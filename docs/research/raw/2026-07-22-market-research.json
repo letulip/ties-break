@@ -1,0 +1,449 @@
+{
+  "summary": "Ground a tennis career sim game concept: TennisStar teardown, competitor landscape, real tennis economics, match-sim math",
+  "agentCount": 4,
+  "logs": [],
+  "result": {
+    "tennisstar-teardown": {
+      "summary": "No shipped mobile game is literally titled \"Tennis Star\"/\"TennisStar\"; the game matching the description (career sim raising a prodigy to pro, minimal match visualization, one court-view mode with shot placements, and heavy ad complaints) is \"Tennis rising star\" — recently rebranded \"Tennis Superstar MyCareer\" — by DROIDHEN LIMITED (package com.tennis.rising.star.sport), released Sept–Oct 2025 on Google Play and the App Store. It has ~100,000+ Google Play installs (androidrank, July 2026) with a 4.53–4.8 star rating (~2,000 Play ratings, 199 App Store ratings), so it is moderately popular rather than a mega-hit. You start as a 16-year-old prodigy and climb from Junior events through Tour to Grand Slams via a skill/stat system (\"upgrade all skills to 200\"), condition/energy management, signature-shot upgrades, and world-ranking/Player-of-the-Year meta systems; matches are not rendered as real-time 3D tennis but resolved through simple tactical choices, consistent with the report of near-zero match visualization plus a court-diagram view of shot placement. Monetization is aggressive: interstitial/rewarded ads gate normal play (\"you need to watch so many ads just to play for 30 mins\"), IAPs run $1.99–$99.99 with ad removal at $14.99, and reviewers describe a difficulty curve that soft-forces spending (a 200-overall player \"lost EVERY opening match for a season\"). Despite this, players call the sim loop itself fun and addictive — the ranking climb, fast progression, and build-your-playstyle skill system are the praised hooks. A closely related, older, gentler comparable is \"Tennis Superstar\" by Lazy Boy Developments (iOS, 4.6 stars, 1.2K ratings): start at age 14, fully simulated matches, hire coaches/trainers, invest in property, endorsements — praised as \"truly exemplifies what it's like to be a tennis player\" but criticized for wait timers.",
+      "findings": [
+        {
+          "point": "Actual identity: the game is 'Tennis rising star', rebranded 'Tennis Superstar MyCareer', by DROIDHEN LIMITED (package com.tennis.rising.star.sport)",
+          "detail": "Google Play page title now reads 'Tennis Superstar MyCareer'; App Store listing id6754313770 credits DROIDHEN LIMITED; released ~Sept 17 / Oct 30, 2025; Android build ~183 MB, requires Android 6.0+",
+          "source": "https://play.google.com/store/apps/details?id=com.tennis.rising.star.sport&hl=en_US"
+        },
+        {
+          "point": "Popularity: ~100,000+ Google Play installs and ~4.5–4.8 rating as of mid-2026",
+          "detail": "androidrank: 100,000 installs reached 2026-07-10 (1k Nov 2025 → 10k Dec 2025 → 50k Feb 2026); 4.53 avg from 2,072 ratings (1,735 five-star, 181 one-star). App Store US: 4.8 from 199 ratings. So popular-ish but not a chart-topper",
+          "source": "https://www.androidrank.org/application/tennis_rising_star/com.tennis.rising.star.sport"
+        },
+        {
+          "point": "Core loop: play a 16-year-old prodigy climbing Junior → Tour → Grand Slam tournaments to world #1 and 'legend' status",
+          "detail": "Official description: 'a 16-year-old tennis prodigy... from local tournaments to pro tours, and ultimately chasing the four Grand Slams glories'; features unique skill system for a personalized playstyle, customizable/upgradeable signature shots, trophies/honors, World Ranking, Youngest Grand Slam Winner leaderboard, Player of the Year events, Ladder Challenge with an energy bar, equipment/accessory customization",
+          "source": "https://apps.apple.com/us/app/tennis-rising-star/id6754313770"
+        },
+        {
+          "point": "Stats and training: numeric skill ratings trained toward a cap (players discuss upgrading 'all skill to 200'), plus a condition system",
+          "detail": "Training via drills/mini-games improving serving, shots and tactics; a 'condition' (form) stat modifies match odds — players complain it feels ineffective ('losing even at peak condition against opponents with far lower stats'). Progression is deliberately fast early ('you'll quickly rocket up the rankings') then stalls",
+          "source": "https://www.chaptercheats.com/qna/android/732936/tennis-rising-star-answers"
+        },
+        {
+          "point": "Match presentation: no full real-time tennis rendering; matches resolve through simple tactical choices, marketed as 'simple controls focused on tactics and skill mastery'",
+          "detail": "Store copy explicitly sells 'simple controls' + tactics rather than reflex gameplay; gameplay videos show menu/court-diagram presentation. This is consistent with the report of one mode showing the court with shot placements landing in/out, though no written source I found describes that screen explicitly — treat that specific detail as plausible but unverified from text sources",
+          "source": "https://play.google.com/store/apps/details?id=com.tennis.rising.star.sport&hl=en_US"
+        },
+        {
+          "point": "Ad-load complaint (verbatim): 'its fun but you need to watch so many ads just to play for 30 mins, lots of potential but just another money grabber' — 'paywall' review by bryceresah, 11/14/2025",
+          "detail": "App Store US review section",
+          "source": "https://apps.apple.com/us/app/tennis-rising-star/id6754313770"
+        },
+        {
+          "point": "Ad-load complaint (verbatim, Google Play): 'half of it is watching ads and the rest is a sloppy mess of inconsistent and frankly incompetent features and systems that are all meant to make your playthrough longer and force you to spend money'; another: 'you can't play for 5 minutes because the only thing you can do is watch ads'",
+          "detail": "Play-review quotes surfaced via search of the Play listing and mod-site mirrors; the existence of a popular 'No Ads' mod APK (v1.0.45+) is itself evidence the ad load is the #1 pain point",
+          "source": "https://gamekillerapp.com/games/tennis-rising-star"
+        },
+        {
+          "point": "Pay-to-win difficulty rubber-banding (verbatim): 'As a 200 overall player (very strong). I lost EVERY opening match for a season... It's of course a season I did not give the developers money. If you pay, you win.' — ex280zx, Feb 2026",
+          "detail": "Matching review by AMGcity: 'You'll quickly rocket up the rankings and then, suddenly, you'll lose almost every match—and that's your hint to start spending money.' Suggests outcome-manipulation tied to monetization, not just stat math",
+          "source": "https://apps.apple.com/us/app/tennis-rising-star/id6754313770"
+        },
+        {
+          "point": "Monetization structure: interstitial + rewarded ads gating play, energy bar in Ladder mode, IAP tiers $0.99/$1.99–$99.99, ad-removal at $14.99",
+          "detail": "App Store IAP list: $1.99, $4.99 (multiple), $9.99 (two), $14.99 'AD FREE', $19.99, $49.99, $99.99; also cosmetic rackets/avatar frames. KZ storefront shows 999₸–59,990₸ range",
+          "source": "https://apps.apple.com/kz/app/tennis-rising-star/id6754313770"
+        },
+        {
+          "point": "What players praise despite ads: the sim/ranking-climb fantasy itself",
+          "detail": "Verbatim: 'There are a lot of ads... but it fun how it's a sim and the rankings to try to be a number 1 tennis player' (King Dragon133, Jun 2026); even the harshest reviews concede 'its fun' / 'this game could actually be fun' / 'lots of potential' — the addictive core is fast early progression, visible ranking movement, and building a personal playstyle via the skill tree",
+          "source": "https://apps.apple.com/us/app/tennis-rising-star/id6754313770"
+        },
+        {
+          "point": "Closest comparable with a gentler design: 'Tennis Superstar' by Lazy Boy Developments (iOS, 4.6 stars, 1.2K ratings) — start at age 14, play until retirement, matches fully simulated",
+          "detail": "Character-development-over-reflexes design: hire trainers/coaches/stylists, endorsements, invest in property/businesses; monetized via cash bundles $0.99–$14.99 + $1.99 unlock and wait/cooldown timers between simulated matches. Praise: 'Truly exemplifies what it's like to be a tennis player. I just have [two] concerns. One, the dang wait!'",
+          "source": "https://apps.apple.com/us/app/tennis-superstar/id1014100347"
+        },
+        {
+          "point": "No literal 'Tennis Star'/'TennisStar' career sim exists at scale; the niche has several adjacent titles that dilute search results",
+          "detail": "Others in the space: Tennis Manager 26 – MY PLAYER (Rebound CG, junior-to-Slam career, 4.6), TOP SEED Tennis Manager 2026 (Gaminho, 1M+ downloads, start at 16), Tennis Sim – Game 2026 (StackTech/NUVIA SRL, point-by-point sim), Retro Slam Tennis (New Star Games RPG-style career). A trivial arcade 'Tennis Star 1.0.13' on Uptodown is unrelated",
+          "source": "https://play.google.com/store/apps/details?id=com.gaminho.topseedtennis&hl=en_US&gl=US"
+        }
+      ],
+      "design_implications": [
+        "The addictive core to copy is cheap to build: numeric stats + visible world-ranking ladder + fast early wins. Players explicitly forgive minimal match visualization when ranking movement and build customization feel real — full 3D tennis rendering is unnecessary.",
+        "A single lightweight match view (top-down court with shot placement dots landing in/out, point-by-point ticker) is enough visual payoff; invest polish there instead of animation. Verify Tennis rising star's version by playing 10 minutes — text sources confirm 'tactics not reflexes' but not the exact screen.",
+        "The #1 churn driver in the reference game is ad cadence, not ad existence: forced interstitials between every activity ('can't play 5 minutes') generates 1-star floods and a thriving no-ads mod scene. Cap interstitials, push value into optional rewarded video (condition refill, extra training slot), and price ad-removal well under the reference's $14.99.",
+        "Never rig match outcomes against paying pressure. The most damaging reviews are about a maxed 200-overall player suddenly losing every match ('if you pay, you win') — players detect and publicize outcome manipulation. Keep the sim math transparent/deterministic-ish (stats + condition + surface + tactic matchups) so losses feel fair.",
+        "Make the 'condition/form' stat actually matter and legible — its perceived ineffectiveness is a named complaint. Show the modifier in the pre-match odds screen.",
+        "Starting age is a differentiator: existing hits start at 14–16. A true childhood start (choose parents/first coach, junior academies, growth spurts affecting stat caps) is underserved and matches the 'raise from childhood' fantasy the user described — no incumbent does it.",
+        "Longevity levers proven in comparables: retirement/aging arc with legacy leaderboards (Youngest Grand Slam Winner), off-court economy (coaches, sponsors, property in Lazy Boy's Tennis Superstar), and seasonal Player-of-the-Year events. Avoid Lazy Boy's real-time wait timers — 'the dang wait' is its top complaint.",
+        "Market context: this niche supports ~100k–1M installs at 4.5+ ratings with tiny teams; differentiation via fairness + childhood-to-legend depth is a credible wedge against DroidHen's ad-choked incumbent."
+      ]
+    },
+    "competitor-landscape": {
+      "summary": "The tennis management genre is thin and dominated by two products: Rebound CG's Tennis Manager series (annual PC/Mac releases, ~2,000-3,000 tournaments, 5,000+ players, real-time 3D match engine with speed controls) and the indie Tennis Elbow Manager 2 (91% positive on Steam, junior-tour start, 3D matches you can even play yourself). Both are desktop-heavy, complex, and neither is web-based; Tennis Manager 25 sits at only 68% positive on Steam with complaints about crashes, opaque attribute effects, and speed-control bugs. Web/browser tennis managers (Onlinetennis.net, Online Tennis Manager, Tennis Mania) exist but are dated multiplayer league games with result-table or minimal match presentation, not point-by-point visual sims. Adjacent exemplars show the winning lightweight formula: New Star Soccer and Retro Bowl (4.8/5 from 915k+ App Store ratings) compress a career sim into short interactive moments plus simple life/resource management; Punch Club shows a stats-decay training loop can carry a narrative career game; Football Manager proves layered match presentation (text commentary → 2D dots → 3D, with highlight modes and speed control) plus deep youth-academy infrastructure is the genre gold standard. Real-world tennis economics are dramatic and underexploited as game material: juniors cost $80k-100k/year (Thiem), roughly $400k-1M from childhood to pro, while only ~336 men and ~251 women break even annually and ITF-level prize money can be literally $6 for a match. No game currently combines: (a) parent/family perspective from junior years, (b) honest brutal tennis economics, and (c) a strong 2D point-by-point match visualization in a lightweight web/PWA package — that is the open gap for the proposed game.",
+      "findings": [
+        {
+          "point": "Tennis Manager 25 (Rebound CG) is a PC/Mac ($~30) management sim with a real-time 3D match engine, 'MatchBeats' accelerated viewing with jump-in control, 'Eagle View' slow-mo line calls, 5,000+ players and ~2,000-3,000 real tournaments (ATP/WTA/ITF), plus a new FM-style Youth Center",
+          "detail": "Co-developed with coach Patrick Mouratoglou; features finances, facilities upgrades, academy staff/mentors, scouting, ranking-evolution graphs, in-game editor; Tennis Manager 26 already announced on Steam",
+          "source": "https://store.steampowered.com/app/3549220/Tennis_Manager_25/"
+        },
+        {
+          "point": "Tennis Manager 25 reception is weak: 68% positive from only 76 Steam reviews",
+          "detail": "Community complaints: crashes without warning, match speed setting reverting from 100x to 1x, attributes (balance, footwork, agility) with no visible match effect, opaque tactics; TM2024 was 77-78% positive from ~100-115 reviews, criticized as incremental with 'not great presentation' and obscure mechanics — tiny audiences for a full-price annual PC franchise",
+          "source": "https://steamcommunity.com/app/3549220/discussions/"
+        },
+        {
+          "point": "Tennis Elbow Manager 2 (Mana Games, PC, ~$10-15) is the indie benchmark: 91% positive from 202 Steam reviews",
+          "detail": "Coach+player career from JUNIOR tour up; junior years shape the player's lifetime potential (starting as junior is harder, not easier); match engine derived from Tennis Elbow 2013 with full 3D matches you can watch or play yourself; niche production values, dated UI",
+          "source": "https://store.steampowered.com/app/760630/Tennis_Elbow_Manager_2/"
+        },
+        {
+          "point": "Web/browser tennis managers exist but are shallow on match presentation: Onlinetennis.net, Online Tennis Manager (browser+Android), Tennis Mania",
+          "detail": "These are multiplayer league/ladder games with training economies, equipment crafting, and 'live match spectating' that amounts to score tickers/result tables — none offers a compelling single-player parent/career narrative or rich 2D point-by-point visualization",
+          "source": "https://www.onlinetennis.net/en"
+        },
+        {
+          "point": "New Star Soccer / Retro Bowl (New Star Games) prove the lightweight career-sim formula: retro aesthetics + RPG/management depth + short interactive match moments",
+          "detail": "NSS: BAFTA winner, App Store #1, start as 16-year-old, loop of train/rest/shop/media/relationships between fixtures; Retro Bowl: 4.8/5 from 915,000+ App Store reviews and 4.7 from 508,000+ on Google Play — you manage the roster but only play the key offensive moments",
+          "source": "https://apps.apple.com/us/app/retro-bowl/id1478902583"
+        },
+        {
+          "point": "Tennis Champs Returns (mobile, 2016) showed appetite for a tennis career arcade-sim: 200-pro world tour, weekly choice of up to 3 events, TouchArcade top-10-of-2016",
+          "detail": "Criticism: early career matches reduced to tie-breaks (a pacing shortcut for lightweight play), and difficulty spikes in the top 20; it is arcade action, not management, and has no economics of raising a player",
+          "source": "https://toucharcade.com/2016/02/18/tennis-champs-returns-review/"
+        },
+        {
+          "point": "Punch Club demonstrates a stats-decay training loop (train/work/eat/rest, stats drop daily) can carry a narrative career sim, but pure hands-off grind grates over time",
+          "detail": "Reviews call it 'an effective casual management sim' whose 'grindy hands-off mechanics soon start to grate' — the fight itself is watch-only, a frequently cited weakness",
+          "source": "https://www.nintendolife.com/reviews/switch-eshop/punch_club"
+        },
+        {
+          "point": "Football Manager's youth model is the design reference: intake quality = Youth Recruitment + Youth Facilities + Junior Coaching + nation youth rating; development = Potential Ability x facilities x personality x game time x training, paying off over 3-5 seasons",
+          "detail": "FM also set the standard for layered match presentation: text commentary, 2D top-down, and 3D, with highlight filters (key/extended/full) and speed controls — the accepted template for 'watchable' simulated matches",
+          "source": "https://www.passion4fm.com/football-manager-youth-development-guide/"
+        },
+        {
+          "point": "Junior tennis costs: $80,000-100,000/year for ages 13-18 (Dominic Thiem), close to $1M invested before a player establishes on tour; LTA estimated ~$400,000 from age 5 to 18",
+          "detail": "Cost lines: coaching, travel, tournament entries ($100-$1,000/event; $5k-25k/yr on tournament travel alone), equipment, physio, mental coaching — a ready-made economic simulation layer no game currently models from the parent's side",
+          "source": "https://lastwordonsports.com/tennis/2025/09/13/1-million-to-go-pro-dominic-thiem-exposes-the-shocking-cost-behind-every-junior-tennis-star/"
+        },
+        {
+          "point": "Pro-tour economics are brutal: only ~336 men and ~251 women break even per year; USTA estimated $143,000/yr costs ($70k coaching, $60k travel) with only the top ~164 men covering them",
+          "detail": "ESPN documented a player earning $6,771 in 2022 prize money against $34,500 expenses, and a player asking 'why am I here, playing for literally $6?'; Noah Rubin (ranked ~212) estimated $90-100k/yr costs; ITF events pay $15k-100k total prize money per tournament; of ~87M players worldwide, <10,000 hold any pro ranking (~0.01%)",
+          "source": "https://www.espn.com/tennis/story/_/id/35414286/the-stunning-financial-reality-high-cost-pro-tennis"
+        },
+        {
+          "point": "ATP Challenger prize money is rising (record $32.4M for 2026) and ITF invested in the 2025 World Tennis Tour, but margins for players ranked ~180+ remain razor-thin after travel, coaching and taxes",
+          "detail": "Even a deep Challenger run covers only a few weeks of tour expenses; lower-tier players pay their own accommodation — good material for period-accurate difficulty tuning in a sim",
+          "source": "https://lastwordonsports.com/tennis/2025/10/25/atp-challenger-tour-prize-money-record-2026/"
+        },
+        {
+          "point": "Gap: no lightweight/web/PWA game does point-by-point 2D tennis match visualization",
+          "detail": "Big managers (TM25, TEM2) use heavyweight 3D desktop engines; browser managers show result tables/tickers; mobile career games (Tennis Champs, Tennis Career Sim) are either arcade action or menu-only auto-sim. Tennis is uniquely suited to cheap-but-rich 2D visualization (discrete points, two actors, small court) yet nobody exploits it",
+          "source": "https://store.steampowered.com/app/760630/Tennis_Elbow_Manager_2/"
+        },
+        {
+          "point": "Gap: no game takes the PARENT'S perspective on a tennis career, and none models honest junior-years economics (family budget, sacrifice, sponsors, federation support, relocation to academies)",
+          "detail": "TEM2 has a junior tour but from a coach's optimization angle; TM25's Youth Center is club-academy management; NSS starts at 16 already signed; the widely publicized $1M-to-go-pro narrative (Thiem, ESPN, PTPA) is culturally resonant and completely un-gamified",
+          "source": "https://www.espn.com/tennis/story/_/id/35414286/the-stunning-financial-reality-high-cost-pro-tennis"
+        }
+      ],
+      "design_implications": [
+        "Position as the intersection nobody occupies: Football Manager-depth structure + Retro Bowl accessibility + the untold parent/family story — 'raising a pro' rather than 'managing a club', with real-world-calibrated economics ($80-100k/yr junior costs, breakeven only near top-150) as the core tension engine.",
+        "Make the 2D point-by-point match view the hero feature: tennis's discrete point structure makes a top-down 2D court with ball/player markers, shot arcs and momentum cues cheap to render in Canvas/SVG yet dramatically better than every web competitor; copy FM's layered presentation — highlight filters (key points / tiebreaks / full match), 1x-100x speed, and instant-result option — and make sure the speed control actually works (a top TM25 complaint).",
+        "Attributes must visibly matter in the match visualization: TM25's biggest credibility complaint is that stats don't observably affect play; design the point simulator so serve %, stamina fade, surface preference and mental toughness produce legible on-court differences the player can watch.",
+        "Adopt the New Star Soccer 'life loop' between tournaments (school vs training, family budget, kid's morale/burnout, gear, sponsors, federation grants) but avoid Punch Club's pure hands-off grind — give the parent meaningful per-match choices (coaching pep talks, scheduling, when to skip a tournament to save money or health).",
+        "Table-based UI is genre-appropriate (FM proves spreadsheets sell) and perfect for PWA; the differentiation budget should go into the match scene and the economics, not into 3D or database licensing — use fictional players/tournaments mirroring the ITF Junior → Futures ($15k/25k) → Challenger → Tour ladder with realistic prize/expense math.",
+        "Junior years as destiny: follow TEM2's insight that junior development shapes lifetime potential — early parental choices (academy vs local coach, which surface, schooling) should lock in long-term ceilings, creating replayability.",
+        "Market realism: the PC tennis-manager audience is tiny (76-202 Steam reviews per title), so a free/cheap web PWA with strong shareability (a dramatic watchable match + an emotionally resonant 'can we afford this?' story) is a better wedge than competing feature-for-feature with Rebound CG.",
+        "Difficulty/economics tuning has ready benchmarks: entry fees $100-1,000/event, $5k-25k/yr tournament travel, USTA's $143k/yr pro cost, ~$6 first-round ITF payouts — using honest numbers is itself a marketing hook (Thiem's '$1M to go pro' discourse)."
+      ]
+    },
+    "real-tennis-economics": {
+      "summary": "Real-world tennis career economics is brutally front-loaded and lottery-shaped. Competitive junior development costs roughly $30k-100k+/year (elite academies like Rafa Nadal Academy ~€56k-60k tuition, IMG Academy ~$88.9k; private coaching $75-300/hr; travel $5k-25k/yr for regional juniors up to $50k-150k for global schedules), with estimates of $300k-400k total to take a junior from beginner to the pro tour. Entry-level pro prize money is tiny: 2025 ITF World Tennis Tour events pay $20k (M15/W15) to $30k (M25/W35) TOTAL per event, so an M15 title is worth roughly $2k-3k while first-round losers get ~$100-150; Challenger 50 winners get ~$8,000; meanwhile Grand Slam first-round losers earn $80k-110k (US Open 2025: $110,000), creating a massive cliff between tour levels. Peer-reviewed break-even research (Schoettl et al. 2025/2026) puts the break-even ranking around ATP/WTA 150, with touring costs of ~$53k-105k/year and only ~330 men and ~250 women worldwide breaking even annually; ESPN documented players like Kiranpal Pannu earning $6.8k against $34.5k of expenses. Funding comes from federation grants (LTA Pro Scholarship up to £80k/yr, USTA up to $9k for juniors, ITF Grand Slam Player Development Programme grants of $25k-50k), product-only equipment sponsorships for juniors, and private income-share backers (e.g., Alison Riske funded at 18 in exchange for a percentage of future earnings; retail platforms like Fantium and the Nick Kyrgios securities offering). Timeline-wise, pros typically start at ~5, earn first ranking points ~18, take ~4.5 years to reach top 100 (mean entry age ~21.5-22), and peak at 23-28; only ~58% of top-10 ITF juniors ever reach the ATP top 100, ~30-40% of top juniors reach financially sustainable rankings, and odds from ordinary junior level to top 500 are on the order of 1 in 10,000.",
+      "findings": [
+        {
+          "point": "Rafa Nadal Academy annual program costs ~€56,000/year tuition (~$60,000 with RNS school program); weekly camps ~€2,200",
+          "detail": "Annual programs for ages 12-18 in Manacor, Mallorca; accommodation can be additional depending on agreement (2025 figures)",
+          "source": "https://knews.media/2025/09/17/how-much-does-it-cost-to-train-at-rafael-nadals-academy/"
+        },
+        {
+          "point": "IMG Academy (Bradenton, FL) annual tuition is $88,900 for grades 10+",
+          "detail": "Cited in ESPN's 2023 investigation of pro tennis economics",
+          "source": "https://www.espn.com/tennis/story/_/id/35414286/the-stunning-financial-reality-high-cost-pro-tennis"
+        },
+        {
+          "point": "Private tennis lessons cost $65-160/hr on average in the US; elite coaches charge $150-300/hr",
+          "detail": "National average ~$113/hr; competitive junior lessons $75-200/hr; travel coaches for tournaments start ~$250/day up to ~$3,000/week (2025-2026 data)",
+          "source": "https://lessons.com/costs/tennis-lessons-cost"
+        },
+        {
+          "point": "Full junior development budgets: coaching $30k-100k/yr, travel $50k-150k/yr for global schedules, equipment/stringing ~$10k/yr, fitness ~$2.8k-5k/yr",
+          "detail": "Regional junior tournament families spend $5k-25k/yr on entries/flights/hotels; per-event cost $100-1,000; total beginner-to-pro estimates ~$300,000+",
+          "source": "https://tennis-prime.com/blogs/all/the-true-cost-of-competitive-tennis-from-beginner-to-pro"
+        },
+        {
+          "point": "Cost of raising a pro estimated at ~$400,000 total",
+          "detail": "Sporting Intelligence estimate for taking a player from childhood to the pro tour",
+          "source": "https://sportingintelligence832.substack.com/p/cost-of-raising-a-tennis-player-estimated-to-be-400000-000036"
+        },
+        {
+          "point": "2025 ITF World Tennis Tour: entry events raised to $20,000 total (M15/W15) and $30,000 (M25/W35); total tour prize money $35.3m across 1,100+ tournaments",
+          "detail": "Women's total $20.7m, men's $14.6m; W75 raised $60k→$70k; mandatory free accommodation at 150+ women's W50-W100 events (28,000 free nights in 2025 vs 5,000 in 2024)",
+          "source": "https://www.itftennis.com/en/news-and-media/articles/itf-announces-investment-into-the-2025-world-tennis-tour/"
+        },
+        {
+          "point": "ITF per-round reality: M15 singles winner ~$2,160, R32 loser ~$156 (2020 scale); a $25,000-event title nets ~$3,600 gross / ~$3,000 after tax; first-round losers ~$117; W25 first-round qualifying as low as $50",
+          "detail": "Brenda Fruhvirtova won 8 ITF titles in 2022 and earned only $43,071 total for the year",
+          "source": "https://www.espn.com/tennis/story/_/id/35414286/the-stunning-financial-reality-high-cost-pro-tennis"
+        },
+        {
+          "point": "ATP Challenger Tour: $28.5m total prize money in 2025 (up 135% since 2022), rising to $32.4m in 2026; 217 events in five tiers (Challenger 50/75/100/125/175)",
+          "detail": "Per-event totals range $60,000-$250,000; a Challenger 50 winner earns ~$8,000, a Challenger 125 winner ~$28,000",
+          "source": "https://www.atptour.com/en/news/atp-challenger-tour-prize-money-soars-december-2024"
+        },
+        {
+          "point": "Grand Slam first-round losers earned $80,000-110,000 in 2025 (US Open: $110,000; Wimbledon £66,000; AO 2026: ~$100,761)",
+          "detail": "Contrast with tour levels below: ATP 250 first-round loser ~$6,895 (men)/$2,804 (women, Auckland 2022); ATP 1000 Indian Wells first-round ~$17,580, winner $426,010; AO champion ~$2.05m (2023)",
+          "source": "https://www.sportico.com/leagues/tennis/2025/2025-us-open-first-round-prize-money-losers-1234868001/"
+        },
+        {
+          "point": "Break-even ranking is approximately ATP/WTA 150; annual touring costs $53,435-104,520; only 32-34% of top-100 juniors (2008 cohort) ended careers with positive financial balance",
+          "detail": "Schoettl, Keiner, Metz, Kainz — 'The Financial Break Even in Professional Tennis' (SSRN 2025) and 'Financial sustainability thresholds in professional tennis' (ScienceDirect, 2026); bottom-up cohort analysis + expert interviews",
+          "source": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5206641"
+        },
+        {
+          "point": "Only ~336 men and ~251 women break even in pro tennis per year; players below ~250 struggle to cover costs",
+          "detail": "Sigrun Tennis analysis of pro-tour income realities; ITF's 2013 estimate put average annual expenses at ~$39k excluding team costs",
+          "source": "https://sigruntennis.com/blogs/courtside/economics-of-tennis-part-1"
+        },
+        {
+          "point": "Case study: Kiranpal Pannu (2022) earned $6,771 in prize money against $34,500 expenses (-$27,729); Vasek Pospisil estimated ~$30,000/yr travel for himself + coach + physio",
+          "detail": "Pannu paid ~$400/month health insurance before dropping coverage; only 97 players worldwide (58 men, 39 women) earned over $1m in prize money in 2022",
+          "source": "https://www.espn.com/tennis/story/_/id/35414286/the-stunning-financial-reality-high-cost-pro-tennis"
+        },
+        {
+          "point": "ITF Grand Slam Player Development Programme: 65 players receive grants up to $25,000 in 2026, three players get $50,000; $65m+ contributed since 1986",
+          "detail": "Also funds junior touring teams with coaches for players from developing nations to attend junior Grand Slams (e.g., Alex Eala received a $25,000 grant)",
+          "source": "https://www.itftennis.com/en/growing-the-game/grand-slam-player-development-programme/"
+        },
+        {
+          "point": "National federation funding: LTA Pro Scholarship Programme grants up to £80,000/year (ages 16-24, max 5 years); LTA Pro Transition Programme £15,000-40,000; USTA junior grants up to $9,000 (age 13+, performance-based)",
+          "detail": "LTA PSP targets players judged capable of ATP/WTA top 100 within five years; initial 2-year support period",
+          "source": "https://www.lta.org.uk/compete/performance/player-pathway/pro-scholarship-programme/"
+        },
+        {
+          "point": "Junior sponsorships are mostly product-only: free racquets, strings, bags, shoes worth $1,000+/year; 3-4 year deal terms; only very top juniors get cash",
+          "detail": "Maria Sharapova's first junior brand contract was worth $25,000-50,000 covering equipment and travel; Nike operates 'don't call us, we'll call you'",
+          "source": "https://mytennishq.com/how-do-junior-tennis-players-get-sponsorship/"
+        },
+        {
+          "point": "Private investor income-share deals are real: Alison Riske was funded at 18 (ranked ~200) by a family friend in exchange for a percentage of future earnings",
+          "detail": "Modern retail versions: Fantium sells stakes in players' prize money; French firm Manse offered up to $4m of Nick Kyrgios-linked securities ($2 units, $0.04 initial annual yield, 10-year expiry)",
+          "source": "https://www.sportico.com/business/finance/2025/investing-in-athlete-income-1234844506/"
+        },
+        {
+          "point": "Timeline milestones: start tennis ~age 5, first ranking points ~18, average 44-54 months from first point to top 100, top-100 entry age ~21.5-22, top-100 average age ~27, peak ages 23-28 (women ~23-24, men ~25-27)",
+          "detail": "PLOS One study of ranking histories of top ATP/WTA players; top-50 players started earlier than players ranked 51-100",
+          "source": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10637680/"
+        },
+        {
+          "point": "Attrition: only ~58% of ITF junior top-10 boys (1996-2005) ever reached ATP top 100; ~45% of top-20 junior girls reach WTA top 100; only 30-40% of top juniors reach financially sustainable rankings; ~1 in 10,000 junior players cracks the top 500",
+          "detail": "McCraw research in ITF Coaching & Sport Science Review; PLOS One junior-to-senior transition studies (2024)",
+          "source": "https://itfcoachingreview.com/index.php/journal/article/view/668"
+        }
+      ],
+      "design_implications": [
+        "Model the 'prize money cliff': income at ITF level (~$150-3,600 per event) vs Challenger (~$8k-28k titles) vs Grand Slam first round ($80k-110k) is exponential, not linear — a single Slam main-draw appearance should transform a career's finances in-game.",
+        "Make ranking ~150 the break-even pivot: below it the player bleeds $50k-105k/year in touring costs; above it sponsors and appearance money compound. This creates a natural 'valley of death' game phase between junior success and tour sustainability.",
+        "Front-load parental/junior spending as a resource sink: $30k-100k+/year for 8-12 years before any meaningful income, totaling $300k-400k — funding choices (family money, federation grant, academy scholarship, investor taking a % of future earnings) are a compelling early-game strategic decision.",
+        "Implement funding sources as distinct mechanics with tradeoffs: federation grants (LTA up to £80k/yr but performance-conditional and revocable), ITF GSPDP grants ($25k-50k, developing nations only), product-only equipment sponsorships (save ~$1-10k/yr, no cash), and income-share investor deals (cash now, % of earnings forever).",
+        "Use realistic timeline gates: start ~5-7, ITF juniors ~13-14, first pro points ~17-18, ~4.5 years grinding ITF/Challenger to reach top 100 at ~21-22, peak 23-28, decline after ~29 — the grind years should feel long relative to the peak.",
+        "Attrition should be harsh but tiered: even a top-10 junior world ranking gives only ~58% odds of ATP top 100; a merely 'good' junior should almost never make it — RNG plus injuries plus money running out are realistic failure modes.",
+        "Gender asymmetry is real data: women's ITF tour has more total prize money and free hospitality at W50+ events, but women peak ~2 years earlier and have shorter careers on average — could be reflected if the sim models both tours.",
+        "Track expenses granularly for immersion: coach salary + coach travel (~$30k/yr for a minimal team), physio, stringing (~$5-10k/yr), health insurance (~$400/mo), entry-fee/travel per event — letting players cut corners (travel without a coach, skip physio) with injury/performance risk mirrors documented real behavior."
+      ]
+    },
+    "match-sim-models": {
+      "summary": "Tennis is one of the best-studied sports for point-level simulation: under the iid assumption (each serve point won with fixed probability p), closed-form Markov formulas give hold/set/match probabilities — the canonical closed form for holding serve is P(game) = p^4(1 + 4q + 10q^2) + 20(pq)^3 · p^2/(1 − 2pq), with tiebreak/set/match built recursively (Newton & Keller 2005; O'Malley 2008 gives equivalent explicit formulas validated on Wimbledon 2007). Realistic tour parameters: servers win ~60–67% of points overall (ATP; elite ~67–73%, WTA ~55–60%), ~72–75% behind first serves and ~50–55% on second serves, holding serve ~77–90% of games. The scoring structure amplifies tiny edges: moving one player's serve-point probability from .62 to .65 (opponent fixed .62) moves best-of-3 match probability from 50% to ~65%; ranking/Elo differences map to match probability via 1/(1+10^(−ΔElo/400)) and can be inverted to a serve-point edge of roughly 1–5 percentage points. Klaassen & Magnus (90,000 Wimbledon points) showed points are not exactly iid — winning the previous point helps slightly and servers underperform on \"big\" points, effects stronger for weaker players — but deviations are small, so iid-plus-a-small-momentum/pressure-modifier is the right game architecture. For rally rendering, real distributions are heavily front-loaded: ~66–70% of points end in 0–4 shots, ~20–25% in 5–8, only ~10% in 9+ (2024 US Open: 9+ ≈ 10.3% men / 10.2% women), so a geometric-style tail on rally length looks authentic; Jeff Sackmann's tennis_atp and Match Charting Project repos (17,800+ charted matches, 10.5M shots with serve direction wide/body/T and rally direction crosscourt/middle/down-the-line, e.g. down-the-line backhands only ~17% for righties) provide free parameter tables. Visualization precedent: IBM SlamTracker's point-by-point momentum graph and \"Keys to the Match\", top-down shot-placement charts, and simple Canvas court renderers; a 2D top-down court with animated arc trajectories driven by MCP direction frequencies is the established pattern.",
+      "findings": [
+        {
+          "point": "Closed-form probability of holding serve from point-win probability p",
+          "detail": "P(hold) = p^4(1 + 4q + 10q^2) + 20(pq)^3 · p^2/(1 − 2pq), q = 1−p. Derivation: win 4-0/4-1/4-2 directly, plus reach deuce (prob 20(pq)^3) then win from deuce with p^2/(1−2pq). Values: p=.55→.623, p=.60→.736, p=.65→.830, p=.70→.901, p=.75→.949. Set/tiebreak/match come from recursions over game scores; tiebreak deuce-block sums to p_A q_B/(1 − p_A p_B − q_A q_B) with serve order A BB AA BB…",
+          "source": "https://www.cis.upenn.edu/~bhusnur4/cit592_fall2013/NeKe2005.pdf"
+        },
+        {
+          "point": "O'Malley (2008) gives equivalent explicit formulas for game, tiebreak, set, match and 'recover from a break down', validated against Wimbledon 2007",
+          "detail": "Journal of Quantitative Analysis in Sports 4(2), 'Probability Formulas and Statistical Analysis in Tennis'. Tiebreak is a 28-term polynomial sum over reachable scores; set = sum over game combos; best-of-3 match M(s) = s^2(1+2(1−s)), best-of-5 M(s) = s^3(1+3(1−s)+6(1−s)^2) where s = set probability.",
+          "source": "https://www.degruyterbrill.com/document/doi/10.2202/1559-0410.1100/html"
+        },
+        {
+          "point": "Empirical serve-point win rates for tour pros: ~0.59–0.73 of points on serve; hold rates 0.73–0.95",
+          "detail": "Newton & Keller Tables 1–2 (2002 US Open + Wimbledon semifinalists): rally-on-serve win p^R ranged 0.59 (Henin) to 0.73 (Sampras); corresponding hold-of-serve 0.73–0.95, matching the theoretical curve. Tour-wide: top-10 ATP win ~75% of first-serve points, bottom of top-100 ~67% (sample avg ~71%); best-ever second-serve win only ~55%, and only 222 men since 1991 averaged >50% on second serve; first-serve-in typically 55–70%.",
+          "source": "https://braingametennis.com/only-222-players-in-28-years-have-achieved-this/"
+        },
+        {
+          "point": "Tiny point-level edges become large match edges (key balancing lever for a career sim)",
+          "detail": "Computed with the formulas above: both players p=.62 → 50/50. p=.63 vs .62 → Bo3 55.0%, Bo5 56.3%. p=.65 vs .62 → hold 83%, Bo3 64.7%, Bo5 68.1%. p=.67 vs .62 → Bo3 73.2%, Bo5 78.1%. p=.70 vs .60 → Bo3 89.1%, Bo5 93.8%. So ±1 percentage point of serve-point skill ≈ ±5% match probability near parity; a career sim should express ratings as small serve/return point deltas.",
+          "source": "https://www.cis.upenn.edu/~bhusnur4/cit592_fall2013/NeKe2005.pdf"
+        },
+        {
+          "point": "Barnett–Clarke (2005) opponent-adjustment formula for match-specific serve probability",
+          "detail": "Combine serving ability of i vs average with returning ability of j vs average: f_ij = f_t + (f_i − f_av) − (g_j − g_av), where f_i = i's serve-points-won %, g_j = j's return-points-won %, f_t/f_av/g_av = tournament/tour averages (ATP overall serve-win ≈ 61–64%). Later refinements add surface adjustment, shrinkage, common opponents (Knottenbelt et al. 2012 common-opponent model).",
+          "source": "https://www.sciencedirect.com/science/article/pii/S0898122112002106"
+        },
+        {
+          "point": "Elo mapping for ranking difference: P(win match) = 1/(1+10^(−ΔElo/400))",
+          "detail": "ΔElo=100 → 64%, 200 → 76%, 400 → 91%. FiveThirtyEight's tennis Elo (built on Sackmann's data, 265k matches) uses dynamic K = 250/((matches+5)^0.4); Tennis Abstract keeps surface-specific Elo blended with overall. For a sim: pick target match prob from Elo gap, then invert the Markov chain to get the serve-point p's.",
+          "source": "https://www.tennisabstract.com/blog/2019/12/03/an-introduction-to-tennis-elo/"
+        },
+        {
+          "point": "Klaassen & Magnus (JASA 2001): points are NOT exactly iid, but deviations are small",
+          "detail": "~90,000 Wimbledon points 1992–95, dynamic binary panel model. Findings: winning the previous point raises probability of winning the current point (positive autocorrelation); servers win fewer points on 'important' points (break points); both effects stronger for lower-ranked players; overall deviation small enough that iid 'provides a good approximation'. Gamifiable as: small momentum bonus after won points, clutch/choke penalty on break points scaled inversely with player rating.",
+          "source": "https://www.tandfonline.com/doi/abs/10.1198/016214501753168217"
+        },
+        {
+          "point": "Momentum follow-ups: hot-hand effects exist but are modest and player-specific",
+          "detail": "'Hot Racquet or Not?' (arXiv 2020) explores momentum in Grand Slam matches beyond iid; 2024 arXiv 'Capturing Momentum' models Wimbledon 2023 point streaks with time-series methods. Consensus: streak effects are real but second-order — good justification for a visible 'momentum meter' that shifts p by ~1–3 points rather than dominating outcomes.",
+          "source": "https://arxiv.org/pdf/2009.05830"
+        },
+        {
+          "point": "Rally length distribution: ~2/3 of points end within 4 shots, ~10% reach 9+",
+          "detail": "Brain Game Tennis / Craig O'Shannessy: 0–4 shots ≈ 59% (men) / 62% (women) in older Slam data, rising to ~69%/68% at 2024 US Open; 5–8 shots ≈ 27%; 9+ ≈ 10–14% (2024 USO: 10.3% M, 10.2% W); rallies of 9+ can be as low as 3.8% on fast courts. At every level incl. U12, 0–4 is >50% of points. Lisi et al. 2024 (J. Sports Analytics) fit formal distributions to rally length (geometric-family with surface-dependent tail; clay > grass mean length).",
+          "source": "https://braingametennis.com/2024-us-open-average-rally-length-it-will-blow-your-mind/"
+        },
+        {
+          "point": "Match Charting Project: free shot-by-shot dataset — 17,808 matches, 2.77M points, 10.5M shots",
+          "detail": "github.com/JeffSackmann/tennis_MatchChartingProject (CSV, user-contributed, CC BY-NC-SA). Every shot coded with type + direction: serves 4=wide 5=body 6=T (separately for deuce/ad courts); rally shots 1=to righty's forehand, 2=middle, 3=to backhand; plus return depth, error types, net approaches. Metadata/aggregates browsable at tennisabstract.com/charting/meta.html.",
+          "source": "https://github.com/JeffSackmann/tennis_MatchChartingProject"
+        },
+        {
+          "point": "Shot-direction priors from MCP: crosscourt dominates; down-the-line is the minority aggressive choice",
+          "detail": "Righties hit the down-the-line backhand on only 16.9% of backhands from the backhand corner (lefties 21.4%; Nadal 24.4% — near the top). 'The easiest direction is back the way it came,' producing long crosscourt exchanges — a simple 3-direction Markov chain (crosscourt ~55–65%, middle ~20%, down-the-line ~15–20%) reproduces realistic patterns. Serve-direction splits (wide/body/T per court side) are in the MCP serve-stats glossary.",
+          "source": "http://www.tennisabstract.com/blog/2019/12/13/a-first-look-at-the-down-the-line-backhand/"
+        },
+        {
+          "point": "Companion datasets: tennis_atp and tennis_wta (rankings, results, match stats) and tennis_slam_pointbypoint",
+          "detail": "github.com/JeffSackmann/tennis_atp has every ATP match since 1968 with serve stats columns (aces, df, svpt, 1stIn, 1stWon, 2ndWon, bpSaved) — enough to fit per-player serve/return point-win distributions by surface. tennis_wta is the WTA equivalent; Sackmann also maintains Slam point-by-point data. SCORE Network hosts a cleaned shot-level Grand Slam sample for teaching.",
+          "source": "https://github.com/JeffSackmann/tennis_atp"
+        },
+        {
+          "point": "IBM SlamTracker: the reference design for visualizing simulated/live tennis without 3D",
+          "detail": "SlamTracker shows a point-by-point momentum line chart, live win probability updated within a 5–10 s window per point, and 'Keys to the Match' (~a dozen recurring pre-match statistical targets, e.g. 'win >52% of 4–9 shot rallies', with live progress bars). This proves score + momentum graph + goal meters carry a match narrative with zero ball animation.",
+          "source": "https://www.ibm.com/new/product-blog/inside-the-ibm-architecture-that-powers-fan-engagement-at-the-us-open"
+        },
+        {
+          "point": "2D web implementations: top-down Canvas courts and pong-style tennis are common; full point animation is rare and thus a differentiator",
+          "detail": "Open-source examples are mostly Canvas 'tennis-pong' (e.g. github.com/divyanshusahu/Tennis-Game, github.com/topics/tennis-game, CodePen 'Tennis HTML5 Canvas Game'). Etter Studio's PointStream rendered live Wimbledon points as generative visualization from data. The proven pattern for a sim: top-down SVG/Canvas court, ball drawn as a dot moving along quadratic Bezier arcs between bounce points sampled from serve-direction and rally-direction distributions, with shot-placement heatmaps between points.",
+          "source": "https://etterstudio.com/pointstream/"
+        },
+        {
+          "point": "Newton & Keller also prove serve order doesn't matter",
+          "detail": "Probability of winning a set/match is independent of who serves first (explicit proof via the recursions) — so a sim need not agonize over the coin toss; it's cosmetic. They also extend the model to full 128-draw tournament win probabilities, directly reusable for career-mode tournament simulation.",
+          "source": "https://www.cis.upenn.edu/~bhusnur4/cit592_fall2013/NeKe2005.pdf"
+        }
+      ],
+      "design_implications": [
+        "Engine core: simulate point-by-point with two parameters per matchup — p_A and p_B (probability each player wins a point on own serve). Derive them from player ratings via Barnett–Clarke (f_ij = tour_avg + serve_skill_i − return_skill_j) or by inverting the target Elo match probability. Everything else (games, tiebreaks, sets) falls out of the scoring state machine — no closed forms needed at runtime, though the closed forms are ideal for instant win-probability displays and fast-forward/simulated results.",
+        "Realistic parameter bands: ATP-like serve-point p in 0.58–0.72 (avg ~0.64), WTA-like 0.52–0.62; first-serve-in 55–70%; hold rates then emerge naturally at 75–90%. Keep skill gaps small: a 3-point p gap already yields ~65% Bo3 win — career progression should move p by fractions of a percent per rating tier.",
+        "Momentum is a legitimate, research-backed game mechanic but keep it subtle: +1–3 percentage points of p after winning streaks, a clutch/choke modifier on break points and set points (weaker/lower-composure players suffer more, per Klaassen–Magnus). Surface it visually as a SlamTracker-style momentum line — the effect being small in the math but visible in the UI is exactly what the data supports.",
+        "Rally generation for visuals can be decoupled from point outcome: first decide who wins the point (Markov), then sample rally length from a front-loaded distribution (~30% 1–2 shots incl. aces/serve+1, ~35% 3–4, ~25% 5–8, ~10% 9+; shift longer on clay, shorter on grass) and sample each shot's direction from MCP frequencies (serve: wide/body/T; rally: crosscourt-heavy ~60%, DTL ~15–20% as the 'winner attempt').",
+        "Render top-down 2D court in Canvas/SVG: ball as a dot following quadratic Bezier arcs between placement cells (serve boxes split into wide/body/T targets; court split into a 3x3 placement grid matching MCP direction codes). Between points show shot-placement heatmaps and a win-probability/momentum strip — IBM SlamTracker proves data-driven charts alone sustain drama.",
+        "Use Jeff Sackmann's repos as the free parameter source: tennis_atp for per-player serve/return stats by surface (calibrate rating→p mapping), tennis_MatchChartingProject for shot direction/rally patterns (note CC BY-NC-SA license — fine for deriving aggregate parameters, attribute it).",
+        "Skip the coin-toss/serve-order logic complexity — provably irrelevant to win probability — and reuse the same point engine for whole-tournament fast-sim (Newton & Keller's 128-draw method): sim non-player matches with the closed-form match probability instead of point-by-point for speed."
+      ]
+    }
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Research"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "tennisstar-teardown",
+      "phaseIndex": 1,
+      "phaseTitle": "Research",
+      "agentId": "a39645773baa10cd9",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1784706930969,
+      "queuedAt": 1784706929304,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "No shipped mobile game is literally titled \"Tennis Star\"/\"T…",
+      "promptPreview": "You are a research agent. First use ToolSearch with query \"select:WebSearch,WebFetch\" to load web tools, then research thoroughly (multiple searches, fetch the best sources). Return concrete facts with numbers and source URLs, not generic statements. English output is fine.\nResearch the mobile game \"Tennis Star\" / \"TennisStar\" — a tennis career simulation mobile game where you raise a tennis playe…",
+      "lastProgressAt": 1784707271692,
+      "tokens": 54747,
+      "toolCalls": 31,
+      "durationMs": 340723,
+      "resultPreview": "{\"summary\":\"No shipped mobile game is literally titled \\\"Tennis Star\\\"/\\\"TennisStar\\\"; the game matching the description (career sim raising a prodigy to pro, minimal match visualization, one court-view mode with shot placements, and heavy ad complaints) is \\\"Tennis rising star\\\" — recently rebranded \\\"Tennis Superstar MyCareer\\\" — by DROIDHEN LIMITED (package com.tennis.rising.star.sport), releas…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "competitor-landscape",
+      "phaseIndex": 1,
+      "phaseTitle": "Research",
+      "agentId": "ac53d11bf97a79e67",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1784706931667,
+      "queuedAt": 1784706929304,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "The tennis management genre is thin and dominated by two pr…",
+      "promptPreview": "You are a research agent. First use ToolSearch with query \"select:WebSearch,WebFetch\" to load web tools, then research thoroughly (multiple searches, fetch the best sources). Return concrete facts with numbers and source URLs, not generic statements. English output is fine.\nSurvey the landscape of tennis management / tennis career simulation games and adjacent career-sim exemplars:\n- Tennis Manage…",
+      "lastProgressAt": 1784707138751,
+      "tokens": 43794,
+      "toolCalls": 17,
+      "durationMs": 207084,
+      "resultPreview": "{\"summary\":\"The tennis management genre is thin and dominated by two products: Rebound CG's Tennis Manager series (annual PC/Mac releases, ~2,000-3,000 tournaments, 5,000+ players, real-time 3D match engine with speed controls) and the indie Tennis Elbow Manager 2 (91% positive on Steam, junior-tour start, 3D matches you can even play yourself). Both are desktop-heavy, complex, and neither is web-…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "real-tennis-economics",
+      "phaseIndex": 1,
+      "phaseTitle": "Research",
+      "agentId": "a3f87d1e504a61f8c",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1784706930878,
+      "queuedAt": 1784706929304,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Real-world tennis career economics is brutally front-loaded…",
+      "promptPreview": "You are a research agent. First use ToolSearch with query \"select:WebSearch,WebFetch\" to load web tools, then research thoroughly (multiple searches, fetch the best sources). Return concrete facts with numbers and source URLs, not generic statements. English output is fine.\nGather REAL numbers for a realistic tennis career economics simulation (this is for game design; realism matters):\n1) Annual …",
+      "lastProgressAt": 1784707179173,
+      "tokens": 49807,
+      "toolCalls": 20,
+      "durationMs": 248295,
+      "resultPreview": "{\"summary\":\"Real-world tennis career economics is brutally front-loaded and lottery-shaped. Competitive junior development costs roughly $30k-100k+/year (elite academies like Rafa Nadal Academy ~€56k-60k tuition, IMG Academy ~$88.9k; private coaching $75-300/hr; travel $5k-25k/yr for regional juniors up to $50k-150k for global schedules), with estimates of $300k-400k total to take a junior from be…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 4,
+      "label": "match-sim-models",
+      "phaseIndex": 1,
+      "phaseTitle": "Research",
+      "agentId": "a7f0c6f3408e0bc94",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1784706931068,
+      "queuedAt": 1784706929304,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Tennis is one of the best-studied sports for point-level si…",
+      "promptPreview": "You are a research agent. First use ToolSearch with query \"select:WebSearch,WebFetch\" to load web tools, then research thoroughly (multiple searches, fetch the best sources). Return concrete facts with numbers and source URLs, not generic statements. English output is fine.\nResearch the mathematics and visualization of simulating tennis matches point-by-point, for a browser game engine:\n1) Markov …",
+      "lastProgressAt": 1784707188179,
+      "tokens": 53299,
+      "toolCalls": 19,
+      "durationMs": 257111,
+      "resultPreview": "{\"summary\":\"Tennis is one of the best-studied sports for point-level simulation: under the iid assumption (each serve point won with fixed probability p), closed-form Markov formulas give hold/set/match probabilities — the canonical closed form for holding serve is P(game) = p^4(1 + 4q + 10q^2) + 20(pq)^3 · p^2/(1 − 2pq), with tiebreak/set/match built recursively (Newton & Keller 2005; O'Malley 20…"
+    }
+  ],
+  "totalTokens": 201647,
+  "totalToolCalls": 87
+}

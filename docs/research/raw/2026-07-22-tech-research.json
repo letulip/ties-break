@@ -1,0 +1,292 @@
+{
+  "summary": "Verify PWA feasibility for a deep tennis career sim: storage limits, framework choice, browser-sim precedents",
+  "agentCount": 3,
+  "logs": [],
+  "result": {
+    "pwa-storage-reality": {
+      "summary": "Browser storage in 2025-2026 is workable for a 1-20 MB career-sim save, but only with a layered strategy. Safari's ITP 7-day script-writable-storage eviction still exists in Safari 26 (2026) for sites browsed in Safari: after 7 days of Safari use without user interaction on the origin, IndexedDB/localStorage/Cache/Service Worker registrations are deleted. Installing the PWA to the iOS home screen effectively exempts it — home-screen web apps get their own isolated storage and use counter, and WebKit's heuristics then grant navigator.storage.persist(), which excludes the origin from eviction. Quotas are generous everywhere relative to 20 MB: Chrome allows up to ~60% of disk per origin, Firefox ~10% of disk (10 GiB group cap, 50% if persisted), Safari 17+ ~60% of disk for browser contexts (~15% for embedded WebViews). IndexedDB on iOS has a long history of flakiness (corruption, \"internal error in Indexed Database server\", data resets after OS updates), so the gold-standard practice is: IndexedDB (or OPFS) as primary store, multiple rotating autosave slots, CompressionStream ('gzip', universally supported since Safari 16.4/mid-2023) to shrink saves, and a user-facing export/import-to-file backup. When embedded in portals (CrazyGames, Yandex Games), storage is partitioned by top-level site in all major browsers (Chrome 115+, Firefox, Safari), and on iOS-in-iframe localStorage can behave like sessionStorage — so portal builds must use the portal SDKs' own save APIs: CrazyGames data module (localStorage-like API, 1 MB cloud limit, cross-device sync for logged-in users) and Yandex player.setData/getData (~200 KB JSON document, whole-document writes, plus safeStorage fallback for guests). A 1-20 MB raw save exceeds both portals' cloud limits, so portal builds need a compressed/trimmed save format or accept local-only persistence there.",
+      "findings": [
+        {
+          "point": "Safari's ITP 7-day script-writable storage eviction still applies in 2026 for sites visited in the Safari browser",
+          "detail": "If a user has 7 days of Safari use without interacting (click/tap) with the origin, ALL script-writable storage is deleted: IndexedDB, localStorage, sessionStorage, media keys, Service Worker registrations (and thus Cache API). The counter is 'days of Safari use', not calendar days, and resets on every visit. Policy introduced March 2020 (ITP), never repealed; still cited as a live limitation in 2026 PWA guides.",
+          "source": "https://webkit.org/blog/14403/updates-to-storage-policy/ ; https://www.magicbell.com/blog/pwa-ios-limitations-safari-support-complete-guide"
+        },
+        {
+          "point": "Home-screen-installed PWAs on iOS are effectively exempt from the 7-day deletion",
+          "detail": "Web apps added to the home screen are 'not part of Safari' — since iOS 16.4/17 they get their own isolated storage container and their own days-of-use counter tied to app usage. WebKit also grants navigator.storage.persist() 'based on heuristics like whether the website is opened as a Home Screen Web App', and origins with persistent storage are excluded from eviction. Practical caveat: iOS may still clear storage of a home-screen PWA unused for many weeks under storage pressure, and deleting the home-screen icon deletes its storage.",
+          "source": "https://webkit.org/blog/14403/updates-to-storage-policy/"
+        },
+        {
+          "point": "Safari 17+ (iOS 17/18/26) quotas are large: ~60% of disk per origin in browser context",
+          "detail": "WebKit storage policy (Safari 17.0, iOS/iPadOS 17, macOS Sonoma, carried forward through Safari 26): origin quota up to 60% of total disk for browser apps, 15% for other apps embedding web content (WKWebView), cross-origin iframes get 10% of the main frame's quota; overall cap 80% of disk (browser) / 20% (other apps). This replaced the old ~1 GB-with-prompts model — the '~1 GB Safari limit' is obsolete since iOS 17. Eviction is LRU under storage pressure, skipping origins with active pages or persisted storage.",
+          "source": "https://webkit.org/blog/14403/updates-to-storage-policy/"
+        },
+        {
+          "point": "navigator.storage.persist() behavior differs sharply per browser",
+          "detail": "Chrome/Chromium: no prompt — auto-granted based on engagement signals (site engagement score, PWA installed, bookmarked, notifications permission), silently denied otherwise; once granted, data is exempt from automatic eviction. Firefox: shows an explicit permission prompt to the user; persisted storage can use up to 50% of disk. Safari: no prompt — decides silently from interaction history / home-screen-installed status. persisted()/persist() available in all engines since ~Dec 2021 (secure contexts only). Recommendation: call persist() after install or first meaningful play session, and check persisted() at startup to warn the user.",
+          "source": "https://web.dev/articles/persistent-storage ; https://developer.mozilla.org/en-US/docs/Web/API/StorageManager/persisted"
+        },
+        {
+          "point": "navigator.storage.estimate() quotas per browser (2025-2026)",
+          "detail": "Chrome/Edge: up to 60% of total disk per origin (e.g. 600 GiB on a 1 TiB disk); estimate() may report a capped value in incognito (~few hundred MB). Firefox: best-effort limit = 10% of total disk, group (eTLD+1) limit capped at 10 GiB; persistent mode up to 50% of free disk. Safari: roughly 60% of disk per origin (browser app). estimate() is available in all engines; note usage numbers include compression/metadata so they don't equal your raw bytes. A 20 MB save is orders of magnitude under every quota.",
+          "source": "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria"
+        },
+        {
+          "point": "iOS IndexedDB has a documented history of flakiness that persists into recent iOS versions",
+          "detail": "Recurring documented failure modes: 'An internal error was encountered in the Indexed Database server' (WebKit bug 235579), IndexedDB found wiped/reset on next PWA launch (Apple dev forums thread 730023), transaction hangs, data loss after iOS updates, connection failures after backgrounding, iOS 17 service-worker fetch TypeErrors. The classic community reference ('The pain and anguish of using IndexedDB') catalogs Safari-specific oddities. Conclusion for a long-running career save: never trust IndexedDB as the only copy on iOS.",
+          "source": "https://bugs.webkit.org/show_bug.cgi?id=235579 ; https://developer.apple.com/forums/thread/730023 ; https://gist.github.com/pesterhazy/4de96193af89a6dd5ce682ce2adff49a"
+        },
+        {
+          "point": "OPFS is now universally supported and faster than IndexedDB for blob-style saves, but Safari's implementation is incomplete",
+          "detail": "OPFS (navigator.storage.getDirectory) supported in Chrome 86+, Edge 86+, Firefox 111+, Safari 15.2+ incl. iOS; shares the same origin quota as IndexedDB. Benchmarks: ~90 ms to write a 100 MB ArrayBuffer via createSyncAccessHandle vs ~850 ms via IndexedDB (~3-4x faster). Gotchas: Safari lacks FileSystemFileHandle.createWritable (must use createSyncAccessHandle, which only works in a dedicated Web Worker); Safari private browsing does not support OPFS; reported Safari bugs where OPFS can read but fails to create/write files (Theia issue #16107). For 1-20 MB saves, IndexedDB storing a single compressed Blob per slot is simpler and fast enough; OPFS is a worthy alternative if using SQLite-WASM.",
+          "source": "https://rxdb.info/rx-storage-opfs.html ; https://github.com/eclipse-theia/theia/issues/16107 ; https://developer.mozilla.org/en-US/docs/Web/API/File_System_API/Origin_private_file_system"
+        },
+        {
+          "point": "CompressionStream API (gzip/deflate/deflate-raw) is supported in all browsers — no library needed for save compression",
+          "detail": "Chromium 80+ (2020), Firefox 113+, Safari 16.4+ (March 2023); web.dev declared it universally supported ('Compression Streams are now supported on all browsers', May 2023). JSON game saves typically compress 5-10x with gzip, so a 20 MB save becomes ~2-4 MB — fitting portal limits better and making export files small. Use new CompressionStream('gzip') piped from a Blob stream; decompress with DecompressionStream.",
+          "source": "https://web.dev/blog/compressionstreams ; https://caniuse.com/mdn-api_compressionstream_compressionstream_gzip"
+        },
+        {
+          "point": "Best-practice save architecture for browser games (2026 consensus)",
+          "detail": "(1) IndexedDB as primary store (localStorage only for tiny settings — it's synchronous, ~5 MB string-only cap, and first to be evicted); (2) versioned save format with migration on load; (3) multiple rotating autosave slots + checksums so one corrupted write doesn't kill the career; (4) autosave on visibilitychange/pagehide (not beforeunload, unreliable on mobile) plus periodic interval; (5) call navigator.storage.persist() and surface the result; (6) always offer export-to-file (Blob download of the compressed save) and import — the only eviction-proof backup on iOS Safari; File System Access API showSaveFilePicker is Chromium-only, so use <a download> fallback; (7) handle QuotaExceededError and AbortError on transactions gracefully.",
+          "source": "https://web.dev/articles/storage-for-the-web ; https://bugnet.io/blog/game-save-best-practices-web"
+        },
+        {
+          "point": "Third-party iframe storage is partitioned by top-level site in all major browsers — and additionally quota-restricted",
+          "detail": "Chrome 115+ (Aug 2023, all users): localStorage/IndexedDB/CacheStorage/ServiceWorkers/BroadcastChannel in a third-party iframe are keyed by (top-level site, iframe origin) — your game embedded on crazygames.com and on yandex.ru has three separate, non-communicating storage buckets vs your own domain. Firefox: State Partitioning double-keys localStorage, IndexedDB, sessionStorage, BroadcastChannel, SharedWorker, Blob URLs. Safari: strictly partitions third-party localStorage/sessionStorage by top-level domain; ITP is even harsher on third-party contexts. Safari 17 additionally gives cross-origin frames only 10% of the main frame's quota. Worst case: iOS-in-iframe localStorage behaves like sessionStorage (wiped when browser closes) — a known cause of lost progress on Yandex Games.",
+          "source": "https://developer.chrome.com/docs/privacy-sandbox/storage-partitioning/ ; https://webkit.org/blog/14403/updates-to-storage-policy/ ; https://yandex.ru/dev/games/doc/ru/sdk/sdk-player"
+        },
+        {
+          "point": "CrazyGames SDK provides its own data module because of partitioning — with a hard 1 MB cloud limit",
+          "detail": "CrazyGames data module mirrors the window.localStorage API (getItem/setItem), stores in localStorage for anonymous users, and syncs to the user's CrazyGames account across devices once logged in. Writes are debounced 1 s (up to 30 s). Hard limit: 1 MB — data beyond 1 MB is no longer backed up to the cloud. Their Automatic Progress Save (APS) system can also mirror your existing localStorage keys. Implication: a 1-20 MB save must be compressed and/or reduced to a slim 'career state' representation (<1 MB) for CrazyGames cloud sync.",
+          "source": "https://docs.crazygames.com/sdk/data/ ; https://docs.crazygames.com/other/aps/"
+        },
+        {
+          "point": "Yandex Games SDK save API is a single JSON document per player (~hundreds of KB), plus safeStorage wrapper for guests",
+          "detail": "ysdk player.setData(obj)/getData() stores one JSON document per player per game server-side (documented limit on the order of 200 KB for data; separate numeric 'stats' via setStats up to ~10 KB); every setData call overwrites the whole document, so you must cache-and-merge client-side, and calls are rate-limited. Only works for authorized players; for guests Yandex provides safeStorage (localStorage-compatible interface) specifically because iOS-in-iframe localStorage resets — games uploaded as an archive to Yandex hosting get localStorage automatically wrapped to be reliable. Implication: full 1-20 MB career save cannot live in Yandex cloud saves; store a compact summary/seed + deltas, or keep the full save local via safeStorage/IndexedDB within the partition.",
+          "source": "https://yandex.ru/dev/games/doc/ru/sdk/sdk-player"
+        }
+      ],
+      "design_implications": [
+        "Primary store: IndexedDB holding one compressed Blob per save slot (gzip via CompressionStream); 1-20 MB compresses to ~2-4 MB and is far below every browser quota. OPFS is optional, not required, at this size.",
+        "Call navigator.storage.persist() at startup (and again after PWA install); read persisted() and show a subtle 'saves may be cleared by your browser — export a backup' warning when it returns false (typical on iOS Safari tab, Chrome low-engagement).",
+        "On iOS, treat home-screen installation as the real persistence story: actively prompt Safari users to Add to Home Screen — installed PWAs escape the 7-day ITP wipe and get persist() granted; warn Safari-tab users that 7 days of non-use deletes the save.",
+        "Assume IndexedDB can vanish or corrupt on iOS regardless: keep 3+ rotating autosave slots with checksums/version numbers, and make export-to-file / import-from-file a first-class UI feature (use <a download> — showSaveFilePicker is Chromium-only).",
+        "Autosave triggers: visibilitychange/pagehide + periodic timer; never rely on beforeunload on mobile.",
+        "Versioned save schema with forward migration is mandatory for a 1000-week career game that will be patched over months.",
+        "Portal builds are a separate persistence tier: storage is partitioned per portal (progress will NOT be shared with your GitHub Pages domain), CrazyGames cloud caps at 1 MB and Yandex setData at ~200 KB — design a compact 'essential career state' serialization (or heavy compression + pruned history) that fits those limits, and use safeStorage on Yandex for guest/local persistence instead of raw localStorage.",
+        "localStorage only for settings/flags (<100 KB); never for the career save."
+      ]
+    },
+    "framework-choice": {
+      "summary": "For a solo-dev, table-heavy, offline career-sim PWA on GitHub Pages, raw framework overhead is essentially irrelevant at 20-30 screens — all modern options (Vue 3.5, Svelte 5, Preact+signals) sit within ~1.05-1.3x of vanilla JS on the krausest js-framework-benchmark, while React (even with the now-stable React 19 Compiler) remains the slowest and heaviest of the group (~28.4 ops/s vs Svelte 5's 39.5 in one 2026 roundup; ~40-45 kB gz runtime vs ~5 kB Preact and ~2-4 kB compiled Svelte). The \"React slows as the app grows\" belief is partially fair: the cause (whole-subtree re-render on state change) is architectural, and the React Compiler only auto-fixed 2 of 10 re-render issues in external testing and fails silently on rule violations; Vue/Svelte/Preact-signals use fine-grained dependency tracking, so they don't inherit that failure mode. For deeply nested mutable game state, Vue 3's reactive() proxies and Svelte 5's deeply-reactive $state (usable in plain .svelte.ts modules) are both excellent; Svelte 5 has first-class TypeScript with no preprocessor, Vue has more mature devtools. For the simulation worker: Comlink (1.2 kB gz, v4.4.2, maintained) remains the standard RPC layer; structured-clone of MB-scale state costs on the order of ~10 ms/MB (a 32 MB buffer round-trip measured ~302 ms vs 6.6 ms transferred), so send diffs/snapshots or Transferables, and avoid SharedArrayBuffer since GitHub Pages cannot set COOP/COEP headers (only the hacky coi-serviceworker reload trick enables it). OffscreenCanvas is Baseline-supported everywhere since Safari 16.4 (March 2023), so the match scene can render from a worker. Vite + vite-plugin-pwa (Workbox 7.3, maintained again; Serwist exists as a fork) + gh-pages is a well-trodden path; the main gotchas are setting base:'/repo/' consistently in Vite and the manifest scope, and index.html caching on redeploys. Recommendation for THIS project: given the dev already knows Vue at scale, Vue 3.5 is the pragmatic pick; Svelte 5 is the performance/bundle optimum if he wants to invest a week of learning; vanilla+tiny store is viable but costs hand-rolled reconciliation for 20-30 table screens; Preact only makes sense if he specifically wanted React idioms, which he doesn't.",
+      "findings": [
+        {
+          "point": "js-framework-benchmark 2025/2026 standings: vanilla fastest; Svelte 5 and Vue 3.5/3.6 near-vanilla; React slowest of the candidate set",
+          "detail": "Official krausest results (Chrome 135-150 runs, weighted geometric mean since Chrome 118): vanillajs = 1.0 baseline; Svelte 5 (runes) typically ~1.05-1.1x slowdown; Vue 3.5 ~1.15-1.25x; Preact+signals ~1.2-1.4x; React 19 hooks ~1.5-1.7x. A Jan 2026 roundup quantifies the gap as Svelte 5 39.5 ops/s vs Vue 3.6 31.2 vs React 19 28.4 (39% Svelte-over-React). At create/update-1000-rows scale differences are single-digit milliseconds — invisible in a management UI that updates a few tables per user action.",
+          "source": "https://krausest.github.io/js-framework-benchmark/current.html and https://byteiota.com/react-19-vs-vue-3-6-vs-svelte-5-2026-framework-convergence/"
+        },
+        {
+          "point": "Runtime bundle sizes (gzipped)",
+          "detail": "Preact core ~4.6 kB (+ ~1.6 kB signals); Svelte 5 has no fixed runtime — compiled hello-world ~2-4 kB, grows per component but a full app stays far under React; Vue 3 runtime ~20 kB (Vapor Mode in Vue 3.6 beta drops baseline under 10 kB, stabilization expected mid-2026, script-setup-only, no Suspense); React 19 + react-dom ~40-45 kB. One 2026 comparison lists Svelte 28 kB vs Vue 58 kB vs React 72 kB for equivalent starter apps.",
+          "source": "https://byteiota.com/react-19-vs-vue-3-6-vs-svelte-5-2026-framework-convergence/ and https://www.alphabold.com/preact-vs-react/"
+        },
+        {
+          "point": "\"React slows as the app grows\" is directionally fair even in 2026, and does NOT apply to Vue/Svelte/Preact-signals",
+          "detail": "React's model re-renders whole subtrees on state change; the React Compiler (stable in the React 19.x line) auto-memoizes but fails SILENTLY when components violate Rules of React (prop mutation, external mutable reads), leaving those components unoptimized, and external testing found it fixed only 2 of 10 real re-render problems. It also cannot help with worker/canvas/rAF-driven imperative code — exactly this project's hot paths. Vue (proxy-based dep tracking), Svelte 5 (compiled signals), and Preact signals update only subscribed nodes, so per-component cost does not scale with app size; their scaling risks are different (proxy overhead on huge reactive object graphs in Vue — mitigate with shallowRef; nothing comparable in Svelte).",
+          "source": "https://acusti.ca/blog/2025/12/16/react-compiler-silent-failures-and-how-to-fix-them/ and https://byteiota.com/react-19-vs-vue-3-6-vs-svelte-5-2026-framework-convergence/"
+        },
+        {
+          "point": "Svelte 5 vs Vue 3 for deeply nested game state and TS",
+          "detail": "Svelte 5 $state is deeply reactive (proxied) for objects/arrays and runes work in plain .svelte.ts modules, so a game-state store can live outside components with direct mutation ergonomics; TS support is native (no preprocessor). Migration reports (Loopwerk et al.) say runes code is more verbose (esp. props) but more explicit and easier to reason about. Vue 3 reactive()/ref() gives equivalent deep reactivity with Pinia as the mature store layer and the strongest devtools (state inspection/time-travel); Svelte devtooling still trails Vue/React. Both handle a ~MB nested sim-state snapshot fine if you keep the giant sim state NON-reactive (in the worker) and only make the view-model reactive.",
+          "source": "https://www.loopwerk.io/articles/2025/svelte-5-runes/ and https://svelte.dev/docs/svelte/v5-migration-guide and https://www.scalablepath.com/javascript/svelte-5-review"
+        },
+        {
+          "point": "Comlink is alive and the default worker-RPC choice",
+          "detail": "GoogleChromeLabs/comlink v4.4.2 (Nov 2024), 12.8k stars, ~1.2 kB gzipped, proxy-based RPC over postMessage; lighter alternatives exist (minlink, comctx, kkRPC) but Comlink is the safe default. For a game loop, plain postMessage with typed message objects is also perfectly adequate and dependency-free.",
+          "source": "https://github.com/GoogleChromeLabs/comlink"
+        },
+        {
+          "point": "Structured-clone cost for MB-sized states is real but manageable",
+          "detail": "Chrome measurements: 32 MB ArrayBuffer round-trip via structured clone ~302 ms vs 6.6 ms via Transferable (zero-copy, constant time). Rule of thumb ~5-10 ms per MB per direction for plain objects, worse for many small nested objects than for typed arrays. Design implication: don't clone the full sim state every tick — send compact per-tick UI deltas, batch match-viz frames, and use Transferable ArrayBuffers (or serialize hot numeric data into typed arrays) for large payloads.",
+          "source": "https://developer.chrome.com/blog/transferable-objects-lightning-fast"
+        },
+        {
+          "point": "SharedArrayBuffer on GitHub Pages: effectively no",
+          "detail": "GH Pages cannot set custom headers (COOP/COEP), a long-open GitHub community request. The coi-serviceworker hack (service worker injects the headers, forces a reload on first visit) works but interacts badly with an actual PWA service worker and adds fragility. Verdict: design around postMessage + Transferables, skip SAB.",
+          "source": "https://github.com/orgs/community/discussions/13309 and https://github.com/gzuidhof/coi-serviceworker and https://blog.tomayac.com/2025/03/08/setting-coop-coep-headers-on-static-hosting-like-github-pages/"
+        },
+        {
+          "point": "OffscreenCanvas is Baseline: safe for worker-side match rendering in 2026",
+          "detail": "Supported in Chrome 69+, Edge 79+, Firefox 105+, Safari 16.4+ (macOS and iOS), i.e. cross-browser since March 2023, including 2d/webgl/webgpu contexts in workers. canvas.transferControlToOffscreen() lets the sim worker (or a dedicated render worker) draw the match scene without touching the main thread.",
+          "source": "https://caniuse.com/offscreencanvas and https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas"
+        },
+        {
+          "point": "Vite + vite-plugin-pwa + GitHub Pages is the standard, working stack",
+          "detail": "vite-plugin-pwa (v0.21+) bundles Workbox 7.3; Workbox itself resumed maintenance (GoogleChrome/workbox issue #3149 answered 'Yes'), with Serwist as an actively developed fork if needed. generateSW strategy precaches the whole build for full offline. Gotchas: (1) set base:'/repo-name/' in vite.config and matching scope/start_url in the manifest; (2) index.html caching on redeploys — use registerType:'autoUpdate' or prompt-for-update flow so users get new versions; (3) SW is served from /repo-name/ scope, fine as long as everything lives under the base; (4) hashed assets precache cleanly, but don't cache-bust index.html via HTTP cache (GH Pages sends 10-min max-age, acceptable).",
+          "source": "https://github.com/vite-pwa/vite-plugin-pwa and https://github.com/GoogleChrome/workbox/issues/3149 and https://dev.to/iamfranco/deploy-react-vite-pwa-to-github-pages-35i and https://adueck.github.io/blog/caching-everything-for-totally-offline-pwa-vite-react/"
+        },
+        {
+          "point": "Recommendation matrix for this project",
+          "detail": "Vue 3.5 + Pinia + Vite: BEST FIT — dev has large-project Vue experience, near-vanilla benchmark speed, mature devtools/ecosystem, deep reactivity ideal for nested game state, ~20 kB runtime is irrelevant for a game; risk: none significant (skip Vapor until stable). Svelte 5 (runes): BEST TECH — smallest bundles, fastest updates, runes in .svelte.ts are a great fit for game stores, native TS; cost: ~1 week learning curve, weaker devtools, younger component ecosystem (mostly irrelevant for a custom game UI). Vanilla + tiny store (e.g. nanostores ~300 B, or hand-rolled signals): viable given his background, zero deps, but 20-30 data-bound table screens means hand-writing DOM reconciliation and update plumbing — the one place frameworks genuinely pay for themselves; recommend only if he enjoys that work. Preact + signals: only sensible as 'React API at 5 kB'; since he neither knows nor wants React idioms, it offers no advantage over Vue/Svelte here. React 19: no — slowest/heaviest of the set, compiler doesn't cover worker/canvas paths, and no existing skill investment. Architecture regardless of framework: authoritative sim state lives in the Worker (non-reactive), UI holds a reactive view-model updated by compact messages; OffscreenCanvas for the match scene; Comlink or raw postMessage; no SharedArrayBuffer on GH Pages.",
+          "source": "https://krausest.github.io/js-framework-benchmark/current.html"
+        }
+      ],
+      "design_implications": [
+        "Framework benchmark deltas are noise at this app's scale; choose on DX and existing skill — Vue 3.5 (pragmatic) or Svelte 5 (optimal tech), not React",
+        "Keep the authoritative simulation state inside the Web Worker and non-reactive; send compact per-tick deltas/view-models to the UI instead of cloning MB-sized state (structured clone ~5-10 ms/MB each way; use Transferable ArrayBuffers for big payloads)",
+        "Do not design around SharedArrayBuffer — GitHub Pages cannot set COOP/COEP headers, and the coi-serviceworker hack conflicts with the PWA's own service worker",
+        "Render the match scene via OffscreenCanvas transferred to a worker (Baseline since Safari 16.4) so the sim/render never blocks the table UI",
+        "Use Comlink (1.2 kB) or raw typed postMessage; for a fixed game-loop protocol raw postMessage is arguably simpler",
+        "PWA stack: Vite + vite-plugin-pwa (generateSW, Workbox 7.3) + gh-pages; set base:'/repo/' everywhere (vite config, manifest scope/start_url) and use registerType:'autoUpdate' to avoid stale index.html after redeploys",
+        "If Vue is chosen: use shallowRef/markRaw for large sim snapshots to avoid proxy overhead on huge object graphs; if Svelte 5: put game stores in .svelte.ts modules with $state",
+        "Vanilla+tiny-store is only worth it if the dev wants to own DOM reconciliation for ~25 table screens; that is the exact workload where a reactive framework repays its bundle cost"
+      ]
+    },
+    "browser-sim-precedents": {
+      "summary": "A browser PWA is comfortably sufficient for a 500-2000 player, 20-year tennis career sim: the existence proof is ZenGM (Basketball GM / Football GM / Hockey / Baseball by Jeremy \"dumbmatter\" Scheff), which simulates full multi-team leagues for decades — users run leagues of 3000+ seasons — entirely client-side in TypeScript, with game logic in a SharedWorker (Web Worker fallback), persistence in IndexedDB, and an in-memory cache layer on top so the DB is only touched for historical data. ZenGM's hard-won lessons: raw IndexedDB access was the bottleneck (moving all hot data to an in-memory cache in a worker gave a 10x speedup), per-season normalization of records is mandatory or old saves slow down linearly, and long-lived saves need sequential `if (oldVersion < N)` migration blocks in onupgradeneeded (ZenGM is at schema version ~65+ after a decade). Raw compute is a non-issue: a local Node/V8 benchmark shows Math.random at ~123M draws/sec, a seeded mulberry32 at ~213M/sec, and a full point-by-point best-of-3 tennis match costs ~1.5 microseconds — so simulating ~1000 matches per weekly tick is ~1.5 ms, and even fully point-by-point fast-forwarding 20 years (~1040 ticks) is under 2 seconds of pure sim; persistence and UI, not the simulation math, will dominate. The real risks are environmental: Chrome throttles main-thread timers in background tabs to once per minute after 5 minutes (workers are exempt — the reason ZenGM moved to workers), iOS Safari kills/reloads pages around 300MB-1.5GB memory depending on device, and browsers can evict IndexedDB under storage pressure unless navigator.storage.persist() is granted plus export-to-file backups are offered. Idle games like Melvor Idle prove the \"catch-up simulation\" pattern (recomputing up to 18-24h of progress on load) works in browsers. Design accordingly: worker-side sim loop, in-memory hot state with dirty-flag flush to IndexedDB, per-season record sharding, versioned migrations from day one, and save export/import.",
+      "findings": [
+        {
+          "point": "ZenGM (Basketball GM, Football GM, ZenGM Hockey/Baseball) is the direct existence proof: single-player sports management sims simulating whole leagues for decades, entirely client-side JavaScript/TypeScript (97% TS), React + Bootstrap UI, data in IndexedDB",
+          "detail": "Core game logic runs in a SharedWorker (Web Worker fallback for Safari); UI in each tab talks to the worker via toUI/toWorker message API. Not fully open source (custom license with CLA) but source is public.",
+          "source": "https://github.com/zengm-games/zengm"
+        },
+        {
+          "point": "ZenGM's key performance move: an in-memory cache (src/worker/db/Cache.ts) sits on top of IndexedDB holding all commonly-accessed data; IndexedDB is only hit for rare cases like viewing past-season stats",
+          "detail": "Cache holds active players in memory, retired players stay on disk; dirty-object tracking flushes to disk periodically. Initial cache gave ~50% speedup; the full worker+cache architecture in Basketball GM 4.0 gave ~10x game-simulation speedup — revealing that 'async' IndexedDB calls were actually blocking the main thread.",
+          "source": "https://zengm.com/blog/2017/04/basketball-gm-4-0-technical-details/"
+        },
+        {
+          "point": "The worker split was forced by Chrome's background-tab throttling breaking long simulations; SharedWorker/Web Worker execution is exempt from tab throttling",
+          "detail": "Web Worker: universal, dies with the tab. SharedWorker: persists across tabs, Chrome/Firefox only (no Safari). Service Worker rejected (30s execution timeout). Also: Promise polyfills + IndexedDB transactions misbehaved in Firefox workers, requiring careful avoidance of async/await around DB transactions at the time.",
+          "source": "https://zengm.com/blog/2017/04/basketball-gm-4-0-technical-details/"
+        },
+        {
+          "point": "Schema design lesson: normalize per-season records or old saves degrade",
+          "detail": "Originally each team was one object accumulating all seasons' stats; IndexedDB has no partial read/write of an object, so every write rewrote growing blobs. 2014: new league = 20s per simulated week, 20-season league = 45s/week. After normalizing seasons into separate records (2016): 50-season leagues ~25% faster, gains growing with league age (cost: ~5% slower for new leagues). 2018: denormalization the other way for read paths (killing N+1 queries) cut Hall of Fame view in a 3000-season league from ~5 min to ~2 min — proof users actually run thousands of seasons.",
+          "source": "https://zengm.com/blog/tag/performance/ ; https://zengm.com/blog/2016/04/game-simulation-performance-improvements/"
+        },
+        {
+          "point": "ZenGM save migration approach: monotonically increasing LEAGUE_DATABASE_VERSION with sequential `if (oldVersion < N)` blocks in the IndexedDB upgrade handler",
+          "detail": "Migrations in src/worker/db/connectLeague.ts run incrementally from any old version to current (version 65+ covering rating rescales, mood system, box-score restructuring); a slowUpgrade() flag warns users that large-league migrations 'can take several minutes or more'; oldest migrations kept in raw callback IndexedDB API for old-Firefox compatibility. This pattern (never renumber, only append; each block idempotent per version) is the standard for long-lived browser saves.",
+          "source": "https://github.com/zengm-games/zengm/blob/master/src/worker/db/connectLeague.ts"
+        },
+        {
+          "point": "JS simulation throughput measured locally (Node v26 / V8, Apple Silicon): Math.random ~123M draws/sec; seeded mulberry32 ~213M draws/sec; a full point-by-point best-of-3 tennis match (deuce/tiebreak logic, ~150-250 points, one RNG draw per point) ~1.5 microseconds, i.e. ~677,000 matches/sec single-threaded",
+          "detail": "Implication: a weekly tick with ~1000 point-by-point matches costs ~1.5 ms; 20 simulated years of weekly ticks (~1040 ticks, ~1M matches) is under 2 s of pure compute — even before using cheaper closed-form results for non-player matches. Historical corroboration: 100M Monte Carlo trials in ~2.7 s on 2013-era Chromium. Simulation math will never be the bottleneck; serialization/persistence and UI rendering will be.",
+          "source": "local V8 benchmark (this machine) ; https://nullprogram.com/blog/2013/02/25/"
+        },
+        {
+          "point": "Background-tab behavior: since Chrome 88, main-thread timers in tabs hidden >5 min with chained timers are throttled to once per minute ('intensive throttling'); timers inside Web Workers are NOT throttled",
+          "detail": "So a 'keep simming while I'm in another tab' feature requires the sim loop to live in a worker (exactly ZenGM's architecture). requestAnimationFrame stops entirely in hidden tabs — never drive simulation from rAF.",
+          "source": "https://developer.chrome.com/blog/timer-throttling-in-chrome-88"
+        },
+        {
+          "point": "iOS Safari memory is the main mobile hazard: page memory limits ~300-450MB on typical devices (up to ~1.5-3GB on Pro iPhones), enforced jointly by WebKit's MemoryPressureHandler and iOS Jetsam; exceeding them silently reloads or kills the page",
+          "detail": "Long-running SPA sessions accumulate heap and get killed; SharedWorker historically unsupported on Safari (ZenGM ships Web Worker fallback). Design mitigation: keep only active-tour players hot in memory, page retired players/history to IndexedDB, avoid unbounded arrays of match logs in RAM.",
+          "source": "https://www.catchmetrics.io/blog/deep-dive-ram-internals-webkit"
+        },
+        {
+          "point": "IndexedDB persistence: data survives sessions but browsers may evict an origin's entire storage (IndexedDB + Cache API deleted together) under disk pressure, least-recently-used first",
+          "detail": "Mitigations: navigator.storage.persist() to request durable storage, plus explicit export/import of save files (ZenGM offers league export as JSON; dumbmatter also built json-web-streams for streaming large save JSON, and fakeIndexedDB for testing DB code in Node).",
+          "source": "https://developer.mozilla.org/en-US/docs/Web/API/Storage_API/Storage_quotas_and_eviction_criteria ; https://dumbmatter.com/projects/"
+        },
+        {
+          "point": "Idle/incremental games prove the offline catch-up pattern: Melvor Idle (browser + Steam, HTML/JS) computes up to 18-24h of elapsed progress at load time by replaying the simulation 'nearly instantly'",
+          "detail": "Same pattern fits a tennis sim resuming after days away: fast-forward weekly ticks on load inside the worker with a progress bar. Melvor caps catch-up at 18h precisely to bound that load-time computation.",
+          "source": "https://wiki.melvoridle.com/w/Offline_Progression"
+        },
+        {
+          "point": "Few other true client-side management sims exist at ZenGM's depth — most football-manager open-source clones are desktop (Openfoot Manager: React+Tauri; open-football: Rust engine) — which makes ZenGM the singular but very strong architecture reference",
+          "detail": "Community forks of the older gm-games codebase (kgilbert-cmu/basketball-gm, nicidob/gm-games) are readable open snapshots of the same architecture if license-clean study material is needed.",
+          "source": "https://github.com/topics/football-manager ; https://github.com/kgilbert-cmu/basketball-gm"
+        },
+        {
+          "point": "dumbmatter's supporting open-source libraries map directly onto the problems this project will hit",
+          "detail": "promise-worker-bi (promise-based bidirectional messaging with Web/Shared Workers), fakeIndexedDB (in-memory IndexedDB for unit-testing DB/migration code), json-web-streams (streaming parse of large save files), faces.js (procedural SVG player faces).",
+          "source": "https://dumbmatter.com/projects/"
+        }
+      ],
+      "design_implications": [
+        "Split the app ZenGM-style from day one: simulation engine + persistence in a Web Worker (add SharedWorker where available), thin UI layer communicating via a typed message API; never run the sim loop on the main thread or off requestAnimationFrame.",
+        "Keep hot state (active tour players, current-season data) as plain in-memory objects inside the worker with dirty-flag flushing to IndexedDB; touch IndexedDB only for history. Expect ~10x difference vs naive per-tick DB writes.",
+        "Normalize storage per-season/per-tournament (one record per player-season, per match log), never append into growing blobs — IndexedDB cannot partially read/write an object, and this is exactly what made old ZenGM saves degrade.",
+        "Compute budget is a non-problem: at ~1.5 microseconds per point-by-point match, simulate the user's matches point-by-point and all ~1000 weekly AI matches with a cheaper closed-form or even full point-by-point model; a 20-year fast-forward is seconds of compute, so invest engineering in persistence, memory ceilings, and UI virtualization instead.",
+        "Adopt ZenGM's migration pattern immediately: a single integer schema version, append-only `if (oldVersion < N)` upgrade blocks, tested against fakeIndexedDB; plus JSON save export/import and navigator.storage.persist() as insurance against origin-storage eviction.",
+        "Budget for iOS Safari: keep worker heap well under ~300MB (page history to disk, cap in-memory match logs), ship the Web Worker fallback path, and use a Melvor-style bounded catch-up computation on app resume rather than trying to run in background tabs on mobile."
+      ]
+    }
+  },
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Tech research"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "pwa-storage-reality",
+      "phaseIndex": 1,
+      "phaseTitle": "Tech research",
+      "agentId": "a071e9573a68d49e8",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1784709695576,
+      "queuedAt": 1784709693827,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "Browser storage in 2025-2026 is workable for a 1-20 MB care…",
+      "promptPreview": "You are a research agent. First use ToolSearch with query \"select:WebSearch,WebFetch\" to load web tools, then research thoroughly (multiple searches, fetch primary sources). Return concrete facts with numbers and source URLs, current as of 2026 where possible. English output is fine.\nContext: a single-player offline-first PWA game (hosted on GitHub Pages) will store long-running save games (career…",
+      "lastProgressAt": 1784709872991,
+      "tokens": 40295,
+      "toolCalls": 13,
+      "durationMs": 177415,
+      "resultPreview": "{\"summary\":\"Browser storage in 2025-2026 is workable for a 1-20 MB career-sim save, but only with a layered strategy. Safari's ITP 7-day script-writable-storage eviction still exists in Safari 26 (2026) for sites browsed in Safari: after 7 days of Safari use without user interaction on the origin, IndexedDB/localStorage/Cache/Service Worker registrations are deleted. Installing the PWA to the iOS …"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "framework-choice",
+      "phaseIndex": 1,
+      "phaseTitle": "Tech research",
+      "agentId": "af2276593fb7f0c65",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1784709696314,
+      "queuedAt": 1784709693827,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "For a solo-dev, table-heavy, offline career-sim PWA on GitH…",
+      "promptPreview": "You are a research agent. First use ToolSearch with query \"select:WebSearch,WebFetch\" to load web tools, then research thoroughly (multiple searches, fetch primary sources). Return concrete facts with numbers and source URLs, current as of 2026 where possible. English output is fine.\nContext: a solo developer is building a large single-player career-sim PWA game (SPA): table-heavy management UI (r…",
+      "lastProgressAt": 1784709926837,
+      "tokens": 46552,
+      "toolCalls": 18,
+      "durationMs": 230522,
+      "resultPreview": "{\"summary\":\"For a solo-dev, table-heavy, offline career-sim PWA on GitHub Pages, raw framework overhead is essentially irrelevant at 20-30 screens — all modern options (Vue 3.5, Svelte 5, Preact+signals) sit within ~1.05-1.3x of vanilla JS on the krausest js-framework-benchmark, while React (even with the now-stable React 19 Compiler) remains the slowest and heaviest of the group (~28.4 ops/s vs S…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "browser-sim-precedents",
+      "phaseIndex": 1,
+      "phaseTitle": "Tech research",
+      "agentId": "a7bd5b96ddaf6126f",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1784709695766,
+      "queuedAt": 1784709693827,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "lastToolSummary": "A browser PWA is comfortably sufficient for a 500-2000 play…",
+      "promptPreview": "You are a research agent. First use ToolSearch with query \"select:WebSearch,WebFetch\" to load web tools, then research thoroughly (multiple searches, fetch primary sources). Return concrete facts with numbers and source URLs, current as of 2026 where possible. English output is fine.\nContext: assessing whether a browser PWA can run a deep sports-management simulation (a tennis career sim: world of…",
+      "lastProgressAt": 1784709936069,
+      "tokens": 45294,
+      "toolCalls": 20,
+      "durationMs": 240302,
+      "resultPreview": "{\"summary\":\"A browser PWA is comfortably sufficient for a 500-2000 player, 20-year tennis career sim: the existence proof is ZenGM (Basketball GM / Football GM / Hockey / Baseball by Jeremy \\\"dumbmatter\\\" Scheff), which simulates full multi-team leagues for decades — users run leagues of 3000+ seasons — entirely client-side in TypeScript, with game logic in a SharedWorker (Web Worker fallback), pe…"
+    }
+  ],
+  "totalTokens": 132141,
+  "totalToolCalls": 51
+}

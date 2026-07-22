@@ -1,0 +1,635 @@
+:root {
+  --bg: #0f172a;
+  --panel: #16213c;
+  --line: #263457;
+  --text: #dbe4f5;
+  --muted: #7d8db0;
+  --accent: #d9f24f;
+  --danger: #f2664f;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+#app {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 20px 16px 48px;
+}
+
+h1 {
+  font-size: 20px;
+  margin: 0 0 2px;
+}
+
+h1 .ball-icon {
+  width: 22px;
+  height: 22px;
+  vertical-align: -3px;
+  margin-right: 4px;
+}
+
+.tagline {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+section {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+section h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+td.num {
+  font-variant-numeric: tabular-nums;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+button {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #101d0a;
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  color: #101d0a;
+}
+
+input[type='text'] {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 14px;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin: 8px 0 0;
+}
+
+.pill {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.pill.ok {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.negative {
+  color: var(--danger);
+}
+
+.log {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* --- Match viewer (Package F) ------------------------------------------------ */
+
+.viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.viewer-canvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  display: block;
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.viewer select {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 14px;
+}
+
+.viewer-readout {
+  width: 100%;
+  max-width: 340px;
+}
+
+.score-line {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 8px;
+}
+
+.score-line.final {
+  color: var(--accent);
+}
+
+.viewer-readout > .pill {
+  display: block;
+  width: fit-content;
+  margin: 0 auto 12px;
+}
+
+.prob-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.prob-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.prob-fill {
+  height: 100%;
+  background: var(--accent);
+}
+
+/* --- Package I: app shell, tabs, onboarding ---------------------------------- */
+
+.app-loading {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 48px 16px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 520px;
+  margin: 0 auto 14px;
+}
+
+.app-header .avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--accent);
+}
+
+.kid-name {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.status-pill {
+  font-variant-numeric: tabular-nums;
+}
+
+.app-content {
+  max-width: 520px;
+  margin: 0 auto;
+  padding-bottom: 88px;
+}
+
+.tab-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 40;
+}
+
+/* On wider screens the bar hugs the content column instead of spanning the window. */
+@media (min-width: 560px) {
+  .tab-bar {
+    border: 1px solid var(--line);
+    border-bottom: none;
+    border-radius: 14px 14px 0 0;
+  }
+}
+
+.tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 4px 6px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.tab-btn:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.tab-btn.active {
+  color: var(--accent);
+}
+
+.tab-emoji {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.tab-label {
+  font-size: 10px;
+  letter-spacing: 0.02em;
+}
+
+/* --- Onboarding wizard -------------------------------------------------------- */
+
+.onboarding {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  z-index: 50;
+}
+
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px 0 6px;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--line);
+}
+
+.dot.active {
+  background: var(--accent);
+}
+
+.onboarding-body {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 20px 20px;
+}
+
+.onboarding-step h2 {
+  font-size: 17px;
+  margin: 4px 0 14px;
+}
+
+.onboarding-step p {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+.onboarding-actions {
+  margin-top: 18px;
+}
+
+.onboarding-nav {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 12px 20px 20px;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  text-decoration: underline;
+  font-size: 12.5px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: var(--accent);
+}
+
+.option-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.option-pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 13px;
+  color: var(--muted);
+  background: transparent;
+}
+
+.option-pill.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.country-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.country-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 4px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+}
+
+.country-tile.selected {
+  border-color: var(--accent);
+  background: rgba(217, 242, 79, 0.08);
+}
+
+.flag {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.country-name {
+  text-align: center;
+  line-height: 1.15;
+}
+
+.choice-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.choice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+}
+
+.choice-card.selected {
+  border-color: var(--accent);
+  background: rgba(217, 242, 79, 0.08);
+}
+
+.choice-budget {
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.choice-blurb {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* --- Kid / Money screens ------------------------------------------------------ */
+
+.kid-portrait {
+  display: block;
+  width: 100%;
+  max-width: 200px;
+  margin: 0 auto;
+  border-radius: 12px;
+}
+
+.big-number {
+  font-size: 36px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  margin: 6px 0 4px;
+}
+
+button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+button.danger:hover:not(:disabled) {
+  background: var(--danger);
+  color: #2a0a06;
+}
+
+/* --- Package J: Home hub v2 + Season tab -------------------------------------- */
+
+.player-card-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1.5px solid var(--accent);
+  flex-shrink: 0;
+}
+
+.player-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.card-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 14px 0;
+}
+
+.coach-quote {
+  font-style: italic;
+  font-size: 13.5px;
+  margin: 0;
+}
+
+.condition-blocks {
+  display: flex;
+  gap: 4px;
+}
+
+.condition-block {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.condition-block.filled {
+  background: var(--accent);
+}
+
+.season-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.strip-arrow {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.spend-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.next-week-bar {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 47px;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  z-index: 39;
+}
+
+.next-week-bar button.primary {
+  flex: 1;
+}
+
+@media (min-width: 560px) {
+  .next-week-bar {
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+}
+
+.app-content.with-next-week-bar {
+  padding-bottom: 160px;
+}
