@@ -13,7 +13,7 @@
 //  - `muted` persists to localStorage and can be read/written any time — it never
 //    touches an <audio> element, so the More screen's toggle works before initSfx().
 
-export type SfxKey = 'hit' | 'bounce' | 'point' | 'game' | 'set' | 'win' | 'click'
+export type SfxKey = 'hit' | 'bounce' | 'point' | 'game' | 'set' | 'win' | 'click' | 'grunt' | 'out' | 'gasp'
 
 const VOLUME = 0.5
 const MUTED_STORAGE_KEY = 'tb-muted'

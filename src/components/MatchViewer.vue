@@ -126,11 +126,16 @@ function completeEvent(ev: TimelineEvent): void {
     if (shot) {
       marks.push({ p: shot.bounce, landedAt: ev.t + ev.duration, result: shot.result })
       if (marks.length > MARK_CAP) marks.shift()
-      playSfx('bounce')
+      // A miss (out/net) gets its own cue at flight end; anything that lands plays bounce.
+      playSfx(shot.result === 'out' || shot.result === 'net' ? 'out' : 'bounce')
     }
   } else if (ev.kind === 'point-end') {
     displayedPointIndex.value = ev.pointIndex
-    playSfx('point')
+    const entry = props.match.points[ev.pointIndex]?.entry
+    // Break point converted (receiver wins a point that was a break point) gets gasp;
+    // any other point end (including a break point saved by the server) gets point.
+    const brokeServe = !!entry && entry.breakPoint && entry.winner !== entry.server
+    playSfx(brokeServe ? 'gasp' : 'point')
   } else if (ev.kind === 'game-end') {
     playSfx('game')
   } else if (ev.kind === 'set-end') {
@@ -185,9 +190,13 @@ function render(): void {
   liveServer.value = props.match.points[scenePointIndex]?.entry.server ?? null
   endsSwappedRef.value = endsState.swappedDuring[scenePointIndex] ?? false
 
-  // 'hit' fires once per shot, exactly when its flight event becomes current.
+  // 'hit' fires once per shot, exactly when its flight event becomes current; 'grunt'
+  // layers on top of every 3rd shot (both players grunt — no side distinction).
   if (currentEvent !== lastRenderedEvent) {
-    if (currentEvent?.kind === 'shot') playSfx('hit')
+    if (currentEvent?.kind === 'shot') {
+      playSfx('hit')
+      if (currentEvent.shotIndex !== undefined && currentEvent.shotIndex % 3 === 0) playSfx('grunt')
+    }
     lastRenderedEvent = currentEvent
   }
 
@@ -261,6 +270,7 @@ function resetPlayback(startPlaying: boolean): void {
 function togglePlay(): void {
   if (viewMode.value === 'skip') return
   initSfx()
+  playSfx('click')
   if (finished.value) {
     resetPlayback(true)
     return
@@ -271,6 +281,7 @@ function togglePlay(): void {
 
 function restart(): void {
   initSfx()
+  playSfx('click')
   resetPlayback(true)
 }
 
@@ -378,12 +389,12 @@ function servePct(side: Side): number {
     </div>
 
     <div class="controls">
-      <select v-model="viewMode">
+      <select v-model="viewMode" @change="playSfx('click')">
         <option value="full">Full</option>
         <option value="key">Key points</option>
         <option value="skip">Skip</option>
       </select>
-      <select v-model.number="speed">
+      <select v-model.number="speed" @change="playSfx('click')">
         <option :value="1">1×</option>
         <option :value="2">2×</option>
         <option :value="4">4×</option>
