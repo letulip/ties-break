@@ -69,6 +69,10 @@ export type TimelineEventKind =
   | 'point-end' // flash result, update score overlay
   | 'game-end'
   | 'set-end'
+  // Round 4 item 3: ends-change beat. Inserted right after the qualifying point's own
+  // point-end/game-end/set-end, before the next point-start (never after the match's
+  // final point — see computeEndsSwaps in timeline.ts).
+  | 'change-ends'
   | 'match-end'
 
 export interface TimelineEvent {

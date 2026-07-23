@@ -9,6 +9,7 @@ import { useGameStore } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SlotMeta } from '../../shared/protocol'
 import ConfirmDialog from '../ConfirmDialog.vue'
+import { isMuted, setMuted } from '../../audio/sfx'
 
 const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -157,6 +158,15 @@ function confirmNewCareer() {
   game.$patch({ snapshot: null })
   confirmingNewCareer.value = false
 }
+
+// --- Sound (round 4 item 5) -------------------------------------------------------
+// isMuted()/setMuted() are plain localStorage-backed state (src/audio/sfx.ts) — no
+// audio node is ever created here, so this toggle works before any match has played.
+const soundMuted = ref(isMuted())
+function toggleSound(): void {
+  setMuted(!soundMuted.value)
+  soundMuted.value = !soundMuted.value
+}
 </script>
 
 <template>
@@ -243,6 +253,14 @@ function confirmNewCareer() {
 
     <hr class="card-divider" />
     <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
+  </section>
+
+  <section>
+    <h2>Sound</h2>
+    <div class="career-row">
+      <div>Sound effects</div>
+      <button @click="toggleSound">{{ soundMuted ? 'Off' : 'On' }}</button>
+    </div>
   </section>
 
   <section>
