@@ -275,6 +275,15 @@ input[type='text'] {
   gap: 8px;
   max-width: 520px;
   margin: 0 auto 16px;
+  /* Sticky so week + funds stay reachable while scrolling the feeds. */
+  position: sticky;
+  top: 0;
+  z-index: 41;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 6px 16px -8px rgba(6, 10, 20, 0.7);
 }
 
 .app-header .avatar {
@@ -291,8 +300,23 @@ input[type='text'] {
   font-weight: 600;
 }
 
+/* Week + funds pill: larger and clearly tappable (routes to the Money tab). */
 .status-pill {
   font-variant-numeric: tabular-nums;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.status-pill:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.status-pill.negative {
+  color: var(--danger);
 }
 
 .app-content {
@@ -902,4 +926,91 @@ tr.kid-row td {
   gap: 12px;
   margin-bottom: 12px;
   padding-right: 36px;
+}
+
+/* --- Round 4: update banner, income colour, rank movement, clickable news ----- */
+
+.update-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 520px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 0 0 12px 12px;
+  font-size: 13px;
+  box-shadow: 0 8px 20px -10px rgba(6, 10, 20, 0.8);
+}
+
+.update-banner button.primary {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+/* Positive (income) ledger amounts read green, like the accent-positive .pill.ok. */
+.num.positive {
+  color: var(--accent);
+}
+
+/* Player-card rank + week-over-week movement. */
+.rank-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-move {
+  margin-left: 8px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-move.up {
+  color: var(--accent);
+}
+
+.rank-move.down {
+  color: var(--danger);
+}
+
+.rank-move.flat {
+  color: var(--muted);
+}
+
+/* Clickable match rows in News -> open the replay overlay. */
+.news-match-cell {
+  padding: 0;
+}
+
+.news-match-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font: inherit;
+  color: var(--text);
+}
+
+.news-match-btn:hover:not(:disabled) {
+  color: var(--accent);
+  background: rgba(217, 242, 79, 0.06);
+}
+
+.watch-cue {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--accent);
 }

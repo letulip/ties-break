@@ -91,7 +91,10 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
           <tbody>
             <tr v-for="row in group.rows" :key="row.event.id">
               <td>{{ row.event.text }}</td>
-              <td class="num" :class="{ negative: (row.event.amountCents ?? 0) < 0 }">
+              <td
+                class="num"
+                :class="{ negative: (row.event.amountCents ?? 0) < 0, positive: (row.event.amountCents ?? 0) > 0 }"
+              >
                 {{ formatSigned(row.event.amountCents ?? 0) }}
               </td>
               <td class="num muted-num">{{ formatFunds(row.balanceAfter) }}</td>

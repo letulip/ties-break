@@ -11,6 +11,7 @@ import MatchViewer from '../MatchViewer.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { kidMatchPlayer } from '../../engine/world'
+import { formatShortName } from '../../shared/format'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { AnnotatedMatch } from '../../viz/types'
 import type { UpcomingEvent, WorldEvent, WorldMatch } from '../../shared/protocol'
@@ -178,7 +179,7 @@ function playExhibition(): void {
         <tbody>
           <tr v-for="r in standings" :key="r.playerId" :class="{ 'kid-row': r.isKid }">
             <td class="num">{{ r.rank }}</td>
-            <td>{{ r.name }}</td>
+            <td>{{ formatShortName(r.name) }}</td>
             <td class="num">{{ r.points }}</td>
           </tr>
         </tbody>

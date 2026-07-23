@@ -104,3 +104,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 **Fairness principle (brand-level)**
 - Never rig outcomes against the player. The reference game's most damaging reviews are about pay-to-win rubber-banding ("if you pay, you win"). Transparent, deterministic-ish sim math is a marketing feature.
+
+## 2026-07-23 – Round 4 quick fixes (`fix/quick-round4`)
+
+- **Art format**: all raster art ships as webp (longest side ≤ 512 px, quality 82); SVG stays SVG. PNG sources are kept in git under `art-src/` (not served) and re-encoded via `npm run art`. See docs/specs/round4-quick.md for the full round-4 item list (schema v7, golden saves, parent income, surnames, PWA update prompt, sticky header, Home rank card).

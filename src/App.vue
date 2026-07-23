@@ -4,6 +4,7 @@
 // switch, per spec.
 import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStore } from './stores/game'
+import { needRefresh, applyUpdate } from './pwa'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
@@ -14,7 +15,7 @@ import MoreScreen from './components/screens/MoreScreen.vue'
 const game = useGameStore()
 // Face crops from the stage "norm" portraits (public/avatars, generated via scripts;
 // see docs/decisions.md). Junior stage until the sim grows an age.
-const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.png`
+const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.webp`
 
 onMounted(() => game.init())
 
@@ -86,6 +87,12 @@ function dismissStopToast(): void {
 </script>
 
 <template>
+  <!-- PWA update prompt (registerType 'prompt'): fixed above everything, all app states. -->
+  <div v-if="needRefresh" class="update-banner">
+    <span>New version available</span>
+    <button class="primary" @click="applyUpdate">Update</button>
+  </div>
+
   <div v-if="!game.ready" class="app-loading">Loading…</div>
 
   <OnboardingWizard v-else-if="showOnboarding" />

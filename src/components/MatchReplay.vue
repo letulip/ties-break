@@ -30,7 +30,7 @@ const annotated = computed(() => {
 <template>
   <div class="dialog-overlay" @click.self="$emit('close')">
     <div class="replay-card">
-      <button class="replay-close" title="Close" @click="$emit('close')">✕</button>
+      <button class="replay-close" aria-label="Close replay" title="Close" @click="$emit('close')">✕</button>
       <div class="replay-header">
         <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
       </div>

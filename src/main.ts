@@ -1,9 +1,9 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { registerSW } from 'virtual:pwa-register'
+import { initPwa } from './pwa'
 import App from './App.vue'
 import './style.css'
 
-registerSW({ immediate: true })
+initPwa()
 
 createApp(App).use(createPinia()).mount('#app')

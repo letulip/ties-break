@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 5,
+  "careerId": "legacy-golden-v5",
+  "seed": "golden-v5",
+  "week": 30,
+  "fundsCents": 120000,
+  "profile": {
+    "kidName": "Mirra",
+    "gender": "girl",
+    "country": "RU",
+    "background": "middle",
+    "coachSetup": "parent",
+    "playStyle": "counterpuncher"
+  },
+  "plan": { "train": 60, "rest": 40 },
+  "log": ["W29: recovery week", "W30: hitting for fun, no drills"]
+}

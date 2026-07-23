@@ -5,6 +5,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { DEFAULT_PROFILE, type CoachSetup, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
+import { SURNAMES } from '../engine/season/cohort'
 
 const game = useGameStore()
 
@@ -49,6 +50,10 @@ function randomName(): string {
   return NAMES[Math.floor(Math.random() * NAMES.length)]
 }
 
+function randomSurname(): string {
+  return SURNAMES[Math.floor(Math.random() * SURNAMES.length)]
+}
+
 function flagEmoji(code: string): string {
   if (!code) return ''
   return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
@@ -59,6 +64,7 @@ const step = ref(1)
 
 const profile = reactive<PlayerProfile>({
   kidName: randomName(),
+  kidLastName: randomSurname(),
   gender: 'girl',
   country: '',
   background: 'middle',
@@ -85,6 +91,9 @@ function next(): void {
 function reroll(): void {
   profile.kidName = randomName()
 }
+function rerollLast(): void {
+  profile.kidLastName = randomSurname()
+}
 function pickCountry(code: string): void {
   profile.country = code
 }
@@ -101,7 +110,11 @@ function skipToDefaults(): void {
   game.newCareer('', DEFAULT_PROFILE)
 }
 function start(): void {
-  const finalProfile: PlayerProfile = { ...profile, kidName: profile.kidName.trim() || DEFAULT_PROFILE.kidName }
+  const finalProfile: PlayerProfile = {
+    ...profile,
+    kidName: profile.kidName.trim() || DEFAULT_PROFILE.kidName,
+    kidLastName: profile.kidLastName.trim() || randomSurname(),
+  }
   // No seed input in the wizard – the store generates a readable one (see game.ts newCareer).
   game.newCareer('', finalProfile)
 }
@@ -128,8 +141,12 @@ function start(): void {
       <section v-else-if="step === 2" class="onboarding-step">
         <h2>Name &amp; gender</h2>
         <div class="controls">
-          <input v-model="profile.kidName" type="text" placeholder="Kid's name" />
-          <button title="Reroll name" @click="reroll">🎲</button>
+          <input v-model="profile.kidName" type="text" placeholder="First name" />
+          <button title="Reroll first name" @click="reroll">🎲</button>
+        </div>
+        <div class="controls" style="margin-top: 8px">
+          <input v-model="profile.kidLastName" type="text" placeholder="Last name" />
+          <button title="Reroll last name" @click="rerollLast">🎲</button>
         </div>
         <div class="option-row">
           <span class="option-pill selected">Girl</span>
@@ -208,7 +225,7 @@ function start(): void {
           <tbody>
             <tr>
               <th>Name</th>
-              <td>{{ profile.kidName }} {{ flagEmoji(profile.country) }}</td>
+              <td>{{ profile.kidName }} {{ profile.kidLastName }} {{ flagEmoji(profile.country) }}</td>
             </tr>
             <tr>
               <th>Background</th>
