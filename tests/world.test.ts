@@ -58,6 +58,17 @@ describe('world (phase-3 living season)', () => {
     expect(start!.keep).toBe(true)
   })
 
+  it('records prevKidRank as the kid rank from the START of the resolved week', () => {
+    const world = createWorld('prev-rank')
+    expect(world.prevKidRank).toBeNull()
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 20; i++) {
+      const rankBeforeTick = world.kidRank
+      tickWeek(world, rng)
+      expect(world.prevKidRank).toBe(rankBeforeTick)
+    }
+  })
+
   it('cohort drift is identical week-by-week regardless of entry choices (RNG discipline)', () => {
     const entered = createWorld('discipline')
     const skipped = createWorld('discipline')

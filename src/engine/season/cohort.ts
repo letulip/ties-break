@@ -15,7 +15,9 @@ const FIRST_NAMES = [
   'Pia', 'Reni', 'Sofia', 'Talia',
 ]
 
-const SURNAMES = [
+// Exported: the kid draws a last name from the same pool (onboarding 🎲 + the v7
+// migration default), so juniors and the player share one surname vocabulary.
+export const SURNAMES = [
   'Adler', 'Baros', 'Costa', 'Duval', 'Everts', 'Falk', 'Granados', 'Horvat',
   'Ivanova', 'Janssen', 'Kovac', 'Lindqvist', 'Moreau', 'Novak', 'Oberg', 'Petrov',
   'Quaranta', 'Rossi', 'Sato', 'Toma', 'Udall', 'Varga', 'Weiss', 'Xu',
@@ -23,6 +25,13 @@ const SURNAMES = [
   'Georgiou', 'Haas', 'Ikeda', 'Jelic', 'Kern', 'Larsson', 'Mensah', 'Nagy',
   'Ortiz', 'Pavic', 'Reyes', 'Sanches',
 ]
+
+/** Deterministic surname for a seed – the v7 migration default for `profile.kidLastName`
+ *  (uses a purpose-scoped sub-RNG so it never touches the main career streams). */
+export function pickSurname(seedStr: string): string {
+  const rng = rngFromSeed(seedStr + ':surname')
+  return SURNAMES[pickInt(rng, 0, SURNAMES.length - 1)]
+}
 
 // Tennis nations, weighted by rough player-pool depth. Duplicated entries give a
 // single pickInt draw the intended skew toward the strong tennis countries.

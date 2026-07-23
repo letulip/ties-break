@@ -11,6 +11,7 @@ import {
   type WeekPlan,
   type WorldEvent,
 } from '../shared/protocol'
+import { formatShortName } from '../shared/format'
 import type { MatchPlayer } from './match/types'
 import type { AiPlayer, RankingRow, SeasonEvent } from './season/types'
 import { TIERS, buildSeason } from './season/calendar'
@@ -23,7 +24,7 @@ import { selectEntrants, runTournament } from './season/tournament'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 6
+export const SAVE_SCHEMA_VERSION = 7
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -54,12 +55,23 @@ export interface WorldState {
   nextEventId: number
   /** the kid's dense rank among cohort + kid (cheap-access cache). */
   kidRank: number
+  /** kidRank as it stood at the start of the last resolved week; null before any tick (v7). */
+  prevKidRank: number | null
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
   wealthy: 120_000_00,
   middle: 25_000_00,
   working: 8_000_00,
+}
+
+// Weekly parent contribution to the war chest, by family background. Emitted as an
+// `income` event BEFORE costs each week. No RNG draw, so the per-week draw count is
+// unchanged (the load-time RNG replay depends on it).
+export const PARENT_INCOME_CENTS: Record<FamilyBackground, number> = {
+  wealthy: 800_00,
+  middle: 450_00,
+  working: 200_00,
 }
 
 // Weekly expense draw ranges in cents. A parent-coach saves on coaching fees;
@@ -201,6 +213,13 @@ function stageLabel(round: number, drawSize: number): string {
 }
 
 // --- weekly resolution pieces ------------------------------------------------
+// The parent's weekly contribution to the budget. Runs BEFORE costs and draws no RNG.
+function resolveParentIncome(world: WorldState): void {
+  const income = PARENT_INCOME_CENTS[world.profile.background]
+  world.fundsCents += income
+  addEvent(world, { week: world.week, type: 'income', text: "Parents' contribution", amountCents: income })
+}
+
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const [lo, hi] = EXPENSE_RANGE[world.profile.coachSetup]
   const expense = Math.round(pickInt(rng, lo, hi) * planExpenseFactor(world.plan))
@@ -250,6 +269,10 @@ function runKidTournament(world: WorldState, event: SeasonEvent, ranking: Rankin
     return { id: ai.id, name: ai.name, serve: ai.serve, ret: ai.ret, composure: ai.composure, stamina: ai.stamina }
   }
 
+  // Short names for EVERYONE in news match texts: cohort names are "First Last"; the
+  // kid's full name is kidName + last name (kidMatchPlayer only carries the first name).
+  const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
     const oppId = m.aId === KID_ID ? m.bId : m.aId
@@ -261,7 +284,7 @@ function runKidTournament(world: WorldState, event: SeasonEvent, ranking: Rankin
     addEvent(world, {
       week: world.week,
       type: 'match',
-      text: `${stage}: ${kid.name} ${kidWon ? 'beat' : 'lost to'} ${oppName} ${kidScore ?? ''}`.trim(),
+      text: `${stage}: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(oppName)} ${kidScore ?? ''}`.trim(),
       match: { ...m, eventId: event.id, surface: event.surface, oppName, a: skillOf(m.aId), b: skillOf(m.bId) },
     })
   }
@@ -331,6 +354,7 @@ export function createWorld(
     events: [],
     nextEventId: 0,
     kidRank: 1,
+    prevKidRank: null,
   }
   addEvent(world, {
     week: 0,
@@ -364,6 +388,9 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
 export function tickWeek(world: WorldState, rng: Rng): void {
   world.week += 1
 
+  // 0. parent's weekly contribution BEFORE costs (no RNG draw)
+  resolveParentIncome(world)
+
   // 1. base costs (main stream, plan-independent draw count)
   resolveBaseCosts(world, rng)
 
@@ -390,7 +417,9 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 4. canonical AI tournaments for ALL scheduled events (main stream, fixed pattern)
   for (const e of scheduled) runAiTournament(world, e, aiRanking, rng)
 
-  // 5. recompute the kid's rank + fire rank milestones (only once the kid has points)
+  // 5. recompute the kid's rank + fire rank milestones (only once the kid has points).
+  // Snapshot the previous week's rank first so the UI can show week-over-week movement.
+  world.prevKidRank = world.kidRank
   const full = computeRanking(world.results, world.week, [...ids, KID_ID])
   const kidRow = full.find((r) => r.playerId === KID_ID)
   world.kidRank = kidRow?.rank ?? full.length
@@ -508,7 +537,11 @@ function computeStandings(world: WorldState): StandingRow[] {
   const full = fullRanking(world)
   const meta = new Map<string, { name: string; nation: string }>()
   for (const p of world.cohort) meta.set(p.id, { name: p.name, nation: p.nation })
-  meta.set(KID_ID, { name: world.profile.kidName, nation: world.profile.country })
+  // Full name so the UI can render "V. Last" for the kid like everyone else (formatShortName).
+  meta.set(KID_ID, {
+    name: `${world.profile.kidName} ${world.profile.kidLastName}`.trim(),
+    nation: world.profile.country,
+  })
   const enrich = (r: RankingRow): StandingRow => {
     const m = meta.get(r.playerId) ?? { name: r.playerId, nation: '' }
     return { ...r, name: m.name, nation: m.nation, isKid: r.playerId === KID_ID }
@@ -539,6 +572,7 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     events: world.events.slice(-SNAPSHOT_EVENTS),
     upcoming: upcomingEvents(world),
     kidRank: world.kidRank,
+    prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
     ...(stopReason ? { stopReason } : {}),
   }

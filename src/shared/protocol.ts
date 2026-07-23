@@ -12,6 +12,8 @@ export type PlayStyle = 'aggressive' | 'counterpuncher' | 'serve-first' | 'all-c
 
 export interface PlayerProfile {
   kidName: string
+  /** family name (schema v7); shown in standings/news as "F. Last", full on the Kid screen */
+  kidLastName: string
   /** boys' tour is post-v1 content */
   gender: 'girl'
   /** ISO 3166-1 alpha-2, e.g. 'RU'; flag emoji is derived from it in the UI */
@@ -23,6 +25,7 @@ export interface PlayerProfile {
 
 export const DEFAULT_PROFILE: PlayerProfile = {
   kidName: 'Vera',
+  kidLastName: 'Martin',
   gender: 'girl',
   country: 'US',
   background: 'middle',
@@ -120,6 +123,8 @@ export interface Snapshot {
   upcoming: UpcomingEvent[]
   /** the kid's current dense rank among the cohort + kid */
   kidRank: number
+  /** the kid's rank at the start of the last resolved week; null before any tick (schema v7) */
+  prevKidRank: number | null
   /** top 10 + 5 around the kid, deduped, rank order */
   standings: StandingRow[]
   /** set when an `advance` stopped early */

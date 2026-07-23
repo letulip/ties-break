@@ -1,5 +1,6 @@
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../shared/protocol'
 import { SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
+import { pickSurname } from './season/cohort'
 
 // Save-data migrations. Append-only: never renumber, never delete a block.
 // Each `if (v < N)` block upgrades from N-1 to N and must be idempotent for its version.
@@ -49,6 +50,16 @@ export function migrateSave(raw: unknown): WorldState {
       seedWorldForV6(save as Partial<WorldState> & { seed: string; week: number; log?: string[] })
     }
     v = 6
+  }
+
+  if (v < 7) {
+    // v7 added the kid's family name + the previous-week rank cache. The last name
+    // defaults deterministically from the seed's surname sub-RNG (same pool the cohort draws).
+    if (save.profile && typeof save.profile.kidLastName !== 'string') {
+      save.profile.kidLastName = pickSurname(typeof save.seed === 'string' ? save.seed : '')
+    }
+    if (save.prevKidRank === undefined) save.prevKidRank = null
+    v = 7
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

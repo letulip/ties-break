@@ -8,7 +8,9 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': a new build waits for the user to tap "Update" (App.vue UpdateBanner),
+      // instead of silently reloading mid-session.
+      registerType: 'prompt',
       includeAssets: ['ball.svg', 'pwa-apple-180.png'],
       manifest: {
         name: 'Ties Break: Ace Parent',
@@ -24,7 +26,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
         // Character portraits and other heavy art load on demand — precaching them
         // would balloon the PWA install (public/images is ~37 MB of source PNGs).
         globIgnores: ['**/images/**'],

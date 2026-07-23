@@ -6,8 +6,10 @@ import {
   enterEvent,
   withdrawEvent,
   KID_ID,
+  PARENT_INCOME_CENTS,
   type WorldState,
 } from '../src/engine/world'
+import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
@@ -61,6 +63,40 @@ describe('entry validation', () => {
     world.fundsCents = 10 // 10 cents — below any tier's entry fee
     const event = firstEnterable(world)
     expect(() => enterEvent(world, event.id)).toThrow(/funds/i)
+  })
+})
+
+describe('weekly parent income', () => {
+  it('emits an income event BEFORE costs each week, sized by family background', () => {
+    for (const background of ['wealthy', 'middle', 'working'] as const) {
+      const world = createWorld(`inc-${background}`, { ...DEFAULT_PROFILE, background })
+      const rng = rngFromSeed(world.seed)
+      const fundsBefore = world.fundsCents
+      tickWeek(world, rng)
+      const weekEvents = world.events.filter((e) => e.week === world.week).sort((a, b) => a.id - b.id)
+      // the parent contribution is the very first event of the week (before the base-cost expense)
+      expect(weekEvents[0].type).toBe('income')
+      expect(weekEvents[0].text).toContain("Parents' contribution")
+      expect(weekEvents[0].amountCents).toBe(PARENT_INCOME_CENTS[background])
+      // funds moved by exactly income minus the week's net spend (income is added to funds)
+      const netDelta = world.fundsCents - fundsBefore
+      const totalSigned = weekEvents.reduce((s, e) => s + (e.amountCents ?? 0), 0)
+      expect(netDelta).toBe(totalSigned)
+    }
+  })
+})
+
+describe('news match texts use short names for everyone', () => {
+  it('renders the kid as "V. Last" and the opponent as "X. Last"', () => {
+    const world = createWorld('short-names') // default profile: Vera Martin
+    const rng = rngFromSeed(world.seed)
+    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+    enterEvent(world, event.id)
+    while (world.week < event.week) tickWeek(world, rng)
+    const matchEv = world.events.find((e) => e.type === 'match' && e.week === event.week)!
+    expect(matchEv.text).toContain('V. Martin')
+    // opponent side also short-formed: an initial, a dot, a space, then a surname
+    expect(matchEv.text).toMatch(/[A-Z]\. [A-Z][a-z]+/)
   })
 })
 
