@@ -56,6 +56,9 @@ describe('golden saves corpus', () => {
 
       // v7 prev-rank cache is present and well-typed
       expect(migrated.prevKidRank === null || typeof migrated.prevKidRank === 'number').toBe(true)
+
+      // v8 tournament-reveal field is present (null for any non-mid-reveal save)
+      expect(migrated.pendingTournament === null || typeof migrated.pendingTournament === 'object').toBe(true)
     })
   }
 })

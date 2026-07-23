@@ -3,6 +3,8 @@ import {
   DEFAULT_PROFILE,
   WEEK_PLAN_PRESETS,
   type FamilyBackground,
+  type PendingBracketRound,
+  type PendingView,
   type PlayerProfile,
   type Snapshot,
   type StandingRow,
@@ -10,10 +12,11 @@ import {
   type UpcomingEvent,
   type WeekPlan,
   type WorldEvent,
+  type WorldMatch,
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
 import type { MatchPlayer } from './match/types'
-import type { AiPlayer, RankingRow, SeasonEvent } from './season/types'
+import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TournamentResult } from './season/types'
 import { TIERS, buildSeason } from './season/calendar'
 import { generateCohort, driftCohort } from './season/cohort'
 import { computeRanking, type SeasonResult } from './season/ranking'
@@ -24,13 +27,28 @@ import { selectEntrants, runTournament } from './season/tournament'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 7
+export const SAVE_SCHEMA_VERSION = 8
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
 
 /** The kid's stable player id inside cohort/ranking/tournament space. */
 export const KID_ID = 'kid'
+
+/** A tournament whose outcome is fully computed (byte-identical to the old inline resolution)
+ *  but is being REVEALED to the player one round at a time. The week that spawned it is not
+ *  closed until the run finalizes. Persisted (schema v8) so a mid-reveal save resumes the flow.
+ *  `players` holds the pre-drift skill snapshots of the kid + every opponent she faces, so the
+ *  revealed match events are identical no matter how the cohort drifts after this week ticks. */
+export interface PendingTournament {
+  eventId: string
+  result: TournamentResult
+  /** kid matches already emitted as News events (0..kidMatches.length) */
+  revealedRounds: number
+  /** true once the last kid match is revealed and points/summary/rank are committed */
+  finished: boolean
+  players: Record<string, MatchPlayer>
+}
 
 export interface WorldState {
   schemaVersion: number
@@ -57,6 +75,8 @@ export interface WorldState {
   kidRank: number
   /** kidRank as it stood at the start of the last resolved week; null before any tick (v7). */
   prevKidRank: number | null
+  /** a tournament being revealed round by round; null when no reveal is in progress (v8). */
+  pendingTournament: PendingTournament | null
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -254,57 +274,152 @@ export function flipScore(score: string): string {
     .join(' ')
 }
 
-// Emits per-round match events (with replayable skill snapshots) plus one summary.
-function runKidTournament(world: WorldState, event: SeasonEvent, ranking: RankingRow[]): void {
+function fallbackPlayer(id: string): MatchPlayer {
+  return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50 }
+}
+
+// The kid's matches within a full result, in round order (she plays once per round she survives).
+function kidMatchesOf(result: TournamentResult): MatchRecord[] {
+  return result.matches.filter((m) => m.aId === KID_ID || m.bId === KID_ID)
+}
+
+// One kid match rendered as a News `match` event: identical text/shape to the old inline
+// resolution. Skill snapshots come from the pre-drift `players` map so the record is stable.
+function kidMatchEvent(
+  world: WorldState,
+  event: SeasonEvent,
+  m: MatchRecord,
+  players: Record<string, MatchPlayer>,
+): { text: string; match: WorldMatch } {
+  const tier = TIERS[event.tier]
+  const oppId = m.aId === KID_ID ? m.bId : m.aId
+  const oppName = (players[oppId] ?? fallbackPlayer(oppId)).name
+  const kidWon = m.winnerId === KID_ID
+  const stage = stageLabel(m.round, tier.drawSize)
+  // MatchRecord scores are from bracket side A's perspective; news reads from the kid's.
+  const kidScore = m.score && m.bId === KID_ID ? flipScore(m.score) : m.score
+  // Short names for EVERYONE: cohort names are "First Last"; the kid's full name is
+  // kidName + last name (kidMatchPlayer only carries the first name).
+  const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+  const a = { ...(players[m.aId] ?? fallbackPlayer(m.aId)) }
+  const b = { ...(players[m.bId] ?? fallbackPlayer(m.bId)) }
+  return {
+    text: `${stage}: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(oppName)} ${kidScore ?? ''}`.trim(),
+    match: { ...m, eventId: event.id, surface: event.surface, oppName, a, b },
+  }
+}
+
+// Compute the kid's full shadow tournament: byte-identical to the old inline resolution (same
+// event-scoped RNG, same entrant selection, same bracket). Emits NO events and awards NO points –
+// that is deferred to reveal/finalize. Snapshots the kid + every opponent she faces at PRE-drift
+// skills so the revealed match records are stable no matter how the cohort drifts afterwards.
+function computeShadowTournament(
+  world: WorldState,
+  event: SeasonEvent,
+  ranking: RankingRow[],
+): PendingTournament {
   const kid = kidMatchPlayer(world)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
   const entrants = selectEntrants(event, world.cohort, ranking, kidRng)
   const result = runTournament(event, entrants, kid, world.seed, kidRng)
-  const tier = TIERS[event.tier]
-
-  const skillOf = (id: string): MatchPlayer => {
-    if (id === KID_ID) return { ...kid }
-    const ai = entrants.find((p) => p.id === id)
-    if (!ai) return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50 }
-    return { id: ai.id, name: ai.name, serve: ai.serve, ret: ai.ret, composure: ai.composure, stamina: ai.stamina }
-  }
-
-  // Short names for EVERYONE in news match texts: cohort names are "First Last"; the
-  // kid's full name is kidName + last name (kidMatchPlayer only carries the first name).
-  const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
-
+  const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
     const oppId = m.aId === KID_ID ? m.bId : m.aId
-    const oppName = skillOf(oppId).name
-    const kidWon = m.winnerId === KID_ID
-    const stage = stageLabel(m.round, tier.drawSize)
-    // MatchRecord scores are from bracket side A's perspective; news reads from the kid's.
-    const kidScore = m.score && m.bId === KID_ID ? flipScore(m.score) : m.score
-    addEvent(world, {
-      week: world.week,
-      type: 'match',
-      text: `${stage}: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(oppName)} ${kidScore ?? ''}`.trim(),
-      match: { ...m, eventId: event.id, surface: event.surface, oppName, a: skillOf(m.aId), b: skillOf(m.bId) },
-    })
+    const ai = entrants.find((p) => p.id === oppId)
+    players[oppId] = ai
+      ? { id: ai.id, name: ai.name, serve: ai.serve, ret: ai.ret, composure: ai.composure, stamina: ai.stamina }
+      : fallbackPlayer(oppId)
   }
+  return { eventId: event.id, result, revealedRounds: 0, finished: false, players }
+}
 
-  const kidFinish = result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
+// Step 5 of a resolved week: recompute the kid's rank vs the whole field and fire rank milestones.
+// Shared by a normal tick (inline) and finalizeTournament (deferred for a reveal week).
+function recomputeRankAndMilestones(world: WorldState): void {
+  world.prevKidRank = world.kidRank
+  const full = computeRanking(world.results, world.week, [...cohortIds(world), KID_ID])
+  const kidRow = full.find((r) => r.playerId === KID_ID)
+  world.kidRank = kidRow?.rank ?? full.length
+  if ((kidRow?.points ?? 0) > 0) fireRankMilestones(world)
+}
+
+// Step 6 of a resolved week: prune ledgers/feeds, roll the calendar forward.
+function housekeep(world: WorldState): void {
+  pruneResults(world)
+  pruneEvents(world)
+  ensureSeason(world)
+}
+
+// Commit the kid's run: award points, emit the summary + milestones, recompute rank + housekeep.
+// Runs once, when the last kid match is revealed. Keeps `pendingTournament` alive (finished: true)
+// so the finale stays a real snapshot; `closeTournament` clears it.
+function finalizeTournament(world: WorldState): void {
+  const p = world.pendingTournament
+  if (!p || p.finished) return
+  const event = eventById(world, p.eventId)
+  if (!event) {
+    world.pendingTournament = null
+    return
+  }
+  const tier = TIERS[event.tier]
+  const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   const points = tier.points[kidFinish] ?? 0
   if (points > 0) world.results.push({ playerId: KID_ID, week: world.week, points })
   addEvent(world, {
     week: world.week,
     type: 'tournament',
-    text: `${tier.label} (${event.surface}, W${event.week}): ${kid.name} – ${finishLabel(kidFinish)} (+${points} pts)`,
+    text: `${tier.label} (${event.surface}, W${event.week}): ${world.profile.kidName} – ${finishLabel(kidFinish)} (+${points} pts)`,
   })
-
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
   if (
     event.tier === 'national' &&
-    result.matches.some((m) => (m.aId === KID_ID || m.bId === KID_ID) && m.winnerId === KID_ID)
+    p.result.matches.some((m) => (m.aId === KID_ID || m.bId === KID_ID) && m.winnerId === KID_ID)
   ) {
     fireMilestone(world, 'first-national', '🏆 First win at National level!')
   }
+  recomputeRankAndMilestones(world)
+  housekeep(world)
+  p.finished = true
+}
+
+/** Reveal ONE more kid match: emit its News `match` event, bump `revealedRounds`, and finalize the
+ *  run once the kid's last match (elimination or the final) has been shown. Idempotent when done. */
+export function revealTournamentRound(world: WorldState): void {
+  const p = world.pendingTournament
+  if (!p || p.finished) return
+  const event = eventById(world, p.eventId)
+  if (!event) return
+  const kidMatches = kidMatchesOf(p.result)
+  const m = kidMatches[p.revealedRounds]
+  if (!m) {
+    finalizeTournament(world)
+    return
+  }
+  const ev = kidMatchEvent(world, event, m, p.players)
+  addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+  p.revealedRounds++
+  if (p.revealedRounds >= kidMatches.length) finalizeTournament(world)
+}
+
+/** Reveal every remaining round at once, then finalize – the "Skip tournament" path to the finale. */
+export function skipTournament(world: WorldState): void {
+  const p = world.pendingTournament
+  if (!p || p.finished) return
+  const event = eventById(world, p.eventId)
+  if (!event) return
+  const kidMatches = kidMatchesOf(p.result)
+  while (p.revealedRounds < kidMatches.length) {
+    const ev = kidMatchEvent(world, event, kidMatches[p.revealedRounds], p.players)
+    addEvent(world, { week: world.week, type: 'match', text: ev.text, match: ev.match })
+    p.revealedRounds++
+  }
+  finalizeTournament(world)
+}
+
+/** Dismiss a finished reveal (the finale's "Continue"): clear the pending state so the week closes. */
+export function closeTournament(world: WorldState): void {
+  world.pendingTournament = null
 }
 
 // The canonical AI-only bracket for one event. Runs on the MAIN stream with a fixed
@@ -355,6 +470,7 @@ export function createWorld(
     nextEventId: 0,
     kidRank: 1,
     prevKidRank: null,
+    pendingTournament: null,
   }
   addEvent(world, {
     week: 0,
@@ -377,6 +493,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   const oldLog = Array.isArray(save.log) ? save.log : []
   save.events = oldLog.map((text) => ({ id: save.nextEventId!++, week: save.week, type: 'info' as const, text }))
   save.kidRank = save.cohort.length + 1
+  save.pendingTournament = null
   ensureSeason(save as WorldState)
   recomputeKidRank(save as WorldState)
   delete save.log
@@ -385,6 +502,12 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
 // Full weekly resolution. Draw order on the MAIN stream is fixed per week regardless
 // of player input: base costs → (kid tournament uses an event-scoped RNG, zero main
 // draws) → cohort drift → canonical AI tournaments for every scheduled event.
+//
+// When the kid has an entered event this week the resolution PAUSES: the shadow tournament is
+// computed (byte-identical to the old inline run) and stashed in `world.pendingTournament`, but its
+// match/summary/milestone events, ranking points and the week's rank recompute are all deferred to
+// the reveal/finalize flow (revealTournamentRound / skipTournament). The main-stream work (base
+// costs, drift, AI brackets) still runs, so the per-week draw count is unchanged.
 export function tickWeek(world: WorldState, rng: Rng): void {
   world.week += 1
 
@@ -404,11 +527,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     ids,
   )
 
-  // 2. the kid's entered event this week (event-scoped RNG only)
+  // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
+  //    fully-computed shadow tournament. Nothing kid-specific is emitted/awarded here – the flow does.
   const enteredThisWeek = scheduled.find((e) => world.entries.includes(e.id))
   if (enteredThisWeek) {
     chargeTravel(world, enteredThisWeek)
-    runKidTournament(world, enteredThisWeek, aiRanking)
+    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking)
   }
 
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
@@ -417,18 +541,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 4. canonical AI tournaments for ALL scheduled events (main stream, fixed pattern)
   for (const e of scheduled) runAiTournament(world, e, aiRanking, rng)
 
-  // 5. recompute the kid's rank + fire rank milestones (only once the kid has points).
-  // Snapshot the previous week's rank first so the UI can show week-over-week movement.
-  world.prevKidRank = world.kidRank
-  const full = computeRanking(world.results, world.week, [...ids, KID_ID])
-  const kidRow = full.find((r) => r.playerId === KID_ID)
-  world.kidRank = kidRow?.rank ?? full.length
-  if ((kidRow?.points ?? 0) > 0) fireRankMilestones(world)
-
-  // 6. housekeeping
-  pruneResults(world)
-  pruneEvents(world)
-  ensureSeason(world)
+  // 5-6. rank recompute + housekeeping. For a reveal week these are deferred to finalizeTournament
+  //      (after the kid's points land), so the rank milestones keep their id order behind the kid's
+  //      match/summary events. A normal week resolves them inline as before.
+  if (!world.pendingTournament) {
+    recomputeRankAndMilestones(world)
+    housekeep(world)
+  }
 }
 
 /** Enter the kid in a scheduled event: validates deadline / funds / duplicates, then
@@ -477,9 +596,12 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   })
 }
 
-/** Tick up to `weeks`, stopping early on a tournament week (after resolving it), an
- *  imminent affordable regional+ deadline, or funds crossing below zero. */
+/** Tick up to `weeks`, stopping early when a tournament week spawns a reveal (the week is not
+ *  closed until it resolves), an imminent affordable regional+ deadline appears, or funds cross
+ *  below zero. A reveal already in progress blocks any advance until it is closed. */
 export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopReason | undefined {
+  // A pending reveal must resolve (and close) before time moves on.
+  if (world.pendingTournament) return 'tournament'
   let stopReason: StopReason | undefined
   for (let i = 0; i < weeks; i++) {
     const nextWeek = world.week + 1
@@ -497,17 +619,14 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
         break
       }
     }
-    const stopForTournament = world.entries.some((id) => {
-      const e = eventById(world, id)
-      return !!e && e.week === nextWeek
-    })
     tickWeek(world, rng)
-    if (world.fundsCents < 0) {
-      stopReason = 'funds'
+    // A tournament this week paused the resolution: stop so the flow can take over.
+    if (world.pendingTournament) {
+      stopReason = 'tournament'
       break
     }
-    if (stopForTournament) {
-      stopReason = 'tournament'
+    if (world.fundsCents < 0) {
+      stopReason = 'funds'
       break
     }
   }
@@ -559,7 +678,60 @@ function computeStandings(world: WorldState): StandingRow[] {
   return out
 }
 
+// The live view of an in-progress reveal (drives TournamentFlow). Lean: the revealed path, the
+// current round's opponent + record, and the finale copy. Scorelines belong to the record and are
+// never shown by the UI before a match has been watched/skipped.
+function pendingView(world: WorldState): PendingView | undefined {
+  const p = world.pendingTournament
+  if (!p) return undefined
+  const event = eventById(world, p.eventId)
+  if (!event) return undefined
+  const tier = TIERS[event.tier]
+  const kidMatches = kidMatchesOf(p.result)
+  const revealed = p.revealedRounds
+
+  const bracket: PendingBracketRound[] = kidMatches.slice(0, revealed).map((m) => {
+    const oppId = m.aId === KID_ID ? m.bId : m.aId
+    return {
+      roundLabel: stageLabel(m.round, tier.drawSize),
+      oppName: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
+      kidWon: m.winnerId === KID_ID,
+      score: m.score && m.bId === KID_ID ? flipScore(m.score) : m.score,
+    }
+  })
+
+  // The round being presented: the next unrevealed match, or (finished) the last one played.
+  const currentIdx = revealed < kidMatches.length ? revealed : kidMatches.length - 1
+  const current = kidMatches[currentIdx]
+  const oppId = current.aId === KID_ID ? current.bId : current.aId
+  const ranks = new Map(fullRanking(world).map((r) => [r.playerId, r.rank]))
+  const oppRank = ranks.get(oppId) ?? world.cohort.length + 1
+  const oppNation = world.cohort.find((c) => c.id === oppId)?.nation ?? ''
+  const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
+
+  return {
+    eventId: p.eventId,
+    tier: event.tier,
+    surface: event.surface,
+    roundLabel: stageLabel(current.round, tier.drawSize),
+    opponent: {
+      name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
+      nation: oppNation,
+      rank: oppRank,
+    },
+    // Only expose a record to watch while there is still an unrevealed round.
+    kidMatch: revealed < kidMatches.length ? kidMatchEvent(world, event, current, p.players).match : undefined,
+    bracket,
+    finished: p.finished,
+    kidChampion: kidFinish === 0,
+    tierLabel: tier.label,
+    points: tier.points[kidFinish] ?? 0,
+    finishLabel: finishLabel(kidFinish),
+  }
+}
+
 export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot {
+  const pending = pendingView(world)
   return {
     schemaVersion: world.schemaVersion,
     careerId: world.careerId,
@@ -575,5 +747,6 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
     ...(stopReason ? { stopReason } : {}),
+    ...(pending ? { pending } : {}),
   }
 }

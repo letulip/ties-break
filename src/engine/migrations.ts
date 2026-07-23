@@ -62,6 +62,13 @@ export function migrateSave(raw: unknown): WorldState {
     v = 7
   }
 
+  if (v < 8) {
+    // v8 added the tournament-reveal flow: a week with the kid's event pauses into
+    // world.pendingTournament instead of resolving inline. Old saves were never mid-reveal.
+    if (save.pendingTournament === undefined) save.pendingTournament = null
+    v = 8
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

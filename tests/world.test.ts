@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createWorld, tickWeek, enterEvent } from '../src/engine/world'
+import { createWorld, tickWeek, enterEvent, skipTournament, closeTournament } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 
 const EVENTS_CAP = 400 // mirrors world.ts
@@ -84,6 +84,12 @@ describe('world (phase-3 living season)', () => {
 
     for (let w = 0; w < 60; w++) {
       tickWeek(entered, rngA)
+      // A reveal week pauses; finalize + close it so time keeps moving. The main-stream draws
+      // (drift + AI) already ran during the tick, so this never touches the cohort or the rng.
+      if (entered.pendingTournament) {
+        skipTournament(entered)
+        closeTournament(entered)
+      }
       tickWeek(skipped, rngB)
       // Entering / skipping must never perturb the main weekly stream, so cohort
       // drift lands identically in both worlds every single week.

@@ -4,6 +4,9 @@ import {
   advanceWeeks,
   enterEvent,
   withdrawEvent,
+  revealTournamentRound,
+  skipTournament,
+  closeTournament,
   toSnapshot,
   type WorldState,
 } from '../engine/world'
@@ -80,6 +83,24 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'withdrawEvent': {
       if (!world) throw new Error('No active career')
       withdrawEvent(world, msg.eventId)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'tournamentReveal': {
+      if (!world) throw new Error('No active career')
+      revealTournamentRound(world)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'tournamentSkip': {
+      if (!world) throw new Error('No active career')
+      skipTournament(world)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'tournamentClose': {
+      if (!world) throw new Error('No active career')
+      closeTournament(world)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }

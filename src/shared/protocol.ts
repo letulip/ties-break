@@ -87,6 +87,41 @@ export interface WorldEvent {
 
 export type StopReason = 'tournament' | 'deadline' | 'funds'
 
+// --- Tournament experience (feat/tournament-experience) -----------------------
+// One revealed round on the kid's path through the bracket (the between-rounds strip).
+export interface PendingBracketRound {
+  roundLabel: string
+  /** short opponent name */
+  oppName: string
+  kidWon: boolean
+  /** kid's-perspective scoreline, e.g. "6-4 3-6 7-6" */
+  score?: string
+}
+
+/** The live view of an in-progress tournament reveal. Present on the snapshot only while
+ *  `world.pendingTournament` is set; drives the full-screen TournamentFlow overlay. Lean:
+ *  enough for the pre-match card, the post-match card, the bracket strip and the finale. */
+export interface PendingView {
+  eventId: string
+  tier: TierId
+  surface: Surface
+  /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
+  roundLabel: string
+  /** the kid's opponent this round: short name, ISO-2 nation, current standings rank */
+  opponent: { name: string; nation: string; rank: number }
+  /** the current round's record – MatchReplay source + post-match stats */
+  kidMatch?: WorldMatch
+  /** revealed rounds so far, the kid's path (oldest first) */
+  bracket: PendingBracketRound[]
+  /** true once the last kid match has been revealed and the run finalized */
+  finished: boolean
+  kidChampion: boolean
+  /** finale card copy */
+  tierLabel: string
+  points: number
+  finishLabel: string
+}
+
 /** A scheduled event surfaced to the UI, with the kid's entry state + tier lookups. */
 export interface UpcomingEvent {
   id: string
@@ -129,6 +164,8 @@ export interface Snapshot {
   standings: StandingRow[]
   /** set when an `advance` stopped early */
   stopReason?: StopReason
+  /** present while a tournament reveal is in progress (drives TournamentFlow) */
+  pending?: PendingView
 }
 
 export interface SlotMeta {
@@ -158,6 +195,9 @@ export type ToWorker =
   | { id: number; type: 'advance'; weeks: 1 | 4 }
   | { id: number; type: 'enterEvent'; eventId: string }
   | { id: number; type: 'withdrawEvent'; eventId: string }
+  | { id: number; type: 'tournamentReveal' }
+  | { id: number; type: 'tournamentSkip' }
+  | { id: number; type: 'tournamentClose' }
   | { id: number; type: 'setPlan'; plan: WeekPlan }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }

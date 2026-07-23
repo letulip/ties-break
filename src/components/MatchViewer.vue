@@ -16,6 +16,9 @@ const props = defineProps<{
   playerB: MatchPlayer
   surface: Surface
 }>()
+// Emitted once when playback reaches the end (used by TournamentFlow to auto-advance to the
+// post-match card; other callers can ignore it).
+const emit = defineEmits<{ finish: [] }>()
 
 // --- canvas: fixed internal resolution, scaled by devicePixelRatio -----------
 // Landscape court (Package H): wide 2:1 canvas.
@@ -213,6 +216,10 @@ watch(
   () => props.match,
   () => resetPlayback(true),
 )
+// Surface the end of playback to the parent (fires once per completed run).
+watch(finished, (isFinished) => {
+  if (isFinished) emit('finish')
+})
 
 // --- readout: score / serve / win-probability / stats -------------------------
 function playerName(side: Side): string {
