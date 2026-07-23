@@ -6,7 +6,7 @@
 // nothing at module load time. `CanvasRenderingContext2D` is a type-only reference
 // (DOM lib); no document/window is touched here, so it is safe under a node test env.
 
-import type { Surface } from '../engine/match/types'
+import type { Side, Surface } from '../engine/match/types'
 import type { AnnotatedMatch, CourtPoint, ShotResult } from './types'
 import { COURT } from './types'
 import { courtToCanvas, courtScale, type Viewport } from './geometry'
@@ -24,6 +24,27 @@ export interface SceneState {
    * here (optional, defaults to 'hard'). See the package report for this spec gap.
    */
   surface?: Surface
+  /**
+   * Round 4 item 2: current eased player positions, in the FIXED physics frame (index =
+   * match Side; side 0 always defends y<0, side 1 always defends y>0, regardless of any
+   * ends swap – see `endsSwapped`). Owned and lerped frame-by-frame by the Vue layer
+   * (MatchViewer); courtRenderer only draws whatever it's handed, staying stateless.
+   * Defaults to both baseline centers when omitted.
+   */
+  players?: [CourtPoint, CourtPoint]
+  /** Round 4 item 1: which match Side is serving the current point, for the accent
+   *  ring; null before the match has started. */
+  serverSide?: Side | null
+  /** Playback clock (timeline seconds) – drives the server ring's subtle pulse phase. */
+  time?: number
+  /**
+   * Round 4 item 3: true while ends are swapped from the initial layout. A tennis court
+   * is symmetric under a (x, y) -> (-x, -y) rotation, so only the DYNAMIC elements
+   * (marks, flight, players) need mirroring when true – lines/background are untouched.
+   */
+  endsSwapped?: boolean
+  /** Round 4 item 3: true during the ~0.9s change-ends beat – draws a small overlay. */
+  changingEnds?: boolean
 }
 
 // --- palette (hardcoded from src/style.css, surfaces darkened toward --bg) --------
@@ -45,6 +66,25 @@ const BALL_RADIUS = 4
 const MARK_RADIUS = 5
 const PLAYER_RADIUS = 6
 
+/** Round 4 item 2: baseline-center "home" position for each side, in the fixed physics frame. */
+const RECOVER_CENTER: readonly [CourtPoint, CourtPoint] = [
+  { x: 0, y: -COURT.halfLength },
+  { x: 0, y: COURT.halfLength },
+]
+
+// --- ends-swap mirroring (round 4 item 3) -----------------------------------
+// A tennis court is symmetric under a (x, y) -> (-x, -y) point reflection, so only the
+// DYNAMIC elements (marks, flight, players) need this transform when ends are swapped;
+// lines/background are drawn once, unmirrored, and look identical either way.
+
+function mirrorPoint(p: CourtPoint, swapped: boolean): CourtPoint {
+  return swapped ? { x: -p.x, y: -p.y } : p
+}
+
+function toCanvas(p: CourtPoint, vp: Viewport, swapped: boolean): { x: number; y: number } {
+  return courtToCanvas(mirrorPoint(p, swapped), vp)
+}
+
 // ---------------------------------------------------------------------------
 
 export function drawScene(ctx: CanvasRenderingContext2D, vp: Viewport, scene: SceneState): void {
@@ -54,6 +94,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, vp: Viewport, scene: Sc
   drawMarks(ctx, vp, scene)
   drawFlight(ctx, vp, scene)
   drawPlayers(ctx, vp, scene)
+  if (scene.changingEnds) drawChangingEndsOverlay(ctx, vp)
 }
 
 // --- background + court fill ------------------------------------------------
@@ -120,10 +161,11 @@ function drawLines(ctx: CanvasRenderingContext2D, vp: Viewport): void {
 // --- bounce marks -----------------------------------------------------------
 
 function drawMarks(ctx: CanvasRenderingContext2D, vp: Viewport, scene: SceneState): void {
+  const swapped = scene.endsSwapped ?? false
   for (const mark of scene.marks) {
     const alpha = Math.max(0, Math.min(1, 1 - mark.age))
     if (alpha <= 0) continue
-    const c = courtToCanvas(mark.p, vp)
+    const c = toCanvas(mark.p, vp, swapped)
     ctx.globalAlpha = alpha
     if (mark.result === 'winner') {
       ctx.fillStyle = ACCENT
@@ -180,8 +222,9 @@ function drawFlight(ctx: CanvasRenderingContext2D, vp: Viewport, scene: SceneSta
   const shots = point.rally.shots
   if (flight.shotIndex < 0 || flight.shotIndex >= shots.length) return
 
-  const startC = courtToCanvas(flightStart(scene, flight.shotIndex), vp)
-  const endC = courtToCanvas(shots[flight.shotIndex].bounce, vp)
+  const swapped = scene.endsSwapped ?? false
+  const startC = toCanvas(flightStart(scene, flight.shotIndex), vp, swapped)
+  const endC = toCanvas(shots[flight.shotIndex].bounce, vp, swapped)
 
   // Modest control-point lift (arc height ~ proportional to distance, capped).
   const dist = Math.hypot(endC.x - startC.x, endC.y - startC.y)
@@ -223,38 +266,77 @@ function drawFlight(ctx: CanvasRenderingContext2D, vp: Viewport, scene: SceneSta
   ctx.fill()
 }
 
-// --- player dots ------------------------------------------------------------
-
-/** Current ball x (court width axis, → canvas Y in landscape) to ease the players toward. */
-function ballCourtX(scene: SceneState): number {
-  if (scene.flight) {
-    const point = scene.match.points[scene.pointIndex]
-    const shots = point?.rally.shots
-    if (shots && flightHasShot(shots.length, scene.flight.shotIndex)) {
-      return shots[scene.flight.shotIndex].bounce.x
-    }
-  }
-  const lastMark = scene.marks[scene.marks.length - 1]
-  return lastMark ? lastMark.p.x : 0
-}
-
-function flightHasShot(len: number, shotIndex: number): boolean {
-  return shotIndex >= 0 && shotIndex < len
-}
+// --- player dots (round 4 items 1 + 2) --------------------------------------
+// Positions arrive pre-eased (scene.players, fixed physics frame – see SceneState) and
+// are only mirrored here for ends-swap, same as marks/flight above. Falls back to both
+// baseline centers if the caller hasn't supplied any (e.g. a bare/legacy scene).
 
 function drawPlayers(ctx: CanvasRenderingContext2D, vp: Viewport, scene: SceneState): void {
-  const targetX = ballCourtX(scene)
-  // Ease the width offset a fraction toward the ball (canvas Y in landscape),
-  // clamped to the singles court; dots sit at each baseline (left/right).
-  const ease = 0.3
-  const clamp = (x: number) => Math.max(-COURT.halfWidth, Math.min(COURT.halfWidth, x))
-  const px = clamp(targetX * ease)
+  const swapped = scene.endsSwapped ?? false
+  const players = scene.players ?? RECOVER_CENTER
+  const serverSide = scene.serverSide ?? null
 
   ctx.fillStyle = PLAYER
-  for (const y of [-COURT.halfLength, COURT.halfLength]) {
-    const c = courtToCanvas({ x: px, y }, vp)
+  for (let side = 0; side < 2; side++) {
+    const p = players[side] ?? RECOVER_CENTER[side]
+    const c = toCanvas(p, vp, swapped)
     ctx.beginPath()
     ctx.arc(c.x, c.y, PLAYER_RADIUS, 0, Math.PI * 2)
     ctx.fill()
   }
+
+  if (serverSide === 0 || serverSide === 1) {
+    const p = players[serverSide] ?? RECOVER_CENTER[serverSide]
+    const c = toCanvas(p, vp, swapped)
+    drawServerRing(ctx, c, scene.time ?? 0)
+  }
+}
+
+/** Subtle breathing ring around the serving side's dot – not a blink, a slow pulse. */
+function drawServerRing(ctx: CanvasRenderingContext2D, c: { x: number; y: number }, time: number): void {
+  const pulse = (Math.sin(time * 4.2) + 1) / 2 // 0..1
+  ctx.save()
+  ctx.globalAlpha = 0.35 + pulse * 0.3
+  ctx.strokeStyle = ACCENT
+  ctx.lineWidth = LINE_WIDTH
+  ctx.beginPath()
+  ctx.arc(c.x, c.y, PLAYER_RADIUS + 3 + pulse * 2, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.restore()
+}
+
+// --- "Changing ends" overlay (round 4 item 3) -------------------------------
+
+function roundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {
+  ctx.beginPath()
+  ctx.moveTo(x + r, y)
+  ctx.arcTo(x + w, y, x + w, y + h, r)
+  ctx.arcTo(x + w, y + h, x, y + h, r)
+  ctx.arcTo(x, y + h, x, y, r)
+  ctx.arcTo(x, y, x + w, y, r)
+  ctx.closePath()
+}
+
+function drawChangingEndsOverlay(ctx: CanvasRenderingContext2D, vp: Viewport): void {
+  const text = 'Changing ends'
+  ctx.save()
+  ctx.font = '600 13px system-ui, -apple-system, sans-serif'
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  const paddingX = 12
+  const paddingY = 6
+  const textHeight = 13
+  const w = ctx.measureText(text).width + paddingX * 2
+  const h = textHeight + paddingY * 2
+  const cx = vp.width / 2
+  const cy = vp.height / 2
+  roundedRectPath(ctx, cx - w / 2, cy - h / 2, w, h, h / 2)
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.82)'
+  ctx.fill()
+  ctx.strokeStyle = ACCENT
+  ctx.lineWidth = 1
+  ctx.stroke()
+  ctx.fillStyle = ACCENT
+  ctx.fillText(text, cx, cy + 0.5)
+  ctx.restore()
 }

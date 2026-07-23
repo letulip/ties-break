@@ -207,6 +207,21 @@ input[type='text'] {
   max-width: 340px;
 }
 
+/* --- Round 4 item 1: server-highlight labels row, under the canvas ------------ */
+
+.ends-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.ends-labels .serving {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 .score-line {
   font-size: 18px;
   font-weight: 600;
@@ -875,6 +890,7 @@ tr.kid-row td {
 /* --- Match replay overlay (reuses .dialog-overlay for the backdrop) ----------- */
 
 .replay-card {
+  position: relative;
   width: 100%;
   max-width: 400px;
   background: var(--panel);
@@ -883,26 +899,33 @@ tr.kid-row td {
   padding: 16px;
 }
 
+/* Round 4 item 4: a clearly-visible, pinned close affordance (replaces the old small
+   text link) so it's unmistakable regardless of what else is in the header row. */
+.replay-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  font-size: 16px;
+  line-height: 1;
+  z-index: 5;
+}
+
 .replay-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
-}
-
-/* Clearly visible close control on the replay overlay (Home + Season reuse it). */
-.replay-close {
-  flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border-radius: 50%;
-  font-size: 16px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding-right: 36px;
 }
 
 /* --- Round 4: update banner, income colour, rank movement, clickable news ----- */

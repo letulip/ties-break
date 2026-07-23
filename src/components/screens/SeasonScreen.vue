@@ -200,6 +200,7 @@ function playExhibition(): void {
         :player-a="exhibitionPlayerA"
         :player-b="exhibitionPlayerB"
         :surface="exhibitionSurface"
+        mode="live"
       />
     </section>
 
