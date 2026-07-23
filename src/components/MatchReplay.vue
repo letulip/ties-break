@@ -30,11 +30,11 @@ const annotated = computed(() => {
 <template>
   <div class="dialog-overlay" @click.self="$emit('close')">
     <div class="replay-card">
+      <button class="replay-close" aria-label="Close replay" title="Close" @click="$emit('close')">✕</button>
       <div class="replay-header">
         <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
-        <button class="replay-close" aria-label="Close replay" title="Close" @click="$emit('close')">✕</button>
       </div>
-      <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" />
+      <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" mode="replay" />
     </div>
   </div>
 </template>

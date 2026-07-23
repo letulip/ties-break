@@ -5,17 +5,25 @@
 // canvas SceneState + the surrounding score/probability/stats readout from it.
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import type { AnnotatedMatch, CourtPoint, ShotResult, Timeline, TimelineEvent, ViewMode } from '../viz/types'
+import { COURT } from '../viz/types'
 import type { MatchPlayer, Side, Surface } from '../engine/match/types'
-import { buildTimeline } from '../viz/timeline'
+import { buildTimeline, computeEndsSwaps, type EndsState } from '../viz/timeline'
 import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
+import { initSfx, playSfx } from '../audio/sfx'
 
-const props = defineProps<{
-  match: AnnotatedMatch
-  playerA: MatchPlayer
-  playerB: MatchPlayer
-  surface: Surface
-}>()
+const props = withDefaults(
+  defineProps<{
+    match: AnnotatedMatch
+    playerA: MatchPlayer
+    playerB: MatchPlayer
+    surface: Surface
+    /** Round 4 item 4: 'replay' swaps Play/Pause + Restart for a single "Watch again"
+     *  button. Defaults to 'live' so existing call sites need no change. */
+    mode?: 'live' | 'replay'
+  }>(),
+  { mode: 'live' },
+)
 
 // --- canvas: fixed internal resolution, scaled by devicePixelRatio -----------
 // Landscape court (Package H): wide 2:1 canvas.
@@ -25,7 +33,10 @@ const canvasRef = ref<HTMLCanvasElement | null>(null)
 let ctx: CanvasRenderingContext2D | null = null
 
 // --- playback controls (reactive; drive the template) -------------------------
-const mode = ref<ViewMode>('key')
+// Named viewMode (not "mode") to avoid colliding with the new `mode` prop
+// ('live'/'replay', round 4 item 4) – Vue's SFC compiler exposes declared prop names as
+// bare template identifiers, so reusing "mode" for both would be ambiguous.
+const viewMode = ref<ViewMode>('key')
 const speed = ref<1 | 2 | 4>(2)
 const playing = ref(false)
 const finished = ref(false)
@@ -45,13 +56,60 @@ interface MarkEntry {
   result: ShotResult
 }
 
-let timeline: Timeline = buildTimeline(props.match, mode.value)
+let timeline: Timeline = buildTimeline(props.match, viewMode.value)
 let clock = 0
 let cursor = 0
 let marks: MarkEntry[] = []
 let currentEvent: TimelineEvent | null = timeline.events[0] ?? null
 let rafId: number | null = null
 let lastTs: number | null = null
+
+// --- round 4 item 3: real side changes (ends-swap state) ---------------------
+// Precomputed once per timeline rebuild; swappedDuring[i] is looked up per frame from
+// the point currently on screen (same pattern as liveServer below).
+let endsState: EndsState = computeEndsSwaps(props.match.points)
+/** Reactive mirror of the ends-swap state for the current point – feeds both the
+ *  canvas scene (mirrors marks/flight/players) and the `.ends-labels` row's left/right
+ *  assignment. */
+const endsSwappedRef = ref(false)
+
+// --- round 4 item 2: players run onto the court -------------------------------
+// Eased position state (fixed physics frame – index = match Side; side 0 always
+// defends y<0, side 1 always defends y>0). Lives here (not in courtRenderer, which
+// stays a stateless drawing layer) alongside the other per-frame mutable state above.
+const PLAYER_HOME: readonly [CourtPoint, CourtPoint] = [
+  { x: 0, y: -COURT.halfLength },
+  { x: 0, y: COURT.halfLength },
+]
+const PLAYER_EASE_RATE = 6 // 1/s; ~90% converged in ~0.35s of timeline time
+let playerPos: [CourtPoint, CourtPoint] = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
+
+/** The shot currently in flight, if any: who's hitting it and where it lands. */
+function currentShotContext(): { hitter: Side; target: CourtPoint } | null {
+  if (!currentEvent || currentEvent.kind !== 'shot' || currentEvent.shotIndex === undefined) return null
+  const shot = props.match.points[currentEvent.pointIndex]?.rally.shots[currentEvent.shotIndex]
+  if (!shot) return null
+  return { hitter: shot.by, target: shot.bounce }
+}
+
+/** Per frame: the shot's hitter recovers toward their own baseline center; the other
+ *  side (who will hit next) chases the incoming ball's landing spot. Between shots
+ *  both sides recover toward center. Plain per-frame lerp – smooth, no physics. */
+function updatePlayers(dt: number): void {
+  const shotCtx = currentShotContext()
+  const factor = Math.min(1, dt * PLAYER_EASE_RATE)
+  for (const side of [0, 1] as const) {
+    const target = shotCtx && shotCtx.hitter !== side ? shotCtx.target : PLAYER_HOME[side]
+    playerPos[side] = {
+      x: playerPos[side].x + (target.x - playerPos[side].x) * factor,
+      y: playerPos[side].y + (target.y - playerPos[side].y) * factor,
+    }
+  }
+}
+
+/** Tracks the last event `render()` reacted to, so the 'hit' sfx fires exactly once per
+ *  shot (on the frame its flight event becomes current), not once per frame. */
+let lastRenderedEvent: TimelineEvent | null = null
 
 function pauseInternal(): void {
   playing.value = false
@@ -68,9 +126,22 @@ function completeEvent(ev: TimelineEvent): void {
     if (shot) {
       marks.push({ p: shot.bounce, landedAt: ev.t + ev.duration, result: shot.result })
       if (marks.length > MARK_CAP) marks.shift()
+      // A miss (out/net) gets its own cue at flight end; anything that lands plays bounce.
+      playSfx(shot.result === 'out' || shot.result === 'net' ? 'out' : 'bounce')
     }
   } else if (ev.kind === 'point-end') {
     displayedPointIndex.value = ev.pointIndex
+    const entry = props.match.points[ev.pointIndex]?.entry
+    // Break point converted (receiver wins a point that was a break point) gets gasp;
+    // any other point end (including a break point saved by the server) gets point.
+    const brokeServe = !!entry && entry.breakPoint && entry.winner !== entry.server
+    playSfx(brokeServe ? 'gasp' : 'point')
+  } else if (ev.kind === 'game-end') {
+    playSfx('game')
+  } else if (ev.kind === 'set-end') {
+    playSfx('set')
+  } else if (ev.kind === 'match-end') {
+    playSfx('win')
   }
 }
 
@@ -117,12 +188,29 @@ function render(): void {
   const vp: Viewport = { width: CSS_W, height: CSS_H }
   const scenePointIndex = currentEvent ? currentEvent.pointIndex : 0
   liveServer.value = props.match.points[scenePointIndex]?.entry.server ?? null
+  endsSwappedRef.value = endsState.swappedDuring[scenePointIndex] ?? false
+
+  // 'hit' fires once per shot, exactly when its flight event becomes current; 'grunt'
+  // layers on top of every 3rd shot (both players grunt – no side distinction).
+  if (currentEvent !== lastRenderedEvent) {
+    if (currentEvent?.kind === 'shot') {
+      playSfx('hit')
+      if (currentEvent.shotIndex !== undefined && currentEvent.shotIndex % 3 === 0) playSfx('grunt')
+    }
+    lastRenderedEvent = currentEvent
+  }
+
   const scene: SceneState = {
     match: props.match,
     pointIndex: scenePointIndex,
     flight: currentFlight(),
     marks: visibleMarks(),
     surface: props.surface,
+    players: playerPos,
+    serverSide: liveServer.value,
+    time: clock,
+    endsSwapped: endsSwappedRef.value,
+    changingEnds: currentEvent?.kind === 'change-ends',
   }
   drawScene(ctx, vp, scene)
 }
@@ -131,7 +219,9 @@ function frame(ts: number): void {
   if (lastTs === null) lastTs = ts
   const dtReal = (ts - lastTs) / 1000
   lastTs = ts
-  advance(dtReal * speed.value)
+  const dt = dtReal * speed.value
+  advance(dt)
+  updatePlayers(dt)
   render()
   if (playing.value && !finished.value) {
     rafId = requestAnimationFrame(frame)
@@ -139,7 +229,7 @@ function frame(ts: number): void {
 }
 
 function startClock(): void {
-  if (finished.value || mode.value === 'skip') return
+  if (finished.value || viewMode.value === 'skip') return
   playing.value = true
   lastTs = null
   rafId = requestAnimationFrame(frame)
@@ -153,19 +243,23 @@ function jumpToEnd(): void {
   currentEvent = timeline.events[timeline.events.length - 1] ?? null
   displayedPointIndex.value = props.match.points.length - 1
   finished.value = true
+  playerPos = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
   render()
 }
 
 function resetPlayback(startPlaying: boolean): void {
   pauseInternal()
-  timeline = buildTimeline(props.match, mode.value)
+  timeline = buildTimeline(props.match, viewMode.value)
+  endsState = computeEndsSwaps(props.match.points)
   clock = 0
   cursor = 0
   marks = []
   displayedPointIndex.value = -1
   finished.value = false
   currentEvent = timeline.events[0] ?? null
-  if (mode.value === 'skip') {
+  lastRenderedEvent = null
+  playerPos = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
+  if (viewMode.value === 'skip') {
     jumpToEnd()
   } else {
     render()
@@ -174,7 +268,9 @@ function resetPlayback(startPlaying: boolean): void {
 }
 
 function togglePlay(): void {
-  if (mode.value === 'skip') return
+  if (viewMode.value === 'skip') return
+  initSfx()
+  playSfx('click')
   if (finished.value) {
     resetPlayback(true)
     return
@@ -184,6 +280,8 @@ function togglePlay(): void {
 }
 
 function restart(): void {
+  initSfx()
+  playSfx('click')
   resetPlayback(true)
 }
 
@@ -208,7 +306,7 @@ onBeforeUnmount(() => {
 
 // Mode change: rebuild the timeline and restart, preserving whatever play state
 // was active. A new match prop (re-run exhibition) always restarts and autoplays.
-watch(mode, () => resetPlayback(playing.value))
+watch(viewMode, () => resetPlayback(playing.value))
 watch(
   () => props.match,
   () => resetPlayback(true),
@@ -218,6 +316,16 @@ watch(
 function playerName(side: Side): string {
   return side === 0 ? props.playerA.name : props.playerB.name
 }
+
+// --- round 4 item 1: server-highlight labels row, on the players' CURRENT sides ----
+// Short name = the full name if it's already short, else its first word – a cosmetic
+// truncation rule invented here (the engine has no first/last-name split); see
+// docs/specs/round4-viz.md §1.
+function shortName(name: string): string {
+  return name.length <= 12 ? name : name.split(' ')[0]
+}
+const leftSide = computed<Side>(() => (endsSwappedRef.value ? 1 : 0))
+const rightSide = computed<Side>(() => (endsSwappedRef.value ? 0 : 1))
 
 const currentAnnotated = computed(() => (displayedPointIndex.value >= 0 ? props.match.points[displayedPointIndex.value] : null))
 const scoreLine = computed(() => currentAnnotated.value?.entry.scoreAfter ?? '0-0')
@@ -271,19 +379,33 @@ function servePct(side: Side): number {
   <div class="viewer">
     <canvas ref="canvasRef" class="viewer-canvas"></canvas>
 
+    <div class="ends-labels">
+      <span :class="{ serving: liveServer === leftSide }">
+        {{ shortName(playerName(leftSide)) }}{{ liveServer === leftSide ? ' · serving' : '' }}
+      </span>
+      <span :class="{ serving: liveServer === rightSide }">
+        {{ shortName(playerName(rightSide)) }}{{ liveServer === rightSide ? ' · serving' : '' }}
+      </span>
+    </div>
+
     <div class="controls">
-      <select v-model="mode">
+      <select v-model="viewMode" @change="playSfx('click')">
         <option value="full">Full</option>
         <option value="key">Key points</option>
         <option value="skip">Skip</option>
       </select>
-      <select v-model.number="speed">
+      <select v-model.number="speed" @change="playSfx('click')">
         <option :value="1">1×</option>
         <option :value="2">2×</option>
         <option :value="4">4×</option>
       </select>
-      <button class="primary" :disabled="mode === 'skip'" @click="togglePlay">{{ playPauseLabel }}</button>
-      <button @click="restart">Restart</button>
+      <template v-if="props.mode === 'replay'">
+        <button class="primary" @click="restart">Watch again ↻</button>
+      </template>
+      <template v-else>
+        <button class="primary" :disabled="viewMode === 'skip'" @click="togglePlay">{{ playPauseLabel }}</button>
+        <button @click="restart">Restart</button>
+      </template>
       <button disabled title="Coming in Phase 6">Shout 📣</button>
     </div>
 
