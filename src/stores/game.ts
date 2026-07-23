@@ -91,6 +91,30 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    async tournamentReveal() {
+      await this.run(async () => {
+        const res = await request({ type: 'tournamentReveal' })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    async tournamentSkip() {
+      await this.run(async () => {
+        const res = await request({ type: 'tournamentSkip' })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    async tournamentClose() {
+      await this.run(async () => {
+        const res = await request({ type: 'tournamentClose' })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
     async setPlan(plan: WeekPlan) {
       await this.run(async () => {
         const res = await request({ type: 'setPlan', plan })

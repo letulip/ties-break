@@ -141,6 +141,29 @@ describe('save migrations', () => {
     expect(migrateSave(makeV6()).profile.kidLastName).toBe(migrated.profile.kidLastName)
   })
 
+  it('upgrades a v7 save to v8: pendingTournament defaults to null', () => {
+    const v7 = {
+      schemaVersion: 7,
+      careerId: 'c-v7',
+      seed: 'no-reveal-yet',
+      week: 20,
+      fundsCents: 2_000_00,
+      profile: { ...DEFAULT_PROFILE, kidName: 'Naomi', kidLastName: 'Kato' },
+      plan: { ...WEEK_PLAN_PRESETS.balanced },
+      cohort: [],
+      results: [],
+      season: [],
+      entries: [],
+      events: [],
+      nextEventId: 0,
+      kidRank: 150,
+      prevKidRank: 152,
+    }
+    const migrated = migrateSave(v7)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect(migrated.pendingTournament).toBeNull()
+  })
+
   it('passes a current save through unchanged', () => {
     const current = {
       schemaVersion: SAVE_SCHEMA_VERSION,
@@ -158,6 +181,7 @@ describe('save migrations', () => {
       nextEventId: 0,
       kidRank: 200,
       prevKidRank: null,
+      pendingTournament: null,
     }
     expect(migrateSave(current)).toEqual(current)
   })

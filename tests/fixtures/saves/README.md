@@ -27,6 +27,7 @@ Shapes come straight from the append-only history in `src/engine/migrations.ts`:
 | v5 | `+careerId` (career profiles) |
 | v6 | living world: `+cohort +results +season +entries +events +nextEventId +kidRank`, `log` dropped |
 | v7 | profile `+kidLastName`, world `+prevKidRank` |
+| v8 | world `+pendingTournament` (tournament-reveal flow; `null` when no reveal is in progress) |
 
 For **v0–v5** the migration regenerates the world systems (cohort/season) deterministically from the
 seed, so those fixtures are the authentic minimal historical shapes. For **v6–v7** the `cohort` /

@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import OnboardingWizard from './components/OnboardingWizard.vue'
+import TournamentFlow from './components/TournamentFlow.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
@@ -74,9 +75,12 @@ watch(
     stopToastDismissed.value = false
   },
 )
-const showStopToast = computed(() => !!game.snapshot?.stopReason && !stopToastDismissed.value)
+// The tournament stop is now owned by the full-screen TournamentFlow overlay (it shows whenever the
+// snapshot carries `pending`), so its toast is gone; deadline/funds stops keep theirs.
+const showStopToast = computed(
+  () => !!game.snapshot?.stopReason && game.snapshot.stopReason !== 'tournament' && !stopToastDismissed.value,
+)
 const STOP_REASON_TEXT: Record<string, string> = {
-  tournament: 'Stopped: this week’s tournament just wrapped up.',
   deadline: 'Stopped: an entry deadline is coming up next week.',
   funds: 'Stopped: funds ran below zero.',
 }
@@ -144,5 +148,8 @@ function dismissStopToast(): void {
         <span class="tab-label">{{ t.label }}</span>
       </button>
     </nav>
+
+    <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress. -->
+    <TournamentFlow v-if="game.snapshot?.pending" />
   </template>
 </template>

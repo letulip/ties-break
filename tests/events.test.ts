@@ -5,6 +5,7 @@ import {
   advanceWeeks,
   enterEvent,
   withdrawEvent,
+  skipTournament,
   KID_ID,
   PARENT_INCOME_CENTS,
   type WorldState,
@@ -93,6 +94,9 @@ describe('news match texts use short names for everyone', () => {
     const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
     enterEvent(world, event.id)
     while (world.week < event.week) tickWeek(world, rng)
+    // The tournament week pauses into a reveal; resolve it so the match events are emitted.
+    expect(world.pendingTournament).toBeTruthy()
+    skipTournament(world)
     const matchEv = world.events.find((e) => e.type === 'match' && e.week === event.week)!
     expect(matchEv.text).toContain('V. Martin')
     // opponent side also short-formed: an initial, a dot, a space, then a surname
@@ -110,10 +114,14 @@ describe('a tournament week the kid entered', () => {
     while (world.week < event.week) tickWeek(world, rng)
     expect(world.week).toBe(event.week)
 
-    // travel was charged this week
+    // travel is charged during the tick; the rest of the run is deferred to the reveal flow.
     expect(
       world.events.some((e) => e.type === 'expense' && e.week === event.week && e.text.includes('Travel')),
     ).toBe(true)
+    expect(world.pendingTournament).toBeTruthy()
+    // Resolve the whole run at once (the "skip tournament" path) and check the committed outcome.
+    skipTournament(world)
+    expect(world.pendingTournament!.finished).toBe(true)
 
     // one tournament summary event
     const summaries = world.events.filter((e) => e.type === 'tournament' && e.week === event.week)

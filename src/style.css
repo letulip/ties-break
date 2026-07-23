@@ -1014,3 +1014,246 @@ tr.kid-row td {
   font-size: 12px;
   color: var(--accent);
 }
+
+/* --- Tournament experience: the full-screen reveal flow ----------------------- */
+
+.tournament-flow {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.tf-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 16px 24px 8px;
+}
+
+.tf-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.tf-sub {
+  margin-top: 4px;
+}
+
+.tf-body {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Path so far – a compact strip of revealed rounds (the kid's whole path is highlighted). */
+.tf-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tf-strip-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1.4fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-left: 3px solid var(--danger);
+  background: rgba(242, 102, 79, 0.06);
+  border-radius: 0 8px 8px 0;
+  font-size: 12.5px;
+}
+
+.tf-strip-row.won {
+  border-left-color: var(--accent);
+  background: rgba(217, 242, 79, 0.06);
+}
+
+.tf-strip-round {
+  color: var(--muted);
+}
+
+.tf-strip-result {
+  font-weight: 700;
+}
+
+.tf-strip-row.won .tf-strip-result {
+  color: var(--accent);
+}
+
+.tf-strip-row:not(.won) .tf-strip-result {
+  color: var(--danger);
+}
+
+.tf-strip-score {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.tf-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.tf-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* Pre-match VS card */
+.tf-vs {
+  text-align: center;
+}
+
+.tf-round {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.tf-vs-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.tf-side-name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tf-vs-mid {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.tf-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tf-actions button {
+  flex: 1;
+}
+
+/* Post-match box score */
+.tf-result-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.tf-badge {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 12px;
+  border-radius: 999px;
+}
+
+.tf-badge.win {
+  color: #101d0a;
+  background: var(--accent);
+}
+
+.tf-badge.loss {
+  color: #2a0a06;
+  background: var(--danger);
+}
+
+.tf-scoreline {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Finale */
+.tf-finale {
+  text-align: center;
+}
+
+.tf-trophy {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.tf-portrait {
+  display: block;
+  width: 100%;
+  max-width: 180px;
+  margin: 0 auto 12px;
+  border-radius: 12px;
+}
+
+.tf-finale.champ {
+  border-color: var(--accent);
+}
+
+.tf-finale-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.tf-finale.champ .tf-finale-title {
+  color: var(--accent);
+}
+
+.tf-finale-points {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent);
+  margin: 0 0 16px;
+}
+
+.tf-path {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.tf-path-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  font-size: 12.5px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tf-path-row.won {
+  color: var(--text);
+}
+
+.tf-path-row:not(.won) {
+  color: var(--muted);
+}
