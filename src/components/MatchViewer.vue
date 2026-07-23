@@ -21,8 +21,12 @@ const props = withDefaults(
     /** Round 4 item 4: 'replay' swaps Play/Pause + Restart for a single "Watch again"
      *  button. Defaults to 'live' so existing call sites need no change. */
     mode?: 'live' | 'replay'
+    /** Round-5 item 9: each player's current standings rank, shown under their name in the
+     *  post-match stats. null (default) hides it – the friendly match passes null for "Top seed". */
+    rankA?: number | null
+    rankB?: number | null
   }>(),
-  { mode: 'live' },
+  { mode: 'live', rankA: null, rankB: null },
 )
 // Emitted once when playback reaches the end (used by TournamentFlow to auto-advance to the
 // post-match card; other callers can ignore it).
@@ -272,8 +276,7 @@ function resetPlayback(startPlaying: boolean): void {
 
 function togglePlay(): void {
   if (viewMode.value === 'skip') return
-  initSfx()
-  playSfx('click')
+  initSfx() // belt-and-suspenders; the global listener normally unlocks audio first
   if (finished.value) {
     resetPlayback(true)
     return
@@ -284,7 +287,6 @@ function togglePlay(): void {
 
 function restart(): void {
   initSfx()
-  playSfx('click')
   resetPlayback(true)
 }
 
@@ -411,7 +413,6 @@ function servePct(side: Side): number {
       </template>
       <template v-else>
         <button class="primary" :disabled="viewMode === 'skip'" @click="togglePlay">{{ playPauseLabel }}</button>
-        <button @click="restart">Restart</button>
       </template>
       <button disabled title="Coming in Phase 6">Shout 📣</button>
     </div>
@@ -468,8 +469,14 @@ function servePct(side: Side): number {
           <thead>
             <tr>
               <th></th>
-              <th>{{ playerA.name }}</th>
-              <th>{{ playerB.name }}</th>
+              <th>
+                <span class="ph-name">{{ playerA.name }}</span>
+                <span v-if="rankA != null" class="ph-rank">#{{ rankA }}</span>
+              </th>
+              <th>
+                <span class="ph-name">{{ playerB.name }}</span>
+                <span v-if="rankB != null" class="ph-rank">#{{ rankB }}</span>
+              </th>
             </tr>
           </thead>
           <tbody>

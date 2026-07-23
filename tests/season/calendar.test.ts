@@ -132,6 +132,28 @@ describe('buildSeason — surface weighting', () => {
   })
 })
 
+describe("buildSeason — a career's first season never opens already-closed (round-5 item 2)", () => {
+  it('places no first-block event before week 3, so every entry deadline is >= 1', () => {
+    // Many seeds: the earliest event must never carry a deadline in the past at week 0.
+    for (let s = 0; s < 40; s++) {
+      const events = buildSeason(`first-${s}`, 0, 52)
+      for (const e of events) {
+        expect(e.week).toBeGreaterThanOrEqual(3)
+        expect(e.deadlineWeek).toBeGreaterThanOrEqual(1)
+      }
+    }
+  })
+
+  it('still yields the full first-season counts inside the floored window', () => {
+    expect(countByTier(buildSeason('first-counts', 0, 52))).toEqual({ local: 26, regional: 13, national: 4, itf: 0 })
+  })
+
+  it('does NOT floor later year-blocks (they already start at 52, 104, …)', () => {
+    const events = buildSeason('later', 52, 52)
+    expect(Math.min(...events.map((e) => e.week))).toBeGreaterThanOrEqual(52)
+  })
+})
+
 describe('buildSeason — offset spans', () => {
   it('keeps every event inside [fromWeek, fromWeek + weeks) and counts scale', () => {
     const events = buildSeason('offset-seed', 52, 52)

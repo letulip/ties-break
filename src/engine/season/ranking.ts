@@ -1,17 +1,37 @@
 // Package L – the rolling ranking. Pure and total: a deterministic function of the
 // results ledger and the current week. No RNG, no mutation of the input.
 
-import type { RankingRow } from './types'
+import type { RankingRow, TierId } from './types'
 
 /** One awarded result. Mirrors the WorldState `results` entries added in Package M. */
 export interface SeasonResult {
   playerId: string
   week: number
   points: number
+  /** the tier this result was earned at (round-5: set on kid results for the "counting
+   *  results" list; optional so AI results and pre-r5 saves can omit it). Never affects ranking. */
+  tier?: TierId
 }
 
 const WINDOW_WEEKS = 52
 const BEST_N = 6
+
+/** A single player's windowed best-6 points sum at `currentWeek` — the exact value
+ *  `computeRanking` assigns as that player's `points`. Pure; ignores `tier`. Used to
+ *  diff the effective ranking delta of a freshly-added result (round-5 item 1). */
+export function windowedBestSum(
+  results: SeasonResult[],
+  currentWeek: number,
+  playerId: string,
+): number {
+  return results
+    .filter(
+      (r) => r.playerId === playerId && r.week <= currentWeek && currentWeek - r.week <= WINDOW_WEEKS,
+    )
+    .sort((a, b) => b.points - a.points || b.week - a.week)
+    .slice(0, BEST_N)
+    .reduce((sum, r) => sum + r.points, 0)
+}
 
 // computeRanking – rolling 52-week window, best-6 results per player, dense ranks.
 // Ties on points break by the more recent counted result; remaining ties keep a

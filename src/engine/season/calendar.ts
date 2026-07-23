@@ -99,6 +99,13 @@ function makeEvent(week: number, tier: TierId, rng: Rng): SeasonEvent {
   }
 }
 
+// A career's very first season must never spawn an event whose entry deadline
+// (`week − 2`) is already in the past at week 0 – that showed a fresh career the
+// "Entries closed" state on week 1 (round-5 item 2). Floor the first block's earliest
+// placement at week 3 so the soonest deadline is week 1. Only the first block is
+// affected (`fromWeek === 0`); later year-blocks start at 52, 104, … already.
+export const MIN_FIRST_EVENT_WEEK = 3
+
 // buildSeason – deterministic season for [fromWeek, fromWeek + weeks). National
 // weeks are placed first, then regional, then local, so lower tiers bend around
 // the higher ones: no two events share a week and local never lands on a national
@@ -107,7 +114,9 @@ export function buildSeason(seedStr: string, fromWeek: number, weeks: number): S
   const rng = rngFromSeed(seedStr)
   const used = new Set<number>()
   const events: SeasonEvent[] = []
-  const lo = fromWeek
+  // Floor the first career block so no event opens already-closed; the makeEvent draw
+  // order is unchanged (only the claimed week shifts), so counts/surfaces/costs are stable.
+  const lo = fromWeek === 0 ? MIN_FIRST_EVENT_WEEK : fromWeek
   const hi = fromWeek + weeks - 1
 
   // Highest tier first so its weeks are reserved before lower tiers are placed.

@@ -16,6 +16,9 @@
 export type SfxKey = 'hit' | 'bounce' | 'point' | 'game' | 'set' | 'win' | 'click' | 'grunt' | 'out' | 'gasp'
 
 const VOLUME = 0.5
+// Per-key volume overrides. The app-wide UI `click` is deliberately quiet so it reads as a
+// tap, not a match cue (round-5 item 6).
+const KEY_VOLUME: Partial<Record<SfxKey, number>> = { click: 0.25 }
 const MUTED_STORAGE_KEY = 'tb-muted'
 
 function readMuted(): boolean {
@@ -73,7 +76,7 @@ async function probe(key: SfxKey): Promise<HTMLAudioElement | null> {
     return null
   }
   const audio = new Audio(url)
-  audio.volume = VOLUME
+  audio.volume = KEY_VOLUME[key] ?? VOLUME
   audio.preload = 'auto'
   cache.set(key, audio)
   return audio
@@ -120,4 +123,32 @@ export function playSfx(key: SfxKey): void {
     .catch(() => {
       failed.add(key)
     })
+}
+
+// --- app-wide install (round-5 item 6) ---------------------------------------
+// ROOT CAUSE this fixes: initSfx() (the audio gate) used to be wired ONLY to the
+// MatchViewer Play/Restart buttons, but matches autoplay on mount and every route into
+// a viewer (tabs, "Watch match", "Play match") skips that gesture – so `audioEnabled`
+// stayed false and the whole app was mute. One delegated document listener flips the gate
+// on the FIRST user click anywhere, and adds a quiet click cue to primary controls.
+
+const CLICK_SELECTOR = 'button.primary, .tab-btn, .option-pill'
+const CLICK_THROTTLE_MS = 80
+let lastClickAt = 0
+let installed = false
+
+/** Install once at startup (main.ts). Idempotent. */
+export function installGlobalSfx(): void {
+  if (installed || typeof document === 'undefined') return
+  installed = true
+  document.addEventListener('click', (e) => {
+    // Any real gesture unlocks audio (browsers block autoplay until one happens).
+    initSfx()
+    const target = e.target as HTMLElement | null
+    if (!target?.closest?.(CLICK_SELECTOR)) return
+    const now = Date.now()
+    if (now - lastClickAt < CLICK_THROTTLE_MS) return // no spam on rapid clicks
+    lastClickAt = now
+    playSfx('click')
+  })
 }
