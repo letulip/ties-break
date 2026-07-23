@@ -11,7 +11,7 @@ export default defineConfig({
       // 'prompt': a new build waits for the user to tap "Update" (App.vue UpdateBanner),
       // instead of silently reloading mid-session.
       registerType: 'prompt',
-      includeAssets: ['ball.svg', 'pwa-apple-180.png'],
+      includeAssets: ['ball.svg', 'pwa-apple-180.png', 'favicon.png'],
       manifest: {
         name: 'Ties Break: Ace Parent',
         short_name: 'Ties Break',

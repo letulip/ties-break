@@ -9,6 +9,10 @@ import { SURNAMES } from '../engine/season/cohort'
 
 const game = useGameStore()
 
+// Round 5 item 30: the finale (summary) step puts a face to the career about to start –
+// the jun-norm portrait (public/images, full body/scene art, not the round header avatar).
+const FINALE_PORTRAIT = `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-norm-fs8.webp`
+
 const NAMES = [
   'Vera', 'Alexandra', 'Maria', 'Elena', 'Sofia', 'Anna', 'Iga', 'Coco', 'Aryna', 'Mirra',
   'Emma', 'Olivia', 'Zoe', 'Lea', 'Carla', 'Bianca', 'Naomi', 'Yuki', 'Ines', 'Petra',
@@ -221,6 +225,13 @@ function start(): void {
 
       <section v-else-if="step === 7" class="onboarding-step">
         <h2>Summary</h2>
+        <img
+          class="onboarding-portrait"
+          :src="FINALE_PORTRAIT"
+          loading="lazy"
+          alt="First time on court"
+        />
+        <p class="onboarding-portrait-caption">First time on court – ready?</p>
         <table>
           <tbody>
             <tr>

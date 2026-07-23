@@ -1,112 +1,94 @@
-// Generates PWA icons in the style of public/ball.svg (yellow-green ball, white seams):
-//   pwa-192.png, pwa-512.png          — transparent background ("any" purpose)
-//   pwa-maskable-512.png, pwa-apple-180.png — dark background, padded ball (maskable / iOS)
-// No image dependencies: raw RGBA pixels -> minimal PNG encoder, soft edges via 1px coverage.
-import { deflateSync } from 'node:zlib'
-import { writeFileSync } from 'node:fs'
+// Round 5 item 34 (PWA identity = the girl, not the ball): generates PWA/app icons
+// from the jun avatar face crop, not the ball motif. Sharp-based (rewrite of the
+// old dependency-free ball-icon encoder).
+//
+// Source: art-src/avatars/jun.png (256x256, already a face-centered square crop of
+// the jun-norm portrait — see docs/decisions.md for the original crop offsets) or a
+// jpeg sibling if one exists instead.
+//
+// Each output is a square canvas filled with the app's theme background (#0f172a,
+// matches vite.config.ts manifest theme_color/background_color) with the face
+// composited as a circle, centered:
+//   pwa-192.png, pwa-512.png       — purpose "any", generous fill
+//   pwa-maskable-512.png           — purpose "maskable": face kept inside a 62%
+//                                     safe zone so OS-applied masks never clip it
+//   pwa-apple-180.png              — iOS touch icon, same generous fill as "any"
+//   favicon.png (64x64)            — the one exception: a bare circular face cutout
+//                                     on a TRANSPARENT canvas (no square corners),
+//                                     sized for a browser tab
+//
+// ball.svg is untouched and stays in the repo — it's no longer the favicon, but the
+// court/viewer UI may still use the ball motif elsewhere.
+import sharp from 'sharp'
+import { existsSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 
-let crcTable
-function crc32(buf) {
-  if (!crcTable) {
-    crcTable = new Int32Array(256)
-    for (let n = 0; n < 256; n++) {
-      let c = n
-      for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1
-      crcTable[n] = c
-    }
+const BG = '#0f172a'
+const STANDARD_FRACTION = 0.82 // any / apple: face diameter as a fraction of the canvas
+const MASKABLE_FRACTION = 0.62 // maskable: OS safe-zone
+const FAVICON_FRACTION = 0.92 // favicon: small canvas, maximize legibility
+
+function findFaceSource() {
+  const candidates = [
+    join(root, 'art-src/avatars/jun.png'),
+    join(root, 'art-src/avatars/jun.jpg'),
+    join(root, 'art-src/avatars/jun.jpeg'),
+  ]
+  const found = candidates.find(existsSync)
+  if (!found) {
+    throw new Error(
+      'gen-icons: no jun avatar face source found (expected art-src/avatars/jun.png or a jpeg sibling)',
+    )
   }
-  let c = -1
-  for (let i = 0; i < buf.length; i++) c = crcTable[(c ^ buf[i]) & 0xff] ^ (c >>> 8)
-  return (c ^ -1) >>> 0
+  return found
 }
 
-function chunk(type, data) {
-  const out = Buffer.alloc(12 + data.length)
-  out.writeUInt32BE(data.length, 0)
-  out.write(type, 4, 'ascii')
-  data.copy(out, 8)
-  out.writeUInt32BE(crc32(out.subarray(4, 8 + data.length)), 8 + data.length)
-  return out
+function circleMaskSvg(diameter) {
+  const r = diameter / 2
+  return Buffer.from(`<svg width="${diameter}" height="${diameter}"><circle cx="${r}" cy="${r}" r="${r}" fill="#fff"/></svg>`)
 }
 
-function encodePng(size, pixelFn) {
-  const raw = Buffer.alloc(size * (1 + size * 4))
-  let o = 0
-  for (let y = 0; y < size; y++) {
-    raw[o++] = 0
-    for (let x = 0; x < size; x++) {
-      const [r, g, b, a] = pixelFn(x + 0.5, y + 0.5)
-      raw[o++] = r
-      raw[o++] = g
-      raw[o++] = b
-      raw[o++] = a
-    }
-  }
-  const ihdr = Buffer.alloc(13)
-  ihdr.writeUInt32BE(size, 0)
-  ihdr.writeUInt32BE(size, 4)
-  ihdr[8] = 8 // bit depth
-  ihdr[9] = 6 // RGBA
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw, { level: 9 })),
-    chunk('IEND', Buffer.alloc(0)),
-  ])
+/** size x size PNG buffer: `source` resized to cover a circle of `size * faceFraction`
+ *  px, centered on a `bg` canvas ('#rrggbb', or null for transparent). */
+async function faceIcon(source, size, faceFraction, bg) {
+  const faceD = Math.round(size * faceFraction)
+  const face = await sharp(source)
+    .resize(faceD, faceD, { fit: 'cover' })
+    .composite([{ input: circleMaskSvg(faceD), blend: 'dest-in' }])
+    .png()
+    .toBuffer()
+
+  const offset = Math.round((size - faceD) / 2)
+  return sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: bg ?? { r: 0, g: 0, b: 0, alpha: 0 },
+    },
+  })
+    .composite([{ input: face, left: offset, top: offset }])
+    .png()
+    .toBuffer()
 }
 
-const BALL = [211, 239, 48] // #d3ef30, as in ball.svg
-const SEAM = [255, 255, 255]
-const BG = [15, 23, 42] // app theme background
-
-const cov = (d) => Math.max(0, Math.min(1, d)) // 1px soft-edge coverage
-const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t))
-
-/** Ball of radius r centered at (cx, cy); returns [r,g,b,coverage 0..1] or null outside. */
-function ballAt(cx, cy, r) {
-  const seamR = r * 1.28
-  const seamOff = r * 1.72
-  const seamW = r * 0.075
-  return (x, y) => {
-    const alpha = cov(r - Math.hypot(x - cx, y - cy) + 0.5)
-    if (alpha === 0) return null
-    const dL = Math.abs(Math.hypot(x - (cx - seamOff), y - cy) - seamR)
-    const dR = Math.abs(Math.hypot(x - (cx + seamOff), y - cy) - seamR)
-    const seam = cov(seamW - Math.min(dL, dR) + 0.5)
-    return [...mix(BALL, SEAM, seam), alpha]
-  }
-}
-
-function transparentIcon(size) {
-  const ball = ballAt(size / 2, size / 2, size * 0.47)
-  return (x, y) => {
-    const px = ball(x, y)
-    return px ? [px[0], px[1], px[2], Math.round(px[3] * 255)] : [0, 0, 0, 0]
-  }
-}
-
-/** Maskable/apple: solid theme background, ball inside the safe zone. */
-function paddedIcon(size) {
-  const ball = ballAt(size / 2, size / 2, size * 0.32)
-  return (x, y) => {
-    const px = ball(x, y)
-    return px ? [...mix(BG, [px[0], px[1], px[2]], px[3]), 255] : [...BG, 255]
-  }
-}
+const source = findFaceSource()
+console.log(`gen-icons: face source ${source}`)
 
 const targets = [
-  ['pwa-192.png', 192, transparentIcon],
-  ['pwa-512.png', 512, transparentIcon],
-  ['pwa-maskable-512.png', 512, paddedIcon],
-  ['pwa-apple-180.png', 180, paddedIcon],
+  ['pwa-192.png', 192, STANDARD_FRACTION, BG],
+  ['pwa-512.png', 512, STANDARD_FRACTION, BG],
+  ['pwa-maskable-512.png', 512, MASKABLE_FRACTION, BG],
+  ['pwa-apple-180.png', 180, STANDARD_FRACTION, BG],
+  ['favicon.png', 64, FAVICON_FRACTION, null],
 ]
 
-for (const [name, size, style] of targets) {
+for (const [name, size, fraction, bg] of targets) {
+  const buf = await faceIcon(source, size, fraction, bg)
   const file = join(root, 'public', name)
-  writeFileSync(file, encodePng(size, style(size)))
+  writeFileSync(file, buf)
   console.log(`wrote ${file}`)
 }
