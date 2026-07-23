@@ -1,5 +1,5 @@
-// Package L — tournament calendar. Pure: the season is a deterministic function
-// of a seed string and a week span. No worker/DOM/IndexedDB, no Math.random —
+// Package L – tournament calendar. Pure: the season is a deterministic function
+// of a seed string and a week span. No worker/DOM/IndexedDB, no Math.random –
 // all randomness flows from a season sub-RNG (rngFromSeed(seedStr)).
 
 import { rngFromSeed, pickInt, type Rng } from '../rng'
@@ -99,7 +99,7 @@ function makeEvent(week: number, tier: TierId, rng: Rng): SeasonEvent {
   }
 }
 
-// buildSeason — deterministic season for [fromWeek, fromWeek + weeks). National
+// buildSeason – deterministic season for [fromWeek, fromWeek + weeks). National
 // weeks are placed first, then regional, then local, so lower tiers bend around
 // the higher ones: no two events share a week and local never lands on a national
 // week. Counts scale as floor(weeks / everyNWeeks) per tier.

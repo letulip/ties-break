@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 3,
+  "seed": "golden-v3",
+  "week": 20,
+  "fundsCents": 400000,
+  "profile": {
+    "kidName": "Coco",
+    "gender": "girl",
+    "country": "US",
+    "background": "middle",
+    "coachSetup": "hired",
+    "playStyle": "aggressive"
+  },
+  "log": []
+}

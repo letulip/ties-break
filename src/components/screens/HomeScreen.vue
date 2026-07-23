@@ -3,12 +3,13 @@
 // week's training/rest plan (presets from the worker), and a restyled news
 // feed off the week log. Replaces the Package I status-table/advance-buttons
 // layout; "Advance" moved to App.vue's sticky Next-week bar.
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent } from '../../shared/protocol'
+import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
+import MatchReplay from '../MatchReplay.vue'
 
 const game = useGameStore()
-const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.png`
+const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.webp`
 
 function flagEmoji(code: string): string {
   if (!code) return ''
@@ -18,6 +19,18 @@ function flagEmoji(code: string): string {
 const kidName = computed(() => game.snapshot?.profile.kidName ?? '')
 const flag = computed(() => flagEmoji(game.snapshot?.profile.country ?? ''))
 const ageYears = computed(() => game.snapshot?.ageYears ?? 0)
+
+// --- Player-card snapshot: real rank, week-over-week movement, season points ----
+const kidRank = computed(() => game.snapshot?.kidRank ?? null)
+const prevKidRank = computed(() => game.snapshot?.prevKidRank ?? null)
+// Rank goes UP when the number goes DOWN. null prev (or no change) shows a neutral dash.
+const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
+  const now = kidRank.value
+  const prev = prevKidRank.value
+  if (now === null || prev === null || now === prev) return { dir: 'flat', by: 0 }
+  return now < prev ? { dir: 'up', by: prev - now } : { dir: 'down', by: now - prev }
+})
+const kidPoints = computed(() => game.snapshot?.standings.find((r) => r.isKid)?.points ?? 0)
 
 // --- Coach's eye: one flavor line per playStyle (static, owner-approved copy) --
 const COACH_QUOTES: Record<PlayStyle, string> = {
@@ -63,9 +76,9 @@ const spendRange = computed<[number, number]>(() => {
 const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
 
 // --- News: structured events (Package M), non-financial types only (expense/
-// income live on the Money ledger). Grouped by week, most recent week first;
-// milestones are pinned to the top of their own week group (stable sort keeps
-// everything else in emission order).
+// income live on the Money ledger). Strictly newest-first: most recent week first,
+// and within a week newest event first (descending id). Milestones stay pinned to
+// the top of their week group (standing owner decision) – the one exception.
 const EVENT_EMOJI: Record<string, string> = {
   info: '💬',
   entry: '📝',
@@ -89,9 +102,19 @@ const newsGroups = computed<NewsGroup[]>(() => {
     .sort((a, b) => b[0] - a[0])
     .map(([week, list]) => ({
       week,
-      events: [...list].sort((a, b) => (a.type === 'milestone' ? 0 : 1) - (b.type === 'milestone' ? 0 : 1)),
+      events: [...list].sort((a, b) => {
+        const am = a.type === 'milestone' ? 0 : 1
+        const bm = b.type === 'milestone' ? 0 : 1
+        return am - bm || b.id - a.id // milestones pinned first, then newest-first
+      }),
     }))
 })
+
+// --- Click a match event -> replay it in the shared MatchReplay overlay ---------
+const replayMatch = ref<WorldMatch | null>(null)
+function openReplay(e: WorldEvent): void {
+  if (e.match) replayMatch.value = e.match
+}
 </script>
 
 <template>
@@ -110,7 +133,24 @@ const newsGroups = computed<NewsGroup[]>(() => {
         <tbody>
           <tr>
             <th>Junior rank</th>
-            <td>– <span class="pill">Phase 3</span></td>
+            <td>
+              <span class="rank-value">#{{ kidRank ?? '–' }}</span>
+              <span
+                v-if="rankMovement.dir === 'up'"
+                class="rank-move up"
+                :title="`Up ${rankMovement.by} since last week`"
+              >↑{{ rankMovement.by }}</span>
+              <span
+                v-else-if="rankMovement.dir === 'down'"
+                class="rank-move down"
+                :title="`Down ${rankMovement.by} since last week`"
+              >↓{{ rankMovement.by }}</span>
+              <span v-else class="rank-move flat" title="No change">–</span>
+            </td>
+          </tr>
+          <tr>
+            <th>Season points</th>
+            <td class="num">{{ kidPoints }}</td>
           </tr>
           <tr>
             <th>Condition</th>
@@ -176,12 +216,20 @@ const newsGroups = computed<NewsGroup[]>(() => {
           <table>
             <tbody>
               <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">
-                <td>{{ EVENT_EMOJI[e.type] }} {{ e.text }}</td>
+                <td v-if="e.type === 'match' && e.match" class="news-match-cell">
+                  <button class="news-match-btn" @click="openReplay(e)">
+                    <span>{{ EVENT_EMOJI[e.type] }} {{ e.text }}</span>
+                    <span class="watch-cue">Watch ▶</span>
+                  </button>
+                </td>
+                <td v-else>{{ EVENT_EMOJI[e.type] }} {{ e.text }}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
     </section>
+
+    <MatchReplay v-if="replayMatch" :match="replayMatch" @close="replayMatch = null" />
   </template>
 </template>

@@ -111,6 +111,36 @@ describe('save migrations', () => {
     expect(make().season).toEqual(make().season)
   })
 
+  it('upgrades a v6 save to v7: kidLastName (deterministic from seed) + prevKidRank default', () => {
+    const makeV6 = () => {
+      const profile: Record<string, unknown> = { ...DEFAULT_PROFILE, kidName: 'Mirra' }
+      delete profile.kidLastName // v6 profiles had no family name
+      return {
+        schemaVersion: 6,
+        careerId: 'c-v6',
+        seed: 'family-name',
+        week: 8,
+        fundsCents: 3_000_00,
+        profile,
+        plan: { ...WEEK_PLAN_PRESETS.balanced },
+        cohort: [],
+        results: [],
+        season: [],
+        entries: [],
+        events: [],
+        nextEventId: 0,
+        kidRank: 200,
+      }
+    }
+    const migrated = migrateSave(makeV6())
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect(typeof migrated.profile.kidLastName).toBe('string')
+    expect(migrated.profile.kidLastName.length).toBeGreaterThan(0)
+    expect(migrated.prevKidRank).toBeNull()
+    // deterministic: the same seed backfills the same surname across independent migrations
+    expect(migrateSave(makeV6()).profile.kidLastName).toBe(migrated.profile.kidLastName)
+  })
+
   it('passes a current save through unchanged', () => {
     const current = {
       schemaVersion: SAVE_SCHEMA_VERSION,
@@ -118,9 +148,16 @@ describe('save migrations', () => {
       seed: 's',
       week: 1,
       fundsCents: 5,
-      profile: { ...DEFAULT_PROFILE, kidName: 'Alexandra', country: 'RS' },
+      profile: { ...DEFAULT_PROFILE, kidName: 'Alexandra', kidLastName: 'Rossi', country: 'RS' },
       plan: { train: 85, rest: 15 },
-      log: [],
+      cohort: [],
+      results: [],
+      season: [],
+      entries: [],
+      events: [],
+      nextEventId: 0,
+      kidRank: 200,
+      prevKidRank: null,
     }
     expect(migrateSave(current)).toEqual(current)
   })

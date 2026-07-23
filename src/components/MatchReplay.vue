@@ -32,7 +32,7 @@ const annotated = computed(() => {
     <div class="replay-card">
       <div class="replay-header">
         <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
-        <button class="link" @click="$emit('close')">Close ✕</button>
+        <button class="replay-close" aria-label="Close replay" title="Close" @click="$emit('close')">✕</button>
       </div>
       <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" />
     </div>

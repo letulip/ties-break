@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 4,
+  "seed": "golden-v4",
+  "week": 26,
+  "fundsCents": 250000,
+  "profile": {
+    "kidName": "Aryna",
+    "gender": "girl",
+    "country": "KZ",
+    "background": "wealthy",
+    "coachSetup": "hired",
+    "playStyle": "serve-first"
+  },
+  "plan": { "train": 85, "rest": 15 },
+  "log": ["W26: national prep block"]
+}

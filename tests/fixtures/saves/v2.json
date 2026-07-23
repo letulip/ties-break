@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 2,
+  "seed": "golden-v2",
+  "week": 14,
+  "fundsCents": 900000,
+  "profile": {
+    "kidName": "Iga",
+    "gender": "girl",
+    "country": "PL",
+    "background": "working",
+    "coachSetup": "parent"
+  },
+  "log": ["W14: practice sets at the local club"]
+}

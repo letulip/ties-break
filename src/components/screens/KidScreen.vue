@@ -5,10 +5,9 @@ import { useGameStore } from '../../stores/game'
 import type { CoachSetup, FamilyBackground, PlayStyle } from '../../shared/protocol'
 
 const game = useGameStore()
-// Spec names `...-jun-norm.png`, but the source PNGs were replaced repo-wide with
-// pngquant-compressed `-fs8` variants (public/images change of 2026-07-22 19:42,
-// outside this package) – same art, new filename. Flagged in the report.
-const portraitUrl = `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-norm-fs8.png`
+// Raster art ships as webp (≤512 px, quality 82) via `npm run art`; PNG sources live in
+// art-src/ (not served). Same portrait, webp filename.
+const portraitUrl = `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-norm-fs8.webp`
 
 const BACKGROUND_LABEL: Record<FamilyBackground, string> = {
   wealthy: 'Wealthy',
@@ -38,6 +37,10 @@ function flagEmoji(code: string): string {
 }
 
 const kidName = computed(() => game.snapshot?.profile.kidName ?? '')
+const kidFullName = computed(() => {
+  const p = game.snapshot?.profile
+  return p ? `${p.kidName} ${p.kidLastName}`.trim() : ''
+})
 const countryDisplay = computed(() => {
   const code = game.snapshot?.profile.country ?? ''
   if (!code) return ''
@@ -57,7 +60,7 @@ const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.sna
         <tbody>
           <tr>
             <th>Name</th>
-            <td>{{ kidName }}</td>
+            <td>{{ kidFullName }}</td>
           </tr>
           <tr>
             <th>Country</th>
