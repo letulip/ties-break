@@ -295,7 +295,7 @@ function runKidTournament(world: WorldState, event: SeasonEvent, ranking: Rankin
   addEvent(world, {
     week: world.week,
     type: 'tournament',
-    text: `${tier.label} (${event.surface}, W${event.week}): ${kid.name} — ${finishLabel(kidFinish)} (+${points} pts)`,
+    text: `${tier.label} (${event.surface}, W${event.week}): ${kid.name} – ${finishLabel(kidFinish)} (+${points} pts)`,
   })
 
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
@@ -451,7 +451,7 @@ export function enterEvent(world: WorldState, eventId: string): void {
   addEvent(world, {
     week: world.week,
     type: 'entry',
-    text: `Entered ${TIERS[event.tier].label} — W${event.week} (${event.surface})`,
+    text: `Entered ${TIERS[event.tier].label} – W${event.week} (${event.surface})`,
   })
 }
 
@@ -473,7 +473,7 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   addEvent(world, {
     week: world.week,
     type: 'entry',
-    text: `Withdrew from ${TIERS[event.tier].label} — W${event.week}`,
+    text: `Withdrew from ${TIERS[event.tier].label} – W${event.week}`,
   })
 }
 

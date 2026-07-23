@@ -145,7 +145,7 @@ function openReplay(e: WorldEvent): void {
                 class="rank-move down"
                 :title="`Down ${rankMovement.by} since last week`"
               >↓{{ rankMovement.by }}</span>
-              <span v-else class="rank-move flat" title="No change">—</span>
+              <span v-else class="rank-move flat" title="No change">–</span>
             </td>
           </tr>
           <tr>

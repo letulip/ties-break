@@ -1,4 +1,4 @@
-// Package L — the rolling ranking. Pure and total: a deterministic function of the
+// Package L – the rolling ranking. Pure and total: a deterministic function of the
 // results ledger and the current week. No RNG, no mutation of the input.
 
 import type { RankingRow } from './types'
@@ -13,7 +13,7 @@ export interface SeasonResult {
 const WINDOW_WEEKS = 52
 const BEST_N = 6
 
-// computeRanking — rolling 52-week window, best-6 results per player, dense ranks.
+// computeRanking – rolling 52-week window, best-6 results per player, dense ranks.
 // Ties on points break by the more recent counted result; remaining ties keep a
 // stable order (roster order, then first-appearance in results). Passing `roster`
 // makes the table total: every roster member appears, zero-point players ranked
