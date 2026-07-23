@@ -1,7 +1,7 @@
 // Typed message protocol between UI and the sim worker.
 // The worker owns the authoritative state; the UI only ever sees snapshots.
 
-// Type-only imports (erased at compile — no runtime dependency on the engine).
+// Type-only imports (erased at compile – no runtime dependency on the engine).
 import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
 import type { MatchPlayer, Surface } from '../engine/match/types'
 

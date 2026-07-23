@@ -34,7 +34,7 @@ let ctx: CanvasRenderingContext2D | null = null
 
 // --- playback controls (reactive; drive the template) -------------------------
 // Named viewMode (not "mode") to avoid colliding with the new `mode` prop
-// ('live'/'replay', round 4 item 4) — Vue's SFC compiler exposes declared prop names as
+// ('live'/'replay', round 4 item 4) – Vue's SFC compiler exposes declared prop names as
 // bare template identifiers, so reusing "mode" for both would be ambiguous.
 const viewMode = ref<ViewMode>('key')
 const speed = ref<1 | 2 | 4>(2)
@@ -68,13 +68,13 @@ let lastTs: number | null = null
 // Precomputed once per timeline rebuild; swappedDuring[i] is looked up per frame from
 // the point currently on screen (same pattern as liveServer below).
 let endsState: EndsState = computeEndsSwaps(props.match.points)
-/** Reactive mirror of the ends-swap state for the current point — feeds both the
+/** Reactive mirror of the ends-swap state for the current point – feeds both the
  *  canvas scene (mirrors marks/flight/players) and the `.ends-labels` row's left/right
  *  assignment. */
 const endsSwappedRef = ref(false)
 
 // --- round 4 item 2: players run onto the court -------------------------------
-// Eased position state (fixed physics frame — index = match Side; side 0 always
+// Eased position state (fixed physics frame – index = match Side; side 0 always
 // defends y<0, side 1 always defends y>0). Lives here (not in courtRenderer, which
 // stays a stateless drawing layer) alongside the other per-frame mutable state above.
 const PLAYER_HOME: readonly [CourtPoint, CourtPoint] = [
@@ -94,7 +94,7 @@ function currentShotContext(): { hitter: Side; target: CourtPoint } | null {
 
 /** Per frame: the shot's hitter recovers toward their own baseline center; the other
  *  side (who will hit next) chases the incoming ball's landing spot. Between shots
- *  both sides recover toward center. Plain per-frame lerp — smooth, no physics. */
+ *  both sides recover toward center. Plain per-frame lerp – smooth, no physics. */
 function updatePlayers(dt: number): void {
   const shotCtx = currentShotContext()
   const factor = Math.min(1, dt * PLAYER_EASE_RATE)
@@ -191,7 +191,7 @@ function render(): void {
   endsSwappedRef.value = endsState.swappedDuring[scenePointIndex] ?? false
 
   // 'hit' fires once per shot, exactly when its flight event becomes current; 'grunt'
-  // layers on top of every 3rd shot (both players grunt — no side distinction).
+  // layers on top of every 3rd shot (both players grunt – no side distinction).
   if (currentEvent !== lastRenderedEvent) {
     if (currentEvent?.kind === 'shot') {
       playSfx('hit')
@@ -318,7 +318,7 @@ function playerName(side: Side): string {
 }
 
 // --- round 4 item 1: server-highlight labels row, on the players' CURRENT sides ----
-// Short name = the full name if it's already short, else its first word — a cosmetic
+// Short name = the full name if it's already short, else its first word – a cosmetic
 // truncation rule invented here (the engine has no first/last-name split); see
 // docs/specs/round4-viz.md §1.
 function shortName(name: string): string {

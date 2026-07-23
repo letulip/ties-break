@@ -1,11 +1,11 @@
-// Package L — the AI junior cohort. Pure: a cohort is a deterministic function of
+// Package L – the AI junior cohort. Pure: a cohort is a deterministic function of
 // a seed string. driftCohort applies a tiny weekly nudge from a passed RNG (the
-// main weekly stream in Package M) — a Phase-4 development placeholder.
+// main weekly stream in Package M) – a Phase-4 development placeholder.
 
 import { rngFromSeed, pickInt, type Rng } from '../rng'
 import type { AiPlayer } from './types'
 
-// 44 given names × 44 surnames — a broad pool so 199 juniors read as distinct.
+// 44 given names × 44 surnames – a broad pool so 199 juniors read as distinct.
 const FIRST_NAMES = [
   'Aria', 'Bela', 'Camila', 'Dasha', 'Elena', 'Freya', 'Gaia', 'Hana',
   'Ines', 'Jana', 'Kaia', 'Lena', 'Mila', 'Nora', 'Oksana', 'Petra',
@@ -41,7 +41,7 @@ function clamp01to100(x: number): number {
   return x < 0 ? 0 : x > 100 ? 100 : x
 }
 
-// generateCohort — `size` age-14 juniors, deterministic from `seedStr`. Skills sit
+// generateCohort – `size` age-14 juniors, deterministic from `seedStr`. Skills sit
 // in the spec bands; growth is a hidden 0.5..1.5 multiplier. Draw order per player
 // is fixed (name, name, nation, serve, ret, composure, stamina, growth) so the
 // stream count is constant regardless of size.
@@ -62,7 +62,7 @@ export function generateCohort(seedStr: string, size = 199): AiPlayer[] {
   return cohort
 }
 
-// driftCohort — one tiny in-place nudge per skill: +0..0.05 scaled by growth,
+// driftCohort – one tiny in-place nudge per skill: +0..0.05 scaled by growth,
 // clamped to [0, 100]. Exactly four draws per player in a fixed order, so the
 // weekly draw count never depends on player input (deterministic replay).
 export function driftCohort(cohort: AiPlayer[], rng: Rng): void {

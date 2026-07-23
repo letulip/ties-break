@@ -27,7 +27,7 @@ export interface SceneState {
   /**
    * Round 4 item 2: current eased player positions, in the FIXED physics frame (index =
    * match Side; side 0 always defends y<0, side 1 always defends y>0, regardless of any
-   * ends swap — see `endsSwapped`). Owned and lerped frame-by-frame by the Vue layer
+   * ends swap – see `endsSwapped`). Owned and lerped frame-by-frame by the Vue layer
    * (MatchViewer); courtRenderer only draws whatever it's handed, staying stateless.
    * Defaults to both baseline centers when omitted.
    */
@@ -35,15 +35,15 @@ export interface SceneState {
   /** Round 4 item 1: which match Side is serving the current point, for the accent
    *  ring; null before the match has started. */
   serverSide?: Side | null
-  /** Playback clock (timeline seconds) — drives the server ring's subtle pulse phase. */
+  /** Playback clock (timeline seconds) – drives the server ring's subtle pulse phase. */
   time?: number
   /**
    * Round 4 item 3: true while ends are swapped from the initial layout. A tennis court
    * is symmetric under a (x, y) -> (-x, -y) rotation, so only the DYNAMIC elements
-   * (marks, flight, players) need mirroring when true — lines/background are untouched.
+   * (marks, flight, players) need mirroring when true – lines/background are untouched.
    */
   endsSwapped?: boolean
-  /** Round 4 item 3: true during the ~0.9s change-ends beat — draws a small overlay. */
+  /** Round 4 item 3: true during the ~0.9s change-ends beat – draws a small overlay. */
   changingEnds?: boolean
 }
 
@@ -267,7 +267,7 @@ function drawFlight(ctx: CanvasRenderingContext2D, vp: Viewport, scene: SceneSta
 }
 
 // --- player dots (round 4 items 1 + 2) --------------------------------------
-// Positions arrive pre-eased (scene.players, fixed physics frame — see SceneState) and
+// Positions arrive pre-eased (scene.players, fixed physics frame – see SceneState) and
 // are only mirrored here for ends-swap, same as marks/flight above. Falls back to both
 // baseline centers if the caller hasn't supplied any (e.g. a bare/legacy scene).
 
@@ -292,7 +292,7 @@ function drawPlayers(ctx: CanvasRenderingContext2D, vp: Viewport, scene: SceneSt
   }
 }
 
-/** Subtle breathing ring around the serving side's dot — not a blink, a slow pulse. */
+/** Subtle breathing ring around the serving side's dot – not a blink, a slow pulse. */
 function drawServerRing(ctx: CanvasRenderingContext2D, c: { x: number; y: number }, time: number): void {
   const pulse = (Math.sin(time * 4.2) + 1) / 2 // 0..1
   ctx.save()

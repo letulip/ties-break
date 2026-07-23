@@ -1,16 +1,16 @@
-// Round 4 item 5 — sound framework. The owner uploads the real mp3s later; this module
+// Round 4 item 5 – sound framework. The owner uploads the real mp3s later; this module
 // must work correctly with zero files present (silent no-op, no console spam) and
 // upgrade transparently the moment files land in public/sounds/ (see the README there).
 //
 // Contract:
 //  - `initSfx()` must be called once from a REAL user gesture (a click handler) before
-//    any sound plays — never on component mount. Until then, `playSfx` is a pure no-op,
+//    any sound plays – never on component mount. Until then, `playSfx` is a pure no-op,
 //    which is what keeps the app's very first (auto-started) match watch-through silent
 //    instead of trying to autoplay audio the browser would block anyway.
 //  - Each key is lazy-loaded on its first `playSfx` call, not eagerly for all 7 up front.
 //  - A missing/failing file is remembered (never retried, never logged) so the app stays
 //    silent-but-functional with an empty public/sounds/ directory.
-//  - `muted` persists to localStorage and can be read/written any time — it never
+//  - `muted` persists to localStorage and can be read/written any time – it never
 //    touches an <audio> element, so the More screen's toggle works before initSfx().
 
 export type SfxKey = 'hit' | 'bounce' | 'point' | 'game' | 'set' | 'win' | 'click' | 'grunt' | 'out' | 'gasp'
@@ -37,7 +37,7 @@ function writeMuted(value: boolean): void {
 let muted = readMuted()
 let audioEnabled = false // flips true on the first initSfx() call, from a real click handler
 
-/** Every key that has 404'd (or otherwise failed) once — never retried, never logged. */
+/** Every key that has 404'd (or otherwise failed) once – never retried, never logged. */
 const failed = new Set<SfxKey>()
 /** Successfully-probed keys, cached so repeat plays skip the existence check entirely. */
 const cache = new Map<SfxKey, HTMLAudioElement>()
@@ -56,7 +56,7 @@ function urlFor(key: SfxKey): string {
  *
  * The content-type check matters because a dev/preview static server (e.g. `vite
  * preview`'s SPA fallback) can answer a genuinely missing path with `200 text/html`
- * (serving index.html) instead of a real 404 — treating any `res.ok` as "found" would
+ * (serving index.html) instead of a real 404 – treating any `res.ok` as "found" would
  * silently hand a broken HTML "audio" file to <audio> and try to play it.
  */
 async function probe(key: SfxKey): Promise<HTMLAudioElement | null> {

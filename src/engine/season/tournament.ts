@@ -1,4 +1,4 @@
-// Package L — single-elimination tournaments. Pure: given the entrants, an
+// Package L – single-elimination tournaments. Pure: given the entrants, an
 // optional kid, and an RNG, the bracket resolves deterministically. Kid matches
 // run the full point engine under an event-scoped seed (replayable); AI-AI matches
 // resolve from the closed-form win probability with a single RNG draw.
@@ -41,10 +41,10 @@ export function standardSeedOrder(n: number): number[] {
   return seeds
 }
 
-// selectEntrants — the AI field for an event. AI enter the tier matching their
+// selectEntrants – the AI field for an event. AI enter the tier matching their
 // standings percentile band; entry within the band is stochastic (position-biased)
 // so the field varies, but the returned array is seeded by standings position
-// (best first). Exactly one RNG draw per band member — a fixed pattern given the
+// (best first). Exactly one RNG draw per band member – a fixed pattern given the
 // ranking.
 //
 // The band is keyed off the player's ORDINAL POSITION in the standings, not the
@@ -119,7 +119,7 @@ function playMatch(
   return { round, aId: a.id, bId: b.id, winnerId: aWins ? a.id : b.id }
 }
 
-// runTournament — single-elimination from `entrants` (seed order, best first). When
+// runTournament – single-elimination from `entrants` (seed order, best first). When
 // the kid enters it takes a slot, bumping the lowest-ranked entrant, and is seeded
 // last. Losers get finish = rounds - round (0 = champion), indexing TierDef.points.
 export function runTournament(

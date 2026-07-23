@@ -160,7 +160,7 @@ function confirmNewCareer() {
 }
 
 // --- Sound (round 4 item 5) -------------------------------------------------------
-// isMuted()/setMuted() are plain localStorage-backed state (src/audio/sfx.ts) — no
+// isMuted()/setMuted() are plain localStorage-backed state (src/audio/sfx.ts) – no
 // audio node is ever created here, so this toggle works before any match has played.
 const soundMuted = ref(isMuted())
 function toggleSound(): void {

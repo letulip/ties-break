@@ -50,7 +50,7 @@ export interface EndsState {
 /**
  * Real-tennis change-of-ends rule (round 4 item 3): a LOCAL games-in-set counter resets
  * to 0 at every set boundary; ends swap whenever that counter is odd (1, 3, 5…). "Carried
- * across set boundaries by the same rule" is exactly this reset-and-reapply — no
+ * across set boundaries by the same rule" is exactly this reset-and-reapply – no
  * cross-set arithmetic is needed: a set's last game already swaps automatically when its
  * total is odd, and when the total is even the next set's first game swaps instead,
  * which the same local-odd test produces for free. A concluded tiebreak always lands on

@@ -14,7 +14,7 @@ export function openDB(
 ): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(name, version)
-    // req.transaction is the live versionchange transaction — the only way to read/rewrite
+    // req.transaction is the live versionchange transaction – the only way to read/rewrite
     // existing records during an upgrade. Async work inside `upgrade` must stay on IDB requests
     // (chained callbacks), never awaited promises, or the transaction auto-commits early.
     req.onupgradeneeded = (e) => upgrade(req.result, e.oldVersion, req.transaction!)
