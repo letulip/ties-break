@@ -38,11 +38,28 @@ Vite + TypeScript + Vue 3.5 + Pinia + vite-plugin-pwa (Workbox) + gh-pages deplo
 
 *(Owner sign-off pending on Vue vs vanilla/Svelte — see decisions.md.)*
 
+## System dependency graph
+
+```mermaid
+graph LR
+  E[Match engine ✅] --> V[Match viz ✅]
+  E --> W[Phase 3: World<br/>cohort · calendar · ranking]
+  SAV[Saves & careers ✅→K] --> W
+  V --> W
+  W --> D[Phase 4: Development<br/>skills · age curves · injuries · radar]
+  W --> EC[Phase 5: Economy<br/>ledger · sponsors · grants · investor]
+  D --> P6[Phase 6: Prologue & events<br/>stages · gallery · mom/dad · levers arc]
+  EC --> P6
+  W -.-> VP[Viz polish: movement,<br/>server highlight, side changes]
+  D -.-> WX[Weather · RAE birth month]
+  P6 --> P7[PWA hardening] --> P8[Balance & content]
+```
+
 ## Phases
 
 Sizes are relative (S < M < L), not promises. Each phase ends with something runnable/testable.
 
-Status: Phase 0 ✅ (2026-07-22, browser-verified). Phase 1 ✅ (2026-07-22: spec [specs/phase1-match-engine.md](specs/phase1-match-engine.md), packages A/B/C via Opus subagents + TDD + architect gate; 86 tests, all calibration bands hit, 10k matches ≈ 0.72 s). Phase 2 ✅ (2026-07-22: spec [specs/phase2-match-viz.md](specs/phase2-match-viz.md), packages D/E/F — rally generation calibrated to real rally-length/DF rates, exact live win-probability DP, timeline + Canvas court, Exhibition-match screen; 128 tests, browser-gated end-to-end). UI detour ✅ (2026-07-22, owner-requested: spec [specs/detour-ui-screens.md](specs/detour-ui-screens.md) — mobile-first shell with 5 bottom tabs, 7-step onboarding wizard incl. play-style pick, landscape court, save schema v3 with PlayerProfile; browser-gated at 375 px). Next: Phase 3 — world & career skeleton.
+Status: Phase 0 ✅ (2026-07-22, browser-verified). Phase 1 ✅ (2026-07-22: spec [specs/phase1-match-engine.md](specs/phase1-match-engine.md), packages A/B/C via Opus subagents + TDD + architect gate; 86 tests, all calibration bands hit, 10k matches ≈ 0.72 s). Phase 2 ✅ (2026-07-22: spec [specs/phase2-match-viz.md](specs/phase2-match-viz.md), packages D/E/F — rally generation calibrated to real rally-length/DF rates, exact live win-probability DP, timeline + Canvas court, Exhibition-match screen; 128 tests, browser-gated end-to-end). UI detour ✅ (2026-07-22, owner-requested: spec [specs/detour-ui-screens.md](specs/detour-ui-screens.md) — mobile-first shell with 5 bottom tabs, 7-step onboarding wizard incl. play-style pick, landscape court, save schema v3 with PlayerProfile; browser-gated at 375 px). Package K ✅ + Phase 3 ✅ (2026-07-22/23: specs [specs/package-k-careers.md](specs/package-k-careers.md), [specs/phase3-world.md](specs/phase3-world.md) — career profiles with 2-generation autosave + recovery, cohort of 200, yearly calendar with entries/deadlines, rolling best-6 ranking, tournaments with watchable replays (~100 B each), structured events → News/Money split, month-advance with stops; schema v6, save ≈ 24 KB gzipped at week 100; 203 tests). Known Phase-4 revisits: shadow-bracket simplification (kid's bracket doesn't affect AI standings), early-season rank-milestone degeneracy (top-10 fires on a sparse week-2 ranking), rank-movement arrows need prior-week rank in Snapshot. Next: Phase 4 — development system.
 
 ### Phase 0 — Foundation (S)
 Repo, Vite+TS+Vue skeleton, PWA plumbing (base path, autoUpdate), GH Pages CI, seeded RNG, worker + typed message protocol, save layer v0: IndexedDB (compressed blob per slot via CompressionStream), schema version 1 + migration harness, export/import to file, `storage.persist()` + `persisted()` surfacing.
@@ -79,6 +96,9 @@ iOS install prompt flow (7-day ITP warning for Safari-tab users), 3+ rotating au
 
 ### Phase 8 — Content, balance, polish (L, ongoing)
 Name/nation pools, world calendar breadth, EN copy pass, onboarding, difficulty tuning via batch-sim harness (thousands of careers overnight → survival/ranking distributions), procedural player portraits (faces.js-style), sound, juice.
+
+### Owner-approved additions (2026-07-22 Q&A, see decisions.md)
+Career profiles + new save model (Package K, before Phase 3 data). Structured events feeding News/Money/Gallery. Month fast-forward with event stops. Viz polish mini-package. Fog-of-war radar (Ph4). Relative-age-effect birth month (Ph4/6). Mom/dad choice (Ph6). Moments gallery (Ph6). Weather (Ph3/4 backlog). Replay storage (~100 B each) + share links. Spacing pass (next UI package).
 
 ### Post-v1 backlog
 ATP tour (data, not code — keep everything parameterized), ad hooks at match/season end (dormant points designed in Phase 3), portal builds (CrazyGames 1 MB / Yandex 200 KB adapters; portal cloud saves optional per-portal), **optional Google Drive backup** (appDataFolder scope, client-side OAuth via Google Identity Services — opt-in "connect cloud backup" button; export/import file remains the baseline), Google Play via TWA (Bubblewrap/PWABuilder), second-child dynasty meta, share/replay links (deterministic engine makes match replays trivially shareable), RU localization.

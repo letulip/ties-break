@@ -66,8 +66,6 @@ const profile = reactive<PlayerProfile>({
   playStyle: 'all-court',
 })
 
-const seed = ref('')
-
 const countryChosen = computed(() => profile.country !== '')
 const nameValid = computed(() => profile.kidName.trim().length > 0)
 const nextDisabled = computed(
@@ -104,7 +102,8 @@ function skipToDefaults(): void {
 }
 function start(): void {
   const finalProfile: PlayerProfile = { ...profile, kidName: profile.kidName.trim() || DEFAULT_PROFILE.kidName }
-  game.newCareer(seed.value.trim(), finalProfile)
+  // No seed input in the wizard – the store generates a readable one (see game.ts newCareer).
+  game.newCareer('', finalProfile)
 }
 </script>
 
@@ -225,9 +224,6 @@ function start(): void {
             </tr>
           </tbody>
         </table>
-        <div class="controls" style="margin-top: 12px">
-          <input v-model="seed" type="text" placeholder="seed (optional)" :disabled="game.busy" />
-        </div>
         <p v-if="game.error" class="error">{{ game.error }}</p>
         <div class="onboarding-actions">
           <button class="primary" :disabled="game.busy" @click="start">Start career</button>

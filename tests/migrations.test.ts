@@ -50,9 +50,71 @@ describe('save migrations', () => {
     expect(migrated.plan).toEqual(WEEK_PLAN_PRESETS.balanced)
   })
 
+  it('upgrades a v4 save: careerId backfilled as legacy-<seed>', () => {
+    const v4 = {
+      schemaVersion: 4,
+      seed: 'coco-2004',
+      week: 12,
+      fundsCents: 999,
+      profile: { ...DEFAULT_PROFILE },
+      plan: { ...WEEK_PLAN_PRESETS.balanced },
+      log: [],
+    }
+    const migrated = migrateSave(v4)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect(migrated.careerId).toBe('legacy-coco-2004')
+    expect(migrated.week).toBe(12)
+  })
+
+  it('upgrades a v5 save to v6: old log becomes info events, world systems generated', () => {
+    const v5 = {
+      schemaVersion: 5,
+      careerId: 'c-migrate-abc',
+      seed: 'migrate-me',
+      week: 30,
+      fundsCents: 5_000_00,
+      profile: { ...DEFAULT_PROFILE, kidName: 'Coco' },
+      plan: { ...WEEK_PLAN_PRESETS.balanced },
+      log: ['W1: technique drills', 'W2: recovery week'],
+    }
+    const migrated = migrateSave(v5)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    // cohort + rolling season regenerated deterministically from the seed
+    expect(migrated.cohort.length).toBe(199)
+    expect(migrated.season.length).toBeGreaterThan(0)
+    const maxWeek = Math.max(...migrated.season.map((e) => e.week))
+    expect(maxWeek - migrated.week).toBeGreaterThanOrEqual(26)
+    // old log lines become info events, in order; the log field is gone
+    const infoTexts = migrated.events.filter((e) => e.type === 'info').map((e) => e.text)
+    expect(infoTexts).toEqual(['W1: technique drills', 'W2: recovery week'])
+    expect('log' in migrated).toBe(false)
+    expect(migrated.results).toEqual([])
+    expect(migrated.entries).toEqual([])
+    expect(typeof migrated.kidRank).toBe('number')
+    expect(migrated.nextEventId).toBe(migrated.events.length)
+    // profile survives
+    expect(migrated.profile.kidName).toBe('Coco')
+  })
+
+  it('regenerates the same cohort/season for a given seed across migrations', () => {
+    const make = () => migrateSave({
+      schemaVersion: 5,
+      careerId: 'c-1',
+      seed: 'stable-seed',
+      week: 10,
+      fundsCents: 1_000_00,
+      profile: { ...DEFAULT_PROFILE },
+      plan: { ...WEEK_PLAN_PRESETS.balanced },
+      log: [],
+    })
+    expect(make().cohort).toEqual(make().cohort)
+    expect(make().season).toEqual(make().season)
+  })
+
   it('passes a current save through unchanged', () => {
     const current = {
       schemaVersion: SAVE_SCHEMA_VERSION,
+      careerId: 'c-s-abc',
       seed: 's',
       week: 1,
       fundsCents: 5,

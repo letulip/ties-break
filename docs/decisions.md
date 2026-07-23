@@ -76,5 +76,27 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 - **Next week** = the one big button (sticky above tabs on Home): resolves the planned week instantly — no timers, ever.
 - Home hub v2 per approved mockup: player card with Coach's-eye quote (by play style) instead of an Overall number; season-tier strip; This-week card with plan presets + planned-spend range; news feed with typed emoji.
 
+## 2026-07-22 – Owner Q&A round (19 items, all approved)
+
+1. **Seed**: removed from onboarding (always generated); shown in More for sharing/repro.
+2. **Kid tab** → named after the kid (tab icon = stage avatar); **Team card** (coach, later physio) lives there.
+3. **Ages**: 5 stages per the art (5-7 / 11-12 / 18 / 28 / 35). Stages 1-2 = accelerated prologue (Phase 6); weekly detail from ~13-14. START_AGE=14 is a Phase-0 stub, not a decision.
+4. **News = events/milestones; Money = ledger.** Log becomes structured events `{type, week, data}` (Phase 3). Old items collapse into season digests; flagged milestones persist → gallery.
+5. **Fast-forward = 1 month (4w) with auto-stop on events** (tournament, deadline, injury…). «52» becomes a dev tool in More.
+6. **Header money pill taps through to Money**; the Money tab slot will later become Stats/World (when Phase 3 has content for it).
+7. **Saves**: one visible autosave (2 generations under the hood — iOS corruption insurance, "Restore previous") + named manual saves; confirm popups on Load/Delete/Overwrite.
+8. **Gallery ("Moments")**: significant events generate posts (stage×emotion art + caption + age). In-game Instagram; also the archive for pruned News. Phase 6 (framework earlier).
+9. **Career profiles**: saves get careerId; More lists careers (name, photo, age, week) with per-career saves; new career never evicts another's. Must land BEFORE Phase 3 world data. Popup copy made honest.
+10. **Match viz polish** (mini-package): player dots run to the ball on both axes, server highlight, real side changes (odd games + every 6 TB points) with a beat.
+11. **Radar chart** (Phase 4): axes without numbers; contour sharpens as coach confidence grows (fog-of-war stats) — radar that respects "talent is discovered".
+12. **Match results commit before playback** (Phase 3 resolves the week first; viewing is optional cinema). **Replays = {seed, players, opts} ≈ 100 bytes** — store freely, shareable links later.
+13. Dependency graph (mermaid) added to plan.md, maintained.
+14. **Weather** (Phase 3/4 backlog): rain on outdoor (reschedule → fatigue), heat (stamina weight), wind (both p toward mean); indoor/outdoor flag on events.
+15. **Age curves for accuracy/power**: junior shot-level data barely exists; we generate our own age-based parameter curves, calibrated via our test harness (Phase 4).
+16. **Birth month = relative age effect** (real phenomenon): onboarding pick; temporary edge/deficit in age-group cohorts, fades toward the pro tour (Phase 4/6).
+17. **Mom or dad** at onboarding: tone presets for event texts and later dialog options (Phase 6); both loving, no caricature. Parent art needed.
+18. **Spacing discipline**: 4/8/12/16/24 scale; outer gaps ≥ inner gaps. Applied as a pass in the next UI package, then a standing rule.
+19. **Levers change as she grows** (core principle): childhood = direct training control → juniors = choosing people (coach prefs = build-by-proxy), calendar, money → adulthood = influence through relationship (advice acceptance scales with trust), finances, legacy. Every lever taken away is replaced by a new system. This arc IS the game.
+
 **Fairness principle (brand-level)**
 - Never rig outcomes against the player. The reference game's most damaging reviews are about pay-to-win rubber-banding ("if you pay, you win"). Transparent, deterministic-ish sim math is a marketing feature.

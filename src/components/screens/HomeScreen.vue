@@ -5,7 +5,7 @@
 // layout; "Advance" moved to App.vue's sticky Next-week bar.
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle } from '../../shared/protocol'
+import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent } from '../../shared/protocol'
 
 const game = useGameStore()
 const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.png`
@@ -58,15 +58,40 @@ const spendRange = computed<[number, number]>(() => {
   return [Math.round(lo * factor), Math.round(hi * factor)]
 })
 
-// --- News: week log restyled with a leading emoji per line -------------------
-function lineEmoji(line: string): string {
-  if (line.includes('sponsor')) return '🎁'
-  if (line.includes('spent $')) return '💰'
-  if (line.includes('career started')) return '🏁'
-  return '💰'
+// --- This week: the kid's nearest entered event (soonest upcoming week with
+// `entered: true`), or a plain "training week" hint when nothing is entered.
+const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
+
+// --- News: structured events (Package M), non-financial types only (expense/
+// income live on the Money ledger). Grouped by week, most recent week first;
+// milestones are pinned to the top of their own week group (stable sort keeps
+// everything else in emission order).
+const EVENT_EMOJI: Record<string, string> = {
+  info: '💬',
+  entry: '📝',
+  match: '🎾',
+  tournament: '🏁',
+  milestone: '🏆',
 }
-const week = computed(() => game.snapshot?.week ?? 0)
-const log = computed(() => game.snapshot?.log ?? [])
+interface NewsGroup {
+  week: number
+  events: WorldEvent[]
+}
+const newsGroups = computed<NewsGroup[]>(() => {
+  const events = (game.snapshot?.events ?? []).filter((e) => e.type !== 'expense' && e.type !== 'income')
+  const byWeek = new Map<number, WorldEvent[]>()
+  for (const e of events) {
+    const list = byWeek.get(e.week)
+    if (list) list.push(e)
+    else byWeek.set(e.week, [e])
+  }
+  return [...byWeek.entries()]
+    .sort((a, b) => b[0] - a[0])
+    .map(([week, list]) => ({
+      week,
+      events: [...list].sort((a, b) => (a.type === 'milestone' ? 0 : 1) - (b.type === 'milestone' ? 0 : 1)),
+    }))
+})
 </script>
 
 <template>
@@ -115,7 +140,13 @@ const log = computed(() => game.snapshot?.log ?? [])
 
     <section>
       <h2>This week</h2>
-      <div class="option-row">
+      <div class="this-week-status">
+        <span v-if="nearestEntered" class="pill ok">
+          {{ nearestEntered.label }} · {{ nearestEntered.surface }} · W{{ nearestEntered.week }}
+        </span>
+        <span v-else class="hint" style="margin: 0">No event – training week</span>
+      </div>
+      <div class="option-row" style="margin-top: 10px">
         <button
           v-for="p in PRESET_ORDER"
           :key="p"
@@ -139,13 +170,17 @@ const log = computed(() => game.snapshot?.log ?? [])
     <section>
       <h2>News</h2>
       <div class="log">
-        <table>
-          <tbody>
-            <tr v-for="(line, i) in log" :key="week + '-' + i">
-              <td>{{ lineEmoji(line) }} {{ line }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <p v-if="!newsGroups.length" class="hint" style="margin: 0">No news yet.</p>
+        <div v-for="group in newsGroups" :key="group.week" class="news-week">
+          <p class="news-week-label">W{{ group.week }}</p>
+          <table>
+            <tbody>
+              <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">
+                <td>{{ EVENT_EMOJI[e.type] }} {{ e.text }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   </template>
