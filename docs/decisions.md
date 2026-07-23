@@ -98,5 +98,9 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 18. **Spacing discipline**: 4/8/12/16/24 scale; outer gaps ≥ inner gaps. Applied as a pass in the next UI package, then a standing rule.
 19. **Levers change as she grows** (core principle): childhood = direct training control → juniors = choosing people (coach prefs = build-by-proxy), calendar, money → adulthood = influence through relationship (advice acceptance scales with trust), finances, legacy. Every lever taken away is replaced by a new system. This arc IS the game.
 
+## 2026-07-23 – Git process (owner directive, permanent)
+
+**Nothing is ever committed or pushed to `main` by Claude/agents.** All work happens on feature branches (`feat/…`, `fix/…`, `chore/…`); after the architect gate, the owner reviews and merges the PR himself. `main` = production (Pages deploys on push to main), so the owner's merge IS the release. `ci.yml` runs tests+build on every PR so review starts from a green check.
+
 **Fairness principle (brand-level)**
 - Never rig outcomes against the player. The reference game's most damaging reviews are about pay-to-win rubber-banding ("if you pay, you win"). Transparent, deterministic-ish sim math is a marketing feature.
