@@ -148,7 +148,6 @@ const RESULTS_WINDOW = 52 // ranking window; results older than this never count
 const EVENTS_CAP = 400 // non-`keep` events beyond this are pruned oldest-first
 const SNAPSHOT_EVENTS = 60 // events surfaced in a snapshot
 const UPCOMING_WEEKS = 8 // calendar horizon surfaced in a snapshot
-const RANK_MILESTONES = [100, 50, 10, 1] // kid-rank thresholds that pin a milestone
 
 function addEvent(world: WorldState, e: Omit<WorldEvent, 'id'>): void {
   world.events.push({ id: world.nextEventId++, ...e })
@@ -220,14 +219,6 @@ export function recomputeKidRank(world: WorldState): void {
 function fireMilestone(world: WorldState, key: string, text: string): void {
   if (world.events.some((e) => e.milestoneKey === key)) return
   addEvent(world, { week: world.week, type: 'milestone', text, keep: true, milestoneKey: key })
-}
-
-function fireRankMilestones(world: WorldState): void {
-  for (const t of RANK_MILESTONES) {
-    if (world.kidRank <= t) {
-      fireMilestone(world, `rank-${t}`, t === 1 ? 'World #1! 🏆' : `Broke into the world top ${t}!`)
-    }
-  }
 }
 
 // --- season wrap-up (Round 5 items 16/21; round-7 item 4) ---------------------
@@ -491,7 +482,10 @@ function recomputeRankAndMilestones(world: WorldState): void {
   const full = computeRanking(world.results, world.week, [...cohortIds(world), KID_ID])
   const kidRow = full.find((r) => r.playerId === KID_ID)
   world.kidRank = kidRow?.rank ?? full.length
-  if ((kidRow?.points ?? 0) > 0) fireRankMilestones(world)
+  // Rank milestones ("top 10/50/1") intentionally removed: in the early season almost no one
+  // has points, so the first result rockets her to a single-digit rank and all of them fire at
+  // once (reads absurdly). A real "world" ranking belief system belongs to the world-news
+  // feature (Phase 4+), not this placeholder cohort ranking.
 }
 
 // Step 6 of a resolved week: prune ledgers/feeds, roll the calendar forward.
