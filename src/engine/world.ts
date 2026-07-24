@@ -162,7 +162,10 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile }):
   const r = rngFromSeed(world.seed + ':kid')
   return {
     id: KID_ID,
-    name: world.profile.kidName,
+    // Round-7 item 17: full "First Last" (was first-name-only) so the match viewer's
+    // under-court labels short-name the kid the same way the opponent already is
+    // ("V. Martin", not "Vera"). formatShortName is applied at the display layer.
+    name: `${world.profile.kidName} ${world.profile.kidLastName}`.trim(),
     serve: pickInt(r, 40, 58),
     ret: pickInt(r, 40, 58),
     composure: pickInt(r, 35, 55),

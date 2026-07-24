@@ -5,6 +5,11 @@ trimmed himself (not stock/library audio). Drop replacements directly in this fo
 (`public/sounds/`) — no subfolders, no manifest edit required beyond `src/audio/sfx.ts`,
 which maps each key to its file(s) below.
 
+> The looping **background music** track (`public/music/theme.mp3`) is a separate,
+> stock-licensed asset — "Clean Sound" from Pixabay under the Pixabay Content License.
+> Its provenance lives in `public/music/README.md`; everything in *this* folder is the
+> owner's own recordings.
+
 | key             | file(s)                                                          | played when                                                                 |
 |-----------------|-------------------------------------------------------------------|------------------------------------------------------------------------------|
 | `hit`           | `hit-1.mp3` … `hit-9.mp3` (random variant each shot)              | a shot's flight starts (racket contact) – at every playback speed          |
@@ -32,7 +37,11 @@ Notes:
   in context.
 - Keep clips short (well under a second for `hit`/`out`/`click`/`clickSoft`; a couple of
   seconds is fine for `ooh`/`oohApplause`/`applauseShort`/`applauseFinal`/`takeYourSeats`)
-  and normalize loudness — playback volume is fixed in code (0.5 by default; `click`,
-  `clickSoft`, and `takeYourSeats` play quieter), not per-file.
+  and normalize loudness — playback volume is fixed in code, not per-file. The whole SFX bus
+  is scaled by a single master knob `SFX_MASTER` (0.40) so match sound sits under the 0.30
+  background music; per-key balance is set by the `KEY_VOICE` map (effective = voice × master):
+  `hit` 0.26, `out`/`ooh`/`oohApplause`/`applauseShort` 0.34, `applauseFinal` 0.40,
+  `takeYourSeats` 0.32, `click` 0.25, `clickSoft` 0.18. Tune `SFX_MASTER` alone to move the whole
+  soundscape relative to the music.
 - `.mp3` only (the code hardcodes the extension). If you need another format, update the
   URL template in `src/audio/sfx.ts`.

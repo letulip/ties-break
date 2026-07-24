@@ -11,6 +11,7 @@ import type { CareerMeta, SlotMeta } from '../../shared/protocol'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
+import { isHapticsOff, setHapticsOff, supportsHaptics } from '../../audio/haptics'
 
 const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -178,6 +179,17 @@ function toggleMusic(): void {
   setMusicMuted(!musicMuted.value)
   musicMuted.value = !musicMuted.value
 }
+
+// --- Haptics (round-7 item 13) -----------------------------------------------------
+// Same plain-localStorage shape ('tb-haptics-off'). `hapticsSupported` gates a small
+// "not supported on this device" hint; the switch itself is always shown so the option
+// is discoverable and consistent with Sound/Music. Default ON where supported.
+const hapticsSupported = supportsHaptics()
+const hapticsOff = ref(isHapticsOff())
+function toggleHaptics(): void {
+  setHapticsOff(!hapticsOff.value)
+  hapticsOff.value = !hapticsOff.value
+}
 </script>
 
 <template>
@@ -292,6 +304,22 @@ function toggleMusic(): void {
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
         <span class="sound-switch-label">{{ musicMuted ? 'OFF' : 'ON' }}</span>
+      </button>
+    </div>
+    <div class="career-row">
+      <div>
+        Haptics
+        <span v-if="!hapticsSupported" class="hint" style="margin: 2px 0 0">Not supported on this device</span>
+      </div>
+      <button
+        class="sound-switch"
+        :class="{ on: !hapticsOff }"
+        role="switch"
+        :aria-checked="!hapticsOff"
+        @click="toggleHaptics"
+      >
+        <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
+        <span class="sound-switch-label">{{ hapticsOff ? 'OFF' : 'ON' }}</span>
       </button>
     </div>
   </section>

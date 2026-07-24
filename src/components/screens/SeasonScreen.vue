@@ -19,6 +19,14 @@ import type { AnnotatedMatch } from '../../viz/types'
 import type { UpcomingEvent, WorldEvent, WorldMatch } from '../../shared/protocol'
 
 const game = useGameStore()
+const base = import.meta.env.BASE_URL
+// Round-7 item 18: the this-week "Watch" button's ▶ glyph broke the row layout – swap it for
+// the play.svg icon, CSS-mask-tinted to follow the button's text colour (same technique as the
+// tab icons). SeasonScreen only; the News "Watch" keeps its glyph per the owner.
+const playIconStyle = {
+  WebkitMaskImage: `url(${base}icons/play.svg)`,
+  maskImage: `url(${base}icons/play.svg)`,
+}
 
 function formatDollars(cents: number): string {
   return `$${Math.round(cents / 100).toLocaleString('en-US')}`
@@ -158,7 +166,9 @@ function playExhibition(): void {
       <ol class="bracket-list">
         <li v-for="m in thisWeekMatches" :key="m.id" class="bracket-row">
           <span>{{ m.text }}</span>
-          <button v-if="m.match" class="link sfx-watch" @click="watchMatch(m)">Watch ▶</button>
+          <button v-if="m.match" class="link sfx-watch" @click="watchMatch(m)">
+            Watch <span class="watch-play-icon" :style="playIconStyle"></span>
+          </button>
         </li>
       </ol>
     </section>
@@ -185,8 +195,9 @@ function playExhibition(): void {
               }}
             </p>
             <div class="controls" style="margin-top: 8px">
+              <!-- Round-7 item 21: past tense once the window has shut. -->
               <span class="pill" :class="{ negative: week > row.event.deadlineWeek && !row.event.entered }">
-                closes W{{ row.event.deadlineWeek }}
+                {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} W{{ row.event.deadlineWeek }}
               </span>
               <span v-if="row.event.entered" class="pill ok">Entered</span>
             </div>

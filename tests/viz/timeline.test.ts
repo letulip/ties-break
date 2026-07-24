@@ -11,6 +11,9 @@ import {
   SET_END,
   CHANGE_ENDS,
   MATCH_END,
+  POINT_END_GAP,
+  GAME_END_GAP,
+  SET_END_GAP,
 } from '../../src/viz/timeline'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { createScore, awardPoint } from '../../src/engine/match/scoring'
@@ -205,11 +208,14 @@ describe('timeline — event sequencing and durations (full mode)', () => {
       ['shot', RALLY_FLIGHT, 0, 1],
       ['shot', RALLY_FLIGHT, 0, 2],
       ['point-end', POINT_END, 0],
+      // Round-7 item 10: tiny quiet gap after p0's point-end (p0 is not the final point).
+      ['gap', POINT_END_GAP, 0],
       ['point-start', POINT_START, 1],
       ['shot', SERVE_FLIGHT, 1, 0],
       ['shot', SERVE_FLIGHT, 1, 1],
       ['shot', RALLY_FLIGHT, 1, 2],
       ['point-end', POINT_END_BIG, 1],
+      // p1 is the final point: no trailing gaps (its game-end/set-end run straight into match-end).
       ['game-end', GAME_END, 1],
       ['set-end', SET_END, 1],
       ['match-end', MATCH_END, 1],
@@ -358,14 +364,18 @@ describe('buildTimeline — round 4 item 3: change-ends events', () => {
       ['point-start', POINT_START, 0],
       ['shot', SERVE_FLIGHT, 0, 0],
       ['point-end', POINT_END, 0],
+      ['gap', POINT_END_GAP, 0], // tiny gap after p0's point-end
       ['point-start', POINT_START, 1],
       ['shot', SERVE_FLIGHT, 1, 0],
       ['point-end', POINT_END, 1],
+      ['gap', POINT_END_GAP, 1], // tiny gap after p1's point-end
       ['game-end', GAME_END, 1],
+      ['gap', GAME_END_GAP, 1], // longer game gap, BEFORE the change-ends beat
       ['change-ends', CHANGE_ENDS, 1],
       ['point-start', POINT_START, 2],
       ['shot', SERVE_FLIGHT, 2, 0],
       ['point-end', POINT_END, 2],
+      // p2 is the final point: no gaps at all (point-end -> game-end -> set-end -> match-end).
       ['game-end', GAME_END, 2],
       ['set-end', SET_END, 2],
       ['match-end', MATCH_END, 2],
@@ -379,6 +389,68 @@ describe('buildTimeline — round 4 item 3: change-ends events', () => {
   })
 })
 
+describe('timeline — round-7 item 10: quiet gaps so applause never overlaps the next hit', () => {
+  it('emits a tiny gap after every non-final point-end, and a longer gap after game-end / set-end', () => {
+    const m = makeMatch([
+      { n: 1, shots: ['serve1'] }, // p0: plain
+      { n: 2, shots: ['serve1'], gameEnd: true }, // p1: game ends
+      { n: 3, shots: ['serve1'], gameEnd: true, setEnd: true }, // p2: set ends
+      { n: 4, shots: ['serve1'] }, // p3: final (plain)
+    ])
+    const events = buildTimeline(m, 'full').events
+
+    // every non-final point-end (p0,p1,p2) is immediately followed by a tiny POINT_END_GAP
+    for (const idx of [0, 1, 2]) {
+      const peAt = events.findIndex((e) => e.kind === 'point-end' && e.pointIndex === idx)
+      expect(peAt).toBeGreaterThanOrEqual(0)
+      const next = events[peAt + 1]
+      expect(next.kind).toBe('gap')
+      expect(next.pointIndex).toBe(idx)
+      expect(Math.abs(next.duration - POINT_END_GAP)).toBeLessThan(EPS)
+    }
+
+    // game-end (p1) is immediately followed by a GAME_END_GAP
+    const geAt = events.findIndex((e) => e.kind === 'game-end' && e.pointIndex === 1)
+    expect(events[geAt + 1].kind).toBe('gap')
+    expect(Math.abs(events[geAt + 1].duration - GAME_END_GAP)).toBeLessThan(EPS)
+
+    // set-end (p2) is immediately followed by a SET_END_GAP
+    const seAt = events.findIndex((e) => e.kind === 'set-end' && e.pointIndex === 2)
+    expect(events[seAt + 1].kind).toBe('gap')
+    expect(Math.abs(events[seAt + 1].duration - SET_END_GAP)).toBeLessThan(EPS)
+  })
+
+  it('suppresses all gaps on the match final point (point-end runs straight into game-end)', () => {
+    const m = makeMatch([
+      { n: 1, shots: ['serve1'], gameEnd: true },
+      { n: 2, shots: ['serve1'], gameEnd: true, setEnd: true }, // final point, game+set end
+    ])
+    const events = buildTimeline(m, 'full').events
+    expect(events.some((e) => e.kind === 'gap' && e.pointIndex === 1)).toBe(false)
+    const peAt = events.findIndex((e) => e.kind === 'point-end' && e.pointIndex === 1)
+    expect(events[peAt + 1].kind).toBe('game-end')
+  })
+
+  it('emits no gap events in skip mode', () => {
+    const m = makeMatch([{ n: 1, shots: ['serve1'], gameEnd: true, setEnd: true }])
+    const tl = buildTimeline(m, 'skip')
+    expect(tl.events.every((e) => e.kind !== 'gap')).toBe(true)
+  })
+
+  it('gaps are silent holds: a gap never coincides with a shot and never changes the point index mid-hold', () => {
+    const m = simAnnotated('viz-e-7')
+    const events = buildTimeline(m, 'full').events
+    for (let i = 0; i < events.length; i++) {
+      if (events[i].kind !== 'gap') continue
+      // a gap carries a real point index and a positive duration
+      expect(events[i].pointIndex).toBeGreaterThanOrEqual(0)
+      expect(events[i].duration).toBeGreaterThan(0)
+      // a gap is never a shot (no ball in flight during the quiet hold)
+      expect(events[i].shotIndex).toBeUndefined()
+    }
+  })
+})
+
 describe('timeline — duration bands on real simulated matches (ATP mirror, fixed seeds)', () => {
   // NOTE ON THE BAND: with the mandated timing constants and the Phase-1 engine's
   // point counts, only reel-length matches fit the spec's full<=240s-ish ceiling
@@ -387,11 +459,13 @@ describe('timeline — duration bands on real simulated matches (ATP mirror, fix
   // reported as a spec tension. Rallies here are the simplified stand-in above.
   //
   // Round 4 item 3 raised both ceilings slightly (240->260, 90->100): every game that
-  // swaps ends now adds a real CHANGE_ENDS (0.9s) beat, which legitimately lengthens
-  // playback. Measured across these 50 fixed seeds post-change: full ∈ [204.7, 245.9],
-  // key ∈ [64.1, 91.5] for the reel-length subset — both ceilings keep ~14s/~8s of
-  // headroom above the observed max, and 260s@1x still lands at 130s (~2.2min) at the
-  // UI's default 2x speed, comfortably inside the owner's 2-3.5min target.
+  // swaps ends adds a real CHANGE_ENDS (0.9s) beat. Round-7 item 10 re-centred them again
+  // (260->290, 100->120): the trailing quiet gaps (POINT_END_GAP after every point-end,
+  // GAME_END_GAP/SET_END_GAP after game/set breaks) so applause never overlaps the next hit
+  // also legitimately lengthen playback. Measured across these 50 fixed seeds post-change:
+  // full ∈ [229.9, 275.2], key ∈ [76.2, 107.5] for the reel-length subset — both ceilings
+  // keep ~15s/~12s of headroom above the observed max, and 290s@1x still lands at 145s
+  // (~2.4min) at the UI's default 2x speed, comfortably inside the owner's 2-3.5min target.
   const seeds = Array.from({ length: 50 }, (_, i) => `viz-e-${i}`)
   const matches = seeds.map(simAnnotated)
 
@@ -405,16 +479,16 @@ describe('timeline — duration bands on real simulated matches (ATP mirror, fix
     }
   })
 
-  it('reel-length matches (<=130 pts) land in full [100,260]s and key [15,100]s', () => {
+  it('reel-length matches (<=130 pts) land in full [100,290]s and key [15,120]s', () => {
     const reel = matches.filter((m) => m.result.totalPoints <= 130)
     expect(reel.length).toBeGreaterThanOrEqual(8)
     for (const m of reel) {
       const full = buildTimeline(m, 'full').duration
       const key = buildTimeline(m, 'key').duration
       expect(full).toBeGreaterThanOrEqual(100)
-      expect(full).toBeLessThanOrEqual(260)
+      expect(full).toBeLessThanOrEqual(290)
       expect(key).toBeGreaterThanOrEqual(15)
-      expect(key).toBeLessThanOrEqual(100)
+      expect(key).toBeLessThanOrEqual(120)
     }
   })
 
@@ -423,8 +497,8 @@ describe('timeline — duration bands on real simulated matches (ATP mirror, fix
     const full = buildTimeline(m, 'full').duration
     const key = buildTimeline(m, 'key').duration
     expect(full).toBeGreaterThanOrEqual(100)
-    expect(full).toBeLessThanOrEqual(260)
+    expect(full).toBeLessThanOrEqual(290)
     expect(key).toBeGreaterThanOrEqual(15)
-    expect(key).toBeLessThanOrEqual(100)
+    expect(key).toBeLessThanOrEqual(120)
   })
 })

@@ -69,14 +69,9 @@ const currentOppRank = ref<number | null>(null)
 const replayOpen = ref(false)
 // True when the replay was opened from a pre-match card (finishing it advances to the result).
 const replayAdvances = ref(false)
-// Round-5 sound rewiring: was the round just revealed actually watched through MatchViewer
-// (which already plays its own match-end cue), or skipped straight to the result card (no
-// match-end cue ever played)? Read once, when the finale screen first shows, to decide
-// whether the champion finale needs to supply its own applauseFinal.
-const lastRoundWatched = ref(false)
-// True only for the round currently being presented being the tournament final – routed into
-// the embedded MatchViewer so its match-end cue is the bigger `applauseFinal`, not the regular
-// short applause used for every other round.
+// True only while the round being presented is the tournament FINAL. Round-7 item 14: the
+// final's embedded MatchViewer suppresses its own match-end applause (`suppressEndApplause`)
+// so the celebratory applause is played exactly once, by the finale screen below.
 const isFinalRound = computed(() => pending.value?.roundLabel === 'Final')
 
 function enterPre(): void {
@@ -97,10 +92,9 @@ if (pending.value?.finished) phase.value = 'finale'
 else if (pending.value && pending.value.bracket.length === 0) phase.value = 'splash'
 else enterPre()
 
-async function showResult(watched: boolean): Promise<void> {
+async function showResult(): Promise<void> {
   if (phase.value !== 'pre') return
   replayOpen.value = false
-  lastRoundWatched.value = watched
   await game.tournamentReveal()
   phase.value = 'post'
 }
@@ -115,7 +109,7 @@ function watchAgain(): void {
 }
 function endReplay(): void {
   replayOpen.value = false
-  if (replayAdvances.value) showResult(true)
+  if (replayAdvances.value) showResult()
 }
 
 function next(): void {
@@ -132,21 +126,21 @@ async function continueFinale(): Promise<void> {
   await game.tournamentClose()
 }
 
-// Round-5 sound rewiring: the champion finale gets its own celebratory applauseFinal, but
-// only when the final round wasn't watched through MatchViewer (which already played that
-// cue at its own match-end) – e.g. the player hit "Skip" on the final's pre-match card.
-// `{ immediate: true }` also covers resuming straight into an already-finished tournament
-// (reload mid-celebration): the fired-once guard still applies, so this plays at most once
-// per mount either way. Note: if the final was skipped and then re-watched via "Watch
-// again" from the post-match card, this still fires (lastRoundWatched only reflects the
-// showResult call) – an acceptable double applause in that edge case, per spec.
+// Round-7 item 14: the finale screen OWNS the celebratory applause whenever the kid PLAYED
+// the final – whether she won it (champion) or lost it (runner-up). The final match's viewer
+// stays silent at its own match-end (suppressEndApplause), so this is the single applauseFinal,
+// fired once here. A kid eliminated EARLIER gets nothing on the (sad) finale: her last match
+// already rang its normal short applause at its own match-end. `{ immediate: true }` also
+// covers resuming straight into an already-finished tournament (reload mid-celebration); the
+// fired-once guard keeps it to at most one play per mount. This replaced the old
+// lastRoundWatched double-fire hack.
 let finaleSoundPlayed = false
 watch(
   phase,
   (p) => {
     if (p !== 'finale' || finaleSoundPlayed) return
     finaleSoundPlayed = true
-    if (pending.value?.kidChampion && !lastRoundWatched.value) playSfx('applauseFinal')
+    if (pending.value?.kidChampion || isRunnerUp.value) playSfx('applauseFinal')
   },
   { immediate: true },
 )
@@ -201,34 +195,46 @@ const matchMeta = computed(() => {
   return { rally: s.meanRallyLength.toFixed(1), duration: s.durationEstimate }
 })
 
-// --- Round 5 item 5: full draw of every revealed round --------------------------
-const showFullDraw = ref(false)
-// Conventional "Winner d. Loser 6-4 ..." reading: world.ts already normalises `score` to the
-// WINNER's perspective, so this just reorders the two names to match (draw side a/b order
-// carries no meaning to the player – who actually won does).
-interface FullDrawMatch {
-  winnerId: string
-  winnerName: string
-  loserName: string
+// --- Round-7 item 19: the full draw as a real visual bracket ---------------------
+// One column per revealed round (R32…F), each match a small two-row cell (the two players,
+// winner bolded/accent, score winner-perspective), the kid's path highlighted, columns
+// left→right showing progression. Shown inline between rounds (post phase) and at the finale.
+// `aName`/`bName` from world.ts are already short ("F. Last"); score is winner-perspective.
+interface BracketSide {
+  name: string
+  won: boolean
+  isKid: boolean
+}
+interface BracketCell {
+  a: BracketSide
+  b: BracketSide
   score?: string
   isKidMatch: boolean
 }
-interface FullDrawRound {
+interface BracketColumn {
   round: number
-  label: string
-  matches: FullDrawMatch[]
+  short: string
+  cells: BracketCell[]
 }
-function toDrawMatch(m: FullBracketMatch): FullDrawMatch {
-  const winnerIsA = m.winnerId === m.aId
+/** "Round of 32" → "R32", "Quarterfinal" → "QF", "Semifinal" → "SF", "Final" → "F". */
+function shortRound(label: string): string {
+  if (label === 'Final') return 'F'
+  if (label === 'Semifinal') return 'SF'
+  if (label === 'Quarterfinal') return 'QF'
+  const m = /^Round of (\d+)$/.exec(label)
+  return m ? `R${m[1]}` : label
+}
+function toCell(m: FullBracketMatch): BracketCell {
+  const aKid = m.aId === KID_ID
+  const bKid = m.bId === KID_ID
   return {
-    winnerId: m.winnerId,
-    winnerName: winnerIsA ? m.aName : m.bName,
-    loserName: winnerIsA ? m.bName : m.aName,
+    a: { name: m.aName, won: m.winnerId === m.aId, isKid: aKid },
+    b: { name: m.bName, won: m.winnerId === m.bId, isKid: bKid },
     score: m.score,
-    isKidMatch: m.aId === KID_ID || m.bId === KID_ID,
+    isKidMatch: aKid || bKid,
   }
 }
-const fullDrawRounds = computed<FullDrawRound[]>(() => {
+const bracketColumns = computed<BracketColumn[]>(() => {
   const matches = pending.value?.fullBracket ?? []
   const byRound = new Map<number, FullBracketMatch[]>()
   for (const m of matches) {
@@ -238,8 +244,13 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
   }
   return [...byRound.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([round, list]) => ({ round, label: list[0].roundLabel, matches: list.map(toDrawMatch) }))
+    .map(([round, list]) => ({ round, short: shortRound(list[0].roundLabel), cells: list.map(toCell) }))
 })
+// Only surface the bracket once a round has actually been played, between rounds (post) and at
+// the finale – never over the pre-match card or during a replay.
+const showBracket = computed(
+  () => bracketColumns.value.length > 0 && !replayOpen.value && (phase.value === 'post' || phase.value === 'finale'),
+)
 </script>
 
 <template>
@@ -289,25 +300,29 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
           </div>
         </div>
 
-        <!-- Round 5 item 5: the full draw of every round revealed so far, collapsible -->
-        <section v-if="fullDrawRounds.length" class="tf-card tf-fulldraw">
-          <button class="tf-fulldraw-toggle" @click="showFullDraw = !showFullDraw">
-            <span>Full draw</span>
-            <span>{{ showFullDraw ? '▲' : '▼' }}</span>
-          </button>
-          <div v-if="showFullDraw" class="tf-fulldraw-body">
-            <div v-for="grp in fullDrawRounds" :key="grp.round" class="tf-fulldraw-round">
-              <p class="tf-fulldraw-round-label">{{ grp.label }}</p>
-              <div
-                v-for="(m, i) in grp.matches"
-                :key="i"
-                class="tf-fulldraw-match"
-                :class="{ 'kid-match': m.isKidMatch }"
-              >
-                <span class="won">{{ m.winnerName }}</span>
-                <span class="tf-fulldraw-vs">d.</span>
-                <span>{{ m.loserName }}</span>
-                <span v-if="m.score" class="num tf-fulldraw-score">{{ m.score }}</span>
+        <!-- Round-7 item 19: the full draw as a real bracket – columns per round, two-row
+             cells, winner accent, the kid's path highlighted, horizontal scroll if wide.
+             Inline between rounds (post) and at the finale, never a collapsible. -->
+        <section v-if="showBracket" class="tf-card tf-bracket">
+          <p class="tf-bracket-title">Draw</p>
+          <div class="tf-bracket-scroll">
+            <div class="tf-bracket-cols">
+              <div v-for="col in bracketColumns" :key="col.round" class="tf-bracket-col">
+                <p class="tf-bracket-round">{{ col.short }}</p>
+                <div class="tf-bracket-cells">
+                  <div
+                    v-for="(cell, i) in col.cells"
+                    :key="i"
+                    class="tf-bracket-cell"
+                    :class="{ 'kid-match': cell.isKidMatch }"
+                  >
+                    <div class="tf-bc-players">
+                      <span class="tf-bc-row" :class="{ won: cell.a.won, kid: cell.a.isKid }">{{ cell.a.name }}</span>
+                      <span class="tf-bc-row" :class="{ won: cell.b.won, kid: cell.b.isKid }">{{ cell.b.name }}</span>
+                    </div>
+                    <span v-if="cell.score" class="tf-bc-score num">{{ cell.score }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -315,8 +330,7 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
 
         <!-- Watching a replay (inline) -->
       <section v-if="replayOpen && annotated && currentMatch" class="tf-card">
-        <div class="tf-card-head">
-          <span class="pill">{{ pending.roundLabel }}</span>
+        <div class="tf-card-head" style="justify-content: flex-end">
           <button class="link" @click="endReplay">To result →</button>
         </div>
         <MatchViewer
@@ -326,7 +340,8 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
           :surface="currentMatch.surface"
           :rank-a="viewerRankA"
           :rank-b="viewerRankB"
-          :final-match="isFinalRound"
+          :stage-label="pending.roundLabel"
+          :suppress-end-applause="isFinalRound"
           @finish="endReplay"
         />
       </section>
@@ -347,7 +362,7 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
         </div>
         <div class="tf-actions">
           <button class="primary sfx-watch" :disabled="game.busy" @click="watchMatch">Watch match</button>
-          <button :disabled="game.busy" @click="showResult(false)">Skip</button>
+          <button :disabled="game.busy" @click="showResult">Skip</button>
         </div>
       </section>
 

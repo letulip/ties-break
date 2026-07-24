@@ -19,6 +19,8 @@
 //  - `muted` persists to localStorage and can be read/written any time – it never
 //    touches an <audio> element, so the More screen's toggle works before initSfx().
 
+import { vibrate } from './haptics'
+
 export type SfxKey =
   | 'hit'
   | 'out'
@@ -44,14 +46,36 @@ const MANIFEST: Record<SfxKey, string | string[]> = {
   clickSoft: 'click-soft',
 }
 
-const VOLUME = 0.5
-// Per-key volume overrides. Both app-wide UI click cues are deliberately quiet so they
-// read as a tap, not a match cue (round-5 item 6 / polish-pass click split): `click` is
-// the hit-like tick reserved for tab-bar navigation and "Watch match"/"Watch"/"Watch
-// again" buttons; `clickSoft` is the plainer tick for every other button. `takeYourSeats`
-// is a longer spoken/crowd cue at playback start and is likewise dialed down so it
-// doesn't jar against the match sfx.
-const KEY_VOLUME: Partial<Record<SfxKey, number>> = { click: 0.25, clickSoft: 0.25, takeYourSeats: 0.35 }
+// Round-7 (audio balance): the whole SFX bus sits UNDER the 0.30 background music
+// (src/audio/music.ts) so the menu→match transition no longer jumps in loudness. `SFX_MASTER`
+// is the ONE owner knob (like economy.ts's constants) – every play is scaled by it; the per-key
+// VOICE levels below only set the balance BETWEEN sounds. Effective volume = VOICE × SFX_MASTER,
+// clamped to [0,1]. With SFX_MASTER = 0.40 the effective levels land on the owner's targets:
+//   hit 0.26 (frequent → quietest) · out/ooh/oohApplause/applauseShort 0.34 · applauseFinal 0.40
+//   (celebratory peak) · takeYourSeats 0.32 · click 0.25 (UI tick, unchanged) · clickSoft 0.18
+//   (softer than click). Move SFX_MASTER alone to shift the whole soundscape vs the music.
+const SFX_MASTER = 0.4
+/** Voice level (0..1) for any key without an explicit override. 0.85 × 0.40 = 0.34 effective. */
+const DEFAULT_VOICE = 0.85
+// Per-key voice overrides. The UI click cues stay deliberately quiet so they read as a tap, not a
+// match cue (round-5 item 6 / polish-pass click split): `click` (effective 0.25) is the hit-like
+// tick for tab-bar navigation and "Watch match"/"Watch"/"Watch again" buttons; `clickSoft`
+// (effective 0.18, softer) is the plainer tick for every other button. `hit` is the quietest match
+// cue because it fires constantly; `takeYourSeats` (a longer crowd cue) and `applauseFinal` (the
+// celebration) are the two the owner wants to read clearly above the rest.
+const KEY_VOICE: Partial<Record<SfxKey, number>> = {
+  hit: 0.65, // 0.26
+  applauseFinal: 1.0, // 0.40
+  takeYourSeats: 0.8, // 0.32
+  click: 0.625, // 0.25
+  clickSoft: 0.45, // 0.18
+  // out / ooh / oohApplause / applauseShort fall through to DEFAULT_VOICE → 0.34
+}
+
+/** Effective, master-scaled volume for a key, clamped to a valid [0,1] range. */
+function volumeFor(key: SfxKey): number {
+  return Math.min(1, Math.max(0, (KEY_VOICE[key] ?? DEFAULT_VOICE) * SFX_MASTER))
+}
 const MUTED_STORAGE_KEY = 'tb-muted'
 
 function readMuted(): boolean {
@@ -121,7 +145,7 @@ async function probe(file: string, key: SfxKey): Promise<HTMLAudioElement | null
     return null
   }
   const audio = new Audio(url)
-  audio.volume = KEY_VOLUME[key] ?? VOLUME
+  audio.volume = volumeFor(key)
   audio.preload = 'auto'
   cache.set(file, audio)
   return audio
@@ -188,6 +212,10 @@ export function playSfx(key: SfxKey): void {
 // button that also happens to be `button.primary` (e.g. "Watch match") still gets `click`.
 const HIT_CLICK_SELECTOR = '.tab-btn, .sfx-watch'
 const SOFT_CLICK_SELECTOR = 'button.primary, .option-pill'
+// Round-7 item 13: presses that also get a short haptic buzz. A superset-by-intent of the
+// "meaningful action" controls – every element here already matches HIT or SOFT above, so
+// the early `if (!hit && !soft) return` never wrongly skips a haptic-eligible press.
+const HAPTIC_SELECTOR = 'button.primary, .tab-btn, .sfx-watch'
 const CLICK_THROTTLE_MS = 80
 let lastClickAt = 0
 let installed = false
@@ -207,5 +235,7 @@ export function installGlobalSfx(): void {
     if (now - lastClickAt < CLICK_THROTTLE_MS) return // no spam on rapid clicks
     lastClickAt = now
     playSfx(hit ? 'click' : 'clickSoft')
+    // Same throttle window as the click cue, so a rapid double-tap buzzes once.
+    if (target?.closest?.(HAPTIC_SELECTOR)) vibrate()
   })
 }
