@@ -946,7 +946,11 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         label: TIERS[e.tier].label,
         entered: entered.has(e.id),
         eligible,
-        ...(eligible ? {} : { ineligibleReason: points < minPoints ? ('locked' as const) : ('outgrown' as const) }),
+        ...(eligible
+          ? {}
+          : points < minPoints
+            ? { ineligibleReason: 'locked' as const, pointsToEnter: minPoints }
+            : { ineligibleReason: 'outgrown' as const }),
       }
     })
 }

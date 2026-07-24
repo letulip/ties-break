@@ -228,6 +228,8 @@ export interface UpcomingEvent {
   /** why the kid can't enter, for the UI lock label; absent when eligible. 'locked' = not enough
    *  ranking points yet (below the tier's minPoints); 'outgrown' = past its ceiling now. */
   ineligibleReason?: 'locked' | 'outgrown'
+  /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
+  pointsToEnter?: number
 }
 
 /** A standings row enriched for display (RankingRow only carries ids). */

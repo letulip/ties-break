@@ -144,6 +144,7 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
       } else {
         expect(e.eligible).toBe(false)
         expect(e.ineligibleReason).toBe('locked') // 0 is below minPoints – not there yet
+        expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0]) // drives the "Reach N pts" lock label
       }
     }
   })
