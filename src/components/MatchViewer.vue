@@ -450,11 +450,9 @@ function startClock(): void {
 function jumpToEnd(): void {
   pauseInternal()
   clock = timeline.duration
-  // Drive the event-START hook to the end so its reaction cues aren't lost when we skip past
-  // the walk (in 'skip' mode the timeline is a lone match-end event, so this plays its single
-  // applause once). Guarded by startedCursor, so a resume that already fired some starts never
-  // double-fires here.
-  processStartsUpTo(clock)
+  // Skip is silent: no one's watching, so no crowd cues play. Mark every event as already
+  // started (without firing its start-hook sound) so a later resume never back-fires them.
+  startedCursor = timeline.events.length
   cursor = timeline.events.length
   currentEvent = timeline.events[timeline.events.length - 1] ?? null
   displayedPointIndex.value = props.match.points.length - 1
