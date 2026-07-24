@@ -7,6 +7,7 @@
 import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import MatchViewer from './MatchViewer.vue'
+import BracketTabs from './BracketTabs.vue'
 import { playSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
@@ -17,7 +18,7 @@ import { KID_ID, flipScore } from '../engine/world'
 import { formatShortName } from '../shared/format'
 import { weekRange } from '../shared/dates'
 import type { MatchOptions, Side } from '../engine/match/types'
-import type { FullBracketMatch, WorldMatch } from '../shared/protocol'
+import type { WorldMatch } from '../shared/protocol'
 
 const game = useGameStore()
 const base = import.meta.env.BASE_URL
@@ -59,7 +60,10 @@ const finalePortrait = computed(() => {
 })
 
 // --- flow state --------------------------------------------------------------
-const phase = ref<'splash' | 'pre' | 'post' | 'finale'>('splash')
+// Round-7 (spectate): 'spectate' sits between the kid's post-match card and the finale – once
+// she's out (but not champion / runner-up) the flow walks the SUBSEQUENT rounds she isn't in,
+// round by round, up to and including the Final, before "Continue" goes home.
+const phase = ref<'splash' | 'pre' | 'post' | 'spectate' | 'finale'>('splash')
 // The record currently being presented – captured from the pre-match snapshot so the post-match
 // card keeps it even after the reveal has advanced the pending pointer to the next round.
 const currentMatch = ref<WorldMatch | null>(null)
@@ -73,6 +77,43 @@ const replayAdvances = ref(false)
 // final's embedded MatchViewer suppresses its own match-end applause (`suppressEndApplause`)
 // so the celebratory applause is played exactly once, by the finale screen below.
 const isFinalRound = computed(() => pending.value?.roundLabel === 'Final')
+
+// --- Round-7 spectate geometry ------------------------------------------------
+// The Final's round index (log2(draw) - 1) and the round the kid exited in. Single-elim: she
+// plays contiguous rounds 0..bracket.length-1, so her exit round is bracket.length-1 (once
+// finished, `bracket` holds all her matches). She reached the Final iff exit === finalRound.
+const finalRound = computed(() => (drawSize.value ? Math.log2(drawSize.value) - 1 : 0))
+const kidExitRound = computed(() => (pending.value ? pending.value.bracket.length - 1 : -1))
+// The round the spectate walk is currently showing (starts at the round after her exit).
+const spectateRound = ref(0)
+// The default-active tab for the draw: the spectate round while spectating, otherwise the kid's
+// latest played round (bracket.length-1).
+const bracketActiveRound = computed(() =>
+  phase.value === 'spectate' ? spectateRound.value : Math.max(0, (pending.value?.bracket.length ?? 1) - 1),
+)
+function stageName(round: number): string {
+  const remaining = drawSize.value / 2 ** round
+  if (remaining === 2) return 'Final'
+  if (remaining === 4) return 'Semifinal'
+  if (remaining === 8) return 'Quarterfinal'
+  return `Round of ${remaining}`
+}
+const spectateRoundLabel = computed(() => stageName(spectateRound.value))
+
+// The whole draw once finished (through the Final), else the kid's played rounds – rendered as
+// the round-tabbed bracket between rounds (post) and during the spectate walk (never over a
+// replay or the pre-match card).
+const bracketMatches = computed(() => pending.value?.fullBracket ?? [])
+const showBracket = computed(
+  () => bracketMatches.value.length > 0 && !replayOpen.value && (phase.value === 'post' || phase.value === 'spectate'),
+)
+// The tournament champion (the Final match's winner) – named on the non-champion finale card,
+// where there is no kid portrait to celebrate an AI winner.
+const championName = computed(() => {
+  const f = bracketMatches.value.find((m) => m.round === finalRound.value)
+  if (!f) return ''
+  return f.winnerId === f.aId ? f.aName : f.bName
+})
 
 function enterPre(): void {
   phase.value = 'pre'
@@ -115,8 +156,25 @@ function endReplay(): void {
 function next(): void {
   const p = pending.value
   if (!p) return
-  if (p.finished) phase.value = 'finale'
-  else enterPre()
+  // Still in her run -> the next round's pre-match card.
+  if (!p.finished) {
+    enterPre()
+    return
+  }
+  // Her run is over. Champion or a lost final (runner-up) -> straight to the finale; both are
+  // cases where she reached the Final so there's nothing left to spectate. Otherwise she exited
+  // early: spectate the SUBSEQUENT rounds she isn't in, starting the round after her exit.
+  if (p.kidChampion || kidExitRound.value >= finalRound.value) {
+    phase.value = 'finale'
+    return
+  }
+  spectateRound.value = kidExitRound.value + 1
+  phase.value = 'spectate'
+}
+// The spectate walk: advance one round until the Final is shown, then "Continue" -> finale.
+function nextSpectateRound(): void {
+  if (spectateRound.value < finalRound.value) spectateRound.value++
+  else phase.value = 'finale'
 }
 async function skipAll(): Promise<void> {
   await game.tournamentSkip()
@@ -195,62 +253,6 @@ const matchMeta = computed(() => {
   return { rally: s.meanRallyLength.toFixed(1), duration: s.durationEstimate }
 })
 
-// --- Round-7 item 19: the full draw as a real visual bracket ---------------------
-// One column per revealed round (R32…F), each match a small two-row cell (the two players,
-// winner bolded/accent, score winner-perspective), the kid's path highlighted, columns
-// left→right showing progression. Shown inline between rounds (post phase) and at the finale.
-// `aName`/`bName` from world.ts are already short ("F. Last"); score is winner-perspective.
-interface BracketSide {
-  name: string
-  won: boolean
-  isKid: boolean
-}
-interface BracketCell {
-  a: BracketSide
-  b: BracketSide
-  score?: string
-  isKidMatch: boolean
-}
-interface BracketColumn {
-  round: number
-  short: string
-  cells: BracketCell[]
-}
-/** "Round of 32" → "R32", "Quarterfinal" → "QF", "Semifinal" → "SF", "Final" → "F". */
-function shortRound(label: string): string {
-  if (label === 'Final') return 'F'
-  if (label === 'Semifinal') return 'SF'
-  if (label === 'Quarterfinal') return 'QF'
-  const m = /^Round of (\d+)$/.exec(label)
-  return m ? `R${m[1]}` : label
-}
-function toCell(m: FullBracketMatch): BracketCell {
-  const aKid = m.aId === KID_ID
-  const bKid = m.bId === KID_ID
-  return {
-    a: { name: m.aName, won: m.winnerId === m.aId, isKid: aKid },
-    b: { name: m.bName, won: m.winnerId === m.bId, isKid: bKid },
-    score: m.score,
-    isKidMatch: aKid || bKid,
-  }
-}
-const bracketColumns = computed<BracketColumn[]>(() => {
-  const matches = pending.value?.fullBracket ?? []
-  const byRound = new Map<number, FullBracketMatch[]>()
-  for (const m of matches) {
-    const list = byRound.get(m.round)
-    if (list) list.push(m)
-    else byRound.set(m.round, [m])
-  }
-  return [...byRound.entries()]
-    .sort((a, b) => a[0] - b[0])
-    .map(([round, list]) => ({ round, short: shortRound(list[0].roundLabel), cells: list.map(toCell) }))
-})
-// Only surface the bracket once a round has actually been played, between rounds (post) and at
-// the finale – never over the pre-match card or during a replay.
-const showBracket = computed(
-  () => bracketColumns.value.length > 0 && !replayOpen.value && (phase.value === 'post' || phase.value === 'finale'),
-)
 </script>
 
 <template>
@@ -300,37 +302,21 @@ const showBracket = computed(
           </div>
         </div>
 
-        <!-- Round-7 item 19: the full draw as a real bracket – columns per round, two-row
-             cells, winner accent, the kid's path highlighted, horizontal scroll if wide.
-             Inline between rounds (post) and at the finale, never a collapsible. -->
+        <!-- Round-7 (owner): the draw as a round-tabbed bracket (R32 · R16 · QF · SF · F). The
+             active tab defaults to the kid's current round between rounds (post) and to the
+             spectate round during the walk. Reused, single component. -->
         <section v-if="showBracket" class="tf-card tf-bracket">
           <p class="tf-bracket-title">Draw</p>
-          <div class="tf-bracket-scroll">
-            <div class="tf-bracket-cols">
-              <div v-for="col in bracketColumns" :key="col.round" class="tf-bracket-col">
-                <p class="tf-bracket-round">{{ col.short }}</p>
-                <div class="tf-bracket-cells">
-                  <div
-                    v-for="(cell, i) in col.cells"
-                    :key="i"
-                    class="tf-bracket-cell"
-                    :class="{ 'kid-match': cell.isKidMatch }"
-                  >
-                    <div class="tf-bc-players">
-                      <span class="tf-bc-row" :class="{ won: cell.a.won, kid: cell.a.isKid }">{{ cell.a.name }}</span>
-                      <span class="tf-bc-row" :class="{ won: cell.b.won, kid: cell.b.isKid }">{{ cell.b.name }}</span>
-                    </div>
-                    <span v-if="cell.score" class="tf-bc-score num">{{ cell.score }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
         </section>
 
         <!-- Watching a replay (inline) -->
       <section v-if="replayOpen && annotated && currentMatch" class="tf-card">
-        <div class="tf-card-head" style="justify-content: flex-end">
+        <!-- Round-7 crowd-reaction pass: the stage/round label lives here as a pill on the LEFT
+             of the head row, level with "To result →" on the right – no longer an absolute pill
+             over the court (which obstructed play). -->
+        <div class="tf-card-head">
+          <span class="tf-replay-round">{{ pending.roundLabel }}</span>
           <button class="link" @click="endReplay">To result →</button>
         </div>
         <MatchViewer
@@ -340,7 +326,6 @@ const showBracket = computed(
           :surface="currentMatch.surface"
           :rank-a="viewerRankA"
           :rank-b="viewerRankB"
-          :stage-label="pending.roundLabel"
           :suppress-end-applause="isFinalRound"
           @finish="endReplay"
         />
@@ -402,30 +387,71 @@ const showBracket = computed(
         </div>
       </section>
 
-      <!-- Finale -->
-      <section
-        v-else
-        class="tf-card tf-finale"
-        :class="pending.kidChampion ? 'champ' : isRunnerUp ? 'silver' : 'out'"
-      >
-        <div v-if="pending.kidChampion" class="tf-trophy">🏆</div>
-        <div v-else-if="isRunnerUp" class="tf-trophy">🥈</div>
-        <img class="tf-portrait" :src="finalePortrait" alt="" />
-        <p class="tf-finale-title">
-          {{ pending.kidChampion ? `Champion – ${pending.tierLabel}!` : pending.finishLabel }}
-        </p>
-        <p class="tf-finale-points">+{{ pending.points }} pts</p>
-        <div v-if="pending.bracket.length" class="tf-path">
-          <div v-for="(r, i) in pending.bracket" :key="i" class="tf-path-row" :class="{ won: r.kidWon }">
-            <span>{{ r.roundLabel }}</span>
-            <span>{{ r.kidWon ? 'beat' : 'lost to' }} {{ r.oppName }}</span>
-            <span class="num">{{ r.score }}</span>
-          </div>
-        </div>
+      <!-- Round-7 spectate: after the kid's exit, walk the rounds she isn't in, up to the Final.
+           Her own result stays visible; the draw above (BracketTabs) shows this round. -->
+      <section v-else-if="phase === 'spectate'" class="tf-card tf-spectate">
+        <p class="tf-spectate-kid">{{ kidShort }} – {{ pending.finishLabel }}</p>
+        <p class="tf-round">{{ spectateRoundLabel }}</p>
+        <p class="hint">She's out – see how the draw finishes.</p>
         <div class="tf-actions">
-          <button class="primary" :disabled="game.busy" @click="continueFinale">Continue</button>
+          <button class="primary" :disabled="game.busy" @click="nextSpectateRound">
+            {{ spectateRound < finalRound ? 'Next round →' : 'Continue' }}
+          </button>
         </div>
       </section>
+
+      <!-- Finale -->
+      <template v-else>
+        <!-- Reached the Final: her own portrait card (champion gold / runner-up silver), unchanged. -->
+        <section
+          v-if="pending.kidChampion || isRunnerUp"
+          class="tf-card tf-finale"
+          :class="pending.kidChampion ? 'champ' : 'silver'"
+        >
+          <div class="tf-trophy">{{ pending.kidChampion ? '🏆' : '🥈' }}</div>
+          <img class="tf-portrait" :src="finalePortrait" alt="" />
+          <p class="tf-finale-title">
+            {{ pending.kidChampion ? `Champion – ${pending.tierLabel}!` : pending.finishLabel }}
+          </p>
+          <p class="tf-finale-points">+{{ pending.points }} pts</p>
+          <div v-if="pending.bracket.length" class="tf-path">
+            <div v-for="(r, i) in pending.bracket" :key="i" class="tf-path-row" :class="{ won: r.kidWon }">
+              <span>{{ r.roundLabel }}</span>
+              <span>{{ r.kidWon ? 'beat' : 'lost to' }} {{ r.oppName }}</span>
+              <span class="num">{{ r.score }}</span>
+            </div>
+          </div>
+          <div class="tf-actions">
+            <button class="primary" :disabled="game.busy" @click="continueFinale">Continue</button>
+          </div>
+        </section>
+
+        <!-- Exited earlier: no art for an AI champion, so a clean Champion card naming the winner,
+             with the kid's own finish line + the tier/surface. -->
+        <section v-else class="tf-card tf-finale out">
+          <div class="tf-trophy">🏆</div>
+          <p class="tf-champ-label">Champion</p>
+          <p class="tf-champ-name">{{ championName }}</p>
+          <p class="tf-finale-kidline">
+            {{ kidShort }} – {{ pending.finishLabel }}
+            <span class="tf-finale-kidpts">(+{{ pending.points }} pts)</span>
+          </p>
+          <div class="controls" style="justify-content: center; margin-top: 4px">
+            <span class="pill">{{ SURFACE_EMOJI[pending.surface] }} {{ pending.surface }}</span>
+            <span class="pill">{{ pending.tierLabel }}</span>
+          </div>
+          <div v-if="pending.bracket.length" class="tf-path" style="margin-top: 12px">
+            <div v-for="(r, i) in pending.bracket" :key="i" class="tf-path-row" :class="{ won: r.kidWon }">
+              <span>{{ r.roundLabel }}</span>
+              <span>{{ r.kidWon ? 'beat' : 'lost to' }} {{ r.oppName }}</span>
+              <span class="num">{{ r.score }}</span>
+            </div>
+          </div>
+          <div class="tf-actions">
+            <button class="primary" :disabled="game.busy" @click="continueFinale">Continue</button>
+          </div>
+        </section>
+      </template>
       </template>
     </div>
   </div>

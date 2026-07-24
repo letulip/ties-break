@@ -129,7 +129,8 @@ function setupMediaSession(): void {
         title: 'Ties Break',
         artist: 'Ace Parent',
         artwork: [
-          { src: `${import.meta.env.BASE_URL}logos/logo-tb-line-light.webp`, sizes: '512x512', type: 'image/webp' },
+          { src: `${import.meta.env.BASE_URL}pwa-192.png`, sizes: '192x192', type: 'image/png' },
+          { src: `${import.meta.env.BASE_URL}pwa-512.png`, sizes: '512x512', type: 'image/png' },
         ],
       })
     }

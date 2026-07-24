@@ -13,6 +13,7 @@ import {
 import { rngFromSeed } from '../src/engine/rng'
 import { simulateMatch } from '../src/engine/match/engine'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { TIERS } from '../src/engine/season/calendar'
 
 // Build a world paused on the kid's entered tournament (pendingTournament set, not yet revealed).
 function buildToPending(seed: string): WorldState {
@@ -109,6 +110,41 @@ describe('tournament reveal – reveal, do not re-run', () => {
     expect(done.tierLabel.length).toBeGreaterThan(0)
     // champion iff finish index 0
     expect(typeof done.kidChampion).toBe('boolean')
+  })
+
+  // Round-7 (spectate): once the kid's run is FINISHED the full bracket is no longer capped at
+  // her played rounds – it exposes every round through the Final (no spoilers left), so the flow
+  // can spectate the tournament past her exit. `probe-2` is a draw of 8 in which the kid loses
+  // her opening match, leaving the whole draw (SF, Final) to unfold without her.
+  it('once finished, fullBracket spans every round through the Final, incl. non-kid later rounds', () => {
+    const world = buildToPending('probe-2')
+    const event = world.season.find((e) => e.id === world.pendingTournament!.eventId)!
+    const drawSize = TIERS[event.tier].drawSize
+    const finalRound = Math.log2(drawSize) - 1
+
+    skipTournament(world)
+    const view = toSnapshot(world).pending!
+    expect(view.finished).toBe(true)
+
+    // precondition: the kid really did exit early (played fewer rounds than the whole draw has)
+    const kidRounds = view.bracket.length
+    expect(kidRounds).toBeGreaterThanOrEqual(1)
+    expect(kidRounds).toBeLessThan(finalRound + 1)
+    expect(view.kidChampion).toBe(false)
+
+    // the full bracket now reaches the Final round index...
+    const rounds = view.fullBracket.map((m) => m.round)
+    expect(Math.max(...rounds)).toBe(finalRound)
+
+    // ...and the rounds AFTER her exit are present and contain no kid match
+    const laterMatches = view.fullBracket.filter((m) => m.round >= kidRounds)
+    expect(laterMatches.length).toBeGreaterThan(0)
+    expect(laterMatches.every((m) => m.aId !== KID_ID && m.bId !== KID_ID)).toBe(true)
+
+    // the Final match (kid absent) determines the tournament champion
+    const finalMatch = view.fullBracket.find((m) => m.round === finalRound)!
+    expect(finalMatch.aId !== KID_ID && finalMatch.bId !== KID_ID).toBe(true)
+    expect([finalMatch.aId, finalMatch.bId]).toContain(finalMatch.winnerId)
   })
 
   it('a paused reveal survives a structured-clone round-trip (schema v8 persistence)', () => {

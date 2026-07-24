@@ -20,17 +20,42 @@ export const CHANGE_ENDS = 0.9
 // Round-7 item 10: trailing "quiet gap" beats so applause never overlaps the next hit.
 // A tiny hold after every point-end, and a longer hold after a game-end / set-end, all
 // BEFORE the next point-start. These are silent, static holds – timing only, no new cues.
-/** Tiny breath after each point-end (before game-end / next point-start). */
+//
+// Round-7 (crowd-reaction pass): the reaction cues now fire at the SCORING instant (each
+// event's START, see MatchViewer.startEvent), so these trailing gaps are what make the
+// crowd's reaction clearly LEAD the next hit instead of overlapping it. They were grown so
+// the reaction gets its moment: game-break and set-break gaps roughly doubled, and an
+// ordinary point that earns an 'ooh' (converted break point / long-rally winner but no
+// game/set end) now gets its own ~1s hold. Ordinary non-reaction points keep the tiny breath.
+/** Tiny breath after an ordinary (non-reaction) point-end – no crowd cue to lead. */
 export const POINT_END_GAP = 0.15
+/** Hold after an ordinary point that triggers an 'ooh' but ends no game/set, so the reaction
+ *  leads the next serve. Only these points use it; plain points keep POINT_END_GAP. */
+export const OOH_GAP = 1.0
 /** Trailing quiet after a game-end, so game applause rings out before the next hit. */
-export const GAME_END_GAP = 0.5
+export const GAME_END_GAP = 1.3
 /** Trailing quiet after a set-end (longer – the set-break applause is bigger). */
-export const SET_END_GAP = 0.9
+export const SET_END_GAP = 1.9
 
 /** A point is "big" (long point-end) when it is a break/set/match point. */
 function isBigPoint(p: AnnotatedPoint): boolean {
   const e = p.entry
   return e.breakPoint || e.setPointFor !== null || e.matchPointFor !== null
+}
+
+/** Mirror of MatchViewer's 'ooh' reaction test (kept in sync deliberately): a point earns a
+ *  crowd 'ooh' when it ends cleanly (not on a miss) AND is either a converted break point
+ *  (receiver wins a break point) or a long rally (>= 8 shots) finished with a winner. Used
+ *  only to size the trailing quiet gap so the reaction leads the next point-start; the cue
+ *  itself is decided independently in MatchViewer.startEvent. */
+function isReactionPoint(p: AnnotatedPoint): boolean {
+  const shots = p.rally.shots
+  const lastShot = shots[shots.length - 1]
+  if (lastShot?.result === 'out' || lastShot?.result === 'net') return false
+  const e = p.entry
+  const brokeServe = e.breakPoint && e.winner !== e.server
+  const longWinnerRally = shots.length >= 8 && lastShot?.result === 'winner'
+  return brokeServe || longWinnerRally
 }
 
 /** Points shown in 'key' mode: any consequential point, plus always the final point. */
@@ -135,7 +160,15 @@ export function buildTimeline(match: AnnotatedMatch, mode: ViewMode): Timeline {
         emit('shot', shot.kind === 'rally' ? RALLY_FLIGHT : SERVE_FLIGHT, i, s)
       }
       emit('point-end', isBigPoint(p) ? POINT_END_BIG : POINT_END, i)
-      if (notLast) emit('gap', POINT_END_GAP, i) // tiny breath after every point-end
+      if (notLast) {
+        // Trailing gap before the next point-start. An ordinary point that earns an 'ooh'
+        // (converted break point / long-rally winner) but ends NO game/set gets the longer
+        // OOH_GAP so the reaction leads the next serve; game/set-ending points keep the tiny
+        // breath here (their bigger trailing quiet is the game-end/set-end gap below), and
+        // plain points keep the tiny breath too.
+        const oohOnly = !p.gameEnd && !p.setEnd && isReactionPoint(p)
+        emit('gap', oohOnly ? OOH_GAP : POINT_END_GAP, i)
+      }
       if (p.gameEnd) emit('game-end', GAME_END, i)
       if (p.gameEnd && notLast) emit('gap', GAME_END_GAP, i)
       if (p.setEnd) emit('set-end', SET_END, i)

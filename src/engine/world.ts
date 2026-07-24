@@ -148,7 +148,6 @@ const RESULTS_WINDOW = 52 // ranking window; results older than this never count
 const EVENTS_CAP = 400 // non-`keep` events beyond this are pruned oldest-first
 const SNAPSHOT_EVENTS = 60 // events surfaced in a snapshot
 const UPCOMING_WEEKS = 8 // calendar horizon surfaced in a snapshot
-const RANK_MILESTONES = [100, 50, 10, 1] // kid-rank thresholds that pin a milestone
 
 function addEvent(world: WorldState, e: Omit<WorldEvent, 'id'>): void {
   world.events.push({ id: world.nextEventId++, ...e })
@@ -220,14 +219,6 @@ export function recomputeKidRank(world: WorldState): void {
 function fireMilestone(world: WorldState, key: string, text: string): void {
   if (world.events.some((e) => e.milestoneKey === key)) return
   addEvent(world, { week: world.week, type: 'milestone', text, keep: true, milestoneKey: key })
-}
-
-function fireRankMilestones(world: WorldState): void {
-  for (const t of RANK_MILESTONES) {
-    if (world.kidRank <= t) {
-      fireMilestone(world, `rank-${t}`, t === 1 ? 'World #1! 🏆' : `Broke into the world top ${t}!`)
-    }
-  }
 }
 
 // --- season wrap-up (Round 5 items 16/21; round-7 item 4) ---------------------
@@ -491,7 +482,10 @@ function recomputeRankAndMilestones(world: WorldState): void {
   const full = computeRanking(world.results, world.week, [...cohortIds(world), KID_ID])
   const kidRow = full.find((r) => r.playerId === KID_ID)
   world.kidRank = kidRow?.rank ?? full.length
-  if ((kidRow?.points ?? 0) > 0) fireRankMilestones(world)
+  // Rank milestones ("top 10/50/1") intentionally removed: in the early season almost no one
+  // has points, so the first result rockets her to a single-digit rank and all of them fire at
+  // once (reads absurdly). A real "world" ranking belief system belongs to the world-news
+  // feature (Phase 4+), not this placeholder cohort ranking.
 }
 
 // Step 6 of a resolved week: prune ledgers/feeds, roll the calendar forward.
@@ -551,6 +545,17 @@ function finalizeTournament(world: WorldState): void {
       `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before)}`,
     finishIdx: kidFinish,
   })
+  // World news: who actually took the title of the draw she played in. When the kid IS the
+  // champion, the summary + first-title milestone already celebrate it, so only report others.
+  const championId = Object.entries(p.result.finishes).find(([, f]) => f === 0)?.[0]
+  if (championId && championId !== KID_ID) {
+    const champName = world.cohort.find((c) => c.id === championId)?.name ?? p.players[championId]?.name ?? championId
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: `🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`,
+    })
+  }
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
   if (
     event.tier === 'national' &&
@@ -923,18 +928,20 @@ function pendingView(world: WorldState): PendingView | undefined {
     }
   })
 
-  // Round 5 item 5: the FULL draw (every match, every player) for every round revealed so
-  // far – the kid's matches are always rounds 0..revealed-1 (single elim, she plays every
-  // round until eliminated), so that also bounds which OTHER matches are safe to reveal.
+  // Round 5 item 5: the FULL draw (every match, every player). During her run this is bounded
+  // to the kid's played rounds (0..revealed-1; single elim, she plays every round until
+  // eliminated) so later rounds stay spoiler-free. Round-7 (spectate): once her run is FINISHED
+  // there are no spoilers left to protect, so the whole draw is exposed – every round through
+  // the Final – letting the flow spectate the tournament to its conclusion past her exit.
   // `score` is always normalised to the WINNER's perspective (conventional "W d. L 6-4 ..."
   // reading) regardless of which bracket side (a/b) actually won – MatchRecord stores it
   // from side A's perspective, so it only needs flipping when B won.
-  const maxRevealedRound = revealed - 1
+  const lastRound = p.finished ? Math.max(...p.result.matches.map((m) => m.round)) : revealed - 1
   const fullBracket: FullBracketMatch[] =
-    maxRevealedRound < 0
+    lastRound < 0
       ? []
       : p.result.matches
-          .filter((m) => m.round <= maxRevealedRound)
+          .filter((m) => m.round <= lastRound)
           .map((m) => ({
             round: m.round,
             roundLabel: stageLabel(m.round, tier.drawSize),

@@ -51,11 +51,14 @@ const EXPENSE_META: { key: ExpenseCategory; label: string; color: string }[] = [
 ]
 const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
 
-const window = ref<'12w' | 'season'>('12w')
+// NB: must NOT be named `window` – Vue's template compiler treats `window` as the
+// browser global (it's on the template global-allowlist), so a ref by that name is
+// unreachable from the template: the toggle would silently no-op.
+const breakdownWindow = ref<'12w' | 'season'>('12w')
 const currentWeek = computed(() => game.snapshot?.week ?? 0)
 // 12w: the last 12 weeks; season: from the current season year's first week.
 const windowStartWeek = computed(() =>
-  window.value === '12w' ? currentWeek.value - 11 : Math.floor(currentWeek.value / 52) * 52,
+  breakdownWindow.value === '12w' ? currentWeek.value - 11 : Math.floor(currentWeek.value / 52) * 52,
 )
 const windowEvents = computed<WorldEvent[]>(() =>
   (game.snapshot?.events ?? []).filter((e) => e.amountCents !== undefined && e.week >= windowStartWeek.value),
@@ -163,8 +166,8 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
       <div class="breakdown-head">
         <h2 style="margin: 0">Breakdown</h2>
         <div class="option-row breakdown-toggle">
-          <button class="option-pill" :class="{ selected: window === '12w' }" @click="window = '12w'">12 weeks</button>
-          <button class="option-pill" :class="{ selected: window === 'season' }" @click="window = 'season'">This season</button>
+          <button class="option-pill" :class="{ selected: breakdownWindow === '12w' }" @click="breakdownWindow = '12w'">12 weeks</button>
+          <button class="option-pill" :class="{ selected: breakdownWindow === 'season' }" @click="breakdownWindow = 'season'">This season</button>
         </div>
       </div>
 

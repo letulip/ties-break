@@ -91,9 +91,14 @@ describe('full bracket view (Round 5 item 5)', () => {
   })
 
   it('grows round by round and includes non-kid matches with resolved names', () => {
-    const world = buildToPending('full-bracket-grow')
+    // `grow-1` is a seed where the kid WINS her opening match, so after one reveal she is still
+    // in the draw (not finished) and the spoiler-safe cap applies – exactly the incremental
+    // growth this test pins. (Once she's FINISHED the cap lifts and the whole draw is exposed;
+    // that spectate behaviour is covered in tournamentReveal.test.ts.)
+    const world = buildToPending('grow-1')
     revealTournamentRound(world)
     const pending = toSnapshot(world).pending!
+    expect(world.pendingTournament!.finished).toBe(false)
     expect(pending.fullBracket.length).toBeGreaterThan(0)
     // every match in the revealed round(s) is present, not just the kid's
     expect(pending.fullBracket.every((m) => m.round <= 0)).toBe(true)
