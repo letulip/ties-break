@@ -164,6 +164,69 @@ describe('save migrations', () => {
     expect(migrated.pendingTournament).toBeNull()
   })
 
+  it('upgrades a v8 save to v9: birth month backfilled deterministically from the seed', () => {
+    const makeV8 = () => {
+      // v8 profiles never had birthMonth – strip the DEFAULT_PROFILE static value so this
+      // exercises the actual rngFromSeed(seed + ':bm') backfill, not a pass-through default.
+      const profile: Record<string, unknown> = { ...DEFAULT_PROFILE, kidName: 'Petra', kidLastName: 'Novak' }
+      delete profile.birthMonth
+      return {
+        schemaVersion: 8,
+        careerId: 'c-v8',
+        seed: 'birth-month-seed',
+        week: 15,
+        fundsCents: 4_000_00,
+        profile,
+        plan: { ...WEEK_PLAN_PRESETS.balanced },
+        cohort: [],
+        results: [],
+        season: [],
+        entries: [],
+        events: [],
+        nextEventId: 0,
+        kidRank: 180,
+        prevKidRank: 182,
+        pendingTournament: null,
+      }
+    }
+    const migrated = migrateSave(makeV8())
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect(typeof migrated.profile.birthMonth).toBe('number')
+    expect(migrated.profile.birthMonth).toBeGreaterThanOrEqual(1)
+    expect(migrated.profile.birthMonth).toBeLessThanOrEqual(12)
+    // deterministic: the same seed backfills the same birth month across independent migrations
+    expect(migrateSave(makeV8()).profile.birthMonth).toBe(migrated.profile.birthMonth)
+  })
+
+  it('backfills DIFFERENT birth months for different seeds (not a constant fallback)', () => {
+    const makeV8 = (seed: string) => {
+      const profile: Record<string, unknown> = { ...DEFAULT_PROFILE }
+      delete profile.birthMonth
+      return {
+        schemaVersion: 8,
+        careerId: `c-${seed}`,
+        seed,
+        week: 1,
+        fundsCents: 0,
+        profile,
+        plan: { ...WEEK_PLAN_PRESETS.balanced },
+        cohort: [],
+        results: [],
+        season: [],
+        entries: [],
+        events: [],
+        nextEventId: 0,
+        kidRank: 200,
+        prevKidRank: null,
+        pendingTournament: null,
+      }
+    }
+    const months = new Set(
+      ['seed-a', 'seed-b', 'seed-c', 'seed-d', 'seed-e', 'seed-f'].map((s) => migrateSave(makeV8(s)).profile.birthMonth),
+    )
+    expect(months.size).toBeGreaterThan(1)
+  })
+
   it('passes a current save through unchanged', () => {
     const current = {
       schemaVersion: SAVE_SCHEMA_VERSION,
@@ -171,7 +234,7 @@ describe('save migrations', () => {
       seed: 's',
       week: 1,
       fundsCents: 5,
-      profile: { ...DEFAULT_PROFILE, kidName: 'Alexandra', kidLastName: 'Rossi', country: 'RS' },
+      profile: { ...DEFAULT_PROFILE, kidName: 'Alexandra', kidLastName: 'Rossi', country: 'RS', birthMonth: 3 },
       plan: { train: 85, rest: 15 },
       cohort: [],
       results: [],

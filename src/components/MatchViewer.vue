@@ -11,6 +11,7 @@ import { buildTimeline, computeEndsSwaps, type EndsState } from '../viz/timeline
 import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
 import { initSfx, playSfx } from '../audio/sfx'
+import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
 
 const props = withDefaults(
@@ -132,6 +133,17 @@ let lastRenderedEvent: TimelineEvent | null = null
  *  (fresh play, mode change, restart, Watch again, ...) so each run decides exactly
  *  once, on its first startClock() call, and never re-decides on pause/resume. */
 let seatsPlayedForRun = false
+
+// --- round-6: background-music ducking ----------------------------------------
+// Matches must be music-free; menus/screens outside a match are not. `duck()`/`restore()`
+// (src/audio/music.ts) are refcounted, so this component must call each at most once per
+// outstanding duck – `musicDuckedForRun` tracks whether THIS instance currently holds one.
+// Deliberately NOT reset in resetPlayback(): a mode change or a new match prop mid-viewing
+// rebuilds the timeline without ever un-ducking (still watching a match), so beginClockLoop's
+// `if (!musicDuckedForRun)` guard must keep seeing `true` across those rebuilds, or it would
+// duck() again without a matching restore() and leak the refcount. Only the two teardown
+// paths below (match finished, component unmounted) ever flip it back to false.
+let musicDuckedForRun = false
 
 // --- round-5 polish: speed-gated sound matrix ---------------------------------
 // At ×2/×4 the full sound picture (every hit, every miss, every game/set cue) turns
@@ -350,6 +362,12 @@ function frame(ts: number): void {
 const SEATS_PREROLL_MS = 1500
 
 function beginClockLoop(): void {
+  // Playback is actually starting now (immediately at speed ×4, or after the
+  // take-your-seats pre-roll at ×1/×2 – both paths funnel through here) – duck the music.
+  if (!musicDuckedForRun) {
+    musicDuckedForRun = true
+    duck()
+  }
   lastTs = null
   rafId = requestAnimationFrame(frame)
 }
@@ -443,6 +461,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   pauseInternal()
+  if (musicDuckedForRun) {
+    musicDuckedForRun = false
+    restore()
+  }
 })
 
 // Mode change: rebuild the timeline and restart, preserving whatever play state
@@ -454,7 +476,13 @@ watch(
 )
 // Surface the end of playback to the parent (fires once per completed run).
 watch(finished, (isFinished) => {
-  if (isFinished) emit('finish')
+  if (isFinished) {
+    emit('finish')
+    if (musicDuckedForRun) {
+      musicDuckedForRun = false
+      restore()
+    }
+  }
 })
 
 // --- readout: score / serve / win-probability / stats -------------------------

@@ -10,6 +10,7 @@ import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SlotMeta } from '../../shared/protocol'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
+import { isMusicMuted, setMusicMuted } from '../../audio/music'
 
 const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -167,6 +168,16 @@ function toggleSound(): void {
   setMuted(!soundMuted.value)
   soundMuted.value = !soundMuted.value
 }
+
+// --- Music (round-6 item 1) --------------------------------------------------------
+// Same isMuted()/setMuted() shape as sfx, on its own 'tb-music-muted' key – see
+// src/audio/music.ts. Also plain localStorage state, so this switch works before the
+// splash screen's first start() call.
+const musicMuted = ref(isMusicMuted())
+function toggleMusic(): void {
+  setMusicMuted(!musicMuted.value)
+  musicMuted.value = !musicMuted.value
+}
 </script>
 
 <template>
@@ -268,6 +279,19 @@ function toggleSound(): void {
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
         <span class="sound-switch-label">{{ soundMuted ? 'OFF' : 'ON' }}</span>
+      </button>
+    </div>
+    <div class="career-row">
+      <div>Music</div>
+      <button
+        class="sound-switch"
+        :class="{ on: !musicMuted }"
+        role="switch"
+        :aria-checked="!musicMuted"
+        @click="toggleMusic"
+      >
+        <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
+        <span class="sound-switch-label">{{ musicMuted ? 'OFF' : 'ON' }}</span>
       </button>
     </div>
   </section>

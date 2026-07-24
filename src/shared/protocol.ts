@@ -21,6 +21,10 @@ export interface PlayerProfile {
   background: FamilyBackground
   coachSetup: CoachSetup
   playStyle: PlayStyle
+  /** 1-12 (schema v9). Relative-age-effect groundwork (round-3 QA item 16): picked at
+   *  onboarding, purely cosmetic until Phase 4 wires the junior age-group dynamics it's
+   *  meant to feed. */
+  birthMonth: number
 }
 
 export const DEFAULT_PROFILE: PlayerProfile = {
@@ -31,6 +35,7 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   background: 'middle',
   coachSetup: 'hired',
   playStyle: 'all-court',
+  birthMonth: 6,
 }
 
 /** Weekly time split in percent; train + rest === 100. */

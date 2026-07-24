@@ -44,6 +44,11 @@ describe('golden saves corpus', () => {
       expect(migrated.profile.kidLastName.length).toBeGreaterThan(0)
       expect(typeof migrated.profile.playStyle).toBe('string')
 
+      // v9 birth month: present and in range on every fixture, however old
+      expect(typeof migrated.profile.birthMonth).toBe('number')
+      expect(migrated.profile.birthMonth).toBeGreaterThanOrEqual(1)
+      expect(migrated.profile.birthMonth).toBeLessThanOrEqual(12)
+
       // living-world systems exist and the pre-v6 `log` field is gone
       expect(Array.isArray(migrated.cohort)).toBe(true)
       expect(Array.isArray(migrated.results)).toBe(true)

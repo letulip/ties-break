@@ -37,6 +37,13 @@ const BACKGROUNDS: { id: FamilyBackground; label: string; budget: string; blurb:
   { id: 'working', label: 'Working class', budget: '$8,000', blurb: 'Used rackets, big dreams – hard mode.' },
 ]
 
+// Round-6: birth month (relative-age-effect groundwork, round-3 QA item 16). Purely
+// cosmetic today – Phase 4 is what actually reads it for junior age-group dynamics.
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
 const COACH_OPTIONS: { id: CoachSetup; label: string; blurb: string }[] = [
   { id: 'parent', label: 'Coach her yourself', blurb: 'Cheaper weeks – between-set coaching unlocks later.' },
   { id: 'hired', label: 'Hire a coach', blurb: 'Pro guidance, real fees.' },
@@ -74,6 +81,7 @@ const profile = reactive<PlayerProfile>({
   background: 'middle',
   coachSetup: 'hired',
   playStyle: 'all-court',
+  birthMonth: DEFAULT_PROFILE.birthMonth,
 })
 
 const countryChosen = computed(() => profile.country !== '')
@@ -82,6 +90,7 @@ const nextDisabled = computed(
   () => (step.value === 2 && !nameValid.value) || (step.value === 3 && !countryChosen.value),
 )
 
+const birthMonthLabel = computed(() => MONTHS[profile.birthMonth - 1] ?? '')
 const backgroundLabel = computed(() => BACKGROUNDS.find((b) => b.id === profile.background)?.label ?? '')
 const coachingLabel = computed(() => COACH_OPTIONS.find((c) => c.id === profile.coachSetup)?.label ?? '')
 const playStyleLabel = computed(() => PLAY_STYLES.find((s) => s.id === profile.playStyle)?.label ?? '')
@@ -156,6 +165,12 @@ function start(): void {
           <span class="option-pill selected">Girl</span>
           <button class="option-pill" disabled title="Coming later">Boy – coming later</button>
         </div>
+        <div class="controls" style="margin-top: 8px">
+          <select v-model.number="profile.birthMonth">
+            <option v-for="(m, i) in MONTHS" :key="m" :value="i + 1">{{ m }}</option>
+          </select>
+        </div>
+        <p class="hint">Birth month – affects junior age-group dynamics – coming with the development system</p>
       </section>
 
       <section v-else-if="step === 3" class="onboarding-step">
@@ -237,6 +252,10 @@ function start(): void {
             <tr>
               <th>Name</th>
               <td>{{ profile.kidName }} {{ profile.kidLastName }} {{ flagEmoji(profile.country) }}</td>
+            </tr>
+            <tr>
+              <th>Birth month</th>
+              <td>{{ birthMonthLabel }}</td>
             </tr>
             <tr>
               <th>Background</th>

@@ -1,6 +1,7 @@
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../shared/protocol'
 import { SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
 import { pickSurname } from './season/cohort'
+import { rngFromSeed, pickInt } from './rng'
 
 // Save-data migrations. Append-only: never renumber, never delete a block.
 // Each `if (v < N)` block upgrades from N-1 to N and must be idempotent for its version.
@@ -67,6 +68,19 @@ export function migrateSave(raw: unknown): WorldState {
     // world.pendingTournament instead of resolving inline. Old saves were never mid-reveal.
     if (save.pendingTournament === undefined) save.pendingTournament = null
     v = 8
+  }
+
+  if (v < 9) {
+    // v9 added the profile's birth month (relative-age-effect groundwork, round-3 QA item
+    // 16; round-6 bundle). Pre-v9 saves never chose one at onboarding, so it's backfilled
+    // deterministically from the seed – same pattern as v7's kidLastName backfill – rather
+    // than collapsing to the static DEFAULT_PROFILE value, so two different legacy careers
+    // don't all land on the same birth month.
+    if (save.profile && typeof save.profile.birthMonth !== 'number') {
+      const seed = typeof save.seed === 'string' ? save.seed : ''
+      save.profile.birthMonth = pickInt(rngFromSeed(`${seed}:bm`), 1, 12)
+    }
+    v = 9
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

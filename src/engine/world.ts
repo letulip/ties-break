@@ -30,7 +30,7 @@ import { selectEntrants, runTournament } from './season/tournament'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 8
+export const SAVE_SCHEMA_VERSION = 9
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
