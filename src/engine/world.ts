@@ -551,6 +551,17 @@ function finalizeTournament(world: WorldState): void {
       `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before)}`,
     finishIdx: kidFinish,
   })
+  // World news: who actually took the title of the draw she played in. When the kid IS the
+  // champion, the summary + first-title milestone already celebrate it, so only report others.
+  const championId = Object.entries(p.result.finishes).find(([, f]) => f === 0)?.[0]
+  if (championId && championId !== KID_ID) {
+    const champName = world.cohort.find((c) => c.id === championId)?.name ?? p.players[championId]?.name ?? championId
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: `🏆 ${formatShortName(champName)} won the ${tier.label} (${event.surface}).`,
+    })
+  }
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
   if (
     event.tier === 'national' &&

@@ -158,6 +158,29 @@ describe('a tournament week the kid entered', () => {
     // and AI results for the same event landed too (the canonical field always plays)
     expect(world.results.some((r) => r.playerId !== KID_ID && r.week === event.week)).toBe(true)
   })
+
+  it('reports the tournament champion in the news when the kid did not win it', () => {
+    // Over several seeds the kid rarely wins her first event; find one she didn't, and assert
+    // a "won the ... " news line naming someone else appears that week.
+    let checked = 0
+    for (const seed of ['champ-a', 'champ-b', 'champ-c', 'champ-d', 'champ-e']) {
+      const world = createWorld(seed)
+      const rng = rngFromSeed(world.seed)
+      const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+      enterEvent(world, event.id)
+      while (world.week < event.week) tickWeek(world, rng)
+      skipTournament(world)
+      const kidWonIt = world.pendingTournament!.result.finishes[KID_ID] === 0
+      const championLine = world.events.find((e) => e.week === event.week && / won the /.test(e.text))
+      if (kidWonIt) {
+        expect(championLine).toBeUndefined() // her own title is celebrated by the summary/milestone
+      } else {
+        expect(championLine).toBeTruthy()
+        checked++
+      }
+    }
+    expect(checked).toBeGreaterThan(0)
+  })
 })
 
 describe('class-flavored expenses (round-5 item 10)', () => {
