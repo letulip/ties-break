@@ -64,6 +64,15 @@ export const ECONOMY = {
     wealthy: 1.4,
   } as Record<FamilyBackground, number>,
 
+  // Travel scales with family means (wealthier travel = pricier + a money-sink; poorer = cheaper).
+  // middle = 1.0 (baseline unchanged). POST-draw multiply only – the travel pickInt in calendar.ts
+  // stays byte-identical, so the season sub-RNG (and the world's RNG identity) hold.
+  travelBgFactor: {
+    working: 0.75,
+    middle: 1.0,
+    wealthy: 1.25,
+  } as Record<FamilyBackground, number>,
+
   // Weekly expense scale from the time split: train 75% ≈ 1.0, more training costs more.
   // factor = base + perTrainPercent * plan.train.
   planFactor: { base: 0.55, perTrainPercent: 0.006 },

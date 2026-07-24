@@ -108,6 +108,34 @@ export interface WorldEvent {
   finishIdx?: number
 }
 
+// --- finance aggregate (Part A) ----------------------------------------------
+// The Money breakdown/ledger can't read `events`: those are capped (the snapshot's trailing 60,
+// the engine's retained 400) so old finance is pruned away and a tournament-heavy stretch buries
+// the rest under news. Instead the world maintains a tiny per-week/per-category signed-cents
+// ledger that survives pruning, and the snapshot carries pre-folded windows off it.
+
+/** Signed cents per (week, category): income positive, expense negative – matches the event
+ *  convention. One entry per week that had >=1 financial event, week-ascending. Maintained on
+ *  the world (survives event pruning), pruned only to a 60-week trailing career window. */
+export interface FinanceWeek {
+  week: number
+  byCategory: Partial<Record<WorldEventCategory, number>>
+}
+
+/** A category-accurate rollup of `FinanceWeek[]` over a trailing window (pure fold; the bench and
+ *  the Money screen both read one of these instead of scraping events). */
+export interface FinanceWindow {
+  startWeek: number
+  /** signed cents per category (income positive, expense negative) */
+  byCategory: Partial<Record<WorldEventCategory, number>>
+  /** sum of the positive category totals */
+  incomeCents: number
+  /** magnitude of the negative category totals (a positive number) */
+  expenseCents: number
+  /** income - expense (== the signed sum of byCategory) */
+  netCents: number
+}
+
 export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end'
 
 /** Structured end-of-season recap (schema v10). Written at wrap-up time (the tick into the
@@ -229,6 +257,12 @@ export interface Snapshot {
   plan: WeekPlan
   /** most recent 60 events, chronological (oldest first) */
   events: WorldEvent[]
+  /** category-accurate spending/income over the full retained finance history (survives the
+   *  60-event cap). window12w = last 12 weeks; season = the current 52-week season block. */
+  finance: { window12w: FinanceWindow; season: FinanceWindow }
+  /** most recent financial transactions (amountCents present), id-ascending, up to 50 –
+   *  independent of the mixed 60-event `events` cap so the ledger isn't starved by news. */
+  financialEvents: WorldEvent[]
   /** scheduled events over the next 8 weeks, with entry state */
   upcoming: UpcomingEvent[]
   /** the kid's current dense rank among the cohort + kid */

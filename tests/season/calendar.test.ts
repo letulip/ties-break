@@ -2,6 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { TIERS, buildSeason, isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 
+// The middle-background travel cost of the first event of buildSeason('travel-pin', 0, 52). Middle
+// keeps the pre-change draw byte-for-byte (factor 1.0), so this pins the RNG-identity baseline.
+const TRAVEL_PIN_MIDDLE = 31564
+
 function countByTier(events: SeasonEvent[]): Record<TierId, number> {
   const c: Record<TierId, number> = { local: 0, regional: 0, national: 0, itf: 0 }
   for (const e of events) c[e.tier]++
@@ -189,6 +193,34 @@ describe("buildSeason — a career's first season never opens already-closed (ro
   it('does NOT floor later year-blocks (they already start at 52, 104, …)', () => {
     const events = buildSeason('later', 52, 52)
     expect(Math.min(...events.map((e) => e.week))).toBeGreaterThanOrEqual(52)  })
+})
+
+describe('buildSeason — travel scales with family background (Part B)', () => {
+  it('working < middle < wealthy travel for the same seed/schedule; middle is the unchanged baseline', () => {
+    const working = buildSeason('travel-bg', 0, 52, 'working')
+    const middle = buildSeason('travel-bg', 0, 52, 'middle')
+    const wealthy = buildSeason('travel-bg', 0, 52, 'wealthy')
+    const baseline = buildSeason('travel-bg', 0, 52) // no background arg ⇒ middle, byte-identical
+
+    // Only travelCostCents scales – the schedule (weeks/tiers/surfaces) is background-independent.
+    expect(middle.map((e) => e.week)).toEqual(working.map((e) => e.week))
+    expect(middle.map((e) => e.tier)).toEqual(wealthy.map((e) => e.tier))
+    expect(middle.map((e) => e.surface)).toEqual(working.map((e) => e.surface))
+
+    for (let i = 0; i < middle.length; i++) {
+      expect(middle[i].travelCostCents).toBe(baseline[i].travelCostCents) // middle == pre-change draw
+      expect(working[i].travelCostCents).toBeLessThan(middle[i].travelCostCents)
+      expect(middle[i].travelCostCents).toBeLessThan(wealthy[i].travelCostCents)
+      // post-draw multiply of the SAME drawn value (working ×0.75, wealthy ×1.25, rounded)
+      expect(working[i].travelCostCents).toBe(Math.round(middle[i].travelCostCents * 0.75))
+      expect(wealthy[i].travelCostCents).toBe(Math.round(middle[i].travelCostCents * 1.25))
+    }
+  })
+
+  it('pins the middle travel byte value (baseline draw must not drift)', () => {
+    const middle = buildSeason('travel-pin', 0, 52, 'middle')
+    expect(middle[0].travelCostCents).toBe(TRAVEL_PIN_MIDDLE)
+  })
 })
 
 describe('buildSeason — offset spans', () => {

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 11,
+  "careerId": "c-golden-v11",
+  "seed": "golden-v11",
+  "week": 58,
+  "fundsCents": 51200,
+  "profile": {
+    "kidName": "Mila",
+    "kidLastName": "Sørensen",
+    "gender": "girl",
+    "country": "DK",
+    "background": "wealthy",
+    "coachSetup": "hired",
+    "playStyle": "aggressive",
+    "birthMonth": 9
+  },
+  "plan": { "train": 85, "rest": 15 },
+  "cohort": [
+    { "id": "ai-0", "name": "Aria Costa", "serve": 49, "ret": 46, "composure": 53, "stamina": 56, "nation": "IT", "growth": 1.1 },
+    { "id": "ai-1", "name": "Lena Novak", "serve": 52, "ret": 50, "composure": 45, "stamina": 61, "nation": "CZ", "growth": 0.9 },
+    { "id": "ai-2", "name": "Sofia Rossi", "serve": 45, "ret": 54, "composure": 62, "stamina": 49, "nation": "ES", "growth": 1.3 }
+  ],
+  "results": [
+    { "playerId": "ai-0", "week": 51, "points": 30 },
+    { "playerId": "kid", "week": 55, "points": 48, "tier": "regional" }
+  ],
+  "season": [
+    { "id": "1-w60-local", "week": 60, "tier": "local", "surface": "clay", "travelCostCents": 11250, "deadlineWeek": 58 },
+    { "id": "1-w64-national", "week": 64, "tier": "national", "surface": "hard", "travelCostCents": 75000, "deadlineWeek": 62 }
+  ],
+  "entries": [],
+  "events": [
+    { "id": 0, "week": 0, "type": "info", "text": "Mila's career started.", "keep": true },
+    { "id": 1, "week": 55, "type": "tournament", "text": "Regional Championship (hard, W55): Mila – Semifinalist (+28 pts)", "finishIdx": 2 },
+    { "id": 2, "week": 57, "type": "income", "category": "income", "text": "Parents' contribution", "amountCents": 43000 },
+    { "id": 3, "week": 57, "type": "expense", "category": "coaching", "text": "Coaching block: technique drills", "amountCents": -78400 },
+    { "id": 4, "week": 58, "type": "income", "category": "income", "text": "Parents' contribution", "amountCents": 43000 },
+    { "id": 5, "week": 58, "type": "expense", "category": "coaching", "text": "Coaching block: footwork and conditioning", "amountCents": -80500 },
+    { "id": 6, "week": 58, "type": "expense", "category": "stringing", "text": "Restring – tour gut", "amountCents": -5800 }
+  ],
+  "nextEventId": 7,
+  "kidRank": 41,
+  "prevKidRank": 44,
+  "pendingTournament": null,
+  "bestFinishByTier": { "local": 0, "regional": 2 },
+  "lastSeasonSummary": {
+    "seasonYear": 2031,
+    "endRank": 41,
+    "startRank": 90,
+    "points": 118,
+    "wins": 11,
+    "losses": 4,
+    "bestResultText": "best Champion",
+    "fundsDeltaCents": -910000
+  },
+  "seasonWins": 3,
+  "seasonLosses": 1,
+  "financeWeeks": [
+    { "week": 55, "byCategory": { "travel": -75000, "income": 43000, "coaching": -77000 } },
+    { "week": 57, "byCategory": { "income": 43000, "coaching": -78400 } },
+    { "week": 58, "byCategory": { "income": 43000, "coaching": -80500, "stringing": -5800 } }
+  ]
+}

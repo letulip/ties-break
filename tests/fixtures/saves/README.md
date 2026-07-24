@@ -29,6 +29,8 @@ Shapes come straight from the append-only history in `src/engine/migrations.ts`:
 | v7 | profile `+kidLastName`, world `+prevKidRank` |
 | v8 | world `+pendingTournament` (tournament-reveal flow; `null` when no reveal is in progress) |
 | v9 | profile `+birthMonth` (1-12; relative-age-effect groundwork, round-3 QA item 16 / round-6) |
+| v10 | world `+bestFinishByTier +lastSeasonSummary +seasonWins +seasonLosses` (Home season strip + SeasonSummaryDialog) |
+| v11 | world `+financeWeeks` (per-week/per-category finance ledger; feeds the Money breakdown past the 60-event cap) |
 
 For **v0–v5** the migration regenerates the world systems (cohort/season) deterministically from the
 seed, so those fixtures are the authentic minimal historical shapes. For **v6–v7** the `cohort` /

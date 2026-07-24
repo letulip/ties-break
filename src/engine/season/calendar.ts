@@ -4,6 +4,8 @@
 
 import { rngFromSeed, pickInt, type Rng } from '../rng'
 import type { Surface } from '../match/types'
+import type { FamilyBackground } from '../../shared/protocol'
+import { ECONOMY } from '../economy'
 import type { SeasonEvent, TierDef, TierId } from './types'
 
 // Tier catalogue. Economy numbers are whole cents. `points` length = rounds + 1
@@ -100,10 +102,13 @@ function idealWeek(fromWeek: number, weeks: number, i: number, count: number): n
   return fromWeek + Math.floor(((i + 0.5) * weeks) / count)
 }
 
-function makeEvent(week: number, tier: TierId, rng: Rng): SeasonEvent {
+function makeEvent(week: number, tier: TierId, rng: Rng, background: FamilyBackground): SeasonEvent {
   const surface = pickSurface(rng)
   const [lo, hi] = TIERS[tier].travelCostCents
-  const travelCostCents = pickInt(rng, lo, hi)
+  // Draw first (byte-identical RNG), THEN scale by family means – the pickInt call is unchanged,
+  // so the draw count/sequence is background-independent. This one scaled value is both what the
+  // UI shows (UpcomingEvent.travelCostCents) and what enterEvent charges (chargeTravel), no divergence.
+  const travelCostCents = Math.round(pickInt(rng, lo, hi) * ECONOMY.travelBgFactor[background])
   const year = Math.floor(week / 52)
   return {
     id: `${year}-w${week}-${tier}`,
@@ -126,7 +131,12 @@ export const MIN_FIRST_EVENT_WEEK = 3
 // weeks are placed first, then regional, then local, so lower tiers bend around
 // the higher ones: no two events share a week and local never lands on a national
 // week. Counts scale as floor(weeks / everyNWeeks) per tier.
-export function buildSeason(seedStr: string, fromWeek: number, weeks: number): SeasonEvent[] {
+export function buildSeason(
+  seedStr: string,
+  fromWeek: number,
+  weeks: number,
+  background: FamilyBackground = 'middle',
+): SeasonEvent[] {
   const rng = rngFromSeed(seedStr)
   const used = new Set<number>()
   const events: SeasonEvent[] = []
@@ -148,7 +158,7 @@ export function buildSeason(seedStr: string, fromWeek: number, weeks: number): S
     for (let i = 0; i < count; i++) {
       const target = idealWeek(fromWeek, weeks, i, count)
       const week = claimWeek(used, target, lo, hi)
-      events.push(makeEvent(week, tier, rng))
+      events.push(makeEvent(week, tier, rng, background))
     }
   }
 

@@ -71,6 +71,12 @@ describe('golden saves corpus', () => {
       expect(migrated.lastSeasonSummary === null || typeof migrated.lastSeasonSummary === 'object').toBe(true)
       expect(typeof migrated.seasonWins).toBe('number')
       expect(typeof migrated.seasonLosses).toBe('number')
+
+      // v11 finance ledger: an array, week-ascending, each entry a {week, byCategory} shape
+      expect(Array.isArray(migrated.financeWeeks)).toBe(true)
+      const weeks = migrated.financeWeeks.map((w) => w.week)
+      expect(weeks).toEqual([...weeks].sort((a, b) => a - b))
+      for (const w of migrated.financeWeeks) expect(typeof w.byCategory).toBe('object')
     })
   }
 })

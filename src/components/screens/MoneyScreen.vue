@@ -3,14 +3,16 @@
 // (round-7 item 2: dependency-free SVG donut + per-category rows over a 12-week / this-season
 // window, income on its own green row), then the real ledger below it.
 //
-// The running ledger balance is reconstructed BACKWARDS from the live `fundsCents` (the true
-// current total) rather than forward from the snapshot's trailing event window, since events
-// are capped/pruned and the window may not reach all the way back to the career's start. The
-// breakdown works off the same visible-event window – it is a recent-spending picture, not the
-// full-career audit trail.
+// Both the breakdown and the ledger read the engine-maintained finance aggregate (Part A) rather
+// than scraping `snapshot.events`: the mixed event feed is capped (60 in a snapshot, 400 retained)
+// so old finance is pruned and a tournament week buries the rest under news. `snapshot.finance`
+// carries category-accurate 12-week / season windows that survive that cap, and
+// `snapshot.financialEvents` is a cap-independent slice of the recent transactions for the ledger.
+// The running ledger balance is still reconstructed BACKWARDS from the live `fundsCents` (the true
+// current total), which stays correct for whatever slice of transactions is shown.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import type { FamilyBackground, WorldEvent, WorldEventCategory } from '../../shared/protocol'
+import type { FamilyBackground, FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
 
 const game = useGameStore()
 
@@ -55,18 +57,13 @@ const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
 // browser global (it's on the template global-allowlist), so a ref by that name is
 // unreachable from the template: the toggle would silently no-op.
 const breakdownWindow = ref<'12w' | 'season'>('12w')
-const currentWeek = computed(() => game.snapshot?.week ?? 0)
-// 12w: the last 12 weeks; season: from the current season year's first week.
-const windowStartWeek = computed(() =>
-  breakdownWindow.value === '12w' ? currentWeek.value - 11 : Math.floor(currentWeek.value / 52) * 52,
-)
-const windowEvents = computed<WorldEvent[]>(() =>
-  (game.snapshot?.events ?? []).filter((e) => e.amountCents !== undefined && e.week >= windowStartWeek.value),
+// The engine-side finance window for the active toggle (12w: last 12 weeks; season: current
+// 52-week block) – category-accurate over the full retained history, not the trailing event feed.
+const activeFinance = computed<FinanceWindow | undefined>(() =>
+  breakdownWindow.value === '12w' ? game.snapshot?.finance.window12w : game.snapshot?.finance.season,
 )
 
-const incomeCents = computed(() =>
-  windowEvents.value.filter((e) => (e.amountCents ?? 0) > 0).reduce((s, e) => s + (e.amountCents ?? 0), 0),
-)
+const incomeCents = computed(() => activeFinance.value?.incomeCents ?? 0)
 
 interface BreakdownRow {
   key: string
@@ -75,14 +72,15 @@ interface BreakdownRow {
   cents: number
   pct: number
 }
-// Expense rows (money OUT), largest first, each with its share of total spend.
+// Expense rows (money OUT), largest first, each with its share of total spend. Reads the signed
+// per-category totals off the aggregate: negative categories are expenses (magnitude shown);
+// an unknown/unbucketed category folds into 'other'.
 const expenseRows = computed<BreakdownRow[]>(() => {
   const totals = new Map<string, number>()
-  for (const e of windowEvents.value) {
-    const amt = e.amountCents ?? 0
-    if (amt >= 0) continue
-    const key = e.category && EXPENSE_KEYS.has(e.category) ? e.category : 'other'
-    totals.set(key, (totals.get(key) ?? 0) + -amt)
+  for (const [cat, amt] of Object.entries(activeFinance.value?.byCategory ?? {})) {
+    if ((amt ?? 0) >= 0) continue
+    const key = EXPENSE_KEYS.has(cat) ? cat : 'other'
+    totals.set(key, (totals.get(key) ?? 0) + -(amt ?? 0))
   }
   const total = [...totals.values()].reduce((a, b) => a + b, 0)
   if (total === 0) return []
@@ -124,7 +122,7 @@ interface LedgerGroup {
 }
 
 const ledgerGroups = computed<LedgerGroup[]>(() => {
-  const financial = (game.snapshot?.events ?? []).filter((e) => e.amountCents !== undefined)
+  const financial = game.snapshot?.financialEvents ?? []
   // Walk newest -> oldest: the last (most recent) financial event's balance-after
   // equals the live fundsCents; each older event's balance-after is that running
   // total minus the delta of everything more recent than it.
