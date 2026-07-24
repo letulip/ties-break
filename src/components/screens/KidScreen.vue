@@ -57,7 +57,7 @@ const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.sna
 const countingResults = computed(() => game.snapshot?.countingResults ?? [])
 const countingTotal = computed(() => countingResults.value.reduce((sum, c) => sum + c.points, 0))
 function tierLabel(tier?: TierId): string {
-  return tier ? TIERS[tier].label : '—'
+  return tier ? TIERS[tier].label : '–'
 }
 </script>
 

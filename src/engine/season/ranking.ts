@@ -16,7 +16,7 @@ export interface SeasonResult {
 const WINDOW_WEEKS = 52
 const BEST_N = 6
 
-/** A single player's windowed best-6 points sum at `currentWeek` — the exact value
+/** A single player's windowed best-6 points sum at `currentWeek` – the exact value
  *  `computeRanking` assigns as that player's `points`. Pure; ignores `tier`. Used to
  *  diff the effective ranking delta of a freshly-added result (round-5 item 1). */
 export function windowedBestSum(
