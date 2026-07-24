@@ -117,3 +117,28 @@ if (existsSync(LIFE_ARC_SRC)) {
 } else {
   console.log('optimize-art: no art-src/images/fem-euro-brunnet-jpeg/ — life-arc set skipped.')
 }
+
+// Round-6: wordmark logos. Like the life-arc set, the owner drops these PNGs straight into
+// art-src/ (no public/ round-trip to move them out of) — every art-src/logo-tb-*.png gets a
+// same-named webp in public/logos/. Natural size is kept (these are small UI wordmarks, not
+// portraits needing the 512px cap — the splash screen renders logo-tb-line/-line-2 at their
+// exact source pixel size, so upscaling here would just blur them later) and alpha is
+// preserved (composited over the app's dark background, not flattened onto white).
+// Idempotent: sources never move, so re-runs just re-encode.
+const LOGO_SRC_RE = /^logo-tb-.*\.png$/i
+const LOGO_OUT = join(publicDir, 'logos')
+const LOGO_QUALITY = 90
+
+const logoSources = existsSync(artSrcDir) ? readdirSync(artSrcDir).filter((n) => LOGO_SRC_RE.test(n)) : []
+if (logoSources.length) {
+  mkdirSync(LOGO_OUT, { recursive: true })
+  for (const name of logoSources) {
+    const base = name.replace(/\.png$/i, '')
+    const target = join(LOGO_OUT, `${base}.webp`)
+    await sharp(join(artSrcDir, name)).webp({ quality: LOGO_QUALITY }).toFile(target)
+    console.log(`webp  logos/${base}.webp  <- art-src/${name}  (q${LOGO_QUALITY}, natural size, alpha kept)`)
+  }
+  console.log(`optimize-art: wordmark logos — ${logoSources.length} webp(s) written to logos/ (natural size, q${LOGO_QUALITY}, alpha kept).`)
+} else {
+  console.log('optimize-art: no art-src/logo-tb-*.png — wordmark logos skipped.')
+}

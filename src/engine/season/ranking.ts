@@ -33,11 +33,12 @@ export function windowedBestSum(
     .reduce((sum, r) => sum + r.points, 0)
 }
 
-// computeRanking – rolling 52-week window, best-6 results per player, dense ranks.
-// Ties on points break by the more recent counted result; remaining ties keep a
-// stable order (roster order, then first-appearance in results). Passing `roster`
-// makes the table total: every roster member appears, zero-point players ranked
-// after pointed ones in stable order.
+// computeRanking – rolling 52-week window, best-6 results per player, competition
+// ranks (ties share a rank; the next rank skips by the tie count, e.g. 4, 4, 6).
+// Ties on points break by the more recent counted result for *order* only; remaining
+// ties keep a stable order (roster order, then first-appearance in results). Passing
+// `roster` makes the table total: every roster member appears, zero-point players
+// ranked after pointed ones in stable order.
 export function computeRanking(
   results: SeasonResult[],
   currentWeek: number,
@@ -77,16 +78,20 @@ export function computeRanking(
 
   rows.sort((a, b) => b.points - a.points || b.recency - a.recency || a.idx - b.idx)
 
-  // Dense ranks: rank increments only when the points value changes.
+  // Competition ranks (standard "1224" numbering, same convention real tennis rankings
+  // use): tied points share one rank, and the next distinct points value takes the rank
+  // equal to how many players sit ahead of it (+1) — i.e. it skips by the tie count
+  // (4, 4, 6 — never 4, 4, 5). Recency (set above, sort only) still breaks the *order*
+  // among equal-points players; it never affects the rank number they share.
   const ranking: RankingRow[] = []
   let rank = 0
   let prevPoints: number | null = null
-  for (const row of rows) {
+  rows.forEach((row, i) => {
     if (prevPoints === null || row.points !== prevPoints) {
-      rank++
+      rank = i + 1
       prevPoints = row.points
     }
     ranking.push({ playerId: row.playerId, points: row.points, rank })
-  }
+  })
   return ranking
 }

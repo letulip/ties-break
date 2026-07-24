@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 9,
+  "careerId": "c-golden-v9",
+  "seed": "golden-v9",
+  "week": 52,
+  "fundsCents": 61000,
+  "profile": {
+    "kidName": "Elena",
+    "kidLastName": "Ferro",
+    "gender": "girl",
+    "country": "IT",
+    "background": "middle",
+    "coachSetup": "hired",
+    "playStyle": "all-court",
+    "birthMonth": 9
+  },
+  "plan": { "train": 75, "rest": 25 },
+  "cohort": [
+    { "id": "ai-0", "name": "Aria Costa", "serve": 49, "ret": 46, "composure": 53, "stamina": 56, "nation": "IT", "growth": 1.1 },
+    { "id": "ai-1", "name": "Lena Novak", "serve": 52, "ret": 50, "composure": 45, "stamina": 61, "nation": "CZ", "growth": 0.9 },
+    { "id": "ai-2", "name": "Sofia Rossi", "serve": 45, "ret": 54, "composure": 62, "stamina": 49, "nation": "ES", "growth": 1.3 }
+  ],
+  "results": [
+    { "playerId": "ai-0", "week": 46, "points": 30 },
+    { "playerId": "kid", "week": 48, "points": 28 }
+  ],
+  "season": [
+    { "id": "1-w54-local", "week": 54, "tier": "local", "surface": "grass", "travelCostCents": 9000, "deadlineWeek": 52 },
+    { "id": "1-w58-national", "week": 58, "tier": "national", "surface": "hard", "travelCostCents": 60000, "deadlineWeek": 56 }
+  ],
+  "entries": [],
+  "events": [
+    { "id": 0, "week": 0, "type": "info", "text": "Elena's career started.", "keep": true },
+    { "id": 1, "week": 48, "type": "milestone", "text": "Broke into the world top 100!", "keep": true, "milestoneKey": "rank-100" }
+  ],
+  "nextEventId": 2,
+  "kidRank": 96,
+  "prevKidRank": 101,
+  "pendingTournament": null
+}

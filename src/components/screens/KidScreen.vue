@@ -2,14 +2,13 @@
 // Package I – Kid tab: portrait + profile table + a Phase 4 placeholder.
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { TIERS } from '../../engine/season/calendar'
-import type { TierId } from '../../engine/season/types'
+import CountingResultsTable from '../CountingResultsTable.vue'
 import type { CoachSetup, FamilyBackground, PlayStyle } from '../../shared/protocol'
 
 const game = useGameStore()
 // Raster art ships as webp (≤512 px, quality 82) via `npm run art`; PNG sources live in
 // art-src/ (not served). Same portrait, webp filename.
-const portraitUrl = `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-norm-fs8.webp`
+const portraitUrl = `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-norm.webp`
 
 const BACKGROUND_LABEL: Record<FamilyBackground, string> = {
   wealthy: 'Wealthy',
@@ -26,6 +25,12 @@ const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
   'serve-first': 'Big serve',
   'all-court': 'All-court',
 }
+// Round-6: birth month row (relative-age-effect groundwork, round-3 QA item 16).
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+]
+
 const COUNTRY_NAMES: Record<string, string> = {
   US: 'United States', GB: 'United Kingdom', FR: 'France', ES: 'Spain', IT: 'Italy', DE: 'Germany',
   RU: 'Russia', RS: 'Serbia', CH: 'Switzerland', CZ: 'Czechia', PL: 'Poland', UA: 'Ukraine',
@@ -48,17 +53,16 @@ const countryDisplay = computed(() => {
   if (!code) return ''
   return `${COUNTRY_NAMES[code] ?? code} ${flagEmoji(code)}`
 })
+const birthMonthLabel = computed(() => (game.snapshot ? MONTHS[game.snapshot.profile.birthMonth - 1] ?? '' : ''))
 const backgroundLabel = computed(() => (game.snapshot ? BACKGROUND_LABEL[game.snapshot.profile.background] : ''))
 const coachingLabel = computed(() => (game.snapshot ? COACH_LABEL[game.snapshot.profile.coachSetup] : ''))
 const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.snapshot.profile.playStyle] : ''))
 
 // --- Counting results (round-5 item 1b): the kid's best-6, 52-week window. Its point
-// total equals the standings points, so the ranking stops looking like a bug. --
+// total equals the standings points, so the ranking stops looking like a bug. Table
+// markup lives in the shared CountingResultsTable.vue (round-6 – also used by the Home
+// player card's best-6 help popover). --
 const countingResults = computed(() => game.snapshot?.countingResults ?? [])
-const countingTotal = computed(() => countingResults.value.reduce((sum, c) => sum + c.points, 0))
-function tierLabel(tier?: TierId): string {
-  return tier ? TIERS[tier].label : '–'
-}
 </script>
 
 <template>
@@ -85,6 +89,10 @@ function tierLabel(tier?: TierId): string {
             <td>{{ countryDisplay }}</td>
           </tr>
           <tr>
+            <th>Birth month</th>
+            <td>{{ birthMonthLabel }}</td>
+          </tr>
+          <tr>
             <th>Background</th>
             <td>{{ backgroundLabel }}</td>
           </tr>
@@ -105,30 +113,7 @@ function tierLabel(tier?: TierId): string {
       <p class="hint" style="margin-top: 0">
         Your rank counts your six best results from the last 52 weeks – this total is your ranking points.
       </p>
-      <table v-if="countingResults.length">
-        <thead>
-          <tr>
-            <th>Week</th>
-            <th>Tier</th>
-            <th>Pts</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(c, i) in countingResults" :key="i">
-            <td class="num">W{{ c.week }}</td>
-            <td>{{ tierLabel(c.tier) }}</td>
-            <td class="num">{{ c.points }}</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr class="counting-total">
-            <th>Total</th>
-            <td></td>
-            <td class="num">{{ countingTotal }}</td>
-          </tr>
-        </tfoot>
-      </table>
-      <p v-else class="hint">No counted results yet – enter a tournament to earn ranking points.</p>
+      <CountingResultsTable :results="countingResults" />
     </section>
 
     <section>

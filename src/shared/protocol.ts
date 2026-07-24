@@ -21,6 +21,10 @@ export interface PlayerProfile {
   background: FamilyBackground
   coachSetup: CoachSetup
   playStyle: PlayStyle
+  /** 1-12 (schema v9). Relative-age-effect groundwork (round-3 QA item 16): picked at
+   *  onboarding, purely cosmetic until Phase 4 wires the junior age-group dynamics it's
+   *  meant to feed. */
+  birthMonth: number
 }
 
 export const DEFAULT_PROFILE: PlayerProfile = {
@@ -31,6 +35,7 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   background: 'middle',
   coachSetup: 'hired',
   playStyle: 'all-court',
+  birthMonth: 6,
 }
 
 /** Weekly time split in percent; train + rest === 100. */
@@ -161,6 +166,12 @@ export interface StandingRow extends RankingRow {
   name: string
   nation: string
   isKid: boolean
+  /** true when one or more ranked players were omitted between this row and the
+   *  previous displayed row (the standings table shows top 10 + a window around the
+   *  kid, not the full field). Competition ranking means a rank number jumping by
+   *  more than 1 is no longer proof of an omission on its own (a tie does that too),
+   *  so the UI must use this flag rather than diffing `rank` values. */
+  gapBefore: boolean
 }
 
 /** One of the kid's counted (best-6, windowed) results, for the Kid-screen transparency

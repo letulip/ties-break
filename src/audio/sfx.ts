@@ -28,6 +28,7 @@ export type SfxKey =
   | 'applauseFinal'
   | 'takeYourSeats'
   | 'click'
+  | 'clickSoft'
 
 /** Key -> filename(s) in public/sounds/ (without the .mp3 extension). A key with
  *  multiple variants plays one at random each time (see `pickFile`). */
@@ -40,13 +41,17 @@ const MANIFEST: Record<SfxKey, string | string[]> = {
   applauseFinal: 'applause-final',
   takeYourSeats: 'take-your-seats',
   click: 'click',
+  clickSoft: 'click-soft',
 }
 
 const VOLUME = 0.5
-// Per-key volume overrides. The app-wide UI `click` is deliberately quiet so it reads as a
-// tap, not a match cue (round-5 item 6). `takeYourSeats` is a longer spoken/crowd cue at
-// playback start and is likewise dialed down so it doesn't jar against the match sfx.
-const KEY_VOLUME: Partial<Record<SfxKey, number>> = { click: 0.25, takeYourSeats: 0.35 }
+// Per-key volume overrides. Both app-wide UI click cues are deliberately quiet so they
+// read as a tap, not a match cue (round-5 item 6 / polish-pass click split): `click` is
+// the hit-like tick reserved for tab-bar navigation and "Watch match"/"Watch"/"Watch
+// again" buttons; `clickSoft` is the plainer tick for every other button. `takeYourSeats`
+// is a longer spoken/crowd cue at playback start and is likewise dialed down so it
+// doesn't jar against the match sfx.
+const KEY_VOLUME: Partial<Record<SfxKey, number>> = { click: 0.25, clickSoft: 0.25, takeYourSeats: 0.35 }
 const MUTED_STORAGE_KEY = 'tb-muted'
 
 function readMuted(): boolean {
@@ -168,14 +173,21 @@ export function playSfx(key: SfxKey): void {
     })
 }
 
-// --- app-wide install (round-5 item 6) ---------------------------------------
+// --- app-wide install (round-5 item 6; polish-pass click split) --------------
 // ROOT CAUSE this fixes: initSfx() (the audio gate) used to be wired ONLY to the
 // MatchViewer Play/Restart buttons, but matches autoplay on mount and every route into
 // a viewer (tabs, "Watch match", "Play match") skips that gesture – so `audioEnabled`
 // stayed false and the whole app was mute. One delegated document listener flips the gate
-// on the FIRST user click anywhere, and adds a quiet click cue to primary controls.
-
-const CLICK_SELECTOR = 'button.primary, .tab-btn, .option-pill'
+// on the FIRST user click anywhere, and adds a click cue to primary controls.
+//
+// Click split: tab-bar navigation and "Watch match"/"Watch"/"Watch again" buttons (the
+// latter marked with `.sfx-watch` at their call sites – TournamentFlow, the News section
+// of HomeScreen, SeasonScreen, MatchViewer) get the hit-like `click`. Every other button
+// this handler covers gets the plainer `clickSoft` instead, so the match-cue-adjacent
+// tick doesn't fire for routine navigation. Checked in that order so a `.sfx-watch`
+// button that also happens to be `button.primary` (e.g. "Watch match") still gets `click`.
+const HIT_CLICK_SELECTOR = '.tab-btn, .sfx-watch'
+const SOFT_CLICK_SELECTOR = 'button.primary, .option-pill'
 const CLICK_THROTTLE_MS = 80
 let lastClickAt = 0
 let installed = false
@@ -188,10 +200,12 @@ export function installGlobalSfx(): void {
     // Any real gesture unlocks audio (browsers block autoplay until one happens).
     initSfx()
     const target = e.target as HTMLElement | null
-    if (!target?.closest?.(CLICK_SELECTOR)) return
+    const hit = target?.closest?.(HIT_CLICK_SELECTOR)
+    const soft = !hit && target?.closest?.(SOFT_CLICK_SELECTOR)
+    if (!hit && !soft) return
     const now = Date.now()
     if (now - lastClickAt < CLICK_THROTTLE_MS) return // no spam on rapid clicks
     lastClickAt = now
-    playSfx('click')
+    playSfx(hit ? 'click' : 'clickSoft')
   })
 }

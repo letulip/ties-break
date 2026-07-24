@@ -11,6 +11,7 @@ import { buildTimeline, computeEndsSwaps, type EndsState } from '../viz/timeline
 import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
 import { initSfx, playSfx } from '../audio/sfx'
+import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
 
 const props = withDefaults(
@@ -76,6 +77,9 @@ let marks: MarkEntry[] = []
 let currentEvent: TimelineEvent | null = timeline.events[0] ?? null
 let rafId: number | null = null
 let lastTs: number | null = null
+/** Pending timer for the pre-match 'takeYourSeats' beat's ~1.5s hold (see startClock);
+ *  non-null only during that hold, so pauseInternal can cancel it cleanly. */
+let preRollTimer: ReturnType<typeof setTimeout> | null = null
 
 // --- round 4 item 3: real side changes (ends-swap state) ---------------------
 // Precomputed once per timeline rebuild; swappedDuring[i] is looked up per frame from
@@ -124,13 +128,97 @@ function updatePlayers(dt: number): void {
  *  shot (on the frame its flight event becomes current), not once per frame. */
 let lastRenderedEvent: TimelineEvent | null = null
 
-/** True until the first point-start event of the current playback run has fired its
- *  'takeYourSeats' cue; reset on every resetPlayback() (fresh play, mode change, restart,
- *  Watch again, ...) so each run gets exactly one. */
+/** True once the pre-match 'takeYourSeats' beat (see startClock) has been decided –
+ *  played or skipped – for the current playback run; reset on every resetPlayback()
+ *  (fresh play, mode change, restart, Watch again, ...) so each run decides exactly
+ *  once, on its first startClock() call, and never re-decides on pause/resume. */
 let seatsPlayedForRun = false
+
+// --- round-6: background-music ducking ----------------------------------------
+// Matches must be music-free; menus/screens outside a match are not. `duck()`/`restore()`
+// (src/audio/music.ts) are refcounted, so this component must call each at most once per
+// outstanding duck – `musicDuckedForRun` tracks whether THIS instance currently holds one.
+// Deliberately NOT reset in resetPlayback(): a mode change or a new match prop mid-viewing
+// rebuilds the timeline without ever un-ducking (still watching a match), so beginClockLoop's
+// `if (!musicDuckedForRun)` guard must keep seeing `true` across those rebuilds, or it would
+// duck() again without a matching restore() and leak the refcount. Only the two teardown
+// paths below (match finished, component unmounted) ever flip it back to false.
+let musicDuckedForRun = false
+
+// --- round-5 polish: speed-gated sound matrix ---------------------------------
+// At ×2/×4 the full sound picture (every hit, every miss, every game/set cue) turns
+// into noise well before the eye can track it, so each speed keeps only a curated
+// subset of cues. Every play site in this file that's part of the match soundscape
+// (not the UI `click`) routes through this one gate – it's the single source of
+// truth for "which key, if any, plays at the current speed":
+//
+//   ×1  – everything, except `out` is throttled to every 3rd call (a plain counter,
+//         so it can never fire twice in a row) so a miss-heavy rally doesn't spam it.
+//   ×2  – `hit`, `applauseShort` at game-end/set-end (tiebreak sets use `applauseShort`
+//         here too, not `oohApplause`) and match-end (including the final – no
+//         `applauseFinal` above ×1), plus the `takeYourSeats` pre-match beat.
+//   ×4  – only `hit` and a single `applauseShort` at match-end (no game/set applause,
+//         no `takeYourSeats`).
+//
+// 'seats' is special: it's not tied to a timeline event at all (see startClock) – it
+// plays, if this speed allows it, BEFORE the clock starts, not from inside
+// completeEvent like every other site.
+type SoundSite = 'hit' | 'out' | 'ooh' | 'gameEnd' | 'setEnd' | 'setEndTiebreak' | 'matchEnd' | 'seats'
+
+/** Counts 'out' calls this playback run; reset in resetPlayback() so every fresh
+ *  play/restart/Watch again starts the throttle from the same deterministic point. */
+let outCounter = 0
+
+function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
+  if (speed.value === 4) {
+    if (site === 'hit') playSfx('hit')
+    else if (site === 'matchEnd') playSfx('applauseShort')
+    return
+  }
+  if (speed.value === 2) {
+    if (site === 'hit') playSfx('hit')
+    else if (site === 'seats') playSfx('takeYourSeats')
+    else if (site === 'gameEnd' || site === 'setEnd' || site === 'setEndTiebreak' || site === 'matchEnd') {
+      playSfx('applauseShort')
+    }
+    return
+  }
+  // ×1: everything, as before.
+  switch (site) {
+    case 'hit':
+      playSfx('hit')
+      return
+    case 'out':
+      outCounter++
+      if (outCounter % 3 === 0) playSfx('out')
+      return
+    case 'ooh':
+      playSfx('ooh')
+      return
+    case 'seats':
+      playSfx('takeYourSeats')
+      return
+    case 'gameEnd':
+      playSfx('applauseShort')
+      return
+    case 'setEnd':
+      playSfx('applauseShort')
+      return
+    case 'setEndTiebreak':
+      playSfx('oohApplause')
+      return
+    case 'matchEnd':
+      playSfx(opts?.final ? 'applauseFinal' : 'applauseShort')
+      return
+  }
+}
 
 function pauseInternal(): void {
   playing.value = false
+  if (preRollTimer !== null) {
+    clearTimeout(preRollTimer)
+    preRollTimer = null
+  }
   if (rafId !== null) {
     cancelAnimationFrame(rafId)
     rafId = null
@@ -151,14 +239,7 @@ function completedSetIndex(pointIndex: number): number {
 }
 
 function completeEvent(ev: TimelineEvent): void {
-  if (ev.kind === 'point-start') {
-    // Round-5 sound rewiring: exactly one 'takeYourSeats' cue, on the very first
-    // point-start of this playback run (fresh play, restart, or Watch again).
-    if (!seatsPlayedForRun) {
-      seatsPlayedForRun = true
-      playSfx('takeYourSeats')
-    }
-  } else if (ev.kind === 'shot' && ev.shotIndex !== undefined) {
+  if (ev.kind === 'shot' && ev.shotIndex !== undefined) {
     const shot = props.match.points[ev.pointIndex]?.rally.shots[ev.shotIndex]
     if (shot) {
       marks.push({ p: shot.bounce, landedAt: ev.t + ev.duration, result: shot.result })
@@ -166,7 +247,7 @@ function completeEvent(ev: TimelineEvent): void {
       // No sound for a shot that lands in or wins the point – only a miss (out/net) gets a
       // cue at flight end. The 'hit' cue already played when this shot's flight started
       // (see render()).
-      if (shot.result === 'out' || shot.result === 'net') playSfx('out')
+      if (shot.result === 'out' || shot.result === 'net') gatedSfx('out')
     }
   } else if (ev.kind === 'point-end') {
     displayedPointIndex.value = ev.pointIndex
@@ -181,17 +262,18 @@ function completeEvent(ev: TimelineEvent): void {
     // ended on a miss.
     const brokeServe = !!entry && entry.breakPoint && entry.winner !== entry.server
     const longWinnerRally = shots.length >= 8 && lastShot?.result === 'winner'
-    if (!endedOnMiss && (brokeServe || longWinnerRally)) playSfx('ooh')
+    if (!endedOnMiss && (brokeServe || longWinnerRally)) gatedSfx('ooh')
   } else if (ev.kind === 'game-end') {
-    playSfx('applauseShort')
+    gatedSfx('gameEnd')
   } else if (ev.kind === 'set-end') {
     // A set decided by a tiebreak (final games score 7-6/6-7) gets the bigger
-    // 'oohApplause' cue; any other set gets the regular short applause.
+    // 'oohApplause' cue at ×1; any other set gets the regular short applause (both
+    // collapse to 'applauseShort' at ×2 – see gatedSfx).
     const set = props.match.result.sets[completedSetIndex(ev.pointIndex)]
     const tiebreakSet = !!set && ((set.a === 7 && set.b === 6) || (set.a === 6 && set.b === 7))
-    playSfx(tiebreakSet ? 'oohApplause' : 'applauseShort')
+    gatedSfx(tiebreakSet ? 'setEndTiebreak' : 'setEnd')
   } else if (ev.kind === 'match-end') {
-    playSfx(props.finalMatch ? 'applauseFinal' : 'applauseShort')
+    gatedSfx('matchEnd', { final: props.finalMatch })
   }
 }
 
@@ -243,7 +325,7 @@ function render(): void {
   // 'hit' fires once per shot, exactly when its flight event becomes current (shot start,
   // not flight end).
   if (currentEvent !== lastRenderedEvent) {
-    if (currentEvent?.kind === 'shot') playSfx('hit')
+    if (currentEvent?.kind === 'shot') gatedSfx('hit')
     lastRenderedEvent = currentEvent
   }
 
@@ -275,11 +357,41 @@ function frame(ts: number): void {
   }
 }
 
+/** ~1.5s of real time the court sits static (players home, clock at 0) after
+ *  'takeYourSeats' plays and before the timeline actually starts – see startClock. */
+const SEATS_PREROLL_MS = 1500
+
+function beginClockLoop(): void {
+  // Playback is actually starting now (immediately at speed ×4, or after the
+  // take-your-seats pre-roll at ×1/×2 – both paths funnel through here) – duck the music.
+  if (!musicDuckedForRun) {
+    musicDuckedForRun = true
+    duck()
+  }
+  lastTs = null
+  rafId = requestAnimationFrame(frame)
+}
+
 function startClock(): void {
   if (finished.value || viewMode.value === 'skip') return
   playing.value = true
-  lastTs = null
-  rafId = requestAnimationFrame(frame)
+  if (!seatsPlayedForRun) {
+    seatsPlayedForRun = true
+    // Pre-match beat (owner spec): on a fresh run, 'takeYourSeats' plays BEFORE the
+    // clock starts – the court sits visible and static for ~1.5s, then the timeline
+    // begins. gatedSfx decides whether this speed plays the cue at all (×1/×2 only);
+    // the hold only applies when it does. This replaced the old wiring where the cue
+    // fired on the timeline's own first point-start event.
+    if (speed.value !== 4) {
+      gatedSfx('seats')
+      preRollTimer = setTimeout(() => {
+        preRollTimer = null
+        beginClockLoop()
+      }, SEATS_PREROLL_MS)
+      return
+    }
+  }
+  beginClockLoop()
 }
 
 /** 'skip' mode never walks points – jump straight to the result screen. */
@@ -306,6 +418,7 @@ function resetPlayback(startPlaying: boolean): void {
   currentEvent = timeline.events[0] ?? null
   lastRenderedEvent = null
   seatsPlayedForRun = false
+  outCounter = 0
   playerPos = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
   if (viewMode.value === 'skip') {
     jumpToEnd()
@@ -348,6 +461,10 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   pauseInternal()
+  if (musicDuckedForRun) {
+    musicDuckedForRun = false
+    restore()
+  }
 })
 
 // Mode change: rebuild the timeline and restart, preserving whatever play state
@@ -359,7 +476,13 @@ watch(
 )
 // Surface the end of playback to the parent (fires once per completed run).
 watch(finished, (isFinished) => {
-  if (isFinished) emit('finish')
+  if (isFinished) {
+    emit('finish')
+    if (musicDuckedForRun) {
+      musicDuckedForRun = false
+      restore()
+    }
+  }
 })
 
 // --- readout: score / serve / win-probability / stats -------------------------
@@ -435,18 +558,18 @@ function servePct(side: Side): number {
     </div>
 
     <div class="controls">
-      <select v-model="viewMode" @change="playSfx('click')">
+      <select v-model="viewMode" @change="playSfx('clickSoft')">
         <option value="full">Full</option>
         <option value="key">Key points</option>
         <option value="skip">Skip</option>
       </select>
-      <select v-model.number="speed" @change="playSfx('click')">
+      <select v-model.number="speed" @change="playSfx('clickSoft')">
         <option :value="1">1×</option>
         <option :value="2">2×</option>
         <option :value="4">4×</option>
       </select>
       <template v-if="props.mode === 'replay'">
-        <button class="primary" @click="restart">Watch again ↻</button>
+        <button class="primary sfx-watch" @click="restart">Watch again ↻</button>
       </template>
       <template v-else>
         <button class="primary" :disabled="viewMode === 'skip'" @click="togglePlay">{{ playPauseLabel }}</button>

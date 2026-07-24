@@ -30,7 +30,7 @@ import { selectEntrants, runTournament } from './season/tournament'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 8
+export const SAVE_SCHEMA_VERSION = 9
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -788,21 +788,22 @@ function computeStandings(world: WorldState): StandingRow[] {
     name: `${world.profile.kidName} ${world.profile.kidLastName}`.trim(),
     nation: world.profile.country,
   })
-  const enrich = (r: RankingRow): StandingRow => {
+  const enrich = (r: RankingRow, gapBefore: boolean): StandingRow => {
     const m = meta.get(r.playerId) ?? { name: r.playerId, nation: '' }
-    return { ...r, name: m.name, nation: m.nation, isKid: r.playerId === KID_ID }
+    return { ...r, name: m.name, nation: m.nation, isKid: r.playerId === KID_ID, gapBefore }
   }
+  // Top 10 + a window around the kid, as *positions in `full`* rather than as slices
+  // deduped by id – tracking the underlying index (not the rank number) is what lets
+  // `gapBefore` below tell a genuine omission from a competition-ranking tie-skip,
+  // which also jumps the rank number by more than 1 without anyone being left out.
   const kidIdx = full.findIndex((r) => r.playerId === KID_ID)
-  const top = full.slice(0, 10)
-  const around = kidIdx >= 0 ? full.slice(Math.max(0, kidIdx - 2), kidIdx + 3) : []
-  const seen = new Set<string>()
-  const out: StandingRow[] = []
-  for (const r of [...top, ...around]) {
-    if (seen.has(r.playerId)) continue
-    seen.add(r.playerId)
-    out.push(enrich(r))
-  }
-  return out
+  const topEnd = Math.min(10, full.length)
+  const aroundStart = kidIdx >= 0 ? Math.max(0, kidIdx - 2) : -1
+  const aroundEnd = kidIdx >= 0 ? Math.min(full.length, kidIdx + 3) : -1
+  const includedIdx: number[] = []
+  for (let i = 0; i < topEnd; i++) includedIdx.push(i)
+  for (let i = Math.max(aroundStart, topEnd); i < aroundEnd; i++) includedIdx.push(i)
+  return includedIdx.map((idx, pos) => enrich(full[idx], pos > 0 && idx !== includedIdx[pos - 1] + 1))
 }
 
 // Any id -> short display name, for anyone who could appear in a bracket (kid or AI),

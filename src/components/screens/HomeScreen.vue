@@ -11,6 +11,8 @@ import { formatShortName } from '../../shared/format'
 import { KID_ID, flipScore } from '../../engine/world'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
+import RankHelpDialog from '../RankHelpDialog.vue'
+import { playSfx } from '../../audio/sfx'
 
 const game = useGameStore()
 const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.webp`
@@ -161,6 +163,14 @@ const replayMatch = ref<WorldMatch | null>(null)
 function openReplay(e: WorldEvent): void {
   if (e.match) replayMatch.value = e.match
 }
+
+// --- Best-6 help popover (round-6): the owner got confused twice by the windowed
+// ranking, so a "?" on the Junior rank row opens a plain explanation (RankHelpDialog).
+const showRankHelp = ref(false)
+function openRankHelp(): void {
+  playSfx('clickSoft')
+  showRankHelp.value = true
+}
 </script>
 
 <template>
@@ -192,6 +202,7 @@ function openReplay(e: WorldEvent): void {
                 :title="`Down ${rankMovement.by} since last week`"
               >↓{{ rankMovement.by }}</span>
               <span v-else class="rank-move flat" title="No change">–</span>
+              <button class="rank-help-btn" aria-label="How ranking points work" title="How ranking points work" @click="openRankHelp">?</button>
             </td>
           </tr>
           <tr>
@@ -272,7 +283,7 @@ function openReplay(e: WorldEvent): void {
             <tbody>
               <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">
                 <td v-if="e.type === 'match' && e.match" class="news-match-cell">
-                  <button class="news-match-btn" @click="openReplay(e)">
+                  <button class="news-match-btn sfx-watch" @click="openReplay(e)">
                     <span class="nm-lines">
                       <span class="nm-players">{{ kidShort }} vs {{ oppShort(e.match) }}</span>
                       <span class="nm-score num">{{ kidScoreOf(e.match) }}</span>
@@ -289,5 +300,6 @@ function openReplay(e: WorldEvent): void {
     </section>
 
     <MatchReplay v-if="replayMatch" :match="replayMatch" @close="replayMatch = null" />
+    <RankHelpDialog v-if="showRankHelp" @close="showRankHelp = false" />
   </template>
 </template>

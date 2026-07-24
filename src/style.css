@@ -160,7 +160,8 @@ button.primary:hover:not(:disabled) {
   color: #101d0a;
 }
 
-input[type='text'] {
+input[type='text'],
+select {
   background: var(--bg);
   border: 1px solid var(--line);
   color: var(--text);
@@ -408,9 +409,101 @@ input[type='text'] {
   line-height: 1;
 }
 
+/* Round-6: SVG tab icons (public/icons/*.svg), tinted via CSS mask so they follow the
+   button's `color` exactly – muted when inactive, accent when active/hover, with zero
+   extra active/inactive rules needed here since .tab-btn/.tab-btn.active already set
+   `color` and `background-color: currentColor` just reads it. Mask ignores the source
+   SVG's own fill, so it's safe even against files with a hardcoded fill color. */
+.tab-icon {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: currentColor;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
 .tab-label {
   font-size: 10px;
   letter-spacing: 0.02em;
+}
+
+/* --- Round-6 item 2: splash screen -------------------------------------------- */
+
+@keyframes splash-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Runs continuously underneath splash-hint-wrap's one-shot fade-in (below) – while the
+   wrapper sits at opacity:0 during its own animation-delay, this pulse is already ticking
+   but invisible (multiplied by the parent's 0 opacity), so there's no visible jump when the
+   wrapper becomes visible: it just reveals whatever pulse phase is already in progress. */
+@keyframes splash-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.splash-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.splash-logo {
+  display: block;
+  opacity: 0;
+  animation: splash-fade-in 0.4s ease forwards;
+}
+
+.splash-logo-1 {
+  animation-delay: 0s;
+}
+
+.splash-logo-2 {
+  animation-delay: 0.9s;
+}
+
+.splash-hint-wrap {
+  position: absolute;
+  bottom: 48px;
+  opacity: 0;
+  animation: splash-fade-in 0.4s ease forwards;
+  animation-delay: 1.6s;
+}
+
+.splash-hint {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  animation: splash-pulse 1.8s ease-in-out infinite;
 }
 
 /* --- Onboarding wizard -------------------------------------------------------- */
@@ -603,8 +696,15 @@ input[type='text'] {
 
 .kid-portrait {
   display: block;
-  width: 100%;
-  max-width: 200px;
+  /* 512x512 square art. HTML width/height attrs on the <img> are presentation hints
+     that map to CSS at the lowest cascade priority – if this rule only overrode
+     `width`, the `height="512"` attribute would win outright (its own origin, not
+     scaled), forcing a fixed 512px-tall box under a now-narrower width and letting
+     the default `object-fit: fill` stretch the square art into a tall strip. Setting
+     `height: auto` here overrides that hint so height derives from the image's own
+     aspect ratio at any width, same pattern as .viewer-canvas above. */
+  width: min(100%, 360px);
+  height: auto;
   margin: 0 auto;
   border-radius: 12px;
 }
@@ -1533,23 +1633,41 @@ tr.kid-row td {
   margin-bottom: 16px;
 }
 
+/* Segmented control (owner feedback: sub-tab pills read as too subtle). One rounded
+   "plate" container in the panel tone – matches the rest of the таблички look – with
+   the active segment filled solid accent (dark text, same convention as
+   button.primary) and muted text on the rest. */
 .tab-row {
   display: flex;
-  gap: 6px;
+  gap: 2px;
+  padding: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 999px;
 }
 
 .tab-pill {
-  border: 1px solid var(--line);
+  border: none;
   border-radius: 999px;
   padding: 6px 16px;
   font-size: 13px;
+  font-weight: 500;
   color: var(--muted);
   background: transparent;
 }
 
+.tab-pill:hover:not(:disabled):not(.active) {
+  color: var(--text);
+}
+
 .tab-pill.active {
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--accent);
+  color: #101d0a;
+  font-weight: 700;
+}
+
+.tab-pill.active:hover:not(:disabled) {
+  color: #101d0a;
 }
 
 .tier-guide-btn {
@@ -1562,6 +1680,39 @@ tr.kid-row td {
   justify-content: center;
   font-weight: 700;
   flex-shrink: 0;
+}
+
+/* Round-6: best-6 help "?" on the Home player card's Junior rank row – same muted-circle
+   idea as .tier-guide-btn, just smaller so it doesn't compete with the rank number/arrow
+   it sits beside. */
+.rank-help-btn {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin-left: 6px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.rank-help-rules {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rank-help-rules .hint {
+  margin: 0;
 }
 
 .guide-card {
@@ -1589,6 +1740,30 @@ tr.kid-row td {
 
 .guide-row-locked td {
   color: var(--muted);
+}
+
+/* Round-6: Stats tab header row (rank / season points tiles). */
+.stats-header-row {
+  display: flex;
+  gap: 12px;
+}
+
+.stats-tile {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.stats-tile-value {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--accent);
 }
 
 .calendar-row-muted {

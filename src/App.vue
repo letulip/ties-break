@@ -7,12 +7,14 @@ import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
 import { KID_ID } from './engine/world'
+import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
+import StatsScreen from './components/screens/StatsScreen.vue'
 import MoneyScreen from './components/screens/MoneyScreen.vue'
 import MoreScreen from './components/screens/MoreScreen.vue'
 
@@ -48,18 +50,31 @@ const avatarUrl = computed(() => {
 
 onMounted(() => game.init())
 
-type TabId = 'home' | 'play' | 'kid' | 'money' | 'more'
+// Round-6 item 2: the splash screen shows on EVERY launch, once init() has settled
+// (game.ready) – before either the onboarding wizard or the tab shell. Plain per-mount
+// ref, not persisted: "every launch" means every page load, not "once ever".
+const splashDone = ref(false)
+
+// 'money' stays a valid CONTENT state (MoneyScreen unchanged, reached via the header
+// W/$ pill) but round-6 dropped its bottom-tab button in favor of Stats – see TABS below.
+type TabId = 'home' | 'play' | 'kid' | 'stats' | 'money' | 'more'
 const tab = ref<TabId>('home')
 
 // Package J: the 'play' tab id stays (per spec – no router, minimal diff) but
 // is now the Season tab (calendar placeholder + the old exhibition block).
-const TABS: { id: TabId; emoji: string; label: string }[] = [
-  { id: 'home', emoji: '🏠', label: 'Home' },
-  { id: 'play', emoji: '📅', label: 'Season' },
-  { id: 'kid', emoji: '👧', label: 'Kid' },
-  { id: 'money', emoji: '💰', label: 'Money' },
-  { id: 'more', emoji: '☰', label: 'More' },
+// Round-6: emoji tab glyphs replaced by the owner's SVG icon set (public/icons/*.svg,
+// tinted via CSS mask so they follow the button's text color exactly – see `.tab-icon`
+// in style.css and `iconUrl()` below). 'money' has no entry here on purpose (see TabId).
+const TABS: { id: TabId; icon: string; label: string }[] = [
+  { id: 'home', icon: 'home', label: 'Home' },
+  { id: 'play', icon: 'season', label: 'Season' },
+  { id: 'kid', icon: 'kid-girl', label: 'Kid' },
+  { id: 'stats', icon: 'stats', label: 'Stats' },
+  { id: 'more', icon: 'more', label: 'More' },
 ]
+function iconUrl(icon: string): string {
+  return `${import.meta.env.BASE_URL}icons/${icon}.svg`
+}
 
 // No active snapshot once init() has settled means: no auto-loaded slot and no
 // in-progress career (fresh install, or a client-side reset from More).
@@ -163,6 +178,8 @@ function dismissStopToast(): void {
 
   <div v-if="!game.ready" class="app-loading">Loading…</div>
 
+  <SplashScreen v-else-if="!splashDone" @done="splashDone = true" />
+
   <OnboardingWizard v-else-if="showOnboarding" />
 
   <template v-else>
@@ -193,6 +210,7 @@ function dismissStopToast(): void {
       <HomeScreen v-if="tab === 'home'" />
       <SeasonScreen v-else-if="tab === 'play'" />
       <KidScreen v-else-if="tab === 'kid'" />
+      <StatsScreen v-else-if="tab === 'stats'" />
       <MoneyScreen v-else-if="tab === 'money'" />
       <MoreScreen v-else-if="tab === 'more'" />
     </main>
@@ -214,7 +232,7 @@ function dismissStopToast(): void {
         :data-tour="`tab-${t.id}`"
         @click="tab = t.id"
       >
-        <span class="tab-emoji">{{ t.emoji }}</span>
+        <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
       </button>

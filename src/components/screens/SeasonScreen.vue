@@ -13,7 +13,6 @@ import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { kidMatchPlayer } from '../../engine/world'
 import { isOffSeasonWeek } from '../../engine/season/calendar'
-import { formatShortName } from '../../shared/format'
 import { weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { AnnotatedMatch } from '../../viz/types'
@@ -32,9 +31,6 @@ const week = computed(() => game.snapshot?.week ?? 0)
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const upcoming = computed(() => game.snapshot?.upcoming ?? [])
 const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
-
-// --- Round 5 item 4: Calendar / Standings sub-tabs ----------------------------
-const seasonTab = ref<'calendar' | 'standings'>('calendar')
 
 // --- Round 5 item 7: tour guide overlay ---------------------------------------
 const showTierGuide = ref(false)
@@ -101,8 +97,8 @@ function runConfirm(): void {
   action?.onConfirm()
 }
 
-// --- standings -----------------------------------------------------------------
-const standings = computed(() => game.snapshot?.standings ?? [])
+// --- kidRank: only needed here now for the Friendly-match viewer's rank-a prop – the
+// full standings table moved to the Stats tab (round-6). ---------------------------
 const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
 
 // --- this week's tournament: only kid matches are ever recorded as `match`
@@ -149,135 +145,101 @@ function playExhibition(): void {
   <template v-if="game.snapshot">
     <p v-if="game.error" class="error">{{ game.error }}</p>
 
+    <!-- Round-6: the Calendar/Standings segmented control is gone – standings moved to
+         the new Stats tab, so Season is calendar-only now. The "?" tour-guide button stays. -->
     <div class="season-topbar">
-      <div class="tab-row">
-        <button class="tab-pill" :class="{ active: seasonTab === 'calendar' }" @click="seasonTab = 'calendar'">
-          Calendar
-        </button>
-        <button class="tab-pill" :class="{ active: seasonTab === 'standings' }" @click="seasonTab = 'standings'">
-          Standings
-        </button>
-      </div>
+      <h2 style="margin: 0">Season</h2>
       <button class="tier-guide-btn" aria-label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</button>
     </div>
 
-    <template v-if="seasonTab === 'calendar'">
-      <section v-if="thisWeekMatches.length">
-        <h2>This week's tournament</h2>
-        <p v-if="thisWeekSummary" class="tournament-summary">{{ thisWeekSummary.text }}</p>
-        <ol class="bracket-list">
-          <li v-for="m in thisWeekMatches" :key="m.id" class="bracket-row">
-            <span>{{ m.text }}</span>
-            <button v-if="m.match" class="link" @click="watchMatch(m)">Watch ▶</button>
-          </li>
-        </ol>
-      </section>
+    <section v-if="thisWeekMatches.length">
+      <h2>This week's tournament</h2>
+      <p v-if="thisWeekSummary" class="tournament-summary">{{ thisWeekSummary.text }}</p>
+      <ol class="bracket-list">
+        <li v-for="m in thisWeekMatches" :key="m.id" class="bracket-row">
+          <span>{{ m.text }}</span>
+          <button v-if="m.match" class="link sfx-watch" @click="watchMatch(m)">Watch ▶</button>
+        </li>
+      </ol>
+    </section>
 
-      <section v-if="myEntries.length">
-        <h2>My entries</h2>
-        <div class="entries-strip">
-          <span v-for="e in myEntries" :key="e.id" class="pill ok">{{ e.label }} · W{{ e.week }}</span>
-        </div>
-      </section>
+    <section v-if="myEntries.length">
+      <h2>My entries</h2>
+      <div class="entries-strip">
+        <span v-for="e in myEntries" :key="e.id" class="pill ok">{{ e.label }} · W{{ e.week }}</span>
+      </div>
+    </section>
 
-      <section>
-        <h2>Calendar</h2>
-        <div class="event-cards">
-          <template v-for="row in calendarRows" :key="row.week">
-            <div v-if="row.kind === 'event' && row.event" class="event-card">
-              <div class="event-card-top">
-                <span class="event-tier">{{ row.event.label }}</span>
-                <span class="pill">{{ SURFACE_EMOJI[row.event.surface] }} {{ row.event.surface }}</span>
-              </div>
-              <p class="hint" style="margin-top: 8px">
-                W{{ row.event.week }} · {{ row.dates }} · entry {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{
-                  formatDollars(row.event.travelCostCents)
-                }}
-              </p>
-              <div class="controls" style="margin-top: 8px">
-                <span class="pill" :class="{ negative: week > row.event.deadlineWeek && !row.event.entered }">
-                  closes W{{ row.event.deadlineWeek }}
-                </span>
-                <span v-if="row.event.entered" class="pill ok">Entered</span>
-              </div>
-              <div class="controls" style="margin-top: 12px">
-                <button
-                  v-if="row.event.entered"
-                  :disabled="week > row.event.deadlineWeek || game.busy"
-                  @click="askWithdraw(row.event)"
-                >
-                  Withdraw
-                </button>
-                <span v-else-if="entriesClosed(row.event)" class="pill muted">
-                  Entries closed W{{ row.event.deadlineWeek }}
-                </span>
-                <template v-else>
-                  <button class="primary" :disabled="fundsShort(row.event) || game.busy" @click="askEnter(row.event)">
-                    Enter
-                  </button>
-                  <span v-if="fundsShort(row.event)" class="hint" style="margin: 0">Not enough funds</span>
-                </template>
-              </div>
+    <section>
+      <h2>Calendar</h2>
+      <div class="event-cards">
+        <template v-for="row in calendarRows" :key="row.week">
+          <div v-if="row.kind === 'event' && row.event" class="event-card">
+            <div class="event-card-top">
+              <span class="event-tier">{{ row.event.label }}</span>
+              <span class="pill">{{ SURFACE_EMOJI[row.event.surface] }} {{ row.event.surface }}</span>
             </div>
-            <div v-else class="calendar-row-muted" :class="{ 'off-season': row.kind === 'off-season' }">
-              <span class="hint" style="margin: 0">
-                W{{ row.week }} · {{ row.dates }} · {{ row.kind === 'off-season' ? 'Off-season' : 'Training week' }}
+            <p class="hint" style="margin-top: 8px">
+              W{{ row.event.week }} · {{ row.dates }} · entry {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{
+                formatDollars(row.event.travelCostCents)
+              }}
+            </p>
+            <div class="controls" style="margin-top: 8px">
+              <span class="pill" :class="{ negative: week > row.event.deadlineWeek && !row.event.entered }">
+                closes W{{ row.event.deadlineWeek }}
               </span>
+              <span v-if="row.event.entered" class="pill ok">Entered</span>
             </div>
-          </template>
-        </div>
-        <p class="hint">
-          <span class="pill">🔒 ITF Junior</span> unlocks later
-        </p>
-      </section>
+            <div class="controls" style="margin-top: 12px">
+              <button
+                v-if="row.event.entered"
+                :disabled="week > row.event.deadlineWeek || game.busy"
+                @click="askWithdraw(row.event)"
+              >
+                Withdraw
+              </button>
+              <span v-else-if="entriesClosed(row.event)" class="pill muted">
+                Entries closed W{{ row.event.deadlineWeek }}
+              </span>
+              <template v-else>
+                <button class="primary" :disabled="fundsShort(row.event) || game.busy" @click="askEnter(row.event)">
+                  Enter
+                </button>
+                <span v-if="fundsShort(row.event)" class="hint" style="margin: 0">Not enough funds</span>
+              </template>
+            </div>
+          </div>
+          <div v-else class="calendar-row-muted" :class="{ 'off-season': row.kind === 'off-season' }">
+            <span class="hint" style="margin: 0">
+              W{{ row.week }} · {{ row.dates }} · {{ row.kind === 'off-season' ? 'Off-season' : 'Training week' }}
+            </span>
+          </div>
+        </template>
+      </div>
+      <p class="hint">
+        <span class="pill">🔒 ITF Junior</span> unlocks later
+      </p>
+    </section>
 
-      <section>
-        <h2>Friendly match</h2>
-        <div class="controls">
-          <input v-model="exhibitionSeed" type="text" placeholder="seed (optional)" />
-          <button class="primary" @click="playExhibition">Play match</button>
-          <span class="pill">{{ kidName }} vs Top seed · Clay</span>
-        </div>
-        <MatchViewer
-          v-if="exhibitionMatch"
-          :match="exhibitionMatch"
-          :player-a="exhibitionPlayerA"
-          :player-b="exhibitionPlayerB"
-          :surface="exhibitionSurface"
-          :rank-a="kidRank"
-          :rank-b="null"
-          mode="live"
-        />
-      </section>
-    </template>
+    <section>
+      <h2>Friendly match</h2>
+      <div class="controls">
+        <input v-model="exhibitionSeed" type="text" placeholder="seed (optional)" />
+        <button class="primary" @click="playExhibition">Play match</button>
+        <span class="pill">{{ kidName }} vs Top seed · Clay</span>
+      </div>
+      <MatchViewer
+        v-if="exhibitionMatch"
+        :match="exhibitionMatch"
+        :player-a="exhibitionPlayerA"
+        :player-b="exhibitionPlayerB"
+        :surface="exhibitionSurface"
+        :rank-a="kidRank"
+        :rank-b="null"
+        mode="live"
+      />
+    </section>
 
-    <template v-else>
-      <section>
-        <h2>Standings</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Player</th>
-              <th>Pts</th>
-            </tr>
-          </thead>
-          <tbody>
-            <template v-for="(r, i) in standings" :key="r.playerId">
-              <tr v-if="i > 0 && r.rank > standings[i - 1].rank + 1" class="standings-gap">
-                <td colspan="3">…</td>
-              </tr>
-              <tr :class="{ 'kid-row': r.isKid }">
-                <td class="num">{{ r.rank }}</td>
-                <td>{{ formatShortName(r.name) }}</td>
-                <td class="num">{{ r.points }}</td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-        <p class="hint">Your rank: #{{ kidRank }}</p>
-      </section>
-    </template>
     <ConfirmDialog
       v-if="pendingConfirm"
       :message="pendingConfirm.message"

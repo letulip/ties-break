@@ -28,14 +28,14 @@ describe('computeRanking — best 6 of the window', () => {
 })
 
 describe('computeRanking — tie-break by recency', () => {
-  it('ranks equal-point players by the more recent best result, sharing the dense rank', () => {
+  it('ranks equal-point players by the more recent best result, sharing the rank', () => {
     const results = [r('x', 40, 50), r('y', 45, 50)]
     const ranking = computeRanking(results, 50)
     const x = ranking.find((v) => v.playerId === 'x')!
     const y = ranking.find((v) => v.playerId === 'y')!
     expect(x.points).toBe(50)
     expect(y.points).toBe(50)
-    expect(x.rank).toBe(y.rank) // dense: equal points → equal rank
+    expect(x.rank).toBe(y.rank) // equal points → equal (shared) rank
     // more recent (y, week 45) is listed before x (week 40)
     expect(ranking.findIndex((v) => v.playerId === 'y')).toBeLessThan(
       ranking.findIndex((v) => v.playerId === 'x'),
@@ -43,14 +43,14 @@ describe('computeRanking — tie-break by recency', () => {
   })
 })
 
-describe('computeRanking — dense ranks', () => {
-  it('assigns dense ranks (equal points share a rank, next distinct is +1)', () => {
+describe('computeRanking — competition ranks', () => {
+  it('assigns competition ranks (equal points share a rank; next distinct skips by the tie count)', () => {
     const results = [r('a', 3, 30), r('b', 3, 30), r('c', 3, 10)]
     const ranking = computeRanking(results, 5)
     const rankOf = (id: string) => ranking.find((v) => v.playerId === id)!.rank
     expect(rankOf('a')).toBe(1)
     expect(rankOf('b')).toBe(1)
-    expect(rankOf('c')).toBe(2) // dense, not 3
+    expect(rankOf('c')).toBe(3) // competition: two tied at 1 → next is 3, not 2
   })
 })
 
@@ -64,7 +64,7 @@ describe('computeRanking — totality over a roster', () => {
     expect(rankOf('a')).toBe(1)
     expect(rankOf('b')).toBe(2)
     expect(rankOf('c')).toBe(3)
-    expect(rankOf('kid')).toBe(3) // both zero-point → same dense rank
+    expect(rankOf('kid')).toBe(3) // both zero-point → share rank 3
     // stable order among zero-point players: c before kid (roster order)
     expect(ranking.findIndex((v) => v.playerId === 'c')).toBeLessThan(
       ranking.findIndex((v) => v.playerId === 'kid'),
@@ -78,13 +78,13 @@ describe('computeRanking — totality over a roster', () => {
     expect(JSON.stringify(results)).toBe(snapshot)
   })
 
-  it('ranks are contiguous from 1 (dense) across a full roster', () => {
+  it('ranks follow competition numbering (1224) across a full roster', () => {
     const roster = ['a', 'b', 'c', 'd', 'e']
     const results = [r('a', 4, 30), r('b', 4, 20), r('c', 4, 20), r('d', 4, 5)]
     const ranking = computeRanking(results, 6, roster)
     const ranks = ranking.map((v) => v.rank)
-    // dense: 1 (a=30), 2,2 (b,c=20), 3 (d=5), 4 (e=0)
-    expect(ranks).toEqual([1, 2, 2, 3, 4])
+    // competition: 1 (a=30), 2,2 (b,c=20 tied), 4 (d=5 — skips 3), 5 (e=0)
+    expect(ranks).toEqual([1, 2, 2, 4, 5])
     // e (zero points) is last
     expect(ranking[ranking.length - 1].playerId).toBe('e')
   })
