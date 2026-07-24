@@ -9,7 +9,7 @@ import type { CoachSetup, FamilyBackground, PlayStyle } from '../../shared/proto
 const game = useGameStore()
 // Raster art ships as webp (≤512 px, quality 82) via `npm run art`; PNG sources live in
 // art-src/ (not served). Same portrait, webp filename.
-const portraitUrl = `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-norm-fs8.webp`
+const portraitUrl = `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-norm.webp`
 
 const BACKGROUND_LABEL: Record<FamilyBackground, string> = {
   wealthy: 'Wealthy',

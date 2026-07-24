@@ -272,7 +272,7 @@ function openReplay(e: WorldEvent): void {
             <tbody>
               <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">
                 <td v-if="e.type === 'match' && e.match" class="news-match-cell">
-                  <button class="news-match-btn" @click="openReplay(e)">
+                  <button class="news-match-btn sfx-watch" @click="openReplay(e)">
                     <span class="nm-lines">
                       <span class="nm-players">{{ kidShort }} vs {{ oppShort(e.match) }}</span>
                       <span class="nm-score num">{{ kidScoreOf(e.match) }}</span>

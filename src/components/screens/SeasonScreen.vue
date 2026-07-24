@@ -168,7 +168,7 @@ function playExhibition(): void {
         <ol class="bracket-list">
           <li v-for="m in thisWeekMatches" :key="m.id" class="bracket-row">
             <span>{{ m.text }}</span>
-            <button v-if="m.match" class="link" @click="watchMatch(m)">Watch ▶</button>
+            <button v-if="m.match" class="link sfx-watch" @click="watchMatch(m)">Watch ▶</button>
           </li>
         </ol>
       </section>
@@ -263,8 +263,8 @@ function playExhibition(): void {
             </tr>
           </thead>
           <tbody>
-            <template v-for="(r, i) in standings" :key="r.playerId">
-              <tr v-if="i > 0 && r.rank > standings[i - 1].rank + 1" class="standings-gap">
+            <template v-for="r in standings" :key="r.playerId">
+              <tr v-if="r.gapBefore" class="standings-gap">
                 <td colspan="3">…</td>
               </tr>
               <tr :class="{ 'kid-row': r.isKid }">

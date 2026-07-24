@@ -346,7 +346,7 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
           </div>
         </div>
         <div class="tf-actions">
-          <button class="primary" :disabled="game.busy" @click="watchMatch">Watch match</button>
+          <button class="primary sfx-watch" :disabled="game.busy" @click="watchMatch">Watch match</button>
           <button :disabled="game.busy" @click="showResult(false)">Skip</button>
         </div>
       </section>
@@ -382,7 +382,7 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
         </table>
         <p v-if="matchMeta" class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
         <div class="tf-actions">
-          <button :disabled="game.busy" @click="watchAgain">Watch again</button>
+          <button class="sfx-watch" :disabled="game.busy" @click="watchAgain">Watch again</button>
           <button class="primary" :disabled="game.busy" @click="next">Next →</button>
         </div>
       </section>
