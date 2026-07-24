@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M3 12C3 4.5885 4.5885 3 12 3C19.4115 3 21 4.5885 21 12C21 19.4115 19.4115 21 12 21C4.5885 21 3 19.4115 3 12Z" stroke="#323232" stroke-width="2"/>
-<path d="M10.9 8.8L10.6577 8.66152C10.1418 8.36676 9.5 8.73922 9.5 9.33333L9.5 14.6667C9.5 15.2608 10.1418 15.6332 10.6577 15.3385L10.9 15.2L15.1 12.8C15.719 12.4463 15.719 11.5537 15.1 11.2L10.9 8.8Z" stroke="#323232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<svg width="800" height="800" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M100 400C100 152.95 152.95 100 400 100C647.05 100 700 152.95 700 400C700 647.05 647.05 700 400 700C152.95 700 100 647.05 100 400Z" stroke="#323232" stroke-width="50"/>
+<path d="M363.333 293.333L355.257 288.717C338.06 278.892 316.667 291.307 316.667 311.111V488.89C316.667 508.693 338.06 521.107 355.257 511.283L363.333 506.667L503.333 426.667C523.967 414.877 523.967 385.123 503.333 373.333L363.333 293.333Z" stroke="#323232" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

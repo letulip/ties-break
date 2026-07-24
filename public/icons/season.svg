@@ -1,9 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?><!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<svg width="800px" height="800px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M2 12C2 8.22876 2 6.34315 3.17157 5.17157C4.34315 4 6.22876 4 10 4H14C17.7712 4 19.6569 4 20.8284 5.17157C22 6.34315 22 8.22876 22 12V14C22 17.7712 22 19.6569 20.8284 20.8284C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.8284C2 19.6569 2 17.7712 2 14V12Z" stroke="#1C274C" stroke-width="1.5"/>
-<path d="M7 4V2.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M17 4V2.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M9 14.5L10.5 13V17" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M13 16V14C13 13.4477 13.4477 13 14 13C14.5523 13 15 13.4477 15 14V16C15 16.5523 14.5523 17 14 17C13.4477 17 13 16.5523 13 16Z" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
-<path d="M2.5 9H21.5" stroke="#1C274C" stroke-width="1.5" stroke-linecap="round"/>
+<svg width="800" height="800" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M66.6667 400C66.6667 274.292 66.6668 211.438 105.719 172.386C144.772 133.333 207.625 133.333 333.333 133.333H466.667C592.373 133.333 655.23 133.333 694.28 172.386C733.333 211.438 733.333 274.292 733.333 400V466.667C733.333 592.373 733.333 655.23 694.28 694.28C655.23 733.333 592.373 733.333 466.667 733.333H333.333C207.625 733.333 144.772 733.333 105.719 694.28C66.6668 655.23 66.6667 592.373 66.6667 466.667V400Z" stroke="#1C274C" stroke-width="50"/>
+<path d="M233.333 133.333V83.3333" stroke="#1C274C" stroke-width="50" stroke-linecap="round"/>
+<path d="M566.667 133.333V83.3333" stroke="#1C274C" stroke-width="50" stroke-linecap="round"/>
+<path d="M300 483.333L350 433.333V566.667" stroke="#1C274C" stroke-width="50" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M433.333 533.333V466.667C433.333 448.257 448.257 433.333 466.667 433.333C485.077 433.333 500 448.257 500 466.667V533.333C500 551.743 485.077 566.667 466.667 566.667C448.257 566.667 433.333 551.743 433.333 533.333Z" stroke="#1C274C" stroke-width="50" stroke-linecap="round"/>
+<path d="M83.3333 300H716.667" stroke="#1C274C" stroke-width="50" stroke-linecap="round"/>
 </svg>
