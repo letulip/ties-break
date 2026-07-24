@@ -16,6 +16,10 @@ export const useGameStore = defineStore('game', {
     careers: [] as CareerMeta[],
     /** set when the active autosave was damaged and the previous generation was restored */
     recovered: false,
+    /** Round 5 item 10: one-shot signal – this `newCareer` was the very first one ever
+     *  on this device (the careers list was empty before it). App.vue consumes it once
+     *  (to decide whether to launch the coach-mark tour) then patches it back to false. */
+    firstEverCareer: false,
     persisted: null as boolean | null,
     busy: false,
     error: '',
@@ -48,11 +52,15 @@ export const useGameStore = defineStore('game', {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
       const finalSeed =
         seed.trim() || `${profile.kidName.toLowerCase()}-${(Math.random().toString(36).slice(2) + '0000').slice(0, 4)}`
+      // Snapshot BEFORE creation: "the careers list was empty" is what makes this the
+      // very first career ever, not whatever it becomes after refreshCareers() below.
+      const wasEmpty = this.careers.length === 0
       await this.run(async () => {
         const res = await request({ type: 'new', seed: finalSeed, profile })
         if (!res.ok) throw new Error(res.error)
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         this.recovered = false
+        if (wasEmpty) this.firstEverCareer = true
         await this.refreshCareers()
         await this.refreshSlots()
       })

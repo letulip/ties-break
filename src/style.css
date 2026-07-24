@@ -1257,3 +1257,292 @@ tr.kid-row td {
 .tf-path-row:not(.won) {
   color: var(--muted);
 }
+
+/* --- Round 5: date subtitle, splash, full draw ------------------------------- */
+
+.tf-week-dates {
+  margin: 0 0 0 8px;
+}
+
+.tf-splash {
+  text-align: center;
+}
+
+.tf-splash-tier {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 4px 0 0;
+}
+
+.tf-fulldraw {
+  padding: 0;
+  overflow: hidden;
+}
+
+.tf-fulldraw-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 12px 16px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.tf-fulldraw-toggle:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.tf-fulldraw-body {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tf-fulldraw-round-label {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 4px;
+}
+
+.tf-fulldraw-match {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.tf-fulldraw-match.kid-match {
+  background: rgba(217, 242, 79, 0.06);
+  border-left: 3px solid var(--accent);
+  color: var(--text);
+}
+
+.tf-fulldraw-vs {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.tf-fulldraw-match span.won {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.tf-fulldraw-match.kid-match span.won {
+  color: var(--accent);
+}
+
+.tf-fulldraw-score {
+  font-size: 12px;
+}
+
+/* --- Round 5: Season sub-tabs, tour guide, calendar muted rows -------------- */
+
+.season-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.tab-row {
+  display: flex;
+  gap: 6px;
+}
+
+.tab-pill {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 13px;
+  color: var(--muted);
+  background: transparent;
+}
+
+.tab-pill.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tier-guide-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.guide-card {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.guide-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  padding-right: 36px;
+}
+
+.guide-table-wrap {
+  overflow-x: auto;
+}
+
+.guide-row-locked td {
+  color: var(--muted);
+}
+
+.calendar-row-muted {
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.calendar-row-muted.off-season {
+  border-color: var(--accent);
+  background: rgba(217, 242, 79, 0.04);
+}
+
+/* --- Round 5: week recap card ------------------------------------------------ */
+
+.recap-card {
+  border: 1px solid var(--accent);
+}
+
+.recap-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.recap-dots {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.recap-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--line);
+}
+
+.recap-dot.train {
+  background: var(--accent);
+}
+
+.recap-dot.rest {
+  background: var(--muted);
+}
+
+.recap-flavor {
+  font-size: 13.5px;
+  margin: 0 0 8px;
+}
+
+.recap-figures {
+  display: flex;
+  gap: 16px;
+  font-size: 13.5px;
+}
+
+/* --- Round 5: Season tab accent dot ------------------------------------------ */
+
+.tab-btn {
+  position: relative;
+}
+
+.tab-dot {
+  position: absolute;
+  top: 4px;
+  right: calc(50% - 18px);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* --- Round 5: onboarding coach-mark tour -------------------------------------- */
+
+.coach-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  pointer-events: none;
+}
+
+.coach-highlight {
+  position: fixed;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  box-shadow: 0 0 0 4000px rgba(6, 10, 20, 0.55);
+  pointer-events: none;
+  transition: all 0.2s ease;
+}
+
+.coach-tooltip {
+  position: fixed;
+  width: 260px;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 12px 28px -12px rgba(6, 10, 20, 0.8);
+  pointer-events: auto;
+}
+
+.coach-tooltip-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--accent);
+}
+
+.coach-tooltip-text {
+  font-size: 13px;
+  margin: 0 0 12px;
+}
+
+.coach-tooltip-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.coach-tooltip-actions button.primary {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.coach-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+}

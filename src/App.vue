@@ -5,13 +5,22 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
+import { weekRange } from './shared/dates'
 import OnboardingWizard from './components/OnboardingWizard.vue'
+import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
 import MoneyScreen from './components/screens/MoneyScreen.vue'
 import MoreScreen from './components/screens/MoreScreen.vue'
+
+// Round 5 item 23: a small accent dot on the Season tab until the player has visited it
+// since the last "New events on the calendar" marker. UI-only state (localStorage), no
+// engine change – the marker text itself is emitted from world.ts's ensureSeason.
+const SEASON_SEEN_KEY = 'tb:lastSeenSeasonWeek'
+// Round 5 item 10: the coach-mark tour is shown once, ever, per device.
+const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 
 const game = useGameStore()
 // Face crops from the stage "norm" portraits (public/avatars, generated via scripts;
@@ -42,7 +51,15 @@ const showOnboarding = computed(() => game.ready && !game.snapshot)
 watch(
   () => game.snapshot,
   (now, before) => {
-    if (now && !before) tab.value = 'home'
+    if (now && !before) {
+      tab.value = 'home'
+      // Consume the one-shot "first ever career" signal exactly once, regardless of
+      // whether the tour actually launches (already seen on this device -> skip it).
+      if (game.firstEverCareer) {
+        game.$patch({ firstEverCareer: false })
+        if (!localStorage.getItem(TOUR_SEEN_KEY)) showTour.value = true
+      }
+    }
   },
 )
 
@@ -54,8 +71,36 @@ function formatFunds(cents: number): string {
 
 const kidName = computed(() => game.snapshot?.profile.kidName ?? '')
 const week = computed(() => game.snapshot?.week ?? 0)
+const weekDates = computed(() => weekRange(week.value))
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const funds = computed(() => formatFunds(fundsCents.value))
+
+// --- Season tab "new events" accent dot (item 23) ---------------------------
+// `lastSeenSeasonWeek` is mirrored into a reactive ref: a plain localStorage.getItem()
+// inside a computed isn't a tracked dependency, so the dot wouldn't clear until some
+// UNRELATED reactive change (e.g. the next tick) happened to force a re-evaluation.
+const lastSeenSeasonWeek = ref(Number(localStorage.getItem(SEASON_SEEN_KEY) ?? '-1'))
+const seasonHasNew = computed(() => {
+  const events = game.snapshot?.events ?? []
+  let latest = -1
+  for (const e of events) {
+    if (e.type === 'info' && e.text === 'New events on the calendar' && e.week > latest) latest = e.week
+  }
+  return latest >= 0 && latest > lastSeenSeasonWeek.value
+})
+watch(tab, (t) => {
+  if (t === 'play') {
+    lastSeenSeasonWeek.value = week.value
+    localStorage.setItem(SEASON_SEEN_KEY, String(week.value))
+  }
+})
+
+// --- coach-mark onboarding tour (item 10) ------------------------------------
+const showTour = ref(false)
+function dismissTour(): void {
+  showTour.value = false
+  localStorage.setItem(TOUR_SEEN_KEY, '1')
+}
 
 // Package K2: a corrupted-generation recovery is rare and stays a one-time hint –
 // dismissing it just patches the flag back to false (same pattern MoreScreen uses
@@ -102,10 +147,15 @@ function dismissStopToast(): void {
   <OnboardingWizard v-else-if="showOnboarding" />
 
   <template v-else>
-    <header class="app-header">
+    <header class="app-header" data-tour="home-header">
       <img class="avatar" :src="avatarUrl" alt="" />
       <span class="kid-name">{{ kidName }}</span>
-      <button class="pill status-pill" :class="{ negative: fundsCents < 0 }" @click="tab = 'money'">
+      <button
+        class="pill status-pill"
+        :class="{ negative: fundsCents < 0 }"
+        :title="weekDates"
+        @click="tab = 'money'"
+      >
         W{{ week }} · {{ funds }}
       </button>
     </header>
@@ -132,7 +182,7 @@ function dismissStopToast(): void {
          Both buttons now go through `advance` (weeks: 1|4) so either one can stop
          early on a tournament week / imminent deadline / funds crossing zero. -->
     <div v-if="tab === 'home'" class="next-week-bar">
-      <button class="primary" :disabled="game.busy" @click="game.advance(1)">Next week ▶</button>
+      <button class="primary" data-tour="next-week" :disabled="game.busy" @click="game.advance(1)">Next week ▶</button>
       <button :disabled="game.busy" @click="game.advance(4)">▶▶ 4</button>
     </div>
 
@@ -142,14 +192,19 @@ function dismissStopToast(): void {
         :key="t.id"
         class="tab-btn"
         :class="{ active: tab === t.id }"
+        :data-tour="`tab-${t.id}`"
         @click="tab = t.id"
       >
         <span class="tab-emoji">{{ t.emoji }}</span>
         <span class="tab-label">{{ t.label }}</span>
+        <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
       </button>
     </nav>
 
     <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress. -->
     <TournamentFlow v-if="game.snapshot?.pending" />
+
+    <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
+    <OnboardingTour v-if="showTour" @done="dismissTour" />
   </template>
 </template>

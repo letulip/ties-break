@@ -48,6 +48,22 @@ export const TIERS: Record<TierId, TierDef> = {
   },
 }
 
+// --- off-season (Round 5 items 16/21) ----------------------------------------
+// Every season year (52 absolute weeks, year = floor(week / 52)) ends with 3 dead
+// weeks that never carry an event – the real-world Nov/Dec break: school, family,
+// no travel. Tied to the absolute week number (not to whatever span buildSeason
+// happens to be called with) so it lines up with world.ts's year-boundary logic
+// regardless of chunking.
+export const WEEKS_PER_YEAR = 52
+export const OFF_SEASON_WEEKS = 3
+
+/** True for the last `OFF_SEASON_WEEKS` weeks of a season year (e.g. weeks 49-51 of
+ *  year 0: Dec 15 - Jan 4 against the Round-5 real-dates epoch). */
+export function isOffSeasonWeek(week: number): boolean {
+  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return offset >= WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+}
+
 // Surface mix: hard 50 / clay 35 / grass 15. One RNG draw.
 function pickSurface(rng: Rng): Surface {
   const r = rng()
@@ -109,6 +125,10 @@ export function buildSeason(seedStr: string, fromWeek: number, weeks: number): S
   const events: SeasonEvent[] = []
   const lo = fromWeek
   const hi = fromWeek + weeks - 1
+
+  // Off-season weeks are reserved FIRST, ahead of even the national tier, so no
+  // event ever lands there (items 16/21).
+  for (let w = lo; w <= hi; w++) if (isOffSeasonWeek(w)) used.add(w)
 
   // Highest tier first so its weeks are reserved before lower tiers are placed.
   const order: TierId[] = ['national', 'regional', 'local']

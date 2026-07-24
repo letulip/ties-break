@@ -11,15 +11,18 @@ import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { computeMatchStats } from '../engine/match/matchStats'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
+import { TIERS } from '../engine/season/calendar'
 import { KID_ID, flipScore } from '../engine/world'
 import { formatShortName } from '../shared/format'
+import { weekRange } from '../shared/dates'
 import type { MatchOptions, Side } from '../engine/match/types'
-import type { WorldMatch } from '../shared/protocol'
+import type { FullBracketMatch, WorldMatch } from '../shared/protocol'
 
 const game = useGameStore()
 const base = import.meta.env.BASE_URL
 const HAPPY_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-happy-fs8.webp`
 const SAD_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-sad-fs8.webp`
+const SERIOUS_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-serious-fs8.webp`
 const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
 
 function flagEmoji(code: string): string {
@@ -34,9 +37,15 @@ const kidShort = computed(() =>
 )
 const kidFlag = computed(() => flagEmoji(profile.value?.country ?? ''))
 const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
+// Snapshot.week stays pinned to the event's own week for the whole reveal (tickWeek never
+// advances again while paused), so this doubles as the tournament's real date range.
+const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
+
+// --- Round 5 item 6: pre-tournament splash ------------------------------------
+const drawSize = computed(() => (pending.value ? TIERS[pending.value.tier].drawSize : 0))
 
 // --- flow state --------------------------------------------------------------
-const phase = ref<'pre' | 'post' | 'finale'>('pre')
+const phase = ref<'splash' | 'pre' | 'post' | 'finale'>('splash')
 // The record currently being presented – captured from the pre-match snapshot so the post-match
 // card keeps it even after the reveal has advanced the pending pointer to the next round.
 const currentMatch = ref<WorldMatch | null>(null)
@@ -50,8 +59,15 @@ function enterPre(): void {
   currentMatch.value = pending.value?.kidMatch ?? null
 }
 
-// Initialise from the snapshot: resume at the finale after a reload mid-celebration.
+function beginFromSplash(): void {
+  enterPre()
+}
+
+// Initialise from the snapshot: resume at the finale after a reload mid-celebration, resume
+// mid-round if a round is already revealed, otherwise this is the FIRST time the flow has
+// opened for this tournament -> show the splash first (item 6).
 if (pending.value?.finished) phase.value = 'finale'
+else if (pending.value && pending.value.bracket.length === 0) phase.value = 'splash'
 else enterPre()
 
 async function showResult(): Promise<void> {
@@ -132,6 +148,46 @@ const matchMeta = computed(() => {
   const s = computeMatchStats(a, m.a, m.b)
   return { rally: s.meanRallyLength.toFixed(1), duration: s.durationEstimate }
 })
+
+// --- Round 5 item 5: full draw of every revealed round --------------------------
+const showFullDraw = ref(false)
+// Conventional "Winner d. Loser 6-4 ..." reading: world.ts already normalises `score` to the
+// WINNER's perspective, so this just reorders the two names to match (draw side a/b order
+// carries no meaning to the player – who actually won does).
+interface FullDrawMatch {
+  winnerId: string
+  winnerName: string
+  loserName: string
+  score?: string
+  isKidMatch: boolean
+}
+interface FullDrawRound {
+  round: number
+  label: string
+  matches: FullDrawMatch[]
+}
+function toDrawMatch(m: FullBracketMatch): FullDrawMatch {
+  const winnerIsA = m.winnerId === m.aId
+  return {
+    winnerId: m.winnerId,
+    winnerName: winnerIsA ? m.aName : m.bName,
+    loserName: winnerIsA ? m.bName : m.aName,
+    score: m.score,
+    isKidMatch: m.aId === KID_ID || m.bId === KID_ID,
+  }
+}
+const fullDrawRounds = computed<FullDrawRound[]>(() => {
+  const matches = pending.value?.fullBracket ?? []
+  const byRound = new Map<number, FullBracketMatch[]>()
+  for (const m of matches) {
+    const list = byRound.get(m.round)
+    if (list) list.push(m)
+    else byRound.set(m.round, [m])
+  }
+  return [...byRound.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([round, list]) => ({ round, label: list[0].roundLabel, matches: list.map(toDrawMatch) }))
+})
 </script>
 
 <template>
@@ -141,25 +197,71 @@ const matchMeta = computed(() => {
         <div class="tf-title">{{ pending.tierLabel }}</div>
         <div class="tf-sub">
           <span class="pill">{{ SURFACE_EMOJI[pending.surface] }} {{ pending.surface }}</span>
+          <span class="hint tf-week-dates">{{ weekDates }}</span>
         </div>
       </div>
-      <button v-if="!pending.finished && phase !== 'finale'" class="link" :disabled="game.busy" @click="skipAll">
+      <button
+        v-if="!pending.finished && phase !== 'finale' && phase !== 'splash'"
+        class="link"
+        :disabled="game.busy"
+        @click="skipAll"
+      >
         Skip tournament →
       </button>
     </header>
 
     <div class="tf-body">
-      <!-- Path so far -->
-      <div v-if="pending.bracket.length" class="tf-strip">
-        <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
-          <span class="tf-strip-round">{{ r.roundLabel }}</span>
-          <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
-          <span class="tf-strip-opp">{{ r.oppName }}</span>
-          <span class="tf-strip-score num">{{ r.score }}</span>
+      <!-- Round 5 item 6: pre-tournament splash, the flow's very first screen -->
+      <section v-if="phase === 'splash'" class="tf-card tf-splash">
+        <img class="tf-portrait" :src="SERIOUS_ART" alt="" />
+        <p class="tf-splash-tier">{{ pending.tierLabel }}</p>
+        <div class="controls" style="justify-content: center; margin-top: 4px">
+          <span class="pill">{{ SURFACE_EMOJI[pending.surface] }} {{ pending.surface }}</span>
+          <span class="pill">Draw of {{ drawSize }}</span>
+          <span class="pill">{{ drawSize }} entrants</span>
         </div>
-      </div>
+        <p class="hint" style="margin-top: 8px">{{ weekDates }}</p>
+        <div class="tf-actions">
+          <button class="primary" :disabled="game.busy" @click="beginFromSplash">Begin →</button>
+        </div>
+      </section>
 
-      <!-- Watching a replay (inline) -->
+      <template v-else>
+        <!-- Path so far -->
+        <div v-if="pending.bracket.length" class="tf-strip">
+          <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
+            <span class="tf-strip-round">{{ r.roundLabel }}</span>
+            <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
+            <span class="tf-strip-opp">{{ r.oppName }}</span>
+            <span class="tf-strip-score num">{{ r.score }}</span>
+          </div>
+        </div>
+
+        <!-- Round 5 item 5: the full draw of every round revealed so far, collapsible -->
+        <section v-if="fullDrawRounds.length" class="tf-card tf-fulldraw">
+          <button class="tf-fulldraw-toggle" @click="showFullDraw = !showFullDraw">
+            <span>Full draw</span>
+            <span>{{ showFullDraw ? '▲' : '▼' }}</span>
+          </button>
+          <div v-if="showFullDraw" class="tf-fulldraw-body">
+            <div v-for="grp in fullDrawRounds" :key="grp.round" class="tf-fulldraw-round">
+              <p class="tf-fulldraw-round-label">{{ grp.label }}</p>
+              <div
+                v-for="(m, i) in grp.matches"
+                :key="i"
+                class="tf-fulldraw-match"
+                :class="{ 'kid-match': m.isKidMatch }"
+              >
+                <span class="won">{{ m.winnerName }}</span>
+                <span class="tf-fulldraw-vs">d.</span>
+                <span>{{ m.loserName }}</span>
+                <span v-if="m.score" class="num tf-fulldraw-score">{{ m.score }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Watching a replay (inline) -->
       <section v-if="replayOpen && annotated && currentMatch" class="tf-card">
         <div class="tf-card-head">
           <span class="pill">{{ pending.roundLabel }}</span>
@@ -243,6 +345,7 @@ const matchMeta = computed(() => {
           <button class="primary" :disabled="game.busy" @click="continueFinale">Continue</button>
         </div>
       </section>
+      </template>
     </div>
   </div>
 </template>
