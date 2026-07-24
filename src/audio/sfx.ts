@@ -39,7 +39,7 @@ const MANIFEST: Record<SfxKey, string | string[]> = {
   out: 'out',
   ooh: 'ooh',
   oohApplause: 'ooh-applause',
-  applauseShort: ['applause-short-1', 'applause-short-2', 'applause-short-3'],
+  applauseShort: ['applause-short-1', 'applause-short-2', 'applause-short-3', 'applause-short-4', 'applause-short-5'],
   applauseFinal: ['applause-final-1', 'applause-final-2', 'applause-final-3'],
   takeYourSeats: 'take-your-seats',
   click: 'click',
