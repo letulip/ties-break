@@ -1,6 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import { TIERS, buildSeason, isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
+import { ECONOMY } from '../../src/engine/economy'
+import { rngFromSeed } from '../../src/engine/rng'
+import type { FamilyBackground } from '../../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../../src/engine/season/types'
+
+// The BASE travel draw (background-independent pickInt) of the first event of
+// buildSeason('travel-pin', 0, 52) – byte-for-byte the pre-corridor value. Each background now
+// applies a per-trip corridor factor on top of this, but the base draw must not drift (RNG identity).
+const TRAVEL_PIN_BASE = 31564
+
+// Re-derive the per-trip corridor factor exactly as makeEvent does: one uniform roll from the
+// purpose-scoped sub-stream keyed by the event, mapped into the background's [lo,hi] corridor.
+function travelFactor(seedStr: string, e: SeasonEvent, background: FamilyBackground): number {
+  const [cLo, cHi] = ECONOMY.travelBgFactor[background]
+  const roll = rngFromSeed(`${seedStr}:travelbg:${e.week}:${e.tier}`)()
+  return cLo + roll * (cHi - cLo)
+}
 
 function countByTier(events: SeasonEvent[]): Record<TierId, number> {
   const c: Record<TierId, number> = { local: 0, regional: 0, national: 0, itf: 0 }
@@ -93,12 +109,15 @@ describe('buildSeason — 52-week structure', () => {
     expect(weeks).toEqual([...weeks].sort((x, y) => x - y))
   })
 
-  it('every event has a valid surface and a travel cost within its tier band', () => {
+  it('every event has a valid surface and a travel cost within its tier band × the middle corridor', () => {
+    // buildSeason defaults to the middle background: travel = round(base * factor), base ∈ [lo,hi],
+    // factor ∈ middle's corridor. So the factored value lives in [lo*corLo, hi*corHi], not [lo,hi].
+    const [cLo, cHi] = ECONOMY.travelBgFactor.middle
     for (const e of events) {
       expect(['hard', 'clay', 'grass']).toContain(e.surface)
       const [lo, hi] = TIERS[e.tier].travelCostCents
-      expect(e.travelCostCents).toBeGreaterThanOrEqual(lo)
-      expect(e.travelCostCents).toBeLessThanOrEqual(hi)
+      expect(e.travelCostCents).toBeGreaterThanOrEqual(Math.round(lo * cLo))
+      expect(e.travelCostCents).toBeLessThanOrEqual(Math.round(hi * cHi))
     }
   })
 
@@ -189,6 +208,57 @@ describe("buildSeason — a career's first season never opens already-closed (ro
   it('does NOT floor later year-blocks (they already start at 52, 104, …)', () => {
     const events = buildSeason('later', 52, 52)
     expect(Math.min(...events.map((e) => e.week))).toBeGreaterThanOrEqual(52)  })
+})
+
+describe('buildSeason — travel sits in a per-trip corridor by family background (Part B / increment 2)', () => {
+  it('each background stays within its corridor of the SAME base draw; working < middle < wealthy per trip', () => {
+    const seedStr = 'travel-bg'
+    const working = buildSeason(seedStr, 0, 52, 'working')
+    const middle = buildSeason(seedStr, 0, 52, 'middle')
+    const wealthy = buildSeason(seedStr, 0, 52, 'wealthy')
+    const baseline = buildSeason(seedStr, 0, 52) // no background arg ⇒ middle, identical corridor
+
+    // Only travelCostCents changes – the schedule (weeks/tiers/surfaces) is background-independent.
+    expect(middle.map((e) => e.week)).toEqual(working.map((e) => e.week))
+    expect(middle.map((e) => e.tier)).toEqual(wealthy.map((e) => e.tier))
+    expect(middle.map((e) => e.surface)).toEqual(working.map((e) => e.surface))
+    expect(middle.map((e) => e.travelCostCents)).toEqual(baseline.map((e) => e.travelCostCents))
+
+    for (let i = 0; i < middle.length; i++) {
+      const e = middle[i]
+      // Same underlying base draw flows through each corridor factor: recovering base = travel/factor
+      // must agree across the three backgrounds (within the ±0.5-cent rounding of Math.round), i.e.
+      // each background's factored travel really is "its corridor of the base".
+      const baseW = working[i].travelCostCents / travelFactor(seedStr, e, 'working')
+      const baseM = middle[i].travelCostCents / travelFactor(seedStr, e, 'middle')
+      const baseWl = wealthy[i].travelCostCents / travelFactor(seedStr, e, 'wealthy')
+      expect(Math.abs(baseW - baseM)).toBeLessThan(1)
+      expect(Math.abs(baseWl - baseM)).toBeLessThan(1)
+      // The corridors are disjoint (≤0.80 < 0.95..1.05 < 1.20≤), so drawn off the same roll the
+      // ordering holds per trip, not just on average.
+      expect(working[i].travelCostCents).toBeLessThan(middle[i].travelCostCents)
+      expect(middle[i].travelCostCents).toBeLessThan(wealthy[i].travelCostCents)
+    }
+
+    // And the average ordering working < middle < wealthy holds across the whole schedule.
+    const avg = (xs: SeasonEvent[]) => xs.reduce((s, e) => s + e.travelCostCents, 0) / xs.length
+    expect(avg(working)).toBeLessThan(avg(middle))
+    expect(avg(middle)).toBeLessThan(avg(wealthy))
+  })
+
+  it('the base travel draw does not drift, and the corridor factor is applied on top (RNG identity)', () => {
+    const seedStr = 'travel-pin'
+    const middle = buildSeason(seedStr, 0, 52, 'middle')
+    const e0 = middle[0]
+    // Recover the base draw from the factored middle value: it must round back to the pinned base,
+    // proving the pickInt draw is byte-stable and the corridor factor is exactly makeEvent's.
+    const recoveredBase = e0.travelCostCents / travelFactor(seedStr, e0, 'middle')
+    expect(Math.round(recoveredBase)).toBe(TRAVEL_PIN_BASE)
+    // The factored value itself lies inside middle's corridor of that base.
+    const [cLo, cHi] = ECONOMY.travelBgFactor.middle
+    expect(e0.travelCostCents).toBeGreaterThanOrEqual(Math.round(TRAVEL_PIN_BASE * cLo))
+    expect(e0.travelCostCents).toBeLessThanOrEqual(Math.round(TRAVEL_PIN_BASE * cHi))
+  })
 })
 
 describe('buildSeason — offset spans', () => {

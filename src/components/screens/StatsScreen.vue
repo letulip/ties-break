@@ -12,13 +12,16 @@
 // says not to do.
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { formatShortName } from '../../shared/format'
+import { formatShortName, rankLabel } from '../../shared/format'
 
 const game = useGameStore()
 
 const standings = computed(() => game.snapshot?.standings ?? [])
 const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
 const kidPoints = computed(() => game.snapshot?.standings.find((r) => r.isKid)?.points ?? 0)
+// 'Unranked' until she's earned a counting result (a point-less kid isn't really ranked; her
+// dense position only floats to the top because everyone ties at 0).
+const ranked = computed(() => (game.snapshot?.countingResults.length ?? 0) > 0)
 </script>
 
 <template>
@@ -28,7 +31,7 @@ const kidPoints = computed(() => game.snapshot?.standings.find((r) => r.isKid)?.
       <div class="stats-header-row">
         <div class="stats-tile">
           <span class="hint">Rank</span>
-          <span class="stats-tile-value">#{{ kidRank }}</span>
+          <span class="stats-tile-value">{{ rankLabel(kidRank, ranked) }}</span>
         </div>
         <div class="stats-tile">
           <span class="hint">Season points</span>
@@ -60,7 +63,7 @@ const kidPoints = computed(() => game.snapshot?.standings.find((r) => r.isKid)?.
           </template>
         </tbody>
       </table>
-      <p class="hint">Your rank: #{{ kidRank }}</p>
+      <p class="hint">Your rank: {{ rankLabel(kidRank, ranked) }}</p>
     </section>
   </template>
 </template>

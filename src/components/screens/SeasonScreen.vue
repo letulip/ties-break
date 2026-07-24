@@ -213,6 +213,11 @@ function playExhibition(): void {
               <span v-else-if="entriesClosed(row.event)" class="pill muted">
                 Entries closed W{{ row.event.deadlineWeek }}
               </span>
+              <!-- Ranking gate (Phase-4 slice 1): her earned points don't meet this tier's band.
+                   'locked' = not ranked high enough yet; 'outgrown' = too good for this tier now. -->
+              <span v-else-if="!row.event.eligible" class="pill muted">
+                🔒 {{ row.event.ineligibleReason === 'outgrown' ? 'Outgrown' : `Reach ${row.event.pointsToEnter} pts` }}
+              </span>
               <template v-else>
                 <button class="primary" :disabled="fundsShort(row.event) || game.busy" @click="askEnter(row.event)">
                   Enter

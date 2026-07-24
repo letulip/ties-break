@@ -4,6 +4,8 @@ import {
   WEEK_PLAN_PRESETS,
   type CountingResult,
   type FamilyBackground,
+  type FinanceWeek,
+  type FinanceWindow,
   type FullBracketMatch,
   type PendingBracketRound,
   type PendingView,
@@ -15,6 +17,7 @@ import {
   type UpcomingEvent,
   type WeekPlan,
   type WorldEvent,
+  type WorldEventCategory,
   type WorldMatch,
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
@@ -32,7 +35,7 @@ import { selectEntrants, runTournament } from './season/tournament'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 10
+export const SAVE_SCHEMA_VERSION = 11
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -92,6 +95,10 @@ export interface WorldState {
    *  at each season wrap-up. */
   seasonWins: number
   seasonLosses: number
+  /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
+   *  point and pruned to a 60-week trailing window. Feeds the Money breakdown/ledger so they
+   *  survive the 60-event snapshot cap; see FinanceWeek in protocol.ts. */
+  financeWeeks: FinanceWeek[]
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -147,10 +154,50 @@ const SEASON_CHUNK = 52 // generate the calendar one deterministic year-block at
 const RESULTS_WINDOW = 52 // ranking window; results older than this never count → prunable
 const EVENTS_CAP = 400 // non-`keep` events beyond this are pruned oldest-first
 const SNAPSHOT_EVENTS = 60 // events surfaced in a snapshot
+const FINANCE_WEEKS = 60 // trailing weeks of the per-category finance ledger retained (12w + a full 52w season)
+const SNAPSHOT_FINANCIAL_EVENTS = 50 // financial transactions surfaced to the ledger, cap-independent of `events`
 const UPCOMING_WEEKS = 8 // calendar horizon surfaced in a snapshot
 
 function addEvent(world: WorldState, e: Omit<WorldEvent, 'id'>): void {
   world.events.push({ id: world.nextEventId++, ...e })
+  // Every financial event (amountCents present) also folds into the persisted finance ledger –
+  // the single choke point that captures income/coaching/sponsor/gear/stringing/travel/entry with
+  // zero call-site changes, and (unlike `events`) survives pruning so the Money breakdown stays
+  // window-accurate. `amount === 0` sponsored line-items move no cash, so they're skipped.
+  if (e.amountCents !== undefined && e.amountCents !== 0) accrueFinance(world, e.week, e.category ?? 'other', e.amountCents)
+}
+
+// Fold one financial delta into financeWeeks: find-or-create the week entry (keeping the array
+// week-ascending – the common case is appending the current, newest week) and add into its category.
+function accrueFinance(world: WorldState, week: number, category: WorldEventCategory, amountCents: number): void {
+  let entry = world.financeWeeks.find((w) => w.week === week)
+  if (!entry) {
+    entry = { week, byCategory: {} }
+    const last = world.financeWeeks[world.financeWeeks.length - 1]
+    if (!last || week >= last.week) world.financeWeeks.push(entry)
+    else world.financeWeeks.splice(world.financeWeeks.findIndex((w) => w.week > week), 0, entry)
+  }
+  entry.byCategory[category] = (entry.byCategory[category] ?? 0) + amountCents
+}
+
+/** Pure category-accurate fold of `financeWeeks` from `fromWeek` onward (inclusive). No world
+ *  dependency, so the bench and tests call it directly. income/expense/net are derived from the
+ *  aggregated per-category totals, so `netCents === incomeCents - expenseCents === Σ byCategory`. */
+export function financeWindow(financeWeeks: FinanceWeek[], fromWeek: number): FinanceWindow {
+  const byCategory: Partial<Record<WorldEventCategory, number>> = {}
+  for (const w of financeWeeks) {
+    if (w.week < fromWeek) continue
+    for (const [cat, amt] of Object.entries(w.byCategory) as [WorldEventCategory, number][]) {
+      byCategory[cat] = (byCategory[cat] ?? 0) + amt
+    }
+  }
+  let incomeCents = 0
+  let expenseCents = 0
+  for (const amt of Object.values(byCategory)) {
+    if ((amt ?? 0) > 0) incomeCents += amt!
+    else expenseCents += -(amt ?? 0)
+  }
+  return { startWeek: fromWeek, byCategory, incomeCents, expenseCents, netCents: incomeCents - expenseCents }
 }
 
 // --- the kid as a match player -----------------------------------------------
@@ -196,7 +243,7 @@ export function ensureSeason(world: WorldState): void {
   while (coveredChunk < horizonChunk) {
     coveredChunk++
     const start = coveredChunk * SEASON_CHUNK
-    world.season.push(...buildSeason(`${world.seed}:s${coveredChunk}`, start, SEASON_CHUNK))
+    world.season.push(...buildSeason(`${world.seed}:s${coveredChunk}`, start, SEASON_CHUNK, world.profile.background))
     if (hadSeason) addEvent(world, { week: world.week, type: 'info', text: 'New events on the calendar' })
   }
   world.season = world.season.filter((e) => e.week >= world.week).sort((a, b) => a.week - b.week)
@@ -492,6 +539,7 @@ function recomputeRankAndMilestones(world: WorldState): void {
 function housekeep(world: WorldState): void {
   pruneResults(world)
   pruneEvents(world)
+  pruneFinanceWeeks(world)
   ensureSeason(world)
 }
 
@@ -632,6 +680,12 @@ function pruneEvents(world: WorldState): void {
   world.events = [...kept, ...trimmed].sort((a, b) => a.id - b.id)
 }
 
+// Drop finance-ledger weeks older than the 60-week trailing window (retain week >= week - 59).
+// Bounded by career length, not event volume, so it stays ≤ ~60 entries no matter the season.
+function pruneFinanceWeeks(world: WorldState): void {
+  world.financeWeeks = world.financeWeeks.filter((w) => w.week >= world.week - (FINANCE_WEEKS - 1))
+}
+
 // --- lifecycle ---------------------------------------------------------------
 export function createWorld(
   seed: string,
@@ -660,6 +714,7 @@ export function createWorld(
     lastSeasonSummary: null,
     seasonWins: 0,
     seasonLosses: 0,
+    financeWeeks: [],
   }
   addEvent(world, {
     week: 0,
@@ -687,6 +742,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.lastSeasonSummary = null
   save.seasonWins = 0
   save.seasonLosses = 0
+  save.financeWeeks = []
   ensureSeason(save as WorldState)
   recomputeKidRank(save as WorldState)
   delete save.log
@@ -748,8 +804,26 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   }
 }
 
-/** Enter the kid in a scheduled event: validates deadline / funds / duplicates, then
- *  charges the fee immediately (expense event) and records the entry (entry event). */
+/** The kid's EARNED ranking points: her windowed best-6 sum at the current week – the same value
+ *  `computeRanking` assigns her, an absolute measure of achievement (a fresh kid = 0). Derived on the
+ *  fly from the results ledger (no persisted state → no schema bump); the eligibility ladder reads it. */
+export function kidPoints(world: WorldState): number {
+  return windowedBestSum(world.results, world.week, KID_ID)
+}
+
+/** Pure eligibility check for a tier (Phase-4 "Season Life" slice 1, increment 2). A tier is a WINDOW
+ *  `[minPoints, maxPoints]` on the kid's EARNED ranking points: eligible ⇔ the points sit inside the
+ *  band. Points (not dense-rank POSITION) so a fresh/point-less kid starts at the BOTTOM (local only)
+ *  and climbs local → regional → national as she earns results. No world/RNG dependency, so the bench
+ *  and tests call it directly. */
+export function isTierEligible(tier: TierId, points: number): boolean {
+  const [minPoints, maxPoints] = TIERS[tier].enterPointBand
+  return minPoints <= points && points <= maxPoints
+}
+
+/** Enter the kid in a scheduled event: validates deadline / funds / duplicates / ranking
+ *  eligibility, then charges the fee immediately (expense event) and records the entry (entry
+ *  event). Eligibility is direction-aware: too low to qualify vs graduated out of the tier. */
 export function enterEvent(world: WorldState, eventId: string): void {
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')
@@ -757,6 +831,14 @@ export function enterEvent(world: WorldState, eventId: string): void {
   if (world.week > event.deadlineWeek) throw new Error('Entry deadline has passed')
   const fee = TIERS[event.tier].entryFeeCents
   if (world.fundsCents < fee) throw new Error('Not enough funds for the entry fee')
+  const [minPoints, maxPoints] = TIERS[event.tier].enterPointBand
+  const points = kidPoints(world)
+  if (points < minPoints) {
+    throw new Error(`Not enough ranking points for ${TIERS[event.tier].label} yet (need ${minPoints})`)
+  }
+  if (points > maxPoints) {
+    throw new Error(`You've outgrown ${TIERS[event.tier].label} (${points} pts)`)
+  }
   world.fundsCents -= fee
   world.entries.push(eventId)
   addEvent(world, {
@@ -843,20 +925,34 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
 // --- snapshot ----------------------------------------------------------------
 function upcomingEvents(world: WorldState): UpcomingEvent[] {
   const entered = new Set(world.entries)
+  const points = kidPoints(world)
   return world.season
     .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)
     .sort((a, b) => a.week - b.week)
-    .map((e) => ({
-      id: e.id,
-      week: e.week,
-      tier: e.tier,
-      surface: e.surface,
-      travelCostCents: e.travelCostCents,
-      deadlineWeek: e.deadlineWeek,
-      entryFeeCents: TIERS[e.tier].entryFeeCents,
-      label: TIERS[e.tier].label,
-      entered: entered.has(e.id),
-    }))
+    .map((e) => {
+      // Snapshot-only points eligibility (no persisted state → no schema bump). `ineligibleReason`
+      // names which side of the band the kid failed: 'locked' = not enough ranking points yet,
+      // 'outgrown' = too good (past the tier's ceiling) now.
+      const eligible = isTierEligible(e.tier, points)
+      const minPoints = TIERS[e.tier].enterPointBand[0]
+      return {
+        id: e.id,
+        week: e.week,
+        tier: e.tier,
+        surface: e.surface,
+        travelCostCents: e.travelCostCents,
+        deadlineWeek: e.deadlineWeek,
+        entryFeeCents: TIERS[e.tier].entryFeeCents,
+        label: TIERS[e.tier].label,
+        entered: entered.has(e.id),
+        eligible,
+        ...(eligible
+          ? {}
+          : points < minPoints
+            ? { ineligibleReason: 'locked' as const, pointsToEnter: minPoints }
+            : { ineligibleReason: 'outgrown' as const }),
+      }
+    })
 }
 
 // The kid's counted best-6 results (round-5 item 1b): same window + sort as computeRanking,
@@ -996,6 +1092,13 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     profile: world.profile,
     plan: world.plan,
     events: world.events.slice(-SNAPSHOT_EVENTS),
+    // Category-accurate windows off the persisted ledger (immune to the 60-event cap). season
+    // keeps the current MoneyScreen semantics: the current 52-week season block from its first week.
+    finance: {
+      window12w: financeWindow(world.financeWeeks, world.week - 11),
+      season: financeWindow(world.financeWeeks, Math.floor(world.week / 52) * 52),
+    },
+    financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,

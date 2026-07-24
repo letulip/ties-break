@@ -1,4 +1,4 @@
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../shared/protocol'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type FinanceWeek, type WorldEventCategory } from '../shared/protocol'
 import { SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
@@ -109,6 +109,33 @@ export function migrateSave(raw: unknown): WorldState {
     if (typeof save.seasonWins !== 'number') save.seasonWins = 0
     if (typeof save.seasonLosses !== 'number') save.seasonLosses = 0
     v = 10
+  }
+
+  if (v < 11) {
+    // v11 added the persisted per-week/per-category finance ledger (financeWeeks) that keeps the
+    // Money breakdown/ledger window-accurate past the 60-event snapshot cap. BEST-EFFORT rebuild
+    // from the retained finance events (each carries week + category + amountCents), pruned to the
+    // same 60-week trailing window the engine maintains. History already pruned out of `events` is
+    // unrecoverable – that's acceptable: exact going forward, approximate for the pre-migration tail.
+    if (!Array.isArray(save.financeWeeks)) {
+      const byWeek = new Map<number, FinanceWeek>()
+      const weeks: FinanceWeek[] = []
+      for (const e of Array.isArray(save.events) ? save.events : []) {
+        if (typeof e.week !== 'number' || typeof e.amountCents !== 'number' || e.amountCents === 0) continue
+        const category = (e.category ?? 'other') as WorldEventCategory
+        let entry = byWeek.get(e.week)
+        if (!entry) {
+          entry = { week: e.week, byCategory: {} }
+          byWeek.set(e.week, entry)
+          weeks.push(entry)
+        }
+        entry.byCategory[category] = (entry.byCategory[category] ?? 0) + e.amountCents
+      }
+      weeks.sort((a, b) => a.week - b.week)
+      const currentWeek = typeof save.week === 'number' ? save.week : 0
+      save.financeWeeks = weeks.filter((w) => w.week >= currentWeek - 59)
+    }
+    v = 11
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

@@ -260,6 +260,49 @@ describe('save migrations', () => {
     expect(migrated.seasonLosses).toBe(0)
   })
 
+  it('upgrades a v10 save to v11: financeWeeks rebuilt from retained finance events', () => {
+    const v10 = {
+      schemaVersion: 10,
+      careerId: 'c-v10',
+      seed: 'finance-ledger',
+      week: 40,
+      fundsCents: 5_000_00,
+      profile: { ...DEFAULT_PROFILE, kidName: 'Lea', kidLastName: 'Meyer', birthMonth: 5 },
+      plan: { ...WEEK_PLAN_PRESETS.balanced },
+      cohort: [],
+      results: [],
+      season: [],
+      entries: [],
+      events: [
+        { id: 0, week: 0, type: 'info', text: 'started', keep: true }, // non-financial: ignored
+        { id: 1, week: 38, type: 'income', category: 'income', text: "Parents' contribution", amountCents: 30_000 },
+        { id: 2, week: 38, type: 'expense', category: 'coaching', text: 'Coaching', amountCents: -45_000 },
+        { id: 3, week: 39, type: 'expense', category: 'travel', text: 'Travel', amountCents: -9_000 },
+        { id: 4, week: 39, type: 'expense', category: 'gear', text: 'Covered', amountCents: 0 }, // $0: skipped
+        { id: 5, week: 2, type: 'expense', category: 'coaching', text: 'old', amountCents: -40_000 }, // within week-59 window at week 40, so retained
+      ],
+      nextEventId: 6,
+      kidRank: 70,
+      prevKidRank: 72,
+      pendingTournament: null,
+      bestFinishByTier: {},
+      lastSeasonSummary: null,
+      seasonWins: 0,
+      seasonLosses: 0,
+    }
+    const migrated = migrateSave(v10)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    expect(Array.isArray(migrated.financeWeeks)).toBe(true)
+    // week-ascending, one entry per week that had >=1 nonzero financial event
+    expect(migrated.financeWeeks.map((w) => w.week)).toEqual([2, 38, 39])
+    // per-category signed sums are rebuilt from the events
+    const w38 = migrated.financeWeeks.find((w) => w.week === 38)!
+    expect(w38.byCategory).toEqual({ income: 30_000, coaching: -45_000 })
+    // the $0 covered gear line-item never created a category entry
+    const w39 = migrated.financeWeeks.find((w) => w.week === 39)!
+    expect(w39.byCategory).toEqual({ travel: -9_000 })
+  })
+
   it('passes a current save through unchanged', () => {
     const current = {
       schemaVersion: SAVE_SCHEMA_VERSION,
@@ -282,6 +325,7 @@ describe('save migrations', () => {
       lastSeasonSummary: null,
       seasonWins: 0,
       seasonLosses: 0,
+      financeWeeks: [],
     }
     expect(migrateSave(current)).toEqual(current)
   })

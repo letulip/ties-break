@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { createWorld, tickWeek, enterEvent, skipTournament, closeTournament } from '../src/engine/world'
+import { createWorld, tickWeek, enterEvent, skipTournament, closeTournament, KID_ID } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { TIERS } from '../src/engine/season/calendar'
 
 const EVENTS_CAP = 400 // mirrors world.ts
 
@@ -78,7 +79,15 @@ describe('world (phase-3 living season)', () => {
     // The entered world commits to the earliest still-open event; the skipped world does not.
     const target = entered.season.find((e) => e.deadlineWeek >= entered.week)
     expect(target).toBeTruthy()
+    // r-gate (season-life-01b): points-based eligibility. This guard is about RNG discipline, not the
+    // ladder, so grant a throwaway result worth the tier's minPoints ONLY for the enterEvent gate
+    // check, then drop it before any tick – the main-stream draws must stay byte-identical to the
+    // skipped world (local's min is 0, needing no grant).
+    const min = TIERS[target!.tier].enterPointBand[0]
+    const marker = { playerId: KID_ID, week: entered.week, points: min, tier: target!.tier }
+    if (min > 0) entered.results.push(marker)
     enterEvent(entered, target!.id)
+    if (min > 0) entered.results = entered.results.filter((r) => r !== marker)
     expect(entered.entries).toContain(target!.id)
     expect(skipped.entries).toHaveLength(0)
 
