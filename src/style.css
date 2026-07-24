@@ -1790,12 +1790,6 @@ tr.kid-row td {
   gap: 12px;
 }
 
-.recap-dots {
-  display: flex;
-  gap: 6px;
-  margin: 12px 0;
-}
-
 .recap-dot {
   width: 12px;
   height: 12px;
@@ -1896,4 +1890,215 @@ tr.kid-row td {
   justify-content: center;
   gap: 6px;
   margin-top: 10px;
+}
+
+/* --- Round 7: Home rank row, real tier strip, recap days --------------------- */
+
+/* item 5a: the Junior-rank row is a flex line so the "?" can sit at the very end. */
+.rank-row {
+  display: flex;
+  align-items: center;
+}
+
+.rank-row .rank-help-btn {
+  margin-left: auto;
+}
+
+/* item 3: real tier-progress chips (Local · W / Regional · SF / … / ITF 🔒). */
+.tier-chip {
+  font-variant-numeric: tabular-nums;
+}
+
+.pill.locked {
+  color: var(--muted);
+  border-color: var(--line);
+  border-style: dashed;
+  opacity: 0.7;
+}
+
+/* item 5b: week-recap day column (dot + Mon–Sun letter) and the legend. */
+.recap-days {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0 6px;
+}
+
+.recap-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.recap-day-letter {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.recap-legend {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.recap-key {
+  font-size: 11px;
+}
+
+.recap-key.train {
+  color: var(--accent);
+}
+
+.recap-key.rest {
+  color: var(--muted);
+}
+
+/* --- Round 7 item 2: Money breakdown (donut + category rows) ----------------- */
+
+.breakdown-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.breakdown-toggle .option-pill {
+  padding: 4px 12px;
+  font-size: 12px;
+}
+
+.breakdown-body {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.donut {
+  width: 116px;
+  height: 116px;
+  flex: none;
+}
+
+.donut-track {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 4;
+}
+
+.donut-seg {
+  fill: none;
+  stroke-width: 4;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.donut-center-num {
+  fill: var(--text);
+  font-family: var(--font-heading);
+  font-size: 5px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.donut-center-cap {
+  fill: var(--muted);
+  font-size: 3px;
+  text-anchor: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.breakdown-rows {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown-row,
+.breakdown-income {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.breakdown-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.breakdown-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breakdown-pct {
+  font-size: 12px;
+}
+
+.breakdown-amount {
+  font-variant-numeric: tabular-nums;
+}
+
+.breakdown-income {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.breakdown-swatch.income {
+  background: #4fd97a;
+}
+
+.breakdown-income .breakdown-amount {
+  color: #4fd97a;
+}
+
+/* --- Round 7 item 4: season-end summary popup ------------------------------- */
+
+.season-summary {
+  max-width: 360px;
+}
+
+.season-summary-kicker {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 4px;
+}
+
+.season-summary-title {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+
+.season-summary-table {
+  margin-bottom: 12px;
+}
+
+.season-summary-table th {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.season-summary-from {
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+.season-summary-note {
+  margin: 0 0 16px;
 }

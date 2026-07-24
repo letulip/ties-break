@@ -2,6 +2,8 @@ import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../shared/protocol'
 import { SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
+import { TIERS } from './season/calendar'
+import type { TierId } from './season/types'
 
 // Save-data migrations. Append-only: never renumber, never delete a block.
 // Each `if (v < N)` block upgrades from N-1 to N and must be idempotent for its version.
@@ -81,6 +83,32 @@ export function migrateSave(raw: unknown): WorldState {
       save.profile.birthMonth = pickInt(rngFromSeed(`${seed}:bm`), 1, 12)
     }
     v = 9
+  }
+
+  if (v < 10) {
+    // v10 added: per-tier best finish (drives the Home season strip), the structured
+    // last-season summary (SeasonSummaryDialog), and running season W-L counters.
+    // bestFinishByTier is BACKFILLED from surviving `tournament` events (each carries the kid's
+    // finishIdx) so a migrated career shows real tier progress immediately; the rest start
+    // empty/zero (an in-flight season's W-L can't be reconstructed post-pruning, and there's no
+    // summary until the next wrap-up). Historical events don't store the tier, so it's recovered
+    // from the summary text's tier-label prefix (e.g. "Local Open (…): …").
+    if (typeof save.bestFinishByTier !== 'object' || save.bestFinishByTier === null) {
+      const tierIds = Object.keys(TIERS) as TierId[]
+      const byTier: Partial<Record<TierId, number>> = {}
+      for (const e of Array.isArray(save.events) ? save.events : []) {
+        if (e.type !== 'tournament' || typeof e.finishIdx !== 'number' || typeof e.text !== 'string') continue
+        const tier = tierIds.find((t) => (e.text as string).startsWith(TIERS[t].label))
+        if (!tier) continue
+        const prior = byTier[tier]
+        if (prior === undefined || e.finishIdx < prior) byTier[tier] = e.finishIdx
+      }
+      save.bestFinishByTier = byTier
+    }
+    if (save.lastSeasonSummary === undefined) save.lastSeasonSummary = null
+    if (typeof save.seasonWins !== 'number') save.seasonWins = 0
+    if (typeof save.seasonLosses !== 'number') save.seasonLosses = 0
+    v = 10
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 10,
+  "careerId": "c-golden-v10",
+  "seed": "golden-v10",
+  "week": 54,
+  "fundsCents": 48500,
+  "profile": {
+    "kidName": "Noa",
+    "kidLastName": "Vidal",
+    "gender": "girl",
+    "country": "FR",
+    "background": "middle",
+    "coachSetup": "hired",
+    "playStyle": "counterpuncher",
+    "birthMonth": 4
+  },
+  "plan": { "train": 75, "rest": 25 },
+  "cohort": [
+    { "id": "ai-0", "name": "Aria Costa", "serve": 49, "ret": 46, "composure": 53, "stamina": 56, "nation": "IT", "growth": 1.1 },
+    { "id": "ai-1", "name": "Lena Novak", "serve": 52, "ret": 50, "composure": 45, "stamina": 61, "nation": "CZ", "growth": 0.9 },
+    { "id": "ai-2", "name": "Sofia Rossi", "serve": 45, "ret": 54, "composure": 62, "stamina": 49, "nation": "ES", "growth": 1.3 }
+  ],
+  "results": [
+    { "playerId": "ai-0", "week": 47, "points": 30 },
+    { "playerId": "kid", "week": 50, "points": 48, "tier": "regional" }
+  ],
+  "season": [
+    { "id": "1-w56-local", "week": 56, "tier": "local", "surface": "clay", "travelCostCents": 9000, "deadlineWeek": 54 },
+    { "id": "1-w60-national", "week": 60, "tier": "national", "surface": "hard", "travelCostCents": 60000, "deadlineWeek": 58 }
+  ],
+  "entries": [],
+  "events": [
+    { "id": 0, "week": 0, "type": "info", "text": "Noa's career started.", "keep": true },
+    { "id": 1, "week": 34, "type": "tournament", "text": "Local Open (clay, W34): Noa – Champion (+30 pts)", "finishIdx": 0 },
+    { "id": 2, "week": 50, "type": "tournament", "text": "Regional Championship (hard, W50): Noa – Semifinalist (+28 pts)", "finishIdx": 2 },
+    { "id": 3, "week": 49, "type": "milestone", "text": "Broke into the world top 50!", "keep": true, "milestoneKey": "rank-50" }
+  ],
+  "nextEventId": 4,
+  "kidRank": 44,
+  "prevKidRank": 47,
+  "pendingTournament": null,
+  "bestFinishByTier": { "local": 0, "regional": 2 },
+  "lastSeasonSummary": {
+    "seasonYear": 2031,
+    "endRank": 44,
+    "startRank": 88,
+    "points": 106,
+    "wins": 9,
+    "losses": 4,
+    "bestResultText": "best Champion",
+    "fundsDeltaCents": -730000
+  },
+  "seasonWins": 2,
+  "seasonLosses": 1
+}

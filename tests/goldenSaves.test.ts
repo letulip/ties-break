@@ -64,6 +64,13 @@ describe('golden saves corpus', () => {
 
       // v8 tournament-reveal field is present (null for any non-mid-reveal save)
       expect(migrated.pendingTournament === null || typeof migrated.pendingTournament === 'object').toBe(true)
+
+      // v10 fields: per-tier best finish is an object, the season summary + W-L counters exist
+      expect(typeof migrated.bestFinishByTier).toBe('object')
+      expect(migrated.bestFinishByTier).not.toBeNull()
+      expect(migrated.lastSeasonSummary === null || typeof migrated.lastSeasonSummary === 'object').toBe(true)
+      expect(typeof migrated.seasonWins).toBe('number')
+      expect(typeof migrated.seasonLosses).toBe('number')
     })
   }
 })

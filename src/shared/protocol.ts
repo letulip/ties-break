@@ -64,6 +64,18 @@ export type WorldEventType =
   | 'tournament'
   | 'milestone'
 
+/** Spending/earning bucket a financial event belongs to (Money-breakdown pie, round-7).
+ *  Optional on the event: pre-round-7 events carry none and render as 'other'. */
+export type WorldEventCategory =
+  | 'coaching'
+  | 'travel'
+  | 'entry'
+  | 'gear'
+  | 'stringing'
+  | 'sponsor'
+  | 'income'
+  | 'other'
+
 /** A kid match, replayable on demand: seed (on MatchRecord) + both players' skill
  *  snapshots + surface feed simulateMatch/annotateMatch. No AnnotatedMatch is stored. */
 export interface WorldMatch extends MatchRecord {
@@ -83,6 +95,8 @@ export interface WorldEvent {
   text: string
   /** signed delta to funds, present on financial events */
   amountCents?: number
+  /** spending/earning bucket for the Money breakdown (round-7); absent ⇒ 'other' */
+  category?: WorldEventCategory
   match?: WorldMatch
   /** milestones are never pruned */
   keep?: boolean
@@ -94,7 +108,28 @@ export interface WorldEvent {
   finishIdx?: number
 }
 
-export type StopReason = 'tournament' | 'deadline' | 'funds'
+export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end'
+
+/** Structured end-of-season recap (schema v10). Written at wrap-up time (the tick into the
+ *  season year's first off-season week) off the world state itself – W-L are counted as the
+ *  season's kid matches resolve (never re-parsed from event text), so pruning can't lose them.
+ *  Surfaced on the snapshot and shown by SeasonSummaryDialog when `advance` reports 'season-end'. */
+export interface SeasonSummary {
+  /** calendar year label of the season that just ended (weekYear of its first week) */
+  seasonYear: number
+  /** kid's dense rank at wrap-up */
+  endRank: number
+  /** kid's dense rank at the season's first week (null if it couldn't be reconstructed) */
+  startRank: number | null
+  /** season points (sum of the kid's results earned in-season) */
+  points: number
+  wins: number
+  losses: number
+  /** e.g. "best Semifinalist" or "no tournaments played" */
+  bestResultText: string
+  /** signed funds delta across the season (flavor figure, matches the wrap-up milestone) */
+  fundsDeltaCents: number
+}
 
 // --- Tournament experience (feat/tournament-experience) -----------------------
 // One revealed round on the kid's path through the bracket (the between-rounds strip).
@@ -204,6 +239,11 @@ export interface Snapshot {
   standings: StandingRow[]
   /** the kid's counted best-6 results (round-5 item 1b), strongest first */
   countingResults: CountingResult[]
+  /** best (smallest) finish index the kid has ever reached per tier (schema v10); drives the
+   *  Home season strip's real tier progress. Untouched tiers are absent. */
+  bestFinishByTier: Partial<Record<TierId, number>>
+  /** the most recent end-of-season recap (schema v10), or null before the first season ends */
+  lastSeasonSummary: SeasonSummary | null
   /** set when an `advance` stopped early */
   stopReason?: StopReason
   /** present while a tournament reveal is in progress (drives TournamentFlow) */

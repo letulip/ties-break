@@ -11,6 +11,7 @@ import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
+import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
@@ -148,17 +149,37 @@ function dismissRecovered(): void {
 // dismiss flag is reset whenever a fresh snapshot arrives (any action) and set
 // when the user dismisses the toast by hand.
 const stopToastDismissed = ref(false)
+// Round-7 item 4: the season-end stop is owned by SeasonSummaryDialog, not the toast. A fresh
+// snapshot resets both dismiss flags (any action re-arms them).
+const seasonSummaryDismissed = ref(false)
 watch(
   () => game.snapshot,
   () => {
     stopToastDismissed.value = false
+    seasonSummaryDismissed.value = false
   },
 )
-// The tournament stop is now owned by the full-screen TournamentFlow overlay (it shows whenever the
-// snapshot carries `pending`), so its toast is gone; deadline/funds stops keep theirs.
+// The tournament stop is owned by the full-screen TournamentFlow overlay and the season-end stop
+// by SeasonSummaryDialog (both show off the snapshot); deadline/funds stops keep the toast.
 const showStopToast = computed(
-  () => !!game.snapshot?.stopReason && game.snapshot.stopReason !== 'tournament' && !stopToastDismissed.value,
+  () =>
+    !!game.snapshot?.stopReason &&
+    game.snapshot.stopReason !== 'tournament' &&
+    game.snapshot.stopReason !== 'season-end' &&
+    !stopToastDismissed.value,
 )
+// The end-of-season summary popup: auto-shows on Home when `advance` reports 'season-end' and a
+// summary is present, until the player hits Continue (client-side flag).
+const showSeasonSummary = computed(
+  () =>
+    tab.value === 'home' &&
+    game.snapshot?.stopReason === 'season-end' &&
+    !!game.snapshot?.lastSeasonSummary &&
+    !seasonSummaryDismissed.value,
+)
+function dismissSeasonSummary(): void {
+  seasonSummaryDismissed.value = true
+}
 const STOP_REASON_TEXT: Record<string, string> = {
   deadline: 'Stopped: an entry deadline is coming up next week.',
   funds: 'Stopped: funds ran below zero.',
@@ -240,6 +261,9 @@ function dismissStopToast(): void {
 
     <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress. -->
     <TournamentFlow v-if="game.snapshot?.pending" />
+
+    <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
+    <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />
 
     <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
     <OnboardingTour v-if="showTour" @done="dismissTour" />

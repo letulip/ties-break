@@ -8,6 +8,7 @@ import {
   type PendingBracketRound,
   type PendingView,
   type PlayerProfile,
+  type SeasonSummary,
   type Snapshot,
   type StandingRow,
   type StopReason,
@@ -19,8 +20,9 @@ import {
 import { formatShortName } from '../shared/format'
 import { weekYear } from '../shared/dates'
 import type { MatchPlayer } from './match/types'
-import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TournamentResult } from './season/types'
+import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import { TIERS, buildSeason, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
+import { ECONOMY, GEAR_CATEGORIES, gearHitForWeek, planExpenseFactor } from './economy'
 import { generateCohort, driftCohort } from './season/cohort'
 import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament } from './season/tournament'
@@ -30,7 +32,7 @@ import { selectEntrants, runTournament } from './season/tournament'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 9
+export const SAVE_SCHEMA_VERSION = 10
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -80,6 +82,16 @@ export interface WorldState {
   prevKidRank: number | null
   /** a tournament being revealed round by round; null when no reveal is in progress (v8). */
   pendingTournament: PendingTournament | null
+  /** best (smallest) finish index the kid has ever reached per tier (v10); updated at
+   *  tournament finalize. Drives the Home season strip's real tier progress. */
+  bestFinishByTier: Partial<Record<TierId, number>>
+  /** the most recent end-of-season recap (v10); null until the first season wraps up. */
+  lastSeasonSummary: SeasonSummary | null
+  /** the CURRENT (in-progress) season's kid wins/losses, counted as matches resolve so the
+   *  summary never has to re-parse event text and pruning can't lose them (v10). Reset to 0
+   *  at each season wrap-up. */
+  seasonWins: number
+  seasonLosses: number
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -88,32 +100,12 @@ export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
   working: 8_000_00,
 }
 
-// Weekly parent contribution to the war chest, by family background. Emitted as an
-// `income` event BEFORE costs each week. No RNG draw, so the per-week draw count is
-// unchanged (the load-time RNG replay depends on it).
-export const PARENT_INCOME_CENTS: Record<FamilyBackground, number> = {
-  wealthy: 800_00,
-  middle: 450_00,
-  working: 200_00,
-}
-
-// Weekly expense draw ranges in cents. A parent-coach saves on coaching fees;
-// the ranges differ but the RNG draw COUNT per tick must stay identical across
-// profiles – the load-time RNG replay depends on it.
-const EXPENSE_RANGE: Record<PlayerProfile['coachSetup'], [number, number]> = {
-  hired: [250_00, 700_00],
-  parent: [120_00, 400_00],
-}
-
-// Family background scales the drawn expense (round-5 item 10). Applied AFTER the
-// `pickInt` draw – the draw itself is unchanged, so the main-stream draw COUNT (and
-// thus cohort drift / the load-time RNG replay) never depends on background. middle
-// is ×1.0 → byte-identical to before (the 520-week identity run uses middle).
-const BG_EXPENSE_FACTOR: Record<FamilyBackground, number> = {
-  working: 0.8,
-  middle: 1.0,
-  wealthy: 1.25,
-}
+// The economy tuning surface now lives in ./economy (the owner's single "ручки регулировки"
+// knob object). These aliases keep the old call sites + the public PARENT_INCOME_CENTS export
+// (imported by tests) pointing at that one source of truth.
+export const PARENT_INCOME_CENTS = ECONOMY.parentIncomeCents
+const EXPENSE_RANGE = ECONOMY.expenseRangeCents
+const BG_EXPENSE_FACTOR = ECONOMY.bgExpenseFactor
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -157,11 +149,6 @@ const EVENTS_CAP = 400 // non-`keep` events beyond this are pruned oldest-first
 const SNAPSHOT_EVENTS = 60 // events surfaced in a snapshot
 const UPCOMING_WEEKS = 8 // calendar horizon surfaced in a snapshot
 const RANK_MILESTONES = [100, 50, 10, 1] // kid-rank thresholds that pin a milestone
-
-/** Weekly expense scale from the time split: train 75% ≈ 1.0, more training costs more. */
-function planExpenseFactor(plan: WeekPlan): number {
-  return 0.55 + 0.006 * plan.train
-}
 
 function addEvent(world: WorldState, e: Omit<WorldEvent, 'id'>): void {
   world.events.push({ id: world.nextEventId++, ...e })
@@ -240,15 +227,19 @@ function fireRankMilestones(world: WorldState): void {
   }
 }
 
-// --- season wrap-up (Round 5 items 16/21) ------------------------------------
+// --- season wrap-up (Round 5 items 16/21; round-7 item 4) ---------------------
 // Fires once, the moment the world ticks into a season year's first off-season week
-// (see calendar.ts's isOffSeasonWeek). Everything is read back off the EXISTING
-// results/events ledgers for the just-finished year – no new persisted state:
-//  - season points / best finish / W-L: results + tournament/match events in range.
+// (see calendar.ts's isOffSeasonWeek). Season figures are read back off the EXISTING
+// ledgers for the just-finished year, EXCEPT W-L which come from the running counters
+// (round-7: "count as you go … don't parse text", so pruning can't lose them):
+//  - season points / best finish: results + tournament events in range.
+//  - W-L: world.seasonWins / seasonLosses (accumulated at finalizeTournament).
 //  - rank vs season start: results ledger replayed at the year's first week (still
 //    inside the 52-week ranking window, so nothing has been pruned away yet).
 //  - funds delta: signed amountCents on expense/income events in range (a flavor
 //    figure, not the audit trail – MoneyScreen's ledger stays authoritative).
+// The same figures are stored as the structured `lastSeasonSummary` (v10) for the
+// SeasonSummaryDialog, then the season counters reset for the year ahead.
 function maybeFireSeasonWrapUp(world: WorldState): void {
   if (world.week % WEEKS_PER_YEAR !== WEEKS_PER_YEAR - OFF_SEASON_WEEKS) return
   const year = Math.floor(world.week / WEEKS_PER_YEAR)
@@ -262,17 +253,15 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
     .reduce((sum, r) => sum + r.points, 0)
 
   let bestFinish: number | null = null
-  let wins = 0
-  let losses = 0
   for (const e of world.events) {
     if (!inRange(e.week)) continue
     if (e.type === 'tournament' && e.finishIdx !== undefined) {
       if (bestFinish === null || e.finishIdx < bestFinish) bestFinish = e.finishIdx
-    } else if (e.type === 'match' && e.match) {
-      if (e.match.winnerId === KID_ID) wins++
-      else losses++
     }
   }
+
+  const wins = world.seasonWins
+  const losses = world.seasonLosses
 
   const fundsDeltaCents = world.events
     .filter((e) => inRange(e.week) && e.amountCents !== undefined)
@@ -298,6 +287,20 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
       `${bestText} · ${wins}-${losses} (W-L) · funds ${fundsText}`,
   )
   addEvent(world, { week: world.week, type: 'info', text: 'Off-season: rest, school, family time.' })
+
+  world.lastSeasonSummary = {
+    seasonYear: weekYear(yearStart),
+    endRank: world.kidRank,
+    startRank,
+    points: seasonPoints,
+    wins,
+    losses,
+    bestResultText: bestText,
+    fundsDeltaCents,
+  }
+  // The season that just wrapped is banked in the summary – start the next one clean.
+  world.seasonWins = 0
+  world.seasonLosses = 0
 }
 
 // --- finish / stage labels ---------------------------------------------------
@@ -331,23 +334,69 @@ function stageLabel(round: number, drawSize: number): string {
 function resolveParentIncome(world: WorldState): void {
   const income = PARENT_INCOME_CENTS[world.profile.background]
   world.fundsCents += income
-  addEvent(world, { week: world.week, type: 'income', text: "Parents' contribution", amountCents: income })
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'income',
+    text: "Parents' contribution",
+    amountCents: income,
+  })
 }
 
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const [lo, hi] = EXPENSE_RANGE[world.profile.coachSetup]
   // Draw first (unchanged), THEN scale by background – draw count stays background-independent.
   const expense = Math.round(
-    pickInt(rng, lo, hi) * planExpenseFactor(world.plan) * BG_EXPENSE_FACTOR[world.profile.background],
+    pickInt(rng, lo, hi) * planExpenseFactor(world.plan.train) * BG_EXPENSE_FACTOR[world.profile.background],
   )
   world.fundsCents -= expense
   const flavors = world.plan.train >= 70 ? trainFlavors(world.profile.background) : restFlavors(world.profile.background)
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
-  addEvent(world, { week: world.week, type: 'expense', text: flavor, amountCents: -expense })
-  if (rng() < 0.06) {
-    const gift = pickInt(rng, 500_00, 1500_00)
-    world.fundsCents += gift
-    addEvent(world, { week: world.week, type: 'income', text: 'A local sponsor chipped in!', amountCents: gift })
+  addEvent(world, { week: world.week, type: 'expense', category: 'coaching', text: flavor, amountCents: -expense })
+  // Local-sponsor cameo: the ROLL (and the gift draw when it hits) run for EVERY background so
+  // the main-stream draw count is background-independent (round-7 keeps the draws exactly as they
+  // were). The payout is now NEED-BASED: only an eligible (working) kid actually banks it; for
+  // everyone else the drawn result is discarded – no funds move, no event.
+  if (rng() < ECONOMY.sponsor.rollChance) {
+    const [glo, ghi] = ECONOMY.sponsor.amountCents
+    const gift = pickInt(rng, glo, ghi)
+    if (ECONOMY.sponsor.eligible.includes(world.profile.background)) {
+      world.fundsCents += gift
+      addEvent(world, {
+        week: world.week,
+        type: 'income',
+        category: 'sponsor',
+        text: 'A local sponsor chipped in!',
+        amountCents: gift,
+      })
+    }
+  }
+}
+
+// Recurring gear line-items (round-7 a). Scheduled DETERMINISTICALLY off per-category
+// purpose-scoped sub-streams – NEVER the main weekly `rng` – so they add zero main-stream
+// draws and cohort drift / the RNG replay stay untouched. The product-sponsorship valve
+// (round-7 amendment) reads the kid's cached rank AT PURCHASE TIME to subsidise gear for a
+// well-ranked kid; the line-item is still emitted (halved / zeroed) so the Money breakdown
+// shows the sponsor relationship instead of the cost simply vanishing.
+function resolveGear(world: WorldState): void {
+  const bg = world.profile.background
+  for (const category of GEAR_CATEGORIES) {
+    const hit = gearHitForWeek(world.seed, category, bg, world.week)
+    if (!hit) continue
+    const line = ECONOMY.gear[category]
+    let amount = hit.amountCents
+    let text = line.flavor[bg]
+    if (world.kidRank <= ECONOMY.sponsorship.freeMaxRank) {
+      amount = 0
+      text += ' – covered by your racket sponsor'
+    } else if (world.kidRank <= ECONOMY.sponsorship.halfPriceMaxRank) {
+      amount = Math.round(amount / 2)
+      text += ' – sponsor covers half'
+    }
+    world.fundsCents -= amount
+    // `-amount` would be -0 for a fully-covered item; keep it +0 so the event/ledger stay clean.
+    addEvent(world, { week: world.week, type: 'expense', category: line.breakdown, text, amountCents: amount === 0 ? 0 : -amount })
   }
 }
 
@@ -356,6 +405,7 @@ function chargeTravel(world: WorldState, event: SeasonEvent): void {
   addEvent(world, {
     week: world.week,
     type: 'expense',
+    category: 'travel',
     text: `Travel to ${TIERS[event.tier].label}`,
     amountCents: -event.travelCostCents,
   })
@@ -473,6 +523,19 @@ function finalizeTournament(world: WorldState): void {
   const tier = TIERS[event.tier]
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   const points = tier.points[kidFinish] ?? 0
+
+  // v10: remember the kid's best (smallest) finish index per tier – drives the Home season strip.
+  const priorBest = world.bestFinishByTier[event.tier]
+  if (priorBest === undefined || kidFinish < priorBest) world.bestFinishByTier[event.tier] = kidFinish
+
+  // v10: count this season's kid wins/losses as they resolve (never re-parsed from text; pruning
+  // can't lose them). Every match on the kid's path is one played match.
+  for (const m of p.result.matches) {
+    if (m.aId !== KID_ID && m.bId !== KID_ID) continue
+    if (m.winnerId === KID_ID) world.seasonWins++
+    else world.seasonLosses++
+  }
+
   // Effective ranking delta = kid's windowed best-6 sum after adding the result minus before.
   const before = windowedBestSum(world.results, world.week, KID_ID)
   if (points > 0) world.results.push({ playerId: KID_ID, week: world.week, points, tier: event.tier })
@@ -585,6 +648,10 @@ export function createWorld(
     kidRank: 1,
     prevKidRank: null,
     pendingTournament: null,
+    bestFinishByTier: {},
+    lastSeasonSummary: null,
+    seasonWins: 0,
+    seasonLosses: 0,
   }
   addEvent(world, {
     week: 0,
@@ -608,6 +675,10 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.events = oldLog.map((text) => ({ id: save.nextEventId!++, week: save.week, type: 'info' as const, text }))
   save.kidRank = save.cohort.length + 1
   save.pendingTournament = null
+  save.bestFinishByTier = {}
+  save.lastSeasonSummary = null
+  save.seasonWins = 0
+  save.seasonLosses = 0
   ensureSeason(save as WorldState)
   recomputeKidRank(save as WorldState)
   delete save.log
@@ -630,6 +701,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   // 1. base costs (main stream, plan-independent draw count)
   resolveBaseCosts(world, rng)
+
+  // 1b. recurring gear line-items (round-7 a). Zero main-stream draws – purpose-scoped
+  //     sub-streams only – so this never perturbs the weekly draw count.
+  resolveGear(world)
 
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)
@@ -679,6 +754,7 @@ export function enterEvent(world: WorldState, eventId: string): void {
   addEvent(world, {
     week: world.week,
     type: 'expense',
+    category: 'entry',
     text: `Entry fee: ${TIERS[event.tier].label} (W${event.week})`,
     amountCents: -fee,
   })
@@ -701,6 +777,7 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   addEvent(world, {
     week: world.week,
     type: 'income',
+    category: 'income',
     text: `Entry refunded: ${TIERS[event.tier].label}`,
     amountCents: fee,
   })
@@ -738,6 +815,13 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // A tournament this week paused the resolution: stop so the flow can take over.
     if (world.pendingTournament) {
       stopReason = 'tournament'
+      break
+    }
+    // Season just wrapped up (the tick landed on the year's first off-season week, week 49 of
+    // the year): stop AFTER the wrap-up resolved, before week 50, so the season-summary popup
+    // shows. Off-season weeks never carry a tournament, so this can't collide with 'tournament'.
+    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS) {
+      stopReason = 'season-end'
       break
     }
     if (world.fundsCents < 0) {
@@ -907,6 +991,8 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
     countingResults: computeCountingResults(world),
+    bestFinishByTier: { ...world.bestFinishByTier },
+    lastSeasonSummary: world.lastSeasonSummary,
     ...(stopReason ? { stopReason } : {}),
     ...(pending ? { pending } : {}),
   }

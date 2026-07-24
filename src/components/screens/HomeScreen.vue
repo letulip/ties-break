@@ -6,6 +6,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
+import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
 import { formatShortName } from '../../shared/format'
 import { KID_ID, flipScore } from '../../engine/world'
@@ -22,7 +23,11 @@ function flagEmoji(code: string): string {
   return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
 }
 
-const kidName = computed(() => game.snapshot?.profile.kidName ?? '')
+// The player CARD shows the full name (the header keeps the first name only). (round-7 item 5c)
+const kidFullName = computed(() => {
+  const p = game.snapshot?.profile
+  return p ? `${p.kidName} ${p.kidLastName}`.trim() : ''
+})
 const flag = computed(() => flagEmoji(game.snapshot?.profile.country ?? ''))
 const ageYears = computed(() => game.snapshot?.ageYears ?? 0)
 const week = computed(() => game.snapshot?.week ?? 0)
@@ -80,17 +85,76 @@ function kidScoreOf(m: WorldMatch): string {
   return m.bId === KID_ID ? flipScore(m.score) : m.score
 }
 
-// --- Coach's eye: one flavor line per playStyle (static, owner-approved copy) --
-const COACH_QUOTES: Record<PlayStyle, string> = {
-  aggressive: 'She hits like it owes her money – now we build the legs to match.',
-  counterpuncher: 'She never gives you the same ball twice. Patience is her weapon.',
-  'serve-first': 'That serve is ahead of her age – free points are a career.',
-  'all-court': 'No holes in her game. Now we find the weapon.',
+// --- Coach's eye: a rotating pool of 5 lines per play style (round-7 item 5d). The
+// existing owner-approved line is #1 of each pool; the visible line rotates weekly by
+// `week % 5` so it is deterministic (same week -> same line) but changes every week. --
+const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> = {
+  aggressive: [
+    'She hits like it owes her money – now we build the legs to match.',
+    'First strike on every point – we just need the misses to come down.',
+    'When she is on, nobody lives with her. The job is the quiet days.',
+    'She wants the short ball so badly – let us make her earn it.',
+    'Big cuts, big heart – footwork turns that into wins.',
+  ],
+  counterpuncher: [
+    'She never gives you the same ball twice. Patience is her weapon.',
+    'She would rally till dark – now we teach her when to end it.',
+    'Nothing rushes her. Next she needs a way to hurt you.',
+    'Every ball comes back – opponents beat themselves against her.',
+    'Defense first, always – the finishing shot is next.',
+  ],
+  'serve-first': [
+    'That serve is ahead of her age – free points are a career.',
+    'She holds serve in her sleep – now we break the return open.',
+    'Big first ball, calm eyes. The second serve is the growth area.',
+    'On serve she fears no one. Rally tennis is the homework.',
+    'Aces buy her time – we spend it teaching the rest of the court.',
+  ],
+  'all-court': [
+    'No holes in her game. Now we find the weapon.',
+    'She can play every style – picking one under pressure is the skill.',
+    'Comfortable everywhere, dangerous nowhere yet. That changes this year.',
+    'She reads the game beautifully – now the hands must catch up.',
+    'Versatile and calm. We are hunting for the shot that ends points.',
+  ],
 }
-const coachQuote = computed(() => (game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle] : ''))
+const coachQuote = computed(() =>
+  game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][week.value % 5] : '',
+)
 
-// --- Season strip: static tier ladder, real progression is Phase 3 -----------
-const SEASON_TIERS = ['Local U14', 'Regional', 'National', 'ITF Juniors']
+// --- Season strip: REAL tier progress (round-7 item 3). Reads the kid's best finish per
+// tier off the snapshot: a reached tier shows the short finish label (W/F/SF/QF/R16…) in
+// accent, an untouched one a muted dash, and ITF is still locked. --
+const SEASON_STRIP_TIERS: { id: TierId; short: string }[] = [
+  { id: 'local', short: 'Local' },
+  { id: 'regional', short: 'Regional' },
+  { id: 'national', short: 'National' },
+  { id: 'itf', short: 'ITF' },
+]
+// finish index -> short label (reuses the finish-index convention: 0 = champion).
+function shortFinish(finish: number): string {
+  if (finish === 0) return 'W'
+  if (finish === 1) return 'F'
+  if (finish === 2) return 'SF'
+  if (finish === 3) return 'QF'
+  return `R${2 ** finish}`
+}
+interface TierChip {
+  id: TierId
+  short: string
+  label: string
+  reached: boolean
+  locked: boolean
+}
+const seasonChips = computed<TierChip[]>(() =>
+  SEASON_STRIP_TIERS.map(({ id, short }) => {
+    const locked = id === 'itf' // ITF stays locked in Phase 3
+    const best = game.snapshot?.bestFinishByTier[id]
+    const reached = !locked && best !== undefined
+    const label = locked ? '🔒' : reached ? shortFinish(best!) : '–'
+    return { id, short, label, reached, locked }
+  }),
+)
 
 // --- This week: preset pills drive game.setPlan(); spend range is a UI-side
 // mirror of src/engine/world.ts EXPENSE_RANGE × planExpenseFactor(train) – kept
@@ -181,7 +245,7 @@ function openRankHelp(): void {
       <div class="player-card-top">
         <img class="player-avatar" :src="avatarUrl" alt="" />
         <div>
-          <div class="player-name">{{ kidName }} {{ flag }}</div>
+          <div class="player-name">{{ kidFullName }} {{ flag }}</div>
           <div class="hint" style="margin-top: 2px">age {{ ageYears }}</div>
         </div>
       </div>
@@ -190,19 +254,22 @@ function openRankHelp(): void {
           <tr>
             <th>Junior rank</th>
             <td>
-              <span class="rank-value">#{{ kidRank ?? '–' }}</span>
-              <span
-                v-if="rankMovement.dir === 'up'"
-                class="rank-move up"
-                :title="`Up ${rankMovement.by} since last week`"
-              >↑{{ rankMovement.by }}</span>
-              <span
-                v-else-if="rankMovement.dir === 'down'"
-                class="rank-move down"
-                :title="`Down ${rankMovement.by} since last week`"
-              >↓{{ rankMovement.by }}</span>
-              <span v-else class="rank-move flat" title="No change">–</span>
-              <button class="rank-help-btn" aria-label="How ranking points work" title="How ranking points work" @click="openRankHelp">?</button>
+              <div class="rank-row">
+                <span class="rank-value">#{{ kidRank ?? '–' }}</span>
+                <span
+                  v-if="rankMovement.dir === 'up'"
+                  class="rank-move up"
+                  :title="`Up ${rankMovement.by} since last week`"
+                >↑{{ rankMovement.by }}</span>
+                <span
+                  v-else-if="rankMovement.dir === 'down'"
+                  class="rank-move down"
+                  :title="`Down ${rankMovement.by} since last week`"
+                >↓{{ rankMovement.by }}</span>
+                <span v-else class="rank-move flat" title="No change">–</span>
+                <!-- round-7 item 5a: the "?" sits at the very END of the row (flex spacer). -->
+                <button class="rank-help-btn" aria-label="How ranking points work" title="How ranking points work" @click="openRankHelp">?</button>
+              </div>
             </td>
           </tr>
           <tr>
@@ -233,12 +300,15 @@ function openRankHelp(): void {
     <section>
       <h2>Season</h2>
       <div class="season-strip">
-        <template v-for="(tier, i) in SEASON_TIERS" :key="tier">
-          <span class="pill" :class="{ ok: i === 0 }">{{ tier }}</span>
-          <span v-if="i < SEASON_TIERS.length - 1" class="strip-arrow">→</span>
+        <template v-for="(chip, i) in seasonChips" :key="chip.id">
+          <span
+            class="pill tier-chip"
+            :class="{ ok: chip.reached, muted: !chip.reached && !chip.locked, locked: chip.locked }"
+            :title="chip.locked ? 'ITF Junior – locked in Phase 3' : `Best ${chip.short} finish`"
+          >{{ chip.short }} · {{ chip.label }}</span>
+          <span v-if="i < seasonChips.length - 1" class="strip-arrow">→</span>
         </template>
       </div>
-      <p class="hint">unlocks in Phase 3</p>
     </section>
 
     <section>

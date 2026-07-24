@@ -227,6 +227,39 @@ describe('save migrations', () => {
     expect(months.size).toBeGreaterThan(1)
   })
 
+  it('upgrades a v9 save to v10: bestFinishByTier backfilled from tournament events, rest defaulted', () => {
+    const v9 = {
+      schemaVersion: 9,
+      careerId: 'c-v9',
+      seed: 'tier-progress',
+      week: 40,
+      fundsCents: 6_000_00,
+      profile: { ...DEFAULT_PROFILE, kidName: 'Ines', kidLastName: 'Duarte', birthMonth: 7 },
+      plan: { ...WEEK_PLAN_PRESETS.balanced },
+      cohort: [],
+      results: [],
+      season: [],
+      entries: [],
+      events: [
+        { id: 0, week: 0, type: 'info', text: 'started', keep: true },
+        { id: 1, week: 10, type: 'tournament', text: 'Local Open (clay, W10): Ines – Runner-up (+18 pts)', finishIdx: 1 },
+        { id: 2, week: 22, type: 'tournament', text: 'Local Open (hard, W22): Ines – Champion (+30 pts)', finishIdx: 0 },
+        { id: 3, week: 30, type: 'tournament', text: 'Regional Championship (grass, W30): Ines – Semifinalist (+28 pts)', finishIdx: 2 },
+      ],
+      nextEventId: 4,
+      kidRank: 60,
+      prevKidRank: 65,
+      pendingTournament: null,
+    }
+    const migrated = migrateSave(v9)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    // best (smallest) finish per tier, recovered from the tournament summaries' tier-label prefix
+    expect(migrated.bestFinishByTier).toEqual({ local: 0, regional: 2 })
+    expect(migrated.lastSeasonSummary).toBeNull()
+    expect(migrated.seasonWins).toBe(0)
+    expect(migrated.seasonLosses).toBe(0)
+  })
+
   it('passes a current save through unchanged', () => {
     const current = {
       schemaVersion: SAVE_SCHEMA_VERSION,
@@ -245,6 +278,10 @@ describe('save migrations', () => {
       kidRank: 200,
       prevKidRank: null,
       pendingTournament: null,
+      bestFinishByTier: { local: 1 },
+      lastSeasonSummary: null,
+      seasonWins: 0,
+      seasonLosses: 0,
     }
     expect(migrateSave(current)).toEqual(current)
   })
