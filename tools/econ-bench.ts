@@ -15,12 +15,14 @@
  * index, never Math.random – the engine forbids wall-clock/Math.random and same
  * seed+preset must reproduce byte-identically).
  *
- * Entry policy v1 (materially drives the numbers – printed in the header, never hidden):
- *   each week, ENTER EVERY eligible event (any tier) the kid can afford entry+travel for
- *   at that moment, then tick, then resolve any spawned tournament (skip + close).
- * Once funds go negative the affordability gate blocks further entries on its own – the
- * policy stalls – while weekly coaching keeps bleeding (it is never funds-gated). That
- * stall is itself a finding, surfaced in the output.
+ * Entry policy v2 (materially drives the numbers – printed in the header, never hidden):
+ *   each week, ENTER EVERY RANKING-ELIGIBLE event (a tier whose band the kid's current rank sits
+ *   inside – see isTierEligible) the kid can also afford entry+travel for at that moment, then tick,
+ *   then resolve any spawned tournament (skip + close). The eligibility gate (Phase-4 slice 1) is
+ *   what makes the entry count realistic: a kid can't spam every affordable tier, only the ones her
+ *   ranking currently opens. Once funds go negative the affordability gate blocks further entries on
+ *   its own – the policy stalls – while weekly coaching keeps bleeding (it is never funds-gated).
+ * The per-season entry count (total + per-tier) is reported so the burn reconciles with real play.
  *
  * Run:  npm run bench:econ            (console table)
  *       npm run bench:econ -- --csv /path/to/rows.csv   (also dump per-seed rows)
@@ -30,6 +32,7 @@ import {
   createWorld,
   tickWeek,
   enterEvent,
+  isTierEligible,
   skipTournament,
   closeTournament,
   financeWindow,
@@ -82,6 +85,9 @@ export interface SeedResult {
   weeksToBankrupt: number | null
   /** lowest fundsCents reached across the run (a "peak deficit" when negative) */
   peakDeficitCents: number
+  /** tournaments entered this season (bench v2): the total plus the ranking-gated per-tier split.
+   *  itf is never scheduled, so it never appears here. total === local + regional + national. */
+  entries: { total: number; local: number; regional: number; national: number }
 }
 
 function zeroCats(): Record<WorldEventCategory, number> {
@@ -106,15 +112,21 @@ export function runSeason(preset: Preset, index: number): SeedResult {
 
   let peak = world.fundsCents
   let bankruptWeek: number | null = world.fundsCents < 0 ? 0 : null
+  const entries = { total: 0, local: 0, regional: 0, national: 0 }
 
   for (let i = 0; i < SEASON_WEEKS; i++) {
-    // Entry policy v1: enter EVERY eligible event (any tier) affordable by entry+travel NOW.
+    // Entry policy v2: enter every RANKING-ELIGIBLE event affordable by entry+travel NOW.
     for (const e of world.season) {
       if (world.entries.includes(e.id)) continue
       if (world.week > e.deadlineWeek) continue // deadline passed – enterEvent would throw
+      // Ranking gate FIRST (before affordability): the kid may only enter tiers her current rank
+      // opens. Skipping here keeps enterEvent from throwing on an ineligible tier.
+      if (!isTierEligible(e.tier, world.kidRank)) continue
       const cost = TIERS[e.tier].entryFeeCents + e.travelCostCents
       if (world.fundsCents < cost) continue // can't afford entry+travel – policy stalls here
       enterEvent(world, e.id)
+      entries.total++
+      if (e.tier === 'local' || e.tier === 'regional' || e.tier === 'national') entries[e.tier]++
     }
     tickWeek(world, rng)
     if (world.pendingTournament) {
@@ -140,6 +152,7 @@ export function runSeason(preset: Preset, index: number): SeedResult {
     endFundsCents: world.fundsCents,
     weeksToBankrupt: bankruptWeek,
     peakDeficitCents: peak,
+    entries,
   }
 }
 
@@ -225,6 +238,19 @@ function renderPreset(preset: Preset, rows: SeedResult[]): string {
   out.push(statRow('end funds', rows.map((r) => r.endFundsCents)))
   out.push(statRow('peak deficit', rows.map((r) => r.peakDeficitCents)))
 
+  // Bench v2: how many tournaments the ranking gate actually let the kid enter this season, total
+  // plus the per-tier split. This is the reconciliation with real junior play (~15-25 events/yr).
+  const meanEntry = (sel: (r: SeedResult) => number) => mean(rows.map(sel)).toFixed(1)
+  const totals = rows.map((r) => r.entries.total)
+  out.push('  -- entries (ranking-gated, per season) --')
+  out.push(
+    '  ' +
+      padEnd('entries/season', LABEL_W) +
+      `${meanEntry((r) => r.entries.total)} mean  ` +
+      `(local ${meanEntry((r) => r.entries.local)} · regional ${meanEntry((r) => r.entries.regional)} · ` +
+      `national ${meanEntry((r) => r.entries.national)})  [min ${Math.min(...totals)} / max ${Math.max(...totals)}]`,
+  )
+
   // Bankruptcy summary: how many of the 30 seeds ever went red, and the median week they did.
   const bankrupt = rows.filter((r) => r.weeksToBankrupt !== null)
   const bankruptWeeks = bankrupt.map((r) => r.weeksToBankrupt as number)
@@ -240,8 +266,9 @@ function renderPreset(preset: Preset, rows: SeedResult[]): string {
 
 const POLICY_HEADER = [
   'Ties Break – economy bench (measurement only; changes no engine numbers)',
-  `Entry policy v1: each week, enter EVERY eligible event (any tier) the kid can afford`,
-  `  entry+travel for at that moment; then tick; then skip+close any spawned tournament.`,
+  `Entry policy v2: each week, enter every RANKING-ELIGIBLE event (a tier her rank opens) the kid`,
+  `  can also afford entry+travel for; then tick; then skip+close any spawned tournament. The`,
+  `  ranking gate (Phase-4 slice 1) caps entries to the tiers her rank allows – see entries/season.`,
   `  Once funds go red the affordability gate stalls entries; weekly coaching still bleeds.`,
   `${SEEDS_PER_PRESET} seeds/preset · ${SEASON_WEEKS}-week season · coach setup per preset (see each block) · plan balanced (75/25).`,
   `Money is whole-dollar rounded; ±sd is the population stddev across the ${SEEDS_PER_PRESET} seeds.`,
@@ -262,6 +289,10 @@ function toCsv(all: { preset: Preset; rows: SeedResult[] }[]): string {
     'end_funds_cents',
     'weeks_to_bankrupt',
     'peak_deficit_cents',
+    'entries_total',
+    'entries_local',
+    'entries_regional',
+    'entries_national',
   ]
   const lines = [cols.join(',')]
   for (const { preset, rows } of all) {
@@ -278,6 +309,10 @@ function toCsv(all: { preset: Preset; rows: SeedResult[] }[]): string {
         r.endFundsCents.toString(),
         r.weeksToBankrupt === null ? '' : r.weeksToBankrupt.toString(),
         r.peakDeficitCents.toString(),
+        r.entries.total.toString(),
+        r.entries.local.toString(),
+        r.entries.regional.toString(),
+        r.entries.national.toString(),
       ]
       lines.push(cells.join(','))
     }

@@ -10,6 +10,12 @@ export interface TierDef {
   travelCostCents: [number, number] // [min,max], drawn per event instance
   points: number[] // by finish: [W, F, SF, QF, R16?, R32?] length matches rounds+1
   everyNWeeks: number
+  /** ranking eligibility WINDOW `[bestRank, worstRank]` on the kid's dense rank (1 = best).
+   *  Eligible ⇔ `bestRank <= kidRank <= worstRank`: a tier opens once the kid is good enough
+   *  (`kidRank <= worstRank`) and graduates her out once she's too good (`kidRank < bestRank`).
+   *  Bands overlap so two tiers can be open at once. Local's `worstRank` is a large sentinel so
+   *  the bottom of the field is always open; national's `bestRank` is 1 so the top never closes. */
+  enterRankBand: [number, number]
 }
 export interface SeasonEvent {
   id: string // `${year}-w${week}-${tier}`

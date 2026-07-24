@@ -11,7 +11,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import { isOffSeasonWeek } from '../src/engine/season/calendar'
+import { isOffSeasonWeek, TIERS } from '../src/engine/season/calendar'
 
 function run(seed: string, weeks: number): WorldState {
   const world = createWorld(seed)
@@ -79,7 +79,12 @@ describe('full bracket view (Round 5 item 5)', () => {
     const world = createWorld(seed)
     const rng = rngFromSeed(seed)
     const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+    // r-gate (season-life-01): a fresh kid ranks #1 → eligible for national only. Enter at a rank
+    // inside the event's band, then restore the real rank so nothing downstream is perturbed.
+    const savedRank = world.kidRank
+    world.kidRank = TIERS[event.tier].enterRankBand[0]
     enterEvent(world, event.id)
+    world.kidRank = savedRank
     while (world.week < event.week) tickWeek(world, rng)
     return world
   }

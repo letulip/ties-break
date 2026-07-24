@@ -20,6 +20,8 @@ export const TIERS: Record<TierId, TierDef> = {
     travelCostCents: [60_00, 120_00],
     points: [30, 18, 10, 5],
     everyNWeeks: 2,
+    // Open to everyone at the bottom (sentinel worstRank); graduates out once the kid cracks top-40.
+    enterRankBand: [41, Number.MAX_SAFE_INTEGER],
   },
   regional: {
     id: 'regional',
@@ -29,6 +31,8 @@ export const TIERS: Record<TierId, TierDef> = {
     travelCostCents: [150_00, 400_00],
     points: [80, 48, 28, 14, 6],
     everyNWeeks: 4,
+    // Opens at rank 130; graduates out at top-10. Overlaps local (41-130) and national (11-40).
+    enterRankBand: [11, 130],
   },
   national: {
     id: 'national',
@@ -38,6 +42,8 @@ export const TIERS: Record<TierId, TierDef> = {
     travelCostCents: [400_00, 900_00],
     points: [200, 120, 70, 35, 15, 6],
     everyNWeeks: 13,
+    // Opens at top-40; never graduates (bestRank 1 keeps the top of the ladder always open).
+    enterRankBand: [1, 40],
   },
   itf: {
     id: 'itf',
@@ -47,6 +53,8 @@ export const TIERS: Record<TierId, TierDef> = {
     travelCostCents: [900_00, 2000_00],
     points: [400, 240, 140, 70, 30, 12],
     everyNWeeks: 0, // locked in Phase 3
+    // Inert: itf is never scheduled (everyNWeeks 0), so this band is never consulted.
+    enterRankBand: [1, Number.MAX_SAFE_INTEGER],
   },
 }
 

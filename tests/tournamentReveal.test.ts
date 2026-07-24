@@ -20,7 +20,12 @@ function buildToPending(seed: string): WorldState {
   const world = createWorld(seed)
   const rng = rngFromSeed(seed)
   const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+  // r-gate (season-life-01): a fresh kid ranks #1 (field tied at 0 pts) → eligible for national only.
+  // Enter at a rank inside the event's band, then restore the real rank so nothing downstream shifts.
+  const savedRank = world.kidRank
+  world.kidRank = TIERS[event.tier].enterRankBand[0]
   enterEvent(world, event.id)
+  world.kidRank = savedRank
   while (world.week < event.week) tickWeek(world, rng)
   expect(world.week).toBe(event.week)
   expect(world.pendingTournament).toBeTruthy()

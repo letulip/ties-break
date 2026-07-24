@@ -3,6 +3,7 @@ import {
   createWorld,
   tickWeek,
   enterEvent,
+  isTierEligible,
   skipTournament,
   closeTournament,
   recomputeKidRank,
@@ -15,6 +16,16 @@ import {
 import { DEFAULT_PROFILE, type FinanceWeek } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
+import type { SeasonEvent } from '../src/engine/season/types'
+
+// r-gate (season-life-01): enter at a rank inside the event's band, then restore the real rank so
+// nothing downstream is perturbed (a fresh kid ranks #1, eligible for national only).
+function enterEligible(world: WorldState, event: SeasonEvent): void {
+  const saved = world.kidRank
+  world.kidRank = TIERS[event.tier].enterRankBand[0]
+  enterEvent(world, event.id)
+  world.kidRank = saved
+}
 
 // Part A – the persisted per-week/per-category finance aggregate (financeWeeks) and the pure
 // windowing helper that feeds the Money breakdown/ledger. The headline is the 60-event-cap
@@ -29,6 +40,9 @@ function busyTournamentSeason(seed: string, weeks: number): WorldState {
   for (let i = 0; i < weeks; i++) {
     for (const e of world.season) {
       if (e.tier !== 'local' || world.entries.includes(e.id) || e.deadlineWeek < world.week) continue
+      // r-gate: only enter tiers the kid is currently eligible for (local opens once she is outside
+      // the top-40); enterEvent would otherwise throw for a too-good rank.
+      if (!isTierEligible(e.tier, world.kidRank)) continue
       if (world.fundsCents < TIERS[e.tier].entryFeeCents + e.travelCostCents) continue
       enterEvent(world, e.id)
     }
@@ -59,7 +73,7 @@ describe('financeWeeks — the persisted per-week finance aggregate', () => {
     const world = createWorld('cats')
     const rng = rngFromSeed(world.seed)
     const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEvent(world, event.id) // charges the entry fee at week 0
+    enterEligible(world, event) // charges the entry fee at week 0
     const w0 = world.financeWeeks.find((w) => w.week === 0)!
     expect(w0.byCategory.entry).toBe(-TIERS[event.tier].entryFeeCents)
 

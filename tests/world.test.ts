@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { createWorld, tickWeek, enterEvent, skipTournament, closeTournament } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { TIERS } from '../src/engine/season/calendar'
 
 const EVENTS_CAP = 400 // mirrors world.ts
 
@@ -78,7 +79,14 @@ describe('world (phase-3 living season)', () => {
     // The entered world commits to the earliest still-open event; the skipped world does not.
     const target = entered.season.find((e) => e.deadlineWeek >= entered.week)
     expect(target).toBeTruthy()
+    // r-gate (season-life-01): a fresh kid ranks #1 (the whole field is tied at 0 pts), eligible for
+    // national only. This guard is about RNG discipline, not eligibility, so enter at a rank inside
+    // the event's band and immediately restore the real rank – the main-stream draws must stay
+    // byte-identical to the skipped world.
+    const savedRank = entered.kidRank
+    entered.kidRank = TIERS[target!.tier].enterRankBand[0]
     enterEvent(entered, target!.id)
+    entered.kidRank = savedRank
     expect(entered.entries).toContain(target!.id)
     expect(skipped.entries).toHaveLength(0)
 

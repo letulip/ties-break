@@ -74,6 +74,27 @@ describe('runSeason accounting reconciles with the finance aggregate', () => {
   })
 })
 
+describe('entries-per-season counter (bench v2 – ranking gate)', () => {
+  it('counts entries with a per-tier split that sums to the total, across every preset', () => {
+    for (const preset of PRESETS) {
+      const r = runSeason(preset, 0)
+      expect(r.entries.total).toBe(r.entries.local + r.entries.regional + r.entries.national)
+      expect(r.entries.total).toBeGreaterThanOrEqual(0)
+    }
+  })
+
+  it('the ranking gate keeps the season entry count realistic (well under one-per-week)', () => {
+    // The whole point of the gate: the kid can no longer spam every affordable tier. A gated season
+    // enters far fewer than the 52 weekly opportunities (the old ungated policy ran to ~50).
+    for (const preset of PRESETS) {
+      for (const index of [0, 1, 2]) {
+        const r = runSeason(preset, index)
+        expect(r.entries.total).toBeLessThan(SEASON_WEEKS)
+      }
+    }
+  })
+})
+
 describe('bankruptcy tracking', () => {
   it('weeksToBankrupt is null-or-in-range, and a red run has a non-null first-red week', () => {
     const results: SeedResult[] = PRESETS.flatMap((p) => [runSeason(p, 0), runSeason(p, 1)])

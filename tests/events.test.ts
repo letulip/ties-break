@@ -16,10 +16,22 @@ import { rngFromSeed } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { simulateMatch } from '../src/engine/match/engine'
+import type { SeasonEvent } from '../src/engine/season/types'
 
 // The earliest event whose entry deadline has not yet passed.
 function firstEnterable(world: WorldState) {
   return world.season.find((e) => e.deadlineWeek >= world.week)!
+}
+
+// r-gate (season-life-01): a fresh kid ranks #1 (the whole field is tied at 0 pts), so she is
+// eligible for national only. These cases predate the ranking gate and aren't about eligibility, so
+// enter at a rank inside the event's band, then restore the real rank so nothing downstream (e.g.
+// gear-sponsorship, which reads kidRank) is perturbed.
+function enterEligible(world: WorldState, event: SeasonEvent): void {
+  const saved = world.kidRank
+  world.kidRank = TIERS[event.tier].enterRankBand[0]
+  enterEvent(world, event.id)
+  world.kidRank = saved
 }
 
 describe('entry validation', () => {
@@ -29,7 +41,7 @@ describe('entry validation', () => {
     const fee = TIERS[event.tier].entryFeeCents
     const before = world.fundsCents
 
-    enterEvent(world, event.id)
+    enterEligible(world, event)
     expect(world.entries).toContain(event.id)
     expect(world.fundsCents).toBe(before - fee)
     // an expense (ledger) event and an entry (News) event are both emitted
@@ -45,7 +57,7 @@ describe('entry validation', () => {
   it('rejects a duplicate entry', () => {
     const world = createWorld('dup')
     const event = firstEnterable(world)
-    enterEvent(world, event.id)
+    enterEligible(world, event)
     expect(() => enterEvent(world, event.id)).toThrow(/already/i)
   })
 
@@ -104,7 +116,7 @@ describe('news match texts use short names for everyone', () => {
     const world = createWorld('short-names') // default profile: Vera Martin
     const rng = rngFromSeed(world.seed)
     const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEvent(world, event.id)
+    enterEligible(world, event)
     while (world.week < event.week) tickWeek(world, rng)
     // The tournament week pauses into a reveal; resolve it so the match events are emitted.
     expect(world.pendingTournament).toBeTruthy()
@@ -121,7 +133,7 @@ describe('a tournament week the kid entered', () => {
     const world = createWorld('tourney-week')
     const rng = rngFromSeed(world.seed)
     const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEvent(world, event.id)
+    enterEligible(world, event)
 
     while (world.week < event.week) tickWeek(world, rng)
     expect(world.week).toBe(event.week)
@@ -167,7 +179,7 @@ describe('a tournament week the kid entered', () => {
       const world = createWorld(seed)
       const rng = rngFromSeed(world.seed)
       const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-      enterEvent(world, event.id)
+      enterEligible(world, event)
       while (world.week < event.week) tickWeek(world, rng)
       skipTournament(world)
       const kidWonIt = world.pendingTournament!.result.finishes[KID_ID] === 0
@@ -238,7 +250,7 @@ describe('kid counting-results transparency (round-5 item 1b)', () => {
     const world = createWorld('counting')
     const rng = rngFromSeed(world.seed)
     const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEvent(world, event.id)
+    enterEligible(world, event)
     while (world.week < event.week) tickWeek(world, rng)
     skipTournament(world)
     const snap = toSnapshot(world)
@@ -257,7 +269,7 @@ describe('advance stop reasons', () => {
     const world = createWorld('adv-tournament')
     const rng = rngFromSeed(world.seed)
     const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEvent(world, event.id)
+    enterEligible(world, event)
     // fast-forward to the week just before the event, so advance hits it on the first tick
     while (world.week < event.week - 1) tickWeek(world, rng)
     expect(world.week).toBe(event.week - 1)
