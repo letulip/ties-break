@@ -928,18 +928,20 @@ function pendingView(world: WorldState): PendingView | undefined {
     }
   })
 
-  // Round 5 item 5: the FULL draw (every match, every player) for every round revealed so
-  // far – the kid's matches are always rounds 0..revealed-1 (single elim, she plays every
-  // round until eliminated), so that also bounds which OTHER matches are safe to reveal.
+  // Round 5 item 5: the FULL draw (every match, every player). During her run this is bounded
+  // to the kid's played rounds (0..revealed-1; single elim, she plays every round until
+  // eliminated) so later rounds stay spoiler-free. Round-7 (spectate): once her run is FINISHED
+  // there are no spoilers left to protect, so the whole draw is exposed – every round through
+  // the Final – letting the flow spectate the tournament to its conclusion past her exit.
   // `score` is always normalised to the WINNER's perspective (conventional "W d. L 6-4 ..."
   // reading) regardless of which bracket side (a/b) actually won – MatchRecord stores it
   // from side A's perspective, so it only needs flipping when B won.
-  const maxRevealedRound = revealed - 1
+  const lastRound = p.finished ? Math.max(...p.result.matches.map((m) => m.round)) : revealed - 1
   const fullBracket: FullBracketMatch[] =
-    maxRevealedRound < 0
+    lastRound < 0
       ? []
       : p.result.matches
-          .filter((m) => m.round <= maxRevealedRound)
+          .filter((m) => m.round <= lastRound)
           .map((m) => ({
             round: m.round,
             roundLabel: stageLabel(m.round, tier.drawSize),

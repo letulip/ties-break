@@ -233,14 +233,24 @@ select {
   line-height: 0; /* no descender gap under the canvas */
 }
 
-/* Round-7 item 18: play.svg tinted to the button's text colour (replaces the ▶ glyph on the
-   SeasonScreen "Watch" button). Same CSS-mask technique as .tab-icon. */
+/* Round-7 item 18 / owner amendment: the SeasonScreen this-week watch control is icon-only – the
+   play.svg glyph masked to accent-yellow and sized like the bottom-tab icons (.tab-icon, ~20px).
+   .watch-play-btn is the icon-only tap target (real button, aria-labelled in the template). */
+.watch-play-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin: -4px 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
 .watch-play-icon {
-  display: inline-block;
-  width: 0.8em;
-  height: 0.8em;
-  vertical-align: -0.06em;
-  background-color: currentColor;
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: var(--accent);
   -webkit-mask-position: center;
   mask-position: center;
   -webkit-mask-size: contain;
@@ -1595,9 +1605,12 @@ tr.kid-row td {
   margin: 4px 0 0;
 }
 
-/* --- Round-7 item 19: full draw as a real, horizontally-scrollable bracket ------ */
+/* --- Round-7 (owner): the draw as a round-tabbed bracket (BracketTabs.vue) ------- */
+/* Reused for the between-rounds view AND the spectate walk. Round tabs on top, the selected
+   round's matches as a vertical list of two-row cells with connector elbows, bounded height with
+   an internal scrollbar-hidden vertical scroll. «таблички», exact game palette. */
 .tf-bracket {
-  padding: 12px 0 12px 12px;
+  padding: 14px 14px 12px;
 }
 
 .tf-bracket-title {
@@ -1608,128 +1621,186 @@ tr.kid-row td {
   margin: 0 0 10px;
 }
 
-/* Round-7 (owner): a full draw's first round (e.g. R32 = 16 cells) is far too tall and pushes
-   the whole flow down, so the bracket body is height-bounded (~4-5 cells) and scrolls INTERNALLY,
-   both axes – horizontal for the round columns, vertical for the tall early rounds. The kid's
-   highlighted cell is scrolled into view on open (see the showBracket watcher in TournamentFlow). */
-.tf-bracket-scroll {
+.bt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Round tabs: a horizontal, scrollbar-hidden pill row; the active round filled solid accent
+   (dark text, same convention as button.primary). */
+.bt-tabs {
+  display: flex;
+  gap: 4px;
   overflow-x: auto;
+  scrollbar-width: none;
+}
+.bt-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.bt-tab {
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 13px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.bt-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* Bounded body with an internal vertical scroll; scrollbar hidden – the owner said users will
+   figure out it scrolls. The kid's cell is scrolled into view on open / round change. */
+.bt-scroll {
+  max-height: 300px;
   overflow-y: auto;
-  max-height: 320px;
-  padding: 0 12px 4px 0;
+  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
+.bt-scroll::-webkit-scrollbar {
+  display: none;
+}
 
-.tf-bracket-cols {
+.bt-list {
   display: flex;
-  gap: 14px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* A pair of adjacent cells (they feed one match in the next round) + a right-side connector
+   elbow. The elbow SVG height is set in the component to match the pair's fixed height. */
+.bt-pair {
+  display: flex;
   align-items: stretch;
-  width: max-content;
 }
 
-.tf-bracket-col {
+.bt-pair-cells {
   display: flex;
   flex-direction: column;
-  min-width: 118px;
-}
-
-/* Sticky so the round label stays visible while the (now height-bounded) bracket body scrolls
-   vertically; opaque panel background hides cells sliding underneath it. */
-.tf-bracket-round {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  font-size: 10.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  text-align: center;
-  margin: 0;
-  padding: 0 0 8px;
-  background: var(--panel);
-}
-
-/* Later (shorter) columns centre vertically against earlier ones, so the draw reads as a
-   left-to-right progression toward the Final. */
-.tf-bracket-cells {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 8px;
   flex: 1;
+  min-width: 0;
 }
 
-.tf-bracket-cell {
+.bt-elbow {
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.bt-cell {
   display: flex;
   align-items: center;
   gap: 6px;
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 7px;
-  padding: 5px 7px;
+  border-radius: 8px;
+  padding: 5px 9px;
+  box-sizing: border-box;
 }
 
-.tf-bracket-cell.kid-match {
+/* The kid's own match is outlined in accent (path highlight). */
+.bt-cell.is-kid {
   border-color: var(--accent);
   background: rgba(217, 242, 79, 0.06);
 }
 
-.tf-bc-players {
+.bt-players {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  justify-content: center;
+  gap: 3px;
   min-width: 0;
   flex: 1;
 }
 
-.tf-bc-row {
+.bt-row {
   display: flex;
   align-items: center;
-  gap: 3px;
-  font-size: 12px;
+  gap: 4px;
+  font-size: 12.5px;
   color: var(--muted);
   min-width: 0;
 }
 
-/* Name truncates with an ellipsis; the winner ✓ (below) stays outside the ellipsis so it is
-   never clipped on a long name. */
-.tf-bc-name {
+/* Name truncates with an ellipsis; the winner ✓ stays outside the ellipsis so it is never
+   clipped on a long name. */
+.bt-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
 }
 
-/* Round-7 (owner): explicit accent checkmark next to the winning player's name in each decided
-   draw cell – scannable at a glance on top of the existing bold/accent. */
-.tf-bc-check {
+.bt-check {
   flex-shrink: 0;
   color: var(--accent);
   font-weight: 700;
   font-size: 11px;
 }
 
-/* winner bolded/accent; the kid's own name is always accent (path highlight). */
-.tf-bc-row.won {
+/* winner accent-colored; the kid's own name is always accent. */
+.bt-row.won {
   color: var(--text);
   font-weight: 600;
 }
-
-.tf-bc-row.kid {
+.bt-row.kid {
   color: var(--accent);
 }
-
-.tf-bc-row.won.kid {
+.bt-row.won.kid {
   color: var(--accent);
   font-weight: 700;
 }
 
-.tf-bc-score {
-  font-size: 10.5px;
+.bt-score {
+  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* Round-7 spectate: the between-round card carrying the kid's result line + the walk control. */
+.tf-spectate {
+  text-align: center;
+}
+
+.tf-spectate-kid {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+/* Champion card (kid exited early – no art for an AI winner). */
+.tf-champ-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0;
+}
+
+.tf-champ-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 2px 0 12px;
+}
+
+.tf-finale-kidline {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+}
+
+.tf-finale-kidpts {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 /* --- Round 5: Season sub-tabs, tour guide, calendar muted rows -------------- */

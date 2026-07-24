@@ -20,9 +20,10 @@ import type { UpcomingEvent, WorldEvent, WorldMatch } from '../../shared/protoco
 
 const game = useGameStore()
 const base = import.meta.env.BASE_URL
-// Round-7 item 18: the this-week "Watch" button's ▶ glyph broke the row layout – swap it for
-// the play.svg icon, CSS-mask-tinted to follow the button's text colour (same technique as the
-// tab icons). SeasonScreen only; the News "Watch" keeps its glyph per the owner.
+// Round-7 item 18 / owner amendment: the this-week tournament row's watch control is now
+// ICON-ONLY – the word "Watch" dropped, just the play.svg glyph, accent-yellow and sized like
+// the bottom-tab icons (see .watch-play-icon / .watch-play-btn). Still a real button with an
+// aria-label for accessibility. SeasonScreen only; the News "Watch" keeps its glyph per the owner.
 const playIconStyle = {
   WebkitMaskImage: `url(${base}icons/play.svg)`,
   maskImage: `url(${base}icons/play.svg)`,
@@ -166,8 +167,8 @@ function playExhibition(): void {
       <ol class="bracket-list">
         <li v-for="m in thisWeekMatches" :key="m.id" class="bracket-row">
           <span>{{ m.text }}</span>
-          <button v-if="m.match" class="link sfx-watch" @click="watchMatch(m)">
-            Watch <span class="watch-play-icon" :style="playIconStyle"></span>
+          <button v-if="m.match" class="watch-play-btn sfx-watch" aria-label="Watch match" @click="watchMatch(m)">
+            <span class="watch-play-icon" :style="playIconStyle"></span>
           </button>
         </li>
       </ol>
