@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { computeRanking, type SeasonResult } from '../../src/engine/season/ranking'
+import { computeRanking, windowedBestSum, type SeasonResult } from '../../src/engine/season/ranking'
+import { rankingDeltaSuffix } from '../../src/engine/world'
 
 function r(playerId: string, week: number, points: number): SeasonResult {
   return { playerId, week, points }
@@ -86,5 +87,63 @@ describe('computeRanking — totality over a roster', () => {
     expect(ranks).toEqual([1, 2, 2, 3, 4])
     // e (zero points) is last
     expect(ranking[ranking.length - 1].playerId).toBe('e')
+  })
+})
+
+// --- round-5 item 1: ranking transparency ------------------------------------
+describe('windowedBestSum — the value the standings show', () => {
+  it('equals the player points computeRanking assigns (sum shown = standings points)', () => {
+    const results = [10, 20, 30, 40, 50, 60, 70].map((p, i) => r('a', 2 + i, p))
+    const standingsPoints = computeRanking(results, 20).find((x) => x.playerId === 'a')!.points
+    expect(windowedBestSum(results, 20, 'a')).toBe(standingsPoints)
+    expect(windowedBestSum(results, 20, 'a')).toBe(20 + 30 + 40 + 50 + 60 + 70) // weakest (10) dropped
+  })
+
+  it('respects the 52-week window (drops a result that ages out)', () => {
+    const results = [r('a', 1, 30)]
+    expect(windowedBestSum(results, 53, 'a')).toBe(30)
+    expect(windowedBestSum(results, 54, 'a')).toBe(0)
+  })
+
+  it('is zero for a player with no counted results', () => {
+    expect(windowedBestSum([r('a', 4, 30)], 6, 'kid')).toBe(0)
+  })
+})
+
+describe("owner's ranking scenarios — effective delta of a new result", () => {
+  // Six existing counted results; the weakest is 15. computeRanking counts all six.
+  const six = () => [r('kid', 1, 30), r('kid', 2, 30), r('kid', 3, 28), r('kid', 4, 20), r('kid', 5, 18), r('kid', 6, 15)]
+
+  it('DISPLACED result: net delta = new − displaced (the pushed-out 6th best)', () => {
+    const before = windowedBestSum(six(), 6, 'kid')
+    const withNew = [...six(), r('kid', 6, 48)] // beats the weakest counted result (15)
+    const after = windowedBestSum(withNew, 6, 'kid')
+    expect(after - before).toBe(48 - 15) // +33: only the improvement over the displaced 15 counts
+    expect(rankingDeltaSuffix(48, after - before)).toBe(' (ranking total +33)')
+  })
+
+  it('BELOW the 6th best: net delta 0, "does not improve best 6"', () => {
+    const before = windowedBestSum(six(), 6, 'kid')
+    const withNew = [...six(), r('kid', 6, 10)] // weaker than the current weakest counted (15)
+    const after = windowedBestSum(withNew, 6, 'kid')
+    expect(after - before).toBe(0)
+    expect(rankingDeltaSuffix(10, after - before)).toBe(' (does not improve best 6)')
+  })
+
+  it('FRESH add (fewer than 6 counted): full points count, no suffix', () => {
+    const before = windowedBestSum([r('kid', 1, 30)], 2, 'kid')
+    const withNew = [r('kid', 1, 30), r('kid', 2, 48)]
+    const after = windowedBestSum(withNew, 2, 'kid')
+    expect(after - before).toBe(48)
+    expect(rankingDeltaSuffix(48, after - before)).toBe('') // delta === points → nothing extra
+  })
+})
+
+describe('rankingDeltaSuffix — pure formatter', () => {
+  it('covers displaced / net-zero / full / degenerate cases', () => {
+    expect(rankingDeltaSuffix(48, 48)).toBe('') // nothing displaced
+    expect(rankingDeltaSuffix(48, 33)).toBe(' (ranking total +33)') // displaced
+    expect(rankingDeltaSuffix(10, 0)).toBe(' (does not improve best 6)') // below 6th
+    expect(rankingDeltaSuffix(0, 0)).toBe('') // no points awarded (degenerate)
   })
 })

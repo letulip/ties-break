@@ -163,6 +163,14 @@ export interface StandingRow extends RankingRow {
   isKid: boolean
 }
 
+/** One of the kid's counted (best-6, windowed) results, for the Kid-screen transparency
+ *  list (round-5 item 1b). `tier` is optional: pre-r5 kid results were stored without it. */
+export interface CountingResult {
+  week: number
+  tier?: TierId
+  points: number
+}
+
 export interface Snapshot {
   schemaVersion: number
   careerId: string
@@ -183,6 +191,8 @@ export interface Snapshot {
   prevKidRank: number | null
   /** top 10 + 5 around the kid, deduped, rank order */
   standings: StandingRow[]
+  /** the kid's counted best-6 results (round-5 item 1b), strongest first */
+  countingResults: CountingResult[]
   /** set when an `advance` stopped early */
   stopReason?: StopReason
   /** present while a tournament reveal is in progress (drives TournamentFlow) */

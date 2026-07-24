@@ -2,6 +2,7 @@ import { type Rng, rngFromSeed, pickInt } from './rng'
 import {
   DEFAULT_PROFILE,
   WEEK_PLAN_PRESETS,
+  type CountingResult,
   type FamilyBackground,
   type FullBracketMatch,
   type PendingBracketRound,
@@ -21,7 +22,7 @@ import type { MatchPlayer } from './match/types'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TournamentResult } from './season/types'
 import { TIERS, buildSeason, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
 import { generateCohort, driftCohort } from './season/cohort'
-import { computeRanking, type SeasonResult } from './season/ranking'
+import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament } from './season/tournament'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
@@ -104,9 +105,19 @@ const EXPENSE_RANGE: Record<PlayerProfile['coachSetup'], [number, number]> = {
   parent: [120_00, 400_00],
 }
 
-// Two flavor lists, same length: the list is chosen deterministically from the
-// plan, so the RNG draw COUNT per tick never depends on player input (the
-// load-time RNG replay requires it).
+// Family background scales the drawn expense (round-5 item 10). Applied AFTER the
+// `pickInt` draw – the draw itself is unchanged, so the main-stream draw COUNT (and
+// thus cohort drift / the load-time RNG replay) never depends on background. middle
+// is ×1.0 → byte-identical to before (the 520-week identity run uses middle).
+const BG_EXPENSE_FACTOR: Record<FamilyBackground, number> = {
+  working: 0.8,
+  middle: 1.0,
+  wealthy: 1.25,
+}
+
+// Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
+// (a single rng() call regardless of list length), so the per-tick draw count is
+// identical across backgrounds. middle keeps the original lists verbatim.
 const TRAIN_EVENTS = [
   'Coaching block: technique drills',
   'Coaching block: footwork and conditioning',
@@ -122,6 +133,22 @@ const REST_EVENTS = [
   'Hitting for fun, no drills',
   'Off week: she reread her favorite book',
 ]
+
+// working can't afford video analysis – swap that one line for a public-courts clinic.
+const WORKING_TRAIN_EVENTS = TRAIN_EVENTS.map((e) =>
+  e === 'Video session: studying her last matches' ? 'Group clinic at the public courts' : e,
+)
+
+// wealthy adds premium recovery lines to the rest pool.
+const WEALTHY_REST_EVENTS = [...REST_EVENTS, 'Physio session', 'Massage & recovery']
+
+function trainFlavors(background: FamilyBackground): string[] {
+  return background === 'working' ? WORKING_TRAIN_EVENTS : TRAIN_EVENTS
+}
+
+function restFlavors(background: FamilyBackground): string[] {
+  return background === 'wealthy' ? WEALTHY_REST_EVENTS : REST_EVENTS
+}
 
 const SEASON_MIN_FUTURE = 26 // always keep at least this many future weeks scheduled
 const SEASON_CHUNK = 52 // generate the calendar one deterministic year-block at a time
@@ -309,9 +336,12 @@ function resolveParentIncome(world: WorldState): void {
 
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const [lo, hi] = EXPENSE_RANGE[world.profile.coachSetup]
-  const expense = Math.round(pickInt(rng, lo, hi) * planExpenseFactor(world.plan))
+  // Draw first (unchanged), THEN scale by background – draw count stays background-independent.
+  const expense = Math.round(
+    pickInt(rng, lo, hi) * planExpenseFactor(world.plan) * BG_EXPENSE_FACTOR[world.profile.background],
+  )
   world.fundsCents -= expense
-  const flavors = world.plan.train >= 70 ? TRAIN_EVENTS : REST_EVENTS
+  const flavors = world.plan.train >= 70 ? trainFlavors(world.profile.background) : restFlavors(world.profile.background)
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
   addEvent(world, { week: world.week, type: 'expense', text: flavor, amountCents: -expense })
   if (rng() < 0.06) {
@@ -418,6 +448,17 @@ function housekeep(world: WorldState): void {
   ensureSeason(world)
 }
 
+/** The clause appended to a tournament summary that explains the EFFECTIVE ranking change
+ *  (round-5 item 1a). `delta` is the change in the kid's windowed best-6 sum caused by the
+ *  new result: `points` when nothing was displaced, `points − displaced` when a counted
+ *  result was pushed out, `0` when the result didn't crack the best 6. */
+export function rankingDeltaSuffix(points: number, delta: number): string {
+  if (points <= 0) return ''
+  if (delta <= 0) return ' (does not improve best 6)'
+  if (delta < points) return ` (ranking total +${delta})`
+  return ''
+}
+
 // Commit the kid's run: award points, emit the summary + milestones, recompute rank + housekeep.
 // Runs once, when the last kid match is revealed. Keeps `pendingTournament` alive (finished: true)
 // so the finale stays a real snapshot; `closeTournament` clears it.
@@ -432,11 +473,16 @@ function finalizeTournament(world: WorldState): void {
   const tier = TIERS[event.tier]
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   const points = tier.points[kidFinish] ?? 0
-  if (points > 0) world.results.push({ playerId: KID_ID, week: world.week, points })
+  // Effective ranking delta = kid's windowed best-6 sum after adding the result minus before.
+  const before = windowedBestSum(world.results, world.week, KID_ID)
+  if (points > 0) world.results.push({ playerId: KID_ID, week: world.week, points, tier: event.tier })
+  const after = windowedBestSum(world.results, world.week, KID_ID)
   addEvent(world, {
     week: world.week,
     type: 'tournament',
-    text: `${tier.label} (${event.surface}, W${event.week}): ${world.profile.kidName} – ${finishLabel(kidFinish)} (+${points} pts)`,
+    text:
+      `${tier.label} (${event.surface}, W${event.week}): ${world.profile.kidName} – ` +
+      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before)}`,
     finishIdx: kidFinish,
   })
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
@@ -721,6 +767,18 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
     }))
 }
 
+// The kid's counted best-6 results (round-5 item 1b): same window + sort as computeRanking,
+// so their points sum equals the kid's standings points. Strongest first.
+function computeCountingResults(world: WorldState): CountingResult[] {
+  return world.results
+    .filter(
+      (r) => r.playerId === KID_ID && r.week <= world.week && world.week - r.week <= RESULTS_WINDOW,
+    )
+    .sort((a, b) => b.points - a.points || b.week - a.week)
+    .slice(0, 6)
+    .map((r) => ({ week: r.week, tier: r.tier, points: r.points }))
+}
+
 function computeStandings(world: WorldState): StandingRow[] {
   const full = fullRanking(world)
   const meta = new Map<string, { name: string; nation: string }>()
@@ -847,6 +905,7 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
+    countingResults: computeCountingResults(world),
     ...(stopReason ? { stopReason } : {}),
     ...(pending ? { pending } : {}),
   }

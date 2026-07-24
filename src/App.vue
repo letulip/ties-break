@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
+import { KID_ID } from './engine/world'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
@@ -23,9 +24,27 @@ const SEASON_SEEN_KEY = 'tb:lastSeenSeasonWeek'
 const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 
 const game = useGameStore()
-// Face crops from the stage "norm" portraits (public/avatars, generated via scripts;
-// see docs/decisions.md). Junior stage until the sim grows an age.
-const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.webp`
+
+// Round 5 item 31 – heuristic v1: the header avatar reflects the kid's most recent
+// on-court result. Most recent `match` event in the snapshot's event log (chronological,
+// oldest first, so the last one is newest) decides happy/sad/norm; no match yet (or the
+// kid didn't play it – other-cohort matches never appear on the snapshot) => norm.
+// Face crops live in public/avatars/{jun-norm,jun-happy,jun-sad}.webp (generated via
+// scripts/optimize-art.mjs from art-src/avatars/jun-*.png; see docs/specs/round5-brand.md
+// for the crop offsets). Junior stage until the sim grows an age.
+const lastKidMatchWon = computed<boolean | null>(() => {
+  const events = game.snapshot?.events
+  if (!events) return null
+  for (let i = events.length - 1; i >= 0; i--) {
+    const match = events[i].match
+    if (match) return match.winnerId === KID_ID
+  }
+  return null
+})
+const avatarUrl = computed(() => {
+  const stage = lastKidMatchWon.value === true ? 'happy' : lastKidMatchWon.value === false ? 'sad' : 'norm'
+  return `${import.meta.env.BASE_URL}avatars/jun-${stage}.webp`
+})
 
 onMounted(() => game.init())
 

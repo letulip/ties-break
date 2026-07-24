@@ -259,7 +259,16 @@ function toggleSound(): void {
     <h2>Sound</h2>
     <div class="career-row">
       <div>Sound effects</div>
-      <button @click="toggleSound">{{ soundMuted ? 'Off' : 'On' }}</button>
+      <button
+        class="sound-switch"
+        :class="{ on: !soundMuted }"
+        role="switch"
+        :aria-checked="!soundMuted"
+        @click="toggleSound"
+      >
+        <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
+        <span class="sound-switch-label">{{ soundMuted ? 'OFF' : 'ON' }}</span>
+      </button>
     </div>
   </section>
 

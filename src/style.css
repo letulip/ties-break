@@ -1,3 +1,31 @@
+/* Round 5 item 32: self-hosted type pair – Sora (headings) + Manrope (body).
+   Files under public/fonts/ (curl'd from Google Fonts/gstatic, latin subset only);
+   precached automatically – the workbox glob already covers woff2. font-display:
+   swap + system fallbacks so text never blocks on the download. */
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/sora-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/manrope-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/manrope-500.woff2') format('woff2');
+}
+
 :root {
   --bg: #0f172a;
   --panel: #16213c;
@@ -6,6 +34,8 @@
   --muted: #7d8db0;
   --accent: #d9f24f;
   --danger: #f2664f;
+  --font-heading: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: dark;
 }
 
@@ -17,7 +47,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font: 15px/1.45 var(--font-body);
 }
 
 #app {
@@ -27,6 +57,7 @@ body {
 }
 
 h1 {
+  font-family: var(--font-heading);
   font-size: 20px;
   margin: 0 0 4px;
 }
@@ -53,6 +84,7 @@ section {
 }
 
 section h2 {
+  font-family: var(--font-heading);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -223,6 +255,7 @@ input[type='text'] {
 }
 
 .score-line {
+  font-family: var(--font-heading);
   font-size: 18px;
   font-weight: 600;
   text-align: center;
@@ -419,6 +452,7 @@ input[type='text'] {
 }
 
 .onboarding-step h2 {
+  font-family: var(--font-heading);
   font-size: 17px;
   margin: 4px 0 16px;
 }
@@ -431,6 +465,24 @@ input[type='text'] {
 
 .onboarding-actions {
   margin-top: 16px;
+}
+
+/* Round 5 item 30: finale-step portrait, above the summary table. */
+.onboarding-portrait {
+  display: block;
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0 auto 8px;
+  border: 1px solid var(--line);
+}
+
+.onboarding-portrait-caption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 16px;
 }
 
 .onboarding-nav {
@@ -1215,6 +1267,15 @@ tr.kid-row td {
   border-color: var(--accent);
 }
 
+/* Round 5 item 11: silver-styled fallback for a lost final (see docs/specs/round5-brand.md
+   for why a dedicated silver artwork isn't shipped here) – gradient ring, no accent gold. */
+.tf-finale.silver {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    linear-gradient(135deg, #f4f6fa, #aab2c0 45%, #7d8698 55%, #f4f6fa) border-box;
+}
+
 .tf-finale-title {
   font-size: 18px;
   font-weight: 700;
@@ -1223,6 +1284,10 @@ tr.kid-row td {
 
 .tf-finale.champ .tf-finale-title {
   color: var(--accent);
+}
+
+.tf-finale.silver .tf-finale-title {
+  color: #d7dbe4;
 }
 
 .tf-finale-points {
@@ -1256,6 +1321,117 @@ tr.kid-row td {
 
 .tf-path-row:not(.won) {
   color: var(--muted);
+}
+
+/* --- Round 5 -------------------------------------------------------------------- */
+
+/* item 2: an event whose entry window has closed (muted, non-actionable). */
+.pill.muted {
+  color: var(--muted);
+  border-color: var(--line);
+  opacity: 0.85;
+}
+
+/* item 7: the ellipsis row between the top-10 block and the around-kid block. */
+.standings-gap td {
+  text-align: center;
+  color: var(--muted);
+  letter-spacing: 0.2em;
+  padding: 2px 0;
+}
+
+/* item 8: news match rows — "V. Martin vs S. Everts" over the kid-perspective score. */
+.nm-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.nm-players {
+  font-weight: 600;
+}
+
+.nm-score {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* item 9: player rank shown under the name in the post-match stats header. */
+.ph-name {
+  display: block;
+}
+
+.ph-rank {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* item 1b: the counting-results total row. */
+.counting-total th,
+.counting-total td {
+  border-top: 1px solid var(--line);
+  font-weight: 600;
+}
+
+/* item 5: the More-screen sound switch (two-state ON/OFF). */
+.sound-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 4px 0;
+  cursor: pointer;
+  color: var(--muted);
+  font: inherit;
+}
+
+.sound-switch-track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.sound-switch-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.sound-switch.on .sound-switch-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.sound-switch.on .sound-switch-knob {
+  transform: translateX(20px);
+  background: var(--bg);
+}
+
+.sound-switch-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  min-width: 2.2em;
+  text-align: left;
+}
+
+.sound-switch.on .sound-switch-label {
+  color: var(--accent);
 }
 
 /* --- Round 5: date subtitle, splash, full draw ------------------------------- */

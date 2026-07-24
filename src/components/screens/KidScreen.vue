@@ -2,6 +2,8 @@
 // Package I – Kid tab: portrait + profile table + a Phase 4 placeholder.
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
+import { TIERS } from '../../engine/season/calendar'
+import type { TierId } from '../../engine/season/types'
 import type { CoachSetup, FamilyBackground, PlayStyle } from '../../shared/protocol'
 
 const game = useGameStore()
@@ -49,13 +51,29 @@ const countryDisplay = computed(() => {
 const backgroundLabel = computed(() => (game.snapshot ? BACKGROUND_LABEL[game.snapshot.profile.background] : ''))
 const coachingLabel = computed(() => (game.snapshot ? COACH_LABEL[game.snapshot.profile.coachSetup] : ''))
 const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.snapshot.profile.playStyle] : ''))
+
+// --- Counting results (round-5 item 1b): the kid's best-6, 52-week window. Its point
+// total equals the standings points, so the ranking stops looking like a bug. --
+const countingResults = computed(() => game.snapshot?.countingResults ?? [])
+const countingTotal = computed(() => countingResults.value.reduce((sum, c) => sum + c.points, 0))
+function tierLabel(tier?: TierId): string {
+  return tier ? TIERS[tier].label : '–'
+}
 </script>
 
 <template>
   <template v-if="game.snapshot">
     <section>
       <h2>Kid</h2>
-      <img class="kid-portrait" :src="portraitUrl" :alt="kidName" loading="lazy" />
+      <img
+        class="kid-portrait"
+        :src="portraitUrl"
+        :alt="kidName"
+        width="512"
+        height="512"
+        decoding="async"
+        loading="lazy"
+      />
       <table style="margin-top: 12px">
         <tbody>
           <tr>
@@ -80,6 +98,37 @@ const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.sna
           </tr>
         </tbody>
       </table>
+    </section>
+
+    <section>
+      <h2>Counting results (best 6)</h2>
+      <p class="hint" style="margin-top: 0">
+        Your rank counts your six best results from the last 52 weeks – this total is your ranking points.
+      </p>
+      <table v-if="countingResults.length">
+        <thead>
+          <tr>
+            <th>Week</th>
+            <th>Tier</th>
+            <th>Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(c, i) in countingResults" :key="i">
+            <td class="num">W{{ c.week }}</td>
+            <td>{{ tierLabel(c.tier) }}</td>
+            <td class="num">{{ c.points }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="counting-total">
+            <th>Total</th>
+            <td></td>
+            <td class="num">{{ countingTotal }}</td>
+          </tr>
+        </tfoot>
+      </table>
+      <p v-else class="hint">No counted results yet – enter a tournament to earn ranking points.</p>
     </section>
 
     <section>

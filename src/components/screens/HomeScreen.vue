@@ -7,6 +7,8 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
 import { weekRange } from '../../shared/dates'
+import { formatShortName } from '../../shared/format'
+import { KID_ID, flipScore } from '../../engine/world'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
 
@@ -53,6 +55,28 @@ const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() =>
   return now < prev ? { dir: 'up', by: prev - now } : { dir: 'down', by: now - prev }
 })
 const kidPoints = computed(() => game.snapshot?.standings.find((r) => r.isKid)?.points ?? 0)
+
+// --- Condition bar (round-5 item 3): 10 segments, classic red→yellow→green gradient.
+// Static 8/10 placeholder until Phase 4 wires the real value (title stays "Phase 4"). --
+const CONDITION_SEGMENTS = 10
+const CONDITION_FILLED = 8
+function conditionColor(i: number): string {
+  const hue = ((i - 1) / (CONDITION_SEGMENTS - 1)) * 120 // 0 = red … 120 = green
+  return `hsl(${Math.round(hue)}, 72%, 48%)`
+}
+
+// --- News match rows (round-5 item 8): "V. Martin vs S. Everts" / kid-perspective score.
+const kidShort = computed(() => {
+  const p = game.snapshot?.profile
+  return p ? formatShortName(`${p.kidName} ${p.kidLastName}`) : ''
+})
+function oppShort(m: WorldMatch): string {
+  return formatShortName(m.oppName)
+}
+function kidScoreOf(m: WorldMatch): string {
+  if (!m.score) return ''
+  return m.bId === KID_ID ? flipScore(m.score) : m.score
+}
 
 // --- Coach's eye: one flavor line per playStyle (static, owner-approved copy) --
 const COACH_QUOTES: Record<PlayStyle, string> = {
@@ -178,7 +202,13 @@ function openReplay(e: WorldEvent): void {
             <th>Condition</th>
             <td>
               <div class="condition-blocks" title="Phase 4">
-                <span v-for="i in 5" :key="i" class="condition-block" :class="{ filled: i <= 4 }"></span>
+                <span
+                  v-for="i in CONDITION_SEGMENTS"
+                  :key="i"
+                  class="condition-block"
+                  :class="{ filled: i <= CONDITION_FILLED }"
+                  :style="i <= CONDITION_FILLED ? { background: conditionColor(i) } : undefined"
+                ></span>
               </div>
             </td>
           </tr>
@@ -243,8 +273,11 @@ function openReplay(e: WorldEvent): void {
               <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">
                 <td v-if="e.type === 'match' && e.match" class="news-match-cell">
                   <button class="news-match-btn" @click="openReplay(e)">
-                    <span>{{ EVENT_EMOJI[e.type] }} {{ e.text }}</span>
-                    <span class="watch-cue">Watch ▶</span>
+                    <span class="nm-lines">
+                      <span class="nm-players">{{ kidShort }} vs {{ oppShort(e.match) }}</span>
+                      <span class="nm-score num">{{ kidScoreOf(e.match) }}</span>
+                    </span>
+                    <span class="watch-cue">Watch</span>
                   </button>
                 </td>
                 <td v-else>{{ EVENT_EMOJI[e.type] }} {{ e.text }}</td>

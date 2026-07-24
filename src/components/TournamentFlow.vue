@@ -22,6 +22,11 @@ const game = useGameStore()
 const base = import.meta.env.BASE_URL
 const HAPPY_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-happy-fs8.webp`
 const SAD_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-sad-fs8.webp`
+// Round 5 item 11: a programmatic gold->silver desaturation of jun-happy (sharp
+// hue/saturation masking on the trophy) came out patchy/inconsistent on inspection –
+// not shipping it (see docs/specs/round5-brand.md). Fallback: the runner-up finale
+// reuses the "serious" (focused, composed) art + a silver-styled card frame instead
+// of a dedicated artwork.
 const SERIOUS_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-serious-fs8.webp`
 const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
 
@@ -44,11 +49,22 @@ const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
 // --- Round 5 item 6: pre-tournament splash ------------------------------------
 const drawSize = computed(() => (pending.value ? TIERS[pending.value.tier].drawSize : 0))
 
+// Round 5 item 11 fallback: lost the final => silver-styled card, serious art, "Runner-up".
+const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
+const finalePortrait = computed(() => {
+  if (pending.value?.kidChampion) return HAPPY_ART
+  if (isRunnerUp.value) return SERIOUS_ART
+  return SAD_ART
+})
+
 // --- flow state --------------------------------------------------------------
 const phase = ref<'splash' | 'pre' | 'post' | 'finale'>('splash')
 // The record currently being presented – captured from the pre-match snapshot so the post-match
 // card keeps it even after the reveal has advanced the pending pointer to the next round.
 const currentMatch = ref<WorldMatch | null>(null)
+// The current opponent's rank, captured at pre-match time (before the reveal advances the pending
+// pointer to the NEXT round's opponent). Shown under the opponent's name in the post-match stats.
+const currentOppRank = ref<number | null>(null)
 const replayOpen = ref(false)
 // True when the replay was opened from a pre-match card (finishing it advances to the result).
 const replayAdvances = ref(false)
@@ -57,6 +73,7 @@ function enterPre(): void {
   phase.value = 'pre'
   replayOpen.value = false
   currentMatch.value = pending.value?.kidMatch ?? null
+  currentOppRank.value = pending.value?.opponent.rank ?? null
 }
 
 function beginFromSplash(): void {
@@ -119,6 +136,11 @@ const kidScore = computed(() => {
   return m.bId === KID_ID ? flipScore(m.score) : m.score
 })
 const oppName = computed(() => currentMatch.value?.oppName ?? '')
+// Short name on both sides for the caption + stats header (round-5 item 9).
+const oppShort = computed(() => (oppName.value ? formatShortName(oppName.value) : ''))
+// Ranks routed into the inline MatchViewer, mapped to its A/B sides by which side the kid took.
+const viewerRankA = computed<number | null>(() => (kidSide.value === 0 ? kidRank.value : currentOppRank.value))
+const viewerRankB = computed<number | null>(() => (kidSide.value === 0 ? currentOppRank.value : kidRank.value))
 
 interface StatRow {
   label: string
@@ -272,6 +294,8 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
           :player-a="currentMatch.a"
           :player-b="currentMatch.b"
           :surface="currentMatch.surface"
+          :rank-a="viewerRankA"
+          :rank-b="viewerRankB"
           @finish="endReplay"
         />
       </section>
@@ -302,13 +326,19 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
           <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
           <span class="tf-scoreline num">{{ kidScore }}</span>
         </div>
-        <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppName }}</p>
+        <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }}</p>
         <table>
           <thead>
             <tr>
               <th></th>
-              <th>{{ kidShort }}</th>
-              <th>{{ oppName }}</th>
+              <th>
+                <span class="ph-name">{{ kidShort }}</span>
+                <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
+              </th>
+              <th>
+                <span class="ph-name">{{ oppShort }}</span>
+                <span v-if="currentOppRank != null" class="ph-rank">#{{ currentOppRank }}</span>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -327,9 +357,14 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
       </section>
 
       <!-- Finale -->
-      <section v-else class="tf-card tf-finale" :class="pending.kidChampion ? 'champ' : 'out'">
+      <section
+        v-else
+        class="tf-card tf-finale"
+        :class="pending.kidChampion ? 'champ' : isRunnerUp ? 'silver' : 'out'"
+      >
         <div v-if="pending.kidChampion" class="tf-trophy">🏆</div>
-        <img class="tf-portrait" :src="pending.kidChampion ? HAPPY_ART : SAD_ART" alt="" />
+        <div v-else-if="isRunnerUp" class="tf-trophy">🥈</div>
+        <img class="tf-portrait" :src="finalePortrait" alt="" />
         <p class="tf-finale-title">
           {{ pending.kidChampion ? `Champion – ${pending.tierLabel}!` : pending.finishLabel }}
         </p>

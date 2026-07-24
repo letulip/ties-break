@@ -64,12 +64,13 @@ const calendarRows = computed<CalendarRow[]>(() => {
   return rows
 })
 
-// Enter is hidden (swapped for Withdraw) once entered, so the only disable
-// reasons an Enter button itself needs are deadline and funds.
-function disableReason(e: UpcomingEvent): string | null {
-  if (week.value > e.deadlineWeek) return 'Entries closed'
-  if (fundsCents.value < e.entryFeeCents) return 'Not enough funds'
-  return null
+// A passed deadline swaps the Enter button for a muted "Entries closed" pill (round-5
+// item 2); an open event only ever disables Enter for insufficient funds.
+function entriesClosed(e: UpcomingEvent): boolean {
+  return week.value > e.deadlineWeek
+}
+function fundsShort(e: UpcomingEvent): boolean {
+  return fundsCents.value < e.entryFeeCents
 }
 
 // --- one shared confirm-popup slot (mirrors MoreScreen's pattern) ------------
@@ -201,19 +202,21 @@ function playExhibition(): void {
               </div>
               <div class="controls" style="margin-top: 12px">
                 <button
-                  v-if="!row.event.entered"
-                  class="primary"
-                  :disabled="!!disableReason(row.event) || game.busy"
-                  @click="askEnter(row.event)"
+                  v-if="row.event.entered"
+                  :disabled="week > row.event.deadlineWeek || game.busy"
+                  @click="askWithdraw(row.event)"
                 >
-                  Enter
-                </button>
-                <button v-else :disabled="week > row.event.deadlineWeek || game.busy" @click="askWithdraw(row.event)">
                   Withdraw
                 </button>
-                <span v-if="!row.event.entered && disableReason(row.event)" class="hint" style="margin: 0">
-                  {{ disableReason(row.event) }}
+                <span v-else-if="entriesClosed(row.event)" class="pill muted">
+                  Entries closed W{{ row.event.deadlineWeek }}
                 </span>
+                <template v-else>
+                  <button class="primary" :disabled="fundsShort(row.event) || game.busy" @click="askEnter(row.event)">
+                    Enter
+                  </button>
+                  <span v-if="fundsShort(row.event)" class="hint" style="margin: 0">Not enough funds</span>
+                </template>
               </div>
             </div>
             <div v-else class="calendar-row-muted" :class="{ 'off-season': row.kind === 'off-season' }">
@@ -241,6 +244,8 @@ function playExhibition(): void {
           :player-a="exhibitionPlayerA"
           :player-b="exhibitionPlayerB"
           :surface="exhibitionSurface"
+          :rank-a="kidRank"
+          :rank-b="null"
           mode="live"
         />
       </section>
@@ -258,17 +263,21 @@ function playExhibition(): void {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="r in standings" :key="r.playerId" :class="{ 'kid-row': r.isKid }">
-              <td class="num">{{ r.rank }}</td>
-              <td>{{ formatShortName(r.name) }}</td>
-              <td class="num">{{ r.points }}</td>
-            </tr>
+            <template v-for="(r, i) in standings" :key="r.playerId">
+              <tr v-if="i > 0 && r.rank > standings[i - 1].rank + 1" class="standings-gap">
+                <td colspan="3">…</td>
+              </tr>
+              <tr :class="{ 'kid-row': r.isKid }">
+                <td class="num">{{ r.rank }}</td>
+                <td>{{ formatShortName(r.name) }}</td>
+                <td class="num">{{ r.points }}</td>
+              </tr>
+            </template>
           </tbody>
         </table>
         <p class="hint">Your rank: #{{ kidRank }}</p>
       </section>
     </template>
-
     <ConfirmDialog
       v-if="pendingConfirm"
       :message="pendingConfirm.message"
