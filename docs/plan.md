@@ -97,6 +97,8 @@ iOS install prompt flow (7-day ITP warning for Safari-tab users), 3+ rotating au
 ### Phase 8 — Content, balance, polish (L, ongoing)
 Name/nation pools, world calendar breadth, EN copy pass, onboarding, difficulty tuning via batch-sim harness (thousands of careers overnight → survival/ranking distributions), procedural player portraits (faces.js-style), sound, juice.
 
+Rounds 4–5 ✅ (2026-07-23/24, owner-driven polish after live playtests; specs round4-*/round5-*/tournament-experience): foreground tournament flow with match stats and finale arcs, sound (owner's recordings, cut to 10 sfx), careers + save generations, real dates + off-season, best-6 transparency, brand identity (owner's logo, Sora/Manrope), full life-arc art set. Next: Phase 4 — development (skills, age curves, Condition mechanics, radar fog-of-war, plan presets with teeth, RAE birth month; revisit shadow-bracket + early rank milestones).
+
 ### Owner-approved additions (2026-07-22 Q&A, see decisions.md)
 Career profiles + new save model (Package K, before Phase 3 data). Structured events feeding News/Money/Gallery. Month fast-forward with event stops. Viz polish mini-package. Fog-of-war radar (Ph4). Relative-age-effect birth month (Ph4/6). Mom/dad choice (Ph6). Moments gallery (Ph6). Weather (Ph3/4 backlog). Replay storage (~100 B each) + share links. Spacing pass (next UI package).
 
