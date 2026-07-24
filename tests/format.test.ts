@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { formatShortName } from '../src/shared/format'
+import { formatShortName, rankLabel } from '../src/shared/format'
 
 describe('formatShortName', () => {
   it('turns "First Last" into "F. Last"', () => {
@@ -17,5 +17,17 @@ describe('formatShortName', () => {
 
   it('trims and tolerates stray whitespace', () => {
     expect(formatShortName('  Lena  Novak  ')).toBe('L. Novak')
+  })
+})
+
+describe('rankLabel', () => {
+  it("shows 'Unranked' until she has a counting result", () => {
+    expect(rankLabel(1, false)).toBe('Unranked')
+    expect(rankLabel(150, false)).toBe('Unranked')
+  })
+
+  it("shows '#N' once she's ranked", () => {
+    expect(rankLabel(1, true)).toBe('#1')
+    expect(rankLabel(42, true)).toBe('#42')
   })
 })

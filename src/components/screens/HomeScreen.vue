@@ -8,7 +8,7 @@ import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
 import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
-import { formatShortName } from '../../shared/format'
+import { formatShortName, rankLabel } from '../../shared/format'
 import { KID_ID, flipScore } from '../../engine/world'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
@@ -53,6 +53,9 @@ function dismissRecap(): void {
 
 // --- Player-card snapshot: real rank, week-over-week movement, season points ----
 const kidRank = computed(() => game.snapshot?.kidRank ?? null)
+// 'Unranked' until she's earned a counting result (see rankLabel): a point-less kid isn't
+// really ranked, so we don't flash a misleading '#1' on a brand-new career.
+const ranked = computed(() => (game.snapshot?.countingResults.length ?? 0) > 0)
 const prevKidRank = computed(() => game.snapshot?.prevKidRank ?? null)
 // Rank goes UP when the number goes DOWN. null prev (or no change) shows a neutral dash.
 const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
@@ -256,18 +259,20 @@ function openRankHelp(): void {
             <th>Junior rank</th>
             <td>
               <div class="rank-row">
-                <span class="rank-value">#{{ kidRank ?? '–' }}</span>
-                <span
-                  v-if="rankMovement.dir === 'up'"
-                  class="rank-move up"
-                  :title="`Up ${rankMovement.by} since last week`"
-                >↑{{ rankMovement.by }}</span>
-                <span
-                  v-else-if="rankMovement.dir === 'down'"
-                  class="rank-move down"
-                  :title="`Down ${rankMovement.by} since last week`"
-                >↓{{ rankMovement.by }}</span>
-                <span v-else class="rank-move flat" title="No change">–</span>
+                <span class="rank-value">{{ rankLabel(kidRank ?? 0, ranked) }}</span>
+                <template v-if="ranked">
+                  <span
+                    v-if="rankMovement.dir === 'up'"
+                    class="rank-move up"
+                    :title="`Up ${rankMovement.by} since last week`"
+                  >↑{{ rankMovement.by }}</span>
+                  <span
+                    v-else-if="rankMovement.dir === 'down'"
+                    class="rank-move down"
+                    :title="`Down ${rankMovement.by} since last week`"
+                  >↓{{ rankMovement.by }}</span>
+                  <span v-else class="rank-move flat" title="No change">–</span>
+                </template>
                 <!-- round-7 item 5a: the "?" sits at the very END of the row (flex spacer). -->
                 <button class="rank-help-btn" aria-label="How ranking points work" title="How ranking points work" @click="openRankHelp">?</button>
               </div>

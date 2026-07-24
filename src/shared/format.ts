@@ -12,3 +12,10 @@ export function formatShortName(fullName: string): string {
   if (!last) return first
   return `${first.charAt(0)}. ${last}`
 }
+
+/** The kid's rank for display: 'Unranked' until she's earned a counting result, else '#N'.
+ *  A point-less kid dense-ranks near the TOP only because ties at 0 collapse — she isn't really
+ *  ranked yet, so the headline rank reads 'Unranked' rather than a misleading '#1'. */
+export function rankLabel(kidRank: number, hasResults: boolean): string {
+  return hasResults ? `#${kidRank}` : 'Unranked'
+}
