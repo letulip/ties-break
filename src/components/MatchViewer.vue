@@ -11,6 +11,7 @@ import { buildTimeline, computeEndsSwaps, type EndsState } from '../viz/timeline
 import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
 import { initSfx, playSfx } from '../audio/sfx'
+import { formatShortName } from '../shared/format'
 
 const props = withDefaults(
   defineProps<{
@@ -327,12 +328,8 @@ function playerName(side: Side): string {
 }
 
 // --- round 4 item 1: server-highlight labels row, on the players' CURRENT sides ----
-// Short name = the full name if it's already short, else its first word – a cosmetic
-// truncation rule invented here (the engine has no first/last-name split); see
-// docs/specs/round4-viz.md §1.
-function shortName(name: string): string {
-  return name.length <= 12 ? name : name.split(' ')[0]
-}
+// Name truncation is the shared formatShortName ("First Last" -> "F. Last"); see
+// docs/specs/round4-viz.md §1 for the row's origin.
 const leftSide = computed<Side>(() => (endsSwappedRef.value ? 1 : 0))
 const rightSide = computed<Side>(() => (endsSwappedRef.value ? 0 : 1))
 
@@ -390,10 +387,10 @@ function servePct(side: Side): number {
 
     <div class="ends-labels">
       <span :class="{ serving: liveServer === leftSide }">
-        {{ shortName(playerName(leftSide)) }}{{ liveServer === leftSide ? ' · serving' : '' }}
+        {{ formatShortName(playerName(leftSide)) }}{{ liveServer === leftSide ? ' · serving' : '' }}
       </span>
       <span :class="{ serving: liveServer === rightSide }">
-        {{ shortName(playerName(rightSide)) }}{{ liveServer === rightSide ? ' · serving' : '' }}
+        {{ formatShortName(playerName(rightSide)) }}{{ liveServer === rightSide ? ' · serving' : '' }}
       </span>
     </div>
 

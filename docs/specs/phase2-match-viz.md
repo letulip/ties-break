@@ -58,6 +58,11 @@ Side A's probability of winning the match from an arbitrary in-progress `MatchSc
 
 ## Package E — playback timeline + court renderer
 
+> **Superseded:** the court is landscape since round-4 (see `docs/specs/round4-viz.md`
+> §"Pre-existing spec conflict found"); the coordinate mapping below reflects the
+> original portrait design and was never updated to match. Left as a historical record,
+> not rewritten.
+
 Files: `src/viz/timeline.ts`, `src/viz/geometry.ts`, `src/viz/courtRenderer.ts`, `tests/viz/timeline.test.ts`, `tests/viz/geometry.test.ts`.
 
 ### timeline.ts (pure, fully testable)

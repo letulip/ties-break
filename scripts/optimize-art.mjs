@@ -10,7 +10,7 @@
 //
 // Idempotent: once sources are moved, a re-run finds nothing to do. Run: npm run art
 import sharp from 'sharp'
-import { readdirSync, statSync, mkdirSync, renameSync, existsSync } from 'node:fs'
+import { readdirSync, statSync, mkdirSync, renameSync, existsSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join, relative, extname } from 'node:path'
 
@@ -37,43 +37,83 @@ function walkRaster(dir) {
 const sources = ART_DIRS.flatMap(walkRaster)
 if (!sources.length) {
   console.log('optimize-art: no PNG/JPEG sources under public/images or public/avatars — nothing to do.')
-  process.exit(0)
-}
-
-// Group sources by the webp target they produce, so a jpeg+png pair collapses to one target.
-const byTarget = new Map()
-for (const src of sources) {
-  const target = src.replace(RASTER_RE, '.webp')
-  const list = byTarget.get(target) ?? []
-  list.push(src)
-  byTarget.set(target, list)
-}
-
-// jpeg beats png for the same target (smaller); ties within a format keep first-seen order.
-const isJpeg = (p) => /\.jpe?g$/i.test(extname(p))
-function preferred(list) {
-  return list.find(isJpeg) ?? list[0]
-}
-
-let converted = 0
-for (const [webp, list] of byTarget) {
-  const chosen = preferred(list)
-  await sharp(chosen)
-    .resize(MAX_SIDE, MAX_SIDE, { fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: QUALITY })
-    .toFile(webp)
-  converted++
-  const chosenRel = relative(publicDir, chosen)
-  const dropped = list.filter((s) => s !== chosen).map((s) => relative(publicDir, s))
-  console.log(`webp  ${relative(publicDir, webp)}  <- ${chosenRel}${dropped.length ? `  (preferred over ${dropped.join(', ')})` : ''}`)
-
-  // Move every source for this target into art-src/, mirroring its path relative to public/.
-  for (const src of list) {
-    const rel = relative(publicDir, src)
-    const dest = join(artSrcDir, rel)
-    mkdirSync(dirname(dest), { recursive: true })
-    renameSync(src, dest)
+} else {
+  // Group sources by the webp target they produce, so a jpeg+png pair collapses to one target.
+  const byTarget = new Map()
+  for (const src of sources) {
+    const target = src.replace(RASTER_RE, '.webp')
+    const list = byTarget.get(target) ?? []
+    list.push(src)
+    byTarget.set(target, list)
   }
+
+  // jpeg beats png for the same target (smaller); ties within a format keep first-seen order.
+  const isJpeg = (p) => /\.jpe?g$/i.test(extname(p))
+  function preferred(list) {
+    return list.find(isJpeg) ?? list[0]
+  }
+
+  let converted = 0
+  for (const [webp, list] of byTarget) {
+    const chosen = preferred(list)
+    await sharp(chosen)
+      .resize(MAX_SIDE, MAX_SIDE, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality: QUALITY })
+      .toFile(webp)
+    converted++
+    const chosenRel = relative(publicDir, chosen)
+    const dropped = list.filter((s) => s !== chosen).map((s) => relative(publicDir, s))
+    console.log(`webp  ${relative(publicDir, webp)}  <- ${chosenRel}${dropped.length ? `  (preferred over ${dropped.join(', ')})` : ''}`)
+
+    // Move every source for this target into art-src/, mirroring its path relative to public/.
+    for (const src of list) {
+      const rel = relative(publicDir, src)
+      const dest = join(artSrcDir, rel)
+      mkdirSync(dirname(dest), { recursive: true })
+      renameSync(src, dest)
+    }
+  }
+
+  console.log(`optimize-art: ${converted} webp target(s) (<= ${MAX_SIDE}px, q${QUALITY}); sources moved to art-src/.`)
 }
 
-console.log(`optimize-art: ${converted} webp target(s) (<= ${MAX_SIDE}px, q${QUALITY}); sources moved to art-src/.`)
+// Full life-arc set: the owner drops finished jpgs straight into art-src (they're kept there
+// for re-encoding anyway, so there's no public/ round-trip to move them out of). Every jpg
+// under art-src/images/fem-euro-brunnet-jpeg/ gets a matching clean-named webp in
+// public/images/fem-euro-brunnet/ — no "-fs8" suffix. The older PNG-era webps for this
+// character (the small jun/teen/young/adult/milf subset) keep their "-fs8" suffix and are
+// left untouched here; code still points at them. Idempotent: sources never move, so re-runs
+// just re-encode.
+const LIFE_ARC_SRC = join(artSrcDir, 'images/fem-euro-brunnet-jpeg')
+const LIFE_ARC_OUT = join(publicDir, 'images/fem-euro-brunnet')
+const MAX_WEBP_BYTES = 120 * 1024
+const QUALITY_STEPS = [82, 79, 76, 75] // task calls for q75-82; first step that fits <=120KB wins
+
+if (existsSync(LIFE_ARC_SRC)) {
+  mkdirSync(LIFE_ARC_OUT, { recursive: true })
+  let lifeArcConverted = 0
+  for (const name of readdirSync(LIFE_ARC_SRC)) {
+    if (!RASTER_RE.test(name)) continue
+    const src = join(LIFE_ARC_SRC, name)
+    const base = name.replace(RASTER_RE, '')
+    const target = join(LIFE_ARC_OUT, `${base}.webp`)
+
+    let buf, q
+    for (q of QUALITY_STEPS) {
+      buf = await sharp(src)
+        .resize(MAX_SIDE, MAX_SIDE, { fit: 'inside', withoutEnlargement: true })
+        .webp({ quality: q })
+        .toBuffer()
+      if (buf.length <= MAX_WEBP_BYTES) break
+    }
+    if (buf.length > MAX_WEBP_BYTES) {
+      console.warn(`optimize-art: WARNING ${base}.webp still ${(buf.length / 1024).toFixed(1)}KB at quality floor ${QUALITY_STEPS.at(-1)}`)
+    }
+    writeFileSync(target, buf)
+    lifeArcConverted++
+    console.log(`webp  images/fem-euro-brunnet/${base}.webp  <- art-src/images/fem-euro-brunnet-jpeg/${name}  (q${q}, ${(buf.length / 1024).toFixed(1)}KB)`)
+  }
+  console.log(`optimize-art: life-arc set — ${lifeArcConverted} webp(s) written to images/fem-euro-brunnet/ (clean names, <=${MAX_WEBP_BYTES / 1024}KB, q75-82).`)
+} else {
+  console.log('optimize-art: no art-src/images/fem-euro-brunnet-jpeg/ — life-arc set skipped.')
+}
