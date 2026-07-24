@@ -83,6 +83,10 @@ export interface WorldEvent {
   keep?: boolean
   /** stable key for idempotent milestone firing (e.g. 'first-title', 'rank-10') */
   milestoneKey?: string
+  /** present on `tournament` summary events: the kid's finish index for that run
+   *  (0 = champion), so the year-end wrap-up (Round 5 item 16/21) can read the
+   *  season's best result straight off the event log – no extra persisted state. */
+  finishIdx?: number
 }
 
 export type StopReason = 'tournament' | 'deadline' | 'funds'
@@ -95,6 +99,21 @@ export interface PendingBracketRound {
   oppName: string
   kidWon: boolean
   /** kid's-perspective scoreline, e.g. "6-4 3-6 7-6" */
+  score?: string
+}
+
+/** One match in the FULL draw view (Round 5 item 5) – every match of a revealed round,
+ *  not just the kid's. AI-vs-AI matches never carry a `score` (they resolve from a single
+ *  closed-form probability draw, no point-by-point sim), so it stays undefined for those. */
+export interface FullBracketMatch {
+  round: number
+  roundLabel: string
+  aId: string
+  bId: string
+  aName: string
+  bName: string
+  winnerId: string
+  /** kid-vs-anyone matches only; AI-AI matches have no simulated scoreline */
   score?: string
 }
 
@@ -113,6 +132,8 @@ export interface PendingView {
   kidMatch?: WorldMatch
   /** revealed rounds so far, the kid's path (oldest first) */
   bracket: PendingBracketRound[]
+  /** every match (all players) from every round revealed so far, round order (Round 5 item 5) */
+  fullBracket: FullBracketMatch[]
   /** true once the last kid match has been revealed and the run finalized */
   finished: boolean
   kidChampion: boolean

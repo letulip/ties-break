@@ -1,24 +1,52 @@
-// Round 4 item 5 – sound framework. The owner uploads the real mp3s later; this module
+// Round 4 item 5 – sound framework. Round 5: rewired for the owner's own recordings
+// (see the README in public/sounds/ for provenance + the manifest table). The module
 // must work correctly with zero files present (silent no-op, no console spam) and
-// upgrade transparently the moment files land in public/sounds/ (see the README there).
+// upgrade transparently the moment files land in public/sounds/.
 //
 // Contract:
 //  - `initSfx()` must be called once from a REAL user gesture (a click handler) before
 //    any sound plays – never on component mount. Until then, `playSfx` is a pure no-op,
 //    which is what keeps the app's very first (auto-started) match watch-through silent
 //    instead of trying to autoplay audio the browser would block anyway.
-//  - Each key is lazy-loaded on its first `playSfx` call, not eagerly for all 7 up front.
+//  - A key's manifest value is either a single file or an array of variant files; a key
+//    with variants picks one uniformly at random on each `playSfx` call (Math.random is
+//    fine here – this is UI polish, not game-engine RNG, so it doesn't need to be seeded).
+//  - Each file is lazy-loaded on its first actual use, not eagerly for every key/variant
+//    up front.
 //  - A missing/failing file is remembered (never retried, never logged) so the app stays
-//    silent-but-functional with an empty public/sounds/ directory.
+//    silent-but-functional with an empty public/sounds/ directory, or with only some
+//    variants of a key present.
 //  - `muted` persists to localStorage and can be read/written any time – it never
 //    touches an <audio> element, so the More screen's toggle works before initSfx().
 
-export type SfxKey = 'hit' | 'bounce' | 'point' | 'game' | 'set' | 'win' | 'click' | 'grunt' | 'out' | 'gasp'
+export type SfxKey =
+  | 'hit'
+  | 'out'
+  | 'ooh'
+  | 'oohApplause'
+  | 'applauseShort'
+  | 'applauseFinal'
+  | 'takeYourSeats'
+  | 'click'
+
+/** Key -> filename(s) in public/sounds/ (without the .mp3 extension). A key with
+ *  multiple variants plays one at random each time (see `pickFile`). */
+const MANIFEST: Record<SfxKey, string | string[]> = {
+  hit: ['hit-1', 'hit-2', 'hit-3', 'hit-4', 'hit-5', 'hit-6', 'hit-7', 'hit-8', 'hit-9'],
+  out: 'out',
+  ooh: 'ooh',
+  oohApplause: 'ooh-applause',
+  applauseShort: ['applause-short-1', 'applause-short-2'],
+  applauseFinal: 'applause-final',
+  takeYourSeats: 'take-your-seats',
+  click: 'click',
+}
 
 const VOLUME = 0.5
 // Per-key volume overrides. The app-wide UI `click` is deliberately quiet so it reads as a
-// tap, not a match cue (round-5 item 6).
-const KEY_VOLUME: Partial<Record<SfxKey, number>> = { click: 0.25 }
+// tap, not a match cue (round-5 item 6). `takeYourSeats` is a longer spoken/crowd cue at
+// playback start and is likewise dialed down so it doesn't jar against the match sfx.
+const KEY_VOLUME: Partial<Record<SfxKey, number>> = { click: 0.25, takeYourSeats: 0.35 }
 const MUTED_STORAGE_KEY = 'tb-muted'
 
 function readMuted(): boolean {
@@ -40,15 +68,27 @@ function writeMuted(value: boolean): void {
 let muted = readMuted()
 let audioEnabled = false // flips true on the first initSfx() call, from a real click handler
 
-/** Every key that has 404'd (or otherwise failed) once – never retried, never logged. */
-const failed = new Set<SfxKey>()
-/** Successfully-probed keys, cached so repeat plays skip the existence check entirely. */
-const cache = new Map<SfxKey, HTMLAudioElement>()
-/** In-flight existence probes, so rapid repeat calls for the same not-yet-resolved key don't pile up fetches. */
-const pending = new Map<SfxKey, Promise<HTMLAudioElement | null>>()
+/** Every file that has 404'd (or otherwise failed) once – never retried, never logged. */
+const failed = new Set<string>()
+/** Successfully-probed files, cached so repeat plays skip the existence check entirely. */
+const cache = new Map<string, HTMLAudioElement>()
+/** In-flight existence probes, so rapid repeat calls for the same not-yet-resolved file don't pile up fetches. */
+const pending = new Map<string, Promise<HTMLAudioElement | null>>()
 
-function urlFor(key: SfxKey): string {
-  return `${import.meta.env.BASE_URL}sounds/${key}.mp3`
+function variantsFor(key: SfxKey): string[] {
+  const v = MANIFEST[key]
+  return Array.isArray(v) ? v : [v]
+}
+
+/** Picks one file for this key, uniformly at random across its variants (a single-file
+ *  key trivially "picks" its only file). */
+function pickFile(key: SfxKey): string {
+  const files = variantsFor(key)
+  return files[Math.floor(Math.random() * files.length)]
+}
+
+function urlFor(file: string): string {
+  return `${import.meta.env.BASE_URL}sounds/${file}.mp3`
 }
 
 /**
@@ -62,34 +102,34 @@ function urlFor(key: SfxKey): string {
  * (serving index.html) instead of a real 404 – treating any `res.ok` as "found" would
  * silently hand a broken HTML "audio" file to <audio> and try to play it.
  */
-async function probe(key: SfxKey): Promise<HTMLAudioElement | null> {
-  const url = urlFor(key)
+async function probe(file: string, key: SfxKey): Promise<HTMLAudioElement | null> {
+  const url = urlFor(file)
   try {
     const res = await fetch(url, { method: 'HEAD', cache: 'no-store' })
     const contentType = res.headers.get('content-type') ?? ''
     if (!res.ok || !contentType.startsWith('audio/')) {
-      failed.add(key)
+      failed.add(file)
       return null
     }
   } catch {
-    failed.add(key)
+    failed.add(file)
     return null
   }
   const audio = new Audio(url)
   audio.volume = KEY_VOLUME[key] ?? VOLUME
   audio.preload = 'auto'
-  cache.set(key, audio)
+  cache.set(file, audio)
   return audio
 }
 
-function loadAudio(key: SfxKey): Promise<HTMLAudioElement | null> {
-  const cached = cache.get(key)
+function loadAudio(file: string, key: SfxKey): Promise<HTMLAudioElement | null> {
+  const cached = cache.get(file)
   if (cached) return Promise.resolve(cached)
-  if (failed.has(key)) return Promise.resolve(null)
-  let inFlight = pending.get(key)
+  if (failed.has(file)) return Promise.resolve(null)
+  let inFlight = pending.get(file)
   if (!inFlight) {
-    inFlight = probe(key).finally(() => pending.delete(key))
-    pending.set(key, inFlight)
+    inFlight = probe(file, key).finally(() => pending.delete(file))
+    pending.set(file, inFlight)
   }
   return inFlight
 }
@@ -108,20 +148,23 @@ export function setMuted(value: boolean): void {
   writeMuted(value)
 }
 
-/** Fire-and-forget playback. Silent no-op before initSfx(), while muted, or for a key
- *  that has failed to load (missing file, decode error, ...). */
+/** Fire-and-forget playback. Silent no-op before initSfx(), while muted, or for a file
+ *  that has failed to load (missing file, decode error, ...) – if the picked variant has
+ *  failed, this call is simply silent rather than falling back to another variant. */
 export function playSfx(key: SfxKey): void {
-  if (!audioEnabled || muted || failed.has(key)) return
-  loadAudio(key)
+  if (!audioEnabled || muted) return
+  const file = pickFile(key)
+  if (failed.has(file)) return
+  loadAudio(file, key)
     .then((audio) => {
       if (!audio || muted) return
       audio.currentTime = 0
       audio.play().catch(() => {
-        failed.add(key)
+        failed.add(file)
       })
     })
     .catch(() => {
-      failed.add(key)
+      failed.add(file)
     })
 }
 

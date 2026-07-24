@@ -4,17 +4,20 @@
 // round by round: a VS pre-match card (watch or skip), a post-match box score, a between-rounds
 // path strip, and a champion/eliminated finale. The result is already committed by the engine –
 // this is presentation (Q&A 12), never a re-decision.
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import MatchViewer from './MatchViewer.vue'
+import { playSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { computeMatchStats } from '../engine/match/matchStats'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
+import { TIERS } from '../engine/season/calendar'
 import { KID_ID, flipScore } from '../engine/world'
 import { formatShortName } from '../shared/format'
+import { weekRange } from '../shared/dates'
 import type { MatchOptions, Side } from '../engine/match/types'
-import type { WorldMatch } from '../shared/protocol'
+import type { FullBracketMatch, WorldMatch } from '../shared/protocol'
 
 const game = useGameStore()
 const base = import.meta.env.BASE_URL
@@ -40,6 +43,13 @@ const kidShort = computed(() =>
 )
 const kidFlag = computed(() => flagEmoji(profile.value?.country ?? ''))
 const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
+// Snapshot.week stays pinned to the event's own week for the whole reveal (tickWeek never
+// advances again while paused), so this doubles as the tournament's real date range.
+const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
+
+// --- Round 5 item 6: pre-tournament splash ------------------------------------
+const drawSize = computed(() => (pending.value ? TIERS[pending.value.tier].drawSize : 0))
+
 // Round 5 item 11 fallback: lost the final => silver-styled card, serious art, "Runner-up".
 const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
 const finalePortrait = computed(() => {
@@ -49,7 +59,7 @@ const finalePortrait = computed(() => {
 })
 
 // --- flow state --------------------------------------------------------------
-const phase = ref<'pre' | 'post' | 'finale'>('pre')
+const phase = ref<'splash' | 'pre' | 'post' | 'finale'>('splash')
 // The record currently being presented – captured from the pre-match snapshot so the post-match
 // card keeps it even after the reveal has advanced the pending pointer to the next round.
 const currentMatch = ref<WorldMatch | null>(null)
@@ -59,6 +69,15 @@ const currentOppRank = ref<number | null>(null)
 const replayOpen = ref(false)
 // True when the replay was opened from a pre-match card (finishing it advances to the result).
 const replayAdvances = ref(false)
+// Round-5 sound rewiring: was the round just revealed actually watched through MatchViewer
+// (which already plays its own match-end cue), or skipped straight to the result card (no
+// match-end cue ever played)? Read once, when the finale screen first shows, to decide
+// whether the champion finale needs to supply its own applauseFinal.
+const lastRoundWatched = ref(false)
+// True only for the round currently being presented being the tournament final – routed into
+// the embedded MatchViewer so its match-end cue is the bigger `applauseFinal`, not the regular
+// short applause used for every other round.
+const isFinalRound = computed(() => pending.value?.roundLabel === 'Final')
 
 function enterPre(): void {
   phase.value = 'pre'
@@ -67,13 +86,21 @@ function enterPre(): void {
   currentOppRank.value = pending.value?.opponent.rank ?? null
 }
 
-// Initialise from the snapshot: resume at the finale after a reload mid-celebration.
+function beginFromSplash(): void {
+  enterPre()
+}
+
+// Initialise from the snapshot: resume at the finale after a reload mid-celebration, resume
+// mid-round if a round is already revealed, otherwise this is the FIRST time the flow has
+// opened for this tournament -> show the splash first (item 6).
 if (pending.value?.finished) phase.value = 'finale'
+else if (pending.value && pending.value.bracket.length === 0) phase.value = 'splash'
 else enterPre()
 
-async function showResult(): Promise<void> {
+async function showResult(watched: boolean): Promise<void> {
   if (phase.value !== 'pre') return
   replayOpen.value = false
+  lastRoundWatched.value = watched
   await game.tournamentReveal()
   phase.value = 'post'
 }
@@ -88,7 +115,7 @@ function watchAgain(): void {
 }
 function endReplay(): void {
   replayOpen.value = false
-  if (replayAdvances.value) showResult()
+  if (replayAdvances.value) showResult(true)
 }
 
 function next(): void {
@@ -104,6 +131,25 @@ async function skipAll(): Promise<void> {
 async function continueFinale(): Promise<void> {
   await game.tournamentClose()
 }
+
+// Round-5 sound rewiring: the champion finale gets its own celebratory applauseFinal, but
+// only when the final round wasn't watched through MatchViewer (which already played that
+// cue at its own match-end) – e.g. the player hit "Skip" on the final's pre-match card.
+// `{ immediate: true }` also covers resuming straight into an already-finished tournament
+// (reload mid-celebration): the fired-once guard still applies, so this plays at most once
+// per mount either way. Note: if the final was skipped and then re-watched via "Watch
+// again" from the post-match card, this still fires (lastRoundWatched only reflects the
+// showResult call) – an acceptable double applause in that edge case, per spec.
+let finaleSoundPlayed = false
+watch(
+  phase,
+  (p) => {
+    if (p !== 'finale' || finaleSoundPlayed) return
+    finaleSoundPlayed = true
+    if (pending.value?.kidChampion && !lastRoundWatched.value) playSfx('applauseFinal')
+  },
+  { immediate: true },
+)
 
 // --- current match: rebuilt annotated match + box score ----------------------
 const annotated = computed(() => {
@@ -154,6 +200,46 @@ const matchMeta = computed(() => {
   const s = computeMatchStats(a, m.a, m.b)
   return { rally: s.meanRallyLength.toFixed(1), duration: s.durationEstimate }
 })
+
+// --- Round 5 item 5: full draw of every revealed round --------------------------
+const showFullDraw = ref(false)
+// Conventional "Winner d. Loser 6-4 ..." reading: world.ts already normalises `score` to the
+// WINNER's perspective, so this just reorders the two names to match (draw side a/b order
+// carries no meaning to the player – who actually won does).
+interface FullDrawMatch {
+  winnerId: string
+  winnerName: string
+  loserName: string
+  score?: string
+  isKidMatch: boolean
+}
+interface FullDrawRound {
+  round: number
+  label: string
+  matches: FullDrawMatch[]
+}
+function toDrawMatch(m: FullBracketMatch): FullDrawMatch {
+  const winnerIsA = m.winnerId === m.aId
+  return {
+    winnerId: m.winnerId,
+    winnerName: winnerIsA ? m.aName : m.bName,
+    loserName: winnerIsA ? m.bName : m.aName,
+    score: m.score,
+    isKidMatch: m.aId === KID_ID || m.bId === KID_ID,
+  }
+}
+const fullDrawRounds = computed<FullDrawRound[]>(() => {
+  const matches = pending.value?.fullBracket ?? []
+  const byRound = new Map<number, FullBracketMatch[]>()
+  for (const m of matches) {
+    const list = byRound.get(m.round)
+    if (list) list.push(m)
+    else byRound.set(m.round, [m])
+  }
+  return [...byRound.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([round, list]) => ({ round, label: list[0].roundLabel, matches: list.map(toDrawMatch) }))
+})
 </script>
 
 <template>
@@ -163,25 +249,71 @@ const matchMeta = computed(() => {
         <div class="tf-title">{{ pending.tierLabel }}</div>
         <div class="tf-sub">
           <span class="pill">{{ SURFACE_EMOJI[pending.surface] }} {{ pending.surface }}</span>
+          <span class="hint tf-week-dates">{{ weekDates }}</span>
         </div>
       </div>
-      <button v-if="!pending.finished && phase !== 'finale'" class="link" :disabled="game.busy" @click="skipAll">
+      <button
+        v-if="!pending.finished && phase !== 'finale' && phase !== 'splash'"
+        class="link"
+        :disabled="game.busy"
+        @click="skipAll"
+      >
         Skip tournament →
       </button>
     </header>
 
     <div class="tf-body">
-      <!-- Path so far -->
-      <div v-if="pending.bracket.length" class="tf-strip">
-        <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
-          <span class="tf-strip-round">{{ r.roundLabel }}</span>
-          <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
-          <span class="tf-strip-opp">{{ r.oppName }}</span>
-          <span class="tf-strip-score num">{{ r.score }}</span>
+      <!-- Round 5 item 6: pre-tournament splash, the flow's very first screen -->
+      <section v-if="phase === 'splash'" class="tf-card tf-splash">
+        <img class="tf-portrait" :src="SERIOUS_ART" alt="" />
+        <p class="tf-splash-tier">{{ pending.tierLabel }}</p>
+        <div class="controls" style="justify-content: center; margin-top: 4px">
+          <span class="pill">{{ SURFACE_EMOJI[pending.surface] }} {{ pending.surface }}</span>
+          <span class="pill">Draw of {{ drawSize }}</span>
+          <span class="pill">{{ drawSize }} entrants</span>
         </div>
-      </div>
+        <p class="hint" style="margin-top: 8px">{{ weekDates }}</p>
+        <div class="tf-actions">
+          <button class="primary" :disabled="game.busy" @click="beginFromSplash">Begin →</button>
+        </div>
+      </section>
 
-      <!-- Watching a replay (inline) -->
+      <template v-else>
+        <!-- Path so far -->
+        <div v-if="pending.bracket.length" class="tf-strip">
+          <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
+            <span class="tf-strip-round">{{ r.roundLabel }}</span>
+            <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
+            <span class="tf-strip-opp">{{ r.oppName }}</span>
+            <span class="tf-strip-score num">{{ r.score }}</span>
+          </div>
+        </div>
+
+        <!-- Round 5 item 5: the full draw of every round revealed so far, collapsible -->
+        <section v-if="fullDrawRounds.length" class="tf-card tf-fulldraw">
+          <button class="tf-fulldraw-toggle" @click="showFullDraw = !showFullDraw">
+            <span>Full draw</span>
+            <span>{{ showFullDraw ? '▲' : '▼' }}</span>
+          </button>
+          <div v-if="showFullDraw" class="tf-fulldraw-body">
+            <div v-for="grp in fullDrawRounds" :key="grp.round" class="tf-fulldraw-round">
+              <p class="tf-fulldraw-round-label">{{ grp.label }}</p>
+              <div
+                v-for="(m, i) in grp.matches"
+                :key="i"
+                class="tf-fulldraw-match"
+                :class="{ 'kid-match': m.isKidMatch }"
+              >
+                <span class="won">{{ m.winnerName }}</span>
+                <span class="tf-fulldraw-vs">d.</span>
+                <span>{{ m.loserName }}</span>
+                <span v-if="m.score" class="num tf-fulldraw-score">{{ m.score }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Watching a replay (inline) -->
       <section v-if="replayOpen && annotated && currentMatch" class="tf-card">
         <div class="tf-card-head">
           <span class="pill">{{ pending.roundLabel }}</span>
@@ -194,6 +326,7 @@ const matchMeta = computed(() => {
           :surface="currentMatch.surface"
           :rank-a="viewerRankA"
           :rank-b="viewerRankB"
+          :final-match="isFinalRound"
           @finish="endReplay"
         />
       </section>
@@ -214,7 +347,7 @@ const matchMeta = computed(() => {
         </div>
         <div class="tf-actions">
           <button class="primary" :disabled="game.busy" @click="watchMatch">Watch match</button>
-          <button :disabled="game.busy" @click="showResult">Skip</button>
+          <button :disabled="game.busy" @click="showResult(false)">Skip</button>
         </div>
       </section>
 
@@ -278,6 +411,7 @@ const matchMeta = computed(() => {
           <button class="primary" :disabled="game.busy" @click="continueFinale">Continue</button>
         </div>
       </section>
+      </template>
     </div>
   </div>
 </template>

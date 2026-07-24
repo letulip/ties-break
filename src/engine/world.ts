@@ -4,6 +4,7 @@ import {
   WEEK_PLAN_PRESETS,
   type CountingResult,
   type FamilyBackground,
+  type FullBracketMatch,
   type PendingBracketRound,
   type PendingView,
   type PlayerProfile,
@@ -16,9 +17,10 @@ import {
   type WorldMatch,
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
+import { weekYear } from '../shared/dates'
 import type { MatchPlayer } from './match/types'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TournamentResult } from './season/types'
-import { TIERS, buildSeason } from './season/calendar'
+import { TIERS, buildSeason, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
 import { generateCohort, driftCohort } from './season/cohort'
 import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament } from './season/tournament'
@@ -194,6 +196,10 @@ function eventById(world: WorldState, id: string): SeasonEvent | undefined {
 // SEASON_MIN_FUTURE weeks ahead are scheduled, then drop resolved (past) weeks and
 // any entries pointing at events that no longer lie in the future.
 export function ensureSeason(world: WorldState): void {
+  // Round 5 item 23: notify the player when a NEW block of the calendar appears –
+  // but not for the very first block a career/migration ever generates (nothing to
+  // be "new" about a calendar the player has never seen yet).
+  const hadSeason = world.season.length > 0
   const horizonChunk = Math.floor((world.week + SEASON_MIN_FUTURE) / SEASON_CHUNK)
   let maxWeek = world.week
   for (const e of world.season) if (e.week > maxWeek) maxWeek = e.week
@@ -202,6 +208,7 @@ export function ensureSeason(world: WorldState): void {
     coveredChunk++
     const start = coveredChunk * SEASON_CHUNK
     world.season.push(...buildSeason(`${world.seed}:s${coveredChunk}`, start, SEASON_CHUNK))
+    if (hadSeason) addEvent(world, { week: world.week, type: 'info', text: 'New events on the calendar' })
   }
   world.season = world.season.filter((e) => e.week >= world.week).sort((a, b) => a.week - b.week)
   const future = new Set(world.season.filter((e) => e.week > world.week).map((e) => e.id))
@@ -231,6 +238,66 @@ function fireRankMilestones(world: WorldState): void {
       fireMilestone(world, `rank-${t}`, t === 1 ? 'World #1! 🏆' : `Broke into the world top ${t}!`)
     }
   }
+}
+
+// --- season wrap-up (Round 5 items 16/21) ------------------------------------
+// Fires once, the moment the world ticks into a season year's first off-season week
+// (see calendar.ts's isOffSeasonWeek). Everything is read back off the EXISTING
+// results/events ledgers for the just-finished year – no new persisted state:
+//  - season points / best finish / W-L: results + tournament/match events in range.
+//  - rank vs season start: results ledger replayed at the year's first week (still
+//    inside the 52-week ranking window, so nothing has been pruned away yet).
+//  - funds delta: signed amountCents on expense/income events in range (a flavor
+//    figure, not the audit trail – MoneyScreen's ledger stays authoritative).
+function maybeFireSeasonWrapUp(world: WorldState): void {
+  if (world.week % WEEKS_PER_YEAR !== WEEKS_PER_YEAR - OFF_SEASON_WEEKS) return
+  const year = Math.floor(world.week / WEEKS_PER_YEAR)
+  const yearStart = year * WEEKS_PER_YEAR
+  const wrapWeek = world.week
+
+  const inRange = (w: number) => w >= yearStart && w < wrapWeek
+
+  const seasonPoints = world.results
+    .filter((r) => r.playerId === KID_ID && inRange(r.week))
+    .reduce((sum, r) => sum + r.points, 0)
+
+  let bestFinish: number | null = null
+  let wins = 0
+  let losses = 0
+  for (const e of world.events) {
+    if (!inRange(e.week)) continue
+    if (e.type === 'tournament' && e.finishIdx !== undefined) {
+      if (bestFinish === null || e.finishIdx < bestFinish) bestFinish = e.finishIdx
+    } else if (e.type === 'match' && e.match) {
+      if (e.match.winnerId === KID_ID) wins++
+      else losses++
+    }
+  }
+
+  const fundsDeltaCents = world.events
+    .filter((e) => inRange(e.week) && e.amountCents !== undefined)
+    .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
+
+  const startRanking = computeRanking(world.results, yearStart, [...cohortIds(world), KID_ID])
+  const startRank = startRanking.find((r) => r.playerId === KID_ID)?.rank ?? null
+  const rankMove =
+    startRank === null || startRank === world.kidRank
+      ? ''
+      : startRank > world.kidRank
+        ? ` (↑${startRank - world.kidRank} vs season start)`
+        : ` (↓${world.kidRank - startRank} vs season start)`
+
+  const bestText = bestFinish === null ? 'no tournaments played' : `best ${finishLabel(bestFinish)}`
+  const fundsSign = fundsDeltaCents >= 0 ? '+' : '-'
+  const fundsText = `${fundsSign}$${Math.abs(Math.round(fundsDeltaCents / 100)).toLocaleString('en-US')}`
+
+  fireMilestone(
+    world,
+    `season-wrap-${year}`,
+    `Season ${weekYear(yearStart)} wrap-up: rank #${world.kidRank}${rankMove} · ${seasonPoints} pts this season · ` +
+      `${bestText} · ${wins}-${losses} (W-L) · funds ${fundsText}`,
+  )
+  addEvent(world, { week: world.week, type: 'info', text: 'Off-season: rest, school, family time.' })
 }
 
 // --- finish / stage labels ---------------------------------------------------
@@ -416,6 +483,7 @@ function finalizeTournament(world: WorldState): void {
     text:
       `${tier.label} (${event.surface}, W${event.week}): ${world.profile.kidName} – ` +
       `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before)}`,
+    finishIdx: kidFinish,
   })
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
   if (
@@ -593,6 +661,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   if (!world.pendingTournament) {
     recomputeRankAndMilestones(world)
     housekeep(world)
+    maybeFireSeasonWrapUp(world)
   }
 }
 
@@ -736,6 +805,14 @@ function computeStandings(world: WorldState): StandingRow[] {
   return out
 }
 
+// Any id -> short display name, for anyone who could appear in a bracket (kid or AI),
+// not just the kid's own opponents (unlike `players`, which only snapshots those).
+function playerShortName(world: WorldState, id: string): string {
+  if (id === KID_ID) return formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+  const ai = world.cohort.find((c) => c.id === id)
+  return formatShortName(ai?.name ?? id)
+}
+
 // The live view of an in-progress reveal (drives TournamentFlow). Lean: the revealed path, the
 // current round's opponent + record, and the finale copy. Scorelines belong to the record and are
 // never shown by the UI before a match has been watched/skipped.
@@ -757,6 +834,29 @@ function pendingView(world: WorldState): PendingView | undefined {
       score: m.score && m.bId === KID_ID ? flipScore(m.score) : m.score,
     }
   })
+
+  // Round 5 item 5: the FULL draw (every match, every player) for every round revealed so
+  // far – the kid's matches are always rounds 0..revealed-1 (single elim, she plays every
+  // round until eliminated), so that also bounds which OTHER matches are safe to reveal.
+  // `score` is always normalised to the WINNER's perspective (conventional "W d. L 6-4 ..."
+  // reading) regardless of which bracket side (a/b) actually won – MatchRecord stores it
+  // from side A's perspective, so it only needs flipping when B won.
+  const maxRevealedRound = revealed - 1
+  const fullBracket: FullBracketMatch[] =
+    maxRevealedRound < 0
+      ? []
+      : p.result.matches
+          .filter((m) => m.round <= maxRevealedRound)
+          .map((m) => ({
+            round: m.round,
+            roundLabel: stageLabel(m.round, tier.drawSize),
+            aId: m.aId,
+            bId: m.bId,
+            aName: playerShortName(world, m.aId),
+            bName: playerShortName(world, m.bId),
+            winnerId: m.winnerId,
+            score: m.score && m.winnerId === m.bId ? flipScore(m.score) : m.score,
+          }))
 
   // The round being presented: the next unrevealed match, or (finished) the last one played.
   const currentIdx = revealed < kidMatches.length ? revealed : kidMatches.length - 1
@@ -780,6 +880,7 @@ function pendingView(world: WorldState): PendingView | undefined {
     // Only expose a record to watch while there is still an unrevealed round.
     kidMatch: revealed < kidMatches.length ? kidMatchEvent(world, event, current, p.players).match : undefined,
     bracket,
+    fullBracket,
     finished: p.finished,
     kidChampion: kidFinish === 0,
     tierLabel: tier.label,

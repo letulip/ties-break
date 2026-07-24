@@ -6,9 +6,11 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
+import { weekRange } from '../../shared/dates'
 import { formatShortName } from '../../shared/format'
 import { KID_ID, flipScore } from '../../engine/world'
 import MatchReplay from '../MatchReplay.vue'
+import WeekRecapCard from '../WeekRecapCard.vue'
 
 const game = useGameStore()
 const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.webp`
@@ -21,6 +23,26 @@ function flagEmoji(code: string): string {
 const kidName = computed(() => game.snapshot?.profile.kidName ?? '')
 const flag = computed(() => flagEmoji(game.snapshot?.profile.country ?? ''))
 const ageYears = computed(() => game.snapshot?.ageYears ?? 0)
+const week = computed(() => game.snapshot?.week ?? 0)
+const weekDates = computed(() => weekRange(week.value))
+
+// --- Round 5 item 9 (light): a dismissible week-recap card, shown after a non-tournament
+// week resolves. Keyed by week number so it re-appears fresh every week without extra state.
+const hasTournamentEventThisWeek = computed(() =>
+  (game.snapshot?.events ?? []).some((e) => e.type === 'tournament' && e.week === week.value),
+)
+const dismissedRecapWeek = ref<number | null>(null)
+const showRecap = computed(
+  () =>
+    !!game.snapshot &&
+    week.value > 0 &&
+    !hasTournamentEventThisWeek.value &&
+    !game.snapshot.pending &&
+    dismissedRecapWeek.value !== week.value,
+)
+function dismissRecap(): void {
+  dismissedRecapWeek.value = week.value
+}
 
 // --- Player-card snapshot: real rank, week-over-week movement, season points ----
 const kidRank = computed(() => game.snapshot?.kidRank ?? null)
@@ -210,6 +232,7 @@ function openReplay(e: WorldEvent): void {
 
     <section>
       <h2>This week</h2>
+      <p class="hint" style="margin: 0 0 8px">{{ weekDates }}</p>
       <div class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">
           {{ nearestEntered.label }} · {{ nearestEntered.surface }} · W{{ nearestEntered.week }}
@@ -236,6 +259,8 @@ function openReplay(e: WorldEvent): void {
         <span class="negative num">${{ spendRange[0] }}–${{ spendRange[1] }}</span>
       </div>
     </section>
+
+    <WeekRecapCard v-if="showRecap" @dismiss="dismissRecap" />
 
     <section>
       <h2>News</h2>

@@ -102,6 +102,19 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 **Nothing is ever committed or pushed to `main` by Claude/agents.** All work happens on feature branches (`feat/…`, `fix/…`, `chore/…`); after the architect gate, the owner reviews and merges the PR himself. `main` = production (Pages deploys on push to main), so the owner's merge IS the release. `ci.yml` runs tests+build on every PR so review starts from a green check.
 
+## 2026-07-23/24 – Round 5 (owner playtest to W53, 37 items)
+
+- **"Points bug" was best-6 opacity**, not math: summary events now show the effective ranking delta; Kid screen lists the six counting results; regression tests replicate the owner's exact numbers.
+- Career's first event ≥ W3 (no born-closed deadlines). Off-season = last 3 weeks of each year (maps to Dec 15–Jan 4 of the real-date epoch, career start Mon Jan 6, 2031) with a Season wrap-up milestone.
+- **Sound was globally mute**: the audio unlock was gated on the viewer Play button while matches autoplay; unlock now arms on the first click anywhere. Quiet app-wide button clicks (vol 0.25).
+- Tournament flow: pre-splash on serious art, full-draw view (winner-first scores), champion/runner-up(silver-framed serious)/eliminated finales; MatchViewer live mode drops Restart.
+- **App identity: the owner's logo** (girl's face close-up) replaces the ball across all PWA icons — "мы не теннис, а сторител про девчушку". Typography: Sora headings / Manrope body, self-hosted.
+- Header avatar mirrors her state (win→happy, loss→sad, else norm) until Condition exists (Phase 4).
+- Class-flavored weekly costs v1 (working: no video analysis, ×0.8; wealthy: physio/massage, ×1.25) — full economy rework stays Phase 5. Parent income added earlier in the round (800/450/200 per week).
+- Owner shipped the FULL life-arc art: jun/teen/young/adult/milf × emotions + bride/funeral/graduated/retired/farewell (35 jpeg sources in art-src; all served as webp).
+- Balance snapshot at W53: working $953, middle $12.9k, wealthy $128k (+8k/yr — needs a sink). **Accepted direction**: academy invitation (~$55k/yr) as the wealthy sink; scholarship-chance event for working/middle after a strong season with a hard family choice (Phase 5).
+- Backlog additions: player-uuid friendly exchange (offline PvP), vacations as a class differentiator affecting recovery (Phase 4/5), relationship/trust UI (Phase 6), attend-vs-watch-on-TV parenting mechanic — shouts only work in person, "кричите в телевизор сколько хотите – её там не слышно" (Phase 6), equipment wear line-items (Phase 5).
+
 **Fairness principle (brand-level)**
 - Never rig outcomes against the player. The reference game's most damaging reviews are about pay-to-win rubber-banding ("if you pay, you win"). Transparent, deterministic-ish sim math is a marketing feature.
 

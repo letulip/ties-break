@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { TIERS, buildSeason } from '../../src/engine/season/calendar'
+import { TIERS, buildSeason, isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 
 function countByTier(events: SeasonEvent[]): Record<TierId, number> {
@@ -132,6 +132,44 @@ describe('buildSeason — surface weighting', () => {
   })
 })
 
+describe('isOffSeasonWeek — Round 5 items 16/21', () => {
+  it('flags exactly the last 3 weeks of year 0 (weeks 49, 50, 51)', () => {
+    for (let w = 0; w < 49; w++) expect(isOffSeasonWeek(w)).toBe(false)
+    expect(isOffSeasonWeek(49)).toBe(true)
+    expect(isOffSeasonWeek(50)).toBe(true)
+    expect(isOffSeasonWeek(51)).toBe(true)
+    expect(isOffSeasonWeek(52)).toBe(false) // year 1 begins fresh
+  })
+
+  it('repeats every WEEKS_PER_YEAR weeks (every season year gets the same 3-week gap)', () => {
+    for (let year = 0; year < 5; year++) {
+      const base = year * WEEKS_PER_YEAR
+      for (let off = 0; off < WEEKS_PER_YEAR - OFF_SEASON_WEEKS; off++) {
+        expect(isOffSeasonWeek(base + off)).toBe(false)
+      }
+      for (let off = WEEKS_PER_YEAR - OFF_SEASON_WEEKS; off < WEEKS_PER_YEAR; off++) {
+        expect(isOffSeasonWeek(base + off)).toBe(true)
+      }
+    }
+  })
+})
+
+describe('buildSeason — off-season carries no events (Round 5 items 16/21)', () => {
+  it('never places an event in an off-season week, over many seeds/years', () => {
+    for (let year = 0; year < 6; year++) {
+      for (let s = 0; s < 10; s++) {
+        const events = buildSeason(`off-${year}-${s}`, year * 52, 52)
+        for (const e of events) expect(isOffSeasonWeek(e.week)).toBe(false)
+      }
+    }
+  })
+
+  it('tier counts are unaffected by the reserved off-season weeks', () => {
+    const events = buildSeason('off-counts', 0, 52)
+    expect(countByTier(events)).toEqual({ local: 26, regional: 13, national: 4, itf: 0 })
+  })
+})
+
 describe("buildSeason — a career's first season never opens already-closed (round-5 item 2)", () => {
   it('places no first-block event before week 3, so every entry deadline is >= 1', () => {
     // Many seeds: the earliest event must never carry a deadline in the past at week 0.
@@ -150,8 +188,7 @@ describe("buildSeason — a career's first season never opens already-closed (ro
 
   it('does NOT floor later year-blocks (they already start at 52, 104, …)', () => {
     const events = buildSeason('later', 52, 52)
-    expect(Math.min(...events.map((e) => e.week))).toBeGreaterThanOrEqual(52)
-  })
+    expect(Math.min(...events.map((e) => e.week))).toBeGreaterThanOrEqual(52)  })
 })
 
 describe('buildSeason — offset spans', () => {
