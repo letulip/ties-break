@@ -53,6 +53,9 @@ const phase = ref<'pre' | 'post' | 'finale'>('pre')
 // The record currently being presented – captured from the pre-match snapshot so the post-match
 // card keeps it even after the reveal has advanced the pending pointer to the next round.
 const currentMatch = ref<WorldMatch | null>(null)
+// The current opponent's rank, captured at pre-match time (before the reveal advances the pending
+// pointer to the NEXT round's opponent). Shown under the opponent's name in the post-match stats.
+const currentOppRank = ref<number | null>(null)
 const replayOpen = ref(false)
 // True when the replay was opened from a pre-match card (finishing it advances to the result).
 const replayAdvances = ref(false)
@@ -61,6 +64,7 @@ function enterPre(): void {
   phase.value = 'pre'
   replayOpen.value = false
   currentMatch.value = pending.value?.kidMatch ?? null
+  currentOppRank.value = pending.value?.opponent.rank ?? null
 }
 
 // Initialise from the snapshot: resume at the finale after a reload mid-celebration.
@@ -116,6 +120,11 @@ const kidScore = computed(() => {
   return m.bId === KID_ID ? flipScore(m.score) : m.score
 })
 const oppName = computed(() => currentMatch.value?.oppName ?? '')
+// Short name on both sides for the caption + stats header (round-5 item 9).
+const oppShort = computed(() => (oppName.value ? formatShortName(oppName.value) : ''))
+// Ranks routed into the inline MatchViewer, mapped to its A/B sides by which side the kid took.
+const viewerRankA = computed<number | null>(() => (kidSide.value === 0 ? kidRank.value : currentOppRank.value))
+const viewerRankB = computed<number | null>(() => (kidSide.value === 0 ? currentOppRank.value : kidRank.value))
 
 interface StatRow {
   label: string
@@ -183,6 +192,8 @@ const matchMeta = computed(() => {
           :player-a="currentMatch.a"
           :player-b="currentMatch.b"
           :surface="currentMatch.surface"
+          :rank-a="viewerRankA"
+          :rank-b="viewerRankB"
           @finish="endReplay"
         />
       </section>
@@ -213,13 +224,19 @@ const matchMeta = computed(() => {
           <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
           <span class="tf-scoreline num">{{ kidScore }}</span>
         </div>
-        <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppName }}</p>
+        <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }}</p>
         <table>
           <thead>
             <tr>
               <th></th>
-              <th>{{ kidShort }}</th>
-              <th>{{ oppName }}</th>
+              <th>
+                <span class="ph-name">{{ kidShort }}</span>
+                <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
+              </th>
+              <th>
+                <span class="ph-name">{{ oppShort }}</span>
+                <span v-if="currentOppRank != null" class="ph-rank">#{{ currentOppRank }}</span>
+              </th>
             </tr>
           </thead>
           <tbody>

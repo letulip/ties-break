@@ -6,6 +6,7 @@ import {
   enterEvent,
   withdrawEvent,
   skipTournament,
+  toSnapshot,
   KID_ID,
   PARENT_INCOME_CENTS,
   type WorldState,
@@ -64,6 +65,17 @@ describe('entry validation', () => {
     world.fundsCents = 10 // 10 cents — below any tier's entry fee
     const event = firstEnterable(world)
     expect(() => enterEvent(world, event.id)).toThrow(/funds/i)
+  })
+
+  it('a fresh career has no already-closed event at week 0 (round-5 item 2)', () => {
+    for (const seed of ['fresh-a', 'fresh-b', 'fresh-c']) {
+      const world = createWorld(seed)
+      expect(world.week).toBe(0)
+      for (const e of world.season) {
+        expect(e.deadlineWeek).toBeGreaterThanOrEqual(1)
+        expect(world.week).toBeLessThanOrEqual(e.deadlineWeek) // still enterable at start
+      }
+    }
   })
 })
 
@@ -145,6 +157,75 @@ describe('a tournament week the kid entered', () => {
     expect(world.results.some((r) => r.playerId === KID_ID && r.week === event.week)).toBe(true)
     // and AI results for the same event landed too (the canonical field always plays)
     expect(world.results.some((r) => r.playerId !== KID_ID && r.week === event.week)).toBe(true)
+  })
+})
+
+describe('class-flavored expenses (round-5 item 10)', () => {
+  it('working swaps the video-session line for a public-courts clinic', () => {
+    const world = createWorld('flavor-working', { ...DEFAULT_PROFILE, background: 'working' })
+    world.plan = { train: 85, rest: 15 } // train-heavy → train flavor list
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 200; i++) tickWeek(world, rng)
+    const flavors = world.events.filter((e) => e.type === 'expense').map((e) => e.text)
+    expect(flavors).not.toContain('Video session: studying her last matches')
+    expect(flavors).toContain('Group clinic at the public courts')
+  })
+
+  it('wealthy adds premium recovery lines to the rest pool', () => {
+    const world = createWorld('flavor-wealthy', { ...DEFAULT_PROFILE, background: 'wealthy' })
+    world.plan = { train: 60, rest: 40 } // rest-heavy → rest flavor list
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 300; i++) tickWeek(world, rng)
+    const flavors = new Set(world.events.filter((e) => e.type === 'expense').map((e) => e.text))
+    expect(flavors.has('Physio session') || flavors.has('Massage & recovery')).toBe(true)
+  })
+
+  it('scales the base expense by background (working < middle < wealthy) for the same draw', () => {
+    const baseCost = (background: 'working' | 'middle' | 'wealthy') => {
+      const w = createWorld('bg-cost', { ...DEFAULT_PROFILE, background })
+      const rng = rngFromSeed(w.seed)
+      tickWeek(w, rng)
+      // no entries → the only week-1 expense event is the base cost
+      const ev = w.events.find((e) => e.type === 'expense' && e.week === 1)!
+      return -ev.amountCents!
+    }
+    expect(baseCost('working')).toBeLessThan(baseCost('middle'))
+    expect(baseCost('middle')).toBeLessThan(baseCost('wealthy'))
+  })
+
+  it('cohort drift + AI results are identical across backgrounds (RNG discipline extended)', () => {
+    const run = (background: 'working' | 'wealthy') => {
+      const w = createWorld('bg-discipline', { ...DEFAULT_PROFILE, background })
+      const rng = rngFromSeed(w.seed)
+      for (let i = 0; i < 60; i++) tickWeek(w, rng)
+      return w
+    }
+    const working = run('working')
+    const wealthy = run('wealthy')
+    // Background only changes funds/flavor text – never the main-stream draw sequence.
+    expect(working.cohort).toEqual(wealthy.cohort)
+    expect(working.results.filter((r) => r.playerId !== KID_ID)).toEqual(
+      wealthy.results.filter((r) => r.playerId !== KID_ID),
+    )
+  })
+})
+
+describe('kid counting-results transparency (round-5 item 1b)', () => {
+  it('exposes the best-6 counted results whose points sum equals the standings points', () => {
+    const world = createWorld('counting')
+    const rng = rngFromSeed(world.seed)
+    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+    enterEvent(world, event.id)
+    while (world.week < event.week) tickWeek(world, rng)
+    skipTournament(world)
+    const snap = toSnapshot(world)
+    expect(snap.countingResults.length).toBeGreaterThanOrEqual(1)
+    // each counted kid result carries the tier it was earned at (new r5 field)
+    expect(snap.countingResults.every((c) => typeof c.tier === 'string')).toBe(true)
+    // the list sum equals the kid's standings points (the whole point of the transparency)
+    const kidStanding = snap.standings.find((row) => row.isKid)!
+    const sum = snap.countingResults.reduce((s, c) => s + c.points, 0)
+    expect(sum).toBe(kidStanding.points)
   })
 })
 

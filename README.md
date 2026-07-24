@@ -4,7 +4,7 @@
 
 A PWA/SPA tennis career simulation: you are the **parent** raising a future tennis star – from junior courts to the pro tour – with honest, real-world-calibrated economics and fully watchable 2D match visualization.
 
-Inspired by *Tennis Rising Star / Tennis Superstar MyCareer* (DroidHen), built as the anti-version of it: no ad spam, no rigged outcomes, and matches you can actually watch.
+Inspired by the genre's mobile career sims – built as the honest version.
 
 Play here: https://letulip.github.io/ties-break/ 🎾
 
