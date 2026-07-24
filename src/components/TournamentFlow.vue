@@ -20,6 +20,12 @@ const game = useGameStore()
 const base = import.meta.env.BASE_URL
 const HAPPY_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-happy-fs8.webp`
 const SAD_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-sad-fs8.webp`
+// Round 5 item 11: a programmatic gold->silver desaturation of jun-happy (sharp
+// hue/saturation masking on the trophy) came out patchy/inconsistent on inspection –
+// not shipping it (see docs/specs/round5-brand.md). Fallback: the runner-up finale
+// reuses the "serious" (focused, composed) art + a silver-styled card frame instead
+// of a dedicated artwork.
+const SERIOUS_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-serious-fs8.webp`
 const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
 
 function flagEmoji(code: string): string {
@@ -34,6 +40,13 @@ const kidShort = computed(() =>
 )
 const kidFlag = computed(() => flagEmoji(profile.value?.country ?? ''))
 const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
+// Round 5 item 11 fallback: lost the final => silver-styled card, serious art, "Runner-up".
+const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
+const finalePortrait = computed(() => {
+  if (pending.value?.kidChampion) return HAPPY_ART
+  if (isRunnerUp.value) return SERIOUS_ART
+  return SAD_ART
+})
 
 // --- flow state --------------------------------------------------------------
 const phase = ref<'pre' | 'post' | 'finale'>('pre')
@@ -225,9 +238,14 @@ const matchMeta = computed(() => {
       </section>
 
       <!-- Finale -->
-      <section v-else class="tf-card tf-finale" :class="pending.kidChampion ? 'champ' : 'out'">
+      <section
+        v-else
+        class="tf-card tf-finale"
+        :class="pending.kidChampion ? 'champ' : isRunnerUp ? 'silver' : 'out'"
+      >
         <div v-if="pending.kidChampion" class="tf-trophy">🏆</div>
-        <img class="tf-portrait" :src="pending.kidChampion ? HAPPY_ART : SAD_ART" alt="" />
+        <div v-else-if="isRunnerUp" class="tf-trophy">🥈</div>
+        <img class="tf-portrait" :src="finalePortrait" alt="" />
         <p class="tf-finale-title">
           {{ pending.kidChampion ? `Champion – ${pending.tierLabel}!` : pending.finishLabel }}
         </p>

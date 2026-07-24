@@ -1,3 +1,31 @@
+/* Round 5 item 32: self-hosted type pair – Sora (headings) + Manrope (body).
+   Files under public/fonts/ (curl'd from Google Fonts/gstatic, latin subset only);
+   precached automatically – the workbox glob already covers woff2. font-display:
+   swap + system fallbacks so text never blocks on the download. */
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/sora-600.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/manrope-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/manrope-500.woff2') format('woff2');
+}
+
 :root {
   --bg: #0f172a;
   --panel: #16213c;
@@ -6,6 +34,8 @@
   --muted: #7d8db0;
   --accent: #d9f24f;
   --danger: #f2664f;
+  --font-heading: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme: dark;
 }
 
@@ -17,7 +47,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font: 15px/1.45 var(--font-body);
 }
 
 #app {
@@ -27,6 +57,7 @@ body {
 }
 
 h1 {
+  font-family: var(--font-heading);
   font-size: 20px;
   margin: 0 0 4px;
 }
@@ -53,6 +84,7 @@ section {
 }
 
 section h2 {
+  font-family: var(--font-heading);
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -223,6 +255,7 @@ input[type='text'] {
 }
 
 .score-line {
+  font-family: var(--font-heading);
   font-size: 18px;
   font-weight: 600;
   text-align: center;
@@ -419,6 +452,7 @@ input[type='text'] {
 }
 
 .onboarding-step h2 {
+  font-family: var(--font-heading);
   font-size: 17px;
   margin: 4px 0 16px;
 }
@@ -431,6 +465,24 @@ input[type='text'] {
 
 .onboarding-actions {
   margin-top: 16px;
+}
+
+/* Round 5 item 30: finale-step portrait, above the summary table. */
+.onboarding-portrait {
+  display: block;
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin: 0 auto 8px;
+  border: 1px solid var(--line);
+}
+
+.onboarding-portrait-caption {
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 16px;
 }
 
 .onboarding-nav {
@@ -1215,6 +1267,15 @@ tr.kid-row td {
   border-color: var(--accent);
 }
 
+/* Round 5 item 11: silver-styled fallback for a lost final (see docs/specs/round5-brand.md
+   for why a dedicated silver artwork isn't shipped here) – gradient ring, no accent gold. */
+.tf-finale.silver {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    linear-gradient(135deg, #f4f6fa, #aab2c0 45%, #7d8698 55%, #f4f6fa) border-box;
+}
+
 .tf-finale-title {
   font-size: 18px;
   font-weight: 700;
@@ -1223,6 +1284,10 @@ tr.kid-row td {
 
 .tf-finale.champ .tf-finale-title {
   color: var(--accent);
+}
+
+.tf-finale.silver .tf-finale-title {
+  color: #d7dbe4;
 }
 
 .tf-finale-points {
