@@ -4,9 +4,10 @@
 // round by round: a VS pre-match card (watch or skip), a post-match box score, a between-rounds
 // path strip, and a champion/eliminated finale. The result is already committed by the engine –
 // this is presentation (Q&A 12), never a re-decision.
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import MatchViewer from './MatchViewer.vue'
+import { playSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { computeMatchStats } from '../engine/match/matchStats'
@@ -68,6 +69,15 @@ const currentOppRank = ref<number | null>(null)
 const replayOpen = ref(false)
 // True when the replay was opened from a pre-match card (finishing it advances to the result).
 const replayAdvances = ref(false)
+// Round-5 sound rewiring: was the round just revealed actually watched through MatchViewer
+// (which already plays its own match-end cue), or skipped straight to the result card (no
+// match-end cue ever played)? Read once, when the finale screen first shows, to decide
+// whether the champion finale needs to supply its own applauseFinal.
+const lastRoundWatched = ref(false)
+// True only for the round currently being presented being the tournament final – routed into
+// the embedded MatchViewer so its match-end cue is the bigger `applauseFinal`, not the regular
+// short applause used for every other round.
+const isFinalRound = computed(() => pending.value?.roundLabel === 'Final')
 
 function enterPre(): void {
   phase.value = 'pre'
@@ -87,9 +97,10 @@ if (pending.value?.finished) phase.value = 'finale'
 else if (pending.value && pending.value.bracket.length === 0) phase.value = 'splash'
 else enterPre()
 
-async function showResult(): Promise<void> {
+async function showResult(watched: boolean): Promise<void> {
   if (phase.value !== 'pre') return
   replayOpen.value = false
+  lastRoundWatched.value = watched
   await game.tournamentReveal()
   phase.value = 'post'
 }
@@ -104,7 +115,7 @@ function watchAgain(): void {
 }
 function endReplay(): void {
   replayOpen.value = false
-  if (replayAdvances.value) showResult()
+  if (replayAdvances.value) showResult(true)
 }
 
 function next(): void {
@@ -120,6 +131,25 @@ async function skipAll(): Promise<void> {
 async function continueFinale(): Promise<void> {
   await game.tournamentClose()
 }
+
+// Round-5 sound rewiring: the champion finale gets its own celebratory applauseFinal, but
+// only when the final round wasn't watched through MatchViewer (which already played that
+// cue at its own match-end) – e.g. the player hit "Skip" on the final's pre-match card.
+// `{ immediate: true }` also covers resuming straight into an already-finished tournament
+// (reload mid-celebration): the fired-once guard still applies, so this plays at most once
+// per mount either way. Note: if the final was skipped and then re-watched via "Watch
+// again" from the post-match card, this still fires (lastRoundWatched only reflects the
+// showResult call) – an acceptable double applause in that edge case, per spec.
+let finaleSoundPlayed = false
+watch(
+  phase,
+  (p) => {
+    if (p !== 'finale' || finaleSoundPlayed) return
+    finaleSoundPlayed = true
+    if (pending.value?.kidChampion && !lastRoundWatched.value) playSfx('applauseFinal')
+  },
+  { immediate: true },
+)
 
 // --- current match: rebuilt annotated match + box score ----------------------
 const annotated = computed(() => {
@@ -296,6 +326,7 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
           :surface="currentMatch.surface"
           :rank-a="viewerRankA"
           :rank-b="viewerRankB"
+          :final-match="isFinalRound"
           @finish="endReplay"
         />
       </section>
@@ -316,7 +347,7 @@ const fullDrawRounds = computed<FullDrawRound[]>(() => {
         </div>
         <div class="tf-actions">
           <button class="primary" :disabled="game.busy" @click="watchMatch">Watch match</button>
-          <button :disabled="game.busy" @click="showResult">Skip</button>
+          <button :disabled="game.busy" @click="showResult(false)">Skip</button>
         </div>
       </section>
 

@@ -26,8 +26,13 @@ const props = withDefaults(
      *  post-match stats. null (default) hides it – the friendly match passes null for "Top seed". */
     rankA?: number | null
     rankB?: number | null
+    /** Round-5 sound rewiring: true only for the tournament FINAL. Swaps the match-end cue
+     *  from the regular short applause to the bigger `applauseFinal` cue. Defaults to false
+     *  so every other call site (friendly exhibition, MatchReplay, non-final rounds) is
+     *  unaffected. */
+    finalMatch?: boolean
   }>(),
-  { mode: 'live', rankA: null, rankB: null },
+  { mode: 'live', rankA: null, rankB: null, finalMatch: false },
 )
 // Emitted once when playback reaches the end (used by TournamentFlow to auto-advance to the
 // post-match card; other callers can ignore it).
@@ -119,6 +124,11 @@ function updatePlayers(dt: number): void {
  *  shot (on the frame its flight event becomes current), not once per frame. */
 let lastRenderedEvent: TimelineEvent | null = null
 
+/** True until the first point-start event of the current playback run has fired its
+ *  'takeYourSeats' cue; reset on every resetPlayback() (fresh play, mode change, restart,
+ *  Watch again, ...) so each run gets exactly one. */
+let seatsPlayedForRun = false
+
 function pauseInternal(): void {
   playing.value = false
   if (rafId !== null) {
@@ -128,28 +138,60 @@ function pauseInternal(): void {
   lastTs = null
 }
 
+/** How many points up to and including `pointIndex` have setEnd === true, minus one – i.e.
+ *  the index into match.result.sets (completed sets only) of the set that just finished at
+ *  this point. match.result.sets holds only completed sets in play order, one per setEnd
+ *  point, so counting setEnd points up to here gives that set's 1-based position. */
+function completedSetIndex(pointIndex: number): number {
+  let count = -1
+  for (let i = 0; i <= pointIndex; i++) {
+    if (props.match.points[i]?.setEnd) count++
+  }
+  return count
+}
+
 function completeEvent(ev: TimelineEvent): void {
-  if (ev.kind === 'shot' && ev.shotIndex !== undefined) {
+  if (ev.kind === 'point-start') {
+    // Round-5 sound rewiring: exactly one 'takeYourSeats' cue, on the very first
+    // point-start of this playback run (fresh play, restart, or Watch again).
+    if (!seatsPlayedForRun) {
+      seatsPlayedForRun = true
+      playSfx('takeYourSeats')
+    }
+  } else if (ev.kind === 'shot' && ev.shotIndex !== undefined) {
     const shot = props.match.points[ev.pointIndex]?.rally.shots[ev.shotIndex]
     if (shot) {
       marks.push({ p: shot.bounce, landedAt: ev.t + ev.duration, result: shot.result })
       if (marks.length > MARK_CAP) marks.shift()
-      // A miss (out/net) gets its own cue at flight end; anything that lands plays bounce.
-      playSfx(shot.result === 'out' || shot.result === 'net' ? 'out' : 'bounce')
+      // No sound for a shot that lands in or wins the point – only a miss (out/net) gets a
+      // cue at flight end. The 'hit' cue already played when this shot's flight started
+      // (see render()).
+      if (shot.result === 'out' || shot.result === 'net') playSfx('out')
     }
   } else if (ev.kind === 'point-end') {
     displayedPointIndex.value = ev.pointIndex
-    const entry = props.match.points[ev.pointIndex]?.entry
-    // Break point converted (receiver wins a point that was a break point) gets gasp;
-    // any other point end (including a break point saved by the server) gets point.
+    const point = props.match.points[ev.pointIndex]
+    const entry = point?.entry
+    const shots = point?.rally.shots ?? []
+    const lastShot = shots[shots.length - 1]
+    const endedOnMiss = lastShot?.result === 'out' || lastShot?.result === 'net'
+    // Silent by default. Two exceptions get an 'ooh': a converted break point (receiver
+    // wins a point that was a break point), or a long rally (>= 8 shots) ending in a clean
+    // winner. Never stacked on top of the 'out' cue that already played when the point
+    // ended on a miss.
     const brokeServe = !!entry && entry.breakPoint && entry.winner !== entry.server
-    playSfx(brokeServe ? 'gasp' : 'point')
+    const longWinnerRally = shots.length >= 8 && lastShot?.result === 'winner'
+    if (!endedOnMiss && (brokeServe || longWinnerRally)) playSfx('ooh')
   } else if (ev.kind === 'game-end') {
-    playSfx('game')
+    playSfx('applauseShort')
   } else if (ev.kind === 'set-end') {
-    playSfx('set')
+    // A set decided by a tiebreak (final games score 7-6/6-7) gets the bigger
+    // 'oohApplause' cue; any other set gets the regular short applause.
+    const set = props.match.result.sets[completedSetIndex(ev.pointIndex)]
+    const tiebreakSet = !!set && ((set.a === 7 && set.b === 6) || (set.a === 6 && set.b === 7))
+    playSfx(tiebreakSet ? 'oohApplause' : 'applauseShort')
   } else if (ev.kind === 'match-end') {
-    playSfx('win')
+    playSfx(props.finalMatch ? 'applauseFinal' : 'applauseShort')
   }
 }
 
@@ -198,13 +240,10 @@ function render(): void {
   liveServer.value = props.match.points[scenePointIndex]?.entry.server ?? null
   endsSwappedRef.value = endsState.swappedDuring[scenePointIndex] ?? false
 
-  // 'hit' fires once per shot, exactly when its flight event becomes current; 'grunt'
-  // layers on top of every 3rd shot (both players grunt – no side distinction).
+  // 'hit' fires once per shot, exactly when its flight event becomes current (shot start,
+  // not flight end).
   if (currentEvent !== lastRenderedEvent) {
-    if (currentEvent?.kind === 'shot') {
-      playSfx('hit')
-      if (currentEvent.shotIndex !== undefined && currentEvent.shotIndex % 3 === 0) playSfx('grunt')
-    }
+    if (currentEvent?.kind === 'shot') playSfx('hit')
     lastRenderedEvent = currentEvent
   }
 
@@ -266,6 +305,7 @@ function resetPlayback(startPlaying: boolean): void {
   finished.value = false
   currentEvent = timeline.events[0] ?? null
   lastRenderedEvent = null
+  seatsPlayedForRun = false
   playerPos = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
   if (viewMode.value === 'skip') {
     jumpToEnd()
