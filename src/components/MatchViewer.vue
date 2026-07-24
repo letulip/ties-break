@@ -37,12 +37,8 @@ const props = withDefaults(
      *  tournament FINAL, whose celebratory applause is owned by the finale screen
      *  (applauseFinal, played once there) – this stops the double applause. Defaults false. */
     suppressEndApplause?: boolean
-    /** Round-7 item 15: optional stage/round label (e.g. "Semifinal") shown as an
-     *  accent pill over the top-left of the court. null (default) hides it – the friendly
-     *  match and standalone replays pass nothing. */
-    stageLabel?: string | null
   }>(),
-  { mode: 'live', rankA: null, rankB: null, finalMatch: false, suppressEndApplause: false, stageLabel: null },
+  { mode: 'live', rankA: null, rankB: null, finalMatch: false, suppressEndApplause: false },
 )
 // Emitted once when playback reaches the end (used by TournamentFlow to auto-advance to the
 // post-match card; other callers can ignore it).
@@ -82,6 +78,10 @@ interface MarkEntry {
 let timeline: Timeline = buildTimeline(props.match, viewMode.value)
 let clock = 0
 let cursor = 0
+/** Event-START cursor (crowd-reaction pass): index of the next event whose START hook
+ *  (reaction cues) hasn't fired yet. Deliberately separate from `cursor` (the event-END /
+ *  completion cursor: marks + displayed score). Reset together in resetPlayback. */
+let startedCursor = 0
 let marks: MarkEntry[] = []
 let currentEvent: TimelineEvent | null = timeline.events[0] ?? null
 let rafId: number | null = null
@@ -257,19 +257,14 @@ function completedSetIndex(pointIndex: number): number {
   return count
 }
 
-function completeEvent(ev: TimelineEvent): void {
-  if (ev.kind === 'shot' && ev.shotIndex !== undefined) {
-    const shot = props.match.points[ev.pointIndex]?.rally.shots[ev.shotIndex]
-    if (shot) {
-      marks.push({ p: shot.bounce, landedAt: ev.t + ev.duration, result: shot.result })
-      if (marks.length > MARK_CAP) marks.shift()
-      // No sound for a shot that lands in or wins the point – only a miss (out/net) gets a
-      // cue at flight end. The 'hit' cue already played when this shot's flight started
-      // (see render()).
-      if (shot.result === 'out' || shot.result === 'net') gatedSfx('out')
-    }
-  } else if (ev.kind === 'point-end') {
-    displayedPointIndex.value = ev.pointIndex
+/** Event-START hook (crowd-reaction pass): fires the reaction cues at the SCORING instant –
+ *  the moment the point/game/set is decided (each event's START) – so the crowd reacts
+ *  immediately and the next point follows AFTER the reaction, not on top of it. Only the
+ *  reaction `gatedSfx(...)` calls live here; all the non-sound completion work (marks, the
+ *  displayed score) stays in completeEvent, at each event's END. The 'hit' cue (shot start,
+ *  in render()) and the 'out' cue (shot landing, in completeEvent) are unchanged. */
+function startEvent(ev: TimelineEvent): void {
+  if (ev.kind === 'point-end') {
     const point = props.match.points[ev.pointIndex]
     const entry = point?.entry
     const shots = point?.rally.shots ?? []
@@ -277,8 +272,7 @@ function completeEvent(ev: TimelineEvent): void {
     const endedOnMiss = lastShot?.result === 'out' || lastShot?.result === 'net'
     // Silent by default. Two exceptions get an 'ooh': a converted break point (receiver
     // wins a point that was a break point), or a long rally (>= 8 shots) ending in a clean
-    // winner. Never stacked on top of the 'out' cue that already played when the point
-    // ended on a miss.
+    // winner. Never stacked on top of the 'out' cue that plays when the point ends on a miss.
     const brokeServe = !!entry && entry.breakPoint && entry.winner !== entry.server
     const longWinnerRally = shots.length >= 8 && lastShot?.result === 'winner'
     if (!endedOnMiss && (brokeServe || longWinnerRally)) gatedSfx('ooh')
@@ -299,8 +293,40 @@ function completeEvent(ev: TimelineEvent): void {
   }
 }
 
+function completeEvent(ev: TimelineEvent): void {
+  if (ev.kind === 'shot' && ev.shotIndex !== undefined) {
+    const shot = props.match.points[ev.pointIndex]?.rally.shots[ev.shotIndex]
+    if (shot) {
+      marks.push({ p: shot.bounce, landedAt: ev.t + ev.duration, result: shot.result })
+      if (marks.length > MARK_CAP) marks.shift()
+      // No sound for a shot that lands in or wins the point – only a miss (out/net) gets a
+      // cue at flight end (the ball landing). The 'hit' cue already played when this shot's
+      // flight started (see render()).
+      if (shot.result === 'out' || shot.result === 'net') gatedSfx('out')
+    }
+  } else if (ev.kind === 'point-end') {
+    // Non-sound completion work only: reveal the point's score once its point-end beat has
+    // fully played. (Its reaction cue, if any, already fired at the point-end START.)
+    displayedPointIndex.value = ev.pointIndex
+  }
+}
+
+/** Event-START walk: fire each event's reaction cue the instant its start time is reached.
+ *  Guarded by startedCursor so every event starts exactly once – shared by the normal frame
+ *  walk (processUpTo) and the skip/jumpToEnd fast-forward, so neither double-fires. */
+function processStartsUpTo(time: number): void {
+  const events = timeline.events
+  while (startedCursor < events.length && events[startedCursor].t <= time) {
+    startEvent(events[startedCursor])
+    startedCursor++
+  }
+}
+
 function processUpTo(time: number): void {
   const events = timeline.events
+  // Starts first (reaction cues at each event's beginning), then completions (marks + score
+  // at each event's end).
+  processStartsUpTo(time)
   while (cursor < events.length && events[cursor].t + events[cursor].duration <= time) {
     completeEvent(events[cursor])
     cursor++
@@ -424,6 +450,11 @@ function startClock(): void {
 function jumpToEnd(): void {
   pauseInternal()
   clock = timeline.duration
+  // Drive the event-START hook to the end so its reaction cues aren't lost when we skip past
+  // the walk (in 'skip' mode the timeline is a lone match-end event, so this plays its single
+  // applause once). Guarded by startedCursor, so a resume that already fired some starts never
+  // double-fires here.
+  processStartsUpTo(clock)
   cursor = timeline.events.length
   currentEvent = timeline.events[timeline.events.length - 1] ?? null
   displayedPointIndex.value = props.match.points.length - 1
@@ -438,6 +469,7 @@ function resetPlayback(startPlaying: boolean): void {
   endsState = computeEndsSwaps(props.match.points)
   clock = 0
   cursor = 0
+  startedCursor = 0
   marks = []
   displayedPointIndex.value = -1
   finished.value = false
@@ -564,8 +596,6 @@ function servePct(side: Side): number {
   <div class="viewer">
     <div class="viewer-court">
       <canvas ref="canvasRef" class="viewer-canvas"></canvas>
-      <!-- Round-7 item 15: stage/round label as an accent pill over the top-left of the court. -->
-      <span v-if="stageLabel" class="viewer-stage">{{ stageLabel }}</span>
     </div>
 
     <div class="ends-labels">

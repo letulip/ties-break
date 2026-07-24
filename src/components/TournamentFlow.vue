@@ -4,7 +4,7 @@
 // round by round: a VS pre-match card (watch or skip), a post-match box score, a between-rounds
 // path strip, and a champion/eliminated finale. The result is already committed by the engine –
 // this is presentation (Q&A 12), never a re-decision.
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import MatchViewer from './MatchViewer.vue'
 import { playSfx } from '../audio/sfx'
@@ -251,6 +251,28 @@ const bracketColumns = computed<BracketColumn[]>(() => {
 const showBracket = computed(
   () => bracketColumns.value.length > 0 && !replayOpen.value && (phase.value === 'post' || phase.value === 'finale'),
 )
+
+// Round-7 (owner): the bracket body is height-bounded (see .tf-bracket-scroll) and could crop
+// the kid's cell if her draw position is low. When the draw opens, centre her highlighted cell
+// inside that scroll box. We move ONLY the box's own scrollTop (never scrollIntoView, which would
+// also scroll the full-screen flow overlay). The first `.kid-match` cell in DOM order is the
+// earliest/tallest round column – exactly where the crop risk is – and it sits in the leftmost
+// (always-visible) column, so no horizontal adjustment is needed.
+const bracketScrollRef = ref<HTMLElement | null>(null)
+watch(
+  showBracket,
+  async (shown) => {
+    if (!shown) return
+    await nextTick()
+    const box = bracketScrollRef.value
+    const cell = box?.querySelector<HTMLElement>('.tf-bracket-cell.kid-match')
+    if (!box || !cell) return
+    const cellRect = cell.getBoundingClientRect()
+    const boxRect = box.getBoundingClientRect()
+    box.scrollTop += cellRect.top - boxRect.top - (box.clientHeight - cell.clientHeight) / 2
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -305,7 +327,7 @@ const showBracket = computed(
              Inline between rounds (post) and at the finale, never a collapsible. -->
         <section v-if="showBracket" class="tf-card tf-bracket">
           <p class="tf-bracket-title">Draw</p>
-          <div class="tf-bracket-scroll">
+          <div ref="bracketScrollRef" class="tf-bracket-scroll">
             <div class="tf-bracket-cols">
               <div v-for="col in bracketColumns" :key="col.round" class="tf-bracket-col">
                 <p class="tf-bracket-round">{{ col.short }}</p>
@@ -317,8 +339,14 @@ const showBracket = computed(
                     :class="{ 'kid-match': cell.isKidMatch }"
                   >
                     <div class="tf-bc-players">
-                      <span class="tf-bc-row" :class="{ won: cell.a.won, kid: cell.a.isKid }">{{ cell.a.name }}</span>
-                      <span class="tf-bc-row" :class="{ won: cell.b.won, kid: cell.b.isKid }">{{ cell.b.name }}</span>
+                      <span class="tf-bc-row" :class="{ won: cell.a.won, kid: cell.a.isKid }">
+                        <span class="tf-bc-name">{{ cell.a.name }}</span>
+                        <span v-if="cell.a.won" class="tf-bc-check" aria-hidden="true">✓</span>
+                      </span>
+                      <span class="tf-bc-row" :class="{ won: cell.b.won, kid: cell.b.isKid }">
+                        <span class="tf-bc-name">{{ cell.b.name }}</span>
+                        <span v-if="cell.b.won" class="tf-bc-check" aria-hidden="true">✓</span>
+                      </span>
                     </div>
                     <span v-if="cell.score" class="tf-bc-score num">{{ cell.score }}</span>
                   </div>
@@ -330,7 +358,11 @@ const showBracket = computed(
 
         <!-- Watching a replay (inline) -->
       <section v-if="replayOpen && annotated && currentMatch" class="tf-card">
-        <div class="tf-card-head" style="justify-content: flex-end">
+        <!-- Round-7 crowd-reaction pass: the stage/round label lives here as a pill on the LEFT
+             of the head row, level with "To result →" on the right – no longer an absolute pill
+             over the court (which obstructed play). -->
+        <div class="tf-card-head">
+          <span class="tf-replay-round">{{ pending.roundLabel }}</span>
           <button class="link" @click="endReplay">To result →</button>
         </div>
         <MatchViewer
@@ -340,7 +372,6 @@ const showBracket = computed(
           :surface="currentMatch.surface"
           :rank-a="viewerRankA"
           :rank-b="viewerRankB"
-          :stage-label="pending.roundLabel"
           :suppress-end-applause="isFinalRound"
           @finish="endReplay"
         />

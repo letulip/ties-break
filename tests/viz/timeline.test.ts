@@ -12,6 +12,7 @@ import {
   CHANGE_ENDS,
   MATCH_END,
   POINT_END_GAP,
+  OOH_GAP,
   GAME_END_GAP,
   SET_END_GAP,
 } from '../../src/viz/timeline'
@@ -52,19 +53,28 @@ interface PointSpec {
   tiebreak?: boolean
   gameEnd?: boolean
   setEnd?: boolean
+  // Optional overrides (default to the historic server=0 / winner=0 / last-shot 'in' so every
+  // existing fixture is unchanged). Needed to build 'ooh' reaction points: a converted break
+  // point (server !== winner) or a long rally whose last shot is a winner.
+  server?: Side
+  winner?: Side
+  lastResult?: Shot['result']
 }
 
 function makePoint(spec: PointSpec): AnnotatedPoint {
   const shots: Shot[] = spec.shots.map((k, i) => shot(k, (i % 2) as Side))
+  if (spec.lastResult && shots.length) {
+    shots[shots.length - 1] = { ...shots[shots.length - 1], result: spec.lastResult }
+  }
   return {
     entry: {
       pointNumber: spec.n,
-      server: 0,
+      server: spec.server ?? 0,
       tiebreak: spec.tiebreak ?? false,
       breakPoint: spec.breakPoint ?? false,
       setPointFor: spec.setPointFor ?? null,
       matchPointFor: spec.matchPointFor ?? null,
-      winner: 0,
+      winner: spec.winner ?? 0,
       pServe: 0.6,
       scoreAfter: '',
     },
@@ -189,6 +199,15 @@ describe('timeline — exported constants match the spec', () => {
     expect(GAME_END).toBe(0.7)
     expect(SET_END).toBe(1.6)
     expect(MATCH_END).toBe(2.0)
+  })
+
+  it('has the crowd-reaction trailing-gap sizes (reaction leads the next point-start)', () => {
+    // Ordinary non-reaction points keep the tiny breath; reaction points get a longer hold so
+    // the crowd cue (fired at the scoring instant) clearly precedes the next hit.
+    expect(POINT_END_GAP).toBe(0.15)
+    expect(OOH_GAP).toBe(1.0)
+    expect(GAME_END_GAP).toBe(1.3)
+    expect(SET_END_GAP).toBe(1.9)
   })
 })
 
@@ -451,6 +470,60 @@ describe('timeline — round-7 item 10: quiet gaps so applause never overlaps th
   })
 })
 
+describe('timeline — crowd-reaction trailing gaps (reaction leads the next point-start)', () => {
+  it('gives an ordinary converted-break-point (no game/set end) the longer OOH_GAP', () => {
+    const m = makeMatch([
+      // p0: receiver (winner 1) converts a break point off server 0, ends cleanly, but this
+      // synthetic point ends NO game/set -> ordinary 'ooh' point -> OOH_GAP.
+      { n: 1, shots: ['serve1', 'rally'], breakPoint: true, server: 0, winner: 1 },
+      { n: 2, shots: ['serve1'] }, // filler final point
+    ])
+    const events = buildTimeline(m, 'full').events
+    const peAt = events.findIndex((e) => e.kind === 'point-end' && e.pointIndex === 0)
+    expect(events[peAt + 1].kind).toBe('gap')
+    expect(Math.abs(events[peAt + 1].duration - OOH_GAP)).toBeLessThan(EPS)
+  })
+
+  it('gives an ordinary long-rally winner (>=8 shots, no game/set end) the longer OOH_GAP', () => {
+    const longRally: ShotKind[] = ['serve1', 'rally', 'rally', 'rally', 'rally', 'rally', 'rally', 'rally']
+    const m = makeMatch([
+      { n: 1, shots: longRally, lastResult: 'winner' }, // 8 shots, last a winner -> 'ooh'
+      { n: 2, shots: ['serve1'] }, // filler final point
+    ])
+    const events = buildTimeline(m, 'full').events
+    const peAt = events.findIndex((e) => e.kind === 'point-end' && e.pointIndex === 0)
+    expect(events[peAt + 1].kind).toBe('gap')
+    expect(Math.abs(events[peAt + 1].duration - OOH_GAP)).toBeLessThan(EPS)
+  })
+
+  it('keeps the tiny POINT_END_GAP after a reaction point that ALSO ends a game (its lead is the game gap)', () => {
+    const m = makeMatch([
+      // Converted break point that ends the game: point-end gap stays tiny; the crowd's lead
+      // before the next point comes from the (longer) GAME_END_GAP after the game-end beat.
+      { n: 1, shots: ['serve1', 'rally'], breakPoint: true, server: 0, winner: 1, gameEnd: true },
+      { n: 2, shots: ['serve1'] }, // filler final point
+    ])
+    const events = buildTimeline(m, 'full').events
+    const peAt = events.findIndex((e) => e.kind === 'point-end' && e.pointIndex === 0)
+    expect(events[peAt + 1].kind).toBe('gap')
+    expect(Math.abs(events[peAt + 1].duration - POINT_END_GAP)).toBeLessThan(EPS)
+    const geAt = events.findIndex((e) => e.kind === 'game-end' && e.pointIndex === 0)
+    expect(events[geAt + 1].kind).toBe('gap')
+    expect(Math.abs(events[geAt + 1].duration - GAME_END_GAP)).toBeLessThan(EPS)
+  })
+
+  it('leaves an ordinary NON-reaction point on the tiny POINT_END_GAP', () => {
+    const m = makeMatch([
+      { n: 1, shots: ['serve1', 'rally'] }, // plain point, no reaction
+      { n: 2, shots: ['serve1'] },
+    ])
+    const events = buildTimeline(m, 'full').events
+    const peAt = events.findIndex((e) => e.kind === 'point-end' && e.pointIndex === 0)
+    expect(events[peAt + 1].kind).toBe('gap')
+    expect(Math.abs(events[peAt + 1].duration - POINT_END_GAP)).toBeLessThan(EPS)
+  })
+})
+
 describe('timeline — duration bands on real simulated matches (ATP mirror, fixed seeds)', () => {
   // NOTE ON THE BAND: with the mandated timing constants and the Phase-1 engine's
   // point counts, only reel-length matches fit the spec's full<=240s-ish ceiling
@@ -462,10 +535,13 @@ describe('timeline — duration bands on real simulated matches (ATP mirror, fix
   // swaps ends adds a real CHANGE_ENDS (0.9s) beat. Round-7 item 10 re-centred them again
   // (260->290, 100->120): the trailing quiet gaps (POINT_END_GAP after every point-end,
   // GAME_END_GAP/SET_END_GAP after game/set breaks) so applause never overlaps the next hit
-  // also legitimately lengthen playback. Measured across these 50 fixed seeds post-change:
-  // full ∈ [229.9, 275.2], key ∈ [76.2, 107.5] for the reel-length subset — both ceilings
-  // keep ~15s/~12s of headroom above the observed max, and 290s@1x still lands at 145s
-  // (~2.4min) at the UI's default 2x speed, comfortably inside the owner's 2-3.5min target.
+  // also legitimately lengthen playback. Round-7 crowd-reaction pass re-centres once more
+  // (290->305, 120->135): the reaction cues now fire at the scoring instant, and the trailing
+  // gaps were grown so the crowd clearly LEADS the next hit — GAME_END_GAP 0.5->1.3, SET_END_GAP
+  // 0.9->1.9, plus a new OOH_GAP (1.0) on ordinary reaction points. Measured across these 50
+  // fixed seeds post-change: full ∈ [244.5, 290.6], key ∈ [90.0, 124.5] for the reel-length
+  // subset — both ceilings keep ~14s/~10s of headroom above the observed max, and 290.6s@1x
+  // still lands at 145s (~2.4min) at the UI's default 2x speed, inside the owner's 2-3.5min target.
   const seeds = Array.from({ length: 50 }, (_, i) => `viz-e-${i}`)
   const matches = seeds.map(simAnnotated)
 
@@ -479,16 +555,16 @@ describe('timeline — duration bands on real simulated matches (ATP mirror, fix
     }
   })
 
-  it('reel-length matches (<=130 pts) land in full [100,290]s and key [15,120]s', () => {
+  it('reel-length matches (<=130 pts) land in full [100,305]s and key [15,135]s', () => {
     const reel = matches.filter((m) => m.result.totalPoints <= 130)
     expect(reel.length).toBeGreaterThanOrEqual(8)
     for (const m of reel) {
       const full = buildTimeline(m, 'full').duration
       const key = buildTimeline(m, 'key').duration
       expect(full).toBeGreaterThanOrEqual(100)
-      expect(full).toBeLessThanOrEqual(290)
+      expect(full).toBeLessThanOrEqual(305)
       expect(key).toBeGreaterThanOrEqual(15)
-      expect(key).toBeLessThanOrEqual(120)
+      expect(key).toBeLessThanOrEqual(135)
     }
   })
 
@@ -497,8 +573,8 @@ describe('timeline — duration bands on real simulated matches (ATP mirror, fix
     const full = buildTimeline(m, 'full').duration
     const key = buildTimeline(m, 'key').duration
     expect(full).toBeGreaterThanOrEqual(100)
-    expect(full).toBeLessThanOrEqual(290)
+    expect(full).toBeLessThanOrEqual(305)
     expect(key).toBeGreaterThanOrEqual(15)
-    expect(key).toBeLessThanOrEqual(120)
+    expect(key).toBeLessThanOrEqual(135)
   })
 })

@@ -226,27 +226,11 @@ select {
   background: var(--bg);
 }
 
-/* Round-7 item 15: positioning context for the stage-label pill over the court. */
+/* Court canvas wrapper. (Round-7 crowd-reaction pass: the stage/round label pill moved out of
+   here into the tournament replay card's head row, level with "To result →" – see .tf-replay-round.) */
 .viewer-court {
-  position: relative;
   width: 100%;
   line-height: 0; /* no descender gap under the canvas */
-}
-
-.viewer-stage {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 2;
-  background: var(--accent);
-  color: var(--bg); /* dark text on accent, same convention as button.primary */
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1.3;
-  padding: 3px 9px;
-  border-radius: 999px;
-  box-shadow: 0 2px 6px -2px rgba(6, 10, 20, 0.6);
 }
 
 /* Round-7 item 18: play.svg tinted to the button's text colour (replaces the ▶ glyph on the
@@ -1316,6 +1300,20 @@ tr.kid-row td {
   margin-bottom: 12px;
 }
 
+/* Round-7 crowd-reaction pass: the tournament replay's stage/round label, as a filled accent
+   pill inline in the card head row (left of "To result →"). Same accent-bg/dark-text look the
+   on-court pill used to have, but no longer absolutely positioned over the court. */
+.tf-replay-round {
+  background: var(--accent);
+  color: var(--bg); /* dark text on accent, same convention as button.primary */
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 /* Pre-match VS card */
 .tf-vs {
   text-align: center;
@@ -1609,8 +1607,14 @@ tr.kid-row td {
   margin: 0 0 10px;
 }
 
+/* Round-7 (owner): a full draw's first round (e.g. R32 = 16 cells) is far too tall and pushes
+   the whole flow down, so the bracket body is height-bounded (~4-5 cells) and scrolls INTERNALLY,
+   both axes – horizontal for the round columns, vertical for the tall early rounds. The kid's
+   highlighted cell is scrolled into view on open (see the showBracket watcher in TournamentFlow). */
 .tf-bracket-scroll {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 320px;
   padding: 0 12px 4px 0;
   -webkit-overflow-scrolling: touch;
 }
@@ -1628,14 +1632,21 @@ tr.kid-row td {
   min-width: 118px;
 }
 
+/* Sticky so the round label stays visible while the (now height-bounded) bracket body scrolls
+   vertically; opaque panel background hides cells sliding underneath it. */
 .tf-bracket-round {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   font-size: 10.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
   text-align: center;
-  margin: 0 0 8px;
+  margin: 0;
+  padding: 0 0 8px;
+  background: var(--panel);
 }
 
 /* Later (shorter) columns centre vertically against earlier ones, so the draw reads as a
@@ -1672,11 +1683,30 @@ tr.kid-row td {
 }
 
 .tf-bc-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
   font-size: 12px;
   color: var(--muted);
+  min-width: 0;
+}
+
+/* Name truncates with an ellipsis; the winner ✓ (below) stays outside the ellipsis so it is
+   never clipped on a long name. */
+.tf-bc-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* Round-7 (owner): explicit accent checkmark next to the winning player's name in each decided
+   draw cell – scannable at a glance on top of the existing bold/accent. */
+.tf-bc-check {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 11px;
 }
 
 /* winner bolded/accent; the kid's own name is always accent (path highlight). */

@@ -86,8 +86,9 @@ function kidScoreOf(m: WorldMatch): string {
 }
 
 // --- Coach's eye: a rotating pool of 5 lines per play style (round-7 item 5d). The
-// existing owner-approved line is #1 of each pool; the visible line rotates weekly by
-// `week % 5` so it is deterministic (same week -> same line) but changes every week. --
+// existing owner-approved line is #1 of each pool; the visible line rotates every 4 weeks by
+// `Math.floor(week / 4) % 5` – deterministic (same 4-week block -> same line) but no longer
+// churning weekly (owner: a coach's read on the kid should settle for a while, not flip). --
 const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> = {
   aggressive: [
     'She hits like it owes her money – now we build the legs to match.',
@@ -119,7 +120,7 @@ const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> 
   ],
 }
 const coachQuote = computed(() =>
-  game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][week.value % 5] : '',
+  game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
 )
 
 // --- Season strip: REAL tier progress (round-7 item 3). Reads the kid's best finish per
