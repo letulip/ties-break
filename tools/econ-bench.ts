@@ -36,7 +36,7 @@ import {
   STARTING_FUNDS_CENTS,
 } from '../src/engine/world'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
-import type { FamilyBackground, PlayerProfile, WorldEventCategory } from '../src/shared/protocol'
+import type { CoachSetup, FamilyBackground, PlayerProfile, WorldEventCategory } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 
@@ -44,16 +44,23 @@ export const SEASON_WEEKS = 52
 export const SEEDS_PER_PRESET = 30
 
 export interface Preset {
-  /** table label, e.g. "25k  · middle" */
+  /** table label, e.g. "25k  · middle · hired coach" */
   label: string
   background: FamilyBackground
+  /** coaching setup drives the biggest expense line, so it's a preset dimension, not a
+   *  constant: a working family self-coaches (parent, $120-400/wk), an affluent one hires
+   *  ($250-700/wk). middle is run BOTH ways to expose the coaching lever's swing. */
+  coachSetup: CoachSetup
 }
 
-// 8k / 25k / 120k = working / middle / wealthy (the tier IS the family background).
+// 8k / 25k / 120k = working / middle / wealthy (the tier IS the family background). Coach setup
+// is realistic per tier: working self-coaches (can't afford a hired coach); wealthy hires; middle
+// is shown both ways because the coach choice is the dominant survivability lever.
 export const PRESETS: Preset[] = [
-  { label: '8k   · working', background: 'working' },
-  { label: '25k  · middle', background: 'middle' },
-  { label: '120k · wealthy', background: 'wealthy' },
+  { label: '8k   · working · self-coached', background: 'working', coachSetup: 'parent' },
+  { label: '25k  · middle  · self-coached', background: 'middle', coachSetup: 'parent' },
+  { label: '25k  · middle  · hired coach', background: 'middle', coachSetup: 'hired' },
+  { label: '120k · wealthy · hired coach', background: 'wealthy', coachSetup: 'hired' },
 ]
 
 /** The per-category buckets we surface, in display order (expenses first, then income). */
@@ -92,7 +99,7 @@ export function runSeason(preset: Preset, index: number): SeedResult {
   const profile: PlayerProfile = {
     ...DEFAULT_PROFILE,
     background: preset.background,
-    coachSetup: 'hired',
+    coachSetup: preset.coachSetup,
   }
   const world = createWorld(seed, profile)
   const rng = rngFromSeed(world.seed)
@@ -194,8 +201,9 @@ function renderPreset(preset: Preset, rows: SeedResult[]): string {
   const out: string[] = []
   out.push('')
   out.push(RULE)
+  const coachRange = preset.coachSetup === 'parent' ? 'self-coached $120-400/wk base' : 'hired coach $250-700/wk base'
   out.push(
-    `  PRESET ${preset.label}   (start $${(startFunds / 100).toLocaleString('en-US')}, coach hired, plan balanced 75/25)`,
+    `  PRESET ${preset.label}   (start $${(startFunds / 100).toLocaleString('en-US')}, ${coachRange}, plan balanced 75/25)`,
   )
   out.push(RULE)
   out.push(header())
@@ -235,7 +243,7 @@ const POLICY_HEADER = [
   `Entry policy v1: each week, enter EVERY eligible event (any tier) the kid can afford`,
   `  entry+travel for at that moment; then tick; then skip+close any spawned tournament.`,
   `  Once funds go red the affordability gate stalls entries; weekly coaching still bleeds.`,
-  `${SEEDS_PER_PRESET} seeds/preset · ${SEASON_WEEKS}-week season · coach hired · plan balanced (75/25).`,
+  `${SEEDS_PER_PRESET} seeds/preset · ${SEASON_WEEKS}-week season · coach setup per preset (see each block) · plan balanced (75/25).`,
   `Money is whole-dollar rounded; ±sd is the population stddev across the ${SEEDS_PER_PRESET} seeds.`,
 ].join('\n')
 
