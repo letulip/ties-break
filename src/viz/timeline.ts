@@ -17,6 +17,16 @@ export const MATCH_END = 2.0
  *  today but kept as its own named constant since it's a conceptually different beat. */
 export const CHANGE_ENDS = 0.9
 
+// Round-7 item 10: trailing "quiet gap" beats so applause never overlaps the next hit.
+// A tiny hold after every point-end, and a longer hold after a game-end / set-end, all
+// BEFORE the next point-start. These are silent, static holds – timing only, no new cues.
+/** Tiny breath after each point-end (before game-end / next point-start). */
+export const POINT_END_GAP = 0.15
+/** Trailing quiet after a game-end, so game applause rings out before the next hit. */
+export const GAME_END_GAP = 0.5
+/** Trailing quiet after a set-end (longer – the set-break applause is bigger). */
+export const SET_END_GAP = 0.9
+
 /** A point is "big" (long point-end) when it is a break/set/match point. */
 function isBigPoint(p: AnnotatedPoint): boolean {
   const e = p.entry
@@ -113,14 +123,23 @@ export function buildTimeline(match: AnnotatedMatch, mode: ViewMode): Timeline {
       const p = points[i]
       if (mode === 'key' && !isKeyPoint(p, i, lastIndex)) continue
 
+      // Round-7 item 10: the trailing quiet gaps exist only to give applause room before
+      // the NEXT point-start. On the match's final point there is no next point (match-end
+      // follows, itself a long beat), so all gaps are suppressed there – same "not on the
+      // last point" rule the change-ends beat already uses.
+      const notLast = i !== lastIndex
+
       emit('point-start', POINT_START, i)
       for (let s = 0; s < p.rally.shots.length; s++) {
         const shot = p.rally.shots[s]
         emit('shot', shot.kind === 'rally' ? RALLY_FLIGHT : SERVE_FLIGHT, i, s)
       }
       emit('point-end', isBigPoint(p) ? POINT_END_BIG : POINT_END, i)
+      if (notLast) emit('gap', POINT_END_GAP, i) // tiny breath after every point-end
       if (p.gameEnd) emit('game-end', GAME_END, i)
+      if (p.gameEnd && notLast) emit('gap', GAME_END_GAP, i)
       if (p.setEnd) emit('set-end', SET_END, i)
+      if (p.setEnd && notLast) emit('gap', SET_END_GAP, i)
       if (ends.changeEndsAfter[i]) emit('change-ends', CHANGE_ENDS, i)
     }
   }

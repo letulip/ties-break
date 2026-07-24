@@ -80,8 +80,8 @@ export function computeRanking(
 
   // Competition ranks (standard "1224" numbering, same convention real tennis rankings
   // use): tied points share one rank, and the next distinct points value takes the rank
-  // equal to how many players sit ahead of it (+1) — i.e. it skips by the tie count
-  // (4, 4, 6 — never 4, 4, 5). Recency (set above, sort only) still breaks the *order*
+  // equal to how many players sit ahead of it (+1) – i.e. it skips by the tie count
+  // (4, 4, 6 – never 4, 4, 5). Recency (set above, sort only) still breaks the *order*
   // among equal-points players; it never affects the rank number they share.
   const ranking: RankingRow[] = []
   let rank = 0

@@ -13,6 +13,7 @@ import type { Viewport } from '../viz/geometry'
 import { initSfx, playSfx } from '../audio/sfx'
 import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
+import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
 
 const props = withDefaults(
   defineProps<{
@@ -30,10 +31,18 @@ const props = withDefaults(
     /** Round-5 sound rewiring: true only for the tournament FINAL. Swaps the match-end cue
      *  from the regular short applause to the bigger `applauseFinal` cue. Defaults to false
      *  so every other call site (friendly exhibition, MatchReplay, non-final rounds) is
-     *  unaffected. */
+     *  unaffected. (Moot when `suppressEndApplause` is set – no match-end cue plays at all.) */
     finalMatch?: boolean
+    /** Round-7 item 14: suppress the match-end applause entirely. Set true for the
+     *  tournament FINAL, whose celebratory applause is owned by the finale screen
+     *  (applauseFinal, played once there) – this stops the double applause. Defaults false. */
+    suppressEndApplause?: boolean
+    /** Round-7 item 15: optional stage/round label (e.g. "Semifinal") shown as an
+     *  accent pill over the top-left of the court. null (default) hides it – the friendly
+     *  match and standalone replays pass nothing. */
+    stageLabel?: string | null
   }>(),
-  { mode: 'live', rankA: null, rankB: null, finalMatch: false },
+  { mode: 'live', rankA: null, rankB: null, finalMatch: false, suppressEndApplause: false, stageLabel: null },
 )
 // Emitted once when playback reaches the end (used by TournamentFlow to auto-advance to the
 // post-match card; other callers can ignore it).
@@ -77,8 +86,8 @@ let marks: MarkEntry[] = []
 let currentEvent: TimelineEvent | null = timeline.events[0] ?? null
 let rafId: number | null = null
 let lastTs: number | null = null
-/** Pending timer for the pre-match 'takeYourSeats' beat's ~1.5s hold (see startClock);
- *  non-null only during that hold, so pauseInternal can cancel it cleanly. */
+/** Pending timer for the pre-match 'takeYourSeats' beat's hold (see startClock +
+ *  SEATS_PREROLL_MS); non-null only during that hold, so pauseInternal can cancel it cleanly. */
 let preRollTimer: ReturnType<typeof setTimeout> | null = null
 
 // --- round 4 item 3: real side changes (ends-swap state) ---------------------
@@ -152,8 +161,8 @@ let musicDuckedForRun = false
 // (not the UI `click`) routes through this one gate – it's the single source of
 // truth for "which key, if any, plays at the current speed":
 //
-//   ×1  – everything, except `out` is throttled to every 3rd call (a plain counter,
-//         so it can never fire twice in a row) so a miss-heavy rally doesn't spam it.
+//   ×1  – everything, except `out` fires only intermittently (~1 in 3–5 out/net points,
+//         seeded per match – see the outRng block below) so a miss-heavy rally doesn't spam it.
 //   ×2  – `hit`, `applauseShort` at game-end/set-end (tiebreak sets use `applauseShort`
 //         here too, not `oohApplause`) and match-end (including the final – no
 //         `applauseFinal` above ×1), plus the `takeYourSeats` pre-match beat.
@@ -165,9 +174,15 @@ let musicDuckedForRun = false
 // completeEvent like every other site.
 type SoundSite = 'hit' | 'out' | 'ooh' | 'gameEnd' | 'setEnd' | 'setEndTiebreak' | 'matchEnd' | 'seats'
 
-/** Counts 'out' calls this playback run; reset in resetPlayback() so every fresh
- *  play/restart/Watch again starts the throttle from the same deterministic point. */
+// --- round-7 item 12: intermittent 'out' call --------------------------------------
+// An out/net point plays the `out` call only ~1 in 3–5 times, at ×1 only. Deterministic
+// PER MATCH so a replay sounds identical: a small RNG seeded from the match seed +
+// ':outcall', re-created at every resetPlayback(). `outCounter` counts out/net occurrences
+// since the last fired call; once it reaches `outThreshold` (a fresh 3–5 draw) the call
+// fires and a new threshold is drawn. (Replaced the earlier every-3rd counter.)
+let outRng: Rng = rngFromSeed(props.match.result.seed + ':outcall')
 let outCounter = 0
+let outThreshold = pickInt(outRng, 3, 5)
 
 function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
   if (speed.value === 4) {
@@ -190,7 +205,11 @@ function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
       return
     case 'out':
       outCounter++
-      if (outCounter % 3 === 0) playSfx('out')
+      if (outCounter >= outThreshold) {
+        playSfx('out')
+        outCounter = 0
+        outThreshold = pickInt(outRng, 3, 5)
+      }
       return
     case 'ooh':
       playSfx('ooh')
@@ -273,7 +292,10 @@ function completeEvent(ev: TimelineEvent): void {
     const tiebreakSet = !!set && ((set.a === 7 && set.b === 6) || (set.a === 6 && set.b === 7))
     gatedSfx(tiebreakSet ? 'setEndTiebreak' : 'setEnd')
   } else if (ev.kind === 'match-end') {
-    gatedSfx('matchEnd', { final: props.finalMatch })
+    // Round-7 item 14: the final's celebratory applause belongs to the finale screen, so a
+    // final-match viewer stays silent at match-end (suppressEndApplause). Every other match
+    // plays its normal short applause here.
+    if (!props.suppressEndApplause) gatedSfx('matchEnd', { final: props.finalMatch })
   }
 }
 
@@ -357,9 +379,12 @@ function frame(ts: number): void {
   }
 }
 
-/** ~1.5s of real time the court sits static (players home, clock at 0) after
- *  'takeYourSeats' plays and before the timeline actually starts – see startClock. */
-const SEATS_PREROLL_MS = 1500
+/** Real time the court sits static (players home, clock at 0) after 'takeYourSeats' plays
+ *  and before the timeline actually starts – see startClock. Round-7 item 11: held for the
+ *  clip's real length (~3.5s) so the match no longer starts over the top of it; was 1.5s,
+ *  which cut the clip off. Applies at ×1/×2 (the speeds that play the cue); ×4 skips both
+ *  the cue and the hold. Hardcoded to the recorded clip's duration. */
+const SEATS_PREROLL_MS = 3600
 
 function beginClockLoop(): void {
   // Playback is actually starting now (immediately at speed ×4, or after the
@@ -378,10 +403,11 @@ function startClock(): void {
   if (!seatsPlayedForRun) {
     seatsPlayedForRun = true
     // Pre-match beat (owner spec): on a fresh run, 'takeYourSeats' plays BEFORE the
-    // clock starts – the court sits visible and static for ~1.5s, then the timeline
-    // begins. gatedSfx decides whether this speed plays the cue at all (×1/×2 only);
-    // the hold only applies when it does. This replaced the old wiring where the cue
-    // fired on the timeline's own first point-start event.
+    // clock starts – the court sits visible and static for the clip's full length
+    // (SEATS_PREROLL_MS ~3.6s, round-7 item 11), then the timeline begins, so the first
+    // hit never lands on top of the clip. gatedSfx decides whether this speed plays the
+    // cue at all (×1/×2 only); the hold only applies when it does. This replaced the old
+    // wiring where the cue fired on the timeline's own first point-start event.
     if (speed.value !== 4) {
       gatedSfx('seats')
       preRollTimer = setTimeout(() => {
@@ -418,7 +444,9 @@ function resetPlayback(startPlaying: boolean): void {
   currentEvent = timeline.events[0] ?? null
   lastRenderedEvent = null
   seatsPlayedForRun = false
+  outRng = rngFromSeed(props.match.result.seed + ':outcall')
   outCounter = 0
+  outThreshold = pickInt(outRng, 3, 5)
   playerPos = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
   if (viewMode.value === 'skip') {
     jumpToEnd()
@@ -426,17 +454,6 @@ function resetPlayback(startPlaying: boolean): void {
     render()
     if (startPlaying) startClock()
   }
-}
-
-function togglePlay(): void {
-  if (viewMode.value === 'skip') return
-  initSfx() // belt-and-suspenders; the global listener normally unlocks audio first
-  if (finished.value) {
-    resetPlayback(true)
-    return
-  }
-  if (playing.value) pauseInternal()
-  else startClock()
 }
 
 function restart(): void {
@@ -500,7 +517,6 @@ const currentAnnotated = computed(() => (displayedPointIndex.value >= 0 ? props.
 const scoreLine = computed(() => currentAnnotated.value?.entry.scoreAfter ?? '0-0')
 const winProbA = computed(() => currentAnnotated.value?.winProbA ?? 0.5)
 const probPct = computed(() => Math.round(winProbA.value * 100))
-const playPauseLabel = computed(() => (playing.value ? 'Pause' : 'Play'))
 
 interface SideStats {
   pointsWon: [number, number]
@@ -546,7 +562,11 @@ function servePct(side: Side): number {
 
 <template>
   <div class="viewer">
-    <canvas ref="canvasRef" class="viewer-canvas"></canvas>
+    <div class="viewer-court">
+      <canvas ref="canvasRef" class="viewer-canvas"></canvas>
+      <!-- Round-7 item 15: stage/round label as an accent pill over the top-left of the court. -->
+      <span v-if="stageLabel" class="viewer-stage">{{ stageLabel }}</span>
+    </div>
 
     <div class="ends-labels">
       <span :class="{ serving: liveServer === leftSide }">
@@ -568,12 +588,9 @@ function servePct(side: Side): number {
         <option :value="2">2×</option>
         <option :value="4">4×</option>
       </select>
-      <template v-if="props.mode === 'replay'">
-        <button class="primary sfx-watch" @click="restart">Watch again ↻</button>
-      </template>
-      <template v-else>
-        <button class="primary" :disabled="viewMode === 'skip'" @click="togglePlay">{{ playPauseLabel }}</button>
-      </template>
+      <!-- Round-7 item 16: live mode autoplays a short match – no Play/Pause control at all.
+           Only replay keeps its single "Watch again"; both modes keep the mode/speed selects. -->
+      <button v-if="props.mode === 'replay'" class="primary sfx-watch" @click="restart">Watch again ↻</button>
       <button disabled title="Coming in Phase 6">Shout 📣</button>
     </div>
 

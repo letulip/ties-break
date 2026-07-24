@@ -106,6 +106,51 @@ export function setMusicMuted(value: boolean): void {
   muted = value
   writeMuted(value)
   applyTarget()
+  updateMediaSessionState()
+}
+
+// --- round-7 item 2: OS / notification-shade media session --------------------
+// Show the game's identity (title/artist/logo) in the phone's notification-shade
+// player instead of a bare "theme.mp3", and let that player's play/pause buttons drive
+// the music toggle. Fully feature-detected: every call is a no-op wherever
+// navigator.mediaSession (or the MediaMetadata constructor) is unavailable, so this
+// never affects the desktop/test paths. Metadata + handlers are installed exactly once,
+// from start() (a real user gesture is guaranteed by then).
+function hasMediaSession(): boolean {
+  return typeof navigator !== 'undefined' && 'mediaSession' in navigator
+}
+
+function setupMediaSession(): void {
+  if (!hasMediaSession()) return
+  const ms = navigator.mediaSession
+  try {
+    if (typeof MediaMetadata !== 'undefined') {
+      ms.metadata = new MediaMetadata({
+        title: 'Ties Break',
+        artist: 'Ace Parent',
+        artwork: [
+          { src: `${import.meta.env.BASE_URL}logos/logo-tb-line-light.webp`, sizes: '512x512', type: 'image/webp' },
+        ],
+      })
+    }
+    // The shade's play/pause toggles the music mute (its own persisted state); the actual
+    // element is started/stopped by applyTarget() as a side effect of setMusicMuted().
+    ms.setActionHandler('play', () => setMusicMuted(false))
+    ms.setActionHandler('pause', () => setMusicMuted(true))
+  } catch {
+    // Some engines throw on an unsupported action/metadata shape – stay silent; the music
+    // itself is unaffected, only the shade decoration is.
+  }
+}
+
+/** Reflect the mute state (not the transient match-duck) as the shade's play/pause icon. */
+function updateMediaSessionState(): void {
+  if (!hasMediaSession()) return
+  try {
+    navigator.mediaSession.playbackState = muted ? 'paused' : 'playing'
+  } catch {
+    // ignore – decoration only.
+  }
 }
 
 /** Gesture-gated: call once, from a real click handler (the splash screen's "tap to
@@ -115,6 +160,8 @@ export function start(): void {
   if (started) return
   started = true
   applyTarget()
+  setupMediaSession()
+  updateMediaSessionState()
 }
 
 /** Refcounted: fades the track to silence while >=1 caller holds a duck. Safe to call

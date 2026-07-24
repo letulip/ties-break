@@ -13,6 +13,9 @@ const game = useGameStore()
 const week = computed(() => game.snapshot?.week ?? 0)
 const plan = computed(() => game.snapshot?.plan ?? { train: 75, rest: 25 })
 
+// Mon–Sun letters shown under the day dots (round-7 item 5b).
+const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+
 // Evenly spread `trainDays` "train" dots across 7 slots (largest-remainder-free integer
 // spread – deterministic, no RNG): slot i is a training day iff the running share crosses
 // an integer boundary at i.
@@ -51,9 +54,13 @@ function formatSigned(cents: number): string {
       <h2 style="margin: 0">Week recap · W{{ week }}</h2>
       <button class="link" @click="$emit('dismiss')">Dismiss</button>
     </div>
-    <div class="recap-dots">
-      <span v-for="(d, i) in dayDots" :key="i" class="recap-dot" :class="d" :title="d === 'train' ? 'Training' : 'Rest'"></span>
+    <div class="recap-days">
+      <div v-for="(d, i) in dayDots" :key="i" class="recap-day">
+        <span class="recap-dot" :class="d" :title="d === 'train' ? 'Training' : 'Rest'"></span>
+        <span class="recap-day-letter">{{ DAY_LETTERS[i] }}</span>
+      </div>
     </div>
+    <p class="recap-legend"><span class="recap-key train">■</span> training · <span class="recap-key rest">■</span> rest</p>
     <p v-if="flavorText" class="recap-flavor">{{ flavorText }}</p>
     <div class="recap-figures">
       <span class="num positive">Income {{ formatSigned(incomeCents) }}</span>

@@ -73,6 +73,11 @@ export type TimelineEventKind =
   // point-end/game-end/set-end, before the next point-start (never after the match's
   // final point – see computeEndsSwaps in timeline.ts).
   | 'change-ends'
+  // Round-7 item 10: a silent, static hold (no shot, no cue) so applause has room to ring
+  // out before the next point's first hit. Emitted after each point-end (tiny) and after a
+  // game-end/set-end (longer), never on the match's final point. Carries the trailing
+  // point's index; the viewer just holds the court on that point while it elapses.
+  | 'gap'
   | 'match-end'
 
 export interface TimelineEvent {
