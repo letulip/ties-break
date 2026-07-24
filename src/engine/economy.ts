@@ -64,14 +64,19 @@ export const ECONOMY = {
     wealthy: 1.4,
   } as Record<FamilyBackground, number>,
 
-  // Travel scales with family means (wealthier travel = pricier + a money-sink; poorer = cheaper).
-  // middle = 1.0 (baseline unchanged). POST-draw multiply only – the travel pickInt in calendar.ts
-  // stays byte-identical, so the season sub-RNG (and the world's RNG identity) hold.
+  // Travel scales with family means (wealthier travel = pricier + a money-sink; poorer = cheaper),
+  // and the owner wants the price to sit in a CORRIDOR for every trip, not on a fixed multiplier.
+  // Each background is a `[lo, hi]` band; a per-event uniform roll (from a purpose-scoped sub-stream
+  // keyed by the event – see calendar.ts) maps into the band: `factor = lo + roll * (hi - lo)`. The
+  // corridors are disjoint (working ≤ 0.80 < middle ≥ 0.95 ≤ 1.05 < wealthy ≥ 1.20) so, drawn off
+  // the SAME roll, working < middle < wealthy holds per trip, not just on average. POST-draw multiply
+  // only – the travel pickInt in calendar.ts stays byte-identical, so the season sub-RNG (and the
+  // world's RNG identity) hold.
   travelBgFactor: {
-    working: 0.75,
-    middle: 1.0,
-    wealthy: 1.25,
-  } as Record<FamilyBackground, number>,
+    working: [0.7, 0.8],
+    middle: [0.95, 1.05],
+    wealthy: [1.2, 1.3],
+  } as Record<FamilyBackground, [number, number]>,
 
   // Weekly expense scale from the time split: train 75% ≈ 1.0, more training costs more.
   // factor = base + perTrainPercent * plan.train.

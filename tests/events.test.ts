@@ -23,15 +23,16 @@ function firstEnterable(world: WorldState) {
   return world.season.find((e) => e.deadlineWeek >= world.week)!
 }
 
-// r-gate (season-life-01): a fresh kid ranks #1 (the whole field is tied at 0 pts), so she is
-// eligible for national only. These cases predate the ranking gate and aren't about eligibility, so
-// enter at a rank inside the event's band, then restore the real rank so nothing downstream (e.g.
-// gear-sponsorship, which reads kidRank) is perturbed.
+// r-gate (season-life-01b): points-based eligibility. These cases predate the ladder and aren't about
+// it, so grant the kid a throwaway result worth the tier's minPoints ONLY for the enterEvent gate
+// check, then drop it. enterEvent never ticks/recomputes, so nothing downstream (points/rank/gear) is
+// perturbed – identical to the old set-and-restore trick. local's min is 0, so no grant is needed there.
 function enterEligible(world: WorldState, event: SeasonEvent): void {
-  const saved = world.kidRank
-  world.kidRank = TIERS[event.tier].enterRankBand[0]
+  const min = TIERS[event.tier].enterPointBand[0]
+  const marker = { playerId: KID_ID, week: world.week, points: min, tier: event.tier }
+  if (min > 0) world.results.push(marker)
   enterEvent(world, event.id)
-  world.kidRank = saved
+  if (min > 0) world.results = world.results.filter((r) => r !== marker)
 }
 
 describe('entry validation', () => {

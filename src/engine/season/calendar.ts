@@ -20,8 +20,10 @@ export const TIERS: Record<TierId, TierDef> = {
     travelCostCents: [60_00, 120_00],
     points: [30, 18, 10, 5],
     everyNWeeks: 2,
-    // Open to everyone at the bottom (sentinel worstRank); graduates out once the kid cracks top-40.
-    enterRankBand: [41, Number.MAX_SAFE_INTEGER],
+    // The ENTRY tier: open from 0 points (a fresh kid always starts here), graduates out once she has
+    // clearly outgrown it (best-6 > 85 pts – roughly three strong local runs). Tuned on the bench so a
+    // fresh career shows a real early local phase before the regional/national climb.
+    enterPointBand: [0, 85],
   },
   regional: {
     id: 'regional',
@@ -31,8 +33,9 @@ export const TIERS: Record<TierId, TierDef> = {
     travelCostCents: [150_00, 400_00],
     points: [80, 48, 28, 14, 6],
     everyNWeeks: 4,
-    // Opens at rank 130; graduates out at top-10. Overlaps local (41-130) and national (11-40).
-    enterRankBand: [11, 130],
+    // Opens once she has a couple of counting results (65 pts); graduates out at 230. Overlaps local
+    // (65-85) and national (150-230), so the climb is a smooth local → regional → national handover.
+    enterPointBand: [65, 230],
   },
   national: {
     id: 'national',
@@ -42,8 +45,8 @@ export const TIERS: Record<TierId, TierDef> = {
     travelCostCents: [400_00, 900_00],
     points: [200, 120, 70, 35, 15, 6],
     everyNWeeks: 13,
-    // Opens at top-40; never graduates (bestRank 1 keeps the top of the ladder always open).
-    enterRankBand: [1, 40],
+    // Opens at 150 pts; never graduates (sentinel maxPoints keeps the top of the ladder always open).
+    enterPointBand: [150, Number.MAX_SAFE_INTEGER],
   },
   itf: {
     id: 'itf',
@@ -54,7 +57,7 @@ export const TIERS: Record<TierId, TierDef> = {
     points: [400, 240, 140, 70, 30, 12],
     everyNWeeks: 0, // locked in Phase 3
     // Inert: itf is never scheduled (everyNWeeks 0), so this band is never consulted.
-    enterRankBand: [1, Number.MAX_SAFE_INTEGER],
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
   },
 }
 
@@ -110,13 +113,26 @@ function idealWeek(fromWeek: number, weeks: number, i: number, count: number): n
   return fromWeek + Math.floor(((i + 0.5) * weeks) / count)
 }
 
-function makeEvent(week: number, tier: TierId, rng: Rng, background: FamilyBackground): SeasonEvent {
+function makeEvent(
+  seedStr: string,
+  week: number,
+  tier: TierId,
+  rng: Rng,
+  background: FamilyBackground,
+): SeasonEvent {
   const surface = pickSurface(rng)
   const [lo, hi] = TIERS[tier].travelCostCents
-  // Draw first (byte-identical RNG), THEN scale by family means – the pickInt call is unchanged,
-  // so the draw count/sequence is background-independent. This one scaled value is both what the
-  // UI shows (UpcomingEvent.travelCostCents) and what enterEvent charges (chargeTravel), no divergence.
-  const travelCostCents = Math.round(pickInt(rng, lo, hi) * ECONOMY.travelBgFactor[background])
+  // Draw the base travel first (byte-identical MAIN-stream RNG – the pickInt call/sequence is
+  // background-independent, so the calendar structure and the world's RNG identity hold). Then map a
+  // per-trip factor out of the background's CORRIDOR using a PURPOSE-SCOPED sub-stream keyed by the
+  // event (week+tier) – independent of both the main weekly stream and this season stream, so it is
+  // identity-safe. Same roll across backgrounds → the same relative draw, only the corridor differs.
+  // This one factored value is both what the UI shows (UpcomingEvent.travelCostCents) and what
+  // enterEvent charges (chargeTravel), no divergence.
+  const baseTravelCents = pickInt(rng, lo, hi)
+  const [cLo, cHi] = ECONOMY.travelBgFactor[background]
+  const roll = rngFromSeed(`${seedStr}:travelbg:${week}:${tier}`)()
+  const travelCostCents = Math.round(baseTravelCents * (cLo + roll * (cHi - cLo)))
   const year = Math.floor(week / 52)
   return {
     id: `${year}-w${week}-${tier}`,
@@ -166,7 +182,7 @@ export function buildSeason(
     for (let i = 0; i < count; i++) {
       const target = idealWeek(fromWeek, weeks, i, count)
       const week = claimWeek(used, target, lo, hi)
-      events.push(makeEvent(week, tier, rng, background))
+      events.push(makeEvent(seedStr, week, tier, rng, background))
     }
   }
 

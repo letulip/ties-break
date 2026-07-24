@@ -222,11 +222,11 @@ export interface UpcomingEvent {
   entryFeeCents: number
   label: string
   entered: boolean
-  /** the kid's current dense rank meets this tier's ranking band (both directions). Snapshot-only
-   *  (derived from kidRank at snapshot time), so it persists nothing and bumps no schema version. */
+  /** the kid's EARNED ranking points meet this tier's point band (both directions). Snapshot-only
+   *  (derived from the results ledger at snapshot time), so it persists nothing and bumps no schema. */
   eligible: boolean
-  /** why the kid can't enter, for the UI lock label; absent when eligible. 'locked' = not ranked
-   *  high enough yet (reach the tier's worstRank); 'outgrown' = too good for this tier now. */
+  /** why the kid can't enter, for the UI lock label; absent when eligible. 'locked' = not enough
+   *  ranking points yet (below the tier's minPoints); 'outgrown' = past its ceiling now. */
   ineligibleReason?: 'locked' | 'outgrown'
 }
 

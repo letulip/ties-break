@@ -20,12 +20,14 @@ function buildToPending(seed: string): WorldState {
   const world = createWorld(seed)
   const rng = rngFromSeed(seed)
   const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-  // r-gate (season-life-01): a fresh kid ranks #1 (field tied at 0 pts) → eligible for national only.
-  // Enter at a rank inside the event's band, then restore the real rank so nothing downstream shifts.
-  const savedRank = world.kidRank
-  world.kidRank = TIERS[event.tier].enterRankBand[0]
+  // r-gate (season-life-01b): points-based eligibility. Grant the kid a throwaway result worth the
+  // tier's minPoints ONLY for the enterEvent gate check, then drop it before any tick so nothing
+  // downstream shifts (local's min is 0, needing no grant).
+  const min = TIERS[event.tier].enterPointBand[0]
+  const marker = { playerId: KID_ID, week: world.week, points: min, tier: event.tier }
+  if (min > 0) world.results.push(marker)
   enterEvent(world, event.id)
-  world.kidRank = savedRank
+  if (min > 0) world.results = world.results.filter((r) => r !== marker)
   while (world.week < event.week) tickWeek(world, rng)
   expect(world.week).toBe(event.week)
   expect(world.pendingTournament).toBeTruthy()

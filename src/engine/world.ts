@@ -804,12 +804,21 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   }
 }
 
-/** Pure ranking-eligibility check for a tier (Phase-4 "Season Life" slice 1). A tier is a WINDOW
- *  `[bestRank, worstRank]` on the kid's dense rank (1 = best): eligible ⇔ the rank sits inside the
- *  band. No world/RNG dependency, so the bench and tests call it directly. */
-export function isTierEligible(tier: TierId, kidRank: number): boolean {
-  const [bestRank, worstRank] = TIERS[tier].enterRankBand
-  return bestRank <= kidRank && kidRank <= worstRank
+/** The kid's EARNED ranking points: her windowed best-6 sum at the current week – the same value
+ *  `computeRanking` assigns her, an absolute measure of achievement (a fresh kid = 0). Derived on the
+ *  fly from the results ledger (no persisted state → no schema bump); the eligibility ladder reads it. */
+export function kidPoints(world: WorldState): number {
+  return windowedBestSum(world.results, world.week, KID_ID)
+}
+
+/** Pure eligibility check for a tier (Phase-4 "Season Life" slice 1, increment 2). A tier is a WINDOW
+ *  `[minPoints, maxPoints]` on the kid's EARNED ranking points: eligible ⇔ the points sit inside the
+ *  band. Points (not dense-rank POSITION) so a fresh/point-less kid starts at the BOTTOM (local only)
+ *  and climbs local → regional → national as she earns results. No world/RNG dependency, so the bench
+ *  and tests call it directly. */
+export function isTierEligible(tier: TierId, points: number): boolean {
+  const [minPoints, maxPoints] = TIERS[tier].enterPointBand
+  return minPoints <= points && points <= maxPoints
 }
 
 /** Enter the kid in a scheduled event: validates deadline / funds / duplicates / ranking
@@ -822,12 +831,13 @@ export function enterEvent(world: WorldState, eventId: string): void {
   if (world.week > event.deadlineWeek) throw new Error('Entry deadline has passed')
   const fee = TIERS[event.tier].entryFeeCents
   if (world.fundsCents < fee) throw new Error('Not enough funds for the entry fee')
-  const [bestRank, worstRank] = TIERS[event.tier].enterRankBand
-  if (world.kidRank > worstRank) {
-    throw new Error(`Not ranked high enough for ${TIERS[event.tier].label} (reach #${worstRank})`)
+  const [minPoints, maxPoints] = TIERS[event.tier].enterPointBand
+  const points = kidPoints(world)
+  if (points < minPoints) {
+    throw new Error(`Not enough ranking points for ${TIERS[event.tier].label} yet (need ${minPoints})`)
   }
-  if (world.kidRank < bestRank) {
-    throw new Error(`You've outgrown ${TIERS[event.tier].label} (rank #${world.kidRank})`)
+  if (points > maxPoints) {
+    throw new Error(`You've outgrown ${TIERS[event.tier].label} (${points} pts)`)
   }
   world.fundsCents -= fee
   world.entries.push(eventId)
@@ -915,15 +925,16 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
 // --- snapshot ----------------------------------------------------------------
 function upcomingEvents(world: WorldState): UpcomingEvent[] {
   const entered = new Set(world.entries)
+  const points = kidPoints(world)
   return world.season
     .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)
     .sort((a, b) => a.week - b.week)
     .map((e) => {
-      // Snapshot-only ranking eligibility (no persisted state → no schema bump). `ineligibleReason`
-      // names which side of the band the kid failed: 'locked' = not ranked high enough yet,
-      // 'outgrown' = too good for this tier now.
-      const eligible = isTierEligible(e.tier, world.kidRank)
-      const worstRank = TIERS[e.tier].enterRankBand[1]
+      // Snapshot-only points eligibility (no persisted state → no schema bump). `ineligibleReason`
+      // names which side of the band the kid failed: 'locked' = not enough ranking points yet,
+      // 'outgrown' = too good (past the tier's ceiling) now.
+      const eligible = isTierEligible(e.tier, points)
+      const minPoints = TIERS[e.tier].enterPointBand[0]
       return {
         id: e.id,
         week: e.week,
@@ -935,7 +946,7 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         label: TIERS[e.tier].label,
         entered: entered.has(e.id),
         eligible,
-        ...(eligible ? {} : { ineligibleReason: world.kidRank > worstRank ? ('locked' as const) : ('outgrown' as const) }),
+        ...(eligible ? {} : { ineligibleReason: points < minPoints ? ('locked' as const) : ('outgrown' as const) }),
       }
     })
 }

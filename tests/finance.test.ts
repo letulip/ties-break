@@ -4,6 +4,7 @@ import {
   tickWeek,
   enterEvent,
   isTierEligible,
+  kidPoints,
   skipTournament,
   closeTournament,
   recomputeKidRank,
@@ -18,13 +19,16 @@ import { rngFromSeed } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import type { SeasonEvent } from '../src/engine/season/types'
 
-// r-gate (season-life-01): enter at a rank inside the event's band, then restore the real rank so
-// nothing downstream is perturbed (a fresh kid ranks #1, eligible for national only).
+// r-gate (season-life-01b): points-based eligibility. These cases aren't about the ladder, so grant
+// the kid a throwaway result worth the tier's minPoints ONLY for the enterEvent gate check, then drop
+// it – enterEvent never ticks, so nothing downstream (points/rank/gear) is perturbed. local's min is
+// 0, so a fresh kid needs no grant at all there.
 function enterEligible(world: WorldState, event: SeasonEvent): void {
-  const saved = world.kidRank
-  world.kidRank = TIERS[event.tier].enterRankBand[0]
+  const min = TIERS[event.tier].enterPointBand[0]
+  const marker = { playerId: KID_ID, week: world.week, points: min, tier: event.tier }
+  if (min > 0) world.results.push(marker)
   enterEvent(world, event.id)
-  world.kidRank = saved
+  if (min > 0) world.results = world.results.filter((r) => r !== marker)
 }
 
 // Part A – the persisted per-week/per-category finance aggregate (financeWeeks) and the pure
@@ -40,9 +44,9 @@ function busyTournamentSeason(seed: string, weeks: number): WorldState {
   for (let i = 0; i < weeks; i++) {
     for (const e of world.season) {
       if (e.tier !== 'local' || world.entries.includes(e.id) || e.deadlineWeek < world.week) continue
-      // r-gate: only enter tiers the kid is currently eligible for (local opens once she is outside
-      // the top-40); enterEvent would otherwise throw for a too-good rank.
-      if (!isTierEligible(e.tier, world.kidRank)) continue
+      // r-gate: only enter tiers the kid is currently eligible for (local is the entry tier, open
+      // from 0 points until she outgrows it); enterEvent would otherwise throw for an outgrown tier.
+      if (!isTierEligible(e.tier, kidPoints(world))) continue
       if (world.fundsCents < TIERS[e.tier].entryFeeCents + e.travelCostCents) continue
       enterEvent(world, e.id)
     }

@@ -15,13 +15,15 @@
  * index, never Math.random – the engine forbids wall-clock/Math.random and same
  * seed+preset must reproduce byte-identically).
  *
- * Entry policy v2 (materially drives the numbers – printed in the header, never hidden):
- *   each week, ENTER EVERY RANKING-ELIGIBLE event (a tier whose band the kid's current rank sits
- *   inside – see isTierEligible) the kid can also afford entry+travel for at that moment, then tick,
- *   then resolve any spawned tournament (skip + close). The eligibility gate (Phase-4 slice 1) is
- *   what makes the entry count realistic: a kid can't spam every affordable tier, only the ones her
- *   ranking currently opens. Once funds go negative the affordability gate blocks further entries on
- *   its own – the policy stalls – while weekly coaching keeps bleeding (it is never funds-gated).
+ * Entry policy v3 (materially drives the numbers – printed in the header, never hidden):
+ *   each week, ENTER EVERY RANKING-ELIGIBLE event (a tier whose POINT band the kid's EARNED ranking
+ *   points sit inside – see isTierEligible) the kid can also afford entry+travel for AS ITS DEADLINE
+ *   APPROACHES (within ENTRY_LOOKAHEAD weeks – a parent commits a few weeks out, not a year ahead),
+ *   then tick, then resolve any spawned tournament (skip + close). The points gate (Phase-4 slice 1,
+ *   increment 2) is what makes the count realistic and ordered: a fresh (0-point) kid starts at the
+ *   bottom (local only) and climbs local → regional → national as she earns results. Once funds go
+ *   negative the affordability gate blocks further entries – the policy stalls – while weekly coaching
+ *   keeps bleeding (it is never funds-gated).
  * The per-season entry count (total + per-tier) is reported so the burn reconciles with real play.
  *
  * Run:  npm run bench:econ            (console table)
@@ -33,6 +35,7 @@ import {
   tickWeek,
   enterEvent,
   isTierEligible,
+  kidPoints,
   skipTournament,
   closeTournament,
   financeWindow,
@@ -45,6 +48,9 @@ import { TIERS } from '../src/engine/season/calendar'
 
 export const SEASON_WEEKS = 52
 export const SEEDS_PER_PRESET = 30
+/** How many weeks before an event's entry deadline the policy commits to it. A near-deadline window
+ *  (not the full rolling horizon) keeps the entry count a realistic single season – see runSeason. */
+export const ENTRY_LOOKAHEAD = 3
 
 export interface Preset {
   /** table label, e.g. "25k  · middle · hired coach" */
@@ -115,13 +121,19 @@ export function runSeason(preset: Preset, index: number): SeedResult {
   const entries = { total: 0, local: 0, regional: 0, national: 0 }
 
   for (let i = 0; i < SEASON_WEEKS; i++) {
-    // Entry policy v2: enter every RANKING-ELIGIBLE event affordable by entry+travel NOW.
+    // Entry policy v3: enter each RANKING-ELIGIBLE event affordable by entry+travel as its deadline
+    // APPROACHES (within ENTRY_LOOKAHEAD weeks) – a parent commits a few weeks out, not a year ahead.
+    // The near-deadline window mirrors the engine's own advanceWeeks "deadline soon" stop-logic and,
+    // crucially, keeps the count a realistic single SEASON: the old policy entered every future event
+    // in the rolling ~2-year horizon at once (front-loading a whole year of locals on week 0), which
+    // inflated the per-season entry count far past what a kid actually plays.
     for (const e of world.season) {
       if (world.entries.includes(e.id)) continue
       if (world.week > e.deadlineWeek) continue // deadline passed – enterEvent would throw
-      // Ranking gate FIRST (before affordability): the kid may only enter tiers her current rank
-      // opens. Skipping here keeps enterEvent from throwing on an ineligible tier.
-      if (!isTierEligible(e.tier, world.kidRank)) continue
+      if (e.deadlineWeek - world.week > ENTRY_LOOKAHEAD) continue // too far out – commit nearer the date
+      // Ranking gate (before affordability): the kid may only enter tiers her EARNED points open.
+      // Skipping here keeps enterEvent from throwing on an ineligible tier.
+      if (!isTierEligible(e.tier, kidPoints(world))) continue
       const cost = TIERS[e.tier].entryFeeCents + e.travelCostCents
       if (world.fundsCents < cost) continue // can't afford entry+travel – policy stalls here
       enterEvent(world, e.id)
@@ -266,10 +278,10 @@ function renderPreset(preset: Preset, rows: SeedResult[]): string {
 
 const POLICY_HEADER = [
   'Ties Break – economy bench (measurement only; changes no engine numbers)',
-  `Entry policy v2: each week, enter every RANKING-ELIGIBLE event (a tier her rank opens) the kid`,
-  `  can also afford entry+travel for; then tick; then skip+close any spawned tournament. The`,
-  `  ranking gate (Phase-4 slice 1) caps entries to the tiers her rank allows – see entries/season.`,
-  `  Once funds go red the affordability gate stalls entries; weekly coaching still bleeds.`,
+  `Entry policy v3: each week, enter every RANKING-ELIGIBLE event (a tier her EARNED points open) the`,
+  `  kid can afford entry+travel for AS ITS DEADLINE NEARS (within ${ENTRY_LOOKAHEAD} wk); tick; skip+close any`,
+  `  spawned tournament. The points gate (Phase-4 slice 1) makes a fresh kid climb local → regional →`,
+  `  national as she earns results – see entries/season. Funds red ⇒ entries stall; coaching still bleeds.`,
   `${SEEDS_PER_PRESET} seeds/preset · ${SEASON_WEEKS}-week season · coach setup per preset (see each block) · plan balanced (75/25).`,
   `Money is whole-dollar rounded; ±sd is the population stddev across the ${SEEDS_PER_PRESET} seeds.`,
 ].join('\n')
