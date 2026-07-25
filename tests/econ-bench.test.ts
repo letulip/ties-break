@@ -11,6 +11,8 @@ import {
   WEEKS_PER_YEAR,
   START_AGE_YEARS,
   REACH_TARGET_MONEY,
+  REACH_PRO_RANK,
+  REACH_PRO_POINTS,
   EXPENSE_CATS,
   INCOME_CATS,
   type SeedResult,
@@ -162,11 +164,35 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
         expect(r.reachedWeek).toBeLessThanOrEqual(H16.weeks)
       }
     }
-    // NOTE (finding, not a bug): the 14→18 pro proxy uses `kidRank <= 50`, and dense-ranking ties the
-    // whole point-less field at rank 1 in the opening weeks, so every career "reaches" it at week 1.
-    // The predicate is implemented exactly as the spec defines it; the degeneracy is worth surfacing.
-    const wealthyH18 = Array.from({ length: 30 }, (_, i) => runCareer(wealthy, i, H18.weeks))
-    expect(wealthyH18.every((r) => r.reachedWeek === 1)).toBe(true)
+  })
+
+  it('the 14→18 pro proxy guards the rank arm with hasResults (no rank credit until a counting result)', () => {
+    // The degeneracy the guard fixes: a brand-new career ties at dense-rank 1 (kidRank <= 50) while
+    // holding ZERO counting results. An unguarded `kidRank <= 50` would therefore "reach pro" at week 1.
+    const fresh = openCareer(wealthy, 0)
+    expect(fresh.world.kidRank).toBeLessThanOrEqual(REACH_PRO_RANK) // dense-rank tie: she's "#1"
+    expect(kidPoints(fresh.world)).toBe(0) // ...but has no counting result yet
+
+    // reachedWeek(pro) must match an INDEPENDENT replay of the GUARDED predicate, and must NOT be the
+    // week-1 degenerate value: the rank arm only fires once she owns a counting result (points > 0),
+    // which mirrors the engine's `ranked = countingResults.length > 0` signal.
+    for (const preset of PRESETS) {
+      for (const index of [0, 1, 2]) {
+        const r = runCareer(preset, index, H18.weeks)
+        const { world, rng } = openCareer(preset, index)
+        let firstReach: number | null = null
+        for (let i = 0; i < H18.weeks; i++) {
+          stepCareerWeek(world, rng)
+          const pts = kidPoints(world)
+          const hasResults = pts > 0 // == computeCountingResults(world).length > 0 (every kid result scores)
+          const met = (hasResults && world.kidRank <= REACH_PRO_RANK) || pts >= REACH_PRO_POINTS
+          if (firstReach === null && met) firstReach = world.week
+        }
+        expect(r.reachedWeek).toBe(firstReach)
+        expect(r.reachedWeek).not.toBe(1) // the guard kills the week-1 degeneracy (null or a real week)
+        if (r.reachedWeek !== null) expect(r.reachedWeek).toBeGreaterThan(2) // only after a scoring result lands
+      }
+    }
   })
 })
 

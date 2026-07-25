@@ -85,13 +85,14 @@ export interface Horizon {
 // Two horizons, both iterated in main. weeks = (targetAge - 14) * 52.
 export const HORIZONS: Horizon[] = [
   { label: '14→16', weeks: 104, targetAge: 16, blurb: 'first prize money proxy (national-tier eligibility)' },
-  { label: '14→18', weeks: 208, targetAge: 18, blurb: 'pro attempt proxy (top-50 rank or 300 points)' },
+  { label: '14→18', weeks: 208, targetAge: 18, blurb: 'pro attempt proxy (top-50 once ranked, or 300 points)' },
 ]
 
 // Reach targets. The engine models NO prize money, so the target is defined against existing state.
 /** 14→16: national-tier eligibility == kidPoints(world) >= 150 (== isTierEligible('national', pts)). */
 export const REACH_TARGET_MONEY = 150
-/** 14→18 "pro" proxy: a top-50 rank OR a points threshold. */
+/** 14→18 "pro" proxy: a top-50 rank ONCE she is actually ranked (has a counting result) OR a points
+ *  threshold. The `hasResults` guard on the rank arm is REQUIRED – see reachedTarget. */
 export const REACH_PRO_RANK = 50
 export const REACH_PRO_POINTS = 300
 
@@ -215,11 +216,21 @@ export function stepCareerWeek(world: WorldState, rng: Rng): { local: number; re
 }
 
 /** True ⇔ the horizon's reach target is currently met. 14→16: national eligibility (points >= 150).
- *  14→18: a top-50 rank OR a 300-point threshold. Keyed on targetAge derived from the horizon length. */
+ *  14→18: (ranked AND top-50) OR a 300-point threshold. Keyed on targetAge derived from the horizon. */
 function reachedTarget(world: WorldState, horizonWeeks: number): boolean {
   const targetAge = START_AGE_YEARS + Math.floor(horizonWeeks / WEEKS_PER_YEAR)
-  if (targetAge >= 18) return world.kidRank <= REACH_PRO_RANK || kidPoints(world) >= REACH_PRO_POINTS
-  return kidPoints(world) >= REACH_TARGET_MONEY
+  const points = kidPoints(world)
+  if (targetAge >= 18) {
+    // hasResults mirrors the engine's `ranked` signal (StatsScreen/HomeScreen use
+    // `countingResults.length > 0`): the kid isn't really ranked until she owns a counting result.
+    // Every kid result carries points > 0 (finalizeTournament only pushes scoring results), so
+    // `points > 0` IS `computeCountingResults(world).length > 0`. The guard is REQUIRED: without it the
+    // point-less field ties at dense-rank 1, firing kidRank<=50 at week 1 for everyone. The points arm
+    // stays UNGUARDED (earned, not tie-degenerate).
+    const hasResults = points > 0
+    return (hasResults && world.kidRank <= REACH_PRO_RANK) || points >= REACH_PRO_POINTS
+  }
+  return points >= REACH_TARGET_MONEY
 }
 
 /**

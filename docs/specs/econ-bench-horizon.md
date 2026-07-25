@@ -50,7 +50,12 @@ a prior reading and may have drifted — anchor on the **symbol names**.
    parent + local sponsor + gear subsidy), define the target against existing state:
    - `14→16`: `REACH_TARGET_MONEY` = national-tier eligibility → `kidPoints(world) >= 150`
      (equivalently `isTierEligible('national', kidPoints(world))`).
-   - `14→18`: `REACH_TARGET_PRO` = a rank/points pro threshold → `kidRank <= 50 || kidPoints >= 300`.
+   - `14→18`: `REACH_TARGET_PRO` = `(hasResults && kidRank <= 50) || kidPoints >= 300`, where
+     `hasResults` = the kid has ≥1 counting result. **The `hasResults` guard is REQUIRED:** without it
+     the rank arm is degenerate — in the opening weeks the whole point-less field ties at dense-rank 1,
+     so `kidRank <= 50` is trivially true from week 1 (the same dense-rank tie the `rankLabel`/Unranked
+     polish addresses). Only count a pro-rank reach once she has a real ranking. The points arm
+     (`kidPoints >= 300`) is unguarded (earned, not tie-degenerate).
    Report reach-rate (% of 30 seeds reaching within the horizon) + median reach week per profile.
 
 6. **PROMINENT caveat** in `POLICY_HEADER` and the printed report: prize money is NOT modeled yet, so
