@@ -63,9 +63,13 @@ export type WorldEventType =
   | 'match'
   | 'tournament'
   | 'milestone'
+  | 'injury'
+  | 'recovery'
 
 /** Spending/earning bucket a financial event belongs to (Money-breakdown pie, round-7).
- *  Optional on the event: pre-round-7 events carry none and render as 'other'. */
+ *  Optional on the event: pre-round-7 events carry none and render as 'other'.
+ *  'physio' (Season-Life slice C) buckets every medical line: weekly rehab, the one-time
+ *  onset treatment, and the healthy-week physio retainer. */
 export type WorldEventCategory =
   | 'coaching'
   | 'travel'
@@ -74,6 +78,7 @@ export type WorldEventCategory =
   | 'stringing'
   | 'sponsor'
   | 'income'
+  | 'physio'
   | 'other'
 
 /** A kid match, replayable on demand: seed (on MatchRecord) + both players' skill
@@ -136,7 +141,7 @@ export interface FinanceWindow {
   netCents: number
 }
 
-export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end'
+export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end' | 'injury'
 
 /** Structured end-of-season recap (schema v10). Written at wrap-up time (the tick into the
  *  season year's first off-season week) off the world state itself – W-L are counted as the
@@ -157,6 +162,9 @@ export interface SeasonSummary {
   bestResultText: string
   /** signed funds delta across the season (flavor figure, matches the wrap-up milestone) */
   fundsDeltaCents: number
+  /** weeks lost to injury inside the season (Season-Life slice C). OPTIONAL – summaries
+   *  banked before slice C never stored it; readers default to 0 (no schema bump). */
+  weeksInjured?: number
 }
 
 // --- Tournament experience (feat/tournament-experience) -----------------------

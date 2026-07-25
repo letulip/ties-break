@@ -41,6 +41,7 @@
  */
 import { writeFileSync } from 'node:fs'
 import {
+  availabilityStatus,
   createWorld,
   tickWeek,
   enterEvent,
@@ -117,7 +118,7 @@ export const PRESETS: Preset[] = [
 ]
 
 /** The per-category buckets we surface, in display order (expenses first, then income). */
-export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'other']
+export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'physio', 'other']
 export const INCOME_CATS: WorldEventCategory[] = ['income', 'sponsor']
 
 /** One completed season, captured at its wrap week off world.lastSeasonSummary + that year's finance fold. */
@@ -169,7 +170,7 @@ export interface SeedResult {
 }
 
 function zeroCats(): Record<WorldEventCategory, number> {
-  return { coaching: 0, travel: 0, entry: 0, gear: 0, stringing: 0, sponsor: 0, income: 0, other: 0 }
+  return { coaching: 0, travel: 0, entry: 0, gear: 0, stringing: 0, physio: 0, sponsor: 0, income: 0, other: 0 }
 }
 
 // --- career simulation -------------------------------------------------------
@@ -202,6 +203,9 @@ export function stepCareerWeek(world: WorldState, rng: Rng): { local: number; re
     if (e.deadlineWeek - world.week > ENTRY_LOOKAHEAD) continue // too far out – commit nearer the date
     // Ranking gate (before affordability): the kid may only enter tiers her EARNED points open.
     if (!isTierEligible(e.tier, kidPoints(world))) continue
+    // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
+    // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
+    if (availabilityStatus(world, e).level === 'blocked') continue
     const cost = TIERS[e.tier].entryFeeCents + e.travelCostCents
     if (world.fundsCents < cost) continue // can't afford entry+travel – policy stalls here
     enterEvent(world, e.id)

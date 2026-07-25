@@ -79,12 +79,15 @@ function fundsShort(e: UpcomingEvent): boolean {
 }
 // The HARD-lock label (Season-Life slice B): point-band (locked/outgrown) or a hard availability
 // block (injured / school exams). Fatigue is NOT here – it stays enterable with a soft caution.
+// The injured detail names the return week (slice C) so the parent can plan around the layoff.
 function lockLabel(e: UpcomingEvent): string {
   switch (e.ineligibleReason) {
     case 'outgrown':
       return 'Outgrown'
-    case 'injured':
-      return 'Injured – rest up'
+    case 'injured': {
+      const s = game.snapshot
+      return s?.injury ? `Injured – back wk ${s.week + s.injury.weeksRemaining}` : 'Injured – rest up'
+    }
     case 'unavailable':
       return 'School exams this week'
     default:

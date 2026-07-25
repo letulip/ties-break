@@ -86,23 +86,31 @@ function conditionColor(i: number): string {
   return `hsl(${Math.round(hue)}, 72%, 48%)`
 }
 
-// --- Availability chip (Season-Life slice B): a plain-language read on whether she can compete.
-// "Fit" (green) when clear; "School break – exams" (grey) when this or next week is a blackout;
-// the red "Injured …" state comes alive in Slice C (snapshot.injury is always null in B). --
+// --- Availability chip (Season-Life slice B, live in slice C): a plain-language read on
+// whether she can compete. "Fit" (green) when clear; "School break – exams" (grey) when this
+// or next week is a blackout; red with the injury kind + return week while she is out. --
 const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'red' } | null>(() => {
   const s = game.snapshot
   if (!s) return null
-  if (s.injury) return { label: `Injured – back in ${s.injury.weeksRemaining} wk`, tone: 'red' }
+  if (s.injury) return { label: `Injured: ${s.injury.kind} – back wk ${s.week + s.injury.weeksRemaining}`, tone: 'red' }
   if (isBlackoutWeek(s.week) || isBlackoutWeek(s.week + 1)) return { label: 'School break – exams', tone: 'grey' }
   return { label: 'Fit', tone: 'green' }
 })
 
-// --- Physio toggle (Season-Life slice B): reflects/sets snapshot.physioActive. The recovery/cost
-// lever is billed in Slice C; here the toggle just flips the persisted flag through the worker. --
+// --- Physio toggle (Season-Life slice C): reflects/sets snapshot.physioActive, which now
+// actually bills a weekly retainer (corridor-scaled to the family's means) and in exchange
+// lowers injury risk and shortens recoveries. The cost range is shown next to the toggle. --
 const physioActive = computed(() => game.snapshot?.physioActive ?? false)
 function togglePhysio(): void {
   game.setPhysio(!physioActive.value)
 }
+const physioCostLabel = computed(() => {
+  const background = game.snapshot?.profile.background
+  if (!background) return ''
+  const [lo, hi] = ECONOMY.physio.retainerPerWeekCents
+  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[background]
+  return `$${Math.round((lo * cLo) / 100)}–${Math.round((hi * cHi) / 100)}/wk`
+})
 
 // --- News match rows (round-5 item 8): "V. Martin vs S. Everts" / kid-perspective score.
 const kidShort = computed(() => {
@@ -230,6 +238,8 @@ const EVENT_EMOJI: Record<string, string> = {
   match: '🎾',
   tournament: '🏁',
   milestone: '🏆',
+  injury: '🩹',
+  recovery: '💪',
 }
 interface NewsGroup {
   week: number
@@ -331,6 +341,7 @@ function openRankHelp(): void {
               <label class="physio-toggle">
                 <input type="checkbox" :checked="physioActive" :disabled="game.busy" @change="togglePhysio" />
                 <span>Physio recovery</span>
+                <span class="hint physio-cost">{{ physioCostLabel }}</span>
               </label>
             </td>
           </tr>

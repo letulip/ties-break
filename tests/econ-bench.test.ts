@@ -9,6 +9,7 @@ import {
   PRESETS,
   HORIZONS,
   WEEKS_PER_YEAR,
+  SEASON_WRAP_OFFSET,
   START_AGE_YEARS,
   REACH_TARGET_MONEY,
   REACH_PRO_RANK,
@@ -91,15 +92,31 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
     expect(incSum).toBe(r.totalIncomeCents)
   })
 
-  it('parent income is the deterministic weekly contribution over the captured seasons (no sponsor for middle)', () => {
+  it('parent income is the deterministic weekly contribution plus injury-withdrawal refunds (no sponsor for middle)', () => {
     // yearStart-aligned folds capture, per season, weeks [52k .. 52k+49]: 49 weeks for season 0
     // (week 0 has no tick) and 50 weeks for every later season. Parent income is a fixed per-week
-    // contribution, so cats.income is that flat rate times the captured income-weeks. Middle never
-    // banks the (working-only) local-sponsor cameo, so cats.sponsor is 0.
+    // contribution. Season-Life slice C: an injury onset auto-withdraws pre-deadline entries and
+    // the refund is an 'income'-category event (same bucket a manual withdrawal always used), so
+    // cats.income = flat contribution x captured weeks + refunds banked inside captured folds –
+    // reconstructed here by an independent replay. Middle never banks the (working-only)
+    // local-sponsor cameo, so cats.sponsor stays 0.
     const capturedIncomeWeeks = (horizonWeeks: number) => 49 + 50 * (horizonWeeks / WEEKS_PER_YEAR - 1)
     for (const h of [H16, H18]) {
       const r = runCareer(middle, 0, h.weeks)
-      expect(r.cats.income).toBe(PARENT_INCOME_CENTS.middle * capturedIncomeWeeks(h.weeks))
+      const { world, rng } = openCareer(middle, 0)
+      let refundsCents = 0
+      for (let i = 0; i < h.weeks; i++) {
+        stepCareerWeek(world, rng)
+        const year = Math.floor(world.week / WEEKS_PER_YEAR)
+        const capturedWeek =
+          world.week % WEEKS_PER_YEAR <= SEASON_WRAP_OFFSET && // inside the fold window [52k .. 52k+49]
+          year * WEEKS_PER_YEAR + SEASON_WRAP_OFFSET <= h.weeks // ...of a season whose wrap lands in-horizon
+        if (!capturedWeek) continue
+        refundsCents += world.events
+          .filter((e) => e.week === world.week && e.text.startsWith('Entry refunded'))
+          .reduce((s, e) => s + (e.amountCents ?? 0), 0)
+      }
+      expect(r.cats.income).toBe(PARENT_INCOME_CENTS.middle * capturedIncomeWeeks(h.weeks) + refundsCents)
       expect(r.cats.sponsor).toBe(0)
     }
   })

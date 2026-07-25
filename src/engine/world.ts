@@ -7,6 +7,7 @@ import {
   type FinanceWeek,
   type FinanceWindow,
   type FullBracketMatch,
+  type InjurySeverity,
   type PendingBracketRound,
   type PendingView,
   type PlayerProfile,
@@ -320,6 +321,14 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
     .filter((e) => inRange(e.week) && e.amountCents !== undefined)
     .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
 
+  // Season-Life slice C: weeks lost to injury inside [yearStart, wrapWeek). Derived from
+  // injuryHistory (each entry spans [week - weeksOut, week)) + the current injury if she is
+  // still out at the wrap – no extra persisted counter, so no schema bump.
+  const overlap = (lo: number, hi: number) => Math.max(0, Math.min(hi, wrapWeek) - Math.max(lo, yearStart))
+  let weeksInjured = 0
+  for (const h of world.injuryHistory) weeksInjured += overlap(h.week - h.weeksOut, h.week)
+  if (world.injury) weeksInjured += overlap(world.injury.sinceWeek, wrapWeek)
+
   const startRanking = computeRanking(world.results, yearStart, [...cohortIds(world), KID_ID])
   const startRank = startRanking.find((r) => r.playerId === KID_ID)?.rank ?? null
   const rankMove =
@@ -350,6 +359,7 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
     losses,
     bestResultText: bestText,
     fundsDeltaCents,
+    weeksInjured,
   }
   // The season that just wrapped is banked in the summary – start the next one clean.
   world.seasonWins = 0
@@ -441,6 +451,198 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
     return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
   }
   return { level: 'ok' }
+}
+
+// --- Season-Life: injuries + physio (slice C) ---------------------------------
+// ALL of this slice's randomness lives on the PRIVATE per-week sub-streams
+// `rngFromSeed(seed + ':injury:' + week)` and `rngFromSeed(seed + ':physio:' + week)`.
+// Each is re-derived per call and keyed on immutable (seed, week) only, so conditional
+// pulls inside them (severity/weeks-out/region only when injured; billing only when owed)
+// can never perturb the MAIN weekly stream or any other week – the C1 invariance test
+// (count 45239 / hash 9f783705, frozen in slice B) guards it. rollInjury/resolvePhysio
+// take only `world`: there is no rng parameter to misuse.
+
+/** The girl injury-age curve (owner research 25.07, peak at 16); ages past the table
+ *  fall to the `default` knob. See docs/research/injury-stats-by-age.md §3.1. */
+export function ageInjuryFactor(ageYears: number): number {
+  const table = ECONOMY.availability.ageInjuryFactor
+  return table[ageYears] ?? table.default
+}
+
+/** Overuse multiplier for competed weeks in the trailing 4 (research §3.2). Index = count,
+ *  clamped to the table's top (4+ straight weeks -> the max factor). */
+export function consecutivePlayFactor(playedWeeks: number): number {
+  const table = ECONOMY.availability.consecutivePlayFactor
+  return table[Math.min(playedWeeks, table.length - 1)]
+}
+
+/** True when the kid is entered in an event scheduled for the CURRENT week. */
+function enteredScheduledThisWeek(world: WorldState): boolean {
+  return world.season.some((e) => e.week === world.week && world.entries.includes(e.id))
+}
+
+/** Competed weeks in the trailing 4 (incl. this one), counted from the KID's results ledger –
+ *  pure state, zero draws. This week's run has not landed in the ledger yet at roll time, so it
+ *  is read off entries+season instead. */
+export function playedWeeksInTrailing4(world: WorldState): number {
+  const weeks = new Set<number>()
+  for (const r of world.results) {
+    if (r.playerId === KID_ID && r.week > world.week - 4 && r.week <= world.week) weeks.add(r.week)
+  }
+  if (enteredScheduledThisWeek(world)) weeks.add(world.week)
+  return weeks.size
+}
+
+/** The effective per-week injury chance (the occurrence roll's threshold). Pure state, zero
+ *  draws: fatigue/age/load/play/physio are post-draw comparison operands, so none of them can
+ *  move the draw sequence – only whether the (already drawn) roll counts as an injury. */
+export function injuryTau(world: WorldState): number {
+  const a = ECONOMY.availability
+  const fatigue = 100 - world.condition
+  let tau = clamp(a.injuryBaseChance + fatigue * a.injuryFatigueSlope, 0, a.injuryChanceCap)
+  tau *= ageInjuryFactor(START_AGE_YEARS + Math.floor(world.week / 52))
+  tau *= consecutivePlayFactor(playedWeeksInTrailing4(world))
+  if (enteredScheduledThisWeek(world)) tau *= a.injuryPlayingMultiplier
+  if (world.physioActive) tau *= ECONOMY.physio.riskReduction
+  return Math.min(tau, a.injuryChanceCap)
+}
+
+// Body-region weights (owner research 25.07): ~48% lower-limb / 28% upper / 24% core, with the
+// WTA skew inside `lower` (girls' pattern = ankle+knee sprains take the majority of the lower
+// share) and a lumbar bias inside `core` (teen back trouble). Flattened to one cumulative table
+// so the region costs exactly ONE pull from the private injury generator.
+const BODY_REGIONS: readonly { part: string; weight: number }[] = [
+  { part: 'ankle', weight: 0.48 * 0.3 },
+  { part: 'knee', weight: 0.48 * 0.25 },
+  { part: 'hamstring', weight: 0.48 * 0.15 },
+  { part: 'calf', weight: 0.48 * 0.12 },
+  { part: 'foot', weight: 0.48 * 0.1 },
+  { part: 'hip', weight: 0.48 * 0.08 },
+  { part: 'wrist', weight: 0.28 * 0.25 },
+  { part: 'shoulder', weight: 0.28 * 0.25 },
+  { part: 'elbow', weight: 0.28 * 0.25 },
+  { part: 'forearm', weight: 0.28 * 0.25 },
+  { part: 'lower back', weight: 0.24 * 0.75 },
+  { part: 'abdominal', weight: 0.24 * 0.25 },
+]
+
+function drawBodyRegion(rng: Rng): string {
+  const u = rng() // exactly one pull
+  let cum = 0
+  for (const region of BODY_REGIONS) {
+    cum += region.weight
+    if (u < cum) return region.part
+  }
+  return BODY_REGIONS[BODY_REGIONS.length - 1].part
+}
+
+// kind = "<part> <descriptor>". A 1-week minor reads as a "niggle", a 2-week one as "soreness" –
+// deterministic variety off the already-drawn weeks-out, no extra pull.
+const SEVERITY_DESCRIPTOR: Record<InjurySeverity, string> = {
+  minor: 'soreness',
+  moderate: 'strain',
+  major: 'stress reaction',
+  severe: 'tear',
+}
+
+/** One medical bill in cents: draw the MIDDLE-anchored base from `band`, then map ONE uniform
+ *  roll from the same physio generator into the background's medical corridor (mirrors
+ *  travelBgFactor: same roll, disjoint corridors, so working < middle < wealthy per bill). */
+function medicalBillCents(world: WorldState, rng: Rng, band: readonly [number, number]): number {
+  const base = pickInt(rng, band[0], band[1])
+  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[world.profile.background]
+  const roll = rng()
+  return Math.round(base * (cLo + roll * (cHi - cLo)))
+}
+
+/** Weekly injury step (tick step 1c, FIRST – so playedThisWeek/accrueCondition see a walkover).
+ *  Injured: count down; at 0 clear + log to injuryHistory + emit a 'recovery' event – the
+ *  clearing week is a grace week (the occurrence roll only fires again next tick). Healthy: one
+ *  UNCONDITIONAL occurrence roll off `seed:injury:week`; injured iff roll < injuryTau(world). */
+export function rollInjury(world: WorldState): void {
+  if (world.injury !== null) {
+    world.injury.weeksRemaining -= 1
+    if (world.injury.weeksRemaining <= 0) {
+      const { kind, severity, totalWeeks } = world.injury
+      world.injuryHistory.push({ kind, severity, week: world.week, weeksOut: totalWeeks })
+      if (world.injuryHistory.length > 20) world.injuryHistory.splice(0, world.injuryHistory.length - 20)
+      world.injury = null
+      addEvent(world, { week: world.week, type: 'recovery', text: 'Back on court – cleared to play.' })
+    }
+    return
+  }
+
+  const injuryRng = rngFromSeed(`${world.seed}:injury:${world.week}`)
+  const roll = injuryRng() // unconditional every healthy week – only tau moves
+  if (roll >= injuryTau(world)) return
+
+  // Injured. Severity band, weeks-out and body region pull from the SAME per-week generator
+  // (invariance-safe: it is private to this (seed, week)).
+  const bands = ECONOMY.availability.severityBands
+  const sevRoll = injuryRng()
+  const band = bands.find((b) => sevRoll < b.cum) ?? bands[bands.length - 1]
+  let weeksOut = pickInt(injuryRng, band.weeksLo, band.weeksHi)
+  const part = drawBodyRegion(injuryRng)
+  if (world.physioActive) weeksOut = Math.max(1, Math.round(weeksOut * (1 - ECONOMY.physio.recoverySpeedup)))
+  const descriptor = band.severity === 'minor' && weeksOut === 1 ? 'niggle' : SEVERITY_DESCRIPTOR[band.severity]
+  const kind = `${part} ${descriptor}`
+  world.injury = { kind, severity: band.severity, weeksRemaining: weeksOut, totalWeeks: weeksOut, sinceWeek: world.week }
+
+  // One-time scans/treatment at onset, corridor-scaled off the physio sub-stream. minor draws
+  // a $0 bill (band [0,0]) and emits no event – she just rests it off.
+  const onsetCost = medicalBillCents(world, rngFromSeed(`${world.seed}:physio:${world.week}`), ECONOMY.physio.onsetCostCents[band.severity])
+  if (onsetCost > 0) {
+    world.fundsCents -= onsetCost
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: 'physio',
+      text: 'Medical – scans and treatment',
+      amountCents: -onsetCost,
+    })
+  }
+
+  // Auto-withdraw every still-refundable (pre-deadline) entry: the family pulls out while the
+  // fee can come back. Post-deadline entries forfeit their fee (withdrawEvent refuses past the
+  // deadline) – if one lands on its play week while she is out, tickWeek emits the walkover.
+  for (const id of [...world.entries]) {
+    const e = eventById(world, id)
+    if (e && world.week <= e.deadlineWeek) withdrawEvent(world, id)
+  }
+
+  const wks = `${weeksOut} wk${weeksOut === 1 ? '' : 's'}`
+  addEvent(world, {
+    week: world.week,
+    type: 'injury',
+    text:
+      band.severity === 'severe'
+        ? `Bad news from the clinic: ${kind} – out ~${wks}. The dream takes a hit.`
+        : `Injury: ${kind} – out ~${wks}.`,
+  })
+}
+
+/** Weekly physio/medical billing (tick step 1c, LAST). Injured weeks bill rehab regardless of
+ *  the retainer toggle; a healthy week bills the retainer only while physioActive. Amounts are
+ *  corridor-scaled draws off `seed:physio:week`; the expense event auto-folds into accrueFinance
+ *  (Money breakdown) and the season-wrap funds delta. */
+export function resolvePhysio(world: WorldState): void {
+  const physioRng = rngFromSeed(`${world.seed}:physio:${world.week}`)
+  let cost: number
+  if (world.injury !== null) {
+    cost = medicalBillCents(world, physioRng, ECONOMY.physio.rehabPerWeekCents)
+  } else if (world.physioActive) {
+    cost = medicalBillCents(world, physioRng, ECONOMY.physio.retainerPerWeekCents)
+  } else {
+    return
+  }
+  world.fundsCents -= cost
+  addEvent(world, {
+    week: world.week,
+    type: 'expense',
+    category: 'physio',
+    text: 'Physio / recovery session',
+    amountCents: -cost,
+  })
 }
 
 // --- weekly resolution pieces ------------------------------------------------
@@ -851,14 +1053,17 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     sub-streams only – so this never perturbs the weekly draw count.
   resolveGear(world)
 
-  // 1c. Season-Life availability. Pure state, ZERO main-stream draws (accrueCondition is pure
-  //     arithmetic). Sits here (not inside the pendingTournament block) so it runs exactly once
-  //     per real week, reveal weeks included. Slice C will add rollInjury(world) above this and
-  //     resolvePhysio(world) below it.
+  // 1c. Season-Life availability. ZERO main-stream draws: rollInjury/resolvePhysio pull only
+  //     from the private per-week `:injury:`/`:physio:` sub-streams and accrueCondition is pure
+  //     arithmetic. Sits here (not inside the pendingTournament block) so it runs exactly once
+  //     per real week, reveal weeks included. rollInjury runs FIRST so playedThisWeek and
+  //     accrueCondition see a fresh injury as the walkover it is.
+  rollInjury(world)
   const playedThisWeek =
     world.season.some((e) => e.week === world.week && world.entries.includes(e.id)) &&
-    world.injury === null // a fresh injury (Slice C) => walkover; injury is always null in B
+    world.injury === null // injured on the play week => walkover, no strain
   accrueCondition(world, playedThisWeek)
+  resolvePhysio(world)
 
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)
@@ -873,11 +1078,19 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
   //    fully-computed shadow tournament. Nothing kid-specific is emitted/awarded here – the flow does.
   const enteredThisWeek = scheduled.find((e) => world.entries.includes(e.id))
-  // A fresh injury (Slice C) turns an entered event into a walkover: no travel, no shadow run.
-  // injury is always null in slice B, so this guard is a no-op here that prepares C's branch.
+  // An injury turns an entered event into a walkover: no travel, no shadow run, 0 points.
+  // Only a POST-deadline entry can still be live here – pre-deadline entries were auto-withdrawn
+  // (and refunded) at onset by rollInjury; past the deadline the fee is forfeited (withdrawEvent
+  // refuses), so the walkover event is all that remains of the trip that never happened.
   if (enteredThisWeek && world.injury === null) {
     chargeTravel(world, enteredThisWeek)
     world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking)
+  } else if (enteredThisWeek) {
+    addEvent(world, {
+      week: world.week,
+      type: 'injury',
+      text: `Walkover: too injured to play the ${TIERS[enteredThisWeek.tier].label} – 0 pts, entry fee forfeited.`,
+    })
   }
 
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
@@ -1013,6 +1226,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // shows. Off-season weeks never carry a tournament, so this can't collide with 'tournament'.
     if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS) {
       stopReason = 'season-end'
+      break
+    }
+    // A FRESH injury (onset this very tick) halts the advance so the medical event surfaces;
+    // an ongoing recovery never re-stops the sim on every week she sits out.
+    if (world.injury !== null && world.injury.sinceWeek === world.week) {
+      stopReason = 'injury'
       break
     }
     if (world.fundsCents < 0) {
