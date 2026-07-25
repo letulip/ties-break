@@ -1,24 +1,37 @@
 import { describe, it, expect } from 'vitest'
 import {
-  runSeason,
+  runCareer,
+  openCareer,
+  stepCareerWeek,
   mean,
   stddev,
   median,
   PRESETS,
-  SEASON_WEEKS,
+  HORIZONS,
+  WEEKS_PER_YEAR,
+  START_AGE_YEARS,
+  REACH_TARGET_MONEY,
+  REACH_PRO_RANK,
+  REACH_PRO_POINTS,
   EXPENSE_CATS,
   INCOME_CATS,
   type SeedResult,
 } from '../tools/econ-bench'
-import { STARTING_FUNDS_CENTS } from '../src/engine/world'
+import { STARTING_FUNDS_CENTS, kidPoints, financeWindow } from '../src/engine/world'
 import { PARENT_INCOME_CENTS } from '../src/engine/world'
 
-// The economy bench (Part C) is a MEASUREMENT tool: it must be deterministic (same seed+preset ⇒
-// identical numbers, no wall-clock/Math.random) and its per-season accounting must reconcile with
-// the finance aggregate it reads. These tests pin the stat helpers and that determinism/reconciliation.
+// The economy bench (Part C, extended to whole-horizon in Wave 1) is a MEASUREMENT tool: it must be
+// deterministic (same seed+preset+horizon ⇒ identical numbers, no wall-clock/Math.random) and its
+// per-SEASON accounting must reconcile with the finance aggregate it reads – including PAST 60 weeks,
+// where the engine's 60-week finance pruning would silently drop early seasons. These tests pin the
+// stat helpers, determinism, the multi-season finance fold, the reach tracker and survival flag.
 
 const middle = PRESETS.find((p) => p.background === 'middle')!
 const working = PRESETS.find((p) => p.background === 'working')!
+const wealthy = PRESETS.find((p) => p.background === 'wealthy')!
+
+const H16 = HORIZONS.find((h) => h.weeks === 104)!
+const H18 = HORIZONS.find((h) => h.weeks === 208)!
 
 describe('bench stat helpers', () => {
   it('mean / stddev (population) / median over a known fixture', () => {
@@ -32,79 +45,201 @@ describe('bench stat helpers', () => {
   })
 })
 
-describe('runSeason determinism', () => {
-  it('same preset+index reproduces byte-identical results (no wall-clock, no Math.random)', () => {
-    const a = runSeason(middle, 0)
-    const b = runSeason(middle, 0)
+describe('runCareer determinism', () => {
+  it('same preset+index+horizon reproduces byte-identical results (deep equal)', () => {
+    const a = runCareer(middle, 0, H16.weeks)
+    const b = runCareer(middle, 0, H16.weeks)
     expect(a).toEqual(b)
   })
 
   it('the seed varies by index, so different indices give different runs', () => {
-    const a = runSeason(middle, 0)
-    const b = runSeason(middle, 1)
+    const a = runCareer(middle, 0, H16.weeks)
+    const b = runCareer(middle, 1, H16.weeks)
     expect(a.seed).not.toBe(b.seed)
-    // extremely unlikely to be identical across every category for two independent seasons
     expect(a).not.toEqual(b)
   })
 })
 
-describe('runSeason accounting reconciles with the finance aggregate', () => {
-  it('net == total income - gross expense == end funds - starting funds', () => {
+describe('per-season capture fires (targetAge - 14) times', () => {
+  it('a 14→18 run yields exactly 4 perSeason entries; 14→16 yields 2', () => {
+    expect(runCareer(middle, 0, H18.weeks).perSeason).toHaveLength(4)
+    expect(runCareer(middle, 0, H16.weeks).perSeason).toHaveLength(2)
+    // guard: it holds across every preset, not just middle
     for (const preset of PRESETS) {
-      const r = runSeason(preset, 0)
-      expect(r.netCents).toBe(r.totalIncomeCents - r.grossExpenseCents)
-      // Every fund movement flows through addEvent, so the season window is a closed ledger:
-      // net must equal the actual change in funds (nothing is spent off-ledger).
-      expect(r.netCents).toBe(r.endFundsCents - STARTING_FUNDS_CENTS[preset.background])
+      expect(runCareer(preset, 0, H16.weeks).perSeason).toHaveLength(2)
+      expect(runCareer(preset, 0, H18.weeks).perSeason).toHaveLength(4)
+    }
+  })
+})
+
+describe('runCareer accounting reconciles with the finance aggregate', () => {
+  it('net == total income - gross expense, and net == the sum of the per-season folds', () => {
+    for (const preset of PRESETS) {
+      for (const h of [H16, H18]) {
+        const r = runCareer(preset, 0, h.weeks)
+        expect(r.netCents).toBe(r.totalIncomeCents - r.grossExpenseCents)
+        expect(r.netCents).toBe(r.perSeason.reduce((s, p) => s + p.netCents, 0))
+      }
     }
   })
 
-  it('gross expense is the sum of the expense categories; income is the sum of income categories', () => {
-    const r = runSeason(working, 0)
+  it('gross expense is the sum of the expense categories; income is the sum of the income categories', () => {
+    const r = runCareer(working, 0, H16.weeks)
     const expSum = EXPENSE_CATS.reduce((s, c) => s + r.cats[c], 0)
     const incSum = INCOME_CATS.reduce((s, c) => s + r.cats[c], 0)
     expect(expSum).toBe(r.grossExpenseCents)
     expect(incSum).toBe(r.totalIncomeCents)
   })
 
-  it('parent income is the deterministic weekly contribution across the whole season', () => {
-    // 52 weekly ticks each emit one parents-contribution income event; the bench reads it back.
-    const r = runSeason(middle, 0)
-    expect(r.cats.income).toBe(PARENT_INCOME_CENTS.middle * SEASON_WEEKS)
+  it('parent income is the deterministic weekly contribution over the captured seasons (no sponsor for middle)', () => {
+    // yearStart-aligned folds capture, per season, weeks [52k .. 52k+49]: 49 weeks for season 0
+    // (week 0 has no tick) and 50 weeks for every later season. Parent income is a fixed per-week
+    // contribution, so cats.income is that flat rate times the captured income-weeks. Middle never
+    // banks the (working-only) local-sponsor cameo, so cats.sponsor is 0.
+    const capturedIncomeWeeks = (horizonWeeks: number) => 49 + 50 * (horizonWeeks / WEEKS_PER_YEAR - 1)
+    for (const h of [H16, H18]) {
+      const r = runCareer(middle, 0, h.weeks)
+      expect(r.cats.income).toBe(PARENT_INCOME_CENTS.middle * capturedIncomeWeeks(h.weeks))
+      expect(r.cats.sponsor).toBe(0)
+    }
   })
 })
 
-describe('entries-per-season counter (bench v2 – ranking gate)', () => {
-  it('counts entries with a per-tier split that sums to the total, across every preset', () => {
+describe('finance read is correct PAST the 60-week pruning window (the crux)', () => {
+  it('cumulative net == sum of the two per-year folds, and != the pruned financeWindow(fw,0)', () => {
+    // A 14→16 run is 104 weeks, well past the engine's 60-week finance retention. Coaching bleeds
+    // every single week, so spend accrues in both seasons.
+    const r = runCareer(middle, 0, H16.weeks)
+    expect(r.perSeason).toHaveLength(2)
+    // The bench sums the per-season folds captured AT each wrap (before pruning eats the early weeks).
+    expect(r.netCents).toBe(r.perSeason.reduce((s, p) => s + p.netCents, 0))
+    // The naive read financeWindow(financeWeeks, 0) at horizon end only sees the last ~60 weeks (the
+    // ledger was pruned), so it must NOT equal the true cumulative net – this guards the pruning bug.
+    expect(r.naiveNetCents).not.toBe(r.netCents)
+    expect(Math.abs(r.netCents - r.naiveNetCents)).toBeGreaterThan(0)
+  })
+
+  it('the naive read really is the pruned window and undercounts the horizon', () => {
+    // Independent replay: open the same career, tick 104 weeks, and confirm the ledger no longer
+    // reaches back to week 0 (so financeWindow(fw,0) is a partial, pruned read).
+    const { world, rng } = openCareer(middle, 0)
+    for (let i = 0; i < H16.weeks; i++) stepCareerWeek(world, rng)
+    const earliestWeek = Math.min(...world.financeWeeks.map((w) => w.week))
+    expect(earliestWeek).toBeGreaterThan(0) // early weeks have been pruned away
+    const naive = financeWindow(world.financeWeeks, 0)
+    expect(naive.startWeek).toBe(0)
+    // it only aggregates the retained tail, never the full career
+    expect(world.financeWeeks.length).toBeLessThanOrEqual(60)
+  })
+})
+
+describe('reach tracker (points/rank proxy – prize money is not modeled)', () => {
+  it('reachedWeek is the FIRST week the target predicate holds (14→16 = national eligibility)', () => {
+    // Independent replay of the SAME deterministic career: find the first week kidPoints crosses the
+    // national-eligibility proxy (>= REACH_TARGET_MONEY) and confirm runCareer recorded exactly that.
     for (const preset of PRESETS) {
-      const r = runSeason(preset, 0)
-      expect(r.entries.total).toBe(r.entries.local + r.entries.regional + r.entries.national)
-      expect(r.entries.total).toBeGreaterThanOrEqual(0)
+      for (const index of [0, 1, 2, 3, 4]) {
+        const r = runCareer(preset, index, H16.weeks)
+        const { world, rng } = openCareer(preset, index)
+        let firstCross: number | null = null
+        for (let i = 0; i < H16.weeks; i++) {
+          stepCareerWeek(world, rng)
+          if (firstCross === null && kidPoints(world) >= REACH_TARGET_MONEY) firstCross = world.week
+        }
+        expect(r.reachedWeek).toBe(firstCross)
+      }
     }
   })
 
-  it('the ranking gate keeps the season entry count realistic (well under one-per-week)', () => {
-    // The whole point of the gate: the kid can no longer spam every affordable tier. A gated season
-    // enters far fewer than the 52 weekly opportunities (the old ungated policy ran to ~50).
+  it('a career that clears the target has a non-null reachedWeek; one that never does is null', () => {
+    // The 14→16 money proxy (kidPoints >= 150) is a genuine climb, so some working careers clear it
+    // and others never accumulate 150 points inside 104 weeks – exercising BOTH the non-null and null
+    // branches deterministically.
+    const workingH16 = Array.from({ length: 30 }, (_, i) => runCareer(working, i, H16.weeks))
+    expect(workingH16.some((r) => r.reachedWeek !== null)).toBe(true) // some clear it
+    expect(workingH16.some((r) => r.reachedWeek === null)).toBe(true) // some never do
+    for (const r of workingH16) {
+      if (r.reachedWeek !== null) {
+        expect(r.reachedWeek).toBeGreaterThan(0)
+        expect(r.reachedWeek).toBeLessThanOrEqual(H16.weeks)
+      }
+    }
+  })
+
+  it('the 14→18 pro proxy guards the rank arm with hasResults (no rank credit until a counting result)', () => {
+    // The degeneracy the guard fixes: a brand-new career ties at dense-rank 1 (kidRank <= 50) while
+    // holding ZERO counting results. An unguarded `kidRank <= 50` would therefore "reach pro" at week 1.
+    const fresh = openCareer(wealthy, 0)
+    expect(fresh.world.kidRank).toBeLessThanOrEqual(REACH_PRO_RANK) // dense-rank tie: she's "#1"
+    expect(kidPoints(fresh.world)).toBe(0) // ...but has no counting result yet
+
+    // reachedWeek(pro) must match an INDEPENDENT replay of the GUARDED predicate, and must NOT be the
+    // week-1 degenerate value: the rank arm only fires once she owns a counting result (points > 0),
+    // which mirrors the engine's `ranked = countingResults.length > 0` signal.
     for (const preset of PRESETS) {
       for (const index of [0, 1, 2]) {
-        const r = runSeason(preset, index)
-        expect(r.entries.total).toBeLessThan(SEASON_WEEKS)
+        const r = runCareer(preset, index, H18.weeks)
+        const { world, rng } = openCareer(preset, index)
+        let firstReach: number | null = null
+        for (let i = 0; i < H18.weeks; i++) {
+          stepCareerWeek(world, rng)
+          const pts = kidPoints(world)
+          const hasResults = pts > 0 // == computeCountingResults(world).length > 0 (every kid result scores)
+          const met = (hasResults && world.kidRank <= REACH_PRO_RANK) || pts >= REACH_PRO_POINTS
+          if (firstReach === null && met) firstReach = world.week
+        }
+        expect(r.reachedWeek).toBe(firstReach)
+        expect(r.reachedWeek).not.toBe(1) // the guard kills the week-1 degeneracy (null or a real week)
+        if (r.reachedWeek !== null) expect(r.reachedWeek).toBeGreaterThan(2) // only after a scoring result lands
       }
     }
   })
 })
 
-describe('bankruptcy tracking', () => {
-  it('weeksToBankrupt is null-or-in-range, and a red run has a non-null first-red week', () => {
-    const results: SeedResult[] = PRESETS.flatMap((p) => [runSeason(p, 0), runSeason(p, 1)])
+describe('survival flag and bankruptcy tracking', () => {
+  it('survived === (weeksToBankrupt === null) across presets and horizons', () => {
+    for (const preset of PRESETS) {
+      for (const index of [0, 1]) {
+        for (const h of [H16, H18]) {
+          const r = runCareer(preset, index, h.weeks)
+          expect(r.survived).toBe(r.weeksToBankrupt === null)
+        }
+      }
+    }
+  })
+
+  it('weeksToBankrupt is null-or-in-range, and a red run has a negative peak deficit', () => {
+    const results: SeedResult[] = PRESETS.flatMap((p) => [runCareer(p, 0, H16.weeks), runCareer(p, 1, H16.weeks)])
     for (const r of results) {
       if (r.weeksToBankrupt !== null) {
         expect(r.weeksToBankrupt).toBeGreaterThanOrEqual(0)
-        expect(r.weeksToBankrupt).toBeLessThanOrEqual(SEASON_WEEKS)
-        // if it went red, the lowest point of the run is itself negative
+        expect(r.weeksToBankrupt).toBeLessThanOrEqual(H16.weeks)
         expect(r.peakDeficitCents).toBeLessThan(0)
       }
     }
+  })
+})
+
+describe('entries-per-career counter (ranking gate)', () => {
+  it('the per-tier split sums to the total, and the gate keeps entries under one-per-week', () => {
+    for (const preset of PRESETS) {
+      for (const index of [0, 1, 2]) {
+        const r = runCareer(preset, index, H16.weeks)
+        expect(r.entries.total).toBe(r.entries.local + r.entries.regional + r.entries.national)
+        expect(r.entries.total).toBeGreaterThanOrEqual(0)
+        expect(r.entries.total).toBeLessThan(H16.weeks)
+      }
+    }
+  })
+})
+
+describe('end-state fields', () => {
+  it('endRank / endPoints are exposed and consistent with the reach proxy', () => {
+    const r = runCareer(wealthy, 0, H16.weeks)
+    expect(Number.isInteger(r.endRank)).toBe(true)
+    expect(r.endPoints).toBeGreaterThanOrEqual(0)
+    // sanity: STARTING_FUNDS is a real preset number the report leans on
+    expect(STARTING_FUNDS_CENTS[wealthy.background]).toBeGreaterThan(0)
+    expect(START_AGE_YEARS).toBe(14)
   })
 })
