@@ -26,6 +26,15 @@ function physioSpendCents(world: WorldState): number {
   return -(financeWindow(world.financeWeeks, 0).byCategory.physio ?? 0)
 }
 
+/** The season's savings-interest income in cents (round-9 R9-1). Like the physio tail above,
+ *  the interest layer landed AFTER the owner froze the burn bands – and it scales with the
+ *  STARTING reserve (wealthy's 120k earns ~$3.7k/yr, dwarfing middle's), so leaving it in
+ *  would warp the band comparison. The calibration adds it back and keeps measuring the fixed
+ *  base cashflow it always measured. */
+function interestEarnedCents(world: WorldState): number {
+  return financeWindow(world.financeWeeks, 0).byCategory.interest ?? 0
+}
+
 /** Net funds lost over 52 weeks with NO tournaments entered (fixed costs only). A fresh career
  *  earns no ranking points, so the kid sits at the bottom of the field all year → rank > 30 →
  *  the product-sponsorship valve never fires. These are the owner's UNSPONSORED-kid bands. */
@@ -34,7 +43,7 @@ function seasonBurnDollars(seed: string, background: FamilyBackground): number {
   const rng = rngFromSeed(world.seed)
   const start = STARTING_FUNDS_CENTS[background]
   for (let i = 0; i < 52; i++) tickWeek(world, rng)
-  return (start - world.fundsCents - physioSpendCents(world)) / 100
+  return (start - world.fundsCents - physioSpendCents(world) + interestEarnedCents(world)) / 100
 }
 
 function batchBurns(background: FamilyBackground): number[] {
@@ -119,9 +128,9 @@ describe('product-sponsorship valve (round-7 amendment)', () => {
     const rng = rngFromSeed(world.seed)
     const start = STARTING_FUNDS_CENTS[background]
     for (let i = 0; i < 52; i++) tickWeek(world, rng)
-    // physio excluded for the same reason as seasonBurnDollars (and so the valve delta compares
-    // gear subsidies, not medical luck).
-    return { burn: (start - world.fundsCents - physioSpendCents(world)) / 100, world }
+    // physio + interest excluded for the same reason as seasonBurnDollars (and so the valve
+    // delta compares gear subsidies, not medical luck or reserve size).
+    return { burn: (start - world.fundsCents - physioSpendCents(world) + interestEarnedCents(world)) / 100, world }
   }
 
   it('a rank-≤10 middle kid burns ≥ $1.5k less over 52w than an unsponsored one', () => {

@@ -117,9 +117,10 @@ export const PRESETS: Preset[] = [
   { label: '120k · wealthy · hired coach', background: 'wealthy', coachSetup: 'hired' },
 ]
 
-/** The per-category buckets we surface, in display order (expenses first, then income). */
+/** The per-category buckets we surface, in display order (expenses first, then income).
+ *  'interest' (round-9 R9-1, weekly savings interest) is an INCOME category. */
 export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'physio', 'other']
-export const INCOME_CATS: WorldEventCategory[] = ['income', 'sponsor']
+export const INCOME_CATS: WorldEventCategory[] = ['income', 'sponsor', 'interest']
 
 /** One completed season, captured at its wrap week off world.lastSeasonSummary + that year's finance fold. */
 export interface PerSeason {
@@ -170,7 +171,7 @@ export interface SeedResult {
 }
 
 function zeroCats(): Record<WorldEventCategory, number> {
-  return { coaching: 0, travel: 0, entry: 0, gear: 0, stringing: 0, physio: 0, sponsor: 0, income: 0, other: 0 }
+  return { coaching: 0, travel: 0, entry: 0, gear: 0, stringing: 0, physio: 0, sponsor: 0, income: 0, interest: 0, other: 0 }
 }
 
 // --- career simulation -------------------------------------------------------

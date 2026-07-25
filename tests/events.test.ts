@@ -100,10 +100,14 @@ describe('weekly parent income', () => {
       const fundsBefore = world.fundsCents
       tickWeek(world, rng)
       const weekEvents = world.events.filter((e) => e.week === world.week).sort((a, b) => a.id - b.id)
-      // the parent contribution is the very first event of the week (before the base-cost expense)
-      expect(weekEvents[0].type).toBe('income')
-      expect(weekEvents[0].text).toContain("Parents' contribution")
-      expect(weekEvents[0].amountCents).toBe(PARENT_INCOME_CENTS[background])
+      // R9-1 (re-pinned deliberately): the savings interest on the carried-in balance now opens
+      // the week, so the parent contribution is the SECOND event – still before every cost.
+      expect(weekEvents[0].category).toBe('interest')
+      expect(weekEvents[1].type).toBe('income')
+      expect(weekEvents[1].text).toContain("Parents' contribution")
+      expect(weekEvents[1].amountCents).toBe(PARENT_INCOME_CENTS[background])
+      const costIdx = weekEvents.findIndex((e) => e.type === 'expense')
+      expect(costIdx).toBeGreaterThan(1)
       // funds moved by exactly income minus the week's net spend (income is added to funds)
       const netDelta = world.fundsCents - fundsBefore
       const totalSigned = weekEvents.reduce((s, e) => s + (e.amountCents ?? 0), 0)

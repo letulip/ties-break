@@ -42,7 +42,9 @@ const startingBudget = computed(() => (game.snapshot ? formatDollars(STARTING_BU
 // Expense buckets in a fixed order, each with an accent-family colour for the donut. Positive
 // (income) events never slice the donut – they roll into one green row. An expense whose
 // category is missing/unknown (pre-round-7 events) falls into 'other'.
-type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor'>
+// 'interest' (R9-1, weekly savings interest) is INCOME-side: it rolls into the green income
+// row via the positive-total fold below and must never slice the expense donut.
+type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest'>
 const EXPENSE_META: { key: ExpenseCategory; label: string; color: string }[] = [
   { key: 'coaching', label: 'Coaching', color: '#d9f24f' },
   { key: 'travel', label: 'Travel', color: '#4fd2f2' },

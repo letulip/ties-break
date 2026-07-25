@@ -154,21 +154,52 @@ export const ECONOMY = {
     },
   } as Record<GearCategory, GearLine>,
 
-  // Season-Life slice B: the per-week condition accumulator (0..100, 100 = fresh). Pure
-  // arithmetic – accrueCondition draws ZERO main-stream RNG, so none of these can shift the
-  // weekly draw sequence (the B1 invariance test guards it). `matchStrengthFloor` ships at 1.0
-  // so the match-strength coupling is OFF and no stored match record changes; wiring the coupling
-  // is a later slice.
+  // R9-1: weekly deterministic savings interest on a POSITIVE balance, credited on the
+  // carried-in funds as each week opens (before any of the week's flows). ~3.1%/yr – a
+  // realistic family savings account. round(fundsCents × apyWeekly), emitted only when
+  // >= 1 cent as an `income` event under the dedicated 'interest' category. Zero RNG.
+  savings: { apyWeekly: 0.0006 },
+
+  // Season-Life condition accumulator (0..100, 100 = fresh). Pure INTEGER arithmetic –
+  // accrueCondition draws ZERO main-stream RNG, so none of these can shift the weekly draw
+  // sequence (the B1 invariance test guards it).
+  //
+  // Round-9 OWNER REDESIGN (replaces the old restBase/restSlope/trainSlope plan formula AND
+  // the flat per-tier tournamentStrain – everything integer, no fractions):
+  //  - FATIGUE comes from MATCHES, per kid match played (world.ts matchDrain, applied when the
+  //    run COMMITS at finalizeTournament): straight sets with no tiebreak = 1; a 3-setter OR a
+  //    tiebreak in a 2-setter = 2; +1 more when the match had MORE than 2 tiebreak sets (a
+  //    three-TB epic) – max 3; plus the tier surcharge PER MATCH below. Hardest national
+  //    match = 3 + 2 = 5, so a five-match National run maxes at 25 (the owner's own check).
+  //  - RECOVERY comes from TIME: recoveryBase every week, always; on a week with NO kid match
+  //    the train/rest slider adds restRecoveryBonus (threshold-based on plan.rest – the 60/40
+  //    preset earns +2, 75/25 earns +1, the 85/15 grind earns 0; NEVER interpolated); physio
+  //    adds ECONOMY.physio.conditionBonusPerWeek; a blackout week (off-season / exams) adds
+  //    blackoutBonus. condition = clamp(condition + recovery − matchDrain, 0, 100).
   condition: {
     start: 100,
     min: 0,
     max: 100,
-    restBase: 4,
-    restSlope: 6,
-    trainSlope: 6,
-    tournamentStrain: { local: 8, regional: 16, national: 26, itf: 34 } as Record<TierId, number>,
-    offSeasonGain: 4, // extra recovery on off-season (weeks 49-51) and exam weeks
-    matchStrengthFloor: 1.0, // condFactor = floor + (1-floor)*(condition/100); 1.0 = coupling OFF
+    recoveryBase: 2, // every week, always
+    // Match-free weeks only, first matching threshold wins (descending): the slider stays
+    // meaningful – money (planFactor), future skill growth, and recovery pacing.
+    restRecoveryBonus: [
+      { minRest: 40, bonus: 2 },
+      { minRest: 25, bonus: 1 },
+    ] as { minRest: number; bonus: number }[],
+    blackoutBonus: 1, // off-season (weeks 49-51) and exam weeks (replaces the old offSeasonGain)
+    // Per-match drain components (see world.ts matchDrain).
+    matchFatigue: { straightSets: 1, hardMatch: 2, extraTiebreaks: 1 },
+    // Tier surcharge PER MATCH. itf is EXTRAPOLATED (+3) – the tier is locked in Phase 3, so
+    // the owner has never priced it; revisit when ITF unlocks.
+    tierMatchFatigue: { local: 0, regional: 1, national: 2, itf: 3 } as Record<TierId, number>,
+    // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
+    // then linear down to `floor` at condition 0:
+    //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.
+    // The kid's MatchPlayer scales by it on the EVENT-scoped `seed:kidtour` stream only; the
+    // slice-B fast-follow the owner proved necessary (won a Regional at 0 condition).
+    matchStrengthKnee: 70,
+    matchStrengthFloor: 0.55,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
@@ -224,6 +255,9 @@ export const ECONOMY = {
     retainerPerWeekCents: [45_00, 70_00] as [number, number], // middle-anchored; the corridor produces the tiering
     riskReduction: 0.76, // tau *= this when physioActive (24% cut)
     recoverySpeedup: 0.12, // weeksOut *= (1 - this), min 1, when physioActive
+    // R9-14: the billed retainer finally shows on the bar – accrueCondition adds this flat
+    // weekly recovery while physioActive. Integer (owner said "1 or 2"; 2 for visible value).
+    conditionBonusPerWeek: 2,
   },
 } as const
 

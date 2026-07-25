@@ -1427,6 +1427,13 @@ tr.kid-row td {
   flex: 1;
 }
 
+/* R9-9b: the splash's post-deadline withdraw link – quiet, centered under Back/Begin. */
+.tf-skip-entry {
+  display: block;
+  margin: 12px auto 0;
+  font-size: 12px;
+}
+
 /* Post-match box score */
 .tf-result-head {
   display: flex;

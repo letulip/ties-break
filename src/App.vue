@@ -13,6 +13,7 @@ import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
+import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
@@ -165,11 +166,26 @@ const stopToastDismissed = ref(false)
 // Round-7 item 4: the season-end stop is owned by SeasonSummaryDialog, not the toast. A fresh
 // snapshot resets both dismiss flags (any action re-arms them).
 const seasonSummaryDismissed = ref(false)
+// R9-21a: the injury stop is owned by the blocking InjuryStopDialog (the quiet toast buried
+// it – the owner only noticed the withdrawal three weeks later). Same dismiss lifecycle.
+const injuryStopDismissed = ref(false)
 watch(
   () => game.snapshot,
   () => {
     stopToastDismissed.value = false
     seasonSummaryDismissed.value = false
+    injuryStopDismissed.value = false
+  },
+)
+
+// R9-9a: the TournamentFlow splash's "← Back" hides the overlay WITHOUT resolving anything –
+// the week stays paused on the engine side. A persistent banner offers Resume; any change of
+// the pending run (skipped, closed, a different event) re-arms the overlay.
+const tournamentHidden = ref(false)
+watch(
+  () => game.snapshot?.pending?.eventId,
+  () => {
+    tournamentHidden.value = false
   },
 )
 // The tournament stop is owned by the full-screen TournamentFlow overlay and the season-end stop
@@ -193,10 +209,19 @@ const showSeasonSummary = computed(
 function dismissSeasonSummary(): void {
   seasonSummaryDismissed.value = true
 }
+// R9-21a: the injury stop popup – blocking, on Home (advance only ever runs from Home's bar),
+// until Continue. The dialog itself plays the alert sfx on mount.
+const showInjuryStop = computed(
+  () =>
+    tab.value === 'home' &&
+    game.snapshot?.stopReason === 'injury' &&
+    !!game.snapshot?.injury &&
+    !injuryStopDismissed.value,
+)
+// R9-21a: 'injury' left this map – it gets the blocking InjuryStopDialog, not a quiet toast.
 const STOP_REASON_TEXT: Record<string, string> = {
   deadline: 'Stopped: an entry deadline is coming up next week.',
   funds: 'Stopped: funds ran below zero.',
-  injury: 'Stopped: she picked up an injury – see the news.',
 }
 const stopReasonText = computed(() => STOP_REASON_TEXT[game.snapshot?.stopReason ?? ''] ?? '')
 function dismissStopToast(): void {
@@ -241,6 +266,13 @@ function dismissStopToast(): void {
       <button @click="dismissStopToast">Dismiss</button>
     </div>
 
+    <!-- R9-9a: the week is paused on a hidden tournament – a persistent Resume affordance on
+         every tab, so backing out of the splash can never strand the career. -->
+    <div v-if="game.snapshot?.pending && tournamentHidden" class="stop-toast tournament-paused">
+      <span>Tournament week: {{ game.snapshot.pending.tierLabel }} – the week is paused.</span>
+      <button class="primary" @click="tournamentHidden = false">Resume</button>
+    </div>
+
     <main class="app-content" :class="{ 'with-next-week-bar': tab === 'home' }">
       <HomeScreen v-if="tab === 'home'" />
       <SeasonScreen v-else-if="tab === 'play'" />
@@ -273,11 +305,16 @@ function dismissStopToast(): void {
       </button>
     </nav>
 
-    <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress. -->
-    <TournamentFlow v-if="game.snapshot?.pending" />
+    <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress.
+         R9-9a: the splash's Back hides it (nothing resolved); the banner above resumes it. -->
+    <TournamentFlow v-if="game.snapshot?.pending && !tournamentHidden" @back="tournamentHidden = true" />
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />
+
+    <!-- R9-21a: a fresh injury stops the advance with a BLOCKING popup (kind, layoff, what was
+         auto-withdrawn + refunds) and an alert sfx – no more quiet missable toast. -->
+    <InjuryStopDialog v-if="showInjuryStop" @continue="injuryStopDismissed = true" />
 
     <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
     <OnboardingTour v-if="showTour" @done="dismissTour" />

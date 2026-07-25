@@ -8,6 +8,7 @@ import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import MatchViewer from './MatchViewer.vue'
 import BracketTabs from './BracketTabs.vue'
+import ConfirmDialog from './ConfirmDialog.vue'
 import { playSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
@@ -19,6 +20,10 @@ import { formatShortName } from '../shared/format'
 import { weekRange } from '../shared/dates'
 import type { MatchOptions, Side } from '../engine/match/types'
 import type { WorldMatch } from '../shared/protocol'
+
+// R9-9a: the splash's "← Back" returns to the shell WITHOUT resolving anything – App.vue
+// hides the overlay and offers a Resume affordance while the week stays paused.
+defineEmits<{ back: [] }>()
 
 const game = useGameStore()
 const base = import.meta.env.BASE_URL
@@ -124,6 +129,22 @@ function enterPre(): void {
 
 function beginFromSplash(): void {
   enterPre()
+}
+
+// R9-9b: skip the event AT its week – a post-deadline withdrawal behind a confirm. The engine
+// command forfeits the entry fee, refunds the travel and discards the shadow run; the snapshot
+// comes back without `pending`, so the overlay closes by itself. Splash-only: once a match has
+// been revealed the run is under way (the engine guards this too).
+const showSkipConfirm = ref(false)
+const skipConfirmMessage = computed(() =>
+  pending.value
+    ? `Skip ${pending.value.tierLabel}? The entry fee is forfeited – the list closed with her on it. ` +
+      'Travel is refunded and the week passes without playing.'
+    : '',
+)
+async function confirmSkipEvent(): Promise<void> {
+  showSkipConfirm.value = false
+  if (pending.value) await game.skipEvent(pending.value.eventId)
 }
 
 // Initialise from the snapshot: resume at the finale after a reload mid-celebration, resume
@@ -286,9 +307,15 @@ const matchMeta = computed(() => {
           <span class="pill">{{ drawSize }} entrants</span>
         </div>
         <p class="hint" style="margin-top: 8px">{{ weekDates }}</p>
+        <!-- R9-9: the begin flow is not a one-way door – Back returns to the shell (nothing
+             resolved), and the skip link withdraws post-deadline behind a confirm. -->
         <div class="tf-actions">
+          <button :disabled="game.busy" @click="$emit('back')">← Back</button>
           <button class="primary" :disabled="game.busy" @click="beginFromSplash">Begin →</button>
         </div>
+        <button class="link tf-skip-entry" :disabled="game.busy" @click="showSkipConfirm = true">
+          Skip this event – withdraw
+        </button>
       </section>
 
       <template v-else>
@@ -454,5 +481,13 @@ const matchMeta = computed(() => {
       </template>
       </template>
     </div>
+
+    <ConfirmDialog
+      v-if="showSkipConfirm"
+      :message="skipConfirmMessage"
+      confirm-label="Skip event"
+      @confirm="confirmSkipEvent"
+      @cancel="showSkipConfirm = false"
+    />
   </div>
 </template>

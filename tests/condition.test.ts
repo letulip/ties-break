@@ -167,46 +167,59 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
 })
 
 // ---------------------------------------------------------------------------
-// B2 — condition dynamics (pure accumulator).
+// B2 — condition dynamics (pure INTEGER accumulator).
+// Re-pinned deliberately for the round-9 OWNER REDESIGN: recovery is time-based
+// (base +2 every week; the train/rest slider adds a threshold bonus on MATCH-FREE
+// weeks only: 85/15 → +0, 75/25 → +1, 60/40 → +2), the slider never drains, and
+// match fatigue lives in matchDrain/finalizeTournament instead. physioActive is
+// pinned OFF for the pure numbers; the +2 physio bonus is covered in round9.test.ts.
 // ---------------------------------------------------------------------------
 describe('B2 — condition dynamics', () => {
-  it('balanced 75/25, non-playing: +1/wk', () => {
+  it('balanced 75/25, match-free: +3/wk', () => {
     const w = createWorld('b2-balanced')
+    w.physioActive = false
     w.condition = 60
     w.plan = { train: 75, rest: 25 }
     for (let i = 0; i < 10; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(70)
+    expect(w.condition).toBe(90) // was +1/wk pre-round-9 – regenerated: owner recovery redesign
   })
 
-  it('grind 100/0: -2/wk', () => {
+  it('grind 85/15, match-free: +2/wk (base only – rest 15 earns no slider bonus)', () => {
     const w = createWorld('b2-grind')
-    w.condition = 100
-    w.plan = { train: 100, rest: 0 }
-    for (let i = 0; i < 30; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(40)
+    w.physioActive = false
+    w.condition = 40
+    w.plan = { train: 85, rest: 15 }
+    for (let i = 0; i < 10; i++) accrueCondition(w, false)
+    expect(w.condition).toBe(60) // was -2/wk (100/0) pre-round-9 – regenerated: owner recovery redesign
   })
 
-  it('full rest 0/100: +10/wk, clamped at 100', () => {
+  it('light 60/40, match-free: +4/wk, clamped at 100', () => {
     const w = createWorld('b2-rest')
-    w.condition = 40
-    w.plan = { train: 0, rest: 100 }
-    for (let i = 0; i < 6; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(100)
+    w.physioActive = false
+    w.condition = 90
+    w.plan = { train: 60, rest: 40 }
+    for (let i = 0; i < 4; i++) accrueCondition(w, false)
+    expect(w.condition).toBe(100) // 90 → 94 → 98 → clamp
   })
 })
 
 // ---------------------------------------------------------------------------
-// B3 — tournament strain.
+// B3 — tournament fatigue. Re-pinned deliberately for round-9 R9-7 (owner redesign):
+// fatigue is PER MATCH (matchDrain: scoreline grade + tier surcharge) and lands at
+// finalizeTournament (the commit point) – accrueCondition applies NO match fatigue at
+// tick time, so a skipped event week (R9-9) or a walkover costs none by construction.
+// The per-match numbers + the finalize integration live in tests/round9.test.ts.
 // ---------------------------------------------------------------------------
-describe('B3 — tournament strain', () => {
-  it('condition 100, balanced, one national played that week -> ~75', () => {
+describe('B3 — tournament fatigue (per-match at finalize since round-9)', () => {
+  it('accrueCondition applies NO match fatigue at tick, even on an entered national week', () => {
     const w = createWorld('b3')
-    w.condition = 100
+    w.physioActive = false
+    w.condition = 60
     w.plan = { train: 75, rest: 25 }
     const ev = injectEvent(w, { week: w.week, tier: 'national' })
     w.entries.push(ev.id)
     accrueCondition(w, true)
-    expect(w.condition).toBe(75) // 100 + 5.5 - 4.5 - 26
+    expect(w.condition).toBe(62) // 60 + base 2 (a match week earns no slider bonus)
   })
 })
 
@@ -241,14 +254,17 @@ describe('B4 — fatigue is a soft, warned choice', () => {
     expect(ul.eligible).toBe(true)
     expect(ul.cautionReason).toBeUndefined()
 
-    // Playing fatigued digs a deeper hole – emergent (tournamentStrain), NO extra entry penalty.
+    // Playing fatigued digs a deeper hole – emergent (per-match drain at finalize since
+    // round-9, see tests/round9.test.ts), NO extra entry penalty. At tick time the accumulator
+    // moves by the base recovery only. (regenerated: owner match-fatigue redesign, round-9)
     const wp = createWorld('b4-play')
+    wp.physioActive = false
     wp.condition = 35
     wp.plan = { train: 75, rest: 25 }
     const ev = injectEvent(wp, { week: wp.week, tier: 'national' })
     wp.entries.push(ev.id)
     accrueCondition(wp, true)
-    expect(wp.condition).toBe(10) // 35 + 5.5 - 4.5 - 26
+    expect(wp.condition).toBe(37) // 35 + base 2 – was 10 under the flat -26 tick strain
   })
 })
 

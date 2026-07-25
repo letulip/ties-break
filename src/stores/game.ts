@@ -99,6 +99,15 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    /** R9-9: skip an entered tournament at its event week (fee forfeited, travel refunded). */
+    async skipEvent(eventId: string) {
+      await this.run(async () => {
+        const res = await request({ type: 'skipEvent', eventId })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
     async tournamentReveal() {
       await this.run(async () => {
         const res = await request({ type: 'tournamentReveal' })
