@@ -118,8 +118,11 @@ export const PRESETS: Preset[] = [
 ]
 
 /** The per-category buckets we surface, in display order (expenses first, then income).
- *  'interest' (round-9 R9-1, weekly savings interest) is an INCOME category. */
-export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'physio', 'other']
+ *  'interest' (round-9 R9-1, weekly savings interest) is an INCOME category.
+ *  'vacation' / 'practice' (season planner, v13) are expense buckets: the econ bench never books
+ *  either (it has no planner policy – that is the fatigue bench's axis), so they read $0 here and
+ *  exist only to keep the category fold exhaustive. */
+export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'other']
 export const INCOME_CATS: WorldEventCategory[] = ['income', 'sponsor', 'interest']
 
 /** One completed season, captured at its wrap week off world.lastSeasonSummary + that year's finance fold. */
@@ -171,7 +174,20 @@ export interface SeedResult {
 }
 
 function zeroCats(): Record<WorldEventCategory, number> {
-  return { coaching: 0, travel: 0, entry: 0, gear: 0, stringing: 0, physio: 0, sponsor: 0, income: 0, interest: 0, other: 0 }
+  return {
+    coaching: 0,
+    travel: 0,
+    entry: 0,
+    gear: 0,
+    stringing: 0,
+    physio: 0,
+    vacation: 0,
+    practice: 0,
+    sponsor: 0,
+    income: 0,
+    interest: 0,
+    other: 0,
+  }
 }
 
 // --- career simulation -------------------------------------------------------

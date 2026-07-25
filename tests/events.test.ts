@@ -284,10 +284,25 @@ describe('advance stop reasons', () => {
     expect(stop).toBe('tournament')
   })
 
-  it('stops before an imminent affordable regional+ deadline (stopReason: deadline)', () => {
+  // *** RE-PINNED 25.07 (season-planner slice, round-9 leftover FIX): the deadline stop now
+  // AND-s in the POINT-BAND eligibility, so the sim no longer halts for a regional/national
+  // deadline the kid could not enter anyway (the owner saw it at W1/W3 with 0 pts). The old
+  // assertion (a FRESH 0-point career stops for the first regional deadline) is therefore
+  // inverted: a fresh kid must NOT be stopped, and a point-eligible kid must still be. ***
+  it('never stops a 0-point kid for a regional+ deadline she cannot enter (round-9 fix)', () => {
     const world = createWorld('adv-deadline')
     const rng = rngFromSeed(world.seed)
-    // ample funds, no entries -> the only early stop available is a deadline warning
+    // ample funds, no entries, ZERO ranking points -> regional (min 65) / national (min 150)
+    // are both out of reach, so no deadline may interrupt the advance.
+    const stop = advanceWeeks(world, rng, 20)
+    expect(stop).not.toBe('deadline')
+  })
+
+  it('stops before an imminent affordable regional+ deadline she IS eligible for', () => {
+    const world = createWorld('adv-deadline')
+    const rng = rngFromSeed(world.seed)
+    // one counting result puts her inside the regional band [65, 230]
+    world.results.push({ playerId: KID_ID, week: world.week, points: 80, tier: 'regional' })
     const stop = advanceWeeks(world, rng, 20)
     expect(stop).toBe('deadline')
     expect(world.week).toBeLessThan(20)

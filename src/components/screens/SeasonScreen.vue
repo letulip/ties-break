@@ -3,20 +3,29 @@
 // event cards with Enter/Withdraw behind ConfirmDialog, "My entries", a
 // standings card, and – when the latest resolved week is a tournament week –
 // a bracket card with a Watch -> MatchReplay link per kid match.
+//
+// Season planner (docs/specs/season-planner.md): OUTGROWN events disappear from the calendar
+// (a UI filter – the engine keeps emitting them, so bench/history stay untouched), locked-ahead
+// "Reach N pts" events stay visible, and every freed empty week becomes plannable via
+// "+ Plan week" -> PlanWeekSheet (Practice / Vacation). A booked week renders with its package
+// name and a Cancel. When she is worn out the screen OFFERS a rescue vacation – an offer, never
+// an auto-book.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import MatchReplay from '../MatchReplay.vue'
 import MatchViewer from '../MatchViewer.vue'
+import PlanWeekSheet from '../PlanWeekSheet.vue'
 import TierGuide from '../TierGuide.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
-import { kidMatchPlayer } from '../../engine/world'
+import { kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek } from '../../engine/season/calendar'
+import { ECONOMY, vacationPackage, vacationPriceCents } from '../../engine/economy'
 import { weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { AnnotatedMatch } from '../../viz/types'
-import type { UpcomingEvent, WorldEvent, WorldMatch } from '../../shared/protocol'
+import type { PracticeBooking, UpcomingEvent, VacationBooking, WorldEvent, WorldMatch } from '../../shared/protocol'
 
 const game = useGameStore()
 const base = import.meta.env.BASE_URL
@@ -38,8 +47,15 @@ const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
 
 const week = computed(() => game.snapshot?.week ?? 0)
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
+const condition = computed(() => game.snapshot?.condition ?? 0)
+// CALENDAR DECLUTTER (spec §1): an OUTGROWN tournament is noise – she can never enter it again –
+// so it leaves the calendar entirely and its week becomes plannable. Locked-ahead events
+// ("Reach N pts") STAY: they are aspirational. Engine output is untouched.
 const upcoming = computed(() => game.snapshot?.upcoming ?? [])
+const visibleUpcoming = computed(() => upcoming.value.filter((e) => e.ineligibleReason !== 'outgrown'))
 const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
+const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
+const practices = computed<PracticeBooking[]>(() => game.snapshot?.practices ?? [])
 
 // --- Round 5 item 7: tour guide overlay ---------------------------------------
 const showTierGuide = ref(false)
@@ -47,27 +63,66 @@ const showTierGuide = ref(false)
 // --- Round 5 items 1/3/16/21: every week in the horizon, not just eventful ones –
 // training weeks and off-season weeks show as muted rows so tournaments sit visibly
 // among ordinary weeks, each carrying its real calendar date range.
+// Season planner: the muted rows now carry their PLAN – a booked vacation/practice, or the
+// "+ Plan week" invitation on a genuinely empty week. Exam weeks say so instead of pretending
+// to be ordinary training weeks (nothing is bookable there).
 interface CalendarRow {
   week: number
   dates: string
-  kind: 'event' | 'training' | 'off-season'
+  kind: 'event' | 'training' | 'off-season' | 'exam' | 'vacation' | 'practice'
   event?: UpcomingEvent
+  vacation?: VacationBooking
+  practice?: PracticeBooking
+  /** an empty future week the parent may plan (vacation always, practice outside the off-season) */
+  plannable: boolean
 }
 const calendarRows = computed<CalendarRow[]>(() => {
   const byWeek = new Map<number, UpcomingEvent>()
-  for (const e of upcoming.value) byWeek.set(e.week, e)
+  for (const e of visibleUpcoming.value) byWeek.set(e.week, e)
   const rows: CalendarRow[] = []
   for (let w = week.value + 1; w <= week.value + CALENDAR_HORIZON; w++) {
     const e = byWeek.get(w)
+    const vacation = vacations.value.find((v) => v.week === w)
+    const practice = practices.value.find((p) => p.week === w)
+    const exam = isExamWeek(w)
+    const offSeason = isOffSeasonWeek(w)
+    const kind: CalendarRow['kind'] = vacation
+      ? 'vacation'
+      : practice
+        ? 'practice'
+        : e
+          ? 'event'
+          : exam
+            ? 'exam'
+            : offSeason
+              ? 'off-season'
+              : 'training'
     rows.push({
       week: w,
       dates: weekRange(w),
-      kind: e ? 'event' : isOffSeasonWeek(w) ? 'off-season' : 'training',
+      kind,
       event: e,
+      vacation,
+      practice,
+      // "Empty" means empty FOR HER: a week whose only tournament is one she can NOT enter – a
+      // locked-ahead "Reach N pts" card (the spec keeps those visible on purpose) or one whose
+      // entry list has already closed – is still hers to plan. Otherwise the aspirational cards
+      // sterilise most of the calendar and the planner has nowhere to go. An ENTERED week is
+      // committed, an enterable one is a real decision she should make first, exam weeks belong
+      // to school, and an already-planned week is done.
+      plannable:
+        !vacation &&
+        !practice &&
+        !exam &&
+        (!e || (!e.entered && (!e.eligible || week.value > e.deadlineWeek))),
     })
   }
   return rows
 })
+
+function packageLabel(packageId: string): string {
+  return vacationPackage(packageId)?.label ?? packageId
+}
 
 // A passed deadline swaps the Enter button for a muted "Entries closed" pill (round-5
 // item 2); an open event only ever disables Enter for insufficient funds.
@@ -77,8 +132,10 @@ function entriesClosed(e: UpcomingEvent): boolean {
 function fundsShort(e: UpcomingEvent): boolean {
   return fundsCents.value < e.entryFeeCents
 }
-// The HARD-lock label (Season-Life slice B): point-band (locked/outgrown) or a hard availability
-// block (injured / school exams). Fatigue is NOT here – it stays enterable with a soft caution.
+// The HARD-lock label (Season-Life slice B): point-band (locked) or a hard availability
+// block (injured / school exams / a booked family vacation). Fatigue is NOT here – it stays
+// enterable with a soft caution. OUTGROWN never reaches this label any more: those events are
+// filtered off the calendar (spec §1), so the case stays only as a defensive fallback.
 // The injured detail names the return week (slice C) so the parent can plan around the layoff.
 function lockLabel(e: UpcomingEvent): string {
   switch (e.ineligibleReason) {
@@ -88,8 +145,10 @@ function lockLabel(e: UpcomingEvent): string {
       const s = game.snapshot
       return s?.injury ? `Injured – back wk ${s.week + s.injury.weeksRemaining}` : 'Injured – rest up'
     }
-    case 'unavailable':
-      return 'School exams this week'
+    case 'unavailable': {
+      const vacation = vacations.value.find((v) => v.week === e.week)
+      return vacation ? `Family vacation – ${packageLabel(vacation.packageId)}` : 'School exams this week'
+    }
     default:
       return `Reach ${e.pointsToEnter} pts`
   }
@@ -128,6 +187,100 @@ function runConfirm(): void {
   action?.onConfirm()
 }
 
+// --- the planner sheet ("+ Plan week") ---------------------------------------------------
+interface SheetState {
+  week: number
+  tab: 'practice' | 'vacation'
+  highlightPackageId?: string
+}
+const planSheet = ref<SheetState | null>(null)
+
+function openPlanner(row: CalendarRow): void {
+  // The off-season row opens on Vacation – the family week is its natural use (spec §4b).
+  planSheet.value = { week: row.week, tab: row.kind === 'off-season' ? 'vacation' : 'practice' }
+}
+
+/** The sheet emitted a practice choice: confirm it (with the guardrail warning in the copy –
+ *  the owner's «Она уже вымотана – ещё матч?» lands HERE, where the parent can still say yes). */
+function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number; caution: PracticeCaution }): void {
+  const what = p.withCoach ? 'Practice match with the coach' : 'Practice match'
+  pendingConfirm.value = {
+    message:
+      (p.caution.level === 'caution' ? `${p.caution.detail} ` : '') +
+      `${what} in W${p.week} – ${formatDollars(p.feeCents)}. No ranking points.`,
+    confirmLabel: p.caution.level === 'caution' ? 'Push through' : 'Book it',
+    onConfirm: () => game.bookPractice(p.week, p.withCoach),
+  }
+  planSheet.value = null
+}
+
+function confirmVacation(v: { week: number; packageId: string; label: string; priceCents: number; gain: number }): void {
+  pendingConfirm.value = {
+    message:
+      `${v.label} in W${v.week} – ${v.priceCents === 0 ? 'free' : formatDollars(v.priceCents)}, ` +
+      `+${v.gain} condition. No tournaments that week.`,
+    confirmLabel: 'Book it',
+    onConfirm: () => game.bookVacation(v.week, v.packageId),
+  }
+  planSheet.value = null
+}
+
+function askCancelVacation(row: CalendarRow): void {
+  const booking = row.vacation!
+  pendingConfirm.value = {
+    message: `Cancel ${packageLabel(booking.packageId)} in W${row.week}? ${
+      booking.paidCents > 0 ? `${formatDollars(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
+    }`,
+    confirmLabel: 'Cancel the trip',
+    onConfirm: () => game.cancelVacation(row.week),
+  }
+}
+function askCancelPractice(row: CalendarRow): void {
+  const booking = row.practice!
+  pendingConfirm.value = {
+    message: `Cancel the practice match in W${row.week}? ${formatDollars(booking.paidCents)} comes back in full.`,
+    confirmLabel: 'Cancel the match',
+    onConfirm: () => game.cancelPractice(row.week),
+  }
+}
+
+// --- the RESCUE prompt (spec §4b) -------------------------------------------------------
+// The bench exposed the trap: a reactive "book when condition < 60" rule never fires for the
+// load-manager, while the overloaded player has no booking habit at all – 5 of 6 packages never
+// sell. So the game SURFACES the lever to whoever is low: below rescueCondition, with a bookable
+// empty week ahead, it OFFERS a vacation, pre-filtered to the packages that bring her back above
+// rescueTargetCondition. An offer – never an auto-book. Dismissible per session.
+const rescueDismissed = ref(false)
+const rescueWeek = computed<number | null>(() => calendarRows.value.find((r) => r.plannable)?.week ?? null)
+/** The cheapest package that would return her above the target (the rescue pre-highlight). */
+const rescuePackageId = computed<string | null>(() => {
+  const w = rescueWeek.value
+  const snap = game.snapshot
+  if (w === null || !snap) return null
+  const affordable = ECONOMY.vacation.packages.filter(
+    (p) => snap.fundsCents >= vacationPriceCents(snap.seed, w, p.id, snap.profile.background),
+  )
+  if (affordable.length === 0) return null
+  const clearing = affordable.find((p) => condition.value + p.conditionGain > ECONOMY.practice.rescueTargetCondition)
+  return (clearing ?? affordable[affordable.length - 1]).id
+})
+const showRescue = computed(
+  () =>
+    !!game.snapshot &&
+    !game.snapshot.injury &&
+    !rescueDismissed.value &&
+    condition.value < ECONOMY.practice.rescueCondition &&
+    rescueWeek.value !== null,
+)
+function openRescue(): void {
+  if (rescueWeek.value === null) return
+  planSheet.value = {
+    week: rescueWeek.value,
+    tab: 'vacation',
+    highlightPackageId: rescuePackageId.value ?? undefined,
+  }
+}
+
 // --- kidRank: only needed here now for the Friendly-match viewer's rank-a prop – the
 // full standings table moved to the Stats tab (round-6). ---------------------------
 const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
@@ -136,11 +289,16 @@ const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
 // events, so the list below IS the kid's path – nothing else to highlight
 // against. Rank-movement arrows would need last week's rank, which the
 // Snapshot doesn't carry, so they're left out (see report: spec conflict). ---
+// A PRACTICE friendly is also a `match` event, so it is filtered out here and gets its own
+// card below – it is not part of any tournament and awards no points.
 const thisWeekMatches = computed<WorldEvent[]>(
-  () => game.snapshot?.events.filter((e) => e.type === 'match' && e.week === week.value) ?? [],
+  () => game.snapshot?.events.filter((e) => e.type === 'match' && !e.friendly && e.week === week.value) ?? [],
 )
 const thisWeekSummary = computed<WorldEvent | null>(
   () => game.snapshot?.events.find((e) => e.type === 'tournament' && e.week === week.value) ?? null,
+)
+const thisWeekFriendly = computed<WorldEvent | null>(
+  () => game.snapshot?.events.find((e) => e.type === 'match' && e.friendly && e.week === week.value) ?? null,
 )
 
 // --- replay overlay --------------------------------------------------------------
@@ -152,7 +310,8 @@ function watchMatch(e: WorldEvent): void {
 // --- Friendly match (Package J, restored per architect ruling: owner-approved –
 // sparring now, a training tool in Phase 4). Player A is the kid's ACTUAL current
 // build, reconstructed the same deterministic way the worker does (kidMatchPlayer,
-// exported from engine/world.ts); the opponent stays the fixed "Top seed" block. --
+// exported from engine/world.ts); the opponent stays the fixed "Top seed" block.
+// This is the sandbox hit-out; a BOOKED practice match (above) is the real, costed one. --
 const exhibitionSurface: Surface = 'clay'
 const kidName = computed(() => game.snapshot?.profile.kidName ?? 'Vera')
 const exhibitionPlayerA = computed<MatchPlayer>(() =>
@@ -183,6 +342,19 @@ function playExhibition(): void {
       <button class="tier-guide-btn" aria-label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</button>
     </div>
 
+    <!-- Rescue prompt (spec §4b): an OFFER when she is worn out, never an auto-book. -->
+    <div v-if="showRescue" class="rescue-card">
+      <p class="rescue-title">She is worn out – maybe a family week?</p>
+      <p class="hint" style="margin: 0">
+        Condition {{ condition }}/100. A week away in W{{ rescueWeek }} would bring her back
+        fresher – nothing is booked until you say so.
+      </p>
+      <div class="controls" style="margin-top: 10px">
+        <button class="primary" @click="openRescue">See the options</button>
+        <button @click="rescueDismissed = true">Not now</button>
+      </div>
+    </div>
+
     <section v-if="thisWeekMatches.length">
       <h2>This week's tournament</h2>
       <p v-if="thisWeekSummary" class="tournament-summary">{{ thisWeekSummary.text }}</p>
@@ -190,6 +362,24 @@ function playExhibition(): void {
         <li v-for="m in thisWeekMatches" :key="m.id" class="bracket-row">
           <span>{{ m.text }}</span>
           <button v-if="m.match" class="watch-play-btn sfx-watch" aria-label="Watch match" @click="watchMatch(m)">
+            <span class="watch-play-icon" :style="playIconStyle"></span>
+          </button>
+        </li>
+      </ol>
+    </section>
+
+    <!-- A booked practice match that has just been played: watchable, zero ranking points. -->
+    <section v-if="thisWeekFriendly">
+      <h2>This week's practice match</h2>
+      <ol class="bracket-list">
+        <li class="bracket-row">
+          <span>{{ thisWeekFriendly.text }}</span>
+          <button
+            v-if="thisWeekFriendly.match"
+            class="watch-play-btn sfx-watch"
+            aria-label="Watch practice match"
+            @click="watchMatch(thisWeekFriendly)"
+          >
             <span class="watch-play-icon" :style="playIconStyle"></span>
           </button>
         </li>
@@ -236,8 +426,9 @@ function playExhibition(): void {
               <span v-else-if="entriesClosed(row.event)" class="pill muted lock">
                 Entries closed W{{ row.event.deadlineWeek }}
               </span>
-              <!-- HARD locks: ranking gate ('locked'/'outgrown') OR a hard availability block
-                   (injured / school exams). Fatigue is NOT here – it stays enterable (see below). -->
+              <!-- HARD locks: ranking gate ('locked') OR a hard availability block (injured /
+                   school exams / a booked family vacation). Fatigue is NOT here – it stays
+                   enterable (see below). -->
               <span v-else-if="!row.event.eligible" class="pill muted lock">
                 🔒 {{ lockLabel(row.event) }}
               </span>
@@ -257,12 +448,48 @@ function playExhibition(): void {
                   Exhausted – race anyway? Rest would be wiser.
                 </p>
               </template>
+              <!-- She cannot enter this one (locked ahead, or the list has closed), so the week is
+                   still hers to plan: a friendly or a family week. The aspirational card stays –
+                   the week just stops being dead. -->
+              <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
             </div>
           </div>
-          <div v-else class="calendar-row-muted" :class="{ 'off-season': row.kind === 'off-season' }">
+
+          <!-- A PLANNED week: the booking reads back with its package/match name + a Cancel. When
+               the week also carried a (locked) tournament, the row NAMES it, so a planned week
+               never makes a calendar entry vanish without explanation – cancel and it is back. -->
+          <div v-else-if="row.kind === 'vacation' && row.vacation" class="calendar-row-muted planned">
             <span class="hint" style="margin: 0">
-              W{{ row.week }} · {{ row.dates }} · {{ row.kind === 'off-season' ? 'Off-season' : 'Training week' }}
+              W{{ row.week }} · {{ row.dates }} · 🏖 {{ packageLabel(row.vacation.packageId) }}
+              <template v-if="row.event"> · skipping {{ row.event.label }}</template>
             </span>
+            <button :disabled="game.busy" @click="askCancelVacation(row)">Cancel</button>
+          </div>
+          <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
+            <span class="hint" style="margin: 0">
+              W{{ row.week }} · {{ row.dates }} · 🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}
+              <template v-if="row.event"> · instead of {{ row.event.label }}</template>
+            </span>
+            <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
+          </div>
+
+          <!-- An empty week: plannable (or an exam block, which is nobody's to plan). -->
+          <div
+            v-else
+            class="calendar-row-muted"
+            :class="{ 'off-season': row.kind === 'off-season', exam: row.kind === 'exam' }"
+          >
+            <span class="hint" style="margin: 0">
+              W{{ row.week }} · {{ row.dates }} ·
+              {{
+                row.kind === 'off-season'
+                  ? 'Off-season – the natural family week'
+                  : row.kind === 'exam'
+                    ? 'School exams'
+                    : 'Training week'
+              }}
+            </span>
+            <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
           </div>
         </template>
       </div>
@@ -290,6 +517,15 @@ function playExhibition(): void {
       />
     </section>
 
+    <PlanWeekSheet
+      v-if="planSheet"
+      :week="planSheet.week"
+      :initial-tab="planSheet.tab"
+      :highlight-package-id="planSheet.highlightPackageId"
+      @book-practice="confirmPractice"
+      @book-vacation="confirmVacation"
+      @close="planSheet = null"
+    />
     <ConfirmDialog
       v-if="pendingConfirm"
       :message="pendingConfirm.message"

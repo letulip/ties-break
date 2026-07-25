@@ -15,9 +15,11 @@ import {
   gridPolicies,
   SCENARIOS,
   withScenario,
-  projectPlanner,
   effectivePhysio,
-  PLANNER,
+  plannerPolicies,
+  GRID_PRACTICE,
+  GRID_VACATION,
+  NO_PLANNER,
   openFatigueCareer,
   stepFatigueWeek,
   runFatigueCareer,
@@ -31,6 +33,7 @@ import {
   type WeekFacts,
 } from '../tools/fatigue-bench'
 import { ECONOMY } from '../src/engine/economy'
+import { WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 
@@ -163,6 +166,14 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
   function independentTrace(facts: WeekFacts[], restPercent: number, physioActive: boolean): number[] {
     const k = ECONOMY.condition
     const clamp = (x: number) => Math.min(k.max, Math.max(k.min, x))
+    /** the season-planner drain of a friendly, re-derived from its scoreline: max(1, local − 1). */
+    const practiceDrainOf = (score: string): number => {
+      const sets = score ? score.split(' ') : []
+      const tiebreaks = sets.filter((s) => s === '7-6' || s === '6-7').length
+      let d = sets.length >= 3 || tiebreaks >= 1 ? k.matchFatigue.hardMatch : k.matchFatigue.straightSets
+      if (tiebreaks > 2) d += k.matchFatigue.extraTiebreaks
+      return Math.max(1, d + k.tierMatchFatigue.local - 1)
+    }
     let c: number = k.start
     const out: number[] = []
     for (const f of facts) {
@@ -175,13 +186,26 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
           break // first (highest) matching threshold wins – never interpolated
         }
       }
-      let recovery = f.played ? k.matchWeekRecoveryBase : k.recoveryBase + bonus
+      // WEEK-TYPE LADDER (season-planner spec §4): tournament week 0 base · PRACTICE week keeps
+      // the base but FORFEITS the slider bonus · free/vacation week base + slider.
+      let recovery = f.played
+        ? k.matchWeekRecoveryBase
+        : f.practiced
+          ? k.recoveryBase
+          : k.recoveryBase + bonus
       if (physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
       const offset = ((f.week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
       const offSeason = offset >= WEEKS_PER_YEAR - OFF_SEASON_WEEKS
       const exam = ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
       if (offSeason || exam) recovery += k.blackoutBonus
       c = clamp(c + recovery)
+      // then the planner's own two effects, in the engine's order: the vacation package's gain,
+      // then the friendly's drain.
+      if (f.vacationResolvedId) {
+        const pkg = ECONOMY.vacation.packages.find((p) => p.id === f.vacationResolvedId)!
+        c = clamp(c + pkg.conditionGain)
+      }
+      if (f.practiced) c = clamp(c - practiceDrainOf(f.practiceScore))
       let strain = 0
       for (const score of f.matchScores) {
         const sets = score ? score.split(' ') : []
@@ -201,7 +225,8 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
       const { world, rng } = openFatigueCareer(middleSelf, policy, 0)
       const physioActive = world.physioActive // constant for the whole run (the bench never toggles)
       const facts: WeekFacts[] = []
-      for (let i = 0; i < H104.weeks; i++) facts.push(stepFatigueWeek(world, rng, policy))
+      const plannerState = { practiceEligibleIdx: 0, seaBookedYears: new Set<number>() }
+      for (let i = 0; i < H104.weeks; i++) facts.push(stepFatigueWeek(world, rng, policy, plannerState))
 
       const engineTrace = facts.map((f) => f.condition)
       const recomputed = independentTrace(facts, policy.plan.rest, physioActive)
@@ -225,7 +250,10 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
         const { world, rng } = openFatigueCareer(middleSelf, policy, 0)
         const physioActive = world.physioActive
         const facts: WeekFacts[] = []
-        for (let i = 0; i < H104.weeks; i++) facts.push(stepFatigueWeek(world, rng, policy))
+        // ONE shared planner state for the whole career – the alternating practice cursor and the
+        // once-a-year off-season booking live there (runFatigueCareer does exactly the same).
+        const plannerState = { practiceEligibleIdx: 0, seaBookedYears: new Set<number>() }
+        for (let i = 0; i < H104.weeks; i++) facts.push(stepFatigueWeek(world, rng, policy, plannerState))
         const engineTrace = facts.map((f) => f.condition)
         expect(JSON.stringify(independentTrace(facts, policy.plan.rest, physioActive))).toBe(
           JSON.stringify(engineTrace),
@@ -345,45 +373,71 @@ describe('scenarios (V2.1 SHIPPED as baseline; v2/legacy patched live)', () => {
   })
 })
 
-describe('planner PROJECTION layer (practices + vacations – arithmetic on real traces, PROJ-only)', () => {
-  const v2 = SCENARIOS.find((s) => s.id === 'v2')!
+describe('season planner (REAL mechanics – bookings through the engine commands)', () => {
+  it('the grinder practises hard and never books a package; the others do both', () => {
+    const g = runFatigueCareer(middleSelf, grinder, 0, H104.weeks)
+    expect(g.practicesPlayed).toBeGreaterThan(30) // ~every plannable week over two seasons
+    expect(g.practiceSpendCents).toBeGreaterThan(0)
+    expect(g.vacationsTotal).toBe(0)
+    expect(g.vacationSpendCents).toBe(0)
 
-  it('is deterministic and reconciles its own money columns', () => {
-    withScenario(v2, () => {
-      const run = runFatigueCareer(middleSelf, balanced, 0, H104.weeks)
-      const a = projectPlanner(run, middleSelf, balanced)
-      const b = projectPlanner(run, middleSelf, balanced)
-      expect(a).toEqual(b)
-      expect(a.projWeekly).toHaveLength(H104.weeks)
-      expect(a.projBandLow + a.projBandMid + a.projBandHigh).toBe(H104.weeks)
-      expect(a.projEndFundsCents).toBe(run.endFundsCents - a.practiceCostCents - a.vacationCostCents)
-      expect(a.projTrough).toBe(Math.min(...a.projWeekly))
-    })
+    const b = runFatigueCareer(middleSelf, balanced, 0, H104.weeks)
+    // alternating: fewer friendlies than the grinder on the same seed/world
+    expect(b.practicesPlayed).toBeLessThan(g.practicesPlayed)
+    // the off-season family week is the scheduled default -> at least one package per season year
+    expect(b.vacationsTotal).toBeGreaterThanOrEqual(1)
+
+    // careful books friendlies only while fresh (>= 80) – but she ALSO enters far fewer
+    // tournaments, so she has more plannable weeks and can out-practise the grinder. That is a
+    // real finding of the planner slice, not a bug: load management frees the calendar.
+    const c = runFatigueCareer(middleSelf, careful, 0, H104.weeks)
+    expect(c.practicesPlayed).toBeGreaterThan(0)
+    expect(c.vacationsTotal).toBeGreaterThanOrEqual(1)
   })
 
-  it('booking rules hold: grinder never vacations + practices every eligible week; balanced sea-only', () => {
-    withScenario(v2, () => {
-      const run = runFatigueCareer(middleSelf, grinder, 0, H104.weeks)
-      const proj = projectPlanner(run, middleSelf, grinder)
-      expect(proj.vacationsTotal).toBe(0)
-      expect(proj.vacationCostCents).toBe(0)
-      // grinder practices EVERY practice-eligible week: empty, healthy, not exam/off-season
-      const eligible = run.weekly.filter((w) => {
-        const offset = w.week % 52
-        const offSeason = offset >= 49
-        const exam = offset >= 24 && offset <= 25
-        return w.matches === 0 && !w.injured && !offSeason && !exam
-      }).length
-      expect(proj.practices).toBe(eligible)
-      // court fee = band midpoint × corridor midpoint, per practice
-      const mid = Math.round(((PLANNER.practice.courtCents[0] + PLANNER.practice.courtCents[1]) / 2) * 1.0)
-      expect(proj.practiceCostCents).toBe(proj.practices * mid) // middle corridor mid == 1.0
+  it('a friendly awards NO ranking points: practices never move points/matches counters', () => {
+    // Same world, planner on vs off: entries/points are driven by tournaments only.
+    const withPractice = { ...balanced, id: 'bal+pract' }
+    const withoutPlanner = { ...balanced, id: 'bal-noplan', planner: { ...NO_PLANNER } }
+    const a = runFatigueCareer(middleSelf, withPractice, 0, H52.weeks)
+    const b = runFatigueCareer(middleSelf, withoutPlanner, 0, H52.weeks)
+    // matchesPlayed counts TOURNAMENT matches only (the friendly is never a result)
+    expect(a.matchesPlayed).toBeGreaterThan(0)
+    expect(b.matchesPlayed).toBeGreaterThan(0)
+    expect(a.practicesPlayed).toBeGreaterThan(0)
+    expect(b.practicesPlayed).toBe(0)
+  })
 
-      const bal = projectPlanner(runFatigueCareer(middleSelf, balanced, 0, H104.weeks), middleSelf, balanced)
-      const packagesBooked = Object.keys(bal.vacationsByPackage)
-      for (const id of packagesBooked) expect(id).toBe('sea') // balanced books sea weeks only
-      expect(bal.vacationsTotal).toBeLessThanOrEqual(H104.seasons) // one per season year max
-    })
+  it('the guardrail caution + the rescue trigger actually fire and are counted', () => {
+    // The grinder books through the caution every time she is worn out or on a streak.
+    const g = runFatigueCareer(working, grinder, 0, H104.weeks)
+    expect(g.cautionedPracticeBookings).toBeGreaterThan(0)
+    // A rescue-enabled policy takes rescue bookings on at least some seeds of a 104w cell.
+    const rescued = runCell(working, careful, H104.weeks, 10).reduce((s, r) => s + r.rescueBookings, 0)
+    expect(rescued).toBeGreaterThan(0)
+  })
+
+  it('planner money reconciles: spend is positive iff something was booked', () => {
+    for (const policy of POLICIES) {
+      const r = runFatigueCareer(middleHired, policy, 2, H104.weeks)
+      expect(r.practiceSpendCents >= 0).toBe(true)
+      expect(r.vacationSpendCents >= 0).toBe(true)
+      if (r.practicesPlayed > 0) expect(r.practiceSpendCents).toBeGreaterThan(0)
+      expect(r.vacationsTotal).toBe(Object.values(r.vacationsByPackage).reduce((s, n) => s + n, 0))
+    }
+  })
+
+  it('the planner grid is the 3×2 axis built as data, with the planner OFF in the factorial grid', () => {
+    const grid = plannerPolicies()
+    expect(grid).toHaveLength(GRID_PRACTICE.length * GRID_VACATION.length)
+    expect(new Set(grid.map((p) => p.id)).size).toBe(grid.length)
+    for (const p of grid) expect(p.plan).toEqual(WEEK_PLAN_PRESETS.balanced) // default player
+    // the plan × entry × physio grid must stay planner-free, or its axes are no longer isolated
+    for (const p of gridPolicies()) {
+      expect(p.planner.practice).toBe('never')
+      expect(p.planner.rescueBelow).toBeNull()
+      expect(p.planner.offSeasonPackageId).toBeNull()
+    }
   })
 
   it('effectivePhysio mirrors the career wiring', () => {

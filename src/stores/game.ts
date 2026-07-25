@@ -132,6 +132,43 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    // --- season planner (v13) -------------------------------------------------------------
+    /** Book a family vacation on an empty future week (price = the sub-stream quote). */
+    async bookVacation(week: number, packageId: string) {
+      await this.run(async () => {
+        const res = await request({ type: 'bookVacation', week, packageId })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** Cancel a booked vacation before its week starts – full refund. */
+    async cancelVacation(week: number) {
+      await this.run(async () => {
+        const res = await request({ type: 'cancelVacation', week })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** Book a practice match (watchable friendly) on an empty future week. */
+    async bookPractice(week: number, withCoach: boolean) {
+      await this.run(async () => {
+        const res = await request({ type: 'bookPractice', week, withCoach })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** Cancel a booked practice match before its week starts – full refund. */
+    async cancelPractice(week: number) {
+      await this.run(async () => {
+        const res = await request({ type: 'cancelPractice', week })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
     async setPlan(plan: WeekPlan) {
       await this.run(async () => {
         const res = await request({ type: 'setPlan', plan })

@@ -18,7 +18,7 @@ import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, ty
 import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
-import { KID_ID, flipScore, isBlackoutWeek } from '../../engine/world'
+import { KID_ID, flipScore, isBlackoutWeek, practiceCaution } from '../../engine/world'
 import { TIERS } from '../../engine/season/calendar'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
@@ -109,11 +109,27 @@ function conditionColor(i: number): string {
 
 // --- Availability chip (Season-Life slice B, live in slice C): a plain-language read on
 // whether she can compete. "Fit" (green) when clear; "School break – exams" (grey) when this
-// or next week is a blackout; red with the injury kind + return week while she is out. --
-const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'red' } | null>(() => {
+// or next week is a blackout; red with the injury kind + return week while she is out.
+// Season planner: the chip also READS THE STRAIN (the practice guardrail) – below the caution
+// floor, or on a run of match weeks, it turns amber and names the problem, because that is the
+// moment the parent should be thinking about a rest week rather than another match. --
+const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'amber' | 'red' } | null>(() => {
   const s = game.snapshot
   if (!s) return null
   if (s.injury) return { label: `Injured: ${s.injury.kind} – back wk ${s.week + s.injury.weeksRemaining}`, tone: 'red' }
+  // The strain read asks the same pure predicate the planner sheet does, for "one more match
+  // next week" – so the chip and the booking warning can never disagree.
+  const strain = practiceCaution({
+    condition: s.condition,
+    practiceWeeks: s.practices.map((p) => p.week),
+    week: s.week + 1,
+  })
+  if (strain.level === 'caution') {
+    return {
+      label: strain.reasons.includes('tired') ? 'Worn out – she needs a rest week' : 'Third match week in a row',
+      tone: 'amber',
+    }
+  }
   if (isBlackoutWeek(s.week) || isBlackoutWeek(s.week + 1)) return { label: 'School break – exams', tone: 'grey' }
   return { label: 'Fit', tone: 'green' }
 })
@@ -463,7 +479,12 @@ function openRankHelp(): void {
                 <td v-if="e.type === 'match' && e.match" class="news-match-cell">
                   <button class="news-match-btn sfx-watch" @click="openReplay(e)">
                     <span class="nm-lines">
-                      <span class="nm-players">{{ kidShort }} vs {{ oppShort(e.match) }}</span>
+                      <span class="nm-players">
+                        {{ kidShort }} vs {{ oppShort(e.match) }}
+                        <!-- Season planner: a friendly is watchable but pays nothing – say so, so
+                             the news feed never passes a practice match off as a real result. -->
+                        <span v-if="e.friendly" class="pill muted nm-friendly">practice</span>
+                      </span>
                       <span class="nm-score num">{{ kidScoreOf(e.match) }}</span>
                     </span>
                     <span class="watch-cue">Watch</span>

@@ -11,12 +11,15 @@ import {
   type PendingBracketRound,
   type PendingView,
   type PlayerProfile,
+  type PracticeBooking,
+  type RecoveryBuff,
   type SeasonSummary,
   type Snapshot,
   type SnapshotInjury,
   type StandingRow,
   type StopReason,
   type UpcomingEvent,
+  type VacationBooking,
   type WeekPlan,
   type WorldEvent,
   type WorldEventCategory,
@@ -24,20 +27,29 @@ import {
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
 import { weekYear } from '../shared/dates'
-import type { MatchPlayer } from './match/types'
+import type { MatchPlayer, Surface } from './match/types'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import { TIERS, buildSeason, isOffSeasonWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
-import { ECONOMY, GEAR_CATEGORIES, gearHitForWeek, planExpenseFactor } from './economy'
+import {
+  ECONOMY,
+  GEAR_CATEGORIES,
+  gearHitForWeek,
+  planExpenseFactor,
+  practiceFeeCents,
+  vacationPackage,
+  vacationPriceCents,
+} from './economy'
 import { generateCohort, driftCohort } from './season/cohort'
 import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
-import { selectEntrants, runTournament } from './season/tournament'
+import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
+import { simulateMatch } from './match/engine'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 12
+export const SAVE_SCHEMA_VERSION = 13
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -112,6 +124,16 @@ export interface WorldState {
   /** whether physio recovery is active (default = profile.coachSetup === 'hired'). The cost lever
    *  is billed in Slice C; in B the flag just reflects/sets the toggle. */
   physioActive: boolean
+  /** Season planner (v13): booked family-vacation weeks. PURE player state – the price was
+   *  quoted/charged from the `:vacation:` sub-stream at booking time, so nothing here can move
+   *  the MAIN weekly draw sequence. Pruned to `week >= world.week` at housekeeping. */
+  vacations: VacationBooking[]
+  /** Season planner (v13): booked practice-match (friendly) weeks – same purity contract, priced
+   *  off the `:practice:` sub-stream. */
+  practices: PracticeBooking[]
+  /** Season planner (v13): a carry-over injury-tau buff from a resort/elite vacation package;
+   *  null when none is running. Applied POST-draw inside injuryTau. */
+  recoveryBuff: RecoveryBuff | null
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -397,8 +419,9 @@ function clamp(x: number, lo: number, hi: number): number {
 }
 
 /** True for a school-exam blackout week – the season-week offset falls inside one of
- *  ECONOMY.availability.examWeeks. */
-function isExamWeek(week: number): boolean {
+ *  ECONOMY.availability.examWeeks. Exported so the planner UI can label the calendar row
+ *  honestly ("School exams") instead of calling it a training week. */
+export function isExamWeek(week: number): boolean {
   const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
   return ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
 }
@@ -427,10 +450,20 @@ export function restRecoveryBonus(restPercent: number): number {
  *  blackout bonus on off-season/exam weeks. Clamps to [min,max]. */
 export function accrueCondition(world: WorldState, playedThisWeek: boolean): void {
   const c = ECONOMY.condition
-  // A match week earns matchWeekRecoveryBase (== recoveryBase by default, so behavior is
-  // unchanged until the owner turns the V2 knob); a match-free week earns recoveryBase + the
-  // rest-slider bonus.
-  let recovery = playedThisWeek ? c.matchWeekRecoveryBase : c.recoveryBase + restRecoveryBonus(world.plan.rest)
+  // WEEK-TYPE RECOVERY LADDER (season-planner spec §4, owner 25.07 – 0 / base / base+slider):
+  //  - TOURNAMENT week: matchWeekRecoveryBase (0 shipped) – travel + competition, not rest;
+  //  - PRACTICE week: the base only – she keeps it but FORFEITS the slider rest bonus, because
+  //    she played, even if the match was a friendly (the drain lands in resolvePractice);
+  //  - free / vacation week: recoveryBase + the rest-slider bonus (the vacation's package gain
+  //    rides on top in resolveVacation).
+  // The practice flag is read off world state (not a parameter) so the signature – and with it
+  // the zero-RNG, arity-2 contract the B1 invariance test pins – stays exactly as it was.
+  const practiced = !playedThisWeek && practiceForWeek(world, world.week) !== undefined
+  let recovery = playedThisWeek
+    ? c.matchWeekRecoveryBase
+    : practiced
+      ? c.recoveryBase
+      : c.recoveryBase + restRecoveryBonus(world.plan.rest)
   if (world.physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
   if (isBlackoutWeek(world.week)) recovery += c.blackoutBonus
   world.condition = clamp(world.condition + recovery, c.min, c.max)
@@ -486,6 +519,13 @@ export interface AvailabilityStatus {
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
   if (world.injury !== null) {
     return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${world.injury.weeksRemaining} weeks.` }
+  }
+  // Season planner: a booked family-vacation week is a HARD blackout – the family is away, so
+  // nothing is enterable (spec §3). It outranks the exam/off-season blackout copy so the chip
+  // names the actual reason she is unavailable.
+  const vacation = vacationForWeek(world, event.week)
+  if (vacation) {
+    return { level: 'blocked', reason: 'unavailable', detail: vacationBlackoutDetail(vacation) }
   }
   if (isBlackoutWeek(event.week)) {
     return { level: 'blocked', reason: 'unavailable', detail: 'School exams this week – no tournaments.' }
@@ -547,6 +587,10 @@ export function injuryTau(world: WorldState): number {
   tau *= consecutivePlayFactor(playedWeeksInTrailing4(world))
   if (enteredScheduledThisWeek(world)) tau *= a.injuryPlayingMultiplier
   if (world.physioActive) tau *= ECONOMY.physio.riskReduction
+  // Season planner: the resort/elite recovery buff is a POST-DRAW multiply on the threshold
+  // (spec §2 "invariance-safe"), so the expensive package buys real protection without ever
+  // touching the draw sequence.
+  if (world.recoveryBuff && world.week <= world.recoveryBuff.untilWeek) tau *= world.recoveryBuff.factor
   return Math.min(tau, a.injuryChanceCap)
 }
 
@@ -653,6 +697,14 @@ export function rollInjury(world: WorldState): void {
     if (e && world.week <= e.deadlineWeek) withdrawEvent(world, id)
   }
 
+  // Season planner (spec §4): an injury cancels the practice weeks it swallows – the court
+  // rental comes back in full ("no fee forfeit beyond the court rental"). Vacations are left
+  // alone: a family week away is still rest, injured or not.
+  const backAtWeek = world.week + weeksOut
+  for (const p of [...world.practices]) {
+    if (p.week >= world.week && p.week < backAtWeek) refundPractice(world, p, 'Injured')
+  }
+
   const wks = `${weeksOut} wk${weeksOut === 1 ? '' : 's'}`
   addEvent(world, {
     week: world.week,
@@ -686,6 +738,295 @@ export function resolvePhysio(world: WorldState): void {
     text: 'Physio / recovery session',
     amountCents: -cost,
   })
+}
+
+// --- Season planner: vacations + practice matches ------------------------------
+// docs/specs/season-planner.md. TWO player-planned week types on otherwise empty weeks.
+//
+// RNG DISCIPLINE (the whole reason this slice is safe): a booking is PURE STATE. Prices are
+// quoted from the purpose-scoped sub-streams `seed:vacation:week:packageId` /
+// `seed:practice:week` (economy.ts), and the friendly itself runs on `seed:practicematch:week`
+// – never the MAIN weekly stream. The B1/C1 freezes (count 45239 / hash 9f783705) therefore
+// stay byte-identical no matter how much the parent plans; tests/planner.test.ts P1 re-proves
+// it with a career that books something every single week.
+
+/** The vacation booked for `week`, if any. */
+export function vacationForWeek(world: WorldState, week: number): VacationBooking | undefined {
+  return world.vacations.find((v) => v.week === week)
+}
+
+/** The practice match booked for `week`, if any. */
+export function practiceForWeek(world: WorldState, week: number): PracticeBooking | undefined {
+  return world.practices.find((p) => p.week === week)
+}
+
+/** The availability copy for a booked vacation week: "Family vacation – {package}" (spec §3). */
+function vacationBlackoutDetail(booking: VacationBooking): string {
+  return `Family vacation – ${vacationPackage(booking.packageId)?.label ?? booking.packageId}`
+}
+
+/** Guard shared by both booking commands: a plannable week is in the FUTURE, free of the kid's
+ *  own entries and of another booking, and she is not laid up through it. Throws the
+ *  player-facing reason (short dash copy). `kind` shapes the school/off-season rules: the
+ *  off-season is family time (no friendlies) but IS the natural family-vacation week, and an
+ *  exam block takes neither. */
+function assertPlannable(world: WorldState, week: number, kind: 'vacation' | 'practice'): void {
+  if (!Number.isInteger(week) || week <= world.week) throw new Error('Only a future week can be planned')
+  if (world.injury !== null && week < world.week + world.injury.weeksRemaining) {
+    throw new Error(`Injured – back in ${world.injury.weeksRemaining} weeks.`)
+  }
+  if (isExamWeek(week)) throw new Error('School exams that week – no matches, no trips')
+  if (kind === 'practice' && isOffSeasonWeek(week)) throw new Error('Off-season – family time, no matches')
+  if (vacationForWeek(world, week)) throw new Error('That week is already a family vacation')
+  if (practiceForWeek(world, week)) throw new Error('A practice match is already booked that week')
+  if (world.season.some((e) => e.week === week && world.entries.includes(e.id))) {
+    throw new Error('She is entered in a tournament that week')
+  }
+}
+
+/** Book a family vacation on an empty future week: charges the sub-stream quote (spec §2) and
+ *  records the booking. The week becomes a hard blackout; the package's condition gain (and, for
+ *  the two top packages, its recovery buff) lands when the week ticks. */
+export function bookVacation(world: WorldState, week: number, packageId: string): void {
+  const pkg = vacationPackage(packageId)
+  if (!pkg) throw new Error('Unknown vacation package')
+  assertPlannable(world, week, 'vacation')
+  const priceCents = vacationPriceCents(world.seed, week, packageId, world.profile.background)
+  if (world.fundsCents < priceCents) throw new Error('Not enough funds for that vacation')
+  world.fundsCents -= priceCents
+  world.vacations.push({ week, packageId, paidCents: priceCents })
+  world.vacations.sort((a, b) => a.week - b.week)
+  if (priceCents > 0) {
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: 'vacation',
+      text: `Booked: ${pkg.label} – W${week}`,
+      amountCents: -priceCents,
+    })
+  }
+  addEvent(world, { week: world.week, type: 'entry', text: `Family vacation booked – W${week} (${pkg.label})` })
+}
+
+/** Cancel a booked vacation before its week starts: FULL refund (mirror of entry withdrawal). */
+export function cancelVacation(world: WorldState, week: number): void {
+  const booking = vacationForWeek(world, week)
+  if (!booking) throw new Error('No vacation booked that week')
+  if (week <= world.week) throw new Error('That vacation week has already started')
+  world.vacations = world.vacations.filter((v) => v !== booking)
+  const label = vacationPackage(booking.packageId)?.label ?? booking.packageId
+  if (booking.paidCents > 0) {
+    world.fundsCents += booking.paidCents
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'vacation',
+      text: `Vacation refunded: ${label}`,
+      amountCents: booking.paidCents,
+    })
+  }
+  addEvent(world, { week: world.week, type: 'entry', text: `Cancelled the family vacation – W${week}` })
+}
+
+/** Book a practice match (a watchable friendly) on an empty future week: charges the court
+ *  rental off the `:practice:` sub-stream, plus half a coaching session when the coach comes
+ *  along. NEVER blocked by the fatigue guardrail – the caution is advice, not a veto (owner:
+ *  "the parent may push, the game warns"); see practiceCaution. */
+export function bookPractice(world: WorldState, week: number, withCoach: boolean): void {
+  assertPlannable(world, week, 'practice')
+  const paidCents = practiceFeeCents(world.seed, week, world.profile.background, withCoach)
+  if (world.fundsCents < paidCents) throw new Error('Not enough funds for the court rental')
+  world.fundsCents -= paidCents
+  world.practices.push({ week, paidCents, withCoach })
+  world.practices.sort((a, b) => a.week - b.week)
+  addEvent(world, {
+    week: world.week,
+    type: 'expense',
+    category: 'practice',
+    text: withCoach ? `Court rental + coach – practice match W${week}` : `Court rental – practice match W${week}`,
+    amountCents: -paidCents,
+  })
+  addEvent(world, { week: world.week, type: 'entry', text: `Practice match booked – W${week}` })
+}
+
+/** Cancel a booked practice before its week starts: full refund of the rental. */
+export function cancelPractice(world: WorldState, week: number): void {
+  const booking = practiceForWeek(world, week)
+  if (!booking) throw new Error('No practice match booked that week')
+  if (week <= world.week) throw new Error('That practice week has already started')
+  refundPractice(world, booking, 'Cancelled')
+}
+
+/** Drop a practice booking and hand the rental back (shared by the player cancel and the
+ *  injury hook, so the money story is identical either way). */
+function refundPractice(world: WorldState, booking: PracticeBooking, reason: 'Cancelled' | 'Injured'): void {
+  world.practices = world.practices.filter((p) => p !== booking)
+  world.fundsCents += booking.paidCents
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'practice',
+    text: `Court rental refunded – W${booking.week}`,
+    amountCents: booking.paidCents,
+  })
+  addEvent(world, {
+    week: world.week,
+    type: 'entry',
+    text:
+      reason === 'Injured'
+        ? `Practice match called off – W${booking.week} (she is hurt)`
+        : `Cancelled the practice match – W${booking.week}`,
+  })
+}
+
+/** How many practice weeks run UNBROKEN immediately before `week` (pure, order-free). */
+export function consecutivePracticeWeeks(practiceWeeks: readonly number[], week: number): number {
+  const booked = new Set(practiceWeeks)
+  let n = 0
+  while (booked.has(week - 1 - n)) n++
+  return n
+}
+
+/** The practice GUARDRAIL as a small pure predicate (fatigue-bench finding 25.07: practising
+ *  every single week is self-destructive – mean condition 47, 41-44% of weeks under 40). It is a
+ *  CAUTION, never a block: the confirm sheet spells the risk out and the Home chip reads the
+ *  strain, but the parent may still push. Reasons: 'tired' (below ECONOMY.practice.cautionCondition)
+ *  and 'streak' (this would be the cautionStreak-th match week in a row). */
+export interface PracticeCaution {
+  level: 'ok' | 'caution'
+  reasons: Array<'tired' | 'streak'>
+  /** player-facing warning copy (short dash), absent when clear */
+  detail?: string
+}
+export function practiceCaution(input: {
+  condition: number
+  practiceWeeks: readonly number[]
+  week: number
+}): PracticeCaution {
+  const p = ECONOMY.practice
+  const reasons: Array<'tired' | 'streak'> = []
+  if (input.condition < p.cautionCondition) reasons.push('tired')
+  if (consecutivePracticeWeeks(input.practiceWeeks, input.week) >= p.cautionStreak - 1) reasons.push('streak')
+  if (reasons.length === 0) return { level: 'ok', reasons }
+  const parts: string[] = []
+  // Owner's line: «Она уже вымотана – ещё матч?»
+  if (reasons.includes('tired')) parts.push('She is already worn out – another match?')
+  if (reasons.includes('streak')) parts.push(`${p.cautionStreak} match weeks in a row – that is how bodies break.`)
+  return { level: 'caution', reasons, detail: parts.join(' ') }
+}
+
+/** Retire an expired recovery buff (pure state). Runs after the week's injury roll, so the last
+ *  covered week still gets its protection. */
+function expireRecoveryBuff(world: WorldState): void {
+  if (world.recoveryBuff && world.week > world.recoveryBuff.untilWeek) world.recoveryBuff = null
+}
+
+/** Tick step 1c: resolve a booked vacation week – the package's condition gain on top of the
+ *  free-week recovery accrueCondition already granted, plus the resort/elite carry-over buff.
+ *  Runs even while she is injured: a family week away is still rest. */
+function resolveVacation(world: WorldState): void {
+  const booking = vacationForWeek(world, world.week)
+  if (!booking) return
+  const pkg = vacationPackage(booking.packageId)
+  if (!pkg) return
+  world.condition = clamp(world.condition + pkg.conditionGain, ECONOMY.condition.min, ECONOMY.condition.max)
+  if (pkg.buffFactor < 1) {
+    world.recoveryBuff = { untilWeek: world.week + ECONOMY.vacation.buffWeeks, factor: pkg.buffFactor }
+  }
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text:
+      pkg.buffFactor < 1
+        ? `Family vacation – ${pkg.label}: +${pkg.conditionGain} condition, and the recovery holds for ${ECONOMY.vacation.buffWeeks} weeks.`
+        : `Family vacation – ${pkg.label}: +${pkg.conditionGain} condition.`,
+  })
+}
+
+/** Pick the week's sparring partner: a cohort player from the kid's own neighbourhood of the
+ *  standings (one draw on the private practice stream). Flavor + a fair hit-out, never a result. */
+function pickSparringPartner(world: WorldState, rng: Rng): AiPlayer {
+  const ranking = fullRanking(world).filter((r) => r.playerId !== KID_ID)
+  const byId = new Map(world.cohort.map((p) => [p.id, p]))
+  const kidIdx = Math.max(0, Math.min(ranking.length - 1, world.kidRank - 1))
+  const lo = Math.max(0, kidIdx - 10)
+  const hi = Math.min(ranking.length - 1, kidIdx + 10)
+  const pick = pickInt(rng, lo, hi) // exactly one pull
+  return byId.get(ranking[pick]?.playerId ?? '') ?? world.cohort[0]
+}
+
+/** Tick step 1c: play a booked practice match. A watchable friendly through the SAME record
+ *  shape a tournament match uses (MatchReplay re-simulates from the stored seed), ZERO ranking
+ *  points, and the spec's drain: `max(1, local-scoreline drain − 1)` – a friendly is one lighter
+ *  than the same match at a local, never free. Injury cancels the week (the rental was already
+ *  refunded at onset); the friendly runs on the private `seed:practicematch:week` stream, so it
+ *  adds no MAIN-stream draws. */
+function resolvePractice(world: WorldState): void {
+  const booking = practiceForWeek(world, world.week)
+  if (!booking) return
+  if (world.injury !== null) {
+    refundPractice(world, booking, 'Injured')
+    return
+  }
+  const rng = rngFromSeed(`${world.seed}:practicematch:${world.week}`)
+  const opponent = pickSparringPartner(world, rng)
+  // She hits at her CURRENT condition, exactly like a tournament run (R9-19 coupling).
+  const factor = conditionMatchFactor(world.condition)
+  const raw = kidMatchPlayer(world)
+  const kid: MatchPlayer = {
+    ...raw,
+    serve: raw.serve * factor,
+    ret: raw.ret * factor,
+    composure: raw.composure * factor,
+    stamina: raw.stamina * factor,
+  }
+  const opp: MatchPlayer = {
+    id: opponent.id,
+    name: opponent.name,
+    serve: opponent.serve,
+    ret: opponent.ret,
+    composure: opponent.composure,
+    stamina: opponent.stamina,
+  }
+  const surface: Surface = 'hard' // the home club's courts
+  const seed = `${world.seed}:practicematch:${world.week}:m`
+  const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
+  const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
+  const kidWon = result.winner === 0
+  // The spec's drain rule, graded off the real scoreline via the SAME matchDrain the tour uses.
+  const drain = Math.max(1, matchDrain('local', score) - 1)
+  world.condition = clamp(world.condition - drain, ECONOMY.condition.min, ECONOMY.condition.max)
+  const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+  addEvent(world, {
+    week: world.week,
+    type: 'match',
+    friendly: true,
+    text: `Practice match: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(opp.name)} ${score} – no ranking points`,
+    match: {
+      round: 0,
+      aId: KID_ID,
+      bId: opp.id,
+      winnerId: kidWon ? KID_ID : opp.id,
+      seed,
+      score,
+      eventId: `practice-w${world.week}`,
+      surface,
+      oppName: opp.name,
+      a: { ...kid },
+      b: { ...opp },
+    },
+  })
+}
+
+/** Housekeeping: bookings are kept for a short TRAILING window after their week resolves, not
+ *  dropped on the spot – the guardrail's consecutive-practice streak (and the Home strain chip)
+ *  has to be able to see "she already played the last two weeks". Bounded, so the save stays
+ *  small no matter how long the career runs. */
+const PLANNER_TRAIL_WEEKS = 4
+function prunePlannerBookings(world: WorldState): void {
+  const from = world.week - PLANNER_TRAIL_WEEKS
+  world.vacations = world.vacations.filter((v) => v.week >= from)
+  world.practices = world.practices.filter((p) => p.week >= from)
 }
 
 // --- weekly resolution pieces ------------------------------------------------
@@ -893,6 +1234,7 @@ function housekeep(world: WorldState): void {
   pruneResults(world)
   pruneEvents(world)
   pruneFinanceWeeks(world)
+  prunePlannerBookings(world)
   ensureSeason(world)
 }
 
@@ -1080,6 +1422,9 @@ export function createWorld(
     injury: null,
     injuryHistory: [],
     physioActive: profile.coachSetup === 'hired',
+    vacations: [],
+    practices: [],
+    recoveryBuff: null,
   }
   addEvent(world, {
     week: 0,
@@ -1112,6 +1457,9 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.injury = null
   save.injuryHistory = []
   save.physioActive = save.profile?.coachSetup === 'hired'
+  save.vacations = []
+  save.practices = []
+  save.recoveryBuff = null
   ensureSeason(save as WorldState)
   recomputeKidRank(save as WorldState)
   delete save.log
@@ -1177,11 +1525,18 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     the walkover it is (played = false ⇒ she keeps the match-free slider bonus). R9-7:
   //     match fatigue no longer accrues here – it lands per-match at finalizeTournament, so a
   //     walkover/skipped week costs none by construction.
+  //     Season planner (v13): the booked week types resolve INSIDE this step, on private
+  //     sub-streams only. Order matters – rollInjury first (so an injury can still cancel the
+  //     friendly and refund the court), then the week-type accrual, then the vacation gain /
+  //     the friendly's drain, exactly like finalizeTournament applies its strain after accrual.
   rollInjury(world)
+  expireRecoveryBuff(world)
   const playedThisWeek =
     world.season.some((e) => e.week === world.week && world.entries.includes(e.id)) &&
     world.injury === null // injured on the play week => walkover
   accrueCondition(world, playedThisWeek)
+  resolveVacation(world)
+  resolvePractice(world)
   resolvePhysio(world)
 
   const ids = cohortIds(world)
@@ -1268,6 +1623,12 @@ export function enterEvent(world: WorldState, eventId: string): void {
   // CHOICE (level 'caution'), so racing tired is allowed – its cost is emergent, not a veto.
   const availability = availabilityStatus(world, event)
   if (availability.level === 'blocked') throw new Error(availability.detail ?? 'Unavailable this week')
+  // Season planner: the real thing wins over the friendly. A practice match booked on this week
+  // gives way (rental refunded in full) instead of stacking a friendly onto a tournament week –
+  // she can only play one week's worth of tennis. A booked VACATION can't collide: it is a hard
+  // availability block, so the guard above already refused.
+  const collidingPractice = practiceForWeek(world, event.week)
+  if (collidingPractice) refundPractice(world, collidingPractice, 'Cancelled')
   world.fundsCents -= fee
   world.entries.push(eventId)
   addEvent(world, {
@@ -1364,15 +1725,22 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     const nextWeek = world.week + 1
     // Pre-tick guards bite only after the first tick, so a single step always progresses.
     if (i > 0) {
+      // Round-9 leftover FIX (owner-visible bug, season-planner slice): the stop must only fire
+      // for an event she could ACTUALLY enter. The availability gate alone let the sim halt at
+      // W1/W3 with 0 points for regional/national deadlines she was nowhere near qualifying for,
+      // so the point-band eligibility is now AND-ed in – the same isTierEligible enterEvent uses,
+      // which also silences a tier she has OUTGROWN (points past the ceiling).
+      const points = kidPoints(world)
       const deadlineSoon = world.season.some(
         (e) =>
           (e.tier === 'regional' || e.tier === 'national') &&
           !world.entries.includes(e.id) &&
           world.fundsCents >= TIERS[e.tier].entryFeeCents &&
           (e.deadlineWeek === world.week || e.deadlineWeek === nextWeek) &&
+          isTierEligible(e.tier, points) &&
           // Season-Life: don't stop-for-deadline only on an event she HARD-cannot enter (school
-          // exams, or injured in Slice C). A fatigued event is still enterable (soft caution), so
-          // the sim MAY stop so the player can make the tough call.
+          // exams, a booked family vacation, or injured in Slice C). A fatigued event is still
+          // enterable (soft caution), so the sim MAY stop so the player can make the tough call.
           availabilityStatus(world, e).level !== 'blocked',
       )
       if (deadlineSoon) {
@@ -1609,6 +1977,13 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     },
     financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),
+    // Season planner (v13): the bookings the calendar renders, plus the short trailing window the
+    // guardrail's consecutive-practice read needs (the calendar only ever looks at future weeks,
+    // so the tail is invisible there). Prices are re-derivable by the UI from the same pure quote
+    // functions the engine charges (economy.ts), so nothing else is needed on the wire.
+    vacations: world.vacations.map((v) => ({ ...v })),
+    practices: world.practices.map((p) => ({ ...p })),
+    recoveryBuff: world.recoveryBuff ? { ...world.recoveryBuff } : null,
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
