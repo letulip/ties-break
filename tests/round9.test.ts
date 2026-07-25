@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { portraitStage } from '../src/shared/avatarEmotion'
 import {
   createWorld,
   tickWeek,
@@ -473,5 +474,55 @@ describe('pt4 — UI wiring', () => {
     const viewer = read('../src/components/MatchViewer.vue')
     expect(viewer).toContain('playLong')
     expect(viewer).toContain('SEATS_PREROLL_MS / Math.min(speed.value, 2)')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Round-9 pt5 — R9-16 portrait stages by age + the young/teen header crops.
+// ---------------------------------------------------------------------------
+describe('pt5 — R9-16 portrait stages by age', () => {
+  it('portraitStage: jun < 12, young 12-16, teen 17-22, adult beyond', () => {
+    expect(portraitStage(10)).toBe('jun')
+    expect(portraitStage(11)).toBe('jun')
+    expect(portraitStage(12)).toBe('young')
+    expect(portraitStage(14)).toBe('young') // START_AGE ⇒ the game OPENS on young art
+    expect(portraitStage(16)).toBe('young')
+    expect(portraitStage(17)).toBe('teen')
+    expect(portraitStage(22)).toBe('teen')
+    expect(portraitStage(23)).toBe('adult')
+  })
+
+  it('the 256px header crops exist for every young/teen emotion (sips→256→cwebp q82)', () => {
+    for (const stage of ['jun', 'young', 'teen'] as const) {
+      for (const emotion of ['norm', 'happy', 'sad', 'serious', 'tired', 'injury'] as const) {
+        const p = new URL(`../public/avatars/${stage}-${emotion}.webp`, import.meta.url)
+        expect(existsSync(p), `${stage}-${emotion}.webp missing`).toBe(true)
+      }
+    }
+  })
+
+  it('the full-size art exists for every young/teen emotion the big portraits can request', () => {
+    for (const stage of ['jun', 'young', 'teen', 'adult'] as const) {
+      for (const emotion of ['norm', 'happy', 'sad', 'serious', 'tired', 'injury'] as const) {
+        const p = new URL(
+          `../public/images/fem-euro-brunnet/fem-euro-brunnet-${stage}-${emotion}.webp`,
+          import.meta.url,
+        )
+        expect(existsSync(p), `${stage}-${emotion} full art missing`).toBe(true)
+      }
+    }
+  })
+
+  it('the stage resolver reaches the crop picker, the big portraits and the flow art', () => {
+    const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
+    expect(read('../src/composables/kidEmotion.ts')).toContain('portraitStage')
+    expect(read('../src/components/TournamentFlow.vue')).toContain('kidStage')
+    // the Kid tab glyph grows up at 18 (owner icon pair; man.svg reserved for the boys' tour)
+    const app = read('../src/App.vue')
+    expect(app).toContain("'woman' : 'kid-girl'")
+    expect(existsSync(new URL('../public/icons/woman.svg', import.meta.url))).toBe(true)
+    expect(existsSync(new URL('../public/icons/man.svg', import.meta.url))).toBe(true)
+    // onboarding's "first time on court" frame stays jun BY DESIGN (narrative flashback)
+    expect(read('../src/components/OnboardingWizard.vue')).toContain('jun')
   })
 })

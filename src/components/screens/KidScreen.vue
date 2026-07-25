@@ -8,12 +8,9 @@ import type { CoachSetup, FamilyBackground, PlayStyle } from '../../shared/proto
 
 const game = useGameStore()
 // Raster art ships as webp (≤512 px, quality 82) via `npm run art`; PNG sources live in
-// art-src/ (not served). R9-15: the BIG portrait reflects her CURRENT state via the shared
-// emotion composable – full-size art exists for every stage×emotion.
-const { emotion: kidEmotion } = useKidEmotion()
-const portraitUrl = computed(
-  () => `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-${kidEmotion.value}.webp`,
-)
+// art-src/ (not served). R9-15/16: the BIG portrait reflects her CURRENT state and age
+// stage via the shared composable – full-size art exists for every stage×emotion.
+const { portraitUrl } = useKidEmotion()
 
 const BACKGROUND_LABEL: Record<FamilyBackground, string> = {
   wealthy: 'Wealthy',

@@ -10,9 +10,11 @@ import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import {
   avatarEmotion,
+  portraitStage,
   type AvatarEmotion,
   type LastKidResult,
   type LastKidTitle,
+  type PortraitStage,
 } from '../shared/avatarEmotion'
 import { KID_ID } from '../engine/world'
 import { TIERS } from '../engine/season/calendar'
@@ -78,5 +80,23 @@ export function useKidEmotion() {
     }),
   )
 
-  return { emotion }
+  // R9-16: the portrait stage follows her age (jun < 12, young 12-16, teen 17-22).
+  const stage = computed<PortraitStage>(() => portraitStage(game.snapshot?.ageYears ?? 14))
+
+  // 256px header/card crops live in public/avatars/{stage}-{emotion}.webp. Crops exist for
+  // jun/young/teen; the adult set is LATER-LIFE content whose crops haven't been cut yet, so
+  // the crop surfaces clamp to teen until then (the full-size adult art below already exists).
+  const cropUrl = computed(() => {
+    const cropStage = stage.value === 'adult' ? 'teen' : stage.value
+    return `${import.meta.env.BASE_URL}avatars/${cropStage}-${emotion.value}.webp`
+  })
+
+  // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
+  // (every stage×emotion exists, adult included).
+  const portraitUrl = computed(
+    () =>
+      `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${emotion.value}.webp`,
+  )
+
+  return { emotion, stage, cropUrl, portraitUrl }
 }

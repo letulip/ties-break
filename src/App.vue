@@ -30,13 +30,12 @@ const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 
 const game = useGameStore()
 
-// R9-13/15: the header avatar emotion comes from the SHARED useKidEmotion composable (the
-// R8-6a/6b freshness rules + R9-11 win-immunity live in src/shared/avatarEmotion.ts), so the
-// header crop, the Home player card and the Kid screen portrait can never disagree. Face
-// crops live in public/avatars/jun-{norm,happy,sad,serious,tired,injury}.webp (256×256,
-// round5-brand offsets convention). Junior stage until the stage-by-age slice (pt5) lands.
-const { emotion: kidEmotion } = useKidEmotion()
-const avatarUrl = computed(() => `${import.meta.env.BASE_URL}avatars/jun-${kidEmotion.value}.webp`)
+// R9-13/15/16: the header avatar comes from the SHARED useKidEmotion composable (R8-6a/6b
+// freshness rules + R9-11 win-immunity + the R9-16 stage-by-age resolver), so the header
+// crop, the Home player card and the Kid screen portrait can never disagree. Face crops live
+// in public/avatars/{stage}-{emotion}.webp (256×256; jun per round5-brand, young/teen cut in
+// round-9 pt5 to the same framing). START_AGE 14 ⇒ the game opens on young-* art.
+const { cropUrl: avatarUrl } = useKidEmotion()
 
 onMounted(() => game.init())
 
@@ -64,6 +63,13 @@ const TABS: { id: TabId; icon: string; label: string }[] = [
 ]
 function iconUrl(icon: string): string {
   return `${import.meta.env.BASE_URL}icons/${icon}.svg`
+}
+// R9-16 (owner icon pair): the KID tab glyph grows up with her – kid-girl.svg while she is a
+// junior, woman.svg from age 18 (man.svg stays reserved for the future boys' tour, like
+// kid-boy.svg). Same CSS-mask tinting path as every other tab icon.
+const kidTabIcon = computed(() => ((game.snapshot?.ageYears ?? 14) >= 18 ? 'woman' : 'kid-girl'))
+function tabIcon(t: { id: TabId; icon: string }): string {
+  return t.id === 'kid' ? kidTabIcon.value : t.icon
 }
 
 // No active snapshot once init() has settled means: no auto-loaded slot and no
@@ -314,7 +320,7 @@ function dismissStopToast(): void {
         :data-tour="`tab-${t.id}`"
         @click="tab = t.id"
       >
-        <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
+        <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(tabIcon(t))})`, maskImage: `url(${iconUrl(tabIcon(t))})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
         <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. -->

@@ -6,6 +6,7 @@
 // this is presentation (Q&A 12), never a re-decision.
 import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
+import { useKidEmotion } from '../composables/kidEmotion'
 import MatchViewer from './MatchViewer.vue'
 import BracketTabs from './BracketTabs.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
@@ -27,14 +28,17 @@ defineEmits<{ back: [] }>()
 
 const game = useGameStore()
 const base = import.meta.env.BASE_URL
-const HAPPY_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-happy-fs8.webp`
-const SAD_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-sad-fs8.webp`
-// Round 5 item 11: a programmatic gold->silver desaturation of jun-happy (sharp
-// hue/saturation masking on the trophy) came out patchy/inconsistent on inspection –
-// not shipping it (see docs/specs/round5-brand.md). Fallback: the runner-up finale
-// reuses the "serious" (focused, composed) art + a silver-styled card frame instead
-// of a dedicated artwork.
-const SERIOUS_ART = `${base}images/fem-euro-brunnet/fem-euro-brunnet-jun-serious-fs8.webp`
+// R9-16: the splash/finale paintings follow her age stage (young at the 14-year-old start,
+// teen from 17) via the shared resolver – the -fs8 optimized variants exist for every stage's
+// happy/sad/serious. Round 5 item 11 still stands: no dedicated runner-up art (a programmatic
+// gold->silver desaturation came out patchy), so the silver finale reuses the "serious"
+// (focused, composed) painting + a silver-styled card frame.
+const { stage: kidStage } = useKidEmotion()
+const artUrl = (emotion: 'happy' | 'sad' | 'serious') =>
+  `${base}images/fem-euro-brunnet/fem-euro-brunnet-${kidStage.value}-${emotion}-fs8.webp`
+const HAPPY_ART = computed(() => artUrl('happy'))
+const SAD_ART = computed(() => artUrl('sad'))
+const SERIOUS_ART = computed(() => artUrl('serious'))
 const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
 
 function flagEmoji(code: string): string {
@@ -59,9 +63,9 @@ const drawSize = computed(() => (pending.value ? TIERS[pending.value.tier].drawS
 // Round 5 item 11 fallback: lost the final => silver-styled card, serious art, "Runner-up".
 const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
 const finalePortrait = computed(() => {
-  if (pending.value?.kidChampion) return HAPPY_ART
-  if (isRunnerUp.value) return SERIOUS_ART
-  return SAD_ART
+  if (pending.value?.kidChampion) return HAPPY_ART.value
+  if (isRunnerUp.value) return SERIOUS_ART.value
+  return SAD_ART.value
 })
 
 // --- flow state --------------------------------------------------------------

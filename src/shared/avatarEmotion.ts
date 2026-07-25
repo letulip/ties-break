@@ -19,6 +19,22 @@ import type { TierId } from '../engine/season/types'
 
 export type AvatarEmotion = 'norm' | 'happy' | 'sad' | 'serious' | 'tired' | 'injury'
 
+// --- R9-16: portrait stage by age -------------------------------------------------
+// The fem-euro-brunnet art set ships one full painting per stage×emotion; the stage the
+// portraits show follows the kid's age (owner: young already from 11-12, teen from 17;
+// adult/milf are later-life content). START_AGE 14 ⇒ a new career OPENS on young-* art –
+// the jun-* placeholder era ends (only the onboarding "first time on court" frame stays
+// jun BY DESIGN: it is a narrative flashback).
+export type PortraitStage = 'jun' | 'young' | 'teen' | 'adult'
+
+/** Pure stage resolver: jun < 12, young 12-16, teen 17-22, adult beyond (later content). */
+export function portraitStage(ageYears: number): PortraitStage {
+  if (ageYears < 12) return 'jun'
+  if (ageYears <= 16) return 'young'
+  if (ageYears <= 22) return 'teen'
+  return 'adult'
+}
+
 /** R9-11: how many weeks a TITLE at each tier shields the sad emotion. local titles shield
  *  nothing (losses there are already `serious` at most); itf mirrors national – the tier is
  *  locked in Phase 3, so the value is a placeholder until ITF unlocks. */

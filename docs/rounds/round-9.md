@@ -141,13 +141,25 @@ already fixed there — verified and noted below. Player copy: short dash "–".
   current-week – after advancing, last week's matches leave the card (they stay in Home News).
 
 ## Stage/art pack (pt5 — checkpoint commit)
-- [ ] **R9-16 portrait stages by age**: stage resolver — `jun` < 12, `young` 12-16, `teen` 17-22
+- [x] **R9-16 portrait stages by age**: stage resolver — `jun` < 12, `young` 12-16, `teen` 17-22
   (owner: young already from 11-12, teen from 17; adult/milf later). START_AGE 14 ⇒ the game now
   OPENS on `young-*` art (the jun-* placeholder era ends). Wire the resolver into the header crop
   picker AND the big portraits. Cut the missing 256px header crops for `young-*` (and `teen-*`
   while at it) — norm/happy/sad/serious/tired/injury — from the full-size art, same
   sips→256→cwebp q82 convention as pt2 (framing consistent with the jun set). Onboarding's jun
   "first time on court" frame stays jun BY DESIGN (narrative flashback).
+  ALSO (owner icon pair, 25.07): the bottom-bar KID tab glyph grows up with her – kid-girl.svg
+  while ageYears < 18, woman.svg from 18 (man.svg reserved for the future boys' tour); same
+  CSS-mask tinting path, verified rendering live at W212/age 18.
+  → `src/shared/avatarEmotion.ts` (portraitStage: jun <12 / young 12-16 / teen 17-22 / adult
+  beyond) + `src/composables/kidEmotion.ts` (stage + cropUrl/portraitUrl; adult CROPS not cut
+  yet – crop surfaces clamp to teen until that content lands, full-size adult art already
+  resolves) + `src/App.vue` (header crop + kid-tab icon swap) + `HomeScreen.vue` +
+  `KidScreen.vue` + `TournamentFlow.vue` (splash/finale art per stage) +
+  `public/avatars/{young,teen}-{norm,happy,sad,serious,tired,injury}.webp` (12 new 256px crops,
+  sips crop → 256 → cwebp q82, face-framing matched to the jun set by eye; teen source art
+  names its injury painting "injured" – the CROP ships as teen-injury.webp so the URL scheme
+  stays uniform) + `tests/round9.test.ts` (pt5 describe).
 
 ## Answered / routed elsewhere (not in this branch)
 - **R9-2 zero-points fields in week-1 Regionals/Nationals** → real issue (AI entrant selection has

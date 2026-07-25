@@ -28,10 +28,9 @@ import RankHelpDialog from '../RankHelpDialog.vue'
 import { playSfx } from '../../audio/sfx'
 
 const game = useGameStore()
-// R9-13: the player-card portrait reflects her CURRENT state via the shared emotion
-// composable (same decision as the header crop + the Kid screen portrait).
-const { emotion: kidEmotion } = useKidEmotion()
-const avatarUrl = computed(() => `${import.meta.env.BASE_URL}avatars/jun-${kidEmotion.value}.webp`)
+// R9-13/16: the player-card portrait reflects her CURRENT state AND age stage via the
+// shared composable (same decision as the header crop + the Kid screen portrait).
+const { cropUrl: avatarUrl } = useKidEmotion()
 
 function flagEmoji(code: string): string {
   if (!code) return ''
