@@ -5,11 +5,9 @@
 // to live behind the "Standings" sub-tab; content and behavior are otherwise unchanged
 // (competition ranks, gap-ellipsis rows, kid highlight, "Your rank: #N").
 //
-// W-L this season was asked for too but is deliberately left out: it isn't already on the
-// Snapshot, and the only client-side approximation (scanning `events`) is unreliable –
-// `events` is capped to the most recent 60 and gets pruned, so a mid/late-season count
-// would silently undercount without extending the engine, which this item explicitly
-// says not to do.
+// W-L this season (round-8, the R6 debt): the engine has tracked world.seasonWins/seasonLosses
+// since the season wrap-up work (v10, counted as matches resolve so pruning can't lose them);
+// the Snapshot now simply surfaces both, so the header reads them directly – no event scanning.
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { formatShortName, rankLabel } from '../../shared/format'
@@ -22,6 +20,10 @@ const kidPoints = computed(() => game.snapshot?.standings.find((r) => r.isKid)?.
 // 'Unranked' until she's earned a counting result (a point-less kid isn't really ranked; her
 // dense position only floats to the top because everyone ties at 0).
 const ranked = computed(() => (game.snapshot?.countingResults.length ?? 0) > 0)
+// This season's W-L, straight off the Snapshot (accumulated at finalizeTournament, reset each
+// season wrap-up).
+const seasonWins = computed(() => game.snapshot?.seasonWins ?? 0)
+const seasonLosses = computed(() => game.snapshot?.seasonLosses ?? 0)
 </script>
 
 <template>
@@ -36,6 +38,10 @@ const ranked = computed(() => (game.snapshot?.countingResults.length ?? 0) > 0)
         <div class="stats-tile">
           <span class="hint">Season points</span>
           <span class="stats-tile-value num">{{ kidPoints }}</span>
+        </div>
+        <div class="stats-tile">
+          <span class="hint">W–L</span>
+          <span class="stats-tile-value num">{{ seasonWins }}–{{ seasonLosses }}</span>
         </div>
       </div>
     </section>

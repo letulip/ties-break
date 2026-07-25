@@ -323,6 +323,11 @@ export interface Snapshot {
   /** best (smallest) finish index the kid has ever reached per tier (schema v10); drives the
    *  Home season strip's real tier progress. Untouched tiers are absent. */
   bestFinishByTier: Partial<Record<TierId, number>>
+  /** the CURRENT season's kid W-L (round-8, the R6 debt): mirrors the v10 world counters that
+   *  accumulate at finalizeTournament and reset at each season wrap-up. The Snapshot is derived,
+   *  so surfacing them bumps no schema. Drives the Stats header's W–L figure. */
+  seasonWins: number
+  seasonLosses: number
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
   /** set when an `advance` stopped early */

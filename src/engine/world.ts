@@ -1036,6 +1036,30 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   delete save.log
 }
 
+// --- Round-8 R8-7a: entry lists close at the deadline --------------------------
+// Real-world rule (owner 25.07): players out of band at close are removed and refunded.
+// If the kid's points have grown OUT of a tier's band while she still holds a
+// still-refundable (pre-deadline) entry of that tier, the organisers release the entry
+// at the top of the weekly tick: full refund via the existing withdrawEvent (mirror of
+// slice C's injury auto-withdraw) + an info beat. A POST-deadline entry is never touched
+// – the list closed with her in band, the fee is committed and the event still plays.
+// Pure state, ZERO RNG draws – the B1/C1 main-stream invariance freezes stay untouched.
+function releaseOutgrownEntries(world: WorldState): void {
+  if (world.entries.length === 0) return
+  const points = kidPoints(world)
+  for (const id of [...world.entries]) {
+    const event = eventById(world, id)
+    if (!event || world.week > event.deadlineWeek) continue // closed list – fee committed
+    if (points <= TIERS[event.tier].enterPointBand[1]) continue // still inside (or under) the band
+    withdrawEvent(world, id)
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: `Entry released – she's outgrown ${TIERS[event.tier].label}. Fee refunded.`,
+    })
+  }
+}
+
 // Full weekly resolution. Draw order on the MAIN stream is fixed per week regardless
 // of player input: base costs → (kid tournament uses an event-scoped RNG, zero main
 // draws) → cohort drift → canonical AI tournaments for every scheduled event.
@@ -1047,6 +1071,10 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
 // costs, drift, AI brackets) still runs, so the per-week draw count is unchanged.
 export function tickWeek(world: WorldState, rng: Rng): void {
   world.week += 1
+
+  // 0a. Round-8 R8-7a: release (refund) still-refundable entries whose tier she has
+  //     outgrown. Pure state, ZERO draws, so it sits safely ahead of every RNG step.
+  releaseOutgrownEntries(world)
 
   // 0. parent's weekly contribution BEFORE costs (no RNG draw)
   resolveParentIncome(world)
@@ -1454,6 +1482,10 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     standings: computeStandings(world),
     countingResults: computeCountingResults(world),
     bestFinishByTier: { ...world.bestFinishByTier },
+    // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
+    // surfacing them is derivation, not schema.
+    seasonWins: world.seasonWins,
+    seasonLosses: world.seasonLosses,
     lastSeasonSummary: world.lastSeasonSummary,
     ...(stopReason ? { stopReason } : {}),
     ...(pending ? { pending } : {}),
