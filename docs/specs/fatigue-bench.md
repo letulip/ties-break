@@ -53,6 +53,26 @@ effort↔wallet↔condition triangle is visible in one table. Policies are DATA
 (`Policy`/`gridPolicies()` in tools/fatigue-bench.ts): a future axis is a new field, never a
 code fork.
 
+## V2 scenario (owner 25.07, after the baseline report)
+V2 = recoveryBase only on match-free weeks + physio conditionBonusPerWeek 2 → 1. The engine
+grew ONE knob for it – `ECONOMY.condition.matchWeekRecoveryBase` (default 2 = shipped behavior
+byte-for-byte; B1/C1 freezes and all pins stay green untouched). The bench patches the LIVE
+ECONOMY (`withScenario`) to {matchWeekRecoveryBase: 0, physio bonus 1}, runs the FULL headline
+matrix + grid as a second section, restores the values, and closes with a V2-vs-baseline delta
+block. Determinism holds per scenario.
+
+## Planner projection (PROJ – not a simulation)
+On top of the V2 traces: practices (−1 condition, court $30-80 × corridor; grinder every
+eligible empty week / balanced every other / careful only at condition ≥ 80) and vacations
+(careful books below 60 the cheapest package clearing 80; balanced one sea week per season in
+the off-season; grinder never). Package boosts are the owner's ladder (staycation +12 … elite
++30); package PRICES are bench ASSUMPTIONS – docs/specs/season-planner.md does not exist in the
+repo yet; swap the numbers in tools/fatigue-bench.ts `PLANNER` when it lands. Injuries are a
+deterministic expected-value integral of the tau formula over the projected fatigue. Blind
+spots (printed in the output): no result/calendar feedback, practices affect neither skills nor
+the overuse counter, midpoint prices, no bookings on exam weeks.
+
 ## Not modeled yet – re-run required
-FRIENDLY MATCHES and VACATIONS (season-planner slice) are not in the engine. Both are condition
-levers this bench cannot see; the grid (and the headline matrix) MUST be re-run when they land.
+FRIENDLY MATCHES and VACATIONS (season-planner slice) are not in the engine. The PROJ section
+above is arithmetic, not mechanics; the grid (and the headline matrix) MUST be re-run when the
+real mechanics land.

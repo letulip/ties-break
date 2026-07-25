@@ -180,7 +180,14 @@ export const ECONOMY = {
     start: 100,
     min: 0,
     max: 100,
-    recoveryBase: 2, // every week, always
+    recoveryBase: 2, // every MATCH-FREE week (see matchWeekRecoveryBase for match weeks)
+    // V2 candidate (owner 25.07, after the fatigue-bench report): the base recovery credited on
+    // a week the kid PLAYS a tournament – the owner wants to test 0 there ("a tournament week is
+    // travel + competition, not rest"). DEFAULT 2 === recoveryBase keeps CURRENT behavior
+    // byte-for-byte; nothing in the shipped game changes until the owner decides. The fatigue
+    // bench patches this to 0 (plus physio.conditionBonusPerWeek 2→1) at runtime for its V2
+    // scenario and restores it afterwards.
+    matchWeekRecoveryBase: 2,
     // Match-free weeks only, first matching threshold wins (descending): the slider stays
     // meaningful – money (planFactor), future skill growth, and recovery pacing.
     restRecoveryBonus: [

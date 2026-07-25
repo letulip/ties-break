@@ -7,6 +7,11 @@ import {
   GRID_SEEDS,
   GRID_HORIZON_WEEKS,
   gridPolicies,
+  SCENARIOS,
+  withScenario,
+  projectPlanner,
+  effectivePhysio,
+  PLANNER,
   openFatigueCareer,
   stepFatigueWeek,
   runFatigueCareer,
@@ -91,10 +96,11 @@ describe('run structure', () => {
     }
   })
 
-  it('the CSV time-series has one row per (seed, week) plus the header', () => {
+  it('the CSV time-series has one row per (seed, week) plus the header, labeled by scenario', () => {
     const runs = [runFatigueCareer(working, balanced, 0, H52.weeks)]
-    const csv = toCsv([{ horizon: H52, profile: working, policy: balanced, runs }])
+    const csv = toCsv([{ scenario: SCENARIOS[0], horizon: H52, profile: working, policy: balanced, runs }])
     expect(csv.trim().split('\n')).toHaveLength(1 + H52.weeks)
+    expect(csv.split('\n')[1].startsWith('baseline,')).toBe(true)
   })
 })
 
@@ -143,17 +149,16 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
     let c: number = k.start
     const out: number[] = []
     for (const f of facts) {
-      let recovery = k.recoveryBase
-      if (!f.played) {
-        let bonus = 0
-        for (const { minRest, bonus: b } of k.restRecoveryBonus) {
-          if (restPercent >= minRest) {
-            bonus = b
-            break // first (highest) matching threshold wins – never interpolated
-          }
+      // match week → matchWeekRecoveryBase (the V2 knob; == recoveryBase at the shipped
+      // default); match-free week → recoveryBase + the rest-slider threshold bonus.
+      let bonus = 0
+      for (const { minRest, bonus: b } of k.restRecoveryBonus) {
+        if (restPercent >= minRest) {
+          bonus = b
+          break // first (highest) matching threshold wins – never interpolated
         }
-        recovery += bonus
       }
+      let recovery = f.played ? k.matchWeekRecoveryBase : k.recoveryBase + bonus
       if (physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
       const offset = ((f.week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
       const offSeason = offset >= WEEKS_PER_YEAR - OFF_SEASON_WEEKS
@@ -191,6 +196,26 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
       // the trace must actually exercise matches, or the drain arm was never tested
       expect(facts.some((f) => f.matchScores.length > 0)).toBe(true)
     }
+  })
+
+  it('the trace ALSO matches under the V2 scenario (live knobs) – the engine knob is wired exactly', () => {
+    // Inside withScenario(V2) both the engine AND the recomputation read the patched knobs
+    // (matchWeekRecoveryBase 0, physio bonus 1), so byte-equality proves accrueCondition applies
+    // the V2 rule on exactly the played weeks and nowhere else.
+    const v2 = SCENARIOS.find((s) => s.id === 'v2')!
+    withScenario(v2, () => {
+      for (const policy of POLICIES) {
+        const { world, rng } = openFatigueCareer(middleSelf, policy, 0)
+        const physioActive = world.physioActive
+        const facts: WeekFacts[] = []
+        for (let i = 0; i < H104.weeks; i++) facts.push(stepFatigueWeek(world, rng, policy))
+        const engineTrace = facts.map((f) => f.condition)
+        expect(JSON.stringify(independentTrace(facts, policy.plan.rest, physioActive))).toBe(
+          JSON.stringify(engineTrace),
+        )
+        expect(facts.some((f) => f.matchScores.length > 0)).toBe(true)
+      }
+    })
   })
 
   it('physio wiring: careful forces on; grinder/balanced follow the coach default; grid "off" forces off', () => {
@@ -241,5 +266,95 @@ describe('factorial grid (owner 25.07: unbundled axes)', () => {
     const a = runFatigueCareer(middleSelf, grind, 0, 52)
     const b = runFatigueCareer(middleSelf, light, 0, 52)
     expect(a.coachingSpendCents).toBeGreaterThan(b.coachingSpendCents)
+  })
+})
+
+describe('V2 scenario (matchWeekRecoveryBase 0 + physio bonus 1, patched live)', () => {
+  const v2 = SCENARIOS.find((s) => s.id === 'v2')!
+
+  it('the engine knob default is a no-op: matchWeekRecoveryBase === recoveryBase as shipped', () => {
+    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(ECONOMY.condition.recoveryBase)
+    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
+  })
+
+  it('withScenario patches, runs, and ALWAYS restores – zero leakage into baseline runs', () => {
+    const before = runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
+    const v2run = withScenario(v2, () => {
+      expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0)
+      expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
+      return runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
+    })
+    // restored exactly
+    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(2)
+    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
+    // the scenario genuinely changes the dynamics, and the baseline reproduces after restore
+    expect(v2run.meanCondition).toBeLessThan(before.meanCondition)
+    expect(runFatigueCareer(middleSelf, grinder, 0, H52.weeks)).toEqual(before)
+  })
+
+  it('restores even when the run throws', () => {
+    expect(() =>
+      withScenario(v2, () => {
+        throw new Error('boom')
+      }),
+    ).toThrow('boom')
+    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(2)
+    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
+  })
+
+  it('V2 runs are deterministic per scenario', () => {
+    const a = withScenario(v2, () => runFatigueCareer(working, careful, 1, H52.weeks))
+    const b = withScenario(v2, () => runFatigueCareer(working, careful, 1, H52.weeks))
+    expect(a).toEqual(b)
+  })
+})
+
+describe('planner PROJECTION layer (practices + vacations – arithmetic on V2 traces, PROJ-only)', () => {
+  const v2 = SCENARIOS.find((s) => s.id === 'v2')!
+
+  it('is deterministic and reconciles its own money columns', () => {
+    withScenario(v2, () => {
+      const run = runFatigueCareer(middleSelf, balanced, 0, H104.weeks)
+      const a = projectPlanner(run, middleSelf, balanced)
+      const b = projectPlanner(run, middleSelf, balanced)
+      expect(a).toEqual(b)
+      expect(a.projWeekly).toHaveLength(H104.weeks)
+      expect(a.projBandLow + a.projBandMid + a.projBandHigh).toBe(H104.weeks)
+      expect(a.projEndFundsCents).toBe(run.endFundsCents - a.practiceCostCents - a.vacationCostCents)
+      expect(a.projTrough).toBe(Math.min(...a.projWeekly))
+    })
+  })
+
+  it('booking rules hold: grinder never vacations + practices every eligible week; balanced sea-only', () => {
+    withScenario(v2, () => {
+      const run = runFatigueCareer(middleSelf, grinder, 0, H104.weeks)
+      const proj = projectPlanner(run, middleSelf, grinder)
+      expect(proj.vacationsTotal).toBe(0)
+      expect(proj.vacationCostCents).toBe(0)
+      // grinder practices EVERY practice-eligible week: empty, healthy, not exam/off-season
+      const eligible = run.weekly.filter((w) => {
+        const offset = w.week % 52
+        const offSeason = offset >= 49
+        const exam = offset >= 24 && offset <= 25
+        return w.matches === 0 && !w.injured && !offSeason && !exam
+      }).length
+      expect(proj.practices).toBe(eligible)
+      // court fee = band midpoint × corridor midpoint, per practice
+      const mid = Math.round(((PLANNER.practice.courtCents[0] + PLANNER.practice.courtCents[1]) / 2) * 1.0)
+      expect(proj.practiceCostCents).toBe(proj.practices * mid) // middle corridor mid == 1.0
+
+      const bal = projectPlanner(runFatigueCareer(middleSelf, balanced, 0, H104.weeks), middleSelf, balanced)
+      const packagesBooked = Object.keys(bal.vacationsByPackage)
+      for (const id of packagesBooked) expect(id).toBe('sea') // balanced books sea weeks only
+      expect(bal.vacationsTotal).toBeLessThanOrEqual(H104.seasons) // one per season year max
+    })
+  })
+
+  it('effectivePhysio mirrors the career wiring', () => {
+    expect(effectivePhysio(middleSelf, grinder)).toBe(false)
+    expect(effectivePhysio(middleHired, grinder)).toBe(true)
+    expect(effectivePhysio(middleSelf, careful)).toBe(true)
+    const off = gridPolicies().find((p) => p.physio === 'off')!
+    expect(effectivePhysio(middleHired, off)).toBe(false)
   })
 })

@@ -427,8 +427,10 @@ export function restRecoveryBonus(restPercent: number): number {
  *  blackout bonus on off-season/exam weeks. Clamps to [min,max]. */
 export function accrueCondition(world: WorldState, playedThisWeek: boolean): void {
   const c = ECONOMY.condition
-  let recovery = c.recoveryBase
-  if (!playedThisWeek) recovery += restRecoveryBonus(world.plan.rest)
+  // A match week earns matchWeekRecoveryBase (== recoveryBase by default, so behavior is
+  // unchanged until the owner turns the V2 knob); a match-free week earns recoveryBase + the
+  // rest-slider bonus.
+  let recovery = playedThisWeek ? c.matchWeekRecoveryBase : c.recoveryBase + restRecoveryBonus(world.plan.rest)
   if (world.physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
   if (isBlackoutWeek(world.week)) recovery += c.blackoutBonus
   world.condition = clamp(world.condition + recovery, c.min, c.max)
