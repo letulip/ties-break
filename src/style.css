@@ -363,6 +363,7 @@ select {
 
 .kid-name {
   flex: 1;
+  font-family: var(--font-heading); /* R9-4: the kid's name reads in Sora */
   font-size: 15px;
   font-weight: 600;
 }
@@ -779,6 +780,7 @@ button.danger:hover:not(:disabled) {
 }
 
 .player-name {
+  font-family: var(--font-heading); /* R9-4: the kid's name reads in Sora */
   font-size: 16px;
   font-weight: 600;
 }
@@ -1034,6 +1036,23 @@ button.primary.risky {
   gap: 8px;
 }
 
+/* R9-8: the week plan as unbordered plain text on ONE line (ellipsis on narrow screens). */
+.this-week-plan {
+  margin: 10px 0 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Round-8 R8-4: the card's bottom line – the kid's latest played match score this week. */
+.this-week-score {
+  flex-basis: 100%;
+  font-size: 13px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
 /* News (Home) + Ledger (Money): week-grouped feeds sharing one rhythm. */
 .news-week,
 .ledger-week {
@@ -1085,6 +1104,7 @@ tr.milestone td {
 }
 
 .event-tier {
+  font-family: var(--font-heading); /* R9-4: tournament names on the Season calendar in Sora */
   font-weight: 600;
   font-size: 14px;
 }
@@ -1419,6 +1439,13 @@ tr.kid-row td {
   flex: 1;
 }
 
+/* R9-9b: the splash's post-deadline withdraw link – quiet, centered under Back/Begin. */
+.tf-skip-entry {
+  display: block;
+  margin: 12px auto 0;
+  font-size: 12px;
+}
+
 /* Post-match box score */
 .tf-result-head {
   display: flex;
@@ -1538,6 +1565,14 @@ tr.kid-row td {
   color: var(--muted);
   border-color: var(--line);
   opacity: 0.85;
+}
+
+/* Round-8 item 6b (owner 25.07): hard-lock pills on the Season calendar ("Reach N pts",
+   "Outgrown", "Entries closed", …). The pill itself stays visually disabled (dim border,
+   slight fade) but the LABEL brightens to a soft amber – the old pale muted tone was too
+   faint to read. Deliberately dimmer than .pill.caution's amber: locked ≠ warned-choice. */
+.pill.muted.lock {
+  color: #d9b26a;
 }
 
 /* item 7: the ellipsis row between the top-10 block and the around-kid block. */
@@ -1706,7 +1741,14 @@ tr.kid-row td {
 .bt-tab.active {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg);
+  color: #101d0a;
+}
+/* Round-8 R8-5: the global button:hover rule (accent text) outranks .bt-tab.active and turned
+   the selected tab accent-on-accent – label invisible, especially with iOS sticky tap-hover.
+   Pin the selected segment to the app's standard dark-on-lime (same as button.primary). */
+.bt-tab.active:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: #101d0a;
 }
 
 /* Bounded body with an internal vertical scroll; scrollbar hidden – the owner said users will
@@ -1857,6 +1899,12 @@ tr.kid-row td {
 }
 
 /* --- Round 5: Season sub-tabs, tour guide, calendar muted rows -------------- */
+
+/* R9-4: the white "Season" heading sits OUTSIDE a section, so the `section h2` Sora rule
+   never reached it – give it the heading face directly. */
+.season-topbar h2 {
+  font-family: var(--font-heading);
+}
 
 .season-topbar {
   display: flex;
@@ -2140,6 +2188,22 @@ tr.kid-row td {
 /* item 3: real tier-progress chips (Local · W / Regional · SF / … / ITF 🔒). */
 .tier-chip {
   font-variant-numeric: tabular-nums;
+}
+
+/* Round-8 R8-8: two new season-strip states (owner 25.07).
+   Unlocked = enterable but never entered – an accent call-to-action ("enter your first!").
+   Outgrown = the card recedes to a dim outline (no fill) while the tier name + her earned
+   best result STAY accent-yellow – earned history stays proud, the frame steps back. */
+.tier-chip.unlocked {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(217, 242, 79, 0.1);
+}
+
+.tier-chip.outgrown {
+  color: var(--accent);
+  border-color: var(--line);
+  background: transparent;
 }
 
 .pill.locked {

@@ -69,7 +69,9 @@ export type WorldEventType =
 /** Spending/earning bucket a financial event belongs to (Money-breakdown pie, round-7).
  *  Optional on the event: pre-round-7 events carry none and render as 'other'.
  *  'physio' (Season-Life slice C) buckets every medical line: weekly rehab, the one-time
- *  onset treatment, and the healthy-week physio retainer. */
+ *  onset treatment, and the healthy-week physio retainer.
+ *  'interest' (round-9 R9-1) is an INCOME-side category: the weekly savings interest on a
+ *  positive balance ("Savings interest"). */
 export type WorldEventCategory =
   | 'coaching'
   | 'travel'
@@ -78,6 +80,7 @@ export type WorldEventCategory =
   | 'stringing'
   | 'sponsor'
   | 'income'
+  | 'interest'
   | 'physio'
   | 'other'
 
@@ -323,6 +326,11 @@ export interface Snapshot {
   /** best (smallest) finish index the kid has ever reached per tier (schema v10); drives the
    *  Home season strip's real tier progress. Untouched tiers are absent. */
   bestFinishByTier: Partial<Record<TierId, number>>
+  /** the CURRENT season's kid W-L (round-8, the R6 debt): mirrors the v10 world counters that
+   *  accumulate at finalizeTournament and reset at each season wrap-up. The Snapshot is derived,
+   *  so surfacing them bumps no schema. Drives the Stats header's W–L figure. */
+  seasonWins: number
+  seasonLosses: number
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
   /** set when an `advance` stopped early */
@@ -361,6 +369,8 @@ export type ToWorker =
   | { id: number; type: 'tournamentReveal' }
   | { id: number; type: 'tournamentSkip' }
   | { id: number; type: 'tournamentClose' }
+  // R9-9: withdraw POST-deadline at the event week – fee forfeited, travel refunded, no run.
+  | { id: number; type: 'skipEvent'; eventId: string }
   | { id: number; type: 'setPlan'; plan: WeekPlan }
   | { id: number; type: 'setPhysio'; active: boolean }
   | { id: number; type: 'save'; slot?: string }

@@ -1,3 +1,12 @@
+<script lang="ts">
+// R9-18: TRUE module scope (a plain script block, compiled once per module – NOT per mount).
+// HomeScreen re-mounts on every tab switch (App.vue v-if), so a `<script setup>` ref forgets
+// the dismissal and the recap card pops back – the owner's "appears sometimes". Keyed by
+// career+week so it can never leak across careers; a page reload re-arms it (acceptable).
+import { ref as moduleRef } from 'vue'
+const dismissedRecapKey = moduleRef<string | null>(null)
+</script>
+
 <script setup lang="ts">
 // Package J – Home hub v2: player card, season strip (Phase 3 teaser), this
 // week's training/rest plan (presets from the worker), and a restyled news
@@ -10,14 +19,18 @@ import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { KID_ID, flipScore, isBlackoutWeek } from '../../engine/world'
+import { TIERS } from '../../engine/season/calendar'
 import { ECONOMY } from '../../engine/economy'
+import { useKidEmotion } from '../../composables/kidEmotion'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
 import { playSfx } from '../../audio/sfx'
 
 const game = useGameStore()
-const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.webp`
+// R9-13/16: the player-card portrait reflects her CURRENT state AND age stage via the
+// shared composable (same decision as the header crop + the Kid screen portrait).
+const { cropUrl: avatarUrl } = useKidEmotion()
 
 function flagEmoji(code: string): string {
   if (!code) return ''
@@ -34,22 +47,30 @@ const ageYears = computed(() => game.snapshot?.ageYears ?? 0)
 const week = computed(() => game.snapshot?.week ?? 0)
 const weekDates = computed(() => weekRange(week.value))
 
-// --- Round 5 item 9 (light): a dismissible week-recap card, shown after a non-tournament
-// week resolves. Keyed by week number so it re-appears fresh every week without extra state.
+// --- Round 5 item 9 / R9-18 – the week-recap card. THE RULE (owner: it appeared
+// "sometimes"): the card shows after EVERY resolved non-tournament week – including
+// multi-week advances, where it recaps the LATEST resolved week – and never after a
+// tournament week (the flow's own cards cover that one) or while a reveal is pending.
+// Week 0 (career start) has nothing to recap. A dismissal silences exactly one week.
+//
+// The R9-18 root cause: the dismissal ref lived per-MOUNT, and HomeScreen re-mounts on
+// every tab switch (App.vue v-if) – so a dismissed recap popped back after visiting any
+// other tab, and the owner read the churn as "sometimes appears". The dismissal now lives
+// at MODULE scope keyed by career+week: it survives remounts for the session and can never
+// leak across careers (a reload re-arms it, which is the pre-existing, acceptable scope).
 const hasTournamentEventThisWeek = computed(() =>
   (game.snapshot?.events ?? []).some((e) => e.type === 'tournament' && e.week === week.value),
 )
-const dismissedRecapWeek = ref<number | null>(null)
 const showRecap = computed(
   () =>
     !!game.snapshot &&
     week.value > 0 &&
     !hasTournamentEventThisWeek.value &&
     !game.snapshot.pending &&
-    dismissedRecapWeek.value !== week.value,
+    dismissedRecapKey.value !== `${game.snapshot.careerId}:${week.value}`,
 )
 function dismissRecap(): void {
-  dismissedRecapWeek.value = week.value
+  if (game.snapshot) dismissedRecapKey.value = `${game.snapshot.careerId}:${week.value}`
 }
 
 // --- Player-card snapshot: real rank, week-over-week movement, season points ----
@@ -97,20 +118,8 @@ const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'red
   return { label: 'Fit', tone: 'green' }
 })
 
-// --- Physio toggle (Season-Life slice C): reflects/sets snapshot.physioActive, which now
-// actually bills a weekly retainer (corridor-scaled to the family's means) and in exchange
-// lowers injury risk and shortens recoveries. The cost range is shown next to the toggle. --
-const physioActive = computed(() => game.snapshot?.physioActive ?? false)
-function togglePhysio(): void {
-  game.setPhysio(!physioActive.value)
-}
-const physioCostLabel = computed(() => {
-  const background = game.snapshot?.profile.background
-  if (!background) return ''
-  const [lo, hi] = ECONOMY.physio.retainerPerWeekCents
-  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[background]
-  return `$${Math.round((lo * cLo) / 100)}–${Math.round((hi * cHi) / 100)}/wk`
-})
+// R9-5: the physio toggle moved to MoneyScreen's Budget section – it is a spending decision
+// (and its row broke the condition cell's layout here anyway).
 
 // --- News match rows (round-5 item 8): "V. Martin vs S. Everts" / kid-perspective score.
 const kidShort = computed(() => {
@@ -180,20 +189,46 @@ function shortFinish(finish: number): string {
   if (finish === 3) return 'QF'
   return `R${2 ** finish}`
 }
+// Round-8 R8-8 (owner 25.07) adds two states on top of reached/untouched/locked:
+//  - unlocked: never entered but currently ENTERABLE (an upcoming event of the tier is
+//    `eligible`) – an accent call-to-action instead of the old grey dash;
+//  - outgrown: her windowed points sit past the tier's entry ceiling (same band the entry
+//    gate uses) – the card recedes to a dim outline while the name + best result stay accent.
+type TierChipState = 'locked' | 'outgrown' | 'unlocked' | 'reached' | 'idle'
 interface TierChip {
   id: TierId
   short: string
   label: string
-  reached: boolean
-  locked: boolean
+  state: TierChipState
+  title: string
 }
 const seasonChips = computed<TierChip[]>(() =>
   SEASON_STRIP_TIERS.map(({ id, short }) => {
     const locked = id === 'itf' // ITF stays locked in Phase 3
     const best = game.snapshot?.bestFinishByTier[id]
     const reached = !locked && best !== undefined
-    const label = locked ? '🔒' : reached ? shortFinish(best!) : '–'
-    return { id, short, label, reached, locked }
+    const outgrown = !locked && kidPoints.value > TIERS[id].enterPointBand[1]
+    const unlocked =
+      !locked && !outgrown && !reached && (game.snapshot?.upcoming ?? []).some((e) => e.tier === id && e.eligible)
+    const state: TierChipState = locked
+      ? 'locked'
+      : outgrown
+        ? 'outgrown'
+        : unlocked
+          ? 'unlocked'
+          : reached
+            ? 'reached'
+            : 'idle'
+    const label = locked ? '🔒' : unlocked ? 'Unlocked – enter your first!' : reached ? shortFinish(best!) : '–'
+    const title =
+      state === 'locked'
+        ? 'ITF Junior – locked in Phase 3'
+        : state === 'outgrown'
+          ? `Outgrown – her best ${short} result stays on the books`
+          : state === 'unlocked'
+            ? `Eligible now – enter a ${short} event to open the account`
+            : `Best ${short} finish`
+    return { id, short, label, state, title }
   }),
 )
 
@@ -227,6 +262,18 @@ const spendRange = computed<[number, number]>(() => {
 // --- This week: the kid's nearest entered event (soonest upcoming week with
 // `entered: true`), or a plain "training week" hint when nothing is entered.
 const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
+
+// Round-8 R8-4: once this week's tournament has been played, the card's bottom line carries
+// the kid's LATEST match score (kid-perspective), read straight off the snapshot's match
+// events for the current week – no engine extension. Empty on non-tournament weeks.
+const thisWeekScore = computed<string | null>(() => {
+  const events = game.snapshot?.events ?? []
+  for (let i = events.length - 1; i >= 0; i--) {
+    const e = events[i]
+    if (e.type === 'match' && e.week === week.value && e.match?.score) return kidScoreOf(e.match)
+  }
+  return null
+})
 
 // --- News: structured events (Package M), non-financial types only (expense/
 // income live on the Money ledger). Strictly newest-first: most recent week first,
@@ -338,11 +385,6 @@ function openRankHelp(): void {
                   {{ availabilityChip.label }}
                 </span>
               </div>
-              <label class="physio-toggle">
-                <input type="checkbox" :checked="physioActive" :disabled="game.busy" @change="togglePhysio" />
-                <span>Physio recovery</span>
-                <span class="hint physio-cost">{{ physioCostLabel }}</span>
-              </label>
             </td>
           </tr>
         </tbody>
@@ -358,8 +400,14 @@ function openRankHelp(): void {
         <template v-for="(chip, i) in seasonChips" :key="chip.id">
           <span
             class="pill tier-chip"
-            :class="{ ok: chip.reached, muted: !chip.reached && !chip.locked, locked: chip.locked }"
-            :title="chip.locked ? 'ITF Junior – locked in Phase 3' : `Best ${chip.short} finish`"
+            :class="{
+              ok: chip.state === 'reached',
+              muted: chip.state === 'idle',
+              locked: chip.state === 'locked',
+              unlocked: chip.state === 'unlocked',
+              outgrown: chip.state === 'outgrown',
+            }"
+            :title="chip.title"
           >{{ chip.short }} · {{ chip.label }}</span>
           <span v-if="i < seasonChips.length - 1" class="strip-arrow">→</span>
         </template>
@@ -374,6 +422,8 @@ function openRankHelp(): void {
           {{ nearestEntered.label }} · {{ nearestEntered.surface }} · W{{ nearestEntered.week }}
         </span>
         <span v-else class="hint" style="margin: 0">No event – training week</span>
+        <!-- Round-8 R8-4: latest played match score of this week's tournament, once available. -->
+        <span v-if="thisWeekScore" class="this-week-score num">Latest match: {{ thisWeekScore }}</span>
       </div>
       <div class="option-row" style="margin-top: 10px">
         <button
@@ -387,9 +437,12 @@ function openRankHelp(): void {
           {{ PRESET_LABEL[p] }}
         </button>
       </div>
-      <div class="controls" style="margin-top: 10px">
-        <span class="pill">Training {{ plan.train }}% · Rest {{ plan.rest }}%</span>
-      </div>
+      <!-- R9-8: the plan reads as unbordered plain text, ONE line, with this week's
+           tournament name when one is entered (the pill frame is gone). -->
+      <p class="this-week-plan">
+        Training {{ plan.train }}% · Rest {{ plan.rest }}%<template v-if="nearestEntered">
+          · {{ nearestEntered.label }} – W{{ nearestEntered.week }}</template>
+      </p>
       <div class="spend-row">
         <span class="hint">Planned spend</span>
         <span class="negative num">${{ spendRange[0] }}–${{ spendRange[1] }}</span>

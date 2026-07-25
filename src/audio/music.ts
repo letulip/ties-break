@@ -165,6 +165,30 @@ export function start(): void {
   updateMediaSessionState()
 }
 
+// --- round-8 item R8-2: pause when the screen/tab hides ------------------------
+// One document-level visibilitychange listener, installed at module load (feature-safe:
+// no-op where `document` doesn't exist, e.g. unit tests). Hidden → hard-pause the element
+// (no fade – the tab may be throttled/frozen any moment) and remember whether it was
+// actually audible. Visible again → resume ONLY if it was audible when hidden, and even
+// then via applyTarget(), which re-derives the target from the CURRENT mute + duck state –
+// so a mute flipped from the notification shade while hidden, or a still-held duck, keeps
+// winning over the resume.
+let resumeOnVisible = false
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      resumeOnVisible = started && audio !== null && !audio.paused && targetVolume() > 0
+      if (audio && !audio.paused) {
+        clearFade()
+        audio.pause()
+      }
+    } else if (resumeOnVisible) {
+      resumeOnVisible = false
+      applyTarget()
+    }
+  })
+}
+
 /** Refcounted: fades the track to silence while >=1 caller holds a duck. Safe to call
  *  before start() (just bumps the counter; applyTarget() no-ops until a gesture happens,
  *  and the next start() call will correctly begin ducked). */

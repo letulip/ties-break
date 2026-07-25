@@ -409,20 +409,64 @@ export function isBlackoutWeek(week: number): boolean {
   return isOffSeasonWeek(week) || isExamWeek(week)
 }
 
-/** Pure condition accumulator (zero RNG). Clamps to [min,max]. `playedThisWeek` folds in the
- *  strain of the tier she entered this week; rest recovers, training/tournaments drain, and a
- *  blackout week (off-season / exams) grants a little extra recovery. See ECONOMY.condition. */
+/** The train/rest slider's recovery bonus for a MATCH-FREE week (round-9 owner redesign):
+ *  threshold-based on plan.rest, first (highest) matching threshold wins, never interpolated –
+ *  the 60/40 preset earns +2, 75/25 earns +1, the 85/15 grind earns 0. Pure, integer. */
+export function restRecoveryBonus(restPercent: number): number {
+  for (const { minRest, bonus } of ECONOMY.condition.restRecoveryBonus) {
+    if (restPercent >= minRest) return bonus
+  }
+  return 0
+}
+
+/** Pure INTEGER condition accumulator (zero RNG). Round-9 owner redesign: fatigue comes from
+ *  MATCHES (matchDrain, applied when a run COMMITS at finalizeTournament – so a skipped event
+ *  week (R9-9) or a walkover costs nothing by construction); recovery comes from TIME:
+ *  recoveryBase every week, + the train/rest slider bonus on match-free weeks only, + the
+ *  physio bonus while the retainer runs (R9-14 – the billed value finally visible), + the
+ *  blackout bonus on off-season/exam weeks. Clamps to [min,max]. */
 export function accrueCondition(world: WorldState, playedThisWeek: boolean): void {
   const c = ECONOMY.condition
-  const restGain = c.restBase + c.restSlope * (world.plan.rest / 100)
-  const trainStrain = c.trainSlope * (world.plan.train / 100)
-  let matchStrain = 0
-  if (playedThisWeek) {
-    const entered = world.season.find((e) => e.week === world.week && world.entries.includes(e.id))
-    if (entered) matchStrain = c.tournamentStrain[entered.tier]
-  }
-  const offGain = isBlackoutWeek(world.week) ? c.offSeasonGain : 0
-  world.condition = clamp(world.condition + restGain - trainStrain - matchStrain + offGain, c.min, c.max)
+  // A match week earns matchWeekRecoveryBase (== recoveryBase by default, so behavior is
+  // unchanged until the owner turns the V2 knob); a match-free week earns recoveryBase + the
+  // rest-slider bonus.
+  let recovery = playedThisWeek ? c.matchWeekRecoveryBase : c.recoveryBase + restRecoveryBonus(world.plan.rest)
+  if (world.physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
+  if (isBlackoutWeek(world.week)) recovery += c.blackoutBonus
+  world.condition = clamp(world.condition + recovery, c.min, c.max)
+}
+
+/** R9-7 (owner redesign): the INTEGER fatigue of ONE kid match – how hard the scoreline was,
+ *  plus the tier's per-match surcharge:
+ *    straight sets, no tiebreak → 1;  a 3-setter OR a tiebreak in a 2-setter → 2;
+ *    +1 more when the match had MORE than 2 tiebreak sets (a three-TB epic) – max 3;
+ *    + tierMatchFatigue[tier] (local 0 / regional 1 / national 2 / itf 3).
+ *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest national match = 5. Pure state, zero
+ *  draws; a record without a score (defensive) counts as straight sets. */
+export function matchDrain(tier: TierId, score: string | undefined): number {
+  const f = ECONOMY.condition.matchFatigue
+  const sets = score ? score.split(' ') : []
+  const tiebreaks = sets.filter((s) => s === '7-6' || s === '6-7').length
+  let drain = sets.length >= 3 || tiebreaks >= 1 ? f.hardMatch : f.straightSets
+  if (tiebreaks > 2) drain += f.extraTiebreaks
+  return drain + ECONOMY.condition.tierMatchFatigue[tier]
+}
+
+/** R9-7: a committed run's total toll = Σ matchDrain over the kid's match records. A 5-match
+ *  National run maxes at 25 (the owner's own check). Applied by finalizeTournament. */
+export function tournamentRunStrain(tier: TierId, kidMatches: { score?: string }[]): number {
+  return kidMatches.reduce((sum, m) => sum + matchDrain(tier, m.score), 0)
+}
+
+/** R9-19 (coupling ON, owner curve): NO strength penalty while she is fresh enough
+ *  (condition >= matchStrengthKnee), then linear down to matchStrengthFloor at condition 0:
+ *    factor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.
+ *  Applied ONLY to the kid's MatchPlayer inside the EVENT-scoped shadow tournament
+ *  (`seed:kidtour` stream), so the MAIN weekly draw sequence stays byte-identical. */
+export function conditionMatchFactor(condition: number): number {
+  const c = ECONOMY.condition
+  if (condition >= c.matchStrengthKnee) return 1
+  return c.matchStrengthFloor + (1 - c.matchStrengthFloor) * (condition / c.matchStrengthKnee)
 }
 
 /** Whether the kid can currently ENTER `event`, at three levels. One helper, wired at three engine
@@ -645,6 +689,23 @@ export function resolvePhysio(world: WorldState): void {
 }
 
 // --- weekly resolution pieces ------------------------------------------------
+// R9-1: weekly savings interest on a POSITIVE balance, credited on the CARRIED-IN funds as
+// the week opens – before any of this week's flows (refunds, contribution, costs). Emitted
+// only when it rounds to >= 1 cent, under the dedicated income category 'interest'. Zero RNG.
+function resolveInterest(world: WorldState): void {
+  if (world.fundsCents <= 0) return
+  const interest = Math.round(world.fundsCents * ECONOMY.savings.apyWeekly)
+  if (interest < 1) return
+  world.fundsCents += interest
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'interest',
+    text: 'Savings interest',
+    amountCents: interest,
+  })
+}
+
 // The parent's weekly contribution to the budget. Runs BEFORE costs and draws no RNG.
 function resolveParentIncome(world: WorldState): void {
   const income = PARENT_INCOME_CENTS[world.profile.background]
@@ -786,7 +847,19 @@ function computeShadowTournament(
   event: SeasonEvent,
   ranking: RankingRow[],
 ): PendingTournament {
-  const kid = kidMatchPlayer(world)
+  // R9-19 coupling ON: the kid plays at her CURRENT condition (post this week's accrual –
+  // step 1c runs before step 2). The SCALED player is both what runs the bracket and what is
+  // snapshotted into `players`, so revealed records and replays stay byte-identical no matter
+  // how her condition moves afterwards. Fractional skills are fine for the match engine.
+  const factor = conditionMatchFactor(world.condition)
+  const raw = kidMatchPlayer(world)
+  const kid: MatchPlayer = {
+    ...raw,
+    serve: raw.serve * factor,
+    ret: raw.ret * factor,
+    composure: raw.composure * factor,
+    stamina: raw.stamina * factor,
+  }
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
   const entrants = selectEntrants(event, world.cohort, ranking, kidRng)
   const result = runTournament(event, entrants, kid, world.seed, kidRng)
@@ -860,6 +933,14 @@ function finalizeTournament(world: WorldState): void {
     if (m.winnerId === KID_ID) world.seasonWins++
     else world.seasonLosses++
   }
+
+  // R9-7: the run's physical toll lands HERE, when it commits – per-match, not flat per tier.
+  // A skipped event week (R9-9) or a walkover never reaches finalize, so neither costs strain.
+  world.condition = clamp(
+    world.condition - tournamentRunStrain(event.tier, kidMatchesOf(p.result)),
+    ECONOMY.condition.min,
+    ECONOMY.condition.max,
+  )
 
   // Effective ranking delta = kid's windowed best-6 sum after adding the result minus before.
   const before = windowedBestSum(world.results, world.week, KID_ID)
@@ -1036,6 +1117,30 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   delete save.log
 }
 
+// --- Round-8 R8-7a: entry lists close at the deadline --------------------------
+// Real-world rule (owner 25.07): players out of band at close are removed and refunded.
+// If the kid's points have grown OUT of a tier's band while she still holds a
+// still-refundable (pre-deadline) entry of that tier, the organisers release the entry
+// at the top of the weekly tick: full refund via the existing withdrawEvent (mirror of
+// slice C's injury auto-withdraw) + an info beat. A POST-deadline entry is never touched
+// – the list closed with her in band, the fee is committed and the event still plays.
+// Pure state, ZERO RNG draws – the B1/C1 main-stream invariance freezes stay untouched.
+function releaseOutgrownEntries(world: WorldState): void {
+  if (world.entries.length === 0) return
+  const points = kidPoints(world)
+  for (const id of [...world.entries]) {
+    const event = eventById(world, id)
+    if (!event || world.week > event.deadlineWeek) continue // closed list – fee committed
+    if (points <= TIERS[event.tier].enterPointBand[1]) continue // still inside (or under) the band
+    withdrawEvent(world, id)
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: `Entry released – she's outgrown ${TIERS[event.tier].label}. Fee refunded.`,
+    })
+  }
+}
+
 // Full weekly resolution. Draw order on the MAIN stream is fixed per week regardless
 // of player input: base costs → (kid tournament uses an event-scoped RNG, zero main
 // draws) → cohort drift → canonical AI tournaments for every scheduled event.
@@ -1047,6 +1152,13 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
 // costs, drift, AI brackets) still runs, so the per-week draw count is unchanged.
 export function tickWeek(world: WorldState, rng: Rng): void {
   world.week += 1
+
+  // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
+  resolveInterest(world)
+
+  // 0a. Round-8 R8-7a: release (refund) still-refundable entries whose tier she has
+  //     outgrown. Pure state, ZERO draws, so it sits safely ahead of every RNG step.
+  releaseOutgrownEntries(world)
 
   // 0. parent's weekly contribution BEFORE costs (no RNG draw)
   resolveParentIncome(world)
@@ -1061,12 +1173,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 1c. Season-Life availability. ZERO main-stream draws: rollInjury/resolvePhysio pull only
   //     from the private per-week `:injury:`/`:physio:` sub-streams and accrueCondition is pure
   //     arithmetic. Sits here (not inside the pendingTournament block) so it runs exactly once
-  //     per real week, reveal weeks included. rollInjury runs FIRST so playedThisWeek and
-  //     accrueCondition see a fresh injury as the walkover it is.
+  //     per real week, reveal weeks included. rollInjury runs FIRST so a fresh injury reads as
+  //     the walkover it is (played = false ⇒ she keeps the match-free slider bonus). R9-7:
+  //     match fatigue no longer accrues here – it lands per-match at finalizeTournament, so a
+  //     walkover/skipped week costs none by construction.
   rollInjury(world)
   const playedThisWeek =
     world.season.some((e) => e.week === world.week && world.entries.includes(e.id)) &&
-    world.injury === null // injured on the play week => walkover, no strain
+    world.injury === null // injured on the play week => walkover
   accrueCondition(world, playedThisWeek)
   resolvePhysio(world)
 
@@ -1191,6 +1305,52 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
     type: 'entry',
     text: `Withdrew from ${TIERS[event.tier].label} – W${event.week}`,
   })
+}
+
+/** R9-9: skip an entered tournament AT its event week – entering the begin flow is no longer a
+ *  one-way door. A POST-deadline withdrawal, real-world style: the entry fee stays committed
+ *  (the list closed with her on it), the travel charge tickWeek took is refunded in full (she
+ *  never boards), NO run is committed (no points, no W-L, no strain – the shadow result is
+ *  discarded), and the week then closes exactly like a normal non-playing week (the same
+ *  deferred steps finalizeTournament would have run). Only callable before the first reveal;
+ *  once a match has been shown the run is under way. Zero draws – the discarded shadow already
+ *  ran on its event-scoped stream, so the MAIN weekly sequence is untouched either way. */
+export function skipEvent(world: WorldState, eventId: string): void {
+  const p = world.pendingTournament
+  if (!p || p.eventId !== eventId) throw new Error('No tournament to skip this week')
+  if (p.finished || p.revealedRounds > 0) throw new Error('The tournament is already under way')
+  const event = eventById(world, eventId)
+  if (!event) {
+    // calendar lost the event (defensive – finalize handles this the same way): just clear.
+    world.pendingTournament = null
+    return
+  }
+  world.fundsCents += event.travelCostCents
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'travel',
+    text: `Travel refunded: ${TIERS[event.tier].label}`,
+    amountCents: event.travelCostCents,
+  })
+  world.entries = world.entries.filter((id) => id !== eventId)
+  world.pendingTournament = null
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: `Skipped ${TIERS[event.tier].label} – entry fee forfeited.`,
+  })
+  // The week ends match-free after all, so she earns the slider recovery bonus that tickWeek
+  // withheld when it still believed she would play (accrueCondition ran with played = true).
+  // Integer, clamped – "the week then resolves as a normal non-playing week".
+  world.condition = clamp(
+    world.condition + restRecoveryBonus(world.plan.rest),
+    ECONOMY.condition.min,
+    ECONOMY.condition.max,
+  )
+  // Close the week: the rank recompute + housekeeping that tickWeek deferred to the flow.
+  recomputeRankAndMilestones(world)
+  housekeep(world)
 }
 
 /** Tick up to `weeks`, stopping early when a tournament week spawns a reveal (the week is not
@@ -1454,6 +1614,10 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     standings: computeStandings(world),
     countingResults: computeCountingResults(world),
     bestFinishByTier: { ...world.bestFinishByTier },
+    // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
+    // surfacing them is derivation, not schema.
+    seasonWins: world.seasonWins,
+    seasonLosses: world.seasonLosses,
     lastSeasonSummary: world.lastSeasonSummary,
     ...(stopReason ? { stopReason } : {}),
     ...(pending ? { pending } : {}),

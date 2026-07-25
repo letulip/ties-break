@@ -6,12 +6,14 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
-import { KID_ID } from './engine/world'
+import { useKidEmotion } from './composables/kidEmotion'
+import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
+import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
@@ -28,26 +30,12 @@ const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 
 const game = useGameStore()
 
-// Round 5 item 31 – heuristic v1: the header avatar reflects the kid's most recent
-// on-court result. Most recent `match` event in the snapshot's event log (chronological,
-// oldest first, so the last one is newest) decides happy/sad/norm; no match yet (or the
-// kid didn't play it – other-cohort matches never appear on the snapshot) => norm.
-// Face crops live in public/avatars/{jun-norm,jun-happy,jun-sad}.webp (generated via
-// scripts/optimize-art.mjs from art-src/avatars/jun-*.png; see docs/specs/round5-brand.md
-// for the crop offsets). Junior stage until the sim grows an age.
-const lastKidMatchWon = computed<boolean | null>(() => {
-  const events = game.snapshot?.events
-  if (!events) return null
-  for (let i = events.length - 1; i >= 0; i--) {
-    const match = events[i].match
-    if (match) return match.winnerId === KID_ID
-  }
-  return null
-})
-const avatarUrl = computed(() => {
-  const stage = lastKidMatchWon.value === true ? 'happy' : lastKidMatchWon.value === false ? 'sad' : 'norm'
-  return `${import.meta.env.BASE_URL}avatars/jun-${stage}.webp`
-})
+// R9-13/15/16: the header avatar comes from the SHARED useKidEmotion composable (R8-6a/6b
+// freshness rules + R9-11 win-immunity + the R9-16 stage-by-age resolver), so the header
+// crop, the Home player card and the Kid screen portrait can never disagree. Face crops live
+// in public/avatars/{stage}-{emotion}.webp (256×256; jun per round5-brand, young/teen cut in
+// round-9 pt5 to the same framing). START_AGE 14 ⇒ the game opens on young-* art.
+const { cropUrl: avatarUrl } = useKidEmotion()
 
 onMounted(() => game.init())
 
@@ -75,6 +63,13 @@ const TABS: { id: TabId; icon: string; label: string }[] = [
 ]
 function iconUrl(icon: string): string {
   return `${import.meta.env.BASE_URL}icons/${icon}.svg`
+}
+// R9-16 (owner icon pair): the KID tab glyph grows up with her – kid-girl.svg while she is a
+// junior, woman.svg from age 18 (man.svg stays reserved for the future boys' tour, like
+// kid-boy.svg). Same CSS-mask tinting path as every other tab icon.
+const kidTabIcon = computed(() => ((game.snapshot?.ageYears ?? 14) >= 18 ? 'woman' : 'kid-girl'))
+function tabIcon(t: { id: TabId; icon: string }): string {
+  return t.id === 'kid' ? kidTabIcon.value : t.icon
 }
 
 // No active snapshot once init() has settled means: no auto-loaded slot and no
@@ -130,6 +125,46 @@ watch(tab, (t) => {
   }
 })
 
+// --- R9-21b: news cue – a soft "тилинь" + a Season-style accent dot on the Home tab -----
+// News = the non-financial events HomeScreen's feed shows (expense/income live on Money).
+// "Last looked at the feed" ≈ the Home tab being active: seen is marked when Home becomes
+// active and whenever a snapshot lands while it is. The cue fires on any genuinely NEW news
+// event (id above the last-seen watermark), whatever tab is up – the owner's complaint was
+// missing news entirely while week-skipping. Watermark persisted per career (event ids are
+// per-career counters, so a global key would collide across careers).
+const newsSeenKey = () => `tb:lastSeenNewsId:${game.snapshot?.careerId ?? ''}`
+const lastSeenNewsId = ref(Number(localStorage.getItem(newsSeenKey()) ?? '-1'))
+const latestNewsId = computed(() => {
+  const events = game.snapshot?.events ?? []
+  let latest = -1
+  for (const e of events) {
+    if (e.type !== 'expense' && e.type !== 'income' && e.id > latest) latest = e.id
+  }
+  return latest
+})
+const homeHasNews = computed(() => tab.value !== 'home' && latestNewsId.value > lastSeenNewsId.value)
+function markNewsSeen(): void {
+  if (latestNewsId.value > lastSeenNewsId.value) {
+    lastSeenNewsId.value = latestNewsId.value
+    localStorage.setItem(newsSeenKey(), String(latestNewsId.value))
+  }
+}
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    // switching careers re-reads that career's own watermark (never dings on a plain load)
+    lastSeenNewsId.value = Number(localStorage.getItem(newsSeenKey()) ?? '-1')
+    if (lastSeenNewsId.value < 0) markNewsSeen()
+  },
+)
+watch(tab, (t) => {
+  if (t === 'home') markNewsSeen()
+})
+watch(latestNewsId, (now, before) => {
+  if (before !== undefined && before >= 0 && now > before) playSfx('clickSoft') // тилинь
+  if (tab.value === 'home') markNewsSeen()
+})
+
 // --- coach-mark onboarding tour (item 10) ------------------------------------
 const showTour = ref(false)
 function dismissTour(): void {
@@ -152,11 +187,26 @@ const stopToastDismissed = ref(false)
 // Round-7 item 4: the season-end stop is owned by SeasonSummaryDialog, not the toast. A fresh
 // snapshot resets both dismiss flags (any action re-arms them).
 const seasonSummaryDismissed = ref(false)
+// R9-21a: the injury stop is owned by the blocking InjuryStopDialog (the quiet toast buried
+// it – the owner only noticed the withdrawal three weeks later). Same dismiss lifecycle.
+const injuryStopDismissed = ref(false)
 watch(
   () => game.snapshot,
   () => {
     stopToastDismissed.value = false
     seasonSummaryDismissed.value = false
+    injuryStopDismissed.value = false
+  },
+)
+
+// R9-9a: the TournamentFlow splash's "← Back" hides the overlay WITHOUT resolving anything –
+// the week stays paused on the engine side. A persistent banner offers Resume; any change of
+// the pending run (skipped, closed, a different event) re-arms the overlay.
+const tournamentHidden = ref(false)
+watch(
+  () => game.snapshot?.pending?.eventId,
+  () => {
+    tournamentHidden.value = false
   },
 )
 // The tournament stop is owned by the full-screen TournamentFlow overlay and the season-end stop
@@ -180,10 +230,19 @@ const showSeasonSummary = computed(
 function dismissSeasonSummary(): void {
   seasonSummaryDismissed.value = true
 }
+// R9-21a: the injury stop popup – blocking, on Home (advance only ever runs from Home's bar),
+// until Continue. The dialog itself plays the alert sfx on mount.
+const showInjuryStop = computed(
+  () =>
+    tab.value === 'home' &&
+    game.snapshot?.stopReason === 'injury' &&
+    !!game.snapshot?.injury &&
+    !injuryStopDismissed.value,
+)
+// R9-21a: 'injury' left this map – it gets the blocking InjuryStopDialog, not a quiet toast.
 const STOP_REASON_TEXT: Record<string, string> = {
   deadline: 'Stopped: an entry deadline is coming up next week.',
   funds: 'Stopped: funds ran below zero.',
-  injury: 'Stopped: she picked up an injury – see the news.',
 }
 const stopReasonText = computed(() => STOP_REASON_TEXT[game.snapshot?.stopReason ?? ''] ?? '')
 function dismissStopToast(): void {
@@ -228,6 +287,13 @@ function dismissStopToast(): void {
       <button @click="dismissStopToast">Dismiss</button>
     </div>
 
+    <!-- R9-9a: the week is paused on a hidden tournament – a persistent Resume affordance on
+         every tab, so backing out of the splash can never strand the career. -->
+    <div v-if="game.snapshot?.pending && tournamentHidden" class="stop-toast tournament-paused">
+      <span>Tournament week: {{ game.snapshot.pending.tierLabel }} – the week is paused.</span>
+      <button class="primary" @click="tournamentHidden = false">Resume</button>
+    </div>
+
     <main class="app-content" :class="{ 'with-next-week-bar': tab === 'home' }">
       <HomeScreen v-if="tab === 'home'" />
       <SeasonScreen v-else-if="tab === 'play'" />
@@ -254,17 +320,24 @@ function dismissStopToast(): void {
         :data-tour="`tab-${t.id}`"
         @click="tab = t.id"
       >
-        <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
+        <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(tabIcon(t))})`, maskImage: `url(${iconUrl(tabIcon(t))})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
+        <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. -->
+        <span v-else-if="t.id === 'home' && homeHasNews" class="tab-dot"></span>
       </button>
     </nav>
 
-    <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress. -->
-    <TournamentFlow v-if="game.snapshot?.pending" />
+    <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress.
+         R9-9a: the splash's Back hides it (nothing resolved); the banner above resumes it. -->
+    <TournamentFlow v-if="game.snapshot?.pending && !tournamentHidden" @back="tournamentHidden = true" />
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />
+
+    <!-- R9-21a: a fresh injury stops the advance with a BLOCKING popup (kind, layoff, what was
+         auto-withdrawn + refunds) and an alert sfx – no more quiet missable toast. -->
+    <InjuryStopDialog v-if="showInjuryStop" @continue="injuryStopDismissed = true" />
 
     <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
     <OnboardingTour v-if="showTour" @done="dismissTour" />

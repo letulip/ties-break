@@ -1,0 +1,1529 @@
+/**
+ * Fatigue/injury bench (docs/specs/fatigue-bench.md, owner ask 25.07) – a headless "how does the
+ * NEW round-9 condition math behave over a season/career" tool.
+ *
+ * MEASUREMENT ONLY. This file imports the engine and reads condition/injury/match state; it
+ * changes NO engine numbers. The B1/C1 main-stream invariance freezes stay untouched: the bench
+ * only calls the same public API the UI does (enterEvent / tickWeek / skipTournament /
+ * closeTournament) plus two pre-tick state choices a player makes in the UI anyway (the
+ * train/rest plan preset and the physio toggle).
+ *
+ * MATRIX
+ *  - Profiles: the real difficulty tiers 8k/25k/120k = working/middle/wealthy, with middle run
+ *    both self-coached and hired (same as econ-bench – the coach setup also flips the DEFAULT
+ *    physio toggle, so it is a fatigue lever too).
+ *  - Policies (the load-management axis this bench exists to compare):
+ *      grinder  – plan 85/15 (grind preset), enters EVERYTHING eligible+affordable, ignores the
+ *                 fatigue 'caution' level exactly like econ-bench's entry policy v3.
+ *      balanced – plan 75/25, same enter-everything rule (the default player).
+ *      careful  – plan 60/40 (light preset), physio ALWAYS on, and skips entry while
+ *                 condition < the tier's availability floor + 10 (rests until recovered).
+ *    Physio for grinder/balanced follows the game default (ON iff hired coach); careful FORCES it.
+ *  - Horizons: 52w (one season), 104w (14→16), 208w (14→18). 30 seeds per cell.
+ *
+ * PAIRED SEEDS: the seed is `fatigue-<background>-<index>` – policy and coach setup are NOT in
+ * the seed, so every policy (and both middle presets) faces the SAME calendar, cohort and
+ * per-week injury/physio sub-stream rolls. Only tau (the injury threshold), her condition and
+ * the entry pattern differ – a paired comparison, which is what makes the 30-seed ordering
+ * (grinder vs careful) tight enough to test.
+ *
+ * Determinism: (profile, policy, seed index, horizon) reproduces byte-identically – the engine
+ * forbids wall-clock/Math.random and the bench adds no entropy of its own.
+ *
+ * Run:  npm run bench:fatigue           (console tables + sparklines, all three horizons)
+ *       npm run bench:fatigue -- --csv /path/to/rows.csv   (also dump the weekly time-series)
+ */
+import { writeFileSync } from 'node:fs'
+import {
+  createWorld,
+  tickWeek,
+  enterEvent,
+  isTierEligible,
+  kidPoints,
+  skipTournament,
+  closeTournament,
+  availabilityStatus,
+  matchDrain,
+  ageInjuryFactor,
+  consecutivePlayFactor,
+  KID_ID,
+  type WorldState,
+} from '../src/engine/world'
+import { ECONOMY } from '../src/engine/economy'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
+import type {
+  CoachSetup,
+  FamilyBackground,
+  InjurySeverity,
+  PlayerProfile,
+  WeekPlan,
+} from '../src/shared/protocol'
+import { rngFromSeed, type Rng } from '../src/engine/rng'
+import { TIERS, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+import type { TierId } from '../src/engine/season/types'
+
+export const START_AGE_YEARS = 14
+export const SEEDS_PER_CELL = 30
+/** Same near-deadline commit window as econ-bench's entry policy v3. */
+export const ENTRY_LOOKAHEAD = 3
+
+export const SEVERITIES: readonly InjurySeverity[] = ['minor', 'moderate', 'major', 'severe']
+
+// --- matrix -------------------------------------------------------------------
+
+export interface Profile {
+  label: string
+  background: FamilyBackground
+  coachSetup: CoachSetup
+}
+
+export const PROFILES: Profile[] = [
+  { label: '8k   · working · self-coached', background: 'working', coachSetup: 'parent' },
+  { label: '25k  · middle  · self-coached', background: 'middle', coachSetup: 'parent' },
+  { label: '25k  · middle  · hired coach', background: 'middle', coachSetup: 'hired' },
+  { label: '120k · wealthy · hired coach', background: 'wealthy', coachSetup: 'hired' },
+]
+
+/** A load-management policy as pure DATA (owner 25.07: axes must stay unbundled so future
+ *  axes – FRIENDLY MATCHES, VACATIONS, both season-planner slice and NOT in the engine yet –
+ *  are a new field here, never a code fork). */
+export interface Policy {
+  id: string
+  label: string
+  plan: WeekPlan
+  /** physio toggle: 'on'/'off' force it; 'default' keeps the game default (ON iff hired coach). */
+  physio: 'on' | 'off' | 'default'
+  /** skip entry while condition < tier availability floor + this margin;
+   *  null = enter regardless of the fatigue caution (the enter-everything rule). */
+  entryConditionMargin: number | null
+}
+
+/** The three HEADLINE policies of the spec (run at 30 seeds over all three horizons). */
+export const POLICIES: Policy[] = [
+  {
+    id: 'grinder',
+    label: 'grinder 85/15 enter-all',
+    plan: WEEK_PLAN_PRESETS.grind,
+    physio: 'default',
+    entryConditionMargin: null,
+  },
+  {
+    id: 'balanced',
+    label: 'balanced 75/25 enter-all',
+    plan: WEEK_PLAN_PRESETS.balanced,
+    physio: 'default',
+    entryConditionMargin: null,
+  },
+  {
+    id: 'careful',
+    label: 'careful 60/40 physio floor+10',
+    plan: WEEK_PLAN_PRESETS.light,
+    physio: 'on',
+    entryConditionMargin: 10,
+  },
+]
+
+// --- factorial grid (owner 25.07 scope extension: unbundle the axes) -------------
+// plan {85/15, 75/25, 60/40} × entry {enter-all, floor-respecting} × physio {on, off}
+// = 12 cells per profile, run at GRID_HORIZON_WEEKS with GRID_SEEDS seeds (reduced from 30
+// to keep the full bench under a minute – the seed count is logged in the output).
+
+export const GRID_PLANS: { id: string; plan: WeekPlan }[] = [
+  { id: '85/15', plan: WEEK_PLAN_PRESETS.grind },
+  { id: '75/25', plan: WEEK_PLAN_PRESETS.balanced },
+  { id: '60/40', plan: WEEK_PLAN_PRESETS.light },
+]
+export const GRID_ENTRIES: { id: string; margin: number | null }[] = [
+  { id: 'all', margin: null },
+  { id: 'floor+10', margin: 10 },
+]
+export const GRID_PHYSIO: ('on' | 'off')[] = ['on', 'off']
+export const GRID_SEEDS = 10
+export const GRID_HORIZON_WEEKS = 104
+
+/** The 12 unbundled grid policies, built from the axis tables above. */
+export function gridPolicies(): Policy[] {
+  const out: Policy[] = []
+  for (const p of GRID_PLANS) {
+    for (const e of GRID_ENTRIES) {
+      for (const ph of GRID_PHYSIO) {
+        out.push({
+          id: `${p.id}·${e.id}·${ph}`,
+          label: `${p.id} ${e.id} physio-${ph}`,
+          plan: p.plan,
+          physio: ph,
+          entryConditionMargin: e.margin,
+        })
+      }
+    }
+  }
+  return out
+}
+
+// --- scenarios --------------------------------------------------------------------
+// V2.1 SHIPPED 25.07 (owner "V2 хорош" + "все чуть ниже к концу сезона"): the engine defaults
+// are now recoveryBase 1 + matchWeekRecoveryBase 0 + physio conditionBonusPerWeek 1, so
+// BASELINE runs the shipped knobs unpatched. Two reference scenarios patch the LIVE ECONOMY
+// object around their run (always restored, finally-guarded):
+//   v2     – the intermediate candidate (recoveryBase 2, the state between the two flips),
+//            headline + PROJ, kept so the V2.1 decision stays auditable in one output;
+//   legacy – the original round-9 values (recoveryBase 2, matchWeekRecoveryBase 2, physio
+//            bonus 2), headline-only audit trail.
+// Patching the live object keeps every feedback loop real: coupling curve, caution/floor
+// gates, injury tau, entry starvation. `as const` is compile-time only – the runtime object is
+// mutable, and the typed views below keep the patch honest.
+
+export interface Scenario {
+  id: 'baseline' | 'v2' | 'legacy'
+  label: string
+  patch: { matchWeekRecoveryBase?: number; physioConditionBonusPerWeek?: number; recoveryBase?: number }
+  /** run the factorial grid inside this scenario's section */
+  grid: boolean
+  /** run the PROJ planner layer on this scenario's 104w headline traces */
+  proj: boolean
+}
+
+export const SCENARIOS: Scenario[] = [
+  {
+    id: 'baseline',
+    label: 'BASELINE – shipped knobs (V2.1: recoveryBase 1, no base recovery on match weeks, physio bonus 1)',
+    patch: {},
+    grid: true,
+    proj: true,
+  },
+  {
+    id: 'v2',
+    label: 'V2 – previous candidate (recoveryBase 2; the state before the V2.1 flip)',
+    patch: { recoveryBase: 2 },
+    grid: false,
+    proj: true,
+  },
+  {
+    id: 'legacy',
+    label: 'LEGACY – pre-V2 round-9 values (recoveryBase 2, matchWeekRecoveryBase 2, physio bonus 2)',
+    patch: { recoveryBase: 2, matchWeekRecoveryBase: 2, physioConditionBonusPerWeek: 2 },
+    grid: false,
+    proj: false,
+  },
+]
+
+type MutableConditionKnobs = { matchWeekRecoveryBase: number; recoveryBase: number }
+type MutablePhysioKnobs = { conditionBonusPerWeek: number }
+
+/** Run `fn` with the scenario's ECONOMY patch applied, ALWAYS restoring the shipped values
+ *  (finally), so scenarios can never leak into each other, the tests, or a later import. */
+export function withScenario<T>(scenario: Scenario, fn: () => T): T {
+  const cond = ECONOMY.condition as unknown as MutableConditionKnobs
+  const phys = ECONOMY.physio as unknown as MutablePhysioKnobs
+  const savedMatchBase = cond.matchWeekRecoveryBase
+  const savedRecoveryBase = cond.recoveryBase
+  const savedPhysioBonus = phys.conditionBonusPerWeek
+  try {
+    if (scenario.patch.matchWeekRecoveryBase !== undefined) cond.matchWeekRecoveryBase = scenario.patch.matchWeekRecoveryBase
+    if (scenario.patch.recoveryBase !== undefined) cond.recoveryBase = scenario.patch.recoveryBase
+    if (scenario.patch.physioConditionBonusPerWeek !== undefined) phys.conditionBonusPerWeek = scenario.patch.physioConditionBonusPerWeek
+    return fn()
+  } finally {
+    cond.matchWeekRecoveryBase = savedMatchBase
+    cond.recoveryBase = savedRecoveryBase
+    phys.conditionBonusPerWeek = savedPhysioBonus
+  }
+}
+
+export interface FatigueHorizon {
+  label: string
+  weeks: number
+  seasons: number
+}
+
+export const FATIGUE_HORIZONS: FatigueHorizon[] = [
+  { label: '52w (one season)', weeks: 52, seasons: 1 },
+  { label: '104w (14→16)', weeks: 104, seasons: 2 },
+  { label: '208w (14→18)', weeks: 208, seasons: 4 },
+]
+
+// --- career simulation ---------------------------------------------------------
+
+/** Open a deterministic career for a profile+policy+index. The seed excludes policy AND coach
+ *  setup on purpose (see the header: paired seeds). The plan preset and the physio toggle are
+ *  the two pre-tick state choices the UI exposes (setPlan / setPhysio); setting them here is a
+ *  player action, not an engine change. */
+export function openFatigueCareer(
+  profile: Profile,
+  policy: Policy,
+  index: number,
+): { world: WorldState; rng: Rng; seed: string } {
+  const seed = `fatigue-${profile.background}-${index}`
+  const playerProfile: PlayerProfile = {
+    ...DEFAULT_PROFILE,
+    background: profile.background,
+    coachSetup: profile.coachSetup,
+  }
+  const world = createWorld(seed, playerProfile)
+  world.plan = { ...policy.plan }
+  if (policy.physio === 'on') world.physioActive = true
+  else if (policy.physio === 'off') world.physioActive = false
+  const rng = rngFromSeed(world.seed)
+  return { world, rng, seed }
+}
+
+/** Everything observed in one bench week – the raw material for the metrics AND the tests'
+ *  independent condition-trace recomputation. */
+export interface WeekFacts {
+  week: number
+  /** post-week condition: after accrueCondition AND after any committed run's strain. */
+  condition: number
+  /** she is out injured as the week closes. */
+  injured: boolean
+  /** a NEW injury landed this week (severity + rolled weeks out), else null. */
+  injuryOnset: { severity: InjurySeverity; weeksOut: number } | null
+  /** the kid actually competed (a shadow run was computed and committed). */
+  played: boolean
+  tierPlayed: TierId | null
+  /** raw kid-match scorelines of the committed run, in round order ('' = defensive no-score). */
+  matchScores: string[]
+  /** the committed run's total condition toll (engine matchDrain summed) – 0 on non-play weeks.
+   *  Carried so the projection layer can rebuild traces without re-deriving scores. */
+  strain: number
+  wins: number
+  losses: number
+  /** an entered event fell on an injured week – fee forfeited, no run. */
+  walkover: boolean
+  /** entries committed THIS week while condition was below the tier's availability floor. */
+  cautionEntries: number
+  entriesCommitted: number
+  /** physio/medical cents billed this week (retainer, rehab, onset scans). */
+  physioSpendCents: number
+  /** weekly coaching/training bill in cents (the planFactor-scaled base cost) – the money side
+   *  of the train slider, so the grid can show the effort↔wallet↔condition triangle. */
+  coachingSpendCents: number
+}
+
+/** Advance ONE bench week: policy-gated entries, tick, commit any spawned run (skip+close – the
+ *  same fast-forward the econ bench uses), then read the week's facts off the world. Shared by
+ *  runFatigueCareer and the tests so the policy lives in exactly one place. */
+export function stepFatigueWeek(world: WorldState, rng: Rng, policy: Policy): WeekFacts {
+  let cautionEntries = 0
+  let entriesCommitted = 0
+  // Entry rule = econ-bench policy v3 (ranking-eligible + affordable, committed near the
+  // deadline, HARD blocks respected) + the careful policy's condition floor. The fatigue
+  // 'caution' level is deliberately IGNORED by grinder/balanced – that is their defining trait.
+  for (const e of world.season) {
+    if (world.entries.includes(e.id)) continue
+    if (world.week > e.deadlineWeek) continue
+    if (e.deadlineWeek - world.week > ENTRY_LOOKAHEAD) continue
+    if (!isTierEligible(e.tier, kidPoints(world))) continue
+    const avail = availabilityStatus(world, e)
+    if (avail.level === 'blocked') continue // injured / exam blackout – enterEvent would throw
+    if (
+      policy.entryConditionMargin !== null &&
+      world.condition < ECONOMY.availability.minConditionToEnter[e.tier] + policy.entryConditionMargin
+    ) {
+      continue // careful: too tired – rest until recovered
+    }
+    const cost = TIERS[e.tier].entryFeeCents + e.travelCostCents
+    if (world.fundsCents < cost) continue
+    if (avail.level === 'caution') cautionEntries++ // entered below the tier floor – the tough-parent choice
+    enterEvent(world, e.id)
+    entriesCommitted++
+  }
+
+  const firstNewEventId = world.nextEventId
+  tickWeek(world, rng)
+
+  // Commit any spawned run in-week (reveal-flow fast-forward). Capture the kid's matches BEFORE
+  // closing: scores/tier feed the strain accounting and the tests' formula spot-check.
+  let played = false
+  let tierPlayed: TierId | null = null
+  let wins = 0
+  let losses = 0
+  let strain = 0
+  const matchScores: string[] = []
+  const p = world.pendingTournament
+  if (p) {
+    played = true
+    tierPlayed = world.season.find((e) => e.id === p.eventId)?.tier ?? null
+    for (const m of p.result.matches) {
+      if (m.aId !== KID_ID && m.bId !== KID_ID) continue
+      matchScores.push(m.score ?? '')
+      if (tierPlayed !== null) strain += matchDrain(tierPlayed, m.score)
+      if (m.winnerId === KID_ID) wins++
+      else losses++
+    }
+    skipTournament(world)
+    closeTournament(world)
+  }
+
+  // This week's fresh events (ids are monotonic; new ones are never pruned within their own
+  // week) carry the walkover marker and every physio/medical bill.
+  const newEvents = world.events.filter((ev) => ev.id >= firstNewEventId)
+  const walkover = newEvents.some((ev) => ev.type === 'injury' && ev.text.startsWith('Walkover'))
+  const physioSpendCents = newEvents
+    .filter((ev) => ev.category === 'physio' && (ev.amountCents ?? 0) < 0)
+    .reduce((s, ev) => s - (ev.amountCents ?? 0), 0)
+  const coachingSpendCents = newEvents
+    .filter((ev) => ev.category === 'coaching' && (ev.amountCents ?? 0) < 0)
+    .reduce((s, ev) => s - (ev.amountCents ?? 0), 0)
+
+  const injuryOnset =
+    world.injury !== null && world.injury.sinceWeek === world.week
+      ? { severity: world.injury.severity, weeksOut: world.injury.totalWeeks }
+      : null
+
+  return {
+    week: world.week,
+    condition: world.condition,
+    injured: world.injury !== null,
+    injuryOnset,
+    played,
+    tierPlayed,
+    matchScores,
+    strain,
+    wins,
+    losses,
+    walkover,
+    cautionEntries,
+    entriesCommitted,
+    physioSpendCents,
+    coachingSpendCents,
+  }
+}
+
+export interface WeeklyPoint {
+  week: number
+  condition: number
+  injured: boolean
+  tierPlayed: TierId | null
+  matches: number
+  /** committed run's condition toll this week (0 = no run) – projection-layer input. */
+  strain: number
+}
+
+export interface RunResult {
+  seed: string
+  /** one point per ticked week, in order – the season curve. */
+  weekly: WeeklyPoint[]
+  meanCondition: number
+  /** week counts by condition band (post-week condition). */
+  bandLow: number // < 40
+  bandMid: number // 40..69
+  bandHigh: number // >= 70
+  /** weeks pinned at the exact cap/floor – the "rides high"/"death spiral" detectors. */
+  weeksAt100: number
+  weeksAt0: number
+  /** deepest trough of the run. */
+  trough: number
+  /** condition at each season's WRAP week (week % 52 === 49, the owner's "end of season" –
+   *  BEFORE the 3 off-season weeks restore her). The tuning target reads here. */
+  endOfSeasonCondition: number[]
+  /** condition at each season year's last week (week % 52 === 51, AFTER the off-season
+   *  blackout weeks) – how far the built-in 3-week restore got on its own. */
+  postOffSeasonCondition: number[]
+  injuriesBySeverity: Record<InjurySeverity, number>
+  injuriesTotal: number
+  /** how many season years of this run saw ≥1 injury ONSET – the real prevalence numerator
+   *  (an onset on a year-boundary week counts into the season it interrupts, clamped). */
+  seasonsWithInjury: number
+  /** weeks that closed with her out injured. */
+  weeksInjured: number
+  walkovers: number
+  cautionEntries: number
+  entries: number
+  physioSpendCents: number
+  coachingSpendCents: number
+  /** family funds at horizon end – the wallet corner of the effort↔wallet↔condition triangle. */
+  endFundsCents: number
+  matchesPlayed: number
+  wins: number
+  losses: number
+  /** best (lowest) dense rank reached while actually ranked (kidPoints > 0) – the same
+   *  hasResults guard econ-bench needed against the point-less dense-rank-1 tie. */
+  bestRank: number | null
+  endRank: number
+  endPoints: number
+}
+
+/** Run ONE career headless to `horizonWeeks`. Deterministic per (profile, policy, index, horizon). */
+export function runFatigueCareer(
+  profile: Profile,
+  policy: Policy,
+  index: number,
+  horizonWeeks: number,
+): RunResult {
+  const { world, rng, seed } = openFatigueCareer(profile, policy, index)
+
+  const weekly: WeeklyPoint[] = []
+  const injuriesBySeverity: Record<InjurySeverity, number> = { minor: 0, moderate: 0, major: 0, severe: 0 }
+  const endOfSeasonCondition: number[] = []
+  const postOffSeasonCondition: number[] = []
+  const onsetSeasons = new Set<number>()
+  let condSum = 0
+  let bandLow = 0
+  let bandMid = 0
+  let bandHigh = 0
+  let weeksAt100 = 0
+  let weeksAt0 = 0
+  let trough: number = ECONOMY.condition.max
+  let weeksInjured = 0
+  let walkovers = 0
+  let cautionEntries = 0
+  let entries = 0
+  let physioSpendCents = 0
+  let coachingSpendCents = 0
+  let wins = 0
+  let losses = 0
+  let bestRank: number | null = null
+
+  for (let i = 0; i < horizonWeeks; i++) {
+    const f = stepFatigueWeek(world, rng, policy)
+    weekly.push({
+      week: f.week,
+      condition: f.condition,
+      injured: f.injured,
+      tierPlayed: f.tierPlayed,
+      matches: f.matchScores.length,
+      strain: f.strain,
+    })
+    condSum += f.condition
+    if (f.condition < 40) bandLow++
+    else if (f.condition < 70) bandMid++
+    else bandHigh++
+    if (f.condition === ECONOMY.condition.max) weeksAt100++
+    if (f.condition === ECONOMY.condition.min) weeksAt0++
+    if (f.condition < trough) trough = f.condition
+    if (f.injured) weeksInjured++
+    if (f.injuryOnset) {
+      injuriesBySeverity[f.injuryOnset.severity]++
+      onsetSeasons.add(Math.min(Math.floor(f.week / WEEKS_PER_YEAR), horizonWeeks / WEEKS_PER_YEAR - 1))
+    }
+    if (f.walkover) walkovers++
+    cautionEntries += f.cautionEntries
+    entries += f.entriesCommitted
+    physioSpendCents += f.physioSpendCents
+    coachingSpendCents += f.coachingSpendCents
+    wins += f.wins
+    losses += f.losses
+    if (kidPoints(world) > 0 && (bestRank === null || world.kidRank < bestRank)) bestRank = world.kidRank
+    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS) endOfSeasonCondition.push(f.condition)
+    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - 1) postOffSeasonCondition.push(f.condition)
+  }
+
+  return {
+    seed,
+    weekly,
+    meanCondition: condSum / horizonWeeks,
+    bandLow,
+    bandMid,
+    bandHigh,
+    weeksAt100,
+    weeksAt0,
+    trough,
+    endOfSeasonCondition,
+    postOffSeasonCondition,
+    injuriesBySeverity,
+    injuriesTotal: SEVERITIES.reduce((s, sev) => s + injuriesBySeverity[sev], 0),
+    seasonsWithInjury: onsetSeasons.size,
+    weeksInjured,
+    walkovers,
+    cautionEntries,
+    entries,
+    physioSpendCents,
+    coachingSpendCents,
+    endFundsCents: world.fundsCents,
+    matchesPlayed: wins + losses,
+    wins,
+    losses,
+    bestRank,
+    endRank: world.kidRank,
+    endPoints: kidPoints(world),
+  }
+}
+
+/** All 30 seeds of one (profile, policy, horizon) cell. */
+export function runCell(profile: Profile, policy: Policy, horizonWeeks: number, seeds = SEEDS_PER_CELL): RunResult[] {
+  const rows: RunResult[] = []
+  for (let i = 0; i < seeds; i++) rows.push(runFatigueCareer(profile, policy, i, horizonWeeks))
+  return rows
+}
+
+// --- stats ----------------------------------------------------------------------
+
+export function mean(xs: number[]): number {
+  if (xs.length === 0) return 0
+  return xs.reduce((s, x) => s + x, 0) / xs.length
+}
+
+/** Population standard deviation (the 30 seeds are the whole population of the cell). */
+export function stddev(xs: number[]): number {
+  if (xs.length === 0) return 0
+  const m = mean(xs)
+  return Math.sqrt(mean(xs.map((x) => (x - m) ** 2)))
+}
+
+export interface CellStats {
+  profile: Profile
+  policy: Policy
+  horizon: FatigueHorizon
+  runs: RunResult[]
+  meanCond: number
+  meanCondSd: number
+  /** pooled week shares across all seeds, in percent. */
+  pctLow: number
+  pctMid: number
+  pctHigh: number
+  pctAt100: number
+  troughMean: number
+  troughMin: number
+  /** mean condition at each season's WRAP week (wk49 – before the off-season restore). */
+  endOfSeasonMean: number[]
+  /** mean condition at each season year's last week (wk51 – after the 3 blackout weeks). */
+  postOffSeasonMean: number[]
+  /** season-end (wk49) values pooled across seeds AND seasons – the tuning-target distribution. */
+  endSeasonPooled: { mean: number; sd: number; min: number; max: number }
+  injPerSeason: number
+  injPerSeasonSd: number
+  /** REAL seasonal prevalence: % of (seed × season) years with ≥1 injury onset – the number
+   *  the research doc's "juniors 46-54%/season" anchor compares against. */
+  prevalencePct: number
+  sevPerSeason: Record<InjurySeverity, number>
+  weeksLostPerSeason: number
+  walkoversPerCareer: number
+  cautionPerSeason: number
+  physioPerSeasonCents: number
+  coachingPerSeasonCents: number
+  endFundsMeanCents: number
+  endPointsMean: number
+  /** pooled kid match-win %: sum wins / sum matches across the cell. */
+  winPct: number
+  matchesPerSeason: number
+  entriesPerSeason: number
+  /** mean best rank over the seeds that got ranked at all, + how many did. */
+  bestRankMean: number | null
+  rankedCount: number
+  /** mean weekly condition across seeds – the sparkline source (length = horizon weeks). */
+  meanWeekly: number[]
+}
+
+export function computeCellStats(
+  profile: Profile,
+  policy: Policy,
+  horizon: FatigueHorizon,
+  runs: RunResult[],
+): CellStats {
+  const seasons = horizon.weeks / WEEKS_PER_YEAR
+  const totalWeeks = runs.length * horizon.weeks
+  const meanWeekly: number[] = []
+  for (let w = 0; w < horizon.weeks; w++) meanWeekly.push(mean(runs.map((r) => r.weekly[w].condition)))
+  const sevPerSeason = { minor: 0, moderate: 0, major: 0, severe: 0 } as Record<InjurySeverity, number>
+  for (const sev of SEVERITIES) sevPerSeason[sev] = mean(runs.map((r) => r.injuriesBySeverity[sev] / seasons))
+  const endOfSeasonMean: number[] = []
+  const postOffSeasonMean: number[] = []
+  for (let s = 0; s < seasons; s++) {
+    endOfSeasonMean.push(mean(runs.map((r) => r.endOfSeasonCondition[s])))
+    postOffSeasonMean.push(mean(runs.map((r) => r.postOffSeasonCondition[s])))
+  }
+  const pooledEnds = runs.flatMap((r) => r.endOfSeasonCondition)
+  const totalWins = runs.reduce((s, r) => s + r.wins, 0)
+  const totalMatches = runs.reduce((s, r) => s + r.matchesPlayed, 0)
+  const ranked = runs.filter((r) => r.bestRank !== null)
+  return {
+    profile,
+    policy,
+    horizon,
+    runs,
+    meanCond: mean(runs.map((r) => r.meanCondition)),
+    meanCondSd: stddev(runs.map((r) => r.meanCondition)),
+    pctLow: (100 * runs.reduce((s, r) => s + r.bandLow, 0)) / totalWeeks,
+    pctMid: (100 * runs.reduce((s, r) => s + r.bandMid, 0)) / totalWeeks,
+    pctHigh: (100 * runs.reduce((s, r) => s + r.bandHigh, 0)) / totalWeeks,
+    pctAt100: (100 * runs.reduce((s, r) => s + r.weeksAt100, 0)) / totalWeeks,
+    troughMean: mean(runs.map((r) => r.trough)),
+    troughMin: Math.min(...runs.map((r) => r.trough)),
+    endOfSeasonMean,
+    postOffSeasonMean,
+    endSeasonPooled: {
+      mean: mean(pooledEnds),
+      sd: stddev(pooledEnds),
+      min: Math.min(...pooledEnds),
+      max: Math.max(...pooledEnds),
+    },
+    injPerSeason: mean(runs.map((r) => r.injuriesTotal / seasons)),
+    injPerSeasonSd: stddev(runs.map((r) => r.injuriesTotal / seasons)),
+    prevalencePct: (100 * runs.reduce((s, r) => s + r.seasonsWithInjury, 0)) / (runs.length * seasons),
+    sevPerSeason,
+    weeksLostPerSeason: mean(runs.map((r) => r.weeksInjured / seasons)),
+    walkoversPerCareer: mean(runs.map((r) => r.walkovers)),
+    cautionPerSeason: mean(runs.map((r) => r.cautionEntries / seasons)),
+    physioPerSeasonCents: mean(runs.map((r) => r.physioSpendCents / seasons)),
+    coachingPerSeasonCents: mean(runs.map((r) => r.coachingSpendCents / seasons)),
+    endFundsMeanCents: mean(runs.map((r) => r.endFundsCents)),
+    endPointsMean: mean(runs.map((r) => r.endPoints)),
+    winPct: totalMatches === 0 ? 0 : (100 * totalWins) / totalMatches,
+    matchesPerSeason: mean(runs.map((r) => r.matchesPlayed / seasons)),
+    entriesPerSeason: mean(runs.map((r) => r.entries / seasons)),
+    bestRankMean: ranked.length ? mean(ranked.map((r) => r.bestRank as number)) : null,
+    rankedCount: ranked.length,
+    meanWeekly,
+  }
+}
+
+// --- planner PROJECTION layer (owner 25.07: practices + vacations) ----------------
+// The mechanics are NOT in the engine (season-planner slice). This is arithmetic ON TOP of the
+// V2 scenario's REAL weekly traces – every projected column is labeled PROJ, and the blind
+// spots are stated in the output footer. docs/specs/season-planner.md is NOT in the repo yet:
+// the condition boosts and the court band come from the owner's ask; the package PRICES below
+// are bench ASSUMPTIONS (middle-anchored, × the wealth-corridor midpoint) to be swapped for
+// the spec's numbers the moment it lands.
+
+export const PLANNER = {
+  /** Owner rule 25.07 (now also in the season-planner spec): practice drain =
+   *  max(1, local-scoreline drain − 1). Locals are mostly 1-2 scoreline drains, so the flat
+   *  projection value is 1; the REAL engine mechanic will grade it off scorelines. Court fee
+   *  band × wealthCorridor; the deterministic projection uses band + corridor midpoints.
+   *  Coach option (+50%) deliberately skipped in projection v1. */
+  practice: { conditionCost: 1, courtCents: [30_00, 80_00] as [number, number] },
+  /** boost = condition gain of the vacation week (owner's ladder); priceCents are ASSUMED. */
+  packages: [
+    { id: 'staycation', boost: 12, priceCents: 100_00 },
+    { id: 'grandma', boost: 14, priceCents: 150_00 },
+    { id: 'camp', boost: 16, priceCents: 400_00 },
+    { id: 'sea', boost: 20, priceCents: 700_00 },
+    { id: 'resort', boost: 25, priceCents: 1200_00 },
+    { id: 'elite', boost: 30, priceCents: 2500_00 },
+  ] as { id: string; boost: number; priceCents: number }[],
+  /** careful books a package when the projected condition is below this on a bookable week... */
+  carefulBookBelow: 60,
+  /** ...picking the CHEAPEST package that returns her above this (largest if none can). */
+  carefulTargetAbove: 80,
+  /** careful only plays a friendly while the projected condition is at/above this. */
+  carefulPracticeMin: 80,
+}
+
+export interface ProjectionResult {
+  seed: string
+  projWeekly: number[]
+  projMeanCond: number
+  projBandLow: number
+  projBandMid: number
+  projBandHigh: number
+  projTrough: number
+  practices: number
+  practiceCostCents: number
+  vacationsByPackage: Record<string, number>
+  vacationsTotal: number
+  vacationCostCents: number
+  /** deterministic expected-injuries integral over the projected fatigue (tau formula per
+   *  healthy week, summed) – honest for a projection; no Monte-Carlo pretence. */
+  projExpectedInjPerSeason: number
+  /** real end funds minus the projected practice + vacation spend (no interest feedback). */
+  projEndFundsCents: number
+}
+
+/** The rest-slider bonus re-derived from the knob table (kept bench-local so the projection
+ *  formula is fully visible in one place). */
+function sliderBonus(restPercent: number): number {
+  for (const { minRest, bonus } of ECONOMY.condition.restRecoveryBonus) {
+    if (restPercent >= minRest) return bonus
+  }
+  return 0
+}
+
+/** effective physio toggle for a (profile, policy) run – mirrors openFatigueCareer. */
+export function effectivePhysio(profile: Profile, policy: Policy): boolean {
+  if (policy.physio === 'on') return true
+  if (policy.physio === 'off') return false
+  return profile.coachSetup === 'hired'
+}
+
+/**
+ * Project practices + vacations onto ONE run's real weekly trace. Reads the LIVE ECONOMY
+ * knobs, so call it inside withScenario(V2) to project on the V2 formula. Pure and
+ * deterministic: same run + profile + policy → same projection.
+ *
+ * Week-type recovery semantics (owner 25.07 – "(almost) every week ≥1 game by choice"):
+ *  - tournament week: matchWeekRecoveryBase (0 shipped) – travel + competition;
+ *  - PRACTICE week: recoveryBase only – she keeps the base but FORFEITS the slider bonus,
+ *    then pays the practice drain;
+ *  - free week: recoveryBase + slider bonus.
+ * Physio and blackout bonuses ride on top exactly like the engine. All planner decisions read
+ * the week's ENTRY condition (before that week's recovery) – the parent plans on what she sees.
+ *
+ * Booking rules (per the owner's ask):
+ *  - bookable week = no real tournament played AND not out injured (rehab weeks are not
+ *    plannable; entered weeks can never collide with a booking by construction).
+ *  - practices: grinder EVERY practice-eligible empty week; balanced every OTHER; careful only
+ *    while the entry condition ≥ carefulPracticeMin. Practice-eligible excludes exam/off-season
+ *    weeks (school + family time – projection assumption, see footer).
+ *  - vacations: careful books when the entry condition < carefulBookBelow (cheapest package
+ *    clearing carefulTargetAbove, largest if none; not on exam weeks); balanced books one sea
+ *    week per season year in the off-season; grinder never books. A vacation week is a free
+ *    week (base + slider) plus the package boost.
+ */
+export function projectPlanner(run: RunResult, profile: Profile, policy: Policy): ProjectionResult {
+  const k = ECONOMY.condition
+  const phys = ECONOMY.physio
+  const av = ECONOMY.availability
+  const clampC = (x: number) => Math.min(k.max, Math.max(k.min, x))
+  const [cLo, cHi] = ECONOMY.wealthCorridor[profile.background]
+  const corridorMid = (cLo + cHi) / 2
+  const physioOn = effectivePhysio(profile, policy)
+  const courtMidCents = Math.round(((PLANNER.practice.courtCents[0] + PLANNER.practice.courtCents[1]) / 2) * corridorMid)
+
+  let c: number = k.start
+  let practices = 0
+  let practiceCostCents = 0
+  const vacationsByPackage: Record<string, number> = {}
+  let vacationCostCents = 0
+  let practiceEligibleIdx = 0 // balanced alternates over the practice-eligible weeks
+  let condSum = 0
+  let bandLow = 0
+  let bandMid = 0
+  let bandHigh = 0
+  let trough: number = k.max
+  let expectedInjuries = 0
+  const projWeekly: number[] = []
+  const seaBookedYears = new Set<number>()
+  const playedFlags: boolean[] = []
+
+  for (let i = 0; i < run.weekly.length; i++) {
+    const w = run.weekly[i]
+    const played = w.matches > 0
+    playedFlags.push(played)
+    const offset = ((w.week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+    const offSeason = offset >= WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+    const exam = av.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
+
+    // 1. planner decisions on the week's ENTRY condition (before recovery)
+    const entryCond = c
+    let booked = false
+    let pkgBoost = 0
+    let practiced = false
+    if (!played && !w.injured) {
+      if (policy.id === 'careful' && !exam && entryCond < PLANNER.carefulBookBelow) {
+        const pkg =
+          PLANNER.packages.find((p) => entryCond + p.boost > PLANNER.carefulTargetAbove) ??
+          PLANNER.packages[PLANNER.packages.length - 1]
+        pkgBoost = pkg.boost
+        vacationsByPackage[pkg.id] = (vacationsByPackage[pkg.id] ?? 0) + 1
+        vacationCostCents += Math.round(pkg.priceCents * corridorMid)
+        booked = true
+      } else if (policy.id === 'balanced' && offSeason) {
+        const year = Math.floor(w.week / WEEKS_PER_YEAR)
+        if (!seaBookedYears.has(year)) {
+          const sea = PLANNER.packages.find((p) => p.id === 'sea')!
+          seaBookedYears.add(year)
+          pkgBoost = sea.boost
+          vacationsByPackage.sea = (vacationsByPackage.sea ?? 0) + 1
+          vacationCostCents += Math.round(sea.priceCents * corridorMid)
+          booked = true
+        }
+      }
+      if (!booked && !offSeason && !exam) {
+        practiced =
+          policy.id === 'grinder' ||
+          (policy.id === 'balanced' && practiceEligibleIdx % 2 === 0) ||
+          (policy.id === 'careful' && entryCond >= PLANNER.carefulPracticeMin)
+        if (practiced) {
+          practices++
+          practiceCostCents += courtMidCents
+        }
+        practiceEligibleIdx++
+      }
+    }
+
+    // 2. week-type recovery (owner semantics): tournament 0 base · practice keeps the base but
+    //    forfeits the slider bonus · free/vacation week = base + slider. Physio/blackout on top.
+    let recovery: number
+    if (played) recovery = k.matchWeekRecoveryBase
+    else if (practiced) recovery = k.recoveryBase
+    else recovery = k.recoveryBase + sliderBonus(policy.plan.rest)
+    if (physioOn) recovery += phys.conditionBonusPerWeek
+    if (offSeason || exam) recovery += k.blackoutBonus
+    c = clampC(c + recovery + pkgBoost - (practiced ? PLANNER.practice.conditionCost : 0))
+
+    // 3. the real committed strain lands after accrual, exactly like the engine's commit order
+    c = clampC(c - w.strain)
+
+    projWeekly.push(c)
+    condSum += c
+    if (c < 40) bandLow++
+    else if (c < 70) bandMid++
+    else bandHigh++
+    if (c < trough) trough = c
+
+    // expected-injury integral: the engine's tau formula on the PROJECTED condition + the REAL
+    // played/injured pattern (weeks she is actually out take no occurrence roll; practices do
+    // NOT feed the overuse counter – friendlies are not competed weeks).
+    if (!w.injured) {
+      let tau = Math.min(av.injuryChanceCap, Math.max(0, av.injuryBaseChance + (100 - c) * av.injuryFatigueSlope))
+      tau *= ageInjuryFactor(START_AGE_YEARS + Math.floor(w.week / 52))
+      const trailing = playedFlags.slice(Math.max(0, i - 3), i + 1).filter(Boolean).length
+      tau *= consecutivePlayFactor(trailing)
+      if (played) tau *= av.injuryPlayingMultiplier
+      if (physioOn) tau *= phys.riskReduction
+      expectedInjuries += Math.min(tau, av.injuryChanceCap)
+    }
+  }
+
+  const seasons = run.weekly.length / WEEKS_PER_YEAR
+  return {
+    seed: run.seed,
+    projWeekly,
+    projMeanCond: condSum / run.weekly.length,
+    projBandLow: bandLow,
+    projBandMid: bandMid,
+    projBandHigh: bandHigh,
+    projTrough: trough,
+    practices,
+    practiceCostCents,
+    vacationsByPackage,
+    vacationsTotal: Object.values(vacationsByPackage).reduce((s, n) => s + n, 0),
+    vacationCostCents,
+    projExpectedInjPerSeason: expectedInjuries / seasons,
+    projEndFundsCents: run.endFundsCents - practiceCostCents - vacationCostCents,
+  }
+}
+
+// --- rendering -------------------------------------------------------------------
+
+const BLOCKS = '▁▂▃▄▅▆▇█'
+
+/** One condition value (0..100) to one sparkline block. */
+export function sparkChar(condition: number): string {
+  const idx = Math.min(BLOCKS.length - 1, Math.max(0, Math.floor(condition / (100 / BLOCKS.length))))
+  return BLOCKS[idx]
+}
+
+/** The cell's mean weekly condition as one 52-char row per season. */
+export function sparkRows(meanWeekly: number[]): string[] {
+  const rows: string[] = []
+  for (let s = 0; s * WEEKS_PER_YEAR < meanWeekly.length; s++) {
+    rows.push(
+      meanWeekly
+        .slice(s * WEEKS_PER_YEAR, (s + 1) * WEEKS_PER_YEAR)
+        .map(sparkChar)
+        .join(''),
+    )
+  }
+  return rows
+}
+
+function padEnd(s: string, w: number): string {
+  return s.length >= w ? s : s + ' '.repeat(w - s.length)
+}
+function pad(s: string, w: number): string {
+  return s.length >= w ? s : ' '.repeat(w - s.length) + s
+}
+
+const POLICY_W = 31
+
+function tableHeader(): string {
+  const cols = [
+    ['cond', 6],
+    ['±sd', 5],
+    ['%<40', 6],
+    ['40-69', 6],
+    ['≥70', 6],
+    ['@100', 6],
+    ['low', 8],
+    ['inj/s', 7],
+    ['mn/mo/mj/sv', 21],
+    ['lost/s', 7],
+    ['WO/c', 5],
+    ['caut/s', 7],
+    ['phys$/s', 8],
+    ['win%', 6],
+    ['mt/s', 6],
+    ['ent/s', 6],
+    ['bestRk', 7],
+  ] as [string, number][]
+  return '  ' + padEnd('policy', POLICY_W) + cols.map(([c, w]) => pad(c, w)).join('')
+}
+
+function cellRow(c: CellStats): string {
+  const sev = SEVERITIES.map((s) => c.sevPerSeason[s].toFixed(2)).join('/')
+  const bestRk = c.bestRankMean === null ? '–' : `#${Math.round(c.bestRankMean)}`
+  const cells: [string, number][] = [
+    [c.meanCond.toFixed(1), 6],
+    [c.meanCondSd.toFixed(1), 5],
+    [c.pctLow.toFixed(1), 6],
+    [c.pctMid.toFixed(1), 6],
+    [c.pctHigh.toFixed(1), 6],
+    [c.pctAt100.toFixed(1), 6],
+    [`${c.troughMean.toFixed(0)}·${c.troughMin}`, 8],
+    [c.injPerSeason.toFixed(2), 7],
+    [sev, 21],
+    [c.weeksLostPerSeason.toFixed(1), 7],
+    [c.walkoversPerCareer.toFixed(2), 5],
+    [c.cautionPerSeason.toFixed(2), 7],
+    [`$${Math.round(c.physioPerSeasonCents / 100)}`, 8],
+    [c.winPct.toFixed(1), 6],
+    [c.matchesPerSeason.toFixed(1), 6],
+    [c.entriesPerSeason.toFixed(1), 6],
+    [bestRk, 7],
+  ]
+  return '  ' + padEnd(c.policy.label, POLICY_W) + cells.map(([s, w]) => pad(s, w)).join('')
+}
+
+/** Degeneracy screens the spec asks the report to surface: pinned condition, injury spirals,
+ *  unplayable calendars. Returns human-readable findings (empty = nothing degenerate). */
+export function degeneracyFindings(c: CellStats): string[] {
+  const out: string[] = []
+  const pooledAt0 = (100 * c.runs.reduce((s, r) => s + r.weeksAt0, 0)) / (c.runs.length * c.horizon.weeks)
+  if (pooledAt0 > 1) out.push(`condition pinned at 0 for ${pooledAt0.toFixed(1)}% of weeks`)
+  if (c.pctAt100 > 90) out.push(`condition pinned at 100 for ${c.pctAt100.toFixed(1)}% of weeks`)
+  if (c.weeksLostPerSeason > 26) out.push(`injury spiral: ${c.weeksLostPerSeason.toFixed(1)} weeks lost/season`)
+  if (c.entriesPerSeason < 1) out.push(`unplayable calendar: ${c.entriesPerSeason.toFixed(1)} entries/season`)
+  return out.map((f) => `${c.profile.label.trim()} × ${c.policy.id}: ${f}`)
+}
+
+// --- grid rendering ---------------------------------------------------------
+
+const GRID_COLS: [string, number][] = [
+  ['plan', 7],
+  ['entry', 10],
+  ['physio', 7],
+  ['cond', 7],
+  ['low', 8],
+  ['inj/s', 7],
+  ['lost/s', 7],
+  ['win%', 6],
+  ['mt/s', 6],
+  ['ent/s', 6],
+  ['coach$/s', 9],
+  ['phys$/s', 8],
+  ['endFunds', 10],
+  ['endPts', 7],
+  ['bestRk', 7],
+]
+
+function gridHeader(): string {
+  return '  ' + GRID_COLS.map(([c, w]) => pad(c, w)).join('')
+}
+
+function gridRow(planId: string, entryId: string, physio: string, c: CellStats): string {
+  const bestRk = c.bestRankMean === null ? '–' : `#${Math.round(c.bestRankMean)}`
+  const endFunds = `$${Math.round(c.endFundsMeanCents / 100).toLocaleString('en-US')}`
+  const cells = [
+    planId,
+    entryId,
+    physio,
+    c.meanCond.toFixed(1),
+    `${c.troughMean.toFixed(0)}·${c.troughMin}`,
+    c.injPerSeason.toFixed(2),
+    c.weeksLostPerSeason.toFixed(1),
+    c.winPct.toFixed(1),
+    c.matchesPerSeason.toFixed(1),
+    c.entriesPerSeason.toFixed(1),
+    `$${Math.round(c.coachingPerSeasonCents / 100).toLocaleString('en-US')}`,
+    `$${Math.round(c.physioPerSeasonCents / 100)}`,
+    endFunds,
+    c.endPointsMean.toFixed(0),
+    bestRk,
+  ]
+  return '  ' + cells.map((s, i) => pad(s, GRID_COLS[i][1])).join('')
+}
+
+/** Pooled corner-case screens over every grid cell – the owner's "does ANYTHING bite?" read. */
+function gridCornerBlock(cells: CellStats[]): string[] {
+  const out: string[] = []
+  const neverBelowKnee = cells.filter((c) => c.troughMin >= ECONOMY.condition.matchStrengthKnee)
+  out.push(
+    `  knee (${ECONOMY.condition.matchStrengthKnee}) never crossed in ${neverBelowKnee.length}/${cells.length} cells` +
+      ` – the win% coupling is inert there; worst trough anywhere = ${Math.min(...cells.map((c) => c.troughMin))}.`,
+  )
+  const dipped = cells.filter((c) => c.troughMin < ECONOMY.condition.matchStrengthKnee)
+  for (const c of dipped) {
+    out.push(`  below-knee cell: ${c.profile.label.trim()} × ${c.policy.id} (worst trough ${c.troughMin})`)
+  }
+  const anyLow = cells.filter((c) => c.pctLow > 0)
+  out.push(
+    anyLow.length === 0
+      ? '  no cell EVER sees a week under condition 40 – the <40 band is unreachable under the current knobs.'
+      : `  cells with <40 weeks: ${anyLow.map((c) => `${c.profile.label.trim()} × ${c.policy.id}`).join(', ')}`,
+  )
+  const maxLost = cells.reduce((a, b) => (a.weeksLostPerSeason >= b.weeksLostPerSeason ? a : b))
+  out.push(
+    `  heaviest injury toll: ${maxLost.profile.label.trim()} × ${maxLost.policy.id} at ` +
+      `${maxLost.weeksLostPerSeason.toFixed(1)} weeks lost/season (${maxLost.injPerSeason.toFixed(2)} inj/season).`,
+  )
+  // Axis effects, pooled across profiles (paired seeds make the deltas meaningful).
+  const byPhysio = (ph: string) => cells.filter((c) => c.policy.id.endsWith(ph))
+  const injOf = (xs: CellStats[]) => mean(xs.map((c) => c.injPerSeason))
+  const condOf = (xs: CellStats[]) => mean(xs.map((c) => c.meanCond))
+  out.push(
+    `  physio axis (pooled): inj/season ${injOf(byPhysio('·on')).toFixed(2)} on vs ${injOf(byPhysio('·off')).toFixed(2)} off · ` +
+      `mean cond ${condOf(byPhysio('·on')).toFixed(1)} vs ${condOf(byPhysio('·off')).toFixed(1)}.`,
+  )
+  const byPlan = (planId: string) => cells.filter((c) => c.policy.id.startsWith(planId))
+  out.push(
+    '  plan axis (pooled): ' +
+      GRID_PLANS.map((p) => `${p.id} cond ${condOf(byPlan(p.id)).toFixed(1)} / inj ${injOf(byPlan(p.id)).toFixed(2)}`).join(' · ') +
+      '.',
+  )
+  const byEntry = (entryId: string) => cells.filter((c) => c.policy.id.includes(`·${entryId}·`))
+  out.push(
+    '  entry axis (pooled): ' +
+      GRID_ENTRIES.map((e) => {
+        const xs = byEntry(e.id)
+        return `${e.id} mt/s ${mean(xs.map((c) => c.matchesPerSeason)).toFixed(1)} / inj ${injOf(xs).toFixed(2)} / caut/s ${mean(xs.map((c) => c.cautionPerSeason)).toFixed(2)}`
+      }).join(' · ') +
+      '.',
+  )
+  return out
+}
+
+const HEADER = [
+  'Ties Break – fatigue/injury bench (round-9 condition math; measurement only, zero engine changes)',
+  '',
+  `Policies: grinder = plan 85/15, enters everything eligible+affordable (ignores the fatigue caution);`,
+  `  balanced = plan 75/25, same entry rule; careful = plan 60/40, physio ALWAYS on, skips entry while`,
+  `  condition < tier floor + 10. Physio for grinder/balanced follows the game default (ON iff hired coach).`,
+  `Entries commit within ${ENTRY_LOOKAHEAD} weeks of the deadline (econ-bench policy v3); spawned runs are`,
+  '  skip-revealed and closed the same week, so per-match strain lands the week it is played.',
+  `Seeds are paired: fatigue-<background>-<index> – policies and both middle presets face the SAME`,
+  '  calendar, cohort and injury/physio sub-stream rolls; only condition, tau and entries differ.',
+  `${SEEDS_PER_CELL} seeds/cell. Columns: cond = mean weekly condition; %<40 / 40-69 / ≥70 = pooled week share`,
+  '  by band; @100 = share of weeks at the exact cap; low = mean trough · worst trough; inj/s = injuries',
+  '  per season (mn/mo/mj/sv = severity split per season); lost/s = injured weeks per season; WO/c =',
+  '  walkovers per career; caut/s = caution entries (below tier floor) per season; phys$/s = physio+medical',
+  '  spend per season; win% = pooled kid match-win rate; mt/s = matches per season; ent/s = entries per',
+  '  season; bestRk = mean best dense rank while ranked. Sparklines: mean weekly condition, one row of 52',
+  '  chars per season (▁=0-12 … █=88-100).',
+  '',
+  `FACTORIAL GRID (owner 25.07): plan × entry × physio unbundled = 12 cells per profile at ${GRID_HORIZON_WEEKS}w,`,
+  `  ${GRID_SEEDS} seeds/cell (REDUCED from ${SEEDS_PER_CELL} for runtime; the headline trio keeps ${SEEDS_PER_CELL}). Money coupling per cell:`,
+  '  coach$/s = planFactor-scaled coaching spend per season; endFunds = mean family funds at horizon end.',
+  'NOT MODELED YET: friendly matches and vacations (season-planner slice) – both are condition levers',
+  '  this grid cannot see. Re-run the grid when they land; policies are data (gridPolicies), so the new',
+  '  axis is a field, not a fork.',
+  '',
+  'SCENARIOS (owner 25.07, V2.1 SHIPPED): BASELINE = the shipped engine knobs (recoveryBase 1,',
+  '  matchWeekRecoveryBase 0, physio bonus 1), full section (headline + grid + PROJ). V2 = the previous',
+  '  candidate patched back (recoveryBase 2), headline + PROJ – the audit trail of the V2.1 decision.',
+  '  LEGACY = the original round-9 values (2/2/2), headline only. Patches land on the LIVE ECONOMY',
+  '  object and are restored afterwards, so every scenario keeps all feedback loops real: coupling',
+  '  curve, caution/floor gates, injury tau, entry starvation. --scenario baseline|v2|legacy runs one',
+  '  section. endSeason lines read wk49 (the wrap, BEFORE the off-season restore) → wk51 (after the 3',
+  '  blackout weeks); the owner target is wk49 ~60-85 by policy. A BASELINE-vs-V2 delta block + the',
+  '  INJURY PANEL (real-anchor calibration) close the full run.',
+].join('\n')
+
+// --- CSV ---------------------------------------------------------------------
+
+export interface BenchCell {
+  scenario: Scenario
+  horizon: FatigueHorizon
+  profile: Profile
+  policy: Policy
+  runs: RunResult[]
+}
+
+export function toCsv(all: BenchCell[]): string {
+  const lines = ['scenario,horizon_weeks,profile,policy,seed,week,condition,injured,tier_played,matches,strain']
+  for (const { scenario, horizon, profile, policy, runs } of all) {
+    for (const r of runs) {
+      for (const w of r.weekly) {
+        lines.push(
+          [
+            scenario.id,
+            horizon.weeks.toString(),
+            profile.label.trim().replace(/\s+/g, ' '),
+            policy.id,
+            r.seed,
+            w.week.toString(),
+            w.condition.toString(),
+            w.injured ? '1' : '0',
+            w.tierPlayed ?? '',
+            w.matches.toString(),
+            w.strain.toString(),
+          ].join(','),
+        )
+      }
+    }
+  }
+  return lines.join('\n') + '\n'
+}
+
+// --- CLI ---------------------------------------------------------------------
+
+function parseCsvPath(argv: string[]): string | null {
+  const i = argv.indexOf('--csv')
+  if (i === -1) return null
+  const path = argv[i + 1]
+  if (!path || path.startsWith('--')) throw new Error('--csv requires a file path argument')
+  return path
+}
+
+function parseScenarioArg(argv: string[]): Scenario['id'] | null {
+  const i = argv.indexOf('--scenario')
+  if (i === -1) return null
+  const v = argv[i + 1]
+  if (v === 'baseline' || v === 'v2' || v === 'legacy') return v
+  throw new Error('--scenario must be "baseline", "v2" or "legacy"')
+}
+
+function keyOf(scenario: Scenario, horizon: FatigueHorizon, profile: Profile, policy: Policy): string {
+  return `${scenario.id}|${horizon.weeks}|${profile.label}|${policy.id}`
+}
+
+// One full section (headline horizons + factorial grid) under the CURRENT live ECONOMY knobs.
+// Call inside withScenario(scenario, ...). Headline stats land in `headline` for the
+// V2-vs-baseline comparison block.
+function runScenarioSection(
+  scenario: Scenario,
+  all: BenchCell[],
+  degenerate: string[],
+  headline: Map<string, CellStats>,
+): void {
+  const rule = '═'.repeat(120)
+  console.log('')
+  console.log(rule)
+  console.log(`  SCENARIO ${scenario.label}`)
+  console.log(rule)
+
+  for (const horizon of FATIGUE_HORIZONS) {
+    console.log('')
+    console.log(rule)
+    console.log(
+      `  [${scenario.id}] HORIZON ${horizon.label} – ${horizon.seasons} season${horizon.seasons > 1 ? 's' : ''}`,
+    )
+    console.log(rule)
+    for (const profile of PROFILES) {
+      console.log('')
+      console.log(`  PROFILE ${profile.label}`)
+      console.log(tableHeader())
+      const cellsOfProfile: CellStats[] = []
+      for (const policy of POLICIES) {
+        const runs = runCell(profile, policy, horizon.weeks)
+        all.push({ scenario, horizon, profile, policy, runs })
+        const stats = computeCellStats(profile, policy, horizon, runs)
+        cellsOfProfile.push(stats)
+        headline.set(keyOf(scenario, horizon, profile, policy), stats)
+        degenerate.push(...degeneracyFindings(stats).map((f) => `[${scenario.id}] ${f}`))
+        console.log(cellRow(stats))
+      }
+      // Season shape: mean weekly condition sparkline per policy, one 52-char row per season.
+      for (const stats of cellsOfProfile) {
+        const rows = sparkRows(stats.meanWeekly)
+        rows.forEach((row, s) => {
+          const label = s === 0 ? `shape ${stats.policy.id}` : ''
+          console.log('  ' + padEnd(label, 17) + `S${s + 1} ` + row)
+        })
+      }
+      // End-of-season (wk49, BEFORE the off-season restore) → post-off-season (wk51) – the
+      // owner's tuning target reads the wk49 side; the arrow shows what 3 blackout weeks buy.
+      for (const stats of cellsOfProfile) {
+        const perSeason = stats.endOfSeasonMean
+          .map((c, s) => `S${s + 1} ${c.toFixed(1)}→${stats.postOffSeasonMean[s].toFixed(1)}`)
+          .join(' · ')
+        const p = stats.endSeasonPooled
+        console.log(
+          '  ' +
+            padEnd(`endSeason ${stats.policy.id}`, 20) +
+            perSeason +
+            `   (wk49→wk51; pooled wk49 ${p.mean.toFixed(1)} ±${p.sd.toFixed(1)} [${p.min}..${p.max}])`,
+        )
+      }
+      // Anchors (spec): balanced vs real junior prevalence; grinder-vs-careful injury ratio.
+      const grinder = cellsOfProfile[0]
+      const balanced = cellsOfProfile[1]
+      const careful = cellsOfProfile[2]
+      const minorShare =
+        balanced.injPerSeason === 0 ? 0 : (100 * balanced.sevPerSeason.minor) / balanced.injPerSeason
+      const ratio =
+        careful.injPerSeason === 0 ? Infinity : grinder.injPerSeason / careful.injPerSeason
+      console.log(
+        `  anchors: balanced inj/season ${balanced.injPerSeason.toFixed(2)} (target ~0.5-1.1; minors ${minorShare.toFixed(0)}%)` +
+          ` · grinder/careful injury ratio ${ratio === Infinity ? 'inf' : ratio.toFixed(1)}x (anchor ≥3x)`,
+      )
+    }
+  }
+
+  // --- factorial grid (12 unbundled cells per profile, one horizon, reduced seeds) ---
+  if (scenario.grid) {
+    const gridHorizon = FATIGUE_HORIZONS.find((h) => h.weeks === GRID_HORIZON_WEEKS)!
+    const gridCells: CellStats[] = []
+    console.log('')
+    console.log(rule)
+    console.log(
+      `  [${scenario.id}] FACTORIAL GRID – plan × entry × physio, ${GRID_HORIZON_WEEKS}w, ${GRID_SEEDS} seeds/cell` +
+        ` (reduced from ${SEEDS_PER_CELL}; headline trio above keeps ${SEEDS_PER_CELL})`,
+    )
+    console.log(rule)
+    for (const profile of PROFILES) {
+      console.log('')
+      console.log(`  PROFILE ${profile.label}`)
+      console.log(gridHeader())
+      for (const p of GRID_PLANS) {
+        for (const e of GRID_ENTRIES) {
+          for (const ph of GRID_PHYSIO) {
+            const policy = gridPolicies().find((g) => g.id === `${p.id}·${e.id}·${ph}`)!
+            const runs = runCell(profile, policy, GRID_HORIZON_WEEKS, GRID_SEEDS)
+            all.push({ scenario, horizon: gridHorizon, profile, policy, runs })
+            const stats = computeCellStats(profile, policy, gridHorizon, runs)
+            gridCells.push(stats)
+            degenerate.push(...degeneracyFindings(stats).map((f) => `[${scenario.id}] ${f}`))
+            console.log(gridRow(p.id, e.id, ph, stats))
+          }
+        }
+      }
+    }
+    console.log('')
+    console.log(`  [${scenario.id}] GRID CORNER CASES`)
+    for (const line of gridCornerBlock(gridCells)) console.log(line)
+  }
+
+  // PROJ layer rides on THIS scenario's REAL 104w headline traces – rendered inside the
+  // scenario (the projection reads the LIVE patched knobs).
+  if (scenario.proj) renderProjection(scenario, all)
+}
+
+// --- PROJ rendering ------------------------------------------------------------
+
+const PROJ_COLS: [string, number][] = [
+  ['policy', POLICY_W],
+  ['cond', 7],
+  ['%<40', 6],
+  ['40-69', 6],
+  ['≥70', 6],
+  ['low', 8],
+  ['pract/s', 8],
+  ['pr$/s', 7],
+  ['vac/s', 6],
+  ['vac$/s', 8],
+  ['E[inj]/s', 9],
+  ['endF real', 11],
+  ['endF PROJ', 11],
+]
+
+function renderProjection(scenario: Scenario, all: BenchCell[]): void {
+  const thin = '─'.repeat(120)
+  console.log('')
+  console.log(thin)
+  console.log(
+    `  [${scenario.id}] PROJ – planner projection ON TOP of the real ${scenario.id} traces (104w headline cells, ${SEEDS_PER_CELL} seeds)`,
+  )
+  console.log('  practices + vacations are NOT engine mechanics – every column here is a projection, not a simulation.')
+  console.log(
+    '  week semantics (owner): tournament wk = 0 base · PRACTICE wk = base, slider bonus FORFEITED, drain 1' +
+      ' (= max(1, local drain − 1); engine will grade off scorelines) · free wk = base + slider.',
+  )
+  console.log(
+    '  ASSUMED package prices (docs/specs/season-planner.md is not in the repo yet – swap when it lands): ' +
+      PLANNER.packages.map((p) => `${p.id} +${p.boost} $${(p.priceCents / 100).toFixed(0)}`).join(' · '),
+  )
+  console.log(`  all prices × wealth-corridor midpoint; court $${PLANNER.practice.courtCents[0] / 100}-${PLANNER.practice.courtCents[1] / 100} at band midpoint.`)
+  console.log(thin)
+  for (const profile of PROFILES) {
+    console.log('')
+    console.log(`  PROFILE ${profile.label}   [PROJ on V2]`)
+    console.log('  ' + PROJ_COLS.map(([c, w], i) => (i === 0 ? padEnd(c, w) : pad(c, w))).join(''))
+    const pkgLines: string[] = []
+    for (const policy of POLICIES) {
+      const cell = all.find(
+        (c) =>
+          c.scenario.id === scenario.id &&
+          c.horizon.weeks === GRID_HORIZON_WEEKS &&
+          c.profile === profile &&
+          c.policy === policy,
+      )
+      if (!cell) continue
+      const seasons = cell.horizon.seasons
+      const projs = cell.runs.map((r) => projectPlanner(r, profile, policy))
+      const totalWeeks = cell.runs.length * cell.horizon.weeks
+      const pctLow = (100 * projs.reduce((s, p) => s + p.projBandLow, 0)) / totalWeeks
+      const pctMid = (100 * projs.reduce((s, p) => s + p.projBandMid, 0)) / totalWeeks
+      const pctHigh = (100 * projs.reduce((s, p) => s + p.projBandHigh, 0)) / totalWeeks
+      const cells = [
+        policy.label,
+        mean(projs.map((p) => p.projMeanCond)).toFixed(1),
+        pctLow.toFixed(1),
+        pctMid.toFixed(1),
+        pctHigh.toFixed(1),
+        `${mean(projs.map((p) => p.projTrough)).toFixed(0)}·${Math.min(...projs.map((p) => p.projTrough))}`,
+        mean(projs.map((p) => p.practices / seasons)).toFixed(1),
+        `$${Math.round(mean(projs.map((p) => p.practiceCostCents / seasons)) / 100)}`,
+        mean(projs.map((p) => p.vacationsTotal / seasons)).toFixed(2),
+        `$${Math.round(mean(projs.map((p) => p.vacationCostCents / seasons)) / 100)}`,
+        mean(projs.map((p) => p.projExpectedInjPerSeason)).toFixed(2),
+        `$${Math.round(mean(cell.runs.map((r) => r.endFundsCents)) / 100).toLocaleString('en-US')}`,
+        `$${Math.round(mean(projs.map((p) => p.projEndFundsCents)) / 100).toLocaleString('en-US')}`,
+      ]
+      console.log('  ' + cells.map((s, i) => (i === 0 ? padEnd(s, PROJ_COLS[i][1]) : pad(s, PROJ_COLS[i][1]))).join(''))
+      // pooled package bookings per season across the cell's seeds
+      const pooled: Record<string, number> = {}
+      for (const p of projs) {
+        for (const [id, n] of Object.entries(p.vacationsByPackage)) pooled[id] = (pooled[id] ?? 0) + n
+      }
+      const parts = PLANNER.packages
+        .filter((p) => pooled[p.id])
+        .map((p) => `${p.id} ${(pooled[p.id] / cell.runs.length / seasons).toFixed(2)}/s`)
+      pkgLines.push(`  packages ${policy.id}: ${parts.length ? parts.join(' · ') : 'none booked'}`)
+    }
+    for (const l of pkgLines) console.log(l)
+  }
+  console.log('')
+  console.log('  PROJ blind spots: no result feedback (win% is NOT recomputed – the coupling curve only acts in')
+  console.log('    the real scenarios above); no calendar feedback (bookings never move entries; entered weeks are')
+  console.log('    non-bookable by construction); practices affect neither skills nor the overuse counter; prices')
+  console.log('    use band + corridor midpoints; no bookings on exam weeks, practices also skip the off-season;')
+  console.log('    planner decisions read the week-entry condition (before that week\'s recovery).')
+}
+
+// --- scenario comparison ----------------------------------------------------------
+
+function renderComparison(headline: Map<string, CellStats>, from: Scenario, to: Scenario): void {
+  const rule = '═'.repeat(120)
+  console.log('')
+  console.log(rule)
+  console.log(
+    `  ${to.id.toUpperCase()} vs ${from.id.toUpperCase()} – headline deltas (${from.id}→${to.id});` +
+      ' owner season-end target: wk49 lands ~60-85 by policy (grinder low, careful high-but-<100)',
+  )
+  console.log(rule)
+  for (const horizon of FATIGUE_HORIZONS) {
+    console.log('')
+    console.log(`  [${horizon.label}]`)
+    for (const profile of PROFILES) {
+      const get = (s: Scenario, pol: Policy) => headline.get(keyOf(s, horizon, profile, pol))
+      const rows = POLICIES.map((pol) => ({ pol, b: get(from, pol), v: get(to, pol) }))
+      if (rows.some((r) => !r.b || !r.v)) continue
+      console.log(`  ${profile.label}`)
+      const below70 = (s: CellStats) => s.pctLow + s.pctMid
+      for (const { pol, b, v } of rows) {
+        console.log(
+          '    ' +
+            padEnd(pol.id, 10) +
+            `cond ${b!.meanCond.toFixed(1)}→${v!.meanCond.toFixed(1)}` +
+            ` · endSeason(wk49) ${b!.endSeasonPooled.mean.toFixed(1)}→${v!.endSeasonPooled.mean.toFixed(1)}` +
+            ` · <70 ${below70(b!).toFixed(1)}%→${below70(v!).toFixed(1)}%` +
+            ` · caut/s ${b!.cautionPerSeason.toFixed(2)}→${v!.cautionPerSeason.toFixed(2)}` +
+            ` · trough ${b!.troughMean.toFixed(0)}·${b!.troughMin}→${v!.troughMean.toFixed(0)}·${v!.troughMin}` +
+            ` · inj/s ${b!.injPerSeason.toFixed(2)}→${v!.injPerSeason.toFixed(2)}`,
+        )
+      }
+      const [g, , c] = rows
+      const ratio = (x?: CellStats, y?: CellStats) =>
+        !x || !y || y.injPerSeason === 0 ? 'inf' : (x.injPerSeason / y.injPerSeason).toFixed(1)
+      const winGap = (s: Scenario) => {
+        const gs = get(s, POLICIES[0])!
+        const cs = get(s, POLICIES[2])!
+        return (cs.winPct - gs.winPct).toFixed(1)
+      }
+      console.log(
+        `    anchors: inj g/c ${ratio(g.b, c.b)}x→${ratio(g.v, c.v)}x (spec ≥3x)` +
+          ` · win% careful−grinder ${winGap(from)}pp→${winGap(to)}pp` +
+          ` · matches g ${g.b!.matchesPerSeason.toFixed(1)}→${g.v!.matchesPerSeason.toFixed(1)}/s` +
+          ` · lost/s g ${g.b!.weeksLostPerSeason.toFixed(1)}→${g.v!.weeksLostPerSeason.toFixed(1)}`,
+      )
+    }
+  }
+}
+
+// --- injury panel (owner calibration vs docs/research/injury-stats-by-age.md) ------
+
+/** Real-world anchors (research doc + owner 25.07): juniors 46-54% injured/season (≈0.5-1.1
+ *  inj/season, minors dominating); girls post-peak ≈1.0 week lost/yr, boys at growth peak
+ *  ≈2.3 weeks; teen-peak heavy-load groups reach ~95% prevalence – the grinder's legitimate
+ *  analog. */
+export const INJURY_ANCHORS = {
+  juniorPrevalencePct: [46, 54] as [number, number],
+  juniorInjPerSeason: [0.5, 1.1] as [number, number],
+  weeksLostBand: [1.0, 2.3] as [number, number], // girls post-peak 1.0 … boys growth-peak 2.3
+  heavyLoadPrevalencePct: 95, // teen-peak heavy-load analog for the grinder
+}
+
+function bandFlag(x: number, [lo, hi]: [number, number]): string {
+  if (x < lo) return `below ${lo}-${hi}`
+  if (x > hi) return `ABOVE ${lo}-${hi}`
+  return `in ${lo}-${hi}`
+}
+
+function renderInjuryPanel(headline: Map<string, CellStats>, from: Scenario, to: Scenario): void {
+  const a = INJURY_ANCHORS
+  const horizon = FATIGUE_HORIZONS.find((h) => h.weeks === GRID_HORIZON_WEEKS)!
+  const rule = '═'.repeat(120)
+  console.log('')
+  console.log(rule)
+  console.log(
+    `  INJURY PANEL – ${horizon.label}, ${from.id}→${to.id}, vs the REAL anchors` +
+      ' (docs/research/injury-stats-by-age.md):',
+  )
+  console.log(
+    `  juniors ${a.juniorPrevalencePct[0]}-${a.juniorPrevalencePct[1]}%/season injured (≈${a.juniorInjPerSeason[0]}-${a.juniorInjPerSeason[1]} inj/season, minors dominating) · weeks lost ` +
+      `${a.weeksLostBand[0]} (girls post-peak) - ${a.weeksLostBand[1]} (boys growth-peak) /yr · heavy-load teen-peak ≈${a.heavyLoadPrevalencePct}% prevalence (grinder analog)`,
+  )
+  console.log(rule)
+  for (const profile of PROFILES) {
+    console.log('')
+    console.log(`  PROFILE ${profile.label}`)
+    for (const policy of POLICIES) {
+      const b = headline.get(keyOf(from, horizon, profile, policy))
+      const v = headline.get(keyOf(to, horizon, profile, policy))
+      if (!b || !v) continue
+      const sev = SEVERITIES.map((s) => v.sevPerSeason[s].toFixed(2)).join('/')
+      const minorShare = v.injPerSeason === 0 ? 0 : (100 * v.sevPerSeason.minor) / v.injPerSeason
+      const anchor =
+        policy.id === 'grinder'
+          ? `prev vs heavy-load ~${a.heavyLoadPrevalencePct}%: ${v.prevalencePct.toFixed(0)}% · lost ${bandFlag(v.weeksLostPerSeason, a.weeksLostBand)}`
+          : `prev ${bandFlag(v.prevalencePct, a.juniorPrevalencePct)}% · inj ${bandFlag(v.injPerSeason, a.juniorInjPerSeason)} · lost ${bandFlag(v.weeksLostPerSeason, a.weeksLostBand)}`
+      console.log(
+        '    ' +
+          padEnd(policy.id, 10) +
+          `inj/s ${b.injPerSeason.toFixed(2)}→${v.injPerSeason.toFixed(2)}` +
+          ` · prev ${b.prevalencePct.toFixed(0)}%→${v.prevalencePct.toFixed(0)}%` +
+          ` · sev(${to.id}) ${sev} (minors ${minorShare.toFixed(0)}%)` +
+          ` · lost/s ${b.weeksLostPerSeason.toFixed(1)}→${v.weeksLostPerSeason.toFixed(1)}` +
+          `   [${anchor}]`,
+      )
+    }
+  }
+}
+
+export function main(argv: string[] = process.argv.slice(2)): void {
+  const csvPath = parseCsvPath(argv)
+  const scenarioFilter = parseScenarioArg(argv)
+  const scenarios = scenarioFilter ? SCENARIOS.filter((s) => s.id === scenarioFilter) : SCENARIOS
+  console.log(HEADER)
+
+  const all: BenchCell[] = []
+  const degenerate: string[] = []
+  const headline = new Map<string, CellStats>()
+
+  for (const scenario of scenarios) {
+    withScenario(scenario, () => runScenarioSection(scenario, all, degenerate, headline))
+  }
+
+  // The audit trail of the V2.1 decision: previous candidate (v2) → shipped (baseline),
+  // plus the owner's injury calibration panel against the real-world anchors.
+  const baseline = scenarios.find((s) => s.id === 'baseline')
+  const v2 = scenarios.find((s) => s.id === 'v2')
+  if (baseline && v2) {
+    renderComparison(headline, v2, baseline)
+    renderInjuryPanel(headline, v2, baseline)
+  }
+
+  console.log('')
+  if (degenerate.length) {
+    console.log('DEGENERATE CELLS:')
+    for (const d of degenerate) console.log('  ' + d)
+  } else {
+    console.log('Degenerate cells: none (no 0/100 pinning beyond thresholds, no injury spirals, no unplayable calendars).')
+  }
+  console.log(
+    'REMINDER: friendly matches + vacations are not in the engine yet (season-planner slice) – the PROJ',
+  )
+  console.log('  section above is arithmetic on the V2 traces; re-run the whole bench when the real mechanics land.')
+
+  if (csvPath) {
+    writeFileSync(csvPath, toCsv(all))
+    console.log(`Weekly time-series written to ${csvPath}`)
+  }
+}
+
+// Run only when invoked as the CLI script, never when imported by the test (vitest sets
+// process.env.VITEST – same guard as econ-bench; under vite-node argv[1] is the runner).
+if (!process.env.VITEST) {
+  main()
+}

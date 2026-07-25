@@ -4,6 +4,7 @@ import {
   advanceWeeks,
   enterEvent,
   withdrawEvent,
+  skipEvent,
   revealTournamentRound,
   skipTournament,
   closeTournament,
@@ -83,6 +84,13 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'withdrawEvent': {
       if (!world) throw new Error('No active career')
       withdrawEvent(world, msg.eventId)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'skipEvent': {
+      // R9-9: post-deadline withdrawal at the event week (fee forfeited, travel refunded).
+      if (!world) throw new Error('No active career')
+      skipEvent(world, msg.eventId)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }
