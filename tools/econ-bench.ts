@@ -41,7 +41,6 @@
  */
 import { writeFileSync } from 'node:fs'
 import {
-  availabilityStatus,
   createWorld,
   tickWeek,
   enterEvent,
@@ -209,10 +208,6 @@ export function stepCareerWeek(world: WorldState, rng: Rng): { local: number; re
     if (availabilityStatus(world, e).level === 'blocked') continue
     const cost = TIERS[e.tier].entryFeeCents + e.travelCostCents
     if (world.fundsCents < cost) continue // can't afford entry+travel – policy stalls here
-    // Availability gate: skip HARD blocks (exam weeks now; injuries after slice C) – enterEvent
-    // throws on 'blocked'. 'caution' (fatigue) stays enterable: it is a soft choice by design,
-    // and the bench policy keeps entering, matching a typical player.
-    if (availabilityStatus(world, e).level === 'blocked') continue
     enterEvent(world, e.id)
     if (e.tier === 'local' || e.tier === 'regional' || e.tier === 'national') entered[e.tier]++
   }

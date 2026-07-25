@@ -8,7 +8,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { ECONOMY, GEAR_CATEGORIES, gearHitsUpTo } from '../src/engine/economy'
+import { ECONOMY, GEAR_CATEGORIES, gearHitsUpTo, planExpenseFactor } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../src/shared/protocol'
 
@@ -84,13 +84,21 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     }
   })
 
-  it('wealthy burn lands in the $14–22k band (mean and every seed) – premium everything must hurt', () => {
+  it('wealthy burn lands in the $14–22k band (batch mean; per-seed floor relaxed) – premium everything must hurt', () => {
+    // ⚠ WEALTH-CORRIDOR MIGRATION – DELIBERATE RELAXATION (owner-accepted, spec-let point 4).
+    // Coaching moved from a fixed ×1.4 to the corridor [1.2, 1.3], cutting wealthy coaching
+    // ~7–14%: the 16-seed batch mean measured $17,722 → $14,063, so the OWNER BAND still holds
+    // for the MEAN, but the per-seed spread now dips to $12,195 – the per-seed floor below is
+    // TEMPORARILY the measured migration floor ($12k; ceiling unchanged). Restore the full
+    // per-seed $14k floor with the coach-slice income re-tune (wealthy income back toward
+    // ~$700+/wk), the owner's declared follow-up. Do NOT touch BANDS.wealthy itself.
+    const WEALTHY_MIGRATION_FLOOR = 12_000
     const burns = batchBurns('wealthy')
     const [lo, hi] = BANDS.wealthy
     expect(mean(burns)).toBeGreaterThanOrEqual(lo)
     expect(mean(burns)).toBeLessThanOrEqual(hi)
     for (const b of burns) {
-      expect(b).toBeGreaterThanOrEqual(lo)
+      expect(b).toBeGreaterThanOrEqual(WEALTHY_MIGRATION_FLOOR)
       expect(b).toBeLessThanOrEqual(hi)
     }
   })
@@ -191,5 +199,95 @@ describe('gear cadence (round-7 a) – each category fires within its window', (
     const short = gearHitsUpTo('det', 'rackets', 'middle', 60)
     const long = gearHitsUpTo('det', 'rackets', 'middle', 200)
     expect(long.slice(0, short.length)).toEqual(short)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Coaching wealth corridor (wealth-corridor unification slice) – the weekly
+// base/coaching expense now prices through ECONOMY.wealthCorridor, mirroring
+// the travel (calendar.test.ts) and medical (injuries.test.ts C11) corridor
+// tests: the MAIN-stream pickInt is untouched; one uniform roll from the
+// private `seed:coachbg:week` sub-stream maps into the background's band.
+// ---------------------------------------------------------------------------
+describe('coaching wealth corridor (post-draw multiply off `seed:coachbg:week`)', () => {
+  const BACKGROUNDS: FamilyBackground[] = ['working', 'middle', 'wealthy']
+
+  // Re-derive the per-week corridor factor exactly as resolveBaseCosts does.
+  function coachFactor(seed: string, week: number, background: FamilyBackground): number {
+    const [cLo, cHi] = ECONOMY.wealthCorridor[background]
+    const roll = rngFromSeed(`${seed}:coachbg:${week}`)()
+    return cLo + roll * (cHi - cLo)
+  }
+
+  // Tick one week and return {cost, planTrain} for the week-1 coaching bill.
+  function weekOneCoaching(seed: string, background: FamilyBackground): { cost: number; planTrain: number } {
+    const world = createWorld(seed, { ...DEFAULT_PROFILE, background })
+    const rng = rngFromSeed(world.seed)
+    tickWeek(world, rng)
+    const bill = world.events.find((e) => e.week === 1 && e.category === 'coaching')
+    expect(bill).toBeDefined()
+    return { cost: -bill!.amountCents!, planTrain: world.plan.train }
+  }
+
+  it('orders working < middle < wealthy off the same base draw + the same roll, inside band x corridor', () => {
+    const seed = 'coach-corridor'
+    const results = BACKGROUNDS.map((bg) => weekOneCoaching(seed, bg))
+    const costs = results.map((r) => r.cost)
+    // The corridors are disjoint (≤0.80 < 0.95..1.05 < 1.20≤), so drawn off the SAME roll the
+    // ordering holds per week, not just on average.
+    expect(costs[0]).toBeLessThan(costs[1])
+    expect(costs[1]).toBeLessThan(costs[2])
+    // Each bill sits inside its background's corridor of the coachSetup band × the plan factor.
+    const planF = planExpenseFactor(results[0].planTrain)
+    const [lo, hi] = ECONOMY.expenseRangeCents[DEFAULT_PROFILE.coachSetup]
+    BACKGROUNDS.forEach((bg, i) => {
+      const [cLo, cHi] = ECONOMY.wealthCorridor[bg]
+      expect(costs[i]).toBeGreaterThanOrEqual(Math.floor(lo * planF * cLo))
+      expect(costs[i]).toBeLessThanOrEqual(Math.ceil(hi * planF * cHi))
+    })
+    // Same underlying base draw flows through each corridor factor: recovering base = cost / factor
+    // must agree across the three backgrounds (within the ±0.5-cent rounding of Math.round), i.e.
+    // each background's bill really is "its corridor of the SAME main-stream draw".
+    const bases = BACKGROUNDS.map((bg, i) => costs[i] / (planF * coachFactor(seed, 1, bg)))
+    expect(Math.abs(bases[0] - bases[1])).toBeLessThan(2)
+    expect(Math.abs(bases[2] - bases[1])).toBeLessThan(2)
+  })
+
+  it('is deterministic: the same seed + week always yields the same factor and the same bill', () => {
+    for (const bg of BACKGROUNDS) {
+      expect(coachFactor('coach-det', 7, bg)).toBe(coachFactor('coach-det', 7, bg))
+      expect(weekOneCoaching('coach-det', bg).cost).toBe(weekOneCoaching('coach-det', bg).cost)
+    }
+    // ...and the factor stays inside the corridor for a spread of weeks.
+    for (let week = 1; week <= 40; week += 3) {
+      for (const bg of BACKGROUNDS) {
+        const [cLo, cHi] = ECONOMY.wealthCorridor[bg]
+        const f = coachFactor('coach-band', week, bg)
+        expect(f).toBeGreaterThanOrEqual(cLo)
+        expect(f).toBeLessThanOrEqual(cHi)
+      }
+    }
+  })
+
+  it('never perturbs the MAIN weekly stream: draw count + sequence are background-independent (52w)', () => {
+    // The corridor is a POST-draw multiply off the private `seed:coachbg:week` sub-stream, so the
+    // same seed must produce a byte-identical main-stream draw sequence for every background.
+    const capture = (background: FamilyBackground) => {
+      const world = createWorld('coach-invariance', { ...DEFAULT_PROFILE, background })
+      const base = rngFromSeed(world.seed)
+      const draws: number[] = []
+      const rng = () => {
+        const v = base()
+        draws.push(v)
+        return v
+      }
+      for (let i = 0; i < 52; i++) tickWeek(world, rng)
+      return draws
+    }
+    const [w, m, r] = BACKGROUNDS.map(capture)
+    expect(m.length).toBe(w.length)
+    expect(r.length).toBe(m.length)
+    expect(w.join(',')).toBe(m.join(','))
+    expect(r.join(',')).toBe(m.join(','))
   })
 })
