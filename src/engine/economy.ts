@@ -11,7 +11,7 @@
 // from the tick's main rng; parent income / expense factors / sponsor eligibility are pure
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
-import { rngFromSeed, pickInt } from './rng'
+import { rngFromSeed, pickInt, type Rng } from './rng'
 import type { CoachSetup, FamilyBackground, InjurySeverity } from '../shared/protocol'
 import type { TierId } from './season/types'
 
@@ -20,6 +20,24 @@ import type { TierId } from './season/types'
  *  often, so the owner wants it split out on the Money pie). */
 export type GearCategory = 'rackets' | 'stringing' | 'shoes' | 'apparel'
 export const GEAR_CATEGORIES: readonly GearCategory[] = ['rackets', 'stringing', 'shoes', 'apparel']
+
+/** One family-vacation package of the season planner (docs/specs/season-planner.md §2).
+ *  ONE shared catalogue – money is the only gate. Prices are MIDDLE-anchored bands scaled by
+ *  the wealth corridor at quote time (see vacationPriceCents); the quote is deterministic per
+ *  (seed, week, packageId) so the offer the player sees is exactly what booking charges. */
+export interface VacationPackage {
+  id: string
+  /** player-facing name (short dash only – never an em dash) */
+  label: string
+  /** one-line flavor for the planner sheet */
+  blurb: string
+  /** middle-anchored [min,max] price in whole cents; [0,0] = free */
+  priceCents: [number, number]
+  /** condition gain applied on the vacation week (clamped to 0..100) */
+  conditionGain: number
+  /** injury-tau multiplier carried for ECONOMY.vacation.buffWeeks weeks; 1 = no carry-over buff */
+  buffFactor: number
+}
 
 export interface GearLine {
   /** breakdown category this line reports under */
@@ -269,6 +287,90 @@ export const ECONOMY = {
     // profiles, see the fatigue bench).
     conditionBonusPerWeek: 1,
   },
+
+  // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
+  // ONE shared catalogue; money is the only gate. A vacation week is a hard blackout (nothing
+  // enterable) that pays a condition gain on top of a FREE week's recovery, and the two top
+  // packages carry an injury-tau buff for `buffWeeks` weeks (applied POST-draw, so the MAIN
+  // stream stays byte-identical). Prices are middle-anchored bands × wealthCorridor, quoted
+  // from the `seed:vacation:week:packageId` sub-stream. 1-week packages, bookable back-to-back
+  // (2 weeks = deep reset at 2× price – owner approved).
+  vacation: {
+    /** how many weeks a resort/elite recovery buff rides after the vacation week */
+    buffWeeks: 4,
+    packages: [
+      {
+        id: 'staycation',
+        label: 'Staycation – home with friends',
+        blurb: 'No travel, no drills – her own bed and her own people.',
+        priceCents: [0, 0],
+        conditionGain: 12,
+        buffFactor: 1,
+      },
+      {
+        id: 'grandma',
+        label: "Grandma's village",
+        blurb: 'Two trains and a bus – slow food, slow days.',
+        priceCents: [0, 50_00],
+        conditionGain: 14,
+        buffFactor: 1,
+      },
+      {
+        id: 'camping',
+        label: 'Camping road-trip',
+        blurb: 'Tent, lake, no racket in the car.',
+        priceCents: [150_00, 300_00],
+        conditionGain: 16,
+        buffFactor: 1,
+      },
+      {
+        id: 'seaside',
+        label: 'Seaside family hotel',
+        blurb: 'A real holiday – sea, sleep, sun.',
+        priceCents: [600_00, 1000_00],
+        conditionGain: 20,
+        buffFactor: 1,
+      },
+      {
+        id: 'resort',
+        label: 'Sports resort – recovery week',
+        blurb: 'Pool, physio, massage – rest with a programme.',
+        priceCents: [1800_00, 3000_00],
+        conditionGain: 25,
+        buffFactor: 0.9,
+      },
+      {
+        id: 'elite',
+        label: 'Elite recovery programme',
+        blurb: 'The clinic the pros use – she comes back new.',
+        priceCents: [4000_00, 7000_00],
+        conditionGain: 30,
+        buffFactor: 0.85,
+      },
+    ] as VacationPackage[],
+  },
+
+  // --- Season planner: practice matches (spec §4) -----------------------------------------
+  // A friendly on an empty week: court rental $30-80 × corridor off `seed:practice:week`, plus
+  // an OPTIONAL coach (50% of a coaching session – "the other half is paid by the opponent's
+  // family"; re-priced per coach tier when the coach slice lands). Effect: condition drain
+  // max(1, local-scoreline drain − 1), ZERO ranking points, and the week keeps the base
+  // recovery but FORFEITS the rest-slider bonus (she played, even if friendly).
+  // GUARDRAIL (fatigue-bench finding 25.07: practising every week is self-destructive – mean
+  // condition 47, 41-44% of weeks under 40): booking below `cautionCondition`, or a
+  // `cautionStreak`-th consecutive practice week, raises a CAUTION. It never blocks – the
+  // owner's philosophy is "the parent may push, the game warns".
+  practice: {
+    courtFeeCents: [30_00, 80_00] as [number, number],
+    coachSessionCents: [120_00, 250_00] as [number, number],
+    coachShare: 0.5,
+    cautionCondition: 55,
+    cautionStreak: 3,
+    /** the rescue prompt fires below this condition (spec §4b – an OFFER, never an auto-book) */
+    rescueCondition: 65,
+    /** the rescue catalogue pre-highlights the cheapest package that returns her above this */
+    rescueTargetCondition: 85,
+  },
 } as const
 
 /** Weekly base-expense scale from the time split (more training ⇒ higher cost). */
@@ -306,6 +408,59 @@ export function gearHitsUpTo(
     hits.push({ week: w, amountCents: pickInt(rng, prLo, prHi) })
   }
   return hits
+}
+
+// --- Season planner pricing (pure, sub-stream only) --------------------------------------
+// Both quotes below are pure functions of (seed, week, …) drawn from a PURPOSE-SCOPED
+// sub-stream, never the main weekly stream – so a player's booking cannot move the world's
+// draw sequence (the B1/C1 invariance freezes stay byte-identical). Being pure also means the
+// UI can quote the same price the engine will charge without any extra snapshot payload.
+
+/** One corridor-scaled price: draw the MIDDLE-anchored base from `band`, then map ONE uniform
+ *  roll into the background's wealth corridor (same shape as medicalBillCents/travelBgFactor –
+ *  same roll, disjoint corridors, so working < middle < wealthy per offer). */
+function corridorPrice(rng: Rng, band: readonly [number, number], background: FamilyBackground): number {
+  const base = pickInt(rng, band[0], band[1])
+  const [cLo, cHi] = WEALTH_CORRIDOR[background]
+  const roll = rng()
+  return Math.round(base * (cLo + roll * (cHi - cLo)))
+}
+
+/** The catalogue entry for a package id, or undefined for an unknown id. */
+export function vacationPackage(id: string): VacationPackage | undefined {
+  return ECONOMY.vacation.packages.find((p) => p.id === id)
+}
+
+/** The deterministic price of ONE vacation offer: `rngFromSeed(seed:vacation:week:packageId)`
+ *  (spec §2). Quoted at offer time, charged on booking – same function, same number. */
+export function vacationPriceCents(
+  seed: string,
+  week: number,
+  packageId: string,
+  background: FamilyBackground,
+): number {
+  const pkg = vacationPackage(packageId)
+  if (!pkg) throw new Error(`Unknown vacation package "${packageId}"`)
+  return corridorPrice(rngFromSeed(`${seed}:vacation:${week}:${packageId}`), pkg.priceCents, background)
+}
+
+/** The deterministic price of ONE practice-match booking off `rngFromSeed(seed:practice:week)`:
+ *  court rental, plus (optionally) HALF a coaching session for «+ тренер на игру». The court
+ *  draw comes FIRST, so adding the coach never moves the court part of the quote. */
+export function practiceFeeCents(
+  seed: string,
+  week: number,
+  background: FamilyBackground,
+  withCoach: boolean,
+): number {
+  const rng = rngFromSeed(`${seed}:practice:${week}`)
+  const court = corridorPrice(rng, ECONOMY.practice.courtFeeCents, background)
+  if (!withCoach) return court
+  const [cLo, cHi] = ECONOMY.practice.coachSessionCents
+  const base = pickInt(rng, cLo, cHi)
+  const [wLo, wHi] = WEALTH_CORRIDOR[background]
+  const roll = rng()
+  return court + Math.round(base * ECONOMY.practice.coachShare * (wLo + roll * (wHi - wLo)))
 }
 
 /** The gear purchase (if any) that lands EXACTLY on `week` for one category, else null. */

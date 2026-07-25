@@ -149,6 +149,17 @@ export function migrateSave(raw: unknown): WorldState {
     v = 12
   }
 
+  if (v < 13) {
+    // v13 added the season planner: booked family-vacation weeks, booked practice-match weeks,
+    // and the carry-over recovery buff from a resort/elite package. Pre-v13 careers never planned
+    // anything, so the backfill is simply "nothing booked, no buff running" – append-only and
+    // idempotent (an existing v13 array is never touched, so a re-migration can't drop a booking).
+    if (!Array.isArray(save.vacations)) save.vacations = []
+    if (!Array.isArray(save.practices)) save.practices = []
+    if (save.recoveryBuff === undefined) save.recoveryBuff = null
+    v = 13
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

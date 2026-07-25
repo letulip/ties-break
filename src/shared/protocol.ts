@@ -71,7 +71,10 @@ export type WorldEventType =
  *  'physio' (Season-Life slice C) buckets every medical line: weekly rehab, the one-time
  *  onset treatment, and the healthy-week physio retainer.
  *  'interest' (round-9 R9-1) is an INCOME-side category: the weekly savings interest on a
- *  positive balance ("Savings interest"). */
+ *  positive balance ("Savings interest").
+ *  'vacation' / 'practice' (season planner, schema v13) bucket the two planner spends: a family
+ *  vacation package and a practice-match court rental (+ the optional coach). Refunds are booked
+ *  under the SAME category, so a cancelled booking nets to zero on the Money breakdown. */
 export type WorldEventCategory =
   | 'coaching'
   | 'travel'
@@ -82,6 +85,8 @@ export type WorldEventCategory =
   | 'income'
   | 'interest'
   | 'physio'
+  | 'vacation'
+  | 'practice'
   | 'other'
 
 /** A kid match, replayable on demand: seed (on MatchRecord) + both players' skill
@@ -106,6 +111,9 @@ export interface WorldEvent {
   /** spending/earning bucket for the Money breakdown (round-7); absent ⇒ 'other' */
   category?: WorldEventCategory
   match?: WorldMatch
+  /** true on a PRACTICE-match record (season planner): a watchable friendly that awards ZERO
+   *  ranking points, so the UI can keep it out of the tournament card and label it honestly. */
+  friendly?: boolean
   /** milestones are never pruned */
   keep?: boolean
   /** stable key for idempotent milestone firing (e.g. 'first-title', 'rank-10') */
@@ -235,6 +243,34 @@ export interface SnapshotInjury {
   totalWeeks: number
 }
 
+// --- Season planner (schema v13) ---------------------------------------------
+// Two player-planned week types on otherwise empty weeks. Both are PURE STATE (no engine RNG
+// draw at booking time): prices come from purpose-scoped sub-streams, so a booking can never
+// perturb the world's main draw sequence.
+
+/** A booked family-vacation week: the package + what the family actually paid for it. */
+export interface VacationBooking {
+  week: number
+  packageId: string
+  paidCents: number
+}
+
+/** A booked practice-match week: the court rental (plus the optional coach) already charged. */
+export interface PracticeBooking {
+  week: number
+  paidCents: number
+  /** «+ тренер на игру» – the coach came along (50% of a session, the other half "paid by the
+   *  opponent's family"). Cosmetic in v1; re-priced per coach tier when the coach slice lands. */
+  withCoach: boolean
+}
+
+/** A carry-over recovery buff from a resort/elite vacation: injury tau × factor through
+ *  `untilWeek` (inclusive). Applied POST-draw, so it moves the threshold, never the stream. */
+export interface RecoveryBuff {
+  untilWeek: number
+  factor: number
+}
+
 /** A scheduled event surfaced to the UI, with the kid's entry state + tier lookups. */
 export interface UpcomingEvent {
   id: string
@@ -315,6 +351,14 @@ export interface Snapshot {
   financialEvents: WorldEvent[]
   /** scheduled events over the next 8 weeks, with entry state */
   upcoming: UpcomingEvent[]
+  /** season planner (schema v13): booked vacation weeks from the current week onward. The
+   *  calendar renders them by package name; a booked week is a hard blackout for entries. */
+  vacations: VacationBooking[]
+  /** season planner (schema v13): booked practice-match weeks from the current week onward. */
+  practices: PracticeBooking[]
+  /** an active resort/elite recovery buff, or null. Surfaced so the UI can show that the
+   *  expensive package is still working. */
+  recoveryBuff: RecoveryBuff | null
   /** the kid's current dense rank among the cohort + kid */
   kidRank: number
   /** the kid's rank at the start of the last resolved week; null before any tick (schema v7) */
@@ -371,6 +415,12 @@ export type ToWorker =
   | { id: number; type: 'tournamentClose' }
   // R9-9: withdraw POST-deadline at the event week – fee forfeited, travel refunded, no run.
   | { id: number; type: 'skipEvent'; eventId: string }
+  // Season planner: book/cancel a vacation or a practice match on an empty FUTURE week.
+  // Cancelling before the week starts refunds in full (mirror of entry withdrawal).
+  | { id: number; type: 'bookVacation'; week: number; packageId: string }
+  | { id: number; type: 'cancelVacation'; week: number }
+  | { id: number; type: 'bookPractice'; week: number; withCoach: boolean }
+  | { id: number; type: 'cancelPractice'; week: number }
   | { id: number; type: 'setPlan'; plan: WeekPlan }
   | { id: number; type: 'setPhysio'; active: boolean }
   | { id: number; type: 'save'; slot?: string }

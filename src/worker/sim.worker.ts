@@ -5,6 +5,10 @@ import {
   enterEvent,
   withdrawEvent,
   skipEvent,
+  bookVacation,
+  cancelVacation,
+  bookPractice,
+  cancelPractice,
   revealTournamentRound,
   skipTournament,
   closeTournament,
@@ -109,6 +113,33 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'tournamentClose': {
       if (!world) throw new Error('No active career')
       closeTournament(world)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    // --- season planner (v13): book/cancel a vacation or a practice match ---------------
+    // Pure player state on the engine side: the price comes off a purpose-scoped sub-stream, so
+    // none of these can move the world's main draw sequence.
+    case 'bookVacation': {
+      if (!world) throw new Error('No active career')
+      bookVacation(world, msg.week, msg.packageId)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'cancelVacation': {
+      if (!world) throw new Error('No active career')
+      cancelVacation(world, msg.week)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'bookPractice': {
+      if (!world) throw new Error('No active career')
+      bookPractice(world, msg.week, msg.withCoach)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'cancelPractice': {
+      if (!world) throw new Error('No active career')
+      cancelPractice(world, msg.week)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }

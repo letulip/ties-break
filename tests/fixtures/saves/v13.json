@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 13,
+  "careerId": "c-golden-v13",
+  "seed": "golden-v13",
+  "week": 58,
+  "fundsCents": 412300,
+  "profile": {
+    "kidName": "Nika",
+    "kidLastName": "Halep",
+    "gender": "girl",
+    "country": "RO",
+    "background": "middle",
+    "coachSetup": "hired",
+    "playStyle": "counterpuncher",
+    "birthMonth": 4
+  },
+  "plan": { "train": 75, "rest": 25 },
+  "cohort": [
+    { "id": "ai-0", "name": "Aria Costa", "serve": 49, "ret": 46, "composure": 53, "stamina": 56, "nation": "IT", "growth": 1.1 },
+    { "id": "ai-1", "name": "Lena Novak", "serve": 52, "ret": 50, "composure": 45, "stamina": 61, "nation": "CZ", "growth": 0.9 },
+    { "id": "ai-2", "name": "Sofia Rossi", "serve": 45, "ret": 54, "composure": 62, "stamina": 49, "nation": "ES", "growth": 1.3 }
+  ],
+  "results": [
+    { "playerId": "ai-0", "week": 51, "points": 30 },
+    { "playerId": "kid", "week": 55, "points": 48, "tier": "regional" }
+  ],
+  "season": [
+    { "id": "1-w60-local", "week": 60, "tier": "local", "surface": "clay", "travelCostCents": 11250, "deadlineWeek": 58 },
+    { "id": "1-w64-national", "week": 64, "tier": "national", "surface": "hard", "travelCostCents": 75000, "deadlineWeek": 62 }
+  ],
+  "entries": [],
+  "events": [
+    { "id": 0, "week": 0, "type": "info", "text": "Nika's career started.", "keep": true },
+    { "id": 1, "week": 55, "type": "tournament", "text": "Regional Championship (hard, W55): Nika – Semifinalist (+28 pts)", "finishIdx": 2 },
+    { "id": 2, "week": 57, "type": "expense", "category": "vacation", "text": "Booked: Sports resort – recovery week – W57", "amountCents": -240000 },
+    { "id": 3, "week": 57, "type": "info", "text": "Family vacation – Sports resort – recovery week: +25 condition, and the recovery holds for 4 weeks." },
+    { "id": 4, "week": 58, "type": "income", "category": "income", "text": "Parents' contribution", "amountCents": 30000 },
+    { "id": 5, "week": 58, "type": "expense", "category": "coaching", "text": "Coaching block: technique drills", "amountCents": -52400 },
+    { "id": 6, "week": 58, "type": "expense", "category": "practice", "text": "Court rental + coach – practice match W59", "amountCents": -14300 },
+    { "id": 7, "week": 58, "type": "expense", "category": "vacation", "text": "Booked: Seaside family hotel – W62", "amountCents": -83000 }
+  ],
+  "nextEventId": 8,
+  "kidRank": 58,
+  "prevKidRank": 61,
+  "pendingTournament": null,
+  "bestFinishByTier": { "local": 0, "regional": 2 },
+  "lastSeasonSummary": {
+    "seasonYear": 2031,
+    "endRank": 58,
+    "startRank": 104,
+    "points": 96,
+    "wins": 9,
+    "losses": 6,
+    "bestResultText": "best Champion",
+    "fundsDeltaCents": -640000,
+    "weeksInjured": 2
+  },
+  "seasonWins": 2,
+  "seasonLosses": 2,
+  "financeWeeks": [
+    { "week": 57, "byCategory": { "income": 30000, "coaching": -51000, "vacation": -240000 } },
+    { "week": 58, "byCategory": { "income": 30000, "coaching": -52400, "practice": -14300, "vacation": -83000 } }
+  ],
+  "condition": 88,
+  "injury": null,
+  "injuryHistory": [{ "kind": "ankle niggle", "severity": "minor", "week": 44, "weeksOut": 1 }],
+  "physioActive": true,
+  "vacations": [{ "week": 62, "packageId": "seaside", "paidCents": 83000 }],
+  "practices": [{ "week": 59, "paidCents": 14300, "withCoach": true }],
+  "recoveryBuff": { "untilWeek": 61, "factor": 0.9 }
+}
