@@ -12,7 +12,7 @@
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
 import { rngFromSeed, pickInt } from './rng'
-import type { CoachSetup, FamilyBackground } from '../shared/protocol'
+import type { CoachSetup, FamilyBackground, InjurySeverity } from '../shared/protocol'
 import type { TierId } from './season/types'
 
 /** The four recurring gear line-items. rackets/shoes/apparel report under the 'gear'
@@ -33,7 +33,21 @@ export interface GearLine {
   flavor: Record<FamilyBackground, string>
 }
 
+// THE app-level wealth-price corridor (owner canon, 25.07): the same [lo, hi] factor band per
+// family background prices travel (travelBgFactor, migrating in the econ-wealth-corridor
+// follow-up) and every medical bill (ECONOMY.physio.medicalBgFactor references this object)
+// today, and coaching in a follow-up slice. Framing: working = public clinics / budget trips,
+// middle = standard, wealthy = private everything. Retuned when real incomes land.
+const WEALTH_CORRIDOR = {
+  working: [0.7, 0.8],
+  middle: [0.95, 1.05],
+  wealthy: [1.2, 1.3],
+} as Record<FamilyBackground, [number, number]>
+
 export const ECONOMY = {
+  /** The canonical wealth-price corridor – see WEALTH_CORRIDOR above. */
+  wealthCorridor: WEALTH_CORRIDOR,
+
   // Weekly parent contribution to the war chest, by family background. Emitted as an
   // `income` event BEFORE costs each week; NO rng draw. TUNED (round-7 economy pass) so
   // that an UNSPONSORED kid (rank > 30 all year, no tournaments) lands the owner's target
@@ -169,6 +183,53 @@ export const ECONOMY = {
   availability: {
     minConditionToEnter: { local: 20, regional: 30, national: 40, itf: 45 } as Record<TierId, number>,
     examWeeks: [[24, 25]] as [number, number][], // season-week offsets blacked out for school
+
+    // Season-Life slice C: fatigue-driven injury risk. ALL of these move only the post-draw
+    // threshold tau (or pull from the private per-week `seed:injury:week` sub-stream) – the MAIN
+    // weekly draw sequence stays byte-identical (the C1 invariance test guards it).
+    injuryBaseChance: 0.006, // per healthy week at condition 100
+    injuryFatigueSlope: 0.0009, // + per fatigue point (100 - condition)
+    injuryPlayingMultiplier: 1.8, // tau *= this the week she competes
+    injuryChanceCap: 0.12,
+    // Owner research 25.07 (docs/research/injury-stats-by-age.md): girl injury-age curve peaks at 16.
+    // Mild by design – the base is already anchored to real junior prevalence (46-54%/season).
+    ageInjuryFactor: { 14: 0.9, 15: 1.05, 16: 1.2, 17: 1.05, 18: 0.95, default: 0.85 } as {
+      [age: number]: number
+      default: number
+    },
+    // Competed weeks in the trailing 4 (incl. this one) -> overuse multiplier. Index = count.
+    consecutivePlayFactor: [1.0, 1.0, 1.2, 1.5, 1.8] as number[],
+    // Cumulative over the severity draw (owner split 60/30/10; the 10% "heavy" splits
+    // 7.5 major / 2.5 severe).
+    severityBands: [
+      { cum: 0.6, severity: 'minor', weeksLo: 1, weeksHi: 2 },
+      { cum: 0.9, severity: 'moderate', weeksLo: 3, weeksHi: 6 },
+      { cum: 0.975, severity: 'major', weeksLo: 8, weeksHi: 14 },
+      { cum: 1.0, severity: 'severe', weeksLo: 16, weeksHi: 22 },
+    ] as { cum: number; severity: InjurySeverity; weeksLo: number; weeksHi: number }[],
+  },
+
+  // Season-Life slice C: physio + medical costs. ALL prices are MIDDLE-anchored bands. Every
+  // medical bill (weekly rehab, one-time onset treatment, physio retainer) draws its base amount
+  // from its band, then multiplies by one uniform roll mapped into medicalBgFactor[background] –
+  // the SAME wealth-corridor principle as travelBgFactor (owner 25.07: working = public clinics /
+  // school resources, middle = standard care, wealthy = private clinics). The roll comes from the
+  // SAME `seed:physio:week` generator (post-draw multiply on a private sub-stream – invariance-safe).
+  physio: {
+    medicalBgFactor: WEALTH_CORRIDOR, // the canonical app-level corridor, not a private copy
+    rehabPerWeekCents: [60_00, 120_00] as [number, number],
+    // One-time scans/treatment at onset (owner table, deliberately compressed so the severe tail
+    // stays brutal-but-survivable for 8k; OWNER-TUNABLE – real surgery $20k+ needs an insurance
+    // valve first). minor = no onset bill (rehab-only).
+    onsetCostCents: {
+      minor: [0, 0],
+      moderate: [200_00, 500_00],
+      major: [1000_00, 2500_00],
+      severe: [4000_00, 8000_00],
+    } as Record<InjurySeverity, [number, number]>,
+    retainerPerWeekCents: [45_00, 70_00] as [number, number], // middle-anchored; the corridor produces the tiering
+    riskReduction: 0.76, // tau *= this when physioActive (24% cut)
+    recoverySpeedup: 0.12, // weeksOut *= (1 - this), min 1, when physioActive
   },
 } as const
 

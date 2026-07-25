@@ -183,6 +183,7 @@ function dismissSeasonSummary(): void {
 const STOP_REASON_TEXT: Record<string, string> = {
   deadline: 'Stopped: an entry deadline is coming up next week.',
   funds: 'Stopped: funds ran below zero.',
+  injury: 'Stopped: she picked up an injury – see the news.',
 }
 const stopReasonText = computed(() => STOP_REASON_TEXT[game.snapshot?.stopReason ?? ''] ?? '')
 function dismissStopToast(): void {

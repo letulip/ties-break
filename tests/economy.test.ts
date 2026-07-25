@@ -3,6 +3,7 @@ import {
   createWorld,
   tickWeek,
   recomputeKidRank,
+  financeWindow,
   STARTING_FUNDS_CENTS,
   KID_ID,
   type WorldState,
@@ -16,6 +17,15 @@ import { DEFAULT_PROFILE, type FamilyBackground } from '../src/shared/protocol'
 // staying cheap.
 const SEEDS = Array.from({ length: 16 }, (_, i) => `cal-${i + 1}`)
 
+/** The season's physio/medical spend in cents (a positive number). Season-Life slice C layered
+ *  injuries + physio ON TOP of the base economy; the owner's net-burn bands below were frozen
+ *  BEFORE that layer, so the calibration excludes the 'physio' bucket (a stochastic medical tail
+ *  – a single severe onset swings $3-6k) and keeps measuring what it always measured: the fixed
+ *  base cashflow. The medical layer's own calibration lives in tests/injuries.test.ts + the bench. */
+function physioSpendCents(world: WorldState): number {
+  return -(financeWindow(world.financeWeeks, 0).byCategory.physio ?? 0)
+}
+
 /** Net funds lost over 52 weeks with NO tournaments entered (fixed costs only). A fresh career
  *  earns no ranking points, so the kid sits at the bottom of the field all year → rank > 30 →
  *  the product-sponsorship valve never fires. These are the owner's UNSPONSORED-kid bands. */
@@ -24,7 +34,7 @@ function seasonBurnDollars(seed: string, background: FamilyBackground): number {
   const rng = rngFromSeed(world.seed)
   const start = STARTING_FUNDS_CENTS[background]
   for (let i = 0; i < 52; i++) tickWeek(world, rng)
-  return (start - world.fundsCents) / 100
+  return (start - world.fundsCents - physioSpendCents(world)) / 100
 }
 
 function batchBurns(background: FamilyBackground): number[] {
@@ -101,7 +111,9 @@ describe('product-sponsorship valve (round-7 amendment)', () => {
     const rng = rngFromSeed(world.seed)
     const start = STARTING_FUNDS_CENTS[background]
     for (let i = 0; i < 52; i++) tickWeek(world, rng)
-    return { burn: (start - world.fundsCents) / 100, world }
+    // physio excluded for the same reason as seasonBurnDollars (and so the valve delta compares
+    // gear subsidies, not medical luck).
+    return { burn: (start - world.fundsCents - physioSpendCents(world)) / 100, world }
   }
 
   it('a rank-≤10 middle kid burns ≥ $1.5k less over 52w than an unsponsored one', () => {

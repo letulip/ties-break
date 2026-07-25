@@ -57,6 +57,11 @@ const rankMove = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
             <td>{{ summary.bestResultText }}</td>
           </tr>
           <tr>
+            <th>Lost to injury</th>
+            <!-- weeksInjured is optional (pre-slice-C summaries never stored it): default 0 -->
+            <td class="num">{{ summary.weeksInjured ?? 0 }} wk</td>
+          </tr>
+          <tr>
             <th>Funds this season</th>
             <td class="num" :class="{ negative: summary.fundsDeltaCents < 0, positive: summary.fundsDeltaCents >= 0 }">
               {{ formatSigned(summary.fundsDeltaCents) }}

@@ -49,6 +49,7 @@ const EXPENSE_META: { key: ExpenseCategory; label: string; color: string }[] = [
   { key: 'entry', label: 'Entry fees', color: '#b07cf2' },
   { key: 'gear', label: 'Gear', color: '#f2a54f' },
   { key: 'stringing', label: 'Stringing', color: '#f2668b' },
+  { key: 'physio', label: 'Physio & medical', color: '#4fe3a3' },
   { key: 'other', label: 'Other', color: '#8aa0c6' },
 ]
 const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))

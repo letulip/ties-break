@@ -1,0 +1,995 @@
+import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import {
+  createWorld,
+  tickWeek,
+  advanceWeeks,
+  enterEvent,
+  rollInjury,
+  resolvePhysio,
+  injuryTau,
+  ageInjuryFactor,
+  consecutivePlayFactor,
+  playedWeeksInTrailing4,
+  toSnapshot,
+  financeWindow,
+  skipTournament,
+  closeTournament,
+  KID_ID,
+  type WorldState,
+} from '../src/engine/world'
+import { migrateSave } from '../src/engine/migrations'
+import { rngFromSeed } from '../src/engine/rng'
+import { ECONOMY } from '../src/engine/economy'
+import { TIERS } from '../src/engine/season/calendar'
+import { PRESETS, stepCareerWeek, EXPENSE_CATS } from '../tools/econ-bench'
+import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import type { FamilyBackground, InjurySeverity, PlayerProfile, WorldEvent } from '../src/shared/protocol'
+
+// ---------------------------------------------------------------------------
+// Season-Life slice C — fatigue-driven injuries + physio.
+// All of C's randomness lives on the PRIVATE per-week sub-streams
+// `seed:injury:week` / `seed:physio:week`; the MAIN weekly stream must stay
+// byte-identical to slice B's frozen capture (C1, blocks merge).
+// ---------------------------------------------------------------------------
+
+// FNV-1a over the stringified draw stream (same fingerprint as B1).
+function fnv1a(s: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return (h >>> 0).toString(16).padStart(8, '0')
+}
+function hashOf(draws: number[]): string {
+  return fnv1a(draws.map((d) => d.toString()).join(','))
+}
+
+// B1's frozen pre-slice reference: seed bench-working-0, weeks 1..52.
+const REF = { count: 45239, hash: '9f783705', kidRank: 131 }
+
+function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
+  draws: number[]
+  world: WorldState
+} {
+  const world = createWorld('bench-working-0')
+  if (mutate) mutate(world)
+  const base = rngFromSeed(world.seed)
+  const draws: number[] = []
+  const rng = () => {
+    const v = base()
+    draws.push(v)
+    return v
+  }
+  for (let i = 0; i < 52; i++) {
+    tickWeek(world, rng)
+    if (perWeek) perWeek(world, world.week)
+  }
+  return { draws, world }
+}
+
+function aiResults(world: WorldState) {
+  return world.results.filter((r) => r.playerId !== KID_ID)
+}
+
+function injectEvent(
+  world: WorldState,
+  partial: { week: number; tier: TierId; id?: string; deadlineWeek?: number },
+): SeasonEvent {
+  const e: SeasonEvent = {
+    id: partial.id ?? `inj-${partial.week}-${partial.tier}`,
+    week: partial.week,
+    tier: partial.tier,
+    surface: 'hard',
+    travelCostCents: 100_00,
+    deadlineWeek: partial.deadlineWeek ?? partial.week - 2,
+  }
+  world.season.push(e)
+  world.season.sort((a, b) => a.week - b.week)
+  return e
+}
+
+function giveKidPoints(world: WorldState, points: number): void {
+  world.results.push({ playerId: KID_ID, week: world.week, points, tier: 'national' })
+}
+
+function setInjury(world: WorldState, weeksRemaining: number, totalWeeks = weeksRemaining, kind = 'ankle strain'): void {
+  world.injury = { kind, severity: 'moderate', weeksRemaining, totalWeeks, sinceWeek: world.week }
+}
+
+function bgProfile(background: FamilyBackground): PlayerProfile {
+  return {
+    kidName: 'Vera',
+    kidLastName: 'Martin',
+    gender: 'girl',
+    country: 'US',
+    background,
+    coachSetup: 'parent',
+    playStyle: 'all-court',
+    birthMonth: 6,
+  }
+}
+
+/** [min, max] cents a medical bill can land on: middle-anchored band x the background corridor. */
+function corridorBounds(band: readonly [number, number], background: FamilyBackground): [number, number] {
+  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[background]
+  return [Math.floor(band[0] * cLo), Math.ceil(band[1] * cHi)]
+}
+
+// A reusable lightweight world for direct rollInjury Monte-Carlo (the injury/physio
+// sub-streams key off (seed, week) only, so mutating seed/week/state between rolls is
+// exactly as deterministic as building a fresh world each time – and far cheaper).
+function resetForRoll(world: WorldState, seed: string): void {
+  world.seed = seed
+  world.week = 0
+  world.injury = null
+  world.injuryHistory = []
+  world.results = []
+  world.season = []
+  world.entries = []
+  world.events = []
+  world.nextEventId = 0
+  world.financeWeeks = []
+  world.fundsCents = 1_000_000_00
+  world.physioActive = false
+  world.condition = 100
+}
+
+const rollWorld = createWorld('c-roll-base')
+
+// tau at condition 0, age 14, no play, no physio: clamp(.006+100*.0009)=.096 * 0.9 = .0864
+const TAU_C0_AGE14 = 0.0864
+
+/** First seed (prefix-indexed) whose week-1 occurrence roll fires below `threshold`. */
+function findFiringSeed(prefix: string, threshold: number, from = 0): string {
+  for (let i = from; i < 4000; i++) {
+    const seed = `${prefix}-${i}`
+    if (rngFromSeed(`${seed}:injury:1`)() < threshold) return seed
+  }
+  throw new Error('no firing seed found')
+}
+
+/** Run one direct roll at (seed, week 1) with condition 0 and return the resulting injury. */
+function onsetAt(seed: string, physio: boolean): WorldState['injury'] {
+  resetForRoll(rollWorld, seed)
+  rollWorld.week = 1
+  rollWorld.condition = 0
+  rollWorld.physioActive = physio
+  rollInjury(rollWorld)
+  return rollWorld.injury
+}
+
+// ---------------------------------------------------------------------------
+// C1 — THE INVARIANT (blocks merge): the B+C build reproduces slice B's frozen
+// MAIN-stream draw sequence byte-for-byte. Injuries/physio draw ONLY from the
+// private per-week sub-streams, so nothing here may move.
+// ---------------------------------------------------------------------------
+describe('C1 — main-stream RNG invariance (blocks merge)', () => {
+  it('reproduces the frozen B capture: count 45239, hash 9f783705', () => {
+    const { draws, world } = recordRun()
+    expect(draws.length).toBe(REF.count)
+    expect(hashOf(draws)).toBe(REF.hash)
+    expect(world.kidRank).toBe(REF.kidRank)
+  })
+
+  it('physio on/off and pre-seeded injury history never perturb the main stream', () => {
+    const base = recordRun()
+    const variants: Array<(w: WorldState) => void> = [
+      (w) => (w.physioActive = true),
+      (w) => (w.physioActive = false),
+      (w) => (w.injuryHistory = [{ kind: 'ankle strain', severity: 'moderate', week: 0, weeksOut: 4 }]),
+    ]
+    for (const mutate of variants) {
+      const v = recordRun(mutate)
+      expect(v.draws.length).toBe(REF.count)
+      expect(hashOf(v.draws)).toBe(REF.hash)
+      expect(v.world.cohort).toEqual(base.world.cohort)
+      expect(aiResults(v.world)).toEqual(aiResults(base.world))
+      expect(v.world.kidRank).toBe(REF.kidRank)
+    }
+  })
+
+  it('a mid-run injury (forced) + its rehab billing never perturb the main stream', () => {
+    const { draws } = recordRun(undefined, (w, week) => {
+      // Force an injury the moment week 10 resolves: the following 6 ticks exercise the
+      // full injured path (countdown, rehab billing, recovery event) against live state.
+      if (week === 10) setInjury(w, 5, 5)
+    })
+    expect(draws.length).toBe(REF.count)
+    expect(hashOf(draws)).toBe(REF.hash)
+  })
+
+  it('rollInjury/resolvePhysio take only `world` – no rng parameter exists to misuse', () => {
+    expect(rollInjury.length).toBe(1)
+    expect(resolvePhysio.length).toBe(1)
+    expect(injuryTau.length).toBe(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C2 — sub-stream determinism: the injury timeline is a function of (seed, week)
+// + the tau state, never of funds/plan; save/reload replays it identically.
+// ---------------------------------------------------------------------------
+describe('C2 — sub-stream determinism', () => {
+  interface Onset {
+    week: number
+    kind: string
+    severity: string
+    totalWeeks: number
+  }
+
+  function timelineRun(mutate: (w: WorldState) => void, weeks: number): Onset[] {
+    const world = createWorld('c2-seed')
+    world.physioActive = false
+    mutate(world)
+    const rng = rngFromSeed(world.seed)
+    const onsets: Onset[] = []
+    for (let i = 0; i < weeks; i++) {
+      world.condition = 35 // pin so tau is identical across variants
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      if (world.injury && world.injury.sinceWeek === world.week) {
+        onsets.push({
+          week: world.week,
+          kind: world.injury.kind,
+          severity: world.injury.severity,
+          totalWeeks: world.injury.totalWeeks,
+        })
+      }
+    }
+    return onsets
+  }
+
+  it('occurrence/severity/weeksOut/region identical across funds/plan variants', () => {
+    const base = timelineRun(() => {}, 90)
+    expect(base.length).toBeGreaterThan(0) // pinned at 35 – injuries genuinely fire
+    const variants: Array<(w: WorldState) => void> = [
+      (w) => (w.fundsCents = 1),
+      (w) => (w.fundsCents = 9_999_999_00),
+      (w) => (w.plan = { train: 100, rest: 0 }),
+      (w) => (w.plan = { train: 60, rest: 40 }),
+    ]
+    for (const mutate of variants) {
+      expect(timelineRun(mutate, 90)).toEqual(base)
+    }
+  })
+
+  it('save mid-career, reload, re-tick -> identical injury timeline', () => {
+    const record = (world: WorldState, rng: () => number, weeks: number): Onset[] => {
+      const onsets: Onset[] = []
+      for (let i = 0; i < weeks; i++) {
+        world.condition = 35
+        tickWeek(world, rng)
+        if (world.pendingTournament) {
+          skipTournament(world)
+          closeTournament(world)
+        }
+        if (world.injury && world.injury.sinceWeek === world.week) {
+          onsets.push({
+            week: world.week,
+            kind: world.injury.kind,
+            severity: world.injury.severity,
+            totalWeeks: world.injury.totalWeeks,
+          })
+        }
+      }
+      return onsets
+    }
+
+    // Uninterrupted run: 80 weeks.
+    const wa = createWorld('c2-reload')
+    wa.physioActive = false
+    const ra = rngFromSeed(wa.seed)
+    const fullTimeline = record(wa, ra, 80)
+    expect(fullTimeline.length).toBeGreaterThan(0)
+
+    // Interrupted run: 40 weeks, JSON save/reload (migrateSave), then 40 more with the
+    // worker's restoreRng recipe (fast-forward a probe world to reposition the main stream).
+    const wb = createWorld('c2-reload')
+    wb.physioActive = false
+    const rb = rngFromSeed(wb.seed)
+    const firstHalf = record(wb, rb, 40)
+    const reloaded = migrateSave(JSON.parse(JSON.stringify(wb))) // save -> load
+    const rc = rngFromSeed(reloaded.seed)
+    const probe = createWorld(reloaded.seed)
+    for (let i = 0; i < reloaded.week; i++) tickWeek(probe, rc)
+    const secondHalf = record(reloaded, rc, 40)
+    expect([...firstHalf, ...secondHalf]).toEqual(fullTimeline)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C3 — fatigue (+ racing) drives injury: Monte-Carlo over 200 seeds, a grinder
+// suffers >= 3x the injuries/season of a rested kid.
+// ---------------------------------------------------------------------------
+describe('C3 — fatigue drives injury (Monte-Carlo, 200 seeds)', () => {
+  function season(seed: string, condition: number, play: boolean): { onsets: number; weeksOut: number } {
+    resetForRoll(rollWorld, seed)
+    let onsets = 0
+    let weeksOut = 0
+    for (let w = 1; w <= 52; w++) {
+      rollWorld.week = w
+      rollWorld.condition = condition
+      if (rollWorld.injury !== null) weeksOut++
+      if (play && rollWorld.injury === null) {
+        // she races every healthy week: entered+scheduled this week + a results-ledger
+        // trail for the trailing-4 overuse counter.
+        rollWorld.season.push({ id: `p-${w}`, week: w, tier: 'local', surface: 'hard', travelCostCents: 0, deadlineWeek: w - 2 })
+        rollWorld.entries.push(`p-${w}`)
+        rollWorld.results.push({ playerId: KID_ID, week: w, points: 5, tier: 'local' })
+      }
+      const before = rollWorld.injury
+      rollInjury(rollWorld)
+      if (before === null && rollWorld.injury !== null) onsets++
+    }
+    return { onsets, weeksOut }
+  }
+
+  it('grinder (condition 45, races weekly) >= 3x rested (condition 85, spaced)', () => {
+    let grinder = 0
+    let rested = 0
+    let grinderWeeksOut = 0
+    let restedWeeksOut = 0
+    const SEEDS = 200
+    for (let i = 0; i < SEEDS; i++) {
+      const g = season(`c3-g-${i}`, 45, true)
+      const r = season(`c3-r-${i}`, 85, false)
+      grinder += g.onsets
+      rested += r.onsets
+      grinderWeeksOut += g.weeksOut
+      restedWeeksOut += r.weeksOut
+    }
+    expect(rested).toBeGreaterThan(0) // injuries exist even for a careful family
+    expect(grinder).toBeGreaterThanOrEqual(rested * 3)
+    // weeks lost follow the same ordering (the report's C3 sanity figures).
+    expect(grinderWeeksOut).toBeGreaterThan(restedWeeksOut)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C4 — injured gate + recovery lifecycle.
+// ---------------------------------------------------------------------------
+describe('C4 — injured gate + recovery', () => {
+  it('while injured, enterEvent throws "Injured – …" on every reachable tier and upcoming flags it', () => {
+    // local (fresh kid) + national (200 pts kid): both hard-blocked while injured.
+    const wl = createWorld('c4-l')
+    setInjury(wl, 3, 5)
+    const loc = injectEvent(wl, { week: wl.week + 2, tier: 'local' })
+    expect(() => enterEvent(wl, loc.id)).toThrow(/^Injured – /)
+    expect(toSnapshot(wl).upcoming.find((e) => e.id === loc.id)!.ineligibleReason).toBe('injured')
+
+    const wn = createWorld('c4-n')
+    giveKidPoints(wn, 200)
+    setInjury(wn, 3, 5)
+    const nat = injectEvent(wn, { week: wn.week + 2, tier: 'national' })
+    expect(() => enterEvent(wn, nat.id)).toThrow(/^Injured – /)
+    expect(toSnapshot(wn).upcoming.find((e) => e.id === nat.id)!.ineligibleReason).toBe('injured')
+  })
+
+  it('weeksRemaining decrements each tick; at 0 -> cleared, history entry, recovery event', () => {
+    const w = createWorld('c4-rec')
+    const rng = rngFromSeed(w.seed)
+    setInjury(w, 2, 5, 'knee strain')
+    tickWeek(w, rng)
+    expect(w.injury?.weeksRemaining).toBe(1)
+    tickWeek(w, rng)
+    expect(w.injury).toBeNull()
+    expect(w.injuryHistory).toHaveLength(1)
+    expect(w.injuryHistory[0]).toEqual({ kind: 'knee strain', severity: 'moderate', week: w.week, weeksOut: 5 })
+    const rec = w.events.find((e) => e.type === 'recovery')
+    expect(rec).toBeDefined()
+    expect(rec!.text).toBe('Back on court – cleared to play.')
+    expect(rec!.amountCents).toBeUndefined() // recovery costs nothing
+  })
+
+  it('the clearing week is a grace week: no occurrence roll fires on it', () => {
+    // Pick a seed whose week-1 roll WOULD fire at condition 0 – then clear an injury on
+    // week 1 and prove she stays healthy (the roll only fires again next tick).
+    const seed = findFiringSeed('c4-grace', TAU_C0_AGE14 * 0.9)
+    const w = createWorld(seed)
+    w.physioActive = false
+    w.condition = 0
+    setInjury(w, 1, 1)
+    const rng = rngFromSeed(w.seed)
+    tickWeek(w, rng) // week 1: countdown hits 0 -> cleared; NO new roll this week
+    expect(w.injury).toBeNull()
+    expect(w.injuryHistory).toHaveLength(1)
+  })
+
+  it('injuryHistory is pruned to the last 20 entries', () => {
+    const w = createWorld('c4-prune')
+    for (let i = 0; i < 25; i++) {
+      setInjury(w, 1, 1, `entry-${i}`)
+      w.week += 1
+      rollInjury(w) // clears immediately -> history push
+    }
+    expect(w.injuryHistory).toHaveLength(20)
+    expect(w.injuryHistory[0].kind).toBe('entry-5') // oldest 5 pruned away
+    expect(w.injuryHistory[19].kind).toBe('entry-24')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C5 — entered-then-injured: pre-deadline entries are auto-withdrawn+refunded at
+// onset; a post-deadline entry walks over (0 points, no travel, no shadow run).
+// ---------------------------------------------------------------------------
+describe('C5 — entered-then-injured walkover + auto-withdraw', () => {
+  it('injury on the play week: no travel, no shadow tournament, walkover event, 0 points', () => {
+    const w = createWorld('c5-walk')
+    w.season = []
+    const ev = injectEvent(w, { week: w.week + 3, tier: 'local', deadlineWeek: w.week + 1 })
+    enterEvent(w, ev.id) // entered while healthy, pre-deadline
+    // Injury lands AFTER the deadline (week +2), so the entry can no longer be refunded.
+    const rng = rngFromSeed(w.seed)
+    tickWeek(w, rng) // week +1 (deadline week)
+    tickWeek(w, rng) // week +2: post-deadline – force the onset here
+    setInjury(w, 5, 5)
+    const fundsBefore = w.fundsCents
+    tickWeek(w, rng) // week +3: the play week – walkover
+    expect(w.pendingTournament).toBeNull()
+    const weekEvents = w.events.filter((e) => e.week === w.week)
+    expect(weekEvents.some((e) => e.text.startsWith('Travel to'))).toBe(false)
+    const walkover = weekEvents.find((e) => e.type === 'injury')
+    expect(walkover).toBeDefined()
+    expect(walkover!.text).toContain('Walkover')
+    expect(w.results.filter((r) => r.playerId === KID_ID)).toHaveLength(0) // 0 points
+    expect(w.events.some((e) => e.type === 'match')).toBe(false)
+    // no refund either – the fee was forfeited at the deadline (documented in world.ts)
+    expect(w.events.some((e) => e.week === w.week && e.text.startsWith('Entry refunded'))).toBe(false)
+    // funds this week: income - base costs - gear - rehab, but NO travel charge
+    expect(w.fundsCents).not.toBe(fundsBefore - ev.travelCostCents)
+  })
+
+  it('pre-deadline entries are auto-withdrawn and refunded at onset', () => {
+    const seed = findFiringSeed('c5-onset', TAU_C0_AGE14 * 0.9)
+    const w = createWorld(seed)
+    w.physioActive = false
+    w.season = []
+    const ev = injectEvent(w, { week: 6, tier: 'local', deadlineWeek: 4 })
+    enterEvent(w, ev.id)
+    expect(w.entries).toContain(ev.id)
+    w.condition = 0 // max fatigue -> the chosen seed's week-1 roll fires
+    const rng = rngFromSeed(w.seed)
+    tickWeek(w, rng)
+    expect(w.injury).not.toBeNull()
+    expect(w.entries).not.toContain(ev.id) // withdrawn at onset
+    const refund = w.events.find((e) => e.week === 1 && e.text.startsWith('Entry refunded'))
+    expect(refund).toBeDefined()
+    expect(refund!.amountCents).toBe(TIERS.local.entryFeeCents)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C6 — physio ledger + benefit.
+// ---------------------------------------------------------------------------
+describe('C6 — physio ledger + benefit', () => {
+  it('each injured week bills a non-zero physio rehab that lands in the Money physio bucket', () => {
+    const w = createWorld('c6-rehab') // default profile: middle
+    w.physioActive = false // rehab is billed regardless of the retainer toggle
+    setInjury(w, 4, 4)
+    const rng = rngFromSeed(w.seed)
+    tickWeek(w, rng)
+    const rehab = w.events.find((e) => e.week === w.week && e.category === 'physio')
+    expect(rehab).toBeDefined()
+    expect(rehab!.type).toBe('expense')
+    expect(rehab!.text).toBe('Physio / recovery session')
+    const [lo, hi] = corridorBounds(ECONOMY.physio.rehabPerWeekCents, 'middle')
+    expect(rehab!.amountCents!).toBeGreaterThanOrEqual(-hi)
+    expect(rehab!.amountCents!).toBeLessThanOrEqual(-lo)
+    // it folds into the persisted finance ledger -> Money breakdown + season funds delta
+    const window = financeWindow(w.financeWeeks, 0)
+    expect(window.byCategory.physio).toBe(rehab!.amountCents)
+    expect(toSnapshot(w).finance.window12w.byCategory.physio).toBe(rehab!.amountCents)
+  })
+
+  it('physioActive bills the corridor-scaled retainer each healthy week; off bills nothing', () => {
+    for (const background of ['working', 'middle', 'wealthy'] as const) {
+      const w = createWorld(`c6-ret-${background}`, bgProfile(background))
+      w.physioActive = true
+      const [lo, hi] = corridorBounds(ECONOMY.physio.retainerPerWeekCents, background)
+      const rng = rngFromSeed(w.seed)
+      tickWeek(w, rng)
+      const retainer = w.events.find((e) => e.week === w.week && e.category === 'physio')
+      expect(retainer).toBeDefined()
+      expect(retainer!.amountCents!).toBeGreaterThanOrEqual(-hi)
+      expect(retainer!.amountCents!).toBeLessThanOrEqual(-lo)
+    }
+    const off = createWorld('c6-ret-off')
+    off.physioActive = false
+    const rng = rngFromSeed(off.seed)
+    tickWeek(off, rng)
+    expect(off.events.some((e) => e.week === off.week && e.category === 'physio')).toBe(false)
+  })
+
+  it('physioActive lowers tau by riskReduction', () => {
+    const w = createWorld('c6-tau')
+    w.condition = 45
+    w.physioActive = false
+    const bare = injuryTau(w)
+    w.physioActive = true
+    expect(injuryTau(w) / bare).toBeCloseTo(ECONOMY.physio.riskReduction, 10)
+  })
+
+  it('physioActive shortens weeksOut: max(1, round(weeksOut * (1 - recoverySpeedup)))', () => {
+    // Find a seed where the roll fires under the physio-reduced tau AND the drawn
+    // weeks-out is long enough (>= 5) for the 12% cut to actually round down.
+    let from = 0
+    for (;;) {
+      const seed = findFiringSeed('c6-speed', TAU_C0_AGE14 * ECONOMY.physio.riskReduction, from)
+      const without = onsetAt(seed, false)
+      const withPhysio = onsetAt(seed, true)
+      expect(withPhysio).not.toBeNull() // r < tau*0.76 -> fires under both variants
+      if (without!.totalWeeks >= 5) {
+        expect(withPhysio!.totalWeeks).toBe(
+          Math.max(1, Math.round(without!.totalWeeks * (1 - ECONOMY.physio.recoverySpeedup))),
+        )
+        expect(withPhysio!.totalWeeks).toBeLessThan(without!.totalWeeks)
+        expect(withPhysio!.severity).toBe(without!.severity) // same draws, same band
+        expect(withPhysio!.kind).toBe(without!.kind)
+        break
+      }
+      from = Number(seed.split('-').pop()) + 1
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C7 — injury flavor: region-composed kinds, lower-limb skew, ankle+knee on top.
+// ---------------------------------------------------------------------------
+describe('C7 — injury flavor (Monte-Carlo sample)', () => {
+  const LOWER = ['ankle', 'knee', 'hamstring', 'calf', 'foot', 'hip']
+  const UPPER = ['wrist', 'shoulder', 'elbow', 'forearm']
+  const CORE = ['lower back', 'abdominal']
+  const PARTS = [...CORE, ...LOWER, ...UPPER] // longest-prefix parts first ('lower back')
+  const DESCRIPTORS: Record<InjurySeverity, string[]> = {
+    minor: ['niggle', 'soreness'],
+    moderate: ['strain'],
+    major: ['stress reaction'],
+    severe: ['tear'],
+  }
+
+  function sample(): { part: string; severity: InjurySeverity; kind: string }[] {
+    const out: { part: string; severity: InjurySeverity; kind: string }[] = []
+    for (let s = 0; s < 140; s++) {
+      resetForRoll(rollWorld, `c7-${s}`)
+      for (let w = 1; w <= 52; w++) {
+        rollWorld.week = w
+        rollWorld.condition = 0
+        rollWorld.injury = null // independent rolls: onset probability per week, no immunity
+        rollInjury(rollWorld)
+        // assertion re-widens: the `= null` assignment above narrows the property and TS cannot
+        // see that rollInjury mutates it.
+        const inj = rollWorld.injury as WorldState['injury']
+        if (inj) {
+          const part = PARTS.find((p) => inj.kind.startsWith(`${p} `))
+          expect(part, `unparseable kind "${inj.kind}"`).toBeDefined()
+          out.push({ part: part!, severity: inj.severity as InjurySeverity, kind: inj.kind })
+        }
+      }
+    }
+    return out
+  }
+
+  it('kinds are region-composed, lower-limb-skewed (~48%), ankle+knee lead the lower share', () => {
+    const all = sample()
+    expect(all.length).toBeGreaterThan(300) // a real sample
+
+    // every kind is "<part> <descriptor>" with the descriptor matching its severity band
+    for (const inj of all) {
+      const rest = inj.kind.slice(inj.part.length + 1)
+      expect(DESCRIPTORS[inj.severity]).toContain(rest)
+    }
+
+    const count = (parts: string[]) => all.filter((i) => parts.includes(i.part)).length
+    const lower = count(LOWER)
+    const upper = count(UPPER)
+    const core = count(CORE)
+    expect(lower + upper + core).toBe(all.length)
+
+    // lower-limb share ~0.48 over the sample
+    const lowerShare = lower / all.length
+    expect(lowerShare).toBeGreaterThan(0.4)
+    expect(lowerShare).toBeLessThan(0.56)
+
+    // WTA skew: ankle + knee are the top two lower-limb regions and take the majority
+    // of the lower share (0.30 + 0.25 of it by construction).
+    const byPart = new Map<string, number>()
+    for (const i of all) byPart.set(i.part, (byPart.get(i.part) ?? 0) + 1)
+    const lowerSorted = [...LOWER].sort((a, b) => (byPart.get(b) ?? 0) - (byPart.get(a) ?? 0))
+    expect(lowerSorted.slice(0, 2).sort()).toEqual(['ankle', 'knee'])
+    expect((byPart.get('ankle') ?? 0) + (byPart.get('knee') ?? 0)).toBeGreaterThan(lower / 2)
+
+    // core keeps its lumbar bias
+    expect(byPart.get('lower back') ?? 0).toBeGreaterThan(byPart.get('abdominal') ?? 0)
+
+    // the label reads like "ankle strain"
+    expect(all.some((i) => i.kind === 'ankle strain')).toBe(true)
+
+    // severity split lands near the owner's 60/30/10 (loose bands – Monte-Carlo)
+    const sev = (s: InjurySeverity) => all.filter((i) => i.severity === s).length / all.length
+    expect(sev('minor')).toBeGreaterThan(0.5)
+    expect(sev('minor')).toBeLessThan(0.7)
+    expect(sev('moderate')).toBeGreaterThan(0.2)
+    expect(sev('moderate')).toBeLessThan(0.4)
+    expect(sev('major') + sev('severe')).toBeLessThan(0.16)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C8 — the girl injury-age curve (peak 16).
+// ---------------------------------------------------------------------------
+describe('C8 — age curve', () => {
+  it('ageInjuryFactor matches the knob table (peak at 16, default past 18)', () => {
+    const t = ECONOMY.availability.ageInjuryFactor
+    expect(ageInjuryFactor(14)).toBe(t[14])
+    expect(ageInjuryFactor(15)).toBe(t[15])
+    expect(ageInjuryFactor(16)).toBe(t[16])
+    expect(ageInjuryFactor(17)).toBe(t[17])
+    expect(ageInjuryFactor(18)).toBe(t[18])
+    expect(ageInjuryFactor(19)).toBe(t.default)
+    expect(ageInjuryFactor(25)).toBe(t.default)
+    expect(ageInjuryFactor(16)).toBeGreaterThan(ageInjuryFactor(14)) // the peak is real
+  })
+
+  it('effective tau at age 16 vs age 14 differs by exactly the factor ratio', () => {
+    const w = createWorld('c8-tau')
+    w.physioActive = false
+    w.condition = 60
+    w.week = 0 // age 14
+    const tau14 = injuryTau(w)
+    w.week = 104 // age 16
+    const tau16 = injuryTau(w)
+    expect(tau16 / tau14).toBeCloseTo(ageInjuryFactor(16) / ageInjuryFactor(14), 10)
+  })
+
+  it('Monte-Carlo direction: more onsets in the age-16 window than the age-14 window', () => {
+    function countOnsets(fromWeek: number): number {
+      let onsets = 0
+      for (let s = 0; s < 400; s++) {
+        resetForRoll(rollWorld, `c8mc-${s}`)
+        for (let i = 0; i < 52; i++) {
+          rollWorld.week = fromWeek + i
+          rollWorld.condition = 60
+          rollWorld.injury = null
+          rollInjury(rollWorld)
+          if (rollWorld.injury) onsets++
+        }
+      }
+      return onsets
+    }
+    const at14 = countOnsets(0) // weeks 0..51 -> age 14
+    const at16 = countOnsets(104) // weeks 104..155 -> age 16
+    expect(at14).toBeGreaterThan(0)
+    expect(at16).toBeGreaterThan(at14 * 1.15) // expected ratio 1.2/0.9 ≈ 1.33
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C9 — consecutive-competition load (trailing-4 counter off the results ledger).
+// ---------------------------------------------------------------------------
+describe('C9 — consecutive load', () => {
+  it('factor table: 0-1 -> x1.0, 2 -> x1.2, 3 -> x1.5, 4 -> x1.8 (clamped above)', () => {
+    expect(consecutivePlayFactor(0)).toBe(1.0)
+    expect(consecutivePlayFactor(1)).toBe(1.0)
+    expect(consecutivePlayFactor(2)).toBe(1.2)
+    expect(consecutivePlayFactor(3)).toBe(1.5)
+    expect(consecutivePlayFactor(4)).toBe(1.8)
+    expect(consecutivePlayFactor(9)).toBe(1.8)
+  })
+
+  it('counter derives from the KID results ledger over the trailing 4 weeks incl. this one', () => {
+    const w = createWorld('c9')
+    w.week = 30
+    w.results = []
+    expect(playedWeeksInTrailing4(w)).toBe(0)
+
+    // 3 past competed weeks + this week's entered event = 4
+    w.results.push(
+      { playerId: KID_ID, week: 27, points: 10, tier: 'local' },
+      { playerId: KID_ID, week: 28, points: 10, tier: 'local' },
+      { playerId: KID_ID, week: 29, points: 10, tier: 'local' },
+    )
+    expect(playedWeeksInTrailing4(w)).toBe(3)
+    const ev = injectEvent(w, { week: 30, tier: 'local' })
+    w.entries.push(ev.id)
+    expect(playedWeeksInTrailing4(w)).toBe(4)
+
+    // outside the window / non-kid results never count; duplicates collapse per week
+    const w2 = createWorld('c9-b')
+    w2.week = 30
+    w2.results = [
+      { playerId: KID_ID, week: 26, points: 10 }, // too old (window is 27..30)
+      { playerId: 'ai-3', week: 28, points: 10 }, // not the kid
+      { playerId: KID_ID, week: 29, points: 10 },
+      { playerId: KID_ID, week: 29, points: 5 }, // same week counts once
+      { playerId: KID_ID, week: 27, points: 10 },
+    ]
+    expect(playedWeeksInTrailing4(w2)).toBe(2)
+    expect(injuryTau(w2) / injuryTau(w)).toBeGreaterThan(0) // both pure, no draws
+  })
+
+  it('a 4-of-4 racer carries x1.8 into tau vs x1.0 for a spaced schedule', () => {
+    const w = createWorld('c9-tau')
+    w.physioActive = false
+    w.condition = 60
+    w.week = 30
+    w.results = []
+    const spaced = injuryTau(w)
+    w.results = [
+      { playerId: KID_ID, week: 27, points: 10 },
+      { playerId: KID_ID, week: 28, points: 10 },
+      { playerId: KID_ID, week: 29, points: 10 },
+      { playerId: KID_ID, week: 30, points: 10 },
+    ]
+    expect(injuryTau(w) / spaced).toBeCloseTo(1.8, 10)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C10 — one-time onset treatment cost.
+// ---------------------------------------------------------------------------
+describe('C10 — onset treatment cost', () => {
+  /** Direct-roll an onset and capture the events it emitted. */
+  function onsetEvents(seed: string, week: number): { injury: WorldState['injury']; events: WorldEvent[] } {
+    resetForRoll(rollWorld, seed)
+    rollWorld.week = week
+    rollWorld.condition = 0
+    const before = rollWorld.events.length
+    rollInjury(rollWorld)
+    return { injury: rollWorld.injury, events: rollWorld.events.slice(before) }
+  }
+
+  function findOnsetOfSeverity(want: (s: string) => boolean): { injury: NonNullable<WorldState['injury']>; events: WorldEvent[] } {
+    for (let s = 0; s < 3000; s++) {
+      for (let w = 1; w <= 8; w++) {
+        const { injury, events } = onsetEvents(`c10-${s}`, w)
+        if (injury && want(injury.severity)) return { injury, events }
+      }
+    }
+    throw new Error('no onset of wanted severity found')
+  }
+
+  it('a moderate+ onset bills a one-time in-range physio expense; minor bills none', () => {
+    for (const severity of ['moderate', 'major', 'severe'] as const) {
+      const { events } = findOnsetOfSeverity((s) => s === severity)
+      const onset = events.find((e) => e.text === 'Medical – scans and treatment')
+      expect(onset, `${severity} onset bill`).toBeDefined()
+      expect(onset!.type).toBe('expense')
+      expect(onset!.category).toBe('physio')
+      const [lo, hi] = corridorBounds(ECONOMY.physio.onsetCostCents[severity], 'middle') // rollWorld is middle
+      expect(onset!.amountCents!).toBeGreaterThanOrEqual(-hi)
+      expect(onset!.amountCents!).toBeLessThanOrEqual(-lo)
+      expect(onset!.amountCents!).toBeLessThan(0)
+    }
+    const minor = findOnsetOfSeverity((s) => s === 'minor')
+    expect(minor.events.some((e) => e.text === 'Medical – scans and treatment')).toBe(false)
+    expect(minor.events.some((e) => e.type === 'injury')).toBe(true) // the news beat still lands
+  })
+
+  it('the onset bill is IN ADDITION to weekly rehab, and both fold into the physio bucket', () => {
+    // Full-tick integration: a seed whose week-1 roll fires with a moderate+ band.
+    let seed = ''
+    for (let s = 0; s < 3000 && !seed; s++) {
+      const candidate = `c10-tick-${s}`
+      const { injury } = onsetEvents(candidate, 1)
+      if (injury && injury.severity !== 'minor') seed = candidate
+    }
+    expect(seed).not.toBe('')
+    const w = createWorld(seed)
+    w.physioActive = false
+    w.season = []
+    w.condition = 0
+    const rng = rngFromSeed(w.seed)
+    tickWeek(w, rng)
+    expect(w.injury).not.toBeNull()
+    const physioEvents = w.events.filter((e) => e.week === 1 && e.category === 'physio')
+    expect(physioEvents).toHaveLength(2) // onset bill + weekly rehab
+    expect(physioEvents.some((e) => e.text === 'Medical – scans and treatment')).toBe(true)
+    expect(physioEvents.some((e) => e.text === 'Physio / recovery session')).toBe(true)
+    const folded = financeWindow(w.financeWeeks, 0).byCategory.physio
+    expect(folded).toBe(physioEvents.reduce((s, e) => s + (e.amountCents ?? 0), 0))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C11 — medical wealth corridors (mirror of the travelBgFactor corridor test):
+// same (seed, week, severity), same base draw + same roll -> disjoint corridors
+// order every medical bill working < middle < wealthy.
+// ---------------------------------------------------------------------------
+describe('C11 — medical corridors', () => {
+  const BACKGROUNDS: FamilyBackground[] = ['working', 'middle', 'wealthy']
+
+  function physioBill(seed: string, background: FamilyBackground, injured: boolean): number {
+    const w = createWorld(seed, bgProfile(background))
+    w.week = 5
+    w.physioActive = true
+    if (injured) setInjury(w, 3, 3)
+    const before = w.events.length
+    resolvePhysio(w)
+    const bill = w.events.slice(before).find((e) => e.category === 'physio')
+    expect(bill).toBeDefined()
+    return -bill!.amountCents!
+  }
+
+  it('weekly rehab orders working < middle < wealthy off the same roll, inside band x corridor', () => {
+    const costs = BACKGROUNDS.map((bg) => physioBill('c11-rehab', bg, true))
+    expect(costs[0]).toBeLessThan(costs[1])
+    expect(costs[1]).toBeLessThan(costs[2])
+    BACKGROUNDS.forEach((bg, i) => {
+      const [lo, hi] = corridorBounds(ECONOMY.physio.rehabPerWeekCents, bg)
+      expect(costs[i]).toBeGreaterThanOrEqual(lo)
+      expect(costs[i]).toBeLessThanOrEqual(hi)
+    })
+  })
+
+  it('the healthy retainer orders working < middle < wealthy, inside band x corridor', () => {
+    const costs = BACKGROUNDS.map((bg) => physioBill('c11-ret', bg, false))
+    expect(costs[0]).toBeLessThan(costs[1])
+    expect(costs[1]).toBeLessThan(costs[2])
+    BACKGROUNDS.forEach((bg, i) => {
+      const [lo, hi] = corridorBounds(ECONOMY.physio.retainerPerWeekCents, bg)
+      expect(costs[i]).toBeGreaterThanOrEqual(lo)
+      expect(costs[i]).toBeLessThanOrEqual(hi)
+    })
+  })
+
+  it('the onset treatment bill orders working < middle < wealthy for the same injury', () => {
+    // Find a (seed, week 1) whose roll fires with a moderate+ band (tau is background-independent,
+    // so the same seed produces the SAME injury for all three families).
+    let seed = ''
+    for (let s = 0; s < 3000 && !seed; s++) {
+      const candidate = `c11-onset-${s}`
+      resetForRoll(rollWorld, candidate)
+      rollWorld.week = 1
+      rollWorld.condition = 0
+      rollInjury(rollWorld)
+      if (rollWorld.injury && rollWorld.injury.severity !== 'minor') seed = candidate
+    }
+    expect(seed).not.toBe('')
+    const results = BACKGROUNDS.map((bg) => {
+      const w = createWorld(seed, bgProfile(bg))
+      w.physioActive = false
+      w.week = 1
+      w.condition = 0
+      rollInjury(w)
+      expect(w.injury).not.toBeNull()
+      const onset = w.events.find((e) => e.text === 'Medical – scans and treatment')
+      expect(onset).toBeDefined()
+      return { severity: w.injury!.severity as InjurySeverity, kind: w.injury!.kind, cost: -onset!.amountCents! }
+    })
+    // identical injury across families...
+    expect(results[0].severity).toBe(results[1].severity)
+    expect(results[1].severity).toBe(results[2].severity)
+    expect(results[0].kind).toBe(results[2].kind)
+    // ...but corridor-ordered bills
+    expect(results[0].cost).toBeLessThan(results[1].cost)
+    expect(results[1].cost).toBeLessThan(results[2].cost)
+    results.forEach((r, i) => {
+      const [lo, hi] = corridorBounds(ECONOMY.physio.onsetCostCents[r.severity], BACKGROUNDS[i])
+      expect(r.cost).toBeGreaterThanOrEqual(lo)
+      expect(r.cost).toBeLessThanOrEqual(hi)
+    })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Season wrap: weeksInjured (optional SeasonSummary stat – no schema bump).
+// ---------------------------------------------------------------------------
+describe('SeasonSummary.weeksInjured', () => {
+  it('accumulates the season\'s injured weeks and lands on the wrap summary', () => {
+    const w = createWorld('wrap-inj')
+    const rng = rngFromSeed(w.seed)
+    while (w.week < 10) {
+      tickWeek(w, rng)
+      if (w.pendingTournament) {
+        skipTournament(w)
+        closeTournament(w)
+      }
+    }
+    w.injury = null // make room for a clean forced injury
+    setInjury(w, 4, 4) // injured weeks 10..13, cleared on 14
+    while (w.week < 49) {
+      tickWeek(w, rng)
+      if (w.pendingTournament) {
+        skipTournament(w)
+        closeTournament(w)
+      }
+    }
+    expect(w.lastSeasonSummary).not.toBeNull()
+    expect(w.lastSeasonSummary!.weeksInjured).toBe(4)
+  })
+
+  it('a clean season reports 0 weeks injured', () => {
+    const w = createWorld('wrap-clean')
+    w.physioActive = false
+    const rng = rngFromSeed(w.seed)
+    // keep her healthy: clear any (rare) random injury before it can accumulate –
+    // this is a stat test, not an occurrence test.
+    while (w.week < 49) {
+      w.injury = null
+      w.condition = 100
+      tickWeek(w, rng)
+      w.injury = null
+      if (w.pendingTournament) {
+        skipTournament(w)
+        closeTournament(w)
+      }
+    }
+    expect(w.lastSeasonSummary).not.toBeNull()
+    expect(w.lastSeasonSummary!.weeksInjured ?? 0).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// advanceWeeks stops on a fresh injury ('injury' stop reason).
+// ---------------------------------------------------------------------------
+describe('advanceWeeks injury stop', () => {
+  it('a fresh injury halts an in-flight advance with stopReason "injury"', () => {
+    const seed = findFiringSeed('adv-inj', TAU_C0_AGE14 * 0.9)
+    const w = createWorld(seed)
+    w.physioActive = false
+    w.condition = 0
+    const stop = advanceWeeks(w, rngFromSeed(w.seed), 4)
+    expect(stop).toBe('injury')
+    expect(w.week).toBe(1)
+    expect(w.injury).not.toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Bench wiring: the physio bucket exists and the entry policy tolerates injury.
+// ---------------------------------------------------------------------------
+describe('bench — physio bucket + injured-week tolerance', () => {
+  it('EXPENSE_CATS carries the physio bucket', () => {
+    expect(EXPENSE_CATS).toContain('physio')
+  })
+
+  it('stepCareerWeek skips entries while injured instead of throwing', () => {
+    const preset = PRESETS.find((p) => p.background === 'middle')!
+    const w = createWorld('bench-inj-tolerance')
+    w.physioActive = false
+    setInjury(w, 6, 6)
+    injectEvent(w, { week: w.week + 2, tier: 'local', deadlineWeek: w.week + 1 })
+    expect(preset).toBeDefined()
+    expect(() => stepCareerWeek(w, rngFromSeed(w.seed))).not.toThrow()
+    expect(w.entries).toHaveLength(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// UI wiring (source-level guards, mirroring B7's pattern).
+// ---------------------------------------------------------------------------
+describe('UI wiring', () => {
+  it('MoneyScreen has a physio breakdown bucket', () => {
+    const src = readFileSync(new URL('../src/components/screens/MoneyScreen.vue', import.meta.url), 'utf8')
+    expect(src).toContain("'physio'")
+  })
+
+  it('SeasonSummaryDialog surfaces weeksInjured', () => {
+    const src = readFileSync(new URL('../src/components/SeasonSummaryDialog.vue', import.meta.url), 'utf8')
+    expect(src).toContain('weeksInjured')
+  })
+
+  it('HomeScreen binds the injured chip to snapshot.injury kind + return week', () => {
+    const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
+    expect(src).toContain('injury.kind')
+    expect(src).toMatch(/back wk/)
+    // the physio toggle shows its weekly retainer cost
+    expect(src).toContain('retainerPerWeekCents')
+  })
+
+  it('player-facing copy never uses the long dash', () => {
+    for (const file of [
+      '../src/components/screens/HomeScreen.vue',
+      '../src/components/screens/SeasonScreen.vue',
+      '../src/components/SeasonSummaryDialog.vue',
+    ]) {
+      const src = readFileSync(new URL(file, import.meta.url), 'utf8')
+      expect(src.includes('—')).toBe(false)
+    }
+  })
+})
