@@ -483,7 +483,8 @@ describe('pt4 — UI wiring', () => {
 describe('pt5 — R9-16 portrait stages by age', () => {
   it('portraitStage: jun < 12, young 12-16, teen 17-22, adult beyond', () => {
     expect(portraitStage(10)).toBe('jun')
-    expect(portraitStage(11)).toBe('jun')
+    // Owner 25.07: young starts at 11 (the childhood prologue will need this boundary).
+    expect(portraitStage(11)).toBe('young')
     expect(portraitStage(12)).toBe('young')
     expect(portraitStage(14)).toBe('young') // START_AGE ⇒ the game OPENS on young art
     expect(portraitStage(16)).toBe('young')

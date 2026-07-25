@@ -80,7 +80,7 @@ export function useKidEmotion() {
     }),
   )
 
-  // R9-16: the portrait stage follows her age (jun < 12, young 12-16, teen 17-22).
+  // R9-16: the portrait stage follows her age (jun < 11, young 11-16, teen 17-22).
   const stage = computed<PortraitStage>(() => portraitStage(game.snapshot?.ageYears ?? 14))
 
   // 256px header/card crops live in public/avatars/{stage}-{emotion}.webp. Crops exist for

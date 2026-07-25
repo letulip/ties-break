@@ -27,9 +27,11 @@ export type AvatarEmotion = 'norm' | 'happy' | 'sad' | 'serious' | 'tired' | 'in
 // jun BY DESIGN: it is a narrative flashback).
 export type PortraitStage = 'jun' | 'young' | 'teen' | 'adult'
 
-/** Pure stage resolver: jun < 12, young 12-16, teen 17-22, adult beyond (later content). */
+/** Pure stage resolver: jun < 11, young 11-16, teen 17-22, adult beyond (later content).
+ *  Owner 25.07: young starts at 11 – the childhood prologue is coming, so the boundary is
+ *  deliberately set where the prologue will need it (unreachable before then: START_AGE 14). */
 export function portraitStage(ageYears: number): PortraitStage {
-  if (ageYears < 12) return 'jun'
+  if (ageYears < 11) return 'jun'
   if (ageYears <= 16) return 'young'
   if (ageYears <= 22) return 'teen'
   return 'adult'
