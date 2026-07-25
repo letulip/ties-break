@@ -36,11 +36,18 @@ function shortStage(round: number, drawSize: number): string {
 interface RoundTab {
   round: number
   short: string
+  /** the engine's full stage name for the round ("Round of 16", "Quarterfinal", …) – the aria-label */
+  label: string
 }
 const tabs = computed<RoundTab[]>(() => {
-  const seen = new Set<number>()
-  for (const m of props.matches) seen.add(m.round)
-  return [...seen].sort((a, b) => a - b).map((round) => ({ round, short: shortStage(round, props.drawSize) }))
+  // Only the rounds actually present in `matches` get a tab. During her run the snapshot caps
+  // `fullBracket` at the REVEALED rounds, so an unreached round has no matches here and therefore
+  // no tab – the spoiler guard is the data, not the view.
+  const seen = new Map<number, string>()
+  for (const m of props.matches) if (!seen.has(m.round)) seen.set(m.round, m.roundLabel)
+  return [...seen.keys()]
+    .sort((a, b) => a - b)
+    .map((round) => ({ round, short: shortStage(round, props.drawSize), label: seen.get(round) ?? '' }))
 })
 
 // The selected round tracks `activeRound` but can be overridden by tapping a tab; it snaps back
@@ -119,14 +126,17 @@ watch(
 
 <template>
   <div class="bt">
-    <div class="bt-tabs" role="tablist">
+    <!-- The app's standard segmented control (.tab-row/.tab-pill) so the draw's round switcher
+         matches every other tab row; `bt-tabs` only adds scroll safety on a narrow phone. Real
+         buttons with aria-pressed + the full stage name as the label (the short "QF" is visual). -->
+    <div class="tab-row on-panel bt-tabs" role="group" aria-label="Draw rounds">
       <button
         v-for="t in tabs"
         :key="t.round"
-        class="bt-tab"
+        class="tab-pill"
         :class="{ active: t.round === selected }"
-        role="tab"
-        :aria-selected="t.round === selected"
+        :aria-pressed="t.round === selected"
+        :aria-label="t.label"
         @click="selected = t.round"
       >
         {{ t.short }}
@@ -143,6 +153,8 @@ watch(
               class="bt-cell"
               :class="{ 'is-kid': cell.isKidMatch }"
               :style="{ height: CELL_H + 'px' }"
+              role="group"
+              :aria-label="cell.isKidMatch ? `Her match – ${cell.a.name} vs ${cell.b.name}` : undefined"
             >
               <div class="bt-players">
                 <span class="bt-row" :class="{ won: cell.a.won, kid: cell.a.isKid }">

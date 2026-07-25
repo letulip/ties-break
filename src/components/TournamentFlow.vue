@@ -110,12 +110,16 @@ function stageName(round: number): string {
 const spectateRoundLabel = computed(() => stageName(spectateRound.value))
 
 // The whole draw once finished (through the Final), else the kid's played rounds – rendered as
-// the round-tabbed bracket between rounds (post) and during the spectate walk (never over a
-// replay or the pre-match card).
+// the round-tabbed bracket between rounds (post), during the spectate walk, and once more under
+// the finale card. NEVER over the pre-match card and never during a replay (round-7 rule): the
+// draw would spoil the match she is about to watch.
 const bracketMatches = computed(() => pending.value?.fullBracket ?? [])
 const showBracket = computed(
   () => bracketMatches.value.length > 0 && !replayOpen.value && (phase.value === 'post' || phase.value === 'spectate'),
 )
+// The finale copy of the draw sits BELOW the champion/portrait card, so the celebration still
+// lands first and the completed bracket is there to scroll into.
+const showFinaleBracket = computed(() => bracketMatches.value.length > 0 && phase.value === 'finale')
 // The tournament champion (the Final match's winner) – named on the non-champion finale card,
 // where there is no kid portrait to celebrate an AI winner.
 const championName = computed(() => {
@@ -335,7 +339,8 @@ const matchMeta = computed(() => {
 
         <!-- Round-7 (owner): the draw as a round-tabbed bracket (R32 · R16 · QF · SF · F). The
              active tab defaults to the kid's current round between rounds (post) and to the
-             spectate round during the walk. Reused, single component. -->
+             spectate round during the walk; the finale renders the same component again below
+             its card. Only revealed rounds are in `fullBracket`, so no tab can leak ahead. -->
         <section v-if="showBracket" class="tf-card tf-bracket">
           <p class="tf-bracket-title">Draw</p>
           <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
@@ -481,6 +486,13 @@ const matchMeta = computed(() => {
           <div class="tf-actions">
             <button class="primary" :disabled="game.busy" @click="continueFinale">Continue</button>
           </div>
+        </section>
+
+        <!-- The finished draw, below the celebration – same component, same tabs (her round is
+             still the default one, and by now every round is revealed). -->
+        <section v-if="showFinaleBracket" class="tf-card tf-bracket">
+          <p class="tf-bracket-title">Draw</p>
+          <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
         </section>
       </template>
       </template>

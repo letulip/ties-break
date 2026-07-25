@@ -1731,40 +1731,20 @@ tr.kid-row td {
   gap: 10px;
 }
 
-/* Round tabs: a horizontal, scrollbar-hidden pill row; the active round filled solid accent
-   (dark text, same convention as button.primary). */
+/* Round tabs reuse the app's segmented control (.tab-row/.tab-pill, below) so the draw's round
+   switcher looks like every other tab row – including its dark-on-accent active state and the
+   round-8 R8-5 hover pin. This modifier only adds narrow-phone scroll safety: at 375 px the five
+   segments (R32 · R16 · QF · SF · F) fit, but a longer row scrolls sideways instead of
+   overflowing the card, with the scrollbar hidden like the draw body's. */
 .bt-tabs {
-  display: flex;
-  gap: 4px;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .bt-tabs::-webkit-scrollbar {
   display: none;
 }
-
-.bt-tab {
+.bt-tabs .tab-pill {
   flex: 0 0 auto;
-  border: 1px solid var(--line);
-  background: var(--bg);
-  color: var(--muted);
-  border-radius: 999px;
-  padding: 4px 13px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-}
-.bt-tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #101d0a;
-}
-/* Round-8 R8-5: the global button:hover rule (accent text) outranks .bt-tab.active and turned
-   the selected tab accent-on-accent – label invisible, especially with iOS sticky tap-hover.
-   Pin the selected segment to the app's standard dark-on-lime (same as button.primary). */
-.bt-tab.active:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: #101d0a;
 }
 
 /* Bounded body with an internal vertical scroll; scrollbar hidden – the owner said users will
@@ -1855,16 +1835,16 @@ tr.kid-row td {
   font-size: 11px;
 }
 
-/* winner accent-colored; the kid's own name is always accent. */
+/* Winner accent-coloured (+ the ✓), loser left muted – the mockup's read: scan the accent names
+   down the round. The kid is told apart by her cell's accent frame/tint, not by colour alone. */
 .bt-row.won {
-  color: var(--text);
+  color: var(--accent);
   font-weight: 600;
 }
+/* Her own name is bolded rather than re-coloured: colour in a cell means result (accent = won,
+   muted = lost), so accenting her name too would make her lost matches read as two winners.
+   Her cell's accent frame + tint is what finds her at a glance. */
 .bt-row.kid {
-  color: var(--accent);
-}
-.bt-row.won.kid {
-  color: var(--accent);
   font-weight: 700;
 }
 
@@ -1943,6 +1923,12 @@ tr.kid-row td {
   border-radius: 999px;
 }
 
+/* The plate is panel-toned for a page background; inside a .tf-card (already --panel) it needs
+   the darker tone to read as a plate at all – used by the draw's round tabs. */
+.tab-row.on-panel {
+  background: var(--bg);
+}
+
 .tab-pill {
   border: none;
   border-radius: 999px;
@@ -1963,6 +1949,9 @@ tr.kid-row td {
   font-weight: 700;
 }
 
+/* Round-8 R8-5 (do not drop): the global button:hover rule repaints a hovered label accent, which
+   over .tab-pill.active means accent-on-accent – the label vanishes, and iOS keeps a sticky
+   tap-hover after the tap. Pin the active segment to dark-on-lime (like button.primary). */
 .tab-pill.active:hover:not(:disabled) {
   color: #101d0a;
 }
