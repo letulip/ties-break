@@ -57,6 +57,19 @@ price — owner approved). Cancel before the week starts = full refund (mirror o
 - An injury still cancels the practice week (walkover rules do not apply — no fee forfeit beyond
   the court rental; keep it simple: refund rental if injured before the week).
 
+## 4b. Bench insight (25.07, fatigue-bench PROJ run) — vacation trigger re-homed
+The projection exposed a design trap: a reactive "book when condition < 60" rule attached to a
+load-managing player NEVER fires (she never drops that low), while the overloaded player — who
+under practices lives at 40-70 — has no booking habit at all. Result: 5 of 6 packages never sell.
+Fix in the implementation:
+- Vacations are the RESCUE lever surfaced to whoever is low: when condition drops below ~65 and
+  an empty bookable week exists ahead, the game PROMPTS ("Она вымотана – может, отпуск?") with
+  the catalogue pre-filtered to packages that return her above ~85. The prompt is an offer, not
+  an auto-book — player agency stays.
+- The scheduled off-season family week (sea) stays a natural default suggestion for everyone.
+- Bench re-run after the slice lands must show every package selling at SOME rate across
+  policies before the price ladder is considered tuned.
+
 ## 5. Closes
 - R5 backlog debt "Vacations as a class differentiator affecting recovery" (Phase 4/5 promise).
 - The design-workflow open question on family-vacation blackouts.
