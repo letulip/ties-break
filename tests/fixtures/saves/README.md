@@ -31,6 +31,7 @@ Shapes come straight from the append-only history in `src/engine/migrations.ts`:
 | v9 | profile `+birthMonth` (1-12; relative-age-effect groundwork, round-3 QA item 16 / round-6) |
 | v10 | world `+bestFinishByTier +lastSeasonSummary +seasonWins +seasonLosses` (Home season strip + SeasonSummaryDialog) |
 | v11 | world `+financeWeeks` (per-week/per-category finance ledger; feeds the Money breakdown past the 60-event cap) |
+| v12 | world `+condition +injury +injuryHistory +physioActive` (Season-Life availability gate; injury/physio wired for Slice C, condition drives the fatigue caution) |
 
 For **v0–v5** the migration regenerates the world systems (cohort/season) deterministically from the
 seed, so those fixtures are the authentic minimal historical shapes. For **v6–v7** the `cohort` /

@@ -77,6 +77,15 @@ describe('golden saves corpus', () => {
       const weeks = migrated.financeWeeks.map((w) => w.week)
       expect(weeks).toEqual([...weeks].sort((a, b) => a - b))
       for (const w of migrated.financeWeeks) expect(typeof w.byCategory).toBe('object')
+
+      // v12 Season-Life availability fields: condition (0..100), injury (null or object),
+      // an injuryHistory array, and a boolean physio flag – present on EVERY migrated fixture.
+      expect(typeof migrated.condition).toBe('number')
+      expect(migrated.condition).toBeGreaterThanOrEqual(0)
+      expect(migrated.condition).toBeLessThanOrEqual(100)
+      expect(migrated.injury === null || typeof migrated.injury === 'object').toBe(true)
+      expect(Array.isArray(migrated.injuryHistory)).toBe(true)
+      expect(typeof migrated.physioActive).toBe('boolean')
     })
   }
 })

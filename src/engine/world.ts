@@ -12,6 +12,7 @@ import {
   type PlayerProfile,
   type SeasonSummary,
   type Snapshot,
+  type SnapshotInjury,
   type StandingRow,
   type StopReason,
   type UpcomingEvent,
@@ -24,7 +25,7 @@ import { formatShortName } from '../shared/format'
 import { weekYear } from '../shared/dates'
 import type { MatchPlayer } from './match/types'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
-import { TIERS, buildSeason, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
+import { TIERS, buildSeason, isOffSeasonWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
 import { ECONOMY, GEAR_CATEGORIES, gearHitForWeek, planExpenseFactor } from './economy'
 import { generateCohort, driftCohort } from './season/cohort'
 import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
@@ -35,7 +36,7 @@ import { selectEntrants, runTournament } from './season/tournament'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 11
+export const SAVE_SCHEMA_VERSION = 12
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -99,6 +100,17 @@ export interface WorldState {
    *  point and pruned to a 60-week trailing window. Feeds the Money breakdown/ledger so they
    *  survive the 60-event snapshot cap; see FinanceWeek in protocol.ts. */
   financeWeeks: FinanceWeek[]
+  /** Season-Life (v12): per-week condition 0..100 (100 = fresh). Written ONLY by accrueCondition
+   *  (pure arithmetic, zero main-stream RNG); fatigue is the derived 100 - condition, not stored. */
+  condition: number
+  /** the kid's active injury, or null when healthy. Wired in slice B but ALWAYS null here – Slice C
+   *  populates it. The snapshot omits `sinceWeek`. */
+  injury: (SnapshotInjury & { sinceWeek: number }) | null
+  /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B). */
+  injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number }>
+  /** whether physio recovery is active (default = profile.coachSetup === 'hired'). The cost lever
+   *  is billed in Slice C; in B the flag just reflects/sets the toggle. */
+  physioActive: boolean
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -368,6 +380,67 @@ function stageLabel(round: number, drawSize: number): string {
   if (remaining === 4) return 'Semifinal'
   if (remaining === 8) return 'Quarterfinal'
   return `Round of ${remaining}`
+}
+
+// --- Season-Life: condition + availability gate (slice B) --------------------
+function clamp(x: number, lo: number, hi: number): number {
+  return x < lo ? lo : x > hi ? hi : x
+}
+
+/** True for a school-exam blackout week – the season-week offset falls inside one of
+ *  ECONOMY.availability.examWeeks. */
+function isExamWeek(week: number): boolean {
+  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
+}
+
+/** A "blackout" week for tournaments: the off-season tail (already event-free) or a school-exam
+ *  block. Used both by the condition accumulator (extra recovery) and the availability gate. */
+export function isBlackoutWeek(week: number): boolean {
+  return isOffSeasonWeek(week) || isExamWeek(week)
+}
+
+/** Pure condition accumulator (zero RNG). Clamps to [min,max]. `playedThisWeek` folds in the
+ *  strain of the tier she entered this week; rest recovers, training/tournaments drain, and a
+ *  blackout week (off-season / exams) grants a little extra recovery. See ECONOMY.condition. */
+export function accrueCondition(world: WorldState, playedThisWeek: boolean): void {
+  const c = ECONOMY.condition
+  const restGain = c.restBase + c.restSlope * (world.plan.rest / 100)
+  const trainStrain = c.trainSlope * (world.plan.train / 100)
+  let matchStrain = 0
+  if (playedThisWeek) {
+    const entered = world.season.find((e) => e.week === world.week && world.entries.includes(e.id))
+    if (entered) matchStrain = c.tournamentStrain[entered.tier]
+  }
+  const offGain = isBlackoutWeek(world.week) ? c.offSeasonGain : 0
+  world.condition = clamp(world.condition + restGain - trainStrain - matchStrain + offGain, c.min, c.max)
+}
+
+/** Whether the kid can currently ENTER `event`, at three levels. One helper, wired at three engine
+ *  surfaces (enterEvent / upcomingEvents / advanceWeeks) so the gate can never desync. Precedence
+ *  is injured > unavailable > fatigued.
+ *   - 'blocked' HARD stops entry: `injured` (dead branch in B – world.injury is always null – but
+ *     wired for Slice C) and `unavailable` (school exams / off-season).
+ *   - 'caution' is a SOFT warning that still ALLOWS entry: `fatigued` (condition below the tier's
+ *     floor). The owner's call: racing tired is a tough-parent CHOICE with emergent consequences
+ *     (deeper condition hole now, higher injury risk once Slice C lands), not a forbidden action.
+ *   - 'ok' is clear. */
+export interface AvailabilityStatus {
+  level: 'ok' | 'caution' | 'blocked'
+  reason?: 'injured' | 'fatigued' | 'unavailable'
+  detail?: string
+}
+export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
+  if (world.injury !== null) {
+    return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${world.injury.weeksRemaining} weeks.` }
+  }
+  if (isBlackoutWeek(event.week)) {
+    return { level: 'blocked', reason: 'unavailable', detail: 'School exams this week – no tournaments.' }
+  }
+  if (world.condition < ECONOMY.availability.minConditionToEnter[event.tier]) {
+    return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
+  }
+  return { level: 'ok' }
 }
 
 // --- weekly resolution pieces ------------------------------------------------
@@ -715,6 +788,10 @@ export function createWorld(
     seasonWins: 0,
     seasonLosses: 0,
     financeWeeks: [],
+    condition: ECONOMY.condition.start,
+    injury: null,
+    injuryHistory: [],
+    physioActive: profile.coachSetup === 'hired',
   }
   addEvent(world, {
     week: 0,
@@ -743,6 +820,10 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.seasonWins = 0
   save.seasonLosses = 0
   save.financeWeeks = []
+  save.condition = ECONOMY.condition.start
+  save.injury = null
+  save.injuryHistory = []
+  save.physioActive = save.profile?.coachSetup === 'hired'
   ensureSeason(save as WorldState)
   recomputeKidRank(save as WorldState)
   delete save.log
@@ -770,6 +851,15 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     sub-streams only – so this never perturbs the weekly draw count.
   resolveGear(world)
 
+  // 1c. Season-Life availability. Pure state, ZERO main-stream draws (accrueCondition is pure
+  //     arithmetic). Sits here (not inside the pendingTournament block) so it runs exactly once
+  //     per real week, reveal weeks included. Slice C will add rollInjury(world) above this and
+  //     resolvePhysio(world) below it.
+  const playedThisWeek =
+    world.season.some((e) => e.week === world.week && world.entries.includes(e.id)) &&
+    world.injury === null // a fresh injury (Slice C) => walkover; injury is always null in B
+  accrueCondition(world, playedThisWeek)
+
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)
   // Canonical ranking excludes the kid so AI-field selection (and thus its main-stream
@@ -783,7 +873,9 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
   //    fully-computed shadow tournament. Nothing kid-specific is emitted/awarded here – the flow does.
   const enteredThisWeek = scheduled.find((e) => world.entries.includes(e.id))
-  if (enteredThisWeek) {
+  // A fresh injury (Slice C) turns an entered event into a walkover: no travel, no shadow run.
+  // injury is always null in slice B, so this guard is a no-op here that prepares C's branch.
+  if (enteredThisWeek && world.injury === null) {
     chargeTravel(world, enteredThisWeek)
     world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking)
   }
@@ -839,6 +931,11 @@ export function enterEvent(world: WorldState, eventId: string): void {
   if (points > maxPoints) {
     throw new Error(`You've outgrown ${TIERS[event.tier].label} (${points} pts)`)
   }
+  // Season-Life availability gate (slice B): same helper the UI + advance read, so they can't
+  // desync. Only a HARD block (injured / school exams) stops entry; fatigue is a soft, warned
+  // CHOICE (level 'caution'), so racing tired is allowed – its cost is emergent, not a veto.
+  const availability = availabilityStatus(world, event)
+  if (availability.level === 'blocked') throw new Error(availability.detail ?? 'Unavailable this week')
   world.fundsCents -= fee
   world.entries.push(eventId)
   addEvent(world, {
@@ -894,7 +991,11 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
           (e.tier === 'regional' || e.tier === 'national') &&
           !world.entries.includes(e.id) &&
           world.fundsCents >= TIERS[e.tier].entryFeeCents &&
-          (e.deadlineWeek === world.week || e.deadlineWeek === nextWeek),
+          (e.deadlineWeek === world.week || e.deadlineWeek === nextWeek) &&
+          // Season-Life: don't stop-for-deadline only on an event she HARD-cannot enter (school
+          // exams, or injured in Slice C). A fatigued event is still enterable (soft caution), so
+          // the sim MAY stop so the player can make the tough call.
+          availabilityStatus(world, e).level !== 'blocked',
       )
       if (deadlineSoon) {
         stopReason = 'deadline'
@@ -932,9 +1033,26 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
     .map((e) => {
       // Snapshot-only points eligibility (no persisted state → no schema bump). `ineligibleReason`
       // names which side of the band the kid failed: 'locked' = not enough ranking points yet,
-      // 'outgrown' = too good (past the tier's ceiling) now.
-      const eligible = isTierEligible(e.tier, points)
+      // 'outgrown' = too good (past the tier's ceiling) now. Season-Life slice B then folds in the
+      // availability gate via the SAME helper enterEvent uses, so the card and the engine agree.
+      const pointEligible = isTierEligible(e.tier, points)
+      const avail = availabilityStatus(world, e)
+      // A fatigued event is a CAUTION, not a block: she stays eligible. Only a point-band failure or
+      // a HARD availability block (injured / unavailable) removes eligibility.
+      const eligible = pointEligible && avail.level !== 'blocked'
       const minPoints = TIERS[e.tier].enterPointBand[0]
+      // Precedence matches enterEvent (point band first, then availability): the point-band reason
+      // is the hard-lock headline; a hard availability block (injured/unavailable) only surfaces
+      // once she is point-eligible; fatigue is surfaced separately as a soft caution.
+      const reason = !pointEligible
+        ? points < minPoints
+          ? { ineligibleReason: 'locked' as const, pointsToEnter: minPoints }
+          : { ineligibleReason: 'outgrown' as const }
+        : avail.level === 'blocked'
+          ? { ineligibleReason: avail.reason as 'injured' | 'unavailable' }
+          : avail.level === 'caution'
+            ? { cautionReason: avail.reason as 'fatigued', cautionDetail: avail.detail }
+            : {}
       return {
         id: e.id,
         week: e.week,
@@ -946,11 +1064,7 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         label: TIERS[e.tier].label,
         entered: entered.has(e.id),
         eligible,
-        ...(eligible
-          ? {}
-          : points < minPoints
-            ? { ineligibleReason: 'locked' as const, pointsToEnter: minPoints }
-            : { ineligibleReason: 'outgrown' as const }),
+        ...reason,
       }
     })
 }
@@ -1091,6 +1205,17 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     fundsCents: world.fundsCents,
     profile: world.profile,
     plan: world.plan,
+    condition: world.condition,
+    // injury is always null in slice B; drop the persisted-only `sinceWeek` when surfacing it.
+    injury: world.injury
+      ? {
+          kind: world.injury.kind,
+          severity: world.injury.severity,
+          weeksRemaining: world.injury.weeksRemaining,
+          totalWeeks: world.injury.totalWeeks,
+        }
+      : null,
+    physioActive: world.physioActive,
     events: world.events.slice(-SNAPSHOT_EVENTS),
     // Category-accurate windows off the persisted ledger (immune to the 60-event cap). season
     // keeps the current MoneyScreen semantics: the current 52-week season block from its first week.

@@ -303,6 +303,76 @@ describe('save migrations', () => {
     expect(w39.byCategory).toEqual({ travel: -9_000 })
   })
 
+  it('upgrades a v11 save to v12: condition/injury/injuryHistory/physio backfilled to healthy defaults', () => {
+    const v11 = {
+      schemaVersion: 11,
+      careerId: 'c-v11',
+      seed: 'availability',
+      week: 40,
+      fundsCents: 7_000_00,
+      profile: { ...DEFAULT_PROFILE, kidName: 'Nadia', kidLastName: 'Petrova', birthMonth: 4, coachSetup: 'hired' as const },
+      plan: { ...WEEK_PLAN_PRESETS.balanced },
+      cohort: [],
+      results: [{ playerId: 'kid', week: 38, points: 30, tier: 'local' as const }],
+      season: [],
+      entries: [],
+      events: [],
+      nextEventId: 0,
+      kidRank: 55,
+      prevKidRank: 58,
+      pendingTournament: null,
+      bestFinishByTier: { local: 1 },
+      lastSeasonSummary: null,
+      seasonWins: 2,
+      seasonLosses: 1,
+      financeWeeks: [],
+    }
+    const migrated = migrateSave(structuredClone(v11))
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    // four new fields at their healthy defaults
+    expect(migrated.condition).toBe(100)
+    expect(migrated.injury).toBeNull()
+    expect(migrated.injuryHistory).toEqual([])
+    expect(migrated.physioActive).toBe(true) // coachSetup 'hired'
+    // everything else identical to the raw v11 save
+    expect(migrated.seed).toBe(v11.seed)
+    expect(migrated.week).toBe(v11.week)
+    expect(migrated.fundsCents).toBe(v11.fundsCents)
+    expect(migrated.results).toEqual(v11.results)
+    expect(migrated.kidRank).toBe(v11.kidRank)
+    // re-running migrateSave on the v12 output changes nothing (idempotent)
+    expect(migrateSave(structuredClone(migrated))).toEqual(migrated)
+  })
+
+  it('v11 -> v12 physioActive follows the coach setup (parent coach -> false)', () => {
+    const v11 = {
+      schemaVersion: 11,
+      careerId: 'c-v11b',
+      seed: 'parent-coach',
+      week: 12,
+      fundsCents: 3_000_00,
+      profile: { ...DEFAULT_PROFILE, coachSetup: 'parent' as const, birthMonth: 8 },
+      plan: { ...WEEK_PLAN_PRESETS.balanced },
+      cohort: [],
+      results: [],
+      season: [],
+      entries: [],
+      events: [],
+      nextEventId: 0,
+      kidRank: 120,
+      prevKidRank: null,
+      pendingTournament: null,
+      bestFinishByTier: {},
+      lastSeasonSummary: null,
+      seasonWins: 0,
+      seasonLosses: 0,
+      financeWeeks: [],
+    }
+    const migrated = migrateSave(v11)
+    expect(migrated.physioActive).toBe(false)
+    expect(migrated.condition).toBe(100)
+  })
+
   it('passes a current save through unchanged', () => {
     const current = {
       schemaVersion: SAVE_SCHEMA_VERSION,

@@ -9,7 +9,8 @@ import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, ty
 import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
-import { KID_ID, flipScore } from '../../engine/world'
+import { KID_ID, flipScore, isBlackoutWeek } from '../../engine/world'
+import { ECONOMY } from '../../engine/economy'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
@@ -66,13 +67,41 @@ const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() =>
 })
 const kidPoints = computed(() => game.snapshot?.standings.find((r) => r.isKid)?.points ?? 0)
 
-// --- Condition bar (round-5 item 3): 10 segments, classic red→yellow→green gradient.
-// Static 8/10 placeholder until Phase 4 wires the real value (title stays "Phase 4"). --
+// --- Condition bar (Season-Life slice B): 10 segments driven by the REAL per-week condition,
+// round(condition/10) filled. The classic red→green ramp holds when she is fresh; the bar reads
+// amber as it approaches a tier floor and red once it drops below the entry floor. --
 const CONDITION_SEGMENTS = 10
-const CONDITION_FILLED = 8
+const condition = computed(() => game.snapshot?.condition ?? 0)
+const conditionFilled = computed(() => Math.round(condition.value / 10))
+const conditionStatus = computed<'red' | 'amber' | 'ok'>(() => {
+  const c = condition.value
+  if (c < ECONOMY.availability.minConditionToEnter.local) return 'red' // below the lowest floor – can't enter anything
+  if (c < ECONOMY.availability.minConditionToEnter.national) return 'amber' // approaching the higher-tier floors
+  return 'ok'
+})
 function conditionColor(i: number): string {
+  if (conditionStatus.value === 'red') return 'hsl(0, 72%, 48%)'
+  if (conditionStatus.value === 'amber') return 'hsl(38, 90%, 50%)'
   const hue = ((i - 1) / (CONDITION_SEGMENTS - 1)) * 120 // 0 = red … 120 = green
   return `hsl(${Math.round(hue)}, 72%, 48%)`
+}
+
+// --- Availability chip (Season-Life slice B): a plain-language read on whether she can compete.
+// "Fit" (green) when clear; "School break – exams" (grey) when this or next week is a blackout;
+// the red "Injured …" state comes alive in Slice C (snapshot.injury is always null in B). --
+const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'red' } | null>(() => {
+  const s = game.snapshot
+  if (!s) return null
+  if (s.injury) return { label: `Injured – back in ${s.injury.weeksRemaining} wk`, tone: 'red' }
+  if (isBlackoutWeek(s.week) || isBlackoutWeek(s.week + 1)) return { label: 'School break – exams', tone: 'grey' }
+  return { label: 'Fit', tone: 'green' }
+})
+
+// --- Physio toggle (Season-Life slice B): reflects/sets snapshot.physioActive. The recovery/cost
+// lever is billed in Slice C; here the toggle just flips the persisted flag through the worker. --
+const physioActive = computed(() => game.snapshot?.physioActive ?? false)
+function togglePhysio(): void {
+  game.setPhysio(!physioActive.value)
 }
 
 // --- News match rows (round-5 item 8): "V. Martin vs S. Everts" / kid-perspective score.
@@ -285,15 +314,24 @@ function openRankHelp(): void {
           <tr>
             <th>Condition</th>
             <td>
-              <div class="condition-blocks" title="Phase 4">
-                <span
-                  v-for="i in CONDITION_SEGMENTS"
-                  :key="i"
-                  class="condition-block"
-                  :class="{ filled: i <= CONDITION_FILLED }"
-                  :style="i <= CONDITION_FILLED ? { background: conditionColor(i) } : undefined"
-                ></span>
+              <div class="condition-cell">
+                <div class="condition-blocks" :title="`Condition ${Math.round(condition)}/100`">
+                  <span
+                    v-for="i in CONDITION_SEGMENTS"
+                    :key="i"
+                    class="condition-block"
+                    :class="{ filled: i <= conditionFilled }"
+                    :style="i <= conditionFilled ? { background: conditionColor(i) } : undefined"
+                  ></span>
+                </div>
+                <span v-if="availabilityChip" class="pill avail-chip" :class="availabilityChip.tone">
+                  {{ availabilityChip.label }}
+                </span>
               </div>
+              <label class="physio-toggle">
+                <input type="checkbox" :checked="physioActive" :disabled="game.busy" @change="togglePhysio" />
+                <span>Physio recovery</span>
+              </label>
             </td>
           </tr>
         </tbody>

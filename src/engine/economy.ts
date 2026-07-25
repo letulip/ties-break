@@ -13,6 +13,7 @@
 
 import { rngFromSeed, pickInt } from './rng'
 import type { CoachSetup, FamilyBackground } from '../shared/protocol'
+import type { TierId } from './season/types'
 
 /** The four recurring gear line-items. rackets/shoes/apparel report under the 'gear'
  *  breakdown category; stringing gets its own 'stringing' category (it recurs far more
@@ -144,6 +145,31 @@ export const ECONOMY = {
       },
     },
   } as Record<GearCategory, GearLine>,
+
+  // Season-Life slice B: the per-week condition accumulator (0..100, 100 = fresh). Pure
+  // arithmetic – accrueCondition draws ZERO main-stream RNG, so none of these can shift the
+  // weekly draw sequence (the B1 invariance test guards it). `matchStrengthFloor` ships at 1.0
+  // so the match-strength coupling is OFF and no stored match record changes; wiring the coupling
+  // is a later slice.
+  condition: {
+    start: 100,
+    min: 0,
+    max: 100,
+    restBase: 4,
+    restSlope: 6,
+    trainSlope: 6,
+    tournamentStrain: { local: 8, regional: 16, national: 26, itf: 34 } as Record<TierId, number>,
+    offSeasonGain: 4, // extra recovery on off-season (weeks 49-51) and exam weeks
+    matchStrengthFloor: 1.0, // condFactor = floor + (1-floor)*(condition/100); 1.0 = coupling OFF
+  },
+
+  // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
+  // blocks (season-week offsets, blacked out for tournaments). Off-season weeks (49-51) are already
+  // event-free and are treated as blackout too (see isBlackoutWeek in world.ts).
+  availability: {
+    minConditionToEnter: { local: 20, regional: 30, national: 40, itf: 45 } as Record<TierId, number>,
+    examWeeks: [[24, 25]] as [number, number][], // season-week offsets blacked out for school
+  },
 } as const
 
 /** Weekly base-expense scale from the time split (more training ⇒ higher cost). */

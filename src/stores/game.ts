@@ -130,6 +130,13 @@ export const useGameStore = defineStore('game', {
         if (res.type === 'snapshot') this.snapshot = res.snapshot
       })
     },
+    async setPhysio(active: boolean) {
+      await this.run(async () => {
+        const res = await request({ type: 'setPhysio', active })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+      })
+    },
     async saveManual() {
       await this.run(async () => {
         const res = await request({ type: 'save', slot: 'manual' })

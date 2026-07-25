@@ -138,6 +138,17 @@ export function migrateSave(raw: unknown): WorldState {
     v = 11
   }
 
+  if (v < 12) {
+    // v12 added Season-Life availability: persisted condition + injury/physio state (Slices B+C).
+    // Pre-v12 saves never stored these; backfill to a healthy default. condition=100 also keeps the
+    // (currently-off) match-strength coupling neutral, so no historical shift.
+    if (typeof save.condition !== 'number') save.condition = 100
+    if (save.injury === undefined) save.injury = null
+    if (!Array.isArray(save.injuryHistory)) save.injuryHistory = []
+    if (typeof save.physioActive !== 'boolean') save.physioActive = save.profile?.coachSetup === 'hired'
+    v = 12
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
