@@ -114,6 +114,14 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }
+    case 'setPhysio': {
+      // Season-Life slice B: the toggle just reflects/sets the flag (default = hired coach). Its
+      // recovery/cost lever is billed in Slice C; no engine draw, no schema impact here.
+      if (!world) throw new Error('No active career')
+      world.physioActive = msg.active
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
     case 'save': {
       if (!world) throw new Error('No active career')
       await writeNamed(world, msg.slot ?? 'manual')

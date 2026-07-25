@@ -77,6 +77,20 @@ function entriesClosed(e: UpcomingEvent): boolean {
 function fundsShort(e: UpcomingEvent): boolean {
   return fundsCents.value < e.entryFeeCents
 }
+// The HARD-lock label (Season-Life slice B): point-band (locked/outgrown) or a hard availability
+// block (injured / school exams). Fatigue is NOT here – it stays enterable with a soft caution.
+function lockLabel(e: UpcomingEvent): string {
+  switch (e.ineligibleReason) {
+    case 'outgrown':
+      return 'Outgrown'
+    case 'injured':
+      return 'Injured – rest up'
+    case 'unavailable':
+      return 'School exams this week'
+    default:
+      return `Reach ${e.pointsToEnter} pts`
+  }
+}
 
 // --- one shared confirm-popup slot (mirrors MoreScreen's pattern) ------------
 interface PendingConfirm {
@@ -87,9 +101,14 @@ interface PendingConfirm {
 const pendingConfirm = ref<PendingConfirm | null>(null)
 
 function askEnter(e: UpcomingEvent): void {
+  // Fatigue is a warned CHOICE: spell out the risk in the confirm, but keep the action available.
+  const fatigued = e.cautionReason === 'fatigued'
   pendingConfirm.value = {
-    message: `Enter ${e.label} (W${e.week}, ${e.surface})? Entry fee ${formatDollars(e.entryFeeCents)}.`,
-    confirmLabel: 'Enter',
+    message: fatigued
+      ? `${e.cautionDetail ?? 'Exhausted – racing risks injury.'} Enter ${e.label} (W${e.week}, ${e.surface}) anyway? ` +
+        `Entry fee ${formatDollars(e.entryFeeCents)}.`
+      : `Enter ${e.label} (W${e.week}, ${e.surface})? Entry fee ${formatDollars(e.entryFeeCents)}.`,
+    confirmLabel: fatigued ? 'Push through' : 'Enter',
     onConfirm: () => game.enterEvent(e.id),
   }
 }
@@ -213,16 +232,26 @@ function playExhibition(): void {
               <span v-else-if="entriesClosed(row.event)" class="pill muted">
                 Entries closed W{{ row.event.deadlineWeek }}
               </span>
-              <!-- Ranking gate (Phase-4 slice 1): her earned points don't meet this tier's band.
-                   'locked' = not ranked high enough yet; 'outgrown' = too good for this tier now. -->
+              <!-- HARD locks: ranking gate ('locked'/'outgrown') OR a hard availability block
+                   (injured / school exams). Fatigue is NOT here – it stays enterable (see below). -->
               <span v-else-if="!row.event.eligible" class="pill muted">
-                🔒 {{ row.event.ineligibleReason === 'outgrown' ? 'Outgrown' : `Reach ${row.event.pointsToEnter} pts` }}
+                🔒 {{ lockLabel(row.event) }}
               </span>
               <template v-else>
-                <button class="primary" :disabled="fundsShort(row.event) || game.busy" @click="askEnter(row.event)">
+                <!-- Fatigued is a soft, warned CHOICE: the Enter stays ACTIVE and amber, with a
+                     "race anyway?" warning – never greyed out. -->
+                <button
+                  class="primary"
+                  :class="{ risky: row.event.cautionReason === 'fatigued' }"
+                  :disabled="fundsShort(row.event) || game.busy"
+                  @click="askEnter(row.event)"
+                >
                   Enter
                 </button>
                 <span v-if="fundsShort(row.event)" class="hint" style="margin: 0">Not enough funds</span>
+                <p v-else-if="row.event.cautionReason === 'fatigued'" class="caution-note">
+                  Exhausted – race anyway? Rest would be wiser.
+                </p>
               </template>
             </div>
           </div>

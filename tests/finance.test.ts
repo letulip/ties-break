@@ -10,6 +10,7 @@ import {
   recomputeKidRank,
   toSnapshot,
   financeWindow,
+  availabilityStatus,
   KID_ID,
   PARENT_INCOME_CENTS,
   type WorldState,
@@ -48,6 +49,9 @@ function busyTournamentSeason(seed: string, weeks: number): WorldState {
       // from 0 points until she outgrows it); enterEvent would otherwise throw for an outgrown tier.
       if (!isTierEligible(e.tier, kidPoints(world))) continue
       if (world.fundsCents < TIERS[e.tier].entryFeeCents + e.travelCostCents) continue
+      // Season-Life: skip events under a HARD availability block (e.g. an event scheduled in a
+      // school-exam week); enterEvent would throw 'unavailable'. Fatigue is soft, so it's not skipped.
+      if (availabilityStatus(world, e).level === 'blocked') continue
       enterEvent(world, e.id)
     }
     tickWeek(world, rng)

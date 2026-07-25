@@ -211,6 +211,19 @@ export interface PendingView {
   finishLabel: string
 }
 
+/** Injury severity (Season-Life). Slice B wires the field but never populates it; Slice C does. */
+export type InjurySeverity = 'minor' | 'moderate' | 'major' | 'severe'
+
+/** The kid's active injury as surfaced to the UI (schema v12). null = healthy. Always null in
+ *  slice B – Slice C (injuries + physio) brings it alive. The persisted world carries one extra
+ *  field (`sinceWeek`) that the snapshot omits. */
+export interface SnapshotInjury {
+  kind: string
+  severity: InjurySeverity
+  weeksRemaining: number
+  totalWeeks: number
+}
+
 /** A scheduled event surfaced to the UI, with the kid's entry state + tier lookups. */
 export interface UpcomingEvent {
   id: string
@@ -225,9 +238,19 @@ export interface UpcomingEvent {
   /** the kid's EARNED ranking points meet this tier's point band (both directions). Snapshot-only
    *  (derived from the results ledger at snapshot time), so it persists nothing and bumps no schema. */
   eligible: boolean
-  /** why the kid can't enter, for the UI lock label; absent when eligible. 'locked' = not enough
-   *  ranking points yet (below the tier's minPoints); 'outgrown' = past its ceiling now. */
-  ineligibleReason?: 'locked' | 'outgrown'
+  /** why the kid HARD-cannot enter, for the UI lock label; absent when eligible. Point-band reasons:
+   *  'locked' = not enough ranking points yet (below the tier's minPoints); 'outgrown' = past its
+   *  ceiling now. Hard availability blocks (Season-Life slice B, checked after the point band):
+   *  'unavailable' = school exams / off-season; 'injured' = wired for Slice C (never set in B).
+   *  Fatigue is NOT here – it is a soft, warned CHOICE (see cautionReason), so a fatigued event
+   *  stays eligible. */
+  ineligibleReason?: 'locked' | 'outgrown' | 'injured' | 'unavailable'
+  /** a SOFT warning on an event the kid CAN still enter (eligible stays true): 'fatigued' = her
+   *  condition is below the tier's floor, so racing risks a deeper hole / injury. The owner's call
+   *  is that a tired body is a tough-parent decision, not a hard rule. */
+  cautionReason?: 'fatigued'
+  /** human-readable caution copy for the soft-warning UI (short dash). */
+  cautionDetail?: string
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
 }
@@ -263,6 +286,14 @@ export interface Snapshot {
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan
+  /** the kid's per-week condition 0..100 (100 = fresh); fatigue is the derived 100 - condition
+   *  (Season-Life slice B, schema v12). */
+  condition: number
+  /** the kid's active injury, or null when healthy. Always null in slice B (Slice C populates it). */
+  injury: SnapshotInjury | null
+  /** whether physio recovery is active (its cost lever is billed in Slice C; in B this just
+   *  reflects/sets the flag, default = coachSetup === 'hired'). */
+  physioActive: boolean
   /** most recent 60 events, chronological (oldest first) */
   events: WorldEvent[]
   /** category-accurate spending/income over the full retained finance history (survives the
@@ -323,6 +354,7 @@ export type ToWorker =
   | { id: number; type: 'tournamentSkip' }
   | { id: number; type: 'tournamentClose' }
   | { id: number; type: 'setPlan'; plan: WeekPlan }
+  | { id: number; type: 'setPhysio'; active: boolean }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }
   | { id: number; type: 'load'; slot: string }
