@@ -55,11 +55,30 @@ code fork.
 
 ## V2 scenario (owner 25.07, after the baseline report)
 V2 = recoveryBase only on match-free weeks + physio conditionBonusPerWeek 2 → 1. The engine
-grew ONE knob for it – `ECONOMY.condition.matchWeekRecoveryBase` (default 2 = shipped behavior
-byte-for-byte; B1/C1 freezes and all pins stay green untouched). The bench patches the LIVE
-ECONOMY (`withScenario`) to {matchWeekRecoveryBase: 0, physio bonus 1}, runs the FULL headline
-matrix + grid as a second section, restores the values, and closes with a V2-vs-baseline delta
-block. Determinism holds per scenario.
+grew ONE knob for it – `ECONOMY.condition.matchWeekRecoveryBase`. The bench patches the LIVE
+ECONOMY (`withScenario`), runs full sections per scenario, restores the values, and closes
+with a delta block. Determinism holds per scenario.
+
+## V2 + V2.1 SHIPPED (owner verdict 25.07 "V2 хорош" + "все чуть ниже к концу сезона")
+The ENGINE DEFAULTS are now the full V2.1 set: recoveryBase 1 (free-week ladder 1/2/3),
+matchWeekRecoveryBase 0, physio bonus 1. The affected condition/round-9 pins (B2/B3/B4,
+R9-10/R9-14) were re-pinned deliberately; the draw-count invariance freezes stayed green
+untouched. Bench scenarios since the flip: `baseline` = shipped knobs (full: headline + grid +
+PROJ), `v2` = the previous candidate patched back (recoveryBase 2; headline + PROJ – the audit
+trail of the V2.1 decision), `legacy` = the original round-9 values 2/2/2 (headline only).
+endSeason metrics read wk49 (the wrap, BEFORE the off-season restore) and wk51 (after the 3
+blackout weeks); the owner target: wk49 lands ~60-85 by policy and blackout weeks + a
+pre-season package restore to ~95-100. The INJURY PANEL calibrates all three policies against
+docs/research/injury-stats-by-age.md (juniors 46-54%/season, ~0.5-1.1 inj/season minors-heavy,
+weeks lost 1.0-2.3/yr, heavy-load teen-peak ~95% prevalence as the grinder analog) using REAL
+per-season prevalence (share of seed-seasons with ≥1 onset).
+
+## Practice model (owner rule 25.07)
+Practice drain = max(1, local-scoreline drain − 1) → flat 1 in the projection (locals are
+mostly 1-2 scoreline drains); the REAL engine mechanic will grade off scorelines. Week-type
+recovery semantics: tournament week = 0 base · practice week keeps the base but FORFEITS the
+slider bonus · free week = base + slider. Owner's vision: (almost) every week has ≥1 game by
+choice.
 
 ## Planner projection (PROJ – not a simulation)
 On top of the V2 traces: practices (−1 condition, court $30-80 × corridor; grinder every

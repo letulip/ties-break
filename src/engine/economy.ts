@@ -180,14 +180,15 @@ export const ECONOMY = {
     start: 100,
     min: 0,
     max: 100,
-    recoveryBase: 2, // every MATCH-FREE week (see matchWeekRecoveryBase for match weeks)
-    // V2 candidate (owner 25.07, after the fatigue-bench report): the base recovery credited on
-    // a week the kid PLAYS a tournament – the owner wants to test 0 there ("a tournament week is
-    // travel + competition, not rest"). DEFAULT 2 === recoveryBase keeps CURRENT behavior
-    // byte-for-byte; nothing in the shipped game changes until the owner decides. The fatigue
-    // bench patches this to 0 (plus physio.conditionBonusPerWeek 2→1) at runtime for its V2
-    // scenario and restores it afterwards.
-    matchWeekRecoveryBase: 2,
+    // V2.1 SHIPPED (owner 25.07 "все чуть ниже к концу сезона", same pass as the V2 flip):
+    // every MATCH-FREE week recovers this base (was 2) – the free-week ladder is now
+    // grinder +1 / balanced +2 / careful +3 via the slider bonus, so every policy ARRIVES at
+    // the season wrap below 100 and the off-season + a planner vacation earn their keep.
+    recoveryBase: 1,
+    // V2 SHIPPED (owner verdict 25.07 "V2 хорош", after two fatigue-bench rounds): a tournament
+    // week is travel + competition, not rest – NO base recovery on a week the kid plays. The
+    // knob stays (the bench's 'legacy' scenario patches it back to 2 for reference runs).
+    matchWeekRecoveryBase: 0,
     // Match-free weeks only, first matching threshold wins (descending): the slider stays
     // meaningful – money (planFactor), future skill growth, and recovery pacing.
     restRecoveryBonus: [
@@ -263,8 +264,10 @@ export const ECONOMY = {
     riskReduction: 0.76, // tau *= this when physioActive (24% cut)
     recoverySpeedup: 0.12, // weeksOut *= (1 - this), min 1, when physioActive
     // R9-14: the billed retainer finally shows on the bar – accrueCondition adds this flat
-    // weekly recovery while physioActive. Integer (owner said "1 or 2"; 2 for visible value).
-    conditionBonusPerWeek: 2,
+    // weekly recovery while physioActive. Integer (owner said "1 or 2"; was 2, tuned to 1 with
+    // the V2 flip 25.07 – at 2 the retainer alone erased every policy difference on hired-coach
+    // profiles, see the fatigue bench).
+    conditionBonusPerWeek: 1,
   },
 } as const
 

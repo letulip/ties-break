@@ -88,7 +88,10 @@ describe('run structure', () => {
       expect(r.weekly).toHaveLength(H104.weeks)
       expect(r.bandLow + r.bandMid + r.bandHigh).toBe(H104.weeks)
       expect(r.wins + r.losses).toBe(r.matchesPlayed)
-      expect(r.endOfSeasonCondition).toHaveLength(H104.seasons)
+      expect(r.endOfSeasonCondition).toHaveLength(H104.seasons) // wk49 of each season (pre-restore)
+      expect(r.postOffSeasonCondition).toHaveLength(H104.seasons) // wk51 (after the blackout weeks)
+      expect(r.seasonsWithInjury).toBeGreaterThanOrEqual(0)
+      expect(r.seasonsWithInjury).toBeLessThanOrEqual(H104.seasons) // prevalence numerator is per season-year
       expect(r.injuriesTotal).toBe(
         r.injuriesBySeverity.minor + r.injuriesBySeverity.moderate + r.injuriesBySeverity.major + r.injuriesBySeverity.severe,
       )
@@ -126,14 +129,22 @@ describe('policy ordering (the load-management axis)', () => {
     const gInj = gRuns.reduce((s, r) => s + r.injuriesTotal, 0)
     const cInj = cRuns.reduce((s, r) => s + r.injuriesTotal, 0)
     expect(gInj).toBeGreaterThan(cInj) // direction holds
-    // *** ANCHOR MISS (docs/specs/fatigue-bench.md wanted grinder ≥ 3x careful, mirroring the C3
-    // Monte-Carlo). The round-9 recovery (+2 base, +1/+2 slider, +2 physio, +1 blackout) keeps
-    // condition at 96-98 for EVERY policy, so the fatigue slope barely differentiates tau and the
-    // measured ratio sits near ~1.5x. Pinned below as a measurement: when the owner retunes the
-    // knobs and the ratio crosses 3x, flip this assertion to the spec's ≥3x. ***
+    // *** RE-PINNED 25.07 with the V2.1 flip (shipped: recoveryBase 1, match weeks 0, physio 1):
+    // at 52w the pooled self-coached ratio sits ~2.6x (one season is too short for the grinder's
+    // downward drift to fully separate tau), still shy of the spec's ≥3x. ***
     const ratio = gInj / cInj
     expect(ratio).toBeGreaterThan(1)
-    expect(ratio).toBeLessThan(3) // the finding: today's math does NOT reach the 3x anchor
+    expect(ratio).toBeLessThan(3)
+  })
+
+  it('the C3 ≥3x anchor RETURNS at 104w under the shipped V2.1 knobs (multi-season drift)', () => {
+    // The owner's target metric: across two seasons the enter-everything grinder drifts low
+    // enough that fatigue-tau separation finally triples the careful player's injury rate.
+    const gRuns = [...runCell(working, grinder, H104.weeks), ...runCell(middleSelf, grinder, H104.weeks)]
+    const cRuns = [...runCell(working, careful, H104.weeks), ...runCell(middleSelf, careful, H104.weeks)]
+    const gInj = gRuns.reduce((s, r) => s + r.injuriesTotal, 0)
+    const cInj = cRuns.reduce((s, r) => s + r.injuriesTotal, 0)
+    expect(gInj / cInj).toBeGreaterThanOrEqual(3)
   })
 })
 
@@ -198,10 +209,10 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
     }
   })
 
-  it('the trace ALSO matches under the V2 scenario (live knobs) – the engine knob is wired exactly', () => {
-    // Inside withScenario(V2) both the engine AND the recomputation read the patched knobs
-    // (matchWeekRecoveryBase 0, physio bonus 1), so byte-equality proves accrueCondition applies
-    // the V2 rule on exactly the played weeks and nowhere else.
+  it('the trace ALSO matches under the v2 scenario (live knobs) – recoveryBase is wired exactly', () => {
+    // Inside withScenario(v2) both the engine AND the recomputation read the patched knobs
+    // (recoveryBase 2 instead of the shipped 1), so byte-equality proves the whole knob set
+    // lands on exactly the right weeks.
     const v2 = SCENARIOS.find((s) => s.id === 'v2')!
     withScenario(v2, () => {
       for (const policy of POLICIES) {
@@ -269,47 +280,66 @@ describe('factorial grid (owner 25.07: unbundled axes)', () => {
   })
 })
 
-describe('V2 scenario (matchWeekRecoveryBase 0 + physio bonus 1, patched live)', () => {
+describe('scenarios (V2.1 SHIPPED as baseline; v2/legacy patched live)', () => {
+  const legacy = SCENARIOS.find((s) => s.id === 'legacy')!
   const v2 = SCENARIOS.find((s) => s.id === 'v2')!
 
-  it('the engine knob default is a no-op: matchWeekRecoveryBase === recoveryBase as shipped', () => {
-    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(ECONOMY.condition.recoveryBase)
-    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
+  it('RE-PINNED 25.07: the V2.1 values ARE the shipped engine defaults', () => {
+    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0) // tournament week = travel + competition
+    expect(ECONOMY.condition.recoveryBase).toBe(1) // free-week ladder 1/2/3 ("все чуть ниже к концу сезона")
+    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
+    // scenario roles: baseline unpatched + full; v2 = previous candidate; legacy = round-9 audit
+    expect(SCENARIOS.find((s) => s.id === 'baseline')!.patch).toEqual({})
+    expect(v2.patch).toEqual({ recoveryBase: 2 })
+    expect(v2.grid).toBe(false)
+    expect(legacy.patch).toEqual({ recoveryBase: 2, matchWeekRecoveryBase: 2, physioConditionBonusPerWeek: 2 })
+    expect(legacy.grid).toBe(false)
   })
 
   it('withScenario patches, runs, and ALWAYS restores – zero leakage into baseline runs', () => {
     const before = runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
-    const v2run = withScenario(v2, () => {
-      expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0)
-      expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
+    const legacyRun = withScenario(legacy, () => {
+      expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(2)
+      expect(ECONOMY.condition.recoveryBase).toBe(2)
+      expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
       return runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
     })
-    // restored exactly
-    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(2)
-    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
-    // the scenario genuinely changes the dynamics, and the baseline reproduces after restore
-    expect(v2run.meanCondition).toBeLessThan(before.meanCondition)
+    // restored exactly to the shipped V2.1 values
+    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0)
+    expect(ECONOMY.condition.recoveryBase).toBe(1)
+    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
+    // legacy (far more recovery) rides higher than the shipped baseline; baseline reproduces after
+    expect(legacyRun.meanCondition).toBeGreaterThan(before.meanCondition)
     expect(runFatigueCareer(middleSelf, grinder, 0, H52.weeks)).toEqual(before)
+
+    // v2 (recoveryBase 2) recovers more than the shipped V2.1 baseline, and also restores
+    const v2run = withScenario(v2, () => {
+      expect(ECONOMY.condition.recoveryBase).toBe(2)
+      return runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
+    })
+    expect(ECONOMY.condition.recoveryBase).toBe(1)
+    expect(v2run.meanCondition).toBeGreaterThan(before.meanCondition)
   })
 
   it('restores even when the run throws', () => {
     expect(() =>
-      withScenario(v2, () => {
+      withScenario(legacy, () => {
         throw new Error('boom')
       }),
     ).toThrow('boom')
-    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(2)
-    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
+    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0)
+    expect(ECONOMY.condition.recoveryBase).toBe(1)
+    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
   })
 
-  it('V2 runs are deterministic per scenario', () => {
+  it('scenario runs are deterministic per scenario', () => {
     const a = withScenario(v2, () => runFatigueCareer(working, careful, 1, H52.weeks))
     const b = withScenario(v2, () => runFatigueCareer(working, careful, 1, H52.weeks))
     expect(a).toEqual(b)
   })
 })
 
-describe('planner PROJECTION layer (practices + vacations – arithmetic on V2 traces, PROJ-only)', () => {
+describe('planner PROJECTION layer (practices + vacations – arithmetic on real traces, PROJ-only)', () => {
   const v2 = SCENARIOS.find((s) => s.id === 'v2')!
 
   it('is deterministic and reconciles its own money columns', () => {

@@ -160,31 +160,54 @@ export function gridPolicies(): Policy[] {
   return out
 }
 
-// --- scenarios (owner 25.07 after the baseline report: test V2 live) -------------
-// V2 = recoveryBase applies ONLY on match-free weeks (a tournament week = travel + competition,
-// no base recovery) + physio.conditionBonusPerWeek 2 → 1. The engine grew ONE knob for this
-// (ECONOMY.condition.matchWeekRecoveryBase, default 2 = current behavior byte-for-byte); the
-// bench patches the LIVE ECONOMY object around each scenario run and restores it, so V2 runs
-// with every feedback loop real: coupling curve, caution/floor gates, injury tau, entry
-// starvation. `as const` is compile-time only – the runtime object is mutable, and the typed
-// views below keep the patch honest.
+// --- scenarios --------------------------------------------------------------------
+// V2.1 SHIPPED 25.07 (owner "V2 хорош" + "все чуть ниже к концу сезона"): the engine defaults
+// are now recoveryBase 1 + matchWeekRecoveryBase 0 + physio conditionBonusPerWeek 1, so
+// BASELINE runs the shipped knobs unpatched. Two reference scenarios patch the LIVE ECONOMY
+// object around their run (always restored, finally-guarded):
+//   v2     – the intermediate candidate (recoveryBase 2, the state between the two flips),
+//            headline + PROJ, kept so the V2.1 decision stays auditable in one output;
+//   legacy – the original round-9 values (recoveryBase 2, matchWeekRecoveryBase 2, physio
+//            bonus 2), headline-only audit trail.
+// Patching the live object keeps every feedback loop real: coupling curve, caution/floor
+// gates, injury tau, entry starvation. `as const` is compile-time only – the runtime object is
+// mutable, and the typed views below keep the patch honest.
 
 export interface Scenario {
-  id: 'baseline' | 'v2'
+  id: 'baseline' | 'v2' | 'legacy'
   label: string
-  patch: { matchWeekRecoveryBase?: number; physioConditionBonusPerWeek?: number }
+  patch: { matchWeekRecoveryBase?: number; physioConditionBonusPerWeek?: number; recoveryBase?: number }
+  /** run the factorial grid inside this scenario's section */
+  grid: boolean
+  /** run the PROJ planner layer on this scenario's 104w headline traces */
+  proj: boolean
 }
 
 export const SCENARIOS: Scenario[] = [
-  { id: 'baseline', label: 'BASELINE – round-9 knobs as shipped', patch: {} },
+  {
+    id: 'baseline',
+    label: 'BASELINE – shipped knobs (V2.1: recoveryBase 1, no base recovery on match weeks, physio bonus 1)',
+    patch: {},
+    grid: true,
+    proj: true,
+  },
   {
     id: 'v2',
-    label: 'V2 – no base recovery on match weeks (matchWeekRecoveryBase 0) + physio bonus 2→1',
-    patch: { matchWeekRecoveryBase: 0, physioConditionBonusPerWeek: 1 },
+    label: 'V2 – previous candidate (recoveryBase 2; the state before the V2.1 flip)',
+    patch: { recoveryBase: 2 },
+    grid: false,
+    proj: true,
+  },
+  {
+    id: 'legacy',
+    label: 'LEGACY – pre-V2 round-9 values (recoveryBase 2, matchWeekRecoveryBase 2, physio bonus 2)',
+    patch: { recoveryBase: 2, matchWeekRecoveryBase: 2, physioConditionBonusPerWeek: 2 },
+    grid: false,
+    proj: false,
   },
 ]
 
-type MutableConditionKnobs = { matchWeekRecoveryBase: number }
+type MutableConditionKnobs = { matchWeekRecoveryBase: number; recoveryBase: number }
 type MutablePhysioKnobs = { conditionBonusPerWeek: number }
 
 /** Run `fn` with the scenario's ECONOMY patch applied, ALWAYS restoring the shipped values
@@ -193,13 +216,16 @@ export function withScenario<T>(scenario: Scenario, fn: () => T): T {
   const cond = ECONOMY.condition as unknown as MutableConditionKnobs
   const phys = ECONOMY.physio as unknown as MutablePhysioKnobs
   const savedMatchBase = cond.matchWeekRecoveryBase
+  const savedRecoveryBase = cond.recoveryBase
   const savedPhysioBonus = phys.conditionBonusPerWeek
   try {
     if (scenario.patch.matchWeekRecoveryBase !== undefined) cond.matchWeekRecoveryBase = scenario.patch.matchWeekRecoveryBase
+    if (scenario.patch.recoveryBase !== undefined) cond.recoveryBase = scenario.patch.recoveryBase
     if (scenario.patch.physioConditionBonusPerWeek !== undefined) phys.conditionBonusPerWeek = scenario.patch.physioConditionBonusPerWeek
     return fn()
   } finally {
     cond.matchWeekRecoveryBase = savedMatchBase
+    cond.recoveryBase = savedRecoveryBase
     phys.conditionBonusPerWeek = savedPhysioBonus
   }
 }
@@ -387,10 +413,17 @@ export interface RunResult {
   weeksAt0: number
   /** deepest trough of the run. */
   trough: number
-  /** condition at each season year's LAST week (week % 52 === 51). */
+  /** condition at each season's WRAP week (week % 52 === 49, the owner's "end of season" –
+   *  BEFORE the 3 off-season weeks restore her). The tuning target reads here. */
   endOfSeasonCondition: number[]
+  /** condition at each season year's last week (week % 52 === 51, AFTER the off-season
+   *  blackout weeks) – how far the built-in 3-week restore got on its own. */
+  postOffSeasonCondition: number[]
   injuriesBySeverity: Record<InjurySeverity, number>
   injuriesTotal: number
+  /** how many season years of this run saw ≥1 injury ONSET – the real prevalence numerator
+   *  (an onset on a year-boundary week counts into the season it interrupts, clamped). */
+  seasonsWithInjury: number
   /** weeks that closed with her out injured. */
   weeksInjured: number
   walkovers: number
@@ -422,6 +455,8 @@ export function runFatigueCareer(
   const weekly: WeeklyPoint[] = []
   const injuriesBySeverity: Record<InjurySeverity, number> = { minor: 0, moderate: 0, major: 0, severe: 0 }
   const endOfSeasonCondition: number[] = []
+  const postOffSeasonCondition: number[] = []
+  const onsetSeasons = new Set<number>()
   let condSum = 0
   let bandLow = 0
   let bandMid = 0
@@ -459,6 +494,7 @@ export function runFatigueCareer(
     if (f.injured) weeksInjured++
     if (f.injuryOnset) {
       injuriesBySeverity[f.injuryOnset.severity]++
+      onsetSeasons.add(Math.min(Math.floor(f.week / WEEKS_PER_YEAR), horizonWeeks / WEEKS_PER_YEAR - 1))
     }
     if (f.walkover) walkovers++
     cautionEntries += f.cautionEntries
@@ -468,7 +504,8 @@ export function runFatigueCareer(
     wins += f.wins
     losses += f.losses
     if (kidPoints(world) > 0 && (bestRank === null || world.kidRank < bestRank)) bestRank = world.kidRank
-    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - 1) endOfSeasonCondition.push(f.condition)
+    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS) endOfSeasonCondition.push(f.condition)
+    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - 1) postOffSeasonCondition.push(f.condition)
   }
 
   return {
@@ -482,8 +519,10 @@ export function runFatigueCareer(
     weeksAt0,
     trough,
     endOfSeasonCondition,
+    postOffSeasonCondition,
     injuriesBySeverity,
     injuriesTotal: SEVERITIES.reduce((s, sev) => s + injuriesBySeverity[sev], 0),
+    seasonsWithInjury: onsetSeasons.size,
     weeksInjured,
     walkovers,
     cautionEntries,
@@ -535,10 +574,17 @@ export interface CellStats {
   pctAt100: number
   troughMean: number
   troughMin: number
-  /** mean condition at each season year's last week. */
+  /** mean condition at each season's WRAP week (wk49 – before the off-season restore). */
   endOfSeasonMean: number[]
+  /** mean condition at each season year's last week (wk51 – after the 3 blackout weeks). */
+  postOffSeasonMean: number[]
+  /** season-end (wk49) values pooled across seeds AND seasons – the tuning-target distribution. */
+  endSeasonPooled: { mean: number; sd: number; min: number; max: number }
   injPerSeason: number
   injPerSeasonSd: number
+  /** REAL seasonal prevalence: % of (seed × season) years with ≥1 injury onset – the number
+   *  the research doc's "juniors 46-54%/season" anchor compares against. */
+  prevalencePct: number
   sevPerSeason: Record<InjurySeverity, number>
   weeksLostPerSeason: number
   walkoversPerCareer: number
@@ -571,7 +617,12 @@ export function computeCellStats(
   const sevPerSeason = { minor: 0, moderate: 0, major: 0, severe: 0 } as Record<InjurySeverity, number>
   for (const sev of SEVERITIES) sevPerSeason[sev] = mean(runs.map((r) => r.injuriesBySeverity[sev] / seasons))
   const endOfSeasonMean: number[] = []
-  for (let s = 0; s < seasons; s++) endOfSeasonMean.push(mean(runs.map((r) => r.endOfSeasonCondition[s])))
+  const postOffSeasonMean: number[] = []
+  for (let s = 0; s < seasons; s++) {
+    endOfSeasonMean.push(mean(runs.map((r) => r.endOfSeasonCondition[s])))
+    postOffSeasonMean.push(mean(runs.map((r) => r.postOffSeasonCondition[s])))
+  }
+  const pooledEnds = runs.flatMap((r) => r.endOfSeasonCondition)
   const totalWins = runs.reduce((s, r) => s + r.wins, 0)
   const totalMatches = runs.reduce((s, r) => s + r.matchesPlayed, 0)
   const ranked = runs.filter((r) => r.bestRank !== null)
@@ -589,8 +640,16 @@ export function computeCellStats(
     troughMean: mean(runs.map((r) => r.trough)),
     troughMin: Math.min(...runs.map((r) => r.trough)),
     endOfSeasonMean,
+    postOffSeasonMean,
+    endSeasonPooled: {
+      mean: mean(pooledEnds),
+      sd: stddev(pooledEnds),
+      min: Math.min(...pooledEnds),
+      max: Math.max(...pooledEnds),
+    },
     injPerSeason: mean(runs.map((r) => r.injuriesTotal / seasons)),
     injPerSeasonSd: stddev(runs.map((r) => r.injuriesTotal / seasons)),
+    prevalencePct: (100 * runs.reduce((s, r) => s + r.seasonsWithInjury, 0)) / (runs.length * seasons),
     sevPerSeason,
     weeksLostPerSeason: mean(runs.map((r) => r.weeksInjured / seasons)),
     walkoversPerCareer: mean(runs.map((r) => r.walkovers)),
@@ -617,9 +676,11 @@ export function computeCellStats(
 // the spec's numbers the moment it lands.
 
 export const PLANNER = {
-  /** a light friendly ≈ a straight-sets local on the owner's integer scale. Court fee band ×
-   *  wealthCorridor; the deterministic projection uses band + corridor midpoints. Coach option
-   *  (+50%) deliberately skipped in projection v1. */
+  /** Owner rule 25.07 (now also in the season-planner spec): practice drain =
+   *  max(1, local-scoreline drain − 1). Locals are mostly 1-2 scoreline drains, so the flat
+   *  projection value is 1; the REAL engine mechanic will grade it off scorelines. Court fee
+   *  band × wealthCorridor; the deterministic projection uses band + corridor midpoints.
+   *  Coach option (+50%) deliberately skipped in projection v1. */
   practice: { conditionCost: 1, courtCents: [30_00, 80_00] as [number, number] },
   /** boost = condition gain of the vacation week (owner's ladder); priceCents are ASSUMED. */
   packages: [
@@ -679,15 +740,24 @@ export function effectivePhysio(profile: Profile, policy: Policy): boolean {
  * knobs, so call it inside withScenario(V2) to project on the V2 formula. Pure and
  * deterministic: same run + profile + policy → same projection.
  *
+ * Week-type recovery semantics (owner 25.07 – "(almost) every week ≥1 game by choice"):
+ *  - tournament week: matchWeekRecoveryBase (0 shipped) – travel + competition;
+ *  - PRACTICE week: recoveryBase only – she keeps the base but FORFEITS the slider bonus,
+ *    then pays the practice drain;
+ *  - free week: recoveryBase + slider bonus.
+ * Physio and blackout bonuses ride on top exactly like the engine. All planner decisions read
+ * the week's ENTRY condition (before that week's recovery) – the parent plans on what she sees.
+ *
  * Booking rules (per the owner's ask):
  *  - bookable week = no real tournament played AND not out injured (rehab weeks are not
  *    plannable; entered weeks can never collide with a booking by construction).
  *  - practices: grinder EVERY practice-eligible empty week; balanced every OTHER; careful only
- *    while projected condition ≥ carefulPracticeMin. Practice-eligible excludes exam/off-season
+ *    while the entry condition ≥ carefulPracticeMin. Practice-eligible excludes exam/off-season
  *    weeks (school + family time – projection assumption, see footer).
- *  - vacations: careful books when projected condition < carefulBookBelow (cheapest package
+ *  - vacations: careful books when the entry condition < carefulBookBelow (cheapest package
  *    clearing carefulTargetAbove, largest if none; not on exam weeks); balanced books one sea
- *    week per season year in the off-season; grinder never books.
+ *    week per season year in the off-season; grinder never books. A vacation week is a free
+ *    week (base + slider) plus the package boost.
  */
 export function projectPlanner(run: RunResult, profile: Profile, policy: Policy): ProjectionResult {
   const k = ECONOMY.condition
@@ -723,20 +793,17 @@ export function projectPlanner(run: RunResult, profile: Profile, policy: Policy)
     const offSeason = offset >= WEEKS_PER_YEAR - OFF_SEASON_WEEKS
     const exam = av.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
 
-    // the LIVE weekly recovery formula (V2 under withScenario(V2))
-    let recovery = played ? k.matchWeekRecoveryBase : k.recoveryBase + sliderBonus(policy.plan.rest)
-    if (physioOn) recovery += phys.conditionBonusPerWeek
-    if (offSeason || exam) recovery += k.blackoutBonus
-    c = clampC(c + recovery)
-
-    const bookable = !played && !w.injured
-    if (bookable) {
-      let booked = false
-      if (policy.id === 'careful' && !exam && c < PLANNER.carefulBookBelow) {
+    // 1. planner decisions on the week's ENTRY condition (before recovery)
+    const entryCond = c
+    let booked = false
+    let pkgBoost = 0
+    let practiced = false
+    if (!played && !w.injured) {
+      if (policy.id === 'careful' && !exam && entryCond < PLANNER.carefulBookBelow) {
         const pkg =
-          PLANNER.packages.find((p) => c + p.boost > PLANNER.carefulTargetAbove) ??
+          PLANNER.packages.find((p) => entryCond + p.boost > PLANNER.carefulTargetAbove) ??
           PLANNER.packages[PLANNER.packages.length - 1]
-        c = clampC(c + pkg.boost)
+        pkgBoost = pkg.boost
         vacationsByPackage[pkg.id] = (vacationsByPackage[pkg.id] ?? 0) + 1
         vacationCostCents += Math.round(pkg.priceCents * corridorMid)
         booked = true
@@ -745,27 +812,36 @@ export function projectPlanner(run: RunResult, profile: Profile, policy: Policy)
         if (!seaBookedYears.has(year)) {
           const sea = PLANNER.packages.find((p) => p.id === 'sea')!
           seaBookedYears.add(year)
-          c = clampC(c + sea.boost)
+          pkgBoost = sea.boost
           vacationsByPackage.sea = (vacationsByPackage.sea ?? 0) + 1
           vacationCostCents += Math.round(sea.priceCents * corridorMid)
           booked = true
         }
       }
       if (!booked && !offSeason && !exam) {
-        const wantsPractice =
+        practiced =
           policy.id === 'grinder' ||
           (policy.id === 'balanced' && practiceEligibleIdx % 2 === 0) ||
-          (policy.id === 'careful' && c >= PLANNER.carefulPracticeMin)
-        if (wantsPractice) {
+          (policy.id === 'careful' && entryCond >= PLANNER.carefulPracticeMin)
+        if (practiced) {
           practices++
           practiceCostCents += courtMidCents
-          c = clampC(c - PLANNER.practice.conditionCost)
         }
         practiceEligibleIdx++
       }
     }
 
-    // the real committed strain lands after accrual, exactly like the engine's commit order
+    // 2. week-type recovery (owner semantics): tournament 0 base · practice keeps the base but
+    //    forfeits the slider bonus · free/vacation week = base + slider. Physio/blackout on top.
+    let recovery: number
+    if (played) recovery = k.matchWeekRecoveryBase
+    else if (practiced) recovery = k.recoveryBase
+    else recovery = k.recoveryBase + sliderBonus(policy.plan.rest)
+    if (physioOn) recovery += phys.conditionBonusPerWeek
+    if (offSeason || exam) recovery += k.blackoutBonus
+    c = clampC(c + recovery + pkgBoost - (practiced ? PLANNER.practice.conditionCost : 0))
+
+    // 3. the real committed strain lands after accrual, exactly like the engine's commit order
     c = clampC(c - w.strain)
 
     projWeekly.push(c)
@@ -1022,13 +1098,15 @@ const HEADER = [
   '  this grid cannot see. Re-run the grid when they land; policies are data (gridPolicies), so the new',
   '  axis is a field, not a fork.',
   '',
-  'SCENARIOS (owner 25.07): the whole bench (headline + grid) runs TWICE – BASELINE (shipped knobs)',
-  '  and V2 (matchWeekRecoveryBase 0: no base recovery on match weeks; physio bonus 2→1). The V2 patch',
-  '  lands on the LIVE ECONOMY object and is restored afterwards, so V2 keeps every feedback loop real:',
-  '  coupling curve, caution/floor gates, injury tau, entry starvation. --scenario baseline|v2 runs one',
-  '  section only. The PROJ section (planner projection: practices + vacations, NOT engine mechanics)',
-  '  rides on the V2 traces – its assumptions and blind spots are printed inline. A V2-vs-BASELINE',
-  '  delta block closes the run.',
+  'SCENARIOS (owner 25.07, V2.1 SHIPPED): BASELINE = the shipped engine knobs (recoveryBase 1,',
+  '  matchWeekRecoveryBase 0, physio bonus 1), full section (headline + grid + PROJ). V2 = the previous',
+  '  candidate patched back (recoveryBase 2), headline + PROJ – the audit trail of the V2.1 decision.',
+  '  LEGACY = the original round-9 values (2/2/2), headline only. Patches land on the LIVE ECONOMY',
+  '  object and are restored afterwards, so every scenario keeps all feedback loops real: coupling',
+  '  curve, caution/floor gates, injury tau, entry starvation. --scenario baseline|v2|legacy runs one',
+  '  section. endSeason lines read wk49 (the wrap, BEFORE the off-season restore) → wk51 (after the 3',
+  '  blackout weeks); the owner target is wk49 ~60-85 by policy. A BASELINE-vs-V2 delta block + the',
+  '  INJURY PANEL (real-anchor calibration) close the full run.',
 ].join('\n')
 
 // --- CSV ---------------------------------------------------------------------
@@ -1077,12 +1155,12 @@ function parseCsvPath(argv: string[]): string | null {
   return path
 }
 
-function parseScenarioArg(argv: string[]): 'baseline' | 'v2' | null {
+function parseScenarioArg(argv: string[]): Scenario['id'] | null {
   const i = argv.indexOf('--scenario')
   if (i === -1) return null
   const v = argv[i + 1]
-  if (v === 'baseline' || v === 'v2') return v
-  throw new Error('--scenario must be "baseline" or "v2"')
+  if (v === 'baseline' || v === 'v2' || v === 'legacy') return v
+  throw new Error('--scenario must be "baseline", "v2" or "legacy"')
 }
 
 function keyOf(scenario: Scenario, horizon: FatigueHorizon, profile: Profile, policy: Policy): string {
@@ -1133,12 +1211,18 @@ function runScenarioSection(
           console.log('  ' + padEnd(label, 17) + `S${s + 1} ` + row)
         })
       }
-      // End-of-season condition per season – the carry-over signal.
+      // End-of-season (wk49, BEFORE the off-season restore) → post-off-season (wk51) – the
+      // owner's tuning target reads the wk49 side; the arrow shows what 3 blackout weeks buy.
       for (const stats of cellsOfProfile) {
+        const perSeason = stats.endOfSeasonMean
+          .map((c, s) => `S${s + 1} ${c.toFixed(1)}→${stats.postOffSeasonMean[s].toFixed(1)}`)
+          .join(' · ')
+        const p = stats.endSeasonPooled
         console.log(
           '  ' +
             padEnd(`endSeason ${stats.policy.id}`, 20) +
-            stats.endOfSeasonMean.map((c, s) => `S${s + 1} ${c.toFixed(1)}`).join(' · '),
+            perSeason +
+            `   (wk49→wk51; pooled wk49 ${p.mean.toFixed(1)} ±${p.sd.toFixed(1)} [${p.min}..${p.max}])`,
         )
       }
       // Anchors (spec): balanced vs real junior prevalence; grinder-vs-careful injury ratio.
@@ -1157,40 +1241,42 @@ function runScenarioSection(
   }
 
   // --- factorial grid (12 unbundled cells per profile, one horizon, reduced seeds) ---
-  const gridHorizon = FATIGUE_HORIZONS.find((h) => h.weeks === GRID_HORIZON_WEEKS)!
-  const gridCells: CellStats[] = []
-  console.log('')
-  console.log(rule)
-  console.log(
-    `  [${scenario.id}] FACTORIAL GRID – plan × entry × physio, ${GRID_HORIZON_WEEKS}w, ${GRID_SEEDS} seeds/cell` +
-      ` (reduced from ${SEEDS_PER_CELL}; headline trio above keeps ${SEEDS_PER_CELL})`,
-  )
-  console.log(rule)
-  for (const profile of PROFILES) {
+  if (scenario.grid) {
+    const gridHorizon = FATIGUE_HORIZONS.find((h) => h.weeks === GRID_HORIZON_WEEKS)!
+    const gridCells: CellStats[] = []
     console.log('')
-    console.log(`  PROFILE ${profile.label}`)
-    console.log(gridHeader())
-    for (const p of GRID_PLANS) {
-      for (const e of GRID_ENTRIES) {
-        for (const ph of GRID_PHYSIO) {
-          const policy = gridPolicies().find((g) => g.id === `${p.id}·${e.id}·${ph}`)!
-          const runs = runCell(profile, policy, GRID_HORIZON_WEEKS, GRID_SEEDS)
-          all.push({ scenario, horizon: gridHorizon, profile, policy, runs })
-          const stats = computeCellStats(profile, policy, gridHorizon, runs)
-          gridCells.push(stats)
-          degenerate.push(...degeneracyFindings(stats).map((f) => `[${scenario.id}] ${f}`))
-          console.log(gridRow(p.id, e.id, ph, stats))
+    console.log(rule)
+    console.log(
+      `  [${scenario.id}] FACTORIAL GRID – plan × entry × physio, ${GRID_HORIZON_WEEKS}w, ${GRID_SEEDS} seeds/cell` +
+        ` (reduced from ${SEEDS_PER_CELL}; headline trio above keeps ${SEEDS_PER_CELL})`,
+    )
+    console.log(rule)
+    for (const profile of PROFILES) {
+      console.log('')
+      console.log(`  PROFILE ${profile.label}`)
+      console.log(gridHeader())
+      for (const p of GRID_PLANS) {
+        for (const e of GRID_ENTRIES) {
+          for (const ph of GRID_PHYSIO) {
+            const policy = gridPolicies().find((g) => g.id === `${p.id}·${e.id}·${ph}`)!
+            const runs = runCell(profile, policy, GRID_HORIZON_WEEKS, GRID_SEEDS)
+            all.push({ scenario, horizon: gridHorizon, profile, policy, runs })
+            const stats = computeCellStats(profile, policy, gridHorizon, runs)
+            gridCells.push(stats)
+            degenerate.push(...degeneracyFindings(stats).map((f) => `[${scenario.id}] ${f}`))
+            console.log(gridRow(p.id, e.id, ph, stats))
+          }
         }
       }
     }
+    console.log('')
+    console.log(`  [${scenario.id}] GRID CORNER CASES`)
+    for (const line of gridCornerBlock(gridCells)) console.log(line)
   }
-  console.log('')
-  console.log(`  [${scenario.id}] GRID CORNER CASES`)
-  for (const line of gridCornerBlock(gridCells)) console.log(line)
 
-  // PROJ layer rides on the V2 scenario's REAL 104w headline traces – rendered inside the
+  // PROJ layer rides on THIS scenario's REAL 104w headline traces – rendered inside the
   // scenario (the projection reads the LIVE patched knobs).
-  if (scenario.id === 'v2') renderProjection(scenario, all)
+  if (scenario.proj) renderProjection(scenario, all)
 }
 
 // --- PROJ rendering ------------------------------------------------------------
@@ -1216,9 +1302,13 @@ function renderProjection(scenario: Scenario, all: BenchCell[]): void {
   console.log('')
   console.log(thin)
   console.log(
-    `  [${scenario.id}] PROJ – planner projection ON TOP of the real V2 traces (104w headline cells, ${SEEDS_PER_CELL} seeds)`,
+    `  [${scenario.id}] PROJ – planner projection ON TOP of the real ${scenario.id} traces (104w headline cells, ${SEEDS_PER_CELL} seeds)`,
   )
   console.log('  practices + vacations are NOT engine mechanics – every column here is a projection, not a simulation.')
+  console.log(
+    '  week semantics (owner): tournament wk = 0 base · PRACTICE wk = base, slider bonus FORFEITED, drain 1' +
+      ' (= max(1, local drain − 1); engine will grade off scorelines) · free wk = base + slider.',
+  )
   console.log(
     '  ASSUMED package prices (docs/specs/season-planner.md is not in the repo yet – swap when it lands): ' +
       PLANNER.packages.map((p) => `${p.id} +${p.boost} $${(p.priceCents / 100).toFixed(0)}`).join(' · '),
@@ -1277,25 +1367,27 @@ function renderProjection(scenario: Scenario, all: BenchCell[]): void {
   console.log('  PROJ blind spots: no result feedback (win% is NOT recomputed – the coupling curve only acts in')
   console.log('    the real scenarios above); no calendar feedback (bookings never move entries; entered weeks are')
   console.log('    non-bookable by construction); practices affect neither skills nor the overuse counter; prices')
-  console.log('    use band + corridor midpoints; no bookings on exam weeks, practices also skip the off-season.')
+  console.log('    use band + corridor midpoints; no bookings on exam weeks, practices also skip the off-season;')
+  console.log('    planner decisions read the week-entry condition (before that week\'s recovery).')
 }
 
-// --- V2 vs baseline comparison ---------------------------------------------------
+// --- scenario comparison ----------------------------------------------------------
 
-function renderComparison(headline: Map<string, CellStats>): void {
+function renderComparison(headline: Map<string, CellStats>, from: Scenario, to: Scenario): void {
   const rule = '═'.repeat(120)
   console.log('')
   console.log(rule)
-  console.log('  V2 vs BASELINE – headline deltas (cond base→v2 · %<70 base→v2 · caut/s base→v2; anchors per profile)')
+  console.log(
+    `  ${to.id.toUpperCase()} vs ${from.id.toUpperCase()} – headline deltas (${from.id}→${to.id});` +
+      ' owner season-end target: wk49 lands ~60-85 by policy (grinder low, careful high-but-<100)',
+  )
   console.log(rule)
-  const base = SCENARIOS[0]
-  const v2 = SCENARIOS[1]
   for (const horizon of FATIGUE_HORIZONS) {
     console.log('')
     console.log(`  [${horizon.label}]`)
     for (const profile of PROFILES) {
       const get = (s: Scenario, pol: Policy) => headline.get(keyOf(s, horizon, profile, pol))
-      const rows = POLICIES.map((pol) => ({ pol, b: get(base, pol), v: get(v2, pol) }))
+      const rows = POLICIES.map((pol) => ({ pol, b: get(from, pol), v: get(to, pol) }))
       if (rows.some((r) => !r.b || !r.v)) continue
       console.log(`  ${profile.label}`)
       const below70 = (s: CellStats) => s.pctLow + s.pctMid
@@ -1303,11 +1395,12 @@ function renderComparison(headline: Map<string, CellStats>): void {
         console.log(
           '    ' +
             padEnd(pol.id, 10) +
-            `cond ${b!.meanCond.toFixed(1)}→${v!.meanCond.toFixed(1)} · <70 ${below70(b!).toFixed(1)}%→${below70(v!).toFixed(1)}%` +
+            `cond ${b!.meanCond.toFixed(1)}→${v!.meanCond.toFixed(1)}` +
+            ` · endSeason(wk49) ${b!.endSeasonPooled.mean.toFixed(1)}→${v!.endSeasonPooled.mean.toFixed(1)}` +
+            ` · <70 ${below70(b!).toFixed(1)}%→${below70(v!).toFixed(1)}%` +
             ` · caut/s ${b!.cautionPerSeason.toFixed(2)}→${v!.cautionPerSeason.toFixed(2)}` +
             ` · trough ${b!.troughMean.toFixed(0)}·${b!.troughMin}→${v!.troughMean.toFixed(0)}·${v!.troughMin}` +
-            ` · inj/s ${b!.injPerSeason.toFixed(2)}→${v!.injPerSeason.toFixed(2)}` +
-            ` · lost/s ${b!.weeksLostPerSeason.toFixed(1)}→${v!.weeksLostPerSeason.toFixed(1)}`,
+            ` · inj/s ${b!.injPerSeason.toFixed(2)}→${v!.injPerSeason.toFixed(2)}`,
         )
       }
       const [g, , c] = rows
@@ -1320,8 +1413,69 @@ function renderComparison(headline: Map<string, CellStats>): void {
       }
       console.log(
         `    anchors: inj g/c ${ratio(g.b, c.b)}x→${ratio(g.v, c.v)}x (spec ≥3x)` +
-          ` · win% careful−grinder ${winGap(base)}pp→${winGap(v2)}pp` +
-          ` · matches g ${g.b!.matchesPerSeason.toFixed(1)}→${g.v!.matchesPerSeason.toFixed(1)}/s`,
+          ` · win% careful−grinder ${winGap(from)}pp→${winGap(to)}pp` +
+          ` · matches g ${g.b!.matchesPerSeason.toFixed(1)}→${g.v!.matchesPerSeason.toFixed(1)}/s` +
+          ` · lost/s g ${g.b!.weeksLostPerSeason.toFixed(1)}→${g.v!.weeksLostPerSeason.toFixed(1)}`,
+      )
+    }
+  }
+}
+
+// --- injury panel (owner calibration vs docs/research/injury-stats-by-age.md) ------
+
+/** Real-world anchors (research doc + owner 25.07): juniors 46-54% injured/season (≈0.5-1.1
+ *  inj/season, minors dominating); girls post-peak ≈1.0 week lost/yr, boys at growth peak
+ *  ≈2.3 weeks; teen-peak heavy-load groups reach ~95% prevalence – the grinder's legitimate
+ *  analog. */
+export const INJURY_ANCHORS = {
+  juniorPrevalencePct: [46, 54] as [number, number],
+  juniorInjPerSeason: [0.5, 1.1] as [number, number],
+  weeksLostBand: [1.0, 2.3] as [number, number], // girls post-peak 1.0 … boys growth-peak 2.3
+  heavyLoadPrevalencePct: 95, // teen-peak heavy-load analog for the grinder
+}
+
+function bandFlag(x: number, [lo, hi]: [number, number]): string {
+  if (x < lo) return `below ${lo}-${hi}`
+  if (x > hi) return `ABOVE ${lo}-${hi}`
+  return `in ${lo}-${hi}`
+}
+
+function renderInjuryPanel(headline: Map<string, CellStats>, from: Scenario, to: Scenario): void {
+  const a = INJURY_ANCHORS
+  const horizon = FATIGUE_HORIZONS.find((h) => h.weeks === GRID_HORIZON_WEEKS)!
+  const rule = '═'.repeat(120)
+  console.log('')
+  console.log(rule)
+  console.log(
+    `  INJURY PANEL – ${horizon.label}, ${from.id}→${to.id}, vs the REAL anchors` +
+      ' (docs/research/injury-stats-by-age.md):',
+  )
+  console.log(
+    `  juniors ${a.juniorPrevalencePct[0]}-${a.juniorPrevalencePct[1]}%/season injured (≈${a.juniorInjPerSeason[0]}-${a.juniorInjPerSeason[1]} inj/season, minors dominating) · weeks lost ` +
+      `${a.weeksLostBand[0]} (girls post-peak) - ${a.weeksLostBand[1]} (boys growth-peak) /yr · heavy-load teen-peak ≈${a.heavyLoadPrevalencePct}% prevalence (grinder analog)`,
+  )
+  console.log(rule)
+  for (const profile of PROFILES) {
+    console.log('')
+    console.log(`  PROFILE ${profile.label}`)
+    for (const policy of POLICIES) {
+      const b = headline.get(keyOf(from, horizon, profile, policy))
+      const v = headline.get(keyOf(to, horizon, profile, policy))
+      if (!b || !v) continue
+      const sev = SEVERITIES.map((s) => v.sevPerSeason[s].toFixed(2)).join('/')
+      const minorShare = v.injPerSeason === 0 ? 0 : (100 * v.sevPerSeason.minor) / v.injPerSeason
+      const anchor =
+        policy.id === 'grinder'
+          ? `prev vs heavy-load ~${a.heavyLoadPrevalencePct}%: ${v.prevalencePct.toFixed(0)}% · lost ${bandFlag(v.weeksLostPerSeason, a.weeksLostBand)}`
+          : `prev ${bandFlag(v.prevalencePct, a.juniorPrevalencePct)}% · inj ${bandFlag(v.injPerSeason, a.juniorInjPerSeason)} · lost ${bandFlag(v.weeksLostPerSeason, a.weeksLostBand)}`
+      console.log(
+        '    ' +
+          padEnd(policy.id, 10) +
+          `inj/s ${b.injPerSeason.toFixed(2)}→${v.injPerSeason.toFixed(2)}` +
+          ` · prev ${b.prevalencePct.toFixed(0)}%→${v.prevalencePct.toFixed(0)}%` +
+          ` · sev(${to.id}) ${sev} (minors ${minorShare.toFixed(0)}%)` +
+          ` · lost/s ${b.weeksLostPerSeason.toFixed(1)}→${v.weeksLostPerSeason.toFixed(1)}` +
+          `   [${anchor}]`,
       )
     }
   }
@@ -1341,7 +1495,14 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     withScenario(scenario, () => runScenarioSection(scenario, all, degenerate, headline))
   }
 
-  if (scenarios.length === SCENARIOS.length) renderComparison(headline)
+  // The audit trail of the V2.1 decision: previous candidate (v2) → shipped (baseline),
+  // plus the owner's injury calibration panel against the real-world anchors.
+  const baseline = scenarios.find((s) => s.id === 'baseline')
+  const v2 = scenarios.find((s) => s.id === 'v2')
+  if (baseline && v2) {
+    renderComparison(headline, v2, baseline)
+    renderInjuryPanel(headline, v2, baseline)
+  }
 
   console.log('')
   if (degenerate.length) {

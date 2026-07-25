@@ -158,11 +158,12 @@ describe('R9-1 — savings interest', () => {
 // + 2 while physioActive, + 1 on blackout weeks. The slider no longer drains.
 // ---------------------------------------------------------------------------
 describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
-  it('match-free weeks: grind 85/15 → +2, balanced 75/25 → +3, light 60/40 → +4', () => {
+  it('match-free weeks: grind 85/15 → +1, balanced 75/25 → +2, light 60/40 → +3 (V2.1 ladder)', () => {
+    // RE-PINNED 25.07 (V2.1: recoveryBase 2 → 1) – the owner's "все чуть ниже к концу сезона".
     const cases: Array<{ plan: { train: number; rest: number }; gain: number }> = [
-      { plan: { train: 85, rest: 15 }, gain: 2 }, // base 2 + slider 0
-      { plan: { train: 75, rest: 25 }, gain: 3 }, // base 2 + slider 1
-      { plan: { train: 60, rest: 40 }, gain: 4 }, // base 2 + slider 2
+      { plan: { train: 85, rest: 15 }, gain: 1 }, // base 1 + slider 0
+      { plan: { train: 75, rest: 25 }, gain: 2 }, // base 1 + slider 1
+      { plan: { train: 60, rest: 40 }, gain: 3 }, // base 1 + slider 2
     ]
     for (const { plan, gain } of cases) {
       const w = createWorld(`r9-rec-${plan.rest}`)
@@ -174,23 +175,28 @@ describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
     }
   })
 
-  it('a match week earns NO slider bonus – just the base (fatigue lands at finalize)', () => {
+  it('a match week earns NO base and NO slider bonus – V2 shipped: tournament = travel + competition', () => {
+    // RE-PINNED 25.07 (owner "V2 хорош"): matchWeekRecoveryBase went 2 → 0, so a played week
+    // now recovers nothing at all on its own (physio/blackout still add on top).
     const w = createWorld('r9-rec-match')
     w.physioActive = false
     w.condition = 50
     w.plan = { train: 60, rest: 40 } // would be +2 slider on a free week
     accrueCondition(w, true)
-    expect(w.condition).toBe(52) // base 2 only
+    expect(w.condition).toBe(50) // matchWeekRecoveryBase 0 – nothing accrues
+    expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0)
   })
 
-  it('R9-14: physioActive adds conditionBonusPerWeek = 2 (the billed retainer finally shows)', () => {
+  it('R9-14: physioActive adds conditionBonusPerWeek = 1 (the billed retainer, V2-tuned)', () => {
+    // RE-PINNED 25.07: was 2 – at 2 the retainer alone erased every policy difference on
+    // hired-coach profiles (fatigue-bench finding), so the V2 flip tuned it to 1.
     const w = createWorld('r9-physio-bonus')
     w.condition = 50
     w.plan = { train: 75, rest: 25 }
     w.physioActive = true
     accrueCondition(w, false)
-    expect(w.condition).toBe(55) // 2 base + 1 slider + 2 physio
-    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
+    expect(w.condition).toBe(53) // 1 base + 1 slider + 1 physio (V2.1 base)
+    expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
   })
 
   it('a blackout week adds +1; everything clamps at 100', () => {
@@ -200,7 +206,7 @@ describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
     w.week = 49 // off-season → blackout
     w.condition = 50
     accrueCondition(w, false)
-    expect(w.condition).toBe(54) // 2 base + 1 slider + 1 blackout
+    expect(w.condition).toBe(53) // 1 base + 1 slider + 1 blackout (V2.1 base)
     w.condition = 99
     accrueCondition(w, false)
     expect(w.condition).toBe(100) // clamped

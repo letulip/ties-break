@@ -175,31 +175,34 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
 // pinned OFF for the pure numbers; the +2 physio bonus is covered in round9.test.ts.
 // ---------------------------------------------------------------------------
 describe('B2 — condition dynamics', () => {
-  it('balanced 75/25, match-free: +3/wk', () => {
+  // RE-PINNED 25.07 (V2.1 shipped: recoveryBase 2 → 1): the free-week ladder is now
+  // grind +1 / balanced +2 / light +3 – the owner wants every policy to ARRIVE at the season
+  // wrap below 100, with the off-season + a planner vacation doing the restoring.
+  it('balanced 75/25, match-free: +2/wk', () => {
     const w = createWorld('b2-balanced')
     w.physioActive = false
     w.condition = 60
     w.plan = { train: 75, rest: 25 }
     for (let i = 0; i < 10; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(90) // was +1/wk pre-round-9 – regenerated: owner recovery redesign
+    expect(w.condition).toBe(80) // base 1 + slider 1 – was +3/wk pre-V2.1
   })
 
-  it('grind 85/15, match-free: +2/wk (base only – rest 15 earns no slider bonus)', () => {
+  it('grind 85/15, match-free: +1/wk (base only – rest 15 earns no slider bonus)', () => {
     const w = createWorld('b2-grind')
     w.physioActive = false
     w.condition = 40
     w.plan = { train: 85, rest: 15 }
     for (let i = 0; i < 10; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(60) // was -2/wk (100/0) pre-round-9 – regenerated: owner recovery redesign
+    expect(w.condition).toBe(50) // base 1 only – was +2/wk pre-V2.1
   })
 
-  it('light 60/40, match-free: +4/wk, clamped at 100', () => {
+  it('light 60/40, match-free: +3/wk, clamped at 100', () => {
     const w = createWorld('b2-rest')
     w.physioActive = false
     w.condition = 90
     w.plan = { train: 60, rest: 40 }
     for (let i = 0; i < 4; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(100) // 90 → 94 → 98 → clamp
+    expect(w.condition).toBe(100) // 90 → 93 → 96 → 99 → clamp
   })
 })
 
@@ -219,7 +222,9 @@ describe('B3 — tournament fatigue (per-match at finalize since round-9)', () =
     const ev = injectEvent(w, { week: w.week, tier: 'national' })
     w.entries.push(ev.id)
     accrueCondition(w, true)
-    expect(w.condition).toBe(62) // 60 + base 2 (a match week earns no slider bonus)
+    // RE-PINNED 25.07 (V2 shipped): a match week earns NO base recovery at all
+    // (matchWeekRecoveryBase 0) – and still no match fatigue at tick time.
+    expect(w.condition).toBe(60)
   })
 })
 
@@ -255,8 +260,8 @@ describe('B4 — fatigue is a soft, warned choice', () => {
     expect(ul.cautionReason).toBeUndefined()
 
     // Playing fatigued digs a deeper hole – emergent (per-match drain at finalize since
-    // round-9, see tests/round9.test.ts), NO extra entry penalty. At tick time the accumulator
-    // moves by the base recovery only. (regenerated: owner match-fatigue redesign, round-9)
+    // round-9, see tests/round9.test.ts), NO extra entry penalty. RE-PINNED 25.07 (V2
+    // shipped): at tick time a match week accrues NOTHING (matchWeekRecoveryBase 0).
     const wp = createWorld('b4-play')
     wp.physioActive = false
     wp.condition = 35
@@ -264,7 +269,7 @@ describe('B4 — fatigue is a soft, warned choice', () => {
     const ev = injectEvent(wp, { week: wp.week, tier: 'national' })
     wp.entries.push(ev.id)
     accrueCondition(wp, true)
-    expect(wp.condition).toBe(37) // 35 + base 2 – was 10 under the flat -26 tick strain
+    expect(wp.condition).toBe(35) // unchanged at tick – was 37 pre-V2, 10 under the flat -26 strain
   })
 })
 
