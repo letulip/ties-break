@@ -1,0 +1,56 @@
+# GitLab CI — mirrors the GitHub workflows (ci.yml + deploy.yml) so both remotes stay honest.
+# Why GitLab: GitHub Pages needs a paid plan to publish from a PRIVATE repo; GitLab Pages does it
+# on the free tier, and its Pages access control can keep the code private while the site is public.
+#
+# Two jobs, same gates as GitHub:
+#   test  — every branch / MR: forced typecheck + tests + build
+#   pages — main only: the same gates, then publish
+#
+# --force on vue-tsc: `-b` trusts its incremental cache, which has hidden real type errors before
+# (a duplicate-import TS2300 shipped past a cached build on 25.07). Always a full check.
+
+default:
+  image: node:22
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm/
+  before_script:
+    - npm ci --cache .npm --prefer-offline
+
+stages:
+  - test
+  - deploy
+
+test:
+  stage: test
+  script:
+    - npx vue-tsc -b --force
+    - npm test
+    - npm run build
+  rules:
+    - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
+
+pages:
+  stage: deploy
+  script:
+    - npx vue-tsc -b --force
+    - npm test
+    # BASE_PATH is derived from the real Pages URL, so this works BOTH ways:
+    #   classic namespace URL  https://<user>.gitlab.io/ties-break  -> "/ties-break/"
+    #   unique-domain URL      https://ties-break-abc123.gitlab.io  -> "/"
+    # (GitLab enables unique domains for new projects; hardcoding /$CI_PROJECT_NAME/ would 404
+    #  every asset in that case.)
+    - export BASE_PATH="$(echo "$CI_PAGES_URL" | sed -E 's#https?://[^/]+##')/"
+    - echo "Building with BASE_PATH=$BASE_PATH (CI_PAGES_URL=$CI_PAGES_URL)"
+    - npm run build
+    # GitLab Pages serves the `public/` directory. Vite READS public/ as its static-asset source
+    # and writes to dist/, so the swap happens only AFTER the build, in this throwaway checkout.
+    - rm -rf public && mv dist public
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
