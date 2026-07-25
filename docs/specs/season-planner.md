@@ -51,11 +51,30 @@ price — owner approved). Cancel before the week starts = full refund (mirror o
 - Option «+ тренер на игру» (owner add): plus 50% of a coaching-session cost — v1 placeholder band
   **$120–250 × corridor × 0.5** (the other half is "paid by the opponent's family"); re-priced per
   coach tier when the coach slice lands.
-- Effect v1: −5 condition (light strain), a watchable friendly via the EXISTING exhibition
+- Effect v1 (owner 25.07, integer scale): condition drain = **max(1, local-scoreline drain − 1)**
+  — a friendly is one lighter than the same match at a local, never below 1 (straight sets = 1,
+  a 3-set friendly slugfest = 1, an epic = 2). Week-type semantics: a PRACTICE week keeps the
+  base recovery (+2) but FORFEITS the slider rest bonus (you played, even if friendly); a
+  TOURNAMENT week gets no base recovery (V2); a free week gets base + slider bonus. So the
+  weekly ladder reads 0 / +2−drain / +2..+4. A watchable friendly via the EXISTING exhibition
   infrastructure (MatchViewer), a news event, **0 ranking points** (ladder stays honest).
-  Development effects arrive with the skills system.
+  Development effects arrive with the skills system — the owner's vision: (almost) every week
+  has at least one game if the player wants it; small stat gains will be the pull.
 - An injury still cancels the practice week (walkover rules do not apply — no fee forfeit beyond
   the court rental; keep it simple: refund rental if injured before the week).
+
+## 4b. Bench insight (25.07, fatigue-bench PROJ run) — vacation trigger re-homed
+The projection exposed a design trap: a reactive "book when condition < 60" rule attached to a
+load-managing player NEVER fires (she never drops that low), while the overloaded player — who
+under practices lives at 40-70 — has no booking habit at all. Result: 5 of 6 packages never sell.
+Fix in the implementation:
+- Vacations are the RESCUE lever surfaced to whoever is low: when condition drops below ~65 and
+  an empty bookable week exists ahead, the game PROMPTS ("Она вымотана – может, отпуск?") with
+  the catalogue pre-filtered to packages that return her above ~85. The prompt is an offer, not
+  an auto-book — player agency stays.
+- The scheduled off-season family week (sea) stays a natural default suggestion for everyone.
+- Bench re-run after the slice lands must show every package selling at SOME rate across
+  policies before the price ladder is considered tuned.
 
 ## 5. Closes
 - R5 backlog debt "Vacations as a class differentiator affecting recovery" (Phase 4/5 promise).
