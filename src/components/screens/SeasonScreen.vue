@@ -232,12 +232,13 @@ function playExhibition(): void {
               >
                 Withdraw
               </button>
-              <span v-else-if="entriesClosed(row.event)" class="pill muted">
+              <!-- Round-8 6b: `lock` brightens the label to soft amber (pill stays disabled). -->
+              <span v-else-if="entriesClosed(row.event)" class="pill muted lock">
                 Entries closed W{{ row.event.deadlineWeek }}
               </span>
               <!-- HARD locks: ranking gate ('locked'/'outgrown') OR a hard availability block
                    (injured / school exams). Fatigue is NOT here – it stays enterable (see below). -->
-              <span v-else-if="!row.event.eligible" class="pill muted">
+              <span v-else-if="!row.event.eligible" class="pill muted lock">
                 🔒 {{ lockLabel(row.event) }}
               </span>
               <template v-else>

@@ -10,6 +10,7 @@ import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { KID_ID, flipScore, isBlackoutWeek } from '../../engine/world'
+import { TIERS } from '../../engine/season/calendar'
 import { ECONOMY } from '../../engine/economy'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
@@ -180,20 +181,46 @@ function shortFinish(finish: number): string {
   if (finish === 3) return 'QF'
   return `R${2 ** finish}`
 }
+// Round-8 R8-8 (owner 25.07) adds two states on top of reached/untouched/locked:
+//  - unlocked: never entered but currently ENTERABLE (an upcoming event of the tier is
+//    `eligible`) – an accent call-to-action instead of the old grey dash;
+//  - outgrown: her windowed points sit past the tier's entry ceiling (same band the entry
+//    gate uses) – the card recedes to a dim outline while the name + best result stay accent.
+type TierChipState = 'locked' | 'outgrown' | 'unlocked' | 'reached' | 'idle'
 interface TierChip {
   id: TierId
   short: string
   label: string
-  reached: boolean
-  locked: boolean
+  state: TierChipState
+  title: string
 }
 const seasonChips = computed<TierChip[]>(() =>
   SEASON_STRIP_TIERS.map(({ id, short }) => {
     const locked = id === 'itf' // ITF stays locked in Phase 3
     const best = game.snapshot?.bestFinishByTier[id]
     const reached = !locked && best !== undefined
-    const label = locked ? '🔒' : reached ? shortFinish(best!) : '–'
-    return { id, short, label, reached, locked }
+    const outgrown = !locked && kidPoints.value > TIERS[id].enterPointBand[1]
+    const unlocked =
+      !locked && !outgrown && !reached && (game.snapshot?.upcoming ?? []).some((e) => e.tier === id && e.eligible)
+    const state: TierChipState = locked
+      ? 'locked'
+      : outgrown
+        ? 'outgrown'
+        : unlocked
+          ? 'unlocked'
+          : reached
+            ? 'reached'
+            : 'idle'
+    const label = locked ? '🔒' : unlocked ? 'Unlocked – enter your first!' : reached ? shortFinish(best!) : '–'
+    const title =
+      state === 'locked'
+        ? 'ITF Junior – locked in Phase 3'
+        : state === 'outgrown'
+          ? `Outgrown – her best ${short} result stays on the books`
+          : state === 'unlocked'
+            ? `Eligible now – enter a ${short} event to open the account`
+            : `Best ${short} finish`
+    return { id, short, label, state, title }
   }),
 )
 
@@ -227,6 +254,18 @@ const spendRange = computed<[number, number]>(() => {
 // --- This week: the kid's nearest entered event (soonest upcoming week with
 // `entered: true`), or a plain "training week" hint when nothing is entered.
 const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
+
+// Round-8 R8-4: once this week's tournament has been played, the card's bottom line carries
+// the kid's LATEST match score (kid-perspective), read straight off the snapshot's match
+// events for the current week – no engine extension. Empty on non-tournament weeks.
+const thisWeekScore = computed<string | null>(() => {
+  const events = game.snapshot?.events ?? []
+  for (let i = events.length - 1; i >= 0; i--) {
+    const e = events[i]
+    if (e.type === 'match' && e.week === week.value && e.match?.score) return kidScoreOf(e.match)
+  }
+  return null
+})
 
 // --- News: structured events (Package M), non-financial types only (expense/
 // income live on the Money ledger). Strictly newest-first: most recent week first,
@@ -358,8 +397,14 @@ function openRankHelp(): void {
         <template v-for="(chip, i) in seasonChips" :key="chip.id">
           <span
             class="pill tier-chip"
-            :class="{ ok: chip.reached, muted: !chip.reached && !chip.locked, locked: chip.locked }"
-            :title="chip.locked ? 'ITF Junior – locked in Phase 3' : `Best ${chip.short} finish`"
+            :class="{
+              ok: chip.state === 'reached',
+              muted: chip.state === 'idle',
+              locked: chip.state === 'locked',
+              unlocked: chip.state === 'unlocked',
+              outgrown: chip.state === 'outgrown',
+            }"
+            :title="chip.title"
           >{{ chip.short }} · {{ chip.label }}</span>
           <span v-if="i < seasonChips.length - 1" class="strip-arrow">→</span>
         </template>
@@ -374,6 +419,8 @@ function openRankHelp(): void {
           {{ nearestEntered.label }} · {{ nearestEntered.surface }} · W{{ nearestEntered.week }}
         </span>
         <span v-else class="hint" style="margin: 0">No event – training week</span>
+        <!-- Round-8 R8-4: latest played match score of this week's tournament, once available. -->
+        <span v-if="thisWeekScore" class="this-week-score num">Latest match: {{ thisWeekScore }}</span>
       </div>
       <div class="option-row" style="margin-top: 10px">
         <button

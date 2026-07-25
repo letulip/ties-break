@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
+import { avatarEmotion, type LastKidResult } from './shared/avatarEmotion'
 import { KID_ID } from './engine/world'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -28,25 +29,37 @@ const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 
 const game = useGameStore()
 
-// Round 5 item 31 – heuristic v1: the header avatar reflects the kid's most recent
-// on-court result. Most recent `match` event in the snapshot's event log (chronological,
-// oldest first, so the last one is newest) decides happy/sad/norm; no match yet (or the
-// kid didn't play it – other-cohort matches never appear on the snapshot) => norm.
-// Face crops live in public/avatars/{jun-norm,jun-happy,jun-sad}.webp (generated via
-// scripts/optimize-art.mjs from art-src/avatars/jun-*.png; see docs/specs/round5-brand.md
-// for the crop offsets). Junior stage until the sim grows an age.
-const lastKidMatchWon = computed<boolean | null>(() => {
+// Round-8 R8-6a/R8-6b (supersedes round 5's lastKidMatchWon heuristic): the header avatar
+// emotion is decided by the pure helper in src/shared/avatarEmotion.ts. A result emotion
+// (happy / sad / serious-for-a-lost-final) only lasts until the next weekly tick; after
+// that the face reflects her current state (injury / tired / serious / norm). Face crops
+// live in public/avatars/jun-{norm,happy,sad,serious,tired,injury}.webp (256×256, cropped
+// from the fem-euro-brunnet jun art via the round5-brand offsets convention). Junior stage
+// until the stage-by-age portrait slice lands.
+const lastKidResult = computed<LastKidResult | null>(() => {
   const events = game.snapshot?.events
   if (!events) return null
   for (let i = events.length - 1; i >= 0; i--) {
-    const match = events[i].match
-    if (match) return match.winnerId === KID_ID
+    const e = events[i]
+    const match = e.match
+    if (!match) continue
+    const won = match.winnerId === KID_ID
+    // R8-6a: a loss in the FINAL = runner-up = a good result. The same week's tournament
+    // summary carries finishIdx 1 exactly when her run ended in the final.
+    const lostFinal =
+      !won && events.some((t) => t.type === 'tournament' && t.week === e.week && t.finishIdx === 1)
+    return { week: e.week, won, lostFinal }
   }
   return null
 })
 const avatarUrl = computed(() => {
-  const stage = lastKidMatchWon.value === true ? 'happy' : lastKidMatchWon.value === false ? 'sad' : 'norm'
-  return `${import.meta.env.BASE_URL}avatars/jun-${stage}.webp`
+  const emotion = avatarEmotion({
+    week: game.snapshot?.week ?? 0,
+    condition: game.snapshot?.condition ?? 100,
+    injured: !!game.snapshot?.injury,
+    lastResult: lastKidResult.value,
+  })
+  return `${import.meta.env.BASE_URL}avatars/jun-${emotion}.webp`
 })
 
 onMounted(() => game.init())

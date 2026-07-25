@@ -13,5 +13,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
+      # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
+      - run: npx vue-tsc -b --force
       - run: npm test
       - run: npm run build
