@@ -11,10 +11,19 @@ constant is the single place to retune.
 
 ## Landed
 - **Travel** — `ECONOMY.travelBgFactor`, corridors live since the ranking-gate slice (roll from
-  `seed:travelbg:week:tier`).
+  `seed:travelbg:week:tier`). Unification slice: `travelBgFactor` now references
+  `ECONOMY.wealthCorridor` directly (pure refactor, values identical, export name kept).
 - **Medical** (slice C) — `ECONOMY.physio.medicalBgFactor` on rehab/onset/retainer (roll from
   `seed:physio:week`). Slice C also introduces the canonical constant `ECONOMY.wealthCorridor`
   and points `medicalBgFactor` at it.
+- **Coaching/review** (unification slice) — the weekly base expense in `world.ts
+  resolveBaseCosts`: main-stream `pickInt` untouched, then × `lo + roll * (hi - lo)` with the
+  roll from `seed:coachbg:week`. `bgExpenseFactor` (fixed 0.8/1.0/1.4) is REMOVED – middle's
+  byte-identical ×1.0 pin to the pre-round-7 baseline ended deliberately (point 3 below).
+  Measured on the calibration batch: wealthy burn mean $17.7k → $14.1k (mean still in the owner
+  band; the per-seed $14k floor is temporarily relaxed to the measured $12k migration floor in
+  tests/economy.test.ts pending the coach-slice income re-tune), working $5.8k → $4.6k,
+  middle ±5% noise.
 
 ## Follow-up slice: "wealth-corridor unification" (small, AFTER slice C merges — collides with C in economy.ts/world.ts, do NOT run in parallel; the CI incident of 25.07 is the lesson)
 1. `travelBgFactor` → reference `ECONOMY.wealthCorridor` (values identical; pure refactor).

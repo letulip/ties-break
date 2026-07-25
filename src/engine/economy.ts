@@ -34,10 +34,11 @@ export interface GearLine {
 }
 
 // THE app-level wealth-price corridor (owner canon, 25.07): the same [lo, hi] factor band per
-// family background prices travel (travelBgFactor, migrating in the econ-wealth-corridor
-// follow-up) and every medical bill (ECONOMY.physio.medicalBgFactor references this object)
-// today, and coaching in a follow-up slice. Framing: working = public clinics / budget trips,
-// middle = standard, wealthy = private everything. Retuned when real incomes land.
+// family background prices travel (ECONOMY.travelBgFactor), every medical bill
+// (ECONOMY.physio.medicalBgFactor) and the weekly coaching/review expense (world.ts
+// resolveBaseCosts, roll from `seed:coachbg:week`) – all three reference this ONE object.
+// Framing: working = public clinics / budget trips, middle = standard, wealthy = private
+// everything. Retuned when real incomes (prize money) land – this constant is the single knob.
 const WEALTH_CORRIDOR = {
   working: [0.7, 0.8],
   middle: [0.95, 1.05],
@@ -64,34 +65,27 @@ export const ECONOMY = {
 
   // Weekly base ("coaching") expense draw range in cents, by coaching setup. A parent-coach
   // saves on fees. The draw COUNT is one pickInt per tick regardless of setup/background.
+  // Background scaling happens AFTER the pickInt via the wealth corridor: one uniform roll from
+  // the private `seed:coachbg:week` sub-stream maps into wealthCorridor[background] (see
+  // world.ts resolveBaseCosts) – a post-draw multiply, so the main-stream draw sequence never
+  // depends on background. (Wealth-corridor unification: this replaced the fixed bgExpenseFactor
+  // 0.8/1.0/1.4 – middle's exact ×1.0 pin to the pre-round-7 baseline ended DELIBERATELY, middle
+  // now breathes ±5% weekly like every other corridor-priced bill.)
   expenseRangeCents: {
     hired: [250_00, 700_00],
     parent: [120_00, 400_00],
   } as Record<CoachSetup, [number, number]>,
 
-  // Family background scales the drawn base expense AFTER the pickInt (draw itself unchanged,
-  // so the main-stream count never depends on background). middle ×1.0 stays byte-identical to
-  // the pre-round-7 baseline used by the 520-week identity run. wealthy 1.25 → 1.4 (round-7 c:
-  // premium everything).
-  bgExpenseFactor: {
-    working: 0.8,
-    middle: 1.0,
-    wealthy: 1.4,
-  } as Record<FamilyBackground, number>,
-
   // Travel scales with family means (wealthier travel = pricier + a money-sink; poorer = cheaper),
   // and the owner wants the price to sit in a CORRIDOR for every trip, not on a fixed multiplier.
-  // Each background is a `[lo, hi]` band; a per-event uniform roll (from a purpose-scoped sub-stream
-  // keyed by the event – see calendar.ts) maps into the band: `factor = lo + roll * (hi - lo)`. The
-  // corridors are disjoint (working ≤ 0.80 < middle ≥ 0.95 ≤ 1.05 < wealthy ≥ 1.20) so, drawn off
-  // the SAME roll, working < middle < wealthy holds per trip, not just on average. POST-draw multiply
-  // only – the travel pickInt in calendar.ts stays byte-identical, so the season sub-RNG (and the
-  // world's RNG identity) hold.
-  travelBgFactor: {
-    working: [0.7, 0.8],
-    middle: [0.95, 1.05],
-    wealthy: [1.2, 1.3],
-  } as Record<FamilyBackground, [number, number]>,
+  // A per-event uniform roll (from a purpose-scoped sub-stream keyed by the event – see calendar.ts)
+  // maps into the band: `factor = lo + roll * (hi - lo)`. The corridors are disjoint
+  // (working ≤ 0.80 < middle ≥ 0.95 ≤ 1.05 < wealthy ≥ 1.20) so, drawn off the SAME roll,
+  // working < middle < wealthy holds per trip, not just on average. POST-draw multiply only – the
+  // travel pickInt in calendar.ts stays byte-identical, so the season sub-RNG (and the world's RNG
+  // identity) hold. The bands ARE the canonical app-level corridor (kept under its historical
+  // export name so call sites stay stable).
+  travelBgFactor: WEALTH_CORRIDOR,
 
   // Weekly expense scale from the time split: train 75% ≈ 1.0, more training costs more.
   // factor = base + perTrainPercent * plan.train.

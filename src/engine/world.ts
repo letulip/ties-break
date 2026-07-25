@@ -125,7 +125,6 @@ export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
 // (imported by tests) pointing at that one source of truth.
 export const PARENT_INCOME_CENTS = ECONOMY.parentIncomeCents
 const EXPENSE_RANGE = ECONOMY.expenseRangeCents
-const BG_EXPENSE_FACTOR = ECONOMY.bgExpenseFactor
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -661,9 +660,15 @@ function resolveParentIncome(world: WorldState): void {
 
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const [lo, hi] = EXPENSE_RANGE[world.profile.coachSetup]
-  // Draw first (unchanged), THEN scale by background – draw count stays background-independent.
+  // Draw first (byte-identical MAIN-stream pickInt, background-independent), THEN scale by the
+  // background's wealth corridor: ONE uniform roll from the private `seed:coachbg:week` sub-stream
+  // maps into wealthCorridor[background] (mirrors travelBgFactor / medicalBgFactor – same roll,
+  // disjoint corridors, so working < middle < wealthy holds per week). POST-draw multiply only,
+  // so the main-stream draw count/order never depends on background.
+  const [cLo, cHi] = ECONOMY.wealthCorridor[world.profile.background]
+  const coachRoll = rngFromSeed(`${world.seed}:coachbg:${world.week}`)()
   const expense = Math.round(
-    pickInt(rng, lo, hi) * planExpenseFactor(world.plan.train) * BG_EXPENSE_FACTOR[world.profile.background],
+    pickInt(rng, lo, hi) * planExpenseFactor(world.plan.train) * (cLo + coachRoll * (cHi - cLo)),
   )
   world.fundsCents -= expense
   const flavors = world.plan.train >= 70 ? trainFlavors(world.profile.background) : restFlavors(world.profile.background)
