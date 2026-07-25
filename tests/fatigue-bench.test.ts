@@ -1,4 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Monte-Carlo cells (30 seeds × 52-208 engine-weeks) finish in ~1-4s on a dev Mac but blow the
+// 5s default on a 2-core CI runner (observed: the ordering + 104w-anchor tests timing out in the
+// PR run). One generous file-level timeout instead of per-test surgery – these tests are
+// deterministic, only slow.
+vi.setConfig({ testTimeout: 240_000 })
 import {
   PROFILES,
   POLICIES,
