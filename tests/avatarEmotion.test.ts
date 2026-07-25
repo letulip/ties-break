@@ -1,6 +1,7 @@
 // Round-8 R8-6a/R8-6b – the pure avatar-emotion decision (src/shared/avatarEmotion.ts).
+// Round-9 R9-11 – win-immunity (a recent title shields sad) + local losses are never sad.
 import { describe, it, expect } from 'vitest'
-import { avatarEmotion, idleEmotion } from '../src/shared/avatarEmotion'
+import { avatarEmotion, idleEmotion, WIN_IMMUNITY_WEEKS } from '../src/shared/avatarEmotion'
 
 describe('idleEmotion (R8-6b state-aware idle)', () => {
   it('injury wins over everything', () => {
@@ -56,5 +57,49 @@ describe('avatarEmotion (result freshness + R8-6a runner-up)', () => {
     expect(avatarEmotion({ ...base, injured: true, lastResult: { week: 10, won: true, lostFinal: false } })).toBe(
       'happy',
     )
+  })
+})
+
+describe('R9-11 — win immunity + local losses are never sad', () => {
+  const base = { week: 10, condition: 80, injured: false }
+  const loss = { week: 10, won: false, lostFinal: false }
+
+  it('the immunity table: local 0, regional 1, national 2 weeks', () => {
+    expect(WIN_IMMUNITY_WEEKS.local).toBe(0)
+    expect(WIN_IMMUNITY_WEEKS.regional).toBe(1)
+    expect(WIN_IMMUNITY_WEEKS.national).toBe(2)
+  })
+
+  it('a local-tier loss maps to serious, never sad', () => {
+    expect(avatarEmotion({ ...base, lastResult: { ...loss, tier: 'local' } })).toBe('serious')
+    // higher tiers still hurt without a shield
+    expect(avatarEmotion({ ...base, lastResult: { ...loss, tier: 'regional' } })).toBe('sad')
+    expect(avatarEmotion({ ...base, lastResult: { ...loss, tier: 'national' } })).toBe('sad')
+  })
+
+  it('a Regional title shields sad for 1 week; a National one for 2', () => {
+    const regionalLoss = { ...loss, tier: 'regional' as const }
+    // Regional title last week -> shielded this week...
+    expect(avatarEmotion({ ...base, lastResult: regionalLoss, lastTitle: { tier: 'regional', week: 9 } })).toBe('serious')
+    // ...but not two weeks later.
+    expect(avatarEmotion({ ...base, lastResult: regionalLoss, lastTitle: { tier: 'regional', week: 8 } })).toBe('sad')
+    // National title shields one week longer.
+    expect(avatarEmotion({ ...base, lastResult: regionalLoss, lastTitle: { tier: 'national', week: 8 } })).toBe('serious')
+    expect(avatarEmotion({ ...base, lastResult: regionalLoss, lastTitle: { tier: 'national', week: 7 } })).toBe('sad')
+  })
+
+  it('a local title shields nothing (0 weeks) beyond its own week', () => {
+    expect(avatarEmotion({ ...base, lastResult: { ...loss, tier: 'regional' }, lastTitle: { tier: 'local', week: 9 } })).toBe('sad')
+  })
+
+  it('the shield only softens fresh LOSSES – wins, finals and idle states are untouched', () => {
+    const title = { tier: 'national' as const, week: 9 }
+    expect(avatarEmotion({ ...base, lastResult: { week: 10, won: true, lostFinal: false }, lastTitle: title })).toBe('happy')
+    expect(avatarEmotion({ ...base, lastResult: { week: 10, won: false, lostFinal: true }, lastTitle: title })).toBe('serious')
+    expect(avatarEmotion({ ...base, condition: 30, lastResult: { week: 8, won: false, lostFinal: false }, lastTitle: title })).toBe('tired')
+  })
+
+  it('no tier on the loss (caller could not resolve it) keeps the pre-R9-11 behavior', () => {
+    expect(avatarEmotion({ ...base, lastResult: loss })).toBe('sad')
   })
 })

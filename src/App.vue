@@ -6,8 +6,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
-import { avatarEmotion, type LastKidResult } from './shared/avatarEmotion'
-import { KID_ID } from './engine/world'
+import { useKidEmotion } from './composables/kidEmotion'
+import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
@@ -30,38 +30,13 @@ const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 
 const game = useGameStore()
 
-// Round-8 R8-6a/R8-6b (supersedes round 5's lastKidMatchWon heuristic): the header avatar
-// emotion is decided by the pure helper in src/shared/avatarEmotion.ts. A result emotion
-// (happy / sad / serious-for-a-lost-final) only lasts until the next weekly tick; after
-// that the face reflects her current state (injury / tired / serious / norm). Face crops
-// live in public/avatars/jun-{norm,happy,sad,serious,tired,injury}.webp (256×256, cropped
-// from the fem-euro-brunnet jun art via the round5-brand offsets convention). Junior stage
-// until the stage-by-age portrait slice lands.
-const lastKidResult = computed<LastKidResult | null>(() => {
-  const events = game.snapshot?.events
-  if (!events) return null
-  for (let i = events.length - 1; i >= 0; i--) {
-    const e = events[i]
-    const match = e.match
-    if (!match) continue
-    const won = match.winnerId === KID_ID
-    // R8-6a: a loss in the FINAL = runner-up = a good result. The same week's tournament
-    // summary carries finishIdx 1 exactly when her run ended in the final.
-    const lostFinal =
-      !won && events.some((t) => t.type === 'tournament' && t.week === e.week && t.finishIdx === 1)
-    return { week: e.week, won, lostFinal }
-  }
-  return null
-})
-const avatarUrl = computed(() => {
-  const emotion = avatarEmotion({
-    week: game.snapshot?.week ?? 0,
-    condition: game.snapshot?.condition ?? 100,
-    injured: !!game.snapshot?.injury,
-    lastResult: lastKidResult.value,
-  })
-  return `${import.meta.env.BASE_URL}avatars/jun-${emotion}.webp`
-})
+// R9-13/15: the header avatar emotion comes from the SHARED useKidEmotion composable (the
+// R8-6a/6b freshness rules + R9-11 win-immunity live in src/shared/avatarEmotion.ts), so the
+// header crop, the Home player card and the Kid screen portrait can never disagree. Face
+// crops live in public/avatars/jun-{norm,happy,sad,serious,tired,injury}.webp (256×256,
+// round5-brand offsets convention). Junior stage until the stage-by-age slice (pt5) lands.
+const { emotion: kidEmotion } = useKidEmotion()
+const avatarUrl = computed(() => `${import.meta.env.BASE_URL}avatars/jun-${kidEmotion.value}.webp`)
 
 onMounted(() => game.init())
 
@@ -142,6 +117,46 @@ watch(tab, (t) => {
     lastSeenSeasonWeek.value = week.value
     localStorage.setItem(SEASON_SEEN_KEY, String(week.value))
   }
+})
+
+// --- R9-21b: news cue – a soft "тилинь" + a Season-style accent dot on the Home tab -----
+// News = the non-financial events HomeScreen's feed shows (expense/income live on Money).
+// "Last looked at the feed" ≈ the Home tab being active: seen is marked when Home becomes
+// active and whenever a snapshot lands while it is. The cue fires on any genuinely NEW news
+// event (id above the last-seen watermark), whatever tab is up – the owner's complaint was
+// missing news entirely while week-skipping. Watermark persisted per career (event ids are
+// per-career counters, so a global key would collide across careers).
+const newsSeenKey = () => `tb:lastSeenNewsId:${game.snapshot?.careerId ?? ''}`
+const lastSeenNewsId = ref(Number(localStorage.getItem(newsSeenKey()) ?? '-1'))
+const latestNewsId = computed(() => {
+  const events = game.snapshot?.events ?? []
+  let latest = -1
+  for (const e of events) {
+    if (e.type !== 'expense' && e.type !== 'income' && e.id > latest) latest = e.id
+  }
+  return latest
+})
+const homeHasNews = computed(() => tab.value !== 'home' && latestNewsId.value > lastSeenNewsId.value)
+function markNewsSeen(): void {
+  if (latestNewsId.value > lastSeenNewsId.value) {
+    lastSeenNewsId.value = latestNewsId.value
+    localStorage.setItem(newsSeenKey(), String(latestNewsId.value))
+  }
+}
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    // switching careers re-reads that career's own watermark (never dings on a plain load)
+    lastSeenNewsId.value = Number(localStorage.getItem(newsSeenKey()) ?? '-1')
+    if (lastSeenNewsId.value < 0) markNewsSeen()
+  },
+)
+watch(tab, (t) => {
+  if (t === 'home') markNewsSeen()
+})
+watch(latestNewsId, (now, before) => {
+  if (before !== undefined && before >= 0 && now > before) playSfx('clickSoft') // тилинь
+  if (tab.value === 'home') markNewsSeen()
 })
 
 // --- coach-mark onboarding tour (item 10) ------------------------------------
@@ -302,6 +317,8 @@ function dismissStopToast(): void {
         <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
+        <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. -->
+        <span v-else-if="t.id === 'home' && homeHasNews" class="tab-dot"></span>
       </button>
     </nav>
 

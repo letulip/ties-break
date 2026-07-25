@@ -79,43 +79,66 @@ already fixed there — verified and noted below. Player copy: short dash "–".
   stop; toast map dropped it) + `tests/round9.test.ts` (UI wiring)
 
 ## UI pack (pt4 — checkpoint commit)
-- [ ] **R9-4 Sora font**: kid's name in the header + on Home, tournament names in the Season
+- [x] **R9-4 Sora font**: kid's name in the header + on Home, tournament names in the Season
   calendar (the white text), and the white "Season" heading → `font-family: Sora`.
-- [ ] **R9-5 physio toggle OUT of Home → Money "Budget" section**: the Home condition block loses
+  → `src/style.css` (.kid-name / .player-name / .event-tier / .season-topbar h2)
+- [x] **R9-5 physio toggle OUT of Home → Money "Budget" section**: the Home condition block loses
   the physio row (its layout is broken there anyway); MoneyScreen gains a "Budget" section with
   the physio toggle + weekly cost label. (First brick of the round-7 "кошелёк-ручки" plan.)
-- [ ] **R9-8 this-week plan as plain text**: the train/rest pill on Home becomes unbordered plain
+  → `src/components/screens/MoneyScreen.vue` (Budget section) + `src/components/screens/HomeScreen.vue`
+  (row removed) + `tests/injuries.test.ts` (UI-wiring re-pin)
+- [x] **R9-8 this-week plan as plain text**: the train/rest pill on Home becomes unbordered plain
   text on ONE line with the current week's tournament name.
-- [ ] **R9-11 emotion win-immunity**: a Regional WIN shields the sad emotion for 1 week, a
+  → `src/components/screens/HomeScreen.vue` (.this-week-plan) + `src/style.css`
+- [x] **R9-11 emotion win-immunity**: a Regional WIN shields the sad emotion for 1 week, a
   National win for 2 weeks (winImmunityWeeks per tier in the avatarEmotion helper); local-tier
   losses map to `serious`, never `sad`. Extend `tests/avatarEmotion.test.ts`.
-- [ ] **R9-13/15 the BIG portrait reflects state**: the Home/Kid large portrait (not just the
+  → `src/shared/avatarEmotion.ts` (WIN_IMMUNITY_WEEKS, lastTitle shield, local→serious) +
+  `tests/avatarEmotion.test.ts` (R9-11 describe)
+- [x] **R9-13/15 the BIG portrait reflects state**: the Home/Kid large portrait (not just the
   header crop) uses the same emotion resolver — tired below 40, injury while injured, etc. The
   full-size art exists for every stage×emotion.
-- [ ] **R9-18 week-recap consistency**: WeekRecapCard appears "sometimes" (owner). Find the
+  → `src/composables/kidEmotion.ts` (new, shared decision incl. tier/title resolution) wired into
+  `src/App.vue` + `HomeScreen.vue` (emotion crop) + `KidScreen.vue` (full-size emotion art)
+- [x] **R9-18 week-recap consistency**: WeekRecapCard appears "sometimes" (owner). Find the
   actual display condition, make it consistent: after EVERY resolved non-tournament week (incl.
   multi-week advances — show the latest), never after a tournament week (the flow covers it).
   Document the rule in a comment.
-- [ ] **R9-21b news cue**: a soft "тилинь" (existing sfx framework — `clickSoft` family or
+  → `src/components/screens/HomeScreen.vue`: ROOT CAUSE was the per-MOUNT dismissal ref (tab
+  switches remount HomeScreen and re-showed a dismissed recap); dismissal now lives in a plain
+  module-scope script block keyed career:week, and THE RULE is documented at showRecap.
+- [x] **R9-21b news cue**: a soft "тилинь" (existing sfx framework — `clickSoft` family or
   similar, no new assets) + the Season-tab-style accent dot on Home when NEW news arrived since
   the player last looked at the feed.
-- [ ] **R9-17 verify**: force an injury+recovery in a test/dev run and confirm the News feed
+  → `src/App.vue` (per-career lastSeenNewsId watermark, Home tab-dot, clickSoft on arrival)
+- [x] **R9-17 verify**: force an injury+recovery in a test/dev run and confirm the News feed
   renders "Back on court – cleared to play." with 💪. Fix rendering if it doesn't.
-- [ ] **R9-23 applause lag after the decisive point** (owner: "пауза между очком и аплодисментами,
+  → VERIFIED: rendering was already correct – `tests/round9.test.ts` (R9-17) now forces an
+  injury+recovery and pins the snapshot event + the feed's 💪 mapping/filter.
+- [x] **R9-23 applause lag after the decisive point** (owner: "пауза между очком и аплодисментами,
   особенно на ×2"): game/set/match applause fires at the START of the separate
   'game-end'/'set-end'/'match-end' timeline events, but those are scheduled AFTER the point-end
   event's duration + the 0.15 trailing gap. FIX (sound-only, no timeline restructure): fire the
   cue in startEvent's 'point-end' branch off the point data (biggest cue only: match > set >
   game; keep the tiebreak-set oohApplause split + suppressEndApplause/final logic), and silence
   the later *-end STARTS.
-- [ ] **R9-24 long cues ignore playback speed** (owner: "на ×2 удары звучат ×2, а аплодисменты и
+  → `src/components/MatchViewer.vue` (startEvent rework – point-end START fires the biggest cue;
+  timeline untouched, zero fixture churn). NOTE: the converted-break 'ooh' now yields to the
+  game applause landing at the same instant (they used to be ~1s apart by scheduling accident).
+- [x] **R9-24 long cues ignore playback speed** (owner: "на ×2 удары звучат ×2, а аплодисменты и
   take-your-seats нет — диссонанс"): playSfx gains {rate}; LONG cues only (applauseShort,
   oohApplause, applauseFinal, takeYourSeats) play at min(speed, 2) with preservesPitch where
   supported (feature-detect); seats pre-roll holds 3600/min(speed,2) ms. Short percussive cues
   stay rate 1.
-- [ ] **R9-25 verify: Season this-week list shows LOST matches too?** Architect's code read says
+  → `src/audio/sfx.ts` (playSfx {rate}, cap 2, preservesPitch feature-detect incl. webkit prefix) +
+  `src/components/MatchViewer.vue` (playLong for the four long cues; seats hold 3600/min(speed,2)).
+- [x] **R9-25 verify: Season this-week list shows LOST matches too?** Architect's code read says
   no wins-only filter exists (kidMatchEvent emits every revealed match unconditionally). Verify
   in the browser pass: a mid-draw LOSS must appear with the Watch icon; note the verdict here.
+  → VERIFIED LIVE (dev build, career zoe-j24k, W4 Local Open, QF exit): "Quarterfinal: Z. Sanches
+  lost to D. Lindqvist 3-6 6-7" rendered in "This week's tournament" WITH the Watch icon –
+  losses ARE included, no wins-only filter exists. Likely perception: the list is strictly
+  current-week – after advancing, last week's matches leave the card (they stay in Home News).
 
 ## Stage/art pack (pt5 — checkpoint commit)
 - [ ] **R9-16 portrait stages by age**: stage resolver — `jun` < 12, `young` 12-16, `teen` 17-22

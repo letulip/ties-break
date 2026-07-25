@@ -1,0 +1,82 @@
+// R9-13/15 – ONE emotion decision for every portrait surface (the header crop, the Home
+// player-card avatar and the Kid screen's big portrait), so they can never disagree. Wraps
+// the pure avatarEmotion helper (R8-6a/6b + R9-11 win-immunity) with the snapshot reads it
+// needs: the freshest kid match (with its tier), the freshest title, condition and injury.
+//
+// Tier resolution is structural, not text-parsing: a SeasonEvent id is `${year}-w${week}-${tier}`
+// (calendar.ts), so the match's own eventId names its tier; the title's tier falls back to the
+// tournament summary's label prefix against the closed TIERS catalogue.
+import { computed } from 'vue'
+import { useGameStore } from '../stores/game'
+import {
+  avatarEmotion,
+  type AvatarEmotion,
+  type LastKidResult,
+  type LastKidTitle,
+} from '../shared/avatarEmotion'
+import { KID_ID } from '../engine/world'
+import { TIERS } from '../engine/season/calendar'
+import type { TierId } from '../engine/season/types'
+
+const TIER_IDS = Object.keys(TIERS) as TierId[]
+
+/** `${year}-w${week}-${tier}` → tier (undefined for an unparseable/foreign id). */
+function tierFromEventId(eventId: string | undefined): TierId | undefined {
+  if (!eventId) return undefined
+  const tail = eventId.split('-').pop()
+  return TIER_IDS.find((t) => t === tail)
+}
+
+/** Tournament-summary events read `${TIERS[tier].label} (…)` – match the label prefix. */
+function tierFromSummaryText(text: string): TierId | undefined {
+  return TIER_IDS.find((t) => text.startsWith(TIERS[t].label))
+}
+
+export function useKidEmotion() {
+  const game = useGameStore()
+
+  // The kid's most recent played match. A result emotion only lasts until the next weekly
+  // tick (avatarEmotion checks week === current), so walking the trailing feed is enough.
+  const lastResult = computed<LastKidResult | null>(() => {
+    const events = game.snapshot?.events
+    if (!events) return null
+    for (let i = events.length - 1; i >= 0; i--) {
+      const e = events[i]
+      const match = e.match
+      if (!match) continue
+      const won = match.winnerId === KID_ID
+      // R8-6a: a loss in the FINAL = runner-up = a good result. The same week's tournament
+      // summary carries finishIdx 1 exactly when her run ended in the final.
+      const lostFinal =
+        !won && events.some((t) => t.type === 'tournament' && t.week === e.week && t.finishIdx === 1)
+      return { week: e.week, won, lostFinal, tier: tierFromEventId(match.eventId) }
+    }
+    return null
+  })
+
+  // R9-11: the kid's most recent TITLE (finishIdx 0 on a tournament summary). The 60-event
+  // snapshot window is plenty – the longest immunity is 2 weeks.
+  const lastTitle = computed<LastKidTitle | null>(() => {
+    const events = game.snapshot?.events
+    if (!events) return null
+    for (let i = events.length - 1; i >= 0; i--) {
+      const e = events[i]
+      if (e.type !== 'tournament' || e.finishIdx !== 0) continue
+      const tier = tierFromSummaryText(e.text)
+      if (tier) return { tier, week: e.week }
+    }
+    return null
+  })
+
+  const emotion = computed<AvatarEmotion>(() =>
+    avatarEmotion({
+      week: game.snapshot?.week ?? 0,
+      condition: game.snapshot?.condition ?? 100,
+      injured: !!game.snapshot?.injury,
+      lastResult: lastResult.value,
+      lastTitle: lastTitle.value,
+    }),
+  )
+
+  return { emotion }
+}

@@ -363,6 +363,7 @@ select {
 
 .kid-name {
   flex: 1;
+  font-family: var(--font-heading); /* R9-4: the kid's name reads in Sora */
   font-size: 15px;
   font-weight: 600;
 }
@@ -779,6 +780,7 @@ button.danger:hover:not(:disabled) {
 }
 
 .player-name {
+  font-family: var(--font-heading); /* R9-4: the kid's name reads in Sora */
   font-size: 16px;
   font-weight: 600;
 }
@@ -1034,6 +1036,15 @@ button.primary.risky {
   gap: 8px;
 }
 
+/* R9-8: the week plan as unbordered plain text on ONE line (ellipsis on narrow screens). */
+.this-week-plan {
+  margin: 10px 0 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Round-8 R8-4: the card's bottom line – the kid's latest played match score this week. */
 .this-week-score {
   flex-basis: 100%;
@@ -1093,6 +1104,7 @@ tr.milestone td {
 }
 
 .event-tier {
+  font-family: var(--font-heading); /* R9-4: tournament names on the Season calendar in Sora */
   font-weight: 600;
   font-size: 14px;
 }
@@ -1887,6 +1899,12 @@ tr.kid-row td {
 }
 
 /* --- Round 5: Season sub-tabs, tour guide, calendar muted rows -------------- */
+
+/* R9-4: the white "Season" heading sits OUTSIDE a section, so the `section h2` Sora rule
+   never reached it – give it the heading face directly. */
+.season-topbar h2 {
+  font-family: var(--font-heading);
+}
 
 .season-topbar {
   display: flex;

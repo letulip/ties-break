@@ -402,3 +402,76 @@ describe('R9-9/R9-21a — UI wiring', () => {
     expect(app).not.toContain('she picked up an injury – see the news')
   })
 })
+
+// ---------------------------------------------------------------------------
+// Round-9 pt4 — UI pack wiring (source-level guards, the B7/C-suite pattern)
+// + the R9-17 engine-to-feed verification.
+// ---------------------------------------------------------------------------
+describe('R9-17 — the recovery line reaches the News feed', () => {
+  it('a forced injury + recovery emits the 💪-mapped event into the snapshot feed', () => {
+    const w = createWorld('r9-recovery-feed')
+    w.injury = { kind: 'knee strain', severity: 'moderate', weeksRemaining: 1, totalWeeks: 3, sinceWeek: w.week }
+    tickWeek(w, rngFromSeed(w.seed))
+    const rec = toSnapshot(w).events.find((e) => e.type === 'recovery')
+    expect(rec).toBeDefined()
+    expect(rec!.text).toBe('Back on court – cleared to play.')
+    // HomeScreen's feed keeps non-financial types (recovery included) and maps 💪 to it.
+    const home = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
+    expect(home).toContain("recovery: '💪'")
+    expect(home).toContain("e.type !== 'expense' && e.type !== 'income'")
+  })
+})
+
+describe('pt4 — UI wiring', () => {
+  const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
+
+  it('R9-4: Sora reaches the kid name, tournament names and the Season heading', () => {
+    const css = read('../src/style.css')
+    for (const sel of ['.kid-name', '.player-name', '.event-tier']) {
+      const block = css.slice(css.indexOf(`${sel} {`))
+      expect(block.slice(0, block.indexOf('}'))).toContain('var(--font-heading)')
+    }
+    expect(css).toContain('.season-topbar h2')
+  })
+
+  it('R9-8: the Home plan line is unbordered plain text with the tournament name', () => {
+    const home = read('../src/components/screens/HomeScreen.vue')
+    expect(home).toContain('this-week-plan')
+    expect(home).not.toContain('<span class="pill">Training')
+  })
+
+  it('R9-13/15: all three portrait surfaces run through the shared emotion composable', () => {
+    for (const p of ['../src/App.vue', '../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
+      expect(read(p)).toContain('useKidEmotion')
+    }
+  })
+
+  it('R9-18: the recap dismissal survives remounts (module scope) and the rule is documented', () => {
+    const home = read('../src/components/screens/HomeScreen.vue')
+    expect(home).toContain('dismissedRecapKey')
+    expect(home).toMatch(/<script lang="ts">/) // the plain (module-scope) block exists
+    expect(home).toContain('THE RULE')
+  })
+
+  it('R9-21b: the Home tab carries an unread-news dot and a soft cue on arrival', () => {
+    const app = read('../src/App.vue')
+    expect(app).toContain('homeHasNews')
+    expect(app).toContain("playSfx('clickSoft')")
+    expect(app).toContain('lastSeenNewsId')
+  })
+
+  it('R9-23: reaction cues fire at the scoring instant; the *-end event starts are silent', () => {
+    const viewer = read('../src/components/MatchViewer.vue')
+    expect(viewer).toMatch(/if \(ev\.kind !== 'point-end'\) return/)
+    expect(viewer).toContain('match > set > game')
+  })
+
+  it('R9-24: long cues rate-match the clip (cap 2, preservesPitch) and the seats hold scales', () => {
+    const sfx = read('../src/audio/sfx.ts')
+    expect(sfx).toContain('preservesPitch')
+    expect(sfx).toContain('MAX_RATE = 2')
+    const viewer = read('../src/components/MatchViewer.vue')
+    expect(viewer).toContain('playLong')
+    expect(viewer).toContain('SEATS_PREROLL_MS / Math.min(speed.value, 2)')
+  })
+})

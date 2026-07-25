@@ -1,3 +1,12 @@
+<script lang="ts">
+// R9-18: TRUE module scope (a plain script block, compiled once per module – NOT per mount).
+// HomeScreen re-mounts on every tab switch (App.vue v-if), so a `<script setup>` ref forgets
+// the dismissal and the recap card pops back – the owner's "appears sometimes". Keyed by
+// career+week so it can never leak across careers; a page reload re-arms it (acceptable).
+import { ref as moduleRef } from 'vue'
+const dismissedRecapKey = moduleRef<string | null>(null)
+</script>
+
 <script setup lang="ts">
 // Package J – Home hub v2: player card, season strip (Phase 3 teaser), this
 // week's training/rest plan (presets from the worker), and a restyled news
@@ -12,13 +21,17 @@ import { formatShortName, rankLabel } from '../../shared/format'
 import { KID_ID, flipScore, isBlackoutWeek } from '../../engine/world'
 import { TIERS } from '../../engine/season/calendar'
 import { ECONOMY } from '../../engine/economy'
+import { useKidEmotion } from '../../composables/kidEmotion'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
 import { playSfx } from '../../audio/sfx'
 
 const game = useGameStore()
-const avatarUrl = `${import.meta.env.BASE_URL}avatars/jun.webp`
+// R9-13: the player-card portrait reflects her CURRENT state via the shared emotion
+// composable (same decision as the header crop + the Kid screen portrait).
+const { emotion: kidEmotion } = useKidEmotion()
+const avatarUrl = computed(() => `${import.meta.env.BASE_URL}avatars/jun-${kidEmotion.value}.webp`)
 
 function flagEmoji(code: string): string {
   if (!code) return ''
@@ -35,22 +48,30 @@ const ageYears = computed(() => game.snapshot?.ageYears ?? 0)
 const week = computed(() => game.snapshot?.week ?? 0)
 const weekDates = computed(() => weekRange(week.value))
 
-// --- Round 5 item 9 (light): a dismissible week-recap card, shown after a non-tournament
-// week resolves. Keyed by week number so it re-appears fresh every week without extra state.
+// --- Round 5 item 9 / R9-18 – the week-recap card. THE RULE (owner: it appeared
+// "sometimes"): the card shows after EVERY resolved non-tournament week – including
+// multi-week advances, where it recaps the LATEST resolved week – and never after a
+// tournament week (the flow's own cards cover that one) or while a reveal is pending.
+// Week 0 (career start) has nothing to recap. A dismissal silences exactly one week.
+//
+// The R9-18 root cause: the dismissal ref lived per-MOUNT, and HomeScreen re-mounts on
+// every tab switch (App.vue v-if) – so a dismissed recap popped back after visiting any
+// other tab, and the owner read the churn as "sometimes appears". The dismissal now lives
+// at MODULE scope keyed by career+week: it survives remounts for the session and can never
+// leak across careers (a reload re-arms it, which is the pre-existing, acceptable scope).
 const hasTournamentEventThisWeek = computed(() =>
   (game.snapshot?.events ?? []).some((e) => e.type === 'tournament' && e.week === week.value),
 )
-const dismissedRecapWeek = ref<number | null>(null)
 const showRecap = computed(
   () =>
     !!game.snapshot &&
     week.value > 0 &&
     !hasTournamentEventThisWeek.value &&
     !game.snapshot.pending &&
-    dismissedRecapWeek.value !== week.value,
+    dismissedRecapKey.value !== `${game.snapshot.careerId}:${week.value}`,
 )
 function dismissRecap(): void {
-  dismissedRecapWeek.value = week.value
+  if (game.snapshot) dismissedRecapKey.value = `${game.snapshot.careerId}:${week.value}`
 }
 
 // --- Player-card snapshot: real rank, week-over-week movement, season points ----
@@ -98,20 +119,8 @@ const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'red
   return { label: 'Fit', tone: 'green' }
 })
 
-// --- Physio toggle (Season-Life slice C): reflects/sets snapshot.physioActive, which now
-// actually bills a weekly retainer (corridor-scaled to the family's means) and in exchange
-// lowers injury risk and shortens recoveries. The cost range is shown next to the toggle. --
-const physioActive = computed(() => game.snapshot?.physioActive ?? false)
-function togglePhysio(): void {
-  game.setPhysio(!physioActive.value)
-}
-const physioCostLabel = computed(() => {
-  const background = game.snapshot?.profile.background
-  if (!background) return ''
-  const [lo, hi] = ECONOMY.physio.retainerPerWeekCents
-  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[background]
-  return `$${Math.round((lo * cLo) / 100)}–${Math.round((hi * cHi) / 100)}/wk`
-})
+// R9-5: the physio toggle moved to MoneyScreen's Budget section – it is a spending decision
+// (and its row broke the condition cell's layout here anyway).
 
 // --- News match rows (round-5 item 8): "V. Martin vs S. Everts" / kid-perspective score.
 const kidShort = computed(() => {
@@ -377,11 +386,6 @@ function openRankHelp(): void {
                   {{ availabilityChip.label }}
                 </span>
               </div>
-              <label class="physio-toggle">
-                <input type="checkbox" :checked="physioActive" :disabled="game.busy" @change="togglePhysio" />
-                <span>Physio recovery</span>
-                <span class="hint physio-cost">{{ physioCostLabel }}</span>
-              </label>
             </td>
           </tr>
         </tbody>
@@ -434,9 +438,12 @@ function openRankHelp(): void {
           {{ PRESET_LABEL[p] }}
         </button>
       </div>
-      <div class="controls" style="margin-top: 10px">
-        <span class="pill">Training {{ plan.train }}% · Rest {{ plan.rest }}%</span>
-      </div>
+      <!-- R9-8: the plan reads as unbordered plain text, ONE line, with this week's
+           tournament name when one is entered (the pill frame is gone). -->
+      <p class="this-week-plan">
+        Training {{ plan.train }}% · Rest {{ plan.rest }}%<template v-if="nearestEntered">
+          · {{ nearestEntered.label }} – W{{ nearestEntered.week }}</template>
+      </p>
       <div class="spend-row">
         <span class="hint">Planned spend</span>
         <span class="negative num">${{ spendRange[0] }}–${{ spendRange[1] }}</span>

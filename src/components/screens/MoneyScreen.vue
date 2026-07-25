@@ -12,9 +12,26 @@
 // current total), which stays correct for whatever slice of transactions is shown.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
+import { ECONOMY } from '../../engine/economy'
 import type { FamilyBackground, FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
 
 const game = useGameStore()
+
+// --- Budget section (R9-5): the physio toggle moved HERE from the Home condition block –
+// it is a spending decision, so it lives with the money (the first brick of the round-7
+// "кошелёк-ручки" plan: recurring budget levers collect on this screen). Reflects/sets
+// snapshot.physioActive; the weekly retainer band is corridor-scaled to the family's means.
+const physioActive = computed(() => game.snapshot?.physioActive ?? false)
+function togglePhysio(): void {
+  game.setPhysio(!physioActive.value)
+}
+const physioCostLabel = computed(() => {
+  const background = game.snapshot?.profile.background
+  if (!background) return ''
+  const [lo, hi] = ECONOMY.physio.retainerPerWeekCents
+  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[background]
+  return `$${Math.round((lo * cLo) / 100)}–${Math.round((hi * cHi) / 100)}/wk`
+})
 
 // Dollar figures per docs/specs/detour-ui-screens.md; must match
 // src/engine/world.ts STARTING_FUNDS_CENTS (wealthy 120k / middle 25k / working 8k).
@@ -161,6 +178,19 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
           </tr>
         </tbody>
       </table>
+    </section>
+
+    <!-- R9-5: recurring budget levers live with the money, not on Home. -->
+    <section>
+      <h2>Budget</h2>
+      <label class="physio-toggle">
+        <input type="checkbox" :checked="physioActive" :disabled="game.busy" @change="togglePhysio" />
+        <span>Physio recovery</span>
+        <span class="hint physio-cost">{{ physioCostLabel }}</span>
+      </label>
+      <p class="hint" style="margin-top: 8px">
+        Weekly retainer – lowers injury risk, shortens recoveries and adds a little condition each week.
+      </p>
     </section>
 
     <section>

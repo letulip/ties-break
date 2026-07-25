@@ -184,17 +184,25 @@ let outRng: Rng = rngFromSeed(props.match.result.seed + ':outcall')
 let outCounter = 0
 let outThreshold = pickInt(outRng, 3, 5)
 
+// R9-24: the LONG cues (applause family + take-your-seats) play rate-matched to the clip at
+// ×2 so they stop dragging behind a sped-up match – capped at 2 inside playSfx (rate-4
+// applause is noise; ×4 already gates most cues off anyway). Short percussive cues (hit /
+// out / ooh / click*) stay at rate 1: they're too brief for the mismatch to register.
+function playLong(key: 'applauseShort' | 'oohApplause' | 'applauseFinal' | 'takeYourSeats'): void {
+  playSfx(key, speed.value > 1 ? { rate: speed.value } : undefined)
+}
+
 function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
   if (speed.value === 4) {
     if (site === 'hit') playSfx('hit')
-    else if (site === 'matchEnd') playSfx('applauseShort')
+    else if (site === 'matchEnd') playLong('applauseShort')
     return
   }
   if (speed.value === 2) {
     if (site === 'hit') playSfx('hit')
-    else if (site === 'seats') playSfx('takeYourSeats')
+    else if (site === 'seats') playLong('takeYourSeats')
     else if (site === 'gameEnd' || site === 'setEnd' || site === 'setEndTiebreak' || site === 'matchEnd') {
-      playSfx('applauseShort')
+      playLong('applauseShort')
     }
     return
   }
@@ -215,19 +223,19 @@ function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
       playSfx('ooh')
       return
     case 'seats':
-      playSfx('takeYourSeats')
+      playLong('takeYourSeats')
       return
     case 'gameEnd':
-      playSfx('applauseShort')
+      playLong('applauseShort')
       return
     case 'setEnd':
-      playSfx('applauseShort')
+      playLong('applauseShort')
       return
     case 'setEndTiebreak':
-      playSfx('oohApplause')
+      playLong('oohApplause')
       return
     case 'matchEnd':
-      playSfx(opts?.final ? 'applauseFinal' : 'applauseShort')
+      playLong(opts?.final ? 'applauseFinal' : 'applauseShort')
       return
   }
 }
@@ -257,40 +265,50 @@ function completedSetIndex(pointIndex: number): number {
   return count
 }
 
-/** Event-START hook (crowd-reaction pass): fires the reaction cues at the SCORING instant –
- *  the moment the point/game/set is decided (each event's START) – so the crowd reacts
- *  immediately and the next point follows AFTER the reaction, not on top of it. Only the
- *  reaction `gatedSfx(...)` calls live here; all the non-sound completion work (marks, the
- *  displayed score) stays in completeEvent, at each event's END. The 'hit' cue (shot start,
- *  in render()) and the 'out' cue (shot landing, in completeEvent) are unchanged. */
+/** Event-START hook (crowd-reaction pass; R9-23 rework): EVERY reaction cue fires at the
+ *  SCORING instant – the START of the decisive point's own 'point-end' event. The game/set/
+ *  match cues used to fire at the START of their separate 'game-end'/'set-end'/'match-end'
+ *  timeline events, but those are scheduled AFTER the point-end's duration plus its trailing
+ *  gap, so the crowd reacted ~a beat late (the owner heard the lag, worst at ×2). Those later
+ *  events' starts are now SILENT – their visual/completion duties are untouched, so the
+ *  timeline itself is unchanged (no fixture churn). Only the BIGGEST cue plays per point
+ *  (match > set > game – a set-ending point is always game-ending too), and the converted-
+ *  break 'ooh' yields to the game applause that now lands at the same instant. The 'hit' cue
+ *  (shot start, in render()) and the 'out' cue (shot landing, in completeEvent) are unchanged.
+ *  'skip' mode stays silent by construction – jumpToEnd never fires start hooks. */
 function startEvent(ev: TimelineEvent): void {
-  if (ev.kind === 'point-end') {
-    const point = props.match.points[ev.pointIndex]
-    const entry = point?.entry
-    const shots = point?.rally.shots ?? []
-    const lastShot = shots[shots.length - 1]
-    const endedOnMiss = lastShot?.result === 'out' || lastShot?.result === 'net'
-    // Silent by default. Two exceptions get an 'ooh': a converted break point (receiver
-    // wins a point that was a break point), or a long rally (>= 8 shots) ending in a clean
-    // winner. Never stacked on top of the 'out' cue that plays when the point ends on a miss.
-    const brokeServe = !!entry && entry.breakPoint && entry.winner !== entry.server
-    const longWinnerRally = shots.length >= 8 && lastShot?.result === 'winner'
-    if (!endedOnMiss && (brokeServe || longWinnerRally)) gatedSfx('ooh')
-  } else if (ev.kind === 'game-end') {
-    gatedSfx('gameEnd')
-  } else if (ev.kind === 'set-end') {
+  if (ev.kind !== 'point-end') return
+  const point = props.match.points[ev.pointIndex]
+
+  // Match-ending point: the last point of the match (always present in 'key' mode).
+  // Round-7 item 14 still applies: a final-match viewer stays silent (suppressEndApplause);
+  // the finale screen owns the celebration.
+  if (ev.pointIndex === props.match.points.length - 1) {
+    if (!props.suppressEndApplause) gatedSfx('matchEnd', { final: props.finalMatch })
+    return
+  }
+  if (point?.setEnd) {
     // A set decided by a tiebreak (final games score 7-6/6-7) gets the bigger
     // 'oohApplause' cue at ×1; any other set gets the regular short applause (both
     // collapse to 'applauseShort' at ×2 – see gatedSfx).
     const set = props.match.result.sets[completedSetIndex(ev.pointIndex)]
     const tiebreakSet = !!set && ((set.a === 7 && set.b === 6) || (set.a === 6 && set.b === 7))
     gatedSfx(tiebreakSet ? 'setEndTiebreak' : 'setEnd')
-  } else if (ev.kind === 'match-end') {
-    // Round-7 item 14: the final's celebratory applause belongs to the finale screen, so a
-    // final-match viewer stays silent at match-end (suppressEndApplause). Every other match
-    // plays its normal short applause here.
-    if (!props.suppressEndApplause) gatedSfx('matchEnd', { final: props.finalMatch })
+    return
   }
+  if (point?.gameEnd) {
+    gatedSfx('gameEnd')
+    return
+  }
+
+  // Ordinary (non-deciding) point. One exception gets an 'ooh': a long rally (>= 8 shots)
+  // ending in a clean winner. (A converted break point always ends its game, so it lands in
+  // the game branch above.) Never stacked on top of the 'out' cue of a point ending on a miss.
+  const shots = point?.rally.shots ?? []
+  const lastShot = shots[shots.length - 1]
+  const endedOnMiss = lastShot?.result === 'out' || lastShot?.result === 'net'
+  const longWinnerRally = shots.length >= 8 && lastShot?.result === 'winner'
+  if (!endedOnMiss && longWinnerRally) gatedSfx('ooh')
 }
 
 function completeEvent(ev: TimelineEvent): void {
@@ -409,8 +427,13 @@ function frame(ts: number): void {
  *  and before the timeline actually starts – see startClock. Round-7 item 11: held for the
  *  clip's real length (~3.5s) so the match no longer starts over the top of it; was 1.5s,
  *  which cut the clip off. Applies at ×1/×2 (the speeds that play the cue); ×4 skips both
- *  the cue and the hold. Hardcoded to the recorded clip's duration. */
+ *  the cue and the hold. Hardcoded to the recorded clip's duration.
+ *  R9-24: the clip itself now plays rate-matched at ×2 (see playLong), so the hold scales
+ *  with it – effective hold = SEATS_PREROLL_MS / min(speed, 2) (~1800ms at ×2). */
 const SEATS_PREROLL_MS = 3600
+function seatsHoldMs(): number {
+  return SEATS_PREROLL_MS / Math.min(speed.value, 2)
+}
 
 function beginClockLoop(): void {
   // Playback is actually starting now (immediately at speed ×4, or after the
@@ -439,7 +462,7 @@ function startClock(): void {
       preRollTimer = setTimeout(() => {
         preRollTimer = null
         beginClockLoop()
-      }, SEATS_PREROLL_MS)
+      }, seatsHoldMs()) // R9-24: rate-matched clip → rate-matched hold (~1800ms at ×2)
       return
     }
   }

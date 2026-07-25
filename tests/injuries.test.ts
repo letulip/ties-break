@@ -978,8 +978,12 @@ describe('UI wiring', () => {
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
     expect(src).toContain('injury.kind')
     expect(src).toMatch(/back wk/)
-    // the physio toggle shows its weekly retainer cost
-    expect(src).toContain('retainerPerWeekCents')
+    // R9-5 (re-pinned deliberately): the physio toggle + retainer cost moved to MoneyScreen's
+    // Budget section – a spending decision lives with the money.
+    const money = readFileSync(new URL('../src/components/screens/MoneyScreen.vue', import.meta.url), 'utf8')
+    expect(money).toContain('retainerPerWeekCents')
+    expect(money).toContain('Budget')
+    expect(src).not.toContain('retainerPerWeekCents')
   })
 
   it('player-facing copy never uses the long dash', () => {

@@ -177,16 +177,36 @@ export function setMuted(value: boolean): void {
   writeMuted(value)
 }
 
+/** R9-24: playback-rate support for the LONG cues (applause family, take-your-seats) so
+ *  they can track a sped-up match clip. Capped at 2 – rate-4 applause is noise, and ×4
+ *  already gates most cues off. `preservesPitch` is set where the browser supports it
+ *  (critical for the take-your-seats speech; harmless feature-detect otherwise – WebKit
+ *  ships it prefixed). Callers that omit `rate` get plain 1× playback, and the shared
+ *  <audio> element is reset to 1 on every such play (elements are cached per file). */
+export interface PlaySfxOptions {
+  rate?: number
+}
+
+const MAX_RATE = 2
+
+function applyRate(audio: HTMLAudioElement, rate: number): void {
+  const el = audio as HTMLAudioElement & Record<'preservesPitch' | 'webkitPreservesPitch', boolean | undefined>
+  if (typeof el.preservesPitch === 'boolean') el.preservesPitch = true
+  else if (typeof el.webkitPreservesPitch === 'boolean') el.webkitPreservesPitch = true
+  audio.playbackRate = rate
+}
+
 /** Fire-and-forget playback. Silent no-op before initSfx(), while muted, or for a file
  *  that has failed to load (missing file, decode error, ...) – if the picked variant has
  *  failed, this call is simply silent rather than falling back to another variant. */
-export function playSfx(key: SfxKey): void {
+export function playSfx(key: SfxKey, opts?: PlaySfxOptions): void {
   if (!audioEnabled || muted) return
   const file = pickFile(key)
   if (failed.has(file)) return
   loadAudio(file, key)
     .then((audio) => {
       if (!audio || muted) return
+      applyRate(audio, Math.min(Math.max(opts?.rate ?? 1, 1), MAX_RATE))
       audio.currentTime = 0
       audio.play().catch(() => {
         failed.add(file)
