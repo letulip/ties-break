@@ -301,7 +301,9 @@ export const ECONOMY = {
     packages: [
       {
         id: 'staycation',
-        label: 'Staycation – home with friends',
+        // Labels are deliberately dash-FREE: they get embedded in copy that already carries a
+        // short dash ("Family vacation – {label}"), and a double dash reads badly.
+        label: 'Staycation with friends',
         blurb: 'No travel, no drills – her own bed and her own people.',
         priceCents: [0, 0],
         conditionGain: 12,
@@ -333,7 +335,7 @@ export const ECONOMY = {
       },
       {
         id: 'resort',
-        label: 'Sports resort – recovery week',
+        label: 'Sports recovery resort',
         blurb: 'Pool, physio, massage – rest with a programme.',
         priceCents: [1800_00, 3000_00],
         conditionGain: 25,

@@ -1018,11 +1018,15 @@ function resolvePractice(world: WorldState): void {
   })
 }
 
-/** Drop bookings whose week has passed (housekeeping – the current week's booking is kept so
- *  the resolved week still reads as a blackout until time moves on). */
+/** Housekeeping: bookings are kept for a short TRAILING window after their week resolves, not
+ *  dropped on the spot – the guardrail's consecutive-practice streak (and the Home strain chip)
+ *  has to be able to see "she already played the last two weeks". Bounded, so the save stays
+ *  small no matter how long the career runs. */
+const PLANNER_TRAIL_WEEKS = 4
 function prunePlannerBookings(world: WorldState): void {
-  world.vacations = world.vacations.filter((v) => v.week >= world.week)
-  world.practices = world.practices.filter((p) => p.week >= world.week)
+  const from = world.week - PLANNER_TRAIL_WEEKS
+  world.vacations = world.vacations.filter((v) => v.week >= from)
+  world.practices = world.practices.filter((p) => p.week >= from)
 }
 
 // --- weekly resolution pieces ------------------------------------------------
@@ -1619,6 +1623,12 @@ export function enterEvent(world: WorldState, eventId: string): void {
   // CHOICE (level 'caution'), so racing tired is allowed – its cost is emergent, not a veto.
   const availability = availabilityStatus(world, event)
   if (availability.level === 'blocked') throw new Error(availability.detail ?? 'Unavailable this week')
+  // Season planner: the real thing wins over the friendly. A practice match booked on this week
+  // gives way (rental refunded in full) instead of stacking a friendly onto a tournament week –
+  // she can only play one week's worth of tennis. A booked VACATION can't collide: it is a hard
+  // availability block, so the guard above already refused.
+  const collidingPractice = practiceForWeek(world, event.week)
+  if (collidingPractice) refundPractice(world, collidingPractice, 'Cancelled')
   world.fundsCents -= fee
   world.entries.push(eventId)
   addEvent(world, {
@@ -1967,11 +1977,12 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     },
     financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),
-    // Season planner (v13): the bookings the calendar renders. Prices are re-derivable by the UI
-    // from the same pure quote functions the engine charges (economy.ts), so nothing else is
-    // needed on the wire.
-    vacations: world.vacations.filter((v) => v.week >= world.week).map((v) => ({ ...v })),
-    practices: world.practices.filter((p) => p.week >= world.week).map((p) => ({ ...p })),
+    // Season planner (v13): the bookings the calendar renders, plus the short trailing window the
+    // guardrail's consecutive-practice read needs (the calendar only ever looks at future weeks,
+    // so the tail is invisible there). Prices are re-derivable by the UI from the same pure quote
+    // functions the engine charges (economy.ts), so nothing else is needed on the wire.
+    vacations: world.vacations.map((v) => ({ ...v })),
+    practices: world.practices.map((p) => ({ ...p })),
     recoveryBuff: world.recoveryBuff ? { ...world.recoveryBuff } : null,
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,

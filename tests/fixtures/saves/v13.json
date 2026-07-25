@@ -32,8 +32,8 @@
   "events": [
     { "id": 0, "week": 0, "type": "info", "text": "Nika's career started.", "keep": true },
     { "id": 1, "week": 55, "type": "tournament", "text": "Regional Championship (hard, W55): Nika – Semifinalist (+28 pts)", "finishIdx": 2 },
-    { "id": 2, "week": 57, "type": "expense", "category": "vacation", "text": "Booked: Sports resort – recovery week – W57", "amountCents": -240000 },
-    { "id": 3, "week": 57, "type": "info", "text": "Family vacation – Sports resort – recovery week: +25 condition, and the recovery holds for 4 weeks." },
+    { "id": 2, "week": 57, "type": "expense", "category": "vacation", "text": "Booked: Sports recovery resort – W57", "amountCents": -240000 },
+    { "id": 3, "week": 57, "type": "info", "text": "Family vacation – Sports recovery resort: +25 condition, and the recovery holds for 4 weeks." },
     { "id": 4, "week": 58, "type": "income", "category": "income", "text": "Parents' contribution", "amountCents": 30000 },
     { "id": 5, "week": 58, "type": "expense", "category": "coaching", "text": "Coaching block: technique drills", "amountCents": -52400 },
     { "id": 6, "week": 58, "type": "expense", "category": "practice", "text": "Court rental + coach – practice match W59", "amountCents": -14300 },

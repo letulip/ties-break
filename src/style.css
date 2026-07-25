@@ -834,6 +834,12 @@ button.danger:hover:not(:disabled) {
   color: var(--danger);
   border-color: var(--danger);
 }
+/* Season planner: the STRAIN read – she is worn out, or on a run of match weeks. Amber, because
+   it is a warning the parent may still overrule (same tone as every other soft caution). */
+.avail-chip.amber {
+  color: #f2b34f;
+  border-color: #f2b34f;
+}
 
 /* Amber "caution" pill – a soft, warned state (e.g. racing while fatigued is a risky CHOICE, not a
    block). Distinct from .pill.muted (a hard lock) and .pill.ok (a clear go). */
@@ -1595,6 +1601,16 @@ tr.kid-row td {
   font-weight: 600;
 }
 
+/* Season planner: the tiny "practice" tag on a friendly's news row (no ranking points). */
+.nm-friendly {
+  margin-left: 6px;
+  padding: 0 6px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: lowercase;
+  vertical-align: middle;
+}
+
 .nm-score {
   font-size: 12.5px;
   color: var(--muted);
@@ -2056,6 +2072,143 @@ tr.kid-row td {
 .calendar-row-muted.off-season {
   border-color: var(--accent);
   background: rgba(217, 242, 79, 0.04);
+}
+
+/* --- Season planner: plannable / planned calendar rows + the "+ Plan week" sheet ---------- */
+
+/* An empty row now carries an action ("+ Plan week") or its booking + a Cancel, so the muted
+   rows lay out as a row instead of a single line of text. */
+.calendar-row-muted {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.calendar-row-muted button {
+  flex: none;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+/* A week the parent has already planned – a solid (not dashed) frame: it is a real commitment. */
+.calendar-row-muted.planned {
+  border-style: solid;
+  border-color: var(--accent);
+  background: rgba(217, 242, 79, 0.05);
+}
+
+/* Exam weeks are nobody's to plan: school owns them. */
+.calendar-row-muted.exam {
+  border-color: var(--line);
+  opacity: 0.75;
+}
+
+/* The rescue OFFER (spec §4b) – surfaced when she is worn out and a bookable week lies ahead. */
+.rescue-card {
+  border: 1px solid #f2b34f;
+  border-radius: 10px;
+  background: rgba(242, 179, 79, 0.06);
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.rescue-title {
+  margin: 0 0 4px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 14px;
+  color: #f2b34f;
+}
+
+/* The planner sheet: same overlay/card language as the tour guide, scrollable on a phone. */
+.plan-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.plan-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.plan-lead {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.plan-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  padding: 4px 0;
+}
+
+.plan-total {
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+  padding-top: 8px;
+  font-weight: 600;
+}
+
+.pkg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pkg-row {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* The pre-highlight: the cheapest package that brings her back above the target (or the
+   off-season family week). Accent frame, never auto-booked. */
+.pkg-row.recommended {
+  border-color: var(--accent);
+  background: rgba(217, 242, 79, 0.05);
+}
+
+.pkg-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pkg-label {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.pkg-blurb,
+.pkg-effect {
+  margin: 4px 0 0;
+}
+
+.pkg-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pkg-actions button {
+  padding: 4px 12px;
+  font-size: 12px;
 }
 
 /* --- Round 5: week recap card ------------------------------------------------ */
