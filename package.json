@@ -12,7 +12,8 @@
     "check": "vue-tsc -b --force && vitest run && vite build",
     "icons": "node scripts/gen-icons.mjs",
     "art": "node scripts/optimize-art.mjs",
-    "bench:econ": "vite-node tools/econ-bench.ts"
+    "bench:econ": "vite-node tools/econ-bench.ts",
+    "bench:fatigue": "vite-node tools/fatigue-bench.ts"
   },
   "dependencies": {
     "pinia": "^3.0.0",

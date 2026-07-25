@@ -1,0 +1,245 @@
+import { describe, it, expect } from 'vitest'
+import {
+  PROFILES,
+  POLICIES,
+  FATIGUE_HORIZONS,
+  SEEDS_PER_CELL,
+  GRID_SEEDS,
+  GRID_HORIZON_WEEKS,
+  gridPolicies,
+  openFatigueCareer,
+  stepFatigueWeek,
+  runFatigueCareer,
+  runCell,
+  computeCellStats,
+  sparkChar,
+  sparkRows,
+  mean,
+  stddev,
+  toCsv,
+  type WeekFacts,
+} from '../tools/fatigue-bench'
+import { ECONOMY } from '../src/engine/economy'
+import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+import type { TierId } from '../src/engine/season/types'
+
+// The fatigue bench is a MEASUREMENT tool for the round-9 condition math: it must be
+// deterministic, its policy ordering must reflect the load-management axis it exists to compare,
+// and its condition trace must be exactly the owner's formula – re-derived here INDEPENDENTLY
+// from the ECONOMY knobs (no accrueCondition/matchDrain imports) and compared byte-for-byte.
+
+const working = PROFILES.find((p) => p.background === 'working')!
+const middleSelf = PROFILES.find((p) => p.background === 'middle' && p.coachSetup === 'parent')!
+const middleHired = PROFILES.find((p) => p.background === 'middle' && p.coachSetup === 'hired')!
+
+const grinder = POLICIES.find((p) => p.id === 'grinder')!
+const balanced = POLICIES.find((p) => p.id === 'balanced')!
+const careful = POLICIES.find((p) => p.id === 'careful')!
+
+const H52 = FATIGUE_HORIZONS.find((h) => h.weeks === 52)!
+const H104 = FATIGUE_HORIZONS.find((h) => h.weeks === 104)!
+
+describe('bench stat helpers', () => {
+  it('mean / population stddev over a known fixture', () => {
+    expect(mean([2, 4, 6])).toBe(4)
+    expect(mean([])).toBe(0)
+    expect(stddev([2, 4, 6])).toBeCloseTo(1.63299, 4)
+    expect(stddev([5, 5, 5])).toBe(0)
+  })
+
+  it('sparkline blocks span the condition range and rows split per season', () => {
+    expect(sparkChar(0)).toBe('▁')
+    expect(sparkChar(100)).toBe('█')
+    expect(sparkChar(50)).toBe('▅')
+    const rows = sparkRows(Array.from({ length: 104 }, () => 75))
+    expect(rows).toHaveLength(2)
+    expect(rows[0]).toHaveLength(52)
+    expect(rows[1]).toHaveLength(52)
+  })
+})
+
+describe('determinism (same cell → deep-equal)', () => {
+  it('same (profile, policy, index, horizon) reproduces byte-identically', () => {
+    const a = runFatigueCareer(middleHired, grinder, 0, H52.weeks)
+    const b = runFatigueCareer(middleHired, grinder, 0, H52.weeks)
+    expect(a).toEqual(b)
+  })
+
+  it('a whole cell reproduces deep-equal, and the seed varies by index only', () => {
+    const a = runCell(working, careful, H52.weeks)
+    const b = runCell(working, careful, H52.weeks)
+    expect(a).toEqual(b)
+    expect(a).toHaveLength(SEEDS_PER_CELL)
+    expect(a[0].seed).not.toBe(a[1].seed)
+    // Paired seeds: policy is NOT in the seed, so every policy faces the same world.
+    expect(runFatigueCareer(working, grinder, 3, H52.weeks).seed).toBe(a[3].seed)
+  })
+})
+
+describe('run structure', () => {
+  it('weekly trace spans the horizon; bands partition it; W-L reconciles; seasons captured', () => {
+    for (const policy of POLICIES) {
+      const r = runFatigueCareer(middleSelf, policy, 1, H104.weeks)
+      expect(r.weekly).toHaveLength(H104.weeks)
+      expect(r.bandLow + r.bandMid + r.bandHigh).toBe(H104.weeks)
+      expect(r.wins + r.losses).toBe(r.matchesPlayed)
+      expect(r.endOfSeasonCondition).toHaveLength(H104.seasons)
+      expect(r.injuriesTotal).toBe(
+        r.injuriesBySeverity.minor + r.injuriesBySeverity.moderate + r.injuriesBySeverity.major + r.injuriesBySeverity.severe,
+      )
+      expect(r.trough).toBe(Math.min(...r.weekly.map((w) => w.condition)))
+    }
+  })
+
+  it('the CSV time-series has one row per (seed, week) plus the header', () => {
+    const runs = [runFatigueCareer(working, balanced, 0, H52.weeks)]
+    const csv = toCsv([{ horizon: H52, profile: working, policy: balanced, runs }])
+    expect(csv.trim().split('\n')).toHaveLength(1 + H52.weeks)
+  })
+})
+
+describe('policy ordering (the load-management axis)', () => {
+  // Self-coached profiles are the clean read: physio is OFF for grinder/balanced there, so the
+  // three policies actually differ in recovery. (On hired-coach profiles the default physio +2
+  // saturates all three at the cap and the ordering collapses to a tie – a bench FINDING, not a
+  // bench bug; see the anchor test below.)
+  it('mean condition: grinder < balanced < careful (both self-coached profiles, 52w)', () => {
+    for (const profile of [working, middleSelf]) {
+      const g = computeCellStats(profile, grinder, H52, runCell(profile, grinder, H52.weeks))
+      const b = computeCellStats(profile, balanced, H52, runCell(profile, balanced, H52.weeks))
+      const c = computeCellStats(profile, careful, H52, runCell(profile, careful, H52.weeks))
+      expect(g.meanCond).toBeLessThan(b.meanCond)
+      expect(b.meanCond).toBeLessThan(c.meanCond)
+    }
+  })
+
+  it('injuries/season: grinder > careful; the spec ≥3x anchor is NOT met – pinned as the round-9 finding', () => {
+    // Pooled over both self-coached profiles at 52w for stability (paired seeds).
+    const gRuns = [...runCell(working, grinder, H52.weeks), ...runCell(middleSelf, grinder, H52.weeks)]
+    const cRuns = [...runCell(working, careful, H52.weeks), ...runCell(middleSelf, careful, H52.weeks)]
+    const gInj = gRuns.reduce((s, r) => s + r.injuriesTotal, 0)
+    const cInj = cRuns.reduce((s, r) => s + r.injuriesTotal, 0)
+    expect(gInj).toBeGreaterThan(cInj) // direction holds
+    // *** ANCHOR MISS (docs/specs/fatigue-bench.md wanted grinder ≥ 3x careful, mirroring the C3
+    // Monte-Carlo). The round-9 recovery (+2 base, +1/+2 slider, +2 physio, +1 blackout) keeps
+    // condition at 96-98 for EVERY policy, so the fatigue slope barely differentiates tau and the
+    // measured ratio sits near ~1.5x. Pinned below as a measurement: when the owner retunes the
+    // knobs and the ratio crosses 3x, flip this assertion to the spec's ≥3x. ***
+    const ratio = gInj / cInj
+    expect(ratio).toBeGreaterThan(1)
+    expect(ratio).toBeLessThan(3) // the finding: today's math does NOT reach the 3x anchor
+  })
+})
+
+describe('formula spot-check: independent condition-trace recomputation (byte-equal)', () => {
+  // Replays one seed per policy and recomputes the weekly condition trace from the ECONOMY
+  // knobs alone: +recoveryBase, the rest-slider threshold bonus on match-free weeks (0/1/2),
+  // +physio bonus, +blackout bonus, then the per-match drains (straight sets 1 / 3-setter-or-TB
+  // 2 / +1 past two TB sets, + tier surcharge), each side clamped to [min,max] exactly like the
+  // engine's accrue-then-commit order. NO engine condition function is imported.
+  function independentTrace(facts: WeekFacts[], restPercent: number, physioActive: boolean): number[] {
+    const k = ECONOMY.condition
+    const clamp = (x: number) => Math.min(k.max, Math.max(k.min, x))
+    let c: number = k.start
+    const out: number[] = []
+    for (const f of facts) {
+      let recovery = k.recoveryBase
+      if (!f.played) {
+        let bonus = 0
+        for (const { minRest, bonus: b } of k.restRecoveryBonus) {
+          if (restPercent >= minRest) {
+            bonus = b
+            break // first (highest) matching threshold wins – never interpolated
+          }
+        }
+        recovery += bonus
+      }
+      if (physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
+      const offset = ((f.week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+      const offSeason = offset >= WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+      const exam = ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
+      if (offSeason || exam) recovery += k.blackoutBonus
+      c = clamp(c + recovery)
+      let strain = 0
+      for (const score of f.matchScores) {
+        const sets = score ? score.split(' ') : []
+        const tiebreaks = sets.filter((s) => s === '7-6' || s === '6-7').length
+        let d = sets.length >= 3 || tiebreaks >= 1 ? k.matchFatigue.hardMatch : k.matchFatigue.straightSets
+        if (tiebreaks > 2) d += k.matchFatigue.extraTiebreaks
+        strain += d + k.tierMatchFatigue[f.tierPlayed as TierId]
+      }
+      c = clamp(c - strain)
+      out.push(c)
+    }
+    return out
+  }
+
+  it('the engine trace matches the owner-math recomputation byte-for-byte (all 3 policies, 104w)', () => {
+    for (const policy of POLICIES) {
+      const { world, rng } = openFatigueCareer(middleSelf, policy, 0)
+      const physioActive = world.physioActive // constant for the whole run (the bench never toggles)
+      const facts: WeekFacts[] = []
+      for (let i = 0; i < H104.weeks; i++) facts.push(stepFatigueWeek(world, rng, policy))
+
+      const engineTrace = facts.map((f) => f.condition)
+      const recomputed = independentTrace(facts, policy.plan.rest, physioActive)
+      expect(JSON.stringify(recomputed)).toBe(JSON.stringify(engineTrace)) // byte-equal
+
+      // and the runner reports the same trace (runFatigueCareer wraps stepFatigueWeek)
+      const r = runFatigueCareer(middleSelf, policy, 0, H104.weeks)
+      expect(r.weekly.map((w) => w.condition)).toEqual(engineTrace)
+      // the trace must actually exercise matches, or the drain arm was never tested
+      expect(facts.some((f) => f.matchScores.length > 0)).toBe(true)
+    }
+  })
+
+  it('physio wiring: careful forces on; grinder/balanced follow the coach default; grid "off" forces off', () => {
+    expect(openFatigueCareer(middleSelf, careful, 0).world.physioActive).toBe(true)
+    expect(openFatigueCareer(middleSelf, grinder, 0).world.physioActive).toBe(false)
+    expect(openFatigueCareer(middleHired, grinder, 0).world.physioActive).toBe(true)
+    const off = gridPolicies().find((p) => p.physio === 'off')!
+    expect(openFatigueCareer(middleHired, off, 0).world.physioActive).toBe(false) // overrides the hired default
+    const on = gridPolicies().find((p) => p.physio === 'on')!
+    expect(openFatigueCareer(middleSelf, on, 0).world.physioActive).toBe(true) // overrides the parent default
+  })
+})
+
+describe('factorial grid (owner 25.07: unbundled axes)', () => {
+  it('is the full 3x2x2 = 12-cell factorial with unique ids, built as data', () => {
+    const grid = gridPolicies()
+    expect(grid).toHaveLength(12)
+    expect(new Set(grid.map((p) => p.id)).size).toBe(12)
+    for (const plan of [85, 75, 60]) {
+      for (const margin of [null, 10]) {
+        for (const ph of ['on', 'off'] as const) {
+          expect(
+            grid.some((p) => p.plan.train === plan && p.entryConditionMargin === margin && p.physio === ph),
+          ).toBe(true)
+        }
+      }
+    }
+    expect(GRID_SEEDS).toBeLessThan(SEEDS_PER_CELL) // reduced seed count is deliberate and logged
+    expect(GRID_HORIZON_WEEKS).toBe(104)
+  })
+
+  it('a grid cell is deterministic and carries the money coupling (coaching/physio/endFunds)', () => {
+    const policy = gridPolicies().find((p) => p.id === '85/15·all·off')!
+    const a = runCell(middleSelf, policy, 52, 3)
+    const b = runCell(middleSelf, policy, 52, 3)
+    expect(a).toEqual(b)
+    for (const r of a) {
+      expect(r.coachingSpendCents).toBeGreaterThan(0) // coaching bleeds every week
+      expect(typeof r.endFundsCents).toBe('number')
+      // physio OFF: no retainer, so any physio-category spend can only be injury bills (rehab/onset)
+      if (r.physioSpendCents > 0) expect(r.injuriesTotal).toBeGreaterThan(0)
+    }
+  })
+
+  it('the plan axis moves the wallet: 85/15 coaching spend > 60/40 on the same seed (planFactor)', () => {
+    const grind = gridPolicies().find((p) => p.id === '85/15·all·off')!
+    const light = gridPolicies().find((p) => p.id === '60/40·all·off')!
+    const a = runFatigueCareer(middleSelf, grind, 0, 52)
+    const b = runFatigueCareer(middleSelf, light, 0, 52)
+    expect(a.coachingSpendCents).toBeGreaterThan(b.coachingSpendCents)
+  })
+})
