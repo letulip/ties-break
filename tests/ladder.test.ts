@@ -211,6 +211,38 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
     }
   })
 
+  // The event id is not just a label any more: it KEYS the tournament's RNG stream
+  // (`seed:aitour:<id>` for the AI bracket, `seed:kidtour:<id>` for the kid's). Two events sharing
+  // an id would silently share a stream, so uniqueness has to hold across the whole LIVE calendar –
+  // multi-event weeks and every year-block a long career generates, not just one 52-week span.
+  it('event ids stay globally unique over a multi-year live calendar (they key an RNG stream)', () => {
+    const world = createWorld('id-uniqueness')
+    const rng = rngFromSeed(world.seed)
+    const idOf = new Map<string, string>() // id -> "week:tier" that first claimed it
+    const collect = () => {
+      for (const e of world.season) {
+        const key = `${e.week}:${e.tier}`
+        const prior = idOf.get(e.id)
+        if (prior === undefined) idOf.set(e.id, key)
+        else expect(prior).toBe(key) // same id ⇒ must be the same event, never a second one
+      }
+    }
+    collect()
+    for (let i = 0; i < 260; i++) {
+      tickWeek(world, rng)
+      collect()
+    }
+    // Five seasons' worth of distinct events actually got generated (not a vacuous pass), and a
+    // week really does carry several of them.
+    expect(idOf.size).toBeGreaterThan(400)
+    const perWeek = new Map<string, number>()
+    for (const key of idOf.values()) {
+      const week = key.split(':')[0]
+      perWeek.set(week, (perWeek.get(week) ?? 0) + 1)
+    }
+    expect([...perWeek.values()].some((n) => n > 1)).toBe(true)
+  })
+
   it('DOES stack different tiers in a week – that is the CHOICE the owner asked for', () => {
     const perWeek = new Map<number, number>()
     for (const e of events) perWeek.set(e.week, (perWeek.get(e.week) ?? 0) + 1)

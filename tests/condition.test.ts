@@ -64,45 +64,49 @@ function giveKidPoints(world: WorldState, points: number): void {
 // step-1c-stubbed (pre-slice) build for seed "bench-working-0", weeks 1..52.
 // ---------------------------------------------------------------------------
 //
-// ⚠ RE-PINNED by ladder-up Part B (the J-level family): 45239 -> 51642, hash 9f783705 -> cae178fc.
-// THIS IS A DELIBERATE, UNAVOIDABLE MOVE, and it is worth being precise about what did and did not
-// change.
+// ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550, hash cae178fc ->
+// e6b0c709 (the AI sub-stream refactor). History of this number: 45239 (pre-ladder) -> 51642
+// (ladder-up Part B, the J family) -> 41550 (here).
 //
-// WHAT MOVED: the season went from 43 scheduled events a year to 92 (j30 every 2 weeks, j60 every
-// 3, j300 every 13, plus the R9-20 national densification). Every scheduled event runs a canonical
-// AI tournament on the MAIN weekly stream – one draw per entrant-band candidate plus one per
-// AI-AI match – so more events means more main-stream draws, per week, by construction. No
-// arrangement of this feature can keep the old count while adding tournaments to the calendar.
-// The entrant windows also changed shape (overlapping percentile windows instead of a partition),
-// which moves the per-event candidate count too.
+// WHY IT MOVED, AND WHY IT STOPS MOVING NOW. The two previous moves were forced by the same
+// design flaw: the canonical AI tournaments drew from the MAIN weekly stream – one draw per
+// entrant-band candidate plus one per AI-AI match, per scheduled event – so the calendar's SIZE
+// was part of the weekly draw count. Any content change (a new tier, a denser cadence, one extra
+// event) re-based this pin by construction; the ladder-up slice moved it for exactly that reason.
+//
+// The AI bracket now runs on its own EVENT-scoped stream `seed:aitour:<event.id>`, the mirror of
+// the kid's `seed:kidtour:<event.id>`. What is left on the main stream is base costs + cohort
+// drift and nothing else: 52 x (4 x 199 cohort drift + 3 base costs) + 2 sponsor-gift draws =
+// 41550. That is a function of the COHORT SIZE and the career length, not of the calendar – so
+// from here on, adding tiers and events is free and this pin no longer moves with content. The
+// composition is proved exhaustively, week by week, in B1b below.
 //
 // WHAT DID NOT MOVE – the property this test actually exists to protect: the per-week draw count
-// is still INDEPENDENT of player input and of world content. Every other test in this describe
-// block is untouched and green: condition/plan/funds/physio variants, entering and playing an
-// event, planner bookings (P1), a mid-run injury (C1), a post-deadline skip (R9-9). Pre-history
-// (Part A) still adds ZERO main-stream draws, and entrant-band SIZES are still position-derived
-// constants, so the ranking's CONTENT still cannot move the stream.
+// is still INDEPENDENT of player input. Every other test in this describe block is untouched and
+// green: condition/plan/funds/physio variants, entering and playing an event, planner bookings
+// (P1), a mid-run injury (C1), a post-deadline skip (R9-9).
 //
 // NOTE ON hash/head/tail: `recordRun` taps the RAW generator, so `draws` is by construction the
 // first N outputs of rngFromSeed('bench-working-0'). hash and tail are therefore pure functions of
 // N and carry no information beyond `count` (head is N-independent and never changes). They are
 // kept because they make an accidental drift loud, but the real guards are the variance tests.
 const REF = {
-  count: 51642,
-  hash: 'cae178fc',
+  count: 41550,
+  hash: 'e6b0c709',
   head: [
     0.29022555728442967, 0.879210032755509, 0.9903593938797712, 0.8499038522131741, 0.3840416269376874,
     0.6166684734635055, 0.3415204482153058, 0.8582294869702309,
   ],
   tail: [
-    0.4260292751714587, 0.49461348494514823, 0.003383339149877429, 0.8723430952522904, 0.9430963601917028,
-    0.04303420544601977, 0.8109669734258205, 0.2922082997392863,
+    0.09633621200919151, 0.14082618593238294, 0.7656564658973366, 0.16811327124014497, 0.9865698856301606,
+    0.8267154651694, 0.7829126522410661, 0.4907760114874691,
   ],
-  // 131 (pre-slice) -> 143 (Part A, cohort pre-history) -> 141 (Part B, the J family). A
-  // CONSEQUENCE of the stream, never the stream itself: the point-less kid shares the dense rank
-  // of the whole 0-point group, so this number is just "how many AI ended the year holding
-  // counting points", and both halves of the slice change which AI those are.
-  kidRank: 141,
+  // 131 (pre-slice) -> 143 (Part A, cohort pre-history) -> 141 (Part B, the J family) -> 140 (the
+  // AI sub-stream). A CONSEQUENCE of the stream, never the stream itself: the point-less kid
+  // shares the dense rank of the whole 0-point group, so this number is just "how many AI ended
+  // the year holding counting points". The AI now play their brackets against different draws, so
+  // a different set of them ends the year in the points – one fewer, here.
+  kidRank: 140,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {
@@ -192,6 +196,78 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
     // accrueCondition takes no rng; proving it here documents the zero-draw contract.
     expect(() => accrueCondition(w, false)).not.toThrow()
     expect(accrueCondition.length).toBe(2) // (world, playedThisWeek) — no rng parameter
+  })
+})
+
+// ---------------------------------------------------------------------------
+// B1b — THE AI SUB-STREAM. Every scheduled event's canonical AI tournament now runs on its OWN
+// event-scoped stream `seed:aitour:<event.id>` – the exact mirror of the kid's `seed:kidtour:
+// <event.id>`. Both entrant selection AND the AI-vs-AI matches draw from it, so the MAIN weekly
+// stream carries base costs + cohort drift and NOTHING else.
+//
+// This is what makes CALENDAR CONTENT FREE: a new tier, a densified cadence, an extra event – none
+// of them can re-base the main stream any more, so the frozen B1/C1 pins stop moving every time the
+// calendar is edited. (The ladder-up slice had to move them precisely because it could not.)
+// ---------------------------------------------------------------------------
+describe('B1b — the main stream is base costs + cohort drift, and nothing else', () => {
+  it('every week draws exactly 3-4 base-cost values + 4 per cohort player', () => {
+    const world = createWorld('bench-working-0')
+    const base = rngFromSeed(world.seed)
+    const draws: number[] = []
+    const rng = () => {
+      const v = base()
+      draws.push(v)
+      return v
+    }
+    const driftDraws = 4 * world.cohort.length // driftCohort: serve/ret/composure/stamina
+    for (let i = 0; i < 52; i++) {
+      const before = draws.length
+      tickWeek(world, rng)
+      const week = draws.slice(before)
+      // resolveBaseCosts runs FIRST and draws, in order: the expense pickInt, the flavor pickInt,
+      // the sponsor roll, and – only when that roll hits – the gift pickInt. Then driftCohort.
+      // Nothing else on the main stream, so the week's length is fully determined by draw #2.
+      const sponsorHit = week[2] < ECONOMY.sponsor.rollChance
+      expect(week.length).toBe(driftDraws + (sponsorHit ? 4 : 3))
+    }
+    expect(draws.length).toBe(REF.count) // ...and the 52 weeks sum to the frozen pin
+  })
+
+  it('CONTENT IS FREE: extra events on the calendar never move the main stream', () => {
+    const base = recordRun()
+    const dense = recordRun((w) => {
+      // 24 extra tournaments across the year – under the old MAIN-stream AI bracket this alone
+      // added thousands of draws (one per band candidate + one per AI-AI match, per event).
+      for (let week = 4; week <= 48; week += 4) {
+        injectEvent(w, { week, tier: 'national', id: `extra-${week}-national` })
+        injectEvent(w, { week, tier: 'j60', id: `extra-${week}-j60` })
+      }
+    })
+    expect(dense.draws.length).toBe(base.draws.length)
+    expect(hashOf(dense.draws)).toBe(hashOf(base.draws))
+    expect(dense.world.cohort).toEqual(base.world.cohort)
+    // ...and the extra brackets really did run – they just ran on their own streams.
+    expect(aiResults(dense.world).length).toBeGreaterThan(aiResults(base.world).length)
+  })
+
+  it("an event's AI bracket is a pure function of (seed, event.id) – the main stream cannot move it", () => {
+    // Same world, same calendar, but the main stream is advanced by a different number of draws
+    // before the weeks resolve. `growth = 0` freezes the cohort's SKILLS (drift still draws its 4
+    // per player, it just lands on +0), so the only thing the offset can still change is the
+    // bracket's RNG. Under a MAIN-stream bracket that rewrites every AI result; under the
+    // event-scoped stream nothing about the AI side can notice.
+    const runWithOffset = (offset: number) => {
+      const world = createWorld('aitour-purity')
+      for (const p of world.cohort) p.growth = 0
+      const rng = rngFromSeed(world.seed)
+      for (let i = 0; i < offset; i++) rng() // desynchronise the main stream
+      for (let i = 0; i < 12; i++) tickWeek(world, rng)
+      return aiResults(world)
+    }
+    const a = runWithOffset(0)
+    const b = runWithOffset(7)
+    expect(b).toEqual(a)
+    expect(a.length).toBeGreaterThan(0)
   })
 })
 

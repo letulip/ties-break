@@ -98,13 +98,18 @@ describe('full bracket view (Round 5 item 5)', () => {
   })
 
   it('grows round by round and includes non-kid matches with resolved names', () => {
-    // `grow-5` is a seed where the kid stays HEALTHY up to the event week (Season-Life slice C:
+    // `grow-2` is a seed where the kid stays HEALTHY up to the event week (Season-Life slice C:
     // an injury would auto-withdraw/walk over the run – `grow-1` started doing exactly that) AND
     // WINS her opening match, so after one reveal she is still in the draw (not finished) and the
     // spoiler-safe cap applies – exactly the incremental growth this test pins. (Once she's
     // FINISHED the cap lifts and the whole draw is exposed; that spectate behaviour is covered
     // in tournamentReveal.test.ts.)
-    const world = buildToPending('grow-5')
+    // ⚠ RE-PICKED (`grow-5` -> `grow-2`) by the AI sub-stream refactor. Her OWN matches still run
+    // on the untouched `seed:kidtour` stream, but her FIELD does not: selectEntrants seeds off the
+    // AI standings, and the AI now play their brackets on `seed:aitour:<event.id>`, so a different
+    // set of juniors holds the points and she draws a different opening opponent. Nothing about
+    // the behaviour under test changed – only which seed happens to exhibit it.
+    const world = buildToPending('grow-2')
     revealTournamentRound(world)
     const pending = toSnapshot(world).pending!
     expect(world.pendingTournament!.finished).toBe(false)

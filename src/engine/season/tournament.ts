@@ -23,9 +23,10 @@ export const JUNIOR_TOUR: Tour = 'wta'
 // position-biased jitter below decides which draw she actually turns up in.
 //
 // The candidate COUNT per tier is a constant of the window, because percentiles are derived from
-// ORDINAL POSITION and the positions are always a permutation of 0..n-1. That is what keeps
-// `selectEntrants`' main-stream draw count independent of the ranking's CONTENT (and therefore of
-// the kid's results and of player input) – the property the B1/C1 invariance tests pin.
+// ORDINAL POSITION and the positions are always a permutation of 0..n-1. `selectEntrants`' draw
+// count is therefore independent of the ranking's CONTENT – it was what kept the MAIN weekly
+// stream stable back when the AI brackets ran on it, and it still keeps each event's own
+// `seed:aitour:<id>` / `seed:kidtour:<id>` stream aligned across replays of the same event.
 
 /** True ⇔ a player at standings percentile `pct` is a candidate for `tier`'s draws. */
 export function isEntrantBand(tier: TierId, pct: number): boolean {

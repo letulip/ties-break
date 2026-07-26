@@ -54,12 +54,14 @@ function fnv1a(s: string): string {
 function hashOf(draws: number[]): string {
   return fnv1a(draws.map((d) => d.toString()).join(','))
 }
-// ⚠ RE-PINNED by ladder-up Part B: 45239 -> 51642 draws (hash cae178fc) because the J family
-// roughly doubled the number of scheduled events, and every one runs an AI tournament on the MAIN
-// stream. P1's actual claim – that PLANNER BOOKINGS never perturb that stream – is unchanged and
+// ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 draws (hash
+// cae178fc -> e6b0c709) by the AI sub-stream refactor. The canonical AI tournaments left the MAIN
+// weekly stream for their own event-scoped `seed:aitour:<event.id>` stream, so the calendar's size
+// is no longer part of the weekly draw count – the flaw that forced the earlier 45239 -> 51642
+// move. P1's actual claim – that PLANNER BOOKINGS never perturb that stream – is unchanged and
 // still proven below: both tests book something every single week and still reproduce the capture
 // exactly. Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 51642, hash: 'cae178fc', kidRank: 141 }
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
 
 function injectEvent(
   world: WorldState,

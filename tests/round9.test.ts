@@ -50,11 +50,13 @@ function fnv1a(s: string): string {
 function hashOf(draws: number[]): string {
   return fnv1a(draws.map((d) => d.toString()).join(','))
 }
-// ⚠ RE-PINNED by ladder-up Part B: 45239 -> 51642 (hash cae178fc), because the J family roughly
-// doubled the number of scheduled events and each runs an AI tournament on the MAIN stream. R9-9's
-// own claim – that a post-deadline SKIP never perturbs the stream – is unchanged and still proven
-// below. Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 51642, hash: 'cae178fc' } // the frozen B1/C1 capture
+// ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 (hash cae178fc ->
+// e6b0c709) by the AI sub-stream refactor – the canonical AI tournaments now run on their own
+// event-scoped `seed:aitour:<event.id>` stream, so the calendar's size is no longer part of the
+// weekly draw count (the flaw that forced the earlier 45239 -> 51642 move). R9-9's own claim –
+// that a post-deadline SKIP never perturbs the stream – is unchanged and still proven below.
+// Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709' } // the frozen B1/C1 capture
 
 /** Enter the earliest still-open local event and tick until its week spawns the reveal.
  *  BOUNDED: a random injury before the event week would auto-withdraw the entry (or turn the

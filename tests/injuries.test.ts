@@ -47,14 +47,17 @@ function hashOf(draws: number[]): string {
 }
 
 // B1's frozen reference: seed bench-working-0, weeks 1..52.
-// ⚠ RE-PINNED by ladder-up Part B: 45239 -> 51642 draws (hash 9f783705 -> cae178fc), because the
-// J family took the calendar from 43 scheduled events a year to 92 and every scheduled event runs
-// a canonical AI tournament on the MAIN stream. The INVARIANT this file guards – that C's injury
-// and physio work adds no main-stream draws, and that nothing about the player's situation can
-// move the sequence – is untouched and still proven by every other test here. kidRank 131 -> 143
-// (Part A) -> 141 (Part B) is a consequence of the ranking, not of the stream. Full reasoning at
-// the REF declaration in tests/condition.test.ts.
-const REF = { count: 51642, hash: 'cae178fc', kidRank: 141 }
+// ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 draws (hash
+// cae178fc -> e6b0c709), by the AI sub-stream refactor. The canonical AI tournaments moved OFF the
+// main weekly stream onto their own event-scoped `seed:aitour:<event.id>` stream, so the calendar's
+// size is no longer part of the weekly draw count – which is what forced both earlier re-pins
+// (45239 -> 51642 for the J family, and this file's own history before it). What remains on the
+// main stream is base costs + cohort drift only: 52 x (4 x 199 + 3) + 2 sponsor-gift draws.
+// The INVARIANT this file guards – that C's injury and physio work adds no main-stream draws, and
+// that nothing about the player's situation can move the sequence – is untouched and still proven
+// by every other test here. kidRank 131 -> 143 (Part A) -> 141 (Part B) -> 140 is a consequence of
+// the ranking, not of the stream. Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
   draws: number[]

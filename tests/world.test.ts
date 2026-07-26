@@ -1,7 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { createWorld, tickWeek, enterEvent, skipTournament, closeTournament, KID_ID } from '../src/engine/world'
+import {
+  createWorld,
+  tickWeek,
+  enterEvent,
+  skipTournament,
+  closeTournament,
+  KID_ID,
+  type WorldState,
+} from '../src/engine/world'
+import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
-import { TIERS } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 
 const EVENTS_CAP = 400 // mirrors world.ts
 
@@ -107,6 +116,80 @@ describe('world (phase-3 living season)', () => {
     // ...but the kid actually played, so only the entered world has kid match events.
     expect(entered.events.some((e) => e.type === 'match')).toBe(true)
     expect(skipped.events.some((e) => e.type === 'match')).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Save/reload replay of the AI world. The canonical AI tournaments run on the event-scoped
+// stream `seed:aitour:<event.id>`, derived from two IMMUTABLE things – the world seed and the
+// event id – so a reloaded career resolves the same brackets by construction, not because the
+// worker managed to fast-forward the main stream onto exactly the right draw.
+// ---------------------------------------------------------------------------
+describe('AI tournaments replay across a save/reload', () => {
+  // Result rows worth a tier's CHAMPION points – the winners of the brackets that resolved from
+  // `fromWeek` on. Keyed by week + points so two events stacked in one week stay distinct.
+  const CHAMPION_POINTS = new Set(TIER_LADDER.map((t) => TIERS[t].points[0]))
+  function championsFrom(world: WorldState, fromWeek: number): string[] {
+    return world.results
+      .filter((r) => r.playerId !== KID_ID && r.week >= fromWeek && CHAMPION_POINTS.has(r.points))
+      .map((r) => `w${r.week}:${r.points}:${r.playerId}`)
+      .sort()
+  }
+
+  // Exactly what sim.worker.ts's restoreRng does: a fresh stream fast-forwarded by one draw-batch
+  // per elapsed week against a probe career.
+  function restoreRng(loaded: WorldState) {
+    const r = rngFromSeed(loaded.seed)
+    const probe = createWorld(loaded.seed, loaded.profile)
+    for (let w = 0; w < loaded.week; w++) tickWeek(probe, r)
+    return r
+  }
+
+  function newWorld(freezeCohort: boolean): WorldState {
+    const world = createWorld('replay-mid-season')
+    // Frozen skills isolate the RNG question: drift still draws its 4 per player, it just lands
+    // on +0, so a diverging main stream can no longer reach the brackets through the cohort.
+    if (freezeCohort) for (const p of world.cohort) p.growth = 0
+    return world
+  }
+
+  function runTo(week: number, freezeCohort = false): WorldState {
+    const world = newWorld(freezeCohort)
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < week; i++) tickWeek(world, rng)
+    return world
+  }
+
+  function saveReload(world: WorldState): WorldState {
+    // The real round-trip the worker performs: a JSON payload back through migrateSave.
+    return migrateSave(JSON.parse(JSON.stringify(world))) as unknown as WorldState
+  }
+
+  it('a mid-season save/reload reproduces the same AI champions', () => {
+    const straight = runTo(30)
+
+    const reloaded = saveReload(runTo(20))
+    const restored = restoreRng(reloaded)
+    for (let i = 0; i < 10; i++) tickWeek(reloaded, restored)
+
+    expect(championsFrom(straight, 21).length).toBeGreaterThan(0)
+    expect(championsFrom(reloaded, 21)).toEqual(championsFrom(straight, 21))
+    expect(reloaded.results.filter((r) => r.playerId !== KID_ID)).toEqual(
+      straight.results.filter((r) => r.playerId !== KID_ID),
+    )
+  })
+
+  it('...even if the reloaded main stream lands on the WRONG draw (replay-safe by construction)', () => {
+    const straight = runTo(30, true)
+
+    const reloaded = saveReload(runTo(20, true))
+    // A deliberately BROKEN restore: a stream that never saw the first 20 weeks, so every
+    // main-stream draw from here on is the wrong one. The brackets must not care.
+    const wrong = rngFromSeed(reloaded.seed)
+    for (let i = 0; i < 10; i++) tickWeek(reloaded, wrong)
+
+    expect(championsFrom(straight, 21).length).toBeGreaterThan(0)
+    expect(championsFrom(reloaded, 21)).toEqual(championsFrom(straight, 21))
   })
 })
 

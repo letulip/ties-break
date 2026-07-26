@@ -1406,11 +1406,21 @@ export function closeTournament(world: WorldState): void {
   world.pendingTournament = null
 }
 
-// The canonical AI-only bracket for one event. Runs on the MAIN stream with a fixed
-// draw pattern (independent of the kid), awarding AI points into the results ledger.
-function runAiTournament(world: WorldState, event: SeasonEvent, aiRanking: RankingRow[], rng: Rng): void {
-  const entrants = selectEntrants(event, world.cohort, aiRanking, rng)
-  const result = runTournament(event, entrants, null, world.seed, rng)
+// The canonical AI-only bracket for one event. Runs on its OWN EVENT-SCOPED stream
+// `seed:aitour:<event.id>` – the exact mirror of the kid's `seed:kidtour:<event.id>` – covering
+// BOTH the entrant selection and the AI-vs-AI matches. ZERO main-stream draws.
+//
+// Why it is scoped and not on the main weekly stream: the calendar is content. While the brackets
+// drew from the main stream, adding a tier or densifying a cadence changed the per-week draw count
+// by construction, which re-based every frozen invariance pin – the ladder-up slice had to move
+// them for exactly that reason. Scoped by (world.seed, event.id) – two immutable values, and
+// event.id is unique per (year, week, tier) – the AI world is now a pure function of the event, so
+// content is free and a reloaded career replays its brackets by construction rather than by the
+// worker fast-forwarding the main stream onto precisely the right draw.
+function runAiTournament(world: WorldState, event: SeasonEvent, aiRanking: RankingRow[]): void {
+  const aiRng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
+  const entrants = selectEntrants(event, world.cohort, aiRanking, aiRng)
+  const result = runTournament(event, entrants, null, world.seed, aiRng)
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {
     const points = pts[finish]
@@ -1551,15 +1561,17 @@ function releaseOutgrownEntries(world: WorldState): void {
   }
 }
 
-// Full weekly resolution. Draw order on the MAIN stream is fixed per week regardless
-// of player input: base costs → (kid tournament uses an event-scoped RNG, zero main
-// draws) → cohort drift → canonical AI tournaments for every scheduled event.
+// Full weekly resolution. The MAIN stream carries exactly TWO things, in this fixed order:
+// resolveBaseCosts (3 draws, 4 when the sponsor roll hits) and driftCohort (4 per cohort player).
+// Nothing else – both tournament sides run on EVENT-scoped streams (`seed:kidtour:<id>` for the
+// kid's shadow run, `seed:aitour:<id>` for the canonical AI bracket), so the weekly draw count is
+// independent of player input AND of how much content the calendar carries.
 //
 // When the kid has an entered event this week the resolution PAUSES: the shadow tournament is
 // computed (byte-identical to the old inline run) and stashed in `world.pendingTournament`, but its
 // match/summary/milestone events, ranking points and the week's rank recompute are all deferred to
 // the reveal/finalize flow (revealTournamentRound / skipTournament). The main-stream work (base
-// costs, drift, AI brackets) still runs, so the per-week draw count is unchanged.
+// costs, drift) and the AI brackets still run, so the per-week draw count is unchanged.
 export function tickWeek(world: WorldState, rng: Rng): void {
   world.week += 1
 
@@ -1603,8 +1615,8 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)
-  // Canonical ranking excludes the kid so AI-field selection (and thus its main-stream
-  // draw count) never depends on the kid's own results / entry history.
+  // Canonical ranking excludes the kid so AI-field selection never depends on the kid's own
+  // results / entry history – the canonical AI world stays the same world whatever she does.
   const aiRanking = computeRanking(
     world.results.filter((r) => r.playerId !== KID_ID),
     world.week,
@@ -1632,8 +1644,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
   driftCohort(world.cohort, rng)
 
-  // 4. canonical AI tournaments for ALL scheduled events (main stream, fixed pattern)
-  for (const e of scheduled) runAiTournament(world, e, aiRanking, rng)
+  // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
+  //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
+  //    touches the weekly draw count. The main stream ends here carrying base costs + drift only.
+  for (const e of scheduled) runAiTournament(world, e, aiRanking)
 
   // 5-6. rank recompute + housekeeping. For a reveal week these are deferred to finalizeTournament
   //      (after the kid's points land), so the rank milestones keep their id order behind the kid's

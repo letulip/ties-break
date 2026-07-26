@@ -1,4 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// The 16-seed × 52-week calibration batches below sit at ~3s against vitest's 5s default – close
+// enough that a busy run tips them over and the gate goes red on timing, not on a claim. Same
+// generous file-level timeout the other batch files already use (tests/fatigue-bench.test.ts):
+// these tests are deterministic, only slow.
+vi.setConfig({ testTimeout: 240_000 })
 import {
   createWorld,
   tickWeek,

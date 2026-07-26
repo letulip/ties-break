@@ -1,4 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Whole-horizon career replays (3 presets × 3 seeds × 208 engine-weeks, twice over) sit at ~4s
+// against vitest's 5s default – close enough that a busy run tips them over and the gate goes red
+// on timing, not on a claim. Same generous file-level timeout the other bench files already use
+// (tests/fatigue-bench.test.ts): these tests are deterministic, only slow.
+vi.setConfig({ testTimeout: 240_000 })
 import {
   runCareer,
   openCareer,
