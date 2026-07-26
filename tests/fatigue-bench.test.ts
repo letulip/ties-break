@@ -188,6 +188,24 @@ describe('policy ordering (the load-management axis)', () => {
     // (injuryFatigueSlope / injuryChanceCap, or the careful policy's entry margin), and that is a
     // balance decision. The `< 3` bound below is a deliberate TRIPWIRE in the style of the 52w
     // sibling above: the day tuning restores the target, this test fails and gets re-read. ***
+    //
+    // *** THE TRIPWIRE FIRED, AND THE ANCHOR IS BACK: 2.77 -> 3.05 (round-10, R10-17). Re-read as
+    // the note above asks. NOT a tuning change – no knob moved. The cause is the R10-17 correctness
+    // fix: `availabilityStatus` used to answer "is she hurt TODAY?" for an event WEEKS away, so an
+    // injury blacked out the ENTIRE 8-week entry horizon for the whole layoff, and every list she
+    // could have joined on the way back had already closed by the time the lock lifted. The gate now
+    // asks "will she still be out in `event.week`?".
+    //     before (stale current-week read)   119 / 43 = 2.77
+    //     after  (event-week read, shipped)  122 / 40 = 3.05
+    // MECHANISM: the fix lands ASYMMETRICALLY, and in the direction C3 measures. The careful policy
+    // is the one that plans around a layoff, so it is the one the phantom lock hurt – it lost the
+    // weeks after her return and came back to a compressed cluster of whatever was still open
+    // (injuries 43 -> 40, entries 657). The grinder was already saturated and simply races more of
+    // the calendar (119 -> 122, entries 805). So the owner's C3 >= 3x target is met again as a
+    // side effect of fixing a bug, which is the best way for a balance target to be met.
+    // STILL A KNIFE EDGE (3.05, exactly as the 3.0000 pin was): the bound below is now the tripwire
+    // in the OTHER direction – if content pushes it back under 3, this fails and gets re-read again.
+    // Do not tighten it into a point pin. ***
     const N = 10
     const gRuns = [...runCell(working, grinder, H104.weeks, N), ...runCell(middleSelf, grinder, H104.weeks, N)]
     const cRuns = [...runCell(working, careful, H104.weeks, N), ...runCell(middleSelf, careful, H104.weeks, N)]
@@ -196,8 +214,10 @@ describe('policy ordering (the load-management axis)', () => {
     const ratio = gInj / cInj
     // The DIRECTION is the property that must never break: the grinder gets hurt far more often.
     expect(ratio).toBeGreaterThan(2)
-    // ...and the owner's ≥3x target is currently missed. Tripwire – see the note above.
-    expect(ratio).toBeLessThan(3)
+    // ...and the owner's ≥3x C3 target is MET again (3.05, restored by the R10-17 fix – see the note
+    // above). Tripwire, now pointing the other way: if this slips back under 3 it must be re-read,
+    // not re-pinned.
+    expect(ratio).toBeGreaterThanOrEqual(3)
   })
 })
 

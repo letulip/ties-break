@@ -10,7 +10,7 @@ import { useKidEmotion } from '../composables/kidEmotion'
 import MatchViewer from './MatchViewer.vue'
 import BracketTabs from './BracketTabs.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
-import { playSfx } from '../audio/sfx'
+import { playSfx, primeSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { computeMatchStats } from '../engine/match/matchStats'
@@ -82,9 +82,10 @@ const currentOppRank = ref<number | null>(null)
 const replayOpen = ref(false)
 // True when the replay was opened from a pre-match card (finishing it advances to the result).
 const replayAdvances = ref(false)
-// True only while the round being presented is the tournament FINAL. Round-7 item 14: the
-// final's embedded MatchViewer suppresses its own match-end applause (`suppressEndApplause`)
-// so the celebratory applause is played exactly once, by the finale screen below.
+// True only while the round being presented is the tournament FINAL. R10-6: the final's embedded
+// MatchViewer now PLAYS the celebration itself, at the deciding point (`finalMatch`), and reports
+// it via `endApplause`; the finale screen below only claps when nobody watched the final. Still
+// exactly one `applauseFinal` – it just isn't a beat late any more.
 const isFinalRound = computed(() => pending.value?.roundLabel === 'Final')
 
 // --- Round-7 spectate geometry ------------------------------------------------
@@ -213,15 +214,23 @@ async function continueFinale(): Promise<void> {
   await game.tournamentClose()
 }
 
-// Round-7 item 14: the finale screen OWNS the celebratory applause whenever the kid PLAYED
-// the final – whether she won it (champion) or lost it (runner-up). The final match's viewer
-// stays silent at its own match-end (suppressEndApplause), so this is the single applauseFinal,
-// fired once here. A kid eliminated EARLIER gets nothing on the (sad) finale: her last match
-// already rang its normal short applause at its own match-end. `{ immediate: true }` also
-// covers resuming straight into an already-finished tournament (reload mid-celebration); the
-// fired-once guard keeps it to at most one play per mount. This replaced the old
-// lastRoundWatched double-fire hack.
+// R10-6 (was round-7 item 14): the celebratory applause belongs to the moment she wins or loses
+// the final, so the final's own MatchViewer fires it at that point and calls `noteEndApplause`
+// here. The finale screen is the FALLBACK for the paths where no viewer ever played it – the
+// player skipped the match (or the whole tournament), watched it in 'skip' view mode, or reloaded
+// straight into an already-finished tournament. Either way it stays ONE applauseFinal per mount.
+//
+// The owner's bug: this watcher was the ONLY player of the cue, so the applause could not fire
+// before the reveal round-trip + the "Next →" click + the phase flip, and then still had to
+// fetch/decode a cold ~60 KB clip (see primeSfx) – audibly behind the result. Both halves are
+// gone: the cue is warmed the moment a final is on deck, and it lands on the deciding point.
 let finaleSoundPlayed = false
+/** The embedded viewer just played a match-end cue. Only the FINAL's is the celebration this
+ *  screen would otherwise play, so an earlier round's ordinary applause must NOT stand it down
+ *  (watch the semifinal, skip the final -> the champion card still gets its applause). */
+function noteEndApplause(): void {
+  if (isFinalRound.value) finaleSoundPlayed = true
+}
 watch(
   phase,
   (p) => {
@@ -231,6 +240,10 @@ watch(
   },
   { immediate: true },
 )
+// Warm the celebration clip as soon as a final is in play – it covers the paths that never mount a
+// final viewer (skip to result / skip tournament / resume into the finale), where the fallback
+// above is what plays. `{ immediate: true }` so a flow that opens already ON the final is covered.
+watch(isFinalRound, (isFinal) => { if (isFinal) primeSfx('applauseFinal') }, { immediate: true })
 
 // --- current match: rebuilt annotated match + box score ----------------------
 const annotated = computed(() => {
@@ -362,8 +375,9 @@ const matchMeta = computed(() => {
           :surface="currentMatch.surface"
           :rank-a="viewerRankA"
           :rank-b="viewerRankB"
-          :suppress-end-applause="isFinalRound"
+          :final-match="isFinalRound"
           @finish="endReplay"
+          @end-applause="noteEndApplause"
         />
       </section>
 

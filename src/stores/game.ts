@@ -99,6 +99,17 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    /** R10-13: cancel an entry before its week starts. Past the deadline the entry fee is NOT
+     *  refunded and the week becomes plannable again (practice/vacation); before the deadline it is
+     *  an ordinary withdrawal with a full refund. */
+    async cancelEntry(eventId: string) {
+      await this.run(async () => {
+        const res = await request({ type: 'cancelEntry', eventId })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
     /** R9-9: skip an entered tournament at its event week (fee forfeited, travel refunded). */
     async skipEvent(eventId: string) {
       await this.run(async () => {

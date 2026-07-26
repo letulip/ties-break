@@ -178,6 +178,29 @@ export interface SeasonSummary {
   weeksInjured?: number
 }
 
+/** One FINISHED season, appended to the career's history at wrap-up (schema v14, R10-9).
+ *  `lastSeasonSummary` above is overwritten every year, so there was no way to compare against
+ *  last season; this is the append-only list behind the Stats screen's season-by-season table.
+ *  Deliberately TINY – seven numbers per SEASON (never per week), so a decade of career costs
+ *  bytes, not kilobytes: no strings, and the full recap keeps living in SeasonSummary. */
+export interface SeasonHistoryEntry {
+  /** calendar year label of the season (same value as SeasonSummary.seasonYear) */
+  year: number
+  /** her dense rank at the season's wrap-up */
+  endRank: number
+  /** ranking points earned in-season */
+  points: number
+  wins: number
+  losses: number
+  /** signed funds delta across the season */
+  fundsDeltaCents: number
+  /** the balance she ended the season with (the "how much is left" figure) */
+  endFundsCents: number
+  /** best tournament finish index that season (0 = champion). Absent when she played none, and
+   *  on rows the v14 migration backfilled (the old summary stored only prose for it). */
+  bestFinish?: number
+}
+
 // --- Tournament experience (feat/tournament-experience) -----------------------
 // One revealed round on the kid's path through the bracket (the between-rounds strip).
 export interface PendingBracketRound {
@@ -282,9 +305,21 @@ export interface UpcomingEvent {
   entryFeeCents: number
   label: string
   entered: boolean
-  /** the kid's EARNED ranking points meet this tier's point band (both directions). Snapshot-only
-   *  (derived from the results ledger at snapshot time), so it persists nothing and bumps no schema. */
+  /** whether she may ENTER this event right now – the verdict of the engine's one entry gate
+   *  (`entryStatus` = point band + availability). Snapshot-only (derived from the results ledger at
+   *  snapshot time), so it persists nothing and bumps no schema.
+   *
+   *  Round-10 R10-5/R10-3, and this is the part that bit: `eligible` is about ENTERING, never about
+   *  an entry already made. An entry survives a band crossing once its list has closed (the fee is
+   *  committed and the event plays), so an `entered` card can legitimately read `eligible: false` –
+   *  and the UI must show it anyway, with `cancellable` as its way out. Hiding or locking an entered
+   *  card on this flag is what produced the dead end. */
   eligible: boolean
+  /** R10-13: the entry is COMMITTED (its list has closed) but its week has not started – the window
+   *  in which the player may CANCEL, forfeiting the fee, and get the week back for a practice match
+   *  or a family vacation. Before the deadline the same control is an ordinary refunded withdrawal;
+   *  once the week starts, the tournament flow's Skip owns it. */
+  cancellable: boolean
   /** why the kid HARD-cannot enter, for the UI lock label; absent when eligible. Point-band reasons:
    *  'locked' = not enough ranking points yet (below the tier's minPoints); 'outgrown' = past its
    *  ceiling now. Hard availability blocks (Season-Life slice B, checked after the point band):
@@ -378,6 +413,9 @@ export interface Snapshot {
   seasonLosses: number
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
+  /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
+   *  Stats. Empty until the first wrap-up. */
+  seasonHistory: SeasonHistoryEntry[]
   /** set when an `advance` stopped early */
   stopReason?: StopReason
   /** present while a tournament reveal is in progress (drives TournamentFlow) */
@@ -416,6 +454,9 @@ export type ToWorker =
   | { id: number; type: 'tournamentClose' }
   // R9-9: withdraw POST-deadline at the event week – fee forfeited, travel refunded, no run.
   | { id: number; type: 'skipEvent'; eventId: string }
+  // R10-13: cancel an entry before its week starts. Past the deadline the fee is FORFEITED and the
+  // week becomes plannable again (the escape from the R10-3 dead end); before it, a full refund.
+  | { id: number; type: 'cancelEntry'; eventId: string }
   // Season planner: book/cancel a vacation or a practice match on an empty FUTURE week.
   // Cancelling before the week starts refunds in full (mirror of entry withdrawal).
   | { id: number; type: 'bookVacation'; week: number; packageId: string }

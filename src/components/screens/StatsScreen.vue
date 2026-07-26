@@ -11,6 +11,9 @@
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { formatShortName, rankLabel } from '../../shared/format'
+// R10-9: the season-by-season history sits right under the header tiles – it is the same three
+// figures (rank / points / W-L) for every season she has finished. See SeasonHistoryTable.vue.
+import SeasonHistoryTable from '../SeasonHistoryTable.vue'
 
 const game = useGameStore()
 
@@ -30,21 +33,26 @@ const seasonLosses = computed(() => game.snapshot?.seasonLosses ?? 0)
   <template v-if="game.snapshot">
     <section>
       <h2>Stats</h2>
+      <!-- R10-2: the three tiles are captions, not body copy – each label stays on ONE line
+           (.stats-tile-label nowraps; the tile padding/gap were trimmed to pay for it) and
+           "Season points" is now "Season pts", which is what actually fits at 375px. -->
       <div class="stats-header-row">
         <div class="stats-tile">
-          <span class="hint">Rank</span>
+          <span class="stats-tile-label">Rank</span>
           <span class="stats-tile-value">{{ rankLabel(kidRank, ranked) }}</span>
         </div>
         <div class="stats-tile">
-          <span class="hint">Season points</span>
+          <span class="stats-tile-label">Season pts</span>
           <span class="stats-tile-value num">{{ kidPoints }}</span>
         </div>
         <div class="stats-tile">
-          <span class="hint">W–L</span>
+          <span class="stats-tile-label">W–L</span>
           <span class="stats-tile-value num">{{ seasonWins }}–{{ seasonLosses }}</span>
         </div>
       </div>
     </section>
+
+    <SeasonHistoryTable />
 
     <section>
       <h2>Standings</h2>

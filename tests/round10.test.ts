@@ -1,0 +1,567 @@
+import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import {
+  createWorld,
+  tickWeek,
+  advanceWeeks,
+  enterEvent,
+  withdrawEvent,
+  cancelEntry,
+  skipEvent,
+  bookVacation,
+  bookPractice,
+  availabilityStatus,
+  entryStatus,
+  isTierEligible,
+  kidPoints,
+  toSnapshot,
+  skipTournament,
+  closeTournament,
+  KID_ID,
+  type WorldState,
+} from '../src/engine/world'
+import { rngFromSeed } from '../src/engine/rng'
+import { TIERS } from '../src/engine/season/calendar'
+import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import type { StopReason } from '../src/shared/protocol'
+
+// ---------------------------------------------------------------------------
+// Round 10 — the owner's playtest of the wave-3 build. Three correctness knots,
+// all of them one-rule-read-twice bugs:
+//
+//   R10-17  the injury gate answered "is she hurt NOW?" for an event WEEKS away, so
+//           every card in the 8-week horizon stayed locked long past her stated
+//           return week ("out until W21" -> nothing enterable at W22+).
+//   R10-5   the tier POINT BAND was re-implemented at three call sites and absent
+//           from the fourth (the play week), so entry, display and resolution could
+//           disagree about the same event.
+//   R10-3   the resulting dead end: an entered event she had outgrown was hidden by
+//           the calendar's declutter filter, which took the Withdraw control away with
+//           it AND made the week look plannable while the engine still saw the entry.
+//   R10-13  the escape hatch: CANCEL on a committed (post-deadline) entry, fee forfeited.
+//
+// ZERO new RNG draws anywhere in this round: every fix is pure state or display.
+// ---------------------------------------------------------------------------
+
+/** Add a controlled event to a world's calendar (mirrors the helper the other suites use). */
+function injectEvent(
+  world: WorldState,
+  partial: { week: number; tier: TierId; id?: string; deadlineWeek?: number },
+): SeasonEvent {
+  const e: SeasonEvent = {
+    id: partial.id ?? `r10-${partial.week}-${partial.tier}`,
+    week: partial.week,
+    tier: partial.tier,
+    surface: 'hard',
+    travelCostCents: 100_00,
+    deadlineWeek: partial.deadlineWeek ?? partial.week - 2,
+  }
+  world.season.push(e)
+  world.season.sort((a, b) => a.week - b.week)
+  return e
+}
+
+function giveKidPoints(world: WorldState, points: number): void {
+  world.results.push({ playerId: KID_ID, week: world.week, points, tier: 'national' })
+}
+
+function setInjury(world: WorldState, weeksRemaining: number): void {
+  world.injury = {
+    kind: 'ankle strain',
+    severity: 'moderate',
+    weeksRemaining,
+    totalWeeks: weeksRemaining,
+    sinceWeek: world.week,
+  }
+}
+
+/** Count of MAIN-stream draws a callback consumes – the guard every round-10 fix must pass. */
+function mainStreamDraws(run: (rng: () => number) => void): number {
+  let n = 0
+  run(() => {
+    n++
+    return 0.5
+  })
+  return n
+}
+
+// ===========================================================================
+// R10-17 — the injury lock must lift exactly when the news says it does.
+// ===========================================================================
+describe('R10-17 — the injury gate is read against the EVENT week, not the current one', () => {
+  it('blocks inside the layoff and clears AT the stated return week', () => {
+    const w = createWorld('r10-17-boundary')
+    w.season = []
+    w.condition = 100
+    setInjury(w, 5) // week 0, out 5 weeks -> the UI says "back wk 5"
+    const backWeek = w.week + w.injury!.weeksRemaining
+    expect(backWeek).toBe(5)
+
+    // Every week strictly BEFORE the return week is a hard 'injured' block...
+    for (let week = w.week + 1; week < backWeek; week++) {
+      const ev = injectEvent(w, { week, tier: 'local', id: `inside-${week}`, deadlineWeek: w.week })
+      const status = availabilityStatus(w, ev)
+      expect(status.level, `W${week} must be blocked`).toBe('blocked')
+      expect(status.reason).toBe('injured')
+    }
+    // ...and the return week itself, plus everything after it, is NOT.
+    for (const week of [backWeek, backWeek + 1, backWeek + 4]) {
+      const ev = injectEvent(w, { week, tier: 'local', id: `after-${week}`, deadlineWeek: w.week })
+      const status = availabilityStatus(w, ev)
+      expect(status.level, `W${week} must not be injury-blocked`).not.toBe('blocked')
+      expect(status.reason).not.toBe('injured')
+    }
+  })
+
+  it('uses the SAME boundary the planner already uses (bookVacation) – one rule, two surfaces', () => {
+    const w = createWorld('r10-17-planner-parity')
+    w.season = []
+    w.condition = 100
+    w.fundsCents = 500_00
+    setInjury(w, 3)
+    const backWeek = w.week + 3
+
+    // the planner's own rule: a vacation is refused inside the layoff, allowed from the return week
+    expect(() => bookVacation(w, backWeek - 1, 'staycation')).toThrow('Injured')
+    expect(() => bookVacation(w, backWeek, 'staycation')).not.toThrow()
+    // ...and availabilityStatus now answers identically for a tournament on those weeks
+    const inside = injectEvent(w, { week: backWeek - 1, tier: 'local', id: 'p-in', deadlineWeek: w.week })
+    const at = injectEvent(w, { week: backWeek + 1, tier: 'local', id: 'p-at', deadlineWeek: w.week })
+    expect(availabilityStatus(w, inside).reason).toBe('injured')
+    expect(availabilityStatus(w, at).reason).not.toBe('injured')
+  })
+
+  it('the snapshot only locks the weeks she is actually out for', () => {
+    const w = createWorld('r10-17-snapshot')
+    w.season = []
+    w.condition = 100
+    setInjury(w, 2) // back at W2
+    injectEvent(w, { week: 1, tier: 'local', id: 'w1', deadlineWeek: 0 })
+    injectEvent(w, { week: 2, tier: 'local', id: 'w2', deadlineWeek: 0 })
+    injectEvent(w, { week: 3, tier: 'local', id: 'w3', deadlineWeek: 0 })
+
+    const up = toSnapshot(w).upcoming
+    expect(up.find((e) => e.id === 'w1')!.ineligibleReason).toBe('injured')
+    expect(up.find((e) => e.id === 'w2')!.ineligibleReason).toBeUndefined()
+    expect(up.find((e) => e.id === 'w3')!.ineligibleReason).toBeUndefined()
+    expect(up.find((e) => e.id === 'w3')!.eligible).toBe(true)
+  })
+
+  it("THE OWNER'S CASE: enter, injure, tick past the return week -> entry works again", () => {
+    // "the news said she is out until week 21, but at week 22 and every week after,
+    //  no tournament could be entered" – reproduced end to end.
+    const w = createWorld('r10-17-owner')
+    w.season = []
+    w.condition = 100
+    w.fundsCents = 5_000_00
+    const rng = rngFromSeed(w.seed)
+
+    const first = injectEvent(w, { week: 4, tier: 'local', id: 'before', deadlineWeek: 2 })
+    enterEvent(w, first.id) // she IS enterable while healthy
+    expect(w.entries).toContain(first.id)
+
+    setInjury(w, 4) // out 4 weeks -> back at W4
+    const backWeek = w.week + 4
+
+    // While out, an event inside the layoff is refused – that part was always right.
+    const during = injectEvent(w, { week: backWeek - 1, tier: 'local', id: 'during', deadlineWeek: 0 })
+    expect(() => enterEvent(w, during.id)).toThrow('Injured')
+
+    // Tick past the stated return week.
+    while (w.week < backWeek + 1) {
+      tickWeek(w, rng)
+      if (w.pendingTournament) {
+        skipTournament(w)
+        closeTournament(w)
+      }
+    }
+    expect(w.injury).toBeNull() // the layoff really did end
+    expect(w.week).toBeGreaterThan(backWeek)
+
+    // ...and entry works again. THIS is what the owner could never do.
+    const after = injectEvent(w, { week: w.week + 3, tier: 'local', id: 'after', deadlineWeek: w.week + 1 })
+    expect(availabilityStatus(w, after).level).not.toBe('blocked')
+    expect(() => enterEvent(w, after.id)).not.toThrow()
+    expect(w.entries).toContain(after.id)
+    expect(toSnapshot(w).upcoming.find((e) => e.id === after.id)!.entered).toBe(true)
+  })
+
+  it('costs ZERO main-stream draws (the gate is pure state)', () => {
+    const w = createWorld('r10-17-draws')
+    setInjury(w, 3)
+    const ev = injectEvent(w, { week: 2, tier: 'local' })
+    expect(mainStreamDraws(() => void availabilityStatus(w, ev))).toBe(0)
+    expect(mainStreamDraws(() => void entryStatus(w, ev))).toBe(0)
+  })
+})
+
+// ===========================================================================
+// R10-5 — ONE rule for the point band. `entryStatus` is now the single gate that
+// enterEvent, the snapshot and advanceWeeks all read; the band is never re-derived.
+// ===========================================================================
+describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
+  it('entryStatus folds the point band AND availability, band first', () => {
+    // below the floor -> 'locked' with the threshold; above the ceiling -> 'outgrown'
+    const low = createWorld('r10-5-low')
+    low.condition = 100
+    const nat = injectEvent(low, { week: 3, tier: 'national', deadlineWeek: 1 })
+    const lockedStatus = entryStatus(low, nat)
+    expect(lockedStatus.level).toBe('blocked')
+    expect(lockedStatus.reason).toBe('locked')
+    expect(lockedStatus.pointsToEnter).toBe(TIERS.national.enterPointBand[0])
+
+    const high = createWorld('r10-5-high')
+    high.condition = 100
+    giveKidPoints(high, 122) // the owner's figure – local's band is [0, 85]
+    const loc = injectEvent(high, { week: 3, tier: 'local', deadlineWeek: 1 })
+    const outgrown = entryStatus(high, loc)
+    expect(outgrown.level).toBe('blocked')
+    expect(outgrown.reason).toBe('outgrown')
+
+    // the band outranks a hard availability block, exactly as upcomingEvents documented
+    const both = createWorld('r10-5-both')
+    giveKidPoints(both, 122)
+    setInjury(both, 4)
+    const locB = injectEvent(both, { week: 2, tier: 'local', deadlineWeek: 0 })
+    expect(entryStatus(both, locB).reason).toBe('outgrown')
+  })
+
+  it('the owner\'s 122-point Local is refused by the gate AND labelled by the snapshot', () => {
+    const w = createWorld('r10-5-surfaces')
+    w.condition = 100
+    w.fundsCents = 5_000_00
+    w.season = []
+    giveKidPoints(w, 122)
+    const loc = injectEvent(w, { week: 3, tier: 'local', deadlineWeek: 1 })
+
+    // surface 1: entry refuses, with the direction-aware copy
+    expect(() => enterEvent(w, loc.id)).toThrow("You've outgrown Local Open (122 pts)")
+    expect(w.entries).toEqual([])
+    // surface 2: the snapshot names the same reason
+    const up = toSnapshot(w).upcoming.find((e) => e.id === loc.id)!
+    expect(up.eligible).toBe(false)
+    expect(up.ineligibleReason).toBe('outgrown')
+    // surface 3: the advance never stops for a deadline she cannot act on
+    const nat = injectEvent(w, { week: w.week + 3, tier: 'regional', deadlineWeek: w.week + 1, id: 'reg-ok' })
+    expect(isTierEligible(nat.tier, kidPoints(w))).toBe(true) // regional IS open at 122
+    expect(availabilityStatus(w, nat).level).not.toBe('blocked')
+  })
+
+  it('the point band is derived in ONE place – no surface re-implements it', () => {
+    const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
+    // `enterPointBand` may only be read by the two pure band helpers; every gate goes
+    // through entryStatus. (This is the structural guard against the R10-5 desync.)
+    const readers = src.split('\n').filter((l) => l.includes('enterPointBand') && !l.trim().startsWith('*'))
+    expect(readers.length).toBeLessThanOrEqual(3)
+    // enterEvent must not destructure the band itself any more
+    const enterFn = src.slice(src.indexOf('export function enterEvent'), src.indexOf('export function withdrawEvent'))
+    expect(enterFn).not.toContain('enterPointBand')
+    expect(enterFn).toContain('entryStatus')
+    // ...and neither may the snapshot builder
+    const upcomingFn = src.slice(src.indexOf('function upcomingEvents'), src.indexOf('function computeCountingResults'))
+    expect(upcomingFn).not.toContain('enterPointBand')
+    expect(upcomingFn).toContain('entryStatus')
+  })
+
+  it('a COMMITTED entry that survived the band crossing stays visible and playable', () => {
+    // The documented owner rule (R8-7a, 25.07): a list that closed with her in band keeps her
+    // on it – the fee is committed and the event still plays. What was broken is that the
+    // snapshot then reported it as an ineligible 'outgrown' card, which the calendar HID.
+    const w = createWorld('r10-5-committed')
+    w.season = []
+    w.condition = 100
+    w.fundsCents = 5_000_00
+    const ev = injectEvent(w, { week: 4, tier: 'local', deadlineWeek: 1 })
+    enterEvent(w, ev.id) // in band (0 pts) while the list is open
+    const rng = rngFromSeed(w.seed)
+    tickWeek(w, rng) // W1 = the deadline week, still in band
+    tickWeek(w, rng) // W2 – past the deadline
+    expect(w.entries).toContain(ev.id)
+
+    giveKidPoints(w, 122) // she outgrows local only AFTER the list closed
+    tickWeek(w, rng) // W3 – releaseOutgrownEntries must NOT touch a closed list
+    expect(w.entries).toContain(ev.id)
+
+    const row = toSnapshot(w).upcoming.find((e) => e.id === ev.id)!
+    expect(row.entered).toBe(true) // she IS in it – the card must not vanish
+    expect(row.cancellable).toBe(true) // ...and R10-13 gives her the way out
+
+    // the play week resolves the committed run – the band gates ENTRY, not a closed list
+    tickWeek(w, rng)
+    expect(w.week).toBe(ev.week)
+    expect(w.pendingTournament?.eventId).toBe(ev.id)
+  })
+
+  it('the calendar no longer hides an ENTERED event just because she outgrew it', () => {
+    const src = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
+    const filter = src.slice(src.indexOf('const visibleUpcoming'), src.indexOf('const myEntries'))
+    expect(filter).toContain('e.entered') // an entered event is never decluttered away
+    expect(filter).toContain("'outgrown'")
+  })
+})
+
+// ===========================================================================
+// R10-3 — the dead end, and that it is gone.
+// ===========================================================================
+describe('R10-3 — the outgrown-entry dead end has a way out', () => {
+  /** The exact knot: entered in band, the list closed, THEN she outgrew the tier and got tired. */
+  function knot() {
+    const w = createWorld('r10-3-knot')
+    w.season = []
+    w.condition = 100
+    w.fundsCents = 20_000_00
+    const ev = injectEvent(w, { week: 6, tier: 'local', deadlineWeek: 2 })
+    enterEvent(w, ev.id)
+    const rng = rngFromSeed(w.seed)
+    while (w.week <= ev.deadlineWeek) tickWeek(w, rng)
+    giveKidPoints(w, 122) // outgrown, past the deadline
+    w.condition = 40 // ...and worn out, so the rescue prompt wants this week for a vacation
+    expect(w.entries).toContain(ev.id)
+    return { w, ev, rng }
+  }
+
+  it('the old dead end really was a dead end (all three exits refused)', () => {
+    const { w, ev } = knot()
+    expect(() => withdrawEvent(w, ev.id)).toThrow('Cannot withdraw after the deadline')
+    expect(() => bookVacation(w, ev.week, 'staycation')).toThrow('She is entered in a tournament that week')
+    expect(() => bookPractice(w, ev.week, false)).toThrow('She is entered in a tournament that week')
+  })
+
+  it('cancelEntry unties it: the week becomes plannable again', () => {
+    const { w, ev } = knot()
+    cancelEntry(w, ev.id)
+    expect(w.entries).not.toContain(ev.id)
+    // a vacation on that week is now bookable – the R10-3 rescue offer finally works
+    expect(() => bookVacation(w, ev.week, 'staycation')).not.toThrow()
+  })
+
+  it('...or a practice match, if the parent would rather she played', () => {
+    const { w, ev } = knot()
+    cancelEntry(w, ev.id)
+    expect(() => bookPractice(w, ev.week, false)).not.toThrow()
+  })
+
+  it('the rescue offer can no longer point at a week the engine will refuse', () => {
+    // The UI-side half of the knot: `plannable` was computed from a calendar the outgrown
+    // filter had already emptied, so the rescue card offered an entered week.
+    const src = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
+    const rows = src.slice(src.indexOf('const calendarRows'), src.indexOf('function packageLabel'))
+    expect(rows).toContain('!e.entered') // an entered week is never plannable
+    // and the row source now includes entered-but-outgrown events (see visibleUpcoming above)
+    expect(rows).toContain('visibleUpcoming')
+  })
+})
+
+// ===========================================================================
+// R10-13 — CANCEL on a committed entry: the fee is NOT refunded.
+// ===========================================================================
+describe('R10-13 — cancel a committed entry (fee forfeited)', () => {
+  function committed(tier: TierId = 'local') {
+    const w = createWorld('r10-13')
+    w.season = []
+    w.condition = 100
+    w.fundsCents = 20_000_00
+    const ev = injectEvent(w, { week: 6, tier, deadlineWeek: 2 }) // local, 0 pts -> in band
+    enterEvent(w, ev.id)
+    const rng = rngFromSeed(w.seed)
+    while (w.week <= ev.deadlineWeek) tickWeek(w, rng)
+    return { w, ev, rng }
+  }
+
+  it('drops the entry and does NOT hand the fee back', () => {
+    const { w, ev } = committed()
+    const before = w.fundsCents
+    cancelEntry(w, ev.id)
+    expect(w.entries).not.toContain(ev.id)
+    expect(w.fundsCents).toBe(before) // the list closed with her on it – the fee is gone
+    expect(w.events.some((e) => e.text.startsWith('Entry refunded'))).toBe(false)
+  })
+
+  it('says so in the news, in player copy (short dash, no Cyrillic)', () => {
+    const { w, ev } = committed()
+    cancelEntry(w, ev.id)
+    const beat = w.events.find((e) => e.week === w.week && e.text.startsWith('Cancelled '))
+    expect(beat).toBeDefined()
+    expect(beat!.text).toContain('entry fee forfeited')
+    expect(beat!.text).not.toMatch(/[—А-Яа-яЁё]/)
+  })
+
+  it('BEFORE the deadline it is a full refund instead (one command, the refund rule intact)', () => {
+    const w = createWorld('r10-13-open')
+    w.season = []
+    w.condition = 100
+    w.fundsCents = 20_000_00
+    const ev = injectEvent(w, { week: 6, tier: 'local', deadlineWeek: 4 })
+    const before = w.fundsCents
+    enterEvent(w, ev.id)
+    expect(w.fundsCents).toBe(before - TIERS.local.entryFeeCents)
+    cancelEntry(w, ev.id) // still refundable -> the withdrawal path
+    expect(w.entries).not.toContain(ev.id)
+    expect(w.fundsCents).toBe(before)
+    expect(w.events.some((e) => e.text.startsWith('Entry refunded'))).toBe(true)
+  })
+
+  it('refuses once the event week has started – that week belongs to skipEvent', () => {
+    const { w, ev, rng } = committed()
+    while (w.week < ev.week) tickWeek(w, rng)
+    expect(w.week).toBe(ev.week)
+    expect(() => cancelEntry(w, ev.id)).toThrow()
+  })
+
+  it('is fee-coherent with skipEvent: both forfeit the entry fee', () => {
+    // skipEvent (R9-9) pulls out ON the event week: fee forfeited, travel refunded (she never
+    // boards). cancelEntry pulls out BEFORE it: same fee rule, and travel was never charged.
+    const a = committed()
+    while (a.w.week < a.ev.week) tickWeek(a.w, a.rng)
+    const beforeSkip = a.w.fundsCents
+    skipEvent(a.w, a.ev.id)
+    expect(a.w.fundsCents).toBe(beforeSkip + a.ev.travelCostCents) // travel back, fee gone
+
+    const b = committed()
+    const beforeCancel = b.w.fundsCents
+    cancelEntry(b.w, b.ev.id)
+    expect(b.w.fundsCents).toBe(beforeCancel) // nothing back: no travel charged yet, fee gone
+  })
+
+  it('refuses an event she is not entered in', () => {
+    const w = createWorld('r10-13-none')
+    w.season = []
+    const ev = injectEvent(w, { week: 6, tier: 'local', deadlineWeek: 2 })
+    expect(() => cancelEntry(w, ev.id)).toThrow('Not entered in this event')
+  })
+
+  it('costs ZERO main-stream draws', () => {
+    const { w, ev } = committed()
+    expect(mainStreamDraws(() => cancelEntry(w, ev.id))).toBe(0)
+  })
+
+  it('is reachable from the UI: protocol message, store action, and a no-refund confirm', () => {
+    const protocol = readFileSync(new URL('../src/shared/protocol.ts', import.meta.url), 'utf8')
+    expect(protocol).toContain("type: 'cancelEntry'")
+    const worker = readFileSync(new URL('../src/worker/sim.worker.ts', import.meta.url), 'utf8')
+    expect(worker).toContain("case 'cancelEntry'")
+    const store = readFileSync(new URL('../src/stores/game.ts', import.meta.url), 'utf8')
+    expect(store).toContain('async cancelEntry(')
+    const screen = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
+    expect(screen).toContain('game.cancelEntry(')
+    // the confirm must state the fee is NOT refunded, and the control must say Cancel
+    const ask = screen.slice(screen.indexOf('function askCancelEntry'), screen.indexOf('function runConfirm'))
+    expect(ask).toMatch(/not refunded/i)
+    expect(ask).not.toMatch(/[—А-Яа-яЁё]/)
+  })
+})
+
+// ===========================================================================
+// R10-16 — the empty popup, and the injury dialog's corner radius.
+// ===========================================================================
+describe('R10-16 — no popup may render without copy', () => {
+  const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
+
+  it('the stop toast is gated on HAVING copy, not merely on a stop reason', () => {
+    const gate = app.slice(app.indexOf('const showStopToast'), app.indexOf('const showSeasonSummary'))
+    // The empty popup: stopReason 'injury' was excluded from STOP_REASON_TEXT (it owns a blocking
+    // dialog) but NOT from the toast's condition, so the toast rendered with an empty <span>.
+    expect(gate).toContain('stopReasonText')
+  })
+
+  it('every StopReason either has toast copy or an owning dialog – and none is both', () => {
+    const reasons: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical']
+    const map = app.slice(app.indexOf('const STOP_REASON_TEXT'), app.indexOf('const stopReasonText'))
+    const owned: Record<string, boolean> = {
+      tournament: true, // TournamentFlow
+      'season-end': true, // SeasonSummaryDialog
+      injury: true, // InjuryStopDialog
+    }
+    for (const r of reasons) {
+      const hasCopy = map.includes(`${r}:`) || map.includes(`'${r}':`)
+      expect(hasCopy || owned[r], `StopReason '${r}' has neither copy nor an owner`).toBe(true)
+      if (owned[r]) expect(hasCopy, `StopReason '${r}' would render an empty toast`).toBe(false)
+    }
+  })
+
+  it('the injury dialog uses the squarer radius of the top popups, not a pill', () => {
+    const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
+    const block = css.slice(css.indexOf('.injury-stop {'))
+    const rule = block.slice(0, block.indexOf('}'))
+    expect(rule).toContain('border-radius')
+    const radius = Number(/border-radius:\s*(\d+)px/.exec(rule)?.[1])
+    // the top popups (.stop-toast / .recovered-banner) sit at 10px; the pill idiom is 999px
+    const toast = css.slice(css.indexOf('.stop-toast {'))
+    const toastRadius = Number(/border-radius:\s*(\d+)px/.exec(toast.slice(0, toast.indexOf('}')))?.[1])
+    expect(radius).toBe(toastRadius)
+    expect(radius).toBeLessThanOrEqual(12)
+  })
+})
+
+// ===========================================================================
+// R10-14 — VERIFIED CORRECT, pinned so nobody "fixes" it.
+// ===========================================================================
+describe('R10-14 — three Local matches cost exactly 6 condition (no change, pinned)', () => {
+  it('4 per-match + 2 ladder = 6', async () => {
+    const { matchDrain, tournamentRunStrain } = await import('../src/engine/condition')
+    const run = [{ score: '6-4 6-4' }, { score: '6-3 6-2' }, { score: '6-4 3-6 7-5' }]
+    const perMatch = run.reduce((s, m) => s + matchDrain('local', m.score), 0)
+    expect(perMatch).toBe(4)
+    expect(tournamentRunStrain('local', run)).toBe(6)
+  })
+})
+
+// ===========================================================================
+// Invariance — none of the above may move the weekly draw sequence.
+// ===========================================================================
+describe('round-10 invariance — the main weekly stream is untouched', () => {
+  it('a career that cancels a committed entry every chance it gets draws the same as one that never does', () => {
+    function draws(cancel: boolean): number[] {
+      const w = createWorld('r10-invariance')
+      w.fundsCents = 500_000_00
+      const seen: number[] = []
+      const base = rngFromSeed(w.seed)
+      const rng = () => {
+        const v = base()
+        seen.push(v)
+        return v
+      }
+      for (let i = 0; i < 24; i++) {
+        const points = kidPoints(w)
+        for (const e of w.season) {
+          if (e.week <= w.week || w.week > e.deadlineWeek || w.entries.includes(e.id)) continue
+          if (entryStatus(w, e).level === 'blocked') continue
+          if (w.season.some((x) => x.week === e.week && w.entries.includes(x.id))) continue
+          if (!isTierEligible(e.tier, points)) continue
+          try {
+            enterEvent(w, e.id)
+          } catch {
+            /* one per week / funds */
+          }
+        }
+        if (cancel) {
+          for (const id of [...w.entries]) {
+            const e = w.season.find((x) => x.id === id)
+            if (e && w.week > e.deadlineWeek && e.week > w.week) cancelEntry(w, id)
+          }
+        }
+        tickWeek(w, rng)
+        if (w.pendingTournament) {
+          skipTournament(w)
+          closeTournament(w)
+        }
+      }
+      return seen
+    }
+    const a = draws(false)
+    const b = draws(true)
+    expect(b.length).toBe(a.length)
+    expect(b).toEqual(a)
+  })
+
+  it('advanceWeeks still reads the same one rule for its deadline stop', () => {
+    const w = createWorld('r10-advance-stop')
+    w.season = []
+    w.fundsCents = 500_00
+    w.condition = 100
+    // a regional deadline next week, but she is 0 pts (locked) -> no stop
+    injectEvent(w, { week: 3, tier: 'regional', deadlineWeek: 1 })
+    const stop: StopReason | undefined = advanceWeeks(w, rngFromSeed(w.seed), 4)
+    expect(stop).not.toBe('deadline')
+  })
+})

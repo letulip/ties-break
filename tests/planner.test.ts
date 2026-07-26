@@ -180,7 +180,9 @@ describe('P1 — main-stream RNG invariance with a planner-heavy career', () => 
 // ---------------------------------------------------------------------------
 describe('P2 — schema v13', () => {
   it('is at version 13 and a fresh world carries empty planner state', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(13)
+    // The planner landed AT v13; later slices keep bumping the schema (R10-9's season history is
+    // v14), so this asserts "v13 or later" – the planner state below is what the case is about.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(13)
     const w = createWorld('p2')
     expect(w.vacations).toEqual([])
     expect(w.practices).toEqual([])
@@ -192,7 +194,7 @@ describe('P2 — schema v13', () => {
       readFileSync(new URL('./fixtures/saves/v12.json', import.meta.url), 'utf8'),
     ) as Record<string, unknown>
     const migrated = migrateSave(structuredClone(v12))
-    expect(migrated.schemaVersion).toBe(13)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect(migrated.vacations).toEqual([])
     expect(migrated.practices).toEqual([])
     expect(migrated.recoveryBuff).toBeNull()
@@ -208,7 +210,7 @@ describe('P2 — schema v13', () => {
       readFileSync(new URL('./fixtures/saves/v13.json', import.meta.url), 'utf8'),
     ) as Record<string, unknown>
     const migrated = migrateSave(structuredClone(v13))
-    expect(migrated.schemaVersion).toBe(13)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect(migrated.vacations.length).toBeGreaterThan(0)
     expect(migrated.practices.length).toBeGreaterThan(0)
   })

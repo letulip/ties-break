@@ -10,7 +10,7 @@ import type { MatchPlayer, Side, Surface } from '../engine/match/types'
 import { buildTimeline, computeEndsSwaps, type EndsState } from '../viz/timeline'
 import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
-import { initSfx, playSfx } from '../audio/sfx'
+import { initSfx, playSfx, primeSfx } from '../audio/sfx'
 import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
 import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
@@ -31,18 +31,21 @@ const props = withDefaults(
     /** Round-5 sound rewiring: true only for the tournament FINAL. Swaps the match-end cue
      *  from the regular short applause to the bigger `applauseFinal` cue. Defaults to false
      *  so every other call site (friendly exhibition, MatchReplay, non-final rounds) is
-     *  unaffected. (Moot when `suppressEndApplause` is set – no match-end cue plays at all.) */
+     *  unaffected. R10-6: a final's cue fires AT the deciding point like every other reaction
+     *  cue (see startEvent) and the clip is pre-warmed on mount, so the celebration lands with
+     *  the winning shot instead of a beat behind the screen. Round-7's `suppressEndApplause`
+     *  (which silenced the final's viewer so the finale SCREEN could clap, one click later) is
+     *  gone with it – `endApplause` below is how the parent knows not to clap twice. */
     finalMatch?: boolean
-    /** Round-7 item 14: suppress the match-end applause entirely. Set true for the
-     *  tournament FINAL, whose celebratory applause is owned by the finale screen
-     *  (applauseFinal, played once there) – this stops the double applause. Defaults false. */
-    suppressEndApplause?: boolean
   }>(),
-  { mode: 'live', rankA: null, rankB: null, finalMatch: false, suppressEndApplause: false },
+  { mode: 'live', rankA: null, rankB: null, finalMatch: false },
 )
-// Emitted once when playback reaches the end (used by TournamentFlow to auto-advance to the
-// post-match card; other callers can ignore it).
-const emit = defineEmits<{ finish: [] }>()
+// `finish` fires once when playback reaches the end (used by TournamentFlow to auto-advance to
+// the post-match card; other callers can ignore it).
+// R10-6: `endApplause` fires the instant the match-END crowd cue actually plays (never in 'skip'
+// mode, which is silent by construction) so a parent that ALSO has an applause of its own –
+// TournamentFlow's finale screen – can stand down instead of double-clapping a beat later.
+const emit = defineEmits<{ finish: []; endApplause: [] }>()
 
 // --- canvas: fixed internal resolution, scaled by devicePixelRatio -----------
 // Landscape court (Package H): wide 2:1 canvas.
@@ -164,10 +167,14 @@ let musicDuckedForRun = false
 //   ×1  – everything, except `out` fires only intermittently (~1 in 3–5 out/net points,
 //         seeded per match – see the outRng block below) so a miss-heavy rally doesn't spam it.
 //   ×2  – `hit`, `applauseShort` at game-end/set-end (tiebreak sets use `applauseShort`
-//         here too, not `oohApplause`) and match-end (including the final – no
-//         `applauseFinal` above ×1), plus the `takeYourSeats` pre-match beat.
-//   ×4  – only `hit` and a single `applauseShort` at match-end (no game/set applause,
-//         no `takeYourSeats`).
+//         here too, not `oohApplause`) and match-end, plus the `takeYourSeats` pre-match beat.
+//   ×4  – only `hit` and a single applause at match-end (no game/set applause, no
+//         `takeYourSeats`).
+//
+// R10-6 amendment: the tournament FINAL's match-end cue is `applauseFinal` at EVERY speed. The
+// old matrix downgraded it to `applauseShort` above ×1 because a long clip dragged behind a
+// sped-up match – R9-24's rate-matching (playLong) removed that reason, and a final gets exactly
+// ONE cue per match, so it is never the noise the per-game/per-set gating is about.
 //
 // 'seats' is special: it's not tied to a timeline event at all (see startClock) – it
 // plays, if this speed allows it, BEFORE the clock starts, not from inside
@@ -195,13 +202,14 @@ function playLong(key: 'applauseShort' | 'oohApplause' | 'applauseFinal' | 'take
 function gatedSfx(site: SoundSite, opts?: { final?: boolean }): void {
   if (speed.value === 4) {
     if (site === 'hit') playSfx('hit')
-    else if (site === 'matchEnd') playLong('applauseShort')
+    else if (site === 'matchEnd') playLong(opts?.final ? 'applauseFinal' : 'applauseShort')
     return
   }
   if (speed.value === 2) {
     if (site === 'hit') playSfx('hit')
     else if (site === 'seats') playLong('takeYourSeats')
-    else if (site === 'gameEnd' || site === 'setEnd' || site === 'setEndTiebreak' || site === 'matchEnd') {
+    else if (site === 'matchEnd') playLong(opts?.final ? 'applauseFinal' : 'applauseShort')
+    else if (site === 'gameEnd' || site === 'setEnd' || site === 'setEndTiebreak') {
       playLong('applauseShort')
     }
     return
@@ -280,11 +288,12 @@ function startEvent(ev: TimelineEvent): void {
   if (ev.kind !== 'point-end') return
   const point = props.match.points[ev.pointIndex]
 
-  // Match-ending point: the last point of the match (always present in 'key' mode).
-  // Round-7 item 14 still applies: a final-match viewer stays silent (suppressEndApplause);
-  // the finale screen owns the celebration.
+  // Match-ending point: the last point of the match (always present in 'key' mode). R10-6: THIS is
+  // where a tournament final's celebration now lands – on the winning shot, with the result – and
+  // the parent is told (`endApplause`) so its finale screen doesn't clap again a click later.
   if (ev.pointIndex === props.match.points.length - 1) {
-    if (!props.suppressEndApplause) gatedSfx('matchEnd', { final: props.finalMatch })
+    gatedSfx('matchEnd', { final: props.finalMatch })
+    emit('endApplause')
     return
   }
   if (point?.setEnd) {
@@ -515,6 +524,10 @@ function restart(): void {
 }
 
 onMounted(() => {
+  // R10-6: a final's celebration clip is the one cue that never plays before the moment it has to
+  // land, so it is warmed HERE – a whole match's worth of lead time for ~60 KB, and by the deciding
+  // point playSfx has nothing left to fetch. (No-op when this isn't a final, or while muted.)
+  if (props.finalMatch) primeSfx('applauseFinal')
   const canvas = canvasRef.value
   if (canvas) {
     const dpr = window.devicePixelRatio || 1

@@ -99,6 +99,16 @@ skipped entirely. Rule:
 TournamentFlow: the finale watcher now fires `applauseFinal` when `kidChampion || isRunnerUp`. The
 old `lastRoundWatched` double-fire hack and the `watched` param on `showResult()` were removed.
 
+> **SUPERSEDED by R10-6 (round 10).** Owner: "the applause fires on a delay; it should land WITH the
+> result screen." Making the finale SCREEN the only player meant the cue could not sound until the
+> reveal round-trip **and** the player's "Next →" click — a screen and a click after the winning
+> shot — and it then had to fetch a cold ~60 KB clip. Now: the final's MatchViewer plays
+> `applauseFinal` at the deciding point (the R9-23 rule, applied to the final too, rate-matched per
+> R9-24 at ×2+), `primeSfx('applauseFinal')` warms every variant while the match is still on, and
+> the viewer reports `endApplause` so the finale screen only claps for the paths where nobody
+> watched the final (skipped match, skipped tournament, resume into the finale). `suppressEndApplause`
+> was deleted — it had no callers left. Still exactly ONE `applauseFinal` per tournament.
+
 ## 15. Highlight the round label (`MatchViewer` + CSS)
 
 New optional `stageLabel` prop renders an **accent pill (accent bg, dark text)** over the top-left
@@ -172,3 +182,5 @@ The calendar event pill reads **"Closed W{n}"** once `week > deadlineWeek`, else
   engine file.
 - `finalMatch` prop on MatchViewer is now moot on the final (superseded by `suppressEndApplause`)
   but kept as a documented, defaulted prop; no call site passes it anymore.
+  **R10-6 update:** `finalMatch` is live again (TournamentFlow passes it for the Final round) and
+  `suppressEndApplause` is gone — see the item-14 note above.

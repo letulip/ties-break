@@ -7,6 +7,10 @@ import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
 import { useKidEmotion } from './composables/kidEmotion'
+// R10-7: the sticky bar's primary button says what the week AHEAD holds (tournament / vacation /
+// practice / exams / off-season / training). All of the derivation lives in the composable – this
+// file only renders the label it hands back.
+import { useWeekAhead } from './composables/weekAhead'
 import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -36,6 +40,7 @@ const game = useGameStore()
 // in public/avatars/{stage}-{emotion}.webp (256×256; jun per round5-brand, young/teen cut in
 // round-9 pt5 to the same framing). START_AGE 14 ⇒ the game opens on young-* art.
 const { cropUrl: avatarUrl } = useKidEmotion()
+const weekAhead = useWeekAhead()
 
 onMounted(() => game.init())
 
@@ -209,15 +214,34 @@ watch(
     tournamentHidden.value = false
   },
 )
-// The tournament stop is owned by the full-screen TournamentFlow overlay and the season-end stop
-// by SeasonSummaryDialog (both show off the snapshot); deadline/funds stops keep the toast.
-const showStopToast = computed(
-  () =>
-    !!game.snapshot?.stopReason &&
-    game.snapshot.stopReason !== 'tournament' &&
-    game.snapshot.stopReason !== 'season-end' &&
-    !stopToastDismissed.value,
-)
+// The tournament stop is owned by the full-screen TournamentFlow overlay, the season-end stop by
+// SeasonSummaryDialog and the injury stop by InjuryStopDialog (all three show off the snapshot);
+// deadline/funds/medical stops keep the toast.
+//
+// R10-16 (owner playtest 26.07 – "an EMPTY popup appeared on Home, no text at all, just a Dismiss
+// button"). THE BUG: this condition excluded the stop reasons that own a dialog BY NAME, and when
+// R9-21a moved 'injury' onto its own blocking dialog it was removed from STOP_REASON_TEXT but never
+// added to that exclusion list. So a fresh injury satisfied the toast's condition with no copy to
+// put in it, and the toast rendered as an empty bar with a lone Dismiss.
+//
+// THE FIX is to stop maintaining a second list at all: the toast shows iff there is something to
+// say. Any future StopReason that gets its own dialog (or simply lacks copy) can no longer produce
+// an empty popup – the copy map is the single source of truth for what the toast is for.
+//
+// 'injury' / 'tournament' / 'season-end' are absent from STOP_REASON_TEXT precisely BECAUSE they own
+// a dialog, so they now fall out of the toast for free instead of needing to be listed twice.
+const STOP_REASON_TEXT: Record<string, string> = {
+  deadline: 'Stopped: an entry deadline is coming up next week.',
+  funds: 'Stopped: funds ran below zero.',
+  // A withdrawal costs her an entry AND its fee, so it must never slide past during a multi-week
+  // advance – the same trap the owner hit with a silent injury withdrawal.
+  medical: 'Stopped: she was not cleared to play – withdrawn on medical advice.',
+}
+const stopReasonText = computed(() => STOP_REASON_TEXT[game.snapshot?.stopReason ?? ''] ?? '')
+const showStopToast = computed(() => !!stopReasonText.value && !stopToastDismissed.value)
+function dismissStopToast(): void {
+  stopToastDismissed.value = true
+}
 // The end-of-season summary popup: auto-shows on Home when `advance` reports 'season-end' and a
 // summary is present, until the player hits Continue (client-side flag).
 const showSeasonSummary = computed(
@@ -239,18 +263,6 @@ const showInjuryStop = computed(
     !!game.snapshot?.injury &&
     !injuryStopDismissed.value,
 )
-// R9-21a: 'injury' left this map – it gets the blocking InjuryStopDialog, not a quiet toast.
-const STOP_REASON_TEXT: Record<string, string> = {
-  deadline: 'Stopped: an entry deadline is coming up next week.',
-  funds: 'Stopped: funds ran below zero.',
-  // A withdrawal costs her an entry AND its fee, so it must never slide past during a multi-week
-  // advance – the same trap the owner hit with a silent injury withdrawal.
-  medical: 'Stopped: she was not cleared to play – withdrawn on medical advice.',
-}
-const stopReasonText = computed(() => STOP_REASON_TEXT[game.snapshot?.stopReason ?? ''] ?? '')
-function dismissStopToast(): void {
-  stopToastDismissed.value = true
-}
 </script>
 
 <template>
@@ -310,7 +322,16 @@ function dismissStopToast(): void {
          Both buttons now go through `advance` (weeks: 1|4) so either one can stop
          early on a tournament week / imminent deadline / funds crossing zero. -->
     <div v-if="tab === 'home'" class="next-week-bar">
-      <button class="primary" data-tour="next-week" :disabled="game.busy" @click="game.advance(1)">Next week ▶</button>
+      <!-- R10-7: one button, a label that names the plan for the week it is about to play. -->
+      <button
+        class="primary next-week-btn"
+        :class="`plan-${weekAhead.kind}`"
+        data-tour="next-week"
+        :disabled="game.busy"
+        @click="game.advance(1)"
+      >
+        {{ weekAhead.label }}
+      </button>
       <button :disabled="game.busy" @click="game.advance(4)">▶▶ 4</button>
     </div>
 
