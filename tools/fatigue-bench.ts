@@ -50,7 +50,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { ECONOMY, vacationPriceCents } from '../src/engine/economy'
+import { ECONOMY, recommendVacationPackage, vacationPriceCents } from '../src/engine/economy'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import type {
   CoachSetup,
@@ -102,7 +102,8 @@ export interface PlannerPolicy {
   withCoach: boolean
   /** book a rescue vacation when condition falls below this; null = never books one */
   rescueBelow: number | null
-  /** the rescue takes the cheapest package that returns her above this */
+  /** the rescue takes the CHEAPEST package that returns her to at least this condition (the
+   *  shipped `recommendVacationPackage` rule, with this as its target) */
   targetAbove: number
   /** the scheduled off-season family week (package id), or null to skip it */
   offSeasonPackageId: string | null
@@ -163,8 +164,12 @@ export const POLICIES: Policy[] = [
     planner: {
       ...NO_PLANNER,
       practice: 'alternate',
-      rescueBelow: 65, // the prompt's own threshold (ECONOMY.practice.rescueCondition)
-      targetAbove: 85,
+      // the prompt's OWN threshold – tracks the knob, so a re-tune of the offer band re-tunes the
+      // default player's habit with it (Wave-2 widened it 65 → 80). The policy acts strictly
+      // BELOW the value while the card offers at-or-below: a one-point difference, deliberately
+      // left alone so `rescueBelow` keeps meaning what its name says.
+      rescueBelow: ECONOMY.practice.rescueCondition,
+      targetAbove: ECONOMY.practice.rescueTargetCondition,
       offSeasonPackageId: 'seaside',
     },
   },
@@ -178,7 +183,10 @@ export const POLICIES: Policy[] = [
       ...NO_PLANNER,
       practice: 'fresh',
       practiceMinCondition: 80,
-      rescueBelow: 75, // acts on the strain chip long before the rescue prompt has to shout
+      // acts on the strain chip as soon as it lights up. Since Wave-2 widened the offer band to
+      // 80 the prompt fires at exactly the level this parent already self-imposed – she still
+      // aims HIGHER than the prompt does (targetAbove 90 vs the knob's 85).
+      rescueBelow: ECONOMY.practice.rescueCondition,
       targetAbove: 90,
       offSeasonPackageId: 'seaside',
     },
@@ -236,7 +244,10 @@ export const GRID_PRACTICE: { id: string; practice: PlannerPolicy['practice'] }[
 ]
 export const GRID_VACATION: { id: string; rescueBelow: number | null; offSeasonPackageId: string | null }[] = [
   { id: 'no-vac', rescueBelow: null, offSeasonPackageId: null },
-  { id: 'rescue65+sea', rescueBelow: 65, offSeasonPackageId: 'seaside' },
+  // "takes the offer whenever the game makes it" – the threshold TRACKS the shipped knob (it was
+  // hard-coded 65 until Wave-2 widened the band; a grid measuring a rule the game no longer has
+  // measures nothing).
+  { id: 'rescue+sea', rescueBelow: ECONOMY.practice.rescueCondition, offSeasonPackageId: 'seaside' },
 ]
 
 /** The 6 planner-grid policies (all on the balanced plan/entry/physio baseline). */
@@ -395,6 +406,12 @@ export interface WeekFacts {
   /** entries committed THIS week while condition was below the tier's availability floor. */
   cautionEntries: number
   entriesCommitted: number
+  /** THE DOCTOR'S VETO (Wave-2): entries the policy WANTED this week – ranking-eligible,
+   *  affordable, inside the commit window – that the medical floor hard-refused. The
+   *  "does the new gate ever fire, and for whom?" counter. */
+  medicalBlocks: number
+  /** the week closed under ECONOMY.availability.medicalFloor (the pathological zone). */
+  belowMedicalFloor: boolean
   /** physio/medical cents billed this week (retainer, rehab, onset scans). */
   physioSpendCents: number
   /** season planner: she played a booked FRIENDLY this week (a practice match resolved). */
@@ -438,14 +455,19 @@ function planNextWeek(
 
   const budgetCents = Math.floor(world.fundsCents * p.maxSpendShare)
   const priceOf = (id: string) => vacationPriceCents(world.seed, target, id, world.profile.background)
-  /** the cheapest package that returns her above `above` and stays inside the prudence budget;
-   *  falls back to the best she can still afford (which may be the free staycation). */
-  const pickPackage = (above: number): string | null => {
-    const affordable = ECONOMY.vacation.packages.filter((pkg) => priceOf(pkg.id) <= budgetCents)
-    if (affordable.length === 0) return null
-    const clearing = affordable.find((pkg) => world.condition + pkg.conditionGain > above)
-    return (clearing ?? affordable[affordable.length - 1]).id
-  }
+  /** THE shared pre-highlight rule (economy.ts): the cheapest package sufficient for her CURRENT
+   *  condition, inside the prudence budget, falling back to the deepest reset she can afford. The
+   *  bench used to carry its own copy of this rule – it now measures the one the UI ships. */
+  const pickPackage = (above: number): string | null =>
+    recommendVacationPackage({
+      seed: world.seed,
+      week: target,
+      background: world.profile.background,
+      condition: world.condition,
+      fundsCents: world.fundsCents,
+      budgetCents,
+      targetCondition: above,
+    })
 
   // 1. the scheduled off-season family week (the spec's natural default for everyone)
   const year = Math.floor(target / WEEKS_PER_YEAR)
@@ -525,6 +547,7 @@ export function stepFatigueWeek(
 ): WeekFacts {
   let cautionEntries = 0
   let entriesCommitted = 0
+  let medicalBlocks = 0
   const firstPlannerEventId = world.nextEventId
   const planned = planNextWeek(world, policy, plannerState)
   // Entry rule = econ-bench policy v3 (ranking-eligible + affordable, committed near the
@@ -540,7 +563,15 @@ export function stepFatigueWeek(
     if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
     if (!isTierEligible(e.tier, kidPoints(world))) continue
     const avail = availabilityStatus(world, e)
-    if (avail.level === 'blocked') continue // injured / exam blackout – enterEvent would throw
+    if (avail.level === 'blocked') {
+      // injured / exam blackout / the doctor's veto – enterEvent would throw. Count ONLY the
+      // veto, and only when she could otherwise have paid for the trip: that is a tournament the
+      // policy really lost to the new gate, not one it was never going to enter.
+      if (avail.reason === 'medical' && world.fundsCents >= TIERS[e.tier].entryFeeCents + e.travelCostCents) {
+        medicalBlocks++
+      }
+      continue
+    }
     if (
       policy.entryConditionMargin !== null &&
       world.condition < ECONOMY.availability.minConditionToEnter[e.tier] + policy.entryConditionMargin
@@ -618,6 +649,8 @@ export function stepFatigueWeek(
     walkover,
     cautionEntries,
     entriesCommitted,
+    medicalBlocks,
+    belowMedicalFloor: world.condition < ECONOMY.availability.medicalFloor,
     physioSpendCents,
     coachingSpendCents,
     practiced: friendly !== undefined,
@@ -671,6 +704,9 @@ export interface RunResult {
   walkovers: number
   cautionEntries: number
   entries: number
+  /** THE DOCTOR'S VETO: tournaments refused by the medical floor, and weeks spent under it. */
+  medicalBlocks: number
+  weeksBelowMedicalFloor: number
   physioSpendCents: number
   coachingSpendCents: number
   /** season planner (REAL mechanics since the planner slice): friendlies actually played, what
@@ -720,6 +756,8 @@ export function runFatigueCareer(
   let walkovers = 0
   let cautionEntries = 0
   let entries = 0
+  let medicalBlocks = 0
+  let weeksBelowMedicalFloor = 0
   let physioSpendCents = 0
   let coachingSpendCents = 0
   let wins = 0
@@ -758,6 +796,8 @@ export function runFatigueCareer(
     if (f.walkover) walkovers++
     cautionEntries += f.cautionEntries
     entries += f.entriesCommitted
+    medicalBlocks += f.medicalBlocks
+    if (f.belowMedicalFloor) weeksBelowMedicalFloor++
     physioSpendCents += f.physioSpendCents
     coachingSpendCents += f.coachingSpendCents
     if (f.practiced) practicesPlayed++
@@ -792,6 +832,8 @@ export function runFatigueCareer(
     walkovers,
     cautionEntries,
     entries,
+    medicalBlocks,
+    weeksBelowMedicalFloor,
     physioSpendCents,
     coachingSpendCents,
     practicesPlayed,
@@ -861,6 +903,10 @@ export interface CellStats {
   weeksLostPerSeason: number
   walkoversPerCareer: number
   cautionPerSeason: number
+  /** THE DOCTOR'S VETO: tournaments the medical floor refused per season, and the share of weeks
+   *  spent under the floor at all – "how often does the new hard gate actually bite?". */
+  medicalBlocksPerSeason: number
+  pctWeeksBelowMedicalFloor: number
   physioPerSeasonCents: number
   coachingPerSeasonCents: number
   /** season planner, per season: friendlies played, court spend, packages bought + their spend,
@@ -936,6 +982,8 @@ export function computeCellStats(
     weeksLostPerSeason: mean(runs.map((r) => r.weeksInjured / seasons)),
     walkoversPerCareer: mean(runs.map((r) => r.walkovers)),
     cautionPerSeason: mean(runs.map((r) => r.cautionEntries / seasons)),
+    medicalBlocksPerSeason: mean(runs.map((r) => r.medicalBlocks / seasons)),
+    pctWeeksBelowMedicalFloor: (100 * runs.reduce((s, r) => s + r.weeksBelowMedicalFloor, 0)) / totalWeeks,
     physioPerSeasonCents: mean(runs.map((r) => r.physioSpendCents / seasons)),
     coachingPerSeasonCents: mean(runs.map((r) => r.coachingSpendCents / seasons)),
     practicesPerSeason: mean(runs.map((r) => r.practicesPlayed / seasons)),
@@ -1073,6 +1121,22 @@ function plannerLine(c: CellStats): string {
   )
 }
 
+/** THE DOCTOR'S VETO per policy, for one profile block: how many tournaments the medical floor
+ *  refused per season and how much of the career was spent under it. The whole point of the knob
+ *  is that this line reads 0.00 for every non-pathological policy. */
+function medicalLine(cells: CellStats[]): string {
+  return (
+    '  ' +
+    padEnd(`medical floor ${ECONOMY.availability.medicalFloor}`, 20) +
+    cells
+      .map(
+        (c) =>
+          `${c.policy.id} ${c.medicalBlocksPerSeason.toFixed(2)} blocked/s (${c.pctWeeksBelowMedicalFloor.toFixed(1)}% of weeks under it)`,
+      )
+      .join(' · ')
+  )
+}
+
 /** Degeneracy screens the spec asks the report to surface: pinned condition, injury spirals,
  *  unplayable calendars. Returns human-readable findings (empty = nothing degenerate). */
 export function degeneracyFindings(c: CellStats): string[] {
@@ -1206,12 +1270,20 @@ const HEADER = [
   '  the §4b rescue trigger bought a package, then the per-package rate. Bookings go through the engine',
   '  commands (bookPractice/bookVacation) for NEXT week only, exactly as the UI offers them: a week that is',
   '  not plannable (exam block, off-season friendly, entered tournament, injury, no funds) is simply skipped.',
+  'WAVE-2 TUNING (26.07, calendar-independent half): (1) the practice guardrail\'s STREAK arm is gated on real',
+  `  strain – ${ECONOMY.practice.cautionStreak} in a row warn only below condition ${ECONOMY.practice.cautionStreakCondition}, ${ECONOMY.practice.cautionStreakAlways} in a row warn at any condition (it used to fire on a`,
+  '  perfectly fresh kid, which is how a warning becomes noise); (2) the vacation OFFER band widened to',
+  `  <= ${ECONOMY.practice.rescueCondition} and the pre-highlight is now the CHEAPEST package sufficient for HER CURRENT condition (one shared`,
+  '  rule in economy.ts – UI and bench read the same function), so the cheap tier can finally be the right',
+  `  answer; (3) the DOCTOR'S VETO – condition < ${ECONOMY.availability.medicalFloor} is a HARD block on entering, surfaced as availability`,
+  "  reason 'medical'. The per-profile \"medical floor\" line and the DOCTOR'S VETO block report its firing rate.",
   '',
   `FACTORIAL GRID (owner 25.07): plan × entry × physio unbundled = 12 cells per profile at ${GRID_HORIZON_WEEKS}w,`,
   `  ${GRID_SEEDS} seeds/cell (REDUCED from ${SEEDS_PER_CELL} for runtime; the headline trio keeps ${SEEDS_PER_CELL}). Money coupling per cell:`,
   '  coach$/s = planFactor-scaled coaching spend per season; endFunds = mean family funds at horizon end.',
-  `PLANNER GRID: practice {never, alternate, every} × vacation {none, rescue65+sea} = 6 cells per profile at`,
-  `  ${GRID_HORIZON_WEEKS}w, ${GRID_SEEDS} seeds/cell, on the DEFAULT player – the planner axis in isolation. It REPLACES the`,
+  `PLANNER GRID: practice {never, alternate, every} × vacation {none, rescue+sea} = 6 cells per profile at`,
+  `  ${GRID_HORIZON_WEEKS}w, ${GRID_SEEDS} seeds/cell, on the DEFAULT player (rescue+sea takes the offer whenever the game`,
+  `  makes it – the shipped band, condition <= ${ECONOMY.practice.rescueCondition}) – the planner axis in isolation. It REPLACES the`,
   '  old PROJ arithmetic layer (deleted with this slice): same questions, real bookings. The factorial grid',
   '  above keeps the planner OFF so plan × entry × physio stays a clean read.',
   '',
@@ -1346,6 +1418,9 @@ function runScenarioSection(
       // whether the guardrail / rescue triggers fired. One line per policy – the headline table
       // is already at its width budget.
       for (const stats of cellsOfProfile) console.log(plannerLine(stats))
+      // The doctor's veto (Wave-2): one line per profile, all three policies – the proof that the
+      // floor only bites in the pathological zone.
+      console.log(medicalLine(cellsOfProfile))
       // Anchors (spec): balanced vs real junior prevalence; grinder-vs-careful injury ratio.
       const grinder = cellsOfProfile[0]
       const balanced = cellsOfProfile[1]
@@ -1445,7 +1520,7 @@ function plannerGridRow(practiceId: string, vacationId: string, c: CellStats): s
   return '  ' + cells.map((s, i) => pad(s, PLANNER_COLS[i][1])).join('')
 }
 
-/** practice {never, alternate, every} × vacation {none, rescue65+sea} on the DEFAULT player –
+/** practice {never, alternate, every} × vacation {none, rescue+sea} on the DEFAULT player –
  *  the planner axis in isolation, with REAL bookings (the PROJ layer used to guess this). */
 function runPlannerGrid(scenario: Scenario, all: BenchCell[], degenerate: string[]): void {
   const horizon = FATIGUE_HORIZONS.find((h) => h.weeks === GRID_HORIZON_WEEKS)!
@@ -1546,6 +1621,59 @@ function renderPackageSales(all: BenchCell[]): void {
     unsold.length === 0
       ? '  VERDICT: all 6 packages sell somewhere – the ladder clears the spec §4b bar.'
       : `  VERDICT: ${unsold.length} package(s) NEVER sold: ${unsold.map((p) => p.id).join(', ')} – the ladder needs a tuning pass.`,
+  )
+}
+
+/** THE DOCTOR'S VETO, pooled per policy over every cell of the run (owner R9-19b, shipped with
+ *  the Wave-2 tuning slice). Answers the two questions the owner will ask: does the new hard gate
+ *  fire at all, and does it ever touch a policy that is not the degenerate grinder? */
+function renderMedicalVeto(all: BenchCell[]): void {
+  const rule = '═'.repeat(120)
+  console.log('')
+  console.log(rule)
+  console.log(
+    `  DOCTOR'S VETO – condition < ${ECONOMY.availability.medicalFloor} is a HARD block on entering` +
+      ' (pooled over every cell of this run; tier caution floors are 20-45, so normal play must read 0.00)',
+  )
+  console.log(rule)
+  const byPolicy = new Map<
+    string,
+    { blocks: number; seasons: number; weeksBelow: number; weeks: number; cells: Set<string> }
+  >()
+  for (const cell of all) {
+    const seasons = cell.horizon.weeks / WEEKS_PER_YEAR
+    const row = byPolicy.get(cell.policy.id) ?? {
+      blocks: 0,
+      seasons: 0,
+      weeksBelow: 0,
+      weeks: 0,
+      cells: new Set<string>(),
+    }
+    for (const r of cell.runs) {
+      row.blocks += r.medicalBlocks
+      row.seasons += seasons
+      row.weeksBelow += r.weeksBelowMedicalFloor
+      row.weeks += cell.horizon.weeks
+      if (r.medicalBlocks > 0) row.cells.add(`${cell.profile.background}·${cell.profile.coachSetup}`)
+    }
+    byPolicy.set(cell.policy.id, row)
+  }
+  const rows = [...byPolicy.entries()].sort((a, b) => b[1].blocks - a[1].blocks)
+  for (const [id, r] of rows) {
+    console.log(
+      '  ' +
+        padEnd(id, 22) +
+        pad(`${r.blocks} blocked`, 14) +
+        pad(`${(r.blocks / r.seasons).toFixed(2)}/season`, 14) +
+        pad(`${((100 * r.weeksBelow) / r.weeks).toFixed(2)}% weeks under the floor`, 30) +
+        `  ${r.cells.size ? `fires in ${r.cells.size} profile(s)` : 'never fires'}`,
+    )
+  }
+  const firing = rows.filter(([, r]) => r.blocks > 0)
+  console.log(
+    firing.length === 0
+      ? '  VERDICT: the veto never fired anywhere – the floor is pure insurance under these knobs.'
+      : `  VERDICT: the veto fires only for ${firing.map(([id]) => id).join(', ')} – every other policy never met it.`,
   )
 }
 
@@ -1684,6 +1812,8 @@ export function main(argv: string[] = process.argv.slice(2)): void {
 
   // The price-ladder verdict (spec §4b): does every package sell somewhere?
   renderPackageSales(all)
+  // The Wave-2 hard body-gate: does it only ever bite the degenerate cell?
+  renderMedicalVeto(all)
 
   console.log('')
   if (degenerate.length) {

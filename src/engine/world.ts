@@ -517,16 +517,23 @@ export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
 
 /** Whether the kid can currently ENTER `event`, at three levels. One helper, wired at three engine
  *  surfaces (enterEvent / upcomingEvents / advanceWeeks) so the gate can never desync. Precedence
- *  is injured > unavailable > fatigued.
- *   - 'blocked' HARD stops entry: `injured` (dead branch in B – world.injury is always null – but
- *     wired for Slice C) and `unavailable` (school exams / off-season).
+ *  is injured > unavailable > medical > fatigued.
+ *   - 'blocked' HARD stops entry: `injured` (she is already out), `unavailable` (school exams /
+ *     off-season / a booked family vacation – WEEK-level reasons, so they name the week), and
+ *     `medical` (the doctor's veto below ECONOMY.availability.medicalFloor).
  *   - 'caution' is a SOFT warning that still ALLOWS entry: `fatigued` (condition below the tier's
  *     floor). The owner's call: racing tired is a tough-parent CHOICE with emergent consequences
- *     (deeper condition hole now, higher injury risk once Slice C lands), not a forbidden action.
- *   - 'ok' is clear. */
+ *     (deeper condition hole now, higher injury risk), not a forbidden action.
+ *   - 'ok' is clear.
+ *
+ *  The 'medical' branch (owner R9-19b, shipped with the Wave-2 tuning slice) is the FIRST hard
+ *  body-gate in the game and the single exception to "the parent may push": under the floor she is
+ *  not cleared to play at all. It sits far below every tier caution floor (20-45), so a normal
+ *  career never meets it – it exists for the pathological zone the fatigue bench found (a
+ *  self-coached grinder competing at condition 0 for ~4.4% of her weeks). */
 export interface AvailabilityStatus {
   level: 'ok' | 'caution' | 'blocked'
-  reason?: 'injured' | 'fatigued' | 'unavailable'
+  reason?: 'injured' | 'fatigued' | 'unavailable' | 'medical'
   detail?: string
 }
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
@@ -553,6 +560,12 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   }
   if (isBlackoutWeek(event.week)) {
     return { level: 'blocked', reason: 'unavailable', detail: 'School exams this week – no tournaments.' }
+  }
+  // THE DOCTOR'S VETO: under the medical floor no tier is enterable, at any price. Ranked AFTER
+  // the week-level blackouts (a vacation/exam week is unenterable for everyone, so it names the
+  // week) and BEFORE the soft fatigue caution, which it replaces in the pathological zone.
+  if (world.condition < ECONOMY.availability.medicalFloor) {
+    return { level: 'blocked', reason: 'medical', detail: 'Not cleared to play – she needs rest.' }
   }
   if (world.condition < ECONOMY.availability.minConditionToEnter[event.tier]) {
     return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
@@ -915,10 +928,18 @@ export function consecutivePracticeWeeks(practiceWeeks: readonly number[], week:
  *  every single week is self-destructive – mean condition 47, 41-44% of weeks under 40). It is a
  *  CAUTION, never a block: the confirm sheet spells the risk out and the Home chip reads the
  *  strain, but the parent may still push. Reasons: 'tired' (below ECONOMY.practice.cautionCondition)
- *  and 'streak' (this would be the cautionStreak-th match week in a row). */
+ *  and 'streak' (a run of consecutive match weeks).
+ *
+ *  WAVE-2 RETUNE (bench 26.07): the streak arm is GATED on real strain – `cautionStreak` (3) in a
+ *  row warns only below `cautionStreakCondition`, while `cautionStreakAlways` (4) in a row warns at
+ *  any condition. It used to fire on a perfectly fresh kid (careful pushed through 8-11
+ *  cautions/season at condition 92), which is how a warning becomes noise. */
 export interface PracticeCaution {
   level: 'ok' | 'caution'
   reasons: Array<'tired' | 'streak'>
+  /** how many match weeks in a row this booking would make (1 = the first) – so the chip and the
+   *  sheet can NAME the run without re-deriving it. */
+  streakWeeks: number
   /** player-facing warning copy (short dash), absent when clear */
   detail?: string
 }
@@ -929,14 +950,17 @@ export function practiceCaution(input: {
 }): PracticeCaution {
   const p = ECONOMY.practice
   const reasons: Array<'tired' | 'streak'> = []
+  // The booking under consideration closes the run, so it is the (unbroken run before it + 1)-th.
+  const streakWeeks = consecutivePracticeWeeks(input.practiceWeeks, input.week) + 1
   if (input.condition < p.cautionCondition) reasons.push('tired')
-  if (consecutivePracticeWeeks(input.practiceWeeks, input.week) >= p.cautionStreak - 1) reasons.push('streak')
-  if (reasons.length === 0) return { level: 'ok', reasons }
+  const strainedStreak = streakWeeks >= p.cautionStreak && input.condition < p.cautionStreakCondition
+  if (strainedStreak || streakWeeks >= p.cautionStreakAlways) reasons.push('streak')
+  if (reasons.length === 0) return { level: 'ok', reasons, streakWeeks }
   const parts: string[] = []
   // Owner's line: «Она уже вымотана – ещё матч?»
   if (reasons.includes('tired')) parts.push('She is already worn out – another match?')
-  if (reasons.includes('streak')) parts.push(`${p.cautionStreak} match weeks in a row – that is how bodies break.`)
-  return { level: 'caution', reasons, detail: parts.join(' ') }
+  if (reasons.includes('streak')) parts.push(`${streakWeeks} match weeks in a row – that is how bodies break.`)
+  return { level: 'caution', reasons, streakWeeks, detail: parts.join(' ') }
 }
 
 /** Retire an expired recovery buff (pure state). Runs after the week's injury roll, so the last
@@ -1850,7 +1874,7 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
           ? { ineligibleReason: 'locked' as const, pointsToEnter: minPoints }
           : { ineligibleReason: 'outgrown' as const }
         : avail.level === 'blocked'
-          ? { ineligibleReason: avail.reason as 'injured' | 'unavailable' }
+          ? { ineligibleReason: avail.reason as 'injured' | 'unavailable' | 'medical' }
           : avail.level === 'caution'
             ? { cautionReason: avail.reason as 'fatigued', cautionDetail: avail.detail }
             : {}

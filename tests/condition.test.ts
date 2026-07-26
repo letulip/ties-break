@@ -15,6 +15,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -442,7 +443,9 @@ describe('availabilityStatus precedence + levels', () => {
 
   it('fatigue on a clear week is a soft caution, not a block', () => {
     const w = createWorld('prec-fat')
-    w.condition = 5
+    // ABOVE the medical floor (the doctor's veto below it is a HARD block – see the block below);
+    // 20 is deep under national's floor of 40, so the soft fatigue caution is what surfaces.
+    w.condition = 20
     const ev = injectEvent(w, { week: w.week + 2, tier: 'national' })
     const status = availabilityStatus(w, ev)
     expect(status.level).toBe('caution')
@@ -455,5 +458,93 @@ describe('availabilityStatus precedence + levels', () => {
     w.condition = 100
     const ev = injectEvent(w, { week: w.week + 2, tier: 'local' })
     expect(availabilityStatus(w, ev)).toEqual({ level: 'ok' })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// THE DOCTOR'S VETO (owner R9-19b, cashed in by the Wave-2 fatigue bench): the ONE
+// place where "the parent may push" yields to medicine. Below
+// ECONOMY.availability.medicalFloor entering is a HARD block; above it fatigue stays
+// the soft, warned CHOICE it has always been. This is the first hard body-gate in
+// the game, and it is knob-driven so the owner can lower or disable it.
+// ---------------------------------------------------------------------------
+describe("the doctor's veto — medical floor", () => {
+  const FLOOR = ECONOMY.availability.medicalFloor
+
+  it('sits far below every tier caution floor, so normal play never meets it', () => {
+    for (const [, floor] of Object.entries(ECONOMY.availability.minConditionToEnter)) {
+      expect(FLOOR).toBeLessThan(floor)
+    }
+    expect(FLOOR).toBeGreaterThan(ECONOMY.condition.min)
+  })
+
+  it('blocks entry below the floor on all three surfaces, with the medical reason', () => {
+    const w = createWorld('vet-block')
+    w.condition = FLOOR - 1
+    const loc = injectEvent(w, { week: w.week + 3, tier: 'local', deadlineWeek: w.week + 1 })
+    w.season = [loc]
+
+    // surface 1: availabilityStatus / enterEvent hard-refuse
+    const status = availabilityStatus(w, loc)
+    expect(status.level).toBe('blocked')
+    expect(status.reason).toBe('medical')
+    expect(status.detail).toBe('Not cleared to play – she needs rest.')
+    expect(() => enterEvent(w, loc.id)).toThrow('Not cleared to play – she needs rest.')
+    expect(w.entries).toEqual([])
+
+    // surface 2: upcoming marks it ineligible with the same reason (and no soft caution)
+    const up = toSnapshot(w).upcoming.find((e) => e.id === loc.id)!
+    expect(up.eligible).toBe(false)
+    expect(up.ineligibleReason).toBe('medical')
+    expect(up.cautionReason).toBeUndefined()
+
+    // surface 3: advance never stops-for-deadline on an event she hard-cannot enter. Condition 0,
+    // because the pre-deadline ticks recover a couple of points before the guard is re-read.
+    const wa = createWorld('vet-block')
+    wa.condition = 0
+    giveKidPoints(wa, 200)
+    const nat = injectEvent(wa, { week: wa.week + 3, tier: 'national', deadlineWeek: wa.week + 1 })
+    wa.season = [nat]
+    expect(advanceWeeks(wa, rngFromSeed(wa.seed), 4)).not.toBe('deadline')
+  })
+
+  it('AT the floor she may still push through – fatigue above it stays a soft caution', () => {
+    const w = createWorld('vet-floor')
+    w.condition = FLOOR // the floor itself is cleared: the block is strictly below
+    const loc = injectEvent(w, { week: w.week + 2, tier: 'local' })
+    const status = availabilityStatus(w, loc)
+    expect(status.level).toBe('caution') // below local's floor of 20 -> the OLD soft warning
+    expect(status.reason).toBe('fatigued')
+    expect(() => enterEvent(w, loc.id)).not.toThrow()
+    expect(w.entries).toContain(loc.id)
+  })
+
+  it('injury still outranks it, and a blacked-out week still names the week-level reason', () => {
+    const inj = createWorld('vet-inj')
+    inj.condition = 0
+    inj.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 2, totalWeeks: 3, sinceWeek: inj.week }
+    const ev = injectEvent(inj, { week: inj.week + 2, tier: 'local' })
+    expect(availabilityStatus(inj, ev).reason).toBe('injured')
+
+    const exam = createWorld('vet-exam')
+    exam.week = 20
+    exam.condition = 0
+    const examEv = injectEvent(exam, { week: 24, tier: 'local' })
+    expect(availabilityStatus(exam, examEv).reason).toBe('unavailable')
+  })
+
+  it('is knob-driven: lowering the floor to 0 restores the pre-veto behaviour', () => {
+    const av = ECONOMY.availability as { medicalFloor: number }
+    const saved = av.medicalFloor
+    try {
+      av.medicalFloor = 0
+      const w = createWorld('vet-knob')
+      w.condition = 0
+      const loc = injectEvent(w, { week: w.week + 2, tier: 'local' })
+      expect(availabilityStatus(w, loc).level).toBe('caution')
+      expect(() => enterEvent(w, loc.id)).not.toThrow()
+    } finally {
+      av.medicalFloor = saved
+    }
   })
 })

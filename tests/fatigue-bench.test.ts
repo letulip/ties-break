@@ -427,6 +427,33 @@ describe('season planner (REAL mechanics – bookings through the engine command
     }
   })
 
+  // Wave-2: the bench's own copy of the "which package?" rule is gone – it measures the rule the
+  // UI ships (recommendVacationPackage), and the default player's habit tracks the offer knob.
+  it('the rescue habit tracks the shipped offer knobs instead of hard-coded thresholds', () => {
+    expect(balanced.planner.rescueBelow).toBe(ECONOMY.practice.rescueCondition)
+    expect(balanced.planner.targetAbove).toBe(ECONOMY.practice.rescueTargetCondition)
+    // the careful parent still aims higher than the prompt does
+    expect(careful.planner.targetAbove).toBeGreaterThan(ECONOMY.practice.rescueTargetCondition)
+  })
+
+  it("the doctor's veto is counted, and only the degenerate policy ever meets it", () => {
+    const floor = ECONOMY.availability.medicalFloor
+    // The grinder is the cell the bench found at condition 0 – she is the one the floor stops.
+    // (Seed 3 is one of the crash seeds; most seeds never reach the floor even for her.)
+    const g = runFatigueCareer(working, grinder, 3, H104.weeks)
+    expect(g.weeksBelowMedicalFloor).toBeGreaterThan(0)
+    expect(g.medicalBlocks).toBeGreaterThan(0)
+    // …and the veto ends the condition-0 pin the bench flagged as the one degenerate cell.
+    expect(g.weeksAt0).toBe(0)
+    // The load-managing policies never go near it – proof the floor is far below normal play.
+    for (const policy of [balanced, careful]) {
+      const r = runFatigueCareer(working, policy, 3, H104.weeks)
+      expect(r.medicalBlocks).toBe(0)
+      expect(r.weeksBelowMedicalFloor).toBe(0)
+      expect(Math.min(...r.weekly.map((w) => w.condition))).toBeGreaterThanOrEqual(floor)
+    }
+  })
+
   it('the planner grid is the 3×2 axis built as data, with the planner OFF in the factorial grid', () => {
     const grid = plannerPolicies()
     expect(grid).toHaveLength(GRID_PRACTICE.length * GRID_VACATION.length)
