@@ -278,7 +278,21 @@ export const ECONOMY = {
     // ~4.4% of her weeks – and this is the floor under it. Deliberately far below every tier
     // caution floor (20-45), so normal play never meets it; knob-driven (0 disables it) so the
     // owner can lower or retire it after seeing the numbers.
+    //
+    // THE DOCTOR NOW CHECKS HER ON ARRIVAL TOO (owner 26.07): "врач точно не пустит ниже 15 на
+    // турнир, если она приезжает". The floor used to gate ENTRY only, and entries commit weeks
+    // ahead of the play week – so a run entered healthy could still be PLAYED at condition 0 with
+    // nothing intervening (the fatigue bench recorded 14 straight weeks of it). It is now re-read on
+    // the play week itself: under the floor she is withdrawn on medical grounds (world.ts tickWeek
+    // step 2). Same knob, two surfaces, one rule.
     medicalFloor: 15,
+    // ...and the band ABOVE the floor where the doctor talks but does not act – the owner's own
+    // framing: "с состоянием 20 врач вполне может сказать «я вас предупреждаю о последствиях,
+    // формально запретить не могу»". In [medicalFloor, medicalWarningCeiling) she PLAYS and a
+    // warning beat carries his line; the philosophy stays "the parent may push, the game warns".
+    // Knob-driven: set it to medicalFloor (or lower) to silence the warning without touching the
+    // veto, or raise it to make the doctor nag earlier.
+    medicalWarningCeiling: 25,
 
     // Season-Life slice C: fatigue-driven injury risk. ALL of these move only the post-draw
     // threshold tau (or pull from the private per-week `seed:injury:week` sub-stream) – the MAIN

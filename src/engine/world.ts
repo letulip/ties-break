@@ -529,6 +529,24 @@ export interface AvailabilityStatus {
   reason?: 'injured' | 'fatigued' | 'unavailable' | 'medical'
   detail?: string
 }
+
+/** What the doctor says about a body at `condition`, as ONE pure knob-driven rule read at BOTH
+ *  medical surfaces – the entry gate (`availabilityStatus`) and the ARRIVAL check on the play week
+ *  (`tickWeek` step 2). Owner 26.07:
+ *    'withdraw' – under ECONOMY.availability.medicalFloor: not cleared, at any price. The single
+ *                 exception to "the parent may push";
+ *    'warn'     – in [medicalFloor, medicalWarningCeiling): she plays, and he warns the family
+ *                 ("я вас предупреждаю о последствиях, формально запретить не могу");
+ *    'clear'    – above the band: medicine has nothing to say (the tier fatigue caution still may).
+ *  Pure integer comparison, zero RNG. A ceiling at or below the floor collapses the band to
+ *  nothing, which is how the warning is switched off without touching the veto. */
+export type MedicalClearance = 'withdraw' | 'warn' | 'clear'
+export function medicalClearance(condition: number): MedicalClearance {
+  const a = ECONOMY.availability
+  if (condition < a.medicalFloor) return 'withdraw'
+  if (condition < a.medicalWarningCeiling) return 'warn'
+  return 'clear'
+}
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
   if (world.injury !== null) {
     return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${world.injury.weeksRemaining} weeks.` }
@@ -557,7 +575,7 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   // THE DOCTOR'S VETO: under the medical floor no tier is enterable, at any price. Ranked AFTER
   // the week-level blackouts (a vacation/exam week is unenterable for everyone, so it names the
   // week) and BEFORE the soft fatigue caution, which it replaces in the pathological zone.
-  if (world.condition < ECONOMY.availability.medicalFloor) {
+  if (medicalClearance(world.condition) === 'withdraw') {
     return { level: 'blocked', reason: 'medical', detail: 'Not cleared to play – she needs rest.' }
   }
   if (world.condition < ECONOMY.availability.minConditionToEnter[event.tier]) {
@@ -1639,15 +1657,69 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // Only a POST-deadline entry can still be live here – pre-deadline entries were auto-withdrawn
   // (and refunded) at onset by rollInjury; past the deadline the fee is forfeited (withdrawEvent
   // refuses), so the walkover event is all that remains of the trip that never happened.
-  if (enteredThisWeek && world.injury === null) {
-    chargeTravel(world, enteredThisWeek)
-    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue)
-  } else if (enteredThisWeek) {
+  //
+  // THE DOCTOR CHECKS HER ON ARRIVAL (owner 26.07). The medical floor used to gate ENTRY only, and
+  // entries commit ENTRY_LOOKAHEAD weeks ahead of the play week – so a run entered healthy could
+  // still be PLAYED at condition 0 and nothing intervened (the fatigue bench traced 14 straight
+  // such weeks). The floor is therefore re-read HERE, on the play week, against the condition she
+  // will actually take the court at (step 1c has already accrued, so this is the same number
+  // computeShadowTournament would scale her by). Precedence mirrors availabilityStatus exactly –
+  // injured > medical – so the two surfaces can never disagree about which beat fires.
+  // Pure state: ZERO new RNG draws, on any stream.
+  const clearance = enteredThisWeek ? medicalClearance(world.condition) : 'clear'
+  if (enteredThisWeek && world.injury !== null) {
     addEvent(world, {
       week: world.week,
       type: 'injury',
       text: `Walkover: too injured to play the ${TIERS[enteredThisWeek.tier].label} – 0 pts, entry fee forfeited.`,
     })
+  } else if (enteredThisWeek && clearance === 'withdraw') {
+    // WITHDRAWN ON MEDICAL GROUNDS: no travel charge (she never boards), no shadow run, 0 points.
+    // The ENTRY FEE IS FORFEITED – the same rule skipEvent uses for a post-deadline pull-out, and
+    // the same rule the injury walkover above uses. Chosen over a refund because it is the identical
+    // real-world situation: the list closed with her on it, so the organisers keep the fee whatever
+    // the reason she does not appear. Refunding here would also make the doctor's veto financially
+    // FREE, i.e. a cheap late exit from any entry she regrets – the fee has to bite or "enter it and
+    // see" becomes the dominant strategy.
+    world.entries = world.entries.filter((id) => id !== enteredThisWeek.id)
+    addEvent(world, {
+      week: world.week,
+      type: 'injury',
+      text: `Withdrawn from the ${TIERS[enteredThisWeek.tier].label} – not cleared to play on medical advice. 0 pts, entry fee forfeited.`,
+    })
+    // The week is match-free after all, so she earns the FULL free-week recovery ladder that
+    // accrueCondition withheld when it still believed she would play (it ran with played = true, so
+    // she banked matchWeekRecoveryBase instead of recoveryBase + the rest-slider bonus). Written as
+    // the DIFFERENCE so it lands on exactly what a non-playing week pays, whatever the two knobs
+    // are set to – and so this stays byte-consistent with the bench's independent trace, which
+    // reads the week as free. Integer, clamped, zero draws.
+    //
+    // NOTE for the architect: skipEvent (R9-9) hands back the rest-slider bonus ALONE. That was
+    // exactly right when it was written (matchWeekRecoveryBase == recoveryBase == 2) and quietly
+    // became a short payment at the V2 flip, which set matchWeekRecoveryBase to 0 – so a skipped
+    // event week still under-pays by recoveryBase. NOT touched here: fixing it moves shipped
+    // condition traces, which is a tuning call, not a merge call.
+    world.condition = clamp(
+      world.condition +
+        (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
+        restRecoveryBonus(world.plan.rest),
+      ECONOMY.condition.min,
+      ECONOMY.condition.max,
+    )
+  } else if (enteredThisWeek) {
+    chargeTravel(world, enteredThisWeek)
+    // ...and the WARNING BAND: cleared, but only just. She plays; the doctor goes on record. Emitted
+    // after the travel charge so the week reads chronologically in the news feed (trip → the doctor
+    // sees her → her matches). Type 'info' rather than 'injury': nothing has happened to her body,
+    // somebody SAID something, which is what the 💬 channel is for.
+    if (clearance === 'warn') {
+      addEvent(world, {
+        week: world.week,
+        type: 'info',
+        text: `Doctor's warning – she is cleared for the ${TIERS[enteredThisWeek.tier].label}, but only just. He can warn you; he cannot forbid it.`,
+      })
+    }
+    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue)
   }
 
   // 3. cohort drift (main stream, fixed 4-draws-per-player)

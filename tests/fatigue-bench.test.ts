@@ -620,21 +620,43 @@ describe('season planner (REAL mechanics – bookings through the engine command
     //      friendly every week sits at whatever condition her last run left her at, for ever. The
     //      traced cell (working/parent, seed 3) spends weeks 62-75 at condition 0 with no
     //      tournament at all: 14 straight weeks of pure treadmill.
-    //   2. THE VETO IS AN ENTRY GATE, not a start-line gate. Entries commit ENTRY_LOOKAHEAD weeks
-    //      ahead, so it can stop her SIGNING UP while wrecked but never stop a run she entered
-    //      healthy from wrecking her - and the cumulative run ladder now charges extra for every
-    //      subsequent match of that same run. Entries commit up to 3 weeks before
-    //      the play week (deadline), and nothing re-checks the floor when the week arrives – so a
-    //      run entered at condition 50 still plays at condition 5.
-    // Both are recorded for the owner rather than papered over. What is asserted now is what the
-    // veto ACTUALLY guarantees plus a degeneracy bound loose enough to be honest and tight enough
-    // to catch a real regression (worst observed 14/104 = 13.5%).
+    //   2. THE VETO WAS AN ENTRY GATE, not a start-line gate. *** MECHANISM 2 IS NOW CLOSED (owner
+    //      26.07, "врач точно не пустит ниже 15 на турнир, если она приезжает"): the floor is
+    //      RE-READ on the play week, and under it she is withdrawn there – no travel, no run,
+    //      0 pts, entry fee forfeited. It used to be able to stop her SIGNING UP while wrecked but
+    //      never to stop a run she entered healthy from wrecking her, and the cumulative run ladder
+    //      charges extra for every subsequent match of that same run. Measured effect on the
+    //      degeneracy this test exists to bound (4 grinder profiles x 104w, seed 3, pooled):
+    //        weeks pinned at condition 0, doctor OFF (medicalFloor 0)  24/416 = 5.8%
+    //        weeks pinned at condition 0, doctor ON  (shipped)          3/416 = 0.7%
+    //      i.e. the gate cuts the condition-0 pin ~8x, and 14 runs were pulled on the day across
+    //      those four careers – every one of which the old build simply played at under condition 15.
+    //      The previously-traced worst cell (working/parent, seed 3) went from 14 straight weeks at
+    //      condition 0 to 2. (That comparison also carries the run-fatigue ladder, which landed in
+    //      the same wave, so it is the wave's combined effect – the floor-0 A/B above is the clean
+    //      read of the doctor alone.)
+    // Mechanism 1 is still open and still out of scope, and is recorded for the owner rather than
+    // papered over. What is asserted is what the veto ACTUALLY guarantees plus a degeneracy bound
+    // loose enough to be honest and tight enough to catch a real regression.
     for (const r of grinderRuns) {
       expect(r.weeksAt0 / r.weekly.length).toBeLessThan(0.2)
       // The veto is doing real work ABOVE zero: she spends far longer under the floor (where it
       // refuses her entries) than pinned at the very bottom.
       if (r.weeksAt0 > 0) expect(r.weeksBelowMedicalFloor).toBeGreaterThan(r.weeksAt0)
     }
+    // THE TWO SURFACES ARE COUNTED SEPARATELY (owner 26.07), because they cost the family different
+    // money: a BLOCK is a trip never booked, a WITHDRAWAL is a trip already paid for. Both must
+    // actually fire for the grinder, or the arrival check is dead code.
+    // MEASURED (4 grinder profiles x 104w, seed 3): 165 blocked · 14 withdrawn · 7 warned.
+    expect(grinderRuns.some((r) => r.medicalWithdrawals > 0)).toBe(true)
+    // A withdrawal is strictly rarer than a block – she has to survive the entry gate first, then
+    // wreck herself inside the commit window. If this ever inverts, the entry gate stopped working.
+    expect(grinderRuns.reduce((s, r) => s + r.medicalWithdrawals, 0)).toBeLessThan(
+      grinderRuns.reduce((s, r) => s + r.medicalBlocks, 0),
+    )
+    // ...and the WARNING band above the floor is used rather than being dead copy: somebody, in this
+    // sweep, played inside [floor, warningCeiling) and got the doctor's line.
+    expect(grinderRuns.reduce((s, r) => s + r.medicalWarnings, 0)).toBeGreaterThan(0)
     // The load-managing policies effectively never go near it – proof the floor sits far below
     // normal play. *** RE-PINNED (wave-3 integration): this asserted EXACTLY 0 for balanced and
     // careful on one profile+seed, and that pin has now broken twice from changes with nothing to
@@ -643,10 +665,12 @@ describe('season planner (REAL mechanics – bookings through the engine command
     // floor on any seed" is not a property this game guarantees, and asserting it just re-breaks.
     // What IS the guarantee: the floor is a grinder phenomenon by orders of magnitude. Measured
     // across the profile sweep rather than one cell, so it survives content changes. ***
-    // MEASURED, not guessed (wave-3 integration, 4 profiles x 104w, seed 3):
-    //   grinder  62 refused entries, 33/416 weeks under the floor (7.9%)
-    //   balanced 14 refused entries,  6/416 (1.4%)
-    //   careful   0 refused entries,  3/416 (0.7%)
+    // MEASURED, not guessed. RE-MEASURED at the wave-3 close (run-fatigue ladder + the arrival
+    // check), 4 profiles x 104w, seed 3:
+    //   grinder  165 blocked + 14 withdrawn, 73/416 weeks under the floor (17.5%)
+    //   balanced+careful pooled: 4 blocked + 0 withdrawn, 3/832 (0.36%)
+    // (was 62 blocked / 7.9% before the ladder – a heavier run cost puts a grinder under the floor
+    // more often, which is the ladder working, not the floor drifting. The RATIO is what is pinned.)
     // Asserted on WEEKS UNDER THE FLOOR (the physical state) rather than refused entries: the bench
     // policy attempts several events in one bad week, so "blocks" multiply-count a single dip and
     // make a brittle pin. The earlier `=== 0 for balanced and careful` pin broke twice from changes
@@ -661,11 +685,17 @@ describe('season planner (REAL mechanics – bookings through the engine command
     expect(share(grinderRuns)).toBeGreaterThan(3 * managedShare)
     // …and a load-managed career practically never gets there.
     expect(managedShare).toBeLessThan(0.02)
-    // refusals point the same way (kept as a direction check, not a magnitude pin).
+    // refusals point the same way (kept as a direction check, not a magnitude pin) – on BOTH
+    // surfaces, so a load-managed career is not quietly paying forfeited entry fees either.
     expect(grinderRuns.reduce((s, r) => s + r.medicalBlocks, 0)).toBeGreaterThan(
       managed.reduce((s, r) => s + r.medicalBlocks, 0),
     )
+    expect(grinderRuns.reduce((s, r) => s + r.medicalWithdrawals, 0)).toBeGreaterThan(
+      managed.reduce((s, r) => s + r.medicalWithdrawals, 0),
+    )
     expect(floor).toBeLessThan(ECONOMY.availability.minConditionToEnter.local)
+    // the warning band sits directly above the floor and is a WARNING, never a block
+    expect(ECONOMY.availability.medicalWarningCeiling).toBeGreaterThan(floor)
   })
 
   it('the planner grid is the 3×2 axis built as data, with the planner OFF in the factorial grid', () => {

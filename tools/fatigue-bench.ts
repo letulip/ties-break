@@ -518,6 +518,15 @@ export interface WeekFacts {
    *  affordable, inside the commit window – that the medical floor hard-refused. The
    *  "does the new gate ever fire, and for whom?" counter. */
   medicalBlocks: number
+  /** THE DOCTOR ON ARRIVAL (owner 26.07): an entry that reached its PLAY week under the medical
+   *  floor and was withdrawn there – no travel, no run, 0 points, fee forfeited. Counted SEPARATELY
+   *  from medicalBlocks because the two measure opposite ends of the same gate: a block is a trip
+   *  the family never booked, a withdrawal is a trip they had already paid for. A withdrawal is the
+   *  expensive one, and it is the number that says whether the arrival check earns its keep. */
+  medicalWithdrawal: boolean
+  /** she played inside [medicalFloor, medicalWarningCeiling) and the doctor's warning beat fired –
+   *  the "does the band actually get used, or is it dead copy?" counter. */
+  medicalWarnings: number
   /** the week closed under ECONOMY.availability.medicalFloor (the pathological zone). */
   belowMedicalFloor: boolean
   /** physio/medical cents billed this week (retainer, rehab, onset scans). */
@@ -730,6 +739,10 @@ export function stepFatigueWeek(
   // the window opens at the BOOKING phase, so a rental refunded the same week nets to zero.
   const newEvents = world.events.filter((ev) => ev.id >= firstPlannerEventId)
   const walkover = newEvents.some((ev) => ev.type === 'injury' && ev.text.startsWith('Walkover'))
+  // The two arrival-check beats, read off the feed the same way the walkover is (the engine emits
+  // exactly one of them per play week, so a substring match is a faithful counter).
+  const medicalWithdrawal = newEvents.some((ev) => ev.type === 'injury' && ev.text.startsWith('Withdrawn from the'))
+  const medicalWarnings = newEvents.filter((ev) => ev.type === 'info' && ev.text.startsWith("Doctor's warning")).length
   const physioSpendCents = newEvents
     .filter((ev) => ev.category === 'physio' && (ev.amountCents ?? 0) < 0)
     .reduce((s, ev) => s - (ev.amountCents ?? 0), 0)
@@ -773,6 +786,8 @@ export function stepFatigueWeek(
     totalSpendCents,
     fundsCents: world.fundsCents,
     medicalBlocks,
+    medicalWithdrawal,
+    medicalWarnings,
     belowMedicalFloor: world.condition < ECONOMY.availability.medicalFloor,
     physioSpendCents,
     coachingSpendCents,
@@ -836,8 +851,15 @@ export interface RunResult {
   /** first week the balance went negative, or null – `survived` is exactly its null-ness. */
   weeksToBankrupt: number | null
   survived: boolean
-  /** THE DOCTOR'S VETO: tournaments refused by the medical floor, and weeks spent under it. */
+  /** THE DOCTOR'S VETO, both surfaces, counted separately (owner 26.07):
+   *   - medicalBlocks       : ENTRIES refused ahead of time by the floor (no money moved);
+   *   - medicalWithdrawals  : entries that reached their PLAY week under the floor and were pulled
+   *                           there – entry fee already paid and forfeited, travel never charged;
+   *   - medicalWarnings     : play weeks inside the warning band, where he talks and she plays.
+   *  plus weeks physically spent under the floor (the pathological zone itself). */
   medicalBlocks: number
+  medicalWithdrawals: number
+  medicalWarnings: number
   weeksBelowMedicalFloor: number
   physioSpendCents: number
   coachingSpendCents: number
@@ -889,6 +911,8 @@ export function runFatigueCareer(
   let cautionEntries = 0
   let entries = 0
   let medicalBlocks = 0
+  let medicalWithdrawals = 0
+  let medicalWarnings = 0
   let weeksBelowMedicalFloor = 0
   const entriesByTier = zeroByTier()
   let travelSpendCents = 0
@@ -939,6 +963,8 @@ export function runFatigueCareer(
     totalSpendCents += f.totalSpendCents
     if (bankruptWeek === null && f.fundsCents < 0) bankruptWeek = f.week
     medicalBlocks += f.medicalBlocks
+    if (f.medicalWithdrawal) medicalWithdrawals++
+    medicalWarnings += f.medicalWarnings
     if (f.belowMedicalFloor) weeksBelowMedicalFloor++
     physioSpendCents += f.physioSpendCents
     coachingSpendCents += f.coachingSpendCents
@@ -981,6 +1007,8 @@ export function runFatigueCareer(
     weeksToBankrupt: bankruptWeek,
     survived: bankruptWeek === null,
     medicalBlocks,
+    medicalWithdrawals,
+    medicalWarnings,
     weeksBelowMedicalFloor,
     physioSpendCents,
     coachingSpendCents,
@@ -1051,9 +1079,16 @@ export interface CellStats {
   weeksLostPerSeason: number
   walkoversPerCareer: number
   cautionPerSeason: number
-  /** THE DOCTOR'S VETO: tournaments the medical floor refused per season, and the share of weeks
-   *  spent under the floor at all – "how often does the new hard gate actually bite?". */
+  /** THE DOCTOR'S VETO, per season, both surfaces kept apart (owner 26.07) – "how often does the
+   *  hard gate actually bite, and which end of it?":
+   *   - medicalBlocksPerSeason      : ENTRIES refused ahead of time (nothing paid);
+   *   - medicalWithdrawalsPerSeason : runs pulled ON THE PLAY WEEK, entry fee already forfeited –
+   *                                   the expensive half, and the one the arrival check added;
+   *   - medicalWarningsPerSeason    : play weeks inside the warning band (he talks, she plays).
+   *  plus the share of weeks physically spent under the floor. */
   medicalBlocksPerSeason: number
+  medicalWithdrawalsPerSeason: number
+  medicalWarningsPerSeason: number
   pctWeeksBelowMedicalFloor: number
   physioPerSeasonCents: number
   coachingPerSeasonCents: number
@@ -1138,6 +1173,8 @@ export function computeCellStats(
     walkoversPerCareer: mean(runs.map((r) => r.walkovers)),
     cautionPerSeason: mean(runs.map((r) => r.cautionEntries / seasons)),
     medicalBlocksPerSeason: mean(runs.map((r) => r.medicalBlocks / seasons)),
+    medicalWithdrawalsPerSeason: mean(runs.map((r) => r.medicalWithdrawals / seasons)),
+    medicalWarningsPerSeason: mean(runs.map((r) => r.medicalWarnings / seasons)),
     pctWeeksBelowMedicalFloor: (100 * runs.reduce((s, r) => s + r.weeksBelowMedicalFloor, 0)) / totalWeeks,
     physioPerSeasonCents: mean(runs.map((r) => r.physioSpendCents / seasons)),
     coachingPerSeasonCents: mean(runs.map((r) => r.coachingSpendCents / seasons)),
@@ -1304,17 +1341,21 @@ function economyLine(c: CellStats): string {
   )
 }
 
-/** THE DOCTOR'S VETO per policy, for one profile block: how many tournaments the medical floor
- *  refused per season and how much of the career was spent under it. The whole point of the knob
- *  is that this line reads 0.00 for every non-pathological policy. */
+/** THE DOCTOR'S VETO per policy, for one profile block. Reports BOTH surfaces of the same floor
+ *  separately (owner 26.07): entries it refused ahead of time ("blocked", nothing paid) and runs it
+ *  pulled on the PLAY WEEK ("withdrawn", entry fee already forfeited – the expensive half). Plus the
+ *  warning band above the floor, where the doctor talks and she plays anyway. The whole point of the
+ *  knob is that all three read 0.00 for every non-pathological policy. */
 function medicalLine(cells: CellStats[]): string {
+  const a = ECONOMY.availability
   return (
     '  ' +
-    padEnd(`medical floor ${ECONOMY.availability.medicalFloor}`, 20) +
+    padEnd(`medical ${a.medicalFloor}/warn ${a.medicalWarningCeiling}`, 20) +
     cells
       .map(
         (c) =>
-          `${c.policy.id} ${c.medicalBlocksPerSeason.toFixed(2)} blocked/s (${c.pctWeeksBelowMedicalFloor.toFixed(1)}% of weeks under it)`,
+          `${c.policy.id} ${c.medicalBlocksPerSeason.toFixed(2)} blocked/s + ${c.medicalWithdrawalsPerSeason.toFixed(2)} withdrawn/s` +
+          ` · ${c.medicalWarningsPerSeason.toFixed(2)} warned/s (${c.pctWeeksBelowMedicalFloor.toFixed(1)}% of weeks under the floor)`,
       )
       .join(' · ')
   )
@@ -1459,7 +1500,13 @@ const HEADER = [
   `  <= ${ECONOMY.practice.rescueCondition} and the pre-highlight is now the CHEAPEST package sufficient for HER CURRENT condition (one shared`,
   '  rule in economy.ts – UI and bench read the same function), so the cheap tier can finally be the right',
   `  answer; (3) the DOCTOR'S VETO – condition < ${ECONOMY.availability.medicalFloor} is a HARD block on entering, surfaced as availability`,
-  "  reason 'medical'. The per-profile \"medical floor\" line and the DOCTOR'S VETO block report its firing rate.",
+  "  reason 'medical'. The per-profile \"medical\" line and the DOCTOR'S VETO block report its firing rate.",
+  `WAVE-3 (owner 26.07): the doctor now also checks her ON ARRIVAL. Entries commit ${ENTRY_LOOKAHEAD} weeks ahead, so the entry`,
+  '  gate alone could never stop a run she signed up for while healthy and reached wrecked – the bench traced 14',
+  '  straight weeks of exactly that. The floor is re-read on the PLAY week: under it she is WITHDRAWN there (no',
+  '  travel, no run, 0 pts, entry fee forfeited – the same rule as a post-deadline skip), and the two surfaces are',
+  `  counted separately (blocked = entries refused ahead of time · withdrawn = runs pulled on the day). In`,
+  `  [${ECONOMY.availability.medicalFloor}, ${ECONOMY.availability.medicalWarningCeiling}) she PLAYS and a warning beat carries the doctor's line ("warned") – never a block.`,
   '',
   `FACTORIAL GRID (owner 25.07): plan × entry × physio unbundled = 12 cells per profile at ${GRID_HORIZON_WEEKS}w,`,
   `  ${GRID_SEEDS} seeds/cell (REDUCED from ${SEEDS_PER_CELL} for runtime; the headline trio keeps ${SEEDS_PER_CELL}). Money coupling per cell:`,
@@ -1830,26 +1877,48 @@ function renderPackageSales(all: BenchCell[]): void {
   )
 }
 
-/** THE DOCTOR'S VETO, pooled per policy over every cell of the run (owner R9-19b, shipped with
- *  the Wave-2 tuning slice). Answers the two questions the owner will ask: does the new hard gate
- *  fire at all, and does it ever touch a policy that is not the degenerate grinder? */
+/** THE DOCTOR'S VETO, pooled per policy over every cell of the run (owner R9-19b; the ARRIVAL half
+ *  added 26.07). Answers the questions the owner will ask: does the gate fire at all, does it ever
+ *  touch a policy that is not the degenerate grinder – and now, WHICH END of it fires. The two ends
+ *  are reported as separate columns because they cost the family different money:
+ *    BLOCKED   – the floor refused an entry weeks ahead of the play week. Nothing was paid.
+ *    WITHDRAWN – the entry reached its play week under the floor and was pulled there. The entry fee
+ *                was already committed and is forfeited; travel is never charged (she never boards).
+ *    WARNED    – the play week landed in [floor, warningCeiling): she played, the doctor went on
+ *                record. Never a block – the owner's "I can warn you, I cannot forbid it".
+ *  A withdrawal is the expensive one, so a policy with withdrawals but no blocks is the interesting
+ *  cell: she was healthy enough to SIGN UP and wrecked herself before the week arrived. */
 function renderMedicalVeto(all: BenchCell[]): void {
   const rule = '═'.repeat(120)
+  const a = ECONOMY.availability
   console.log('')
   console.log(rule)
   console.log(
-    `  DOCTOR'S VETO – condition < ${ECONOMY.availability.medicalFloor} is a HARD block on entering` +
-      ' (pooled over every cell of this run; tier caution floors are 20-45, so normal play must read 0.00)',
+    `  DOCTOR'S VETO – condition < ${a.medicalFloor} blocks ENTRY and, since 26.07, also withdraws her ON THE PLAY WEEK;` +
+      ` ${a.medicalFloor}-${a.medicalWarningCeiling - 1} warns and lets her play`,
+  )
+  console.log(
+    '  (pooled over every cell of this run; tier caution floors are 20-45, so normal play must read 0.00 everywhere)',
   )
   console.log(rule)
   const byPolicy = new Map<
     string,
-    { blocks: number; seasons: number; weeksBelow: number; weeks: number; cells: Set<string> }
+    {
+      blocks: number
+      withdrawals: number
+      warnings: number
+      seasons: number
+      weeksBelow: number
+      weeks: number
+      cells: Set<string>
+    }
   >()
   for (const cell of all) {
     const seasons = cell.horizon.weeks / WEEKS_PER_YEAR
     const row = byPolicy.get(cell.policy.id) ?? {
       blocks: 0,
+      withdrawals: 0,
+      warnings: 0,
       seasons: 0,
       weeksBelow: 0,
       weeks: 0,
@@ -1857,29 +1926,38 @@ function renderMedicalVeto(all: BenchCell[]): void {
     }
     for (const r of cell.runs) {
       row.blocks += r.medicalBlocks
+      row.withdrawals += r.medicalWithdrawals
+      row.warnings += r.medicalWarnings
       row.seasons += seasons
       row.weeksBelow += r.weeksBelowMedicalFloor
       row.weeks += cell.horizon.weeks
-      if (r.medicalBlocks > 0) row.cells.add(`${cell.profile.background}·${cell.profile.coachSetup}`)
+      if (r.medicalBlocks + r.medicalWithdrawals > 0) row.cells.add(`${cell.profile.background}·${cell.profile.coachSetup}`)
     }
     byPolicy.set(cell.policy.id, row)
   }
-  const rows = [...byPolicy.entries()].sort((a, b) => b[1].blocks - a[1].blocks)
+  const rows = [...byPolicy.entries()].sort((a2, b) => b[1].blocks + b[1].withdrawals - (a2[1].blocks + a2[1].withdrawals))
   for (const [id, r] of rows) {
     console.log(
       '  ' +
-        padEnd(id, 22) +
-        pad(`${r.blocks} blocked`, 14) +
-        pad(`${(r.blocks / r.seasons).toFixed(2)}/season`, 14) +
-        pad(`${((100 * r.weeksBelow) / r.weeks).toFixed(2)}% weeks under the floor`, 30) +
+        padEnd(id, 12) +
+        pad(`${r.blocks} blocked`, 13) +
+        pad(`${(r.blocks / r.seasons).toFixed(2)}/s`, 9) +
+        pad(`${r.withdrawals} withdrawn`, 15) +
+        pad(`${(r.withdrawals / r.seasons).toFixed(2)}/s`, 9) +
+        pad(`${r.warnings} warned`, 13) +
+        pad(`${((100 * r.weeksBelow) / r.weeks).toFixed(2)}% wks under floor`, 26) +
         `  ${r.cells.size ? `fires in ${r.cells.size} profile(s)` : 'never fires'}`,
     )
   }
-  const firing = rows.filter(([, r]) => r.blocks > 0)
+  const firing = rows.filter(([, r]) => r.blocks + r.withdrawals > 0)
+  const pulled = rows.filter(([, r]) => r.withdrawals > 0)
   console.log(
     firing.length === 0
       ? '  VERDICT: the veto never fired anywhere – the floor is pure insurance under these knobs.'
-      : `  VERDICT: the veto fires only for ${firing.map(([id]) => id).join(', ')} – every other policy never met it.`,
+      : `  VERDICT: the veto fires only for ${firing.map(([id]) => id).join(', ')} – every other policy never met it.` +
+        (pulled.length === 0
+          ? ' No entry ever reached its play week under the floor, so the ARRIVAL check is pure insurance too.'
+          : ` The ARRIVAL check earns its keep for ${pulled.map(([id]) => id).join(', ')} – runs entered healthy that were wrecked before the week came.`),
   )
 }
 
@@ -1952,7 +2030,8 @@ const RUNFAT_COLS: [string, number][] = [
   ['spend$/s', 10],
   ['endFunds', 10],
   ['surv%', 6],
-  ['veto/s', 7],
+  ['blk/s', 7],
+  ['wdr/s', 7],
 ]
 
 function runfatHeader(): string {
@@ -1980,6 +2059,7 @@ function runfatRow(scenario: Scenario, c: CellStats): string {
     dollars(c.endFundsMeanCents),
     c.survivalPct.toFixed(0),
     c.medicalBlocksPerSeason.toFixed(2),
+    c.medicalWithdrawalsPerSeason.toFixed(2),
   ]
   return '  ' + cells.map((x, i) => pad(x, RUNFAT_COLS[i][1])).join('')
 }
@@ -2059,6 +2139,8 @@ function renderRunFatigueComparison(headline: Map<string, CellStats>, scenarios:
         endFundsMeanCents: mean(cells.map((c) => c.endFundsMeanCents)),
         survivalPct: mean(cells.map((c) => c.survivalPct)),
         medicalBlocksPerSeason: mean(cells.map((c) => c.medicalBlocksPerSeason)),
+        medicalWithdrawalsPerSeason: mean(cells.map((c) => c.medicalWithdrawalsPerSeason)),
+        medicalWarningsPerSeason: mean(cells.map((c) => c.medicalWarningsPerSeason)),
       }
       console.log(runfatRow(sc, pooled))
     }
