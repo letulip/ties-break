@@ -7,6 +7,8 @@ import {
   advanceWeeks,
   accrueCondition,
   availabilityStatus,
+  entryStatus,
+  medicalBlock,
   bookVacation,
   cancelVacation,
   bookPractice,
@@ -542,10 +544,182 @@ describe('P7 — practice guardrail predicate', () => {
 
   it('never BLOCKS the booking – the parent may push (owner philosophy)', () => {
     const w = createWorld('p7-push', bgProfile('middle'))
+    // 20 is CHOSEN, not arbitrary: it is the owner's own "он вполне может сказать «предупреждаю»"
+    // example, i.e. inside the warning band and ABOVE the medical floor – so what this test pins is
+    // the GUARDRAIL's philosophy, not the absence of the doctor's veto (P7b owns that boundary).
+    // Stated as an assertion so the day the floor is raised past it, this test says why it broke.
     w.condition = 20
+    expect(w.condition).toBeGreaterThanOrEqual(ECONOMY.availability.medicalFloor)
     const week = freeWeek(w)
     expect(() => bookPractice(w, week, false)).not.toThrow()
     expect(w.practices).toHaveLength(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// P7b — THE DOCTOR'S VETO REACHES THE FRIENDLY (owner 26.07: "the doctor who will
+// not let her travel probably should not clear her for a friendly at condition 0").
+//
+// WHY THIS EXISTS, measured: the match-base raise (1 -> 2) made the friendly's
+// `max(1, localDrain − 1)` subtraction real, so the "friendly treadmill" turned from
+// a flat plateau into a −0.6/week slide, and the veto gated TOURNAMENTS only. Nothing
+// stopped a practise-every-week policy from sitting at condition 0 for a third of a
+// career (fatigue bench: worst cell 1.9% -> 32.7% of weeks at 0 across the base raise).
+// The fix is candidate (b) from the doctor's-veto test: gate the BOOKING on the same
+// floor, through the same predicate.
+//
+// TWO properties are non-negotiable here and both are asserted below:
+//   1. ONE RULE, ONE OWNER – the friendly and the tournament read `medicalBlock`, so
+//      they refuse for the same reason in the same words. No second threshold compare.
+//   2. NO DEAD END – a refused practice week is still the parent's to plan (vacation,
+//      training/rest, or nothing at all). A week where nothing is possible is the worst
+//      item of the owner's last playtest (R10-3) and must never come back.
+// It is a HARD block with NO warning band: fatigue for tournaments is a soft warned
+// choice, but below the floor the doctor "точно не пустит" (owner, verbatim).
+// ---------------------------------------------------------------------------
+describe("P7b — the doctor's veto on a friendly", () => {
+  const FLOOR = ECONOMY.availability.medicalFloor
+
+  it('refuses the booking BELOW the floor, clears it AT the floor and above', () => {
+    const below = createWorld('p7b-below', bgProfile('middle'))
+    below.condition = FLOOR - 1
+    const fundsBefore = below.fundsCents
+    expect(() => bookPractice(below, freeWeek(below), false)).toThrow(/not cleared to play/i)
+    expect(below.practices).toEqual([]) // nothing booked…
+    expect(below.fundsCents).toBe(fundsBefore) // …and nothing charged for the refusal
+    // the degenerate case the gate exists for
+    const wrecked = createWorld('p7b-zero', bgProfile('middle'))
+    wrecked.condition = ECONOMY.condition.min
+    expect(() => bookPractice(wrecked, freeWeek(wrecked), false)).toThrow(/not cleared to play/i)
+    // AT the floor she is cleared – the veto is strictly below, exactly like the entry gate
+    const at = createWorld('p7b-at', bgProfile('middle'))
+    at.condition = FLOOR
+    expect(() => bookPractice(at, freeWeek(at), false)).not.toThrow()
+    expect(at.practices).toHaveLength(1)
+    const above = createWorld('p7b-above', bgProfile('middle'))
+    above.condition = FLOOR + 1
+    expect(() => bookPractice(above, freeWeek(above), false)).not.toThrow()
+    expect(above.practices).toHaveLength(1)
+  })
+
+  it('refuses in the SAME WORDS the tournament gate uses – one predicate, three surfaces', () => {
+    const w = createWorld('p7b-agree', bgProfile('middle'))
+    w.condition = FLOOR - 1
+    const ev = injectEvent(w, { week: w.week + 3, tier: 'local' })
+    // the tournament surfaces
+    const availability = availabilityStatus(w, ev)
+    expect(availability.level).toBe('blocked')
+    expect(availability.reason).toBe('medical')
+    expect(entryStatus(w, ev).detail).toBe(availability.detail)
+    expect(toSnapshot(w).upcoming.find((e) => e.id === ev.id)!.ineligibleReason).toBe('medical')
+    // the practice surface: the SAME sentence, because both read `medicalBlock`
+    let practiceReason = ''
+    try {
+      bookPractice(w, freeWeek(w), false)
+    } catch (e) {
+      practiceReason = (e as Error).message
+    }
+    expect(practiceReason).toBe(availability.detail)
+    expect(practiceReason).toBe(medicalBlock(w.condition)!.detail)
+    // …and the shared predicate is silent the moment she is cleared, so nothing above the floor
+    // can pick up a hard refusal by accident
+    expect(medicalBlock(FLOOR)).toBeNull()
+    expect(medicalBlock(ECONOMY.condition.max)).toBeNull()
+  })
+
+  it('is the SAME KNOB as the tournament veto: floor 0 restores the old booking behaviour', () => {
+    const av = ECONOMY.availability as { medicalFloor: number }
+    const saved = av.medicalFloor
+    try {
+      av.medicalFloor = 0
+      const w = createWorld('p7b-knob', bgProfile('middle'))
+      w.condition = ECONOMY.condition.min
+      expect(() => bookPractice(w, freeWeek(w), false)).not.toThrow()
+    } finally {
+      av.medicalFloor = saved
+    }
+  })
+
+  it('leaves the refused week FULLY PLANNABLE – vacation, training/rest, or nothing at all', () => {
+    const w = createWorld('p7b-plannable', bgProfile('middle'))
+    w.condition = ECONOMY.condition.min // the worst case: the week must still be usable
+    const week = freeWeek(w)
+    expect(() => bookPractice(w, week, false)).toThrow(/not cleared to play/i)
+    // 1. a VACATION on the very same week – the answer the sheet points the parent at. REST is
+    //    never gated on the floor; gating it is how this fix would have become an R10-3 dead end.
+    expect(() => bookVacation(w, week, 'grandma')).not.toThrow()
+    expect(w.vacations).toHaveLength(1)
+    cancelVacation(w, week) // and it is still cancellable, so nothing is one-way
+    expect(w.vacations).toEqual([])
+    // 2. plain TRAINING/REST commits and the week RECOVERS her instead of draining her – the whole
+    //    point of the gate (a practice week would have paid base only, and drained 1-3 on top).
+    w.plan = { train: 60, rest: 40 }
+    const before = w.condition
+    tickWeek(w, rngFromSeed(w.seed))
+    expect(w.condition).toBeGreaterThan(before)
+    // 3. and doing NOTHING still advances time (no state can trap the week)
+    const at = w.week
+    advanceWeeks(w, rngFromSeed(w.seed), 3)
+    expect(w.week).toBeGreaterThan(at)
+  })
+
+  it('calls OFF a booked friendly whose week arrives below the floor, rental refunded in full', () => {
+    // The booking gate reads her condition on BOOKING day and a booking is a week ahead, so the
+    // floor is re-read on arrival – the same two-surface shape the tournament veto has (entry gate
+    // + play-week check). Injury is switched off via the live tau knobs (bench pattern: patch, run,
+    // always restore), because an injury outranks the medical branch and would pre-empt it.
+    const av = ECONOMY.availability as unknown as { injuryBaseChance: number; injuryChanceCap: number }
+    const savedBase = av.injuryBaseChance
+    const savedCap = av.injuryChanceCap
+    try {
+      av.injuryBaseChance = 0
+      av.injuryChanceCap = 0
+      const w = createWorld('p7b-arrive', bgProfile('middle'))
+      w.physioActive = false
+      w.plan = { train: 60, rest: 40 } // free-week slider bonus = +2
+      w.season = [] // no tournament anywhere near: the week is the friendly's alone
+      w.condition = FLOOR + 20 // booked while the doctor was happy
+      const week = w.week + 1
+      bookPractice(w, week, false)
+      const paid = w.practices[0].paidCents
+      expect(paid).toBeGreaterThan(0)
+      // …and then a bad week happens in between (a deep run, an injury scare): she arrives wrecked
+      w.condition = 3
+      tickWeek(w, rngFromSeed(w.seed))
+      expect(w.week).toBe(week)
+      expect(w.practices).toEqual([]) // the friendly is off
+      expect(w.events.some((e) => e.type === 'match' && e.friendly === true)).toBe(false) // never played
+      // MONEY: full refund, unlike the tournament withdrawal's forfeited entry fee. There is no
+      // closed entry list holding a friendly's court rental, cancelPractice already refunds it in
+      // full at any point before the week, and the practice sub-system's own precedent for "her body
+      // called it off" (the injury branch) is a refund too. Asserted on the 'practice' CATEGORY,
+      // which nets to zero – total funds also carry the week's ordinary income and bills.
+      expect(w.events.some((e) => e.category === 'practice' && e.amountCents === paid)).toBe(true)
+      expect(
+        w.events.filter((e) => e.category === 'practice').reduce((s, e) => s + (e.amountCents ?? 0), 0),
+      ).toBe(0)
+      expect(w.events.some((e) => e.text.includes('not cleared to play'))).toBe(true)
+      // CONDITION: the week ends match-free, so it pays the FULL free-week ladder (base 1 accrued by
+      // accrueCondition + the slider bonus handed back here), and drains nothing.
+      expect(w.condition).toBe(3 + ECONOMY.condition.recoveryBase + 2)
+    } finally {
+      av.injuryBaseChance = savedBase
+      av.injuryChanceCap = savedCap
+    }
+  })
+
+  it('surfaces the refusal in the planner sheet: disabled WITH the reason, never a throwing button', () => {
+    // Source-level (the B7/P9 pattern): the sheet reads the engine's own `medicalBlock` and renders
+    // its `detail`, so the sentence the player sees IS the sentence bookPractice would throw – the
+    // two surfaces cannot drift into two different explanations of the same doctor.
+    const src = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
+    expect(src).toMatch(/medicalBlock/)
+    expect(src).toMatch(/medical\.detail/)
+    expect(src).toMatch(/:disabled="!!medical/)
+    // …and it names what the week CAN still become, so the refusal is never a dead end
+    expect(src).toMatch(/Vacation\s*\n?\s*tab/)
+    // the guardrail's soft caution is still there for everything above the floor
+    expect(src).toMatch(/caution\.level === 'caution'/)
   })
 })
 

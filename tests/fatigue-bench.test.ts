@@ -229,6 +229,22 @@ describe('policy ordering (the load-management axis)', () => {
     // condition-0 pin the same change produces in the degenerate cell (see the doctor's-veto test
     // below). If the anchor matters more than the pin, the knob is injuryFatigueSlope, not the base.
     // The bound below is again the tripwire in the other direction. ***
+    //
+    // *** THE PRACTICE GATE MOVES IT AGAIN, DOWNWARD: 2.938 -> 2.833. Both bounds still hold, so
+    // nothing is re-pinned – but the note above demands a re-read, so here it is. MEASURED, same
+    // cells, N=10, 104w, paired seeds, gate OFF vs ON:
+    //     no gate  injuries 141 / 48 = 2.938 · entries 640 / 652 · friendlies 899 / 661
+    //     the gate injuries 136 / 48 = 2.833 · entries 863 / 652 · friendlies 501 / 661
+    // MECHANISM, and it is the SAME asymmetry the base raise had, running backwards. The CAREFUL side
+    // does not move by a single injury or a single entry (48 / 652 both times): she only practises at
+    // condition >= 80, so she never meets the floor and the gate is invisible to her. Everything that
+    // moves is the grinder's, and it moves in the direction that LOOKS wrong and is not: she loses 398
+    // friendlies (899 -> 501) and gains 223 tournament entries (+35%), because a body that is not
+    // pinned at 0 clears the entry gate. More tournaments, and yet FIVE FEWER injuries (141 -> 136) –
+    // the tau she sheds by living above the floor (weeks under it: 932 -> 590 of 2080) is worth more
+    // than the extra matches cost her. So the ratio slips 0.1 for the healthiest possible reason.
+    // FOR THE OWNER, unchanged from the note above: restoring >= 3 is a knob decision
+    // (injuryFatigueSlope / the careful entry margin), and this branch does not take it. ***
     const ratio = gInj / cInj
     // The DIRECTION is the property that must never break: the grinder gets hurt far more often.
     expect(ratio).toBeGreaterThan(2)
@@ -587,7 +603,21 @@ describe('run-fatigue ladder scenarios (owner idea 26.07)', () => {
 describe('season planner (REAL mechanics – bookings through the engine commands)', () => {
   it('the grinder practises hard and never books a package; the others do both', () => {
     const g = runFatigueCareer(middleSelf, grinder, 0, H104.weeks)
-    expect(g.practicesPlayed).toBeGreaterThan(30) // ~every plannable week over two seasons
+    // *** RE-PINNED 30 -> 15 BY THE PRACTICE GATE (owner 26.07), and this is the gate's own bill
+    // arriving: below the medical floor a friendly can no longer be booked, and the grinder is the
+    // only policy that lives down there. MEASURED, this exact cell (middle/self-coached, seed 0,
+    // 104w), gate OFF vs ON – nothing else changed:
+    //   friendlies played  52 -> 26     weeks under the floor 58 -> 28   weeks at condition 0  2 -> 0
+    //   mean condition   24.0 -> 29.0   tournament entries    25 -> 36
+    // She loses half her friendlies and buys 11 more real tournaments with the body that pays for
+    // them, which is exactly the trade the gate was shipped to force. The claim under test is
+    // unchanged – "the grinder practises HARD" – and 26 friendlies over two seasons still is hard
+    // (~13 a season, against balanced's 17 and careful's 26 over the same span). The bound is 15,
+    // i.e. a season's worth: loose enough not to re-break on content, tight enough to catch the
+    // practice habit disappearing altogether.
+    // The other two policies are byte-identical across the gate on this cell (balanced 17 friendlies
+    // / 14 packages, careful 26 / 9, same cents both times) – they never reach the floor. ***
+    expect(g.practicesPlayed).toBeGreaterThan(15)
     expect(g.practiceSpendCents).toBeGreaterThan(0)
     expect(g.vacationsTotal).toBe(0)
     expect(g.vacationSpendCents).toBe(0)
@@ -719,8 +749,36 @@ describe('season planner (REAL mechanics – bookings through the engine command
     //       who will not let her travel probably should not clear her for a friendly at condition 0.
     // (b) is the smaller change, keeps the week-type ladder intact, and closes the loop the veto was
     // built for; it is the recommendation. ***
+    //
+    // *** MECHANISM 1 IS NOW CLOSED. CANDIDATE (b) SHIPPED (owner 26.07: "the doctor who will not let
+    // her travel probably should not clear her for a friendly at condition 0"). RE-PINNED 0.4 -> 0.08.
+    // `bookPractice` now reads the SAME `medicalBlock` the tournament gate reads, so under the floor a
+    // friendly cannot be booked, and a friendly already booked whose week arrives under the floor is
+    // called OFF there (court rental refunded in full – unlike the tournament's forfeited entry fee,
+    // because no entry list ever closed on a court booking; see world.ts resolvePractice).
+    // MEASURED on this branch, the SAME cells as the base-1/base-2 rows above (grinder, 4 profiles ×
+    // 12 seeds × 104w = 4992 weeks), gate OFF vs gate ON, nothing else changed:
+    //     base 1              worst cell  1.9%  ·  pooled  9/4992 = 0.18%
+    //     base 2, no gate     worst cell 32.7%  ·  pooled 70/4992 = 1.40%
+    //     base 2 + THE GATE   worst cell  2.9%  ·  pooled 18/4992 = 0.36%
+    // The worst cell (8k working, self-coached, seed 3) goes from 34 of 104 weeks at exactly 0 to 3,
+    // and the whole sweep's deepest pin is 3 weeks (was 34). That is the degenerate cell back at
+    // roughly its base-1 level: the ramp DOWN is gone, because the treadmill now stops itself.
+    // WHY IT WORKS, in the traced cell: she books 67 friendlies over that career without the gate and
+    // 20 with it, and the weeks the gate takes away from her are weeks she now spends recovering
+    // (base + the rest-slider bonus she used to forfeit), so she climbs back off the floor instead of
+    // sliding along it.
+    // NO COLLATERAL DAMAGE, measured on the same seed-3 cells this test asserts on: the load-managed
+    // policies are byte-identical either way – balanced+careful pooled, gate OFF vs ON, 5 blocked / 0
+    // withdrawn / 5 of 832 weeks under the floor / 197 practices, both times. They never dip under 15,
+    // so there is nothing for the gate to refuse. It is a grinder-only rule in practice as well as in
+    // theory.
+    // THE BOUND: 0.08 against a measured worst cell of 2.9% (3 weeks of 104) – ~2.7× headroom, chosen
+    // so an ordinary content shift does not re-break it while a return of the treadmill (which was a
+    // THIRD of a career) fails loudly. NOT a number picked to pass: the sweep above is the measurement,
+    // and 0.4 would now be 14× looser than the phenomenon it is bounding. ***
     for (const r of grinderRuns) {
-      expect(r.weeksAt0 / r.weekly.length).toBeLessThan(0.4)
+      expect(r.weeksAt0 / r.weekly.length).toBeLessThan(0.08)
       // The veto is doing real work ABOVE zero: she spends far longer under the floor (where it
       // refuses her entries) than pinned at the very bottom.
       if (r.weeksAt0 > 0) expect(r.weeksBelowMedicalFloor).toBeGreaterThan(r.weeksAt0)
@@ -730,8 +788,14 @@ describe('season planner (REAL mechanics – bookings through the engine command
     // actually fire for the grinder, or the arrival check is dead code.
     // MEASURED (4 grinder profiles x 104w, seed 3), RE-MEASURED at the base raise (26.07):
     //   base 1 (pre-change)  113 blocked · 6 withdrawn · 7 warned
-    //   base 2 (shipped)     299 blocked · 13 withdrawn · 12 warned
-    // (the older "165 · 14 · 7" in this comment was the wave-3 reading, before round-10 content).
+    //   base 2, no gate      299 blocked · 13 withdrawn · 12 warned
+    //   base 2 + the gate    199 blocked · 24 withdrawn · 17 warned   <- shipped
+    // (the older "165 · 14 · 7" in this comment was the wave-3 reading, before round-10 content.)
+    // The gate moves the two surfaces in OPPOSITE directions, and that is the mechanism working, not a
+    // regression: refused a third of her friendlies, she recovers instead of grinding, so she is ABOVE
+    // the floor on far more entry days (blocks 299 -> 199, entries +35%) and therefore reaches far more
+    // play weeks – a few of them still wrecked (withdrawn 13 -> 24) and more of them inside the warning
+    // band (warned 12 -> 17). Fewer refusals ahead of time, more real tournaments, the same doctor.
     expect(grinderRuns.some((r) => r.medicalWithdrawals > 0)).toBe(true)
     // A withdrawal is strictly rarer than a block – she has to survive the entry gate first, then
     // wreck herself inside the commit window. If this ever inverts, the entry gate stopped working.
@@ -760,6 +824,12 @@ describe('season planner (REAL mechanics – bookings through the engine command
     // load-managed policies FURTHER AWAY from it (1.4% -> 0.6%) – they skip more and pay less. The
     // ratio the test pins therefore widens from 10.5x to 57x, which is the doctor's veto separating
     // the degenerate policy from the sane ones harder, not the floor drifting.
+    // RE-MEASURED at THE PRACTICE GATE (26.07, candidate (b)), same cells again:
+    //   grinder  199 blocked + 24 withdrawn, 116/416 (27.9%)
+    //   balanced+careful pooled: 5 blocked + 0 withdrawn, 5/832 (0.6%) – IDENTICAL, to the week
+    // The grinder climbs partway back out of the hole (34.1% -> 27.9% of her weeks under the floor)
+    // and the managed policies do not move AT ALL, which is the cleanest possible statement of what
+    // this rule is: it costs the grinder her friendlies and costs nobody else anything. Ratio 46x.
     // (was 62 blocked / 7.9% before the ladder – a heavier run cost puts a grinder under the floor
     // more often, which is the ladder working, not the floor drifting. The RATIO is what is pinned.)
     // Asserted on WEEKS UNDER THE FLOOR (the physical state) rather than refused entries: the bench

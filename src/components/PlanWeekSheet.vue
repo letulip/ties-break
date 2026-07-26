@@ -2,8 +2,9 @@
 // Season planner (docs/specs/season-planner.md) – the "+ Plan week" sheet.
 //
 // ONE empty future week, TWO tabs: Practice (a watchable friendly – court fee, the optional
-// «+ тренер на игру», and the fatigue GUARDRAIL) and Vacation (the shared 6-package catalogue
-// with prices, condition gains and the cheapest-that-brings-her-back pre-highlighted).
+// «+ тренер на игру», the fatigue GUARDRAIL and, under the medical floor, the doctor's hard refusal)
+// and Vacation (the shared 6-package catalogue with prices, condition gains and the
+// cheapest-that-brings-her-back pre-highlighted).
 //
 // The sheet books NOTHING itself: it emits the chosen plan and SeasonScreen routes it through the
 // same ConfirmDialog an entry uses, so money always gets a confirm and the guardrail warning
@@ -12,7 +13,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPriceCents } from '../engine/economy'
-import { practiceCaution, type PracticeCaution } from '../engine/world'
+import { medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekRange } from '../shared/dates'
 
@@ -64,6 +65,14 @@ const caution = computed<PracticeCaution>(() =>
     week: props.week,
   }),
 )
+// THE DOCTOR'S VETO – the one thing above the guardrail, and the only HARD block on a friendly
+// (owner 26.07: he will not let her travel to a tournament at condition 0, so he will not clear her
+// for a friendly either). Read through the engine's own `medicalBlock`, i.e. the SAME verdict the
+// tournament card's "Not cleared to play" lock renders and the same sentence `bookPractice` would
+// throw – so the two surfaces cannot drift, and the button is disabled-with-a-reason instead of
+// throwing on click. The week itself stays plannable: the Vacation tab is the answer, and the copy
+// says so, because a week where nothing at all is possible is the worst bug this planner has had.
+const medical = computed(() => medicalBlock(condition.value))
 
 function askPractice(): void {
   emit('bookPractice', {
@@ -171,19 +180,25 @@ function askVacation(row: PackageRow): void {
             <span>Total</span>
             <span class="num negative">{{ formatDollars(practiceFee) }}</span>
           </div>
-          <p v-if="caution.level === 'caution'" class="caution-note">{{ caution.detail }}</p>
+          <!-- The doctor's veto outranks the guardrail: a hard block, so it replaces the warning
+               rather than stacking with it, and it points at the week's remaining options. -->
+          <p v-if="medical" class="caution-note">
+            {{ medical.detail }} A friendly is still a match, so it is out too at condition
+            {{ condition }} – try the Vacation tab, or leave the week to training.
+          </p>
+          <p v-else-if="caution.level === 'caution'" class="caution-note">{{ caution.detail }}</p>
           <div class="dialog-actions" style="margin-top: 12px">
             <button @click="emit('close')">Cancel</button>
             <button
               class="primary"
-              :class="{ risky: caution.level === 'caution' }"
-              :disabled="!practiceAffordable || game.busy"
+              :class="{ risky: !medical && caution.level === 'caution' }"
+              :disabled="!!medical || !practiceAffordable || game.busy"
               @click="askPractice"
             >
-              {{ caution.level === 'caution' ? 'Book anyway' : 'Book the match' }}
+              {{ medical ? 'Not cleared to play' : caution.level === 'caution' ? 'Book anyway' : 'Book the match' }}
             </button>
           </div>
-          <p v-if="!practiceAffordable" class="hint" style="margin: 6px 0 0">Not enough funds</p>
+          <p v-if="!medical && !practiceAffordable" class="hint" style="margin: 6px 0 0">Not enough funds</p>
         </template>
       </template>
 
