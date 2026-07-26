@@ -149,8 +149,15 @@ describe('policy ordering (the load-management axis)', () => {
   it('the C3 ≥3x anchor RETURNS at 104w under the shipped V2.1 knobs (multi-season drift)', () => {
     // The owner's target metric: across two seasons the enter-everything grinder drifts low
     // enough that fatigue-tau separation finally triples the careful player's injury rate.
-    const gRuns = [...runCell(working, grinder, H104.weeks), ...runCell(middleSelf, grinder, H104.weeks)]
-    const cRuns = [...runCell(working, careful, H104.weeks), ...runCell(middleSelf, careful, H104.weeks)]
+    // *** SEEDS TRIMMED 25.07 (ladder-up): sim cost per week is no longer flat – once she climbs
+    // into the J-tiers the calendar stacks several draw-32 AI tournaments EVERY week, so a 104w
+    // career costs orders of magnitude more than a 52w one (measured uncontended: the 52w pooling
+    // above runs in 1.5s, this one took 908s at 30 seeds and blew the CI timeout). 10 paired seeds
+    // per cell (40 careers over two seasons) still separates a ~3-4x ratio cleanly;
+    // `npm run bench:fatigue` keeps the full 30. ***
+    const N = 10
+    const gRuns = [...runCell(working, grinder, H104.weeks, N), ...runCell(middleSelf, grinder, H104.weeks, N)]
+    const cRuns = [...runCell(working, careful, H104.weeks, N), ...runCell(middleSelf, careful, H104.weeks, N)]
     const gInj = gRuns.reduce((s, r) => s + r.injuriesTotal, 0)
     const cInj = cRuns.reduce((s, r) => s + r.injuriesTotal, 0)
     expect(gInj / cInj).toBeGreaterThanOrEqual(3)
@@ -438,13 +445,18 @@ describe('season planner (REAL mechanics – bookings through the engine command
 
   it("the doctor's veto is counted, and only the degenerate policy ever meets it", () => {
     const floor = ECONOMY.availability.medicalFloor
-    // The grinder is the cell the bench found at condition 0 – she is the one the floor stops.
-    // (Seed 3 is one of the crash seeds; most seeds never reach the floor even for her.)
-    const g = runFatigueCareer(working, grinder, 3, H104.weeks)
-    expect(g.weeksBelowMedicalFloor).toBeGreaterThan(0)
-    expect(g.medicalBlocks).toBeGreaterThan(0)
-    // …and the veto ends the condition-0 pin the bench flagged as the one degenerate cell.
-    expect(g.weeksAt0).toBe(0)
+    // *** RE-PINNED 25.07 (ladder-up union): this used to hardcode `working` + seed 3, because
+    // that was the crash cell when the calendar topped out at national. With the J-tiers the
+    // degenerate cell MOVED – an 8k family now runs out of money on international travel before
+    // her body runs out (economy throttles her first), while a wealthy grinder can afford to keep
+    // playing until she craters. The invariant under test is not "this profile" but "the grinder
+    // is the only policy that ever reaches the floor", so the assertion now searches the grinder
+    // across profiles instead of naming one – calendar- and economy-shift proof. ***
+    const grinderRuns = PROFILES.map((p) => runFatigueCareer(p, grinder, 3, H104.weeks))
+    expect(grinderRuns.some((r) => r.weeksBelowMedicalFloor > 0)).toBe(true)
+    expect(grinderRuns.some((r) => r.medicalBlocks > 0)).toBe(true)
+    // …and wherever it fires, the veto ends the condition-0 pin the bench flagged as degenerate.
+    for (const r of grinderRuns) expect(r.weeksAt0).toBe(0)
     // The load-managing policies never go near it – proof the floor is far below normal play.
     for (const policy of [balanced, careful]) {
       const r = runFatigueCareer(working, policy, 3, H104.weeks)
