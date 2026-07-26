@@ -230,6 +230,22 @@ export const ECONOMY = {
     // slice-B fast-follow the owner proved necessary (won a Regional at 0 condition).
     matchStrengthKnee: 70,
     matchStrengthFloor: 0.55,
+    // RIVALS BECOME REAL (rival-life slice): how many trailing weeks of the results ledger a
+    // COHORT player's condition is reconstructed from. The kid carries a persisted `condition`
+    // counter; a rival cannot (world.cohort is inside every save, and a new field would cost a
+    // schema bump AND re-roll all 199 players), so hers is DERIVED on the fly from the rows she
+    // already has – which means the scan has to be bounded.
+    //
+    // The window is therefore the rival's MEMORY: she carries the last N weeks of competitive
+    // load, not her whole career. That is not just an optimisation – it is the knob that keeps a
+    // heavy schedule from being an unrecoverable death spiral. Elite juniors enter ~20-30 draws a
+    // season (the entrant bands overlap, so the top of the table is a candidate for j30 + j60 +
+    // j300 at once), and at recoveryBase 1/week their drain outruns their recovery permanently:
+    // an unbounded scan pins the whole top of the cohort at condition 0 for the entire season,
+    // which inverts the standings instead of colouring them. Measured on the real calendar
+    // (docs + the rival bench): 16 weeks keeps the field's median in the 70s-80s, leaves a real
+    // dip behind a deep run, and floors nobody all season.
+    rivalFatigueWindowWeeks: 16,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

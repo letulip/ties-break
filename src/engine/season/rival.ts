@@ -1,0 +1,275 @@
+// RIVALS BECOME REAL — the cohort's fatigue and play style, both DERIVED (docs/specs/rival-life.md).
+//
+// THE HARD CONSTRAINT: derive, never store. `world.cohort` is persisted inside every save and
+// `generateCohort` draws its attributes sequentially, so adding one stored field would cost a
+// schema bump AND shift every subsequent draw for all 199 players (a full cohort re-roll). Both
+// halves of this module are therefore pure functions of data the world ALREADY holds:
+//   - fatigue  <- the results ledger (`world.results`), which records every draw a rival entered;
+//   - style    <- the four attributes she was generated with.
+// No new WorldState field, no schema bump, and ZERO RNG draws – the frozen MAIN-stream pins are
+// untouched by construction.
+//
+// ONE RULE FOR EVERYBODY: every number below comes from ../condition (matchDrain,
+// tournamentRunStrain, conditionMatchFactor) or from ECONOMY.condition – the same knobs that
+// govern the kid. Rivals get NO injuries, NO physio, NO vacations and NO plan slider: that
+// asymmetry is the player's edge, and it is deliberate.
+
+import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from '../condition'
+import { ECONOMY } from '../economy'
+import { TIERS, TIER_LADDER, isBlackoutWeek } from './calendar'
+import type { SeasonResult } from './ranking'
+import type { AiPlayer, TierId } from './types'
+import type { MatchPlayer, Surface } from '../match/types'
+import type { PlayStyle } from '../../shared/protocol'
+
+// --- Part A: fatigue reconstructed from the ledger ---------------------------
+
+/** How many matches a player played to reach finish index `finish` in a draw of `rounds` rounds.
+ *
+ *  `finish` is `rounds - round` where `round` is the round she LOST in (0-based), so a loser at
+ *  finish f played `rounds - f + 1` matches; the champion (f = 0) never lost and played all
+ *  `rounds`. Runner-up and champion therefore play the same number of matches, which is exactly
+ *  right – the final is one match for both of them. Pure integer arithmetic. */
+export function matchesForFinish(rounds: number, finish: number): number {
+  return finish <= 0 ? rounds : Math.min(rounds, rounds - finish + 1)
+}
+
+/** What ONE ledger row says about the week it was earned in. */
+export interface RivalRun {
+  tier: TierId
+  /** matches played in that draw (>= 1) */
+  matches: number
+  /** the run's condition toll, straight off `tournamentRunStrain` */
+  strain: number
+}
+
+/** The strain of a rival's run. AI-vs-AI matches resolve closed-form and carry NO scoreline, so
+ *  every rival match takes `matchDrain`'s score-less branch (straight sets + the tier surcharge) –
+ *  the same value the kid pays for a straight-sets match at that tier. Routed through
+ *  `tournamentRunStrain` rather than re-derived, so a future cumulative run-fatigue ladder lands
+ *  in one place and BOTH sides inherit it at once. */
+function runStrain(tier: TierId, matches: number): number {
+  return tournamentRunStrain(tier, new Array<{ score?: string }>(matches).fill({}))
+}
+
+/** Every (tier, finish) pair that could have produced `points`, cheapest first. Built once: the
+ *  tier point arrays are compile-time constants, so this is a tiny static index. */
+const RUNS_BY_POINTS: Map<number, RivalRun[]> = (() => {
+  const byPoints = new Map<number, RivalRun[]>()
+  for (const tier of TIER_LADDER) {
+    const rounds = Math.log2(TIERS[tier].drawSize)
+    TIERS[tier].points.forEach((points, finish) => {
+      const matches = matchesForFinish(rounds, finish)
+      const run: RivalRun = { tier, matches, strain: runStrain(tier, matches) }
+      const list = byPoints.get(points)
+      if (list) list.push(run)
+      else byPoints.set(points, [run])
+    })
+  }
+  // Cheapest reading first; ties break by ladder order (the lower rung), so the choice is total
+  // and deterministic rather than dependent on iteration order.
+  for (const list of byPoints.values()) {
+    list.sort((a, b) => a.strain - b.strain || TIER_LADDER.indexOf(a.tier) - TIER_LADDER.indexOf(b.tier))
+  }
+  return byPoints
+})()
+
+/** The cheapest run any tier could have produced – the last-resort reading for a points value
+ *  that matches no tier at all (a hand-edited or future-tier save). One match at the entry tier:
+ *  never a crash, and never free. */
+const FALLBACK_RUN: RivalRun = { tier: TIER_LADDER[0], matches: 1, strain: runStrain(TIER_LADDER[0], 1) }
+
+/** Reconstruct what a rival actually PLAYED from one results row.
+ *
+ *  With `tier` present (every row this slice writes) the answer is exact: `points` inverts through
+ *  `TIERS[tier].points` – strictly descending, so the finish index is unique – and the finish gives
+ *  the match count.
+ *
+ *  WITHOUT `tier` (it is optional on `SeasonResult`, and every AI row written before this slice
+ *  omitted it, pre-history included) the points value alone can be ambiguous: 30 is a Local title,
+ *  a J30 last-16 and a J300 first round at once. Such a row resolves to the CHEAPEST reading by
+ *  strain – deterministic, and a legacy save can never invent fatigue a rival may not have earned.
+ *  It is explicitly never treated as free: the cheapest reading is still at least one match. */
+export function reconstructRun(result: SeasonResult): RivalRun {
+  const candidates = RUNS_BY_POINTS.get(result.points)
+  if (result.tier !== undefined) {
+    const exact = candidates?.find((c) => c.tier === result.tier)
+    if (exact) return exact
+    // A tier that no longer awards this value (a retuned points array under an old save): fall
+    // through to the same cheapest-reading rule rather than crashing.
+  }
+  return candidates?.[0] ?? FALLBACK_RUN
+}
+
+/** Walk `runs` (a single rival's reconstructed runs, keyed by the week they were earned) forward
+ *  across the window ending at `week`, applying the kid's own week ladder:
+ *    - a week she competed earns `matchWeekRecoveryBase` (0 shipped) – travel and competition,
+ *      not rest – and then pays the run's strain;
+ *    - a quiet week earns `recoveryBase`, plus `blackoutBonus` when the calendar is dark
+ *      (off-season / school exams). A week's TYPE is a property of the week, so it applies to
+ *      everybody;
+ *    - and that is ALL: no plan slider, no physio, no vacation. The player's edge.
+ *  Starts the scan at full condition, so the window is the rival's memory (see the knob's note in
+ *  economy.ts). Clamped to the same [min, max] as the kid's. */
+function walkWindow(runs: Map<number, RivalRun[]>, week: number): number {
+  const c = ECONOMY.condition
+  let condition: number = c.max
+  for (let w = week - c.rivalFatigueWindowWeeks + 1; w <= week; w++) {
+    const played = runs.get(w)
+    const recovery = played
+      ? c.matchWeekRecoveryBase
+      : c.recoveryBase + (isBlackoutWeek(w) ? c.blackoutBonus : 0)
+    condition = clamp(condition + recovery, c.min, c.max)
+    if (played) {
+      for (const run of played) condition = clamp(condition - run.strain, c.min, c.max)
+    }
+  }
+  return condition
+}
+
+/** ONE rival's condition (0..100, 100 = fresh) at `week`, derived from the results ledger.
+ *
+ *  Takes the LEDGER rather than the world: it is a pure function of (results, playerId, week), so
+ *  the tests and the bench call it directly and nothing about a world's other state can leak in.
+ *  Zero RNG draws. For a whole field prefer `rivalConditions`, which indexes the ledger once. */
+export function rivalCondition(results: readonly SeasonResult[], playerId: string, week: number): number {
+  const runs = new Map<number, RivalRun[]>()
+  const from = week - ECONOMY.condition.rivalFatigueWindowWeeks + 1
+  for (const r of results) {
+    if (r.playerId !== playerId || r.week < from || r.week > week) continue
+    const list = runs.get(r.week)
+    if (list) list.push(reconstructRun(r))
+    else runs.set(r.week, [reconstructRun(r)])
+  }
+  return walkWindow(runs, week)
+}
+
+/** Every rival's condition at `week`, indexing the ledger ONCE. The engine calls this per tick, so
+ *  the per-week cost is O(rows in the window) rather than O(players × rows). Players with no rows
+ *  in the window are absent from the map – they are at full condition by construction, and
+ *  `rivalMatchPlayer` treats a missing entry as exactly that. */
+export function rivalConditions(results: readonly SeasonResult[], week: number): Map<string, number> {
+  const from = week - ECONOMY.condition.rivalFatigueWindowWeeks + 1
+  const byPlayer = new Map<string, Map<number, RivalRun[]>>()
+  for (const r of results) {
+    if (r.week < from || r.week > week) continue
+    let runs = byPlayer.get(r.playerId)
+    if (!runs) {
+      runs = new Map<number, RivalRun[]>()
+      byPlayer.set(r.playerId, runs)
+    }
+    const list = runs.get(r.week)
+    if (list) list.push(reconstructRun(r))
+    else runs.set(r.week, [reconstructRun(r)])
+  }
+  const conditions = new Map<string, number>()
+  for (const [playerId, runs] of byPlayer) conditions.set(playerId, walkWindow(runs, week))
+  return conditions
+}
+
+// --- Part B: play style, derived from the attributes she was generated with ---
+
+/** The style thresholds, as ONE exported knob object so the tests, the bench and any future
+ *  tuning pass read the same numbers the engine does.
+ *
+ *  Calibrated against the generation ranges (`generateCohort`: serve 30-60, ret 30-60, composure
+ *  25-70, stamina 30-70) to give all four styles a real share of a 199-player cohort – see the
+ *  histogram test. `high*` sit just above each range's midpoint, so "high" means "top ~half of
+ *  what this cohort can be", and `serveEdge` is a clear gap rather than a coin-flip on noise. */
+export const RIVAL_STYLE = {
+  /** serve − ret at or above this ⇒ a serve-first build */
+  serveEdge: 8,
+  /** "high" serve (generation range 30-60) */
+  highServe: 46,
+  /** "high" return (generation range 30-60) */
+  highRet: 46,
+  /** "high" stamina (generation range 30-70) */
+  highStamina: 52,
+} as const
+
+/** A rival's play style: a PURE function of the attributes she already has, in the spec's order.
+ *
+ *  A serve clearly ahead of the return is the loudest signal there is, so it wins first; then legs
+ *  behind a return (the counterpuncher's actual weapon is the third ball, not the first); then two
+ *  weapons without the legs to grind (the aggressive baseliner); and everything else is all-court.
+ *  Nothing is stored: the same player always reads the same style, and drift moves it only when her
+ *  attributes genuinely move. */
+export function styleOf(player: Pick<MatchPlayer, 'serve' | 'ret' | 'stamina'>): PlayStyle {
+  const s = RIVAL_STYLE
+  if (player.serve - player.ret >= s.serveEdge) return 'serve-first'
+  if (player.ret >= s.highRet && player.stamina >= s.highStamina) return 'counterpuncher'
+  if (player.serve >= s.highServe && player.ret >= s.highRet) return 'aggressive'
+  return 'all-court'
+}
+
+/** Multiplicative per-(style, surface) attribute factors. Deliberately small: `basePServe` moves
+ *  0.0016 of serve-point probability per skill point, so ±6% on a ~45 attribute is ≈ ±0.004 – about
+ *  a third of the surface's own ±0.015 serve bonus. A style COLOURS a matchup; it never rewrites it.
+ *
+ *  all-court is neutral on all three surfaces, and that IS its identity ("no weaknesses, no
+ *  shortcuts"): on a mixed calendar never being wrong-footed is the edge. */
+const STYLE_SURFACE: Record<PlayStyle, Record<Surface, { serve: number; ret: number; stamina: number }>> = {
+  // Free points are worth most where the ball stays low and fast, least where it sits up.
+  'serve-first': {
+    grass: { serve: 1.06, ret: 1.0, stamina: 1.0 },
+    hard: { serve: 1.02, ret: 1.0, stamina: 1.0 },
+    clay: { serve: 0.95, ret: 1.0, stamina: 1.0 },
+  },
+  // Clay gives her the extra ball she lives on; grass takes it away.
+  counterpuncher: {
+    clay: { serve: 1.0, ret: 1.06, stamina: 1.04 },
+    hard: { serve: 1.0, ret: 1.01, stamina: 1.01 },
+    grass: { serve: 1.0, ret: 0.95, stamina: 1.0 },
+  },
+  // Two weapons, no patience: rewarded where points end early, punished in the long rally.
+  aggressive: {
+    hard: { serve: 1.03, ret: 1.02, stamina: 1.0 },
+    grass: { serve: 1.03, ret: 0.99, stamina: 1.0 },
+    clay: { serve: 0.97, ret: 0.99, stamina: 1.0 },
+  },
+  'all-court': {
+    hard: { serve: 1.0, ret: 1.0, stamina: 1.0 },
+    clay: { serve: 1.0, ret: 1.0, stamina: 1.0 },
+    grass: { serve: 1.0, ret: 1.0, stamina: 1.0 },
+  },
+}
+
+/** How a style plays ON a given surface: a pure, allocation-cheap transform of a MatchPlayer.
+ *
+ *  ⚠ COORDINATION NOTE: the `feat/surface-style` slice introduces this exact name and signature for
+ *  the KID's side and is NOT on this branch's base. This is a local twin so Part B could ship;
+ *  at merge the two must collapse into ONE implementation (this one is attribute-multiplicative
+ *  and composes cleanly before the condition factor – see `rivalMatchPlayer`). */
+export function applySurfaceStyle(player: MatchPlayer, style: PlayStyle, surface: Surface): MatchPlayer {
+  const f = STYLE_SURFACE[style][surface]
+  return {
+    ...player,
+    serve: player.serve * f.serve,
+    ret: player.ret * f.ret,
+    stamina: player.stamina * f.stamina,
+  }
+}
+
+/** THE one helper both tournament paths call (the kid's shadow run and the canonical AI bracket),
+ *  so a rival can never be built two different ways.
+ *
+ *  Composition order mirrors the kid's exactly (spec §Composition):
+ *      base attributes → surface/style modifier → condition factor
+ *  applied exactly ONCE. `condition` defaults to full, so a rival with no rows in the fatigue
+ *  window (or any caller that has not derived one) is simply fresh. */
+export function rivalMatchPlayer(player: AiPlayer, surface: Surface, condition: number = ECONOMY.condition.max): MatchPlayer {
+  const styled = applySurfaceStyle(player, styleOf(player), surface)
+  const factor = conditionMatchFactor(condition)
+  return {
+    id: styled.id,
+    name: styled.name,
+    serve: styled.serve * factor,
+    ret: styled.ret * factor,
+    composure: styled.composure * factor,
+    stamina: styled.stamina * factor,
+  }
+}
+
+/** Re-exported so a caller that already has a rival's condition can read her strength factor
+ *  through the same curve without reaching into ../condition. */
+export { conditionMatchFactor, matchDrain }
