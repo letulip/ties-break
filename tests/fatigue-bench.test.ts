@@ -211,13 +211,30 @@ describe('policy ordering (the load-management axis)', () => {
     const cRuns = [...runCell(working, careful, H104.weeks, N), ...runCell(middleSelf, careful, H104.weeks, N)]
     const gInj = gRuns.reduce((s, r) => s + r.injuriesTotal, 0)
     const cInj = cRuns.reduce((s, r) => s + r.injuriesTotal, 0)
+    // *** THE TRIPWIRE FIRED AGAIN, AND THE ANCHOR IS LOST AGAIN: 3.05 -> 2.94, by the MATCH BASE
+    // RAISE (owner decision 26.07, straightSets 1 -> 2). RE-READ as the note above demands, not
+    // re-pinned blind. MEASURED, same cells, N=10, 104w, paired seeds:
+    //     base 1 (pre-change)  injuries 122 / 40 = 3.050 · entries 805 / 657
+    //     base 2 (shipped)     injuries 141 / 48 = 2.938 · entries 640 / 652
+    // MECHANISM, and it is NOT the injury model: look at the ENTRIES. Both policies get hurt more in
+    // absolute terms (grinder +16%, careful +20%) because every match costs a rung more, but the
+    // grinder's SCHEDULE collapses – 805 -> 640 entries, -20% – while the careful parent, who was
+    // already skipping below her floor, loses 5. The doctor's veto is what does it: at base 2 the
+    // grinder spends 34% of her weeks under the medical floor (was 15%) and is refused 299 entries
+    // (was 113). She cannot get hurt at tournaments she is not allowed to enter, so the very
+    // degeneracy the veto exists to stop is now ALSO capping the metric the C3 anchor measures.
+    // The careful parent, meanwhile, absorbs the base raise as pure tau: +20% injuries on an
+    // unchanged calendar. Compression follows arithmetically.
+    // FOR THE OWNER: 2.94 vs the >= 3 target is a rounding error next to the 33%-of-career
+    // condition-0 pin the same change produces in the degenerate cell (see the doctor's-veto test
+    // below). If the anchor matters more than the pin, the knob is injuryFatigueSlope, not the base.
+    // The bound below is again the tripwire in the other direction. ***
     const ratio = gInj / cInj
     // The DIRECTION is the property that must never break: the grinder gets hurt far more often.
     expect(ratio).toBeGreaterThan(2)
-    // ...and the owner's ≥3x C3 target is MET again (3.05, restored by the R10-17 fix – see the note
-    // above). Tripwire, now pointing the other way: if this slips back under 3 it must be re-read,
-    // not re-pinned.
-    expect(ratio).toBeGreaterThanOrEqual(3)
+    // ...and it is knife-edge-close to the owner's >= 3 target without meeting it (2.94). If a future
+    // change restores >= 3, this fails and gets re-read rather than quietly re-pinned.
+    expect(ratio).toBeLessThan(3)
   })
 })
 
@@ -675,8 +692,35 @@ describe('season planner (REAL mechanics – bookings through the engine command
     // Mechanism 1 is still open and still out of scope, and is recorded for the owner rather than
     // papered over. What is asserted is what the veto ACTUALLY guarantees plus a degeneracy bound
     // loose enough to be honest and tight enough to catch a real regression.
+    //
+    // *** MECHANISM 1 JUST GOT TEETH. RE-PINNED 0.2 -> 0.4 by the MATCH BASE RAISE (owner decision
+    // 26.07, straightSets 1 -> 2), and this is the WORST consequence of that change – recorded here
+    // in full rather than smoothed into a bound.
+    // The friendly treadmill was net ZERO by arithmetic accident: a practice week recovers
+    // recoveryBase (1) and a friendly drained max(1, localDrain − 1) = max(1, 0) = 1 for EVERY
+    // scoreline, because the −1 was clamped away. At base 2 the −1 finally subtracts, so the drain
+    // GRADES: 1 for straight sets, 2 for a 3-setter, 3 for a three-TB epic. MEASURED over 16 grinder
+    // careers × 104w (4 profiles × 4 seeds), the friendly mix is 41% straight / 59% harder, so
+    //     mean friendly drain 1.000 -> 1.588  ·  per season 20.8 -> 37.0 condition
+    // and a practise-every-week policy therefore slides at about −0.6/week instead of holding flat
+    // for ever. The treadmill is no longer a plateau, it is a ramp DOWN, and the doctor's veto gates
+    // tournaments only – so nothing catches her.
+    // MEASURED weeks pinned at condition 0 (grinder, 4 profiles × 12 seeds × 104w):
+    //     base 1   worst cell  1.9%  ·  pooled  9/4992 = 0.2%
+    //     base 2   worst cell 32.7%  ·  pooled 70/4992 = 1.4%
+    // The worst cell (8k working, self-coached, seed 3) spends 34 of 104 weeks at exactly 0. Pooled
+    // it is still rare (1.4%), which is why the bound stays a bound; but the bad cell is 17× worse.
+    // FOR THE OWNER, the two candidate fixes, neither in this branch's scope:
+    //   (a) let a practice week earn the rest-slider bonus it currently FORFEITS (season-planner §4),
+    //       which would restore a net-positive treadmill for the 60/40 and 75/25 sliders – but it
+    //       makes a friendly nearly free in condition, which is how "play every week" became
+    //       dominant in the first place, so it trades this degeneracy for the older one;
+    //   (b) gate practice bookings on the medical floor the way tournaments are gated – the doctor
+    //       who will not let her travel probably should not clear her for a friendly at condition 0.
+    // (b) is the smaller change, keeps the week-type ladder intact, and closes the loop the veto was
+    // built for; it is the recommendation. ***
     for (const r of grinderRuns) {
-      expect(r.weeksAt0 / r.weekly.length).toBeLessThan(0.2)
+      expect(r.weeksAt0 / r.weekly.length).toBeLessThan(0.4)
       // The veto is doing real work ABOVE zero: she spends far longer under the floor (where it
       // refuses her entries) than pinned at the very bottom.
       if (r.weeksAt0 > 0) expect(r.weeksBelowMedicalFloor).toBeGreaterThan(r.weeksAt0)
@@ -684,7 +728,10 @@ describe('season planner (REAL mechanics – bookings through the engine command
     // THE TWO SURFACES ARE COUNTED SEPARATELY (owner 26.07), because they cost the family different
     // money: a BLOCK is a trip never booked, a WITHDRAWAL is a trip already paid for. Both must
     // actually fire for the grinder, or the arrival check is dead code.
-    // MEASURED (4 grinder profiles x 104w, seed 3): 165 blocked · 14 withdrawn · 7 warned.
+    // MEASURED (4 grinder profiles x 104w, seed 3), RE-MEASURED at the base raise (26.07):
+    //   base 1 (pre-change)  113 blocked · 6 withdrawn · 7 warned
+    //   base 2 (shipped)     299 blocked · 13 withdrawn · 12 warned
+    // (the older "165 · 14 · 7" in this comment was the wave-3 reading, before round-10 content).
     expect(grinderRuns.some((r) => r.medicalWithdrawals > 0)).toBe(true)
     // A withdrawal is strictly rarer than a block – she has to survive the entry gate first, then
     // wreck herself inside the commit window. If this ever inverts, the entry gate stopped working.
@@ -704,8 +751,15 @@ describe('season planner (REAL mechanics – bookings through the engine command
     // across the profile sweep rather than one cell, so it survives content changes. ***
     // MEASURED, not guessed. RE-MEASURED at the wave-3 close (run-fatigue ladder + the arrival
     // check), 4 profiles x 104w, seed 3:
-    //   grinder  165 blocked + 14 withdrawn, 73/416 weeks under the floor (17.5%)
-    //   balanced+careful pooled: 4 blocked + 0 withdrawn, 3/832 (0.36%)
+    //   grinder  113 blocked + 6 withdrawn, 63/416 weeks under the floor (15.1%)
+    //   balanced+careful pooled: 0 blocked + 1 withdrawn, 12/832 (1.4%)
+    // RE-MEASURED at the MATCH BASE RAISE (26.07, base 1 -> 2), same cells:
+    //   grinder  299 blocked + 13 withdrawn, 142/416 (34.1%)
+    //   balanced+careful pooled: 5 blocked + 0 withdrawn, 5/832 (0.6%)
+    // i.e. the base raise moves the grinder deeper under the floor (15% -> 34% of her weeks) and the
+    // load-managed policies FURTHER AWAY from it (1.4% -> 0.6%) – they skip more and pay less. The
+    // ratio the test pins therefore widens from 10.5x to 57x, which is the doctor's veto separating
+    // the degenerate policy from the sane ones harder, not the floor drifting.
     // (was 62 blocked / 7.9% before the ladder – a heavier run cost puts a grinder under the floor
     // more often, which is the ladder working, not the floor drifting. The RATIO is what is pinned.)
     // Asserted on WEEKS UNDER THE FLOOR (the physical state) rather than refused entries: the bench

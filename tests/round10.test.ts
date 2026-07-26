@@ -495,14 +495,20 @@ describe('R10-16 — no popup may render without copy', () => {
 
 // ===========================================================================
 // R10-14 — VERIFIED CORRECT, pinned so nobody "fixes" it.
+//
+// ⚠ RE-PINNED 6 → 9 (26.07, MATCH BASE RAISE: straightSets 1 → 2, hardMatch 2 → 3). This is the
+// owner's own reference run – two straight-sets wins and a three-setter at a Local – and it is the
+// headline number of the change: the per-match half went 4 → 7 (2 + 2 + 3), the ladder half is
+// unchanged at 2. Nothing was "fixed" here; the knob moved by decision.
+// Same case, same numbers, in tests/fatigueReference.test.ts + docs/specs/fatigue-reference.md.
 // ===========================================================================
-describe('R10-14 — three Local matches cost exactly 6 condition (no change, pinned)', () => {
-  it('4 per-match + 2 ladder = 6', async () => {
+describe('R10-14 — three Local matches cost exactly 9 condition (base raised, pinned)', () => {
+  it('7 per-match + 2 ladder = 9', async () => {
     const { matchDrain, tournamentRunStrain } = await import('../src/engine/condition')
     const run = [{ score: '6-4 6-4' }, { score: '6-3 6-2' }, { score: '6-4 3-6 7-5' }]
     const perMatch = run.reduce((s, m) => s + matchDrain('local', m.score), 0)
-    expect(perMatch).toBe(4)
-    expect(tournamentRunStrain('local', run)).toBe(6)
+    expect(perMatch).toBe(7)
+    expect(tournamentRunStrain('local', run)).toBe(9)
   })
 })
 

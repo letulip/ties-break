@@ -185,10 +185,11 @@ export const ECONOMY = {
   // Round-9 OWNER REDESIGN (replaces the old restBase/restSlope/trainSlope plan formula AND
   // the flat per-tier tournamentStrain – everything integer, no fractions):
   //  - FATIGUE comes from MATCHES, per kid match played (world.ts matchDrain, applied when the
-  //    run COMMITS at finalizeTournament): straight sets with no tiebreak = 1; a 3-setter OR a
-  //    tiebreak in a 2-setter = 2; +1 more when the match had MORE than 2 tiebreak sets (a
-  //    three-TB epic) – max 3; plus the tier surcharge PER MATCH below. Hardest national
-  //    match = 3 + 2 = 5, so a five-match National run maxes at 25 (the owner's own check).
+  //    run COMMITS at finalizeTournament): straight sets with no tiebreak = 2; a 3-setter OR a
+  //    tiebreak in a 2-setter = 3; +1 more when the match had MORE than 2 tiebreak sets (a
+  //    three-TB epic) – max 4; plus the tier surcharge PER MATCH below. Hardest national
+  //    match = 4 + 2 = 6, so a five-match National run of epics costs 30 + the cumulative ladder.
+  //    (BASE RAISED 1 → 2, owner 26.07; the old "maxes at 25" check was that same run at base 1.)
   //  - RECOVERY comes from TIME: recoveryBase every week, always; on a week with NO kid match
   //    the train/rest slider adds restRecoveryBonus (threshold-based on plan.rest – the 60/40
   //    preset earns +2, 75/25 earns +1, the 85/15 grind earns 0; NEVER interpolated); physio
@@ -215,13 +216,25 @@ export const ECONOMY = {
     ] as { minRest: number; bonus: number }[],
     blackoutBonus: 1, // off-season (weeks 49-51) and exam weeks (replaces the old offSeasonGain)
     // Per-match drain components (see world.ts matchDrain).
-    matchFatigue: { straightSets: 1, hardMatch: 2, extraTiebreaks: 1 },
+    // MATCH BASE RAISED 1 → 2 (owner decision 26.07, "a simple match should cost 2, not 1"): the
+    // BASE moved one rung and hardMatch moved with it, because his rule is unchanged – "+1 for a
+    // tiebreak or a third set" – so hardMatch must always be straightSets + 1 (pinned as a pair in
+    // tests/fatigueReference.test.ts). extraTiebreaks and tierMatchFatigue are NOT touched, so a
+    // SIMPLE match now costs 2 (local) … 7 (j300) and the ceiling is 9 (a three-TB J300 epic).
+    // The consequence he asked for: at the shipped ladder C a straight-sets TITLE costs exactly
+    // what the pre-round-9 FLAT tournamentStrain charged (local 8 / regional 16 / national 26),
+    // while a first-round exit still costs a fraction of it.
+    // ONE side effect, deliberate: the practice friendly's max(1, local − 1) used to clamp
+    // (max(1, 0) = 1 for every scoreline); it now subtracts for real, so a straight-sets friendly
+    // still costs 1 but a 3-setter costs 2 and a three-TB epic 3 (docs/specs/fatigue-reference.md).
+    matchFatigue: { straightSets: 2, hardMatch: 3, extraTiebreaks: 1 },
     // Tier surcharge PER MATCH, one step per rung. The J levels are EXTRAPOLATED above national
     // (ladder-up): international travel, time-zone changes and a fortnight away from home make
-    // them the most draining weeks she plays. Worst case is a 5-match J300 run at 3 + 5 per match
-    // = 40 condition – deliberately the heaviest thing in the game, and OWNER-TUNABLE: the owner
-    // has priced local..national himself ("a five-match National run maxes at 25"), never the J
-    // family, so these three are the first numbers the pending tuning pass should look at.
+    // them the most draining weeks she plays. Worst case is a 5-match J300 run at 4 + 5 per match
+    // = 45, + the cumulative ladder 6 = 51 condition – deliberately the heaviest thing in the game
+    // (it was 40 + 6 before the base raise), and OWNER-TUNABLE: the owner has priced local..national
+    // himself, never the J family, so these three are the first numbers the pending tuning pass
+    // should look at – all the more so now that the base under them is one rung higher.
     tierMatchFatigue: { local: 0, regional: 1, national: 2, j30: 3, j60: 4, j300: 5 } as Record<TierId, number>,
     // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
     // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own

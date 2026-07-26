@@ -421,14 +421,22 @@ describe('P6 — practice match mechanics', () => {
     expect(ev.match!.score).toBeTruthy()
     // zero ranking points: the kid's results ledger is untouched by a friendly
     expect(w.results.filter((r) => r.playerId === KID_ID)).toEqual([])
-    // condition: entry 80 + practice-week recovery (base 1, slider FORFEITED) − drain(1..2)
+    // condition: entry 80 + practice-week recovery (base 1, slider FORFEITED) − drain(1..3)
+    // ⚠ RE-PINNED 26.07 by the MATCH BASE RAISE: this re-derivation HARDCODED the old base (`? 2 : 1`)
+    // and so would have silently disagreed with the engine on any friendly that was not straight
+    // sets — it only kept passing because this seed produces a straight-sets one. Read off the live
+    // knobs instead, so the test measures the rule rather than a snapshot of it. The drain ceiling
+    // moves 2 → 3 with the base: max(1, local − 1) now grades (1 straight / 2 a 3-setter / 3 an
+    // epic) where it used to clamp everything to 1. The canonical table is in
+    // tests/fatigueReference.test.ts + docs/specs/fatigue-reference.md.
+    const f = ECONOMY.condition.matchFatigue
     const sets = ev.match!.score!.split(' ')
     const tiebreaks = sets.filter((s) => s === '7-6' || s === '6-7').length
-    const local = (sets.length >= 3 || tiebreaks >= 1 ? 2 : 1) + (tiebreaks > 2 ? 1 : 0)
+    const local = (sets.length >= 3 || tiebreaks >= 1 ? f.hardMatch : f.straightSets) + (tiebreaks > 2 ? f.extraTiebreaks : 0)
     const drain = Math.max(1, local - 1)
     expect(w.condition).toBe(80 + ECONOMY.condition.recoveryBase - drain)
     expect(drain).toBeGreaterThanOrEqual(1)
-    expect(drain).toBeLessThanOrEqual(2)
+    expect(drain).toBeLessThanOrEqual(3)
   })
 
   it('a PRACTICE week keeps the base recovery but FORFEITS the slider bonus (owner ladder)', () => {
