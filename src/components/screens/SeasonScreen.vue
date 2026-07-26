@@ -19,9 +19,10 @@ import PlanWeekSheet from '../PlanWeekSheet.vue'
 import TierGuide from '../TierGuide.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
+import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
-import { isOffSeasonWeek } from '../../engine/season/calendar'
-import { ECONOMY, vacationPackage, vacationPriceCents } from '../../engine/economy'
+import { isOffSeasonWeek, surfaceBlockFor, WEEKS_PER_YEAR } from '../../engine/season/calendar'
+import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 import { weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { AnnotatedMatch } from '../../viz/types'
@@ -43,11 +44,44 @@ function formatDollars(cents: number): string {
 }
 
 const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
+
+// Surface x play style (docs/specs/surface-style.md): the calendar column stops being flavour, so
+// the card says so in one line – and says nothing at all when the court is neutral for her build.
+function surfaceNote(surface: Surface): string | null {
+  return game.snapshot ? surfaceStyleHint(game.snapshot.profile.playStyle, surface) : null
+}
 const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
 
 const week = computed(() => game.snapshot?.week ?? 0)
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const condition = computed(() => game.snapshot?.condition ?? 0)
+
+// SEASON STRUCTURE BY SURFACE (owner approved 26.07). The calendar shows 8 weeks, so a 15-week clay
+// swing would otherwise only become visible once she is standing in it – and the whole point of the
+// block schedule is that the calendar tells her when her surface ARRIVES. One strip above the
+// calendar names the block she is in, when it ends, and what comes next, each tagged with how it
+// reads for HER build (the same surfaceStyleHint copy the event cards carry, so the two can never
+// disagree). Derived purely from the week number, so nothing was added to the snapshot payload.
+interface SeasonBlockView {
+  label: string
+  when: string
+  surface: Surface
+  note: string | null
+}
+function blockView(atWeek: number, when: string): SeasonBlockView {
+  const block = surfaceBlockFor(atWeek)
+  // A block's identity is its dominant surface – the one the player plans around.
+  const surface = (Object.keys(block.weights) as Surface[]).reduce((a, b) =>
+    block.weights[b] > block.weights[a] ? b : a,
+  )
+  return { label: block.label, when, surface, note: surfaceNote(surface) }
+}
+const seasonBlocks = computed<SeasonBlockView[]>(() => {
+  if (!game.snapshot) return []
+  const year = Math.floor(week.value / WEEKS_PER_YEAR)
+  const endWeek = year * WEEKS_PER_YEAR + surfaceBlockFor(week.value).to
+  return [blockView(week.value, `now – through W${endWeek}`), blockView(endWeek + 1, `from W${endWeek + 1}`)]
+})
 // CALENDAR DECLUTTER (spec §1): an OUTGROWN tournament is noise – she can never enter it again –
 // so it leaves the calendar entirely and its week becomes plannable. Locked-ahead events
 // ("Reach N pts") STAY: they are aspirational. Engine output is untouched.
@@ -145,6 +179,10 @@ function lockLabel(e: UpcomingEvent): string {
       const s = game.snapshot
       return s?.injury ? `Injured – back wk ${s.week + s.injury.weeksRemaining}` : 'Injured – rest up'
     }
+    // The doctor's veto (below ECONOMY.availability.medicalFloor): the one hard body-gate. The
+    // card says WHY in three words; the confirm never appears, because there is nothing to confirm.
+    case 'medical':
+      return 'Not cleared to play'
     case 'unavailable': {
       const vacation = vacations.value.find((v) => v.week === e.week)
       return vacation ? `Family vacation – ${packageLabel(vacation.packageId)}` : 'School exams this week'
@@ -247,30 +285,42 @@ function askCancelPractice(row: CalendarRow): void {
 // --- the RESCUE prompt (spec §4b) -------------------------------------------------------
 // The bench exposed the trap: a reactive "book when condition < 60" rule never fires for the
 // load-manager, while the overloaded player has no booking habit at all – 5 of 6 packages never
-// sell. So the game SURFACES the lever to whoever is low: below rescueCondition, with a bookable
-// empty week ahead, it OFFERS a vacation, pre-filtered to the packages that bring her back above
-// rescueTargetCondition. An offer – never an auto-book. Dismissible per session.
+// sell. So the game SURFACES the lever to whoever is low: at or below rescueCondition, with a
+// bookable empty week ahead, it OFFERS a vacation with the cheapest sufficient package
+// pre-highlighted. An offer – never an auto-book. Dismissible per session.
+// WAVE-2 (bench 26.07): the band was widened 65 → 80 and the pick now reads HER condition
+// (recommendVacationPackage) instead of always demanding a package that clears 85 – on a mild
+// deficit the free staycation is the right answer, and seaside stops being the only sale.
 const rescueDismissed = ref(false)
 const rescueWeek = computed<number | null>(() => calendarRows.value.find((r) => r.plannable)?.week ?? null)
-/** The cheapest package that would return her above the target (the rescue pre-highlight). */
+/** The cheapest package sufficient for her CURRENT condition – the ONE shared rule (economy.ts),
+ *  so this card, the planner sheet and the bench can never drift apart. */
 const rescuePackageId = computed<string | null>(() => {
   const w = rescueWeek.value
   const snap = game.snapshot
   if (w === null || !snap) return null
-  const affordable = ECONOMY.vacation.packages.filter(
-    (p) => snap.fundsCents >= vacationPriceCents(snap.seed, w, p.id, snap.profile.background),
-  )
-  if (affordable.length === 0) return null
-  const clearing = affordable.find((p) => condition.value + p.conditionGain > ECONOMY.practice.rescueTargetCondition)
-  return (clearing ?? affordable[affordable.length - 1]).id
+  return recommendVacationPackage({
+    seed: snap.seed,
+    week: w,
+    background: snap.profile.background,
+    condition: condition.value,
+    fundsCents: snap.fundsCents,
+  })
 })
 const showRescue = computed(
   () =>
     !!game.snapshot &&
     !game.snapshot.injury &&
     !rescueDismissed.value &&
-    condition.value < ECONOMY.practice.rescueCondition &&
+    condition.value <= ECONOMY.practice.rescueCondition &&
     rescueWeek.value !== null,
+)
+/** The offer now reaches MILDLY tired weeks too (band widened to 80), and "she is worn out" is a
+ *  lie at condition 78 – the headline follows the depth of the hole. */
+const rescueTitle = computed(() =>
+  condition.value < ECONOMY.practice.cautionCondition
+    ? 'She is worn out – maybe a family week?'
+    : 'She could use a week off – maybe a family week?',
 )
 function openRescue(): void {
   if (rescueWeek.value === null) return
@@ -314,9 +364,11 @@ function watchMatch(e: WorldEvent): void {
 // This is the sandbox hit-out; a BOOKED practice match (above) is the real, costed one. --
 const exhibitionSurface: Surface = 'clay'
 const kidName = computed(() => game.snapshot?.profile.kidName ?? 'Vera')
+// Her CURRENT build as this clay court lets her play it (surface-style). Condition is deliberately
+// NOT applied here – the sandbox hit-out has always shown her raw build, unlike a real match week.
 const exhibitionPlayerA = computed<MatchPlayer>(() =>
   game.snapshot
-    ? kidMatchPlayer(game.snapshot)
+    ? applySurfaceStyle(kidMatchPlayer(game.snapshot), game.snapshot.profile.playStyle, exhibitionSurface)
     : { id: 'kid', name: kidName.value, serve: 50, ret: 50, composure: 50, stamina: 50 },
 )
 const exhibitionPlayerB: MatchPlayer = { id: 'top-seed', name: 'Top seed', serve: 63, ret: 60, composure: 70, stamina: 65 }
@@ -344,7 +396,7 @@ function playExhibition(): void {
 
     <!-- Rescue prompt (spec §4b): an OFFER when she is worn out, never an auto-book. -->
     <div v-if="showRescue" class="rescue-card">
-      <p class="rescue-title">She is worn out – maybe a family week?</p>
+      <p class="rescue-title">{{ rescueTitle }}</p>
       <p class="hint" style="margin: 0">
         Condition {{ condition }}/100. A week away in W{{ rescueWeek }} would bring her back
         fresher – nothing is booked until you say so.
@@ -395,6 +447,14 @@ function playExhibition(): void {
 
     <section>
       <h2>Calendar</h2>
+      <!-- The season's surface blocks: which swing she is in, and which one is coming. -->
+      <div v-if="seasonBlocks.length" class="season-blocks">
+        <div v-for="(b, i) in seasonBlocks" :key="b.when" class="season-block" :class="{ upcoming: i > 0 }">
+          <span class="pill">{{ SURFACE_EMOJI[b.surface] }} {{ b.label }}</span>
+          <span class="hint">{{ b.when }}</span>
+          <span v-if="b.note" class="hint surface-note" :class="{ suits: b.note.includes('suits') }">{{ b.note }}</span>
+        </div>
+      </div>
       <div class="event-cards">
         <template v-for="row in calendarRows" :key="row.week">
           <div v-if="row.kind === 'event' && row.event" class="event-card">
@@ -402,6 +462,14 @@ function playExhibition(): void {
               <span class="event-tier">{{ row.event.label }}</span>
               <span class="pill">{{ SURFACE_EMOJI[row.event.surface] }} {{ row.event.surface }}</span>
             </div>
+            <p
+              v-if="surfaceNote(row.event.surface)"
+              class="hint surface-note"
+              :class="{ suits: surfaceNote(row.event.surface)!.includes('suits') }"
+              style="margin: 6px 0 0"
+            >
+              {{ surfaceNote(row.event.surface) }}
+            </p>
             <p class="hint" style="margin-top: 8px">
               W{{ row.event.week }} · {{ row.dates }} · entry {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{
                 formatDollars(row.event.travelCostCents)
@@ -427,8 +495,8 @@ function playExhibition(): void {
                 Entries closed W{{ row.event.deadlineWeek }}
               </span>
               <!-- HARD locks: ranking gate ('locked') OR a hard availability block (injured /
-                   school exams / a booked family vacation). Fatigue is NOT here – it stays
-                   enterable (see below). -->
+                   school exams / a booked family vacation / the doctor's veto under the medical
+                   floor). ORDINARY fatigue is NOT here – it stays enterable (see below). -->
               <span v-else-if="!row.event.eligible" class="pill muted lock">
                 🔒 {{ lockLabel(row.event) }}
               </span>
@@ -494,7 +562,7 @@ function playExhibition(): void {
         </template>
       </div>
       <p class="hint">
-        <span class="pill">🔒 ITF Junior</span> unlocks later
+        Weeks can carry more than one event now – she can only play one, so the pick is yours.
       </p>
     </section>
 

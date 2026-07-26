@@ -99,7 +99,12 @@ layer is **deleted**; `PLANNER`/`projectPlanner`/`ProjectionResult` are gone. In
   `bookPractice`/`bookVacation` for NEXT week only, exactly as the UI offers them;
 - a per-policy `planner …` line reports friendlies played + court spend, packages booked + spend,
   guardrail cautions pushed through, and rescue bookings;
-- a new **PLANNER GRID** (practice {never, alternate, every} × vacation {none, rescue65+sea} = 6
+- a new **PLANNER GRID** (practice {never, alternate, every} × vacation {none, rescue+sea} = 6
   cells per profile at 104w) replaces the PROJ table; the factorial grid keeps the planner OFF so
-  plan × entry × physio stays an isolated read;
-- a closing **PACKAGE SALES** block answers spec §4b ("every package selling at SOME rate").
+  plan × entry × physio stays an isolated read. The rescue arm tracks the SHIPPED offer band
+  (`ECONOMY.practice.rescueCondition`, widened 65 → 80 by the Wave-2 tuning slice), so the grid
+  always measures the rule the game actually has;
+- a closing **PACKAGE SALES** block answers spec §4b ("every package selling at SOME rate");
+- a closing **DOCTOR'S VETO** block (Wave-2) reports, per policy, how many tournaments the medical
+  floor (`ECONOMY.availability.medicalFloor`) refused and what share of weeks fell under it – the
+  proof that the one hard body-gate only bites the degenerate cell.

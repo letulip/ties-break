@@ -17,7 +17,7 @@ import {
   type PortraitStage,
 } from '../shared/avatarEmotion'
 import { KID_ID } from '../engine/world'
-import { TIERS } from '../engine/season/calendar'
+import { TIERS, tierFromLabel } from '../engine/season/calendar'
 import type { TierId } from '../engine/season/types'
 
 const TIER_IDS = Object.keys(TIERS) as TierId[]
@@ -29,10 +29,9 @@ function tierFromEventId(eventId: string | undefined): TierId | undefined {
   return TIER_IDS.find((t) => t === tail)
 }
 
-/** Tournament-summary events read `${TIERS[tier].label} (…)` – match the label prefix. */
-function tierFromSummaryText(text: string): TierId | undefined {
-  return TIER_IDS.find((t) => text.startsWith(TIERS[t].label))
-}
+/** Tournament-summary events read `${TIERS[tier].label} (…)` – the shared longest-label-first
+ *  matcher in calendar.ts owns the lookup (and with it the "Junior Tour 30" / "300" prefix trap). */
+const tierFromSummaryText = tierFromLabel
 
 export function useKidEmotion() {
   const game = useGameStore()

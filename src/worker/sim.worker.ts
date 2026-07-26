@@ -32,6 +32,9 @@ import type { ToWorker, ToUI } from '../shared/protocol'
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
 // The RNG stream position is part of determinism: it is reconstructed by fast-forwarding
 // one draw-batch per elapsed week on load. Cheap now; Phase 1+ will persist stream state properly.
+// The main stream only feeds base costs + cohort drift – both tournament sides run on their own
+// event-scoped streams keyed by (seed, event.id) – so a reloaded career replays its brackets by
+// construction, not because this fast-forward happened to land on exactly the right draw.
 
 let world: WorldState | null = null
 let rng: Rng | null = null

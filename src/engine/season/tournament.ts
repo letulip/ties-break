@@ -6,22 +6,41 @@
 import { type Rng } from '../rng'
 import type { MatchPlayer, Tour } from '../match/types'
 import { simulateMatch, fastMatchProbability } from '../match/engine'
-import { TIERS } from './calendar'
+import { TIERS, TIER_LADDER } from './calendar'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './types'
 
 // Junior events run under WTA-average scoring (the project is WTA-first). Fixed so
 // stored kid-match seeds reproduce exactly.
 export const JUNIOR_TOUR: Tour = 'wta'
 
-// Percentile band boundaries (rank / field size). Top 25% aim national, the next
-// slice regional, the rest local. ITF is locked, so no AI ever aims for it.
-const NATIONAL_MAX_PCT = 0.25
-const REGIONAL_MAX_PCT = 0.6
+// AI entry ambition, by standings PERCENTILE (`(position + 1) / fieldSize`, 0 = best).
+//
+// Was a partition (top 25% → national, next → regional, rest → local) with exactly one tier per
+// player. The J family broke that: six tiers, four of them 32-draws, over a 199-strong cohort
+// leaves ~33 candidates per disjoint band – barely more than the draw itself, so every J300 would
+// have run with the same 32 players. Windows now OVERLAP (TierDef.entrantPctBand), exactly like
+// the kid's `enterPointBand`: a junior is a candidate for several rungs at once and the
+// position-biased jitter below decides which draw she actually turns up in.
+//
+// The candidate COUNT per tier is a constant of the window, because percentiles are derived from
+// ORDINAL POSITION and the positions are always a permutation of 0..n-1. `selectEntrants`' draw
+// count is therefore independent of the ranking's CONTENT – it was what kept the MAIN weekly
+// stream stable back when the AI brackets ran on it, and it still keeps each event's own
+// `seed:aitour:<id>` / `seed:kidtour:<id>` stream aligned across replays of the same event.
 
-export function bandForPercentile(pct: number): TierId {
-  if (pct <= NATIONAL_MAX_PCT) return 'national'
-  if (pct <= REGIONAL_MAX_PCT) return 'regional'
-  return 'local'
+/** True ⇔ a player at standings percentile `pct` is a candidate for `tier`'s draws. */
+export function isEntrantBand(tier: TierId, pct: number): boolean {
+  const [lo, hi] = TIERS[tier].entrantPctBand
+  return pct >= lo && pct <= hi
+}
+
+/** The STRONGEST tier a player at percentile `pct` is a candidate for – her "home" level, used to
+ *  give the cohort a coherent pre-history (season/prehistory.ts). Falls back to the entry tier. */
+export function topBandForPercentile(pct: number): TierId {
+  for (let i = TIER_LADDER.length - 1; i >= 0; i--) {
+    if (isEntrantBand(TIER_LADDER[i], pct)) return TIER_LADDER[i]
+  }
+  return TIER_LADDER[0]
 }
 
 // Standard seeded-bracket slot order for a power-of-two draw: slot i holds the
@@ -41,11 +60,10 @@ export function standardSeedOrder(n: number): number[] {
   return seeds
 }
 
-// selectEntrants – the AI field for an event. AI enter the tier matching their
-// standings percentile band; entry within the band is stochastic (position-biased)
-// so the field varies, but the returned array is seeded by standings position
-// (best first). Exactly one RNG draw per band member – a fixed pattern given the
-// ranking.
+// selectEntrants – the AI field for an event. Candidates are the cohort players whose standings
+// percentile falls inside the tier's (overlapping) entrant window; entry among them is stochastic
+// (position-biased) so the field varies, but the returned array is seeded by standings position
+// (best first). Exactly one RNG draw per candidate – a fixed pattern given the ranking.
 //
 // The band is keyed off the player's ORDINAL POSITION in the standings, not the
 // dense `rank` field: dense ranks collapse every zero-point player onto a single
@@ -65,7 +83,7 @@ export function selectEntrants(
   // Percentile from position: (position + 1) / total lands in (0, 1]. Players
   // absent from the ranking sort to the back.
   const pctOf = (id: string) => ((posOf.get(id) ?? total - 1) + 1) / total
-  const band = cohort.filter((p) => bandForPercentile(pctOf(p.id)) === event.tier)
+  const band = cohort.filter((p) => isEntrantBand(event.tier, pctOf(p.id)))
 
   // Position-biased stochastic entry: lower key = more likely to enter. Jitter is a
   // fraction of the draw so strong players usually enter but the field still moves.
@@ -122,9 +140,14 @@ function playMatch(
 // runTournament – single-elimination from `entrants` (seed order, best first). When
 // the kid enters it takes a slot, bumping the lowest-ranked entrant, and is seeded
 // last. Losers get finish = rounds - round (0 = champion), indexing TierDef.points.
+//
+// `entrants` is a MatchPlayer[] (it was an AiPlayer[], which is a subtype, so every existing call
+// site still type-checks): since the rival-life slice the caller hands in cohort rows ALREADY put
+// through `rivalMatchPlayer` – surface/style modifier and condition factor applied – so the
+// bracket sees exactly the players who take the court, and the cohort rows themselves stay pristine.
 export function runTournament(
   event: SeasonEvent,
-  entrants: AiPlayer[],
+  entrants: MatchPlayer[],
   kid: MatchPlayer | null,
   worldSeed: string,
   rng: Rng,
