@@ -494,7 +494,7 @@ function playExhibition(): void {
         </template>
       </div>
       <p class="hint">
-        <span class="pill">🔒 ITF Junior</span> unlocks later
+        Weeks can carry more than one event now – she can only play one, so the pick is yours.
       </p>
     </section>
 

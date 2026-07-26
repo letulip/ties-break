@@ -474,7 +474,7 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
  *  plus the tier's per-match surcharge:
  *    straight sets, no tiebreak → 1;  a 3-setter OR a tiebreak in a 2-setter → 2;
  *    +1 more when the match had MORE than 2 tiebreak sets (a three-TB epic) – max 3;
- *    + tierMatchFatigue[tier] (local 0 / regional 1 / national 2 / itf 3).
+ *    + tierMatchFatigue[tier] (local 0 / regional 1 / national 2 / j30 3 / j60 4 / j300 5).
  *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest national match = 5. Pure state, zero
  *  draws; a record without a score (defensive) counts as straight sets. */
 export function matchDrain(tier: TierId, score: string | undefined): number {
@@ -503,6 +503,18 @@ export function conditionMatchFactor(condition: number): number {
   return c.matchStrengthFloor + (1 - c.matchStrengthFloor) * (condition / c.matchStrengthKnee)
 }
 
+/** The kid's age (whole years) in a given absolute week – the same arithmetic the snapshot uses. */
+export function ageAtWeek(week: number): number {
+  return START_AGE_YEARS + Math.floor(week / WEEKS_PER_YEAR)
+}
+
+/** Pure age gate for a tier (ladder-up): the junior tour is 13+, the domestic ladder has no
+ *  minimum. No world/RNG dependency, so the childhood prologue and the tests call it directly. */
+export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
+  const minAge = TIERS[tier].minAgeYears
+  return minAge === undefined || ageYears >= minAge
+}
+
 /** Whether the kid can currently ENTER `event`, at three levels. One helper, wired at three engine
  *  surfaces (enterEvent / upcomingEvents / advanceWeeks) so the gate can never desync. Precedence
  *  is injured > unavailable > fatigued.
@@ -520,6 +532,17 @@ export interface AvailabilityStatus {
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
   if (world.injury !== null) {
     return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${world.injury.weeksRemaining} weeks.` }
+  }
+  // Ladder-up: the junior international tour opens at 13. Our detailed sim starts at 14, so this
+  // never fires today – it is wired now so the childhood prologue (Phase 6) inherits the rule for
+  // free instead of re-deriving it, and so the tier table stays the single source of truth.
+  const minAge = TIERS[event.tier].minAgeYears
+  if (minAge !== undefined && !isTierAgeOpen(event.tier, ageAtWeek(event.week))) {
+    return {
+      level: 'blocked',
+      reason: 'unavailable',
+      detail: `${TIERS[event.tier].label} opens at ${minAge} – she is too young.`,
+    }
   }
   // Season planner: a booked family-vacation week is a HARD blackout – the family is away, so
   // nothing is enterable (spec §3). It outranks the exam/off-season blackout copy so the chip
@@ -1623,6 +1646,12 @@ export function enterEvent(world: WorldState, eventId: string): void {
   if (!event) throw new Error('Unknown event')
   if (world.entries.includes(eventId)) throw new Error('Already entered this event')
   if (world.week > event.deadlineWeek) throw new Error('Entry deadline has passed')
+  // Ladder-up: the calendar now stacks several tiers on the same week, so "one event per week" is
+  // no longer guaranteed by the schedule and has to be a rule. She has one body and one week –
+  // the abundance is a CHOICE between events, not a licence to play two.
+  if (world.season.some((e) => e.week === event.week && world.entries.includes(e.id))) {
+    throw new Error('She is already entered in a tournament that week')
+  }
   const fee = TIERS[event.tier].entryFeeCents
   if (world.fundsCents < fee) throw new Error('Not enough funds for the entry fee')
   const [minPoints, maxPoints] = TIERS[event.tier].enterPointBand
@@ -1748,7 +1777,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
       const points = kidPoints(world)
       const deadlineSoon = world.season.some(
         (e) =>
-          (e.tier === 'regional' || e.tier === 'national') &&
+          // Ladder-up: "regional or national" was "anything above the entry tier" – it now reads
+          // that way literally, so the J levels (the most expensive commitments in the game) stop
+          // the sim too. NOTE for the tuning pass: with j30 every 2 weeks this roughly doubles how
+          // often an advance halts once she is J-eligible; if that proves noisy the fix belongs in
+          // a player-side "don't stop for tier X" preference, not in silently skipping the stop.
+          e.tier !== 'local' &&
           !world.entries.includes(e.id) &&
           world.fundsCents >= TIERS[e.tier].entryFeeCents &&
           (e.deadlineWeek === world.week || e.deadlineWeek === nextWeek) &&

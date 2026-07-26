@@ -62,25 +62,46 @@ function giveKidPoints(world: WorldState, points: number): void {
 // input, funds, plan, or condition. Frozen reference captured from the
 // step-1c-stubbed (pre-slice) build for seed "bench-working-0", weeks 1..52.
 // ---------------------------------------------------------------------------
+//
+// ⚠ RE-PINNED by ladder-up Part B (the J-level family): 45239 -> 51642, hash 9f783705 -> cae178fc.
+// THIS IS A DELIBERATE, UNAVOIDABLE MOVE, and it is worth being precise about what did and did not
+// change.
+//
+// WHAT MOVED: the season went from 43 scheduled events a year to 92 (j30 every 2 weeks, j60 every
+// 3, j300 every 13, plus the R9-20 national densification). Every scheduled event runs a canonical
+// AI tournament on the MAIN weekly stream – one draw per entrant-band candidate plus one per
+// AI-AI match – so more events means more main-stream draws, per week, by construction. No
+// arrangement of this feature can keep the old count while adding tournaments to the calendar.
+// The entrant windows also changed shape (overlapping percentile windows instead of a partition),
+// which moves the per-event candidate count too.
+//
+// WHAT DID NOT MOVE – the property this test actually exists to protect: the per-week draw count
+// is still INDEPENDENT of player input and of world content. Every other test in this describe
+// block is untouched and green: condition/plan/funds/physio variants, entering and playing an
+// event, planner bookings (P1), a mid-run injury (C1), a post-deadline skip (R9-9). Pre-history
+// (Part A) still adds ZERO main-stream draws, and entrant-band SIZES are still position-derived
+// constants, so the ranking's CONTENT still cannot move the stream.
+//
+// NOTE ON hash/head/tail: `recordRun` taps the RAW generator, so `draws` is by construction the
+// first N outputs of rngFromSeed('bench-working-0'). hash and tail are therefore pure functions of
+// N and carry no information beyond `count` (head is N-independent and never changes). They are
+// kept because they make an accidental drift loud, but the real guards are the variance tests.
 const REF = {
-  count: 45239,
-  hash: '9f783705',
+  count: 51642,
+  hash: 'cae178fc',
   head: [
     0.29022555728442967, 0.879210032755509, 0.9903593938797712, 0.8499038522131741, 0.3840416269376874,
     0.6166684734635055, 0.3415204482153058, 0.8582294869702309,
   ],
   tail: [
-    0.4780225674621761, 0.18402758589945734, 0.041664635529741645, 0.7598230177536607, 0.7584145739674568,
-    0.9743674397468567, 0.3922130144201219, 0.5808420258108526,
+    0.4260292751714587, 0.49461348494514823, 0.003383339149877429, 0.8723430952522904, 0.9430963601917028,
+    0.04303420544601977, 0.8109669734258205, 0.2922082997392863,
   ],
-  // RE-PINNED by ladder-up Part A (cohort pre-history), 131 -> 143. The DRAW STREAM above is
-  // untouched (count 45239 / hash 9f783705 / head / tail all still exact) – pre-history draws come
-  // from `rngFromSeed(seed + ':prehistory')` at createWorld and add ZERO main-stream pulls, and the
-  // per-tier entrant band SIZES are position-percentile based, so they cannot move either. What
-  // moved is a CONSEQUENCE of the stream, not the stream: a real week-0 ranking changes WHICH AI
-  // enter which draw, so a different set of AI ends the year holding counting points, and the
-  // point-less kid's shared dense rank sits behind 142 of them instead of 130.
-  kidRank: 143,
+  // 131 (pre-slice) -> 143 (Part A, cohort pre-history) -> 141 (Part B, the J family). A
+  // CONSEQUENCE of the stream, never the stream itself: the point-less kid shares the dense rank
+  // of the whole 0-point group, so this number is just "how many AI ended the year holding
+  // counting points", and both halves of the slice change which AI those are.
+  kidRank: 141,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {

@@ -53,6 +53,8 @@ function busyTournamentSeason(seed: string, weeks: number): WorldState {
   for (let i = 0; i < weeks; i++) {
     for (const e of world.season) {
       if (world.entries.includes(e.id) || e.deadlineWeek < world.week) continue
+      // Ladder-up: the calendar stacks tiers on a week, and she can only play one of them.
+      if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
       // r-gate: only enter tiers the kid is currently eligible for; enterEvent would otherwise
       // throw for a tier she has not reached yet or has already outgrown.
       if (!isTierEligible(e.tier, kidPoints(world))) continue

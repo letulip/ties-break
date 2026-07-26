@@ -34,8 +34,8 @@ import { INCOME_CATS } from '../tools/econ-bench'
 // RNG discipline: NOTHING in this pack draws from the MAIN weekly stream —
 // interest is deterministic, strain/recovery/physio-bonus are pure arithmetic,
 // and the coupling only scales the kid's MatchPlayer on the EVENT-scoped
-// `seed:kidtour` stream. The B1/C1 freezes (seed bench-working-0, count 45239,
-// hash 9f783705) stay green untouched; the skip test below re-proves the hash.
+// `seed:kidtour` stream. The B1/C1 freezes (seed bench-working-0) stay green;
+// the skip test below re-proves the capture.
 // ---------------------------------------------------------------------------
 
 // FNV-1a over the stringified draw stream (same fingerprint as B1/C1).
@@ -50,7 +50,11 @@ function fnv1a(s: string): string {
 function hashOf(draws: number[]): string {
   return fnv1a(draws.map((d) => d.toString()).join(','))
 }
-const REF = { count: 45239, hash: '9f783705' } // the frozen B1/C1 capture
+// ⚠ RE-PINNED by ladder-up Part B: 45239 -> 51642 (hash cae178fc), because the J family roughly
+// doubled the number of scheduled events and each runs an AI tournament on the MAIN stream. R9-9's
+// own claim – that a post-deadline SKIP never perturbs the stream – is unchanged and still proven
+// below. Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 51642, hash: 'cae178fc' } // the frozen B1/C1 capture
 
 /** Enter the earliest still-open local event and tick until its week spawns the reveal.
  *  BOUNDED: a random injury before the event week would auto-withdraw the entry (or turn the
@@ -217,7 +221,7 @@ describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
 // R9-7 — match-based fatigue (owner redesign, integer per match), applied when
 // the run COMMITS (finalize). matchDrain = 1 (straight sets, no TB) | 2 (a
 // 3-setter OR a TB in a 2-setter) | 3 (more than 2 TB sets), + the tier's
-// per-match surcharge (local 0 / regional 1 / national 2 / itf 3).
+// per-match surcharge (local 0 / regional 1 / national 2 / j30 3 / j60 4 / j300 5).
 // ---------------------------------------------------------------------------
 describe('R9-7 — match-based fatigue', () => {
   it('matchDrain grades the scoreline: 1 easy, 2 hard, 3 a three-tiebreak epic', () => {
@@ -232,7 +236,9 @@ describe('R9-7 — match-based fatigue', () => {
     expect(matchDrain('regional', '6-4 6-2')).toBe(2) // 1 + 1
     expect(matchDrain('national', '6-4 6-2')).toBe(3) // 1 + 2
     expect(matchDrain('national', '7-6 6-7 7-6')).toBe(5) // 3 + 2 – the owner's own check
-    expect(matchDrain('itf', '6-4 6-2')).toBe(4) // 1 + 3 (extrapolated tier)
+    // RE-PINNED by ladder-up Part B: the inert `itf` placeholder became the J family, and its
+    // +3 surcharge carried over to j30 unchanged (j60 +4, j300 +5 extrapolate above it).
+    expect(matchDrain('j30', '6-4 6-2')).toBe(4) // 1 + 3
     // a record without a score (defensive) counts as straight sets
     expect(matchDrain('national', undefined)).toBe(3)
   })
@@ -240,7 +246,7 @@ describe('R9-7 — match-based fatigue', () => {
   it('tournamentRunStrain sums the run: a 5-match National of epics maxes at 25', () => {
     expect(tournamentRunStrain('national', new Array(5).fill({ score: '7-6 6-7 7-6' }))).toBe(25)
     expect(tournamentRunStrain('local', [{ score: '6-4 6-2' }, { score: '7-6 4-6 6-3' }])).toBe(3) // 1 + 2
-    expect(tournamentRunStrain('itf', [])).toBe(0) // no matches, no drain
+    expect(tournamentRunStrain('j30', [])).toBe(0) // no matches, no drain
   })
 
   it('no fatigue lands at tick time; the full run drain lands at finalizeTournament', () => {

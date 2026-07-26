@@ -18,7 +18,7 @@ import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, ty
 import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
-import { KID_ID, flipScore, isBlackoutWeek, practiceCaution } from '../../engine/world'
+import { KID_ID, flipScore, isBlackoutWeek, isTierAgeOpen, practiceCaution } from '../../engine/world'
 import { TIERS } from '../../engine/season/calendar'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
@@ -190,12 +190,15 @@ const coachQuote = computed(() =>
 
 // --- Season strip: REAL tier progress (round-7 item 3). Reads the kid's best finish per
 // tier off the snapshot: a reached tier shows the short finish label (W/F/SF/QF/R16…) in
-// accent, an untouched one a muted dash, and ITF is still locked. --
+// accent, an untouched one a muted dash. Ladder-up: the strip is the whole six-rung ladder
+// (the old locked placeholder is gone – every tier is live now, gated only by points and age).
 const SEASON_STRIP_TIERS: { id: TierId; short: string }[] = [
   { id: 'local', short: 'Local' },
   { id: 'regional', short: 'Regional' },
   { id: 'national', short: 'National' },
-  { id: 'itf', short: 'ITF' },
+  { id: 'j30', short: 'J30' },
+  { id: 'j60', short: 'J60' },
+  { id: 'j300', short: 'J300' },
 ]
 // finish index -> short label (reuses the finish-index convention: 0 = champion).
 function shortFinish(finish: number): string {
@@ -210,6 +213,9 @@ function shortFinish(finish: number): string {
 //    `eligible`) – an accent call-to-action instead of the old grey dash;
 //  - outgrown: her windowed points sit past the tier's entry ceiling (same band the entry
 //    gate uses) – the card recedes to a dim outline while the name + best result stay accent.
+// Ladder-up: `locked` no longer means "a tier we haven't built yet" – it means the AGE gate has
+// not opened (the junior tour is 13+). At our start age of 14 nothing is locked; the state stays
+// wired for the childhood prologue.
 type TierChipState = 'locked' | 'outgrown' | 'unlocked' | 'reached' | 'idle'
 interface TierChip {
   id: TierId
@@ -220,7 +226,7 @@ interface TierChip {
 }
 const seasonChips = computed<TierChip[]>(() =>
   SEASON_STRIP_TIERS.map(({ id, short }) => {
-    const locked = id === 'itf' // ITF stays locked in Phase 3
+    const locked = !isTierAgeOpen(id, game.snapshot?.ageYears ?? 0)
     const best = game.snapshot?.bestFinishByTier[id]
     const reached = !locked && best !== undefined
     const outgrown = !locked && kidPoints.value > TIERS[id].enterPointBand[1]
@@ -238,7 +244,7 @@ const seasonChips = computed<TierChip[]>(() =>
     const label = locked ? '🔒' : unlocked ? 'Unlocked – enter your first!' : reached ? shortFinish(best!) : '–'
     const title =
       state === 'locked'
-        ? 'ITF Junior – locked in Phase 3'
+        ? `${TIERS[id].label} – opens at ${TIERS[id].minAgeYears}`
         : state === 'outgrown'
           ? `Outgrown – her best ${short} result stays on the books`
           : state === 'unlocked'

@@ -216,9 +216,13 @@ export const ECONOMY = {
     blackoutBonus: 1, // off-season (weeks 49-51) and exam weeks (replaces the old offSeasonGain)
     // Per-match drain components (see world.ts matchDrain).
     matchFatigue: { straightSets: 1, hardMatch: 2, extraTiebreaks: 1 },
-    // Tier surcharge PER MATCH. itf is EXTRAPOLATED (+3) – the tier is locked in Phase 3, so
-    // the owner has never priced it; revisit when ITF unlocks.
-    tierMatchFatigue: { local: 0, regional: 1, national: 2, itf: 3 } as Record<TierId, number>,
+    // Tier surcharge PER MATCH, one step per rung. The J levels are EXTRAPOLATED above national
+    // (ladder-up): international travel, time-zone changes and a fortnight away from home make
+    // them the most draining weeks she plays. Worst case is a 5-match J300 run at 3 + 5 per match
+    // = 40 condition – deliberately the heaviest thing in the game, and OWNER-TUNABLE: the owner
+    // has priced local..national himself ("a five-match National run maxes at 25"), never the J
+    // family, so these three are the first numbers the pending tuning pass should look at.
+    tierMatchFatigue: { local: 0, regional: 1, national: 2, j30: 3, j60: 4, j300: 5 } as Record<TierId, number>,
     // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
     // then linear down to `floor` at condition 0:
     //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.
@@ -232,7 +236,10 @@ export const ECONOMY = {
   // blocks (season-week offsets, blacked out for tournaments). Off-season weeks (49-51) are already
   // event-free and are treated as blackout too (see isBlackoutWeek in world.ts).
   availability: {
-    minConditionToEnter: { local: 20, regional: 30, national: 40, itf: 45 } as Record<TierId, number>,
+    // The soft fatigue floor per tier, one step per rung (the J levels extrapolate above national,
+    // matching tierMatchFatigue). Racing below the floor is still ALLOWED – it raises a caution,
+    // never a block (the owner's "the parent may push, the game warns").
+    minConditionToEnter: { local: 20, regional: 30, national: 40, j30: 45, j60: 50, j300: 55 } as Record<TierId, number>,
     examWeeks: [[24, 25]] as [number, number][], // season-week offsets blacked out for school
 
     // Season-Life slice C: fatigue-driven injury risk. ALL of these move only the post-draw

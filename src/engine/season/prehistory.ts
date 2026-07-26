@@ -23,7 +23,7 @@
 
 import { rngFromSeed, pickInt } from '../rng'
 import { TIERS } from './calendar'
-import { bandForPercentile } from './tournament'
+import { topBandForPercentile } from './tournament'
 import type { SeasonResult } from './ranking'
 import type { AiPlayer } from './types'
 
@@ -74,9 +74,11 @@ export function generatePreHistory(seedStr: string, cohort: AiPlayer[]): SeasonR
   const results: SeasonResult[] = []
   ordered.forEach(({ p }, pos) => {
     // Percentile in (0, 1], 0 = best – the SAME convention selectEntrants uses, so a player's
-    // pre-history is earned at the tier she will actually be entering from week 1.
+    // pre-history is earned at the HIGHEST tier she will actually be entering from week 1. That
+    // matters once the J family is live: if the elite's history were domestic-only, the first
+    // week of real J300 results (1000 for a title) would blow the table away instantly.
     const q = (pos + 1) / size
-    const tier = bandForPercentile(q)
+    const tier = topBandForPercentile(q)
     const points = TIERS[tier].points
 
     const count = 1 + Math.round(RESULT_SPAN * (1 - q) ** RESULT_SHAPE) + (rng() < 0.5 ? 1 : 0)

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { TIERS, buildSeason, isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
+import {
+  TIERS,
+  TIER_LADDER,
+  buildSeason,
+  isOffSeasonWeek,
+  OFF_SEASON_WEEKS,
+  WEEKS_PER_YEAR,
+} from '../../src/engine/season/calendar'
 import { ECONOMY } from '../../src/engine/economy'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { FamilyBackground } from '../../src/shared/protocol'
@@ -8,7 +15,12 @@ import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 // The BASE travel draw (background-independent pickInt) of the first event of
 // buildSeason('travel-pin', 0, 52) – byte-for-byte the pre-corridor value. Each background now
 // applies a per-trip corridor factor on top of this, but the base draw must not drift (RNG identity).
-const TRAVEL_PIN_BASE = 31564
+// RE-PINNED by ladder-up Part B: 31564 -> 196133. The pin is "the base travel draw of the FIRST
+// event of buildSeason('travel-pin', 0, 52)", and with the J family that first event is a Junior
+// Tour 60 (band $1,100-2,400) instead of a Local Open (band $60-120) – a different tier, hence a
+// different band, hence a different base. The PROPERTY under test is unchanged: the base pickInt
+// is byte-stable and the background corridor is applied on top of it.
+const TRAVEL_PIN_BASE = 196133
 
 // Re-derive the per-trip corridor factor exactly as makeEvent does: one uniform roll from the
 // purpose-scoped sub-stream keyed by the event, mapped into the background's [lo,hi] corridor.
@@ -18,15 +30,21 @@ function travelFactor(seedStr: string, e: SeasonEvent, background: FamilyBackgro
   return cLo + roll * (cHi - cLo)
 }
 
+// RE-PINNED by ladder-up Part B: the catalogue is the six-rung ladder now, so the counter is
+// derived from TIERS instead of listing the (then four) tiers by hand.
+const SEASON_COUNTS: Record<TierId, number> = { local: 26, regional: 13, national: 6, j30: 26, j60: 17, j300: 4 }
+
 function countByTier(events: SeasonEvent[]): Record<TierId, number> {
-  const c: Record<TierId, number> = { local: 0, regional: 0, national: 0, itf: 0 }
+  const c = Object.fromEntries(Object.keys(TIERS).map((t) => [t, 0])) as Record<TierId, number>
   for (const e of events) c[e.tier]++
   return c
 }
 
 describe('TIERS — tier catalogue', () => {
-  it('has exactly the four tiers with the spec economy numbers (whole cents)', () => {
-    expect(Object.keys(TIERS).sort()).toEqual(['itf', 'local', 'national', 'regional'])
+  it('has exactly the six tiers with the spec economy numbers (whole cents)', () => {
+    // RE-PINNED by ladder-up Part B: `itf` was replaced by the live j30/j60/j300 family.
+    // The J-level numbers themselves are pinned in tests/ladder.test.ts (L2).
+    expect(Object.keys(TIERS).sort()).toEqual(['j30', 'j300', 'j60', 'local', 'national', 'regional'])
 
     expect(TIERS.local.drawSize).toBe(8)
     expect(TIERS.local.everyNWeeks).toBe(2)
@@ -42,19 +60,19 @@ describe('TIERS — tier catalogue', () => {
 
     expect(TIERS.national.drawSize).toBe(32)
     expect(TIERS.national.everyNWeeks).toBe(13)
+    expect(TIERS.national.secondHalfBonus).toBe(2) // R9-20 densification
     expect(TIERS.national.entryFeeCents).toBe(120_00)
     expect(TIERS.national.travelCostCents).toEqual([400_00, 900_00])
     expect(TIERS.national.points).toEqual([200, 120, 70, 35, 15, 6])
   })
 
-  it('itf is present but locked (everyNWeeks 0)', () => {
-    expect(TIERS.itf.everyNWeeks).toBe(0)
-    expect(TIERS.itf.id).toBe('itf')
+  it('no tier is locked any more – every rung is scheduled', () => {
+    // RE-PINNED by ladder-up Part B (was: "itf is present but locked (everyNWeeks 0)").
+    for (const t of Object.values(TIERS)) expect(t.everyNWeeks).toBeGreaterThan(0)
   })
 
   it('each tier points array length matches rounds + 1', () => {
     for (const t of Object.values(TIERS)) {
-      if (t.everyNWeeks === 0) continue
       const rounds = Math.log2(t.drawSize)
       expect(t.points.length).toBe(rounds + 1)
     }
@@ -82,22 +100,35 @@ describe('buildSeason — determinism', () => {
 describe('buildSeason — 52-week structure', () => {
   const events = buildSeason('struct-seed', 0, 52)
 
-  it('yields 26 local / 13 regional / 4 national / 0 itf', () => {
-    expect(countByTier(events)).toEqual({ local: 26, regional: 13, national: 4, itf: 0 })
+  it('yields the ladder-up season counts (26 local / 13 regional / 6 national / 26 j30 / 17 j60 / 4 j300)', () => {
+    expect(countByTier(events)).toEqual(SEASON_COUNTS)
   })
 
-  it('never schedules two events in the same week', () => {
-    const weeks = events.map((e) => e.week)
-    expect(new Set(weeks).size).toBe(weeks.length)
+  it('never schedules two events of the SAME tier in one week', () => {
+    // RE-PINNED by ladder-up Part B (was: "never schedules two events in the same week"). The J
+    // family takes the season to ~92 events over 49 playable weeks, so a global one-per-week rule
+    // no longer fits – and should not: the owner's point is that a week becomes a CHOICE between
+    // events. Uniqueness is now per (week, tier), which is exactly what keeps the event ids unique.
+    const keys = events.map((e) => `${e.week}:${e.tier}`)
+    expect(new Set(keys).size).toBe(keys.length)
   })
 
   it('deadline is always the end of week - 2', () => {
     for (const e of events) expect(e.deadlineWeek).toBe(e.week - 2)
   })
 
-  it('local events never share a week with a national event', () => {
-    const nationalWeeks = new Set(events.filter((e) => e.tier === 'national').map((e) => e.week))
-    for (const e of events) if (e.tier === 'local') expect(nationalWeeks.has(e.week)).toBe(false)
+  it('tiers DO share weeks now, and the strongest rung sorts first inside a week', () => {
+    // RE-PINNED by ladder-up Part B (was: "local events never share a week with a national event").
+    // Lower tiers no longer bend around higher ones – they run alongside them, which is the whole
+    // "always somewhere to go" requirement. Ordering inside a week is strongest-first.
+    const perWeek = new Map<number, number>()
+    for (const e of events) perWeek.set(e.week, (perWeek.get(e.week) ?? 0) + 1)
+    expect([...perWeek.values()].some((n) => n > 1)).toBe(true)
+    const rung = (t: TierId) => TIER_LADDER.indexOf(t)
+    for (let i = 1; i < events.length; i++) {
+      if (events[i].week !== events[i - 1].week) continue
+      expect(rung(events[i].tier)).toBeLessThan(rung(events[i - 1].tier))
+    }
   })
 
   it('all weeks fall inside the requested span and events come sorted', () => {
@@ -185,7 +216,7 @@ describe('buildSeason — off-season carries no events (Round 5 items 16/21)', (
 
   it('tier counts are unaffected by the reserved off-season weeks', () => {
     const events = buildSeason('off-counts', 0, 52)
-    expect(countByTier(events)).toEqual({ local: 26, regional: 13, national: 4, itf: 0 })
+    expect(countByTier(events)).toEqual(SEASON_COUNTS)
   })
 })
 
@@ -202,7 +233,7 @@ describe("buildSeason — a career's first season never opens already-closed (ro
   })
 
   it('still yields the full first-season counts inside the floored window', () => {
-    expect(countByTier(buildSeason('first-counts', 0, 52))).toEqual({ local: 26, regional: 13, national: 4, itf: 0 })
+    expect(countByTier(buildSeason('first-counts', 0, 52))).toEqual(SEASON_COUNTS)
   })
 
   it('does NOT floor later year-blocks (they already start at 52, 104, …)', () => {
@@ -268,6 +299,6 @@ describe('buildSeason — offset spans', () => {
       expect(e.week).toBeGreaterThanOrEqual(52)
       expect(e.week).toBeLessThan(104)
     }
-    expect(countByTier(events)).toEqual({ local: 26, regional: 13, national: 4, itf: 0 })
+    expect(countByTier(events)).toEqual(SEASON_COUNTS)
   })
 })

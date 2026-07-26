@@ -247,7 +247,9 @@ describe('entries-per-career counter (ranking gate)', () => {
     for (const preset of PRESETS) {
       for (const index of [0, 1, 2]) {
         const r = runCareer(preset, index, H16.weeks)
-        expect(r.entries.total).toBe(r.entries.local + r.entries.regional + r.entries.national)
+        // RE-PINNED by ladder-up Part B: the split covers the whole six-rung catalogue now
+        // (local/regional/national + j30/j60/j300), not the three hard-coded playable tiers.
+        expect(r.entries.total).toBe(Object.values(r.entries.byTier).reduce((s, n) => s + n, 0))
         expect(r.entries.total).toBeGreaterThanOrEqual(0)
         expect(r.entries.total).toBeLessThan(H16.weeks)
       }

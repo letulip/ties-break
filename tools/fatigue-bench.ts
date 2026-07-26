@@ -534,6 +534,10 @@ export function stepFatigueWeek(
     if (world.entries.includes(e.id)) continue
     if (world.week > e.deadlineWeek) continue
     if (e.deadlineWeek - world.week > ENTRY_LOOKAHEAD) continue
+    // Ladder-up: the calendar stacks tiers on a week now, and she can only play one of them
+    // (enterEvent enforces it). The season list is already sorted strongest-tier-first within a
+    // week (buildSeason), so taking the first eligible one IS "the biggest event she qualifies for".
+    if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
     if (!isTierEligible(e.tier, kidPoints(world))) continue
     const avail = availabilityStatus(world, e)
     if (avail.level === 'blocked') continue // injured / exam blackout – enterEvent would throw
