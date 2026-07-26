@@ -21,6 +21,10 @@ rather than quietly editing the earlier entry's checkbox.
 | [round-5.md](round-5.md) | 5 – owner playtest to W53 (2026-07-23/24) | 37 | 30 shipped (1 of those – the segmented control – later superseded in round 6), 7 backlog items still open |
 | [round-6.md](round-6.md) | 6 – this bundle (music/splash/birth-month/docs) + interim follow-ups + mid-task additions | 14 | all shipped |
 | [round-7.md](round-7.md) | 7 – owner's post-playtest list: economy pain pass + match/audio/season-UI polish (2026-07-24) | 21 | 20 shipped, 1 deferred (per-day calendar detail screens → Phase 4); plus 7 extras landed in the same push, listed under "Дополнительно" (SFX master-volume balance, an owner icon refresh, and 5 items first shipped in round 6 – birth-month field, Stats tab, best-6 help popover, splash screen, background music) |
+| [round-8.md](round-8.md) | 8 – owner playtest, main-screen pass (2026-07-25) | 10 | all shipped |
+| [round-9.md](round-9.md) | 9 – owner playtest, condition/fatigue redesign round (2026-07-26) | 22 | all shipped |
+| [round-10.md](round-10.md) | 10 – owner playtest on the wave-3 build (2026-07-26) | 17 | all shipped on `r10/fix`+`r10/ui`+`r10/view`; R10-11 later reverted by R11-15 |
+| [round-11.md](round-11.md) | 11 – owner playtest, two full careers (2026-07-27) | 15 | triaged into waves A–E, nothing started (waits on the five open branches) |
 
 Every item's checkbox and comment lives in its own file – this table is just navigation, not a
 duplicate ledger.
