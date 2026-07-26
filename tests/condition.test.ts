@@ -102,11 +102,17 @@ const REF = {
     0.8267154651694, 0.7829126522410661, 0.4907760114874691,
   ],
   // 131 (pre-slice) -> 143 (Part A, cohort pre-history) -> 141 (Part B, the J family) -> 140 (the
-  // AI sub-stream). A CONSEQUENCE of the stream, never the stream itself: the point-less kid
-  // shares the dense rank of the whole 0-point group, so this number is just "how many AI ended
-  // the year holding counting points". The AI now play their brackets against different draws, so
-  // a different set of them ends the year in the points – one fewer, here.
-  kidRank: 140,
+  // AI sub-stream) -> 141 (RIVALS BECOME REAL). A CONSEQUENCE of the stream, never the stream
+  // itself: the point-less kid shares the dense rank of the whole 0-point group, so this number is
+  // just "how many AI ended the year holding counting points".
+  //
+  // ⚠ RE-PINNED 140 -> 141 BY THE RIVAL-LIFE SLICE, DELIBERATELY. Rivals now arrive at a draw
+  // carrying the fatigue of their own recent schedule and coloured by how their style suits the
+  // surface, so AI-vs-AI matches resolve differently and a different set of juniors ends the year
+  // in the points – one fewer, here. That is the POINT of the slice. What did NOT move, and is the
+  // thing this test exists to protect, is everything above: count 41550, hash e6b0c709, head and
+  // tail are all byte-identical, because both halves are pure derivations that draw no RNG.
+  kidRank: 141,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {

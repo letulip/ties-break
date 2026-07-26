@@ -49,6 +49,7 @@ import {
   vacationPriceCents,
 } from './economy'
 import { generateCohort, driftCohort } from './season/cohort'
+import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
@@ -1193,14 +1194,28 @@ function kidMatchEvent(
   }
 }
 
-// Compute the kid's full shadow tournament: byte-identical to the old inline resolution (same
-// event-scoped RNG, same entrant selection, same bracket). Emits NO events and awards NO points –
-// that is deferred to reveal/finalize. Snapshots the kid + every opponent she faces at PRE-drift
-// skills so the revealed match records are stable no matter how the cohort drifts afterwards.
+/** RIVALS BECOME REAL: turn the selected cohort rows into the players who actually take the court
+ *  for `event` – base attributes → surface/style modifier → condition factor, exactly once and in
+ *  the same order as the kid's, via the single `rivalMatchPlayer` helper (season/rival.ts).
+ *
+ *  THE one place both tournament paths (the kid's shadow run and the canonical AI bracket) build a
+ *  rival, so the two can never disagree about who she is. `fatigue` is the week's derived
+ *  conditions; a player absent from it has no results inside the fatigue window and is fresh.
+ *  Pure – the cohort rows are read, never written – and ZERO RNG draws. */
+function rivalField(entrants: AiPlayer[], event: SeasonEvent, fatigue: Map<string, number>): MatchPlayer[] {
+  return entrants.map((p) => rivalMatchPlayer(p, event.surface, fatigue.get(p.id) ?? ECONOMY.condition.max))
+}
+
+// Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
+// bracket. Emits NO events and awards NO points – that is deferred to reveal/finalize. Snapshots
+// the kid + every opponent she faces at PRE-drift skills so the revealed match records are stable
+// no matter how the cohort drifts afterwards; since rival-life those snapshots are the FATIGUED,
+// surface-styled opponents, i.e. exactly who she played, so a replay reproduces the match.
 function computeShadowTournament(
   world: WorldState,
   event: SeasonEvent,
   ranking: RankingRow[],
+  fatigue: Map<string, number>,
 ): PendingTournament {
   // R9-19 coupling ON: the kid plays at her CURRENT condition (post this week's accrual –
   // step 1c runs before step 2). The SCALED player is both what runs the bracket and what is
@@ -1216,16 +1231,14 @@ function computeShadowTournament(
     stamina: raw.stamina * factor,
   }
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
-  const entrants = selectEntrants(event, world.cohort, ranking, kidRng)
-  const result = runTournament(event, entrants, kid, world.seed, kidRng)
+  const field = rivalField(selectEntrants(event, world.cohort, ranking, kidRng), event, fatigue)
+  const result = runTournament(event, field, kid, world.seed, kidRng)
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
     const oppId = m.aId === KID_ID ? m.bId : m.aId
-    const ai = entrants.find((p) => p.id === oppId)
-    players[oppId] = ai
-      ? { id: ai.id, name: ai.name, serve: ai.serve, ret: ai.ret, composure: ai.composure, stamina: ai.stamina }
-      : fallbackPlayer(oppId)
+    const ai = field.find((p) => p.id === oppId)
+    players[oppId] = ai ? { ...ai } : fallbackPlayer(oppId)
   }
   return { eventId: event.id, result, revealedRounds: 0, finished: false, players }
 }
@@ -1383,14 +1396,25 @@ export function closeTournament(world: WorldState): void {
 // event.id is unique per (year, week, tier) – the AI world is now a pure function of the event, so
 // content is free and a reloaded career replays its brackets by construction rather than by the
 // worker fast-forwarding the main stream onto precisely the right draw.
-function runAiTournament(world: WorldState, event: SeasonEvent, aiRanking: RankingRow[]): void {
+//
+// RIVALS BECOME REAL: the field is built through `rivalField`, so the bracket runs on rivals who
+// are tired from their own recent schedule and coloured by how their style suits the surface. That
+// costs no draw – both are pure derivations – so everything above still holds. The awarded rows now
+// record their `tier`, which is what lets next week's reconstruction read them EXACTLY instead of
+// guessing (SeasonResult.tier has always been optional, so this is not a schema bump).
+function runAiTournament(
+  world: WorldState,
+  event: SeasonEvent,
+  aiRanking: RankingRow[],
+  fatigue: Map<string, number>,
+): void {
   const aiRng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
-  const entrants = selectEntrants(event, world.cohort, aiRanking, aiRng)
-  const result = runTournament(event, entrants, null, world.seed, aiRng)
+  const field = rivalField(selectEntrants(event, world.cohort, aiRanking, aiRng), event, fatigue)
+  const result = runTournament(event, field, null, world.seed, aiRng)
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {
     const points = pts[finish]
-    if (points > 0) world.results.push({ playerId, week: world.week, points })
+    if (points > 0) world.results.push({ playerId, week: world.week, points, tier: event.tier })
   }
 }
 
@@ -1589,6 +1613,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     ids,
   )
 
+  // RIVALS BECOME REAL: every cohort player's condition for THIS week, derived ONCE from the
+  // results ledger before any of the week's brackets run. Deriving it up front (rather than per
+  // event) is what keeps the week coherent: every event scheduled this week sees the same rivals,
+  // and the kid's shadow run (step 2) and the canonical AI brackets (step 4) can never disagree
+  // about how tired an opponent is. Pure derivation, ZERO main-stream draws.
+  const rivalFatigue = rivalConditions(world.results, world.week)
+
   // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
   //    fully-computed shadow tournament. Nothing kid-specific is emitted/awarded here – the flow does.
   const enteredThisWeek = scheduled.find((e) => world.entries.includes(e.id))
@@ -1598,7 +1629,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // refuses), so the walkover event is all that remains of the trip that never happened.
   if (enteredThisWeek && world.injury === null) {
     chargeTravel(world, enteredThisWeek)
-    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking)
+    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue)
   } else if (enteredThisWeek) {
     addEvent(world, {
       week: world.week,
@@ -1613,7 +1644,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
   //    touches the weekly draw count. The main stream ends here carrying base costs + drift only.
-  for (const e of scheduled) runAiTournament(world, e, aiRanking)
+  for (const e of scheduled) runAiTournament(world, e, aiRanking, rivalFatigue)
 
   // 5-6. rank recompute + housekeeping. For a reveal week these are deferred to finalizeTournament
   //      (after the kid's points land), so the rank milestones keep their id order behind the kid's

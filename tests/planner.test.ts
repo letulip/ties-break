@@ -60,8 +60,15 @@ function hashOf(draws: number[]): string {
 // is no longer part of the weekly draw count – the flaw that forced the earlier 45239 -> 51642
 // move. P1's actual claim – that PLANNER BOOKINGS never perturb that stream – is unchanged and
 // still proven below: both tests book something every single week and still reproduce the capture
-// exactly. Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
+// exactly.
+//
+// ⚠ kidRank RE-PINNED 140 -> 141 by the rival-life slice, deliberately. P1's claim is about the
+// PLAYER's bookings, and that claim is untouched: count and hash still reproduce byte-for-byte
+// under a career that books something every week. What moved is the AI world – rivals now tire
+// from their own schedule and read the surface through a play style – so one more junior finishes
+// the year in the points. Zero RNG draws were added; only outcomes changed.
+// Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 141 }
 
 function injectEvent(
   world: WorldState,

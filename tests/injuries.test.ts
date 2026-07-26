@@ -55,9 +55,16 @@ function hashOf(draws: number[]): string {
 // main stream is base costs + cohort drift only: 52 x (4 x 199 + 3) + 2 sponsor-gift draws.
 // The INVARIANT this file guards – that C's injury and physio work adds no main-stream draws, and
 // that nothing about the player's situation can move the sequence – is untouched and still proven
-// by every other test here. kidRank 131 -> 143 (Part A) -> 141 (Part B) -> 140 is a consequence of
-// the ranking, not of the stream. Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
+// by every other test here. kidRank 131 -> 143 (Part A) -> 141 (Part B) -> 140 -> 141 is a
+// consequence of the ranking, not of the stream.
+//
+// ⚠ kidRank RE-PINNED 140 -> 141 by the rival-life slice, deliberately: cohort players now carry
+// their own accumulated fatigue and a surface/style modifier into every draw, so the AI brackets
+// resolve differently and one more junior ends the year holding counting points. The stream itself
+// (count 41550, hash e6b0c709) is untouched – both halves of that slice are pure derivations off
+// state the world already holds and draw ZERO RNG, which is exactly what this file guards.
+// Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 141 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
   draws: number[]

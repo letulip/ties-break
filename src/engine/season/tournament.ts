@@ -140,9 +140,14 @@ function playMatch(
 // runTournament – single-elimination from `entrants` (seed order, best first). When
 // the kid enters it takes a slot, bumping the lowest-ranked entrant, and is seeded
 // last. Losers get finish = rounds - round (0 = champion), indexing TierDef.points.
+//
+// `entrants` is a MatchPlayer[] (it was an AiPlayer[], which is a subtype, so every existing call
+// site still type-checks): since the rival-life slice the caller hands in cohort rows ALREADY put
+// through `rivalMatchPlayer` – surface/style modifier and condition factor applied – so the
+// bracket sees exactly the players who take the court, and the cohort rows themselves stay pristine.
 export function runTournament(
   event: SeasonEvent,
-  entrants: AiPlayer[],
+  entrants: MatchPlayer[],
   kid: MatchPlayer | null,
   worldSeed: string,
   rng: Rng,

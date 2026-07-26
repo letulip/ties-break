@@ -17,6 +17,17 @@ import type { SeasonResult } from '../src/engine/season/ranking'
 import type { TierId } from '../src/engine/season/types'
 import type { MatchPlayer, Surface } from '../src/engine/match/types'
 import type { PlayStyle } from '../src/shared/protocol'
+import {
+  KID_ID,
+  SAVE_SCHEMA_VERSION,
+  closeTournament,
+  createWorld,
+  enterEvent,
+  skipTournament,
+  tickWeek,
+  type WorldState,
+} from '../src/engine/world'
+import { rngFromSeed } from '../src/engine/rng'
 
 // ---------------------------------------------------------------------------
 // Rivals become real — Part A: rival fatigue, DERIVED from the results ledger.
@@ -393,5 +404,123 @@ describe('B5 — rivalMatchPlayer: ONE composition, in the kid order, applied ex
     const snapshot = JSON.stringify(rival)
     expect(rivalMatchPlayer(rival, 'grass', 55)).toEqual(rivalMatchPlayer(rival, 'grass', 55))
     expect(JSON.stringify(rival)).toBe(snapshot)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// C — the WIRING. Both halves reach the bracket through one helper, in a real ticked world.
+// ---------------------------------------------------------------------------
+
+/** Tick a fresh world `weeks` weeks, resolving any reveal so time keeps moving. */
+function runWorld(seed: string, weeks: number): WorldState {
+  const world = createWorld(seed)
+  const rng = rngFromSeed(world.seed)
+  for (let i = 0; i < weeks; i++) {
+    tickWeek(world, rng)
+    if (world.pendingTournament) {
+      skipTournament(world)
+      closeTournament(world)
+    }
+  }
+  return world
+}
+
+describe('C1 — derive, never store: no schema bump and no new cohort field', () => {
+  it('the save schema is untouched and a cohort row still carries exactly its generated fields', () => {
+    const world = runWorld('rival-wiring', 8)
+    expect(world.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    for (const p of world.cohort.slice(0, 5)) {
+      expect(Object.keys(p).sort()).toEqual(['composure', 'growth', 'id', 'name', 'nation', 'ret', 'serve', 'stamina'])
+    }
+  })
+
+  it('AI result rows now record their tier, so next week reconstructs them EXACTLY', () => {
+    const world = runWorld('rival-wiring', 8)
+    const ai = world.results.filter((r) => r.playerId !== KID_ID && r.week > 0)
+    expect(ai.length).toBeGreaterThan(0)
+    expect(ai.every((r) => r.tier !== undefined)).toBe(true)
+    // ...and the tier is a real one, whose points array really does contain that value.
+    for (const r of ai.slice(0, 40)) expect(TIERS[r.tier!].points).toContain(r.points)
+  })
+})
+
+describe('C2 — a real season produces genuinely tired rivals, and nobody is pinned all season', () => {
+  const world = runWorld('rival-wiring', 40)
+
+  it('the ledger feeds the derivation: some of the field is under the strength knee', () => {
+    const conds = world.cohort.map((p) => rivalConditions(world.results, world.week).get(p.id) ?? ECONOMY.condition.max)
+    expect(conds.some((c) => c < ECONOMY.condition.matchStrengthKnee)).toBe(true)
+    expect(conds.some((c) => c === ECONOMY.condition.max)).toBe(true) // ...and some are fresh
+  })
+
+  it('NO rival sits at the floor for the whole season – the degenerate cell stays closed', () => {
+    const flooredWeeks = new Map<string, number>()
+    const weeks = 20
+    for (let w = world.week - weeks + 1; w <= world.week; w++) {
+      const conds = rivalConditions(world.results, w)
+      for (const [id, c] of conds) if (c === ECONOMY.condition.min) flooredWeeks.set(id, (flooredWeeks.get(id) ?? 0) + 1)
+    }
+    for (const [id, n] of flooredWeeks) expect(n, `${id} floored weeks`).toBeLessThan(weeks / 2)
+  })
+})
+
+describe('C3 — the kid faces the rivals who actually took the court', () => {
+  it('her snapshotted opponents carry the surface/style modifier and their own fatigue', () => {
+    const world = createWorld('rival-snapshot')
+    const rng = rngFromSeed(world.seed)
+    const target = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)!
+    enterEvent(world, target.id)
+    while (!world.pendingTournament) tickWeek(world, rng)
+    const p = world.pendingTournament!
+    const event = world.season.find((e) => e.id === p.eventId)!
+    const byId = new Map(world.cohort.map((c) => [c.id, c]))
+    const opponents = Object.entries(p.players).filter(([id]) => id !== KID_ID)
+    expect(opponents.length).toBeGreaterThan(0)
+    for (const [id, snapshot] of opponents) {
+      const row = byId.get(id)!
+      const fatigue = rivalConditions(world.results, world.week).get(id) ?? ECONOMY.condition.max
+      const expected = rivalMatchPlayer(row, event.surface, fatigue)
+      expect(snapshot.id).toBe(expected.id)
+      expect(snapshot.name).toBe(expected.name)
+      // The snapshot is what the ONE composition helper builds – no second code path. It is taken
+      // PRE-drift (step 2 of the tick; driftCohort is step 3), which is deliberate: it is what
+      // keeps a revealed match record replayable however the cohort moves afterwards. So the
+      // cohort row we read back here has had exactly one drift nudge applied (<= 0.075 per
+      // attribute), and the comparison is a ratio rather than an equality.
+      for (const key of ['serve', 'ret', 'composure', 'stamina'] as const) {
+        expect(snapshot[key] / expected[key], `${id}.${key}`).toBeCloseTo(1, 2)
+      }
+    }
+  })
+})
+
+describe('C4 — determinism: same seed, same world, and zero new draws', () => {
+  it('two runs of the same seed produce identical ledgers, cohorts and ranks', () => {
+    const a = runWorld('rival-determinism', 24)
+    const b = runWorld('rival-determinism', 24)
+    expect(b.results).toEqual(a.results)
+    expect(b.cohort).toEqual(a.cohort)
+    expect(b.kidRank).toBe(a.kidRank)
+  })
+
+  it('the per-week MAIN-stream draw count is still base costs + cohort drift and nothing else', () => {
+    // The rival derivation is pure arithmetic over the ledger, so it cannot add a draw. Proved here
+    // independently of the frozen B1/C1/P1 pins, which guard the same property from the other side.
+    const world = createWorld('rival-draws')
+    const base = rngFromSeed(world.seed)
+    const draws: number[] = []
+    const rng = () => {
+      const v = base()
+      draws.push(v)
+      return v
+    }
+    const driftDraws = 4 * world.cohort.length
+    for (let i = 0; i < 12; i++) {
+      const before = draws.length
+      tickWeek(world, rng)
+      const week = draws.slice(before)
+      const sponsorHit = week[2] < ECONOMY.sponsor.rollChance
+      expect(week.length).toBe(driftDraws + (sponsorHit ? 4 : 3))
+    }
   })
 })

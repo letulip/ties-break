@@ -93,7 +93,11 @@ export function generatePreHistory(seedStr: string, cohort: AiPlayer[]): SeasonR
       usedWeeks.add(week)
       // Every tier's points array is strictly positive, so every drawn finish is a counting result:
       // that is what makes the KID the only 0-point player on the table at week 0.
-      results.push({ playerId: p.id, week, points: points[finish] })
+      // `tier` is recorded (it costs no draw and no schema bump – SeasonResult.tier has always been
+      // optional) so the rival-life fatigue reconstruction reads these rows EXACTLY rather than
+      // through the ambiguous cheapest-reading fallback: 30 points is a Local title AND a J300
+      // first round, and a pre-history row knows perfectly well which one it is.
+      results.push({ playerId: p.id, week, points: points[finish], tier })
     }
   })
 
