@@ -11,8 +11,10 @@ import { start as startMusic } from '../audio/music'
 
 const emit = defineEmits<{ done: [] }>()
 
-const LOGO_LINE = `${import.meta.env.BASE_URL}logos/logo-tb-line-light.webp`
-const LOGO_LINE_2 = `${import.meta.env.BASE_URL}logos/logo-tb-line-2-light.webp`
+// The owner's SVG wordmarks (public root), not the generated webp rasters: a vector mark stays
+// crisp at any size and on any dpr, which is the whole point of the splash beat.
+const LOGO_LINE = `${import.meta.env.BASE_URL}logo-tb-line-light.svg`
+const LOGO_LINE_2 = `${import.meta.env.BASE_URL}logo-tb-line-2-light.svg`
 
 // Any tap: unlock sfx (same gesture-gate contract as sfx.ts's initSfx – belt-and-suspenders,
 // installGlobalSfx's document listener would also catch this click), start the music
@@ -27,8 +29,9 @@ function onTap(): void {
 <template>
   <div class="splash" role="button" tabindex="0" aria-label="Tap to start" @click="onTap" @keydown.enter="onTap" @keydown.space.prevent="onTap">
     <div class="splash-center">
-      <!-- Natural size (138x30) – a raster wordmark upscaled goes soft, so it's rendered
-           exactly as exported rather than stretched to fill more of the screen. -->
+      <!-- width/height are the intrinsic viewBox numbers (aspect ratio + no layout shift); the
+           actual rendered size comes from CSS. These are VECTOR marks now, so the old
+           "never upscale a raster" limit is gone and the wordmark can breathe on the splash. -->
       <img class="splash-logo splash-logo-1" :src="LOGO_LINE" width="138" height="30" alt="Ties Break" />
       <img class="splash-logo splash-logo-2" :src="LOGO_LINE_2" width="139" height="30" alt="Ace Parent" />
     </div>

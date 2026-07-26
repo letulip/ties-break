@@ -510,8 +510,12 @@ select {
   gap: 10px;
 }
 
+/* Vector wordmarks (SVG): scale with the viewport and stay razor-sharp at any dpr. Capped at
+   200px so the mark still reads as a logo rather than a banner; height follows the viewBox. */
 .splash-logo {
   display: block;
+  width: min(56vw, 200px);
+  height: auto;
   opacity: 0;
   animation: splash-fade-in 0.4s ease forwards;
 }
