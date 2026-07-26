@@ -64,7 +64,8 @@ function hashOf(draws: number[]): string {
 // (count 41550, hash e6b0c709) is untouched – both halves of that slice are pure derivations off
 // state the world already holds and draw ZERO RNG, which is exactly what this file guards.
 // Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 141 }
+// 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
   draws: number[]
@@ -183,7 +184,7 @@ function onsetAt(seed: string, physio: boolean): WorldState['injury'] {
 // private per-week sub-streams, so nothing here may move.
 // ---------------------------------------------------------------------------
 describe('C1 — main-stream RNG invariance (blocks merge)', () => {
-  it('reproduces the frozen B capture: count 51642, hash cae178fc', () => {
+  it('reproduces the frozen B capture byte-for-byte (values in REF, not in this title)', () => {
     const { draws, world } = recordRun()
     expect(draws.length).toBe(REF.count)
     expect(hashOf(draws)).toBe(REF.hash)

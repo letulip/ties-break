@@ -112,7 +112,8 @@ const REF = {
   // in the points – one fewer, here. That is the POINT of the slice. What did NOT move, and is the
   // thing this test exists to protect, is everything above: count 41550, hash e6b0c709, head and
   // tail are all byte-identical, because both halves are pure derivations that draw no RNG.
-  kidRank: 141,
+  // 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
+  kidRank: 140,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {

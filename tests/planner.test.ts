@@ -68,7 +68,8 @@ function hashOf(draws: number[]): string {
 // from their own schedule and read the surface through a play style – so one more junior finishes
 // the year in the points. Zero RNG draws were added; only outcomes changed.
 // Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 141 }
+// 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
 
 function injectEvent(
   world: WorldState,

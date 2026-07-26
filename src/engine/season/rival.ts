@@ -19,6 +19,10 @@ import { ECONOMY } from '../economy'
 import { TIERS, TIER_LADDER, isBlackoutWeek } from './calendar'
 import type { SeasonResult } from './ranking'
 import type { AiPlayer, TierId } from './types'
+import { applySurfaceStyle } from '../match/style'
+// Re-exported under its historical name: this module owned a local twin before integration, so
+// existing imports (and tests) keep working while there is only ONE implementation.
+export { applySurfaceStyle }
 import type { MatchPlayer, Surface } from '../match/types'
 import type { PlayStyle } from '../../shared/protocol'
 
@@ -202,53 +206,12 @@ export function styleOf(player: Pick<MatchPlayer, 'serve' | 'ret' | 'stamina'>):
   return 'all-court'
 }
 
-/** Multiplicative per-(style, surface) attribute factors. Deliberately small: `basePServe` moves
- *  0.0016 of serve-point probability per skill point, so ±6% on a ~45 attribute is ≈ ±0.004 – about
- *  a third of the surface's own ±0.015 serve bonus. A style COLOURS a matchup; it never rewrites it.
- *
- *  all-court is neutral on all three surfaces, and that IS its identity ("no weaknesses, no
- *  shortcuts"): on a mixed calendar never being wrong-footed is the edge. */
-const STYLE_SURFACE: Record<PlayStyle, Record<Surface, { serve: number; ret: number; stamina: number }>> = {
-  // Free points are worth most where the ball stays low and fast, least where it sits up.
-  'serve-first': {
-    grass: { serve: 1.06, ret: 1.0, stamina: 1.0 },
-    hard: { serve: 1.02, ret: 1.0, stamina: 1.0 },
-    clay: { serve: 0.95, ret: 1.0, stamina: 1.0 },
-  },
-  // Clay gives her the extra ball she lives on; grass takes it away.
-  counterpuncher: {
-    clay: { serve: 1.0, ret: 1.06, stamina: 1.04 },
-    hard: { serve: 1.0, ret: 1.01, stamina: 1.01 },
-    grass: { serve: 1.0, ret: 0.95, stamina: 1.0 },
-  },
-  // Two weapons, no patience: rewarded where points end early, punished in the long rally.
-  aggressive: {
-    hard: { serve: 1.03, ret: 1.02, stamina: 1.0 },
-    grass: { serve: 1.03, ret: 0.99, stamina: 1.0 },
-    clay: { serve: 0.97, ret: 0.99, stamina: 1.0 },
-  },
-  'all-court': {
-    hard: { serve: 1.0, ret: 1.0, stamina: 1.0 },
-    clay: { serve: 1.0, ret: 1.0, stamina: 1.0 },
-    grass: { serve: 1.0, ret: 1.0, stamina: 1.0 },
-  },
-}
-
-/** How a style plays ON a given surface: a pure, allocation-cheap transform of a MatchPlayer.
- *
- *  ⚠ COORDINATION NOTE: the `feat/surface-style` slice introduces this exact name and signature for
- *  the KID's side and is NOT on this branch's base. This is a local twin so Part B could ship;
- *  at merge the two must collapse into ONE implementation (this one is attribute-multiplicative
- *  and composes cleanly before the condition factor – see `rivalMatchPlayer`). */
-export function applySurfaceStyle(player: MatchPlayer, style: PlayStyle, surface: Surface): MatchPlayer {
-  const f = STYLE_SURFACE[style][surface]
-  return {
-    ...player,
-    serve: player.serve * f.serve,
-    ret: player.ret * f.ret,
-    stamina: player.stamina * f.stamina,
-  }
-}
+/** The surface/style transform lives in ONE place for the whole game: `match/style.ts`, shipped by
+ *  the surface-style slice. This file used to carry a local twin (written when that slice was not
+ *  yet on this branch); the two were collapsed onto the canonical table at integration, which is
+ *  the stricter of the pair – its per-attribute deltas SUM TO ZERO across the three surfaces, so a
+ *  specialist trades one court for another instead of gaining outright. Rivals and the kid are now
+ *  provably shaped by the same rule. */
 
 /** THE one helper both tournament paths call (the kid's shadow run and the canonical AI bracket),
  *  so a rival can never be built two different ways.

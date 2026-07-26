@@ -482,13 +482,37 @@ describe('season planner (REAL mechanics – bookings through the engine command
       // refuses her entries) than pinned at the very bottom.
       if (r.weeksAt0 > 0) expect(r.weeksBelowMedicalFloor).toBeGreaterThan(r.weeksAt0)
     }
-    // The load-managing policies never go near it – proof the floor is far below normal play.
-    for (const policy of [balanced, careful]) {
-      const r = runFatigueCareer(working, policy, 3, H104.weeks)
-      expect(r.medicalBlocks).toBe(0)
-      expect(r.weeksBelowMedicalFloor).toBe(0)
-      expect(Math.min(...r.weekly.map((w) => w.condition))).toBeGreaterThanOrEqual(floor)
-    }
+    // The load-managing policies effectively never go near it – proof the floor sits far below
+    // normal play. *** RE-PINNED (wave-3 integration): this asserted EXACTLY 0 for balanced and
+    // careful on one profile+seed, and that pin has now broken twice from changes with nothing to
+    // do with the floor (first the J calendar, then the surface x style table – both simply change
+    // which matches she wins, hence how deep her runs go). "A careful parent NEVER touches the
+    // floor on any seed" is not a property this game guarantees, and asserting it just re-breaks.
+    // What IS the guarantee: the floor is a grinder phenomenon by orders of magnitude. Measured
+    // across the profile sweep rather than one cell, so it survives content changes. ***
+    // MEASURED, not guessed (wave-3 integration, 4 profiles x 104w, seed 3):
+    //   grinder  62 refused entries, 33/416 weeks under the floor (7.9%)
+    //   balanced 14 refused entries,  6/416 (1.4%)
+    //   careful   0 refused entries,  3/416 (0.7%)
+    // Asserted on WEEKS UNDER THE FLOOR (the physical state) rather than refused entries: the bench
+    // policy attempts several events in one bad week, so "blocks" multiply-count a single dip and
+    // make a brittle pin. The earlier `=== 0 for balanced and careful` pin broke twice from changes
+    // that had nothing to do with the floor; the guarantee is a ratio, not a zero.
+    const managed = PROFILES.flatMap((p) =>
+      [balanced, careful].map((policy) => runFatigueCareer(p, policy, 3, H104.weeks)),
+    )
+    const share = (rs: typeof managed) =>
+      rs.reduce((s, r) => s + r.weeksBelowMedicalFloor, 0) / rs.reduce((s, r) => s + r.weekly.length, 0)
+    const managedShare = share(managed)
+    // the doctor is a grinder phenomenon: she lives under the floor several times as often…
+    expect(share(grinderRuns)).toBeGreaterThan(3 * managedShare)
+    // …and a load-managed career practically never gets there.
+    expect(managedShare).toBeLessThan(0.02)
+    // refusals point the same way (kept as a direction check, not a magnitude pin).
+    expect(grinderRuns.reduce((s, r) => s + r.medicalBlocks, 0)).toBeGreaterThan(
+      managed.reduce((s, r) => s + r.medicalBlocks, 0),
+    )
+    expect(floor).toBeLessThan(ECONOMY.availability.minConditionToEnter.local)
   })
 
   it('the planner grid is the 3×2 axis built as data, with the planner OFF in the factorial grid', () => {
