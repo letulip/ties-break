@@ -552,7 +552,22 @@ export function medicalClearance(condition: number): MedicalClearance {
   return 'clear'
 }
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
-  if (world.injury !== null) {
+  // R10-17 (owner playtest 26.07 – "the news said she is out until week 21, but at week 22 and
+  // every week after, no tournament could be entered"). A layoff is a RANGE OF WEEKS and the event
+  // is weeks away, so the question this gate has to answer is "will she still be out IN
+  // `event.week`?" – not "is she hurt TODAY?". Reading today's injury against a future event week
+  // locked the ENTIRE 8-week horizon for the whole layoff, and because entry lists close two weeks
+  // out, every list she could have joined on the way back had already shut by the time the lock
+  // lifted – which is what made it feel permanent.
+  //
+  // The boundary is the one the planner's `assertPlannable` has always used (`week < world.week +
+  // weeksRemaining`), so a tournament and a vacation now agree to the week about when she is back:
+  // rollInjury clears the injury at the TOP of week `world.week + weeksRemaining`, BEFORE the
+  // play-week check reads it, so that week is hers again. It is also exactly the week the UI has
+  // been printing all along ("back wk {week + weeksRemaining}"), so the label and the lock finally
+  // tell the same story. Note the CONDITION-driven branches below stay current-week reads: her
+  // condition in a future week is unknowable, which is why the doctor re-checks her on arrival.
+  if (world.injury !== null && event.week < world.week + world.injury.weeksRemaining) {
     return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${world.injury.weeksRemaining} weeks.` }
   }
   // Ladder-up: the junior international tour opens at 13. Our detailed sim starts at 14, so this
@@ -586,6 +601,54 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
     return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
   }
   return { level: 'ok' }
+}
+
+/** THE ENTRY GATE – the ONE rule that answers "may she enter THIS event, right now?".
+ *
+ *  Round-10 R10-5 (owner playtest): the tier POINT BAND used to be re-derived at every surface that
+ *  needed it – inline in `enterEvent`, inline again in `upcomingEvents`, via `isTierEligible` in
+ *  `advanceWeeks` – and absent from the fourth (the play-week resolution). `availabilityStatus`
+ *  existed so the BODY/WEEK half could never desync, but nothing did that job for the band, so the
+ *  band was free to drift, and it did: the owner was in a Local at 122 points (band [0, 85]) with no
+ *  lock shown anywhere. This helper closes the hole – it is the only place the two halves are
+ *  combined, and every gate reads it instead of re-deriving anything.
+ *
+ *  PRECEDENCE: the point band FIRST (it is the hard, permanent headline – "Reach N pts" /
+ *  "Outgrown"), then availability (injured > unavailable > medical > fatigued). That is the order
+ *  `enterEvent` threw in and the order `upcomingEvents` documented, so the wiring is a
+ *  de-duplication, not a behaviour change.
+ *
+ *  SCOPE, and this is the subtle half of R10-5/R10-3: this gate governs ENTERING. It does NOT
+ *  govern an entry already made. Once a list has CLOSED with her on it the fee is committed and the
+ *  event plays (the owner's real-world rule, see `releaseOutgrownEntries`) – so a committed entry
+ *  she has since outgrown is not "illegal", it is a decision that needs an exit, which is what
+ *  `cancelEntry` (R10-13) is. Treating the entry gate's verdict as a lock on a committed entry is
+ *  precisely what removed the escape and produced the R10-3 dead end.
+ *
+ *  Pure state, ZERO RNG draws. */
+export interface EntryStatus {
+  level: 'ok' | 'caution' | 'blocked'
+  reason?: 'locked' | 'outgrown' | 'injured' | 'fatigued' | 'unavailable' | 'medical'
+  detail?: string
+  /** the tier's minPoints threshold, present only when 'locked' (so the UI can say "Reach N pts") */
+  pointsToEnter?: number
+}
+export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus {
+  const tier = TIERS[event.tier]
+  const minPoints = tier.enterPointBand[0]
+  const points = kidPoints(world)
+  if (points < minPoints) {
+    return {
+      level: 'blocked',
+      reason: 'locked',
+      detail: `Not enough ranking points for ${tier.label} yet (need ${minPoints})`,
+      pointsToEnter: minPoints,
+    }
+  }
+  if (outgrewTier(event.tier, points)) {
+    return { level: 'blocked', reason: 'outgrown', detail: `You've outgrown ${tier.label} (${points} pts)` }
+  }
+  return availabilityStatus(world, event)
 }
 
 // --- Season-Life: injuries + physio (slice C) ---------------------------------
@@ -1575,7 +1638,7 @@ function releaseOutgrownEntries(world: WorldState): void {
   for (const id of [...world.entries]) {
     const event = eventById(world, id)
     if (!event || world.week > event.deadlineWeek) continue // closed list – fee committed
-    if (points <= TIERS[event.tier].enterPointBand[1]) continue // still inside (or under) the band
+    if (!outgrewTier(event.tier, points)) continue // still inside (or under) the band
     withdrawEvent(world, id)
     addEvent(world, {
       week: world.week,
@@ -1766,6 +1829,14 @@ export function isTierEligible(tier: TierId, points: number): boolean {
   return minPoints <= points && points <= maxPoints
 }
 
+/** The GRADUATED-OUT half of the band, on its own: her points have passed the tier's ceiling.
+ *  Round-10: pulled out as a named rule because two places need exactly this direction (the entry
+ *  gate's 'outgrown' verdict and the deadline release), and each used to spell the comparison out
+ *  by hand – which is how "outgrown" came to mean slightly different things on different surfaces. */
+export function outgrewTier(tier: TierId, points: number): boolean {
+  return points > TIERS[tier].enterPointBand[1]
+}
+
 /** Enter the kid in a scheduled event: validates deadline / funds / duplicates / ranking
  *  eligibility, then charges the fee immediately (expense event) and records the entry (entry
  *  event). Eligibility is direction-aware: too low to qualify vs graduated out of the tier. */
@@ -1782,19 +1853,12 @@ export function enterEvent(world: WorldState, eventId: string): void {
   }
   const fee = TIERS[event.tier].entryFeeCents
   if (world.fundsCents < fee) throw new Error('Not enough funds for the entry fee')
-  const [minPoints, maxPoints] = TIERS[event.tier].enterPointBand
-  const points = kidPoints(world)
-  if (points < minPoints) {
-    throw new Error(`Not enough ranking points for ${TIERS[event.tier].label} yet (need ${minPoints})`)
-  }
-  if (points > maxPoints) {
-    throw new Error(`You've outgrown ${TIERS[event.tier].label} (${points} pts)`)
-  }
-  // Season-Life availability gate (slice B): same helper the UI + advance read, so they can't
-  // desync. Only a HARD block (injured / school exams) stops entry; fatigue is a soft, warned
-  // CHOICE (level 'caution'), so racing tired is allowed – its cost is emergent, not a veto.
-  const availability = availabilityStatus(world, event)
-  if (availability.level === 'blocked') throw new Error(availability.detail ?? 'Unavailable this week')
+  // THE ONE GATE (round-10 R10-5): point band + availability, in one call, shared with the snapshot
+  // and the advance stop – so no surface can decide differently about the same event. Only a HARD
+  // block stops entry; fatigue is a soft, warned CHOICE (level 'caution'), so racing tired is
+  // allowed – its cost is emergent, not a veto.
+  const gate = entryStatus(world, event)
+  if (gate.level === 'blocked') throw new Error(gate.detail ?? 'Unavailable this week')
   // Season planner: the real thing wins over the friendly. A practice match booked on this week
   // gives way (rental refunded in full) instead of stacking a friendly onto a tournament week –
   // she can only play one week's worth of tennis. A booked VACATION can't collide: it is a hard
@@ -1837,6 +1901,48 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
     week: world.week,
     type: 'entry',
     text: `Withdrew from ${TIERS[event.tier].label} – W${event.week}`,
+  })
+}
+
+/** R10-13: CANCEL an entry, at any point before its week starts. THE ESCAPE HATCH.
+ *
+ *  The owner's dead end (R10-3): she was entered in a Local, the list closed, and only THEN did she
+ *  outgrow the tier and run out of gas. `withdrawEvent` refuses past the deadline, the planner
+ *  refuses a week that holds an entry, and the calendar had hidden the card – so the week could be
+ *  neither played, planned, nor abandoned. Nothing was possible. This is the way out.
+ *
+ *  THE FEE RULE, kept coherent with `skipEvent` (R9-9) and with the medical withdrawal in tickWeek:
+ *  once the list has closed, the organisers keep the fee whatever the reason she does not appear.
+ *  So all three pull-outs forfeit it, and the only difference between them is what else was already
+ *  charged at the moment of the pull-out:
+ *    - BEFORE the deadline  -> this is a withdrawal, not a forfeit: delegates to `withdrawEvent`
+ *                             (full refund). One command for the UI, the refund rule untouched.
+ *    - after the deadline, before the week -> fee forfeited. Travel has not been charged yet
+ *                             (tickWeek charges it on the play week), so there is nothing to hand
+ *                             back, and the week becomes plannable again (practice or vacation).
+ *    - ON the event week    -> not this command's business: tickWeek has already charged travel and
+ *                             stashed the run, so `skipEvent` owns it (fee forfeited, travel back).
+ *  Refunding here instead would make "enter it and see" the dominant strategy, which is the same
+ *  reason the medical withdrawal forfeits – the fee has to bite.
+ *
+ *  Pure state, ZERO RNG draws. */
+export function cancelEntry(world: WorldState, eventId: string): void {
+  if (!world.entries.includes(eventId)) throw new Error('Not entered in this event')
+  const event = eventById(world, eventId)
+  if (!event) throw new Error('Unknown event')
+  if (event.week <= world.week) {
+    throw new Error('That week has already started – skip the tournament instead')
+  }
+  // Still refundable: the list is open, so this is an ordinary withdrawal and the fee comes back.
+  if (world.week <= event.deadlineWeek) {
+    withdrawEvent(world, eventId)
+    return
+  }
+  world.entries = world.entries.filter((id) => id !== eventId)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: `Cancelled ${TIERS[event.tier].label} – W${event.week}, entry fee forfeited.`,
   })
 }
 
@@ -1902,7 +2008,6 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
       // W1/W3 with 0 points for regional/national deadlines she was nowhere near qualifying for,
       // so the point-band eligibility is now AND-ed in – the same isTierEligible enterEvent uses,
       // which also silences a tier she has OUTGROWN (points past the ceiling).
-      const points = kidPoints(world)
       const deadlineSoon = world.season.some(
         (e) =>
           // Ladder-up: "regional or national" was "anything above the entry tier" – it now reads
@@ -1914,11 +2019,14 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
           !world.entries.includes(e.id) &&
           world.fundsCents >= TIERS[e.tier].entryFeeCents &&
           (e.deadlineWeek === world.week || e.deadlineWeek === nextWeek) &&
-          isTierEligible(e.tier, points) &&
-          // Season-Life: don't stop-for-deadline only on an event she HARD-cannot enter (school
-          // exams, a booked family vacation, or injured in Slice C). A fatigued event is still
-          // enterable (soft caution), so the sim MAY stop so the player can make the tough call.
-          availabilityStatus(world, e).level !== 'blocked',
+          // Round-10 R10-5: the point band AND the availability gate, read through the ONE helper
+          // every other surface reads (`entryStatus` = band + availability). This used to be
+          // `isTierEligible(...) && availabilityStatus(...) !== 'blocked'` spelled out here – the
+          // same verdict, but a third independent copy of the rule. Don't stop-for-deadline on an
+          // event she HARD-cannot enter (locked/outgrown on points, school exams, a booked family
+          // vacation, injured); a FATIGUED event is still enterable (soft caution), so the sim MAY
+          // stop so the player can make the tough call.
+          entryStatus(world, e).level !== 'blocked',
       )
       if (deadlineSoon) {
         stopReason = 'deadline'
@@ -1961,32 +2069,28 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
 // --- snapshot ----------------------------------------------------------------
 function upcomingEvents(world: WorldState): UpcomingEvent[] {
   const entered = new Set(world.entries)
-  const points = kidPoints(world)
   return world.season
     .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)
     .sort((a, b) => a.week - b.week)
     .map((e) => {
-      // Snapshot-only points eligibility (no persisted state → no schema bump). `ineligibleReason`
-      // names which side of the band the kid failed: 'locked' = not enough ranking points yet,
-      // 'outgrown' = too good (past the tier's ceiling) now. Season-Life slice B then folds in the
-      // availability gate via the SAME helper enterEvent uses, so the card and the engine agree.
-      const pointEligible = isTierEligible(e.tier, points)
-      const avail = availabilityStatus(world, e)
-      // A fatigued event is a CAUTION, not a block: she stays eligible. Only a point-band failure or
-      // a HARD availability block (injured / unavailable) removes eligibility.
-      const eligible = pointEligible && avail.level !== 'blocked'
-      const minPoints = TIERS[e.tier].enterPointBand[0]
-      // Precedence matches enterEvent (point band first, then availability): the point-band reason
-      // is the hard-lock headline; a hard availability block (injured/unavailable) only surfaces
-      // once she is point-eligible; fatigue is surfaced separately as a soft caution.
-      const reason = !pointEligible
-        ? points < minPoints
-          ? { ineligibleReason: 'locked' as const, pointsToEnter: minPoints }
-          : { ineligibleReason: 'outgrown' as const }
-        : avail.level === 'blocked'
-          ? { ineligibleReason: avail.reason as 'injured' | 'unavailable' | 'medical' }
-          : avail.level === 'caution'
-            ? { cautionReason: avail.reason as 'fatigued', cautionDetail: avail.detail }
+      // Round-10 R10-5: ONE call, the same `entryStatus` enterEvent and advanceWeeks read, instead
+      // of this function's own copy of the point band + a separate availability call. `eligible`
+      // and `ineligibleReason` therefore describe exactly what enterEvent would do, by construction
+      // rather than by two implementations happening to agree.
+      //
+      // NOTE the scope: this is the ENTRY verdict. It is NOT a verdict on `entered` – a list that
+      // closed with her on it keeps her on it whatever her points did afterwards, so an entered
+      // card must never be treated as a lock (see `cancellable`, and R10-3).
+      const gate = entryStatus(world, e)
+      const isEntered = entered.has(e.id)
+      const reason =
+        gate.level === 'blocked'
+          ? {
+              ineligibleReason: gate.reason as 'locked' | 'outgrown' | 'injured' | 'unavailable' | 'medical',
+              ...(gate.pointsToEnter !== undefined ? { pointsToEnter: gate.pointsToEnter } : {}),
+            }
+          : gate.level === 'caution'
+            ? { cautionReason: gate.reason as 'fatigued', cautionDetail: gate.detail }
             : {}
       return {
         id: e.id,
@@ -1997,8 +2101,14 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         deadlineWeek: e.deadlineWeek,
         entryFeeCents: TIERS[e.tier].entryFeeCents,
         label: TIERS[e.tier].label,
-        entered: entered.has(e.id),
-        eligible,
+        entered: isEntered,
+        // A fatigued event is a CAUTION, not a block: she stays eligible. Only a HARD block
+        // (point band, injured, unavailable, medical) removes eligibility.
+        eligible: gate.level !== 'blocked',
+        // R10-13: the entry is COMMITTED (the list has closed) but the week has not started yet –
+        // the only window in which cancelling costs the fee and frees the week. Every row here is
+        // a FUTURE week by construction, so the closed list is the whole condition.
+        cancellable: isEntered && world.week > e.deadlineWeek,
         ...reason,
       }
     })

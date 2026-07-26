@@ -85,8 +85,17 @@ const seasonBlocks = computed<SeasonBlockView[]>(() => {
 // CALENDAR DECLUTTER (spec §1): an OUTGROWN tournament is noise – she can never enter it again –
 // so it leaves the calendar entirely and its week becomes plannable. Locked-ahead events
 // ("Reach N pts") STAY: they are aspirational. Engine output is untouched.
+//
+// R10-3 (owner playtest 26.07 – the worst item of the round): the filter used to be unconditional,
+// so it also hid an event she was ALREADY ENTERED IN the moment her points crossed the tier's
+// ceiling. That took the whole week with it: the card carried the Withdraw/Cancel control, so the
+// entry became unreachable; `calendarRows` then saw an empty week and offered "+ Plan week"; and the
+// engine still held the entry, so every booking was refused. Total dead end. An ENTERED event is
+// never decluttered – she is IN it, and it is the one card she most needs to act on.
 const upcoming = computed(() => game.snapshot?.upcoming ?? [])
-const visibleUpcoming = computed(() => upcoming.value.filter((e) => e.ineligibleReason !== 'outgrown'))
+const visibleUpcoming = computed(() =>
+  upcoming.value.filter((e) => e.entered || e.ineligibleReason !== 'outgrown'),
+)
 const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
 const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
 const practices = computed<PracticeBooking[]>(() => game.snapshot?.practices ?? [])
@@ -217,6 +226,20 @@ function askWithdraw(e: UpcomingEvent): void {
     message: `Withdraw from ${e.label} (W${e.week})? Entry fee ${formatDollars(e.entryFeeCents)} will be refunded.`,
     confirmLabel: 'Withdraw',
     onConfirm: () => game.withdrawEvent(e.id),
+  }
+}
+/** R10-13: the entry list has CLOSED, so this is a cancellation, not a withdrawal – the word and the
+ *  money both change. The confirm has to be blunt about the fee (it is the only thing standing
+ *  between the player and an irreversible spend) and about what she GETS: the week back. This is the
+ *  escape from the R10-3 dead end, so it also names the two things the freed week can become. */
+function askCancelEntry(e: UpcomingEvent): void {
+  pendingConfirm.value = {
+    message:
+      `Cancel her entry to ${e.label} (W${e.week})? Entries closed on W${e.deadlineWeek}, so the ` +
+      `${formatDollars(e.entryFeeCents)} entry fee is NOT refunded. The week frees up for a practice ` +
+      `match or a family week.`,
+    confirmLabel: 'Cancel the entry',
+    onConfirm: () => game.cancelEntry(e.id),
   }
 }
 function runConfirm(): void {
@@ -481,14 +504,27 @@ function playExhibition(): void {
                 {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} W{{ row.event.deadlineWeek }}
               </span>
               <span v-if="row.event.entered" class="pill ok">Entered</span>
+              <!-- R10-5: an entry that survived the band crossing is COMMITTED, not illegal – but it
+                   must SAY so. The owner played a Local at 122 points with nothing on screen to
+                   explain it, because the card had been decluttered away entirely. -->
+              <span v-if="row.event.entered && row.event.ineligibleReason === 'outgrown'" class="pill muted lock">
+                🔒 Outgrown – she is past this level
+              </span>
             </div>
             <div class="controls" style="margin-top: 12px">
+              <!-- Entered, list still OPEN: an ordinary withdrawal, fee refunded. -->
               <button
-                v-if="row.event.entered"
-                :disabled="week > row.event.deadlineWeek || game.busy"
+                v-if="row.event.entered && !row.event.cancellable"
+                :disabled="game.busy"
                 @click="askWithdraw(row.event)"
               >
                 Withdraw
+              </button>
+              <!-- R10-13: entered, list CLOSED. Not a "withdraw" any more – a CANCEL, with the fee
+                   forfeited, which hands the week back to the planner. Plain secondary button, like
+                   the planner's own Cancel controls; the confirm carries the warning. -->
+              <button v-else-if="row.event.entered" :disabled="game.busy" @click="askCancelEntry(row.event)">
+                Cancel entry
               </button>
               <!-- Round-8 6b: `lock` brightens the label to soft amber (pill stays disabled). -->
               <span v-else-if="entriesClosed(row.event)" class="pill muted lock">
