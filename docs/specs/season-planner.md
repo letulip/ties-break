@@ -100,6 +100,26 @@ The first bench run on REAL bookings (not the PROJ projection) said §4b had shi
   The floor sits far below every tier caution floor (20-45), so only the bench's degenerate cell (a
   self-coached grinder at condition 0) ever meets it.
 
+## 4d. The veto reaches the FRIENDLY (26.07, owner) — the practice booking gate
+The match-base raise (1 → 2) made the friendly's `max(1, localDrain − 1)` subtraction real, so the
+"practise every week" treadmill turned from a flat plateau into a −0.6 condition/week slide, and the
+veto gated tournaments only: nothing stopped a grinder from booking friendlies while pinned at 0.
+The owner's call — *"the doctor who will not let her travel probably should not clear her for a
+friendly at condition 0"*:
+
+- **`bookPractice` is refused below the floor**, through the SAME predicate the entry gate reads
+  (`medicalBlock`, world.ts). One rule, one owner — the friendly and the tournament print the same
+  sentence, and the planner sheet's Practice tab disables the button and shows that sentence (it also
+  points at the Vacation tab, so the week never becomes a dead end).
+- **A booked friendly whose week ARRIVES under the floor is called off there**, mirroring the
+  tournament arrival check — but the **court rental is refunded in full** (no entry list ever closed
+  on it, and `cancelPractice` already refunds) and the freed week pays the **full** free-week
+  recovery instead of the practice-week rung.
+- **No warning band for a friendly** (hard block below 15, the guardrail's soft caution above it),
+  and **vacations are never gated**: refusing rest below the floor would be the R10-3 dead end again.
+- Measured: weeks at condition 0 in the degenerate cell **32.7% → 2.9%** (pooled 1.40% → 0.36%);
+  `balanced`/`careful` unchanged to the week. See docs/specs/fatigue-reference.md.
+
 ## 5. Closes
 - R5 backlog debt "Vacations as a class differentiator affecting recovery" (Phase 4/5 promise).
 - The design-workflow open question on family-vacation blackouts.

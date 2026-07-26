@@ -584,6 +584,24 @@ export function medicalClearance(condition: number): MedicalClearance {
   if (condition < a.medicalWarningCeiling) return 'warn'
   return 'clear'
 }
+
+/** THE VETO AS A VERDICT – `medicalClearance` decided, phrased once. Every surface that has to
+ *  REFUSE on medical grounds (tournament entry, and since the practice gate the friendly too) reads
+ *  THIS, so the three of them cannot drift into three different sentences about the same doctor.
+ *  Null = nothing to say, i.e. she is at or above the floor.
+ *
+ *  Shaped as an `AvailabilityStatus` because that is what the tournament gate returns and what the
+ *  UI already knows how to render; `detail` is non-optional here so a caller can print it without a
+ *  fallback. Pure integer comparison, zero RNG. */
+export interface MedicalBlock {
+  level: 'blocked'
+  reason: 'medical'
+  detail: string
+}
+export function medicalBlock(condition: number): MedicalBlock | null {
+  if (medicalClearance(condition) !== 'withdraw') return null
+  return { level: 'blocked', reason: 'medical', detail: 'Not cleared to play – she needs rest.' }
+}
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
   // R10-17 (owner playtest 26.07 – "the news said she is out until week 21, but at week 22 and
   // every week after, no tournament could be entered"). A layoff is a RANGE OF WEEKS and the event
@@ -627,9 +645,9 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   // THE DOCTOR'S VETO: under the medical floor no tier is enterable, at any price. Ranked AFTER
   // the week-level blackouts (a vacation/exam week is unenterable for everyone, so it names the
   // week) and BEFORE the soft fatigue caution, which it replaces in the pathological zone.
-  if (medicalClearance(world.condition) === 'withdraw') {
-    return { level: 'blocked', reason: 'medical', detail: 'Not cleared to play – she needs rest.' }
-  }
+  // The verdict itself comes from `medicalBlock`, shared with the practice gate.
+  const medical = medicalBlock(world.condition)
+  if (medical) return medical
   if (world.condition < ECONOMY.availability.minConditionToEnter[event.tier]) {
     return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
   }
@@ -917,7 +935,17 @@ function vacationBlackoutDetail(booking: VacationBooking): string {
  *  own entries and of another booking, and she is not laid up through it. Throws the
  *  player-facing reason (short dash copy). `kind` shapes the school/off-season rules: the
  *  off-season is family time (no friendlies) but IS the natural family-vacation week, and an
- *  exam block takes neither. */
+ *  exam block takes neither.
+ *
+ *  THE DOCTOR'S VETO REACHES THE FRIENDLY (owner 26.07: "the doctor who will not let her travel
+ *  probably should not clear her for a friendly at condition 0"). A match is a match: under
+ *  ECONOMY.availability.medicalFloor she is not cleared for one, whoever is standing across the
+ *  net. It applies to `practice` ONLY – a VACATION is rest, and refusing that below the floor is
+ *  how a week becomes a dead end (R10-3), the exact bug class this gate must not reintroduce.
+ *  The verdict comes from the shared `medicalBlock`, so the friendly and the tournament print the
+ *  same sentence by construction. Ranked LAST, mirroring `availabilityStatus`: injury and the
+ *  week-level reasons (exams, off-season, an existing booking, an entered tournament) name
+ *  themselves first, because they are true for any body. */
 function assertPlannable(world: WorldState, week: number, kind: 'vacation' | 'practice'): void {
   if (!Number.isInteger(week) || week <= world.week) throw new Error('Only a future week can be planned')
   if (world.injury !== null && week < world.week + world.injury.weeksRemaining) {
@@ -929,6 +957,10 @@ function assertPlannable(world: WorldState, week: number, kind: 'vacation' | 'pr
   if (practiceForWeek(world, week)) throw new Error('A practice match is already booked that week')
   if (world.season.some((e) => e.week === week && world.entries.includes(e.id))) {
     throw new Error('She is entered in a tournament that week')
+  }
+  if (kind === 'practice') {
+    const medical = medicalBlock(world.condition)
+    if (medical) throw new Error(medical.detail)
   }
 }
 
@@ -978,8 +1010,14 @@ export function cancelVacation(world: WorldState, week: number): void {
 
 /** Book a practice match (a watchable friendly) on an empty future week: charges the court
  *  rental off the `:practice:` sub-stream, plus half a coaching session when the coach comes
- *  along. NEVER blocked by the fatigue guardrail – the caution is advice, not a veto (owner:
- *  "the parent may push, the game warns"); see practiceCaution. */
+ *  along. NEVER blocked by the fatigue GUARDRAIL – the caution is advice, not a veto (owner:
+ *  "the parent may push, the game warns"); see practiceCaution.
+ *
+ *  The ONE exception, and it is the doctor's, not the guardrail's: below
+ *  ECONOMY.availability.medicalFloor `assertPlannable` refuses outright (there is no warning band
+ *  for a friendly – above the floor the guardrail's soft caution owns the whole range). That is the
+ *  same hard body-gate `availabilityStatus` applies to a tournament, reading the same
+ *  `medicalBlock`. */
 export function bookPractice(world: WorldState, week: number, withCoach: boolean): void {
   assertPlannable(world, week, 'practice')
   const paidCents = practiceFeeCents(world.seed, week, world.profile.background, withCoach)
@@ -1005,9 +1043,9 @@ export function cancelPractice(world: WorldState, week: number): void {
   refundPractice(world, booking, 'Cancelled')
 }
 
-/** Drop a practice booking and hand the rental back (shared by the player cancel and the
- *  injury hook, so the money story is identical either way). */
-function refundPractice(world: WorldState, booking: PracticeBooking, reason: 'Cancelled' | 'Injured'): void {
+/** Drop a practice booking and hand the rental back (shared by the player cancel, the injury hook
+ *  and the doctor's arrival check, so the money story is identical whichever one fires). */
+function refundPractice(world: WorldState, booking: PracticeBooking, reason: 'Cancelled' | 'Injured' | 'Medical'): void {
   world.practices = world.practices.filter((p) => p !== booking)
   world.fundsCents += booking.paidCents
   addEvent(world, {
@@ -1023,7 +1061,9 @@ function refundPractice(world: WorldState, booking: PracticeBooking, reason: 'Ca
     text:
       reason === 'Injured'
         ? `Practice match called off – W${booking.week} (she is hurt)`
-        : `Cancelled the practice match – W${booking.week}`,
+        : reason === 'Medical'
+          ? `Practice match called off – W${booking.week} (not cleared to play)`
+          : `Cancelled the practice match – W${booking.week}`,
   })
 }
 
@@ -1118,13 +1158,47 @@ function pickSparringPartner(world: WorldState, rng: Rng): AiPlayer {
  *  shape a tournament match uses (MatchReplay re-simulates from the stored seed), ZERO ranking
  *  points, and the spec's drain: `max(1, local-scoreline drain − 1)` – a friendly is one lighter
  *  than the same match at a local, never free. Injury cancels the week (the rental was already
- *  refunded at onset); the friendly runs on the private `seed:practicematch:week` stream, so it
- *  adds no MAIN-stream draws. */
+ *  refunded at onset), and so does the doctor's floor, re-read here on arrival (see below); the
+ *  friendly runs on the private `seed:practicematch:week` stream, so it adds no MAIN-stream draws. */
 function resolvePractice(world: WorldState): void {
   const booking = practiceForWeek(world, world.week)
   if (!booking) return
   if (world.injury !== null) {
     refundPractice(world, booking, 'Injured')
+    return
+  }
+  // THE DOCTOR CHECKS HER ON ARRIVAL HERE TOO. The booking gate reads her condition on the day she
+  // BOOKS, and a booking is made a week ahead – so a friendly signed up for at condition 30 can
+  // still come round with her at 5 (one bad tournament run in between is enough). The floor is
+  // therefore re-read on the play week against the condition she would actually take the court at
+  // (step 1c has already accrued), exactly like the tournament arrival check in tickWeek, and
+  // ranked the same way: injury first, then medicine.
+  //
+  // THE MONEY GOES THE OTHER WAY THAN THE TOURNAMENT'S, deliberately. A medical withdrawal from a
+  // tournament FORFEITS the entry fee, because the list closed with her on it and refunding it
+  // would make the veto a free late exit from any entry the parent regrets. Neither half of that is
+  // true of a friendly: there is no closed list (cancelPractice already refunds in full at any point
+  // before the week), the friendly awards nothing that could be gamed, and the practice
+  // sub-system's own precedent for "her body called it off" – the injury branch right above – is a
+  // FULL refund. So the club simply does not get booked. Consistency inside the practice rules beats
+  // symmetry with a rule whose reason does not apply.
+  //
+  // It does NOT set `medicalWithdrawalWeek` either: that marker exists to HALT an advance so the
+  // player cannot miss a forfeited entry fee (the owner's silent-withdrawal trap). Nothing is lost
+  // here – the money is back and the news feed carries the line – so stopping the fast-forward
+  // would be a nag, not a warning.
+  if (medicalClearance(world.condition) === 'withdraw') {
+    refundPractice(world, booking, 'Medical')
+    // The week is match-free after all, so she earns the FULL free-week recovery that
+    // accrueCondition withheld when it still believed she would play a friendly (it paid
+    // recoveryBase alone, the practice-week rung of the ladder). Written as the DIFFERENCE from a
+    // free week, exactly like the tournament withdrawal in tickWeek: base is already in, only the
+    // rest-slider bonus is owed. Integer, clamped, zero draws.
+    world.condition = clamp(
+      world.condition + restRecoveryBonus(world.plan.rest),
+      ECONOMY.condition.min,
+      ECONOMY.condition.max,
+    )
     return
   }
   const rng = rngFromSeed(`${world.seed}:practicematch:${world.week}`)

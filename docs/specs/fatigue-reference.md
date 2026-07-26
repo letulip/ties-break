@@ -131,9 +131,35 @@ consequence** (16 grinder careers × 104w — the policy that books a friendly e
 the friendly scoreline mix is 41% straight / 59% harder, so the mean friendly drain goes
 **1.000 → 1.588** and a practice-heavy season pays **20.8 → 37.0** condition. A practice week recovers
 `recoveryBase` (1) and forfeits the slider bonus, so the "friendly treadmill" that used to hold
-condition flat for ever (drain 1 = recovery 1, net zero) is now a slide of about **−0.6/week**. What
-that does to the degenerate cell, and the two candidate follow-ups, are recorded in
-`tests/fatigue-bench.test.ts` (the doctor's-veto test).
+condition flat for ever (drain 1 = recovery 1, net zero) became a slide of about **−0.6/week**.
+
+### THE DOCTOR GATES THE FRIENDLY TOO (owner 26.07) — the rule that stops that slide
+> "The doctor who will not let her travel probably should not clear her for a friendly at condition 0."
+
+Below `ECONOMY.availability.medicalFloor` (15) a practice match **cannot be booked**, and a friendly
+already booked whose week **arrives** under the floor is **called off on the day**. It is the same
+predicate the tournament entry gate uses (`medicalBlock` in `world.ts`, off `medicalClearance`), so
+the two surfaces refuse in the same words — the planner sheet disables the button and prints the
+reason instead of throwing on click. Two deliberate asymmetries with the tournament veto:
+
+- **there is no warning band for a friendly.** Below 15 it is a hard block; from 15 up, the practice
+  GUARDRAIL's soft caution (`practiceCaution`) owns the whole range, exactly as before. Fatigue for
+  tournaments stays a warned choice; the floor is the one hard body-gate.
+- **the court rental comes back in full** when the week is called off, where a tournament withdrawal
+  forfeits the entry fee. No entry list ever closed on a court booking, `cancelPractice` already
+  refunds in full, and the friendly awards nothing that "book it and see" could game. The called-off
+  week then pays the **full** free-week recovery (base + slider bonus), not the practice-week rung.
+- a **vacation is never gated** — refusing rest below the floor is how the fix would have created a
+  week where nothing at all was possible.
+
+**Measured** (grinder, 4 profiles × 12 seeds × 104w = 4 992 weeks; gate off vs on, nothing else
+changed): weeks pinned at condition 0 **worst cell 32.7% → 2.9%**, pooled **1.40% → 0.36%** (base 1,
+before any of this, was 1.9% / 0.18%). The traced worst cell books 67 friendlies without the gate and
+20 with it, and spends 34 weeks at 0 without it and 3 with it. `balanced` and `careful` are
+**unchanged to the week** (5 of 832 weeks under the floor either way, 197 friendlies either way):
+they only practise while fresh, so the gate never sees them. Full audit trail, both surfaces of the
+veto and the injury-anchor side effect: `tests/fatigue-bench.test.ts` (the doctor's-veto test) and
+`tests/planner.test.ts` P7b.
 
 ## Why the four variants feel alike (measured, not argued)
 Run-depth distribution, RE-MEASURED at base 2 through the bench's own week stepper (4 profiles × 3

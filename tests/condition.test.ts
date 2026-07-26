@@ -8,6 +8,7 @@ import {
   accrueCondition,
   availabilityStatus,
   isBlackoutWeek,
+  medicalBlock,
   medicalClearance,
   restRecoveryBonus,
   toSnapshot,
@@ -695,7 +696,17 @@ describe('the doctor on ARRIVAL — the play-week re-check', () => {
     return { world, event, rng }
   }
 
-  it('medicalClearance is the ONE pure rule both surfaces read', () => {
+  it('medicalClearance is the ONE pure rule every surface reads', () => {
+    // THREE surfaces now, not two: the entry gate, this arrival check, and (26.07) the practice
+    // booking – a friendly is a match, so the doctor's floor governs it too. `medicalBlock` is the
+    // shared VERDICT wrapper, so all three refuse in the same words; the practice half of that is
+    // asserted in tests/planner.test.ts P7b.
+    expect(medicalBlock(FLOOR - 1)).toEqual({
+      level: 'blocked',
+      reason: 'medical',
+      detail: 'Not cleared to play – she needs rest.',
+    })
+    expect(medicalBlock(FLOOR)).toBeNull()
     expect(medicalClearance(FLOOR - 1)).toBe('withdraw')
     expect(medicalClearance(ECONOMY.condition.min)).toBe('withdraw')
     expect(medicalClearance(FLOOR)).toBe('warn') // the floor itself is cleared – the veto is strictly below
