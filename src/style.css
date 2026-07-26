@@ -852,10 +852,13 @@ button.danger:hover:not(:disabled) {
 /* THE ONE PILL THAT IS NOT A CAPSULE (owner 26.07: "specifically for this one make them less
    round, the rest seem fine"). It carries the longest text of any chip in the app – a whole injury
    sentence with a return week – so at the capsule radius the ends bow away from the words and it
-   reads as a lozenge rather than a label. 8px: squarer than the capsule, softer than the 10px
-   panels it sits inside, and it keeps the .pill padding and tones untouched. */
+   reads as a lozenge rather than a label. 6px is the OWNER'S PICK off a rendered comparison of
+   10 / 8 / 6 (26.07): 10px is invisible next to the capsule, which renders at 10.7px on this chip's
+   21px height, and 8px was a shade too soft for a label. Applies to every tone, not just .red –
+   the chip must not change shape when her availability changes. The .pill padding and the tone
+   colours are untouched. */
 .avail-chip {
-  border-radius: 8px;
+  border-radius: 6px;
 }
 
 .avail-chip.green {

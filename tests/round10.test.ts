@@ -541,6 +541,8 @@ describe('R10-16 — no popup may render without copy', () => {
     // Squarer than the capsule it would otherwise inherit from .pill. The bound is the MEASURED
     // rendered capsule radius (10.7px at the chip's 21px height): anything at or above it is not a
     // visible change, which is why 10px – the panel radius – was rejected as too subtle to see.
+    // The owner picked 6 off a rendered 10 / 8 / 6 comparison; the range stays a range, so a later
+    // taste change does not have to touch this test.
     expect(radius).toBeLessThan(10.7)
     expect(radius).toBeGreaterThan(3) // still a chip, not a box
   })
