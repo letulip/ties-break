@@ -54,6 +54,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { ECONOMY, recommendVacationPackage, vacationPriceCents } from '../src/engine/economy'
+import { rivalConditions } from '../src/engine/season/rival'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import type {
   CoachSetup,
@@ -73,6 +74,19 @@ export const SEEDS_PER_CELL = 30
 export const ENTRY_LOOKAHEAD = 3
 
 export const SEVERITIES: readonly InjurySeverity[] = ['minor', 'moderate', 'major', 'severe']
+
+/** RUN DEPTH: the most matches ONE committed run can be on the current calendar – a 32-draw is 5
+ *  rounds (local 8 = 3, regional 16 = 4). The run-fatigue ladder is indexed by exactly this, so the
+ *  histogram is the distribution of "which rungs of the ladder does the game ever actually charge".
+ *  A deeper future draw would repeat the ladder's last rung, so the top bucket reads as "N+". */
+export const MAX_RUN_DEPTH = 5
+
+/** RIVAL-SIDE SAMPLING CADENCE: the cohort's derived condition is read every Nth week PLUS every
+ *  week the kid actually takes the court (the "who did she meet, and how tired were they" read).
+ *  The engine derives the same map once per tick, so sampling every single week would roughly
+ *  double the cohort half of the tick cost for a number that moves slowly – a 4-week cadence over a
+ *  208w career is still 52 field-wide samples per seed, i.e. 1560 per cell. */
+export const RIVAL_SAMPLE_EVERY = 4
 
 /** Every expense-side event category (the income side is parent contribution / sponsor /
  *  interest). Kept as a local list so the fatigue bench never imports econ-bench – that module
@@ -551,6 +565,43 @@ export interface WeekFacts {
   /** weekly coaching/training bill in cents (the planFactor-scaled base cost) – the money side
    *  of the train slider, so the grid can show the effort↔wallet↔condition triangle. */
   coachingSpendCents: number
+  /** THE RIVAL-SIDE READ (the shared-ladder proof, owner 26.07). The cumulative run-fatigue ladder
+   *  lives in `tournamentRunStrain`, which the COHORT's ledger reconstruction calls as well as the
+   *  kid's finalizeTournament – so a steeper ladder must tire her opponents too. A bench that only
+   *  reports kid-side numbers cannot tell a working shared ladder from a kid-only one (that was
+   *  exactly the module-load caching bug: the `--scenario runfat-*` switch moved only the kid).
+   *  `null` on a week that was not sampled (see RIVAL_SAMPLE_EVERY). */
+  rival: {
+    /** mean derived condition over the WHOLE cohort (a player with no rows in the fatigue window
+     *  is fresh, exactly as `rivalField` treats a missing entry). */
+    mean: number
+    /** share of the cohort below `matchStrengthKnee` – i.e. arriving already weakened, since the
+     *  coupling curve only bites below the knee. */
+    pctBelowKnee: number
+    /** this was one of HER play weeks (the field she actually met), not just a calendar sample. */
+    playWeek: boolean
+  } | null
+}
+
+/** The cohort's derived condition at `week`, summarised. Reads `rivalConditions` – the same pure
+ *  function the engine calls once per tick – so this is a MEASUREMENT of engine state, never a
+ *  second implementation of it. Zero RNG draws, zero writes. */
+export function sampleCohortCondition(
+  world: WorldState,
+  week: number,
+  playWeek: boolean,
+): { mean: number; pctBelowKnee: number; playWeek: boolean } {
+  const knee = ECONOMY.condition.matchStrengthKnee
+  const derived = rivalConditions(world.results, week)
+  let sum = 0
+  let below = 0
+  for (const p of world.cohort) {
+    const c = derived.get(p.id) ?? ECONOMY.condition.max
+    sum += c
+    if (c < knee) below++
+  }
+  const n = world.cohort.length
+  return { mean: n === 0 ? 0 : sum / n, pctBelowKnee: n === 0 ? 0 : (100 * below) / n, playWeek }
 }
 
 /** The planner's decision for NEXT week (the only week a player can book – the engine refuses the
@@ -704,6 +755,18 @@ export function stepFatigueWeek(
     entryTiers.push(e.tier)
   }
 
+  // RIVAL-SIDE SAMPLE, taken BEFORE the tick and at week+1 on purpose: `tickWeek` increments the
+  // week and then derives `rivalConditions(world.results, world.week)` (world.ts, step 1d) before
+  // any of the week's own rows are appended – and nothing between the entry loop and the tick
+  // touches `world.results`. So this call reproduces the engine's OWN fatigue map for the week it is
+  // about to play, byte for byte, rather than a post-hoc approximation of it.
+  const nextWeek = world.week + 1
+  const kidPlaysNextWeek = world.season.some((e) => e.week === nextWeek && world.entries.includes(e.id))
+  const rival =
+    kidPlaysNextWeek || nextWeek % RIVAL_SAMPLE_EVERY === 0
+      ? sampleCohortCondition(world, nextWeek, kidPlaysNextWeek)
+      : null
+
   tickWeek(world, rng)
 
   // Commit any spawned run in-week (reveal-flow fast-forward). Capture the kid's matches BEFORE
@@ -799,6 +862,7 @@ export function stepFatigueWeek(
     vacationSpendCents: netOf('vacation'),
     cautionedPracticeBookings: planned.cautioned ? 1 : 0,
     rescueBookings: planned.rescued ? 1 : 0,
+    rival,
   }
 }
 
@@ -878,6 +942,23 @@ export interface RunResult {
   matchesPlayed: number
   wins: number
   losses: number
+  /** RUN-DEPTH DISTRIBUTION (the previous sweep's most useful finding: ~half of all runs are a
+   *  SINGLE match, which is why the shallow ladder variants were indistinguishable – a one-match run
+   *  pays 0 ladder by definition). Index = matches in the committed run, 1..MAX_RUN_DEPTH; index 0
+   *  is always 0 (a committed run has at least one match) and the top index absorbs anything deeper.
+   *  Σ counts = runsCommitted and Σ (index × count) = matchesPlayed, which the test pins. */
+  runDepthCounts: number[]
+  /** committed runs over the horizon (a walkover / medical withdrawal / skipped event is NOT one:
+   *  it never reaches finalize, so it costs no strain and charges no ladder rung). */
+  runsCommitted: number
+  /** RIVAL-SIDE (the shared-ladder proof): means over the sampled weeks. `*PlayWeek*` restricts to
+   *  the weeks she actually competed – the field she MET rather than the calendar at large. */
+  rivalCondMean: number
+  rivalPctBelowKnee: number
+  rivalSamples: number
+  rivalPlayWeekCondMean: number
+  rivalPlayWeekPctBelowKnee: number
+  rivalPlayWeekSamples: number
   /** best (lowest) dense rank reached while actually ranked (kidPoints > 0) – the same
    *  hasResults guard econ-bench needed against the point-less dense-rank-1 tie. */
   bestRank: number | null
@@ -931,6 +1012,14 @@ export function runFatigueCareer(
   let rescueBookings = 0
   const vacationsByPackage: Record<string, number> = {}
   const plannerState = { practiceEligibleIdx: 0, seaBookedYears: new Set<number>() }
+  const runDepthCounts = new Array<number>(MAX_RUN_DEPTH + 1).fill(0)
+  let runsCommitted = 0
+  let rivalCondSum = 0
+  let rivalBelowSum = 0
+  let rivalSamples = 0
+  let rivalPlayCondSum = 0
+  let rivalPlayBelowSum = 0
+  let rivalPlaySamples = 0
 
   for (let i = 0; i < horizonWeeks; i++) {
     const f = stepFatigueWeek(world, rng, policy, plannerState)
@@ -955,6 +1044,22 @@ export function runFatigueCareer(
       onsetSeasons.add(Math.min(Math.floor(f.week / WEEKS_PER_YEAR), horizonWeeks / WEEKS_PER_YEAR - 1))
     }
     if (f.walkover) walkovers++
+    // A committed run's DEPTH is the ladder's own index domain: bucket it (anything deeper than the
+    // calendar's biggest draw folds into the top bucket, mirroring the ladder's repeat-last rule).
+    if (f.matchScores.length > 0) {
+      runsCommitted++
+      runDepthCounts[Math.min(f.matchScores.length, MAX_RUN_DEPTH)]++
+    }
+    if (f.rival) {
+      rivalCondSum += f.rival.mean
+      rivalBelowSum += f.rival.pctBelowKnee
+      rivalSamples++
+      if (f.rival.playWeek) {
+        rivalPlayCondSum += f.rival.mean
+        rivalPlayBelowSum += f.rival.pctBelowKnee
+        rivalPlaySamples++
+      }
+    }
     cautionEntries += f.cautionEntries
     entries += f.entriesCommitted
     for (const tier of f.entryTiers) entriesByTier[tier]++
@@ -1023,6 +1128,14 @@ export function runFatigueCareer(
     matchesPlayed: wins + losses,
     wins,
     losses,
+    runDepthCounts,
+    runsCommitted,
+    rivalCondMean: rivalSamples === 0 ? 0 : rivalCondSum / rivalSamples,
+    rivalPctBelowKnee: rivalSamples === 0 ? 0 : rivalBelowSum / rivalSamples,
+    rivalSamples,
+    rivalPlayWeekCondMean: rivalPlaySamples === 0 ? 0 : rivalPlayCondSum / rivalPlaySamples,
+    rivalPlayWeekPctBelowKnee: rivalPlaySamples === 0 ? 0 : rivalPlayBelowSum / rivalPlaySamples,
+    rivalPlayWeekSamples: rivalPlaySamples,
     bestRank,
     endRank: world.kidRank,
     endPoints: kidPoints(world),
@@ -1120,6 +1233,20 @@ export interface CellStats {
   survivalPct: number
   /** mean weekly condition across seeds – the sparkline source (length = horizon weeks). */
   meanWeekly: number[]
+  /** RUN-DEPTH DISTRIBUTION pooled over the cell's seeds: percent of committed runs at each depth
+   *  (index = matches, 1..MAX_RUN_DEPTH; [0] unused). THE number that decides whether a ladder can
+   *  be felt at all – a rung only ever gets charged as often as runs reach that depth. */
+  runDepthPct: number[]
+  runsPerSeason: number
+  meanRunDepth: number
+  /** share of committed runs that reach 3+ / 4+ matches – the "deep run" the owner wants FELT. */
+  pctRuns3Plus: number
+  pctRuns4Plus: number
+  /** RIVAL-SIDE, meaned over seeds (see RunResult): the whole-calendar read and the play-week read. */
+  rivalCondMean: number
+  rivalPctBelowKnee: number
+  rivalPlayWeekCondMean: number
+  rivalPlayWeekPctBelowKnee: number
 }
 
 export function computeCellStats(
@@ -1144,6 +1271,13 @@ export function computeCellStats(
   const totalWins = runs.reduce((s, r) => s + r.wins, 0)
   const totalMatches = runs.reduce((s, r) => s + r.matchesPlayed, 0)
   const ranked = runs.filter((r) => r.bestRank !== null)
+  // Run depth pooled over the whole cell (counts, not per-seed shares: a seed with 2 runs must not
+  // weigh as much as a seed with 20 when the question is "what does a RUN look like").
+  const depthCounts = new Array<number>(MAX_RUN_DEPTH + 1).fill(0)
+  for (const r of runs) for (let d = 0; d <= MAX_RUN_DEPTH; d++) depthCounts[d] += r.runDepthCounts[d]
+  const totalRuns = depthCounts.reduce((s, n) => s + n, 0)
+  const depthShare = (from: number) =>
+    totalRuns === 0 ? 0 : (100 * depthCounts.slice(from).reduce((s, n) => s + n, 0)) / totalRuns
   return {
     profile,
     policy,
@@ -1207,6 +1341,20 @@ export function computeCellStats(
     totalSpendPerSeasonCents: mean(runs.map((r) => r.totalSpendCents / seasons)),
     survivalPct: (100 * runs.filter((r) => r.survived).length) / runs.length,
     meanWeekly,
+    runDepthPct: depthCounts.map((n) => (totalRuns === 0 ? 0 : (100 * n) / totalRuns)),
+    runsPerSeason: mean(runs.map((r) => r.runsCommitted / seasons)),
+    meanRunDepth:
+      totalRuns === 0 ? 0 : depthCounts.reduce((s, n, d) => s + d * n, 0) / totalRuns,
+    pctRuns3Plus: depthShare(3),
+    pctRuns4Plus: depthShare(4),
+    rivalCondMean: mean(runs.map((r) => r.rivalCondMean)),
+    rivalPctBelowKnee: mean(runs.map((r) => r.rivalPctBelowKnee)),
+    // Seeds where she never played a single week have no play-week sample; averaging them in as 0
+    // would read as "her opponents arrived at condition 0". Restrict to the seeds that HAVE one.
+    rivalPlayWeekCondMean: mean(runs.filter((r) => r.rivalPlayWeekSamples > 0).map((r) => r.rivalPlayWeekCondMean)),
+    rivalPlayWeekPctBelowKnee: mean(
+      runs.filter((r) => r.rivalPlayWeekSamples > 0).map((r) => r.rivalPlayWeekPctBelowKnee),
+    ),
   }
 }
 
@@ -1531,6 +1679,14 @@ const HEADER = [
   '  BASELINE exactly. With >= 2 of them selected the RUN-FATIGUE LADDER block tables the variants against each',
   '  other (condition + wk49 + injuries + the ECONOMY side-effects). They are headline-only: the factorial and',
   '  planner grids measure axes this idea does not touch, and would multiply a five-section sweep for nothing.',
+  '  RUN-DEPTH LINES ("depth <variant>"): the share of COMMITTED runs that were 1, 2, … matches long, plus the',
+  '  mean depth and runs/season. This is the distribution the ladder is indexed by, so it decides whether a',
+  '  variant can be felt at all – a 1-match run pays rung 0 (nothing) under every variant.',
+  '  RIVAL-SIDE COLUMNS (rivCond / riv<knee%) + the RIVAL-SIDE block: the ladder lives in tournamentRunStrain,',
+  '  which the COHORT ledger reconstruction calls as well as the kid, so a steeper ladder must tire her',
+  `  opponents too. Cohort condition is derived (never stored), sampled every ${RIVAL_SAMPLE_EVERY} weeks plus every play week;`,
+  `  "<knee" is the share of the cohort under condition ${ECONOMY.condition.matchStrengthKnee}, where the strength coupling starts to bite. These`,
+  '  numbers moving across variants IS the proof the sweep measures the whole game and not just the kid.',
   'ECONOMY LINE (per policy, under the planner line): ent N/s split BY TIER, travel + entry fees + total family',
   '  spend per season, mean end funds and the survival rate (share of seeds whose balance never went negative) –',
   '  the "does a heavier body cost make anyone play fewer / cheaper events?" read.',
@@ -2037,6 +2193,10 @@ const RUNFAT_COLS: [string, number][] = [
   ['surv%', 6],
   ['blk/s', 7],
   ['wdr/s', 7],
+  // RIVAL-SIDE: the ladder is SHARED, so these two must move with the variant or the table is
+  // measuring half the game (the module-load caching bug fixed on main).
+  ['rivCond', 8],
+  ['riv<knee%', 10],
 ]
 
 function runfatHeader(): string {
@@ -2065,8 +2225,20 @@ function runfatRow(scenario: Scenario, c: CellStats): string {
     c.survivalPct.toFixed(0),
     c.medicalBlocksPerSeason.toFixed(2),
     c.medicalWithdrawalsPerSeason.toFixed(2),
+    c.rivalCondMean.toFixed(1),
+    c.rivalPctBelowKnee.toFixed(1),
   ]
   return '  ' + cells.map((x, i) => pad(x, RUNFAT_COLS[i][1])).join('')
+}
+
+/** One cell's run-depth histogram as a line: the share of committed runs at each depth, the mean
+ *  depth, and how many runs a season there were at all. */
+function depthLine(c: CellStats): string {
+  const buckets = c.runDepthPct
+    .map((pct, d) => (d === 0 ? '' : `${d}${d === MAX_RUN_DEPTH ? '+' : ''}:${pct.toFixed(0)}%`))
+    .filter((s) => s !== '')
+    .join(' ')
+  return `${buckets}  mean ${c.meanRunDepth.toFixed(2)} · ${c.runsPerSeason.toFixed(1)} runs/s · 3+ ${c.pctRuns3Plus.toFixed(0)}% · 4+ ${c.pctRuns4Plus.toFixed(0)}%`
 }
 
 /** THE run-fatigue slice's headline output: every ladder variant that ran, side by side, per
@@ -2105,6 +2277,11 @@ function renderRunFatigueComparison(headline: Map<string, CellStats>, scenarios:
         // fewer / cheaper events?" is answered by THIS line, not by the ent/s column alone.
         for (const { sc, c } of rows) {
           console.log('  ' + padEnd(`tiers ${sc.id.replace('runfat-', '')}`, 14) + tierSplit(c))
+        }
+        // RUN DEPTH per variant – how often the ladder's deeper rungs are charged at all. If the
+        // distribution is dominated by 1-match runs, no shallow variant CAN be felt.
+        for (const { sc, c } of rows) {
+          console.log('  ' + padEnd(`depth ${sc.id.replace('runfat-', '')}`, 14) + depthLine(c))
         }
       }
     }
@@ -2146,10 +2323,68 @@ function renderRunFatigueComparison(headline: Map<string, CellStats>, scenarios:
         medicalBlocksPerSeason: mean(cells.map((c) => c.medicalBlocksPerSeason)),
         medicalWithdrawalsPerSeason: mean(cells.map((c) => c.medicalWithdrawalsPerSeason)),
         medicalWarningsPerSeason: mean(cells.map((c) => c.medicalWarningsPerSeason)),
+        pctWeeksBelowMedicalFloor: mean(cells.map((c) => c.pctWeeksBelowMedicalFloor)),
+        rivalCondMean: mean(cells.map((c) => c.rivalCondMean)),
+        rivalPctBelowKnee: mean(cells.map((c) => c.rivalPctBelowKnee)),
+        rivalPlayWeekCondMean: mean(cells.map((c) => c.rivalPlayWeekCondMean)),
+        rivalPlayWeekPctBelowKnee: mean(cells.map((c) => c.rivalPlayWeekPctBelowKnee)),
+        // Depth pools by RUN COUNT, so re-pool from the cells' own counts rather than meaning
+        // percentages (a 52w cell has a quarter of the runs a 208w cell does).
+        ...pooledDepth(cells),
       }
       console.log(runfatRow(sc, pooled))
+      console.log('  ' + padEnd('  depth', 14) + depthLine(pooled))
     }
   }
+
+  // THE RIVAL-SIDE PROOF, in one block: the ladder lives in `tournamentRunStrain`, which the cohort's
+  // ledger reconstruction calls too, so a steeper ladder MUST tire the field. If these numbers were
+  // flat across variants, the sweep would be measuring the kid only (the module-load caching bug).
+  console.log('')
+  console.log(
+    `  RIVAL-SIDE (shared-ladder proof): cohort condition derived from the results ledger, sampled every ${RIVAL_SAMPLE_EVERY} weeks`,
+  )
+  console.log(
+    `  plus EVERY play week. "<knee" = share of the 199-player cohort under condition ${ECONOMY.condition.matchStrengthKnee}, where the strength`,
+  )
+  console.log('  coupling starts to bite. field = the whole calendar · met = only the weeks she took the court.')
+  for (const horizon of FATIGUE_HORIZONS) {
+    const parts: string[] = []
+    for (const sc of ran) {
+      const cells = PROFILES.flatMap((pr) =>
+        POLICIES.map((po) => headline.get(keyOf(sc, horizon, pr, po))).filter((c): c is CellStats => !!c),
+      )
+      if (cells.length === 0) continue
+      parts.push(
+        `${padEnd(sc.id.replace('runfat-', ''), 4)} field ${mean(cells.map((c) => c.rivalCondMean)).toFixed(1)}` +
+          ` (<knee ${mean(cells.map((c) => c.rivalPctBelowKnee)).toFixed(1)}%)` +
+          ` · met ${mean(cells.map((c) => c.rivalPlayWeekCondMean)).toFixed(1)}` +
+          ` (<knee ${mean(cells.map((c) => c.rivalPlayWeekPctBelowKnee)).toFixed(1)}%)`,
+      )
+    }
+    if (parts.length) {
+      console.log(`  ${horizon.label}`)
+      for (const p of parts) console.log(`    ${p}`)
+    }
+  }
+
+  // RUN DEPTH pooled per variant × policy – the distribution that decides whether ANY ladder can be
+  // felt (a 1-match run pays rung 0 = nothing, whatever the variant).
+  console.log('')
+  console.log('  RUN-DEPTH DISTRIBUTION per variant (pooled over horizons × profiles, by RUN count), one block per policy')
+  for (const policy of POLICIES) {
+    console.log('')
+    console.log(`  policy ${policy.label}`)
+    for (const sc of ran) {
+      const cells = FATIGUE_HORIZONS.flatMap((h) =>
+        PROFILES.map((pr) => headline.get(keyOf(sc, h, pr, policy))).filter((c): c is CellStats => !!c),
+      )
+      if (cells.length === 0) continue
+      const pooled: CellStats = { ...cells[0], ...pooledDepth(cells) }
+      console.log('  ' + padEnd(sc.id.replace('runfat-', ''), 8) + depthLine(pooled))
+    }
+  }
+
   // The grinder/careful injury anchor per variant – the spec's >=3x load-management signal.
   console.log('')
   console.log('  INJURY ANCHOR per variant (grinder/careful inj/season, pooled over profiles; spec anchor >= 3x)')
@@ -2164,6 +2399,28 @@ function renderRunFatigueComparison(headline: Map<string, CellStats>, scenarios:
       parts.push(`${sc.id.replace('runfat-', '')} ${ci === 0 ? 'inf' : (gi / ci).toFixed(1)}x`)
     }
     if (parts.length) console.log(`  ${horizon.label}: ${parts.join(' · ')}`)
+  }
+}
+
+/** Re-pool a run-depth distribution from several cells by RUN COUNT (never by meaning their
+ *  percentages – the horizons contribute wildly different numbers of runs). */
+function pooledDepth(
+  cells: CellStats[],
+): Pick<CellStats, 'runDepthPct' | 'meanRunDepth' | 'pctRuns3Plus' | 'pctRuns4Plus' | 'runsPerSeason'> {
+  const counts = new Array<number>(MAX_RUN_DEPTH + 1).fill(0)
+  for (const c of cells) {
+    for (const r of c.runs) {
+      for (let d = 0; d <= MAX_RUN_DEPTH; d++) counts[d] += r.runDepthCounts[d]
+    }
+  }
+  const total = counts.reduce((s, n) => s + n, 0)
+  const share = (from: number) => (total === 0 ? 0 : (100 * counts.slice(from).reduce((s, n) => s + n, 0)) / total)
+  return {
+    runDepthPct: counts.map((n) => (total === 0 ? 0 : (100 * n) / total)),
+    meanRunDepth: total === 0 ? 0 : counts.reduce((s, n, d) => s + d * n, 0) / total,
+    pctRuns3Plus: share(3),
+    pctRuns4Plus: share(4),
+    runsPerSeason: mean(cells.map((c) => c.runsPerSeason)),
   }
 }
 

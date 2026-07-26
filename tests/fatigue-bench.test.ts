@@ -543,6 +543,50 @@ describe('run-fatigue ladder scenarios (owner idea 26.07)', () => {
     expect(j300Title()).toBe(flat + 6) // and restored
   })
 
+  it('the bench REPORTS the cohort half: switching scenario moves a RIVAL-side number, not just a kid one', () => {
+    // The re-sweep gate (owner 26.07). The test above proves the shared ladder at the level of ONE
+    // reconstructed run; this one proves it end-to-end through the numbers the report actually
+    // prints. It has to be a RIVAL-side column: the module-load caching bug moved the kid while the
+    // whole cohort stayed on variant C, and every kid-side column looked perfectly healthy while it
+    // did. Cohort condition is derived from the results ledger, so a steeper ladder must drag the
+    // field down and push more of it under the strength knee.
+    const cell = (id: string) => {
+      const runs = withScenario(byId(id), () =>
+        [0, 1, 2].map((i) => runFatigueCareer(middleSelf, grinder, i, H52.weeks)),
+      )
+      return computeCellStats(middleSelf, grinder, H52, runs)
+    }
+    const off = cell('runfat-off')
+    const a = cell('runfat-a')
+    // sampled at all, and a real cohort read (never the kid's own condition wearing a rival hat:
+    // the kid grinds herself into the 40s while the 199-player field averages the 80s).
+    expect(off.rivalCondMean).toBeGreaterThan(50)
+    expect(off.rivalCondMean).toBeLessThan(ECONOMY.condition.max)
+    // THE assertion: the steepest ladder tires her opponents too.
+    expect(a.rivalCondMean).toBeLessThan(off.rivalCondMean)
+    expect(a.rivalPctBelowKnee).toBeGreaterThan(off.rivalPctBelowKnee)
+    // and the same holds for the field she actually MET, not only the calendar at large
+    expect(a.rivalPlayWeekCondMean).toBeLessThan(off.rivalPlayWeekCondMean)
+  })
+
+  it('the run-depth histogram reconciles with the matches it came from', () => {
+    // The distribution the ladder is indexed BY, so it has to be exact: every committed run lands in
+    // exactly one bucket and the bucket index IS the match count (the top bucket absorbs anything
+    // deeper, which the current calendar's 32-draw never reaches past 5).
+    const r = runFatigueCareer(middleSelf, grinder, 0, H104.weeks)
+    expect(r.runDepthCounts[0]).toBe(0) // a committed run always has >= 1 match
+    expect(r.runDepthCounts.reduce((s, n) => s + n, 0)).toBe(r.runsCommitted)
+    expect(r.runDepthCounts.reduce((s, n, d) => s + d * n, 0)).toBe(r.matchesPlayed)
+    expect(r.runsCommitted).toBe(r.weekly.filter((w) => w.matches > 0).length)
+    const st = computeCellStats(middleSelf, grinder, H104, [r])
+    expect(st.runDepthPct.reduce((s, p) => s + p, 0)).toBeCloseTo(100, 6)
+    // The previous sweep's headline finding, re-pinned as a RANGE rather than a point: single-match
+    // runs are the modal outcome, which is why the shallow ladder variants are hard to tell apart.
+    expect(st.runDepthPct[1]).toBeGreaterThan(20)
+    expect(st.meanRunDepth).toBeGreaterThan(1)
+    expect(st.meanRunDepth).toBeLessThanOrEqual(5)
+  })
+
   it('runfat-c IS the shipped engine (byte-identical careers); runfat-off is the pre-ladder one', () => {
     const shippedRun = runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
     expect(withScenario(byId('runfat-c'), () => runFatigueCareer(middleSelf, grinder, 0, H52.weeks))).toEqual(
