@@ -11,7 +11,7 @@
 // (economy.ts), keyed on (seed, week, package) – exactly what bookVacation/bookPractice charge.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
-import { ECONOMY, practiceFeeCents, vacationPriceCents } from '../engine/economy'
+import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPriceCents } from '../engine/economy'
 import { practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekRange } from '../shared/dates'
@@ -87,20 +87,24 @@ interface PackageRow {
   recommended: boolean
 }
 
-/** The pre-highlight: an explicit pick (the rescue prompt), else the off-season family week
- *  (the natural default for everyone – spec §4b), else the CHEAPEST affordable package that
- *  returns her above ECONOMY.practice.rescueTargetCondition, else the biggest she can afford. */
-const recommendedId = computed<string | null>(() => {
-  if (props.highlightPackageId) return props.highlightPackageId
-  const target = ECONOMY.practice.rescueTargetCondition
-  const affordable = ECONOMY.vacation.packages.filter(
-    (p) => fundsCents.value >= vacationPriceCents(seed.value, props.week, p.id, background.value),
-  )
-  if (affordable.length === 0) return null
-  if (offSeason.value && affordable.some((p) => p.id === 'seaside')) return 'seaside'
-  const clearing = affordable.find((p) => condition.value + p.conditionGain > target)
-  return (clearing ?? affordable[affordable.length - 1]).id
-})
+/** The pre-highlight: an explicit pick (the rescue prompt), else the CHEAPEST package sufficient
+ *  for HER CURRENT condition – the one shared rule in economy.ts, so the sheet, the rescue card
+ *  and the bench can never drift apart.
+ *  WAVE-2 (bench 26.07): the old rule needed a package clearing 85 and, failing that, highlighted
+ *  the most expensive she could afford; the off-season row additionally hard-coded seaside. Both
+ *  are gone – seaside took 88% of every booking in the bench, and a family week for a nearly-fresh
+ *  kid should recommend the free staycation, not a $1000 hotel. */
+const recommendedId = computed<string | null>(() =>
+  props.highlightPackageId
+    ? props.highlightPackageId
+    : recommendVacationPackage({
+        seed: seed.value,
+        week: props.week,
+        background: background.value,
+        condition: condition.value,
+        fundsCents: fundsCents.value,
+      }),
+)
 
 const packageRows = computed<PackageRow[]>(() =>
   ECONOMY.vacation.packages.map((p) => {

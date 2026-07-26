@@ -235,6 +235,16 @@ export const ECONOMY = {
     minConditionToEnter: { local: 20, regional: 30, national: 40, itf: 45 } as Record<TierId, number>,
     examWeeks: [[24, 25]] as [number, number][], // season-week offsets blacked out for school
 
+    // THE DOCTOR'S VETO (owner idea R9-19b, cashed in by the Wave-2 fatigue bench 26.07): the one
+    // place where "the parent may push, the game warns" yields to medicine. Below this condition
+    // entering a tournament is a HARD block (availabilityStatus level 'blocked', reason 'medical');
+    // at or above it, fatigue stays the SOFT caution it has always been. The bench found the only
+    // degenerate cell of the whole sweep – a self-coached grinder competing at condition 0 for
+    // ~4.4% of her weeks – and this is the floor under it. Deliberately far below every tier
+    // caution floor (20-45), so normal play never meets it; knob-driven (0 disables it) so the
+    // owner can lower or retire it after seeing the numbers.
+    medicalFloor: 15,
+
     // Season-Life slice C: fatigue-driven injury risk. ALL of these move only the post-draw
     // threshold tau (or pull from the private per-week `seed:injury:week` sub-stream) – the MAIN
     // weekly draw sequence stays byte-identical (the C1 invariance test guards it).
@@ -359,18 +369,36 @@ export const ECONOMY = {
   // max(1, local-scoreline drain − 1), ZERO ranking points, and the week keeps the base
   // recovery but FORFEITS the rest-slider bonus (she played, even if friendly).
   // GUARDRAIL (fatigue-bench finding 25.07: practising every week is self-destructive – mean
-  // condition 47, 41-44% of weeks under 40): booking below `cautionCondition`, or a
-  // `cautionStreak`-th consecutive practice week, raises a CAUTION. It never blocks – the
-  // owner's philosophy is "the parent may push, the game warns".
+  // condition 47, 41-44% of weeks under 40): booking below `cautionCondition`, or a long enough
+  // run of consecutive practice weeks, raises a CAUTION. It never blocks – the owner's philosophy
+  // is "the parent may push, the game warns".
+  //
+  // WAVE-2 RETUNE (fatigue bench 26.07): the streak arm used to fire on the 3rd week no matter
+  // how fresh she was – careful pushed through 8-11 cautions/season at condition 92, and a warning
+  // nobody believes is worse than none (it trains the player to click through the real ones). The
+  // arm is now gated on ACTUAL strain: 3 in a row only warns below `cautionStreakCondition`, while
+  // `cautionStreakAlways` in a row warns at any condition (a run that long IS strain). The
+  // low-condition arm (`cautionCondition`) is untouched.
   practice: {
     courtFeeCents: [30_00, 80_00] as [number, number],
     coachSessionCents: [120_00, 250_00] as [number, number],
     coachShare: 0.5,
     cautionCondition: 55,
+    /** the SHORT streak – warns only while she is under the strain gate below */
     cautionStreak: 3,
-    /** the rescue prompt fires below this condition (spec §4b – an OFFER, never an auto-book) */
-    rescueCondition: 65,
-    /** the rescue catalogue pre-highlights the cheapest package that returns her above this */
+    /** the short streak's strain gate: 3 match weeks in a row warn only below this condition */
+    cautionStreakCondition: 75,
+    /** a run this long warns at ANY condition – no gate */
+    cautionStreakAlways: 4,
+    /** the rescue prompt fires at or below this condition (spec §4b – an OFFER, never an
+     *  auto-book). WIDENED 65 → 80 (Wave-2): the narrow band meant the offer only ever appeared
+     *  on a deep deficit, where nothing but the expensive packages could clear the target – so
+     *  seaside took 88% of every booking in the bench. A mildly-tired week is exactly where a
+     *  cheap package is the right answer. */
+    rescueCondition: 80,
+    /** the offer pre-highlights the CHEAPEST package sufficient to return her to this condition
+     *  (see recommendVacationPackage) – so the recommendation slides down the ladder as the
+     *  deficit shrinks, instead of always demanding the +20 tier. */
     rescueTargetCondition: 85,
   },
 } as const
@@ -444,6 +472,53 @@ export function vacationPriceCents(
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error(`Unknown vacation package "${packageId}"`)
   return corridorPrice(rngFromSeed(`${seed}:vacation:${week}:${packageId}`), pkg.priceCents, background)
+}
+
+/** THE vacation pre-highlight, as ONE pure rule (Wave-2 tuning, fatigue bench 26.07).
+ *
+ *  Before this pass the rule lived in three places (the rescue card, the planner sheet, the
+ *  bench) and every copy asked the same question – "the cheapest package that returns her ABOVE
+ *  85" – which on a deep deficit no cheap package can answer, so all three fell through to "the
+ *  most expensive she can afford". Result: seaside 88% of every booking in the bench, grandma
+ *  0.2%, camping 0.4%.
+ *
+ *  The rule now reads HER CURRENT condition: the cheapest package that gets her to
+ *  `targetCondition` (defaulting to ECONOMY.practice.rescueTargetCondition), counting the clamp
+ *  at ECONOMY.condition.max – so on a mild deficit the free staycation IS the answer and the
+ *  recommendation slides up the ladder only as the hole deepens. When nothing on the shelf can
+ *  reach the target (a real crash), it falls back to the biggest reset she can afford.
+ *
+ *  Pure: prices come from the same deterministic quote the booking will charge, so the UI, the
+ *  engine and the bench can never disagree. Returns null only when even the free package is out
+ *  of reach (a prudence budget below zero). */
+export function recommendVacationPackage(input: {
+  seed: string
+  week: number
+  background: FamilyBackground
+  /** her condition TODAY – the deficit the package has to close */
+  condition: number
+  fundsCents: number
+  /** optional prudence cap (the bench's "never spend more than X on one package") */
+  budgetCents?: number
+  /** optional override for the condition the pick aims to restore */
+  targetCondition?: number
+}): string | null {
+  const cap = Math.min(input.fundsCents, input.budgetCents ?? input.fundsCents)
+  const target = input.targetCondition ?? ECONOMY.practice.rescueTargetCondition
+  const priced = ECONOMY.vacation.packages
+    .map((pkg) => ({ pkg, priceCents: vacationPriceCents(input.seed, input.week, pkg.id, input.background) }))
+    .filter((row) => row.priceCents <= cap)
+    // cheapest first, and on a price tie the SMALLER gain first – "cheapest sufficient" has to be
+    // read off the quoted price, not the catalogue order (quotes breathe inside their bands).
+    .sort((a, b) => a.priceCents - b.priceCents || a.pkg.conditionGain - b.pkg.conditionGain)
+  if (priced.length === 0) return null
+  const sufficient = priced.find(
+    (row) => Math.min(ECONOMY.condition.max, input.condition + row.pkg.conditionGain) >= target,
+  )
+  // Nothing clears the target: buy the deepest reset money can buy (the biggest gain, cheapest
+  // among equals) – the crash case the ladder's top tiers exist for.
+  const deepest = priced.reduce((a, b) => (b.pkg.conditionGain > a.pkg.conditionGain ? b : a))
+  return (sufficient ?? deepest).pkg.id
 }
 
 /** The deterministic price of ONE practice-match booking off `rngFromSeed(seed:practice:week)`:

@@ -23,7 +23,13 @@ import {
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
-import { ECONOMY, vacationPackage, vacationPriceCents, practiceFeeCents } from '../src/engine/economy'
+import {
+  ECONOMY,
+  recommendVacationPackage,
+  vacationPackage,
+  vacationPriceCents,
+  practiceFeeCents,
+} from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import type { FamilyBackground, PlayerProfile } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
@@ -475,15 +481,39 @@ describe('P7 — practice guardrail predicate', () => {
     expect(fresh.reasons).toEqual([])
   })
 
-  it('flags the 3rd consecutive practice week', () => {
-    const third = practiceCaution({ condition: 95, practiceWeeks: [8, 9], week: 10 })
+  // Wave-2 tuning (fatigue bench 26.07): the 3-in-a-row arm used to fire on a perfectly fresh
+  // kid – careful pushed through 8-11 cautions/season at condition 92, which trains the player to
+  // click through the REAL ones. The streak arm is now gated on actual strain (below
+  // cautionStreakCondition) OR on a longer run (cautionStreakAlways).
+  it('stays QUIET on a 3-week streak while she is fresh (the warning-noise fix)', () => {
+    const p = ECONOMY.practice
+    expect(p.cautionStreakCondition).toBeLessThan(ECONOMY.condition.max)
+    const fresh = practiceCaution({ condition: 92, practiceWeeks: [8, 9], week: 10 })
+    expect(fresh.level).toBe('ok')
+    expect(fresh.reasons).toEqual([])
+    // exactly AT the strain gate is still quiet (the gate is "below")
+    expect(practiceCaution({ condition: p.cautionStreakCondition, practiceWeeks: [8, 9], week: 10 }).level).toBe('ok')
+  })
+
+  it('flags the 3rd consecutive practice week once she is actually strained', () => {
+    const third = practiceCaution({ condition: ECONOMY.practice.cautionStreakCondition - 1, practiceWeeks: [8, 9], week: 10 })
     expect(third.level).toBe('caution')
     expect(third.reasons).toContain('streak')
+    expect(third.streakWeeks).toBe(3)
+    expect(third.detail).toMatch(/3 match weeks in a row/)
     // a gap resets the streak
-    expect(practiceCaution({ condition: 95, practiceWeeks: [7, 9], week: 10 }).level).toBe('ok')
+    expect(practiceCaution({ condition: 70, practiceWeeks: [7, 9], week: 10 }).level).toBe('ok')
     expect(consecutivePracticeWeeks([8, 9], 10)).toBe(2)
     expect(consecutivePracticeWeeks([7, 9], 10)).toBe(1)
     expect(consecutivePracticeWeeks([], 10)).toBe(0)
+  })
+
+  it('flags a 4-in-a-row run at ANY condition (a long streak is strain by itself)', () => {
+    const long = practiceCaution({ condition: 100, practiceWeeks: [7, 8, 9], week: 10 })
+    expect(long.level).toBe('caution')
+    expect(long.reasons).toContain('streak')
+    expect(long.streakWeeks).toBe(ECONOMY.practice.cautionStreakAlways)
+    expect(long.detail).toMatch(/4 match weeks in a row/)
   })
 
   it('never BLOCKS the booking – the parent may push (owner philosophy)', () => {
@@ -574,6 +604,97 @@ describe('P9 — snapshot + planner UI', () => {
   it('the Home availability chip reads the practice strain', () => {
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
     expect(src).toMatch(/practiceCaution|cautionCondition/)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// P10 — the vacation OFFER (Wave-2 tuning): a wider band + a pre-highlight that
+// slides DOWN the ladder as the deficit shrinks. Before this pass the offer only
+// fired below 65 and the pick always needed >= 85, so seaside took 88% of every
+// booking in the bench and grandma/camping were unreachable answers.
+// ---------------------------------------------------------------------------
+describe('P10 — vacation offer band + cheapest-sufficient pre-highlight', () => {
+  const RICH = 9_999_999_00
+
+  function pickAt(condition: number, seed = 'p10', week = 12, fundsCents = RICH): string | null {
+    return recommendVacationPackage({ seed, week, background: 'wealthy', condition, fundsCents })
+  }
+
+  it('the offer band reaches mildly-tired weeks (<= 80), where a cheap package IS the answer', () => {
+    expect(ECONOMY.practice.rescueCondition).toBeGreaterThanOrEqual(80)
+    // …and the target the pre-highlight aims for stays where the owner put it.
+    expect(ECONOMY.practice.rescueTargetCondition).toBe(85)
+  })
+
+  it('picks the CHEAPEST package sufficient for her CURRENT condition', () => {
+    // gains: staycation +12 · grandma +14 · camping +16 · seaside +20 · resort +25 · elite +30,
+    // target 85 -> the ladder slides down as the deficit shrinks.
+    expect(pickAt(80)).toBe('staycation') // 80+12 = 92
+    expect(pickAt(73)).toBe('staycation') // 73+12 = 85 (exactly sufficient)
+    expect(pickAt(72)).toBe('grandma') // 72+12 = 84 short; +14 = 86
+    expect(pickAt(70)).toBe('camping') // +14 = 84 short; +16 = 86
+    expect(pickAt(66)).toBe('seaside') // +16 = 82 short; +20 = 86
+    expect(pickAt(61)).toBe('resort')
+    expect(pickAt(56)).toBe('elite')
+  })
+
+  it('a nearly-fresh kid gets the FREE staycation (the clamp at 100 counts as sufficient)', () => {
+    expect(pickAt(95)).toBe('staycation')
+    expect(pickAt(100)).toBe('staycation')
+  })
+
+  it('on a deep deficit nothing clears the target, so it falls back to the best she can afford', () => {
+    expect(pickAt(20)).toBe('elite') // 20+30 = 50, still short – buy the biggest reset available
+  })
+
+  it('respects the wallet: only affordable packages, and null when even the free one is gone', () => {
+    const week = 12
+    const camping = vacationPriceCents('p10', week, 'camping', 'wealthy')
+    // A family that can afford camping but not seaside gets camping even on a deep deficit.
+    expect(recommendVacationPackage({ seed: 'p10', week, background: 'wealthy', condition: 30, fundsCents: camping })).toBe(
+      'camping',
+    )
+    // The staycation is free, so it is always reachable – a budget of 0 still returns it.
+    expect(recommendVacationPackage({ seed: 'p10', week, background: 'wealthy', condition: 30, fundsCents: 0 })).toBe(
+      'staycation',
+    )
+    // …unless the prudence budget forbids even that (bench guard: negative funds).
+    expect(
+      recommendVacationPackage({ seed: 'p10', week, background: 'wealthy', condition: 30, fundsCents: 0, budgetCents: -1 }),
+    ).toBeNull()
+  })
+
+  it('takes an explicit target override (the bench policies aim higher than the prompt)', () => {
+    expect(pickAt(78)).toBe('staycation')
+    expect(
+      recommendVacationPackage({
+        seed: 'p10',
+        week: 12,
+        background: 'wealthy',
+        condition: 78,
+        fundsCents: RICH,
+        targetCondition: 90,
+      }),
+    ).toBe('staycation') // 78+12 = 90 exactly
+    expect(
+      recommendVacationPackage({
+        seed: 'p10',
+        week: 12,
+        background: 'wealthy',
+        condition: 77,
+        fundsCents: RICH,
+        targetCondition: 90,
+      }),
+    ).toBe('grandma') // 77+12 = 89 short
+  })
+
+  it('BOTH pre-highlight surfaces call the one shared helper (no third copy of the rule)', () => {
+    const sheet = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
+    const season = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
+    expect(sheet).toContain('recommendVacationPackage')
+    expect(season).toContain('recommendVacationPackage')
+    // the old off-season hard-code ("always seaside") is gone – the recommendation slides now
+    expect(sheet).not.toMatch(/'seaside'/)
   })
 })
 

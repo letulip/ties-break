@@ -21,7 +21,7 @@ import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek } from '../../engine/season/calendar'
-import { ECONOMY, vacationPackage, vacationPriceCents } from '../../engine/economy'
+import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 import { weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { AnnotatedMatch } from '../../viz/types'
@@ -145,6 +145,10 @@ function lockLabel(e: UpcomingEvent): string {
       const s = game.snapshot
       return s?.injury ? `Injured – back wk ${s.week + s.injury.weeksRemaining}` : 'Injured – rest up'
     }
+    // The doctor's veto (below ECONOMY.availability.medicalFloor): the one hard body-gate. The
+    // card says WHY in three words; the confirm never appears, because there is nothing to confirm.
+    case 'medical':
+      return 'Not cleared to play'
     case 'unavailable': {
       const vacation = vacations.value.find((v) => v.week === e.week)
       return vacation ? `Family vacation – ${packageLabel(vacation.packageId)}` : 'School exams this week'
@@ -247,30 +251,42 @@ function askCancelPractice(row: CalendarRow): void {
 // --- the RESCUE prompt (spec §4b) -------------------------------------------------------
 // The bench exposed the trap: a reactive "book when condition < 60" rule never fires for the
 // load-manager, while the overloaded player has no booking habit at all – 5 of 6 packages never
-// sell. So the game SURFACES the lever to whoever is low: below rescueCondition, with a bookable
-// empty week ahead, it OFFERS a vacation, pre-filtered to the packages that bring her back above
-// rescueTargetCondition. An offer – never an auto-book. Dismissible per session.
+// sell. So the game SURFACES the lever to whoever is low: at or below rescueCondition, with a
+// bookable empty week ahead, it OFFERS a vacation with the cheapest sufficient package
+// pre-highlighted. An offer – never an auto-book. Dismissible per session.
+// WAVE-2 (bench 26.07): the band was widened 65 → 80 and the pick now reads HER condition
+// (recommendVacationPackage) instead of always demanding a package that clears 85 – on a mild
+// deficit the free staycation is the right answer, and seaside stops being the only sale.
 const rescueDismissed = ref(false)
 const rescueWeek = computed<number | null>(() => calendarRows.value.find((r) => r.plannable)?.week ?? null)
-/** The cheapest package that would return her above the target (the rescue pre-highlight). */
+/** The cheapest package sufficient for her CURRENT condition – the ONE shared rule (economy.ts),
+ *  so this card, the planner sheet and the bench can never drift apart. */
 const rescuePackageId = computed<string | null>(() => {
   const w = rescueWeek.value
   const snap = game.snapshot
   if (w === null || !snap) return null
-  const affordable = ECONOMY.vacation.packages.filter(
-    (p) => snap.fundsCents >= vacationPriceCents(snap.seed, w, p.id, snap.profile.background),
-  )
-  if (affordable.length === 0) return null
-  const clearing = affordable.find((p) => condition.value + p.conditionGain > ECONOMY.practice.rescueTargetCondition)
-  return (clearing ?? affordable[affordable.length - 1]).id
+  return recommendVacationPackage({
+    seed: snap.seed,
+    week: w,
+    background: snap.profile.background,
+    condition: condition.value,
+    fundsCents: snap.fundsCents,
+  })
 })
 const showRescue = computed(
   () =>
     !!game.snapshot &&
     !game.snapshot.injury &&
     !rescueDismissed.value &&
-    condition.value < ECONOMY.practice.rescueCondition &&
+    condition.value <= ECONOMY.practice.rescueCondition &&
     rescueWeek.value !== null,
+)
+/** The offer now reaches MILDLY tired weeks too (band widened to 80), and "she is worn out" is a
+ *  lie at condition 78 – the headline follows the depth of the hole. */
+const rescueTitle = computed(() =>
+  condition.value < ECONOMY.practice.cautionCondition
+    ? 'She is worn out – maybe a family week?'
+    : 'She could use a week off – maybe a family week?',
 )
 function openRescue(): void {
   if (rescueWeek.value === null) return
@@ -344,7 +360,7 @@ function playExhibition(): void {
 
     <!-- Rescue prompt (spec §4b): an OFFER when she is worn out, never an auto-book. -->
     <div v-if="showRescue" class="rescue-card">
-      <p class="rescue-title">She is worn out – maybe a family week?</p>
+      <p class="rescue-title">{{ rescueTitle }}</p>
       <p class="hint" style="margin: 0">
         Condition {{ condition }}/100. A week away in W{{ rescueWeek }} would bring her back
         fresher – nothing is booked until you say so.
@@ -427,8 +443,8 @@ function playExhibition(): void {
                 Entries closed W{{ row.event.deadlineWeek }}
               </span>
               <!-- HARD locks: ranking gate ('locked') OR a hard availability block (injured /
-                   school exams / a booked family vacation). Fatigue is NOT here – it stays
-                   enterable (see below). -->
+                   school exams / a booked family vacation / the doctor's veto under the medical
+                   floor). ORDINARY fatigue is NOT here – it stays enterable (see below). -->
               <span v-else-if="!row.event.eligible" class="pill muted lock">
                 🔒 {{ lockLabel(row.event) }}
               </span>

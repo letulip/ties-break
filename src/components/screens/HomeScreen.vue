@@ -125,8 +125,12 @@ const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'amb
     week: s.week + 1,
   })
   if (strain.level === 'caution') {
+    // The streak arm is gated on real strain now (Wave-2), so the run it names varies – read the
+    // count off the same predicate instead of hard-coding "Third".
     return {
-      label: strain.reasons.includes('tired') ? 'Worn out – she needs a rest week' : 'Third match week in a row',
+      label: strain.reasons.includes('tired')
+        ? 'Worn out – she needs a rest week'
+        : `${strain.streakWeeks} match weeks in a row`,
       tone: 'amber',
     }
   }

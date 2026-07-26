@@ -288,10 +288,11 @@ export interface UpcomingEvent {
   /** why the kid HARD-cannot enter, for the UI lock label; absent when eligible. Point-band reasons:
    *  'locked' = not enough ranking points yet (below the tier's minPoints); 'outgrown' = past its
    *  ceiling now. Hard availability blocks (Season-Life slice B, checked after the point band):
-   *  'unavailable' = school exams / off-season; 'injured' = wired for Slice C (never set in B).
-   *  Fatigue is NOT here – it is a soft, warned CHOICE (see cautionReason), so a fatigued event
-   *  stays eligible. */
-  ineligibleReason?: 'locked' | 'outgrown' | 'injured' | 'unavailable'
+   *  'unavailable' = school exams / off-season / a booked family vacation; 'injured' = she is out;
+   *  'medical' = the doctor's veto below ECONOMY.availability.medicalFloor (the one hard body-gate
+   *  – see availabilityStatus). Ordinary fatigue is NOT here – it is a soft, warned CHOICE (see
+   *  cautionReason), so a fatigued event stays eligible. */
+  ineligibleReason?: 'locked' | 'outgrown' | 'injured' | 'unavailable' | 'medical'
   /** a SOFT warning on an event the kid CAN still enter (eligible stays true): 'fatigued' = her
    *  condition is below the tier's floor, so racing risks a deeper hole / injury. The owner's call
    *  is that a tired body is a tough-parent decision, not a hard rule. */
