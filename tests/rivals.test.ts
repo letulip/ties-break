@@ -110,10 +110,13 @@ describe('A1 — reconstruction: (tier, points) round-trips to the right match c
     // (LADDER5 = 6 at variant C) exactly as the kid's own five-match run does. Asserted against
     // tournamentRunStrain itself as well, so the two sides are proved to be ONE function rather
     // than two formulas that happen to agree today. ***
+    // *** RE-PINNED AGAIN 36 -> 41 (26.07, MATCH BASE RAISE 1 -> 2): the ladder half is untouched
+    // (LADDER5 = 6) and so is the sharing property this test exists for; the five per-match drains
+    // went 6 -> 7 each. The heaviest reconstructable rival run in the game is now 41. ***
     const run = reconstructRun(row('j300', 0, 4))
     expect(run.matches).toBe(5)
     expect(run.strain).toBe(5 * matchDrain('j300', undefined) + LADDER5)
-    expect(run.strain).toBe(36) // 5 × (1 straight-sets + 5 j300 surcharge) = 30, + 6 ladder
+    expect(run.strain).toBe(41) // 5 × (2 straight-sets + 5 j300 surcharge) = 35, + 6 ladder
     // THE point of routing through the shared helper: the rival's number IS the kid's number for the
     // same five score-less wins at that tier, ladder included.
     expect(run.strain).toBe(tournamentRunStrain('j300', new Array(5).fill({})))
@@ -171,9 +174,23 @@ describe('A2 — a tier-less row (legacy saves / pre-history) is handled explici
     // steepening of the ladder (the owner's variant A would make the local title 3 + 6 = 9) would
     // flip a legacy row's cheapest reading onto a different tier. Recorded for the tuning pass –
     // the rule is "cheapest", not "local", so this is behaviour, not a bug. ***
+    //
+    // *** THAT PREDICTION CAME TRUE — and not from the ladder. RE-PINNED local/3/5 -> j300/1/7 by the
+    // MATCH BASE RAISE (26.07, straightSets 1 -> 2). The base is charged PER MATCH, so raising it by
+    // one taxes a 3-match reading three times and a 1-match reading once; the readings at base 2 are
+    //     local title    3 matches × 2 =  6, + ladder(0,1,1) = 2  ->  8
+    //     j30 last-16    2 matches × 5 = 10, + ladder(0,1)   = 1  -> 11
+    //     j300 first rd  1 match  × 7 =  7, + ladder(0)      = 0  ->  7   <- now the cheapest
+    // BEHAVIOUR, NOT A BUG, exactly as the note above said: the rule is "cheapest reading", and the
+    // cheapest reading of 30 points is now one J300 first-round loss rather than a Local title. It
+    // only touches rows with NO `tier` field — every AI row written since the rival-life slice
+    // carries one — i.e. pre-slice legacy saves, where a tier-less row now reconstructs as 1 match /
+    // 7 strain instead of 3 matches / 5. FLAGGED FOR THE OWNER: if a legacy row should still read as
+    // the LOCAL title (the likelier real history for a 30-point week), the fix is a tie-break
+    // preference in reconstructRun, not a fatigue knob. ***
     const run = reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })
-    expect(run).toMatchObject({ tier: 'local', matches: 3, strain: 5 })
-    expect(run.strain).toBe(tournamentRunStrain('local', new Array(3).fill({}))) // the shared helper
+    expect(run).toMatchObject({ tier: 'j300', matches: 1, strain: 7 })
+    expect(run.strain).toBe(tournamentRunStrain('j300', new Array(1).fill({}))) // the shared helper
     // ...and it is a pure function: same row, same answer, every time.
     expect(reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })).toEqual(run)
   })
@@ -196,18 +213,21 @@ describe('A3 — the same drain + the same time recovery the kid uses', () => {
     // *** RE-PINNED 70 -> 64 (wave-3, the SHARED ladder): the run's toll is 30 per-match + 6 ladder
     // = 36, the same 36 the kid pays for five score-less J300 wins. Written as `30 + LADDER5` rather
     // than 36 so the owner's four ladder variants re-read this instead of re-breaking it. ***
-    const drain = 5 * matchDrain('j300', undefined) + LADDER5 // 36
-    expect(rivalCondition(ledger, 'ai-x', 10)).toBe(R.max - drain) // 64 – the run week itself
+    // *** …and that is exactly why the MATCH BASE RAISE (26.07, 1 -> 2) did not break it: the drain
+    // is READ FROM THE ENGINE, so it moved 36 -> 41 on its own. Only the illustrative numbers in
+    // these comments were re-pinned: the run week is now 59, then 60, 63. ***
+    const drain = 5 * matchDrain('j300', undefined) + LADDER5 // 41 (35 per-match + 6 ladder)
+    expect(rivalCondition(ledger, 'ai-x', 10)).toBe(R.max - drain) // 59 – the run week itself
     // A tournament week earns matchWeekRecoveryBase (0 shipped); every quiet week earns
     // recoveryBase, +blackoutBonus on an off-season/exam week. Weeks 11-14 are all plain.
-    expect(rivalCondition(ledger, 'ai-x', 11)).toBe(R.max - drain + R.recoveryBase) // 65
-    expect(rivalCondition(ledger, 'ai-x', 14)).toBe(R.max - drain + 4 * R.recoveryBase) // 68
+    expect(rivalCondition(ledger, 'ai-x', 11)).toBe(R.max - drain + R.recoveryBase) // 60
+    expect(rivalCondition(ledger, 'ai-x', 14)).toBe(R.max - drain + 4 * R.recoveryBase) // 63
   })
 
   it('rivals get NO plan slider, NO physio and NO vacation – that asymmetry is the player edge', () => {
     // The kid on the 60/40 preset recovers recoveryBase + 2 on a free week, +1 more on physio.
     // A rival recovers the base alone: four quiet weeks buy her exactly 4 * recoveryBase. Dug out
-    // of a deep enough hole (a J300 title: 36 under the shared ladder) that the ceiling clamp cannot
+    // of a deep enough hole (a J300 title: 41 at base 2 under the shared ladder) that the clamp cannot
     // flatter the reading.
     const deep = [row('j300', 0, 10)]
     const gained = rivalCondition(deep, 'ai-x', 14) - rivalCondition(deep, 'ai-x', 10)
@@ -216,7 +236,7 @@ describe('A3 — the same drain + the same time recovery the kid uses', () => {
   })
 
   it('clamps to the same [min, max] bounds', () => {
-    // Eight back-to-back J300 titles (288 strain under the shared ladder) cannot push her below the
+    // Eight back-to-back J300 titles (328 strain at base 2 under the shared ladder) cannot push her below the
     // floor...
     const brutal = Array.from({ length: 8 }, (_, i) => row('j300', 0, 3 + i))
     expect(rivalCondition(brutal, 'ai-x', 10)).toBe(R.min)
@@ -284,14 +304,21 @@ describe('A4 — a deep run leaves a soft week behind her, and it heals', () => 
     // no-op back – widening it to 65 would restore the old claim exactly – so this is flagged for
     // the tuning pass rather than patched here. What the test now pins is the SHAPE: one deep run
     // is a small, recoverable dent, not the cliff that ACCUMULATED load is. ***
+    //
+    // *** RE-PINNED 0.95 -> 0.90 by the MATCH BASE RAISE (26.07, 1 -> 2). The J300 title now costs 41
+    // rather than 36, so the fresh champion lands on 60 (was 65) and reads ~0.936 (was ~0.968): the
+    // dent roughly DOUBLED, 3% -> 6.4%. Still the shape this test pins – a recoverable shade, five
+    // quiet weeks from gone – but the base raise pushed her 10 points under the knee instead of 5,
+    // and that is exactly the "widen the knee to 65" question the note above flagged, now louder.
+    // The bound is loosened once, deliberately, and stays a bound rather than a point pin. ***
     const fresh = rivalCondition([row('j300', 0, 12, 'ai-fresh')], 'ai-fresh', 13)
-    expect(fresh).toBe(R.max - (5 * matchDrain('j300', undefined) + LADDER5) + R.recoveryBase) // 65
+    expect(fresh).toBe(R.max - (5 * matchDrain('j300', undefined) + LADDER5) + R.recoveryBase) // 60
     expect(fresh).toBeLessThan(R.max)
     // she has crossed the knee, but only just: a few percent, nowhere near the floor
     expect(fresh).toBeLessThan(R.matchStrengthKnee)
     const factor = conditionMatchFactor(fresh)
     expect(factor).toBeLessThan(1)
-    expect(factor).toBeGreaterThan(0.95) // ~0.968 shipped: a shade, not a cliff
+    expect(factor).toBeGreaterThan(0.9) // ~0.936 shipped: a shade, not a cliff
     // ...and the cliff is still reserved for accumulated load – the A4 runner above, who arrives at
     // the same J300 already carrying three recent draws, is far weaker than this fresh champion.
     expect(conditionMatchFactor(rivalCondition(runner, 'ai-run', 13))).toBeLessThan(factor)
@@ -558,6 +585,23 @@ describe('C2 — a real season produces genuinely tired rivals, and nobody is pi
     //   1. nobody is floored for the whole window (the title's literal claim);
     //   2. heavy pinning stays a handful of the 199, not the standings (measured 0-2, either mix);
     //   3. the cohort's MEDIAN condition stays healthy, so the ranking is coloured, not inverted.
+    //
+    // *** RE-PINNED (2) 3 -> 10 by the MATCH BASE RAISE (26.07, 1 -> 2). The cohort pays the SAME
+    // per-match drain the kid does and recovers at recoveryBase 1/week with no slider, no physio and
+    // no vacation, so a base raise lands on the rivals harder than on any player. MEASURED, 8 seeds
+    // × 40 ticked weeks × 199 rivals, window 20w (tools sweep, base patched with the runsIndex memo
+    // invalidated – it is keyed on the ladder array, so a matchFatigue patch alone is invisible to it):
+    //     base 1   worst floored 7-13/20 · heavy(>=10w) 0-2 · ever floored 13.1-15.1% · min median 98
+    //     base 2   worst floored 12-14/20 · heavy(>=10w) 2-9 · ever floored 21.1-23.6% · min median 93-96
+    // So: claims (1) and (3) hold with room to spare – the median rival is still fit every week, i.e.
+    // the standings are still COLOURED and not inverted, which is the property that protects the
+    // ranking. What degraded is (2): the handful went 0-2 -> 2-9 of 199 (1% -> 4.5%). Bound set at 10
+    // from the measured 9, not tightened onto it.
+    // ⚠ FLAGGED FOR THE OWNER, not tuned here: `ever floored` is now 21-24% against a 25% bound, and
+    // the same sweep at 60 ticked weeks measures 25.6% – i.e. a longer world already crosses it. The
+    // knob for that is `rivalFatigueWindowWeeks` (16), which economy.ts documents as chosen precisely
+    // because "at recoveryBase 1/week their drain outruns their recovery permanently"; one rung more
+    // drain shortens the window that statement is true for. ~12-13 is the follow-up to measure. ***
     const weeks = 20
     const flooredWeeks = new Map<string, number>()
     const medians: number[] = []
@@ -575,7 +619,7 @@ describe('C2 — a real season produces genuinely tired rivals, and nobody is pi
     }
     // 2. a handful of the field, not the field
     const heavy = [...flooredWeeks.values()].filter((n) => n >= weeks / 2).length
-    expect(heavy, 'rivals floored for half the window').toBeLessThanOrEqual(3)
+    expect(heavy, 'rivals floored for half the window').toBeLessThanOrEqual(10)
     expect(flooredWeeks.size / world.cohort.length, 'share ever floored').toBeLessThan(0.25)
     // 3. the standings are coloured, not inverted – the median rival is fit every single week
     for (const m of medians) expect(m).toBeGreaterThan(ECONOMY.condition.matchStrengthKnee)

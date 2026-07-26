@@ -17,11 +17,11 @@ export function clamp(x: number, lo: number, hi: number): number {
 }
 
 /** R9-7 (owner redesign): the INTEGER fatigue of ONE match – how hard the scoreline was,
- *  plus the tier's per-match surcharge:
- *    straight sets, no tiebreak → 1;  a 3-setter OR a tiebreak in a 2-setter → 2;
- *    +1 more when the match had MORE than 2 tiebreak sets (a three-TB epic) – max 3;
+ *  plus the tier's per-match surcharge (BASE RAISED 1 → 2, owner 26.07):
+ *    straight sets, no tiebreak → 2;  a 3-setter OR a tiebreak in a 2-setter → 3;
+ *    +1 more when the match had MORE than 2 tiebreak sets (a three-TB epic) – max 4;
  *    + tierMatchFatigue[tier] (local 0 / regional 1 / national 2 / j30 3 / j60 4 / j300 5).
- *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest national match = 5. Pure state, zero
+ *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest national match = 6. Pure state, zero
  *  draws; a record without a score (defensive) counts as straight sets – which is also the
  *  branch every RIVAL match takes, since AI-vs-AI results carry no scoreline (rival-life). */
 export function matchDrain(tier: TierId, score: string | undefined): number {
@@ -34,7 +34,8 @@ export function matchDrain(tier: TierId, score: string | undefined): number {
 }
 
 /** R9-7: a committed run's total toll = Σ matchDrain over the run's match records. A 5-match
- *  National run maxes at 25 (the owner's own check). Applied by finalizeTournament for the kid,
+ *  National run of epics maxes at 30 per-match (it was 25, the owner's own check, before the base
+ *  raise of 26.07) + the cumulative ladder. Applied by finalizeTournament for the kid,
  *  and by the rival ledger reconstruction for the cohort – so if a cumulative run-fatigue ladder
  *  is ever added it lands HERE and both sides inherit it at once. */
 /** CUMULATIVE RUN FATIGUE (owner idea 26.07): the EXTRA condition the n-th match of ONE tournament
@@ -55,7 +56,7 @@ export function runFatigueExtra(matchIndex: number): number {
 
 /** A committed run's total toll = the sum of (matchDrain + the run-fatigue ladder) over the match
  *  records IN ORDER - the reduce index IS the match-within-run index the ladder wants. A 5-match
- *  National run of epics = 25 per-match + 6 ladder (variant C) = 31. A walkover or a skipped event
+ *  National run of epics = 30 per-match + 6 ladder (variant C) = 36. A walkover or a skipped event
  *  never reaches finalize, so it has no records and costs nothing, ladder included. */
 export function tournamentRunStrain(tier: TierId, matches: { score?: string }[]): number {
   return matches.reduce((sum, m, i) => sum + matchDrain(tier, m.score) + runFatigueExtra(i), 0)

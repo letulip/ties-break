@@ -53,7 +53,10 @@ price — owner approved). Cancel before the week starts = full refund (mirror o
   coach tier when the coach slice lands.
 - Effect v1 (owner 25.07, integer scale): condition drain = **max(1, local-scoreline drain − 1)**
   — a friendly is one lighter than the same match at a local, never below 1 (straight sets = 1,
-  a 3-set friendly slugfest = 1, an epic = 2). Week-type semantics: a PRACTICE week keeps the
+  a 3-set friendly slugfest = 1, an epic = 2). ⚠ **Those three examples were the base-1 arithmetic
+  and moved with the MATCH BASE RAISE (owner 26.07, straightSets 1 → 2): the FORMULA is unchanged,
+  but it no longer clamps — straight sets = 1, a 3-setter = 2, an epic = 3. The canonical table is
+  `docs/specs/fatigue-reference.md`.** Week-type semantics: a PRACTICE week keeps the
   base recovery (+2) but FORFEITS the slider rest bonus (you played, even if friendly); a
   TOURNAMENT week gets no base recovery (V2); a free week gets base + slider bonus. So the
   weekly ladder reads 0 / +2−drain / +2..+4. A watchable friendly via the EXISTING exhibition

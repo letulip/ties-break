@@ -374,10 +374,13 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
   })
 
   it('matchDrain extrapolates above national for the J levels', () => {
-    expect(matchDrain('national', '6-4 6-2')).toBe(3) // 1 + 2
-    expect(matchDrain('j30', '6-4 6-2')).toBe(4) // 1 + 3 (was the itf pin)
-    expect(matchDrain('j60', '6-4 6-2')).toBe(5)
-    expect(matchDrain('j300', '6-4 6-2')).toBe(6)
+    // ⚠ RE-PINNED +1 each 26.07 (MATCH BASE RAISE, straightSets 1 → 2): the J extrapolation itself
+    // is untouched – tierMatchFatigue is unchanged and the +1-per-rung shape is what this test is
+    // about. Only the base under it moved, so every cell went up by exactly one.
+    expect(matchDrain('national', '6-4 6-2')).toBe(4) // 2 + 2
+    expect(matchDrain('j30', '6-4 6-2')).toBe(5) // 2 + 3 (was the itf pin)
+    expect(matchDrain('j60', '6-4 6-2')).toBe(6)
+    expect(matchDrain('j300', '6-4 6-2')).toBe(7)
   })
 
   it('WIN_IMMUNITY_WEEKS covers every tier (avatar emotion)', () => {
