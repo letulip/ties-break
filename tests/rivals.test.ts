@@ -9,7 +9,7 @@ import {
   rivalMatchPlayer,
   styleOf,
 } from '../src/engine/season/rival'
-import { conditionMatchFactor, matchDrain } from '../src/engine/condition'
+import { conditionMatchFactor, matchDrain, runFatigueExtra, tournamentRunStrain } from '../src/engine/condition'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { generateCohort } from '../src/engine/season/cohort'
 import { ECONOMY } from '../src/engine/economy'
@@ -37,9 +37,23 @@ import { rngFromSeed } from '../src/engine/rng'
 // `points` inverts through `TIERS[tier].points` to a finish index, the finish index gives how
 // many matches she played, and from there the SAME matchDrain / tournamentRunStrain / recovery /
 // conditionMatchFactor the kid uses do the rest.
+//
+// *** RE-PINNED (wave-3 integration, 26.07 – THE LADDER IS SHARED). The run-fatigue slice added
+// ECONOMY.condition.runFatigueLadder, the extra condition the n-th match of ONE run costs on top of
+// its own scoreline drain. Because a rival's strain is `tournamentRunStrain` and NOT a private
+// formula, the cohort inherited it the moment the two slices met – so every A-series number below
+// moved. That is the DESIGN, not a leak: if only the kid paid the ladder a deep run would grind only
+// the player, reintroducing precisely the asymmetry this slice exists to remove. Every pin in A1-A4
+// is therefore re-pinned to the ladder-INCLUSIVE reality, and the ladder's contribution is written
+// out from the knob (LADDER5 below) rather than hard-coded, so a tuning pass on the owner's four
+// variants re-reads instead of re-breaking. ***
 // ---------------------------------------------------------------------------
 
 const R = ECONOMY.condition
+
+/** The ladder's total extra over a FIVE-match run (variant C shipped: 0+1+1+2+2 = 6) – read from
+ *  the knob so re-tuning the ladder does not re-break the arithmetic below. */
+const LADDER5 = Array.from({ length: 5 }, (_, i) => runFatigueExtra(i)).reduce((s, x) => s + x, 0)
 
 /** One ledger row for `ai-x` at `week`, finishing `finish` at `tier`. */
 function row(tier: TierId, finish: number, week: number, playerId = 'ai-x'): SeasonResult {
@@ -90,11 +104,42 @@ describe('A1 — reconstruction: (tier, points) round-trips to the right match c
     // AI-vs-AI records carry no scoreline (they resolve closed-form), so every rival match takes
     // matchDrain's score-less branch: straightSets + the tier surcharge. Identical to what the kid
     // would pay for a straight-sets match at that tier – never a private rival formula.
+    //
+    // *** RE-PINNED 30 -> 36 (wave-3, the SHARED ladder): the five per-match drains are unchanged
+    // (5 × 6 = 30), and on top of them the run now pays the cumulative ladder for matches 2-5
+    // (LADDER5 = 6 at variant C) exactly as the kid's own five-match run does. Asserted against
+    // tournamentRunStrain itself as well, so the two sides are proved to be ONE function rather
+    // than two formulas that happen to agree today. ***
     const run = reconstructRun(row('j300', 0, 4))
     expect(run.matches).toBe(5)
-    expect(run.strain).toBe(5 * matchDrain('j300', undefined))
-    expect(run.strain).toBe(30) // 5 × (1 straight-sets + 5 j300 surcharge)
+    expect(run.strain).toBe(5 * matchDrain('j300', undefined) + LADDER5)
+    expect(run.strain).toBe(36) // 5 × (1 straight-sets + 5 j300 surcharge) = 30, + 6 ladder
+    // THE point of routing through the shared helper: the rival's number IS the kid's number for the
+    // same five score-less wins at that tier, ladder included.
+    expect(run.strain).toBe(tournamentRunStrain('j300', new Array(5).fill({})))
+    // A ONE-match run is ladder-free on both sides – her first match of a run never pays extra.
     expect(reconstructRun(row('local', 3, 4)).strain).toBe(matchDrain('local', undefined)) // 1
+    expect(runFatigueExtra(0)).toBe(0)
+  })
+
+  it('the ladder is SHARED, not copied: re-tuning the knob moves the cohort too', () => {
+    // The wave-3 integration decision, asserted directly. The strain index is memoised on the LIVE
+    // ladder (rival.ts runsIndex), so a tuning pass – or the fatigue bench's `--scenario runfat-*`
+    // sections, which is what the owner reads to choose a variant – moves the kid and the cohort
+    // together. With a module-load snapshot the cohort silently stayed on variant C while the kid
+    // moved, and the comparison measured half the game.
+    const knob = R as unknown as { runFatigueLadder: number[] }
+    const shipped = knob.runFatigueLadder
+    const flat = 5 * matchDrain('j300', undefined)
+    try {
+      knob.runFatigueLadder = [0] // the pre-ladder engine
+      expect(reconstructRun(row('j300', 0, 4)).strain).toBe(flat)
+      knob.runFatigueLadder = [0, 1, 2, 3, 4] // the owner's steepest variant (A)
+      expect(reconstructRun(row('j300', 0, 4)).strain).toBe(flat + 10)
+    } finally {
+      knob.runFatigueLadder = shipped
+    }
+    expect(reconstructRun(row('j300', 0, 4)).strain).toBe(flat + LADDER5) // restored
   })
 })
 
@@ -115,11 +160,20 @@ describe('A2 — a tier-less row (legacy saves / pre-history) is handled explici
   })
 
   it('resolves an AMBIGUOUS points value to the cheapest reading, deterministically', () => {
-    // 30 points is a Local title (3 matches, no surcharge = 3), a J30 last-16 (2 × 4 = 8) or a
-    // J300 first round (1 × 6 = 6). The cheapest reading wins: a legacy row can never invent
-    // fatigue the rival may not have earned.
+    // 30 points is a Local title, a J30 last-16 or a J300 first round.
+    //
+    // *** RE-PINNED strain 3 -> 5 (wave-3, the SHARED ladder). The three readings under the ladder:
+    //     local title    3 matches × 1 =  3, + ladder(0,1,1) = 2  ->  5   <- still the cheapest
+    //     j30 last-16    2 matches × 4 =  8, + ladder(0,1)   = 1  ->  9
+    //     j300 first rd  1 match  × 6 =  6, + ladder(0)      = 0  ->  6
+    // Note how much TIGHTER the ordering became: the winning reading used to be 3 against 6, it is
+    // now 5 against 6. The cheapest-reading rule is unchanged and still picks local, but a future
+    // steepening of the ladder (the owner's variant A would make the local title 3 + 6 = 9) would
+    // flip a legacy row's cheapest reading onto a different tier. Recorded for the tuning pass –
+    // the rule is "cheapest", not "local", so this is behaviour, not a bug. ***
     const run = reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })
-    expect(run).toMatchObject({ tier: 'local', matches: 3, strain: 3 })
+    expect(run).toMatchObject({ tier: 'local', matches: 3, strain: 5 })
+    expect(run.strain).toBe(tournamentRunStrain('local', new Array(3).fill({}))) // the shared helper
     // ...and it is a pure function: same row, same answer, every time.
     expect(reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })).toEqual(run)
   })
@@ -139,17 +193,22 @@ describe('A3 — the same drain + the same time recovery the kid uses', () => {
 
   it('a five-match J300 run costs exactly the run strain, and recovers recoveryBase per quiet week', () => {
     const ledger = [row('j300', 0, 10)]
-    expect(rivalCondition(ledger, 'ai-x', 10)).toBe(R.max - 30) // 70 – the run week itself
+    // *** RE-PINNED 70 -> 64 (wave-3, the SHARED ladder): the run's toll is 30 per-match + 6 ladder
+    // = 36, the same 36 the kid pays for five score-less J300 wins. Written as `30 + LADDER5` rather
+    // than 36 so the owner's four ladder variants re-read this instead of re-breaking it. ***
+    const drain = 5 * matchDrain('j300', undefined) + LADDER5 // 36
+    expect(rivalCondition(ledger, 'ai-x', 10)).toBe(R.max - drain) // 64 – the run week itself
     // A tournament week earns matchWeekRecoveryBase (0 shipped); every quiet week earns
     // recoveryBase, +blackoutBonus on an off-season/exam week. Weeks 11-14 are all plain.
-    expect(rivalCondition(ledger, 'ai-x', 11)).toBe(R.max - 30 + R.recoveryBase)
-    expect(rivalCondition(ledger, 'ai-x', 14)).toBe(R.max - 30 + 4 * R.recoveryBase)
+    expect(rivalCondition(ledger, 'ai-x', 11)).toBe(R.max - drain + R.recoveryBase) // 65
+    expect(rivalCondition(ledger, 'ai-x', 14)).toBe(R.max - drain + 4 * R.recoveryBase) // 68
   })
 
   it('rivals get NO plan slider, NO physio and NO vacation – that asymmetry is the player edge', () => {
     // The kid on the 60/40 preset recovers recoveryBase + 2 on a free week, +1 more on physio.
     // A rival recovers the base alone: four quiet weeks buy her exactly 4 * recoveryBase. Dug out
-    // of a deep enough hole (a J300 title, 30) that the ceiling clamp cannot flatter the reading.
+    // of a deep enough hole (a J300 title: 36 under the shared ladder) that the ceiling clamp cannot
+    // flatter the reading.
     const deep = [row('j300', 0, 10)]
     const gained = rivalCondition(deep, 'ai-x', 14) - rivalCondition(deep, 'ai-x', 10)
     expect(gained).toBe(4 * R.recoveryBase)
@@ -157,7 +216,8 @@ describe('A3 — the same drain + the same time recovery the kid uses', () => {
   })
 
   it('clamps to the same [min, max] bounds', () => {
-    // Eight back-to-back J300 titles (240 strain) cannot push her below the floor...
+    // Eight back-to-back J300 titles (288 strain under the shared ladder) cannot push her below the
+    // floor...
     const brutal = Array.from({ length: 8 }, (_, i) => row('j300', 0, 3 + i))
     expect(rivalCondition(brutal, 'ai-x', 10)).toBe(R.min)
     // ...and no amount of rest lifts her over the ceiling.
@@ -210,12 +270,31 @@ describe('A4 — a deep run leaves a soft week behind her, and it heals', () => 
     expect(conditionMatchFactor(cRun)).toBeLessThan(conditionMatchFactor(cRest))
   })
 
-  it('the owner curve still holds: a FRESH rival pays condition for one deep run, not strength', () => {
-    // 100 − 30 = 70 = matchStrengthKnee exactly, so a rival arriving fresh at a J300 and winning it
-    // walks away tired but undamaged. Fatigue bites on ACCUMULATED load, which is the point.
+  it('the CLAIM CHANGED: one deep run now costs a fresh champion a shade of strength too', () => {
+    // *** RE-PINNED AND RE-CLAIMED (wave-3, the SHARED ladder). This test used to assert "a fresh
+    // rival pays condition for one deep run, not strength": pre-ladder a J300 title cost 30, so she
+    // landed on 100 − 30 = 70 = matchStrengthKnee EXACTLY and the strength curve was still a no-op.
+    // That equality was a coincidence of two independently-tuned knobs, and the ladder ended it: the
+    // run now costs 36, she is on 64 the run week and 65 the week after – one point UNDER the knee –
+    // so conditionMatchFactor reads ~0.968 and she carries a ~3% strength cost into next week.
+    //
+    // DOCUMENTED, NOT TUNED AWAY. It is the same rule the kid pays (one curve, one knee, one
+    // ladder), and "the champion of a five-match international is a shade weaker the following week"
+    // is the intent of the whole run-fatigue idea. The knee is the owner's knob if he wants the
+    // no-op back – widening it to 65 would restore the old claim exactly – so this is flagged for
+    // the tuning pass rather than patched here. What the test now pins is the SHAPE: one deep run
+    // is a small, recoverable dent, not the cliff that ACCUMULATED load is. ***
     const fresh = rivalCondition([row('j300', 0, 12, 'ai-fresh')], 'ai-fresh', 13)
+    expect(fresh).toBe(R.max - (5 * matchDrain('j300', undefined) + LADDER5) + R.recoveryBase) // 65
     expect(fresh).toBeLessThan(R.max)
-    expect(conditionMatchFactor(fresh)).toBe(1)
+    // she has crossed the knee, but only just: a few percent, nowhere near the floor
+    expect(fresh).toBeLessThan(R.matchStrengthKnee)
+    const factor = conditionMatchFactor(fresh)
+    expect(factor).toBeLessThan(1)
+    expect(factor).toBeGreaterThan(0.95) // ~0.968 shipped: a shade, not a cliff
+    // ...and the cliff is still reserved for accumulated load – the A4 runner above, who arrives at
+    // the same J300 already carrying three recent draws, is far weaker than this fresh champion.
+    expect(conditionMatchFactor(rivalCondition(runner, 'ai-run', 13))).toBeLessThan(factor)
   })
 
   it('after enough quiet weeks the two converge again', () => {

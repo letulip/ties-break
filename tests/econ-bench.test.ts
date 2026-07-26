@@ -1,9 +1,10 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// Whole-horizon career replays (3 presets × 3 seeds × 208 engine-weeks, twice over) sit at ~4s
-// against vitest's 5s default – close enough that a busy run tips them over and the gate goes red
-// on timing, not on a claim. Same generous file-level timeout the other bench files already use
-// (tests/fatigue-bench.test.ts): these tests are deterministic, only slow.
+// Whole-horizon career replays are deterministic but SLOW, and they sit close enough to vitest's
+// 5s default that a busy run tips them over - the gate then goes red on timing, not on a claim.
+// Two independent reasons pile up: the suite runs eight files in parallel, and the ladder-up
+// calendar made a 14->18 career far heavier (several draw-32 AI tournaments a week once she reaches
+// the J-tiers). Same generous file-level timeout the fatigue bench already carries, same reason.
 vi.setConfig({ testTimeout: 240_000 })
 import {
   runCareer,

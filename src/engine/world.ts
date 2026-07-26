@@ -456,7 +456,7 @@ function stageLabel(round: number, drawSize: number): string {
 // ./season/calendar by the rival-life slice, so the AI cohort can run the SAME rules without a
 // world.ts import cycle. They are re-exported here under their historical names – every existing
 // call site and test import keeps working, and there is still exactly one implementation.
-export { matchDrain, tournamentRunStrain, conditionMatchFactor } from './condition'
+export { matchDrain, runFatigueExtra, tournamentRunStrain, conditionMatchFactor } from './condition'
 export { isExamWeek, isBlackoutWeek } from './season/calendar'
 
 /** The train/rest slider's recovery bonus for a MATCH-FREE week (round-9 owner redesign):

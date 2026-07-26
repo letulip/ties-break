@@ -32,6 +32,9 @@
  *
  * Run:  npm run bench:fatigue           (console tables + sparklines, all three horizons)
  *       npm run bench:fatigue -- --csv /path/to/rows.csv   (also dump the weekly time-series)
+ *       npm run bench:fatigue -- --scenario runfat-off,runfat-a,runfat-b,runfat-c,runfat-d
+ *              (the CUMULATIVE RUN FATIGUE comparison – the owner's four ladders against the
+ *               pre-ladder engine; --scenario takes one id or a comma-separated list)
  */
 import { writeFileSync } from 'node:fs'
 import {
@@ -46,7 +49,7 @@ import {
   bookPractice,
   bookVacation,
   practiceCaution,
-  matchDrain,
+  tournamentRunStrain,
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
@@ -58,9 +61,10 @@ import type {
   InjurySeverity,
   PlayerProfile,
   WeekPlan,
+  WorldEventCategory,
 } from '../src/shared/protocol'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
-import { TIERS, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 
 export const START_AGE_YEARS = 14
@@ -69,6 +73,26 @@ export const SEEDS_PER_CELL = 30
 export const ENTRY_LOOKAHEAD = 3
 
 export const SEVERITIES: readonly InjurySeverity[] = ['minor', 'moderate', 'major', 'severe']
+
+/** Every expense-side event category (the income side is parent contribution / sponsor /
+ *  interest). Kept as a local list so the fatigue bench never imports econ-bench – that module
+ *  runs its own CLI on import. */
+export const EXPENSE_CATEGORIES: readonly WorldEventCategory[] = [
+  'coaching',
+  'travel',
+  'entry',
+  'gear',
+  'stringing',
+  'physio',
+  'vacation',
+  'practice',
+  'other',
+]
+
+/** A zeroed per-tier counter (the entries-by-tier economy split). */
+export function zeroByTier(): Record<TierId, number> {
+  return Object.fromEntries(TIER_LADDER.map((t) => [t, 0])) as Record<TierId, number>
+}
 
 // --- matrix -------------------------------------------------------------------
 
@@ -288,9 +312,15 @@ export function plannerPolicies(): Policy[] {
 // mutable, and the typed views below keep the patch honest.
 
 export interface Scenario {
-  id: 'baseline' | 'v2' | 'legacy'
+  id: 'baseline' | 'v2' | 'legacy' | 'runfat-off' | 'runfat-a' | 'runfat-b' | 'runfat-c' | 'runfat-d'
   label: string
-  patch: { matchWeekRecoveryBase?: number; physioConditionBonusPerWeek?: number; recoveryBase?: number }
+  patch: {
+    matchWeekRecoveryBase?: number
+    physioConditionBonusPerWeek?: number
+    recoveryBase?: number
+    /** CUMULATIVE RUN FATIGUE: the extra drain per match-within-run (index 0 = her first match). */
+    runFatigueLadder?: number[]
+  }
   /** run the factorial grid (plan × entry × physio) inside this scenario's section */
   grid: boolean
   /** run the PLANNER grid (practice × vacation) inside this scenario's section */
@@ -321,7 +351,67 @@ export const SCENARIOS: Scenario[] = [
   },
 ]
 
-type MutableConditionKnobs = { matchWeekRecoveryBase: number; recoveryBase: number }
+// --- run-fatigue ladder scenarios (owner idea 26.07) --------------------------------
+// "Matches at a tournament run every day or every other day, so each SUBSEQUENT match should cost
+// EXTRA condition" – the owner proposed four ladders of extra drain by match-within-run and asked
+// the bench to price all four. They are OPT-IN (never part of the default sweep): run them with
+//   npm run bench:fatigue -- --scenario runfat-off,runfat-a,runfat-b,runfat-c,runfat-d
+// and the RUN-FATIGUE LADDER block at the end tables them against each other. runfat-off is the
+// PRE-LADDER engine (the reference "what it cost before the idea"); runfat-c is the shipped
+// default, so it must reproduce BASELINE exactly – the tests pin that.
+export const RUNFAT_LADDERS = {
+  off: [0], // no cumulative fatigue at all – the pre-idea engine
+  a: [0, 1, 2, 3, 4], // +1,+2,+3,+4 = 10 over a five-match run (steepest)
+  b: [0, 1, 1, 2, 4], // +1,+1,+2,+4 = 8 (flat then a brutal final)
+  c: [0, 1, 1, 2, 2], // +1,+1,+2,+2 = 6 (SHIPPED default)
+  d: [0, 1, 1, 1, 1], // +1 every subsequent match = 4 (flattest)
+} as Record<string, number[]>
+
+/** The five run-fatigue sections. Headline-only (no grids): the question is the LADDER, and the
+ *  factorial/planner grids would multiply a five-scenario sweep by ~5x runtime for axes this
+ *  change does not touch. */
+export const RUNFAT_SCENARIOS: Scenario[] = [
+  {
+    id: 'runfat-off',
+    label: 'RUNFAT-OFF – no cumulative run fatigue (the pre-idea engine; the comparison reference)',
+    patch: { runFatigueLadder: RUNFAT_LADDERS.off },
+    grid: false,
+    plannerGrid: false,
+  },
+  {
+    id: 'runfat-a',
+    label: 'RUNFAT-A – ladder +1,+2,+3,+4 (10 over a five-match run)',
+    patch: { runFatigueLadder: RUNFAT_LADDERS.a },
+    grid: false,
+    plannerGrid: false,
+  },
+  {
+    id: 'runfat-b',
+    label: 'RUNFAT-B – ladder +1,+1,+2,+4 (8 over a five-match run)',
+    patch: { runFatigueLadder: RUNFAT_LADDERS.b },
+    grid: false,
+    plannerGrid: false,
+  },
+  {
+    id: 'runfat-c',
+    label: 'RUNFAT-C – ladder +1,+1,+2,+2 (6) – the SHIPPED default, so identical to BASELINE',
+    patch: { runFatigueLadder: RUNFAT_LADDERS.c },
+    grid: false,
+    plannerGrid: false,
+  },
+  {
+    id: 'runfat-d',
+    label: 'RUNFAT-D – ladder +1,+1,+1,+1 (4 over a five-match run)',
+    patch: { runFatigueLadder: RUNFAT_LADDERS.d },
+    grid: false,
+    plannerGrid: false,
+  },
+]
+
+/** Every scenario the CLI can select: the default sweep plus the opt-in ladder sections. */
+export const ALL_SCENARIOS: Scenario[] = [...SCENARIOS, ...RUNFAT_SCENARIOS]
+
+type MutableConditionKnobs = { matchWeekRecoveryBase: number; recoveryBase: number; runFatigueLadder: number[] }
 type MutablePhysioKnobs = { conditionBonusPerWeek: number }
 
 /** Run `fn` with the scenario's ECONOMY patch applied, ALWAYS restoring the shipped values
@@ -332,15 +422,20 @@ export function withScenario<T>(scenario: Scenario, fn: () => T): T {
   const savedMatchBase = cond.matchWeekRecoveryBase
   const savedRecoveryBase = cond.recoveryBase
   const savedPhysioBonus = phys.conditionBonusPerWeek
+  // the ladder is an ARRAY knob: keep the shipped instance itself, and hand the patch a COPY,
+  // so nothing a scenario does can mutate the engine's default in place.
+  const savedLadder = cond.runFatigueLadder
   try {
     if (scenario.patch.matchWeekRecoveryBase !== undefined) cond.matchWeekRecoveryBase = scenario.patch.matchWeekRecoveryBase
     if (scenario.patch.recoveryBase !== undefined) cond.recoveryBase = scenario.patch.recoveryBase
     if (scenario.patch.physioConditionBonusPerWeek !== undefined) phys.conditionBonusPerWeek = scenario.patch.physioConditionBonusPerWeek
+    if (scenario.patch.runFatigueLadder !== undefined) cond.runFatigueLadder = [...scenario.patch.runFatigueLadder]
     return fn()
   } finally {
     cond.matchWeekRecoveryBase = savedMatchBase
     cond.recoveryBase = savedRecoveryBase
     phys.conditionBonusPerWeek = savedPhysioBonus
+    cond.runFatigueLadder = savedLadder
   }
 }
 
@@ -396,7 +491,8 @@ export interface WeekFacts {
   tierPlayed: TierId | null
   /** raw kid-match scorelines of the committed run, in round order ('' = defensive no-score). */
   matchScores: string[]
-  /** the committed run's total condition toll (engine matchDrain summed) – 0 on non-play weeks.
+  /** the committed run's total condition toll (engine tournamentRunStrain: per-match drains +
+   *  the cumulative run-fatigue ladder) – 0 on non-play weeks.
    *  Carried so the projection layer can rebuild traces without re-deriving scores. */
   strain: number
   wins: number
@@ -406,6 +502,18 @@ export interface WeekFacts {
   /** entries committed THIS week while condition was below the tier's availability floor. */
   cautionEntries: number
   entriesCommitted: number
+  /** the TIERS entered this week, in commit order – the economy read of a load-management shift
+   *  (a heavier body cost should show up as fewer / cheaper events, not only as lower condition). */
+  entryTiers: TierId[]
+  /** net travel and entry-fee spend this week (a skip refunds travel under the same category, so
+   *  netting is what the family really parted with). */
+  travelSpendCents: number
+  entryFeeSpendCents: number
+  /** net spend across EVERY expense category this week (coaching, travel, entry, gear, stringing,
+   *  physio, vacation, practice, other) – the wallet side of the ladder. */
+  totalSpendCents: number
+  /** family funds as the week closes – the survival (never-negative) tracker's input. */
+  fundsCents: number
   /** THE DOCTOR'S VETO (Wave-2): entries the policy WANTED this week – ranking-eligible,
    *  affordable, inside the commit window – that the medical floor hard-refused. The
    *  "does the new gate ever fire, and for whom?" counter. */
@@ -548,6 +656,7 @@ export function stepFatigueWeek(
   let cautionEntries = 0
   let entriesCommitted = 0
   let medicalBlocks = 0
+  const entryTiers: TierId[] = []
   const firstPlannerEventId = world.nextEventId
   const planned = planNextWeek(world, policy, plannerState)
   // Entry rule = econ-bench policy v3 (ranking-eligible + affordable, committed near the
@@ -583,6 +692,7 @@ export function stepFatigueWeek(
     if (avail.level === 'caution') cautionEntries++ // entered below the tier floor – the tough-parent choice
     enterEvent(world, e.id)
     entriesCommitted++
+    entryTiers.push(e.tier)
   }
 
   tickWeek(world, rng)
@@ -599,13 +709,18 @@ export function stepFatigueWeek(
   if (p) {
     played = true
     tierPlayed = world.season.find((e) => e.id === p.eventId)?.tier ?? null
+    const kidMatches: { score?: string }[] = []
     for (const m of p.result.matches) {
       if (m.aId !== KID_ID && m.bId !== KID_ID) continue
       matchScores.push(m.score ?? '')
-      if (tierPlayed !== null) strain += matchDrain(tierPlayed, m.score)
+      kidMatches.push({ score: m.score })
       if (m.winnerId === KID_ID) wins++
       else losses++
     }
+    // The run's toll the way the engine charges it: per-match drains PLUS the cumulative
+    // run-fatigue ladder, which is order-sensitive – so the whole run goes in at once
+    // (summing matchDrain here would silently drop the ladder).
+    if (tierPlayed !== null) strain = tournamentRunStrain(tierPlayed, kidMatches)
     skipTournament(world)
     closeTournament(world)
   }
@@ -622,9 +737,12 @@ export function stepFatigueWeek(
     .filter((ev) => ev.category === 'coaching' && (ev.amountCents ?? 0) < 0)
     .reduce((s, ev) => s - (ev.amountCents ?? 0), 0)
   // Planner spend nets refunds (a cancelled/injury-refunded booking is credited under the SAME
-  // category, so the sum is what the family really parted with).
-  const netOf = (cat: 'practice' | 'vacation') =>
+  // category, so the sum is what the family really parted with). The same netting gives the
+  // ECONOMY read its travel / entry-fee / total-spend columns (a skipped trip refunds travel
+  // under the 'travel' category, and that is money the family kept).
+  const netOf = (cat: WorldEventCategory) =>
     -newEvents.filter((ev) => ev.category === cat).reduce((s, ev) => s + (ev.amountCents ?? 0), 0)
+  const totalSpendCents = EXPENSE_CATEGORIES.reduce((s, cat) => s + netOf(cat), 0)
   const friendly = newEvents.find((ev) => ev.friendly === true)
   // Bookings survive their week for a short trailing window, so the one that just resolved is
   // still on the world – read the engine's state, not the policy's intent.
@@ -649,6 +767,11 @@ export function stepFatigueWeek(
     walkover,
     cautionEntries,
     entriesCommitted,
+    entryTiers,
+    travelSpendCents: netOf('travel'),
+    entryFeeSpendCents: netOf('entry'),
+    totalSpendCents,
+    fundsCents: world.fundsCents,
     medicalBlocks,
     belowMedicalFloor: world.condition < ECONOMY.availability.medicalFloor,
     physioSpendCents,
@@ -704,6 +827,15 @@ export interface RunResult {
   walkovers: number
   cautionEntries: number
   entries: number
+  /** ECONOMY side of the load-management calculus: which tiers she actually entered, what the
+   *  trips and fees cost, what the family spent in total, and whether it survived the horizon. */
+  entriesByTier: Record<TierId, number>
+  travelSpendCents: number
+  entryFeeSpendCents: number
+  totalSpendCents: number
+  /** first week the balance went negative, or null – `survived` is exactly its null-ness. */
+  weeksToBankrupt: number | null
+  survived: boolean
   /** THE DOCTOR'S VETO: tournaments refused by the medical floor, and weeks spent under it. */
   medicalBlocks: number
   weeksBelowMedicalFloor: number
@@ -758,6 +890,11 @@ export function runFatigueCareer(
   let entries = 0
   let medicalBlocks = 0
   let weeksBelowMedicalFloor = 0
+  const entriesByTier = zeroByTier()
+  let travelSpendCents = 0
+  let entryFeeSpendCents = 0
+  let totalSpendCents = 0
+  let bankruptWeek: number | null = null
   let physioSpendCents = 0
   let coachingSpendCents = 0
   let wins = 0
@@ -796,6 +933,11 @@ export function runFatigueCareer(
     if (f.walkover) walkovers++
     cautionEntries += f.cautionEntries
     entries += f.entriesCommitted
+    for (const tier of f.entryTiers) entriesByTier[tier]++
+    travelSpendCents += f.travelSpendCents
+    entryFeeSpendCents += f.entryFeeSpendCents
+    totalSpendCents += f.totalSpendCents
+    if (bankruptWeek === null && f.fundsCents < 0) bankruptWeek = f.week
     medicalBlocks += f.medicalBlocks
     if (f.belowMedicalFloor) weeksBelowMedicalFloor++
     physioSpendCents += f.physioSpendCents
@@ -832,6 +974,12 @@ export function runFatigueCareer(
     walkovers,
     cautionEntries,
     entries,
+    entriesByTier,
+    travelSpendCents,
+    entryFeeSpendCents,
+    totalSpendCents,
+    weeksToBankrupt: bankruptWeek,
+    survived: bankruptWeek === null,
     medicalBlocks,
     weeksBelowMedicalFloor,
     physioSpendCents,
@@ -928,6 +1076,13 @@ export interface CellStats {
   /** mean best rank over the seeds that got ranked at all, + how many did. */
   bestRankMean: number | null
   rankedCount: number
+  /** ECONOMY side-effects (the run-fatigue ladder's second question): entries per season split by
+   *  tier, the trips/fees they cost, total family spend per season, and the survival rate. */
+  entriesByTierPerSeason: Record<TierId, number>
+  travelPerSeasonCents: number
+  entryFeePerSeasonCents: number
+  totalSpendPerSeasonCents: number
+  survivalPct: number
   /** mean weekly condition across seeds – the sparkline source (length = horizon weeks). */
   meanWeekly: number[]
 }
@@ -1007,6 +1162,13 @@ export function computeCellStats(
     entriesPerSeason: mean(runs.map((r) => r.entries / seasons)),
     bestRankMean: ranked.length ? mean(ranked.map((r) => r.bestRank as number)) : null,
     rankedCount: ranked.length,
+    entriesByTierPerSeason: Object.fromEntries(
+      TIER_LADDER.map((t) => [t, mean(runs.map((r) => r.entriesByTier[t] / seasons))]),
+    ) as Record<TierId, number>,
+    travelPerSeasonCents: mean(runs.map((r) => r.travelSpendCents / seasons)),
+    entryFeePerSeasonCents: mean(runs.map((r) => r.entryFeeSpendCents / seasons)),
+    totalSpendPerSeasonCents: mean(runs.map((r) => r.totalSpendCents / seasons)),
+    survivalPct: (100 * runs.filter((r) => r.survived).length) / runs.length,
     meanWeekly,
   }
 }
@@ -1118,6 +1280,27 @@ function plannerLine(c: CellStats): string {
     ` · caution-booked ${c.cautionedPracticePerSeason.toFixed(1)}/s` +
     ` · rescue ${c.rescuePerSeason.toFixed(2)}/s` +
     ` · ${parts.length ? parts.join(' · ') : 'no packages booked'}`
+  )
+}
+
+/** The per-tier entry split as "local 2.0 · regional 3.1 · …", tiers she never entered omitted. */
+function tierSplit(c: CellStats): string {
+  const used = TIER_LADDER.filter((t) => c.entriesByTierPerSeason[t] > 0)
+  return used.length === 0 ? 'none' : used.map((t) => `${t} ${c.entriesByTierPerSeason[t].toFixed(1)}`).join(' · ')
+}
+
+/** The ECONOMY read for one cell (the run-fatigue ladder's side-effect question): how many events
+ *  per season and OF WHAT TIER, what the trips + fees cost, total family spend, end funds and the
+ *  survival rate. A heavier body cost should show up HERE as fewer / cheaper events. */
+function economyLine(c: CellStats): string {
+  const dollars = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`
+  return (
+    '  ' +
+    padEnd(`economy ${c.policy.id}`, 20) +
+    `ent ${c.entriesPerSeason.toFixed(1)}/s (${tierSplit(c)})` +
+    ` · travel ${dollars(c.travelPerSeasonCents)}/s · fees ${dollars(c.entryFeePerSeasonCents)}/s` +
+    ` · spend ${dollars(c.totalSpendPerSeasonCents)}/s · endFunds ${dollars(c.endFundsMeanCents)}` +
+    ` · survived ${c.survivalPct.toFixed(0)}%`
   )
 }
 
@@ -1287,6 +1470,19 @@ const HEADER = [
   '  old PROJ arithmetic layer (deleted with this slice): same questions, real bookings. The factorial grid',
   '  above keeps the planner OFF so plan × entry × physio stays a clean read.',
   '',
+  'RUN-FATIGUE LADDER (owner idea 26.07): matches at a tournament run every day or every other day, so each',
+  '  SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own scoreline drain',
+  `  (ECONOMY.condition.runFatigueLadder, indexed by match-within-run; shipped [${ECONOMY.condition.runFatigueLadder.join(',')}] = variant C).`,
+  '  The owner proposed four ladders – A +1,+2,+3,+4 (10 over a 5-match run) · B +1,+1,+2,+4 (8) · C +1,+1,+2,+2 (6) ·',
+  '  D +1,+1,+1,+1 (4) – benched as OPT-IN sections: --scenario runfat-off,runfat-a,runfat-b,runfat-c,runfat-d.',
+  '  runfat-off is the PRE-LADDER engine (the reference); runfat-c is the shipped default, so it must reproduce',
+  '  BASELINE exactly. With >= 2 of them selected the RUN-FATIGUE LADDER block tables the variants against each',
+  '  other (condition + wk49 + injuries + the ECONOMY side-effects). They are headline-only: the factorial and',
+  '  planner grids measure axes this idea does not touch, and would multiply a five-section sweep for nothing.',
+  'ECONOMY LINE (per policy, under the planner line): ent N/s split BY TIER, travel + entry fees + total family',
+  '  spend per season, mean end funds and the survival rate (share of seeds whose balance never went negative) –',
+  '  the "does a heavier body cost make anyone play fewer / cheaper events?" read.',
+  '',
   'SCENARIOS (owner 25.07, V2.1 SHIPPED): BASELINE = the shipped engine knobs (recoveryBase 1,',
   '  matchWeekRecoveryBase 0, physio bonus 1), full section (headline + both grids). V2 = the previous',
   '  candidate patched back (recoveryBase 2), headline only – the audit trail of the V2.1 decision.',
@@ -1344,12 +1540,18 @@ function parseCsvPath(argv: string[]): string | null {
   return path
 }
 
-function parseScenarioArg(argv: string[]): Scenario['id'] | null {
+/** `--scenario a[,b,…]` selects one or more sections by id (the run-fatigue ladder sections are
+ *  opt-in and only reachable this way). Returns null when the flag is absent = the default sweep. */
+export function parseScenarioArg(argv: string[]): Scenario['id'][] | null {
   const i = argv.indexOf('--scenario')
   if (i === -1) return null
   const v = argv[i + 1]
-  if (v === 'baseline' || v === 'v2' || v === 'legacy') return v
-  throw new Error('--scenario must be "baseline", "v2" or "legacy"')
+  const known = ALL_SCENARIOS.map((s) => s.id)
+  const ids = (v ?? '').split(',').map((x) => x.trim()).filter((x) => x.length > 0)
+  if (ids.length === 0 || ids.some((id) => !known.includes(id as Scenario['id']))) {
+    throw new Error(`--scenario must be a comma-separated list of: ${known.join(', ')}`)
+  }
+  return ids as Scenario['id'][]
 }
 
 function keyOf(scenario: Scenario, horizon: FatigueHorizon, profile: Profile, policy: Policy): string {
@@ -1418,6 +1620,10 @@ function runScenarioSection(
       // whether the guardrail / rescue triggers fired. One line per policy – the headline table
       // is already at its width budget.
       for (const stats of cellsOfProfile) console.log(plannerLine(stats))
+      // ECONOMY side-effects: the entry pattern + what it cost. The run-fatigue ladder is expected
+      // to move THIS line as much as the condition columns (deeper runs cost more body ⇒ the
+      // load-management calculus, and with it the entry pattern, shifts).
+      for (const stats of cellsOfProfile) console.log(economyLine(stats))
       // The doctor's veto (Wave-2): one line per profile, all three policies – the proof that the
       // floor only bites in the pathological zone.
       console.log(medicalLine(cellsOfProfile))
@@ -1727,6 +1933,153 @@ function renderComparison(headline: Map<string, CellStats>, from: Scenario, to: 
   }
 }
 
+// --- run-fatigue ladder comparison (owner idea 26.07) ------------------------------
+
+const RUNFAT_COLS: [string, number][] = [
+  ['variant', 12],
+  ['ladder', 16],
+  ['cond', 6],
+  ['%<40', 6],
+  ['%<70', 6],
+  ['trough', 9],
+  ['wk49', 19],
+  ['inj/s', 6],
+  ['lost/s', 7],
+  ['ent/s', 6],
+  ['mt/s', 6],
+  ['win%', 6],
+  ['travel$/s', 10],
+  ['spend$/s', 10],
+  ['endFunds', 10],
+  ['surv%', 6],
+  ['veto/s', 7],
+]
+
+function runfatHeader(): string {
+  return '  ' + RUNFAT_COLS.map(([c, w]) => pad(c, w)).join('')
+}
+
+function runfatRow(scenario: Scenario, c: CellStats): string {
+  const ladder = scenario.patch.runFatigueLadder ?? ECONOMY.condition.runFatigueLadder
+  const dollars = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`
+  const cells = [
+    scenario.id.replace('runfat-', ''),
+    `[${ladder.join(',')}]`,
+    c.meanCond.toFixed(1),
+    c.pctLow.toFixed(1),
+    (c.pctLow + c.pctMid).toFixed(1),
+    `${c.troughMean.toFixed(0)}·${c.troughMin}`,
+    `${c.endSeasonPooled.mean.toFixed(1)}±${c.endSeasonPooled.sd.toFixed(0)}[${c.endSeasonPooled.min}-${c.endSeasonPooled.max}]`,
+    c.injPerSeason.toFixed(2),
+    c.weeksLostPerSeason.toFixed(1),
+    c.entriesPerSeason.toFixed(1),
+    c.matchesPerSeason.toFixed(1),
+    c.winPct.toFixed(1),
+    dollars(c.travelPerSeasonCents),
+    dollars(c.totalSpendPerSeasonCents),
+    dollars(c.endFundsMeanCents),
+    c.survivalPct.toFixed(0),
+    c.medicalBlocksPerSeason.toFixed(2),
+  ]
+  return '  ' + cells.map((x, i) => pad(x, RUNFAT_COLS[i][1])).join('')
+}
+
+/** THE run-fatigue slice's headline output: every ladder variant that ran, side by side, per
+ *  horizon × profile × policy, plus a pooled per-variant summary and the per-tier entry split
+ *  (the ECONOMY side-effect the owner expects). Rendered only when >= 2 ladder scenarios ran. */
+function renderRunFatigueComparison(headline: Map<string, CellStats>, scenarios: Scenario[]): void {
+  const ran = scenarios.filter((s) => s.patch.runFatigueLadder !== undefined)
+  if (ran.length < 2) return
+  const rule = '═'.repeat(140)
+  console.log('')
+  console.log(rule)
+  console.log(
+    '  RUN-FATIGUE LADDER – cumulative tournament fatigue (owner idea 26.07): each SUBSEQUENT match of the same run',
+  )
+  console.log(
+    `  costs EXTRA condition. Variants: ${ran.map((s) => `${s.id.replace('runfat-', '')} [${(s.patch.runFatigueLadder ?? []).join(',')}]`).join(' · ')}` +
+      ` – wk49 is the owner's season-end target (~60-85 by policy).`,
+  )
+  console.log(rule)
+  for (const horizon of FATIGUE_HORIZONS) {
+    const anyRow = ran.some((sc) => PROFILES.some((pr) => POLICIES.some((po) => headline.has(keyOf(sc, horizon, pr, po)))))
+    if (!anyRow) continue
+    console.log('')
+    console.log(`  [${horizon.label}]`)
+    for (const profile of PROFILES) {
+      for (const policy of POLICIES) {
+        const rows = ran
+          .map((sc) => ({ sc, c: headline.get(keyOf(sc, horizon, profile, policy)) }))
+          .filter((r): r is { sc: Scenario; c: CellStats } => r.c !== undefined)
+        if (rows.length < 2) continue
+        console.log('')
+        console.log(`  ${profile.label.trim()} × ${policy.id}`)
+        console.log(runfatHeader())
+        for (const { sc, c } of rows) console.log(runfatRow(sc, c))
+        // the entry pattern in full, per variant – "does a heavier deep run make anyone play
+        // fewer / cheaper events?" is answered by THIS line, not by the ent/s column alone.
+        for (const { sc, c } of rows) {
+          console.log('  ' + padEnd(`tiers ${sc.id.replace('runfat-', '')}`, 14) + tierSplit(c))
+        }
+      }
+    }
+  }
+  // Pooled per-variant summary over the whole comparison (all horizons × profiles), per policy.
+  console.log('')
+  console.log('  POOLED per variant (mean over all horizons × profiles), one block per policy')
+  for (const policy of POLICIES) {
+    console.log('')
+    console.log(`  policy ${policy.label}`)
+    console.log(runfatHeader())
+    for (const sc of ran) {
+      const cells = FATIGUE_HORIZONS.flatMap((h) =>
+        PROFILES.map((pr) => headline.get(keyOf(sc, h, pr, policy))).filter((c): c is CellStats => c !== undefined),
+      )
+      if (cells.length === 0) continue
+      const pooled: CellStats = {
+        ...cells[0],
+        meanCond: mean(cells.map((c) => c.meanCond)),
+        pctLow: mean(cells.map((c) => c.pctLow)),
+        pctMid: mean(cells.map((c) => c.pctMid)),
+        troughMean: mean(cells.map((c) => c.troughMean)),
+        troughMin: Math.min(...cells.map((c) => c.troughMin)),
+        endSeasonPooled: {
+          mean: mean(cells.map((c) => c.endSeasonPooled.mean)),
+          sd: mean(cells.map((c) => c.endSeasonPooled.sd)),
+          min: Math.min(...cells.map((c) => c.endSeasonPooled.min)),
+          max: Math.max(...cells.map((c) => c.endSeasonPooled.max)),
+        },
+        injPerSeason: mean(cells.map((c) => c.injPerSeason)),
+        weeksLostPerSeason: mean(cells.map((c) => c.weeksLostPerSeason)),
+        entriesPerSeason: mean(cells.map((c) => c.entriesPerSeason)),
+        matchesPerSeason: mean(cells.map((c) => c.matchesPerSeason)),
+        winPct: mean(cells.map((c) => c.winPct)),
+        travelPerSeasonCents: mean(cells.map((c) => c.travelPerSeasonCents)),
+        totalSpendPerSeasonCents: mean(cells.map((c) => c.totalSpendPerSeasonCents)),
+        endFundsMeanCents: mean(cells.map((c) => c.endFundsMeanCents)),
+        survivalPct: mean(cells.map((c) => c.survivalPct)),
+        medicalBlocksPerSeason: mean(cells.map((c) => c.medicalBlocksPerSeason)),
+      }
+      console.log(runfatRow(sc, pooled))
+    }
+  }
+  // The grinder/careful injury anchor per variant – the spec's >=3x load-management signal.
+  console.log('')
+  console.log('  INJURY ANCHOR per variant (grinder/careful inj/season, pooled over profiles; spec anchor >= 3x)')
+  for (const horizon of FATIGUE_HORIZONS) {
+    const parts: string[] = []
+    for (const sc of ran) {
+      const g = PROFILES.map((pr) => headline.get(keyOf(sc, horizon, pr, POLICIES[0]))).filter((c): c is CellStats => !!c)
+      const cf = PROFILES.map((pr) => headline.get(keyOf(sc, horizon, pr, POLICIES[2]))).filter((c): c is CellStats => !!c)
+      if (g.length === 0 || cf.length === 0) continue
+      const gi = mean(g.map((c) => c.injPerSeason))
+      const ci = mean(cf.map((c) => c.injPerSeason))
+      parts.push(`${sc.id.replace('runfat-', '')} ${ci === 0 ? 'inf' : (gi / ci).toFixed(1)}x`)
+    }
+    if (parts.length) console.log(`  ${horizon.label}: ${parts.join(' · ')}`)
+  }
+}
+
 // --- injury panel (owner calibration vs docs/research/injury-stats-by-age.md) ------
 
 /** Real-world anchors (research doc + owner 25.07): juniors 46-54% injured/season (≈0.5-1.1
@@ -1790,7 +2143,12 @@ function renderInjuryPanel(headline: Map<string, CellStats>, from: Scenario, to:
 export function main(argv: string[] = process.argv.slice(2)): void {
   const csvPath = parseCsvPath(argv)
   const scenarioFilter = parseScenarioArg(argv)
-  const scenarios = scenarioFilter ? SCENARIOS.filter((s) => s.id === scenarioFilter) : SCENARIOS
+  // Default sweep = the three shipped-knob sections. The run-fatigue ladder sections are opt-in
+  // (they would multiply the default run's cost for an axis the default run does not ask about),
+  // and selecting them keeps the CLI order the user typed.
+  const scenarios = scenarioFilter
+    ? scenarioFilter.map((id) => ALL_SCENARIOS.find((s) => s.id === id)!)
+    : SCENARIOS
   console.log(HEADER)
 
   const all: BenchCell[] = []
@@ -1809,6 +2167,9 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     renderComparison(headline, v2, baseline)
     renderInjuryPanel(headline, v2, baseline)
   }
+
+  // The run-fatigue ladder table (owner idea 26.07) – only when >= 2 ladder sections ran.
+  renderRunFatigueComparison(headline, scenarios)
 
   // The price-ladder verdict (spec §4b): does every package sell somewhere?
   renderPackageSales(all)

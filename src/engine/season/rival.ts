@@ -13,6 +13,12 @@
 // tournamentRunStrain, conditionMatchFactor) or from ECONOMY.condition – the same knobs that
 // govern the kid. Rivals get NO injuries, NO physio, NO vacations and NO plan slider: that
 // asymmetry is the player's edge, and it is deliberate.
+//
+// THE CUMULATIVE RUN-FATIGUE LADDER IS SHARED (wave-3 integration decision). Because the strain of
+// a reconstructed run is `tournamentRunStrain`, the ladder the run-fatigue slice added applies to
+// the cohort too: a rival's deep run costs her the same escalating toll it costs the kid. That is
+// the point – if only the kid paid the ladder, a deep run would grind only the player, which is
+// exactly the asymmetry this module exists to remove.
 
 import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from '../condition'
 import { ECONOMY } from '../economy'
@@ -50,15 +56,32 @@ export interface RivalRun {
 /** The strain of a rival's run. AI-vs-AI matches resolve closed-form and carry NO scoreline, so
  *  every rival match takes `matchDrain`'s score-less branch (straight sets + the tier surcharge) –
  *  the same value the kid pays for a straight-sets match at that tier. Routed through
- *  `tournamentRunStrain` rather than re-derived, so a future cumulative run-fatigue ladder lands
- *  in one place and BOTH sides inherit it at once. */
+ *  `tournamentRunStrain` rather than re-derived, so the cumulative run-fatigue ladder lands in ONE
+ *  place and BOTH sides inherit it at once: a five-match J300 title costs a rival 5 × 6 + the
+ *  ladder (6 at variant C) = 36, exactly what the kid would pay for the same five straight-sets
+ *  wins at that tier. */
 function runStrain(tier: TierId, matches: number): number {
   return tournamentRunStrain(tier, new Array<{ score?: string }>(matches).fill({}))
 }
 
-/** Every (tier, finish) pair that could have produced `points`, cheapest first. Built once: the
- *  tier point arrays are compile-time constants, so this is a tiny static index. */
-const RUNS_BY_POINTS: Map<number, RivalRun[]> = (() => {
+/** The (tier, finish) index every reconstruction reads: for each points value, every run that
+ *  could have produced it, CHEAPEST FIRST.
+ *
+ *  Derived, and MEMOISED ON THE LIVE RUN-FATIGUE LADDER rather than built once at module load. The
+ *  tier point arrays are compile-time constants, so the shape is a tiny static table – but the
+ *  STRAIN column is a function of `ECONOMY.condition.runFatigueLadder`, and a module-load snapshot
+ *  silently froze the rivals on whatever ladder happened to be live at import time. That broke the
+ *  one property the shared ladder exists for: the fatigue bench's `--scenario runfat-*` sections
+ *  swap the knob to compare the owner's four ladders, and with a frozen index the KID moved while
+ *  the cohort stayed on variant C – so the comparison the owner reads to pick a ladder measured
+ *  half the game. Keyed on array IDENTITY (withScenario patches in a fresh copy and restores the
+ *  original instance), which is also how the rest of the engine treats ECONOMY: a knob object is
+ *  replaced, never scribbled on in place. */
+let runsIndexCache: { ladder: readonly number[]; byPoints: Map<number, RivalRun[]>; fallback: RivalRun } | null = null
+
+function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } {
+  const ladder = ECONOMY.condition.runFatigueLadder
+  if (runsIndexCache && runsIndexCache.ladder === ladder) return runsIndexCache
   const byPoints = new Map<number, RivalRun[]>()
   for (const tier of TIER_LADDER) {
     const rounds = Math.log2(TIERS[tier].drawSize)
@@ -75,13 +98,13 @@ const RUNS_BY_POINTS: Map<number, RivalRun[]> = (() => {
   for (const list of byPoints.values()) {
     list.sort((a, b) => a.strain - b.strain || TIER_LADDER.indexOf(a.tier) - TIER_LADDER.indexOf(b.tier))
   }
-  return byPoints
-})()
-
-/** The cheapest run any tier could have produced – the last-resort reading for a points value
- *  that matches no tier at all (a hand-edited or future-tier save). One match at the entry tier:
- *  never a crash, and never free. */
-const FALLBACK_RUN: RivalRun = { tier: TIER_LADDER[0], matches: 1, strain: runStrain(TIER_LADDER[0], 1) }
+  // The cheapest run any tier could have produced – the last-resort reading for a points value that
+  // matches no tier at all (a hand-edited or future-tier save). One match at the entry tier: never a
+  // crash, and never free. Her first match of a run pays 0 ladder, so this is pure matchDrain.
+  const fallback: RivalRun = { tier: TIER_LADDER[0], matches: 1, strain: runStrain(TIER_LADDER[0], 1) }
+  runsIndexCache = { ladder, byPoints, fallback }
+  return runsIndexCache
+}
 
 /** Reconstruct what a rival actually PLAYED from one results row.
  *
@@ -95,14 +118,15 @@ const FALLBACK_RUN: RivalRun = { tier: TIER_LADDER[0], matches: 1, strain: runSt
  *  strain – deterministic, and a legacy save can never invent fatigue a rival may not have earned.
  *  It is explicitly never treated as free: the cheapest reading is still at least one match. */
 export function reconstructRun(result: SeasonResult): RivalRun {
-  const candidates = RUNS_BY_POINTS.get(result.points)
+  const { byPoints, fallback } = runsIndex()
+  const candidates = byPoints.get(result.points)
   if (result.tier !== undefined) {
     const exact = candidates?.find((c) => c.tier === result.tier)
     if (exact) return exact
     // A tier that no longer awards this value (a retuned points array under an old save): fall
     // through to the same cheapest-reading rule rather than crashing.
   }
-  return candidates?.[0] ?? FALLBACK_RUN
+  return candidates?.[0] ?? fallback
 }
 
 /** Walk `runs` (a single rival's reconstructed runs, keyed by the week they were earned) forward

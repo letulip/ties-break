@@ -37,8 +37,28 @@ export function matchDrain(tier: TierId, score: string | undefined): number {
  *  National run maxes at 25 (the owner's own check). Applied by finalizeTournament for the kid,
  *  and by the rival ledger reconstruction for the cohort – so if a cumulative run-fatigue ladder
  *  is ever added it lands HERE and both sides inherit it at once. */
+/** CUMULATIVE RUN FATIGUE (owner idea 26.07): the EXTRA condition the n-th match of ONE tournament
+ *  run costs on top of its own scoreline drain, because the rounds are played on consecutive (or
+ *  every-other) days - the deeper she goes, the more the week grinds her down. `matchIndex` is
+ *  0-based WITHIN THE RUN, so a first match always costs 0 extra. A run longer than
+ *  ECONOMY.condition.runFatigueLadder repeats the ladder's LAST value (a bigger future draw must
+ *  never silently cost nothing). Pure integer arithmetic, zero draws.
+ *
+ *  Lives HERE, next to matchDrain, rather than in world.ts: the rival-life slice moved the whole
+ *  drain family into this module so the cohort inherits it, and the ladder must apply to BOTH sides
+ *  or a deep run would grind only the player. */
+export function runFatigueExtra(matchIndex: number): number {
+  const ladder = ECONOMY.condition.runFatigueLadder
+  if (ladder.length === 0) return 0
+  return ladder[Math.max(0, Math.min(matchIndex, ladder.length - 1))]
+}
+
+/** A committed run's total toll = the sum of (matchDrain + the run-fatigue ladder) over the match
+ *  records IN ORDER - the reduce index IS the match-within-run index the ladder wants. A 5-match
+ *  National run of epics = 25 per-match + 6 ladder (variant C) = 31. A walkover or a skipped event
+ *  never reaches finalize, so it has no records and costs nothing, ladder included. */
 export function tournamentRunStrain(tier: TierId, matches: { score?: string }[]): number {
-  return matches.reduce((sum, m) => sum + matchDrain(tier, m.score), 0)
+  return matches.reduce((sum, m, i) => sum + matchDrain(tier, m.score) + runFatigueExtra(i), 0)
 }
 
 /** R9-19 (coupling ON, owner curve): NO strength penalty while she is fresh enough
