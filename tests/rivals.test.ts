@@ -1,16 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import {
   RIVAL_STYLE,
+  applySurfaceStyle,
   matchesForFinish,
   reconstructRun,
   rivalCondition,
   rivalConditions,
+  rivalMatchPlayer,
+  styleOf,
 } from '../src/engine/season/rival'
 import { conditionMatchFactor, matchDrain } from '../src/engine/condition'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { generateCohort } from '../src/engine/season/cohort'
 import { ECONOMY } from '../src/engine/economy'
 import type { SeasonResult } from '../src/engine/season/ranking'
 import type { TierId } from '../src/engine/season/types'
+import type { MatchPlayer, Surface } from '../src/engine/match/types'
+import type { PlayStyle } from '../src/shared/protocol'
 
 // ---------------------------------------------------------------------------
 // Rivals become real — Part A: rival fatigue, DERIVED from the results ledger.
@@ -208,7 +214,20 @@ describe('A4 — a deep run leaves a soft week behind her, and it heals', () => 
   })
 })
 
-describe('A5 — the style thresholds are exported, documented knobs', () => {
+// ---------------------------------------------------------------------------
+// Part B — derived play styles. A pure function of the attributes the cohort was ALREADY
+// generated with, fed with the event's surface through applySurfaceStyle.
+// ---------------------------------------------------------------------------
+
+const STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
+const SURFACES: Surface[] = ['hard', 'clay', 'grass']
+
+/** A bare MatchPlayer with the given attributes – style reads only serve/ret/stamina. */
+function player(serve: number, ret: number, stamina: number, composure = 50): MatchPlayer {
+  return { id: 'p', name: 'P', serve, ret, composure, stamina }
+}
+
+describe('B1 — the style thresholds are exported, documented knobs', () => {
   it('sits inside the cohort generation ranges (serve/ret 30-60, stamina 30-70)', () => {
     expect(RIVAL_STYLE.serveEdge).toBeGreaterThan(0)
     for (const t of [RIVAL_STYLE.highServe, RIVAL_STYLE.highRet]) {
@@ -217,5 +236,162 @@ describe('A5 — the style thresholds are exported, documented knobs', () => {
     }
     expect(RIVAL_STYLE.highStamina).toBeGreaterThan(30)
     expect(RIVAL_STYLE.highStamina).toBeLessThan(70)
+  })
+})
+
+describe('B2 — styleOf: a pure function of existing attributes, in the spec order', () => {
+  const s = RIVAL_STYLE
+
+  it('a serve clearly ahead of the return is serve-first, and it wins over every other arm', () => {
+    expect(styleOf(player(58, 58 - s.serveEdge, 30))).toBe('serve-first')
+    // ...even when the counterpuncher and aggressive arms would BOTH also match: the loudest
+    // signal is checked first (spec order), so the classification is total and unambiguous.
+    expect(styleOf(player(60, 60 - s.serveEdge, 70))).toBe('serve-first')
+    expect(styleOf(player(58, 58 - s.serveEdge + 1, 30))).not.toBe('serve-first') // one short of the gap
+  })
+
+  it('a high return on high stamina is a counterpuncher – legs, not the first ball', () => {
+    expect(styleOf(player(s.highRet, s.highRet, s.highStamina))).toBe('counterpuncher')
+    // Same return, no legs: she cannot grind, so she is the aggressive baseliner instead.
+    expect(styleOf(player(s.highServe, s.highRet, s.highStamina - 1))).toBe('aggressive')
+  })
+
+  it('two weapons without the legs is aggressive; anything else is all-court', () => {
+    expect(styleOf(player(s.highServe, s.highRet, 30))).toBe('aggressive')
+    expect(styleOf(player(s.highServe - 1, s.highRet, 30))).toBe('all-court') // one weapon short
+    expect(styleOf(player(40, 40, 40))).toBe('all-court')
+    expect(styleOf(player(30, 30, 30))).toBe('all-court') // the generation floor
+  })
+
+  it('is pure: same attributes, same style, and it never touches the player object', () => {
+    const p = player(52, 44, 60)
+    const snapshot = JSON.stringify(p)
+    expect(styleOf(p)).toBe(styleOf(p))
+    expect(JSON.stringify(p)).toBe(snapshot)
+  })
+})
+
+describe('B3 — the style histogram over a REAL generated cohort', () => {
+  const cohort = generateCohort('rival-style-histogram')
+
+  it('every style is represented and none swallows the field', () => {
+    const counts = new Map<PlayStyle, number>(STYLES.map((s) => [s, 0]))
+    for (const p of cohort) counts.set(styleOf(p), counts.get(styleOf(p))! + 1)
+    // Reported in the slice write-up; asserted as a BAND, not a pin, so cohort tuning stays free.
+    for (const style of STYLES) {
+      const share = counts.get(style)! / cohort.length
+      expect(share, `${style} share`).toBeGreaterThan(0.05) // present, and not a curiosity
+      expect(share, `${style} share`).toBeLessThan(0.5) // ...and not the whole field
+    }
+    expect([...counts.values()].reduce((a, b) => a + b, 0)).toBe(cohort.length) // total, no gaps
+  })
+
+  it('holds across independent cohort seeds – it is the thresholds, not one lucky draw', () => {
+    for (const seed of ['alpha', 'bravo', 'charlie', 'bench-working-0']) {
+      const present = new Set(generateCohort(seed).map(styleOf))
+      expect(present.size, `seed ${seed}`).toBe(STYLES.length)
+    }
+  })
+})
+
+describe('B4 — applySurfaceStyle: the surface finally cuts both ways', () => {
+  it('is pure and leaves identity fields (and composure) alone', () => {
+    const p = player(50, 50, 50)
+    const out = applySurfaceStyle(p, 'serve-first', 'grass')
+    expect(out).not.toBe(p)
+    expect(p).toEqual(player(50, 50, 50)) // input untouched
+    expect(out.id).toBe(p.id)
+    expect(out.name).toBe(p.name)
+    expect(out.composure).toBe(p.composure)
+  })
+
+  it('serve-first is rewarded on grass and blunted on clay', () => {
+    const p = player(50, 50, 50)
+    expect(applySurfaceStyle(p, 'serve-first', 'grass').serve).toBeGreaterThan(p.serve)
+    expect(applySurfaceStyle(p, 'serve-first', 'clay').serve).toBeLessThan(p.serve)
+  })
+
+  it('the counterpuncher is rewarded on clay and exposed on grass', () => {
+    const p = player(50, 50, 50)
+    expect(applySurfaceStyle(p, 'counterpuncher', 'clay').ret).toBeGreaterThan(p.ret)
+    expect(applySurfaceStyle(p, 'counterpuncher', 'grass').ret).toBeLessThan(p.ret)
+  })
+
+  it('all-court is neutral everywhere – that IS its identity, no weaknesses and no shortcuts', () => {
+    const p = player(50, 44, 61)
+    for (const surface of SURFACES) expect(applySurfaceStyle(p, 'all-court', surface)).toEqual(p)
+  })
+
+  it('stays a COLOURING: no attribute moves more than 10% on any (style, surface) cell', () => {
+    const p = player(50, 50, 50)
+    for (const style of STYLES) {
+      for (const surface of SURFACES) {
+        const out = applySurfaceStyle(p, style, surface)
+        for (const key of ['serve', 'ret', 'stamina'] as const) {
+          expect(Math.abs(out[key] - p[key]) / p[key], `${style}/${surface}/${key}`).toBeLessThanOrEqual(0.1)
+        }
+      }
+    }
+  })
+
+  it('no style is uniformly better: every non-neutral style gives back somewhere', () => {
+    const p = player(50, 50, 50)
+    for (const style of STYLES.filter((s) => s !== 'all-court')) {
+      const sums = SURFACES.map((surface) => {
+        const out = applySurfaceStyle(p, style, surface)
+        return out.serve + out.ret + out.stamina
+      })
+      expect(Math.min(...sums), style).toBeLessThan(p.serve + p.ret + p.stamina)
+      expect(Math.max(...sums), style).toBeGreaterThan(p.serve + p.ret + p.stamina)
+    }
+  })
+})
+
+describe('B5 — rivalMatchPlayer: ONE composition, in the kid order, applied exactly once', () => {
+  const rival = generateCohort('compose')[0]
+
+  it('is base -> surface/style -> condition factor, and nothing else', () => {
+    const condition = 40
+    const built = rivalMatchPlayer(rival, 'clay', condition)
+    const styled = applySurfaceStyle(rival, styleOf(rival), 'clay')
+    const factor = conditionMatchFactor(condition)
+    expect(built.serve).toBeCloseTo(styled.serve * factor, 12)
+    expect(built.ret).toBeCloseTo(styled.ret * factor, 12)
+    expect(built.stamina).toBeCloseTo(styled.stamina * factor, 12)
+    // composure takes the condition factor only – the style table deliberately never touches it.
+    expect(built.composure).toBeCloseTo(rival.composure * factor, 12)
+  })
+
+  it('a fresh rival is her styled self exactly – the condition factor is a no-op above the knee', () => {
+    for (const surface of SURFACES) {
+      const fresh = rivalMatchPlayer(rival, surface, ECONOMY.condition.max)
+      const styled = applySurfaceStyle(rival, styleOf(rival), surface)
+      expect(fresh.serve).toBeCloseTo(styled.serve, 12)
+      expect(fresh.ret).toBeCloseTo(styled.ret, 12)
+    }
+    // ...and the default argument means "fresh", so a caller with no derived condition is safe.
+    expect(rivalMatchPlayer(rival, 'hard')).toEqual(rivalMatchPlayer(rival, 'hard', ECONOMY.condition.max))
+  })
+
+  it('a tired rival is strictly weaker on every attribute, and never below the floor', () => {
+    const fresh = rivalMatchPlayer(rival, 'hard', ECONOMY.condition.max)
+    const spent = rivalMatchPlayer(rival, 'hard', ECONOMY.condition.min)
+    for (const key of ['serve', 'ret', 'composure', 'stamina'] as const) {
+      expect(spent[key]).toBeLessThan(fresh[key])
+      expect(spent[key]).toBeCloseTo(fresh[key] * ECONOMY.condition.matchStrengthFloor, 12)
+    }
+    expect(spent.id).toBe(rival.id)
+    expect(spent.name).toBe(rival.name)
+  })
+
+  it('drops the AiPlayer-only fields: a MatchPlayer goes into the bracket, not a cohort row', () => {
+    const built = rivalMatchPlayer(rival, 'hard', 80)
+    expect(Object.keys(built).sort()).toEqual(['composure', 'id', 'name', 'ret', 'serve', 'stamina'])
+  })
+
+  it('is deterministic and never mutates the cohort row', () => {
+    const snapshot = JSON.stringify(rival)
+    expect(rivalMatchPlayer(rival, 'grass', 55)).toEqual(rivalMatchPlayer(rival, 'grass', 55))
+    expect(JSON.stringify(rival)).toBe(snapshot)
   })
 })
