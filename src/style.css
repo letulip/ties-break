@@ -36,6 +36,18 @@
   --danger: #f2664f;
   --font-heading: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* THE CAPSULE RADIUS, named because the raw 999px was unfindable: the owner went looking for the
+     round border expecting "50%" and found a magic number instead (26.07). The two are NOT
+     interchangeable and the sheet keeps them apart on purpose:
+       --radius-pill  a WIDE, short element – 999px is clamped by the browser to half the height,
+                      so the ends come out as true semicircles and the sides stay flat (a capsule).
+       50%            a SQUARE element – a real circle. Every 50% in this file sits on one
+                      (avatar 30x30, .dot 7x7, .replay-close 32x32, the switch knob 18x18 ...).
+     Putting 50% on a capsule does not make it rounder, it makes it an ELLIPSE: the horizontal
+     radius becomes half the WIDTH, so a chip turns into a lens and a progress bar into an eye.
+     If a pill should look squarer, give it a px radius (the panel idiom is 10px) – see
+     .avail-chip below. */
+  --radius-pill: 999px;
   color-scheme: dark;
 }
 
@@ -185,7 +197,7 @@ select {
 .pill {
   display: inline-block;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   /* vertical 1px is an optical baseline nudge for the pill's short height, not a rhythm gap
      – left off the 4/8/12/16/24 scale on purpose; horizontal snapped to 12. */
   padding: 1px 12px;
@@ -317,7 +329,7 @@ select {
 
 .prob-bar {
   height: 8px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--line);
   overflow: hidden;
 }
@@ -648,7 +660,7 @@ select {
 
 .option-pill {
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 8px 16px;
   font-size: 13px;
   color: var(--muted);
@@ -835,6 +847,18 @@ button.danger:hover:not(:disabled) {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+/* THE ONE PILL THAT IS NOT A CAPSULE (owner 26.07: "specifically for this one make them less
+   round, the rest seem fine"). It carries the longest text of any chip in the app – a whole injury
+   sentence with a return week – so at the capsule radius the ends bow away from the words and it
+   reads as a lozenge rather than a label. 6px is the OWNER'S PICK off a rendered comparison of
+   10 / 8 / 6 (26.07): 10px is invisible next to the capsule, which renders at 10.7px on this chip's
+   21px height, and 8px was a shade too soft for a label. Applies to every tone, not just .red –
+   the chip must not change shape when her availability changes. The .pill padding and the tone
+   colours are untouched. */
+.avail-chip {
+  border-radius: 6px;
 }
 
 .avail-chip.green {
@@ -1521,7 +1545,7 @@ tr.kid-row td {
   font-weight: 700;
   letter-spacing: 0.02em;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 
@@ -1587,7 +1611,7 @@ tr.kid-row td {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 2px 12px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 .tf-badge.win {
@@ -1774,7 +1798,7 @@ tr.kid-row td {
   position: relative;
   width: 44px;
   height: 24px;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--line);
   border: 1px solid var(--line);
   transition: background 0.15s, border-color 0.15s;
@@ -2041,7 +2065,7 @@ tr.kid-row td {
   padding: 4px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
 }
 
 /* The plate is panel-toned for a page background; inside a .tf-card (already --panel) it needs
@@ -2052,7 +2076,7 @@ tr.kid-row td {
 
 .tab-pill {
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   padding: 6px 16px;
   font-size: 13px;
   font-weight: 500;

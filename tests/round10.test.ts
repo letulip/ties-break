@@ -485,11 +485,66 @@ describe('R10-16 — no popup may render without copy', () => {
     const rule = block.slice(0, block.indexOf('}'))
     expect(rule).toContain('border-radius')
     const radius = Number(/border-radius:\s*(\d+)px/.exec(rule)?.[1])
-    // the top popups (.stop-toast / .recovered-banner) sit at 10px; the pill idiom is 999px
+    // the top popups (.stop-toast / .recovered-banner) sit at 10px; the capsule idiom is
+    // var(--radius-pill) – see the two tests below for why it is a token and not a bare 999px.
     const toast = css.slice(css.indexOf('.stop-toast {'))
     const toastRadius = Number(/border-radius:\s*(\d+)px/.exec(toast.slice(0, toast.indexOf('}')))?.[1])
     expect(radius).toBe(toastRadius)
     expect(radius).toBeLessThanOrEqual(12)
+  })
+
+  // ---------------------------------------------------------------------------
+  // THE CAPSULE-vs-CIRCLE CONVENTION (owner 26.07, a follow-up to the item above).
+  //
+  // He went hunting for the round border, expected to find "50%", found a bare `999px`, and asked
+  // for every 999px to become 50%. They are not interchangeable: on a WIDE element 999px is clamped
+  // by the browser to half the HEIGHT, so the ends are true semicircles and the sides stay flat (a
+  // capsule); 50% takes half the WIDTH as well, which is an ELLIPSE. Measured in the browser on the
+  // real chip: 294 x 21 px, so the capsule radius renders as 10.7px and 50% would render as
+  // 147 x 10.7px – a lens. The same swap turns .prob-bar into a leaf and the sound switch's track
+  // into an egg. So the answer to the ask was a NAME (the magic number is now findable by grep),
+  // not a value change, plus the one squarer radius he actually wanted. Both halves are pinned here.
+  // ---------------------------------------------------------------------------
+  const CAPSULES = ['.pill', '.prob-bar', '.option-pill', '.tf-replay-round', '.tf-badge', '.sound-switch-track', '.tab-row', '.tab-pill']
+
+  it('the capsule radius is a named token, and no bare 999px is left to hunt for', () => {
+    const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
+    expect(css).toContain('--radius-pill: 999px')
+    // Every other mention must be prose in a comment, never a declaration – that is the whole point.
+    const declarations = css
+      .split('\n')
+      .filter((l) => l.includes('999px') && l.includes('border-radius'))
+    expect(declarations).toEqual([])
+    // EVERY occurrence of the selector, not the first: `.bt-tabs .tab-pill` (a flex-only override)
+    // sits ~200 lines above `.tab-pill` itself, so a plain indexOf reads the wrong block and the
+    // test lies about a passing file. Learned the hard way one run before this comment existed.
+    const bodies = (sel: string): string[] => {
+      const out: string[] = []
+      for (let from = 0; ; ) {
+        const i = css.indexOf(`${sel} {`, from)
+        if (i < 0) return out
+        out.push(css.slice(i, css.indexOf('}', i)))
+        from = i + 1
+      }
+    }
+    for (const sel of CAPSULES) {
+      const declaring = bodies(sel).filter((b) => b.includes('border-radius'))
+      expect(declaring.length, `${sel} declares a radius somewhere`).toBeGreaterThan(0)
+      for (const body of declaring) expect(body, sel).toContain('border-radius: var(--radius-pill)')
+    }
+  })
+
+  it('the availability chip is the one pill that is NOT a capsule (owner: "make this one less round")', () => {
+    const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
+    const rule = css.slice(css.indexOf('.avail-chip {'))
+    const radius = Number(/border-radius:\s*(\d+)px/.exec(rule.slice(0, rule.indexOf('}')))?.[1])
+    // Squarer than the capsule it would otherwise inherit from .pill. The bound is the MEASURED
+    // rendered capsule radius (10.7px at the chip's 21px height): anything at or above it is not a
+    // visible change, which is why 10px – the panel radius – was rejected as too subtle to see.
+    // The owner picked 6 off a rendered 10 / 8 / 6 comparison; the range stays a range, so a later
+    // taste change does not have to touch this test.
+    expect(radius).toBeLessThan(10.7)
+    expect(radius).toBeGreaterThan(3) // still a chip, not a box
   })
 })
 
