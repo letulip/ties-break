@@ -19,6 +19,7 @@ import PlanWeekSheet from '../PlanWeekSheet.vue'
 import TierGuide from '../TierGuide.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
+import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek } from '../../engine/season/calendar'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
@@ -43,6 +44,12 @@ function formatDollars(cents: number): string {
 }
 
 const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
+
+// Surface x play style (docs/specs/surface-style.md): the calendar column stops being flavour, so
+// the card says so in one line – and says nothing at all when the court is neutral for her build.
+function surfaceNote(surface: Surface): string | null {
+  return game.snapshot ? surfaceStyleHint(game.snapshot.profile.playStyle, surface) : null
+}
 const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
 
 const week = computed(() => game.snapshot?.week ?? 0)
@@ -330,9 +337,11 @@ function watchMatch(e: WorldEvent): void {
 // This is the sandbox hit-out; a BOOKED practice match (above) is the real, costed one. --
 const exhibitionSurface: Surface = 'clay'
 const kidName = computed(() => game.snapshot?.profile.kidName ?? 'Vera')
+// Her CURRENT build as this clay court lets her play it (surface-style). Condition is deliberately
+// NOT applied here – the sandbox hit-out has always shown her raw build, unlike a real match week.
 const exhibitionPlayerA = computed<MatchPlayer>(() =>
   game.snapshot
-    ? kidMatchPlayer(game.snapshot)
+    ? applySurfaceStyle(kidMatchPlayer(game.snapshot), game.snapshot.profile.playStyle, exhibitionSurface)
     : { id: 'kid', name: kidName.value, serve: 50, ret: 50, composure: 50, stamina: 50 },
 )
 const exhibitionPlayerB: MatchPlayer = { id: 'top-seed', name: 'Top seed', serve: 63, ret: 60, composure: 70, stamina: 65 }
@@ -418,6 +427,14 @@ function playExhibition(): void {
               <span class="event-tier">{{ row.event.label }}</span>
               <span class="pill">{{ SURFACE_EMOJI[row.event.surface] }} {{ row.event.surface }}</span>
             </div>
+            <p
+              v-if="surfaceNote(row.event.surface)"
+              class="hint surface-note"
+              :class="{ suits: surfaceNote(row.event.surface)!.includes('suits') }"
+              style="margin: 6px 0 0"
+            >
+              {{ surfaceNote(row.event.surface) }}
+            </p>
             <p class="hint" style="margin-top: 8px">
               W{{ row.event.week }} · {{ row.dates }} · entry {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{
                 formatDollars(row.event.travelCostCents)

@@ -44,6 +44,7 @@ import { generatePreHistory } from './season/prehistory'
 import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
 import { simulateMatch } from './match/engine'
+import { applySurfaceStyle } from './match/style'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -252,6 +253,31 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile }):
     composure: pickInt(r, 35, 55),
     stamina: pickInt(r, 40, 60),
   }
+}
+
+/** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
+ *  CONDITION factor (R9-19) and then by the surface x play-style table (docs/specs/surface-style.md).
+ *  Both are pure arithmetic with ZERO RNG, they compose multiplicatively, and every path that puts
+ *  her in a match – the shadow tournament, the practice friendly, the exhibition viewer – builds her
+ *  here, so the modifiers land exactly once per match. `all-court` (and any untouched attribute)
+ *  comes back byte-identical to the pre-slice condition-only scaling. */
+export function kidMatchPlayerFor(
+  world: { seed: string; profile: PlayerProfile; condition: number },
+  surface: Surface,
+): MatchPlayer {
+  const raw = kidMatchPlayer(world)
+  const factor = conditionMatchFactor(world.condition)
+  return applySurfaceStyle(
+    {
+      ...raw,
+      serve: raw.serve * factor,
+      ret: raw.ret * factor,
+      composure: raw.composure * factor,
+      stamina: raw.stamina * factor,
+    },
+    world.profile.playStyle,
+    surface,
+  )
 }
 
 function cohortIds(world: WorldState): string[] {
@@ -1018,16 +1044,10 @@ function resolvePractice(world: WorldState): void {
   }
   const rng = rngFromSeed(`${world.seed}:practicematch:${world.week}`)
   const opponent = pickSparringPartner(world, rng)
-  // She hits at her CURRENT condition, exactly like a tournament run (R9-19 coupling).
-  const factor = conditionMatchFactor(world.condition)
-  const raw = kidMatchPlayer(world)
-  const kid: MatchPlayer = {
-    ...raw,
-    serve: raw.serve * factor,
-    ret: raw.ret * factor,
-    composure: raw.composure * factor,
-    stamina: raw.stamina * factor,
-  }
+  const surface: Surface = 'hard' // the home club's courts
+  // She hits at her CURRENT condition, exactly like a tournament run (R9-19 coupling), and on the
+  // court her style earns her (surface-style): one composition point, applied once.
+  const kid = kidMatchPlayerFor(world, surface)
   const opp: MatchPlayer = {
     id: opponent.id,
     name: opponent.name,
@@ -1036,7 +1056,6 @@ function resolvePractice(world: WorldState): void {
     composure: opponent.composure,
     stamina: opponent.stamina,
   }
-  const surface: Surface = 'hard' // the home club's courts
   const seed = `${world.seed}:practicematch:${world.week}:m`
   const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
   const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
@@ -1237,18 +1256,11 @@ function computeShadowTournament(
   ranking: RankingRow[],
 ): PendingTournament {
   // R9-19 coupling ON: the kid plays at her CURRENT condition (post this week's accrual –
-  // step 1c runs before step 2). The SCALED player is both what runs the bracket and what is
-  // snapshotted into `players`, so revealed records and replays stay byte-identical no matter
-  // how her condition moves afterwards. Fractional skills are fine for the match engine.
-  const factor = conditionMatchFactor(world.condition)
-  const raw = kidMatchPlayer(world)
-  const kid: MatchPlayer = {
-    ...raw,
-    serve: raw.serve * factor,
-    ret: raw.ret * factor,
-    composure: raw.composure * factor,
-    stamina: raw.stamina * factor,
-  }
+  // step 1c runs before step 2), on the event's surface as her play style meets it (surface-style).
+  // The SCALED player is both what runs the bracket and what is snapshotted into `players`, so
+  // revealed records and replays stay byte-identical no matter how her condition moves afterwards –
+  // and the run's every round shares this ONE build. Fractional skills are fine for the match engine.
+  const kid = kidMatchPlayerFor(world, event.surface)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
   const entrants = selectEntrants(event, world.cohort, ranking, kidRng)
   const result = runTournament(event, entrants, kid, world.seed, kidRng)
