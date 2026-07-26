@@ -1125,6 +1125,24 @@ tr.milestone td {
   color: var(--accent);
 }
 
+/* Season structure by surface: the two-row block strip above the Calendar list. The upcoming block
+   is dimmed so the eye lands on the swing she is actually in. */
+.season-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.season-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.season-block.upcoming {
+  opacity: 0.6;
+}
+
 .entries-strip {
   display: flex;
   flex-wrap: wrap;

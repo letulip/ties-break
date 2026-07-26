@@ -25,6 +25,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { SURFACE_BLOCKS, buildSeason, surfaceBlockFor } from '../src/engine/season/calendar'
 
 // ---------------------------------------------------------------------------
 // surface x play-style (docs/specs/surface-style.md).
@@ -38,10 +39,27 @@ const STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all
 const SURFACES: Surface[] = ['hard', 'clay', 'grass']
 const SKILLS: SkillKey[] = ['serve', 'ret', 'composure', 'stamina']
 
-/** The calendar's real surface mix (season/calendar.ts pickSurface: hard .50 / clay .35 / grass .15).
- *  Used only to weight the "is all-court dominated?" check the way a blind enter-everything player
- *  would actually meet the surfaces. */
-const CALENDAR_MIX: Record<Surface, number> = { hard: 0.5, clay: 0.35, grass: 0.15 }
+/** The calendar's real surface mix, MEASURED off the real calendar rather than hard-coded.
+ *
+ *  It used to be the literal `{ hard: .5, clay: .35, grass: .15 }` of the old flat per-event draw.
+ *  The season-block slice made the surface a function of the WEEK, so a copied constant would now be
+ *  a second source of truth that silently drifts every time the block table is tuned – and the whole
+ *  point of the "is all-court dominated?" check is that it weights the surfaces the way a blind
+ *  enter-everything player ACTUALLY meets them. Derived once here, so tuning the blocks re-weights
+ *  the balance check for free. Measured under the shipped table: hard .512 / clay .366 / grass .122
+ *  (the flat mix's .50/.35/.15 is preserved to within ~1.5 points on hard and ~3 on grass, which is
+ *  the season-block slice's own design constraint). */
+const CALENDAR_MIX: Record<Surface, number> = (() => {
+  const tally: Record<Surface, number> = { hard: 0, clay: 0, grass: 0 }
+  let n = 0
+  for (let s = 0; s < 60; s++) {
+    for (const e of buildSeason(`style-mix-${s}`, 0, 52)) {
+      tally[e.surface]++
+      n++
+    }
+  }
+  return { hard: tally.hard / n, clay: tally.clay / n, grass: tally.grass / n }
+})()
 
 function basePlayer(id: string, name: string): MatchPlayer {
   return { id, name, serve: 50, ret: 50, composure: 50, stamina: 50 }
@@ -220,6 +238,133 @@ describe('surface x style — all-court is not dominated', () => {
       expect(weighted).toBeGreaterThan(0.49)
       expect(weighted).toBeLessThan(0.51)
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// SEASON BLOCKS x STYLE — what the block calendar does to the balance the surface-style slice
+// measured, and to the hint the season planner shows.
+//
+// The season-block slice's promise was "re-distribute the surfaces across the year without
+// re-tuning anybody's build". Both halves of that are asserted here: the YEAR-long spread is
+// unchanged, and INSIDE a block it opens up – which is the payoff, because a block is a thing the
+// player can plan for.
+// ---------------------------------------------------------------------------
+describe('season blocks x style — the balance survives, the calendar gains signal', () => {
+  /** One style's win rate over a mix, averaged against the whole field (itself included) – the same
+   *  read the surface-style slice reported as "all-court 50.0 / counter 50.4 / …". */
+  function fieldWinRate(style: PlayStyle, mix: Record<Surface, number>): number {
+    let acc = 0
+    for (const opponent of STYLES) {
+      for (const surface of SURFACES) acc += mix[surface] * closedFormWinRate(style, opponent, surface)
+    }
+    return acc / STYLES.length
+  }
+
+  /** The mix inside one block, measured off the real calendar. */
+  function blockMix(blockId: string): Record<Surface, number> {
+    const tally: Record<Surface, number> = { hard: 0, clay: 0, grass: 0 }
+    let n = 0
+    for (let s = 0; s < 60; s++) {
+      for (const e of buildSeason(`style-mix-${s}`, 0, 52)) {
+        if (surfaceBlockFor(e.week).id !== blockId) continue
+        tally[e.surface]++
+        n++
+      }
+    }
+    return { hard: tally.hard / n, clay: tally.clay / n, grass: tally.grass / n }
+  }
+
+  const FLAT_MIX: Record<Surface, number> = { hard: 0.5, clay: 0.35, grass: 0.15 }
+
+  it('the SEASON-long spread is essentially untouched – no build was re-balanced by the calendar', () => {
+    // MEASURED (closed form, exact – zero sampling noise):
+    //   FLAT   all-court 49.97 · counter 50.40 · aggressive 50.09 · serve-first 49.54  (spread 0.86)
+    //   BLOCKS all-court 49.99 · counter 50.51 · aggressive 50.04 · serve-first 49.47  (spread 1.04)
+    // The flat row reproduces the surface-style slice's own report (50.0 / 50.4 / 50.1 / 49.6), so
+    // this is the same measurement, not a new one. Blocks widen the spread by 0.2 of a point.
+    const spreadOf = (mix: Record<Surface, number>): number => {
+      const rates = STYLES.map((s) => fieldWinRate(s, mix))
+      return Math.max(...rates) - Math.min(...rates)
+    }
+    const flat = spreadOf(FLAT_MIX)
+    const blocks = spreadOf(CALENDAR_MIX)
+    expect(flat).toBeLessThan(0.015) // under 1.5 points: nobody is dominant over a year
+    expect(blocks).toBeLessThan(0.015)
+    // and the shift is small – a calendar change must not be a stealth balance patch
+    expect(Math.abs(blocks - flat)).toBeLessThan(0.005)
+    // every style still lands within a point of even money over the year
+    for (const style of STYLES) {
+      expect(fieldWinRate(style, CALENDAR_MIX), style).toBeGreaterThan(0.49)
+      expect(fieldWinRate(style, CALENDAR_MIX), style).toBeLessThan(0.51)
+    }
+  })
+
+  it('INSIDE a block the spread opens up – that is the signal the flat mix could not carry', () => {
+    // MEASURED per block (closed form):
+    //   clay swing   counter 52.21 · all-court 50.62 · serve-first 49.03 · aggressive 48.14 (4.07)
+    //   grass window serve-first 50.99 · aggressive 50.85 · all-court 49.72 · counter 48.44 (2.54)
+    //   hard swings  aggressive 50.8x · counter 50.0x · all-court 49.7x · serve-first 49.40 (1.4x)
+    // A player who plans her season now gets 2.5-4 points of edge inside her block, against a
+    // year-long spread of 1. THAT is what "the calendar tells you when your surface arrives" buys.
+    const clay = blockMix('clay')
+    const grass = blockMix('grass')
+    const spreadOf = (mix: Record<Surface, number>): number => {
+      const rates = STYLES.map((s) => fieldWinRate(s, mix))
+      return Math.max(...rates) - Math.min(...rates)
+    }
+    expect(spreadOf(clay)).toBeGreaterThan(0.03) // >= 3 points inside the clay swing
+    expect(spreadOf(grass)).toBeGreaterThan(0.02)
+    expect(spreadOf(clay)).toBeGreaterThan(spreadOf(CALENDAR_MIX) * 2.5)
+    // ...and it favours the RIGHT builds: the clay swing is the counterpuncher's season, the grass
+    // window is the server's, and all-court is neither hero nor victim in either.
+    const best = (mix: Record<Surface, number>) =>
+      STYLES.reduce((a, b) => (fieldWinRate(b, mix) > fieldWinRate(a, mix) ? b : a))
+    expect(best(clay)).toBe('counterpuncher')
+    expect(best(grass)).toBe('serve-first')
+    for (const mix of [clay, grass]) {
+      expect(fieldWinRate('all-court', mix)).toBeGreaterThan(0.49)
+      expect(fieldWinRate('all-court', mix)).toBeLessThan(0.51)
+    }
+  })
+
+  it("the planner's surface hint CLUSTERS: her block is where 'suits her game' lives", () => {
+    // The season planner renders surfaceStyleHint per calendar card (SeasonScreen surfaceNote), so
+    // this is what the player actually reads. VERIFIED, not assumed: for each specialist, count the
+    // "suits her game" cards inside her home block against everywhere else.
+    const home: Partial<Record<PlayStyle, string>> = {
+      counterpuncher: 'clay',
+      'serve-first': 'grass',
+      aggressive: 'hard-late',
+    }
+    for (const [style, blockId] of Object.entries(home) as [PlayStyle, string][]) {
+      let inBlock = 0
+      let inBlockTotal = 0
+      let outside = 0
+      let outsideTotal = 0
+      for (let s = 0; s < 30; s++) {
+        for (const e of buildSeason(`hint-${s}`, 0, 52)) {
+          const suits = surfaceStyleHint(style, e.surface) === `${e.surface[0].toUpperCase()}${e.surface.slice(1)} – suits her game`
+          if (surfaceBlockFor(e.week).id === blockId) {
+            inBlockTotal++
+            if (suits) inBlock++
+          } else {
+            outsideTotal++
+            if (suits) outside++
+          }
+        }
+      }
+      const inRate = inBlock / inBlockTotal
+      const outRate = outside / outsideTotal
+      // her block really is her season: the hint fires far more often inside it…
+      expect(inRate, `${style} in ${blockId}`).toBeGreaterThan(outRate * 1.5)
+      // …and it is not a wall of green outside it either (the hint keeps meaning something)
+      expect(inRate, `${style} in ${blockId}`).toBeGreaterThan(0.4)
+    }
+    // all-court never gets a hint at all – silence is its identity, and the planner shows nothing
+    for (const surface of SURFACES) expect(surfaceStyleHint('all-court', surface)).toBeNull()
+    // the block labels the planner strip shows are player copy: short dash only, no Cyrillic
+    for (const b of SURFACE_BLOCKS) expect(b.label).not.toMatch(/[—А-Яа-яЁё]/)
   })
 })
 

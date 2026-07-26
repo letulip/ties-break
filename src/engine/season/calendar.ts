@@ -182,12 +182,93 @@ export function isBlackoutWeek(week: number): boolean {
   return isOffSeasonWeek(week) || isExamWeek(week)
 }
 
-// Surface mix: hard 50 / clay 35 / grass 15. One RNG draw.
-function pickSurface(rng: Rng): Surface {
-  const r = rng()
-  if (r < 0.5) return 'hard'
-  if (r < 0.85) return 'clay'
-  return 'grass'
+// --- SEASON STRUCTURE BY SURFACE (owner approved 26.07: "звучит круто") ---------------------
+//
+// The surface used to be drawn per event off a FLAT mix (hard .50 / clay .35 / grass .15), which
+// made the calendar's surface column noise: it told the player nothing, and it taxed a serve-first
+// build blindly – she met grass 15% of the time whatever she planned. The real tour has BLOCKS, and
+// blocks are what turn the column into information: the calendar now says WHEN her surface arrives,
+// so "wait six weeks and enter three grass events" becomes a real season plan.
+//
+// A block is a pure function of the SEASON WEEK (`week % WEEKS_PER_YEAR`), so it repeats every year
+// and a tier's event on week W simply takes that block's surface distribution. Real-tour shape,
+// against the round-5 date epoch (career week 0 = Mon Jan 6):
+//
+//   offset  0-9   Jan 6  – Mar 15   HARD   the Australian / indoor swing
+//   offset 10-24  Mar 16 – Jun 28   CLAY   the European spring clay circuit
+//   offset 25-30  Jun 29 – Aug 10   GRASS  the SHORT window (junior Wimbledon is the first week
+//                                          of July) – 6 weeks of 49, deliberately scarce
+//   offset 31-48  Aug 11 – Dec 14   HARD   the US + Asian autumn swing
+//   offset 49-51  Dec 15 – Jan 4    off-season – already event-free (isOffSeasonWeek), carried as a
+//                                   block only so the lookup is total
+//
+// NOT UNIFORM INSIDE A BLOCK. A stray hard event in the clay block is realistic and is what keeps
+// the calendar from becoming a metronome, so each block is a WEIGHTED mix with a dominant surface
+// rather than a single surface. The weights are cumulative in the order (hard, clay, grass) – the
+// same order the old flat draw used, so the pre-block behaviour is exactly the special case
+// `{ hard: .5, clay: .35, grass: .15 }` in every block.
+//
+// THE MIX IS PRESERVED, which is the point: the block widths and weights below were solved so the
+// season-long mix stays ~hard .50 / clay .37 / grass .13 (measured over 60 seasons – see
+// tests/season/calendar.test.ts). Grass stays a SHORT window; nobody's build gets re-tuned by a
+// calendar change, and the surface-style balance the surface-style slice measured still holds.
+//
+// OWNER-TUNABLE: this table IS the knob. Widen the grass window, move the clay swing earlier, or
+// flatten a block's weights back toward the old mix – all of it is data.
+export interface SurfaceBlock {
+  id: string
+  /** player-facing name for the season planner's block strip (short dash only) */
+  label: string
+  /** inclusive season-week offset range, 0-based within the season year */
+  from: number
+  to: number
+  /** surface probabilities, summing to 1; consumed cumulatively in (hard, clay, grass) order */
+  weights: Record<Surface, number>
+}
+
+/** The dominant-surface weights the two HARD blocks share (they are the same phase of the tour). */
+const HARD_BLOCK_WEIGHTS: Record<Surface, number> = { hard: 0.72, clay: 0.22, grass: 0.06 }
+
+export const SURFACE_BLOCKS: readonly SurfaceBlock[] = [
+  { id: 'hard-early', label: 'Hard-court swing', from: 0, to: 9, weights: HARD_BLOCK_WEIGHTS },
+  { id: 'clay', label: 'Clay swing', from: 10, to: 24, weights: { hard: 0.19, clay: 0.78, grass: 0.03 } },
+  { id: 'grass', label: 'Grass window', from: 25, to: 30, weights: { hard: 0.22, clay: 0.08, grass: 0.7 } },
+  { id: 'hard-late', label: 'Summer hard swing', from: 31, to: 48, weights: HARD_BLOCK_WEIGHTS },
+  { id: 'off-season', label: 'Off-season', from: 49, to: 51, weights: HARD_BLOCK_WEIGHTS },
+]
+
+/** Cumulative read order. Keeping it (hard, clay, grass) is what makes the old flat mix an exact
+ *  special case of the weighted draw – one code path, no "legacy" branch. */
+const SURFACE_ORDER: readonly Surface[] = ['hard', 'clay', 'grass']
+
+/** The block a week belongs to. Pure, total (the table tiles the whole season year), and a function
+ *  of the SEASON week only – so every year has the same shape and the UI can label a week without
+ *  the engine handing it anything. */
+export function surfaceBlockFor(week: number): SurfaceBlock {
+  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return SURFACE_BLOCKS.find((b) => offset >= b.from && offset <= b.to) ?? SURFACE_BLOCKS[0]
+}
+
+/** The surface for an event on `week`, given ONE already-drawn uniform in [0,1). Split out from the
+ *  draw so it is testable without an Rng and so the caller owns the draw – which is what keeps the
+ *  season sub-stream byte-identical (see pickSurface). */
+export function surfaceForWeek(week: number, roll: number): Surface {
+  const { weights } = surfaceBlockFor(week)
+  let cum = 0
+  for (const surface of SURFACE_ORDER) {
+    cum += weights[surface]
+    if (roll < cum) return surface
+  }
+  return SURFACE_ORDER[SURFACE_ORDER.length - 1]
+}
+
+/** ONE draw off the season sub-stream, in exactly the position the old flat `pickSurface` used it.
+ *  That is deliberate and load-bearing: the very next draw is the event's base travel cost, so
+ *  keeping the draw COUNT and ORDER identical means the whole economy side of the calendar
+ *  (travel costs, and everything the econ bench reads off them) is byte-identical across this
+ *  change. Only which SURFACE the roll maps to moved. */
+function pickSurface(rng: Rng, week: number): Surface {
+  return surfaceForWeek(week, rng())
 }
 
 // Claim the free week nearest `target`, searching outward (forward first) within
@@ -239,7 +320,7 @@ function makeEvent(
   rng: Rng,
   background: FamilyBackground,
 ): SeasonEvent {
-  const surface = pickSurface(rng)
+  const surface = pickSurface(rng, week)
   const [lo, hi] = TIERS[tier].travelCostCents
   // Draw the base travel first (byte-identical MAIN-stream RNG – the pickInt call/sequence is
   // background-independent, so the calendar structure and the world's RNG identity hold). Then map a

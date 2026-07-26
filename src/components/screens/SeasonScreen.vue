@@ -21,7 +21,7 @@ import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
-import { isOffSeasonWeek } from '../../engine/season/calendar'
+import { isOffSeasonWeek, surfaceBlockFor, WEEKS_PER_YEAR } from '../../engine/season/calendar'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 import { weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
@@ -55,6 +55,33 @@ const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
 const week = computed(() => game.snapshot?.week ?? 0)
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const condition = computed(() => game.snapshot?.condition ?? 0)
+
+// SEASON STRUCTURE BY SURFACE (owner approved 26.07). The calendar shows 8 weeks, so a 15-week clay
+// swing would otherwise only become visible once she is standing in it – and the whole point of the
+// block schedule is that the calendar tells her when her surface ARRIVES. One strip above the
+// calendar names the block she is in, when it ends, and what comes next, each tagged with how it
+// reads for HER build (the same surfaceStyleHint copy the event cards carry, so the two can never
+// disagree). Derived purely from the week number, so nothing was added to the snapshot payload.
+interface SeasonBlockView {
+  label: string
+  when: string
+  surface: Surface
+  note: string | null
+}
+function blockView(atWeek: number, when: string): SeasonBlockView {
+  const block = surfaceBlockFor(atWeek)
+  // A block's identity is its dominant surface – the one the player plans around.
+  const surface = (Object.keys(block.weights) as Surface[]).reduce((a, b) =>
+    block.weights[b] > block.weights[a] ? b : a,
+  )
+  return { label: block.label, when, surface, note: surfaceNote(surface) }
+}
+const seasonBlocks = computed<SeasonBlockView[]>(() => {
+  if (!game.snapshot) return []
+  const year = Math.floor(week.value / WEEKS_PER_YEAR)
+  const endWeek = year * WEEKS_PER_YEAR + surfaceBlockFor(week.value).to
+  return [blockView(week.value, `now – through W${endWeek}`), blockView(endWeek + 1, `from W${endWeek + 1}`)]
+})
 // CALENDAR DECLUTTER (spec §1): an OUTGROWN tournament is noise – she can never enter it again –
 // so it leaves the calendar entirely and its week becomes plannable. Locked-ahead events
 // ("Reach N pts") STAY: they are aspirational. Engine output is untouched.
@@ -420,6 +447,14 @@ function playExhibition(): void {
 
     <section>
       <h2>Calendar</h2>
+      <!-- The season's surface blocks: which swing she is in, and which one is coming. -->
+      <div v-if="seasonBlocks.length" class="season-blocks">
+        <div v-for="(b, i) in seasonBlocks" :key="b.when" class="season-block" :class="{ upcoming: i > 0 }">
+          <span class="pill">{{ SURFACE_EMOJI[b.surface] }} {{ b.label }}</span>
+          <span class="hint">{{ b.when }}</span>
+          <span v-if="b.note" class="hint surface-note" :class="{ suits: b.note.includes('suits') }">{{ b.note }}</span>
+        </div>
+      </div>
       <div class="event-cards">
         <template v-for="row in calendarRows" :key="row.week">
           <div v-if="row.kind === 'event' && row.event" class="event-card">

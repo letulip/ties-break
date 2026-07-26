@@ -2,11 +2,15 @@ import { describe, it, expect } from 'vitest'
 import {
   TIERS,
   TIER_LADDER,
+  SURFACE_BLOCKS,
   buildSeason,
   isOffSeasonWeek,
+  surfaceBlockFor,
+  surfaceForWeek,
   OFF_SEASON_WEEKS,
   WEEKS_PER_YEAR,
 } from '../../src/engine/season/calendar'
+import type { Surface } from '../../src/engine/match/types'
 import { ECONOMY } from '../../src/engine/economy'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { FamilyBackground } from '../../src/shared/protocol'
@@ -172,13 +176,223 @@ describe('buildSeason — surface weighting', () => {
         total++
       }
     }
-    // Loose bands — this only guards against a badly wrong weighting.
+    // Loose bands — this only guards against a badly wrong weighting. UNCHANGED by the season-block
+    // slice, which is the point of it: the blocks re-DISTRIBUTE the surfaces across the year without
+    // re-tuning the year's mix, so this test kept passing untouched (measured 50.5 / 37.3 / 12.2).
     expect(tally.hard / total).toBeGreaterThan(0.4)
     expect(tally.hard / total).toBeLessThan(0.6)
     expect(tally.grass / total).toBeGreaterThan(0.08)
     expect(tally.grass / total).toBeLessThan(0.22)
     expect(tally.clay / total).toBeGreaterThan(0.27)
     expect(tally.clay / total).toBeLessThan(0.43)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// SEASON STRUCTURE BY SURFACE (owner approved 26.07: "звучит круто").
+//
+// The surface used to be one flat per-event draw, which made the calendar's surface column noise:
+// it told the player nothing and taxed a serve-first build blindly. It is now a BLOCK schedule –
+// a pure function of the season week – so the calendar says WHEN her surface arrives and planning a
+// season around it becomes a real decision.
+//
+// The four properties that matter, all asserted below:
+//   1. the block table is a total, non-overlapping tiling of the season year, and repeats yearly;
+//   2. the surface draw is still exactly ONE roll in exactly its old position, so the season
+//      sub-stream – and with it every travel cost – is byte-identical;
+//   3. the year's MIX is preserved (nobody's build gets re-balanced by a calendar change), and grass
+//      stays a SHORT window;
+//   4. each block is DOMINATED by its surface but never uniform – a stray hard event in the clay
+//      swing is realistic, and it is what keeps the calendar from being a metronome.
+// ---------------------------------------------------------------------------
+const SURFACES: Surface[] = ['hard', 'clay', 'grass']
+/** The pre-block flat mix. Reinstating it in every block IS the old engine, which is what makes the
+ *  invariance tests below exact rather than approximate. */
+const FLAT_MIX: Record<Surface, number> = { hard: 0.5, clay: 0.35, grass: 0.15 }
+
+/** Run `fn` with every block's weights replaced (restored on return AND on a throw). The table is
+ *  the owner's knob, so being able to swap it is also the thing under test. */
+function withBlockWeights<T>(weights: Record<Surface, number>, fn: () => T): T {
+  const saved = SURFACE_BLOCKS.map((b) => b.weights)
+  try {
+    for (const b of SURFACE_BLOCKS) b.weights = weights
+    return fn()
+  } finally {
+    SURFACE_BLOCKS.forEach((b, i) => (b.weights = saved[i]))
+  }
+}
+
+function tallySurfaces(events: SeasonEvent[]): Record<Surface, number> {
+  const t: Record<Surface, number> = { hard: 0, clay: 0, grass: 0 }
+  for (const e of events) t[e.surface]++
+  return t
+}
+
+describe('season structure by surface — the block table', () => {
+  it('tiles the whole season year exactly once, off-season included, with weights summing to 1', () => {
+    const covered = new Array<number>(WEEKS_PER_YEAR).fill(0)
+    for (const b of SURFACE_BLOCKS) {
+      expect(b.to).toBeGreaterThanOrEqual(b.from)
+      for (let w = b.from; w <= b.to; w++) covered[w]++
+      const sum = SURFACES.reduce((s, x) => s + b.weights[x], 0)
+      expect(sum, `${b.id} weights`).toBeCloseTo(1, 10)
+      for (const s of SURFACES) expect(b.weights[s], `${b.id}.${s}`).toBeGreaterThanOrEqual(0)
+      expect(b.label).not.toMatch(/[—А-Яа-яЁё]/) // player-facing: short dash only, no Cyrillic
+    }
+    // total AND non-overlapping – every week of the year in exactly one block
+    expect(covered.every((n) => n === 1)).toBe(true)
+    expect(new Set(SURFACE_BLOCKS.map((b) => b.id)).size).toBe(SURFACE_BLOCKS.length)
+    // the existing off-season tail is carried as a block, so the lookup can never fall through
+    const tail = SURFACE_BLOCKS.find((b) => b.id === 'off-season')!
+    for (let w = 0; w < WEEKS_PER_YEAR; w++) {
+      expect(isOffSeasonWeek(w)).toBe(w >= tail.from && w <= tail.to)
+    }
+  })
+
+  it('surfaceBlockFor is a pure function of the SEASON week and repeats every year', () => {
+    for (let w = 0; w < WEEKS_PER_YEAR; w++) {
+      const block = surfaceBlockFor(w)
+      for (const year of [0, 1, 2, 7]) expect(surfaceBlockFor(w + year * WEEKS_PER_YEAR)).toBe(block)
+      expect(surfaceBlockFor(w)).toBe(surfaceBlockFor(w)) // same instance, no allocation per call
+    }
+    // ...and it is total for a negative week too (the pre-history / prologue direction)
+    expect(surfaceBlockFor(-1).id).toBe(SURFACE_BLOCKS.find((b) => b.to === WEEKS_PER_YEAR - 1)!.id)
+  })
+
+  it('surfaceForWeek maps a roll cumulatively in (hard, clay, grass) order – the flat mix is the old rule', () => {
+    // Flatten every block and the function must reproduce the historical thresholds EXACTLY:
+    // r < .5 hard, r < .85 clay, else grass. One code path, no legacy branch.
+    withBlockWeights(FLAT_MIX, () => {
+      for (const week of [0, 12, 20, 27, 40, 50]) {
+        expect(surfaceForWeek(week, 0)).toBe('hard')
+        expect(surfaceForWeek(week, 0.4999)).toBe('hard')
+        expect(surfaceForWeek(week, 0.5)).toBe('clay')
+        expect(surfaceForWeek(week, 0.8499)).toBe('clay')
+        expect(surfaceForWeek(week, 0.85)).toBe('grass')
+        expect(surfaceForWeek(week, 0.999999)).toBe('grass')
+      }
+    })
+    // and under the shipped table the SAME roll reads differently per block – that IS the feature
+    const clayWeek = SURFACE_BLOCKS.find((b) => b.id === 'clay')!.from
+    const grassWeek = SURFACE_BLOCKS.find((b) => b.id === 'grass')!.from
+    expect(surfaceForWeek(clayWeek, 0.3)).toBe('clay')
+    expect(surfaceForWeek(grassWeek, 0.3)).toBe('grass')
+    expect(surfaceForWeek(0, 0.3)).toBe('hard')
+    // a roll of exactly 1 (never produced by the rng, but the function must stay total)
+    for (const b of SURFACE_BLOCKS) expect(SURFACES).toContain(surfaceForWeek(b.from, 1))
+  })
+
+  it('ZERO draw-order change: swapping the whole block table cannot move a travel cost', () => {
+    // The surface still costs exactly ONE roll, in exactly the position the flat draw used it – and
+    // the very next draw is the event's base travel cost. So the schedule and the whole economy side
+    // of the calendar are byte-identical across any block table; only `surface` moves. This is what
+    // let the season-block slice ship without re-pinning TRAVEL_PIN_BASE or the econ bench.
+    const blocks = buildSeason('block-invariance', 0, 52)
+    const flat = withBlockWeights(FLAT_MIX, () => buildSeason('block-invariance', 0, 52))
+    expect(flat).toHaveLength(blocks.length)
+    for (let i = 0; i < blocks.length; i++) {
+      expect(flat[i].id).toBe(blocks[i].id)
+      expect(flat[i].week).toBe(blocks[i].week)
+      expect(flat[i].tier).toBe(blocks[i].tier)
+      expect(flat[i].deadlineWeek).toBe(blocks[i].deadlineWeek)
+      expect(flat[i].travelCostCents).toBe(blocks[i].travelCostCents) // byte-identical
+    }
+    // ...and the surfaces really did differ, or the comparison proved nothing
+    expect(flat.some((e, i) => e.surface !== blocks[i].surface)).toBe(true)
+  })
+
+  it('each block is DOMINATED by its surface, and never uniform', () => {
+    const perBlock = new Map<string, Record<Surface, number>>()
+    for (let s = 0; s < 60; s++) {
+      for (const e of buildSeason(`surf-${s}`, 0, 52)) {
+        const id = surfaceBlockFor(e.week).id
+        const row = perBlock.get(id) ?? { hard: 0, clay: 0, grass: 0 }
+        row[e.surface]++
+        perBlock.set(id, row)
+      }
+    }
+    // MEASURED over 60 seasons (5520 events): hard-early 71.8% hard · clay 78.6% clay ·
+    // grass 69.5% grass · hard-late 71.8% hard. Off-season carries no events at all.
+    const dominant: Record<string, Surface> = {
+      'hard-early': 'hard',
+      clay: 'clay',
+      grass: 'grass',
+      'hard-late': 'hard',
+    }
+    for (const [id, surface] of Object.entries(dominant)) {
+      const row = perBlock.get(id)!
+      const n = row.hard + row.clay + row.grass
+      expect(n, `${id} events`).toBeGreaterThan(100)
+      // the block READS as its surface – a player can plan around the calendar column
+      expect(row[surface] / n, `${id} dominant share`).toBeGreaterThan(0.6)
+      // ...but it is NOT a metronome: the other two surfaces still show up
+      expect(row[surface] / n, `${id} dominant share`).toBeLessThan(0.9)
+      for (const other of SURFACES) expect(row[other], `${id}.${other}`).toBeGreaterThan(0)
+    }
+    expect(perBlock.get('off-season')).toBeUndefined() // the tail stays event-free
+  })
+
+  it('grass stays a SHORT window, and the surfaces cluster instead of alternating', () => {
+    const grass = SURFACE_BLOCKS.find((b) => b.id === 'grass')!
+    const playable = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+    const grassWeeks = grass.to - grass.from + 1
+    expect(grassWeeks).toBeLessThanOrEqual(8) // a real tour's grass season is weeks, not months
+    expect(grassWeeks / playable).toBeLessThan(0.2) // never "grass is 40% of the year"
+    // CLUSTERING, measured directly: an event is far likelier to share its surface with the events
+    // around it than the flat mix could ever manage. Compare consecutive-event agreement.
+    const agreement = (events: SeasonEvent[]): number => {
+      let same = 0
+      let pairs = 0
+      for (let i = 1; i < events.length; i++) {
+        if (events[i].week === events[i - 1].week) continue // same week – not a calendar step
+        pairs++
+        if (events[i].surface === events[i - 1].surface) same++
+      }
+      return same / pairs
+    }
+    let blocked = 0
+    let flatAgree = 0
+    for (let s = 0; s < 30; s++) {
+      blocked += agreement(buildSeason(`clust-${s}`, 0, 52))
+      flatAgree += withBlockWeights(FLAT_MIX, () => agreement(buildSeason(`clust-${s}`, 0, 52)))
+    }
+    // flat mix: agreement is just Σ p², ~0.395. Blocks push it far above that – the column has
+    // structure a player can read.
+    expect(flatAgree / 30).toBeLessThan(0.45)
+    expect(blocked / 30).toBeGreaterThan(0.55)
+  })
+
+  it('no tier is surface-starved: every rung meets every court over a season', () => {
+    const perTier = new Map<TierId, Record<Surface, number>>()
+    for (let s = 0; s < 60; s++) {
+      for (const e of buildSeason(`surf-${s}`, 0, 52)) {
+        const row = perTier.get(e.tier) ?? { hard: 0, clay: 0, grass: 0 }
+        row[e.surface]++
+        perTier.set(e.tier, row)
+      }
+    }
+    for (const tier of TIER_LADDER) {
+      const row = perTier.get(tier)!
+      const n = row.hard + row.clay + row.grass
+      for (const s of SURFACES) {
+        // a rung that never sees a surface would make a specialist's build unplayable at that level
+        expect(row[s] / n, `${tier}/${s}`).toBeGreaterThan(0.02)
+      }
+    }
+  })
+
+  it('the whole thing is DATA: a one-block table collapses the season to a single surface', () => {
+    // The owner's knob, exercised. (Also the degenerate case the tiling test forbids in the shipped
+    // table – proved here to be a table property, not a code property.)
+    const saved = SURFACE_BLOCKS.map((b) => ({ ...b }))
+    try {
+      for (const b of SURFACE_BLOCKS) b.weights = { hard: 0, clay: 1, grass: 0 }
+      expect(tallySurfaces(buildSeason('one-block', 0, 52))).toMatchObject({ hard: 0, grass: 0 })
+      expect(tallySurfaces(buildSeason('one-block', 0, 52)).clay).toBeGreaterThan(0)
+    } finally {
+      SURFACE_BLOCKS.forEach((b, i) => (b.weights = saved[i].weights))
+    }
+    expect(tallySurfaces(buildSeason('one-block', 0, 52)).hard).toBeGreaterThan(0) // restored
   })
 })
 
