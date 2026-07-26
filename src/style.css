@@ -2573,3 +2573,12 @@ tr.kid-row td {
 .season-summary-note {
   margin: 0 0 16px;
 }
+
+/* R10-16 (owner playtest 26.07): the injury popup read as a heavily-rounded box next to the
+   square-ish banners that stack at the top of the screen (.stop-toast / .recovered-banner, both
+   10px). `.injury-stop` was already on the card but had no rule at all – so the radius was
+   whatever .dialog-card happened to be, with nothing pinning the two families together. Pinned
+   here, to the top-popup value, so the injury dialog and the banners can no longer drift apart. */
+.injury-stop {
+  border-radius: 10px;
+}

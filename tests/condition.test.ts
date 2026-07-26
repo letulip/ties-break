@@ -392,12 +392,17 @@ describe('B4 — fatigue is a soft, warned choice', () => {
 // surface; fatigue never does.
 // ---------------------------------------------------------------------------
 describe('hard availability blocks (injured / exams)', () => {
+  // R10-17: the layoff is a RANGE of weeks, so these fixtures put the event under test INSIDE it
+  // (3 weeks out, event at +2). What they assert is unchanged – an injured kid is hard-blocked on
+  // every tier – but the layoff has to actually cover the event's week for that to be the question:
+  // she is enterable again FROM `week + weeksRemaining`, which is the same week the news and the
+  // planner have always named. tests/round10.test.ts owns the boundary itself.
   it('an injured kid is blocked on every reachable tier', () => {
     // local (fresh kid, point-eligible) -> injured throw.
     const wl = createWorld('hb-inj-l')
-    wl.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 2, totalWeeks: 3, sinceWeek: wl.week }
+    wl.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 3, totalWeeks: 3, sinceWeek: wl.week }
     const loc = injectEvent(wl, { week: wl.week + 2, tier: 'local' })
-    expect(() => enterEvent(wl, loc.id)).toThrow('Injured – back in 2 weeks.')
+    expect(() => enterEvent(wl, loc.id)).toThrow('Injured – back in 3 weeks.')
     const ul = toSnapshot(wl).upcoming.find((e) => e.id === loc.id)!
     expect(ul.eligible).toBe(false)
     expect(ul.ineligibleReason).toBe('injured')
@@ -406,9 +411,9 @@ describe('hard availability blocks (injured / exams)', () => {
     // national (national-eligible) -> injured throw too.
     const wn = createWorld('hb-inj-n')
     giveKidPoints(wn, 200)
-    wn.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 2, totalWeeks: 3, sinceWeek: wn.week }
+    wn.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 3, totalWeeks: 3, sinceWeek: wn.week }
     const nat = injectEvent(wn, { week: wn.week + 2, tier: 'national' })
-    expect(() => enterEvent(wn, nat.id)).toThrow('Injured – back in 2 weeks.')
+    expect(() => enterEvent(wn, nat.id)).toThrow('Injured – back in 3 weeks.')
     expect(toSnapshot(wn).upcoming.find((e) => e.id === nat.id)!.ineligibleReason).toBe('injured')
   })
 
@@ -475,12 +480,14 @@ describe('B6 — three-surface parity', () => {
   it('a hard block (injured) is consistent on all three surfaces (never stops advance)', () => {
     const b = createWorld('b6-inj')
     giveKidPoints(b, 200)
-    b.injury = { kind: 'ankle', severity: 'moderate', weeksRemaining: 3, totalWeeks: 6, sinceWeek: b.week }
+    // R10-17: 4 weeks out so the +3 event under test sits INSIDE the layoff (she is enterable again
+    // from week + weeksRemaining – see tests/round10.test.ts for the boundary itself).
+    b.injury = { kind: 'ankle', severity: 'moderate', weeksRemaining: 4, totalWeeks: 6, sinceWeek: b.week }
     const nat = injectEvent(b, { week: b.week + 3, tier: 'national', deadlineWeek: b.week + 1 })
     b.season = [nat]
 
     // surface 1: enterEvent throws (hard block)
-    expect(() => enterEvent(b, nat.id)).toThrow('Injured – back in 3 weeks.')
+    expect(() => enterEvent(b, nat.id)).toThrow('Injured – back in 4 weeks.')
     // surface 2: upcoming marks it ineligible with the matching reason
     const ue = toSnapshot(b).upcoming.find((e) => e.id === nat.id)!
     expect(ue.eligible).toBe(false)
@@ -607,7 +614,9 @@ describe("the doctor's veto — medical floor", () => {
   it('injury still outranks it, and a blacked-out week still names the week-level reason', () => {
     const inj = createWorld('vet-inj')
     inj.condition = 0
-    inj.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 2, totalWeeks: 3, sinceWeek: inj.week }
+    // R10-17: the layoff must cover the event's week for "injury outranks the veto" to be the
+    // question being asked – 3 weeks out, event at +2.
+    inj.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 3, totalWeeks: 3, sinceWeek: inj.week }
     const ev = injectEvent(inj, { week: inj.week + 2, tier: 'local' })
     expect(availabilityStatus(inj, ev).reason).toBe('injured')
 

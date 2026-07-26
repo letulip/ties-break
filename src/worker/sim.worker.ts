@@ -4,6 +4,7 @@ import {
   advanceWeeks,
   enterEvent,
   withdrawEvent,
+  cancelEntry,
   skipEvent,
   bookVacation,
   cancelVacation,
@@ -91,6 +92,14 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'withdrawEvent': {
       if (!world) throw new Error('No active career')
       withdrawEvent(world, msg.eventId)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'cancelEntry': {
+      // R10-13: cancel before the event week – past the deadline the fee is forfeited and the week
+      // becomes plannable again; before it, a full refund (the withdrawal path).
+      if (!world) throw new Error('No active career')
+      cancelEntry(world, msg.eventId)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }
