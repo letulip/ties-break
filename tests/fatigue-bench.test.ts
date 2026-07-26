@@ -14,6 +14,10 @@ import {
   GRID_HORIZON_WEEKS,
   gridPolicies,
   SCENARIOS,
+  RUNFAT_SCENARIOS,
+  RUNFAT_LADDERS,
+  ALL_SCENARIOS,
+  parseScenarioArg,
   withScenario,
   effectivePhysio,
   plannerPolicies,
@@ -34,7 +38,7 @@ import {
 } from '../tools/fatigue-bench'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEK_PLAN_PRESETS } from '../src/shared/protocol'
-import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+import { TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 
 // The fatigue bench is a MEASUREMENT tool for the round-9 condition math: it must be
@@ -214,13 +218,18 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
       }
       if (f.practiced) c = clamp(c - practiceDrainOf(f.practiceScore))
       let strain = 0
-      for (const score of f.matchScores) {
+      f.matchScores.forEach((score, i) => {
         const sets = score ? score.split(' ') : []
         const tiebreaks = sets.filter((s) => s === '7-6' || s === '6-7').length
         let d = sets.length >= 3 || tiebreaks >= 1 ? k.matchFatigue.hardMatch : k.matchFatigue.straightSets
         if (tiebreaks > 2) d += k.matchFatigue.extraTiebreaks
-        strain += d + k.tierMatchFatigue[f.tierPlayed as TierId]
-      }
+        // CUMULATIVE RUN FATIGUE (owner 26.07): the run's i-th match (0-based) also pays the
+        // ladder's extra – re-derived here from the knob, including the repeat-last-value rule
+        // for a run longer than the ladder. Her first match of the run always pays 0.
+        const ladder = k.runFatigueLadder
+        const extra = ladder.length === 0 ? 0 : ladder[Math.min(i, ladder.length - 1)]
+        strain += d + k.tierMatchFatigue[f.tierPlayed as TierId] + extra
+      })
       c = clamp(c - strain)
       out.push(c)
     }
@@ -380,6 +389,100 @@ describe('scenarios (V2.1 SHIPPED as baseline; v2/legacy patched live)', () => {
   })
 })
 
+// ---------------------------------------------------------------------------
+// CUMULATIVE RUN FATIGUE (owner idea 26.07) – the four ladders he proposed, benched against the
+// pre-ladder engine. The bench must (a) carry his table verbatim, (b) patch and restore the array
+// knob as safely as it does the scalars, and (c) leave the default sweep's cost untouched.
+// ---------------------------------------------------------------------------
+describe('run-fatigue ladder scenarios (owner idea 26.07)', () => {
+  const byId = (id: string) => RUNFAT_SCENARIOS.find((s) => s.id === id)!
+
+  it("carries the owner's four ladders verbatim (+ the pre-ladder reference), variant C shipped", () => {
+    // his table: extra per 2nd/3rd/4th/5th match, totalling 10 / 8 / 6 / 4 over a five-match run
+    expect(RUNFAT_LADDERS.a).toEqual([0, 1, 2, 3, 4])
+    expect(RUNFAT_LADDERS.b).toEqual([0, 1, 1, 2, 4])
+    expect(RUNFAT_LADDERS.c).toEqual([0, 1, 1, 2, 2])
+    expect(RUNFAT_LADDERS.d).toEqual([0, 1, 1, 1, 1])
+    for (const [id, total] of [['a', 10], ['b', 8], ['c', 6], ['d', 4]] as [string, number][]) {
+      expect(RUNFAT_LADDERS[id].reduce((s, x) => s + x, 0)).toBe(total)
+      expect(RUNFAT_LADDERS[id][0]).toBe(0) // her first match of a run never costs extra
+    }
+    expect(RUNFAT_LADDERS.off).toEqual([0]) // the pre-idea engine: no cumulative fatigue at all
+    // C is the SHIPPED default, so the runfat-c section must be a no-op patch on the engine
+    expect(ECONOMY.condition.runFatigueLadder).toEqual(RUNFAT_LADDERS.c)
+    // the five sections are headline-only and OPT-IN: the default sweep's cost is unchanged
+    expect(SCENARIOS.map((s) => s.id)).toEqual(['baseline', 'v2', 'legacy'])
+    expect(RUNFAT_SCENARIOS).toHaveLength(5)
+    for (const s of RUNFAT_SCENARIOS) {
+      expect(s.grid).toBe(false)
+      expect(s.plannerGrid).toBe(false)
+      expect(s.patch.runFatigueLadder).toBeDefined()
+    }
+    expect(ALL_SCENARIOS).toHaveLength(SCENARIOS.length + RUNFAT_SCENARIOS.length)
+    expect(new Set(ALL_SCENARIOS.map((s) => s.id)).size).toBe(ALL_SCENARIOS.length)
+  })
+
+  it('withScenario patches the ladder, restores it on return AND on a throw, and never mutates it', () => {
+    const shipped = ECONOMY.condition.runFatigueLadder
+    const shippedCopy = [...shipped]
+    withScenario(byId('runfat-a'), () => {
+      expect(ECONOMY.condition.runFatigueLadder).toEqual([0, 1, 2, 3, 4])
+      // the patch works on a COPY – scribbling on the live array can't reach the shipped one
+      ECONOMY.condition.runFatigueLadder[0] = 99
+    })
+    expect(ECONOMY.condition.runFatigueLadder).toBe(shipped) // the very same instance is back
+    expect(ECONOMY.condition.runFatigueLadder).toEqual(shippedCopy)
+    expect(RUNFAT_LADDERS.a).toEqual([0, 1, 2, 3, 4]) // and the table itself is intact
+
+    expect(() =>
+      withScenario(byId('runfat-off'), () => {
+        throw new Error('boom')
+      }),
+    ).toThrow('boom')
+    expect(ECONOMY.condition.runFatigueLadder).toEqual(shippedCopy)
+  })
+
+  it('runfat-c IS the shipped engine (byte-identical careers); runfat-off is the pre-ladder one', () => {
+    const shippedRun = runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
+    expect(withScenario(byId('runfat-c'), () => runFatigueCareer(middleSelf, grinder, 0, H52.weeks))).toEqual(
+      shippedRun,
+    )
+    // no ladder at all = strictly less strain on the same paired seed, so she rides higher and
+    // the per-week strain the bench reports is smaller wherever she played more than one match.
+    const off = withScenario(byId('runfat-off'), () => runFatigueCareer(middleSelf, grinder, 0, H52.weeks))
+    expect(off.meanCondition).toBeGreaterThan(shippedRun.meanCondition)
+    const deepWeeks = shippedRun.weekly.filter((w) => w.matches > 1).length
+    expect(deepWeeks).toBeGreaterThan(0) // the ladder arm was actually exercised
+  })
+
+  it('the steepest ladder costs the most condition: off > D > A on the same paired seeds', () => {
+    const pooled = (id: string) =>
+      mean(
+        withScenario(byId(id), () =>
+          runCell(middleSelf, grinder, H52.weeks, 10).map((r) => r.meanCondition),
+        ),
+      )
+    const off = pooled('runfat-off')
+    const d = pooled('runfat-d')
+    const a = pooled('runfat-a')
+    expect(off).toBeGreaterThan(d) // any ladder costs something
+    expect(d).toBeGreaterThan(a) // +1 flat costs less than +1,+2,+3,+4
+  })
+
+  it('--scenario takes a comma-separated list of known ids and rejects anything else', () => {
+    expect(parseScenarioArg([])).toBeNull()
+    expect(parseScenarioArg(['--scenario', 'baseline'])).toEqual(['baseline'])
+    expect(parseScenarioArg(['--scenario', 'runfat-off,runfat-a,runfat-d'])).toEqual([
+      'runfat-off',
+      'runfat-a',
+      'runfat-d',
+    ])
+    expect(() => parseScenarioArg(['--scenario', 'nope'])).toThrow('--scenario must be')
+    expect(() => parseScenarioArg(['--scenario', 'baseline,nope'])).toThrow('--scenario must be')
+    expect(() => parseScenarioArg(['--scenario'])).toThrow('--scenario must be')
+  })
+})
+
 describe('season planner (REAL mechanics – bookings through the engine commands)', () => {
   it('the grinder practises hard and never books a package; the others do both', () => {
     const g = runFatigueCareer(middleSelf, grinder, 0, H104.weeks)
@@ -455,8 +558,13 @@ describe('season planner (REAL mechanics – bookings through the engine command
     const grinderRuns = PROFILES.map((p) => runFatigueCareer(p, grinder, 3, H104.weeks))
     expect(grinderRuns.some((r) => r.weeksBelowMedicalFloor > 0)).toBe(true)
     expect(grinderRuns.some((r) => r.medicalBlocks > 0)).toBe(true)
-    // …and wherever it fires, the veto ends the condition-0 pin the bench flagged as degenerate.
-    for (const r of grinderRuns) expect(r.weeksAt0).toBe(0)
+    // *** RE-PINNED 26.07 (CUMULATIVE RUN FATIGUE): this used to assert an exact 0. The veto gates
+    // ENTRY – and entries commit up to ENTRY_LOOKAHEAD weeks BEFORE the event – so it can stop her
+    // signing up while wrecked, never stop a run she entered healthy from wrecking her. With the
+    // ladder charging extra for every subsequent match of the same run, a grinder bottoms out at 0
+    // again for a few weeks of a 104-week career. It stays a TAIL (< 10% of weeks), not the pin the
+    // pre-veto bench flagged as degenerate, and only for the grinder. ***
+    for (const r of grinderRuns) expect(r.weeksAt0).toBeLessThan(0.1 * H104.weeks)
     // The load-managing policies never go near it – proof the floor is far below normal play.
     for (const policy of [balanced, careful]) {
       const r = runFatigueCareer(working, policy, 3, H104.weeks)
@@ -476,6 +584,21 @@ describe('season planner (REAL mechanics – bookings through the engine command
       expect(p.planner.practice).toBe('never')
       expect(p.planner.rescueBelow).toBeNull()
       expect(p.planner.offSeasonPackageId).toBeNull()
+    }
+  })
+
+  it('the economy read reconciles: the tier split sums to entries, spend nets, survival is the flag', () => {
+    for (const policy of POLICIES) {
+      const r = runFatigueCareer(middleSelf, policy, 1, H104.weeks)
+      // every committed entry is booked under exactly one tier
+      expect(TIER_LADDER.reduce((s, t) => s + r.entriesByTier[t], 0)).toBe(r.entries)
+      // trips + fees are real money and can only be a PART of what the family spent
+      expect(r.travelSpendCents).toBeGreaterThan(0)
+      expect(r.entryFeeSpendCents).toBeGreaterThan(0)
+      expect(r.travelSpendCents + r.entryFeeSpendCents).toBeLessThan(r.totalSpendCents)
+      // survival is exactly "the balance never went negative"
+      expect(r.survived).toBe(r.weeksToBankrupt === null)
+      if (r.weeksToBankrupt !== null) expect(r.weeksToBankrupt).toBeLessThanOrEqual(H104.weeks)
     }
   })
 
