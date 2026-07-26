@@ -18,10 +18,12 @@ import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, ty
 import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
-import { KID_ID, flipScore, isBlackoutWeek, isTierAgeOpen, practiceCaution } from '../../engine/world'
-import { TIERS } from '../../engine/season/calendar'
+import { KID_ID, flipScore, isTierAgeOpen, practiceCaution } from '../../engine/world'
+// The week-TYPE predicates come from the calendar itself (world.ts re-exports isExamWeek only).
+import { TIERS, isExamWeek, isOffSeasonWeek } from '../../engine/season/calendar'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
+import { TIER_SHORT } from '../../composables/weekAhead'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
@@ -134,7 +136,14 @@ const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'amb
       tone: 'amber',
     }
   }
-  if (isBlackoutWeek(s.week) || isBlackoutWeek(s.week + 1)) return { label: 'School break – exams', tone: 'grey' }
+  // Spotted during the R10 presentation pass (NOT on the owner's list): this arm asked
+  // `isBlackoutWeek`, which is TRUE for the off-season tail as well as the exam block – so the whole
+  // December off-season read "School break – exams" on the player card. Same grey chip, but the two
+  // blackouts are now named for what they actually are.
+  if (isExamWeek(s.week) || isExamWeek(s.week + 1)) return { label: 'School break – exams', tone: 'grey' }
+  // Kept to the same length as its exam sibling: the chip lives in the condition cell and a longer
+  // string wraps inside the pill, which pushes the whole row taller.
+  if (isOffSeasonWeek(s.week) || isOffSeasonWeek(s.week + 1)) return { label: 'Off-season – resting', tone: 'grey' }
   return { label: 'Fit', tone: 'green' }
 })
 
@@ -196,14 +205,12 @@ const coachQuote = computed(() =>
 // tier off the snapshot: a reached tier shows the short finish label (W/F/SF/QF/R16…) in
 // accent, an untouched one a muted dash. Ladder-up: the strip is the whole six-rung ladder
 // (the old locked placeholder is gone – every tier is live now, gated only by points and age).
-const SEASON_STRIP_TIERS: { id: TierId; short: string }[] = [
-  { id: 'local', short: 'Local' },
-  { id: 'regional', short: 'Regional' },
-  { id: 'national', short: 'National' },
-  { id: 'j30', short: 'J30' },
-  { id: 'j60', short: 'J60' },
-  { id: 'j300', short: 'J300' },
-]
+// R10-7: the short names now come from the ONE shared table (composables/weekAhead.ts), which the
+// dynamic Next-week button also reads – so the strip and the button can never call the same tier
+// two different things. This array only carries the LADDER ORDER.
+const SEASON_STRIP_TIERS: { id: TierId; short: string }[] = (
+  ['local', 'regional', 'national', 'j30', 'j60', 'j300'] as const
+).map((id) => ({ id, short: TIER_SHORT[id] }))
 // finish index -> short label (reuses the finish-index convention: 0 = champion).
 function shortFinish(finish: number): string {
   if (finish === 0) return 'W'
@@ -390,8 +397,11 @@ function openRankHelp(): void {
               </div>
             </td>
           </tr>
+          <!-- R10-8: "points" -> "pts". Together with the widened label column (.player-card th
+               nowraps and takes exactly the width its labels need) both this row and "Junior rank"
+               above stay on ONE line at 375px. -->
           <tr>
-            <th>Season points</th>
+            <th>Season pts</th>
             <td class="num">{{ kidPoints }}</td>
           </tr>
           <tr>

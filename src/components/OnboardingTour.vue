@@ -37,7 +37,9 @@ const STEPS: Step[] = [
   {
     selector: '[data-tour="next-week"]',
     title: 'Next week',
-    text: 'Tap "Next week" to advance the career, one week at a time.',
+    // R10-7: the button no longer says a literal "Next week" – it names the week's plan – so the
+    // coach-mark points at the button instead of quoting a label that changes.
+    text: 'Tap this button to advance the career, one week at a time. It tells you what the week holds.',
     placement: 'above',
   },
 ]
