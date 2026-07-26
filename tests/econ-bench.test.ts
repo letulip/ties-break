@@ -184,11 +184,16 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
   })
 
   it('the 14→18 pro proxy guards the rank arm with hasResults (no rank credit until a counting result)', () => {
-    // The degeneracy the guard fixes: a brand-new career ties at dense-rank 1 (kidRank <= 50) while
-    // holding ZERO counting results. An unguarded `kidRank <= 50` would therefore "reach pro" at week 1.
+    // RE-PINNED by ladder-up Part A (cohort pre-history). The degeneracy this guard was written
+    // against – a brand-new career tying the whole 0-point field at dense-rank 1, so an unguarded
+    // `kidRank <= 50` "reached pro" at week 1 – is now fixed AT SOURCE: the cohort carries a real
+    // season of results, so the point-less kid is the ONLY 0-point player and starts ranked LAST.
+    // The guard is kept (it is still the correct predicate, and it is what stops a future
+    // ranking change from re-opening the hole), but the assertion is inverted to pin the fix.
     const fresh = openCareer(wealthy, 0)
-    expect(fresh.world.kidRank).toBeLessThanOrEqual(REACH_PRO_RANK) // dense-rank tie: she's "#1"
-    expect(kidPoints(fresh.world)).toBe(0) // ...but has no counting result yet
+    expect(fresh.world.kidRank).toBe(fresh.world.cohort.length + 1) // last, not "#1"
+    expect(fresh.world.kidRank).toBeGreaterThan(REACH_PRO_RANK)
+    expect(kidPoints(fresh.world)).toBe(0) // ...and still no counting result
 
     // reachedWeek(pro) must match an INDEPENDENT replay of the GUARDED predicate, and must NOT be the
     // week-1 degenerate value: the rank arm only fires once she owns a counting result (points > 0),

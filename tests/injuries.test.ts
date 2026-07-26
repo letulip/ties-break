@@ -47,7 +47,11 @@ function hashOf(draws: number[]): string {
 }
 
 // B1's frozen pre-slice reference: seed bench-working-0, weeks 1..52.
-const REF = { count: 45239, hash: '9f783705', kidRank: 131 }
+// kidRank RE-PINNED by ladder-up Part A (cohort pre-history), 131 -> 143: the stream itself
+// (count/hash) is byte-identical, but a real week-0 ranking changes which AI fill each draw, so a
+// different number of them end the year with counting points ahead of the point-less kid. See the
+// full note on REF in tests/condition.test.ts.
+const REF = { count: 45239, hash: '9f783705', kidRank: 143 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
   draws: number[]

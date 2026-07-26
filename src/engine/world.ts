@@ -40,6 +40,7 @@ import {
   vacationPriceCents,
 } from './economy'
 import { generateCohort, driftCohort } from './season/cohort'
+import { generatePreHistory } from './season/prehistory'
 import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
 import { simulateMatch } from './match/engine'
@@ -1396,6 +1397,18 @@ export function createWorld(
   careerId: string = `legacy-${seed}`,
 ): WorldState {
   const fundsCents = STARTING_FUNDS_CENTS[profile.background]
+  const cohort = generateCohort(seed)
+  // Ladder-up Part A: the cohort arrives with a season already behind it (season/prehistory.ts),
+  // so week-1 entrant fields are ranking-MEANINGFUL and the standings are not a 199-way tie at 0.
+  // Rows sit at NEGATIVE weeks [-51, -1]; they count inside the existing rolling-52 window at
+  // week 0 and are pruned away by the normal `world.week - r.week <= RESULTS_WINDOW` rule as the
+  // first season runs – NO new field and NO schema bump. Audited before adopting the shape: the
+  // only week-sensitive reads over `results` are pruneResults, computeRanking/windowedBestSum
+  // (all three use the same `<= WINDOW` difference, which is sign-agnostic), playedWeeksInTrailing4
+  // and computeCountingResults (KID-only, and pre-history is AI-only), and maybeFireSeasonWrapUp's
+  // `inRange` (`w >= yearStart`, so negative weeks are excluded from every season figure). Nothing
+  // clamps a result week at 0 and nothing feeds a result week to weekYear.
+  // The kid gets NO pre-history: she still starts on 0 points and reads "Unranked".
   const world: WorldState = {
     schemaVersion: SAVE_SCHEMA_VERSION,
     careerId,
@@ -1404,13 +1417,15 @@ export function createWorld(
     fundsCents,
     profile,
     plan: { ...WEEK_PLAN_PRESETS.balanced },
-    cohort: generateCohort(seed),
-    results: [],
+    cohort,
+    results: generatePreHistory(seed, cohort),
     season: [],
     entries: [],
     events: [],
     nextEventId: 0,
-    kidRank: 1,
+    // Placeholder only – recomputeKidRank below replaces it with the real value (last, behind the
+    // whole cohort, because she is the only player without a counting result).
+    kidRank: cohort.length + 1,
     prevKidRank: null,
     pendingTournament: null,
     bestFinishByTier: {},

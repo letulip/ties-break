@@ -73,7 +73,14 @@ const REF = {
     0.4780225674621761, 0.18402758589945734, 0.041664635529741645, 0.7598230177536607, 0.7584145739674568,
     0.9743674397468567, 0.3922130144201219, 0.5808420258108526,
   ],
-  kidRank: 131,
+  // RE-PINNED by ladder-up Part A (cohort pre-history), 131 -> 143. The DRAW STREAM above is
+  // untouched (count 45239 / hash 9f783705 / head / tail all still exact) – pre-history draws come
+  // from `rngFromSeed(seed + ':prehistory')` at createWorld and add ZERO main-stream pulls, and the
+  // per-tier entrant band SIZES are position-percentile based, so they cannot move either. What
+  // moved is a CONSEQUENCE of the stream, not the stream: a real week-0 ranking changes WHICH AI
+  // enter which draw, so a different set of AI ends the year holding counting points, and the
+  // point-less kid's shared dense rank sits behind 142 of them instead of 130.
+  kidRank: 143,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {

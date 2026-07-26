@@ -37,16 +37,24 @@ function enterEligible(world: WorldState, event: SeasonEvent): void {
 // immunity: the breakdown must stay window-accurate even when a tournament-heavy stretch pushes
 // finance events out of the trailing 60-event snapshot feed.
 
-// A busy tournament season: enter every affordable local event and resolve each run, so the mixed
-// event feed floods with match/news lines and finance events get pushed past the 60-event cap.
+// A busy tournament season: enter every affordable event she is ELIGIBLE for and resolve each run,
+// so the mixed event feed floods with match/news lines and finance events get pushed past the
+// 60-event cap.
+//
+// RE-PINNED by ladder-up Part A (cohort pre-history): this used to enter LOCAL events only. Against
+// a real cohort table the local field is genuinely the weak end of the draw, so the kid now wins it
+// and outgrows the tier's [0, 85] band about two thirds of the way through – the "busy" season went
+// quiet and stopped flooding the feed, which is what the helper exists to do. Following the ladder
+// up (local -> regional -> national, exactly as the entry policy the econ bench uses does) restores
+// the intended pressure without weakening a single assertion.
 function busyTournamentSeason(seed: string, weeks: number): WorldState {
   const world = createWorld(seed) // default profile: middle background
   const rng = rngFromSeed(world.seed)
   for (let i = 0; i < weeks; i++) {
     for (const e of world.season) {
-      if (e.tier !== 'local' || world.entries.includes(e.id) || e.deadlineWeek < world.week) continue
-      // r-gate: only enter tiers the kid is currently eligible for (local is the entry tier, open
-      // from 0 points until she outgrows it); enterEvent would otherwise throw for an outgrown tier.
+      if (world.entries.includes(e.id) || e.deadlineWeek < world.week) continue
+      // r-gate: only enter tiers the kid is currently eligible for; enterEvent would otherwise
+      // throw for a tier she has not reached yet or has already outgrown.
       if (!isTierEligible(e.tier, kidPoints(world))) continue
       if (world.fundsCents < TIERS[e.tier].entryFeeCents + e.travelCostCents) continue
       // Season-Life: skip events under a HARD availability block (e.g. an event scheduled in a

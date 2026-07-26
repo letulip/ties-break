@@ -49,7 +49,10 @@ function fnv1a(s: string): string {
 function hashOf(draws: number[]): string {
   return fnv1a(draws.map((d) => d.toString()).join(','))
 }
-const REF = { count: 45239, hash: '9f783705', kidRank: 131 }
+// kidRank RE-PINNED by ladder-up Part A (cohort pre-history), 131 -> 143: the MAIN stream is
+// byte-identical (count/hash unchanged), but the week-0 ranking is now real, so a different set of
+// AI ends the year with counting points ahead of the point-less kid. See tests/condition.test.ts.
+const REF = { count: 45239, hash: '9f783705', kidRank: 143 }
 
 function injectEvent(
   world: WorldState,
