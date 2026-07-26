@@ -1,4 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Multi-season Monte-Carlo careers run in 1-4s each UNCONTENDED, but the whole suite runs eight
+// files in parallel and the ladder-up calendar made a 14→18 career far heavier (several draw-32
+// AI tournaments a week once she reaches the J-tiers). Under that contention the 5s default fires
+// on the reach-tracker/survival cells even though nothing is wrong – they are deterministic, only
+// slow. Same generous file-level timeout the fatigue bench already carries, same reason.
+vi.setConfig({ testTimeout: 240_000 })
 import {
   runCareer,
   openCareer,
