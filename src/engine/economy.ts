@@ -268,7 +268,10 @@ export const ECONOMY = {
     // matching tierMatchFatigue). Racing below the floor is still ALLOWED – it raises a caution,
     // never a block (the owner's "the parent may push, the game warns").
     minConditionToEnter: { local: 20, regional: 30, national: 40, j30: 45, j60: 50, j300: 55 } as Record<TierId, number>,
-    examWeeks: [[24, 25]] as [number, number][], // season-week offsets blacked out for school
+    examWeeks: [[23, 24]] as [number, number][], // season-week offsets blacked out for school
+    // Moved off 24-25 when the surface blocks landed: week 25 is the FIRST week of the grass
+    // window (25-30), so the old placement ate 1 of only 6 grass weeks a year - a real cost to a
+    // serve-first build, for no design reason. 23-24 is also truer: school ends, THEN grass.
 
     // THE DOCTOR'S VETO (owner idea R9-19b, cashed in by the Wave-2 fatigue bench 26.07): the one
     // place where "the parent may push, the game warns" yields to medicine. Below this condition

@@ -119,6 +119,10 @@ export interface WorldState {
   /** the CURRENT (in-progress) season's kid wins/losses, counted as matches resolve so the
    *  summary never has to re-parse event text and pruning can't lose them (v10). Reset to 0
    *  at each season wrap-up. */
+  /** The week a medical withdrawal fired, so advanceWeeks can halt ONCE on it. Derived, not
+   *  meaningful state: optional, so every pre-existing save loads unchanged with no migration, and a
+   *  reload simply re-derives it on the next tick that withdraws her. */
+  medicalWithdrawalWeek?: number
   seasonWins: number
   seasonLosses: number
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
@@ -1682,6 +1686,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // FREE, i.e. a cheap late exit from any entry she regrets – the fee has to bite or "enter it and
     // see" becomes the dominant strategy.
     world.entries = world.entries.filter((id) => id !== enteredThisWeek.id)
+    // Mark the week so advanceWeeks halts ONCE on it (see the stop below). The owner hit exactly this
+    // trap with injuries – he skipped weeks, an entry was silently withdrawn, and he only found out
+    // in the news three weeks later – so a forfeited entry must never pass by unseen either. The
+    // marker is derived state, not saved: a reload replays the tick and re-derives it.
+    world.medicalWithdrawalWeek = world.week
     addEvent(world, {
       week: world.week,
       type: 'injury',
@@ -1933,6 +1942,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // an ongoing recovery never re-stops the sim on every week she sits out.
     if (world.injury !== null && world.injury.sinceWeek === world.week) {
       stopReason = 'injury'
+      break
+    }
+    // A medical withdrawal costs her an entry AND its fee, so it halts the advance for the same
+    // reason a fresh injury does: the player must see it happen, not read about it later.
+    if (world.medicalWithdrawalWeek === world.week) {
+      stopReason = 'medical'
       break
     }
     if (world.fundsCents < 0) {

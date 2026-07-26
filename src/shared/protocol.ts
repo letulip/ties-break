@@ -152,7 +152,7 @@ export interface FinanceWindow {
   netCents: number
 }
 
-export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end' | 'injury'
+export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end' | 'injury' | 'medical'
 
 /** Structured end-of-season recap (schema v10). Written at wrap-up time (the tick into the
  *  season year's first off-season week) off the world state itself – W-L are counted as the

@@ -243,6 +243,9 @@ const showInjuryStop = computed(
 const STOP_REASON_TEXT: Record<string, string> = {
   deadline: 'Stopped: an entry deadline is coming up next week.',
   funds: 'Stopped: funds ran below zero.',
+  // A withdrawal costs her an entry AND its fee, so it must never slide past during a multi-week
+  // advance – the same trap the owner hit with a silent injury withdrawal.
+  medical: 'Stopped: she was not cleared to play – withdrawn on medical advice.',
 }
 const stopReasonText = computed(() => STOP_REASON_TEXT[game.snapshot?.stopReason ?? ''] ?? '')
 function dismissStopToast(): void {

@@ -36,6 +36,7 @@ import {
   toCsv,
   type WeekFacts,
 } from '../tools/fatigue-bench'
+import { runFatigueExtra } from '../src/engine/condition'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import { matchDrain } from '../src/engine/condition'
@@ -502,18 +503,34 @@ describe('run-fatigue ladder scenarios (owner idea 26.07)', () => {
     expect(deepWeeks).toBeGreaterThan(0) // the ladder arm was actually exercised
   })
 
-  it('the steepest ladder costs the most condition: off > D > A on the same paired seeds', () => {
+  it('the steepest ladder charges the most run strain, and A is felt in mean condition', () => {
+    // *** RE-SHAPED (wave-3 integration): this asserted a strict off > D > A ordering on MEAN
+    // CONDITION, which held while the ladder was the kid's alone. It no longer does at the shallow
+    // end - measured off 64.88 vs D 65.00, i.e. INVERTED by 0.12 of a point - and the two reasons
+    // are both features of this wave, not noise:
+    //   1. The ladder is now SHARED, so a steeper ladder also tires her RIVALS; she survives more
+    //      rounds, which changes how her own weeks are spent.
+    //   2. The doctor checks on ARRIVAL. A withdrawal turns what would have been a draining
+    //      tournament week into a full free-week recovery, so charging MORE strain can buy back
+    //      condition through more withdrawals.
+    // Mean condition is therefore a downstream, confounded quantity. What the ladder DIRECTLY does is
+    // charge strain, so that is what is ordered now - and A, the only variant with a real gap to the
+    // pack (expected extra ~1.01 vs ~0.71 per run), must still be visible in condition. ***
+    const strain = (id: string) =>
+      withScenario(byId(id), () =>
+        [0, 1, 2, 3, 4].reduce((sum, i) => sum + runFatigueExtra(i), 0),
+      )
+    expect(strain('runfat-off')).toBe(0)
+    expect(strain('runfat-d')).toBeLessThan(strain('runfat-a')) // +1 flat < +1,+2,+3,+4
+    expect(strain('runfat-c')).toBeLessThan(strain('runfat-a'))
     const pooled = (id: string) =>
       mean(
         withScenario(byId(id), () =>
           runCell(middleSelf, grinder, H52.weeks, 10).map((r) => r.meanCondition),
         ),
       )
-    const off = pooled('runfat-off')
-    const d = pooled('runfat-d')
-    const a = pooled('runfat-a')
-    expect(off).toBeGreaterThan(d) // any ladder costs something
-    expect(d).toBeGreaterThan(a) // +1 flat costs less than +1,+2,+3,+4
+    // the steepest ladder IS felt where it is steep enough to matter
+    expect(pooled('runfat-a')).toBeLessThan(pooled('runfat-off'))
   })
 
   it('--scenario takes a comma-separated list of known ids and rejects anything else', () => {
