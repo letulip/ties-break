@@ -524,3 +524,30 @@ describe('C4 — determinism: same seed, same world, and zero new draws', () => 
     }
   })
 })
+
+describe('C5 — a legacy ledger (every AI row tier-less) still ticks', () => {
+  it('strips tier off the whole ledger, keeps ticking, and lands in the same bounds', () => {
+    // Exactly the shape of a save written BEFORE this slice: pre-history and AI results alike
+    // carry no `tier`, so every row goes through the cheapest-reading fallback. The engine must
+    // run normally on it – this is the backward-compatibility guarantee, exercised through
+    // tickWeek rather than through the pure function alone.
+    const world = createWorld('rival-legacy')
+    world.results = world.results.map(({ tier: _drop, ...rest }) => rest)
+    const rng = rngFromSeed(world.seed)
+    expect(() => {
+      for (let i = 0; i < 12; i++) {
+        tickWeek(world, rng)
+        if (world.pendingTournament) {
+          skipTournament(world)
+          closeTournament(world)
+        }
+      }
+    }).not.toThrow()
+    const conds = [...rivalConditions(world.results, world.week).values()]
+    expect(conds.length).toBeGreaterThan(0)
+    for (const c of conds) {
+      expect(c).toBeGreaterThanOrEqual(ECONOMY.condition.min)
+      expect(c).toBeLessThanOrEqual(ECONOMY.condition.max)
+    }
+  })
+})
