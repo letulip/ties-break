@@ -29,7 +29,16 @@ import { formatShortName } from '../shared/format'
 import { weekYear } from '../shared/dates'
 import type { MatchPlayer, Surface } from './match/types'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
-import { TIERS, buildSeason, isOffSeasonWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
+import {
+  TIERS,
+  buildSeason,
+  isBlackoutWeek,
+  isExamWeek,
+  isOffSeasonWeek,
+  WEEKS_PER_YEAR,
+  OFF_SEASON_WEEKS,
+} from './season/calendar'
+import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
 import {
   ECONOMY,
   GEAR_CATEGORIES,
@@ -415,23 +424,13 @@ function stageLabel(round: number, drawSize: number): string {
 }
 
 // --- Season-Life: condition + availability gate (slice B) --------------------
-function clamp(x: number, lo: number, hi: number): number {
-  return x < lo ? lo : x > hi ? hi : x
-}
-
-/** True for a school-exam blackout week – the season-week offset falls inside one of
- *  ECONOMY.availability.examWeeks. Exported so the planner UI can label the calendar row
- *  honestly ("School exams") instead of calling it a training week. */
-export function isExamWeek(week: number): boolean {
-  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
-  return ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
-}
-
-/** A "blackout" week for tournaments: the off-season tail (already event-free) or a school-exam
- *  block. Used both by the condition accumulator (extra recovery) and the availability gate. */
-export function isBlackoutWeek(week: number): boolean {
-  return isOffSeasonWeek(week) || isExamWeek(week)
-}
+// The condition MATH (clamp / matchDrain / tournamentRunStrain / conditionMatchFactor) and the
+// week-TYPE predicates (isExamWeek / isBlackoutWeek) were extracted to ./condition and
+// ./season/calendar by the rival-life slice, so the AI cohort can run the SAME rules without a
+// world.ts import cycle. They are re-exported here under their historical names – every existing
+// call site and test import keeps working, and there is still exactly one implementation.
+export { matchDrain, tournamentRunStrain, conditionMatchFactor } from './condition'
+export { isExamWeek, isBlackoutWeek } from './season/calendar'
 
 /** The train/rest slider's recovery bonus for a MATCH-FREE week (round-9 owner redesign):
  *  threshold-based on plan.rest, first (highest) matching threshold wins, never interpolated –
@@ -468,39 +467,6 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   if (world.physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
   if (isBlackoutWeek(world.week)) recovery += c.blackoutBonus
   world.condition = clamp(world.condition + recovery, c.min, c.max)
-}
-
-/** R9-7 (owner redesign): the INTEGER fatigue of ONE kid match – how hard the scoreline was,
- *  plus the tier's per-match surcharge:
- *    straight sets, no tiebreak → 1;  a 3-setter OR a tiebreak in a 2-setter → 2;
- *    +1 more when the match had MORE than 2 tiebreak sets (a three-TB epic) – max 3;
- *    + tierMatchFatigue[tier] (local 0 / regional 1 / national 2 / j30 3 / j60 4 / j300 5).
- *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest national match = 5. Pure state, zero
- *  draws; a record without a score (defensive) counts as straight sets. */
-export function matchDrain(tier: TierId, score: string | undefined): number {
-  const f = ECONOMY.condition.matchFatigue
-  const sets = score ? score.split(' ') : []
-  const tiebreaks = sets.filter((s) => s === '7-6' || s === '6-7').length
-  let drain = sets.length >= 3 || tiebreaks >= 1 ? f.hardMatch : f.straightSets
-  if (tiebreaks > 2) drain += f.extraTiebreaks
-  return drain + ECONOMY.condition.tierMatchFatigue[tier]
-}
-
-/** R9-7: a committed run's total toll = Σ matchDrain over the kid's match records. A 5-match
- *  National run maxes at 25 (the owner's own check). Applied by finalizeTournament. */
-export function tournamentRunStrain(tier: TierId, kidMatches: { score?: string }[]): number {
-  return kidMatches.reduce((sum, m) => sum + matchDrain(tier, m.score), 0)
-}
-
-/** R9-19 (coupling ON, owner curve): NO strength penalty while she is fresh enough
- *  (condition >= matchStrengthKnee), then linear down to matchStrengthFloor at condition 0:
- *    factor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.
- *  Applied ONLY to the kid's MatchPlayer inside the EVENT-scoped shadow tournament
- *  (`seed:kidtour` stream), so the MAIN weekly draw sequence stays byte-identical. */
-export function conditionMatchFactor(condition: number): number {
-  const c = ECONOMY.condition
-  if (condition >= c.matchStrengthKnee) return 1
-  return c.matchStrengthFloor + (1 - c.matchStrengthFloor) * (condition / c.matchStrengthKnee)
 }
 
 /** The kid's age (whole years) in a given absolute week – the same arithmetic the snapshot uses. */

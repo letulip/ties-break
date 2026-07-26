@@ -164,6 +164,24 @@ export function isOffSeasonWeek(week: number): boolean {
   return offset >= WEEKS_PER_YEAR - OFF_SEASON_WEEKS
 }
 
+/** True for a school-exam blackout week – the season-week offset falls inside one of
+ *  ECONOMY.availability.examWeeks. Exported so the planner UI can label the calendar row
+ *  honestly ("School exams") instead of calling it a training week.
+ *  (Lives here, with its off-season sibling, since the rival-life slice: a week's TYPE is a
+ *  property of the calendar, and the cohort's condition accrual has to read it without
+ *  importing world.ts. world.ts re-exports both under their historical names.) */
+export function isExamWeek(week: number): boolean {
+  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
+}
+
+/** A "blackout" week for tournaments: the off-season tail (already event-free) or a school-exam
+ *  block. Used by the condition accumulators (extra recovery, for the kid AND the cohort) and by
+ *  the availability gate. */
+export function isBlackoutWeek(week: number): boolean {
+  return isOffSeasonWeek(week) || isExamWeek(week)
+}
+
 // Surface mix: hard 50 / clay 35 / grass 15. One RNG draw.
 function pickSurface(rng: Rng): Surface {
   const r = rng()
