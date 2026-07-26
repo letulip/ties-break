@@ -1115,6 +1115,16 @@ tr.milestone td {
   font-size: 14px;
 }
 
+/* Surface x play style: one line per card, and only when the court has an opinion about her
+   build – accent when it suits her, muted-warm when it does not. */
+.surface-note {
+  font-size: 12px;
+  color: #c98d63;
+}
+.surface-note.suits {
+  color: var(--accent);
+}
+
 .entries-strip {
   display: flex;
   flex-wrap: wrap;
