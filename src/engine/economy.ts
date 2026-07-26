@@ -223,6 +223,18 @@ export const ECONOMY = {
     // has priced local..national himself ("a five-match National run maxes at 25"), never the J
     // family, so these three are the first numbers the pending tuning pass should look at.
     tierMatchFatigue: { local: 0, regional: 1, national: 2, j30: 3, j60: 4, j300: 5 } as Record<TierId, number>,
+    // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
+    // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
+    // scoreline drain – the deeper she goes, the more that week grinds her down. The array is the
+    // extra, INDEXED BY MATCH-WITHIN-RUN: index 0 = her first match = 0 extra, index 1 = the
+    // second match, and so on (world.ts runFatigueExtra / tournamentRunStrain).
+    // A run LONGER than the ladder repeats its LAST value – a future draw bigger than the J-tier
+    // 32 (5 matches) must never silently cost 0.
+    // The owner proposed four ladders and the fatigue bench measured all four
+    // (--scenario runfat-a|b|c|d, plus runfat-off for the pre-ladder reference):
+    //   A +1,+2,+3,+4 (10 over a 5-match run) · B +1,+1,+2,+4 (8) · C +1,+1,+2,+2 (6) · D +1×4 (4)
+    // C – the middle of his range – ships as the default; the bench report is what moves it.
+    runFatigueLadder: [0, 1, 1, 2, 2] as number[],
     // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
     // then linear down to `floor` at condition 0:
     //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.

@@ -12,6 +12,7 @@ import {
   accrueCondition,
   matchDrain,
   tournamentRunStrain,
+  runFatigueExtra,
   restRecoveryBonus,
   conditionMatchFactor,
   kidMatchPlayer,
@@ -243,9 +244,13 @@ describe('R9-7 — match-based fatigue', () => {
     expect(matchDrain('national', undefined)).toBe(3)
   })
 
-  it('tournamentRunStrain sums the run: a 5-match National of epics maxes at 25', () => {
-    expect(tournamentRunStrain('national', new Array(5).fill({ score: '7-6 6-7 7-6' }))).toBe(25)
-    expect(tournamentRunStrain('local', [{ score: '6-4 6-2' }, { score: '7-6 4-6 6-3' }])).toBe(3) // 1 + 2
+  // ⚠ RE-PINNED 26.07 by the CUMULATIVE RUN FATIGUE ladder (owner idea; see the dedicated block
+  // below): the per-match drains are unchanged, but a run now also pays the ladder's extra per
+  // SUBSEQUENT match. Variant C ([0,1,1,2,2], +6 over five matches) ships as the default, so the
+  // owner's "five-match National of epics" check moves 25 -> 31 and the 2-match local 3 -> 4.
+  it('tournamentRunStrain sums the run: a 5-match National of epics is 25 + the ladder', () => {
+    expect(tournamentRunStrain('national', new Array(5).fill({ score: '7-6 6-7 7-6' }))).toBe(31) // 25 + 6
+    expect(tournamentRunStrain('local', [{ score: '6-4 6-2' }, { score: '7-6 4-6 6-3' }])).toBe(4) // 1 + 2 + 1
     expect(tournamentRunStrain('j30', [])).toBe(0) // no matches, no drain
   })
 
@@ -261,6 +266,113 @@ describe('R9-7 — match-based fatigue', () => {
     const c = ECONOMY.condition
     const expected = Math.max(c.min, Math.min(c.max, afterTick - strain))
     expect(world.condition).toBe(expected)
+    closeTournament(world)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// CUMULATIVE RUN FATIGUE (owner idea 26.07) — matches at a tournament run every
+// day or every other day, so each SUBSEQUENT match in the SAME run costs EXTRA
+// condition on top of its own scoreline drain: the deeper she goes, the more the
+// week grinds her down. ECONOMY.condition.runFatigueLadder is that extra, indexed
+// by match-within-run (index 0 = her first match = 0 extra); a run longer than the
+// ladder repeats its LAST value, so a future bigger draw can never silently cost 0.
+// Shipped default = the owner's variant C (+1,+1,+2,+2 = 6 over a five-match run).
+// Pure arithmetic on the run's match records – zero RNG, order-sensitive only.
+// ---------------------------------------------------------------------------
+describe('cumulative run fatigue (the ladder)', () => {
+  const LADDER = ECONOMY.condition.runFatigueLadder
+  const straightNat = matchDrain('national', '6-4 6-2') // 3 = 1 + tier 2
+
+  it('ships variant C: [0,+1,+1,+2,+2] – 0 extra for the first match, 6 over a five-match run', () => {
+    expect(LADDER).toEqual([0, 1, 1, 2, 2])
+    expect(LADDER[0]).toBe(0) // her FIRST match of the run never costs extra
+    expect(LADDER.reduce((s, x) => s + x, 0)).toBe(6)
+    expect(runFatigueExtra(0)).toBe(0)
+    expect([1, 2, 3, 4].map(runFatigueExtra)).toEqual([1, 1, 2, 2])
+  })
+
+  it('a 1-match run is UNCHANGED: the ladder never touches a first-round exit', () => {
+    for (const tier of ['local', 'regional', 'national', 'j30', 'j60', 'j300'] as const) {
+      for (const score of ['6-4 6-2', '7-6 6-4', '7-6 6-7 7-6']) {
+        expect(tournamentRunStrain(tier, [{ score }])).toBe(matchDrain(tier, score))
+      }
+    }
+  })
+
+  it('a 5-match National run adds EXACTLY the ladder sum on top of the per-match drains', () => {
+    const run = new Array(5).fill({ score: '6-4 6-2' })
+    const perMatch = 5 * straightNat // 15 – what the pre-ladder engine charged
+    expect(tournamentRunStrain('national', run)).toBe(perMatch + 6)
+    // and the growth is match-by-match, not a lump at the end
+    const cumulative = [1, 2, 3, 4, 5].map((n) => tournamentRunStrain('national', new Array(n).fill({ score: '6-4 6-2' })))
+    expect(cumulative).toEqual([3, 7, 11, 16, 21])
+    expect(cumulative.map((c, i) => c - (i === 0 ? 0 : cumulative[i - 1]) - straightNat)).toEqual([0, 1, 1, 2, 2])
+  })
+
+  it('a run LONGER than the ladder repeats its LAST value (a bigger future draw can never cost 0)', () => {
+    const last = LADDER[LADDER.length - 1]
+    expect(runFatigueExtra(LADDER.length)).toBe(last)
+    expect(runFatigueExtra(99)).toBe(last)
+    // a 7-match run (draw of 128) = the ladder sum + 2 more repeats of its last rung
+    const seven = new Array(7).fill({ score: '6-4 6-2' })
+    expect(tournamentRunStrain('national', seven)).toBe(7 * straightNat + 6 + 2 * last)
+  })
+
+  it('a SKIPPED run still costs NOTHING: no match records, no drains, no ladder', () => {
+    expect(tournamentRunStrain('j300', [])).toBe(0) // the heaviest tier, zero matches
+    // …and the engine agrees: skipping at the tournament week never reaches finalize. Grind plan
+    // (rest 15 → slider bonus 0), so the retroactive match-free bonus is 0 and the number is exact.
+    const { world, eventId } = tickToPending('r9-skip', (w) => {
+      w.physioActive = false
+      w.plan = { train: 85, rest: 15 }
+      w.condition = 60
+    })
+    const conditionAfterTick = world.condition
+    skipEvent(world, eventId)
+    expect(world.pendingTournament).toBeNull()
+    expect(world.condition).toBe(conditionAfterTick) // no run committed -> no per-match drain, no ladder
+  })
+
+  it('a WALKOVER still costs NOTHING: the trip that never happened has no run to charge', () => {
+    const world = createWorld('runfat-walkover')
+    world.physioActive = false
+    world.plan = { train: 85, rest: 15 } // slider bonus 0 → the only recovery is the base
+    world.condition = 60
+    const target = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)!
+    enterEvent(world, target.id)
+    const rng = rngFromSeed(world.seed)
+    while (world.week < target.week - 1) tickWeek(world, rng)
+    // she arrives at the event week injured: entry fee forfeited, no travel, no run at all
+    world.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 3, totalWeeks: 3, sinceWeek: world.week }
+    const before = world.condition
+    tickWeek(world, rng)
+    expect(world.week).toBe(target.week)
+    expect(world.events.some((e) => e.week === world.week && e.text.startsWith('Walkover'))).toBe(true)
+    expect(world.pendingTournament).toBeNull()
+    // recovery only (base 1, no slider/physio/blackout) – zero strain, so zero ladder
+    expect(world.condition).toBe(before + ECONOMY.condition.recoveryBase)
+  })
+
+  it('is pure, RNG-free and never mutates the knob array', () => {
+    const snapshot = [...LADDER]
+    const run = new Array(5).fill({ score: '7-6 6-4' })
+    expect(tournamentRunStrain('regional', run)).toBe(tournamentRunStrain('regional', run)) // idempotent
+    expect(LADDER).toEqual(snapshot)
+    expect(tournamentRunStrain.length).toBe(2) // (tier, kidMatches) – no rng parameter
+    expect(runFatigueExtra.length).toBe(1) // (matchIndex) – no rng parameter
+  })
+
+  it('the ladder rides on the COMMITTED run: finalize subtracts drains + ladder together', () => {
+    const { world } = tickToPending('r9-strain-ladder')
+    const afterTick = world.condition
+    const kidMatches = world.pendingTournament!.result.matches.filter((m) => m.aId === KID_ID || m.bId === KID_ID)
+    const flat = kidMatches.reduce((s, m) => s + matchDrain('local', m.score), 0)
+    const withLadder = tournamentRunStrain('local', kidMatches)
+    expect(withLadder).toBe(flat + kidMatches.map((_, i) => runFatigueExtra(i)).reduce((s, x) => s + x, 0))
+    skipTournament(world) // reveal-all -> finalize commits the run
+    const c = ECONOMY.condition
+    expect(world.condition).toBe(Math.max(c.min, Math.min(c.max, afterTick - withLadder)))
     closeTournament(world)
   })
 })
