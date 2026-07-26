@@ -774,6 +774,17 @@ button.danger:hover:not(:disabled) {
   gap: 12px;
 }
 
+/* R10-8: at 375px "JUNIOR RANK" and "SEASON POINTS" each wrapped to two lines while the value column
+   sat half empty – the label column was being squeezed by a `table-layout: auto` split that gave the
+   values more than they needed. `width: 1%` + nowrap inverts that: the label column takes EXACTLY
+   the width its longest label needs (one line, always) and every remaining pixel goes to the value.
+   Pairs with the copy trim in HomeScreen.vue ("Season points" -> "Season pts"). */
+.player-card th {
+  width: 1%;
+  white-space: nowrap;
+  padding-right: 8px;
+}
+
 .player-avatar {
   width: 64px;
   height: 64px;
@@ -913,6 +924,17 @@ button.primary.risky {
 
 .next-week-bar button.primary {
   flex: 1;
+}
+
+/* R10-7: the label is no longer a fixed two words – it names the week's plan ("🏆 Play Regional ▶",
+   "🏖 Leave on vacation ▶"). Keep it on ONE line at 375px: the longest label is a tournament one, and
+   the bar has ~280px for it after the ▶▶4 button, so it fits – ellipsis is the safety net, not the
+   plan, and min-width: 0 is what lets it kick in instead of the flex item pushing the bar wide. */
+.next-week-btn {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 @media (min-width: 560px) {
@@ -1108,7 +1130,9 @@ tr.milestone td {
 
 .event-card-top {
   display: flex;
-  align-items: center;
+  /* R10-11: the surface side is now a two-row stack (dot + caption), so the tier name aligns to the
+     TOP of it rather than floating at the stack's vertical centre. */
+  align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
 }
@@ -1120,13 +1144,63 @@ tr.milestone td {
 }
 
 /* Surface x play style: one line per card, and only when the court has an opinion about her
-   build – accent when it suits her, muted-warm when it does not. */
+   build – accent when it suits her, muted-warm when it does not. (Still used by the season-blocks
+   strip above the calendar; the EVENT CARD moved to .surface-badge below in R10-11.) */
 .surface-note {
   font-size: 12px;
   color: #c98d63;
 }
 .surface-note.suits {
   color: var(--accent);
+}
+
+/* R10-11: the event card's surface chip + its words, as ONE stacked object on the right of the card
+   top. The chip is the court's colour dot; the caption underneath names the surface and – when the
+   court has an opinion about her build – says so. When it SUITS her the dot wears an accent ring:
+   that ring is the at-a-glance signal, the caption is the confirmation. Both states come straight
+   from engine/match/style.ts, so they cannot drift from the deltas that move her attributes. */
+.surface-badge {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  /* Never let a long caption ("Grass – not her surface") crowd out the tournament name. */
+  max-width: 47%;
+}
+
+.surface-dot {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.surface-caption {
+  font-size: 11.5px;
+  line-height: 1.25;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* The accent circle: a 2px ring plus a soft outer halo, so it reads as "ringed" and not merely
+   "outlined" at a glance. */
+.surface-badge.aff-suits .surface-dot {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 3px rgba(217, 242, 79, 0.14);
+}
+
+.surface-badge.aff-suits .surface-caption {
+  color: var(--accent);
+}
+
+.surface-badge.aff-against .surface-caption {
+  color: #c98d63;
 }
 
 /* Season structure by surface: the two-row block strip above the Calendar list. The upcoming block
@@ -1177,6 +1251,21 @@ tr.milestone td {
   background: rgba(217, 242, 79, 0.06);
   border-radius: 0 8px 8px 0;
   font-size: 13.5px;
+}
+
+/* R10-15: a win and a loss used to read IDENTICALLY in the this-week list – both wore the default
+   accent rail and tint, so the only signal was "beat" vs "lost to" buried in the sentence. The result
+   is now carried by the row itself, using the palette's own positive/negative pair: --accent (the
+   same green .pill.ok and the rank-up arrow use) for a win, --danger for a loss. The rail thickens
+   from 3px to 4px so the two are separable without relying on hue alone. */
+.bracket-row.won {
+  border-left: 4px solid var(--accent);
+  background: rgba(217, 242, 79, 0.1);
+}
+
+.bracket-row.lost {
+  border-left: 4px solid var(--danger);
+  background: rgba(242, 102, 79, 0.1);
 }
 
 /* Round-7 item 18: keep the "Watch" label + play icon on one line even when the match text
@@ -2060,21 +2149,34 @@ tr.kid-row td {
   color: var(--muted);
 }
 
-/* Round-6: Stats tab header row (rank / season points tiles). */
+/* Round-6: Stats tab header row (rank / season points tiles).
+   R10-2: at 375px the three tiles share ~311px, and "Season points" wrapped to two lines inside its
+   own tile – the header read as a ragged block. The label is a fixed CAPTION, not body copy, so it
+   nowraps by construction and the tile pays for it in padding (10/14 -> 8/10) and gutter (12 -> 8).
+   Each tile still sizes to its own widest child ("Unranked" is the widest value there is), so no
+   value clips either. */
 .stats-header-row {
   display: flex;
-  gap: 12px;
+  gap: 8px;
 }
 
 .stats-tile {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 8px 10px;
+}
+
+/* Same muted caption treatment as .hint, minus .hint's 8px top margin (it is the tile's first
+   child, so that margin was pure dead space) and pinned to one line. */
+.stats-tile-label {
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
 }
 
 .stats-tile-value {
@@ -2117,6 +2219,26 @@ tr.kid-row td {
   border-style: solid;
   border-color: var(--accent);
   background: rgba(217, 242, 79, 0.05);
+  align-items: flex-start;
+}
+
+/* R10-4: a planned week is TWO lines – the WHEN (week + dates) muted on top, the WHAT (the trip or
+   the practice match) in full text underneath. As one run-on line it wrapped to three rows at 375px
+   and the booking itself ended up buried mid-sentence. */
+.planned-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.planned-when {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.planned-what {
+  font-size: 13px;
 }
 
 /* Exam weeks are nobody's to plan: school owns them. */

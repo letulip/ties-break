@@ -22,8 +22,8 @@ import PlanWeekSheet from '../PlanWeekSheet.vue'
 import TierGuide from '../TierGuide.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
-import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
-import { kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
+import { applySurfaceStyle, surfaceStyleAffinity, surfaceStyleHint } from '../../engine/match/style'
+import { KID_ID, kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek, surfaceBlockFor, WEEKS_PER_YEAR } from '../../engine/season/calendar'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 import { weekRange } from '../../shared/dates'
@@ -53,6 +53,36 @@ const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', gras
 function surfaceNote(surface: Surface): string | null {
   return game.snapshot ? surfaceStyleHint(game.snapshot.profile.playStyle, surface) : null
 }
+function surfaceAffinity(surface: Surface): 'suits' | 'against' | 'neutral' {
+  return game.snapshot ? surfaceStyleAffinity(game.snapshot.profile.playStyle, surface) : 'neutral'
+}
+
+// R10-11 – the event card's surface CHIP + the words beneath it.
+//
+// The chip used to read "🟢 grass" on the right of the card top while a separate line under it read
+// "Grass – suits her game" on the LEFT: the surface name was printed twice and the affinity sat
+// nowhere near the thing it described. Now the chip is the court's colour DOT and the words live
+// directly under it, so the pair reads as one object.
+//
+// The ring and the wording are both CONSUMED from engine/match/style.ts – `surfaceStyleAffinity`
+// decides whether the dot is ringed, `surfaceStyleHint` writes the sentence. Neither is re-derived
+// here, so the visual claim can never drift from SURFACE_STYLE_DELTAS, the table that actually moves
+// her attributes. A neutral court (every court, for an all-court build) gets no ring and no verdict –
+// just the surface name, because silence beats a line of noise, and the name must not vanish with it.
+interface SurfaceView {
+  emoji: string
+  affinity: 'suits' | 'against' | 'neutral'
+  /** "Hard – suits her game" / "Clay – not her surface" / plain "Hard" on a neutral court */
+  caption: string
+}
+function surfaceView(surface: Surface): SurfaceView {
+  return {
+    emoji: SURFACE_EMOJI[surface],
+    affinity: surfaceAffinity(surface),
+    // Fall back to the bare, capitalised surface id rather than a second copy of the label table.
+    caption: surfaceNote(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1),
+  }
+}
 const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
 
 const week = computed(() => game.snapshot?.week ?? 0)
@@ -70,6 +100,9 @@ interface SeasonBlockView {
   when: string
   surface: Surface
   note: string | null
+  /** R10-11: read off surfaceStyleAffinity, NOT sniffed out of the note string – the strip used to
+   *  test `note.includes('suits')`, which would silently mis-colour the day the copy is reworded. */
+  affinity: 'suits' | 'against' | 'neutral'
 }
 function blockView(atWeek: number, when: string): SeasonBlockView {
   const block = surfaceBlockFor(atWeek)
@@ -77,7 +110,7 @@ function blockView(atWeek: number, when: string): SeasonBlockView {
   const surface = (Object.keys(block.weights) as Surface[]).reduce((a, b) =>
     block.weights[b] > block.weights[a] ? b : a,
   )
-  return { label: block.label, when, surface, note: surfaceNote(surface) }
+  return { label: block.label, when, surface, note: surfaceNote(surface), affinity: surfaceAffinity(surface) }
 }
 const seasonBlocks = computed<SeasonBlockView[]>(() => {
   if (!game.snapshot) return []
@@ -377,6 +410,15 @@ const thisWeekFriendly = computed<WorldEvent | null>(
   () => game.snapshot?.events.find((e) => e.type === 'match' && e.friendly && e.week === week.value) ?? null,
 )
 
+// R10-15: the this-week list read identically for a win and a loss, so the parent had to parse
+// "beat" vs "lost to" out of the sentence to find out how the run went. The row now carries the
+// result as colour: accent (the palette's positive/green, same token as .pill.ok and the rank-up
+// arrow) for a win, --danger for a loss. Read off `match.winnerId`, the record's own field – never
+// scraped from the event text.
+function kidWon(e: WorldEvent): boolean | null {
+  return e.match ? e.match.winnerId === KID_ID : null
+}
+
 // --- replay overlay --------------------------------------------------------------
 const replayMatch = ref<WorldMatch | null>(null)
 function watchMatch(e: WorldEvent): void {
@@ -459,7 +501,12 @@ function playExhibition(): void {
       <h2>This week's tournament</h2>
       <p v-if="thisWeekSummary" class="tournament-summary">{{ thisWeekSummary.text }}</p>
       <ol class="bracket-list">
-        <li v-for="m in thisWeekMatches" :key="m.id" class="bracket-row">
+        <li
+          v-for="m in thisWeekMatches"
+          :key="m.id"
+          class="bracket-row"
+          :class="{ won: kidWon(m) === true, lost: kidWon(m) === false }"
+        >
           <span>{{ m.text }}</span>
           <button v-if="m.match" class="watch-play-btn sfx-watch" aria-label="Watch match" @click="watchMatch(m)">
             <span class="watch-play-icon" :style="playIconStyle"></span>
@@ -474,7 +521,10 @@ function playExhibition(): void {
     <section v-if="thisWeekFriendly">
       <h2>This week's practice match</h2>
       <ol class="bracket-list">
-        <li class="bracket-row">
+        <li
+          class="bracket-row"
+          :class="{ won: kidWon(thisWeekFriendly) === true, lost: kidWon(thisWeekFriendly) === false }"
+        >
           <span>{{ thisWeekFriendly.text }}</span>
           <button
             v-if="thisWeekFriendly.match"
@@ -502,7 +552,7 @@ function playExhibition(): void {
         <div v-for="(b, i) in seasonBlocks" :key="b.when" class="season-block" :class="{ upcoming: i > 0 }">
           <span class="pill">{{ SURFACE_EMOJI[b.surface] }} {{ b.label }}</span>
           <span class="hint">{{ b.when }}</span>
-          <span v-if="b.note" class="hint surface-note" :class="{ suits: b.note.includes('suits') }">{{ b.note }}</span>
+          <span v-if="b.note" class="hint surface-note" :class="{ suits: b.affinity === 'suits' }">{{ b.note }}</span>
         </div>
       </div>
       <div class="event-cards">
@@ -510,16 +560,14 @@ function playExhibition(): void {
           <div v-if="row.kind === 'event' && row.event" class="event-card">
             <div class="event-card-top">
               <span class="event-tier">{{ row.event.label }}</span>
-              <span class="pill">{{ SURFACE_EMOJI[row.event.surface] }} {{ row.event.surface }}</span>
+              <!-- R10-11: the surface chip is the court's colour dot, the words sit UNDER it. An
+                   accent RING on the dot means "this court suits her build" – the ring carries it at
+                   a glance, the caption underneath confirms it in words. -->
+              <span class="surface-badge" :class="`aff-${surfaceView(row.event.surface).affinity}`">
+                <span class="surface-dot" aria-hidden="true">{{ surfaceView(row.event.surface).emoji }}</span>
+                <span class="surface-caption">{{ surfaceView(row.event.surface).caption }}</span>
+              </span>
             </div>
-            <p
-              v-if="surfaceNote(row.event.surface)"
-              class="hint surface-note"
-              :class="{ suits: surfaceNote(row.event.surface)!.includes('suits') }"
-              style="margin: 6px 0 0"
-            >
-              {{ surfaceNote(row.event.surface) }}
-            </p>
             <p class="hint" style="margin-top: 8px">
               W{{ row.event.week }} · {{ row.dates }} · entry {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{
                 formatDollars(row.event.travelCostCents)
@@ -589,17 +637,27 @@ function playExhibition(): void {
           <!-- A PLANNED week: the booking reads back with its package/match name + a Cancel. When
                the week also carried a (locked) tournament, the row NAMES it, so a planned week
                never makes a calendar entry vanish without explanation – cancel and it is back. -->
+          <!-- R10-4: WHEN on the first line (week + dates), WHAT on the second (the trip / the
+               match). As one run-on line the booking landed mid-sentence on a third wrapped row and
+               the parent had to read to the end to find out what she had actually booked. The
+               practice row gets the same two-line shape – it is the same card. -->
           <div v-else-if="row.kind === 'vacation' && row.vacation" class="calendar-row-muted planned">
-            <span class="hint" style="margin: 0">
-              W{{ row.week }} · {{ row.dates }} · 🏖 {{ packageLabel(row.vacation.packageId) }}
-              <template v-if="row.event"> · skipping {{ row.event.label }}</template>
+            <span class="planned-lines">
+              <span class="planned-when">W{{ row.week }} · {{ row.dates }}</span>
+              <span class="planned-what">
+                🏖 {{ packageLabel(row.vacation.packageId) }}
+                <template v-if="row.event"> · skipping {{ row.event.label }}</template>
+              </span>
             </span>
             <button :disabled="game.busy" @click="askCancelVacation(row)">Cancel</button>
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
-            <span class="hint" style="margin: 0">
-              W{{ row.week }} · {{ row.dates }} · 🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}
-              <template v-if="row.event"> · instead of {{ row.event.label }}</template>
+            <span class="planned-lines">
+              <span class="planned-when">W{{ row.week }} · {{ row.dates }}</span>
+              <span class="planned-what">
+                🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}
+                <template v-if="row.event"> · instead of {{ row.event.label }}</template>
+              </span>
             </span>
             <!-- R10-12: on the week that is next, the friendly is enterable right here – this plays
                  the week (the same single advance the Home bar does) and opens it live. -->

@@ -7,6 +7,10 @@ import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
 import { useKidEmotion } from './composables/kidEmotion'
+// R10-7: the sticky bar's primary button says what the week AHEAD holds (tournament / vacation /
+// practice / exams / off-season / training). All of the derivation lives in the composable – this
+// file only renders the label it hands back.
+import { useWeekAhead } from './composables/weekAhead'
 import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -36,6 +40,7 @@ const game = useGameStore()
 // in public/avatars/{stage}-{emotion}.webp (256×256; jun per round5-brand, young/teen cut in
 // round-9 pt5 to the same framing). START_AGE 14 ⇒ the game opens on young-* art.
 const { cropUrl: avatarUrl } = useKidEmotion()
+const weekAhead = useWeekAhead()
 
 onMounted(() => game.init())
 
@@ -317,7 +322,16 @@ const showInjuryStop = computed(
          Both buttons now go through `advance` (weeks: 1|4) so either one can stop
          early on a tournament week / imminent deadline / funds crossing zero. -->
     <div v-if="tab === 'home'" class="next-week-bar">
-      <button class="primary" data-tour="next-week" :disabled="game.busy" @click="game.advance(1)">Next week ▶</button>
+      <!-- R10-7: one button, a label that names the plan for the week it is about to play. -->
+      <button
+        class="primary next-week-btn"
+        :class="`plan-${weekAhead.kind}`"
+        data-tour="next-week"
+        :disabled="game.busy"
+        @click="game.advance(1)"
+      >
+        {{ weekAhead.label }}
+      </button>
       <button :disabled="game.busy" @click="game.advance(4)">▶▶ 4</button>
     </div>
 
