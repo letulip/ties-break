@@ -13,6 +13,7 @@ import {
   type PlayerProfile,
   type PracticeBooking,
   type RecoveryBuff,
+  type SeasonHistoryEntry,
   type SeasonSummary,
   type Snapshot,
   type SnapshotInjury,
@@ -61,7 +62,7 @@ import { applySurfaceStyle } from './match/style'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 13
+export const SAVE_SCHEMA_VERSION = 14
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -116,6 +117,12 @@ export interface WorldState {
   bestFinishByTier: Partial<Record<TierId, number>>
   /** the most recent end-of-season recap (v10); null until the first season wraps up. */
   lastSeasonSummary: SeasonSummary | null
+  /** R10-9 (v14): every FINISHED season, oldest first – `lastSeasonSummary` is overwritten each
+   *  year, so this append-only list is what makes "how does this season compare to last?"
+   *  answerable. One tiny numeric row per SEASON (see SeasonHistoryEntry), written once at
+   *  wrap-up (idempotent per year) and pruned to SEASON_HISTORY_CAP, so it can never grow
+   *  per-week and the save stays size-safe over a long career. */
+  seasonHistory: SeasonHistoryEntry[]
   /** the CURRENT (in-progress) season's kid wins/losses, counted as matches resolve so the
    *  summary never has to re-parse event text and pruning can't lose them (v10). Reset to 0
    *  at each season wrap-up. */
@@ -343,6 +350,10 @@ function fireMilestone(world: WorldState, key: string, text: string): void {
   addEvent(world, { week: world.week, type: 'milestone', text, keep: true, milestoneKey: key })
 }
 
+/** R10-9: how many finished seasons the career history keeps (newest wins). 30 years of junior/
+ *  pro career is far past the game's horizon – the cap exists so the save has a hard ceiling. */
+const SEASON_HISTORY_CAP = 30
+
 // --- season wrap-up (Round 5 items 16/21; round-7 item 4) ---------------------
 // Fires once, the moment the world ticks into a season year's first off-season week
 // (see calendar.ts's isOffSeasonWeek). Season figures are read back off the EXISTING
@@ -423,6 +434,26 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
     fundsDeltaCents,
     weeksInjured,
   }
+  // R10-9: the same figures also APPEND to the career history (the summary above is overwritten
+  // every year). Guarded on the year, so a re-entry for a season already banked is a no-op –
+  // the append is idempotent exactly like the wrap-up milestone.
+  if (!world.seasonHistory.some((h) => h.year === weekYear(yearStart))) {
+    world.seasonHistory.push({
+      year: weekYear(yearStart),
+      endRank: world.kidRank,
+      points: seasonPoints,
+      wins,
+      losses,
+      fundsDeltaCents,
+      endFundsCents: world.fundsCents,
+      ...(bestFinish === null ? {} : { bestFinish }),
+    })
+    // Bounded: a career this long is beyond the game's horizon, but the save must never grow
+    // without a ceiling. Oldest seasons drop out first.
+    if (world.seasonHistory.length > SEASON_HISTORY_CAP) {
+      world.seasonHistory = world.seasonHistory.slice(-SEASON_HISTORY_CAP)
+    }
+  }
   // The season that just wrapped is banked in the summary – start the next one clean.
   world.seasonWins = 0
   world.seasonLosses = 0
@@ -430,7 +461,9 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
 
 // --- finish / stage labels ---------------------------------------------------
 // finish index = rounds - round (0 = champion). Higher = earlier exit.
-function finishLabel(finish: number): string {
+// Exported for R10-9's history table, which renders a season's stored `bestFinish` index with the
+// SAME wording the tournament finale and the wrap-up milestone use.
+export function finishLabel(finish: number): string {
   switch (finish) {
     case 0:
       return 'Champion'
@@ -1511,6 +1544,7 @@ export function createWorld(
     pendingTournament: null,
     bestFinishByTier: {},
     lastSeasonSummary: null,
+    seasonHistory: [],
     seasonWins: 0,
     seasonLosses: 0,
     financeWeeks: [],
@@ -1546,6 +1580,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.pendingTournament = null
   save.bestFinishByTier = {}
   save.lastSeasonSummary = null
+  save.seasonHistory = []
   save.seasonWins = 0
   save.seasonLosses = 0
   save.financeWeeks = []
@@ -2177,6 +2212,8 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     seasonWins: world.seasonWins,
     seasonLosses: world.seasonLosses,
     lastSeasonSummary: world.lastSeasonSummary,
+    // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
+    seasonHistory: world.seasonHistory.map((h) => ({ ...h })),
     ...(stopReason ? { stopReason } : {}),
     ...(pending ? { pending } : {}),
   }

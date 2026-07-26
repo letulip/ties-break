@@ -178,6 +178,29 @@ export interface SeasonSummary {
   weeksInjured?: number
 }
 
+/** One FINISHED season, appended to the career's history at wrap-up (schema v14, R10-9).
+ *  `lastSeasonSummary` above is overwritten every year, so there was no way to compare against
+ *  last season; this is the append-only list behind the Stats screen's season-by-season table.
+ *  Deliberately TINY – seven numbers per SEASON (never per week), so a decade of career costs
+ *  bytes, not kilobytes: no strings, and the full recap keeps living in SeasonSummary. */
+export interface SeasonHistoryEntry {
+  /** calendar year label of the season (same value as SeasonSummary.seasonYear) */
+  year: number
+  /** her dense rank at the season's wrap-up */
+  endRank: number
+  /** ranking points earned in-season */
+  points: number
+  wins: number
+  losses: number
+  /** signed funds delta across the season */
+  fundsDeltaCents: number
+  /** the balance she ended the season with (the "how much is left" figure) */
+  endFundsCents: number
+  /** best tournament finish index that season (0 = champion). Absent when she played none, and
+   *  on rows the v14 migration backfilled (the old summary stored only prose for it). */
+  bestFinish?: number
+}
+
 // --- Tournament experience (feat/tournament-experience) -----------------------
 // One revealed round on the kid's path through the bracket (the between-rounds strip).
 export interface PendingBracketRound {
@@ -378,6 +401,9 @@ export interface Snapshot {
   seasonLosses: number
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
+  /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
+   *  Stats. Empty until the first wrap-up. */
+  seasonHistory: SeasonHistoryEntry[]
   /** set when an `advance` stopped early */
   stopReason?: StopReason
   /** present while a tournament reveal is in progress (drives TournamentFlow) */

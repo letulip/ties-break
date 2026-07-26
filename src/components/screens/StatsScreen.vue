@@ -11,6 +11,9 @@
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { formatShortName, rankLabel } from '../../shared/format'
+// R10-9: the season-by-season history sits right under the header tiles – it is the same three
+// figures (rank / points / W-L) for every season she has finished. See SeasonHistoryTable.vue.
+import SeasonHistoryTable from '../SeasonHistoryTable.vue'
 
 const game = useGameStore()
 
@@ -45,6 +48,8 @@ const seasonLosses = computed(() => game.snapshot?.seasonLosses ?? 0)
         </div>
       </div>
     </section>
+
+    <SeasonHistoryTable />
 
     <section>
       <h2>Standings</h2>

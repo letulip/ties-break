@@ -15,6 +15,9 @@ import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import MatchReplay from '../MatchReplay.vue'
 import MatchViewer from '../MatchViewer.vue'
+// R10-12: a booked friendly is enterable LIVE through this flow (VS card -> live viewer -> box
+// score), instead of only being diggable out of the feed as a replay afterwards.
+import PracticeFlow from '../PracticeFlow.vue'
 import PlanWeekSheet from '../PlanWeekSheet.vue'
 import TierGuide from '../TierGuide.vue'
 import { simulateMatch } from '../../engine/match/engine'
@@ -357,6 +360,28 @@ function watchMatch(e: WorldEvent): void {
   if (e.match) replayMatch.value = e.match
 }
 
+// --- R10-12: the booked practice match, LIVE -------------------------------------------------
+// Two ways in, both on the WEEK rather than in the feed:
+//  1. the booked practice row for NEXT week -> "Watch it live →" plays that week and drops straight
+//     into the flow (the engine resolves the friendly during the tick, exactly as it always did –
+//     `advance(1)` always ticks one week, so this is the normal week-advance, not a new path);
+//  2. the "This week's practice match" card -> the same flow for the week just played.
+// The result is the engine's: the flow only re-simulates the stored record under its stored seed.
+const practiceLive = ref<WorldMatch | null>(null)
+const practiceLiveWeek = ref(0)
+function openPracticeLive(match: WorldMatch, atWeek: number): void {
+  practiceLiveWeek.value = atWeek
+  practiceLive.value = match
+}
+/** The booked friendly for next week: play the week, then watch it live. If she got hurt (the
+ *  engine cancels + refunds the booking) or the advance stopped for another reason, no friendly
+ *  lands and nothing opens – the news event explains it, as before. */
+async function playPracticeWeek(): Promise<void> {
+  await game.advance(1)
+  const friendly = thisWeekFriendly.value
+  if (friendly?.match && game.snapshot) openPracticeLive(friendly.match, game.snapshot.week)
+}
+
 // --- Friendly match (Package J, restored per architect ruling: owner-approved –
 // sparring now, a training tool in Phase 4). Player A is the kid's ACTUAL current
 // build, reconstructed the same deterministic way the worker does (kidMatchPlayer,
@@ -420,7 +445,9 @@ function playExhibition(): void {
       </ol>
     </section>
 
-    <!-- A booked practice match that has just been played: watchable, zero ranking points. -->
+    <!-- A booked practice match that has just been played: watchable, zero ranking points.
+         R10-12: the play button opens the LIVE flow (VS card -> the match -> a box score), not the
+         "Watch again ↻" replay card – a friendly you paid for should play out, not read as history. -->
     <section v-if="thisWeekFriendly">
       <h2>This week's practice match</h2>
       <ol class="bracket-list">
@@ -430,7 +457,7 @@ function playExhibition(): void {
             v-if="thisWeekFriendly.match"
             class="watch-play-btn sfx-watch"
             aria-label="Watch practice match"
-            @click="watchMatch(thisWeekFriendly)"
+            @click="openPracticeLive(thisWeekFriendly.match, week)"
           >
             <span class="watch-play-icon" :style="playIconStyle"></span>
           </button>
@@ -538,6 +565,11 @@ function playExhibition(): void {
               W{{ row.week }} · {{ row.dates }} · 🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}
               <template v-if="row.event"> · instead of {{ row.event.label }}</template>
             </span>
+            <!-- R10-12: on the week that is next, the friendly is enterable right here – this plays
+                 the week (the same single advance the Home bar does) and opens it live. -->
+            <button v-if="row.week === week + 1" class="primary sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
+              Watch it live →
+            </button>
             <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
           </div>
 
@@ -602,6 +634,14 @@ function playExhibition(): void {
       @cancel="pendingConfirm = null"
     />
     <MatchReplay v-if="replayMatch" :match="replayMatch" @close="replayMatch = null" />
+    <!-- R10-12: the live practice-match flow (full-screen, like the tournament's). -->
+    <PracticeFlow
+      v-if="practiceLive"
+      :match="practiceLive"
+      :week="practiceLiveWeek"
+      :kid-rank="kidRank"
+      @close="practiceLive = null"
+    />
     <TierGuide v-if="showTierGuide" @close="showTierGuide = false" />
   </template>
 </template>

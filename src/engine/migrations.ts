@@ -161,6 +161,35 @@ export function migrateSave(raw: unknown): WorldState {
     v = 13
   }
 
+  if (v < 14) {
+    // v14 (R10-9) added the append-only per-season history list behind the Stats season-by-season
+    // table. `lastSeasonSummary` is the only per-season record that ever existed before it, so a
+    // migrated career SEEDS the list with that one season (when it has one) and grows from the next
+    // wrap-up on – the same "backfill what survives, be exact going forward" rule v10/v11 used.
+    // `bestFinish` stays absent on a backfilled row: the old summary stored only prose for it, and
+    // parsing text back into an index is exactly what the wrap-up work moved away from.
+    // Idempotent: an existing array is never touched, so a re-migration cannot duplicate a season.
+    if (!Array.isArray(save.seasonHistory)) {
+      const s = save.lastSeasonSummary
+      save.seasonHistory = s
+        ? [
+            {
+              year: s.seasonYear,
+              endRank: s.endRank,
+              points: s.points,
+              wins: s.wins,
+              losses: s.losses,
+              fundsDeltaCents: s.fundsDeltaCents,
+              // The old summary carried no closing balance; the save's CURRENT funds are the
+              // closest honest figure for the most recent season (off-season, nothing spent yet).
+              endFundsCents: typeof save.fundsCents === 'number' ? save.fundsCents : 0,
+            },
+          ]
+        : []
+    }
+    v = 14
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
