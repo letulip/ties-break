@@ -76,6 +76,27 @@ Fix in the implementation:
 - Bench re-run after the slice lands must show every package selling at SOME rate across
   policies before the price ladder is considered tuned.
 
+## 4c. Wave-2 retune (26.07, real-mechanics bench) — the offer band, the streak arm, the veto
+The first bench run on REAL bookings (not the PROJ projection) said §4b had shipped half a lever:
+- **Offer band 65 → 80** (`ECONOMY.practice.rescueCondition`, now inclusive). Below 65 no cheap
+  package can reach the +85 target, so the pre-highlight always fell through to "the most expensive
+  she can afford": seaside took **88%** of every booking, grandma 0.2%, camping 0.4%.
+- **Pre-highlight = cheapest package SUFFICIENT for her CURRENT condition**
+  (`recommendVacationPackage` in economy.ts — ONE pure rule, read by the rescue card, the planner
+  sheet and the bench). The recommendation now slides down the ladder as the deficit shrinks, and
+  the off-season row no longer hard-codes seaside. The +12…+30 gain ladder is NOT re-spaced: that
+  is calendar-sensitive and waits for the Ladder-up slice.
+- **Practice guardrail, streak arm gated on real strain**: 3 match weeks in a row warn only below
+  `cautionStreakCondition` (75); 4 in a row warn at any condition. It used to fire on a perfectly
+  fresh kid — careful pushed through 8-11 cautions/season at condition 92, which is how a warning
+  becomes noise. The low-condition arm (`cautionCondition` 55) is unchanged.
+- **The doctor's veto** (owner R9-19b): condition below `ECONOMY.availability.medicalFloor` (15) is
+  a HARD block on entering, surfaced through `availabilityStatus` as `level: 'blocked'`,
+  `reason: 'medical'` — "Not cleared to play – she needs rest." The first hard body-gate in the
+  game and the one exception to "the parent may push"; fatigue above the floor stays a soft caution.
+  The floor sits far below every tier caution floor (20-45), so only the bench's degenerate cell (a
+  self-coached grinder at condition 0) ever meets it.
+
 ## 5. Closes
 - R5 backlog debt "Vacations as a class differentiator affecting recovery" (Phase 4/5 promise).
 - The design-workflow open question on family-vacation blackouts.

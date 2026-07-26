@@ -46,8 +46,26 @@ function hashOf(draws: number[]): string {
   return fnv1a(draws.map((d) => d.toString()).join(','))
 }
 
-// B1's frozen pre-slice reference: seed bench-working-0, weeks 1..52.
-const REF = { count: 45239, hash: '9f783705', kidRank: 131 }
+// B1's frozen reference: seed bench-working-0, weeks 1..52.
+// ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 draws (hash
+// cae178fc -> e6b0c709), by the AI sub-stream refactor. The canonical AI tournaments moved OFF the
+// main weekly stream onto their own event-scoped `seed:aitour:<event.id>` stream, so the calendar's
+// size is no longer part of the weekly draw count – which is what forced both earlier re-pins
+// (45239 -> 51642 for the J family, and this file's own history before it). What remains on the
+// main stream is base costs + cohort drift only: 52 x (4 x 199 + 3) + 2 sponsor-gift draws.
+// The INVARIANT this file guards – that C's injury and physio work adds no main-stream draws, and
+// that nothing about the player's situation can move the sequence – is untouched and still proven
+// by every other test here. kidRank 131 -> 143 (Part A) -> 141 (Part B) -> 140 -> 141 is a
+// consequence of the ranking, not of the stream.
+//
+// ⚠ kidRank RE-PINNED 140 -> 141 by the rival-life slice, deliberately: cohort players now carry
+// their own accumulated fatigue and a surface/style modifier into every draw, so the AI brackets
+// resolve differently and one more junior ends the year holding counting points. The stream itself
+// (count 41550, hash e6b0c709) is untouched – both halves of that slice are pure derivations off
+// state the world already holds and draw ZERO RNG, which is exactly what this file guards.
+// Full reasoning at the REF declaration in tests/condition.test.ts.
+// 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
   draws: number[]
@@ -166,7 +184,7 @@ function onsetAt(seed: string, physio: boolean): WorldState['injury'] {
 // private per-week sub-streams, so nothing here may move.
 // ---------------------------------------------------------------------------
 describe('C1 — main-stream RNG invariance (blocks merge)', () => {
-  it('reproduces the frozen B capture: count 45239, hash 9f783705', () => {
+  it('reproduces the frozen B capture byte-for-byte (values in REF, not in this title)', () => {
     const { draws, world } = recordRun()
     expect(draws.length).toBe(REF.count)
     expect(hashOf(draws)).toBe(REF.hash)

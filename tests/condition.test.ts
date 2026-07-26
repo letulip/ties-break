@@ -8,6 +8,8 @@ import {
   accrueCondition,
   availabilityStatus,
   isBlackoutWeek,
+  medicalClearance,
+  restRecoveryBonus,
   toSnapshot,
   skipTournament,
   closeTournament,
@@ -15,6 +17,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -62,18 +65,57 @@ function giveKidPoints(world: WorldState, points: number): void {
 // input, funds, plan, or condition. Frozen reference captured from the
 // step-1c-stubbed (pre-slice) build for seed "bench-working-0", weeks 1..52.
 // ---------------------------------------------------------------------------
+//
+// ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550, hash cae178fc ->
+// e6b0c709 (the AI sub-stream refactor). History of this number: 45239 (pre-ladder) -> 51642
+// (ladder-up Part B, the J family) -> 41550 (here).
+//
+// WHY IT MOVED, AND WHY IT STOPS MOVING NOW. The two previous moves were forced by the same
+// design flaw: the canonical AI tournaments drew from the MAIN weekly stream – one draw per
+// entrant-band candidate plus one per AI-AI match, per scheduled event – so the calendar's SIZE
+// was part of the weekly draw count. Any content change (a new tier, a denser cadence, one extra
+// event) re-based this pin by construction; the ladder-up slice moved it for exactly that reason.
+//
+// The AI bracket now runs on its own EVENT-scoped stream `seed:aitour:<event.id>`, the mirror of
+// the kid's `seed:kidtour:<event.id>`. What is left on the main stream is base costs + cohort
+// drift and nothing else: 52 x (4 x 199 cohort drift + 3 base costs) + 2 sponsor-gift draws =
+// 41550. That is a function of the COHORT SIZE and the career length, not of the calendar – so
+// from here on, adding tiers and events is free and this pin no longer moves with content. The
+// composition is proved exhaustively, week by week, in B1b below.
+//
+// WHAT DID NOT MOVE – the property this test actually exists to protect: the per-week draw count
+// is still INDEPENDENT of player input. Every other test in this describe block is untouched and
+// green: condition/plan/funds/physio variants, entering and playing an event, planner bookings
+// (P1), a mid-run injury (C1), a post-deadline skip (R9-9).
+//
+// NOTE ON hash/head/tail: `recordRun` taps the RAW generator, so `draws` is by construction the
+// first N outputs of rngFromSeed('bench-working-0'). hash and tail are therefore pure functions of
+// N and carry no information beyond `count` (head is N-independent and never changes). They are
+// kept because they make an accidental drift loud, but the real guards are the variance tests.
 const REF = {
-  count: 45239,
-  hash: '9f783705',
+  count: 41550,
+  hash: 'e6b0c709',
   head: [
     0.29022555728442967, 0.879210032755509, 0.9903593938797712, 0.8499038522131741, 0.3840416269376874,
     0.6166684734635055, 0.3415204482153058, 0.8582294869702309,
   ],
   tail: [
-    0.4780225674621761, 0.18402758589945734, 0.041664635529741645, 0.7598230177536607, 0.7584145739674568,
-    0.9743674397468567, 0.3922130144201219, 0.5808420258108526,
+    0.09633621200919151, 0.14082618593238294, 0.7656564658973366, 0.16811327124014497, 0.9865698856301606,
+    0.8267154651694, 0.7829126522410661, 0.4907760114874691,
   ],
-  kidRank: 131,
+  // 131 (pre-slice) -> 143 (Part A, cohort pre-history) -> 141 (Part B, the J family) -> 140 (the
+  // AI sub-stream) -> 141 (RIVALS BECOME REAL). A CONSEQUENCE of the stream, never the stream
+  // itself: the point-less kid shares the dense rank of the whole 0-point group, so this number is
+  // just "how many AI ended the year holding counting points".
+  //
+  // ⚠ RE-PINNED 140 -> 141 BY THE RIVAL-LIFE SLICE, DELIBERATELY. Rivals now arrive at a draw
+  // carrying the fatigue of their own recent schedule and coloured by how their style suits the
+  // surface, so AI-vs-AI matches resolve differently and a different set of juniors ends the year
+  // in the points – one fewer, here. That is the POINT of the slice. What did NOT move, and is the
+  // thing this test exists to protect, is everything above: count 41550, hash e6b0c709, head and
+  // tail are all byte-identical, because both halves are pure derivations that draw no RNG.
+  // 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
+  kidRank: 140,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {
@@ -163,6 +205,78 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
     // accrueCondition takes no rng; proving it here documents the zero-draw contract.
     expect(() => accrueCondition(w, false)).not.toThrow()
     expect(accrueCondition.length).toBe(2) // (world, playedThisWeek) — no rng parameter
+  })
+})
+
+// ---------------------------------------------------------------------------
+// B1b — THE AI SUB-STREAM. Every scheduled event's canonical AI tournament now runs on its OWN
+// event-scoped stream `seed:aitour:<event.id>` – the exact mirror of the kid's `seed:kidtour:
+// <event.id>`. Both entrant selection AND the AI-vs-AI matches draw from it, so the MAIN weekly
+// stream carries base costs + cohort drift and NOTHING else.
+//
+// This is what makes CALENDAR CONTENT FREE: a new tier, a densified cadence, an extra event – none
+// of them can re-base the main stream any more, so the frozen B1/C1 pins stop moving every time the
+// calendar is edited. (The ladder-up slice had to move them precisely because it could not.)
+// ---------------------------------------------------------------------------
+describe('B1b — the main stream is base costs + cohort drift, and nothing else', () => {
+  it('every week draws exactly 3-4 base-cost values + 4 per cohort player', () => {
+    const world = createWorld('bench-working-0')
+    const base = rngFromSeed(world.seed)
+    const draws: number[] = []
+    const rng = () => {
+      const v = base()
+      draws.push(v)
+      return v
+    }
+    const driftDraws = 4 * world.cohort.length // driftCohort: serve/ret/composure/stamina
+    for (let i = 0; i < 52; i++) {
+      const before = draws.length
+      tickWeek(world, rng)
+      const week = draws.slice(before)
+      // resolveBaseCosts runs FIRST and draws, in order: the expense pickInt, the flavor pickInt,
+      // the sponsor roll, and – only when that roll hits – the gift pickInt. Then driftCohort.
+      // Nothing else on the main stream, so the week's length is fully determined by draw #2.
+      const sponsorHit = week[2] < ECONOMY.sponsor.rollChance
+      expect(week.length).toBe(driftDraws + (sponsorHit ? 4 : 3))
+    }
+    expect(draws.length).toBe(REF.count) // ...and the 52 weeks sum to the frozen pin
+  })
+
+  it('CONTENT IS FREE: extra events on the calendar never move the main stream', () => {
+    const base = recordRun()
+    const dense = recordRun((w) => {
+      // 24 extra tournaments across the year – under the old MAIN-stream AI bracket this alone
+      // added thousands of draws (one per band candidate + one per AI-AI match, per event).
+      for (let week = 4; week <= 48; week += 4) {
+        injectEvent(w, { week, tier: 'national', id: `extra-${week}-national` })
+        injectEvent(w, { week, tier: 'j60', id: `extra-${week}-j60` })
+      }
+    })
+    expect(dense.draws.length).toBe(base.draws.length)
+    expect(hashOf(dense.draws)).toBe(hashOf(base.draws))
+    expect(dense.world.cohort).toEqual(base.world.cohort)
+    // ...and the extra brackets really did run – they just ran on their own streams.
+    expect(aiResults(dense.world).length).toBeGreaterThan(aiResults(base.world).length)
+  })
+
+  it("an event's AI bracket is a pure function of (seed, event.id) – the main stream cannot move it", () => {
+    // Same world, same calendar, but the main stream is advanced by a different number of draws
+    // before the weeks resolve. `growth = 0` freezes the cohort's SKILLS (drift still draws its 4
+    // per player, it just lands on +0), so the only thing the offset can still change is the
+    // bracket's RNG. Under a MAIN-stream bracket that rewrites every AI result; under the
+    // event-scoped stream nothing about the AI side can notice.
+    const runWithOffset = (offset: number) => {
+      const world = createWorld('aitour-purity')
+      for (const p of world.cohort) p.growth = 0
+      const rng = rngFromSeed(world.seed)
+      for (let i = 0; i < offset; i++) rng() // desynchronise the main stream
+      for (let i = 0; i < 12; i++) tickWeek(world, rng)
+      return aiResults(world)
+    }
+    const a = runWithOffset(0)
+    const b = runWithOffset(7)
+    expect(b).toEqual(a)
+    expect(a.length).toBeGreaterThan(0)
   })
 })
 
@@ -414,7 +528,9 @@ describe('availabilityStatus precedence + levels', () => {
 
   it('fatigue on a clear week is a soft caution, not a block', () => {
     const w = createWorld('prec-fat')
-    w.condition = 5
+    // ABOVE the medical floor (the doctor's veto below it is a HARD block – see the block below);
+    // 20 is deep under national's floor of 40, so the soft fatigue caution is what surfaces.
+    w.condition = 20
     const ev = injectEvent(w, { week: w.week + 2, tier: 'national' })
     const status = availabilityStatus(w, ev)
     expect(status.level).toBe('caution')
@@ -427,5 +543,327 @@ describe('availabilityStatus precedence + levels', () => {
     w.condition = 100
     const ev = injectEvent(w, { week: w.week + 2, tier: 'local' })
     expect(availabilityStatus(w, ev)).toEqual({ level: 'ok' })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// THE DOCTOR'S VETO (owner R9-19b, cashed in by the Wave-2 fatigue bench): the ONE
+// place where "the parent may push" yields to medicine. Below
+// ECONOMY.availability.medicalFloor entering is a HARD block; above it fatigue stays
+// the soft, warned CHOICE it has always been. This is the first hard body-gate in
+// the game, and it is knob-driven so the owner can lower or disable it.
+// ---------------------------------------------------------------------------
+describe("the doctor's veto — medical floor", () => {
+  const FLOOR = ECONOMY.availability.medicalFloor
+
+  it('sits far below every tier caution floor, so normal play never meets it', () => {
+    for (const [, floor] of Object.entries(ECONOMY.availability.minConditionToEnter)) {
+      expect(FLOOR).toBeLessThan(floor)
+    }
+    expect(FLOOR).toBeGreaterThan(ECONOMY.condition.min)
+  })
+
+  it('blocks entry below the floor on all three surfaces, with the medical reason', () => {
+    const w = createWorld('vet-block')
+    w.condition = FLOOR - 1
+    const loc = injectEvent(w, { week: w.week + 3, tier: 'local', deadlineWeek: w.week + 1 })
+    w.season = [loc]
+
+    // surface 1: availabilityStatus / enterEvent hard-refuse
+    const status = availabilityStatus(w, loc)
+    expect(status.level).toBe('blocked')
+    expect(status.reason).toBe('medical')
+    expect(status.detail).toBe('Not cleared to play – she needs rest.')
+    expect(() => enterEvent(w, loc.id)).toThrow('Not cleared to play – she needs rest.')
+    expect(w.entries).toEqual([])
+
+    // surface 2: upcoming marks it ineligible with the same reason (and no soft caution)
+    const up = toSnapshot(w).upcoming.find((e) => e.id === loc.id)!
+    expect(up.eligible).toBe(false)
+    expect(up.ineligibleReason).toBe('medical')
+    expect(up.cautionReason).toBeUndefined()
+
+    // surface 3: advance never stops-for-deadline on an event she hard-cannot enter. Condition 0,
+    // because the pre-deadline ticks recover a couple of points before the guard is re-read.
+    const wa = createWorld('vet-block')
+    wa.condition = 0
+    giveKidPoints(wa, 200)
+    const nat = injectEvent(wa, { week: wa.week + 3, tier: 'national', deadlineWeek: wa.week + 1 })
+    wa.season = [nat]
+    expect(advanceWeeks(wa, rngFromSeed(wa.seed), 4)).not.toBe('deadline')
+  })
+
+  it('AT the floor she may still push through – fatigue above it stays a soft caution', () => {
+    const w = createWorld('vet-floor')
+    w.condition = FLOOR // the floor itself is cleared: the block is strictly below
+    const loc = injectEvent(w, { week: w.week + 2, tier: 'local' })
+    const status = availabilityStatus(w, loc)
+    expect(status.level).toBe('caution') // below local's floor of 20 -> the OLD soft warning
+    expect(status.reason).toBe('fatigued')
+    expect(() => enterEvent(w, loc.id)).not.toThrow()
+    expect(w.entries).toContain(loc.id)
+  })
+
+  it('injury still outranks it, and a blacked-out week still names the week-level reason', () => {
+    const inj = createWorld('vet-inj')
+    inj.condition = 0
+    inj.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 2, totalWeeks: 3, sinceWeek: inj.week }
+    const ev = injectEvent(inj, { week: inj.week + 2, tier: 'local' })
+    expect(availabilityStatus(inj, ev).reason).toBe('injured')
+
+    const exam = createWorld('vet-exam')
+    exam.week = 20
+    exam.condition = 0
+    const examEv = injectEvent(exam, { week: 24, tier: 'local' })
+    expect(availabilityStatus(exam, examEv).reason).toBe('unavailable')
+  })
+
+  it('is knob-driven: lowering the floor to 0 restores the pre-veto behaviour', () => {
+    const av = ECONOMY.availability as { medicalFloor: number }
+    const saved = av.medicalFloor
+    try {
+      av.medicalFloor = 0
+      const w = createWorld('vet-knob')
+      w.condition = 0
+      const loc = injectEvent(w, { week: w.week + 2, tier: 'local' })
+      expect(availabilityStatus(w, loc).level).toBe('caution')
+      expect(() => enterEvent(w, loc.id)).not.toThrow()
+    } finally {
+      av.medicalFloor = saved
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// THE DOCTOR CHECKS HER ON ARRIVAL (owner 26.07):
+//   "врач точно не пустит ниже 15 на турнир, если она приезжает; скажем, с состоянием 20 врач
+//    вполне может сказать «я вас предупреждаю о последствиях, формально запретить не могу»"
+//
+// The floor above gates ENTRY, and entries commit weeks ahead of the play week – so until now a run
+// entered healthy could still be PLAYED at condition 0 with nothing intervening (the fatigue bench
+// traced a grinder doing exactly that for 14 straight weeks). The floor is now re-read ON the play
+// week, before the run resolves:
+//   under the floor            -> WITHDRAWN on medical grounds (no travel, no run, 0 pts, fee gone);
+//   [floor, warningCeiling)    -> she PLAYS and the doctor goes on record. A warning, never a block.
+// Pure state, ZERO new RNG draws – proved against the main stream below.
+// ---------------------------------------------------------------------------
+describe('the doctor on ARRIVAL — the play-week re-check', () => {
+  const FLOOR = ECONOMY.availability.medicalFloor
+  const CEILING = ECONOMY.availability.medicalWarningCeiling
+
+  /** A seed whose PRIVATE injury sub-stream cannot fire on weeks 1..`through` whatever her condition
+   *  is: each of those weeks' FIRST draw is at or above ECONOMY.availability.injuryChanceCap, and tau
+   *  is capped there. That makes these tests deterministic instead of 12%-per-week flaky – an injury
+   *  would pre-empt the medical branch (injury outranks it, exactly as availabilityStatus says). */
+  function injuryProofSeed(prefix: string, through: number): string {
+    const cap = ECONOMY.availability.injuryChanceCap
+    for (let i = 0; i < 400; i++) {
+      const seed = `${prefix}-${i}`
+      let clean = true
+      for (let w = 1; w <= through && clean; w++) {
+        if (rngFromSeed(`${seed}:injury:${w}`)() < cap) clean = false
+      }
+      if (clean) return seed
+    }
+    throw new Error('no injury-proof seed found')
+  }
+
+  /** A world entered in ONE local event at `playWeek`, ticked to the week BEFORE it, with the
+   *  recovery knobs pinned flat (no physio, 85/15 so the slider bonus is 0) so the arithmetic below
+   *  is exact. `condition` is set on the eve of the play week – past the deadline, so the entry can
+   *  no longer be withdrawn/refunded and only the arrival check can act. */
+  function arriveAt(seedPrefix: string, condition: number, playWeek = 6) {
+    const world = createWorld(injuryProofSeed(seedPrefix, playWeek))
+    world.physioActive = false
+    world.plan = { train: 85, rest: 15 }
+    world.season = []
+    const event = injectEvent(world, { week: playWeek, tier: 'local', deadlineWeek: playWeek - 3 })
+    enterEvent(world, event.id) // entered at full condition, pre-deadline
+    const rng = rngFromSeed(world.seed)
+    while (world.week < playWeek - 1) tickWeek(world, rng)
+    expect(world.injury).toBeNull() // the seed guarantees it – the branch under test is the medical one
+    world.condition = condition
+    return { world, event, rng }
+  }
+
+  it('medicalClearance is the ONE pure rule both surfaces read', () => {
+    expect(medicalClearance(FLOOR - 1)).toBe('withdraw')
+    expect(medicalClearance(ECONOMY.condition.min)).toBe('withdraw')
+    expect(medicalClearance(FLOOR)).toBe('warn') // the floor itself is cleared – the veto is strictly below
+    expect(medicalClearance(CEILING - 1)).toBe('warn')
+    expect(medicalClearance(CEILING)).toBe('clear')
+    expect(medicalClearance(ECONOMY.condition.max)).toBe('clear')
+    // the owner's own example: "с состоянием 20 врач вполне может сказать…"
+    expect(medicalClearance(20)).toBe('warn')
+    // The band is non-empty, contains the owner's own example, and stays deep in the pathological
+    // zone rather than nagging through normal play.
+    expect(CEILING).toBeGreaterThan(FLOOR)
+    expect(CEILING).toBeGreaterThan(20) // "с состоянием 20 врач вполне может сказать…" – 20 must warn
+    expect(CEILING).toBeLessThan(ECONOMY.condition.max / 2)
+    // It DELIBERATELY overlaps local's soft fatigue floor of 20 – the owner's example forces that,
+    // and the two gates ask different questions: the tier floor is "is this event too big for her
+    // right now?" (checked at ENTRY, per tier), the band is "is this body fit to compete at all?"
+    // (checked on ARRIVAL, tier-independent). At condition 22 a local entry is 'ok' and the doctor
+    // still speaks up on the day, which is the intended reading, not a conflict.
+    expect(CEILING).toBeGreaterThan(ECONOMY.availability.minConditionToEnter.local)
+    // ...and the entry gate is the same rule, not a copy of the comparison.
+    const w = createWorld('clearance-gate')
+    w.condition = FLOOR - 1
+    const ev = injectEvent(w, { week: w.week + 2, tier: 'local' })
+    expect(availabilityStatus(w, ev).reason).toBe('medical')
+    w.condition = FLOOR
+    expect(availabilityStatus(w, ev).reason).toBe('fatigued') // warn band = play + warn, never block
+  })
+
+  it('under the floor on the play week she is WITHDRAWN: no travel, no run, 0 pts, fee forfeited', () => {
+    const { world, event, rng } = arriveAt('arrive-block', 0)
+    tickWeek(world, rng)
+    expect(world.week).toBe(event.week)
+
+    // no run at all
+    expect(world.pendingTournament).toBeNull()
+    expect(world.events.some((e) => e.type === 'match')).toBe(false)
+    expect(world.results.filter((r) => r.playerId === KID_ID)).toHaveLength(0) // 0 points
+    // the entry is spent, not pending
+    expect(world.entries).not.toContain(event.id)
+
+    const weekEvents = world.events.filter((e) => e.week === world.week)
+    // NO travel charge – she never boards, so the trip is never billed (nothing to refund either:
+    // the whole travel category nets to exactly zero this week).
+    expect(weekEvents.some((e) => e.text.startsWith('Travel to'))).toBe(false)
+    expect(weekEvents.filter((e) => e.category === 'travel').reduce((s, e) => s + (e.amountCents ?? 0), 0)).toBe(0)
+    expect(event.travelCostCents).toBeGreaterThan(0) // ...and there really was a trip to not charge
+    // ENTRY FEE FORFEITED – the same rule skipEvent uses post-deadline, and the same rule the
+    // injury walkover uses: the list closed with her on it. No refund event of any kind.
+    expect(weekEvents.some((e) => e.text.startsWith('Entry refunded'))).toBe(false)
+    expect(weekEvents.some((e) => e.category === 'entry' && (e.amountCents ?? 0) > 0)).toBe(false)
+
+    // the news beat, in player copy: short dash, no Cyrillic
+    const beat = weekEvents.find((e) => e.text.includes('not cleared to play'))
+    expect(beat).toBeDefined()
+    expect(beat!.text).toBe(
+      `Withdrawn from the ${TIERS.local.label} – not cleared to play on medical advice. 0 pts, entry fee forfeited.`,
+    )
+    expect(beat!.text).not.toMatch(/[—А-Яа-яЁё]/)
+  })
+
+  it('the withdrawn week resolves as a normal NON-playing week – she gets the free-week recovery', () => {
+    // accrueCondition ran with played = true (she was still entered), banking matchWeekRecoveryBase.
+    // The withdrawal hands back the DIFFERENCE plus the rest-slider bonus, so the week pays exactly
+    // what a match-free week pays – whatever the two knobs are set to.
+    for (const plan of [{ train: 85, rest: 15 }, { train: 60, rest: 40 }]) {
+      const { world, rng } = arriveAt(`arrive-recover-${plan.rest}`, 0)
+      world.plan = plan
+      tickWeek(world, rng)
+      expect(world.condition).toBe(ECONOMY.condition.recoveryBase + restRecoveryBonus(plan.rest))
+      expect(world.pendingTournament).toBeNull()
+    }
+  })
+
+  it('an INJURY still outranks it: the walkover beat fires, not the medical one', () => {
+    const { world, rng } = arriveAt('arrive-inj', 0)
+    world.injury = { kind: 'wrist niggle', severity: 'minor', weeksRemaining: 3, totalWeeks: 3, sinceWeek: world.week }
+    tickWeek(world, rng)
+    const weekEvents = world.events.filter((e) => e.week === world.week)
+    expect(weekEvents.some((e) => e.text.startsWith('Walkover'))).toBe(true)
+    expect(weekEvents.some((e) => e.text.includes('not cleared to play'))).toBe(false)
+  })
+
+  it('inside the warning band she PLAYS, and the doctor goes on record', () => {
+    const { world, rng } = arriveAt('arrive-warn', CEILING - 1)
+    tickWeek(world, rng)
+    // she plays: the run really is computed
+    expect(world.pendingTournament).not.toBeNull()
+    const weekEvents = world.events.filter((e) => e.week === world.week)
+    expect(weekEvents.some((e) => e.text.startsWith('Travel to'))).toBe(true) // the trip IS billed
+    const warning = weekEvents.find((e) => e.text.startsWith("Doctor's warning"))
+    expect(warning).toBeDefined()
+    expect(warning!.type).toBe('info') // somebody SAID something; nothing happened to her body
+    expect(warning!.text).toBe(
+      `Doctor's warning – she is cleared for the ${TIERS.local.label}, but only just. He can warn you; he cannot forbid it.`,
+    )
+    expect(warning!.text).not.toMatch(/[—А-Яа-яЁё]/) // short dash only, no Cyrillic in player copy
+    skipTournament(world)
+    closeTournament(world)
+    // ...and it really was a run: she has a result row (every tier awards points at every finish)
+    expect(world.results.some((r) => r.playerId === KID_ID)).toBe(true)
+  })
+
+  it('above the band she plays in silence – the doctor has nothing to say', () => {
+    const { world, rng } = arriveAt('arrive-clear', CEILING)
+    tickWeek(world, rng)
+    expect(world.pendingTournament).not.toBeNull()
+    expect(world.events.filter((e) => e.week === world.week).some((e) => e.text.startsWith("Doctor's warning"))).toBe(
+      false,
+    )
+  })
+
+  it('both halves are knob-driven: floor 0 disables the veto, ceiling = floor silences the warning', () => {
+    const av = ECONOMY.availability as { medicalFloor: number; medicalWarningCeiling: number }
+    const savedFloor = av.medicalFloor
+    const savedCeiling = av.medicalWarningCeiling
+    try {
+      // floor 0: at condition 0 she plays after all (the pre-veto engine)
+      av.medicalFloor = 0
+      const { world, rng } = arriveAt('arrive-knob-off', 0)
+      tickWeek(world, rng)
+      expect(world.pendingTournament).not.toBeNull()
+      expect(world.events.some((e) => e.text.includes('not cleared to play'))).toBe(false)
+
+      // ceiling pulled down to the floor: the band is empty, so nobody is ever warned
+      av.medicalFloor = savedFloor
+      av.medicalWarningCeiling = savedFloor
+      expect(medicalClearance(savedFloor)).toBe('clear')
+      const quiet = arriveAt('arrive-knob-quiet', savedFloor)
+      tickWeek(quiet.world, quiet.rng)
+      expect(quiet.world.pendingTournament).not.toBeNull()
+      expect(quiet.world.events.some((e) => e.text.startsWith("Doctor's warning"))).toBe(false)
+    } finally {
+      av.medicalFloor = savedFloor
+      av.medicalWarningCeiling = savedCeiling
+    }
+  })
+
+  it('ZERO new draws: the arrival check cannot move the MAIN weekly stream', () => {
+    // The strongest form of the claim – the SAME career, once with the withdrawal firing and once
+    // with the floor switched off so she plays instead. The shadow run lives on its own event-scoped
+    // stream, and the check itself is integer comparison, so the main sequence must be byte-equal.
+    function record(disableFloor: boolean): { draws: number[]; withdrawn: boolean } {
+      const av = ECONOMY.availability as { medicalFloor: number }
+      const saved = av.medicalFloor
+      try {
+        if (disableFloor) av.medicalFloor = 0
+        const world = createWorld(injuryProofSeed('arrive-draws', 6))
+        world.physioActive = false
+        world.plan = { train: 85, rest: 15 }
+        world.season = []
+        const event = injectEvent(world, { week: 6, tier: 'local', deadlineWeek: 3 })
+        enterEvent(world, event.id)
+        const base = rngFromSeed(world.seed)
+        const draws: number[] = []
+        const rng = () => {
+          const v = base()
+          draws.push(v)
+          return v
+        }
+        for (let i = 0; i < 10; i++) {
+          if (world.week === 5) world.condition = 0 // wrecked on the eve of the play week
+          tickWeek(world, rng)
+          if (world.pendingTournament) {
+            skipTournament(world)
+            closeTournament(world)
+          }
+        }
+        return { draws, withdrawn: world.events.some((e) => e.text.includes('not cleared to play')) }
+      } finally {
+        av.medicalFloor = saved
+      }
+    }
+    const pulled = record(false)
+    const played = record(true)
+    expect(pulled.withdrawn).toBe(true) // the branch under test really fired…
+    expect(played.withdrawn).toBe(false) // …and really did not, in the reference run
+    expect(pulled.draws.length).toBe(played.draws.length)
+    expect(hashOf(pulled.draws)).toBe(hashOf(played.draws))
   })
 })

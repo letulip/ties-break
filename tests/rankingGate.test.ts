@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createWorld, enterEvent, isTierEligible, kidPoints, toSnapshot, KID_ID, type WorldState } from '../src/engine/world'
-import { TIERS } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // Phase-4 "Season Life" slice 1, increment 2: a POINTS eligibility BAND per tier. A tier is a window
@@ -10,7 +10,9 @@ import type { SeasonEvent, TierId } from '../src/engine/season/types'
 // once she is past its ceiling. This replaces the inverted dense-rank model where a point-less kid,
 // tied at 0 with the field, collapsed to a HIGH rank and could enter the top tiers immediately.
 
-const PLAYABLE: TierId[] = ['local', 'regional', 'national'] // itf is never scheduled
+// RE-PINNED by ladder-up Part B: every tier in the catalogue is playable now (the inert `itf`
+// placeholder became the live j30/j60/j300 family), so the ladder invariants below run over all six.
+const PLAYABLE: TierId[] = [...TIER_LADDER]
 
 /** Grant the kid a single counting result so her best-6 (== kidPoints) equals `points`. */
 function giveKidPoints(world: WorldState, points: number): void {
@@ -149,15 +151,24 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
     }
   })
 
-  it('a high-point kid: national open, local/regional locked (outgrown)', () => {
+  it('a high-point kid: the top rungs open, local/regional outgrown, j300 still out of reach', () => {
+    // RE-PINNED by ladder-up Part B: at 700 points she has outgrown local (>85) and regional
+    // (>230), national/j30/j60 are all open (their ceilings are the MAX sentinel), and j300 is
+    // still LOCKED – she has not earned its 900-point entry yet. That is the ladder working:
+    // outgrown below, open in the middle, something still to climb above.
     const world = createWorld('snap-top')
-    giveKidPoints(world, 700) // outgrown local (>85) & regional (>230); national opens at 150
+    giveKidPoints(world, 700)
     const upcoming = toSnapshot(world).upcoming
+    expect(upcoming.length).toBeGreaterThan(0)
     for (const e of upcoming) {
       expect(e.eligible).toBe(isTierEligible(e.tier, 700))
-      if (e.tier === 'national') {
+      if (e.tier === 'national' || e.tier === 'j30' || e.tier === 'j60') {
         expect(e.eligible).toBe(true)
         expect(e.ineligibleReason).toBeUndefined()
+      } else if (e.tier === 'j300') {
+        expect(e.eligible).toBe(false)
+        expect(e.ineligibleReason).toBe('locked') // 700 < 900 – not there yet
+        expect(e.pointsToEnter).toBe(900)
       } else {
         expect(e.eligible).toBe(false)
         expect(e.ineligibleReason).toBe('outgrown') // 700 is past the ceiling – too good now

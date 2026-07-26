@@ -38,13 +38,16 @@ export function portraitStage(ageYears: number): PortraitStage {
 }
 
 /** R9-11: how many weeks a TITLE at each tier shields the sad emotion. local titles shield
- *  nothing (losses there are already `serious` at most); itf mirrors national – the tier is
- *  locked in Phase 3, so the value is a placeholder until ITF unlocks. */
+ *  nothing (losses there are already `serious` at most). Ladder-up: an international title
+ *  carries further than a domestic one – a J30 matches national, and the two levels above it
+ *  buy an extra week of "nothing can touch me". */
 export const WIN_IMMUNITY_WEEKS: Record<TierId, number> = {
   local: 0,
   regional: 1,
   national: 2,
-  itf: 2,
+  j30: 2,
+  j60: 3,
+  j300: 3,
 }
 
 /** The kid's most recent played match, as the caller read it off the snapshot's events. */

@@ -56,7 +56,8 @@ import {
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { CoachSetup, FamilyBackground, PlayerProfile, WorldEventCategory } from '../src/shared/protocol'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
-import { TIERS, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+import type { TierId } from '../src/engine/season/types'
 
 export { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
@@ -165,8 +166,8 @@ export interface SeedResult {
   /** one entry per completed season (2 for 14→16, 4 for 14→18) */
   perSeason: PerSeason[]
   /** tournaments entered over the horizon: total plus the ranking-gated per-tier split.
-   *  itf is never scheduled, so it never appears. total === local + regional + national. */
-  entries: { total: number; local: number; regional: number; national: number }
+   *  Every tier in the catalogue is live since ladder-up, so total === Σ byTier. */
+  entries: { total: number; byTier: Record<TierId, number> }
   /** DIAGNOSTIC ONLY: financeWindow(financeWeeks, 0).netCents read at horizon end – the OLD BUGGY read
    *  that the 60-week pruning corrupts past 60 weeks. Kept so tests can prove the fix; not featured in
    *  the console table (surfaced in the CSV so the correction is auditable). */
@@ -207,17 +208,32 @@ export function openCareer(preset: Preset, index: number): { world: WorldState; 
   return { world, rng, seed }
 }
 
+/** Zeroed per-tier counter over the whole live catalogue (ladder-up: six rungs). */
+export function zeroByTier(): Record<TierId, number> {
+  return Object.fromEntries(TIER_LADDER.map((t) => [t, 0])) as Record<TierId, number>
+}
+
 /** Advance ONE career week under entry policy v3, then tick and resolve any spawned tournament.
  *  Returns the per-tier entries committed this week. Shared by runCareer and the tests so the world
  *  evolution is defined in exactly one place (no duplication of the entry policy). */
-export function stepCareerWeek(world: WorldState, rng: Rng): { local: number; regional: number; national: number } {
-  const entered = { local: 0, regional: 0, national: 0 }
+export function stepCareerWeek(world: WorldState, rng: Rng): Record<TierId, number> {
+  const entered = zeroByTier()
   // Entry policy v3: enter each RANKING-ELIGIBLE event affordable by entry+travel as its deadline
   // APPROACHES (within ENTRY_LOOKAHEAD weeks) – a parent commits a few weeks out, not a year ahead.
-  for (const e of world.season) {
+  //
+  // Ladder-up: the season now stacks several tiers on the same week, so the policy walks the
+  // calendar STRONGEST-TIER-FIRST and takes at most one event per week (enterEvent enforces the
+  // rule; the policy has to choose, and an ambitious parent picks the biggest event she qualifies
+  // for). Without the ordering the policy would just grab whichever rung happened to sort first.
+  const byRung = [...world.season].sort(
+    (a, b) => a.week - b.week || TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier),
+  )
+  for (const e of byRung) {
     if (world.entries.includes(e.id)) continue
     if (world.week > e.deadlineWeek) continue // deadline passed – enterEvent would throw
     if (e.deadlineWeek - world.week > ENTRY_LOOKAHEAD) continue // too far out – commit nearer the date
+    // One tournament a week: skip the week entirely once something is booked on it.
+    if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
     // Ranking gate (before affordability): the kid may only enter tiers her EARNED points open.
     if (!isTierEligible(e.tier, kidPoints(world))) continue
     // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
@@ -226,7 +242,7 @@ export function stepCareerWeek(world: WorldState, rng: Rng): { local: number; re
     const cost = TIERS[e.tier].entryFeeCents + e.travelCostCents
     if (world.fundsCents < cost) continue // can't afford entry+travel – policy stalls here
     enterEvent(world, e.id)
-    if (e.tier === 'local' || e.tier === 'regional' || e.tier === 'national') entered[e.tier]++
+    entered[e.tier]++
   }
   tickWeek(world, rng)
   if (world.pendingTournament) {
@@ -269,7 +285,7 @@ export function runCareer(preset: Preset, index: number, horizonWeeks: number): 
   let peak = world.fundsCents
   let bankruptWeek: number | null = world.fundsCents < 0 ? 0 : null
   let reachedWeek: number | null = null
-  const entries = { total: 0, local: 0, regional: 0, national: 0 }
+  const entries = { total: 0, byTier: zeroByTier() }
 
   // Per-season finance accumulation (survives the engine's 60-week pruning; see file header).
   const signedCats = zeroCats() // signed per category: income positive, expense negative
@@ -280,10 +296,10 @@ export function runCareer(preset: Preset, index: number, horizonWeeks: number): 
 
   for (let i = 0; i < horizonWeeks; i++) {
     const e = stepCareerWeek(world, rng)
-    entries.local += e.local
-    entries.regional += e.regional
-    entries.national += e.national
-    entries.total += e.local + e.regional + e.national
+    for (const tier of TIER_LADDER) {
+      entries.byTier[tier] += e[tier]
+      entries.total += e[tier]
+    }
 
     if (world.fundsCents < peak) peak = world.fundsCents
     if (bankruptWeek === null && world.fundsCents < 0) bankruptWeek = world.week
@@ -422,14 +438,15 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[]): str
   // How many tournaments the ranking gate actually let the kid enter over the horizon, total + split.
   const meanEntry = (sel: (r: SeedResult) => number) => mean(rows.map(sel)).toFixed(1)
   const totals = rows.map((r) => r.entries.total)
+  const split = TIER_LADDER.map((t) => `${t} ${meanEntry((r) => r.entries.byTier[t])}`).join(' · ')
   out.push('  -- entries (ranking-gated, whole horizon) --')
   out.push(
     '  ' +
       padEnd('entries/career', LABEL_W) +
       `${meanEntry((r) => r.entries.total)} mean  ` +
-      `(local ${meanEntry((r) => r.entries.local)} · regional ${meanEntry((r) => r.entries.regional)} · ` +
-      `national ${meanEntry((r) => r.entries.national)})  [min ${Math.min(...totals)} / max ${Math.max(...totals)}]`,
+      `[min ${Math.min(...totals)} / max ${Math.max(...totals)}]`,
   )
+  out.push('  ' + padEnd('  per tier', LABEL_W) + split)
 
   // SURVIVAL (the headline): cumulative bankruptcy-survival over the FULL horizon.
   const survivors = rows.filter((r) => r.survived)
@@ -512,9 +529,7 @@ function toCsv(all: { horizon: Horizon; preset: Preset; rows: SeedResult[] }[]):
     'end_points',
     'seasons_captured',
     'entries_total',
-    'entries_local',
-    'entries_regional',
-    'entries_national',
+    ...TIER_LADDER.map((t) => `entries_${t}`),
   ]
   const lines = [cols.join(',')]
   for (const { horizon, preset, rows } of all) {
@@ -540,9 +555,7 @@ function toCsv(all: { horizon: Horizon; preset: Preset; rows: SeedResult[] }[]):
         r.endPoints.toString(),
         r.perSeason.length.toString(),
         r.entries.total.toString(),
-        r.entries.local.toString(),
-        r.entries.regional.toString(),
-        r.entries.national.toString(),
+        ...TIER_LADDER.map((t) => r.entries.byTier[t].toString()),
       ]
       lines.push(cells.join(','))
     }

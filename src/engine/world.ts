@@ -29,7 +29,16 @@ import { formatShortName } from '../shared/format'
 import { weekYear } from '../shared/dates'
 import type { MatchPlayer, Surface } from './match/types'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
-import { TIERS, buildSeason, isOffSeasonWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
+import {
+  TIERS,
+  buildSeason,
+  isBlackoutWeek,
+  isExamWeek,
+  isOffSeasonWeek,
+  WEEKS_PER_YEAR,
+  OFF_SEASON_WEEKS,
+} from './season/calendar'
+import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
 import {
   ECONOMY,
   GEAR_CATEGORIES,
@@ -40,9 +49,12 @@ import {
   vacationPriceCents,
 } from './economy'
 import { generateCohort, driftCohort } from './season/cohort'
+import { rivalConditions, rivalMatchPlayer } from './season/rival'
+import { generatePreHistory } from './season/prehistory'
 import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
 import { simulateMatch } from './match/engine'
+import { applySurfaceStyle } from './match/style'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -107,6 +119,10 @@ export interface WorldState {
   /** the CURRENT (in-progress) season's kid wins/losses, counted as matches resolve so the
    *  summary never has to re-parse event text and pruning can't lose them (v10). Reset to 0
    *  at each season wrap-up. */
+  /** The week a medical withdrawal fired, so advanceWeeks can halt ONCE on it. Derived, not
+   *  meaningful state: optional, so every pre-existing save loads unchanged with no migration, and a
+   *  reload simply re-derives it on the next tick that withdraws her. */
+  medicalWithdrawalWeek?: number
   seasonWins: number
   seasonLosses: number
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
@@ -251,6 +267,31 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile }):
     composure: pickInt(r, 35, 55),
     stamina: pickInt(r, 40, 60),
   }
+}
+
+/** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
+ *  CONDITION factor (R9-19) and then by the surface x play-style table (docs/specs/surface-style.md).
+ *  Both are pure arithmetic with ZERO RNG, they compose multiplicatively, and every path that puts
+ *  her in a match – the shadow tournament, the practice friendly, the exhibition viewer – builds her
+ *  here, so the modifiers land exactly once per match. `all-court` (and any untouched attribute)
+ *  comes back byte-identical to the pre-slice condition-only scaling. */
+export function kidMatchPlayerFor(
+  world: { seed: string; profile: PlayerProfile; condition: number },
+  surface: Surface,
+): MatchPlayer {
+  const raw = kidMatchPlayer(world)
+  const factor = conditionMatchFactor(world.condition)
+  return applySurfaceStyle(
+    {
+      ...raw,
+      serve: raw.serve * factor,
+      ret: raw.ret * factor,
+      composure: raw.composure * factor,
+      stamina: raw.stamina * factor,
+    },
+    world.profile.playStyle,
+    surface,
+  )
 }
 
 function cohortIds(world: WorldState): string[] {
@@ -414,23 +455,13 @@ function stageLabel(round: number, drawSize: number): string {
 }
 
 // --- Season-Life: condition + availability gate (slice B) --------------------
-function clamp(x: number, lo: number, hi: number): number {
-  return x < lo ? lo : x > hi ? hi : x
-}
-
-/** True for a school-exam blackout week – the season-week offset falls inside one of
- *  ECONOMY.availability.examWeeks. Exported so the planner UI can label the calendar row
- *  honestly ("School exams") instead of calling it a training week. */
-export function isExamWeek(week: number): boolean {
-  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
-  return ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
-}
-
-/** A "blackout" week for tournaments: the off-season tail (already event-free) or a school-exam
- *  block. Used both by the condition accumulator (extra recovery) and the availability gate. */
-export function isBlackoutWeek(week: number): boolean {
-  return isOffSeasonWeek(week) || isExamWeek(week)
-}
+// The condition MATH (clamp / matchDrain / tournamentRunStrain / conditionMatchFactor) and the
+// week-TYPE predicates (isExamWeek / isBlackoutWeek) were extracted to ./condition and
+// ./season/calendar by the rival-life slice, so the AI cohort can run the SAME rules without a
+// world.ts import cycle. They are re-exported here under their historical names – every existing
+// call site and test import keeps working, and there is still exactly one implementation.
+export { matchDrain, runFatigueExtra, tournamentRunStrain, conditionMatchFactor } from './condition'
+export { isExamWeek, isBlackoutWeek } from './season/calendar'
 
 /** The train/rest slider's recovery bonus for a MATCH-FREE week (round-9 owner redesign):
  *  threshold-based on plan.rest, first (highest) matching threshold wins, never interpolated –
@@ -469,56 +500,71 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   world.condition = clamp(world.condition + recovery, c.min, c.max)
 }
 
-/** R9-7 (owner redesign): the INTEGER fatigue of ONE kid match – how hard the scoreline was,
- *  plus the tier's per-match surcharge:
- *    straight sets, no tiebreak → 1;  a 3-setter OR a tiebreak in a 2-setter → 2;
- *    +1 more when the match had MORE than 2 tiebreak sets (a three-TB epic) – max 3;
- *    + tierMatchFatigue[tier] (local 0 / regional 1 / national 2 / itf 3).
- *  A set scored 7-6 / 6-7 is a tiebreak set. Hardest national match = 5. Pure state, zero
- *  draws; a record without a score (defensive) counts as straight sets. */
-export function matchDrain(tier: TierId, score: string | undefined): number {
-  const f = ECONOMY.condition.matchFatigue
-  const sets = score ? score.split(' ') : []
-  const tiebreaks = sets.filter((s) => s === '7-6' || s === '6-7').length
-  let drain = sets.length >= 3 || tiebreaks >= 1 ? f.hardMatch : f.straightSets
-  if (tiebreaks > 2) drain += f.extraTiebreaks
-  return drain + ECONOMY.condition.tierMatchFatigue[tier]
+/** The kid's age (whole years) in a given absolute week – the same arithmetic the snapshot uses. */
+export function ageAtWeek(week: number): number {
+  return START_AGE_YEARS + Math.floor(week / WEEKS_PER_YEAR)
 }
 
-/** R9-7: a committed run's total toll = Σ matchDrain over the kid's match records. A 5-match
- *  National run maxes at 25 (the owner's own check). Applied by finalizeTournament. */
-export function tournamentRunStrain(tier: TierId, kidMatches: { score?: string }[]): number {
-  return kidMatches.reduce((sum, m) => sum + matchDrain(tier, m.score), 0)
-}
-
-/** R9-19 (coupling ON, owner curve): NO strength penalty while she is fresh enough
- *  (condition >= matchStrengthKnee), then linear down to matchStrengthFloor at condition 0:
- *    factor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.
- *  Applied ONLY to the kid's MatchPlayer inside the EVENT-scoped shadow tournament
- *  (`seed:kidtour` stream), so the MAIN weekly draw sequence stays byte-identical. */
-export function conditionMatchFactor(condition: number): number {
-  const c = ECONOMY.condition
-  if (condition >= c.matchStrengthKnee) return 1
-  return c.matchStrengthFloor + (1 - c.matchStrengthFloor) * (condition / c.matchStrengthKnee)
+/** Pure age gate for a tier (ladder-up): the junior tour is 13+, the domestic ladder has no
+ *  minimum. No world/RNG dependency, so the childhood prologue and the tests call it directly. */
+export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
+  const minAge = TIERS[tier].minAgeYears
+  return minAge === undefined || ageYears >= minAge
 }
 
 /** Whether the kid can currently ENTER `event`, at three levels. One helper, wired at three engine
  *  surfaces (enterEvent / upcomingEvents / advanceWeeks) so the gate can never desync. Precedence
- *  is injured > unavailable > fatigued.
- *   - 'blocked' HARD stops entry: `injured` (dead branch in B – world.injury is always null – but
- *     wired for Slice C) and `unavailable` (school exams / off-season).
+ *  is injured > unavailable > medical > fatigued.
+ *   - 'blocked' HARD stops entry: `injured` (she is already out), `unavailable` (school exams /
+ *     off-season / a booked family vacation – WEEK-level reasons, so they name the week), and
+ *     `medical` (the doctor's veto below ECONOMY.availability.medicalFloor).
  *   - 'caution' is a SOFT warning that still ALLOWS entry: `fatigued` (condition below the tier's
  *     floor). The owner's call: racing tired is a tough-parent CHOICE with emergent consequences
- *     (deeper condition hole now, higher injury risk once Slice C lands), not a forbidden action.
- *   - 'ok' is clear. */
+ *     (deeper condition hole now, higher injury risk), not a forbidden action.
+ *   - 'ok' is clear.
+ *
+ *  The 'medical' branch (owner R9-19b, shipped with the Wave-2 tuning slice) is the FIRST hard
+ *  body-gate in the game and the single exception to "the parent may push": under the floor she is
+ *  not cleared to play at all. It sits far below every tier caution floor (20-45), so a normal
+ *  career never meets it – it exists for the pathological zone the fatigue bench found (a
+ *  self-coached grinder competing at condition 0 for ~4.4% of her weeks). */
 export interface AvailabilityStatus {
   level: 'ok' | 'caution' | 'blocked'
-  reason?: 'injured' | 'fatigued' | 'unavailable'
+  reason?: 'injured' | 'fatigued' | 'unavailable' | 'medical'
   detail?: string
+}
+
+/** What the doctor says about a body at `condition`, as ONE pure knob-driven rule read at BOTH
+ *  medical surfaces – the entry gate (`availabilityStatus`) and the ARRIVAL check on the play week
+ *  (`tickWeek` step 2). Owner 26.07:
+ *    'withdraw' – under ECONOMY.availability.medicalFloor: not cleared, at any price. The single
+ *                 exception to "the parent may push";
+ *    'warn'     – in [medicalFloor, medicalWarningCeiling): she plays, and he warns the family
+ *                 ("я вас предупреждаю о последствиях, формально запретить не могу");
+ *    'clear'    – above the band: medicine has nothing to say (the tier fatigue caution still may).
+ *  Pure integer comparison, zero RNG. A ceiling at or below the floor collapses the band to
+ *  nothing, which is how the warning is switched off without touching the veto. */
+export type MedicalClearance = 'withdraw' | 'warn' | 'clear'
+export function medicalClearance(condition: number): MedicalClearance {
+  const a = ECONOMY.availability
+  if (condition < a.medicalFloor) return 'withdraw'
+  if (condition < a.medicalWarningCeiling) return 'warn'
+  return 'clear'
 }
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
   if (world.injury !== null) {
     return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${world.injury.weeksRemaining} weeks.` }
+  }
+  // Ladder-up: the junior international tour opens at 13. Our detailed sim starts at 14, so this
+  // never fires today – it is wired now so the childhood prologue (Phase 6) inherits the rule for
+  // free instead of re-deriving it, and so the tier table stays the single source of truth.
+  const minAge = TIERS[event.tier].minAgeYears
+  if (minAge !== undefined && !isTierAgeOpen(event.tier, ageAtWeek(event.week))) {
+    return {
+      level: 'blocked',
+      reason: 'unavailable',
+      detail: `${TIERS[event.tier].label} opens at ${minAge} – she is too young.`,
+    }
   }
   // Season planner: a booked family-vacation week is a HARD blackout – the family is away, so
   // nothing is enterable (spec §3). It outranks the exam/off-season blackout copy so the chip
@@ -529,6 +575,12 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   }
   if (isBlackoutWeek(event.week)) {
     return { level: 'blocked', reason: 'unavailable', detail: 'School exams this week – no tournaments.' }
+  }
+  // THE DOCTOR'S VETO: under the medical floor no tier is enterable, at any price. Ranked AFTER
+  // the week-level blackouts (a vacation/exam week is unenterable for everyone, so it names the
+  // week) and BEFORE the soft fatigue caution, which it replaces in the pathological zone.
+  if (medicalClearance(world.condition) === 'withdraw') {
+    return { level: 'blocked', reason: 'medical', detail: 'Not cleared to play – she needs rest.' }
   }
   if (world.condition < ECONOMY.availability.minConditionToEnter[event.tier]) {
     return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
@@ -891,10 +943,18 @@ export function consecutivePracticeWeeks(practiceWeeks: readonly number[], week:
  *  every single week is self-destructive – mean condition 47, 41-44% of weeks under 40). It is a
  *  CAUTION, never a block: the confirm sheet spells the risk out and the Home chip reads the
  *  strain, but the parent may still push. Reasons: 'tired' (below ECONOMY.practice.cautionCondition)
- *  and 'streak' (this would be the cautionStreak-th match week in a row). */
+ *  and 'streak' (a run of consecutive match weeks).
+ *
+ *  WAVE-2 RETUNE (bench 26.07): the streak arm is GATED on real strain – `cautionStreak` (3) in a
+ *  row warns only below `cautionStreakCondition`, while `cautionStreakAlways` (4) in a row warns at
+ *  any condition. It used to fire on a perfectly fresh kid (careful pushed through 8-11
+ *  cautions/season at condition 92), which is how a warning becomes noise. */
 export interface PracticeCaution {
   level: 'ok' | 'caution'
   reasons: Array<'tired' | 'streak'>
+  /** how many match weeks in a row this booking would make (1 = the first) – so the chip and the
+   *  sheet can NAME the run without re-deriving it. */
+  streakWeeks: number
   /** player-facing warning copy (short dash), absent when clear */
   detail?: string
 }
@@ -905,14 +965,17 @@ export function practiceCaution(input: {
 }): PracticeCaution {
   const p = ECONOMY.practice
   const reasons: Array<'tired' | 'streak'> = []
+  // The booking under consideration closes the run, so it is the (unbroken run before it + 1)-th.
+  const streakWeeks = consecutivePracticeWeeks(input.practiceWeeks, input.week) + 1
   if (input.condition < p.cautionCondition) reasons.push('tired')
-  if (consecutivePracticeWeeks(input.practiceWeeks, input.week) >= p.cautionStreak - 1) reasons.push('streak')
-  if (reasons.length === 0) return { level: 'ok', reasons }
+  const strainedStreak = streakWeeks >= p.cautionStreak && input.condition < p.cautionStreakCondition
+  if (strainedStreak || streakWeeks >= p.cautionStreakAlways) reasons.push('streak')
+  if (reasons.length === 0) return { level: 'ok', reasons, streakWeeks }
   const parts: string[] = []
   // Owner's line: «Она уже вымотана – ещё матч?»
   if (reasons.includes('tired')) parts.push('She is already worn out – another match?')
-  if (reasons.includes('streak')) parts.push(`${p.cautionStreak} match weeks in a row – that is how bodies break.`)
-  return { level: 'caution', reasons, detail: parts.join(' ') }
+  if (reasons.includes('streak')) parts.push(`${streakWeeks} match weeks in a row – that is how bodies break.`)
+  return { level: 'caution', reasons, streakWeeks, detail: parts.join(' ') }
 }
 
 /** Retire an expired recovery buff (pure state). Runs after the week's injury roll, so the last
@@ -970,16 +1033,10 @@ function resolvePractice(world: WorldState): void {
   }
   const rng = rngFromSeed(`${world.seed}:practicematch:${world.week}`)
   const opponent = pickSparringPartner(world, rng)
-  // She hits at her CURRENT condition, exactly like a tournament run (R9-19 coupling).
-  const factor = conditionMatchFactor(world.condition)
-  const raw = kidMatchPlayer(world)
-  const kid: MatchPlayer = {
-    ...raw,
-    serve: raw.serve * factor,
-    ret: raw.ret * factor,
-    composure: raw.composure * factor,
-    stamina: raw.stamina * factor,
-  }
+  const surface: Surface = 'hard' // the home club's courts
+  // She hits at her CURRENT condition, exactly like a tournament run (R9-19 coupling), and on the
+  // court her style earns her (surface-style): one composition point, applied once.
+  const kid = kidMatchPlayerFor(world, surface)
   const opp: MatchPlayer = {
     id: opponent.id,
     name: opponent.name,
@@ -988,7 +1045,6 @@ function resolvePractice(world: WorldState): void {
     composure: opponent.composure,
     stamina: opponent.stamina,
   }
-  const surface: Surface = 'hard' // the home club's courts
   const seed = `${world.seed}:practicematch:${world.week}:m`
   const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
   const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
@@ -1179,39 +1235,44 @@ function kidMatchEvent(
   }
 }
 
-// Compute the kid's full shadow tournament: byte-identical to the old inline resolution (same
-// event-scoped RNG, same entrant selection, same bracket). Emits NO events and awards NO points –
-// that is deferred to reveal/finalize. Snapshots the kid + every opponent she faces at PRE-drift
-// skills so the revealed match records are stable no matter how the cohort drifts afterwards.
+/** RIVALS BECOME REAL: turn the selected cohort rows into the players who actually take the court
+ *  for `event` – base attributes → surface/style modifier → condition factor, exactly once and in
+ *  the same order as the kid's, via the single `rivalMatchPlayer` helper (season/rival.ts).
+ *
+ *  THE one place both tournament paths (the kid's shadow run and the canonical AI bracket) build a
+ *  rival, so the two can never disagree about who she is. `fatigue` is the week's derived
+ *  conditions; a player absent from it has no results inside the fatigue window and is fresh.
+ *  Pure – the cohort rows are read, never written – and ZERO RNG draws. */
+function rivalField(entrants: AiPlayer[], event: SeasonEvent, fatigue: Map<string, number>): MatchPlayer[] {
+  return entrants.map((p) => rivalMatchPlayer(p, event.surface, fatigue.get(p.id) ?? ECONOMY.condition.max))
+}
+
+// Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
+// bracket. Emits NO events and awards NO points – that is deferred to reveal/finalize. Snapshots
+// the kid + every opponent she faces at PRE-drift skills so the revealed match records are stable
+// no matter how the cohort drifts afterwards; since rival-life those snapshots are the FATIGUED,
+// surface-styled opponents, i.e. exactly who she played, so a replay reproduces the match.
 function computeShadowTournament(
   world: WorldState,
   event: SeasonEvent,
   ranking: RankingRow[],
+  fatigue: Map<string, number>,
 ): PendingTournament {
   // R9-19 coupling ON: the kid plays at her CURRENT condition (post this week's accrual –
-  // step 1c runs before step 2). The SCALED player is both what runs the bracket and what is
-  // snapshotted into `players`, so revealed records and replays stay byte-identical no matter
-  // how her condition moves afterwards. Fractional skills are fine for the match engine.
-  const factor = conditionMatchFactor(world.condition)
-  const raw = kidMatchPlayer(world)
-  const kid: MatchPlayer = {
-    ...raw,
-    serve: raw.serve * factor,
-    ret: raw.ret * factor,
-    composure: raw.composure * factor,
-    stamina: raw.stamina * factor,
-  }
+  // step 1c runs before step 2), on the event's surface as her play style meets it (surface-style).
+  // The SCALED player is both what runs the bracket and what is snapshotted into `players`, so
+  // revealed records and replays stay byte-identical no matter how her condition moves afterwards –
+  // and the run's every round shares this ONE build. Fractional skills are fine for the match engine.
+  const kid = kidMatchPlayerFor(world, event.surface)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
-  const entrants = selectEntrants(event, world.cohort, ranking, kidRng)
-  const result = runTournament(event, entrants, kid, world.seed, kidRng)
+  const field = rivalField(selectEntrants(event, world.cohort, ranking, kidRng), event, fatigue)
+  const result = runTournament(event, field, kid, world.seed, kidRng)
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
     const oppId = m.aId === KID_ID ? m.bId : m.aId
-    const ai = entrants.find((p) => p.id === oppId)
-    players[oppId] = ai
-      ? { id: ai.id, name: ai.name, serve: ai.serve, ret: ai.ret, composure: ai.composure, stamina: ai.stamina }
-      : fallbackPlayer(oppId)
+    const ai = field.find((p) => p.id === oppId)
+    players[oppId] = ai ? { ...ai } : fallbackPlayer(oppId)
   }
   return { eventId: event.id, result, revealedRounds: 0, finished: false, players }
 }
@@ -1358,15 +1419,36 @@ export function closeTournament(world: WorldState): void {
   world.pendingTournament = null
 }
 
-// The canonical AI-only bracket for one event. Runs on the MAIN stream with a fixed
-// draw pattern (independent of the kid), awarding AI points into the results ledger.
-function runAiTournament(world: WorldState, event: SeasonEvent, aiRanking: RankingRow[], rng: Rng): void {
-  const entrants = selectEntrants(event, world.cohort, aiRanking, rng)
-  const result = runTournament(event, entrants, null, world.seed, rng)
+// The canonical AI-only bracket for one event. Runs on its OWN EVENT-SCOPED stream
+// `seed:aitour:<event.id>` – the exact mirror of the kid's `seed:kidtour:<event.id>` – covering
+// BOTH the entrant selection and the AI-vs-AI matches. ZERO main-stream draws.
+//
+// Why it is scoped and not on the main weekly stream: the calendar is content. While the brackets
+// drew from the main stream, adding a tier or densifying a cadence changed the per-week draw count
+// by construction, which re-based every frozen invariance pin – the ladder-up slice had to move
+// them for exactly that reason. Scoped by (world.seed, event.id) – two immutable values, and
+// event.id is unique per (year, week, tier) – the AI world is now a pure function of the event, so
+// content is free and a reloaded career replays its brackets by construction rather than by the
+// worker fast-forwarding the main stream onto precisely the right draw.
+//
+// RIVALS BECOME REAL: the field is built through `rivalField`, so the bracket runs on rivals who
+// are tired from their own recent schedule and coloured by how their style suits the surface. That
+// costs no draw – both are pure derivations – so everything above still holds. The awarded rows now
+// record their `tier`, which is what lets next week's reconstruction read them EXACTLY instead of
+// guessing (SeasonResult.tier has always been optional, so this is not a schema bump).
+function runAiTournament(
+  world: WorldState,
+  event: SeasonEvent,
+  aiRanking: RankingRow[],
+  fatigue: Map<string, number>,
+): void {
+  const aiRng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
+  const field = rivalField(selectEntrants(event, world.cohort, aiRanking, aiRng), event, fatigue)
+  const result = runTournament(event, field, null, world.seed, aiRng)
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {
     const points = pts[finish]
-    if (points > 0) world.results.push({ playerId, week: world.week, points })
+    if (points > 0) world.results.push({ playerId, week: world.week, points, tier: event.tier })
   }
 }
 
@@ -1396,6 +1478,18 @@ export function createWorld(
   careerId: string = `legacy-${seed}`,
 ): WorldState {
   const fundsCents = STARTING_FUNDS_CENTS[profile.background]
+  const cohort = generateCohort(seed)
+  // Ladder-up Part A: the cohort arrives with a season already behind it (season/prehistory.ts),
+  // so week-1 entrant fields are ranking-MEANINGFUL and the standings are not a 199-way tie at 0.
+  // Rows sit at NEGATIVE weeks [-51, -1]; they count inside the existing rolling-52 window at
+  // week 0 and are pruned away by the normal `world.week - r.week <= RESULTS_WINDOW` rule as the
+  // first season runs – NO new field and NO schema bump. Audited before adopting the shape: the
+  // only week-sensitive reads over `results` are pruneResults, computeRanking/windowedBestSum
+  // (all three use the same `<= WINDOW` difference, which is sign-agnostic), playedWeeksInTrailing4
+  // and computeCountingResults (KID-only, and pre-history is AI-only), and maybeFireSeasonWrapUp's
+  // `inRange` (`w >= yearStart`, so negative weeks are excluded from every season figure). Nothing
+  // clamps a result week at 0 and nothing feeds a result week to weekYear.
+  // The kid gets NO pre-history: she still starts on 0 points and reads "Unranked".
   const world: WorldState = {
     schemaVersion: SAVE_SCHEMA_VERSION,
     careerId,
@@ -1404,13 +1498,15 @@ export function createWorld(
     fundsCents,
     profile,
     plan: { ...WEEK_PLAN_PRESETS.balanced },
-    cohort: generateCohort(seed),
-    results: [],
+    cohort,
+    results: generatePreHistory(seed, cohort),
     season: [],
     entries: [],
     events: [],
     nextEventId: 0,
-    kidRank: 1,
+    // Placeholder only – recomputeKidRank below replaces it with the real value (last, behind the
+    // whole cohort, because she is the only player without a counting result).
+    kidRank: cohort.length + 1,
     prevKidRank: null,
     pendingTournament: null,
     bestFinishByTier: {},
@@ -1489,15 +1585,17 @@ function releaseOutgrownEntries(world: WorldState): void {
   }
 }
 
-// Full weekly resolution. Draw order on the MAIN stream is fixed per week regardless
-// of player input: base costs → (kid tournament uses an event-scoped RNG, zero main
-// draws) → cohort drift → canonical AI tournaments for every scheduled event.
+// Full weekly resolution. The MAIN stream carries exactly TWO things, in this fixed order:
+// resolveBaseCosts (3 draws, 4 when the sponsor roll hits) and driftCohort (4 per cohort player).
+// Nothing else – both tournament sides run on EVENT-scoped streams (`seed:kidtour:<id>` for the
+// kid's shadow run, `seed:aitour:<id>` for the canonical AI bracket), so the weekly draw count is
+// independent of player input AND of how much content the calendar carries.
 //
 // When the kid has an entered event this week the resolution PAUSES: the shadow tournament is
 // computed (byte-identical to the old inline run) and stashed in `world.pendingTournament`, but its
 // match/summary/milestone events, ranking points and the week's rank recompute are all deferred to
 // the reveal/finalize flow (revealTournamentRound / skipTournament). The main-stream work (base
-// costs, drift, AI brackets) still runs, so the per-week draw count is unchanged.
+// costs, drift) and the AI brackets still run, so the per-week draw count is unchanged.
 export function tickWeek(world: WorldState, rng: Rng): void {
   world.week += 1
 
@@ -1541,13 +1639,20 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   const ids = cohortIds(world)
   const scheduled = world.season.filter((e) => e.week === world.week)
-  // Canonical ranking excludes the kid so AI-field selection (and thus its main-stream
-  // draw count) never depends on the kid's own results / entry history.
+  // Canonical ranking excludes the kid so AI-field selection never depends on the kid's own
+  // results / entry history – the canonical AI world stays the same world whatever she does.
   const aiRanking = computeRanking(
     world.results.filter((r) => r.playerId !== KID_ID),
     world.week,
     ids,
   )
+
+  // RIVALS BECOME REAL: every cohort player's condition for THIS week, derived ONCE from the
+  // results ledger before any of the week's brackets run. Deriving it up front (rather than per
+  // event) is what keeps the week coherent: every event scheduled this week sees the same rivals,
+  // and the kid's shadow run (step 2) and the canonical AI brackets (step 4) can never disagree
+  // about how tired an opponent is. Pure derivation, ZERO main-stream draws.
+  const rivalFatigue = rivalConditions(world.results, world.week)
 
   // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
   //    fully-computed shadow tournament. Nothing kid-specific is emitted/awarded here – the flow does.
@@ -1556,22 +1661,83 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // Only a POST-deadline entry can still be live here – pre-deadline entries were auto-withdrawn
   // (and refunded) at onset by rollInjury; past the deadline the fee is forfeited (withdrawEvent
   // refuses), so the walkover event is all that remains of the trip that never happened.
-  if (enteredThisWeek && world.injury === null) {
-    chargeTravel(world, enteredThisWeek)
-    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking)
-  } else if (enteredThisWeek) {
+  //
+  // THE DOCTOR CHECKS HER ON ARRIVAL (owner 26.07). The medical floor used to gate ENTRY only, and
+  // entries commit ENTRY_LOOKAHEAD weeks ahead of the play week – so a run entered healthy could
+  // still be PLAYED at condition 0 and nothing intervened (the fatigue bench traced 14 straight
+  // such weeks). The floor is therefore re-read HERE, on the play week, against the condition she
+  // will actually take the court at (step 1c has already accrued, so this is the same number
+  // computeShadowTournament would scale her by). Precedence mirrors availabilityStatus exactly –
+  // injured > medical – so the two surfaces can never disagree about which beat fires.
+  // Pure state: ZERO new RNG draws, on any stream.
+  const clearance = enteredThisWeek ? medicalClearance(world.condition) : 'clear'
+  if (enteredThisWeek && world.injury !== null) {
     addEvent(world, {
       week: world.week,
       type: 'injury',
       text: `Walkover: too injured to play the ${TIERS[enteredThisWeek.tier].label} – 0 pts, entry fee forfeited.`,
     })
+  } else if (enteredThisWeek && clearance === 'withdraw') {
+    // WITHDRAWN ON MEDICAL GROUNDS: no travel charge (she never boards), no shadow run, 0 points.
+    // The ENTRY FEE IS FORFEITED – the same rule skipEvent uses for a post-deadline pull-out, and
+    // the same rule the injury walkover above uses. Chosen over a refund because it is the identical
+    // real-world situation: the list closed with her on it, so the organisers keep the fee whatever
+    // the reason she does not appear. Refunding here would also make the doctor's veto financially
+    // FREE, i.e. a cheap late exit from any entry she regrets – the fee has to bite or "enter it and
+    // see" becomes the dominant strategy.
+    world.entries = world.entries.filter((id) => id !== enteredThisWeek.id)
+    // Mark the week so advanceWeeks halts ONCE on it (see the stop below). The owner hit exactly this
+    // trap with injuries – he skipped weeks, an entry was silently withdrawn, and he only found out
+    // in the news three weeks later – so a forfeited entry must never pass by unseen either. The
+    // marker is derived state, not saved: a reload replays the tick and re-derives it.
+    world.medicalWithdrawalWeek = world.week
+    addEvent(world, {
+      week: world.week,
+      type: 'injury',
+      text: `Withdrawn from the ${TIERS[enteredThisWeek.tier].label} – not cleared to play on medical advice. 0 pts, entry fee forfeited.`,
+    })
+    // The week is match-free after all, so she earns the FULL free-week recovery ladder that
+    // accrueCondition withheld when it still believed she would play (it ran with played = true, so
+    // she banked matchWeekRecoveryBase instead of recoveryBase + the rest-slider bonus). Written as
+    // the DIFFERENCE so it lands on exactly what a non-playing week pays, whatever the two knobs
+    // are set to – and so this stays byte-consistent with the bench's independent trace, which
+    // reads the week as free. Integer, clamped, zero draws.
+    //
+    // NOTE for the architect: skipEvent (R9-9) hands back the rest-slider bonus ALONE. That was
+    // exactly right when it was written (matchWeekRecoveryBase == recoveryBase == 2) and quietly
+    // became a short payment at the V2 flip, which set matchWeekRecoveryBase to 0 – so a skipped
+    // event week still under-pays by recoveryBase. NOT touched here: fixing it moves shipped
+    // condition traces, which is a tuning call, not a merge call.
+    world.condition = clamp(
+      world.condition +
+        (ECONOMY.condition.recoveryBase - ECONOMY.condition.matchWeekRecoveryBase) +
+        restRecoveryBonus(world.plan.rest),
+      ECONOMY.condition.min,
+      ECONOMY.condition.max,
+    )
+  } else if (enteredThisWeek) {
+    chargeTravel(world, enteredThisWeek)
+    // ...and the WARNING BAND: cleared, but only just. She plays; the doctor goes on record. Emitted
+    // after the travel charge so the week reads chronologically in the news feed (trip → the doctor
+    // sees her → her matches). Type 'info' rather than 'injury': nothing has happened to her body,
+    // somebody SAID something, which is what the 💬 channel is for.
+    if (clearance === 'warn') {
+      addEvent(world, {
+        week: world.week,
+        type: 'info',
+        text: `Doctor's warning – she is cleared for the ${TIERS[enteredThisWeek.tier].label}, but only just. He can warn you; he cannot forbid it.`,
+      })
+    }
+    world.pendingTournament = computeShadowTournament(world, enteredThisWeek, aiRanking, rivalFatigue)
   }
 
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
   driftCohort(world.cohort, rng)
 
-  // 4. canonical AI tournaments for ALL scheduled events (main stream, fixed pattern)
-  for (const e of scheduled) runAiTournament(world, e, aiRanking, rng)
+  // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
+  //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
+  //    touches the weekly draw count. The main stream ends here carrying base costs + drift only.
+  for (const e of scheduled) runAiTournament(world, e, aiRanking, rivalFatigue)
 
   // 5-6. rank recompute + housekeeping. For a reveal week these are deferred to finalizeTournament
   //      (after the kid's points land), so the rank milestones keep their id order behind the kid's
@@ -1608,6 +1774,12 @@ export function enterEvent(world: WorldState, eventId: string): void {
   if (!event) throw new Error('Unknown event')
   if (world.entries.includes(eventId)) throw new Error('Already entered this event')
   if (world.week > event.deadlineWeek) throw new Error('Entry deadline has passed')
+  // Ladder-up: the calendar now stacks several tiers on the same week, so "one event per week" is
+  // no longer guaranteed by the schedule and has to be a rule. She has one body and one week –
+  // the abundance is a CHOICE between events, not a licence to play two.
+  if (world.season.some((e) => e.week === event.week && world.entries.includes(e.id))) {
+    throw new Error('She is already entered in a tournament that week')
+  }
   const fee = TIERS[event.tier].entryFeeCents
   if (world.fundsCents < fee) throw new Error('Not enough funds for the entry fee')
   const [minPoints, maxPoints] = TIERS[event.tier].enterPointBand
@@ -1733,7 +1905,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
       const points = kidPoints(world)
       const deadlineSoon = world.season.some(
         (e) =>
-          (e.tier === 'regional' || e.tier === 'national') &&
+          // Ladder-up: "regional or national" was "anything above the entry tier" – it now reads
+          // that way literally, so the J levels (the most expensive commitments in the game) stop
+          // the sim too. NOTE for the tuning pass: with j30 every 2 weeks this roughly doubles how
+          // often an advance halts once she is J-eligible; if that proves noisy the fix belongs in
+          // a player-side "don't stop for tier X" preference, not in silently skipping the stop.
+          e.tier !== 'local' &&
           !world.entries.includes(e.id) &&
           world.fundsCents >= TIERS[e.tier].entryFeeCents &&
           (e.deadlineWeek === world.week || e.deadlineWeek === nextWeek) &&
@@ -1765,6 +1942,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // an ongoing recovery never re-stops the sim on every week she sits out.
     if (world.injury !== null && world.injury.sinceWeek === world.week) {
       stopReason = 'injury'
+      break
+    }
+    // A medical withdrawal costs her an entry AND its fee, so it halts the advance for the same
+    // reason a fresh injury does: the player must see it happen, not read about it later.
+    if (world.medicalWithdrawalWeek === world.week) {
+      stopReason = 'medical'
       break
     }
     if (world.fundsCents < 0) {
@@ -1801,7 +1984,7 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
           ? { ineligibleReason: 'locked' as const, pointsToEnter: minPoints }
           : { ineligibleReason: 'outgrown' as const }
         : avail.level === 'blocked'
-          ? { ineligibleReason: avail.reason as 'injured' | 'unavailable' }
+          ? { ineligibleReason: avail.reason as 'injured' | 'unavailable' | 'medical' }
           : avail.level === 'caution'
             ? { cautionReason: avail.reason as 'fatigued', cautionDetail: avail.detail }
             : {}
