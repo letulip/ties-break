@@ -70,9 +70,10 @@ const LOGO_RE = /^logo-tb-.*\.png$/i
  * at the webp wordmarks, and delete the pattern here.
  */
 const NOT_SHIPPED = [
-  // `angry` is not a member of AvatarEmotion, so nothing can construct these URLs. Five masters,
-  // ~300 KB of webp. Painted ahead of a feature that never landed.
-  { re: /-angry$/i, why: 'no "angry" in AvatarEmotion — nothing can request it' },
+  // `-angry` came off this list on 27.07: `angry` is a member of AvatarEmotion now, so the URLs
+  // ARE constructible and the five masters encode like any other. (Nothing SELECTS angry yet —
+  // avatarEmotion() explains why it has no trigger — but "unreachable" was the reason it was
+  // skipped, and that reason is gone.)
   // SplashScreen.vue loads public/logo-tb-*.svg. The webp copies of the same wordmarks, generated
   // from the PNG masters, are referenced by nothing at all — 8 files, ~32 KB.
   { re: /^logo-tb-/i, why: 'the splash uses the SVG wordmarks; these webp copies are unreferenced' },

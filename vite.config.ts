@@ -69,19 +69,27 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
         // The big character paintings stay OUT of the precache, on purpose (R11-9; re-measured
         // on build/webp-only, after the duplicate `-fs8` set was deleted).
-        // MEASURED, not guessed: public/images/fem-euro-brunnet/ is 42 webp / 2348 KiB, and the
-        // whole precache is 67 entries / 1752 KiB — so precaching the art would still more than
-        // DOUBLE the install, and 18 of those files (1105 KiB: milf/bride/funeral/graduated/
-        // pregnant/angry) are later-life art no code path can request yet — `PortraitStage` has no
-        // `milf` and `AvatarEmotion` has no `angry`. Only 24 files / 1243 KiB are reachable.
+        // MEASURED, not guessed: public/images/fem-euro-brunnet/ is 42 webp / 2348 KiB — so
+        // precaching the art would still more than DOUBLE the install.
         //
-        // What IS offline-safe by precache: the 20 small 256px crops in public/avatars (324 KiB),
-        // which is why the header and the Home card never break offline.
+        // The reachable share GREW on 27.07: `PortraitStage` gained `milf` and `AvatarEmotion`
+        // gained `angry`, so 35 of the 42 (5 bands x 7 emotions) are now requestable, against 24
+        // before. Only 7 files / 400 KiB are still unreachable, and they are STORY frames rather
+        // than a missing band — bride / funeral / graduated / pregnant-first / pregnant-last /
+        // farewell / retired. They have no AvatarEmotion to name them and no surface that shows
+        // them; they wait on a life-events feature, not on a type.
+        //
+        // Keeping the art out of the precache matters MORE now, not less: a career only ever
+        // occupies one band at a time, and src/art/preload.ts fetches that band on demand.
+        //
+        // What IS offline-safe by precache: the small 256px crops in public/avatars (37 files /
+        // 528 KiB — was 20 / 324 KiB before the adult and milf crops were cut), which is why the
+        // header and the Home card never break offline at any age.
         globIgnores: ['**/images/**'],
         // ...and the big paintings get a CacheFirst runtime route instead: one age band is only
-        // ~361-435 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
+        // ~361-424 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
         // renders ahead of its art), and once fetched a painting is offline-durable for 60 days.
-        // maxEntries 80 comfortably holds the whole reachable set (24 files) plus headroom.
+        // maxEntries 80 still comfortably holds the whole reachable set (35 files) plus headroom.
         runtimeCaching: [
           {
             // webp only: after build/webp-only nothing else can exist under /images/.

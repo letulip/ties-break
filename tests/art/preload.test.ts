@@ -30,7 +30,7 @@ import type { PortraitStage } from '../../src/shared/avatarEmotion'
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
 const PUBLIC = `${ROOT}public/`
-const STAGES: PortraitStage[] = ['jun', 'young', 'teen', 'adult']
+const STAGES: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'milf']
 
 /** url -> path on disk (strip the Vite base prefix the builders prepend). */
 function assetPath(url: string): string {
@@ -38,7 +38,7 @@ function assetPath(url: string): string {
 }
 
 describe('preload urls resolve to files that actually ship', () => {
-  it('every Kid-screen painting exists (4 stages x 6 emotions)', () => {
+  it('every Kid-screen painting exists (5 stages x 6 emotions)', () => {
     for (const stage of STAGES) {
       for (const emotion of KID_EMOTIONS) {
         const p = assetPath(portraitUrl(stage, emotion))
@@ -47,7 +47,7 @@ describe('preload urls resolve to files that actually ship', () => {
     }
   })
 
-  it('every tournament-finale painting exists (4 stages x champion/runner-up/exit)', () => {
+  it('every tournament-finale painting exists (5 stages x champion/runner-up/exit)', () => {
     for (const stage of STAGES) {
       for (const emotion of FINALE_EMOTIONS) {
         const p = assetPath(finaleUrl(stage, emotion))
@@ -56,7 +56,7 @@ describe('preload urls resolve to files that actually ship', () => {
     }
   })
 
-  it('every 256px crop exists (adult clamps to teen, like kidEmotion.ts)', () => {
+  it('every 256px crop exists – no stage borrows another stage\'s face any more', () => {
     for (const stage of STAGES) {
       for (const emotion of KID_EMOTIONS) {
         const p = assetPath(cropUrl(stage, emotion))
@@ -152,7 +152,7 @@ describe('preload budget', () => {
     expect(warmedCount()).toBe(after)
   })
 
-  it('warms one band at a time – the whole 4-band set is never pulled at once', () => {
+  it('warms one band at a time – the whole 5-band set is never pulled at once', () => {
     resetPreloadCache()
     preloadForAge(14)
     expect(warmedCount()).toBe(12)
@@ -164,12 +164,16 @@ describe('stageDueNext – only warm the next band on the last year of the curre
     expect(stageDueNext(10)).toBe('young') // jun ends at 10
     expect(stageDueNext(16)).toBe('teen') // young ends at 16
     expect(stageDueNext(22)).toBe('adult') // teen ends at 22
+    expect(stageDueNext(30)).toBe('milf') // adult ends at 30 (it had no upper bound before)
   })
 
   it('stays silent mid-band and at the top of the ladder', () => {
     for (const age of [9, 11, 14, 15, 17, 21]) expect(stageDueNext(age)).toBeNull()
-    expect(stageDueNext(23)).toBeNull()
-    expect(stageDueNext(30)).toBeNull()
+    expect(stageDueNext(23)).toBeNull() // first year of adult, 7 years from milf
+    expect(stageDueNext(29)).toBeNull()
+    // milf is the LAST band – past it there is never a next one to warm.
+    expect(stageDueNext(31)).toBeNull()
+    expect(stageDueNext(45)).toBeNull()
   })
 
   it('a mid-band career pays for one band only', () => {
