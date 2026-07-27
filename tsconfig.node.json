@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["vite.config.ts", "scripts/**/*.mjs"]
+  "include": ["vite.config.ts", "scripts/**/*.mjs", "scripts/**/*.d.mts"]
 }

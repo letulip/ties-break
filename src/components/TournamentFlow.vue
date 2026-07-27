@@ -7,6 +7,7 @@
 import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
+import { finaleUrl } from '../art/preload'
 import MatchViewer from './MatchViewer.vue'
 import BracketTabs from './BracketTabs.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
@@ -27,15 +28,17 @@ import type { WorldMatch } from '../shared/protocol'
 defineEmits<{ back: [] }>()
 
 const game = useGameStore()
-const base = import.meta.env.BASE_URL
 // R9-16: the splash/finale paintings follow her age stage (young at the 14-year-old start,
-// teen from 17) via the shared resolver – the -fs8 optimized variants exist for every stage's
-// happy/sad/serious. Round 5 item 11 still stands: no dedicated runner-up art (a programmatic
-// gold->silver desaturation came out patchy), so the silver finale reuses the "serious"
-// (focused, composed) painting + a silver-styled card frame.
+// teen from 17) via the shared resolver. Round 5 item 11 still stands: no dedicated runner-up art
+// (a programmatic gold->silver desaturation came out patchy), so the silver finale reuses the
+// "serious" (focused, composed) painting + a silver-styled card frame.
+//
+// build/webp-only: the url comes from art/preload.ts instead of being spelled out here. This
+// component used to hand-build a `-fs8` name that the preloader also hand-built, and the two
+// spellings could disagree with what actually shipped – which is how the adult champion splash
+// 404'd. One builder, checked against the files on disk by tests/art/preload.test.ts.
 const { stage: kidStage } = useKidEmotion()
-const artUrl = (emotion: 'happy' | 'sad' | 'serious') =>
-  `${base}images/fem-euro-brunnet/fem-euro-brunnet-${kidStage.value}-${emotion}-fs8.webp`
+const artUrl = (emotion: 'happy' | 'sad' | 'serious') => finaleUrl(kidStage.value, emotion)
 const HAPPY_ART = computed(() => artUrl('happy'))
 const SAD_ART = computed(() => artUrl('sad'))
 const SERIOUS_ART = computed(() => artUrl('serious'))
