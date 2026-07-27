@@ -208,7 +208,16 @@ describe('R11-14 — "Practice match + coach" is one line in the calendar', () =
 // R11-5a — "locked" vs "nothing scheduled", as ONE rule.
 // ===========================================================================
 describe('R11-5a — the tier ladder tells a point lock apart from an empty calendar', () => {
-  const base: TierStateInput = { ageYears: 16, points: 0, upcoming: [], horizonWeeks: HORIZON_WEEKS }
+  // The ITF annual entry cap (feat/junior-age-caps) added a fifth input. R11-5a is about the
+  // point lock vs the empty calendar, so every case here runs with the allowance UNTOUCHED – the
+  // cap has its own suite in tests/age-caps.test.ts.
+  const base: TierStateInput = {
+    ageYears: 16,
+    points: 0,
+    upcoming: [],
+    horizonWeeks: HORIZON_WEEKS,
+    entryCap: { used: 0, limit: 25, remaining: 25 },
+  }
   const at = (points: number, upcoming: { tier: TierId; week: number }[] = []): TierStateInput => ({
     ...base,
     points,

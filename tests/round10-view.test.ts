@@ -126,8 +126,12 @@ describe('R10-9 — season history (v14)', () => {
 })
 
 describe('R10-9 — v14 migration', () => {
-  it('is at schema 14', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(14)
+  // R10-9's season history landed AT v14; later slices keep bumping the schema (the annual entry
+  // cap's ledger is v15), so this asserts "v14 or later" – the same relaxation P2 made in
+  // tests/planner.test.ts when v13 stopped being the tip. What the case is about is the migration
+  // below, not the number.
+  it('is at schema 14 or later', () => {
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(14)
   })
 
   it('seeds the history from a v13 save\'s lastSeasonSummary (and is idempotent)', () => {

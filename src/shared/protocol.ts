@@ -351,8 +351,11 @@ export interface UpcomingEvent {
    *  'unavailable' = school exams / off-season / a booked family vacation; 'injured' = she is out;
    *  'medical' = the doctor's veto below ECONOMY.availability.medicalFloor (the one hard body-gate
    *  – see availabilityStatus). Ordinary fatigue is NOT here – it is a soft, warned CHOICE (see
-   *  cautionReason), so a fatigued event stays eligible. */
-  ineligibleReason?: 'locked' | 'outgrown' | 'injured' | 'unavailable' | 'medical'
+   *  cautionReason), so a fatigued event stays eligible.
+   *  'capped' = she has spent her year's allowance of INTERNATIONAL entries (the ITF annual entry
+   *  cap, docs/research/ranking-points-by-tier.md §2) – a hard block, but one that lifts by itself
+   *  when the season turns, which is why it is its own reason and not folded into 'unavailable'. */
+  ineligibleReason?: 'locked' | 'outgrown' | 'injured' | 'unavailable' | 'medical' | 'capped'
   /** a SOFT warning on an event the kid CAN still enter (eligible stays true): 'fatigued' = her
    *  condition is below the tier's floor, so racing risks a deeper hole / injury. The owner's call
    *  is that a tired body is a tough-parent decision, not a hard rule. */
@@ -361,6 +364,22 @@ export interface UpcomingEvent {
   cautionDetail?: string
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
+  /** present only when 'capped': the allowance the gate judged THIS event against, so the card can
+   *  print "N of M" without re-deriving it. Per-event for the same reason `pointsToEnter` is – an
+   *  event in the next season is measured against a different year's allowance than today's. */
+  entryCap?: EntryCapUsage
+}
+
+/** The ITF annual entry cap as it stands for ONE season (docs/research/ranking-points-by-tier.md
+ *  §2, Appendix F of the 2026 ITF junior regulations): how many INTERNATIONAL events (j30/j60/j300)
+ *  a player of that age may enter in a year, and how many of them she has already spent. The
+ *  domestic tiers are our own invention and are not counted – see ECONOMY.entryCap.
+ *  `limit === Number.MAX_SAFE_INTEGER` means unrestricted (17 and over). */
+export interface EntryCapUsage {
+  used: number
+  limit: number
+  /** `limit - used`, floored at 0. `remaining <= 0` is the whole gate. */
+  remaining: number
 }
 
 /** A standings row enriched for display (RankingRow only carries ids). */
@@ -412,6 +431,10 @@ export interface Snapshot {
   financialEvents: WorldEvent[]
   /** scheduled events over the next 8 weeks, with entry state */
   upcoming: UpcomingEvent[]
+  /** the ITF annual entry cap for the CURRENT season – what the Home tier ladder needs to tell
+   *  "capped for the year" apart from "locked on points" and "nothing scheduled". Derived at
+   *  snapshot time from the persisted ledger, so it persists nothing of its own. */
+  entryCap: EntryCapUsage
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */
   vacations: VacationBooking[]

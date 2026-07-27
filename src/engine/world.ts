@@ -4,6 +4,7 @@ import {
   STOP_PRECEDENCE,
   WEEK_PLAN_PRESETS,
   type CountingResult,
+  type EntryCapUsage,
   type FamilyBackground,
   type FinanceWeek,
   type FinanceWindow,
@@ -63,7 +64,7 @@ import { applySurfaceStyle } from './match/style'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 14
+export const SAVE_SCHEMA_VERSION = 15
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -158,6 +159,20 @@ export interface WorldState {
   /** Season planner (v13): a carry-over injury-tau buff from a resort/elite vacation package;
    *  null when none is running. Applied POST-draw inside injuryTau. */
   recoveryBuff: RecoveryBuff | null
+  /** ITF ANNUAL ENTRY CAP (v15): the absolute WEEK of every INTERNATIONAL event she has entered.
+   *
+   *  Why a persisted ledger rather than a derivation off `results`: the kid's result row is
+   *  AWARD-ONLY (`finalizeTournament` writes it `if (points > 0)`), so since wave B's first-round
+   *  zero a first-round exit leaves NO trace in the ledger – and first-round exits are precisely
+   *  the entries this cap exists to count. `world.entries` cannot do it either: `ensureSeason`
+   *  prunes it to FUTURE events, so a played entry disappears the week it is played.
+   *
+   *  One number per entry (the event's week), not a counter, so "how many this season" is a filter
+   *  rather than a value that has to be reset correctly – a missed reset is then impossible. At
+   *  most one international entry can exist per week (enterEvent allows one tournament a week), so
+   *  the week identifies the entry uniquely and a withdrawal can remove exactly its own slot.
+   *  Pruned to the current season onward at housekeeping, so it is bounded by the cap itself. */
+  internationalEntryWeeks: number[]
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -582,11 +597,48 @@ export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
   return minAge === undefined || ageYears >= minAge
 }
 
+// --- the ITF annual entry cap (docs/research/ranking-points-by-tier.md §2) --------------------
+// The knob (the per-age table and the tier set) lives in ECONOMY.entryCap with the rest of the
+// tuning surface; everything below is logic that reads it, so the numbers can be retuned without
+// touching a line of this file. All three helpers are pure and draw ZERO RNG on any stream – an
+// entry rule is a post-draw gate, so the frozen MAIN capture cannot move.
+
+/** Is this tier one the ITF counts? Only the international rungs; the domestic ladder is ours. */
+export function isCappedTier(tier: TierId): boolean {
+  return ECONOMY.entryCap.cappedTiers.includes(tier)
+}
+
+/** How many international events she may enter in the season she is `ageYears` old.
+ *  MAX_SAFE_INTEGER = unrestricted (17+), the same "no ceiling" sentinel `enterPointBand` uses. */
+export function annualEntryLimit(ageYears: number): number {
+  const table = ECONOMY.entryCap.perYearByAge
+  return table[ageYears] ?? table.default
+}
+
+/** Her allowance for the season CONTAINING `week`, and how much of it is already spent.
+ *
+ *  Scoped to the EVENT's season, never to today's, for the same reason `layoffCovering` is scoped
+ *  to the event's week (R10-17): a rule about a future event has to be asked about that event's
+ *  future, or the December horizon reports next season's fixture against this season's ledger.
+ *  "This season" is `seasonStartWeek` – THE definition the round-11 money accounting introduced
+ *  and the wrap-up shares (R11-12a) – rather than a second spelling of the same arithmetic.
+ *
+ *  Age and season are the same boundary here: `ageAtWeek` is START_AGE_YEARS + floor(week/52) and
+ *  `seasonStartWeek` is floor(week/52)*52, so our season block IS the real rule's birthday year. */
+export function entryCapUsage(world: WorldState, week: number): EntryCapUsage {
+  const from = seasonStartWeek(week)
+  const used = world.internationalEntryWeeks.filter((w) => w >= from && w < from + WEEKS_PER_YEAR).length
+  const limit = annualEntryLimit(ageAtWeek(week))
+  return { used, limit, remaining: Math.max(0, limit - used) }
+}
+
 /** Whether the kid can currently ENTER `event`, at three levels. One helper, wired at three engine
  *  surfaces (enterEvent / upcomingEvents / advanceWeeks) so the gate can never desync. Precedence
- *  is injured > unavailable > medical > fatigued.
- *   - 'blocked' HARD stops entry: `injured` (she is already out), `unavailable` (school exams /
- *     off-season / a booked family vacation – WEEK-level reasons, so they name the week), and
+ *  is injured > too-young > capped > unavailable > medical > fatigued.
+ *   - 'blocked' HARD stops entry: `injured` (she is already out), `unavailable` (too young for the
+ *     tier / school exams / off-season / a booked family vacation – WEEK-level reasons, so they
+ *     name the week), `capped` (the annual entry cap: she has spent this SEASON's allowance of
+ *     international entries – the one block that lifts by itself, when the year turns), and
  *     `medical` (the doctor's veto below ECONOMY.availability.medicalFloor).
  *   - 'caution' is a SOFT warning that still ALLOWS entry: `fatigued` (condition below the tier's
  *     floor). The owner's call: racing tired is a tough-parent CHOICE with emergent consequences
@@ -600,8 +652,11 @@ export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
  *  self-coached grinder competing at condition 0 for ~4.4% of her weeks). */
 export interface AvailabilityStatus {
   level: 'ok' | 'caution' | 'blocked'
-  reason?: 'injured' | 'fatigued' | 'unavailable' | 'medical'
+  reason?: 'injured' | 'fatigued' | 'unavailable' | 'medical' | 'capped'
   detail?: string
+  /** 'capped' only: the season's allowance and what she has spent of it, so every surface prints
+   *  the ENGINE's own numbers for THIS event instead of re-deriving them (see `pointsToEnter`). */
+  entryCap?: EntryCapUsage
 }
 
 /** What the doctor says about a body at `condition`, as ONE pure knob-driven rule read at BOTH
@@ -682,6 +737,32 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
       detail: `${TIERS[event.tier].label} opens at ${minAge} – she is too young.`,
     }
   }
+  // THE ITF ANNUAL ENTRY CAP – she has used her year's international allowance.
+  //
+  // Placed HERE, immediately after the tier's minimum age, because it is the same family of rule
+  // from the same source: both are ITF eligibility, both are about how old she is, and the two
+  // read as one paragraph rather than two unrelated gates. Precedence therefore runs
+  // injured > too young > CAPPED > vacation/exam > medical > fatigued. Above the week-level
+  // blackouts on purpose: an exam week tells her nothing she can act on, while "the allowance is
+  // gone until the season turns" is the fact that should reshape the rest of her year.
+  //
+  // Deliberately BELOW `injured`: a layoff is the fresher, more urgent news and it names a return
+  // week, whereas the cap will still be there to report the moment she is fit again.
+  if (isCappedTier(event.tier)) {
+    const cap = entryCapUsage(world, event.week)
+    if (cap.remaining <= 0) {
+      return {
+        level: 'blocked',
+        reason: 'capped',
+        // Short dash only, and it must read as THIS YEAR rather than "never" – a parent who has
+        // spent all fourteen has to understand she is capped for the season, not shut out.
+        detail:
+          `Year limit reached – ${cap.used} of ${cap.limit} international events at ` +
+          `${ageAtWeek(event.week)}. A fresh allowance next season.`,
+        entryCap: cap,
+      }
+    }
+  }
   // Season planner: a booked family-vacation week is a HARD blackout – the family is away, so
   // nothing is enterable (spec §3). It outranks the exam/off-season blackout copy so the chip
   // names the actual reason she is unavailable.
@@ -729,10 +810,12 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
  *  Pure state, ZERO RNG draws. */
 export interface EntryStatus {
   level: 'ok' | 'caution' | 'blocked'
-  reason?: 'locked' | 'outgrown' | 'injured' | 'fatigued' | 'unavailable' | 'medical'
+  reason?: 'locked' | 'outgrown' | 'injured' | 'fatigued' | 'unavailable' | 'medical' | 'capped'
   detail?: string
   /** the tier's minPoints threshold, present only when 'locked' (so the UI can say "Reach N pts") */
   pointsToEnter?: number
+  /** 'capped' only: the season allowance behind the verdict (see AvailabilityStatus.entryCap). */
+  entryCap?: EntryCapUsage
 }
 export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus {
   const tier = TIERS[event.tier]
@@ -1321,6 +1404,16 @@ function prunePlannerBookings(world: WorldState): void {
   world.practices = world.practices.filter((p) => p.week >= from)
 }
 
+/** Drop international entries from seasons that are over: nothing can ever read them again (the
+ *  cap is asked per season, and the only seasons reachable are the current one and the next). The
+ *  list is therefore bounded by the cap itself – tens of numbers over a whole career, not one per
+ *  event played. Same `seasonStartWeek` boundary the cap counts on, so the prune can never eat a
+ *  slot the gate still needs. */
+function pruneInternationalEntries(world: WorldState): void {
+  const from = seasonStartWeek(world.week)
+  world.internationalEntryWeeks = world.internationalEntryWeeks.filter((w) => w >= from)
+}
+
 // --- weekly resolution pieces ------------------------------------------------
 // R9-1: weekly savings interest on a POSITIVE balance, credited on the CARRIED-IN funds as
 // the week opens – before any of this week's flows (refunds, contribution, costs). Emitted
@@ -1532,6 +1625,7 @@ function housekeep(world: WorldState): void {
   pruneEvents(world)
   pruneFinanceWeeks(world)
   prunePlannerBookings(world)
+  pruneInternationalEntries(world)
   ensureSeason(world)
 }
 
@@ -1789,6 +1883,7 @@ export function createWorld(
     vacations: [],
     practices: [],
     recoveryBuff: null,
+    internationalEntryWeeks: [],
   }
   addEvent(world, {
     week: 0,
@@ -1806,6 +1901,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.cohort = generateCohort(save.seed)
   save.results = []
   save.entries = []
+  save.internationalEntryWeeks = []
   save.season = []
   save.nextEventId = 0
   const oldLog = Array.isArray(save.log) ? save.log : []
@@ -2073,6 +2169,9 @@ export function enterEvent(world: WorldState, eventId: string): void {
   if (collidingPractice) refundPractice(world, collidingPractice, 'Cancelled')
   world.fundsCents -= fee
   world.entries.push(eventId)
+  // ITF annual cap: an international entry spends one of the year's slots. Recorded by the EVENT's
+  // week, which is both the slot's identity (one tournament a week) and the season it belongs to.
+  if (isCappedTier(event.tier)) world.internationalEntryWeeks.push(event.week)
   addEvent(world, {
     week: world.week,
     type: 'expense',
@@ -2096,6 +2195,16 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   const fee = TIERS[event.tier].entryFeeCents
   world.fundsCents += fee
   world.entries = world.entries.filter((id) => id !== eventId)
+  // THE SLOT FOLLOWS THE FEE. This is the only path that hands the money back, and it is the only
+  // one that hands the year's slot back – the ITF counts PARTICIPATION, and a name taken off an
+  // open list never participated. Every forfeiting exit keeps both (cancelEntry past the deadline,
+  // skipEvent on the week, the medical withdrawal in tickWeek): the list closed with her on it, so
+  // she was an entrant. Nothing else needs to know the rule, because the two automatic pull-outs
+  // that DO refund – the injury auto-withdraw and releaseOutgrownEntries – both come through here.
+  if (isCappedTier(event.tier)) {
+    const at = world.internationalEntryWeeks.indexOf(event.week)
+    if (at >= 0) world.internationalEntryWeeks.splice(at, 1)
+  }
   addEvent(world, {
     week: world.week,
     type: 'income',
@@ -2294,8 +2403,18 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
       const reason =
         gate.level === 'blocked'
           ? {
-              ineligibleReason: gate.reason as 'locked' | 'outgrown' | 'injured' | 'unavailable' | 'medical',
+              ineligibleReason: gate.reason as
+                | 'locked'
+                | 'outgrown'
+                | 'injured'
+                | 'unavailable'
+                | 'medical'
+                | 'capped',
               ...(gate.pointsToEnter !== undefined ? { pointsToEnter: gate.pointsToEnter } : {}),
+              // Per-EVENT figures, exactly like pointsToEnter: a card near the year boundary can
+              // be judged against a different season's allowance than today's, so the number it
+              // prints has to be the one the gate actually used.
+              ...(gate.entryCap !== undefined ? { entryCap: gate.entryCap } : {}),
             }
           : gate.level === 'caution'
             ? { cautionReason: gate.reason as 'fatigued', cautionDetail: gate.detail }
@@ -2494,6 +2613,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     vacations: world.vacations.map((v) => ({ ...v })),
     practices: world.practices.map((p) => ({ ...p })),
     recoveryBuff: world.recoveryBuff ? { ...world.recoveryBuff } : null,
+    // The ITF annual cap as it stands TODAY – what the Home ladder needs to tell a tier's state.
+    // Derived at snapshot time from the persisted ledger, so it can never disagree with the gate.
+    entryCap: entryCapUsage(world, world.week),
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
