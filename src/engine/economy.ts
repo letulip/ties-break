@@ -75,8 +75,14 @@ export const ECONOMY = {
   // knobs alone can't make an $800/wk-funded season burn, so the contribution comes down
   // (they still front-load a large STARTING reserve; see world.ts STARTING_FUNDS_CENTS).
   // Working is unchanged – it already sat in-band.
+  // WEALTHY RAISED 430 -> 750 (owner, round 12 - his THIRD ask, 27.07 "я уже просил его поднять и
+  // не один раз"). His two full 120k careers both ended the same way: bankrupt around week 120-125,
+  // with travel overtaking the coach as the top cost centre once the international calendar opened.
+  // The old figure was tuned for the round-7 no-tournament burn bands; a real playing season at the
+  // J tiers costs $45-60k/season and the age-cap change already trimmed the schedule, so the burn
+  // band gives way to the owner's number. He asked for 700-800; 750 is the middle of his range.
   parentIncomeCents: {
-    wealthy: 430_00,
+    wealthy: 750_00,
     middle: 300_00,
     working: 245_00,
   } as Record<FamilyBackground, number>,
