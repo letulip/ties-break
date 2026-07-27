@@ -3,14 +3,37 @@
 
 import type { RankingRow, TierId } from './types'
 
-/** One awarded result. Mirrors the WorldState `results` entries added in Package M. */
+/** ONE APPEARANCE in a draw – "she was in it", with what it paid.
+ *
+ *  SHE PLAYED and SHE SCORED are two different facts and this row carries BOTH: the (playerId,
+ *  week, tier) triple says she was in that draw, `points` says what the finish was worth. They used
+ *  to be the same fact – every finish paid something, so "has a row" and "played" were
+ *  interchangeable – and wave B's first-round zero pulled them apart (docs/specs/
+ *  wave-b-first-round-zero.md §5). A scoreless row is therefore NORMAL and load-bearing: it is the
+ *  only record `season/rival.ts` has that a cohort player spent that week travelling and playing
+ *  rather than resting.
+ *
+ *  Which half a reader wants is now an explicit choice, made through `isCountingResult` below –
+ *  never by re-spelling `points > 0` at each site, which is exactly how the two halves of the
+ *  engine came to disagree in the first place. */
 export interface SeasonResult {
   playerId: string
   week: number
+  /** what the finish PAID. 0 is a real, written value: a first-round exit (every tier, wave B). */
   points: number
   /** the tier this result was earned at (round-5: set on kid results for the "counting
    *  results" list; optional so AI results and pre-r5 saves can omit it). Never affects ranking. */
   tier?: TierId
+}
+
+/** THE ranking half of the row: a result COUNTS when it scored. A scoreless appearance is a record
+ *  of play, not an achievement – it never enters the standings, the best-6 sum, or the kid's
+ *  counting-results list. Splitting it out here (rather than leaving a `points > 0` in each reader)
+ *  is what keeps the standings arithmetic byte-identical now that scoreless rows exist: without it
+ *  a scoreless row would lend its week to `recency`, silently reordering tied players and with them
+ *  the entrant percentiles `selectEntrants` reads. */
+export function isCountingResult(r: SeasonResult): boolean {
+  return r.points > 0
 }
 
 const WINDOW_WEEKS = 52
@@ -18,7 +41,9 @@ const BEST_N = 6
 
 /** A single player's windowed best-6 points sum at `currentWeek` – the exact value
  *  `computeRanking` assigns as that player's `points`. Pure; ignores `tier`. Used to
- *  diff the effective ranking delta of a freshly-added result (round-5 item 1). */
+ *  diff the effective ranking delta of a freshly-added result (round-5 item 1).
+ *  Scoreless appearances are skipped: they add 0 to the sum but would otherwise consume best-6
+ *  slots from a player who has fewer than six counting results. */
 export function windowedBestSum(
   results: SeasonResult[],
   currentWeek: number,
@@ -26,7 +51,11 @@ export function windowedBestSum(
 ): number {
   return results
     .filter(
-      (r) => r.playerId === playerId && r.week <= currentWeek && currentWeek - r.week <= WINDOW_WEEKS,
+      (r) =>
+        isCountingResult(r) &&
+        r.playerId === playerId &&
+        r.week <= currentWeek &&
+        currentWeek - r.week <= WINDOW_WEEKS,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
     .slice(0, BEST_N)
@@ -39,14 +68,22 @@ export function windowedBestSum(
 // ties keep a stable order (roster order, then first-appearance in results). Passing
 // `roster` makes the table total: every roster member appears, zero-point players
 // ranked after pointed ones in stable order.
+//
+// A STANDINGS TABLE IS BUILT FROM COUNTING RESULTS ONLY (`isCountingResult`). The ledger also
+// carries scoreless appearances now – the record a played-but-unrewarded week leaves for the
+// fatigue reconstruction – and they are dropped here BEFORE anything reads them, in both places a
+// row can enter the table: the per-player list and the "seen only in results" tail of the base
+// order. So showing up and losing your opener neither banks points nor puts you on the table nor
+// refreshes your `recency`, which is exactly the pre-wave-B behaviour this function must keep.
 export function computeRanking(
   results: SeasonResult[],
   currentWeek: number,
   roster?: string[],
 ): RankingRow[] {
-  // Keep only results inside the window (age ≤ 52 weeks, not in the future).
+  // Keep only counting results inside the window (age ≤ 52 weeks, not in the future).
   const perPlayer = new Map<string, SeasonResult[]>()
   for (const res of results) {
+    if (!isCountingResult(res)) continue
     if (res.week > currentWeek || currentWeek - res.week > WINDOW_WEEKS) continue
     const list = perPlayer.get(res.playerId)
     if (list) list.push(res)
@@ -63,7 +100,7 @@ export function computeRanking(
     }
   }
   if (roster) for (const id of roster) add(id)
-  for (const res of results) add(res.playerId)
+  for (const res of results) if (isCountingResult(res)) add(res.playerId)
 
   // Per player: best-6 points sum + recency (latest week among the counted six).
   const rows = order.map((playerId, idx) => {
