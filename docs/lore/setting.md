@@ -172,7 +172,7 @@ Depict a working professional, or an adult who used to be one – the same face,
 tiredness.
 
 This band carries the mid-life milestones, and each one already exists as a painting: `bride`,
-`graduated`, `pregnant-first`, `pregnant-last`, `funeral`. Play them straight, domestic and quiet.
+`graduated`, `pregnant-early`, `pregnant-last`, `funeral`. Play them straight, domestic and quiet.
 The game does not yet reach any of them.
 
 ### `milf` – 29 and up. After.
@@ -312,7 +312,7 @@ duplicate, it 404'd for `adult`, and it has been deleted. Do not reintroduce the
 | `jun` | all six | – |
 | `young` | all six | – |
 | `teen` | all six | – |
-| `adult` | all six | `bride`, `graduated`, `pregnant-first`, `pregnant-last`, `funeral` |
+| `adult` | all six | `bride`, `graduated`, `pregnant-early`, `pregnant-last`, `funeral` |
 | `milf` | all six | `retired`, `farewell` |
 
 Every band × emotion the code can resolve exists. The milestone frames are later-life content
@@ -485,7 +485,7 @@ bride           – a small wedding, day of, not the aisle: a registry office st
                   in a dress, because she is.
 graduated       – a distance degree finished late, in a rented gown, photographed by
                   one person. Ordinary corridor or lawn.
-pregnant-first  – early, barely showing, ordinary clothes, at home or at a court she
+pregnant-early  – early, barely showing, ordinary clothes, at home or at a court she
                   is no longer playing on. Calm, private, slightly unresolved.
 pregnant-last   – late term. Domestic. A racquet visible somewhere in the room and not
                   in her hands.
