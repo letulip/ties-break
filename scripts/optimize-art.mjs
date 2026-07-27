@@ -1,168 +1,315 @@
-// Raster-art pipeline: convert the character portraits (public/images/**) and the
-// header/kid avatars (public/avatars/*) from PNG/JPEG to webp (longest side <= 512 px,
-// quality 82), then MOVE each source into art-src/ (mirrored path — kept in git for
-// re-encoding, never served). App icons (public/pwa-*.png, ball.svg) are generated
-// separately by scripts/gen-icons.mjs and stay as-is.
+// RASTER-ART PIPELINE — raw art never enters git; the webp it produces does.
 //
-// When BOTH a jpeg and a png map to the same webp target (e.g. the owner drops a jpeg
-// copy of an existing png portrait), the jpeg wins — the owner's jpeg exports are smaller
-// than the fs8 pngs — and every source for that target is still moved to art-src/.
+// THE AUTHORING FLOW
+//   1. Drop the masters (jpg / jpeg / png) into  public/images/<set>-jpeg/.
+//   2. Build (or `npm run art`). Each master is encoded to  public/images/<set>/<name>.webp
+//      — longest side <= 512 px, quality ladder 82 -> 75, first step that fits 120 KB wins —
+//      and the master is then MOVED out of public/ into  art-src/images/<set>-jpeg/.
+//   3. Commit the webp. Nothing else.
 //
-// Idempotent: once sources are moved, a re-run finds nothing to do. Run: npm run art
+// WHY THE MOVE. Vite copies EVERYTHING under public/ into dist/ verbatim, whether git tracks it
+// or not. Masters left next to their webp are shipped to every player: measured, 74 stray raw
+// files turned dist/images into 61 MB against 4.2 MB of actual art. Untracking them in git does
+// not help — only getting them out of public/ does.
+//
+// WHY art-src/ IS GITIGNORED. It is the author's local master library, kept so the webp can be
+// re-encoded later. A fresh clone has no art-src/ at all: the committed webp under public/images/
+// ARE the shipping art, and this script finds nothing to do. That is the intended CI behaviour.
+//   => the masters exist ONLY on the author's machine. git is not their backup any more.
+//
+// IDEMPOTENCE. Every encoded target records its source's content hash in art-src/.art-cache.json.
+// A target is re-encoded only when the source's bytes changed or the target went missing, so a
+// second build in a row does no encoding at all. With no art-src/ and no raw files under public/
+// the whole script is a handful of stat() calls.
+//
+// NO "-fs8". That suffix is pngquant-era (Floyd-Steinberg dithering) and means nothing for webp.
+// Leftover `-fs8` masters are evacuated out of public/ but never encoded — otherwise the -fs8
+// webp twins deleted in build/webp-only would grow straight back on the next build.
+//
+// Run standalone: `npm run art`. Runs automatically inside every `vite build` (see vite.config.ts).
 import sharp from 'sharp'
-import { readdirSync, statSync, mkdirSync, renameSync, existsSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  renameSync,
+  rmdirSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { dirname, join, relative, extname } from 'node:path'
+import { basename, dirname, join, relative, resolve } from 'node:path'
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..')
-const publicDir = join(root, 'public')
-const artSrcDir = join(root, 'art-src')
-
-const ART_DIRS = [join(publicDir, 'images'), join(publicDir, 'avatars')]
-const MAX_SIDE = 512
-const QUALITY = 82
 const RASTER_RE = /\.(png|jpe?g)$/i
+const JPEG_RE = /\.jpe?g$/i
+const INBOX_RE = /-jpeg$/i
+const FS8_RE = /-fs8$/i
 
-function walkRaster(dir) {
+/** Portraits: the 512 px cap the Kid screen and the finale splash render at. */
+const MAX_SIDE = 512
+/** Per-file ceiling for a portrait; the ladder stops at the first quality that fits. */
+const MAX_BYTES = 120 * 1024
+const QUALITY_LADDER = [82, 79, 76, 75]
+const QUALITY_FLOOR = QUALITY_LADDER[QUALITY_LADDER.length - 1]
+/** Wordmarks keep their natural size (the splash renders them 1:1) and their alpha. */
+const LOGO_QUALITY = 90
+const LOGO_RE = /^logo-tb-.*\.png$/i
+
+/**
+ * Masters the pipeline deliberately does NOT ship, with the reason each is here.
+ *
+ * The rule is "a master becomes a webp", and that is right — but a master whose output no code
+ * path can request is dead weight in every user's download. Deleting the webp alone does not
+ * work: the next build regenerates it from the master, which is exactly what happened when 13
+ * such files were removed by hand and came back on the following `vite build`. The rule has to
+ * be changed where the rule lives.
+ *
+ * Each entry is reversible in one line — put the emotion in `AvatarEmotion`, or point the splash
+ * at the webp wordmarks, and delete the pattern here.
+ */
+const NOT_SHIPPED = [
+  // `angry` is not a member of AvatarEmotion, so nothing can construct these URLs. Five masters,
+  // ~300 KB of webp. Painted ahead of a feature that never landed.
+  { re: /-angry$/i, why: 'no "angry" in AvatarEmotion — nothing can request it' },
+  // SplashScreen.vue loads public/logo-tb-*.svg. The webp copies of the same wordmarks, generated
+  // from the PNG masters, are referenced by nothing at all — 8 files, ~32 KB.
+  { re: /^logo-tb-/i, why: 'the splash uses the SVG wordmarks; these webp copies are unreferenced' },
+]
+
+/** True when a master's output is deliberately not shipped (see NOT_SHIPPED). */
+function notShipped(stem) {
+  return NOT_SHIPPED.some((rule) => rule.re.test(stem))
+}
+
+const CACHE_NAME = '.art-cache.json'
+const CACHE_VERSION = 3
+
+function defaultRoot() {
+  return resolve(dirname(fileURLToPath(import.meta.url)), '..')
+}
+
+/** Every file under `dir`, recursively. Dotfiles are skipped (.DS_Store, .art-cache.json). */
+function listFiles(dir) {
   if (!existsSync(dir)) return []
   const out = []
   for (const name of readdirSync(dir)) {
+    if (name.startsWith('.')) continue
     const p = join(dir, name)
-    if (statSync(p).isDirectory()) out.push(...walkRaster(p))
-    else if (RASTER_RE.test(name)) out.push(p)
+    if (statSync(p).isDirectory()) out.push(...listFiles(p))
+    else out.push(p)
   }
   return out
 }
 
-const sources = ART_DIRS.flatMap(walkRaster)
-if (!sources.length) {
-  console.log('optimize-art: no PNG/JPEG sources under public/images or public/avatars — nothing to do.')
-} else {
-  // Group sources by the webp target they produce, so a jpeg+png pair collapses to one target.
-  const byTarget = new Map()
-  for (const src of sources) {
-    const target = src.replace(RASTER_RE, '.webp')
-    const list = byTarget.get(target) ?? []
-    list.push(src)
-    byTarget.set(target, list)
+function sha1(file) {
+  return createHash('sha1').update(readFileSync(file)).digest('hex')
+}
+
+/**
+ * Every unit of work this run could do.
+ *   encode[]   { src, target, profile, moveTo }  – produce a webp (and evacuate src when moveTo)
+ *   evacuate[] { src, moveTo }                   – get raw bytes out of public/, no webp
+ */
+function discover(root) {
+  const publicDir = join(root, 'public')
+  const artSrcDir = join(root, 'art-src')
+  const encode = []
+  const evacuate = []
+
+  // --- A. raw art sitting under public/ — the authoring inbox, plus any stray ---------------
+  // A file in `public/images/<set>-jpeg/` belongs to `<set>`; anything else encodes in place.
+  // Either way the raw bytes leave public/ for art-src/, mirroring their path.
+  for (const dir of [join(publicDir, 'images'), join(publicDir, 'avatars')]) {
+    for (const src of listFiles(dir)) {
+      if (!RASTER_RE.test(src)) continue
+      const moveTo = join(artSrcDir, relative(publicDir, src))
+      const stem = basename(src).replace(RASTER_RE, '')
+      // `-fs8` residue and NOT_SHIPPED masters still get out of public/ — they must not ship as raw
+      // bytes either — they just never become a webp.
+      if (FS8_RE.test(stem) || notShipped(stem)) {
+        evacuate.push({ src, moveTo })
+        continue
+      }
+      const srcDir = dirname(src)
+      const target = INBOX_RE.test(basename(srcDir))
+        ? join(dirname(srcDir), basename(srcDir).replace(INBOX_RE, ''), `${stem}.webp`)
+        : join(srcDir, `${stem}.webp`)
+      encode.push({ src, target, profile: 'portrait', moveTo, incoming: true })
+    }
   }
 
-  // jpeg beats png for the same target (smaller); ties within a format keep first-seen order.
-  const isJpeg = (p) => /\.jpe?g$/i.test(extname(p))
-  function preferred(list) {
-    return list.find(isJpeg) ?? list[0]
+  // --- B. masters already living in art-src/ — re-encode targets, never moved ---------------
+  // Only `<set>-jpeg/` inboxes are treated as sources. A plain `art-src/images/<set>/` is
+  // pre-pipeline residue (the old pngquant `-fs8` pngs live there) and is deliberately inert:
+  // encoding it would recreate exactly the duplicate webp this branch removed.
+  const artImages = join(artSrcDir, 'images')
+  if (existsSync(artImages)) {
+    for (const name of readdirSync(artImages)) {
+      if (name.startsWith('.') || !INBOX_RE.test(name)) continue
+      const inbox = join(artImages, name)
+      if (!statSync(inbox).isDirectory()) continue
+      const outDir = join(publicDir, 'images', name.replace(INBOX_RE, ''))
+      for (const src of listFiles(inbox)) {
+        if (!RASTER_RE.test(src)) continue
+        const stem = basename(src).replace(RASTER_RE, '')
+        if (FS8_RE.test(stem) || notShipped(stem)) continue
+        encode.push({ src, target: join(outDir, `${stem}.webp`), profile: 'portrait', moveTo: null })
+      }
+    }
   }
 
-  let converted = 0
-  for (const [webp, list] of byTarget) {
-    const chosen = preferred(list)
-    await sharp(chosen)
+  // art-src/avatars/*.png -> public/avatars/*.webp (the 256 px header/card crops).
+  const artAvatars = join(artSrcDir, 'avatars')
+  for (const src of listFiles(artAvatars)) {
+    if (!RASTER_RE.test(src)) continue
+    const stem = basename(src).replace(RASTER_RE, '')
+    if (FS8_RE.test(stem) || notShipped(stem)) continue
+    const target = join(publicDir, 'avatars', dirname(relative(artAvatars, src)), `${stem}.webp`)
+    encode.push({ src, target, profile: 'portrait', moveTo: null })
+  }
+
+  // art-src/logo-tb-*.png -> public/logos/*.webp (natural size, alpha kept).
+  if (existsSync(artSrcDir)) {
+    for (const name of readdirSync(artSrcDir)) {
+      if (!LOGO_RE.test(name) || notShipped(name.replace(/\.png$/i, ''))) continue
+      const src = join(artSrcDir, name)
+      if (!statSync(src).isFile()) continue
+      const target = join(publicDir, 'logos', `${name.replace(/\.png$/i, '')}.webp`)
+      encode.push({ src, target, profile: 'logo', moveTo: null })
+    }
+  }
+
+  return { encode: dedupe(encode), evacuate }
+}
+
+/**
+ * Two masters can aim at the same webp (a jpeg re-export of an existing png). One wins; the
+ * loser is still evacuated, so no raw file is left behind in public/.
+ * Priority: a file just dropped into public/ beats one already filed in art-src/ (it is the
+ * newer export), then jpeg beats png (the author's jpeg exports are the smaller source).
+ */
+function dedupe(jobs) {
+  const rank = (j) => (j.incoming ? 2 : 0) + (JPEG_RE.test(j.src) ? 1 : 0)
+  const best = new Map()
+  const losers = []
+  for (const job of jobs) {
+    const prev = best.get(job.target)
+    if (!prev) best.set(job.target, job)
+    else if (rank(job) > rank(prev)) {
+      best.set(job.target, job)
+      losers.push(prev)
+    } else losers.push(job)
+  }
+  const winners = [...best.values()]
+  // A loser still has to leave public/ if that is where it sits.
+  for (const l of losers) if (l.moveTo) winners.push({ ...l, target: null })
+  return winners
+}
+
+async function encodePortrait(src) {
+  let buf
+  let quality = QUALITY_FLOOR
+  for (const q of QUALITY_LADDER) {
+    buf = await sharp(src)
       .resize(MAX_SIDE, MAX_SIDE, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: QUALITY })
-      .toFile(webp)
-    converted++
-    const chosenRel = relative(publicDir, chosen)
-    const dropped = list.filter((s) => s !== chosen).map((s) => relative(publicDir, s))
-    console.log(`webp  ${relative(publicDir, webp)}  <- ${chosenRel}${dropped.length ? `  (preferred over ${dropped.join(', ')})` : ''}`)
+      .webp({ quality: q })
+      .toBuffer()
+    quality = q
+    if (buf.length <= MAX_BYTES) break
+  }
+  return { buf, quality }
+}
 
-    // Move every source for this target into art-src/, mirroring its path relative to public/.
-    for (const src of list) {
-      const rel = relative(publicDir, src)
-      const dest = join(artSrcDir, rel)
-      mkdirSync(dirname(dest), { recursive: true })
-      renameSync(src, dest)
+async function encodeLogo(src) {
+  return { buf: await sharp(src).webp({ quality: LOGO_QUALITY }).toBuffer(), quality: LOGO_QUALITY }
+}
+
+/** Move a raw master out of public/ into art-src/, and tidy the inbox dir once it is empty. */
+function evacuateFile(src, moveTo) {
+  mkdirSync(dirname(moveTo), { recursive: true })
+  renameSync(src, moveTo)
+  const dir = dirname(src)
+  try {
+    if (!readdirSync(dir).length) rmdirSync(dir)
+  } catch {
+    /* directory not empty, or already gone – nothing to tidy */
+  }
+}
+
+/**
+ * @param {{ root?: string, log?: (msg: string) => void }} [options]
+ *   `root` MUST be passed by the Vite plugin: the config is bundled before it runs, so
+ *   import.meta.url would point at the bundle, not at this file.
+ */
+export async function optimizeArt(options = {}) {
+  const root = options.root ?? defaultRoot()
+  const log = options.log ?? ((m) => console.log(m))
+  const artSrcDir = join(root, 'art-src')
+
+  const { encode, evacuate } = discover(root)
+  const result = { encoded: 0, skipped: 0, evacuated: 0 }
+
+  if (!encode.length && !evacuate.length) {
+    log('optimize-art: no raw masters under public/ or art-src/ – nothing to do.')
+    return result
+  }
+
+  const cachePath = join(artSrcDir, CACHE_NAME)
+  let cache = {}
+  try {
+    const parsed = JSON.parse(readFileSync(cachePath, 'utf8'))
+    if (parsed.version === CACHE_VERSION) cache = parsed.targets ?? {}
+  } catch {
+    /* no cache yet, or a stale version – everything re-encodes once */
+  }
+
+  for (const job of encode) {
+    if (job.target) {
+      const key = relative(root, job.target)
+      const hash = sha1(job.src)
+      const prev = cache[key]
+      if (prev && prev.hash === hash && prev.profile === job.profile && existsSync(job.target)) {
+        result.skipped++
+      } else {
+        const { buf, quality } =
+          job.profile === 'logo' ? await encodeLogo(job.src) : await encodePortrait(job.src)
+        if (job.profile === 'portrait' && buf.length > MAX_BYTES) {
+          log(`optimize-art: WARNING ${key} is ${(buf.length / 1024).toFixed(1)} KB at the quality floor q${QUALITY_FLOOR}`)
+        }
+        mkdirSync(dirname(job.target), { recursive: true })
+        writeFileSync(job.target, buf)
+        cache[key] = { hash, profile: job.profile, src: relative(root, job.src) }
+        result.encoded++
+        log(`optimize-art: webp ${key} <- ${relative(root, job.src)} (q${quality}, ${(buf.length / 1024).toFixed(1)} KB)`)
+      }
+    }
+    if (job.moveTo) {
+      const from = relative(root, job.src)
+      evacuateFile(job.src, job.moveTo)
+      result.evacuated++
+      log(`optimize-art: moved ${from} -> ${relative(root, job.moveTo)}`)
     }
   }
 
-  console.log(`optimize-art: ${converted} webp target(s) (<= ${MAX_SIDE}px, q${QUALITY}); sources moved to art-src/.`)
+  for (const { src, moveTo } of evacuate) {
+    const from = relative(root, src)
+    evacuateFile(src, moveTo)
+    result.evacuated++
+    log(`optimize-art: moved ${from} -> ${relative(root, moveTo)} WITHOUT encoding – "-fs8" is a dead pngquant-era name.`)
+  }
+
+  if (result.encoded || Object.keys(cache).length) {
+    mkdirSync(artSrcDir, { recursive: true })
+    writeFileSync(cachePath, `${JSON.stringify({ version: CACHE_VERSION, targets: cache }, null, 2)}\n`)
+  }
+
+  log(`optimize-art: ${result.encoded} encoded, ${result.skipped} unchanged, ${result.evacuated} raw file(s) moved out of public/.`)
+  return result
 }
 
-// Full life-arc set: the owner drops finished jpgs straight into art-src (they're kept there
-// for re-encoding anyway, so there's no public/ round-trip to move them out of). Every jpg
-// under art-src/images/fem-euro-brunnet-jpeg/ gets a matching clean-named webp in
-// public/images/fem-euro-brunnet/ — no "-fs8" suffix. The older PNG-era webps for this
-// character (the small jun/teen/young/adult/milf subset) keep their "-fs8" suffix and are
-// left untouched here; code still points at them. Idempotent: sources never move, so re-runs
-// just re-encode.
-const LIFE_ARC_SRC = join(artSrcDir, 'images/fem-euro-brunnet-jpeg')
-const LIFE_ARC_OUT = join(publicDir, 'images/fem-euro-brunnet')
-const MAX_WEBP_BYTES = 120 * 1024
-const QUALITY_STEPS = [82, 79, 76, 75] // task calls for q75-82; first step that fits <=120KB wins
-
-if (existsSync(LIFE_ARC_SRC)) {
-  mkdirSync(LIFE_ARC_OUT, { recursive: true })
-  let lifeArcConverted = 0
-  for (const name of readdirSync(LIFE_ARC_SRC)) {
-    if (!RASTER_RE.test(name)) continue
-    const src = join(LIFE_ARC_SRC, name)
-    const base = name.replace(RASTER_RE, '')
-    const target = join(LIFE_ARC_OUT, `${base}.webp`)
-
-    let buf, q
-    for (q of QUALITY_STEPS) {
-      buf = await sharp(src)
-        .resize(MAX_SIDE, MAX_SIDE, { fit: 'inside', withoutEnlargement: true })
-        .webp({ quality: q })
-        .toBuffer()
-      if (buf.length <= MAX_WEBP_BYTES) break
-    }
-    if (buf.length > MAX_WEBP_BYTES) {
-      console.warn(`optimize-art: WARNING ${base}.webp still ${(buf.length / 1024).toFixed(1)}KB at quality floor ${QUALITY_STEPS.at(-1)}`)
-    }
-    writeFileSync(target, buf)
-    lifeArcConverted++
-    console.log(`webp  images/fem-euro-brunnet/${base}.webp  <- art-src/images/fem-euro-brunnet-jpeg/${name}  (q${q}, ${(buf.length / 1024).toFixed(1)}KB)`)
-  }
-  console.log(`optimize-art: life-arc set — ${lifeArcConverted} webp(s) written to images/fem-euro-brunnet/ (clean names, <=${MAX_WEBP_BYTES / 1024}KB, q75-82).`)
-} else {
-  console.log('optimize-art: no art-src/images/fem-euro-brunnet-jpeg/ — life-arc set skipped.')
-}
-
-// R11-9: LEGACY "-fs8" ALIASES. TournamentFlow.vue asks for `-{emotion}-fs8.webp` for EVERY
-// portrait stage, but the "-fs8" names come from the older pngquant-era set, which never had an
-// adult happy frame — so a champion aged 23+ (portraitStage 'adult') hit a 404 on her own title
-// splash. The suffix carries no quality meaning for webp (the fs8 and clean encodes of the same
-// frame land within a few hundred bytes of each other), so the fix is to also emit the legacy
-// name from the life-arc jpeg source. Add a line here if another stage ever loses its fs8 twin.
-const FS8_ALIASES = [
-  { from: 'fem-euro-brunnet-adult-happy.jpg', to: 'fem-euro-brunnet-adult-happy-fs8.webp' },
-]
-
-for (const { from, to } of FS8_ALIASES) {
-  const src = join(LIFE_ARC_SRC, from)
-  if (!existsSync(src)) {
-    console.warn(`optimize-art: fs8 alias source missing, skipped: ${from}`)
-    continue
-  }
-  const buf = await sharp(src)
-    .resize(MAX_SIDE, MAX_SIDE, { fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: QUALITY })
-    .toBuffer()
-  writeFileSync(join(LIFE_ARC_OUT, to), buf)
-  console.log(`webp  images/fem-euro-brunnet/${to}  <- art-src/images/fem-euro-brunnet-jpeg/${from}  (q${QUALITY}, legacy fs8 alias, ${(buf.length / 1024).toFixed(1)}KB)`)
-}
-
-// Round-6: wordmark logos. Like the life-arc set, the owner drops these PNGs straight into
-// art-src/ (no public/ round-trip to move them out of) — every art-src/logo-tb-*.png gets a
-// same-named webp in public/logos/. Natural size is kept (these are small UI wordmarks, not
-// portraits needing the 512px cap — the splash screen renders logo-tb-line/-line-2 at their
-// exact source pixel size, so upscaling here would just blur them later) and alpha is
-// preserved (composited over the app's dark background, not flattened onto white).
-// Idempotent: sources never move, so re-runs just re-encode.
-const LOGO_SRC_RE = /^logo-tb-.*\.png$/i
-const LOGO_OUT = join(publicDir, 'logos')
-const LOGO_QUALITY = 90
-
-const logoSources = existsSync(artSrcDir) ? readdirSync(artSrcDir).filter((n) => LOGO_SRC_RE.test(n)) : []
-if (logoSources.length) {
-  mkdirSync(LOGO_OUT, { recursive: true })
-  for (const name of logoSources) {
-    const base = name.replace(/\.png$/i, '')
-    const target = join(LOGO_OUT, `${base}.webp`)
-    await sharp(join(artSrcDir, name)).webp({ quality: LOGO_QUALITY }).toFile(target)
-    console.log(`webp  logos/${base}.webp  <- art-src/${name}  (q${LOGO_QUALITY}, natural size, alpha kept)`)
-  }
-  console.log(`optimize-art: wordmark logos — ${logoSources.length} webp(s) written to logos/ (natural size, q${LOGO_QUALITY}, alpha kept).`)
-} else {
-  console.log('optimize-art: no art-src/logo-tb-*.png — wordmark logos skipped.')
+// Standalone (`npm run art`). Never fires when this module is imported by vite.config.ts.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  await optimizeArt()
 }

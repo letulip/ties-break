@@ -166,10 +166,14 @@ So:
 512px longest side, WebP q82, 35–79 KB each. `{stage}` is `jun|young|teen|adult`, `{emotion}` is
 `norm|happy|sad|serious|tired|injury`. All 24 exist. These are the big Kid-screen / Home portraits.
 
-**Finale paintings** – the same, with a legacy `-fs8` suffix
-(`...-{stage}-{emotion}-fs8.webp`), for `happy|serious|sad` only. These are what the tournament result
-splash shows. The suffix is a historical filename artefact from the pngquant era and means nothing
-about quality.
+**Finale paintings** – there is no separate set. The tournament result splash shows the SAME
+`happy|serious|sad` frames the Kid screen uses. A parallel `-fs8` copy of every frame used to exist
+(a filename artefact of the pngquant era, meaning nothing about quality); it was an incomplete
+duplicate and 404'd for `adult`, and was deleted on `build/webp-only`. Do not reintroduce the suffix.
+
+**How new art gets in** – drop the masters into `public/images/<set>-jpeg/` and build. The build
+encodes them to webp in `public/images/<set>/` and moves the masters into the gitignored `art-src/`.
+Raw jpeg/png is never committed and never served; only the webp is.
 
 **Header crops** – `public/avatars/{stage}-{emotion}.webp`, 256px, 11–20 KB. Tight face/shoulders
 crop of the same painting. No `adult` crop exists yet, so `adult` falls back to `teen`.

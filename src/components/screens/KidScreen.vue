@@ -7,9 +7,10 @@ import { useKidEmotion } from '../../composables/kidEmotion'
 import type { CoachSetup, FamilyBackground, PlayStyle } from '../../shared/protocol'
 
 const game = useGameStore()
-// Raster art ships as webp (≤512 px, quality 82) via `npm run art`; PNG sources live in
-// art-src/ (not served). R9-15/16: the BIG portrait reflects her CURRENT state and age
-// stage via the shared composable – full-size art exists for every stage×emotion.
+// Raster art ships as webp only (≤512 px, quality 82-75), converted by the build itself
+// (vite.config.ts -> scripts/optimize-art.mjs). The masters live outside the repo, in the
+// gitignored art-src/, and are never served. R9-15/16: the BIG portrait reflects her CURRENT
+// state and age stage via the shared composable – art exists for every stage×emotion.
 const { portraitUrl } = useKidEmotion()
 
 const BACKGROUND_LABEL: Record<FamilyBackground, string> = {

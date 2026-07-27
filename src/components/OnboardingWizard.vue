@@ -6,12 +6,14 @@ import { computed, reactive, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { DEFAULT_PROFILE, type CoachSetup, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
 import { SURNAMES } from '../engine/season/cohort'
+import { portraitUrl } from '../art/preload'
 
 const game = useGameStore()
 
 // Round 5 item 30: the finale (summary) step puts a face to the career about to start –
 // the jun-norm portrait (public/images, full body/scene art, not the round header avatar).
-const FINALE_PORTRAIT = `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-jun-norm-fs8.webp`
+// build/webp-only: through the shared builder, so this can never drift into a 404 again.
+const FINALE_PORTRAIT = portraitUrl('jun', 'norm')
 
 const NAMES = [
   'Vera', 'Alexandra', 'Maria', 'Elena', 'Sofia', 'Anna', 'Iga', 'Coco', 'Aryna', 'Mirra',

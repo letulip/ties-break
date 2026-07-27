@@ -1,11 +1,51 @@
-import { defineConfig } from 'vitest/config'
+import { defineConfig, type Plugin } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import { optimizeArt } from './scripts/optimize-art.mjs'
+
+/**
+ * build/webp-only — the art pipeline runs INSIDE the build, not beside it.
+ *
+ * Raw masters dropped into `public/images/<set>-jpeg/` are encoded to webp in
+ * `public/images/<set>/` and then moved out of public/ into the gitignored `art-src/`.
+ * The move is the load-bearing half: Vite copies all of public/ into dist/ verbatim,
+ * so a master left there ships to every player no matter what git tracks.
+ *
+ * Why a plugin and not a `prebuild` npm script: npm only fires `prebuild` for
+ * `npm run build`. The project gate is `npm run check`, which calls `vite build`
+ * directly — a prebuild hook would silently not run there. `buildStart` runs for
+ * every `vite build`, however it was invoked.
+ *
+ * It also runs on `vite dev` so newly dropped art shows up without a build, but never
+ * under Vitest: tests must not mutate the working tree.
+ *
+ * Cost when there is nothing to do: a few stat() calls. See scripts/optimize-art.mjs
+ * for the content-hash cache that keeps a second build from re-encoding anything.
+ */
+function artPipeline(): Plugin {
+  let root = process.cwd()
+  let done = false
+  return {
+    name: 'ties-break:art-pipeline',
+    apply: (_config, env) => env.command === 'build' || !process.env.VITEST,
+    configResolved(config) {
+      // The config is bundled before it runs, so the script cannot locate itself — hand it
+      // the root Vite resolved.
+      root = config.root
+    },
+    async buildStart() {
+      if (done) return // dev server restarts re-run buildStart; once per process is enough
+      done = true
+      await optimizeArt({ root, log: (m) => this.info(m) })
+    },
+  }
+}
 
 // BASE_PATH is set by CI to "/<repo-name>/" for GitHub Pages; locally the app serves from "/".
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [
+    artPipeline(),
     vue(),
     VitePWA({
       // 'prompt': a new build waits for the user to tap "Update" (App.vue UpdateBanner),
@@ -27,24 +67,25 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
-        // The big character paintings stay OUT of the precache, on purpose (R11-9, re-measured).
-        // MEASURED, not guessed: public/images/fem-euro-brunnet/ is 67 webp / 3511 KiB, and the
-        // rest of the precache is 61 entries / 1746 KiB — so precaching the art would TRIPLE the
-        // install, and 31 of those files (1641 KiB: milf/bride/funeral/graduated/pregnant/angry
-        // and unused -fs8 variants) are later-life art no code path can request yet. The stale
-        // "~37 MB of source PNGs" note this replaces was about the SOURCES, which have since moved
-        // to art-src/ and are never served.
+        // The big character paintings stay OUT of the precache, on purpose (R11-9; re-measured
+        // on build/webp-only, after the duplicate `-fs8` set was deleted).
+        // MEASURED, not guessed: public/images/fem-euro-brunnet/ is 42 webp / 2348 KiB, and the
+        // whole precache is 67 entries / 1752 KiB — so precaching the art would still more than
+        // DOUBLE the install, and 18 of those files (1105 KiB: milf/bride/funeral/graduated/
+        // pregnant/angry) are later-life art no code path can request yet — `PortraitStage` has no
+        // `milf` and `AvatarEmotion` has no `angry`. Only 24 files / 1243 KiB are reachable.
         //
-        // What IS offline-safe by precache: the 20 small 256px crops in public/avatars (294 KiB),
+        // What IS offline-safe by precache: the 20 small 256px crops in public/avatars (324 KiB),
         // which is why the header and the Home card never break offline.
         globIgnores: ['**/images/**'],
         // ...and the big paintings get a CacheFirst runtime route instead: one age band is only
-        // ~413-487 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
+        // ~361-435 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
         // renders ahead of its art), and once fetched a painting is offline-durable for 60 days.
-        // maxEntries 80 comfortably holds the whole reachable set (36 files) plus headroom.
+        // maxEntries 80 comfortably holds the whole reachable set (24 files) plus headroom.
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => /\/images\/.*\.(?:webp|png|jpe?g)$/.test(url.pathname),
+            // webp only: after build/webp-only nothing else can exist under /images/.
+            urlPattern: ({ url }) => /\/images\/.*\.webp$/.test(url.pathname),
             handler: 'CacheFirst',
             options: {
               cacheName: 'tb-art-v1',
