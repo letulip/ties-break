@@ -1,8 +1,8 @@
 // R11-9 – warm the portrait art BEFORE the screen or the popup that needs it.
 //
 // THE PROBLEM. The big paintings under public/images/fem-euro-brunnet/ are deliberately outside
-// the service-worker precache (see vite.config: precaching all 3511 KiB would triple the install,
-// and 1641 KiB of it is later-life art no code path can reach yet). They are fetched the moment a
+// the service-worker precache (see vite.config: precaching all 2348 KiB would more than double the
+// install, and the five age bands are never all needed at once). They are fetched the moment a
 // component binds them to an <img src>, which means the tournament finale and the Kid screen can
 // paint their frame before the portrait arrives.
 //
@@ -11,8 +11,9 @@
 //      through a plain `new Image()` – no <img> in the DOM, no layout, no component change.
 //   2. In the service worker: a CacheFirst route over `**/images/*.webp` (vite.config
 //      runtimeCaching). So a preload is not just a warm memory cache – it PERSISTS the file, and
-//      the same portrait works offline afterwards. Preloading one age band (413-487 KiB measured)
-//      is what makes "the whole age set is in the cache" true for the band she actually plays.
+//      the same portrait works offline afterwards. Preloading one age band (361-424 KiB measured
+//      across the five) is what makes "the whole age set is in the cache" true for the band she
+//      actually plays.
 //
 // The URL builders below MUST agree with the consumers, or a preload warms a file nobody asks for:
 //   - full paintings  `images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp`
@@ -31,7 +32,15 @@ import { portraitStage, type AvatarEmotion, type PortraitStage } from '../shared
 const ART_DIR = 'images/fem-euro-brunnet/'
 const NAME = 'fem-euro-brunnet'
 
-/** Every emotion the Kid screen / header can land on (shared/avatarEmotion AvatarEmotion). */
+/**
+ * Every emotion the Kid screen / header can land on — i.e. every value `avatarEmotion()` can
+ * actually RETURN, which is what makes a preload worth its bytes.
+ *
+ * `angry` is deliberately absent even though it is a member of AvatarEmotion and its art ships:
+ * no branch of avatarEmotion() produces it yet (the reasoning is in shared/avatarEmotion.ts), so
+ * warming it would add 2 files a band that no player would ever be shown. Add it here the same
+ * day a trigger lands, not before.
+ */
 export const KID_EMOTIONS: readonly AvatarEmotion[] = ['norm', 'happy', 'sad', 'serious', 'tired', 'injury']
 
 /** The three the tournament finale can show: champion (happy), runner-up (serious), earlier exit
@@ -64,10 +73,12 @@ export function finaleUrl(stage: PortraitStage, emotion: AvatarEmotion): string 
   return portraitUrl(stage, emotion)
 }
 
-/** 256px crop URL. The crop set has no adult art, so adult clamps to teen – exactly what
- *  kidEmotion.ts cropUrl does. Keep the two in step. */
+/** 256px crop URL. No clamp any more: `adult` used to redirect to the teen crops because the adult
+ *  ones had never been cut, and with `milf` reachable that would have put a teenager's face on a
+ *  31-year-old. The missing crops were cut instead, so every stage now has its own — same rule as
+ *  shared/avatarEmotion.ts `avatarCropPath`, which is the one the components go through. */
 export function cropUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
-  return `${base()}avatars/${stage === 'adult' ? 'teen' : stage}-${emotion}.webp`
+  return `${base()}avatars/${stage}-${emotion}.webp`
 }
 
 // Every URL this module has already asked for. A preload is idempotent and free to call on every
@@ -114,9 +125,9 @@ export function preloadKidArt(stage: PortraitStage): string[] {
 }
 
 /** Everything one age band needs – the answer to "should the whole age set live in the cache?".
- *  Yes, per band: 6 paintings + 6 crops = 12 files, 361-435 KiB measured, fetched once and then
- *  offline. It was 15 files before build/webp-only, when the finale asked for a duplicate `-fs8`
- *  copy of three frames it now shares with the Kid screen. */
+ *  Yes, per band: 6 paintings + 6 crops = 12 files, 361-424 KiB measured across the five bands,
+ *  fetched once and then offline. It was 15 files before build/webp-only, when the finale asked
+ *  for a duplicate `-fs8` copy of three frames it now shares with the Kid screen. */
 export function preloadStage(stage: PortraitStage): string[] {
   return [...preloadKidArt(stage), ...preloadFinaleArt(stage)]
 }
@@ -126,12 +137,13 @@ export function preloadForAge(ageYears: number): string[] {
   return preloadStage(portraitStage(ageYears))
 }
 
-const STAGE_ORDER: PortraitStage[] = ['jun', 'young', 'teen', 'adult']
+const STAGE_ORDER: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'milf']
 
-/** The stage AFTER hers, but only while she is in the LAST year of her band (10 / 16 / 22 –
+/** The stage AFTER hers, but only while she is in the LAST year of her band (10 / 16 / 22 / 30 –
  *  the boundaries in shared/avatarEmotion portraitStage). Null the rest of the time, so a
  *  birthday never costs her a blank portrait and no career pays for a band it is years away
- *  from – a second band would roughly double the bytes for nothing. */
+ *  from – a second band would roughly double the bytes for nothing. `milf` is the top of the
+ *  ladder, so from 31 on there is never a next band to warm. */
 export function stageDueNext(ageYears: number): PortraitStage | null {
   const stage = portraitStage(ageYears)
   if (portraitStage(ageYears + 1) === stage) return null

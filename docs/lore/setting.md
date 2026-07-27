@@ -124,14 +124,19 @@ There are **five** bands in the art set. Only four of them exist in code.
 | `jun` | under 11 | under 12 | yes |
 | `young` | 11–16 | 12–15 | yes |
 | `teen` | 17–22 | 16–22 | yes |
-| `adult` | 23 and up (terminal) | 23–28 | yes |
-| `milf` | **does not exist** | **29 and up** | **yes – 8 paintings** |
+| `adult` | **23–30** | 23–28 | yes |
+| `milf` | **31 and up** | 29 and up | yes |
 
 The shipped resolver is the one the build actually runs, and it is the later instruction: the owner
-moved `young` down to 11 on 25.07 so the coming childhood prologue has a band to live in. But the
-resolver never returns `milf`, `adult` has no upper bound, and no test covers a fifth band – so the
-`milf` art ships in the PWA and no code path can reach it. That gap is real, it is not a documentation
-error, and it is the single biggest open item in this file.
+moved `young` down to 11 on 25.07 so the coming childhood prologue has a band to live in.
+
+**RESOLVED 27.07.** This file previously recorded the biggest open item in it: the resolver returned
+four bands, `adult` had no upper bound, and the eight `milf` paintings shipped with no code path able
+to reach them. The owner settled the boundaries – `adult` 23–30, `milf` 31 and up – and both are now
+in `portraitStage()` with a test over the whole band range. `adult` also gained the 256px face crops
+it never had (it used to borrow `teen`'s, so a woman of 30 wore a seventeen-year-old's face), and
+`milf` got its own. The remaining discrepancy in this table is between the shipped resolver and the
+older numbers in `docs/decisions.md`; only the owner can reconcile those.
 
 ### `jun` – under 11. The prologue.
 A child, not an athlete. Kit that does not match. A racquet slightly too big. Held at the club down
@@ -318,7 +323,10 @@ wrong the moment the set changes. `ls public/images/fem-euro-brunnet/` is the an
 **One naming inconsistency to know about before adding files:** `angry` exists as a JPEG master for
 all five bands. Whether it ships depends on whether the code can request it – the pipeline carries a
 `NOT_SHIPPED` list precisely so art no code path can reach is not encoded into every player's
-download, and `angry` sits on that list until an emotion of that name exists.
+download, and `angry` came off that list on 27.07 when it became the seventh member of `AvatarEmotion`. It has art
+and a type but no trigger yet: nothing in the emotion model selects it, deliberately, until there is
+a cause worth calling anger (the likely one is a loss to a NAMED rival, which needs a field the
+result does not carry today).
 
 **Header crops** – `public/avatars/{band}-{emotion}.webp`, 256 × 256, 11–20 KB. Tight face/shoulders
 crop of the same painting, cut from the 1254px master with an explicit crop rectangle (the recipe for

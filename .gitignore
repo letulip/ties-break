@@ -1,5 +1,7 @@
-# slashless ON PURPOSE: "node_modules/" matches a DIRECTORY only, so the symlink the shared-install
-# worktrees use slipped past it and got committed as a mode-120000 link pointing OUT of the repo.
+# No trailing slash ON PURPOSE: `node_modules/` matches a DIRECTORY only. Every tb-* worktree
+# shares one install via a `node_modules` SYMLINK, which the slashed rule did not match — so
+# `git add -A` swept the symlink itself into the tree (it shipped in c96ecec, pointing out of the
+# repo into a sibling worktree). Slashless matches the directory and the symlink both.
 node_modules
 dist/
 dev-dist/

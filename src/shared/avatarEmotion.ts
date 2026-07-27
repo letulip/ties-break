@@ -19,33 +19,45 @@
 
 import type { TierId } from '../engine/season/types'
 
-export type AvatarEmotion = 'norm' | 'happy' | 'sad' | 'serious' | 'tired' | 'injury'
+/**
+ * `angry` is a MEMBER but not yet an OUTCOME: five paintings ship for it and any surface holding
+ * an AvatarEmotion can render it, but `avatarEmotion()` below never returns it. That is deliberate
+ * – see the note above the result branch. Adding it here is what makes the art reachable at all
+ * (scripts/optimize-art.mjs used "not in AvatarEmotion" as its reason to skip encoding it).
+ */
+export type AvatarEmotion = 'norm' | 'happy' | 'sad' | 'serious' | 'tired' | 'injury' | 'angry'
 
 // --- R9-16: portrait stage by age -------------------------------------------------
 // The fem-euro-brunnet art set ships one full painting per stage×emotion; the stage the
-// portraits show follows the kid's age (owner: young already from 11-12, teen from 17;
-// adult/milf are later-life content). START_AGE 14 ⇒ a new career OPENS on young-* art –
-// the jun-* placeholder era ends (only the onboarding "first time on court" frame stays
-// jun BY DESIGN: it is a narrative flashback).
-export type PortraitStage = 'jun' | 'young' | 'teen' | 'adult'
+// portraits show follows the kid's age (owner: young already from 11-12, teen from 17).
+// START_AGE 14 ⇒ a new career OPENS on young-* art – the jun-* placeholder era ends (only the
+// onboarding "first time on court" frame stays jun BY DESIGN: it is a narrative flashback).
+// `milf` is the fifth and last band, and since the owner's 27.07 call it is REACHED, not just
+// painted: a career that runs long enough now ages into its own face instead of freezing at the
+// adult art. Every band has full crops, so no band borrows another band's face any more.
+export type PortraitStage = 'jun' | 'young' | 'teen' | 'adult' | 'milf'
 
-/** Pure stage resolver: jun < 11, young 11-16, teen 17-22, adult beyond (later content).
+/** Pure stage resolver – the owner's five bands, 27.07:
+ *  `jun <11 · young 11-16 · teen 17-22 · adult 23-30 · milf 31+`.
  *  Owner 25.07: young starts at 11 – the childhood prologue is coming, so the boundary is
- *  deliberately set where the prologue will need it (unreachable before then: START_AGE 14). */
+ *  deliberately set where the prologue will need it (unreachable before then: START_AGE 14).
+ *  `adult` gained an UPPER bound here – it used to swallow every age from 23 up. */
 export function portraitStage(ageYears: number): PortraitStage {
   if (ageYears < 11) return 'jun'
   if (ageYears <= 16) return 'young'
   if (ageYears <= 22) return 'teen'
-  return 'adult'
+  if (ageYears <= 30) return 'adult'
+  return 'milf'
 }
 
 /** Where the 256px header/card crop for a stage×emotion lives, relative to the app's BASE_URL.
- *  The `adult` crops have not been cut yet (that is LATER-LIFE content), so every crop surface
- *  clamps to teen – the full-size adult paintings already exist and are NOT clamped. Kept here,
- *  as one pure function, so the clamp cannot drift between the emotional surfaces and the
- *  emotion-free header (F45-1). */
+ *  NO CLAMP. `adult` used to redirect to the teen crops because the adult ones had never been
+ *  cut; with the milf band reachable that clamp would have put a 17-year-old's face on a woman of
+ *  31, so the missing crops were cut instead (all five bands × seven emotions now exist under
+ *  public/avatars/). Kept as one pure function, shared with the emotion-free header (F45-1), so
+ *  the two crop surfaces cannot drift apart. */
 export function avatarCropPath(stage: PortraitStage, emotion: AvatarEmotion): string {
-  return `avatars/${stage === 'adult' ? 'teen' : stage}-${emotion}.webp`
+  return `avatars/${stage}-${emotion}.webp`
 }
 
 /** R9-11: how many weeks a TITLE at each tier shields the sad emotion. local titles shield
@@ -109,7 +121,28 @@ function titleShields(week: number, lastTitle: LastKidTitle | null | undefined):
   return weeksSince >= 0 && weeksSince <= WIN_IMMUNITY_WEEKS[lastTitle.tier]
 }
 
-/** The avatar emotion right now: a fresh (this-week) result wins; otherwise the idle state. */
+/**
+ * The avatar emotion right now: a fresh (this-week) result wins; otherwise the idle state.
+ *
+ * WHY `angry` IS NOT RETURNED HERE (27.07). It is a member of AvatarEmotion and its five
+ * paintings ship, but no branch below produces it, on purpose:
+ *
+ *  - The result layer is the obvious home for it, and it is the wrong one. Anger needs a CAUSE –
+ *    a robbed line call, a rival's mouth, a match she was supposed to win. `LastKidResult` carries
+ *    week / won / lostFinal / tier and nothing else: there is no opponent strength, no seeding, no
+ *    scoreline, so every candidate rule ("a first-round exit at j300 is angry") would be a
+ *    disappointment rule wearing anger's face. `sad` already covers disappointment.
+ *  - It also cuts against the direction the loss branch has been moved TWICE. R8-6a made
+ *    runner-up `serious` rather than sad; R9-11 softened local exits and shielded fresh champions.
+ *    The kid this model describes gets composed after a loss, not furious.
+ *  - The idle layer is a FATIGUE ladder (injury → tired → serious → norm). Anger is not a point
+ *    on it, and low condition is already spoken for.
+ *
+ * So the art is wired and the type is real, and the trigger is left to the owner. The natural
+ * hook when the design grows one is the rival system – a rival's taunt or a loss to a named rival
+ * is a cause, which is exactly what this input is missing. That needs a new field on
+ * AvatarEmotionInput, not a reinterpretation of the ones here.
+ */
 export function avatarEmotion({ week, condition, injured, lastResult, lastTitle }: AvatarEmotionInput): AvatarEmotion {
   if (lastResult && lastResult.week === week) {
     if (lastResult.won) return 'happy'

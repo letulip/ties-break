@@ -37,18 +37,17 @@ const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 // F45-1 — the header crop is `norm` for her age band, and nothing else.
 // ===========================================================================
 describe('F45-1 — the header avatar is age-only, never emotional', () => {
-  const EMOTIONS: AvatarEmotion[] = ['norm', 'happy', 'sad', 'serious', 'tired', 'injury']
+  const EMOTIONS: AvatarEmotion[] = ['norm', 'happy', 'sad', 'serious', 'tired', 'injury', 'angry']
 
   it('every age the game can reach resolves to the norm crop of its stage', () => {
-    // 6 (the childhood prologue's floor) through 30 (past the adult boundary) – the whole span
-    // the stage resolver can be asked about.
-    for (let age = 6; age <= 30; age++) {
+    // 6 (the childhood prologue's floor) through 40 (well past the milf boundary at 31) – the
+    // whole span the stage resolver can be asked about.
+    for (let age = 6; age <= 40; age++) {
       const url = headerCropUrl(age)
       const stage = portraitStage(age)
-      // the adult crops have not been cut yet, so crop surfaces clamp to teen (kidEmotion does
-      // the same – ONE clamp, in avatarCropPath).
-      const expected = stage === 'adult' ? 'teen' : stage
-      expect(url, `age ${age}`).toBe(`/avatars/${expected}-norm.webp`)
+      // No clamp any more: every stage has its own crops, so the header wears her OWN age's face
+      // at every age. `adult` used to redirect to teen here.
+      expect(url, `age ${age}`).toBe(`/avatars/${stage}-norm.webp`)
       for (const e of EMOTIONS) {
         if (e === 'norm') continue
         expect(url, `age ${age} must not carry ${e}`).not.toContain(e)
