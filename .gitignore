@@ -3,3 +3,24 @@ dist/
 dev-dist/
 *.local
 .DS_Store
+
+# --- raster art -------------------------------------------------------------------------
+# Raw masters NEVER enter git; only the webp the build produces from them does.
+# The pipeline (scripts/optimize-art.mjs, wired into vite.config.ts) encodes anything dropped
+# into public/images/<set>-jpeg/ and then MOVES the master into art-src/ — out of public/,
+# because Vite copies public/ into dist/ verbatim whether git tracks it or not.
+#
+# NOTE: art-src/ is the author's LOCAL master library. git is not its backup.
+# gitignore has no brace expansion, so each extension gets its own line.
+art-src/
+public/images/*-jpeg/
+public/images/**/*.png
+public/images/**/*.jpg
+public/images/**/*.jpeg
+public/avatars/**/*.png
+public/avatars/**/*.jpg
+public/avatars/**/*.jpeg
+
+# Exempt from the rule above and intentionally tracked as PNG: public/favicon.png and the
+# public/pwa-*.png manifest / apple-touch icons. PWA icons are not reliably accepted as webp
+# across platforms, so those five stay raster on purpose.

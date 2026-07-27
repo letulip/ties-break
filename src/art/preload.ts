@@ -20,7 +20,7 @@
 //   - 256px crops     `avatars/{stage}-{emotion}.webp`
 //     -> composables/kidEmotion.ts cropUrl (header + Home card; ALREADY precached, listed here
 //        only so a cold first paint has them decoded, at 11-20 KiB each)
-//   - finale art      `images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}-fs8.webp`
+//   - finale art      the SAME paintings, for the three finale emotions
 //     -> components/TournamentFlow.vue artUrl (champion / runner-up / early-exit splash)
 //
 // Pure side-effect module: importing it does nothing. Safe in a non-DOM (test/worker) context –
@@ -47,9 +47,21 @@ export function portraitUrl(stage: PortraitStage, emotion: AvatarEmotion): strin
   return `${base()}${ART_DIR}${NAME}-${stage}-${emotion}.webp`
 }
 
-/** Tournament-finale painting URL (the legacy `-fs8` variant names TournamentFlow requests). */
+/**
+ * Tournament-finale painting URL.
+ *
+ * build/webp-only: this used to append `-fs8` — a pngquant-era Floyd-Steinberg suffix that
+ * carried no meaning for webp and pointed at a SECOND, near-identical copy of every frame.
+ * That parallel set was incomplete (no adult-happy), so a champion aged 23+ 404'd on her own
+ * title splash. The duplicates are gone; the finale now shows the same painting the Kid screen
+ * does, which is also why one age band costs 12 preloads instead of 15.
+ *
+ * Kept as its own function (rather than inlining portraitUrl at the call sites) because the
+ * finale is a distinct surface with its own emotion set — if it ever gets dedicated art, this
+ * is the one place that changes.
+ */
 export function finaleUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
-  return `${base()}${ART_DIR}${NAME}-${stage}-${emotion}-fs8.webp`
+  return portraitUrl(stage, emotion)
 }
 
 /** 256px crop URL. The crop set has no adult art, so adult clamps to teen – exactly what
@@ -84,7 +96,9 @@ function warm(url: string): void {
 }
 
 /** The finale set for one stage – call this the moment a tournament week is entered, so the
- *  champion/runner-up splash has its painting before the reveal animates. 3 files, ~135-165 KiB. */
+ *  champion/runner-up splash has its painting before the reveal animates. 3 files, and since
+ *  build/webp-only they are three of the SIX the Kid screen already warms, so on a stage that
+ *  has been on screen this costs nothing at all. */
 export function preloadFinaleArt(stage: PortraitStage): string[] {
   const urls = FINALE_EMOTIONS.map((e) => finaleUrl(stage, e))
   for (const u of urls) warm(u)
@@ -100,7 +114,9 @@ export function preloadKidArt(stage: PortraitStage): string[] {
 }
 
 /** Everything one age band needs – the answer to "should the whole age set live in the cache?".
- *  Yes, per band: 9 paintings + 6 crops, 413-487 KiB measured, fetched once and then offline. */
+ *  Yes, per band: 6 paintings + 6 crops = 12 files, 361-435 KiB measured, fetched once and then
+ *  offline. It was 15 files before build/webp-only, when the finale asked for a duplicate `-fs8`
+ *  copy of three frames it now shares with the Kid screen. */
 export function preloadStage(stage: PortraitStage): string[] {
   return [...preloadKidArt(stage), ...preloadFinaleArt(stage)]
 }
