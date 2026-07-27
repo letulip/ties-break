@@ -35,6 +35,7 @@ Shapes come straight from the append-only history in `src/engine/migrations.ts`:
 | v13 | world `+vacations +practices +recoveryBuff` (season planner: booked family-vacation weeks, booked practice-match weeks, and the carry-over injury-tau buff from a resort/elite package) |
 | v14 | world `+seasonHistory` (R10-9: append-only per-season record – year, end rank, points, W-L, funds delta, closing funds, best finish – behind the Stats season-by-season table; `lastSeasonSummary` is overwritten yearly, this list is not) |
 | v15 | world `+internationalEntryWeeks` (the ITF annual entry cap: the absolute week of every j30/j60/j300 entry she has made, counted per season against `ECONOMY.entryCap.perYearByAge`. Pre-v15 saves backfill to an empty ledger – nothing in them can reconstruct it, since the kid's result row is award-only) |
+| v16 | `seasonHistory` rows `year` → `+seasonIndex` (a season's identity is its 0-based index, never the calendar year of its first Monday – a season is 364 days, so that year repeats at season 5 and the wrap-up's dedup guard silently dropped a whole season's row). The backfill is an exact inversion: the old guard kept the first season to claim a year, so the smallest index yielding it is the one that wrote it) |
 
 For **v0–v5** the migration regenerates the world systems (cohort/season) deterministically from the
 seed, so those fixtures are the authentic minimal historical shapes. For **v6–v7** the `cohort` /

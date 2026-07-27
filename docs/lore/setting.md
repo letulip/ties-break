@@ -323,10 +323,12 @@ wrong the moment the set changes. `ls public/images/fem-euro-brunnet/` is the an
 **One naming inconsistency to know about before adding files:** `angry` exists as a JPEG master for
 all five bands. Whether it ships depends on whether the code can request it – the pipeline carries a
 `NOT_SHIPPED` list precisely so art no code path can reach is not encoded into every player's
-download, and `angry` came off that list on 27.07 when it became the seventh member of `AvatarEmotion`. It has art
-and a type but no trigger yet: nothing in the emotion model selects it, deliberately, until there is
-a cause worth calling anger (the likely one is a loss to a NAMED rival, which needs a field the
-result does not carry today).
+download, and `angry` came off that list on 27.07 when it became the seventh member of `AvatarEmotion`. It now has art, a type
+AND a trigger (fix/world-trio): she turns angry on a run of consecutive losses, the exact length
+drawn per streak in 4-6 so the player cannot count to a fixed number. The cause the emotion was
+waiting for turned out not to be inside any single result – it is the SHAPE of several of them, and
+the engine is what observes that. It is painted for all five bands and precached like every other
+reachable face.
 
 **Header crops** – `public/avatars/{band}-{emotion}.webp`, 256 × 256, 11–20 KB. Tight face/shoulders
 crop of the same painting, cut from the 1254px master with an explicit crop rectangle (the recipe for
@@ -584,8 +586,6 @@ block an artist or a video generator today.
   single national setting is canon. Draw the venue, not the flag.
 - **The runner-up problem.** Whether the fix is a dedicated painting per band or a treatment of the
   existing `serious` frame is an open design question.
-- **`angry` is an orphan.** Five paintings exist for an emotion the game cannot resolve. Either it
-  becomes a seventh emotion or the masters should be retired – right now it is neither.
 - **No venue or crowd art exists at all.** §10 has backdrop prompts, but nothing has been produced
   from them, and no UI surface currently consumes a backdrop.
 - **Milestone staging beyond a one-line brief.** The seven milestone frames now have prompt text

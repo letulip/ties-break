@@ -36,12 +36,21 @@ const NAME = 'fem-euro-brunnet'
  * Every emotion the Kid screen / header can land on — i.e. every value `avatarEmotion()` can
  * actually RETURN, which is what makes a preload worth its bytes.
  *
- * `angry` is deliberately absent even though it is a member of AvatarEmotion and its art ships:
- * no branch of avatarEmotion() produces it yet (the reasoning is in shared/avatarEmotion.ts), so
- * warming it would add 2 files a band that no player would ever be shown. Add it here the same
- * day a trigger lands, not before.
+ * `angry` JOINED THE LIST with its trigger (fix/world-trio item 3: a run of 4-6 straight losses,
+ * the exact number drawn per streak). It used to be excluded on the standing rule stated here —
+ * "add it the same day a trigger lands, not before" — because warming an unreachable face cost 2
+ * files a band for nothing. That day is now: the branch exists, so bytes follow reachability in the
+ * other direction. Every value the decision can return, and nothing else, belongs here.
  */
-export const KID_EMOTIONS: readonly AvatarEmotion[] = ['norm', 'happy', 'sad', 'serious', 'tired', 'injury']
+export const KID_EMOTIONS: readonly AvatarEmotion[] = [
+  'norm',
+  'happy',
+  'sad',
+  'serious',
+  'tired',
+  'injury',
+  'angry',
+]
 
 /** The three the tournament finale can show: champion (happy), runner-up (serious), earlier exit
  *  (sad). Round-5 item 11 still stands – there is no dedicated runner-up painting. */
