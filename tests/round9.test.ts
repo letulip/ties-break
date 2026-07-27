@@ -580,10 +580,14 @@ describe('pt4 — UI wiring', () => {
     expect(home).not.toContain('<span class="pill">Training')
   })
 
-  it('R9-13/15: all three portrait surfaces run through the shared emotion composable', () => {
-    for (const p of ['../src/App.vue', '../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
+  // PIN MOVED by F45-1 (27.07): the header crop left this set. R9-13/15's point – the surfaces that
+  // show an emotion all take it from ONE composable – still holds for the two that remain; the
+  // header is now age-only by owner decision (tests/round11-followups.test.ts).
+  it('R9-13/15: both emotional portrait surfaces run through the shared emotion composable', () => {
+    for (const p of ['../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
       expect(read(p)).toContain('useKidEmotion')
     }
+    expect(read('../src/App.vue')).toContain('useHeaderAvatar')
   })
 
   it('R9-18: the recap dismissal survives remounts (module scope) and the rule is documented', () => {

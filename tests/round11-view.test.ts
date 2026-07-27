@@ -148,8 +148,13 @@ describe('R11-2 — no win/loss avatar swap for practice matches', () => {
     expect(walk).not.toMatch(/if \(!match\) continue/)
   })
 
-  it('ONE predicate, not three copies: every portrait surface reads useKidEmotion', () => {
-    const surfaces = ['../src/App.vue', '../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']
+  // PIN MOVED by F45-1 (27.07). This used to sweep THREE surfaces including App.vue. The owner has
+  // since ruled the header avatar emotion-free entirely — «в хедере… всегда norm для возраста» — so
+  // App.vue is no longer an emotional surface and asserting it reads the emotion composable would
+  // now pin the bug. The R11-2 property this test exists for is unchanged for the surfaces that DO
+  // show an emotion; the header's own rule is pinned in tests/round11-followups.test.ts.
+  it('ONE predicate, not two copies: every EMOTIONAL portrait surface reads useKidEmotion', () => {
+    const surfaces = ['../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']
     for (const rel of surfaces) {
       const src = readFileSync(new URL(rel, import.meta.url), 'utf8')
       expect(src, rel).toContain('useKidEmotion')
@@ -157,6 +162,9 @@ describe('R11-2 — no win/loss avatar swap for practice matches', () => {
       expect(src, rel).not.toContain('avatarEmotion(')
       expect(src, rel).not.toMatch(/avatars\/\$\{/)
     }
+    // the header is not on the list any more – and must not quietly rejoin it
+    const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
+    expect(app).not.toContain('useKidEmotion')
     // TournamentFlow picks its finale art from `pending`, which only exists for a TOURNAMENT
     // reveal – a friendly never mounts it, so it needs no gate and must not grow one.
     const flow = readFileSync(new URL('../src/components/TournamentFlow.vue', import.meta.url), 'utf8')

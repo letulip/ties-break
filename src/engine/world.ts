@@ -639,24 +639,37 @@ export function medicalBlock(condition: number): MedicalBlock | null {
   if (medicalClearance(condition) !== 'withdraw') return null
   return { level: 'blocked', reason: 'medical', detail: 'Not cleared to play – she needs rest.' }
 }
+/** R10-17, AS ONE FUNCTION – "will she still be laid up in `week`?".
+ *
+ *  A layoff is a RANGE OF WEEKS: an injury with `weeksRemaining` to run covers
+ *  `[world.week, world.week + weeksRemaining)`. The upper bound is EXCLUSIVE because `rollInjury`
+ *  clears the injury at the TOP of week `world.week + weeksRemaining`, before anything else reads
+ *  it – so the return week is already hers. That is also exactly the week the UI has been printing
+ *  all along ("back wk {week + weeksRemaining}"), so the label and every lock tell one story.
+ *
+ *  R10-17 was the owner's playtest 26.07 – "the news said she is out until week 21, but at week 22
+ *  and every week after, no tournament could be entered": `availabilityStatus` was asking "is she
+ *  hurt TODAY?" about an event WEEKS away, which blacked out the whole 8-week horizon for the
+ *  entire layoff. It fixed the ENTRY gate. F45-2 (27.07) found the same question being skipped
+ *  outright in the ONSET sweep, where `rollInjury` cancelled every still-refundable entry no matter
+ *  how far past her return it sat. Rather than a third spelling of the comparison, the rule now
+ *  lives here and the three surfaces that ask it – the entry gate, the planner and the onset sweep –
+ *  all call this. Returns the active injury (so callers can quote `weeksRemaining` without
+ *  re-deriving the window) or null.
+ *
+ *  NOT for "is she hurt right now" – that is a plain `world.injury !== null` on the current week. */
+export function layoffCovering(world: WorldState, week: number): WorldState['injury'] {
+  const injury = world.injury
+  return injury !== null && week < world.week + injury.weeksRemaining ? injury : null
+}
+
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
-  // R10-17 (owner playtest 26.07 – "the news said she is out until week 21, but at week 22 and
-  // every week after, no tournament could be entered"). A layoff is a RANGE OF WEEKS and the event
-  // is weeks away, so the question this gate has to answer is "will she still be out IN
-  // `event.week`?" – not "is she hurt TODAY?". Reading today's injury against a future event week
-  // locked the ENTIRE 8-week horizon for the whole layoff, and because entry lists close two weeks
-  // out, every list she could have joined on the way back had already shut by the time the lock
-  // lifted – which is what made it feel permanent.
-  //
-  // The boundary is the one the planner's `assertPlannable` has always used (`week < world.week +
-  // weeksRemaining`), so a tournament and a vacation now agree to the week about when she is back:
-  // rollInjury clears the injury at the TOP of week `world.week + weeksRemaining`, BEFORE the
-  // play-week check reads it, so that week is hers again. It is also exactly the week the UI has
-  // been printing all along ("back wk {week + weeksRemaining}"), so the label and the lock finally
-  // tell the same story. Note the CONDITION-driven branches below stay current-week reads: her
-  // condition in a future week is unknowable, which is why the doctor re-checks her on arrival.
-  if (world.injury !== null && event.week < world.week + world.injury.weeksRemaining) {
-    return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${world.injury.weeksRemaining} weeks.` }
+  // The injury window is read against the EVENT's week, never today's (R10-17 – see layoffCovering).
+  // Note the CONDITION-driven branches below stay current-week reads: her condition in a future week
+  // is unknowable, which is why the doctor re-checks her on arrival.
+  const layoff = layoffCovering(world, event.week)
+  if (layoff !== null) {
+    return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${layoff.weeksRemaining} weeks.` }
   }
   // Ladder-up: the junior international tour opens at 13. Our detailed sim starts at 14, so this
   // never fires today – it is wired now so the childhood prologue (Phase 6) inherits the rule for
@@ -892,20 +905,37 @@ export function rollInjury(world: WorldState): void {
     })
   }
 
-  // Auto-withdraw every still-refundable (pre-deadline) entry: the family pulls out while the
-  // fee can come back. Post-deadline entries forfeit their fee (withdrawEvent refuses past the
-  // deadline) – if one lands on its play week while she is out, tickWeek emits the walkover.
+  // F45-2 (owner playtest 27.07 – «автоматически выкидывает СО ВСЕХ поданных заявок и делает
+  // рефанд, даже если турнир ТОЧНО ПОСЛЕ выздоровления»). Withdraw only the entries the layoff
+  // actually SWALLOWS. This loop used to ask one question – "is the list still open?" – so a
+  // one-week niggle in week 10 cancelled a tournament in week 30, refund and all. It is the same
+  // mistake R10-17 fixed in the entry gate, in the one injury surface that never got the fix: a
+  // layoff is a RANGE of weeks, so the question is "will she still be out IN e.week?".
+  //
+  // TWO conditions, both required:
+  //   inside the layoff – `layoffCovering`, the shared R10-17 window (exclusive of the return
+  //                       week). At or after her return she is FIT, so the entry stays booked.
+  //   list still open   – `world.week <= e.deadlineWeek`. Past the deadline the fee is committed
+  //                       and `withdrawEvent` refuses anyway, so an in-layoff entry with a closed
+  //                       list keeps today's behaviour: still entered, fee forfeited, and the
+  //                       walkover beat in tickWeek resolves its week. Deliberately unchanged.
+  //
+  // Consequence worth naming: lists close two weeks out, so a still-refundable entry always sits at
+  // `world.week + 2` or later – which means a 1- or 2-week layoff now cancels NOTHING, and only a
+  // 3+ week absence can reach an open list at all.
   for (const id of [...world.entries]) {
     const e = eventById(world, id)
-    if (e && world.week <= e.deadlineWeek) withdrawEvent(world, id)
+    if (e && layoffCovering(world, e.week) !== null && world.week <= e.deadlineWeek) {
+      withdrawEvent(world, id)
+    }
   }
 
   // Season planner (spec §4): an injury cancels the practice weeks it swallows – the court
   // rental comes back in full ("no fee forfeit beyond the court rental"). Vacations are left
-  // alone: a family week away is still rest, injured or not.
-  const backAtWeek = world.week + weeksOut
+  // alone: a family week away is still rest, injured or not. Same window as the entries above,
+  // and now literally the same predicate instead of a hand-rolled `backAtWeek` copy of it.
   for (const p of [...world.practices]) {
-    if (p.week >= world.week && p.week < backAtWeek) refundPractice(world, p, 'Injured')
+    if (p.week >= world.week && layoffCovering(world, p.week) !== null) refundPractice(world, p, 'Injured')
   }
 
   const wks = `${weeksOut} wk${weeksOut === 1 ? '' : 's'}`
@@ -985,9 +1015,8 @@ function vacationBlackoutDetail(booking: VacationBooking): string {
  *  themselves first, because they are true for any body. */
 function assertPlannable(world: WorldState, week: number, kind: 'vacation' | 'practice'): void {
   if (!Number.isInteger(week) || week <= world.week) throw new Error('Only a future week can be planned')
-  if (world.injury !== null && week < world.week + world.injury.weeksRemaining) {
-    throw new Error(`Injured – back in ${world.injury.weeksRemaining} weeks.`)
-  }
+  const layoff = layoffCovering(world, week) // the shared R10-17 window
+  if (layoff !== null) throw new Error(`Injured – back in ${layoff.weeksRemaining} weeks.`)
   if (isExamWeek(week)) throw new Error('School exams that week – no matches, no trips')
   if (kind === 'practice' && isOffSeasonWeek(week)) throw new Error('Off-season – family time, no matches')
   if (vacationForWeek(world, week)) throw new Error('That week is already a family vacation')

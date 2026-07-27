@@ -1,7 +1,9 @@
-// R9-13/15 – ONE emotion decision for every portrait surface (the header crop, the Home
-// player-card avatar and the Kid screen's big portrait), so they can never disagree. Wraps
-// the pure avatarEmotion helper (R8-6a/6b + R9-11 win-immunity) with the snapshot reads it
-// needs: the freshest kid match (with its tier), the freshest title, condition and injury.
+// R9-13/15 – ONE emotion decision for every portrait surface that is ALLOWED an emotion (the
+// Home player-card avatar and the Kid screen's big portrait), so they can never disagree. The
+// app header used to be the third; F45-1 took it off this composable for good – it is age-only now
+// and lives in ./headerAvatar.ts. Wraps the pure avatarEmotion helper (R8-6a/6b + R9-11
+// win-immunity) with the snapshot reads it needs: the freshest kid match (with its tier), the
+// freshest title, condition and injury.
 //
 // Tier resolution is structural, not text-parsing: a SeasonEvent id is `${year}-w${week}-${tier}`
 // (calendar.ts), so the match's own eventId names its tier; the title's tier falls back to the
@@ -9,6 +11,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import {
+  avatarCropPath,
   avatarEmotion,
   portraitStage,
   type AvatarEmotion,
@@ -33,10 +36,11 @@ const TIER_IDS = Object.keys(TIERS) as TierId[]
  * came home from a hit-out at the club looking crushed. A practice match now leaves her face alone:
  * she falls back to the IDLE emotion (condition / injury), exactly as on any week she did not compete.
  *
- * This is the ONE predicate for it. Every portrait in the app – App.vue's header crop, the Home
- * player card and the Kid screen's big painting – takes its emotion from `useKidEmotion` below, so
- * gating it here gates all three at once and they cannot drift apart. TournamentFlow's finale art is
- * NOT affected and must not be: it only ever mounts for a tournament reveal.
+ * This is the ONE predicate for it. Every portrait that shows an emotion – the Home player card and
+ * the Kid screen's big painting – takes it from `useKidEmotion` below, so gating it here gates both
+ * at once and they cannot drift apart. The app header is no longer in that set at all (F45-1: it is
+ * age-only, ./headerAvatar.ts). TournamentFlow's finale art is NOT affected and must not be: it only
+ * ever mounts for a tournament reveal.
  */
 export function resultShowsOnHerFace(e: WorldEvent): boolean {
   return !!e.match && !e.friendly
@@ -103,13 +107,12 @@ export function useKidEmotion() {
   // R9-16: the portrait stage follows her age (jun < 11, young 11-16, teen 17-22).
   const stage = computed<PortraitStage>(() => portraitStage(game.snapshot?.ageYears ?? 14))
 
-  // 256px header/card crops live in public/avatars/{stage}-{emotion}.webp. Crops exist for
-  // jun/young/teen; the adult set is LATER-LIFE content whose crops haven't been cut yet, so
-  // the crop surfaces clamp to teen until then (the full-size adult art below already exists).
-  const cropUrl = computed(() => {
-    const cropStage = stage.value === 'adult' ? 'teen' : stage.value
-    return `${import.meta.env.BASE_URL}avatars/${cropStage}-${emotion.value}.webp`
-  })
+  // 256px card crops live in public/avatars/{stage}-{emotion}.webp – the Home player card is the
+  // only consumer since F45-1 took the header off this composable. `avatarCropPath` owns the
+  // adult→teen clamp for both of us, so the two crop surfaces cannot drift apart.
+  const cropUrl = computed(
+    () => `${import.meta.env.BASE_URL}${avatarCropPath(stage.value, emotion.value)}`,
+  )
 
   // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
   // (every stage×emotion exists, adult included).

@@ -26,9 +26,11 @@ const SEVERITY_LABEL: Record<InjurySeverity, string> = {
 const severityLabel = computed(() => (injury.value ? SEVERITY_LABEL[injury.value.severity] : ''))
 const backWeek = computed(() => week.value + (injury.value?.weeksRemaining ?? 0))
 
-// What the family pulled out of at onset: rollInjury auto-withdraws every still-refundable
-// entry the moment the injury lands, so this week's withdrawal beats + refund income ARE the
-// onset's fallout. Presentation-only reads off the snapshot events – no engine extension.
+// What the family pulled out of at onset. F45-2: `rollInjury` no longer cancels every open entry –
+// only the ones the LAYOFF SWALLOWS, so this list is usually short and is often empty (entry lists
+// close two weeks out, so a 1-2 week absence reaches nothing at all). The copy below has to say
+// that plainly: the row is about what was CANCELLED, and it must never read as "your season is
+// gone". Presentation-only reads off the snapshot events – no engine extension.
 const withdrawnEntries = computed(() =>
   (game.snapshot?.events ?? [])
     .filter((e) => e.week === week.value && e.type === 'entry' && e.text.startsWith('Withdrew from '))
@@ -67,17 +69,20 @@ onMounted(() => playSfx('ooh'))
             <td>~{{ injury.totalWeeks }} wk{{ injury.totalWeeks === 1 ? '' : 's' }} – back around W{{ backWeek }}</td>
           </tr>
           <tr>
-            <th>Entries</th>
+            <th>Cancelled</th>
             <td>
               <template v-if="withdrawnEntries.length">
                 <div v-for="(entry, i) in withdrawnEntries" :key="i">Withdrawn: {{ entry }}</div>
                 <div v-if="refundCents > 0" class="positive num">Fees refunded: +{{ formatDollars(refundCents) }}</div>
               </template>
-              <template v-else>None affected</template>
+              <template v-else>Nothing – every entry stands</template>
             </td>
           </tr>
         </tbody>
       </table>
+      <p class="hint season-summary-note">
+        Only the weeks she is out are cancelled – anything from W{{ backWeek }} on is still booked.
+      </p>
       <p class="hint season-summary-note">Rest and rehab now – the news feed tracks her recovery.</p>
       <div class="dialog-actions">
         <button class="primary" @click="$emit('continue')">Continue</button>
