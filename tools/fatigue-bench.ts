@@ -2542,6 +2542,9 @@ export function main(argv: string[] = process.argv.slice(2)): void {
 
 // Run only when invoked as the CLI script, never when imported by the test (vitest sets
 // process.env.VITEST – same guard as econ-bench; under vite-node argv[1] is the runner).
-if (!process.env.VITEST) {
+// TB_BENCH_NO_AUTORUN is the same escape hatch for a non-vitest IMPORTER: tools/points-curve.ts
+// reuses the PROFILES/POLICIES axes and the career stepping from here, and without the flag that
+// import would run this entire sweep first. Set it before importing, never when running the bench.
+if (!process.env.VITEST && !process.env.TB_BENCH_NO_AUTORUN) {
   main()
 }
