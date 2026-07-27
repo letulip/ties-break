@@ -1,4 +1,6 @@
-node_modules/
+# slashless ON PURPOSE: "node_modules/" matches a DIRECTORY only, so the symlink the shared-install
+# worktrees use slipped past it and got committed as a mode-120000 link pointing OUT of the repo.
+node_modules
 dist/
 dev-dist/
 *.local
