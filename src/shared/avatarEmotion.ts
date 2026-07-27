@@ -13,7 +13,9 @@
 //     injured → injury, condition < 40 → tired, < 60 → serious, else norm.
 //
 // Pure and UI-free so it can be unit-tested and consumed anywhere an avatar emotion is
-// picked (App.vue's header avatar + the Home/Kid big portraits via useKidEmotion).
+// picked (the Home card + the Kid screen's big portrait, via useKidEmotion). The app header is
+// NOT a consumer since F45-1 – it is age-only and takes the `norm` crop straight from
+// `avatarCropPath` below, never from this decision.
 
 import type { TierId } from '../engine/season/types'
 
@@ -35,6 +37,15 @@ export function portraitStage(ageYears: number): PortraitStage {
   if (ageYears <= 16) return 'young'
   if (ageYears <= 22) return 'teen'
   return 'adult'
+}
+
+/** Where the 256px header/card crop for a stage×emotion lives, relative to the app's BASE_URL.
+ *  The `adult` crops have not been cut yet (that is LATER-LIFE content), so every crop surface
+ *  clamps to teen – the full-size adult paintings already exist and are NOT clamped. Kept here,
+ *  as one pure function, so the clamp cannot drift between the emotional surfaces and the
+ *  emotion-free header (F45-1). */
+export function avatarCropPath(stage: PortraitStage, emotion: AvatarEmotion): string {
+  return `avatars/${stage === 'adult' ? 'teen' : stage}-${emotion}.webp`
 }
 
 /** R9-11: how many weeks a TITLE at each tier shields the sad emotion. local titles shield

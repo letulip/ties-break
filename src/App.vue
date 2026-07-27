@@ -7,7 +7,7 @@ import type { StopReason } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
-import { useKidEmotion } from './composables/kidEmotion'
+import { useHeaderAvatar } from './composables/headerAvatar'
 // R10-7: the sticky bar's primary button says what the week AHEAD holds (tournament / vacation /
 // practice / exams / off-season / training). All of the derivation lives in the composable – this
 // file only renders the label it hands back.
@@ -35,12 +35,15 @@ const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
 
 const game = useGameStore()
 
-// R9-13/15/16: the header avatar comes from the SHARED useKidEmotion composable (R8-6a/6b
-// freshness rules + R9-11 win-immunity + the R9-16 stage-by-age resolver), so the header
-// crop, the Home player card and the Kid screen portrait can never disagree. Face crops live
-// in public/avatars/{stage}-{emotion}.webp (256×256; jun per round5-brand, young/teen cut in
-// round-9 pt5 to the same framing). START_AGE 14 ⇒ the game opens on young-* art.
-const { cropUrl: avatarUrl } = useKidEmotion()
+// F45-1 (owner, 27.07): the header avatar is STATIC apart from her age – always the `norm` crop
+// of her current stage. It is chrome above every screen; a face that flickers with each week's
+// result is noise. This REVERSES round 5's "header avatar emotions" and the R9-13/15/16 wiring
+// that carried it: the shell no longer touches the emotion composable at all. Her state still
+// shows where it belongs – the Home player card and the Kid screen's big portrait, both still on
+// the emotion composable. Crops live in public/avatars/{stage}-norm.webp (256×256); START_AGE 14
+// ⇒ the game opens on young-norm. (The guard in tests/round11-followups.test.ts is a plain text
+// search, so the shell must not name that composable even in a comment – which is the point.)
+const { cropUrl: avatarUrl } = useHeaderAvatar()
 const weekAhead = useWeekAhead()
 
 onMounted(() => game.init())
