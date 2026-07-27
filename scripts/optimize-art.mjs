@@ -57,6 +57,32 @@ const QUALITY_FLOOR = QUALITY_LADDER[QUALITY_LADDER.length - 1]
 const LOGO_QUALITY = 90
 const LOGO_RE = /^logo-tb-.*\.png$/i
 
+/**
+ * Masters the pipeline deliberately does NOT ship, with the reason each is here.
+ *
+ * The rule is "a master becomes a webp", and that is right — but a master whose output no code
+ * path can request is dead weight in every user's download. Deleting the webp alone does not
+ * work: the next build regenerates it from the master, which is exactly what happened when 13
+ * such files were removed by hand and came back on the following `vite build`. The rule has to
+ * be changed where the rule lives.
+ *
+ * Each entry is reversible in one line — put the emotion in `AvatarEmotion`, or point the splash
+ * at the webp wordmarks, and delete the pattern here.
+ */
+const NOT_SHIPPED = [
+  // `angry` is not a member of AvatarEmotion, so nothing can construct these URLs. Five masters,
+  // ~300 KB of webp. Painted ahead of a feature that never landed.
+  { re: /-angry$/i, why: 'no "angry" in AvatarEmotion — nothing can request it' },
+  // SplashScreen.vue loads public/logo-tb-*.svg. The webp copies of the same wordmarks, generated
+  // from the PNG masters, are referenced by nothing at all — 8 files, ~32 KB.
+  { re: /^logo-tb-/i, why: 'the splash uses the SVG wordmarks; these webp copies are unreferenced' },
+]
+
+/** True when a master's output is deliberately not shipped (see NOT_SHIPPED). */
+function notShipped(stem) {
+  return NOT_SHIPPED.some((rule) => rule.re.test(stem))
+}
+
 const CACHE_NAME = '.art-cache.json'
 const CACHE_VERSION = 3
 
@@ -100,7 +126,9 @@ function discover(root) {
       if (!RASTER_RE.test(src)) continue
       const moveTo = join(artSrcDir, relative(publicDir, src))
       const stem = basename(src).replace(RASTER_RE, '')
-      if (FS8_RE.test(stem)) {
+      // `-fs8` residue and NOT_SHIPPED masters still get out of public/ — they must not ship as raw
+      // bytes either — they just never become a webp.
+      if (FS8_RE.test(stem) || notShipped(stem)) {
         evacuate.push({ src, moveTo })
         continue
       }
@@ -126,7 +154,7 @@ function discover(root) {
       for (const src of listFiles(inbox)) {
         if (!RASTER_RE.test(src)) continue
         const stem = basename(src).replace(RASTER_RE, '')
-        if (FS8_RE.test(stem)) continue
+        if (FS8_RE.test(stem) || notShipped(stem)) continue
         encode.push({ src, target: join(outDir, `${stem}.webp`), profile: 'portrait', moveTo: null })
       }
     }
@@ -137,7 +165,7 @@ function discover(root) {
   for (const src of listFiles(artAvatars)) {
     if (!RASTER_RE.test(src)) continue
     const stem = basename(src).replace(RASTER_RE, '')
-    if (FS8_RE.test(stem)) continue
+    if (FS8_RE.test(stem) || notShipped(stem)) continue
     const target = join(publicDir, 'avatars', dirname(relative(artAvatars, src)), `${stem}.webp`)
     encode.push({ src, target, profile: 'portrait', moveTo: null })
   }
@@ -145,7 +173,7 @@ function discover(root) {
   // art-src/logo-tb-*.png -> public/logos/*.webp (natural size, alpha kept).
   if (existsSync(artSrcDir)) {
     for (const name of readdirSync(artSrcDir)) {
-      if (!LOGO_RE.test(name)) continue
+      if (!LOGO_RE.test(name) || notShipped(name.replace(/\.png$/i, ''))) continue
       const src = join(artSrcDir, name)
       if (!statSync(src).isFile()) continue
       const target = join(publicDir, 'logos', `${name.replace(/\.png$/i, '')}.webp`)
