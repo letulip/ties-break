@@ -18,12 +18,16 @@ import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, ty
 import type { TierId } from '../../engine/season/types'
 import { weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
-import { KID_ID, flipScore, isTierAgeOpen, practiceCaution } from '../../engine/world'
+import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 // The week-TYPE predicates come from the calendar itself (world.ts re-exports isExamWeek only).
-import { TIERS, isExamWeek, isOffSeasonWeek } from '../../engine/season/calendar'
+// R11-5a: the tier catalogue and the age gate are no longer imported here at all – the bands are read
+// in ONE place now (composables/tierState.ts), which is the whole point of the item.
+import { isExamWeek, isOffSeasonWeek } from '../../engine/season/calendar'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
 import { TIER_SHORT } from '../../composables/weekAhead'
+// R11-5a: the ONE tier-state rule, shared with the Season screen's lock labels + open-tier note.
+import { isTierOpen, useTierStates } from '../../composables/tierState'
 import MatchReplay from '../MatchReplay.vue'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
@@ -227,7 +231,15 @@ function shortFinish(finish: number): string {
 // Ladder-up: `locked` no longer means "a tier we haven't built yet" – it means the AGE gate has
 // not opened (the junior tour is 13+). At our start age of 14 nothing is locked; the state stays
 // wired for the childhood prologue.
-type TierChipState = 'locked' | 'outgrown' | 'unlocked' | 'reached' | 'idle'
+//
+// R11-5a – the ladder's WORST state was the dash. Four completely different situations printed the
+// same "National · –": she is 100 points short; she is past the level; she can walk into one next
+// week; and – the one that cost the owner a whole season of confusion – she can enter it any time but
+// none is scheduled inside the 8-week horizon. The AVAILABILITY half of the chip is now decided by
+// the shared rule in composables/tierState.ts (the same one the Season screen reads, so the two can
+// never disagree), and this file only composes it with her ACHIEVEMENT – the best finish she has on
+// the books for that tier. Nothing about a band or a threshold is re-derived here any more.
+type TierChipState = 'locked' | 'outgrown' | 'unlocked' | 'waiting' | 'reached' | 'idle'
 interface TierChip {
   id: TierId
   short: string
@@ -235,32 +247,43 @@ interface TierChip {
   state: TierChipState
   title: string
 }
+const tierStates = useTierStates()
 const seasonChips = computed<TierChip[]>(() =>
-  SEASON_STRIP_TIERS.map(({ id, short }) => {
-    const locked = !isTierAgeOpen(id, game.snapshot?.ageYears ?? 0)
+  SEASON_STRIP_TIERS.map(({ id, short }, i) => {
+    const avail = tierStates.value[i]
     const best = game.snapshot?.bestFinishByTier[id]
-    const reached = !locked && best !== undefined
-    const outgrown = !locked && kidPoints.value > TIERS[id].enterPointBand[1]
-    const unlocked =
-      !locked && !outgrown && !reached && (game.snapshot?.upcoming ?? []).some((e) => e.tier === id && e.eligible)
-    const state: TierChipState = locked
-      ? 'locked'
-      : outgrown
-        ? 'outgrown'
-        : unlocked
-          ? 'unlocked'
+    // Her earned result outranks every open state: once a tier is on the books the chip's job is to
+    // show the finish, and the availability lives in the tooltip.
+    const reached = isTierOpen(avail) && best !== undefined
+    const state: TierChipState =
+      avail.kind === 'age-locked' || avail.kind === 'locked'
+        ? 'locked'
+        : avail.kind === 'outgrown'
+          ? 'outgrown'
           : reached
             ? 'reached'
-            : 'idle'
-    const label = locked ? '🔒' : unlocked ? 'Unlocked – enter your first!' : reached ? shortFinish(best!) : '–'
-    const title =
+            : avail.kind === 'unscheduled'
+              ? 'waiting'
+              : 'unlocked'
+    // Every locked/waiting label is the shared rule's own wording, verbatim – one sentence, two
+    // screens. Only the two states this file OWNS (a finish on the books, an outgrown tier she never
+    // played) are worded here.
+    const label =
       state === 'locked'
-        ? `${TIERS[id].label} – opens at ${TIERS[id].minAgeYears}`
+        ? `🔒 ${avail.note}`
+        : state === 'reached'
+          ? shortFinish(best!)
+          : state === 'outgrown'
+            ? (best !== undefined ? shortFinish(best) : avail.note)
+            : state === 'waiting'
+              ? avail.note
+              : 'Unlocked – enter your first!'
+    const title =
+      state === 'reached'
+        ? `Best ${short} finish · ${avail.title}`
         : state === 'outgrown'
           ? `Outgrown – her best ${short} result stays on the books`
-          : state === 'unlocked'
-            ? `Eligible now – enter a ${short} event to open the account`
-            : `Best ${short} finish`
+          : avail.title
     return { id, short, label, state, title }
   }),
 )
@@ -441,6 +464,7 @@ function openRankHelp(): void {
               muted: chip.state === 'idle',
               locked: chip.state === 'locked',
               unlocked: chip.state === 'unlocked',
+              waiting: chip.state === 'waiting',
               outgrown: chip.state === 'outgrown',
             }"
             :title="chip.title"
