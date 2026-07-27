@@ -14,13 +14,20 @@ dev-dist/
 # gitignore has no brace expansion, so each extension gets its own line.
 art-src/
 public/images/*-jpeg/
-public/images/**/*.png
-public/images/**/*.jpg
-public/images/**/*.jpeg
-public/avatars/**/*.png
-public/avatars/**/*.jpg
-public/avatars/**/*.jpeg
 
-# Exempt from the rule above and intentionally tracked as PNG: public/favicon.png and the
-# public/pwa-*.png manifest / apple-touch icons. PWA icons are not reliably accepted as webp
-# across platforms, so those five stay raster on purpose.
+# Repo-wide, not per-directory. Path-scoped rules only cover the folders someone thought of:
+# public/logo-i-light.png sat untracked and uncaught under the earlier per-folder version, and the
+# next stray will land somewhere else again. Deny everything, then name the exceptions — that is the
+# only shape of this rule that cannot be walked around.
+*.png
+*.jpg
+*.jpeg
+
+# The exceptions, and the whole list of them. PWA manifest icons and apple-touch-icon are not
+# reliably accepted as webp across platforms, so these five stay raster ON PURPOSE. Adding a sixth
+# line here should require an argument.
+!public/favicon.png
+!public/pwa-192.png
+!public/pwa-512.png
+!public/pwa-maskable-512.png
+!public/pwa-apple-180.png
