@@ -475,7 +475,7 @@ describe('B6 — three-surface parity', () => {
     wa.condition = 35
     const natA = injectEvent(wa, { week: wa.week + 3, tier: 'national', deadlineWeek: wa.week + 1 })
     wa.season = [natA]
-    expect(advanceWeeks(wa, rngFromSeed(wa.seed), 4)).toBe('deadline')
+    expect(advanceWeeks(wa, rngFromSeed(wa.seed), 4)).toContain('deadline')
   })
 
   it('a hard block (injured) is consistent on all three surfaces (never stops advance)', () => {
@@ -494,7 +494,7 @@ describe('B6 — three-surface parity', () => {
     expect(ue.eligible).toBe(false)
     expect(ue.ineligibleReason).toBe('injured')
     // surface 3: advance never stops-for-deadline on an event she hard-cannot enter
-    expect(advanceWeeks(b, rngFromSeed(b.seed), 4)).not.toBe('deadline')
+    expect(advanceWeeks(b, rngFromSeed(b.seed), 4)).not.toContain('deadline')
   })
 })
 
@@ -598,7 +598,7 @@ describe("the doctor's veto — medical floor", () => {
     giveKidPoints(wa, 200)
     const nat = injectEvent(wa, { week: wa.week + 3, tier: 'national', deadlineWeek: wa.week + 1 })
     wa.season = [nat]
-    expect(advanceWeeks(wa, rngFromSeed(wa.seed), 4)).not.toBe('deadline')
+    expect(advanceWeeks(wa, rngFromSeed(wa.seed), 4)).not.toContain('deadline')
   })
 
   it('AT the floor she may still push through – fatigue above it stays a soft caution', () => {

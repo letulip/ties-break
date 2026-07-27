@@ -154,6 +154,21 @@ export interface FinanceWindow {
 
 export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end' | 'injury' | 'medical'
 
+/** R11-1: the order the UI must SURFACE a week's stop reasons in, and the order `advanceWeeks`
+ *  returns them in. One advance can stop for SEVERAL true reasons at once (the owner's lost injury
+ *  popup: a fresh injury landing on the season wrap-up week was reported as 'season-end' alone, so
+ *  neither the injury dialog nor a toast ever appeared and the auto-withdrawals happened in
+ *  silence). Medical events rank FIRST precisely because they may never be swallowed by a stop that
+ *  can wait a click: they cost her entries and money the moment they land. */
+export const STOP_PRECEDENCE: readonly StopReason[] = [
+  'injury',
+  'medical',
+  'tournament',
+  'season-end',
+  'deadline',
+  'funds',
+]
+
 /** Structured end-of-season recap (schema v10). Written at wrap-up time (the tick into the
  *  season year's first off-season week) off the world state itself – W-L are counted as the
  *  season's kid matches resolve (never re-parsed from event text), so pruning can't lose them.
@@ -171,8 +186,18 @@ export interface SeasonSummary {
   losses: number
   /** e.g. "best Semifinalist" or "no tournaments played" */
   bestResultText: string
-  /** signed funds delta across the season (flavor figure, matches the wrap-up milestone) */
+  /** signed funds delta across the season (== earnedCents - spentCents, and == the change in
+   *  `fundsCents` across the season window). R11-12a: this used to be a scrape of the CAPPED
+   *  `events` feed over a window that also excluded the wrap-up week, so it disagreed with the
+   *  Money screen by hundreds of dollars a season; it is now the same `financeWindow` fold the
+   *  wallet reads, over the same window. */
   fundsDeltaCents: number
+  /** GROSS spend across the season window (a positive number) – the figure the Money screen's
+   *  "This season" donut shows in its centre. OPTIONAL: summaries banked before R11-12a never
+   *  stored it, so readers must treat `undefined` as "not recorded" and show nothing. */
+  spentCents?: number
+  /** GROSS income across the same window (a positive number). Same optionality as `spentCents`. */
+  earnedCents?: number
   /** weeks lost to injury inside the season (Season-Life slice C). OPTIONAL – summaries
    *  banked before slice C never stored it; readers default to 0 (no schema bump). */
   weeksInjured?: number
@@ -416,8 +441,12 @@ export interface Snapshot {
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
    *  Stats. Empty until the first wrap-up. */
   seasonHistory: SeasonHistoryEntry[]
-  /** set when an `advance` stopped early */
-  stopReason?: StopReason
+  /** EVERY reason an `advance` stopped early, in STOP_PRECEDENCE order; absent when the advance ran
+   *  its full course. R11-1: this replaced a single `stopReason`, which could only ever report one
+   *  of the week's true reasons and silently dropped the rest (a fresh injury on the wrap-up week
+   *  came back as 'season-end' alone). The UI dispatches off the SET, so an injury and the season
+   *  wrap-up are both reachable from one advance. */
+  stopReasons?: StopReason[]
   /** present while a tournament reveal is in progress (drives TournamentFlow) */
   pending?: PendingView
 }

@@ -281,7 +281,7 @@ describe('advance stop reasons', () => {
 
     const stop = advanceWeeks(world, rng, 4)
     expect(world.week).toBe(event.week)
-    expect(stop).toBe('tournament')
+    expect(stop).toContain('tournament')
   })
 
   // *** RE-PINNED 25.07 (season-planner slice, round-9 leftover FIX): the deadline stop now
@@ -295,7 +295,7 @@ describe('advance stop reasons', () => {
     // ample funds, no entries, ZERO ranking points -> regional (min 65) / national (min 150)
     // are both out of reach, so no deadline may interrupt the advance.
     const stop = advanceWeeks(world, rng, 20)
-    expect(stop).not.toBe('deadline')
+    expect(stop).not.toContain('deadline')
   })
 
   it('stops before an imminent affordable regional+ deadline she IS eligible for', () => {
@@ -304,7 +304,7 @@ describe('advance stop reasons', () => {
     // one counting result puts her inside the regional band [65, 230]
     world.results.push({ playerId: KID_ID, week: world.week, points: 80, tier: 'regional' })
     const stop = advanceWeeks(world, rng, 20)
-    expect(stop).toBe('deadline')
+    expect(stop).toContain('deadline')
     expect(world.week).toBeLessThan(20)
     const soon = world.season.some(
       (e) =>
@@ -323,6 +323,6 @@ describe('advance stop reasons', () => {
     world.fundsCents = -50_000_00
     const stop = advanceWeeks(world, rng, 4)
     expect(world.fundsCents).toBeLessThan(0)
-    expect(stop).toBe('funds')
+    expect(stop).toContain('funds')
   })
 })

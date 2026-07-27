@@ -3,8 +3,9 @@
 // missed while week-skipping (he saw the auto-withdrawal three weeks later). This is the
 // blocking popup instead (SeasonSummaryDialog pattern): the injury kind, how long she is out,
 // what was auto-withdrawn at onset and what came back as refunds – plus an alert sfx from the
-// existing framework ('ooh', no new assets). App.vue shows it when an advance stops with
-// stopReason 'injury'; Continue dismisses it client-side like the season summary.
+// existing framework ('ooh', no new assets). App.vue shows it whenever an advance's stop reasons
+// INCLUDE 'injury' (R11-1: one week can stop for several reasons, and a week that also ended the
+// season used to swallow this one whole); Continue dismisses it client-side like the season summary.
 import { computed, onMounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import { playSfx } from '../audio/sfx'

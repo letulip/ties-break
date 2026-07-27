@@ -79,9 +79,11 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     }
     case 'advance': {
       if (!world || !rng) throw new Error('No active career')
-      const stopReason = advanceWeeks(world, rng, msg.weeks)
+      // R11-1: EVERY reason the advance stopped rides along (an injury landing on the wrap-up week
+      // is both 'injury' and 'season-end'); `advance` is still the only message that sets them.
+      const stopReasons = advanceWeeks(world, rng, msg.weeks)
       await autosave(world)
-      return { id: msg.id, ok: true, type: 'snapshot', snapshot: toSnapshot(world, stopReason) }
+      return { id: msg.id, ok: true, type: 'snapshot', snapshot: toSnapshot(world, stopReasons) }
     }
     case 'enterEvent': {
       if (!world) throw new Error('No active career')
