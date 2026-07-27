@@ -80,6 +80,14 @@ describe('A1 — reconstruction: (tier, points) round-trips to the right match c
       // is now systematically fresher than it was. Surfaced in docs/specs/wave-b-first-round-zero.md
       // as an open decision for the owner – it is a side effect of the points change, not a design
       // choice, and fixing it means touching how "she played" is recorded (world.ts), not this table.
+      //
+      // ⚠ AND THAT IS WHAT HAPPENED (fix/rival-fatigue-rows). The second paragraph above is HISTORY
+      // as of that branch and is kept only because it explains why this test reads the way it does.
+      // The cohort write site no longer guards on `points > 0`: every entrant leaves a row, `points`
+      // carries the award (0 included), and a first-round exit costs a rival exactly one score-less
+      // match at that tier. The table below is unchanged – the fix is in world.ts, precisely where
+      // this note said it would have to be – and the reconstruction of a 0-point row is asserted on
+      // the very next line, which now describes a row the engine really writes.
       expect(def.points.length).toBe(rounds + 1)
       expect(def.points.slice(0, -1).every((p) => p > 0)).toBe(true)
       expect(def.points[def.points.length - 1]).toBe(0)

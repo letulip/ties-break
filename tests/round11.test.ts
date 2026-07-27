@@ -262,6 +262,7 @@ describe('R11-12a — the wrap-up summary reconciles with the wallet', () => {
     const wealthy = PRESETS.find((p) => p.background === 'wealthy')!
     const { world, rng } = openCareer(wealthy, 0)
     let wraps = 0
+    let feedEverAtCap = false
     for (let i = 0; i < 2 * WEEKS_PER_YEAR; i++) {
       stepCareerWeek(world, rng)
       if (world.week % WEEKS_PER_YEAR !== WRAP_OFFSET) continue
@@ -288,9 +289,21 @@ describe('R11-12a — the wrap-up summary reconciles with the wallet', () => {
         .filter((e) => e.week >= yearStart && e.week < world.week && e.amountCents !== undefined)
         .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
       expect(legacy).not.toBe(wallet.netCents)
-      expect(world.events.length).toBeGreaterThanOrEqual(400) // the feed IS at its cap
+      // ⚠ RE-PINNED by fix/rival-fatigue-rows: this used to assert `>= 400` (the EVENTS_CAP) AT
+      // EVERY WRAP, and season 1 of this fixture now closes on 362 events (season 2 is 402, still
+      // over the cap). MEASURED, same seed, pre-fix → post-fix: entries 25 → 21, tournaments
+      // 24 → 19, kid matches 42 → 28, injuries 1 → 0. MECHANISM: cohort rivals now pay condition
+      // for a draw they lost their opener in, so the field she meets is tireder, her brackets
+      // resolve differently and this particular career takes a different (shorter) shape in year 1.
+      // The claim this line exists for is "the feed really is pruned, so the legacy fold above is
+      // reading a mutilated history" – so it is now asserted where it is TRUE (at least one wrap
+      // hits the cap) plus a floor at every wrap that keeps the fixture a busy one. Weakening it to
+      // a per-wrap `>= 350` would have kept it green while quietly dropping the witness.
+      feedEverAtCap ||= world.events.length >= 400
+      expect(world.events.length).toBeGreaterThan(300) // a real, event-dense season either way
     }
     expect(wraps).toBe(2)
+    expect(feedEverAtCap).toBe(true) // ...and the cap is genuinely reached, so pruning IS exercised
   })
 
   it('the net equals the actual movement in fundsCents across the season window', () => {

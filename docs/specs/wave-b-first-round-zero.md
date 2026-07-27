@@ -135,6 +135,15 @@ analog for "top-100" or "top-250". The rank-band columns above are the honest su
 
 ## 5. TWO SIDE EFFECTS THE OWNER HAS TO RULE ON
 
+> **RULED ON, AND FIXED — see `docs/specs/rival-fatigue-rows.md` (`fix/rival-fatigue-rows`).**
+> (a) is gone: the cohort write site no longer guards on `points > 0`, so every entrant leaves a row
+> and a first-round exit costs a rival one score-less match of condition. Measured over the same
+> axes, blind appearances went **45.6% → 0.0%**, mean cohort condition **81.3 → 75.8**, and the
+> cohort's win% against the kid came back **3.0 points** (49.4 → 46.4). (b) is resolved in
+> PRE-HISTORY's favour – it was the half that was already right – so `prehistory.ts` is unchanged
+> and the live path moved onto its shape. The `kidRank` pins below did NOT move again. The section
+> is left as written: it is the record of what this slice measured and why it left the decision open.
+
 Both come from one root: **the engine uses "has a row in `world.results`" as the record that a week
 was PLAYED, and both write sites guard on `points > 0`.** Until now every finish paid, so the two
 were the same thing. Zeroing the first round pulls them apart for the first time.

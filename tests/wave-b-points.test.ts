@@ -162,31 +162,44 @@ describe('W-B3b — THE SIDE EFFECT: "played" and "scored" have come apart', () 
   //
   // Pinned here so the coupling is visible and cannot regress silently while the owner decides.
   // Neither is fixed in this slice: the fix lives in world.ts / prehistory.ts, not in the table.
-  it('a first-round exit produces no ledger row, so it is invisible to rival fatigue', () => {
+  //
+  // ⚠ RE-CLAIMED BY fix/rival-fatigue-rows, WHICH IS THE DECISION (1) WAS WAITING FOR. The cohort
+  // write site no longer guards on `points > 0`: every entrant of every draw leaves a row and
+  // `points` carries the award, 0 included, exactly as pre-history has always written it. So (2)'s
+  // disagreement is resolved – in pre-history's favour – and (1) is gone: measured over 12 cells ×
+  // 30 seeds × 208w, the share of cohort appearances charged no strain went 45.6% → 0.0% and the
+  // field's mean condition 81.3 → 75.8 (tools/rival-fatigue-audit.ts). The mechanism-level pins
+  // live in tests/rival-fatigue.test.ts. What stays HERE is the part that belongs to the points
+  // table: a zero in the table must never be able to erase a week of tennis.
+  it('a first-round exit is worth 0 and still costs a rival a match of condition', () => {
     const tier: TierId = 'j30'
     const pts = TIERS[tier].points[TIERS[tier].points.length - 1]
     expect(pts).toBe(0)
-    // finalizeTournament / awardAiPoints both do `if (points > 0) results.push(...)`.
-    const wouldWriteRow = pts > 0
-    expect(wouldWriteRow).toBe(false)
 
-    // ...and with no row, the fatigue window sees a QUIET week: full recovery, no strain.
-    const playedButScoreless: SeasonResult[] = [] // exactly what the ledger holds after that week
-    const restedAll = rivalCondition(playedButScoreless, 'ai-x', 10)
+    // The row the engine now writes for that exit, and what the fatigue window makes of it.
+    const scoreless: SeasonResult[] = [{ playerId: 'ai-x', week: 10, points: pts, tier }]
+    const playedAndLost = rivalCondition(scoreless, 'ai-x', 10)
+    const rested = rivalCondition([], 'ai-x', 10)
+    expect(playedAndLost).toBeLessThan(rested) // showing up is never free…
+    // …and a deeper run still costs more, so the ordering the points table implies survives.
     const wonOne: SeasonResult[] = [{ playerId: 'ai-x', week: 10, points: TIERS[tier].points[4], tier }]
-    const playedAndScored = rivalCondition(wonOne, 'ai-x', 10)
-    expect(restedAll).toBeGreaterThan(playedAndScored)
+    expect(rivalCondition(wonOne, 'ai-x', 10)).toBeLessThan(playedAndLost)
   })
 
-  it('pre-history still writes the scoreless week, so the two halves disagree', () => {
+  it('pre-history writes the scoreless week, and the live path now writes it too', () => {
     const cohort = generateCohort('wave-b-ph')
     const rows = generatePreHistory('wave-b-ph', cohort)
     const zero = rows.filter((r) => r.points === 0)
-    // It has no `points > 0` guard – unlike both live write sites.
+    // It never had a `points > 0` guard, and it is the shape the live path was moved onto.
     expect(zero.length).toBeGreaterThan(0)
-    // Which leaves cohort players who "played" a whole pre-season and hold nothing.
-    const ranking = computeRanking(rows, 0, cohort.map((p) => p.id))
+    // Which leaves cohort players who "played" a whole pre-season and hold nothing: they sit on the
+    // table at 0 points, sharing the last rank the kid opens on. That follows from THIS slice (the
+    // points table), not from whether the scoreless rows are written at all – `computeRanking`
+    // counts only scoring rows, so dropping them cannot move anybody's total by a single point.
+    const ids = cohort.map((p) => p.id)
+    const ranking = computeRanking(rows, 0, ids)
     expect(ranking.some((r) => r.points === 0)).toBe(true)
+    expect(computeRanking(rows.filter((r) => r.points > 0), 0, ids)).toEqual(ranking)
   })
 })
 
