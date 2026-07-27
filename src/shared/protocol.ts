@@ -174,7 +174,11 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
  *  season's kid matches resolve (never re-parsed from event text), so pruning can't lose them.
  *  Surfaced on the snapshot and shown by SeasonSummaryDialog when `advance` reports 'season-end'. */
 export interface SeasonSummary {
-  /** calendar year label of the season that just ended (weekYear of its first week) */
+  /** DISPLAY year of the season that just ended – `seasonYear(seasonIndex)` in shared/dates.ts,
+   *  i.e. derived from the season's INDEX, never from the calendar year of its first Monday.
+   *  It used to be `weekYear(yearStart)`, which repeats 2035 for seasons 4 and 5 (a season is 364
+   *  days, so its opening Monday walks back over New Year); the popup would then have announced
+   *  "Season 2035" two years running. Label only – the season's identity is its index. */
   seasonYear: number
   /** kid's dense rank at wrap-up */
   endRank: number
@@ -209,8 +213,19 @@ export interface SeasonSummary {
  *  Deliberately TINY – seven numbers per SEASON (never per week), so a decade of career costs
  *  bytes, not kilobytes: no strings, and the full recap keeps living in SeasonSummary. */
 export interface SeasonHistoryEntry {
-  /** calendar year label of the season (same value as SeasonSummary.seasonYear) */
-  year: number
+  /** THE SEASON'S IDENTITY: its 0-based index (`floor(week / WEEKS_PER_YEAR)`), schema v16.
+   *
+   *  This used to be `year`, the calendar year of the season's first Monday, and that is a value
+   *  that REPEATS: a season is 52 weeks = 364 days, so its opening Monday walks ~1.25 days earlier
+   *  every year and steps back over New Year at season 5 – `weekYear(208)` and `weekYear(260)` are
+   *  both 2035. The wrap-up's "already banked?" guard tested that year, so season 5 looked like a
+   *  season already in the list and its whole row was dropped: the player lost a season out of the
+   *  Stats table at age 19, from the very feature that table exists for.
+   *
+   *  An index cannot drift, cannot repeat and needs no calendar to compute. The year the table
+   *  PRINTS is derived from it (`seasonYear(seasonIndex)`, shared/dates.ts) – the same function
+   *  `weekLabel` uses, so a row's header and the week labels inside that season always agree. */
+  seasonIndex: number
   /** her dense rank at the season's wrap-up */
   endRank: number
   /** ranking points earned in-season */
@@ -403,6 +418,29 @@ export interface CountingResult {
   points: number
 }
 
+/** The kid's current run of consecutive COMPETITIVE losses, and the threshold at which this
+ *  particular run turns her face angry (fix/world-trio item 3, owner's call).
+ *
+ *  Computed by the ENGINE (it owns the seed, the full event log and the RNG discipline) and carried
+ *  on the snapshot so the pure `avatarEmotion` decision only has to compare two numbers. Null when
+ *  her most recent competitive match was a WIN, or when she has never played one.
+ *
+ *  WHAT COUNTS (see `computeLossStreak` in engine/world.ts for the reasoning):
+ *   - a tournament match she lost           -> counts, and extends the streak;
+ *   - a tournament match she won            -> BREAKS the streak (nothing else does);
+ *   - a practice friendly, either result    -> invisible (R11-2: a friendly never moves her face);
+ *   - a walkover / medical withdrawal       -> invisible: she never took the court, so there is no
+ *                                              defeat to add and nothing to forgive either. */
+export interface LossStreak {
+  /** consecutive competitive losses ending at her most recent competitive match (>= 1) */
+  losses: number
+  /** the week the streak's FIRST loss was played – the sub-stream key `angerAt` is drawn on, and
+   *  what makes the threshold stable for the life of one streak instead of re-rolled per render */
+  startWeek: number
+  /** how many consecutive losses THIS streak needs before her face turns angry (4..6, drawn once) */
+  angerAt: number
+}
+
 export interface Snapshot {
   schemaVersion: number
   careerId: string
@@ -459,6 +497,10 @@ export interface Snapshot {
    *  so surfacing them bumps no schema. Drives the Stats header's W–L figure. */
   seasonWins: number
   seasonLosses: number
+  /** her current run of consecutive competitive losses + the threshold that turns it angry, or
+   *  null when her last competitive match was a win (or she has never played one). Derived at
+   *  snapshot time from the event log – persists nothing, bumps no schema. */
+  lossStreak: LossStreak | null
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on

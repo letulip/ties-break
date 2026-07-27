@@ -14,6 +14,7 @@ import {
   avatarCropPath,
   avatarEmotion,
   portraitStage,
+  resultShowsOnHerFace,
   type AvatarEmotion,
   type LastKidResult,
   type LastKidTitle,
@@ -22,29 +23,25 @@ import {
 import { KID_ID } from '../engine/world'
 import { TIERS, tierFromLabel } from '../engine/season/calendar'
 import type { TierId } from '../engine/season/types'
-import type { WorldEvent } from '../shared/protocol'
 
 const TIER_IDS = Object.keys(TIERS) as TierId[]
 
 /**
- * R11-2 – which recorded matches are allowed to change her FACE. The owner: «на practice match
- * вообще не вижу смысла менять аватарку на выигрыш или проигравшую – на турнирах да, локальные,
- * региональные, национальные да, а на тренировочных не вижу смысла.»
+ * R11-2 – which recorded matches are allowed to change her FACE. THE DEFINITION MOVED to
+ * `shared/avatarEmotion.ts` (fix/world-trio item 3) and is re-exported here unchanged, so every
+ * import path that already pointed at this module keeps working.
  *
- * A booked friendly is stored as an ordinary `match` event with `friendly: true` (world.ts
- * resolvePractice) – the same shape a tournament round has – so the result layer picked it up and she
- * came home from a hit-out at the club looking crushed. A practice match now leaves her face alone:
- * she falls back to the IDLE emotion (condition / injury), exactly as on any week she did not compete.
+ * It moved because it grew a second caller on the far side of the engine/UI line: the engine's
+ * consecutive-loss streak has to skip exactly the same events this walk skips (a friendly that is
+ * not a RESULT must not be a LOSS either), and the only way to guarantee that is one function, in
+ * the layer both sides can import. Its behaviour is byte-identical – `!!e.match && !e.friendly`.
  *
- * This is the ONE predicate for it. Every portrait that shows an emotion – the Home player card and
- * the Kid screen's big painting – takes it from `useKidEmotion` below, so gating it here gates both
- * at once and they cannot drift apart. The app header is no longer in that set at all (F45-1: it is
- * age-only, ./headerAvatar.ts). TournamentFlow's finale art is NOT affected and must not be: it only
- * ever mounts for a tournament reveal.
+ * Every portrait that shows an emotion – the Home player card and the Kid screen's big painting –
+ * takes it from `useKidEmotion` below, so gating it there gates both at once. The app header is no
+ * longer in that set at all (F45-1: it is age-only, ./headerAvatar.ts). TournamentFlow's finale art
+ * is NOT affected and must not be: it only ever mounts for a tournament reveal.
  */
-export function resultShowsOnHerFace(e: WorldEvent): boolean {
-  return !!e.match && !e.friendly
-}
+export { resultShowsOnHerFace }
 
 /** `${year}-w${week}-${tier}` → tier (undefined for an unparseable/foreign id). */
 function tierFromEventId(eventId: string | undefined): TierId | undefined {
@@ -101,6 +98,10 @@ export function useKidEmotion() {
       injured: !!game.snapshot?.injury,
       lastResult: lastResult.value,
       lastTitle: lastTitle.value,
+      // Taken from the snapshot AS IS – the streak and its anger threshold are the engine's, drawn
+      // once per streak off a purpose-scoped sub-stream. Recomputing (or re-drawing) either here
+      // would flicker her face between `sad` and `angry` on one screen; see engine computeLossStreak.
+      lossStreak: game.snapshot?.lossStreak ?? null,
     }),
   )
 

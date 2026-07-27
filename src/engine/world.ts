@@ -10,6 +10,7 @@ import {
   type FinanceWindow,
   type FullBracketMatch,
   type InjurySeverity,
+  type LossStreak,
   type PendingBracketRound,
   type PendingView,
   type PlayerProfile,
@@ -29,7 +30,20 @@ import {
   type WorldMatch,
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
-import { weekYear } from '../shared/dates'
+// THE LAYERING, stated once (fix/world-trio item 2). `src/shared/dates.ts` is deliberately
+// engine-free – it imports nothing and knows only the fixed epoch – so the dependency runs one way,
+// engine -> shared, exactly as it already does for `../shared/protocol` and `../shared/format`.
+// This import is therefore the seam, not a violation of one: there is no need for (and must be no)
+// second week formatter living inside the engine. The engine keeps counting ABSOLUTE weeks and
+// every RNG sub-stream key / save field / pinned capture stays on that index; `weekLabel` is
+// applied only where the engine writes a string a PLAYER reads.
+import { seasonYear, weekLabel } from '../shared/dates'
+// The emotion RULES live in shared/ (pure, UI-free, and the composable reads the same module), so
+// the engine borrows the two facts it needs rather than restating them: which recorded matches are
+// allowed to move her face (R11-2's one predicate) and the band a streak's anger threshold sits in.
+// Type-only on the way back (shared/avatarEmotion imports `type TierId` from engine/season/types),
+// so this is a leaf dependency, not a cycle.
+import { ANGER_STREAK_MAX, ANGER_STREAK_MIN, resultShowsOnHerFace } from '../shared/avatarEmotion'
 import type { MatchPlayer, Surface } from './match/types'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import {
@@ -64,7 +78,7 @@ import { applySurfaceStyle } from './match/style'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 15
+export const SAVE_SCHEMA_VERSION = 16
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -253,11 +267,22 @@ function accrueFinance(world: WorldState, week: number, category: WorldEventCate
   entry.byCategory[category] = (entry.byCategory[category] ?? 0) + amountCents
 }
 
+/** THE SEASON'S IDENTITY: the 0-based index of the 52-week block a week belongs to.
+ *
+ *  Pure integer arithmetic on the absolute week – no calendar, no date, nothing that can drift.
+ *  It is the ONLY thing allowed to identify a season: the wrap-up milestone key, the "already
+ *  banked?" guard on `seasonHistory` and the row it writes all key on this. The season year the
+ *  player READS is derived from it (`seasonYear` in shared/dates.ts), never the other way round –
+ *  see SeasonHistoryEntry.seasonIndex for the season that went missing when it was. */
+export function seasonIndexOf(week: number): number {
+  return Math.floor(week / WEEKS_PER_YEAR)
+}
+
 /** The first week of the 52-week season block a week belongs to. THE ONE definition of "this
  *  season" for money: the Money screen's "This season" window and the end-of-season summary both
  *  read it, so a season can never mean two different spans on two surfaces (R11-12a). */
 export function seasonStartWeek(week: number): number {
-  return Math.floor(week / WEEKS_PER_YEAR) * WEEKS_PER_YEAR
+  return seasonIndexOf(week) * WEEKS_PER_YEAR
 }
 
 /** Pure category-accurate fold of `financeWeeks` from `fromWeek` onward (inclusive). No world
@@ -412,7 +437,18 @@ const SEASON_HISTORY_CAP = 30
 // `fundsCents` itself, in tests/round11.test.ts.
 function maybeFireSeasonWrapUp(world: WorldState): void {
   if (world.week % WEEKS_PER_YEAR !== WEEKS_PER_YEAR - OFF_SEASON_WEEKS) return
-  const year = Math.floor(world.week / WEEKS_PER_YEAR)
+  // THE SEASON, IDENTIFIED BY ITS INDEX – and the year it is DISPLAYED as, derived from that index.
+  // Everything below that names a season (the milestone key, the milestone text, the summary's
+  // label, the history row and its dedup guard) reads one of these two, so they cannot disagree.
+  //
+  // ⚠ THE BUG THIS REPLACES (fix/world-trio). The label and the identity were the same value –
+  // `weekYear(yearStart)`, the calendar year of the season's first Monday – and that value repeats:
+  // 52 weeks is 364 days, so the opening Monday walks ~1.25 days earlier a year and steps back over
+  // New Year at season 5. weekYear(208) and weekYear(260) are BOTH 2035, so when season 5 wrapped,
+  // the `some(h => h.year === …)` guard below saw 2035 already banked (by season 4) and dropped
+  // season 5's row on the floor. A whole season vanished from the Stats table at age 19.
+  const seasonIndex = seasonIndexOf(world.week)
+  const displayYear = seasonYear(seasonIndex)
   const yearStart = seasonStartWeek(world.week)
   const wrapWeek = world.week
 
@@ -467,14 +503,14 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
 
   fireMilestone(
     world,
-    `season-wrap-${year}`,
-    `Season ${weekYear(yearStart)} wrap-up: rank #${world.kidRank}${rankMove} · ${seasonPoints} pts this season · ` +
+    `season-wrap-${seasonIndex}`,
+    `Season ${displayYear} wrap-up: rank #${world.kidRank}${rankMove} · ${seasonPoints} pts this season · ` +
       `${bestText} · ${wins}-${losses} (W-L) · funds ${fundsText}`,
   )
   addEvent(world, { week: world.week, type: 'info', text: 'Off-season: rest, school, family time.' })
 
   world.lastSeasonSummary = {
-    seasonYear: weekYear(yearStart),
+    seasonYear: displayYear,
     endRank: world.kidRank,
     startRank,
     points: seasonPoints,
@@ -487,11 +523,12 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
     weeksInjured,
   }
   // R10-9: the same figures also APPEND to the career history (the summary above is overwritten
-  // every year). Guarded on the year, so a re-entry for a season already banked is a no-op –
-  // the append is idempotent exactly like the wrap-up milestone.
-  if (!world.seasonHistory.some((h) => h.year === weekYear(yearStart))) {
+  // every year). Guarded on the season INDEX, so a re-entry for a season already banked is a no-op –
+  // the append is idempotent exactly like the wrap-up milestone, whose key is the same index. This
+  // guard is where the dropped season died; an index makes the collision unrepresentable.
+  if (!world.seasonHistory.some((h) => h.seasonIndex === seasonIndex)) {
     world.seasonHistory.push({
-      year: weekYear(yearStart),
+      seasonIndex,
       endRank: world.kidRank,
       points: seasonPoints,
       wins,
@@ -1130,11 +1167,11 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
       week: world.week,
       type: 'expense',
       category: 'vacation',
-      text: `Booked: ${pkg.label} – W${week}`,
+      text: `Booked: ${pkg.label} – ${weekLabel(week)}`,
       amountCents: -priceCents,
     })
   }
-  addEvent(world, { week: world.week, type: 'entry', text: `Family vacation booked – W${week} (${pkg.label})` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Family vacation booked – ${weekLabel(week)} (${pkg.label})` })
 }
 
 /** Cancel a booked vacation before its week starts: FULL refund (mirror of entry withdrawal). */
@@ -1154,7 +1191,7 @@ export function cancelVacation(world: WorldState, week: number): void {
       amountCents: booking.paidCents,
     })
   }
-  addEvent(world, { week: world.week, type: 'entry', text: `Cancelled the family vacation – W${week}` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Cancelled the family vacation – ${weekLabel(week)}` })
 }
 
 /** Book a practice match (a watchable friendly) on an empty future week: charges the court
@@ -1178,10 +1215,10 @@ export function bookPractice(world: WorldState, week: number, withCoach: boolean
     week: world.week,
     type: 'expense',
     category: 'practice',
-    text: withCoach ? `Court rental + coach – practice match W${week}` : `Court rental – practice match W${week}`,
+    text: withCoach ? `Court rental + coach – practice match ${weekLabel(week)}` : `Court rental – practice match ${weekLabel(week)}`,
     amountCents: -paidCents,
   })
-  addEvent(world, { week: world.week, type: 'entry', text: `Practice match booked – W${week}` })
+  addEvent(world, { week: world.week, type: 'entry', text: `Practice match booked – ${weekLabel(week)}` })
 }
 
 /** Cancel a booked practice before its week starts: full refund of the rental. */
@@ -1201,7 +1238,7 @@ function refundPractice(world: WorldState, booking: PracticeBooking, reason: 'Ca
     week: world.week,
     type: 'income',
     category: 'practice',
-    text: `Court rental refunded – W${booking.week}`,
+    text: `Court rental refunded – ${weekLabel(booking.week)}`,
     amountCents: booking.paidCents,
   })
   addEvent(world, {
@@ -1209,10 +1246,10 @@ function refundPractice(world: WorldState, booking: PracticeBooking, reason: 'Ca
     type: 'entry',
     text:
       reason === 'Injured'
-        ? `Practice match called off – W${booking.week} (she is hurt)`
+        ? `Practice match called off – ${weekLabel(booking.week)} (she is hurt)`
         : reason === 'Medical'
-          ? `Practice match called off – W${booking.week} (not cleared to play)`
-          : `Cancelled the practice match – W${booking.week}`,
+          ? `Practice match called off – ${weekLabel(booking.week)} (not cleared to play)`
+          : `Cancelled the practice match – ${weekLabel(booking.week)}`,
   })
 }
 
@@ -1692,7 +1729,7 @@ function finalizeTournament(world: WorldState): void {
     week: world.week,
     type: 'tournament',
     text:
-      `${tier.label} (${event.surface}, W${event.week}): ${world.profile.kidName} – ` +
+      `${tier.label} (${event.surface}, ${weekLabel(event.week)}): ${world.profile.kidName} – ` +
       `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before)}`,
     finishIdx: kidFinish,
   })
@@ -1830,6 +1867,69 @@ function pruneEvents(world: WorldState): void {
 // Bounded by career length, not event volume, so it stays ≤ ~60 entries no matter the season.
 function pruneFinanceWeeks(world: WorldState): void {
   world.financeWeeks = world.financeWeeks.filter((w) => w.week >= world.week - (FINANCE_WEEKS - 1))
+}
+
+// --- the losing streak (fix/world-trio item 3) --------------------------------
+// `angry` finally has a trigger, and it is the owner's: she gets angry after a RUN of losses, of a
+// length the player cannot count to (a threshold drawn per streak in ANGER_STREAK_MIN..MAX).
+//
+// WHY THE ENGINE OWNS THIS. `avatarEmotion()` is a pure function of one result – no seed, no
+// history – so it can neither count a streak nor draw a threshold. Both are done here, once, and
+// travel on the snapshot; the pure decision then only compares two numbers. That split is also what
+// makes the face STABLE: a threshold re-drawn on every render would flip her between `sad` and
+// `angry` on the same screen (a UI-side draw has no idea it has already been made).
+//
+// THE STREAK RULES, and the reasoning for each:
+//
+//  * A COMPETITIVE MATCH SHE LOST extends it; a COMPETITIVE MATCH SHE WON ends it. Those are the
+//    only two things that move it. Note this makes an entire tournament RUN self-clearing: a run
+//    that reaches the final is W,W,W,L in the feed, so walking back from the newest event stops at
+//    the first of those wins and the streak is 1 – a good week cannot leave anger banked.
+//
+//  * A PRACTICE FRIENDLY IS INVISIBLE – it neither counts nor breaks. Forced by R11-2 (the owner:
+//    a friendly must not move her face at all): if a friendly LOSS could push her over the edge, a
+//    hit-out at the club would have changed her face, and if a friendly WIN could clear a run of
+//    real defeats, it would have changed it just as much in the other direction. Consistency here
+//    is not a judgement call, it is the same rule read twice – so it is the same predicate, too
+//    (`resultShowsOnHerFace`, shared/avatarEmotion.ts).
+//
+//  * A WALKOVER OR A MEDICAL WITHDRAWAL IS INVISIBLE – neither counts nor breaks. She never took
+//    the court: there is no defeat to add (losing to her own body is what `injury`/`tired` are for,
+//    and the injury emotion outranks the whole idle ladder anyway), and there is no performance to
+//    forgive her with either. Making it BREAK the streak would be perverse – a forfeited entry
+//    would launder away four real losses – and making it COUNT would punish her for an injury
+//    twice. This falls out of the walk for free: both emit `injury`-type events carrying no
+//    `match`, so the predicate above already skips them. Stated explicitly because "it happens to
+//    work" is exactly how such a rule rots.
+//
+//  * The streak spans SEASONS. A season boundary is a calendar fact, not something that happens to
+//    her; nothing about New Year makes the fifth defeat land softer.
+//
+// COST ON THE MAIN STREAM: ZERO. The threshold comes from `rngFromSeed(seed:angry:<startWeek>)` –
+// a purpose-scoped sub-stream, the same shape as `:injury:<week>` and `:aitour:<eventId>` – and
+// nothing here touches the weekly `rng`. The frozen capture (41550 / e6b0c709) cannot move: this
+// runs at SNAPSHOT time, which is not part of the tick at all.
+//
+// The start week is the key because it is the ONE thing about a streak that does not change while
+// the streak grows – keying on the length would re-draw at every new loss, which is the flicker
+// again. At most one competitive loss can exist per week (one tournament a week, and a bracket
+// eliminates her exactly once), so a start week identifies its streak uniquely.
+export function computeLossStreak(world: WorldState): LossStreak | null {
+  let losses = 0
+  let startWeek = 0
+  for (let i = world.events.length - 1; i >= 0; i--) {
+    const e = world.events[i]
+    if (!resultShowsOnHerFace(e)) continue
+    if (e.match!.winnerId === KID_ID) break
+    losses++
+    startWeek = e.week
+  }
+  if (losses === 0) return null
+  return {
+    losses,
+    startWeek,
+    angerAt: pickInt(rngFromSeed(`${world.seed}:angry:${startWeek}`), ANGER_STREAK_MIN, ANGER_STREAK_MAX),
+  }
 }
 
 // --- lifecycle ---------------------------------------------------------------
@@ -2176,13 +2276,13 @@ export function enterEvent(world: WorldState, eventId: string): void {
     week: world.week,
     type: 'expense',
     category: 'entry',
-    text: `Entry fee: ${TIERS[event.tier].label} (W${event.week})`,
+    text: `Entry fee: ${TIERS[event.tier].label} (${weekLabel(event.week)})`,
     amountCents: -fee,
   })
   addEvent(world, {
     week: world.week,
     type: 'entry',
-    text: `Entered ${TIERS[event.tier].label} – W${event.week} (${event.surface})`,
+    text: `Entered ${TIERS[event.tier].label} – ${weekLabel(event.week)} (${event.surface})`,
   })
 }
 
@@ -2215,7 +2315,7 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   addEvent(world, {
     week: world.week,
     type: 'entry',
-    text: `Withdrew from ${TIERS[event.tier].label} – W${event.week}`,
+    text: `Withdrew from ${TIERS[event.tier].label} – ${weekLabel(event.week)}`,
   })
 }
 
@@ -2257,7 +2357,7 @@ export function cancelEntry(world: WorldState, eventId: string): void {
   addEvent(world, {
     week: world.week,
     type: 'info',
-    text: `Cancelled ${TIERS[event.tier].label} – W${event.week}, entry fee forfeited.`,
+    text: `Cancelled ${TIERS[event.tier].label} – ${weekLabel(event.week)}, entry fee forfeited.`,
   })
 }
 
@@ -2625,6 +2725,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // surfacing them is derivation, not schema.
     seasonWins: world.seasonWins,
     seasonLosses: world.seasonLosses,
+    // The run of defeats behind her face, decided HERE and not in the UI: the engine holds the seed
+    // (so the per-streak threshold is drawn once, off `seed:angry:<startWeek>`) and the FULL event
+    // log (the snapshot only carries the trailing 60, which a long streak could outrun). Pure
+    // derivation off state that already exists – no persisted field, no schema bump.
+    lossStreak: computeLossStreak(world),
     lastSeasonSummary: world.lastSeasonSummary,
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
     seasonHistory: world.seasonHistory.map((h) => ({ ...h })),

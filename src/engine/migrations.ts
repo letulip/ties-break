@@ -1,12 +1,31 @@
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type FinanceWeek, type WorldEventCategory } from '../shared/protocol'
+import {
+  DEFAULT_PROFILE,
+  WEEK_PLAN_PRESETS,
+  type FinanceWeek,
+  type SeasonHistoryEntry,
+  type WorldEventCategory,
+} from '../shared/protocol'
 import { SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
 import { tierFromLabel } from './season/calendar'
+import { WEEKS_IN_SEASON, weekYear } from '../shared/dates'
 import type { TierId } from './season/types'
 
 // Save-data migrations. Append-only: never renumber, never delete a block.
 // Each `if (v < N)` block upgrades from N-1 to N and must be idempotent for its version.
+
+const EPOCH_SEASON_YEAR = weekYear(0) // 2031 – the year season 0 opened in
+
+/** v16 helper: invert the pre-v16 `year` field back to the season index that wrote it.
+ *
+ *  The old wrap-up stamped `weekYear(seasonIndex * WEEKS_IN_SEASON)` and refused to write a year
+ *  already present, so the smallest index yielding a given year IS the index that produced the row.
+ *  Bounded well past the game's horizon; falls back to the flat offset if it ever runs off the end. */
+function seasonIndexOfLegacyYear(year: number): number {
+  for (let k = 0; k <= 200; k++) if (weekYear(k * WEEKS_IN_SEASON) === year) return k
+  return Math.max(0, year - EPOCH_SEASON_YEAR)
+}
 
 export function migrateSave(raw: unknown): WorldState {
   // `log` is a pre-v6 field (dropped from WorldState when Snapshot switched to
@@ -169,9 +188,13 @@ export function migrateSave(raw: unknown): WorldState {
     // `bestFinish` stays absent on a backfilled row: the old summary stored only prose for it, and
     // parsing text back into an index is exactly what the wrap-up work moved away from.
     // Idempotent: an existing array is never touched, so a re-migration cannot duplicate a season.
+    // NOTE (v16): this block writes the v14 SHAPE, with the `year` field that v16 later re-keys to
+    // `seasonIndex`. Blocks are append-only and each one upgrades to ITS OWN version, so it stays
+    // exactly as it was written; the cast is what lets a historical shape be expressed against the
+    // current type. The v16 block below converts whatever this produced.
     if (!Array.isArray(save.seasonHistory)) {
       const s = save.lastSeasonSummary
-      save.seasonHistory = s
+      save.seasonHistory = (s
         ? [
             {
               year: s.seasonYear,
@@ -185,7 +208,7 @@ export function migrateSave(raw: unknown): WorldState {
               endFundsCents: typeof save.fundsCents === 'number' ? save.fundsCents : 0,
             },
           ]
-        : []
+        : []) as unknown as SeasonHistoryEntry[]
     }
     v = 14
   }
@@ -201,6 +224,30 @@ export function migrateSave(raw: unknown): WorldState {
     // Idempotent: an existing array is never touched, so a re-migration cannot drop a slot.
     if (!Array.isArray(save.internationalEntryWeeks)) save.internationalEntryWeeks = []
     v = 15
+  }
+
+  if (v < 16) {
+    // v16 (fix/world-trio) re-keys `seasonHistory` on the SEASON INDEX. Rows used to carry `year`,
+    // the calendar year of the season's first Monday, and the wrap-up used that as the season's
+    // IDENTITY – but a season is 364 days, so its opening Monday drifts back over New Year and
+    // weekYear(208) === weekYear(260) === 2035. Season 5 therefore looked already-banked and its
+    // row was never written. See SeasonHistoryEntry.seasonIndex.
+    //
+    // THE BACKFILL IS EXACT, not best-effort, because the buggy writer's own guard makes it
+    // invertible: it kept the FIRST season to claim a year and dropped every later claimant, so a
+    // legacy `year` can only ever have come from the SMALLEST index that yields it. Recovering that
+    // index is a short scan over `weekYear(k * WEEKS_IN_SEASON)`. (2035 is the only collision inside
+    // 40 seasons, so in practice this shifts nothing below season 5 and re-labels seasons 6+ by the
+    // one year the drop had cost them.) Idempotent: a row that already has an index is left alone.
+    if (Array.isArray(save.seasonHistory)) {
+      save.seasonHistory = save.seasonHistory.map((h) => {
+        const row = h as SeasonHistoryEntry & { year?: number }
+        if (typeof row.seasonIndex === 'number') return row
+        const { year, ...rest } = row
+        return { ...rest, seasonIndex: seasonIndexOfLegacyYear(year ?? EPOCH_SEASON_YEAR) }
+      })
+    }
+    v = 16
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

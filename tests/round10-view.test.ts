@@ -20,6 +20,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { simulateMatch } from '../src/engine/match/engine'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
+import { seasonYear } from '../src/shared/dates'
 import type { WorldEvent } from '../src/shared/protocol'
 
 // ---------------------------------------------------------------------------
@@ -50,13 +51,14 @@ describe('R10-9 — season history (v14)', () => {
     // keeps `world.fundsCents` at exactly what that season closed with (see below).
     const world = run('r10-history', 101)
     expect(world.seasonHistory.length).toBe(2)
-    const years = world.seasonHistory.map((h) => h.year)
-    expect(years).toEqual([...years].sort((a, b) => a - b))
+    const seasons = world.seasonHistory.map((h) => h.seasonIndex)
+    expect(seasons).toEqual([...seasons].sort((a, b) => a - b))
 
     // The newest row is the season the (overwritten) summary still describes – same figures.
     const last = world.seasonHistory[1]
     const summary = world.lastSeasonSummary!
-    expect(last.year).toBe(summary.seasonYear)
+    // v16: the row's identity is the index; the summary's label is that index's DISPLAY year.
+    expect(seasonYear(last.seasonIndex)).toBe(summary.seasonYear)
     expect(last.endRank).toBe(summary.endRank)
     expect(last.points).toBe(summary.points)
     expect(last.wins).toBe(summary.wins)
@@ -70,17 +72,17 @@ describe('R10-9 — season history (v14)', () => {
     const world = run('r10-history-2', 102)
     const first = world.seasonHistory[0]
     // The summary now describes season 2, so the only place season 1 survives is the history.
-    expect(world.lastSeasonSummary!.seasonYear).toBe(first.year + 1)
+    expect(world.lastSeasonSummary!.seasonYear).toBe(seasonYear(first.seasonIndex + 1))
     expect(typeof first.wins).toBe('number')
     expect(typeof first.losses).toBe('number')
-    expect(first.year).toBeLessThan(world.lastSeasonSummary!.seasonYear)
+    expect(seasonYear(first.seasonIndex)).toBeLessThan(world.lastSeasonSummary!.seasonYear)
   })
 
   it('is written ONCE per season – ticking through the whole off-season never duplicates a year', () => {
     const world = run('r10-history-once', 60) // week 49 wrap + the rest of the off-season
     expect(world.seasonHistory.length).toBe(1)
-    const years = world.seasonHistory.map((h) => h.year)
-    expect(new Set(years).size).toBe(years.length)
+    const seasons = world.seasonHistory.map((h) => h.seasonIndex)
+    expect(new Set(seasons).size).toBe(seasons.length)
   })
 
   it('grows per SEASON, not per week, and every row is a tiny numeric record', () => {
@@ -142,8 +144,10 @@ describe('R10-9 — v14 migration', () => {
     expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect(migrated.seasonHistory.length).toBe(1)
     const summary = migrated.lastSeasonSummary!
+    // v16 re-keys the seeded row onto the season INDEX; the summary's year is that index's label.
+    expect(seasonYear(migrated.seasonHistory[0].seasonIndex)).toBe(summary.seasonYear)
     expect(migrated.seasonHistory[0]).toEqual({
-      year: summary.seasonYear,
+      seasonIndex: migrated.seasonHistory[0].seasonIndex,
       endRank: summary.endRank,
       points: summary.points,
       wins: summary.wins,
@@ -169,14 +173,22 @@ describe('R10-9 — v14 migration', () => {
     expect(migrated.seasonHistory).toEqual([])
   })
 
-  it('never touches an existing v14 history (a real career\'s seasons survive re-migration)', () => {
+  it('never DROPS a season from an existing v14 history (v16 re-keys it, figure for figure)', () => {
     const v14 = JSON.parse(
       readFileSync(new URL('./fixtures/saves/v14.json', import.meta.url), 'utf8'),
     ) as Record<string, unknown>
+    const legacy = v14.seasonHistory as Array<Record<string, number>>
     const migrated = migrateSave(structuredClone(v14))
     expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
-    expect(migrated.seasonHistory).toEqual(v14.seasonHistory)
-    expect(migrated.seasonHistory.length).toBe(2)
+    // Same seasons, same order, same numbers – only the KEY changed (v16: `year` -> `seasonIndex`),
+    // and the index still prints as the year the row was banked under.
+    expect(migrated.seasonHistory.length).toBe(legacy.length)
+    migrated.seasonHistory.forEach((row, i) => {
+      const { seasonIndex, ...figures } = row
+      const { year, ...legacyFigures } = legacy[i]
+      expect(seasonYear(seasonIndex)).toBe(year)
+      expect(figures).toEqual(legacyFigures)
+    })
   })
 })
 

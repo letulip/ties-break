@@ -130,7 +130,13 @@ describe('weekLabel – the season year is the SEASON INDEX, not weekYear()', ()
 
 const SRC = new URL('../src/', import.meta.url)
 
-/** Every view-layer source file: templates, composables and the store. */
+/** Every view-layer source file: templates, composables and the store.
+ *
+ *  `engine` / `worker` / `viz` are skipped because they THINK in absolute weeks and must keep doing
+ *  so – every RNG sub-stream key, save field and pinned capture is on that index. But the engine
+ *  also WRITES strings a player reads, and those went unswept for a whole round (the ledger printed
+ *  "Entry fee: Local Open (W57)" under a "W3 '32" header). That half of the guard now lives in
+ *  tests/world-trio.test.ts, item 2 – the two together cover src/ with no gap. */
 function viewFiles(dir = SRC, prefix = ''): string[] {
   const out: string[] = []
   for (const entry of readdirSync(dir, { withFileTypes: true })) {

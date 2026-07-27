@@ -8,9 +8,12 @@
 //   2. the art matrix — 5 stages x 7 emotions, crops AND paintings, actually on disk, because a
 //      missing crop is a broken <img> in the header rather than a type error;
 //   3. that the adult->teen crop clamp is gone from every surface that had it;
-//   4. AGAINST: that `angry` is never RETURNED by the decision. It is a member of the union and its
-//      art ships, but nothing selects it yet (see shared/avatarEmotion.ts). If someone later wires
-//      a trigger, this test is the one that should go red and make them say so out loud.
+//   4. that `angry` is reachable ONLY through its trigger. It used to be a test AGAINST – nothing
+//      selected the emotion at all – and that pin went red exactly as intended when fix/world-trio
+//      wired the owner's trigger (a run of 4-6 straight losses). What survives is the half that is
+//      still a real property: every OTHER input still resolves to one of the six faces it always
+//      did, so anger cannot leak into an ordinary loss. The trigger's own behaviour is pinned in
+//      tests/world-trio.test.ts.
 import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import {
@@ -102,7 +105,7 @@ describe('the art matrix is complete on disk', () => {
   })
 })
 
-describe('`angry` is shipped art, not a live outcome', () => {
+describe('`angry` is reachable only through its trigger', () => {
   it('is a member of the union the surfaces accept', () => {
     // Compile-time is the real assertion; this keeps it honest at runtime too.
     expect(avatarCropPath('milf', 'angry')).toBe('avatars/milf-angry.webp')
@@ -115,9 +118,12 @@ describe('`angry` is shipped art, not a live outcome', () => {
     expect(src).toMatch(/re:\s*\/\^logo-tb-\/i/)
   })
 
-  it('NOTHING the decision can be asked returns it', () => {
-    // Sweep the whole reachable input space of avatarEmotion: fresh/stale result x won/lost x
-    // final-or-not x every tier x every title tier and age x injury x the condition ladder.
+  it('NOTHING WITHOUT A LOSING STREAK returns it', () => {
+    // Sweep the whole rest of avatarEmotion's input space: fresh/stale result x won/lost x
+    // final-or-not x every tier x every title tier and age x injury x the condition ladder, with no
+    // streak supplied. This is the half of the old "nothing returns angry" pin that is still TRUE
+    // and still worth having: the trigger must be the ONLY door, so an ordinary loss – at any tier,
+    // in any state – still reads sad/serious exactly as it did before the emotion existed.
     const results = new Set<AvatarEmotion>()
     for (const condition of [0, 39, 40, 59, 60, 100]) {
       for (const injured of [false, true]) {
@@ -127,15 +133,19 @@ describe('`angry` is shipped art, not a live outcome', () => {
             for (const tier of [undefined, ...TIERS]) {
               for (const resultWeek of [10, 9]) {
                 for (const lastTitle of [null, ...TIERS.flatMap((t) => [8, 9, 10].map((w) => ({ tier: t, week: w })))]) {
-                  results.add(
-                    avatarEmotion({
-                      week: 10,
-                      condition,
-                      injured,
-                      lastResult: { week: resultWeek, won, lostFinal, tier },
-                      lastTitle,
-                    }),
-                  )
+                  // both shapes a caller can hand over when there is no run: absent and null
+                  for (const lossStreak of [undefined, null]) {
+                    results.add(
+                      avatarEmotion({
+                        week: 10,
+                        condition,
+                        injured,
+                        lastResult: { week: resultWeek, won, lostFinal, tier },
+                        lastTitle,
+                        lossStreak,
+                      }),
+                    )
+                  }
                 }
               }
             }
@@ -148,10 +158,12 @@ describe('`angry` is shipped art, not a live outcome', () => {
     expect(results.has('angry')).toBe(false)
   })
 
-  it('is not preloaded while it cannot happen – bytes follow reachability', async () => {
+  it('IS preloaded now that it can happen – bytes follow reachability', async () => {
+    // The rule never changed, only the answer: warm every face the decision can return, and only
+    // those. `angry` was excluded while it was unreachable and joins the set with its trigger.
     const { KID_EMOTIONS } = await import('../src/art/preload')
-    expect(KID_EMOTIONS).not.toContain('angry')
-    expect([...KID_EMOTIONS].sort()).toEqual(['happy', 'injury', 'norm', 'sad', 'serious', 'tired'])
+    expect(KID_EMOTIONS).toContain('angry')
+    expect([...KID_EMOTIONS].sort()).toEqual(['angry', 'happy', 'injury', 'norm', 'sad', 'serious', 'tired'])
   })
 })
 
