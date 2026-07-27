@@ -71,7 +71,14 @@ function hashOf(draws: number[]): string {
 // the year in the points. Zero RNG draws were added; only outcomes changed.
 // Full reasoning at the REF declaration in tests/condition.test.ts.
 // 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
+//
+// ⚠ kidRank RE-PINNED 140 -> 133 by wave B "first-round loss pays ZERO", deliberately. P1's claim
+// is about the PLAYER's bookings and is untouched: a career that books something every single week
+// still reproduces count 41550 / hash e6b0c709 byte-for-byte. What moved is the AI table – a
+// first-round exit now banks nothing (`awardAiPoints` writes only when `points > 0`), so seven
+// fewer juniors end the year with counting points and the point-less kid sits inside a bigger
+// 0-point tie. Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 133 }
 
 function injectEvent(
   world: WorldState,

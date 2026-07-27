@@ -197,8 +197,15 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
     // season of results, so the point-less kid is the ONLY 0-point player and starts ranked LAST.
     // The guard is kept (it is still the correct predicate, and it is what stops a future
     // ranking change from re-opening the hole), but the assertion is inverted to pin the fix.
+    //
+    // ⚠ RE-PINNED 200 -> 195 by wave B "first-round loss pays ZERO" (tune/first-round-zero). She is
+    // no longer the ONLY 0-point player: pre-history draws first-round exits, which are now worth
+    // 0, so a handful of cohort players share the bottom rank with her (5 here). What this test
+    // actually needs is unchanged and is what is asserted: she starts FAR outside the top 50 with
+    // no counting result, so the unguarded `kidRank <= 50` arm would still be wrong at week 1 and
+    // the hasResults guard is still doing real work. Full note in tests/season/prehistory.test.ts.
     const fresh = openCareer(wealthy, 0)
-    expect(fresh.world.kidRank).toBe(fresh.world.cohort.length + 1) // last, not "#1"
+    expect(fresh.world.kidRank).toBe(195)
     expect(fresh.world.kidRank).toBeGreaterThan(REACH_PRO_RANK)
     expect(kidPoints(fresh.world)).toBe(0) // ...and still no counting result
 

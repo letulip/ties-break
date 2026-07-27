@@ -252,12 +252,27 @@ describe('class-flavored expenses (round-5 item 10)', () => {
 
 describe('kid counting-results transparency (round-5 item 1b)', () => {
   it('exposes the best-6 counted results whose points sum equals the standings points', () => {
-    const world = createWorld('counting')
-    const rng = rngFromSeed(world.seed)
-    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEligible(world, event)
-    while (world.week < event.week) tickWeek(world, rng)
-    skipTournament(world)
+    // ⚠ Wave B ("first-round loss pays ZERO") made a losing opener bank nothing, so a single
+    // hard-coded seed is no longer guaranteed to produce a counting result at all – and a run that
+    // scores nothing cannot exercise the transparency claim (0 === 0 passes vacuously). Walk seeds
+    // until she actually WINS a match and banks something, which is the state this test is about.
+    // The walk is deterministic and bounded; the assertions below are unchanged.
+    let world!: WorldState
+    for (let i = 0; i < 40; i++) {
+      const w = createWorld(`counting-${i}`)
+      const rng = rngFromSeed(w.seed)
+      const event = w.season.find((e) => e.week >= 5 && e.deadlineWeek >= w.week)
+      if (!event) continue
+      enterEligible(w, event)
+      while (w.week < event.week) tickWeek(w, rng)
+      if (!w.pendingTournament) continue // injured out / withdrawn – not this test's subject
+      skipTournament(w)
+      if (w.results.some((r) => r.playerId === KID_ID)) {
+        world = w
+        break
+      }
+    }
+    expect(world).toBeDefined()
     const snap = toSnapshot(world)
     expect(snap.countingResults.length).toBeGreaterThanOrEqual(1)
     // each counted kid result carries the tier it was earned at (new r5 field)

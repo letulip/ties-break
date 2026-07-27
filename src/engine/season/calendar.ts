@@ -12,6 +12,17 @@ import type { SeasonEvent, TierDef, TierId } from './types'
 // (rounds = log2(drawSize)); index 0 = champion. Every tier is LIVE – the inert `itf`
 // placeholder became the j30/j60/j300 family in the ladder-up slice.
 //
+// THE LAST ELEMENT IS THE FIRST-ROUND EXIT, AND IT IS 0 AT EVERY TIER (wave B, tune/first-round-zero).
+// runTournament sets `finishes[loser] = rounds - round` with round 0 = the first round, so a
+// first-round loser's finish is exactly `rounds` – the last slot. It used to pay (local 5,
+// regional 6, national 6, j30 12, j60 18, j300 30), which with best-6 was a PARTICIPATION INCOME:
+// 26 J30 first-round exits a season banked a 72-point floor before she won anything, and
+// docs/research/ranking-points-by-tier.md names that floor – not the title value – as the actual
+// engine of the "just play J30s" degeneracy. The real ITF table pays nothing at any grade until you
+// win a main-draw match (Reg 31(a): "No ranking points will be awarded to a player until he/she has
+// played and won a round in the Main Draw"), and the professional table repeats the shape at W15/W35.
+// So: she now earns her first point by WINNING one, at every rung. Pinned by tests/wave-b-points.ts.
+//
 // THE LADDER (owner: "there must ALWAYS be somewhere to go"). Two overlapping ladders,
 // both read off the kid's EARNED windowed best-6 points:
 //
@@ -36,7 +47,7 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 8,
     entryFeeCents: 40_00,
     travelCostCents: [60_00, 120_00],
-    points: [30, 18, 10, 5],
+    points: [30, 18, 10, 0],
     everyNWeeks: 2,
     // The ENTRY tier: open from 0 points (a fresh kid always starts here), graduates out once she has
     // clearly outgrown it (best-6 > 85 pts – roughly three strong local runs). Tuned on the bench so a
@@ -51,7 +62,7 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 16,
     entryFeeCents: 75_00,
     travelCostCents: [150_00, 400_00],
-    points: [80, 48, 28, 14, 6],
+    points: [80, 48, 28, 14, 0],
     everyNWeeks: 4,
     // Opens once she has a couple of counting results (65 pts); graduates out at 230. Overlaps local
     // (65-85) and national (150-230), so the climb is a smooth local → regional → national handover.
@@ -64,7 +75,7 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 32,
     entryFeeCents: 120_00,
     travelCostCents: [400_00, 900_00],
-    points: [200, 120, 70, 35, 15, 6],
+    points: [200, 120, 70, 35, 15, 0],
     everyNWeeks: 13,
     // R9-20 (owner): 4 a year is far too sparse for a kid who has outgrown regional but cannot yet
     // afford the international calendar, and the shortage bites hardest in the season's back half
@@ -88,7 +99,7 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 32,
     entryFeeCents: 200_00,
     travelCostCents: [900_00, 2000_00],
-    points: [400, 240, 140, 70, 30, 12],
+    points: [400, 240, 140, 70, 30, 0],
     // THE dense entry level – with regional it is what makes an empty week a choice, not a gap.
     everyNWeeks: 2,
     minAgeYears: 13,
@@ -104,7 +115,7 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 32,
     entryFeeCents: 250_00,
     travelCostCents: [1100_00, 2400_00],
-    points: [600, 360, 210, 105, 45, 18],
+    points: [600, 360, 210, 105, 45, 0],
     everyNWeeks: 3,
     minAgeYears: 13,
     // 400 = one J30 title, or three J30 semi-finals. A real body of international results, not one
@@ -118,7 +129,7 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 32,
     entryFeeCents: 400_00,
     travelCostCents: [1600_00, 3200_00],
-    points: [1000, 600, 350, 175, 75, 30],
+    points: [1000, 600, 350, 175, 75, 0],
     // Rare by design: four a year, so each one is an event the family plans a season around.
     everyNWeeks: 13,
     minAgeYears: 13,

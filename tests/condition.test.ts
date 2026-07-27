@@ -116,7 +116,19 @@ const REF = {
   // thing this test exists to protect, is everything above: count 41550, hash e6b0c709, head and
   // tail are all byte-identical, because both halves are pure derivations that draw no RNG.
   // 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
-  kidRank: 140,
+  //
+  // ⚠ RE-PINNED 140 -> 133 BY WAVE B "first-round loss pays ZERO" (tune/first-round-zero),
+  // DELIBERATELY, and it is the LARGEST move this number has ever made. Mechanism, in one line:
+  // `awardAiPoints` only writes a ledger row when `points > 0`, so with every tier's first-round
+  // value now 0, the ~half of each 32-draw that loses its opener stops banking anything at all.
+  // Seven fewer juniors end the year holding counting points, and the kid – still point-less at
+  // week 52 in this fixture – shares the dense rank of a 0-point group that is now seven larger.
+  // The number means exactly what the note above says it means ("how many AI ended the year
+  // holding counting points"), so a DROP here is the change landing, not a regression.
+  // The STREAM is untouched and that is the whole point of this test: count 41550, hash e6b0c709,
+  // head and tail all still byte-identical, because points are post-draw arithmetic – they are
+  // read off a table AFTER the bracket has already been resolved by the RNG.
+  kidRank: 133,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {
@@ -805,8 +817,13 @@ describe('the doctor on ARRIVAL — the play-week re-check', () => {
     expect(warning!.text).not.toMatch(/[—А-Яа-яЁё]/) // short dash only, no Cyrillic in player copy
     skipTournament(world)
     closeTournament(world)
-    // ...and it really was a run: she has a result row (every tier awards points at every finish)
-    expect(world.results.some((r) => r.playerId === KID_ID)).toBe(true)
+    // ...and it really was a run. This used to be proven by "she has a result row", which relied on
+    // every tier paying at every finish; wave B ("first-round loss pays ZERO") made a first-round
+    // exit bank nothing, so a result row is no longer evidence that she PLAYED. Proven instead off
+    // the two records finalizeTournament writes UNCONDITIONALLY, which is the stronger claim
+    // anyway – the doctor's subject is whether she took the court, not whether she scored.
+    expect(world.events.some((e) => e.type === 'tournament' && e.week === world.week)).toBe(true)
+    expect(world.bestFinishByTier.local).toBeDefined()
   })
 
   it('above the band she plays in silence – the doctor has nothing to say', () => {

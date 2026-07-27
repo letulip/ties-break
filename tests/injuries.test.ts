@@ -65,7 +65,14 @@ function hashOf(draws: number[]): string {
 // state the world already holds and draw ZERO RNG, which is exactly what this file guards.
 // Full reasoning at the REF declaration in tests/condition.test.ts.
 // 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 140 }
+//
+// ⚠ kidRank RE-PINNED 140 -> 133 by wave B "first-round loss pays ZERO", deliberately. C1's claim
+// is that INJURY and PHYSIO add no main-stream draws, and that claim is untouched: count 41550 and
+// hash e6b0c709 still reproduce byte-for-byte. What moved is who holds points – `awardAiPoints`
+// writes a row only when `points > 0`, so first-round losers (half of every draw) now bank nothing
+// and seven fewer juniors finish the year in the points; the point-less kid shares that larger
+// 0-point group's dense rank. Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 133 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
   draws: number[]

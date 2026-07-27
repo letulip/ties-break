@@ -65,10 +65,32 @@ describe('A1 — reconstruction: (tier, points) round-trips to the right match c
     for (const tier of TIER_LADDER) {
       const def = TIERS[tier]
       const rounds = Math.log2(def.drawSize)
-      // Every tier awards points at EVERY finish (the arrays are strictly positive), so every
-      // entrant of every draw leaves a reconstructible row – nobody is invisible to the ledger.
+      // ⚠ RE-PINNED by wave B "first-round loss pays ZERO" (tune/first-round-zero). This used to
+      // assert `def.points.every((p) => p > 0)` – "every entrant of every draw leaves a
+      // reconstructible row, nobody is invisible to the ledger". That is NO LONGER TRUE, and the
+      // consequence is deliberately pinned here rather than quietly dropped:
+      //
+      //   every finish EXCEPT the first-round exit still pays, and the exit pays exactly 0;
+      //   BOTH ledger write sites guard on `points > 0` (world.ts finalizeTournament for the kid,
+      //   awardAiPoints for the cohort), so a first-round exit now leaves NO ROW AT ALL.
+      //
+      // For the RIVAL-FATIGUE reconstruction that means a rival who loses her opener is invisible
+      // to `rivalCondition`: her week reads as a QUIET week and earns `recoveryBase` instead of
+      // costing her a trip and a match. The ledger is the only record rival.ts has, so the cohort
+      // is now systematically fresher than it was. Surfaced in docs/specs/wave-b-first-round-zero.md
+      // as an open decision for the owner – it is a side effect of the points change, not a design
+      // choice, and fixing it means touching how "she played" is recorded (world.ts), not this table.
+      //
+      // ⚠ AND THAT IS WHAT HAPPENED (fix/rival-fatigue-rows). The second paragraph above is HISTORY
+      // as of that branch and is kept only because it explains why this test reads the way it does.
+      // The cohort write site no longer guards on `points > 0`: every entrant leaves a row, `points`
+      // carries the award (0 included), and a first-round exit costs a rival exactly one score-less
+      // match at that tier. The table below is unchanged – the fix is in world.ts, precisely where
+      // this note said it would have to be – and the reconstruction of a 0-point row is asserted on
+      // the very next line, which now describes a row the engine really writes.
       expect(def.points.length).toBe(rounds + 1)
-      expect(def.points.every((p) => p > 0)).toBe(true)
+      expect(def.points.slice(0, -1).every((p) => p > 0)).toBe(true)
+      expect(def.points[def.points.length - 1]).toBe(0)
 
       expect(reconstructRun(row(tier, 0, 1))).toMatchObject({ tier, matches: rounds }) // champion
       expect(reconstructRun(row(tier, rounds, 1))).toMatchObject({ tier, matches: 1 }) // R1 exit
@@ -188,9 +210,19 @@ describe('A2 — a tier-less row (legacy saves / pre-history) is handled explici
     // 7 strain instead of 3 matches / 5. FLAGGED FOR THE OWNER: if a legacy row should still read as
     // the LOCAL title (the likelier real history for a 30-point week), the fix is a tie-break
     // preference in reconstructRun, not a fatigue knob. ***
+    // *** AND WAVE B PUT IT BACK. RE-PINNED j300/1/7 -> local/3/8 by "first-round loss pays ZERO"
+    // (tune/first-round-zero). A J300 first round is no longer worth 30 – it is worth 0 – so 30
+    // points is no longer a reading j300 can produce at all, and the surviving candidates are
+    //     local title    3 matches × 2 =  6, + ladder(0,1,1) = 2  ->  8   <- cheapest
+    //     j30 last-16    2 matches × 5 = 10, + ladder(0,1)   = 1  -> 11
+    // This is exactly the outcome the note above asked for ("if a legacy row should still read as
+    // the LOCAL title – the likelier real history for a 30-point week"), reached by removing the
+    // false candidate rather than by adding a tie-break preference. No knob was touched. Zeroing
+    // the first round also collapses SIX readings onto the value 0 – but no row is ever written
+    // with 0 points, so that collision is unreachable from a real save. ***
     const run = reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })
-    expect(run).toMatchObject({ tier: 'j300', matches: 1, strain: 7 })
-    expect(run.strain).toBe(tournamentRunStrain('j300', new Array(1).fill({}))) // the shared helper
+    expect(run).toMatchObject({ tier: 'local', matches: 3, strain: 8 })
+    expect(run.strain).toBe(tournamentRunStrain('local', new Array(3).fill({}))) // the shared helper
     // ...and it is a pure function: same row, same answer, every time.
     expect(reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })).toEqual(run)
   })

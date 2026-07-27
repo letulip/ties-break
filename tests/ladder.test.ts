@@ -92,14 +92,23 @@ describe('L2 — the J-level table (spec numbers)', () => {
     expect(TIERS.j300.minAgeYears).toBe(13)
   })
 
-  it('points scale with the level: j30 is the old itf array, j60 = 1.5x, j300 = 2.5x', () => {
-    expect(TIERS.j30.points).toEqual([400, 240, 140, 70, 30, 12])
+  it('points scale with the level: j60 = 1.5x j30, j300 = 2.5x j30', () => {
+    // ⚠ RE-PINNED by wave B "first-round loss pays ZERO" (tune/first-round-zero): was
+    // [400, 240, 140, 70, 30, 12]. The last element is the first-round exit and pays nothing now,
+    // at every rung – ITF Reg 31(a), "no points until you have won a round in the main draw".
+    // The ×1.5 / ×2.5 level scaling below is UNAFFECTED: 0 × 1.5 = 0 × 2.5 = 0, so the relation
+    // that actually defines the J family still holds exactly, which is why it is asserted as a
+    // relation rather than as three hard-coded arrays.
+    expect(TIERS.j30.points).toEqual([400, 240, 140, 70, 30, 0])
     expect(TIERS.j60.points).toEqual(TIERS.j30.points.map((p) => p * 1.5))
     expect(TIERS.j300.points).toEqual(TIERS.j30.points.map((p) => p * 2.5))
-    // ...and every J level out-scores the domestic top tier at the same finish.
-    for (let i = 0; i < TIERS.national.points.length; i++) {
+    // ...and every J level out-scores the domestic top tier at every finish THAT PAYS. The last
+    // slot is excluded because both are now 0 there: a first-round exit is worth nothing anywhere,
+    // so "the international result is worth more" is a claim about results, not about turning up.
+    for (let i = 0; i < TIERS.national.points.length - 1; i++) {
       expect(TIERS.j30.points[i]).toBeGreaterThan(TIERS.national.points[i])
     }
+    expect(TIERS.j30.points[TIERS.j30.points.length - 1]).toBe(TIERS.national.points[TIERS.national.points.length - 1])
   })
 
   it('travel and entry fees rise monotonically up the ladder', () => {
