@@ -19,8 +19,28 @@ import {
 import { KID_ID } from '../engine/world'
 import { TIERS, tierFromLabel } from '../engine/season/calendar'
 import type { TierId } from '../engine/season/types'
+import type { WorldEvent } from '../shared/protocol'
 
 const TIER_IDS = Object.keys(TIERS) as TierId[]
+
+/**
+ * R11-2 – which recorded matches are allowed to change her FACE. The owner: «на practice match
+ * вообще не вижу смысла менять аватарку на выигрыш или проигравшую – на турнирах да, локальные,
+ * региональные, национальные да, а на тренировочных не вижу смысла.»
+ *
+ * A booked friendly is stored as an ordinary `match` event with `friendly: true` (world.ts
+ * resolvePractice) – the same shape a tournament round has – so the result layer picked it up and she
+ * came home from a hit-out at the club looking crushed. A practice match now leaves her face alone:
+ * she falls back to the IDLE emotion (condition / injury), exactly as on any week she did not compete.
+ *
+ * This is the ONE predicate for it. Every portrait in the app – App.vue's header crop, the Home
+ * player card and the Kid screen's big painting – takes its emotion from `useKidEmotion` below, so
+ * gating it here gates all three at once and they cannot drift apart. TournamentFlow's finale art is
+ * NOT affected and must not be: it only ever mounts for a tournament reveal.
+ */
+export function resultShowsOnHerFace(e: WorldEvent): boolean {
+  return !!e.match && !e.friendly
+}
 
 /** `${year}-w${week}-${tier}` → tier (undefined for an unparseable/foreign id). */
 function tierFromEventId(eventId: string | undefined): TierId | undefined {
@@ -36,15 +56,16 @@ const tierFromSummaryText = tierFromLabel
 export function useKidEmotion() {
   const game = useGameStore()
 
-  // The kid's most recent played match. A result emotion only lasts until the next weekly
+  // The kid's most recent TOURNAMENT match. A result emotion only lasts until the next weekly
   // tick (avatarEmotion checks week === current), so walking the trailing feed is enough.
+  // R11-2: a practice friendly is skipped outright – it is not a result her face reports on.
   const lastResult = computed<LastKidResult | null>(() => {
     const events = game.snapshot?.events
     if (!events) return null
     for (let i = events.length - 1; i >= 0; i--) {
       const e = events[i]
       const match = e.match
-      if (!match) continue
+      if (!match || !resultShowsOnHerFace(e)) continue
       const won = match.winnerId === KID_ID
       // R8-6a: a loss in the FINAL = runner-up = a good result. The same week's tournament
       // summary carries finishIdx 1 exactly when her run ended in the final.

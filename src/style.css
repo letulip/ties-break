@@ -1154,8 +1154,8 @@ tr.milestone td {
 
 .event-card-top {
   display: flex;
-  /* R10-11: the surface side is now a two-row stack (dot + caption), so the tier name aligns to the
-     TOP of it rather than floating at the stack's vertical centre. */
+  /* R10-11 / R11-15: the surface side is a two-row stack (pill + its verdict), so the tier name
+     aligns to the TOP of it rather than floating at the stack's vertical centre. */
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
@@ -1178,45 +1178,38 @@ tr.milestone td {
   color: var(--accent);
 }
 
-/* R10-11: the event card's surface chip + its words, as ONE stacked object on the right of the card
-   top. The chip is the court's colour dot; the caption underneath names the surface and – when the
-   court has an opinion about her build – says so. When it SUITS her the dot wears an accent ring:
-   that ring is the at-a-glance signal, the caption is the confirmation. Both states come straight
-   from engine/match/style.ts, so they cannot drift from the deltas that move her attributes. */
+/* R11-15 (REVERTS R10-11): the event card's surface PILL, back in the corner, with the verdict alone
+   underneath it. R10-11 turned the pill into a 30px colour DOT and moved the surface NAME below it;
+   the owner's read was that the pill had been "сильно лучше" and asked for it back with only
+   "suits her game / nothing" beneath. So the pill carries the colour AND the name (once, here), and
+   .surface-caption is now the verdict only – it is absent entirely on a neutral court.
+   Kept from R10-11: the stacked badge (pill + its verdict as ONE object, instead of the pre-R10-11
+   layout that put the chip top-right and its sentence on the far left of the row below), and the
+   colours consumed from engine/match/style.ts so they cannot drift from SURFACE_STYLE_DELTAS. */
 .surface-badge {
   display: flex;
   flex: none;
   flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  /* Never let a long caption ("Grass – not her surface") crowd out the tournament name. */
+  align-items: flex-end;
+  gap: 4px;
+  /* Never let a long verdict ("not her surface") crowd out the tournament name. */
   max-width: 47%;
 }
 
-.surface-dot {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.03);
-  font-size: 15px;
-  line-height: 1;
+/* The pill inherits .pill (capsule radius, border, muted text); it only needs its own emoji gap and
+   a guarantee that "🟠 clay" never breaks across two lines inside the capsule. */
+.surface-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
 }
 
 .surface-caption {
   font-size: 11.5px;
   line-height: 1.25;
-  text-align: center;
+  text-align: right;
   color: var(--muted);
-}
-
-/* The accent circle: a 2px ring plus a soft outer halo, so it reads as "ringed" and not merely
-   "outlined" at a glance. */
-.surface-badge.aff-suits .surface-dot {
-  border: 2px solid var(--accent);
-  box-shadow: 0 0 0 3px rgba(217, 242, 79, 0.14);
 }
 
 .surface-badge.aff-suits .surface-caption {
@@ -2238,12 +2231,27 @@ tr.kid-row td {
   font-size: 12px;
 }
 
-/* A week the parent has already planned – a solid (not dashed) frame: it is a real commitment. */
+/* A week the parent has already planned – a solid (not dashed) frame: it is a real commitment.
+   R11-14: and it is a STACK, not a row. Side by side with its controls the text had ~285px minus the
+   buttons: on a practice row carrying both "Watch it live →" and "Cancel" that left about 80px, so
+   "🎾 Practice match + coach" broke mid-phrase across two lines and the date line broke too – four
+   text lines for one booking. The owner asked for that label on one line; full width, it is one line
+   with room to spare (measured ~170px of the 285px available at 375px). The controls take their own
+   band underneath, right-aligned, which also stops a two-button row from ever squeezing the text
+   again if a third control is added later. */
 .calendar-row-muted.planned {
   border-style: solid;
   border-color: var(--accent);
   background: rgba(217, 242, 79, 0.05);
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.planned-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* R10-4: a planned week is TWO lines – the WHEN (week + dates) muted on top, the WHAT (the trip or
@@ -2524,6 +2532,21 @@ tr.kid-row td {
   color: var(--accent);
   border-color: var(--line);
   background: transparent;
+}
+
+/* R11-5a: "open to her, but the calendar has none in the horizon" – its own state, because for a
+   whole season it was indistinguishable from a point lock. Deliberately NOT the accent of `unlocked`
+   (there is nothing to tap yet) and NOT the dashed grey of `locked` (nothing is barring her): a solid
+   neutral outline with normal-weight text, i.e. "available, just waiting". */
+.tier-chip.waiting {
+  color: var(--text);
+  border-color: var(--line);
+  background: transparent;
+}
+
+/* The same sentence, said once under the calendar list where the missing cards are. */
+.open-tier-note {
+  color: var(--muted);
 }
 
 .pill.locked {

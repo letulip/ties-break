@@ -26,8 +26,12 @@ import { applySurfaceStyle, surfaceStyleAffinity, surfaceStyleHint } from '../..
 import { KID_ID, kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek, surfaceBlockFor, WEEKS_PER_YEAR } from '../../engine/season/calendar'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
+// R11-5a: the ONE tier-state rule, shared with the Home season ladder.
+import { HORIZON_WEEKS, pointsLockNote, useTierStates, type TierState } from '../../composables/tierState'
+import { TIER_SHORT } from '../../composables/weekAhead'
 import { weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
+import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
 import type { PracticeBooking, UpcomingEvent, VacationBooking, WorldEvent, WorldMatch } from '../../shared/protocol'
 
@@ -57,30 +61,48 @@ function surfaceAffinity(surface: Surface): 'suits' | 'against' | 'neutral' {
   return game.snapshot ? surfaceStyleAffinity(game.snapshot.profile.playStyle, surface) : 'neutral'
 }
 
-// R10-11 – the event card's surface CHIP + the words beneath it.
+// R11-15 – the event card's surface PILL, back in the card corner. THIS REVERTS R10-11.
 //
-// The chip used to read "🟢 grass" on the right of the card top while a separate line under it read
-// "Grass – suits her game" on the LEFT: the surface name was printed twice and the affinity sat
-// nowhere near the thing it described. Now the chip is the court's colour DOT and the words live
-// directly under it, so the pair reads as one object.
+// R10-11 replaced the coloured pill with a ringed colour DOT and moved the surface name underneath
+// it. The owner's verdict on that swap: «раньше в углу карточки в календаре была пилюля с типом
+// покрытия и цветом – было сильно лучше, чем кружок сейчас. Надо вернуть пилюлю, а вот под ней
+// оставить просто подходит или нет, а название поверхности убрать.» So the pill is back, with the
+// court's colour and its NAME inside it, and the line beneath carries the verdict ONLY.
 //
-// The ring and the wording are both CONSUMED from engine/match/style.ts – `surfaceStyleAffinity`
-// decides whether the dot is ringed, `surfaceStyleHint` writes the sentence. Neither is re-derived
-// here, so the visual claim can never drift from SURFACE_STYLE_DELTAS, the table that actually moves
-// her attributes. A neutral court (every court, for an all-court build) gets no ring and no verdict –
-// just the surface name, because silence beats a line of noise, and the name must not vanish with it.
+// The surface name now appears EXACTLY ONCE, inside the pill – which is the whole reason the fit line
+// is stripped down: the duplicate name ("🟢 grass" in the corner, "Grass – suits her game" below) was
+// the real complaint R10-11 over-corrected for.
+//
+// Kept from R10-11, because those parts were right: the badge stays a STACKED object (pill on top,
+// its verdict directly beneath, so the pair reads as one thing rather than being flung to opposite
+// corners), the emoji stays `aria-hidden` (it is the colour, and the name next to it already carries
+// the meaning), and both the verdict and its colour are still CONSUMED from engine/match/style.ts –
+// `surfaceStyleAffinity` colours it, `surfaceStyleHint` words it – so nothing here can drift from
+// SURFACE_STYLE_DELTAS, the table that actually moves her attributes.
 interface SurfaceView {
   emoji: string
   affinity: 'suits' | 'against' | 'neutral'
-  /** "Hard – suits her game" / "Clay – not her surface" / plain "Hard" on a neutral court */
-  caption: string
+  /** the verdict alone – "suits her game" / "not her surface" – or null on a neutral court */
+  fit: string | null
+  /** the engine's whole sentence, surface name included, for the pill's title */
+  title: string
+}
+/** The engine's hint MINUS its surface-name prefix. `surfaceStyleHint` writes "Grass – suits her
+ *  game"; the pill already says "grass", so only the tail belongs under it. Sliced off the engine's
+ *  own string rather than re-written from the affinity, so the two can never word it differently. */
+function surfaceFit(surface: Surface): string | null {
+  const hint = surfaceNote(surface)
+  if (!hint) return null
+  const dash = hint.indexOf('– ')
+  return dash < 0 ? hint : hint.slice(dash + 2)
 }
 function surfaceView(surface: Surface): SurfaceView {
   return {
     emoji: SURFACE_EMOJI[surface],
     affinity: surfaceAffinity(surface),
+    fit: surfaceFit(surface),
     // Fall back to the bare, capitalised surface id rather than a second copy of the label table.
-    caption: surfaceNote(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1),
+    title: surfaceNote(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1),
   }
 }
 const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
@@ -233,9 +255,29 @@ function lockLabel(e: UpcomingEvent): string {
       return vacation ? `Family vacation – ${packageLabel(vacation.packageId)}` : 'School exams this week'
     }
     default:
-      return `Reach ${e.pointsToEnter} pts`
+      // R11-5a: the WORDS come from the shared rule, the NUMBER stays the engine's own verdict for
+      // THIS event. Reading the ladder's whole note here instead was tried and rejected in the
+      // browser: it let a card the engine had locked print the ladder's "open" state.
+      return e.pointsToEnter !== undefined ? pointsLockNote(e.pointsToEnter) : tierStateById.value[e.tier].note
   }
 }
+
+// --- R11-5a: "locked" vs "nothing scheduled" -------------------------------------------------
+// The owner could enter a J30 and believed National was LOCKED. It never was – national [150, ∞) is a
+// superset of j30 [180, ∞) – but national comes round 6 times a season against j30's ~26, so there was
+// simply none inside the 8-week horizon, and every surface reported that with the same muted dash it
+// used for a genuine point lock. The states are told apart by ONE rule (composables/tierState.ts);
+// this screen consumes it twice: the lock label above, and the note below the calendar that finally
+// NAMES the tiers she can enter but has nothing scheduled for.
+const tierStates = useTierStates()
+const tierStateById = computed<Record<TierId, TierState>>(
+  () => Object.fromEntries(tierStates.value.map((s) => [s.id, s])) as Record<TierId, TierState>,
+)
+/** Open to her, nothing on the calendar – the exact case that read as "locked". Short names: the
+ *  line sits under a list of full tier cards, so the ladder shorthand is enough to point at them. */
+const openButUnscheduled = computed<string[]>(() =>
+  tierStates.value.filter((s) => s.kind === 'unscheduled').map((s) => TIER_SHORT[s.id]),
+)
 
 // --- one shared confirm-popup slot (mirrors MoreScreen's pattern) ------------
 interface PendingConfirm {
@@ -560,12 +602,17 @@ function playExhibition(): void {
           <div v-if="row.kind === 'event' && row.event" class="event-card">
             <div class="event-card-top">
               <span class="event-tier">{{ row.event.label }}</span>
-              <!-- R10-11: the surface chip is the court's colour dot, the words sit UNDER it. An
-                   accent RING on the dot means "this court suits her build" – the ring carries it at
-                   a glance, the caption underneath confirms it in words. -->
+              <!-- R11-15 (reverts R10-11): the coloured PILL is back in the corner, carrying the
+                   surface colour and its name, and only the verdict sits under it. The name is
+                   printed exactly once – here. A neutral court gets the pill and nothing else. -->
               <span class="surface-badge" :class="`aff-${surfaceView(row.event.surface).affinity}`">
-                <span class="surface-dot" aria-hidden="true">{{ surfaceView(row.event.surface).emoji }}</span>
-                <span class="surface-caption">{{ surfaceView(row.event.surface).caption }}</span>
+                <span class="pill surface-pill" :title="surfaceView(row.event.surface).title">
+                  <span aria-hidden="true">{{ surfaceView(row.event.surface).emoji }}</span>
+                  {{ row.event.surface }}
+                </span>
+                <span v-if="surfaceView(row.event.surface).fit" class="surface-caption">
+                  {{ surfaceView(row.event.surface).fit }}
+                </span>
               </span>
             </div>
             <p class="hint" style="margin-top: 8px">
@@ -641,6 +688,11 @@ function playExhibition(): void {
                match). As one run-on line the booking landed mid-sentence on a third wrapped row and
                the parent had to read to the end to find out what she had actually booked. The
                practice row gets the same two-line shape – it is the same card. -->
+          <!-- R11-14: the booking text and its controls are now two STACKED bands instead of two
+               flex columns fighting over 285px. Side by side, the two buttons on a practice row left
+               the text ~80px, so "🎾 Practice match + coach" broke across two lines mid-phrase (and
+               the date line broke too) – the owner asked for that label on ONE line. Full width, it
+               always is. Same shape for the vacation row: it is the same card. -->
           <div v-else-if="row.kind === 'vacation' && row.vacation" class="calendar-row-muted planned">
             <span class="planned-lines">
               <span class="planned-when">W{{ row.week }} · {{ row.dates }}</span>
@@ -649,7 +701,9 @@ function playExhibition(): void {
                 <template v-if="row.event"> · skipping {{ row.event.label }}</template>
               </span>
             </span>
-            <button :disabled="game.busy" @click="askCancelVacation(row)">Cancel</button>
+            <span class="planned-actions">
+              <button :disabled="game.busy" @click="askCancelVacation(row)">Cancel</button>
+            </span>
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
             <span class="planned-lines">
@@ -659,12 +713,14 @@ function playExhibition(): void {
                 <template v-if="row.event"> · instead of {{ row.event.label }}</template>
               </span>
             </span>
-            <!-- R10-12: on the week that is next, the friendly is enterable right here – this plays
-                 the week (the same single advance the Home bar does) and opens it live. -->
-            <button v-if="row.week === week + 1" class="primary sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
-              Watch it live →
-            </button>
-            <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
+            <span class="planned-actions">
+              <!-- R10-12: on the week that is next, the friendly is enterable right here – this plays
+                   the week (the same single advance the Home bar does) and opens it live. -->
+              <button v-if="row.week === week + 1" class="primary sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
+                Watch it live →
+              </button>
+              <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
+            </span>
           </div>
 
           <!-- An empty week: plannable (or an exam block, which is nobody's to plan). -->
@@ -687,6 +743,13 @@ function playExhibition(): void {
           </div>
         </template>
       </div>
+      <!-- R11-5a: the line the owner needed and never had. A tier she can enter but that has nothing
+           on the calendar used to be indistinguishable from one she was locked out of – both were
+           simply absent. Now it says so, and says it is not a lock. -->
+      <p v-if="openButUnscheduled.length" class="hint open-tier-note">
+        Also open to her: {{ openButUnscheduled.join(', ') }} – none scheduled in the next
+        {{ HORIZON_WEEKS }} weeks. Not locked, just rarer: keep watching the calendar.
+      </p>
       <p class="hint">
         Weeks can carry more than one event now – she can only play one, so the pick is yours.
       </p>
