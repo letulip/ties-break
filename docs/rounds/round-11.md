@@ -76,27 +76,49 @@ Measured off the tables, no simulation needed:
 
 | tier | winner pts | events/season |
 |---|---|---|
-| local | 30 | ~26 |
-| regional | 80 | ~13 |
-| national | **200** | **6** |
-| j30 | **400** | **~26** |
-| j60 | 600 | ~4 |
-| j300 | 1000 | ~2 |
+| tier | winner pts | `everyNWeeks` | events/season |
+|---|---|---|---|
+| local | 30 | 2 | ~26 |
+| regional | 80 | 4 | ~13 |
+| national | **200** | 13 (+2 extra) | **6** |
+| j30 | **400** | 2 | **~26** |
+| j60 | **600** | 3 | **~17** |
+| j300 | 1000 | 13 | ~4 |
 
 **A J30 title pays twice a National title and comes round four times as often.** There is no strategy
-question left: once she clears 180 points, J30 is the whole game. That single row explains the sweep,
-the rank-5 finish and the 56-16 record.
+question left: once she clears 180 points, the international entry rungs are the whole game. That
+explains the sweep, the rank-5 finish and the 56-16 record.
 
-Candidate fixes (a bench pass decides, and it must be run against
-`docs/specs/career-outcome-targets.md`):
-1. **Cut the J30 award** so it sits near or below National (National is rarer, so scarcity keeps it
-   prestigious without paying more per event). Cheapest, one row.
-2. **Strengthen J30 draws** — the international field should be tougher than a national field, so a
-   title is genuinely harder. `entrantPctBand` is the knob. Truer to reality, harder to tune.
-3. **Cap counting J30 results** inside the best-6 window. Most invasive; probably unnecessary if 1
-   lands.
+> ⚠ **Correction (27.07).** The first version of this table said j60 ran ~4 a season and j300 ~2. Both
+> were wrong — read off `everyNWeeks`, j60 runs **17** a season at 600 points, so the strongest grind
+> in the shipped build is **J60, not J30**. The direction of the finding held; the worst offender was
+> misnamed.
 
-Recommendation: try 1 first, measure the point curve and tier mix, then look at 2.
+**Now backed by research: `docs/research/ranking-points-by-tier.md`**, and it says the problem is
+deeper than one row.
+
+1. **In the real ITF ladder the grade name IS the winner's points** — a J30 title pays 30, a J300
+   title pays 300, a 10× spread. Ours is 2.5× (400 vs 1000). We ship a tier called "Junior Tour 30"
+   that pays 400.
+2. **A first-round loss pays ZERO at every ITF grade.** We pay 12 for an R1 exit at a J30, 26 times a
+   season — a ~72-point floor before she wins anything. That participation income, not the title
+   value, is the actual engine of the grind.
+3. **The real ladder COMPRESSES as you climb** (title ÷ one-win: 15× at J30 → 5× at J300); ours is a
+   flat 13.3× at every rung, so a J300 feels like a J30 with bigger numbers. Nothing in the shape
+   tells the player she has changed worlds.
+4. Both published national ladders (USTA, LTA) put the **national title ABOVE the J30 title** — 3.3×
+   and 2.2×. Our ordering is inverted.
+5. Reality's own anti-grind levers are ones we do not have at all: **hard age caps** (a 14-year-old
+   may play 14 ITF junior events a year; we offer her 26 J30s alone) and eligibility-by-composition.
+
+The research proposes a full six-rung table (the three international rungs = the real ITF table ×10,
+the invented domestic rungs placed via the LTA conversion) which also **reorders the ladder** to
+`local < regional < j30 < j60 < national < j300` and needs every `enterPointBand` rescaled. That is a
+bigger change than a tuning knob and is wave B's first decision, gated against
+`docs/specs/career-outcome-targets.md`.
+
+Cheaper partial steps, if the full retable is too much at once: zero the first-round-loss award (item
+2 above — one number, kills the participation floor), then cut the J30/J60 titles toward National.
 
 ### R11-1b why injuries feel fast "even at good condition", and the missing wear model
 The per-week threshold (`injuryTau`) is:
