@@ -15,6 +15,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { finishLabel } from '../engine/world'
+import { seasonYear } from '../shared/dates'
 import type { SeasonHistoryEntry } from '../shared/protocol'
 
 const game = useGameStore()
@@ -55,9 +56,13 @@ function formatDollars(cents: number): string {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.year">
+          <!-- Keyed on the SEASON INDEX, and the header prints the year that index derives to
+               (shared/dates seasonYear – the same function weekLabel uses, so a row and the week
+               labels inside that season always name the same year). Keying on the printed year is
+               what dropped season 5 from this table; see SeasonHistoryEntry.seasonIndex. -->
+          <tr v-for="r in rows" :key="r.seasonIndex">
             <th>
-              <span class="ph-name">{{ r.year }}</span>
+              <span class="ph-name">{{ seasonYear(r.seasonIndex) }}</span>
               <!-- Best result of that season, in the same wording the finale card uses. Absent on
                    a season with no tournaments, and on rows the v14 migration backfilled. -->
               <span v-if="r.bestFinish !== undefined" class="ph-rank">{{ finishLabel(r.bestFinish) }}</span>

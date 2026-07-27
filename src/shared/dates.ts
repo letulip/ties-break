@@ -33,8 +33,10 @@ function weekEnd(week: number): Ymd {
   return dateAtDay(week * 7 + 6)
 }
 
-/** The calendar year the week's Monday falls in – used to group weeks into "season years"
- *  (e.g. for the year-end wrap-up milestone label, "Season 2031 wrap-up"). */
+/** The calendar year the week's Monday falls in. A REAL-CALENDAR fact about a date, and nothing
+ *  more – it is NOT a season identity and must never be used as one (see `seasonYear` below and
+ *  the note above WEEKS_IN_SEASON: it collides at season 5). Kept because the date range genuinely
+ *  needs the calendar year, and because the tests that pin the collision have to be able to name it. */
 export function weekYear(week: number): number {
   return weekStart(week).year
 }
@@ -64,12 +66,27 @@ export function weekYear(week: number): number {
 export const WEEKS_IN_SEASON = 52 // === WEEKS_PER_YEAR in engine/season/calendar.ts (pinned in tests)
 const EPOCH_YEAR = weekYear(0) // 2031
 
+/** THE ONE definition of a season's DISPLAY year, from its 0-based INDEX and nothing else.
+ *
+ *  Extracted out of `weekLabel` (fix/world-trio) because the label was not the only surface that
+ *  needed it: the season wrap-up milestone, the wrap-up popup and the Stats season-by-season table
+ *  each derived their own "Season 2035" from `weekYear(seasonFirstWeek)` – the exact date-derived
+ *  year the note above says drifts – and the history table went further and used it as a season's
+ *  IDENTITY, which silently dropped season 5 (both it and season 4 hashed to 2035). The identity is
+ *  now the index everywhere; this is the only place that turns an index into a year to print, so
+ *  every surface that names a season names the same one.
+ *
+ *  Total and strictly increasing by construction – two different seasons can never print alike. */
+export function seasonYear(seasonIndex: number): number {
+  return EPOCH_YEAR + seasonIndex
+}
+
 /** "W14 '31" – an absolute career week as the in-season week (1..52) + its season year.
  *  Total: defined for every integer, including the negative weeks entry deadlines can reach. */
 export function weekLabel(week: number): string {
   const w = Math.floor(week)
   const offset = ((w % WEEKS_IN_SEASON) + WEEKS_IN_SEASON) % WEEKS_IN_SEASON
-  const year = EPOCH_YEAR + Math.floor(w / WEEKS_IN_SEASON)
+  const year = seasonYear(Math.floor(w / WEEKS_IN_SEASON))
   return `W${offset + 1} '${String(((year % 100) + 100) % 100).padStart(2, '0')}`
 }
 

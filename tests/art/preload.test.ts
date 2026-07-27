@@ -134,13 +134,16 @@ describe('preload urls resolve to files that actually ship', () => {
 })
 
 describe('preload budget', () => {
-  it('one age band is 12 urls: 6 paintings + 6 crops (the 3 finale frames are 3 of the 6)', () => {
+  it('one age band is 14 urls: 7 paintings + 7 crops (the 3 finale frames are 3 of the 7)', () => {
     // It was 15 before build/webp-only, when the finale asked for a duplicate `-fs8` copy of
     // happy/serious/sad. Deleting the duplicates made the finale share the Kid-screen paintings,
-    // so a band now costs 3 fewer requests and ~150 KiB less.
+    // so a band cost 3 fewer requests and ~150 KiB less.
+    // 12 -> 14 (fix/world-trio): `angry` became a REACHABLE outcome (a run of 4-6 straight losses),
+    // so its painting + crop joined KID_EMOTIONS. The budget rule is unchanged and is the reason
+    // the number moved at all – warm every face the decision can return, and only those.
     resetPreloadCache()
     const urls = preloadStage('young')
-    expect(new Set(urls).size).toBe(12)
+    expect(new Set(urls).size).toBe(14)
   })
 
   it('is idempotent – calling it every tick costs nothing after the first', () => {
@@ -155,7 +158,7 @@ describe('preload budget', () => {
   it('warms one band at a time – the whole 5-band set is never pulled at once', () => {
     resetPreloadCache()
     preloadForAge(14)
-    expect(warmedCount()).toBe(12)
+    expect(warmedCount()).toBe(14)
   })
 })
 
@@ -180,13 +183,13 @@ describe('stageDueNext – only warm the next band on the last year of the curre
     resetPreloadCache()
     preloadForAge(14)
     preloadNextStageIfDue(14)
-    expect(warmedCount()).toBe(12)
+    expect(warmedCount()).toBe(14)
   })
 
   it('the last year of a band pays for two', () => {
     resetPreloadCache()
     preloadForAge(16)
     preloadNextStageIfDue(16)
-    expect(warmedCount()).toBe(24)
+    expect(warmedCount()).toBe(28)
   })
 })
