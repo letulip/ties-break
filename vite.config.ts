@@ -27,9 +27,32 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webp,woff2}'],
-        // Character portraits and other heavy art load on demand — precaching them
-        // would balloon the PWA install (public/images is ~37 MB of source PNGs).
+        // The big character paintings stay OUT of the precache, on purpose (R11-9, re-measured).
+        // MEASURED, not guessed: public/images/fem-euro-brunnet/ is 67 webp / 3511 KiB, and the
+        // rest of the precache is 61 entries / 1746 KiB — so precaching the art would TRIPLE the
+        // install, and 31 of those files (1641 KiB: milf/bride/funeral/graduated/pregnant/angry
+        // and unused -fs8 variants) are later-life art no code path can request yet. The stale
+        // "~37 MB of source PNGs" note this replaces was about the SOURCES, which have since moved
+        // to art-src/ and are never served.
+        //
+        // What IS offline-safe by precache: the 20 small 256px crops in public/avatars (294 KiB),
+        // which is why the header and the Home card never break offline.
         globIgnores: ['**/images/**'],
+        // ...and the big paintings get a CacheFirst runtime route instead: one age band is only
+        // ~413-487 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
+        // renders ahead of its art), and once fetched a painting is offline-durable for 60 days.
+        // maxEntries 80 comfortably holds the whole reachable set (36 files) plus headroom.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => /\/images\/.*\.(?:webp|png|jpe?g)$/.test(url.pathname),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'tb-art-v1',
+              expiration: { maxEntries: 80, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+        ],
       },
     }),
   ],

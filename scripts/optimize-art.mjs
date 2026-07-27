@@ -118,6 +118,30 @@ if (existsSync(LIFE_ARC_SRC)) {
   console.log('optimize-art: no art-src/images/fem-euro-brunnet-jpeg/ — life-arc set skipped.')
 }
 
+// R11-9: LEGACY "-fs8" ALIASES. TournamentFlow.vue asks for `-{emotion}-fs8.webp` for EVERY
+// portrait stage, but the "-fs8" names come from the older pngquant-era set, which never had an
+// adult happy frame — so a champion aged 23+ (portraitStage 'adult') hit a 404 on her own title
+// splash. The suffix carries no quality meaning for webp (the fs8 and clean encodes of the same
+// frame land within a few hundred bytes of each other), so the fix is to also emit the legacy
+// name from the life-arc jpeg source. Add a line here if another stage ever loses its fs8 twin.
+const FS8_ALIASES = [
+  { from: 'fem-euro-brunnet-adult-happy.jpg', to: 'fem-euro-brunnet-adult-happy-fs8.webp' },
+]
+
+for (const { from, to } of FS8_ALIASES) {
+  const src = join(LIFE_ARC_SRC, from)
+  if (!existsSync(src)) {
+    console.warn(`optimize-art: fs8 alias source missing, skipped: ${from}`)
+    continue
+  }
+  const buf = await sharp(src)
+    .resize(MAX_SIDE, MAX_SIDE, { fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: QUALITY })
+    .toBuffer()
+  writeFileSync(join(LIFE_ARC_OUT, to), buf)
+  console.log(`webp  images/fem-euro-brunnet/${to}  <- art-src/images/fem-euro-brunnet-jpeg/${from}  (q${QUALITY}, legacy fs8 alias, ${(buf.length / 1024).toFixed(1)}KB)`)
+}
+
 // Round-6: wordmark logos. Like the life-arc set, the owner drops these PNGs straight into
 // art-src/ (no public/ round-trip to move them out of) — every art-src/logo-tb-*.png gets a
 // same-named webp in public/logos/. Natural size is kept (these are small UI wordmarks, not
