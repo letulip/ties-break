@@ -77,10 +77,24 @@ describe('tournament reveal – reveal, do not re-run', () => {
     }
     expect(matches).toBe(kidMatchCount)
 
-    // finalize side effects: exactly one summary, kid points recorded, no summary before finalize
+    // finalize side effects: exactly one summary, no summary before finalize.
     const summaries = world.events.filter((e) => e.type === 'tournament' && e.week === eventWeek)
     expect(summaries.length).toBe(1)
-    expect(world.results.some((r) => r.playerId === KID_ID && r.week === eventWeek)).toBe(true)
+
+    // ⚠ RE-PINNED by wave B "first-round loss pays ZERO" (tune/first-round-zero). This used to
+    // assert a result row unconditionally. Since a first-round exit now banks nothing and
+    // finalizeTournament only pushes a row when `points > 0`, "she played" and "she scored" have
+    // come apart. Assert the RULE rather than one seed's luck: the row exists exactly when she won
+    // at least one match. That is a strictly stronger check than the old unconditional one, and it
+    // holds whichever way this seed's bracket falls.
+    const kidWon = world.pendingTournament!.result.matches.some(
+      (m) => (m.aId === KID_ID || m.bId === KID_ID) && m.winnerId === KID_ID,
+    )
+    const banked = world.results.some((r) => r.playerId === KID_ID && r.week === eventWeek)
+    expect(banked).toBe(kidWon)
+    // ...while the summary event fires either way – the week is always on the record.
+    const playedEvent = world.season.find((e) => e.id === world.pendingTournament!.eventId)!
+    expect(summaries[0].text).toContain(TIERS[playedEvent.tier].label)
   })
 
   it('revealed match records reproduce via simulateMatch (already committed, never re-decided)', () => {

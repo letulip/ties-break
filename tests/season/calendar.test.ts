@@ -54,20 +54,23 @@ describe('TIERS — tier catalogue', () => {
     expect(TIERS.local.everyNWeeks).toBe(2)
     expect(TIERS.local.entryFeeCents).toBe(40_00)
     expect(TIERS.local.travelCostCents).toEqual([60_00, 120_00])
-    expect(TIERS.local.points).toEqual([30, 18, 10, 5])
+    // ⚠ RE-PINNED by wave B "first-round loss pays ZERO" (tune/first-round-zero): the LAST element
+    // of every array is the first-round exit (runTournament: finish = rounds - round, round 0 =
+    // first round), and it is now 0 at every rung – real ITF Reg 31(a). Was [30, 18, 10, 5].
+    expect(TIERS.local.points).toEqual([30, 18, 10, 0])
 
     expect(TIERS.regional.drawSize).toBe(16)
     expect(TIERS.regional.everyNWeeks).toBe(4)
     expect(TIERS.regional.entryFeeCents).toBe(75_00)
     expect(TIERS.regional.travelCostCents).toEqual([150_00, 400_00])
-    expect(TIERS.regional.points).toEqual([80, 48, 28, 14, 6])
+    expect(TIERS.regional.points).toEqual([80, 48, 28, 14, 0]) // was [..., 6]
 
     expect(TIERS.national.drawSize).toBe(32)
     expect(TIERS.national.everyNWeeks).toBe(13)
     expect(TIERS.national.secondHalfBonus).toBe(2) // R9-20 densification
     expect(TIERS.national.entryFeeCents).toBe(120_00)
     expect(TIERS.national.travelCostCents).toEqual([400_00, 900_00])
-    expect(TIERS.national.points).toEqual([200, 120, 70, 35, 15, 6])
+    expect(TIERS.national.points).toEqual([200, 120, 70, 35, 15, 0]) // was [..., 6]
   })
 
   it('no tier is locked any more – every rung is scheduled', () => {

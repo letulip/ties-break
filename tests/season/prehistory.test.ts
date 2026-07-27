@@ -74,11 +74,29 @@ describe('generatePreHistory — shape of the ledger', () => {
     expect(PREHISTORY_FIRST_WEEK).toBe(-51) // week 0 - 51 == inside the 52-week ranking window
   })
 
-  it('never writes a KID row and never writes a zero-point row', () => {
+  // ⚠ RE-PINNED by wave B "first-round loss pays ZERO" (tune/first-round-zero), and this one is
+  // FLAGGED FOR THE OWNER rather than quietly accepted – see docs/specs/wave-b-first-round-zero.md.
+  //
+  // `generatePreHistory` draws a finish index uniformly-ish over `TIERS[tier].points` and pushes
+  // `points[finish]` UNCONDITIONALLY – it has no `points > 0` guard, because it was written against
+  // an invariant that has now gone: its own comment reads "Every tier's points array is strictly
+  // positive, so every drawn finish is a counting result: that is what makes the KID the only
+  // 0-point player on the table at week 0."
+  //
+  // With a first-round exit worth 0, roughly 7-9% of pre-history rows are now ZERO-POINT rows
+  // (measured: 49/672, 52/684, 64/679 on seeds fresh-ph / bench-wealthy-0 / counting). The KID row
+  // half of the claim is untouched and still asserted; the zero-point half is now false BY DESIGN
+  // OF THE POINTS CHANGE, and the live engine disagrees with it – finalizeTournament and
+  // awardAiPoints both guard on `points > 0`, so a real first-round exit writes NOTHING while a
+  // pre-history one writes a 0-point row. That inconsistency is the thing to decide, and the fix
+  // is a one-line guard in prehistory.ts or a decision to record scoreless weeks everywhere.
+  it('never writes a KID row (zero-point rows: see the wave-B note above)', () => {
     for (const r of rows) {
       expect(r.playerId).not.toBe(KID_ID)
-      expect(r.points).toBeGreaterThan(0)
+      expect(r.points).toBeGreaterThanOrEqual(0)
     }
+    // Pin the NEW fact so it cannot drift unnoticed while the decision is open.
+    expect(rows.some((r) => r.points === 0)).toBe(true)
   })
 
   it('gives EVERY cohort player at least one counting result (the kid stays the only 0-point player)', () => {
@@ -145,14 +163,32 @@ describe('createWorld — the fresh career now opens on a REAL ranking', () => {
     expect(windowedBestSum(world.results, world.week, KID_ID)).toBe(0)
   })
 
-  it('RE-PINNED (was rank #1): the kid starts ranked LAST, behind the whole cohort', () => {
+  it('RE-PINNED (was rank #1, then #200): the kid starts at the BOTTOM of the table', () => {
     // Before pre-history every AI was tied at 0 points, so the kid shared dense-rank 1 with the
     // entire field – the artifact the owner saw (a brand-new career reading "#1"). With a real
-    // table she is now the ONLY point-less player, i.e. rank cohort.length + 1 = 200. This is the
-    // FIX, not a regression; `rankLabel` still shows "Unranked" until she owns a counting result.
+    // table she became the ONLY point-less player, i.e. rank cohort.length + 1 = 200.
+    //
+    // ⚠ RE-PINNED 200 -> 197 by wave B "first-round loss pays ZERO" (tune/first-round-zero), and
+    // FLAGGED, not accepted – see docs/specs/wave-b-first-round-zero.md. She is no longer the only
+    // 0-point player: pre-history now draws first-round exits worth 0 (see the note on the
+    // zero-point-row test above), so a few cohort players end the pre-history with no points and
+    // share the bottom dense rank with her – 3 of them on this seed (4 on bench-wealthy-0, 6 on
+    // 'counting'). "Ranked last" still HOLDS – nobody is below her, and that is asserted here as
+    // the invariant. What broke is "she is the only one down there", which was the point of the
+    // pre-history slice. `rankLabel` still reads "Unranked" until she owns a counting result, so
+    // the player-visible symptom is muted, but the standings table is no longer strictly ordered
+    // behind her. One-line guard in prehistory.ts fixes it; that is the owner's call, not this
+    // slice's, because the same question ("is a scoreless week a row?") has a second answer in
+    // world.ts, where it is currently NO.
     const world = createWorld('fresh-ph')
-    expect(world.kidRank).toBe(world.cohort.length + 1)
-    expect(world.kidRank).toBe(200)
+    const ranking = computeRanking(world.results, 0, [...world.cohort.map((p) => p.id), KID_ID])
+    const kidRow = ranking.find((r) => r.playerId === KID_ID)!
+    // THE INVARIANT THAT STILL HOLDS: nobody is ranked below her, and she has no points.
+    expect(kidRow.points).toBe(0)
+    expect(Math.max(...ranking.map((r) => r.rank))).toBe(kidRow.rank)
+    // THE MEASURED FACT, pinned so the open decision stays visible:
+    expect(world.kidRank).toBe(197)
+    expect(ranking.filter((r) => r.points === 0).length).toBe(4) // the kid + 3 cohort players
   })
 
   it('the week-0 standings are meaningful: the top of the table actually has points', () => {
