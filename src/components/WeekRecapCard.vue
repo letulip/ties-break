@@ -9,6 +9,7 @@
 // card needs nothing from HomeScreen.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
+import { weekLabel } from '../shared/dates'
 import PracticeFlow from './PracticeFlow.vue'
 import type { WorldMatch } from '../shared/protocol'
 
@@ -64,7 +65,7 @@ const practiceLive = ref<WorldMatch | null>(null)
 <template>
   <section class="recap-card">
     <div class="recap-head">
-      <h2 style="margin: 0">Week recap · W{{ week }}</h2>
+      <h2 style="margin: 0">Week recap · {{ weekLabel(week) }}</h2>
       <button class="link" @click="$emit('dismiss')">Dismiss</button>
     </div>
     <div class="recap-days">

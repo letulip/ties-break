@@ -29,7 +29,7 @@ import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder.
 import { HORIZON_WEEKS, pointsLockNote, useTierStates, type TierState } from '../../composables/tierState'
 import { TIER_SHORT } from '../../composables/weekAhead'
-import { weekRange } from '../../shared/dates'
+import { weekLabel, weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
@@ -138,7 +138,10 @@ const seasonBlocks = computed<SeasonBlockView[]>(() => {
   if (!game.snapshot) return []
   const year = Math.floor(week.value / WEEKS_PER_YEAR)
   const endWeek = year * WEEKS_PER_YEAR + surfaceBlockFor(week.value).to
-  return [blockView(week.value, `now – through W${endWeek}`), blockView(endWeek + 1, `from W${endWeek + 1}`)]
+  return [
+    blockView(week.value, `now – through ${weekLabel(endWeek)}`),
+    blockView(endWeek + 1, `from ${weekLabel(endWeek + 1)}`),
+  ]
 })
 // CALENDAR DECLUTTER (spec §1): an OUTGROWN tournament is noise – she can never enter it again –
 // so it leaves the calendar entirely and its week becomes plannable. Locked-ahead events
@@ -292,16 +295,16 @@ function askEnter(e: UpcomingEvent): void {
   const fatigued = e.cautionReason === 'fatigued'
   pendingConfirm.value = {
     message: fatigued
-      ? `${e.cautionDetail ?? 'Exhausted – racing risks injury.'} Enter ${e.label} (W${e.week}, ${e.surface}) anyway? ` +
-        `Entry fee ${formatDollars(e.entryFeeCents)}.`
-      : `Enter ${e.label} (W${e.week}, ${e.surface})? Entry fee ${formatDollars(e.entryFeeCents)}.`,
+      ? `${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
+        `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? Entry fee ${formatDollars(e.entryFeeCents)}.`
+      : `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? Entry fee ${formatDollars(e.entryFeeCents)}.`,
     confirmLabel: fatigued ? 'Push through' : 'Enter',
     onConfirm: () => game.enterEvent(e.id),
   }
 }
 function askWithdraw(e: UpcomingEvent): void {
   pendingConfirm.value = {
-    message: `Withdraw from ${e.label} (W${e.week})? Entry fee ${formatDollars(e.entryFeeCents)} will be refunded.`,
+    message: `Withdraw from ${e.label} (${weekLabel(e.week)})? Entry fee ${formatDollars(e.entryFeeCents)} will be refunded.`,
     confirmLabel: 'Withdraw',
     onConfirm: () => game.withdrawEvent(e.id),
   }
@@ -313,7 +316,7 @@ function askWithdraw(e: UpcomingEvent): void {
 function askCancelEntry(e: UpcomingEvent): void {
   pendingConfirm.value = {
     message:
-      `Cancel her entry to ${e.label} (W${e.week})? Entries closed on W${e.deadlineWeek}, so the ` +
+      `Cancel her entry to ${e.label} (${weekLabel(e.week)})? Entries closed on ${weekLabel(e.deadlineWeek)}, so the ` +
       `${formatDollars(e.entryFeeCents)} entry fee is NOT refunded. The week frees up for a practice ` +
       `match or a family week.`,
     confirmLabel: 'Cancel the entry',
@@ -346,7 +349,7 @@ function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number
   pendingConfirm.value = {
     message:
       (p.caution.level === 'caution' ? `${p.caution.detail} ` : '') +
-      `${what} in W${p.week} – ${formatDollars(p.feeCents)}. No ranking points.`,
+      `${what} in ${weekLabel(p.week)} – ${formatDollars(p.feeCents)}. No ranking points.`,
     confirmLabel: p.caution.level === 'caution' ? 'Push through' : 'Book it',
     onConfirm: () => game.bookPractice(p.week, p.withCoach),
   }
@@ -356,7 +359,7 @@ function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number
 function confirmVacation(v: { week: number; packageId: string; label: string; priceCents: number; gain: number }): void {
   pendingConfirm.value = {
     message:
-      `${v.label} in W${v.week} – ${v.priceCents === 0 ? 'free' : formatDollars(v.priceCents)}, ` +
+      `${v.label} in ${weekLabel(v.week)} – ${v.priceCents === 0 ? 'free' : formatDollars(v.priceCents)}, ` +
       `+${v.gain} condition. No tournaments that week.`,
     confirmLabel: 'Book it',
     onConfirm: () => game.bookVacation(v.week, v.packageId),
@@ -367,7 +370,7 @@ function confirmVacation(v: { week: number; packageId: string; label: string; pr
 function askCancelVacation(row: CalendarRow): void {
   const booking = row.vacation!
   pendingConfirm.value = {
-    message: `Cancel ${packageLabel(booking.packageId)} in W${row.week}? ${
+    message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(row.week)}? ${
       booking.paidCents > 0 ? `${formatDollars(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
     }`,
     confirmLabel: 'Cancel the trip',
@@ -377,7 +380,7 @@ function askCancelVacation(row: CalendarRow): void {
 function askCancelPractice(row: CalendarRow): void {
   const booking = row.practice!
   pendingConfirm.value = {
-    message: `Cancel the practice match in W${row.week}? ${formatDollars(booking.paidCents)} comes back in full.`,
+    message: `Cancel the practice match in ${weekLabel(row.week)}? ${formatDollars(booking.paidCents)} comes back in full.`,
     confirmLabel: 'Cancel the match',
     onConfirm: () => game.cancelPractice(row.week),
   }
@@ -408,6 +411,9 @@ const rescuePackageId = computed<string | null>(() => {
     fundsCents: snap.fundsCents,
   })
 })
+/** The rescue week as the player reads it. Empty string is unreachable: the card is gated on
+ *  `showRescue`, which requires a plannable week. */
+const rescueWeekLabel = computed(() => (rescueWeek.value === null ? '' : weekLabel(rescueWeek.value)))
 const showRescue = computed(
   () =>
     !!game.snapshot &&
@@ -530,7 +536,7 @@ function playExhibition(): void {
     <div v-if="showRescue" class="rescue-card">
       <p class="rescue-title">{{ rescueTitle }}</p>
       <p class="hint" style="margin: 0">
-        Condition {{ condition }}/100. A week away in W{{ rescueWeek }} would bring her back
+        Condition {{ condition }}/100. A week away in {{ rescueWeekLabel }} would bring her back
         fresher – nothing is booked until you say so.
       </p>
       <div class="controls" style="margin-top: 10px">
@@ -583,7 +589,7 @@ function playExhibition(): void {
     <section v-if="myEntries.length">
       <h2>My entries</h2>
       <div class="entries-strip">
-        <span v-for="e in myEntries" :key="e.id" class="pill ok">{{ e.label }} · W{{ e.week }}</span>
+        <span v-for="e in myEntries" :key="e.id" class="pill ok">{{ e.label }} · {{ weekLabel(e.week) }}</span>
       </div>
     </section>
 
@@ -616,14 +622,13 @@ function playExhibition(): void {
               </span>
             </div>
             <p class="hint" style="margin-top: 8px">
-              W{{ row.event.week }} · {{ row.dates }} · entry {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{
-                formatDollars(row.event.travelCostCents)
-              }}
+              {{ weekLabel(row.event.week) }} · {{ row.dates }} · entry
+              {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{ formatDollars(row.event.travelCostCents) }}
             </p>
             <div class="controls" style="margin-top: 8px">
               <!-- Round-7 item 21: past tense once the window has shut. -->
               <span class="pill" :class="{ negative: week > row.event.deadlineWeek && !row.event.entered }">
-                {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} W{{ row.event.deadlineWeek }}
+                {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
               </span>
               <span v-if="row.event.entered" class="pill ok">Entered</span>
               <!-- R10-5: an entry that survived the band crossing is COMMITTED, not illegal – but it
@@ -650,7 +655,7 @@ function playExhibition(): void {
               </button>
               <!-- Round-8 6b: `lock` brightens the label to soft amber (pill stays disabled). -->
               <span v-else-if="entriesClosed(row.event)" class="pill muted lock">
-                Entries closed W{{ row.event.deadlineWeek }}
+                Entries closed {{ weekLabel(row.event.deadlineWeek) }}
               </span>
               <!-- HARD locks: ranking gate ('locked') OR a hard availability block (injured /
                    school exams / a booked family vacation / the doctor's veto under the medical
@@ -695,7 +700,7 @@ function playExhibition(): void {
                always is. Same shape for the vacation row: it is the same card. -->
           <div v-else-if="row.kind === 'vacation' && row.vacation" class="calendar-row-muted planned">
             <span class="planned-lines">
-              <span class="planned-when">W{{ row.week }} · {{ row.dates }}</span>
+              <span class="planned-when">{{ weekLabel(row.week) }} · {{ row.dates }}</span>
               <span class="planned-what">
                 🏖 {{ packageLabel(row.vacation.packageId) }}
                 <template v-if="row.event"> · skipping {{ row.event.label }}</template>
@@ -707,7 +712,7 @@ function playExhibition(): void {
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
             <span class="planned-lines">
-              <span class="planned-when">W{{ row.week }} · {{ row.dates }}</span>
+              <span class="planned-when">{{ weekLabel(row.week) }} · {{ row.dates }}</span>
               <span class="planned-what">
                 🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}
                 <template v-if="row.event"> · instead of {{ row.event.label }}</template>
@@ -730,7 +735,7 @@ function playExhibition(): void {
             :class="{ 'off-season': row.kind === 'off-season', exam: row.kind === 'exam' }"
           >
             <span class="hint" style="margin: 0">
-              W{{ row.week }} · {{ row.dates }} ·
+              {{ weekLabel(row.week) }} · {{ row.dates }} ·
               {{
                 row.kind === 'off-season'
                   ? 'Off-season – the natural family week'

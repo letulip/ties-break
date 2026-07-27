@@ -39,6 +39,40 @@ export function weekYear(week: number): number {
   return weekStart(week).year
 }
 
+// --- R11-6: the ONE week label ------------------------------------------------------------
+// Owner: «с нового года нумерацию недели надо обновлять, не надо их насквозь считать».
+//
+// The ENGINE keeps counting weeks from the career's start and never resets – every RNG
+// sub-stream key (`seed:injury:87`), every pinned capture, the save format and the whole bench
+// are keyed on that ABSOLUTE index. This is the display side of it, and the only place in the
+// app where the shape of a week label is decided: before it, every surface hand-rolled its own
+// `W${week}` and the player was reading "W87".
+//
+// FORMAT: `W14 '31` – the in-season week (1..52) plus a two-digit season year.
+//   * the week alone cannot tell two seasons apart, and telling them apart is the whole point,
+//     so the year has to be in the label itself – the status pill (30px tall) carries no date;
+//   * two digits, because where a date IS printed it sits right next to this label and already
+//     spells the year out in full ("W14 '31 · Jan 27 – Feb 2, 2031"). A second four-digit year
+//     on the same line is length the news feed and the calendar cards cannot spare;
+//   * the year is the same one the wrap-up popup and the season-by-season table already name
+//     ("Season 2031"), so there is nothing new to learn – '31 IS that season.
+//
+// The season year is the SEASON INDEX off the epoch year, NOT weekYear(week). A season is
+// exactly 52 weeks = 364 days, so a season's opening Monday drifts ~1.25 days earlier each year and
+// crosses back over New Year at season 5: weekYear(208) and weekYear(260) are BOTH 2035. A label
+// built on that would print two consecutive seasons as '35 – the one thing it exists to prevent.
+export const WEEKS_IN_SEASON = 52 // === WEEKS_PER_YEAR in engine/season/calendar.ts (pinned in tests)
+const EPOCH_YEAR = weekYear(0) // 2031
+
+/** "W14 '31" – an absolute career week as the in-season week (1..52) + its season year.
+ *  Total: defined for every integer, including the negative weeks entry deadlines can reach. */
+export function weekLabel(week: number): string {
+  const w = Math.floor(week)
+  const offset = ((w % WEEKS_IN_SEASON) + WEEKS_IN_SEASON) % WEEKS_IN_SEASON
+  const year = EPOCH_YEAR + Math.floor(w / WEEKS_IN_SEASON)
+  return `W${offset + 1} '${String(((year % 100) + 100) % 100).padStart(2, '0')}`
+}
+
 /** "Jan 6–12, 2031" – a human date range for one career week (Monday..Sunday).
  *  Widens its own format only as far as needed to stay unambiguous:
  *  same month:      "Jan 6–12, 2031"

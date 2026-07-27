@@ -14,6 +14,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { ECONOMY } from '../../engine/economy'
 import type { FamilyBackground, FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
+import { weekLabel } from '../../shared/dates'
 
 const game = useGameStore()
 
@@ -247,7 +248,7 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
       <h2>Ledger</h2>
       <p v-if="!ledgerGroups.length" class="hint" style="margin: 0">No transactions yet.</p>
       <div v-for="group in ledgerGroups" :key="group.week" class="ledger-week">
-        <p class="ledger-week-label">W{{ group.week }}</p>
+        <p class="ledger-week-label">{{ weekLabel(group.week) }}</p>
         <table>
           <tbody>
             <tr v-for="row in group.rows" :key="row.event.id">

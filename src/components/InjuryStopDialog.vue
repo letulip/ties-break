@@ -10,6 +10,7 @@ import { computed, onMounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import { playSfx } from '../audio/sfx'
 import type { InjurySeverity } from '../shared/protocol'
+import { weekLabel } from '../shared/dates'
 
 defineEmits<{ continue: [] }>()
 
@@ -52,7 +53,7 @@ onMounted(() => playSfx('ooh'))
 <template>
   <div v-if="injury" class="dialog-overlay" @click.self="$emit('continue')">
     <div class="dialog-card season-summary injury-stop">
-      <p class="season-summary-kicker">Injury – week {{ week }}</p>
+      <p class="season-summary-kicker">Injury – {{ weekLabel(week) }}</p>
       <h2 class="season-summary-title">She's hurt.</h2>
       <table class="season-summary-table">
         <tbody>
@@ -66,7 +67,10 @@ onMounted(() => playSfx('ooh'))
           </tr>
           <tr>
             <th>Out for</th>
-            <td>~{{ injury.totalWeeks }} wk{{ injury.totalWeeks === 1 ? '' : 's' }} – back around W{{ backWeek }}</td>
+            <td>
+              ~{{ injury.totalWeeks }} wk{{ injury.totalWeeks === 1 ? '' : 's' }} – back around
+              {{ weekLabel(backWeek) }}
+            </td>
           </tr>
           <tr>
             <th>Cancelled</th>
@@ -81,7 +85,7 @@ onMounted(() => playSfx('ooh'))
         </tbody>
       </table>
       <p class="hint season-summary-note">
-        Only the weeks she is out are cancelled – anything from W{{ backWeek }} on is still booked.
+        Only the weeks she is out are cancelled – anything from {{ weekLabel(backWeek) }} on is still booked.
       </p>
       <p class="hint season-summary-note">Rest and rehab now – the news feed tracks her recovery.</p>
       <div class="dialog-actions">
