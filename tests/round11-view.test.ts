@@ -10,6 +10,10 @@ import type { TierId } from '../src/engine/season/types'
 
 // ---------------------------------------------------------------------------
 // Round 11, wave C — PRESENTATION ONLY. No engine file is touched by any of these
+// FILE NAME: this lives in round11-VIEW.test.ts, not round11.test.ts, because wave A created a
+// file of that name on its own branch in parallel and the two collided add/add at integration —
+// the exact conflict round 10 hit before it (round10.test.ts / round10-view.test.ts). Same split,
+// same reason: correctness tests in round11.test.ts, presentation tests here.
 // items; every one of them reads data the Snapshot already carries.
 //
 //   R11-15  the surface PILL comes back to the calendar card corner (this REVERTS
