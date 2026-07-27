@@ -53,7 +53,7 @@ import {
 import { generateCohort, driftCohort } from './season/cohort'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
-import { computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
+import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
@@ -1582,6 +1582,15 @@ function finalizeTournament(world: WorldState): void {
   )
 
   // Effective ranking delta = kid's windowed best-6 sum after adding the result minus before.
+  //
+  // THE KID'S ROW IS STILL AWARD-ONLY, deliberately (fix/rival-fatigue-rows). The cohort's rows
+  // became APPEARANCE rows because the ledger is the only record rival fatigue has; the kid needs
+  // no such record – her run's strain is charged directly, twenty lines above, off the very match
+  // list that produced it. What she does still read out of the ledger is `playedWeeksInTrailing4`
+  // (the consecutive-play multiplier on injury risk), and THAT is under-counting a week she lost
+  // her opener in, exactly as rival fatigue was. It is left alone here on purpose: it moves injury
+  // exposure, which is a tuning decision with its own targets, and folding it into this slice would
+  // make the cohort-fatigue measurement unattributable. Flagged for the owner in the commit message.
   const before = windowedBestSum(world.results, world.week, KID_ID)
   if (points > 0) world.results.push({ playerId: KID_ID, week: world.week, points, tier: event.tier })
   const after = windowedBestSum(world.results, world.week, KID_ID)
@@ -1672,6 +1681,29 @@ export function closeTournament(world: WorldState): void {
 // costs no draw – both are pure derivations – so everything above still holds. The awarded rows now
 // record their `tier`, which is what lets next week's reconstruction read them EXACTLY instead of
 // guessing (SeasonResult.tier has always been optional, so this is not a schema bump).
+//
+// EVERY ENTRANT LEAVES A ROW – SCORING OR NOT (fix/rival-fatigue-rows). This loop used to guard on
+// `points > 0`, which was harmless while every finish paid: "has a row" and "played that week" were
+// the same fact. Wave B's first-round zero ended that, and the guard then deleted the ONLY record
+// that half of every draw had played at all – so `season/rival.ts`, which reconstructs a cohort
+// player's strain from her rows, read a rival who lost her opener as having RESTED. She banked
+// `recoveryBase` for a week she spent travelling and playing. Measured on the real engine
+// (tools/rival-fatigue-audit.ts, 12 cells × 30 seeds × 208w): 45.6% of all cohort appearances were
+// charged no strain whatever, the field ran ~4 points of condition fresher than the tennis it
+// played, and the cohort's win% against the kid moved with it.
+//
+// So the row is written for EVERY entrant of the draw and `points` carries the award, 0 included.
+// The two facts now live in two fields instead of one presence check, which is what
+// `isCountingResult` exists to keep honest: nothing that reads the ledger as a STANDINGS table sees
+// a scoreless row (computeRanking / windowedBestSum / the counting-results list all filter it out),
+// and the one system that reads it as a record of PLAY – the rival fatigue window – sees all of it.
+// This is the same shape `season/prehistory.ts` has always written; the live path is what moved.
+//
+// COSTS NOTHING ON THE STREAM: pushing a row draws no RNG on any stream, and the loop already
+// visited every entrant (`result.finishes` is dense over the whole draw). The frozen MAIN capture
+// 41550 / e6b0c709 is untouched by construction – points are post-draw arithmetic, read off a table
+// after the bracket has already been resolved. The ledger roughly doubles in size (a 32-draw writes
+// 32 rows instead of 16); it is still pruned on the same 52-week rule and stays ~2k rows.
 function runAiTournament(
   world: WorldState,
   event: SeasonEvent,
@@ -1683,8 +1715,7 @@ function runAiTournament(
   const result = runTournament(event, field, null, world.seed, aiRng)
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {
-    const points = pts[finish]
-    if (points > 0) world.results.push({ playerId, week: world.week, points, tier: event.tier })
+    world.results.push({ playerId, week: world.week, points: pts[finish] ?? 0, tier: event.tier })
   }
 }
 
@@ -2292,11 +2323,18 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
 }
 
 // The kid's counted best-6 results (round-5 item 1b): same window + sort as computeRanking,
-// so their points sum equals the kid's standings points. Strongest first.
+// so their points sum equals the kid's standings points. Strongest first. `isCountingResult` is
+// the same filter computeRanking applies, named rather than respelled – "counting" has to mean one
+// thing in both places or this list and the standings total drift apart the moment a scoreless row
+// reaches the kid's half of the ledger.
 function computeCountingResults(world: WorldState): CountingResult[] {
   return world.results
     .filter(
-      (r) => r.playerId === KID_ID && r.week <= world.week && world.week - r.week <= RESULTS_WINDOW,
+      (r) =>
+        isCountingResult(r) &&
+        r.playerId === KID_ID &&
+        r.week <= world.week &&
+        world.week - r.week <= RESULTS_WINDOW,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
     .slice(0, 6)

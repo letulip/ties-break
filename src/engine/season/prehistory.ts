@@ -91,12 +91,28 @@ export function generatePreHistory(seedStr: string, cohort: AiPlayer[]): SeasonR
       let week = -pickInt(rng, -PREHISTORY_LAST_WEEK, -PREHISTORY_FIRST_WEEK)
       while (usedWeeks.has(week)) week = week === PREHISTORY_LAST_WEEK ? PREHISTORY_FIRST_WEEK : week + 1
       usedWeeks.add(week)
-      // Every tier's points array is strictly positive, so every drawn finish is a counting result:
-      // that is what makes the KID the only 0-point player on the table at week 0.
+      // EVERY DRAWN ENTRY LEAVES A ROW, SCORING OR NOT – and this path is the one that was already
+      // right. It never had a `points > 0` guard, so when wave B zeroed the first round it simply
+      // carried on recording those entries as 0-point rows while the live path (world.ts
+      // `runAiTournament`) silently dropped them; the two halves of the engine then disagreed about
+      // whether a played-but-scoreless week exists at all. fix/rival-fatigue-rows resolved the
+      // disagreement in THIS direction – a row is an APPEARANCE, `points` is what it paid – because
+      // `season/rival.ts` reconstructs a cohort player's fatigue from her rows and cannot see a week
+      // that left no record. So nothing changed here, on purpose: it is the live path that moved.
+      //
+      // The consequence for week 0 is worth stating plainly, because it is a real change of meaning
+      // from the ladder-up slice's original claim: a cohort player whose whole synthetic season was
+      // first-round exits now holds ZERO counting points, so the kid is no longer the ONLY 0-point
+      // player on the opening table. She is still ranked last (nobody is below her) and still reads
+      // "Unranked" until she owns a counting result – she now SHARES that last rank with a handful
+      // of juniors. That follows from the points table, not from this guard: `computeRanking` counts
+      // only scoring rows, so adding or removing the scoreless ones cannot move anyone's total.
+      //
       // `tier` is recorded (it costs no draw and no schema bump – SeasonResult.tier has always been
       // optional) so the rival-life fatigue reconstruction reads these rows EXACTLY rather than
       // through the ambiguous cheapest-reading fallback: 30 points is a Local title AND a J300
-      // first round, and a pre-history row knows perfectly well which one it is.
+      // first round, and a pre-history row knows perfectly well which one it is. That matters more
+      // than ever now that 0 is a written value: SIX tiers can produce it, and only `tier` says which.
       results.push({ playerId: p.id, week, points: points[finish], tier })
     }
   })

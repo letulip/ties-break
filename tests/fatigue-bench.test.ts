@@ -667,8 +667,25 @@ describe('season planner (REAL mechanics – bookings through the engine command
     expect(g.vacationSpendCents).toBe(0)
 
     const b = runFatigueCareer(middleSelf, balanced, 0, H104.weeks)
-    // alternating: fewer friendlies than the grinder on the same seed/world
-    expect(b.practicesPlayed).toBeLessThan(g.practicesPlayed)
+    // *** RE-PINNED BY fix/rival-fatigue-rows: `b.practicesPlayed < g.practicesPlayed` is DEAD, and
+    // it died of the mechanism this test already documents three lines below for `careful`. Cohort
+    // rivals now pay condition for a draw they lost their opener in, so the field is tireder, the
+    // kid wins more and her careers take a different shape. MEASURED, this exact cell (middle/
+    // self-coached, seed 0, 104w), pre-fix -> post-fix:
+    //   grinder  friendlies 28 -> 31   mean condition 30.4 -> 30.9   end points   10 ->  28
+    //   balanced friendlies 15 -> 34   mean condition 75.2 -> 87.9   end points  868 -> 104
+    //   careful  friendlies 24 -> 55   mean condition 85.2 -> 90.0   end points 1198 -> 104
+    // (seed 0 is an unlucky draw on points – over 10 seeds the same cell goes 192 -> 417 mean end
+    // points for balanced and 255 -> 429 for careful, i.e. the kid does markedly BETTER against a
+    // field that is finally paying for its own tennis.)
+    //
+    // The grinder is not practising LESS – she is practising as hard as the engine will let her.
+    // She lives under `medicalFloor`, where the practice gate refuses a friendly outright, so her
+    // count is capped by her body while the alternating policy's is capped only by the calendar.
+    // The claim is therefore re-stated as the thing that is actually true and actually load-bearing:
+    // both policies practise, and the ORDER between them is explained by condition, not by habit. ***
+    expect(b.practicesPlayed).toBeGreaterThan(0)
+    expect(b.meanCondition).toBeGreaterThan(g.meanCondition)
     // the off-season family week is the scheduled default -> at least one package per season year
     expect(b.vacationsTotal).toBeGreaterThanOrEqual(1)
 

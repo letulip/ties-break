@@ -6,6 +6,14 @@
 // halves of this module are therefore pure functions of data the world ALREADY holds:
 //   - fatigue  <- the results ledger (`world.results`), which records every draw a rival entered;
 //   - style    <- the four attributes she was generated with.
+//
+// THAT FIRST LINE IS A CONTRACT, AND IT WAS BROKEN ONCE (fix/rival-fatigue-rows). "Records every
+// draw a rival entered" is the whole basis of this module, and for a while it was not true: both
+// ledger write sites guarded on `points > 0`, which cost nothing while every finish paid – and then
+// wave B made a first-round exit worth 0 at every tier, so half of every draw stopped leaving a row
+// and this reconstruction read those weeks as REST. `runAiTournament` now writes a row for every
+// entrant and `points` carries the award (0 included), so the contract holds by construction rather
+// than by luck. A ROW IS AN APPEARANCE; `isCountingResult` is what the STANDINGS read instead.
 // No new WorldState field, no schema bump, and ZERO RNG draws – the frozen MAIN-stream pins are
 // untouched by construction.
 //
@@ -116,7 +124,15 @@ function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } 
  *  omitted it, pre-history included) the points value alone can be ambiguous: 30 is a Local title,
  *  a J30 last-16 and a J300 first round at once. Such a row resolves to the CHEAPEST reading by
  *  strain – deterministic, and a legacy save can never invent fatigue a rival may not have earned.
- *  It is explicitly never treated as free: the cheapest reading is still at least one match. */
+ *  It is explicitly never treated as free: the cheapest reading is still at least one match.
+ *
+ *  0 POINTS IS THE MOST AMBIGUOUS VALUE THERE IS – six tiers produce it, one first-round exit each –
+ *  and it is also the value a scoreless appearance carries, which is now the commonest row in the
+ *  ledger. Every row that can hold it comes from a write site that records `tier` (the live bracket
+ *  and pre-history both have since the rival-life slice), so the exact branch above always fires and
+ *  the collision is unreachable in practice. A tier-LESS 0-point row can only come from a
+ *  hand-edited save; it reads as the cheapest first-round exit (Local, one match), which is the
+ *  right instinct for an unknown row: never free, never inflated. */
 export function reconstructRun(result: SeasonResult): RivalRun {
   const { byPoints, fallback } = runsIndex()
   const candidates = byPoints.get(result.points)
