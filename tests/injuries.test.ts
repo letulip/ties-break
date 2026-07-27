@@ -952,7 +952,7 @@ describe('advanceWeeks injury stop', () => {
     w.physioActive = false
     w.condition = 0
     const stop = advanceWeeks(w, rngFromSeed(w.seed), 4)
-    expect(stop).toBe('injury')
+    expect(stop).toContain('injury')
     expect(w.week).toBe(1)
     expect(w.injury).not.toBeNull()
   })

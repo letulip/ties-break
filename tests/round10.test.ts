@@ -622,7 +622,8 @@ describe('round-10 invariance — the main weekly stream is untouched', () => {
     w.condition = 100
     // a regional deadline next week, but she is 0 pts (locked) -> no stop
     injectEvent(w, { week: 3, tier: 'regional', deadlineWeek: 1 })
-    const stop: StopReason | undefined = advanceWeeks(w, rngFromSeed(w.seed), 4)
-    expect(stop).not.toBe('deadline')
+    // R11-1: advanceWeeks reports the SET of reasons the week stopped it, not a single one.
+    const stop: StopReason[] = advanceWeeks(w, rngFromSeed(w.seed), 4)
+    expect(stop).not.toContain('deadline')
   })
 })

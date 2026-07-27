@@ -3,6 +3,7 @@
 // onboarding wizard when there is no active career. No router – a plain ref
 // switch, per spec.
 import { computed, onMounted, ref, watch } from 'vue'
+import type { StopReason } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekRange } from './shared/dates'
@@ -184,7 +185,7 @@ function dismissRecovered(): void {
   game.$patch({ recovered: false })
 }
 
-// Package N: `stopReason` lives ON the snapshot (only `advance` ever sets it –
+// Package N: `stopReasons` lives ON the snapshot (only `advance` ever sets them –
 // `tick`/enterEvent/etc. never do), not as an independent store flag, so a local
 // dismiss flag is reset whenever a fresh snapshot arrives (any action) and set
 // when the user dismisses the toast by hand.
@@ -237,32 +238,52 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // advance – the same trap the owner hit with a silent injury withdrawal.
   medical: 'Stopped: she was not cleared to play – withdrawn on medical advice.',
 }
-const stopReasonText = computed(() => STOP_REASON_TEXT[game.snapshot?.stopReason ?? ''] ?? '')
+// R11-1: an advance reports the SET of reasons it stopped for, already in surfacing order
+// (STOP_PRECEDENCE, medical first). Every gate below asks "is my reason in the set?" instead of
+// "is my reason THE reason" – which is what used to lose the injury popup whenever the same week
+// also ended the season.
+const stopReasons = computed<StopReason[]>(() => game.snapshot?.stopReasons ?? [])
+// The toast speaks for the highest-precedence reason that HAS copy (R10-16: no copy, no toast).
+const stopReasonText = computed(() => {
+  for (const reason of stopReasons.value) {
+    const text = STOP_REASON_TEXT[reason]
+    if (text) return text
+  }
+  return ''
+})
 const showStopToast = computed(() => !!stopReasonText.value && !stopToastDismissed.value)
 function dismissStopToast(): void {
   stopToastDismissed.value = true
 }
-// The end-of-season summary popup: auto-shows on Home when `advance` reports 'season-end' and a
-// summary is present, until the player hits Continue (client-side flag).
+// R9-21a: the injury stop popup – blocking, until Continue. The dialog itself plays the alert sfx
+// on mount.
+//
+// R11-1 removed the `tab === 'home'` gate that used to sit here, justified by "advance only ever
+// runs from Home's bar". That claim is FALSE on the current build: SeasonScreen's "Watch it live"
+// on a booked practice week calls `game.advance(1)` from the Season tab (see playPracticeWeek), so
+// an injury rolled on that very tick showed nothing at all. The dialog is a full-screen overlay
+// with its own dismiss – there is no tab it cannot open over, and the dismiss flags are per
+// snapshot, so it can never re-appear after Continue.
+const showInjuryStop = computed(
+  () => stopReasons.value.includes('injury') && !!game.snapshot?.injury && !injuryStopDismissed.value,
+)
+// The end-of-season summary popup: auto-shows when `advance` reports 'season-end' and a summary is
+// present, until the player hits Continue (client-side flag). Same tab-gate removal as above.
+//
+// ONE overlay at a time, in a defined order: when a week is both an injury and the season's end,
+// the injury is shown FIRST (it is the news that cost her entries) and the wrap-up waits for that
+// Continue – it cannot be lost, because dismissing the injury re-evaluates this gate. No week can
+// dead-end: every reason in the set owns either a dialog with a Continue or a dismissable toast.
 const showSeasonSummary = computed(
   () =>
-    tab.value === 'home' &&
-    game.snapshot?.stopReason === 'season-end' &&
+    stopReasons.value.includes('season-end') &&
     !!game.snapshot?.lastSeasonSummary &&
-    !seasonSummaryDismissed.value,
+    !seasonSummaryDismissed.value &&
+    !showInjuryStop.value,
 )
 function dismissSeasonSummary(): void {
   seasonSummaryDismissed.value = true
 }
-// R9-21a: the injury stop popup – blocking, on Home (advance only ever runs from Home's bar),
-// until Continue. The dialog itself plays the alert sfx on mount.
-const showInjuryStop = computed(
-  () =>
-    tab.value === 'home' &&
-    game.snapshot?.stopReason === 'injury' &&
-    !!game.snapshot?.injury &&
-    !injuryStopDismissed.value,
-)
 </script>
 
 <template>
@@ -297,7 +318,11 @@ const showInjuryStop = computed(
       <button @click="dismissRecovered">Dismiss</button>
     </div>
 
-    <div v-if="tab === 'home' && showStopToast" class="stop-toast">
+    <!-- R11-1: NOT gated on the Home tab any more – an advance can be triggered from the Season
+         screen too (playPracticeWeek), and a stop the player never sees is a stop that did not
+         happen as far as they are concerned. Same treatment as the tournament-paused banner
+         below, which has always shown on every tab. -->
+    <div v-if="showStopToast" class="stop-toast">
       <span>{{ stopReasonText }}</span>
       <button @click="dismissStopToast">Dismiss</button>
     </div>

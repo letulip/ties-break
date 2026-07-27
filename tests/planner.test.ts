@@ -731,7 +731,7 @@ describe('P8 — deadline stop respects the point band', () => {
     const w = createWorld('p8-fresh')
     const rng = rngFromSeed(w.seed)
     const stop = advanceWeeks(w, rng, 20)
-    expect(stop).not.toBe('deadline')
+    expect(stop).not.toContain('deadline')
   })
 
   it('a point-eligible kid IS stopped by the same deadline', () => {
@@ -739,7 +739,7 @@ describe('P8 — deadline stop respects the point band', () => {
     giveKidPoints(w, 200) // national band [150, ∞)
     const nat = injectEvent(w, { week: w.week + 4, tier: 'national', deadlineWeek: w.week + 2 })
     w.season = [nat]
-    expect(advanceWeeks(w, rngFromSeed(w.seed), 4)).toBe('deadline')
+    expect(advanceWeeks(w, rngFromSeed(w.seed), 4)).toContain('deadline')
   })
 
   it('an OUTGROWN tier never stops the sim either (points past the ceiling)', () => {
@@ -747,7 +747,7 @@ describe('P8 — deadline stop respects the point band', () => {
     giveKidPoints(w, 400) // past regional's 230 ceiling; national needs no stop here
     const reg = injectEvent(w, { week: w.week + 4, tier: 'regional', deadlineWeek: w.week + 2 })
     w.season = [reg]
-    expect(advanceWeeks(w, rngFromSeed(w.seed), 4)).not.toBe('deadline')
+    expect(advanceWeeks(w, rngFromSeed(w.seed), 4)).not.toContain('deadline')
   })
 })
 

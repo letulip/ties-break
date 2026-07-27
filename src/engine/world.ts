@@ -1,6 +1,7 @@
 import { type Rng, rngFromSeed, pickInt } from './rng'
 import {
   DEFAULT_PROFILE,
+  STOP_PRECEDENCE,
   WEEK_PLAN_PRESETS,
   type CountingResult,
   type FamilyBackground,
@@ -237,6 +238,13 @@ function accrueFinance(world: WorldState, week: number, category: WorldEventCate
   entry.byCategory[category] = (entry.byCategory[category] ?? 0) + amountCents
 }
 
+/** The first week of the 52-week season block a week belongs to. THE ONE definition of "this
+ *  season" for money: the Money screen's "This season" window and the end-of-season summary both
+ *  read it, so a season can never mean two different spans on two surfaces (R11-12a). */
+export function seasonStartWeek(week: number): number {
+  return Math.floor(week / WEEKS_PER_YEAR) * WEEKS_PER_YEAR
+}
+
 /** Pure category-accurate fold of `financeWeeks` from `fromWeek` onward (inclusive). No world
  *  dependency, so the bench and tests call it directly. income/expense/net are derived from the
  *  aggregated per-category totals, so `netCents === incomeCents - expenseCents === Σ byCategory`. */
@@ -363,14 +371,34 @@ const SEASON_HISTORY_CAP = 30
 //  - W-L: world.seasonWins / seasonLosses (accumulated at finalizeTournament).
 //  - rank vs season start: results ledger replayed at the year's first week (still
 //    inside the 52-week ranking window, so nothing has been pruned away yet).
-//  - funds delta: signed amountCents on expense/income events in range (a flavor
-//    figure, not the audit trail – MoneyScreen's ledger stays authoritative).
+//  - money (spent / earned / net): the SAME financeWindow fold the Money screen reads,
+//    over the SAME season window (see below).
 // The same figures are stored as the structured `lastSeasonSummary` (v10) for the
 // SeasonSummaryDialog, then the season counters reset for the year ahead.
+//
+// R11-12a – THE MONEY BUG (owner, 120k season 2: "spend 59740 … no wait, the final popup adds it
+// up wrong: the wallet says 95507"). The season's money figures were a scrape of `world.events`:
+//   1. `events` is CAPPED (EVENTS_CAP = 400, pruned oldest-first) and `housekeep` prunes it
+//      IMMEDIATELY BEFORE this function runs – so from the first season the cap bites, the earliest
+//      financial events of the year were simply not in the array any more. Measured on the bench's
+//      120k/wealthy career: season 2 came out $885 light for exactly this reason. The per-category
+//      `financeWeeks` ledger exists precisely because `events` cannot be trusted for money
+//      (protocol.ts, FinanceWeek) – the Money screen was moved onto it and this fold was missed.
+//   2. the window was `[yearStart, wrapWeek)` – it EXCLUDED the wrap-up week's own costs, which the
+//      tick has already charged by the time this runs, while the Money screen's "This season"
+//      window includes them (another $174–$381 a season on the same bench career).
+//   3. and one figure was doing two jobs: the popup's single line is a NET delta, while the number
+//      the owner was comparing it against – the wallet's donut centre – is GROSS SPEND. On that
+//      same career the two are $47,371 and $73,316: both correct, neither the other. So the summary
+//      now banks spend and income SEPARATELY, and the popup can show what the wallet shows.
+// The fold is exhaustive over the ledger's categories by construction (financeWindow walks
+// `byCategory`), so a NEW expense category can never be forgotten here again – there is no list to
+// forget it from. Reconciled cent-for-cent against the wallet, and against the change in
+// `fundsCents` itself, in tests/round11.test.ts.
 function maybeFireSeasonWrapUp(world: WorldState): void {
   if (world.week % WEEKS_PER_YEAR !== WEEKS_PER_YEAR - OFF_SEASON_WEEKS) return
   const year = Math.floor(world.week / WEEKS_PER_YEAR)
-  const yearStart = year * WEEKS_PER_YEAR
+  const yearStart = seasonStartWeek(world.week)
   const wrapWeek = world.week
 
   const inRange = (w: number) => w >= yearStart && w < wrapWeek
@@ -390,9 +418,16 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
   const wins = world.seasonWins
   const losses = world.seasonLosses
 
-  const fundsDeltaCents = world.events
-    .filter((e) => inRange(e.week) && e.amountCents !== undefined)
-    .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
+  // The season's money, off the pruning-proof per-category ledger, over the window that ENDS ON
+  // the wrap-up week (inclusive – `financeWindow` has no upper bound and the ledger holds nothing
+  // past the current week). That window is exactly what the Money screen's "This season" shows at
+  // this moment, so the popup and the wallet agree by construction. The two remaining off-season
+  // weeks (50, 51) still spend money and the wallet keeps counting them into the same 52-block –
+  // a figure computed HERE cannot know them, and it should not: it describes the season played.
+  const seasonMoney = financeWindow(world.financeWeeks, yearStart)
+  const spentCents = seasonMoney.expenseCents
+  const earnedCents = seasonMoney.incomeCents
+  const fundsDeltaCents = seasonMoney.netCents
 
   // Season-Life slice C: weeks lost to injury inside [yearStart, wrapWeek). Derived from
   // injuryHistory (each entry spans [week - weeksOut, week)) + the current injury if she is
@@ -432,6 +467,8 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
     losses,
     bestResultText: bestText,
     fundsDeltaCents,
+    spentCents,
+    earnedCents,
     weeksInjured,
   }
   // R10-9: the same figures also APPEND to the career history (the summary above is overwritten
@@ -2103,11 +2140,21 @@ export function skipEvent(world: WorldState, eventId: string): void {
 
 /** Tick up to `weeks`, stopping early when a tournament week spawns a reveal (the week is not
  *  closed until it resolves), an imminent affordable regional+ deadline appears, or funds cross
- *  below zero. A reveal already in progress blocks any advance until it is closed. */
-export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopReason | undefined {
+ *  below zero. A reveal already in progress blocks any advance until it is closed.
+ *
+ *  Returns EVERY reason the advance stopped, in STOP_PRECEDENCE order (empty = it ran its full
+ *  course). R11-1 – THE BUG this shape fixes (owner 26.07, "the injury popup does not always
+ *  appear – once it did, once it did not"): the old signature carried ONE reason and `break`ed on
+ *  the first match in source order, so a fresh injury that landed on the season wrap-up week was
+ *  reported as 'season-end' alone. The injury dialog never mounted, the toast had no copy for
+ *  'injury' either (R10-16 moved it onto the dialog), and her auto-withdrawals happened with
+ *  NOTHING shown. One week can be several things at once; the caller gets all of them and decides
+ *  the order to show them in. ZERO extra RNG draws and the identical number of ticks – the loop
+ *  still breaks on the first week that stops it, it just no longer forgets the rest of the news. */
+export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopReason[] {
   // A pending reveal must resolve (and close) before time moves on.
-  if (world.pendingTournament) return 'tournament'
-  let stopReason: StopReason | undefined
+  if (world.pendingTournament) return ['tournament']
+  const stops = new Set<StopReason>()
   for (let i = 0; i < weeks; i++) {
     const nextWeek = world.week + 1
     // Pre-tick guards bite only after the first tick, so a single step always progresses.
@@ -2138,41 +2185,33 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
           entryStatus(world, e).level !== 'blocked',
       )
       if (deadlineSoon) {
-        stopReason = 'deadline'
+        stops.add('deadline')
         break
       }
     }
     tickWeek(world, rng)
+    // EVERY reason this week stops the advance is collected – no `break` between them, because a
+    // week that is two things at once (the classic: she gets hurt in the season's last playing
+    // week) must report both. The loop still breaks ONCE, after the week has been read out.
+    //
     // A tournament this week paused the resolution: stop so the flow can take over.
-    if (world.pendingTournament) {
-      stopReason = 'tournament'
-      break
-    }
+    if (world.pendingTournament) stops.add('tournament')
     // Season just wrapped up (the tick landed on the year's first off-season week, week 49 of
     // the year): stop AFTER the wrap-up resolved, before week 50, so the season-summary popup
     // shows. Off-season weeks never carry a tournament, so this can't collide with 'tournament'.
-    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS) {
-      stopReason = 'season-end'
-      break
-    }
+    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS) stops.add('season-end')
     // A FRESH injury (onset this very tick) halts the advance so the medical event surfaces;
     // an ongoing recovery never re-stops the sim on every week she sits out.
-    if (world.injury !== null && world.injury.sinceWeek === world.week) {
-      stopReason = 'injury'
-      break
-    }
+    if (world.injury !== null && world.injury.sinceWeek === world.week) stops.add('injury')
     // A medical withdrawal costs her an entry AND its fee, so it halts the advance for the same
     // reason a fresh injury does: the player must see it happen, not read about it later.
-    if (world.medicalWithdrawalWeek === world.week) {
-      stopReason = 'medical'
-      break
-    }
-    if (world.fundsCents < 0) {
-      stopReason = 'funds'
-      break
-    }
+    if (world.medicalWithdrawalWeek === world.week) stops.add('medical')
+    if (world.fundsCents < 0) stops.add('funds')
+    if (stops.size > 0) break
   }
-  return stopReason
+  // Precedence order, not insertion order: the caller renders them in this sequence, and the
+  // medical pair leads it so nothing can bury them (see STOP_PRECEDENCE).
+  return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
 // --- snapshot ----------------------------------------------------------------
@@ -2348,7 +2387,7 @@ function pendingView(world: WorldState): PendingView | undefined {
   }
 }
 
-export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot {
+export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
   return {
     schemaVersion: world.schemaVersion,
@@ -2375,7 +2414,9 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     // keeps the current MoneyScreen semantics: the current 52-week season block from its first week.
     finance: {
       window12w: financeWindow(world.financeWeeks, world.week - 11),
-      season: financeWindow(world.financeWeeks, Math.floor(world.week / 52) * 52),
+      // ONE definition of "this season" (seasonStartWeek), shared with the wrap-up summary – the
+      // two used to spell the same arithmetic out separately, which is how they came to disagree.
+      season: financeWindow(world.financeWeeks, seasonStartWeek(world.week)),
     },
     financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),
@@ -2398,7 +2439,7 @@ export function toSnapshot(world: WorldState, stopReason?: StopReason): Snapshot
     lastSeasonSummary: world.lastSeasonSummary,
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
     seasonHistory: world.seasonHistory.map((h) => ({ ...h })),
-    ...(stopReason ? { stopReason } : {}),
+    ...(stopReasons && stopReasons.length > 0 ? { stopReasons } : {}),
     ...(pending ? { pending } : {}),
   }
 }
