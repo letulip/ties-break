@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import { TIERS } from '../engine/season/calendar'
 import type { TierId } from '../engine/season/types'
 import type { CountingResult } from '../shared/protocol'
+import { weekLabel } from '../shared/dates'
 
 const props = defineProps<{ results: CountingResult[] }>()
 
@@ -28,7 +29,7 @@ function tierLabel(tier?: TierId): string {
     </thead>
     <tbody>
       <tr v-for="(c, i) in results" :key="i">
-        <td class="num">W{{ c.week }}</td>
+        <td class="num">{{ weekLabel(c.week) }}</td>
         <td>{{ tierLabel(c.tier) }}</td>
         <td class="num">{{ c.points }}</td>
       </tr>

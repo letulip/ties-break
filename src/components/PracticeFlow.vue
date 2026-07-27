@@ -17,7 +17,7 @@ import { computeMatchStats } from '../engine/match/matchStats'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { KID_ID, flipScore } from '../engine/world'
 import { formatShortName } from '../shared/format'
-import { weekRange } from '../shared/dates'
+import { weekLabel, weekRange } from '../shared/dates'
 import type { MatchOptions, Side } from '../engine/match/types'
 import type { WorldMatch } from '../shared/protocol'
 
@@ -103,7 +103,7 @@ function close(): void {
         <div class="tf-title">Practice match</div>
         <div class="tf-sub">
           <span class="pill">{{ SURFACE_EMOJI[match.surface] }} {{ match.surface }}</span>
-          <span class="hint tf-week-dates">W{{ week }} · {{ weekDates }}</span>
+          <span class="hint tf-week-dates">{{ weekLabel(week) }} · {{ weekDates }}</span>
         </div>
       </div>
       <button class="link" @click="close">Close ✕</button>

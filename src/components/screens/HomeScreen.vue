@@ -16,7 +16,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
 import type { TierId } from '../../engine/season/types'
-import { weekRange } from '../../shared/dates'
+import { weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 // The week-TYPE predicates come from the calendar itself (world.ts re-exports isExamWeek only).
@@ -479,7 +479,7 @@ function openRankHelp(): void {
       <p class="hint" style="margin: 0 0 8px">{{ weekDates }}</p>
       <div class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">
-          {{ nearestEntered.label }} · {{ nearestEntered.surface }} · W{{ nearestEntered.week }}
+          {{ nearestEntered.label }} · {{ nearestEntered.surface }} · {{ weekLabel(nearestEntered.week) }}
         </span>
         <span v-else class="hint" style="margin: 0">No event – training week</span>
         <!-- Round-8 R8-4: latest played match score of this week's tournament, once available. -->
@@ -501,7 +501,7 @@ function openRankHelp(): void {
            tournament name when one is entered (the pill frame is gone). -->
       <p class="this-week-plan">
         Training {{ plan.train }}% · Rest {{ plan.rest }}%<template v-if="nearestEntered">
-          · {{ nearestEntered.label }} – W{{ nearestEntered.week }}</template>
+          · {{ nearestEntered.label }} – {{ weekLabel(nearestEntered.week) }}</template>
       </p>
       <div class="spend-row">
         <span class="hint">Planned spend</span>
@@ -516,7 +516,7 @@ function openRankHelp(): void {
       <div class="log">
         <p v-if="!newsGroups.length" class="hint" style="margin: 0">No news yet.</p>
         <div v-for="group in newsGroups" :key="group.week" class="news-week">
-          <p class="news-week-label">W{{ group.week }}</p>
+          <p class="news-week-label">{{ weekLabel(group.week) }}</p>
           <table>
             <tbody>
               <tr v-for="e in group.events" :key="e.id" :class="{ milestone: e.type === 'milestone' }">

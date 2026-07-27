@@ -6,7 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { StopReason } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
-import { weekRange } from './shared/dates'
+import { weekLabel, weekRange } from './shared/dates'
 import { useHeaderAvatar } from './composables/headerAvatar'
 // R10-7: the sticky bar's primary button says what the week AHEAD holds (tournament / vacation /
 // practice / exams / off-season / training). All of the derivation lives in the composable – this
@@ -312,7 +312,7 @@ function dismissSeasonSummary(): void {
         :title="weekDates"
         @click="tab = 'money'"
       >
-        W{{ week }} · {{ funds }}
+        {{ weekLabel(week) }} · {{ funds }}
       </button>
     </header>
 

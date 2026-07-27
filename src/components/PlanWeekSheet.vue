@@ -15,7 +15,7 @@ import { useGameStore } from '../stores/game'
 import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPriceCents } from '../engine/economy'
 import { medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
-import { weekRange } from '../shared/dates'
+import { weekLabel, weekRange } from '../shared/dates'
 
 const props = defineProps<{
   week: number
@@ -147,7 +147,7 @@ function askVacation(row: PackageRow): void {
   <div class="dialog-overlay" @click.self="emit('close')">
     <div class="plan-sheet">
       <button class="replay-close" aria-label="Close planner" title="Close" @click="emit('close')">✕</button>
-      <p class="guide-title">Plan week {{ week }}</p>
+      <p class="guide-title">Plan {{ weekLabel(week) }}</p>
       <p class="hint" style="margin-top: -6px">{{ dates }} · condition {{ condition }}/100</p>
 
       <div class="plan-tabs">
