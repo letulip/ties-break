@@ -13,19 +13,26 @@
 //   'age-locked'  the junior tour is 13+ and she is younger (kept wired for the childhood prologue)
 //   'locked'      she is BELOW enterPointBand[0] – "Reach N pts", the one real lock
 //   'outgrown'    her windowed points are past enterPointBand[1] (unchanged behaviour)
+//   'capped'      she has spent this YEAR's allowance of international entries (the ITF annual
+//                 entry cap) – blocked, but only until the season turns
 //   'scheduled'   she can enter it AND one is on the calendar – the week is named
 //   'unscheduled' she can enter it and NOTHING is on the calendar – say exactly that
+//
+// 'capped' is a FOURTH thing the muted dash used to hide, and the one most likely to be misread as
+// permanent: a parent who has used all fourteen must not conclude the tier is shut. So it is a
+// state of its own, it prints the count she spent, and its long form says the allowance returns.
 //
 // Presentation only: every input is already on the Snapshot and every threshold is read from the
 // engine's own TIERS catalogue. No engine helper was added and nothing here re-derives a band.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
-import { isTierAgeOpen } from '../engine/world'
+import { isCappedTier, isTierAgeOpen } from '../engine/world'
 import { weekRange } from '../shared/dates'
+import type { EntryCapUsage } from '../shared/protocol'
 import type { TierId } from '../engine/season/types'
 
-export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'scheduled' | 'unscheduled'
+export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 'scheduled' | 'unscheduled'
 
 /**
  * The ONE wording for a point lock – shared, but the NUMBER always comes from the caller.
@@ -46,6 +53,8 @@ export interface TierState {
   kind: TierStateKind
   /** 'locked' only: the tier's entry threshold, for "Reach N pts". */
   pointsToEnter?: number
+  /** 'capped' only: the season allowance behind the verdict, for "N of M". */
+  entryCap?: EntryCapUsage
   /** 'scheduled' only: the week of the next event of this tier inside the horizon. */
   nextWeek?: number
   /** Short player-facing state line. Never names the tier – every caller has already said it. */
@@ -64,6 +73,9 @@ export interface TierStateInput {
   upcoming: readonly { tier: TierId; week: number }[]
   /** how many weeks that horizon covers, so the copy can state its own length honestly */
   horizonWeeks: number
+  /** the ITF annual entry cap for the CURRENT season, straight off the snapshot – the engine's own
+   *  count, never re-derived here (the same discipline `pointsToEnter` is under). */
+  entryCap: EntryCapUsage
 }
 
 /**
@@ -100,6 +112,23 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       kind: 'outgrown',
       note: 'Outgrown',
       title: `${tier.label} – outgrown: she is past this level`,
+    }
+  }
+  // The tier is hers on points. Has she any of the year's international allowance left?
+  // Ranked AFTER the permanent locks (a tier she cannot enter at all has nothing to say about how
+  // many entries she has left) and BEFORE the calendar, because a scheduled event she may not take
+  // must never read "Open – on the calendar". Mirrors the engine's own precedence: band, then
+  // availability, and the cap sits in availability (world.ts availabilityStatus).
+  if (isCappedTier(id) && input.entryCap.remaining <= 0) {
+    const { used, limit } = input.entryCap
+    return {
+      id,
+      kind: 'capped',
+      entryCap: input.entryCap,
+      note: `Year limit – ${used} of ${limit}`,
+      title:
+        `${tier.label} – she has used all ${limit} of her international events for this year ` +
+        `(age ${input.ageYears}). Not locked: a fresh allowance arrives next season.`,
     }
   }
   // She can enter it. The only question left is whether the calendar has one.
@@ -149,6 +178,8 @@ export function useTierStates(): ComputedRef<TierState[]> {
       points: snap?.standings.find((r) => r.isKid)?.points ?? 0,
       upcoming: snap?.upcoming ?? [],
       horizonWeeks: HORIZON_WEEKS,
+      // No snapshot yet = nothing spent and nothing to say; the age gate/point band answer first.
+      entryCap: snap?.entryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
     }
     return TIER_LADDER.map((id) => tierState(id, input))
   })

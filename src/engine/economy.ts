@@ -335,6 +335,44 @@ export const ECONOMY = {
     ] as { cum: number; severity: InjurySeverity; weeksLo: number; weeksHi: number }[],
   },
 
+  // --- THE ITF ANNUAL ENTRY CAP (docs/research/ranking-points-by-tier.md §2 and §6) -----------
+  //
+  // Reality's real brake on "just grind cheap international events" is not the points table, it is
+  // a HARD ELIGIBILITY CAP: Appendix F of the 2026 ITF World Tennis Tour Juniors Regulations limits
+  // how many ITF junior events a player may enter per year, and the limit is tighter the younger
+  // she is. The research counted our calendar at ~26 J30s + 17 J60s + 4 J300s a season, against an
+  // allowance of FOURTEEN events for a 14-year-old. Wave B measured that zeroing the first-round
+  // award did NOT reduce the grind (docs/specs/wave-b-first-round-zero.md) – the count is driven by
+  // eligibility, affordability and calendar density, and this is the eligibility half.
+  //
+  // Counted birthday-to-birthday in the real rule; here that is exactly the 52-week season block,
+  // because `ageAtWeek` and `seasonStartWeek` are the same arithmetic (world.ts) – so the reset is
+  // the season boundary and no second definition of "this year" was invented.
+  entryCap: {
+    // WHY ONLY THESE THREE, and please do not "fix" it later: `local` / `regional` / `national` are
+    // OUR OWN INVENTION – no national result of any kind produces an ITF junior ranking point
+    // (Reg 10's list of Ranking Tournaments is closed and contains only ITF grades), so the ITF has
+    // nothing to say about how many of them a kid plays. Capping them would be inventing a rule and
+    // attributing it to a source. The domestic ladder stays deliberately uncapped; it is also what
+    // she is left with once the allowance is gone, which is the whole point of the change.
+    cappedTiers: ['j30', 'j60', 'j300'] as readonly TierId[],
+    // ITF Appendix F, verbatim: 16 -> 25, 15 -> 18, 14 -> 14, 13 -> 10, 17 and 18 unrestricted,
+    // 12 and under not eligible at all. `default` is the 17+ row; ages below 13 never reach this
+    // table because `TIERS[tier].minAgeYears = 13` refuses them first (availabilityStatus asks the
+    // age gate before the cap), which is also the honest place for "not eligible" to live.
+    //
+    // NOT MODELLED, DELIBERATELY – the merit increases. The same appendix grants +4 events to a
+    // top-20 ITF junior at 14/15 (+4 to a top-50 at 13), and the WTA rulebook grants a year-end
+    // top-5 junior up to 4 extra PRO events. Both are keyed to a world ranking; our field is 199
+    // cohort players plus the kid, so "top 20 of the ITF" has no defensible mapping onto "top 20 of
+    // 200" without an owner decision about what our standings represent. Left out rather than
+    // guessed, and left out in the direction that keeps the cap honest (a bonus only weakens it).
+    perYearByAge: { 13: 10, 14: 14, 15: 18, 16: 25, default: Number.MAX_SAFE_INTEGER } as {
+      [age: number]: number
+      default: number
+    },
+  },
+
   // Season-Life slice C: physio + medical costs. ALL prices are MIDDLE-anchored bands. Every
   // medical bill (weekly rehab, one-time onset treatment, physio retainer) draws its base amount
   // from its band, then multiplies by one uniform roll mapped into medicalBgFactor[background] –

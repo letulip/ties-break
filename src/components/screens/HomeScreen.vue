@@ -262,7 +262,13 @@ const seasonChips = computed<TierChip[]>(() =>
           ? 'outgrown'
           : reached
             ? 'reached'
-            : avail.kind === 'unscheduled'
+            : // 'capped' rides the SAME chip state as 'unscheduled', and deliberately so: both mean
+              // "not this week, and not because anything is wrong" – a tier she has every right to
+              // that simply is not available to her yet. The padlock would be a lie (the allowance
+              // returns when the season turns) and 'unlocked' would be worse still, inviting her to
+              // "enter your first!" an event the engine will refuse. The chip prints the shared
+              // rule's own note ("Year limit – 14 of 14") and the tooltip carries the reset.
+              avail.kind === 'unscheduled' || avail.kind === 'capped'
               ? 'waiting'
               : 'unlocked'
     // Every locked/waiting label is the shared rule's own wording, verbatim – one sentence, two

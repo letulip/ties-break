@@ -190,6 +190,19 @@ export function migrateSave(raw: unknown): WorldState {
     v = 14
   }
 
+  if (v < 15) {
+    // v15 added the ITF annual entry cap's ledger: the week of every INTERNATIONAL entry she has
+    // made, counted per season against ECONOMY.entryCap.perYearByAge (docs/research/
+    // ranking-points-by-tier.md §2). Nothing in a pre-v15 save can reconstruct it – the kid's
+    // result row is award-only, so wave B's first-round zero left her cheapest entries with no
+    // trace at all – so the backfill is an EMPTY ledger, i.e. a legacy career resumes with this
+    // season's allowance untouched. That is the lenient direction on purpose: the alternative is
+    // to invent a number and possibly lock a loaded career out of a tier it was mid-way through.
+    // Idempotent: an existing array is never touched, so a re-migration cannot drop a slot.
+    if (!Array.isArray(save.internationalEntryWeeks)) save.internationalEntryWeeks = []
+    v = 15
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

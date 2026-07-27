@@ -253,6 +253,13 @@ function lockLabel(e: UpcomingEvent): string {
     // card says WHY in three words; the confirm never appears, because there is nothing to confirm.
     case 'medical':
       return 'Not cleared to play'
+    // The annual entry cap: she has spent this YEAR's international allowance. The count comes
+    // from the engine's verdict on THIS event (never the ladder's current-season read) for the same
+    // reason `pointsToEnter` does – an event in the next season is judged against a different
+    // year's allowance. "Year limit" rather than "Locked": the block lifts when the season turns,
+    // and the tier ladder's long form says so in full.
+    case 'capped':
+      return e.entryCap ? `Year limit – ${e.entryCap.used} of ${e.entryCap.limit}` : 'Year limit reached'
     case 'unavailable': {
       const vacation = vacations.value.find((v) => v.week === e.week)
       return vacation ? `Family vacation – ${packageLabel(vacation.packageId)}` : 'School exams this week'
