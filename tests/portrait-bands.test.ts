@@ -154,3 +154,38 @@ describe('`angry` is shipped art, not a live outcome', () => {
     expect([...KID_EMOTIONS].sort()).toEqual(['happy', 'injury', 'norm', 'sad', 'serious', 'tired'])
   })
 })
+
+// ---------------------------------------------------------------------------
+// THE CROP TABLE IS THE ONLY RECORD OF HOW THE FACES ARE FRAMED.
+//
+// art-src/ is gitignored by design, so the 256px masters live only on the author's machine. If the
+// rectangles are not in the repo, an art refresh means re-finding 35 faces by eye — which is what
+// this branch had to do for the 17 it added, and what nobody could do for the 18 that shipped
+// before (they were recovered by cross-correlation instead). This test makes the table complete by
+// construction: add a stage or an emotion and it fails until the rectangle exists.
+// ---------------------------------------------------------------------------
+describe('the avatar crop table covers every face the code can request', () => {
+  it('has a rectangle for every stage x emotion', async () => {
+    const { CROPS } = await import('../scripts/cut-avatar-crops.mjs')
+    const missing: string[] = []
+    for (const stage of STAGES) {
+      for (const emotion of EMOTIONS) {
+        if (!(`${stage}-${emotion}` in CROPS)) missing.push(`${stage}-${emotion}`)
+      }
+    }
+    expect(missing, 'stage x emotion pairs with no crop rectangle').toEqual([])
+  })
+
+  it('every rectangle is a square that fits inside the 512px painting', async () => {
+    // A window clamped at the canvas edge silently re-frames the face, so catch it here instead.
+    const { CROPS } = await import('../scripts/cut-avatar-crops.mjs')
+    for (const [stem, [cx, cy, side]] of Object.entries(CROPS)) {
+      expect(side, `${stem} side`).toBeGreaterThanOrEqual(100)
+      expect(side, `${stem} side`).toBeLessThanOrEqual(256)
+      expect(cx - side / 2, `${stem} left edge`).toBeGreaterThanOrEqual(0)
+      expect(cy - side / 2, `${stem} top edge`).toBeGreaterThanOrEqual(0)
+      expect(cx + side / 2, `${stem} right edge`).toBeLessThanOrEqual(512)
+      expect(cy + side / 2, `${stem} bottom edge`).toBeLessThanOrEqual(512)
+    }
+  })
+})
