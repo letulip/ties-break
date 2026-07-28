@@ -589,12 +589,18 @@ export interface DiaryFacts {
 }
 
 /** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
- *  one line. `anniversary` = the milestone's week is ~52 weeks ago (±1); `echo` = the deterministic
- *  every-4-6-weeks pick off `seed:memory:<week>`. */
+ *  one line.
+ *    `anniversary` – the milestone's week is ~52 weeks ago (±1). The loud one.
+ *    `echo`        – the deterministic roughly-every-5-weeks pick off `seed:memory:<week>`.
+ *    `recent`      – neither fired, so the card shows her LATEST milestone. A3: the card is titled
+ *                    "Recent memory", and a quiet week used to make it say "Too early for memories"
+ *                    to a girl four seasons into her career. Silence is a fine thing for a diary
+ *                    LINE; on a card with a heading it is a lie. The distinction survives in `kind`
+ *                    so the loud weeks can still look different from the quiet ones. */
 export interface MemoryCard {
-  kind: 'anniversary' | 'echo'
+  kind: 'anniversary' | 'echo' | 'recent'
   milestone: Milestone
-  /** e.g. "one year ago" (anniversary) or the milestone's week label "W14 '31" (echo) */
+  /** e.g. "one year ago" (anniversary) or the milestone's week label "W14 '31" (echo/recent) */
   whenLabel: string
   /** the age band she was in at the milestone's week – what makes time felt */
   stage: PortraitStage

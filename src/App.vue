@@ -422,15 +422,21 @@ function dismissSeasonSummary(): void {
       <MoreScreen v-else-if="tab === 'more'" />
     </main>
 
-    <!-- Package N: sticky Next-week bar, fixed above the tab bar. R13-12: GLOBAL – it renders on
-         every tab (advancing the week is the game's one always-available verb, and the R9-9a
+    <!-- Package N: the sticky week button, floating above the tab bar. R13-12: GLOBAL – it renders
+         on every tab (advancing the week is the game's one always-available verb, and the R9-9a
          "no tab can strand the career" guarantee rides on it now). It must never move into the
-         This-week tab. Both buttons go through `advance` (weeks: 1|4) so either one can stop
-         early on a tournament week / imminent deadline / funds crossing zero. -->
+         This-week tab.
+         A3 (owner, 28.07): the BAR is gone and the button stands on its own – a panel behind it
+         made the bottom of every screen feel heavy – styled as the export's CTA pill, the same
+         object as "+ Plan week" on the
+         Season screen and "Start Match" on the tournament preview. The skip-4 button went with the
+         bar: it was a testing shortcut that offered to skip the thing the player came to play.
+         The mockups have no week button at all, because the mockups never modelled a week loop -
+         this is the one control the redesign keeps for reasons of play, not of picture. -->
     <div class="next-week-bar">
       <!-- R10-7: one button, a label that names the plan for the week it is about to play.
-           R13-5/R13-8: both buttons route through playWeek – a paused tournament re-opens its
-           overlay, a booked practice week opens the flow, everything else advances as before. -->
+           R13-5/R13-8: it routes through playWeek – a paused tournament re-opens its overlay, a
+           booked practice week opens the flow, everything else advances as before. -->
       <button
         class="primary next-week-btn"
         :class="`plan-${weekAhead.kind}`"
@@ -440,7 +446,6 @@ function dismissSeasonSummary(): void {
       >
         {{ weekAhead.label }}
       </button>
-      <button :disabled="game.busy" @click="playWeek(4)">▶▶ 4</button>
     </div>
 
     <nav class="tab-bar">

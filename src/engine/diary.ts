@@ -770,7 +770,11 @@ export const MEMORY_ANNIVERSARY_TOLERANCE = 1
  *
  *  (a) ANNIVERSARY: a milestone whose week is ~52 weeks ago (±1) always shows – "one year ago".
  *  (b) ECHO: otherwise `seed:memory:<week>` decides, deterministically, whether this is one of the
- *      roughly-every-5 weeks that remembers at all, and which aged milestone it remembers.
+ *      roughly-every-5 weeks that remembers something OTHER than the obvious.
+ *  (c) RECENT: and when neither fires, the LATEST aged milestone. The card is headed "Recent
+ *      memory", so it may be quiet but it may not be empty – it used to tell a girl four seasons
+ *      in that it was "too early for memories". Only null before she HAS a memory: the first eight
+ *      weeks, or a career with nothing captured yet.
  *
  *  The painting is the age band she was in at the milestone's week – that is what makes time felt:
  *  a 17-year-old's Memory of her first Local title shows the 14-year-old who won it. */
@@ -790,10 +794,14 @@ export function selectMemory(
   if (anniversary) {
     kind = 'anniversary'
     pick = anniversary
-  } else {
-    if (rng() >= MEMORY_ECHO_CHANCE) return null
+  } else if (rng() < MEMORY_ECHO_CHANCE) {
     kind = 'echo'
     pick = aged[Math.floor(rng() * aged.length)]
+  } else {
+    // The quiet default. `aged` comes off the ledger in capture order, so the last one is the most
+    // recent thing that happened to her.
+    kind = 'recent'
+    pick = aged[aged.length - 1]
   }
   const lines = MEMORY_LINES.filter((l) => l.type === pick.type)
   if (lines.length === 0) return null

@@ -931,45 +931,56 @@ button.primary.risky {
   font-size: 14px;
 }
 
+/* A3: no bar, no panel, no border – just the button, floating. The row still POSITIONS it (fixed,
+   centred, above the tab bar) and still catches nothing, so the page scrolls under it. */
 .next-week-bar {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 47px;
+  bottom: 58px;
   width: 100%;
   max-width: 520px;
   display: flex;
-  gap: 8px;
-  padding: 12px 16px;
-  background: var(--panel);
-  border-top: 1px solid var(--line);
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
   z-index: 39;
 }
 
-.next-week-bar button.primary {
-  flex: 1;
-}
-
-/* R10-7: the label is no longer a fixed two words – it names the week's plan ("🏆 Play Regional ▶",
-   "🏖 Leave on vacation ▶"). Keep it on ONE line at 375px: the longest label is a tournament one, and
-   the bar has ~280px for it after the ▶▶4 button, so it fits – ellipsis is the safety net, not the
-   plan, and min-width: 0 is what lets it kick in instead of the flex item pushing the bar wide. */
+/* The export's CTA, verbatim: a lime pill, 14.5px/800 ink on lime, 12/26 padding, min-width 206px,
+   and the lime glow under it. The same object as "+ Plan week" and "Start Match" in the mockups -
+   one button shape for the whole app.
+   R10-7: the label names the week's plan, so it is not a fixed width. Ellipsis is the safety net at
+   375px, not the plan; min-width: 0 is what lets it kick in instead of pushing the pill wide. */
 .next-week-btn {
-  min-width: 0;
+  pointer-events: auto;
+  min-width: 206px;
+  max-width: 100%;
+  padding: 12px 26px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #111a10;
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  box-shadow: 0 8px 24px rgba(207, 225, 82, 0.18);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-@media (min-width: 560px) {
-  .next-week-bar {
-    border-left: 1px solid var(--line);
-    border-right: 1px solid var(--line);
-  }
+.next-week-btn:hover:not(:disabled) {
+  background: #dcec6a;
+  color: #111a10;
+}
+
+.next-week-btn:disabled {
+  opacity: 0.5;
 }
 
 .app-content.with-next-week-bar {
-  padding-bottom: 160px;
+  padding-bottom: 148px;
 }
 
 /* --- Package K2: careers, saves, recovered hint, confirm dialog --------------- */
@@ -2781,11 +2792,14 @@ tr.kid-row td {
 .diary-hero {
   position: relative;
   margin: -16px -16px 0;
-  /* The export's 398px of an 844px device – kept as a RATIO so it holds on every phone, with a
-     floor and a ceiling so a short landscape window cannot crush it or a tablet turn it into a
-     poster. */
-  height: min(52vh, 420px);
-  min-height: 320px;
+  /* A3 (owner, 28.07): the hero is SQUARE, because the paintings are square (512x512) – so at the
+     full width of the phone the whole frame is on screen and nothing is cut. It used to be
+     min(52vh, 420px), which cropped a slice off every painting for no reason anyone asked for. The
+     export's own hero is 398px on a 390px device, i.e. square to within a rounding error.
+     `max-height` keeps a tablet from turning it into a poster; `cover` + the face steering below
+     are still there for the one master that is 458x512 rather than square. */
+  aspect-ratio: 1 / 1;
+  max-height: 60vh;
   overflow: hidden;
 }
 

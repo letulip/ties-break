@@ -44,13 +44,16 @@ export type WeekAheadKind =
 
 export interface WeekAhead {
   kind: WeekAheadKind
-  /** the button's whole label, leading glyph included. Player copy: short dash, no Cyrillic. */
+  /** the button's whole label. Player copy: short dash, no Cyrillic.
+   *
+   *  A3 (owner, 28.07): NO EMOJI, NO TRAILING ARROW. The redesign's buttons are the export's CTAs -
+   *  a lime pill with one plain word on it, like "+ Plan week" and "Start Match" - and a row of
+   *  emoji was the loudest thing left on the page. The `kind` still carries the same meaning for
+   *  anything that wants to colour or branch on it; only the picture went. */
   label: string
 }
 
-// U+FE0F on 🏋️ / 🏖️ – both codepoints default to TEXT presentation, so without the selector they can
-// render as a flat mono glyph next to the emoji-presentation 🏆/🎾/📚/🌴.
-const TRAINING: WeekAhead = { kind: 'training', label: '🏋️ Training week ▶' }
+const TRAINING: WeekAhead = { kind: 'training', label: 'Training week' }
 
 /** The plan for `snapshot.week + 1`, as a button label. Precedence is "most committed first": a
  *  tournament she paid to enter outranks a booked week, which outranks the calendar's own defaults. */
@@ -65,7 +68,7 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
     // to next week's plan while a tiny banner holds the truth. App.vue routes the click back into
     // the overlay in this state; time cannot tick past a pending reveal anyway (advanceWeeks
     // returns 'tournament' without a tick), so any other label here would be a lie twice over.
-    if (snap.pending) return { kind: 'tournament', label: `🏆 Play ${TIER_SHORT[snap.pending.tier]} ▶` }
+    if (snap.pending) return { kind: 'tournament', label: `Play ${TIER_SHORT[snap.pending.tier]}` }
     const next = snap.week + 1
     // The entered-tournament case, answered by the ENGINE (see the header note). `arrival` is
     // non-null exactly when an entry sits on `next`, so it replaces the old `upcoming` lookup
@@ -78,17 +81,17 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
       // sending her to a tournament that does not happen. The TIER is dropped from this label and
       // the one below on purpose – .next-week-btn ellipsises at 375px and the labels here have to
       // stay inside the ~22-character budget the vacation label already proves fits (style.css).
-      if (arrival.verdict === 'injured') return { kind: 'walkover', label: '🩹 Injured – walkover ▶' }
+      if (arrival.verdict === 'injured') return { kind: 'walkover', label: 'Injured – walkover' }
       // A committed entry to a tier she has since outgrown still PLAYS (R10-3: the list closed with
       // her on it). It is not a block and the button is not disabled – but the parent should know
       // which week she is spending.
-      if (arrival.outgrown) return { kind: 'tournament', label: `🏆 ${tier} (outgrown) ▶` }
-      return { kind: 'tournament', label: `🏆 Play ${tier} ▶` }
+      if (arrival.outgrown) return { kind: 'tournament', label: `${tier} (outgrown)` }
+      return { kind: 'tournament', label: `Play ${tier}` }
     }
-    if (snap.vacations.some((v) => v.week === next)) return { kind: 'vacation', label: '🏖️ Leave on vacation ▶' }
-    if (snap.practices.some((p) => p.week === next)) return { kind: 'practice', label: '🎾 Practice match ▶' }
-    if (isExamWeek(next)) return { kind: 'exam', label: '📚 Exam week ▶' }
-    if (isOffSeasonWeek(next)) return { kind: 'off-season', label: '🌴 Off-season week ▶' }
+    if (snap.vacations.some((v) => v.week === next)) return { kind: 'vacation', label: 'Leave on vacation' }
+    if (snap.practices.some((p) => p.week === next)) return { kind: 'practice', label: 'Practice match' }
+    if (isExamWeek(next)) return { kind: 'exam', label: 'Exam week' }
+    if (isOffSeasonWeek(next)) return { kind: 'off-season', label: 'Off-season week' }
     return TRAINING
   })
 }
