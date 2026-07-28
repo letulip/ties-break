@@ -76,15 +76,22 @@ describe('R11-15 — the surface pill returns to the card corner (reverts R10-11
     expect(cssBodies('.surface-badge.aff-suits .surface-dot')).toEqual([])
   })
 
-  it('the line under the pill is the VERDICT only – the name is never printed twice', () => {
-    const card = eventCardTop()
-    // the caption binds the stripped `fit`, never the engine's full sentence
-    expect(card).toContain('.fit')
-    expect(card).not.toContain('.caption')
-    // exactly ONE render of the surface name in the whole card top
-    expect(card.split('{{ row.event.surface }}').length - 1).toBe(1)
-    // and it is conditional – a neutral court gets the pill and nothing else
-    expect(card).toContain('v-if="surfaceView(row.event.surface).fit"')
+  it('the VERDICT is still said once, and the name is still never printed twice', () => {
+    // ⚠ RE-AIMED by the wave-2 Season card (28.07). R11-15's complaint was DUPLICATION - the court
+    // named in the pill and named again in the line under it. That is still forbidden and still
+    // pinned. What moved is where the verdict lives: the card has a coach's plaque now, and his
+    // sentence is the natural home for "the court suits her game" - so the standalone caption is
+    // gone rather than sitting above a plaque that says the same thing a second time.
+    const src = seasonScreen
+    // exactly ONE render of the surface name in the whole card
+    expect(src.split('{{ row.event.surface }}').length - 1).toBe(1)
+    // the verdict is CONSUMED from the engine, through the same stripped helper as before...
+    expect(src).toContain('const fit = surfaceFit(e.surface)')
+    // ...and it reaches the player through the coach, exactly once.
+    expect(src).toContain('coachSays(row.event)')
+    expect(src.split('coachSays(row.event)').length - 1).toBe(1)
+    // the standalone caption is gone, not merely hidden
+    expect(src).not.toContain('surface-caption')
   })
 
   it('THE STRIP THE COMPONENT SLICES: every engine hint is "<Surface> – <verdict>"', () => {

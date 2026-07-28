@@ -142,3 +142,11 @@ export function weekRange(week: number): string {
   }
   return `${MONTHS[start.month]} ${start.day}–${end.day}, ${end.year}`
 }
+
+/** A SEASON-RELATIVE week range, for the surface-block strip: "W1-10" from zero-based offsets.
+ *  Lives here with every other week label, and for the same reason: the moment a screen spells a
+ *  week itself, two screens spell it two ways. (These are offsets inside a season, never absolute
+ *  career weeks - the strip describes the shape every season has.) */
+export function seasonWeekRange(fromOffset: number, toOffset: number): string {
+  return `W${fromOffset + 1}-${toOffset + 1}`
+}
