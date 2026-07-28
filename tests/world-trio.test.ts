@@ -427,10 +427,20 @@ describe('item 3 — the pure decision only COMPARES', () => {
   const base = { week: 10, condition: 80, injured: false }
   const streak = (losses: number, angerAt: number): LossStreak => ({ losses, startWeek: 3, angerAt })
 
-  it('a fresh loss at or over the threshold is angry', () => {
+  // ⚠ R12-16 RE-SPECIFIED THIS COMPARISON (owner playtest 27.07: once the streak had crossed, she
+  // was angry on every single loss after it – a permanent face, where the design intent was a
+  // mood). `>=` became `===`: only the CROSSING loss is angry.
+  it('the CROSSING loss is angry – exactly the one that broke her', () => {
     const lastResult = { week: 10, won: false, lostFinal: false, tier: 'national' as const }
     expect(avatarEmotion({ ...base, lastResult, lossStreak: streak(4, 4) })).toBe('angry')
-    expect(avatarEmotion({ ...base, lastResult, lossStreak: streak(7, 5) })).toBe('angry')
+    expect(avatarEmotion({ ...base, lastResult, lossStreak: streak(6, 6) })).toBe('angry')
+  })
+
+  it('R12-16: every LATER loss in the same streak is sad again – anger is a moment, not a mask', () => {
+    const lastResult = { week: 10, won: false, lostFinal: false, tier: 'national' as const }
+    expect(avatarEmotion({ ...base, lastResult, lossStreak: streak(5, 4) })).toBe('sad')
+    expect(avatarEmotion({ ...base, lastResult, lossStreak: streak(7, 5) })).toBe('sad')
+    expect(avatarEmotion({ ...base, lastResult, lossStreak: streak(20, 4) })).toBe('sad')
   })
 
   it('one short of the threshold is still sad – the run has to be finished, not started', () => {
@@ -683,7 +693,10 @@ describe('item 3 — end to end on a real career', () => {
     let observed: LossStreak | null = null
     const world = playCareer('trio-e2e', 5 * WEEKS_PER_YEAR, (w) => {
       const s = computeLossStreak(w)
-      if (s && s.losses >= s.angerAt) {
+      // R12-16: stop on the CROSSING loss (`===`), not merely at-or-past it – past it her face is
+      // `sad` again by design, so a `>=` walk could land on a week the assertion below would fail
+      // on for the right reason.
+      if (s && s.losses === s.angerAt) {
         observed = s
         return true
       }

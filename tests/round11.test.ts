@@ -186,10 +186,14 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
   it('STOP_PRECEDENCE covers every StopReason exactly once, medical pair first', () => {
     // MECHANICAL: a StopReason added later without a precedence slot would be silently dropped by
     // the `STOP_PRECEDENCE.filter(...)` return, which is exactly the class of bug R11-1 was.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical']
+    // R12-15 added 'walkover' – an entered event that came round inside her layoff, 0 pts and the
+    // entry fee forfeited. It joins the medical pair at the front for the same reason they are
+    // there: it costs her real money the moment it lands, so it may never be swallowed by a stop
+    // that can wait a click.
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
-    for (const medical of ['injury', 'medical'] as StopReason[]) {
+    for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {
       expect(STOP_PRECEDENCE.indexOf(medical)).toBeLessThan(STOP_PRECEDENCE.indexOf('season-end'))
       expect(STOP_PRECEDENCE.indexOf(medical)).toBeLessThan(STOP_PRECEDENCE.indexOf('funds'))
     }

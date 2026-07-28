@@ -240,7 +240,18 @@ describe('F45-2 — an injury withdraws only the entries inside the layoff', () 
     expect(w.entries).toContain(beyond.id)
 
     // She is back at W13; the knobs are restored, so no second onset is forced on the way.
-    advanceWeeks(w, rngFromSeed(w.seed), 5) // -> W15, her event week
+    //
+    // ⚠ TWO advances now, and that is R12-15 LANDING, not a regression. This fixture holds the
+    // owner's dead-click state on purpose: `f45-closed` sits on W11, post-deadline, inside the
+    // layoff – so W11 resolves as a WALKOVER with its fee forfeited. That beat used to be silent
+    // (no stop, no dialog, no toast), which is exactly why a single `advanceWeeks(…, 5)` used to
+    // run straight past it to W15. It now HALTS on the walkover, so the player sees the money go;
+    // the advance is simply resumed, and the property this test exists for – that the surviving
+    // entry beyond her return week still PLAYS – is unchanged below.
+    const rng = rngFromSeed(w.seed)
+    expect(advanceWeeks(w, rng, 5)).toContain('walkover') // -> W11, the forfeited walkover
+    expect(w.week).toBe(11)
+    advanceWeeks(w, rng, 4) // -> W15, her event week
     expect(w.week).toBe(15)
     expect(w.injury).toBeNull()
     // the availability gate agrees she may be there...

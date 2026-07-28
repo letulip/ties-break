@@ -9,10 +9,20 @@
 // resolves – so the week the button plays is `snapshot.week + 1`, never the already-resolved
 // `snapshot.week`. Every lookup below is against `week + 1`.
 //
-// Deliberately NOT a branch here: the injury layoff. `injury.weeksRemaining` is measured against the
-// return week (`week + weeksRemaining`), so "is she still out NEXT week" is `weeksRemaining > 1` –
-// an off-by-one that is being actively reworked in the r10/fix injury pass (R10-17). A wrong recovery
-// label would read as a bug, so the button stays on the five week types that are stable state.
+// R12-15 / R12-3 – THE BUTTON STOPPED GUESSING. This file used to answer the tournament case with
+// one fact – "is there an entered event on week + 1?" – and print "🏆 Play {TIER} ▶" whatever her
+// body or her ranking points had done since. The comment that stood here said the injury layoff was
+// "deliberately NOT a branch", on the grounds that `weeksRemaining` was mid-rework and a wrong
+// recovery label would read as a bug. R10-17 finished that rework; the off-by-one is settled, and
+// the engine now hands the answer over ready-made.
+//
+// So the tournament branch reads `snapshot.arrival` – the ENGINE's own arrival verdict for that
+// event, the same one `tickWeek` will resolve the week with (engine/world.ts arrivalStatus). The
+// button can no longer promise a tournament the engine has already decided is a walkover, and it
+// names a committed entry to an outgrown tier for what it is. Nothing is DISABLED: advancing time
+// must always be possible (a week the player cannot leave is the R10-3 dead end), so the button
+// still acts – it just stops lying about what the act will produce, which is the other half of the
+// R10-16 doctrine.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { isExamWeek, isOffSeasonWeek } from '../engine/season/calendar'
@@ -29,7 +39,14 @@ export const TIER_SHORT: Record<TierId, string> = {
   j300: 'J300',
 }
 
-export type WeekAheadKind = 'tournament' | 'vacation' | 'practice' | 'exam' | 'off-season' | 'training'
+export type WeekAheadKind =
+  | 'tournament'
+  | 'walkover'
+  | 'vacation'
+  | 'practice'
+  | 'exam'
+  | 'off-season'
+  | 'training'
 
 export interface WeekAhead {
   kind: WeekAheadKind
@@ -49,8 +66,24 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
     const snap = game.snapshot
     if (!snap) return TRAINING
     const next = snap.week + 1
-    const entered = snap.upcoming.find((e) => e.entered && e.week === next)
-    if (entered) return { kind: 'tournament', label: `🏆 Play ${TIER_SHORT[entered.tier]} ▶` }
+    // The entered-tournament case, answered by the ENGINE (see the header note). `arrival` is
+    // non-null exactly when an entry sits on `next`, so it replaces the old `upcoming` lookup
+    // outright rather than second-guessing it.
+    const arrival = snap.arrival
+    if (arrival) {
+      const tier = TIER_SHORT[arrival.tier]
+      // She is still inside her layoff when it comes round: the fee is already committed and the
+      // week WILL resolve as a walkover. Say so on the button that is about to spend it, instead of
+      // sending her to a tournament that does not happen. The TIER is dropped from this label and
+      // the one below on purpose – .next-week-btn ellipsises at 375px and the labels here have to
+      // stay inside the ~22-character budget the vacation label already proves fits (style.css).
+      if (arrival.verdict === 'injured') return { kind: 'walkover', label: '🩹 Injured – walkover ▶' }
+      // A committed entry to a tier she has since outgrown still PLAYS (R10-3: the list closed with
+      // her on it). It is not a block and the button is not disabled – but the parent should know
+      // which week she is spending.
+      if (arrival.outgrown) return { kind: 'tournament', label: `🏆 ${tier} (outgrown) ▶` }
+      return { kind: 'tournament', label: `🏆 Play ${tier} ▶` }
+    }
     if (snap.vacations.some((v) => v.week === next)) return { kind: 'vacation', label: '🏖️ Leave on vacation ▶' }
     if (snap.practices.some((p) => p.week === next)) return { kind: 'practice', label: '🎾 Practice match ▶' }
     if (isExamWeek(next)) return { kind: 'exam', label: '📚 Exam week ▶' }

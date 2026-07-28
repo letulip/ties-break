@@ -152,7 +152,18 @@ export interface FinanceWindow {
   netCents: number
 }
 
-export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end' | 'injury' | 'medical'
+export type StopReason =
+  | 'tournament'
+  | 'deadline'
+  | 'funds'
+  | 'season-end'
+  | 'injury'
+  | 'medical'
+  /** R12-15: an entered tournament came round while she was still inside her layoff, so the week
+   *  resolved as a WALKOVER – 0 points, and the entry fee forfeited (the list had closed with her on
+   *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
+   *  'medical', and it used to pass in complete silence. */
+  | 'walkover'
 
 /** R11-1: the order the UI must SURFACE a week's stop reasons in, and the order `advanceWeeks`
  *  returns them in. One advance can stop for SEVERAL true reasons at once (the owner's lost injury
@@ -163,6 +174,11 @@ export type StopReason = 'tournament' | 'deadline' | 'funds' | 'season-end' | 'i
 export const STOP_PRECEDENCE: readonly StopReason[] = [
   'injury',
   'medical',
+  // Third, with its two medical siblings and above everything that can wait a click: a walkover
+  // costs her the entry fee. When it lands on the SAME week as the onset (an entry on the very week
+  // she gets hurt) both fire – the injury dialog leads, the walkover toast rides above it – because
+  // they are two different facts and R11-1's whole point is that a week may be several things.
+  'walkover',
   'tournament',
   'season-end',
   'deadline',
@@ -441,6 +457,39 @@ export interface LossStreak {
   angerAt: number
 }
 
+/** R12-15 / R12-3 – WHAT THE "next week" BUTTON IS ACTUALLY ABOUT TO DO.
+ *
+ *  The sticky bar's label used to be derived from one fact: is there an entered event on
+ *  `week + 1`? If yes it said "🏆 Play {TIER} ▶", whatever her body or her ranking points had done
+ *  since. So an entry that was going to resolve as a walkover was advertised as a tournament, and
+ *  a committed entry to a tier she had outgrown was advertised as an ordinary one.
+ *
+ *  This is the ENGINE's own arrival verdict for that event (`arrivalStatus` in engine/world.ts) –
+ *  the very verdict `tickWeek` will resolve the week with – carried on the snapshot so the button
+ *  reads it instead of guessing. Null when no entry sits on `week + 1`.
+ *
+ *  ONLY FACTS ARE PREVIEWED. The layoff window and the point band are pure state: they cannot
+ *  change between this snapshot and the tick that reads them, so previewing them is safe. The
+ *  DOCTOR's arm is deliberately absent – his verdict is re-read on arrival against a condition that
+ *  can still rise before then (physio, a blackout week), so a "not cleared" preview could turn out
+ *  false and a button that cried wolf would be a NEW lie in place of the old one. A medical
+ *  withdrawal announces itself the way it always has: it halts the advance with the 'medical' stop
+ *  and its own toast. */
+export interface ArrivalPreview {
+  eventId: string
+  tier: TierId
+  /** the event's week – always `snapshot.week + 1` by construction */
+  week: number
+  /** 'injured' = the layoff still covers that week, so it will be a walkover (0 pts, fee
+   *  forfeited); 'play' = she takes the court, as far as anything knowable today says. */
+  verdict: 'play' | 'injured'
+  /** player-facing reason, present exactly when `verdict === 'injured'` */
+  detail?: string
+  /** her points have passed the tier's ceiling. The entry is COMMITTED and still plays (R10-3) –
+   *  this is here so the button can say so, never so a surface can block it. */
+  outgrown: boolean
+}
+
 export interface Snapshot {
   schemaVersion: number
   careerId: string
@@ -469,6 +518,9 @@ export interface Snapshot {
   financialEvents: WorldEvent[]
   /** scheduled events over the next 8 weeks, with entry state */
   upcoming: UpcomingEvent[]
+  /** R12-15/R12-3: the engine's verdict on the entered event for `week + 1` – the week the sticky
+   *  bar's button is about to play – or null when nothing is entered there. See ArrivalPreview. */
+  arrival: ArrivalPreview | null
   /** the ITF annual entry cap for the CURRENT season – what the Home tier ladder needs to tell
    *  "capped for the year" apart from "locked on points" and "nothing scheduled". Derived at
    *  snapshot time from the persisted ledger, so it persists nothing of its own. */

@@ -322,6 +322,26 @@ export const ECONOMY = {
     injuryBaseChance: 0.006, // per healthy week at condition 100
     injuryFatigueSlope: 0.0009, // + per fatigue point (100 - condition)
     injuryPlayingMultiplier: 1.8, // tau *= this the week she competes
+    // R12-4/11 (owner playtest 27.07: "injured ON a family vacation", TWICE in one career). A
+    // resort week used to roll the SAME dice as a training week – `rollInjury` reads fatigue, age,
+    // trailing load and whether she is competing, and a booked vacation touched none of them, so
+    // the week she is furthest from a tennis court was as dangerous as the week she is grinding.
+    //
+    // THE VALUE, and why 0.25. The model's load axis already runs from 1.8 (a competing week) up to
+    // 1.8 again for four straight played weeks; a vacation is the far end of that same axis and
+    // must be a bigger move than any protection money can buy – `physio.riskReduction` is 0.76 (a
+    // retainer, 24% off) and the elite package's carry-over buff is 0.85. A quarter of a training
+    // week's risk puts a fresh kid's holiday at ~0.15%/wk, i.e. one holiday injury per several
+    // hundred vacation weeks, and it stays NONZERO on the owner's own instruction ("holidays do
+    // sprain ankles") – she still climbs, swims and falls over. It rises with a deep condition
+    // deficit, which is honest: the week she most needs the rest is the week her body is most
+    // fragile, and that is exactly when a vacation gets booked.
+    //
+    // POST-DRAW MULTIPLY ON THE THRESHOLD – the same invariance pattern as `physio.riskReduction`
+    // and the recovery buff (see injuryTau). ZERO draws, on any stream: the frozen MAIN capture
+    // cannot move, and neither can the private `seed:injury:week` sequence, so a career that never
+    // books a vacation is byte-identical to before.
+    injuryVacationFactor: 0.25,
     injuryChanceCap: 0.12,
     // Owner research 25.07 (docs/research/injury-stats-by-age.md): girl injury-age curve peaks at 16.
     // Mild by design – the base is already anchored to real junior prevalence (46-54%/season).
