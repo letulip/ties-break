@@ -544,6 +544,12 @@ export interface DiaryFacts {
   /** her rank after this week's standings recompute is strictly better than before it –
    *  the engine's capture (never derived in the UI) behind the third loss softener */
   rankClimbed: boolean
+  /** R13-2: the ranking points her run AWARDED this week (the kid's result rows at `week`).
+   *  finalizeTournament writes a row only when points > 0, so since wave B's first-round zero
+   *  "> 0" is exactly "she WON matches this week" – the licence the climb softener and the
+   *  good-loss diary lines require, because rank is relative and can climb on a zero-point week
+   *  purely off rivals' results decaying out of their 52-week windows. */
+  runPointsThisWeek: number
   /** consecutive competitive losses ending at her most recent competitive match (0 = none) */
   lossStreak: number
   /** raw condition 0..100 – the diary module bands it; surfaces print words, not this number */

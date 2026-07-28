@@ -371,6 +371,51 @@ select {
   border-radius: 50%;
   object-fit: cover;
   border: 1.5px solid var(--accent);
+  display: block;
+}
+
+/* R13-12: the avatar is a BUTTON now (it opens the Kid screen – the tab left the bottom bar).
+   Strip the default button chrome so the header looks exactly as before, keep the round hit
+   area, and let the ring do the hover talk. */
+.avatar-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 0;
+}
+
+.avatar-btn:hover:not(:disabled) .avatar {
+  border-color: var(--text);
+}
+
+/* R13-12: the one-time discoverability callout under the avatar. Anchored to the sticky header
+   (position: sticky establishes the containing block), accent-framed like the coach tooltips. */
+.kid-hint {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 8px;
+  z-index: 42;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text);
+  box-shadow: 0 10px 24px -10px rgba(6, 10, 20, 0.8);
+}
+
+.kid-hint::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 14px;
+  width: 8px;
+  height: 8px;
+  background: var(--panel);
+  border-left: 1px solid var(--accent);
+  border-top: 1px solid var(--accent);
+  transform: rotate(45deg);
 }
 
 .kid-name {
@@ -476,6 +521,8 @@ select {
 .tab-label {
   font-size: 10px;
   letter-spacing: 0.02em;
+  /* R13-12: "This week" is the longest label the bar has carried – one line, always. */
+  white-space: nowrap;
 }
 
 /* --- Round-6 item 2: splash screen -------------------------------------------- */
@@ -820,6 +867,12 @@ button.danger:hover:not(:disabled) {
   margin: 6px 0 0;
 }
 
+/* R13-3: the practice-strain warning, folded out of the removed Fit chip into the note area.
+   Same amber the strain read has always worn (the soft, overrulable caution tone). */
+.condition-note.warn {
+  color: #f2b34f;
+}
+
 /* D10: the Memory card – a small past-band portrait beside one line. */
 .memory-body {
   display: flex;
@@ -890,8 +943,8 @@ button.danger:hover:not(:disabled) {
   background: var(--accent);
 }
 
-/* Season-Life slice B: condition cell = the block bar + an availability chip, with a physio toggle
-   beneath it. */
+/* Season-Life slice B: the condition cell's block bar (R13-3: the availability chip that shared
+   this row is gone – the D1 note + the amber strain line beneath carry its meaning). */
 .condition-cell {
   display: flex;
   align-items: center;
@@ -911,23 +964,11 @@ button.danger:hover:not(:disabled) {
   border-radius: 6px;
 }
 
-.avail-chip.green {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-.avail-chip.grey {
-  color: var(--muted);
-  border-color: var(--line);
-}
+/* R13-3: green/grey/amber tones retired with Home's chip – the Season screen's layoff chips are
+   the chip's one surviving surface, and they are always red. */
 .avail-chip.red {
   color: var(--danger);
   border-color: var(--danger);
-}
-/* Season planner: the STRAIN read – she is worn out, or on a run of match weeks. Amber, because
-   it is a warning the parent may still overrule (same tone as every other soft caution). */
-.avail-chip.amber {
-  color: #f2b34f;
-  border-color: #f2b34f;
 }
 
 /* Amber "caution" pill – a soft, warned state (e.g. racing while fatigued is a risky CHOICE, not a

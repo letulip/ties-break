@@ -140,6 +140,9 @@ export interface DiaryWorldView {
   /** a tournament reveal is in progress and NOT yet finalized: the week's rank recompute has not
    *  run, so `rankClimbed` must not read last week's movement as this week's. */
   pendingUnfinished: boolean
+  /** R13-2: the ranking points the kid's run AWARDED this week (sum of her result rows at
+   *  `week`). 0 on a first-round exit – see DiaryFacts.runPointsThisWeek. */
+  runPointsThisWeek: number
   milestones: readonly Milestone[]
   /** a booked family vacation resolved this week */
   vacationWeek: boolean
@@ -186,6 +189,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     lastTitle,
     lossStreak: view.lossStreak,
     rankClimbed,
+    runPointsThisWeek: view.runPointsThisWeek,
   })
   const resultFresh = lastResult !== null && lastResult.week === week
   const thisWeek = view.events.filter((e) => e.week === week)
@@ -205,6 +209,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     titleThisWeek: thisWeek.some((e) => e.type === 'tournament' && e.finishIdx === 0),
     resultTier: resultFresh ? (lastResult.tier ?? null) : null,
     rankClimbed,
+    runPointsThisWeek: view.runPointsThisWeek,
     lossStreak: view.lossStreak?.losses ?? 0,
     condition: view.condition,
     conditionBand: conditionBandOf(view.condition),
@@ -240,7 +245,9 @@ export interface DiaryClaims {
   title?: true
   /** asserts a fresh lost final (runner-up) */
   runnerUp?: true
-  /** asserts the table moved up despite the loss – the owner's "good loss" */
+  /** asserts the table moved up despite the loss AND that she EARNED the move (run points > 0,
+   *  i.e. she won matches this week) – the owner's "good loss". R13-2: a passive climb – rivals'
+   *  results decaying out of their windows on her zero-point week – licenses none of these. */
   rankClimbed?: true
   /** asserts the anger crossing – the loss that broke her composure */
   angry?: true
@@ -324,6 +331,9 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     license: (f) => f.won && f.titleThisWeek,
   },
   // --- photo card: runner-up (serious by R8-6a) ------------------------------------------------
+  // R13-4: a final lost is a GOOD result and deserves its own words – the pool grew, and while it
+  // is non-empty a lostFinal week selects ONLY from it (the climb lines below exclude lostFinal),
+  // so the runner-up can never catch a generic loss line or a mere table-movement line.
   {
     surface: 'photo',
     text: 'Second place. The medal stayed in her bag.',
@@ -336,24 +346,48 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', lost: true, runnerUp: true },
     license: (f) => f.resultFresh && !f.won && f.lostFinal,
   },
+  {
+    surface: 'photo',
+    text: 'Runner-up. She pushed the final all the way.',
+    claims: { affect: 'neutral', lost: true, runnerUp: true },
+    license: (f) => f.resultFresh && !f.won && f.lostFinal,
+  },
+  {
+    surface: 'photo',
+    text: 'Lost the final, and walked off with her head up.',
+    claims: { affect: 'neutral', lost: true, runnerUp: true },
+    license: (f) => f.resultFresh && !f.won && f.lostFinal,
+  },
+  {
+    surface: 'photo',
+    text: 'A finalist. We let that word sit at dinner.',
+    claims: { affect: 'neutral', lost: true, runnerUp: true },
+    license: (f) => f.resultFresh && !f.won && f.lostFinal,
+  },
   // --- photo card: the owner's "good loss" – lost, and the table moved up anyway ---------------
+  // R13-2: licensed by (lost AND rankClimbed AND runPointsThisWeek > 0) – she must have EARNED the
+  // climb by winning matches this week, not inherited it from rivals' decayed windows. The extra
+  // emotion check keeps line and face in lockstep, but the points licence is asserted here in its
+  // own right so no future softener re-order can let a passive climb speak.
+  // R13-4: `!f.lostFinal` – a lost final keeps its own pool above; these are for the QF/SF exits
+  // that still climbed.
   {
     surface: 'photo',
     text: 'Not a win – but she moved up the table.',
     claims: { affect: 'neutral', lost: true, rankClimbed: true },
-    license: (f) => f.resultFresh && !f.won && f.rankClimbed && f.emotion === 'serious',
+    license: (f) => f.resultFresh && !f.won && !f.lostFinal && f.rankClimbed && f.runPointsThisWeek > 0 && f.emotion === 'serious',
   },
   {
     surface: 'photo',
     text: 'She lost late, and climbed anyway.',
     claims: { affect: 'neutral', lost: true, rankClimbed: true },
-    license: (f) => f.resultFresh && !f.won && f.rankClimbed && f.emotion === 'serious',
+    license: (f) => f.resultFresh && !f.won && !f.lostFinal && f.rankClimbed && f.runPointsThisWeek > 0 && f.emotion === 'serious',
   },
   {
     surface: 'photo',
     text: 'Beaten on Saturday. Higher on Monday.',
     claims: { affect: 'neutral', lost: true, rankClimbed: true },
-    license: (f) => f.resultFresh && !f.won && f.rankClimbed && f.emotion === 'serious',
+    license: (f) => f.resultFresh && !f.won && !f.lostFinal && f.rankClimbed && f.runPointsThisWeek > 0 && f.emotion === 'serious',
   },
   // --- photo card: a softened loss (local exit / a shielded champion) --------------------------
   {
@@ -477,6 +511,12 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     license: (f) => f.fundsPressure === 'tight' && !f.resultFresh && f.emotion !== 'happy',
   },
   // --- photo card: an ordinary week (idle norm) – lines AND silences ---------------------------
+  // R13-10 (owner, first Diary-1 playtest: «там же тоже жизнь продолжается»): the ordinary-week
+  // pool grew from three lines to twelve – school, kitchen, bus, phone, homework, weather, all
+  // domestic one-liners licensed by the quiet-week facts alone, asserting nothing about her tennis
+  // or her body the facts do not carry. The silences moved from three-in-six to four-in-sixteen:
+  // an ordinary week now SPEAKS roughly three times in four and stays quiet the fourth – silence
+  // is still possible and still meaningful, it just stopped being the default.
   {
     surface: 'photo',
     text: 'She seems calm.',
@@ -495,7 +535,63 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', quietWeek: true },
     license: (f) => quiet(f) && f.emotion === 'norm',
   },
-  // Three deliberate silences: an ordinary week says nothing roughly half the time it is drawn.
+  {
+    surface: 'photo',
+    text: 'Homework at the kitchen table, racquet by the door.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  {
+    surface: 'photo',
+    text: 'She missed the bus and ran for it, laughing.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  {
+    surface: 'photo',
+    text: 'Pasta again. Nobody complained.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  {
+    surface: 'photo',
+    text: 'Rain most of the week – practice moved indoors.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  {
+    surface: 'photo',
+    text: 'Her phone buzzed all evening. The homework got done anyway.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  {
+    surface: 'photo',
+    text: 'A school project took the evenings – glue on everything.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  {
+    surface: 'photo',
+    text: 'Groceries together on Saturday. She pushed the cart.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  {
+    surface: 'photo',
+    text: 'A new month on the kitchen calendar. The same routine.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  {
+    surface: 'photo',
+    text: 'Warm evenings – dinner ran long on the balcony.',
+    claims: { affect: 'neutral', quietWeek: true },
+    license: (f) => quiet(f) && f.emotion === 'norm',
+  },
+  // Four deliberate silences against the twelve lines above: roughly one quiet week in four says
+  // nothing at all (R13-10 – down from one-in-two).
+  { surface: 'photo', text: null, claims: { affect: 'neutral', quietWeek: true }, license: (f) => quiet(f) && f.emotion === 'norm' },
   { surface: 'photo', text: null, claims: { affect: 'neutral', quietWeek: true }, license: (f) => quiet(f) && f.emotion === 'norm' },
   { surface: 'photo', text: null, claims: { affect: 'neutral', quietWeek: true }, license: (f) => quiet(f) && f.emotion === 'norm' },
   { surface: 'photo', text: null, claims: { affect: 'neutral', quietWeek: true }, license: (f) => quiet(f) && f.emotion === 'norm' },

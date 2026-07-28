@@ -82,9 +82,14 @@ export const ECONOMY = {
   // The old figure was tuned for the round-7 no-tournament burn bands; a real playing season at the
   // J tiers costs $45-60k/season and the age-cap change already trimmed the schedule, so the burn
   // band gives way to the owner's number. He asked for 700-800; 750 is the middle of his range.
+  // MIDDLE RAISED 300 -> 425 (owner, round 13, 28.07 - his ask at "400-450" for the SECOND time;
+  // wealthy moved in round 12 but middle never did, and his first Diary-1 playtest burned the whole
+  // 25k reserve inside one season). 425 is the middle of his range. Same trade as the wealthy
+  // re-base: the round-7 idle-year burn band gives way to the owner's number, and the calibration
+  // band in tests/economy.test.ts is re-pinned to the measured window at 425, deliberately.
   parentIncomeCents: {
     wealthy: 750_00,
-    middle: 300_00,
+    middle: 425_00,
     working: 245_00,
   } as Record<FamilyBackground, number>,
 

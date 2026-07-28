@@ -1352,7 +1352,10 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
   if (!pkg) throw new Error('Unknown vacation package')
   assertPlannable(world, week, 'vacation')
   const priceCents = vacationPriceCents(world.seed, week, packageId, world.profile.background)
-  if (world.fundsCents < priceCents) throw new Error('Not enough funds for that vacation')
+  // R13-7a: a ZERO-PRICE package is always affordable. The bare `funds < price` refused the free
+  // home-rest week the moment funds went negative (-$1 < $0), i.e. exactly when it is the one
+  // thing a broke family can still book. Nothing is charged, so nothing has to be afforded.
+  if (priceCents > 0 && world.fundsCents < priceCents) throw new Error('Not enough funds for that vacation')
   world.fundsCents -= priceCents
   world.vacations.push({ week, packageId, paidCents: priceCents })
   world.vacations.sort((a, b) => a.week - b.week)
@@ -2975,6 +2978,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,
     pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
+    // R13-2: the points her run AWARDED this week. finalizeTournament writes a kid row only when
+    // points > 0, so a first-round exit leaves none – "> 0" is exactly "she won matches this
+    // week", the licence behind the earned-climb softener and the good-loss diary lines.
+    runPointsThisWeek: world.results
+      .filter((r) => r.playerId === KID_ID && r.week === world.week)
+      .reduce((s, r) => s + r.points, 0),
     milestones: world.milestones,
     vacationWeek: vacationForWeek(world, world.week) !== undefined,
   })

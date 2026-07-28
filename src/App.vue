@@ -3,7 +3,7 @@
 // onboarding wizard when there is no active career. No router – a plain ref
 // switch, per spec.
 import { computed, onMounted, ref, watch } from 'vue'
-import type { StopReason } from './shared/protocol'
+import type { StopReason, WorldMatch } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekLabel, weekRange } from './shared/dates'
@@ -12,15 +12,20 @@ import { useHeaderAvatar } from './composables/headerAvatar'
 // practice / exams / off-season / training). All of the derivation lives in the composable – this
 // file only renders the label it hands back.
 import { useWeekAhead } from './composables/weekAhead'
+// R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
+// renders the card by – one predicate, two consumers, zero drift.
+import { recapExists, thisWeekDotShows } from './composables/weekRecap'
 import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
+import PracticeFlow from './components/PracticeFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
+import ThisWeekScreen from './components/screens/ThisWeekScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
 import StatsScreen from './components/screens/StatsScreen.vue'
 import MoneyScreen from './components/screens/MoneyScreen.vue'
@@ -32,6 +37,10 @@ import MoreScreen from './components/screens/MoreScreen.vue'
 const SEASON_SEEN_KEY = 'tb:lastSeenSeasonWeek'
 // Round 5 item 10: the coach-mark tour is shown once, ever, per device.
 const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
+// R13-12: the Kid screen opens by tapping the header avatar now (no bottom tab). A one-time
+// callout under the avatar makes that discoverable; the first avatar tap dismisses it and the
+// dismissal persists per device (localStorage, the TOUR_SEEN_KEY idiom) – NEVER in the save.
+const KID_HINT_KEY = 'tb:kidAvatarHintSeen'
 
 const game = useGameStore()
 
@@ -53,32 +62,28 @@ onMounted(() => game.init())
 // ref, not persisted: "every launch" means every page load, not "once ever".
 const splashDone = ref(false)
 
-// 'money' stays a valid CONTENT state (MoneyScreen unchanged, reached via the header
-// W/$ pill) but round-6 dropped its bottom-tab button in favor of Stats – see TABS below.
-type TabId = 'home' | 'play' | 'kid' | 'stats' | 'money' | 'more'
+// 'money' and 'kid' stay valid CONTENT states without a bottom-tab button: MoneyScreen is
+// reached via the header W/$ pill (round-6 dropped its tab for Stats), and R13-12 moved the Kid
+// screen behind the header AVATAR – see openKid() below and TABS.
+type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more'
 const tab = ref<TabId>('home')
 
 // Package J: the 'play' tab id stays (per spec – no router, minimal diff) but
 // is now the Season tab (calendar placeholder + the old exhibition block).
 // Round-6: emoji tab glyphs replaced by the owner's SVG icon set (public/icons/*.svg,
 // tinted via CSS mask so they follow the button's text color exactly – see `.tab-icon`
-// in style.css and `iconUrl()` below). 'money' has no entry here on purpose (see TabId).
+// in style.css and `iconUrl()` below). 'money' and 'kid' have no entry here on purpose
+// (see TabId). R13-12 (the owner's nav design): the Kid tab left the bar for the header
+// avatar, and "This week" – the plan + recap tab (ThisWeekScreen) – took the slot.
 const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'home', icon: 'home', label: 'Home' },
   { id: 'play', icon: 'season', label: 'Season' },
-  { id: 'kid', icon: 'kid-girl', label: 'Kid' },
+  { id: 'week', icon: 'week', label: 'This week' },
   { id: 'stats', icon: 'stats', label: 'Stats' },
   { id: 'more', icon: 'more', label: 'More' },
 ]
 function iconUrl(icon: string): string {
   return `${import.meta.env.BASE_URL}icons/${icon}.svg`
-}
-// R9-16 (owner icon pair): the KID tab glyph grows up with her – kid-girl.svg while she is a
-// junior, woman.svg from age 18 (man.svg stays reserved for the future boys' tour, like
-// kid-boy.svg). Same CSS-mask tinting path as every other tab icon.
-const kidTabIcon = computed(() => ((game.snapshot?.ageYears ?? 14) >= 18 ? 'woman' : 'kid-girl'))
-function tabIcon(t: { id: TabId; icon: string }): string {
-  return t.id === 'kid' ? kidTabIcon.value : t.icon
 }
 
 // No active snapshot once init() has settled means: no auto-loaded slot and no
@@ -133,6 +138,48 @@ watch(tab, (t) => {
     localStorage.setItem(SEASON_SEEN_KEY, String(week.value))
   }
 })
+
+// --- R13-12: the This-week tab's accent dot – a FRESH recap is unseen -------------
+// "Fresh" is the shared rule in composables/weekRecap.ts: a recap exists for the CURRENT week
+// (same predicate ThisWeekScreen renders the card by) and the tab has not been visited since it
+// appeared. The seen watermark is the snapshot week at the last visit, persisted per career
+// (careers advance independently, so a global key would collide – the R9-21b news lesson), and
+// re-read on a career switch so a plain load never invents freshness the stored watermark denies.
+const weekSeenKey = () => `tb:lastSeenThisWeek:${game.snapshot?.careerId ?? ''}`
+const lastSeenThisWeek = ref(Number(localStorage.getItem(weekSeenKey()) ?? '-1'))
+const weekTabDot = computed(() =>
+  thisWeekDotShows(recapExists(game.snapshot), week.value, lastSeenThisWeek.value),
+)
+function markThisWeekSeen(): void {
+  if (lastSeenThisWeek.value !== week.value) {
+    lastSeenThisWeek.value = week.value
+    localStorage.setItem(weekSeenKey(), String(week.value))
+  }
+}
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    lastSeenThisWeek.value = Number(localStorage.getItem(weekSeenKey()) ?? '-1')
+  },
+)
+watch(tab, (t) => {
+  if (t === 'week') markThisWeekSeen()
+})
+// The global advance bar (below) can resolve a week WHILE the tab is up – the player is looking
+// at the fresh recap, so it is seen the moment it lands.
+watch(week, () => {
+  if (tab.value === 'week') markThisWeekSeen()
+})
+
+// --- R13-12: the Kid screen lives behind the header avatar ------------------------
+const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))
+function openKid(): void {
+  tab.value = 'kid'
+  if (showKidHint.value) {
+    showKidHint.value = false
+    localStorage.setItem(KID_HINT_KEY, '1')
+  }
+}
 
 // --- R9-21b: news cue – a soft "тилинь" + a Season-style accent dot on the Home tab -----
 // News = the non-financial events HomeScreen's feed shows (expense/income live on Money).
@@ -209,8 +256,13 @@ watch(
 )
 
 // R9-9a: the TournamentFlow splash's "← Back" hides the overlay WITHOUT resolving anything –
-// the week stays paused on the engine side. A persistent banner offers Resume; any change of
-// the pending run (skipped, closed, a different event) re-arms the overlay.
+// the week stays paused on the engine side. Any change of the pending run (skipped, closed, a
+// different event) re-arms the overlay. R13-8 made the sticky bar's primary button the resume
+// control on Home ("Play {tier}" via useWeekAhead's pending branch, re-opened by playWeek below);
+// R13-12 made that bar GLOBAL, so the button is the resume affordance on EVERY tab now and the
+// old paused-tournament banner is gone entirely – off Home it only ever existed to cover for the
+// bar's absence, and keeping it would re-create the duplication the owner complained about
+// (R13-8) five times over. The R9-9a guarantee – no tab can strand the career – rides on the bar.
 const tournamentHidden = ref(false)
 watch(
   () => game.snapshot?.pending?.eventId,
@@ -218,6 +270,31 @@ watch(
     tournamentHidden.value = false
   },
 )
+
+// R13-5 / R13-8: ONE handler behind both sticky-bar buttons, so a click always does what the
+// label promises.
+//  - A PAUSED tournament re-opens the overlay – never a tick past it (the engine refuses anyway:
+//    advanceWeeks returns 'tournament' untouched, which used to make this click a silent no-op).
+//  - A booked PRACTICE week plays THROUGH the flow (R10-12's live watch path, exactly what the
+//    Season screen's "Watch it live" does): advance the week – the engine resolves the friendly
+//    inside the tick as always – then open PracticeFlow on the resolved match, where the player
+//    watches or skips to the result. No more one-click week that felt like a skip. If the advance
+//    stopped short (a fresh injury cancels + refunds the friendly), nothing opens and the stop's
+//    own dialog explains – same contract as the Season path.
+const practiceLive = ref<WorldMatch | null>(null)
+async function playWeek(weeks: 1 | 4): Promise<void> {
+  if (game.snapshot?.pending) {
+    tournamentHidden.value = false
+    return
+  }
+  const throughPractice = weeks === 1 && weekAhead.value.kind === 'practice'
+  await game.advance(weeks)
+  if (throughPractice) {
+    const s = game.snapshot
+    const friendly = s?.events.find((e) => e.type === 'match' && e.friendly && e.week === s.week && e.match)
+    if (friendly?.match) practiceLive.value = friendly.match
+  }
+}
 // The tournament stop is owned by the full-screen TournamentFlow overlay, the season-end stop by
 // SeasonSummaryDialog and the injury stop by InjuryStopDialog (all three show off the snapshot);
 // deadline/funds/medical stops keep the toast.
@@ -309,7 +386,16 @@ function dismissSeasonSummary(): void {
 
   <template v-else>
     <header class="app-header" data-tour="home-header">
-      <img class="avatar" :src="avatarUrl" alt="" />
+      <!-- R13-12: the avatar is the door to the Kid screen (the tab left the bottom bar). The
+           crop itself stays F45-1's age-only norm – tappable chrome, not an emotional surface. -->
+      <button
+        class="avatar-btn"
+        data-tour="kid-avatar"
+        aria-label="Open her profile"
+        @click="openKid"
+      >
+        <img class="avatar" :src="avatarUrl" alt="" />
+      </button>
       <span class="kid-name">{{ kidName }}</span>
       <button
         class="pill status-pill"
@@ -318,6 +404,11 @@ function dismissSeasonSummary(): void {
         @click="tab = 'money'"
       >
         {{ weekLabel(week) }} · {{ funds }}
+      </button>
+      <!-- R13-12: one-time discoverability callout – dismissed (and persisted) by the first
+           avatar tap; tapping the callout itself opens the same door. -->
+      <button v-if="showKidHint" class="kid-hint" @click="openKid">
+        Tap the photo – her page lives here
       </button>
     </header>
 
@@ -328,44 +419,44 @@ function dismissSeasonSummary(): void {
 
     <!-- R11-1: NOT gated on the Home tab any more – an advance can be triggered from the Season
          screen too (playPracticeWeek), and a stop the player never sees is a stop that did not
-         happen as far as they are concerned. Same treatment as the tournament-paused banner
-         below, which has always shown on every tab. -->
+         happen as far as they are concerned. -->
     <div v-if="showStopToast" class="stop-toast">
       <span>{{ stopReasonText }}</span>
       <button @click="dismissStopToast">Dismiss</button>
     </div>
 
-    <!-- R9-9a: the week is paused on a hidden tournament – a persistent Resume affordance on
-         every tab, so backing out of the splash can never strand the career. -->
-    <div v-if="game.snapshot?.pending && tournamentHidden" class="stop-toast tournament-paused">
-      <span>Tournament week: {{ game.snapshot.pending.tierLabel }} – the week is paused.</span>
-      <button class="primary" @click="tournamentHidden = false">Resume</button>
-    </div>
+    <!-- R13-12: the paused-tournament banner is GONE – the sticky bar below is global now, and
+         its primary button ("Play {tier}", playWeek) is the resume affordance on every tab. -->
 
-    <main class="app-content" :class="{ 'with-next-week-bar': tab === 'home' }">
+    <main class="app-content with-next-week-bar">
       <HomeScreen v-if="tab === 'home'" />
       <SeasonScreen v-else-if="tab === 'play'" />
+      <ThisWeekScreen v-else-if="tab === 'week'" />
       <KidScreen v-else-if="tab === 'kid'" />
       <StatsScreen v-else-if="tab === 'stats'" />
       <MoneyScreen v-else-if="tab === 'money'" />
       <MoreScreen v-else-if="tab === 'more'" />
     </main>
 
-    <!-- Package N: sticky Next-week bar, Home tab only, fixed above the tab bar.
-         Both buttons now go through `advance` (weeks: 1|4) so either one can stop
+    <!-- Package N: sticky Next-week bar, fixed above the tab bar. R13-12: GLOBAL – it renders on
+         every tab (advancing the week is the game's one always-available verb, and the R9-9a
+         "no tab can strand the career" guarantee rides on it now). It must never move into the
+         This-week tab. Both buttons go through `advance` (weeks: 1|4) so either one can stop
          early on a tournament week / imminent deadline / funds crossing zero. -->
-    <div v-if="tab === 'home'" class="next-week-bar">
-      <!-- R10-7: one button, a label that names the plan for the week it is about to play. -->
+    <div class="next-week-bar">
+      <!-- R10-7: one button, a label that names the plan for the week it is about to play.
+           R13-5/R13-8: both buttons route through playWeek – a paused tournament re-opens its
+           overlay, a booked practice week opens the flow, everything else advances as before. -->
       <button
         class="primary next-week-btn"
         :class="`plan-${weekAhead.kind}`"
         data-tour="next-week"
         :disabled="game.busy"
-        @click="game.advance(1)"
+        @click="playWeek(1)"
       >
         {{ weekAhead.label }}
       </button>
-      <button :disabled="game.busy" @click="game.advance(4)">▶▶ 4</button>
+      <button :disabled="game.busy" @click="playWeek(4)">▶▶ 4</button>
     </div>
 
     <nav class="tab-bar">
@@ -377,17 +468,30 @@ function dismissSeasonSummary(): void {
         :data-tour="`tab-${t.id}`"
         @click="tab = t.id"
       >
-        <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(tabIcon(t))})`, maskImage: `url(${iconUrl(tabIcon(t))})` }"></span>
+        <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
         <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. -->
         <span v-else-if="t.id === 'home' && homeHasNews" class="tab-dot"></span>
+        <!-- R13-12: a fresh, unseen week recap – same accent treatment again. -->
+        <span v-else-if="t.id === 'week' && weekTabDot" class="tab-dot"></span>
       </button>
     </nav>
 
     <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress.
-         R9-9a: the splash's Back hides it (nothing resolved); the banner above resumes it. -->
+         R9-9a: the splash's Back hides it (nothing resolved); the global bar's primary button
+         (playWeek) re-opens it from any tab (R13-12). -->
     <TournamentFlow v-if="game.snapshot?.pending && !tournamentHidden" @back="tournamentHidden = true" />
+
+    <!-- R13-5: the booked friendly the Next-week button just played, opened as a match (the
+         R10-12 flow – the same overlay the Season screen's "Watch it live" uses). -->
+    <PracticeFlow
+      v-if="practiceLive"
+      :match="practiceLive"
+      :week="week"
+      :kid-rank="game.snapshot?.kidRank ?? null"
+      @close="practiceLive = null"
+    />
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />

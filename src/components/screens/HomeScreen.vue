@@ -1,28 +1,18 @@
-<script lang="ts">
-// R9-18: TRUE module scope (a plain script block, compiled once per module – NOT per mount).
-// HomeScreen re-mounts on every tab switch (App.vue v-if), so a `<script setup>` ref forgets
-// the dismissal and the recap card pops back – the owner's "appears sometimes". Keyed by
-// career+week so it can never leak across careers; a page reload re-arms it (acceptable).
-import { ref as moduleRef } from 'vue'
-const dismissedRecapKey = moduleRef<string | null>(null)
-</script>
-
 <script setup lang="ts">
-// Package J – Home hub v2: player card, season strip (Phase 3 teaser), this
-// week's training/rest plan (presets from the worker), and a restyled news
-// feed off the week log. Replaces the Package I status-table/advance-buttons
-// layout; "Advance" moved to App.vue's sticky Next-week bar.
+// Package J – Home hub, R13-12: the DIARY page. Player card (photo, phrase, condition + note),
+// season strip, a compact next-tournament summary, news, Memory. The This-week block (plan
+// presets, planned spend) and the week-recap card moved to their own tab –
+// screens/ThisWeekScreen.vue – together with the R9-18 module-scope recap dismissal; "Advance"
+// stays in App.vue's sticky Next-week bar (global on every tab).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { WEEK_PLAN_PRESETS, type CoachSetup, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
+import type { PlayStyle, WorldEvent, WorldMatch } from '../../shared/protocol'
 import type { TierId } from '../../engine/season/types'
-import { weekLabel, weekRange } from '../../shared/dates'
+import { weekLabel } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
-// The week-TYPE predicates come from the calendar itself (world.ts re-exports isExamWeek only).
-// R11-5a: the tier catalogue and the age gate are no longer imported here at all – the bands are read
-// in ONE place now (composables/tierState.ts), which is the whole point of the item.
-import { isExamWeek, isOffSeasonWeek } from '../../engine/season/calendar'
+// R13-3: the calendar week-type predicates left with the availability chip – the D1 note names
+// the exam/off-season weeks itself now (engine-licensed), so nothing here re-derives them.
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
 import { facePoint } from '../../art/faceRects'
@@ -31,7 +21,6 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 // R11-5a: the ONE tier-state rule, shared with the Season screen's lock labels + open-tier note.
 import { isTierOpen, useTierStates } from '../../composables/tierState'
 import MatchReplay from '../MatchReplay.vue'
-import WeekRecapCard from '../WeekRecapCard.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
 import { playSfx } from '../../audio/sfx'
 
@@ -76,33 +65,9 @@ const kidFullName = computed(() => {
 const flag = computed(() => flagEmoji(game.snapshot?.profile.country ?? ''))
 const ageYears = computed(() => game.snapshot?.ageYears ?? 0)
 const week = computed(() => game.snapshot?.week ?? 0)
-const weekDates = computed(() => weekRange(week.value))
 
-// --- Round 5 item 9 / R9-18 – the week-recap card. THE RULE (owner: it appeared
-// "sometimes"): the card shows after EVERY resolved non-tournament week – including
-// multi-week advances, where it recaps the LATEST resolved week – and never after a
-// tournament week (the flow's own cards cover that one) or while a reveal is pending.
-// Week 0 (career start) has nothing to recap. A dismissal silences exactly one week.
-//
-// The R9-18 root cause: the dismissal ref lived per-MOUNT, and HomeScreen re-mounts on
-// every tab switch (App.vue v-if) – so a dismissed recap popped back after visiting any
-// other tab, and the owner read the churn as "sometimes appears". The dismissal now lives
-// at MODULE scope keyed by career+week: it survives remounts for the session and can never
-// leak across careers (a reload re-arms it, which is the pre-existing, acceptable scope).
-const hasTournamentEventThisWeek = computed(() =>
-  (game.snapshot?.events ?? []).some((e) => e.type === 'tournament' && e.week === week.value),
-)
-const showRecap = computed(
-  () =>
-    !!game.snapshot &&
-    week.value > 0 &&
-    !hasTournamentEventThisWeek.value &&
-    !game.snapshot.pending &&
-    dismissedRecapKey.value !== `${game.snapshot.careerId}:${week.value}`,
-)
-function dismissRecap(): void {
-  if (game.snapshot) dismissedRecapKey.value = `${game.snapshot.careerId}:${week.value}`
-}
+// R13-12: the week-recap card (and the R9-18 module-scope dismissal that guards it) moved to
+// screens/ThisWeekScreen.vue with the rest of the This-week block.
 
 // --- Player-card snapshot: real rank, week-over-week movement, season points ----
 const kidRank = computed(() => game.snapshot?.kidRank ?? null)
@@ -138,42 +103,29 @@ function conditionColor(i: number): string {
   return `hsl(${Math.round(hue)}, 72%, 48%)`
 }
 
-// --- Availability chip (Season-Life slice B, live in slice C): a plain-language read on
-// whether she can compete. "Fit" (green) when clear; "School break – exams" (grey) when this
-// or next week is a blackout; red with the injury kind + return week while she is out.
-// Season planner: the chip also READS THE STRAIN (the practice guardrail) – below the caution
-// floor, or on a run of match weeks, it turns amber and names the problem, because that is the
-// moment the parent should be thinking about a rest week rather than another match. --
-const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'amber' | 'red' } | null>(() => {
+// --- R13-3: the availability chip LEFT the condition row (owner: the squares + the D1 note
+// already carry it – the "Fit" chip duplicated both and spent the space). The states it knew are
+// covered without it: injured / exams / off-season all speak through the engine-licensed D1 note
+// ("Out with the ankle soreness – 2 weeks to go." names the kind and the clock), and the chip
+// idiom itself lives on where it still earns its place (the Season screen's red layoff chips).
+// The ONE thing only the chip knew – the practice-strain warning – folds into the note area
+// below as its own amber line, read off the same pure predicate the planner sheet asks
+// (practiceCaution, for "one more match next week"), so the warning and the booking sheet can
+// never disagree. --
+const strainNote = computed<string | null>(() => {
   const s = game.snapshot
-  if (!s) return null
-  if (s.injury) return { label: `Injured: ${s.injury.kind} – back ${weekLabel(s.week + s.injury.weeksRemaining)}`, tone: 'red' }
-  // The strain read asks the same pure predicate the planner sheet does, for "one more match
-  // next week" – so the chip and the booking warning can never disagree.
+  if (!s || s.injury) return null
   const strain = practiceCaution({
     condition: s.condition,
     practiceWeeks: s.practices.map((p) => p.week),
     week: s.week + 1,
   })
-  if (strain.level === 'caution') {
-    // The streak arm is gated on real strain now (Wave-2), so the run it names varies – read the
-    // count off the same predicate instead of hard-coding "Third".
-    return {
-      label: strain.reasons.includes('tired')
-        ? 'Worn out – she needs a rest week'
-        : `${strain.streakWeeks} match weeks in a row`,
-      tone: 'amber',
-    }
-  }
-  // Spotted during the R10 presentation pass (NOT on the owner's list): this arm asked
-  // `isBlackoutWeek`, which is TRUE for the off-season tail as well as the exam block – so the whole
-  // December off-season read "School break – exams" on the player card. Same grey chip, but the two
-  // blackouts are now named for what they actually are.
-  if (isExamWeek(s.week) || isExamWeek(s.week + 1)) return { label: 'School break – exams', tone: 'grey' }
-  // Kept to the same length as its exam sibling: the chip lives in the condition cell and a longer
-  // string wraps inside the pill, which pushes the whole row taller.
-  if (isOffSeasonWeek(s.week) || isOffSeasonWeek(s.week + 1)) return { label: 'Off-season – resting', tone: 'grey' }
-  return { label: 'Fit', tone: 'green' }
+  if (strain.level !== 'caution') return null
+  // The streak arm is gated on real strain (Wave-2), so the run it names varies – read the
+  // count off the same predicate instead of hard-coding "Third".
+  return strain.reasons.includes('tired')
+    ? 'Worn out – she needs a rest week'
+    : `${strain.streakWeeks} match weeks in a row`
 })
 
 // R9-5: the physio toggle moved to MoneyScreen's Budget section – it is a spending decision
@@ -319,48 +271,10 @@ const seasonChips = computed<TierChip[]>(() =>
   }),
 )
 
-// --- This week: preset pills drive game.setPlan(); spend range is a UI-side
-// mirror of src/engine/world.ts EXPENSE_RANGE × planExpenseFactor(train) – kept
-// here as a display estimate, not the source of truth for the actual draw. ---
-const PRESET_ORDER = ['grind', 'balanced', 'light'] as const
-const PRESET_LABEL: Record<(typeof PRESET_ORDER)[number], string> = {
-  grind: 'Grind 85/15',
-  balanced: 'Balanced 75/25',
-  light: 'Light 60/40',
-}
-const EXPENSE_RANGE_DOLLARS: Record<CoachSetup, [number, number]> = {
-  hired: [250, 700],
-  parent: [120, 400],
-}
-
-const plan = computed(() => game.snapshot?.plan ?? WEEK_PLAN_PRESETS.balanced)
-const activePreset = computed(() => {
-  const p = game.snapshot?.plan
-  if (!p) return null
-  return PRESET_ORDER.find((k) => WEEK_PLAN_PRESETS[k].train === p.train && WEEK_PLAN_PRESETS[k].rest === p.rest) ?? null
-})
-const spendRange = computed<[number, number]>(() => {
-  if (!game.snapshot) return [0, 0]
-  const factor = 0.55 + 0.006 * game.snapshot.plan.train
-  const [lo, hi] = EXPENSE_RANGE_DOLLARS[game.snapshot.profile.coachSetup]
-  return [Math.round(lo * factor), Math.round(hi * factor)]
-})
-
-// --- This week: the kid's nearest entered event (soonest upcoming week with
-// `entered: true`), or a plain "training week" hint when nothing is entered.
+// --- Next tournament (R13-12): the diary keeps a compact summary of the kid's nearest entered
+// event (soonest upcoming week with `entered: true`) – the plan controls that used to sit around
+// it live on the This-week tab now (screens/ThisWeekScreen.vue), the calendar on Season.
 const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
-
-// Round-8 R8-4: once this week's tournament has been played, the card's bottom line carries
-// the kid's LATEST match score (kid-perspective), read straight off the snapshot's match
-// events for the current week – no engine extension. Empty on non-tournament weeks.
-const thisWeekScore = computed<string | null>(() => {
-  const events = game.snapshot?.events ?? []
-  for (let i = events.length - 1; i >= 0; i--) {
-    const e = events[i]
-    if (e.type === 'match' && e.week === week.value && e.match?.score) return kidScoreOf(e.match)
-  }
-  return null
-})
 
 // --- News: structured events (Package M), non-financial types only (expense/
 // income live on the Money ledger). Strictly newest-first: most recent week first,
@@ -467,7 +381,8 @@ function openRankHelp(): void {
             <td>
               <div class="condition-cell">
                 <!-- D3: HOME speaks words, not percentages – the number (and its old tooltip) live
-                     on Stats/the planner. The squares carry the level, the chip carries the word. -->
+                     on Stats/the planner. The squares carry the level, the note carries the word
+                     (R13-3: the chip that used to sit here duplicated both and is gone). -->
                 <div class="condition-blocks">
                   <span
                     v-for="i in CONDITION_SEGMENTS"
@@ -477,12 +392,11 @@ function openRankHelp(): void {
                     :style="i <= conditionFilled ? { background: conditionColor(i) } : undefined"
                   ></span>
                 </div>
-                <span v-if="availabilityChip" class="pill avail-chip" :class="availabilityChip.tone">
-                  {{ availabilityChip.label }}
-                </span>
               </div>
               <!-- D1: one line of WHY, from real facts of the last tick (engine-licensed). -->
               <p class="condition-note">{{ conditionNote }}</p>
+              <!-- R13-3: the practice-strain warning, folded out of the removed chip. -->
+              <p v-if="strainNote" class="condition-note warn">{{ strainNote }}</p>
             </td>
           </tr>
         </tbody>
@@ -513,42 +427,18 @@ function openRankHelp(): void {
       </div>
     </section>
 
+    <!-- R13-12: the diary's compact next-tournament summary – the pill idiom the This-week
+         status block used, kept here so Home still answers "what is she building toward?".
+         The plan controls and the recap moved to the This-week tab. -->
     <section>
-      <h2>This week</h2>
-      <p class="hint" style="margin: 0 0 8px">{{ weekDates }}</p>
+      <h2>Next tournament</h2>
       <div class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">
           {{ nearestEntered.label }} · {{ nearestEntered.surface }} · {{ weekLabel(nearestEntered.week) }}
         </span>
-        <span v-else class="hint" style="margin: 0">No event – training week</span>
-        <!-- Round-8 R8-4: latest played match score of this week's tournament, once available. -->
-        <span v-if="thisWeekScore" class="this-week-score num">Latest match: {{ thisWeekScore }}</span>
-      </div>
-      <div class="option-row" style="margin-top: 10px">
-        <button
-          v-for="p in PRESET_ORDER"
-          :key="p"
-          class="option-pill"
-          :class="{ selected: activePreset === p }"
-          :disabled="game.busy"
-          @click="game.setPlan(WEEK_PLAN_PRESETS[p])"
-        >
-          {{ PRESET_LABEL[p] }}
-        </button>
-      </div>
-      <!-- R9-8: the plan reads as unbordered plain text, ONE line, with this week's
-           tournament name when one is entered (the pill frame is gone). -->
-      <p class="this-week-plan">
-        Training {{ plan.train }}% · Rest {{ plan.rest }}%<template v-if="nearestEntered">
-          · {{ nearestEntered.label }} – {{ weekLabel(nearestEntered.week) }}</template>
-      </p>
-      <div class="spend-row">
-        <span class="hint">Planned spend</span>
-        <span class="negative num">${{ spendRange[0] }}–${{ spendRange[1] }}</span>
+        <span v-else class="hint" style="margin: 0">Nothing entered yet</span>
       </div>
     </section>
-
-    <WeekRecapCard v-if="showRecap" @dismiss="dismissRecap" />
 
     <section>
       <h2>News</h2>

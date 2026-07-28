@@ -80,9 +80,16 @@ function mean(xs: number[]): number {
 // where his two real 120k careers spent $50-93k/season and died at ~W120 anyway. The band below is
 // the measured idle-year window at 750, asserted so the knob cannot drift unnoticed in either
 // direction. Burn > 0 means net burn; negative means the household saves while she does not play.
+// ⚠ MIDDLE RE-BASED (round 13, R13-1 – the owner's second ask at "400-450"; his first Diary-1
+// playtest burned the whole 25k inside one season): parentIncome 300 -> 425/wk. THE MECHANISM:
+// income is not burn, but the net-burn band is income-shaped – +$125/wk is exactly +$6,500 of
+// income over the 52 measured weeks, and the idle-year spend side did not move, so the round-7
+// [$9k, $14k] band died arithmetically the same way wealthy's did in round 12. Measured at 425
+// (same 16 seeds): mean $4,701, every-seed spread $3,142-$5,953. The band below is that measured
+// window with headroom, re-pinned so the knob cannot drift unnoticed in either direction.
 const BANDS: Record<FamilyBackground, [number, number]> = {
   working: [4_500, 7_000],
-  middle: [9_000, 14_000],
+  middle: [3_000, 6_500],
   wealthy: [-7_000, 3_000],
 }
 
@@ -126,7 +133,11 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     expect(mean(batchBurns('working'))).toBeLessThan(mean(burns))
   })
 
-  it('middle burn lands in the $9–14k band (mean and every seed)', () => {
+  it('middle burn lands in the $3-6.5k band (mean and every seed; round-13 income re-base)', () => {
+    // ⚠ RE-PINNED by R13-1 (was "$9-14k"): the middle contribution rose 300 -> 425/wk, which adds
+    // $6,500 of income across the 52 measured weeks while the spend side stayed put – so the whole
+    // distribution translated down by the income delta (measured mean $11.2k -> $4.7k). Same
+    // trade as the round-12 wealthy re-base: the round-7 band gives way to the owner's number.
     const burns = batchBurns('middle')
     const [lo, hi] = BANDS.middle
     expect(mean(burns)).toBeGreaterThanOrEqual(lo)
@@ -159,6 +170,10 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     // families without that income still order by lifestyle cost, and wealthy sitting BELOW
     // working is now the asserted design, so a future income cut cannot silently restore the old
     // chain without tripping this.
+    // R13-1 note: the middle re-base (300 -> 425/wk) narrowed the working-vs-middle gap to about
+    // $1k on this batch (sponsor-inclusive working $3.7k vs middle $4.7k) – measured, still
+    // ordered, and deterministic on these seeds. If a future middle raise flips it, that is the
+    // moment this ordering becomes an owner question, not a re-pin.
     const w = mean(batchBurns('working'))
     const m = mean(batchBurns('middle'))
     const rich = mean(batchBurns('wealthy'))

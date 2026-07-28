@@ -25,6 +25,7 @@ rather than quietly editing the earlier entry's checkbox.
 | [round-9.md](round-9.md) | 9 – owner playtest, condition/fatigue redesign round (2026-07-26) | 22 | all shipped |
 | [round-10.md](round-10.md) | 10 – owner playtest on the wave-3 build (2026-07-26) | 17 | all shipped on `r10/fix`+`r10/ui`+`r10/view`; R10-11 later reverted by R11-15 |
 | [round-11.md](round-11.md) | 11 – owner playtest, two full careers (2026-07-27) | 15 | triaged into waves A–E, nothing started (waits on the five open branches) |
+| [round-13.md](round-13.md) | 13 – owner's first Diary-1 playtest, quick pass (2026-07-28) | 8 + 2 additions | all shipped on `fix/r13-quick`; the R13-7 economy half deferred to the economy wave by design; second visit same day folded in the economy DECISIONS (recorded, docs only → `specs/economy-wave.md`) and R13-12, the nav restructure (Kid behind the header avatar, the This week tab) |
 
 Every item's checkbox and comment lives in its own file – this table is just navigation, not a
 duplicate ledger.

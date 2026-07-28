@@ -15,11 +15,20 @@ interface Step {
   placement: 'above' | 'below'
 }
 
+// R13-12 re-anchored the marks to the new nav: Home is the diary (the plan moved to the
+// This-week tab, which gets its own step), and the Kid step points at the header avatar –
+// the Kid tab is gone from the bottom bar.
 const STEPS: Step[] = [
   {
     selector: '[data-tour="home-header"]',
     title: 'Welcome',
-    text: "This is Home – your kid's card, this week's plan, and the news feed all live here.",
+    text: "This is Home – your kid's diary: her photo, how she is doing, and the news feed.",
+    placement: 'below',
+  },
+  {
+    selector: '[data-tour="kid-avatar"]',
+    title: 'Kid',
+    text: 'Tap her photo any time – her full profile lives behind it.',
     placement: 'below',
   },
   {
@@ -29,9 +38,9 @@ const STEPS: Step[] = [
     placement: 'above',
   },
   {
-    selector: '[data-tour="tab-kid"]',
-    title: 'Kid',
-    text: "The Kid tab shows her full profile.",
+    selector: '[data-tour="tab-week"]',
+    title: 'This week',
+    text: 'Set the training plan here and read the week recap after each week.',
     placement: 'above',
   },
   {
