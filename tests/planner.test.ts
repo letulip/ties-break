@@ -722,7 +722,8 @@ describe("P7b — the doctor's veto on a friendly", () => {
     const src = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
     expect(src).toMatch(/medicalBlock/)
     expect(src).toMatch(/medical\.detail/)
-    expect(src).toMatch(/:disabled="!!medical/)
+    // R12-5b: the layoff gate now stands IN FRONT of the doctor on the same button
+    expect(src).toMatch(/:disabled="!!layoff \|\| !!medical/)
     // …and it names what the week CAN still become, so the refusal is never a dead end
     expect(src).toMatch(/Vacation\s*\n?\s*tab/)
     // the guardrail's soft caution is still there for everything above the floor

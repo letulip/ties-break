@@ -13,7 +13,7 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPriceCents } from '../engine/economy'
-import { medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
+import { layoffBlock, medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekLabel, weekRange } from '../shared/dates'
 
@@ -74,16 +74,14 @@ const caution = computed<PracticeCaution>(() =>
 // says so, because a week where nothing at all is possible is the worst bug this planner has had.
 const medical = computed(() => medicalBlock(condition.value))
 
-// R12-8b: THE LAYOFF, as the snapshot tells it – an injury spans [week, week + weeksRemaining),
-// EXCLUSIVE of the return week (the engine's `layoffCovering` window, R10-17; the sheet cannot call
-// that helper – it takes the worker's WorldState – so it mirrors the inequality on snapshot facts).
-// `bookVacation` refuses these weeks ("Injured – back in N weeks."), and until now the Vacation tab
-// still offered six Book buttons that could only throw: the refusal surfaced as a raw store error
-// AFTER the confirm, or not at all. Same disable-with-reason shape as the medical veto above.
-// The PRACTICE tab's layoff gate is R12-5b (wave A) and is deliberately not wired here.
+// R12-8b + R12-5b: THE LAYOFF, through the engine's own predicate. The "sheet cannot call that
+// helper" era ended when wave A shipped `layoffBlock`, which takes exactly the snapshot facts the
+// sheet holds – so the mirror-the-inequality copy this computed used to carry is gone, and the
+// sheet, `bookPractice`'s throw and the tournament lock all share ONE window comparison
+// (`layoffCoversWeek`). Gates BOTH tabs: a friendly is a match and a laid-up week books nothing.
 const layoff = computed(() => {
   const s = game.snapshot
-  return s?.injury != null && props.week < s.week + s.injury.weeksRemaining ? s.injury : null
+  return layoffBlock({ currentWeek: s?.week ?? 0, injury: s?.injury ?? null, week: props.week })
 })
 /** The refusal's first words – the same words the tournament card's injured lock uses. */
 const layoffNote = computed(() => {
@@ -197,9 +195,13 @@ function askVacation(row: PackageRow): void {
             <span>Total</span>
             <span class="num negative">{{ formatDollars(practiceFee) }}</span>
           </div>
-          <!-- The doctor's veto outranks the guardrail: a hard block, so it replaces the warning
-               rather than stacking with it, and it points at the week's remaining options. -->
-          <p v-if="medical" class="caution-note">
+          <!-- R12-5b: the LAYOFF outranks even the doctor – availabilityStatus ranks injured above
+               medical, and the sheet keeps that order. One hard block renders at a time. -->
+          <p v-if="layoff" class="caution-note">
+            {{ layoffNote }} A friendly is still a match, so the week books nothing until she is
+            back – leave it to rest.
+          </p>
+          <p v-else-if="medical" class="caution-note">
             {{ medical.detail }} A friendly is still a match, so it is out too at condition
             {{ condition }} – try the Vacation tab, or leave the week to training.
           </p>
@@ -208,14 +210,14 @@ function askVacation(row: PackageRow): void {
             <button @click="emit('close')">Cancel</button>
             <button
               class="primary"
-              :class="{ risky: !medical && caution.level === 'caution' }"
-              :disabled="!!medical || !practiceAffordable || game.busy"
+              :class="{ risky: !layoff && !medical && caution.level === 'caution' }"
+              :disabled="!!layoff || !!medical || !practiceAffordable || game.busy"
               @click="askPractice"
             >
-              {{ medical ? 'Not cleared to play' : caution.level === 'caution' ? 'Book anyway' : 'Book the match' }}
+              {{ layoff ? 'Injured' : medical ? 'Not cleared to play' : caution.level === 'caution' ? 'Book anyway' : 'Book the match' }}
             </button>
           </div>
-          <p v-if="!medical && !practiceAffordable" class="hint" style="margin: 6px 0 0">Not enough funds</p>
+          <p v-if="!layoff && !medical && !practiceAffordable" class="hint" style="margin: 6px 0 0">Not enough funds</p>
         </template>
       </template>
 
