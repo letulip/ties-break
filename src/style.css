@@ -1292,6 +1292,23 @@ tr.milestone td {
   white-space: nowrap;
 }
 
+/* R12-12 (the owner's second ask – round-11's one-line fix was the practice row): the this-week
+   tournament plaque is TWO lines, the sentence on top and the scoreline on its own line beneath.
+   The stack owns the row's flexible width, so the watch button can never fold the score back into
+   the sentence. */
+.bracket-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bracket-score {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 tr.kid-row td {
   color: var(--accent);
   font-weight: 600;
@@ -2273,10 +2290,13 @@ tr.kid-row td {
   font-size: 13px;
 }
 
-/* Exam weeks are nobody's to plan: school owns them. */
+/* Exam weeks are nobody's to plan: school owns them. R12-1/14 (owner): they read like the
+   off-season weeks now – the same green frame and tint, mirroring .calendar-row-muted.off-season
+   above – instead of the dimmed grey that looked like a rendering accident. A NAMED family of
+   blocked weeks: December is the tour's, weeks 23-24 are school's. */
 .calendar-row-muted.exam {
-  border-color: var(--line);
-  opacity: 0.75;
+  border-color: var(--accent);
+  background: rgba(217, 242, 79, 0.04);
 }
 
 /* The rescue OFFER (spec §4b) – surfaced when she is worn out and a bookable week lies ahead. */
