@@ -7,6 +7,7 @@ import { type Rng } from '../rng'
 import type { MatchPlayer, Tour } from '../match/types'
 import { simulateMatch, fastMatchProbability } from '../match/engine'
 import { TIERS, TIER_LADDER } from './calendar'
+import { ECONOMY } from '../economy'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './types'
 
 // Junior events run under WTA-average scoring (the project is WTA-first). Fixed so
@@ -74,6 +75,10 @@ export function selectEntrants(
   cohort: AiPlayer[],
   ranking: RankingRow[],
   rng: Rng,
+  /** every cohort player's condition this week (`rivalConditions`). A player absent from it has no
+   *  results in the fatigue window and is fresh. Optional so the bench and the older tests can call
+   *  this without one - and when it is absent, nobody is gated, which is the pre-gate behaviour. */
+  conditions?: ReadonlyMap<string, number>,
 ): AiPlayer[] {
   const total = ranking.length || cohort.length
   const posOf = new Map<string, number>()
@@ -93,18 +98,57 @@ export function selectEntrants(
     return { p, pos, key: pos + rng() * jitter }
   })
   keyed.sort((a, b) => a.key - b.key)
-  let chosen = keyed.slice(0, drawSize)
 
-  // Defensive: if the band is thinner than the draw (not expected for the live
-  // tiers), backfill with the nearest-positioned players outside the band.
+  // THE AVAILABILITY GATE, and it is the KID's gate applied to everybody (28.07, the owner).
+  //
+  // She has never been allowed to enter a tier below its condition floor; the cohort had no such
+  // rule, so a rival wrecked to 0 turned up in a draw exactly as readily as a fresh one. The
+  // measurement that produced this, by a player's home band over 6 careers x 120 weeks:
+  //
+  //   band     runs/wk  strain/wk  net/wk   median condition  weeks at or below 5
+  //   local     0.00      0.00      +1.00        100                 0%
+  //   regional  0.00      0.00      +1.00        100                 0%
+  //   national  0.00      0.00      +1.00        100                 0%
+  //   j30       0.19      0.92      -0.11         95                 0%
+  //   j60       0.26      2.79      -2.06         73                 6%
+  //   j300      0.64      7.58      -7.22         10                42%
+  //
+  // The elite played 0.64 events a week and took 7.58 strain against a recovery capped at 1 per
+  // QUIET week: minus seven, every week, forever. One run cost about twelve idle weeks to repay,
+  // so the top of the table lived at condition 10 and spent two weeks in five pinned at the floor.
+  // Meanwhile the three lower bands played NOTHING - the field was an exhausted elite and a crowd
+  // of extras. The fatigue model was working perfectly and changing nothing, because nothing ever
+  // read it.
+  //
+  // Now a tired rival sits the week out, recovers, and comes back - and the draw she vacated goes
+  // to the next echelon down, which is what makes the rest of the cohort play at all.
+  //
+  // THE DRAW COUNT IS UNTOUCHED, which is the constraint that matters: the gate is applied AFTER
+  // every candidate's key has been drawn, never before, so `selectEntrants` still takes exactly one
+  // number per band candidate. The event's sub-stream stays aligned across replays, and nothing on
+  // the MAIN weekly stream moves.
+  const floor = ECONOMY.availability.minConditionToEnter[event.tier]
+  const fit = (id: string) => (conditions?.get(id) ?? ECONOMY.condition.max) >= floor
+  let chosen = keyed.filter((c) => fit(c.p.id)).slice(0, drawSize)
+
+  // Short of a full draw: reach OUTSIDE the band for the nearest-positioned players who are fit.
+  // This is the same defensive backfill the thin-band case always had, and it is also the path that
+  // lets a wrecked elite hand its slots to the tier below.
   if (chosen.length < drawSize) {
     const have = new Set(chosen.map((c) => c.p.id))
     const fill = cohort
-      .filter((p) => !have.has(p.id))
+      .filter((p) => !have.has(p.id) && fit(p.id))
       .map((p) => ({ p, pos: posOf.get(p.id) ?? total - 1, key: 0 }))
       .sort((a, b) => a.pos - b.pos)
       .slice(0, drawSize - chosen.length)
     chosen = chosen.concat(fill)
+  }
+
+  // Last resort: a draw must be filled, so if the whole cohort is under the floor the tired ones
+  // play after all - in key order, so the same players are not always the ones dragged in.
+  if (chosen.length < drawSize) {
+    const have = new Set(chosen.map((c) => c.p.id))
+    chosen = chosen.concat(keyed.filter((c) => !have.has(c.p.id)).slice(0, drawSize - chosen.length))
   }
 
   // Seed order = ascending standings position (best first).

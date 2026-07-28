@@ -1875,7 +1875,7 @@ function computeShadowTournament(
   // and the run's every round shares this ONE build. Fractional skills are fine for the match engine.
   const kid = kidMatchPlayerFor(world, event.surface)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
-  const field = rivalField(selectEntrants(event, world.cohort, ranking, kidRng), event, fatigue)
+  const field = rivalField(selectEntrants(event, world.cohort, ranking, kidRng, fatigue), event, fatigue)
   const result = runTournament(event, field, kid, world.seed, kidRng)
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
@@ -2090,7 +2090,7 @@ function runAiTournament(
   fatigue: Map<string, number>,
 ): void {
   const aiRng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
-  const field = rivalField(selectEntrants(event, world.cohort, aiRanking, aiRng), event, fatigue)
+  const field = rivalField(selectEntrants(event, world.cohort, aiRanking, aiRng, fatigue), event, fatigue)
   const result = runTournament(event, field, null, world.seed, aiRng)
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {

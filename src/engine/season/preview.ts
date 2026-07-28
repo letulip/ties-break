@@ -19,6 +19,12 @@
 // and lost. That makes this an estimate about a field she would meet if it started now, which is
 // the information the PLAYER has when deciding whether to enter. Never a prophecy.
 //
+// WHO TURNS UP AND HOW STRONG THEY ARE ARE TWO QUESTIONS, and the preview answers them from two
+// different places. The bracket now gates entry on condition exactly as the kid is gated (a wrecked
+// rival sits the week out), so WHO is in the draw depends on today's fatigue - and the preview must
+// use it, or it would name an opponent who will not be there. HOW STRONG they are is the next
+// paragraph: rested, always.
+//
 // THE FIELD IS PREVIEWED RESTED, and that is a correction, not a simplification. The first version
 // scaled every opponent by her condition TODAY, which sounded more truthful and was much less so:
 // measured over 10 careers at week 40, the elite band's median condition is 10 out of 100 and it is
@@ -38,7 +44,7 @@ import { ECONOMY } from '../economy'
 import { fastMatchProbability } from '../match/engine'
 import type { MatchPlayer } from '../match/types'
 import { TIERS } from './calendar'
-import { rivalMatchPlayer } from './rival'
+import { rivalConditions, rivalMatchPlayer } from './rival'
 import {
   JUNIOR_TOUR,
   drawKidInto,
@@ -47,6 +53,7 @@ import {
   standardSeedOrder,
 } from './tournament'
 import type { AiPlayer, RankingRow, SeasonEvent } from './types'
+import type { SeasonResult } from './ranking'
 
 /** How the field she would meet compares with her. Three bands, because a card has room for one
  *  short clause and the player only needs to know which way to lean. */
@@ -71,12 +78,14 @@ function drawnField(
   event: SeasonEvent,
   cohort: AiPlayer[],
   ranking: RankingRow[],
+  conditions: ReadonlyMap<string, number>,
   kid: MatchPlayer,
   seed: string,
 ): MatchPlayer[] {
   const rng = rngFromSeed(`${seed}:kidtour:${event.id}`)
-  // Full condition on purpose - see the note at the top of this file.
-  const entrants = selectEntrants(event, cohort, ranking, rng).map((p) =>
+  // `conditions` decides WHO is drawn (the same availability gate the bracket applies); the max
+  // below decides how strong they are. See the two notes at the top of this file.
+  const entrants = selectEntrants(event, cohort, ranking, rng, conditions).map((p) =>
     rivalMatchPlayer(p, event.surface, ECONOMY.condition.max),
   )
   const drawSize = TIERS[event.tier].drawSize
@@ -116,13 +125,22 @@ export function eventTemperature(seed: string, event: SeasonEvent): number {
 export function previewEvent(
   world: {
     seed: string
+    week: number
     cohort: AiPlayer[]
+    results: SeasonResult[]
   },
   event: SeasonEvent,
   ranking: RankingRow[],
   kid: MatchPlayer,
 ): EventPreview {
-  const alive = drawnField(event, world.cohort, ranking, kid, world.seed)
+  const alive = drawnField(
+    event,
+    world.cohort,
+    ranking,
+    rivalConditions(world.results, world.week),
+    kid,
+    world.seed,
+  )
   const opp = firstRoundOpponent(alive, kid)
   const posOf = new Map<string, number>()
   ranking.forEach((r, i) => posOf.set(r.playerId, i))

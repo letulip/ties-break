@@ -54,12 +54,14 @@ describe('the preview names the opponent the bracket actually produces', () => {
       const preview = previewEvent(world, event, ranking, kid)
 
       // Now play it for real, exactly as computeShadowTournament does.
-      // The bracket scales opponents by their REAL fatigue; the preview scales them rested (see
-      // preview.ts). That changes how strong they are, never WHO they are - `selectEntrants` reads
-      // the standings, not conditions - so the identity check below still bites.
+      // Built exactly as computeShadowTournament does, GATE INCLUDED: `selectEntrants` now takes
+      // the fatigue map, because a rival under her tier's floor sits the week out. The preview must
+      // pass the same map or it would name an opponent who is not in the draw - which is precisely
+      // what this test exists to catch. (It scales them rested; that changes strength, never
+      // identity.)
       const fatigue = rivalConditions(world.results, world.week)
       const rng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
-      const field = selectEntrants(event, world.cohort, ranking, rng).map((p) =>
+      const field = selectEntrants(event, world.cohort, ranking, rng, fatigue).map((p) =>
         rivalMatchPlayer(p, event.surface, fatigue.get(p.id) ?? ECONOMY.condition.max),
       )
       const result = runTournament(event, field, kid, world.seed, rng)
@@ -75,9 +77,13 @@ describe('the preview names the opponent the bracket actually produces', () => {
     const { world, ranking, event, kid } = fixture('pv-formula')
     const preview = previewEvent(world, event, ranking, kid)
     const rng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
-    const entrants = selectEntrants(event, world.cohort, ranking, rng).map((p) =>
-      rivalMatchPlayer(p, event.surface, ECONOMY.condition.max),
-    )
+    const entrants = selectEntrants(
+      event,
+      world.cohort,
+      ranking,
+      rng,
+      rivalConditions(world.results, world.week),
+    ).map((p) => rivalMatchPlayer(p, event.surface, ECONOMY.condition.max))
     const drawSize = TIERS[event.tier].drawSize
     const f: MatchPlayer[] = entrants.slice(0, drawSize - 1)
     f.push(kid)
@@ -125,12 +131,17 @@ describe('the preview is stable, and free', () => {
     // The correction that produced this rule: previewing at today's condition read 81% for a J30
     // event eight weeks out, against a field whose median condition that day was 3 out of 100. The
     // same draw rested reads 52%. So the module must not consult the fatigue map at all.
+    // ⚠ TIGHTENED, not loosened, by the rival availability gate (28.07). The module DOES read the
+    // fatigue map now - it has to, because a rival under her tier's floor no longer enters and the
+    // preview would otherwise name someone who is not in the draw. What must never happen is
+    // fatigue reaching the STRENGTH of the players, and that is what is pinned: the only place a
+    // condition is handed to `rivalMatchPlayer` is the constant maximum.
     const src = read('../src/engine/season/preview.ts')
-    expect(src).not.toContain('rivalConditions')
     expect(src).toContain('rivalMatchPlayer(p, event.surface, ECONOMY.condition.max)')
-    // ...and its input type cannot even reach the results ledger the fatigue is derived from.
-    const sig = src.slice(src.indexOf('export function previewEvent'), src.indexOf('): EventPreview'))
-    expect(sig).not.toContain('results')
+    expect(src.match(/rivalMatchPlayer\(/g) ?? []).toHaveLength(1)
+    expect(src).not.toMatch(/rivalMatchPlayer\([^)]*conditions/)
+    // ...and the fatigue map only ever reaches the entrant SELECTION.
+    expect(src).toContain('selectEntrants(event, cohort, ranking, rng, conditions)')
   })
 
   it('draws ONLY on purpose-scoped sub-streams – the frozen capture cannot move', () => {
