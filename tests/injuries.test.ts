@@ -1002,7 +1002,9 @@ describe('UI wiring', () => {
   it('HomeScreen binds the injured chip to snapshot.injury kind + return week', () => {
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
     expect(src).toContain('injury.kind')
-    expect(src).toMatch(/back wk/)
+    // round-12 follow-up: the chip's return week goes through weekLabel() now ("back W18 '32"),
+    // so the pin asserts the FORMATTER is bound, not the old hand-rolled "back wk <absolute>".
+    expect(src).toMatch(/back \$\{weekLabel\(/)
     // R9-5 (re-pinned deliberately): the physio toggle + retainer cost moved to MoneyScreen's
     // Budget section – a spending decision lives with the money.
     const money = readFileSync(new URL('../src/components/screens/MoneyScreen.vue', import.meta.url), 'utf8')
