@@ -83,6 +83,12 @@ export const TIERS: Record<TierId, TierDef> = {
     // takes it to 6/season – a modest bump that keeps the tier prestigious while giving the
     // 150-180 point window a real bridge into the J ladder.
     secondHalfBonus: 2,
+    // R12-6 (owner playtest 27.07: "two Nationals on adjacent weeks, twice in one season, including
+    // the last two weeks"). The R9-20 extras above are spread across the second half by their OWN
+    // even placement, blind to where the 13-week base cadence already put one – so the two could
+    // land side by side. A National is a week the family plans around and cannot play twice in a
+    // row; 2 means never consecutive. Trivially satisfiable at 6 events over 49 placeable weeks.
+    minGapWeeks: 2,
     // Opens at 150 pts; never graduates (sentinel maxPoints keeps the top of the ladder always open).
     enterPointBand: [150, Number.MAX_SAFE_INTEGER],
     // The domestic elite is a mid-table field once the real prospects are away on the J tour.
@@ -132,6 +138,10 @@ export const TIERS: Record<TierId, TierDef> = {
     points: [1000, 600, 350, 175, 75, 0],
     // Rare by design: four a year, so each one is an event the family plans a season around.
     everyNWeeks: 13,
+    // R12-6: same rule as national, for the same reason and with even more room (4 events). The two
+    // DENSE entry rungs – j30 (every 2 weeks) and j60 (every 3) – deliberately get NO gap: they are
+    // dense by design, and 26 j30s cannot fit in 49 weeks at 2 apart anyway.
+    minGapWeeks: 2,
     minAgeYears: 13,
     // 900 ≈ a J60 title plus a deep second run – the point at which she is one of the field's best.
     enterPointBand: [900, Number.MAX_SAFE_INTEGER],
@@ -283,23 +293,52 @@ function pickSurface(rng: Rng, week: number): Surface {
 }
 
 // Claim the free week nearest `target`, searching outward (forward first) within
-// [lo, hi]. `used` is PER TIER (plus the shared off-season reservation), so different tiers may
-// share a week – see buildSeason – while a tier never runs two events in the same one. The
-// densest tier claims floor(weeks/2) slots out of `weeks - OFF_SEASON_WEEKS`, so a free slot
-// always exists.
-function claimWeek(used: Set<number>, target: number, lo: number, hi: number): number {
+// [lo, hi]. `reserved` is the shared off-season block (no tier may schedule into it); `claimed` is
+// THIS TIER's own weeks, so different tiers may share a week – see buildSeason – while a tier never
+// runs two events in the same one. The densest tier claims floor(weeks/2) slots out of
+// `weeks - OFF_SEASON_WEEKS`, so a free slot always exists.
+//
+// R12-6: `minGap` additionally keeps a tier's events APART – a week is only claimable if no event
+// of the same tier sits within `minGap - 1` weeks of it. It applies to `claimed` ONLY, never to
+// `reserved`: the off-season is a hard exclusion, and spreading the gap over its edges would push
+// every tier's December placement around for no reason.
+//
+// The two sets used to be one, which is what makes this a split rather than an extra parameter: a
+// gap measured against a set that already contained the off-season would have measured the wrong
+// thing.
+//
+// TOTAL BY CONSTRUCTION. If no week in the span satisfies the gap, the search RETRIES at gap 1 –
+// a calendar that cannot honour the constraint must still be built (the old "no free week" throw
+// stays as the genuine over-subscription case). Only the sparse rungs carry a gap today, with 4-6
+// events over 49 placeable weeks, so the retry is unreachable at the shipped numbers; it exists so
+// that raising a cadence can never turn a tuning change into a crash.
+function claimWeek(
+  reserved: Set<number>,
+  claimed: Set<number>,
+  target: number,
+  lo: number,
+  hi: number,
+  minGap = 1,
+): number {
   const start = Math.min(Math.max(target, lo), hi)
-  for (let d = 0; d <= hi - lo; d++) {
-    const up = start + d
-    if (up <= hi && !used.has(up)) {
-      used.add(up)
-      return up
-    }
-    if (d > 0) {
-      const down = start - d
-      if (down >= lo && !used.has(down)) {
-        used.add(down)
-        return down
+  const free = (w: number, gap: number): boolean => {
+    if (reserved.has(w) || claimed.has(w)) return false
+    for (let d = 1; d < gap; d++) if (claimed.has(w - d) || claimed.has(w + d)) return false
+    return true
+  }
+  for (const gap of minGap > 1 ? [minGap, 1] : [1]) {
+    for (let d = 0; d <= hi - lo; d++) {
+      const up = start + d
+      if (up <= hi && free(up, gap)) {
+        claimed.add(up)
+        return up
+      }
+      if (d > 0) {
+        const down = start - d
+        if (down >= lo && free(down, gap)) {
+          claimed.add(down)
+          return down
+        }
       }
     }
   }
@@ -398,22 +437,28 @@ export function buildSeason(
     const def = TIERS[tier]
     const cadence = def.everyNWeeks
     if (cadence === 0) continue
-    const used = new Set<number>(offSeason)
+    // R12-6: the tier's OWN weeks, kept apart from the shared off-season reservation so the min gap
+    // is measured against events, never against December (see claimWeek).
+    const claimed = new Set<number>()
+    const minGap = def.minGapWeeks ?? 1
     const phase = tierPhase(tier)
     const count = Math.floor(weeks / cadence)
     for (let i = 0; i < count; i++) {
       const target = idealWeek(fromWeek, weeks, i, count, phase)
-      const week = claimWeek(used, target, lo, hi)
+      const week = claimWeek(offSeason, claimed, target, lo, hi, minGap)
       events.push(makeEvent(seedStr, week, tier, rng, background))
     }
     // R9-20: the extra events a tier gets in the season's SECOND half only (national densification).
+    // These are the ones R12-6 is about: they are spread across the half by their own even
+    // placement, so without the gap they could land right beside a base-cadence event – and
+    // `claimed` now carries every base week, so the gap is enforced against all of them.
     const bonus = def.secondHalfBonus ?? 0
     if (bonus > 0) {
       const halfFrom = fromWeek + Math.floor(weeks / 2)
       const halfWeeks = weeks - Math.floor(weeks / 2)
       for (let i = 0; i < bonus; i++) {
         const target = idealWeek(halfFrom, halfWeeks, i, bonus, phase)
-        const week = claimWeek(used, target, Math.max(lo, halfFrom), hi)
+        const week = claimWeek(offSeason, claimed, target, Math.max(lo, halfFrom), hi, minGap)
         events.push(makeEvent(seedStr, week, tier, rng, background))
       }
     }

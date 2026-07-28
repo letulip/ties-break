@@ -29,7 +29,7 @@ import {
 import { avatarEmotion } from '../src/shared/avatarEmotion'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
-import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { buildSeason, isOffSeasonWeek, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { STOP_PRECEDENCE, type LossStreak } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -607,5 +607,74 @@ describe('R12-5b — practice offered during a layoff', () => {
     world.injury = { kind: 'knee strain', severity: 'moderate', weeksRemaining: 5, totalWeeks: 5, sinceWeek: 10 }
     world.fundsCents = 1_000_000_00
     expect(() => bookPractice(world, 12, false)).toThrow(/Injured/)
+  })
+})
+
+// ---------------------------------------------------------------------------------------------
+// R12-6 lands in its OWN commit: it moves the calendar, and the calendar is what the frozen
+// MAIN-stream capture's derived `kidRank` is read off. See the commit message for the re-pin.
+describe('R12-6 — same-tier events never on adjacent weeks (national and above)', () => {
+  const GAPPED: TierId[] = ['national', 'j300']
+  const DENSE: TierId[] = ['local', 'regional', 'j30', 'j60']
+
+  /** Every week a tier occupies in one generated season block, ascending. */
+  function weeksOf(events: SeasonEvent[], tier: TierId): number[] {
+    return events.filter((e) => e.tier === tier).map((e) => e.week).sort((a, b) => a - b)
+  }
+
+  it('THE BUG: two Nationals could land on consecutive weeks – now they never do', () => {
+    // Swept wide, because the owner saw it twice in ONE season: a handful of seeds would not have
+    // caught it, and a handful would not prove it gone either.
+    let checked = 0
+    for (let block = 0; block < 40; block++) {
+      const events = buildSeason(`r12-6-sweep:s${block}`, block * 52, 52)
+      for (const tier of GAPPED) {
+        const weeks = weeksOf(events, tier)
+        expect(weeks.length, `${tier} block ${block}`).toBeGreaterThan(0)
+        for (let i = 1; i < weeks.length; i++) {
+          expect(weeks[i] - weeks[i - 1], `${tier} block ${block}: W${weeks[i - 1]} and W${weeks[i]}`)
+            .toBeGreaterThanOrEqual(TIERS[tier].minGapWeeks!)
+        }
+        checked++
+      }
+    }
+    expect(checked).toBe(80)
+  })
+
+  it('THE R9-20 EXTRAS are what needed it – the count is untouched, only the placement', () => {
+    // The fix must not cost her the two extra Nationals R9-20 added: 52/13 = 4 base + 2 bonus.
+    for (let block = 0; block < 20; block++) {
+      const events = buildSeason(`r12-6-count:s${block}`, block * 52, 52)
+      expect(weeksOf(events, 'national')).toHaveLength(6)
+      expect(weeksOf(events, 'j300')).toHaveLength(4)
+    }
+  })
+
+  it('THE DENSE ENTRY RUNGS ARE UNTOUCHED – they are dense by design', () => {
+    // j30 every 2 weeks is 26 events over 49 placeable weeks; a gap of 2 could not fit and should
+    // not be wanted. The knob is deliberately absent on all four, and adjacency still happens there.
+    for (const tier of DENSE) expect(TIERS[tier].minGapWeeks).toBeUndefined()
+    let sawAdjacent = false
+    for (let block = 0; block < 10 && !sawAdjacent; block++) {
+      const weeks = weeksOf(buildSeason(`r12-6-dense:s${block}`, block * 52, 52), 'j30')
+      for (let i = 1; i < weeks.length; i++) if (weeks[i] - weeks[i - 1] === 1) sawAdjacent = true
+    }
+    expect(sawAdjacent, 'the dense tiers lost their density – the gap leaked past its knob').toBe(true)
+  })
+
+  it('the off-season stays event-free, and the gap did not eat into it', () => {
+    for (let block = 0; block < 20; block++) {
+      for (const e of buildSeason(`r12-6-off:s${block}`, block * 52, 52)) {
+        expect(isOffSeasonWeek(e.week), `${e.tier} W${e.week}`).toBe(false)
+      }
+    }
+  })
+
+  it('still deterministic, and still one event per tier per week', () => {
+    const a = buildSeason('r12-6-det', 0, 52)
+    const b = buildSeason('r12-6-det', 0, 52)
+    expect(a).toEqual(b)
+    const byTierWeek = new Set(a.map((e) => `${e.tier}@${e.week}`))
+    expect(byTierWeek.size).toBe(a.length)
   })
 })
