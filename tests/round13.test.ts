@@ -229,9 +229,15 @@ describe('R13-8 — a paused tournament owns the primary button', () => {
     expect(app).toContain('tournamentHidden.value = false')
   })
 
-  it('the resume banner leaves Home (the primary button owns resume there) but survives elsewhere', () => {
-    expect(app).toMatch(/pending && tournamentHidden && tab !== 'home'/)
-    expect(app).toContain('Resume') // the off-Home affordance stays – no tab can strand the career
+  it('the resume banner is GONE everywhere – the global bar owns resume on every tab', () => {
+    // ⚠ RE-AIMED by R13-12 (28.07). As first shipped, R13-8 dropped the banner on Home only
+    // (the bar was Home-only, so off Home the banner was the sole resume control). R13-12 made
+    // the bar global, which extends R13-8's own argument – "the banner duplicates the primary
+    // button" – to every tab: the banner is deleted outright, and the R9-9a "no tab can strand
+    // the career" property rides on the un-gated bar (pinned in tests/round9.test.ts).
+    expect(app).not.toContain('tournament-paused')
+    expect(app).not.toMatch(/tab !== 'home'/)
+    expect(app).toContain('<div class="next-week-bar">') // no v-if – every tab has the button
   })
 })
 

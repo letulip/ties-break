@@ -99,3 +99,65 @@ deliberately NOT this branch; it goes to the economy wave.
   (bench at 425/wk: 8/30 to age 16, 0/30 to age 18). Known shape — economy wave.
 - `skipEvent`'s recovery under-pay note (world.ts, pre-existing) still stands — tuning call, not a
   merge call.
+
+---
+
+## Folded into the same branch after the first pass (28.07, second visit)
+
+### The economy decisions, recorded (docs only — nothing here touches code)
+
+The owner settled the coach-affordability question the first pass kept deferring. The decisions
+live in [../specs/economy-wave.md](../specs/economy-wave.md) so the future wave starts from
+decisions, not questions; the short form:
+
+1. **The coach becomes a CHOICE of tiers** — different cost AND different effectiveness (the
+   long-planned coach-as-choice slice, design detail in `docs/backlog/season-life-future.md` §1).
+2. **Club/federation help + relatives' help come to 25k too** — but LESS aggressive than the 8k
+   valves.
+3. Together with what already shipped — middle income 425 (R13-1) and the +5–10%/season
+   compounding growth (round 12) — the owner expects the 25k hired-coach 0/30 to resolve. **The
+   wave's job is to MEASURE that stack, not re-decide it.**
+4. Open observation for the wave's bench (variance/balance, NOT for now): an 8k self-coached
+   career steamrolled (43-8 at 14) while another profile with coaches and freshness did not.
+5. The economy wave is **not next** — the owner's next wave is an INTERFACE wave from his own
+   drafts.
+
+### R13-12 — the navigation restructure (the owner's design, agreed)
+
+- [x] **New bottom nav: `Home · Season · This week · Stats · More`.** The owner's #12, his
+  design. What moved:
+  - **Kid left the bottom bar.** The Kid screen opens by tapping the HEADER AVATAR (previously
+    static chrome — it stays the age-only `norm` crop, F45-1 untouched; only tappability was
+    added). A one-time callout under the avatar ("Tap the photo – her page lives here") makes the
+    screen discoverable; it dismisses on the first avatar tap and the dismissal persists in
+    localStorage (`tb:kidAvatarHintSeen`, the same device-scoped mechanism as the tour) — NOT in
+    the save.
+  - **The new "This week" tab** (`src/components/screens/ThisWeekScreen.vue`) took the This-week
+    block (status + plan preset pills + planned spend) and the WeekRecapCard from Home, as its
+    own sections with room for the wave's future controls (coach settings etc.). The R9-18
+    module-scope recap dismissal moved with the card. The tab's nav item shows an accent dot
+    while a FRESH recap is unseen: the rule is the shared pure pair in
+    `src/composables/weekRecap.ts` (`recapExists` — the same predicate the screen renders the
+    card by; `thisWeekDotShows` — exists AND the tab not visited since the week resolved), seen
+    watermark per career in localStorage (`tb:lastSeenThisWeek:{careerId}`, the R9-21b news
+    pattern).
+  - **Home became the diary page**: photo card, name/phrase, condition + note, season strip,
+    a compact "Next tournament" summary (the nearest entered event — the one Home piece the
+    This-week block used to carry for the diary), news, Memory. Nothing that stayed was rebuilt.
+  - **The advance bar went GLOBAL**: the sticky Next-week bar renders on every tab now, not just
+    Home — and therefore the paused-tournament resume banner is GONE entirely: the R13-8
+    argument ("the banner only duplicated the primary button") now holds on every tab, and the
+    R9-9a guarantee ("no tab can strand the career") is carried by the bar itself, whose primary
+    button re-opens a pending overlay from anywhere (`playWeek`).
+  - **Coach marks re-anchored** (OnboardingTour): the Kid step points at the header avatar
+    (`[data-tour="kid-avatar"]`), a new step points at `[data-tour="tab-week"]`, and the Welcome
+    step stopped promising "this week's plan" on Home.
+  - Pins re-aimed, old → new (each names R13-12 at the spot): round9 R9-9a resume-banner pin →
+    the global bar + `playWeek` re-open; round9 R9-8 `this-week-plan` and R9-18 recap-dismissal
+    pins → ThisWeekScreen.vue; round9 R9-16 Kid-tab glyph pin → retired with the tab (the aging
+    surface is the header avatar via `portraitStage`, already pinned by round11-followups);
+    round13 R13-8 "banner survives elsewhere" pin → "the banner is gone, the bar is the resume
+    affordance everywhere"; week-numbering `WEEK_PRINTING_FILES` gained ThisWeekScreen.vue.
+  - New pins in `tests/round13-nav.test.ts`: the five labels, Kid reachable only via the avatar,
+    the hint mechanics, the dot rule (unit, on the pure pair), the advance bar in the App shell
+    and in no tab screen.

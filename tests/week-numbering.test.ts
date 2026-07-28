@@ -167,6 +167,8 @@ const WEEK_PRINTING_FILES = [
   'components/screens/MoneyScreen.vue',
   'components/screens/MoreScreen.vue',
   'components/screens/SeasonScreen.vue',
+  // R13-12: the This-week tab prints the week range and the entered event's week.
+  'components/screens/ThisWeekScreen.vue',
 ]
 
 /** Interpolations that mention a week but do NOT print one. Explicit, with the reason. */

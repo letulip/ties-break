@@ -526,10 +526,17 @@ describe('R9-9/R9-21a — UI wiring', () => {
     expect(src).toContain('ConfirmDialog')
   })
 
-  it('App.vue can hide the flow (Back) and offers a Resume affordance while the week is paused', () => {
+  it('App.vue can hide the flow (Back) and the paused week can be resumed from ANY tab', () => {
+    // ⚠ RE-AIMED by R13-12 (28.07). The resume affordance used to be a banner (plus, since
+    // R13-8, the Home bar's primary button). R13-12 made the sticky Next-week bar GLOBAL and
+    // dropped the banner: the bar's primary button (playWeek re-opens a pending overlay – the
+    // R13-8 wiring) is now the one resume control, present on every tab because the bar carries
+    // no tab gate. The R9-9a property this pin exists for – no tab can strand the career –
+    // is unchanged; only the surface that guarantees it moved.
     const src = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
     expect(src).toContain('tournamentHidden')
-    expect(src).toContain('Resume')
+    expect(src).toContain('<div class="next-week-bar">') // no v-if – the bar is on every tab
+    expect(src).toContain('tournamentHidden.value = false') // the re-open path playWeek takes
   })
 
   it('the injury stop is a blocking popup with kind/weeks/withdrawals and an alert sfx — not a toast', () => {
@@ -574,10 +581,13 @@ describe('pt4 — UI wiring', () => {
     expect(css).toContain('.season-topbar h2')
   })
 
-  it('R9-8: the Home plan line is unbordered plain text with the tournament name', () => {
-    const home = read('../src/components/screens/HomeScreen.vue')
-    expect(home).toContain('this-week-plan')
-    expect(home).not.toContain('<span class="pill">Training')
+  it('R9-8: the plan line is unbordered plain text with the tournament name', () => {
+    // ⚠ RE-AIMED by R13-12 (28.07): the This-week block left Home for its own tab
+    // (screens/ThisWeekScreen.vue). The property is the block's, not the screen's – it moved
+    // with the block, wording and all.
+    const src = read('../src/components/screens/ThisWeekScreen.vue')
+    expect(src).toContain('this-week-plan')
+    expect(src).not.toContain('<span class="pill">Training')
   })
 
   // PIN MOVED by F45-1 (27.07): the header crop left this set. R9-13/15's point – the surfaces that
@@ -591,10 +601,13 @@ describe('pt4 — UI wiring', () => {
   })
 
   it('R9-18: the recap dismissal survives remounts (module scope) and the rule is documented', () => {
-    const home = read('../src/components/screens/HomeScreen.vue')
-    expect(home).toContain('dismissedRecapKey')
-    expect(home).toMatch(/<script lang="ts">/) // the plain (module-scope) block exists
-    expect(home).toContain('THE RULE')
+    // ⚠ RE-AIMED by R13-12 (28.07): the WeekRecapCard moved to the This-week tab, and the
+    // module-scope dismissal – the whole point of R9-18 – moved WITH it (the new screen
+    // re-mounts on tab switches exactly like Home did).
+    const screen = read('../src/components/screens/ThisWeekScreen.vue')
+    expect(screen).toContain('dismissedRecapKey')
+    expect(screen).toMatch(/<script lang="ts">/) // the plain (module-scope) block exists
+    expect(screen).toContain('THE RULE')
   })
 
   it('R9-21b: the Home tab carries an unread-news dot and a soft cue on arrival', () => {
@@ -664,9 +677,14 @@ describe('pt5 — R9-16 portrait stages by age', () => {
     const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
     expect(read('../src/composables/kidEmotion.ts')).toContain('portraitStage')
     expect(read('../src/components/TournamentFlow.vue')).toContain('kidStage')
-    // the Kid tab glyph grows up at 18 (owner icon pair; man.svg reserved for the boys' tour)
+    // ⚠ RE-AIMED by R13-12 (28.07): the Kid TAB left the bottom bar (the header avatar opens
+    // the screen now), so the R9-16 "tab glyph grows up at 18" wiring went with it – its subject
+    // no longer exists. What SURVIVES of R9-16: the surface that opens the Kid screen still ages
+    // with her (the header avatar resolves through portraitStage – pinned by
+    // tests/round11-followups.test.ts F45-1), and the owner's icon pairs stay on disk, reserved
+    // (woman/man for the future tours, like kid-boy).
     const app = read('../src/App.vue')
-    expect(app).toContain("'woman' : 'kid-girl'")
+    expect(app).not.toContain("'kid-girl'") // no Kid tab entry survives in the shell
     expect(existsSync(new URL('../public/icons/woman.svg', import.meta.url))).toBe(true)
     expect(existsSync(new URL('../public/icons/man.svg', import.meta.url))).toBe(true)
     // onboarding's "first time on court" frame stays jun BY DESIGN (narrative flashback)

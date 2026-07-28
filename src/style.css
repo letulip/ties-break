@@ -371,6 +371,51 @@ select {
   border-radius: 50%;
   object-fit: cover;
   border: 1.5px solid var(--accent);
+  display: block;
+}
+
+/* R13-12: the avatar is a BUTTON now (it opens the Kid screen – the tab left the bottom bar).
+   Strip the default button chrome so the header looks exactly as before, keep the round hit
+   area, and let the ring do the hover talk. */
+.avatar-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  border-radius: 50%;
+  line-height: 0;
+}
+
+.avatar-btn:hover:not(:disabled) .avatar {
+  border-color: var(--text);
+}
+
+/* R13-12: the one-time discoverability callout under the avatar. Anchored to the sticky header
+   (position: sticky establishes the containing block), accent-framed like the coach tooltips. */
+.kid-hint {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 8px;
+  z-index: 42;
+  background: var(--panel);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text);
+  box-shadow: 0 10px 24px -10px rgba(6, 10, 20, 0.8);
+}
+
+.kid-hint::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 14px;
+  width: 8px;
+  height: 8px;
+  background: var(--panel);
+  border-left: 1px solid var(--accent);
+  border-top: 1px solid var(--accent);
+  transform: rotate(45deg);
 }
 
 .kid-name {
@@ -476,6 +521,8 @@ select {
 .tab-label {
   font-size: 10px;
   letter-spacing: 0.02em;
+  /* R13-12: "This week" is the longest label the bar has carried – one line, always. */
+  white-space: nowrap;
 }
 
 /* --- Round-6 item 2: splash screen -------------------------------------------- */
