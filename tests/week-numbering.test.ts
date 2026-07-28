@@ -185,9 +185,12 @@ describe('R11-6 guard – no surface prints a raw absolute week', () => {
   })
 
   it('no view file hand-rolls a "W<week>" label', () => {
-    // `W${...}` in a script string, `W{{ ... }}` in a template, and the spelled-out
-    // "week {{ ... }}" – the three shapes this app had before the sweep.
-    const offenders = CONSUMERS.filter((f) => /W\$\{|W\{\{|\bweek \{\{/.test(read(f)))
+    // `W${...}` in a script string, `W{{ ... }}` in a template, the spelled-out "week {{ ... }}",
+    // AND `wk ${...}` – the fourth shape slipped through the original sweep unseen: the injury
+    // surfaces wrote "back wk 70" and this guard's three patterns matched none of them, so the
+    // owner met a raw absolute week in his very next playtest (round 12). A guard that enumerates
+    // spellings is only as good as its enumeration – hence the widest net that stays cheap.
+    const offenders = CONSUMERS.filter((f) => /W\$\{|W\{\{|\bweek \{\{|\bwk \$\{|\bwk \{\{/.test(read(f)))
     expect(offenders).toEqual([])
   })
 

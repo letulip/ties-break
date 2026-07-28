@@ -130,8 +130,10 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
   })
 
   it('the chip explains itself with the tournament lock\'s own words', () => {
-    expect(seasonScreen).toContain('`Injured – back wk ${s.week + s.injury.weeksRemaining}`')
-    expect(planSheet).toContain('`Injured – back wk ${s.week + s.injury.weeksRemaining}.`')
+    // round-12 follow-up: both sites route through weekLabel() – the pin moved with the wording
+    // (it existed to keep the two surfaces IDENTICAL, and that property is what it still asserts).
+    expect(seasonScreen).toContain('`Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}`')
+    expect(planSheet).toContain('`Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}.`')
   })
 
   it('the Vacation tab renders the layoff refusal instead of throwing it', () => {
@@ -201,7 +203,7 @@ describe('round-12 wave B player copy', () => {
       'Exams',
       'Exams this week',
       'injury',
-      `Injured – back wk 74`,
+      `Injured – back W23 '32`,
       'The layoff covers this week, so a family trip cannot be booked – the planner frees up once she is back.',
     ]) {
       expect(s).not.toMatch(/[—А-Яа-яЁё]/)

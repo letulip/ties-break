@@ -199,7 +199,7 @@ function layoffCovers(w: number): boolean {
 /** The chip's tooltip – the same words the tournament card's injured lock uses. */
 const layoffNote = computed(() => {
   const s = game.snapshot
-  return s?.injury ? `Injured – back wk ${s.week + s.injury.weeksRemaining}` : ''
+  return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : ''
 })
 const calendarRows = computed<CalendarRow[]>(() => {
   const byWeek = new Map<number, UpcomingEvent>()
@@ -270,7 +270,7 @@ function lockLabel(e: UpcomingEvent): string {
       return 'Outgrown'
     case 'injured': {
       const s = game.snapshot
-      return s?.injury ? `Injured – back wk ${s.week + s.injury.weeksRemaining}` : 'Injured – rest up'
+      return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : 'Injured – rest up'
     }
     // The doctor's veto (below ECONOMY.availability.medicalFloor): the one hard body-gate. The
     // card says WHY in three words; the confirm never appears, because there is nothing to confirm.
