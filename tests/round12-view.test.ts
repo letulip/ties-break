@@ -122,11 +122,14 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
     expect(rule).not.toContain('50%')
   })
 
-  it('THE WINDOW IS EXCLUSIVE of the return week, in both consumers (mirrors layoffCovering)', () => {
-    // She is back at the TOP of week `week + weeksRemaining` – marking that week too would
-    // contradict the "Injured – back wk N" words rendered right next to it.
+  it('THE WINDOW IS EXCLUSIVE of the return week, in both consumers', () => {
+    // She is back at the TOP of week `week + weeksRemaining`. The sheet no longer mirrors the
+    // inequality by hand - the R12-5b seam replaced the copy with the engine's own `layoffBlock`
+    // (one comparison, `layoffCoversWeek`, for the sheet, the throw and the tournament lock).
+    // SeasonScreen still mirrors it on snapshot facts; the sheet is pinned to the shared predicate.
     expect(seasonScreen).toContain('w < s.week + s.injury.weeksRemaining')
-    expect(planSheet).toContain('props.week < s.week + s.injury.weeksRemaining')
+    expect(planSheet).toContain('layoffBlock({ currentWeek:')
+    expect(planSheet).not.toMatch(/props\.week < s\.week \+ s\.injury\.weeksRemaining/)
   })
 
   it('the chip explains itself with the tournament lock\'s own words', () => {
@@ -148,9 +151,13 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
     expect(vacation).toContain('v-if="!layoff && !row.affordable"')
   })
 
-  it('the practice tab is deliberately NOT wired here – R12-5b belongs to wave A', () => {
+  it('the practice tab IS wired now - the R12-5b seam landed (this pin used to assert the opposite)', () => {
     const practice = slice(planSheet, "<template v-if=\"tab === 'practice'\">", '<!-- ---------------- Vacation')
-    expect(practice).not.toContain('layoff')
+    // layoff outranks the doctor (availabilityStatus order: injured > medical), one hard block at
+    // a time, and the button is disabled WITH the reason - never a throwing click.
+    expect(practice).toContain('v-if="layoff"')
+    expect(practice).toContain(':disabled="!!layoff || !!medical')
+    expect(practice).toMatch(/layoff \? 'Injured'/)
   })
 })
 

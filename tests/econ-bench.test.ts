@@ -26,7 +26,7 @@ import {
   type SeedResult,
 } from '../tools/econ-bench'
 import { STARTING_FUNDS_CENTS, kidPoints, financeWindow } from '../src/engine/world'
-import { PARENT_INCOME_CENTS } from '../src/engine/world'
+import { parentIncomeForWeekCents } from '../src/engine/economy'
 
 // The economy bench (Part C, extended to whole-horizon in Wave 1) is a MEASUREMENT tool: it must be
 // deterministic (same seed+preset+horizon ⇒ identical numbers, no wall-clock/Math.random) and its
@@ -107,7 +107,20 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
     // cats.income = flat contribution x captured weeks + refunds banked inside captured folds –
     // reconstructed here by an independent replay. Middle never banks the (working-only)
     // local-sponsor cameo, so cats.sponsor stays 0.
-    const capturedIncomeWeeks = (horizonWeeks: number) => 49 + 50 * (horizonWeeks / WEEKS_PER_YEAR - 1)
+    // Round 12: the contribution GROWS per season (parentIncomeForWeekCents, +5-10% compounding),
+    // so "weeks x flat constant" became "sum the per-week amount over the captured weeks". The
+    // capture window per season is unchanged: weeks [52k .. 52k+49] of every season whose wrap
+    // lands inside the horizon (49 weeks of season 0, 50 of each later one - week 52k is week 0
+    // of the season and pays too).
+    const capturedIncomeCents = (horizonWeeks: number) => {
+      let total = 0
+      for (let w = 0; w < horizonWeeks; w++) {
+        const year = Math.floor(w / WEEKS_PER_YEAR)
+        const inFold = w % WEEKS_PER_YEAR <= SEASON_WRAP_OFFSET && year * WEEKS_PER_YEAR + SEASON_WRAP_OFFSET <= horizonWeeks
+        if (w > 0 && inFold) total += parentIncomeForWeekCents('bench-middle-0', 'middle', w)
+      }
+      return total
+    }
     for (const h of [H16, H18]) {
       const r = runCareer(middle, 0, h.weeks)
       const { world, rng } = openCareer(middle, 0)
@@ -123,7 +136,7 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
           .filter((e) => e.week === world.week && e.text.startsWith('Entry refunded'))
           .reduce((s, e) => s + (e.amountCents ?? 0), 0)
       }
-      expect(r.cats.income).toBe(PARENT_INCOME_CENTS.middle * capturedIncomeWeeks(h.weeks) + refundsCents)
+      expect(r.cats.income).toBe(capturedIncomeCents(h.weeks) + refundsCents)
       expect(r.cats.sponsor).toBe(0)
     }
   })

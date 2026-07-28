@@ -57,7 +57,7 @@ import {
   OFF_SEASON_WEEKS,
 } from './season/calendar'
 import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
-import {
+import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
   gearHitForWeek,
@@ -1636,9 +1636,12 @@ function resolveInterest(world: WorldState): void {
   })
 }
 
-// The parent's weekly contribution to the budget. Runs BEFORE costs and draws no RNG.
+// The parent's weekly contribution to the budget. Runs BEFORE costs and draws no MAIN-stream RNG:
+// the per-season growth (round 12, +5-10% compounding each new season) replays from the private
+// `seed:income:<season>` sub-stream inside parentIncomeForWeekCents, so the amount is a pure
+// function of (seed, background, week) - nothing stored, nothing to migrate.
 function resolveParentIncome(world: WorldState): void {
-  const income = PARENT_INCOME_CENTS[world.profile.background]
+  const income = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
   world.fundsCents += income
   addEvent(world, {
     week: world.week,

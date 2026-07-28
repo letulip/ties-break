@@ -14,6 +14,7 @@
 import { rngFromSeed, pickInt, type Rng } from './rng'
 import type { CoachSetup, FamilyBackground, InjurySeverity } from '../shared/protocol'
 import type { TierId } from './season/types'
+import { WEEKS_PER_YEAR } from './season/calendar'
 
 /** The four recurring gear line-items. rackets/shoes/apparel report under the 'gear'
  *  breakdown category; stringing gets its own 'stringing' category (it recurs far more
@@ -86,6 +87,12 @@ export const ECONOMY = {
     middle: 300_00,
     working: 245_00,
   } as Record<FamilyBackground, number>,
+
+  // THE PARENTS' CAREERS MOVE TOO (owner, round 12: "с каждым новым годом вклад родителей
+  // приростал процентов на 5-10 рандомно... не фиксированная сумма на всю жизнь"). Each season
+  // boundary the weekly contribution grows by a uniform draw from this band, COMPOUNDING - season
+  // N's income is base x prod(1 + roll_i) over seasons 1..N. Both bounds are knobs.
+  incomeGrowthBand: [0.05, 0.10] as [number, number],
 
   // Weekly base ("coaching") expense draw range in cents, by coaching setup. A parent-coach
   // saves on fees. The draw COUNT is one pickInt per tick regardless of setup/background.
@@ -677,4 +684,21 @@ export function gearHitForWeek(
   week: number,
 ): GearHit | null {
   return gearHitsUpTo(seed, category, background, week).find((h) => h.week === week) ?? null
+}
+
+/** The parents' weekly contribution for the season holding `week` - PURE, no stored state.
+ *  Season 0 pays the base; each later season compounds one uniform growth roll from
+ *  `incomeGrowthBand`, drawn off the private `seed:income:<season>` sub-stream (one draw per
+ *  season, keyed by index, so the whole trajectory replays from the seed alone: no schema field,
+ *  no migration, nothing to desync). Rounded to whole cents once, AFTER the compounding, so the
+ *  weekly ledger stays integer. Zero MAIN-stream draws. */
+export function parentIncomeForWeekCents(seedStr: string, background: FamilyBackground, week: number): number {
+  const season = Math.max(0, Math.floor(week / WEEKS_PER_YEAR))
+  let income = ECONOMY.parentIncomeCents[background]
+  const [lo, hi] = ECONOMY.incomeGrowthBand
+  for (let i = 1; i <= season; i++) {
+    const rng = rngFromSeed(`${seedStr}:income:${i}`)
+    income *= 1 + lo + rng() * (hi - lo)
+  }
+  return Math.round(income)
 }
