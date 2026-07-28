@@ -216,12 +216,12 @@ const strainNote = computed<string | null>(() => {
 // where the plan presets, the planned spend and the week recap live (they left the bottom bar with
 // that tab – see App.vue's TABS comment).
 const nearestEntered = computed(() => game.snapshot?.upcoming.find((e) => e.entered) ?? null)
-const nextTierShort = computed(() =>
-  nearestEntered.value ? TIER_SHORT[nearestEntered.value.tier] : '',
-)
 const nextDates = computed(() => (nearestEntered.value ? weekRange(nearestEntered.value.week) : ''))
+// A COST, printed plain (owner, 28.07). The minus sign belongs to the ledger, where a number can
+// go either way; here the label already says "Travel budget" and nothing about it is ever positive,
+// so the sign only made it look like a balance in trouble.
 const nextTravel = computed(() =>
-  nearestEntered.value ? formatFunds(-Math.abs(nearestEntered.value.travelCostCents)) : '',
+  nearestEntered.value ? formatFunds(Math.abs(nearestEntered.value.travelCostCents)) : '',
 )
 // The painted venue. src/art/venues.ts picks it from the event's own id on a purpose-scoped
 // sub-stream, so a tournament's photograph is the same one every render, every reload and every
@@ -628,8 +628,10 @@ function openRankHelp(): void {
               <img :src="nextVenue" alt="" />
             </div>
             <p class="note-title">{{ nearestEntered.label }}</p>
+            <!-- The TIER is not repeated here: the tournament's own name above it already says
+                 "Regional Championship" (owner, 28.07). Surface, then dates - the export's order. -->
             <p class="note-meta">
-              <span>{{ nextTierShort }} &middot; {{ nearestEntered.surface }}</span>
+              <span>{{ nearestEntered.surface }}</span>
               <span>{{ nextDates }}</span>
             </p>
             <div class="note-foot">

@@ -101,7 +101,7 @@
   --tilt-1: -1.1deg;
   --tilt-2: 0.9deg;
   --tilt-3: -0.6deg;
-  --tilt-4: -4deg;
+  --tilt-4: -7deg;
 
   /* A2: one shadow for every word that sits on a painting (the export's --sh-text-on-art). The
      left scrim does the heavy lifting; this keeps the edges crisp where the picture is busy. */
@@ -3403,10 +3403,13 @@ button.note-card:active:not(:disabled) {
   margin: 0;
 }
 
+/* 66px, not the export's 46 (owner, 28.07): our card carries a single TOTAL where the export
+   stacked Income and Spent rows, so `margin-top: auto` was pushing 20px of nothing above the line.
+   The chart takes that space back rather than the card growing a gap. */
 .budget-chart {
   display: block;
   width: 100%;
-  height: 46px;
+  height: 66px;
   margin-top: auto;
   overflow: visible;
 }
@@ -3496,10 +3499,20 @@ button.note-card:active:not(:disabled) {
 
 /* A REAL polaroid: cream paper, a fat bottom lip, tilted, dropped on the corner of the card. The
    only light surface in the app, and the reason the card reads as a page from an album. */
+/* Owner, 28.07: leaning further left and pulled in toward the "Recent memory" line, so it reads as
+   a photo dropped ON the card rather than one sliding off its edge. The tack below moves with it -
+   the two are one object. */
 .memory-polaroid {
   position: absolute;
-  right: -8px;
-  top: 24px;
+  /* Pulled in from the export's -8px, but not to the 2px the first pass tried: the tilt widens the
+     footprint and the handwritten line beside it started running underneath. -4px is as close as it
+     comes without stealing the words' room. */
+  right: -4px;
+  /* Clears the kicker's baseline. The tilt WIDENS its footprint (a rotated 68px box spans 76px), so
+     pulling it in toward the text and leaning it further both push it onto the word "memory" - at
+     18px it clipped the last letter, at 27px it still grazed it. 34px is the first value that keeps
+     the kicker whole; the export starts its polaroid below the kicker line too. */
+  top: 34px;
   width: 68px;
   transform: rotate(var(--tilt-4));
   padding: 4px 4px 12px;
@@ -3515,11 +3528,11 @@ button.note-card:active:not(:disabled) {
   object-fit: cover;
 }
 
-/* The tack that holds it down. */
+/* The tack that holds it down - moved with the polaroid it pins. */
 .memory-tack {
   position: absolute;
-  right: 38px;
-  top: 22px;
+  right: 50px;
+  top: 30px;
   width: 22px;
   height: 22px;
   border-radius: 7px;
@@ -3549,7 +3562,8 @@ button.note-card:active:not(:disabled) {
   font-weight: 600;
   line-height: 1.25;
   color: var(--ink);
-  max-width: 96px;
+  /* Stops short of the tilted polaroid rather than sliding under it. */
+  max-width: 80px;
   text-wrap: pretty;
 }
 
