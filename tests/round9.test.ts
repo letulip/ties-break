@@ -535,7 +535,11 @@ describe('R9-9/R9-21a — UI wiring', () => {
     // is unchanged; only the surface that guarantees it moved.
     const src = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
     expect(src).toContain('tournamentHidden')
-    expect(src).toContain('<div class="next-week-bar">') // no v-if – the bar is on every tab
+    // ⚠ RE-AIMED by wave 2: the bar is Home-only for ADVANCING and global for RESUMING a
+    // paused reveal (see round13-nav.test.ts). What R9-9 cares about is that the shell owns it and
+    // no screen grows one of its own - that is unchanged.
+    expect(src).toContain(`class="next-week-bar"`)
+    expect(src).toContain(`game.snapshot?.pending`)
     expect(src).toContain('tournamentHidden.value = false') // the re-open path playWeek takes
   })
 

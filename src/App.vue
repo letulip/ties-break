@@ -408,7 +408,7 @@ function dismissSeasonSummary(): void {
     <!-- R13-12: the paused-tournament banner is GONE – the sticky bar below is global now, and
          its primary button ("Play {tier}", playWeek) is the resume affordance on every tab. -->
 
-    <main class="app-content with-next-week-bar">
+    <main class="app-content with-next-week-bar" :class="{ home: tab === 'home' }">
       <!-- epic/redesign-home: Home's notecards are doors (the budget card opens the wallet, the
            next-tournament card opens This week). The shell owns `tab`, so the screen ASKS – one
            event, no router, no store field. `recapFresh` is the This-week dot, still decided by the
@@ -432,8 +432,20 @@ function dismissSeasonSummary(): void {
          Season screen and "Start Match" on the tournament preview. The skip-4 button went with the
          bar: it was a testing shortcut that offered to skip the thing the player came to play.
          The mockups have no week button at all, because the mockups never modelled a week loop -
-         this is the one control the redesign keeps for reasons of play, not of picture. -->
-    <div class="next-week-bar">
+         this is the one control the redesign keeps for reasons of play, not of picture.
+
+         WAVE 2 (owner, 28.07): it is HOME-ONLY now, WITH ONE EXCEPTION, and the exception is the
+         whole design. R13-12 made the button global so no tab could strand the career, and that was
+         right while it sat in a bar of its own; floating, it lands under the thumb on every screen,
+         and a stray tap SPENDS A WEEK - the one action in this game that cannot be undone.
+         So the button splits by what a stray tap COSTS:
+           * ADVANCING A WEEK is irreversible, so it lives on Home only. Home is one tap from
+             everywhere, so nothing is stranded.
+           * RESUMING A PAUSED TOURNAMENT costs nothing - it re-opens an overlay the player backed
+             out of - so it stays global. R13-8 deleted the paused-tournament banner precisely
+             because this button carried resume on every tab; keeping that arm global is what lets
+             the banner stay deleted. -->
+    <div v-if="tab === 'home' || game.snapshot?.pending" class="next-week-bar">
       <!-- R10-7: one button, a label that names the plan for the week it is about to play.
            R13-5/R13-8: it routes through playWeek – a paused tournament re-opens its overlay, a
            booked practice week opens the flow, everything else advances as before. -->

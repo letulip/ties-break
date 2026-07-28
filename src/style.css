@@ -189,6 +189,15 @@ section {
   margin-bottom: 16px;
 }
 
+/* A section with no furniture: heading and content, nothing behind them. The Season screen's
+   calendar and entry strips use it so the cards themselves are the only objects on the page. */
+section.bare {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
 section h2 {
   font-family: var(--font-heading);
   font-size: 12px;
@@ -989,7 +998,13 @@ button.primary.risky {
   opacity: 0.5;
 }
 
+/* Wave 2: only Home carries the floating week button, so only Home reserves room under it. Every
+   other screen gets its space back – which is most of a card's height on a 390px phone. */
 .app-content.with-next-week-bar {
+  padding-bottom: 96px;
+}
+
+.app-content.with-next-week-bar.home {
   padding-bottom: 148px;
 }
 
@@ -1167,6 +1182,12 @@ tr.milestone td {
   gap: 12px;
 }
 
+/* The export's list gutter is 14px of the screen; ours already has 16px from #app, so the cards
+   simply stop being inset a second time by a panel. */
+section.bare .event-cards {
+  margin: 0;
+}
+
 /* --- SEASON HEADER + PHASE STRIP (wave 2) --------------------------------------------------------
    The export's header: the screen's name at 20/800 with the season's own year beneath it. */
 .season-title {
@@ -1247,7 +1268,9 @@ tr.milestone td {
   border: 1px solid var(--card-edge);
   border-radius: 18px;
   background: var(--card-bottom);
-  padding: 16px;
+  /* The export pads its card 16 / 16 / 6 – tighter at the bottom, because the coach plaque brings
+     its own inset. */
+  padding: 16px 16px 12px;
   display: flex;
   flex-direction: column;
 }
@@ -1307,20 +1330,78 @@ tr.milestone td {
   text-wrap: pretty;
 }
 
+/* The FIGURE is white (owner, 28.07) - it is a reading, and every other reading on these screens is
+   white. Only the sun keeps the amber, which is what makes it read as a sun. */
 .event-weather {
   flex: none;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--amber);
+  color: #ffffff;
   font-size: 17px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-shadow: var(--shadow-text-on-art);
 }
 
-/* WHERE THE EXPORT PRINTS A CITY. The owner moved the surface and dates here; the pill keeps
-   R11-15's colour and name, and the vertical hairline is the export's own separator. */
+.event-sun {
+  color: var(--amber);
+}
+
+/* THE SURFACE MARK, the export's own: two concentric rings in the court's colour, then its name.
+   The clay value is the export's verbatim; hard and grass are chosen at the same weight and
+   saturation so the three read as one family rather than as three decisions. */
+:root {
+  --surface-hard: #4a90d9;
+  --surface-clay: #e2822f;
+  --surface-grass: #5fb05a;
+}
+
+.surface-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  text-transform: capitalize;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.surface-ring {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.surface-ring i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: block;
+}
+
+/* The colour rides on the RING only, so the surface name keeps the card's own ink. */
+.surface-mark.surf-hard .surface-ring {
+  color: var(--surface-hard);
+}
+
+.surface-mark.surf-clay .surface-ring {
+  color: var(--surface-clay);
+}
+
+.surface-mark.surf-grass .surface-ring {
+  color: var(--surface-grass);
+}
+
+/* WHERE THE EXPORT PRINTS A CITY. The owner moved the surface and dates here; the vertical hairline
+   is the export's own separator. */
 .event-place {
   display: flex;
   align-items: center;
@@ -1371,6 +1452,86 @@ tr.milestone td {
   color: var(--ink-soft);
 }
 
+/* THE FRIENDLY CARD – the sandbox hit-out, wearing the same notecard as everything else. */
+.friendly-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 17px;
+  border: 1px solid var(--card-edge);
+  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+}
+
+.friendly-said {
+  flex: 1;
+  min-width: 0;
+}
+
+.friendly-vs {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.friendly-vs span {
+  color: var(--ink-soft);
+  font-weight: 500;
+  margin: 0 4px;
+}
+
+.friendly-sub {
+  margin: 7px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+
+.friendly-sub .surface-mark {
+  font-size: 12.5px;
+  text-shadow: none;
+}
+
+.friendly-sub .surface-ring {
+  width: 15px;
+  height: 15px;
+}
+
+.friendly-sub .surface-ring i {
+  width: 7px;
+  height: 7px;
+}
+
+.friendly-go {
+  flex: none;
+}
+
+/* The seed box is a developer affordance, not part of the card. */
+.friendly-seed {
+  margin-top: 10px;
+}
+
+/* THE STATUS ROW. "closes W3", "Entered", the injury chip - one line, above the plaque, wrapping
+   only if it truly must. It used to sit below and stack, which pushed the plaque off the card. */
+.event-card .controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.event-card .controls .pill {
+  white-space: nowrap;
+}
+
 /* THE COACH PLAQUE – frosted glass on the photograph, the export's own idiom. */
 .event-coach {
   margin-top: 14px;
@@ -1404,6 +1565,16 @@ tr.milestone td {
   line-height: 1.35;
   color: #eef3f6;
   text-wrap: pretty;
+}
+
+/* Owner, 28.07: the card's secondary buttons ("+ Plan week", "Withdraw") were disappearing into the
+   photograph behind them - a 7% outline is enough on a flat panel and not on a painting. */
+.event-card .controls button {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.event-card .controls button:hover:not(:disabled) {
+  border-color: var(--accent);
 }
 
 /* HER ODDS. Same shape and the same red-to-green ramp as the condition ring on Home, so a

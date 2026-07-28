@@ -238,12 +238,20 @@ describe('R13-12 — the dot rule (unit): a FRESH recap is unseen', () => {
 // ===========================================================================
 // The advance bar: GLOBAL, in the App shell, in no tab screen.
 // ===========================================================================
-describe('R13-12 — the advance button stays global in the App shell', () => {
-  it('the sticky bar renders unconditionally – no tab gate survives on it', () => {
-    expect(app).toContain('<div class="next-week-bar">')
-    expect(app).not.toContain('v-if="tab === \'home\'" class="next-week-bar"')
-    // the content padding that makes room for the bar is unconditional too
-    expect(app).toContain('<main class="app-content with-next-week-bar">')
+describe('the advance button lives in the App shell, and splits by what a stray tap costs', () => {
+  it('ADVANCING is Home-only; RESUMING a paused tournament stays global', () => {
+    // ⚠ RE-AIMED by wave 2 (owner, 28.07). R13-12 made the button global so no tab could strand a
+    // career, and that was right while it sat in a bar of its own. Wave 2 floated it, and floating
+    // it lands under the thumb on every screen - where a stray tap SPENDS A WEEK, the one action in
+    // this game that cannot be undone.
+    //
+    // So the button splits by cost, and both arms are pinned here:
+    //   * advancing is irreversible  -> Home only. Home is one tap from everywhere.
+    //   * resuming a paused reveal costs nothing -> global, which is what lets R13-8's deleted
+    //     paused-tournament banner STAY deleted (see the sibling test below).
+    expect(app).toContain(`<div v-if="tab === 'home' || game.snapshot?.pending" class="next-week-bar">`)
+    // ...and the room reserved under it follows the same rule rather than being paid on every tab.
+    expect(app).toContain(`<main class="app-content with-next-week-bar" :class="{ home: tab === 'home' }">`)
   })
 
   it('no tab screen carries an advance control of its own', () => {
