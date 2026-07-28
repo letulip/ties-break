@@ -60,24 +60,29 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
     }
   })
 
-  it('the calendar row is labelled "Exams" – the owner\'s word, not the old "School exams"', () => {
-    const emptyRow = slice(seasonScreen, '<!-- An empty week', '<!-- R11-5a')
-    expect(emptyRow).toContain("? 'Exams'")
-    expect(emptyRow).not.toContain('School exams')
+  it('the week card is titled "Exams" – the owner\'s word, not the old "School exams"', () => {
+    // ⚠ RE-AIMED by wave 2 (28.07): the one-line row became a card, so the label lives in
+    // `weekTitle` rather than inline in the template. The WORD is the fact R12-1/14 pinned.
+    expect(seasonScreen).toContain("row.kind === 'exam' ? 'Exams'")
+    expect(seasonScreen).not.toContain('School exams')
+    expect(seasonScreen).toContain('{{ weekTitle(row) }}')
   })
 
-  it('the exam row wears the off-season treatment: same green frame, same tint, no dimming', () => {
-    const exam = cssBodies('.calendar-row-muted.exam')
-    const off = cssBodies('.calendar-row-muted.off-season')
+  it('an exam week is AFFIRMED, never dimmed – the rule survives its row becoming a card', () => {
+    // ⚠ RE-AIMED by wave 2. R12-1/14 gave exams the off-season's green frame so the week stopped
+    // looking like a rendering accident. Wave 2 gave the OFF-SEASON a painting - a frozen lake at
+    // sunset says "family week" better than a border ever did - so the pair no longer share a rule.
+    // What R12-1/14 was actually protecting is unchanged and still pinned: the exam week is stated
+    // in the accent colour, not greyed out.
+    const exam = cssBodies('.week-card.exam')
     expect(exam.length).toBe(1)
-    expect(off.length).toBe(1)
     expect(exam[0]).toContain('border-color: var(--accent)')
     expect(exam[0]).toContain('background: rgba(217, 242, 79, 0.04)')
-    expect(off[0]).toContain('border-color: var(--accent)')
-    expect(off[0]).toContain('background: rgba(217, 242, 79, 0.04)')
-    // the old "rendering accident" grey is gone: no opacity dim, no --line border
     expect(exam[0]).not.toContain('opacity')
     expect(exam[0]).not.toContain('var(--line)')
+    // ...and the off-season says it with art instead, which is why it needs no frame.
+    expect(cssBodies('.calendar-row-muted.off-season')).toEqual([])
+    expect(seasonScreen).toContain('weekArtUrl(row.week)')
   })
 
   it('exam weeks stay nobody\'s to plan – the flag rode into CalendarRow, the rule did not move', () => {

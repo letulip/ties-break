@@ -58,8 +58,12 @@ describe('generateCohort — age-14 skill bands', () => {
   })
 })
 
-describe('driftCohort — bounded weekly drift', () => {
-  it('nudges every skill by 0..0.05*growth and never leaves [0, 100]', () => {
+describe('driftCohort — development, bounded by a ceiling and an age', () => {
+  it('a week can never take more than the headroom, and never leaves [0, 100]', () => {
+    // ⚠ RE-AIMED at v20. The old bound was `0..0.05*growth`, a flat step with no ceiling - which is
+    // exactly the thing that made the field a rising tide: about 1.5 a year, for ever, so no career
+    // could catch the ladder. The bound now is the one that matters: a week takes a SHARE of the
+    // distance still to go, so nobody can pass her own limit, however long the save runs.
     const cohort = generateCohort('drift', 60)
     const before = clone(cohort)
     driftCohort(cohort, rngFromSeed('drift-week'))
@@ -68,12 +72,40 @@ describe('driftCohort — bounded weekly drift', () => {
       const a = cohort[i]
       for (const k of ['serve', 'ret', 'composure', 'stamina'] as const) {
         const delta = a[k] - b[k]
-        expect(delta).toBeGreaterThanOrEqual(0)
-        expect(delta).toBeLessThanOrEqual(0.05 * b.growth + 1e-9)
+        const headroom = Math.max(0, b.potential[k] - b[k])
+        // A growing player gains at most her whole headroom; a declining one only ever loses.
+        expect(delta, `${k} delta`).toBeLessThanOrEqual(headroom + 1e-9)
+        if (b.ageYears < 29) expect(delta, `${k} delta`).toBeGreaterThanOrEqual(-1e-9)
         expect(a[k]).toBeGreaterThanOrEqual(0)
         expect(a[k]).toBeLessThanOrEqual(100)
       }
       expect(a.growth).toBe(b.growth) // growth itself does not drift
+      expect(a.ageYears).toBe(b.ageYears) // ...and a WEEK does not age anybody
+      expect(a.potential).toEqual(b.potential) // ...nor move a ceiling
+    }
+  })
+
+  it('a ceiling is a ceiling: a century of weeks never passes it', () => {
+    // The property the old flat step could not have, stated the only way worth stating it.
+    const cohort = generateCohort('ceiling', 40)
+    const ceilings = clone(cohort).map((p) => ({ ...p.potential }))
+    for (let w = 0; w < 520; w++) driftCohort(cohort, rngFromSeed(`ceil-${w}`))
+    for (let i = 0; i < cohort.length; i++) {
+      for (const k of ['serve', 'ret', 'composure', 'stamina'] as const) {
+        expect(cohort[i][k], `${cohort[i].id}.${k}`).toBeLessThanOrEqual(ceilings[i][k] + 1e-9)
+      }
+    }
+  })
+
+  it('past the peak the body goes and the head does not', () => {
+    const cohort = generateCohort('veteran', 12)
+    for (const p of cohort) p.ageYears = 33
+    const before = clone(cohort)
+    for (let w = 0; w < 52; w++) driftCohort(cohort, rngFromSeed(`vet-${w}`))
+    for (let i = 0; i < cohort.length; i++) {
+      expect(cohort[i].serve, 'serve').toBeLessThan(before[i].serve)
+      expect(cohort[i].stamina, 'stamina').toBeLessThan(before[i].stamina)
+      expect(cohort[i].composure, 'composure').toBeGreaterThanOrEqual(before[i].composure)
     }
   })
 

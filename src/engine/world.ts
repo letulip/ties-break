@@ -68,11 +68,13 @@ import { parentIncomeForWeekCents,
   vacationPackage,
   vacationPriceCents,
 } from './economy'
-import { generateCohort, driftCohort } from './season/cohort'
+import { generateCohort, driftCohort, ageCohort } from './season/cohort'
+import { growWeek, rollPotential, type KidSkills } from './development'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
+import { previewEvent } from './season/preview'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
@@ -85,7 +87,7 @@ import { buildDiarySnapshot, milestoneKey } from './diary'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 18
+export const SAVE_SCHEMA_VERSION = 20
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -144,6 +146,15 @@ export interface WorldState {
    *  null only on a save migrated from a pre-v17 schema mid-season – nothing in such a save can
    *  reconstruct it, and `SeasonSummary.startRank` has always been nullable. */
   seasonStartRank: number | null
+  /** HER BUILD, and it MOVES now (v19, Phase 4). Until v18 this was re-derived from `seed:kid`
+   *  every time it was asked for, which is why she was exactly as good at week 180 as at week 1.
+   *  Seeded from that same derivation so a migrated career does not lurch, then grown weekly by
+   *  engine/development.ts. */
+  skills: KidSkills
+  /** Her ceiling, rolled once from `seed:potential` and never shown (decisions.md #11 – the radar
+   *  has axes without numbers). Persisted rather than re-rolled so a save cannot re-roll her
+   *  talent, which is the one thing in a career that must not be re-rollable. */
+  potential: KidSkills
   /** a tournament being revealed round by round; null when no reveal is in progress (v8). */
   pendingTournament: PendingTournament | null
   /** best (smallest) finish index the kid has ever reached per tier (v10); updated at
@@ -381,18 +392,33 @@ export function financeSeries(
 // The kid has no persisted skills in Phase 3 (development lands in Phase 4), so the
 // starting build is derived deterministically from the world seed. Stable across a
 // career, and snapshotted into every kid-match event for replay.
-export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile }): MatchPlayer {
-  const r = rngFromSeed(world.seed + ':kid')
+/** The build she is BORN with – the pre-Phase-4 derivation, unchanged, from `seed:kid`.
+ *  createWorld seeds `world.skills` with it and the v19 migration back-fills old saves with it, so
+ *  adding development moved nobody's starting point by a hundredth. */
+export function startingSkills(seed: string, _profile: PlayerProfile): KidSkills {
+  const r = rngFromSeed(seed + ':kid')
+  return {
+    serve: pickInt(r, 40, 58),
+    ret: pickInt(r, 40, 58),
+    composure: pickInt(r, 35, 55),
+    stamina: pickInt(r, 40, 60),
+  }
+}
+
+export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; skills?: KidSkills }): MatchPlayer {
+  // Her CURRENT build when the world has one (every world does since v19); the birth derivation is
+  // the fallback for the handful of pure callers that build a player without a full world.
+  const s = world.skills ?? startingSkills(world.seed, world.profile)
   return {
     id: KID_ID,
     // Round-7 item 17: full "First Last" (was first-name-only) so the match viewer's
     // under-court labels short-name the kid the same way the opponent already is
     // ("V. Martin", not "Vera"). formatShortName is applied at the display layer.
     name: `${world.profile.kidName} ${world.profile.kidLastName}`.trim(),
-    serve: pickInt(r, 40, 58),
-    ret: pickInt(r, 40, 58),
-    composure: pickInt(r, 35, 55),
-    stamina: pickInt(r, 40, 60),
+    serve: s.serve,
+    ret: s.ret,
+    composure: s.composure,
+    stamina: s.stamina,
   }
 }
 
@@ -1874,7 +1900,7 @@ function computeShadowTournament(
   // and the run's every round shares this ONE build. Fractional skills are fine for the match engine.
   const kid = kidMatchPlayerFor(world, event.surface)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
-  const field = rivalField(selectEntrants(event, world.cohort, ranking, kidRng), event, fatigue)
+  const field = rivalField(selectEntrants(event, world.cohort, ranking, kidRng, fatigue), event, fatigue)
   const result = runTournament(event, field, kid, world.seed, kidRng)
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
@@ -2089,7 +2115,7 @@ function runAiTournament(
   fatigue: Map<string, number>,
 ): void {
   const aiRng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
-  const field = rivalField(selectEntrants(event, world.cohort, aiRanking, aiRng), event, fatigue)
+  const field = rivalField(selectEntrants(event, world.cohort, aiRanking, aiRng, fatigue), event, fatigue)
   const result = runTournament(event, field, null, world.seed, aiRng)
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {
@@ -2216,6 +2242,11 @@ export function createWorld(
     // whole cohort, because she is the only player without a counting result).
     kidRank: cohort.length + 1,
     prevKidRank: null,
+    // Phase 4: her starting build is the SAME derivation that used to be recomputed on demand, so
+    // week 0 is byte-identical to the pre-development engine. What changed is that it is now state,
+    // and state moves.
+    skills: startingSkills(seed, profile),
+    potential: rollPotential(seed, startingSkills(seed, profile)),
     // R12-S1: season 0's start rank is set below, once `recomputeKidRank` has produced the real
     // value – she starts dead last behind the whole cohort, because she is the only player without
     // a counting result, and that is a true and meaningful thing for her first wrap-up to say.
@@ -2328,7 +2359,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //       last week's – the final off-season week of the season just gone – which is precisely "the
   //       rank she started this season on". Pure state, ZERO draws, and it runs before every RNG
   //       step so it cannot perturb the weekly sequence.
-  if (world.week % WEEKS_PER_YEAR === 0) world.seasonStartRank = world.kidRank
+  if (world.week % WEEKS_PER_YEAR === 0) {
+    world.seasonStartRank = world.kidRank
+    // 0a0b (v20): AND EVERYBODY GETS A YEAR OLDER. The cohort had no age at all until now, which is
+    // why it grew for ever and the ladder could never be caught. Pure arithmetic, ZERO draws, and
+    // it runs beside the rank capture because they are the same event: a season turned over.
+    ageCohort(world.cohort)
+  }
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)
@@ -2480,6 +2517,27 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   // 3. cohort drift (main stream, fixed 4-draws-per-player)
   driftCohort(world.cohort, rng)
+
+  // 3b. SHE DEVELOPS (Phase 4). Deliberately here, beside the cohort's own drift: the whole point
+  //     is that both sides of the ladder move, and putting them on adjacent lines is the cheapest
+  //     way to keep it that way. ZERO main-stream draws – `growWeek` reads `seed:growth:<week>`,
+  //     its own stream – so the frozen capture cannot move.
+  //
+  //     The matches that feed it are THIS week's, counted off the ledger she just wrote, so a
+  //     tournament week teaches her and a training week does not pretend to.
+  const matchesThisWeek = world.events.filter(
+    (e) => e.week === world.week && e.type === 'match' && !e.friendly,
+  ).length
+  world.skills = growWeek({
+    skills: world.skills,
+    potential: world.potential,
+    ageYears: ageAtWeek(world.week),
+    plan: world.plan,
+    coach: world.profile.coachSetup,
+    matchesThisWeek,
+    seed: world.seed,
+    week: world.week,
+  })
 
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
@@ -2780,6 +2838,11 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
 // --- snapshot ----------------------------------------------------------------
 function upcomingEvents(world: WorldState): UpcomingEvent[] {
   const entered = new Set(world.entries)
+  // The Season card's preview needs the standings and her match build ONCE for the whole list, not
+  // once per card: both are the same for every event in the window, and rebuilding them per event
+  // would be the expensive half of this function. Surface-specific scaling still happens per event
+  // inside the preview, which is where it belongs.
+  const ranking = fullRanking(world)
   return world.season
     .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)
     .sort((a, b) => a.week - b.week)
@@ -2818,6 +2881,10 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         week: e.week,
         tier: e.tier,
         surface: e.surface,
+        // What the Season card can honestly say before she plays: her odds in round one against
+        // the field as it stands TODAY, how strong that field is, and the (decorative) weather.
+        // See season/preview.ts for what this estimate does and does not claim.
+        preview: previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
         travelCostCents: e.travelCostCents,
         deadlineWeek: e.deadlineWeek,
         entryFeeCents: TIERS[e.tier].entryFeeCents,

@@ -16,7 +16,12 @@ dev-dist/
 #
 # NOTE: art-src/ is the author's LOCAL master library. git is not its backup.
 # gitignore has no brace expansion, so each extension gets its own line.
-art-src/
+# No trailing slash ON PURPOSE. A worktree shares one master library by SYMLINKING art-src at the
+# other checkout, and `art-src/` matches a directory but NOT a symlink - so the link showed up as
+# untracked and was one `git add -A` away from being committed as a link pointing outside the repo.
+# (`node_modules` above is spelled without a slash for exactly this reason, and is why it never
+# happened there.)
+art-src
 public/images/*-jpeg/
 
 # Repo-wide, not per-directory. Path-scoped rules only cover the folders someone thought of:

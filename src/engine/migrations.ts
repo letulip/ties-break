@@ -6,7 +6,10 @@ import {
   type SeasonHistoryEntry,
   type WorldEventCategory,
 } from '../shared/protocol'
-import { isCappedTier, KID_ID, SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
+import { isCappedTier, KID_ID, SAVE_SCHEMA_VERSION, seedWorldForV6, startingSkills, type WorldState } from './world'
+import { rollPotential } from './development'
+import { COHORT } from './season/cohort'
+import type { PlayerProfile } from '../shared/protocol'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
 import { OFF_SEASON_WEEKS, TIERS, tierFromLabel } from './season/calendar'
@@ -344,6 +347,43 @@ export function migrateSave(raw: unknown): WorldState {
       save.milestones = ledger
     }
     v = 18
+  }
+
+  // v18 -> v19: DEVELOPMENT (Phase 4). Her build stops being re-derived on demand and becomes state
+  // that moves. Both fields are back-filled from the SAME `seed:kid` derivation the engine used to
+  // recompute every time, so a career opened after this migration is byte-identical to the one that
+  // was saved - she simply starts developing from here rather than never.
+  //
+  // Potential is rolled from `seed:potential`, its own stream, so an old save gets the same ceiling
+  // it would have had if it had been created under v19. A ceiling must not be re-rollable.
+  if (v === 18) {
+    const start = startingSkills(String(save.seed), save.profile as PlayerProfile)
+    save.skills = start
+    save.potential = rollPotential(String(save.seed), start)
+    v = 19
+  }
+
+  // v19 -> v20: THE COHORT GETS AN AGE AND A CEILING. Until now they grew about 1.5 a year for
+  // ever, so no career could catch the ladder. Back-filled deterministically from the player's own
+  // seed - the same generator the cohort was built with would have given them these numbers, and a
+  // migrated career must not get a DIFFERENT field from a fresh one on the same seed.
+  if (v === 19) {
+    const cohort = Array.isArray(save.cohort) ? (save.cohort as unknown as Record<string, unknown>[]) : []
+    const rng = rngFromSeed(`${String(save.seed)}:cohort-age`)
+    for (const p of cohort) {
+      p.ageYears = pickInt(rng, COHORT.ageBand[0], COHORT.ageBand[1])
+      const [lo, hi] = COHORT.potentialBand
+      const head = () => lo + rng() * (hi - lo)
+      // Their CURRENT attributes are wherever the old unbounded drift left them, so the ceiling is
+      // measured from there: a save that has been running for years keeps the players it earned.
+      p.potential = {
+        serve: Number(p.serve) + head(),
+        ret: Number(p.ret) + head(),
+        composure: Number(p.composure) + head(),
+        stamina: Number(p.stamina) + head(),
+      }
+    }
+    v = 20
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

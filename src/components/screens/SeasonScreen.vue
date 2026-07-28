@@ -24,12 +24,16 @@ import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleAffinity, surfaceStyleHint } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
-import { isOffSeasonWeek, surfaceBlockFor, WEEKS_PER_YEAR } from '../../engine/season/calendar'
+import { isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
+import { venueArtUrl } from '../../art/venues'
+import { weekArtUrl } from '../../art/weeks'
+import { rngFromSeed } from '../../engine/rng'
+import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder.
 import { HORIZON_WEEKS, pointsLockNote, useTierStates, type TierState } from '../../composables/tierState'
 import { TIER_SHORT } from '../../composables/weekAhead'
-import { weekLabel, weekRange } from '../../shared/dates'
+import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
@@ -105,6 +109,119 @@ function surfaceView(surface: Surface): SurfaceView {
     title: surfaceNote(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1),
   }
 }
+// --- THE SEASON CARD (wave 2, the owner's redesign) ---------------------------------------------
+// The export's big tournament card, one per upcoming event, scrolling. Three of its parts are ours
+// rather than the export's, and each is a decision:
+//
+//   * WHERE THE LOCATION WAS, the surface and the dates now sit. The export prints a city under a
+//     map pin; we have no cities (they are in the backlog, D4 of the diary spec), and an empty pin
+//     is worse than no pin. The owner moved the surface/date line down into that slot.
+//   * "COACH SAYS" carries what we can actually say - whether the surface suits her play style, and
+//     how the field reads - instead of an invented quote.
+//   * THE RING is the engine's own first-match probability (engine/season/preview.ts). It is the
+//     one number on this screen that is a claim about the future, and it is computed, not styled.
+//
+// THE PHASE STRIP is the export's, driven by the real SURFACE_BLOCKS table the calendar generates
+// from - so the strip cannot promise a swing the season does not have.
+const PHASE_STRIP = SURFACE_BLOCKS.map((b) => ({
+  id: b.id,
+  // The export's own five words: Hard / Clay / Grass / Hard / Off. Our block labels are prose
+  // ("Summer hard swing"), and prose wraps to two lines in a fifth of 390px - which is exactly what
+  // the owner saw. The DOMINANT SURFACE is the fact the strip carries, so it is what it prints.
+  short: b.id === 'off-season' ? 'Off' : dominantSurface(b).replace(/^./, (c) => c.toUpperCase()),
+  weeks: seasonWeekRange(b.from, b.to),
+}))
+const activePhaseId = computed(() => surfaceBlockFor(week.value).id)
+
+/** The painting for a week with no tournament. Every such week has one - training and exams share
+ *  the on-court frame, the three off-season weeks each wear their own (src/art/weeks.ts). */
+function weekArt(row: CalendarRow): string {
+  return weekArtUrl(row.week)
+}
+/** R12-1/14 kept: "Exams" is the owner's own word for it. */
+function weekTitle(row: CalendarRow): string {
+  return row.kind === 'off-season' ? 'Off-season' : row.kind === 'exam' ? 'Exams' : 'Training week'
+}
+
+/** "W8" - the week number alone. The date beside it already names the year, and `weekLabel` would
+ *  print it a second time as "'38". Sliced off the shared formatter rather than re-derived, so the
+ *  two can never disagree about which week it is. */
+function weekOnly(w: number): string {
+  return weekLabel(w).split(' ')[0]
+}
+
+/** A block's identity is the surface it is mostly made of - the one the player plans around. */
+function dominantSurface(b: (typeof SURFACE_BLOCKS)[number]): Surface {
+  return (Object.keys(b.weights) as Surface[]).reduce((a, x) => (b.weights[x] > b.weights[a] ? x : a))
+}
+/** The season's own year, the same one weekLabel prints – never the calendar year (they diverge at
+ *  season 5, which is what week-numbering.test.ts exists to remember). */
+const seasonYearLabel = computed(() => {
+  const short = weekLabel(week.value).match(/'(\d{2})$/)?.[1] ?? ''
+  return short ? `20${short}` : ''
+})
+
+/** The painted court for a card. Same picker Home uses, so one tournament wears one photograph
+ *  wherever it appears. */
+function venueUrl(e: UpcomingEvent): string {
+  return venueArtUrl(e.tier, e.surface, e.id, game.snapshot?.seed ?? '')
+}
+
+/** WHAT THE COACH SAYS about an event. Two clauses at most: how the field reads, and - only when
+ *  the court actually has an opinion about her build - whether it suits her.
+ *
+ *  THE FIELD CLAUSE HAS FOUR WORDINGS PER VERDICT, picked off `seed:coachsay:<eventId>` (owner:
+ *  «а там есть какое-то разнообразие в словах тренера?» - there was not). The event's own
+ *  sub-stream, so a tournament's line never changes between renders and costs the MAIN stream
+ *  nothing; and because it is keyed on the EVENT rather than the week, two cards on screen together
+ *  do not echo each other.
+ *
+ *  Every wording says the same thing as its verdict. A coach who is cheerful about a field the ring
+ *  reads at 30% is the diary's cardinal sin wearing a whistle. */
+const COACH_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
+  strong: [
+    'This field is strong.',
+    'Tough draw. Plenty of good players here.',
+    'She will have to earn every game here.',
+    'This is a level up. Good practice either way.',
+  ],
+  even: [
+    'An even field.',
+    'Good field. Many solid players.',
+    'She belongs in this one.',
+    'Nothing here she has not seen before.',
+  ],
+  favourite: [
+    'You should be among the best here.',
+    'She is one of the strongest in this draw.',
+    'On paper this is hers to lose.',
+    'A field she should be beating.',
+  ],
+}
+function coachSays(e: UpcomingEvent): string {
+  // `surfaceFit` is the engine's own verdict with the surface name sliced off (R11-15) – the card
+  // names the court once, beside its ring, so the coach must not name it a second time.
+  const fit = surfaceFit(e.surface)
+  const pool = COACH_FIELD_LINES[e.preview.fieldStrength]
+  const field = pool[Math.floor(rngFromSeed(`${game.snapshot?.seed ?? ''}:coachsay:${e.id}`)() * pool.length)]
+  if (!fit) return field
+  // "suits her game" -> "The court suits her game." Capitalised into a sentence, because the coach
+  // speaks in sentences and the engine's fragment does not.
+  return `The court ${fit}. ${field}`
+}
+
+/** The ring's arc, on the export's geometry (r=19 of a 46px box). */
+const RING_C = Math.round(2 * Math.PI * 19 * 10) / 10
+function ringOffset(chance: number): number {
+  const p = Math.max(0, Math.min(1, chance))
+  return Math.round(RING_C * (1 - p) * 10) / 10
+}
+/** Her odds read on the same red-to-green ramp the condition ring uses, so a percentage means the
+ *  same thing everywhere in the app. */
+function chanceColor(chance: number): string {
+  return `hsl(${Math.round(Math.max(0, Math.min(1, chance)) * 120)}, 72%, 48%)`
+}
+
 const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
 
 const week = computed(() => game.snapshot?.week ?? 0)
@@ -117,32 +234,10 @@ const condition = computed(() => game.snapshot?.condition ?? 0)
 // calendar names the block she is in, when it ends, and what comes next, each tagged with how it
 // reads for HER build (the same surfaceStyleHint copy the event cards carry, so the two can never
 // disagree). Derived purely from the week number, so nothing was added to the snapshot payload.
-interface SeasonBlockView {
-  label: string
-  when: string
-  surface: Surface
-  note: string | null
-  /** R10-11: read off surfaceStyleAffinity, NOT sniffed out of the note string – the strip used to
-   *  test `note.includes('suits')`, which would silently mis-colour the day the copy is reworded. */
-  affinity: 'suits' | 'against' | 'neutral'
-}
-function blockView(atWeek: number, when: string): SeasonBlockView {
-  const block = surfaceBlockFor(atWeek)
-  // A block's identity is its dominant surface – the one the player plans around.
-  const surface = (Object.keys(block.weights) as Surface[]).reduce((a, b) =>
-    block.weights[b] > block.weights[a] ? b : a,
-  )
-  return { label: block.label, when, surface, note: surfaceNote(surface), affinity: surfaceAffinity(surface) }
-}
-const seasonBlocks = computed<SeasonBlockView[]>(() => {
-  if (!game.snapshot) return []
-  const year = Math.floor(week.value / WEEKS_PER_YEAR)
-  const endWeek = year * WEEKS_PER_YEAR + surfaceBlockFor(week.value).to
-  return [
-    blockView(week.value, `now – through ${weekLabel(endWeek)}`),
-    blockView(endWeek + 1, `from ${weekLabel(endWeek + 1)}`),
-  ]
-})
+// ⚠ The `SeasonBlockView` / `blockView` / `seasonBlocks` trio went with the two-row swing strip in
+// wave 2 (see the template). The phase strip now shows the whole season from the engine's own
+// SURFACE_BLOCKS, and the surface affinity those rows carried reaches the player through the coach
+// on each card instead. Nothing else consumed them.
 // CALENDAR DECLUTTER (spec §1): an OUTGROWN tournament is noise – she can never enter it again –
 // so it leaves the calendar entirely and its week becomes plannable. Locked-ahead events
 // ("Reach N pts") STAY: they are aspirational. Engine output is untouched.
@@ -588,10 +683,29 @@ function playExhibition(): void {
     <p v-if="game.error" class="error">{{ game.error }}</p>
 
     <!-- Round-6: the Calendar/Standings segmented control is gone – standings moved to
-         the new Stats tab, so Season is calendar-only now. The "?" tour-guide button stays. -->
+         the new Stats tab, so Season is calendar-only now. The "?" tour-guide button stays.
+         Wave 2: restyled to the export's header – the title with the season year under it, and the
+         one control this screen has, on the right. -->
     <div class="season-topbar">
-      <h2 style="margin: 0">Season</h2>
+      <div>
+        <h2 class="season-title">Season Planner</h2>
+        <p class="season-year">{{ seasonYearLabel }}</p>
+      </div>
       <button class="tier-guide-btn" aria-label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</button>
+    </div>
+
+    <!-- THE PHASE STRIP. Driven by the engine's own SURFACE_BLOCKS, so it cannot promise a swing the
+         calendar does not generate; the lime cell is the block this week falls in. -->
+    <div class="phase-strip">
+      <div
+        v-for="p in PHASE_STRIP"
+        :key="p.id"
+        class="phase-cell"
+        :class="{ active: p.id === activePhaseId }"
+      >
+        <span class="phase-name">{{ p.short }}</span>
+        <span class="phase-weeks">{{ p.weeks }}</span>
+      </div>
     </div>
 
     <!-- Rescue prompt (spec §4b): an OFFER when she is worn out, never an auto-book. -->
@@ -652,46 +766,74 @@ function playExhibition(): void {
       </ol>
     </section>
 
-    <section v-if="myEntries.length">
+    <!-- Owner, 28.07: no panel behind this - just the heading and the chips, which reads lighter
+         and gives the chips the full width. -->
+    <section v-if="myEntries.length" class="bare">
       <h2>My entries</h2>
       <div class="entries-strip">
         <span v-for="e in myEntries" :key="e.id" class="pill ok">{{ e.label }} · {{ weekLabel(e.week) }}</span>
       </div>
     </section>
 
-    <section>
+    <!-- Owner, 28.07: the calendar's panel is gone and the cards ARE the surface now, so they run
+         to the screen's own gutter the way the export draws them. The panel's translucent top
+         border went with it - that was the line running across above the first card. -->
+    <section class="bare">
       <h2>Calendar</h2>
-      <!-- The season's surface blocks: which swing she is in, and which one is coming. -->
-      <div v-if="seasonBlocks.length" class="season-blocks">
-        <div v-for="(b, i) in seasonBlocks" :key="b.when" class="season-block" :class="{ upcoming: i > 0 }">
-          <span class="pill">{{ SURFACE_EMOJI[b.surface] }} {{ b.label }}</span>
-          <span class="hint">{{ b.when }}</span>
-          <span v-if="b.note" class="hint surface-note" :class="{ suits: b.affinity === 'suits' }">{{ b.note }}</span>
-        </div>
-      </div>
+      <!-- ⚠ The two-row "swing" strip that used to sit here is GONE (wave 2). The phase strip at the
+           top of the screen is the export's version of the same fact and shows the WHOLE season
+           rather than this block and the next, so keeping both meant saying it twice. The surface
+           affinity it also carried now reaches the player through the coach on each card, where it
+           is about a tournament she can actually enter. -->
       <div class="event-cards">
         <template v-for="row in calendarRows" :key="row.week">
           <div v-if="row.kind === 'event' && row.event" class="event-card">
+            <!-- THE PAINTED COURT, bleeding in from the right under the export's own dissolve, with
+                 a vertical scrim over it so the words keep their contrast whatever the picture is
+                 doing. Same picker Home uses: one tournament, one photograph. -->
+            <div class="event-art">
+              <img :src="venueUrl(row.event)" alt="" />
+              <span class="event-art-scrim"></span>
+            </div>
+
             <div class="event-card-top">
-              <span class="event-tier">{{ row.event.label }}</span>
-              <!-- R11-15 (reverts R10-11): the coloured PILL is back in the corner, carrying the
-                   surface colour and its name, and only the verdict sits under it. The name is
-                   printed exactly once – here. A neutral court gets the pill and nothing else. -->
-              <span class="surface-badge" :class="`aff-${surfaceView(row.event.surface).affinity}`">
-                <span class="pill surface-pill" :title="surfaceView(row.event.surface).title">
-                  <span aria-hidden="true">{{ surfaceView(row.event.surface).emoji }}</span>
-                  {{ row.event.surface }}
-                </span>
-                <span v-if="surfaceView(row.event.surface).fit" class="surface-caption">
-                  {{ surfaceView(row.event.surface).fit }}
-                </span>
+              <h3 class="event-tier">{{ row.event.label }}</h3>
+              <!-- Decorative weather (owner's ruling): deterministic per event, read by nothing. -->
+              <span class="event-weather">
+                <svg class="event-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4.2"></circle>
+                  <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"></path>
+                </svg>
+                {{ row.event.preview.temperatureC }}&deg;
               </span>
             </div>
-            <p class="hint" style="margin-top: 8px">
-              {{ weekLabel(row.event.week) }} · {{ row.dates }} · entry
-              {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{ formatDollars(row.event.travelCostCents) }}
-            </p>
-            <div class="controls" style="margin-top: 8px">
+
+            <!-- WHERE THE EXPORT PRINTS A CITY (owner: we have no cities yet, so this slot carries
+                 the surface and the dates). R11-15's pill still names the court exactly once. -->
+            <div class="event-place">
+              <!-- The export's surface mark: two concentric rings in the court's colour, then its
+                   name. It replaces the emoji pill HERE and nowhere else - the pill still carries
+                   R11-15's job on any surface the redesign has not reached. -->
+              <span class="surface-mark" :class="`surf-${row.event.surface}`" :title="surfaceView(row.event.surface).title">
+                <span class="surface-ring" aria-hidden="true"><i></i></span>
+                {{ row.event.surface }}
+              </span>
+              <span class="event-place-sep"></span>
+              <!-- Owner, 28.07: the week number belongs UP here with the dates, and without its
+                   season suffix - "W8 · Feb 20-26, 2034" already says which year twice otherwise. -->
+              <span class="event-dates">{{ weekOnly(row.event.week) }} &middot; {{ row.dates }}</span>
+            </div>
+
+            <div class="event-money">
+              <p class="event-money-label">Travel budget</p>
+              <p class="event-money-figure">{{ formatDollars(row.event.travelCostCents) }}</p>
+
+            </div>
+
+            <div class="controls">
+              <!-- The entry fee reads as a FIGURE, in white, on the same row as the deadline chips
+                   (owner, 28.07) - it is money, like the travel budget above it, not a caption. -->
+              <span class="entry-fee">entry {{ formatDollars(row.event.entryFeeCents) }}</span>
               <!-- R12-8b: the layoff covers this WEEK, whatever the event's own lock says – a
                    points-locked card names the band first (lock precedence), so without the chip
                    the injury never appeared on it at all. -->
@@ -708,6 +850,41 @@ function playExhibition(): void {
                 🔒 Outgrown – she is past this level
               </span>
             </div>
+
+            <!-- THE COACH PLAQUE. His read on the court and the field, and her real odds in round
+                 one - see engine/season/preview.ts for what that number does and does not claim. -->
+            <div class="event-coach">
+              <div class="event-coach-said">
+                <p class="event-coach-label">Coach says:</p>
+                <p class="event-coach-line">{{ coachSays(row.event) }}</p>
+              </div>
+              <div
+                class="chance-ring"
+                role="img"
+                :aria-label="`Her chance to win the first match: ${Math.round(row.event.preview.firstMatchChance * 100)} percent, against ${row.event.preview.opponentName}`"
+                :title="`First round vs ${row.event.preview.opponentName}`"
+              >
+                <svg width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
+                  <circle cx="23" cy="23" r="19" class="chance-ring-track" stroke-width="3" />
+                  <circle
+                    cx="23"
+                    cy="23"
+                    r="19"
+                    class="chance-ring-arc"
+                    :stroke="chanceColor(row.event.preview.firstMatchChance)"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    :stroke-dasharray="RING_C"
+                    :stroke-dashoffset="ringOffset(row.event.preview.firstMatchChance)"
+                    transform="rotate(-90 23 23)"
+                  />
+                </svg>
+                <span class="chance-ring-value">
+                  <b>{{ Math.round(row.event.preview.firstMatchChance * 100) }}</b><i>%</i>
+                </span>
+              </div>
+            </div>
+            
             <div class="controls" style="margin-top: 12px">
               <!-- Entered, list still OPEN: an ordinary withdrawal, fee refunded. -->
               <button
@@ -810,26 +987,31 @@ function playExhibition(): void {
             </span>
           </div>
 
-          <!-- An empty week: plannable (or an exam block, which is nobody's to plan). -->
+          <!-- A WEEK WITH NO TOURNAMENT: training, the off-season, or exams. Owner, 28.07 - these
+               used to be one muted line each, which read like table rows beside a photo album now
+               that the tournament cards are cards. Same card, one size down: the painting across
+               the top, the week's name, its dates, and the plan button at the foot.
+               Exams have no painting yet and render without one (see src/art/weeks.ts). -->
           <div
             v-else
-            class="calendar-row-muted"
+            class="week-card"
             :class="{ 'off-season': row.kind === 'off-season', exam: row.kind === 'exam' }"
           >
-            <!-- R12-1/14: the exam row reads like the off-season row – green, named. "Exams", the
-                 owner's word for the label; the frame comes from .calendar-row-muted.exam. -->
-            <span class="hint" style="margin: 0">
-              {{ weekLabel(row.week) }} · {{ row.dates }} ·
-              {{
-                row.kind === 'off-season'
-                  ? 'Off-season – the natural family week'
-                  : row.kind === 'exam'
-                    ? 'Exams'
-                    : 'Training week'
-              }}
-            </span>
-            <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
-            <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
+            <div class="week-art">
+              <img :src="weekArt(row)" alt="" />
+              <span class="week-art-scrim"></span>
+            </div>
+            <div class="week-body">
+              <div>
+                <h3 class="week-title">{{ weekTitle(row) }}</h3>
+                <p class="week-dates">{{ weekOnly(row.week) }} &middot; {{ row.dates }}</p>
+              </div>
+              <div class="controls week-controls">
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+                <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
+                <span v-else-if="row.kind === 'exam'" class="week-note">School owns this week.</span>
+              </div>
+            </div>
           </div>
         </template>
       </div>
@@ -845,12 +1027,24 @@ function playExhibition(): void {
       </p>
     </section>
 
-    <section>
+    <!-- The sandbox hit-out, in the redesign's own idiom (owner, 28.07): the same notecard the rest
+         of the app uses, with the matchup as its subject rather than a row of controls. Its costed
+         cousin - a BOOKED practice match - lives on the calendar above. -->
+    <section class="bare">
       <h2>Friendly match</h2>
-      <div class="controls">
+      <div class="friendly-card">
+        <div class="friendly-said">
+          <p class="friendly-vs">{{ kidName }} <span>vs</span> Top seed</p>
+          <p class="friendly-sub">
+            <span class="surface-mark surf-clay"><span class="surface-ring" aria-hidden="true"><i></i></span> clay</span>
+            <span class="event-place-sep"></span>
+            <span>No points, no money – a hit-out</span>
+          </p>
+        </div>
+        <button class="primary friendly-go" @click="playExhibition">Play match</button>
+      </div>
+      <div class="controls friendly-seed">
         <input v-model="exhibitionSeed" type="text" placeholder="seed (optional)" />
-        <button class="primary" @click="playExhibition">Play match</button>
-        <span class="pill">{{ kidName }} vs Top seed · Clay</span>
       </div>
       <MatchViewer
         v-if="exhibitionMatch"

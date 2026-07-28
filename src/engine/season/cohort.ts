@@ -5,6 +5,28 @@
 import { rngFromSeed, pickInt, type Rng } from '../rng'
 import type { AiPlayer } from './types'
 
+/** THE COHORT'S OWN KNOBS (v20). Kept here rather than in ECONOMY because they describe the WORLD's
+ *  population, not the family's money - and because the file that reads them is the only file that
+ *  should. The curve deliberately mirrors ECONOMY.development's: she and the field are the same
+ *  kind of thing, and the day the two shapes diverge is the day the ladder stops making sense. */
+export const COHORT = {
+  /** A junior field spans the ones just starting and the ones about to age out. */
+  ageBand: [13, 19] as [number, number],
+  /** Headroom on top of where she is generated. Wide on purpose: most juniors never become
+   *  anything, and a field where everyone is a future champion is a rising tide with extra steps. */
+  potentialBand: [1, 22] as [number, number],
+  ageCurve: {
+    growthEnd: 18,
+    plateauStart: 23,
+    declineStart: 29,
+    /** share of remaining headroom per week while young, before `growth` (0.5..1.5) scales it */
+    peakRate: 0.0052,
+    plateauRate: 0.0007,
+    declineRate: 0.0003,
+    declineAccel: 0.25,
+  },
+} as const
+
 // 44 given names × 210 surnames (R11-13) – a broad pool so 199 juniors read as distinct.
 const FIRST_NAMES = [
   'Aria', 'Bela', 'Camila', 'Dasha', 'Elena', 'Freya', 'Gaia', 'Hana',
@@ -116,19 +138,90 @@ export function generateCohort(seedStr: string, size = 199): AiPlayer[] {
     const composure = pickInt(rng, 25, 70)
     const stamina = pickInt(rng, 30, 70)
     const growth = 0.5 + rng() // 0.5 .. 1.5
-    cohort.push({ id: `ai-${i}`, name: `${first} ${last}`, serve, ret, composure, stamina, nation, growth })
+    // A junior cohort is not one class: it spans the ones just starting and the ones about to age
+    // out. Their ages decide how much growing they have left, which is what turns a flat field into
+    // a conveyor - somebody is always arriving and somebody is always finishing.
+    const ageYears = pickInt(rng, COHORT.ageBand[0], COHORT.ageBand[1])
+    // Headroom on top of where she already is. Most juniors have a little; a few have a lot.
+    const [pLo, pHi] = COHORT.potentialBand
+    const head = () => pLo + rng() * (pHi - pLo)
+    const potential = {
+      serve: serve + head(),
+      ret: ret + head(),
+      composure: composure + head(),
+      stamina: stamina + head(),
+    }
+    cohort.push({
+      id: `ai-${i}`,
+      name: `${first} ${last}`,
+      serve,
+      ret,
+      composure,
+      stamina,
+      nation,
+      growth,
+      ageYears,
+      potential,
+    })
   }
   return cohort
 }
 
-// driftCohort – one tiny in-place nudge per skill: +0..0.05 scaled by growth,
-// clamped to [0, 100]. Exactly four draws per player in a fixed order, so the
-// weekly draw count never depends on player input (deterministic replay).
+// driftCohort – the cohort's development, and since v20 it has the same SHAPE as the kid's.
+//
+// It used to be `+ rng() * 0.05 * growth` per attribute: unbounded, ageless, forever. Measured, the
+// top ten climbed about 1.5 a year and never stopped - 57.8 at the kid's 14 to 71.6 at her 23 -
+// so no amount of talent or management could ever catch the ladder, because the ladder was a
+// rising tide rather than a group of people.
+//
+// Now every rival has an AGE and a CEILING, and a week's gain is a share of the distance still to
+// go, scaled by the same age curve the kid runs on. Juniors climb fast, the mid-twenties hold, the
+// thirties decline. The field becomes a conveyor: somebody is always arriving, somebody is always
+// finishing, and the top of it is reachable.
+//
+// EXACTLY FOUR DRAWS PER PLAYER, in the same fixed order as before. This is the constraint the
+// change is built around: the weekly draw count must not depend on player input or on world state,
+// or the frozen MAIN capture moves. Every number below is arithmetic applied AFTER the draw.
 export function driftCohort(cohort: AiPlayer[], rng: Rng): void {
   for (const p of cohort) {
-    p.serve = clamp01to100(p.serve + rng() * 0.05 * p.growth)
-    p.ret = clamp01to100(p.ret + rng() * 0.05 * p.growth)
-    p.composure = clamp01to100(p.composure + rng() * 0.05 * p.growth)
-    p.stamina = clamp01to100(p.stamina + rng() * 0.05 * p.growth)
+    const rate = aiAgeFactor(p.ageYears) * p.growth
+    const decline = aiDeclineFactor(p.ageYears)
+    p.serve = clamp01to100(step(p.serve, p.potential.serve, rate, decline, rng()))
+    p.ret = clamp01to100(step(p.ret, p.potential.ret, rate, decline, rng()))
+    // Composure is the one thing that does not fade – the veteran is slower and calmer.
+    p.composure = clamp01to100(step(p.composure, p.potential.composure, rate, 0, rng()))
+    p.stamina = clamp01to100(step(p.stamina, p.potential.stamina, rate, decline, rng()))
   }
+}
+
+/** One attribute, one week. `roll` is the already-drawn uniform - no draws happen in here. */
+function step(current: number, ceiling: number, rate: number, decline: number, roll: number): number {
+  const gain = Math.max(0, ceiling - current) * rate * roll
+  return current + gain - decline * current
+}
+
+/** The cohort's age curve. Deliberately the same shape as the kid's (engine/development.ts) rather
+ *  than a second model: the whole point is that she and the field are the same kind of thing. */
+export function aiAgeFactor(ageYears: number): number {
+  const c = COHORT.ageCurve
+  if (ageYears < c.growthEnd) return c.peakRate
+  if (ageYears < c.plateauStart) {
+    const t = (ageYears - c.growthEnd) / (c.plateauStart - c.growthEnd)
+    return c.peakRate * (1 - t) + c.plateauRate * t
+  }
+  if (ageYears < c.declineStart) return c.plateauRate
+  return 0
+}
+
+/** What she loses per week past the peak, steepening each year so careers end rather than fade. */
+export function aiDeclineFactor(ageYears: number): number {
+  const c = COHORT.ageCurve
+  if (ageYears < c.declineStart) return 0
+  return c.declineRate * (1 + (ageYears - c.declineStart) * c.declineAccel)
+}
+
+/** A season has passed: everybody is a year older. Pure arithmetic, no draws, called once a year
+ *  from the season boundary - which is what makes the field a conveyor rather than a photograph. */
+export function ageCohort(cohort: AiPlayer[]): void {
+  for (const p of cohort) p.ageYears += 1
 }

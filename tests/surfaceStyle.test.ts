@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { KidSkills } from '../src/engine/development'
 import {
   SURFACE_STYLE_DELTAS,
   SURFACE_STYLE_MAX_DELTA,
@@ -372,19 +373,34 @@ describe('season blocks x style — the balance survives, the calendar gains sig
 // The world composition point: condition factor x style table, applied ONCE.
 // ---------------------------------------------------------------------------
 
-function tickToPending(seed: string, mutate?: (w: WorldState) => void): { world: WorldState; eventId: string } {
+function tickToPending(
+  seed: string,
+  mutate?: (w: WorldState) => void,
+): { world: WorldState; eventId: string; skillsAtEntry: KidSkills } {
   const world = createWorld(seed)
   if (mutate) mutate(world)
+  // The build the bracket saw: her skills at the START of the week that produced the tournament -
+  // NOT at career start. She develops every week (v19), so the weeks this helper ticks through on
+  // the way there move her too.
+  let skillsAtEntry = { ...world.skills }
   const target = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)!
   enterEvent(world, target.id)
   const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < 12 && !world.pendingTournament; i++) tickWeek(world, rng)
+  for (let i = 0; i < 12 && !world.pendingTournament; i++) {
+    skillsAtEntry = { ...world.skills }
+    tickWeek(world, rng)
+  }
   if (!world.pendingTournament) throw new Error(`seed ${seed}: reveal never spawned – pick another seed`)
-  return { world, eventId: target.id }
+  return { world, eventId: target.id, skillsAtEntry }
 }
 
-function expectedKid(world: WorldState, surface: Surface): MatchPlayer {
-  const raw = kidMatchPlayer(world)
+/** ⚠ `atSkills` matters since Phase 4 (v19). She DEVELOPS, and the tick's order is deliberate: the
+ *  shadow tournament (step 2) runs on the build she woke up with, and growth (step 3b) happens
+ *  afterwards - you do not improve halfway through a tournament. So a snapshot taken inside the
+ *  tick must be compared against her PRE-tick build, not against the one she finished the week
+ *  with. Callers that never ticked can leave it out. */
+function expectedKid(world: WorldState, surface: Surface, atSkills?: KidSkills): MatchPlayer {
+  const raw = kidMatchPlayer(atSkills ? { ...world, skills: atSkills } : world)
   const factor = conditionMatchFactor(world.condition)
   return applySurfaceStyle(
     {
@@ -434,11 +450,26 @@ describe('surface x style — the single composition point in world.ts', () => {
   })
 
   it('a tournament run applies it ONCE: every round of the run carries the same snapshot', () => {
-    const { world } = tickToPending('sfx-run', (w) => {
-      w.profile = { ...w.profile, playStyle: 'serve-first' }
-    })
+    // ⚠ SEED-WALKED by the random-draw change (28.07): this needs a MULTI-ROUND run (the whole
+    // point is that every round carries the same build), and with a random draw the fixed seed
+    // 'sfx-run' now goes out in the first round. Which seed survives a round is not the subject.
+    let world!: WorldState
+    let atEntry!: KidSkills
+    for (let i = 0; i < 30; i++) {
+      const r = tickToPending(`sfx-run-${i}`, (x) => {
+        x.profile = { ...x.profile, playStyle: 'serve-first' }
+      })
+      const w = r.world
+      const finish = w.pendingTournament!.result.finishes[KID_ID]
+      const rounds = Math.log2(w.pendingTournament!.result.matches.length + 1)
+      if (finish !== undefined && finish >= rounds) continue // lost round one
+      world = w
+      atEntry = r.skillsAtEntry
+      break
+    }
+    expect(world, 'no seed in 30 gave her a multi-round run').toBeTruthy()
     const event = world.season.find((e) => e.id === world.pendingTournament!.eventId)!
-    const expected = expectedKid(world, event.surface)
+    const expected = expectedKid(world, event.surface, atEntry)
     const stored = world.pendingTournament!.players[KID_ID]
     expect(stored.serve).toBeCloseTo(expected.serve, 10)
     expect(stored.ret).toBeCloseTo(expected.ret, 10)
@@ -460,11 +491,14 @@ describe('surface x style — the single composition point in world.ts', () => {
     world.profile = { ...world.profile, playStyle: 'aggressive' }
     bookPractice(world, world.week + 1, false)
     const rng = rngFromSeed(world.seed)
+    // Her build as the friendly saw it: growth (step 3b) lands after the match, and it moves each
+    // attribute by a different amount, so even the RATIO below shifts if we read her afterwards.
+    const skillsAtMatch = { ...world.skills }
     tickWeek(world, rng)
     const friendly = world.events.find((e) => e.type === 'match' && e.friendly)
     expect(friendly).toBeDefined()
     const kidSide = friendly!.match!.aId === KID_ID ? friendly!.match!.a : friendly!.match!.b
-    const expected = expectedKid(world, 'hard')
+    const expected = expectedKid(world, 'hard', skillsAtMatch)
     // condition moved when the friendly resolved, so compare the RATIO the table imposes instead.
     const mult = surfaceStyleMultipliers('aggressive', 'hard')
     expect(mult.serve).toBeGreaterThan(1) // hard suits the aggressive kid

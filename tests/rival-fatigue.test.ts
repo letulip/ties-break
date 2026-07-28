@@ -58,17 +58,23 @@ function runWeeks(seed: string, weeks: number): WorldState {
  *  `selectEntrants` on the event-scoped `seed:aitour:<event.id>` stream, against the kid-free
  *  ranking. Every entrant of a full draw plays at least one match, so entrance IS play. Built on its
  *  own `rngFromSeed` instance, so it can never perturb the career it is watching. */
+/** The entrants the engine WILL draw for `week`, rebuilt exactly as `runAiTournaments` does.
+ *
+ *  ⚠ The fatigue map became load-bearing here (28.07): rivals are now gated on condition the same
+ *  way the kid is, so a wrecked player is not in the draw at all. Rebuilding without it silently
+ *  produced a DIFFERENT, larger field - which is what this helper's own test caught. */
 function entrantsOfWeek(world: WorldState, week: number): Set<string> {
   const ranking = computeRanking(
     world.results.filter((r) => r.playerId !== KID_ID),
     week,
     world.cohort.map((p) => p.id),
   )
+  const fatigue = rivalConditions(world.results, week)
   const out = new Set<string>()
   for (const e of world.season) {
     if (e.week !== week) continue
     const rng = rngFromSeed(`${world.seed}:aitour:${e.id}`)
-    for (const p of selectEntrants(e, world.cohort, ranking, rng)) out.add(p.id)
+    for (const p of selectEntrants(e, world.cohort, ranking, rng, fatigue)) out.add(p.id)
   }
   return out
 }

@@ -563,12 +563,37 @@ function runWorld(seed: string, weeks: number): WorldState {
   return world
 }
 
-describe('C1 — derive, never store: no schema bump and no new cohort field', () => {
-  it('the save schema is untouched and a cohort row still carries exactly its generated fields', () => {
+describe('C1 — a cohort row carries exactly what it is meant to, and nothing else', () => {
+  it('the row is its generated fields plus the two Phase-4 ones, and no more', () => {
+    // ⚠ RE-AIMED at v20. C1's rule was "derive, never store" and it was right for FATIGUE - which
+    // is still derived from the results ledger and still stored nowhere. It was never a rule
+    // against the cohort HAVING properties: age and a ceiling are facts about a person, not a
+    // cache of something computable, and without them the field grew about 1.5 a year for ever
+    // and no career could catch the ladder.
+    //
+    // What C1 actually guards - that a row does not quietly accumulate derived state - is
+    // unchanged, and this list is still exhaustive.
     const world = runWorld('rival-wiring', 8)
     expect(world.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     for (const p of world.cohort.slice(0, 5)) {
-      expect(Object.keys(p).sort()).toEqual(['composure', 'growth', 'id', 'name', 'nation', 'ret', 'serve', 'stamina'])
+      expect(Object.keys(p).sort()).toEqual([
+        'ageYears',
+        'composure',
+        'growth',
+        'id',
+        'name',
+        'nation',
+        'potential',
+        'ret',
+        'serve',
+        'stamina',
+      ])
+    }
+    // ...and no CONDITION or fatigue is stored on a rival, which is the half of C1 that was never
+    // about schema at all.
+    for (const p of world.cohort) {
+      expect(Object.keys(p)).not.toContain('condition')
+      expect(Object.keys(p)).not.toContain('fatigue')
     }
   })
 
@@ -672,17 +697,29 @@ describe('C3 — the kid faces the rivals who actually took the court', () => {
     expect(opponents.length).toBeGreaterThan(0)
     for (const [id, snapshot] of opponents) {
       const row = byId.get(id)!
-      const fatigue = rivalConditions(world.results, world.week).get(id) ?? ECONOMY.condition.max
+      // ⚠ The fatigue must be read as it was BEFORE this event resolved. `world.results` already
+      // carries this week's own AI rows by the time we look, and those rows are exactly what the
+      // bracket did NOT see when it built its players.
+      const priorResults = world.results.filter((r) => r.week < world.week)
+      const fatigue = rivalConditions(priorResults, world.week).get(id) ?? ECONOMY.condition.max
       const expected = rivalMatchPlayer(row, event.surface, fatigue)
       expect(snapshot.id).toBe(expected.id)
       expect(snapshot.name).toBe(expected.name)
       // The snapshot is what the ONE composition helper builds – no second code path. It is taken
       // PRE-drift (step 2 of the tick; driftCohort is step 3), which is deliberate: it is what
       // keeps a revealed match record replayable however the cohort moves afterwards. So the
-      // cohort row we read back here has had exactly one drift nudge applied (<= 0.075 per
-      // attribute), and the comparison is a ratio rather than an equality.
+      // cohort row we read back here has had exactly one drift nudge applied.
+      //
+      // ⚠ RE-AIMED by the random-draw change (28.07). This compared a RATIO to two decimal places,
+      // i.e. a 0.5% tolerance – which only ever held because she used to meet the number-one seed
+      // in every first round. The top seed has the largest attributes in the field, so one drift
+      // nudge was a small FRACTION of them. Now she meets whoever the draw gives her, and the same
+      // absolute nudge on a weaker player's smaller numbers blows a relative tolerance. The bound
+      // the engine actually guarantees is ABSOLUTE (one driftCohort step), so that is what we
+      // check – it is the stronger statement anyway, and it no longer depends on who she drew.
+      const DRIFT_STEP = 0.075
       for (const key of ['serve', 'ret', 'composure', 'stamina'] as const) {
-        expect(snapshot[key] / expected[key], `${id}.${key}`).toBeCloseTo(1, 2)
+        expect(Math.abs(snapshot[key] - expected[key]), `${id}.${key}`).toBeLessThanOrEqual(DRIFT_STEP)
       }
     }
   })

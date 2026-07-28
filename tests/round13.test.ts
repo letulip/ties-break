@@ -237,7 +237,9 @@ describe('R13-8 — a paused tournament owns the primary button', () => {
     // the career" property rides on the un-gated bar (pinned in tests/round9.test.ts).
     expect(app).not.toContain('tournament-paused')
     expect(app).not.toMatch(/tab !== 'home'/)
-    expect(app).toContain('<div class="next-week-bar">') // no v-if – every tab has the button
+    // ⚠ RE-AIMED by wave 2: Home-only to advance, global to resume - see round13-nav.test.ts.
+    expect(app).toContain(`class="next-week-bar"`)
+    expect(app).toContain(`game.snapshot?.pending`)
   })
 })
 

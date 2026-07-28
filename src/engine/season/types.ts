@@ -56,8 +56,17 @@ export interface SeasonEvent {
 }
 export interface AiPlayer extends MatchPlayer {
   nation: string // ISO-2
-  /** hidden growth multiplier 0.5..1.5; real development lands in Phase 4 */
+  /** hidden growth multiplier 0.5..1.5 – how fast she closes on her ceiling */
   growth: number
+  /** her age in whole years, advanced at each season boundary (v20). Until Phase 4 the cohort had
+   *  no age at all: everybody grew at the same rate for ever, which is why the top ten reached 71.6
+   *  by the time the kid was 23 and the ladder could never be caught. */
+  ageYears: number
+  /** her ceiling, per attribute (v20). Same idea as the kid's: growth is a share of the distance
+   *  still to go, so a rival approaches her limit and stops. The BAND is wide on purpose - most of
+   *  a junior cohort never becomes anything, and a field where everyone is a future champion is
+   *  the same rising tide with extra steps. */
+  potential: { serve: number; ret: number; composure: number; stamina: number }
 }
 export interface RankingRow { playerId: string; points: number; rank: number }
 export interface MatchRecord {

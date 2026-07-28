@@ -105,6 +105,31 @@ Career profiles + new save model (Package K, before Phase 3 data). Structured ev
 ### Post-v1 backlog
 ATP tour (data, not code — keep everything parameterized), ad hooks at match/season end (dormant points designed in Phase 3), portal builds (CrazyGames 1 MB / Yandex 200 KB adapters; portal cloud saves optional per-portal), **optional Google Drive backup** (appDataFolder scope, client-side OAuth via Google Identity Services — opt-in "connect cloud backup" button; export/import file remains the baseline), Google Play via TWA (Bubblewrap/PWABuilder), second-child dynasty meta, share/replay links (deterministic engine makes match replays trivially shareable), RU localization.
 
+## How we ship (owner's working agreement)
+
+These are process rules, not product ones. They cost nothing to follow and they have each cost
+something to learn.
+
+**ONE BRANCH PER WAVE, not one per fix.** (Owner, 28.07.) GitLab bills CI in minutes per month and
+the app is getting slower to build; every branch and every push spends from that budget. So changes
+accumulate on a single wave branch and go over in one merge request, even when they are unrelated -
+a micro-fix waits for the wave rather than earning a branch of its own. If something is genuinely
+urgent it may still go alone; that is the exception, and it should be said out loud.
+
+**Never push to `main`.** Everything lands on a branch; the owner reviews and merges. This predates
+the CI rule and outranks it.
+
+**Green before push.** `npm run check` (vue-tsc + the full suite + the production build) passes
+locally before a branch is pushed, so a red pipeline never spends minutes discovering what a local
+run would have caught. Never chain a push onto the command that runs the gate - read the result,
+then push.
+
+**Balance changes are measured, not argued.** Anything that moves the simulation goes through
+`bench:econ` / `bench:fatigue` against the unchanged branch, at a sample size big enough for the
+effect claimed. 30 careers per preset is enough to see a trend and NOT enough to call a 10-point
+one: the random-draw change looked like a 14-point regression at 30 seeds and turned out to be
+inside noise at 120.
+
 ## MVP milestone (demo-able wedge)
 
 End of Phase 3 + thin slices of 4/5 (preset training plans, simple money counter): **"one junior season"** — pick a girl, a country, a family budget; play 52 weeks; watch matches; survive financially. If that slice is compelling, everything else is layering.

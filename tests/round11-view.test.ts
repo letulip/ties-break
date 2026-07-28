@@ -53,78 +53,76 @@ function cssBodies(selector: string): string[] {
 const STYLES = Object.keys(SURFACE_STYLE_DELTAS) as PlayStyle[]
 const SURFACES: Surface[] = ['hard', 'clay', 'grass']
 
-/** The `.event-card-top` block of the calendar card. Sliced forward from the opening tag – a plain
- *  `indexOf('<div class="controls"')` finds the RESCUE card's controls, which sit ABOVE this one and
- *  silently produce an empty string (the round-10 "the test lies about a passing file" trap). */
-function eventCardTop(): string {
-  const from = seasonScreen.indexOf('<div class="event-card-top">')
-  expect(from).toBeGreaterThan(0)
-  return seasonScreen.slice(from, seasonScreen.indexOf('<div class="controls"', from))
-}
+// ⚠ `eventCardTop()` went with wave 2: the card's top row is the name and the weather now, and
+// the surface moved down into the place row. The tests above slice `.event-place` instead.
 
 // ===========================================================================
 // R11-15 — the pill is back, and the surface name is printed EXACTLY ONCE.
 // ===========================================================================
-describe('R11-15 — the surface pill returns to the card corner (reverts R10-11)', () => {
-  it('the event card renders a PILL carrying the surface name, not a ringed dot', () => {
-    const card = eventCardTop()
-    expect(card).toContain('class="pill surface-pill"')
-    expect(card).toContain('{{ row.event.surface }}') // the NAME lives inside the pill
-    expect(card).not.toContain('surface-dot') // the R10-11 dot is gone
-    // ...and the stylesheet no longer carries a rule for it either.
+describe('the surface mark on the Season card (R11-15, reversed by the owner in wave 2)', () => {
+  // ⚠ R11-15 put a coloured PILL back in the card corner, reverting R10-11's ringed dot, because
+  // the owner asked for it. In wave 2 he asked for the EXPORT's mark instead: two concentric rings
+  // in the court's colour with the name beside them. That is not a return to R10-11 - what R10-11
+  // got wrong was flinging the name away from the mark, and what R11-15 was defending was the name
+  // being printed once, next to its colour. Both of those still hold, and both are pinned here.
+  it('the card carries the export\'s ring mark, with the name beside it', () => {
+    const from = seasonScreen.indexOf('<div class="event-place">')
+    expect(from).toBeGreaterThan(0)
+    const place = seasonScreen.slice(from, seasonScreen.indexOf('</div>', from))
+    expect(place).toContain('class="surface-mark"')
+    expect(place).toContain('class="surface-ring"')
+    expect(place).toContain('{{ row.event.surface }}') // the NAME sits with the mark
+    expect(place).not.toContain('surface-dot') // R10-11's bare dot is still gone
     expect(cssBodies('.surface-dot')).toEqual([])
-    expect(cssBodies('.surface-badge.aff-suits .surface-dot')).toEqual([])
   })
 
-  it('the line under the pill is the VERDICT only – the name is never printed twice', () => {
-    const card = eventCardTop()
-    // the caption binds the stripped `fit`, never the engine's full sentence
-    expect(card).toContain('.fit')
-    expect(card).not.toContain('.caption')
-    // exactly ONE render of the surface name in the whole card top
-    expect(card.split('{{ row.event.surface }}').length - 1).toBe(1)
-    // and it is conditional – a neutral court gets the pill and nothing else
-    expect(card).toContain('v-if="surfaceView(row.event.surface).fit"')
+  it('the surface name is printed EXACTLY ONCE on the card – R11-15\'s actual complaint', () => {
+    expect(seasonScreen.split('{{ row.event.surface }}').length - 1).toBe(1)
+  })
+
+  it('the VERDICT still reaches the player, exactly once, through the coach', () => {
+    // R11-15's real complaint was DUPLICATION - the court named in the pill and named again in the
+    // line under it. Wave 2 removed the standalone caption because the card grew a coach's plaque,
+    // and his sentence is the natural home for "the court suits her game". Still consumed from the
+    // engine, still said once.
+    expect(seasonScreen).toContain('const fit = surfaceFit(e.surface)')
+    expect(seasonScreen).toContain('coachSays(row.event)')
+    expect(seasonScreen.split('coachSays(row.event)').length - 1).toBe(1)
+    expect(seasonScreen).not.toContain('surface-caption')
   })
 
   it('THE STRIP THE COMPONENT SLICES: every engine hint is "<Surface> – <verdict>"', () => {
     // surfaceFit() in SeasonScreen takes the tail after the first "– ". That is only correct while
-    // surfaceStyleHint keeps prefixing the surface name; if the engine's copy is ever reworded, this
-    // fails HERE rather than shipping "Grass – suits her game" under a pill that already says grass.
+    // surfaceStyleHint keeps prefixing the surface name; if the engine's copy is ever reworded this
+    // fails HERE, rather than shipping "Grass – suits her game" out of a coach's mouth on a card
+    // that has already named the court.
     for (const style of STYLES) {
       for (const surface of SURFACES) {
         const hint = surfaceStyleHint(style, surface)
-        if (hint === null) {
-          expect(surfaceStyleAffinity(style, surface)).toBe('neutral')
-          continue
-        }
-        const dash = hint.indexOf('– ')
-        expect(dash, `${style}/${surface}: "${hint}" has no short-dash separator`).toBeGreaterThan(0)
-        const name = hint.slice(0, dash).trim()
-        const fit = hint.slice(dash + 2)
-        expect(name.toLowerCase()).toBe(surface)
-        // the tail – what the card actually prints – must NOT name the surface again
-        expect(fit.toLowerCase()).not.toContain(surface)
-        expect(fit).not.toMatch(/[—А-Яа-яЁё]/) // player copy: short dash, no Cyrillic
+        if (!hint) continue
+        expect(hint, `${style}/${surface}`).toMatch(
+          new RegExp(`^${surface.charAt(0).toUpperCase()}${surface.slice(1)} – `),
+        )
+        // ...and the affinity agrees with the words, so the ring's colour and the coach's clause
+        // can never contradict each other.
+        expect(surfaceStyleAffinity(style, surface), `${style}/${surface}`).not.toBe('neutral')
       }
     }
   })
 
-  it('the pill keeps the CAPSULE radius (a wide element is never 50%)', () => {
-    // The R10-11 dot was a true circle at 50%; a pill is wide, so 50% would render an ellipse.
-    // The convention (owner 26.07) is the named token – see round10.test.ts for the measurement.
-    for (const body of cssBodies('.surface-pill')) expect(body).not.toContain('50%')
-    expect(cssBodies('.pill').some((b) => b.includes('border-radius: var(--radius-pill)'))).toBe(true)
-  })
-
-  it('the badge is still a STACK – the good half of R10-11 survives the revert', () => {
-    const badge = cssBodies('.surface-badge')[0]
-    expect(badge).toContain('flex-direction: column')
-    // the emoji stays hidden from assistive tech: it is the colour, the name next to it is the word
-    const card = seasonScreen.slice(seasonScreen.indexOf('class="pill surface-pill"'))
-    expect(card.slice(0, 300)).toContain('aria-hidden="true"')
-    // ...and the pill carries the engine's whole sentence as its title
-    expect(seasonScreen).toContain(':title="surfaceView(row.event.surface).title"')
+  it('the ring is the export\'s geometry, and the colour rides on the RING, not the word', () => {
+    const outer = cssBodies('.surface-ring')[0] ?? ''
+    expect(outer).toContain('width: 19px')
+    expect(outer).toContain('border: 1.5px solid currentColor')
+    const inner = cssBodies('.surface-ring i')[0] ?? ''
+    expect(inner).toContain('width: 9px')
+    // one declared colour per surface, and each one only reaches the ring
+    for (const surf of ['hard', 'clay', 'grass']) {
+      const rule = cssBodies(`.surface-mark.surf-${surf} .surface-ring`)[0] ?? ''
+      expect(rule, surf).toContain(`var(--surface-${surf})`)
+    }
+    // clay is the export's own value, verbatim
+    expect(css).toContain('--surface-clay: #e2822f')
   })
 })
 

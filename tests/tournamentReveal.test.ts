@@ -138,10 +138,25 @@ describe('tournament reveal – reveal, do not re-run', () => {
   // can spectate the tournament past her exit. `probe-2` is a draw of 8 in which the kid loses
   // her opening match, leaving the whole draw (SF, Final) to unfold without her.
   it('once finished, fullBracket spans every round through the Final, incl. non-kid later rounds', () => {
-    const world = buildToPending('probe-2')
-    const event = world.season.find((e) => e.id === world.pendingTournament!.eventId)!
-    const drawSize = TIERS[event.tier].drawSize
-    const finalRound = Math.log2(drawSize) - 1
+    // ⚠ SEED-WALKED by the random-draw change (28.07). The precondition below is that she exits
+    // EARLY, which used to be reliable on any seed - she met the top seed in round one, every time.
+    // Now the draw is random and 'probe-2' happens to send her to the final, which makes the
+    // precondition false. Which seed loses is not the subject; that the FULL bracket keeps running
+    // past her exit is.
+    let world!: WorldState
+    let finalRound = 0
+    for (let i = 0; i < 30; i++) {
+      const w = buildToPending(`probe-2-${i}`)
+      const e = w.season.find((x) => x.id === w.pendingTournament!.eventId)!
+      const fr = Math.log2(TIERS[e.tier].drawSize) - 1
+
+      const finish = w.pendingTournament!.result.finishes[KID_ID]
+      if (finish === undefined || finish === 0) continue // she won it - no early exit to check
+      world = w
+      finalRound = fr
+      break
+    }
+    expect(world, 'no seed in 30 gave her an early exit').toBeTruthy()
 
     skipTournament(world)
     const view = toSnapshot(world).pending!

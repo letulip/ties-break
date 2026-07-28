@@ -101,7 +101,7 @@
   --tilt-1: -1.1deg;
   --tilt-2: 0.9deg;
   --tilt-3: -0.6deg;
-  --tilt-4: -4deg;
+  --tilt-4: -7deg;
 
   /* A2: one shadow for every word that sits on a painting (the export's --sh-text-on-art). The
      left scrim does the heavy lifting; this keeps the edges crisp where the picture is busy. */
@@ -187,6 +187,15 @@ section {
   border-radius: 10px;
   padding: 16px;
   margin-bottom: 16px;
+}
+
+/* A section with no furniture: heading and content, nothing behind them. The Season screen's
+   calendar and entry strips use it so the cards themselves are the only objects on the page. */
+section.bare {
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 
 section h2 {
@@ -989,7 +998,13 @@ button.primary.risky {
   opacity: 0.5;
 }
 
+/* Wave 2: only Home carries the floating week button, so only Home reserves room under it. Every
+   other screen gets its space back – which is most of a card's height on a 390px phone. */
 .app-content.with-next-week-bar {
+  padding-bottom: 96px;
+}
+
+.app-content.with-next-week-bar.home {
   padding-bottom: 148px;
 }
 
@@ -1167,25 +1182,561 @@ tr.milestone td {
   gap: 12px;
 }
 
+/* The export's list gutter is 14px of the screen; ours already has 16px from #app, so the cards
+   simply stop being inset a second time by a panel. */
+section.bare .event-cards {
+  margin: 0;
+}
+
+/* --- SEASON HEADER + PHASE STRIP (wave 2) --------------------------------------------------------
+   The export's header: the screen's name at 20/800 with the season's own year beneath it. */
+.season-title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.season-year {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Five cells, one per surface block, hairline-separated; the lime one is the week she is standing
+   in. Driven by the engine's SURFACE_BLOCKS, so it cannot describe a season we do not generate. */
+.phase-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0 0 14px;
+}
+
+.phase-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 2px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.phase-cell:first-child {
+  border-left: none;
+}
+
+.phase-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.phase-weeks {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.phase-cell.active {
+  border: 1px solid var(--accent);
+  border-radius: 11px;
+}
+
+.phase-cell.active .phase-name,
+.phase-cell.active .phase-weeks {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* The cell after the active one keeps its own hairline off, or it doubles up against the border. */
+.phase-cell.active + .phase-cell {
+  border-left-color: transparent;
+}
+
+/* --- THE SEASON CARD (wave 2) -------------------------------------------------------------------
+   The export's big tournament card: the painted court bleeding in from the right, the name and the
+   weather across the top, the surface and dates where the export prints a city, the travel figure,
+   and the coach's plaque pinned to the bottom with her odds beside it. Everything below the plaque
+   (entry controls, locks, chips) is the screen's existing machinery, restyled by inheritance. */
 .event-card {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--card-edge);
+  border-radius: 18px;
+  background: var(--card-bottom);
+  /* The export pads its card 16 / 16 / 6 – tighter at the bottom, because the coach plaque brings
+     its own inset. */
+  padding: 16px 16px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 74% of the card, dissolved away to the left, exactly as the export draws it. */
+.event-art {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 74%;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 42%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 42%);
+  pointer-events: none;
+}
+
+.event-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The export's four-stop vertical scrim. Without it a bright court eats the type at both ends. */
+.event-art-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 17, 23, 0.55) 0%,
+    rgba(11, 17, 23, 0.12) 34%,
+    rgba(11, 17, 23, 0.55) 78%,
+    rgba(11, 17, 23, 0.86) 100%
+  );
+}
+
+/* Everything after the art is a sibling of it, so it needs to sit above. */
+.event-card > *:not(.event-art) {
+  position: relative;
 }
 
 .event-card-top {
   display: flex;
-  /* R10-11 / R11-15: the surface side is a two-row stack (pill + its verdict), so the tier name
-     aligns to the TOP of it rather than floating at the stack's vertical centre. */
   align-items: flex-start;
   justify-content: space-between;
   gap: 8px;
 }
 
 .event-tier {
-  font-family: var(--font-heading); /* R9-4: tournament names on the Season calendar in Sora */
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+  max-width: 62%;
+  text-wrap: pretty;
+}
+
+/* The FIGURE is white (owner, 28.07) - it is a reading, and every other reading on these screens is
+   white. Only the sun keeps the amber, which is what makes it read as a sun. */
+.event-weather {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.event-sun {
+  color: var(--amber);
+}
+
+/* THE SURFACE MARK, the export's own: two concentric rings in the court's colour, then its name.
+   The clay value is the export's verbatim; hard and grass are chosen at the same weight and
+   saturation so the three read as one family rather than as three decisions. */
+:root {
+  --surface-hard: #4a90d9;
+  --surface-clay: #e2822f;
+  --surface-grass: #5fb05a;
+}
+
+.surface-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
   font-weight: 600;
-  font-size: 14px;
+  color: var(--ink-2);
+  text-transform: capitalize;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.surface-ring {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.surface-ring i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  display: block;
+}
+
+/* The colour rides on the RING only, so the surface name keeps the card's own ink. */
+.surface-mark.surf-hard .surface-ring {
+  color: var(--surface-hard);
+}
+
+.surface-mark.surf-clay .surface-ring {
+  color: var(--surface-clay);
+}
+
+.surface-mark.surf-grass .surface-ring {
+  color: var(--surface-grass);
+}
+
+/* WHERE THE EXPORT PRINTS A CITY. The owner moved the surface and dates here; the vertical hairline
+   is the export's own separator. */
+.event-place {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.event-place-sep {
+  width: 1px;
+  height: 13px;
+  background: rgba(255, 255, 255, 0.22);
+  flex: none;
+}
+
+.event-dates {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.event-money {
+  margin-top: 14px;
+}
+
+.event-money-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.event-money-figure {
+  margin: 2px 0 0;
+  font-family: var(--font-heading);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.event-money-sub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* --- THE WEEK CARD (owner, 28.07) ----------------------------------------------------------------
+   A week with no tournament in it, built exactly like the tournament card: the painting fills the
+   card, dissolves away to the left, and the words sit on it - name at the top, action at the foot,
+   air between. The only difference is the shape, and it comes from the art: these masters are 16:9
+   landscape (941x536), so the CARD takes that ratio rather than the art taking a fixed band.
+   At 324px wide that is a 185px card - the same height the export gives its own cards, which is a
+   coincidence worth keeping. */
+.week-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--card-edge);
+  border-radius: 18px;
+  background: var(--card-bottom);
+  aspect-ratio: 941 / 536;
+  display: flex;
+  flex-direction: column;
+}
+
+.week-art {
+  position: absolute;
+  inset: 0;
+}
+
+.week-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+}
+
+/* Dark on the left where the words are, clear on the right where she is - the same reading the
+   hero's scrim on Home makes, for the same reason. */
+.week-art-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, rgba(8, 12, 17, 0.86) 0%, rgba(8, 12, 17, 0.5) 38%, rgba(8, 12, 17, 0.06) 66%),
+    linear-gradient(180deg, rgba(8, 12, 17, 0.34) 0%, rgba(8, 12, 17, 0) 40%, rgba(8, 12, 17, 0.42) 100%);
+}
+
+/* Title top, controls bottom, the space between them left as space. */
+.week-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* A step under the tournament card's 21px: a training week is a smaller thing than a championship
+   and the type should say so before the words do. */
+.week-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.week-dates {
+  margin: 5px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.week-note {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.week-controls {
+  margin-top: 0;
+}
+
+.week-controls button {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.week-controls button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+/* Exams are nobody's to plan. R12-1/14's rule survives its row becoming a card: the week is
+   AFFIRMED in the accent colour, never dimmed into looking like a rendering accident. */
+.week-card.exam {
+  border-color: var(--accent);
+  background: rgba(217, 242, 79, 0.04);
+}
+
+/* THE FRIENDLY CARD – the sandbox hit-out, wearing the same notecard as everything else. */
+.friendly-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 17px;
+  border: 1px solid var(--card-edge);
+  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+}
+
+.friendly-said {
+  flex: 1;
+  min-width: 0;
+}
+
+.friendly-vs {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.friendly-vs span {
+  color: var(--ink-soft);
+  font-weight: 500;
+  margin: 0 4px;
+}
+
+.friendly-sub {
+  margin: 7px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+
+.friendly-sub .surface-mark {
+  font-size: 12.5px;
+  text-shadow: none;
+}
+
+.friendly-sub .surface-ring {
+  width: 15px;
+  height: 15px;
+}
+
+.friendly-sub .surface-ring i {
+  width: 7px;
+  height: 7px;
+}
+
+.friendly-go {
+  flex: none;
+}
+
+/* The seed box is a developer affordance, not part of the card. */
+.friendly-seed {
+  margin-top: 10px;
+}
+
+/* The entry fee sits with the deadline chips but is NOT one – it is a figure, so it reads white and
+   carries no outline (owner, 28.07). */
+.entry-fee {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+/* THE STATUS ROW. "closes W3", "Entered", the injury chip - one line, above the plaque, wrapping
+   only if it truly must. It used to sit below and stack, which pushed the plaque off the card. */
+.event-card .controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.event-card .controls .pill {
+  white-space: nowrap;
+}
+
+/* THE COACH PLAQUE – frosted glass on the photograph, the export's own idiom. */
+.event-coach {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 15, 20, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.event-coach-said {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-coach-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.event-coach-line {
+  margin: 5px 0 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #eef3f6;
+  text-wrap: pretty;
+}
+
+/* Owner, 28.07: the card's secondary buttons ("+ Plan week", "Withdraw") were disappearing into the
+   photograph behind them - a 7% outline is enough on a flat panel and not on a painting. */
+.event-card .controls button {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.event-card .controls button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+/* HER ODDS. Same shape and the same red-to-green ramp as the condition ring on Home, so a
+   percentage means one thing across the app. The number is the ENGINE's (season/preview.ts). */
+.chance-ring {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex: none;
+}
+
+.chance-ring svg {
+  display: block;
+}
+
+.chance-ring-track {
+  stroke: rgba(255, 255, 255, 0.12);
+  fill: none;
+}
+
+.chance-ring-arc {
+  fill: none;
+  transition: stroke-dashoffset 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.chance-ring-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5px;
+  padding-top: 12px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.chance-ring-value b {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.chance-ring-value i {
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chance-ring-arc {
+    transition: none;
+  }
 }
 
 /* Surface x play style: one line per card, and only when the court has an opinion about her
@@ -2232,11 +2783,6 @@ tr.kid-row td {
   padding: 10px 12px;
 }
 
-.calendar-row-muted.off-season {
-  border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.04);
-}
-
 /* --- Season planner: plannable / planned calendar rows + the "+ Plan week" sheet ---------- */
 
 /* An empty row now carries an action ("+ Plan week") or its booking + a Cancel, so the muted
@@ -2300,10 +2846,10 @@ tr.kid-row td {
    off-season weeks now – the same green frame and tint, mirroring .calendar-row-muted.off-season
    above – instead of the dimmed grey that looked like a rendering accident. A NAMED family of
    blocked weeks: December is the tour's, weeks 23-24 are school's. */
-.calendar-row-muted.exam {
-  border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.04);
-}
+/* ⚠ The `.calendar-row-muted.exam` / `.off-season` pair went with the rows they dressed (wave 2:
+   both are cards now). R12-1/14's rule survives where it matters – an exam week is AFFIRMED, never
+   dimmed – and is carried by `.week-card.exam`'s green frame above. The off-season no longer needs
+   a frame to say what it is: it has a picture of a frozen lake. */
 
 /* The rescue OFFER (spec §4b) – surfaced when she is worn out and a bookable week lies ahead. */
 .rescue-card {
@@ -3115,14 +3661,15 @@ tr.kid-row td {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.diary-caption-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
+/* The brand mark, in place of the lime dot that used to sit here (owner, 28.07). The asset is the
+   wordmark's "i" – 9x30, a white stem under a lime ball – so it is drawn at its own aspect and
+   aligned to the first line of the caption rather than centred on the block. */
+.diary-caption-mark {
   flex: none;
-  margin-top: 7px;
-  box-shadow: 0 0 8px rgba(207, 225, 82, 0.6);
+  display: block;
+  width: 7px;
+  height: 23px;
+  margin-top: 1px;
 }
 
 .diary-caption-text {
@@ -3402,10 +3949,13 @@ button.note-card:active:not(:disabled) {
   margin: 0;
 }
 
+/* 66px, not the export's 46 (owner, 28.07): our card carries a single TOTAL where the export
+   stacked Income and Spent rows, so `margin-top: auto` was pushing 20px of nothing above the line.
+   The chart takes that space back rather than the card growing a gap. */
 .budget-chart {
   display: block;
   width: 100%;
-  height: 46px;
+  height: 66px;
   margin-top: auto;
   overflow: visible;
 }
@@ -3495,10 +4045,20 @@ button.note-card:active:not(:disabled) {
 
 /* A REAL polaroid: cream paper, a fat bottom lip, tilted, dropped on the corner of the card. The
    only light surface in the app, and the reason the card reads as a page from an album. */
+/* Owner, 28.07: leaning further left and pulled in toward the "Recent memory" line, so it reads as
+   a photo dropped ON the card rather than one sliding off its edge. The tack below moves with it -
+   the two are one object. */
 .memory-polaroid {
   position: absolute;
-  right: -8px;
-  top: 24px;
+  /* Pulled in from the export's -8px, but not to the 2px the first pass tried: the tilt widens the
+     footprint and the handwritten line beside it started running underneath. -4px is as close as it
+     comes without stealing the words' room. */
+  right: -4px;
+  /* Clears the kicker's baseline. The tilt WIDENS its footprint (a rotated 68px box spans 76px), so
+     pulling it in toward the text and leaning it further both push it onto the word "memory" - at
+     18px it clipped the last letter, at 27px it still grazed it. 34px is the first value that keeps
+     the kicker whole; the export starts its polaroid below the kicker line too. */
+  top: 34px;
   width: 68px;
   transform: rotate(var(--tilt-4));
   padding: 4px 4px 12px;
@@ -3514,11 +4074,11 @@ button.note-card:active:not(:disabled) {
   object-fit: cover;
 }
 
-/* The tack that holds it down. */
+/* The tack that holds it down - moved with the polaroid it pins. */
 .memory-tack {
   position: absolute;
-  right: 38px;
-  top: 22px;
+  right: 50px;
+  top: 30px;
   width: 22px;
   height: 22px;
   border-radius: 7px;
@@ -3548,7 +4108,8 @@ button.note-card:active:not(:disabled) {
   font-weight: 600;
   line-height: 1.25;
   color: var(--ink);
-  max-width: 96px;
+  /* Stops short of the tilted polaroid rather than sliding under it. */
+  max-width: 80px;
   text-wrap: pretty;
 }
 
