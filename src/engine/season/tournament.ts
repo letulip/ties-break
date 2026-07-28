@@ -166,6 +166,27 @@ function playMatch(
 // site still type-checks): since the rival-life slice the caller hands in cohort rows ALREADY put
 // through `rivalMatchPlayer` – surface/style modifier and condition factor applied – so the
 // bracket sees exactly the players who take the court, and the cohort rows themselves stay pristine.
+/** THE DRAW, as one function, because two callers need to agree on it to the draw: the bracket that
+ *  actually plays, and the Season screen's preview of who she would meet. It mutates `alive` in
+ *  place and takes EXACTLY ONE number off `rng`, so a preview that has consumed the same stream in
+ *  the same order lands on the same slot.
+ *
+ *  She arrives appended last, which `standardSeedOrder` has already parked opposite seed 1 – the
+ *  old, rigged position. One swap with a uniformly random slot fixes it; the player displaced takes
+ *  the slot she came from, so every other seeding relationship survives. */
+export function drawKidInto(alive: MatchPlayer[], kid: MatchPlayer, rng: Rng): void {
+  const from = alive.findIndex((p) => p.id === kid.id)
+  const to = Math.floor(rng() * alive.length)
+  ;[alive[from], alive[to]] = [alive[to], alive[from]]
+}
+
+/** Who `kid` meets in round one of `alive`, once drawn. Round one pairs adjacent slots. */
+export function firstRoundOpponent(alive: readonly MatchPlayer[], kid: MatchPlayer): MatchPlayer | null {
+  const i = alive.findIndex((p) => p.id === kid.id)
+  if (i < 0) return null
+  return alive[i % 2 === 0 ? i + 1 : i - 1] ?? null
+}
+
 export function runTournament(
   event: SeasonEvent,
   entrants: MatchPlayer[],
@@ -185,13 +206,7 @@ export function runTournament(
 
   const order = standardSeedOrder(field.length)
   let alive: MatchPlayer[] = order.map((seed) => field[seed - 1])
-  if (kid) {
-    // She was appended last, so `standardSeedOrder` has already put her in slot 1 – opposite seed 1.
-    // Swap her with a uniformly random slot; the player displaced takes the slot she came from.
-    const from = alive.findIndex((p) => p.id === kid.id)
-    const to = Math.floor(rng() * alive.length)
-    ;[alive[from], alive[to]] = [alive[to], alive[from]]
-  }
+  if (kid) drawKidInto(alive, kid, rng)
 
   const matches: MatchRecord[] = []
   const finishes: Record<string, number> = {}

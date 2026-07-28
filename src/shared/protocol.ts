@@ -5,6 +5,7 @@
 import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
 import type { MatchPlayer, Surface } from '../engine/match/types'
 import type { AvatarEmotion, PortraitStage } from './avatarEmotion'
+import type { EventPreview } from '../engine/season/preview'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
 export type CoachSetup = 'parent' | 'hired'
@@ -376,6 +377,12 @@ export interface UpcomingEvent {
   week: number
   tier: TierId
   surface: Surface
+  /** what the Season card may say about an event she has not played: her odds in ROUND ONE against
+   *  the field as it would be drawn today, who that opponent would be, how strong the field is, and
+   *  a decorative temperature. Derived at snapshot time, persists nothing, and draws only on the
+   *  event's own `seed:kidtour:` / `seed:weather:` sub-streams. Explicitly an estimate about a
+   *  field that will have moved by the time the event plays – see engine/season/preview.ts. */
+  preview: EventPreview
   travelCostCents: number
   deadlineWeek: number
   entryFeeCents: number

@@ -73,6 +73,7 @@ import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
+import { previewEvent } from './season/preview'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
@@ -2780,6 +2781,11 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
 // --- snapshot ----------------------------------------------------------------
 function upcomingEvents(world: WorldState): UpcomingEvent[] {
   const entered = new Set(world.entries)
+  // The Season card's preview needs the standings and her match build ONCE for the whole list, not
+  // once per card: both are the same for every event in the window, and rebuilding them per event
+  // would be the expensive half of this function. Surface-specific scaling still happens per event
+  // inside the preview, which is where it belongs.
+  const ranking = fullRanking(world)
   return world.season
     .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)
     .sort((a, b) => a.week - b.week)
@@ -2818,6 +2824,10 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         week: e.week,
         tier: e.tier,
         surface: e.surface,
+        // What the Season card can honestly say before she plays: her odds in round one against
+        // the field as it stands TODAY, how strong that field is, and the (decorative) weather.
+        // See season/preview.ts for what this estimate does and does not claim.
+        preview: previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
         travelCostCents: e.travelCostCents,
         deadlineWeek: e.deadlineWeek,
         entryFeeCents: TIERS[e.tier].entryFeeCents,
