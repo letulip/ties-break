@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { KidSkills } from '../src/engine/development'
 import { existsSync, readFileSync } from 'node:fs'
 import { portraitStage } from '../src/shared/avatarEmotion'
 import {
@@ -68,15 +69,24 @@ function tickToPending(seed: string, mutate?: (w: WorldState) => void): {
   rng: Rng
   eventId: string
   travelCostCents: number
+  /** ⚠ Phase 4 (v19): she DEVELOPS every week, and the tick grows her (step 3b) AFTER the shadow
+   *  tournament runs (step 2) - you do not improve halfway through a tournament. So a snapshot
+   *  taken inside the tick belongs to the build she woke up with, and anything comparing against it
+   *  must use THIS, not `world.skills` afterwards. */
+  skillsAtEntry: KidSkills
 } {
   const world = createWorld(seed)
   if (mutate) mutate(world)
   const target = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)!
   enterEvent(world, target.id)
   const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < 12 && !world.pendingTournament; i++) tickWeek(world, rng)
+  let skillsAtEntry = { ...world.skills }
+  for (let i = 0; i < 12 && !world.pendingTournament; i++) {
+    skillsAtEntry = { ...world.skills }
+    tickWeek(world, rng)
+  }
   if (!world.pendingTournament) throw new Error(`seed ${seed}: reveal never spawned (injury got in the way?) – pick another seed`)
-  return { world, rng, eventId: target.id, travelCostCents: target.travelCostCents }
+  return { world, rng, eventId: target.id, travelCostCents: target.travelCostCents, skillsAtEntry }
 }
 
 // ---------------------------------------------------------------------------
@@ -408,7 +418,7 @@ describe('R9-19 — match-strength coupling', () => {
 
   it('the shadow tournament scales the kid\'s MatchPlayer by the factor (stored snapshot included)', () => {
     // Grind + no physio so she arrives at the event week genuinely worn.
-    const { world } = tickToPending('r9-couple', (w) => {
+    const { world, skillsAtEntry } = tickToPending('r9-couple', (w) => {
       w.physioActive = false
       w.plan = { train: 100, rest: 0 }
       w.condition = 40
@@ -416,7 +426,7 @@ describe('R9-19 — match-strength coupling', () => {
     expect(world.condition).toBeLessThan(100)
     const factor = conditionMatchFactor(world.condition)
     expect(factor).toBeLessThan(1)
-    const raw = kidMatchPlayer(world)
+    const raw = kidMatchPlayer({ ...world, skills: skillsAtEntry })
     const stored = world.pendingTournament!.players[KID_ID]
     expect(stored.serve).toBeCloseTo(raw.serve * factor, 10)
     expect(stored.ret).toBeCloseTo(raw.ret * factor, 10)
@@ -428,9 +438,9 @@ describe('R9-19 — match-strength coupling', () => {
 
   it('at condition 100 the kid plays unscaled (factor exactly 1)', () => {
     // Default profile (hired coach → physio on) + balanced plan keeps her at 100.
-    const { world } = tickToPending('r9-couple-fresh')
+    const { world, skillsAtEntry } = tickToPending('r9-couple-fresh')
     expect(world.condition).toBe(100)
-    const raw = kidMatchPlayer(world)
+    const raw = kidMatchPlayer({ ...world, skills: skillsAtEntry })
     const stored = world.pendingTournament!.players[KID_ID]
     expect(stored.serve).toBe(raw.serve)
     expect(stored.stamina).toBe(raw.stamina)

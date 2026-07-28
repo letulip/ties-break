@@ -6,7 +6,9 @@ import {
   type SeasonHistoryEntry,
   type WorldEventCategory,
 } from '../shared/protocol'
-import { isCappedTier, KID_ID, SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
+import { isCappedTier, KID_ID, SAVE_SCHEMA_VERSION, seedWorldForV6, startingSkills, type WorldState } from './world'
+import { rollPotential } from './development'
+import type { PlayerProfile } from '../shared/protocol'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
 import { OFF_SEASON_WEEKS, TIERS, tierFromLabel } from './season/calendar'
@@ -344,6 +346,20 @@ export function migrateSave(raw: unknown): WorldState {
       save.milestones = ledger
     }
     v = 18
+  }
+
+  // v18 -> v19: DEVELOPMENT (Phase 4). Her build stops being re-derived on demand and becomes state
+  // that moves. Both fields are back-filled from the SAME `seed:kid` derivation the engine used to
+  // recompute every time, so a career opened after this migration is byte-identical to the one that
+  // was saved - she simply starts developing from here rather than never.
+  //
+  // Potential is rolled from `seed:potential`, its own stream, so an old save gets the same ceiling
+  // it would have had if it had been created under v19. A ceiling must not be re-rollable.
+  if (v === 18) {
+    const start = startingSkills(String(save.seed), save.profile as PlayerProfile)
+    save.skills = start
+    save.potential = rollPotential(String(save.seed), start)
+    v = 19
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

@@ -213,6 +213,53 @@ export const ECONOMY = {
   //    preset earns +2, 75/25 earns +1, the 85/15 grind earns 0; NEVER interpolated); physio
   //    adds ECONOMY.physio.conditionBonusPerWeek; a blackout week (off-season / exams) adds
   //    blackoutBonus. condition = clamp(condition + recovery − matchDrain, 0, 100).
+  // --- DEVELOPMENT (Phase 4) --------------------------------------------------------------------
+  // Every number the growth model reads, in one object, because this is the block the owner will
+  // want to turn. The shape is docs/plan.md's ("potential + age curves ... weekly training
+  // allocation, coach quality"); these are its first measured values, not its last.
+  development: {
+    /** Headroom rolled per attribute ON TOP of where she starts. A career at the bottom of this
+     *  band is a girl who was never going to make it, and that has to be a career the game can
+     *  tell - so the low end is deliberately small, not merely "less good". */
+    potentialBand: [4, 26] as [number, number],
+    /** She never falls below this, whatever age does to her. */
+    floor: 20,
+    ageCurve: {
+      /** the steep years start here (our START_AGE is 14, so a prologue at 13 is covered) */
+      growthStart: 13,
+      /** ...and ease off into the late teens */
+      growthEnd: 18,
+      /** by the plan's calibration: first points 17-18, top-100 about 4.5 years later */
+      plateauStart: 23,
+      /** peak 23-28 */
+      declineStart: 29,
+      /** share of remaining headroom taken per week at the steepest age */
+      peakRate: 0.0062,
+      /** how much of that is gone by `growthEnd` (0.5 = half the rate at 18 that she had at 13) */
+      growthEase: 0.5,
+      /** across the peak she maintains rather than climbs */
+      plateauRate: 0.0009,
+      /** share of an attribute lost per week at `declineStart` */
+      declineRate: 0.00035,
+      /** ...growing each year past it, so a career ends rather than fading forever */
+      declineAccel: 0.28,
+    },
+    /** The plan slider, end to end. Roughly a factor of two between coasting and committing. */
+    trainAt60: 0.72,
+    trainAt85: 1.28,
+    /** The coach. The tier slice will widen this into a real ladder. */
+    coachParent: 0.82,
+    coachHired: 1.15,
+    /** Competition teaches what practice cannot – capped, because a fourth match in a week is
+     *  fatigue, not education, and the condition model already charges her for that. */
+    matchBonus: 0.18,
+    matchBonusCap: 3,
+    /** One draw per week, shared across the four attributes: a good week is a good week. */
+    weekLuck: [0.55, 1.45] as [number, number],
+    /** Past the peak, composure keeps creeping up – the veteran is slower and calmer. */
+    veteranPoise: 0.004,
+  },
+
   condition: {
     start: 100,
     min: 0,
