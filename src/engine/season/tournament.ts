@@ -137,9 +137,30 @@ function playMatch(
   return { round, aId: a.id, bId: b.id, winnerId: aWins ? a.id : b.id }
 }
 
-// runTournament – single-elimination from `entrants` (seed order, best first). When
-// the kid enters it takes a slot, bumping the lowest-ranked entrant, and is seeded
-// last. Losers get finish = rounds - round (0 = champion), indexing TierDef.points.
+// runTournament – single-elimination from `entrants` (seed order, best first). When the kid enters
+// she takes a slot, bumping the lowest-ranked entrant, and is then DRAWN INTO THE BRACKET AT
+// RANDOM. Losers get finish = rounds - round (0 = champion), indexing TierDef.points.
+//
+// WHY THE DRAW IS RANDOM (28.07, the owner: «в настоящем теннисе несеяная новичок попадает в сетку
+// случайно – мне кажется нам тоже так надо делать»).
+//
+// She used to be appended last, which made her the LOWEST seed – and in a standard seeded bracket
+// the lowest seed meets seed 1 in round one, by construction. Measured directly: at every draw size
+// (4, 8, 16, 32) and every tier, her first opponent was the strongest player in the field. Every
+// tournament of every career. That is not a hard game, it is a broken draw: an unseeded newcomer in
+// real tennis is drawn into the gaps between the seeds and can meet anybody.
+//
+// THE FIX IS ONE SWAP AND ONE DRAW. The AI keep their seeding relationships exactly; the kid trades
+// places with whoever holds a uniformly random slot. So she can still draw the top seed – she just
+// no longer draws them EVERY time.
+//
+// TWO INVARIANTS, both load-bearing:
+//   * the draw comes off the `rng` already passed in, which is the event-scoped `seed:kidtour:<id>`
+//     sub-stream. No new stream, and not one draw on the MAIN weekly stream – the frozen capture
+//     cannot move.
+//   * it is taken ONLY when a kid is in the field. An AI-only bracket (`kid === null`) takes no
+//     extra draw and is byte-identical to before, so the cohort's own season is untouched and this
+//     change is confined to the events she actually plays.
 //
 // `entrants` is a MatchPlayer[] (it was an AiPlayer[], which is a subtype, so every existing call
 // site still type-checks): since the rival-life slice the caller hands in cohort rows ALREADY put
@@ -164,6 +185,13 @@ export function runTournament(
 
   const order = standardSeedOrder(field.length)
   let alive: MatchPlayer[] = order.map((seed) => field[seed - 1])
+  if (kid) {
+    // She was appended last, so `standardSeedOrder` has already put her in slot 1 – opposite seed 1.
+    // Swap her with a uniformly random slot; the player displaced takes the slot she came from.
+    const from = alive.findIndex((p) => p.id === kid.id)
+    const to = Math.floor(rng() * alive.length)
+    ;[alive[from], alive[to]] = [alive[to], alive[from]]
+  }
 
   const matches: MatchRecord[] = []
   const finishes: Record<string, number> = {}

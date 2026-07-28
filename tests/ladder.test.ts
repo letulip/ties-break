@@ -147,14 +147,19 @@ describe('L3 — NO prize money at any level (juniors pay to play)', () => {
       enterEvent(w, j30.id)
       const rng = rngFromSeed(w.seed)
       while (w.week < j30.week) tickWeek(w, rng)
-      if (w.pendingTournament) {
-        world = w
-        played = j30
-      }
+      if (!w.pendingTournament) continue
+      // ⚠ WIDENED by the random-draw change (28.07): she used to meet the top seed in every first
+      // round, which meant a predictable early exit – and a first-round loss banks NO points
+      // (wave B). Now the draw is random, so the seed walk also has to find a run she actually
+      // SCORED in, or the "she banked points" assertion below is a coin flip. Resolving the run
+      // inside the walk is the only way to know.
+      skipTournament(w)
+      closeTournament(w)
+      if (!w.results.some((r) => r.playerId === KID_ID && r.week === j30.week)) continue
+      world = w
+      played = j30
     }
-    expect(world).toBeTruthy()
-    skipTournament(world!)
-    closeTournament(world!)
+    expect(world, 'no seed in 25 produced a scoring J30 run').toBeTruthy()
     const week = financeWindow(world!.financeWeeks, played!.week).byCategory
     // travel is charged, and the ONLY positive buckets a J week may show are the parent's
     // contribution and savings interest – there is no prize bucket at any junior level.

@@ -3115,14 +3115,15 @@ tr.kid-row td {
   -webkit-backdrop-filter: blur(12px);
 }
 
-.diary-caption-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--accent);
+/* The brand mark, in place of the lime dot that used to sit here (owner, 28.07). The asset is the
+   wordmark's "i" – 9x30, a white stem under a lime ball – so it is drawn at its own aspect and
+   aligned to the first line of the caption rather than centred on the block. */
+.diary-caption-mark {
   flex: none;
-  margin-top: 7px;
-  box-shadow: 0 0 8px rgba(207, 225, 82, 0.6);
+  display: block;
+  width: 7px;
+  height: 23px;
+  margin-top: 1px;
 }
 
 .diary-caption-text {

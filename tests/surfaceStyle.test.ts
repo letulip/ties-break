@@ -434,9 +434,21 @@ describe('surface x style — the single composition point in world.ts', () => {
   })
 
   it('a tournament run applies it ONCE: every round of the run carries the same snapshot', () => {
-    const { world } = tickToPending('sfx-run', (w) => {
-      w.profile = { ...w.profile, playStyle: 'serve-first' }
-    })
+    // ⚠ SEED-WALKED by the random-draw change (28.07): this needs a MULTI-ROUND run (the whole
+    // point is that every round carries the same build), and with a random draw the fixed seed
+    // 'sfx-run' now goes out in the first round. Which seed survives a round is not the subject.
+    let world!: WorldState
+    for (let i = 0; i < 30; i++) {
+      const w = tickToPending(`sfx-run-${i}`, (x) => {
+        x.profile = { ...x.profile, playStyle: 'serve-first' }
+      }).world
+      const finish = w.pendingTournament!.result.finishes[KID_ID]
+      const rounds = Math.log2(w.pendingTournament!.result.matches.length + 1)
+      if (finish !== undefined && finish >= rounds) continue // lost round one
+      world = w
+      break
+    }
+    expect(world, 'no seed in 30 gave her a multi-round run').toBeTruthy()
     const event = world.season.find((e) => e.id === world.pendingTournament!.eventId)!
     const expected = expectedKid(world, event.surface)
     const stored = world.pendingTournament!.players[KID_ID]

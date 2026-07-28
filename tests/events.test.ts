@@ -135,12 +135,27 @@ describe('news match texts use short names for everyone', () => {
 
 describe('a tournament week the kid entered', () => {
   it('emits travel, per-round match and one tournament event, and awards ranking points', () => {
-    const world = createWorld('tourney-week')
-    const rng = rngFromSeed(world.seed)
-    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEligible(world, event)
-
-    while (world.week < event.week) tickWeek(world, rng)
+    // ⚠ SEED-WALKED by the random-draw change (28.07). This used to be the single seed
+    // 'tourney-week': she met the top seed in every first round, so her run was predictable and a
+    // fixed seed was safe. With a random draw an early exit banks NO points (wave B), so the
+    // fixture now walks until it finds a run that scored - which is the case this test is about.
+    let world!: WorldState
+    let event!: SeasonEvent
+    for (let i = 0; i < 30; i++) {
+      const w = createWorld(`tourney-week-${i}`)
+      const r = rngFromSeed(w.seed)
+      const e = w.season.find((x) => x.week >= 5 && x.deadlineWeek >= w.week)!
+      enterEligible(w, e)
+      while (w.week < e.week) tickWeek(w, r)
+      if (!w.pendingTournament) continue
+      // Peek at the committed finishes without resolving: a scoring run is one she won a round of.
+      const finish = w.pendingTournament.result.finishes[KID_ID]
+      if (finish === undefined || finish >= Math.log2(TIERS[e.tier].drawSize)) continue
+      world = w
+      event = e
+      break
+    }
+    expect(world, 'no seed in 30 produced a scoring run').toBeTruthy()
     expect(world.week).toBe(event.week)
 
     // travel is charged during the tick; the rest of the run is deferred to the reveal flow.

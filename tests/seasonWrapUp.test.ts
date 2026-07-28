@@ -149,7 +149,19 @@ describe('full bracket view (Round 5 item 5)', () => {
   })
 
   it('never exceeds the highest revealed round, and covers everything once finished', () => {
-    const world = buildToPending('full-bracket-finish')
+    // ⚠ SEED-WALKED by the random-draw change (28.07). Once a run is FINISHED the full bracket
+    // spans the whole draw, so "never exceeds the kid's highest round" is only a real statement
+    // when her highest round IS the last one - i.e. when she reached the final. That used to hold
+    // on this fixed seed and no longer does, because the draw is no longer rigged against her.
+    let world!: WorldState
+    for (let i = 0; i < 40; i++) {
+      const w = buildToPending(`full-bracket-finish-${i}`)
+      const finish = w.pendingTournament!.result.finishes[KID_ID]
+      if (finish !== undefined && finish > 1) continue // out before the final
+      world = w
+      break
+    }
+    expect(world, 'no seed in 40 took her to the final').toBeTruthy()
     skipTournament(world)
     const pending = toSnapshot(world).pending!
     const kidRounds = new Set(
