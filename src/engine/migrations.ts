@@ -2,13 +2,15 @@ import {
   DEFAULT_PROFILE,
   WEEK_PLAN_PRESETS,
   type FinanceWeek,
+  type Milestone,
   type SeasonHistoryEntry,
   type WorldEventCategory,
 } from '../shared/protocol'
-import { SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
+import { isCappedTier, KID_ID, SAVE_SCHEMA_VERSION, seedWorldForV6, type WorldState } from './world'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
-import { tierFromLabel } from './season/calendar'
+import { OFF_SEASON_WEEKS, TIERS, tierFromLabel } from './season/calendar'
+import { milestoneKey } from './diary'
 import { WEEKS_IN_SEASON, weekYear } from '../shared/dates'
 import type { TierId } from './season/types'
 
@@ -265,6 +267,83 @@ export function migrateSave(raw: unknown): WorldState {
     // season boundary onward. Idempotent: an existing value is never overwritten.
     if (save.seasonStartRank === undefined) save.seasonStartRank = null
     v = 17
+  }
+
+  if (v < 18) {
+    // v18 (Diary-1, D10) adds the durable milestone ledger behind the Memory card: first title and
+    // first final per tier, the first international entry (j30+), the first injury, each season's
+    // closing rank. Going forward these are captured AT THE MOMENT they happen; here they are
+    // BACKFILLED from what an old save still carries, with the earliest surviving evidence winning
+    // per milestone identity.
+    //
+    // WHAT THE BACKFILL CAN HONESTLY SAY, and what it cannot:
+    //  - titles/finals: read from surviving `tournament` events (finishIdx + label → tier), from
+    //    the kept `first-title` milestone event (exact, survives all pruning), and from the kid's
+    //    result rows (points inverted through the tier table – rows are award-only, so a points
+    //    value names its finish exactly). Events prune at 400 and results at 52 weeks, so a
+    //    backfilled "first" is the earliest SURVIVING one – the true first may predate it on a long
+    //    career. The global first title is exact whenever its kept event exists (every save since
+    //    v6 keeps it forever).
+    //  - first injury: injuryHistory (onset = week − weeksOut) plus the active injury. Exact
+    //    unless the 20-entry cap has already eaten her earliest layoffs.
+    //  - season ranks: seasonHistory rows are exact for every season they retain (cap 30).
+    //  - first international: NO true record survives (the entry ledger prunes to the current
+    //    season, and a first-round exit leaves no result row at all since wave B), so the earliest
+    //    surviving j30+ evidence stands in. Approximate by construction, and better than the
+    //    alternative – an empty slot here would let the NEXT entry of a seasoned traveller be
+    //    captured as her "first".
+    if (!Array.isArray(save.milestones)) {
+      const candidates: Milestone[] = []
+      const events = Array.isArray(save.events) ? save.events : []
+      for (const e of events) {
+        if (e.type !== 'tournament' || typeof e.finishIdx !== 'number' || typeof e.text !== 'string') continue
+        const tier = tierFromLabel(e.text)
+        if (!tier || typeof e.week !== 'number') continue
+        if (e.finishIdx === 0) candidates.push({ type: 'title', week: e.week, tier })
+        if (e.finishIdx <= 1) candidates.push({ type: 'final', week: e.week, tier })
+        if (isCappedTier(tier)) candidates.push({ type: 'international', week: e.week, tier })
+      }
+      for (const e of events) {
+        if (e.milestoneKey !== 'first-title' || typeof e.text !== 'string' || typeof e.week !== 'number') continue
+        const tail = e.text.split('First career title: ')[1]
+        const tier = tail ? tierFromLabel(tail) : undefined
+        if (tier) {
+          candidates.push({ type: 'title', week: e.week, tier })
+          candidates.push({ type: 'final', week: e.week, tier })
+        }
+      }
+      for (const r of Array.isArray(save.results) ? save.results : []) {
+        if (r.playerId !== KID_ID || !r.tier || typeof r.points !== 'number' || r.points <= 0) continue
+        const finish = TIERS[r.tier].points.indexOf(r.points)
+        if (finish < 0) continue
+        if (finish === 0) candidates.push({ type: 'title', week: r.week, tier: r.tier })
+        if (finish <= 1) candidates.push({ type: 'final', week: r.week, tier: r.tier })
+        if (isCappedTier(r.tier)) candidates.push({ type: 'international', week: r.week, tier: r.tier })
+      }
+      for (const w of Array.isArray(save.internationalEntryWeeks) ? save.internationalEntryWeeks : []) {
+        if (typeof w === 'number') candidates.push({ type: 'international', week: w })
+      }
+      for (const h of Array.isArray(save.injuryHistory) ? save.injuryHistory : []) {
+        candidates.push({ type: 'injury', week: h.week - h.weeksOut, kind: h.kind })
+      }
+      if (save.injury) candidates.push({ type: 'injury', week: save.injury.sinceWeek, kind: save.injury.kind })
+      for (const h of Array.isArray(save.seasonHistory) ? save.seasonHistory : []) {
+        candidates.push({
+          type: 'season-rank',
+          week: h.seasonIndex * WEEKS_IN_SEASON + (WEEKS_IN_SEASON - OFF_SEASON_WEEKS),
+          seasonIndex: h.seasonIndex,
+          rank: h.endRank,
+        })
+      }
+      // Earliest surviving evidence wins per identity: sort by week, first claim of a key stands.
+      candidates.sort((a, b) => a.week - b.week)
+      const ledger: Milestone[] = []
+      for (const m of candidates) {
+        if (!ledger.some((x) => milestoneKey(x) === milestoneKey(m))) ledger.push(m)
+      }
+      save.milestones = ledger
+    }
+    v = 18
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

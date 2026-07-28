@@ -6,7 +6,7 @@
 // height (124-182 px, median ~158 of a 512 px painting). So: centre the square on the face, size it
 // to the head, resize to 256.
 //
-// Face centres below were read off a labelled 64px grid laid over each painting. That method was
+// Face centres (src/art/faceRects.ts) were read off a labelled 64px grid laid over each painting. That method was
 // checked against four paintings whose true rectangle is known (teen-norm, young-happy, jun-sad,
 // teen-serious) and landed within 2-12 px of the architect's own centre every time — inside his own
 // frame-to-frame spread.
@@ -18,58 +18,18 @@ import sharp from 'sharp'
 import { mkdirSync } from 'node:fs'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
+// THE TABLE MOVED (Diary-1, D2): the face rectangles now live in src/art/faceRects.ts, because the
+// Home photo card steers its `object-position` off the same face centres this cutter crops around –
+// one record of the framing, two consumers that can never disagree. Node strips the types on import
+// (≥23, no build step), and the re-export below keeps this module's public surface – and its
+// declaration file – exactly as the completeness test has always read it.
+import { CROPS } from '../src/art/faceRects.ts'
+
+export { CROPS }
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const PAINT = `${ROOT}/public/images/fem-euro-brunnet`
 const OUT = `${ROOT}/art-src/avatars`
-
-// stem -> [face centre x, face centre y, square side], in 512px painting pixels
-export const CROPS = {
-  'jun-angry': [252, 135, 165],
-  'young-angry': [285, 122, 165],
-  'teen-angry': [290, 148, 145],
-  'adult-angry': [300, 150, 155],
-  'milf-angry': [252, 140, 155],
-  // second pass: 155 framed her head noticeably smaller than the rest of the set, and this is the
-  // DEFAULT face for 23-30, so it is the one worth getting tight.
-  'adult-norm': [302, 140, 128],
-  'adult-happy': [247, 98, 190],
-  'adult-sad': [305, 180, 172],
-  'adult-serious': [292, 182, 165],
-  'adult-tired': [295, 168, 172],
-  'adult-injury': [328, 188, 165],
-  'milf-norm': [257, 150, 145],
-  'milf-happy': [265, 95, 185],
-  'milf-sad': [300, 152, 172],
-  'milf-serious': [235, 130, 185],
-  'milf-tired': [247, 118, 185],
-  'milf-injury': [297, 197, 165],
-
-  // --- RECOVERED, not authored ------------------------------------------------------------
-  // The 18 crops that shipped before this table existed were cut by hand and their rectangles
-  // were never written down. Each was located back inside its painting by
-  // `scripts/find-crop-rect.mjs` (normalised cross-correlation); the residual on each line is
-  // that match's error — all under 0.04, i.e. near-exact. They are here so a re-cut after an
-  // art refresh covers the WHOLE set, not just the ones added in this branch.
-  'jun-norm': [251, 137, 138], // recovered, residual 0.0110
-  'jun-happy': [208, 168, 156], // recovered, residual 0.0110
-  'jun-sad': [233, 171, 154], // recovered, residual 0.0214
-  'jun-serious': [239, 197, 170], // recovered, residual 0.0073
-  'jun-tired': [240, 156, 172], // recovered, residual 0.0071
-  'jun-injury': [238, 154, 172], // recovered, residual 0.0045
-  'young-norm': [275, 135, 154], // recovered, residual 0.0088
-  'young-happy': [232, 170, 156], // recovered, residual 0.0319
-  'young-sad': [200, 146, 140], // recovered, residual 0.0382
-  'young-serious': [296, 80, 124], // recovered, residual 0.0154
-  'young-tired': [286, 164, 156], // recovered, residual 0.0062
-  'young-injury': [227, 169, 154], // recovered, residual 0.0197
-  'teen-norm': [275, 103, 154], // recovered, residual 0.0170
-  'teen-happy': [292, 170, 172], // recovered, residual 0.0036
-  'teen-sad': [290, 160, 164], // recovered, residual 0.0100
-  'teen-serious': [323, 155, 182], // recovered, residual 0.0162
-  'teen-tired': [304, 160, 172], // recovered, residual 0.0163
-  'teen-injury': [272, 160, 164], // recovered, residual 0.0050
-}
 
 // Only cut when RUN. The table is also imported by tests/portrait-bands.test.ts to check that every
 // stage x emotion has a rectangle — importing it must not rewrite 35 masters as a side effect.

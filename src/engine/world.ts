@@ -12,6 +12,7 @@ import {
   type FullBracketMatch,
   type InjurySeverity,
   type LossStreak,
+  type Milestone,
   type PendingBracketRound,
   type PendingView,
   type PlayerProfile,
@@ -73,13 +74,17 @@ import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } 
 import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
+// Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
+// identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
+// dependency runs one way: world → diary, exactly like world → condition.
+import { buildDiarySnapshot, milestoneKey } from './diary'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 17
+export const SAVE_SCHEMA_VERSION = 18
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -190,6 +195,13 @@ export interface WorldState {
   /** Season planner (v13): a carry-over injury-tau buff from a resort/elite vacation package;
    *  null when none is running. Applied POST-draw inside injuryTau. */
   recoveryBuff: RecoveryBuff | null
+  /** Diary-1 D10 (v18): the durable milestone ledger behind the Memory card. The event feed
+   *  prunes at 400 rows, so memories need their own record: first title and first final per tier,
+   *  the first international entry, the first injury, each season's closing rank – captured AT THE
+   *  MOMENT they happen (finalizeTournament / enterEvent / rollInjury / the season wrap-up).
+   *  Bounded by construction (≤ 6+6+1+1 + one row per season), so it is never pruned. Capture is
+   *  SILENT – the milestone EVENTS that already exist keep announcing; this ledger only remembers. */
+  milestones: Milestone[]
   /** ITF ANNUAL ENTRY CAP (v15): the absolute WEEK of every INTERNATIONAL event she has entered.
    *
    *  Why a persisted ledger rather than a derivation off `results`: the kid's result row is
@@ -415,6 +427,15 @@ function fireMilestone(world: WorldState, key: string, text: string): void {
   addEvent(world, { week: world.week, type: 'milestone', text, keep: true, milestoneKey: key })
 }
 
+/** Diary-1 D10: remember a moment in the durable ledger. Idempotent per `milestoneKey` (a first
+ *  can only happen once), SILENT (no event – the existing milestone events keep announcing), and
+ *  pure state: zero draws on any stream, so no capture can ever move the frozen MAIN pins. */
+function captureMilestone(world: WorldState, m: Milestone): void {
+  const key = milestoneKey(m)
+  if (world.milestones.some((x) => milestoneKey(x) === key)) return
+  world.milestones.push(m)
+}
+
 /** R10-9: how many finished seasons the career history keeps (newest wins). 30 years of junior/
  *  pro career is far past the game's horizon – the cap exists so the save has a hard ceiling. */
 const SEASON_HISTORY_CAP = 30
@@ -586,6 +607,9 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
       world.seasonHistory = world.seasonHistory.slice(-SEASON_HISTORY_CAP)
     }
   }
+  // D10: the season's closing rank joins the durable ledger – one row per season, keyed on the
+  // same index as the wrap-up milestone and the history row, so all three name the same season.
+  captureMilestone(world, { type: 'season-rank', week: wrapWeek, seasonIndex, rank: world.kidRank })
   // The season that just wrapped is banked in the summary – start the next one clean.
   world.seasonWins = 0
   world.seasonLosses = 0
@@ -1177,6 +1201,9 @@ export function rollInjury(world: WorldState): void {
   const descriptor = band.severity === 'minor' && weeksOut === 1 ? 'niggle' : SEVERITY_DESCRIPTOR[band.severity]
   const kind = `${part} ${descriptor}`
   world.injury = { kind, severity: band.severity, weeksRemaining: weeksOut, totalWeeks: weeksOut, sinceWeek: world.week }
+  // D10: her first injury, captured at ONSET (injuryHistory only records at recovery). Pure
+  // state, zero extra pulls from the injury generator – the draws above are untouched.
+  captureMilestone(world, { type: 'injury', week: world.week, kind })
 
   // One-time scans/treatment at onset, corridor-scaled off the physio sub-stream. minor draws
   // a $0 bill (band [0,0]) and emits no event – she just rests it off.
@@ -1915,6 +1942,10 @@ function finalizeTournament(world: WorldState): void {
     })
   }
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
+  // D10: the durable ledger remembers the FIRST title and the FIRST final per tier, at the moment
+  // they land. A title week captures both – reaching the final is part of winning it.
+  if (kidFinish === 0) captureMilestone(world, { type: 'title', week: world.week, tier: event.tier })
+  if (kidFinish <= 1) captureMilestone(world, { type: 'final', week: world.week, tier: event.tier })
   if (
     event.tier === 'national' &&
     p.result.matches.some((m) => (m.aId === KID_ID || m.bId === KID_ID) && m.winnerId === KID_ID)
@@ -2157,6 +2188,7 @@ export function createWorld(
     vacations: [],
     practices: [],
     recoveryBuff: null,
+    milestones: [],
     internationalEntryWeeks: [],
   }
   addEvent(world, {
@@ -2196,6 +2228,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.vacations = []
   save.practices = []
   save.recoveryBuff = null
+  save.milestones = []
   ensureSeason(save as WorldState)
   recomputeKidRank(save as WorldState)
   // R12-S1 (v17): a pre-v6 save carries no season history at all, so the honest value for "the rank
@@ -2474,7 +2507,13 @@ export function enterEvent(world: WorldState, eventId: string): void {
   world.entries.push(eventId)
   // ITF annual cap: an international entry spends one of the year's slots. Recorded by the EVENT's
   // week, which is both the slot's identity (one tournament a week) and the season it belongs to.
-  if (isCappedTier(event.tier)) world.internationalEntryWeeks.push(event.week)
+  if (isCappedTier(event.tier)) {
+    world.internationalEntryWeeks.push(event.week)
+    // D10: her FIRST international entry (j30+) is a moment the family keeps – captured here, at
+    // the moment the form goes in, which is what "first entry" means. Idempotent, so every later
+    // entry (and a withdrawal of this one) leaves the memory untouched.
+    captureMilestone(world, { type: 'international', week: world.week, tier: event.tier })
+  }
   addEvent(world, {
     week: world.week,
     type: 'expense',
@@ -2911,6 +2950,34 @@ function pendingView(world: WorldState): PendingView | undefined {
 
 export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
   const pending = pendingView(world)
+  // Computed ONCE and shared by the snapshot field and the diary facts – two computations could
+  // never disagree, but one is also cheaper and reads as the single decision it is.
+  const lossStreak = computeLossStreak(world)
+  // Diary-1: the facts + the selected lines, assembled from a narrow view of the world. Selection
+  // draws only from `seed:diary:*` / `seed:memory:*` sub-streams at SNAPSHOT time – zero MAIN
+  // draws, so the frozen capture (41550 / e6b0c709) is untouched by construction.
+  const diary = buildDiarySnapshot({
+    seed: world.seed,
+    week: world.week,
+    kidId: KID_ID,
+    startAgeYears: START_AGE_YEARS,
+    condition: world.condition,
+    fundsCents: world.fundsCents,
+    injury: world.injury
+      ? {
+          kind: world.injury.kind,
+          weeksRemaining: world.injury.weeksRemaining,
+          totalWeeks: world.injury.totalWeeks,
+        }
+      : null,
+    events: world.events,
+    lossStreak,
+    kidRank: world.kidRank,
+    prevKidRank: world.prevKidRank,
+    pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
+    milestones: world.milestones,
+    vacationWeek: vacationForWeek(world, world.week) !== undefined,
+  })
   return {
     schemaVersion: world.schemaVersion,
     careerId: world.careerId,
@@ -2968,7 +3035,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // (so the per-streak threshold is drawn once, off `seed:angry:<startWeek>`) and the FULL event
     // log (the snapshot only carries the trailing 60, which a long streak could outrun). Pure
     // derivation off state that already exists – no persisted field, no schema bump.
-    lossStreak: computeLossStreak(world),
+    lossStreak,
+    diary,
     lastSeasonSummary: world.lastSeasonSummary,
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
     seasonHistory: world.seasonHistory.map((h) => ({ ...h })),

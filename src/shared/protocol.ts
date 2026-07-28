@@ -4,6 +4,7 @@
 // Type-only imports (erased at compile – no runtime dependency on the engine).
 import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
 import type { MatchPlayer, Surface } from '../engine/match/types'
+import type { AvatarEmotion, PortraitStage } from './avatarEmotion'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
 export type CoachSetup = 'parent' | 'hired'
@@ -490,6 +491,105 @@ export interface ArrivalPreview {
   outgrown: boolean
 }
 
+// --- Diary-1 + Memory (docs/specs/family-diary.md, D1/D2/D3 + D10) -------------
+// The diary speaks in WORDS licensed by FACTS. The engine assembles the facts at snapshot time
+// (nothing here is persisted except the milestone ledger), selects at most one line per surface
+// off the `seed:diary:<week>` sub-stream, and the UI renders the strings verbatim – so a phrase
+// can never assert something the simulation did not do. src/engine/diary.ts owns the whole system.
+
+/** The durable moments a career keeps forever (D10, schema v18). Captured AT THE MOMENT they
+ *  happen; a dozen rows per career, so the ledger needs no pruning. */
+export type MilestoneType = 'title' | 'final' | 'international' | 'injury' | 'season-rank'
+
+/** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
+ *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
+export interface Milestone {
+  type: MilestoneType
+  /** the absolute career week it happened */
+  week: number
+  /** title/final: the tier it happened at. international: the tier of the first entry (absent on
+   *  a migrated save that only knows the week). */
+  tier?: TierId
+  /** injury: the injury kind, e.g. "ankle soreness" */
+  kind?: string
+  /** season-rank: the season it closed */
+  seasonIndex?: number
+  /** season-rank: her rank at that season's wrap-up */
+  rank?: number
+}
+
+/** How drained she is, as a WORD (D3 – Home speaks words; Stats keeps the number). */
+export type ConditionBand = 'fresh' | 'ok' | 'worn' | 'drained'
+
+/** How the family wallet is breathing, as a band – the diary never quotes the balance. */
+export type FundsPressure = 'tight' | 'watchful' | 'ok'
+
+/** Everything a diary phrase is allowed to know – assembled by the ENGINE at snapshot time, all
+ *  read off facts that already exist on the world. A phrase is selected BY these and may assert
+ *  nothing they do not carry (the honesty pin in tests/diary.test.ts sweeps exactly that). */
+export interface DiaryFacts {
+  week: number
+  /** the ONE face decision, computed engine-side (same inputs the paintings render) */
+  emotion: AvatarEmotion
+  /** a competitive result from THIS week is on her face (the emotion above is a result emotion) */
+  resultFresh: boolean
+  /** fresh result: she won her last match this week */
+  won: boolean
+  /** fresh result: the loss was the FINAL – runner-up, a good result (R8-6a) */
+  lostFinal: boolean
+  /** a tournament TITLE landed this week (finishIdx 0 on this week's summary) */
+  titleThisWeek: boolean
+  /** tier of the fresh result, when it could be resolved */
+  resultTier: TierId | null
+  /** her rank after this week's standings recompute is strictly better than before it –
+   *  the engine's capture (never derived in the UI) behind the third loss softener */
+  rankClimbed: boolean
+  /** consecutive competitive losses ending at her most recent competitive match (0 = none) */
+  lossStreak: number
+  /** raw condition 0..100 – the diary module bands it; surfaces print words, not this number */
+  condition: number
+  conditionBand: ConditionBand
+  /** the active injury, or null when healthy */
+  injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
+  /** this week's drains, read off the week's own events/state */
+  travelled: boolean
+  playedTournament: boolean
+  playedPractice: boolean
+  examsWeek: boolean
+  offSeasonWeek: boolean
+  vacationWeek: boolean
+  fundsPressure: FundsPressure
+  /** a milestone captured THIS week, if any */
+  freshMilestone: MilestoneType | null
+}
+
+/** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
+ *  one line. `anniversary` = the milestone's week is ~52 weeks ago (±1); `echo` = the deterministic
+ *  every-4-6-weeks pick off `seed:memory:<week>`. */
+export interface MemoryCard {
+  kind: 'anniversary' | 'echo'
+  milestone: Milestone
+  /** e.g. "one year ago" (anniversary) or the milestone's week label "W14 '31" (echo) */
+  whenLabel: string
+  /** the age band she was in at the milestone's week – what makes time felt */
+  stage: PortraitStage
+  /** the painting emotion the memory shows (title → happy, injury → injury, …) */
+  emotion: AvatarEmotion
+  line: string
+}
+
+/** The diary as the UI sees it: the facts, plus at most ONE selected line per surface. The photo
+ *  line may be null – silence is allowed and meaningful (an ordinary week may say nothing). */
+export interface DiarySnapshot {
+  facts: DiaryFacts
+  /** the one phrase under her name on the Home photo card (D2), or null for a quiet week */
+  photoLine: string | null
+  /** the one WHY line beside the condition bar (D1) – never empty */
+  conditionNote: string
+  /** the Memory card to show this week, or null */
+  memory: MemoryCard | null
+}
+
 export interface Snapshot {
   schemaVersion: number
   careerId: string
@@ -553,6 +653,10 @@ export interface Snapshot {
    *  null when her last competitive match was a win (or she has never played one). Derived at
    *  snapshot time from the event log – persists nothing, bumps no schema. */
   lossStreak: LossStreak | null
+  /** Diary-1: the facts + the selected lines for every diary surface (photo card, condition
+   *  note, Memory). Derived at snapshot time – only the milestone ledger behind `memory`
+   *  persists (schema v18). */
+  diary: DiarySnapshot
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on

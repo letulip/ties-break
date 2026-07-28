@@ -25,19 +25,13 @@
 // R10-16 doctrine.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
-import { isExamWeek, isOffSeasonWeek } from '../engine/season/calendar'
-import type { TierId } from '../engine/season/types'
+import { isExamWeek, isOffSeasonWeek, TIER_SHORT } from '../engine/season/calendar'
 
-/** Short tier names for width-starved UI (this button, the Home season strip). `TIERS[id].label`
- *  is the full "Regional Championship" – no 375px button carries that. */
-export const TIER_SHORT: Record<TierId, string> = {
-  local: 'Local',
-  regional: 'Regional',
-  national: 'National',
-  j30: 'J30',
-  j60: 'J60',
-  j300: 'J300',
-}
+/** Short tier names for width-starved UI (this button, the Home season strip). THE TABLE MOVED to
+ *  engine/season/calendar.ts (Diary-1): the diary's copy system speaks the same short names, and
+ *  one table on the engine side is the only way the button and the phrase can never disagree.
+ *  Re-exported here unchanged, so every existing import path keeps working. */
+export { TIER_SHORT }
 
 export type WeekAheadKind =
   | 'tournament'
