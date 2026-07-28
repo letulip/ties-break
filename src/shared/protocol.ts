@@ -153,6 +153,19 @@ export interface FinanceWindow {
   netCents: number
 }
 
+/** ONE week of the Home budget card's 12-week chart (epic/redesign-home): what came IN and what
+ *  went OUT, both as positive magnitudes. The existing `FinanceWindow` is a FOLD – it answers "how
+ *  much this season", which is the wallet's question – and a chart needs the shape over time, which
+ *  no fold can give back. Derived at snapshot time from the same `FinanceWeek[]` ledger the windows
+ *  fold, so the card and the wallet can never disagree about a week; persists nothing. */
+export interface FinanceWeekPoint {
+  week: number
+  /** sum of the week's POSITIVE category totals, in cents */
+  incomeCents: number
+  /** magnitude of the week's negative category totals, in cents (a positive number) */
+  expenseCents: number
+}
+
 export type StopReason =
   | 'tournament'
   | 'deadline'
@@ -590,6 +603,10 @@ export interface DiarySnapshot {
   facts: DiaryFacts
   /** the one phrase under her name on the Home photo card (D2), or null for a quiet week */
   photoLine: string | null
+  /** epic/redesign-home: the time-of-day word the diary page opens with – "Good morning" before the
+   *  week is played, "Good evening" once its tournaments have resolved, otherwise varied off
+   *  `seed:greet:<week>` and never repeating a word the caption already used. See greetingFor. */
+  greeting: string
   /** the one WHY line beside the condition bar (D1) – never empty */
   conditionNote: string
   /** the Memory card to show this week, or null */
@@ -617,8 +634,10 @@ export interface Snapshot {
   /** most recent 60 events, chronological (oldest first) */
   events: WorldEvent[]
   /** category-accurate spending/income over the full retained finance history (survives the
-   *  60-event cap). window12w = last 12 weeks; season = the current 52-week season block. */
-  finance: { window12w: FinanceWindow; season: FinanceWindow }
+   *  60-event cap). window12w = last 12 weeks; season = the current 52-week season block;
+   *  weekly12 = the SAME 12 weeks kept week-by-week, for the Home budget card's chart (a fold
+   *  cannot be un-folded, so the shape over time has to be carried separately). */
+  finance: { window12w: FinanceWindow; season: FinanceWindow; weekly12: FinanceWeekPoint[] }
   /** most recent financial transactions (amountCents present), id-ascending, up to 50 –
    *  independent of the mixed 60-event `events` cap so the ledger isn't starved by news. */
   financialEvents: WorldEvent[]

@@ -75,13 +75,40 @@ const tab = ref<TabId>('home')
 // in style.css and `iconUrl()` below). 'money' and 'kid' have no entry here on purpose
 // (see TabId). R13-12 (the owner's nav design): the Kid tab left the bar for the header
 // avatar, and "This week" – the plan + recap tab (ThisWeekScreen) – took the slot.
-const TABS: { id: TabId; icon: string; label: string }[] = [
-  { id: 'home', icon: 'home', label: 'Home' },
+//
+// epic/redesign-home (the owner's redesign, 28.07): the bar is now
+//   Season · Calendar · Home · Stats · More
+// with HOME IN THE CENTRE – the whole point of the new order, and the reason the bar keeps five
+// slots even though only four of them are live.
+//
+// TWO CONSEQUENCES, both deliberate:
+//
+//  1. CALENDAR IS A PLACEHOLDER. It is a real tab in the owner's design and it is NOT built in this
+//     slice. It renders (glyph + word, a third of the weight, disabled, no press state, no dot) so
+//     that Home actually sits in the middle. The alternative – four live tabs – puts Home in seat
+//     two of four, which is not the design; an empty gap in the bar reads as a rendering bug. A
+//     dimmed tab reads as "next". Its glyph is week.svg, the dot-grid calendar freed up below; the
+//     Season tab keeps season.svg (the dated page), so the two are never the same picture.
+//
+//  2. "THIS WEEK" LEFT THE BAR, NOT THE APP. It joins 'money' and 'kid' as a tabless CONTENT state –
+//     the established idiom here – and its door is Home's NEXT TOURNAMENT card, which is exactly
+//     what that screen is about (what she is entered for, what we plan for it, how the last one
+//     went). The fresh-recap dot moved onto that card with it, so nothing that used to be reachable
+//     or noticeable stopped being either.
+type NavId = TabId | 'calendar'
+const TABS: { id: NavId; icon: string; label: string; soon?: true }[] = [
   { id: 'play', icon: 'season', label: 'Season' },
-  { id: 'week', icon: 'week', label: 'This week' },
+  { id: 'calendar', icon: 'week', label: 'Calendar', soon: true },
+  { id: 'home', icon: 'home', label: 'Home' },
   { id: 'stats', icon: 'stats', label: 'Stats' },
   { id: 'more', icon: 'more', label: 'More' },
 ]
+/** The one writer of `tab` from the bar. A placeholder slot is inert by construction – it can never
+ *  route to a screen that does not exist, whatever its `id` says. */
+function openNav(entry: (typeof TABS)[number]): void {
+  if (entry.soon) return
+  tab.value = entry.id as TabId
+}
 function iconUrl(icon: string): string {
   return `${import.meta.env.BASE_URL}icons/${icon}.svg`
 }
@@ -429,7 +456,11 @@ function dismissSeasonSummary(): void {
          its primary button ("Play {tier}", playWeek) is the resume affordance on every tab. -->
 
     <main class="app-content with-next-week-bar">
-      <HomeScreen v-if="tab === 'home'" />
+      <!-- epic/redesign-home: Home's notecards are doors (the budget card opens the wallet, the
+           next-tournament card opens This week). The shell owns `tab`, so the screen ASKS – one
+           event, no router, no store field. `recapFresh` is the This-week dot, still decided by the
+           shared rule here (this file owns the per-career seen watermark) and only RENDERED there. -->
+      <HomeScreen v-if="tab === 'home'" :recap-fresh="weekTabDot" @navigate="tab = $event" />
       <SeasonScreen v-else-if="tab === 'play'" />
       <ThisWeekScreen v-else-if="tab === 'week'" />
       <KidScreen v-else-if="tab === 'kid'" />
@@ -464,17 +495,19 @@ function dismissSeasonSummary(): void {
         v-for="t in TABS"
         :key="t.id"
         class="tab-btn"
-        :class="{ active: tab === t.id }"
+        :class="{ active: tab === t.id, 'tab-soon': t.soon }"
         :data-tour="`tab-${t.id}`"
-        @click="tab = t.id"
+        :disabled="t.soon"
+        :aria-disabled="t.soon"
+        @click="openNav(t)"
       >
         <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
         <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. -->
         <span v-else-if="t.id === 'home' && homeHasNews" class="tab-dot"></span>
-        <!-- R13-12: a fresh, unseen week recap – same accent treatment again. -->
-        <span v-else-if="t.id === 'week' && weekTabDot" class="tab-dot"></span>
+        <!-- epic/redesign-home: the fresh-recap dot left this bar with the This-week tab – it is on
+             Home's Next-tournament card now, which is the door to that screen. -->
       </button>
     </nav>
 

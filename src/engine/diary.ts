@@ -698,6 +698,41 @@ export function diaryLine(surface: DiarySurface, facts: DiaryFacts, seed: string
   return typeof pick.text === 'function' ? pick.text(facts) : pick.text
 }
 
+// --- the greeting (epic/redesign-home) --------------------------------------------------------
+
+/** The four words the diary page can open with. Time of day, nothing else – the greeting is
+ *  CHROME above the date line, and the girl's week is the hero caption's job. */
+export const GREETINGS = ['Good morning', 'Good afternoon', 'Good evening', 'Good night'] as const
+export type Greeting = (typeof GREETINGS)[number]
+
+/** The greeting for this week's diary page.
+ *
+ *  THE OWNER'S RULE, and it comes first: morning before the week is played, evening once the
+ *  tournaments have resolved. Both arms are FACTS, so they win outright –
+ *   - `week === 0` is a career that has not played a week yet: the page is opened in the morning
+ *     of the whole story, which is exactly the beat the word is for;
+ *   - `playedTournament` is the engine's own "a tournament resolved inside this week".
+ *
+ *  Everything else – the training weeks, the exam weeks, the layoffs – has no time of day the facts
+ *  can name, so it VARIES, deterministically, off `seed:greet:<week>`: stable for the whole week
+ *  (no flicker across re-renders or reloads) and drawn on its own purpose-scoped sub-stream, so the
+ *  frozen MAIN capture cannot move. Nothing here runs inside the tick.
+ *
+ *  NOT A DUPLICATE OF THE CAPTION. The hero already speaks one line about her week, and the two sit
+ *  a thumb apart; a page that says "Good night" over "Asleep before nine, two nights running." has
+ *  said the same thing twice. The varying arm therefore drops any word the photo line has already
+ *  used ("morning" / "afternoon" / "evening" / "night"), and falls back to the full set if a future
+ *  caption should ever manage to use all four. */
+export function greetingFor(facts: DiaryFacts, photoLine: string | null, seed: string): Greeting {
+  if (facts.playedTournament) return 'Good evening'
+  if (facts.week === 0) return 'Good morning'
+  const line = (photoLine ?? '').toLowerCase()
+  const free = GREETINGS.filter((g) => !line.includes(g.slice('Good '.length)))
+  const pool = free.length > 0 ? free : GREETINGS
+  const rng = rngFromSeed(`${seed}:greet:${facts.week}`)
+  return pool[Math.floor(rng() * pool.length)]
+}
+
 // --- Memory (D10) ---------------------------------------------------------------------------
 
 /** One memory line per milestone type; same licence discipline (the licence IS the type match,
@@ -779,9 +814,13 @@ export function selectMemory(
 /** Everything the UI renders: facts + one line per surface. Called once per snapshot. */
 export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
   const facts = assembleDiaryFacts(view)
+  // The caption is selected FIRST: the greeting is allowed to see it, so the two can never say the
+  // same thing (greetingFor).
+  const photoLine = diaryLine('photo', facts, view.seed)
   return {
     facts,
-    photoLine: diaryLine('photo', facts, view.seed),
+    photoLine,
+    greeting: greetingFor(facts, photoLine, view.seed),
     // The licences cover every state the engine can produce (the coverage sweep in
     // tests/diary.test.ts proves it); the fallback is a sentence that is true of any week at all.
     conditionNote: diaryLine('condition', facts, view.seed) ?? 'The week went by.',

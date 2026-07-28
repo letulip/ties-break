@@ -28,9 +28,11 @@
 // every entry point no-ops when `Image` is unavailable.
 
 import { portraitStage, type AvatarEmotion, type PortraitStage } from '../shared/avatarEmotion'
+import type { FamilyBackground } from '../shared/protocol'
 
 const ART_DIR = 'images/fem-euro-brunnet/'
 const NAME = 'fem-euro-brunnet'
+const COACH_DIR = 'images/coaches/'
 
 /**
  * Every emotion the Kid screen / header can land on — i.e. every value `avatarEmotion()` can
@@ -90,6 +92,42 @@ export function cropUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
   return `${base()}avatars/${stage}-${emotion}.webp`
 }
 
+// --- the coach's face (epic/redesign-home) ---------------------------------------------------
+//
+// 16 coach masters shipped with the redesign; THREE of them are wired, one per family background,
+// as the DEFAULT coach the Home card shows. The mapping is the owner's own and it is the only
+// coach selection that exists today – picking a coach is its own future slice, and the other 13
+// portraits are on disk waiting for it.
+//
+// WHY THE OTHER 13 ARE NOT IN `NOT_SHIPPED` (scripts/optimize-art.mjs), even though nothing can
+// request them yet. That list exists for one measured reason, stated in the script: a master whose
+// output no code path can request is "dead weight in every user's download". The coach webp are
+// not in any user's download – vite.config's precache carries `globIgnores: ['**/images/**']`, and
+// /images/*.webp is a CacheFirst RUNTIME route, so a file is fetched if and only if some component
+// asks for its URL. Three URLs are constructible; three files will ever be fetched. The remaining
+// 13 (~137 KB) sit in dist/ costing nobody anything, and stay ready for the coach-choice slice
+// instead of having to be re-encoded from masters that live only on the author's machine.
+// NOT_SHIPPED's rule is honoured, not bent: its premise simply is not true of art outside the
+// precache. What WOULD be dishonest is preloading them, and none of them is preloaded.
+
+/** The default coach portrait per family background – the owner's mapping (28.07). The stems are
+ *  the master filenames: `budget` / `middle` / `elit` name the coach's own tier, not the girl's. */
+export const COACH_BY_BACKGROUND: Record<FamilyBackground, string> = {
+  working: 'budget-1',
+  middle: 'middle-1',
+  wealthy: 'elit-1',
+}
+
+/** Coach portrait URL for one stem (162x264 webp). */
+export function coachPortraitUrl(stem: string): string {
+  return `${base()}${COACH_DIR}${stem}.webp`
+}
+
+/** The default coach's portrait for a family background – what the Home coach card renders. */
+export function coachUrlFor(background: FamilyBackground): string {
+  return coachPortraitUrl(COACH_BY_BACKGROUND[background])
+}
+
 // Every URL this module has already asked for. A preload is idempotent and free to call on every
 // render/tick: the second call for a URL does nothing at all.
 const requested = new Set<string>()
@@ -139,6 +177,17 @@ export function preloadKidArt(stage: PortraitStage): string[] {
  *  for a duplicate `-fs8` copy of three frames it now shares with the Kid screen. */
 export function preloadStage(stage: PortraitStage): string[] {
   return [...preloadKidArt(stage), ...preloadFinaleArt(stage)]
+}
+
+/** ONE file (8-11 KB): the family's default coach portrait, on the first card grid the player sees.
+ *  Deliberately NOT folded into `preloadStage`/`preloadForAge` – those are keyed on her age band and
+ *  their budget ("14 urls per band, and only the faces the decision can return") is a rule worth
+ *  keeping literal. The coach changes with the family, not with the year, so it warms on its own
+ *  trigger (src/art/autoPreload.ts watches the background). */
+export function preloadCoachArt(background: FamilyBackground): string[] {
+  const url = coachUrlFor(background)
+  warm(url)
+  return [url]
 }
 
 /** Same, from her age – the caller usually holds `snapshot.ageYears`, not a stage. */

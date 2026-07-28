@@ -27,15 +27,76 @@
 }
 
 :root {
-  --bg: #0f172a;
-  --panel: #16213c;
-  --line: #263457;
-  --text: #dbe4f5;
-  --muted: #7d8db0;
-  --accent: #d9f24f;
-  --danger: #f2664f;
+  /* --- THE SURFACE NEUTRALS (epic/redesign-home, slice A) ---------------------------------------
+     Taken VERBATIM off the owner's design export, docs/design/screens.dc.html – which is the source
+     of truth for pixels on all eight screens and beats any prose description of them, this comment
+     included. The old five were a lighter cool slate (#0f172a / #16213c / #263457 / #dbe4f5 /
+     #7d8db0): the standard dark-SaaS palette, and the reason our screens read "grown-up but dry".
+     The export goes DARKER and quieter, and moves every hairline to a translucent white so a border
+     is light on the page rather than a drawn line – which is most of why its cards read as objects.
+
+     Same five roles, so no screen's structure changes and no unrelated screen is rewritten; every
+     screen inherits the export's surface for free, which is the point of paying for it in slice A.
+     The WARMTH the direction asks for is carried by the accents below (amber, orange, the cream
+     polaroid paper) on top of this cool base – exactly as the export does it. */
+  --bg: #0a0e13;
+  --panel: #0f1720;
+  --line: rgba(255, 255, 255, 0.07);
+  --text: #f2f6f8;
+  --muted: #8e9ba4;
+  /* The export's lime, a shade deeper than our old #d9f24f. It is the brand AND the export's one
+     call-to-read colour (every card kicker is this). */
+  --accent: #cfe152;
+  --danger: #ef4b3a;
+
+  /* --- THE DIARY LAYER --------------------------------------------------------------------------
+     Card/polaroid treatment for the Home redesign and every later slice that wants a notecard.
+     Namespaced so they compose with the neutrals above instead of competing with them. */
+
+  /* A card is a vertical gradient, not a flat fill – the export's own idiom, and what makes a card
+     read as lit from above. --card-edge is the hairline that cuts it out of the page. */
+  --card-top: #17212b;
+  --card-bottom: #121a22;
+  --card-edge: rgba(255, 255, 255, 0.055);
+  --radius-card: 17px;
+
+  /* Four steps of ink, because the export uses exactly four: the headline, the sentence, the label,
+     and the caption under a label. */
+  --ink: #f2f6f8;
+  --ink-2: #e3eaee;
+  --ink-soft: #8e9ba4;
+  --ink-dim: #6d7a83;
+
+  /* Money has two directions and both must read at 6px wide, side by side, in the budget chart. */
+  --money-in: #4ac96a;
+  --money-out: #ef4b3a;
+  /* The warm accents: lamplight and late sun. The diary's warmth on the export's cool base. */
+  --amber: #f5b942;
+  --orange: #e2822f;
+  /* Real photographic paper – the Memory polaroid, and the only light surface in the whole app. */
+  --polaroid-paper: #f3f0e8;
+  /* The bottom bar sits a step DARKER than the page, so the page floats above it. */
+  --nav-bg: #0c141b;
+
+  /* THE TILT. Fixed angles rather than a random one per render: a note that re-tilts on every
+     re-render is a nervous tic, and a random angle cannot be checked in a screenshot. */
+  --tilt-1: -1.1deg;
+  --tilt-2: 0.9deg;
+  --tilt-3: -0.6deg;
+  --tilt-4: -4deg;
+
+  --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.42);
+  --shadow-card-lift: 0 16px 34px rgba(0, 0, 0, 0.5);
+  --shadow-polaroid: 0 8px 20px rgba(0, 0, 0, 0.45);
+
   --font-heading: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* TODO (type, not this slice): the design export asks for Manrope + Caveat, pulled from
+     fonts.googleapis.com. Manrope we already self-host and it is --font-body. CAVEAT (the
+     handwritten hand, used in the export for the coach's signature) is NOT shipped: a remote font
+     link is a regression for an offline-first PWA, and self-hosting a second family is its own
+     decision. Nothing on Home needs it today – the signature belonged to the coach quote the owner
+     cut – so the gap costs this slice nothing. */
   /* THE CAPSULE RADIUS, named because the raw 999px was unfindable: the owner went looking for the
      round border expecting "50%" and found a magic number instead (26.07). The two are NOT
      interchangeable and the sheet keeps them apart on purpose:
@@ -827,104 +888,20 @@ button.danger:hover:not(:disabled) {
 
 /* --- Package J: Home hub v2 + Season tab -------------------------------------- */
 
-/* Diary-1 (D2): the living photo card – the big painting across the full card width, cropped
-   landscape around her face (object-position is set inline from src/art/faceRects.ts).
+/* epic/redesign-home REMOVED the Diary-1 Home furniture that lived here – `.photo-card` and its
+   3:2 album frame, `.photo-caption` / `.photo-line`, `.player-card` / `.player-name`, the
+   `.memory-body` / `.memory-photo` pair, `.coach-quote`, `.condition-cell`, `.rank-row` and
+   `.rank-help-btn`. Every one of them was the OLD Home and has exactly zero consumers now: the
+   redesigned page is full-bleed (no photo frame), her name is 42px ON the picture (no card), the
+   coach speaks in a photograph (no quote) and the rank chip absorbed the "?" button. The rules
+   they were replaced by are at the bottom of this file, under THE DIARY PAGE.
 
-   ASPECT RATIO 3:2, the photo-album print ratio, and that is the argument: the design doc's frame
-   is "a family photo album × a diary", and 3:2 is what a printed family photo IS. Tried against
-   16:10 in the browser (28.07): at the card's ~340px width 3:2 stands ~14px taller, keeps her
-   whole head with air above it across the emotion set, and reads as a photograph pasted into a
-   journal page; 16:10 read as a website hero – wider, more cinematic, less domestic. */
-.photo-card {
-  aspect-ratio: 3 / 2;
-  overflow: hidden;
-  border-radius: 12px;
-  border: 1px solid var(--line);
-}
-
-.photo-card-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.photo-caption {
-  margin-top: 10px;
-}
-
-/* The one diary phrase under her name (D2) – her week, in the parent's voice. */
-.photo-line {
-  font-style: italic;
-  font-size: 14px;
-  margin: 6px 0 0;
-}
-
-/* D1: the WHY line under the condition bar – words, engine-licensed, never a number. */
-.condition-note {
-  color: var(--muted);
-  font-size: 12.5px;
-  margin: 6px 0 0;
-}
-
-/* R13-3: the practice-strain warning, folded out of the removed Fit chip into the note area.
-   Same amber the strain read has always worn (the soft, overrulable caution tone). */
-.condition-note.warn {
-  color: #f2b34f;
-}
-
-/* D10: the Memory card – a small past-band portrait beside one line. */
-.memory-body {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.memory-photo {
-  width: 72px;
-  height: 72px;
-  border-radius: 10px;
-  object-fit: cover;
-  border: 1px solid var(--line);
-  flex-shrink: 0;
-}
-
-.memory-line {
-  font-style: italic;
-  font-size: 14px;
-  margin: 0;
-}
-
-/* R10-8: at 375px "JUNIOR RANK" and "SEASON POINTS" each wrapped to two lines while the value column
-   sat half empty – the label column was being squeezed by a `table-layout: auto` split that gave the
-   values more than they needed. `width: 1%` + nowrap inverts that: the label column takes EXACTLY
-   the width its longest label needs (one line, always) and every remaining pixel goes to the value.
-   Pairs with the copy trim in HomeScreen.vue ("Season points" -> "Season pts"). */
-.player-card th {
-  width: 1%;
-  white-space: nowrap;
-  padding-right: 8px;
-}
-
-/* .player-card-top / .player-avatar removed by Diary-1: the 64px crop top gave way to the
-   photo card above. The round header avatar (App.vue) is untouched – it never used these. */
-
-.player-name {
-  font-family: var(--font-heading); /* R9-4: the kid's name reads in Sora */
-  font-size: 16px;
-  font-weight: 600;
-}
+   `.card-divider` moved to MoreScreen's section below, which is its one surviving caller. */
 
 .card-divider {
   border: none;
   border-top: 1px solid var(--line);
   margin: 16px 0;
-}
-
-.coach-quote {
-  font-style: italic;
-  font-size: 13.5px;
-  margin: 0;
 }
 
 .condition-blocks {
@@ -2214,24 +2191,9 @@ tr.kid-row td {
   flex-shrink: 0;
 }
 
-/* Round-6: best-6 help "?" on the Home player card's Junior rank row – same muted-circle
-   idea as .tier-guide-btn, just smaller so it doesn't compete with the rank number/arrow
-   it sits beside. */
-.rank-help-btn {
-  width: 18px;
-  height: 18px;
-  padding: 0;
-  margin-left: 6px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-  vertical-align: middle;
-  flex-shrink: 0;
-}
+/* Round-6's best-6 help "?" was its own 18px circle beside the rank number. epic/redesign-home
+   folded it INTO the rank chip (.diary-rank) – the chip is the button now, one affordance where
+   there used to be two – so the rule has no consumers left. The dialog it opens is untouched. */
 
 .rank-help-rules {
   list-style: none;
@@ -2614,15 +2576,9 @@ tr.kid-row td {
 
 /* --- Round 7: Home rank row, real tier strip, recap days --------------------- */
 
-/* item 5a: the Junior-rank row is a flex line so the "?" can sit at the very end. */
-.rank-row {
-  display: flex;
-  align-items: center;
-}
-
-.rank-row .rank-help-btn {
-  margin-left: auto;
-}
+/* item 5a's Junior-rank ROW (a flex line, so the "?" could sit at its end) went with the player
+   card in epic/redesign-home: the rank is one chip on the photograph now (.diary-rank), and the
+   chip IS the help button. */
 
 /* item 3: real tier-progress chips (Local · W / Regional · SF / … / ITF 🔒). */
 .tier-chip {
@@ -2861,4 +2817,589 @@ tr.kid-row td {
    here, to the top-popup value, so the injury dialog and the banners can no longer drift apart. */
 .injury-stop {
   border-radius: 10px;
+}
+
+/* =================================================================================================
+   epic/redesign-home, slice A – THE DIARY PAGE
+   =================================================================================================
+   The full Home restructure the family-diary doc parked as D9/D12 ("SOON, after D2 proves the
+   direction"). D2 proved it, so this is the page, and its geometry is the owner's own design export
+   (docs/design/screens.dc.html, block "A. Home") measured off the markup rather than eyeballed.
+
+   THE FOUR IDEAS THE EXPORT IS BUILT ON, so a later slice can extend it without guessing:
+
+     * THE PHOTOGRAPH IS THE PAGE, not a picture on it. The hero runs edge to edge and MELTS into
+       the panel below through a bottom scrim; the date, the greeting, her name and the caption are
+       all laid ON it. There is no frame, no card and no rounded photo at the top of this screen.
+     * A CARD IS AN OBJECT: a vertical gradient, a translucent hairline, 17px corners, and art that
+       bleeds off its own edge under a soft mask instead of sitting in a box.
+     * ONE COLOUR MEANS "READ THIS". Every card kicker is the lime, at 10px/800 and a tenth of an em
+       of tracking. Nothing else on the page is that colour.
+     * FOUR STEPS OF INK (--ink … --ink-dim), and the export uses all four: headline, sentence,
+       label, and the caption under a label. */
+
+.diary {
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- 1 + 2. THE HERO, which carries the header --------------------------------------------------
+   Full-bleed: it cancels #app's 16px gutter so the photograph reaches both edges of the phone, the
+   way the export draws it. */
+.diary-hero {
+  position: relative;
+  margin: -16px -16px 0;
+  /* The export's 398px of an 844px device – kept as a RATIO so it holds on every phone, with a
+     floor and a ceiling so a short landscape window cannot crush it or a tablet turn it into a
+     poster. */
+  height: min(52vh, 420px);
+  min-height: 320px;
+  overflow: hidden;
+}
+
+.diary-hero-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* TWO scrims, and they do two different jobs.
+   TOP: darkens the first 40% so the date and the icons are legible over any of the 35 paintings.
+   BOTTOM: takes the photograph into --panel by 100%, which is what makes the picture read as the
+   page itself rather than as a banner sitting on top of it. */
+.diary-hero-top {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(6, 10, 14, 0.78) 0%, rgba(6, 10, 14, 0.18) 22%, rgba(6, 10, 14, 0) 40%);
+}
+
+.diary-hero-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(9, 14, 19, 0) 46%, rgba(11, 17, 23, 0.72) 78%, var(--bg) 100%);
+}
+
+/* The header row, laid on the photograph. */
+.diary-head {
+  position: absolute;
+  left: 20px;
+  right: 18px;
+  top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* "W27 2033 · Jun 3 – Jun 9" – OUR week label, the year in full, and the week's real days. Built by
+   shared/dates.ts weekDateLine and by nothing else. (The export prints a plain calendar date here;
+   the owner's ruling replaces it, because our whole game speaks in week numbers.) */
+.diary-date {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.86);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+.diary-tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.diary-tool {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  display: block;
+}
+
+.diary-tool:hover:not(:disabled) {
+  background: transparent;
+  color: var(--accent);
+}
+
+.diary-tool svg {
+  display: block;
+}
+
+/* The export's unread dot: alert red, ringed by the page so it reads on any painting. */
+.diary-tool-dot {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 2px rgba(10, 15, 20, 0.55);
+}
+
+/* Her name is the biggest type in the app, and it is the point of the screen. */
+.diary-id {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 74px;
+  pointer-events: none;
+}
+
+.diary-greeting {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0 0 4px;
+}
+
+.diary-name {
+  font-family: var(--font-heading);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+  margin: 0;
+}
+
+.diary-age {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 8px 0 0;
+}
+
+/* The rank chip – the page's ONE table-number, and the door to the best-6 explainer (round-6: the
+   owner was confused by the windowed ranking twice). It is a button, which is why the old separate
+   "?" is gone: one affordance where there used to be two. */
+.diary-rank {
+  pointer-events: auto;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(10, 15, 20, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.diary-rank:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgba(10, 15, 20, 0.55);
+  color: #ffffff;
+}
+
+/* THE CAPTION – a frosted chip low on the photograph, with a lime dot glowing beside it. The one
+   phrase the parent wrote about her week; it appears exactly once on the page. */
+.diary-caption {
+  position: absolute;
+  left: 18px;
+  bottom: 30px;
+  max-width: 250px;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 13px 16px 14px;
+  border-radius: 13px;
+  background: rgba(10, 15, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+
+.diary-caption-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
+  margin-top: 7px;
+  box-shadow: 0 0 8px rgba(207, 225, 82, 0.6);
+}
+
+.diary-caption-text {
+  font-size: 15px;
+  line-height: 1.42;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.96);
+  margin: 0;
+}
+
+/* Her body, immediately under the photograph: the ten squares (D3 – words and colour, never a
+   percentage) and the engine's WHY line. It is a fact about HER, so it rides with the hero rather
+   than becoming a fifth notecard. */
+.diary-body {
+  padding: 14px 4px 2px;
+}
+
+/* --- 3. THE CARD GRID --------------------------------------------------------------------------- */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+  padding: 2px 0 14px;
+}
+
+.note-card {
+  position: relative;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  padding: 14px;
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+  border: 1px solid var(--card-edge);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  min-height: 186px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.note-card.card-short {
+  min-height: 138px;
+}
+
+/* Picking a card up: a TAPPABLE card lifts under the finger. A card with nowhere to go does not
+   move – which is the whole affordance, and it costs no chevrons, no "tap to open" copy, no icons. */
+button.note-card {
+  cursor: pointer;
+}
+
+button.note-card:hover:not(:disabled),
+button.note-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-lift);
+  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+button.note-card:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-card);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-card,
+  button.note-card:hover:not(:disabled),
+  button.note-card:focus-visible,
+  button.note-card:active:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* ONE colour means "read this". Every card is labelled in it, and nothing else on the page is. */
+.note-kicker {
+  position: relative;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0;
+}
+
+.note-title {
+  position: relative;
+  margin: 11px 0 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  max-width: 118px;
+  text-wrap: pretty;
+}
+
+.note-meta {
+  position: relative;
+  margin: 9px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  max-width: 118px;
+}
+
+/* A figure and the word above it – the export's "Travel budget / $137" pair. */
+.note-foot {
+  position: relative;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.note-foot-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  margin: 0;
+}
+
+.note-figure {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin: 2px 0 0;
+}
+
+/* The empty state of any card. Not a hole and not an apology – a plain sentence where the content
+   would be, so a card is finished before it has anything to say. */
+.note-empty {
+  position: relative;
+  margin: 11px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--ink-soft);
+  max-width: 130px;
+  text-wrap: pretty;
+}
+
+/* --- NEXT TOURNAMENT ---------------------------------------------------------------------------- */
+
+/* THE VENUE ART, the export's signature move: the painting bleeds off the card's bottom-right
+   corner as a tall arch, and a diagonal mask dissolves its left edge INTO the card so there is no
+   seam and no frame. src/art/venues.ts decides which painting (stable per event, forever). */
+.venue-art {
+  position: absolute;
+  right: -4px;
+  bottom: 0;
+  width: 112px;
+  height: 136px;
+  border-radius: 56px 56px 14px 14px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(100deg, transparent 4%, #000 44%);
+  mask-image: linear-gradient(100deg, transparent 4%, #000 44%);
+}
+
+.venue-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* The masters are not one aspect ratio (626x505 to 625x627) – cover, never letterbox. */
+  object-fit: cover;
+}
+
+/* A fresh recap the player has not read – the dot that used to sit on the This-week tab, re-homed
+   onto the card that now opens that screen. */
+.note-dot {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(207, 225, 82, 0.6);
+}
+
+/* --- FAMILY BUDGET ------------------------------------------------------------------------------ */
+
+.budget-total {
+  position: relative;
+  font-family: var(--font-heading);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin: 12px 0 0;
+}
+
+.budget-total.negative {
+  color: var(--danger);
+}
+
+.budget-rule {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 12px 0 9px;
+}
+
+.budget-window {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.budget-chart {
+  display: block;
+  width: 100%;
+  height: 46px;
+  margin-top: auto;
+  overflow: visible;
+}
+
+.budget-bar-in {
+  fill: var(--money-in);
+}
+
+.budget-bar-out {
+  fill: var(--money-out);
+}
+
+.budget-axis {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1;
+}
+
+/* --- COACH -------------------------------------------------------------------------------------- */
+
+/* The owner cut the coach's line, so the card is his PHOTOGRAPH and the word. It uses the same
+   bleed-and-dissolve the tournament card uses for its venue – the export's own vocabulary – rather
+   than the export's 54px strip, which was sized for the sentence that is no longer there and would
+   have left two thirds of the card empty. */
+.coach-art {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(115deg, transparent 2%, #000 52%);
+  mask-image: linear-gradient(115deg, transparent 2%, #000 52%);
+}
+
+.coach-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+/* --- RECENT MEMORY ------------------------------------------------------------------------------ */
+
+/* A REAL polaroid: cream paper, a fat bottom lip, tilted, dropped on the corner of the card. The
+   only light surface in the app, and the reason the card reads as a page from an album. */
+.memory-polaroid {
+  position: absolute;
+  right: -8px;
+  top: 24px;
+  width: 68px;
+  transform: rotate(var(--tilt-4));
+  padding: 4px 4px 12px;
+  border-radius: 3px;
+  background: var(--polaroid-paper);
+  box-shadow: var(--shadow-polaroid);
+}
+
+.memory-polaroid img {
+  display: block;
+  width: 100%;
+  height: 52px;
+  object-fit: cover;
+}
+
+/* The tack that holds it down. */
+.memory-tack {
+  position: absolute;
+  right: 38px;
+  top: 22px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: #151d25;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.memory-tack::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.memory-line {
+  position: relative;
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--ink);
+  max-width: 92px;
+  text-wrap: pretty;
+}
+
+.memory-when {
+  position: relative;
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  max-width: 86px;
+}
+
+/* --- 4. what stays below the grid ---------------------------------------------------------------
+   The tier ladder and the news feed keep their markup (and every rule that pins it) and only change
+   chrome, so the page below the fold reads as more of the same diary rather than the start of an
+   older screen. */
+.diary-strip {
+  padding: 14px;
+  margin-bottom: 11px;
+  min-height: 0;
+  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+  border: 1px solid var(--card-edge);
+  border-radius: var(--radius-card);
+}
+
+.diary-strip h2 {
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+
+/* --- the bottom nav's Calendar placeholder ------------------------------------------------------
+   The owner's bar is Season · Calendar · Home · Stats · More, with HOME IN THE CENTRE – and a centre
+   only exists if there are five slots. Calendar is not built in this slice, so the slot renders its
+   glyph and its word at a third of the weight, disabled, with no press state and no dot: a tab that
+   is clearly NEXT rather than a tab that is broken. The alternative – four live tabs and a hole –
+   moves Home off centre, which is the one thing the owner's new order is about. */
+.tab-btn.tab-soon {
+  opacity: 0.34;
+  cursor: default;
+}
+
+.tab-btn.tab-soon:hover {
+  color: var(--muted);
+}
+
+/* The export's bar sits a step darker than the page, with an 11px label. */
+.tab-bar {
+  background: var(--nav-bg);
+}
+
+.tab-btn.active .tab-label {
+  font-weight: 700;
 }

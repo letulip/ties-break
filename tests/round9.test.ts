@@ -574,7 +574,10 @@ describe('pt4 — UI wiring', () => {
 
   it('R9-4: Sora reaches the kid name, tournament names and the Season heading', () => {
     const css = read('../src/style.css')
-    for (const sel of ['.kid-name', '.player-name', '.event-tier']) {
+    // ⚠ RE-AIMED by epic/redesign-home (28.07): the kid's name on Home left `.player-name` (the
+    // player card is gone) for `.diary-name` – the 42px headline laid on the hero photograph. The
+    // property is the NAME's, not the card's, and it moved with it.
+    for (const sel of ['.kid-name', '.diary-name', '.event-tier']) {
       const block = css.slice(css.indexOf(`${sel} {`))
       expect(block.slice(0, block.indexOf('}'))).toContain('var(--font-heading)')
     }
