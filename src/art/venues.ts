@@ -1,8 +1,8 @@
 // THE VENUE ART PICKER (epic/redesign-home, slice A) – which painted court a tournament card shows.
 //
-// 16 masters shipped as `public/images/fields/<tier>-<surface>-<n>.webp`, plus two `-venue-` frames
-// that are ESTABLISHING shots (a gate, a walkway) with no playable court in frame – the ones to use
-// where a card must not promise a surface.
+// 20 masters shipped as `public/images/fields/<tier>-<surface>-<n>.webp`, plus three `-venue-`
+// frames that are ESTABLISHING shots (a gate, a walkway) with no playable court in frame – the ones
+// to use where a card must not promise a surface.
 //
 // TWO HARD RULES, and they are the whole module:
 //
@@ -16,10 +16,9 @@
 //     cardinal sin – a surface the simulation will not play on, asserted in a picture. This is the
 //     one place the fallback ladder handed down with the art was NARROWED: "same tier, any surface"
 //     became "same tier, SURFACE-NEUTRAL shot", and a lower-tier court on the RIGHT surface is
-//     preferred to a same-tier court on the wrong one. The two gaps the art actually has – there is
-//     no `regional-grass` and no clean `j30` establishing shot – are both covered silently by it:
-//     a regional grass week borrows `local-grass-1`, and j30 never needs a neutral frame because
-//     all three of its surfaces are shot.
+//     preferred to a same-tier court on the wrong one. The one gap the art still has – there is no
+//     `regional-grass` – is covered silently by it: a regional grass week borrows `local-grass-1`.
+//     (j30 has all three surfaces AND its own establishing shot since the owner's second wave.)
 
 import type { TierId } from '../engine/season/types'
 import type { Surface } from '../engine/match/types'
@@ -46,6 +45,7 @@ export const FIELD_ART: readonly string[] = [
   'national-venue-2', // establishing shot – no court in frame
   'j30-clay-1',
   'j30-clay-2',
+  'j30-clay-3',
   'j30-hard-1',
   'j30-hard-2',
   'j30-grass-1',

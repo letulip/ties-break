@@ -1,4 +1,8 @@
 /* Round 5 item 32: self-hosted type pair – Sora (headings) + Manrope (body).
+   A2e (owner, 28.07) adds a THIRD: Caveat, the export's handwriting, for the things that are meant
+   to look written by hand rather than typeset – the note on a photograph, and later the coach's
+   signature and the weekly story. It earns its 51 KB by being the only thing on these screens that
+   is not a UI element.
    Files under public/fonts/ (curl'd from Google Fonts/gstatic, latin subset only);
    precached automatically – the workbox glob already covers woff2. font-display:
    swap + system fallbacks so text never blocks on the download. */
@@ -24,6 +28,14 @@
   font-weight: 500;
   font-display: swap;
   src: url('/fonts/manrope-500.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/caveat-600.woff2') format('woff2');
 }
 
 :root {
@@ -101,11 +113,13 @@
 
   --font-heading: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  /* SETTLED (owner, 28.07): the type pair stays ours – Sora on every heading, Manrope on everything
-     else, both self-hosted since R5-32. The design export asks for Manrope + CAVEAT (a handwritten
-     hand, used there for the coach's signature) off fonts.googleapis.com; we take neither the
-     remote link, which is a regression for an offline-first PWA, nor the third family. The
-     signature it was for belonged to the coach quote the owner had already cut. */
+  --font-hand: 'Caveat', 'Bradley Hand', 'Segoe Script', cursive;
+  /* SETTLED (owner, 28.07): Sora on every heading, Manrope on everything else, CAVEAT on anything
+     meant to read as handwriting. All three are SELF-HOSTED – the export links Manrope and Caveat
+     off fonts.googleapis.com and that link we do not take, because a remote font is a regression
+     for an offline-first PWA.
+     Caveat has a small x-height and long ascenders, so anywhere it is used it needs 3-4px more than
+     the sans would take at the same optical size. Never use it for a number or a control. */
   /* THE CAPSULE RADIUS, named because the raw 999px was unfindable: the owner went looking for the
      round border expecting "50%" and found a magic number instead (26.07). The two are NOT
      interchangeable and the sheet keeps them apart on purpose:
@@ -3498,14 +3512,18 @@ button.note-card:active:not(:disabled) {
   background: rgba(255, 255, 255, 0.55);
 }
 
+/* A2e: the one line on this page that is genuinely a note written on a photograph, so it is the
+   first place Caveat goes. Bigger than the sans it replaced (17px vs 13.5px) because Caveat's
+   x-height is far smaller - the two look the same size on screen. */
 .memory-line {
   position: relative;
   margin: 10px 0 0;
-  font-size: 13.5px;
-  font-weight: 700;
-  line-height: 1.3;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
   color: var(--ink);
-  max-width: 92px;
+  max-width: 96px;
   text-wrap: pretty;
 }
 

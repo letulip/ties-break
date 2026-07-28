@@ -371,10 +371,10 @@ describe('the venue paintings', () => {
   })
 
   it('the second j30 wave widened the pools it was meant to widen, and nothing else', () => {
-    // The owner de-branded and returned j30-1/2/4 (28.07); j30-3 is still held back over an ITF
-    // roundel that survived the pass. So j30 gains a second clay, a second hard and its own
-    // establishing shot – and j30 grass, which nothing new touched, must NOT have moved.
-    expect(venueCandidates('j30', 'clay')).toEqual(['j30-clay-1', 'j30-clay-2'])
+    // The owner de-branded and returned all four j30 frames (28.07). So j30 gains two more clay
+    // courts, a second hard and its own establishing shot – and j30 grass, which nothing new
+    // touched, must NOT have moved.
+    expect(venueCandidates('j30', 'clay')).toEqual(['j30-clay-1', 'j30-clay-2', 'j30-clay-3'])
     expect(venueCandidates('j30', 'hard')).toEqual(['j30-hard-1', 'j30-hard-2'])
     expect(venueCandidates('j30', 'grass')).toEqual(['j30-grass-1'])
   })
@@ -572,13 +572,16 @@ describe('the style foundation later slices reuse', () => {
     }
     expect(css).toContain("--font-heading: 'Sora'")
     expect(css).toContain("--font-body: 'Manrope'")
+    // A2e: Caveat came in as the handwriting, SELF-HOSTED like the other two.
+    expect(css).toContain("--font-hand: 'Caveat'")
     // Every self-hosted face has a file on disk, and there is no third family.
     const faces = [...css.matchAll(/url\('([^']+\.woff2)'\)/g)].map((m) => m[1])
     expect(faces.length).toBeGreaterThan(0)
     for (const f of faces) {
       expect(existsSync(`${ROOT}public${f.replace(/^\/?/, '/')}`), `missing font file ${f}`).toBe(true)
     }
-    expect(css).not.toMatch(/font-family:[^;]*Caveat/)
+    // ...and it is used where handwriting belongs, never on a control or a number.
+    expect(css).toContain('font-family: var(--font-hand)')
   })
 })
 
