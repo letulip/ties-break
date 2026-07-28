@@ -68,7 +68,7 @@ import { parentIncomeForWeekCents,
   vacationPackage,
   vacationPriceCents,
 } from './economy'
-import { generateCohort, driftCohort } from './season/cohort'
+import { generateCohort, driftCohort, ageCohort } from './season/cohort'
 import { growWeek, rollPotential, type KidSkills } from './development'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
@@ -87,7 +87,7 @@ import { buildDiarySnapshot, milestoneKey } from './diary'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 19
+export const SAVE_SCHEMA_VERSION = 20
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -2359,7 +2359,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //       last week's – the final off-season week of the season just gone – which is precisely "the
   //       rank she started this season on". Pure state, ZERO draws, and it runs before every RNG
   //       step so it cannot perturb the weekly sequence.
-  if (world.week % WEEKS_PER_YEAR === 0) world.seasonStartRank = world.kidRank
+  if (world.week % WEEKS_PER_YEAR === 0) {
+    world.seasonStartRank = world.kidRank
+    // 0a0b (v20): AND EVERYBODY GETS A YEAR OLDER. The cohort had no age at all until now, which is
+    // why it grew for ever and the ladder could never be caught. Pure arithmetic, ZERO draws, and
+    // it runs beside the rank capture because they are the same event: a season turned over.
+    ageCohort(world.cohort)
+  }
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)

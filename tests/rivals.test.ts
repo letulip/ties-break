@@ -563,12 +563,37 @@ function runWorld(seed: string, weeks: number): WorldState {
   return world
 }
 
-describe('C1 — derive, never store: no schema bump and no new cohort field', () => {
-  it('the save schema is untouched and a cohort row still carries exactly its generated fields', () => {
+describe('C1 — a cohort row carries exactly what it is meant to, and nothing else', () => {
+  it('the row is its generated fields plus the two Phase-4 ones, and no more', () => {
+    // ⚠ RE-AIMED at v20. C1's rule was "derive, never store" and it was right for FATIGUE - which
+    // is still derived from the results ledger and still stored nowhere. It was never a rule
+    // against the cohort HAVING properties: age and a ceiling are facts about a person, not a
+    // cache of something computable, and without them the field grew about 1.5 a year for ever
+    // and no career could catch the ladder.
+    //
+    // What C1 actually guards - that a row does not quietly accumulate derived state - is
+    // unchanged, and this list is still exhaustive.
     const world = runWorld('rival-wiring', 8)
     expect(world.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     for (const p of world.cohort.slice(0, 5)) {
-      expect(Object.keys(p).sort()).toEqual(['composure', 'growth', 'id', 'name', 'nation', 'ret', 'serve', 'stamina'])
+      expect(Object.keys(p).sort()).toEqual([
+        'ageYears',
+        'composure',
+        'growth',
+        'id',
+        'name',
+        'nation',
+        'potential',
+        'ret',
+        'serve',
+        'stamina',
+      ])
+    }
+    // ...and no CONDITION or fatigue is stored on a rival, which is the half of C1 that was never
+    // about schema at all.
+    for (const p of world.cohort) {
+      expect(Object.keys(p)).not.toContain('condition')
+      expect(Object.keys(p)).not.toContain('fatigue')
     }
   })
 

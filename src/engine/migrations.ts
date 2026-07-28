@@ -8,6 +8,7 @@ import {
 } from '../shared/protocol'
 import { isCappedTier, KID_ID, SAVE_SCHEMA_VERSION, seedWorldForV6, startingSkills, type WorldState } from './world'
 import { rollPotential } from './development'
+import { COHORT } from './season/cohort'
 import type { PlayerProfile } from '../shared/protocol'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
@@ -360,6 +361,29 @@ export function migrateSave(raw: unknown): WorldState {
     save.skills = start
     save.potential = rollPotential(String(save.seed), start)
     v = 19
+  }
+
+  // v19 -> v20: THE COHORT GETS AN AGE AND A CEILING. Until now they grew about 1.5 a year for
+  // ever, so no career could catch the ladder. Back-filled deterministically from the player's own
+  // seed - the same generator the cohort was built with would have given them these numbers, and a
+  // migrated career must not get a DIFFERENT field from a fresh one on the same seed.
+  if (v === 19) {
+    const cohort = Array.isArray(save.cohort) ? (save.cohort as unknown as Record<string, unknown>[]) : []
+    const rng = rngFromSeed(`${String(save.seed)}:cohort-age`)
+    for (const p of cohort) {
+      p.ageYears = pickInt(rng, COHORT.ageBand[0], COHORT.ageBand[1])
+      const [lo, hi] = COHORT.potentialBand
+      const head = () => lo + rng() * (hi - lo)
+      // Their CURRENT attributes are wherever the old unbounded drift left them, so the ceiling is
+      // measured from there: a save that has been running for years keeps the players it earned.
+      p.potential = {
+        serve: Number(p.serve) + head(),
+        ret: Number(p.ret) + head(),
+        composure: Number(p.composure) + head(),
+        stamina: Number(p.stamina) + head(),
+      }
+    }
+    v = 20
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {
