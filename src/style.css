@@ -146,10 +146,20 @@ body {
   font: 15px/1.45 var(--font-body);
 }
 
+/* The shell's gutter, as TOKENS, because the full-bleed hero has to cancel it exactly. It was
+   spelled here as `24px 16px 48px` and guessed as `-16px` over in .diary-hero, which left an 8px
+   band of page colour above the photograph – the last visible trace of the deleted header. Two
+   places, one pair of numbers, and now they cannot drift apart again. */
+:root {
+  --app-pad-top: 24px;
+  --app-pad-x: 16px;
+  --app-pad-bottom: 48px;
+}
+
 #app {
   max-width: 880px;
   margin: 0 auto;
-  padding: 24px 16px 48px;
+  padding: var(--app-pad-top) var(--app-pad-x) var(--app-pad-bottom);
 }
 
 h1 {
@@ -2791,7 +2801,8 @@ tr.kid-row td {
    way the export draws it. */
 .diary-hero {
   position: relative;
-  margin: -16px -16px 0;
+  /* Full-bleed: cancel the shell's gutter EXACTLY, on all three sides it touches. */
+  margin: calc(-1 * var(--app-pad-top)) calc(-1 * var(--app-pad-x)) 0;
   /* A3 (owner, 28.07): the hero is SQUARE, because the paintings are square (512x512) – so at the
      full width of the phone the whole frame is on screen and nothing is cut. It used to be
      min(52vh, 420px), which cropped a slice off every painting for no reason anyone asked for. The
