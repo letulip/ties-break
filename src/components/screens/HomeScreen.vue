@@ -25,6 +25,8 @@ import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 import { isExamWeek, isOffSeasonWeek } from '../../engine/season/calendar'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
+import { facePoint } from '../../art/faceRects'
+import { portraitUrl as portraitArtUrl } from '../../art/preload'
 import { TIER_SHORT } from '../../composables/weekAhead'
 // R11-5a: the ONE tier-state rule, shared with the Season screen's lock labels + open-tier note.
 import { isTierOpen, useTierStates } from '../../composables/tierState'
@@ -34,9 +36,32 @@ import RankHelpDialog from '../RankHelpDialog.vue'
 import { playSfx } from '../../audio/sfx'
 
 const game = useGameStore()
-// R9-13/16: the player-card portrait reflects her CURRENT state AND age stage via the
-// shared composable (same decision as the header crop + the Kid screen portrait).
-const { cropUrl: avatarUrl } = useKidEmotion()
+// Diary-1 (D2): the top of Home is the BIG painting now – the same emotion-correct 512px art the
+// Kid screen shows (already preloaded per band, so this costs zero new bytes), landscape-cropped
+// with `object-fit: cover` and steered by the face centre from the ONE crop table
+// (src/art/faceRects.ts), so the window shows her face plus the scene around it. The owner's ask,
+// verbatim: «фоточку на home давай ещё побольше … и кроп … не только на лицо, но и чуть больше из
+// кадра захватим». The emotion is the ENGINE's decision (snapshot.diary), same as the phrase
+// under the name – image and words cannot disagree by construction.
+const { portraitUrl, stage, emotion } = useKidEmotion()
+const photoStyle = computed(() => {
+  const p = facePoint(`${stage.value}-${emotion.value}`)
+  return { objectPosition: `${p.x}% ${p.y}%` }
+})
+// The one phrase under her name (D2) – null on a deliberately quiet week.
+const photoLine = computed(() => game.snapshot?.diary.photoLine ?? null)
+// The WHY line beside the condition bar (D1).
+const conditionNote = computed(() => game.snapshot?.diary.conditionNote ?? '')
+// The Memory card (D10): a past milestone + the painting from the band she was in THEN.
+const memory = computed(() => game.snapshot?.diary.memory ?? null)
+const memoryArt = computed(() =>
+  memory.value ? portraitArtUrl(memory.value.stage, memory.value.emotion) : '',
+)
+const memoryStyle = computed(() => {
+  if (!memory.value) return undefined
+  const p = facePoint(`${memory.value.stage}-${memory.value.emotion}`)
+  return { objectPosition: `${p.x}% ${p.y}%` }
+})
 
 function flagEmoji(code: string): string {
   if (!code) return ''
@@ -394,12 +419,16 @@ function openRankHelp(): void {
     <p v-if="game.error" class="error">{{ game.error }}</p>
 
     <section class="player-card">
-      <div class="player-card-top">
-        <img class="player-avatar" :src="avatarUrl" alt="" />
-        <div>
-          <div class="player-name">{{ kidFullName }} {{ flag }}</div>
-          <div class="hint" style="margin-top: 2px">age {{ ageYears }}</div>
-        </div>
+      <!-- Diary-1 (D2): the living photo card. The full painting, landscape-cropped around her
+           face (faceRects), with her name and ONE engine-licensed phrase under it. The 3:2 frame
+           is the photo-album print ratio – see style.css .photo-card for the choice. -->
+      <div class="photo-card">
+        <img class="photo-card-img" :src="portraitUrl" :style="photoStyle" alt="" />
+      </div>
+      <div class="photo-caption">
+        <div class="player-name">{{ kidFullName }} {{ flag }}</div>
+        <div class="hint" style="margin-top: 2px">age {{ ageYears }}</div>
+        <p v-if="photoLine" class="photo-line">{{ photoLine }}</p>
       </div>
       <table style="margin-top: 12px">
         <tbody>
@@ -437,7 +466,9 @@ function openRankHelp(): void {
             <th>Condition</th>
             <td>
               <div class="condition-cell">
-                <div class="condition-blocks" :title="`Condition ${Math.round(condition)}/100`">
+                <!-- D3: HOME speaks words, not percentages – the number (and its old tooltip) live
+                     on Stats/the planner. The squares carry the level, the chip carries the word. -->
+                <div class="condition-blocks">
                   <span
                     v-for="i in CONDITION_SEGMENTS"
                     :key="i"
@@ -450,6 +481,8 @@ function openRankHelp(): void {
                   {{ availabilityChip.label }}
                 </span>
               </div>
+              <!-- D1: one line of WHY, from real facts of the last tick (engine-licensed). -->
+              <p class="condition-note">{{ conditionNote }}</p>
             </td>
           </tr>
         </tbody>
@@ -545,6 +578,16 @@ function openRankHelp(): void {
             </tbody>
           </table>
         </div>
+      </div>
+    </section>
+
+    <!-- D10: the Memory card – an anniversary, or the deterministic every-few-weeks echo. The
+         painting is from the age band she was in at the milestone's week: time, made visible. -->
+    <section v-if="memory" class="memory-card">
+      <h2>Memory · {{ memory.whenLabel }}</h2>
+      <div class="memory-body">
+        <img class="memory-photo" :src="memoryArt" :style="memoryStyle" alt="" />
+        <p class="memory-line">{{ memory.line }}</p>
       </div>
     </section>
 

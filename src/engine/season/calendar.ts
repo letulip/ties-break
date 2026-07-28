@@ -154,6 +154,20 @@ export const TIERS: Record<TierId, TierDef> = {
  *  every monotonicity check in the tests. */
 export const TIER_LADDER: readonly TierId[] = ['local', 'regional', 'national', 'j30', 'j60', 'j300']
 
+/** Short tier names for width-starved surfaces (the next-week button, the Home season strip) and
+ *  for the diary's own voice ("Still tired from the J30 trip"). MOVED here from
+ *  composables/weekAhead.ts (Diary-1): the engine's copy system became a second consumer on the
+ *  far side of the engine/UI line, and two spellings of a tier's short name is exactly the drift
+ *  the one-table rule exists to prevent. weekAhead re-exports it, so UI imports are untouched. */
+export const TIER_SHORT: Record<TierId, string> = {
+  local: 'Local',
+  regional: 'Regional',
+  national: 'National',
+  j30: 'J30',
+  j60: 'J60',
+  j300: 'J300',
+}
+
 // Tier ids ordered by DESCENDING label length – the scan order tierFromLabel needs. "Junior Tour
 // 30" is a prefix of "Junior Tour 300", so a first-match scan would report every J300 result as a
 // J30 one. Derived, not hand-written, so a future label can never silently reintroduce the bug.

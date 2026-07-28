@@ -31,7 +31,12 @@ import type { TierId } from '../src/engine/season/types'
 
 const seasonScreen = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
 const homeScreen = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
-const kidEmotionSrc = readFileSync(new URL('../src/composables/kidEmotion.ts', import.meta.url), 'utf8')
+// PIN MOVED by Diary-1: the result/title walk left composables/kidEmotion.ts for engine/diary.ts
+// (lastKidResultOf), because the diary's copy system needed the same walk engine-side and one walk
+// in one place is the only way the painting and the phrase can never disagree. The property this
+// file pins – the walk asks resultShowsOnHerFace, not a parallel copy – is unchanged; only the
+// file that carries the walk moved.
+const kidEmotionSrc = readFileSync(new URL('../src/engine/diary.ts', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
 
 /** The body of a CSS rule, by selector (every occurrence – see the round-10 lesson). */
@@ -140,8 +145,8 @@ describe('R11-2 — no win/loss avatar swap for practice matches', () => {
 
   it('the gate is what the emotion walk actually asks – not a parallel copy', () => {
     const walk = kidEmotionSrc.slice(
-      kidEmotionSrc.indexOf('const lastResult'),
-      kidEmotionSrc.indexOf('const lastTitle'),
+      kidEmotionSrc.indexOf('function lastKidResultOf'),
+      kidEmotionSrc.indexOf('function lastKidTitleOf'),
     )
     expect(walk).toContain('resultShowsOnHerFace(e)')
     // the old unguarded `if (!match) continue` must not still be the only filter

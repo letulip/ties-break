@@ -140,6 +140,10 @@ export interface AvatarEmotionInput {
    *  keep the pre-anger behavior exactly. This function does no counting and no drawing of its own –
    *  it compares two numbers, which is what keeps it pure and keeps her face from flickering. */
   lossStreak?: LossStreak | null
+  /** Diary-1 (owner, mid-flight): her rank after THIS week's standings recompute is strictly
+   *  better than before it – captured by the ENGINE (diary facts), never derived in the UI.
+   *  Optional: callers that cannot supply it keep the pre-softener behavior exactly. */
+  rankClimbed?: boolean
 }
 
 /** State-aware idle emotion (R8-6b): what her face settles into once a result has decayed. */
@@ -201,6 +205,20 @@ function titleShields(week: number, lastTitle: LastKidTitle | null | undefined):
  * still reads composed even if it is her fifth straight loss, and a reigning champion is still
  * shielded. Anger INTENSIFIES the sad outcome; it does not outrank the reasons not to be sad.
  *
+ * THE THIRD SOFTENER – A LOSS THAT STILL CLIMBED THE TABLE (Diary-1, owner mid-flight): «она
+ * проиграла … но при этом в таблице поднялась – тогда она вполне может оставаться нормальной или
+ * серьёзной, а не расстроенной». Since the first-round zero, any points from a losing run mean she
+ * won matches first – so a rank climb on a loss week is almost always a deep run at a big event,
+ * exactly the "good loss" the owner means. PRECEDENCE, deliberately:
+ *
+ *   - BELOW the anger crossing: four-to-six straight defeats stay ANGRY even if stale points math
+ *     nudged the rank up – anger is about the run of defeats, not the table;
+ *   - BELOW the final/local/title softeners: they already produce `serious`; this one only
+ *     converts a would-be `sad`.
+ *
+ * And it softens the FACE, never the count: a good loss still extends the losing streak
+ * (computeLossStreak knows nothing of ranks), so the crossing still arrives on schedule.
+ *
  * The idle layer is untouched. It is a FATIGUE ladder (injury -> tired -> serious -> norm) and
  * anger is not a point on it; a result emotion also decays at the next weekly tick, so her anger
  * lasts exactly the week she earned it and then her state takes over, like every other result.
@@ -212,6 +230,7 @@ export function avatarEmotion({
   lastResult,
   lastTitle,
   lossStreak,
+  rankClimbed,
 }: AvatarEmotionInput): AvatarEmotion {
   if (lastResult && lastResult.week === week) {
     if (lastResult.won) return 'happy'
@@ -224,6 +243,10 @@ export function avatarEmotion({
     // `>=`; see the ordering note above). A comparison, never a count and never a draw – the engine
     // did both, once per streak, so this cannot return a different face for the same screen twice.
     if (lossStreak && lossStreak.losses === lossStreak.angerAt) return 'angry'
+    // The third softener, LAST by design (see the ordering note): a loss that still climbed the
+    // table converts only a would-be `sad` – it never outranks the crossing above, and the
+    // `serious` softeners above never needed it. A boolean the ENGINE captured, never a UI guess.
+    if (rankClimbed) return 'serious'
     return 'sad'
   }
   return idleEmotion(injured, condition)

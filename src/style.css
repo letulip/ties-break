@@ -780,10 +780,66 @@ button.danger:hover:not(:disabled) {
 
 /* --- Package J: Home hub v2 + Season tab -------------------------------------- */
 
-.player-card-top {
+/* Diary-1 (D2): the living photo card – the big painting across the full card width, cropped
+   landscape around her face (object-position is set inline from src/art/faceRects.ts).
+
+   ASPECT RATIO 3:2, the photo-album print ratio, and that is the argument: the design doc's frame
+   is "a family photo album × a diary", and 3:2 is what a printed family photo IS. Tried against
+   16:10 in the browser (28.07): at the card's ~340px width 3:2 stands ~14px taller, keeps her
+   whole head with air above it across the emotion set, and reads as a photograph pasted into a
+   journal page; 16:10 read as a website hero – wider, more cinematic, less domestic. */
+.photo-card {
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+}
+
+.photo-card-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-caption {
+  margin-top: 10px;
+}
+
+/* The one diary phrase under her name (D2) – her week, in the parent's voice. */
+.photo-line {
+  font-style: italic;
+  font-size: 14px;
+  margin: 6px 0 0;
+}
+
+/* D1: the WHY line under the condition bar – words, engine-licensed, never a number. */
+.condition-note {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin: 6px 0 0;
+}
+
+/* D10: the Memory card – a small past-band portrait beside one line. */
+.memory-body {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.memory-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.memory-line {
+  font-style: italic;
+  font-size: 14px;
+  margin: 0;
 }
 
 /* R10-8: at 375px "JUNIOR RANK" and "SEASON POINTS" each wrapped to two lines while the value column
@@ -797,14 +853,8 @@ button.danger:hover:not(:disabled) {
   padding-right: 8px;
 }
 
-.player-avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 14px;
-  object-fit: cover;
-  border: 1.5px solid var(--accent);
-  flex-shrink: 0;
-}
+/* .player-card-top / .player-avatar removed by Diary-1: the 64px crop top gave way to the
+   photo card above. The round header avatar (App.vue) is untouched – it never used these. */
 
 .player-name {
   font-family: var(--font-heading); /* R9-4: the kid's name reads in Sora */
