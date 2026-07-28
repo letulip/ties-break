@@ -240,6 +240,11 @@ const STOP_REASON_TEXT: Record<string, string> = {
   // A withdrawal costs her an entry AND its fee, so it must never slide past during a multi-week
   // advance – the same trap the owner hit with a silent injury withdrawal.
   medical: 'Stopped: she was not cleared to play – withdrawn on medical advice.',
+  // R12-15 – THE DEAD CLICK. This beat had no copy anywhere and no stop at all: an entry whose list
+  // had already closed came round while she was still laid up, the week resolved as a walkover with
+  // the fee forfeited, and the only trace was one line in the news feed. The button that spent it
+  // had just said "Play". Now the advance halts and says what it cost.
+  walkover: 'Stopped: she was too injured to play – walkover, entry fee forfeited.',
 }
 // R11-1: an advance reports the SET of reasons it stopped for, already in surfacing order
 // (STOP_PRECEDENCE, medical first). Every gate below asks "is my reason in the set?" instead of

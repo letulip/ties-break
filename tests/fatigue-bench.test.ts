@@ -153,7 +153,7 @@ describe('policy ordering (the load-management axis)', () => {
     expect(ratio).toBeLessThan(3)
   })
 
-  it('the C3 ≥3x anchor is LOST AGAIN at 104w – the run-fatigue ladder compresses it (wave-3)', () => {
+  it('the C3 ≥3x anchor is BACK at 104w – R12-6 spread the adjacent Nationals (round-12)', () => {
     // The owner's target metric: across two seasons the enter-everything grinder drifts low
     // enough that fatigue-tau separation finally triples the careful player's injury rate.
     // *** SEEDS TRIMMED 25.07 (ladder-up): sim cost per week is no longer flat – once she climbs
@@ -245,12 +245,34 @@ describe('policy ordering (the load-management axis)', () => {
     // than the extra matches cost her. So the ratio slips 0.1 for the healthiest possible reason.
     // FOR THE OWNER, unchanged from the note above: restoring >= 3 is a knob decision
     // (injuryFatigueSlope / the careful entry margin), and this branch does not take it. ***
+    //
+    // *** THE TRIPWIRE FIRED, AND THE ANCHOR IS BACK: 2.833 -> 3.122 (round-12, wave A + R12-6).
+    // Re-read as the note above demands. NO KNOB MOVED on the injury model – the cause is two
+    // correctness fixes, exactly like the R10-17 episode further up. MEASURED, same cells, N=10,
+    // 104w, paired seeds, on this branch, gap OFF vs ON:
+    //     R12-6 gap OFF   grinder 128 / careful 44 = 2.909 · entries 785 / 610 · cond 29.5 / 85.9
+    //     R12-6 gap ON    grinder 128 / careful 41 = 3.122 · entries 788 / 599 · cond 29.6 / 85.5
+    // (and the 2.833 -> 2.909 half is wave A's R12-4/11 vacation tau factor: `careful` is the only
+    // policy that books packages, so it is the only one the protection reaches.)
+    //
+    // MECHANISM, and it is the SAME asymmetry every note in this block has found, once more: the
+    // GRINDER DOES NOT MOVE AT ALL – 128 injuries either way, +3 entries, +0.1 condition. She races
+    // everything and lives near the floor, so moving two Nationals one week apart is invisible to
+    // her. Everything that moves is the CAREFUL parent's, and it moves because she is the policy
+    // that PLANS: she enters only above the tier floor + 10, and a pair of ADJACENT Nationals used
+    // to offer her two shots at the tier inside one recovery window (block 0's weeks 47 and 48 –
+    // the owner's own "including the last two weeks"). Spread to 46 and 48, one of them now lands
+    // where her condition gate refuses it: 11 fewer entries, 3 fewer injuries.
+    // So the owner's C3 >= 3x target is met again as a side effect of fixing a calendar bug, which
+    // the R10-17 note already called the best way for a balance target to be met.
     const ratio = gInj / cInj
     // The DIRECTION is the property that must never break: the grinder gets hurt far more often.
     expect(ratio).toBeGreaterThan(2)
-    // ...and it is knife-edge-close to the owner's >= 3 target without meeting it (2.94). If a future
-    // change restores >= 3, this fails and gets re-read rather than quietly re-pinned.
-    expect(ratio).toBeLessThan(3)
+    // ...and the owner's C3 anchor is MET again (3.12). This is the tripwire in the other direction
+    // now: if content pushes it back under 3, this fails and gets re-read rather than quietly
+    // re-pinned. Deliberately NOT tightened into a point pin – see every note above.
+    expect(ratio).toBeGreaterThan(3)
+    expect(ratio).toBeLessThan(4)
   })
 })
 

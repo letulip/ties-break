@@ -3,6 +3,7 @@ import {
   DEFAULT_PROFILE,
   STOP_PRECEDENCE,
   WEEK_PLAN_PRESETS,
+  type ArrivalPreview,
   type CountingResult,
   type EntryCapUsage,
   type FamilyBackground,
@@ -78,7 +79,7 @@ import { applySurfaceStyle } from './match/style'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 16
+export const SAVE_SCHEMA_VERSION = 17
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -126,6 +127,17 @@ export interface WorldState {
   kidRank: number
   /** kidRank as it stood at the start of the last resolved week; null before any tick (v7). */
   prevKidRank: number | null
+  /** R12-S1 (v17): her dense rank as she ENTERED the season currently in progress – captured at
+   *  the top of the tick into the season's first week, and read once, at that season's wrap-up.
+   *
+   *  Persisted rather than derived because it is IRRECOVERABLE by the time it is wanted: the wrap
+   *  fires 49 weeks into the season and `pruneResults` keeps only a 52-week trailing window, so the
+   *  results that produced this rank are long gone (see maybeFireSeasonWrapUp for the full story of
+   *  the "from #1" it used to print). One number per career, overwritten yearly.
+   *
+   *  null only on a save migrated from a pre-v17 schema mid-season – nothing in such a save can
+   *  reconstruct it, and `SeasonSummary.startRank` has always been nullable. */
+  seasonStartRank: number | null
   /** a tournament being revealed round by round; null when no reveal is in progress (v8). */
   pendingTournament: PendingTournament | null
   /** best (smallest) finish index the kid has ever reached per tier (v10); updated at
@@ -146,6 +158,11 @@ export interface WorldState {
    *  meaningful state: optional, so every pre-existing save loads unchanged with no migration, and a
    *  reload simply re-derives it on the next tick that withdraws her. */
   medicalWithdrawalWeek?: number
+  /** R12-15: the week an entered tournament resolved as a WALKOVER (she was inside her layoff when
+   *  it came round). Same shape and the same job as `medicalWithdrawalWeek` above – it forfeits her
+   *  entry fee, so the advance must halt on it once and the player must SEE it happen. Derived, not
+   *  persisted; a reload re-derives it on the tick that walks her over. */
+  walkoverWeek?: number
   seasonWins: number
   seasonLosses: number
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
@@ -488,8 +505,26 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
   for (const h of world.injuryHistory) weeksInjured += overlap(h.week - h.weeksOut, h.week)
   if (world.injury) weeksInjured += overlap(world.injury.sinceWeek, wrapWeek)
 
-  const startRanking = computeRanking(world.results, yearStart, [...cohortIds(world), KID_ID])
-  const startRank = startRanking.find((r) => r.playerId === KID_ID)?.rank ?? null
+  // R12-S1 – "#89 ↓88 FROM #1" (owner's screenshots, BOTH careers, season 2). She did not start
+  // season 2 ranked first; nobody did.
+  //
+  // THE BUG. This line used to be a REPLAY:
+  //     computeRanking(world.results, yearStart, [...cohortIds(world), KID_ID])
+  // – "rank everyone as they stood on the season's first week" – and the comment above it claimed
+  // the data was still there ("still inside the 52-week ranking window, so nothing has been pruned
+  // away yet"). That claim is false, and it is false by 49 weeks. The wrap fires at yearStart + 49,
+  // and `pruneResults` keeps `world.week - r.week <= 52`, i.e. weeks from yearStart − 3 onward. The
+  // ranking AT yearStart needs the 52 weeks BEFORE it – the whole season that earned her the rank
+  // she carried in – and every one of them has already been pruned. So `computeRanking` ran over a
+  // ledger holding almost nothing, virtually the entire field came out on 0 points, and competition
+  // ranking gives every member of a tie the SAME rank: #1. Her "season start rank" was an artefact
+  // of an empty table, and it read as a fall from the top of the world.
+  //
+  // It is not recoverable at wrap-up – the rows are gone – so it is CAPTURED instead, at the moment
+  // it is true: the top of the tick into the season's first week (see tickWeek), from the rank she
+  // carried in. Persisted, because a save can be closed mid-season (schema v17). null on a career
+  // migrated from an older save mid-season, which every reader already handles as "not recorded".
+  const startRank = world.seasonStartRank
   const rankMove =
     startRank === null || startRank === world.kidRank
       ? ''
@@ -497,7 +532,15 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
         ? ` (↑${startRank - world.kidRank} vs season start)`
         : ` (↓${world.kidRank - startRank} vs season start)`
 
-  const bestText = bestFinish === null ? 'no tournaments played' : `best ${finishLabel(bestFinish)}`
+  // R12-S2 (owner's screenshot): the row LABEL is already "Best result", so the value said
+  // "best Champion". The value is the finish, and nothing else – "Champion" / "Runner-up" /
+  // "Semifinalist". The no-tournaments phrasing is untouched: it is a sentence, not a finish.
+  // Checked against every consumer: SeasonSummaryDialog's "Best result" row (the row this fixes),
+  // the wrap-up milestone below (which reads as a bare clause between two others, and reads better
+  // without the stray adjective), and the Stats season table – which never used this string at all,
+  // it renders `bestFinish` through `finishLabel` itself. Summaries banked BEFORE this change keep
+  // their stored wording, which is correct: a recap is a record of what was said.
+  const bestText = bestFinish === null ? 'no tournaments played' : finishLabel(bestFinish)
   const fundsSign = fundsDeltaCents >= 0 ? '+' : '-'
   const fundsText = `${fundsSign}$${Math.abs(Math.round(fundsDeltaCents / 100)).toLocaleString('en-US')}`
 
@@ -752,7 +795,63 @@ export function medicalBlock(condition: number): MedicalBlock | null {
  *  NOT for "is she hurt right now" – that is a plain `world.injury !== null` on the current week. */
 export function layoffCovering(world: WorldState, week: number): WorldState['injury'] {
   const injury = world.injury
-  return injury !== null && week < world.week + injury.weeksRemaining ? injury : null
+  return injury !== null && layoffCoversWeek(world.week, injury.weeksRemaining, week) ? injury : null
+}
+
+/** R10-17's window as PURE ARITHMETIC, with no WorldState in sight.
+ *
+ *  R12-5b (owner playtest 27.07 – the planner sheet still rendered the Practice tab bookable
+ *  during a 5-week layoff, and booking would have thrown) needs this comparison on the UI side of
+ *  the wire, where there is a Snapshot and no world. Rather than let a component re-spell
+ *  `week < currentWeek + weeksRemaining` – the fourth spelling of the rule R10-17 exists to make
+ *  singular – the arithmetic is extracted here and BOTH shapes call it: `layoffCovering` for the
+ *  engine, `layoffBlock` for anything holding a snapshot. Same comparison, one implementation.
+ *
+ *  `weeksRemaining` is nullable so a caller can pass `snapshot.injury?.weeksRemaining` straight in;
+ *  null/undefined/0 all mean "no layoff". Pure integer comparison, zero RNG. */
+export function layoffCoversWeek(
+  currentWeek: number,
+  weeksRemaining: number | null | undefined,
+  week: number,
+): boolean {
+  return weeksRemaining !== null && weeksRemaining !== undefined && weeksRemaining > 0 && week < currentWeek + weeksRemaining
+}
+
+/** THE LAYOFF SENTENCE, written once. Four surfaces refuse a week because she is laid up – the
+ *  entry gate, the planner's `assertPlannable` throw, the arrival gate and (since R12-5b) the
+ *  planner SHEET's disabled Practice button – and a disabled button whose reason differs from the
+ *  message the same click would have thrown is exactly the drift R10-16 is about. */
+function injuredDetail(weeksRemaining: number): string {
+  return `Injured – back in ${weeksRemaining} weeks.`
+}
+
+/** THE LAYOFF AS A BLOCK – the exact shape and role `medicalBlock` has, for the other half of the
+ *  planner's body gate (R12-5b).
+ *
+ *  THE BUG (owner, round 12): the sheet asked `medicalBlock(condition)` and nothing else, so during
+ *  a 5-week layoff the Practice tab rendered a live "Book the match" button whose click
+ *  `assertPlannable` would have thrown on. The engine was right and the sheet was silent – the
+ *  R10-16 doctrine in one line: every control must either act or be disabled WITH A REASON.
+ *
+ *  Takes the two facts a Snapshot already carries (its `week` and its `injury.weeksRemaining`), so
+ *  the component needs nothing new on the wire and no world. Returns the SAME sentence
+ *  `assertPlannable` throws, by construction. Null = she is free that week. */
+export interface LayoffBlock {
+  level: 'blocked'
+  reason: 'injured'
+  detail: string
+}
+export function layoffBlock(input: {
+  /** the snapshot's current week */
+  currentWeek: number
+  /** the snapshot's active injury, or null when healthy */
+  injury: { weeksRemaining: number } | null
+  /** the week being planned */
+  week: number
+}): LayoffBlock | null {
+  const weeksRemaining = input.injury?.weeksRemaining
+  if (!layoffCoversWeek(input.currentWeek, weeksRemaining, input.week)) return null
+  return { level: 'blocked', reason: 'injured', detail: injuredDetail(weeksRemaining!) }
 }
 
 export function availabilityStatus(world: WorldState, event: SeasonEvent): AvailabilityStatus {
@@ -761,7 +860,7 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   // is unknowable, which is why the doctor re-checks her on arrival.
   const layoff = layoffCovering(world, event.week)
   if (layoff !== null) {
-    return { level: 'blocked', reason: 'injured', detail: `Injured – back in ${layoff.weeksRemaining} weeks.` }
+    return { level: 'blocked', reason: 'injured', detail: injuredDetail(layoff.weeksRemaining) }
   }
   // Ladder-up: the junior international tour opens at 13. Our detailed sim starts at 14, so this
   // never fires today – it is wired now so the childhood prologue (Phase 6) inherits the rule for
@@ -872,6 +971,68 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
   return availabilityStatus(world, event)
 }
 
+// --- THE ARRIVAL GATE (R12-15 / R12-3) ----------------------------------------------------------
+//
+// `entryStatus` above answers "may she ENTER this event?". Nothing answered the OTHER question the
+// player asks every single week – "what will actually happen when this entered week arrives?" – so
+// three surfaces answered it separately and one of them lied:
+//
+//   * `tickWeek` step 2 asked `world.injury !== null` and `medicalClearance(condition)` INLINE. Two
+//     hand-rolled reads of rules that already exist as named functions (`layoffCovering` – the
+//     R10-17 window – and `medicalBlock`), which is precisely the shape R10-5 was written to end.
+//   * `composables/weekAhead.ts` asked NOTHING. It found the entered event for `week + 1` and
+//     printed "🏆 Play {TIER} ▶", with a comment admitting the injury layoff was "deliberately NOT
+//     a branch here".
+//   * nothing at all reported that the committed entry was to a tier she has since OUTGROWN.
+//
+// THE OWNER'S DEAD CLICK (R12-15, the round's worst item), reproduced exactly on seed
+// "r12-repro-12" at week 4: an injury onsets in week W; her entry for week W+1 is already PAST its
+// deadline, so `rollInjury`'s F45-2 sweep deliberately leaves it alone (the fee is committed – "no
+// refunds"); the sticky bar reads the entry and promises "🏆 Play Local ▶"; the click ticks the
+// week, step 2 takes the walkover branch, and the week resolves with a single news line, no
+// tournament, no refund, no dialog and no toast – `advanceWeeks` collected no stop reason at all
+// (the injury was not FRESH that week, and a walkover was not a reason). No refund, no tournament,
+// no error: the button did nothing a player could see.
+//
+// THE DIVERGENCE FROM THE PRACTICE PATH the owner noticed is right here. A booked friendly inside
+// the layoff is cancelled AT ONSET by `rollInjury` and refunded in full, so the money visibly comes
+// back and the injury dialog lists it. A post-deadline tournament entry is deliberately NOT
+// cancelled – the fee is committed – so it rode silently into a walkover a week later with nothing
+// surfacing it. The fee rule is correct and stays; what was missing is that the walkover must be
+// ANNOUNCED (a stop reason, see `advanceWeeks`) and must not be PROMISED as a tournament (this
+// verdict, carried to the button on the snapshot).
+//
+// So: ONE rule, three readers. `tickWeek` consumes it to resolve the week, `toSnapshot` previews it
+// so the button can tell the truth, and the tests pin both halves. Pure state, ZERO RNG draws on
+// any stream – the frozen MAIN capture (41550 / e6b0c709) cannot move, and by construction the
+// verdicts are the same two comparisons step 2 already made, so nothing about a resolved week
+// changed either.
+export type ArrivalVerdict = 'play' | 'injured' | 'medical'
+export interface ArrivalStatus {
+  verdict: ArrivalVerdict
+  /** player-facing reason; present exactly when `verdict !== 'play'` */
+  detail?: string
+  /** Her points have passed the tier's ceiling. NOT a block and never will be: once a list has
+   *  closed with her on it the entry is COMMITTED and the event plays (R10-3 / R10-5 – treating a
+   *  committed entry as illegal is what produced the round-10 dead end). It rides on the verdict so
+   *  every surface can SAY so, which is the half R12-3 was missing. */
+  outgrown: boolean
+}
+
+/** What the play week will do with `event` – asked with the SAME predicates every other surface
+ *  reads: `layoffCovering` for the body (against the EVENT's week, so the R10-17 window governs
+ *  here too) and `medicalBlock` for the doctor. Precedence mirrors `availabilityStatus` exactly –
+ *  injured > medical – so the entry gate and the arrival gate can never disagree about which beat
+ *  fires. */
+export function arrivalStatus(world: WorldState, event: SeasonEvent): ArrivalStatus {
+  const outgrown = outgrewTier(event.tier, kidPoints(world))
+  const layoff = layoffCovering(world, event.week)
+  if (layoff !== null) return { verdict: 'injured', detail: injuredDetail(layoff.weeksRemaining), outgrown }
+  const medical = medicalBlock(world.condition)
+  if (medical) return { verdict: 'medical', detail: medical.detail, outgrown }
+  return { verdict: 'play', outgrown }
+}
+
 // --- Season-Life: injuries + physio (slice C) ---------------------------------
 // ALL of this slice's randomness lives on the PRIVATE per-week sub-streams
 // `rngFromSeed(seed + ':injury:' + week)` and `rngFromSeed(seed + ':physio:' + week)`.
@@ -922,6 +1083,12 @@ export function injuryTau(world: WorldState): number {
   tau *= ageInjuryFactor(START_AGE_YEARS + Math.floor(world.week / 52))
   tau *= consecutivePlayFactor(playedWeeksInTrailing4(world))
   if (enteredScheduledThisWeek(world)) tau *= a.injuryPlayingMultiplier
+  // R12-4/11: a booked family week is the opposite pole of the load axis above – she is not
+  // training and not competing, so the week costs a fraction of a training week's risk. Nonzero on
+  // purpose (holidays do sprain ankles). Post-draw multiply, zero draws – see the knob's note.
+  // Read off `vacations` rather than a flag: `rollInjury` runs at step 1c BEFORE `resolveVacation`,
+  // and `prunePlannerBookings` keeps the current week, so the booking is always visible here.
+  if (vacationForWeek(world, world.week)) tau *= a.injuryVacationFactor
   if (world.physioActive) tau *= ECONOMY.physio.riskReduction
   // Season planner: the resort/elite recovery buff is a POST-DRAW multiply on the threshold
   // (spec §2 "invariance-safe"), so the expensive package buys real protection without ever
@@ -1969,6 +2136,10 @@ export function createWorld(
     // whole cohort, because she is the only player without a counting result).
     kidRank: cohort.length + 1,
     prevKidRank: null,
+    // R12-S1: season 0's start rank is set below, once `recomputeKidRank` has produced the real
+    // value – she starts dead last behind the whole cohort, because she is the only player without
+    // a counting result, and that is a true and meaningful thing for her first wrap-up to say.
+    seasonStartRank: null,
     pendingTournament: null,
     bestFinishByTier: {},
     lastSeasonSummary: null,
@@ -1993,6 +2164,7 @@ export function createWorld(
   })
   ensureSeason(world)
   recomputeKidRank(world)
+  world.seasonStartRank = world.kidRank // R12-S1 – see the field above
   return world
 }
 
@@ -2023,6 +2195,9 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.recoveryBuff = null
   ensureSeason(save as WorldState)
   recomputeKidRank(save as WorldState)
+  // R12-S1 (v17): a pre-v6 save carries no season history at all, so the honest value for "the rank
+  // she entered this season on" is the one the rebuilt world has right now.
+  save.seasonStartRank = save.kidRank ?? null
   delete save.log
 }
 
@@ -2063,6 +2238,15 @@ function releaseOutgrownEntries(world: WorldState): void {
 // costs, drift) and the AI brackets still run, so the per-week draw count is unchanged.
 export function tickWeek(world: WorldState, rng: Rng): void {
   world.week += 1
+
+  // 0a00. R12-S1: a NEW SEASON opens – bank the rank she carries into it, before anything this year
+  //       can move it. This is the only moment the number exists: by the wrap-up 49 weeks later the
+  //       results behind it have been pruned out of the 52-week window and it cannot be replayed
+  //       (which is exactly how the wrap-up came to report "from #1"). `world.kidRank` here is still
+  //       last week's – the final off-season week of the season just gone – which is precisely "the
+  //       rank she started this season on". Pure state, ZERO draws, and it runs before every RNG
+  //       step so it cannot perturb the weekly sequence.
+  if (world.week % WEEKS_PER_YEAR === 0) world.seasonStartRank = world.kidRank
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)
@@ -2135,14 +2319,30 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // computeShadowTournament would scale her by). Precedence mirrors availabilityStatus exactly –
   // injured > medical – so the two surfaces can never disagree about which beat fires.
   // Pure state: ZERO new RNG draws, on any stream.
+  //
+  // R12-3 / R12-15: the two comparisons above USED to be spelled out inline here – `world.injury
+  // !== null` and `medicalClearance(world.condition)` – a private copy of two rules that already
+  // had names. They now come from `arrivalStatus`, the ONE arrival verdict the sticky-bar button
+  // also reads off the snapshot, so the week cannot resolve one way while the button that played it
+  // promised another. Byte-identical by construction: on the play week `world.week === event.week`,
+  // so `layoffCovering(world, event.week)` is `injury !== null && 0 < weeksRemaining`, which is
+  // exactly `world.injury !== null` (rollInjury clears at 0 before this runs); and `medicalBlock` is
+  // non-null exactly when `medicalClearance` returns 'withdraw'.
+  const arrival = enteredThisWeek ? arrivalStatus(world, enteredThisWeek) : null
   const clearance = enteredThisWeek ? medicalClearance(world.condition) : 'clear'
-  if (enteredThisWeek && world.injury !== null) {
+  if (enteredThisWeek && arrival!.verdict === 'injured') {
+    // R12-15: MARK THE WEEK, so `advanceWeeks` halts on it exactly once. A walkover forfeits the
+    // entry fee just as surely as the medical withdrawal below does, and the owner's dead click was
+    // this beat passing in total silence – no dialog, no toast, and a "Play" button that had just
+    // promised a tournament. Derived state, deliberately not persisted (like
+    // `medicalWithdrawalWeek`): a reload replays the tick and re-derives it.
+    world.walkoverWeek = world.week
     addEvent(world, {
       week: world.week,
       type: 'injury',
       text: `Walkover: too injured to play the ${TIERS[enteredThisWeek.tier].label} – 0 pts, entry fee forfeited.`,
     })
-  } else if (enteredThisWeek && clearance === 'withdraw') {
+  } else if (enteredThisWeek && arrival!.verdict === 'medical') {
     // WITHDRAWN ON MEDICAL GROUNDS: no travel charge (she never boards), no shadow run, 0 points.
     // The ENTRY FEE IS FORFEITED – the same rule skipEvent uses for a post-deadline pull-out, and
     // the same rule the injury walkover above uses. Chosen over a refund because it is the identical
@@ -2475,6 +2675,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // A medical withdrawal costs her an entry AND its fee, so it halts the advance for the same
     // reason a fresh injury does: the player must see it happen, not read about it later.
     if (world.medicalWithdrawalWeek === world.week) stops.add('medical')
+    // R12-15: ...and so does a WALKOVER, for exactly the same reason. This was the owner's dead
+    // click: the entry fee was forfeited, the trip never happened, and the only trace was one line
+    // in a news feed the player had no reason to open – because the click that caused it had just
+    // promised a tournament. Note this fires INDEPENDENTLY of 'injury': the walkover usually lands
+    // a week or more AFTER the onset, when the injury is no longer fresh and nothing else stops.
+    if (world.walkoverWeek === world.week) stops.add('walkover')
     if (world.fundsCents < 0) stops.add('funds')
     if (stops.size > 0) break
   }
@@ -2539,6 +2745,33 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         ...reason,
       }
     })
+}
+
+/** R12-15/R12-3: the arrival verdict for the entered event on `world.week + 1` – the week the
+ *  sticky bar's one button plays (tickWeek increments the week FIRST, so it is always `week + 1`,
+ *  never today). Null when no entry sits there.
+ *
+ *  The DOCTOR's arm is downgraded to 'play' on purpose (see ArrivalPreview): his verdict is re-read
+ *  on arrival against a condition that can only have RISEN by then (a tournament week accrues
+ *  `matchWeekRecoveryBase` = 0, plus the physio and blackout bonuses, and nothing subtracts before
+ *  step 2), so a 'medical' preview can be false by a point or two. Announcing a withdrawal that
+ *  then does not happen would replace the old lie with a new one; the medical stop + toast already
+ *  make the real thing loud. The layoff and the point band are pure state and cannot move, so those
+ *  two ARE previewed. */
+function arrivalPreview(world: WorldState): ArrivalPreview | null {
+  const next = world.week + 1
+  const event = world.season.find((e) => e.week === next && world.entries.includes(e.id))
+  if (!event) return null
+  const status = arrivalStatus(world, event)
+  const injured = status.verdict === 'injured'
+  return {
+    eventId: event.id,
+    tier: event.tier,
+    week: event.week,
+    verdict: injured ? 'injured' : 'play',
+    ...(injured && status.detail !== undefined ? { detail: status.detail } : {}),
+    outgrown: status.outgrown,
+  }
 }
 
 // The kid's counted best-6 results (round-5 item 1b): same window + sort as computeRanking,
@@ -2706,6 +2939,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     },
     financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),
+    // R12-15/R12-3: what next week's entered event will actually DO, so the one button that plays
+    // that week stops promising a tournament the engine has already decided against.
+    arrival: arrivalPreview(world),
     // Season planner (v13): the bookings the calendar renders, plus the short trailing window the
     // guardrail's consecutive-practice read needs (the calendar only ever looks at future weeks,
     // so the tail is invisible there). Prices are re-derivable by the UI from the same pure quote

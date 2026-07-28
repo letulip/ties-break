@@ -250,6 +250,23 @@ export function migrateSave(raw: unknown): WorldState {
     v = 16
   }
 
+  if (v < 17) {
+    // v17 (R12-S1) adds `seasonStartRank` – her dense rank as she entered the season in progress.
+    // It exists because the wrap-up used to REPLAY that ranking from the results ledger, 49 weeks
+    // after the fact, by which time the 52-week prune had removed every row behind it: the replay
+    // saw an almost empty table, everyone tied on 0 points, and competition ranking handed the
+    // whole tie rank #1. Both of the owner's careers reported "from #1" for season 2.
+    //
+    // A pre-v17 save cannot be backfilled, for exactly the reason the field had to be added: the
+    // data is gone. Null is therefore the honest value, and it is a value every reader already
+    // handles – `SeasonSummary.startRank` has been nullable since it was introduced, and the popup
+    // renders no "from #N" at all when it is null. A career loaded from an older save loses the
+    // start-rank line for the season it is currently in, and captures a real one from the next
+    // season boundary onward. Idempotent: an existing value is never overwritten.
+    if (save.seasonStartRank === undefined) save.seasonStartRank = null
+    v = 17
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

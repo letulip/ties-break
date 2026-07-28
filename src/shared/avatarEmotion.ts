@@ -177,8 +177,24 @@ function titleShields(week: number, lastTitle: LastKidTitle | null | undefined):
  *   lostFinal           -> serious    R8-6a: runner-up is 2nd place, a GOOD result
  *   tier === 'local'    -> serious    R9-11: a Local Open exit is not a tragedy
  *   a fresh title       -> serious    R9-11: a champion licking a wound still reads composed
- *   streak >= angerAt   -> ANGRY      only now, and only over the branch that meant `sad`
+ *   streak === angerAt  -> ANGRY      the CROSSING loss only – see R12-16 below
  *   otherwise           -> sad
+ *
+ * R12-16 – ANGER IS A MOMENT, NOT A MASK (owner playtest 27.07: "once the streak crossed, she was
+ * angry on every single loss after it"). The comparison here was `losses >= angerAt`, which is true
+ * for the crossing loss AND for every loss that follows it in the same run – so the fifth defeat
+ * put the face on and the sixth, seventh and eighth never took it off. The design intent was a
+ * mood: the loss that finally breaks her composure. It is now `===`, so:
+ *
+ *   losses <  angerAt   -> sad        the run has not broken her yet
+ *   losses === angerAt  -> ANGRY      THE loss that did – shown for the week it happened
+ *   losses >  angerAt   -> sad        she is past furious and back to hurting
+ *
+ * A NEW streak draws its OWN threshold, because the draw is keyed on the streak's start week
+ * (engine/world.ts computeLossStreak) – so a win, then another bad run, can make her angry again at
+ * a different length. The per-streak stability that keeps her face from flickering is untouched:
+ * within one streak `angerAt` is still drawn exactly once, and `===` is still a comparison of two
+ * numbers this function was handed.
  *
  * That ordering is the point, not an implementation detail. The loss branch has been softened
  * TWICE deliberately (R8-6a, R9-11) and anger must not quietly undo either: a runner-up finish
@@ -204,10 +220,10 @@ export function avatarEmotion({
     // champion is still riding the win – both read `serious`, not `sad`.
     if (lastResult.tier === 'local') return 'serious'
     if (titleShields(week, lastTitle)) return 'serious'
-    // ...and only here, under every softener: the run of defeats she has stopped absorbing.
-    // A comparison, never a count and never a draw – the engine did both, once per streak, so
-    // this cannot return a different face for the same screen twice.
-    if (lossStreak && lossStreak.losses >= lossStreak.angerAt) return 'angry'
+    // ...and only here, under every softener: the ONE loss that broke her (R12-16 – `===`, never
+    // `>=`; see the ordering note above). A comparison, never a count and never a draw – the engine
+    // did both, once per streak, so this cannot return a different face for the same screen twice.
+    if (lossStreak && lossStreak.losses === lossStreak.angerAt) return 'angry'
     return 'sad'
   }
   return idleEmotion(injured, condition)

@@ -16,6 +16,16 @@ export interface TierDef {
   /** EXTRA events of this tier placed inside the season's SECOND half, on top of the
    *  `floor(weeks / everyNWeeks)` evenly-spaced ones (R9-20 national densification). */
   secondHalfBonus?: number
+  /** R12-6: the smallest allowed distance, in weeks, between two events OF THIS TIER. Absent (or 1)
+   *  means adjacency is fine, which is the historical behaviour and the right one for the dense
+   *  entry rungs. 2 means "never on consecutive weeks".
+   *
+   *  It exists because `secondHalfBonus` places its extras by their own even spread, with no idea
+   *  where the base cadence already put one – so R9-20's two extra Nationals could land right next
+   *  to a base-cadence National. The owner hit it twice in one season, once on the season's final
+   *  two weeks. A per-tier knob rather than a rule, so which rungs care is an explicit table
+   *  somebody can read and retune, not something to re-derive from `everyNWeeks`. */
+  minGapWeeks?: number
   /** Minimum age in years to enter. Absent = no age gate. The junior tour opens at 13; our
    *  detailed sim starts at 14, so it never bites today – it is here for the childhood prologue. */
   minAgeYears?: number
