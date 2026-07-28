@@ -807,7 +807,7 @@ describe('P9 — snapshot + planner UI', () => {
     }
   })
 
-  it('the Home availability chip reads the practice strain', () => {
+  it('Home reads the practice strain (R13-3: folded from the removed chip into the note line)', () => {
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
     expect(src).toMatch(/practiceCaution|cautionCondition/)
   })

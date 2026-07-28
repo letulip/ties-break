@@ -141,7 +141,9 @@ const packageRows = computed<PackageRow[]>(() =>
       gain: p.conditionGain,
       buffFactor: p.buffFactor,
       returnsTo: Math.min(ECONOMY.condition.max, condition.value + p.conditionGain),
-      affordable: fundsCents.value >= priceCents,
+      // R13-7a: a zero-price package is ALWAYS affordable – the bare `funds >= price` disabled
+      // the free staycation's Book at negative funds (the same predicate bookVacation fixed).
+      affordable: priceCents === 0 || fundsCents.value >= priceCents,
       recommended: recommendedId.value === p.id,
     }
   }),

@@ -820,6 +820,12 @@ button.danger:hover:not(:disabled) {
   margin: 6px 0 0;
 }
 
+/* R13-3: the practice-strain warning, folded out of the removed Fit chip into the note area.
+   Same amber the strain read has always worn (the soft, overrulable caution tone). */
+.condition-note.warn {
+  color: #f2b34f;
+}
+
 /* D10: the Memory card – a small past-band portrait beside one line. */
 .memory-body {
   display: flex;
@@ -890,8 +896,8 @@ button.danger:hover:not(:disabled) {
   background: var(--accent);
 }
 
-/* Season-Life slice B: condition cell = the block bar + an availability chip, with a physio toggle
-   beneath it. */
+/* Season-Life slice B: the condition cell's block bar (R13-3: the availability chip that shared
+   this row is gone – the D1 note + the amber strain line beneath carry its meaning). */
 .condition-cell {
   display: flex;
   align-items: center;
@@ -911,23 +917,11 @@ button.danger:hover:not(:disabled) {
   border-radius: 6px;
 }
 
-.avail-chip.green {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-.avail-chip.grey {
-  color: var(--muted);
-  border-color: var(--line);
-}
+/* R13-3: green/grey/amber tones retired with Home's chip – the Season screen's layoff chips are
+   the chip's one surviving surface, and they are always red. */
 .avail-chip.red {
   color: var(--danger);
   border-color: var(--danger);
-}
-/* Season planner: the STRAIN read – she is worn out, or on a run of match weeks. Amber, because
-   it is a warning the parent may still overrule (same tone as every other soft caution). */
-.avail-chip.amber {
-  color: #f2b34f;
-  border-color: #f2b34f;
 }
 
 /* Amber "caution" pill – a soft, warned state (e.g. racing while fatigued is a risky CHOICE, not a

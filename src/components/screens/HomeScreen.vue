@@ -19,10 +19,8 @@ import type { TierId } from '../../engine/season/types'
 import { weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
-// The week-TYPE predicates come from the calendar itself (world.ts re-exports isExamWeek only).
-// R11-5a: the tier catalogue and the age gate are no longer imported here at all – the bands are read
-// in ONE place now (composables/tierState.ts), which is the whole point of the item.
-import { isExamWeek, isOffSeasonWeek } from '../../engine/season/calendar'
+// R13-3: the calendar week-type predicates left with the availability chip – the D1 note names
+// the exam/off-season weeks itself now (engine-licensed), so nothing here re-derives them.
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
 import { facePoint } from '../../art/faceRects'
@@ -138,42 +136,29 @@ function conditionColor(i: number): string {
   return `hsl(${Math.round(hue)}, 72%, 48%)`
 }
 
-// --- Availability chip (Season-Life slice B, live in slice C): a plain-language read on
-// whether she can compete. "Fit" (green) when clear; "School break – exams" (grey) when this
-// or next week is a blackout; red with the injury kind + return week while she is out.
-// Season planner: the chip also READS THE STRAIN (the practice guardrail) – below the caution
-// floor, or on a run of match weeks, it turns amber and names the problem, because that is the
-// moment the parent should be thinking about a rest week rather than another match. --
-const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'amber' | 'red' } | null>(() => {
+// --- R13-3: the availability chip LEFT the condition row (owner: the squares + the D1 note
+// already carry it – the "Fit" chip duplicated both and spent the space). The states it knew are
+// covered without it: injured / exams / off-season all speak through the engine-licensed D1 note
+// ("Out with the ankle soreness – 2 weeks to go." names the kind and the clock), and the chip
+// idiom itself lives on where it still earns its place (the Season screen's red layoff chips).
+// The ONE thing only the chip knew – the practice-strain warning – folds into the note area
+// below as its own amber line, read off the same pure predicate the planner sheet asks
+// (practiceCaution, for "one more match next week"), so the warning and the booking sheet can
+// never disagree. --
+const strainNote = computed<string | null>(() => {
   const s = game.snapshot
-  if (!s) return null
-  if (s.injury) return { label: `Injured: ${s.injury.kind} – back ${weekLabel(s.week + s.injury.weeksRemaining)}`, tone: 'red' }
-  // The strain read asks the same pure predicate the planner sheet does, for "one more match
-  // next week" – so the chip and the booking warning can never disagree.
+  if (!s || s.injury) return null
   const strain = practiceCaution({
     condition: s.condition,
     practiceWeeks: s.practices.map((p) => p.week),
     week: s.week + 1,
   })
-  if (strain.level === 'caution') {
-    // The streak arm is gated on real strain now (Wave-2), so the run it names varies – read the
-    // count off the same predicate instead of hard-coding "Third".
-    return {
-      label: strain.reasons.includes('tired')
-        ? 'Worn out – she needs a rest week'
-        : `${strain.streakWeeks} match weeks in a row`,
-      tone: 'amber',
-    }
-  }
-  // Spotted during the R10 presentation pass (NOT on the owner's list): this arm asked
-  // `isBlackoutWeek`, which is TRUE for the off-season tail as well as the exam block – so the whole
-  // December off-season read "School break – exams" on the player card. Same grey chip, but the two
-  // blackouts are now named for what they actually are.
-  if (isExamWeek(s.week) || isExamWeek(s.week + 1)) return { label: 'School break – exams', tone: 'grey' }
-  // Kept to the same length as its exam sibling: the chip lives in the condition cell and a longer
-  // string wraps inside the pill, which pushes the whole row taller.
-  if (isOffSeasonWeek(s.week) || isOffSeasonWeek(s.week + 1)) return { label: 'Off-season – resting', tone: 'grey' }
-  return { label: 'Fit', tone: 'green' }
+  if (strain.level !== 'caution') return null
+  // The streak arm is gated on real strain (Wave-2), so the run it names varies – read the
+  // count off the same predicate instead of hard-coding "Third".
+  return strain.reasons.includes('tired')
+    ? 'Worn out – she needs a rest week'
+    : `${strain.streakWeeks} match weeks in a row`
 })
 
 // R9-5: the physio toggle moved to MoneyScreen's Budget section – it is a spending decision
@@ -467,7 +452,8 @@ function openRankHelp(): void {
             <td>
               <div class="condition-cell">
                 <!-- D3: HOME speaks words, not percentages – the number (and its old tooltip) live
-                     on Stats/the planner. The squares carry the level, the chip carries the word. -->
+                     on Stats/the planner. The squares carry the level, the note carries the word
+                     (R13-3: the chip that used to sit here duplicated both and is gone). -->
                 <div class="condition-blocks">
                   <span
                     v-for="i in CONDITION_SEGMENTS"
@@ -477,12 +463,11 @@ function openRankHelp(): void {
                     :style="i <= conditionFilled ? { background: conditionColor(i) } : undefined"
                   ></span>
                 </div>
-                <span v-if="availabilityChip" class="pill avail-chip" :class="availabilityChip.tone">
-                  {{ availabilityChip.label }}
-                </span>
               </div>
               <!-- D1: one line of WHY, from real facts of the last tick (engine-licensed). -->
               <p class="condition-note">{{ conditionNote }}</p>
+              <!-- R13-3: the practice-strain warning, folded out of the removed chip. -->
+              <p v-if="strainNote" class="condition-note warn">{{ strainNote }}</p>
             </td>
           </tr>
         </tbody>

@@ -59,6 +59,13 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
   return computed<WeekAhead>(() => {
     const snap = game.snapshot
     if (!snap) return TRAINING
+    // R13-8 – A PAUSED TOURNAMENT OWNS THE BUTTON, first and before every week-ahead lookup. While
+    // a reveal is pending (the player backed out of the overlay), THIS week is not resolved: the
+    // label must keep saying what the click will do – play the championship – instead of moving on
+    // to next week's plan while a tiny banner holds the truth. App.vue routes the click back into
+    // the overlay in this state; time cannot tick past a pending reveal anyway (advanceWeeks
+    // returns 'tournament' without a tick), so any other label here would be a lie twice over.
+    if (snap.pending) return { kind: 'tournament', label: `🏆 Play ${TIER_SHORT[snap.pending.tier]} ▶` }
     const next = snap.week + 1
     // The entered-tournament case, answered by the ENGINE (see the header note). `arrival` is
     // non-null exactly when an entry sits on `next`, so it replaces the old `upcoming` lookup

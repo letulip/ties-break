@@ -999,12 +999,19 @@ describe('UI wiring', () => {
     expect(src).toContain('weeksInjured')
   })
 
-  it('HomeScreen binds the injured chip to snapshot.injury kind + return week', () => {
+  it('the injured WHY reaches Home through the D1 note (R13-3 re-aim: the chip left the row)', () => {
+    // ⚠ RE-AIMED by R13-3 (28.07). This pin used to hold Home's availability chip to
+    // `injury.kind` + a weekLabel()-formatted return week. The owner dropped the chip from Home's
+    // condition row (the squares + the D1 note carry the state; the chip duplicated both), so what
+    // the pin now asserts is the SAME guarantee through its surviving surface: the engine's D1
+    // note names the kind and the clock, and Home renders that note verbatim. The chip idiom
+    // itself lives on on the Season screen's layoff plaques (round12-view pins it there).
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
-    expect(src).toContain('injury.kind')
-    // round-12 follow-up: the chip's return week goes through weekLabel() now ("back W18 '32"),
-    // so the pin asserts the FORMATTER is bound, not the old hand-rolled "back wk <absolute>".
-    expect(src).toMatch(/back \$\{weekLabel\(/)
+    expect(src).not.toContain('avail-chip')
+    expect(src).toContain('diary.conditionNote')
+    const diary = readFileSync(new URL('../src/engine/diary.ts', import.meta.url), 'utf8')
+    expect(diary).toContain('Out with the ${f.injured?.kind')
+    expect(diary).toContain("weeksRemaining ?? 1, 'week'")
     // R9-5 (re-pinned deliberately): the physio toggle + retainer cost moved to MoneyScreen's
     // Budget section – a spending decision lives with the money.
     const money = readFileSync(new URL('../src/components/screens/MoneyScreen.vue', import.meta.url), 'utf8')

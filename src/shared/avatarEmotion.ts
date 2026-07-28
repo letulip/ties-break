@@ -144,6 +144,11 @@ export interface AvatarEmotionInput {
    *  better than before it – captured by the ENGINE (diary facts), never derived in the UI.
    *  Optional: callers that cannot supply it keep the pre-softener behavior exactly. */
   rankClimbed?: boolean
+  /** R13-2: the ranking points her run AWARDED this week, as the engine read them off the results
+   *  ledger. The climb softener requires them – see the licence note in the big comment below.
+   *  Optional: a caller that supplies `rankClimbed` without this keeps the pre-softener behavior
+   *  (no softening), because a climb that cannot be shown to be earned must not soothe a loss. */
+  runPointsThisWeek?: number
 }
 
 /** State-aware idle emotion (R8-6b): what her face settles into once a result has decayed. */
@@ -209,7 +214,16 @@ function titleShields(week: number, lastTitle: LastKidTitle | null | undefined):
  * проиграла … но при этом в таблице поднялась – тогда она вполне может оставаться нормальной или
  * серьёзной, а не расстроенной». Since the first-round zero, any points from a losing run mean she
  * won matches first – so a rank climb on a loss week is almost always a deep run at a big event,
- * exactly the "good loss" the owner means. PRECEDENCE, deliberately:
+ * exactly the "good loss" the owner means.
+ *
+ * R13-2 – THE CLIMB MUST BE EARNED (owner's first Diary-1 playtest, 28.07: "she pushed on and
+ * climbed" after a FIRST-ROUND exit). "Almost always" above was the bug: rank is RELATIVE, so she
+ * can climb on a zero-point week purely because rivals' results decayed out of their 52-week
+ * windows – other people's ageing calendars, not her tennis. The softener is therefore licensed by
+ * (lost AND rankClimbed AND runPointsThisWeek > 0): post-first-round-zero, run points > 0 means she
+ * WON matches this week, which is the deep run the softener was always meant for. A passive climb
+ * still moves the table (the ↑ arrow keeps showing) – it just no longer touches her face.
+ * PRECEDENCE, deliberately:
  *
  *   - BELOW the anger crossing: four-to-six straight defeats stay ANGRY even if stale points math
  *     nudged the rank up – anger is about the run of defeats, not the table;
@@ -231,6 +245,7 @@ export function avatarEmotion({
   lastTitle,
   lossStreak,
   rankClimbed,
+  runPointsThisWeek,
 }: AvatarEmotionInput): AvatarEmotion {
   if (lastResult && lastResult.week === week) {
     if (lastResult.won) return 'happy'
@@ -245,8 +260,10 @@ export function avatarEmotion({
     if (lossStreak && lossStreak.losses === lossStreak.angerAt) return 'angry'
     // The third softener, LAST by design (see the ordering note): a loss that still climbed the
     // table converts only a would-be `sad` – it never outranks the crossing above, and the
-    // `serious` softeners above never needed it. A boolean the ENGINE captured, never a UI guess.
-    if (rankClimbed) return 'serious'
+    // `serious` softeners above never needed it. Facts the ENGINE captured, never a UI guess.
+    // R13-2: the climb must be EARNED – run points > 0 means she won matches this week. A climb
+    // that arrived because rivals' results decayed out of their windows leaves her face alone.
+    if (rankClimbed && (runPointsThisWeek ?? 0) > 0) return 'serious'
     return 'sad'
   }
   return idleEmotion(injured, condition)

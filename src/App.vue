@@ -3,7 +3,7 @@
 // onboarding wizard when there is no active career. No router – a plain ref
 // switch, per spec.
 import { computed, onMounted, ref, watch } from 'vue'
-import type { StopReason } from './shared/protocol'
+import type { StopReason, WorldMatch } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 import { weekLabel, weekRange } from './shared/dates'
@@ -17,6 +17,7 @@ import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
 import TournamentFlow from './components/TournamentFlow.vue'
+import PracticeFlow from './components/PracticeFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
@@ -209,8 +210,12 @@ watch(
 )
 
 // R9-9a: the TournamentFlow splash's "← Back" hides the overlay WITHOUT resolving anything –
-// the week stays paused on the engine side. A persistent banner offers Resume; any change of
-// the pending run (skipped, closed, a different event) re-arms the overlay.
+// the week stays paused on the engine side. Any change of the pending run (skipped, closed, a
+// different event) re-arms the overlay. R13-8 re-divided the resume affordances: on HOME the
+// sticky bar's primary button stays "Play {tier}" (useWeekAhead's pending branch) and re-opens
+// the overlay via playWeek below – the owner's ask, the big button must not move on while the
+// tournament is unresolved. The banner survives ONLY off the Home tab, where it is the sole
+// resume control; on Home it duplicated the primary button and is gone.
 const tournamentHidden = ref(false)
 watch(
   () => game.snapshot?.pending?.eventId,
@@ -218,6 +223,31 @@ watch(
     tournamentHidden.value = false
   },
 )
+
+// R13-5 / R13-8: ONE handler behind both sticky-bar buttons, so a click always does what the
+// label promises.
+//  - A PAUSED tournament re-opens the overlay – never a tick past it (the engine refuses anyway:
+//    advanceWeeks returns 'tournament' untouched, which used to make this click a silent no-op).
+//  - A booked PRACTICE week plays THROUGH the flow (R10-12's live watch path, exactly what the
+//    Season screen's "Watch it live" does): advance the week – the engine resolves the friendly
+//    inside the tick as always – then open PracticeFlow on the resolved match, where the player
+//    watches or skips to the result. No more one-click week that felt like a skip. If the advance
+//    stopped short (a fresh injury cancels + refunds the friendly), nothing opens and the stop's
+//    own dialog explains – same contract as the Season path.
+const practiceLive = ref<WorldMatch | null>(null)
+async function playWeek(weeks: 1 | 4): Promise<void> {
+  if (game.snapshot?.pending) {
+    tournamentHidden.value = false
+    return
+  }
+  const throughPractice = weeks === 1 && weekAhead.value.kind === 'practice'
+  await game.advance(weeks)
+  if (throughPractice) {
+    const s = game.snapshot
+    const friendly = s?.events.find((e) => e.type === 'match' && e.friendly && e.week === s.week && e.match)
+    if (friendly?.match) practiceLive.value = friendly.match
+  }
+}
 // The tournament stop is owned by the full-screen TournamentFlow overlay, the season-end stop by
 // SeasonSummaryDialog and the injury stop by InjuryStopDialog (all three show off the snapshot);
 // deadline/funds/medical stops keep the toast.
@@ -335,9 +365,11 @@ function dismissSeasonSummary(): void {
       <button @click="dismissStopToast">Dismiss</button>
     </div>
 
-    <!-- R9-9a: the week is paused on a hidden tournament – a persistent Resume affordance on
-         every tab, so backing out of the splash can never strand the career. -->
-    <div v-if="game.snapshot?.pending && tournamentHidden" class="stop-toast tournament-paused">
+    <!-- R9-9a/R13-8: the week is paused on a hidden tournament. OFF the Home tab this banner is
+         the only Resume affordance, so backing out of the splash can never strand the career; ON
+         Home the sticky bar's primary button holds "Play {tier}" and re-opens the overlay itself,
+         so the banner would only duplicate it (the owner's complaint) and stays hidden there. -->
+    <div v-if="game.snapshot?.pending && tournamentHidden && tab !== 'home'" class="stop-toast tournament-paused">
       <span>Tournament week: {{ game.snapshot.pending.tierLabel }} – the week is paused.</span>
       <button class="primary" @click="tournamentHidden = false">Resume</button>
     </div>
@@ -355,17 +387,19 @@ function dismissSeasonSummary(): void {
          Both buttons now go through `advance` (weeks: 1|4) so either one can stop
          early on a tournament week / imminent deadline / funds crossing zero. -->
     <div v-if="tab === 'home'" class="next-week-bar">
-      <!-- R10-7: one button, a label that names the plan for the week it is about to play. -->
+      <!-- R10-7: one button, a label that names the plan for the week it is about to play.
+           R13-5/R13-8: both buttons route through playWeek – a paused tournament re-opens its
+           overlay, a booked practice week opens the flow, everything else advances as before. -->
       <button
         class="primary next-week-btn"
         :class="`plan-${weekAhead.kind}`"
         data-tour="next-week"
         :disabled="game.busy"
-        @click="game.advance(1)"
+        @click="playWeek(1)"
       >
         {{ weekAhead.label }}
       </button>
-      <button :disabled="game.busy" @click="game.advance(4)">▶▶ 4</button>
+      <button :disabled="game.busy" @click="playWeek(4)">▶▶ 4</button>
     </div>
 
     <nav class="tab-bar">
@@ -386,8 +420,19 @@ function dismissSeasonSummary(): void {
     </nav>
 
     <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress.
-         R9-9a: the splash's Back hides it (nothing resolved); the banner above resumes it. -->
+         R9-9a: the splash's Back hides it (nothing resolved); the primary button (Home) or the
+         banner above (other tabs) resumes it. -->
     <TournamentFlow v-if="game.snapshot?.pending && !tournamentHidden" @back="tournamentHidden = true" />
+
+    <!-- R13-5: the booked friendly the Next-week button just played, opened as a match (the
+         R10-12 flow – the same overlay the Season screen's "Watch it live" uses). -->
+    <PracticeFlow
+      v-if="practiceLive"
+      :match="practiceLive"
+      :week="week"
+      :kid-rank="game.snapshot?.kidRank ?? null"
+      @close="practiceLive = null"
+    />
 
     <!-- Round-7 item 4: end-of-season summary popup at the W49→50 boundary. -->
     <SeasonSummaryDialog v-if="showSeasonSummary" @continue="dismissSeasonSummary" />

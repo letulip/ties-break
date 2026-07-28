@@ -76,34 +76,53 @@ describe('faceRects – the one crop table', () => {
 
 // ---------------------------------------------------------------------------
 // The third loss softener: a loss that still climbed the table reads composed.
+// ⚠ RE-AIMED by R13-2 (owner's first Diary-1 playtest: the line fired on a FIRST-ROUND exit).
+// Rank is relative – she can climb on a zero-point week purely because rivals' results decayed out
+// of their 52-week windows – so the softener now demands the climb be EARNED: run points > 0 this
+// week (post-first-round-zero, that means she won matches). Every softened case below therefore
+// carries `runPointsThisWeek`; the new passive-climb cases pin the sad verdict the owner asked for.
 // ---------------------------------------------------------------------------
-describe('rankClimbed – the owner\'s "good loss" softener', () => {
+describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only, R13-2)', () => {
   const base = { week: 10, condition: 80, injured: false, lastTitle: null }
   const loss = { week: 10, won: false, lostFinal: false }
 
-  it('a fresh loss that climbed the table is serious, not sad', () => {
-    expect(avatarEmotion({ ...base, lastResult: loss, rankClimbed: true })).toBe('serious')
+  it('a fresh loss that EARNED its climb is serious, not sad', () => {
+    expect(avatarEmotion({ ...base, lastResult: loss, rankClimbed: true, runPointsThisWeek: 30 })).toBe('serious')
+  })
+
+  it('a PASSIVE climb (zero run points) no longer softens – R1 exit + decayed rivals reads sad', () => {
+    expect(avatarEmotion({ ...base, lastResult: loss, rankClimbed: true, runPointsThisWeek: 0 })).toBe('sad')
+    // an absent field is the same verdict: a climb that cannot be shown to be earned never soothes
+    expect(avatarEmotion({ ...base, lastResult: loss, rankClimbed: true })).toBe('sad')
   })
 
   it('the same loss without the climb stays sad – and so does an absent flag (old callers)', () => {
-    expect(avatarEmotion({ ...base, lastResult: loss, rankClimbed: false })).toBe('sad')
+    expect(avatarEmotion({ ...base, lastResult: loss, rankClimbed: false, runPointsThisWeek: 30 })).toBe('sad')
     expect(avatarEmotion({ ...base, lastResult: loss })).toBe('sad')
   })
 
   it('the anger crossing BEATS the climb – anger is about the run, not the table', () => {
     const streak = { losses: 5, startWeek: 6, angerAt: 5 }
-    expect(avatarEmotion({ ...base, lastResult: loss, lossStreak: streak, rankClimbed: true })).toBe('angry')
-    // ...past the crossing she is back to hurting, and the climb may soften THAT week again
+    expect(
+      avatarEmotion({ ...base, lastResult: loss, lossStreak: streak, rankClimbed: true, runPointsThisWeek: 30 }),
+    ).toBe('angry')
+    // ...past the crossing she is back to hurting, and an EARNED climb may soften THAT week again
     const past = { losses: 6, startWeek: 6, angerAt: 5 }
-    expect(avatarEmotion({ ...base, lastResult: loss, lossStreak: past, rankClimbed: true })).toBe('serious')
+    expect(
+      avatarEmotion({ ...base, lastResult: loss, lossStreak: past, rankClimbed: true, runPointsThisWeek: 30 }),
+    ).toBe('serious')
     expect(avatarEmotion({ ...base, lastResult: loss, lossStreak: past, rankClimbed: false })).toBe('sad')
   })
 
   it('never touches a win, a runner-up, or a stale result', () => {
-    expect(avatarEmotion({ ...base, lastResult: { week: 10, won: true, lostFinal: false }, rankClimbed: true })).toBe('happy')
-    expect(avatarEmotion({ ...base, lastResult: { week: 10, won: false, lostFinal: true }, rankClimbed: true })).toBe('serious')
+    expect(
+      avatarEmotion({ ...base, lastResult: { week: 10, won: true, lostFinal: false }, rankClimbed: true, runPointsThisWeek: 90 }),
+    ).toBe('happy')
+    expect(
+      avatarEmotion({ ...base, lastResult: { week: 10, won: false, lostFinal: true }, rankClimbed: true, runPointsThisWeek: 40 }),
+    ).toBe('serious')
     // stale result + climb -> pure idle state, the climb colours nothing
-    expect(avatarEmotion({ ...base, lastResult: { ...loss, week: 9 }, rankClimbed: true })).toBe('norm')
+    expect(avatarEmotion({ ...base, lastResult: { ...loss, week: 9 }, rankClimbed: true, runPointsThisWeek: 30 })).toBe('norm')
   })
 
   it('the ENGINE captures it: strictly-better rank, gated off while a reveal is unfinished', () => {
@@ -120,6 +139,7 @@ describe('rankClimbed – the owner\'s "good loss" softener', () => {
       kidRank: 50,
       prevKidRank: 60,
       pendingUnfinished: false,
+      runPointsThisWeek: 0,
       milestones: [],
       vacationWeek: false,
       ...over,
@@ -150,6 +170,8 @@ function makeFacts(input: {
   injured: boolean
   result: SweepResult | null
   rankClimbed: boolean
+  /** R13-2: the points her run awarded this week – the earned half of the climb licence */
+  runPoints?: number
   losses: number
   angerAt?: number
   scenario: 'quiet' | 'tournament' | 'travelOnly' | 'exams' | 'vacation' | 'offSeason' | 'practice'
@@ -171,6 +193,7 @@ function makeFacts(input: {
     lastTitle: null,
     lossStreak,
     rankClimbed: input.rankClimbed,
+    runPointsThisWeek: input.runPoints ?? 0,
   })
   const s = input.scenario
   return {
@@ -182,6 +205,7 @@ function makeFacts(input: {
     titleThisWeek: input.titleThisWeek ?? false,
     resultTier: null,
     rankClimbed: input.rankClimbed,
+    runPointsThisWeek: input.runPoints ?? 0,
     lossStreak: input.losses,
     condition: input.condition,
     conditionBand: conditionBandOf(input.condition),
@@ -209,11 +233,13 @@ function* sweepFacts(): Generator<DiaryFacts> {
     for (const injuredFlag of [false, true])
       for (const result of results)
         for (const rankClimbed of [false, true])
-          for (const losses of [0, 2, 5])
-            for (const angerAt of losses === 5 ? [5, 99] : [99])
-              for (const scenario of scenarios)
-                for (const fundsCents of [500_00, 50_000_00])
-                  yield makeFacts({ condition, injured: injuredFlag, result, rankClimbed, losses, angerAt, scenario, fundsCents })
+          // R13-2: the earned/passive split – 0 = a passive climb (rivals decayed), 30 = a real run
+          for (const runPoints of [0, 30])
+            for (const losses of [0, 2, 5])
+              for (const angerAt of losses === 5 ? [5, 99] : [99])
+                for (const scenario of scenarios)
+                  for (const fundsCents of [500_00, 50_000_00])
+                    yield makeFacts({ condition, injured: injuredFlag, result, rankClimbed, runPoints, losses, angerAt, scenario, fundsCents })
 }
 
 /** The pin's independent reading of what each claim means – a SECOND spelling on purpose, so a
@@ -226,7 +252,9 @@ function claimViolation(c: DiaryClaims, f: DiaryFacts): string | null {
   if (c.lost && !(f.resultFresh && !f.won)) return 'claims a fresh loss'
   if (c.title && !f.titleThisWeek) return 'claims a title'
   if (c.runnerUp && !(f.resultFresh && f.lostFinal)) return 'claims a runner-up finish'
-  if (c.rankClimbed && !f.rankClimbed) return 'claims a rank climb'
+  // R13-2: the claim asserts an EARNED climb – table movement alone (a passive climb off rivals'
+  // decayed windows) does not license it.
+  if (c.rankClimbed && !(f.rankClimbed && f.runPointsThisWeek > 0)) return 'claims an earned rank climb'
   if (c.angry && f.emotion !== 'angry') return 'claims the anger crossing'
   if (c.injured && f.injured === null) return 'claims an injury'
   if (c.tired && f.condition >= 80) return `claims tiredness at condition ${f.condition}`
@@ -275,14 +303,17 @@ describe('THE HONESTY PIN – no selectable phrase contradicts its facts', () =>
     // no travel phrase without the travel fact
     const home = makeFacts({ condition: 70, injured: false, result: null, rankClimbed: false, losses: 0, scenario: 'quiet' })
     expect(DIARY_POOL.filter((p) => p.license(home) && p.claims.travel)).toEqual([])
-    // the good-loss lines need BOTH facts: a loss alone or a climb alone licenses none of them
+    // the good-loss lines need ALL THREE facts (R13-2): a loss alone, a climb alone, or a loss
+    // with a PASSIVE climb (zero run points – rivals decayed out of their windows) licenses none
     const lossOnly = makeFacts({ condition: 80, injured: false, result: { won: false, lostFinal: false }, rankClimbed: false, losses: 1, scenario: 'tournament' })
-    const climbOnly = makeFacts({ condition: 80, injured: false, result: null, rankClimbed: true, losses: 0, scenario: 'quiet' })
-    for (const f of [lossOnly, climbOnly]) {
+    const climbOnly = makeFacts({ condition: 80, injured: false, result: null, rankClimbed: true, runPoints: 30, losses: 0, scenario: 'quiet' })
+    const passiveClimb = makeFacts({ condition: 80, injured: false, result: { won: false, lostFinal: false }, rankClimbed: true, runPoints: 0, losses: 1, scenario: 'tournament' })
+    expect(passiveClimb.emotion).toBe('sad') // the R1 exit the owner saw – no softening either
+    for (const f of [lossOnly, climbOnly, passiveClimb]) {
       expect(DIARY_POOL.filter((p) => p.license(f) && p.claims.rankClimbed)).toEqual([])
     }
-    // ...and a loss WITH the climb does license them
-    const goodLoss = makeFacts({ condition: 80, injured: false, result: { won: false, lostFinal: false }, rankClimbed: true, losses: 1, scenario: 'tournament' })
+    // ...and a loss WITH an EARNED climb does license them
+    const goodLoss = makeFacts({ condition: 80, injured: false, result: { won: false, lostFinal: false }, rankClimbed: true, runPoints: 30, losses: 1, scenario: 'tournament' })
     expect(goodLoss.emotion).toBe('serious')
     expect(DIARY_POOL.filter((p) => p.license(goodLoss) && p.claims.rankClimbed).length).toBeGreaterThan(0)
   })
@@ -554,6 +585,7 @@ describe('capture + snapshot integration', () => {
         lastTitle: lastKidTitleOf(s.events),
         lossStreak: s.lossStreak,
         rankClimbed: s.diary.facts.rankClimbed,
+        runPointsThisWeek: s.diary.facts.runPointsThisWeek,
       })
       expect(s.diary.facts.emotion).toBe(recomputed)
       // snapshotting is pure observation: doing it twice changes nothing and agrees with itself
