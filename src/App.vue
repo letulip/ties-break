@@ -6,8 +6,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { StopReason, WorldMatch } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
-import { weekLabel, weekRange } from './shared/dates'
-import { useHeaderAvatar } from './composables/headerAvatar'
 // R10-7: the sticky bar's primary button says what the week AHEAD holds (tournament / vacation /
 // practice / exams / off-season / training). All of the derivation lives in the composable – this
 // file only renders the label it hands back.
@@ -37,22 +35,13 @@ import MoreScreen from './components/screens/MoreScreen.vue'
 const SEASON_SEEN_KEY = 'tb:lastSeenSeasonWeek'
 // Round 5 item 10: the coach-mark tour is shown once, ever, per device.
 const TOUR_SEEN_KEY = 'tb:onboardingTourSeen'
-// R13-12: the Kid screen opens by tapping the header avatar now (no bottom tab). A one-time
-// callout under the avatar makes that discoverable; the first avatar tap dismisses it and the
-// dismissal persists per device (localStorage, the TOUR_SEEN_KEY idiom) – NEVER in the save.
-const KID_HINT_KEY = 'tb:kidAvatarHintSeen'
-
 const game = useGameStore()
 
-// F45-1 (owner, 27.07): the header avatar is STATIC apart from her age – always the `norm` crop
-// of her current stage. It is chrome above every screen; a face that flickers with each week's
-// result is noise. This REVERSES round 5's "header avatar emotions" and the R9-13/15/16 wiring
-// that carried it: the shell no longer touches the emotion composable at all. Her state still
-// shows where it belongs – the Home player card and the Kid screen's big portrait, both still on
-// the emotion composable. Crops live in public/avatars/{stage}-norm.webp (256×256); START_AGE 14
-// ⇒ the game opens on young-norm. (The guard in tests/round11-followups.test.ts is a plain text
-// search, so the shell must not name that composable even in a comment – which is the point.)
-const { cropUrl: avatarUrl } = useHeaderAvatar()
+// A2 (owner, 28.07): the app header is GONE, so the shell shows no face of hers at all. R13-12's
+// door to the Kid screen and F45-1's rule about which crop it wears both moved to HomeScreen with
+// the avatar itself; the shell only routes. (The guards in tests/round11-followups.test.ts and
+// tests/round13-nav.test.ts are plain text searches, so this file must not name the crop
+// composable or the hint key even in a comment – which is the point.)
 const weekAhead = useWeekAhead()
 
 onMounted(() => game.init())
@@ -62,9 +51,9 @@ onMounted(() => game.init())
 // ref, not persisted: "every launch" means every page load, not "once ever".
 const splashDone = ref(false)
 
-// 'money' and 'kid' stay valid CONTENT states without a bottom-tab button: MoneyScreen is
-// reached via the header W/$ pill (round-6 dropped its tab for Stats), and R13-12 moved the Kid
-// screen behind the header AVATAR – see openKid() below and TABS.
+// 'money' and 'kid' stay valid CONTENT states without a bottom-tab button. Both are reached from
+// Home now (A2, 28.07): the wallet from the Family budget card, her profile from her photograph.
+// Round-6 dropped Money's tab for Stats; R13-12 dropped the Kid tab for the avatar.
 type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more'
 const tab = ref<TabId>('home')
 
@@ -73,15 +62,42 @@ const tab = ref<TabId>('home')
 // Round-6: emoji tab glyphs replaced by the owner's SVG icon set (public/icons/*.svg,
 // tinted via CSS mask so they follow the button's text color exactly – see `.tab-icon`
 // in style.css and `iconUrl()` below). 'money' and 'kid' have no entry here on purpose
-// (see TabId). R13-12 (the owner's nav design): the Kid tab left the bar for the header
-// avatar, and "This week" – the plan + recap tab (ThisWeekScreen) – took the slot.
-const TABS: { id: TabId; icon: string; label: string }[] = [
-  { id: 'home', icon: 'home', label: 'Home' },
+// (see TabId). R13-12 (the owner's nav design): the Kid tab left the bar for her photograph, and
+// "This week" – the plan + recap tab (ThisWeekScreen) – took the slot.
+//
+// epic/redesign-home (the owner's redesign, 28.07): the bar is now
+//   Season · Calendar · Home · Stats · More
+// with HOME IN THE CENTRE – the whole point of the new order, and the reason the bar keeps five
+// slots even though only four of them are live.
+//
+// TWO CONSEQUENCES, both deliberate:
+//
+//  1. CALENDAR IS A PLACEHOLDER. It is a real tab in the owner's design and it is NOT built in this
+//     slice. It renders (glyph + word, a third of the weight, disabled, no press state, no dot) so
+//     that Home actually sits in the middle. The alternative – four live tabs – puts Home in seat
+//     two of four, which is not the design; an empty gap in the bar reads as a rendering bug. A
+//     dimmed tab reads as "next". Its glyph is week.svg, the dot-grid calendar freed up below; the
+//     Season tab keeps season.svg (the dated page), so the two are never the same picture.
+//
+//  2. "THIS WEEK" LEFT THE BAR, NOT THE APP. It joins 'money' and 'kid' as a tabless CONTENT state –
+//     the established idiom here – and its door is Home's NEXT TOURNAMENT card, which is exactly
+//     what that screen is about (what she is entered for, what we plan for it, how the last one
+//     went). The fresh-recap dot moved onto that card with it, so nothing that used to be reachable
+//     or noticeable stopped being either.
+type NavId = TabId | 'calendar'
+const TABS: { id: NavId; icon: string; label: string; soon?: true }[] = [
   { id: 'play', icon: 'season', label: 'Season' },
-  { id: 'week', icon: 'week', label: 'This week' },
+  { id: 'calendar', icon: 'week', label: 'Calendar', soon: true },
+  { id: 'home', icon: 'home', label: 'Home' },
   { id: 'stats', icon: 'stats', label: 'Stats' },
   { id: 'more', icon: 'more', label: 'More' },
 ]
+/** The one writer of `tab` from the bar. A placeholder slot is inert by construction – it can never
+ *  route to a screen that does not exist, whatever its `id` says. */
+function openNav(entry: (typeof TABS)[number]): void {
+  if (entry.soon) return
+  tab.value = entry.id as TabId
+}
 function iconUrl(icon: string): string {
   return `${import.meta.env.BASE_URL}icons/${icon}.svg`
 }
@@ -107,17 +123,7 @@ watch(
   },
 )
 
-function formatFunds(cents: number): string {
-  const dollars = Math.round(cents / 100)
-  const sign = dollars < 0 ? '-' : ''
-  return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
-}
-
-const kidName = computed(() => game.snapshot?.profile.kidName ?? '')
 const week = computed(() => game.snapshot?.week ?? 0)
-const weekDates = computed(() => weekRange(week.value))
-const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
-const funds = computed(() => formatFunds(fundsCents.value))
 
 // --- Season tab "new events" accent dot (item 23) ---------------------------
 // `lastSeenSeasonWeek` is mirrored into a reactive ref: a plain localStorage.getItem()
@@ -171,15 +177,9 @@ watch(week, () => {
   if (tab.value === 'week') markThisWeekSeen()
 })
 
-// --- R13-12: the Kid screen lives behind the header avatar ------------------------
-const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))
-function openKid(): void {
-  tab.value = 'kid'
-  if (showKidHint.value) {
-    showKidHint.value = false
-    localStorage.setItem(KID_HINT_KEY, '1')
-  }
-}
+// --- R13-12: the Kid screen lives behind her photograph ---------------------------
+// A2 moved the avatar itself onto Home (App has no header any more), so the hint's state moved
+// with it – HomeScreen owns both, and the shell only learns that a navigation happened.
 
 // --- R9-21b: news cue – a soft "тилинь" + a Season-style accent dot on the Home tab -----
 // News = the non-financial events HomeScreen's feed shows (expense/income live on Money).
@@ -385,32 +385,12 @@ function dismissSeasonSummary(): void {
   <OnboardingWizard v-else-if="showOnboarding" />
 
   <template v-else>
-    <header class="app-header" data-tour="home-header">
-      <!-- R13-12: the avatar is the door to the Kid screen (the tab left the bottom bar). The
-           crop itself stays F45-1's age-only norm – tappable chrome, not an emotional surface. -->
-      <button
-        class="avatar-btn"
-        data-tour="kid-avatar"
-        aria-label="Open her profile"
-        @click="openKid"
-      >
-        <img class="avatar" :src="avatarUrl" alt="" />
-      </button>
-      <span class="kid-name">{{ kidName }}</span>
-      <button
-        class="pill status-pill"
-        :class="{ negative: fundsCents < 0 }"
-        :title="weekDates"
-        @click="tab = 'money'"
-      >
-        {{ weekLabel(week) }} · {{ funds }}
-      </button>
-      <!-- R13-12: one-time discoverability callout – dismissed (and persisted) by the first
-           avatar tap; tapping the callout itself opens the same door. -->
-      <button v-if="showKidHint" class="kid-hint" @click="openKid">
-        Tap the photo – her page lives here
-      </button>
-    </header>
+    <!-- epic/redesign-home slice A2 (owner, 28.07): THE APP HEADER IS GONE. It carried three
+         things and all three found better homes – the avatar and its one-time callout moved onto
+         Home's photograph (left of the date, where the export puts the day), the W/$ pill's wallet
+         door became the Family budget card, and her name is the 42px headline of the hero. What is
+         genuinely lost is the week number and the balance on Season / Stats / More; the owner ruled
+         that acceptable, and Season prints the week on every calendar row anyway. -->
 
     <div v-if="game.recovered" class="recovered-banner">
       <span>Autosave was damaged – restored the previous one.</span>
@@ -429,7 +409,11 @@ function dismissSeasonSummary(): void {
          its primary button ("Play {tier}", playWeek) is the resume affordance on every tab. -->
 
     <main class="app-content with-next-week-bar">
-      <HomeScreen v-if="tab === 'home'" />
+      <!-- epic/redesign-home: Home's notecards are doors (the budget card opens the wallet, the
+           next-tournament card opens This week). The shell owns `tab`, so the screen ASKS – one
+           event, no router, no store field. `recapFresh` is the This-week dot, still decided by the
+           shared rule here (this file owns the per-career seen watermark) and only RENDERED there. -->
+      <HomeScreen v-if="tab === 'home'" :recap-fresh="weekTabDot" @navigate="tab = $event" />
       <SeasonScreen v-else-if="tab === 'play'" />
       <ThisWeekScreen v-else-if="tab === 'week'" />
       <KidScreen v-else-if="tab === 'kid'" />
@@ -438,15 +422,21 @@ function dismissSeasonSummary(): void {
       <MoreScreen v-else-if="tab === 'more'" />
     </main>
 
-    <!-- Package N: sticky Next-week bar, fixed above the tab bar. R13-12: GLOBAL – it renders on
-         every tab (advancing the week is the game's one always-available verb, and the R9-9a
+    <!-- Package N: the sticky week button, floating above the tab bar. R13-12: GLOBAL – it renders
+         on every tab (advancing the week is the game's one always-available verb, and the R9-9a
          "no tab can strand the career" guarantee rides on it now). It must never move into the
-         This-week tab. Both buttons go through `advance` (weeks: 1|4) so either one can stop
-         early on a tournament week / imminent deadline / funds crossing zero. -->
+         This-week tab.
+         A3 (owner, 28.07): the BAR is gone and the button stands on its own – a panel behind it
+         made the bottom of every screen feel heavy – styled as the export's CTA pill, the same
+         object as "+ Plan week" on the
+         Season screen and "Start Match" on the tournament preview. The skip-4 button went with the
+         bar: it was a testing shortcut that offered to skip the thing the player came to play.
+         The mockups have no week button at all, because the mockups never modelled a week loop -
+         this is the one control the redesign keeps for reasons of play, not of picture. -->
     <div class="next-week-bar">
       <!-- R10-7: one button, a label that names the plan for the week it is about to play.
-           R13-5/R13-8: both buttons route through playWeek – a paused tournament re-opens its
-           overlay, a booked practice week opens the flow, everything else advances as before. -->
+           R13-5/R13-8: it routes through playWeek – a paused tournament re-opens its overlay, a
+           booked practice week opens the flow, everything else advances as before. -->
       <button
         class="primary next-week-btn"
         :class="`plan-${weekAhead.kind}`"
@@ -456,7 +446,6 @@ function dismissSeasonSummary(): void {
       >
         {{ weekAhead.label }}
       </button>
-      <button :disabled="game.busy" @click="playWeek(4)">▶▶ 4</button>
     </div>
 
     <nav class="tab-bar">
@@ -464,17 +453,19 @@ function dismissSeasonSummary(): void {
         v-for="t in TABS"
         :key="t.id"
         class="tab-btn"
-        :class="{ active: tab === t.id }"
+        :class="{ active: tab === t.id, 'tab-soon': t.soon }"
         :data-tour="`tab-${t.id}`"
-        @click="tab = t.id"
+        :disabled="t.soon"
+        :aria-disabled="t.soon"
+        @click="openNav(t)"
       >
         <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
         <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. -->
         <span v-else-if="t.id === 'home' && homeHasNews" class="tab-dot"></span>
-        <!-- R13-12: a fresh, unseen week recap – same accent treatment again. -->
-        <span v-else-if="t.id === 'week' && weekTabDot" class="tab-dot"></span>
+        <!-- epic/redesign-home: the fresh-recap dot left this bar with the This-week tab – it is on
+             Home's Next-tournament card now, which is the door to that screen. -->
       </button>
     </nav>
 

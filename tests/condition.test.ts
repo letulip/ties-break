@@ -523,12 +523,17 @@ describe('B7 — snapshot + UI', () => {
     expect(typeof snap.physioActive).toBe('boolean')
   })
 
-  it('HomeScreen drives the condition bar off round(condition/10), no "Phase 4" title', () => {
+  it('HomeScreen drives the condition RING off the real condition, never a hard-coded fill', () => {
+    // ⚠ RE-AIMED by A2b (owner, 28.07): slice B's ten squares became the export's ProgressRing, so
+    // `round(condition / 10)` (the number of filled squares) is gone. The fact this guards is
+    // unchanged and is now checked at the arc: the sweep is the REAL condition, clamped to 0..100,
+    // and the geometry comes from the radius rather than from a magic number.
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
     expect(src).not.toContain('Phase 4')
-    // the bar is driven off round(condition / 10), not a hard-coded fill.
-    expect(src).toMatch(/round\([^)]*condition[^)]*\/\s*10/i)
+    expect(src).toMatch(/Math\.min\(100,\s*condition\.value\)\)\s*\/\s*100/)
+    expect(src).toMatch(/RING_C\s*=\s*Math\.round\(2 \* Math\.PI \* RING_R/)
     expect(src).not.toContain('CONDITION_FILLED')
+    expect(src).not.toContain('conditionFilled')
   })
 })
 

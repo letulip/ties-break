@@ -8,6 +8,7 @@ import {
   type EntryCapUsage,
   type FamilyBackground,
   type FinanceWeek,
+  type FinanceWeekPoint,
   type FinanceWindow,
   type FullBracketMatch,
   type InjurySeverity,
@@ -332,6 +333,48 @@ export function financeWindow(financeWeeks: FinanceWeek[], fromWeek: number): Fi
     else expenseCents += -(amt ?? 0)
   }
   return { startWeek: fromWeek, byCategory, incomeCents, expenseCents, netCents: incomeCents - expenseCents }
+}
+
+/** DENSE per-week income/expense over `[fromWeek, toWeek]` – the Home budget card's chart series.
+ *
+ *  Dense is the whole point, and the reason this is not a `.map` over `financeWeeks`: that ledger
+ *  only holds weeks that HAD a financial event, so a fortnight with nothing in it simply is not
+ *  there, and a chart plotted straight off it would silently close the gap and draw a quiet
+ *  stretch as if it never happened. Every week in the span gets a bar, zero-valued when the ledger
+ *  is silent about it.
+ *
+ *  Pure (no world dependency), and the same sign convention `financeWindow` folds by: positive
+ *  category totals are income, negative ones are spend, reported as a magnitude. */
+export function financeSeries(
+  financeWeeks: FinanceWeek[],
+  fromWeek: number,
+  toWeek: number,
+  /** what the family has RIGHT NOW, i.e. at the end of `toWeek`. The running balance is walked
+   *  backwards from it, so the series can never drift away from the funds the card prints above the
+   *  chart – they are the same number by construction. Defaults to 0 for callers that only want the
+   *  in/out shape. */
+  endBalanceCents = 0,
+): FinanceWeekPoint[] {
+  const byWeek = new Map<number, FinanceWeek>()
+  for (const w of financeWeeks) byWeek.set(w.week, w)
+  const out: FinanceWeekPoint[] = []
+  for (let week = fromWeek; week <= toWeek; week++) {
+    let incomeCents = 0
+    let expenseCents = 0
+    for (const amt of Object.values(byWeek.get(week)?.byCategory ?? {})) {
+      if ((amt ?? 0) > 0) incomeCents += amt!
+      else expenseCents += -(amt ?? 0)
+    }
+    out.push({ week, incomeCents, expenseCents, balanceCents: 0 })
+  }
+  // Backwards: the last week ends on today's funds, and every earlier week ends on the next week's
+  // opening balance. Undoing week i means removing ITS OWN net from the balance it closed on.
+  let running = endBalanceCents
+  for (let i = out.length - 1; i >= 0; i--) {
+    out[i].balanceCents = running
+    running -= out[i].incomeCents - out[i].expenseCents
+  }
+  return out
 }
 
 // --- the kid as a match player -----------------------------------------------
@@ -3015,6 +3058,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // ONE definition of "this season" (seasonStartWeek), shared with the wrap-up summary – the
       // two used to spell the same arithmetic out separately, which is how they came to disagree.
       season: financeWindow(world.financeWeeks, seasonStartWeek(world.week)),
+      // The same 12 weeks, un-folded, for the Home budget card's chart. Clamped at week 0 so a
+      // young career charts the weeks it has actually lived instead of eleven empty bars. Today's
+      // funds anchor the running balance, so the line's last point is the total printed above it.
+      weekly12: financeSeries(
+        world.financeWeeks,
+        Math.max(0, world.week - 11),
+        world.week,
+        world.fundsCents,
+      ),
     },
     financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),

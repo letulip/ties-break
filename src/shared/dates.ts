@@ -81,13 +81,49 @@ export function seasonYear(seasonIndex: number): number {
   return EPOCH_YEAR + seasonIndex
 }
 
+/** The two facts EVERY week label is built from: the in-season week (1..52) and the SEASON year.
+ *
+ *  Extracted for the redesigned Home header, which prints the same week with the year spelled out
+ *  in full ("W27 2033"). Both labels now read this one derivation instead of each running the
+ *  modulo/`seasonYear` pair themselves – the short and the long form cannot name different weeks.
+ *  Total: defined for every integer, including the negative weeks entry deadlines can reach. */
+function weekParts(week: number): { inSeason: number; year: number } {
+  const w = Math.floor(week)
+  const offset = ((w % WEEKS_IN_SEASON) + WEEKS_IN_SEASON) % WEEKS_IN_SEASON
+  return { inSeason: offset + 1, year: seasonYear(Math.floor(w / WEEKS_IN_SEASON)) }
+}
+
 /** "W14 '31" – an absolute career week as the in-season week (1..52) + its season year.
  *  Total: defined for every integer, including the negative weeks entry deadlines can reach. */
 export function weekLabel(week: number): string {
-  const w = Math.floor(week)
-  const offset = ((w % WEEKS_IN_SEASON) + WEEKS_IN_SEASON) % WEEKS_IN_SEASON
-  const year = seasonYear(Math.floor(w / WEEKS_IN_SEASON))
-  return `W${offset + 1} '${String(((year % 100) + 100) % 100).padStart(2, '0')}`
+  const { inSeason, year } = weekParts(week)
+  return `W${inSeason} '${String(((year % 100) + 100) % 100).padStart(2, '0')}`
+}
+
+/** "Jun 3 – Jun 9" – the week's Monday..Sunday span, both months always named, NO year.
+ *
+ *  A second shape of `weekRange`, not a rival to it: the two share `weekStart`/`weekEnd`, so they
+ *  can never disagree about which days a week covers. The difference is what the caller has already
+ *  said. `weekRange` is used where the week is otherwise unidentified, so it must be self-contained
+ *  ("Jan 27 – Feb 2, 2031"). This one is used where the YEAR IS ALREADY ON THE LINE (see
+ *  `weekDateLine`), where repeating it reads as a stutter – and it names both months every time
+ *  rather than contracting to "Jun 3–9", because the redesigned header is a fixed-width row and a
+ *  span that changes shape mid-month made the line jump. */
+export function weekSpan(week: number): string {
+  const start = weekStart(week)
+  const end = weekEnd(week)
+  return `${MONTHS[start.month]} ${start.day} – ${MONTHS[end.month]} ${end.day}`
+}
+
+/** "W27 2033 · Jun 3 – Jun 9" – THE date line of the redesigned Home header (epic/redesign-home).
+ *
+ *  The owner's own format, and the one place it is spelled: OUR week label (the number the whole
+ *  game speaks in) with the year written out IN FULL – the header has room the 30px status pill
+ *  does not, and "'33" beside a real date range reads as a typo – then the week's actual calendar
+ *  days. Every surface that wants this line calls this function; nothing re-composes it. */
+export function weekDateLine(week: number): string {
+  const { inSeason, year } = weekParts(week)
+  return `W${inSeason} ${year} · ${weekSpan(week)}`
 }
 
 /** "Jan 6–12, 2031" – a human date range for one career week (Monday..Sunday).

@@ -35,3 +35,10 @@ public/images/*-jpeg/
 !public/pwa-512.png
 !public/pwa-maskable-512.png
 !public/pwa-apple-180.png
+
+# Author staging inboxes for raw art at the REPO ROOT. Masters live here until they are copied
+# into public/images/<set>-jpeg/ for the pipeline; they must never enter git.
+# The leading slash is load-bearing: unanchored `coaches/` would also swallow
+# public/images/coaches/, i.e. the generated webp we DO ship.
+/coaches/
+/fields/

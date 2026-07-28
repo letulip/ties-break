@@ -412,22 +412,49 @@ describe('Memory – selection', () => {
     if (outside) expect(outside.kind).toBe('echo')
   })
 
-  it('the echo cadence: deterministic, roughly every 4-6 weeks, never a fresh milestone', () => {
-    const cards = []
+  it('the echo cadence: deterministic, roughly every 4-6 weeks, and the rest of the weeks are quiet', () => {
+    // ⚠ WIDENED by A3 (28.07): the card is headed "Recent memory" and used to render "Too early for
+    // memories." on every non-echo week – to a player four seasons into her career. So a week that
+    // does not ECHO now falls back to her LATEST milestone (`kind: 'recent'`) and the card is never
+    // empty once she has a memory at all. The cadence this test exists for is unchanged: `echo` is
+    // still ~1 week in 5, and it is still the only kind that reaches back past the newest thing.
+    const kinds: string[] = []
     for (let week = MEMORY_MIN_WEEKS + 10; week < MEMORY_MIN_WEEKS + 110; week++) {
       if (week >= 61 && week <= 63) continue // skip the anniversary window
       const a = selectMemory([title], week, 'cadence-seed', 14)
       const b = selectMemory([title], week, 'cadence-seed', 14)
       expect(a).toEqual(b) // pure function of (milestones, week, seed)
-      if (a) cards.push(a)
+      expect(a, `week ${week} left the card empty`).not.toBeNull()
+      kinds.push(a!.kind)
+      expect(a!.whenLabel).toBe('W11 \'31') // weekLabel(10)
     }
     // p = 0.2 over ~97 weeks: a wide, non-flaky corridor around "every 4-6 weeks"
-    expect(cards.length).toBeGreaterThanOrEqual(6)
-    expect(cards.length).toBeLessThanOrEqual(40)
-    for (const c of cards) {
-      expect(c.kind).toBe('echo')
-      expect(c.whenLabel).toBe('W11 \'31') // weekLabel(10)
+    const echoes = kinds.filter((k) => k === 'echo').length
+    expect(echoes).toBeGreaterThanOrEqual(6)
+    expect(echoes).toBeLessThanOrEqual(40)
+    // ...and every other week is the quiet fallback, never nothing.
+    expect(kinds.filter((k) => k === 'recent').length).toBe(kinds.length - echoes)
+  })
+
+  it('the card is only ever EMPTY before she has a memory to show', () => {
+    // Before the eight-week floor, and for a career with nothing captured – those two, and no
+    // other case. This is the pin that keeps "Too early for memories." honest.
+    expect(selectMemory([title], MEMORY_MIN_WEEKS - 1, 'seed', 14)).toBeNull()
+    expect(selectMemory([], 300, 'seed', 14)).toBeNull()
+    // A milestone that has not aged yet does not count as one she can remember.
+    expect(selectMemory([{ type: 'title', week: 298, tier: 'local' }], 300, 'seed', 14)).toBeNull()
+    // ...but as soon as one HAS aged, every week answers.
+    for (let week = 300; week < 340; week++) {
+      expect(selectMemory([title], week, 'seed', 14), `week ${week}`).not.toBeNull()
     }
+  })
+
+  it('the quiet fallback shows her LATEST milestone, not an old one', () => {
+    const first: Milestone = { type: 'title', week: 10, tier: 'local' }
+    const later: Milestone = { type: 'final', week: 120, tier: 'regional' }
+    // Week 200 is outside both anniversary windows, so anything showing is echo-or-recent.
+    const card = selectMemory([first, later], 200, 'recent-seed', 14)!
+    if (card.kind === 'recent') expect(card.milestone).toEqual(later)
   })
 
   it('the painting is from the band she was in THEN: a title at 17 shows the teen band at 22', () => {
@@ -688,11 +715,20 @@ describe('v18 migration – the milestone backfill', () => {
 // The surfaces: Home speaks words (D3), and the tables the copy shares stay single.
 // ---------------------------------------------------------------------------
 describe('surfaces + shared tables', () => {
-  it('D3: Home shows no raw condition number – the squares and the words carry it', () => {
+  it('D3 REVERSED by the owner (28.07): the number is back, ONCE, inside the ring', () => {
+    // D3 said "Home speaks words, not percentages". The owner reversed it when the ten squares
+    // became a ProgressRing: a ring without its number is a decoration, because the fullness of an
+    // arc is not readable to a percent. What D3 was actually protecting survives and is pinned
+    // here – the number appears exactly ONCE, it is the engine's own condition rendered verbatim,
+    // and none of the WORDS left with it.
     const home = read('../src/components/screens/HomeScreen.vue')
-    expect(home).not.toContain('Condition ${')
+    const template = home.slice(home.indexOf('<template>'))
+    expect(template.match(/\{\{ condition \}\}/g) ?? []).toHaveLength(1)
+    expect(template).toContain('class="condition-ring-value"')
+    // ...and the sign is its own element, so it can be the smaller half of the pair.
+    expect(template).toMatch(/<b>\{\{ condition \}\}<\/b><i>%<\/i>/)
     expect(home).not.toMatch(/Math\.round\(condition\)/)
-    // the note and the photo line render the engine's strings verbatim
+    // the note and the photo line still render the engine's strings verbatim
     expect(home).toContain('diary.conditionNote')
     expect(home).toContain('diary.photoLine')
     expect(home).toContain('diary.memory')

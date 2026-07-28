@@ -72,22 +72,43 @@ describe('F45-1 — the header avatar is age-only, never emotional', () => {
     }
   })
 
-  it('App.vue takes the header crop from useHeaderAvatar and never from the emotion composable', () => {
+  it('the shell shows no face of hers at all – A2 deleted the header it lived in', () => {
+    // ⚠ RE-AIMED by A2 (28.07): this used to read "App.vue takes the crop from useHeaderAvatar and
+    // never from the emotion composable". The header is gone, so the stronger statement is now
+    // true and is what we pin: the shell renders NO avatar, by either route. The positive half of
+    // the old guard – that the surviving avatar is the age-only one – moved to the Home pin below.
     const app = read('../src/App.vue')
-    expect(app).toContain('useHeaderAvatar')
-    // THE REGRESSION GUARD: if a future refactor routes the header back through the emotion
-    // composable, or hand-builds a crop filename in the shell, this line fails.
+    expect(app).not.toContain('useHeaderAvatar')
     expect(app).not.toContain('useKidEmotion')
     expect(app).not.toContain('avatarEmotion')
     expect(app).not.toMatch(/avatars\/\$\{/)
+    expect(app).not.toContain('<img')
   })
 
-  it('the Home card and the Kid screen KEEP their emotions', () => {
+  it('the Home hero and the Kid screen KEEP their emotions', () => {
     for (const p of ['../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
-      const src = read(p)
-      expect(src, p).toContain('useKidEmotion')
-      expect(src, p).not.toContain('useHeaderAvatar')
+      expect(read(p), p).toContain('useKidEmotion')
     }
+    // The Kid screen shows ONLY the emotional portrait – nothing static competes with it.
+    expect(read('../src/components/screens/KidScreen.vue')).not.toContain('useHeaderAvatar')
+  })
+
+  it('A2: Home carries BOTH faces, and each keeps its own rule', () => {
+    // ⚠ RE-AIMED by A2 (28.07): the app header is gone and its 30px avatar moved onto Home, so
+    // "the shell must not be emotional" became "the CHROME avatar must not be emotional" – the two
+    // faces now sit on one screen. What the guard protects is unchanged and the pin is sharper for
+    // it: the big painting is the emotion composable's, the small crop is the age-only one's, and
+    // no element takes both.
+    const home = read('../src/components/screens/HomeScreen.vue')
+    expect(home).toContain('useKidEmotion')
+    expect(home).toContain('useHeaderAvatar')
+    expect(home).toContain('class="diary-hero-img" :src="portraitUrl"')
+    expect(home).toContain(':src="headerAvatarUrl"')
+    // Neither source is wired to the other's element.
+    expect(home).not.toContain('class="diary-avatar" :src="portraitUrl"')
+    expect(home).not.toContain('class="diary-hero-img" :src="headerAvatarUrl"')
+    // And the age-only composable is still emotion-blind at the source (checked above too).
+    expect(read('../src/composables/headerAvatar.ts')).not.toContain('useKidEmotion')
   })
 })
 

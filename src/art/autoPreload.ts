@@ -10,7 +10,7 @@
 // yet, so the fetches never compete with a reveal animation.
 import { watch } from 'vue'
 import { useGameStore } from '../stores/game'
-import { preloadForAge, preloadNextStageIfDue } from './preload'
+import { preloadCoachArt, preloadForAge, preloadNextStageIfDue } from './preload'
 
 export function startArtPreloader(): void {
   const game = useGameStore()
@@ -20,6 +20,16 @@ export function startArtPreloader(): void {
       if (typeof age !== 'number') return
       preloadForAge(age)
       preloadNextStageIfDue(age)
+    },
+    { immediate: true },
+  )
+  // epic/redesign-home: the coach's face, on its OWN trigger. Her band changes with birthdays; the
+  // family's coach does not change at all in v1, so a second watch on the background is both the
+  // cheapest and the honest key – and it keeps the per-band preload budget (14 urls) literal.
+  watch(
+    () => game.snapshot?.profile.background,
+    (background) => {
+      if (background) preloadCoachArt(background)
     },
     { immediate: true },
   )

@@ -18,6 +18,12 @@ interface Step {
 // R13-12 re-anchored the marks to the new nav: Home is the diary (the plan moved to the
 // This-week tab, which gets its own step), and the Kid step points at the header avatar –
 // the Kid tab is gone from the bottom bar.
+//
+// epic/redesign-home re-aimed ONE of them. The This-week TAB left the bottom bar (the owner's new
+// order is Season · Calendar · Home · Stats · More), and its screen is reached from Home's
+// next-tournament card – so the mark that pointed at `tab-week` points at that card. It is the only
+// anchor in the set that does not live in App.vue's own template, which is exactly why the card
+// carries a `data-tour` attribute of its own rather than the step guessing a position.
 const STEPS: Step[] = [
   {
     selector: '[data-tour="home-header"]',
@@ -38,9 +44,9 @@ const STEPS: Step[] = [
     placement: 'above',
   },
   {
-    selector: '[data-tour="tab-week"]',
+    selector: '[data-tour="next-tournament"]',
     title: 'This week',
-    text: 'Set the training plan here and read the week recap after each week.',
+    text: 'Tap the tournament card to set the training plan and read the last week recap.',
     placement: 'above',
   },
   {
