@@ -54,6 +54,9 @@ describe('the preview names the opponent the bracket actually produces', () => {
       const preview = previewEvent(world, event, ranking, kid)
 
       // Now play it for real, exactly as computeShadowTournament does.
+      // The bracket scales opponents by their REAL fatigue; the preview scales them rested (see
+      // preview.ts). That changes how strong they are, never WHO they are - `selectEntrants` reads
+      // the standings, not conditions - so the identity check below still bites.
       const fatigue = rivalConditions(world.results, world.week)
       const rng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
       const field = selectEntrants(event, world.cohort, ranking, rng).map((p) =>
@@ -71,10 +74,9 @@ describe('the preview names the opponent the bracket actually produces', () => {
   it('the chance is the engine\'s own formula against that opponent – not a second model', () => {
     const { world, ranking, event, kid } = fixture('pv-formula')
     const preview = previewEvent(world, event, ranking, kid)
-    const fatigue = rivalConditions(world.results, world.week)
     const rng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
     const entrants = selectEntrants(event, world.cohort, ranking, rng).map((p) =>
-      rivalMatchPlayer(p, event.surface, fatigue.get(p.id) ?? ECONOMY.condition.max),
+      rivalMatchPlayer(p, event.surface, ECONOMY.condition.max),
     )
     const drawSize = TIERS[event.tier].drawSize
     const f: MatchPlayer[] = entrants.slice(0, drawSize - 1)
@@ -117,6 +119,18 @@ describe('the preview is stable, and free', () => {
     const pa = previewEvent(a.world, a.event, a.ranking, a.kid)
     const pb = previewEvent(b.world, b.event, b.ranking, b.kid)
     expect(pa).not.toEqual(pb)
+  })
+
+  it('previews a RESTED field – a rival\'s exhaustion today is not a fact about a future week', () => {
+    // The correction that produced this rule: previewing at today's condition read 81% for a J30
+    // event eight weeks out, against a field whose median condition that day was 3 out of 100. The
+    // same draw rested reads 52%. So the module must not consult the fatigue map at all.
+    const src = read('../src/engine/season/preview.ts')
+    expect(src).not.toContain('rivalConditions')
+    expect(src).toContain('rivalMatchPlayer(p, event.surface, ECONOMY.condition.max)')
+    // ...and its input type cannot even reach the results ledger the fatigue is derived from.
+    const sig = src.slice(src.indexOf('export function previewEvent'), src.indexOf('): EventPreview'))
+    expect(sig).not.toContain('results')
   })
 
   it('draws ONLY on purpose-scoped sub-streams – the frozen capture cannot move', () => {

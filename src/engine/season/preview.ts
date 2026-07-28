@@ -15,11 +15,18 @@
 //      touches nothing the simulation reads.
 //
 // WHAT THE PREVIEW CANNOT KNOW, and says so in its own type: the field is drawn from the standings
-// and the rivals' fatigue AS THEY ARE TODAY. By the time the event actually plays, both will have
-// moved - other girls will have won and lost, and her own condition will be whatever the weeks
-// between did to her. That makes this an estimate about a field she would meet if it started now,
-// which is exactly the information the PLAYER has when deciding whether to enter. It is not a
-// prophecy and must never be presented as one.
+// AS THEY ARE TODAY. By the time the event plays they will have moved - other girls will have won
+// and lost. That makes this an estimate about a field she would meet if it started now, which is
+// the information the PLAYER has when deciding whether to enter. Never a prophecy.
+//
+// THE FIELD IS PREVIEWED RESTED, and that is a correction, not a simplification. The first version
+// scaled every opponent by her condition TODAY, which sounded more truthful and was much less so:
+// measured over 10 careers at week 40, the elite band's median condition is 10 out of 100 and it is
+// at or below 5 in 45% of weeks, so a J30 card eight weeks out read 81% when the same draw against a
+// rested field reads 52%. Their exhaustion today says nothing about their condition on a week that
+// has not happened; quoting it turns a transient into a promise, and the transient is enormous.
+// So opponents are previewed at full condition: "this is who is there, and this is her chance
+// against them at their best". The card understates rather than flatters.
 //
 // RNG DISCIPLINE. Every draw here comes off `seed:kidtour:<eventId>` - the event's own sub-stream,
 // created fresh, read, and thrown away. Building a preview cannot move the MAIN weekly stream, so
@@ -31,7 +38,7 @@ import { ECONOMY } from '../economy'
 import { fastMatchProbability } from '../match/engine'
 import type { MatchPlayer } from '../match/types'
 import { TIERS } from './calendar'
-import { rivalConditions, rivalMatchPlayer } from './rival'
+import { rivalMatchPlayer } from './rival'
 import {
   JUNIOR_TOUR,
   drawKidInto,
@@ -40,7 +47,6 @@ import {
   standardSeedOrder,
 } from './tournament'
 import type { AiPlayer, RankingRow, SeasonEvent } from './types'
-import type { SeasonResult } from './ranking'
 
 /** How the field she would meet compares with her. Three bands, because a card has room for one
  *  short clause and the player only needs to know which way to lean. */
@@ -65,13 +71,13 @@ function drawnField(
   event: SeasonEvent,
   cohort: AiPlayer[],
   ranking: RankingRow[],
-  fatigue: Map<string, number>,
   kid: MatchPlayer,
   seed: string,
 ): MatchPlayer[] {
   const rng = rngFromSeed(`${seed}:kidtour:${event.id}`)
+  // Full condition on purpose - see the note at the top of this file.
   const entrants = selectEntrants(event, cohort, ranking, rng).map((p) =>
-    rivalMatchPlayer(p, event.surface, fatigue.get(p.id) ?? ECONOMY.condition.max),
+    rivalMatchPlayer(p, event.surface, ECONOMY.condition.max),
   )
   const drawSize = TIERS[event.tier].drawSize
   const field = entrants.slice(0, drawSize - 1)
@@ -110,16 +116,13 @@ export function eventTemperature(seed: string, event: SeasonEvent): number {
 export function previewEvent(
   world: {
     seed: string
-    week: number
     cohort: AiPlayer[]
-    results: SeasonResult[]
   },
   event: SeasonEvent,
   ranking: RankingRow[],
   kid: MatchPlayer,
 ): EventPreview {
-  const fatigue = rivalConditions(world.results, world.week)
-  const alive = drawnField(event, world.cohort, ranking, fatigue, kid, world.seed)
+  const alive = drawnField(event, world.cohort, ranking, kid, world.seed)
   const opp = firstRoundOpponent(alive, kid)
   const posOf = new Map<string, number>()
   ranking.forEach((r, i) => posOf.set(r.playerId, i))
