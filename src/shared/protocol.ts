@@ -164,6 +164,12 @@ export interface FinanceWeekPoint {
   incomeCents: number
   /** magnitude of the week's negative category totals, in cents (a positive number) */
   expenseCents: number
+  /** what the family HAD at the end of this week, in cents – the running balance, reconstructed
+   *  backwards from today's funds so the last point of the series IS the number printed above the
+   *  chart. Signed: a family below zero charts below zero. (A2, the owner's chart ruling: the card
+   *  draws the line the export draws, and the line a parent actually watches is the balance, not
+   *  the per-week churn – the slope toward zero is the whole game.) */
+  balanceCents: number
 }
 
 export type StopReason =

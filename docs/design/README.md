@@ -6,8 +6,14 @@
 проходит турниры и матчи. Визуальный язык — «тёмный спортивный дашборд + бумажные артефакты»
 (записки, полароиды, скотч), кислотно-лаймовый акцент.
 
-Пакет содержит **8 экранов** первого игрового цикла: A. Home, B. Season Planner, C. Kid Profile,
-D. Weekly Story, E. Tournament (Preview), F. Match Day (Live), G. Family Budget, H. Calendar (Week View).
+Пакет содержит **9 экранов** первого игрового цикла: A. Home, B. Season Planner, C. Kid Profile,
+D. Weekly Story, E. Tournament (Preview), F. Match Day (Live), G. Family Budget, H. Calendar (Week View),
+I. Live Match (Court).
+
+**F vs I.** Это два разных представления живого матча. **F** — кинематографичное: арт-сцена во весь экран,
+компактный счёт, реплика тренера. **I** — «диспетчерское»: схематичный корт с анимацией, полная статистика,
+лог очков, управление скоростью. F — для эмоциональных моментов, I — для длинных матчей, которые игрок
+проматывает. Реализовать оба; переключение между ними — вне рамок этих макетов.
 
 ## About the Design Files
 Файлы в `design/` — **дизайн-референсы, сделанные в HTML**. Это прототипы, показывающие
@@ -33,6 +39,9 @@ D. Weekly Story, E. Tournament (Preview), F. Match Day (Live), G. Family Budget,
 - **Иконки** нарисованы вручную как inline SVG в стиле 1.5–1.9px stroke, 24×24 grid
   (близко к Lucide / Feather). В проде — взять Lucide и совпадающие по смыслу глифы.
 - **Смайл настроения** (жёлтый круг «tired») собран из div-ов — заменить на арт-набор эмоций.
+- **Корт на экране I** — схематичный (div-ы + CSS-анимация), это осознанный «диспетчерский» вид, а не арт.
+  Разметку корта и цвета копировать точно; движение мяча/игроков в проде должно управляться игровой
+  симуляцией, а не зацикленной анимацией.
 
 ## Дизайн-принципы (важно соблюсти)
 1. **Тёмный интерфейс, светлая бумага.** Данные и UI — на тёмных панелях; человеческое,
@@ -276,6 +285,69 @@ CTA → tab bar (активен Season).
   поверх — бумажка 264px (наклон −0.8°, «Notes» 12.5px/600 `#4a4235` + Caveat 20px
   «Remember to pack rain jacket.») и оторванный клочок 52×48 `#e2d6b4` (наклон +6°).
 
+### I. Live Match (Court)
+**Purpose:** длинный матч, который игрок наблюдает и проматывает: схема корта, полный счёт,
+статистика, лог очков, управление скоростью.
+
+**Layout:** header (flex:none) → большая панель матча (корт + счёт + подача + статистика) →
+лог очков (`flex:1; min-height:0; overflow:hidden`) → две вторичные кнопки → primary CTA. Таб-бара нет.
+
+- **Header** (padding 22px 18px 12px): верхняя строка — back-arrow 22px слева и ссылка
+  «Skip match →» справа (12.5px/600 `#8fb2d6`, `border-bottom:1px rgba(143,178,214,.45)`, стрелка 13px).
+  Ниже по центру: «National Hard Open» 19px/800 −0.02em, затем «Round of 16 · Jan 19 – 25, 2033»
+  12.5px/500 `#8e9ba4` (разделитель — точка 3.5px `#5c6a74`, gap 9px).
+- **Панель матча:** `margin:0 14px`, radius 17px, `overflow:hidden`, фон `#141d26`, border subtle.
+  Внутри — 5 секций сверху вниз, разделённых `border-top:1px rgba(255,255,255,.07)`:
+
+  1. **Корт**, высота 160px, фон `linear-gradient(180deg,#1b3a5f,#16304f)` (зона выката).
+     Игровая площадка: `inset:20px 24px`, фон `#22456f`, border `1.6px rgba(255,255,255,.8)`.
+     Ориентация — **ландшафтная, сетка вертикально по центру**. Разметка линиями `1.4px rgba(255,255,255,.72)`:
+     одиночные боковые (inset 16px сверху и снизу), линии подачи (24% слева и справа),
+     центральная линия подачи (между линиями подачи, по середине высоты), метки центра на задних линиях (9px).
+     Сетка: полоса 9px с «сеткой» `repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 1px, transparent 1px 3px)`
+     + трос `2.4px rgba(255,255,255,.95)`, выступает на 7px за площадку сверху и снизу.
+     Игроки — точки 11px: подающая `#ffffff` с ободком `0 0 0 2.5px rgba(207,225,82,.55)` (left 11px, top 56%),
+     соперница `#e8eef4` (right 11px, top 38%). Мяч — 7px `#e8f04a`, glow `0 0 10px rgba(232,240,74,.85)`.
+     Анимации (все 2.8s ease-in-out infinite, синхронно): `rally` — мяч по траектории через сетку
+     (12%/58% → 82%/34% → назад), `ballHop` — пульсация масштаба на отскоках,
+     `playerNear` / `playerFar` — вертикальное смещение игроков ±13px/11px в противофазе.
+     Оверлеи: слева сверху бейдж «Live» (pill `rgba(8,13,18,.72)` + blur 8px, красная точка 7px
+     с анимацией `livePulse` 1.1s), справа снизу чип погоды («23°» 14px/700 + «2 m/s» 10.5px/500).
+  2. **Строки игроков** (2 шт, padding 11px 12px 4px и 4px 12px 11px): индикатор подачи — лаймовая точка 7px
+     (у неподающей — прозрачный спейсер 7px для выравнивания) → флаг 24×16 → имя 14.5px/700
+     (**у своей игроницы имя лаймом `#cfe152`**, у соперницы `#f2f6f8`) + сид «(4)» 12px/600 `#8e9ba4`,
+     под именем возраст 11px/500 → 4 ячейки счёта 38×34 radius 8px:
+     текущий сет у ведущей — `#d9e455` / текст `#161f0c` 17px/800; сыгранные — `rgba(255,255,255,.05)`,
+     17px/700; будущие — `rgba(255,255,255,.03)`, «–» 15px/600 `#5c6a74`.
+     Данные: Bianca Tran (4), 16 y.o. — 1 0 – – ; Dana Delgado, 17 y.o. — 0 0 – –.
+  3. **Строка подачи:** pill «Serving: B. Tran» (border `1px #cfe152`, текст лайм 12.5px/700,
+     padding 7px 13px) и справа «Match time» 12px/500 (`white-space:nowrap`) + «00:07» 13.5px/700.
+  4. **Статистика:** `grid repeat(3,1fr)`, padding 12px 4px 14px, колонки разделены hairline.
+     Лейбл 11.5px/500 `#a8b3ba`.
+     *Momentum* — два polyline 104×26: свой лайм 1.8px, соперницы `rgba(255,255,255,.22)` 1.4px,
+     подпись «Slight edge» 11px `#8e9ba4`.
+     *1st Serve %* — «53%» 16px/800 лаймом | делитель 1×12px | «46%» 15px/700 `#8e9ba4`;
+     ниже бар 6px radius 3px, трек `rgba(255,255,255,.1)`, лаймовая заливка 53%.
+     *Break points* — «0/0» 16px/800 `#f2f6f8` | «0/0» 15px/700 muted; ниже два пустых бара 6px.
+- **Лог очков:** `flex:1; min-height:0; overflow:hidden`, radius 17px `#141d26`, padding 6px 12px 10px.
+  Вертикальная линия таймлайна: `position:absolute; left:56px; top:20px; bottom:48px; width:1.5px;
+  rgba(255,255,255,.09)`. Строка (`padding:6px 0`, `border-bottom:1px rgba(255,255,255,.05)`):
+  время 11.5px/500 `#8e9ba4` (ширина 34px) → точка 9px (последнее событие — `#e8f04a` с glow,
+  остальные `#46545f`) → текст 13px/500 (последнее — `#e3eaee`, остальные `#c3ccd2`;
+  ключевое слово выделяется 800 лаймом, напр. «Ace!») → счёт 13px/700 (последний `#f2f6f8`,
+  остальные `#c3ccd2`, `letter-spacing:0.01em`).
+  Копия: 00:07 «Ace! Clean serve down the T.» 1 – 0 · 00:03 «Rally of 9. Bianca wins the point.» 40 – 15 ·
+  00:01 «Good first serve.» 30 – 15 · 00:00 «Match started.» 0 – 0.
+  Внизу «Show more ⌄» 12.5px/600 `#8e9ba4` по центру.
+  **Внимание:** высота лога — остаток по флексу (≈165px при 390×844). Строки специально сжаты
+  до `padding:6px 0`, иначе «Show more» уходит под `overflow:hidden`. В проде лог скроллится,
+  «Show more» разворачивает историю.
+- **Вторичные кнопки:** `grid 1fr 1fr; gap 10px`, padding 14px 8px, radius 14px, `#141d26`,
+  border `rgba(255,255,255,.1)`: «Coach advice» (иконка чата 18px + бейдж-круг 19px `#cfe152`
+  с числом 11px/800 `#161f0c`) и «Match stats» (иконка столбиков 18px `#8fb2d6`). Подписи 13.5px/700.
+- **CTA «Speed up»:** pill `#cfe152`, padding 15px 12px, иконка ▷▷ 19px `#111a10`, текст 15px/800,
+  `box-shadow:0 8px 24px rgba(207,225,82,.18)`. Нижний отступ экрана 22px.
+
 ---
 
 ## Interactions & Behavior
@@ -292,6 +364,9 @@ CTA → tab bar (активен Season).
 - E → «Start Match» → **F. Match Day**.
 - Конец недели (игровой тик) → **D. Weekly Story** как модалка; × возвращает на Home.
 - C открывается по табу «Bianca»; «See all» в moments → полная биография.
+- E → «Start Match» → **F** (кинематографичный) или **I** (диспетчерский, для проматывания).
+- I: «Skip match →» → сразу результат матча; «Coach advice» → шторка с советами (бейдж = непрочитанные);
+  «Match stats» → полная статистика; «Speed up» → переключение скорости симуляции (1× / 2× / 4×).
 
 **Анимации** (все — 180–260ms, `cubic-bezier(.2,.8,.2,1)`):
 - Появление экрана-модалки: slide-up 24px + fade.
@@ -301,6 +376,10 @@ CTA → tab bar (активен Season).
 - Sparkline на Home: `stroke-dasharray` рисуется слева-направо 700ms.
 - Live-точка в F: пульсация opacity 1→0.35, 1.1s, infinite.
 - Смена счёта в F: текущая ячейка гейма — `scale` 1→1.12→1, 200ms.
+- Корт в I: мяч и игроки — 2.8s ease-in-out, зацикленно (`@keyframes rally / ballHop / playerNear / playerFar`).
+  В проде длительность обратна скорости симуляции: при «Speed up» цикл ускоряется, а не подменяется.
+- Новая запись в логе I: вставка сверху, slide-down 12px + fade 200ms; у прежней верхней строки
+  точка гаснет с лайма в `#46545f`.
 
 **Состояния (press/hover):**
 - Карточка/плитка: `brightness(1.08)` + `scale(0.985)` при нажатии.
@@ -332,6 +411,11 @@ CTA → tab bar (активен Season).
   rankingPoints, spectators, prizeMoney, opponent }.
 - `match` (активный): sets[[6,4],[4,6],[2,1]], currentGame ['30','15'], server, matchTime,
   serveState ('Second Serve'), coachMessages[].
+- `match` (экран I, расширенно): players[{name, seed, age, flag, isPlayer}], setScores (4 слота),
+  serving, matchTime, `simSpeed` (1|2|4), stats { momentum: number[] × 2, firstServePct × 2,
+  breakPoints '0/0' × 2 }, `pointLog`[] { time, text, highlight?, score, isLatest },
+  `courtState` { ballSide, ballPos, players: [{x,y}] } — источник анимации корта,
+  `coachUnread` (бейдж на «Coach advice»).
 - `memories`: [] { title, date, photo } — источник плитки Recent memory и таймлайна moments.
 - `weeklyReport`: собирается на конце недели — scene art, narrative line, finances, training deltas,
   mood, highlights[], nextGoal.
@@ -402,6 +486,10 @@ text-on-art `0 2px 14px rgba(0,0,0,.55)` · glow-dot `0 0 8px <color>`.
 14. **Sparkline** — polyline + заливка + цветные точки по оценке дня.
 15. **CoachBar** — фото + реплика + действие (варианты: glass-плашка и оверлей матча).
 16. **MoodFace** — состояние настроения (заменить на арт).
+17. **CourtDiagram** — схема корта (ландшафтная, сетка по центру) + позиции игроков и мяча,
+    props `ballPos`, `players`, `serving`, `speed`; вся разметка — данные, не картинка.
+18. **PointLog** — таймлайн событий матча со скроллом и разворотом.
+19. **StatTriplet** — строка из трёх метрик с hairline-разделителями (Momentum / 1st Serve / Break points).
 
 ## Assets
 Все изображения в прототипе — **пустые слоты** (`<image-slot>`), заполняются пользователем.
@@ -429,14 +517,17 @@ text-on-art `0 2px 14px rgba(0,0,0,.55)` · glow-dot `0 0 8px <color>`.
 ## Screenshots
 `screenshots/` — рендеры всех восьми экранов, 780×1688 (2× от 390×844 pt), PNG:
 `A-home.png`, `B-season-planner.png`, `C-kid-profile.png`, `D-weekly-story.png`,
-`E-tournament-preview.png`, `F-match-day-live.png`, `G-family-budget.png`, `H-calendar-week.png`.
+`E-tournament-preview.png`, `F-match-day-live.png`, `G-family-budget.png`, `H-calendar-week.png`,
+`I-live-match-court.png`.
+
+Экран I на скриншоте — один кадр зацикленной анимации; мяч и игроки в движении.
 
 Арт-слоты на скриншотах пустые (видны как плейсхолдеры) — это ожидаемо, см. Assets.
 Скриншоты — для сверки пропорций и композиции; **точные значения брать из `tokens.css` и спецификаций выше**,
 а не пипеткой из PNG.
 
 ## Files
-- `design/Home Screen.dc.html` — все 8 экранов, открывается прямо в браузере (двойной клик).
+- `design/Home Screen.dc.html` — все 9 экранов, открывается прямо в браузере (двойной клик).
   Экраны идут подряд, каждый подписан курсивом (A…H).
 - `design/support.js`, `design/image-slot.js` — рантайм прототипа (нужны, чтобы файл открылся).
   **В продакшн не переносить.**

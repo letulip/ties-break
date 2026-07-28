@@ -45,8 +45,11 @@ export const FIELD_ART: readonly string[] = [
   'national-venue-1', // establishing shot – no court in frame
   'national-venue-2', // establishing shot – no court in frame
   'j30-clay-1',
+  'j30-clay-2',
   'j30-hard-1',
+  'j30-hard-2',
   'j30-grass-1',
+  'j30-venue-1', // establishing shot – no court in frame
 ]
 
 /** Weakest to strongest – the direction "nearest LOWER tier" walks. */

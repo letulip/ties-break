@@ -345,7 +345,16 @@ export function financeWindow(financeWeeks: FinanceWeek[], fromWeek: number): Fi
  *
  *  Pure (no world dependency), and the same sign convention `financeWindow` folds by: positive
  *  category totals are income, negative ones are spend, reported as a magnitude. */
-export function financeSeries(financeWeeks: FinanceWeek[], fromWeek: number, toWeek: number): FinanceWeekPoint[] {
+export function financeSeries(
+  financeWeeks: FinanceWeek[],
+  fromWeek: number,
+  toWeek: number,
+  /** what the family has RIGHT NOW, i.e. at the end of `toWeek`. The running balance is walked
+   *  backwards from it, so the series can never drift away from the funds the card prints above the
+   *  chart – they are the same number by construction. Defaults to 0 for callers that only want the
+   *  in/out shape. */
+  endBalanceCents = 0,
+): FinanceWeekPoint[] {
   const byWeek = new Map<number, FinanceWeek>()
   for (const w of financeWeeks) byWeek.set(w.week, w)
   const out: FinanceWeekPoint[] = []
@@ -356,7 +365,14 @@ export function financeSeries(financeWeeks: FinanceWeek[], fromWeek: number, toW
       if ((amt ?? 0) > 0) incomeCents += amt!
       else expenseCents += -(amt ?? 0)
     }
-    out.push({ week, incomeCents, expenseCents })
+    out.push({ week, incomeCents, expenseCents, balanceCents: 0 })
+  }
+  // Backwards: the last week ends on today's funds, and every earlier week ends on the next week's
+  // opening balance. Undoing week i means removing ITS OWN net from the balance it closed on.
+  let running = endBalanceCents
+  for (let i = out.length - 1; i >= 0; i--) {
+    out[i].balanceCents = running
+    running -= out[i].incomeCents - out[i].expenseCents
   }
   return out
 }
@@ -3043,8 +3059,14 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // two used to spell the same arithmetic out separately, which is how they came to disagree.
       season: financeWindow(world.financeWeeks, seasonStartWeek(world.week)),
       // The same 12 weeks, un-folded, for the Home budget card's chart. Clamped at week 0 so a
-      // young career charts the weeks it has actually lived instead of eleven empty bars.
-      weekly12: financeSeries(world.financeWeeks, Math.max(0, world.week - 11), world.week),
+      // young career charts the weeks it has actually lived instead of eleven empty bars. Today's
+      // funds anchor the running balance, so the line's last point is the total printed above it.
+      weekly12: financeSeries(
+        world.financeWeeks,
+        Math.max(0, world.week - 11),
+        world.week,
+        world.fundsCents,
+      ),
     },
     financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),

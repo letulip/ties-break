@@ -75,30 +75,41 @@ describe('the bottom nav is Season · Calendar · Home · Stats · More, Home in
 // ===========================================================================
 // Kid: reachable ONLY via the header avatar, with a one-time hint.
 // ===========================================================================
-describe('R13-12 — the Kid screen opens from the header avatar', () => {
+describe('R13-12 — the Kid screen opens from her photograph', () => {
+  // ⚠ RE-AIMED WHOLESALE by A2 (28.07): the app header that carried the avatar is gone. Every
+  // fact R13-12 pinned is still true, it just lives on Home now – the button, the age-only crop,
+  // the one-time callout and its localStorage key all moved together, and the shell learns about
+  // the navigation the same way it learns about the wallet and This-week: through `navigate`.
   it('the avatar is a button that routes to the kid state – the ONE door', () => {
-    expect(app).toContain('data-tour="kid-avatar"')
-    expect(app).toContain('@click="openKid"')
-    const openKid = app.slice(app.indexOf('function openKid'), app.indexOf('</script>'))
-    expect(openKid).toContain("tab.value = 'kid'")
-    // ...and no other site in the shell sets the kid state (openKid is the only writer).
-    expect(app.split("tab.value = 'kid'").length - 1).toBe(1)
+    expect(home).toContain('data-tour="kid-avatar"')
+    expect(home).toContain('@click="openKid"')
+    const openKid = home.slice(home.indexOf('function openKid'), home.indexOf('</script>'))
+    expect(openKid).toContain("emit('navigate', 'kid')")
+    // ...and nothing else asks for that screen: openKid is the only writer, on either side.
+    expect(home.split("'kid'").length - 1).toBe(2) // the emit union, and the emit itself
+    expect(app.split("tab.value = 'kid'").length - 1).toBe(0)
+    expect(app).toContain('@navigate="tab = $event"')
   })
 
-  it('the avatar stays F45-1: the tap wrapper did not re-route the crop', () => {
-    // The button wraps the SAME age-only crop – interactivity was added, the emotion path was not
-    // (tests/round11-followups.test.ts still sweeps the shell for the emotion composable).
-    expect(app).toContain('useHeaderAvatar')
-    expect(app).toContain(':src="avatarUrl"')
+  it('the avatar stays F45-1: neither the move nor the tap wrapper re-routed the crop', () => {
+    // The button wraps the SAME age-only crop. Home is the one screen holding both faces now, so
+    // this is the pin that keeps them apart: the small one is chrome, the big one is her.
+    expect(home).toContain('useHeaderAvatar')
+    expect(home).toContain(':src="headerAvatarUrl"')
+    expect(home).toContain('class="diary-avatar"')
+    // The hero painting is the emotional one and takes a different source entirely.
+    expect(home).toContain('class="diary-hero-img" :src="portraitUrl"')
   })
 
   it('the hint shows until first tap, and the tap persists the dismissal OUTSIDE the save', () => {
-    expect(app).toContain("const KID_HINT_KEY = 'tb:kidAvatarHintSeen'")
+    expect(home).toContain("const KID_HINT_KEY = 'tb:kidAvatarHintSeen'")
     // shown iff never dismissed on this device (the TOUR_SEEN_KEY idiom, localStorage)...
-    expect(app).toContain('const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))')
-    // ...and the first avatar tap both opens the screen and persists the dismissal.
-    const openKid = app.slice(app.indexOf('function openKid'), app.indexOf('</script>'))
+    expect(home).toContain('const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))')
+    // ...and the first tap both opens the screen and persists the dismissal.
+    const openKid = home.slice(home.indexOf('function openKid'), home.indexOf('</script>'))
     expect(openKid).toContain("localStorage.setItem(KID_HINT_KEY, '1')")
+    // The key left App.vue with the header – no second copy can drift out of step.
+    expect(app).not.toContain('KID_HINT_KEY')
     // NOT in the save: no store/engine surface knows the key.
     for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts', '../src/shared/protocol.ts']) {
       expect(read(rel)).not.toContain('kidAvatarHint')
@@ -106,10 +117,36 @@ describe('R13-12 — the Kid screen opens from the header avatar', () => {
   })
 
   it('the hint copy obeys the player-copy rules: short dash, no Cyrillic', () => {
-    expect(app).toContain('Tap the photo – her page lives here')
-    const template = app.slice(app.indexOf('<template>'))
+    expect(home).toContain('Tap the photo – her page lives here')
+    const template = home.slice(home.indexOf('<template>'))
     expect(template).not.toContain('—')
-    expect(template).not.toMatch(/[Ѐ-ӿ]/)
+    expect(template).not.toMatch(/[\u0400-\u04ff]/)
+  })
+})
+
+describe('A2 — the app header is gone', () => {
+  it('the shell renders no header at all, and none of its parts survived as dead markup', () => {
+    expect(app).not.toContain('<header')
+    expect(app).not.toContain('app-header')
+    for (const gone of ['avatarUrl', 'kidName', 'weekDates', 'status-pill', 'formatFunds']) {
+      expect(app, `App.vue still carries ${gone}`).not.toContain(gone)
+    }
+  })
+
+  it('its CSS went with it – no rule is left that nothing can render', () => {
+    const css = read('../src/style.css')
+    for (const dead of ['.app-header {', '.avatar-btn {', '.kid-name {', '.status-pill {', '.kid-hint {']) {
+      expect(css, `dead rule still in the sheet: ${dead}`).not.toContain(dead)
+    }
+  })
+
+  it('the tour still has both of its Home anchors, on the elements that replaced the header', () => {
+    // The coach-mark steps are unchanged; the elements they point at moved.
+    const tour = read('../src/components/OnboardingTour.vue')
+    expect(tour).toContain('[data-tour="home-header"]')
+    expect(tour).toContain('[data-tour="kid-avatar"]')
+    expect(home).toContain('data-tour="home-header"')
+    expect(home).toContain('data-tour="kid-avatar"')
   })
 })
 

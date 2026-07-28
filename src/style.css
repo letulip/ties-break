@@ -67,9 +67,15 @@
   --ink-soft: #8e9ba4;
   --ink-dim: #6d7a83;
 
-  /* Money has two directions and both must read at 6px wide, side by side, in the budget chart. */
+  /* Money has two directions and both must read side by side wherever the wallet splits them. */
   --money-in: #4ac96a;
   --money-out: #ef4b3a;
+  /* The export's three "how did this day go" colours (tokens.css --day-good/mid/bad). On the budget
+     sparkline they are the dots: a week that earned, a week that spent, a week that spent while
+     already under water. */
+  --day-good: #dbe45a;
+  --day-mid: #f0913c;
+  --day-bad: #ef6a3a;
   /* The warm accents: lamplight and late sun. The diary's warmth on the export's cool base. */
   --amber: #f5b942;
   --orange: #e2822f;
@@ -85,18 +91,21 @@
   --tilt-3: -0.6deg;
   --tilt-4: -4deg;
 
+  /* A2: one shadow for every word that sits on a painting (the export's --sh-text-on-art). The
+     left scrim does the heavy lifting; this keeps the edges crisp where the picture is busy. */
+  --shadow-text-on-art: 0 2px 14px rgba(0, 0, 0, 0.55);
+
   --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.42);
   --shadow-card-lift: 0 16px 34px rgba(0, 0, 0, 0.5);
   --shadow-polaroid: 0 8px 20px rgba(0, 0, 0, 0.45);
 
   --font-heading: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  /* TODO (type, not this slice): the design export asks for Manrope + Caveat, pulled from
-     fonts.googleapis.com. Manrope we already self-host and it is --font-body. CAVEAT (the
-     handwritten hand, used in the export for the coach's signature) is NOT shipped: a remote font
-     link is a regression for an offline-first PWA, and self-hosting a second family is its own
-     decision. Nothing on Home needs it today – the signature belonged to the coach quote the owner
-     cut – so the gap costs this slice nothing. */
+  /* SETTLED (owner, 28.07): the type pair stays ours – Sora on every heading, Manrope on everything
+     else, both self-hosted since R5-32. The design export asks for Manrope + CAVEAT (a handwritten
+     hand, used there for the coach's signature) off fonts.googleapis.com; we take neither the
+     remote link, which is a regression for an offline-first PWA, nor the third family. The
+     signature it was for belonged to the coach quote the owner had already cut. */
   /* THE CAPSULE RADIUS, named because the raw 999px was unfindable: the owner went looking for the
      round border expecting "50%" and found a magic number instead (26.07). The two are NOT
      interchangeable and the sheet keeps them apart on purpose:
@@ -409,101 +418,10 @@ select {
   padding: 48px 16px;
 }
 
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  max-width: 520px;
-  margin: 0 auto 16px;
-  /* Sticky so week + funds stay reachable while scrolling the feeds. */
-  position: sticky;
-  top: 0;
-  z-index: 41;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 8px 12px;
-  box-shadow: 0 6px 16px -8px rgba(6, 10, 20, 0.7);
-}
-
-.app-header .avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1.5px solid var(--accent);
-  display: block;
-}
-
-/* R13-12: the avatar is a BUTTON now (it opens the Kid screen – the tab left the bottom bar).
-   Strip the default button chrome so the header looks exactly as before, keep the round hit
-   area, and let the ring do the hover talk. */
-.avatar-btn {
-  border: none;
-  background: transparent;
-  padding: 0;
-  border-radius: 50%;
-  line-height: 0;
-}
-
-.avatar-btn:hover:not(:disabled) .avatar {
-  border-color: var(--text);
-}
-
-/* R13-12: the one-time discoverability callout under the avatar. Anchored to the sticky header
-   (position: sticky establishes the containing block), accent-framed like the coach tooltips. */
-.kid-hint {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 8px;
-  z-index: 42;
-  background: var(--panel);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 12px;
-  color: var(--text);
-  box-shadow: 0 10px 24px -10px rgba(6, 10, 20, 0.8);
-}
-
-.kid-hint::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: 14px;
-  width: 8px;
-  height: 8px;
-  background: var(--panel);
-  border-left: 1px solid var(--accent);
-  border-top: 1px solid var(--accent);
-  transform: rotate(45deg);
-}
-
-.kid-name {
-  flex: 1;
-  font-family: var(--font-heading); /* R9-4: the kid's name reads in Sora */
-  font-size: 15px;
-  font-weight: 600;
-}
-
-/* Week + funds pill: larger and clearly tappable (routes to the Money tab). */
-.status-pill {
-  font-variant-numeric: tabular-nums;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 14px;
-  color: var(--text);
-  cursor: pointer;
-}
-
-.status-pill:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.status-pill.negative {
-  color: var(--danger);
-}
+/* A2 (owner, 28.07): THE APP HEADER IS GONE, and its whole rule set with it – .app-header,
+   .avatar-btn, .kid-name, .status-pill and .kid-hint. The avatar and its callout live on Home's
+   photograph now (.diary-avatar-btn / .diary-kid-hint), her name is the 42px hero headline, and
+   the W/$ pill's wallet door became the Family budget card. Nothing here had another consumer. */
 
 .app-content {
   max-width: 520px;
@@ -2882,7 +2800,26 @@ tr.kid-row td {
   background: linear-gradient(180deg, rgba(9, 14, 19, 0) 46%, rgba(11, 17, 23, 0.72) 78%, var(--bg) 100%);
 }
 
-/* The header row, laid on the photograph. */
+/* A2 (owner, 28.07): the THIRD scrim, and the one the owner asked for. Everything on this page is
+   laid down the LEFT of the painting – date, greeting, name, age, rank – and it runs far below the
+   top scrim's 40%. On the sunlit courts (local-hard-1, national-grass-1) the age and the rank chip
+   simply vanished into the picture. This darkens the left edge and clears well before the middle:
+   her face sits centre-right in all 35 paintings, so the gradient never lands on it. */
+.diary-hero-left {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(6, 10, 14, 0.66) 0%,
+    rgba(6, 10, 14, 0.44) 26%,
+    rgba(6, 10, 14, 0.12) 48%,
+    rgba(6, 10, 14, 0) 64%
+  );
+}
+
+/* The header row, laid on the photograph. A2 put the avatar at its head – the app header that used
+   to carry it is gone. */
 .diary-head {
   position: absolute;
   left: 20px;
@@ -2890,8 +2827,75 @@ tr.kid-row td {
   top: 20px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
+}
+
+/* The date takes the slack so the two tool icons stay pinned right. */
+.diary-head .diary-date {
+  flex: 1;
+}
+
+/* The small round avatar with the lime ring, moved here from the deleted header – same object, same
+   job (the door to her profile), now sitting on the photograph beside the date. */
+.diary-avatar-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.diary-avatar-btn:hover:not(:disabled) {
+  background: transparent;
+}
+
+.diary-avatar {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--accent);
+  /* The ring needs to hold against a bright court too, so it carries its own dark halo. */
+  box-shadow: 0 0 0 1px rgba(6, 10, 14, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.diary-avatar-btn:hover:not(:disabled) .diary-avatar {
+  border-color: #ffffff;
+}
+
+/* The one-time callout, moved with the avatar it explains. It hangs under the avatar rather than
+   beside it – at 30px there is no room on a 390px screen, and the arrow makes the target obvious. */
+.diary-kid-hint {
+  position: absolute;
+  left: 16px;
+  top: 58px;
+  z-index: 2;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent);
+  background: rgba(10, 15, 20, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.diary-kid-hint::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: rgba(10, 15, 20, 0.82);
+  border-left: 1px solid var(--accent);
+  border-top: 1px solid var(--accent);
 }
 
 /* "W27 2033 · Jun 3 – Jun 9" – OUR week label, the year in full, and the week's real days. Built by
@@ -2904,7 +2908,7 @@ tr.kid-row td {
   color: rgba(255, 255, 255, 0.86);
   margin: 0;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  text-shadow: var(--shadow-text-on-art);
 }
 
 .diary-tools {
@@ -2961,6 +2965,7 @@ tr.kid-row td {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.78);
   margin: 0 0 4px;
+  text-shadow: var(--shadow-text-on-art);
 }
 
 .diary-name {
@@ -2970,7 +2975,7 @@ tr.kid-row td {
   letter-spacing: -0.025em;
   line-height: 1;
   color: #ffffff;
-  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.45);
+  text-shadow: var(--shadow-text-on-art);
   margin: 0;
 }
 
@@ -2979,6 +2984,7 @@ tr.kid-row td {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.82);
   margin: 8px 0 0;
+  text-shadow: var(--shadow-text-on-art);
 }
 
 /* The rank chip – the page's ONE table-number, and the door to the best-6 explainer (round-6: the
@@ -3007,12 +3013,58 @@ tr.kid-row td {
   color: #ffffff;
 }
 
+/* --- A2b: THE STATE ROW, along the bottom of the photograph ------------------------------------
+   The owner's layout (28.07): the caption chip on the left, the condition ring on its right, and
+   the WHY lines stacked ABOVE both. The lines take the chip's place on a week with no caption, so
+   a strain warning is never what goes missing when the diary chooses to stay quiet. */
+.diary-state {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  pointer-events: none;
+}
+
+.diary-state-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* The WHY lines ride on the picture now, so they carry the on-art shadow like everything else up
+   there, and a scrim of their own where the painting is busy. */
+.diary-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 290px;
+}
+
+/* D1's WHY line. It had no rule of its own while it sat on the page background; on a painting it
+   needs both a colour of its own and the shared on-art shadow. */
+.condition-note {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: var(--shadow-text-on-art);
+  text-wrap: pretty;
+}
+
+/* R13-3's strain warning – the one line here that is a warning rather than an observation. */
+.condition-note.warn {
+  color: var(--amber);
+  font-weight: 600;
+}
+
 /* THE CAPTION – a frosted chip low on the photograph, with a lime dot glowing beside it. The one
    phrase the parent wrote about her week; it appears exactly once on the page. */
 .diary-caption {
-  position: absolute;
-  left: 18px;
-  bottom: 30px;
   max-width: 250px;
   display: flex;
   gap: 11px;
@@ -3022,7 +3074,6 @@ tr.kid-row td {
   background: rgba(10, 15, 20, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  pointer-events: none;
 }
 
 .diary-caption-dot {
@@ -3043,11 +3094,73 @@ tr.kid-row td {
   margin: 0;
 }
 
-/* Her body, immediately under the photograph: the ten squares (D3 – words and colour, never a
-   percentage) and the engine's WHY line. It is a fact about HER, so it rides with the hero rather
-   than becoming a fifth notecard. */
-.diary-body {
-  padding: 14px 4px 2px;
+/* THE CONDITION RING – the export's ProgressRing (46px box, r=19, 3px stroke, round cap, twelve
+   o'clock start), parked at the bottom-right of the photograph. `margin-left: auto` pins it right
+   even when there is no caption chip to push it there. */
+.condition-ring {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  margin-left: auto;
+}
+
+.condition-ring svg {
+  display: block;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55));
+}
+
+.condition-ring-track {
+  stroke: rgba(255, 255, 255, 0.18);
+  fill: none;
+}
+
+/* SOLID, and the colour IS the number (the owner's correction, 28.07): a gradient along the arc put
+   red on the ring of a girl at 100%, and a gradient inside one band said nothing at all. One flat
+   hsl, interpolated red->green by her exact condition, so every value has its own colour. The stroke
+   itself is bound in the template because it is DATA, not styling. */
+.condition-ring-arc {
+  fill: none;
+  transition:
+    stroke-dashoffset var(--dur-slow, 260ms) cubic-bezier(0.2, 0.8, 0.2, 1),
+    stroke var(--dur-slow, 260ms) linear;
+}
+
+/* The export's own pairing (its Kid-screen ring): the figure carries the weight, the sign is a
+   third smaller and sits on the same baseline rather than being scaled down to a superscript.
+   The label is LIGHT, not tinted (owner, 28.07) – the arc already carries the colour, and a
+   coloured number beside a coloured ring makes two things shouting the same word. It also sits a
+   little higher than the export's own offset so the descenderless figure reads centred inside the
+   circle rather than resting on its lower stroke. */
+.condition-ring-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5px;
+  padding-top: 12px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.condition-ring-value b {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.condition-ring-value i {
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .condition-ring-arc {
+    transition: none;
+  }
 }
 
 /* --- 3. THE CARD GRID --------------------------------------------------------------------------- */
@@ -3258,38 +3371,85 @@ button.note-card:active:not(:disabled) {
   overflow: visible;
 }
 
-.budget-bar-in {
-  fill: var(--money-in);
+/* A2: the export's sparkline – one lime stroke, a soft area under it, and a dot per week whose
+   colour says how that week went. `vector-effect` keeps the 1.8 stroke honest under the
+   `preserveAspectRatio="none"` stretch, which would otherwise squash it horizontally. */
+.budget-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
 }
 
-.budget-bar-out {
-  fill: var(--money-out);
+.budget-dot.good {
+  fill: var(--day-good);
 }
 
-.budget-axis {
-  stroke: rgba(255, 255, 255, 0.12);
-  stroke-width: 1;
+.budget-dot.mid {
+  fill: var(--day-mid);
+}
+
+.budget-dot.bad {
+  fill: var(--day-bad);
 }
 
 /* --- COACH -------------------------------------------------------------------------------------- */
 
-/* The owner cut the coach's line, so the card is his PHOTOGRAPH and the word. It uses the same
-   bleed-and-dissolve the tournament card uses for its venue – the export's own vocabulary – rather
-   than the export's 54px strip, which was sized for the sentence that is no longer there and would
-   have left two thirds of the card empty. */
+/* A2 (owner checked this one against the mockup): the export's geometry, restored. The portrait is
+   a 54px strip standing the FULL height of the card, flush to its left edge – the card's own
+   overflow:hidden rounds it – and everything else lives in the column beside it. Slice A had used
+   the venue card's bleed-and-dissolve here, which reads as decoration; a strip reads as a person
+   standing there. The card drops its padding, because the strip must reach all four edges. */
+.coach-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* A2c/d (owner, 28.07): the portrait is sized by HEIGHT and nothing else. `height:100%; width:auto`
+   means the whole frame is on screen – no vertical crop, which was the ask – and the card shows as
+   much of its width as it has room for. The hard right edge is replaced by a gradient into the
+   card; the mask makes the CARD's own gradient show through, so the two can never be different
+   colours the way a painted overlay would drift. */
 .coach-art {
   position: absolute;
-  inset: 0;
-  -webkit-mask-image: linear-gradient(115deg, transparent 2%, #000 52%);
-  mask-image: linear-gradient(115deg, transparent 2%, #000 52%);
+  left: 0;
+  top: 0;
+  bottom: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 34%, transparent 96%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 34%, transparent 96%);
 }
 
 .coach-art img {
   display: block;
-  width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center 22%;
+  width: auto;
+}
+
+.coach-body {
+  position: relative;
+  margin-left: 54px;
+  padding: 13px 11px 11px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.coach-line {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.42;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* His words need the room, so the text column starts past the opaque part of the portrait and the
+   note is free to run to the bottom of the card. */
+.coach-line {
+  margin-bottom: 0;
 }
 
 /* --- RECENT MEMORY ------------------------------------------------------------------------------ */

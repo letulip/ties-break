@@ -198,22 +198,40 @@ describe('financeSeries – the shape a fold cannot give back', () => {
     { week: 5, byCategory: { coaching: -300_00 } },
   ]
 
-  it('is DENSE: a week the ledger never heard of still gets a bar', () => {
+  it('is DENSE: a week the ledger never heard of still gets a point', () => {
     const series = financeSeries(ledger, 0, 6)
     expect(series.map((p) => p.week)).toEqual([0, 1, 2, 3, 4, 5, 6])
-    expect(series[0]).toEqual({ week: 0, incomeCents: 0, expenseCents: 0 })
+    expect(series[0]).toEqual({ week: 0, incomeCents: 0, expenseCents: 0, balanceCents: -50_00 })
   })
 
   it('splits a week into money IN and money OUT, both as magnitudes', () => {
     const week2 = financeSeries(ledger, 0, 6).find((p) => p.week === 2)!
-    expect(week2).toEqual({ week: 2, incomeCents: 400_00, expenseCents: 50_00 })
+    expect(week2).toEqual({ week: 2, incomeCents: 400_00, expenseCents: 50_00, balanceCents: 300_00 })
     const week5 = financeSeries(ledger, 0, 6).find((p) => p.week === 5)!
-    expect(week5).toEqual({ week: 5, incomeCents: 0, expenseCents: 300_00 })
+    expect(week5).toEqual({ week: 5, incomeCents: 0, expenseCents: 300_00, balanceCents: 0 })
   })
 
   it('an empty span is an empty series, not a throw', () => {
     expect(financeSeries([], 3, 2)).toEqual([])
-    expect(financeSeries([], 0, 0)).toEqual([{ week: 0, incomeCents: 0, expenseCents: 0 }])
+    expect(financeSeries([], 0, 0)).toEqual([{ week: 0, incomeCents: 0, expenseCents: 0, balanceCents: 0 }])
+  })
+
+  // A2: the running balance is the thing the sparkline plots, so it gets its own pins.
+  it('the running balance ENDS on the funds it was anchored with, and walks back by each net', () => {
+    const series = financeSeries(ledger, 0, 6, 10_000_00)
+    expect(series[series.length - 1].balanceCents).toBe(10_000_00)
+    // Nothing moved after week 5, so weeks 5 and 6 close on the same number...
+    expect(series[5].balanceCents).toBe(10_000_00)
+    // ...week 4 closes BEFORE week 5's -$300 was taken...
+    expect(series[4].balanceCents).toBe(10_300_00)
+    // ...and week 1 is before week 2's +$400/-$50 net of +$350.
+    expect(series[1].balanceCents).toBe(9_950_00)
+    expect(series[0].balanceCents).toBe(9_950_00)
+  })
+
+  it('a family under water charts under water – the balance is signed, never clamped', () => {
+    const series = financeSeries(ledger, 0, 6, -1_200_00)
+    expect(series.every((p) => p.balanceCents < 0)).toBe(true)
   })
 
   it('the snapshot carries exactly the same 12 weeks the wallet folds, and agrees with the fold', () => {
@@ -230,6 +248,8 @@ describe('financeSeries – the shape a fold cannot give back', () => {
     const outSum = series.reduce((s, p) => s + p.expenseCents, 0)
     expect(inSum).toBe(snap.finance.window12w.incomeCents)
     expect(outSum).toBe(snap.finance.window12w.expenseCents)
+    // A2: and the line's last point IS the total printed above it, by construction.
+    expect(series[series.length - 1].balanceCents).toBe(snap.fundsCents)
   })
 
   it('a young career charts the weeks it has lived, never eleven empty bars before week 0', () => {
@@ -347,7 +367,16 @@ describe('the venue paintings', () => {
   it('the establishing shots are surface-neutral by construction', () => {
     // `-venue-` frames have no playable court in frame, which is what licenses them as a fallback.
     const neutral = FIELD_ART.filter((s) => s.includes('-venue-'))
-    expect(neutral).toEqual(['national-venue-1', 'national-venue-2'])
+    expect(neutral).toEqual(['national-venue-1', 'national-venue-2', 'j30-venue-1'])
+  })
+
+  it('the second j30 wave widened the pools it was meant to widen, and nothing else', () => {
+    // The owner de-branded and returned j30-1/2/4 (28.07); j30-3 is still held back over an ITF
+    // roundel that survived the pass. So j30 gains a second clay, a second hard and its own
+    // establishing shot – and j30 grass, which nothing new touched, must NOT have moved.
+    expect(venueCandidates('j30', 'clay')).toEqual(['j30-clay-1', 'j30-clay-2'])
+    expect(venueCandidates('j30', 'hard')).toEqual(['j30-hard-1', 'j30-hard-2'])
+    expect(venueCandidates('j30', 'grass')).toEqual(['j30-grass-1'])
   })
 
   it("a tournament's photograph is the same one forever, and differs between tournaments", () => {
@@ -430,13 +459,33 @@ describe('the diary page: the structure the redesign decided', () => {
     expect(home).toContain('class="budget-chart"')
   })
 
-  it('the coach card is a portrait and a word – no invented quote came back', () => {
+  it('the coach card is the export: his portrait down the left edge, his read beside it', () => {
+    // ⚠ REVERSED by the owner (A2d, 28.07). Slice A had cut the coach's line and slice A2 had put
+    // the coaching SPEND in its place; he asked for the pool back – "coach notes и слова тренера
+    // (у нас уже это было реализовано)" – and for the numbers to go. So the pool is the SAME one
+    // that predates the redesign, restored verbatim, and the card carries no figure at all.
     expect(home).toContain('coachUrlFor')
-    expect(home).not.toContain('COACH_QUOTES')
-    // The rotating pool is gone from the TEMPLATE (the script comment records why it left).
+    expect(home).toContain('COACH_QUOTES')
     const template = home.slice(home.indexOf('<template>'))
-    expect(template).not.toContain("Coach's eye")
-    expect(template).not.toContain('coach-quote')
+    expect(template).toContain('Coach note')
+    expect(template).toContain('{{ coachQuote }}')
+    // No money, no week counts – the card is about a person. (Scoped to the coach card: the BUDGET
+    // card legitimately says "Last 12 weeks" over its chart.)
+    const card = template.slice(template.indexOf('coach-card'), template.indexOf('Recent memory'))
+    expect(card).not.toContain('coachSpend')
+    expect(card).not.toContain('Last 12 weeks')
+    expect(card).not.toMatch(/\$/)
+  })
+
+  it('the coach pool is the pre-redesign one, unedited, and rotates on the 4-week block', () => {
+    // Five lines per play style, and the rotation is deterministic and SLOW (a coach's read on her
+    // settles for a month rather than flipping every week).
+    expect(home).toContain('Math.floor(week.value / 4) % 5')
+    const pool = home.slice(home.indexOf('const COACH_QUOTES'), home.indexOf('const coachQuote'))
+    for (const style of ['aggressive:', 'counterpuncher:', "'serve-first':", "'all-court':"]) {
+      expect(pool, `missing pool for ${style}`).toContain(style)
+    }
+    expect((pool.match(/^\s{4}'/gm) ?? []).length).toBe(20) // 4 styles x 5 lines
   })
 
   it('the Memory card keeps the painting from the band she was in THEN', () => {
@@ -512,16 +561,24 @@ describe('the style foundation later slices reuse', () => {
   })
 
   it('the offline-first rule holds: no remote font came in with the export', () => {
-    // The export pulls Manrope + Caveat from fonts.googleapis.com. Manrope we already self-host;
-    // Caveat is not shipped, and a remote <link> would be a regression for a PWA.
-    // A LOADED remote font, not a mention of one: the sheet's @font-face comment legitimately
-    // records where our self-hosted woff2 files were originally fetched from.
+    // The export pulls Manrope + Caveat from fonts.googleapis.com. SETTLED by the owner (28.07):
+    // the pair stays ours – Sora on headings, Manrope on the rest, both self-hosted – and Caveat
+    // is not taken at all. A LOADED remote font is what this forbids, not a mention of one: the
+    // sheet's @font-face comment legitimately records where our own woff2 files came from.
     for (const src of [css, read('../index.html')]) {
       expect(src).not.toMatch(/@import[^;]*fonts\.(googleapis|gstatic)/)
       expect(src).not.toMatch(/<link[^>]*fonts\.(googleapis|gstatic)/)
       expect(src).not.toMatch(/src:\s*url\(['"]?https?:/)
     }
-    expect(css).toContain('Caveat') // named in a TODO, so the gap is recorded rather than forgotten
+    expect(css).toContain("--font-heading: 'Sora'")
+    expect(css).toContain("--font-body: 'Manrope'")
+    // Every self-hosted face has a file on disk, and there is no third family.
+    const faces = [...css.matchAll(/url\('([^']+\.woff2)'\)/g)].map((m) => m[1])
+    expect(faces.length).toBeGreaterThan(0)
+    for (const f of faces) {
+      expect(existsSync(`${ROOT}public${f.replace(/^\/?/, '/')}`), `missing font file ${f}`).toBe(true)
+    }
+    expect(css).not.toMatch(/font-family:[^;]*Caveat/)
   })
 })
 

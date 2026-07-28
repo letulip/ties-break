@@ -688,11 +688,20 @@ describe('v18 migration – the milestone backfill', () => {
 // The surfaces: Home speaks words (D3), and the tables the copy shares stay single.
 // ---------------------------------------------------------------------------
 describe('surfaces + shared tables', () => {
-  it('D3: Home shows no raw condition number – the squares and the words carry it', () => {
+  it('D3 REVERSED by the owner (28.07): the number is back, ONCE, inside the ring', () => {
+    // D3 said "Home speaks words, not percentages". The owner reversed it when the ten squares
+    // became a ProgressRing: a ring without its number is a decoration, because the fullness of an
+    // arc is not readable to a percent. What D3 was actually protecting survives and is pinned
+    // here – the number appears exactly ONCE, it is the engine's own condition rendered verbatim,
+    // and none of the WORDS left with it.
     const home = read('../src/components/screens/HomeScreen.vue')
-    expect(home).not.toContain('Condition ${')
+    const template = home.slice(home.indexOf('<template>'))
+    expect(template.match(/\{\{ condition \}\}/g) ?? []).toHaveLength(1)
+    expect(template).toContain('class="condition-ring-value"')
+    // ...and the sign is its own element, so it can be the smaller half of the pair.
+    expect(template).toMatch(/<b>\{\{ condition \}\}<\/b><i>%<\/i>/)
     expect(home).not.toMatch(/Math\.round\(condition\)/)
-    // the note and the photo line render the engine's strings verbatim
+    // the note and the photo line still render the engine's strings verbatim
     expect(home).toContain('diary.conditionNote')
     expect(home).toContain('diary.photoLine')
     expect(home).toContain('diary.memory')

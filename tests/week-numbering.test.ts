@@ -157,7 +157,9 @@ const read = (rel: string): string => readFileSync(new URL(rel, SRC), 'utf8')
 /** The files that actually print a week. Listed, so a screen that STOPS printing one is noticed
  *  too – this list and the guard below have to stay true together. */
 const WEEK_PRINTING_FILES = [
-  'App.vue',
+  // ⚠ App.vue LEFT this list in A2 (28.07): the shell's header was its only week-printing surface,
+  // and the header is gone. It routes now and prints nothing – so requiring the import would pin a
+  // dead import rather than a live rule. Home took the job (see the date-line test below).
   'components/CountingResultsTable.vue',
   'components/InjuryStopDialog.vue',
   'components/PlanWeekSheet.vue',
@@ -221,9 +223,14 @@ describe('R11-6 guard – no surface prints a raw absolute week', () => {
     }
   })
 
-  it('the status pill – the week the player sees on every screen – is formatted', () => {
-    // The pill has no room for a date, so the label IS the only thing that dates the career.
-    expect(read('App.vue')).toMatch(/\{\{ weekLabel\(week\) \}\} · \{\{ funds \}\}/)
+  it('the date line – the week the player sees on Home – is formatted, and nothing hand-rolls it', () => {
+    // ⚠ RE-AIMED by A2 (28.07): the app header's W/$ pill is gone, and with it the last surface
+    // that dated the career in chrome. Home's hero line took the job, and it says MORE than the
+    // pill did – the week number, the year in full and the week's real days – all from
+    // shared/dates.ts. The guard that matters is unchanged: no screen spells a week itself.
+    const home = read('components/screens/HomeScreen.vue')
+    expect(home).toContain('weekDateLine(week.value)')
+    expect(read('App.vue')).not.toContain('weekLabel(week)')
   })
 
   it('the news feed groups under a formatted week', () => {

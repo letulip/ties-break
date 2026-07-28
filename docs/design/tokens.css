@@ -87,6 +87,21 @@
   --event-tournament: #9c5a1c;
   --event-tournament-border: #d9a441;
 
+  /* Court diagram (экран I) */
+  --court-runoff: linear-gradient(180deg, #1b3a5f 0%, #16304f 100%);
+  --court-surface-hard: #22456f;
+  --court-line: rgba(255, 255, 255, 0.72);
+  --court-line-outer: rgba(255, 255, 255, 0.8);
+  --court-net-cord: rgba(255, 255, 255, 0.95);
+  --court-net-mesh: rgba(255, 255, 255, 0.28);
+  --court-player-self: #ffffff;
+  --court-player-rival: #e8eef4;
+  --court-ball: #e8f04a;
+  --overlay-chip: rgba(8, 13, 18, 0.72);
+  --log-dot-idle: #46545f;
+  --link-skip: #8fb2d6;
+  --dur-rally: 2800ms;
+
   /* Typography */
   --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
   --font-hand: 'Caveat', cursive;

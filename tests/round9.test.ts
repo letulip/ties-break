@@ -577,7 +577,9 @@ describe('pt4 — UI wiring', () => {
     // ⚠ RE-AIMED by epic/redesign-home (28.07): the kid's name on Home left `.player-name` (the
     // player card is gone) for `.diary-name` – the 42px headline laid on the hero photograph. The
     // property is the NAME's, not the card's, and it moved with it.
-    for (const sel of ['.kid-name', '.diary-name', '.event-tier']) {
+    // ⚠ RE-AIMED AGAIN by A2 (28.07): `.kid-name` was the app header's name, and the app header
+    // is gone. `.diary-name` is the only place her name is set now, and it is the headline.
+    for (const sel of ['.diary-name', '.event-tier']) {
       const block = css.slice(css.indexOf(`${sel} {`))
       expect(block.slice(0, block.indexOf('}'))).toContain('var(--font-heading)')
     }
@@ -600,7 +602,11 @@ describe('pt4 — UI wiring', () => {
     for (const p of ['../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
       expect(read(p)).toContain('useKidEmotion')
     }
-    expect(read('../src/App.vue')).toContain('useHeaderAvatar')
+    // ⚠ RE-AIMED by A2 (28.07): the static age-only crop moved off the deleted app header onto
+    // Home, beside the date. Home is now the one screen carrying BOTH faces – the big emotional
+    // painting and the small chrome avatar – and they still answer to different composables.
+    expect(read('../src/components/screens/HomeScreen.vue')).toContain('useHeaderAvatar')
+    expect(read('../src/App.vue')).not.toContain('useHeaderAvatar')
   })
 
   it('R9-18: the recap dismissal survives remounts (module scope) and the rule is documented', () => {

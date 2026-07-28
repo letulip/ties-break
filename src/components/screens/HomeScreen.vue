@@ -26,13 +26,14 @@
 // The advance button is NOT here – it is App.vue's sticky bar, global on every tab (R13-12).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import type { WorldEvent, WorldMatch } from '../../shared/protocol'
+import type { PlayStyle, WorldEvent, WorldMatch } from '../../shared/protocol'
 import type { TierId } from '../../engine/season/types'
 import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
+import { useHeaderAvatar } from '../../composables/headerAvatar'
 import { facePoint } from '../../art/faceRects'
 import { coachUrlFor, portraitUrl as portraitArtUrl } from '../../art/preload'
 import { venueArtUrl } from '../../art/venues'
@@ -47,9 +48,27 @@ import { playSfx } from '../../audio/sfx'
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
 // with the tab and is RENDERED here, on the card that opens that screen.
 defineProps<{ recapFresh: boolean }>()
-const emit = defineEmits<{ navigate: ['money' | 'week' | 'more'] }>()
+const emit = defineEmits<{ navigate: ['money' | 'week' | 'more' | 'kid'] }>()
 
 const game = useGameStore()
+
+// --- A2: the avatar and its callout, moved off the deleted app header ---------------------------
+// TWO different faces live on this screen and they answer to different rules. The BIG painting is
+// emotional (useKidEmotion, below). This 256px crop in the corner is F45-1's age-only `norm`: it is
+// chrome, and chrome that flickers with each week's result is noise. Keeping them on separate
+// composables is what makes that guarantee checkable.
+const { cropUrl: headerAvatarUrl } = useHeaderAvatar()
+// R13-12's discoverability callout: shown once ever per device, dismissed by the first tap on
+// either the avatar or the callout itself. localStorage, never the save.
+const KID_HINT_KEY = 'tb:kidAvatarHintSeen'
+const showKidHint = ref(!localStorage.getItem(KID_HINT_KEY))
+function openKid(): void {
+  if (showKidHint.value) {
+    showKidHint.value = false
+    localStorage.setItem(KID_HINT_KEY, '1')
+  }
+  emit('navigate', 'kid')
+}
 // Diary-1 (D2): the top of Home is the BIG painting – the same emotion-correct 512px art the Kid
 // screen shows (already preloaded per band, so this costs zero new bytes), landscape-cropped with
 // `object-fit: cover` and steered by the face centre from the ONE crop table (src/art/faceRects.ts),
@@ -127,24 +146,51 @@ const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() =>
   return now < prev ? { dir: 'up', by: prev - now } : { dir: 'down', by: now - prev }
 })
 
-// --- Condition bar (Season-Life slice B): 10 segments driven by the REAL per-week condition,
-// round(condition/10) filled. The classic red→green ramp holds when she is fresh; the bar reads
-// amber as it approaches a tier floor and red once it drops below the entry floor. --
-const CONDITION_SEGMENTS = 10
+// --- THE CONDITION RING (A2b, the owner's ruling 28.07) ------------------------------------------
+// Slice B's ten squares became the export's ProgressRing, and it moved ONTO the photograph, into the
+// bottom-right corner beside the caption chip. Two things changed with it and both are the owner's:
+//
+//  * THE NUMBER IS BACK. D3 ("Home speaks words, not percentages") took it away, and it belongs in a
+//    ring – a ring without its number is a decoration, and the fullness of an arc is not readable to
+//    a percent. The WORDS did not leave: the availability chip still speaks, and the WHY line is now
+//    the more prominent of the two, sitting above the caption instead of under the picture.
+//  * THE RAMP IS CONTINUOUS AND SOLID. Not the old ten discrete fills, and not a gradient either
+//    (the owner corrected that on sight): one flat colour, interpolated red→green by the exact
+//    number, so 61% and 62% are genuinely different colours. It is the SAME hsl ramp the ten
+//    squares used, which is why nothing the player already learned had to be re-learned.
+//
+// The geometry is the export's: 46px box, r=19, 3px stroke, round cap, started at twelve o'clock.
+const RING_R = 19
+const RING_C = Math.round(2 * Math.PI * RING_R * 10) / 10 // 119.4, the export's own dasharray
 const condition = computed(() => game.snapshot?.condition ?? 0)
-const conditionFilled = computed(() => Math.round(condition.value / 10))
+const ringOffset = computed(() => {
+  const pct = Math.max(0, Math.min(100, condition.value)) / 100
+  return Math.round(RING_C * (1 - pct) * 10) / 10
+})
+/** The arc's colour: hue 0 (red) at 0 through hue 120 (green) at 100 – slice B's own ramp, now read
+ *  continuously instead of in ten steps. */
+const ringColor = computed(() => {
+  const pct = Math.max(0, Math.min(100, condition.value))
+  return `hsl(${Math.round((pct / 100) * 120)}, 72%, 48%)`
+})
+/** The BANDS survive in the spoken label only. The colour is now a smooth ramp, so it can no longer
+ *  say "she is under the entry floor" by itself – and that is a fact worth keeping sayable. */
 const conditionStatus = computed<'red' | 'amber' | 'ok'>(() => {
   const c = condition.value
   if (c < ECONOMY.availability.minConditionToEnter.local) return 'red' // below the lowest floor
   if (c < ECONOMY.availability.minConditionToEnter.national) return 'amber' // near the higher floors
   return 'ok'
 })
-function conditionColor(i: number): string {
-  if (conditionStatus.value === 'red') return 'hsl(0, 72%, 48%)'
-  if (conditionStatus.value === 'amber') return 'hsl(38, 90%, 50%)'
-  const hue = ((i - 1) / (CONDITION_SEGMENTS - 1)) * 120 // 0 = red … 120 = green
-  return `hsl(${Math.round(hue)}, 72%, 48%)`
-}
+/** The ring is a picture, so it says out loud what it draws – including WHY the number matters. */
+const conditionAria = computed(() => {
+  const band =
+    conditionStatus.value === 'red'
+      ? 'below the entry floor'
+      : conditionStatus.value === 'amber'
+        ? 'near the higher entry floors'
+        : 'fit'
+  return `Condition ${condition.value} percent, ${band}`
+})
 
 // R13-3: the practice-strain warning, read off the same pure predicate the planner sheet asks
 // (practiceCaution, for "one more match next week"), so the warning and the booking sheet can never
@@ -197,39 +243,110 @@ function formatFunds(cents: number): string {
 }
 const funds = computed(() => formatFunds(fundsCents.value))
 
-const CHART_SLOT = 10 // viewBox units per week
-const CHART_BASELINE = 50 // income grows up from here, spending down
-const CHART_REACH = 46 // the tallest a bar may be, either way
-interface ChartBar {
+// THE BUDGET SPARKLINE. The export draws a lime polyline with a soft area under it and one dot per
+// point, and the owner ruled we take it (A2, 28.07) over slice A's paired bars. Geometry is the
+// export's own: a 146x46 viewBox, 1.8 stroke, r=2.8 dots, the area fading from 0.42 alpha to zero.
+//
+// WHAT THE LINE PLOTS is our decision, not the export's: the running BALANCE, so the line ends
+// exactly on the total printed above it and its slope is the thing that actually matters to a
+// family. The dot colours are the export's three day colours, and they say how the week went –
+// earned (good), spent but still afloat (mid), spent while under water (bad). A dot is never a
+// mood: it is arithmetic the player can check against the wallet.
+const CHART_W = 146
+const CHART_H = 46
+const CHART_PAD = 6 // the export insets the first and last point by this much
+const CHART_TOP = 8
+const CHART_BOTTOM = 38
+interface ChartDot {
   x: number
-  inHeight: number
-  outHeight: number
+  y: number
+  tone: 'good' | 'mid' | 'bad'
 }
-const budgetChart = computed<{ width: number; bars: ChartBar[]; any: boolean }>(() => {
+const budgetChart = computed<{ dots: ChartDot[]; line: string; area: string; any: boolean }>(() => {
   const points = game.snapshot?.finance.weekly12 ?? []
-  // ONE scale for both directions: income and spending have to be comparable by eye, or the chart
-  // says "she earns as much as she spends" on a week where she earned a tenth of it.
-  const peak = Math.max(1, ...points.map((p) => Math.max(p.incomeCents, p.expenseCents)))
-  return {
-    width: Math.max(1, points.length) * CHART_SLOT,
-    any: points.some((p) => p.incomeCents > 0 || p.expenseCents > 0),
-    bars: points.map((p, i) => ({
-      x: i * CHART_SLOT + 2,
-      inHeight: (p.incomeCents / peak) * CHART_REACH,
-      outHeight: (p.expenseCents / peak) * CHART_REACH,
-    })),
-  }
+  const any = points.some((p) => p.incomeCents > 0 || p.expenseCents > 0)
+  if (!any || points.length === 0) return { dots: [], line: '', area: '', any: false }
+  // The band is the series' own min..max, so a flat-broke career still reads as a flat line rather
+  // than as noise amplified to full height. A zero-height band (one point, or a career that never
+  // moved) parks the line in the middle instead of dividing by zero.
+  const values = points.map((p) => p.balanceCents)
+  const lo = Math.min(...values)
+  const hi = Math.max(...values)
+  const span = hi - lo
+  const step = points.length > 1 ? (CHART_W - CHART_PAD * 2) / (points.length - 1) : 0
+  const dots: ChartDot[] = points.map((p, i) => ({
+    x: CHART_PAD + i * step,
+    y: span === 0 ? (CHART_TOP + CHART_BOTTOM) / 2 : CHART_BOTTOM - ((p.balanceCents - lo) / span) * (CHART_BOTTOM - CHART_TOP),
+    tone: p.incomeCents > p.expenseCents ? 'good' : p.balanceCents < 0 ? 'bad' : 'mid',
+  }))
+  const line = dots.map((d) => `${round2(d.x)},${round2(d.y)}`).join(' ')
+  const area = `M${round2(dots[0].x)} ${round2(dots[0].y)} ${dots
+    .slice(1)
+    .map((d) => `L${round2(d.x)} ${round2(d.y)}`)
+    .join(' ')} L${round2(dots[dots.length - 1].x)} ${CHART_H} L${round2(dots[0].x)} ${CHART_H} Z`
+  return { dots, line, area, any: true }
 })
+function round2(n: number): number {
+  return Math.round(n * 100) / 100
+}
 
 // --- COACH card --------------------------------------------------------------------------------
-// The owner cut the coach's spoken line (the rotating "Coach's eye" pool went with it) and asked
-// for his FACE. Portrait + the word, and deliberately nothing else: a sub-label naming the coaching
-// setup would either restate the onboarding or invent a job title nobody wrote, and this page's
-// whole discipline is that it asserts only what the facts carry. The default portrait per family
-// background is the owner's mapping and lives in src/art/preload.ts with the other art URLs.
+// A2c/d (owner, 28.07). The card is the EXPORT's: his portrait standing down the left edge, the
+// kicker and his words beside it. Two corrections got it here, both his:
+//
+//  * the picture is not cropped vertically. It is sized by HEIGHT (`height:100%; width:auto`), so
+//    the whole frame is visible and the card simply shows as much of its width as it has room for;
+//    the hard right edge is a gradient into the card rather than a cut.
+//  * his WORDS came back. Slice A had replaced them with the coaching spend, which was true but was
+//    a number on a card that is about a person - the owner cut it and asked for the pool that
+//    already existed. This IS that pool, restored verbatim from before the redesign (round-7 5d):
+//    five lines per play style, the visible one rotating every FOUR weeks by
+//    `floor(week / 4) % 5`. Deterministic, and slow enough that a coach's read on her settles for
+//    a while instead of flipping every week.
+//
+// The default portrait per family background is the owner's mapping and lives in src/art/preload.ts
+// with the other art URLs.
 const coachPhoto = computed(() =>
   game.snapshot ? coachUrlFor(game.snapshot.profile.background) : '',
 )
+// --- Coach's eye: a rotating pool of 5 lines per play style (round-7 item 5d). The
+// existing owner-approved line is #1 of each pool; the visible line rotates every 4 weeks by
+// `Math.floor(week / 4) % 5` – deterministic (same 4-week block -> same line) but no longer
+// churning weekly (owner: a coach's read on the kid should settle for a while, not flip). --
+const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> = {
+  aggressive: [
+    'She hits like it owes her money – now we build the legs to match.',
+    'First strike on every point – we just need the misses to come down.',
+    'When she is on, nobody lives with her. The job is the quiet days.',
+    'She wants the short ball so badly – let us make her earn it.',
+    'Big cuts, big heart – footwork turns that into wins.',
+  ],
+  counterpuncher: [
+    'She never gives you the same ball twice. Patience is her weapon.',
+    'She would rally till dark – now we teach her when to end it.',
+    'Nothing rushes her. Next she needs a way to hurt you.',
+    'Every ball comes back – opponents beat themselves against her.',
+    'Defense first, always – the finishing shot is next.',
+  ],
+  'serve-first': [
+    'That serve is ahead of her age – free points are a career.',
+    'She holds serve in her sleep – now we break the return open.',
+    'Big first ball, calm eyes. The second serve is the growth area.',
+    'On serve she fears no one. Rally tennis is the homework.',
+    'Aces buy her time – we spend it teaching the rest of the court.',
+  ],
+  'all-court': [
+    'No holes in her game. Now we find the weapon.',
+    'She can play every style – picking one under pressure is the skill.',
+    'Comfortable everywhere, dangerous nowhere yet. That changes this year.',
+    'She reads the game beautifully – now the hands must catch up.',
+    'Versatile and calm. We are hunting for the shot that ends points.',
+  ],
+}
+const coachQuote = computed(() =>
+  game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
+)
+
 
 // --- Season strip: REAL tier progress. Reads the kid's best finish per tier off the snapshot: a
 // reached tier shows the short finish label (W/F/SF/QF/R16…) in accent, an untouched one a muted
@@ -374,12 +491,28 @@ function openRankHelp(): void {
            page, not a picture placed on it. Two scrims do the work – one darkens the top so the
            date and the icons read over any of the 35 paintings, one takes the picture down into the
            page colour so there is no bottom edge at all. -->
-      <div class="diary-hero">
+      <div class="diary-hero" data-tour="home-header">
         <img class="diary-hero-img" :src="portraitUrl" :style="photoStyle" alt="" />
         <div class="diary-hero-top"></div>
+        <!-- A2 (owner, 28.07): the identity block runs down the LEFT of the painting, well past
+             the top scrim, and on a sunlit court it stopped being readable. This third scrim
+             darkens the left edge only – her face sits centre-right in all 35 paintings, so it
+             never touches her. -->
+        <div class="diary-hero-left"></div>
         <div class="diary-hero-fade"></div>
 
         <header class="diary-head">
+          <!-- A2: the app header is gone; its avatar lives here, left of the date, and is still the
+               door to her profile. The crop stays F45-1's age-only `norm` – chrome, not an
+               emotional surface; the emotion belongs to the big painting behind it. -->
+          <button
+            class="diary-avatar-btn"
+            data-tour="kid-avatar"
+            aria-label="Open her profile"
+            @click="openKid"
+          >
+            <img class="diary-avatar" :src="headerAvatarUrl" alt="" />
+          </button>
           <!-- OWNER'S RULING over the export, which prints a plain calendar date here: our week
                label with the year in full, then the week's real days. shared/dates.ts owns it. -->
           <p class="diary-date">{{ dateLine }}</p>
@@ -399,6 +532,12 @@ function openRankHelp(): void {
             </button>
           </div>
         </header>
+
+        <!-- R13-12's one-time callout, moved with the avatar it explains. Dismissed (and persisted
+             per device, never in the save) by the first tap on either it or the avatar. -->
+        <button v-if="showKidHint" class="diary-kid-hint" @click="openKid">
+          Tap the photo – her page lives here
+        </button>
 
         <div class="diary-id">
           <!-- The greeting is the ENGINE's word (morning before the week is played, evening once a
@@ -421,29 +560,51 @@ function openRankHelp(): void {
           </button>
         </div>
 
-        <!-- THE CAPTION – the one phrase the parent wrote about her week, on a frosted chip. It
-             appears exactly once on this page. -->
-        <div v-if="photoLine" class="diary-caption">
-          <span class="diary-caption-dot"></span>
-          <p class="diary-caption-text">{{ photoLine }}</p>
+        <!-- A2b (owner, 28.07): HER BODY MOVED ONTO THE PHOTOGRAPH. The bottom row of the hero is
+             the caption chip and, to the right of it, the condition ring, which frees the whole
+             strip under the picture for the cards.
+             THE WHY LINES sit ABOVE the chip, and take its place entirely when there is no caption,
+             so a warning is never the thing that goes missing on a quiet week. -->
+        <div class="diary-state">
+          <div v-if="conditionNote || strainNote" class="diary-notes">
+            <!-- D1: one line of WHY, from real facts of the last tick (engine-licensed). -->
+            <p v-if="conditionNote" class="condition-note">{{ conditionNote }}</p>
+            <p v-if="strainNote" class="condition-note warn">{{ strainNote }}</p>
+          </div>
+          <div class="diary-state-row">
+            <!-- THE CAPTION – the one phrase the parent wrote about her week, on a frosted chip. It
+                 appears exactly once on this page. -->
+            <div v-if="photoLine" class="diary-caption">
+              <span class="diary-caption-dot"></span>
+              <p class="diary-caption-text">{{ photoLine }}</p>
+            </div>
+            <!-- THE CONDITION RING (the export's ProgressRing, 46px, r=19, 3px stroke). How far
+                 round the arc travels is her condition, and its solid colour is that same number
+                 read on a red-to-green ramp. The label follows the export's Kid-screen pair: the
+                 figure at 15px/800 with the sign small beside it at 10px/700, on one baseline, and
+                 in plain light ink - the ARC is what carries the colour. -->
+            <div class="condition-ring" role="img" :aria-label="conditionAria">
+              <svg width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
+                <circle cx="23" cy="23" r="19" class="condition-ring-track" stroke-width="3" />
+                <circle
+                  cx="23"
+                  cy="23"
+                  r="19"
+                  class="condition-ring-arc"
+                  :stroke="ringColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  :stroke-dasharray="RING_C"
+                  :stroke-dashoffset="ringOffset"
+                  transform="rotate(-90 23 23)"
+                />
+              </svg>
+              <span class="condition-ring-value">
+                <b>{{ condition }}</b><i>%</i>
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <!-- Her body, straight under the photograph. D3: HOME speaks words, not percentages – the
-           number and its old tooltip live on Stats and in the planner. -->
-      <div class="diary-body">
-        <div class="condition-blocks">
-          <span
-            v-for="i in CONDITION_SEGMENTS"
-            :key="i"
-            class="condition-block"
-            :class="{ filled: i <= conditionFilled }"
-            :style="i <= conditionFilled ? { background: conditionColor(i) } : undefined"
-          ></span>
-        </div>
-        <!-- D1: one line of WHY, from real facts of the last tick (engine-licensed). -->
-        <p class="condition-note">{{ conditionNote }}</p>
-        <p v-if="strainNote" class="condition-note warn">{{ strainNote }}</p>
       </div>
 
       <!-- 3. THE CARD GRID – the visual signature. Two of the four are doors, and they say so by
@@ -485,33 +646,41 @@ function openRankHelp(): void {
           <svg
             v-if="budgetChart.any"
             class="budget-chart"
-            :viewBox="`0 0 ${budgetChart.width} 100`"
+            :viewBox="`0 0 ${CHART_W} ${CHART_H}`"
             preserveAspectRatio="none"
             role="img"
-            aria-label="Money in and out over the last 12 weeks"
+            aria-label="The family balance over the last 12 weeks"
           >
-            <template v-for="(bar, i) in budgetChart.bars" :key="i">
-              <rect
-                class="budget-bar-in"
-                :x="bar.x"
-                :y="CHART_BASELINE - bar.inHeight"
-                width="6"
-                :height="bar.inHeight"
-              />
-              <rect class="budget-bar-out" :x="bar.x" :y="CHART_BASELINE" width="6" :height="bar.outHeight" />
-            </template>
-            <line class="budget-axis" x1="0" :y1="CHART_BASELINE" :x2="budgetChart.width" :y2="CHART_BASELINE" />
+            <defs>
+              <linearGradient id="tb-spark" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.42" />
+                <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <path class="budget-area" :d="budgetChart.area" fill="url(#tb-spark)" />
+            <polyline class="budget-line" :points="budgetChart.line" />
+            <circle
+              v-for="(dot, i) in budgetChart.dots"
+              :key="i"
+              :class="`budget-dot ${dot.tone}`"
+              :cx="dot.x"
+              :cy="dot.y"
+              r="2.8"
+            />
           </svg>
           <p v-else class="note-empty">Nothing has moved yet.</p>
         </button>
 
-        <!-- COACH. OWNER'S RULING over the export, which puts a coach's line and a handwritten
-             signature beside the photo: his PHOTOGRAPH and the word, nothing invented. -->
-        <article class="note-card card-short">
+        <!-- COACH NOTE. The export's own layout: his portrait down the left edge, his read on her
+             beside it. -->
+        <article class="note-card card-short coach-card">
           <div class="coach-art">
             <img :src="coachPhoto" alt="" />
           </div>
-          <p class="note-kicker">Coach</p>
+          <div class="coach-body">
+            <p class="note-kicker">Coach note</p>
+            <p class="coach-line">{{ coachQuote }}</p>
+          </div>
         </article>
 
         <!-- D10: RECENT MEMORY – the painting from the band she was in THEN, on cream paper,
