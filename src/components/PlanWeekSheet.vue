@@ -88,7 +88,7 @@ const layoff = computed(() => {
 /** The refusal's first words – the same words the tournament card's injured lock uses. */
 const layoffNote = computed(() => {
   const s = game.snapshot
-  return s?.injury && layoff.value ? `Injured – back wk ${s.week + s.injury.weeksRemaining}.` : ''
+  return s?.injury && layoff.value ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}.` : ''
 })
 
 function askPractice(): void {

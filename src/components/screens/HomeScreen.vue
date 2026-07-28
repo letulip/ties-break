@@ -122,7 +122,7 @@ function conditionColor(i: number): string {
 const availabilityChip = computed<{ label: string; tone: 'green' | 'grey' | 'amber' | 'red' } | null>(() => {
   const s = game.snapshot
   if (!s) return null
-  if (s.injury) return { label: `Injured: ${s.injury.kind} – back wk ${s.week + s.injury.weeksRemaining}`, tone: 'red' }
+  if (s.injury) return { label: `Injured: ${s.injury.kind} – back ${weekLabel(s.week + s.injury.weeksRemaining)}`, tone: 'red' }
   // The strain read asks the same pure predicate the planner sheet does, for "one more match
   // next week" – so the chip and the booking warning can never disagree.
   const strain = practiceCaution({
