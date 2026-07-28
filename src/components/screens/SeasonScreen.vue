@@ -23,7 +23,7 @@ import TierGuide from '../TierGuide.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleAffinity, surfaceStyleHint } from '../../engine/match/style'
-import { KID_ID, kidMatchPlayer, isExamWeek, type PracticeCaution } from '../../engine/world'
+import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek, surfaceBlockFor, WEEKS_PER_YEAR } from '../../engine/season/calendar'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder.
@@ -179,7 +179,28 @@ interface CalendarRow {
   practice?: PracticeBooking
   /** an empty future week the parent may plan (vacation always, practice outside the off-season) */
   plannable: boolean
+  /** R12-1/14: a school-exam week (ECONOMY.availability.examWeeks). Kept as its own flag because an
+   *  exam week can still CARRY an event (kind 'event' wins) – and that card must say why the week
+   *  is not hers to plan instead of silently dropping the button. */
+  exam: boolean
+  /** R12-8b: the layoff covers this week – the card wears the small red injury chip. */
+  injured: boolean
 }
+
+// R12-8b: the layoff window as the SNAPSHOT tells it. Mirrors the engine's `layoffCovering`
+// (R10-17: covered ⇔ w < week + weeksRemaining, EXCLUSIVE of the return week – she is back at the
+// top of that week) without reaching into the worker's WorldState. Every calendar card inside the
+// window carries a small red "injury" chip, so "why can't I plan anything" is answerable at a
+// glance instead of one lock label at a time.
+function layoffCovers(w: number): boolean {
+  const s = game.snapshot
+  return s?.injury != null && w < s.week + s.injury.weeksRemaining
+}
+/** The chip's tooltip – the same words the tournament card's injured lock uses. */
+const layoffNote = computed(() => {
+  const s = game.snapshot
+  return s?.injury ? `Injured – back wk ${s.week + s.injury.weeksRemaining}` : ''
+})
 const calendarRows = computed<CalendarRow[]>(() => {
   const byWeek = new Map<number, UpcomingEvent>()
   for (const e of visibleUpcoming.value) byWeek.set(e.week, e)
@@ -219,6 +240,8 @@ const calendarRows = computed<CalendarRow[]>(() => {
         !practice &&
         !exam &&
         (!e || (!e.entered && (!e.eligible || week.value > e.deadlineWeek))),
+      exam,
+      injured: layoffCovers(w),
     })
   }
   return rows
@@ -260,9 +283,11 @@ function lockLabel(e: UpcomingEvent): string {
     // and the tier ladder's long form says so in full.
     case 'capped':
       return e.entryCap ? `Year limit – ${e.entryCap.used} of ${e.entryCap.limit}` : 'Year limit reached'
+    // R12-1/14: worded to match the exam row's own label ("Exams") – ONE language for the block,
+    // whether the parent reads the row or the card.
     case 'unavailable': {
       const vacation = vacations.value.find((v) => v.week === e.week)
-      return vacation ? `Family vacation – ${packageLabel(vacation.packageId)}` : 'School exams this week'
+      return vacation ? `Family vacation – ${packageLabel(vacation.packageId)}` : 'Exams this week'
     }
     default:
       // R11-5a: the WORDS come from the shared rule, the NUMBER stays the engine's own verdict for
@@ -270,6 +295,18 @@ function lockLabel(e: UpcomingEvent): string {
       // browser: it let a card the engine had locked print the ladder's "open" state.
       return e.pointsToEnter !== undefined ? pointsLockNote(e.pointsToEnter) : tierStateById.value[e.tier].note
   }
+}
+
+// R12-1/14: an exam week's event card must NAME the block wherever losing "+ Plan week" would
+// otherwise be silent. Before this, a points-locked card ("Reach N pts") or an entries-closed one
+// simply lost the button – lock precedence names the band first, so "exams" never appeared. The one
+// case that already says it is the unavailable-lock pill itself (an in-band, open event, which
+// lockLabel words as "Exams this week") – the reason must not print twice on that card.
+function examReasonShows(row: CalendarRow): boolean {
+  if (!row.exam || !row.event) return false
+  const e = row.event
+  const lockPillShows = !e.entered && !entriesClosed(e) && !e.eligible
+  return !(lockPillShows && e.ineligibleReason === 'unavailable')
 }
 
 // --- R11-5a: "locked" vs "nothing scheduled" -------------------------------------------------
@@ -465,6 +502,24 @@ const thisWeekFriendly = computed<WorldEvent | null>(
   () => game.snapshot?.events.find((e) => e.type === 'match' && e.friendly && e.week === week.value) ?? null,
 )
 
+// R12-12 (the owner's SECOND ask – round-11's one-line fix was the practice row; THIS is the
+// tournament plaque): on the this-week tournament rows the SCORE leaves the sentence and takes its
+// own line under the title. The score is never re-parsed out of the text: it comes off the match
+// record itself, flipped to the kid's perspective exactly the way kidMatchEvent built the sentence
+// (MatchRecord scores are side A's; flipScore when she played side B), and the title is the
+// sentence MINUS that trailing token. A row without a stored scoreline – or one whose text ever
+// stops ending with it – renders exactly as before, on one line, losing nothing.
+interface PlaqueLines {
+  title: string
+  score: string | null
+}
+function plaqueLines(e: WorldEvent): PlaqueLines {
+  const m = e.match
+  const score = m?.score ? (m.bId === KID_ID ? flipScore(m.score) : m.score) : null
+  if (!score || !e.text.endsWith(score)) return { title: e.text, score: null }
+  return { title: e.text.slice(0, e.text.length - score.length).trimEnd(), score }
+}
+
 // R10-15: the this-week list read identically for a win and a loss, so the parent had to parse
 // "beat" vs "lost to" out of the sentence to find out how the run went. The row now carries the
 // result as colour: accent (the palette's positive/green, same token as .pill.ok and the rank-up
@@ -556,13 +611,17 @@ function playExhibition(): void {
       <h2>This week's tournament</h2>
       <p v-if="thisWeekSummary" class="tournament-summary">{{ thisWeekSummary.text }}</p>
       <ol class="bracket-list">
+        <!-- R12-12: TWO lines – the sentence on top, the scoreline on its own line beneath. -->
         <li
           v-for="m in thisWeekMatches"
           :key="m.id"
           class="bracket-row"
           :class="{ won: kidWon(m) === true, lost: kidWon(m) === false }"
         >
-          <span>{{ m.text }}</span>
+          <span class="bracket-lines">
+            <span>{{ plaqueLines(m).title }}</span>
+            <span v-if="plaqueLines(m).score" class="bracket-score">{{ plaqueLines(m).score }}</span>
+          </span>
           <button v-if="m.match" class="watch-play-btn sfx-watch" aria-label="Watch match" @click="watchMatch(m)">
             <span class="watch-play-icon" :style="playIconStyle"></span>
           </button>
@@ -633,6 +692,10 @@ function playExhibition(): void {
               {{ formatDollars(row.event.entryFeeCents) }} · travel ~{{ formatDollars(row.event.travelCostCents) }}
             </p>
             <div class="controls" style="margin-top: 8px">
+              <!-- R12-8b: the layoff covers this WEEK, whatever the event's own lock says – a
+                   points-locked card names the band first (lock precedence), so without the chip
+                   the injury never appeared on it at all. -->
+              <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
               <!-- Round-7 item 21: past tense once the window has shut. -->
               <span class="pill" :class="{ negative: week > row.event.deadlineWeek && !row.event.entered }">
                 {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
@@ -690,6 +753,9 @@ function playExhibition(): void {
                    still hers to plan: a friendly or a family week. The aspirational card stays –
                    the week just stops being dead. -->
               <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
+              <!-- R12-1/14: on an exam week the button does not vanish SILENTLY – the card says why
+                   SHE cannot go (the tournament still runs; school owns her week). -->
+              <span v-else-if="examReasonShows(row)" class="pill muted lock">Exams this week</span>
             </div>
           </div>
 
@@ -707,7 +773,11 @@ function playExhibition(): void {
                always is. Same shape for the vacation row: it is the same card. -->
           <div v-else-if="row.kind === 'vacation' && row.vacation" class="calendar-row-muted planned">
             <span class="planned-lines">
-              <span class="planned-when">{{ weekLabel(row.week) }} · {{ row.dates }}</span>
+              <span class="planned-when">
+                {{ weekLabel(row.week) }} · {{ row.dates }}
+                <!-- R12-8b: a kept booking inside the layoff still wears the week's truth. -->
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+              </span>
               <span class="planned-what">
                 🏖 {{ packageLabel(row.vacation.packageId) }}
                 <template v-if="row.event"> · skipping {{ row.event.label }}</template>
@@ -719,7 +789,12 @@ function playExhibition(): void {
           </div>
           <div v-else-if="row.kind === 'practice' && row.practice" class="calendar-row-muted planned">
             <span class="planned-lines">
-              <span class="planned-when">{{ weekLabel(row.week) }} · {{ row.dates }}</span>
+              <span class="planned-when">
+                {{ weekLabel(row.week) }} · {{ row.dates }}
+                <!-- R12-8b: the engine refunds these on injury, so the chip here is a belt-and-braces
+                     read of the same window, never a promise the match survives the layoff. -->
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+              </span>
               <span class="planned-what">
                 🎾 Practice match{{ row.practice.withCoach ? ' + coach' : '' }}
                 <template v-if="row.event"> · instead of {{ row.event.label }}</template>
@@ -741,16 +816,19 @@ function playExhibition(): void {
             class="calendar-row-muted"
             :class="{ 'off-season': row.kind === 'off-season', exam: row.kind === 'exam' }"
           >
+            <!-- R12-1/14: the exam row reads like the off-season row – green, named. "Exams", the
+                 owner's word for the label; the frame comes from .calendar-row-muted.exam. -->
             <span class="hint" style="margin: 0">
               {{ weekLabel(row.week) }} · {{ row.dates }} ·
               {{
                 row.kind === 'off-season'
                   ? 'Off-season – the natural family week'
                   : row.kind === 'exam'
-                    ? 'School exams'
+                    ? 'Exams'
                     : 'Training week'
               }}
             </span>
+            <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
             <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
           </div>
         </template>

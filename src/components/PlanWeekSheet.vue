@@ -74,6 +74,23 @@ const caution = computed<PracticeCaution>(() =>
 // says so, because a week where nothing at all is possible is the worst bug this planner has had.
 const medical = computed(() => medicalBlock(condition.value))
 
+// R12-8b: THE LAYOFF, as the snapshot tells it – an injury spans [week, week + weeksRemaining),
+// EXCLUSIVE of the return week (the engine's `layoffCovering` window, R10-17; the sheet cannot call
+// that helper – it takes the worker's WorldState – so it mirrors the inequality on snapshot facts).
+// `bookVacation` refuses these weeks ("Injured – back in N weeks."), and until now the Vacation tab
+// still offered six Book buttons that could only throw: the refusal surfaced as a raw store error
+// AFTER the confirm, or not at all. Same disable-with-reason shape as the medical veto above.
+// The PRACTICE tab's layoff gate is R12-5b (wave A) and is deliberately not wired here.
+const layoff = computed(() => {
+  const s = game.snapshot
+  return s?.injury != null && props.week < s.week + s.injury.weeksRemaining ? s.injury : null
+})
+/** The refusal's first words – the same words the tournament card's injured lock uses. */
+const layoffNote = computed(() => {
+  const s = game.snapshot
+  return s?.injury && layoff.value ? `Injured – back wk ${s.week + s.injury.weeksRemaining}.` : ''
+})
+
 function askPractice(): void {
   emit('bookPractice', {
     week: props.week,
@@ -208,6 +225,12 @@ function askVacation(row: PackageRow): void {
           A week away – no tournaments that week, and she comes back fresher. Cancel any time
           before the week starts for a full refund.
         </p>
+        <!-- R12-8b: the layoff's hard no, rendered BEFORE a click instead of thrown after one.
+             The doctor is not the blocker here – the layoff owns the week. -->
+        <p v-if="layoff" class="caution-note">
+          {{ layoffNote }} The layoff covers this week, so a family trip cannot be booked – the
+          planner frees up once she is back.
+        </p>
         <div class="pkg-list">
           <div v-for="row in packageRows" :key="row.id" class="pkg-row" :class="{ recommended: row.recommended }">
             <div class="pkg-head">
@@ -222,10 +245,12 @@ function askVacation(row: PackageRow): void {
             </p>
             <div class="pkg-actions">
               <span v-if="row.recommended" class="pill ok">Recommended</span>
-              <button class="primary" :disabled="!row.affordable || game.busy" @click="askVacation(row)">
+              <!-- R12-8b: disabled during the layoff (the note above carries the reason) – a Book
+                   that can only throw is the R10-16 dead control this sheet must never grow. -->
+              <button class="primary" :disabled="!!layoff || !row.affordable || game.busy" @click="askVacation(row)">
                 Book
               </button>
-              <span v-if="!row.affordable" class="hint" style="margin: 0">Out of reach</span>
+              <span v-if="!layoff && !row.affordable" class="hint" style="margin: 0">Out of reach</span>
             </div>
           </div>
         </div>
