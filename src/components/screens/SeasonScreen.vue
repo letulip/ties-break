@@ -26,6 +26,7 @@ import { applySurfaceStyle, surfaceStyleAffinity, surfaceStyleHint } from '../..
 import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
+import { weekArtUrl } from '../../art/weeks'
 import { rngFromSeed } from '../../engine/rng'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
@@ -131,6 +132,23 @@ const PHASE_STRIP = SURFACE_BLOCKS.map((b) => ({
   weeks: seasonWeekRange(b.from, b.to),
 }))
 const activePhaseId = computed(() => surfaceBlockFor(week.value).id)
+
+/** The painting for a week with no tournament. Every such week has one - training and exams share
+ *  the on-court frame, the three off-season weeks each wear their own (src/art/weeks.ts). */
+function weekArt(row: CalendarRow): string {
+  return weekArtUrl(row.week)
+}
+/** R12-1/14 kept: "Exams" is the owner's own word for it. */
+function weekTitle(row: CalendarRow): string {
+  return row.kind === 'off-season' ? 'Off-season' : row.kind === 'exam' ? 'Exams' : 'Training week'
+}
+
+/** "W8" - the week number alone. The date beside it already names the year, and `weekLabel` would
+ *  print it a second time as "'38". Sliced off the shared formatter rather than re-derived, so the
+ *  two can never disagree about which week it is. */
+function weekOnly(w: number): string {
+  return weekLabel(w).split(' ')[0]
+}
 
 /** A block's identity is the surface it is mostly made of - the one the player plans around. */
 function dominantSurface(b: (typeof SURFACE_BLOCKS)[number]): Surface {
@@ -801,18 +819,21 @@ function playExhibition(): void {
                 {{ row.event.surface }}
               </span>
               <span class="event-place-sep"></span>
-              <span class="event-dates">{{ row.dates }}</span>
+              <!-- Owner, 28.07: the week number belongs UP here with the dates, and without its
+                   season suffix - "W8 · Feb 20-26, 2034" already says which year twice otherwise. -->
+              <span class="event-dates">{{ weekOnly(row.event.week) }} &middot; {{ row.dates }}</span>
             </div>
 
             <div class="event-money">
               <p class="event-money-label">Travel budget</p>
               <p class="event-money-figure">{{ formatDollars(row.event.travelCostCents) }}</p>
-              <p class="event-money-sub">
-                {{ weekLabel(row.event.week) }} &middot; entry {{ formatDollars(row.event.entryFeeCents) }}
-              </p>
+
             </div>
 
-            <div class="controls" >
+            <div class="controls">
+              <!-- The entry fee reads as a FIGURE, in white, on the same row as the deadline chips
+                   (owner, 28.07) - it is money, like the travel budget above it, not a caption. -->
+              <span class="entry-fee">entry {{ formatDollars(row.event.entryFeeCents) }}</span>
               <!-- R12-8b: the layoff covers this WEEK, whatever the event's own lock says – a
                    points-locked card names the band first (lock precedence), so without the chip
                    the injury never appeared on it at all. -->
@@ -966,26 +987,31 @@ function playExhibition(): void {
             </span>
           </div>
 
-          <!-- An empty week: plannable (or an exam block, which is nobody's to plan). -->
+          <!-- A WEEK WITH NO TOURNAMENT: training, the off-season, or exams. Owner, 28.07 - these
+               used to be one muted line each, which read like table rows beside a photo album now
+               that the tournament cards are cards. Same card, one size down: the painting across
+               the top, the week's name, its dates, and the plan button at the foot.
+               Exams have no painting yet and render without one (see src/art/weeks.ts). -->
           <div
             v-else
-            class="calendar-row-muted"
+            class="week-card"
             :class="{ 'off-season': row.kind === 'off-season', exam: row.kind === 'exam' }"
           >
-            <!-- R12-1/14: the exam row reads like the off-season row – green, named. "Exams", the
-                 owner's word for the label; the frame comes from .calendar-row-muted.exam. -->
-            <span class="hint" style="margin: 0">
-              {{ weekLabel(row.week) }} · {{ row.dates }} ·
-              {{
-                row.kind === 'off-season'
-                  ? 'Off-season – the natural family week'
-                  : row.kind === 'exam'
-                    ? 'Exams'
-                    : 'Training week'
-              }}
-            </span>
-            <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
-            <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
+            <div class="week-art">
+              <img :src="weekArt(row)" alt="" />
+              <span class="week-art-scrim"></span>
+            </div>
+            <div class="week-body">
+              <div>
+                <h3 class="week-title">{{ weekTitle(row) }}</h3>
+                <p class="week-dates">{{ weekOnly(row.week) }} &middot; {{ row.dates }}</p>
+              </div>
+              <div class="controls week-controls">
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+                <button v-if="row.plannable" :disabled="game.busy" @click="openPlanner(row)">+ Plan week</button>
+                <span v-else-if="row.kind === 'exam'" class="week-note">School owns this week.</span>
+              </div>
+            </div>
           </div>
         </template>
       </div>
