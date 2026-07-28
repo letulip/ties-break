@@ -26,7 +26,6 @@ import {
   type SeedResult,
 } from '../tools/econ-bench'
 import { STARTING_FUNDS_CENTS, kidPoints, financeWindow } from '../src/engine/world'
-import { PARENT_INCOME_CENTS } from '../src/engine/world'
 import { parentIncomeForWeekCents } from '../src/engine/economy'
 
 // The economy bench (Part C, extended to whole-horizon in Wave 1) is a MEASUREMENT tool: it must be
