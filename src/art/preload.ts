@@ -109,6 +109,13 @@ export function cropUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
 // instead of having to be re-encoded from masters that live only on the author's machine.
 // NOT_SHIPPED's rule is honoured, not bent: its premise simply is not true of art outside the
 // precache. What WOULD be dishonest is preloading them, and none of them is preloaded.
+//
+// ⚠ THE COACH-CHOICE SLICE ARRIVED, and all 16 are now requestable: the Coach Market (screen T)
+// renders one row per coach and `ECONOMY.coach.roster` names every portrait as a coach id. The
+// paragraph above still holds exactly as written - a file is fetched if and only if a component
+// asks for its URL - and `preloadCoachArt` still warms ONE face, the Home card's. What changed is
+// that there is now a screen that can show the other 13, so `preloadCoachMarketArt` exists to warm
+// them AT THAT SCREEN and nowhere else. The rule is unchanged: never preload what cannot be shown.
 
 /** The default coach portrait per family background – the owner's mapping (28.07). The stems are
  *  the master filenames: `budget` / `middle` / `elit` name the coach's own tier, not the girl's. */
@@ -126,6 +133,16 @@ export function coachPortraitUrl(stem: string): string {
 /** The default coach's portrait for a family background – what the Home coach card renders. */
 export function coachUrlFor(background: FamilyBackground): string {
   return coachPortraitUrl(COACH_BY_BACKGROUND[background])
+}
+
+/** Warm every roster face - called by the Coach Market and by nothing else, because it is the only
+ *  surface that can show them. ~137 KB across 16 files, fetched once and then CacheFirst. */
+export function preloadCoachMarketArt(stems: readonly string[]): string[] {
+  return stems.map((stem) => {
+    const url = coachPortraitUrl(stem)
+    warm(url)
+    return url
+  })
 }
 
 // Every URL this module has already asked for. A preload is idempotent and free to call on every

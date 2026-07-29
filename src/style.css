@@ -1496,6 +1496,19 @@ section.bare .event-cards {
 /* THE SURFACE MARK, the export's own: two concentric rings in the court's colour, then its name.
    The clay value is the export's verbatim; hard and grass are chosen at the same weight and
    saturation so the three read as one family rather than as three decisions. */
+/* Coach Market (screen T). Tier colours and fit-pill surfaces come straight from the design
+   system's export, docs/design/tokens.css - same names, same values, so the handoff and the app
+   cannot drift apart the way the brand lime once did. */
+:root {
+  --tier-budget: #8fb2d6;
+  --tier-middle: #cfe152;
+  --tier-high: #e2822f;
+  --tier-elite: #9b7fd4;
+  --fit-great-bg: rgba(207, 225, 82, 0.14);
+  --fit-good-bg: rgba(255, 255, 255, 0.07);
+  --fit-off-border: rgba(255, 255, 255, 0.12);
+}
+
 :root {
   --surface-hard: #4a90d9;
   --surface-clay: #e2822f;
@@ -4375,4 +4388,358 @@ button.note-card:active:not(:disabled) {
 
 .tab-btn.active .tab-label {
   font-weight: 700;
+}
+
+
+/* --- SCREEN T: COACH MARKET (docs/design/README.md §T) ------------------------------------- */
+
+.market-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.market-back {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.market-back:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+.market-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--text);
+}
+.market-sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.market-sub strong {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* The budget meter. Three real numbers: what she pays now, what a week brings in, and the gap. */
+.budget-meter {
+  padding: 12px 14px;
+  border-radius: var(--radius-frame);
+}
+.budget-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.budget-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.budget-free {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.budget-free strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.budget-bar {
+  margin: 8px 0;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+}
+.budget-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.budget-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.legend-dot.cap {
+  margin-left: 10px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.market-chips {
+  margin-bottom: 8px;
+}
+.chip-count {
+  font-size: 10px;
+  opacity: 0.65;
+}
+.market-controls {
+  margin-bottom: 10px;
+}
+.market-drop {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.market-drop .drop-label {
+  font-weight: 500;
+  color: var(--muted);
+}
+.market-drop.active {
+  background: rgba(var(--accent-rgb), 0.07);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  color: var(--accent);
+}
+.market-lens-note {
+  margin: -4px 0 10px;
+}
+
+/* A tier is a SECTION, not a filter (design §T.1): dot, name, count, price range. */
+.tier-block {
+  margin-bottom: 18px;
+  scroll-margin-top: 12px;
+}
+.tier-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 8px;
+  font-size: var(--label-size);
+  font-weight: 800;
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+}
+.tier-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+.tier-head.tier-budget {
+  color: var(--tier-budget);
+}
+.tier-head.tier-middle {
+  color: var(--tier-middle);
+}
+.tier-head.tier-high {
+  color: var(--tier-high);
+}
+.tier-head.tier-elite {
+  color: var(--tier-elite);
+}
+.tier-count {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-dim);
+}
+.tier-range {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+
+/* The coach row. Headline signal is the FIT pill, not a tag list (design §T.3). */
+.coach-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 9px 12px 9px 9px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-frame);
+  background: var(--card-bottom);
+  text-align: left;
+  cursor: pointer;
+}
+.coach-row:hover:not(:disabled) {
+  border-color: var(--card-edge);
+}
+.coach-row:disabled {
+  cursor: default;
+}
+/* A disabled row is still a row you must be able to READ – the global button:disabled dim would
+   grey out the coach she actually has, which is the one row that most needs to be legible. */
+.coach-row:disabled {
+  opacity: 1;
+}
+.coach-row.current {
+  background: rgba(var(--accent-rgb), 0.07);
+  border-color: var(--accent);
+}
+/* Over budget or gated: dashed, dimmed, and the shortfall stated in money (never "expensive"). */
+.coach-row.blocked {
+  background: rgba(20, 29, 38, 0.5);
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.09);
+}
+.coach-row.blocked .coach-face {
+  opacity: 0.45;
+}
+.coach-row.blocked .coach-name {
+  color: var(--ink-dim);
+}
+.coach-face {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-dialog);
+  object-fit: cover;
+  object-position: 50% 22%;
+}
+.coach-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.coach-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+.coach-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.coach-uplift {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+.coach-row.current .coach-uplift {
+  color: var(--accent);
+}
+.coach-tags {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.fit-pill {
+  flex: none;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+}
+.fit-pill.fit-great {
+  background: var(--fit-great-bg);
+  color: var(--accent);
+}
+.fit-pill.fit-good {
+  background: var(--fit-good-bg);
+  color: var(--ink-2);
+}
+.fit-pill.fit-off {
+  border-color: var(--fit-off-border);
+  color: var(--muted);
+}
+.coach-right {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.coach-price {
+  font-size: 14.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.coach-price i {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.coach-row.blocked .coach-price {
+  color: var(--ink-dim);
+}
+.coach-action {
+  font-size: 12px;
+  font-weight: 800;
+}
+.coach-action.is-hire {
+  color: var(--accent);
+}
+.coach-action.is-current {
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.coach-action.is-over,
+.coach-action.is-locked {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.self-coach-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* A table cell that is a door (the Kid screen's Coaching row -> the market). The chevron must not
+   wrap onto its own line, so the whole label stays together. */
+button.linkish {
+  white-space: nowrap;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.linkish:hover:not(:disabled) {
+  text-decoration: underline;
 }

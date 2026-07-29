@@ -9,6 +9,7 @@ import {
   bookVacation,
   cancelVacation,
   bookPractice,
+  hireCoach,
   cancelPractice,
   revealTournamentRound,
   skipTournament,
@@ -149,6 +150,12 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'bookPractice': {
       if (!world) throw new Error('No active career')
       bookPractice(world, msg.week, msg.withCoach)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'hireCoach': {
+      if (!world) throw new Error('No active career')
+      hireCoach(world, msg.coachId)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }

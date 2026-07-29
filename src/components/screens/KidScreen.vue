@@ -8,6 +8,12 @@ import type { FamilyBackground, PlayStyle } from '../../shared/protocol'
 import { COACH_TIER_LABEL } from '../../engine/coach'
 
 const game = useGameStore()
+// THE DOOR TO THE COACH MARKET (screen T). It lives on the Coaching row rather than on Home for two
+// reasons: the row already names who coaches her, so "tap it to change that" needs no new concept;
+// and Home's coach card is designed as the coach's MESSAGE FEED, whose guard test deliberately pins
+// that region money-free - a price-bearing market door would fight both the design and the test.
+// The shell owns `tab`; this screen only asks (the same rule HomeScreen follows).
+const emit = defineEmits<{ navigate: ['market'] }>()
 // Raster art ships as webp only (≤512 px, quality 82-75), converted by the build itself
 // (vite.config.ts -> scripts/optimize-art.mjs). The masters live outside the repo, in the
 // gitignored art-src/, and are never served. R9-15/16: the BIG portrait reflects her CURRENT
@@ -55,7 +61,14 @@ const countryDisplay = computed(() => {
 })
 const birthMonthLabel = computed(() => (game.snapshot ? MONTHS[game.snapshot.profile.birthMonth - 1] ?? '' : ''))
 const backgroundLabel = computed(() => (game.snapshot ? BACKGROUND_LABEL[game.snapshot.profile.background] : ''))
-const coachingLabel = computed(() => (game.snapshot ? COACH_TIER_LABEL[game.snapshot.profile.coachTier] : ''))
+// Who she trains with TODAY, which is `world.coachId` and not the rung chosen at onboarding – the
+// two part company the first time the market is used.
+const coachName = computed(() => {
+  const snap = game.snapshot
+  if (!snap) return ''
+  const row = snap.coachMarket.find((c) => c.current)
+  return row ? `${row.name} – ${COACH_TIER_LABEL[row.tier]} tier` : COACH_TIER_LABEL['self']
+})
 const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.snapshot.profile.playStyle] : ''))
 
 // --- Counting results (round-5 item 1b): the kid's best-6, 52-week window. Its point
@@ -98,7 +111,9 @@ const countingResults = computed(() => game.snapshot?.countingResults ?? [])
           </tr>
           <tr>
             <th>Coaching</th>
-            <td>{{ coachingLabel }}</td>
+            <td>
+              <button class="linkish" @click="emit('navigate', 'market')">{{ coachName }} &rsaquo;</button>
+            </td>
           </tr>
           <tr>
             <th>Play style</th>

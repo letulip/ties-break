@@ -20,7 +20,7 @@ const dismissedRecapKey = moduleRef<string | null>(null)
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type WorldMatch } from '../../shared/protocol'
-import { coachWeeklyBandCents } from '../../engine/coach'
+import { coachBillRangeCents, coachById, selfRateCents } from '../../engine/coach'
 import { weekLabel, weekRange } from '../../shared/dates'
 import { KID_ID, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
@@ -88,7 +88,12 @@ const activePreset = computed(() => {
 const spendRange = computed<[number, number]>(() => {
   const snap = game.snapshot
   if (!snap) return [0, 0]
-  const [lo, hi] = coachWeeklyBandCents(snap.profile.coachTier, snap.ageYears, snap.plan)
+  // HER coach's own rate, not the rung's band: once someone is hired his price is fixed, and what
+  // still moves is the corridor roll and the week's jitter. `coachBillRangeCents` is the same
+  // arithmetic resolveBaseCosts bills through, so the estimate cannot drift from the charge.
+  const coach = coachById(snap.seed, snap.ageYears, snap.coachId)
+  const rate = coach ? coach.rateCents : selfRateCents(snap.ageYears)
+  const [lo, hi] = coachBillRangeCents(rate, snap.plan, snap.profile.background)
   return [Math.round(lo / 100), Math.round(hi / 100)]
 })
 </script>
