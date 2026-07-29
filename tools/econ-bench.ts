@@ -229,7 +229,11 @@ function zeroCats(): Record<WorldEventCategory, number> {
 /** Open a fresh, deterministic career for a preset+index: createWorld + rngFromSeed(world.seed) are
  *  the ONLY entropy sources, so the same (preset, index) reproduces exactly. Exported so tests can
  *  replay a career week by week without duplicating the engine wiring. */
-export function openCareer(preset: Preset, index: number): { world: WorldState; rng: Rng; seed: string } {
+export function openCareer(
+  preset: Preset,
+  index: number,
+  policy: Policy = POLICIES[0],
+): { world: WorldState; rng: Rng; seed: string } {
   const seed = `bench-${preset.background}-${index}`
   const profile: PlayerProfile = {
     ...DEFAULT_PROFILE,
@@ -237,6 +241,9 @@ export function openCareer(preset: Preset, index: number): { world: WorldState; 
     coachTier: preset.coachTier,
   }
   const world = createWorld(seed, profile)
+  // R4: the tournament-week toggle is a career-long stance, so it is set at birth rather than
+  // flipped mid-run. ZERO draws either way - the frozen capture cannot see it.
+  world.coachOnEventWeeks = policy.coachOnEventWeeks
   const rng = rngFromSeed(world.seed)
   return { world, rng, seed }
 }
@@ -249,7 +256,46 @@ export function zeroByTier(): Record<TierId, number> {
 /** Advance ONE career week under entry policy v3, then tick and resolve any spawned tournament.
  *  Returns the per-tier entries committed this week. Shared by runCareer and the tests so the world
  *  evolution is defined in exactly one place (no duplication of the entry policy). */
-export function stepCareerWeek(world: WorldState, rng: Rng): Record<TierId, number> {
+/** HOW THE CAREER IS MANAGED - the second axis of the bench, and the owner's question (R4).
+ *
+ *  «"элита = ловушка" - это верно для гриндера, а не обязательно для игрока. Вот и я о том же.
+ *   Добавь, померим.»
+ *
+ *  The only policy this bench has ever had enters everything it can afford and spends toward zero,
+ *  so an expensive coach mechanically eats the entry fees and any "the dear rungs do not pay"
+ *  finding inherits that behaviour rather than measuring the rung. A second arm that manages the
+ *  career the way a player would is what tells the two apart. */
+export interface Policy {
+  id: 'grinder' | 'player'
+  label: string
+  /** cash the family refuses to go below when committing to a trip. 0 = spend to the floor. */
+  reserveCents: number
+  /** condition she must be at to enter at all, ON TOP of the tier's own caution floor. The
+   *  plateau work measured a grinder's mean condition at 24.4 against the field's 72.3, and a
+   *  floor near 70 was worth roughly #89 -> #40, so this is the lever that arm exists to pull. */
+  restFloor: number
+  /** does she buy the coach for competition weeks (R4)? */
+  coachOnEventWeeks: boolean
+}
+
+export const POLICIES: Policy[] = [
+  // The historical arm, unchanged in every respect, so every earlier number in this file's history
+  // is still reproducible: no reserve, no rest floor, and the R4 default of leaving the coach at
+  // home on competition weeks.
+  { id: 'grinder', label: 'grinder', reserveCents: 0, restFloor: 0, coachOnEventWeeks: false },
+  // Someone actually managing it: keeps a season's worth of runway rather than spending to zero,
+  // refuses to race worn out, and - having paid for a coach - takes him to the tournaments.
+  { id: 'player', label: 'player', reserveCents: 5_000_00, restFloor: 70, coachOnEventWeeks: true },
+]
+
+/** Advance ONE career week under a policy, then tick and resolve any spawned tournament. Returns
+ *  the per-tier entries committed this week. Shared by runCareer and the tests so the world
+ *  evolution is defined in exactly one place (no duplication of the entry policy). */
+export function stepCareerWeek(
+  world: WorldState,
+  rng: Rng,
+  policy: Policy = POLICIES[0],
+): Record<TierId, number> {
   const entered = zeroByTier()
   // Entry policy v3: enter each RANKING-ELIGIBLE event affordable by entry+travel as its deadline
   // APPROACHES (within ENTRY_LOOKAHEAD weeks) – a parent commits a few weeks out, not a year ahead.
@@ -272,10 +318,15 @@ export function stepCareerWeek(world: WorldState, rng: Rng): Record<TierId, numb
     // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
     // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
     if (availabilityStatus(world, e).level === 'blocked') continue
+    // THE REST FLOOR (player arm): the grinder ignores the fatigue caution by design; a player
+    // does not race worn out. `restFloor` 0 leaves the historical behaviour byte-identical.
+    if (world.condition < policy.restFloor) continue
     // v21: the trip is priced AFTER the academy's share, because that is what the family is
     // actually asked for – a policy quoting the sticker price would refuse trips she can afford.
     const cost = TIERS[e.tier].entryFeeCents + travelCostFor(world, e)
-    if (world.fundsCents < cost) continue // can't afford entry+travel – policy stalls here
+    // THE RESERVE (player arm): commit only what still leaves the family standing. A reserve of 0
+    // is the old `world.fundsCents < cost` test exactly.
+    if (world.fundsCents - cost < policy.reserveCents) continue
     enterEvent(world, e.id)
     entered[e.tier]++
   }
@@ -314,8 +365,13 @@ function reachedTarget(world: WorldState, horizonWeeks: number): boolean {
  * financeWindow(fw, yearStartWeek), summing the per-year folds – so it stays correct past the engine's
  * 60-week finance-ledger pruning, which financeWindow(fw, 0) at horizon end would fall foul of.
  */
-export function runCareer(preset: Preset, index: number, horizonWeeks: number): SeedResult {
-  const { world, rng, seed } = openCareer(preset, index)
+export function runCareer(
+  preset: Preset,
+  index: number,
+  horizonWeeks: number,
+  policy: Policy = POLICIES[0],
+): SeedResult {
+  const { world, rng, seed } = openCareer(preset, index, policy)
 
   let peak = world.fundsCents
   let bankruptWeek: number | null = world.fundsCents < 0 ? 0 : null
@@ -332,7 +388,7 @@ export function runCareer(preset: Preset, index: number, horizonWeeks: number): 
   const perSeason: PerSeason[] = []
 
   for (let i = 0; i < horizonWeeks; i++) {
-    const e = stepCareerWeek(world, rng)
+    const e = stepCareerWeek(world, rng, policy)
     for (const tier of TIER_LADDER) {
       entries.byTier[tier] += e[tier]
       entries.total += e[tier]
@@ -449,7 +505,7 @@ function header(): string {
 
 const RULE = '─'.repeat(2 + LABEL_W + COL_W * 4)
 
-function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[]): string {
+function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[], policy: Policy): string {
   const startFunds = STARTING_FUNDS_CENTS[preset.background]
   const out: string[] = []
   out.push('')
@@ -464,7 +520,7 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[]): str
   )
   const coachRange = `${COACH_TIER_LABEL[preset.coachTier]} coach $${Math.round(wLo / 100)}-${Math.round(wHi / 100)}/wk at 14, ${preset.background} corridor`
   out.push(
-    `  PRESET ${preset.label}   [${horizon.label}, ${horizon.weeks} wk / ${horizon.targetAge - START_AGE_YEARS} seasons]`,
+    `  PRESET ${preset.label}   ·  ${policy.label.toUpperCase()}   [${horizon.label}, ${horizon.weeks} wk / ${horizon.targetAge - START_AGE_YEARS} seasons]`,
   )
   out.push(`  start $${(startFunds / 100).toLocaleString('en-US')}, ${coachRange}, plan balanced 75/25`)
   out.push(RULE)
@@ -563,17 +619,20 @@ const policyHeader = (seeds: number): string => [
   `Entry policy v3: each week, enter every RANKING-ELIGIBLE event (a tier her EARNED points open) the`,
   `  kid can afford entry+travel for AS ITS DEADLINE NEARS (within ${ENTRY_LOOKAHEAD} wk); tick; skip+close any`,
   `  spawned tournament. Funds red ⇒ entries stall; coaching still bleeds.`,
-  `${seeds} seeds/preset · coach rung per preset · plan balanced (75/25).`,
+  `${seeds} seeds/cell · coach rung per preset · plan balanced (75/25) · TWO policy arms:`,
+  `  grinder = enters everything affordable, no reserve, no rest floor, coach stays home on event weeks;`,
+  `  player  = keeps a $5k reserve, refuses to enter below condition ${POLICIES[1].restFloor}, takes the coach to tournaments.`,
   `Money is whole-dollar rounded; ±sd is the population stddev across the ${seeds} seeds.`,
 ].join('\n')
 
 // --- CSV ---------------------------------------------------------------------
 
-function toCsv(all: { horizon: Horizon; preset: Preset; rows: SeedResult[] }[]): string {
+function toCsv(all: { horizon: Horizon; preset: Preset; policy: Policy; rows: SeedResult[] }[]): string {
   const cols = [
     'horizon',
     'horizon_weeks',
     'preset',
+    'policy',
     'background',
     'seed',
     ...EXPENSE_CATS.map((c) => `${c}_cents`),
@@ -594,12 +653,13 @@ function toCsv(all: { horizon: Horizon; preset: Preset; rows: SeedResult[] }[]):
     ...TIER_LADDER.map((t) => `entries_${t}`),
   ]
   const lines = [cols.join(',')]
-  for (const { horizon, preset, rows } of all) {
+  for (const { horizon, preset, policy, rows } of all) {
     for (const r of rows) {
       const cells = [
         horizon.label,
         horizon.weeks.toString(),
         preset.label.trim(),
+        policy.label,
         preset.background,
         r.seed,
         ...EXPENSE_CATS.map((c) => r.cats[c].toString()),
@@ -657,17 +717,55 @@ export function main(argv: string[] = process.argv.slice(2)): void {
 
   console.log(policyHeader(seeds))
 
-  const all: { horizon: Horizon; preset: Preset; rows: SeedResult[] }[] = []
+  const all: { horizon: Horizon; preset: Preset; policy: Policy; rows: SeedResult[] }[] = []
   for (const horizon of HORIZONS) {
     console.log('')
     console.log(`${'═'.repeat(2 + LABEL_W + COL_W * 4)}`)
     console.log(`  HORIZON ${horizon.label}  (${horizon.weeks} weeks, ${horizon.targetAge - START_AGE_YEARS} seasons) – ${horizon.blurb}`)
     console.log(`${'═'.repeat(2 + LABEL_W + COL_W * 4)}`)
     for (const preset of PRESETS) {
-      const rows: SeedResult[] = []
-      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, i, horizon.weeks))
-      all.push({ horizon, preset, rows })
-      console.log(renderPreset(preset, horizon, rows))
+      for (const policy of POLICIES) {
+        const rows: SeedResult[] = []
+        for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, i, horizon.weeks, policy))
+        all.push({ horizon, preset, policy, rows })
+        console.log(renderPreset(preset, horizon, rows, policy))
+      }
+    }
+  }
+
+  // THE SIDE-BY-SIDE, which is the whole point of the second arm: one line per (preset, policy) so
+  // the two ways of running the SAME family and the SAME coach can be read against each other
+  // without scrolling through nine pairs of blocks.
+  for (const horizon of HORIZONS) {
+    console.log('')
+    console.log(`  TWO ARMS, ${horizon.label} – does the rung pay off for someone who does not grind?`)
+    console.log(
+      '  ' +
+        padEnd('preset', 30) +
+        ['policy', 'survived', 'end funds', 'reach', 'entries', 'coaching'].map((c) => pad(c, 12)).join(''),
+    )
+    for (const preset of PRESETS) {
+      for (const policy of POLICIES) {
+        const cell = all.find((a) => a.horizon === horizon && a.preset === preset && a.policy === policy)
+        if (!cell) continue
+        const r = cell.rows
+        const survived = r.filter((x) => x.survived).length
+        const reached = r.filter((x) => x.reachedWeek !== null).length
+        console.log(
+          '  ' +
+            padEnd(preset.label.trim(), 30) +
+            [
+              policy.label,
+              `${survived}/${r.length}`,
+              fmtUsd(mean(r.map((x) => x.endFundsCents))),
+              `${reached}/${r.length}`,
+              mean(r.map((x) => x.entries.total)).toFixed(1),
+              fmtUsd(mean(r.map((x) => x.cats.coaching))),
+            ]
+              .map((c) => pad(c, 12))
+              .join(''),
+        )
+      }
     }
   }
   console.log('')

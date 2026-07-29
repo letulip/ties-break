@@ -109,7 +109,7 @@ import { buildDiarySnapshot, milestoneKey } from './diary'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 23
+export const SAVE_SCHEMA_VERSION = 24
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -264,6 +264,14 @@ export interface WorldState {
    *  chose at ONBOARDING; this records who she trains with NOW, and the two part company the first
    *  time the Coach Market is used. Everything the engine bills or grows from reads THIS. */
   coachId: string | null
+  /** DOES THE COACH COME TO TOURNAMENTS (v24)? A competition week is not billed as a coaching week
+   *  by default - she spends it in a draw, not on his court - and this buys him for those weeks
+   *  anyway. Default FALSE, which is the owner's own framing: the automatic behaviour is that
+   *  competition weeks are not coach weeks, and the toggle is what adds him back.
+   *
+   *  It moves BOTH the bill and the development rate (coachWorksThisWeek), because a coach who is
+   *  not paid for a week is not at that week. That is what keeps it a decision. */
+  coachOnEventWeeks: boolean
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -1573,6 +1581,55 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
   })
 }
 
+/** THE TOURNAMENT-WEEK TOGGLE. Pure state, zero draws on any stream - it changes only what the
+ *  arithmetic downstream of an unchanged pickInt does with the number it drew, so the frozen MAIN
+ *  capture cannot move. Takes effect from the NEXT tick; this week's bill is already written. */
+export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
+  if (world.coachOnEventWeeks === on) return
+  world.coachOnEventWeeks = on
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: on
+      ? 'Your coach travels to tournaments now – billed on competition weeks too.'
+      : 'Your coach stays home on tournament weeks – those weeks are no longer billed.',
+  })
+}
+
+/** WHAT THE COACH COSTS OVER A SEASON, both ways, so the toggle can be priced rather than guessed.
+ *
+ *  `weeklyCents` is the same either way - what differs is HOW MANY weeks are billed, so the honest
+ *  pair of numbers is the season, not the week. Counted off the season she is actually in: the
+ *  off-season weeks are already unbilled for everyone, and `eventWeeks` is the weeks of it she is
+ *  entered for. Derived at snapshot time; persists nothing. */
+export function coachBilling(world: WorldState): {
+  onEventWeeks: boolean
+  weeklyCents: number
+  eventWeeks: number
+  seasonOffCents: number
+  seasonOnCents: number
+} {
+  const age = ageAtWeek(world.week)
+  const coach = coachById(world.seed, age, world.coachId)
+  const rate = coach ? coach.rateCents : selfRateCents(age)
+  const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background)
+  const seasonStart = seasonStartWeek(world.week)
+  const seasonEnd = seasonStart + WEEKS_PER_YEAR
+  const inSeason = (w: number) => w >= seasonStart && w < seasonEnd
+  const eventWeeks = new Set(
+    world.season.filter((e) => inSeason(e.week) && world.entries.includes(e.id)).map((e) => e.week),
+  ).size
+  // The playable weeks of a season are everything but the off-season block.
+  const playableWeeks = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+  return {
+    onEventWeeks: world.coachOnEventWeeks,
+    weeklyCents,
+    eventWeeks,
+    seasonOffCents: weeklyCents * Math.max(0, playableWeeks - eventWeeks),
+    seasonOnCents: weeklyCents * playableWeeks,
+  }
+}
+
 /** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and
  *  HER plan, read against HER game, with what each rung would add for her.
  *
@@ -1893,6 +1950,30 @@ function resolveParentIncome(world: WorldState): void {
   })
 }
 
+/** IS SHE COMPETING THIS WEEK - entered in an event scheduled for it, and healthy enough to play.
+ *
+ *  ONE definition, two call sites, and they are deliberately evaluated at DIFFERENT points in the
+ *  tick: the coaching bill asks at step 1 (before rollInjury) and `accrueCondition` asks at step 1c
+ *  (after it). So a fresh injury this week counts as a competition week for the BILL and as a
+ *  walkover for CONDITION, which is the honest reading of both - the week opened with her entered
+ *  and travelling, and it ended with her not playing.
+ *
+ *  ENTERED, not merely offered: a calendar full of events she did not enter is a training week.
+ *  Pure, zero draws. */
+export function isCompetitionWeek(world: WorldState): boolean {
+  return (
+    world.injury === null &&
+    world.season.some((e) => e.week === world.week && world.entries.includes(e.id))
+  )
+}
+
+/** Is the coach on the clock this week? Every week except a competition week she is not paying him
+ *  for - see `coachOnEventWeeks`. Pure, zero draws, and the ONE place the rule lives: the bill and
+ *  the development step both ask it, so they can never disagree about whether he was there. */
+export function coachWorksThisWeek(world: WorldState): boolean {
+  return world.coachOnEventWeeks || !isCompetitionWeek(world)
+}
+
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // THE COACHING BILL = his rate x hours x the market she trains in x this week's jitter
   // (docs/specs/coach-tiers.md; the model is engine/coach.ts).
@@ -1916,11 +1997,33 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const jitter = pickInt(rng, jLo, jHi) / 10_000
   const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background)
-  const expense = Math.round(coachWeeklyCents(rate, world.plan, world.profile.background, corridor) * jitter)
+  // ⚠ A COMPETITION WEEK IS NOT A COACHING WEEK (owner, R4): «мы автоматически можем не считать
+  // соревновательные и турнирные недели тренерскими, а давать игроку возможность самому отдельным
+  // переключателем добавить тренера и на эти недели тоже». She spends that week in a draw, not on
+  // his court, so by default she is not billed a retainer for it - and `coachOnEventWeeks` buys him
+  // for those weeks anyway, because a coach who travels and works between matches is exactly what
+  // the expensive rungs are for.
+  //
+  // THE DRAWS HAPPEN EITHER WAY. Both pickInts above and below run on every week whatever this
+  // resolves to, and only the ARITHMETIC after them changes - the same discipline the sponsor
+  // cameo uses when it discards a gift for an ineligible background. The frozen MAIN capture
+  // cannot see a toggle.
+  const works = coachWorksThisWeek(world)
+  const expense = works
+    ? Math.round(coachWeeklyCents(rate, world.plan, world.profile.background, corridor) * jitter)
+    : 0
   world.fundsCents -= expense
   const flavors = world.plan.train >= 70 ? trainFlavors(world.profile.background) : restFlavors(world.profile.background)
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
-  addEvent(world, { week: world.week, type: 'expense', category: 'coaching', text: flavor, amountCents: -expense })
+  // The $0 line is still EMITTED, the way a sponsor-covered gear item is: the Money breakdown should
+  // show why a coaching week cost nothing, not silently drop the row.
+  addEvent(world, {
+    week: world.week,
+    type: 'expense',
+    category: 'coaching',
+    text: works ? flavor : 'Competition week – no coaching billed',
+    amountCents: works ? -expense : 0,
+  })
   // Local-sponsor cameo: the ROLL (and the gift draw when it hits) run for EVERY background so
   // the main-stream draw count is background-independent (round-7 keeps the draws exactly as they
   // were). The payout is now NEED-BASED: only an eligible (working) kid actually banks it; for
@@ -2554,6 +2657,8 @@ export function createWorld(
     // walking into an academy and saying "we can afford this much" actually gets, and it means a
     // career opens with a real named coach rather than an abstraction.
     coachId: openingCoachId(seed, profile),
+    // Default OFF - the automatic rule is that competition weeks are not coach weeks.
+    coachOnEventWeeks: false,
     vacations: [],
     practices: [],
     recoveryBuff: null,
@@ -2595,6 +2700,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.injuryHistory = []
   save.physioActive = coachIncludesPhysio(save.profile?.coachTier ?? DEFAULT_PROFILE.coachTier)
   save.coachId = openingCoachId(save.seed, save.profile ?? DEFAULT_PROFILE)
+  save.coachOnEventWeeks = false
   save.vacations = []
   save.practices = []
   save.recoveryBuff = null
@@ -2699,9 +2805,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     the friendly's drain, exactly like finalizeTournament applies its strain after accrual.
   rollInjury(world)
   expireRecoveryBuff(world)
-  const playedThisWeek =
-    world.season.some((e) => e.week === world.week && world.entries.includes(e.id)) &&
-    world.injury === null // injured on the play week => walkover
+  const playedThisWeek = isCompetitionWeek(world) // injured on the play week => walkover
   accrueCondition(world, playedThisWeek)
   resolveVacation(world)
   resolvePractice(world)
@@ -2835,7 +2939,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     potential: world.potential,
     ageYears: ageAtWeek(world.week),
     plan: world.plan,
-    coach: coachById(world.seed, ageAtWeek(world.week), world.coachId),
+    // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR (R4). A competition week she has not bought him
+    //     for is a week he is not there, so it develops at the self-coached rate - which is what
+    //     makes `coachOnEventWeeks` a decision rather than free money. Same predicate the bill used
+    //     at step 1, so the two can never disagree about whether he came.
+    coach: coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null,
     playStyle: world.profile.playStyle,
     matchesThisWeek,
     seed: world.seed,
@@ -3470,6 +3578,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     entryCap: entryCapUsage(world, world.week),
     coachId: world.coachId,
     coachMarket: coachMarket(world),
+    coachBilling: coachBilling(world),
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),

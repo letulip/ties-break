@@ -308,10 +308,20 @@ describe('the coach portraits', () => {
     expect(warmedCount()).toBe(1) // idempotent, like every other preload
   })
 
+  // ⚠ RE-AIMED (R4). This asserted that the coach warms off `game.snapshot?.profile.background` -
+  // true while the coach was a per-background default and nothing could change it. The Coach Market
+  // shipped, Home renders HER coach's portrait, and a background-keyed watch would warm the default
+  // face while the one on screen stayed cold. The PROTECTED FACT is unchanged and is the one in the
+  // title: the coach warms on its OWN trigger, so the per-band portrait budget is untouched. What
+  // moved is the key - and the background is still there as the self-coached fallback.
   it('the per-band portrait budget is untouched – the coach warms on its own trigger', () => {
     const preloader = read('../src/art/autoPreload.ts')
-    expect(preloader).toContain('preloadCoachArt')
-    expect(preloader).toContain('game.snapshot?.profile.background')
+    expect(preloader).toContain('preloadCoachArt') // the self-coached fallback
+    expect(preloader).toContain('preloadCoachMarketArt') // her actual coach
+    expect(preloader).toContain('game.snapshot?.coachId')
+    // Still a SECOND watch, separate from the age/band one, which is what keeps the budget literal.
+    expect(preloader.match(/watch\(/g) ?? []).toHaveLength(2)
+    expect(preloader).not.toContain('preloadForAge(age)\n      preloadCoachArt')
   })
 })
 

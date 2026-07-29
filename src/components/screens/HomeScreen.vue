@@ -35,7 +35,7 @@ import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
 import { useHeaderAvatar } from '../../composables/headerAvatar'
 import { facePoint } from '../../art/faceRects'
-import { coachUrlFor, portraitUrl as portraitArtUrl } from '../../art/preload'
+import { coachPortraitUrl, coachUrlFor, portraitUrl as portraitArtUrl } from '../../art/preload'
 import { venueArtUrl } from '../../art/venues'
 import { TIER_SHORT } from '../../composables/weekAhead'
 // R11-5a: the ONE tier-state rule, shared with the Season screen's lock labels + open-tier note.
@@ -339,8 +339,22 @@ function round2(n: number): number {
 //
 // The default portrait per family background is the owner's mapping and lives in src/art/preload.ts
 // with the other art URLs.
+// R4: HER coach, once she has one - the roster row marked `current` carries both his portrait stem
+// and his name, so the face and the signature below it are the same person. `coachUrlFor` stays the
+// fallback for a self-coached career, which is what it was always for: a note with no coach behind
+// it still needs a face, and the owner's per-background mapping is the one to use for it.
+const currentCoach = computed(() => game.snapshot?.coachMarket.find((c) => c.current) ?? null)
 const coachPhoto = computed(() =>
-  game.snapshot ? coachUrlFor(game.snapshot.profile.background) : '',
+  currentCoach.value
+    ? coachPortraitUrl(currentCoach.value.id)
+    : game.snapshot
+      ? coachUrlFor(game.snapshot.profile.background)
+      : '',
+)
+/** The handwritten signature under the note (design §Home.3: «подпись "M. Ricci"»). Empty while she
+ *  is self-coached - the read is the parent's own then, and nobody signs their own diary. */
+const coachSignature = computed(() =>
+  currentCoach.value ? formatShortName(currentCoach.value.name) : '',
 )
 // --- Coach's eye: a rotating pool of 5 lines per play style (round-7 item 5d). The
 // existing owner-approved line is #1 of each pool; the visible line rotates every 4 weeks by
@@ -736,6 +750,9 @@ function openRankHelp(): void {
           <div class="coach-body">
             <p class="note-kicker">Coach note</p>
             <p class="coach-line">{{ coachQuote }}</p>
+            <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
+                 appears only when there is a him. -->
+            <p v-if="coachSignature" class="coach-sign">{{ coachSignature }}</p>
           </div>
         </button>
 

@@ -10,7 +10,7 @@
 // yet, so the fetches never compete with a reveal animation.
 import { watch } from 'vue'
 import { useGameStore } from '../stores/game'
-import { preloadCoachArt, preloadForAge, preloadNextStageIfDue } from './preload'
+import { preloadCoachArt, preloadCoachMarketArt, preloadForAge, preloadNextStageIfDue } from './preload'
 
 export function startArtPreloader(): void {
   const game = useGameStore()
@@ -23,13 +23,19 @@ export function startArtPreloader(): void {
     },
     { immediate: true },
   )
-  // epic/redesign-home: the coach's face, on its OWN trigger. Her band changes with birthdays; the
-  // family's coach does not change at all in v1, so a second watch on the background is both the
-  // cheapest and the honest key – and it keeps the per-band preload budget (14 urls) literal.
+  // epic/redesign-home: the coach's face, on its OWN trigger, which keeps the per-band portrait
+  // budget (14 urls) literal.
+  //
+  // ⚠ RE-KEYED (R4) FROM THE BACKGROUND TO THE COACH. The original comment said "the family's coach
+  // does not change at all in v1", and that stopped being true the moment the Coach Market shipped:
+  // Home now renders HER coach's portrait, so a watch on `background` would warm the default face
+  // and leave the one actually on screen cold. The key is `coachId`, so the warm follows a hire.
+  // Self-coached still falls back to the background default, which is the face Home shows then.
   watch(
-    () => game.snapshot?.profile.background,
-    (background) => {
-      if (background) preloadCoachArt(background)
+    () => [game.snapshot?.coachId, game.snapshot?.profile.background] as const,
+    ([coachId, background]) => {
+      if (coachId) preloadCoachMarketArt([coachId])
+      else if (background) preloadCoachArt(background)
     },
     { immediate: true },
   )

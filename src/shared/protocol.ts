@@ -731,6 +731,16 @@ export interface Snapshot {
   coachId: string | null
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
   coachMarket: CoachMarketRow[]
+  /** What the coach costs over a season with tournament weeks OFF and ON, so the toggle can be
+   *  priced rather than guessed. The weekly rate is the same either way; the week COUNT differs. */
+  coachBilling: {
+    onEventWeeks: boolean
+    weeklyCents: number
+    /** weeks of the current season she is entered for */
+    eventWeeks: number
+    seasonOffCents: number
+    seasonOnCents: number
+  }
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */
   vacations: VacationBooking[]
@@ -823,6 +833,7 @@ export type ToWorker =
   | { id: number; type: 'cancelVacation'; week: number }
   | { id: number; type: 'bookPractice'; week: number; withCoach: boolean }
   | { id: number; type: 'hireCoach'; coachId: string | null }
+  | { id: number; type: 'setCoachOnEventWeeks'; on: boolean }
   | { id: number; type: 'cancelPractice'; week: number }
   | { id: number; type: 'setPlan'; plan: WeekPlan }
   | { id: number; type: 'setPhysio'; active: boolean }

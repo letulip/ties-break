@@ -91,6 +91,16 @@ const activePlan = computed(() => {
 })
 const sessionsNow = computed(() => (game.snapshot ? coachHoursForPlan(game.snapshot.plan) : 0))
 
+// --- DOES HE COME TO TOURNAMENTS (owner, R4) ----------------------------------------------------
+// A competition week is not billed as a coaching week by default - she spends it in a draw, not on
+// his court - and this buys him for those weeks anyway. It belongs HERE, beside the regulator,
+// because this screen is where weekly coach cost is decided and the toggle is the other half of it.
+//
+// BOTH SEASON NUMBERS ARE SHOWN, because the weekly rate is identical either way and only the WEEK
+// COUNT moves; a weekly figure could not tell the two apart. Engine-computed (`coachBilling`), so
+// the screen never does this arithmetic itself.
+const billing = computed(() => game.snapshot?.coachBilling ?? null)
+
 type SortMode = 'fit' | 'price'
 const sort = ref<SortMode>('fit')
 function toggleSort(): void {
@@ -241,6 +251,43 @@ function scrollToTier(tier: CoachTier): void {
     </div>
     <p class="hint cm-plan-note">
       Every price below is {{ sessionsNow }} sessions a week. More of him costs more.
+    </p>
+
+    <!-- THE TOURNAMENT-WEEK TOGGLE. The other half of the weekly cost, beside the regulator. -->
+    <section v-if="billing" class="cm-travel">
+      <div class="cm-travel-text">
+        <p class="cm-travel-title">Coach travels to tournaments</p>
+        <p class="cm-travel-sub">
+          {{
+            billing.onEventWeeks
+              ? 'He travels with her and works between matches.'
+              : 'Competition weeks are not billed – and he is not there.'
+          }}
+        </p>
+      </div>
+      <button
+        class="cm-switch"
+        role="switch"
+        :aria-checked="billing.onEventWeeks"
+        :disabled="game.busy"
+        @click="game.setCoachOnEventWeeks(!billing.onEventWeeks)"
+      >
+        <span class="cm-switch-knob"></span>
+      </button>
+    </section>
+    <!-- The price of the toggle, and it has to work BEFORE anything is entered - a season pair is
+         two identical numbers on week 1, which tells a player nothing. So the per-week cost leads
+         (it is true whatever she books) and the season pair only appears once there are weeks to
+         count. -->
+    <p v-if="billing" class="hint cm-travel-cost">
+      <strong>{{ formatDollars(billing.weeklyCents) }}</strong> for each competition week.
+      <template v-if="billing.eventWeeks > 0">
+        {{ billing.eventWeeks }} booked this season:
+        <strong :class="{ chosen: !billing.onEventWeeks }">{{ formatDollars(billing.seasonOffCents) }}</strong>
+        without him &middot;
+        <strong :class="{ chosen: billing.onEventWeeks }">{{ formatDollars(billing.seasonOnCents) }}</strong> with.
+      </template>
+      <template v-else>Nothing entered yet this season.</template>
     </p>
 
     <!-- Tier chips SCROLL to a section rather than filtering the list to nothing (design §T.1). -->

@@ -4346,6 +4346,20 @@ button.note-card:active:not(:disabled) {
   background: rgba(255, 255, 255, 0.55);
 }
 
+/* R4: the coach's handwritten sign-off, from the export (§Home.3: «подпись "M. Ricci" - Caveat 17px
+   rgba(207,225,82,.72)»). Its values are the export's, to the digit; the alpha is written against
+   `--accent-rgb` so the brand lime stays repairable in one place the way the token pass required.
+   It is the SECOND place Caveat goes, and for the same reason as the first - a note on a
+   photograph, signed by the person who wrote it. */
+.coach-sign {
+  margin: 6px 0 0;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  color: rgba(var(--accent-rgb), 0.72);
+}
+
 /* A2e: the one line on this page that is genuinely a note written on a photograph, so it is the
    first place Caveat goes. Bigger than the sans it replaced (17px vs 13.5px) because Caveat's
    x-height is far smaller - the two look the same size on screen. */
@@ -4546,6 +4560,78 @@ button.note-card:active:not(:disabled) {
 }
 .market-lens-note {
   margin: -4px 0 10px;
+}
+
+/* The tournament-week toggle: a row of text and a switch, in the budget card's own idiom. */
+.cm-travel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-frame);
+  margin-bottom: 6px;
+}
+.cm-travel-text {
+  flex: 1;
+  min-width: 0;
+}
+.cm-travel-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.cm-travel-sub {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.cm-switch {
+  flex: none;
+  position: relative;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cm-switch[aria-checked='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.cm-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-2);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cm-switch[aria-checked='true'] .cm-switch-knob {
+  background: var(--on-lime);
+  transform: translateX(18px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-switch,
+  .cm-switch-knob {
+    transition: none;
+  }
+}
+.cm-travel-cost {
+  margin: 0 0 12px;
+}
+.cm-travel-cost strong {
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.cm-travel-cost strong.chosen {
+  color: var(--accent);
 }
 
 /* A tier is a SECTION, not a filter (design §T.1): dot, name, count, price range. */

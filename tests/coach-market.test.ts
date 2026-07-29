@@ -149,3 +149,50 @@ describe('screen T, round 3', () => {
     expect(market).not.toContain('SPECIALISM_LABEL')
   })
 })
+
+describe('screen T, round 4', () => {
+  it('carries the tournament-week toggle beside the regulator, as a real switch', () => {
+    // The other half of weekly coach cost, on the screen where weekly coach cost is decided.
+    expect(market).toContain('game.setCoachOnEventWeeks(')
+    expect(market).toContain('role="switch"')
+    expect(market).toContain(':aria-checked="billing.onEventWeeks"')
+    expect(css).toContain('.cm-switch')
+    // Reduced motion is honoured, like every other animated control in the sheet.
+    expect(css).toMatch(/prefers-reduced-motion[\s\S]{0,200}\.cm-switch/)
+  })
+
+  it('prices the toggle from the ENGINE, and usefully before anything is entered', () => {
+    // A season pair is two identical numbers in week 1, which tells a player nothing - so the
+    // per-week cost leads and the pair appears only once there are weeks to count.
+    expect(market).toContain('game.snapshot?.coachBilling')
+    expect(market).toContain('billing.weeklyCents')
+    expect(market).toContain('billing.eventWeeks > 0')
+    expect(market).toContain('Nothing entered yet this season')
+    // Still no local arithmetic: the screen formats cents, it does not derive them.
+    expect(market).not.toContain('seasonOffCents +')
+    expect(market).not.toContain('* billing.eventWeeks')
+  })
+
+  it('signs the Home coach note in the export\'s own hand, and keeps that card money-free', () => {
+    const home = read('../src/components/screens/HomeScreen.vue')
+    expect(home).toContain('coach-sign')
+    expect(home).toContain('formatShortName(currentCoach.value.name)')
+    // Design §Home.3: «подпись "M. Ricci" - Caveat 17px rgba(207,225,82,.72)». Values to the digit,
+    // with the alpha written against the token so the brand lime stays repairable in one place.
+    const rule = css.slice(css.indexOf('.coach-sign {'), css.indexOf('}', css.indexOf('.coach-sign {')))
+    expect(rule).toContain('var(--font-hand)')
+    expect(rule).toContain('font-size: 17px')
+    expect(rule).toContain('rgba(var(--accent-rgb), 0.72)')
+    // The card is a door and a card, not a form: no price, and the signature is a NAME.
+    const region = home.slice(home.indexOf('coach-card'), home.indexOf('Recent memory'))
+    expect(region).not.toContain('$')
+    // ...and it only signs when there is somebody to sign it.
+    expect(home).toContain('v-if="coachSignature"')
+  })
+
+  it('shows HER coach on the Home note, so the face and the signature are one person', () => {
+    const home = read('../src/components/screens/HomeScreen.vue')
+    expect(home).toContain('coachPortraitUrl(currentCoach.value.id)')
+    expect(home).toContain('coachUrlFor') // the self-coached fallback survives
+  })
+})

@@ -22,11 +22,23 @@ import {
   HIREABLE_TIERS,
 } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
-import { ageAtWeek, coachMarket, createWorld, hireCoach, tickWeek } from '../src/engine/world'
+import {
+  ageAtWeek,
+  closeTournament,
+  coachBilling,
+  coachMarket,
+  createWorld,
+  enterEvent,
+  hireCoach,
+  isCompetitionWeek,
+  setCoachOnEventWeeks,
+  skipTournament,
+  tickWeek,
+} from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type PlayStyle } from '../src/shared/protocol'
-import { ageFactor, trainFactor } from '../src/engine/development'
+import { ageFactor, SKILL_KEYS, trainFactor } from '../src/engine/development'
 
 // THE COACH LADDER (docs/specs/coach-tiers.md). Five rungs replacing a boolean, priced per hour by
 // age, billed for as many hours as the training split buys, and read against the game she plays.
@@ -391,6 +403,148 @@ describe('the roster – a market, not a menu', () => {
     } finally {
       gate.enabled = false
     }
+  })
+})
+
+describe('a competition week is not a coaching week (R4)', () => {
+  /** Put her in an event on `week` and tick to it, returning the coaching line for that week. */
+  function coachingOn(week: number, onEventWeeks: boolean): { cents: number; text: string } {
+    const world = createWorld('event-week', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    world.fundsCents = 500_000_00
+    world.coachOnEventWeeks = onEventWeeks
+    const target = world.season.find((e) => e.week === week && e.tier === 'local' && e.deadlineWeek >= world.week)!
+    enterEvent(world, target.id)
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < week; i++) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+    }
+    const bill = world.events.find((e) => e.week === week && e.category === 'coaching')!
+    return { cents: Math.abs(bill.amountCents ?? 0), text: bill.text }
+  }
+
+  // A fresh kid has no points, so the only tier she can enter is `local` - the same gate the bench
+  // policy respects.
+  const playWeek = (() => {
+    const w = createWorld('event-week', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    return w.season.find((e) => e.tier === 'local' && e.deadlineWeek >= w.week && e.week > w.week + 1)!.week
+  })()
+
+  it('bills nothing on a week she is entered for, and says why', () => {
+    const off = coachingOn(playWeek, false)
+    expect(off.cents).toBe(0)
+    expect(off.text).toContain('Competition week')
+    // ...and the neighbouring training week IS billed, so this is the week and not the career.
+    const world = createWorld('event-week', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    const rng = rngFromSeed(world.seed)
+    tickWeek(world, rng)
+    expect(-(world.events.find((e) => e.week === 1 && e.category === 'coaching')!.amountCents ?? 0)).toBeGreaterThan(0)
+  })
+
+  it('bills it when the toggle buys him for tournaments', () => {
+    const on = coachingOn(playWeek, true)
+    expect(on.cents).toBeGreaterThan(0)
+    expect(on.text).not.toContain('Competition week')
+  })
+
+  it('a calendar full of events she did NOT enter is a training week', () => {
+    // ENTERED, not offered - the distinction the toggle turns on.
+    const world = createWorld('no-entry', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    const rng = rngFromSeed(world.seed)
+    tickWeek(world, rng)
+    // The calendar really is full of events she could have entered; she just did not.
+    expect(world.season.length).toBeGreaterThan(0)
+    expect(world.entries).toHaveLength(0)
+    expect(isCompetitionWeek(world)).toBe(false)
+    expect(-(world.events.find((e) => e.week === 1 && e.category === 'coaching')!.amountCents ?? 0)).toBeGreaterThan(0)
+  })
+
+  it('he is ABSENT from the weeks he is not paid for – the toggle is not free money', () => {
+    // The whole reason this is a decision: an unbilled competition week develops at the
+    // self-coached rate, because a coach who is not paid for a week is not at that week.
+    const build = (onEventWeeks: boolean) => {
+      const world = createWorld('dev-week', { ...DEFAULT_PROFILE, coachTier: 'elite' })
+      world.fundsCents = 500_000_00
+      world.coachOnEventWeeks = onEventWeeks
+      const rng = rngFromSeed(world.seed)
+      for (let i = 0; i < 40; i++) {
+        for (const e of world.season) {
+          if (world.entries.includes(e.id)) continue
+          if (world.week > e.deadlineWeek || e.deadlineWeek - world.week > 3) continue
+          if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
+          try {
+            enterEvent(world, e.id)
+          } catch {
+            /* gate refused */
+          }
+        }
+        tickWeek(world, rng)
+        if (world.pendingTournament) {
+          skipTournament(world)
+          closeTournament(world)
+        }
+      }
+      return SKILL_KEYS.reduce((a, k) => a + world.skills[k], 0) / SKILL_KEYS.length
+    }
+    expect(build(true)).toBeGreaterThan(build(false))
+  })
+
+  it('spends the SAME main-stream draws either way, 52 weeks (the frozen capture cannot see it)', () => {
+    const capture = (onEventWeeks: boolean) => {
+      const world = createWorld('toggle-rng', { ...DEFAULT_PROFILE, coachTier: 'high' })
+      world.fundsCents = 500_000_00
+      world.coachOnEventWeeks = onEventWeeks
+      const base = rngFromSeed(world.seed)
+      const draws: number[] = []
+      const rng = () => {
+        const v = base()
+        draws.push(v)
+        return v
+      }
+      for (let i = 0; i < 52; i++) {
+        for (const e of world.season) {
+          if (world.entries.includes(e.id)) continue
+          if (world.week > e.deadlineWeek || e.deadlineWeek - world.week > 3) continue
+          if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
+          try {
+            enterEvent(world, e.id)
+          } catch {
+            /* gate refused */
+          }
+        }
+        tickWeek(world, rng)
+        if (world.pendingTournament) {
+          skipTournament(world)
+          closeTournament(world)
+        }
+      }
+      return draws.join(',')
+    }
+    expect(capture(true)).toBe(capture(false))
+  })
+
+  it('prices the toggle over a SEASON, because only the week count differs', () => {
+    const world = createWorld('billing', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    const b = coachBilling(world)
+    expect(b.onEventWeeks).toBe(false)
+    expect(b.weeklyCents).toBeGreaterThan(0)
+    expect(b.seasonOnCents).toBeGreaterThanOrEqual(b.seasonOffCents)
+    // With nothing entered the two agree - the toggle costs exactly the weeks she plays.
+    expect(b.eventWeeks).toBe(0)
+    expect(b.seasonOffCents).toBe(b.seasonOnCents)
+  })
+
+  it('the command is idempotent, logs the change, and draws nothing', () => {
+    const world = createWorld('toggle-cmd', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    const before = world.events.length
+    setCoachOnEventWeeks(world, false) // already false
+    expect(world.events.length).toBe(before)
+    setCoachOnEventWeeks(world, true)
+    expect(world.coachOnEventWeeks).toBe(true)
+    expect(world.events.length).toBe(before + 1)
   })
 })
 

@@ -10,6 +10,7 @@ import {
   cancelVacation,
   bookPractice,
   hireCoach,
+  setCoachOnEventWeeks,
   cancelPractice,
   revealTournamentRound,
   skipTournament,
@@ -156,6 +157,12 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'hireCoach': {
       if (!world) throw new Error('No active career')
       hireCoach(world, msg.coachId)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'setCoachOnEventWeeks': {
+      if (!world) throw new Error('No active career')
+      setCoachOnEventWeeks(world, msg.on)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }

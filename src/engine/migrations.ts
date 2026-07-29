@@ -466,6 +466,20 @@ export function migrateSave(raw: unknown): WorldState {
     v = 23
   }
 
+  // v23 -> v24: DOES THE COACH COME TO TOURNAMENTS. A competition week stops being billed as a
+  // coaching week by default (owner, R4), and `coachOnEventWeeks` buys him for those weeks anyway.
+  //
+  // Back-filled FALSE, which is the new default and NOT a preservation of what the save was doing -
+  // an existing career was billed for every week, so this migration makes its coach cheaper and,
+  // on tournament weeks, absent. That is deliberate: the owner's framing is that competition weeks
+  // are automatically not coach weeks, so the automatic rule is what a migrated career should wake
+  // up under. The toggle is one tap away on the Coach Market for anyone who wants the old
+  // behaviour back, and it is the cheaper direction, which is the safe one to migrate into.
+  if (v === 23) {
+    save.coachOnEventWeeks = false
+    v = 24
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
