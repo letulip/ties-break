@@ -4,7 +4,7 @@
 // Type-only imports (erased at compile – no runtime dependency on the engine).
 import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
 import type { MatchPlayer, Surface } from '../engine/match/types'
-import type { AvatarEmotion, PortraitStage } from './avatarEmotion'
+import type { AvatarEmotion, PortraitEmotion, PortraitStage } from './avatarEmotion'
 import type { EventPreview } from '../engine/season/preview'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
@@ -617,8 +617,10 @@ export type FundsPressure = 'tight' | 'watchful' | 'ok'
  *  nothing they do not carry (the honesty pin in tests/diary.test.ts sweeps exactly that). */
 export interface DiaryFacts {
   week: number
-  /** the ONE face decision, computed engine-side (same inputs the paintings render) */
-  emotion: AvatarEmotion
+  /** the ONE face decision, computed engine-side (same inputs the paintings render).
+   *  `PortraitEmotion`, not `AvatarEmotion`: the decision can land on the painting-only `rehab`
+   *  (R14-1 – the layoff is a state and wears its own picture), and nothing renders a crop of it. */
+  emotion: PortraitEmotion
   /** a competitive result from THIS week is on her face (the emotion above is a result emotion) */
   resultFresh: boolean
   /** fresh result: she won her last match this week */
@@ -673,7 +675,10 @@ export interface MemoryCard {
   whenLabel: string
   /** the age band she was in at the milestone's week – what makes time felt */
   stage: PortraitStage
-  /** the painting emotion the memory shows (title → happy, injury → injury, …) */
+  /** the painting emotion the memory shows (title → happy, injury → injury, …).
+   *  Stays the NARROW union on purpose: a memory is a picture of a WEEK THAT HAPPENED, so every
+   *  value here is a moment face – `injury` is the week she went down, never the layoff after it
+   *  (R14-1). Nothing a milestone can map to is painting-only. */
   emotion: AvatarEmotion
   line: string
 }

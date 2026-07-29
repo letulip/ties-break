@@ -110,7 +110,13 @@ export function milestoneKey(m: Milestone): string {
 }
 
 /** The painting a memory of each milestone type shows. `happy` only for the title – the one
- *  moment that earned it; everything else stays in the composed half of the set. */
+ *  moment that earned it; everything else stays in the composed half of the set.
+ *
+ *  R14-1: `injury` STAYS here and is one of the two surfaces that can still request that painting.
+ *  A Memory is a picture of a week that happened – "ankle strain – her first injury" is the week
+ *  she went down, not the nine that followed it – so the moment face is the right one and the
+ *  layoff's `rehab` would be wrong. Typed on the NARROW union for that reason: nothing a milestone
+ *  maps to is painting-only, so the Memory polaroid keeps a crop it could fall back on. */
 export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   title: 'happy',
   final: 'serious',
@@ -234,7 +240,8 @@ export type DiarySurface = 'photo' | 'condition'
 /** What a line ASSERTS, as data the honesty pin can hold against the facts. Every tag is a claim
  *  the pin re-checks independently: a `won: true` line licensed on a loss is a failing test, not
  *  a matter of taste. `affect: 'positive'` is the spec's own concrete rule – unselectable while
- *  the emotion is sad, angry or injury. */
+ *  the emotion is sad, angry or rehab (R14-1 renamed the last one: the layoff face, formerly
+ *  `injury`). */
 export interface DiaryClaims {
   affect: 'positive' | 'neutral' | 'negative'
   /** asserts a fresh win this week */
@@ -253,6 +260,9 @@ export interface DiaryClaims {
   angry?: true
   /** asserts an active injury */
   injured?: true
+  /** R14-1: asserts the injury happened THIS week – the onset, not a week of the layoff. A
+   *  strictly stronger claim than `injured`, and the pin checks it separately. */
+  justHurt?: true
   /** asserts a worn body – unselectable at condition ≥ 80 */
   tired?: true
   /** asserts a genuinely fresh body – unselectable below 80 */
@@ -288,6 +298,18 @@ function short(tier: TierId | null): string {
 function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? '' : 's'}`
 }
+
+/** THE WEEK IT HAPPENED (R14-1). Nothing has been ticked off the layoff yet – `rollInjury` sets
+ *  `weeksRemaining = totalWeeks` at onset and decrements at the TOP of every later week, so this is
+ *  true on the onset week and on no other, a one-week injury included.
+ *
+ *  It exists because the split the owner asked for on her FACE has to hold in her PARENT'S VOICE
+ *  too: `idleEmotion` no longer returns `injury` at all, so a licence reading `emotion === 'injury'`
+ *  would be dead copy – but the lines it used to carry are not interchangeable. One of them is
+ *  about the day the ice pack came out; the others are about week six. Derived from facts the diary
+ *  already carries, so no new field and no schema question. */
+const justHurt = (f: DiaryFacts): boolean =>
+  f.injured !== null && f.injured.weeksRemaining === f.injured.totalWeeks
 
 /** An ordinary, healthy, event-free week – the licence behind every quiet line AND the silences. */
 const quiet = (f: DiaryFacts): boolean =>
@@ -434,24 +456,34 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'negative', lost: true, angry: true },
     license: (f) => f.emotion === 'angry',
   },
-  // --- photo card: injured (idle) --------------------------------------------------------------
+  // --- photo card: THE MOMENT she got hurt ------------------------------------------------------
+  // R14-1: these three lines all read `emotion === 'injury'` when that was one meaning wearing two
+  // hats. It is two weeks, and they are not the same week – so each line went to the meaning it was
+  // written for. The ice pack is NEWS: it appears on the counter the evening she comes home hurt,
+  // and by week six it is furniture. Licensed on the onset, which is also the week the blocking
+  // popup fires and the week the `injury` painting is shown – caption, picture and dialog all
+  // naming the same moment.
   {
     surface: 'photo',
     text: 'The ice pack lives on the kitchen counter now.',
-    claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    claims: { affect: 'negative', injured: true, justHurt: true },
+    license: justHurt,
   },
+  // --- photo card: the LAYOFF (idle rehab) ------------------------------------------------------
+  // ...and these two are about the weeks that follow. Watching from the bench and counting down are
+  // both things you can only do once the news has stopped being news – they need the layoff to have
+  // length, which is exactly what the rehab painting behind them shows.
   {
     surface: 'photo',
     text: 'She watches practice from the bench this week.',
     claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    license: (f) => f.emotion === 'rehab',
   },
   {
     surface: 'photo',
     text: 'She counts the weeks to her return out loud.',
     claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    license: (f) => f.emotion === 'rehab',
   },
   // --- photo card: worn down (idle tired) ------------------------------------------------------
   {

@@ -169,6 +169,9 @@ interface SweepResult {
 function makeFacts(input: {
   condition: number
   injured: boolean
+  /** R14-1: an injured week is either the ONSET (nothing ticked off yet) or a week of the layoff –
+   *  two different weeks with two different sets of licensed copy, so the sweep visits both. */
+  injuryOnset?: boolean
   result: SweepResult | null
   rankClimbed: boolean
   /** R13-2: the points her run awarded this week – the earned half of the climb licence */
@@ -180,7 +183,9 @@ function makeFacts(input: {
   titleThisWeek?: boolean
 }): DiaryFacts {
   const week = 10
-  const injured = input.injured ? { kind: 'ankle soreness', weeksRemaining: 2, totalWeeks: 3 } : null
+  const injured = input.injured
+    ? { kind: 'ankle soreness', weeksRemaining: input.injuryOnset ? 3 : 2, totalWeeks: 3 }
+    : null
   const lastResult = input.result ? { week, won: input.result.won, lostFinal: input.result.lostFinal } : null
   const lossStreak =
     input.losses > 0 && input.result && !input.result.won
@@ -232,21 +237,32 @@ function* sweepFacts(): Generator<DiaryFacts> {
   ]
   for (const condition of [0, 25, 39, 40, 59, 60, 79, 80, 100])
     for (const injuredFlag of [false, true])
-      for (const result of results)
-        for (const rankClimbed of [false, true])
-          // R13-2: the earned/passive split – 0 = a passive climb (rivals decayed), 30 = a real run
-          for (const runPoints of [0, 30])
-            for (const losses of [0, 2, 5])
-              for (const angerAt of losses === 5 ? [5, 99] : [99])
-                for (const scenario of scenarios)
-                  for (const fundsCents of [500_00, 50_000_00])
-                    yield makeFacts({ condition, injured: injuredFlag, result, rankClimbed, runPoints, losses, angerAt, scenario, fundsCents })
+      // R14-1: the onset week and a mid-layoff week license DIFFERENT copy, so both are swept.
+      // (`true` is a no-op when injuredFlag is false – makeFacts ignores it.)
+      for (const injuryOnset of injuredFlag ? [false, true] : [false])
+        for (const result of results)
+          for (const rankClimbed of [false, true])
+            // R13-2: the earned/passive split – 0 = a passive climb (rivals decayed), 30 = a real run
+            for (const runPoints of [0, 30])
+              for (const losses of [0, 2, 5])
+                for (const angerAt of losses === 5 ? [5, 99] : [99])
+                  for (const scenario of scenarios)
+                    for (const fundsCents of [500_00, 50_000_00])
+                      yield makeFacts({ condition, injured: injuredFlag, injuryOnset, result, rankClimbed, runPoints, losses, angerAt, scenario, fundsCents })
 }
 
 /** The pin's independent reading of what each claim means – a SECOND spelling on purpose, so a
  *  licence and its claims cannot be wrong together. Returns the violated claim, or null. */
 function claimViolation(c: DiaryClaims, f: DiaryFacts): string | null {
-  if (c.affect === 'positive' && (f.emotion === 'sad' || f.emotion === 'angry' || f.emotion === 'injury')) {
+  // ⚠ 'injury' -> 'rehab' AND 'injury' KEPT (R14-1). The spec's rule is "no positive line while she
+  // is hurt", and the face that means "she is hurt" for the whole layoff is `rehab` now. `injury`
+  // stays in the list as well: this is the pin's INDEPENDENT spelling, so it should hold for any
+  // week the engine could put that face on, including the two moment surfaces – dropping it would
+  // quietly narrow the guard instead of re-aiming it.
+  if (
+    c.affect === 'positive' &&
+    (f.emotion === 'sad' || f.emotion === 'angry' || f.emotion === 'rehab' || f.emotion === 'injury')
+  ) {
     return `positive affect on a ${f.emotion} week`
   }
   if (c.won && !(f.resultFresh && f.won)) return 'claims a fresh win'
@@ -258,6 +274,11 @@ function claimViolation(c: DiaryClaims, f: DiaryFacts): string | null {
   if (c.rankClimbed && !(f.rankClimbed && f.runPointsThisWeek > 0)) return 'claims an earned rank climb'
   if (c.angry && f.emotion !== 'angry') return 'claims the anger crossing'
   if (c.injured && f.injured === null) return 'claims an injury'
+  // R14-1: strictly stronger than `injured` – the line asserts the week it HAPPENED. Spelled here
+  // independently of engine/diary.ts's `justHurt`, like every other claim in this function.
+  if (c.justHurt && !(f.injured !== null && f.injured.weeksRemaining === f.injured.totalWeeks)) {
+    return 'claims the injury happened this week'
+  }
   if (c.tired && f.condition >= 80) return `claims tiredness at condition ${f.condition}`
   if (c.freshBody && f.condition < 80) return `claims freshness at condition ${f.condition}`
   if (c.travel && !f.travelled) return 'claims travel'
@@ -317,6 +338,41 @@ describe('THE HONESTY PIN – no selectable phrase contradicts its facts', () =>
     const goodLoss = makeFacts({ condition: 80, injured: false, result: { won: false, lostFinal: false }, rankClimbed: true, runPoints: 30, losses: 1, scenario: 'tournament' })
     expect(goodLoss.emotion).toBe('serious')
     expect(DIARY_POOL.filter((p) => p.license(goodLoss) && p.claims.rankClimbed).length).toBeGreaterThan(0)
+  })
+
+  // ===========================================================================
+  // R14-1 — injury is a MOMENT, rehab is the STATE, and the copy splits with the face.
+  // ===========================================================================
+  it('the layoff copy and the onset copy are different weeks, and neither leaks into the other', () => {
+    const onset = makeFacts({ condition: 60, injured: true, injuryOnset: true, result: null, rankClimbed: false, losses: 0, scenario: 'quiet' })
+    const week3 = makeFacts({ condition: 60, injured: true, injuryOnset: false, result: null, rankClimbed: false, losses: 0, scenario: 'quiet' })
+    // Both weeks wear the layoff face – the owner's rule: rehab on the main screen for the WHOLE
+    // layoff, the injury painting only in the popup at the moment.
+    expect(onset.emotion).toBe('rehab')
+    expect(week3.emotion).toBe('rehab')
+
+    const photo = (f: typeof onset) =>
+      DIARY_POOL.filter((p) => p.surface === 'photo' && p.license(f)).map((p) => p.text)
+    const onsetLines = photo(onset)
+    const layoffLines = photo(week3)
+
+    // The ice pack is NEWS: it appears the week it happened and not in week three.
+    expect(onsetLines).toContain('The ice pack lives on the kitchen counter now.')
+    expect(layoffLines).not.toContain('The ice pack lives on the kitchen counter now.')
+    // Watching from the bench and counting down need the layoff to have LENGTH.
+    expect(layoffLines).toContain('She watches practice from the bench this week.')
+    expect(layoffLines).toContain('She counts the weeks to her return out loud.')
+    // Every injured week still has something to say – the split must not create a silent week.
+    expect(onsetLines.length).toBeGreaterThan(0)
+    expect(layoffLines.length).toBeGreaterThan(0)
+
+    // ...and no line anywhere is still licensed on the retired meaning of `emotion === 'injury'`,
+    // which the emotion ladder can no longer produce – that would be dead copy.
+    const deadCopy = DIARY_POOL.filter((p) => {
+      const neverAgain = { ...week3, emotion: 'injury' as const }
+      return p.license(neverAgain) && !p.license(week3) && !p.license(onset)
+    })
+    expect(deadCopy.map((p) => p.text), 'lines reachable ONLY through the retired injury face').toEqual([])
   })
 
   it('player copy discipline: short dash only, no Cyrillic, in every line of every surface', () => {

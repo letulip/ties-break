@@ -3,7 +3,8 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
-  KID_EMOTIONS,
+  KID_PAINTING_EMOTIONS,
+  KID_CROP_EMOTIONS,
   FINALE_EMOTIONS,
   cropUrl,
   finaleUrl,
@@ -27,6 +28,14 @@ import type { PortraitStage } from '../../src/shared/avatarEmotion'
 // and TournamentFlow.vue / OnboardingWizard.vue now build their urls with the SAME functions this
 // file checks, instead of spelling the paths out themselves. These three "exists" tests are
 // therefore the complete enumeration of every portrait url the app can construct.
+//
+// ⚠ RE-AIMED by ui/art-rehab-sleepy: `KID_EMOTIONS` split into KID_PAINTING_EMOTIONS (8) and
+// KID_CROP_EMOTIONS (7), because the two art sets stopped being the same set – `rehab` ships as
+// five paintings and no crops (nothing in the app renders an emotion crop; see the note on
+// KID_PAINTING_EMOTIONS). The property these tests protect is UNCHANGED and is the reason the
+// split had to happen here too: every url the module can produce must resolve to a file on disk.
+// Looping the crops over the painting set would have asserted the existence of five files that are
+// deliberately not cut – i.e. it would have demanded the exact regression the split prevents.
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
 const PUBLIC = `${ROOT}public/`
@@ -38,9 +47,9 @@ function assetPath(url: string): string {
 }
 
 describe('preload urls resolve to files that actually ship', () => {
-  it('every Kid-screen painting exists (5 stages x 6 emotions)', () => {
+  it('every Kid-screen painting exists (5 stages x 8 emotions, rehab included)', () => {
     for (const stage of STAGES) {
-      for (const emotion of KID_EMOTIONS) {
+      for (const emotion of KID_PAINTING_EMOTIONS) {
         const p = assetPath(portraitUrl(stage, emotion))
         expect(existsSync(p), `missing painting ${p}`).toBe(true)
       }
@@ -58,19 +67,33 @@ describe('preload urls resolve to files that actually ship', () => {
 
   it('every 256px crop exists – no stage borrows another stage\'s face any more', () => {
     for (const stage of STAGES) {
-      for (const emotion of KID_EMOTIONS) {
+      for (const emotion of KID_CROP_EMOTIONS) {
         const p = assetPath(cropUrl(stage, emotion))
         expect(existsSync(p), `missing crop ${p}`).toBe(true)
       }
     }
   })
 
+  it('...and NO crop is warmed for a painting-only face – the 404 the split exists to prevent', () => {
+    // The other half of the same property, and the one that would have been lost by simply
+    // widening the loop above: `preloadKidArt` must ask for 8 paintings and 7 crops, never 8 and 8.
+    // Asserted on the URLS the module actually emits, so a future edit to either loop is caught.
+    resetPreloadCache()
+    const urls = preloadStage('teen')
+    const crops = urls.filter((u) => u.includes('/avatars/'))
+    expect(crops.some((u) => u.includes('rehab')), 'a rehab CROP was warmed – that file does not exist').toBe(false)
+    expect(new Set(crops).size).toBe(KID_CROP_EMOTIONS.length)
+    const paintings = new Set(urls.filter((u) => u.includes('/fem-euro-brunnet/')))
+    expect([...paintings].some((u) => u.endsWith('teen-rehab.webp')), 'the rehab PAINTING must be warmed').toBe(true)
+    expect(paintings.size).toBe(KID_PAINTING_EMOTIONS.length)
+  })
+
   it('no url the app can build still carries the dead "-fs8" suffix', () => {
     // pngquant-era Floyd-Steinberg name. It selected a second, INCOMPLETE copy of the art set,
     // which is exactly how the adult champion splash 404'd. Nothing may reintroduce it.
     const every = STAGES.flatMap((stage) => [
-      ...KID_EMOTIONS.map((e) => portraitUrl(stage, e)),
-      ...KID_EMOTIONS.map((e) => cropUrl(stage, e)),
+      ...KID_PAINTING_EMOTIONS.map((e) => portraitUrl(stage, e)),
+      ...KID_CROP_EMOTIONS.map((e) => cropUrl(stage, e)),
       ...FINALE_EMOTIONS.map((e) => finaleUrl(stage, e)),
     ])
     expect(every.filter((u) => u.includes('-fs8'))).toEqual([])
@@ -134,16 +157,19 @@ describe('preload urls resolve to files that actually ship', () => {
 })
 
 describe('preload budget', () => {
-  it('one age band is 14 urls: 7 paintings + 7 crops (the 3 finale frames are 3 of the 7)', () => {
+  it('one age band is 15 urls: 8 paintings + 7 crops (the 3 finale frames are 3 of the 8)', () => {
     // It was 15 before build/webp-only, when the finale asked for a duplicate `-fs8` copy of
     // happy/serious/sad. Deleting the duplicates made the finale share the Kid-screen paintings,
     // so a band cost 3 fewer requests and ~150 KiB less.
     // 12 -> 14 (fix/world-trio): `angry` became a REACHABLE outcome (a run of 4-6 straight losses),
-    // so its painting + crop joined KID_EMOTIONS. The budget rule is unchanged and is the reason
-    // the number moved at all – warm every face the decision can return, and only those.
+    // so its painting + crop joined the warmed set. The budget rule is unchanged and is the reason
+    // the number moved at all – warm every face a surface can request, and only those.
+    // ⚠ 14 -> 15 (ui/art-rehab-sleepy): `rehab` adds ONE url, not two. It is the first face whose
+    // painting exists and whose crop does not, so the band's cost is now asymmetric BY DESIGN –
+    // 16 would mean a crop had been warmed that cannot resolve.
     resetPreloadCache()
     const urls = preloadStage('young')
-    expect(new Set(urls).size).toBe(14)
+    expect(new Set(urls).size).toBe(15)
   })
 
   it('is idempotent – calling it every tick costs nothing after the first', () => {
@@ -158,7 +184,7 @@ describe('preload budget', () => {
   it('warms one band at a time – the whole 5-band set is never pulled at once', () => {
     resetPreloadCache()
     preloadForAge(14)
-    expect(warmedCount()).toBe(14)
+    expect(warmedCount()).toBe(15)
   })
 })
 
@@ -183,13 +209,13 @@ describe('stageDueNext – only warm the next band on the last year of the curre
     resetPreloadCache()
     preloadForAge(14)
     preloadNextStageIfDue(14)
-    expect(warmedCount()).toBe(14)
+    expect(warmedCount()).toBe(15)
   })
 
   it('the last year of a band pays for two', () => {
     resetPreloadCache()
     preloadForAge(16)
     preloadNextStageIfDue(16)
-    expect(warmedCount()).toBe(28)
+    expect(warmedCount()).toBe(30)
   })
 })

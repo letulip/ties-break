@@ -10,7 +10,9 @@
 //     Won → happy. Lost the FINAL → serious (runner-up = 2nd place = a GOOD result – the
 //     owner's R8-6a: never sad). Any earlier exit → sad, unless softened per R9-11.
 //  2. IDLE emotion – from the following week the face derives from her current state:
-//     injured → injury, condition < 40 → tired, < 60 → serious, else norm.
+//     injured → REHAB, condition < 40 → tired, < 60 → serious, else norm.
+//     (R14-1: the layoff wears the rehab painting for its whole length; `injury` is the face of
+//     the moment she went down and belongs to the popup that announces it. See idleEmotion.)
 //
 // Pure and UI-free so it can be unit-tested and consumed anywhere an avatar emotion is
 // picked (the Home card + the Kid screen's big portrait, via useKidEmotion). The app header is
@@ -20,9 +22,42 @@
 import type { TierId } from '../engine/season/types'
 import type { LossStreak, WorldEvent } from './protocol'
 
-/** Every face the game can put on her. `angry` became a real OUTCOME in fix/world-trio (owner's
- *  call: a run of losses); before that it was a member with art and no branch that returned it. */
+/** Every face there is a 256px CROP for – i.e. exactly what `avatarCropPath` below is TOTAL over.
+ *  `angry` became a real OUTCOME in fix/world-trio (owner's call: a run of losses); before that it
+ *  was a member with art and no branch that returned it. */
 export type AvatarEmotion = 'norm' | 'happy' | 'sad' | 'serious' | 'tired' | 'injury' | 'angry'
+
+/** Every face there is a full PAINTING for – the union the portrait surfaces (the Home hero, the
+ *  Kid screen, the Memory polaroid, the finale splash) accept.
+ *
+ *  WHY IT IS WIDER THAN `AvatarEmotion`, and why that asymmetry is the point (ui/art-rehab-sleepy).
+ *  `rehab` ships as five paintings and NO crops, deliberately: no surface in the app renders an
+ *  emotion crop at all. The header is age-only `norm` (F45-1) and so is Home's corner crop, and
+ *  `useKidEmotion().cropUrl` has no consumers. Cutting five crops nobody can request would be five
+ *  files in every user's download for nothing – so the TYPES carry the fact instead of a comment
+ *  carrying it: `avatarCropPath` stays total over the seven croppable faces and simply cannot be
+ *  handed a face that would 404, while the painting surfaces take the wider union. */
+export type PortraitEmotion = AvatarEmotion | 'rehab'
+
+/** The seven croppable faces, as a value (the type's own members – a test pins that they agree). */
+export const CROPPABLE_EMOTIONS: readonly AvatarEmotion[] = [
+  'norm',
+  'happy',
+  'sad',
+  'serious',
+  'tired',
+  'injury',
+  'angry',
+]
+
+/** The eight painted faces: the croppable seven plus the painting-only `rehab`. */
+export const PORTRAIT_EMOTIONS: readonly PortraitEmotion[] = [...CROPPABLE_EMOTIONS, 'rehab']
+
+/** Narrowing guard – true when a painted face also has a 256px crop. The ONE place a caller that
+ *  holds a `PortraitEmotion` is allowed to reach `avatarCropPath`. */
+export function hasCrop(emotion: PortraitEmotion): emotion is AvatarEmotion {
+  return (CROPPABLE_EMOTIONS as readonly string[]).includes(emotion)
+}
 
 /**
  * R11-2 – which recorded matches are allowed to change her FACE. The owner: «на practice match
@@ -87,7 +122,12 @@ export function portraitStage(ageYears: number): PortraitStage {
  *  cut; with the milf band reachable that clamp would have put a 17-year-old's face on a woman of
  *  31, so the missing crops were cut instead (all five bands × seven emotions now exist under
  *  public/avatars/). Kept as one pure function, shared with the emotion-free header (F45-1), so
- *  the two crop surfaces cannot drift apart. */
+ *  the two crop surfaces cannot drift apart.
+ *
+ *  TOTAL, AND THE TYPE IS WHAT MAKES IT TOTAL (ui/art-rehab-sleepy). The parameter is
+ *  `AvatarEmotion`, not `PortraitEmotion`, so the painting-only `rehab` cannot be passed at all –
+ *  a caller holding a painted face has to narrow through `hasCrop` first. Every string this can
+ *  return names a file that exists; there is no branch through which it can produce a 404. */
 export function avatarCropPath(stage: PortraitStage, emotion: AvatarEmotion): string {
   return `avatars/${stage}-${emotion}.webp`
 }
@@ -151,9 +191,31 @@ export interface AvatarEmotionInput {
   runPointsThisWeek?: number
 }
 
-/** State-aware idle emotion (R8-6b): what her face settles into once a result has decayed. */
-export function idleEmotion(injured: boolean, condition: number): AvatarEmotion {
-  if (injured) return 'injury'
+/**
+ * State-aware idle emotion (R8-6b): what her face settles into once a result has decayed.
+ *
+ * R14-1 – INJURY IS A MOMENT, REHAB IS THE STATE (owner, 29.07): «rehab – показываем на главном
+ * экране всегда вместо травмы (как сейчас) до момента восстановления, травму показываем ТОЛЬКО в
+ * момент самой травмы в попапе или еще где-то.»
+ *
+ * The same correction R12-16 made to `angry`, applied to the other end of the ladder. This branch
+ * used to return `injury` for the WHOLE layoff, so the painting of the moment she went down – the
+ * one that means "she is hurt, right now" – was also what Home showed in week six of a nine-week
+ * recovery. Those are two different pictures of two different weeks. The layoff is a STATE and it
+ * now has its own painting: she is on the bench with a brace on, working her way back. `injury`
+ * survives as a MOMENT-ONLY face with exactly two surfaces, neither of them this ladder:
+ *
+ *   - `components/InjuryStopDialog.vue` – the blocking popup on the week it happened (R9-21a);
+ *   - `MEMORY_EMOTION.injury` (engine/diary.ts) – the Memory card for her first injury, which is
+ *     a card ABOUT that week and shows the girl who was in it.
+ *
+ * So no branch of this function returns `injury` any more, and that is not an oversight: nothing
+ * about her ONGOING state is the moment of getting hurt. The idle ladder is otherwise untouched –
+ * it is still a fatigue ladder (rehab -> tired -> serious -> norm) and it still outranks nothing:
+ * a fresh result on an injured week still wins, exactly as before.
+ */
+export function idleEmotion(injured: boolean, condition: number): PortraitEmotion {
+  if (injured) return 'rehab'
   if (condition < 40) return 'tired'
   if (condition < 60) return 'serious'
   return 'norm'
@@ -233,7 +295,7 @@ function titleShields(week: number, lastTitle: LastKidTitle | null | undefined):
  * And it softens the FACE, never the count: a good loss still extends the losing streak
  * (computeLossStreak knows nothing of ranks), so the crossing still arrives on schedule.
  *
- * The idle layer is untouched. It is a FATIGUE ladder (injury -> tired -> serious -> norm) and
+ * The idle layer is untouched. It is a FATIGUE ladder (rehab -> tired -> serious -> norm) and
  * anger is not a point on it; a result emotion also decays at the next weekly tick, so her anger
  * lasts exactly the week she earned it and then her state takes over, like every other result.
  */
@@ -246,7 +308,7 @@ export function avatarEmotion({
   lossStreak,
   rankClimbed,
   runPointsThisWeek,
-}: AvatarEmotionInput): AvatarEmotion {
+}: AvatarEmotionInput): PortraitEmotion {
   if (lastResult && lastResult.week === week) {
     if (lastResult.won) return 'happy'
     if (lastResult.lostFinal) return 'serious'
