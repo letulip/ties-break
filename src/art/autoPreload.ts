@@ -50,8 +50,9 @@ export function startArtPreloader(): void {
   // has already chosen which of the four this week shows, so exactly one file is fetched, at the
   // weekly tick, before the tab that renders it is opened. Null on every other week and free.
   watch(
-    () => game.snapshot?.diary.facts.travelHomeScene,
-    (scene) => preloadTravelHomeArt(scene),
+    () =>
+      [game.snapshot?.diary.facts.travelHomeScene, game.snapshot?.diary.facts.travelHomeMood] as const,
+    ([scene, mood]) => preloadTravelHomeArt(scene, mood),
     { immediate: true },
   )
 }

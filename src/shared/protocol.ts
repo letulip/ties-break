@@ -675,6 +675,11 @@ export interface DiaryFacts {
   /** the scene of the journey home, on a week she came back from an away tournament; null
    *  otherwise. See engine/diary.ts travelHomeSceneFor for the rule and the draw. */
   travelHomeScene: TravelHomeScene | null
+  /** HOW she came home, on exactly the weeks `travelHomeScene` is non-null (null on every other
+   *  week, and the two are null together by construction). The owner's rule, read off the tournament
+   *  she is coming back FROM and the state she is in: reached the final → happy or sleepy, fell
+   *  short → sad, or sleepy if she was worn out anyway. See engine/diary.ts travelHomeMoodFor. */
+  travelHomeMood: TravelHomeMood | null
 }
 
 /** THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на
@@ -728,6 +733,13 @@ export interface DiarySnapshot {
   greeting: string
   /** the one WHY line beside the condition bar (D1) – never empty */
   conditionNote: string
+  /** THE NOTE ON THE SCRAP UNDER THE JOURNEY PAINTING (screen D). Non-null on exactly the weeks
+   *  `facts.travelHomeScene` is non-null, and never null on those – the picture is of a journey and
+   *  a picture of a journey wants a caption, the same argument that keeps `conditionNote` from being
+   *  silent. Written in the PARENT's voice, about her, in the third person; every line is licensed
+   *  by facts of the trip she is coming back from, so it can never describe a final she did not
+   *  reach. See engine/diary.ts TRAVEL_NOTES. */
+  travelNote: string | null
   /** the Memory card to show this week, or null */
   memory: MemoryCard | null
 }

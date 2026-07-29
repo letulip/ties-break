@@ -41,7 +41,10 @@ describe('R13-1 — middle parent income 425/wk', () => {
  *  inputs. Base = a fresh regional first-round loss on a healthy, solvent, travelled week. */
 function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
   const f: DiaryFacts = {
-    travelHomeScene: null, // R14-2 – not a copy licence, so the loss suite holds it null
+    // R14-2 – not a copy licence, so the loss suite holds it null. ⚠ `travelHomeMood` joined it with
+    // ui/travel-set and is null on the same weeks, so the pair still says "she came home from nothing".
+    travelHomeScene: null,
+    travelHomeMood: null,
     week: 10,
     emotion: 'sad', // recomputed below
     resultFresh: true,
@@ -279,7 +282,9 @@ describe('R13-7a — zero-price vacation at negative funds', () => {
 // ---------------------------------------------------------------------------
 describe('R13-10 — the ordinary-week pool', () => {
   const quietFacts: DiaryFacts = {
-    travelHomeScene: null, // R14-2 – a quiet week is a week she went nowhere
+    // R14-2 – a quiet week is a week she went nowhere. ⚠ The mood is null with the scene (ui/travel-set).
+    travelHomeScene: null,
+    travelHomeMood: null,
     week: 10,
     emotion: 'norm',
     resultFresh: false,

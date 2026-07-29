@@ -1,6 +1,14 @@
 // R14-2 — THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры
 // в конце на экране Week story как в макете»).
 //
+// ⚠ IT WAS FOUR PAINTINGS AND ONE FACT WHEN THIS FILE WAS WRITTEN. The owner's second art drop the
+// same day made it TWELVE – three moods of the same four journeys – and asked for words to go under
+// them, so the feature is now three facts (`travelHomeScene`, `travelHomeMood`,
+// `DiarySnapshot.travelNote`) and this file has a second half. Nothing in the first half was
+// relaxed: the three claims below are the original three and are asserted exactly as they were,
+// over a set that grew. The new suites start at "ui/travel-set" and pin the mood rule and the note's
+// own honesty.
+//
 // Four paintings of her asleep on the way back – airport / plane / bus / car – and one engine fact
 // that says which, `DiaryFacts.travelHomeScene`. This suite pins the three things that could each
 // silently make the feature wrong or invisible:
@@ -18,7 +26,17 @@
 //      than assumed: this file runs the same career with and without the fact being read.
 import { describe, it, expect } from 'vitest'
 import { existsSync } from 'node:fs'
-import { travelHomeSceneFor, assembleDiaryFacts, type DiaryWorldView } from '../src/engine/diary'
+import {
+  travelHomeSceneFor,
+  travelHomeMoodFor,
+  travelHomeFactsFor,
+  travelNoteFor,
+  assembleDiaryFacts,
+  buildDiarySnapshot,
+  TRAVEL_NOTES,
+  type DiaryWorldView,
+  type TravelHomeFacts,
+} from '../src/engine/diary'
 import {
   closeTournament,
   createWorld,
@@ -33,11 +51,19 @@ import { preloadTravelHomeArt, resetPreloadCache, travelHomeUrl, warmedCount } f
 import { rngFromSeed } from '../src/engine/rng'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
-import type { TravelHomeScene, WorldEvent, WorldMatch } from '../src/shared/protocol'
+import type {
+  ConditionBand,
+  Milestone,
+  TravelHomeMood,
+  TravelHomeScene,
+  WorldEvent,
+  WorldMatch,
+} from '../src/shared/protocol'
 
 const AIR: TravelHomeScene[] = ['airport', 'plane']
 const ROAD: TravelHomeScene[] = ['bus', 'car']
 const ALL_SCENES: TravelHomeScene[] = [...AIR, ...ROAD]
+const ALL_MOODS: TravelHomeMood[] = ['sleepy', 'happy', 'sad']
 
 let nextId = 1
 /** One competitive match of hers at `tier`, in `week` – the event shape the walk reads. */
@@ -236,17 +262,31 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     expect(scenes.size, 'more than one picture over a career').toBeGreaterThan(1)
   })
 
-  it('the four scenes are on disk and the builder finds them – one file per journey, no bands', () => {
-    for (const scene of ALL_SCENES) {
-      const url = travelHomeUrl(scene)
-      expect(existsSync(new URL(`../public/${url.slice(import.meta.env.BASE_URL.length)}`, import.meta.url)), url).toBe(true)
+  // ⚠ RE-AIMED, NOT WEAKENED (ui/travel-set). This used to sweep FOUR files, because the art set was
+  // four – `-travel-sleepy-{scene}`, one picture per journey. The owner's 29.07 drop made it TWELVE,
+  // three moods of each journey, and `travelHomeUrl` grew a `mood` argument (defaulted to `sleepy`,
+  // so the old one-argument call still spells the old filename). The protected facts are both
+  // unchanged and both still asserted, over the bigger set: every picture the engine can choose is
+  // on disk, and exactly ONE file is warmed per week. What moved is the size of "every picture" –
+  // which is the whole point of the mood landing, so a four-file sweep would now be passing over a
+  // third of the art and would not notice a missing `-travel-happy-bus`.
+  it('all TWELVE journeys are on disk and the builder finds them – no bands, one file per week', () => {
+    for (const mood of ALL_MOODS) {
+      for (const scene of ALL_SCENES) {
+        const url = travelHomeUrl(scene, mood)
+        expect(existsSync(new URL(`../public/${url.slice(import.meta.env.BASE_URL.length)}`, import.meta.url)), url).toBe(true)
+      }
     }
-    // ...and only the week's OWN scene is warmed – never the other three
+    // the default is still the original set, so a caller that predates the mood spells a real file
+    expect(travelHomeUrl('car')).toBe(travelHomeUrl('car', 'sleepy'))
+    // ...and only the week's OWN picture is warmed – never a second mood, never a second scene
     resetPreloadCache()
-    expect(preloadTravelHomeArt('plane')).toEqual([travelHomeUrl('plane')])
+    expect(preloadTravelHomeArt('plane', 'happy')).toEqual([travelHomeUrl('plane', 'happy')])
     expect(warmedCount()).toBe(1)
-    expect(preloadTravelHomeArt(null), 'an ordinary week costs nothing').toEqual([])
+    expect(preloadTravelHomeArt(null, null), 'an ordinary week costs nothing').toEqual([])
     expect(warmedCount()).toBe(1)
+    // and the URL it warms is the one the card renders: same builder, same twelve names
+    expect(preloadTravelHomeArt('bus', 'sad')).toEqual([`${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-travel-sad-bus.webp`])
   })
 
   // ⚠ THE FROZEN CAPTURE (41550 draws / hash e6b0c709). tests/condition.test.ts re-derives it from
@@ -268,8 +308,13 @@ describe('R14-2 — on the facts object, and on a real career', () => {
         tickWeek(world, rng)
         if (snapshotEveryWeek) {
           const snap = toSnapshot(world)
-          // touch the new fact, so a lazy getter could not hide the draw
+          // touch the new facts, so a lazy getter could not hide a draw. ⚠ THREE now, not one:
+          // ui/travel-set added the mood's coin (`seed:travelmood:<week>`) and the note's selection
+          // (`seed:travelnote:<week>`), and each is a NEW rngFromSeed call inside the snapshot path –
+          // exactly the shape of change this test exists to catch. Same claim, wider surface.
           void snap.diary.facts.travelHomeScene
+          void snap.diary.facts.travelHomeMood
+          void snap.diary.travelNote
         }
       }
       return draws
@@ -307,5 +352,372 @@ describe('R14-2 — on the facts object, and on a real career', () => {
         `week ${world.week} of a local-only career`,
       ).toBeNull()
     }
+  })
+})
+
+// =================================================================================================
+// ui/travel-set — THE MOOD, and THE NOTE THE PARENT WROTE
+//
+// The owner's 29.07 art drop turned four paintings into twelve and named the rule verbatim:
+//   «если дошла до финала можем рандомно показывать happy/sleepy разные, если не дошла - sad или
+//    sleepy если сильно устала при этом»
+// ...and asked for the words to go with them:
+//   «про неё родительской рукой – так и делай, надо прям красиво, жизненно и уютно сделать. Если
+//    травму получила - поддержать как-то словами на записке, если проиграла - тоже».
+//
+// Three things can each make this silently wrong, and each gets a pin below:
+//   1. THE MOOD picking off something other than the two facts the owner named (the finish, and how
+//      worn out she is), or moving the frozen MAIN capture on its way.
+//   2. A NOTE THAT LIES – a line about a final on a week she went out in the first round. This is
+//      the failure that would kill the effect outright, so the honesty pin sweeps the whole licence
+//      space and re-checks every claim independently, exactly as tests/diary.test.ts does for
+//      DIARY_POOL.
+//   3. A NOTE THAT DOES NOT ARRIVE, or arrives in the wrong voice. The picture is of a journey and
+//      the scrap under it is its caption, so silence there is a missing string rather than a quiet
+//      week – and a line in the coach's register would put two identical voices on one card.
+// =================================================================================================
+
+/** One coherent away RESULT. `firstRound` is "one match, and she lost it", which is what the engine
+ *  reads off the match feed rather than off the draw size. */
+const RESULTS = [
+  { finishIdx: 0, matchesWon: 4, firstRound: false, name: 'title' },
+  { finishIdx: 1, matchesWon: 3, firstRound: false, name: 'runner-up' },
+  { finishIdx: 2, matchesWon: 2, firstRound: false, name: 'semi-final' },
+  { finishIdx: 3, matchesWon: 1, firstRound: false, name: 'quarter-final' },
+  { finishIdx: 4, matchesWon: 0, firstRound: true, name: 'first round (16 draw)' },
+  { finishIdx: 5, matchesWon: 0, firstRound: true, name: 'first round (32 draw)' },
+  // defensive: a summary that never arrived. The match feed still answers everything that matters.
+  { finishIdx: null as number | null, matchesWon: 0, firstRound: true, name: 'no summary' },
+] as const
+
+const BANDS: ConditionBand[] = ['fresh', 'ok', 'worn', 'drained']
+
+/** Every journey the engine can hand the note pool. The mood is swept over all THREE rather than
+ *  taken from the rule, which makes the honesty pin strictly stronger than the engine it guards. */
+function* sweepTravel(): Generator<TravelHomeFacts> {
+  for (const result of RESULTS) {
+    for (const abroad of [true, false]) {
+      for (const scene of abroad ? AIR : ROAD) {
+        for (const mood of ALL_MOODS) {
+          for (const band of BANDS) {
+            for (const injured of [true, false]) {
+              for (const injuryWeeks of injured ? [1, 3, 4, 6, 12] : [0])
+              for (const firstAbroad of abroad ? [true, false] : [false]) {
+                yield {
+                  week: 20,
+                  awayWeek: 19,
+                  scene,
+                  mood,
+                  tier: abroad ? 'j30' : 'regional',
+                  abroad,
+                  finishIdx: result.finishIdx,
+                  wonTitle: result.finishIdx === 0,
+                  lostFinal: result.finishIdx === 1,
+                  reachedFinal: result.finishIdx === 0 || result.finishIdx === 1,
+                  matchesWon: result.matchesWon,
+                  firstRound: result.firstRound,
+                  firstAbroad,
+                  injured,
+                  // 0 when healthy; otherwise sweep a niggle AND a season-ender, because the injury
+                  // pool splits on the length of the layoff and a one-week band would leave half of
+                  // it unswept.
+                  injuryWeeks: injured ? injuryWeeks : 0,
+                  conditionBand: band,
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () => {
+  const mood = (reachedFinal: boolean, conditionBand: ConditionBand, week = 20, seed = 's') =>
+    travelHomeMoodFor({ reachedFinal, conditionBand, seed, week })
+
+  it('reached the final: happy or sleepy, and BOTH are reachable', () => {
+    const seen = new Set<TravelHomeMood>()
+    for (let w = 1; w < 200; w++) {
+      for (const band of BANDS) {
+        const m = mood(true, band, w)
+        expect(['happy', 'sleepy'], `w${w} ${band}`).toContain(m)
+        seen.add(m)
+      }
+    }
+    expect([...seen].sort(), 'a constant wearing a draw\'s clothes').toEqual(['happy', 'sleepy'])
+  })
+
+  it('fell short: sad – unless she was worn out anyway, and then sleepy', () => {
+    // «сильно устала» is the BOTTOM rung (below 40), the one the condition note calls running on
+    // empty. `worn` (40-59) is tired; it is not that.
+    for (let w = 1; w < 60; w++) {
+      expect(mood(false, 'drained', w), `w${w}`).toBe('sleepy')
+      for (const band of ['fresh', 'ok', 'worn'] as ConditionBand[]) {
+        expect(mood(false, band, w), `w${w} ${band}`).toBe('sad')
+      }
+    }
+  })
+
+  it('DETERMINISTIC: the same seed and week answer the same mood, twice and forever', () => {
+    const first = mood(true, 'ok', 31, 'career-a')
+    for (let i = 0; i < 50; i++) expect(mood(true, 'ok', 31, 'career-a')).toBe(first)
+    const bySeed = new Set(Array.from({ length: 40 }, (_, i) => mood(true, 'ok', 31, `career-${i}`)))
+    expect(bySeed.size, 'the coin has to be a coin').toBe(2)
+  })
+
+  it('the facts carry the mood, and it is null on exactly the weeks the scene is', () => {
+    const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
+      seed: 's', week: 11, kidId: KID_ID, startAgeYears: 14, condition: 80, fundsCents: 100_000_00,
+      injury: null, events: [], lossStreak: null, kidRank: 50, prevKidRank: 50,
+      pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false, ...over,
+    })
+    const away = assembleDiaryFacts(view({ events: trip(10, 'national') }))
+    expect(away.travelHomeScene).not.toBeNull()
+    expect(away.travelHomeMood).not.toBeNull()
+    const ordinary = assembleDiaryFacts(view({}))
+    expect(ordinary.travelHomeScene).toBeNull()
+    expect(ordinary.travelHomeMood).toBeNull()
+  })
+})
+
+describe('ui/travel-set — the note may not lie', () => {
+  /** Every claim, re-derived from the facts INDEPENDENTLY of the licence that let the line through.
+   *  A line whose licence and whose claims disagree is a failing test, not a matter of taste. */
+  const HOLDS: Record<string, (t: TravelHomeFacts) => boolean> = {
+    title: (t) => t.wonTitle,
+    runnerUp: (t) => t.lostFinal,
+    lost: (t) => !t.wonTitle,
+    wonMatches: (t) => t.matchesWon > 0,
+    firstRound: (t) => t.firstRound,
+    injured: (t) => t.injured,
+    tired: (t) => t.conditionBand === 'drained',
+    abroad: (t) => t.abroad,
+    firstAbroad: (t) => t.firstAbroad,
+    road: (t) => !t.abroad,
+    // the sleepy paintings are the only ones that show her asleep; happy and sad are her awake
+    slept: (t) => t.mood === 'sleepy',
+  }
+
+  it('every licensed line asserts only what the trip actually carries', () => {
+    let checked = 0
+    for (const t of sweepTravel()) {
+      for (const note of TRAVEL_NOTES) {
+        if (!note.license(t)) continue
+        for (const [claim, value] of Object.entries(note.claims)) {
+          if (value !== true) continue
+          expect(
+            HOLDS[claim](t),
+            `"${note.text}" claims ${claim} on: ${JSON.stringify({
+              finish: t.finishIdx, won: t.matchesWon, first: t.firstRound, mood: t.mood,
+              abroad: t.abroad, firstAbroad: t.firstAbroad, injured: t.injured, band: t.conditionBand,
+            })}`,
+          ).toBe(true)
+          checked++
+        }
+      }
+    }
+    expect(checked, 'the sweep has to actually reach the pool').toBeGreaterThan(500)
+  })
+
+  it('an injured week is not offered a line about chips', () => {
+    // The owner asked for support on the note when she is hurt. A pool that also licenses "she won
+    // it and asked to stop for chips" on that week would draw it three times in four, so the injury
+    // TAKES the note: nothing else is licensed at all.
+    for (const t of sweepTravel()) {
+      if (!t.injured) continue
+      const licensed = TRAVEL_NOTES.filter((n) => n.license(t))
+      expect(licensed.length, 'an injured week must still have words').toBeGreaterThan(0)
+      for (const n of licensed) expect(n.claims.injured, `"${n.text}" on an injured week`).toBe(true)
+    }
+  })
+
+  it('every journey the engine can produce has something to say', () => {
+    // The scrap is the CAPTION of a painting the player is looking at, so silence here is a missing
+    // string – unlike the photo caption, where a quiet week saying nothing is the point.
+    for (const t of sweepTravel()) {
+      expect(
+        TRAVEL_NOTES.some((n) => n.license(t)),
+        `nothing licensed for ${JSON.stringify({ finish: t.finishIdx, mood: t.mood, abroad: t.abroad, injured: t.injured, first: t.firstAbroad, band: t.conditionBand })}`,
+      ).toBe(true)
+    }
+  })
+
+  it('DETERMINISTIC, and stable for the whole week', () => {
+    const t = [...sweepTravel()][17]
+    const first = travelNoteFor(t, 'career-a')
+    for (let i = 0; i < 40; i++) expect(travelNoteFor(t, 'career-a')).toBe(first)
+    const bySeed = new Set(Array.from({ length: 60 }, (_, i) => travelNoteFor(t, `career-${i}`)))
+    expect(bySeed.size, 'a pool of one wearing a draw\'s clothes').toBeGreaterThan(1)
+  })
+})
+
+describe('ui/travel-set — the note is the PARENT, and it fits on a scrap of paper', () => {
+  const texts = TRAVEL_NOTES.map((n) => n.text)
+
+  it('fits on a scrap: 80 characters, which is two lines of handwriting on a phone', () => {
+    // The card already has a "Next goal" scrap and a Training tile on it. A parent's note that runs
+    // to four lines stops being a thing tucked under a photograph and becomes the page's main text.
+    for (const t of texts) expect(t.length, t).toBeLessThanOrEqual(80)
+  })
+
+  it('is written ABOUT her, by somebody who loves her – never to the player, never a scoreboard', () => {
+    for (const t of texts) {
+      expect(/\byou\b|\byour\b/i.test(t), `second person in "${t}"`).toBe(false)
+      // The parent narrates; they never appear as "I". "We" is the family and is in voice.
+      expect(/\bI\b|\bmy\b/.test(t), `first person singular in "${t}"`).toBe(false)
+      // Her name is ROLLED at onboarding (44 x 210 pools). A note that used it would read like a
+      // certificate, and the fallback profile's name would be wrong for almost every career.
+      expect(/Vera|Martin/.test(t), `a name in "${t}"`).toBe(false)
+    }
+  })
+
+  it('speaks the app\'s player-facing English: short dash only, no Cyrillic', () => {
+    for (const t of texts) {
+      expect(t.includes('—'), `long dash in "${t}"`).toBe(false)
+      expect(/[Ѐ-ӿ]/.test(t), `Cyrillic in "${t}"`).toBe(false)
+    }
+  })
+
+  it('does not congratulate a loss, and does not talk like the coach', () => {
+    // Two register tests the owner's brief asks for in words. A loss note NOTICES her; it does not
+    // grade her. And engine/radar.ts already writes on this screen in the coach's voice, so anything
+    // that reads as a coaching assessment would put the same person on the card twice.
+    const CONSOLATION = /\bwell played\b|\bgood effort\b|\bproud of\b|\bnext time\b|\bunlucky\b|\bso close\b/i
+    const COACH = /\bwe (?:build|fix|work on)\b|\bthe job\b|\bher weapon\b|\bthis year\b|\bat her age\b/i
+    for (const t of texts) {
+      expect(CONSOLATION.test(t), `consolation prize in "${t}"`).toBe(false)
+      expect(COACH.test(t), `coach's register in "${t}"`).toBe(false)
+    }
+  })
+
+  it('no two lines are the same line', () => {
+    expect(new Set(texts).size).toBe(texts.length)
+  })
+})
+
+describe('ui/travel-set — on a real career', () => {
+  it('the note arrives on exactly the weeks the journey painting does, and never elsewhere', () => {
+    const world = createWorld('travel-home-1')
+    const rng = rngFromSeed(world.seed)
+    let withNote = 0
+    for (let i = 0; i < 120; i++) {
+      for (const e of world.season) {
+        if (e.week > world.week && world.week <= e.deadlineWeek && !world.entries.includes(e.id)) {
+          try { enterEvent(world, e.id) } catch { /* blocked entries are not this test's business */ }
+        }
+      }
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      const snap = toSnapshot(world)
+      const hasScene = snap.diary.facts.travelHomeScene !== null
+      expect(snap.diary.travelNote !== null, `week ${snap.week}`).toBe(hasScene)
+      expect(snap.diary.facts.travelHomeMood !== null, `week ${snap.week}`).toBe(hasScene)
+      if (hasScene) {
+        withNote++
+        // the note is one of the pool's own lines, never a stitched-together string
+        expect(TRAVEL_NOTES.map((n) => n.text)).toContain(snap.diary.travelNote)
+      }
+    }
+    expect(withNote, 'two seasons must come home from an away trip more than once').toBeGreaterThan(3)
+  })
+
+  it('the facts reading agrees with the snapshot, week for week', () => {
+    const world = createWorld('career-a')
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 80; i++) {
+      for (const e of world.season) {
+        if (e.week > world.week && world.week <= e.deadlineWeek && !world.entries.includes(e.id)) {
+          try { enterEvent(world, e.id) } catch { /* not this test's business */ }
+        }
+      }
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      const snap = toSnapshot(world)
+      const travel = travelHomeFactsFor({
+        events: world.events,
+        milestones: world.milestones as readonly Milestone[],
+        week: world.week,
+        seed: world.seed,
+        kidId: KID_ID,
+        condition: world.condition,
+        injury: world.injury,
+        pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
+      })
+      expect(snap.diary.facts.travelHomeMood).toBe(travel?.mood ?? null)
+      expect(snap.diary.travelNote).toBe(travel ? travelNoteFor(travel, world.seed) : null)
+      if (travel) {
+        // the mood the picture shows is the rule, re-derived from the two facts it is allowed to see
+        expect(travel.mood).toBe(
+          travelHomeMoodFor({
+            reachedFinal: travel.reachedFinal,
+            conditionBand: travel.conditionBand,
+            seed: world.seed,
+            week: world.week,
+          }),
+        )
+      }
+    }
+  })
+
+  // ⚠ THE PIN FOR THE BUG A PLAYTEST FOUND AND THE SWEEP COULD NOT. `firstAbroad` was read off the
+  // milestone ledger alone, and the `international` milestone is captured when the ENTRY FORM GOES
+  // IN – so from the week she signed up for her first J30, a Regional Championship she DROVE to came
+  // home under "Her first one in another country". The licence-space sweep above could never see it:
+  // it generates `firstAbroad` only where `abroad` is true, because that is what the fact means. So
+  // the invariant is asserted where the fact is BUILT, against a career that really goes abroad.
+  it('her first trip abroad is a trip abroad, and it happens once', () => {
+    const world = createWorld('ace-parent-1')
+    const rng = rngFromSeed(world.seed)
+    let firsts = 0
+    let abroadTrips = 0
+    for (let i = 0; i < 130; i++) {
+      for (const e of world.season) {
+        if (e.week > world.week && world.week <= e.deadlineWeek && !world.entries.includes(e.id)) {
+          try { enterEvent(world, e.id) } catch { /* not this test's business */ }
+        }
+      }
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      const travel = travelHomeFactsFor({
+        events: world.events,
+        milestones: world.milestones as readonly Milestone[],
+        week: world.week,
+        seed: world.seed,
+        kidId: KID_ID,
+        condition: world.condition,
+        injury: world.injury,
+        pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
+      })
+      if (!travel) continue
+      if (travel.abroad) abroadTrips++
+      if (!travel.firstAbroad) continue
+      firsts++
+      expect(travel.abroad, `week ${world.week}: a ${travel.tier} trip claimed to be her first abroad`).toBe(true)
+      expect(['j30', 'j60', 'j300'], `week ${world.week}`).toContain(travel.tier)
+      expect(firsts, 'a career has one first trip abroad').toBe(1)
+    }
+    expect(abroadTrips, 'this career has to actually leave the country').toBeGreaterThan(3)
+    expect(firsts, 'and the moment has to be reachable at all').toBe(1)
+  })
+
+  it('buildDiarySnapshot is field-for-field deterministic with the journey on it', () => {
+    const view: DiaryWorldView = {
+      seed: 's', week: 11, kidId: KID_ID, startAgeYears: 14, condition: 30, fundsCents: 100_000_00,
+      injury: null, events: trip(10, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
+      pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
+    }
+    expect(buildDiarySnapshot(view)).toEqual(buildDiarySnapshot(view))
+    expect(buildDiarySnapshot(view).travelNote).not.toBeNull()
   })
 })

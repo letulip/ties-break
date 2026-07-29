@@ -224,10 +224,18 @@ function makeFacts(input: {
     vacationWeek: s === 'vacation',
     fundsPressure: fundsPressureOf(input.fundsCents ?? 50_000_00),
     freshMilestone: null,
-    // R14-2: the sweep is about the COPY pool, and no phrase is licensed on the journey home
-    // (it is a picture, not a line) – so the fixture holds it null and the dedicated suite below
-    // exercises the rule.
+    // R14-2: this sweep is about the DIARY_POOL, and no phrase in it is licensed on the journey home
+    // – so the fixture holds it null and tests/travel-home.test.ts exercises the rule.
+    //
+    // ⚠ THE JOURNEY GREW A SECOND FIELD AND A COPY POOL OF ITS OWN (ui/travel-set): the mood, and
+    // `DiarySnapshot.travelNote`. The protected fact this sweep guards is UNCHANGED – it is that no
+    // line in DIARY_POOL may assert something the week's facts do not carry, and the journey-home
+    // note is not in DIARY_POOL. It lives in TRAVEL_NOTES with its own licence space and its own
+    // honesty pin, in tests/travel-home.test.ts, for the same reason: its facts are the AWAY week's,
+    // which this fixture does not model at all. Both fields stay null here, together, exactly as the
+    // engine builds them on a week she went nowhere.
     travelHomeScene: null,
+    travelHomeMood: null,
   }
 }
 

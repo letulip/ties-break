@@ -122,22 +122,30 @@ export function cropUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
 // that do not exist. `TravelHomeScene` (shared/protocol) is the mode union, and the ENGINE picks
 // both mode and mood – see engine/diary.ts.
 
-/** Painting URL for one journey-home scene. `mood` defaults to the original sleepy set, so a caller
- *  that predates the three-mood art keeps working while the selection is being wired. */
+/** Painting URL for one journey-home picture. `mood` defaults to the original sleepy set, so a
+ *  caller that predates the three-mood art keeps working. */
 export function travelHomeUrl(scene: TravelHomeScene, mood: TravelHomeMood = 'sleepy'): string {
   return `${base()}${ART_DIR}${NAME}-travel-${mood}-${scene}.webp`
 }
 
-/** Warm the ONE scene this week selected, and only that one.
+/** Warm the ONE picture this week selected, and only that one.
  *
  *  Same rule as everywhere else in this module – never preload what cannot be shown – applied to a
- *  set where the answer is known in advance: the engine has already decided which of the four the
- *  week shows, so warming the other three would be three wasted files (~29 KB each) on a week that
- *  can only ever render one. Called from art/autoPreload.ts on the snapshot's own fact, which lands
- *  at the weekly tick – i.e. before the player opens the tab that renders it. */
-export function preloadTravelHomeArt(scene: TravelHomeScene | null | undefined): string[] {
+ *  set where the answer is known in advance: the engine has already decided which of the twelve the
+ *  week shows, so warming any other would be wasted files (~29 KB each) on a week that can only ever
+ *  render one. Called from art/autoPreload.ts on the snapshot's own facts, which land at the weekly
+ *  tick – i.e. before the player opens the tab that renders it.
+ *
+ *  ⚠ THE MOOD IS PART OF THE ANSWER since the art became a group of twelve: warming
+ *  `-travel-sleepy-plane` on a week the engine chose `happy` would fetch a file the card never asks
+ *  for AND leave the one it does ask for cold, which is worse than not preloading at all. Scene and
+ *  mood are null together on the snapshot (engine/diary.ts), so one guard covers both. */
+export function preloadTravelHomeArt(
+  scene: TravelHomeScene | null | undefined,
+  mood: TravelHomeMood | null | undefined,
+): string[] {
   if (!scene) return []
-  const url = travelHomeUrl(scene)
+  const url = travelHomeUrl(scene, mood ?? 'sleepy')
   warm(url)
   return [url]
 }
