@@ -135,8 +135,15 @@ describe('R12-8b — a red "injury" chip on every card the layoff covers', () =>
   })
 
   it('the chip is the availability-chip idiom: 6px, not the capsule, not a circle', () => {
+    // ⚠ RE-AIMED by the radius ladder (owner, 29.07: even values, 2px steps). The VALUE did not
+    // move — the owner's 6px was already even and is now the ladder's chip rung — only its
+    // spelling did, from a bare `6px` to `var(--radius-chip)`. Resolved off :root so this still
+    // asserts the number and not merely "some token", which would pass on --radius-pill and let
+    // the exact regression this test exists for straight through.
     const rule = cssBodies('.avail-chip')[0]
-    expect(rule).toContain('border-radius: 6px')
+    expect(rule).toContain('border-radius: var(--radius-chip)')
+    const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
+    expect(/\n\s*--radius-chip:\s*6px;/.test(root), '--radius-chip is still the owner\'s 6px').toBe(true)
     expect(rule).not.toContain('50%')
   })
 

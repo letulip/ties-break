@@ -31,6 +31,14 @@ const home = read('../src/components/screens/HomeScreen.vue')
 const app = read('../src/App.vue')
 const css = read('../src/style.css')
 
+/** A rung of THE RADIUS LADDER, in px, read off :root (owner, 29.07 — every radius in the sheet
+ *  is a `--radius-*` token now, so a test that wants the NUMBER has to resolve one). */
+function resolveRadiusToken(sheet: string, token: string): number {
+  const root = sheet.slice(sheet.indexOf(':root {'), sheet.indexOf('\n}\n', sheet.indexOf(':root {')))
+  const declared = new RegExp(`\\n\\s*${token}:\\s*([^;]+);`).exec(root)?.[1]?.trim()
+  return Number(/^(\d+(?:\.\d+)?)px$/.exec(declared ?? '')?.[1] ?? NaN)
+}
+
 // ===========================================================================
 // 1a. The date line: "W27 2033 · Jun 3 – Jun 9"
 // ===========================================================================
@@ -450,7 +458,14 @@ describe('the diary page: the structure the redesign decided', () => {
     // The export's signature: art bleeding off the card corner under a diagonal dissolve.
     const rule = css.slice(css.indexOf('.venue-art {'), css.indexOf('}', css.indexOf('.venue-art {')))
     expect(rule).toContain('mask-image')
-    expect(rule).toContain('border-radius: 56px 56px 14px 14px')
+    // ⚠ RE-AIMED by the radius ladder (owner, 29.07). The shape is unchanged; only its bottom two
+    // corners changed spelling, from a bare `14px` to the frame rung they were already sitting on.
+    // The 56px stays a literal on purpose and the ladder's own comment says why: it is half this
+    // element's 112px width, so it is GEOMETRY — it is what makes the top an arch rather than a
+    // rounded rectangle — and a rung would hide that.
+    expect(rule).toContain('border-radius: 56px 56px var(--radius-frame) var(--radius-frame)')
+    // the arch is the point: the top corners must stay far rounder than the bottom ones
+    expect(56).toBeGreaterThan(resolveRadiusToken(css, '--radius-frame'))
   })
 
   it('the budget card charts the engine series and never re-derives money of its own', () => {

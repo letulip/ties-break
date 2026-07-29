@@ -454,6 +454,22 @@ describe('R10-13 — cancel a committed entry (fee forfeited)', () => {
 // ===========================================================================
 // R10-16 — the empty popup, and the injury dialog's corner radius.
 // ===========================================================================
+
+/** The radius a rule actually renders, in px, whether it is written as a number or as a rung of
+ *  THE RADIUS LADDER (owner, 29.07 — every radius in the sheet is a `--radius-*` token now).
+ *  Resolving the token rather than accepting any token is the point: a test that only checked
+ *  "it uses some variable" would pass on `var(--radius-pill)`, which is exactly the mistake the
+ *  radius tests below exist to catch. */
+function resolveRadius(css: string, rule: string): number {
+  const direct = /border-radius:\s*(\d+(?:\.\d+)?)px/.exec(rule)
+  if (direct) return Number(direct[1])
+  const token = /border-radius:\s*var\((--[\w-]+)\)/.exec(rule)?.[1]
+  if (!token) return NaN
+  const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
+  const declared = new RegExp(`\\n\\s*${token}:\\s*([^;]+);`).exec(root)?.[1]?.trim()
+  return Number(/^(\d+(?:\.\d+)?)px$/.exec(declared ?? '')?.[1] ?? NaN)
+}
+
 describe('R10-16 — no popup may render without copy', () => {
   const app = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
 
@@ -484,8 +500,7 @@ describe('R10-16 — no popup may render without copy', () => {
     const block = css.slice(css.indexOf('.injury-stop {'))
     const rule = block.slice(0, block.indexOf('}'))
     expect(rule).toContain('border-radius')
-    const radius = Number(/border-radius:\s*(\d+)px/.exec(rule)?.[1])
-    // the top popups (.stop-toast / .recovered-banner) sit at 10px; the capsule idiom is
+    // the top popups (.stop-toast / .recovered-banner) sit at the panel rung; the capsule idiom is
     // var(--radius-pill) – see the two tests below for why it is a token and not a bare 999px.
     // ⚠ RE-AIMED by the css-dry pass (docs/specs/css-dry-audit.md): `.stop-toast` and
     // `.recovered-banner` were eleven identical declarations written out twice and are now ONE
@@ -495,10 +510,17 @@ describe('R10-16 — no popup may render without copy', () => {
     // What the merge actually strengthened: the two popups can no longer drift apart at all, so
     // there is no longer a version of this file where .recovered-banner and .stop-toast disagree
     // about the radius that this test then checks only one of.
+    // ⚠ RE-AIMED AGAIN by the radius ladder (owner, 29.07: "надо приводить в порядок всё с чётными
+    // значениями"). Both rules now say `var(--radius-panel)` instead of a bare `10px`, so reading
+    // a number straight out of the rule finds nothing. It resolves the token off :root instead —
+    // which pins MORE than before: the two must still agree, the value must still be squarer than
+    // a pill, AND the radius has to be a rung of the ladder rather than a number someone typed.
+    const radius = resolveRadius(css, rule)
     const toast = css.slice(css.indexOf('.stop-toast {'))
-    const toastRadius = Number(/border-radius:\s*(\d+)px/.exec(toast.slice(0, toast.indexOf('}')))?.[1])
+    const toastRadius = resolveRadius(css, toast.slice(0, toast.indexOf('}')))
     expect(radius).toBe(toastRadius)
     expect(radius).toBeLessThanOrEqual(12)
+    expect(radius % 2, 'every rung of the radius ladder is even').toBe(0)
   })
 
   // ---------------------------------------------------------------------------
@@ -545,7 +567,11 @@ describe('R10-16 — no popup may render without copy', () => {
   it('the availability chip is the one pill that is NOT a capsule (owner: "make this one less round")', () => {
     const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
     const rule = css.slice(css.indexOf('.avail-chip {'))
-    const radius = Number(/border-radius:\s*(\d+)px/.exec(rule.slice(0, rule.indexOf('}')))?.[1])
+    // ⚠ RE-AIMED by the radius ladder (owner, 29.07): the chip says `var(--radius-chip)` now
+    // instead of a bare `6px`, so the number is read through :root. The owner's 6 did NOT move —
+    // it was already even and it is the rung the whole chip family sits on — and the bounds below
+    // are untouched, so this still fails if anyone rounds the chip back toward the capsule.
+    const radius = resolveRadius(css, rule.slice(0, rule.indexOf('}')))
     // Squarer than the capsule it would otherwise inherit from .pill. The bound is the MEASURED
     // rendered capsule radius (10.7px at the chip's 21px height): anything at or above it is not a
     // visible change, which is why 10px – the panel radius – was rejected as too subtle to see.
