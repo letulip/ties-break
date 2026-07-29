@@ -329,6 +329,13 @@ export interface PendingView {
   eventId: string
   tier: TierId
   surface: Surface
+  /** THE DAY'S TEMPERATURE, for the live match's weather plate. The SAME number the Season card
+   *  showed for this tournament – `eventTemperature`, one source, so the two surfaces cannot
+   *  disagree about the weather at one event. Decorative: nothing reads it but a screen.
+   *  ⚠ `upcoming` is filtered to `week > world.week`, so an event BEING PLAYED has already dropped
+   *  out of it and its preview is unreachable. That is why this rides on the pending view instead
+   *  of the viewer re-deriving it – two call sites computing one number is how they drift. */
+  temperatureC: number
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
   /** the kid's opponent this round: short name, ISO-2 nation, current standings rank */

@@ -368,10 +368,22 @@ describe('the weather is decoration, and stays decoration', () => {
   it('is not consulted by the engine – only the preview and the view know it exists', () => {
     // A grep guard, because the day someone makes weather affect a match is the day it stops being
     // free and starts needing a schema, a capture re-pin and a balance sweep.
-    for (const rel of ['../src/engine/world.ts', '../src/engine/match/engine.ts', '../src/engine/season/tournament.ts']) {
+    //
+    // ⚠ RE-AIMED, NOT WEAKENED, and world.ts is now exempted for ONE call – exactly the shape the
+    // crowd's guard above already has. THE PROTECTED FACT IS UNCHANGED: weather must not reach the
+    // SIMULATION. What changed is that the live match needs to SHOW the day, and the number has to
+    // travel there on the pending view because `upcoming` drops an event the week it is played.
+    // A view assembly is not a rule, and the pin below is what keeps the difference honest: the
+    // match engine and the tournament still may not name it at all, and world.ts gets one use,
+    // whose exact text is asserted so a second one cannot hide behind the first.
+    for (const rel of ['../src/engine/match/engine.ts', '../src/engine/season/tournament.ts']) {
       expect(read(rel), rel).not.toContain('eventTemperature')
       expect(read(rel), rel).not.toContain(':weather:')
     }
+    const world = read('../src/engine/world.ts')
+    expect(world).not.toContain(':weather:')
+    expect(world.match(/eventTemperature\(/g) ?? [], 'world.ts uses the weather more than once').toHaveLength(1)
+    expect(world).toContain('temperatureC: eventTemperature(world.seed, event)')
   })
 })
 

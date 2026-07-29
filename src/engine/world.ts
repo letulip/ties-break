@@ -97,7 +97,7 @@ import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, kidSeedIndexIn, JUNIOR_TOUR } from './season/tournament'
-import { previewEvent, eventCrowd } from './season/preview'
+import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
@@ -3650,6 +3650,9 @@ function pendingView(world: WorldState): PendingView | undefined {
     eventId: p.eventId,
     tier: event.tier,
     surface: event.surface,
+    // The weather plate on the live match. Same function the Season card quotes, so one tournament
+    // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
+    temperatureC: eventTemperature(world.seed, event),
     roundLabel: stageLabel(current.round, tier.drawSize),
     opponent: {
       name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),

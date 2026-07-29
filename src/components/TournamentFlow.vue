@@ -617,6 +617,7 @@ const matchMeta = computed(() => {
           :rank-a="viewerRankA"
           :rank-b="viewerRankB"
           :final-match="isFinalRound"
+          :temperature-c="pending?.temperatureC ?? null"
           @finish="endReplay"
           @end-applause="noteEndApplause"
         />
