@@ -97,8 +97,9 @@ coach-tier engine slice.
 | champion / runner-up moment photos | we have them; use those |
 | summary portrait (S) | **settled: it is `jun-norm`** — the junior neutral portrait we already ship (`fem-euro-brunnet-jun-norm.webp`). Owner: «первый раз входит в клуб», nothing to draw |
 | onboarding hero (N) | the owner is finishing a new square one. Until it arrives, `jun-norm` again |
-| four play-style poses (R) | the owner will supply; ship a placeholder |
+| four play-style poses (R) | **arrived 29.07** as SVG: `public/icons/styles/{all-court,baseliner,bigserve,counterpuncher}.svg`, 100×100 viewBox, matching the four `playStyle` ids exactly |
 | trip photo (G) | maybe remade later for every age; not blocking |
+| vacation art, one per package (Season feed + the planner's picker) | **requested 29.07, not yet landed.** Five needed, by package id: `staycation`, `grandma`, `camping`, `seaside`, `resort` |
 
 **Q5 — density vs scroll: fidelity to the composition, real content may scroll.** Confirmed as a
 general rule, generalising the Season screen decision of 28.07.
