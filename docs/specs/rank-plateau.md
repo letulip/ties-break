@@ -1,8 +1,11 @@
 # Why her rank is pinned near #90 — diagnosis (29.07.2026)
 
 Her dense rank has sat between #80 and #101 at every age, at every power level, before and after the
-conveyor, in every preset. This is what is actually causing it. **Nothing here is implemented** — the
-fix in §5 re-rolls every tournament result in the game and wants the owner's word first.
+conveyor, in every preset.
+
+**§1–§3 are the diagnosis as first written. §4 is the fix that was proposed, shipped and MEASURED TO
+DO NOTHING. §5 is the actual answer, found because §4's prediction was falsifiable and got
+falsified.** Read to the end before acting on anything above it.
 
 Measured over 6–8 careers of the 120k preset (the least money-starved career we have, so the cause
 cannot be "she could not afford to play"), balanced 75/25 plan, entry policy "strongest tier she
@@ -97,27 +100,85 @@ choice to a real player, so it will play out the same way unless playing down is
 
 ---
 
-## 4. The prediction the fix has to satisfy
+## 4. The seeding fix: shipped, measured, and NOT the answer
 
-If §2a is the dominant cause, then seeding only the top 8 and placing everyone else at random will
-**not move her points much** — it will lower the mid-table's, because those players lose the
-protection they should never have had. Her rank should improve while her point total stays roughly
-flat. That is a falsifiable prediction and the measurement should be run against it.
+The prediction was: seed only the top 8 and place everyone else at random, and her POINTS should stay
+roughly flat while the mid-table's fall — because those players lose a protection they should never
+have had — so her rank improves.
+
+Shipped exactly that (`buildDraw` in `season/tournament.ts`: the top `drawSize/4` take the standard
+seed positions, everybody else including the kid is shuffled into the rest; she now enters the field
+at her standing rather than at the bottom of it). Measured, 30 careers, like-for-like on the same
+seeds:
+
+| week | rank before | rank after | her points before | after | peers' points before | after |
+| --- | --- | --- | --- | --- | --- | --- |
+| 104 | #83 | #81 | 448 | 473 | 448 | 472 |
+| 208 | #94 | #96 | 334 | 334 | 318 | 311 |
+| 312 | #88 | #87 | 399 | 413 | 396 | 403 |
+| 416 | #80 | #76 | 468 | 550 | 467 | 545 |
+
+**−2, +2, −1, −4. Nothing.** And the shape of the failure is the clue: her points and her peers' move
+*together, every time*. The change lifted her and the mid-table by the same amount, which is what it
+would do if the two were the same thing — which they are, and that is the thing to explain.
+
+Balance cost of keeping it: none. 120 seeds/preset, 14→18 — survival 68→70, 3→2, 42→39, 111→112;
+every cell inside noise. **It stays**, because a bracket that seeded all 32 and singled out one player
+for the random slot was wrong on its own terms, not because it fixed anything.
 
 ---
 
-## 5. The proposed fix, in order
+## 5. THE ACTUAL ANSWER: she is never fresh, and the model is working perfectly
 
-1. **Seed like a real draw.** `standardSeedOrder` places the top `drawSize / 4` (8 of 32, 4 of 16,
-   2 of 8 — the ITF shape); everyone else, kid included, is shuffled into the remaining slots on the
-   event's own stream. She is seeded when her standing earns it and unseeded when it does not, on the
-   same terms as everybody else. `drawKidInto` is absorbed by this and its guard tests get re-aimed,
-   not deleted.
-   **This re-rolls every tournament result in the game** — event-scoped streams only, so the frozen
-   MAIN capture cannot move, but every existing seed produces a different world. Wants a full
-   econ-bench pass at 120 seeds and the owner's word before it lands.
-2. **One entry rule.** Her eligibility should read the same signal the AI's entry list reads: in the
-   band by standing OR over the points threshold. And j300's band should be widened (or its draw
-   reduced) so its field is what the rule claims it is instead of being backfilled to #140 every time.
-3. **Make playing down worth something**, so 2c is a choice rather than a trap. Out of scope until
-   1 and 2 are measured — they may change the arithmetic on their own.
+| | her | the field |
+| --- | --- | --- |
+| mean condition, any week | **24.4** | 72.3 (her direct rivals: 59.3) |
+| mean condition on a week she PLAYS | **18.7** | 72.5 |
+| condition match factor | **0.707** | 0.931 |
+| raw power | 56.8 | 51.3 |
+| **effective power on court** | **40.0** | **45.6** |
+
+She is five points of raw power stronger than her rivals and takes the court **twelve percent
+weaker** than they do. That is the whole plateau. Not the draw, not the points table, not the tie
+block — she plays every week she can afford, at condition 19, for ever.
+
+And it is not a bug in the fatigue model. It is the fatigue model doing exactly the job it was built
+for, against a schedule nobody had measured the consequence of. Add ONE rule to the entry policy — do
+not enter below a condition floor — and change nothing else:
+
+| condition floor | entries/season | mean condition | match factor | her points | **her rank** |
+| --- | --- | --- | --- | --- | --- |
+| 0 (the grind) | 23.5 | 24.4 | 0.707 | 395 | **#89** |
+| 35 | 17.2 | 31.8 | 0.754 | 483 | #84 |
+| 55 | 13.9 | 43.3 | 0.828 | 668 | #57 |
+| 70 | 12.6 | 53.2 | 0.892 | 898 | **#40** |
+| 85 | 11.2 | 64.7 | 0.966 | 937 | **#39** |
+
+**Playing half as many tournaments more than doubles her points and moves her fifty places.** Her
+ceiling was never the ladder. It was her calendar.
+
+### What this actually means for the game
+
+1. **The ranking is not broken and the ladder does not need rescaling to fix it.** (The points table
+   is still wrong on its own evidence — `docs/research/ranking-points-by-tier.md` §6, J300 pays 2.5×
+   a J30 where reality says 10× — but that is a separate argument and this is no longer the reason
+   to act on it.)
+2. **The player is given no way to see the cost.** The Season screen shows a condition ring and a
+   'caution' chip when she is under a tier's floor, and then lets her enter anyway with no statement
+   of what it costs. Nothing anywhere says "she will play this at 0.71 of herself". The single most
+   valuable thing the interface can do is put that number in front of the player at the moment of
+   entering — this is a UI slice, and it is worth more than any balance change on this page.
+3. **The benches grind by construction** ("enter every eligible event you can afford"), so every
+   number they have ever produced describes a wrecked player. Worth a second policy on the econ
+   bench — the fatigue bench already has careful/balanced/grinder — so future claims can say which
+   player they are about.
+4. **Rest has to become a real choice with a visible payoff.** Today the planner's vacation and the
+   rest slider are the only levers, and neither is presented as "this is worth fifty ranking places".
+
+### Still open, and still worth doing on its own merits
+
+- **Two entry rules for the same event** (§2b): she qualifies on absolute points, the AI on standing
+  plus a backfill that reaches to #140 in a tier whose band ends at #50. Unfair, and unrelated to the
+  plateau.
+- **She always plays up** (§2c) — which the rest-floor table now reframes: playing up while wrecked
+  is the trap, and the fix for both may be the same one.

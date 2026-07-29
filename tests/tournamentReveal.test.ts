@@ -151,7 +151,12 @@ describe('tournament reveal – reveal, do not re-run', () => {
       const fr = Math.log2(TIERS[e.tier].drawSize) - 1
 
       const finish = w.pendingTournament!.result.finishes[KID_ID]
-      if (finish === undefined || finish === 0) continue // she won it - no early exit to check
+      // ⚠ RE-AIMED 29.07 (partial seeding): `finish === 0` excluded only the CHAMPION, but a
+      // RUNNER-UP also plays every round, so there are no "rounds after her exit" to find and the
+      // precondition below fails. She is drawn by her standing now and reaches finals she used to
+      // miss, which is how this surfaced. The protected fact is unchanged: a full bracket must span
+      // rounds she was not in.
+      if (finish === undefined || finish <= 1) continue // champion or runner-up – no early exit
       world = w
       finalRound = fr
       break

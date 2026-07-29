@@ -13,21 +13,19 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { previewEvent, eventTemperature } from '../src/engine/season/preview'
 import {
-  drawKidInto,
+  buildDraw,
   firstRoundOpponent,
+  kidSeedIndexIn,
   selectEntrants,
-  standardSeedOrder,
   runTournament,
   JUNIOR_TOUR,
 } from '../src/engine/season/tournament'
 import { computeRanking } from '../src/engine/season/ranking'
 import { rivalConditions, rivalMatchPlayer } from '../src/engine/season/rival'
 import { fastMatchProbability } from '../src/engine/match/engine'
-import { TIERS } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
 import { createWorld, kidMatchPlayerFor, KID_ID, tickWeek, toSnapshot } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import type { MatchPlayer } from '../src/engine/match/types'
 import type { SeasonEvent } from '../src/engine/season/types'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
@@ -48,7 +46,11 @@ describe('the preview names the opponent the bracket actually produces', () => {
   it('agrees with a real run of the same event, on every tier', () => {
     // The load-bearing test of the whole module. The preview and `runTournament` build the field
     // independently; they agree only because they consume the SAME sub-stream in the same order and
-    // share `drawKidInto`. Break either and this fails with a name.
+    // share the draw itself. Break either and this fails with a name.
+    // ⚠ RE-AIMED (29.07, partial seeding): `drawKidInto` is gone – the whole bracket is now built by
+    // `buildDraw`, which seeds the top 8 of 32 and shuffles the rest, the kid included, at her own
+    // standing. The protected fact is unchanged and is the only one that matters here: the name the
+    // card prints is the name the bracket produces.
     for (const seed of ['pv-a', 'pv-b', 'pv-c', 'pv-d']) {
       const { world, ranking, event, kid } = fixture(seed)
       const preview = previewEvent(world, event, ranking, kid)
@@ -64,7 +66,7 @@ describe('the preview names the opponent the bracket actually produces', () => {
       const field = selectEntrants(event, world.cohort, ranking, rng, fatigue).map((p) =>
         rivalMatchPlayer(p, event.surface, fatigue.get(p.id) ?? ECONOMY.condition.max),
       )
-      const result = runTournament(event, field, kid, world.seed, rng)
+      const result = runTournament(event, field, kid, world.seed, rng, kidSeedIndexIn(field, ranking, KID_ID))
       const first = result.matches.find((m) => m.aId === KID_ID || m.bId === KID_ID)!
       const realOppId = first.aId === KID_ID ? first.bId : first.aId
       const realOpp = field.find((p) => p.id === realOppId)!
@@ -84,11 +86,9 @@ describe('the preview names the opponent the bracket actually produces', () => {
       rng,
       rivalConditions(world.results, world.week),
     ).map((p) => rivalMatchPlayer(p, event.surface, ECONOMY.condition.max))
-    const drawSize = TIERS[event.tier].drawSize
-    const f: MatchPlayer[] = entrants.slice(0, drawSize - 1)
-    f.push(kid)
-    const alive = standardSeedOrder(f.length).map((s) => f[s - 1])
-    drawKidInto(alive, kid, rng)
+    // ⚠ RE-AIMED with the test above: one call to the shared `buildDraw` replaces the hand-rolled
+    // copy of the bracket, which is the point of extracting it.
+    const alive = buildDraw(event, entrants, kid, kidSeedIndexIn(entrants, ranking, kid.id), rng)
     const opp = firstRoundOpponent(alive, kid)!
     expect(preview.firstMatchChance).toBe(
       fastMatchProbability(kid, opp, { surface: event.surface, tour: JUNIOR_TOUR, seed: '' }),

@@ -78,7 +78,12 @@ function hashOf(draws: number[]): string {
 // first-round exit now banks nothing (`awardAiPoints` writes only when `points > 0`), so seven
 // fewer juniors end the year with counting points and the point-less kid sits inside a bigger
 // 0-point tie. Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 133 }
+// ⚠ RE-PINNED 133 -> 135 (29.07, partial seeding). The DRAW SEQUENCE did not move - `count` and
+// `hash` above are untouched and still pass, which is the fact this block exists to protect. What
+// moved is her RANK, a companion pin carried alongside: the bracket now seeds only the top 8 of 32
+// and shuffles everyone else, the kid included, so her results in a 52-week window differ and so
+// does the rank they earn. See docs/specs/rank-plateau.md.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 135 }
 
 function injectEvent(
   world: WorldState,

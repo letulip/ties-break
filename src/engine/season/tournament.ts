@@ -185,43 +185,94 @@ function playMatch(
 // she takes a slot, bumping the lowest-ranked entrant, and is then DRAWN INTO THE BRACKET AT
 // RANDOM. Losers get finish = rounds - round (0 = champion), indexing TierDef.points.
 //
-// WHY THE DRAW IS RANDOM (28.07, the owner: «в настоящем теннисе несеяная новичок попадает в сетку
-// случайно – мне кажется нам тоже так надо делать»).
+// WHY THE DRAW IS PART SEEDED AND PART RANDOM (the owner, 28.07: «в настоящем теннисе несеяная
+// новичок попадает в сетку случайно – мне кажется нам тоже так надо делать», and its other half,
+// 29.07, after the rank diagnosis).
 //
-// She used to be appended last, which made her the LOWEST seed – and in a standard seeded bracket
-// the lowest seed meets seed 1 in round one, by construction. Measured directly: at every draw size
-// (4, 8, 16, 32) and every tier, her first opponent was the strongest player in the field. Every
-// tournament of every career. That is not a hard game, it is a broken draw: an unseeded newcomer in
-// real tennis is drawn into the gaps between the seeds and can meet anybody.
+// FIRST VERSION. She was appended last, which made her the LOWEST seed – and in a standard seeded
+// bracket the lowest seed meets seed 1 in round one, by construction. At every draw size and every
+// tier her first opponent was the strongest player in the field, every tournament of every career.
+// That was fixed by trading her into a uniformly random slot.
 //
-// THE FIX IS ONE SWAP AND ONE DRAW. The AI keep their seeding relationships exactly; the kid trades
-// places with whoever holds a uniformly random slot. So she can still draw the top seed – she just
-// no longer draws them EVERY time.
+// WHAT THAT LEFT, AND WHY IT WAS STILL WRONG. `standardSeedOrder` seeded the ENTIRE field, so every
+// one of the other 31 players was protected – a mid-table AI met the player adjacent to her in the
+// standings – while she alone carried the variance of a random draw. Measured (docs/specs/
+// rank-plateau.md): her entries produced a scoring result 27% of the time against her direct rivals'
+// 47%, and she sat five points of raw power above the players she was tied with on points. A rule
+// that applies to exactly one player in the world is not a difficulty setting, it is a bug.
+//
+// A REAL DRAW SEEDS THE TOP AND RANDOMISES THE REST. The ITF seeds 8 of a 32-draw (4 of 16, 2 of 8);
+// everybody else goes into the gaps by lot. So that is what this does, and the kid is nobody special
+// in it: she takes her place in the field BY HER STANDING, is seeded when that standing earns it,
+// and is drawn at random when it does not - on the same terms as every other unseeded player.
 //
 // TWO INVARIANTS, both load-bearing:
-//   * the draw comes off the `rng` already passed in, which is the event-scoped `seed:kidtour:<id>`
-//     sub-stream. No new stream, and not one draw on the MAIN weekly stream – the frozen capture
-//     cannot move.
-//   * it is taken ONLY when a kid is in the field. An AI-only bracket (`kid === null`) takes no
-//     extra draw and is byte-identical to before, so the cohort's own season is untouched and this
-//     change is confined to the events she actually plays.
+//   * every draw comes off the `rng` already passed in, which is the EVENT-scoped
+//     `seed:kidtour:<id>` / `seed:aitour:<id>` sub-stream. Not one draw on the MAIN weekly stream –
+//     the frozen capture (41550 / e6b0c709) cannot move, and its test proves it.
+//   * the shuffle spends exactly one draw per unseeded player, a count that depends only on the
+//     tier's draw size. It cannot depend on player input, on funds, or on who is in the field.
 //
 // `entrants` is a MatchPlayer[] (it was an AiPlayer[], which is a subtype, so every existing call
 // site still type-checks): since the rival-life slice the caller hands in cohort rows ALREADY put
 // through `rivalMatchPlayer` – surface/style modifier and condition factor applied – so the
 // bracket sees exactly the players who take the court, and the cohort rows themselves stay pristine.
-/** THE DRAW, as one function, because two callers need to agree on it to the draw: the bracket that
- *  actually plays, and the Season screen's preview of who she would meet. It mutates `alive` in
- *  place and takes EXACTLY ONE number off `rng`, so a preview that has consumed the same stream in
- *  the same order lands on the same slot.
+/** How many of a draw are seeded. The ITF shape: 8 of 32, 4 of 16, 2 of 8. */
+export function seedsFor(drawSize: number): number {
+  return Math.max(2, Math.floor(drawSize / 4))
+}
+
+/** Where the kid slots into a standings-ordered entrant list – simply how many of them outrank her.
+ *  Exported because THREE callers have to agree on it to the place: the bracket that plays, the
+ *  Season screen's preview of it, and the test that proves those two agree. */
+export function kidSeedIndexIn(
+  entrants: readonly MatchPlayer[],
+  ranking: readonly RankingRow[],
+  kidId: string,
+): number {
+  const posOf = new Map<string, number>()
+  ranking.forEach((r, i) => posOf.set(r.playerId, i))
+  const last = ranking.length
+  const mine = posOf.get(kidId) ?? last
+  return entrants.filter((p) => (posOf.get(p.id) ?? last) < mine).length
+}
+
+/** THE DRAW, as one function, because two callers need to agree on it to the slot: the bracket that
+ *  actually plays, and the Season screen's preview of who she would meet.
  *
- *  She arrives appended last, which `standardSeedOrder` has already parked opposite seed 1 – the
- *  old, rigged position. One swap with a uniformly random slot fixes it; the player displaced takes
- *  the slot she came from, so every other seeding relationship survives. */
-export function drawKidInto(alive: MatchPlayer[], kid: MatchPlayer, rng: Rng): void {
-  const from = alive.findIndex((p) => p.id === kid.id)
-  const to = Math.floor(rng() * alive.length)
-  ;[alive[from], alive[to]] = [alive[to], alive[from]]
+ *  `entrants` arrive SORTED BY STANDING (selectEntrants guarantees it). The kid, when she is in the
+ *  field, is spliced in at `kidSeedIndex` – her place by standing, not the bottom – and the weakest
+ *  entrant is bumped to keep the draw at `drawSize`. The top `seedsFor(drawSize)` then take the
+ *  standard seed positions and EVERYBODY ELSE is shuffled into the remaining slots.
+ *
+ *  Exactly one draw per unseeded player, in a fixed order, off the event's own stream. */
+export function buildDraw(
+  event: SeasonEvent,
+  entrants: readonly MatchPlayer[],
+  kid: MatchPlayer | null,
+  kidSeedIndex: number | null,
+  rng: Rng,
+): MatchPlayer[] {
+  const drawSize = TIERS[event.tier].drawSize
+  let field: MatchPlayer[]
+  if (kid) {
+    field = entrants.slice(0, drawSize - 1)
+    const at = Math.max(0, Math.min(kidSeedIndex ?? field.length, field.length))
+    field.splice(at, 0, kid)
+  } else {
+    field = entrants.slice(0, drawSize)
+  }
+
+  const seeded = seedsFor(field.length)
+  // Fisher-Yates over the unseeded tail. `pool` is a copy: `field` stays in standings order so the
+  // seed lookup below is unambiguous.
+  const pool = field.slice(seeded)
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1))
+    ;[pool[i], pool[j]] = [pool[j], pool[i]]
+  }
+  let next = 0
+  return standardSeedOrder(field.length).map((s) => (s <= seeded ? field[s - 1] : pool[next++]))
 }
 
 /** Who `kid` meets in round one of `alive`, once drawn. Round one pairs adjacent slots. */
@@ -237,24 +288,16 @@ export function runTournament(
   kid: MatchPlayer | null,
   worldSeed: string,
   rng: Rng,
+  /** her place among the entrants by standing (see `kidSeedIndexIn`). Omitted ⇒ she goes in last,
+   *  which is what an unranked newcomer deserves and what the tests that do not care want. */
+  kidSeedIndex?: number,
 ): TournamentResult {
-  const drawSize = TIERS[event.tier].drawSize
-
-  let field: MatchPlayer[]
-  if (kid) {
-    field = entrants.slice(0, drawSize - 1) // bump the lowest-ranked entrant
-    field.push(kid) // the kid takes the freed slot (lowest seed)
-  } else {
-    field = entrants.slice(0, drawSize)
-  }
-
-  const order = standardSeedOrder(field.length)
-  let alive: MatchPlayer[] = order.map((seed) => field[seed - 1])
-  if (kid) drawKidInto(alive, kid, rng)
+  let alive: MatchPlayer[] = buildDraw(event, entrants, kid, kidSeedIndex ?? null, rng)
+  const rounds0 = alive.length
 
   const matches: MatchRecord[] = []
   const finishes: Record<string, number> = {}
-  const rounds = Math.log2(field.length)
+  const rounds = Math.log2(rounds0)
 
   for (let round = 0; round < rounds; round++) {
     const winners: MatchPlayer[] = []

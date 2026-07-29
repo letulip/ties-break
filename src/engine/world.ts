@@ -81,7 +81,7 @@ import {
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
-import { selectEntrants, runTournament, JUNIOR_TOUR } from './season/tournament'
+import { selectEntrants, runTournament, kidSeedIndexIn, JUNIOR_TOUR } from './season/tournament'
 import { previewEvent } from './season/preview'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
@@ -2043,8 +2043,11 @@ function computeShadowTournament(
   // and the run's every round shares this ONE build. Fractional skills are fine for the match engine.
   const kid = kidMatchPlayerFor(world, event.surface)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
-  const field = rivalField(selectEntrants(event, world.cohort, ranking, kidRng, fatigue), event, fatigue)
-  const result = runTournament(event, field, kid, world.seed, kidRng)
+  const entrants = selectEntrants(event, world.cohort, ranking, kidRng, fatigue)
+  const field = rivalField(entrants, event, fatigue)
+  // v21b: she goes into the draw AT HER STANDING, not at the bottom of it - the same place the
+  // acceptance list would give her - and is seeded, or not, on the terms everybody else gets.
+  const result = runTournament(event, field, kid, world.seed, kidRng, kidSeedIndexIn(field, ranking, KID_ID))
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue

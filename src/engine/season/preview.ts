@@ -43,14 +43,13 @@ import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 import { fastMatchProbability } from '../match/engine'
 import type { MatchPlayer } from '../match/types'
-import { TIERS } from './calendar'
 import { rivalConditions, rivalMatchPlayer } from './rival'
 import {
   JUNIOR_TOUR,
-  drawKidInto,
+  buildDraw,
   firstRoundOpponent,
+  kidSeedIndexIn,
   selectEntrants,
-  standardSeedOrder,
 } from './tournament'
 import type { AiPlayer, RankingRow, SeasonEvent } from './types'
 import type { SeasonResult } from './ranking'
@@ -71,9 +70,10 @@ export interface EventPreview {
   temperatureC: number
 }
 
-/** The kid's slot is the one `runTournament` gives her: she bumps the weakest entrant and is then
- *  drawn at random. Rebuilt here rather than imported, because `runTournament` PLAYS the bracket
- *  and a preview must not. The two share `drawKidInto`, which is the part that has to agree. */
+/** The kid's slot is the one `runTournament` gives her. The two share `buildDraw` outright – the
+ *  preview cannot call `runTournament`, which PLAYS the bracket, but it must not build a second one
+ *  either, so the draw is one function and both callers pass it the same stream at the same
+ *  position. */
 function drawnField(
   event: SeasonEvent,
   cohort: AiPlayer[],
@@ -88,12 +88,7 @@ function drawnField(
   const entrants = selectEntrants(event, cohort, ranking, rng, conditions).map((p) =>
     rivalMatchPlayer(p, event.surface, ECONOMY.condition.max),
   )
-  const drawSize = TIERS[event.tier].drawSize
-  const field = entrants.slice(0, drawSize - 1)
-  field.push(kid)
-  const alive = standardSeedOrder(field.length).map((s) => field[s - 1])
-  drawKidInto(alive, kid, rng)
-  return alive
+  return buildDraw(event, entrants, kid, kidSeedIndexIn(entrants, ranking, kid.id), rng)
 }
 
 /** Where she would sit among the entrants if the field were drawn today. `strong` = most of them

@@ -128,7 +128,10 @@ const REF = {
   // The STREAM is untouched and that is the whole point of this test: count 41550, hash e6b0c709,
   // head and tail all still byte-identical, because points are post-draw arithmetic – they are
   // read off a table AFTER the bracket has already been resolved by the RNG.
-  kidRank: 133,
+  // ⚠ RE-PINNED 133 -> 135 (29.07, partial seeding). `count`/`hash`/`head`/`tail` above did NOT
+  // move - the main stream is untouched, which is what this block guards. Her RANK moved, because
+  // the bracket now seeds the top 8 and shuffles the rest, herself included.
+  kidRank: 135,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {
