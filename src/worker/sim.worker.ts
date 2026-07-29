@@ -27,6 +27,7 @@ import {
   deleteSlot,
   listCareers,
   deleteCareer,
+  touchCareer,
 } from '../db/saves'
 import type { ToWorker, ToUI } from '../shared/protocol'
 
@@ -188,12 +189,15 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'load': {
       world = await readSlot(msg.slot)
       rng = restoreRng(world)
+      // Opening it counts as playing it, or the next boot ignores the choice - see touchCareer.
+      await touchCareer(world.careerId)
       return snapshotMsg(msg.id, world)
     }
     case 'loadCareer': {
       const { world: loaded, recovered } = await readLatestAutosave(msg.careerId)
       world = loaded
       rng = restoreRng(loaded)
+      await touchCareer(loaded.careerId)
       return snapshotMsg(msg.id, loaded, recovered)
     }
     case 'deleteSlot': {

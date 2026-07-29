@@ -206,6 +206,24 @@ async function upsertCareer(world: WorldState, playedAt: number): Promise<void> 
   await reqToPromise(store.put(meta))
 }
 
+/** OPENING a career counts as playing it (owner, 29.07).
+ *
+ *  THE BUG THIS FIXES. `lastPlayedAt` was written by exactly two paths - autosave and a named save -
+ *  so LOADING an old career never touched it. The store boots into
+ *  `careers.sort(b.lastPlayedAt - a.lastPlayedAt)[0]`, so after picking an old save and closing the
+ *  app you came back to whichever career had most recently been SAVED, which in practice is the last
+ *  one you created. The owner reported it as "it always loads the newest career, no matter what".
+ *
+ *  A career you have deliberately opened is the career you are playing, so the timestamp moves when
+ *  it opens rather than waiting for the first week to tick. */
+export async function touchCareer(careerId: string, at: number = Date.now()): Promise<void> {
+  const database = await db()
+  const store = tx(database, CAREERS, 'readwrite').objectStore(CAREERS)
+  const existing = (await reqToPromise(store.get(careerId))) as CareerMeta | undefined
+  if (!existing) return // nothing to touch - a slot with no meta row is already an inconsistency
+  await reqToPromise(store.put({ ...existing, lastPlayedAt: at }))
+}
+
 /** Delete every slot belonging to a career plus its meta row, in one transaction. */
 export async function deleteCareer(careerId: string): Promise<void> {
   const database = await db()
