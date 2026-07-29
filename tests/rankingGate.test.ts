@@ -33,8 +33,9 @@ function giveKidPoints(world: WorldState, points: number): void {
 
 describe('tier point bands (the tunable thresholds)', () => {
   it('pins the tuned band per tier (local open from 0, national at the top)', () => {
+    // ⚠ RE-AIMED by the National stagger: regional's ceiling moved 230 → 250, onto J30's new floor.
     expect(TIERS.local.enterPointBand).toEqual([0, 85])
-    expect(TIERS.regional.enterPointBand).toEqual([65, 230])
+    expect(TIERS.regional.enterPointBand).toEqual([65, 250])
     expect(TIERS.national.enterPointBand).toEqual([150, Number.MAX_SAFE_INTEGER])
   })
 })
@@ -53,7 +54,7 @@ describe('isTierEligible — pure points check, both directions', () => {
 
   it('is false above maxPoints (past the ceiling – outgrown)', () => {
     expect(isTierEligible('local', 100)).toBe(false) // 100 > 85
-    expect(isTierEligible('regional', 231)).toBe(false) // 231 > 230
+    expect(isTierEligible('regional', 251)).toBe(false) // ⚠ 251 > 250 (ceiling re-aimed onto J30's floor)
   })
 
   it('is inclusive at both boundaries', () => {

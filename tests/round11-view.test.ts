@@ -285,8 +285,10 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
       { tier: 'j30' as TierId, week: 12 },
       { tier: 'local' as TierId, week: 11 },
     ]
-    const nat = tierState('national', at(200, upcoming))
-    const j30 = tierState('j30', at(200, upcoming))
+    // ⚠ RE-AIMED by the National stagger: 200 points used to open both rungs, and J30's floor is
+    // now 250. The owner's case needs a total at which BOTH are open, so it moved up with the gate.
+    const nat = tierState('national', at(260, upcoming))
+    const j30 = tierState('j30', at(260, upcoming))
     expect(j30.kind).toBe('scheduled')
     expect(nat.kind).toBe('unscheduled')
     expect(isTierOpen(nat)).toBe(true) // she is NOT locked out – that was the whole confusion

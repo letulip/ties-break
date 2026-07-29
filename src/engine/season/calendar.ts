@@ -23,22 +23,26 @@ import type { SeasonEvent, TierDef, TierId } from './types'
 // played and won a round in the Main Draw"), and the professional table repeats the shape at W15/W35.
 // So: she now earns her first point by WINNING one, at every rung. Pinned by tests/wave-b-points.ts.
 //
-// THE LADDER (owner: "there must ALWAYS be somewhere to go"). Two overlapping ladders,
-// both read off the kid's EARNED windowed best-6 points:
+// THE LADDER (owner: "there must ALWAYS be somewhere to go"). Two overlapping ladders. The
+// DOMESTIC rungs read off her earned windowed best-6 in the national table; the J rungs above the
+// on-ramp read off her ITF RANK instead (see two-ladders.md), so this axis places j60/j300 only
+// by where they land in practice:
 //
-//   pts →      0      65    85   150  180        230        400            900
-//   local      ├───────────────┤
-//   regional          ├──────────────────────────┤
-//   national                    ├──────────────────────────────────────────────→ ∞
-//   j30                              ├─────────────────────────────────────────→ ∞
-//   j60                                          ────────────├───────────────  → ∞
-//   j300                                                                  ├───→ ∞
+//   domestic pts →   0      65    85       150            250
+//   local            ├───────────────┤
+//   regional                ├──────────────────────────────┤
+//   national                          ├────────────────────────────────────────→ ∞
+//   j30 (on-ramp)                                          ├───────────────────→ ∞
+//   ITF rank →                                             ·  top 40%   top 25%
+//   j60                                                           ├────────────→ ∞
+//   j300                                                                  ├────→ ∞
 //
 // Read it as: she never falls off the bottom (local opens at 0), she is never stranded at the
 // top (national and every J level use the MAX sentinel so they never graduate her out), and at
-// every total from 150 up at least TWO rungs are open at once, so the handover is a choice
-// rather than a cliff. Only local and regional graduate her – the two tiers she is meant to
-// outgrow. NO junior level pays prize money (real rule: juniors pay to play), which is the
+// every total at least TWO rungs are open at once, so the handover is a choice rather than a
+// cliff. ⚠ National's floor (150) and J30's (250) are deliberately 100 points apart – closing
+// that gap is what killed National once already. Only local and regional graduate her – the two
+// tiers she is meant to outgrow. NO junior level pays prize money (real rule: juniors pay to play), which is the
 // whole "invest without knowing the return" thesis: international travel out, points only back.
 export const TIERS: Record<TierId, TierDef> = {
   local: {
@@ -66,9 +70,13 @@ export const TIERS: Record<TierId, TierDef> = {
     travelCostCents: [150_00, 400_00],
     points: [80, 48, 28, 14, 0],
     everyNWeeks: 4,
-    // Opens once she has a couple of counting results (65 pts); graduates out at 230. Overlaps local
-    // (65-85) and national (150-230), so the climb is a smooth local → regional → national handover.
-    enterPointBand: [65, 230],
+    // Opens once she has a couple of counting results (65 pts); graduates out at 250. Overlaps local
+    // (65-85) and national (150-250), so the climb is a smooth local → regional → national handover.
+    // ⚠ The ceiling moved 230 → 250 with J30's floor, so that regional stays open right up to the
+    // week the international door does. At 230 there was a 20-point band in which National (6 events
+    // a season) was the only tier she could enter, and a career can sit in a band like that for
+    // months. The two numbers are one decision and must move together.
+    enterPointBand: [65, 250],
     entrantPctBand: [0.4, 0.88],
   },
   national: {
@@ -113,19 +121,26 @@ export const TIERS: Record<TierId, TierDef> = {
     // THE dense entry level – with regional it is what makes an empty week a choice, not a gap.
     everyNWeeks: 2,
     minAgeYears: 13,
-    // Opens at 180: one National quarter-final (35) on top of a regional book gets her there, so
-    // the international door opens while regional (≤230) is still open and national is already
-    // live. Never closes – a J30 stays a legitimate week even for a strong junior.
     // THE DOMESTIC LADDER IS THE ON-RAMP (owner, 29.07). J30 is the one international rung that
-    // opens on DOMESTIC points - the same 150 that opens National - and everything above it opens
-    // on ITF rank. That is how a real career starts: a federation nominates you onto an acceptance
-    // list off your national standing, because you cannot have an international ranking before you
-    // have played internationally, and a rank gate on the first rung would be a closed loop.
+    // opens on DOMESTIC points, and everything above it opens on ITF rank. That is how a real
+    // career starts: a federation nominates you onto an acceptance list off your national standing,
+    // because you cannot have an international ranking before you have played internationally, and
+    // a rank gate on the first rung would be a closed loop.
     //
-    // It also keeps the climb the game is about: Local -> Regional -> National -> the world. Open
-    // at zero, a wealthy family would fly at fourteen and the entire domestic ladder would be
-    // optional content for the one preset that can afford to skip it.
-    enterPointBand: [150, Number.MAX_SAFE_INTEGER],
+    // ⚠ 250, NOT the 150 that opens National. They were the same number for one release and it made
+    // National dead content: the entry policy walks the calendar strongest-tier-first, so the week
+    // National opened J30 opened too, J30 always won, and National fell to 0.3 entries per
+    // four-year career (measured, 120 seeds - see docs/specs/two-ladders.md). Staggering them makes
+    // National the rung she climbs THROUGH rather than past, which is the climb the game is about:
+    // Local -> Regional -> National -> the world. Owner, 29.07: «National становится ступенью,
+    // через которую проходят, а не мимо которой - вот это мне нравится, да».
+    //
+    // 250 is a National quarter-final (70) on top of a full regional book - she has to show up at
+    // her national championship and win a round before the world opens. It is also exactly where
+    // regional graduates out (below), so the domestic ladder hands over to the international one at
+    // the point where it ends, with no band in which only one sparse tier is open.
+    // Never closes - a J30 stays a legitimate week even for a strong junior.
+    enterPointBand: [250, Number.MAX_SAFE_INTEGER],
     entrantPctBand: [0.12, 0.6],
   },
   j60: {

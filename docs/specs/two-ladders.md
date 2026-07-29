@@ -151,3 +151,40 @@ regional book plus a national quarter-final, and it makes National the rung you 
 than past). It restores the sequence the ladder-up slice designed, Local → Regional → National → the
 world, and it is exactly the "she always plays up" trap from `rank-plateau.md` 2c seen from the other
 side. **Owner's number to pick.**
+
+# The stagger, measured — 120 seeds, 14→18
+
+Owner, 29.07: «National становится ступенью, через которую проходят, а не мимо которой – вот это мне
+нравится, да». So: **J30's floor 150 → 250, and regional's ceiling 230 → 250 with it** — the two are
+one decision, because at 230 there would have been a 20-point band in which National (six events a
+season) was the only tier open, and a career can sit in a band like that for months.
+
+| preset | national | j30 | j60 | j300 | survival | reach | rank at 18 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 8k working | 0.3 → **6.4** | 12.7 → 5.5 | 9.8 → 6.5 | 0.5 → **1.4** | 67 → **108**/120 | 83% → **66%** | #87 → **#76** |
+| 25k middle · self | 0.2 → **6.6** | 13.0 → 5.5 | 11.2 → 7.2 | 0.6 → **1.3** | 117 → **120**/120 | 80% → **63%** | #88 → **#79** |
+| 25k middle · hired | – → 3.0 | – → 6.1 | – → 2.9 | – → 0.8 | 0 → 0/120 | 87% → 87% | #124 → #124 |
+| 120k wealthy | 0.6 → **5.4** | 18.5 → 10.6 | 25.3 → 21.5 | 2.4 → **4.0** | 120 → 120/120 | 98% → 98% | #75 → **#64** |
+
+**National is a rung again** — 0.2–0.6 entries per four-year career became 3.0–6.6. And J300, the
+top of the ladder, is reached *more* often than before (0.5 → 1.4, 2.4 → 4.0), because she arrives
+at it with a domestic base under her instead of having skipped straight to the airport.
+
+**There is a real cost and it is not small: reach fell for the two poor presets, 83% → 66% and
+80% → 63%, while survival rose sharply.** The mechanism is plain — a J30 costs $900–2000 in travel
+and a regional costs $150–400, so holding the international door shut for another 100 points keeps
+her at home, solvent, and further from a pro attempt at eighteen. The wealthy preset paid nothing
+for it (98% → 98%, and its rank improved #75 → #64), because it could always afford both ladders.
+
+That is the class gap widening, which is the thesis — but it is the owner's call whether a working
+family surviving *by not trying* is the story he wants, or whether reach at 66% is too low. The
+knob is the same one: J30's floor.
+
+## A hypothesis that did NOT survive checking
+
+The working family enters more J60s (6.5) than J30s (5.5), which looked like the "unranked means
+rank one" bug returning through a thin ITF table. Measured: **110–115 of 199 players hold counting
+ITF points** at every season boundary, so the acceptance lists gate against a dense, real field.
+The ordering is the entry policy preferring the strongest open rung — which is correct for J30
+(explicitly "the dense entry level", a rung meant to be passed through) and was only wrong for
+National because National is a marquee event, not an on-ramp.

@@ -178,8 +178,16 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
     // same signal `entrantPctBand` already uses to pick the AI field, which is what finally makes
     // both sides of one event obey one rule (docs/specs/rank-plateau.md 2b).
     expect(TIERS.local.enterPointBand).toEqual([0, 85])
-    expect(TIERS.regional.enterPointBand).toEqual([65, 230])
+    expect(TIERS.regional.enterPointBand).toEqual([65, 250])
     expect(TIERS.national.enterPointBand).toEqual([150, Number.MAX_SAFE_INTEGER])
+    // ⚠ RE-AIMED AGAIN (the National stagger). Regional's ceiling moved 230 → 250 to sit exactly on
+    // J30's new floor, so the domestic ladder stays open right up to the week the international one
+    // opens. THE FACT THIS TEST IS FOR is the gap below, not the literals: National must open a long
+    // way BEFORE the on-ramp does, or the entry policy skips it entirely (measured at 0.3 entries
+    // per four-year career when the two shared a floor). Do not close it to tidy the numbers.
+    expect(TIERS.j30.enterPointBand[0] - TIERS.national.enterPointBand[0]).toBeGreaterThanOrEqual(100)
+    // ...and regional hands over to the on-ramp with no band in between where only National is open.
+    expect(TIERS.regional.enterPointBand[1]).toBe(TIERS.j30.enterPointBand[0])
     // j30 is OPEN - the research is explicit that an unranked thirteen-year-old near home gets into
     // one, and that the gate up the ladder is the queue rather than the fee.
     // ⚠ The acceptance list is a SHARE of the field, not a rank number - a count would silently
