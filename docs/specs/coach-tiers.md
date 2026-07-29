@@ -109,3 +109,80 @@ Adding it to coaching too would be double-counting unless the coaching bill is e
 - The four tier prices in *our* units (weekly, at four sessions) once the bench has spoken.
 - Whether changing coach mid-season costs something. Real academies charge notice; a free swap makes
   the choice weightless.
+
+---
+
+# Round 2 — the owner corrects the model (29.07)
+
+## The wealth corridor goes back ON coaching, and I had the reason wrong
+
+I argued the corridor should come off because the tier already expresses "poorer families buy cheaper
+coaches", so keeping both would charge the difference twice. The owner's model is better and it is
+not the same claim:
+
+> «для 8к все тиры **[в их академии]** стоят согласно их коридору, для 25к — свои цены, для 120к
+> **[в их премиальных и элитных местах]** стоят дороже всего»
+
+The corridor is not a discount for being poor. It is **the market she trains in**. The same rung of
+coach costs different money in a working-class club, an ordinary academy and a premium one — because
+the court, the city and the queue for that coach's time are different. A family does not get a
+cheaper Middle coach because it is poor; it hires the Middle coach *its academy has*.
+
+So **every tier is priced in every corridor**, and both dials are real: which rung, and which world
+you are hiring in. It also means the wealthy family pays MORE for the same rung, which is right and
+which the previous model got backwards.
+
+## Hours are 4 / 5 / 6
+
+The owner's numbers, replacing the 3/4/6 anchoring: `plan.train` light / balanced / grind means
+**4, 5 and 6 sessions a week**, and an hour is a session. The price table's per-hour figures are
+unchanged; the weekly bill is `rate(tier, age, corridor) × hours(plan)`.
+
+## A roster, not a rung
+
+Roughly **four coaches per tier — one per play style**, each carrying the family's corridor price.
+That is what makes screen T a market rather than a menu: at any tier the parent is choosing between
+a coach who fits her game and one who does not, at the same price, and the fit pill (great / good /
+off) is the whole point of the choice.
+
+## Screen T ships in THIS wave
+
+No longer deferred. The Coach Market is the surface the whole slice hangs off, and every choice this
+model adds is unreachable without it. It is designed in `docs/design/` (screenshot `T-coach-market`,
+README §T) and its components are listed there — tier section headers with a dot, a count and a
+price range, the fit pills, the budget meter, and the three price-action states (hire / current /
+over budget).
+
+## Elite may be gated, not just expensive
+
+Owner: «элит, кстати, могу вообще стать доступны для туров, как вариант и стоит соответствующе».
+An option worth pricing rather than assuming: an Elite coach does not take a fourteen-year-old with
+no results — she becomes hireable when the player has something to show. That turns the top rung from
+"the thing rich families buy at week 1" into something earned, which is the same shape as the academy
+scholarship. Leave the hook in the model; the owner decides whether it is on.
+
+## Show the player what they are buying
+
+> «а мы можем подсветить у каждого тира тренера на сколько он будет полезен игроку? … "budget может
+> добавить 0-2%", "middle 1-3%", "high 2-4%" но всё зависит от ребенка»
+
+Yes — and it should be **computed, not written down**, because the game already knows the answer and
+a hand-written band would drift the moment a knob moves.
+
+The honest quantity is her **growth rate against her remaining headroom**: `growWeek` gains a share
+of the distance still to go, scaled by the coach factor. So the card can say what this rung would add
+*for her, right now*, and the "depends on the child" part is not a disclaimer — it is literally her
+headroom, and it is why the same coach is worth more to a thirteen-year-old with room than to a girl
+already near her ceiling.
+
+Two rules for the copy:
+- **A range, never a number.** The weekly luck draw (`ECONOMY.development.weekLuck`, 0.55–1.45) is
+  real spread and the band must carry it.
+- **Never promise.** The phrasing is what a rung *can* add over a season against her current build,
+  not what she will get.
+
+## Everything gets recomputed and re-measured
+
+Prices per class, all six bench presets, and the specific claim restated: **each family should have a
+real choice inside its own corridor** — survive-and-plateau or gamble, at more than one rung, rather
+than one viable rung per class.
