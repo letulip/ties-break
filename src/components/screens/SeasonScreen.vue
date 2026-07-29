@@ -705,7 +705,12 @@ function playExhibition(): void {
     <div class="season-topbar">
       <div>
         <h2 class="season-title">Season Planner</h2>
-        <p class="season-year">{{ seasonYearLabel }}</p>
+        <p class="season-year">
+          {{ seasonYearLabel }}
+          <!-- Owner, 29.07: the week she is actually IN, up here with the year, so it is on
+               screen without hunting for it down the feed. -->
+          <span class="season-week-now">&middot; {{ weekOnly(week) }}</span>
+        </p>
       </div>
       <button class="tier-guide-btn" aria-label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</button>
     </div>

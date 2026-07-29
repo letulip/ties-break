@@ -1233,6 +1233,13 @@ section.bare .event-cards {
   font-variant-numeric: tabular-nums;
 }
 
+/* Owner, 29.07: the current week rides with the year in the Season header. Quieter than the year
+   itself - it is a locator, not a title. */
+.season-week-now {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
 /* Five cells, one per surface block, hairline-separated; the lime one is the week she is standing
    in. Driven by the engine's SURFACE_BLOCKS, so it cannot describe a season we do not generate. */
 .phase-strip {
@@ -4053,16 +4060,40 @@ button.note-card:active:not(:disabled) {
   vector-effect: non-scaling-stroke;
 }
 
+/* The dots are HTML, not SVG (see HomeScreen): the chart stretches to the card's width and an
+   SVG circle inside it stretches with it. Positioned in percent over the same box, so they land on
+   the polyline's own vertices, and sized in px, so they stay circles at any card width. */
+/* The wallet card becomes the dots' positioning context. It is a <button>, already the card
+   surface, and nothing inside it was absolutely positioned before. */
+.note-card:has(.budget-dots) {
+  position: relative;
+}
+
+.budget-dots {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 66px;
+  pointer-events: none;
+}
+
+.budget-dot {
+  position: absolute;
+  width: 5.5px;
+  height: 5.5px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .budget-dot.good {
-  fill: var(--day-good);
+  background: var(--day-good);
 }
 
 .budget-dot.mid {
-  fill: var(--day-mid);
+  background: var(--day-mid);
 }
 
 .budget-dot.bad {
-  fill: var(--day-bad);
+  background: var(--day-bad);
 }
 
 /* --- COACH -------------------------------------------------------------------------------------- */
