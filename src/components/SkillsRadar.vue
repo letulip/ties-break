@@ -135,6 +135,18 @@ const ceilingPath = computed(() =>
  *  edge - "you learn the range, never the number". */
 const ceilingEdge = computed(() => polygon(ordered.value.map((a) => a.ceilingHi)))
 
+/** HOW SHARPLY THE CONTOUR IS DRAWN. decisions.md #11 is not "a shape plus a fog", it is «contour
+ *  sharpens as coach confidence grows» - so the LINE has to soften too, or the picture says
+ *  "we know exactly where she is, give or take a lot", which is a contradiction rather than a
+ *  reading. Derived from the fog the contract already carries, so it needs no extra field: a wide
+ *  band draws a line you can see through, a narrow one draws a line you can trust. */
+const sharpness = computed(() => {
+  const axes = ordered.value
+  if (!axes.length) return 1
+  const mean = axes.reduce((sum, a) => sum + Math.max(0, a.band), 0) / axes.length
+  return Math.max(0.5, Math.min(1, 1 - mean / 60))
+})
+
 /** The spokes and the two guide rings. Decoration, and deliberately faint: they are there so the
  *  shape reads as a measurement rather than as a blob, not so anything can be counted off them. */
 const spokes = computed(() => ORDER.map((_, i) => pointAt(i, 100)))
@@ -193,8 +205,13 @@ const notes = computed(() =>
       <!-- HOW WRONG WE MIGHT BE about where she is: the fog hugging the contour. -->
       <path class="radar-fog" :d="fogPath" fill-rule="evenodd" filter="url(#radar-fog)" />
 
-      <!-- WHERE SHE IS, as far as anyone can tell. The only hard line in the picture. -->
-      <path class="radar-core" :d="corePath" />
+      <!-- WHERE SHE IS, as far as anyone can tell. The only hard line in the picture - and how hard
+           it is drawn is itself the reading: see `sharpness`. -->
+      <path
+        class="radar-core"
+        :d="corePath"
+        :style="{ strokeOpacity: sharpness, strokeWidth: `${(1.2 + 0.7 * sharpness).toFixed(2)}px` }"
+      />
 
       <text
         v-for="l in labels"
