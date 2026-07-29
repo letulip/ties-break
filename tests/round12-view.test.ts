@@ -114,11 +114,16 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
 // R12-8b — the layoff is visible on week plaques, and the sheet's refusal is legible.
 // ===========================================================================
 describe('R12-8b — a red "injury" chip on every card the layoff covers', () => {
-  it('all FOUR calendar card kinds carry the chip: event, vacation, practice, muted', () => {
+  it('EVERY calendar card kind carries the chip: event, vacation (both renderings), practice, muted', () => {
+    // ⚠ RE-AIMED 4 -> 5 (29.07, the vacation cards). The protected fact has not moved: every card
+    // kind the layoff can cover must wear the chip. What changed is that a booked family week now
+    // has TWO renderings - the painted card, and the plain row it falls back to for a package with
+    // no art yet - and BOTH have to carry it, which is precisely why the count went up rather than
+    // across. If this fires again, count the card kinds in the template and re-aim; do not delete.
     const chip = 'class="pill avail-chip red" :title="layoffNote">injury</span>'
-    expect(seasonScreen.split(chip).length - 1).toBe(4)
+    expect(seasonScreen.split(chip).length - 1).toBe(5)
     // each is gated on the row's own layoff read, never on "is she hurt right now"
-    expect(seasonScreen.split('v-if="row.injured"').length - 1).toBe(4)
+    expect(seasonScreen.split('v-if="row.injured"').length - 1).toBe(5)
   })
 
   it('the chip is the availability-chip idiom: 6px, not the capsule, not a circle', () => {

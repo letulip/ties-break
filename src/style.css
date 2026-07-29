@@ -1550,6 +1550,28 @@ section.bare .event-cards {
 
 /* Exams are nobody's to plan. R12-1/14's rule survives its row becoming a card: the week is
    AFFIRMED in the accent colour, never dimmed into looking like a rendering accident. */
+/* THE BOOKED FAMILY WEEK (owner, 29.07) - the same card as a training week, following its own art.
+   The vacation frames are 941x377 where the week paintings are 941x536, so this card is visibly
+   SHORTER in the same feed. That is deliberate: the owner asked for the card to take the picture's
+   shape rather than crop a wide picture into a tall box. It carries no button, so the body needs a
+   little less room at the foot than a plannable week does. */
+.week-card.vacation {
+  aspect-ratio: 941 / 377;
+  cursor: pointer;
+}
+
+.week-card.vacation:hover,
+.week-card.vacation:focus-visible {
+  border-color: var(--accent-soft, rgba(217, 242, 79, 0.45));
+}
+
+/* The chips on a booked week are read-only facts, not controls, so they sit quieter than the
+   Enter/Plan row they share a class with. */
+.week-card.vacation .week-controls .pill {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
 .week-card.exam {
   border-color: var(--accent);
   background: rgba(217, 242, 79, 0.04);
@@ -2919,10 +2941,63 @@ tr.kid-row td {
   gap: 10px;
 }
 
+/* THE PACKAGE ROWS (owner, 29.07): each one now carries its own painting behind the words, the
+   same frame the booked week wears in the Season feed, so choosing a trip and living it are visibly
+   the same object. The row got TALLER and roomier at the same time - the owner asked for more air
+   and more of the picture; at 10px padding the art was a sliver behind four lines of text. */
 .pkg-row {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+}
+
+/* Behind everything, dissolving to the left exactly like the Season cards' venue art, so the words
+   keep a solid backing on the reading side and the picture owns the right. */
+.pkg-art {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 62%;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 46%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 46%);
+  pointer-events: none;
+}
+
+.pkg-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A bright beach eats 12px type. Same four-stop scrim idea the event cards use. */
+.pkg-art-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(15, 23, 32, 0.85) 0%, rgba(15, 23, 32, 0.35) 45%, rgba(15, 23, 32, 0.55) 100%);
+}
+
+/* Everything the row already had now sits ON the picture. */
+.pkg-row > *:not(.pkg-art) {
+  position: relative;
+}
+
+.pkg-row .pkg-label,
+.pkg-row .pkg-blurb,
+.pkg-row .pkg-effect {
+  text-shadow: var(--shadow-text-on-art);
+}
+
+/* The price sits on the brightest corner of most of these pictures - a sunlit pool, a lake at
+   golden hour - so the bare pill lost its number. It gets the art backing every other figure on a
+   painted card already has. */
+.pkg-head .pill {
+  background: rgba(12, 18, 25, 0.62);
+  border-color: rgba(255, 255, 255, 0.2);
+  text-shadow: var(--shadow-text-on-art);
 }
 
 /* The pre-highlight: the cheapest package that brings her back above the target (or the

@@ -51,3 +51,37 @@ export function weekArtStem(week: number): string {
 export function weekArtUrl(week: number): string {
   return `${import.meta.env.BASE_URL}${WEEK_DIR}${weekArtStem(week)}.webp`
 }
+
+// --- THE VACATION PAINTINGS (owner, 29.07) -------------------------------------------------------
+// A booked family week now gets a card of its own in the Season feed, and each of the six packages
+// wears its own frame instead of all of them sharing the calendar's grey row.
+//
+// THE FILE NAMES ARE THE OWNER'S, NOT THE PACKAGE IDS, and this map is why: he paints and names by
+// what is in the picture (friends, a village, the sea), the engine names by what the family buys
+// (`staycation`, `grandma`, `seaside`). Mapping them here keeps both free to be themselves and puts
+// the translation in exactly one place - the alternative is renaming an author's files, which is a
+// habit that eventually loses one.
+//
+// THEY ARE A DIFFERENT SHAPE from the week paintings and the card follows the art: the vacation
+// frames are 941x377 (2.50:1) against the week frames' 941x536 (1.76:1), so a vacation card is
+// visibly shorter than a training card in the same feed. That is the owner's intent, not a
+// mismatch - see `.vacation-card` in style.css, which takes its aspect-ratio from these numbers.
+const VACATION_ART: Record<string, string> = {
+  staycation: 'vac-friends',
+  grandma: 'vac-village',
+  camping: 'vac-camping',
+  seaside: 'vac-sea',
+  resort: 'vac-resort',
+  elite: 'vac-elite',
+}
+
+/** The frame for a package id, or null if the id is one we have no painting for - a caller must
+ *  handle that rather than render a 404, because the package catalogue can grow before the art does. */
+export function vacationArtUrl(packageId: string): string | null {
+  const stem = VACATION_ART[packageId]
+  return stem ? `${import.meta.env.BASE_URL}${WEEK_DIR}${stem}.webp` : null
+}
+
+/** Exported for the test that checks every shipped package has a painting and every painting is
+ *  reachable from a package - the same both-directions check `WEEK_ART` gets. */
+export const VACATION_ART_STEMS: readonly string[] = Object.values(VACATION_ART)
