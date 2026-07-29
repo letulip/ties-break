@@ -487,6 +487,14 @@ describe('R10-16 — no popup may render without copy', () => {
     const radius = Number(/border-radius:\s*(\d+)px/.exec(rule)?.[1])
     // the top popups (.stop-toast / .recovered-banner) sit at 10px; the capsule idiom is
     // var(--radius-pill) – see the two tests below for why it is a token and not a bare 999px.
+    // ⚠ RE-AIMED by the css-dry pass (docs/specs/css-dry-audit.md): `.stop-toast` and
+    // `.recovered-banner` were eleven identical declarations written out twice and are now ONE
+    // rule, so the radius this reads lives in a shared body. The selector list deliberately ENDS
+    // with `.stop-toast`, so `.stop-toast {` still names the rule that declares it and the fact
+    // being pinned – the injury dialog wears the top popups' radius, not a pill – is unchanged.
+    // What the merge actually strengthened: the two popups can no longer drift apart at all, so
+    // there is no longer a version of this file where .recovered-banner and .stop-toast disagree
+    // about the radius that this test then checks only one of.
     const toast = css.slice(css.indexOf('.stop-toast {'))
     const toastRadius = Number(/border-radius:\s*(\d+)px/.exec(toast.slice(0, toast.indexOf('}')))?.[1])
     expect(radius).toBe(toastRadius)

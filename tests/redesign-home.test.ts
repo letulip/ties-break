@@ -530,6 +530,13 @@ describe('the style foundation later slices reuse', () => {
     expect(css).toContain('button.note-card:hover:not(:disabled)')
     // The card is a GRADIENT with a translucent hairline – the export's idiom, and most of why its
     // cards read as objects rather than as filled rectangles.
+    // ⚠ RE-AIMED by the css-dry pass (docs/specs/css-dry-audit.md): the gradient and the
+    // --card-edge hairline moved out of `.note-card`'s own rule into THE NOTECARD SURFACE, the
+    // shared rule that also dresses `.friendly-card` and `.diary-strip` – three places had been
+    // writing the export's card idiom out by hand. The merged selector list deliberately ENDS with
+    // `.note-card`, so `.note-card {` still names the rule that declares them and the fact being
+    // pinned is unchanged: a notecard is a gradient with a translucent hairline, not a filled
+    // rectangle. It is now pinned for all THREE surfaces at once rather than for this one.
     const rule = css.slice(css.indexOf('.note-card {'), css.indexOf('}', css.indexOf('.note-card {')))
     expect(rule).toContain('linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%)')
     expect(rule).toContain('border: 1px solid var(--card-edge)')

@@ -1272,17 +1272,27 @@ section.bare .event-cards {
    weather across the top, the surface and dates where the export prints a city, the travel figure,
    and the coach's plaque pinned to the bottom with her odds beside it. Everything below the plaque
    (entry controls, locks, chips) is the screen's existing machinery, restyled by inheritance. */
-.event-card {
+/* THE PHOTOGRAPH CARD, shared with the week card below: a clipped 18px box in the dark card tone
+   that a painting bleeds into, with the words stacked on top of it. `.week-card`'s own comment
+   already said it is "built exactly like the tournament card"; this is that sentence as one rule,
+   so the next painted card inherits the shape instead of copying seven declarations. The two
+   differ in exactly one thing each and it stays with them - this one is padded, the week card
+   takes its height from its 16:9 master instead. */
+.event-card,
+.week-card {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--card-edge);
   border-radius: 18px;
   background: var(--card-bottom);
-  /* The export pads its card 16 / 16 / 6 – tighter at the bottom, because the coach plaque brings
-     its own inset. */
-  padding: 16px 16px 12px;
   display: flex;
   flex-direction: column;
+}
+
+/* The export pads its card 16 / 16 / 6 – tighter at the bottom, because the coach plaque brings
+   its own inset. */
+.event-card {
+  padding: 16px 16px 12px;
 }
 
 /* 74% of the card, dissolved away to the left, exactly as the export draws it. */
@@ -1297,7 +1307,16 @@ section.bare .event-cards {
   pointer-events: none;
 }
 
-.event-art img {
+/* A PHOTOGRAPH FILLING ITS FRAME. Four places show a painting inside a box the layout has already
+   sized – the tournament card's court, the week card's master, the venue arch on Home's next-
+   tournament card, and Home's own hero – and all four need the same four declarations: fill the
+   box, never letterbox, and no descender gap under the image. The masters are not one aspect ratio
+   (626x505 to 625x627, 941x536, 512x512), which is exactly why `cover` is not optional here.
+   `.week-art img` steers its crop as well; that one line stays with it. */
+.event-art img,
+.week-art img,
+.venue-art img,
+.diary-hero-img {
   display: block;
   width: 100%;
   height: 100%;
@@ -1474,14 +1493,7 @@ section.bare .event-cards {
    At 324px wide that is a 185px card - the same height the export gives its own cards, which is a
    coincidence worth keeping. */
 .week-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--card-edge);
-  border-radius: 18px;
-  background: var(--card-bottom);
   aspect-ratio: 941 / 536;
-  display: flex;
-  flex-direction: column;
 }
 
 .week-art {
@@ -1489,11 +1501,8 @@ section.bare .event-cards {
   inset: 0;
 }
 
+/* Fills its frame (see the shared rule up by .event-art img) and steers its own crop. */
 .week-art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   object-position: center 38%;
 }
 
@@ -1587,15 +1596,29 @@ section.bare .event-cards {
   background: rgba(217, 242, 79, 0.04);
 }
 
+/* THE NOTECARD SURFACE. A card is an OBJECT, and this is what makes it one: a vertical gradient
+   rather than a flat fill (so it reads as lit from above), a translucent hairline that cuts it out
+   of the page rather than a drawn line, and 17px corners. It is the export's own idiom and three
+   places were writing it out by hand – the friendly card, the strips below Home's fold, and the
+   notecards themselves. `.friendly-card` spelled its radius `17px` where the other two used
+   `--radius-card`; the token IS 17px, so this is the same number with its name back on it, not a
+   value change (recorded in docs/specs/css-dry-audit.md).
+   `.note-card` is LAST on purpose: redesign-home.test.ts reads the body of `.note-card {` for the
+   gradient and the --card-edge hairline, and that is this rule. */
+.friendly-card,
+.diary-strip,
+.note-card {
+  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+  border: 1px solid var(--card-edge);
+  border-radius: var(--radius-card);
+}
+
 /* THE FRIENDLY CARD – the sandbox hit-out, wearing the same notecard as everything else. */
 .friendly-card {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px;
-  border-radius: 17px;
-  border: 1px solid var(--card-edge);
-  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
 }
 
 .friendly-said {
@@ -3440,12 +3463,7 @@ tr.kid-row td {
   overflow: hidden;
 }
 
-.diary-hero-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+/* The hero photograph fills its square – see the shared rule up by .event-art img. */
 
 /* TWO scrims, and they do two different jobs.
    TOP: darkens the first 40% so the date and the icons are legible over any of the 35 paintings.
@@ -3811,6 +3829,9 @@ tr.kid-row td {
   padding: 2px 0 14px;
 }
 
+/* The gradient, the --card-edge hairline and the 17px corners are THE NOTECARD SURFACE, shared
+   with .friendly-card and .diary-strip further up the sheet. What is left here is what makes this
+   one a card in the grid rather than a strip: its box, its type, its height, its lift. */
 .note-card {
   position: relative;
   box-sizing: border-box;
@@ -3820,9 +3841,6 @@ tr.kid-row td {
   width: 100%;
   text-align: left;
   padding: 14px;
-  border-radius: var(--radius-card);
-  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
-  border: 1px solid var(--card-edge);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
@@ -3863,14 +3881,29 @@ button.note-card:active:not(:disabled) {
   }
 }
 
-/* ONE colour means "read this". Every card is labelled in it, and nothing else on the page is. */
-.note-kicker {
-  position: relative;
+/* THE LIME EYEBROW. ONE colour means "read this": every card on this page is labelled in it, the
+   strips below the fold are labelled in it, and nothing else is. Two rules were writing the same
+   six values out – this one and `.diary-strip h2` at the bottom of the sheet – so they are one
+   rule, with only their margins (and this one's stacking) left apart.
+   The two values that were IMPLICIT are now written down, and neither changes a pixel: the kicker
+   only ever sits inside a `.note-card`, which is already `--font-body`; and `.diary-strip` is a
+   <section>, so `section h2` was the thing supplying the uppercase. Both were measured in the
+   browser against the running app before this merge – see docs/specs/css-dry-audit.md.
+   NOT the same object as the app's other uppercase labels: those are MUTED, at 11-12px and three
+   different trackings. That is an open question in the audit, not a group. */
+.note-kicker,
+.diary-strip h2 {
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+/* It sits above the card's own absolutely-positioned art. */
+.note-kicker {
+  position: relative;
   margin: 0;
 }
 
@@ -3951,13 +3984,8 @@ button.note-card:active:not(:disabled) {
   mask-image: linear-gradient(100deg, transparent 4%, #000 44%);
 }
 
-.venue-art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  /* The masters are not one aspect ratio (626x505 to 625x627) – cover, never letterbox. */
-  object-fit: cover;
-}
+/* Fills its frame – see the shared rule up by .event-art img, which is also where the reason
+   `cover` is not optional lives (the venue masters run 626x505 to 625x627). */
 
 /* A fresh recap the player has not read – the dot that used to sit on the This-week tab, re-homed
    onto the card that now opens that screen. */
@@ -4178,22 +4206,18 @@ button.note-card:active:not(:disabled) {
 /* --- 4. what stays below the grid ---------------------------------------------------------------
    The tier ladder and the news feed keep their markup (and every rule that pins it) and only change
    chrome, so the page below the fold reads as more of the same diary rather than the start of an
-   older screen. */
+   older screen. And it is literally the same chrome: the gradient, the hairline and the corners are
+   THE NOTECARD SURFACE, shared with .note-card and .friendly-card. */
 .diary-strip {
   padding: 14px;
   margin-bottom: 11px;
   min-height: 0;
-  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
-  border: 1px solid var(--card-edge);
-  border-radius: var(--radius-card);
 }
 
+/* The strip's heading is THE LIME EYEBROW – see .note-kicker above, where the shared rule lives.
+   All this one adds is the gap under it; `.diary-strip` is a <section>, so `section h2` used to be
+   the thing quietly supplying the uppercase and the eyebrow rule now says it out loud. */
 .diary-strip h2 {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--accent);
   margin: 0 0 12px;
 }
 
