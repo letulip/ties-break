@@ -1,5 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { createWorld, enterEvent, isTierEligible, kidPoints, toSnapshot, KID_ID, type WorldState } from '../src/engine/world'
+import {
+  createWorld,
+  enterEvent,
+  isTierEligible,
+  kidPoints,
+  recomputeKidRank,
+  tierOpenFor,
+  toSnapshot,
+  KID_ID,
+  type WorldState,
+} from '../src/engine/world'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -162,21 +172,43 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
   it('a high-point kid: the top rungs open, local/regional outgrown, j300 still out of reach', () => {
     // RE-PINNED by ladder-up Part B: at 700 points she has outgrown local (>85) and regional
     // (>230), national/j30/j60 are all open (their ceilings are the MAX sentinel), and j300 is
-    // still LOCKED – she has not earned its 900-point entry yet. That is the ladder working:
-    // outgrown below, open in the middle, something still to climb above.
+    // still LOCKED. That is the ladder working: outgrown below, open in the middle, something
+    // still to climb above.
+    //
+    // ⚠ RE-AIMED by the two ladders (docs/specs/two-ladders.md). TWO THINGS MOVED.
+    //   (1) "She has the points for it" is no longer one number. 700 DOMESTIC points buy nothing
+    //       international above the j30 on-ramp, so the fixture now gives her an ITF book as well –
+    //       a J60 title, a J60 final and a J300 round of 16, 156 points, which is #65 on this seed:
+    //       inside j60's top 120 and outside j300's top 50. Without it "the top rungs open" was
+    //       simply not a state this world could be in, and the case had nothing left to assert.
+    //   (2) j300's lock is no longer a 900-point band – it is an ACCEPTANCE LIST – so the card
+    //       carries `rankToEnter` (top 50) where it used to carry `pointsToEnter` (900). Same
+    //       verdict, same rung, stated in the currency she can actually read off her own table.
+    // WHAT IS UNCHANGED is the fact this case exists for: the SHAPE of the ladder around her – two
+    // rungs outgrown below, three open in the middle, and exactly one still to climb above.
     const world = createWorld('snap-top')
     giveKidPoints(world, 700)
+    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j60' }) // a J60 title
+    world.results.push({ playerId: KID_ID, week: world.week, points: 36, tier: 'j60' }) // ...a J60 final
+    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j300' }) // ...a J300 R16
+    recomputeKidRank(world)
+    expect(kidPoints(world, 'domestic')).toBe(700)
+    expect(world.kidRank).toBeGreaterThan(TIERS.j300.enterRank!) // outside the top 50...
+    expect(world.kidRank).toBeLessThanOrEqual(TIERS.j60.enterRank!) // ...and inside the top 120
     const upcoming = toSnapshot(world).upcoming
     expect(upcoming.length).toBeGreaterThan(0)
     for (const e of upcoming) {
-      expect(e.eligible).toBe(isTierEligible(e.tier, 700))
+      // The ENGINE'S OWN gate, not a re-derived one. `isTierEligible` is the DOMESTIC half only –
+      // a points band – and j60/j300 no longer have a meaningful one ([0, MAX]), so it would read
+      // both as open to anybody with any points at all.
+      expect(e.eligible).toBe(tierOpenFor(world, e.tier))
       if (e.tier === 'national' || e.tier === 'j30' || e.tier === 'j60') {
         expect(e.eligible).toBe(true)
         expect(e.ineligibleReason).toBeUndefined()
       } else if (e.tier === 'j300') {
         expect(e.eligible).toBe(false)
-        expect(e.ineligibleReason).toBe('locked') // 700 < 900 – not there yet
-        expect(e.pointsToEnter).toBe(900)
+        expect(e.ineligibleReason).toBe('locked') // #65 – outside the acceptance list, not there yet
+        expect(e.rankToEnter).toBe(50)
       } else {
         expect(e.eligible).toBe(false)
         expect(e.ineligibleReason).toBe('outgrown') // 700 is past the ceiling – too good now

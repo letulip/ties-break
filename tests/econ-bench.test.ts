@@ -217,8 +217,20 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
     // actually needs is unchanged and is what is asserted: she starts FAR outside the top 50 with
     // no counting result, so the unguarded `kidRank <= 50` arm would still be wrong at week 1 and
     // the hasResults guard is still doing real work. Full note in tests/season/prehistory.test.ts.
+    //
+    // ⚠ RE-PINNED 195 -> 120 by the two ladders (docs/specs/two-ladders.md), and it is a DERIVED
+    // number about a different question, not a regression. `kidRank` is her ITF rank now, and the
+    // ITF table is a smaller table: only the 119 cohort players whose pre-history was earned on the
+    // J rungs hold a counting international result, so everybody else - the kid included - ties at
+    // zero and shares dense rank 120. The protected fact is untouched and is what the next two
+    // lines assert: with no counting result she starts FAR outside the top 50, so the unguarded
+    // `kidRank <= 50` arm would still fire wrongly at week 1.
+    //
+    // Worth reading twice: 120 is EXACTLY j60's acceptance list. The engine carries the same
+    // `ranked` guard on its own entry gate for precisely this reason - unranked is not rank one,
+    // and without it a fresh fourteen-year-old would read as #120 and be handed a J60 on day one.
     const fresh = openCareer(wealthy, 0)
-    expect(fresh.world.kidRank).toBe(195)
+    expect(fresh.world.kidRank).toBe(120)
     expect(fresh.world.kidRank).toBeGreaterThan(REACH_PRO_RANK)
     expect(kidPoints(fresh.world, 'itf')).toBe(0) // ...and still no counting result
 
