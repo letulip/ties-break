@@ -13,6 +13,7 @@ import {
   closeTournament,
   travelCostFor,
   reviewAcademy,
+  toSnapshot,
   SAVE_SCHEMA_VERSION,
   type WorldState,
 } from '../src/engine/world'
@@ -274,5 +275,40 @@ describe('schema v21', () => {
     const world = createWorld('acad-fresh')
     expect(world.academy).toBeNull()
     expect(world.schemaVersion).toBe(21)
+  })
+})
+
+// --- what the player is shown -------------------------------------------------
+// The project has no component mounting, so the UI facts are pinned by reading the source – the
+// same guard style the redesign slices use. ⚠ If one of these fires, RE-AIM it at wherever the fact
+// moved to; do not delete it. The fact being protected is that a discounted number is never shown
+// without saying who discounted it.
+
+describe('the scholarship is visible where the money is', () => {
+  const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
+
+  it('names the academy under the Season card travel figure', () => {
+    const src = read('../src/components/screens/SeasonScreen.vue')
+    expect(src).toContain('academyCoverPct')
+    expect(src).toContain('academy covers {{ academyCoverPct }}%')
+    // The figure it explains is the engine's net price, not the calendar's sticker.
+    expect(src).toContain('formatDollars(row.event.travelCostCents)')
+  })
+
+  it('reports the season total in the wrap-up, and hides the row when nobody backed her', () => {
+    const src = read('../src/components/SeasonSummaryDialog.vue')
+    expect(src).toContain('Academy covered')
+    expect(src).toContain('(summary.academyCoveredCents ?? 0) > 0')
+  })
+
+  it('carries the scholarship on the snapshot as a SHARE, ready to print', () => {
+    const world = runCareer('acad-offer', 'working', 60)
+    const snap = toSnapshot(world)
+    expect(snap.academy).not.toBeNull()
+    expect(snap.academy!.coverShare).toBeCloseTo(travelCoverShare(world.academy), 12)
+    expect(snap.academy!.sinceWeek).toBe(52)
+    // ...and every quoted travel price is already net of it.
+    const full = world.season.find((e) => e.week > world.week)!
+    expect(travelCostFor(world, full)).toBeLessThan(full.travelCostCents)
   })
 })

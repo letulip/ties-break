@@ -227,6 +227,9 @@ const CALENDAR_HORIZON = 8 // mirrors world.ts's UPCOMING_WEEKS
 const week = computed(() => game.snapshot?.week ?? 0)
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 const condition = computed(() => game.snapshot?.condition ?? 0)
+// v21: the share of every trip the academy is paying. One number for the whole calendar – the
+// scholarship is a rate, not a per-event deal – so each card can print it without re-deriving it.
+const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.coverShare ?? 0) * 100))
 
 // SEASON STRUCTURE BY SURFACE (owner approved 26.07). The calendar shows 8 weeks, so a 15-week clay
 // swing would otherwise only become visible once she is standing in it – and the whole point of the
@@ -827,7 +830,9 @@ function playExhibition(): void {
             <div class="event-money">
               <p class="event-money-label">Travel budget</p>
               <p class="event-money-figure">{{ formatDollars(row.event.travelCostCents) }}</p>
-
+              <!-- v21: the figure above is already NET of the scholarship, so without this line the
+                   player just sees a smaller number and no reason for it. -->
+              <p v-if="academyCoverPct > 0" class="event-money-sub">academy covers {{ academyCoverPct }}%</p>
             </div>
 
             <div class="controls">

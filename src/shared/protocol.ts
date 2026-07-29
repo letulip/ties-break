@@ -247,6 +247,10 @@ export interface SeasonSummary {
   /** weeks lost to injury inside the season (Season-Life slice C). OPTIONAL – summaries
    *  banked before slice C never stored it; readers default to 0 (no schema bump). */
   weeksInjured?: number
+  /** travel the academy paid for inside the season, in cents (schema v21). 0 when nobody was
+   *  backing her. OPTIONAL for the same reason as the two above: a recap is a record of what was
+   *  said, and summaries banked before v21 never knew this number. */
+  academyCoveredCents?: number
 }
 
 /** One FINISHED season, appended to the career's history at wrap-up (schema v14, R10-9).
@@ -374,6 +378,19 @@ export interface PracticeBooking {
 export interface RecoveryBuff {
   untilWeek: number
   factor: number
+}
+
+/** Her academy scholarship as the UI needs it (schema v21). The engine keeps the level; the screens
+ *  only ever want the SHARE of a trip somebody else is paying, which is the level already scaled by
+ *  `ECONOMY.academy.travelCover` – so the number here is the one the card prints and nothing has to
+ *  re-derive it. */
+export interface SnapshotAcademy {
+  /** 0..1 – the share of every travel bill the academy covers right now. */
+  coverShare: number
+  /** the week the current unbroken run of support began. */
+  sinceWeek: number
+  /** travel the academy has paid for since the last review, in cents. */
+  coveredCents: number
 }
 
 /** A scheduled event surfaced to the UI, with the kid's entry state + tier lookups. */
@@ -682,6 +699,10 @@ export interface Snapshot {
   /** an active resort/elite recovery buff, or null. Surfaced so the UI can show that the
    *  expensive package is still working. */
   recoveryBuff: RecoveryBuff | null
+  /** her academy scholarship, or null when nobody is backing her (schema v21). Surfaced because
+   *  every travel figure the planner quotes is already net of it, and a smaller number with no
+   *  explanation is worse than no discount at all. */
+  academy: SnapshotAcademy | null
   /** the kid's current dense rank among the cohort + kid */
   kidRank: number
   /** the kid's rank at the start of the last resolved week; null before any tick (schema v7) */

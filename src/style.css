@@ -1445,11 +1445,15 @@ section.bare .event-cards {
   text-shadow: var(--shadow-text-on-art);
 }
 
+/* The line under the travel figure. v21 gave it its job back: the figure is already net of the
+   academy's share, and this says so. It sits ON the venue painting like the figure above it, so it
+   carries the same shadow – `--ink-soft` alone disappears over a bright court. */
 .event-money-sub {
   margin: 4px 0 0;
   font-size: 12.5px;
   font-weight: 500;
   color: var(--ink-soft);
+  text-shadow: var(--shadow-text-on-art);
 }
 
 /* --- THE WEEK CARD (owner, 28.07) ----------------------------------------------------------------

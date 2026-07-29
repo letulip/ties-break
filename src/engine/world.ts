@@ -665,6 +665,10 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
     spentCents,
     earnedCents,
     weeksInjured,
+    // v21: what the scholarship was actually worth this season. It exists nowhere else – the travel
+    // half is a discount on the travel line, not an income row, so no window fold can recover it.
+    // Read HERE, at week 49, which is after the year's last trip and before the review resets it.
+    academyCoveredCents: world.academy?.coveredCents ?? 0,
   }
   // R10-9: the same figures also APPEND to the career history (the summary above is overwritten
   // every year). Guarded on the season INDEX, so a re-entry for a season already banked is a no-op –
@@ -3267,6 +3271,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     vacations: world.vacations.map((v) => ({ ...v })),
     practices: world.practices.map((p) => ({ ...p })),
     recoveryBuff: world.recoveryBuff ? { ...world.recoveryBuff } : null,
+    academy: world.academy
+      ? {
+          coverShare: travelCoverShare(world.academy),
+          sinceWeek: world.academy.sinceWeek,
+          coveredCents: world.academy.coveredCents,
+        }
+      : null,
     // The ITF annual cap as it stands TODAY – what the Home ladder needs to tell a tier's state.
     // Derived at snapshot time from the persisted ledger, so it can never disagree with the gate.
     entryCap: entryCapUsage(world, world.week),

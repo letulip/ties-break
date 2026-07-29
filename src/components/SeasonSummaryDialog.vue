@@ -78,6 +78,13 @@ const rankMove = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
             <th>Earned this season</th>
             <td class="num positive">{{ formatSigned(earnedCents) }}</td>
           </tr>
+          <!-- v21: the scholarship never shows up in "Earned" – its travel half is a discount on
+               the travel line, not income – so this is the only place the year's help is a number.
+               Hidden at zero: a family nobody backed should not read a row of dashes. -->
+          <tr v-if="(summary.academyCoveredCents ?? 0) > 0">
+            <th>Academy covered</th>
+            <td class="num positive">{{ formatSigned(summary.academyCoveredCents ?? 0) }}</td>
+          </tr>
           <tr>
             <th>Funds this season</th>
             <td class="num" :class="{ negative: summary.fundsDeltaCents < 0, positive: summary.fundsDeltaCents >= 0 }">

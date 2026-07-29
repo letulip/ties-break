@@ -14,6 +14,7 @@ import { writeFileSync } from 'node:fs'
 import { createWorld, tickWeek, enterEvent, skipTournament, closeTournament } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { encodeExportFile } from '../src/engine/saveCodec'
+import { DEFAULT_PROFILE, type FamilyBackground } from '../src/shared/protocol'
 
 function arg(name: string, fallback: string): string {
   const i = process.argv.indexOf(`--${name}`)
@@ -25,7 +26,11 @@ async function main(): Promise<void> {
   const target = Number(arg('week', '45'))
   const out = arg('out', 'demo.tbsave')
 
-  const world = createWorld(seed)
+  // v21: the family's background decides whether an academy ever backs her, so a demo of the
+  // scholarship has to be able to pick one: `--background working`.
+  const background = arg('background', DEFAULT_PROFILE.background) as FamilyBackground
+  const coachSetup = background === 'working' ? 'parent' : DEFAULT_PROFILE.coachSetup
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachSetup })
   // Enough money that the demo is about the CALENDAR, not about affordability.
   world.fundsCents = 500_000_00
   const rng = rngFromSeed(world.seed)
@@ -50,6 +55,11 @@ async function main(): Promise<void> {
 
   writeFileSync(out, await encodeExportFile(world))
   console.log(`seed "${seed}" -> week ${world.week} (season week ${(world.week % 52) + 1}), funds $${Math.round(world.fundsCents / 100).toLocaleString('en-US')}`)
+  console.log(
+    world.academy
+      ? `academy: ${Math.round(world.academy.level * 100)}% level, covering travel since week ${world.academy.sinceWeek}`
+      : 'academy: nobody is backing her',
+  )
   console.log(`wrote ${out}`)
 }
 
