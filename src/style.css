@@ -237,10 +237,10 @@ td.num {
 }
 
 /* A WRAPPING ROW OF CHIPS, 8px apart. The app's most-repeated layout: buttons under a card, the
-   condition blocks beside their label, the tier ladder across Home. Three rules said it in three
-   different declaration orders and meant the same thing. */
+   entry chips on the Season screen, the tier ladder across Home. Two rules said it in two
+   different declaration orders and meant the same thing. (A third, `.condition-cell`, was in this
+   list until the dead-rule sweep - it had no consumer left anywhere.) */
 .controls,
-.condition-cell,
 .season-strip {
   display: flex;
   flex-wrap: wrap;
@@ -871,22 +871,6 @@ button.danger:hover:not(:disabled) {
   border: none;
   border-top: 1px solid var(--line);
   margin: 16px 0;
-}
-
-.condition-blocks {
-  display: flex;
-  gap: 4px;
-}
-
-.condition-block {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  background: var(--line);
-}
-
-.condition-block.filled {
-  background: var(--accent);
 }
 
 /* Season-Life slice B: the condition cell's block bar (R13-3: the availability chip that shared
@@ -1831,17 +1815,6 @@ section.bare .event-cards {
   .condition-ring-arc {
     transition: none;
   }
-}
-
-/* Surface x play style: one line per card, and only when the court has an opinion about her
-   build – accent when it suits her, muted-warm when it does not. (Still used by the season-blocks
-   strip above the calendar; the EVENT CARD moved to .surface-badge below in R10-11.) */
-.surface-note {
-  font-size: 12px;
-  color: #c98d63;
-}
-.surface-note.suits {
-  color: var(--accent);
 }
 
 /* R11-15 (REVERTS R10-11): the event card's surface PILL, back in the corner, with the verdict alone
