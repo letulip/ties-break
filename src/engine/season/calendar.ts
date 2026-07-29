@@ -43,6 +43,7 @@ import type { SeasonEvent, TierDef, TierId } from './types'
 export const TIERS: Record<TierId, TierDef> = {
   local: {
     id: 'local',
+    track: 'domestic',
     label: 'Local Open',
     drawSize: 8,
     entryFeeCents: 40_00,
@@ -58,6 +59,7 @@ export const TIERS: Record<TierId, TierDef> = {
   },
   regional: {
     id: 'regional',
+    track: 'domestic',
     label: 'Regional Championship',
     drawSize: 16,
     entryFeeCents: 75_00,
@@ -71,6 +73,7 @@ export const TIERS: Record<TierId, TierDef> = {
   },
   national: {
     id: 'national',
+    track: 'domestic',
     label: 'National Series',
     drawSize: 32,
     entryFeeCents: 120_00,
@@ -101,41 +104,50 @@ export const TIERS: Record<TierId, TierDef> = {
   // at every finish – an international result is worth more than a domestic one of the same round.
   j30: {
     id: 'j30',
+    track: 'itf',
     label: 'Junior Tour 30',
     drawSize: 32,
     entryFeeCents: 200_00,
     travelCostCents: [900_00, 2000_00],
-    points: [400, 240, 140, 70, 30, 0],
+    points: [30, 18, 9, 5, 2, 0],
     // THE dense entry level – with regional it is what makes an empty week a choice, not a gap.
     everyNWeeks: 2,
     minAgeYears: 13,
     // Opens at 180: one National quarter-final (35) on top of a regional book gets her there, so
     // the international door opens while regional (≤230) is still open and national is already
     // live. Never closes – a J30 stays a legitimate week even for a strong junior.
-    enterPointBand: [180, Number.MAX_SAFE_INTEGER],
+    // OPEN. A J30 is the international entry rung and the research is explicit that an unranked
+    // thirteen-year-old near home can get into one; the band below still decides who the AI field
+    // is drawn from, so she meets the players who actually play them.
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     entrantPctBand: [0.12, 0.6],
   },
   j60: {
     id: 'j60',
+    track: 'itf',
     label: 'Junior Tour 60',
     drawSize: 32,
     entryFeeCents: 250_00,
     travelCostCents: [1100_00, 2400_00],
-    points: [600, 360, 210, 105, 45, 0],
+    points: [60, 36, 18, 10, 5, 0],
     everyNWeeks: 3,
     minAgeYears: 13,
     // 400 = one J30 title, or three J30 semi-finals. A real body of international results, not one
     // lucky week.
-    enterPointBand: [400, Number.MAX_SAFE_INTEGER],
+    // The acceptance list starts to bite: an ITF ranking inside the top 120 of a ~200-strong field,
+    // which is the same signal `entrantPctBand` uses for everybody else.
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    enterRank: 120,
     entrantPctBand: [0.05, 0.4],
   },
   j300: {
     id: 'j300',
+    track: 'itf',
     label: 'Junior Tour 300',
     drawSize: 32,
     entryFeeCents: 400_00,
     travelCostCents: [1600_00, 3200_00],
-    points: [1000, 600, 350, 175, 75, 0],
+    points: [300, 210, 140, 100, 60, 30],
     // Rare by design: four a year, so each one is an event the family plans a season around.
     everyNWeeks: 13,
     // R12-6: same rule as national, for the same reason and with even more room (4 events). The two
@@ -144,7 +156,8 @@ export const TIERS: Record<TierId, TierDef> = {
     minGapWeeks: 2,
     minAgeYears: 13,
     // 900 ≈ a J60 title plus a deep second run – the point at which she is one of the field's best.
-    enterPointBand: [900, Number.MAX_SAFE_INTEGER],
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    enterRank: 50,
     entrantPctBand: [0.0, 0.25],
   },
 }
