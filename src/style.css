@@ -91,6 +91,30 @@
   /* The warm accents: lamplight and late sun. The diary's warmth on the export's cool base. */
   --amber: #f5b942;
   --orange: #e2822f;
+
+  /* --- THE STATE COLOURS (owner, 29.07: "всё в переменные, если смыслово цвет ту же функцию
+     выполняет — меняй") ---------------------------------------------------------------------
+     Three named states that are neither "good" (--accent) nor "stop" (--danger), each of which
+     had been living as a bare hex somewhere down the sheet.
+
+     --warning  "this is a risk, and you may still take it": the caution pill, the risky Enter
+                button, the amber line under it, the rescue offer's frame and title, and the
+                strain warning on Home. SIX rules, ONE job, and it had been done in two values -
+                a hard-coded #f2b34f in five of them and --amber (#f5b942) in the sixth. #f5b942
+                wins because the design system already named it: docs/design/tokens.css declares
+                `--warning: #f5b942`, so this is the app catching up with its own export rather
+                than a taste call.
+                It is an ALIAS of --amber rather than a copy of the value, because --amber's other
+                consumer is the SUN in the weather readout, and a sun is not a caution. One value,
+                two names, and each name says what it is for.
+     --locked   a hard lock, deliberately dimmer than a warning (owner, round 8: locked is not the
+                same as warned - you cannot do this, versus you probably should not).
+     --against  the court does not suit her build. A verdict, not a warning: it says something
+                about the match, not about a risk she is taking. */
+  --warning: var(--amber);
+  --warning-wash: rgba(245, 185, 66, 0.06);
+  --locked: #d9b26a;
+  --against: #c98d63;
   /* Real photographic paper – the Memory polaroid, and the only light surface in the whole app. */
   --polaroid-paper: #f3f0e8;
   /* The bottom bar sits a step DARKER than the page, so the page floats above it. */
@@ -909,11 +933,11 @@ button.danger:hover:not(:disabled) {
   border-color: var(--danger);
 }
 
-/* Amber "caution" pill – a soft, warned state (e.g. racing while fatigued is a risky CHOICE, not a
+/* The "caution" pill – a soft, warned state (e.g. racing while fatigued is a risky CHOICE, not a
    block). Distinct from .pill.muted (a hard lock) and .pill.ok (a clear go). */
 .pill.caution {
-  color: #f2b34f;
-  border-color: #f2b34f;
+  color: var(--warning);
+  border-color: var(--warning);
 }
 
 .physio-toggle {
@@ -929,15 +953,15 @@ button.danger:hover:not(:disabled) {
   cursor: pointer;
 }
 
-/* The amber warning line under a "race anyway?" Enter button (SeasonScreen fatigued card). */
+/* The warning line under a "race anyway?" Enter button (SeasonScreen fatigued card). */
 .caution-note {
-  color: #f2b34f;
+  color: var(--warning);
   font-size: 12px;
   margin: 6px 0 0;
 }
 button.primary.risky {
-  border-color: #f2b34f;
-  color: #f2b34f;
+  border-color: var(--warning);
+  color: var(--warning);
 }
 
 /* A wrapping row of chips – see .controls at the top of the sheet. */
@@ -1872,7 +1896,7 @@ section.bare .event-cards {
 }
 
 .surface-badge.aff-against .surface-caption {
-  color: #c98d63;
+  color: var(--against);
 }
 
 /* Season structure by surface: the two-row block strip above the Calendar list. The upcoming block
@@ -2380,9 +2404,9 @@ tr.kid-row td {
 /* Round-8 item 6b (owner 25.07): hard-lock pills on the Season calendar ("Reach N pts",
    "Outgrown", "Entries closed", …). The pill itself stays visually disabled (dim border,
    slight fade) but the LABEL brightens to a soft amber – the old pale muted tone was too
-   faint to read. Deliberately dimmer than .pill.caution's amber: locked ≠ warned-choice. */
+   faint to read. Deliberately dimmer than --warning: locked is not warned-choice. */
 .pill.muted.lock {
-  color: #d9b26a;
+  color: var(--locked);
 }
 
 /* item 7: the ellipsis row between the top-10 block and the around-kid block. */
@@ -2920,9 +2944,9 @@ tr.kid-row td {
 
 /* The rescue OFFER (spec §4b) – surfaced when she is worn out and a bookable week lies ahead. */
 .rescue-card {
-  border: 1px solid #f2b34f;
+  border: 1px solid var(--warning);
   border-radius: 10px;
-  background: rgba(242, 179, 79, 0.06);
+  background: var(--warning-wash);
   padding: 12px;
   margin-bottom: 16px;
 }
@@ -2932,7 +2956,7 @@ tr.kid-row td {
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 14px;
-  color: #f2b34f;
+  color: var(--warning);
 }
 
 /* The planner sheet: same overlay/card language as the tour guide, scrollable on a phone.
@@ -3744,9 +3768,10 @@ tr.kid-row td {
   text-wrap: pretty;
 }
 
-/* R13-3's strain warning – the one line here that is a warning rather than an observation. */
+/* R13-3's strain warning – the one line here that is a warning rather than an observation, which
+   is exactly why it is --warning and the sun above is still --amber. Same value, different job. */
 .condition-note.warn {
-  color: var(--amber);
+  color: var(--warning);
   font-weight: 600;
 }
 
