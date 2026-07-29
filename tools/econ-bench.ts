@@ -55,7 +55,9 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
-import type { CoachSetup, FamilyBackground, PlayerProfile, WorldEventCategory } from '../src/shared/protocol'
+import { WEEK_PLAN_PRESETS } from '../src/shared/protocol'
+import type { CoachTier, FamilyBackground, PlayerProfile, WorldEventCategory } from '../src/shared/protocol'
+import { COACH_TIER_LABEL, coachWeeklyBandCents } from '../src/engine/coach'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
@@ -103,20 +105,43 @@ export interface Preset {
   /** table label, e.g. "25k  · middle · hired coach" */
   label: string
   background: FamilyBackground
-  /** coaching setup drives the biggest expense line, so it's a preset dimension, not a
-   *  constant: a working family self-coaches (parent, $120-400/wk), an affluent one hires
-   *  ($250-700/wk). middle is run BOTH ways to expose the coaching lever's swing. */
-  coachSetup: CoachSetup
+  /** the coach RUNG drives the biggest expense line, so it's a preset dimension, not a constant.
+   *  middle is run on two rungs to expose the lever's swing. */
+  coachTier: CoachTier
 }
 
-// 8k / 25k / 120k = working / middle / wealthy (the tier IS the family background). Coach setup
-// is realistic per tier: working self-coaches (can't afford a hired coach); wealthy hires; middle
-// is shown both ways because the coach choice is the dominant survivability lever.
+// 8k / 25k / 120k = working / middle / wealthy (the tier IS the family background). The coach RUNG
+// is the one each family realistically buys off the ladder: working and middle can both self-coach,
+// middle's paid option is the STANDARD private coach, and wealthy buys the top of the market.
+//
+// ⚠ RE-AIMED BY THE COACH LADDER, four cells to FIVE, and each old cell still has exactly one
+// successor so every before/after comparison survives:
+//
+//   old `coachSetup: 'parent'` -> `self`    (rows 1 and 3) - the same rung, the parent on the court
+//   old `coachSetup: 'hired'`  -> `middle`  (row 4) and `elite` (row 5)
+//
+// WHY `hired` SPLITS IN TWO. It was a single $250-700/wk band whose midpoint (~$475) the spec
+// prices as an ELITE coach, so the middle family was never choosing a coach – it was being handed
+// the most expensive one in the game, and going bankrupt 120 times out of 120 for it. On the ladder
+// the middle family buys `middle` and the wealthy family buys `elite`, which is the whole point:
+// one setting became a choice, and the two families stop sharing an answer.
+//
+// ROWS 2 AND 4 ARE NEW, because the ladder created something to measure. Under one boolean there
+// was nothing between "no coach" and "the most expensive coach in the game", so a family had no
+// choice to get wrong. Budget is the rung that changes that for both families, and its weekly price
+// is also the closest of any rung to what `parent` used to cost a WORKING family. Without these
+// rows the bench would only ever report families paying LESS, and would never test the choice the
+// slice actually gave them.
+//
+// The 25k family gets three rows because it is the family the slice is about: it is the one that
+// went bankrupt 120 times out of 120, and "which rungs can it survive" is the question.
 export const PRESETS: Preset[] = [
-  { label: '8k   · working · self-coached', background: 'working', coachSetup: 'parent' },
-  { label: '25k  · middle  · self-coached', background: 'middle', coachSetup: 'parent' },
-  { label: '25k  · middle  · hired coach', background: 'middle', coachSetup: 'hired' },
-  { label: '120k · wealthy · hired coach', background: 'wealthy', coachSetup: 'hired' },
+  { label: '8k   · working · self-coached', background: 'working', coachTier: 'self' },
+  { label: '8k   · working · budget coach', background: 'working', coachTier: 'budget' },
+  { label: '25k  · middle  · self-coached', background: 'middle', coachTier: 'self' },
+  { label: '25k  · middle  · budget coach', background: 'middle', coachTier: 'budget' },
+  { label: '25k  · middle  · middle coach', background: 'middle', coachTier: 'middle' },
+  { label: '120k · wealthy · elite coach', background: 'wealthy', coachTier: 'elite' },
 ]
 
 /** The per-category buckets we surface, in display order (expenses first, then income).
@@ -209,7 +234,7 @@ export function openCareer(preset: Preset, index: number): { world: WorldState; 
   const profile: PlayerProfile = {
     ...DEFAULT_PROFILE,
     background: preset.background,
-    coachSetup: preset.coachSetup,
+    coachTier: preset.coachTier,
   }
   const world = createWorld(seed, profile)
   const rng = rngFromSeed(world.seed)
@@ -429,7 +454,10 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[]): str
   const out: string[] = []
   out.push('')
   out.push(RULE)
-  const coachRange = preset.coachSetup === 'parent' ? 'self-coached $120-400/wk base' : 'hired coach $250-700/wk base'
+  // The weekly band this rung bills at the horizon's OPENING age and the bench's plan – the same
+  // arithmetic the engine charges, so the header cannot drift from the coaching row below it.
+  const [wLo, wHi] = coachWeeklyBandCents(preset.coachTier, START_AGE_YEARS, WEEK_PLAN_PRESETS.balanced)
+  const coachRange = `${COACH_TIER_LABEL[preset.coachTier]} $${Math.round(wLo / 100)}-${Math.round(wHi / 100)}/wk at 14`
   out.push(
     `  PRESET ${preset.label}   [${horizon.label}, ${horizon.weeks} wk / ${horizon.targetAge - START_AGE_YEARS} seasons]`,
   )
@@ -530,7 +558,7 @@ const policyHeader = (seeds: number): string => [
   `Entry policy v3: each week, enter every RANKING-ELIGIBLE event (a tier her EARNED points open) the`,
   `  kid can afford entry+travel for AS ITS DEADLINE NEARS (within ${ENTRY_LOOKAHEAD} wk); tick; skip+close any`,
   `  spawned tournament. Funds red ⇒ entries stall; coaching still bleeds.`,
-  `${seeds} seeds/preset · coach setup per preset · plan balanced (75/25).`,
+  `${seeds} seeds/preset · coach rung per preset · plan balanced (75/25).`,
   `Money is whole-dollar rounded; ±sd is the population stddev across the ${seeds} seeds.`,
 ].join('\n')
 
