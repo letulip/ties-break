@@ -148,6 +148,23 @@ describe('screen T, round 3', () => {
     expect(market).not.toContain("'Defense'")
     expect(market).not.toContain('SPECIALISM_LABEL')
   })
+
+  // ⚠ THE ONE SANCTIONED EXCEPTION TO THE RULE ABOVE, pinned here rather than somewhere else so the
+  // rule and its exception are read together. The Kid screen's copy of `counterpuncher` carries a
+  // SOFT HYPHEN (U+00AD) - an invisible character that lets a 120px word wrap inside a 104px paper
+  // scrap, at "Counter-" / "puncher" instead of mid-syllable (owner, 29.07: «может стоит перенос на
+  // вторую строчку сделать?»). It is invisible, so the vocabulary has NOT drifted - and that is what
+  // this asserts: strip the character and the two screens spell the same word. Without the pin the
+  // next reader deletes a character they cannot see and the scrap silently clips again.
+  it('the Kid screen\'s scrap wraps the long one WITHOUT leaving the vocabulary', () => {
+    const kid = read('../src/components/screens/KidScreen.vue')
+    const match = kid.match(/counterpuncher: '([^']+)'/)
+    expect(match, 'the Kid screen still names her style').not.toBeNull()
+    expect(match![1]).toContain('­')
+    expect(match![1].replace(/­/g, '')).toBe('Counterpuncher')
+    // ...and the CSS floor under it, for any label a soft hyphen was never added to
+    expect(kid).toContain('overflow-wrap: break-word')
+  })
 })
 
 describe('screen T, round 4', () => {

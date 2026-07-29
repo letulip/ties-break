@@ -24,6 +24,7 @@ import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
 import { useWeekAhead } from '../composables/weekAhead'
 import { weekArtUrl } from '../art/weeks'
+import { travelHomeUrl } from '../art/preload'
 import { weekLabel } from '../shared/dates'
 import PracticeFlow from './PracticeFlow.vue'
 import Card from './ui/Card.vue'
@@ -31,7 +32,7 @@ import Eyebrow from './ui/Eyebrow.vue'
 import PaperNote from './ui/PaperNote.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
-import type { DiaryFacts, WorldEvent, WorldMatch } from '../shared/protocol'
+import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
 
 const game = useGameStore()
 
@@ -62,40 +63,42 @@ const plan = computed(() => game.snapshot?.plan ?? { train: 75, rest: 25 })
 //   The scene replaces a picture that was wrong, instead of sitting under it.
 // This is flagged in the report; if the owner meant a second image after the goal note, it is a
 // small move and nothing else about the composition depends on it.
-type TravelHomeScene = 'airport' | 'plane' | 'bus' | 'car'
+//
+// ⚠ THE STUB IS GONE. This block used to read `travelHomeScene` through a widening cast, because the
+// engine half was being written in a sibling worktree and `DiaryFacts` did not declare the field
+// yet. It declares two now – the mode AND the mood – so both are read straight off the snapshot, and
+// the URL is built by `travelHomeUrl`, the one builder art/preload.ts warms through. That last part
+// matters more than it looks: the preloader and the <img> have to spell the same twelve filenames or
+// every come-home week fetches a file it never shows and shows a file it never warmed.
+const travelHomeScene = computed(() => game.snapshot?.diary.facts.travelHomeScene ?? null)
+const travelHomeMood = computed(() => game.snapshot?.diary.facts.travelHomeMood ?? null)
 
-/** ⚠ STUB. The engine half is being written in a sibling worktree right now; the contract is
- *  `snapshot.diary.facts.travelHomeScene: 'airport' | 'plane' | 'bus' | 'car' | null` – null on every
- *  ordinary week, non-null when she came home from an away tournament, picked deterministically off
- *  a seeded sub-stream keyed on the week (so it is stable across renders). This reads that field
- *  through a widening cast because `DiaryFacts` does not declare it yet and `src/shared/protocol.ts`
- *  is the other agent's file this wave. WHEN THE ENGINE LANDS: delete the cast, nothing else. */
-const travelHomeScene = computed<TravelHomeScene | null>(() => {
-  const facts = game.snapshot?.diary.facts
-  if (!facts) return null
-  return (facts as DiaryFacts & { travelHomeScene?: TravelHomeScene | null }).travelHomeScene ?? null
-})
-
-/** NOT band-scoped, unlike every other painting in this folder: the same four serve a girl of
- *  fourteen and a woman of thirty-one, because a bus at midnight is a scene and not a face. So they
- *  are built here rather than routed through `avatarEmotion`'s stage/emotion path. */
-const SLEEPY_DIR = 'images/fem-euro-brunnet/fem-euro-brunnet-sleepy-'
 const artUrl = computed(() =>
   travelHomeScene.value
-    ? `${import.meta.env.BASE_URL}${SLEEPY_DIR}${travelHomeScene.value}.webp`
+    ? travelHomeUrl(travelHomeScene.value, travelHomeMood.value ?? 'sleepy')
     : weekArtUrl(week.value),
 )
 
 // The week paintings are decorative – the handwriting under them says what the week was. The travel
 // scenes are not: they are the ONE place the story says she spent the week getting home, so they say
-// it out loud for anyone who cannot see them.
+// it out loud for anyone who cannot see them. Both halves of the picture are described, because both
+// carry meaning now: `sleepy` is her asleep, `happy` and `sad` are her awake at the window.
 const SCENE_ALT: Record<TravelHomeScene, string> = {
-  airport: 'Asleep in the airport on the way home',
-  plane: 'Asleep on the plane home',
-  bus: 'Asleep on the bus home',
-  car: 'Asleep in the car on the way home',
+  airport: 'in the airport on the way home',
+  plane: 'on the plane home',
+  bus: 'on the bus home',
+  car: 'in the car on the way home',
 }
-const artAlt = computed(() => (travelHomeScene.value ? SCENE_ALT[travelHomeScene.value] : ''))
+const MOOD_ALT: Record<TravelHomeMood, string> = {
+  sleepy: 'Asleep',
+  happy: 'Smiling',
+  sad: 'Quiet',
+}
+const artAlt = computed(() =>
+  travelHomeScene.value
+    ? `${MOOD_ALT[travelHomeMood.value ?? 'sleepy']} ${SCENE_ALT[travelHomeScene.value]}`
+    : '',
+)
 
 // Mon–Sun letters shown under the day dots (round-7 item 5b).
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -131,6 +134,20 @@ const balanceCents = computed(() => incomeCents.value + expenseCents.value)
 // picks one of TRAIN_EVENTS/REST_EVENTS for it already) – and it is what D writes by hand across
 // the bottom of the painting.
 const flavorText = computed(() => weekEvents.value.find((e) => e.type === 'expense')?.text ?? '')
+
+/** THE SCRAP UNDER THE PAINTING, and on a come-home week it is a DIFFERENT WRITER.
+ *
+ *  The mockup settles this the same way it settled where the journey painting goes – its own
+ *  handwriting under the image reads «Bianca quietly fell asleep in the car after the tournament».
+ *  That caption is about the journey in the picture above it, so on a week the picture IS the
+ *  journey, the note is the engine's `travelNote`: a line in the PARENT's voice about the girl who
+ *  just got back, licensed by the facts of the tournament she came back from (engine/diary.ts).
+ *
+ *  On every other week the scrap keeps what it has always carried – the week's own base-cost flavour
+ *  line ("Coaching block: technique drills"), which is the ledger's voice and belongs to a training
+ *  week. The two never both apply: `travelNote` is non-null on exactly the weeks the painting is a
+ *  journey, so this is one scrap with two authors rather than two scraps. */
+const noteText = computed(() => game.snapshot?.diary.travelNote ?? flavorText.value)
 
 function formatSigned(cents: number): string {
   const dollars = Math.round(cents / 100)
@@ -248,16 +265,18 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
       <img :src="artUrl" :alt="artAlt" />
     </div>
 
-    <!-- Her line about the week, in her hand, riding up over the bottom of the painting. -->
+    <!-- The line about the week, handwritten, riding up over the bottom of the painting. On a
+         come-home week it is the parent's note about her; otherwise the week's own flavour line. -->
     <PaperNote
-      v-if="flavorText"
+      v-if="noteText"
       class="recap-note"
+      :class="{ 'recap-note--travel': travelHomeScene }"
       :tilt="-0.5"
       ruled
       torn
       margin-rule
     >
-      <p class="recap-note-text">{{ flavorText }}</p>
+      <p class="recap-note-text">{{ noteText }}</p>
       <svg class="recap-doodle" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
         <path d="M12 20.2s-7.4-4.6-7.4-9.5A4.1 4.1 0 0 1 12 8.4a4.1 4.1 0 0 1 7.4 2.3c0 4.9-7.4 9.5-7.4 9.5z" />
       </svg>
@@ -421,6 +440,19 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
   margin: 0;
   font-size: 23px;
   line-height: 1.32;
+}
+
+/* ⚠ THE PARENT'S NOTE IS A LONGER SENTENCE THAN THE LEDGER'S, and the scrap has to stay a scrap.
+   The flavour lines this note shares its paper with are ledger fragments – "Restring –
+   multifilament", 24 characters, one line at 23px. A parent's note about her week is two clauses
+   (the pool caps at 80 characters, pinned in tests/travel-home.test.ts), which at 23px runs to three
+   lines and turns the scrap into the card's main content instead of a thing tucked under a
+   photograph. One step down the type ramp puts it back at two lines and roughly the visual mass of
+   the "Next goal" scrap at the other end of the page. The handwriting, the paper and the tilt are
+   unchanged – this is the same object saying a longer thing. */
+.recap-note--travel .recap-note-text {
+  font-size: 19px;
+  line-height: 1.34;
 }
 
 /* Both doodles are drawn in the paper's own ink (`currentColor` off .tb-paper), pinned to the
