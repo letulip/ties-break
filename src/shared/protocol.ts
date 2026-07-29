@@ -679,12 +679,17 @@ export interface DiaryFacts {
 
 /** THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на
  *  экране Week story как в макете»). Four paintings of the same girl asleep on the way back –
- *  `fem-euro-brunnet-sleepy-{scene}.webp`.
+ *  `fem-euro-brunnet-travel-{mood}-{scene}.webp`.
  *
  *  NOT PART OF THE PORTRAIT MATRIX, and deliberately not typed as one: they are NOT band-scoped.
  *  The same four serve a fourteen-year-old and a woman of thirty-one, because the picture is of a
  *  journey rather than of a face – she is asleep in all four. Forcing them into `PortraitEmotion`
  *  would have implied five copies of each that do not exist and never will. */
+/** THE MOOD OF THE JOURNEY HOME. The owner's 29.07 art drop turned four paintings into twelve:
+ *  «если дошла до финала можем рандомно показывать happy/sleepy разные, если не дошла - sad или
+ *  sleepy если сильно устала при этом». The ENGINE picks it; nothing here decides. */
+export type TravelHomeMood = 'sleepy' | 'happy' | 'sad'
+
 export type TravelHomeScene = 'airport' | 'plane' | 'bus' | 'car'
 
 /** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
