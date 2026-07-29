@@ -1010,7 +1010,13 @@ button.primary.risky {
 
 /* --- Package K2: careers, saves, recovered hint, confirm dialog --------------- */
 
-.recovered-banner {
+/* THE TOP POPUP. A strip that sits above the content column and says something happened: the
+   recovered-save hint (Package K2) and the stop toast (Package N). They were written out twice,
+   eleven declarations each, byte for byte the same – so they are one rule now and can no longer
+   drift apart, which is what the injury dialog's radius is pinned against in round10.test.ts.
+   `.stop-toast` is last in the list on purpose: that test reads the body of `.stop-toast {`. */
+.recovered-banner,
+.stop-toast {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1024,7 +1030,14 @@ button.primary.risky {
   font-size: 13px;
 }
 
-.recovered-banner button {
+/* THE COMPACT BUTTON – a control that has to fit inside a strip or a row rather than stand on its
+   own. Four places had reached for the same two numbers independently. (`.breakdown-toggle`'s
+   segment is an `.option-pill`, not a `<button>`, which is why it is spelled out rather than
+   folded into the selector above it.) */
+.recovered-banner button,
+.stop-toast button,
+.pkg-actions button,
+.breakdown-toggle .option-pill {
   padding: 4px 12px;
   font-size: 12px;
 }
@@ -1103,24 +1116,7 @@ button.primary.risky {
 
 /* --- Package N: Season/Home/Money world UI ------------------------------------ */
 
-.stop-toast {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  max-width: 520px;
-  margin: 0 auto 16px;
-  padding: 12px 16px;
-  background: var(--panel);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  font-size: 13px;
-}
-
-.stop-toast button {
-  padding: 4px 12px;
-  font-size: 12px;
-}
+/* `.stop-toast` and its button are up with `.recovered-banner` – the two popups are one rule. */
 
 .this-week-status {
   display: flex;
@@ -3032,10 +3028,7 @@ tr.kid-row td {
   margin-top: 8px;
 }
 
-.pkg-actions button {
-  padding: 4px 12px;
-  font-size: 12px;
-}
+/* `.pkg-actions button` is compact – see THE COMPACT BUTTON up with the top popups. */
 
 /* --- Round 5: week recap card ------------------------------------------------ */
 
@@ -3250,10 +3243,7 @@ tr.kid-row td {
   margin-bottom: 12px;
 }
 
-.breakdown-toggle .option-pill {
-  padding: 4px 12px;
-  font-size: 12px;
-}
+/* `.breakdown-toggle .option-pill` is compact too – same rule, up with the top popups. */
 
 .breakdown-body {
   display: flex;
