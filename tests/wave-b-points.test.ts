@@ -232,7 +232,11 @@ describe('W-B4 — the ladder must not stall: every enterPointBand stays reachab
   it('regional (65) is reachable on local results alone, which is the only rung open at 0', () => {
     // Local is the ONLY tier with minPoints 0, so the very first gate must fall to local results.
     const openAtZero = TIER_LADDER.filter((t) => TIERS[t].enterPointBand[0] === 0)
-    expect(openAtZero).toEqual(['local'])
+    // ⚠ RE-AIMED by the two ladders: at zero points the DOMESTIC ladder still opens only Local, and
+    // that is the claim this test exists for - the domestic climb must be reachable from below. The
+    // J rungs are open at zero too, because they gate on an acceptance list and a J30 has none;
+    // they are a different ladder and cannot stall this one.
+    expect(openAtZero.filter((t) => ['local', 'regional', 'national'].includes(t))).toEqual(['local'])
     expect(bestSixCeiling(['local'])).toBeGreaterThanOrEqual(TIERS.regional.enterPointBand[0])
   })
 })

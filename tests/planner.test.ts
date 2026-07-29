@@ -83,7 +83,11 @@ function hashOf(draws: number[]): string {
 // moved is her RANK, a companion pin carried alongside: the bracket now seeds only the top 8 of 32
 // and shuffles everyone else, the kid included, so her results in a 52-week window differ and so
 // does the rank they earn. See docs/specs/rank-plateau.md.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 135 }
+// ⚠ RE-PINNED 135 -> 126 (29.07, the two ladders). `count`/`hash`/`head`/`tail` did NOT move; the
+// stream is untouched and that is what this block guards. What moved is the MEANING of kidRank: it
+// is now her place in the ITF table, not in a single mixed one, so it is a different number about a
+// different question. See docs/specs/two-ladders.md.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 126 }
 
 function injectEvent(
   world: WorldState,
@@ -741,10 +745,27 @@ describe("P7b — the doctor's veto on a friendly", () => {
 // ---------------------------------------------------------------------------
 describe('P8 — deadline stop respects the point band', () => {
   it('a 0-point kid is never stopped by a regional/national deadline', () => {
+    // ⚠ RE-AIMED by the two ladders (29.07). The old claim was "a 0-point kid can only enter Local",
+    // which was true when ONE points ladder gated everything. There are two now: the domestic rungs
+    // still open by points and in order, and the international ones are an acceptance list. A J30
+    // has no acceptance bar at all - the research is explicit that an unranked thirteen-year-old
+    // near home gets into one, and that the gate up the ladder is the QUEUE, not the fee. So a
+    // point-less kid is legitimately stopped by a J30 deadline: she really can enter it, if the
+    // family can pay for the plane. The protected fact is unchanged and is now stated exactly:
+    // she is not stopped for a rung she cannot enter.
     const w = createWorld('p8-fresh')
     const rng = rngFromSeed(w.seed)
     const stop = advanceWeeks(w, rng, 20)
-    expect(stop).not.toContain('deadline')
+    // She IS stopped now - and the test proves it is for the right reason. Every deadline that can
+    // stop a point-less kid must belong to a rung she may actually enter: Local (open at 0 domestic
+    // points) or a J30 (no acceptance bar). A Regional or National deadline still may not.
+    if (stop.includes('deadline')) {
+      const stoppable = w.season.filter(
+        (e) => e.deadlineWeek >= w.week - 20 && e.deadlineWeek <= w.week && entryStatus(w, e).level !== 'blocked',
+      )
+      expect(stoppable.length).toBeGreaterThan(0)
+      for (const e of stoppable) expect(['local', 'j30']).toContain(e.tier)
+    }
   })
 
   it('a point-eligible kid IS stopped by the same deadline', () => {

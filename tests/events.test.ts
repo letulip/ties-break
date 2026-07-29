@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import {
+  entryStatus,
   createWorld,
   tickWeek,
   advanceWeeks,
   enterEvent,
   withdrawEvent,
+  recomputeKidRank,
   skipTournament,
   toSnapshot,
   KID_ID,
@@ -17,6 +19,7 @@ import { TIERS } from '../src/engine/season/calendar'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { simulateMatch } from '../src/engine/match/engine'
 import type { SeasonEvent } from '../src/engine/season/types'
+import type { SeasonResult } from '../src/engine/season/ranking'
 
 // The earliest event whose entry deadline has not yet passed.
 function firstEnterable(world: WorldState) {
@@ -24,15 +27,43 @@ function firstEnterable(world: WorldState) {
 }
 
 // r-gate (season-life-01b): points-based eligibility. These cases predate the ladder and aren't about
-// it, so grant the kid a throwaway result worth the tier's minPoints ONLY for the enterEvent gate
-// check, then drop it. enterEvent never ticks/recomputes, so nothing downstream (points/rank/gear) is
-// perturbed – identical to the old set-and-restore trick. local's min is 0, so no grant is needed there.
+// it, so grant the kid throwaway results worth exactly what the rung asks ONLY for the enterEvent
+// gate check, then drop them. enterEvent never ticks/recomputes, so nothing downstream
+// (points/rank/gear) is perturbed – identical to the old set-and-restore trick.
+//
+// TWO LADDERS (docs/specs/two-ladders.md): one minPoints grant no longer covers every rung, because
+// what "eligible" costs depends on which table the rung pays into.
+//   * a DOMESTIC rung reads her domestic best-6 against its band – the old grant, unchanged (local's
+//     min is 0, so it still needs nothing);
+//   * J30, the on-ramp, is an ITF rung that reads her DOMESTIC standing, so its grant has to sit on
+//     the domestic track. A marker tiered `j30` would pay into the ITF table and open nothing, which
+//     is exactly what the old one-liner did once the tracks split;
+//   * J60 / J300 are an ACCEPTANCE LIST: they read her ITF rank, and refuse to read a position at
+//     all until she owns a counting ITF result. So they need a real international book AND
+//     `recomputeKidRank` to put it in the cache the gate reads. Four J300 titles land her around
+//     #21–#35 on every seed in this file – comfortably inside j300's top 50, with room for drift.
+// The rank caches are saved and restored with the ledger, so the promise above still holds whole.
 function enterEligible(world: WorldState, event: SeasonEvent): void {
-  const min = TIERS[event.tier].enterPointBand[0]
-  const marker = { playerId: KID_ID, week: world.week, points: min, tier: event.tier }
-  if (min > 0) world.results.push(marker)
+  const def = TIERS[event.tier]
+  const ledger = world.results
+  const rank = world.kidRank
+  const rankDomestic = world.kidRankDomestic
+  const grant: SeasonResult[] = []
+  if (def.enterPct === undefined) {
+    const min = def.enterPointBand[0]
+    // 'national' is a domestic row whatever the event is – which is the whole point for j30.
+    if (min > 0) grant.push({ playerId: KID_ID, week: world.week, points: min, tier: 'national' })
+  } else {
+    for (let i = 0; i < 4; i++) grant.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'j300' })
+  }
+  if (grant.length > 0) {
+    world.results = [...ledger, ...grant]
+    recomputeKidRank(world)
+  }
   enterEvent(world, event.id)
-  if (min > 0) world.results = world.results.filter((r) => r !== marker)
+  world.results = ledger
+  world.kidRank = rank
+  world.kidRankDomestic = rankDomestic
 }
 
 describe('entry validation', () => {
@@ -289,7 +320,10 @@ describe('kid counting-results transparency (round-5 item 1b)', () => {
     }
     expect(world).toBeDefined()
     const snap = toSnapshot(world)
-    expect(snap.countingResults.length).toBeGreaterThanOrEqual(1)
+    // ⚠ RE-AIMED by the two ladders: this list explains the ITF ranking beside it, so it holds ITF
+    // results only and is honestly empty until she owns one. The transparency claim - the list sums
+    // to the rank it sits next to - is unchanged and is the assertion at the end.
+    expect(snap.countingResults.every((c) => ['j30', 'j60', 'j300'].includes(c.tier ?? ''))).toBe(true)
     // each counted kid result carries the tier it was earned at (new r5 field)
     expect(snap.countingResults.every((c) => typeof c.tier === 'string')).toBe(true)
     // the list sum equals the kid's standings points (the whole point of the transparency)
@@ -320,12 +354,26 @@ describe('advance stop reasons', () => {
   // assertion (a FRESH 0-point career stops for the first regional deadline) is therefore
   // inverted: a fresh kid must NOT be stopped, and a point-eligible kid must still be. ***
   it('never stops a 0-point kid for a regional+ deadline she cannot enter (round-9 fix)', () => {
+    // ⚠ RE-AIMED by the two ladders (29.07). The old claim was "a 0-point kid can only enter Local",
+    // which was true when ONE points ladder gated everything. There are two now: the domestic rungs
+    // still open by points and in order, and the international ones are an acceptance list. A J30
+    // has no acceptance bar at all - the research is explicit that an unranked thirteen-year-old
+    // near home gets into one, and that the gate up the ladder is the QUEUE, not the fee. So a
+    // point-less kid is legitimately stopped by a J30 deadline: she really can enter it, if the
+    // family can pay for the plane. The protected fact is unchanged and is now stated exactly:
+    // she is not stopped for a rung she cannot enter.
     const world = createWorld('adv-deadline')
     const rng = rngFromSeed(world.seed)
     // ample funds, no entries, ZERO ranking points -> regional (min 65) / national (min 150)
     // are both out of reach, so no deadline may interrupt the advance.
+    // ⚠ RE-AIMED by the two ladders: a J30 has no acceptance bar, so a point-less kid CAN enter one
+    // and a J30 deadline may legitimately stop her. What must still never stop her is a rung she
+    // cannot enter, which is what is asserted now.
     const stop = advanceWeeks(world, rng, 20)
-    expect(stop).not.toContain('deadline')
+    if (stop.includes('deadline')) {
+      const stoppable = world.season.filter((e) => entryStatus(world, e).level !== 'blocked')
+      for (const e of stoppable) expect(['local', 'j30']).toContain(e.tier)
+    }
   })
 
   it('stops before an imminent affordable regional+ deadline she IS eligible for', () => {

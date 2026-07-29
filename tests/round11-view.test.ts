@@ -235,10 +235,14 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
   it('THE REPORT WAS STRUCTURALLY IMPOSSIBLE: j30 is a strict subset of national', () => {
     // The owner said he could enter a J30 but not a National. By the bands that cannot happen –
     // which is why the fix is a sentence, not a rule.
-    const [natMin, natMax] = TIERS.national.enterPointBand
-    const [j30Min, j30Max] = TIERS.j30.enterPointBand
-    expect(j30Min).toBeGreaterThanOrEqual(natMin)
-    expect(j30Max).toBeLessThanOrEqual(natMax)
+    // ⚠ RE-AIMED by the two ladders. The original report was structurally impossible because j30's
+    // POINTS band was a strict subset of national's - both were on one ladder. They are on two now,
+    // so the comparison cannot be made in points at all. The structural fact survives in its real
+    // form: national is the last DOMESTIC rung and never closes, and j30 is open to anyone, so a
+    // player who has national open always has j30 open too - the report stays impossible.
+    const [natMin] = TIERS.national.enterPointBand
+    expect(TIERS.j30.enterPct).toBeUndefined()
+    expect(natMin).toBeGreaterThan(0)
     for (const points of [180, 200, 400, 1_000]) {
       const nat = tierState('national', at(points))
       const j30 = tierState('j30', at(points))
@@ -281,8 +285,10 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
       { tier: 'j30' as TierId, week: 12 },
       { tier: 'local' as TierId, week: 11 },
     ]
-    const nat = tierState('national', at(200, upcoming))
-    const j30 = tierState('j30', at(200, upcoming))
+    // ⚠ RE-AIMED by the National stagger: 200 points used to open both rungs, and J30's floor is
+    // now 250. The owner's case needs a total at which BOTH are open, so it moved up with the gate.
+    const nat = tierState('national', at(260, upcoming))
+    const j30 = tierState('j30', at(260, upcoming))
     expect(j30.kind).toBe('scheduled')
     expect(nat.kind).toBe('unscheduled')
     expect(isTierOpen(nat)).toBe(true) // she is NOT locked out – that was the whole confusion

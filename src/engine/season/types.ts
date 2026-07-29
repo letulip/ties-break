@@ -5,9 +5,17 @@ import type { MatchPlayer, Surface } from '../match/types'
  *  junior international tour (`j30` → `j60` → `j300`); the inert `itf` placeholder was replaced by
  *  that family in the ladder-up slice. J500/J200/J100 analogues are content for later. */
 export type TierId = 'local' | 'regional' | 'national' | 'j30' | 'j60' | 'j300'
+/** WHICH TABLE A RESULT PAYS INTO. Two currencies with no exchange rate between them, which is how
+ *  the real sport works: Reg 10's list of ranking tournaments is closed and contains only ITF grades,
+ *  so a national title produces exactly ZERO ITF points, while federations import ITF results at
+ *  their own valuation and never the reverse. See docs/specs/two-ladders.md. */
+export type LadderTrack = 'domestic' | 'itf'
+
 export interface TierDef {
   id: TierId
   label: string
+  /** the table this rung's points pay into. Nothing crosses between the two. */
+  track: LadderTrack
   drawSize: 8 | 16 | 32
   entryFeeCents: number
   travelCostCents: [number, number] // [min,max], drawn per event instance
@@ -16,6 +24,27 @@ export interface TierDef {
   /** EXTRA events of this tier placed inside the season's SECOND half, on top of the
    *  `floor(weeks / everyNWeeks)` evenly-spaced ones (R9-20 national densification). */
   secondHalfBonus?: number
+  /** ITF RUNGS ONLY: the acceptance list, as a SHARE OF THE FIELD rather than a rank number.
+   *
+   *  ⚠ A COUNT WOULD BE A TIME BOMB, and it nearly was one. Written as "top 120" it means the top
+   *  60% of today's 199-strong cohort - and `living-field.md` plans a population of two to three
+   *  thousand, where the same 120 silently becomes the top 6%. The rule would change without anybody
+   *  editing it. A share cannot do that.
+   *
+   *  It is deliberately the SAME NUMBER as the tier's own `entrantPctBand[1]`, so the rule is one
+   *  sentence: she is accepted if she would be inside the field they draw from. That is what closes
+   *  rank-plateau.md 2b - both sides of one event finally read one signal - and it is why this is a
+   *  share and not a taste.
+   *
+   *  Absent means the rung is open to anyone, which is what a J30 is - the research is explicit that a J30 is
+   *  "genuinely enterable by an unranked 13-year-old near home" and that the gate up the ladder is
+   *  the QUEUE, not the fee. Domestic rungs ignore this and keep `enterPointBand`.
+   *
+   *  This is what closes rank-plateau.md 2b: the AI's field is chosen by standings percentile, so
+   *  gating her on standings POSITION makes both sides read the same signal instead of one side
+   *  reading an absolute points threshold nobody else obeys. */
+  enterPct?: number
+
   /** R12-6: the smallest allowed distance, in weeks, between two events OF THIS TIER. Absent (or 1)
    *  means adjacency is fine, which is the historical behaviour and the right one for the dense
    *  entry rungs. 2 means "never on consecutive weeks".

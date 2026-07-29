@@ -174,6 +174,8 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
   it('reachedWeek is the FIRST week the target predicate holds (14→16 = national eligibility)', () => {
     // Independent replay of the SAME deterministic career: find the first week kidPoints crosses the
     // national-eligibility proxy (>= REACH_TARGET_MONEY) and confirm runCareer recorded exactly that.
+    // The DOMESTIC table, because national eligibility is a domestic band – see reachedTarget, whose
+    // 14→16 arm was reading the ITF one against it.
     for (const preset of PRESETS) {
       for (const index of [0, 1, 2, 3, 4]) {
         const r = runCareer(preset, index, H16.weeks)
@@ -181,7 +183,7 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
         let firstCross: number | null = null
         for (let i = 0; i < H16.weeks; i++) {
           stepCareerWeek(world, rng)
-          if (firstCross === null && kidPoints(world) >= REACH_TARGET_MONEY) firstCross = world.week
+          if (firstCross === null && kidPoints(world, 'domestic') >= REACH_TARGET_MONEY) firstCross = world.week
         }
         expect(r.reachedWeek).toBe(firstCross)
       }
@@ -189,9 +191,15 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
   })
 
   it('a career that clears the target has a non-null reachedWeek; one that never does is null', () => {
-    // The 14→16 money proxy (kidPoints >= 150) is a genuine climb, so some working careers clear it
-    // and others never accumulate 150 points inside 104 weeks – exercising BOTH the non-null and null
-    // branches deterministically.
+    // The 14→16 money proxy (DOMESTIC kidPoints >= 150) is a genuine climb, so some working careers
+    // clear it and others never accumulate 150 points inside 104 weeks – exercising BOTH the non-null
+    // and null branches deterministically.
+    //
+    // THIS ASSERTION CAUGHT A REAL BUG rather than aging into one, and it is worth saying which:
+    // `reachedTarget`'s 14→16 arm was reading her ITF table against a threshold denominated in
+    // domestic points, so the "some clear it" branch went from 28 of these 30 careers to ZERO and
+    // the tracker was pinned at 'never' for three of the four presets. Fixed in tools/econ-bench.ts;
+    // both branches fire again, which is exactly what this case is here to notice.
     const workingH16 = Array.from({ length: 30 }, (_, i) => runCareer(working, i, H16.weeks))
     expect(workingH16.some((r) => r.reachedWeek !== null)).toBe(true) // some clear it
     expect(workingH16.some((r) => r.reachedWeek === null)).toBe(true) // some never do
@@ -217,10 +225,22 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
     // actually needs is unchanged and is what is asserted: she starts FAR outside the top 50 with
     // no counting result, so the unguarded `kidRank <= 50` arm would still be wrong at week 1 and
     // the hasResults guard is still doing real work. Full note in tests/season/prehistory.test.ts.
+    //
+    // ⚠ RE-PINNED 195 -> 120 by the two ladders (docs/specs/two-ladders.md), and it is a DERIVED
+    // number about a different question, not a regression. `kidRank` is her ITF rank now, and the
+    // ITF table is a smaller table: only the 119 cohort players whose pre-history was earned on the
+    // J rungs hold a counting international result, so everybody else - the kid included - ties at
+    // zero and shares dense rank 120. The protected fact is untouched and is what the next two
+    // lines assert: with no counting result she starts FAR outside the top 50, so the unguarded
+    // `kidRank <= 50` arm would still fire wrongly at week 1.
+    //
+    // Worth reading twice: 120 is EXACTLY j60's acceptance list. The engine carries the same
+    // `ranked` guard on its own entry gate for precisely this reason - unranked is not rank one,
+    // and without it a fresh fourteen-year-old would read as #120 and be handed a J60 on day one.
     const fresh = openCareer(wealthy, 0)
-    expect(fresh.world.kidRank).toBe(195)
+    expect(fresh.world.kidRank).toBe(120)
     expect(fresh.world.kidRank).toBeGreaterThan(REACH_PRO_RANK)
-    expect(kidPoints(fresh.world)).toBe(0) // ...and still no counting result
+    expect(kidPoints(fresh.world, 'itf')).toBe(0) // ...and still no counting result
 
     // reachedWeek(pro) must match an INDEPENDENT replay of the GUARDED predicate, and must NOT be the
     // week-1 degenerate value: the rank arm only fires once she owns a counting result (points > 0),
@@ -232,7 +252,7 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
         let firstReach: number | null = null
         for (let i = 0; i < H18.weeks; i++) {
           stepCareerWeek(world, rng)
-          const pts = kidPoints(world)
+          const pts = kidPoints(world, 'itf')
           const hasResults = pts > 0 // == computeCountingResults(world).length > 0 (every kid result scores)
           const met = (hasResults && world.kidRank <= REACH_PRO_RANK) || pts >= REACH_PRO_POINTS
           if (firstReach === null && met) firstReach = world.week

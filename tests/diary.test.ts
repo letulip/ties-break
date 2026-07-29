@@ -29,6 +29,7 @@ import {
   createWorld,
   enterEvent,
   KID_ID,
+  recomputeKidRank,
   SAVE_SCHEMA_VERSION,
   skipTournament,
   tickWeek,
@@ -37,7 +38,7 @@ import {
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
-import { TIERS, TIER_SHORT, tierFromLabel } from '../src/engine/season/calendar'
+import { TIER_SHORT, tierFromLabel } from '../src/engine/season/calendar'
 import { TIER_SHORT as TIER_SHORT_VIA_UI } from '../src/composables/weekAhead'
 import { CROPS, facePoint } from '../src/art/faceRects'
 
@@ -559,19 +560,28 @@ describe('capture + snapshot integration', () => {
       (e) => (e.tier === 'j30' || e.tier === 'j60' || e.tier === 'j300') && e.week > world.week && world.week <= e.deadlineWeek,
     )
     expect(candidates.length).toBeGreaterThan(0)
-    // grant each band's floor so the points gate opens (the world.test.ts marker pattern), and
-    // take the first candidate whose week is not otherwise blocked (exams etc.)
+    // TWO LADDERS (docs/specs/two-ladders.md): an international entry is no longer a points floor
+    // she can be handed in one row, so the old per-candidate marker opened nothing. J30 is the
+    // on-ramp and reads her DOMESTIC standing; J60 and J300 are an acceptance list and read her ITF
+    // RANK, which they refuse to read at all until she owns a counting ITF result. She is therefore
+    // given both halves of a real career before the entry – a national book that clears the on-ramp,
+    // and four J300 titles that put her inside the top 50 – so that whichever rung comes up first is
+    // one she could genuinely be on the list for. What this case is about is the CAPTURE, not the
+    // gate, and the capture cannot be observed until she can make the entry at all.
+    world.results.push({ playerId: KID_ID, week: world.week, points: 1000, tier: 'national' })
+    for (let i = 0; i < 4; i++) {
+      world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'j300' })
+    }
+    recomputeKidRank(world)
+    // ...then take the first candidate whose week is not otherwise blocked (exams etc.)
     let entered: (typeof candidates)[number] | null = null
     for (const target of candidates) {
-      const min = TIERS[target.tier].enterPointBand[0]
-      const marker = { playerId: KID_ID, week: world.week, points: min, tier: target.tier }
-      if (min > 0) world.results.push(marker)
       try {
         enterEvent(world, target.id)
         entered = target
         break
       } catch {
-        world.results = world.results.filter((r) => r !== marker)
+        /* blocked for a reason that is not the ladder – try the next candidate */
       }
     }
     expect(entered).toBeTruthy()

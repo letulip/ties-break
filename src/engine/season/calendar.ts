@@ -23,26 +23,31 @@ import type { SeasonEvent, TierDef, TierId } from './types'
 // played and won a round in the Main Draw"), and the professional table repeats the shape at W15/W35.
 // So: she now earns her first point by WINNING one, at every rung. Pinned by tests/wave-b-points.ts.
 //
-// THE LADDER (owner: "there must ALWAYS be somewhere to go"). Two overlapping ladders,
-// both read off the kid's EARNED windowed best-6 points:
+// THE LADDER (owner: "there must ALWAYS be somewhere to go"). Two overlapping ladders. The
+// DOMESTIC rungs read off her earned windowed best-6 in the national table; the J rungs above the
+// on-ramp read off her ITF RANK instead (see two-ladders.md), so this axis places j60/j300 only
+// by where they land in practice:
 //
-//   pts →      0      65    85   150  180        230        400            900
-//   local      ├───────────────┤
-//   regional          ├──────────────────────────┤
-//   national                    ├──────────────────────────────────────────────→ ∞
-//   j30                              ├─────────────────────────────────────────→ ∞
-//   j60                                          ────────────├───────────────  → ∞
-//   j300                                                                  ├───→ ∞
+//   domestic pts →   0      65    85       150            250
+//   local            ├───────────────┤
+//   regional                ├──────────────────────────────┤
+//   national                          ├────────────────────────────────────────→ ∞
+//   j30 (on-ramp)                                          ├───────────────────→ ∞
+//   ITF rank →                                             ·  top 40%   top 25%
+//   j60                                                           ├────────────→ ∞
+//   j300                                                                  ├────→ ∞
 //
 // Read it as: she never falls off the bottom (local opens at 0), she is never stranded at the
 // top (national and every J level use the MAX sentinel so they never graduate her out), and at
-// every total from 150 up at least TWO rungs are open at once, so the handover is a choice
-// rather than a cliff. Only local and regional graduate her – the two tiers she is meant to
-// outgrow. NO junior level pays prize money (real rule: juniors pay to play), which is the
+// every total at least TWO rungs are open at once, so the handover is a choice rather than a
+// cliff. ⚠ National's floor (150) and J30's (250) are deliberately 100 points apart – closing
+// that gap is what killed National once already. Only local and regional graduate her – the two
+// tiers she is meant to outgrow. NO junior level pays prize money (real rule: juniors pay to play), which is the
 // whole "invest without knowing the return" thesis: international travel out, points only back.
 export const TIERS: Record<TierId, TierDef> = {
   local: {
     id: 'local',
+    track: 'domestic',
     label: 'Local Open',
     drawSize: 8,
     entryFeeCents: 40_00,
@@ -58,19 +63,25 @@ export const TIERS: Record<TierId, TierDef> = {
   },
   regional: {
     id: 'regional',
+    track: 'domestic',
     label: 'Regional Championship',
     drawSize: 16,
     entryFeeCents: 75_00,
     travelCostCents: [150_00, 400_00],
     points: [80, 48, 28, 14, 0],
     everyNWeeks: 4,
-    // Opens once she has a couple of counting results (65 pts); graduates out at 230. Overlaps local
-    // (65-85) and national (150-230), so the climb is a smooth local → regional → national handover.
-    enterPointBand: [65, 230],
+    // Opens once she has a couple of counting results (65 pts); graduates out at 250. Overlaps local
+    // (65-85) and national (150-250), so the climb is a smooth local → regional → national handover.
+    // ⚠ The ceiling moved 230 → 250 with J30's floor, so that regional stays open right up to the
+    // week the international door does. At 230 there was a 20-point band in which National (6 events
+    // a season) was the only tier she could enter, and a career can sit in a band like that for
+    // months. The two numbers are one decision and must move together.
+    enterPointBand: [65, 250],
     entrantPctBand: [0.4, 0.88],
   },
   national: {
     id: 'national',
+    track: 'domestic',
     label: 'National Series',
     drawSize: 32,
     entryFeeCents: 120_00,
@@ -101,41 +112,69 @@ export const TIERS: Record<TierId, TierDef> = {
   // at every finish – an international result is worth more than a domestic one of the same round.
   j30: {
     id: 'j30',
+    track: 'itf',
     label: 'Junior Tour 30',
     drawSize: 32,
     entryFeeCents: 200_00,
     travelCostCents: [900_00, 2000_00],
-    points: [400, 240, 140, 70, 30, 0],
+    points: [30, 18, 9, 5, 2, 0],
     // THE dense entry level – with regional it is what makes an empty week a choice, not a gap.
     everyNWeeks: 2,
     minAgeYears: 13,
-    // Opens at 180: one National quarter-final (35) on top of a regional book gets her there, so
-    // the international door opens while regional (≤230) is still open and national is already
-    // live. Never closes – a J30 stays a legitimate week even for a strong junior.
-    enterPointBand: [180, Number.MAX_SAFE_INTEGER],
+    // THE DOMESTIC LADDER IS THE ON-RAMP (owner, 29.07). J30 is the one international rung that
+    // opens on DOMESTIC points, and everything above it opens on ITF rank. That is how a real
+    // career starts: a federation nominates you onto an acceptance list off your national standing,
+    // because you cannot have an international ranking before you have played internationally, and
+    // a rank gate on the first rung would be a closed loop.
+    //
+    // ⚠ 250, NOT the 150 that opens National. They were the same number for one release and it made
+    // National dead content: the entry policy walks the calendar strongest-tier-first, so the week
+    // National opened J30 opened too, J30 always won, and National fell to 0.3 entries per
+    // four-year career (measured, 120 seeds - see docs/specs/two-ladders.md). Staggering them makes
+    // National the rung she climbs THROUGH rather than past, which is the climb the game is about:
+    // Local -> Regional -> National -> the world. Owner, 29.07: «National становится ступенью,
+    // через которую проходят, а не мимо которой - вот это мне нравится, да».
+    //
+    // 250 is a National quarter-final (70) on top of a full regional book - she has to show up at
+    // her national championship and win a round before the world opens. It is also exactly where
+    // regional graduates out (below), so the domestic ladder hands over to the international one at
+    // the point where it ends, with no band in which only one sparse tier is open.
+    // Never closes - a J30 stays a legitimate week even for a strong junior.
+    enterPointBand: [250, Number.MAX_SAFE_INTEGER],
     entrantPctBand: [0.12, 0.6],
   },
   j60: {
     id: 'j60',
+    track: 'itf',
     label: 'Junior Tour 60',
     drawSize: 32,
     entryFeeCents: 250_00,
     travelCostCents: [1100_00, 2400_00],
-    points: [600, 360, 210, 105, 45, 0],
+    points: [60, 36, 18, 10, 5, 0],
     everyNWeeks: 3,
     minAgeYears: 13,
     // 400 = one J30 title, or three J30 semi-finals. A real body of international results, not one
     // lucky week.
-    enterPointBand: [400, Number.MAX_SAFE_INTEGER],
+    // The acceptance list starts to bite, and it is EXACTLY the field they draw from: inside the
+    // top 40%, the same number `entrantPctBand` ends on one line below.
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    enterPct: 0.4,
     entrantPctBand: [0.05, 0.4],
   },
   j300: {
     id: 'j300',
+    track: 'itf',
     label: 'Junior Tour 300',
     drawSize: 32,
     entryFeeCents: 400_00,
     travelCostCents: [1600_00, 3200_00],
-    points: [1000, 600, 350, 175, 75, 0],
+    // ⚠ THE LAST ENTRY IS 0, NOT THE ITF TABLE'S 30, and the difference is our draw size. Reg 31's
+    // "R32" column means REACHED the round of 32 having won a round, which in a real J300 (draws of
+    // 48-64) is a player who has already won. Our J300 draw is 32, so its last finish index IS the
+    // first-round loser - and Reg 31(a) is explicit that nobody scores until they have won a main
+    // draw round. Copying the 30 across would have paid for losing, which is the exact participation
+    // floor wave B removed. Caught by wave-b-points.test.ts, which is what that test is for.
+    points: [300, 210, 140, 100, 60, 0],
     // Rare by design: four a year, so each one is an event the family plans a season around.
     everyNWeeks: 13,
     // R12-6: same rule as national, for the same reason and with even more room (4 events). The two
@@ -144,7 +183,8 @@ export const TIERS: Record<TierId, TierDef> = {
     minGapWeeks: 2,
     minAgeYears: 13,
     // 900 ≈ a J60 title plus a deep second run – the point at which she is one of the field's best.
-    enterPointBand: [900, Number.MAX_SAFE_INTEGER],
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    enterPct: 0.25,
     entrantPctBand: [0.0, 0.25],
   },
 }

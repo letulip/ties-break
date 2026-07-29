@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { createWorld, enterEvent, isTierEligible, kidPoints, toSnapshot, KID_ID, type WorldState } from '../src/engine/world'
+import {
+  acceptanceRank,
+  createWorld,
+  enterEvent,
+  isTierEligible,
+  kidPoints,
+  recomputeKidRank,
+  tierOpenFor,
+  toSnapshot,
+  KID_ID,
+  type WorldState,
+} from '../src/engine/world'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -17,13 +28,14 @@ const PLAYABLE: TierId[] = [...TIER_LADDER]
 /** Grant the kid a single counting result so her best-6 (== kidPoints) equals `points`. */
 function giveKidPoints(world: WorldState, points: number): void {
   world.results.push({ playerId: KID_ID, week: world.week, points, tier: 'local' })
-  expect(kidPoints(world)).toBe(points)
+  expect(kidPoints(world, 'domestic')).toBe(points)
 }
 
 describe('tier point bands (the tunable thresholds)', () => {
   it('pins the tuned band per tier (local open from 0, national at the top)', () => {
+    // ⚠ RE-AIMED by the National stagger: regional's ceiling moved 230 → 250, onto J30's new floor.
     expect(TIERS.local.enterPointBand).toEqual([0, 85])
-    expect(TIERS.regional.enterPointBand).toEqual([65, 230])
+    expect(TIERS.regional.enterPointBand).toEqual([65, 250])
     expect(TIERS.national.enterPointBand).toEqual([150, Number.MAX_SAFE_INTEGER])
   })
 })
@@ -42,7 +54,7 @@ describe('isTierEligible — pure points check, both directions', () => {
 
   it('is false above maxPoints (past the ceiling – outgrown)', () => {
     expect(isTierEligible('local', 100)).toBe(false) // 100 > 85
-    expect(isTierEligible('regional', 231)).toBe(false) // 231 > 230
+    expect(isTierEligible('regional', 251)).toBe(false) // ⚠ 251 > 250 (ceiling re-aimed onto J30's floor)
   })
 
   it('is inclusive at both boundaries', () => {
@@ -102,7 +114,7 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
   it('rejects too-few points with a "need <minPoints>" message', () => {
     const { world, event } = firstEventOfTier('gate-low', 'regional')
     // a fresh kid has 0 points, below regional's minPoints (65)
-    expect(kidPoints(world)).toBe(0)
+    expect(kidPoints(world, 'domestic')).toBe(0)
     expect(() => enterEvent(world, event.id)).toThrow(
       `Not enough ranking points for ${TIERS.regional.label} yet (need 65)`,
     )
@@ -127,7 +139,7 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
 
   it('a fresh kid can always enter local (the entry tier, minPoints 0)', () => {
     const { world, event } = firstEventOfTier('gate-fresh', 'local')
-    expect(kidPoints(world)).toBe(0)
+    expect(kidPoints(world, 'domestic')).toBe(0)
     enterEvent(world, event.id)
     expect(world.entries).toContain(event.id)
   })
@@ -135,18 +147,26 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
 
 describe('upcomingEvents — surfaces eligibility both directions', () => {
   it('a fresh (0-point) kid: local open, regional/national locked (not enough points yet)', () => {
+    // ⚠ RE-AIMED by the two ladders (29.07). The claim survives whole - at zero she has Local and
+    // nothing else - but the LOCK now comes in two kinds and the label differs with it. A domestic
+    // rung (and j30, the on-ramp, which reads her national standing) says "Reach N pts". The rungs
+    // above j30 are an acceptance list and say a RANK instead, because a points number she cannot
+    // read off her own table would be no help at all.
     const world = createWorld('snap-low')
-    expect(kidPoints(world)).toBe(0)
+    expect(kidPoints(world, 'domestic')).toBe(0)
     const upcoming = toSnapshot(world).upcoming
     for (const e of upcoming) {
-      expect(e.eligible).toBe(isTierEligible(e.tier, 0))
       if (e.tier === 'local') {
         expect(e.eligible).toBe(true)
         expect(e.ineligibleReason).toBeUndefined()
+        continue
+      }
+      expect(e.eligible).toBe(false)
+      expect(e.ineligibleReason).toBe('locked')
+      if (TIERS[e.tier].enterPct === undefined) {
+        expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0])
       } else {
-        expect(e.eligible).toBe(false)
-        expect(e.ineligibleReason).toBe('locked') // 0 is below minPoints – not there yet
-        expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0]) // drives the "Reach N pts" lock label
+        expect(e.rankToEnter).toBe(acceptanceRank(world, e.tier))
       }
     }
   })
@@ -154,21 +174,43 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
   it('a high-point kid: the top rungs open, local/regional outgrown, j300 still out of reach', () => {
     // RE-PINNED by ladder-up Part B: at 700 points she has outgrown local (>85) and regional
     // (>230), national/j30/j60 are all open (their ceilings are the MAX sentinel), and j300 is
-    // still LOCKED – she has not earned its 900-point entry yet. That is the ladder working:
-    // outgrown below, open in the middle, something still to climb above.
+    // still LOCKED. That is the ladder working: outgrown below, open in the middle, something
+    // still to climb above.
+    //
+    // ⚠ RE-AIMED by the two ladders (docs/specs/two-ladders.md). TWO THINGS MOVED.
+    //   (1) "She has the points for it" is no longer one number. 700 DOMESTIC points buy nothing
+    //       international above the j30 on-ramp, so the fixture now gives her an ITF book as well –
+    //       a J60 title, a J60 final and a J300 round of 16, 156 points, which is #65 on this seed:
+    //       inside j60's top 120 and outside j300's top 50. Without it "the top rungs open" was
+    //       simply not a state this world could be in, and the case had nothing left to assert.
+    //   (2) j300's lock is no longer a 900-point band – it is an ACCEPTANCE LIST – so the card
+    //       carries `rankToEnter` (top 50) where it used to carry `pointsToEnter` (900). Same
+    //       verdict, same rung, stated in the currency she can actually read off her own table.
+    // WHAT IS UNCHANGED is the fact this case exists for: the SHAPE of the ladder around her – two
+    // rungs outgrown below, three open in the middle, and exactly one still to climb above.
     const world = createWorld('snap-top')
     giveKidPoints(world, 700)
+    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j60' }) // a J60 title
+    world.results.push({ playerId: KID_ID, week: world.week, points: 36, tier: 'j60' }) // ...a J60 final
+    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j300' }) // ...a J300 R16
+    recomputeKidRank(world)
+    expect(kidPoints(world, 'domestic')).toBe(700)
+    expect(world.kidRank).toBeGreaterThan(acceptanceRank(world, 'j300')!) // outside the top 50...
+    expect(world.kidRank).toBeLessThanOrEqual(acceptanceRank(world, 'j60')!) // ...and inside the top 120
     const upcoming = toSnapshot(world).upcoming
     expect(upcoming.length).toBeGreaterThan(0)
     for (const e of upcoming) {
-      expect(e.eligible).toBe(isTierEligible(e.tier, 700))
+      // The ENGINE'S OWN gate, not a re-derived one. `isTierEligible` is the DOMESTIC half only –
+      // a points band – and j60/j300 no longer have a meaningful one ([0, MAX]), so it would read
+      // both as open to anybody with any points at all.
+      expect(e.eligible).toBe(tierOpenFor(world, e.tier))
       if (e.tier === 'national' || e.tier === 'j30' || e.tier === 'j60') {
         expect(e.eligible).toBe(true)
         expect(e.ineligibleReason).toBeUndefined()
       } else if (e.tier === 'j300') {
         expect(e.eligible).toBe(false)
-        expect(e.ineligibleReason).toBe('locked') // 700 < 900 – not there yet
-        expect(e.pointsToEnter).toBe(900)
+        expect(e.ineligibleReason).toBe('locked') // #65 – outside the acceptance list, not there yet
+        expect(e.rankToEnter).toBe(50)
       } else {
         expect(e.eligible).toBe(false)
         expect(e.ineligibleReason).toBe('outgrown') // 700 is past the ceiling – too good now

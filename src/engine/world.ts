@@ -48,7 +48,7 @@ import { seasonYear, weekLabel } from '../shared/dates'
 // so this is a leaf dependency, not a cycle.
 import { ANGER_STREAK_MAX, ANGER_STREAK_MIN, resultShowsOnHerFace } from '../shared/avatarEmotion'
 import type { MatchPlayer, Surface } from './match/types'
-import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
+import type { AiPlayer, LadderTrack, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import {
   TIERS,
   buildSeason,
@@ -139,8 +139,13 @@ export interface WorldState {
   /** structured News/Money feed; capped, `keep` survives pruning. */
   events: WorldEvent[]
   nextEventId: number
-  /** the kid's dense rank among cohort + kid (cheap-access cache). */
+  /** the kid's dense rank among cohort + kid (cheap-access cache). THE ITF table since the two-ladder
+   *  slice - it is the one the international rungs gate on and the one the standings are about. */
   kidRank: number
+  /** her rank in the DOMESTIC table, the one she has before she owns an international result at all.
+   *  Derived like `kidRank` and cached beside it; a career opened before this field existed simply
+   *  recomputes it on the next tick, which is why it needs no migration. */
+  kidRankDomestic?: number
   /** kidRank as it stood at the start of the last resolved week; null before any tick (v7). */
   prevKidRank: number | null
   /** R12-S1 (v17): her dense rank as she ENTERED the season currently in progress – captured at
@@ -492,14 +497,45 @@ export function ensureSeason(world: WorldState): void {
 }
 
 // --- ranking helpers ---------------------------------------------------------
-function fullRanking(world: WorldState): RankingRow[] {
-  return computeRanking(world.results, world.week, [...cohortIds(world), KID_ID])
+//
+// TWO TABLES, ONE LEDGER (docs/specs/two-ladders.md, the owner 29.07). Local / Regional / National
+// pay into a NATIONAL table; J30 / J60 / J300 pay into the ITF junior table. Nothing crosses: in the
+// real sport a national result produces zero ITF points, because Reg 10's list of ranking
+// tournaments is closed and contains only ITF grades, while federations import ITF results at their
+// own valuation and never the reverse.
+//
+// It costs nothing to store, which is the nice part: a result row already carries the `tier` it was
+// won at, so a track is a FILTER over the ledger we already keep. Two tables = two folds. No schema
+// bump, no migration, no golden save.
+
+/** Does this result pay into `track`? A row with no tier is pre-r5 history and counts as domestic -
+ *  it can only have come from the rungs that existed then. */
+export function inTrack(track: LadderTrack): (r: SeasonResult) => boolean {
+  return (r) => (r.tier ? TIERS[r.tier].track === track : track === 'domestic')
 }
 
-/** Refresh the cheap-access kidRank cache from the current results ledger. */
+function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] {
+  return computeRanking(world.results, world.week, [...cohortIds(world), KID_ID], inTrack(track))
+}
+
+/** THE table when only one is meant: the ITF one. It is what opens the international rungs and what
+ *  the game is about. Callers that need the domestic side ask for it by name. */
+function fullRanking(world: WorldState): RankingRow[] {
+  return rankingFor(world, 'itf')
+}
+
+function domesticRanking(world: WorldState): RankingRow[] {
+  return rankingFor(world, 'domestic')
+}
+
+/** Refresh the cheap-access rank caches. `kidRank` stays the ITF one - it is the number the ladder
+ *  and the standings are about - and the domestic rank rides beside it for the screens that show her
+ *  place before she has an international result at all. */
 export function recomputeKidRank(world: WorldState): void {
   const row = fullRanking(world).find((r) => r.playerId === KID_ID)
   world.kidRank = row?.rank ?? world.cohort.length + 1
+  const dom = domesticRanking(world).find((r) => r.playerId === KID_ID)
+  world.kidRankDomestic = dom?.rank ?? world.cohort.length + 1
 }
 
 // --- milestones (never pruned) -----------------------------------------------
@@ -1057,15 +1093,59 @@ export interface EntryStatus {
   level: 'ok' | 'caution' | 'blocked'
   reason?: 'locked' | 'outgrown' | 'injured' | 'fatigued' | 'unavailable' | 'medical' | 'capped'
   detail?: string
-  /** the tier's minPoints threshold, present only when 'locked' (so the UI can say "Reach N pts") */
+  /** the tier's minPoints threshold, present only when a DOMESTIC rung is 'locked' (so the UI can
+   *  say "Reach N pts"). */
   pointsToEnter?: number
+  /** the ITF rank an international rung accepts down to, present only when one is 'locked' - the UI
+   *  says "top 50" rather than a points number she can never read off her own table. */
+  rankToEnter?: number
   /** 'capped' only: the season allowance behind the verdict (see AvailabilityStatus.entryCap). */
   entryCap?: EntryCapUsage
 }
 export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus {
   const tier = TIERS[event.tier]
+  // AN ITF RUNG IS AN ACCEPTANCE LIST, not a points threshold (docs/specs/two-ladders.md). She gets
+  // in on her ITF RANK, the same signal the AI field is drawn on, so the two sides of the same
+  // event finally obey the same rule - see rank-plateau.md 2b for what it cost when they did not.
+  if (tier.track === 'itf') {
+    // The first international rung has no rank bar - it reads her DOMESTIC points, because she
+    // cannot own an international ranking before she has played internationally and a rank gate
+    // there would be a closed loop. Above it, the acceptance list takes over.
+    const accepts = acceptanceRank(world, event.tier)
+    if (accepts === undefined) {
+      const [minPoints] = tier.enterPointBand
+      const domestic = kidPoints(world, 'domestic')
+      if (domestic < minPoints) {
+        return {
+          level: 'blocked',
+          reason: 'locked',
+          detail: `${tier.label} takes her on her national standing – ${minPoints} pts needed`,
+          pointsToEnter: minPoints,
+        }
+      }
+      return availabilityStatus(world, event)
+    }
+    // ⚠ UNRANKED IS NOT RANK ONE. With nobody holding an ITF point in week 1 the whole field ties at
+    // zero, and competition ranking gives every member of a tie the SAME rank - so a fresh
+    // fourteen-year-old reads as #1 and the top rungs would open to her on day one. You cannot be on
+    // an acceptance list BY RANKING if you have no ranking, so the gate demands a counting ITF
+    // result before it will read a position at all. (The same `hasResults` guard the econ bench
+    // already puts on its rank arm, for the same reason.)
+    const ranked = kidPoints(world, 'itf') > 0
+    if (!ranked || world.kidRank > accepts) {
+      return {
+        level: 'blocked',
+        reason: 'locked',
+        detail: ranked
+          ? `${tier.label} takes the top ${accepts} – she is #${world.kidRank}`
+          : `${tier.label} takes the top ${accepts} – she has no international ranking yet`,
+        rankToEnter: accepts,
+      }
+    }
+    return availabilityStatus(world, event)
+  }
   const minPoints = tier.enterPointBand[0]
-  const points = kidPoints(world)
+  const points = kidPoints(world, 'domestic')
   if (points < minPoints) {
     return {
       level: 'blocked',
@@ -1134,7 +1214,7 @@ export interface ArrivalStatus {
  *  injured > medical – so the entry gate and the arrival gate can never disagree about which beat
  *  fires. */
 export function arrivalStatus(world: WorldState, event: SeasonEvent): ArrivalStatus {
-  const outgrown = outgrewTier(event.tier, kidPoints(world))
+  const outgrown = outgrewTier(event.tier, kidPoints(world, 'domestic'))
   const layoff = layoffCovering(world, event.week)
   if (layoff !== null) return { verdict: 'injured', detail: injuredDetail(layoff.weeksRemaining), outgrown }
   const medical = medicalBlock(world.condition)
@@ -2473,7 +2553,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
 // Pure state, ZERO RNG draws – the B1/C1 main-stream invariance freezes stay untouched.
 function releaseOutgrownEntries(world: WorldState): void {
   if (world.entries.length === 0) return
-  const points = kidPoints(world)
+  const points = kidPoints(world, 'domestic')
   for (const id of [...world.entries]) {
     const event = eventById(world, id)
     if (!event || world.week > event.deadlineWeek) continue // closed list – fee committed
@@ -2715,8 +2795,16 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 /** The kid's EARNED ranking points: her windowed best-6 sum at the current week – the same value
  *  `computeRanking` assigns her, an absolute measure of achievement (a fresh kid = 0). Derived on the
  *  fly from the results ledger (no persisted state → no schema bump); the eligibility ladder reads it. */
-export function kidPoints(world: WorldState): number {
-  return windowedBestSum(world.results, world.week, KID_ID)
+// NO DEFAULT, DELIBERATELY. There are two tables now and "her points" is no longer a question with
+// one answer, so every caller has to say which one it means. Making the argument required turns a
+// silent change of meaning into a compile error - which is what a change of this kind should be.
+export function kidPoints(world: WorldState, track: LadderTrack): number {
+  return windowedBestSum(world.results, world.week, KID_ID, inTrack(track))
+}
+
+/** Her domestic best-6 - the number the domestic rungs' bands are denominated in. */
+export function kidDomesticPoints(world: WorldState): number {
+  return kidPoints(world, 'domestic')
 }
 
 /** Pure eligibility check for a tier (Phase-4 "Season Life" slice 1, increment 2). A tier is a WINDOW
@@ -2727,6 +2815,35 @@ export function kidPoints(world: WorldState): number {
 export function isTierEligible(tier: TierId, points: number): boolean {
   const [minPoints, maxPoints] = TIERS[tier].enterPointBand
   return minPoints <= points && points <= maxPoints
+}
+
+/** The acceptance list as an absolute position, for the one field we actually have this week. A
+ *  share rather than a count, so it survives the field growing (see TierDef.enterPct). */
+export function acceptanceRank(world: WorldState, tier: TierId): number | undefined {
+  const pct = TIERS[tier].enterPct
+  if (pct === undefined) return undefined
+  return Math.max(1, Math.round(pct * (world.cohort.length + 1)))
+}
+
+/** THE ONE GATE, now that there are two tables (docs/specs/two-ladders.md).
+ *
+ *  A DOMESTIC rung reads her domestic best-6 against its band, exactly as the single ladder always
+ *  did - those bands are denominated in domestic points and did not move, because the domestic
+ *  point tables did not move either.
+ *
+ *  An ITF rung reads her ITF RANK POSITION against `enterRank`. That is the acceptance list, it is
+ *  how the real tour works, and it is the same signal `entrantPctBand` already uses to pick the AI
+ *  field - which is what closes the "two different entry rules for the same event" finding in
+ *  rank-plateau.md 2b. A rung with no `enterRank` is open to anyone, which is what a J30 is. */
+export function tierOpenFor(world: WorldState, tier: TierId): boolean {
+  const def = TIERS[tier]
+  if (def.track === 'itf') {
+    // The on-ramp rung reads domestic points; the rungs above it read her ITF rank. See entryStatus.
+    const accepts = acceptanceRank(world, tier)
+    if (accepts === undefined) return isTierEligible(tier, kidPoints(world, 'domestic'))
+    return kidPoints(world, 'itf') > 0 && world.kidRank <= accepts
+  }
+  return isTierEligible(tier, kidPoints(world, 'domestic'))
 }
 
 /** The GRADUATED-OUT half of the band, on its own: her points have passed the tier's ceiling.
@@ -3032,6 +3149,7 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
                 | 'medical'
                 | 'capped',
               ...(gate.pointsToEnter !== undefined ? { pointsToEnter: gate.pointsToEnter } : {}),
+              ...(gate.rankToEnter !== undefined ? { rankToEnter: gate.rankToEnter } : {}),
               // Per-EVENT figures, exactly like pointsToEnter: a card near the year boundary can
               // be judged against a different season's allowance than today's, so the number it
               // prints has to be the one the gate actually used.
@@ -3101,7 +3219,11 @@ function arrivalPreview(world: WorldState): ArrivalPreview | null {
 // thing in both places or this list and the standings total drift apart the moment a scoreless row
 // reaches the kid's half of the ledger.
 function computeCountingResults(world: WorldState): CountingResult[] {
-  return world.results
+  // TWO LADDERS: this list EXPLAINS a ranking, so it has to be the same table as the rank beside it.
+  // `standings` and `kidRank` are the ITF one, so this is too - and before she owns an international
+  // result it is honestly empty, which is what "unranked internationally" means. The domestic
+  // equivalent arrives with the domestic table's own surface.
+  return world.results.filter(inTrack('itf'))
     .filter(
       (r) =>
         isCountingResult(r) &&
