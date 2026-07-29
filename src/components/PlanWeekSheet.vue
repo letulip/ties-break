@@ -13,6 +13,8 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPriceCents } from '../engine/economy'
+import { practiceCoachRateCents } from '../engine/coach'
+import { ageAtWeek } from '../engine/world'
 import { layoffBlock, medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekLabel, weekRange } from '../shared/dates'
@@ -51,9 +53,21 @@ const offSeason = computed(() => isOffSeasonWeek(props.week))
 // --- Practice tab -------------------------------------------------------------------------
 // The off-season is family time – no friendlies there (the engine refuses too), so the tab
 // explains itself instead of offering a button that would throw.
+// R3: «+ тренер на игру» is HER coach now, so the quote reads his rate through the same pure rule
+// the engine charges by (engine/coach.ts practiceCoachRateCents) instead of a flat band. Priced at
+// the age she will be in the BOOKED week, which is the week the coach is actually working.
+const coachRateCents = computed(() =>
+  practiceCoachRateCents(
+    seed.value,
+    ageAtWeek(props.week),
+    game.snapshot?.coachId ?? null,
+    game.snapshot?.profile.playStyle ?? 'all-court',
+  ),
+)
 const courtCents = computed(() => practiceFeeCents(seed.value, props.week, background.value, false))
 const coachExtraCents = computed(
-  () => practiceFeeCents(seed.value, props.week, background.value, true) - courtCents.value,
+  () =>
+    practiceFeeCents(seed.value, props.week, background.value, true, coachRateCents.value) - courtCents.value,
 )
 const practiceFee = computed(() => (withCoach.value ? courtCents.value + coachExtraCents.value : courtCents.value))
 const practiceAffordable = computed(() => fundsCents.value >= practiceFee.value)

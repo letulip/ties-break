@@ -32,8 +32,8 @@ describe('screen T renders what the design specified', () => {
     expect(market).toContain('overBudgetCents')
     expect(market).toContain('formatDollars(r.overBudgetCents)')
     // ...and the over-budget row is dashed and dimmed rather than hidden.
-    expect(css).toContain('.coach-row.blocked')
-    expect(css).toMatch(/\.coach-row\.blocked\s*\{[^}]*border-style: dashed/)
+    expect(css).toContain('.cm-row.blocked')
+    expect(css).toMatch(/\.cm-row\.blocked\s*\{[^}]*border-style: dashed/)
   })
 
   it('leads each row with the FIT pill, in the design system\'s own colours', () => {
@@ -91,5 +91,61 @@ describe('screen T renders what the design specified', () => {
 
   it('surfaces command failures the way every commanding screen does', () => {
     expect(market).toContain('<p v-if="game.error" class="error">')
+  })
+})
+
+describe('screen T, round 3', () => {
+  it('scopes every row class, so Home\'s coach card cannot leak geometry into it', () => {
+    // ⚠ THE BUG THIS PINS WAS SHIPPED. The first cut named the row\'s text column `.coach-body`,
+    // which ALREADY EXISTS as the Home coach card\'s text column carrying `margin-left: 54px` and
+    // its own padding - so both rules matched every market row. A screen-scoped prefix makes the
+    // collision impossible; this asserts the prefix is actually used rather than merely intended.
+    const rowClasses = ['cm-row', 'cm-art', 'cm-body', 'cm-name', 'cm-meta', 'cm-price', 'cm-action']
+    for (const cls of rowClasses) expect(market).toContain(cls)
+    // The market template must not reference any of Home\'s coach-card classes.
+    const template = market.slice(market.indexOf('<template>'))
+    for (const owned of ['"coach-body"', '"coach-art"', '"coach-card"', '"coach-line"']) {
+      expect(template, `${owned} belongs to Home's coach card`).not.toContain(owned)
+    }
+  })
+
+  it('gives the portrait the full-bleed strip treatment, not a square avatar', () => {
+    // The Home card\'s reasoning (A2c/d), applied here: sized by HEIGHT so the whole frame shows
+    // with no vertical crop, and masked into the card so the card\'s own gradient shows through.
+    expect(css).toMatch(/\.cm-art\s*\{[^}]*position: absolute/)
+    expect(css).toMatch(/\.cm-art\s*\{[^}]*mask-image: linear-gradient/)
+    expect(css).toMatch(/\.cm-art img\s*\{[^}]*height: 100%/)
+    expect(css).toMatch(/\.cm-art img\s*\{[^}]*width: auto/)
+    // ...and no fixed square is set on the image any more.
+    expect(market).not.toContain('width="46"')
+  })
+
+  it('carries the training regulator, writing through with the planner\'s own command', () => {
+    // The weekly bill is `rate x hours(plan)`, so the plan is half of every price on this screen.
+    expect(market).toContain('game.setPlan(WEEK_PLAN_PRESETS[k])')
+    expect(market).toContain('option-pill') // the planner's control, not a new idiom
+    expect(market).toContain('coachHoursForPlan')
+    // Prices come back from the ENGINE after the write - the screen must not reprice locally.
+    expect(market).not.toContain('coachWeeklyCents(')
+  })
+
+  it('draws the back control bare, from the shared class', () => {
+    expect(market).toContain('class="back-link"')
+    expect(market).not.toContain('market-back')
+    expect(css).toContain('.back-link {')
+    // No plate: no background, no border, no padding.
+    const rule = css.slice(css.indexOf('.back-link {'), css.indexOf('}', css.indexOf('.back-link {')))
+    expect(rule).toMatch(/border: none/)
+    expect(rule).toMatch(/background: none/)
+    expect(rule).toMatch(/padding: 0/)
+  })
+
+  it('names a coach\'s game in the vocabulary the rest of the app uses', () => {
+    // The first cut renamed the styles for this screen alone ("Defense", "Attacking"), so a
+    // counterpuncher looking for a counterpuncher could not find one - the coach was there, the
+    // WORD was not. One vocabulary: the same labels onboarding and the Kid screen use.
+    expect(market).toContain("counterpuncher: 'Counterpuncher'")
+    expect(market).not.toContain("'Defense'")
+    expect(market).not.toContain('SPECIALISM_LABEL')
   })
 })

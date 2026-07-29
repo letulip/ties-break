@@ -366,6 +366,29 @@ button {
   cursor: pointer;
 }
 
+/* THE BACK CONTROL, once (owner, R3). Top-left back is ONE control across the whole app and it is
+   a bare arrow - the Coach Market shipped it on a circular plate, which made it the odd one out.
+   No plate, no border, no padding: the arrow IS the affordance, and it sits beside the generic
+   `button` reset because that is what it is a variant of.
+   The app's only other back control is TournamentFlow's "← Back", which lives in a flow's action
+   row rather than a screen header and reads as a labelled button there; it is left alone, and this
+   class is here for the next screen header that needs one. */
+.back-link {
+  flex: none;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.back-link:hover:not(:disabled),
+.back-link:focus-visible {
+  border-color: transparent;
+  color: var(--text);
+}
+
 button:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
@@ -4393,27 +4416,18 @@ button.note-card:active:not(:disabled) {
 
 /* --- SCREEN T: COACH MARKET (docs/design/README.md §T) ------------------------------------- */
 
+/* ⚠ EVERY ROW CLASS IS `cm-` PREFIXED, and that is a bug fix rather than a style. The first cut
+   named them `.coach-row / .coach-body / .coach-name`, and `.coach-body` ALREADY EXISTS - it is the
+   Home coach card's text column, carrying `margin-left: 54px` and its own padding. Both rules
+   matched every market row, so Home's geometry was silently leaking into this screen. A screen-
+   scoped prefix is the cheapest way to make that impossible; `.fit-pill` keeps its plain name
+   because it is genuinely shared vocabulary (the design system's own pill). */
+
 .market-head {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 14px;
-}
-.market-back {
-  flex: none;
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--text);
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-}
-.market-back:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
 }
 .market-title {
   margin: 0;
@@ -4433,6 +4447,14 @@ button.note-card:active:not(:disabled) {
 .market-sub strong {
   font-weight: 700;
   color: var(--accent);
+}
+
+/* The training regulator, and the line that says what it just did to every price below. */
+.cm-plan {
+  margin-bottom: 6px;
+}
+.cm-plan-note {
+  margin: 0 0 12px;
 }
 
 /* The budget meter. Three real numbers: what she pays now, what a week brings in, and the gap. */
@@ -4575,83 +4597,86 @@ button.note-card:active:not(:disabled) {
   color: var(--muted);
 }
 
-/* The coach row. Headline signal is the FIT pill, not a tag list (design §T.3). */
-.coach-row {
+/* THE COACH ROW. Headline signal is the FIT pill, not a tag list (design §T.3), and the portrait is
+   full-bleed down the left edge - the same treatment `.coach-art` gives the Home card, for the
+   reason recorded there (A2c/d): sized by HEIGHT so the whole frame is on screen with no vertical
+   crop, and masked into the card so the card's own gradient shows through rather than a painted
+   overlay that would drift out of step with it. */
+.cm-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
+  min-height: 82px;
   margin-bottom: 8px;
-  padding: 9px 12px 9px 9px;
+  padding: 9px 12px 9px 0;
+  overflow: hidden;
   border: 1px solid transparent;
   border-radius: var(--radius-frame);
   background: var(--card-bottom);
   text-align: left;
   cursor: pointer;
 }
-.coach-row:hover:not(:disabled) {
+.cm-row:hover:not(:disabled) {
   border-color: var(--card-edge);
 }
-.coach-row:disabled {
-  cursor: default;
-}
-/* A disabled row is still a row you must be able to READ – the global button:disabled dim would
+/* A disabled row is still a row you must be able to READ - the global button:disabled dim would
    grey out the coach she actually has, which is the one row that most needs to be legible. */
-.coach-row:disabled {
+.cm-row:disabled {
+  cursor: default;
   opacity: 1;
 }
-.coach-row.current {
+.cm-row.current {
   background: rgba(var(--accent-rgb), 0.07);
   border-color: var(--accent);
 }
 /* Over budget or gated: dashed, dimmed, and the shortfall stated in money (never "expensive"). */
-.coach-row.blocked {
+.cm-row.blocked {
   background: rgba(20, 29, 38, 0.5);
   border-style: dashed;
   border-color: rgba(255, 255, 255, 0.09);
 }
-.coach-row.blocked .coach-face {
+.cm-row.blocked .cm-art {
   opacity: 0.45;
 }
-.coach-row.blocked .coach-name {
+.cm-row.blocked .cm-name {
   color: var(--ink-dim);
 }
-.coach-face {
-  flex: none;
-  width: 46px;
-  height: 46px;
-  border-radius: var(--radius-dialog);
-  object-fit: cover;
-  object-position: 50% 22%;
+.cm-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
 }
-.coach-body {
+.cm-art img {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+.cm-body {
+  position: relative;
   flex: 1;
   min-width: 0;
+  margin-left: 62px;
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
-.coach-name {
+.cm-name {
   font-size: 14.5px;
   font-weight: 700;
   color: var(--text);
 }
-.coach-meta {
+.cm-meta {
   display: flex;
   align-items: center;
   gap: 7px;
   min-width: 0;
 }
-.coach-uplift {
-  font-size: 10.5px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink-soft);
-}
-.coach-row.current .coach-uplift {
-  color: var(--accent);
-}
-.coach-tags {
+.cm-tags {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -4659,6 +4684,15 @@ button.note-card:active:not(:disabled) {
   font-size: 11px;
   font-weight: 500;
   color: var(--muted);
+}
+.cm-uplift {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+.cm-row.current .cm-uplift {
+  color: var(--accent);
 }
 .fit-pill {
   flex: none;
@@ -4680,42 +4714,43 @@ button.note-card:active:not(:disabled) {
   border-color: var(--fit-off-border);
   color: var(--muted);
 }
-.coach-right {
+.cm-right {
+  position: relative;
   flex: none;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 3px;
 }
-.coach-price {
+.cm-price {
   font-size: 14.5px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
-.coach-price i {
+.cm-price i {
   font-style: normal;
   font-size: 10.5px;
   font-weight: 600;
   color: var(--muted);
 }
-.coach-row.blocked .coach-price {
+.cm-row.blocked .cm-price {
   color: var(--ink-dim);
 }
-.coach-action {
+.cm-action {
   font-size: 12px;
   font-weight: 800;
 }
-.coach-action.is-hire {
+.cm-action.is-hire {
   color: var(--accent);
 }
-.coach-action.is-current {
+.cm-action.is-current {
   color: var(--accent);
   font-size: 11.5px;
   font-weight: 700;
 }
-.coach-action.is-over,
-.coach-action.is-locked {
+.cm-action.is-over,
+.cm-action.is-locked {
   font-size: 11px;
   font-weight: 600;
   color: var(--muted);

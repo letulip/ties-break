@@ -261,13 +261,15 @@ describe('fit and development – what the rung is worth', () => {
 })
 
 describe('the roster – a market, not a menu', () => {
-  it('is roughly four coaches a tier, one per play style, and every portrait exists on disk', () => {
+  // ⚠ RE-PINNED (R3): FOUR a tier, exactly, not "three to five". Middle used to carry two
+  // counterpunchers purely because five middle portraits had to go somewhere; moving one to Budget
+  // makes every rung four and puts the single duplicate in the tier where it reads as something -
+  // the club IS defence and consistency.
+  it('is four coaches a tier, and every portrait exists on disk', () => {
     const roster = buildCoachRoster('roster-seed', 14)
     expect(roster).toHaveLength(16) // the 16 portraits that ship in public/images/coaches
     for (const tier of HIREABLE_TIERS) {
-      const atTier = roster.filter((c) => c.tier === tier)
-      expect(atTier.length).toBeGreaterThanOrEqual(3)
-      expect(atTier.length).toBeLessThanOrEqual(5)
+      expect(roster.filter((c) => c.tier === tier)).toHaveLength(4)
     }
     // Both directions: every slot has art, and every file is used. A missing face is a broken row.
     const dir = fileURLToPath(new URL('../public/images/coaches', import.meta.url))
@@ -277,15 +279,31 @@ describe('the roster – a market, not a menu', () => {
 
   it('leaves BUDGET without a serve-first coach – a big serve is the expensive build', () => {
     const roster = buildCoachRoster('roster-seed', 14)
-    const stylesAt = (tier: CoachTier) => new Set(roster.filter((c) => c.tier === tier).map((c) => c.style))
-    expect(stylesAt('budget').has('serve-first')).toBe(false)
-    // ...and every other rung covers all four, so shopping up the ladder is what fixes it.
+    const stylesAt = (tier: CoachTier) => roster.filter((c) => c.tier === tier).map((c) => c.style)
+    expect(stylesAt('budget')).not.toContain('serve-first')
+    // ...and every other rung covers all four exactly once, so shopping up the ladder fixes it.
     for (const tier of ['middle', 'high', 'elite'] as CoachTier[]) {
-      expect(stylesAt(tier)).toEqual(new Set(PLAY_STYLES))
+      expect([...stylesAt(tier)].sort()).toEqual([...PLAY_STYLES].sort())
     }
     // Consequence, stated: a serve-first kid finds nobody great for her at Budget.
     const budget = roster.filter((c) => c.tier === 'budget')
     expect(budget.every((c) => coachFitFor(c, 'serve-first') !== 'great')).toBe(true)
+  })
+
+  it('gives EVERY OTHER style a great-fit coach at the cheapest rung (R3)', () => {
+    // The owner reported Budget as short a counterpuncher. It was not - but the screen had renamed
+    // the style to "Defense", so the coach was there and the word was not. This pins the fact he
+    // was reaching for, in the engine where it can be checked: below serve-first, the bottom of the
+    // market always has someone whose game IS hers, and she never has to buy up a rung to find one.
+    const roster = buildCoachRoster('roster-seed', 14)
+    const budget = roster.filter((c) => c.tier === 'budget')
+    for (const style of PLAY_STYLES.filter((s) => s !== 'serve-first')) {
+      expect(budget.some((c) => coachFitFor(c, style) === 'great'), `no great fit at budget for ${style}`).toBe(true)
+      // ...and he really is the cheapest same-style coach in the game.
+      const greatEverywhere = roster.filter((c) => coachFitFor(c, style) === 'great')
+      const cheapest = greatEverywhere.reduce((a, b) => (b.rateCents < a.rateCents ? b : a))
+      expect(cheapest.tier).toBe('budget')
+    }
   })
 
   it('is a pure derivation of the seed: stable across rebuilds, different between careers', () => {
@@ -318,13 +336,17 @@ describe('the roster – a market, not a menu', () => {
     expect(coachById('aging', 14, 'no-such-coach')).toBeNull()
   })
 
-  it('opens a career with a real named coach at the rung onboarding chose', () => {
-    const world = createWorld('opening', { ...DEFAULT_PROFILE, coachTier: 'middle', playStyle: 'serve-first' })
-    const coach = coachById(world.seed, 14, world.coachId)
-    expect(coach).not.toBeNull()
-    expect(coach!.tier).toBe('middle')
-    // ...and it is the one who FITS her, not merely the first in the list.
-    expect(coachFitFor(coach, 'serve-first')).toBe('great')
+  it('opens a career with her GREAT-FIT coach at the rung onboarding chose (R3)', () => {
+    // The owner's ruling, and it was already the rule: the fit pill exists to say the match matters,
+    // so handing a new player a mismatched coach on day one teaches the opposite. Pinned for all
+    // four styles now rather than one, because Middle carries a coach for every style.
+    for (const style of PLAY_STYLES) {
+      const world = createWorld(`opening-${style}`, { ...DEFAULT_PROFILE, coachTier: 'middle', playStyle: style })
+      const coach = coachById(world.seed, 14, world.coachId)
+      expect(coach, `no coach for ${style}`).not.toBeNull()
+      expect(coach!.tier).toBe('middle')
+      expect(coachFitFor(coach, style), `opening coach is not great for ${style}`).toBe('great')
+    }
     // `self` hires nobody.
     expect(createWorld('opening-self', { ...DEFAULT_PROFILE, coachTier: 'self' }).coachId).toBeNull()
   })

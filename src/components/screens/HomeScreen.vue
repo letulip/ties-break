@@ -48,7 +48,7 @@ import { playSfx } from '../../audio/sfx'
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
 // with the tab and is RENDERED here, on the card that opens that screen.
 defineProps<{ recapFresh: boolean }>()
-const emit = defineEmits<{ navigate: ['money' | 'week' | 'more' | 'kid'] }>()
+const emit = defineEmits<{ navigate: ['money' | 'week' | 'more' | 'kid' | 'market'] }>()
 
 const game = useGameStore()
 /** Vite's base path, so the brand mark resolves under a sub-path deploy the same way the art does. */
@@ -720,8 +720,16 @@ function openRankHelp(): void {
         </button>
 
         <!-- COACH NOTE. The export's own layout: his portrait down the left edge, his read on her
-             beside it. -->
-        <article class="note-card card-short coach-card">
+             beside it.
+             R3: and it is a DOOR into the Coach Market. `button.note-card` is the app's own "this is
+             a door" affordance (the lift on hover/focus), so it arrives keyboard-reachable and
+             focus-visible for free - no new pattern, and no price on the card: what changed is that
+             it can be opened, not what it says. -->
+        <button
+          class="note-card card-short coach-card"
+          aria-label="Coach note - open the Coach Market"
+          @click="emit('navigate', 'market')"
+        >
           <div class="coach-art">
             <img :src="coachPhoto" alt="" />
           </div>
@@ -729,7 +737,7 @@ function openRankHelp(): void {
             <p class="note-kicker">Coach note</p>
             <p class="coach-line">{{ coachQuote }}</p>
           </div>
-        </article>
+        </button>
 
         <!-- D10: RECENT MEMORY – the painting from the band she was in THEN, on cream paper,
              tilted and tacked to the card. Time, made visible. -->

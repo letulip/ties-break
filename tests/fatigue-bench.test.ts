@@ -449,7 +449,10 @@ describe('factorial grid (owner 25.07: unbundled axes)', () => {
     }
   })
 
-  it('the plan axis moves the wallet: 85/15 coaching spend > 60/40 on the same seed (planFactor)', () => {
+  // ⚠ RE-AIMED (name and reason only): the mechanism it credits, `planFactor`, is retired. The plan
+  // moved the coaching bill by 0.91 -> 1.06 through that factor; it now moves it through HOURS,
+  // 4 -> 6 sessions a week, which is the same fact with three times the force behind it.
+  it('the plan axis moves the wallet: 85/15 coaching spend > 60/40 on the same seed (hours)', () => {
     const grind = gridPolicies().find((p) => p.id === '85/15·all·off')!
     const light = gridPolicies().find((p) => p.id === '60/40·all·off')!
     const a = runFatigueCareer(middleSelf, grind, 0, 52)

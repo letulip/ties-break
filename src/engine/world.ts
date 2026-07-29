@@ -72,6 +72,7 @@ import { generateCohort, driftCohort, ageCohort } from './season/cohort'
 import { renewCohort } from './season/conveyor'
 import { ageFactor, growWeek, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
 import {
+  bestFitCoachAt,
   buildCoachRoster,
   coachById,
   coachCorridorFactor,
@@ -81,6 +82,7 @@ import {
   coachWeeklyCents,
   COACH_TIER_LABEL,
   eliteGateShortfall,
+  practiceCoachRateCents,
   selfRateCents,
 } from './coach'
 import {
@@ -1520,14 +1522,13 @@ export function cancelVacation(world: WorldState, week: number): void {
  *  from the seed and nothing is drawn on the main stream. */
 export function openingCoachId(seed: string, profile: PlayerProfile): string | null {
   if (profile.coachTier === 'self') return null
-  const FIT_RANK: Record<string, number> = { great: 0, good: 1, off: 2 }
-  const candidates = buildCoachRoster(seed, START_AGE_YEARS).filter((c) => c.tier === profile.coachTier)
-  if (candidates.length === 0) return null
-  return candidates.sort(
-    (a, b) =>
-      FIT_RANK[coachFitFor(a, profile.playStyle)] - FIT_RANK[coachFitFor(b, profile.playStyle)] ||
-      a.rateCents - b.rateCents,
-  )[0].id
+  return bestFitCoachAt(seed, START_AGE_YEARS, profile.coachTier, profile.playStyle)?.id ?? null
+}
+
+/** The friendly's coach rate for one week of THIS world - a thin read of the pure rule in
+ *  engine/coach.ts, so the planner sheet and the engine quote the same number. */
+export function practiceCoachRateFor(world: WorldState, week: number): number {
+  return practiceCoachRateCents(world.seed, ageAtWeek(week), world.coachId, world.profile.playStyle)
 }
 
 /** THE HIRE, and it is deliberately cheap to do: no signing fee, no notice period, effective from
@@ -1613,7 +1614,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
 
 export function bookPractice(world: WorldState, week: number, withCoach: boolean): void {
   assertPlannable(world, week, 'practice')
-  const paidCents = practiceFeeCents(world.seed, week, world.profile.background, withCoach)
+  const paidCents = practiceFeeCents(world.seed, week, world.profile.background, withCoach, practiceCoachRateFor(world, week))
   if (world.fundsCents < paidCents) throw new Error('Not enough funds for the court rental')
   world.fundsCents -= paidCents
   world.practices.push({ week, paidCents, withCoach })

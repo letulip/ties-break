@@ -272,10 +272,56 @@ export function buildCoachRoster(seed: string, ageYears: number): Coach[] {
   })
 }
 
+/** THE BEST COACH AT ONE RUNG for the game she plays: best fit first, cheapest among equals.
+ *
+ *  ONE definition, three callers - the coach a career opens with, the coach the practice friendly
+ *  falls back to when she is self-coached, and the market's own "which of these is for her". A
+ *  second copy of this rule would let two surfaces disagree about who her natural coach is. */
+export function bestFitCoachAt(
+  seed: string,
+  ageYears: number,
+  tier: CoachTier,
+  style: PlayStyle,
+): Coach | null {
+  const FIT_RANK: Record<StyleFit, number> = { great: 0, good: 1, off: 2 }
+  const candidates = buildCoachRoster(seed, ageYears).filter((c) => c.tier === tier)
+  if (candidates.length === 0) return null
+  return candidates.sort(
+    (a, b) =>
+      FIT_RANK[styleFitBetween(a.style, style)] - FIT_RANK[styleFitBetween(b.style, style)] ||
+      a.rateCents - b.rateCents,
+  )[0]
+}
+
 /** One coach by id, or null for the parent (and for an id no roster knows). */
 export function coachById(seed: string, ageYears: number, id: string | null): Coach | null {
   if (!id) return null
   return buildCoachRoster(seed, ageYears).find((c) => c.id === id) ?? null
+}
+
+/** THE HOURLY RATE THE PRACTICE FRIENDLY'S COACH CHARGES (owner's ruling, Round 3):
+ *  «справедливо будет завязать на стоимость выбранного тренера или best-fit если не выбран».
+ *
+ *  Her own coach, when she has one - so «+ тренер на игру» costs what HER coach costs, and there is
+ *  no second, unrelated price for an hour of coaching anywhere in the game.
+ *
+ *  SELF-COACHED FALLS BACK TO THE CHEAPEST RUNG, which is the honest reading of "best-fit if none
+ *  chosen": a family with no coach is hiring one for a single afternoon, so what it pays is the
+ *  bottom of the market and not a retainer it does not hold. Best fit within that rung, by the same
+ *  rule a career opens on.
+ *
+ *  Lives HERE rather than in world.ts so the planner sheet quotes the number the engine charges by
+ *  calling the same function, instead of re-deriving the fallback and drifting from it. Pure: the
+ *  roster is a derivation of the seed, so this draws nothing on any stream. */
+export function practiceCoachRateCents(
+  seed: string,
+  ageYears: number,
+  coachId: string | null,
+  style: PlayStyle,
+): number {
+  const hers = coachById(seed, ageYears, coachId)
+  if (hers) return hers.rateCents
+  return bestFitCoachAt(seed, ageYears, HIREABLE_TIERS[0], style)?.rateCents ?? 0
 }
 
 /** The rung she is training at - `self` when nobody is hired. */

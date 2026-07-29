@@ -197,17 +197,29 @@ export const ECONOMY = {
     // gender is a fact about the file and the style is a reading of what he is doing in it. What the
     // seed draws is the NAME; who these people are does not change between careers.
     //
-    // BUDGET HAS NO SERVE-FIRST COACH, deliberately. A big serve is the expensive build: the cheap
-    // rung teaches shape and consistency, and a serve-first kid who shops there finds nobody who
-    // fits her at all. That is the tier's texture, and it is also why budget has three and not four.
+    // BUDGET HAS NO SERVE-FIRST COACH, deliberately, and the owner has not objected: a big serve is
+    // the expensive build, the cheap rung teaches shape and consistency, and a serve-first kid who
+    // shops there finds nobody who fits her at all. That is the tier's texture.
+    //
+    // ⚠ THE DUPLICATE MOVED DOWN A RUNG (Round 3). Middle used to carry TWO counterpunchers, purely
+    // because five middle portraits had to go somewhere, and Budget carried three coaches. Moving
+    // `middle-4` to Budget makes it four a tier all the way up, leaves Middle / High / Elite with
+    // exactly one coach per style, and puts the one duplicate in the tier where it reads as
+    // something rather than as an accident: the club IS defence and consistency, so two defensive
+    // coaches at the bottom of the market is what a club looks like. A counterpuncher now has two
+    // Budget coaches to choose between at different prices, which is the roster doing its job.
+    //
+    // The portrait stem still says `middle-4` because a stem names the MASTER FILE, not the rung -
+    // the art is a man in an orange jacket explaining something, which is a club coach as readily
+    // as an academy one. Renaming the file would break every save holding that id.
     roster: [
       { portrait: 'budget-1', tier: 'budget', style: 'counterpuncher', gender: 'm' },
       { portrait: 'budget-2', tier: 'budget', style: 'all-court', gender: 'f' },
       { portrait: 'budget-3', tier: 'budget', style: 'aggressive', gender: 'f' },
+      { portrait: 'middle-4', tier: 'budget', style: 'counterpuncher', gender: 'm' },
       { portrait: 'middle-1', tier: 'middle', style: 'all-court', gender: 'f' },
       { portrait: 'middle-2', tier: 'middle', style: 'counterpuncher', gender: 'm' },
       { portrait: 'middle-3', tier: 'middle', style: 'serve-first', gender: 'm' },
-      { portrait: 'middle-4', tier: 'middle', style: 'counterpuncher', gender: 'm' },
       { portrait: 'middle-5', tier: 'middle', style: 'aggressive', gender: 'm' },
       { portrait: 'high-1', tier: 'high', style: 'all-court', gender: 'm' },
       { portrait: 'high-2', tier: 'high', style: 'counterpuncher', gender: 'f' },
@@ -761,8 +773,7 @@ export const ECONOMY = {
 
   // --- Season planner: practice matches (spec §4) -----------------------------------------
   // A friendly on an empty week: court rental $30-80 × corridor off `seed:practice:week`, plus
-  // an OPTIONAL coach (50% of a coaching session – "the other half is paid by the opponent's
-  // family"; re-priced per coach tier when the coach slice lands). Effect: condition drain
+  // an OPTIONAL coach. Effect: condition drain
   // max(1, local-scoreline drain − 1), ZERO ranking points, and the week keeps the base
   // recovery but FORFEITS the rest-slider bonus (she played, even if friendly).
   // GUARDRAIL (fatigue-bench finding 25.07: practising every week is self-destructive – mean
@@ -778,7 +789,18 @@ export const ECONOMY = {
   // low-condition arm (`cautionCondition`) is untouched.
   practice: {
     courtFeeCents: [30_00, 80_00] as [number, number],
-    coachSessionCents: [120_00, 250_00] as [number, number],
+    // ⚠ `coachSessionCents: [120_00, 250_00]` IS GONE (Round 3), and it is the owner's ruling that
+    // retired it: «справедливо будет завязать на стоимость выбранного тренера или best-fit если не
+    // выбран». The friendly's optional coach is HER coach, so it costs a share of HIS OWN rate -
+    // there is no second, unrelated price for a coaching hour any more. The flat band had drifted
+    // badly enough to be worth saying out loud: at $120-250 a session it sat ABOVE the Elite tier's
+    // own $96-144/h, so a practice friendly was charging more for an hour of coaching than the most
+    // expensive coach in the game charges for one.
+    //
+    // A FRIENDLY IS A MATCH, NOT A LESSON, so it books more of him than a training hour does. Two
+    // hours is a warm-up and a match; `coachShare` then halves it, because the other half is paid by
+    // the opponent's family (the original framing, unchanged).
+    coachHours: 2,
     coachShare: 0.5,
     cautionCondition: 55,
     /** the SHORT streak – warns only while she is under the strain gate below */
@@ -914,22 +936,32 @@ export function recommendVacationPackage(input: {
 }
 
 /** The deterministic price of ONE practice-match booking off `rngFromSeed(seed:practice:week)`:
- *  court rental, plus (optionally) HALF a coaching session for «+ тренер на игру». The court
- *  draw comes FIRST, so adding the coach never moves the court part of the quote. */
+ *  court rental, plus (optionally) her own coach for «+ тренер на игру».
+ *
+ *  ⚠ THE COACH HALF IS NOW HER COACH (Round 3, owner's ruling). `coachHourlyCents` is the rate of
+ *  the coach she actually has - or, when she is self-coached, of the best-fit coach at the cheapest
+ *  hireable rung, because a family with no coach is hiring one for a single afternoon and the
+ *  bottom of the market is what that costs. Callers resolve it through `practiceCoachRateCents` in
+ *  engine/world.ts so there is exactly one definition of "her rate".
+ *
+ *  THE COURT DRAW COMES FIRST and is untouched, so a `withCoach: false` quote is byte-identical to
+ *  every one this function has ever given. The coach half spends one fewer draw than it used to
+ *  (its own price is no longer drawn - it is looked up), which only moves this private per-week
+ *  sub-stream and never the main one. */
 export function practiceFeeCents(
   seed: string,
   week: number,
   background: FamilyBackground,
   withCoach: boolean,
+  coachHourlyCents = 0,
 ): number {
   const rng = rngFromSeed(`${seed}:practice:${week}`)
   const court = corridorPrice(rng, ECONOMY.practice.courtFeeCents, background)
   if (!withCoach) return court
-  const [cLo, cHi] = ECONOMY.practice.coachSessionCents
-  const base = pickInt(rng, cLo, cHi)
   const [wLo, wHi] = WEALTH_CORRIDOR[background]
   const roll = rng()
-  return court + Math.round(base * ECONOMY.practice.coachShare * (wLo + roll * (wHi - wLo)))
+  const hours = ECONOMY.practice.coachHours * ECONOMY.practice.coachShare
+  return court + Math.round(coachHourlyCents * hours * (wLo + roll * (wHi - wLo)))
 }
 
 /** The gear purchase (if any) that lands EXACTLY on `week` for one category, else null. */

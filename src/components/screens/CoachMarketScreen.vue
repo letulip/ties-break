@@ -28,8 +28,8 @@ import { computed, ref, watchEffect } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
-import { COACH_TIER_LABEL, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
-import type { CoachMarketRow, CoachTier, PlayStyle } from '../../shared/protocol'
+import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
+import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
@@ -45,14 +45,6 @@ const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
 // its own verdict. (An earlier draft put a per-rung blurb here; at 375px it truncated to "Group
 // ses…" and pushed the uplift off the row entirely, which is the one number the owner asked for.)
 const FIT_LABEL: Record<StyleFit, string> = { great: 'Great fit', good: 'Good fit', off: 'Off-style' }
-// The same four styles named as SPECIALISATIONS rather than as builds - what he teaches, in the
-// design's own idiom ("Defense · Fundamentals"), and short enough not to truncate at 375px.
-const SPECIALISM_LABEL: Record<PlayStyle, string> = {
-  aggressive: 'Attacking',
-  counterpuncher: 'Defense',
-  'serve-first': 'Big serve',
-  'all-court': 'All-court',
-}
 const FIT_CLASS: Record<StyleFit, string> = { great: 'fit-great', good: 'fit-good', off: 'fit-off' }
 
 function formatDollars(cents: number): string {
@@ -76,6 +68,28 @@ function cycleStyle(): void {
   const next = STYLE_ORDER[(i + 1) % STYLE_ORDER.length]
   styleLens.value = next === kidStyle.value ? null : next
 }
+
+// --- THE TRAINING REGULATOR (owner, R3) ---------------------------------------------------------
+// The weekly bill is `rate x hours(plan)`, so the plan is HALF the price and a market that shows
+// only the other half is lying by omission. The same control the planner uses, on this screen,
+// writing through to `world.plan` with the same `setPlan` command - so every price on every row
+// reprices from the ENGINE (the snapshot's coachMarket is recomputed at the new plan), not from a
+// local copy of the arithmetic that could drift.
+//
+// ⚠ IT IS THE PLANNER'S PRESET PILLS, NOT A 60-85 SLIDER, and that is deliberate: there is no
+// slider anywhere in this app. The "training regulator" is three presets, and they land exactly on
+// the sessions the owner's example names - light 4, balanced 5, grind 6. Matching the real control
+// keeps one idiom; inventing a fourth one here would make this screen the odd one out AND fire a
+// command per drag frame.
+const PLAN_ORDER = ['light', 'balanced', 'grind'] as const
+const planLabel = (k: (typeof PLAN_ORDER)[number]) =>
+  `${k[0].toUpperCase()}${k.slice(1)} ${coachHoursForPlan(WEEK_PLAN_PRESETS[k])}/wk`
+const activePlan = computed(() => {
+  const p = game.snapshot?.plan
+  if (!p) return null
+  return PLAN_ORDER.find((k) => WEEK_PLAN_PRESETS[k].train === p.train) ?? null
+})
+const sessionsNow = computed(() => (game.snapshot ? coachHoursForPlan(game.snapshot.plan) : 0))
 
 type SortMode = 'fit' | 'price'
 const sort = ref<SortMode>('fit')
@@ -187,7 +201,7 @@ function scrollToTier(tier: CoachTier): void {
     <p v-if="game.error" class="error">{{ game.error }}</p>
 
     <section class="bare market-head">
-      <button class="market-back" aria-label="Back" @click="emit('back')">&lsaquo;</button>
+      <button class="back-link" aria-label="Back" @click="emit('back')">&larr;</button>
       <div>
         <h2 class="market-title">Coach Market</h2>
         <p class="market-sub">
@@ -211,6 +225,23 @@ function scrollToTier(tier: CoachTier): void {
         <span class="legend-dot cap"></span>{{ formatDollars(capCents) }} weekly cap
       </p>
     </section>
+
+    <!-- THE TRAINING REGULATOR. Half of every price on this screen, so it belongs on it. -->
+    <div class="option-row cm-plan">
+      <button
+        v-for="k in PLAN_ORDER"
+        :key="k"
+        class="option-pill"
+        :class="{ selected: activePlan === k }"
+        :disabled="game.busy"
+        @click="game.setPlan(WEEK_PLAN_PRESETS[k])"
+      >
+        {{ planLabel(k) }}
+      </button>
+    </div>
+    <p class="hint cm-plan-note">
+      Every price below is {{ sessionsNow }} sessions a week. More of him costs more.
+    </p>
 
     <!-- Tier chips SCROLL to a section rather than filtering the list to nothing (design §T.1). -->
     <div class="controls market-chips">
@@ -239,35 +270,38 @@ function scrollToTier(tier: CoachTier): void {
         <span class="tier-range">{{ formatDollars(g.loCents) }}-{{ formatDollars(g.hiCents) }} /wk</span>
       </p>
 
+      <!-- The portrait is FULL-BLEED down the left edge, sized by height, masked into the card -
+           the same treatment `.coach-card` uses on Home and for the same reason (A2c/d): a strip
+           reads as a person standing there, a square reads as an avatar. -->
       <button
         v-for="r in g.rows"
         :key="r.id"
-        class="coach-row"
+        class="cm-row"
         :class="{ current: r.current, blocked: r.overBudgetCents > 0 || r.lockedPoints !== null }"
         :disabled="r.current || r.lockedPoints !== null"
         @click="askHire(r)"
       >
-        <img class="coach-face" :src="coachPortraitUrl(r.id)" :alt="r.name" width="46" height="46" loading="lazy" />
-        <span class="coach-body">
-          <span class="coach-name">{{ r.name }}</span>
-          <span class="coach-meta">
+        <span class="cm-art"><img :src="coachPortraitUrl(r.id)" :alt="r.name" loading="lazy" /></span>
+        <span class="cm-body">
+          <span class="cm-name">{{ r.name }}</span>
+          <span class="cm-meta">
             <span class="fit-pill" :class="FIT_CLASS[r.fitNow]">{{ FIT_LABEL[r.fitNow] }}</span>
-            <span class="coach-tags">{{ SPECIALISM_LABEL[r.style] }}</span>
+            <span class="cm-tags">{{ PLAY_STYLE_LABEL[r.style] }}</span>
           </span>
           <!-- WHAT THE RUNG IS WORTH TO HER, computed from her own headroom. Its own line, because
                it is the number the owner asked for and it must never be the thing that truncates. -->
-          <span class="coach-uplift">{{ formatUplift(r.upliftPct) }}</span>
+          <span class="cm-uplift">{{ formatUplift(r.upliftPct) }}</span>
         </span>
-        <span class="coach-right">
-          <span class="coach-price">{{ formatDollars(r.weeklyCents) }}<i>/wk</i></span>
-          <span v-if="r.current" class="coach-action is-current">Current</span>
-          <span v-else-if="r.lockedPoints !== null" class="coach-action is-locked"
+        <span class="cm-right">
+          <span class="cm-price">{{ formatDollars(r.weeklyCents) }}<i>/wk</i></span>
+          <span v-if="r.current" class="cm-action is-current">Current</span>
+          <span v-else-if="r.lockedPoints !== null" class="cm-action is-locked"
             >{{ r.lockedPoints }} pts short</span
           >
-          <span v-else-if="r.overBudgetCents > 0" class="coach-action is-over"
+          <span v-else-if="r.overBudgetCents > 0" class="cm-action is-over"
             >{{ formatDollars(r.overBudgetCents) }} over</span
           >
-          <span v-else class="coach-action is-hire">Hire &rsaquo;</span>
+          <span v-else class="cm-action is-hire">Hire &rsaquo;</span>
         </span>
       </button>
     </section>
