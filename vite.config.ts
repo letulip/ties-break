@@ -108,5 +108,31 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    // WHY CI RUNS THE SUITE IN ONE FORK.
+    //
+    // The symptom (29.07, and it survived a re-run): every one of the 1242 tests passes and the job
+    // still exits 1 with `[vitest-worker]: Timeout calling "onTaskUpdate"`. That is not a test
+    // failure - it is vitest's worker RPC. A worker awaits `onTaskUpdate` on the main process and
+    // birpc gives it a HARD-CODED 60s timeout (node_modules/birpc: DEFAULT_TIMEOUT = 6e4), which
+    // nothing in vitest's config surface can raise.
+    //
+    // What makes it fire is contention, and our suite is unusually good at producing it: ~110s of
+    // the run is Monte-Carlo simulation in three files (fatigue-bench 44s, econ-bench 34s,
+    // match/calibration 31s under load). Vitest opens one fork per core; a GitHub runner has two,
+    // so several CPU-bound forks and the main process fight over them and a single blocked call can
+    // sit past a minute. Locally, on ten cores, it never happens - which is exactly why it only
+    // ever went red in CI.
+    //
+    // One fork removes the contention rather than papering over it: each file gets a whole core and
+    // the main process gets the other, so no RPC waits on a starved thread. It costs wall-clock (the
+    // files no longer overlap) and it buys a gate that does not fail for reasons that have nothing
+    // to do with the code. Locally the default pool is untouched.
+    //
+    // The real long-term fix is to stop spending two minutes of CPU on Monte-Carlo inside the PR
+    // gate - move the two bench files to their own job. That is a decision about what the gate is
+    // for, so it waits for the owner rather than being smuggled in here.
+    poolOptions: {
+      forks: { singleFork: !!process.env.CI },
+    },
   },
 })
