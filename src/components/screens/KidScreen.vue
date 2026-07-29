@@ -79,9 +79,23 @@ const emit = defineEmits<{ navigate: ['market' | 'home' | 'more'] }>()
 // it falls back to `injury` for the painting-only `rehab` face (see the composable).
 const { emotion, portraitUrl, moodCropUrl } = useKidEmotion()
 
+// ⚠ THE SOFT HYPHEN IN `Counterpuncher` IS LOAD-BEARING and it is one invisible character, U+00AD.
+// The paper scrap this renders into is 104px wide (the export's own measurement); the word is about
+// 120px at 14/700, and it was running off the paper. The owner, 29.07: «может стоит перенос на
+// вторую строчку сделать?» – so it wraps, and the question is only WHERE.
+//   Three of the four labels have a space and wrap for free. This one does not, so the browser has
+//   to be given a break point. `hyphens: auto` is the right answer on paper and does not work in
+//   practice: hyphenation needs a dictionary for the document language, and a Chromium without one
+//   silently falls through to `overflow-wrap: break-word`, which cut it at "Counterpun / cher" –
+//   verified in the browser at 375pt, not assumed. A SOFT HYPHEN is the same instruction carried in
+//   the string itself: invisible when the word fits, and "Counter-" / "puncher" when it does not,
+//   with no dependency on what the engine happens to ship.
+// It is deliberately HERE and not in the other two copies of this vocabulary (OnboardingWizard,
+// CoachMarketScreen): those render the label in a wide row where it never wraps, and a character
+// nobody can see should exist only where it does something.
 const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
   aggressive: 'Aggressive baseliner',
-  counterpuncher: 'Counterpuncher',
+  counterpuncher: 'Counter­puncher',
   'serve-first': 'Big serve',
   'all-court': 'All-court',
 }
@@ -570,7 +584,25 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   display: block;
 }
 
-/* The scrap sits where the export puts it, and it is a scrap: 88px wide, one short line, tilted. */
+/* The scrap sits where the export puts it, and it is a scrap: 88px wide, one short line, tilted.
+   ⚠ ...EXCEPT THAT ONE OF THE FOUR WORDS IS NOT SHORT, and it has been running off the paper. The
+   owner, 29.07: «может стоит перенос на вторую строчку сделать?» – so it wraps.
+   Three of the four labels already wrapped on their own, because they have a space in them
+   ("Aggressive baseliner", "Big serve", "All-court" – and the last two fit on one line anyway).
+   `Counterpuncher` has none: it is a single 14-character word, about 120px at this size inside 80px
+   of content box (measured in the browser at 375pt: scrollWidth 120 against clientWidth 104), and
+   CSS will not break a word at a space that is not there. So the fix is a break OPPORTUNITY, not a
+   smaller type – and it takes two halves, one of which is in the string rather than here:
+     the SOFT HYPHEN in PLAY_STYLE_LABEL (see the note there) puts the break where a person would
+                             put it: "Counter-" / "puncher".
+     `overflow-wrap: break-word`  is the floor under it. Any future label long enough to overflow
+                             still wraps rather than overhanging the paper, hyphen or no hyphen.
+     `hyphens: auto`         is kept as the belt to that pair of braces: on an engine that DOES ship
+                             an English dictionary it would find the same break unaided. It is not
+                             load-bearing – this Chromium has no dictionary and fell straight through
+                             to break-word, which is exactly why the soft hyphen exists.
+   `text-wrap: balance` keeps the two lines even instead of leaving one character stranded, and the
+   scrap grows downward from a fixed top edge, so a second line cannot push it off the portrait. */
 .kid-style-note {
   position: absolute;
   right: 16px;
@@ -582,6 +614,9 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.01em;
+  hyphens: auto;
+  overflow-wrap: break-word;
+  text-wrap: balance;
 }
 
 /* --- 2. THE ATTRIBUTE GRID -------------------------------------------------------------------- */

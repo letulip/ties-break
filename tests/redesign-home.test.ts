@@ -117,7 +117,11 @@ describe('weekDateLine – the header date line, in one place', () => {
 /** A coherent-enough facts object for the greeting, which reads exactly two fields of it. */
 function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
   return {
-    travelHomeScene: null, // R14-2: the greeting does not read it; kept explicit so the type is total
+    // R14-2: the greeting reads neither; kept explicit so the type is total. ⚠ The MOOD joined the
+    // journey facts with ui/travel-set – null together with the scene, exactly as the engine builds
+    // them, so this fixture still describes a week she went nowhere.
+    travelHomeScene: null,
+    travelHomeMood: null,
     week: 10,
     emotion: 'norm',
     resultFresh: false,

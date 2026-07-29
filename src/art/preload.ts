@@ -23,7 +23,7 @@
 //        only so a cold first paint has them decoded, at 11-20 KiB each)
 //   - finale art      the SAME paintings, for the three finale emotions
 //     -> components/TournamentFlow.vue artUrl (champion / runner-up / early-exit splash)
-//   - journey home    `images/fem-euro-brunnet/fem-euro-brunnet-sleepy-{scene}.webp` (R14-2)
+//   - journey home    `images/fem-euro-brunnet/fem-euro-brunnet-travel-{mood}-{scene}.webp`
 //     -> the Weekly Story, on a week she came back from an away tournament. NOT band-scoped:
 //        four files serve every age, and only the one the engine picked is ever warmed.
 //
@@ -38,7 +38,7 @@ import {
   type PortraitEmotion,
   type PortraitStage,
 } from '../shared/avatarEmotion'
-import type { FamilyBackground, TravelHomeScene } from '../shared/protocol'
+import type { FamilyBackground, TravelHomeScene, TravelHomeMood } from '../shared/protocol'
 
 const ART_DIR = 'images/fem-euro-brunnet/'
 const NAME = 'fem-euro-brunnet'
@@ -108,30 +108,44 @@ export function cropUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
 
 // --- the journey home (R14-2) ------------------------------------------------------------------
 //
-// `fem-euro-brunnet-sleepy-{airport,plane,bus,car}.webp` – four paintings of her asleep on the way
-// back from an away tournament, shown on the Weekly Story.
+// `fem-euro-brunnet-travel-{mood}-{airport,plane,bus,car}.webp` – the journey back from an away
+// tournament, shown on the Weekly Story.
+//
+// ⚠ RENAMED INTO A GROUP (owner, 29.07). The four originals were `-sleepy-{scene}`; the set now has
+// three moods and the owner named the new art `-travel-sleepy-` / `-travel-happy-` / `-travel-sad-`
+// so that every journey picture matches one prefix: «будет одна общая группа, тогда мы все *-travel-*
+// сможем корректно привязать к отдельной логике». Twelve files, 3 moods x 4 modes.
 //
 // NOT BAND-SCOPED, and that is why they get their own builder rather than joining `portraitUrl`.
-// The same four serve a fourteen-year-old and a woman of thirty-one: the picture is of a journey,
-// not of a face, and she is asleep in all four. Threading them through the stage×emotion matrix
-// would have implied twenty files that do not exist. `TravelHomeScene` (shared/protocol) is the
-// union, and the ENGINE picks the member – see engine/diary.ts travelHomeSceneFor.
+// The same twelve serve a fourteen-year-old and a woman of thirty-one: the picture is of a journey,
+// not of a face. Threading them through the stage×emotion matrix would have implied sixty files
+// that do not exist. `TravelHomeScene` (shared/protocol) is the mode union, and the ENGINE picks
+// both mode and mood – see engine/diary.ts.
 
-/** Painting URL for one journey-home scene. */
-export function travelHomeUrl(scene: TravelHomeScene): string {
-  return `${base()}${ART_DIR}${NAME}-sleepy-${scene}.webp`
+/** Painting URL for one journey-home picture. `mood` defaults to the original sleepy set, so a
+ *  caller that predates the three-mood art keeps working. */
+export function travelHomeUrl(scene: TravelHomeScene, mood: TravelHomeMood = 'sleepy'): string {
+  return `${base()}${ART_DIR}${NAME}-travel-${mood}-${scene}.webp`
 }
 
-/** Warm the ONE scene this week selected, and only that one.
+/** Warm the ONE picture this week selected, and only that one.
  *
  *  Same rule as everywhere else in this module – never preload what cannot be shown – applied to a
- *  set where the answer is known in advance: the engine has already decided which of the four the
- *  week shows, so warming the other three would be three wasted files (~29 KB each) on a week that
- *  can only ever render one. Called from art/autoPreload.ts on the snapshot's own fact, which lands
- *  at the weekly tick – i.e. before the player opens the tab that renders it. */
-export function preloadTravelHomeArt(scene: TravelHomeScene | null | undefined): string[] {
+ *  set where the answer is known in advance: the engine has already decided which of the twelve the
+ *  week shows, so warming any other would be wasted files (~29 KB each) on a week that can only ever
+ *  render one. Called from art/autoPreload.ts on the snapshot's own facts, which land at the weekly
+ *  tick – i.e. before the player opens the tab that renders it.
+ *
+ *  ⚠ THE MOOD IS PART OF THE ANSWER since the art became a group of twelve: warming
+ *  `-travel-sleepy-plane` on a week the engine chose `happy` would fetch a file the card never asks
+ *  for AND leave the one it does ask for cold, which is worse than not preloading at all. Scene and
+ *  mood are null together on the snapshot (engine/diary.ts), so one guard covers both. */
+export function preloadTravelHomeArt(
+  scene: TravelHomeScene | null | undefined,
+  mood: TravelHomeMood | null | undefined,
+): string[] {
   if (!scene) return []
-  const url = travelHomeUrl(scene)
+  const url = travelHomeUrl(scene, mood ?? 'sleepy')
   warm(url)
   return [url]
 }
