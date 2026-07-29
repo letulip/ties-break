@@ -10,8 +10,32 @@
 // season before it – the year-over-year version of the panel the player is already looking at.
 // (Kid is identity: portrait, background, play style, and the best-6 that explains her rank.)
 //
-// Presentation only – no new persisted state, no CSS of its own: the app's plain «таблички»
-// table plus the existing .ph-name/.ph-rank two-line cell pattern (MatchViewer's stats header).
+// Presentation only – no new persisted state: the app's plain «таблички» table plus the existing
+// .ph-name/.ph-rank two-line cell pattern (MatchViewer's stats header).
+//
+// ⚠ U1 GAVE IT A STYLE BLOCK, for a defect and not for a redesign. `docs/specs/ui-inventory.md` §6
+// records it as the first of two real bugs the 375px capture pass found: "the season-history table
+// scrolls the whole document sideways at 375px (scrollWidth 426 vs a 375 viewport) and the FUNDS
+// column is cut off". Reproduced before the fix at a realistic row (a "Quarterfinalist" best-finish
+// label, a four-digit rank, a seven-figure balance): documentElement.scrollWidth 452 against
+// clientWidth 375, with the FUNDS column's right edge 77px past the right of the screen.
+//
+// THE CAUSE is two things at once and the fix answers both:
+//   1. FIVE COLUMNS OF 12px SIDE PADDING is 120px of the 311px this table gets inside a section on
+//      a 375px phone - more than a third of the width spent on gutters. The app's default table
+//      inset is right for a two-column table and wrong for a five-column one, so this table sets
+//      its own (6px) rather than moving a rule eleven other tables depend on.
+//   2. EVEN THEN IT CAN OVERFLOW, because "Quarterfinalist" is one unbreakable word and a career
+//      can end a season a million dollars up or down. So the table gets a SCROLLER of its own.
+//      Sideways scroll was never the bug - sideways scroll of the whole DOCUMENT was: it moves the
+//      tab bar, the sticky button and every other screen element off-centre to read one column.
+// The columns are all still there and all still reachable; what changed is who scrolls.
+//
+// The rules live in this component and not in `src/style.css` because the sheet is the file six
+// screens being built in parallel would all touch, and because a table that knows it is five
+// columns wide is exactly the kind of thing a component should own. `TierGuide.vue` has the same
+// defect (ui-inventory §6, item 2) and wants the same two rules; it is a different surface with a
+// different slice and is left to it - noted in the wave report.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { finishLabel } from '../engine/world'
@@ -44,44 +68,92 @@ function formatDollars(cents: number): string {
       after it stacks on top.
     </p>
     <template v-else>
-      <table>
-        <thead>
-          <tr>
-            <th>Season</th>
-            <th>Rank</th>
-            <th>Pts</th>
-            <!-- narrow phones: "W–L" must not break across two lines (the column is the tightest) -->
-            <th style="white-space: nowrap">W–L</th>
-            <th>Funds</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Keyed on the SEASON INDEX, and the header prints the year that index derives to
-               (shared/dates seasonYear – the same function weekLabel uses, so a row and the week
-               labels inside that season always name the same year). Keying on the printed year is
-               what dropped season 5 from this table; see SeasonHistoryEntry.seasonIndex. -->
-          <tr v-for="r in rows" :key="r.seasonIndex">
-            <th>
-              <span class="ph-name">{{ seasonYear(r.seasonIndex) }}</span>
-              <!-- Best result of that season, in the same wording the finale card uses. Absent on
-                   a season with no tournaments, and on rows the v14 migration backfilled. -->
-              <span v-if="r.bestFinish !== undefined" class="ph-rank">{{ finishLabel(r.bestFinish) }}</span>
-            </th>
-            <td class="num">#{{ r.endRank }}</td>
-            <td class="num">{{ r.points }}</td>
-            <td class="num" style="white-space: nowrap">{{ r.wins }}–{{ r.losses }}</td>
-            <td class="num">
-              <span class="ph-name" :class="r.fundsDeltaCents < 0 ? 'negative' : 'positive'">
-                {{ formatSigned(r.fundsDeltaCents) }}
-              </span>
-              <span class="ph-rank">{{ formatDollars(r.endFundsCents) }} left</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- THE SCROLLER. `tabindex="0"` because a region that scrolls must be reachable without a
+           pointer, and `role="group"` + a name so a screen reader says what it has landed in. -->
+      <div class="season-history-scroll" tabindex="0" role="group" aria-label="Season by season, scrollable">
+        <table>
+          <thead>
+            <tr>
+              <th>Season</th>
+              <th>Rank</th>
+              <th>Pts</th>
+              <!-- narrow phones: "W–L" must not break across two lines (the column is the tightest) -->
+              <th style="white-space: nowrap">W–L</th>
+              <th>Funds</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Keyed on the SEASON INDEX, and the header prints the year that index derives to
+                 (shared/dates seasonYear – the same function weekLabel uses, so a row and the week
+                 labels inside that season always name the same year). Keying on the printed year is
+                 what dropped season 5 from this table; see SeasonHistoryEntry.seasonIndex. -->
+            <tr v-for="r in rows" :key="r.seasonIndex">
+              <th>
+                <span class="ph-name">{{ seasonYear(r.seasonIndex) }}</span>
+                <!-- Best result of that season, in the same wording the finale card uses. Absent on
+                     a season with no tournaments, and on rows the v14 migration backfilled. -->
+                <span v-if="r.bestFinish !== undefined" class="ph-rank">{{ finishLabel(r.bestFinish) }}</span>
+              </th>
+              <td class="num">#{{ r.endRank }}</td>
+              <td class="num">{{ r.points }}</td>
+              <td class="num" style="white-space: nowrap">{{ r.wins }}–{{ r.losses }}</td>
+              <td class="num">
+                <span class="ph-name" :class="r.fundsDeltaCents < 0 ? 'negative' : 'positive'">
+                  {{ formatSigned(r.fundsDeltaCents) }}
+                </span>
+                <span class="ph-rank">{{ formatDollars(r.endFundsCents) }} left</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <p class="hint">
         Funds is the season's net – underneath it, what the family had left when the year ended.
       </p>
     </template>
   </section>
 </template>
+
+<style scoped>
+/* THE 375px FIX (docs/specs/ui-inventory.md §6, defect 1). See the note at the top of the script
+   block for the measurement this answers and why the fix is two rules rather than one. */
+.season-history-scroll {
+  overflow-x: auto;
+  /* Belt and braces: a flex/grid child can refuse to shrink below its content without this, and
+     this component sits inside whatever a screen puts it in. */
+  max-width: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.season-history-scroll:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Five columns cannot afford the app's default 12px side inset - that is 120px of a 311px table.
+   Scoped, so the eleven other tables in the app keep the inset that is right for them. */
+.season-history-scroll th,
+.season-history-scroll td {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+.season-history-scroll th:first-child,
+.season-history-scroll td:first-child {
+  padding-left: 0;
+}
+
+.season-history-scroll th:last-child,
+.season-history-scroll td:last-child {
+  padding-right: 0;
+}
+
+/* The last row's hairline: the sheet's `tr:last-child td { border-bottom: none }` only reaches the
+   `td`s, and this table's first cell in every row is a `th` - so the bottom row was closed by a
+   one-column stub of a line under the season year. Visible in the 375px capture, and it is the
+   same rule finishing its own job. */
+.season-history-scroll tbody tr:last-child th {
+  border-bottom: none;
+}
+</style>
