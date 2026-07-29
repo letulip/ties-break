@@ -36,8 +36,8 @@
 
 import { rngFromSeed } from './rng'
 import { ECONOMY } from './economy'
-import { coachFactor, coachStyleFit } from './coach'
-import type { CoachTier, PlayStyle, WeekPlan } from '../shared/protocol'
+import { coachFactor, coachFitFor, tierOf, type Coach } from './coach'
+import type { PlayStyle, WeekPlan } from '../shared/protocol'
 
 /** The four attributes the match engine reads. Kept as a bare record so it serialises into the save
  *  as four numbers and nothing else. */
@@ -106,8 +106,8 @@ export function trainFactor(plan: WeekPlan): number {
 }
 
 // ⚠ RE-AIMED: `coachFactor` moved to engine/coach.ts, and it is no longer a two-way switch – it
-// reads a rung of the ladder AND how that rung fits the game she plays. The two values it used to
-// return (0.82 parent, 1.15 hired) are unchanged, and are now the ends of that ladder.
+// reads a rung of the ladder AND how the COACH SHE HIRED fits the game she plays. The two values it
+// used to return (0.82 parent, 1.15 hired) are unchanged, and are now the ends of that ladder.
 
 /** ONE WEEK of development. Pure, total, and the only place skills change.
  *
@@ -120,8 +120,9 @@ export function growWeek(args: {
   potential: KidSkills
   ageYears: number
   plan: WeekPlan
-  coach: CoachTier
-  /** her game, which decides whether this rung can teach it (the great / good / off read) */
+  /** whoever she trains with, or null for the parent on the court */
+  coach: Coach | null
+  /** her game, which decides whether her coach can teach it (the great / good / off read) */
   playStyle: PlayStyle
   matchesThisWeek: number
   seed: string
@@ -133,7 +134,7 @@ export function growWeek(args: {
   const rate =
     ageFactor(ageYears) *
     trainFactor(plan) *
-    coachFactor(coach, coachStyleFit(coach, playStyle)) *
+    coachFactor(tierOf(coach), coachFitFor(coach, playStyle)) *
     (1 + Math.min(matchesThisWeek, d.matchBonusCap) * d.matchBonus)
 
   // One draw for the whole week, shared across the attributes: a good week is a good week, and four

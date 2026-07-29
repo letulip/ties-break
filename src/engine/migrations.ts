@@ -7,18 +7,18 @@ import {
   type WorldEventCategory,
 } from '../shared/protocol'
 import {
-  ageAtWeek,
   isCappedTier,
   KID_ID,
   SAVE_SCHEMA_VERSION,
+  openingCoachId,
   seedWorldForV6,
   startingSkills,
   type WorldState,
 } from './world'
 import { rollPotential } from './development'
-import { COACH_TIERS, coachIncludesPhysio, coachRateBandCents, coachWeeklyCostCents } from './coach'
+import { coachIncludesPhysio } from './coach'
 import { COHORT } from './season/cohort'
-import type { CoachTier, FamilyBackground, PlayerProfile, WeekPlan } from '../shared/protocol'
+import type { PlayerProfile } from '../shared/protocol'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
 import { OFF_SEASON_WEEKS, TIERS, tierFromLabel } from './season/calendar'
@@ -39,45 +39,6 @@ const EPOCH_SEASON_YEAR = weekYear(0) // 2031 – the year season 0 opened in
 function seasonIndexOfLegacyYear(year: number): number {
   for (let k = 0; k <= 200; k++) if (weekYear(k * WEEKS_IN_SEASON) === year) return k
   return Math.max(0, year - EPOCH_SEASON_YEAR)
-}
-
-// --- v22 helper: the coach-ladder back-fill ------------------------------------------------
-//
-// The three constants below are FROZEN COPIES of the pre-v22 economy, deliberately, and must never
-// be re-pointed at ECONOMY: a migration answers "what was this save being charged", which is a fact
-// about the build it was written by. If a live knob moved, an old save's back-fill must not move
-// with it.
-const V21_EXPENSE_RANGE_CENTS = { parent: [120_00, 400_00], hired: [250_00, 700_00] } as const
-const V21_PLAN_FACTOR = { base: 0.55, perTrainPercent: 0.006 } as const
-const V21_WEALTH_CORRIDOR: Record<FamilyBackground, [number, number]> = {
-  working: [0.7, 0.8],
-  middle: [0.95, 1.05],
-  wealthy: [1.2, 1.3],
-}
-
-const mid = (band: readonly [number, number] | readonly number[]): number => (band[0] + band[1]) / 2
-
-/** The rung a pre-v22 career lands on – see the v21 -> v22 block for the full argument. */
-function backfillCoachTier(
-  profile: PlayerProfile & { coachSetup?: 'parent' | 'hired' },
-  plan: WeekPlan,
-  week: number,
-): CoachTier {
-  // The parent rung is a fiction match, not a price match: that family bought no coach.
-  if (profile.coachSetup !== 'hired') return 'self'
-  const wasPaying =
-    mid(V21_EXPENSE_RANGE_CENTS.hired) *
-    (V21_PLAN_FACTOR.base + V21_PLAN_FACTOR.perTrainPercent * plan.train) *
-    mid(V21_WEALTH_CORRIDOR[profile.background])
-  // Cheapest rung wins a tie, so a save on the boundary is never migrated UP into a bill it was
-  // not already carrying.
-  const paid = COACH_TIERS.filter((t) => t !== 'self').map((tier) => ({
-    tier,
-    cost: coachWeeklyCostCents(mid(coachRateBandCents(tier, ageAtWeek(week))), plan),
-  }))
-  return paid.reduce((best, row) =>
-    Math.abs(row.cost - wasPaying) < Math.abs(best.cost - wasPaying) ? row : best,
-  ).tier
 }
 
 export function migrateSave(raw: unknown): WorldState {
@@ -463,44 +424,46 @@ export function migrateSave(raw: unknown): WorldState {
   // v21 -> v22: THE COACH LADDER (docs/specs/coach-tiers.md). `profile.coachSetup: 'parent' |
   // 'hired'` becomes `profile.coachTier: 'self' | 'budget' | 'middle' | 'high' | 'elite'`.
   //
-  // THE BACK-FILL RULE: land the career on the tier CLOSEST TO WHAT IT WAS PAYING. Old and new are
-  // both weekly bills, so they can be compared directly, and both are computed at the plan the save
-  // is actually running and the age she is actually at.
+  // THE BACK-FILL IS THE OWNER'S RULING AND IT IS DELIBERATELY BLUNT: `hired` -> `elite`,
+  // `parent` -> `self`. Asked what an existing career should land on, he said Elite and that he
+  // does not mind, because there are no players yet - so the version of this block that priced
+  // each save's old weekly bill against every rung and picked the nearest is gone. It was more
+  // arithmetic than the question deserved.
   //
-  //   old = mid(expenseRange[setup]) x planFactor(plan.train) x mid(wealthCorridor[background])
-  //   new = mid(hourlyRate[tier][ageBand]) x hours(plan.train)
+  // It is also, as it happens, what that arithmetic mostly said: the old `hired` band's midpoint
+  // (~$475/wk) is what the spec's own conversion prices an Elite coach at, to within $5. And both
+  // mappings are DEVELOPMENT-NEUTRAL - `self` carries 0.82, which is exactly the `coachParent` a
+  // parent-coached career was growing at, and `elite` carries 1.15, which is exactly `coachHired`.
+  // No migrated career's growth rate moves by a hair; only its bill does.
   //
-  // The old bill is background-scaled and the new one is not (the corridor came off coaching), so
-  // the SAME `hired` career lands on a different rung depending on who was paying for it – which is
-  // the honest answer, because those families genuinely were being charged different amounts.
-  //
-  // `parent` IS THE ONE EXCEPTION, and it is a correction rather than a shortcut. Run through the
-  // arithmetic above, a parent-coached save prices out at $195-325/wk and would migrate onto a
-  // MIDDLE or HIGH paid coach – because the old `parent` band was never a coach's fee, it was a
-  // catch-all base cost with a coach-sized number on it. What that family was buying was no coach
-  // at all, and `self` is the only rung that sells it. It also keeps the career development-neutral
-  // across the migration: `self` carries 0.82, which is exactly the `coachParent` it was growing at.
-  //
-  // Measured at the balanced plan and age 14, which is where the arithmetic actually lands:
-  //   parent / any background   -> self    (the exception above)
-  //   hired  / working  $356/wk -> high    ($320/wk, against elite's $480)
-  //   hired  / middle   $475/wk -> elite   ($480/wk - the spec's own sentence, to within $5)
-  //   hired  / wealthy  $594/wk -> elite
-  //
-  // WHAT THIS COSTS A MID-CAREER SAVE, said plainly: a middle-background `hired` career lands on
-  // ELITE and stays expensive, because an Elite coach is precisely what it was being charged for.
-  // This slice ships no way to change coach (the Coach Market screen, T, is a later slice), so such
-  // a save cannot yet buy its way down the ladder, and the bench says a 25k family on Elite does not
-  // survive. That is deliberate and it is not the migration's problem to fix: migrating the career
-  // somewhere cheaper would hand it a rescue it never chose, and quietly re-price a coach the player
-  // was told they had. The rescue belongs to the screen that lets them choose.
+  // A migrated career is not stranded on that bill, either: the Coach Market (screen T) ships in
+  // the same wave, so an Elite coach it cannot afford is one screen away from being a Budget one.
   if (v === 21) {
     const profile = save.profile as (PlayerProfile & { coachSetup?: 'parent' | 'hired' }) | undefined
     if (profile && profile.coachTier === undefined) {
-      profile.coachTier = backfillCoachTier(profile, save.plan ?? WEEK_PLAN_PRESETS.balanced, save.week ?? 0)
+      profile.coachTier = profile.coachSetup === 'hired' ? 'elite' : 'self'
       delete profile.coachSetup
     }
     v = 22
+  }
+
+  // v22 -> v23: A ROSTER, NOT A RUNG. `world.coachId` joins the profile's rung - the id of the
+  // actual person she trains with, or `null` for the parent on the court.
+  //
+  // The back-fill hires the coach at the rung she was already on, choosing by fit and then by
+  // price, which is the same rule `openingCoachId` applies to a brand-new career. So a migrated
+  // save keeps the tier it was being billed at, keeps its development factor, and simply gains a
+  // name and a face for the money it was already spending.
+  //
+  // Nothing here is drawn on the main stream: the roster is a pure derivation of the seed
+  // (engine/coach.ts buildCoachRoster), which is also why only the id needs storing - the roster
+  // itself rebuilds identically on every load, for ever.
+  if (v === 22) {
+    const profile = save.profile as PlayerProfile | undefined
+    if (save.coachId === undefined) {
+      save.coachId = profile ? openingCoachId(String(save.seed), profile) : null
+    }
+    v = 23
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {
