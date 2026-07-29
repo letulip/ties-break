@@ -2452,9 +2452,17 @@ function computeShadowTournament(
 // Shared by a normal tick (inline) and finalizeTournament (deferred for a reveal week).
 function recomputeRankAndMilestones(world: WorldState): void {
   world.prevKidRank = world.kidRank
-  const full = computeRanking(world.results, world.week, [...cohortIds(world), KID_ID])
-  const kidRow = full.find((r) => r.playerId === KID_ID)
-  world.kidRank = kidRow?.rank ?? full.length
+  // ⚠ ONE WRITER, ONE MEANING. This used to rank with `computeRanking(results, week, ids)` and NO
+  // track predicate - so it folded BOTH ladders into one table and wrote that into `kidRank`, while
+  // `recomputeKidRank` wrote the ITF rank into the same field and `computeStandings` rendered the
+  // ITF table. Whichever ran last won, so Home and the season wrap-up showed her combined-table
+  // place (#4 on 604 points) while the Stats table showed her ITF row (#128 on 4) - the owner's
+  // playtest finding, and four items on his list are this one bug wearing different clothes.
+  //
+  // The two-ladder slice removed `kidPoints`' default track for exactly this reason; this call site
+  // survived because it reached for `computeRanking` directly instead. It now defers to the one
+  // function that owns the caches, so the field cannot mean two things again.
+  recomputeKidRank(world)
   // Rank milestones ("top 10/50/1") intentionally removed: in the early season almost no one
   // has points, so the first result rockets her to a single-digit rank and all of them fire at
   // once (reads absurdly). A real "world" ranking belief system belongs to the world-news
