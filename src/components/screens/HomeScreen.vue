@@ -680,8 +680,12 @@ function openRankHelp(): void {
           <p class="budget-total" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
           <div class="budget-rule"></div>
           <p class="budget-window">Last 12 weeks</p>
+          <!-- ONE BOX for the line and the dots. They must share geometry exactly, and the card is
+               not that box: `.note-card` is padded 14px, so a dot layer positioned against the CARD
+               is 28px wider than the chart and starts 14px to its left - which is precisely how the
+               dots ended up beside the line instead of on it. -->
+          <div v-if="budgetChart.any" class="budget-chart-wrap">
           <svg
-            v-if="budgetChart.any"
             class="budget-chart"
             :viewBox="`0 0 ${CHART_W} ${CHART_H}`"
             preserveAspectRatio="none"
@@ -703,7 +707,7 @@ function openRankHelp(): void {
                viewBox is 146x46 inside a box 66px tall, so every `r` came out an egg. Positioning
                the dots in PERCENT of the same box puts them exactly where the polyline's vertices
                are, and a CSS circle cannot be stretched by an SVG scale it is not inside. -->
-          <span v-if="budgetChart.any" class="budget-dots" aria-hidden="true">
+          <span class="budget-dots" aria-hidden="true">
             <i
               v-for="(dot, i) in budgetChart.dots"
               :key="i"
@@ -711,6 +715,7 @@ function openRankHelp(): void {
               :style="{ left: `${(dot.x / CHART_W) * 100}%`, top: `${(dot.y / CHART_H) * 100}%` }"
             ></i>
           </span>
+          </div>
           <p v-else class="note-empty">Nothing has moved yet.</p>
         </button>
 

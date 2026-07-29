@@ -2808,6 +2808,15 @@ tr.kid-row td {
   overflow-x: auto;
 }
 
+/* Owner, 29.07: "вертикальные отступы великоваты, можно в 2 раза меньше". Halved here and here
+   only - the global `th,td` 8px is right for the Stats tables, which are read a row at a time.
+   This one is a REFERENCE table of six tiers that has to be taken in at a glance, and at 8px the
+   sixth row fell off the bottom of the card. */
+.guide-card th,
+.guide-card td {
+  padding-block: 4px;
+}
+
 .guide-row-locked td {
   color: var(--muted);
 }
@@ -4044,7 +4053,6 @@ button.note-card:active:not(:disabled) {
   display: block;
   width: 100%;
   height: 66px;
-  margin-top: auto;
   overflow: visible;
 }
 
@@ -4060,19 +4068,22 @@ button.note-card:active:not(:disabled) {
   vector-effect: non-scaling-stroke;
 }
 
-/* The dots are HTML, not SVG (see HomeScreen): the chart stretches to the card's width and an
-   SVG circle inside it stretches with it. Positioned in percent over the same box, so they land on
-   the polyline's own vertices, and sized in px, so they stay circles at any card width. */
-/* The wallet card becomes the dots' positioning context. It is a <button>, already the card
-   surface, and nothing inside it was absolutely positioned before. */
-.note-card:has(.budget-dots) {
+/* THE CHART'S OWN BOX. The line and the dots have to share it EXACTLY, and the card is not it:
+   `.note-card` is padded 14px, so a dot layer positioned against the card comes out 28px wider and
+   14px to the left of the chart it annotates - which is exactly how the dots ended up beside the
+   line instead of on it (owner's screenshot, 29.07). Measured after the fix: layer and svg identical
+   to the pixel. */
+.budget-chart-wrap {
   position: relative;
+  margin-top: auto;
 }
 
+/* The dots are HTML, not SVG (see HomeScreen): the chart stretches to the card's width and an SVG
+   circle inside it stretches with it. Positioned in percent of the SAME box, so they land on the
+   polyline's own vertices, and sized in px, so they stay circles at any card width. */
 .budget-dots {
   position: absolute;
-  inset: auto 0 0 0;
-  height: 66px;
+  inset: 0;
   pointer-events: none;
 }
 
