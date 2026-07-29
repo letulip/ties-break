@@ -74,10 +74,18 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
     // sunset says "family week" better than a border ever did - so the pair no longer share a rule.
     // What R12-1/14 was actually protecting is unchanged and still pinned: the exam week is stated
     // in the accent colour, not greyed out.
+    // ⚠ RE-AIMED by the colour cleanup (owner, 29.07: "тоже причёсываем к новому цвету").
+    // The tint was written `rgba(217, 242, 79, 0.04)` - the PRE-redesign lime #d9f24f, which is
+    // not --accent and had not been since the export moved the brand to #cfe152. Every accent
+    // tint in the sheet is now built from --accent-rgb, so the exam week is finally washed in the
+    // colour its own border is drawn in. The alpha - the part that says "faint" - is unchanged.
+    // The protected fact is untouched and the check is strictly stronger: it now also fails if
+    // someone re-hard-codes a hex here and lets the tint drift off the brand a second time.
     const exam = cssBodies('.week-card.exam')
     expect(exam.length).toBe(1)
     expect(exam[0]).toContain('border-color: var(--accent)')
-    expect(exam[0]).toContain('background: rgba(217, 242, 79, 0.04)')
+    expect(exam[0]).toContain('background: rgba(var(--accent-rgb), 0.04)')
+    expect(exam[0]).not.toMatch(/#[0-9a-f]{3,8}/i) // no literal colour may creep back in
     expect(exam[0]).not.toContain('opacity')
     expect(exam[0]).not.toContain('var(--line)')
     // ...and the off-season says it with art instead, which is why it needs no frame.
