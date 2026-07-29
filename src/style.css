@@ -1094,13 +1094,27 @@ button.primary.risky {
   z-index: 60;
 }
 
-.dialog-card {
-  width: 100%;
-  max-width: 320px;
+/* THE PANEL SHELL. Everything that opens over the page - the confirm dialog, the match replay,
+   the tournament flow's cards, the tier guide, the planner sheet - is the same box: the --panel
+   tone, a hairline, 12px corners, 16px of padding. Five rules had written those four declarations
+   out independently, which is why a sixth surface would have had to guess them.
+   What each surface DOESN'T share is its size and whether it scrolls, so that stays with each one
+   below. `.injury-stop` (10px) and `.tf-finale.silver` (a gradient border) still override from
+   further down the sheet, exactly as before - grouping changes no specificity. */
+.dialog-card,
+.replay-card,
+.tf-card,
+.guide-card,
+.plan-sheet {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 16px;
+}
+
+.dialog-card {
+  width: 100%;
+  max-width: 320px;
 }
 
 .dialog-message {
@@ -1910,14 +1924,11 @@ tr.kid-row td {
 
 /* --- Match replay overlay (reuses .dialog-overlay for the backdrop) ----------- */
 
+/* Panel shell (up with .dialog-card) + its own size. */
 .replay-card {
   position: relative;
   width: 100%;
   max-width: 400px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
 }
 
 /* Round 4 item 4: a clearly-visible, pinned close affordance (replaces the old small
@@ -2124,12 +2135,7 @@ tr.kid-row td {
   font-size: 12px;
 }
 
-.tf-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
-}
+/* The tournament flow's card is the panel shell and nothing else – see .dialog-card. */
 
 .tf-card-head {
   display: flex;
@@ -2735,16 +2741,13 @@ tr.kid-row td {
   margin: 0;
 }
 
+/* Panel shell (up with .dialog-card) + its own size, and it scrolls. */
 .guide-card {
   position: relative;
   width: 100%;
   max-width: 560px;
   max-height: 80vh;
   overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
 }
 
 .guide-title {
@@ -2890,17 +2893,14 @@ tr.kid-row td {
   color: #f2b34f;
 }
 
-/* The planner sheet: same overlay/card language as the tour guide, scrollable on a phone. */
+/* The planner sheet: same overlay/card language as the tour guide, scrollable on a phone.
+   Which is now literal – both are the panel shell up with .dialog-card, plus their own size. */
 .plan-sheet {
   position: relative;
   width: 100%;
   max-width: 420px;
   max-height: 86vh;
   overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
 }
 
 .plan-tabs {
