@@ -788,11 +788,14 @@ const matchMeta = computed(() => {
    `.tf-round` (still the spectate card's label too), `.tf-actions`, `.tf-badge`, `.tf-replay-round`,
    `.tf-strip*`, `.tf-bracket*` and `.tf-spectate*` – the phases this slice does not redesign.
 
-   ⚠ TWO DESIGN TOKENS THIS SCREEN NEEDS DO NOT EXIST IN THE APP. `docs/design/tokens.css` declares
-   `--celebration-bg` / `--celebration-bg-cool` (L and M's card ground) and `--gold`, but that file is
-   a REFERENCE, never imported – so the values are written out below, at the point of use, exactly as
-   Home and Season write out the glass they need. They belong in `src/style.css`'s :root the day
-   somebody owns that file again; a scoped `:root` would match nothing.
+   ⚠ RESOLVED, 29.07 – the two design tokens this screen needs NOW EXIST IN THE APP. This block used
+   to say `--celebration-bg` / `--celebration-bg-cool` were declared only in `docs/design/tokens.css`,
+   which is a REFERENCE and never imported, so the gradients were written out below at the point of
+   use and would "belong in `src/style.css`'s :root the day somebody owns that file again". That day
+   came with the owner's question about the play-style colours, and both are on :root now; L and M
+   reference them. `--gold` was listed here too and turns out never to have been referenced by any
+   rule on this screen – the champion card is lime – so it was NOT promoted. See tests/design-tokens.test.ts,
+   which now fails the build if a screen references a token this app does not declare.
    ================================================================================================= */
 
 /* --- E. Tournament (Preview) ------------------------------------------------------------------ */
@@ -1067,9 +1070,10 @@ const matchMeta = computed(() => {
 
 /* --- L. Champion / M. Runner-up ---------------------------------------------------------------- */
 
-/* THE POSTER. `--celebration-bg` / `--celebration-bg-cool` from docs/design/tokens.css, written out
-   because that file is a reference and not an import (see the ⚠ at the top of this block). M's is
-   the same light from the same place, colder by one step. */
+/* THE POSTER. `--celebration-bg` / `--celebration-bg-cool`, the design system's own light behind a
+   champion's card; M's is the same light from the same place, colder by one step. Both are REAL
+   tokens now (src/style.css :root) rather than the two gradients this rule used to spell out - see
+   the ⚠ at the top of this block, which is why they were literals in the first place. */
 .tf-poster {
   display: flex;
   flex-direction: column;
@@ -1077,23 +1081,26 @@ const matchMeta = computed(() => {
   text-align: center;
   padding: 18px 14px 14px;
   border-radius: var(--radius-card);
-  background: radial-gradient(120% 68% at 50% 0%, #16283b 0%, #111a24 52%, #101821 100%);
+  background: var(--celebration-bg);
 }
 
 .tf-poster.silver,
 .tf-poster.out {
-  background: radial-gradient(120% 68% at 50% 0%, #152532 0%, #111a24 52%, #101821 100%);
+  background: var(--celebration-bg-cool);
 }
 
 .tf-poster.champ {
   border-color: var(--accent);
 }
 
-/* Round 5 item 11's silver ring, kept: a lost final is not a gold card with the gold turned off. */
+/* Round 5 item 11's silver ring, kept: a lost final is not a gold card with the gold turned off.
+   The ground is the same `--celebration-bg-cool` as the rule above; only the border-box layer on
+   top of it is this rule's own. (The metal itself is not a design token - the system names no
+   silver - so that gradient stays a literal, and honestly so.) */
 .tf-poster.silver {
   border: 2px solid transparent;
   background:
-    radial-gradient(120% 68% at 50% 0%, #152532 0%, #111a24 52%, #101821 100%) padding-box,
+    var(--celebration-bg-cool) padding-box,
     linear-gradient(135deg, #f4f6fa, #aab2c0 45%, #7d8698 55%, #f4f6fa) border-box;
 }
 

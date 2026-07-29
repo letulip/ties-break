@@ -93,23 +93,31 @@ const COACH_OPTIONS: { id: CoachTier; label: string; blurb: string }[] = [
 
 // An inclination, not numbers: weights future skill growth (Phase 4).
 //
-// ⚠ THE POSE FILES DO NOT SHARE THE `playStyle` IDS, whatever docs/specs/ui-inventory §4 Q4 says.
-// Two of the four are named for the STYLE and two for the id: `counterpuncher` and `all-court`
-// match, `baseliner` is our `aggressive` and `bigserve` is our `serve-first`. So the mapping is
-// spelled out here, once, rather than derived from the id and 404-ing on half the screen.
+// ⚠ THE `playStyle` ID IS THE WHOLE ADDRESS NOW – there is no mapping table here any more, and that
+// is a deliberate deletion. The four pose SVGs used to be named half for the STYLE and half for the
+// id (`baseliner` for our `aggressive`, `bigserve` for our `serve-first`), so this list carried a
+// `pose:` field per style whose only job was to translate. The owner's ruling (29.07: «переименуй
+// если нужно»): the FILES were renamed to the ids, and the translation is gone.
 //
-// `tone` is the design's own colour for each style (docs/design/tokens.css --style-*), declared as
-// local custom properties on `.ob` below – see the note there. It paints the pose (the SVGs ship as
-// black silhouettes, invisible on this page until they are tinted) and the radar polygon.
+// WHICH DIRECTION THE RENAME HAD TO GO, because the other one looks equally easy and is not:
+// `PlayStyle` is persisted inside `PlayerProfile`, so every save on every device has one of these
+// four strings written into it. Renaming the union would need a save migration to read old careers;
+// renaming two files in `public/` costs nothing and breaks nothing. Files are free, the union is
+// not. The labels stay the INTERFACE's words ("Aggressive baseliner", "Big serve") - those were
+// never the problem, and they are what the owner named the files after in the first place.
 //
-// `radar` is the design's data pentagon, verbatim from the prototype, in the 56x56 box the spec
-// asks for. Five spokes, one point each; the shape IS the description of the style.
+// So: the pose art is `icons/styles/<id>.svg` and the colour is `var(--style-<id>)`, both derived.
+// A fifth style added to the protocol needs a file and a token with its own name, and the guard
+// test below fails until both exist rather than 404-ing on half the screen.
+//
+// The colour paints the pose (the SVGs ship as black silhouettes, invisible on this page until they
+// are tinted) and the radar polygon. `radar` is the design's data pentagon, verbatim from the
+// prototype, in the 56x56 box the spec asks for. Five spokes, one point each; the shape IS the
+// description of the style.
 const PLAY_STYLES: {
   id: PlayStyle
   label: string
   blurb: string
-  pose: string
-  tone: string
   chips: [string, string]
   radar: string
 }[] = [
@@ -117,8 +125,6 @@ const PLAY_STYLES: {
     id: 'aggressive',
     label: 'Aggressive baseliner',
     blurb: 'Dictate with heavy groundstrokes.',
-    pose: 'baseliner',
-    tone: 'var(--style-baseliner)',
     chips: ['Power', 'Consistency'],
     radar: '28,6 43.7,22.9 34.5,36.9 20.9,37.8 10.2,22.2',
   },
@@ -126,8 +132,6 @@ const PLAY_STYLES: {
     id: 'counterpuncher',
     label: 'Counterpuncher',
     blurb: 'Speed, defense, and endless patience.',
-    pose: 'counterpuncher',
-    tone: 'var(--style-counterpuncher)',
     chips: ['Defense', 'Stamina'],
     radar: '28,15.9 40.5,23.9 40.3,44.9 15.1,45.8 11.3,22.6',
   },
@@ -135,8 +139,6 @@ const PLAY_STYLES: {
     id: 'serve-first',
     label: 'Big serve',
     blurb: 'Free points first.',
-    pose: 'bigserve',
-    tone: 'var(--style-bigserve)',
     chips: ['Serve', 'Power'],
     radar: '28,6 46.8,21.9 33.8,36 22.8,35.1 15.5,23.9',
   },
@@ -144,8 +146,6 @@ const PLAY_STYLES: {
     id: 'all-court',
     label: 'All-court',
     blurb: 'No weaknesses, no shortcuts.',
-    pose: 'all-court',
-    tone: 'var(--style-allcourt)',
     chips: ['Versatility', 'Balance'],
     radar: '28,11.5 43.7,22.9 37.7,41.4 18.3,41.4 12.3,22.9',
   },
@@ -165,8 +165,9 @@ const STEP_HEADS: { title: string; sub: string }[] = [
   { title: 'All set!', sub: "Here's your champion in the making." },
 ]
 
-function poseUrl(pose: string): string {
-  return `${import.meta.env.BASE_URL}icons/styles/${pose}.svg`
+/** The pose art for a style, addressed BY ITS ID – see the ⚠ on PLAY_STYLES for why that is safe. */
+function poseUrl(id: PlayStyle): string {
+  return `${import.meta.env.BASE_URL}icons/styles/${id}.svg`
 }
 
 function randomName(): string {
@@ -505,13 +506,13 @@ function start(): void {
           as="button"
           class="ob-style"
           :class="{ 'is-on': profile.playStyle === s.id }"
-          :style="{ '--tone': s.tone }"
+          :style="{ '--tone': `var(--style-${s.id})` }"
           pad="12px 14px"
           :aria-pressed="profile.playStyle === s.id"
           @click="pickPlayStyle(s.id)"
         >
           <span class="ob-pose" aria-hidden="true">
-            <i class="ob-pose-fig" :style="{ '--pose': `url(${poseUrl(s.pose)})` }"></i>
+            <i class="ob-pose-fig" :style="{ '--pose': `url(${poseUrl(s.id)})` }"></i>
           </span>
           <span class="ob-style-text">
             <span class="ob-style-title">{{ s.label }}</span>
@@ -634,19 +635,14 @@ function start(): void {
 </template>
 
 <style scoped>
-/* THE FOUR PLAY-STYLE COLOURS, and why they are declared here rather than in `src/style.css`.
-   They are in the design system (docs/design/tokens.css --style-baseliner / --style-counterpuncher
-   / --style-bigserve / --style-allcourt), verbatim below - but that file is a REFERENCE and is
-   never imported, so the app has to declare what it uses. One screen uses these four, so they live
-   on that screen's root, where custom-property inheritance carries them to the cards. If a second
-   screen ever needs them (T, the Coach Market, plausibly), they graduate to `src/style.css` and
-   this block goes away. Values are copied, not chosen. */
-.ob {
-  --style-baseliner: #ef4b3a;
-  --style-counterpuncher: #cfe152;
-  --style-bigserve: #5b9bd5;
-  --style-allcourt: #9b7fd4;
-}
+/* ⚠ THE FOUR PLAY-STYLE COLOURS USED TO BE DECLARED HERE, on `.ob`, and they have GRADUATED to
+   `src/style.css`'s :root as `--style-aggressive` / `--style-counterpuncher` / `--style-serve-first`
+   / `--style-all-court`. The old block said "if a second screen ever needs them they graduate";
+   what actually forced it was the owner asking what these tokens were for at all (29.07), and the
+   answer being that `docs/design/tokens.css` is a reference nobody imports, so a design token only
+   exists if some screen hand-copies it - which is two sources of truth and a manual sync that fails
+   silently. tests/design-tokens.test.ts is the gate that now makes that impossible to ship.
+   The names moved to the `playStyle` ids for the same reason the pose files did: one vocabulary. */
 
 /* `.onboarding` (shared with the splash and the tournament flow) already fixes this to the
    viewport as a column; the shell takes what is left of it. */
