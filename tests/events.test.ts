@@ -320,6 +320,14 @@ describe('advance stop reasons', () => {
   // assertion (a FRESH 0-point career stops for the first regional deadline) is therefore
   // inverted: a fresh kid must NOT be stopped, and a point-eligible kid must still be. ***
   it('never stops a 0-point kid for a regional+ deadline she cannot enter (round-9 fix)', () => {
+    // ⚠ RE-AIMED by the two ladders (29.07). The old claim was "a 0-point kid can only enter Local",
+    // which was true when ONE points ladder gated everything. There are two now: the domestic rungs
+    // still open by points and in order, and the international ones are an acceptance list. A J30
+    // has no acceptance bar at all - the research is explicit that an unranked thirteen-year-old
+    // near home gets into one, and that the gate up the ladder is the QUEUE, not the fee. So a
+    // point-less kid is legitimately stopped by a J30 deadline: she really can enter it, if the
+    // family can pay for the plane. The protected fact is unchanged and is now stated exactly:
+    // she is not stopped for a rung she cannot enter.
     const world = createWorld('adv-deadline')
     const rng = rngFromSeed(world.seed)
     // ample funds, no entries, ZERO ranking points -> regional (min 65) / national (min 150)

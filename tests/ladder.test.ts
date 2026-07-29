@@ -92,33 +92,30 @@ describe('L2 — the J-level table (spec numbers)', () => {
     expect(TIERS.j300.minAgeYears).toBe(13)
   })
 
-  it('points scale with the level: j60 = 1.5x j30, j300 = 2.5x j30', () => {
-    // ⚠ RE-PINNED by wave B "first-round loss pays ZERO" (tune/first-round-zero): was
-    // [400, 240, 140, 70, 30, 12]. The last element is the first-round exit and pays nothing now,
-    // at every rung – ITF Reg 31(a), "no points until you have won a round in the main draw".
-    // The ×1.5 / ×2.5 level scaling below is UNAFFECTED: 0 × 1.5 = 0 × 2.5 = 0, so the relation
-    // that actually defines the J family still holds exactly, which is why it is asserted as a
-    // relation rather than as three hard-coded arrays.
-    expect(TIERS.j30.points).toEqual([400, 240, 140, 70, 30, 0])
-    expect(TIERS.j60.points).toEqual(TIERS.j30.points.map((p) => p * 1.5))
-    expect(TIERS.j300.points).toEqual(TIERS.j30.points.map((p) => p * 2.5))
-    // ...and every J level out-scores the domestic top tier at every finish THAT PAYS. The last
-    // slot is excluded because both are now 0 there: a first-round exit is worth nothing anywhere,
-    // so "the international result is worth more" is a claim about results, not about turning up.
-    for (let i = 0; i < TIERS.national.points.length - 1; i++) {
-      expect(TIERS.j30.points[i]).toBeGreaterThan(TIERS.national.points[i])
-    }
-    expect(TIERS.j30.points[TIERS.j30.points.length - 1]).toBe(TIERS.national.points[TIERS.national.points.length - 1])
-  })
-
-  it('travel and entry fees rise monotonically up the ladder', () => {
-    for (let i = 1; i < TIER_LADDER.length; i++) {
-      const lo = TIERS[TIER_LADDER[i - 1]]
-      const hi = TIERS[TIER_LADDER[i]]
-      expect(hi.entryFeeCents).toBeGreaterThan(lo.entryFeeCents)
-      expect(hi.travelCostCents[0]).toBeGreaterThan(lo.travelCostCents[0])
-      expect(hi.travelCostCents[1]).toBeGreaterThan(lo.travelCostCents[1])
-    }
+  it('points scale with the level, at the REAL ITF ratios: j60 = 2x j30, j300 = 10x j30', () => {
+    // ⚠ RE-AIMED for the two ladders (29.07). Was [400, 240, 140, 70, 30, 0] with the level scaling
+    // asserted as x1.5 / x2.5 - our invention. These are ITF Reg 31's own singles rows, and the
+    // convention every rung of the real ladder follows is that the GRADE NAME IS THE WINNER'S
+    // POINTS. The ratios that fall out are the real ones: j60 is twice a j30 and j300 is TEN times
+    // it, where ours paid 2.5x. That inversion is the whole reason for this slice - a flawless
+    // season of J30s used to out-score a J300 title 2.4 to 1, so there was never a reason to get on
+    // the expensive plane.
+    //
+    // The last element stays 0 at every rung and that is NOT the ITF table's number: Reg 31's "R32"
+    // column means REACHED the round of 32 having won a round, which in a real J300 (draws of
+    // 48-64) is a player who has already won. Our draws are 32, so the last finish index IS the
+    // first-round loser, and Reg 31(a) pays nobody until they win a main-draw round.
+    expect(TIERS.j30.points).toEqual([30, 18, 9, 5, 2, 0])
+    expect(TIERS.j60.points).toEqual([60, 36, 18, 10, 5, 0])
+    expect(TIERS.j300.points).toEqual([300, 210, 140, 100, 60, 0])
+    expect(TIERS.j60.points[0]).toBe(TIERS.j30.points[0] * 2)
+    expect(TIERS.j300.points[0]).toBe(TIERS.j30.points[0] * 10)
+    // ...and the compression the real ladder has and ours never did: a title is worth FEWER single
+    // wins as you climb. At j30 the title is 15 wins; at j300 it is 5.
+    const titleOverOneWin = (t: 'j30' | 'j60' | 'j300') =>
+      TIERS[t].points[0] / TIERS[t].points[TIERS[t].points.length - 2]
+    expect(titleOverOneWin('j30')).toBeGreaterThan(titleOverOneWin('j60'))
+    expect(titleOverOneWin('j60')).toBeGreaterThan(titleOverOneWin('j300'))
   })
 })
 
@@ -173,13 +170,22 @@ describe('L3 — NO prize money at any level (juniors pay to play)', () => {
 })
 
 describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () => {
-  it('pins each tier band (documented overlap table)', () => {
+  it('pins the DOMESTIC bands, and the international rungs gate on rank instead', () => {
+    // ⚠ RE-AIMED for the two ladders. The point bands are a DOMESTIC instrument now and they did
+    // not move, because the domestic point tables did not move either. The J rungs left the band
+    // system entirely: an international entry is an ACCEPTANCE LIST, read off her ITF rank - the
+    // same signal `entrantPctBand` already uses to pick the AI field, which is what finally makes
+    // both sides of one event obey one rule (docs/specs/rank-plateau.md 2b).
     expect(TIERS.local.enterPointBand).toEqual([0, 85])
     expect(TIERS.regional.enterPointBand).toEqual([65, 230])
     expect(TIERS.national.enterPointBand).toEqual([150, Number.MAX_SAFE_INTEGER])
-    expect(TIERS.j30.enterPointBand).toEqual([180, Number.MAX_SAFE_INTEGER])
-    expect(TIERS.j60.enterPointBand).toEqual([400, Number.MAX_SAFE_INTEGER])
-    expect(TIERS.j300.enterPointBand).toEqual([900, Number.MAX_SAFE_INTEGER])
+    // j30 is OPEN - the research is explicit that an unranked thirteen-year-old near home gets into
+    // one, and that the gate up the ladder is the queue rather than the fee.
+    expect(TIERS.j30.enterRank).toBeUndefined()
+    expect(TIERS.j60.enterRank).toBe(120)
+    expect(TIERS.j300.enterRank).toBe(50)
+    // ...and the acceptance lists tighten as you climb, which is the ladder.
+    expect(TIERS.j300.enterRank!).toBeLessThan(TIERS.j60.enterRank!)
   })
 
   it('every point total 0..5000 keeps at least one tier open – no gap, ever', () => {
@@ -195,10 +201,14 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
     }
   })
 
-  it('the ladder opens in order and the top three never close', () => {
+  it('the DOMESTIC ladder opens in order and nothing above national ever closes', () => {
+    // ⚠ RE-AIMED: "opens in order" was a statement about one ladder. There are two, and only the
+    // domestic one is ordered by points - the J rungs are ordered by acceptance list instead (see
+    // the band test above), so asserting a points ordering across all six now asserts nothing.
+    const domestic: TierId[] = ['local', 'regional', 'national']
     const opensAt = (t: TierId) => TIERS[t].enterPointBand[0]
-    for (let i = 1; i < TIER_LADDER.length; i++) {
-      expect(opensAt(TIER_LADDER[i])).toBeGreaterThan(opensAt(TIER_LADDER[i - 1]))
+    for (let i = 1; i < domestic.length; i++) {
+      expect(opensAt(domestic[i])).toBeGreaterThan(opensAt(domestic[i - 1]))
     }
     for (const t of ['national', 'j30', 'j60', 'j300'] as TierId[]) {
       expect(TIERS[t].enterPointBand[1]).toBe(Number.MAX_SAFE_INTEGER)
