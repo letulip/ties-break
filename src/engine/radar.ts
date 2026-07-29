@@ -177,9 +177,10 @@ export const NOTE_UNTESTED_MAX = 0.25
 //
 //  1. IT IS FOGGED, NOT ROUNDED. The question is never "the number, vaguely" - it is CAN ANYONE
 //     TELL YET. So movement is measured in FOG WIDTHS (`bandFor`), not in points: at a band of
-//     twelve she must gain a great deal before anyone may honestly claim to see it, and while
-//     nobody can read any wing at all the card says exactly that, out loud, week after week. A
-//     confident read on an axis nobody has evidence for is the same leak in nicer words.
+//     twelve she must gain a great deal before anyone may honestly claim to see it, and while he
+//     does not know her ON THE WHOLE - the MEAN of the four wings, not his best-read one - the card
+//     says exactly that, out loud, week after week. A confident read on an axis nobody has evidence
+//     for is the same leak in nicer words.
 //
 //  2. IT IS NOT A NUMERIC SIDE-CHANNEL. A card that spoke every week the serve moved by ANY amount
 //     would hand over the SIGN of every weekly delta, and a patient player integrates that. Four
@@ -190,8 +191,9 @@ export const NOTE_UNTESTED_MAX = 0.25
 //       - THE EARLY ONES ARE NEVER REPORTED. Below TRAINING_MIN_CONFIDENCE the card says nobody can
 //         tell, so the biggest crossings of all - a fourteen-year-old's, when she improves fastest
 //         and is understood least - are silently missing from any count anyone tries to keep.
-//       - A THIRD OF THE REST ARE NEVER MENTIONED EITHER (TRAINING_MENTION_CHANCE), drawn once per
-//         notch. So the crossings a player DOES see are a subset with gaps of unknown size.
+//       - A SIXTH OF THE REST ARE NEVER MENTIONED EITHER (TRAINING_MENTION_CHANCE), drawn once per
+//         notch. So the crossings a player DOES see are a subset with gaps of unknown size. This is
+//         the weakest of the four legs and the constant says why.
 //       - AND THE NOTCH'S WIDTH IS DENOMINATED IN THE FOG, which lifts for reasons that have
 //         nothing to do with how much she gained: matches played, weeks with the man, his rung.
 //     What reaches the player is a subset of crossings, of moving width, with unknown gaps. That
