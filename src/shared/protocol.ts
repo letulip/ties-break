@@ -346,6 +346,12 @@ export interface PendingView {
   tierLabel: string
   points: number
   finishLabel: string
+  /** how many people came, for the E brief's fourth fact. The SAME decorative reading the Season
+   *  card's `UpcomingEvent.preview.crowd` carries, off the same `seed:crowd:<eventId>` sub-stream –
+   *  carried here because a preview leaves the snapshot the week its event arrives (upcomingEvents
+   *  filters to `week > world.week`), and screen E must not print a second, different number for the
+   *  same tournament. Decorative: nothing in the simulation reads it (engine/season/preview.ts). */
+  crowd: number
 }
 
 /** Injury severity (Season-Life). Slice B wires the field but never populates it; Slice C does. */
@@ -438,9 +444,10 @@ export interface UpcomingEvent {
   surface: Surface
   /** what the Season card may say about an event she has not played: her odds in ROUND ONE against
    *  the field as it would be drawn today, who that opponent would be, how strong the field is, and
-   *  a decorative temperature. Derived at snapshot time, persists nothing, and draws only on the
-   *  event's own `seed:kidtour:` / `seed:weather:` sub-streams. Explicitly an estimate about a
-   *  field that will have moved by the time the event plays – see engine/season/preview.ts. */
+   *  two decorative readings (the temperature and the crowd). Derived at snapshot time, persists
+   *  nothing, and draws only on the event's own `seed:kidtour:` / `seed:weather:` / `seed:crowd:`
+   *  sub-streams. Explicitly an estimate about a field that will have moved by the time the event
+   *  plays – see engine/season/preview.ts. */
   preview: EventPreview
   travelCostCents: number
   deadlineWeek: number
