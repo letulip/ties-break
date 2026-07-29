@@ -215,8 +215,9 @@ slice from de-duplicating live ones, and this pass was told to change nothing. W
 
 ## Guard tests
 
-Two tests pin a fact inside a rule that this pass merged. Neither assertion was weakened and neither
-test was deleted; both now read the merged rule, and both carry a `⚠ RE-AIMED` note saying what moved.
+Three tests pin a fact inside a rule that this pass merged. No assertion was weakened and no test
+was deleted; all three now read the merged rule, and all three carry a `⚠ RE-AIMED` note saying what
+moved and why the protected fact is unchanged.
 
 - `tests/round10.test.ts` — "the injury dialog uses the squarer radius of the top popups" reads the
   body of `.stop-toast {`. `.stop-toast` is now the last selector of the shared top-popup rule, so
@@ -226,15 +227,13 @@ test was deleted; both now read the merged rule, and both carry a `⚠ RE-AIMED`
   reads the body of `.note-card {` for the gradient and the `--card-edge` hairline. Both moved into
   the shared notecard-surface rule, whose selector list ends with `.note-card`, so the test reads the
   rule that now owns them.
+- `tests/round11-view.test.ts` — "the planned row stacks instead of competing for width" reads the
+  body of `.planned-actions {` for the `flex-end`. It merged with `.dialog-actions`; same
+  selector-order rule, same `⚠ RE-AIMED` note.
 
-In both cases the merged selector list deliberately ends with the pinned selector. That is not a
+In all three cases the merged selector list deliberately ends with the pinned selector. That is not a
 trick to keep a test quiet: the rule genuinely is that selector's rule, and it genuinely declares the
 property the test is checking. The comment in each test says so, so nobody has to rediscover it.
-
-A third test, `tests/round11-view.test.ts`, reads the body of `.planned-actions {`; the same
-selector-order rule was applied there and the fact — a booked week's controls sit right-aligned —
-is read from the rule that declares it. No comment was added, because nothing about that fact's
-home is surprising: it is still the first rule matching that string in the file.
 
 ## One thing found that is not this slice's to fix
 
