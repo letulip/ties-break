@@ -49,11 +49,12 @@ restyle by analogy with the system, or leave until it gets its own design.
 | `SeasonSummaryDialog.vue` | end-of-season recap | the natural sibling of D and L/M |
 | `InjuryStopDialog.vue` | the injury interruption | a real emotional beat with no design |
 | `TierGuide.vue` | the ladder explainer | reachable from Season |
-| `RankHelpDialog.vue` | how the best-6 ranking works | |
+| `RankHelpDialog.vue` | how the best-6 ranking works | opens from **Home** (the rank chip under her name), not from Stats |
 | `ConfirmDialog.vue` | generic confirm | pure utility |
 | `MatchReplay.vue` | replay of a stored match | feeds off F/I once those land |
 | `PracticeFlow.vue` | the friendly-match flow | shares the match surfaces |
-| `CountingResultsTable.vue`, `SeasonHistoryTable.vue` | tables inside Stats | |
+| `SeasonHistoryTable.vue` | the season-by-season table in Stats | **overflows horizontally at 375px** – see below |
+| `CountingResultsTable.vue` | the counting best-6 table | **not in Stats**: it is used by `KidScreen` and by `RankHelpDialog` |
 | `BracketTabs.vue` | round switcher | shipped wave 1, J/K will absorb it |
 
 ## 3. What the handoff asks for that we do not have at all
@@ -122,3 +123,15 @@ surfaces could not be reached without changing app code.
 Some of these may not need a designer at all: Stats, More, the week planner and the small dialogs
 are all assemblies of components the new system already defines (Card, Eyebrow, SegmentedRow,
 StatRow, PrimaryPill). Worth a review pass before commissioning designs for them.
+
+### Two real defects the capture pass found
+
+Neither is a design question — both are bugs, found because somebody finally looked at these screens
+at the phone width they ship at.
+
+1. **The season-history table scrolls the whole document sideways at 375px** (`scrollWidth` 426 vs a
+   375 viewport) and the FUNDS column is cut off.
+2. **TierGuide has the same problem** — its TRAVEL and POINTS columns are clipped, and the last tier
+   row is cut off at the bottom of the card.
+
+Both are tables that assume more width than a phone has. They want the same fix and it is small.

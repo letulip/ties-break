@@ -47,3 +47,10 @@ public/images/*-jpeg/
 # public/images/coaches/, i.e. the generated webp we DO ship.
 /coaches/
 /fields/
+
+# Exported/generated save files. `tools/demo-save.ts` writes these, and serving one out of
+# public/ is the only way to get a save into the running app (the file picker cannot be driven),
+# so they turn up in the working tree routinely. They are throwaway state - two of them were
+# swept into a commit on 29.07 and had to be filtered back out.
+*.tsave
+
