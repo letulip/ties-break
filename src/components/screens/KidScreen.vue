@@ -29,13 +29,15 @@
 // the Born tile, because a flag emoji on its own is a riddle.
 //
 // WHAT THIS SCREEN IS NOT ALLOWED TO DO: derive a fact of its own. The emotion is the engine's
-// (via the shared composable), the rank is the engine's, the coach row is the engine's. The one
-// exception is the radar's data, and it is a STUB that is labelled as one in six places - see
-// `stubRadarAxes` below.
+// (via the shared composable), the rank is the engine's, the coach row is the engine's, and since
+// the radar's engine half landed there is NO exception left: the four axes are `snapshot.radar`,
+// derived in `engine/radar.ts`. The stub that stood here while the two halves were built in
+// parallel is gone.
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import CountingResultsTable from '../CountingResultsTable.vue'
-import SkillsRadar, { type RadarAxis, type RadarAxisKey } from '../SkillsRadar.vue'
+import SkillsRadar from '../SkillsRadar.vue'
+import type { RadarAxis } from '../../shared/protocol'
 import { useKidEmotion } from '../../composables/kidEmotion'
 import { weekLabel } from '../../shared/dates'
 import { rankLabel } from '../../shared/format'
@@ -213,106 +215,18 @@ const moments = computed<Moment[]>(() => {
   ]
 })
 
-// --- THE SKILLS RADAR: A STUB OF THE FINAL SHAPE ---------------------------------------------
+// --- THE SKILLS RADAR ------------------------------------------------------------------------
+// The stub is gone. `snapshot.radar` is the engine's own derivation (engine/radar.ts, built on
+// docs/specs/skills-radar.md): four axes in SKILL_KEYS order, each an ESTIMATE with an error band
+// and a haze over her ceiling. The truth never crosses this line - `Snapshot` carries no `skills`
+// and no `potential`, which is the whole design and is pinned engine-side.
 //
-// ############################################################################################
-// ##  STUB. THIS IS NOT THE MODEL. It fabricates `RadarAxis[]` so screen C can be built and   ##
-// ##  reviewed while the ENGINE half is written in parallel on branch `feat/skills-radar`.    ##
-// ##  The contract it returns is docs/specs/skills-radar.md §2, unchanged, so when the engine ##
-// ##  puts `radar: RadarAxis[]` on the Snapshot this whole block is deleted and the template  ##
-// ##  reads `game.snapshot.radar` instead. Nothing else on this screen moves.                 ##
-// ##                                                                                          ##
-// ##  IT TOUCHES NO ENGINE RNG. The wobble below is a local string hash, not `rngFromSeed`,   ##
-// ##  precisely so it cannot be mistaken for the purpose-scoped sub-stream the spec specifies ##
-// ##  (`seed:read:<axis>`) and cannot perturb the frozen MAIN capture.                        ##
-// ############################################################################################
-//
-// It is driven off facts the snapshot really carries, so the two states the DESIGN has to survive
-// are both reachable by playing the game rather than by editing a constant:
-//
-//   WEEK 1, AGE 14, NO COACH, NO MATCHES   confidence ~0  -> maximum fog, a huge haze, no notes.
-//   AGE 17, ELITE COACH, LONG HISTORY      confidence ~1  -> a tight contour, a narrow haze that
-//                                                            still never closes, most notes present.
-//
-// ⚠ TWO INPUTS THE SPEC WANTS THAT THE SNAPSHOT DOES NOT CARRY, and the stub approximates them:
-//   * WEEKS WITH THIS COACH. There is no `coachSince` on the Snapshot, so career weeks stand in.
-//     The engine owns this one and will compute it properly; nothing here needs to change.
-//   * WAS IT LONG / WAS IT TIGHT, per match. `WorldMatch` has the scoreline and both skill
-//     snapshots, but the Snapshot carries no match history to fold - so the stub derives a
-//     plausible share of long and tight matches from the match COUNT. That is exactly the read the
-//     engine will do properly over the ledger (spec §1, evidence source 3).
-const TIER_CONFIDENCE: Record<string, number> = { self: 0, budget: 0.35, middle: 0.55, high: 0.75, elite: 1 }
-const RADAR_KEYS: readonly RadarAxisKey[] = ['serve', 'ret', 'composure', 'stamina']
-/** A stable 0..1 per (career, axis). Not an RNG - a hash, so her coach's misreading of her backhand
- *  is the same misreading on every render, which is also how misreading a person actually works. */
-function hash01(text: string): number {
-  let h = 2166136261
-  for (let i = 0; i < text.length; i++) {
-    h ^= text.charCodeAt(i)
-    h = Math.imul(h, 16777619)
-  }
-  return ((h >>> 0) % 10000) / 10000
-}
-const lerp = (a: number, b: number, t: number): number => a + (b - a) * Math.max(0, Math.min(1, t))
-/** The coach's sentence per axis, once he has enough to say it. The engine will own this copy; the
- *  stub keeps one line per axis so the layout is exercised with real words rather than lorem. */
-const STUB_NOTES: Record<RadarAxisKey, [string, string]> = {
-  serve: ['Her serve is her weapon.', 'The serve is a work in progress.'],
-  ret: ['She reads a serve early.', 'Returning is where the work is.'],
-  composure: ['She does not flinch on a big point.', 'Tight sets still get to her.'],
-  stamina: ['A third set does not frighten her.', 'She fades late in long matches.'],
-}
-function stubRadarAxes(): RadarAxis[] {
-  const snap = game.snapshot
-  if (!snap) return []
-  const seed = snap.seed
-  const weeksTogether = snap.week
-  const tier = snap.coachMarket.find((c) => c.current)?.tier ?? 'self'
-  const played =
-    snap.seasonWins +
-    snap.seasonLosses +
-    snap.seasonHistory.reduce((sum, s) => sum + s.wins + s.losses, 0)
-
-  return RADAR_KEYS.map((key) => {
-    // Evidence, per axis: serve and return sharpen with matches generally; composure needs TIGHT
-    // matches and stamina needs LONG ones, so both lag behind - the asymmetry the spec is about.
-    const evidence =
-      key === 'composure'
-        ? Math.min(1, Math.floor(played * 0.35) / 8)
-        : key === 'stamina'
-          ? Math.min(1, Math.floor(played * 0.25) / 6)
-          : Math.min(1, played / 30)
-    const confidence = Math.max(
-      0,
-      Math.min(1, 0.25 * (TIER_CONFIDENCE[tier] ?? 0) + 0.25 * Math.min(1, weeksTogether / 40) + 0.5 * evidence),
-    )
-
-    // Where she is, as far as anyone can tell: a stable per-career shape that grows with her age.
-    const shownValue = Math.max(
-      5,
-      Math.min(92, 34 + hash01(`${seed}:${key}`) * 22 + Math.max(0, snap.ageYears - 14) * 5),
-    )
-    // The fog around it, and the haze BEYOND it. The haze's half-width has a FLOOR (spec §3): you
-    // learn the range, never the number, however long you wait. The band is placed clear of the
-    // fog's outer edge rather than on top of it, because a ceiling is by definition above where she
-    // is - and because two shapes that always sit inside one another read as one glow.
-    const band = lerp(26, 4, confidence)
-    const ceilingHalf = lerp(24, 8, confidence)
-    const ceilingMid = Math.min(100, shownValue + band + ceilingHalf * 0.55 + lerp(10, 5, confidence))
-
-    const noteAt = key === 'composure' || key === 'stamina' ? 0.55 : 0.45
-    const strong = hash01(`${seed}:${key}:read`) > 0.45
-    return {
-      key,
-      shownValue,
-      band,
-      ceilingLo: Math.max(0, ceilingMid - ceilingHalf),
-      ceilingHi: Math.min(100, ceilingMid + ceilingHalf),
-      note: confidence >= noteAt ? STUB_NOTES[key][strong ? 0 : 1] : null,
-    }
-  })
-}
-const radarAxes = computed<RadarAxis[]>(() => stubRadarAxes())
+// ⚠ The element and this feed were built in PARALLEL against the written contract and met here.
+// Two things the engine settled that the stub had guessed: `band` is a HALF-width (the true value
+// is inside `shownValue ± band`, guaranteed on every axis of every week), and every number is on
+// one shared 0..100 scale. Axis ORDER is meaningful - serve, ret, composure, stamina - so it is
+// never sorted.
+const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
 </script>
 
 <template>
