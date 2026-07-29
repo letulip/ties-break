@@ -46,16 +46,35 @@ export function useKidEmotion() {
   // with the emotion-free header (F45-1), so the two crop surfaces cannot drift apart.
   //
   // ⚠ NULL FOR A PAINTING-ONLY FACE, and it has to be able to say null (ui/art-rehab-sleepy).
-  // `rehab` ships as five paintings and no crops – deliberately, because NO surface in the app
-  // renders an emotion crop: the app header is the age-only `norm` of F45-1, Home's corner crop is
-  // the same, and THIS computed has zero consumers in src/components/. It is kept rather than
-  // deleted because it is the documented emotional-crop seam and a future card may want it; what it
-  // may NOT do is hand that card a URL that 404s. So the emotion is narrowed through `hasCrop`
-  // first and the absence is returned as a value the caller must handle, instead of a broken <img>.
+  // `rehab` ships as five paintings and no crops – deliberately, because the app header is the
+  // age-only `norm` of F45-1 and Home's corner crop is the same. What this may NOT do is hand a
+  // card a URL that 404s, so the emotion is narrowed through `hasCrop` and the absence comes back
+  // as a value the caller must handle.
+  //
+  // ⚠⚠ AND IT ACQUIRED CONSUMERS WHILE THE WAVE WAS BEING BUILT. The note here used to say "zero
+  // consumers in src/components/" – true when it was written, false by the time three parallel
+  // screens landed: screen C's Mood tile and screen D's Mood tile both render a 36px face from it.
+  // The merge is where that showed up, as a type error rather than a broken image, which is the
+  // whole reason the null was introduced.
   const cropUrl = computed<string | null>(() =>
     hasCrop(emotion.value)
       ? `${import.meta.env.BASE_URL}${avatarCropPath(stage.value, emotion.value)}`
       : null,
+  )
+
+  /** THE MOOD-TILE FACE, which must always resolve to something.
+   *
+   *  The Mood tiles on C and D are a 36px thumbnail beside a word – "Hurt", "Tired", "Steady". They
+   *  are not the emotional portrait; that is the big painting, and during a layoff the big painting
+   *  is `rehab`, which is exactly the change the owner asked for.
+   *
+   *  A thumbnail is a different surface with a different job, and it has no `rehab` crop to show.
+   *  It falls back to `injury` – the closest TRUE face, and the one whose word the tile is already
+   *  printing. Falling back to `norm` would have the tile say "Hurt" over a photograph of a girl who
+   *  is fine, which is worse than either. */
+  const moodCropUrl = computed(
+    () =>
+      `${import.meta.env.BASE_URL}${avatarCropPath(stage.value, hasCrop(emotion.value) ? emotion.value : 'injury')}`,
   )
 
   // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
@@ -65,5 +84,5 @@ export function useKidEmotion() {
       `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${emotion.value}.webp`,
   )
 
-  return { emotion, stage, cropUrl, portraitUrl }
+  return { emotion, stage, cropUrl, moodCropUrl, portraitUrl }
 }
