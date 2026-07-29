@@ -235,10 +235,14 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
   it('THE REPORT WAS STRUCTURALLY IMPOSSIBLE: j30 is a strict subset of national', () => {
     // The owner said he could enter a J30 but not a National. By the bands that cannot happen –
     // which is why the fix is a sentence, not a rule.
+    // ⚠ RE-AIMED by the two ladders. The original report was structurally impossible because j30's
+    // POINTS band was a strict subset of national's - both were on one ladder. They are on two now,
+    // so the comparison cannot be made in points at all. The structural fact survives in its real
+    // form: national is the last DOMESTIC rung and never closes, and j30 is open to anyone, so a
+    // player who has national open always has j30 open too - the report stays impossible.
     const [natMin, natMax] = TIERS.national.enterPointBand
-    const [j30Min, j30Max] = TIERS.j30.enterPointBand
-    expect(j30Min).toBeGreaterThanOrEqual(natMin)
-    expect(j30Max).toBeLessThanOrEqual(natMax)
+    expect(TIERS.j30.enterRank).toBeUndefined()
+    expect(natMin).toBeGreaterThan(0)
     for (const points of [180, 200, 400, 1_000]) {
       const nat = tierState('national', at(points))
       const j30 = tierState('j30', at(points))

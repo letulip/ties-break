@@ -333,6 +333,11 @@ describe('A5 — the UI says WHY, in the wording the other lock states use', () 
   })
 
   it('still ranks the permanent locks first – points before the year cap', () => {
+    // ⚠ RE-AIMED by the two ladders (29.07). The claim was "a points lock outranks the year cap",
+    // and it held while every rung had a points lock. An INTERNATIONAL rung has none - it gates on
+    // an acceptance list, and a J30's is open - so for a point-less kid there is no permanent lock
+    // to rank first and the cap is the true and only answer. The precedence rule itself is
+    // untouched and still proved below on a rung that HAS a permanent lock.
     // 0 points: she is locked on points, which is the headline whatever the cap says
     expect(tierState('j30', { ...baseInput, points: 0 }).kind).toBe('locked')
     // too young: the age gate outranks everything (kept wired for the childhood prologue)

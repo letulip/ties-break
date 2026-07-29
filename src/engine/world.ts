@@ -3179,7 +3179,11 @@ function arrivalPreview(world: WorldState): ArrivalPreview | null {
 // thing in both places or this list and the standings total drift apart the moment a scoreless row
 // reaches the kid's half of the ledger.
 function computeCountingResults(world: WorldState): CountingResult[] {
-  return world.results
+  // TWO LADDERS: this list EXPLAINS a ranking, so it has to be the same table as the rank beside it.
+  // `standings` and `kidRank` are the ITF one, so this is too - and before she owns an international
+  // result it is honestly empty, which is what "unranked internationally" means. The domestic
+  // equivalent arrives with the domestic table's own surface.
+  return world.results.filter(inTrack('itf'))
     .filter(
       (r) =>
         isCountingResult(r) &&

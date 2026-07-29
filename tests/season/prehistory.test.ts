@@ -163,7 +163,7 @@ describe('createWorld — the fresh career now opens on a REAL ranking', () => {
     expect(windowedBestSum(world.results, world.week, KID_ID)).toBe(0)
   })
 
-  it('RE-PINNED (was rank #1, then #200): the kid starts at the BOTTOM of the table', () => {
+  it('RE-PINNED (was #1, then #200, then #197): her opening rank is an ITF rank now', () => {
     // Before pre-history every AI was tied at 0 points, so the kid shared dense-rank 1 with the
     // entire field – the artifact the owner saw (a brand-new career reading "#1"). With a real
     // table she became the ONLY point-less player, i.e. rank cohort.length + 1 = 200.
@@ -187,7 +187,7 @@ describe('createWorld — the fresh career now opens on a REAL ranking', () => {
     expect(kidRow.points).toBe(0)
     expect(Math.max(...ranking.map((r) => r.rank))).toBe(kidRow.rank)
     // THE MEASURED FACT, pinned so the open decision stays visible:
-    expect(world.kidRank).toBe(197)
+    expect(world.kidRank).toBe(120)
     expect(ranking.filter((r) => r.points === 0).length).toBe(4) // the kid + 3 cohort players
   })
 

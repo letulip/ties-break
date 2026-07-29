@@ -135,6 +135,10 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
 
 describe('upcomingEvents — surfaces eligibility both directions', () => {
   it('a fresh (0-point) kid: local open, regional/national locked (not enough points yet)', () => {
+    // ⚠ RE-AIMED by the two ladders: the claim is about the DOMESTIC ladder, which is unchanged -
+    // local open, regional and national locked on points. A J30 is open to her as well now, on a
+    // different ladder and by an acceptance list that has no bar, so it is excluded from the check
+    // rather than contradicting it.
     const world = createWorld('snap-low')
     expect(kidPoints(world, 'domestic')).toBe(0)
     const upcoming = toSnapshot(world).upcoming

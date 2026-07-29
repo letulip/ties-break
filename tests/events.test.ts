@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  entryStatus,
   createWorld,
   tickWeek,
   advanceWeeks,
@@ -289,7 +290,10 @@ describe('kid counting-results transparency (round-5 item 1b)', () => {
     }
     expect(world).toBeDefined()
     const snap = toSnapshot(world)
-    expect(snap.countingResults.length).toBeGreaterThanOrEqual(1)
+    // ⚠ RE-AIMED by the two ladders: this list explains the ITF ranking beside it, so it holds ITF
+    // results only and is honestly empty until she owns one. The transparency claim - the list sums
+    // to the rank it sits next to - is unchanged and is the assertion at the end.
+    expect(snap.countingResults.every((c) => ['j30', 'j60', 'j300'].includes(c.tier ?? ''))).toBe(true)
     // each counted kid result carries the tier it was earned at (new r5 field)
     expect(snap.countingResults.every((c) => typeof c.tier === 'string')).toBe(true)
     // the list sum equals the kid's standings points (the whole point of the transparency)
@@ -332,8 +336,14 @@ describe('advance stop reasons', () => {
     const rng = rngFromSeed(world.seed)
     // ample funds, no entries, ZERO ranking points -> regional (min 65) / national (min 150)
     // are both out of reach, so no deadline may interrupt the advance.
+    // ⚠ RE-AIMED by the two ladders: a J30 has no acceptance bar, so a point-less kid CAN enter one
+    // and a J30 deadline may legitimately stop her. What must still never stop her is a rung she
+    // cannot enter, which is what is asserted now.
     const stop = advanceWeeks(world, rng, 20)
-    expect(stop).not.toContain('deadline')
+    if (stop.includes('deadline')) {
+      const stoppable = world.season.filter((e) => entryStatus(world, e).level !== 'blocked')
+      for (const e of stoppable) expect(['local', 'j30']).toContain(e.tier)
+    }
   })
 
   it('stops before an imminent affordable regional+ deadline she IS eligible for', () => {

@@ -243,7 +243,7 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     expect(up.ineligibleReason).toBe('outgrown')
     // surface 3: the advance never stops for a deadline she cannot act on
     const nat = injectEvent(w, { week: w.week + 3, tier: 'regional', deadlineWeek: w.week + 1, id: 'reg-ok' })
-    expect(isTierEligible(nat.tier, kidPoints(w))).toBe(true) // regional IS open at 122
+    expect(isTierEligible(nat.tier, kidPoints(w, 'domestic'))).toBe(true) // regional IS open at 122
     expect(availabilityStatus(w, nat).level).not.toBe('blocked')
   })
 
