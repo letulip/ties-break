@@ -257,7 +257,12 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
 // grows a second root.
 const ledgerEl = useTemplateRef<HTMLElement>('ledger')
 function showAllTransactions(): void {
-  ledgerEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  // The glide is a nicety and the ARRIVAL is the promise, so the behaviour is chosen rather than
+  // assumed: a player who has asked their system for less motion gets taken there at once. Found
+  // by driving it - the verification browser does not animate `behavior: 'smooth'` at all, and a
+  // button whose only mode is an animation nobody runs is a button that does nothing.
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+  ledgerEl.value?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
 }
 </script>
 
