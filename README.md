@@ -26,3 +26,29 @@ The intersection nobody occupies:
 ## Status
 
 Concept / planning phase (July 2026). See [docs/decisions.md](docs/decisions.md) and [docs/research/](docs/research/).
+
+## Source Code & License
+
+**tl;dr:** You can view, fork, and study the source code for personal or educational purposes. You **cannot** use it to create a competing public product, redistribute it as your own, or run a commercial service based on this code without explicit permission.
+
+This project is **source-available** — not open source in the traditional sense.
+
+- **✅ Allowed:**
+  - Reading, forking, and inspecting the code for learning.
+  - Running the app locally for personal use.
+  - Submitting bug reports or feature suggestions via Issues.
+  - Creating private modifications for your own gameplay.
+
+- **❌ Not Allowed:**
+  - Deploying a public instance of this game (or a derivative) without written authorization.
+  - Using the code to build a competing tennis management game or any commercial product.
+  - Selling, sublicensing, or redistributing the source code or any compiled version.
+  - Removing or obscuring the original copyright and license notices.
+
+**Why this model?**  
+We believe in transparency (you can check the math, the economy, and the match engine) — but `Ties Break: Ace Parent` is a commercial creative work, and its code represents years of research and design. If you'd like to use the code under a commercial license (e.g., for a port, adaptation, or institutional use), please reach out via GitHub Issues or email.
+
+**Contributions:**  
+We welcome community feedback and suggestions. However, we do not accept unsolicited pull requests that add new features — we want to keep the creative vision coherent. If you'd like to contribute, please open an Issue first to discuss.
+
+© 2026 [Igor Vladimirskiy / T Software]. All rights reserved.
