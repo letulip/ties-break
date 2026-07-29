@@ -6,6 +6,7 @@ import {
   type ArrivalPreview,
   type CountingResult,
   type EntryCapUsage,
+  type TierOpenMap,
   type FamilyBackground,
   type FinanceWeek,
   type FinanceWeekPoint,
@@ -57,8 +58,7 @@ import {
   isExamWeek,
   isOffSeasonWeek,
   WEEKS_PER_YEAR,
-  OFF_SEASON_WEEKS,
-} from './season/calendar'
+  OFF_SEASON_WEEKS, TIER_LADDER } from './season/calendar'
 import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
@@ -3803,6 +3803,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // The ITF annual cap as it stands TODAY – what the Home ladder needs to tell a tier's state.
     // Derived at snapshot time from the persisted ledger, so it can never disagree with the gate.
     entryCap: entryCapUsage(world, world.week),
+    // THE ENGINE'S OWN VERDICT PER RUNG (see TierOpenMap in protocol.ts). `tierOpenFor` is the same
+    // function `enterEvent` validates against, so a screen can no longer disagree with the gate.
+    tierOpen: Object.fromEntries(TIER_LADDER.map((t) => [t, tierOpenFor(world, t)])) as TierOpenMap,
     coachId: world.coachId,
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),
