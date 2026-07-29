@@ -157,6 +157,28 @@
   --against: #c98d63;
   /* Real photographic paper – the Memory polaroid, and the only light surface in the whole app. */
   --polaroid-paper: #f3f0e8;
+
+  /* --- THE PAPER LAYER (U0) -------------------------------------------------------------------
+     The design's paper artefacts, taken verbatim from docs/design/tokens.css: warm stock, its
+     ruling, the red margin rule of an exercise book, and tape. Nothing on the app's screens uses
+     them YET – the polaroid above is the only paper object we ship – so they change no pixel today.
+     They are declared HERE, once, because `src/style.css` is the collision point for the six screens
+     being built in parallel on top of this slice: without them, the first screen that needs a paper
+     note adds five tokens to this file and the next five each add their own spelling of the same
+     five. See src/components/ui/PaperNote.vue, which is their only consumer. */
+  --paper-lined: #eae1c8;
+  --paper-card: #eee6d3;
+  --paper-ink: #2b2721;
+  --paper-margin-rule: rgba(190, 90, 80, 0.5);
+  --paper-tape: rgba(240, 236, 222, 0.72);
+  --paper-ruling: repeating-linear-gradient(
+    180deg,
+    rgba(58, 48, 30, 0.13) 0px,
+    rgba(58, 48, 30, 0.13) 1px,
+    transparent 1px,
+    transparent 26px
+  );
+
   /* The bottom bar sits a step DARKER than the page, so the page floats above it. */
   --nav-bg: #0c141b;
 
@@ -174,6 +196,10 @@
   --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.42);
   --shadow-card-lift: 0 16px 34px rgba(0, 0, 0, 0.5);
   --shadow-polaroid: 0 8px 20px rgba(0, 0, 0, 0.45);
+  /* The paper layer's two shadows (docs/design/tokens.css --sh-paper / --sh-tape) – see the paper
+     tokens above for why they are declared before their first screen exists. */
+  --shadow-paper: 0 14px 30px rgba(0, 0, 0, 0.45);
+  --shadow-tape: 0 1px 4px rgba(0, 0, 0, 0.3);
 
   /* THE UNLIT PART OF A PROGRESS RING. Both rings in the app - her odds on a Season card, her
      condition on Home's photograph - draw the full circle in this and then paint the earned arc
@@ -239,6 +265,9 @@
   --radius-dialog: 12px;
   --radius-frame: 14px;
   --radius-card: 18px;
+  /* OFF THE LADDER, and the design says why: paper is not rounded. 2px is the design's --r-paper,
+     and it is a material fact rather than a size choice, so it never rounds up to the next rung. */
+  --radius-paper: 2px;
 
   color-scheme: dark;
 }
