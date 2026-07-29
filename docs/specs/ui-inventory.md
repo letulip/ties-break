@@ -18,10 +18,10 @@ Legend: ✅ redone to the design · 🎨 design exists, not built · ⏸ design 
 | C | Kid Profile | `screens/KidScreen.vue` | 🎨 |
 | D | Weekly Story | `WeekRecapCard.vue` (+ parts of `screens/ThisWeekScreen.vue`) | 🎨 |
 | E | Tournament (Preview) | `TournamentFlow.vue`, pre-match section | 🎨 |
-| F | Match Day (Live) — cinematic | *(nothing; we only have the court view)* | 🎨 |
+| F | Match Day — **the portrait treatment**, not a second live view (owner §4 Q2) | pre-match section of `TournamentFlow.vue`, and reused on L/M | 🎨 |
 | G | Family Budget | `screens/MoneyScreen.vue` | 🎨 |
 | H | Calendar (Week View) | `screens/ThisWeekScreen.vue` + the inert `calendar` tab | ⏸ owner: concept first |
-| I | Live Match (Court) — dispatcher | `MatchViewer.vue` (canvas court) | 🎨 partial: the view exists, the layout is ours |
+| I | Live Match (Court) — THE live view | `MatchViewer.vue` (canvas court) | 🎨 partial: the view exists; needs the design's layout **and a running text commentary of the key moments**, which we have none of |
 | J | Championship Draw (R16) | `BracketTabs.vue` + the bracket in `TournamentFlow.vue` | 🎨 partial: round tabs shipped wave 1 |
 | K | Championship Draw (Final) | same | 🎨 partial |
 | L | Champion | finale section of `TournamentFlow.vue` | 🎨 |
@@ -43,7 +43,7 @@ restyle by analogy with the system, or leave until it gets its own design.
 |---|---|---|
 | `SplashScreen.vue` | brand splash, "Tap to start" | already on-brand (logo, Sora/Manrope) |
 | `OnboardingTour.vue` | the 5-step coach-mark tour after onboarding | distinct from N–S; sits over the game |
-| `screens/StatsScreen.vue` | ranking table, counting best-6, season-by-season history | **the design's tab bar has no Stats** — see §4 Q1 |
+| `screens/StatsScreen.vue` | ranking table, counting best-6, season-by-season history | keeps its tab for now (§4 Q1); the design's bar has no Stats slot, which is a later conversation |
 | `screens/MoreScreen.vue` | careers, saves, import/export, sound, about, danger zone | a settings screen; low design value, high utility |
 | `PlanWeekSheet.vue` | the week planner: vacation packages, practice matches | the closest thing we have to H's planning |
 | `SeasonSummaryDialog.vue` | end-of-season recap | the natural sibling of D and L/M |
@@ -61,13 +61,13 @@ restyle by analogy with the system, or leave until it gets its own design.
 - **Reusable components 1–31** (`README.md` §"Переиспользуемые компоненты"). We have built several of
   them ad hoc, twice, inside Home and Season. Extracting the first eight before building six more
   screens is the single highest-leverage step in this wave.
-- **~24 new art slots** (`README.md` §Assets): trophy, silver medal, five coach portraits, the
-  onboarding hero, four play-style poses, the summary portrait, the champion/runner-up moment photos,
-  the trip photo. Several screens are art-led and will look unfinished without them.
+- **Art slots** (`README.md` §Assets) — mostly already solved from stock; see §4 Q4. Only two are
+  genuinely outstanding and both are the owner's: the onboarding hero and the four play-style poses.
 - **A coach market** — the engine has `coachSetup: 'parent' | 'hired'`, a boolean. T needs tiers,
   prices, style fit and a weekly budget. That is an engine slice, and it is the same one the owner
   named as the fix for "middle family + hired coach goes bankrupt in 120 careers of 120".
-- **A cinematic match view (F)** distinct from the court view (I).
+- **A running text commentary** of a live match's key moments (owner §4 Q2). The match engine
+  produces the points; nothing turns them into readable beats.
 
 ## 4. The owner's rulings (29.07) — these are settled
 
