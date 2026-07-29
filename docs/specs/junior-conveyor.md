@@ -73,6 +73,26 @@ how strong the field's tail is. That is its own investigation — the suspects a
 schedule size, the points table across tiers, and the size of the 0-point tie block at the bottom of
 a 199-player table.
 
+## A regression it introduced, found 29.07 and not yet fixed
+
+**Retired players stay in the standings for a year, as raw ids.** Seen live on the Stats screen:
+row 5 of STANDINGS reads `ai-153`, 1715 pts.
+
+`computeRanking(results, week, roster)` treats `roster` as a **base order, not a filter**
+(`season/ranking.ts`): after seeding the order from the roster it adds *anyone with a counting
+result in the window*, roster or not. Before the conveyor that was harmless — every id with results
+was in the cohort for ever. Now a player who leaves at the crunch keeps counting results for up to
+52 weeks, so for a year afterwards she still holds a ranking place. `computeStandings` then falls
+back to `{ name: r.playerId }` because her card is gone from `world.cohort`, and prints the id.
+
+Two consequences, and the second is the one that matters: the table shows a non-name, **and every
+player below her is pushed down a place, the kid included**. The rank numbers in
+`docs/specs/rank-plateau.md` are therefore slightly pessimistic for the year after each turnover.
+
+The fix is to make the roster a filter when one is passed. It moves every rank number in the game,
+so it wants a measured run rather than a quiet patch — see task #50, and it may as well ride with
+the two-track ranking work.
+
 ## Known simplification
 
 A player's starting attributes do not depend on her age at generation: `makeJunior` draws serve 30–60
