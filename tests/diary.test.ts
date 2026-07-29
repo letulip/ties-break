@@ -224,6 +224,10 @@ function makeFacts(input: {
     vacationWeek: s === 'vacation',
     fundsPressure: fundsPressureOf(input.fundsCents ?? 50_000_00),
     freshMilestone: null,
+    // R14-2: the sweep is about the COPY pool, and no phrase is licensed on the journey home
+    // (it is a picture, not a line) – so the fixture holds it null and the dedicated suite below
+    // exercises the rule.
+    travelHomeScene: null,
   }
 }
 
