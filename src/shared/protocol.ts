@@ -5,7 +5,7 @@
 import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
 import type { SkillKey } from '../engine/development'
 import type { MatchPlayer, Surface } from '../engine/match/types'
-import type { AvatarEmotion, PortraitStage } from './avatarEmotion'
+import type { AvatarEmotion, PortraitEmotion, PortraitStage } from './avatarEmotion'
 import type { EventPreview } from '../engine/season/preview'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
@@ -329,6 +329,13 @@ export interface PendingView {
   eventId: string
   tier: TierId
   surface: Surface
+  /** THE DAY'S TEMPERATURE, for the live match's weather plate. The SAME number the Season card
+   *  showed for this tournament – `eventTemperature`, one source, so the two surfaces cannot
+   *  disagree about the weather at one event. Decorative: nothing reads it but a screen.
+   *  ⚠ `upcoming` is filtered to `week > world.week`, so an event BEING PLAYED has already dropped
+   *  out of it and its preview is unreachable. That is why this rides on the pending view instead
+   *  of the viewer re-deriving it – two call sites computing one number is how they drift. */
+  temperatureC: number
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
   /** the kid's opponent this round: short name, ISO-2 nation, current standings rank */
@@ -346,6 +353,12 @@ export interface PendingView {
   tierLabel: string
   points: number
   finishLabel: string
+  /** how many people came, for the E brief's fourth fact. The SAME decorative reading the Season
+   *  card's `UpcomingEvent.preview.crowd` carries, off the same `seed:crowd:<eventId>` sub-stream –
+   *  carried here because a preview leaves the snapshot the week its event arrives (upcomingEvents
+   *  filters to `week > world.week`), and screen E must not print a second, different number for the
+   *  same tournament. Decorative: nothing in the simulation reads it (engine/season/preview.ts). */
+  crowd: number
 }
 
 /** Injury severity (Season-Life). Slice B wires the field but never populates it; Slice C does. */
@@ -438,9 +451,10 @@ export interface UpcomingEvent {
   surface: Surface
   /** what the Season card may say about an event she has not played: her odds in ROUND ONE against
    *  the field as it would be drawn today, who that opponent would be, how strong the field is, and
-   *  a decorative temperature. Derived at snapshot time, persists nothing, and draws only on the
-   *  event's own `seed:kidtour:` / `seed:weather:` sub-streams. Explicitly an estimate about a
-   *  field that will have moved by the time the event plays – see engine/season/preview.ts. */
+   *  two decorative readings (the temperature and the crowd). Derived at snapshot time, persists
+   *  nothing, and draws only on the event's own `seed:kidtour:` / `seed:weather:` / `seed:crowd:`
+   *  sub-streams. Explicitly an estimate about a field that will have moved by the time the event
+   *  plays – see engine/season/preview.ts. */
   preview: EventPreview
   travelCostCents: number
   deadlineWeek: number
@@ -618,8 +632,10 @@ export type FundsPressure = 'tight' | 'watchful' | 'ok'
  *  nothing they do not carry (the honesty pin in tests/diary.test.ts sweeps exactly that). */
 export interface DiaryFacts {
   week: number
-  /** the ONE face decision, computed engine-side (same inputs the paintings render) */
-  emotion: AvatarEmotion
+  /** the ONE face decision, computed engine-side (same inputs the paintings render).
+   *  `PortraitEmotion`, not `AvatarEmotion`: the decision can land on the painting-only `rehab`
+   *  (R14-1 – the layoff is a state and wears its own picture), and nothing renders a crop of it. */
+  emotion: PortraitEmotion
   /** a competitive result from THIS week is on her face (the emotion above is a result emotion) */
   resultFresh: boolean
   /** fresh result: she won her last match this week */
@@ -656,7 +672,20 @@ export interface DiaryFacts {
   fundsPressure: FundsPressure
   /** a milestone captured THIS week, if any */
   freshMilestone: MilestoneType | null
+  /** the scene of the journey home, on a week she came back from an away tournament; null
+   *  otherwise. See engine/diary.ts travelHomeSceneFor for the rule and the draw. */
+  travelHomeScene: TravelHomeScene | null
 }
+
+/** THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на
+ *  экране Week story как в макете»). Four paintings of the same girl asleep on the way back –
+ *  `fem-euro-brunnet-sleepy-{scene}.webp`.
+ *
+ *  NOT PART OF THE PORTRAIT MATRIX, and deliberately not typed as one: they are NOT band-scoped.
+ *  The same four serve a fourteen-year-old and a woman of thirty-one, because the picture is of a
+ *  journey rather than of a face – she is asleep in all four. Forcing them into `PortraitEmotion`
+ *  would have implied five copies of each that do not exist and never will. */
+export type TravelHomeScene = 'airport' | 'plane' | 'bus' | 'car'
 
 /** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
  *  one line.
@@ -674,7 +703,10 @@ export interface MemoryCard {
   whenLabel: string
   /** the age band she was in at the milestone's week – what makes time felt */
   stage: PortraitStage
-  /** the painting emotion the memory shows (title → happy, injury → injury, …) */
+  /** the painting emotion the memory shows (title → happy, injury → injury, …).
+   *  Stays the NARROW union on purpose: a memory is a picture of a WEEK THAT HAPPENED, so every
+   *  value here is a moment face – `injury` is the week she went down, never the layoff after it
+   *  (R14-1). Nothing a milestone can map to is painting-only. */
   emotion: AvatarEmotion
   line: string
 }

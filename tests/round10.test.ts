@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import {
   createWorld,
   tickWeek,
@@ -545,16 +545,36 @@ describe('R10-16 — no popup may render without copy', () => {
   // into an egg. So the answer to the ask was a NAME (the magic number is now findable by grep),
   // not a value change, plus the one squarer radius he actually wanted. Both halves are pinned here.
   // ---------------------------------------------------------------------------
-  const CAPSULES = ['.pill', '.prob-bar', '.option-pill', '.tf-replay-round', '.tf-badge', '.sound-switch-track', '.tab-row', '.tab-pill']
+  // ⚠ RE-AIMED by U4 (screen I): `.prob-bar` left this list because it left the app. The design's
+  // match panel has no win-probability bar – its Momentum sparkline is the same reading – so the
+  // rule was deleted along with the rest of the viewer's sheet rules when screen I's styles moved
+  // into MatchViewer.vue. The protected fact is unchanged and now reaches FURTHER than it did: the
+  // capsule radius is still a named token, a bare `999px` declaration is still forbidden, and the
+  // sweep for one now covers every component's scoped block as well as the sheet – which is where
+  // screen styles live from U0 onward, and therefore where the next bare 999px would have hidden.
+  const CAPSULES = ['.pill', '.option-pill', '.tf-replay-round', '.tf-badge', '.sound-switch-track', '.tab-row', '.tab-pill']
 
   it('the capsule radius is a named token, and no bare 999px is left to hunt for', () => {
     const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
     expect(css).toContain('--radius-pill: 999px')
     // Every other mention must be prose in a comment, never a declaration – that is the whole point.
-    const declarations = css
-      .split('\n')
-      .filter((l) => l.includes('999px') && l.includes('border-radius'))
-    expect(declarations).toEqual([])
+    // Components too, now that a screen's styles live in its SFC.
+    const sfcs = (dir: URL): [string, string][] => {
+      const out: [string, string][] = []
+      for (const e of readdirSync(dir, { withFileTypes: true })) {
+        if (e.isDirectory()) out.push(...sfcs(new URL(`${e.name}/`, dir)))
+        else if (e.name.endsWith('.vue')) out.push([e.name, readFileSync(new URL(e.name, dir), 'utf8')])
+      }
+      return out
+    }
+    const componentSources = sfcs(new URL('../src/components/', import.meta.url))
+    expect(componentSources.length, 'the component sweep found no SFCs').toBeGreaterThan(10)
+    for (const [name, text] of [['src/style.css', css] as [string, string], ...componentSources]) {
+      const declarations = text
+        .split('\n')
+        .filter((l) => l.includes('999px') && l.includes('border-radius'))
+      expect(declarations, name).toEqual([])
+    }
     // EVERY occurrence of the selector, not the first: `.bt-tabs .tab-pill` (a flex-only override)
     // sits ~200 lines above `.tab-pill` itself, so a plain indexOf reads the wrong block and the
     // test lies about a passing file. Learned the hard way one run before this comment existed.
