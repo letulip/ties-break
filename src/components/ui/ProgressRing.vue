@@ -71,7 +71,11 @@ const offset = computed(() => {
         :transform="`rotate(-90 ${geom.box / 2} ${geom.box / 2})`"
       />
     </svg>
-    <span class="tb-ring-value"><slot /></span>
+    <span class="tb-ring-value"
+      ><slot
+        ><b>{{ Math.round(value * 100) }}</b><i>%</i></slot
+      ></span
+    >
   </div>
 </template>
 
@@ -111,7 +115,11 @@ const offset = computed(() => {
 }
 
 /* The label sits a little high on purpose: the figure has no descenders, so centring its BOX reads
-   as resting on the lower stroke of the circle. */
+   as resting on the lower stroke of the circle.
+   ⚠ THE NUDGE IS PROPORTIONAL, not a fixed 12px. It was a literal, tuned against the 46px ring -
+   which put the figure visibly low inside the 56px one on screen C, the owner's «проценты кондишна
+   надо выровнять по вертикали, как в других местах». A ring that comes in two sizes cannot carry a
+   one-size optical correction; 26% of the box is the same LOOK at both. */
 .tb-ring-value {
   position: absolute;
   inset: 0;
@@ -119,9 +127,17 @@ const offset = computed(() => {
   align-items: baseline;
   justify-content: center;
   gap: 0.5px;
-  padding-top: 12px;
+  padding-top: 26%;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
+}
+
+.tb-ring--56 .tb-ring-value :deep(b) {
+  font-size: 17px;
+}
+
+.tb-ring--56 .tb-ring-value :deep(i) {
+  font-size: 11px;
 }
 
 .tb-ring-value :deep(b) {

@@ -650,9 +650,7 @@ function openRankHelp(): void {
               :color="ringColor"
               :label="conditionAria"
               on-art
-            >
-              <b>{{ condition }}</b><i>%</i>
-            </ProgressRing>
+            />
           </div>
         </div>
       </div>

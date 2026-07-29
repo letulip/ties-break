@@ -566,9 +566,7 @@ const matchMeta = computed(() => {
               :value="condition / 100"
               :color="conditionColor"
               :label="`Her condition going into this tournament: ${Math.round(condition)} percent`"
-            >
-              <b>{{ Math.round(condition) }}</b><i>%</i>
-            </ProgressRing>
+            />
             <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">Begin →</PrimaryPill>
           </div>
         </Card>

@@ -77,7 +77,7 @@ const emit = defineEmits<{ navigate: ['market' | 'home' | 'more'] }>()
 // state and age stage via the shared composable - art exists for every stage x emotion.
 // `moodCropUrl` is the 256px face crop of the SAME decision, which is what the Mood tile shows;
 // it falls back to `injury` for the painting-only `rehab` face (see the composable).
-const { emotion, portraitUrl, moodCropUrl } = useKidEmotion()
+const { emotion, portraitUrl } = useKidEmotion()
 
 // ⚠ THE SOFT HYPHEN IN `Counterpuncher` IS LOAD-BEARING and it is one invisible character, U+00AD.
 // The paper scrap this renders into is 104px wide (the export's own measurement); the word is about
@@ -320,15 +320,16 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
             :size="56"
             :color="conditionColor"
             :label="`Condition: ${condition} percent`"
-          >
-            <b>{{ condition }}</b><i>%</i>
-          </ProgressRing>
+          />
         </Card>
 
+        <!-- ⚠ NO FACE ON THIS TILE (owner, 29.07): «в mood давай кружок уберем, и так на большой
+             картинке видно эмоцию вполне». He is right - the hero directly above is the SAME
+             decision at forty times the size, so the 36px crop was the emotion said twice, and the
+             smaller saying carried less. The word stays; the picture is the picture above it. -->
         <Card class="kid-tile kid-tile-mood" pad="11px 9px">
           <p class="kid-tile-label">Mood</p>
           <p class="kid-tile-lead">{{ moodLabel }}</p>
-          <img class="kid-mood-face" :src="moodCropUrl" alt="" width="36" height="36" decoding="async" />
         </Card>
 
         <Card class="kid-tile" pad="11px 9px">
@@ -698,16 +699,6 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   bottom: 8px;
 }
 
-.kid-tile-mood .kid-mood-face {
-  position: absolute;
-  right: 9px;
-  bottom: 10px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid var(--card-edge);
-}
 
 .kid-tile-mood .kid-tile-lead {
   max-width: 62%;

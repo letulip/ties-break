@@ -801,18 +801,27 @@ describe('surfaces + shared tables', () => {
     // and none of the WORDS left with it.
     const home = read('../src/components/screens/HomeScreen.vue')
     const template = home.slice(home.indexOf('<template>'), home.lastIndexOf('</template>'))
-    expect(template.match(/\{\{ condition \}\}/g) ?? []).toHaveLength(1)
-    // ⚠ RE-AIMED by U0: the ring's label element is `.tb-ring-value` inside
-    // `src/components/ui/ProgressRing.vue` now, and the figure is passed to it as slot content –
-    // which is why the `<b>…</b><i>%</i>` pair below is still asserted HERE, on this template.
-    // The protected fact is exactly what it was: the number appears ONCE, inside the ring, as the
-    // engine's own condition, with the sign as its own smaller element on the same baseline.
+    // ⚠ RE-AIMED TWICE, AND THE PROTECTED FACT HAS NOT MOVED EITHER TIME. U0 put the label inside
+    // `ui/ProgressRing.vue` but left the `<b>…</b><i>%</i>` pair for each caller to hand-write; the
+    // owner then asked for one entity instead of four – «вообще из этого надо компонент сделать и
+    // везде использовать, зачем сущности плодить?» – so the ring now renders the figure ITSELF from
+    // `value`. Home therefore no longer contains the markup, and asserting it here would be pinning
+    // the duplication we were asked to remove.
+    //
+    // What D3 protects is unchanged and is now checked where it lives: the number appears exactly
+    // ONCE, inside the ring, as the engine's own condition, with the sign as its own smaller
+    // element on the same baseline. Home's half of that is that it passes the condition and writes
+    // no percentage of its own.
+    expect(template).toContain('<ProgressRing')
+    expect(template).toContain(':value="condition / 100"')
+    expect(template.match(/\{\{ condition \}\}/g) ?? []).toHaveLength(0)
+    expect(home).not.toMatch(/<i>%<\/i>/)
+    expect(home).not.toMatch(/Math\.round\(condition\)/)
     const ring = read('../src/components/ui/ProgressRing.vue')
     expect(ring).toContain('class="tb-ring-value"')
-    expect(template).toContain('<ProgressRing')
-    // ...and the sign is its own element, so it can be the smaller half of the pair.
-    expect(template).toMatch(/<b>\{\{ condition \}\}<\/b><i>%<\/i>/)
-    expect(home).not.toMatch(/Math\.round\(condition\)/)
+    // ONE place renders the figure, and the sign is its own element so it can be the smaller half.
+    expect(ring.match(/Math\.round\(value \* 100\)/g) ?? []).toHaveLength(1)
+    expect(ring).toMatch(/<b>\{\{ Math\.round\(value \* 100\) \}\}<\/b><i>%<\/i>/)
     // the note and the photo line still render the engine's strings verbatim
     expect(home).toContain('diary.conditionNote')
     expect(home).toContain('diary.photoLine')
