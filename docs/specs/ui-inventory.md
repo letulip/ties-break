@@ -100,7 +100,7 @@ coach-tier engine slice.
 | champion / runner-up moment photos | we have them; use those |
 | summary portrait (S) | **settled: it is `jun-norm`** — the junior neutral portrait we already ship (`fem-euro-brunnet-jun-norm.webp`). Owner: «первый раз входит в клуб», nothing to draw |
 | onboarding hero (N) | the owner is finishing a new square one. Until it arrives, `jun-norm` again |
-| four play-style poses (R) | **arrived 29.07** as SVG: `public/icons/styles/{all-court,baseliner,bigserve,counterpuncher}.svg`, 100×100 viewBox, matching the four `playStyle` ids exactly |
+| four play-style poses (R) | **arrived 29.07** as SVG: `public/icons/styles/{all-court,baseliner,bigserve,counterpuncher}.svg`, 100×100 viewBox. ⚠ **CORRECTION — the ids do NOT match `playStyle`.** This line said they matched "exactly"; U5 found two of four do not, and a mapping is required: `all-court`→`all-court`, `counterpuncher`→`counterpuncher`, but **`baseliner`→`aggressive`** and **`bigserve`→`serve-first`**. The mapping lives in `PLAY_STYLES` in `OnboardingWizard.vue` and is pinned by a test that reads the union out of `protocol.ts`, so it cannot drift back into a 404 |
 | trip photo (G) | maybe remade later for every age; not blocking |
 | vacation art, one per package (Season feed + the planner's picker) | **requested 29.07, not yet landed.** Five needed, by package id: `staycation`, `grandma`, `camping`, `seaside`, `resort` |
 
