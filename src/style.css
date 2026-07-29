@@ -111,6 +111,19 @@
   --shadow-card-lift: 0 16px 34px rgba(0, 0, 0, 0.5);
   --shadow-polaroid: 0 8px 20px rgba(0, 0, 0, 0.45);
 
+  /* THE UNLIT PART OF A PROGRESS RING. Both rings in the app - her odds on a Season card, her
+     condition on Home's photograph - draw the full circle in this and then paint the earned arc
+     over it. They used to be two values, 0.12 and 0.18 (owner, 29.07: "всё в единый стиль"), and
+     0.18 is the one that survived: it is Home's, which is signed off, and a track that reads on a
+     painting also reads on a card while the reverse is not true. */
+  --ring-track: rgba(255, 255, 255, 0.18);
+
+  /* The design system's own transition length (docs/design/tokens.css --dur-slow). That file is a
+     reference, not an import, so the app never saw the token and one of the two ring arcs was
+     spelling the number out. Declared here so `var(--dur-slow)` resolves for real. 260ms either
+     way - nothing about the animation changes. */
+  --dur-slow: 260ms;
+
   --font-heading: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-hand: 'Caveat', 'Bradley Hand', 'Segoe Script', cursive;
@@ -1773,14 +1786,17 @@ section.bare .event-cards {
   display: block;
 }
 
-.chance-ring-track {
-  stroke: rgba(255, 255, 255, 0.12);
+/* The two rings' unlit tracks were the last thing keeping them apart - 0.12 here, 0.18 on Home.
+   One token now, so a percentage looks like a percentage down to the groove it sits in. */
+.chance-ring-track,
+.condition-ring-track {
+  stroke: var(--ring-track);
   fill: none;
 }
 
 .chance-ring-arc {
   fill: none;
-  transition: stroke-dashoffset 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: stroke-dashoffset var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .chance-ring-value,
@@ -3781,11 +3797,6 @@ tr.kid-row td {
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55));
 }
 
-.condition-ring-track {
-  stroke: rgba(255, 255, 255, 0.18);
-  fill: none;
-}
-
 /* SOLID, and the colour IS the number (the owner's correction, 28.07): a gradient along the arc put
    red on the ring of a girl at 100%, and a gradient inside one band said nothing at all. One flat
    hsl, interpolated red->green by her exact condition, so every value has its own colour. The stroke
@@ -3793,8 +3804,8 @@ tr.kid-row td {
 .condition-ring-arc {
   fill: none;
   transition:
-    stroke-dashoffset var(--dur-slow, 260ms) cubic-bezier(0.2, 0.8, 0.2, 1),
-    stroke var(--dur-slow, 260ms) linear;
+    stroke-dashoffset var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1),
+    stroke var(--dur-slow) linear;
 }
 
 /* The export's own pairing (its Kid-screen ring): the figure carries the weight, the sign is a
