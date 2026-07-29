@@ -74,10 +74,23 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
     // sunset says "family week" better than a border ever did - so the pair no longer share a rule.
     // What R12-1/14 was actually protecting is unchanged and still pinned: the exam week is stated
     // in the accent colour, not greyed out.
+    // ⚠ RE-AIMED by the colour cleanup (owner, 29.07: "тоже причёсываем к новому цвету").
+    // The tint was written `rgba(217, 242, 79, 0.04)` - the PRE-redesign lime #d9f24f, which is
+    // not --accent and had not been since the export moved the brand to #cfe152. Every accent
+    // tint in the sheet is now built from --accent-rgb, so the exam week is finally washed in the
+    // colour its own border is drawn in. The alpha - the part that says "faint" - is unchanged.
+    // The protected fact is untouched and the check is strictly stronger: it now also fails if
+    // someone re-hard-codes a hex here and lets the tint drift off the brand a second time.
     const exam = cssBodies('.week-card.exam')
     expect(exam.length).toBe(1)
     expect(exam[0]).toContain('border-color: var(--accent)')
-    expect(exam[0]).toContain('background: rgba(217, 242, 79, 0.04)')
+    // ⚠ RE-AIMED 29.07 (the owner collapsed the alpha ladder): the tint is now the named
+    // `--accent-wash`, not a hand-written 0.04. Five alphas were doing two jobs; an exam week is the
+    // app MARKING a week for you, which is the wash. The protected fact is what it always was - the
+    // exam week is affirmed in the accent, never dimmed - and the check is unchanged in strength:
+    // it still demands an accent-derived background and still rejects a literal hex.
+    expect(exam[0]).toContain('background: var(--accent-wash)')
+    expect(exam[0]).not.toMatch(/#[0-9a-f]{3,8}/i) // no literal colour may creep back in
     expect(exam[0]).not.toContain('opacity')
     expect(exam[0]).not.toContain('var(--line)')
     // ...and the off-season says it with art instead, which is why it needs no frame.
@@ -114,16 +127,28 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
 // R12-8b — the layoff is visible on week plaques, and the sheet's refusal is legible.
 // ===========================================================================
 describe('R12-8b — a red "injury" chip on every card the layoff covers', () => {
-  it('all FOUR calendar card kinds carry the chip: event, vacation, practice, muted', () => {
+  it('EVERY calendar card kind carries the chip: event, vacation (both renderings), practice, muted', () => {
+    // ⚠ RE-AIMED 4 -> 5 (29.07, the vacation cards). The protected fact has not moved: every card
+    // kind the layoff can cover must wear the chip. What changed is that a booked family week now
+    // has TWO renderings - the painted card, and the plain row it falls back to for a package with
+    // no art yet - and BOTH have to carry it, which is precisely why the count went up rather than
+    // across. If this fires again, count the card kinds in the template and re-aim; do not delete.
     const chip = 'class="pill avail-chip red" :title="layoffNote">injury</span>'
-    expect(seasonScreen.split(chip).length - 1).toBe(4)
+    expect(seasonScreen.split(chip).length - 1).toBe(5)
     // each is gated on the row's own layoff read, never on "is she hurt right now"
-    expect(seasonScreen.split('v-if="row.injured"').length - 1).toBe(4)
+    expect(seasonScreen.split('v-if="row.injured"').length - 1).toBe(5)
   })
 
   it('the chip is the availability-chip idiom: 6px, not the capsule, not a circle', () => {
+    // ⚠ RE-AIMED by the radius ladder (owner, 29.07: even values, 2px steps). The VALUE did not
+    // move — the owner's 6px was already even and is now the ladder's chip rung — only its
+    // spelling did, from a bare `6px` to `var(--radius-chip)`. Resolved off :root so this still
+    // asserts the number and not merely "some token", which would pass on --radius-pill and let
+    // the exact regression this test exists for straight through.
     const rule = cssBodies('.avail-chip')[0]
-    expect(rule).toContain('border-radius: 6px')
+    expect(rule).toContain('border-radius: var(--radius-chip)')
+    const root = css.slice(css.indexOf(':root {'), css.indexOf('\n}\n', css.indexOf(':root {')))
+    expect(/\n\s*--radius-chip:\s*6px;/.test(root), '--radius-chip is still the owner\'s 6px').toBe(true)
     expect(rule).not.toContain('50%')
   })
 

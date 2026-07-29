@@ -16,6 +16,7 @@ import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPriceCents
 import { layoffBlock, medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekLabel, weekRange } from '../shared/dates'
+import { vacationArtUrl } from '../art/weeks'
 
 const props = defineProps<{
   week: number
@@ -109,6 +110,8 @@ interface PackageRow {
   returnsTo: number
   affordable: boolean
   recommended: boolean
+  /** the package's painting, or null when it has none yet */
+  art: string | null
 }
 
 /** The pre-highlight: an explicit pick (the rescue prompt), else the CHEAPEST package sufficient
@@ -145,6 +148,9 @@ const packageRows = computed<PackageRow[]>(() =>
       // the free staycation's Book at negative funds (the same predicate bookVacation fixed).
       affordable: priceCents === 0 || fundsCents.value >= priceCents,
       recommended: recommendedId.value === p.id,
+      // The package's own painting (owner, 29.07). Null is handled by the template - a catalogue
+      // entry may exist before its frame does, and a missing picture must not cost the row.
+      art: vacationArtUrl(p.id),
     }
   }),
 )
@@ -237,6 +243,12 @@ function askVacation(row: PackageRow): void {
         </p>
         <div class="pkg-list">
           <div v-for="row in packageRows" :key="row.id" class="pkg-row" :class="{ recommended: row.recommended }">
+            <!-- The frame sits BEHIND the row and dissolves to the left, exactly as it does on the
+                 Season feed's cards, so the picker and the feed read as one idea. -->
+            <div v-if="row.art" class="pkg-art" aria-hidden="true">
+              <img :src="row.art" alt="" />
+              <span class="pkg-art-scrim"></span>
+            </div>
             <div class="pkg-head">
               <span class="pkg-label">{{ row.label }}</span>
               <span class="pill" :class="{ ok: row.recommended }">{{ formatDollars(row.priceCents) }}</span>

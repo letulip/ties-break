@@ -108,6 +108,10 @@ The conveyor retires every rival at nineteen and cannot touch the heroine, which
 4. **The other three endings onto that surface** — bankruptcy (today it stalls), the career-ending injury, and the natural decline end.
 Open calls for the owner are listed in §5 of the spec: best-6 vs best-16 for the adult window, whether she keeps the domestic ladder as an adult, whether there is play after the ending, and whether "stop" is ever the right answer.
 
+### PARKED UNTIL THE INTERFACES ARE DONE (owner, 29.07)
+**Two ranking tracks + real ITF points.** The owner's own research and ours agree: Local / Regional / National are not ITF categories and never produce an ITF point, so they get a **national ranking** of their own and the J-rungs feed an **ITF junior ranking** — «ведите два рейтинга». That dissolves the two questions this had been stuck on: there is no single ladder to reorder, and a National title cannot be farmed for ITF points because it does not make any. Then: real ITF singles values (J30 30/18/9/5/2, J60 60/36/18/10/5, J300 300/210/140/100/60/30, and zero for a first-round loss), and **J-tier entry by ITF rank position instead of an absolute points threshold** — which also closes the "two entry rules for the same event" finding in `rank-plateau.md` §2b. Sources and the worked table: `docs/research/ranking-points-by-tier.md` §1 and §6. Task #49.
+Two corrections to watch when implementing, both against ITF Reg 31: the J30 rows 13/6/3 that circulate are the **doubles** column (singles is 18/9/5/2), and the 30/20 qualifying consolation points exist **only at junior Grand Slams** — everywhere else it is zero until you win a main-draw round.
+
 ### Owner-approved additions (2026-07-22 Q&A, see decisions.md)
 Career profiles + new save model (Package K, before Phase 3 data). Structured events feeding News/Money/Gallery. Month fast-forward with event stops. Viz polish mini-package. Fog-of-war radar (Ph4). Relative-age-effect birth month (Ph4/6). Mom/dad choice (Ph6). Moments gallery (Ph6). Weather (Ph3/4 backlog). Replay storage (~100 B each) + share links. Spacing pass (next UI package).
 

@@ -26,7 +26,7 @@ import { applySurfaceStyle, surfaceStyleAffinity, surfaceStyleHint } from '../..
 import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
-import { weekArtUrl } from '../../art/weeks'
+import { vacationArtUrl, weekArtUrl } from '../../art/weeks'
 import { rngFromSeed } from '../../engine/rng'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
@@ -139,6 +139,19 @@ function weekArt(row: CalendarRow): string {
   return weekArtUrl(row.week)
 }
 /** R12-1/14 kept: "Exams" is the owner's own word for it. */
+// THE BOOKED FAMILY WEEK's painting, by package (owner, 29.07). Null when a package has no frame
+// yet - the card falls back to the plain planned row rather than rendering a 404, because the
+// catalogue can grow before the art does.
+function vacationArt(row: CalendarRow): string | null {
+  return row.vacation ? vacationArtUrl(row.vacation.packageId) : null
+}
+
+/** What the week away is worth, for the card's chips: the gain the package promises and what the
+ *  family actually paid for it (the quote is per (seed, week, package), so the booking carries it). */
+function vacationGain(row: CalendarRow): number {
+  return vacationPackage(row.vacation?.packageId ?? '')?.conditionGain ?? 0
+}
+
 function weekTitle(row: CalendarRow): string {
   return row.kind === 'off-season' ? 'Off-season' : row.kind === 'exam' ? 'Exams' : 'Training week'
 }
@@ -692,7 +705,12 @@ function playExhibition(): void {
     <div class="season-topbar">
       <div>
         <h2 class="season-title">Season Planner</h2>
-        <p class="season-year">{{ seasonYearLabel }}</p>
+        <p class="season-year">
+          {{ seasonYearLabel }}
+          <!-- Owner, 29.07: the week she is actually IN, up here with the year, so it is on
+               screen without hunting for it down the feed. -->
+          <span class="season-week-now">&middot; {{ weekOnly(week) }}</span>
+        </p>
       </div>
       <button class="tier-guide-btn" aria-label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</button>
     </div>
@@ -953,11 +971,46 @@ function playExhibition(): void {
                the text ~80px, so "🎾 Practice match + coach" broke across two lines mid-phrase (and
                the date line broke too) – the owner asked for that label on ONE line. Full width, it
                always is. Same shape for the vacation row: it is the same card. -->
+          <!-- A BOOKED FAMILY WEEK (owner, 29.07). It used to be a muted text row beside the
+               painted training and off-season cards, which made the one week the family actually
+               chose the plainest thing in the feed. Now it wears its own frame, one per package.
+               SHORTER than a training card, because the art is: these frames are 941x377 against
+               the week paintings' 941x536, and the card follows the art rather than cropping it.
+               NO BUTTON on it (the owner's call): a booked week is a statement, not a control, and
+               cancelling lives where booking does - tap the card and the planner opens. -->
+          <div
+            v-else-if="row.kind === 'vacation' && row.vacation && vacationArt(row)"
+            class="week-card vacation"
+            role="button"
+            tabindex="0"
+            :aria-label="`${packageLabel(row.vacation.packageId)}, ${weekLabel(row.week)} - open the planner`"
+            @click="openPlanner(row)"
+            @keydown.enter.prevent="openPlanner(row)"
+            @keydown.space.prevent="openPlanner(row)"
+          >
+            <div class="week-art">
+              <img :src="vacationArt(row)!" alt="" />
+              <span class="week-art-scrim"></span>
+            </div>
+            <div class="week-body">
+              <div>
+                <h3 class="week-title">{{ packageLabel(row.vacation.packageId) }}</h3>
+                <p class="week-dates">{{ weekOnly(row.week) }} &middot; {{ row.dates }}</p>
+              </div>
+              <div class="controls week-controls">
+                <!-- R12-8b: a kept booking inside the layoff still wears the week's truth. -->
+                <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
+                <span v-if="vacationGain(row) > 0" class="pill">+{{ vacationGain(row) }} condition</span>
+                <span class="pill">{{ formatDollars(row.vacation.paidCents) }}</span>
+                <span v-if="row.event" class="week-note">Skipping {{ row.event.label }}.</span>
+              </div>
+            </div>
+          </div>
+          <!-- A package with no painting yet keeps the old row, Cancel included. -->
           <div v-else-if="row.kind === 'vacation' && row.vacation" class="calendar-row-muted planned">
             <span class="planned-lines">
               <span class="planned-when">
                 {{ weekLabel(row.week) }} · {{ row.dates }}
-                <!-- R12-8b: a kept booking inside the layoff still wears the week's truth. -->
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
               </span>
               <span class="planned-what">

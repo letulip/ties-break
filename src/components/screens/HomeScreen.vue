@@ -85,7 +85,38 @@ const photoStyle = computed(() => {
 // on this page, which is the rule the redesign is most careful about: the greeting above is a time
 // of day and never a second copy of it (engine/diary.ts greetingFor).
 const photoLine = computed(() => game.snapshot?.diary.photoLine ?? null)
-const greeting = computed(() => game.snapshot?.diary.greeting ?? '')
+// THE GREETING FOLLOWS THE PLAYER'S OWN CLOCK (owner, 29.07).
+//
+// The engine picks one off `seed:greet:<week>` because the engine may not read a wall clock - its
+// whole contract is that the same seed replays the same career. But the greeting is not part of the
+// career: it is the app saying hello to the person holding the phone, and that person knows what
+// time it is. So the CLOCK decides here, in the view, where a wall-clock read costs nothing and
+// changes nothing that is stored.
+//
+// The engine's choice is still the fallback, and it earns its keep: its rule is that the greeting
+// must not repeat the photo caption ("...a quiet morning" under a "Good morning"). When the clock's
+// answer would collide with the caption, we defer to the engine's - the caption is the writing, and
+// the greeting is the frame around it.
+const CLOCK_GREETINGS: [number, string][] = [
+  [5, 'Good morning'],
+  [12, 'Good afternoon'],
+  [18, 'Good evening'],
+  [22, 'Good night'],
+]
+
+function greetingForHour(hour: number): string {
+  let picked = 'Good night' // 22:00-04:59 wraps to the last band
+  for (const [from, text] of CLOCK_GREETINGS) if (hour >= from) picked = text
+  return picked
+}
+
+const greeting = computed(() => {
+  const fromEngine = game.snapshot?.diary.greeting ?? ''
+  const byClock = greetingForHour(new Date().getHours())
+  const caption = (game.snapshot?.diary.photoLine ?? '').toLowerCase()
+  const word = byClock.slice('Good '.length)
+  return caption.includes(word) ? fromEngine || byClock : byClock
+})
 // The WHY line beside the condition bar (D1).
 const conditionNote = computed(() => game.snapshot?.diary.conditionNote ?? '')
 // The Memory card (D10): a past milestone + the painting from the band she was in THEN.
@@ -649,8 +680,12 @@ function openRankHelp(): void {
           <p class="budget-total" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
           <div class="budget-rule"></div>
           <p class="budget-window">Last 12 weeks</p>
+          <!-- ONE BOX for the line and the dots. They must share geometry exactly, and the card is
+               not that box: `.note-card` is padded 14px, so a dot layer positioned against the CARD
+               is 28px wider than the chart and starts 14px to its left - which is precisely how the
+               dots ended up beside the line instead of on it. -->
+          <div v-if="budgetChart.any" class="budget-chart-wrap">
           <svg
-            v-if="budgetChart.any"
             class="budget-chart"
             :viewBox="`0 0 ${CHART_W} ${CHART_H}`"
             preserveAspectRatio="none"
@@ -665,15 +700,22 @@ function openRankHelp(): void {
             </defs>
             <path class="budget-area" :d="budgetChart.area" fill="url(#tb-spark)" />
             <polyline class="budget-line" :points="budgetChart.line" />
-            <circle
+          </svg>
+          <!-- THE DOTS LEFT THE SVG (owner, 29.07: "the dots stretched, make them round again").
+               The chart is drawn with preserveAspectRatio="none" so one lime stroke fills whatever
+               width the card has - which is right for a sparkline and fatal for a circle: the
+               viewBox is 146x46 inside a box 66px tall, so every `r` came out an egg. Positioning
+               the dots in PERCENT of the same box puts them exactly where the polyline's vertices
+               are, and a CSS circle cannot be stretched by an SVG scale it is not inside. -->
+          <span class="budget-dots" aria-hidden="true">
+            <i
               v-for="(dot, i) in budgetChart.dots"
               :key="i"
               :class="`budget-dot ${dot.tone}`"
-              :cx="dot.x"
-              :cy="dot.y"
-              r="2.8"
-            />
-          </svg>
+              :style="{ left: `${(dot.x / CHART_W) * 100}%`, top: `${(dot.y / CHART_H) * 100}%` }"
+            ></i>
+          </span>
+          </div>
           <p v-else class="note-empty">Nothing has moved yet.</p>
         </button>
 

@@ -59,6 +59,46 @@
   /* The export's lime, a shade deeper than our old #d9f24f. It is the brand AND the export's one
      call-to-read colour (every card kicker is this). */
   --accent: #cfe152;
+  /* THE SAME COLOUR, as channels, because a tint needs the parts and not the hex. Every accent
+     wash and glow in this sheet is built from it, so there is exactly one place the brand lime
+     lives even though CSS makes us write it twice. #cfe152 == 207, 225, 82 - if one of these two
+     lines ever changes, the other one has to change with it.
+     This is what the redesign missed: --accent moved from #d9f24f to #cfe152 and the eleven
+     rgba() tints did not move with it, so for two waves every highlighted row on every screen was
+     washed in the PREVIOUS brand colour (owner, 29.07: "надеюсь он один" - it is now). */
+  --accent-rgb: 207, 225, 82;
+  /* The three the design system already names (docs/design/tokens.css --accent-lime-wash /
+     --accent-lime-glow), plus the soft border the vacation card wanted and never had. */
+  /* TWO FILLS, AND THEY MEAN DIFFERENT THINGS (owner, 29.07: "она нужна? можем упростить").
+     There were FIVE alphas - 0.04, 0.05, 0.06, 0.08, 0.1 - doing what turned out to be two jobs:
+       WASH  the app marked this row for you: an exam week, a planned week, the recommended
+             package, a hovered result, the row that is hers.
+       FILL  YOU marked it, or she won it: a chosen country or play style, a won bracket row, an
+             unlocked tier.
+     Five values could not be told apart on a dark panel anyway; two can, and now the difference
+     carries a meaning instead of a history. */
+  --accent-wash: rgba(var(--accent-rgb), 0.06);
+  --accent-fill: rgba(var(--accent-rgb), 0.12);
+  --accent-glow: rgba(var(--accent-rgb), 0.18);
+
+  /* THE MUTED UPPERCASE LABEL, one value (owner, 29.07). Six rules were writing the same kind of
+     small-caps signpost - a week divider, a bracket title, a recap kicker, a round name, a badge -
+     at 11px and 12px across three trackings (0.05 / 0.06 / 0.08em), and the spread was backwards:
+     smaller caps need MORE tracking, not less, and ours had 11px at 0.05 while 12px sat at 0.08.
+     11px because four of the six already were; 0.08em because it is the widest in use and it
+     continues the eyebrow's own curve correctly (10px carries 0.1em, so 11px wants a little less).
+     The EYEBROW itself is a different thing and keeps its own values - it is the lime section
+     heading the design system specifies at 10px/800/0.1em. */
+  --label-size: 11px;
+  --label-track: 0.08em;
+  --accent-soft: rgba(var(--accent-rgb), 0.45);
+
+  /* THE INK ON LIME. Anything sitting on an accent fill - the primary button, a lime chip, the
+     champion's plaque - is written in this. It was three values for one job (#101d0a five times,
+     #111a10 twice, and docs/design/tokens.css naming a third), which is the same drift the accent
+     tints had: one decision, copied by hand, drifting on each copy. The design system's own
+     `--on-lime` wins for the same reason `--warning` did - the app was behind its own export. */
+  --on-lime: #111a10;
   --danger: #ef4b3a;
 
   /* --- THE DIARY LAYER --------------------------------------------------------------------------
@@ -70,7 +110,7 @@
   --card-top: #17212b;
   --card-bottom: #121a22;
   --card-edge: rgba(255, 255, 255, 0.055);
-  --radius-card: 17px;
+  /* --radius-card is a rung of THE RADIUS LADDER below, and is 18px since 29.07 (it was 17). */
 
   /* Four steps of ink, because the export uses exactly four: the headline, the sentence, the label,
      and the caption under a label. */
@@ -91,6 +131,30 @@
   /* The warm accents: lamplight and late sun. The diary's warmth on the export's cool base. */
   --amber: #f5b942;
   --orange: #e2822f;
+
+  /* --- THE STATE COLOURS (owner, 29.07: "всё в переменные, если смыслово цвет ту же функцию
+     выполняет — меняй") ---------------------------------------------------------------------
+     Three named states that are neither "good" (--accent) nor "stop" (--danger), each of which
+     had been living as a bare hex somewhere down the sheet.
+
+     --warning  "this is a risk, and you may still take it": the caution pill, the risky Enter
+                button, the amber line under it, the rescue offer's frame and title, and the
+                strain warning on Home. SIX rules, ONE job, and it had been done in two values -
+                a hard-coded #f2b34f in five of them and --amber (#f5b942) in the sixth. #f5b942
+                wins because the design system already named it: docs/design/tokens.css declares
+                `--warning: #f5b942`, so this is the app catching up with its own export rather
+                than a taste call.
+                It is an ALIAS of --amber rather than a copy of the value, because --amber's other
+                consumer is the SUN in the weather readout, and a sun is not a caution. One value,
+                two names, and each name says what it is for.
+     --locked   a hard lock, deliberately dimmer than a warning (owner, round 8: locked is not the
+                same as warned - you cannot do this, versus you probably should not).
+     --against  the court does not suit her build. A verdict, not a warning: it says something
+                about the match, not about a risk she is taking. */
+  --warning: var(--amber);
+  --warning-wash: rgba(245, 185, 66, 0.06);
+  --locked: #d9b26a;
+  --against: #c98d63;
   /* Real photographic paper – the Memory polaroid, and the only light surface in the whole app. */
   --polaroid-paper: #f3f0e8;
   /* The bottom bar sits a step DARKER than the page, so the page floats above it. */
@@ -110,6 +174,21 @@
   --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.42);
   --shadow-card-lift: 0 16px 34px rgba(0, 0, 0, 0.5);
   --shadow-polaroid: 0 8px 20px rgba(0, 0, 0, 0.45);
+
+  /* THE UNLIT PART OF A PROGRESS RING. Both rings in the app - her odds on a Season card, her
+     condition on Home's photograph - draw the full circle in this and then paint the earned arc
+     over it. They used to be two values, 0.12 and 0.18; the owner picked (29.07): "всё в единый
+     стиль... 0.12 мне кажется вполне ок". So the change lands on HOME, not on Season.
+     The argument for 0.18 was that Home is signed off and a track that reads on a painting also
+     reads on a card while the reverse is not true - worth knowing if the condition ring ever looks
+     thin against a bright photograph, because that is the one place this could bite. */
+  --ring-track: rgba(255, 255, 255, 0.12);
+
+  /* The design system's own transition length (docs/design/tokens.css --dur-slow). That file is a
+     reference, not an import, so the app never saw the token and one of the two ring arcs was
+     spelling the number out. Declared here so `var(--dur-slow)` resolves for real. 260ms either
+     way - nothing about the animation changes. */
+  --dur-slow: 260ms;
 
   --font-heading: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -132,6 +211,35 @@
      If a pill should look squarer, give it a px radius (the panel idiom is 10px) – see
      .avail-chip below. */
   --radius-pill: 999px;
+
+  /* --- THE RADIUS LADDER (owner, 29.07) -----------------------------------------------------
+     "ну конечно дрейф, надо приводить в порядок всё с чётными значениями и шагами в 2px по
+     возможности." It was drift: twelve values - 3, 6, 7, 8, 10, 11, 12, 13, 14, 17, 18, 56 -
+     for what is really seven sizes, because every wave picked a number by eye.
+
+     Seven rungs, all even, 2px apart. The rule that got us here is mechanical rather than
+     tasteful, so nobody has to re-argue a tie: EVERY ODD VALUE ROUNDS UP TO THE NEXT EVEN. That
+     makes every single move exactly +1px - 3→4, 7→8, 11→12, 13→14, 17→18 - and 1px of corner is
+     not a thing anyone can see. Nothing moved by 2px or more; if something had, it would have
+     been left alone and listed instead.
+
+     A rung is a SIZE, named for its most common tenant. A neighbour may sit on a rung whose name
+     does not describe it (the polaroid's tack is not a "control") - that is the ladder working,
+     not a mistake. Two names predate this block and keep their meaning: --radius-card, which is
+     the diary card and moved 17→18 so that every card in the app is finally one radius, and
+     --radius-pill above, which is a shape and not a rung at all.
+
+     OFF THE LADDER, on purpose: 50% (a real circle - see the note above), --radius-pill (a
+     capsule), and .venue-art's 56px, which is half that element's own 112px width and therefore
+     geometry - it draws the arch. */
+  --radius-mark: 4px;
+  --radius-chip: 6px;
+  --radius-control: 8px;
+  --radius-panel: 10px;
+  --radius-dialog: 12px;
+  --radius-frame: 14px;
+  --radius-card: 18px;
+
   color-scheme: dark;
 }
 
@@ -184,7 +292,7 @@ h1 .ball-icon {
 section {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   padding: 16px;
   margin-bottom: 16px;
 }
@@ -236,7 +344,12 @@ td.num {
   font-variant-numeric: tabular-nums;
 }
 
-.controls {
+/* A WRAPPING ROW OF CHIPS, 8px apart. The app's most-repeated layout: buttons under a card, the
+   entry chips on the Season screen, the tier ladder across Home. Two rules said it in two
+   different declaration orders and meant the same thing. (A third, `.condition-cell`, was in this
+   list until the dead-rule sweep - it had no consumer left anywhere.) */
+.controls,
+.season-strip {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -247,7 +360,7 @@ button {
   background: transparent;
   border: 1px solid var(--line);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   padding: 8px 16px;
   font-size: 14px;
   cursor: pointer;
@@ -266,13 +379,13 @@ button:disabled {
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #101d0a;
+  color: var(--on-lime);
   font-weight: 600;
 }
 
 button.primary:hover:not(:disabled) {
   filter: brightness(1.08);
-  color: #101d0a;
+  color: var(--on-lime);
 }
 
 input[type='text'],
@@ -280,7 +393,7 @@ select {
   background: var(--bg);
   border: 1px solid var(--line);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   padding: 8px 12px;
   font-size: 14px;
 }
@@ -337,7 +450,7 @@ select {
   height: auto;
   aspect-ratio: 2 / 1;
   display: block;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: var(--bg);
 }
 
@@ -361,11 +474,16 @@ select {
   align-items: center;
 }
 
-.watch-play-icon {
+/* THE MASKED ICON, 20px. An SVG from public/icons/ painted by CSS mask rather than drawn, so it
+   takes whatever colour we hand it and the source file's own fill can never leak through. Two
+   places wanted exactly this - the bottom tabs and the Season screen's watch control - and wrote
+   the same nine declarations out twice. The tenth is the only real difference between them and it
+   stays with each: the tab follows its button's `color`, the watch glyph is always accent. */
+.watch-play-icon,
+.tab-icon {
   display: block;
   width: 20px;
   height: 20px;
-  background-color: var(--accent);
   -webkit-mask-position: center;
   mask-position: center;
   -webkit-mask-size: contain;
@@ -374,11 +492,15 @@ select {
   mask-repeat: no-repeat;
 }
 
+.watch-play-icon {
+  background-color: var(--accent);
+}
+
 .viewer select {
   background: var(--bg);
   border: 1px solid var(--line);
   color: var(--text);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   padding: 7px 10px;
   font-size: 14px;
 }
@@ -481,7 +603,7 @@ select {
   .tab-bar {
     border: 1px solid var(--line);
     border-bottom: none;
-    border-radius: 14px 14px 0 0;
+    border-radius: var(--radius-frame) var(--radius-frame) 0 0;
   }
 }
 
@@ -518,16 +640,7 @@ select {
    `color` and `background-color: currentColor` just reads it. Mask ignores the source
    SVG's own fill, so it's safe even against files with a hardcoded fill color. */
 .tab-icon {
-  display: block;
-  width: 20px;
-  height: 20px;
   background-color: currentColor;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
 }
 
 .tab-label {
@@ -562,15 +675,25 @@ select {
   }
 }
 
-.splash {
+/* THE FULL-SCREEN TAKEOVER. Three things cover the whole app rather than sitting on it: the
+   splash, the onboarding wizard, and the tournament flow. They are the same five declarations –
+   pinned to the viewport, page-coloured, a column – written out three times, four hundred and two
+   thousand lines apart. What separates them is only how high they stack, and that stays with each:
+   the wizard at 50, the splash and the flow at 55 (nothing shows both). */
+.splash,
+.onboarding,
+.tournament-flow {
   position: fixed;
   inset: 0;
-  z-index: 55;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
+}
+
+.splash {
+  z-index: 55;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
   cursor: pointer;
 }
 
@@ -617,12 +740,8 @@ select {
 
 /* --- Onboarding wizard -------------------------------------------------------- */
 
+/* A full-screen takeover (see .splash) that sits under the splash. */
 .onboarding {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
   z-index: 50;
 }
 
@@ -644,7 +763,12 @@ select {
   background: var(--accent);
 }
 
-.onboarding-body {
+/* THE FLOW BODY. The scrolling middle of a full-screen takeover: a 480px column, centred, taking
+   whatever height the header and footer leave it. The wizard and the tournament flow both need
+   exactly this, so it is one rule; the tournament flow's own stacking (a 16px-gapped column) is
+   the only thing it adds, and that stays with it. */
+.onboarding-body,
+.tf-body {
   flex: 1;
   overflow-y: auto;
   width: 100%;
@@ -676,7 +800,7 @@ select {
   height: auto;
   aspect-ratio: 1 / 1;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: var(--radius-frame);
   margin: 0 auto 10px;
   border: 1px solid var(--line);
 }
@@ -744,16 +868,21 @@ select {
   align-items: center;
   gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   padding: 12px 4px;
   background: transparent;
   color: var(--text);
   font-size: 11px;
 }
 
-.country-tile.selected {
+/* PICKED, in the wizard. Two grids of choices - her country, then the family's means - and one
+   answer to "which one did I tap": the accent frame plus the faintest lime wash. (The wash used
+   to be the PRE-redesign lime; the owner ruled on that on 29.07 and every tint in this sheet is
+   built from --accent-rgb now. The ALPHA is still an open question - see the audit.) */
+.country-tile.selected,
+.choice-card.selected {
   border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.08);
+  background: var(--accent-fill);
 }
 
 .flag {
@@ -779,17 +908,14 @@ select {
   align-items: flex-start;
   gap: 4px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   padding: 12px 16px;
   background: transparent;
   color: var(--text);
   text-align: left;
 }
 
-.choice-card.selected {
-  border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.08);
-}
+/* Picked - see .country-tile.selected. */
 
 .choice-budget {
   font-variant-numeric: tabular-nums;
@@ -816,7 +942,7 @@ select {
   width: min(100%, 360px);
   height: auto;
   margin: 0 auto;
-  border-radius: 12px;
+  border-radius: var(--radius-dialog);
 }
 
 .big-number {
@@ -855,30 +981,9 @@ button.danger:hover:not(:disabled) {
   margin: 16px 0;
 }
 
-.condition-blocks {
-  display: flex;
-  gap: 4px;
-}
-
-.condition-block {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  background: var(--line);
-}
-
-.condition-block.filled {
-  background: var(--accent);
-}
-
 /* Season-Life slice B: the condition cell's block bar (R13-3: the availability chip that shared
    this row is gone – the D1 note + the amber strain line beneath carry its meaning). */
-.condition-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+/* A wrapping row of chips – see .controls at the top of the sheet. */
 
 /* THE ONE PILL THAT IS NOT A CAPSULE (owner 26.07: "specifically for this one make them less
    round, the rest seem fine"). It carries the longest text of any chip in the app – a whole injury
@@ -889,7 +994,7 @@ button.danger:hover:not(:disabled) {
    the chip must not change shape when her availability changes. The .pill padding and the tone
    colours are untouched. */
 .avail-chip {
-  border-radius: 6px;
+  border-radius: var(--radius-chip);
 }
 
 /* R13-3: green/grey/amber tones retired with Home's chip – the Season screen's layoff chips are
@@ -899,11 +1004,11 @@ button.danger:hover:not(:disabled) {
   border-color: var(--danger);
 }
 
-/* Amber "caution" pill – a soft, warned state (e.g. racing while fatigued is a risky CHOICE, not a
+/* The "caution" pill – a soft, warned state (e.g. racing while fatigued is a risky CHOICE, not a
    block). Distinct from .pill.muted (a hard lock) and .pill.ok (a clear go). */
 .pill.caution {
-  color: #f2b34f;
-  border-color: #f2b34f;
+  color: var(--warning);
+  border-color: var(--warning);
 }
 
 .physio-toggle {
@@ -919,23 +1024,18 @@ button.danger:hover:not(:disabled) {
   cursor: pointer;
 }
 
-/* The amber warning line under a "race anyway?" Enter button (SeasonScreen fatigued card). */
+/* The warning line under a "race anyway?" Enter button (SeasonScreen fatigued card). */
 .caution-note {
-  color: #f2b34f;
+  color: var(--warning);
   font-size: 12px;
   margin: 6px 0 0;
 }
 button.primary.risky {
-  border-color: #f2b34f;
-  color: #f2b34f;
+  border-color: var(--warning);
+  color: var(--warning);
 }
 
-.season-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
+/* A wrapping row of chips – see .controls at the top of the sheet. */
 
 .strip-arrow {
   color: var(--muted);
@@ -979,11 +1079,11 @@ button.primary.risky {
   border: none;
   border-radius: var(--radius-pill);
   background: var(--accent);
-  color: #111a10;
+  color: var(--on-lime);
   font-size: 14.5px;
   font-weight: 800;
   letter-spacing: -0.01em;
-  box-shadow: 0 8px 24px rgba(207, 225, 82, 0.18);
+  box-shadow: 0 8px 24px var(--accent-glow);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -991,7 +1091,7 @@ button.primary.risky {
 
 .next-week-btn:hover:not(:disabled) {
   background: #dcec6a;
-  color: #111a10;
+  color: var(--on-lime);
 }
 
 .next-week-btn:disabled {
@@ -1010,7 +1110,13 @@ button.primary.risky {
 
 /* --- Package K2: careers, saves, recovered hint, confirm dialog --------------- */
 
-.recovered-banner {
+/* THE TOP POPUP. A strip that sits above the content column and says something happened: the
+   recovered-save hint (Package K2) and the stop toast (Package N). They were written out twice,
+   eleven declarations each, byte for byte the same – so they are one rule now and can no longer
+   drift apart, which is what the injury dialog's radius is pinned against in round10.test.ts.
+   `.stop-toast` is last in the list on purpose: that test reads the body of `.stop-toast {`. */
+.recovered-banner,
+.stop-toast {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1020,11 +1126,18 @@ button.primary.risky {
   padding: 12px 16px;
   background: var(--panel);
   border: 1px solid var(--accent);
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   font-size: 13px;
 }
 
-.recovered-banner button {
+/* THE COMPACT BUTTON – a control that has to fit inside a strip or a row rather than stand on its
+   own. Four places had reached for the same two numbers independently. (`.breakdown-toggle`'s
+   segment is an `.option-pill`, not a `<button>`, which is why it is spelled out rather than
+   folded into the selector above it.) */
+.recovered-banner button,
+.stop-toast button,
+.pkg-actions button,
+.breakdown-toggle .option-pill {
   padding: 4px 12px;
   font-size: 12px;
 }
@@ -1081,13 +1194,27 @@ button.primary.risky {
   z-index: 60;
 }
 
+/* THE PANEL SHELL. Everything that opens over the page - the confirm dialog, the match replay,
+   the tournament flow's cards, the tier guide, the planner sheet - is the same box: the --panel
+   tone, a hairline, 12px corners, 16px of padding. Five rules had written those four declarations
+   out independently, which is why a sixth surface would have had to guess them.
+   What each surface DOESN'T share is its size and whether it scrolls, so that stays with each one
+   below. `.injury-stop` (10px) and `.tf-finale.silver` (a gradient border) still override from
+   further down the sheet, exactly as before - grouping changes no specificity. */
+.dialog-card,
+.replay-card,
+.tf-card,
+.guide-card,
+.plan-sheet {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-dialog);
+  padding: 16px;
+}
+
 .dialog-card {
   width: 100%;
   max-width: 320px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
 }
 
 .dialog-message {
@@ -1095,7 +1222,11 @@ button.primary.risky {
   font-size: 14px;
 }
 
-.dialog-actions {
+/* A ROW OF ACTIONS PUSHED RIGHT. A dialog's Cancel/Confirm pair, and the controls under a booked
+   week on the calendar. `.planned-actions` is last in the list because round11-view.test.ts reads
+   the body of `.planned-actions {` for the flex-end, and this is that rule. */
+.dialog-actions,
+.planned-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -1103,26 +1234,14 @@ button.primary.risky {
 
 /* --- Package N: Season/Home/Money world UI ------------------------------------ */
 
-.stop-toast {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  max-width: 520px;
-  margin: 0 auto 16px;
-  padding: 12px 16px;
-  background: var(--panel);
-  border: 1px solid var(--accent);
-  border-radius: 10px;
-  font-size: 13px;
-}
+/* `.stop-toast` and its button are up with `.recovered-banner` – the two popups are one rule. */
 
-.stop-toast button {
-  padding: 4px 12px;
-  font-size: 12px;
-}
-
-.this-week-status {
+/* A WRAPPING STRIP OF CHIPS. What she is entered for, and what this week holds: a bare run of
+   pills that folds onto a second line rather than scrolling. (The .controls family at the top of
+   the sheet is the same strip with its items centred on each other; these two do not need that,
+   because everything in them is a pill of the same height.) */
+.this-week-status,
+.entries-strip {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -1159,9 +1278,9 @@ button.primary.risky {
 .news-week-label,
 .ledger-week-label {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--label-size);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--label-track);
   margin: 0 0 4px;
 }
 
@@ -1206,6 +1325,13 @@ section.bare .event-cards {
   font-variant-numeric: tabular-nums;
 }
 
+/* Owner, 29.07: the current week rides with the year in the Season header. Quieter than the year
+   itself - it is a locator, not a title. */
+.season-week-now {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
 /* Five cells, one per surface block, hairline-separated; the lime one is the week she is standing
    in. Driven by the engine's SURFACE_BLOCKS, so it cannot describe a season we do not generate. */
 .phase-strip {
@@ -1243,7 +1369,7 @@ section.bare .event-cards {
 
 .phase-cell.active {
   border: 1px solid var(--accent);
-  border-radius: 11px;
+  border-radius: var(--radius-dialog);
 }
 
 .phase-cell.active .phase-name,
@@ -1262,17 +1388,27 @@ section.bare .event-cards {
    weather across the top, the surface and dates where the export prints a city, the travel figure,
    and the coach's plaque pinned to the bottom with her odds beside it. Everything below the plaque
    (entry controls, locks, chips) is the screen's existing machinery, restyled by inheritance. */
-.event-card {
+/* THE PHOTOGRAPH CARD, shared with the week card below: a clipped 18px box in the dark card tone
+   that a painting bleeds into, with the words stacked on top of it. `.week-card`'s own comment
+   already said it is "built exactly like the tournament card"; this is that sentence as one rule,
+   so the next painted card inherits the shape instead of copying seven declarations. The two
+   differ in exactly one thing each and it stays with them - this one is padded, the week card
+   takes its height from its 16:9 master instead. */
+.event-card,
+.week-card {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--card-edge);
-  border-radius: 18px;
+  border-radius: var(--radius-card);
   background: var(--card-bottom);
-  /* The export pads its card 16 / 16 / 6 – tighter at the bottom, because the coach plaque brings
-     its own inset. */
-  padding: 16px 16px 12px;
   display: flex;
   flex-direction: column;
+}
+
+/* The export pads its card 16 / 16 / 6 – tighter at the bottom, because the coach plaque brings
+   its own inset. */
+.event-card {
+  padding: 16px 16px 12px;
 }
 
 /* 74% of the card, dissolved away to the left, exactly as the export draws it. */
@@ -1287,7 +1423,16 @@ section.bare .event-cards {
   pointer-events: none;
 }
 
-.event-art img {
+/* A PHOTOGRAPH FILLING ITS FRAME. Four places show a painting inside a box the layout has already
+   sized – the tournament card's court, the week card's master, the venue arch on Home's next-
+   tournament card, and Home's own hero – and all four need the same four declarations: fill the
+   box, never letterbox, and no descender gap under the image. The masters are not one aspect ratio
+   (626x505 to 625x627, 941x536, 512x512), which is exactly why `cover` is not optional here.
+   `.week-art img` steers its crop as well; that one line stays with it. */
+.event-art img,
+.week-art img,
+.venue-art img,
+.diary-hero-img {
   display: block;
   width: 100%;
   height: 100%;
@@ -1464,14 +1609,7 @@ section.bare .event-cards {
    At 324px wide that is a 185px card - the same height the export gives its own cards, which is a
    coincidence worth keeping. */
 .week-card {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid var(--card-edge);
-  border-radius: 18px;
-  background: var(--card-bottom);
   aspect-ratio: 941 / 536;
-  display: flex;
-  flex-direction: column;
 }
 
 .week-art {
@@ -1479,11 +1617,8 @@ section.bare .event-cards {
   inset: 0;
 }
 
+/* Fills its frame (see the shared rule up by .event-art img) and steers its own crop. */
 .week-art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   object-position: center 38%;
 }
 
@@ -1550,9 +1685,48 @@ section.bare .event-cards {
 
 /* Exams are nobody's to plan. R12-1/14's rule survives its row becoming a card: the week is
    AFFIRMED in the accent colour, never dimmed into looking like a rendering accident. */
+/* THE BOOKED FAMILY WEEK (owner, 29.07) - the same card as a training week, following its own art.
+   The vacation frames are 941x377 where the week paintings are 941x536, so this card is visibly
+   SHORTER in the same feed. That is deliberate: the owner asked for the card to take the picture's
+   shape rather than crop a wide picture into a tall box. It carries no button, so the body needs a
+   little less room at the foot than a plannable week does. */
+.week-card.vacation {
+  aspect-ratio: 941 / 377;
+  cursor: pointer;
+}
+
+.week-card.vacation:hover,
+.week-card.vacation:focus-visible {
+  border-color: var(--accent-soft);
+}
+
+/* The chips on a booked week are read-only facts, not controls, so they sit quieter than the
+   Enter/Plan row they share a class with. */
+.week-card.vacation .week-controls .pill {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
 .week-card.exam {
   border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.04);
+  background: var(--accent-wash);
+}
+
+/* THE NOTECARD SURFACE. A card is an OBJECT, and this is what makes it one: a vertical gradient
+   rather than a flat fill (so it reads as lit from above), a translucent hairline that cuts it out
+   of the page rather than a drawn line, and 17px corners. It is the export's own idiom and three
+   places were writing it out by hand – the friendly card, the strips below Home's fold, and the
+   notecards themselves. (`.friendly-card` used to spell the radius out as `17px`; the token was
+   17px then and is 18px now, so all three moved together when the ladder landed - which is the
+   point of them sharing a rule.)
+   `.note-card` is LAST on purpose: redesign-home.test.ts reads the body of `.note-card {` for the
+   gradient and the --card-edge hairline, and that is this rule. */
+.friendly-card,
+.diary-strip,
+.note-card {
+  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+  border: 1px solid var(--card-edge);
+  border-radius: var(--radius-card);
 }
 
 /* THE FRIENDLY CARD – the sandbox hit-out, wearing the same notecard as everything else. */
@@ -1561,9 +1735,6 @@ section.bare .event-cards {
   align-items: center;
   gap: 12px;
   padding: 14px;
-  border-radius: 17px;
-  border: 1px solid var(--card-edge);
-  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
 }
 
 .friendly-said {
@@ -1652,7 +1823,7 @@ section.bare .event-cards {
   align-items: center;
   gap: 12px;
   padding: 11px 13px;
-  border-radius: 13px;
+  border-radius: var(--radius-frame);
   border: 1px solid rgba(255, 255, 255, 0.14);
   background: rgba(10, 15, 20, 0.62);
   backdrop-filter: blur(10px);
@@ -1691,8 +1862,15 @@ section.bare .event-cards {
 }
 
 /* HER ODDS. Same shape and the same red-to-green ramp as the condition ring on Home, so a
-   percentage means one thing across the app. The number is the ENGINE's (season/preview.ts). */
-.chance-ring {
+   percentage means one thing across the app. The number is the ENGINE's (season/preview.ts).
+   That sentence used to be a claim in a comment while the two rings were written out separately,
+   forty-odd declarations apart, and nothing stopped one of them drifting. They are the same rule
+   now, so the claim is enforced: the 46px box, the figure-and-sign pairing inside it, the weights.
+   `.condition-ring` still adds `margin-left: auto` (it has to pin right on a photograph with no
+   caption beside it) and the on-art text shadow; the two TRACKS and the two ARCS stay apart on
+   purpose - see docs/specs/css-dry-audit.md for the track question and the arc's reason. */
+.chance-ring,
+.condition-ring {
   position: relative;
   width: 46px;
   height: 46px;
@@ -1703,17 +1881,21 @@ section.bare .event-cards {
   display: block;
 }
 
-.chance-ring-track {
-  stroke: rgba(255, 255, 255, 0.12);
+/* The two rings' unlit tracks were the last thing keeping them apart - 0.12 here, 0.18 on Home.
+   One token now, so a percentage looks like a percentage down to the groove it sits in. */
+.chance-ring-track,
+.condition-ring-track {
+  stroke: var(--ring-track);
   fill: none;
 }
 
 .chance-ring-arc {
   fill: none;
-  transition: stroke-dashoffset 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: stroke-dashoffset var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.chance-ring-value {
+.chance-ring-value,
+.condition-ring-value {
   position: absolute;
   inset: 0;
   display: flex;
@@ -1725,33 +1907,25 @@ section.bare .event-cards {
   font-variant-numeric: tabular-nums;
 }
 
-.chance-ring-value b {
+.chance-ring-value b,
+.condition-ring-value b {
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
-.chance-ring-value i {
+.chance-ring-value i,
+.condition-ring-value i {
   font-size: 10px;
   font-weight: 700;
   font-style: normal;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chance-ring-arc {
+  .chance-ring-arc,
+  .condition-ring-arc {
     transition: none;
   }
-}
-
-/* Surface x play style: one line per card, and only when the court has an opinion about her
-   build – accent when it suits her, muted-warm when it does not. (Still used by the season-blocks
-   strip above the calendar; the EVENT CARD moved to .surface-badge below in R10-11.) */
-.surface-note {
-  font-size: 12px;
-  color: #c98d63;
-}
-.surface-note.suits {
-  color: var(--accent);
 }
 
 /* R11-15 (REVERTS R10-11): the event card's surface PILL, back in the corner, with the verdict alone
@@ -1793,7 +1967,7 @@ section.bare .event-cards {
 }
 
 .surface-badge.aff-against .surface-caption {
-  color: #c98d63;
+  color: var(--against);
 }
 
 /* Season structure by surface: the two-row block strip above the Calendar list. The upcoming block
@@ -1814,11 +1988,7 @@ section.bare .event-cards {
   opacity: 0.6;
 }
 
-.entries-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+/* A wrapping strip of chips - see .this-week-status. */
 
 .tournament-summary {
   font-size: 13.5px;
@@ -1841,8 +2011,8 @@ section.bare .event-cards {
   gap: 12px;
   padding: 8px 12px;
   border-left: 3px solid var(--accent);
-  background: rgba(217, 242, 79, 0.06);
-  border-radius: 0 8px 8px 0;
+  background: var(--accent-wash);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
   font-size: 13.5px;
 }
 
@@ -1853,7 +2023,7 @@ section.bare .event-cards {
    from 3px to 4px so the two are separable without relying on hue alone. */
 .bracket-row.won {
   border-left: 4px solid var(--accent);
-  background: rgba(217, 242, 79, 0.1);
+  background: var(--accent-fill);
 }
 
 .bracket-row.lost {
@@ -1892,14 +2062,25 @@ tr.kid-row td {
 
 /* --- Match replay overlay (reuses .dialog-overlay for the backdrop) ----------- */
 
+/* Panel shell (up with .dialog-card) + its own size. */
 .replay-card {
   position: relative;
   width: 100%;
   max-width: 400px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
+}
+
+/* THE 32px ROUND BUTTON. A single glyph in a real circle, big enough to hit with a thumb: the
+   replay's close, and the Season header's "?". A true circle, so 50% and never --radius-pill –
+   the note on the capsule radius at the top of this file is about exactly this distinction. */
+.replay-close,
+.tier-guide-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
 
 /* Round 4 item 4: a clearly-visible, pinned close affordance (replaces the old small
@@ -1908,13 +2089,6 @@ tr.kid-row td {
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
   background: var(--panel);
   border: 1px solid var(--line);
   font-size: 16px;
@@ -1922,12 +2096,22 @@ tr.kid-row td {
   z-index: 5;
 }
 
-.replay-header {
+/* A CARD'S HEAD ROW. The title on the left, whatever control the card carries on the right, and
+   12px of air under the pair. Three cards had written the same five declarations out - the match
+   replay, the tournament flow's cards, the Money breakdown. Each keeps only what is its own: the
+   replay's head clears its pinned close button, the breakdown's is allowed to wrap. */
+.replay-header,
+.tf-card-head,
+.breakdown-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+/* Clears the pinned close button in the corner. */
+.replay-header {
   padding-right: 36px;
 }
 
@@ -1948,7 +2132,7 @@ tr.kid-row td {
   padding: 10px 16px;
   background: var(--panel);
   border: 1px solid var(--accent);
-  border-radius: 0 0 12px 12px;
+  border-radius: 0 0 var(--radius-dialog) var(--radius-dialog);
   font-size: 13px;
   box-shadow: 0 8px 20px -10px rgba(6, 10, 20, 0.8);
 }
@@ -2001,7 +2185,7 @@ tr.kid-row td {
   text-align: left;
   background: transparent;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-chip);
   padding: 8px 12px;
   font: inherit;
   color: var(--text);
@@ -2009,7 +2193,7 @@ tr.kid-row td {
 
 .news-match-btn:hover:not(:disabled) {
   color: var(--accent);
-  background: rgba(217, 242, 79, 0.06);
+  background: var(--accent-wash);
 }
 
 .watch-cue {
@@ -2020,13 +2204,9 @@ tr.kid-row td {
 
 /* --- Tournament experience: the full-screen reveal flow ----------------------- */
 
+/* A full-screen takeover (see .splash). */
 .tournament-flow {
-  position: fixed;
-  inset: 0;
   z-index: 55;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
 }
 
 .tf-top {
@@ -2049,13 +2229,8 @@ tr.kid-row td {
   margin-top: 4px;
 }
 
+/* The flow body (see .onboarding-body), stacking its cards. */
 .tf-body {
-  flex: 1;
-  overflow-y: auto;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 8px 24px 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -2076,13 +2251,13 @@ tr.kid-row td {
   padding: 6px 12px;
   border-left: 3px solid var(--danger);
   background: rgba(242, 102, 79, 0.06);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
   font-size: 12.5px;
 }
 
 .tf-strip-row.won {
   border-left-color: var(--accent);
-  background: rgba(217, 242, 79, 0.06);
+  background: var(--accent-wash);
 }
 
 .tf-strip-round {
@@ -2106,20 +2281,9 @@ tr.kid-row td {
   font-size: 12px;
 }
 
-.tf-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
-}
+/* The tournament flow's card is the panel shell and nothing else – see .dialog-card. */
 
-.tf-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
+/* A card's head row and nothing else – see .replay-header. */
 
 /* Round-7 crowd-reaction pass: the tournament replay's stage/round label, as a filled accent
    pill inline in the card head row (left of "To result →"). Same accent-bg/dark-text look the
@@ -2136,15 +2300,34 @@ tr.kid-row td {
 }
 
 /* Pre-match VS card */
-.tf-vs {
+/* THE CENTRED CARDS OF THE FLOW. Four of the tournament flow's cards are read down the middle -
+   the pre-match VS, the finale, the entry splash and the between-rounds spectate card - and each
+   carried its own one-line rule saying so. One rule, in the order the player meets them. */
+.tf-vs,
+.tf-splash,
+.tf-spectate,
+.tf-finale {
   text-align: center;
 }
 
-.tf-round {
-  font-size: 12px;
+/* THE MUTED SECTION LABEL, 12px. The same object `section h2` is - a quiet uppercase word over a
+   block of content - minus the Sora face, because these two sit inside the tournament flow's cards
+   rather than in a <section>. The round above a VS card and the word "CHAMPION" above a name were
+   the same four declarations written out twice, four hundred lines apart. Only the gap under them
+   differs, and that stays with each.
+   NOTE this is 0.08em. The app's other muted uppercase labels are at 0.05em and 0.06em, and which
+   tracking is right is the one question this cleanup could not answer from evidence - see
+   docs/specs/css-dry-audit.md. Nothing was guessed: only rules that were already identical were
+   folded. */
+.tf-round,
+.tf-champ-label {
+  font-size: var(--label-size);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--label-track);
   color: var(--muted);
+}
+
+.tf-round {
   margin: 0 0 16px;
 }
 
@@ -2192,16 +2375,16 @@ tr.kid-row td {
 }
 
 .tf-badge {
-  font-size: 12px;
+  font-size: var(--label-size);
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--label-track);
   padding: 2px 12px;
   border-radius: var(--radius-pill);
 }
 
 .tf-badge.win {
-  color: #101d0a;
+  color: var(--on-lime);
   background: var(--accent);
 }
 
@@ -2217,9 +2400,7 @@ tr.kid-row td {
 }
 
 /* Finale */
-.tf-finale {
-  text-align: center;
-}
+/* Centred - see .tf-vs. */
 
 .tf-trophy {
   font-size: 44px;
@@ -2232,7 +2413,7 @@ tr.kid-row td {
   width: 100%;
   max-width: 180px;
   margin: 0 auto 12px;
-  border-radius: 12px;
+  border-radius: var(--radius-dialog);
 }
 
 .tf-finale.champ {
@@ -2283,7 +2464,7 @@ tr.kid-row td {
   gap: 8px;
   font-size: 12.5px;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: var(--radius-chip);
   background: rgba(255, 255, 255, 0.02);
 }
 
@@ -2307,9 +2488,9 @@ tr.kid-row td {
 /* Round-8 item 6b (owner 25.07): hard-lock pills on the Season calendar ("Reach N pts",
    "Outgrown", "Entries closed", …). The pill itself stays visually disabled (dim border,
    slight fade) but the LABEL brightens to a soft amber – the old pale muted tone was too
-   faint to read. Deliberately dimmer than .pill.caution's amber: locked ≠ warned-choice. */
+   faint to read. Deliberately dimmer than --warning: locked is not warned-choice. */
 .pill.muted.lock {
-  color: #d9b26a;
+  color: var(--locked);
 }
 
 /* item 7: the ellipsis row between the top-10 block and the around-kid block. */
@@ -2430,9 +2611,7 @@ tr.kid-row td {
   margin: 0 0 0 8px;
 }
 
-.tf-splash {
-  text-align: center;
-}
+/* Centred - see .tf-vs. */
 
 .tf-splash-tier {
   font-size: 18px;
@@ -2449,14 +2628,16 @@ tr.kid-row td {
 }
 
 .tf-bracket-title {
-  font-size: 11px;
+  font-size: var(--label-size);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--label-track);
   color: var(--muted);
   margin: 0 0 10px;
 }
 
-.bt {
+/* The draw stacks twice over - the card's own parts, then the round's cells - at one rhythm. */
+.bt,
+.bt-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2471,9 +2652,6 @@ tr.kid-row td {
   overflow-x: auto;
   scrollbar-width: none;
 }
-.bt-tabs::-webkit-scrollbar {
-  display: none;
-}
 .bt-tabs .tab-pill {
   flex: 0 0 auto;
 }
@@ -2486,14 +2664,12 @@ tr.kid-row td {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Both of the draw's scrollers hide their bar - the owner's call: users will work out that it
+   scrolls. `scrollbar-width: none` covers Firefox, this covers WebKit. */
+.bt-tabs::-webkit-scrollbar,
 .bt-scroll::-webkit-scrollbar {
   display: none;
-}
-
-.bt-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 /* A pair of adjacent cells (they feed one match in the next round) + a right-side connector
@@ -2521,7 +2697,7 @@ tr.kid-row td {
   gap: 6px;
   background: var(--bg);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   padding: 5px 9px;
   box-sizing: border-box;
 }
@@ -2529,7 +2705,7 @@ tr.kid-row td {
 /* The kid's own match is outlined in accent (path highlight). */
 .bt-cell.is-kid {
   border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.06);
+  background: var(--accent-wash);
 }
 
 .bt-players {
@@ -2587,9 +2763,7 @@ tr.kid-row td {
 }
 
 /* Round-7 spectate: the between-round card carrying the kid's result line + the walk control. */
-.tf-spectate {
-  text-align: center;
-}
+/* Centred - see .tf-vs. */
 
 .tf-spectate-kid {
   font-size: 13px;
@@ -2598,12 +2772,9 @@ tr.kid-row td {
   margin: 0 0 8px;
 }
 
-/* Champion card (kid exited early – no art for an AI winner). */
+/* Champion card (kid exited early – no art for an AI winner). The label is the muted section
+   label shared with .tf-round; it sits tight against the name under it. */
 .tf-champ-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
   margin: 0;
 }
 
@@ -2676,7 +2847,7 @@ tr.kid-row td {
 
 .tab-pill.active {
   background: var(--accent);
-  color: #101d0a;
+  color: var(--on-lime);
   font-weight: 700;
 }
 
@@ -2684,17 +2855,11 @@ tr.kid-row td {
    over .tab-pill.active means accent-on-accent – the label vanishes, and iOS keeps a sticky
    tap-hover after the tap. Pin the active segment to dark-on-lime (like button.primary). */
 .tab-pill.active:hover:not(:disabled) {
-  color: #101d0a;
+  color: var(--on-lime);
 }
 
+/* The 32px round button (see .replay-close), holding its size in the header's flex row. */
 .tier-guide-btn {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -2717,16 +2882,13 @@ tr.kid-row td {
   margin: 0;
 }
 
+/* Panel shell (up with .dialog-card) + its own size, and it scrolls. */
 .guide-card {
   position: relative;
   width: 100%;
   max-width: 560px;
   max-height: 80vh;
   overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
 }
 
 .guide-title {
@@ -2738,6 +2900,15 @@ tr.kid-row td {
 
 .guide-table-wrap {
   overflow-x: auto;
+}
+
+/* Owner, 29.07: "вертикальные отступы великоваты, можно в 2 раза меньше". Halved here and here
+   only - the global `th,td` 8px is right for the Stats tables, which are read a row at a time.
+   This one is a REFERENCE table of six tiers that has to be taken in at a glance, and at 8px the
+   sixth row fell off the bottom of the card. */
+.guide-card th,
+.guide-card td {
+  padding-block: 4px;
 }
 
 .guide-row-locked td {
@@ -2762,7 +2933,7 @@ tr.kid-row td {
   gap: 2px;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   padding: 8px 10px;
 }
 
@@ -2781,21 +2952,22 @@ tr.kid-row td {
   color: var(--accent);
 }
 
-.calendar-row-muted {
-  border: 1px dashed var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
-}
-
 /* --- Season planner: plannable / planned calendar rows + the "+ Plan week" sheet ---------- */
 
-/* An empty row now carries an action ("+ Plan week") or its booking + a Cancel, so the muted
-   rows lay out as a row instead of a single line of text. */
+/* An UNBOOKED week: a dashed frame, because nothing has been committed to it yet. It carries an
+   action ("+ Plan week") or its booking plus a Cancel, so it lays out as a row rather than as a
+   single line of text.
+   (This was two `.calendar-row-muted` rules ten lines apart - the round-5 frame and the planner
+   wave's layout, appended without either noticing the other. Same selector, no overlapping
+   declaration, so joining them is the same cascade written once.) */
 .calendar-row-muted {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-panel);
+  padding: 10px 12px;
 }
 
 .calendar-row-muted button {
@@ -2815,17 +2987,13 @@ tr.kid-row td {
 .calendar-row-muted.planned {
   border-style: solid;
   border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.05);
+  background: var(--accent-wash);
   flex-direction: column;
   align-items: stretch;
   gap: 10px;
 }
 
-.planned-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
+/* A row of actions pushed right - see .dialog-actions. */
 
 /* R10-4: a planned week is TWO lines – the WHEN (week + dates) muted on top, the WHAT (the trip or
    the practice match) in full text underneath. As one run-on line it wrapped to three rows at 375px
@@ -2857,9 +3025,9 @@ tr.kid-row td {
 
 /* The rescue OFFER (spec §4b) – surfaced when she is worn out and a bookable week lies ahead. */
 .rescue-card {
-  border: 1px solid #f2b34f;
-  border-radius: 10px;
-  background: rgba(242, 179, 79, 0.06);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-panel);
+  background: var(--warning-wash);
   padding: 12px;
   margin-bottom: 16px;
 }
@@ -2869,20 +3037,17 @@ tr.kid-row td {
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 14px;
-  color: #f2b34f;
+  color: var(--warning);
 }
 
-/* The planner sheet: same overlay/card language as the tour guide, scrollable on a phone. */
+/* The planner sheet: same overlay/card language as the tour guide, scrollable on a phone.
+   Which is now literal – both are the panel shell up with .dialog-card, plus their own size. */
 .plan-sheet {
   position: relative;
   width: 100%;
   max-width: 420px;
   max-height: 86vh;
   overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 16px;
 }
 
 .plan-tabs {
@@ -2919,17 +3084,70 @@ tr.kid-row td {
   gap: 10px;
 }
 
+/* THE PACKAGE ROWS (owner, 29.07): each one now carries its own painting behind the words, the
+   same frame the booked week wears in the Season feed, so choosing a trip and living it are visibly
+   the same object. The row got TALLER and roomier at the same time - the owner asked for more air
+   and more of the picture; at 10px padding the art was a sliver behind four lines of text. */
 .pkg-row {
+  position: relative;
+  overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
+  border-radius: var(--radius-frame);
+  padding: 14px 14px 12px;
+}
+
+/* Behind everything, dissolving to the left exactly like the Season cards' venue art, so the words
+   keep a solid backing on the reading side and the picture owns the right. */
+.pkg-art {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 62%;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 46%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 46%);
+  pointer-events: none;
+}
+
+.pkg-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A bright beach eats 12px type. Same four-stop scrim idea the event cards use. */
+.pkg-art-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(15, 23, 32, 0.85) 0%, rgba(15, 23, 32, 0.35) 45%, rgba(15, 23, 32, 0.55) 100%);
+}
+
+/* Everything the row already had now sits ON the picture. */
+.pkg-row > *:not(.pkg-art) {
+  position: relative;
+}
+
+.pkg-row .pkg-label,
+.pkg-row .pkg-blurb,
+.pkg-row .pkg-effect {
+  text-shadow: var(--shadow-text-on-art);
+}
+
+/* The price sits on the brightest corner of most of these pictures - a sunlit pool, a lake at
+   golden hour - so the bare pill lost its number. It gets the art backing every other figure on a
+   painted card already has. */
+.pkg-head .pill {
+  background: rgba(12, 18, 25, 0.62);
+  border-color: rgba(255, 255, 255, 0.2);
+  text-shadow: var(--shadow-text-on-art);
 }
 
 /* The pre-highlight: the cheapest package that brings her back above the target (or the
    off-season family week). Accent frame, never auto-booked. */
 .pkg-row.recommended {
   border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.05);
+  background: var(--accent-wash);
 }
 
 .pkg-head {
@@ -2957,10 +3175,7 @@ tr.kid-row td {
   margin-top: 8px;
 }
 
-.pkg-actions button {
-  padding: 4px 12px;
-  font-size: 12px;
-}
+/* `.pkg-actions button` is compact – see THE COMPACT BUTTON up with the top popups. */
 
 /* --- Round 5: week recap card ------------------------------------------------ */
 
@@ -2978,7 +3193,7 @@ tr.kid-row td {
 .recap-dot {
   width: 12px;
   height: 12px;
-  border-radius: 3px;
+  border-radius: var(--radius-mark);
   background: var(--line);
 }
 
@@ -3029,7 +3244,7 @@ tr.kid-row td {
 .coach-highlight {
   position: fixed;
   border: 2px solid var(--accent);
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
   box-shadow: 0 0 0 4000px rgba(6, 10, 20, 0.55);
   pointer-events: none;
   transition: all 0.2s ease;
@@ -3040,7 +3255,7 @@ tr.kid-row td {
   width: 260px;
   background: var(--panel);
   border: 1px solid var(--accent);
-  border-radius: 12px;
+  border-radius: var(--radius-dialog);
   padding: 14px 16px;
   box-shadow: 0 12px 28px -12px rgba(6, 10, 20, 0.8);
   pointer-events: auto;
@@ -3095,7 +3310,7 @@ tr.kid-row td {
 .tier-chip.unlocked {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.1);
+  background: var(--accent-fill);
 }
 
 .tier-chip.outgrown {
@@ -3166,19 +3381,13 @@ tr.kid-row td {
 
 /* --- Round 7 item 2: Money breakdown (donut + category rows) ----------------- */
 
+/* A card's head row (see .replay-header) that is allowed to wrap – the toggle beside the title
+   is two segments wide and a narrow phone should drop it to its own line rather than squeeze. */
 .breakdown-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
 }
 
-.breakdown-toggle .option-pill {
-  padding: 4px 12px;
-  font-size: 12px;
-}
+/* `.breakdown-toggle .option-pill` is compact too – same rule, up with the top popups. */
 
 .breakdown-body {
   display: flex;
@@ -3239,7 +3448,7 @@ tr.kid-row td {
 .breakdown-swatch {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--radius-mark);
   flex: none;
 }
 
@@ -3280,9 +3489,9 @@ tr.kid-row td {
 }
 
 .season-summary-kicker {
-  font-size: 11px;
+  font-size: var(--label-size);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--label-track);
   color: var(--muted);
   margin: 0 0 4px;
 }
@@ -3319,7 +3528,7 @@ tr.kid-row td {
    whatever .dialog-card happened to be, with nothing pinning the two families together. Pinned
    here, to the top-popup value, so the injury dialog and the banners can no longer drift apart. */
 .injury-stop {
-  border-radius: 10px;
+  border-radius: var(--radius-panel);
 }
 
 /* =================================================================================================
@@ -3364,12 +3573,7 @@ tr.kid-row td {
   overflow: hidden;
 }
 
-.diary-hero-img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+/* The hero photograph fills its square – see the shared rule up by .event-art img. */
 
 /* TWO scrims, and they do two different jobs.
    TOP: darkens the first 40% so the date and the icons are legible over any of the 35 paintings.
@@ -3645,9 +3849,10 @@ tr.kid-row td {
   text-wrap: pretty;
 }
 
-/* R13-3's strain warning – the one line here that is a warning rather than an observation. */
+/* R13-3's strain warning – the one line here that is a warning rather than an observation, which
+   is exactly why it is --warning and the sun above is still --amber. Same value, different job. */
 .condition-note.warn {
-  color: var(--amber);
+  color: var(--warning);
   font-weight: 600;
 }
 
@@ -3659,7 +3864,7 @@ tr.kid-row td {
   gap: 11px;
   align-items: flex-start;
   padding: 13px 16px 14px;
-  border-radius: 13px;
+  border-radius: var(--radius-frame);
   background: rgba(10, 15, 20, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -3685,24 +3890,17 @@ tr.kid-row td {
 }
 
 /* THE CONDITION RING – the export's ProgressRing (46px box, r=19, 3px stroke, round cap, twelve
-   o'clock start), parked at the bottom-right of the photograph. `margin-left: auto` pins it right
-   even when there is no caption chip to push it there. */
+   o'clock start), parked at the bottom-right of the photograph. The 46px box and everything inside
+   it are shared with `.chance-ring` up in the Season card – one rule, so a percentage keeps looking
+   like a percentage everywhere. `margin-left: auto` pins it right even when there is no caption
+   chip to push it there, and that is the only thing here that is this ring's alone. */
 .condition-ring {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  flex: none;
   margin-left: auto;
 }
 
 .condition-ring svg {
   display: block;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.55));
-}
-
-.condition-ring-track {
-  stroke: rgba(255, 255, 255, 0.18);
-  fill: none;
 }
 
 /* SOLID, and the colour IS the number (the owner's correction, 28.07): a gradient along the arc put
@@ -3712,8 +3910,8 @@ tr.kid-row td {
 .condition-ring-arc {
   fill: none;
   transition:
-    stroke-dashoffset var(--dur-slow, 260ms) cubic-bezier(0.2, 0.8, 0.2, 1),
-    stroke var(--dur-slow, 260ms) linear;
+    stroke-dashoffset var(--dur-slow) cubic-bezier(0.2, 0.8, 0.2, 1),
+    stroke var(--dur-slow) linear;
 }
 
 /* The export's own pairing (its Kid-screen ring): the figure carries the weight, the sign is a
@@ -3721,36 +3919,11 @@ tr.kid-row td {
    The label is LIGHT, not tinted (owner, 28.07) – the arc already carries the colour, and a
    coloured number beside a coloured ring makes two things shouting the same word. It also sits a
    little higher than the export's own offset so the descenderless figure reads centred inside the
-   circle rather than resting on its lower stroke. */
+   circle rather than resting on its lower stroke.
+   All of that is shared with `.chance-ring-value` up in the Season card, b and i included; this
+   ring sits ON a painting, so the shadow is the one thing it adds here. */
 .condition-ring-value {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.5px;
-  padding-top: 12px;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
   text-shadow: var(--shadow-text-on-art);
-}
-
-.condition-ring-value b {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.condition-ring-value i {
-  font-size: 10px;
-  font-weight: 700;
-  font-style: normal;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .condition-ring-arc {
-    transition: none;
-  }
 }
 
 /* --- 3. THE CARD GRID --------------------------------------------------------------------------- */
@@ -3762,6 +3935,9 @@ tr.kid-row td {
   padding: 2px 0 14px;
 }
 
+/* The gradient, the --card-edge hairline and the 17px corners are THE NOTECARD SURFACE, shared
+   with .friendly-card and .diary-strip further up the sheet. What is left here is what makes this
+   one a card in the grid rather than a strip: its box, its type, its height, its lift. */
 .note-card {
   position: relative;
   box-sizing: border-box;
@@ -3771,9 +3947,6 @@ tr.kid-row td {
   width: 100%;
   text-align: left;
   padding: 14px;
-  border-radius: var(--radius-card);
-  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
-  border: 1px solid var(--card-edge);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 15px;
@@ -3814,14 +3987,29 @@ button.note-card:active:not(:disabled) {
   }
 }
 
-/* ONE colour means "read this". Every card is labelled in it, and nothing else on the page is. */
-.note-kicker {
-  position: relative;
+/* THE LIME EYEBROW. ONE colour means "read this": every card on this page is labelled in it, the
+   strips below the fold are labelled in it, and nothing else is. Two rules were writing the same
+   six values out – this one and `.diary-strip h2` at the bottom of the sheet – so they are one
+   rule, with only their margins (and this one's stacking) left apart.
+   The two values that were IMPLICIT are now written down, and neither changes a pixel: the kicker
+   only ever sits inside a `.note-card`, which is already `--font-body`; and `.diary-strip` is a
+   <section>, so `section h2` was the thing supplying the uppercase. Both were measured in the
+   browser against the running app before this merge – see docs/specs/css-dry-audit.md.
+   NOT the same object as the app's other uppercase labels: those are MUTED, at 11-12px and three
+   different trackings. That is an open question in the audit, not a group. */
+.note-kicker,
+.diary-strip h2 {
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--accent);
+}
+
+/* It sits above the card's own absolutely-positioned art. */
+.note-kicker {
+  position: relative;
   margin: 0;
 }
 
@@ -3896,19 +4084,14 @@ button.note-card:active:not(:disabled) {
   bottom: 0;
   width: 112px;
   height: 136px;
-  border-radius: 56px 56px 14px 14px;
+  border-radius: 56px 56px var(--radius-frame) var(--radius-frame);
   overflow: hidden;
   -webkit-mask-image: linear-gradient(100deg, transparent 4%, #000 44%);
   mask-image: linear-gradient(100deg, transparent 4%, #000 44%);
 }
 
-.venue-art img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  /* The masters are not one aspect ratio (626x505 to 625x627) – cover, never letterbox. */
-  object-fit: cover;
-}
+/* Fills its frame – see the shared rule up by .event-art img, which is also where the reason
+   `cover` is not optional lives (the venue masters run 626x505 to 625x627). */
 
 /* A fresh recap the player has not read – the dot that used to sit on the This-week tab, re-homed
    onto the card that now opens that screen. */
@@ -3920,7 +4103,7 @@ button.note-card:active:not(:disabled) {
   height: 7px;
   border-radius: 50%;
   background: var(--accent);
-  box-shadow: 0 0 8px rgba(207, 225, 82, 0.6);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
 }
 
 /* --- FAMILY BUDGET ------------------------------------------------------------------------------ */
@@ -3960,7 +4143,6 @@ button.note-card:active:not(:disabled) {
   display: block;
   width: 100%;
   height: 66px;
-  margin-top: auto;
   overflow: visible;
 }
 
@@ -3976,16 +4158,43 @@ button.note-card:active:not(:disabled) {
   vector-effect: non-scaling-stroke;
 }
 
+/* THE CHART'S OWN BOX. The line and the dots have to share it EXACTLY, and the card is not it:
+   `.note-card` is padded 14px, so a dot layer positioned against the card comes out 28px wider and
+   14px to the left of the chart it annotates - which is exactly how the dots ended up beside the
+   line instead of on it (owner's screenshot, 29.07). Measured after the fix: layer and svg identical
+   to the pixel. */
+.budget-chart-wrap {
+  position: relative;
+  margin-top: auto;
+}
+
+/* The dots are HTML, not SVG (see HomeScreen): the chart stretches to the card's width and an SVG
+   circle inside it stretches with it. Positioned in percent of the SAME box, so they land on the
+   polyline's own vertices, and sized in px, so they stay circles at any card width. */
+.budget-dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.budget-dot {
+  position: absolute;
+  width: 5.5px;
+  height: 5.5px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
 .budget-dot.good {
-  fill: var(--day-good);
+  background: var(--day-good);
 }
 
 .budget-dot.mid {
-  fill: var(--day-mid);
+  background: var(--day-mid);
 }
 
 .budget-dot.bad {
-  fill: var(--day-bad);
+  background: var(--day-bad);
 }
 
 /* --- COACH -------------------------------------------------------------------------------------- */
@@ -4066,7 +4275,7 @@ button.note-card:active:not(:disabled) {
   width: 68px;
   transform: rotate(var(--tilt-4));
   padding: 4px 4px 12px;
-  border-radius: 3px;
+  border-radius: var(--radius-mark);
   background: var(--polaroid-paper);
   box-shadow: var(--shadow-polaroid);
 }
@@ -4085,7 +4294,7 @@ button.note-card:active:not(:disabled) {
   top: 30px;
   width: 22px;
   height: 22px;
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   background: #151d25;
   border: 1px solid rgba(255, 255, 255, 0.07);
   display: flex;
@@ -4129,22 +4338,18 @@ button.note-card:active:not(:disabled) {
 /* --- 4. what stays below the grid ---------------------------------------------------------------
    The tier ladder and the news feed keep their markup (and every rule that pins it) and only change
    chrome, so the page below the fold reads as more of the same diary rather than the start of an
-   older screen. */
+   older screen. And it is literally the same chrome: the gradient, the hairline and the corners are
+   THE NOTECARD SURFACE, shared with .note-card and .friendly-card. */
 .diary-strip {
   padding: 14px;
   margin-bottom: 11px;
   min-height: 0;
-  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
-  border: 1px solid var(--card-edge);
-  border-radius: var(--radius-card);
 }
 
+/* The strip's heading is THE LIME EYEBROW – see .note-kicker above, where the shared rule lives.
+   All this one adds is the gap under it; `.diary-strip` is a <section>, so `section h2` used to be
+   the thing quietly supplying the uppercase and the eyebrow rule now says it out loud. */
 .diary-strip h2 {
-  font-family: var(--font-body);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--accent);
   margin: 0 0 12px;
 }
 

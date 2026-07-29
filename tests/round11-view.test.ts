@@ -203,6 +203,11 @@ describe('R11-14 — "Practice match + coach" is one line in the calendar', () =
   it('the planned row stacks instead of competing for width', () => {
     const rule = cssBodies('.calendar-row-muted.planned')[0]
     expect(rule).toContain('flex-direction: column')
+    // ⚠ RE-AIMED by the css-dry pass (docs/specs/css-dry-audit.md): `.planned-actions` and
+    // `.dialog-actions` were the same three declarations - a row of actions pushed right - and are
+    // now one rule. The selector list ENDS with `.planned-actions`, so cssBodies() still reads the
+    // rule that declares the flex-end, and the fact is unchanged: a booked week's controls take
+    // their own band under the text, right-aligned, instead of competing with it for width.
     expect(cssBodies('.planned-actions')[0]).toContain('justify-content: flex-end')
   })
 })
