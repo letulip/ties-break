@@ -135,22 +135,26 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
 
 describe('upcomingEvents — surfaces eligibility both directions', () => {
   it('a fresh (0-point) kid: local open, regional/national locked (not enough points yet)', () => {
-    // ⚠ RE-AIMED by the two ladders: the claim is about the DOMESTIC ladder, which is unchanged -
-    // local open, regional and national locked on points. A J30 is open to her as well now, on a
-    // different ladder and by an acceptance list that has no bar, so it is excluded from the check
-    // rather than contradicting it.
+    // ⚠ RE-AIMED by the two ladders (29.07). The claim survives whole - at zero she has Local and
+    // nothing else - but the LOCK now comes in two kinds and the label differs with it. A domestic
+    // rung (and j30, the on-ramp, which reads her national standing) says "Reach N pts". The rungs
+    // above j30 are an acceptance list and say a RANK instead, because a points number she cannot
+    // read off her own table would be no help at all.
     const world = createWorld('snap-low')
     expect(kidPoints(world, 'domestic')).toBe(0)
     const upcoming = toSnapshot(world).upcoming
     for (const e of upcoming) {
-      expect(e.eligible).toBe(isTierEligible(e.tier, 0))
       if (e.tier === 'local') {
         expect(e.eligible).toBe(true)
         expect(e.ineligibleReason).toBeUndefined()
+        continue
+      }
+      expect(e.eligible).toBe(false)
+      expect(e.ineligibleReason).toBe('locked')
+      if (TIERS[e.tier].enterRank === undefined) {
+        expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0])
       } else {
-        expect(e.eligible).toBe(false)
-        expect(e.ineligibleReason).toBe('locked') // 0 is below minPoints – not there yet
-        expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0]) // drives the "Reach N pts" lock label
+        expect(e.rankToEnter).toBe(TIERS[e.tier].enterRank)
       }
     }
   })

@@ -240,7 +240,7 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     // so the comparison cannot be made in points at all. The structural fact survives in its real
     // form: national is the last DOMESTIC rung and never closes, and j30 is open to anyone, so a
     // player who has national open always has j30 open too - the report stays impossible.
-    const [natMin, natMax] = TIERS.national.enterPointBand
+    const [natMin] = TIERS.national.enterPointBand
     expect(TIERS.j30.enterRank).toBeUndefined()
     expect(natMin).toBeGreaterThan(0)
     for (const points of [180, 200, 400, 1_000]) {

@@ -252,7 +252,11 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     // `enterPointBand` may only be read by the two pure band helpers; every gate goes
     // through entryStatus. (This is the structural guard against the R10-5 desync.)
     const readers = src.split('\n').filter((l) => l.includes('enterPointBand') && !l.trim().startsWith('*'))
-    expect(readers.length).toBeLessThanOrEqual(3)
+    // ⚠ RE-PINNED 3 -> 4 by the two ladders. The band gained one more legitimate reader and it is
+    // INSIDE the same gate: `entryStatus`'s international branch reads it for the on-ramp rung,
+    // whose bar is domestic points rather than an ITF rank. The protected fact is unchanged - no
+    // SURFACE re-implements the band, every one of them still goes through entryStatus.
+    expect(readers.length).toBeLessThanOrEqual(4)
     // enterEvent must not destructure the band itself any more
     const enterFn = src.slice(src.indexOf('export function enterEvent'), src.indexOf('export function withdrawEvent'))
     expect(enterFn).not.toContain('enterPointBand')
@@ -617,7 +621,7 @@ describe('round-10 invariance — the main weekly stream is untouched', () => {
         return v
       }
       for (let i = 0; i < 24; i++) {
-        const points = kidPoints(w)
+        const points = kidPoints(w, 'domestic')
         for (const e of w.season) {
           if (e.week <= w.week || w.week > e.deadlineWeek || w.entries.includes(e.id)) continue
           if (entryStatus(w, e).level === 'blocked') continue

@@ -1108,11 +1108,36 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
   // in on her ITF RANK, the same signal the AI field is drawn on, so the two sides of the same
   // event finally obey the same rule - see rank-plateau.md 2b for what it cost when they did not.
   if (tier.track === 'itf') {
-    if (tier.enterRank !== undefined && world.kidRank > tier.enterRank) {
+    // The first international rung has no rank bar - it reads her DOMESTIC points, because she
+    // cannot own an international ranking before she has played internationally and a rank gate
+    // there would be a closed loop. Above it, the acceptance list takes over.
+    if (tier.enterRank === undefined) {
+      const [minPoints] = tier.enterPointBand
+      const domestic = kidPoints(world, 'domestic')
+      if (domestic < minPoints) {
+        return {
+          level: 'blocked',
+          reason: 'locked',
+          detail: `${tier.label} takes her on her national standing – ${minPoints} pts needed`,
+          pointsToEnter: minPoints,
+        }
+      }
+      return availabilityStatus(world, event)
+    }
+    // ⚠ UNRANKED IS NOT RANK ONE. With nobody holding an ITF point in week 1 the whole field ties at
+    // zero, and competition ranking gives every member of a tie the SAME rank - so a fresh
+    // fourteen-year-old reads as #1 and the top rungs would open to her on day one. You cannot be on
+    // an acceptance list BY RANKING if you have no ranking, so the gate demands a counting ITF
+    // result before it will read a position at all. (The same `hasResults` guard the econ bench
+    // already puts on its rank arm, for the same reason.)
+    const ranked = kidPoints(world, 'itf') > 0
+    if (!ranked || world.kidRank > tier.enterRank) {
       return {
         level: 'blocked',
         reason: 'locked',
-        detail: `${tier.label} takes the top ${tier.enterRank} – she is #${world.kidRank}`,
+        detail: ranked
+          ? `${tier.label} takes the top ${tier.enterRank} – she is #${world.kidRank}`
+          : `${tier.label} takes the top ${tier.enterRank} – she has no international ranking yet`,
         rankToEnter: tier.enterRank,
       }
     }
@@ -2803,7 +2828,11 @@ export function isTierEligible(tier: TierId, points: number): boolean {
  *  rank-plateau.md 2b. A rung with no `enterRank` is open to anyone, which is what a J30 is. */
 export function tierOpenFor(world: WorldState, tier: TierId): boolean {
   const def = TIERS[tier]
-  if (def.track === 'itf') return def.enterRank === undefined || world.kidRank <= def.enterRank
+  if (def.track === 'itf') {
+    // The on-ramp rung reads domestic points; the rungs above it read her ITF rank. See entryStatus.
+    if (def.enterRank === undefined) return isTierEligible(tier, kidPoints(world, 'domestic'))
+    return kidPoints(world, 'itf') > 0 && world.kidRank <= def.enterRank
+  }
   return isTierEligible(tier, kidPoints(world, 'domestic'))
 }
 
@@ -3110,6 +3139,7 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
                 | 'medical'
                 | 'capped',
               ...(gate.pointsToEnter !== undefined ? { pointsToEnter: gate.pointsToEnter } : {}),
+              ...(gate.rankToEnter !== undefined ? { rankToEnter: gate.rankToEnter } : {}),
               // Per-EVENT figures, exactly like pointsToEnter: a card near the year boundary can
               // be judged against a different season's allowance than today's, so the number it
               // prints has to be the one the gate actually used.

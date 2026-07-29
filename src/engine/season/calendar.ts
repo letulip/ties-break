@@ -116,10 +116,16 @@ export const TIERS: Record<TierId, TierDef> = {
     // Opens at 180: one National quarter-final (35) on top of a regional book gets her there, so
     // the international door opens while regional (≤230) is still open and national is already
     // live. Never closes – a J30 stays a legitimate week even for a strong junior.
-    // OPEN. A J30 is the international entry rung and the research is explicit that an unranked
-    // thirteen-year-old near home can get into one; the band below still decides who the AI field
-    // is drawn from, so she meets the players who actually play them.
-    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    // THE DOMESTIC LADDER IS THE ON-RAMP (owner, 29.07). J30 is the one international rung that
+    // opens on DOMESTIC points - the same 150 that opens National - and everything above it opens
+    // on ITF rank. That is how a real career starts: a federation nominates you onto an acceptance
+    // list off your national standing, because you cannot have an international ranking before you
+    // have played internationally, and a rank gate on the first rung would be a closed loop.
+    //
+    // It also keeps the climb the game is about: Local -> Regional -> National -> the world. Open
+    // at zero, a wealthy family would fly at fourteen and the entire domestic ladder would be
+    // optional content for the one preset that can afford to skip it.
+    enterPointBand: [150, Number.MAX_SAFE_INTEGER],
     entrantPctBand: [0.12, 0.6],
   },
   j60: {

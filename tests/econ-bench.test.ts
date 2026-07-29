@@ -220,7 +220,7 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
     const fresh = openCareer(wealthy, 0)
     expect(fresh.world.kidRank).toBe(195)
     expect(fresh.world.kidRank).toBeGreaterThan(REACH_PRO_RANK)
-    expect(kidPoints(fresh.world)).toBe(0) // ...and still no counting result
+    expect(kidPoints(fresh.world, 'itf')).toBe(0) // ...and still no counting result
 
     // reachedWeek(pro) must match an INDEPENDENT replay of the GUARDED predicate, and must NOT be the
     // week-1 degenerate value: the rank arm only fires once she owns a counting result (points > 0),
