@@ -70,6 +70,13 @@ import { parentIncomeForWeekCents,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort } from './season/cohort'
 import { growWeek, rollPotential, type KidSkills } from './development'
+import {
+  kitGrantCents,
+  netTravelCents,
+  reviewLevel,
+  travelCoverShare,
+  type AcademySupport,
+} from './academy'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
@@ -87,7 +94,7 @@ import { buildDiarySnapshot, milestoneKey } from './diary'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 20
+export const SAVE_SCHEMA_VERSION = 21
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -155,6 +162,10 @@ export interface WorldState {
    *  has axes without numbers). Persisted rather than re-rolled so a save cannot re-roll her
    *  talent, which is the one thing in a career that must not be re-rollable. */
   potential: KidSkills
+  /** Her academy scholarship, or null when nobody is backing her (v21). Decided once a year at the
+   *  season boundary from what an academy can see – see engine/academy.ts. Persisted because it is
+   *  a relationship: it must not re-decide itself between reviews. */
+  academy: AcademySupport | null
   /** a tournament being revealed round by round; null when no reveal is in progress (v8). */
   pendingTournament: PendingTournament | null
   /** best (smallest) finish index the kid has ever reached per tier (v10); updated at
@@ -1814,15 +1825,109 @@ function resolveGear(world: WorldState): void {
   }
 }
 
+/** WHAT THE TRIP COSTS THE FAMILY – the scholarship applied to the calendar's full fare.
+ *
+ *  THE ONE definition, and it has to be: the charge (chargeTravel), the refund (skipEvent) and the
+ *  price the planner quotes (the snapshot's UpcomingEvent) all read this. If any of them computed
+ *  its own number the discount would be arbitrageable – enter at the covered price, withdraw at the
+ *  full refund, bank the difference, repeat for every J30 on the calendar. */
+export function travelCostFor(world: WorldState, event: SeasonEvent): number {
+  return netTravelCents(event.travelCostCents, world.academy)
+}
+
 function chargeTravel(world: WorldState, event: SeasonEvent): void {
-  world.fundsCents -= event.travelCostCents
+  const net = travelCostFor(world, event)
+  const covered = event.travelCostCents - net
+  world.fundsCents -= net
+  if (world.academy && covered > 0) world.academy.coveredCents += covered
   addEvent(world, {
     week: world.week,
     type: 'expense',
     category: 'travel',
-    text: `Travel to ${TIERS[event.tier].label}`,
-    amountCents: -event.travelCostCents,
+    // The sponsor valve's wording, for the same reason: the line is still emitted at its reduced
+    // amount so the Money breakdown shows the relationship instead of the cost quietly shrinking.
+    text:
+      covered > 0
+        ? `Travel to ${TIERS[event.tier].label} – academy covers ${Math.round(travelCoverShare(world.academy) * 100)}%`
+        : `Travel to ${TIERS[event.tier].label}`,
+    amountCents: -net,
   })
+}
+
+// --- the academy's annual review ---------------------------------------------
+// Runs at the season boundary, on the rank she CARRIES IN (the one the season just gone earned
+// her) and the year of tournaments behind it. Zero draws on any stream – see engine/academy.ts.
+
+export function reviewAcademy(world: WorldState): void {
+  const seasonIndex = seasonIndexOf(world.week)
+  const prev = world.academy
+  if (prev && prev.seasonIndex === seasonIndex) return // idempotent per season
+
+  const ageYears = ageAtWeek(world.week)
+  const playedLastYear = world.results.filter((r) => r.playerId === KID_ID && world.week - r.week <= RESULTS_WINDOW).length
+  const level = reviewLevel({
+    rank: world.kidRank,
+    potential: world.potential,
+    background: world.profile.background,
+    playedLastYear,
+    ageYears,
+  })
+
+  if (level <= 0) {
+    if (prev) {
+      // Why it ended matters – "she aged out" and "she stopped playing" are different stories, and
+      // the second one is a lesson.
+      const reason =
+        ageYears > ECONOMY.academy.ageBand[1]
+          ? 'she has aged out of their junior programme'
+          : playedLastYear < ECONOMY.academy.minEventsPerYear
+            ? 'she barely competed this year'
+            : 'her year did not make their case'
+      addEvent(world, {
+        week: world.week,
+        type: 'info',
+        text: `The academy has ended her scholarship – ${reason}.`,
+      })
+    }
+    world.academy = null
+    return
+  }
+
+  const pct = Math.round(level * ECONOMY.academy.travelCover * 100)
+  if (!prev) {
+    fireMilestone(world, `academy-in-${seasonIndex}`, `An academy has taken her on – a scholarship covering ${pct}% of her travel.`)
+  } else {
+    const wasPct = Math.round(prev.level * ECONOMY.academy.travelCover * 100)
+    if (pct !== wasPct) {
+      addEvent(world, {
+        week: world.week,
+        type: 'info',
+        text: `Academy review: her scholarship ${pct > wasPct ? 'rises' : 'falls'} to ${pct}% of her travel.`,
+      })
+    }
+  }
+
+  world.academy = {
+    level,
+    // A renewal is not a new offer: the relationship keeps its start date.
+    sinceWeek: prev ? prev.sinceWeek : world.week,
+    seasonIndex,
+    coveredCents: 0,
+  }
+
+  // "и экипа" – the kit, once a year, as money rather than as a per-purchase discount, because it
+  // arrives as a delivery and not as a coupon.
+  const kit = kitGrantCents(level)
+  if (kit > 0) {
+    world.fundsCents += kit
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'academy',
+      text: 'Academy kit grant – rackets, strings and shoes for the season',
+      amountCents: kit,
+    })
+  }
 }
 
 // The kid's tournament run. Uses an EVENT-SCOPED sub-RNG only (never the main
@@ -2247,6 +2352,9 @@ export function createWorld(
     // and state moves.
     skills: startingSkills(seed, profile),
     potential: rollPotential(seed, startingSkills(seed, profile)),
+    // Nobody is backing her yet. The first review is the season boundary at week 52 – she has to
+    // put a year in front of them before anyone writes a letter.
+    academy: null,
     // R12-S1: season 0's start rank is set below, once `recomputeKidRank` has produced the real
     // value – she starts dead last behind the whole cohort, because she is the only player without
     // a counting result, and that is a true and meaningful thing for her first wrap-up to say.
@@ -2365,6 +2473,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // why it grew for ever and the ladder could never be caught. Pure arithmetic, ZERO draws, and
     // it runs beside the rank capture because they are the same event: a season turned over.
     ageCohort(world.cohort)
+    // 0a0c (v21): AND THE ACADEMY DECIDES. It reads `world.kidRank` before this season can touch
+    // it – the rank the year just gone earned her – which is precisely what an academy reviewing
+    // her in the off-season would be looking at. ZERO draws, so it is safe this far up the tick.
+    reviewAcademy(world)
   }
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
@@ -2725,13 +2837,19 @@ export function skipEvent(world: WorldState, eventId: string): void {
     world.pendingTournament = null
     return
   }
-  world.fundsCents += event.travelCostCents
+  // v21: refund WHAT SHE PAID, not what the calendar prints. `travelCostFor` is the same function
+  // chargeTravel used minutes ago, so a scholarship can never be turned into free money by entering
+  // and withdrawing; the covered part is handed back to the academy's season tally at the same time.
+  const paid = travelCostFor(world, event)
+  const covered = event.travelCostCents - paid
+  world.fundsCents += paid
+  if (world.academy && covered > 0) world.academy.coveredCents = Math.max(0, world.academy.coveredCents - covered)
   addEvent(world, {
     week: world.week,
     type: 'income',
     category: 'travel',
     text: `Travel refunded: ${TIERS[event.tier].label}`,
-    amountCents: event.travelCostCents,
+    amountCents: paid,
   })
   world.entries = world.entries.filter((id) => id !== eventId)
   world.pendingTournament = null
@@ -2885,7 +3003,9 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // the field as it stands TODAY, how strong that field is, and the (decorative) weather.
         // See season/preview.ts for what this estimate does and does not claim.
         preview: previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
-        travelCostCents: e.travelCostCents,
+        // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
+        // entering will actually cost, and it is the same number chargeTravel will take.
+        travelCostCents: travelCostFor(world, e),
         deadlineWeek: e.deadlineWeek,
         entryFeeCents: TIERS[e.tier].entryFeeCents,
         label: TIERS[e.tier].label,

@@ -386,6 +386,20 @@ export function migrateSave(raw: unknown): WorldState {
     v = 20
   }
 
+  // v20 -> v21: THE ACADEMY SCHOLARSHIP. Back-filled as `null` – nobody is backing her – rather
+  // than by replaying what the reviews WOULD have decided over the career so far.
+  //
+  // That is a deliberate choice and not a shortcut. A replay would have to invent the events that
+  // never fired (the offer, the renewals, the kit grants) and refund the travel she has already
+  // paid full price for, or else quietly hand her a scholarship she was never told about. Starting
+  // from null costs a migrated career at most one season: the next boundary reviews her on the year
+  // she just played, and if the academy wants her, they say so then – as an offer, with the
+  // milestone that goes with it.
+  if (v === 20) {
+    save.academy = null
+    v = 21
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

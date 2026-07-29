@@ -84,6 +84,11 @@ export type WorldEventCategory =
   | 'gear'
   | 'stringing'
   | 'sponsor'
+  /** 'academy' (v21) is an INCOME-side category: the once-a-year kit grant that comes with a
+   *  scholarship. The travel half of the same scholarship is NOT booked here – it is taken off the
+   *  travel line itself, exactly like the racket sponsor's gear discount, so the ledger shows the
+   *  reduced price the family actually paid. */
+  | 'academy'
   | 'income'
   | 'interest'
   | 'physio'

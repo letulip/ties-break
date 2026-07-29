@@ -50,6 +50,7 @@ import {
   bookVacation,
   practiceCaution,
   tournamentRunStrain,
+  travelCostFor,
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
@@ -88,9 +89,9 @@ export const MAX_RUN_DEPTH = 5
  *  208w career is still 52 field-wide samples per seed, i.e. 1560 per cell. */
 export const RIVAL_SAMPLE_EVERY = 4
 
-/** Every expense-side event category (the income side is parent contribution / sponsor /
- *  interest). Kept as a local list so the fatigue bench never imports econ-bench – that module
- *  runs its own CLI on import. */
+/** Every expense-side event category (the income side is parent contribution / sponsor / academy
+ *  kit grant / interest). Kept as a local list so the fatigue bench never imports econ-bench – that
+ *  module runs its own CLI on import. */
 export const EXPENSE_CATEGORIES: readonly WorldEventCategory[] = [
   'coaching',
   'travel',
@@ -736,7 +737,7 @@ export function stepFatigueWeek(
       // injured / exam blackout / the doctor's veto – enterEvent would throw. Count ONLY the
       // veto, and only when she could otherwise have paid for the trip: that is a tournament the
       // policy really lost to the new gate, not one it was never going to enter.
-      if (avail.reason === 'medical' && world.fundsCents >= TIERS[e.tier].entryFeeCents + e.travelCostCents) {
+      if (avail.reason === 'medical' && world.fundsCents >= TIERS[e.tier].entryFeeCents + travelCostFor(world, e)) {
         medicalBlocks++
       }
       continue
@@ -747,7 +748,8 @@ export function stepFatigueWeek(
     ) {
       continue // careful: too tired – rest until recovered
     }
-    const cost = TIERS[e.tier].entryFeeCents + e.travelCostCents
+    // v21: priced after the academy's share, like the econ bench – what the family is asked for.
+    const cost = TIERS[e.tier].entryFeeCents + travelCostFor(world, e)
     if (world.fundsCents < cost) continue
     if (avail.level === 'caution') cautionEntries++ // entered below the tier floor – the tough-parent choice
     enterEvent(world, e.id)

@@ -50,6 +50,7 @@ import {
   closeTournament,
   financeWindow,
   availabilityStatus,
+  travelCostFor,
   STARTING_FUNDS_CENTS,
   type WorldState,
 } from '../src/engine/world'
@@ -124,7 +125,7 @@ export const PRESETS: Preset[] = [
  *  either (it has no planner policy – that is the fatigue bench's axis), so they read $0 here and
  *  exist only to keep the category fold exhaustive. */
 export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'other']
-export const INCOME_CATS: WorldEventCategory[] = ['income', 'sponsor', 'interest']
+export const INCOME_CATS: WorldEventCategory[] = ['income', 'sponsor', 'academy', 'interest']
 
 /** One completed season, captured at its wrap week off world.lastSeasonSummary + that year's finance fold. */
 export interface PerSeason {
@@ -168,6 +169,12 @@ export interface SeedResult {
   /** tournaments entered over the horizon: total plus the ranking-gated per-tier split.
    *  Every tier in the catalogue is live since ladder-up, so total === Σ byTier. */
   entries: { total: number; byTier: Record<TierId, number> }
+  /** v21: travel the academy paid for over the horizon, summed at each season wrap. Invisible in
+   *  the category fold by design – the scholarship discounts the travel line rather than crediting
+   *  an income one – so it is carried here or it is not measurable at all. */
+  academyCoveredCents: number
+  /** how many of the horizon's seasons she was on a scholarship for. */
+  academySeasons: number
   /** DIAGNOSTIC ONLY: financeWindow(financeWeeks, 0).netCents read at horizon end – the OLD BUGGY read
    *  that the 60-week pruning corrupts past 60 weeks. Kept so tests can prove the fix; not featured in
    *  the console table (surfaced in the CSV so the correction is auditable). */
@@ -185,6 +192,7 @@ function zeroCats(): Record<WorldEventCategory, number> {
     vacation: 0,
     practice: 0,
     sponsor: 0,
+    academy: 0,
     income: 0,
     interest: 0,
     other: 0,
@@ -239,7 +247,9 @@ export function stepCareerWeek(world: WorldState, rng: Rng): Record<TierId, numb
     // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
     // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
     if (availabilityStatus(world, e).level === 'blocked') continue
-    const cost = TIERS[e.tier].entryFeeCents + e.travelCostCents
+    // v21: the trip is priced AFTER the academy's share, because that is what the family is
+    // actually asked for – a policy quoting the sticker price would refuse trips she can afford.
+    const cost = TIERS[e.tier].entryFeeCents + travelCostFor(world, e)
     if (world.fundsCents < cost) continue // can't afford entry+travel – policy stalls here
     enterEvent(world, e.id)
     entered[e.tier]++
@@ -292,6 +302,8 @@ export function runCareer(preset: Preset, index: number, horizonWeeks: number): 
   let cumIncome = 0
   let cumExpense = 0
   let cumNet = 0
+  let academyCoveredCents = 0
+  let academySeasons = 0
   const perSeason: PerSeason[] = []
 
   for (let i = 0; i < horizonWeeks; i++) {
@@ -317,6 +329,11 @@ export function runCareer(preset: Preset, index: number, horizonWeeks: number): 
       cumIncome += fold.incomeCents
       cumExpense += fold.expenseCents
       cumNet += fold.netCents
+      // v21: the scholarship's travel half never appears as income – it is taken off the travel
+      // line – so the only place its size exists is the academy's own season tally. Read at the
+      // wrap (week 49), which is after every trip of the year and before the review resets it.
+      academyCoveredCents += world.academy?.coveredCents ?? 0
+      if (world.academy) academySeasons += 1
       const s = world.lastSeasonSummary
       perSeason.push({
         seasonYear: s?.seasonYear ?? START_AGE_YEARS + Math.floor(world.week / WEEKS_PER_YEAR),
@@ -348,6 +365,8 @@ export function runCareer(preset: Preset, index: number, horizonWeeks: number): 
     endPoints: kidPoints(world),
     perSeason,
     entries,
+    academyCoveredCents,
+    academySeasons,
     naiveNetCents: financeWindow(world.financeWeeks, 0).netCents,
   }
 }
@@ -448,6 +467,16 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[]): str
   )
   out.push('  ' + padEnd('  per tier', LABEL_W) + split)
 
+  // THE SCHOLARSHIP (v21): how many careers it reached, for how many seasons, and what it paid.
+  const backed = rows.filter((r) => r.academySeasons > 0)
+  out.push('  -- academy scholarship --')
+  out.push(
+    '  ' +
+      padEnd('backed', LABEL_W) +
+      `${backed.length}/${rows.length} careers · ${meanEntry((r) => r.academySeasons)} seasons mean · ` +
+      `travel covered ${fmtUsd(mean(rows.map((r) => r.academyCoveredCents)))} mean`,
+  )
+
   // SURVIVAL (the headline): cumulative bankruptcy-survival over the FULL horizon.
   const survivors = rows.filter((r) => r.survived)
   const red = rows.filter((r) => r.weeksToBankrupt !== null)
@@ -484,7 +513,7 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[]): str
   return out.join('\n')
 }
 
-const POLICY_HEADER = [
+const policyHeader = (seeds: number): string => [
   'Ties Break – economy bench (measurement only; changes no engine numbers)',
   '',
   '*** CAVEAT – prize money is NOT modeled yet. Tournaments award POINTS only; income = parent',
@@ -501,8 +530,8 @@ const POLICY_HEADER = [
   `Entry policy v3: each week, enter every RANKING-ELIGIBLE event (a tier her EARNED points open) the`,
   `  kid can afford entry+travel for AS ITS DEADLINE NEARS (within ${ENTRY_LOOKAHEAD} wk); tick; skip+close any`,
   `  spawned tournament. Funds red ⇒ entries stall; coaching still bleeds.`,
-  `${SEEDS_PER_PRESET} seeds/preset · coach setup per preset · plan balanced (75/25).`,
-  `Money is whole-dollar rounded; ±sd is the population stddev across the ${SEEDS_PER_PRESET} seeds.`,
+  `${seeds} seeds/preset · coach setup per preset · plan balanced (75/25).`,
+  `Money is whole-dollar rounded; ±sd is the population stddev across the ${seeds} seeds.`,
 ].join('\n')
 
 // --- CSV ---------------------------------------------------------------------
@@ -575,10 +604,25 @@ function parseCsvPath(argv: string[]): string | null {
   return path
 }
 
+/** `--seeds N` – the Monte-Carlo sample size, defaulting to SEEDS_PER_PRESET.
+ *
+ *  It is a FLAG rather than a constant because 30 seeds is a trend and not a claim: a balance
+ *  change of a few points hides inside the noise of a 30-seed run (the random-draw slice looked
+ *  like a 14pp regression at 30 and was flat at 120). Anything that gets reported as a number
+ *  should be run at a sample that carries it. */
+function parseSeeds(argv: string[]): number {
+  const i = argv.indexOf('--seeds')
+  if (i === -1) return SEEDS_PER_PRESET
+  const n = Number(argv[i + 1])
+  if (!Number.isInteger(n) || n < 1) throw new Error('--seeds requires a positive integer')
+  return n
+}
+
 export function main(argv: string[] = process.argv.slice(2)): void {
   const csvPath = parseCsvPath(argv)
+  const seeds = parseSeeds(argv)
 
-  console.log(POLICY_HEADER)
+  console.log(policyHeader(seeds))
 
   const all: { horizon: Horizon; preset: Preset; rows: SeedResult[] }[] = []
   for (const horizon of HORIZONS) {
@@ -588,7 +632,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     console.log(`${'═'.repeat(2 + LABEL_W + COL_W * 4)}`)
     for (const preset of PRESETS) {
       const rows: SeedResult[] = []
-      for (let i = 0; i < SEEDS_PER_PRESET; i++) rows.push(runCareer(preset, i, horizon.weeks))
+      for (let i = 0; i < seeds; i++) rows.push(runCareer(preset, i, horizon.weeks))
       all.push({ horizon, preset, rows })
       console.log(renderPreset(preset, horizon, rows))
     }

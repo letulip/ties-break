@@ -62,7 +62,7 @@ const startingBudget = computed(() => (game.snapshot ? formatDollars(STARTING_BU
 // category is missing/unknown (pre-round-7 events) falls into 'other'.
 // 'interest' (R9-1, weekly savings interest) is INCOME-side: it rolls into the green income
 // row via the positive-total fold below and must never slice the expense donut.
-type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest'>
+type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy'>
 const EXPENSE_META: { key: ExpenseCategory; label: string; color: string }[] = [
   { key: 'coaching', label: 'Coaching', color: '#d9f24f' },
   { key: 'travel', label: 'Travel', color: '#4fd2f2' },
