@@ -17,6 +17,7 @@ import { formatShortName } from '../shared/format'
 import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
 import { KID_ID } from '../engine/world'
 import Card from './ui/Card.vue'
+import PrimaryPill from './ui/PrimaryPill.vue'
 import SegmentedRow from './ui/SegmentedRow.vue'
 
 const props = withDefaults(
@@ -979,7 +980,9 @@ function servePct(side: Side): number {
       <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
     </div>
     <div v-if="props.mode === 'replay' || !finished" class="mv-actions">
-      <button v-if="props.mode === 'replay'" class="primary sfx-watch" @click="restart">Watch again ↻</button>
+      <!-- U0's PrimaryPill: `solid` IS `.primary`, so the class stays and the sound layer's
+           `.sfx-watch` hook keeps working - what arrives is the one door for the affirmative. -->
+      <PrimaryPill v-if="props.mode === 'replay'" class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
       <button v-else disabled title="Coming in Phase 6">Shout 📣</button>
     </div>
 
