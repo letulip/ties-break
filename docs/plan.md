@@ -85,6 +85,7 @@ Stat model (technical/physical/mental), potential + age curves (calibrate to rea
 ### Phase 5 — Economy & family (M)
 Expense engine (coach tiers/hourly, travel by geography, entries, stringing, academy fees, physio, insurance), income engine (prize tables with the real cliff, product-then-cash sponsors, federation grants — conditional & revocable, income-share investor as a Faustian option), parent character: job/income/time budget, relationship meter; family background + start country = difficulty. Sponsor-hunt actions for parent.
 **Exit:** the "valley of death" produces real dilemmas; bankruptcy is a possible (and dramatic) ending.
+Landed (2026-07-29, spec `academy-support.md`): the **academy scholarship** — the "conditional & revocable" grant of this phase, reviewed annually on results + the scout's read of her ceiling + family need, paying a share of travel plus a kit grant. It is the answer to what development did to the family bankroll: working-preset survival over 14→18 went 18/120 → 44/120, and the help converts into tournaments played rather than into savings.
 
 ### Phase 6 — Childhood prologue & narrative (M)
 Accelerated 5→14 prologue (quarter/year ticks, a few defining choices: first coach vs parent-coach setup, surface, school track, relocation/academy gamble) producing the starting profile; event system (conflicts, growth spurts, school, media); morale/relationship effects wired to shouts & coaching setup.
