@@ -69,27 +69,37 @@ restyle by analogy with the system, or leave until it gets its own design.
   named as the fix for "middle family + hired coach goes bankrupt in 120 careers of 120".
 - **A cinematic match view (F)** distinct from the court view (I).
 
-## 4. Open compatibility questions for the owner
+## 4. The owner's rulings (29.07) — these are settled
 
-**Q1 — the tab bar.** The design's bar is `Home · Season · Calendar · Bianca · More` (and on T the
-fifth slot becomes `Market`). Ours is `Season · Calendar · Home · Stats · More`. Two differences that
-need a ruling: Home moves to first, and **Stats has no slot** while the Kid gets one. Where does
-Stats live — inside the Kid profile, inside More, or do we keep our bar and put the Kid where the
-design puts her?
+**Q1 — the tab bar: KEEP OURS, unchanged for now.** `Season · Calendar · Home · Stats · More` stays;
+the design's `Home · Season · Calendar · Bianca · More` is a later job. The owner also noted that
+**More is becoming redundant** — the gear on Home already reaches it — so the bar gets re-cut in that
+pass rather than now. Every screen in this wave therefore keeps the navigation it has.
 
-**Q2 — F and I.** The handoff says build both and calls switching between them out of scope. We have
-one match surface (`MatchViewer`, the canvas court ≈ I). Do we build F as a second view, and if so
-what chooses between them — the tier? the round? a setting?
+**Q2 — F is NOT a second live match.** The owner's reading, and it is better than the handoff's:
+- **F = the preview / result treatment** — the big portrait scene. Used *before* a match, and reused
+  *after* it on the result screens.
+- **I = our live match**, the one we already have, tidied up to the design — plus **a canonical
+  running text commentary of the key moments**, which we do not have at all today.
+So there is one live view, not two, and no switcher to design.
 
-**Q3 — the Coach Market.** Confirm T waits for the coach-tier engine slice rather than being built
-against the current boolean.
+**Q3 — the Coach Market waits.** It goes into the next cycle together with the calendar, behind the
+coach-tier engine slice.
 
-**Q4 — art.** Which of the ~24 slots does the owner want to produce, in what order, and what should a
-screen do while its art is missing (we have no placeholder convention outside the prototype)?
+**Q4 — art. Almost nothing needs making:**
 
-**Q5 — density vs scroll.** The design principle is "the screen is always full, no scrolling". Our
-Season screen already scrolls by the owner's own decision (28.07: «будет скролл, это не страшно»).
-Confirm that ruling generalises: fidelity to the layout, but real content may scroll.
+| slot | ruling |
+|---|---|
+| trophy, silver medal | use what we already ship |
+| the five coach portraits | **already in `public/images/coaches/` — 16 of them**, wired since wave 2 |
+| champion / runner-up moment photos | we have them; use those |
+| onboarding hero (N) | the owner is finishing it — square, like the rest of ours. Until then default to `jun-norm` |
+| four play-style poses (R) | the owner will supply; ship a placeholder |
+| trip photo (G) | maybe remade later for every age; not blocking |
+| summary portrait (S) | **the owner asked which screen this is: it is S, the last onboarding step — the full-bleed 346×306 portrait "her at the club entrance" behind the summary card.** He will look and decide whether to reuse an existing one |
+
+**Q5 — density vs scroll: fidelity to the composition, real content may scroll.** Confirmed as a
+general rule, generalising the Season screen decision of 28.07.
 
 ## 5. Settled, no action needed
 
@@ -101,3 +111,13 @@ Confirm that ruling generalises: fidelity to the layout, but real content may sc
 - **Tokens** — the refreshed `tokens.css` is a strict superset of the one we shipped: it adds
   celebration backgrounds, fit pills, gold, the onboarding gutter, the four play-style colours and
   the four coach-tier colours. Nothing we already use changed value, so no migration.
+
+## 6. The 14 undesigned surfaces — captured for the designer
+
+`docs/design/undesigned/` holds reference screenshots of every surface in §2, at 375×812, so the
+owner can feed them into the design system. Its README says which state each shot is in and which
+surfaces could not be reached without changing app code.
+
+Some of these may not need a designer at all: Stats, More, the week planner and the small dialogs
+are all assemblies of components the new system already defines (Card, Eyebrow, SegmentedRow,
+StatRow, PrimaryPill). Worth a review pass before commissioning designs for them.
