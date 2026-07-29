@@ -235,7 +235,17 @@ describe('class-flavored expenses (round-5 item 10)', () => {
     expect(flavors.has('Physio session') || flavors.has('Massage & recovery')).toBe(true)
   })
 
-  it('scales the base expense by background (working < middle < wealthy) for the same draw', () => {
+  // ⚠ RE-AIMED BY THE COACH LADDER, AND THE ASSERTION IS INVERTED ON PURPOSE. This test read
+  // "scales the base expense by background (working < middle < wealthy) for the same draw" – the
+  // weekly coaching bill was multiplied by the family's wealth corridor. docs/specs/coach-tiers.md
+  // §2 took the corridor OFF coaching: the coach TIER now states the family's price level as a
+  // CHOICE, so scaling it by background as well charged the same difference twice.
+  //
+  // The block's own subject is untouched, which is why the re-aim lands here rather than being
+  // deleted: class still flavours this line, it just flavours the TEXT and not the AMOUNT. The two
+  // tests above (working's public-courts clinic, wealthy's premium recovery lines) are the half
+  // that survived, and this is the half that inverted.
+  it('does NOT scale the base expense by background – a coach charges a market rate', () => {
     const baseCost = (background: 'working' | 'middle' | 'wealthy') => {
       const w = createWorld('bg-cost', { ...DEFAULT_PROFILE, background })
       const rng = rngFromSeed(w.seed)
@@ -244,8 +254,10 @@ describe('class-flavored expenses (round-5 item 10)', () => {
       const ev = w.events.find((e) => e.type === 'expense' && e.week === 1)!
       return -ev.amountCents!
     }
-    expect(baseCost('working')).toBeLessThan(baseCost('middle'))
-    expect(baseCost('middle')).toBeLessThan(baseCost('wealthy'))
+    expect(baseCost('working')).toBe(baseCost('middle'))
+    expect(baseCost('wealthy')).toBe(baseCost('middle'))
+    // ...and the bill is a real number, so the equality above is not three zeroes agreeing.
+    expect(baseCost('middle')).toBeGreaterThan(0)
   })
 
   it('cohort drift + AI results are identical across backgrounds (RNG discipline extended)', () => {

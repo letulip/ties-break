@@ -3,6 +3,7 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
+import { COACH_TIERS } from '../src/engine/coach'
 
 // Backward compatibility is a hard product guarantee: every historical save shape must still
 // load. Each fixture is a world-shaped payload for one schema version; all of them must migrate
@@ -43,6 +44,11 @@ describe('golden saves corpus', () => {
       expect(typeof migrated.profile.kidLastName).toBe('string')
       expect(migrated.profile.kidLastName.length).toBeGreaterThan(0)
       expect(typeof migrated.profile.playStyle).toBe('string')
+
+      // v22 coach ladder: every fixture, however old, lands on a real rung and the pre-v22
+      // `coachSetup` boolean is gone from the profile entirely.
+      expect(COACH_TIERS).toContain(migrated.profile.coachTier)
+      expect('coachSetup' in migrated.profile).toBe(false)
 
       // v9 birth month: present and in range on every fixture, however old
       expect(typeof migrated.profile.birthMonth).toBe('number')

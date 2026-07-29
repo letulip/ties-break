@@ -50,8 +50,11 @@ import type { TierId } from '../src/engine/season/types'
 // from the ECONOMY knobs (no accrueCondition/matchDrain imports) and compared byte-for-byte.
 
 const working = PROFILES.find((p) => p.background === 'working')!
-const middleSelf = PROFILES.find((p) => p.background === 'middle' && p.coachSetup === 'parent')!
-const middleHired = PROFILES.find((p) => p.background === 'middle' && p.coachSetup === 'hired')!
+// ⚠ RE-AIMED by the coach ladder: the bench's profiles moved from `coachSetup: 'parent' | 'hired'`
+// to rungs of the ladder ('self' / 'middle'). Same two middle-family cells, same contrast – the
+// self-coached family against the one paying a coach – so every assertion below is unchanged.
+const middleSelf = PROFILES.find((p) => p.background === 'middle' && p.coachTier === 'self')!
+const middleHired = PROFILES.find((p) => p.background === 'middle' && p.coachTier === 'middle')!
 
 const grinder = POLICIES.find((p) => p.id === 'grinder')!
 const balanced = POLICIES.find((p) => p.id === 'balanced')!
@@ -409,7 +412,7 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
     expect(openFatigueCareer(middleSelf, grinder, 0).world.physioActive).toBe(false)
     expect(openFatigueCareer(middleHired, grinder, 0).world.physioActive).toBe(true)
     const off = gridPolicies().find((p) => p.physio === 'off')!
-    expect(openFatigueCareer(middleHired, off, 0).world.physioActive).toBe(false) // overrides the hired default
+    expect(openFatigueCareer(middleHired, off, 0).world.physioActive).toBe(false) // overrides the paid-coach default
     const on = gridPolicies().find((p) => p.physio === 'on')!
     expect(openFatigueCareer(middleSelf, on, 0).world.physioActive).toBe(true) // overrides the parent default
   })
