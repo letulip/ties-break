@@ -102,6 +102,32 @@
   --link-skip: #8fb2d6;
   --dur-rally: 2800ms;
 
+  /* Tiers (T. Coach Market, J–M badges) */
+  --tier-budget: #8fb2d6;
+  --tier-middle: #cfe152;
+  --tier-high: #e2822f;
+  --tier-elite: #9b7fd4;
+
+  /* Fit states (T) */
+  --fit-great-bg: rgba(207, 225, 82, 0.14);
+  --fit-good-bg: rgba(255, 255, 255, 0.07);
+  --fit-off-border: rgba(255, 255, 255, 0.12);
+  --unaffordable-bg: rgba(20, 29, 38, 0.5);
+  --unaffordable-border: rgba(255, 255, 255, 0.09);
+
+  /* Play-style radars (R) */
+  --style-baseliner: #ef4b3a;
+  --style-counterpuncher: #cfe152;
+  --style-bigserve: #5b9bd5;
+  --style-allcourt: #9b7fd4;
+
+  /* Celebration (L) */
+  --gold: #d9a441;
+  --gold-dim: #8a7040;
+  --celebration-bg: radial-gradient(120% 68% at 50% 0%, #16283b 0%, #111a24 52%, #101821 100%);
+  --celebration-bg-cool: radial-gradient(120% 68% at 50% 0%, #152532 0%, #111a24 52%, #101821 100%);
+  --onboarding-gutter: 22px;
+
   /* Typography */
   --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
   --font-hand: 'Caveat', cursive;
