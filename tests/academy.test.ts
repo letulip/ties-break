@@ -42,7 +42,7 @@ function support(level: number): AcademySupport {
 /** A career of the given background, ticked `weeks` weeks with a policy that enters whatever the
  *  gate allows – the same shape the demo-save tool and the benches use. */
 function runCareer(seed: string, background: FamilyBackground, weeks: number): WorldState {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachSetup: 'parent' })
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachTier: 'self' })
   const rng = rngFromSeed(world.seed)
   for (let w = 0; w < weeks; w++) {
     for (const e of world.season) {
@@ -215,7 +215,7 @@ function lastEnding(world: WorldState): string {
 describe('the scholarship cannot be turned into free money', () => {
   it('refunds a post-deadline withdrawal at the price she actually paid', () => {
     // Walk a backed career forward until a tournament week spawns a reveal, then withdraw from it.
-    const world = createWorld('acad-skip', { ...DEFAULT_PROFILE, background: 'working', coachSetup: 'parent' })
+    const world = createWorld('acad-skip', { ...DEFAULT_PROFILE, background: 'working', coachTier: 'self' })
     const rng = rngFromSeed(world.seed)
     let charged: number | null = null
     let fundsAfterTick = 0
@@ -274,7 +274,10 @@ describe('schema v21', () => {
   it('opens a fresh career unbacked', () => {
     const world = createWorld('acad-fresh')
     expect(world.academy).toBeNull()
-    expect(world.schemaVersion).toBe(21)
+    // ⚠ RE-AIMED from the literal 21 to the constant (the coach ladder bumped it to 22). The fact
+    // this line guards is "a fresh career opens on the CURRENT schema", which a literal restates as
+    // a version number and then has to chase every bump; the constant states it directly.
+    expect(world.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
   })
 })
 

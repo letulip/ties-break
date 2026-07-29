@@ -266,6 +266,16 @@ describe('class-flavored expenses (round-5 item 10)', () => {
     expect(flavors.has('Physio session') || flavors.has('Massage & recovery')).toBe(true)
   })
 
+  // ⚠ RE-AIMED TWICE, AND IT IS BACK TO WHAT IT ALWAYS SAID. Round 1 inverted this test - the coach
+  // TIER was going to express the family's price level, so scaling by background as well would have
+  // charged it twice. Round 2 restored it, because the owner's model is better and is a different
+  // claim: the wealth corridor is not a discount for being poor, it is THE MARKET SHE TRAINS IN.
+  // The same rung of coach costs different money in a working-class club, an ordinary academy and a
+  // premium one, so this block's original assertion is right again and the wealthy family paying
+  // most is the point rather than a side effect.
+  //
+  // The block's own subject was never in doubt through either round: class flavours this line. What
+  // moved was only whether it flavours the amount as well as the text. It does.
   it('scales the base expense by background (working < middle < wealthy) for the same draw', () => {
     const baseCost = (background: 'working' | 'middle' | 'wealthy') => {
       const w = createWorld('bg-cost', { ...DEFAULT_PROFILE, background })

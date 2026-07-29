@@ -6,8 +6,17 @@ import {
   type SeasonHistoryEntry,
   type WorldEventCategory,
 } from '../shared/protocol'
-import { isCappedTier, KID_ID, SAVE_SCHEMA_VERSION, seedWorldForV6, startingSkills, type WorldState } from './world'
+import {
+  isCappedTier,
+  KID_ID,
+  SAVE_SCHEMA_VERSION,
+  openingCoachId,
+  seedWorldForV6,
+  startingSkills,
+  type WorldState,
+} from './world'
 import { rollPotential } from './development'
+import { coachIncludesPhysio } from './coach'
 import { COHORT } from './season/cohort'
 import type { PlayerProfile } from '../shared/protocol'
 import { pickSurname } from './season/cohort'
@@ -170,7 +179,19 @@ export function migrateSave(raw: unknown): WorldState {
     if (typeof save.condition !== 'number') save.condition = 100
     if (save.injury === undefined) save.injury = null
     if (!Array.isArray(save.injuryHistory)) save.injuryHistory = []
-    if (typeof save.physioActive !== 'boolean') save.physioActive = save.profile?.coachSetup === 'hired'
+    // ⚠ RE-AIMED by the coach ladder (v22), and the historical answer is unchanged. This block used
+    // to read `save.profile?.coachSetup === 'hired'`. A save reaching it can now carry EITHER
+    // profile shape: a genuine pre-v12 save still has `coachSetup` (v22 is downstream and has not
+    // run yet), while a v0/v1 save was handed today's DEFAULT_PROFILE by the v2 block above, which
+    // carries `coachTier`. Both are asked, and both say the same thing – "she has a hired coach" –
+    // because every rung but self-coached IS a hire.
+    if (typeof save.physioActive !== 'boolean') {
+      const p = save.profile as (PlayerProfile & { coachSetup?: string }) | undefined
+      save.physioActive =
+        p?.coachSetup !== undefined
+          ? p.coachSetup === 'hired'
+          : p?.coachTier !== undefined && coachIncludesPhysio(p.coachTier)
+    }
     v = 12
   }
 
@@ -398,6 +419,65 @@ export function migrateSave(raw: unknown): WorldState {
   if (v === 20) {
     save.academy = null
     v = 21
+  }
+
+  // v21 -> v22: THE COACH LADDER (docs/specs/coach-tiers.md). `profile.coachSetup: 'parent' |
+  // 'hired'` becomes `profile.coachTier: 'self' | 'budget' | 'middle' | 'high' | 'elite'`.
+  //
+  // THE BACK-FILL IS THE OWNER'S RULING AND IT IS DELIBERATELY BLUNT: `hired` -> `elite`,
+  // `parent` -> `self`. Asked what an existing career should land on, he said Elite and that he
+  // does not mind, because there are no players yet - so the version of this block that priced
+  // each save's old weekly bill against every rung and picked the nearest is gone. It was more
+  // arithmetic than the question deserved.
+  //
+  // It is also, as it happens, what that arithmetic mostly said: the old `hired` band's midpoint
+  // (~$475/wk) is what the spec's own conversion prices an Elite coach at, to within $5. And both
+  // mappings are DEVELOPMENT-NEUTRAL - `self` carries 0.82, which is exactly the `coachParent` a
+  // parent-coached career was growing at, and `elite` carries 1.15, which is exactly `coachHired`.
+  // No migrated career's growth rate moves by a hair; only its bill does.
+  //
+  // A migrated career is not stranded on that bill, either: the Coach Market (screen T) ships in
+  // the same wave, so an Elite coach it cannot afford is one screen away from being a Budget one.
+  if (v === 21) {
+    const profile = save.profile as (PlayerProfile & { coachSetup?: 'parent' | 'hired' }) | undefined
+    if (profile && profile.coachTier === undefined) {
+      profile.coachTier = profile.coachSetup === 'hired' ? 'elite' : 'self'
+      delete profile.coachSetup
+    }
+    v = 22
+  }
+
+  // v22 -> v23: A ROSTER, NOT A RUNG. `world.coachId` joins the profile's rung - the id of the
+  // actual person she trains with, or `null` for the parent on the court.
+  //
+  // The back-fill hires the coach at the rung she was already on, choosing by fit and then by
+  // price, which is the same rule `openingCoachId` applies to a brand-new career. So a migrated
+  // save keeps the tier it was being billed at, keeps its development factor, and simply gains a
+  // name and a face for the money it was already spending.
+  //
+  // Nothing here is drawn on the main stream: the roster is a pure derivation of the seed
+  // (engine/coach.ts buildCoachRoster), which is also why only the id needs storing - the roster
+  // itself rebuilds identically on every load, for ever.
+  if (v === 22) {
+    const profile = save.profile as PlayerProfile | undefined
+    if (save.coachId === undefined) {
+      save.coachId = profile ? openingCoachId(String(save.seed), profile) : null
+    }
+    v = 23
+  }
+
+  // v23 -> v24: DOES THE COACH COME TO TOURNAMENTS. A competition week stops being billed as a
+  // coaching week by default (owner, R4), and `coachOnEventWeeks` buys him for those weeks anyway.
+  //
+  // Back-filled FALSE, which is the new default and NOT a preservation of what the save was doing -
+  // an existing career was billed for every week, so this migration makes its coach cheaper and,
+  // on tournament weeks, absent. That is deliberate: the owner's framing is that competition weeks
+  // are automatically not coach weeks, so the automatic rule is what a migrated career should wake
+  // up under. The toggle is one tap away on the Coach Market for anyone who wants the old
+  // behaviour back, and it is the cheaper direction, which is the safe one to migrate into.
+  if (v === 23) {
+    save.coachOnEventWeeks = false
+    v = 24
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

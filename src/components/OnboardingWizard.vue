@@ -4,7 +4,7 @@
 // this out for the tab shell reactively (no emit/props needed).
 import { computed, reactive, ref } from 'vue'
 import { useGameStore } from '../stores/game'
-import { DEFAULT_PROFILE, type CoachSetup, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
+import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
 import { SURNAMES } from '../engine/season/cohort'
 import { portraitUrl } from '../art/preload'
 
@@ -46,9 +46,19 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ]
 
-const COACH_OPTIONS: { id: CoachSetup; label: string; blurb: string }[] = [
-  { id: 'parent', label: 'Coach her yourself', blurb: 'Cheaper weeks – between-set coaching unlocks later.' },
-  { id: 'hired', label: 'Hire a coach', blurb: 'Pro guidance, real fees.' },
+// THE INTERIM CHOOSER. Onboarding still offers the two options it always did, mapped onto the two
+// rungs of the ladder they mean: the parent on the court, and the standard private coach. "Hire a
+// coach" deliberately lands on `middle` and NOT on the dearest rung – handing a new middle-class
+// family an Elite coach is exactly the wall docs/specs/coach-tiers.md exists to close.
+//
+// WHAT A PROPER CHOOSER NEEDS (screen T, Coach Market – designed, and a later slice): all five
+// rungs as sections rather than two cards, each rung's weekly band quoted at HER age and HER plan
+// (coachWeeklyBandCents already returns it), the great / good / off fit pill read against the play
+// style chosen on the next step, and a budget bar. Two of those - the price and the fit - are the
+// whole point of the ladder, and neither fits on a card that has to stay a boolean.
+const COACH_OPTIONS: { id: CoachTier; label: string; blurb: string }[] = [
+  { id: 'self', label: 'Coach her yourself', blurb: 'You are free; the court is not. Between-set coaching unlocks later.' },
+  { id: 'middle', label: 'Hire a coach', blurb: 'A standard private coach, and a real weekly bill.' },
 ]
 
 // An inclination, not numbers: weights future skill growth (Phase 4).
@@ -81,7 +91,7 @@ const profile = reactive<PlayerProfile>({
   gender: 'girl',
   country: '',
   background: 'middle',
-  coachSetup: 'hired',
+  coachTier: DEFAULT_PROFILE.coachTier,
   playStyle: 'all-court',
   birthMonth: DEFAULT_PROFILE.birthMonth,
 })
@@ -94,7 +104,7 @@ const nextDisabled = computed(
 
 const birthMonthLabel = computed(() => MONTHS[profile.birthMonth - 1] ?? '')
 const backgroundLabel = computed(() => BACKGROUNDS.find((b) => b.id === profile.background)?.label ?? '')
-const coachingLabel = computed(() => COACH_OPTIONS.find((c) => c.id === profile.coachSetup)?.label ?? '')
+const coachingLabel = computed(() => COACH_OPTIONS.find((c) => c.id === profile.coachTier)?.label ?? '')
 const playStyleLabel = computed(() => PLAY_STYLES.find((s) => s.id === profile.playStyle)?.label ?? '')
 
 function back(): void {
@@ -115,8 +125,8 @@ function pickCountry(code: string): void {
 function pickBackground(id: FamilyBackground): void {
   profile.background = id
 }
-function pickCoach(id: CoachSetup): void {
-  profile.coachSetup = id
+function pickCoach(id: CoachTier): void {
+  profile.coachTier = id
 }
 function pickPlayStyle(id: PlayStyle): void {
   profile.playStyle = id
@@ -215,7 +225,7 @@ function start(): void {
             v-for="c in COACH_OPTIONS"
             :key="c.id"
             class="choice-card"
-            :class="{ selected: profile.coachSetup === c.id }"
+            :class="{ selected: profile.coachTier === c.id }"
             @click="pickCoach(c.id)"
           >
             <strong>{{ c.label }}</strong>

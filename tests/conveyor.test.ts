@@ -11,7 +11,7 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { AiPlayer } from '../src/engine/season/types'
 
 function career(seed: string, weeks: number): WorldState {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, background: 'wealthy', coachSetup: 'hired' })
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, background: 'wealthy', coachTier: 'elite' })
   const rng = rngFromSeed(world.seed)
   for (let w = 0; w < weeks; w++) {
     for (const e of world.season) {

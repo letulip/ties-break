@@ -366,6 +366,29 @@ button {
   cursor: pointer;
 }
 
+/* THE BACK CONTROL, once (owner, R3). Top-left back is ONE control across the whole app and it is
+   a bare arrow - the Coach Market shipped it on a circular plate, which made it the odd one out.
+   No plate, no border, no padding: the arrow IS the affordance, and it sits beside the generic
+   `button` reset because that is what it is a variant of.
+   The app's only other back control is TournamentFlow's "← Back", which lives in a flow's action
+   row rather than a screen header and reads as a labelled button there; it is left alone, and this
+   class is here for the next screen header that needs one. */
+.back-link {
+  flex: none;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+.back-link:hover:not(:disabled),
+.back-link:focus-visible {
+  border-color: transparent;
+  color: var(--text);
+}
+
 button:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
@@ -1496,6 +1519,19 @@ section.bare .event-cards {
 /* THE SURFACE MARK, the export's own: two concentric rings in the court's colour, then its name.
    The clay value is the export's verbatim; hard and grass are chosen at the same weight and
    saturation so the three read as one family rather than as three decisions. */
+/* Coach Market (screen T). Tier colours and fit-pill surfaces come straight from the design
+   system's export, docs/design/tokens.css - same names, same values, so the handoff and the app
+   cannot drift apart the way the brand lime once did. */
+:root {
+  --tier-budget: #8fb2d6;
+  --tier-middle: #cfe152;
+  --tier-high: #e2822f;
+  --tier-elite: #9b7fd4;
+  --fit-great-bg: rgba(207, 225, 82, 0.14);
+  --fit-good-bg: rgba(255, 255, 255, 0.07);
+  --fit-off-border: rgba(255, 255, 255, 0.12);
+}
+
 :root {
   --surface-hard: #4a90d9;
   --surface-clay: #e2822f;
@@ -4310,6 +4346,20 @@ button.note-card:active:not(:disabled) {
   background: rgba(255, 255, 255, 0.55);
 }
 
+/* R4: the coach's handwritten sign-off, from the export (§Home.3: «подпись "M. Ricci" - Caveat 17px
+   rgba(207,225,82,.72)»). Its values are the export's, to the digit; the alpha is written against
+   `--accent-rgb` so the brand lime stays repairable in one place the way the token pass required.
+   It is the SECOND place Caveat goes, and for the same reason as the first - a note on a
+   photograph, signed by the person who wrote it. */
+.coach-sign {
+  margin: 6px 0 0;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  color: rgba(var(--accent-rgb), 0.72);
+}
+
 /* A2e: the one line on this page that is genuinely a note written on a photograph, so it is the
    first place Caveat goes. Bigger than the sans it replaced (17px vs 13.5px) because Caveat's
    x-height is far smaller - the two look the same size on screen. */
@@ -4375,4 +4425,442 @@ button.note-card:active:not(:disabled) {
 
 .tab-btn.active .tab-label {
   font-weight: 700;
+}
+
+
+/* --- SCREEN T: COACH MARKET (docs/design/README.md §T) ------------------------------------- */
+
+/* ⚠ EVERY ROW CLASS IS `cm-` PREFIXED, and that is a bug fix rather than a style. The first cut
+   named them `.coach-row / .coach-body / .coach-name`, and `.coach-body` ALREADY EXISTS - it is the
+   Home coach card's text column, carrying `margin-left: 54px` and its own padding. Both rules
+   matched every market row, so Home's geometry was silently leaking into this screen. A screen-
+   scoped prefix is the cheapest way to make that impossible; `.fit-pill` keeps its plain name
+   because it is genuinely shared vocabulary (the design system's own pill). */
+
+.market-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.market-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--text);
+}
+.market-sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.market-sub strong {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* The training regulator, and the line that says what it just did to every price below. */
+.cm-plan {
+  margin-bottom: 6px;
+}
+.cm-plan-note {
+  margin: 0 0 12px;
+}
+
+/* The budget meter. Three real numbers: what she pays now, what a week brings in, and the gap. */
+.budget-meter {
+  padding: 12px 14px;
+  border-radius: var(--radius-frame);
+}
+.budget-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.budget-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.budget-free {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.budget-free strong {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+}
+.budget-bar {
+  margin: 8px 0;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+}
+.budget-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.budget-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.legend-dot.cap {
+  margin-left: 10px;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.market-chips {
+  margin-bottom: 8px;
+}
+.chip-count {
+  font-size: 10px;
+  opacity: 0.65;
+}
+.market-controls {
+  margin-bottom: 10px;
+}
+.market-drop {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.market-drop .drop-label {
+  font-weight: 500;
+  color: var(--muted);
+}
+.market-drop.active {
+  background: rgba(var(--accent-rgb), 0.07);
+  border-color: rgba(var(--accent-rgb), 0.5);
+  color: var(--accent);
+}
+.market-lens-note {
+  margin: -4px 0 10px;
+}
+
+/* The tournament-week toggle: a row of text and a switch, in the budget card's own idiom. */
+.cm-travel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-frame);
+  margin-bottom: 6px;
+}
+.cm-travel-text {
+  flex: 1;
+  min-width: 0;
+}
+.cm-travel-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.cm-travel-sub {
+  margin: 2px 0 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.cm-switch {
+  flex: none;
+  position: relative;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  transition: background 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cm-switch[aria-checked='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.cm-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--ink-2);
+  transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.cm-switch[aria-checked='true'] .cm-switch-knob {
+  background: var(--on-lime);
+  transform: translateX(18px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .cm-switch,
+  .cm-switch-knob {
+    transition: none;
+  }
+}
+.cm-travel-cost {
+  margin: 0 0 12px;
+}
+.cm-travel-cost strong {
+  font-weight: 700;
+  color: var(--ink-2);
+}
+.cm-travel-cost strong.chosen {
+  color: var(--accent);
+}
+
+/* A tier is a SECTION, not a filter (design §T.1): dot, name, count, price range. */
+.tier-block {
+  margin-bottom: 18px;
+  scroll-margin-top: 12px;
+}
+.tier-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 8px;
+  font-size: var(--label-size);
+  font-weight: 800;
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+}
+.tier-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+.tier-head.tier-budget {
+  color: var(--tier-budget);
+}
+.tier-head.tier-middle {
+  color: var(--tier-middle);
+}
+.tier-head.tier-high {
+  color: var(--tier-high);
+}
+.tier-head.tier-elite {
+  color: var(--tier-elite);
+}
+.tier-count {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-dim);
+}
+.tier-range {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+
+/* THE COACH ROW. Headline signal is the FIT pill, not a tag list (design §T.3), and the portrait is
+   full-bleed down the left edge - the same treatment `.coach-art` gives the Home card, for the
+   reason recorded there (A2c/d): sized by HEIGHT so the whole frame is on screen with no vertical
+   crop, and masked into the card so the card's own gradient shows through rather than a painted
+   overlay that would drift out of step with it. */
+.cm-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 82px;
+  margin-bottom: 8px;
+  padding: 9px 12px 9px 0;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: var(--radius-frame);
+  background: var(--card-bottom);
+  text-align: left;
+  cursor: pointer;
+}
+.cm-row:hover:not(:disabled) {
+  border-color: var(--card-edge);
+}
+/* A disabled row is still a row you must be able to READ - the global button:disabled dim would
+   grey out the coach she actually has, which is the one row that most needs to be legible. */
+.cm-row:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.cm-row.current {
+  background: rgba(var(--accent-rgb), 0.07);
+  border-color: var(--accent);
+}
+/* Over budget or gated: dashed, dimmed, and the shortfall stated in money (never "expensive"). */
+.cm-row.blocked {
+  background: rgba(20, 29, 38, 0.5);
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.09);
+}
+.cm-row.blocked .cm-art {
+  opacity: 0.45;
+}
+.cm-row.blocked .cm-name {
+  color: var(--ink-dim);
+}
+.cm-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
+}
+.cm-art img {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+.cm-body {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  margin-left: 62px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cm-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+.cm-meta {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.cm-tags {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.cm-uplift {
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+.cm-row.current .cm-uplift {
+  color: var(--accent);
+}
+.fit-pill {
+  flex: none;
+  padding: 3px 8px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 700;
+}
+.fit-pill.fit-great {
+  background: var(--fit-great-bg);
+  color: var(--accent);
+}
+.fit-pill.fit-good {
+  background: var(--fit-good-bg);
+  color: var(--ink-2);
+}
+.fit-pill.fit-off {
+  border-color: var(--fit-off-border);
+  color: var(--muted);
+}
+.cm-right {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+.cm-price {
+  font-size: 14.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.cm-price i {
+  font-style: normal;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.cm-row.blocked .cm-price {
+  color: var(--ink-dim);
+}
+.cm-action {
+  font-size: 12px;
+  font-weight: 800;
+}
+.cm-action.is-hire {
+  color: var(--accent);
+}
+.cm-action.is-current {
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.cm-action.is-over,
+.cm-action.is-locked {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.self-coach-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* A table cell that is a door (the Kid screen's Coaching row -> the market). The chevron must not
+   wrap onto its own line, so the whole label stays together. */
+button.linkish {
+  white-space: nowrap;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.linkish:hover:not(:disabled) {
+  text-decoration: underline;
 }

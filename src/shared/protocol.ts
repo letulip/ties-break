@@ -8,7 +8,11 @@ import type { AvatarEmotion, PortraitStage } from './avatarEmotion'
 import type { EventPreview } from '../engine/season/preview'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
-export type CoachSetup = 'parent' | 'hired'
+/** The coach ladder (docs/specs/coach-tiers.md), cheapest rung first. Replaces the old
+ *  `CoachSetup = 'parent' | 'hired'` boolean, whose single `hired` band turned out to be a smear
+ *  across three real tiers. `self` is the parent on the court – free as a coach, though the court
+ *  is still rented. See src/engine/coach.ts for what each rung costs and what it is worth. */
+export type CoachTier = 'self' | 'budget' | 'middle' | 'high' | 'elite'
 /** An inclination, not numbers: weights future skill growth (Phase 4), gives build identity now. */
 export type PlayStyle = 'aggressive' | 'counterpuncher' | 'serve-first' | 'all-court'
 
@@ -21,7 +25,8 @@ export interface PlayerProfile {
   /** ISO 3166-1 alpha-2, e.g. 'RU'; flag emoji is derived from it in the UI */
   country: string
   background: FamilyBackground
-  coachSetup: CoachSetup
+  /** which rung of the coach ladder she is on (schema v22) */
+  coachTier: CoachTier
   playStyle: PlayStyle
   /** 1-12 (schema v9). Relative-age-effect groundwork (round-3 QA item 16): picked at
    *  onboarding, purely cosmetic until Phase 4 wires the junior age-group dynamics it's
@@ -35,7 +40,10 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   gender: 'girl',
   country: 'US',
   background: 'middle',
-  coachSetup: 'hired',
+  // A middle-class family's default is the STANDARD private coach, not the dearest one on the
+  // ladder. The old default read `coachSetup: 'hired'`, which the spec's conversion prices at
+  // ~$475/wk – an Elite coach, and precisely the wall this slice exists to close.
+  coachTier: 'middle',
   playStyle: 'all-court',
   birthMonth: 6,
 }
@@ -394,6 +402,34 @@ export interface SnapshotAcademy {
 }
 
 /** A scheduled event surfaced to the UI, with the kid's entry state + tier lookups. */
+/** ONE ROW OF THE COACH MARKET (screen T, schema-free - derived at snapshot time).
+ *
+ *  The ENGINE decides fit, price, affordability and the gate; the screen only lays them out. That
+ *  is the same division `UpcomingEvent` uses for a tournament, and it is why two surfaces can never
+ *  disagree about what a coach costs. */
+export interface CoachMarketRow {
+  /** stable id, and also the portrait stem under public/images/coaches */
+  id: string
+  tier: CoachTier
+  name: string
+  /** the game HE plays */
+  style: PlayStyle
+  /** how that reads against hers - the great / good / off pill */
+  fit: 'great' | 'good' | 'off'
+  /** his weekly price in HER family's market, at HER plan and HER age */
+  weeklyCents: number
+  /** true for the coach she trains with today */
+  current: boolean
+  /** how much his weekly price exceeds the week's parent income, or 0 when it fits */
+  overBudgetCents: number
+  /** ranking points still needed before he would take her, or null when nothing is stopping her.
+   *  Always null while ECONOMY.coach.eliteGate is off, which is its shipped state. */
+  lockedPoints: number | null
+  /** [lo, hi] percent of her CURRENT level this rung could add over a season, above what the
+   *  parent alone would manage. Computed from her own headroom - see coachSeasonUplift. */
+  upliftPct: [number, number]
+}
+
 export interface UpcomingEvent {
   id: string
   week: number
@@ -674,7 +710,7 @@ export interface Snapshot {
   /** the kid's active injury, or null when healthy. Always null in slice B (Slice C populates it). */
   injury: SnapshotInjury | null
   /** whether physio recovery is active (its cost lever is billed in Slice C; in B this just
-   *  reflects/sets the flag, default = coachSetup === 'hired'). */
+   *  reflects/sets the flag, default = every coach tier but self-coached). */
   physioActive: boolean
   /** most recent 60 events, chronological (oldest first) */
   events: WorldEvent[]
@@ -695,6 +731,20 @@ export interface Snapshot {
    *  "capped for the year" apart from "locked on points" and "nothing scheduled". Derived at
    *  snapshot time from the persisted ledger, so it persists nothing of its own. */
   entryCap: EntryCapUsage
+  /** WHO SHE TRAINS WITH (v23): the roster coach's id, or null for the parent on the court. */
+  coachId: string | null
+  /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
+  coachMarket: CoachMarketRow[]
+  /** What the coach costs over a season with tournament weeks OFF and ON, so the toggle can be
+   *  priced rather than guessed. The weekly rate is the same either way; the week COUNT differs. */
+  coachBilling: {
+    onEventWeeks: boolean
+    weeklyCents: number
+    /** weeks of the current season she is entered for */
+    eventWeeks: number
+    seasonOffCents: number
+    seasonOnCents: number
+  }
   /** season planner (schema v13): booked vacation weeks from the current week onward. The
    *  calendar renders them by package name; a booked week is a hard blackout for entries. */
   vacations: VacationBooking[]
@@ -786,6 +836,8 @@ export type ToWorker =
   | { id: number; type: 'bookVacation'; week: number; packageId: string }
   | { id: number; type: 'cancelVacation'; week: number }
   | { id: number; type: 'bookPractice'; week: number; withCoach: boolean }
+  | { id: number; type: 'hireCoach'; coachId: string | null }
+  | { id: number; type: 'setCoachOnEventWeeks'; on: boolean }
   | { id: number; type: 'cancelPractice'; week: number }
   | { id: number; type: 'setPlan'; plan: WeekPlan }
   | { id: number; type: 'setPhysio'; active: boolean }

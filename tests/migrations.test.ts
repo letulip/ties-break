@@ -344,6 +344,14 @@ describe('save migrations', () => {
     expect(migrateSave(structuredClone(migrated))).toEqual(migrated)
   })
 
+  // ⚠ RE-AIMED BY THE COACH LADDER (v22), and the protected fact is unchanged: a parent-coached
+  // career migrates with physio OFF. What moved is where the v12 block LOOKS. It used to ask
+  // `profile.coachSetup === 'hired'` and nothing else; v22 renames that field to `coachTier`, so
+  // the block now asks the legacy field FIRST and falls back to the new one. The precedence
+  // matters here specifically: this fixture is a v11 shape built by spreading today's
+  // DEFAULT_PROFILE, so it carries BOTH `coachSetup: 'parent'` and (from the spread)
+  // `coachTier: 'middle'` – a hybrid no real save has. The legacy field wins, which is the correct
+  // reading for a genuine pre-v22 save and is what keeps this assertion true.
   it('v11 -> v12 physioActive follows the coach setup (parent coach -> false)', () => {
     const v11 = {
       schemaVersion: 11,

@@ -251,7 +251,13 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
     // `enterPointBand` may only be read by the two pure band helpers; every gate goes
     // through entryStatus. (This is the structural guard against the R10-5 desync.)
-    const readers = src.split('\n').filter((l) => l.includes('enterPointBand') && !l.trim().startsWith('*'))
+    // ⚠ The `//` exclusion joined the `*` one when the coach branch met the two ladders: the Elite
+    // gate's comment has to name `TIERS.national.enterPointBand[0]` to explain WHY its threshold is
+    // 150, and prose cannot re-implement a band. This makes the guard measure what it always meant
+    // - actual readers - rather than mentions. The count below is unchanged, which is the point.
+    const readers = src
+      .split('\n')
+      .filter((l) => l.includes('enterPointBand') && !l.trim().startsWith('*') && !l.trim().startsWith('//'))
     // ⚠ RE-PINNED 3 -> 4 by the two ladders. The band gained one more legitimate reader and it is
     // INSIDE the same gate: `entryStatus`'s international branch reads it for the on-ramp rung,
     // whose bar is domestic points rather than an ITF rank. The protected fact is unchanged - no

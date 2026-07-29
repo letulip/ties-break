@@ -12,7 +12,7 @@
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
 import { rngFromSeed, pickInt, type Rng } from './rng'
-import type { CoachSetup, FamilyBackground, InjurySeverity } from '../shared/protocol'
+import type { CoachTier, FamilyBackground, InjurySeverity, PlayStyle } from '../shared/protocol'
 import type { TierId } from './season/types'
 import { WEEKS_PER_YEAR } from './season/calendar'
 
@@ -54,10 +54,15 @@ export interface GearLine {
 
 // THE app-level wealth-price corridor (owner canon, 25.07): the same [lo, hi] factor band per
 // family background prices travel (ECONOMY.travelBgFactor), every medical bill
-// (ECONOMY.physio.medicalBgFactor) and the weekly coaching/review expense (world.ts
-// resolveBaseCosts, roll from `seed:coachbg:week`) – all three reference this ONE object.
-// Framing: working = public clinics / budget trips, middle = standard, wealthy = private
-// everything. Retuned when real incomes (prize money) land – this constant is the single knob.
+// (ECONOMY.physio.medicalBgFactor) and the season planner's packages (vacationPriceCents /
+// practiceFeeCents) – all of them reference this ONE object. Framing: working = public clinics /
+// budget trips, middle = standard, wealthy = private everything. Retuned when real incomes (prize
+// money) land – this constant is the single knob.
+//
+// ⚠ COACHING LEFT THE CORRIDOR (coach-tiers slice, docs/specs/coach-tiers.md §2). The weekly
+// coaching bill used to be its fourth customer, via a roll from `seed:coachbg:week` in world.ts
+// resolveBaseCosts. The coach TIER now states the family's price level explicitly, so the corridor
+// would have charged the same difference twice. Everything else it prices is untouched.
 const WEALTH_CORRIDOR = {
   working: [0.7, 0.8],
   middle: [0.95, 1.05],
@@ -99,18 +104,202 @@ export const ECONOMY = {
   // N's income is base x prod(1 + roll_i) over seasons 1..N. Both bounds are knobs.
   incomeGrowthBand: [0.05, 0.10] as [number, number],
 
-  // Weekly base ("coaching") expense draw range in cents, by coaching setup. A parent-coach
-  // saves on fees. The draw COUNT is one pickInt per tick regardless of setup/background.
-  // Background scaling happens AFTER the pickInt via the wealth corridor: one uniform roll from
-  // the private `seed:coachbg:week` sub-stream maps into wealthCorridor[background] (see
-  // world.ts resolveBaseCosts) – a post-draw multiply, so the main-stream draw sequence never
-  // depends on background. (Wealth-corridor unification: this replaced the fixed bgExpenseFactor
-  // 0.8/1.0/1.4 – middle's exact ×1.0 pin to the pre-round-7 baseline ended DELIBERATELY, middle
-  // now breathes ±5% weekly like every other corridor-priced bill.)
-  expenseRangeCents: {
-    hired: [250_00, 700_00],
-    parent: [120_00, 400_00],
-  } as Record<CoachSetup, [number, number]>,
+  // --- THE COACH LADDER (docs/specs/coach-tiers.md; the model itself is engine/coach.ts) --------
+  //
+  // REPLACES `expenseRangeCents` – the old two-band weekly draw (hired $250-700, parent $120-400).
+  // The bands become a per-tier PER-HOUR ladder, a ROSTER of named coaches is drawn off it, and the
+  // weekly bill is `coach rate x hours(plan) x wealthCorridor[background]`.
+  //
+  // ⚠ THE CORRIDOR IS BACK ON COACHING (Round 2, owner 29.07), and the reason is his, not mine. I
+  // took it off arguing that the tier already says "poorer families buy cheaper coaches", so keeping
+  // both charges the difference twice. His model is better and it is a DIFFERENT claim:
+  //
+  //   «для 8к все тиры [в их академии] стоят согласно их коридору, для 25к – свои цены,
+  //    для 120к [в их премиальных и элитных местах] стоят дороже всего»
+  //
+  // The corridor is not a discount for being poor, it is THE MARKET SHE TRAINS IN. The same rung of
+  // coach costs different money in a working-class club, an ordinary academy and a premium one,
+  // because the court, the city and the queue for that coach's time are different. A family does not
+  // get a cheaper Middle coach because it is poor - it hires the Middle coach its academy HAS. So
+  // every tier is priced in every corridor, both dials are real, and the wealthy family pays MORE
+  // for the same rung, which the previous model had backwards.
+  //
+  // THE DRAW COUNT IS STILL ONE pickInt per tick, in the same position. What it draws changed: the
+  // COACH's rate is his own and comes off the roster sub-stream, so the main-stream draw is now the
+  // week's jitter (see weekJitterBps). Corridor and hours are post-draw multiplies.
+  coach: {
+    // Inclusive upper bounds of the age-rate rows: 12-16 (development), 17-22 (pro), 23+ (peak and
+    // after). His own caveat is why there are three and not four - 17-22 and 22-28 barely differ,
+    // and 29+ holds level because past the peak the work becomes maintenance.
+    ageBandUpper: [16, 22] as [number, number],
+
+    // SESSIONS A WEEK, anchored on the three plan PRESETS. ⚠ 4 / 5 / 6, the owner's own numbers
+    // (Round 2), replacing the 3/4/6 I anchored on his price table's "x4 h/wk" reference. An hour
+    // is a session.
+    //
+    // THE HALF THE OLD MODEL WAS MISSING: the split scaled the development rate and, through
+    // planFactor, barely scaled the bill (0.91 at train 60 to 1.06 at 85 - a 16% spread on a slider
+    // that doubles her growth). Hours are what a coach charges for, so the split now moves the bill
+    // by half again end to end and the family has two dials instead of none: WHICH coach, and HOW
+    // MUCH of him. A High coach at four sessions is affordable where an Elite at six is not.
+    //
+    // Anchors rather than two endpoints because train 75 sits at t=0.6 of the 60-85 range, not at
+    // its middle, so a straight line puts BALANCED somewhere nobody chose. Linear between anchors,
+    // clamped outside them, ascending by construction.
+    sessionsByTrain: [
+      [60, 4],
+      [75, 5],
+      [85, 6],
+    ] as [number, number][],
+
+    // THE OWNER'S PRICE RESEARCH (29.07), per hour, individual lessons, big-city rate, converted
+    // straight across because per-hour is the unit he priced in. His midpoints, row by row:
+    //   12-16   Budget 30 · Middle 50 · High  80 · Elite 120
+    //   17-22   Budget 35 · Middle 60 · High 100 · Elite 160
+    //   23+     Budget 40 · Middle 65 · High 120 · Elite 200
+    //
+    // ⚠ THESE ARE MIDDLE-CORRIDOR PRICES. The corridor multiplies them, and middle's is [0.95, 1.05]
+    // centred on 1.0, so his table IS what an ordinary academy charges - which is the market he
+    // priced. Working pays 0.7-0.8 of it and wealthy 1.2-1.3, per the rung, per the hour.
+    //
+    // Each band is his midpoint +/-20%, and a coach's OWN rate is drawn from it once and kept for
+    // the career (see the roster below). So the band is no longer weekly breathing - it is the
+    // spread of rates between the coaches who work at that rung, which is what makes a tier a
+    // market with a price range rather than a single number.
+    //
+    // SELF IS THE COURT, NOT THE COACH. The parent's hour is free - that is the whole rung - but the
+    // court is not, and §3 of the spec keeps every tier price inclusive of it rather than splitting
+    // court rental into a line of its own (we already charge it for practice matches). So `self` is
+    // priced at exactly the court rental §3 quotes, $10-30/h, and takes the MIDDLE of that band: it
+    // has no roster and nobody to be dearer than. A $0 rung would hand the working family the single
+    // largest line in the game.
+    hourlyRateCents: {
+      self: [[10_00, 30_00], [11_00, 33_00], [12_00, 36_00]],
+      budget: [[24_00, 36_00], [28_00, 42_00], [32_00, 48_00]],
+      middle: [[40_00, 60_00], [48_00, 72_00], [52_00, 78_00]],
+      high: [[64_00, 96_00], [80_00, 120_00], [96_00, 144_00]],
+      elite: [[96_00, 144_00], [128_00, 192_00], [160_00, 240_00]],
+    } as Record<CoachTier, [number, number][]>,
+
+    // THE WEEK'S JITTER, in basis points, and the ONE main-stream draw the bill spends. A coach has
+    // a rate; a WEEK still varies - a session moved, a court booked at a worse hour, an extra half
+    // hour before a tournament. +/-8% keeps the bill recognisably his price while leaving the
+    // Money screen something to show, and it is what preserves the frozen MAIN capture: exactly one
+    // pickInt, in exactly the slot the old expense draw held.
+    weekJitterBps: [9200, 10800] as [number, number],
+
+    // THE ROSTER (Round 2). «примерно по 4 тренера на тир, по одному на стиль игры» - what makes
+    // screen T a market rather than a menu: at one rung the parent chooses between a coach who fits
+    // her game and one who does not, at roughly the same money.
+    //
+    // The slots are DATA and not a generated grid, because the art is: 16 portraits ship in
+    // public/images/coaches (budget 3, middle 5, high 4, elite 4), each of a specific person, so the
+    // gender is a fact about the file and the style is a reading of what he is doing in it. What the
+    // seed draws is the NAME; who these people are does not change between careers.
+    //
+    // BUDGET HAS NO SERVE-FIRST COACH, deliberately, and the owner has not objected: a big serve is
+    // the expensive build, the cheap rung teaches shape and consistency, and a serve-first kid who
+    // shops there finds nobody who fits her at all. That is the tier's texture.
+    //
+    // ⚠ THE DUPLICATE MOVED DOWN A RUNG (Round 3). Middle used to carry TWO counterpunchers, purely
+    // because five middle portraits had to go somewhere, and Budget carried three coaches. Moving
+    // `middle-4` to Budget makes it four a tier all the way up, leaves Middle / High / Elite with
+    // exactly one coach per style, and puts the one duplicate in the tier where it reads as
+    // something rather than as an accident: the club IS defence and consistency, so two defensive
+    // coaches at the bottom of the market is what a club looks like. A counterpuncher now has two
+    // Budget coaches to choose between at different prices, which is the roster doing its job.
+    //
+    // The portrait stem still says `middle-4` because a stem names the MASTER FILE, not the rung -
+    // the art is a man in an orange jacket explaining something, which is a club coach as readily
+    // as an academy one. Renaming the file would break every save holding that id.
+    roster: [
+      { portrait: 'budget-1', tier: 'budget', style: 'counterpuncher', gender: 'm' },
+      { portrait: 'budget-2', tier: 'budget', style: 'all-court', gender: 'f' },
+      { portrait: 'budget-3', tier: 'budget', style: 'aggressive', gender: 'f' },
+      { portrait: 'middle-4', tier: 'budget', style: 'counterpuncher', gender: 'm' },
+      { portrait: 'middle-1', tier: 'middle', style: 'all-court', gender: 'f' },
+      { portrait: 'middle-2', tier: 'middle', style: 'counterpuncher', gender: 'm' },
+      { portrait: 'middle-3', tier: 'middle', style: 'serve-first', gender: 'm' },
+      { portrait: 'middle-5', tier: 'middle', style: 'aggressive', gender: 'm' },
+      { portrait: 'high-1', tier: 'high', style: 'all-court', gender: 'm' },
+      { portrait: 'high-2', tier: 'high', style: 'counterpuncher', gender: 'f' },
+      { portrait: 'high-3', tier: 'high', style: 'aggressive', gender: 'm' },
+      { portrait: 'high-4', tier: 'high', style: 'serve-first', gender: 'f' },
+      { portrait: 'elit-1', tier: 'elite', style: 'aggressive', gender: 'f' },
+      { portrait: 'elit-2', tier: 'elite', style: 'all-court', gender: 'f' },
+      { portrait: 'elit-3', tier: 'elite', style: 'serve-first', gender: 'm' },
+      { portrait: 'elit-4', tier: 'elite', style: 'counterpuncher', gender: 'm' },
+    ] as { portrait: string; tier: CoachTier; style: PlayStyle; gender: 'm' | 'f' }[],
+
+    // WHAT EACH RUNG IS WORTH. Replaces ECONOMY.development.coachParent (0.82) / coachHired (1.15),
+    // and keeps both of those values as the ENDS of the ladder on purpose - see coachFactor in
+    // engine/coach.ts for the argument. Steps shrink as they climb (+0.13, +0.09, +0.07, +0.04)
+    // while the price roughly doubles every two rungs, so Elite is a luxury rather than an
+    // optimisation.
+    developmentFactor: { self: 0.82, budget: 0.95, middle: 1.04, high: 1.11, elite: 1.15 } as Record<
+      CoachTier,
+      number
+    >,
+
+    // FIT, as screen T's three pills - and since Round 2 it is a fact about the COACH, not the tier.
+    // A coach coaches the game he plays; how well that transfers to hers is a question about the two
+    // STYLES, so this is a compatibility table and not a tier table.
+    //
+    // Symmetric, and the shape is the game's own: aggressive and serve-first are both first-strike
+    // tennis and read across; counterpuncher is the opposite philosophy and does not; all-court is
+    // the generalist and is never `off` for anybody, in either direction. Own style is always
+    // `great`, anything unlisted is `off`.
+    styleAffinity: {
+      aggressive: ['serve-first', 'all-court'],
+      counterpuncher: ['all-court'],
+      'serve-first': ['aggressive', 'all-court'],
+      'all-court': ['aggressive', 'counterpuncher', 'serve-first'],
+    } as Record<PlayStyle, PlayStyle[]>,
+
+    // ...and what a pill is worth on the development rate. Deliberately SMALL next to the rung
+    // ladder (which spans 1.40 end to end): fit is a reason to prefer one affordable coach over
+    // another, never a reason to buy up a rung. At these values a Budget coach who is great for her
+    // (0.95 x 1.05 = 0.998) just edges a Middle coach who is wrong for her (1.04 x 0.94 = 0.978),
+    // which is exactly the size of trade the pills are meant to be advertising.
+    fitFactor: { great: 1.05, good: 1.0, off: 0.94 } as Record<'great' | 'good' | 'off', number>,
+
+    // THE PARENT'S OWN FIT. Self-coaching has no specialty to match: he taught her the game she
+    // plays, so he is never wrong for it and never a specialist in it.
+    selfFit: 'good' as 'great' | 'good' | 'off',
+
+    // THE ELITE GATE - A HOOK, AND IT IS OFF. Owner: «элит, кстати, могу вообще стать доступны для
+    // туров, как вариант и стоит соответствующе». The idea is that an Elite coach does not take a
+    // fourteen-year-old with nothing to show, which would turn the top rung from "what rich families
+    // buy in week 1" into something earned - the same shape as the academy scholarship.
+    //
+    // He asked for it to be an OPTION, so it is modelled and switched off: flip `enabled` and the
+    // gate is live everywhere at once (the market's hireable check, the hire command's refusal and
+    // the screen's locked row all read `coachHireable`). `minPoints` is her EARNED ranking points,
+    // the same number the tier ladder gates on, and 150 is national-tier eligibility - "she has
+    // results" stated in the currency the rest of the game already uses.
+    //
+    // ⚠ DOMESTIC POINTS, since the two ladders landed. 150 is literally
+    // TIERS.national.enterPointBand[0], so the domestic table is the one that keeps this number
+    // meaning what it was written to mean. Do not repoint it at the ITF table without moving the
+    // threshold too: an ITF gate would make the Elite rung reachable only by families who could
+    // already afford to fly, which is the shape the gate exists to prevent.
+    eliteGate: { enabled: false, minPoints: 150 },
+
+    // WHAT A RUNG IS WORTH TO HER, RIGHT NOW - the projection screen T prints on every coach row.
+    // Owner: «"budget может добавить 0-2%", "middle 1-3%", "high 2-4%" но всё зависит от ребенка».
+    // COMPUTED, never written down (see coachSeasonUplift): a hand-written band drifts the moment a
+    // knob moves, and the game already knows the answer. `weeks` is the horizon the projection runs
+    // over - one season, because that is the unit a weekly bill is judged in.
+    //
+    // ⚠ THE LITERAL 52 IS DELIBERATE and must not become `WEEKS_PER_YEAR`. This object is evaluated
+    // at MODULE LOAD, and economy.ts sits inside an import cycle with season/calendar.ts - so
+    // reading that constant HERE throws "Cannot access 'WEEKS_PER_YEAR' before initialization" in
+    // the browser's module order and takes the whole app down with it. It does NOT throw under
+    // vitest, whose resolution order differs, which is exactly how it got as far as a green suite;
+    // it was caught by loading the real app. The constant stays safe inside FUNCTION bodies, and
+    // parentIncomeForWeekCents below still uses it that way.
+    upliftHorizonWeeks: 52,
+  },
 
   // Travel scales with family means (wealthier travel = pricier + a money-sink; poorer = cheaper),
   // and the owner wants the price to sit in a CORRIDOR for every trip, not on a fixed multiplier.
@@ -123,9 +312,11 @@ export const ECONOMY = {
   // export name so call sites stay stable).
   travelBgFactor: WEALTH_CORRIDOR,
 
-  // Weekly expense scale from the time split: train 75% ≈ 1.0, more training costs more.
-  // factor = base + perTrainPercent * plan.train.
-  planFactor: { base: 0.55, perTrainPercent: 0.006 },
+  // ⚠ `planFactor` (base 0.55 + 0.006 x plan.train) IS GONE, and its job moved rather than
+  // vanished. It scaled the weekly coaching bill by the training split, but only from 0.91 at
+  // train 60 to 1.06 at train 85 – a 16% spread on a slider that doubles her development. The
+  // coach ladder replaces it with HOURS (ECONOMY.coach.sessionsAt60/85), which move the bill 2x
+  // end to end, because hours are what a coach actually charges for.
 
   // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), but round-7 b makes the
   // payout NEED-BASED: only a `working`-background kid actually banks it – for everyone else
@@ -247,9 +438,10 @@ export const ECONOMY = {
     /** The plan slider, end to end. Roughly a factor of two between coasting and committing. */
     trainAt60: 0.72,
     trainAt85: 1.28,
-    /** The coach. The tier slice will widen this into a real ladder. */
-    coachParent: 0.82,
-    coachHired: 1.15,
+    /* ⚠ THE COACH MOVED OUT (coach-tiers slice). `coachParent: 0.82` and `coachHired: 1.15` lived
+     * here; they are now the two ENDS of `ECONOMY.coach.developmentFactor`, beside the prices they
+     * are traded against, because "what a rung costs" and "what a rung is worth" are one decision
+     * and were never legible split across two objects. Neither value changed. */
     /** Competition teaches what practice cannot – capped, because a fourth match in a week is
      *  fatigue, not education, and the condition model already charges her for that. */
     matchBonus: 0.18,
@@ -587,8 +779,7 @@ export const ECONOMY = {
 
   // --- Season planner: practice matches (spec §4) -----------------------------------------
   // A friendly on an empty week: court rental $30-80 × corridor off `seed:practice:week`, plus
-  // an OPTIONAL coach (50% of a coaching session – "the other half is paid by the opponent's
-  // family"; re-priced per coach tier when the coach slice lands). Effect: condition drain
+  // an OPTIONAL coach. Effect: condition drain
   // max(1, local-scoreline drain − 1), ZERO ranking points, and the week keeps the base
   // recovery but FORFEITS the rest-slider bonus (she played, even if friendly).
   // GUARDRAIL (fatigue-bench finding 25.07: practising every week is self-destructive – mean
@@ -604,7 +795,18 @@ export const ECONOMY = {
   // low-condition arm (`cautionCondition`) is untouched.
   practice: {
     courtFeeCents: [30_00, 80_00] as [number, number],
-    coachSessionCents: [120_00, 250_00] as [number, number],
+    // ⚠ `coachSessionCents: [120_00, 250_00]` IS GONE (Round 3), and it is the owner's ruling that
+    // retired it: «справедливо будет завязать на стоимость выбранного тренера или best-fit если не
+    // выбран». The friendly's optional coach is HER coach, so it costs a share of HIS OWN rate -
+    // there is no second, unrelated price for a coaching hour any more. The flat band had drifted
+    // badly enough to be worth saying out loud: at $120-250 a session it sat ABOVE the Elite tier's
+    // own $96-144/h, so a practice friendly was charging more for an hour of coaching than the most
+    // expensive coach in the game charges for one.
+    //
+    // A FRIENDLY IS A MATCH, NOT A LESSON, so it books more of him than a training hour does. Two
+    // hours is a warm-up and a match; `coachShare` then halves it, because the other half is paid by
+    // the opponent's family (the original framing, unchanged).
+    coachHours: 2,
     coachShare: 0.5,
     cautionCondition: 55,
     /** the SHORT streak – warns only while she is under the strain gate below */
@@ -625,11 +827,6 @@ export const ECONOMY = {
     rescueTargetCondition: 85,
   },
 } as const
-
-/** Weekly base-expense scale from the time split (more training ⇒ higher cost). */
-export function planExpenseFactor(trainPercent: number): number {
-  return ECONOMY.planFactor.base + ECONOMY.planFactor.perTrainPercent * trainPercent
-}
 
 export interface GearHit {
   week: number
@@ -745,22 +942,32 @@ export function recommendVacationPackage(input: {
 }
 
 /** The deterministic price of ONE practice-match booking off `rngFromSeed(seed:practice:week)`:
- *  court rental, plus (optionally) HALF a coaching session for «+ тренер на игру». The court
- *  draw comes FIRST, so adding the coach never moves the court part of the quote. */
+ *  court rental, plus (optionally) her own coach for «+ тренер на игру».
+ *
+ *  ⚠ THE COACH HALF IS NOW HER COACH (Round 3, owner's ruling). `coachHourlyCents` is the rate of
+ *  the coach she actually has - or, when she is self-coached, of the best-fit coach at the cheapest
+ *  hireable rung, because a family with no coach is hiring one for a single afternoon and the
+ *  bottom of the market is what that costs. Callers resolve it through `practiceCoachRateCents` in
+ *  engine/world.ts so there is exactly one definition of "her rate".
+ *
+ *  THE COURT DRAW COMES FIRST and is untouched, so a `withCoach: false` quote is byte-identical to
+ *  every one this function has ever given. The coach half spends one fewer draw than it used to
+ *  (its own price is no longer drawn - it is looked up), which only moves this private per-week
+ *  sub-stream and never the main one. */
 export function practiceFeeCents(
   seed: string,
   week: number,
   background: FamilyBackground,
   withCoach: boolean,
+  coachHourlyCents = 0,
 ): number {
   const rng = rngFromSeed(`${seed}:practice:${week}`)
   const court = corridorPrice(rng, ECONOMY.practice.courtFeeCents, background)
   if (!withCoach) return court
-  const [cLo, cHi] = ECONOMY.practice.coachSessionCents
-  const base = pickInt(rng, cLo, cHi)
   const [wLo, wHi] = WEALTH_CORRIDOR[background]
   const roll = rng()
-  return court + Math.round(base * ECONOMY.practice.coachShare * (wLo + roll * (wHi - wLo)))
+  const hours = ECONOMY.practice.coachHours * ECONOMY.practice.coachShare
+  return court + Math.round(coachHourlyCents * hours * (wLo + roll * (wHi - wLo)))
 }
 
 /** The gear purchase (if any) that lands EXACTLY on `week` for one category, else null. */

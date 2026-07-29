@@ -63,12 +63,32 @@ describe('the bottom nav is Season · Calendar · Home · Stats · More, Home in
     expect(calendar).not.toBe(season)
   })
 
-  it("'kid', 'money' and now 'week' stay valid CONTENT states – screens without a tab button", () => {
+  it("'kid', 'money', 'week' and now 'market' stay valid CONTENT states – screens without a tab button", () => {
     // 'week' JOINED that list in epic/redesign-home: the This-week tab left the bar, its screen did
     // not leave the app. Home's next-tournament card is its door (see the suite below).
-    expect(app).toContain("type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more'")
-    expect(app).toContain(`<KidScreen v-else-if="tab === 'kid'" />`)
+    //
+    // ⚠ RE-AIMED BY THE COACH MARKET (screen T): 'market' joins the same list, and the reason is
+    // this test's own rule rather than an exception to it. The design sheet for T proposes replacing
+    // "More" with a fifth "Market" tab; the bar is pinned to exactly five entries in exactly this
+    // order two tests above, and that pin is the owner's, so the screen takes the door-and-content
+    // route every other tabless screen takes. Its door is the Kid screen's Coaching row - the row
+    // already names who coaches her, so "tap it to change that" needs no new concept.
+    expect(app).toContain(
+      "type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'",
+    )
+    expect(app).toContain(`<KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />`)
     expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" />`)
+    expect(app).toContain(`<CoachMarketScreen v-else-if="tab === 'market'"`)
+    // ...and the screen asks the shell rather than writing `tab` itself, like every other screen.
+    const market = read('../src/components/screens/CoachMarketScreen.vue')
+    expect(market).not.toContain('tab.value')
+    const kid = read('../src/components/screens/KidScreen.vue')
+    expect(kid).not.toContain('tab.value')
+    expect(kid).toContain("emit('navigate', 'market')")
+    // Copy rules apply to the new screen too: no em dash, no Cyrillic in the template.
+    const marketTemplate = market.slice(market.indexOf('<template>'))
+    expect(marketTemplate).not.toContain('—')
+    expect(marketTemplate).not.toMatch(/[\u0400-\u04ff]/)
   })
 })
 

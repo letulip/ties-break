@@ -58,13 +58,14 @@ import { ECONOMY, recommendVacationPackage, vacationPriceCents } from '../src/en
 import { rivalConditions } from '../src/engine/season/rival'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import type {
-  CoachSetup,
+  CoachTier,
   FamilyBackground,
   InjurySeverity,
   PlayerProfile,
   WeekPlan,
   WorldEventCategory,
 } from '../src/shared/protocol'
+import { coachIncludesPhysio } from '../src/engine/coach'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
@@ -114,14 +115,17 @@ export function zeroByTier(): Record<TierId, number> {
 export interface Profile {
   label: string
   background: FamilyBackground
-  coachSetup: CoachSetup
+  coachTier: CoachTier
 }
 
+// ⚠ RE-AIMED by the coach ladder, matching tools/econ-bench.ts PRESETS rung for rung so the two
+// benches keep measuring the same four families. `parent` -> `self`, and the middle family's paid
+// option -> `middle` (the old `hired` band's midpoint was an ELITE coach; see the econ bench).
 export const PROFILES: Profile[] = [
-  { label: '8k   · working · self-coached', background: 'working', coachSetup: 'parent' },
-  { label: '25k  · middle  · self-coached', background: 'middle', coachSetup: 'parent' },
-  { label: '25k  · middle  · hired coach', background: 'middle', coachSetup: 'hired' },
-  { label: '120k · wealthy · hired coach', background: 'wealthy', coachSetup: 'hired' },
+  { label: '8k   · working · self-coached', background: 'working', coachTier: 'self' },
+  { label: '25k  · middle  · self-coached', background: 'middle', coachTier: 'self' },
+  { label: '25k  · middle  · middle coach', background: 'middle', coachTier: 'middle' },
+  { label: '120k · wealthy · elite coach', background: 'wealthy', coachTier: 'elite' },
 ]
 
 /** The season-planner axis as DATA (the axes stayed unbundled exactly so this could arrive as a
@@ -481,7 +485,7 @@ export function openFatigueCareer(
   const playerProfile: PlayerProfile = {
     ...DEFAULT_PROFILE,
     background: profile.background,
-    coachSetup: profile.coachSetup,
+    coachTier: profile.coachTier,
   }
   const world = createWorld(seed, playerProfile)
   world.plan = { ...policy.plan }
@@ -1366,7 +1370,7 @@ export function computeCellStats(
 export function effectivePhysio(profile: Profile, policy: Policy): boolean {
   if (policy.physio === 'on') return true
   if (policy.physio === 'off') return false
-  return profile.coachSetup === 'hired'
+  return coachIncludesPhysio(profile.coachTier)
 }
 
 // --- rendering -------------------------------------------------------------------
@@ -2096,7 +2100,7 @@ function renderMedicalVeto(all: BenchCell[]): void {
       row.seasons += seasons
       row.weeksBelow += r.weeksBelowMedicalFloor
       row.weeks += cell.horizon.weeks
-      if (r.medicalBlocks + r.medicalWithdrawals > 0) row.cells.add(`${cell.profile.background}·${cell.profile.coachSetup}`)
+      if (r.medicalBlocks + r.medicalWithdrawals > 0) row.cells.add(`${cell.profile.background}·${cell.profile.coachTier}`)
     }
     byPolicy.set(cell.policy.id, row)
   }

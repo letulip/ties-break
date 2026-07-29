@@ -21,6 +21,7 @@ import {
   type RecoveryBuff,
   type SeasonHistoryEntry,
   type SeasonSummary,
+  type CoachMarketRow,
   type Snapshot,
   type SnapshotInjury,
   type StandingRow,
@@ -63,14 +64,27 @@ import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
   gearHitForWeek,
-  planExpenseFactor,
   practiceFeeCents,
   vacationPackage,
   vacationPriceCents,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort } from './season/cohort'
 import { renewCohort } from './season/conveyor'
-import { growWeek, rollPotential, type KidSkills } from './development'
+import { ageFactor, growWeek, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
+import {
+  bestFitCoachAt,
+  buildCoachRoster,
+  coachById,
+  coachCorridorFactor,
+  coachFitFor,
+  coachIncludesPhysio,
+  coachSeasonUplift,
+  coachWeeklyCents,
+  COACH_TIER_LABEL,
+  eliteGateShortfall,
+  practiceCoachRateCents,
+  selfRateCents,
+} from './coach'
 import {
   kitGrantCents,
   netTravelCents,
@@ -95,7 +109,7 @@ import { buildDiarySnapshot, milestoneKey } from './diary'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 21
+export const SAVE_SCHEMA_VERSION = 24
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -211,8 +225,10 @@ export interface WorldState {
   injury: (SnapshotInjury & { sinceWeek: number }) | null
   /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B). */
   injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number }>
-  /** whether physio recovery is active (default = profile.coachSetup === 'hired'). The cost lever
-   *  is billed in Slice C; in B the flag just reflects/sets the toggle. */
+  /** whether physio recovery is active (default = `coachIncludesPhysio(profile.coachTier)`, i.e.
+   *  every rung but self-coached – the old rule was "a hired coach comes with a physio" and
+   *  self-coaching is the only rung that is not a hire). The cost lever is billed in Slice C; in B
+   *  the flag just reflects/sets the toggle. */
   physioActive: boolean
   /** Season planner (v13): booked family-vacation weeks. PURE player state – the price was
    *  quoted/charged from the `:vacation:` sub-stream at booking time, so nothing here can move
@@ -245,6 +261,22 @@ export interface WorldState {
    *  the week identifies the entry uniquely and a withdrawal can remove exactly its own slot.
    *  Pruned to the current season onward at housekeeping, so it is bounded by the cap itself. */
   internationalEntryWeeks: number[]
+  /** WHO SHE TRAINS WITH (v23): a roster coach's id, or `null` for the parent on the court.
+   *
+   *  Only the id is stored. The roster itself is a pure derivation of `seed` (engine/coach.ts
+   *  buildCoachRoster), so it can never desync from the career that hired off it, and an id saved
+   *  today resolves years later without a migration. `profile.coachTier` records the rung they
+   *  chose at ONBOARDING; this records who she trains with NOW, and the two part company the first
+   *  time the Coach Market is used. Everything the engine bills or grows from reads THIS. */
+  coachId: string | null
+  /** DOES THE COACH COME TO TOURNAMENTS (v24)? A competition week is not billed as a coaching week
+   *  by default - she spends it in a draw, not on his court - and this buys him for those weeks
+   *  anyway. Default FALSE, which is the owner's own framing: the automatic behaviour is that
+   *  competition weeks are not coach weeks, and the toggle is what adds him back.
+   *
+   *  It moves BOTH the bill and the development rate (coachWorksThisWeek), because a coach who is
+   *  not paid for a week is not at that week. That is what keeps it a decision. */
+  coachOnEventWeeks: boolean
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -257,7 +289,9 @@ export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
 // knob object). These aliases keep the old call sites + the public PARENT_INCOME_CENTS export
 // (imported by tests) pointing at that one source of truth.
 export const PARENT_INCOME_CENTS = ECONOMY.parentIncomeCents
-const EXPENSE_RANGE = ECONOMY.expenseRangeCents
+// ⚠ `EXPENSE_RANGE = ECONOMY.expenseRangeCents` lived here – the two-band weekly coaching draw.
+// The ladder replaced it with a per-tier, per-age HOURLY band; resolveBaseCosts reads it through
+// `coachRateBandCents` (engine/coach.ts) so the age lookup and the band live in one place.
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -1566,9 +1600,164 @@ export function cancelVacation(world: WorldState, week: number): void {
  *  for a friendly – above the floor the guardrail's soft caution owns the whole range). That is the
  *  same hard body-gate `availabilityStatus` applies to a tournament, reading the same
  *  `medicalBlock`. */
+// --- THE COACH MARKET (v23) --------------------------------------------------------------------
+
+/** The coach a career OPENS with, from the rung onboarding chose.
+ *
+ *  `self` means nobody: the parent is on the court, and there is no id to store. Otherwise it is
+ *  the coach at that rung who suits her game best, cheapest first among equals - which is what a
+ *  parent walking into an academy and naming a budget actually gets. Pure: the roster is derived
+ *  from the seed and nothing is drawn on the main stream. */
+export function openingCoachId(seed: string, profile: PlayerProfile): string | null {
+  if (profile.coachTier === 'self') return null
+  return bestFitCoachAt(seed, START_AGE_YEARS, profile.coachTier, profile.playStyle)?.id ?? null
+}
+
+/** The friendly's coach rate for one week of THIS world - a thin read of the pure rule in
+ *  engine/coach.ts, so the planner sheet and the engine quote the same number. */
+export function practiceCoachRateFor(world: WorldState, week: number): number {
+  return practiceCoachRateCents(world.seed, ageAtWeek(week), world.coachId, world.profile.playStyle)
+}
+
+/** THE HIRE, and it is deliberately cheap to do: no signing fee, no notice period, effective from
+ *  the next weekly bill.
+ *
+ *  Whether swapping coach mid-season should COST something is an open question the spec raises
+ *  (§5 - "a free swap makes the choice weightless") and not one this slice answers, so the command
+ *  is built to take a fee later without changing shape: the refusals live here in one place, and
+ *  the only mutation is the id.
+ *
+ *  ZERO RNG on any stream - the roster is a derivation and the id is a string. The frozen MAIN
+ *  capture cannot move, and neither can the week's own bill until the week actually turns.
+ *
+ *  `null` fires the parent back onto the court, which must always be allowed: a family that cannot
+ *  pay has to be able to stop paying. */
+export function hireCoach(world: WorldState, coachId: string | null): void {
+  if (coachId === null) {
+    if (world.coachId === null) return
+    world.coachId = null
+    world.physioActive = false
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: 'You are coaching her yourself again. The weekly bill is court time only.',
+    })
+    return
+  }
+  const coach = coachById(world.seed, ageAtWeek(world.week), coachId)
+  if (!coach) throw new Error('No such coach')
+  if (world.coachId === coach.id) return
+  // ⚠ DOMESTIC, and the merge with the two ladders is why this now has to say so out loud. The
+  // gate's threshold (ECONOMY.coach.eliteGate.minPoints = 150) was written as "national-tier
+  // eligibility" - it IS TIERS.national.enterPointBand[0] - so the domestic table is the one that
+  // preserves its meaning. Reading ITF points here would also make the Elite rung strictly
+  // downstream of money (no international travel, no ITF points, no Elite coach ever), which is the
+  // opposite of the "earned rather than bought" shape the owner asked the gate for.
+  const short = eliteGateShortfall(coach, kidPoints(world, 'domestic'))
+  if (short !== null) {
+    throw new Error(`${coach.name} only takes players with results – ${short} more ranking points`)
+  }
+  world.coachId = coach.id
+  world.physioActive = coachIncludesPhysio(coach.tier)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    keep: true,
+    text: `${coach.name} is her coach now – ${COACH_TIER_LABEL[coach.tier]} tier.`,
+  })
+}
+
+/** THE TOURNAMENT-WEEK TOGGLE. Pure state, zero draws on any stream - it changes only what the
+ *  arithmetic downstream of an unchanged pickInt does with the number it drew, so the frozen MAIN
+ *  capture cannot move. Takes effect from the NEXT tick; this week's bill is already written. */
+export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
+  if (world.coachOnEventWeeks === on) return
+  world.coachOnEventWeeks = on
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: on
+      ? 'Your coach travels to tournaments now – billed on competition weeks too.'
+      : 'Your coach stays home on tournament weeks – those weeks are no longer billed.',
+  })
+}
+
+/** WHAT THE COACH COSTS OVER A SEASON, both ways, so the toggle can be priced rather than guessed.
+ *
+ *  `weeklyCents` is the same either way - what differs is HOW MANY weeks are billed, so the honest
+ *  pair of numbers is the season, not the week. Counted off the season she is actually in: the
+ *  off-season weeks are already unbilled for everyone, and `eventWeeks` is the weeks of it she is
+ *  entered for. Derived at snapshot time; persists nothing. */
+export function coachBilling(world: WorldState): {
+  onEventWeeks: boolean
+  weeklyCents: number
+  eventWeeks: number
+  seasonOffCents: number
+  seasonOnCents: number
+} {
+  const age = ageAtWeek(world.week)
+  const coach = coachById(world.seed, age, world.coachId)
+  const rate = coach ? coach.rateCents : selfRateCents(age)
+  const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background)
+  const seasonStart = seasonStartWeek(world.week)
+  const seasonEnd = seasonStart + WEEKS_PER_YEAR
+  const inSeason = (w: number) => w >= seasonStart && w < seasonEnd
+  const eventWeeks = new Set(
+    world.season.filter((e) => inSeason(e.week) && world.entries.includes(e.id)).map((e) => e.week),
+  ).size
+  // The playable weeks of a season are everything but the off-season block.
+  const playableWeeks = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+  return {
+    onEventWeeks: world.coachOnEventWeeks,
+    weeklyCents,
+    eventWeeks,
+    seasonOffCents: weeklyCents * Math.max(0, playableWeeks - eventWeeks),
+    seasonOnCents: weeklyCents * playableWeeks,
+  }
+}
+
+/** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and
+ *  HER plan, read against HER game, with what each rung would add for her.
+ *
+ *  Derived at snapshot time, so it persists nothing and bumps no schema. The ENGINE decides fit,
+ *  price, affordability and the gate; the screen only lays them out - the same division upcoming
+ *  events already use, and the reason two surfaces can never disagree about what a coach costs. */
+export function coachMarket(world: WorldState): CoachMarketRow[] {
+  const age = ageAtWeek(world.week)
+  const points = kidPoints(world, 'domestic') // ⚠ the Elite gate's currency – see hireCoach above
+  const weeklyIncome = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
+  return buildCoachRoster(world.seed, age).map((coach) => {
+    const fit = coachFitFor(coach, world.profile.playStyle)
+    const [upliftLo, upliftHi] = coachSeasonUplift({
+      skills: SKILL_KEYS.map((k) => world.skills[k]),
+      potential: SKILL_KEYS.map((k) => world.potential[k]),
+      plan: world.plan,
+      tier: coach.tier,
+      fit,
+      ageFactor: ageFactor(age),
+      trainFactor: trainFactor(world.plan),
+    })
+    return {
+      id: coach.id,
+      tier: coach.tier,
+      name: coach.name,
+      style: coach.style,
+      fit,
+      weeklyCents: coachWeeklyCents(coach.rateCents, world.plan, world.profile.background),
+      current: world.coachId === coach.id,
+      // AFFORDABLE MEANS "against the week's income", not "against the reserve". A reserve pays for
+      // one week of anything; what the family is actually deciding is whether this bill fits the
+      // money that arrives every week, which is the number the budget meter draws.
+      overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background) - weeklyIncome),
+      lockedPoints: eliteGateShortfall(coach, points),
+      upliftPct: [upliftLo, upliftHi] as [number, number],
+    }
+  })
+}
+
 export function bookPractice(world: WorldState, week: number, withCoach: boolean): void {
   assertPlannable(world, week, 'practice')
-  const paidCents = practiceFeeCents(world.seed, week, world.profile.background, withCoach)
+  const paidCents = practiceFeeCents(world.seed, week, world.profile.background, withCoach, practiceCoachRateFor(world, week))
   if (world.fundsCents < paidCents) throw new Error('Not enough funds for the court rental')
   world.fundsCents -= paidCents
   world.practices.push({ week, paidCents, withCoach })
@@ -1847,22 +2036,80 @@ function resolveParentIncome(world: WorldState): void {
   })
 }
 
-function resolveBaseCosts(world: WorldState, rng: Rng): void {
-  const [lo, hi] = EXPENSE_RANGE[world.profile.coachSetup]
-  // Draw first (byte-identical MAIN-stream pickInt, background-independent), THEN scale by the
-  // background's wealth corridor: ONE uniform roll from the private `seed:coachbg:week` sub-stream
-  // maps into wealthCorridor[background] (mirrors travelBgFactor / medicalBgFactor – same roll,
-  // disjoint corridors, so working < middle < wealthy holds per week). POST-draw multiply only,
-  // so the main-stream draw count/order never depends on background.
-  const [cLo, cHi] = ECONOMY.wealthCorridor[world.profile.background]
-  const coachRoll = rngFromSeed(`${world.seed}:coachbg:${world.week}`)()
-  const expense = Math.round(
-    pickInt(rng, lo, hi) * planExpenseFactor(world.plan.train) * (cLo + coachRoll * (cHi - cLo)),
+/** IS SHE COMPETING THIS WEEK - entered in an event scheduled for it, and healthy enough to play.
+ *
+ *  ONE definition, two call sites, and they are deliberately evaluated at DIFFERENT points in the
+ *  tick: the coaching bill asks at step 1 (before rollInjury) and `accrueCondition` asks at step 1c
+ *  (after it). So a fresh injury this week counts as a competition week for the BILL and as a
+ *  walkover for CONDITION, which is the honest reading of both - the week opened with her entered
+ *  and travelling, and it ended with her not playing.
+ *
+ *  ENTERED, not merely offered: a calendar full of events she did not enter is a training week.
+ *  Pure, zero draws. */
+export function isCompetitionWeek(world: WorldState): boolean {
+  return (
+    world.injury === null &&
+    world.season.some((e) => e.week === world.week && world.entries.includes(e.id))
   )
+}
+
+/** Is the coach on the clock this week? Every week except a competition week she is not paying him
+ *  for - see `coachOnEventWeeks`. Pure, zero draws, and the ONE place the rule lives: the bill and
+ *  the development step both ask it, so they can never disagree about whether he was there. */
+export function coachWorksThisWeek(world: WorldState): boolean {
+  return world.coachOnEventWeeks || !isCompetitionWeek(world)
+}
+
+function resolveBaseCosts(world: WorldState, rng: Rng): void {
+  // THE COACHING BILL = his rate x hours x the market she trains in x this week's jitter
+  // (docs/specs/coach-tiers.md; the model is engine/coach.ts).
+  //
+  // ONE MAIN-STREAM DRAW, IN THE SAME POSITION IT ALWAYS HELD. The old bill drew a band with one
+  // `pickInt` here and multiplied by the plan factor and a corridor roll. The new one draws the
+  // WEEK'S JITTER with one `pickInt` here and multiplies by the coach's own rate, the hours the
+  // plan buys and the corridor roll. Same draw, same slot, and the frozen MAIN capture (41550
+  // draws / e6b0c709) cannot see the difference - which is the whole reason the jitter is what
+  // gets drawn and everything with a decision behind it is what gets multiplied.
+  //
+  // ⚠ THE WEALTH CORRIDOR IS BACK ON THIS LINE (Round 2), on the SAME private
+  // `seed:coachbg:<week>` sub-stream it always used. I had taken it off arguing the tier already
+  // said "poorer families buy cheaper coaches"; the owner's model is better and is a different
+  // claim - the corridor is THE MARKET SHE TRAINS IN, so the same rung costs different money in a
+  // working-class club, an ordinary academy and a premium one, and the wealthy family pays MORE for
+  // the same coach. POST-draw multiply, so the main-stream sequence still cannot depend on
+  // background (the invariance test in economy.test.ts holds it to that).
+  const coach = coachById(world.seed, ageAtWeek(world.week), world.coachId)
+  const rate = coach ? coach.rateCents : selfRateCents(ageAtWeek(world.week))
+  const [jLo, jHi] = ECONOMY.coach.weekJitterBps
+  const jitter = pickInt(rng, jLo, jHi) / 10_000
+  const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background)
+  // ⚠ A COMPETITION WEEK IS NOT A COACHING WEEK (owner, R4): «мы автоматически можем не считать
+  // соревновательные и турнирные недели тренерскими, а давать игроку возможность самому отдельным
+  // переключателем добавить тренера и на эти недели тоже». She spends that week in a draw, not on
+  // his court, so by default she is not billed a retainer for it - and `coachOnEventWeeks` buys him
+  // for those weeks anyway, because a coach who travels and works between matches is exactly what
+  // the expensive rungs are for.
+  //
+  // THE DRAWS HAPPEN EITHER WAY. Both pickInts above and below run on every week whatever this
+  // resolves to, and only the ARITHMETIC after them changes - the same discipline the sponsor
+  // cameo uses when it discards a gift for an ineligible background. The frozen MAIN capture
+  // cannot see a toggle.
+  const works = coachWorksThisWeek(world)
+  const expense = works
+    ? Math.round(coachWeeklyCents(rate, world.plan, world.profile.background, corridor) * jitter)
+    : 0
   world.fundsCents -= expense
   const flavors = world.plan.train >= 70 ? trainFlavors(world.profile.background) : restFlavors(world.profile.background)
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
-  addEvent(world, { week: world.week, type: 'expense', category: 'coaching', text: flavor, amountCents: -expense })
+  // The $0 line is still EMITTED, the way a sponsor-covered gear item is: the Money breakdown should
+  // show why a coaching week cost nothing, not silently drop the row.
+  addEvent(world, {
+    week: world.week,
+    type: 'expense',
+    category: 'coaching',
+    text: works ? flavor : 'Competition week – no coaching billed',
+    amountCents: works ? -expense : 0,
+  })
   // Local-sponsor cameo: the ROLL (and the gift draw when it hits) run for EVERY background so
   // the main-stream draw count is background-independent (round-7 keeps the draws exactly as they
   // were). The payout is now NEED-BASED: only an eligible (working) kid actually banks it; for
@@ -2490,7 +2737,14 @@ export function createWorld(
     condition: ECONOMY.condition.start,
     injury: null,
     injuryHistory: [],
-    physioActive: profile.coachSetup === 'hired',
+    physioActive: coachIncludesPhysio(profile.coachTier),
+    // v23: onboarding picks a RUNG, so the world picks the person on it - the coach at that rung
+    // who suits her game best, and the cheapest of those when several tie. That is what a parent
+    // walking into an academy and saying "we can afford this much" actually gets, and it means a
+    // career opens with a real named coach rather than an abstraction.
+    coachId: openingCoachId(seed, profile),
+    // Default OFF - the automatic rule is that competition weeks are not coach weeks.
+    coachOnEventWeeks: false,
     vacations: [],
     practices: [],
     recoveryBuff: null,
@@ -2530,7 +2784,9 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.condition = ECONOMY.condition.start
   save.injury = null
   save.injuryHistory = []
-  save.physioActive = save.profile?.coachSetup === 'hired'
+  save.physioActive = coachIncludesPhysio(save.profile?.coachTier ?? DEFAULT_PROFILE.coachTier)
+  save.coachId = openingCoachId(save.seed, save.profile ?? DEFAULT_PROFILE)
+  save.coachOnEventWeeks = false
   save.vacations = []
   save.practices = []
   save.recoveryBuff = null
@@ -2635,9 +2891,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     the friendly's drain, exactly like finalizeTournament applies its strain after accrual.
   rollInjury(world)
   expireRecoveryBuff(world)
-  const playedThisWeek =
-    world.season.some((e) => e.week === world.week && world.entries.includes(e.id)) &&
-    world.injury === null // injured on the play week => walkover
+  const playedThisWeek = isCompetitionWeek(world) // injured on the play week => walkover
   accrueCondition(world, playedThisWeek)
   resolveVacation(world)
   resolvePractice(world)
@@ -2771,7 +3025,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     potential: world.potential,
     ageYears: ageAtWeek(world.week),
     plan: world.plan,
-    coach: world.profile.coachSetup,
+    // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR (R4). A competition week she has not bought him
+    //     for is a week he is not there, so it develops at the self-coached rate - which is what
+    //     makes `coachOnEventWeeks` a decision rather than free money. Same predicate the bill used
+    //     at step 1, so the two can never disagree about whether he came.
+    coach: coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null,
+    playStyle: world.profile.playStyle,
     matchesThisWeek,
     seed: world.seed,
     week: world.week,
@@ -3445,6 +3704,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // The ITF annual cap as it stands TODAY – what the Home ladder needs to tell a tier's state.
     // Derived at snapshot time from the persisted ledger, so it can never disagree with the gate.
     entryCap: entryCapUsage(world, world.week),
+    coachId: world.coachId,
+    coachMarket: coachMarket(world),
+    coachBilling: coachBilling(world),
     kidRank: world.kidRank,
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),

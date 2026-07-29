@@ -22,8 +22,11 @@ import {
   SAVE_SCHEMA_VERSION,
   KID_ID,
   type WorldState,
+  practiceCoachRateFor,
+  hireCoach,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
+import { bestFitCoachAt, coachById } from '../src/engine/coach'
 import { rngFromSeed } from '../src/engine/rng'
 import {
   ECONOMY,
@@ -117,7 +120,7 @@ function bgProfile(background: FamilyBackground): PlayerProfile {
     gender: 'girl',
     country: 'US',
     background,
-    coachSetup: 'parent',
+    coachTier: 'self',
     playStyle: 'all-court',
     birthMonth: 6,
   }
@@ -269,20 +272,46 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
     expect(vacationPriceCents('quote-seed', 7, 'staycation', 'wealthy')).toBe(0)
   })
 
-  it('practice court fee is $30-80 × corridor off seed:practice:week; the coach adds 50% of a session', () => {
+  it('practice court fee is $30-80 × corridor off seed:practice:week; the coach costs HER coach\'s rate', () => {
+    // ⚠ RE-AIMED BY THE OWNER'S RULING (R3): «справедливо будет завязать на стоимость выбранного
+    // тренера или best-fit если не выбран». The coach half used to be a flat $120-250 band of its
+    // own; it is now a share of the rate of the coach she actually employs. The band is gone, so
+    // the assertion that bounded the extra by it is replaced by one that bounds it by HIS rate.
+    //
+    // THE COURT HALF IS UNTOUCHED AND STILL ASSERTED FIRST, which is the property that mattered
+    // then and still does: the court draw comes first on `seed:practice:week`, so a coach-free
+    // quote is byte-identical to every one this function has ever given.
     const fee = practiceFeeCents('court-seed', 4, 'middle', false)
     expect(fee).toBe(practiceFeeCents('court-seed', 4, 'middle', false))
     const [lo, hi] = ECONOMY.practice.courtFeeCents
     expect(fee).toBeGreaterThanOrEqual(Math.floor(lo * ECONOMY.wealthCorridor.middle[0]))
     expect(fee).toBeLessThanOrEqual(Math.ceil(hi * ECONOMY.wealthCorridor.middle[1]))
     expect(practiceFeeCents('court-seed', 4, 'working', false)).toBeLessThan(fee)
-    // adding the coach never moves the court part, and costs ~50% of a coaching session
-    const withCoach = practiceFeeCents('court-seed', 4, 'middle', true)
-    const extra = withCoach - fee
-    const [clo, chi] = ECONOMY.practice.coachSessionCents
-    const share = ECONOMY.practice.coachShare
-    expect(extra).toBeGreaterThanOrEqual(Math.floor(clo * share * ECONOMY.wealthCorridor.middle[0]))
-    expect(extra).toBeLessThanOrEqual(Math.ceil(chi * share * ECONOMY.wealthCorridor.middle[1]))
+    // Adding the coach never moves the court part, and costs `coachHours x coachShare` of HIS rate.
+    const rate = 50_00
+    const extra = practiceFeeCents('court-seed', 4, 'middle', true, rate) - fee
+    const hours = ECONOMY.practice.coachHours * ECONOMY.practice.coachShare
+    expect(extra).toBeGreaterThanOrEqual(Math.floor(rate * hours * ECONOMY.wealthCorridor.middle[0]))
+    expect(extra).toBeLessThanOrEqual(Math.ceil(rate * hours * ECONOMY.wealthCorridor.middle[1]))
+    // A dearer coach really does make the friendly dearer - the point of the ruling.
+    expect(practiceFeeCents('court-seed', 4, 'middle', true, 120_00)).toBeGreaterThan(
+      practiceFeeCents('court-seed', 4, 'middle', true, 30_00),
+    )
+  })
+
+  it('the friendly\'s coach IS her coach, and the cheapest rung when she has none', () => {
+    // bgProfile is self-coached, so hire someone first - the point is that HIS rate is the price.
+    const world = createWorld('p3-friendly', bgProfile('middle'))
+    const target = bestFitCoachAt(world.seed, 14, 'high', world.profile.playStyle)!
+    hireCoach(world, target.id)
+    const hers = coachById(world.seed, 14, world.coachId)!
+    expect(practiceCoachRateFor(world, 4)).toBe(hers.rateCents)
+    // Self-coached: the best-fit coach at the cheapest hireable rung, because a family with no
+    // coach is hiring one for a single afternoon rather than holding a retainer.
+    hireCoach(world, null)
+    const fallback = bestFitCoachAt(world.seed, 14, 'budget', world.profile.playStyle)!
+    expect(practiceCoachRateFor(world, 4)).toBe(fallback.rateCents)
+    expect(practiceCoachRateFor(world, 4)).toBeLessThan(hers.rateCents)
   })
 })
 
@@ -309,7 +338,11 @@ describe('P4 — booking and cancelling', () => {
   it('books a practice with and without the coach and refunds on cancel', () => {
     const w = createWorld('p4-pra', bgProfile('middle'))
     const week = freeWeek(w)
-    const fee = practiceFeeCents(w.seed, week, 'middle', true)
+    // ⚠ RE-AIMED (R3): the quote now needs HER coach's rate, because that is what the coach half
+    // costs. `practiceCoachRateFor` is the one definition of it, and the engine bills through the
+    // same call - so this stays a test that the BOOKING charges exactly the QUOTE, which is the
+    // fact it exists for, rather than a second copy of the pricing.
+    const fee = practiceFeeCents(w.seed, week, 'middle', true, practiceCoachRateFor(w, week))
     const before = w.fundsCents
     bookPractice(w, week, true)
     expect(w.fundsCents).toBe(before - fee)

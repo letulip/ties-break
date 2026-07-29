@@ -25,6 +25,7 @@ import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import ThisWeekScreen from './components/screens/ThisWeekScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
+import CoachMarketScreen from './components/screens/CoachMarketScreen.vue'
 import StatsScreen from './components/screens/StatsScreen.vue'
 import MoneyScreen from './components/screens/MoneyScreen.vue'
 import MoreScreen from './components/screens/MoreScreen.vue'
@@ -54,7 +55,7 @@ const splashDone = ref(false)
 // 'money' and 'kid' stay valid CONTENT states without a bottom-tab button. Both are reached from
 // Home now (A2, 28.07): the wallet from the Family budget card, her profile from her photograph.
 // Round-6 dropped Money's tab for Stats; R13-12 dropped the Kid tab for the avatar.
-type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more'
+type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'
 const tab = ref<TabId>('home')
 
 // Package J: the 'play' tab id stays (per spec – no router, minimal diff) but
@@ -416,7 +417,8 @@ function dismissSeasonSummary(): void {
       <HomeScreen v-if="tab === 'home'" :recap-fresh="weekTabDot" @navigate="tab = $event" />
       <SeasonScreen v-else-if="tab === 'play'" />
       <ThisWeekScreen v-else-if="tab === 'week'" />
-      <KidScreen v-else-if="tab === 'kid'" />
+      <KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />
+      <CoachMarketScreen v-else-if="tab === 'market'" @back="tab = 'kid'" />
       <StatsScreen v-else-if="tab === 'stats'" />
       <MoneyScreen v-else-if="tab === 'money'" />
       <MoreScreen v-else-if="tab === 'more'" />

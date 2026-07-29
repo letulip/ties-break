@@ -139,7 +139,7 @@ function bgProfile(background: FamilyBackground): PlayerProfile {
     gender: 'girl',
     country: 'US',
     background,
-    coachSetup: 'parent',
+    coachTier: 'self',
     playStyle: 'all-court',
     birthMonth: 6,
   }

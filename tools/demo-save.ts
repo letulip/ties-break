@@ -29,8 +29,8 @@ async function main(): Promise<void> {
   // v21: the family's background decides whether an academy ever backs her, so a demo of the
   // scholarship has to be able to pick one: `--background working`.
   const background = arg('background', DEFAULT_PROFILE.background) as FamilyBackground
-  const coachSetup = background === 'working' ? 'parent' : DEFAULT_PROFILE.coachSetup
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachSetup })
+  const coachTier = background === 'working' ? 'self' : DEFAULT_PROFILE.coachTier
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachTier })
   // Enough money that the demo is about the CALENDAR, not about affordability.
   world.fundsCents = 500_000_00
   const rng = rngFromSeed(world.seed)

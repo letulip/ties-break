@@ -171,6 +171,24 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    /** Hire a coach off the market, or pass `null` to put the parent back on the court. */
+    async hireCoach(coachId: string | null) {
+      await this.run(async () => {
+        const res = await request({ type: 'hireCoach', coachId })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** Buy the coach for competition weeks too, or send him home for them. */
+    async setCoachOnEventWeeks(on: boolean) {
+      await this.run(async () => {
+        const res = await request({ type: 'setCoachOnEventWeeks', on })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
     /** Cancel a booked practice match before its week starts – full refund. */
     async cancelPractice(week: number) {
       await this.run(async () => {
