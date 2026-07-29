@@ -9,30 +9,37 @@
 // scroll"): the SKILLS RADAR, which is the whole point of the wave for this screen, and the
 // counting-results table, which is real content that predates the design and explains her rank.
 //
-// ⚠ THREE OF THE EXPORT'S SIX TILES HAVE NO ENGINE BEHIND THEM, and inventing one would have been
-// the worst thing this screen could do. The mockup's grid reads Personality / Confidence / Mood /
-// School / Friends / Coach. We have no personality model, no school and no friendships - they are
-// fiction in a picture, not a spec for a simulation that does not run them. What we DO have is six
-// real facts, and they are laid into the same six cells:
+// THE SIX TILES ARE THE EXPORT'S OWN SIX, and every one of them now has an engine behind it:
 //
-//   export            ours                  where it comes from
-//   Personality  ->   Rank                  kidRank + the best-6 total (the headline of her career)
-//   Confidence   ->   Condition             snapshot.condition, the same ring Home draws
-//   Mood         ->   Mood                  diary.facts.emotion, as a word and as her own face
-//   School       ->   Born                  profile.birthMonth + country (round-3 QA item 16)
-//   Friends      ->   Family                profile.background, and the academy when one backs her
-//   Coach        ->   Coach                 coachMarket's current row - and the door to screen T
+//   Personality   snapshot.life.personality   her play style, read as a girl (engine/kidLife.ts)
+//   Confidence    snapshot.condition          the ring Home draws, on the same continuous hue
+//   Mood          diary.facts.emotion         as a word and as her own face
+//   School        snapshot.life.school        her grade, from her age and her birth month
+//   Friends       snapshot.life.friends       who she is closest to, and how that is going
+//   Coach         coachMarket's current row   - and the door to screen T
 //
-// Every fact the old table showed survives: her play style moved onto the paper scrap on the hero
-// (the export puts "Right-Handed" there, and a play style is the same KIND of fact - an inherent,
-// unchanging way she plays), and her country is both the flag beside her name and a named line in
-// the Born tile, because a flag emoji on its own is a riddle.
+// ⚠ THIS IS THE SECOND ATTEMPT AT THIS GRID. The first one found that three of the six had no
+// simulation behind them and substituted dry facts (Rank / Born / Family) rather than invent one.
+// The owner overruled it, 29.07 - «Сухие факты грустно, пусть как в макете сделает» - and the
+// answer was neither of the two things that had been on the table: the three tiles are DERIVED, in
+// engine/kidLife.ts, from her play style, her age and birth month, and the week's own facts. The
+// school year and the tennis year use different cut-offs (1 September against ITF's 1 January),
+// which is why the tile can say something the rest of the game cannot.
+//
+// WHERE THE THREE DISPLACED FACTS WENT, because none of them was dropped:
+//   Rank    -> onto the counting-results card below, which exists to explain exactly that number
+//              (and it is on Home, Stats and Season already).
+//   Born    -> her birth month is no longer decoration: it is what the School tile is derived FROM,
+//              and her country is the flag beside her name, which now carries the country's name as
+//              its accessible label instead of leaving an emoji to be a riddle.
+//   Family  -> her background prices the Money screen's starting budget and the academy's cover
+//              share is the Season screen's own line; neither needed a third home.
 //
 // WHAT THIS SCREEN IS NOT ALLOWED TO DO: derive a fact of its own. The emotion is the engine's
-// (via the shared composable), the rank is the engine's, the coach row is the engine's, and since
-// the radar's engine half landed there is NO exception left: the four axes are `snapshot.radar`,
-// derived in `engine/radar.ts`. The stub that stood here while the two halves were built in
-// parallel is gone.
+// (via the shared composable), the rank is the engine's, the coach row is the engine's, the radar's
+// four axes are `snapshot.radar`, and the three tiles above are `snapshot.life`. There is no
+// exception left on this screen, and that is the point: these lines are testable because they are
+// not written here.
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import CountingResultsTable from '../CountingResultsTable.vue'
@@ -41,7 +48,11 @@ import type { RadarAxis } from '../../shared/protocol'
 import { useKidEmotion } from '../../composables/kidEmotion'
 import { weekLabel } from '../../shared/dates'
 import { rankLabel } from '../../shared/format'
-import type { FamilyBackground, PlayStyle } from '../../shared/protocol'
+// ⚠ MERGE: `FamilyBackground` left with the Family tile (screen C now draws the export's six, and
+// family background lives on the Money screen where it prices things). `PortraitEmotion`, not
+// `AvatarEmotion` - `rehab` joined the faces with ui/art-rehab-sleepy and the Mood tile can wear it
+// for weeks at a time.
+import type { PlayStyle } from '../../shared/protocol'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_LABEL } from '../../engine/coach'
 // U0 - the shared components (docs/specs/ui-components.md). StatRow is the ninth, and it is not
@@ -68,11 +79,6 @@ const emit = defineEmits<{ navigate: ['market' | 'home' | 'more'] }>()
 // it falls back to `injury` for the painting-only `rehab` face (see the composable).
 const { emotion, portraitUrl, moodCropUrl } = useKidEmotion()
 
-const BACKGROUND_LABEL: Record<FamilyBackground, string> = {
-  wealthy: 'Wealthy',
-  middle: 'Middle class',
-  working: 'Working class',
-}
 const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
   aggressive: 'Aggressive baseliner',
   counterpuncher: 'Counterpuncher',
@@ -95,12 +101,9 @@ const MOOD_LABEL: Record<PortraitEmotion, string> = {
   rehab: 'On the mend',
   angry: 'Angry',
 }
-// Round-6: birth month row (relative-age-effect groundwork, round-3 QA item 16).
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
-
+// Her country in words. The export prints only a flag next to her name, and a flag emoji on its own
+// is a riddle - so the name is the flag's ACCESSIBLE label rather than a fourth line of chrome laid
+// over the painting.
 const COUNTRY_NAMES: Record<string, string> = {
   US: 'United States', GB: 'United Kingdom', FR: 'France', ES: 'Spain', IT: 'Italy', DE: 'Germany',
   RU: 'Russia', RS: 'Serbia', CH: 'Switzerland', CZ: 'Czechia', PL: 'Poland', UA: 'Ukraine',
@@ -124,12 +127,16 @@ const countryName = computed(() => {
   const code = game.snapshot?.profile.country ?? ''
   return code ? COUNTRY_NAMES[code] ?? code : ''
 })
-const birthMonthLabel = computed(() => (game.snapshot ? MONTHS[game.snapshot.profile.birthMonth - 1] ?? '' : ''))
-const backgroundLabel = computed(() => (game.snapshot ? BACKGROUND_LABEL[game.snapshot.profile.background] : ''))
 const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.snapshot.profile.playStyle] : ''))
 const moodLabel = computed(() => MOOD_LABEL[emotion.value] ?? 'Steady')
 
-// --- THE RANK TILE -------------------------------------------------------------------------
+// --- THE PERSONALITY / SCHOOL / FRIENDS TILES ------------------------------------------------
+// Three tiles, one field: `snapshot.life`, derived in engine/kidLife.ts. The screen chooses NONE of
+// these words - not the grade, not the reading of her play style, not who she is closest to this
+// year. See the header note: this screen renders facts, it does not make them.
+const life = computed(() => game.snapshot?.life ?? null)
+
+// --- THE RANK, on the card that explains it --------------------------------------------------
 // `rankLabel` is the shared rule: a kid with no counting result reads "Unranked" rather than the
 // misleading "#1" that a field of ties at zero points would otherwise hand her.
 const countingResults = computed(() => game.snapshot?.countingResults ?? [])
@@ -147,14 +154,6 @@ const condition = computed(() => Math.round(game.snapshot?.condition ?? 0))
 const conditionColor = computed(() => {
   const pct = Math.max(0, Math.min(100, condition.value))
   return `hsl(${Math.round((pct / 100) * 120)}, 72%, 48%)`
-})
-
-// --- THE FAMILY TILE -----------------------------------------------------------------------
-// The academy line only exists when somebody is actually backing her (schema v21); a family with
-// no scholarship gets one line, not an empty second one saying "none".
-const academyLine = computed(() => {
-  const a = game.snapshot?.academy
-  return a ? `Academy covers ${Math.round(a.coverShare * 100)}% of travel` : ''
 })
 
 // --- THE COACH TILE ------------------------------------------------------------------------
@@ -259,7 +258,10 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
           <div class="kid-id">
             <p class="kid-name-row">
               <span class="kid-name">{{ kidFullName }}</span>
-              <span class="kid-flag" aria-hidden="true">{{ countryFlag }}</span>
+              <!-- The flag SAYS its country: it is the only place her nationality appears now that
+                   the export's six tiles are all in use, and an emoji nobody can name is not a
+                   fact. `role="img"` + a label is what turns the glyph into one. -->
+              <span class="kid-flag" role="img" :aria-label="countryName" :title="countryName">{{ countryFlag }}</span>
             </p>
             <p class="kid-age">{{ ageYears }} years old</p>
           </div>
@@ -286,12 +288,14 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
         <PaperNote class="kid-style-note" tilt="-4deg">{{ playStyleLabel }}</PaperNote>
       </div>
 
-      <!-- ======================== 2. THE ATTRIBUTE GRID ======================== -->
+      <!-- ======================== 2. THE ATTRIBUTE GRID ========================
+           The export's own six cells, in the export's own order. Personality / School / Friends
+           each print TWO lines out of `snapshot.life` and choose none of the words themselves. -->
       <div class="kid-grid">
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">Rank</p>
-          <p class="kid-tile-lead">{{ rankText }}</p>
-          <p class="kid-tile-sub">{{ pointsText }}</p>
+          <p class="kid-tile-label">Personality</p>
+          <p class="kid-tile-line">{{ life?.personality.lead }}</p>
+          <p class="kid-tile-line kid-tile-line-soft">{{ life?.personality.note }}</p>
         </Card>
 
         <Card class="kid-tile kid-tile-ring" pad="11px 9px">
@@ -314,15 +318,15 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
         </Card>
 
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">Born</p>
-          <p class="kid-tile-line">{{ birthMonthLabel }}</p>
-          <p class="kid-tile-line kid-tile-line-soft">{{ countryName }}</p>
+          <p class="kid-tile-label">School</p>
+          <p class="kid-tile-line">{{ life?.school.lead }}</p>
+          <p class="kid-tile-line kid-tile-line-soft">{{ life?.school.note }}</p>
         </Card>
 
         <Card class="kid-tile" pad="11px 9px">
-          <p class="kid-tile-label">Family</p>
-          <p class="kid-tile-line">{{ backgroundLabel }}</p>
-          <p v-if="academyLine" class="kid-tile-line kid-tile-line-soft">{{ academyLine }}</p>
+          <p class="kid-tile-label">Friends</p>
+          <p class="kid-tile-line">{{ life?.friends.lead }}</p>
+          <p class="kid-tile-line kid-tile-line-soft">{{ life?.friends.note }}</p>
         </Card>
 
         <!-- THE DOOR to screen T. `as="button"` because the ELEMENT is what says "this is a door" -
@@ -418,6 +422,13 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            lives in the shared CountingResultsTable.vue (also used by Home's best-6 popover). -->
       <Card class="kid-panel">
         <Eyebrow as="h2">Counting results (best 6)</Eyebrow>
+        <!-- THE RANK ITSELF, which used to have a tile of its own. It reads better here than it
+             did up there: this is the card that explains where the number comes from, so the
+             number and its working now sit together instead of a screen apart. -->
+        <p class="kid-rank-line">
+          <b class="kid-rank-value">{{ rankText }}</b>
+          <span class="kid-rank-points">{{ pointsText }}</span>
+        </p>
         <p class="kid-panel-note">
           Her rank counts her six best results from the last 52 weeks. This total is her ranking
           points.
@@ -607,16 +618,11 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   font-variant-numeric: tabular-nums;
 }
 
-.kid-tile-sub {
-  margin: 3px 0 0;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--ink-dim);
-  font-variant-numeric: tabular-nums;
-}
-
-/* The export's two 11.5px lines, 4px apart, on the tiles that name two facts. `nowrap` is the
-   export's own rule and it is load-bearing: a wrapped second line pushes the tile out of the row. */
+/* The export's two 11.5px lines, 4px apart - now on FOUR of the six tiles (Personality, School,
+   Friends, Coach), which is what the export draws. `nowrap` is the export's own rule and it is
+   load-bearing: a wrapped second line pushes the tile out of the row. It is also why every line
+   engine/kidLife.ts can produce is held to TILE_LINE_MAX (17 characters) by a test - the cell is
+   115px wide and the eye is the wrong instrument for finding the line that outgrows it. */
 .kid-tile-line {
   margin: 9px 0 0;
   font-size: 11.5px;
@@ -692,6 +698,31 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   line-height: 1.4;
   color: var(--ink-soft);
   text-wrap: pretty;
+}
+
+/* The rank, on the card that explains it. Sized like a figure rather than like a tile value: it is
+   the ANSWER the table below works out, so it leads the card and the note follows it. */
+.kid-rank-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 10px 0 0;
+}
+
+.kid-rank-value {
+  font-family: var(--font-heading);
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.kid-rank-points {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- 4. THE MOMENTS TIMELINE ------------------------------------------------------------------ */

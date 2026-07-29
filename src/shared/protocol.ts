@@ -329,6 +329,13 @@ export interface PendingView {
   eventId: string
   tier: TierId
   surface: Surface
+  /** THE DAY'S TEMPERATURE, for the live match's weather plate. The SAME number the Season card
+   *  showed for this tournament – `eventTemperature`, one source, so the two surfaces cannot
+   *  disagree about the weather at one event. Decorative: nothing reads it but a screen.
+   *  ⚠ `upcoming` is filtered to `week > world.week`, so an event BEING PLAYED has already dropped
+   *  out of it and its preview is unreachable. That is why this rides on the pending view instead
+   *  of the viewer re-deriving it – two call sites computing one number is how they drift. */
+  temperatureC: number
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
   /** the kid's opponent this round: short name, ISO-2 nation, current standings rank */
@@ -346,6 +353,12 @@ export interface PendingView {
   tierLabel: string
   points: number
   finishLabel: string
+  /** how many people came, for the E brief's fourth fact. The SAME decorative reading the Season
+   *  card's `UpcomingEvent.preview.crowd` carries, off the same `seed:crowd:<eventId>` sub-stream –
+   *  carried here because a preview leaves the snapshot the week its event arrives (upcomingEvents
+   *  filters to `week > world.week`), and screen E must not print a second, different number for the
+   *  same tournament. Decorative: nothing in the simulation reads it (engine/season/preview.ts). */
+  crowd: number
 }
 
 /** Injury severity (Season-Life). Slice B wires the field but never populates it; Slice C does. */
@@ -438,9 +451,10 @@ export interface UpcomingEvent {
   surface: Surface
   /** what the Season card may say about an event she has not played: her odds in ROUND ONE against
    *  the field as it would be drawn today, who that opponent would be, how strong the field is, and
-   *  a decorative temperature. Derived at snapshot time, persists nothing, and draws only on the
-   *  event's own `seed:kidtour:` / `seed:weather:` sub-streams. Explicitly an estimate about a
-   *  field that will have moved by the time the event plays – see engine/season/preview.ts. */
+   *  two decorative readings (the temperature and the crowd). Derived at snapshot time, persists
+   *  nothing, and draws only on the event's own `seed:kidtour:` / `seed:weather:` / `seed:crowd:`
+   *  sub-streams. Explicitly an estimate about a field that will have moved by the time the event
+   *  plays – see engine/season/preview.ts. */
   preview: EventPreview
   travelCostCents: number
   deadlineWeek: number
@@ -713,6 +727,32 @@ export interface DiarySnapshot {
   memory: MemoryCard | null
 }
 
+// --- her life off the court (engine/kidLife.ts) -------------------------------
+// The three tiles of screen C's attribute grid that are about the GIRL rather than her results:
+// Personality, School and Friends. The design draws all three; the engine derives all three, from
+// her play style, her age and birth month, and the week's own facts. Derived at snapshot time
+// exactly like `radar` and `coachMarket` – it persists nothing and bumps no schema.
+
+/** One tile: two short lines, as the design's cells are drawn. Both are `white-space: nowrap` on
+ *  screen C, so both are written to a hard 17-character budget (see TILE_LINE_MAX). */
+export interface KidLifeTile {
+  /** the first line – the fact ("10th grade", "Patient", "Close to Sofia") */
+  lead: string
+  /** the second line – what it means or how it is going ("Oldest in class", "And stubborn") */
+  note: string
+}
+
+export interface KidLife {
+  /** her play style, read as a person and never as tennis. Fixed for the career. */
+  personality: KidLifeTile
+  /** her grade, on a 1-September school year, plus her place in the class by age. Moves once a
+   *  year, and says "Exams this week" while the calendar is holding an exam blackout. */
+  school: KidLifeTile
+  /** who she is closest to this school year, and how that is going this week. Deterministic
+   *  (purpose-scoped sub-streams, never Math.random), and it moves with both clocks. */
+  friends: KidLifeTile
+}
+
 // --- the skills radar (docs/specs/skills-radar.md, decisions.md #11) ----------
 // ONE AXIS OF THE FOG-OF-WAR CONTOUR, and the whole of what the UI is ever told about her build.
 // NOT ONE FIELD HERE IS A TRUE VALUE: `shownValue` is an estimate that is deliberately wrong while
@@ -850,6 +890,10 @@ export interface Snapshot {
    *  note, Memory). Derived at snapshot time – only the milestone ledger behind `memory`
    *  persists (schema v18). */
   diary: DiarySnapshot
+  /** HER LIFE OFF THE COURT: the Personality / School / Friends tiles of screen C, derived in
+   *  engine/kidLife.ts from her play style, her age and birth month, and the week's facts. Derived
+   *  at snapshot time, persists nothing, bumps no schema. */
+  life: KidLife
   /** THE SKILLS RADAR: four axes, always in `SKILL_KEYS` order (serve, ret, composure, stamina).
    *  An ESTIMATE of her build and a haze over her ceiling – never the truth, which stays in the
    *  engine. Derived at snapshot time, persists nothing, bumps no schema. See RadarAxis. */

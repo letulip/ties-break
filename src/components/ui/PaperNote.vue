@@ -74,13 +74,13 @@ withDefaults(
 
 <style scoped>
 .tb-paper {
-  /* THE PAPER LAYER'S SECOND INK (docs/design/tokens.css --paper-ink-soft), declared HERE rather
-     than in `src/style.css` beside the other five paper tokens - which is where it belongs and
-     where it should be lifted the moment that sheet reopens. This wave has six screens building on
-     one branch and the sheet is frozen against them, so a token that only paper can use is declared
-     on the paper. It INHERITS, so anything slotted into a note can write `var(--paper-ink-soft)`:
-     screen D's "Next goal" label is the first, and every annotation on a scrap after it. */
-  --paper-ink-soft: #4a4235;
+  /* ⚠ `--paper-ink-soft` USED TO BE DECLARED HERE and has moved to `src/style.css`'s :root, beside
+     the other five paper tokens, exactly as the note that stood here said it should. It was a
+     design token hand-copied into a component because the sheet was frozen against six parallel
+     screens; that is the two-sources-of-truth problem tests/design-tokens.test.ts now gates.
+     Nothing about the value changed, and it still INHERITS to anything slotted into a note -
+     screen D's "Next goal" label reads it from a further component away, which is only true
+     because it is on :root now rather than on this element. */
   position: relative;
   box-sizing: border-box;
   padding: 12px 14px;

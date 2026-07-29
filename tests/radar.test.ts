@@ -201,6 +201,11 @@ describe('radar – the fog is an honest claim', () => {
   // three rungs are the ends of the ladder and its middle; the synthetic sweep below covers the
   // rest of the space far more cheaply than a fourth and fifth career would (and the suite already
   // spends two minutes of CPU inside the PR gate - see vite.config.ts).
+  // ⚠ EXPLICIT TIMEOUT, NOT A WEAKENED ASSERTION. These sweep LIVE careers - 208 weeks x several
+  // seeds x four axes - and take 1-3s alone. Under a loaded machine (this suite grew to 72 files,
+  // and the wave was built by five agents at once) they crossed vitest's 5s default and went red
+  // while passing in isolation. The pins below are untouched; only the clock is. CI runs
+  // singleFork, which is slower still, so the headroom is not optional.
   it('THE TRUTH IS ALWAYS INSIDE THE BANDS – every axis, every week, on a live career', () => {
     for (const tier of ['self', 'middle', 'elite'] as CoachTier[]) {
       for (const seed of ['radar-h1', 'radar-h2']) {
@@ -214,7 +219,7 @@ describe('radar – the fog is an honest claim', () => {
         })
       }
     }
-  })
+  }, 30_000)
 
   it('...and the same holds at the extremes the live careers never reach', () => {
     // A synthetic sweep over the whole confidence range and both signs of every draw, because the
@@ -278,6 +283,11 @@ describe('radar – the ceiling band narrows to a floor and STOPS', () => {
     expect(worst).toBeLessThanOrEqual(CEILING_CENTRE_DRIFT * CEILING_FLOOR_HALF + 1e-9)
   })
 
+  // ⚠ EXPLICIT TIMEOUT, NOT A WEAKENED ASSERTION. These sweep LIVE careers - 208 weeks x several
+  // seeds x four axes - and take 1-3s alone. Under a loaded machine (this suite grew to 72 files,
+  // and the wave was built by five agents at once) they crossed vitest's 5s default and went red
+  // while passing in isolation. The pins below are untouched; only the clock is. CI runs
+  // singleFork, which is slower still, so the headroom is not optional.
   it('on a live career the haze stops at its floor width and stays there', () => {
     const widths: number[] = []
     runCareer('radar-floor', 'elite', 120, (world) => {
@@ -288,13 +298,18 @@ describe('radar – the ceiling band narrows to a floor and STOPS', () => {
     expect(widths[0]).toBeGreaterThan(2 * CEILING_FLOOR_HALF)
     expect(widths[widths.length - 1]).toBeLessThanOrEqual(2 * CEILING_FLOOR_HALF + 1e-9)
     expect(widths[widths.length - 1]).toBeGreaterThan(2 * CEILING_FLOOR_HALF - 1) // never collapses
-  })
+  }, 30_000)
 })
 
 // ---------------------------------------------------------------------------
 // 4. NO SHIMMER
 // ---------------------------------------------------------------------------
 describe('radar – the estimate does not shimmer', () => {
+  // ⚠ EXPLICIT TIMEOUT, NOT A WEAKENED ASSERTION. These sweep LIVE careers - 208 weeks x several
+  // seeds x four axes - and take 1-3s alone. Under a loaded machine (this suite grew to 72 files,
+  // and the wave was built by five agents at once) they crossed vitest's 5s default and went red
+  // while passing in isolation. The pins below are untouched; only the clock is. CI runs
+  // singleFork, which is slower still, so the headroom is not optional.
   it('THE MISREADING KEEPS ITS SIGN for the whole career – it converges, it does not breathe', () => {
     for (const seed of ['radar-s1', 'radar-s2']) {
       const signs = new Map<SkillKey, number>()
@@ -310,7 +325,7 @@ describe('radar – the estimate does not shimmer', () => {
       })
       expect(signs.size).toBe(SKILL_KEYS.length)
     }
-  })
+  }, 30_000)
 
   it('the sub-stream is PER CAREER, not per week: the same view re-read gives the same reading', () => {
     const view = synthView({ n: 7, score: '6-4 3-6 6-4' })
@@ -327,6 +342,11 @@ describe('radar – the estimate does not shimmer', () => {
     expect(a.map((x) => x.shownValue)).not.toEqual(b.map((x) => x.shownValue))
   })
 
+  // ⚠ EXPLICIT TIMEOUT, NOT A WEAKENED ASSERTION. These sweep LIVE careers - 208 weeks x several
+  // seeds x four axes - and take 1-3s alone. Under a loaded machine (this suite grew to 72 files,
+  // and the wave was built by five agents at once) they crossed vitest's 5s default and went red
+  // while passing in isolation. The pins below are untouched; only the clock is. CI runs
+  // singleFork, which is slower still, so the headroom is not optional.
   it('⚠ MEASURED, NOT ASSUMED: the fog can re-widen slightly, and by no more than half a point', () => {
     // The evidence read is a COUNT that can only rise (matchesEverPlayed) times a RATE measured over
     // the retained event window, and that window rotates – so the rate can dip when a tight match
@@ -348,7 +368,7 @@ describe('radar – the estimate does not shimmer', () => {
       })
     }
     expect(worst).toBeLessThanOrEqual(0.5)
-  })
+  }, 30_000)
 })
 
 // ---------------------------------------------------------------------------
@@ -477,6 +497,11 @@ describe('radar – the coach reads her faster and more accurately', () => {
     }
   })
 
+  // ⚠ EXPLICIT TIMEOUT, NOT A WEAKENED ASSERTION. These sweep LIVE careers - 208 weeks x several
+  // seeds x four axes - and take 1-3s alone. Under a loaded machine (this suite grew to 72 files,
+  // and the wave was built by five agents at once) they crossed vitest's 5s default and went red
+  // while passing in isolation. The pins below are untouched; only the clock is. CI runs
+  // singleFork, which is slower still, so the headroom is not optional.
   it('...and on a LIVE career the same order holds early AND late', () => {
     for (const week of [18, 90]) {
       const bands = COACH_TIERS.map((tier) => {
@@ -487,7 +512,7 @@ describe('radar – the coach reads her faster and more accurately', () => {
         expect(bands[i], `${COACH_TIERS[i]} at w${week}`).toBeLessThan(bands[i - 1])
       }
     }
-  })
+  }, 30_000)
 
   it('weeks together matter, and they saturate rather than run away', () => {
     expect(tenureRamp(0)).toBeGreaterThan(0) // a good coach has an opinion after one session

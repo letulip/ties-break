@@ -11,7 +11,7 @@
 //      the weekly stream, merely LOOKING at the Season screen would change the career.
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { previewEvent, eventTemperature } from '../src/engine/season/preview'
+import { previewEvent, eventTemperature, eventCrowd } from '../src/engine/season/preview'
 import {
   buildDraw,
   firstRoundOpponent,
@@ -26,9 +26,22 @@ import { fastMatchProbability } from '../src/engine/match/engine'
 import { ECONOMY } from '../src/engine/economy'
 import { createWorld, kidMatchPlayerFor, KID_ID, tickWeek, toSnapshot } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import type { SeasonEvent } from '../src/engine/season/types'
+import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
+
+/** The spectator corridors, restated INDEPENDENTLY of the engine's own table (preview.ts
+ *  CROWD_BANDS) rather than imported from it. A test that imports the numbers it is checking pins
+ *  nothing; written out here, retuning a band is a deliberate two-file edit that shows up in a
+ *  diff – which is what the owner tunes this feature by. */
+const EXPECTED_BANDS: Record<TierId, readonly [number, number]> = {
+  local: [10, 40],
+  regional: [45, 130],
+  national: [220, 650],
+  j30: [30, 90],
+  j60: [110, 320],
+  j300: [900, 2600],
+}
 
 /** The roster `computeRanking` wants: the whole cohort plus her. `cohortIds` is engine-internal, so
  *  the test spells the same thing rather than widening the engine's surface for a test's sake. */
@@ -145,11 +158,18 @@ describe('the preview is stable, and free', () => {
   })
 
   it('draws ONLY on purpose-scoped sub-streams – the frozen capture cannot move', () => {
+    // ⚠ RE-AIMED, NOT WEAKENED: the allowlist gained `crowd` when the spectator figure landed
+    // (`seed:crowd:<eventId>`, engine/season/preview.ts `eventCrowd`). WHAT IS PINNED HERE IS
+    // UNCHANGED and is not the list of names: it is that every stream this module opens is
+    // PURPOSE-SCOPED and event-keyed – never the bare `${seed}`, which is the MAIN weekly stream
+    // the frozen 41550 / e6b0c709 capture measures. A closed allowlist rather than a generic
+    // `${seed}:<word>:` pattern is the point: a fourth sub-stream must be added here deliberately,
+    // by someone who has read this comment, instead of appearing by accident.
     const src = read('../src/engine/season/preview.ts')
     const keys = [...src.matchAll(/rngFromSeed\(`([^`]+)`\)/g)].map((m) => m[1])
     expect(keys.length).toBeGreaterThan(0)
     for (const k of keys) {
-      expect(k, `preview reads ${k}`).toMatch(/^\$\{seed\}:(kidtour|weather):/)
+      expect(k, `preview reads ${k}`).toMatch(/^\$\{seed\}:(kidtour|weather|crowd):/)
     }
   })
 })
@@ -234,6 +254,88 @@ describe('what the numbers say', () => {
   })
 })
 
+// THE CROWD (owner: «"Spectators" – это прикольно вроде, можно как-то прикинуть какие-то коридоры
+// для разного уровня турниров»). Pinned to the weather's standard, plus one property the weather
+// does not have: the bands have to say something. A crowd figure that does not separate the rungs
+// is not atmosphere, it is noise with a label on it.
+describe('the crowd is decoration, and stays decoration', () => {
+  it('is stable per event, varies between events, and never leaves its tier band', () => {
+    const world = createWorld('pv-crowd')
+    const events = world.season.filter((e) => e.week > world.week)
+    const seen = new Map<TierId, Set<number>>()
+    for (const e of events) {
+      const c = eventCrowd(world.seed, e)
+      expect(eventCrowd(world.seed, e), e.id).toBe(c) // stable: the card cannot move under the player
+      const [lo, hi] = EXPECTED_BANDS[e.tier]
+      expect(c, `${e.id} out of band`).toBeGreaterThanOrEqual(lo)
+      expect(c, `${e.id} out of band`).toBeLessThanOrEqual(hi)
+      // Rounded to an estimate, never a turnstile count – and the rounding must not push a figure
+      // out of its own corridor, which is why every band end is a multiple of its step.
+      expect(c % (hi >= 1000 ? 50 : hi >= 200 ? 10 : 5), e.id).toBe(0)
+      ;(seen.get(e.tier) ?? seen.set(e.tier, new Set()).get(e.tier)!).add(c)
+    }
+    for (const [tier, values] of seen) expect(values.size, `${tier} is a constant`).toBeGreaterThan(1)
+  })
+
+  it('the ladder is FELT: local is a bench, national is a stand, J300 is a show court', () => {
+    // The owner's own acceptance test - "if local and national overlap, the bands are wrong".
+    // Measured over real seasons rather than off the table, so a future tuning of the table is
+    // judged by what the calendar actually produces.
+    const byTier = new Map<TierId, number[]>()
+    for (const seed of ['pv-crowd-1', 'pv-crowd-2', 'pv-crowd-3']) {
+      const world = createWorld(seed)
+      for (const e of world.season) (byTier.get(e.tier) ?? byTier.set(e.tier, []).get(e.tier)!).push(eventCrowd(world.seed, e))
+    }
+    const span = (t: TierId) => {
+      const v = byTier.get(t) ?? []
+      expect(v.length, `${t} never scheduled`).toBeGreaterThan(0)
+      return [Math.min(...v), Math.max(...v)] as const
+    }
+    // ⚠ THE HARD ONE (owner). A local open and a national championship must not be confusable.
+    expect(span('local')[1], 'local tops out above national\'s floor').toBeLessThan(span('national')[0])
+    // Each ladder climbs within itself - the DOMESTIC rungs and the ITF rungs separately, because
+    // production scale is not prestige and the two tracks are deliberately interleaved (a J30
+    // abroad draws fewer people than a national at home). See the table in preview.ts.
+    expect(span('local')[1]).toBeLessThan(span('regional')[0])
+    expect(span('regional')[1]).toBeLessThan(span('national')[0])
+    expect(span('j30')[1]).toBeLessThan(span('j60')[0])
+    expect(span('j60')[1]).toBeLessThan(span('j300')[0])
+    // And the top of the ladder is a different KIND of event: an order of magnitude past everything.
+    expect(span('j300')[0]).toBeGreaterThan(span('national')[1])
+    // Nobody should ever feel a local event drew a thousand people.
+    expect(span('local')[1]).toBeLessThan(100)
+  })
+
+  it('touches nothing the simulation reads: two worlds tick identically whatever the crowd says', () => {
+    const a = createWorld('pv-crowd-free')
+    const b = createWorld('pv-crowd-free')
+    // Read every gate on one of them, then tick both the same way.
+    for (const e of a.season) eventCrowd(a.seed, e)
+    const ra = rngFromSeed(a.seed)
+    const rb = rngFromSeed(b.seed)
+    for (let i = 0; i < 20; i++) {
+      tickWeek(a, ra)
+      tickWeek(b, rb)
+    }
+    expect(JSON.stringify(a)).toBe(JSON.stringify(b))
+  })
+
+  it('is not consulted by the engine – condition, nerves and money never see it', () => {
+    // The same grep guard the weather carries, and for the same reason: the day someone lets a
+    // crowd figure move a match is the day it stops being free and starts needing a schema, a
+    // capture re-pin and a balance sweep. world.ts is exempted for ONE call - the snapshot copy
+    // that carries the figure to screen E - so the guard checks the SIMULATION files, and checks
+    // that world.ts's single use is the view assembly and not a rule.
+    for (const rel of ['../src/engine/match/engine.ts', '../src/engine/season/tournament.ts', '../src/engine/condition.ts']) {
+      expect(read(rel), rel).not.toContain('eventCrowd')
+      expect(read(rel), rel).not.toContain(':crowd:')
+    }
+    const world = read('../src/engine/world.ts')
+    expect(world.match(/eventCrowd\(/g) ?? [], 'world.ts uses the crowd more than once').toHaveLength(1)
+    expect(world).toContain('crowd: eventCrowd(world.seed, event)')
+  })
+})
+
 describe('the weather is decoration, and stays decoration', () => {
   it('is stable per event and varies between events', () => {
     const world = createWorld('pv-weather')
@@ -266,10 +368,22 @@ describe('the weather is decoration, and stays decoration', () => {
   it('is not consulted by the engine – only the preview and the view know it exists', () => {
     // A grep guard, because the day someone makes weather affect a match is the day it stops being
     // free and starts needing a schema, a capture re-pin and a balance sweep.
-    for (const rel of ['../src/engine/world.ts', '../src/engine/match/engine.ts', '../src/engine/season/tournament.ts']) {
+    //
+    // ⚠ RE-AIMED, NOT WEAKENED, and world.ts is now exempted for ONE call – exactly the shape the
+    // crowd's guard above already has. THE PROTECTED FACT IS UNCHANGED: weather must not reach the
+    // SIMULATION. What changed is that the live match needs to SHOW the day, and the number has to
+    // travel there on the pending view because `upcoming` drops an event the week it is played.
+    // A view assembly is not a rule, and the pin below is what keeps the difference honest: the
+    // match engine and the tournament still may not name it at all, and world.ts gets one use,
+    // whose exact text is asserted so a second one cannot hide behind the first.
+    for (const rel of ['../src/engine/match/engine.ts', '../src/engine/season/tournament.ts']) {
       expect(read(rel), rel).not.toContain('eventTemperature')
       expect(read(rel), rel).not.toContain(':weather:')
     }
+    const world = read('../src/engine/world.ts')
+    expect(world).not.toContain(':weather:')
+    expect(world.match(/eventTemperature\(/g) ?? [], 'world.ts uses the weather more than once').toHaveLength(1)
+    expect(world).toContain('temperatureC: eventTemperature(world.seed, event)')
   })
 })
 
@@ -284,6 +398,19 @@ describe('every upcoming card on the snapshot carries one', () => {
       expect(u.preview.opponentName, u.id).not.toBe('')
       expect(u.preview.firstMatchChance).toBeGreaterThan(0)
       expect(u.preview.temperatureC).toBeGreaterThan(0)
+      expect(u.preview.crowd, u.id).toBeGreaterThan(0)
+    }
+  })
+
+  it('the E brief and the Season card quote the SAME crowd for the same tournament', () => {
+    // The figure reaches screen E through `PendingView.crowd`, because the preview leaves the
+    // snapshot the week its event arrives. Two carriers for one number is exactly how two screens
+    // start disagreeing about one tournament, so this pins that they cannot: both read `eventCrowd`
+    // off the same event id.
+    const world = createWorld('pv-crowd-handoff')
+    for (const e of world.season.filter((x) => x.week > world.week).slice(0, 10)) {
+      const p = previewEvent(world, e, computeRanking(world.results, world.week, roster(world)), kidMatchPlayerFor(world, e.surface))
+      expect(p.crowd, e.id).toBe(eventCrowd(world.seed, e))
     }
   })
 })
