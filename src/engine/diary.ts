@@ -41,6 +41,7 @@ import type {
   MemoryCard,
   Milestone,
   MilestoneType,
+  TravelHomeScene,
   WorldEvent,
 } from '../shared/protocol'
 import { isExamWeek, isOffSeasonWeek, TIERS, TIER_SHORT, tierFromLabel } from './season/calendar'
@@ -110,7 +111,13 @@ export function milestoneKey(m: Milestone): string {
 }
 
 /** The painting a memory of each milestone type shows. `happy` only for the title – the one
- *  moment that earned it; everything else stays in the composed half of the set. */
+ *  moment that earned it; everything else stays in the composed half of the set.
+ *
+ *  R14-1: `injury` STAYS here and is one of the two surfaces that can still request that painting.
+ *  A Memory is a picture of a week that happened – "ankle strain – her first injury" is the week
+ *  she went down, not the nine that followed it – so the moment face is the right one and the
+ *  layoff's `rehab` would be wrong. Typed on the NARROW union for that reason: nothing a milestone
+ *  maps to is painting-only, so the Memory polaroid keeps a crop it could fall back on. */
 export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   title: 'happy',
   final: 'serious',
@@ -167,11 +174,122 @@ export function fundsPressureOf(fundsCents: number): FundsPressure {
   return 'ok'
 }
 
+// --- the journey home (R14-2) ----------------------------------------------------------------
+//
+// The owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на экране Week
+// story как в макете». Four paintings of her asleep on the way back, on the Weekly Story.
+//
+// (a) WHAT COUNTS AS COMING HOME FROM AN AWAY TRIP — three clauses, all conservative, because on
+//     the Weekly Story this scene REPLACES the week's painting rather than sitting beside it. A
+//     false positive does not add decoration; it swaps correct art for wrong art.
+//
+//     1. IT IS THE WEEK AFTER, not the week of. Two reasons, and they agree. The screen: a week
+//        with a `tournament` event has NO recap at all (composables/weekRecap.ts recapExists), so a
+//        scene set on the tournament week would be a fact no surface can ever render. The fiction:
+//        «после выездов» is *after* the trips – she plays on the Saturday, and the following week's
+//        story opens on her asleep on the way back. So the rule reads WEEK - 1.
+//     2. SHE ACTUALLY PLAYED THERE. A competitive match of hers at that event, off the ledger –
+//        which rules out every way an entry can exist without a journey: the walkover (too injured
+//        to travel), the doctor's medical withdrawal, and the friendly, which is not a trip and not
+//        a result (R11-2). No matches, no journey home.
+//     3. THE FAMILY PAID TO GET HER THERE, net over the week. Same test `travelled` uses and for
+//        the same reason: a skipped tournament refunds its travel in the same week and nets to 0 –
+//        she never boarded.
+//     4. AND SHE STAYED HOME. Back-to-back tournament weeks are ordinary on the calendar (j30 runs
+//        every 2 weeks), and on one of them the journey back is not the week's story – she came in
+//        on Sunday and was gone again by Tuesday, and what happened is the SECOND tournament. The
+//        picture would replace a week of competing with a picture of a car. This clause is also the
+//        one that makes the fact renderable: it is `recapExists`'s own tournament test, read off
+//        the same events plus the in-flight reveal, so a scene can never land on a week that has no
+//        Weekly Story to put it on. Caught by tests/travel-home.test.ts against a live career –
+//        the first draft of this rule had it, and week 43 of seed `travel-home-1` was invisible.
+//
+//     ...and then the LINE: every tier except `local`. A Local Open is the club down the road (the
+//     calendar prices its travel at $60-120 against a Regional's $150-400) and nobody comes home
+//     from it; a Regional Championship is a выезд in the plain sense of the word – another town,
+//     a night away, a drive back. TIER AND NOT COST, deliberately: the academy scholarship pays up
+//     to 80% of a fare, and a J300 abroad is the same journey whether the family or the academy
+//     bought the ticket. Cost is what she paid; tier is where she went.
+//
+// (b) WHICH OF THE FOUR — correlated with the trip, not uniform, because the data supports it and
+//     uniform noise would put her in an airport coming back from the next county. Every tier
+//     already carries a `track`: `itf` is the junior international tour (the calendar's own words:
+//     "international travel out"), `domestic` is local/regional/national. So the international
+//     ladder flies home (airport, plane) and the domestic one drives (bus, car) – which also means
+//     a career that never leaves the domestic ladder never sees an airport, and the first J30 trip
+//     brings a picture she has not seen before.
+//
+//     THE DRAW is a purpose-scoped sub-stream, `seed:travel:<week>` – the same week always produces
+//     the same scene, on any device and any replay, and ZERO draws land on the MAIN weekly stream
+//     (nothing here runs inside the tick at all, so the frozen capture 41550 / e6b0c709 cannot move
+//     by construction). Keyed on the week she comes HOME, which is the week the picture is shown.
+
+/** The two buckets, and the scenes that tell each journey. */
+const TRAVEL_HOME_SCENES: Record<'air' | 'road', readonly TravelHomeScene[]> = {
+  air: ['airport', 'plane'],
+  road: ['bus', 'car'],
+}
+
+/** Her competitive tournament tier in `week`, off the event feed – null when she played none.
+ *  Only the kid's own matches are ever recorded as `match` events (the AI brackets resolve without
+ *  a scoreline), which is the same assumption `lastKidResultOf` above rests on. A friendly is
+ *  skipped by the predicate her face uses (R11-2): a hit-out at the club is not a trip. */
+function playedTierIn(events: readonly WorldEvent[], week: number): TierId | null {
+  for (const e of events) {
+    if (e.week !== week || !e.match || !resultShowsOnHerFace(e)) continue
+    return tierFromEventId(e.match.eventId) ?? null
+  }
+  return null
+}
+
+/** Net travel spend in `week`, in signed cents (negative = the family paid). */
+function travelCentsIn(events: readonly WorldEvent[], week: number): number {
+  return events
+    .filter((e) => e.week === week && e.category === 'travel')
+    .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
+}
+
+/**
+ * The scene of the journey home for `week`, or null. See the note above for the whole argument.
+ * Pure and deterministic: the same arguments always answer the same scene.
+ *
+ * `pendingUnfinished` is clause 4's second half – a reveal in flight belongs to THIS week and has
+ * not written its summary event yet, so the walk alone would not see it.
+ */
+export function travelHomeSceneFor(args: {
+  /** the full retained event log */
+  events: readonly WorldEvent[]
+  /** the week she is HOME – the week the picture would be shown on */
+  week: number
+  seed: string
+  /** a tournament reveal of hers is in flight this week (DiaryWorldView.pendingUnfinished) */
+  pendingUnfinished?: boolean
+}): TravelHomeScene | null {
+  const { events, week, seed } = args
+  const away = week - 1
+  if (away < 0) return null
+  // 4. she stayed home this week – no tournament of hers, resolved or in flight
+  if (args.pendingUnfinished) return null
+  if (playedTierIn(events, week) !== null) return null
+  if (events.some((e) => e.week === week && e.type === 'tournament')) return null
+  // 1-2. she played an away tournament last week...
+  const tier = playedTierIn(events, away)
+  if (tier === null || tier === 'local') return null
+  // 3. ...and the family paid to get her there
+  if (travelCentsIn(events, away) >= 0) return null
+  const pool = TRAVEL_HOME_SCENES[TIERS[tier].track === 'itf' ? 'air' : 'road']
+  const rng = rngFromSeed(`${seed}:travel:${week}`)
+  return pool[Math.floor(rng() * pool.length)]
+}
+
 /** Which of this week's captured milestones the diary calls THE fresh one (a title week also
  *  captures its final – the louder fact wins). */
 const MILESTONE_PRIORITY: readonly MilestoneType[] = ['title', 'final', 'international', 'injury', 'season-rank']
 
-/** Assemble the facts – every field read off state that already exists, zero draws anywhere. */
+/** Assemble the facts – every field read off state that already exists, and (since R14-2) exactly
+ *  ONE that is drawn: `travelHomeScene`, on its own purpose-scoped sub-stream. Rule 2 at the top of
+ *  this file is unchanged and is what matters – zero draws on the MAIN weekly stream, from anything
+ *  in this module, ever. */
 export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
   const { week } = view
   const lastResult = lastKidResultOf(view.events, view.kidId)
@@ -224,6 +342,16 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     vacationWeek: view.vacationWeek,
     fundsPressure: fundsPressureOf(view.fundsCents),
     freshMilestone,
+    // R14-2: the ONE fact here that is drawn rather than read, and it is drawn because there is no
+    // state to read it off – which of four equally-true pictures of the same journey to show is a
+    // question the simulation does not answer. Purpose-scoped sub-stream (`seed:travel:<week>`),
+    // stable for the whole week, zero MAIN draws. See travelHomeSceneFor.
+    travelHomeScene: travelHomeSceneFor({
+      events: view.events,
+      week,
+      seed: view.seed,
+      pendingUnfinished: view.pendingUnfinished,
+    }),
   }
 }
 
@@ -234,7 +362,8 @@ export type DiarySurface = 'photo' | 'condition'
 /** What a line ASSERTS, as data the honesty pin can hold against the facts. Every tag is a claim
  *  the pin re-checks independently: a `won: true` line licensed on a loss is a failing test, not
  *  a matter of taste. `affect: 'positive'` is the spec's own concrete rule – unselectable while
- *  the emotion is sad, angry or injury. */
+ *  the emotion is sad, angry or rehab (R14-1 renamed the last one: the layoff face, formerly
+ *  `injury`). */
 export interface DiaryClaims {
   affect: 'positive' | 'neutral' | 'negative'
   /** asserts a fresh win this week */
@@ -253,6 +382,9 @@ export interface DiaryClaims {
   angry?: true
   /** asserts an active injury */
   injured?: true
+  /** R14-1: asserts the injury happened THIS week – the onset, not a week of the layoff. A
+   *  strictly stronger claim than `injured`, and the pin checks it separately. */
+  justHurt?: true
   /** asserts a worn body – unselectable at condition ≥ 80 */
   tired?: true
   /** asserts a genuinely fresh body – unselectable below 80 */
@@ -288,6 +420,18 @@ function short(tier: TierId | null): string {
 function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? '' : 's'}`
 }
+
+/** THE WEEK IT HAPPENED (R14-1). Nothing has been ticked off the layoff yet – `rollInjury` sets
+ *  `weeksRemaining = totalWeeks` at onset and decrements at the TOP of every later week, so this is
+ *  true on the onset week and on no other, a one-week injury included.
+ *
+ *  It exists because the split the owner asked for on her FACE has to hold in her PARENT'S VOICE
+ *  too: `idleEmotion` no longer returns `injury` at all, so a licence reading `emotion === 'injury'`
+ *  would be dead copy – but the lines it used to carry are not interchangeable. One of them is
+ *  about the day the ice pack came out; the others are about week six. Derived from facts the diary
+ *  already carries, so no new field and no schema question. */
+const justHurt = (f: DiaryFacts): boolean =>
+  f.injured !== null && f.injured.weeksRemaining === f.injured.totalWeeks
 
 /** An ordinary, healthy, event-free week – the licence behind every quiet line AND the silences. */
 const quiet = (f: DiaryFacts): boolean =>
@@ -434,24 +578,34 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'negative', lost: true, angry: true },
     license: (f) => f.emotion === 'angry',
   },
-  // --- photo card: injured (idle) --------------------------------------------------------------
+  // --- photo card: THE MOMENT she got hurt ------------------------------------------------------
+  // R14-1: these three lines all read `emotion === 'injury'` when that was one meaning wearing two
+  // hats. It is two weeks, and they are not the same week – so each line went to the meaning it was
+  // written for. The ice pack is NEWS: it appears on the counter the evening she comes home hurt,
+  // and by week six it is furniture. Licensed on the onset, which is also the week the blocking
+  // popup fires and the week the `injury` painting is shown – caption, picture and dialog all
+  // naming the same moment.
   {
     surface: 'photo',
     text: 'The ice pack lives on the kitchen counter now.',
-    claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    claims: { affect: 'negative', injured: true, justHurt: true },
+    license: justHurt,
   },
+  // --- photo card: the LAYOFF (idle rehab) ------------------------------------------------------
+  // ...and these two are about the weeks that follow. Watching from the bench and counting down are
+  // both things you can only do once the news has stopped being news – they need the layoff to have
+  // length, which is exactly what the rehab painting behind them shows.
   {
     surface: 'photo',
     text: 'She watches practice from the bench this week.',
     claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    license: (f) => f.emotion === 'rehab',
   },
   {
     surface: 'photo',
     text: 'She counts the weeks to her return out loud.',
     claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    license: (f) => f.emotion === 'rehab',
   },
   // --- photo card: worn down (idle tired) ------------------------------------------------------
   {

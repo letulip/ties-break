@@ -14,7 +14,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { headerCropUrl } from '../src/composables/headerAvatar'
-import { portraitStage, type AvatarEmotion } from '../src/shared/avatarEmotion'
+import { portraitStage, type PortraitEmotion } from '../src/shared/avatarEmotion'
 import {
   createWorld,
   advanceWeeks,
@@ -37,7 +37,11 @@ const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 // F45-1 — the header crop is `norm` for her age band, and nothing else.
 // ===========================================================================
 describe('F45-1 — the header avatar is age-only, never emotional', () => {
-  const EMOTIONS: AvatarEmotion[] = ['norm', 'happy', 'sad', 'serious', 'tired', 'injury', 'angry']
+  // ⚠ WIDENED by ui/art-rehab-sleepy to the PAINTED union (8) rather than the croppable one (7).
+  // The guard is "no emotion of any kind can reach the header", and `rehab` is an emotion the
+  // engine's decision can now land on – checking only the croppable seven would have left the one
+  // new face unguarded. There is no rehab crop, so the assertions below are stronger for free.
+  const EMOTIONS: PortraitEmotion[] = ['norm', 'happy', 'sad', 'serious', 'tired', 'injury', 'angry', 'rehab']
 
   it('every age the game can reach resolves to the norm crop of its stage', () => {
     // 6 (the childhood prologue's floor) through 40 (well past the milf boundary at 31) – the
@@ -109,6 +113,26 @@ describe('F45-1 — the header avatar is age-only, never emotional', () => {
     expect(home).not.toContain('class="diary-hero-img" :src="headerAvatarUrl"')
     // And the age-only composable is still emotion-blind at the source (checked above too).
     expect(read('../src/composables/headerAvatar.ts')).not.toContain('useKidEmotion')
+  })
+
+  // ===========================================================================
+  // R14-1 — the injury painting has exactly two surfaces, and neither of them is the idle ladder.
+  // ===========================================================================
+  it('the MOMENT face lives in the popup; the STATE face lives on Home', () => {
+    // The popup is the surface that only exists on the week it happened, so its emotion is a
+    // CONSTANT rather than a decision – it deliberately does not read the composable (the same
+    // shape OnboardingWizard uses for its fixed jun-norm frame).
+    const dialog = read('../src/components/InjuryStopDialog.vue')
+    expect(dialog, 'the injury popup must paint the injury face').toContain("portraitUrl(stage.value, 'injury')")
+    expect(dialog, 'and must not derive an emotion of its own').not.toContain('useKidEmotion')
+    expect(dialog).not.toContain('avatarEmotion(')
+
+    // ...and nothing hard-codes the moment face onto an ongoing surface. Home and the Kid screen
+    // take whatever the ENGINE decided, which for a layoff week is `rehab`.
+    for (const p of ['../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
+      expect(read(p), `${p} must not name a fixed emotion`).not.toContain("'injury'")
+      expect(read(p), `${p} must not name a fixed emotion`).not.toContain("'rehab'")
+    }
   })
 })
 

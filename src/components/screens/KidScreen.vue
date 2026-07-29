@@ -42,7 +42,7 @@ import { useKidEmotion } from '../../composables/kidEmotion'
 import { weekLabel } from '../../shared/dates'
 import { rankLabel } from '../../shared/format'
 import type { FamilyBackground, PlayStyle } from '../../shared/protocol'
-import type { AvatarEmotion } from '../../shared/avatarEmotion'
+import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_LABEL } from '../../engine/coach'
 // U0 - the shared components (docs/specs/ui-components.md). StatRow is the ninth, and it is not
 // used here: it belongs to the Money screen, which is where it earned its shape.
@@ -63,9 +63,10 @@ const emit = defineEmits<{ navigate: ['market' | 'home' | 'more'] }>()
 // Raster art ships as webp only (<=512 px, quality 82-75), converted by the build itself
 // (vite.config.ts -> scripts/optimize-art.mjs). The masters live outside the repo, in the
 // gitignored art-src/, and are never served. R9-15/16: the BIG portrait reflects her CURRENT
-// state and age stage via the shared composable - art exists for every stage x emotion. `cropUrl`
-// is the 256px face crop of the SAME decision, which is what the Mood tile shows.
-const { emotion, portraitUrl, cropUrl } = useKidEmotion()
+// state and age stage via the shared composable - art exists for every stage x emotion.
+// `moodCropUrl` is the 256px face crop of the SAME decision, which is what the Mood tile shows;
+// it falls back to `injury` for the painting-only `rehab` face (see the composable).
+const { emotion, portraitUrl, moodCropUrl } = useKidEmotion()
 
 const BACKGROUND_LABEL: Record<FamilyBackground, string> = {
   wealthy: 'Wealthy',
@@ -81,13 +82,17 @@ const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
 // How her face reads as a WORD. The export's Mood tile is a word plus a picture, and both halves
 // here answer to the same engine decision (diary.facts.emotion) - so the word can never contradict
 // the portrait above it, which is the whole reason R9-13/15 put the decision engine-side.
-const MOOD_LABEL: Record<AvatarEmotion, string> = {
+// ⚠ PortraitEmotion, not AvatarEmotion: `rehab` joined the faces with ui/art-rehab-sleepy and it
+// is a face this tile can be showing for eleven weeks at a stretch, so it needs its own word.
+// "Hurt" is the moment she went down; the weeks after it are something else, and the word says so.
+const MOOD_LABEL: Record<PortraitEmotion, string> = {
   norm: 'Steady',
   happy: 'Happy',
   sad: 'Low',
   serious: 'Focused',
   tired: 'Tired',
   injury: 'Hurt',
+  rehab: 'On the mend',
   angry: 'Angry',
 }
 // Round-6: birth month row (relative-age-effect groundwork, round-3 QA item 16).
@@ -305,7 +310,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
         <Card class="kid-tile kid-tile-mood" pad="11px 9px">
           <p class="kid-tile-label">Mood</p>
           <p class="kid-tile-lead">{{ moodLabel }}</p>
-          <img class="kid-mood-face" :src="cropUrl" alt="" width="36" height="36" decoding="async" />
+          <img class="kid-mood-face" :src="moodCropUrl" alt="" width="36" height="36" decoding="async" />
         </Card>
 
         <Card class="kid-tile" pad="11px 9px">

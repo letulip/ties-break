@@ -23,9 +23,14 @@ import { dirname, resolve } from 'node:path'
 // one record of the framing, two consumers that can never disagree. Node strips the types on import
 // (≥23, no build step), and the re-export below keeps this module's public surface – and its
 // declaration file – exactly as the completeness test has always read it.
-import { CROPS } from '../src/art/faceRects.ts'
+// ⚠ `croppableStems()`, not `Object.keys(CROPS)` (ui/art-rehab-sleepy). The table gained face
+// centres for the five REHAB paintings, because the Home hero frames every painting by one — but
+// `rehab` is a PAINTING-ONLY face: nothing in the app renders an emotion crop, so cutting five more
+// masters would put five files in every download that no URL can ask for. The centre is what the
+// hero needs; being cut is a separate decision, and this is where it is taken.
+import { CROPS, croppableStems, PAINTING_ONLY_FACES } from '../src/art/faceRects.ts'
 
-export { CROPS }
+export { CROPS, croppableStems, PAINTING_ONLY_FACES }
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const PAINT = `${ROOT}/public/images/fem-euro-brunnet`
@@ -37,7 +42,9 @@ const RUN_DIRECTLY = process.argv[1] && import.meta.url === pathToFileURL(proces
 if (RUN_DIRECTLY) {
 mkdirSync(OUT, { recursive: true })
 
-for (const [stem, [cx, cy, s]] of Object.entries(CROPS)) {
+const stems = croppableStems()
+for (const stem of stems) {
+  const [cx, cy, s] = CROPS[stem]
   const src = `${PAINT}/fem-euro-brunnet-${stem}.webp`
   const { width: W, height: H } = await sharp(src).metadata()
   const side = Math.min(s, W, H)
@@ -52,5 +59,8 @@ for (const [stem, [cx, cy, s]] of Object.entries(CROPS)) {
     .toFile(`${OUT}/${stem}.png`)
   console.log(`${stem.padEnd(15)} extract=(${left},${top},${side}) from ${W}x${H}`)
 }
-console.log(`\n${Object.keys(CROPS).length} crop masters -> art-src/avatars/`)
+console.log(
+  `\n${stems.length} crop masters -> art-src/avatars/` +
+    ` (${Object.keys(CROPS).length - stems.length} painting-only faces skipped: ${PAINTING_ONLY_FACES.join(', ')})`,
+)
 }

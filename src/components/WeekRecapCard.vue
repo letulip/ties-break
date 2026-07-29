@@ -30,7 +30,7 @@ import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import PaperNote from './ui/PaperNote.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
-import type { AvatarEmotion } from '../shared/avatarEmotion'
+import type { PortraitEmotion } from '../shared/avatarEmotion'
 import type { DiaryFacts, WorldEvent, WorldMatch } from '../shared/protocol'
 
 const game = useGameStore()
@@ -145,17 +145,20 @@ function formatSigned(cents: number): string {
 // smiley here would be a second, dumber emotion system beside the real one - and it would need
 // `--mood`/`--mood-ink`, two colours the app has never declared, to draw a face we already own.
 // Same composition as D, same size, real data.
-const { cropUrl, emotion } = useKidEmotion()
+const { moodCropUrl, emotion } = useKidEmotion()
 
 /** Her face, as ONE word – D's "Tired", which is literally one of our seven emotions. Player copy,
  *  so it says what a parent would say rather than repeating the asset's file name. */
-const MOOD_WORD: Record<AvatarEmotion, string> = {
+const MOOD_WORD: Record<PortraitEmotion, string> = {
   norm: 'Steady',
   happy: 'Happy',
   sad: 'Low',
   serious: 'Focused',
   tired: 'Tired',
   injury: 'Hurt',
+  // ⚠ `rehab` joined the faces with ui/art-rehab-sleepy - the STATE of a layoff, as against the
+  // moment of going down. A word she wears for weeks, so it is not "Hurt" again.
+  rehab: 'On the mend',
   angry: 'Frustrated',
 }
 const moodWord = computed(() => MOOD_WORD[emotion.value])
@@ -311,7 +314,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
       <Card class="recap-tile" pad="12px 13px">
         <Eyebrow>Mood</Eyebrow>
         <div class="recap-mood">
-          <img class="recap-face" :src="cropUrl" alt="" />
+          <img class="recap-face" :src="moodCropUrl" alt="" />
           <span class="recap-mood-word">{{ moodWord }}</span>
         </div>
         <div class="recap-energy">

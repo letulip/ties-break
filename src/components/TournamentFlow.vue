@@ -155,6 +155,19 @@ const venueUrl = computed(() =>
 )
 /** Winner's points at this tier – `points[0]` of the tier table, the design's "Ranking Points". */
 const winnerPoints = computed(() => tier.value?.points[0] ?? 0)
+/**
+ * "SPECTATORS" – the design's fourth fact, and now a real (if decorative) figure.
+ *
+ * The engine draws it per event off `seed:crowd:<eventId>`, banded by tier, so a Local Open is a
+ * couple of dozen people and a J300 is a show court – see engine/season/preview.ts for the bands
+ * and for the warning that nothing in the simulation may ever read this number. The UI only
+ * FORMATS it: grouped through the same `toLocaleString('en-US')` every other figure in the app
+ * uses, so "1,750" is punctuated here exactly as it is on the money screens.
+ */
+const crowdFigure = computed(() => (pending.value?.crowd ?? 0).toLocaleString('en-US'))
+const crowdTitle = computed(() =>
+  pending.value ? `About ${crowdFigure.value} people around the courts – atmosphere, not a factor in play` : '',
+)
 /** How many wins the title costs from round one. log2 of the draw, in words, because the coach
  *  says it out loud rather than printing it. */
 const WINS_IN_WORDS = ['', 'One win', 'Two wins', 'Three wins', 'Four wins', 'Five wins', 'Six wins']
@@ -456,7 +469,15 @@ const matchMeta = computed(() => {
           </div>
         </Card>
 
-        <!-- THE FACTS ROW. Surface / draw / what winning is worth / what it pays. -->
+        <!-- THE FACTS ROW, and it is the design's own four in the design's own order: Surface /
+             Prize Money / Ranking Points / Spectators.
+             ⚠ THE FOURTH CELL WAS "Draw" FOR ONE SLICE, because the game did not model a crowd. It
+             does now (engine/season/preview.ts `eventCrowd` – a corridor per tier off the event's
+             own `seed:crowd:` sub-stream, decorative, read by nothing), so the handoff's own label
+             is back. The DRAW SIZE did not lose its place with the swap: it moved onto the
+             first-round card below, which is where a draw size actually means something, and it
+             is stated there for every tier – `roundLabel` alone would not do it, since a local's
+             8-player first round reads "Quarterfinal" and never says 8. -->
         <div class="tf-facts">
           <div class="tf-fact">
             <span class="tf-fact-tile" aria-hidden="true">
@@ -467,14 +488,18 @@ const matchMeta = computed(() => {
             <span class="tf-fact-label">Surface</span>
             <span class="tf-fact-value surface">{{ pending.surface }}</span>
           </div>
+          <!-- "Prize Money", dashed out, is the design's own third fact, and it is true of every
+               event in the game: the junior tour pays nothing at all (engine/season/calendar.ts,
+               "the junior international tour – no prize money"). The family carries the year; she
+               collects points. That is the premise of the whole game, so it earns a cell. -->
           <div class="tf-fact">
             <span class="tf-fact-tile" aria-hidden="true">
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 5h6v6H3zM3 13h6v6H3zM12 8h4v8h-4zM19 12h2" />
+                <path d="M12 3v18M16 7.5A3.5 3.5 0 0 0 12.5 5h-1a3 3 0 0 0 0 6h1a3 3 0 0 1 0 6h-1A3.5 3.5 0 0 1 8 16.5" />
               </svg>
             </span>
-            <span class="tf-fact-label">Draw</span>
-            <span class="tf-fact-value">{{ drawSize }} players</span>
+            <span class="tf-fact-label">Prize money</span>
+            <span class="tf-fact-value" title="The junior tour pays no prize money at any level">–</span>
           </div>
           <div class="tf-fact">
             <span class="tf-fact-tile" aria-hidden="true">
@@ -485,19 +510,19 @@ const matchMeta = computed(() => {
             <span class="tf-fact-label">Winner</span>
             <span class="tf-fact-value">{{ winnerPoints }} pts</span>
           </div>
-          <!-- The handoff's fourth fact is "Spectators", which we do not model. This one is the
-               THIRD fact of its own mock ("Prize Money —") and it is true of every event in the
-               game: the junior tour pays nothing at all (engine/season/calendar.ts, "the junior
-               international tour – no prize money"). The family carries the year; she collects
-               points. That is the premise of the whole game, so it earns a cell. -->
           <div class="tf-fact">
             <span class="tf-fact-tile" aria-hidden="true">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 3v18M16 7.5A3.5 3.5 0 0 0 12.5 5h-1a3 3 0 0 0 0 6h1a3 3 0 0 1 0 6h-1A3.5 3.5 0 0 1 8 16.5" />
+              <!-- The design's own three-figure mark: one face forward, two behind it. -->
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <circle cx="12" cy="7.4" r="2.8" />
+                <circle cx="5.8" cy="9.4" r="2.2" />
+                <circle cx="18.2" cy="9.4" r="2.2" />
+                <path d="M12 11.4c-3 0-5.2 1.7-5.2 4.1V18h10.4v-2.5c0-2.4-2.2-4.1-5.2-4.1z" />
+                <path d="M5.8 12.6c-2 0-3.6 1.2-3.6 2.9V18h3.2v-2.5c0-1 .3-1.9.9-2.6a5 5 0 0 0-.5-.3zM18.2 12.6c2 0 3.6 1.2 3.6 2.9V18h-3.2v-2.5c0-1-.3-1.9-.9-2.6a5 5 0 0 1 .5-.3z" />
               </svg>
             </span>
-            <span class="tf-fact-label">Prize money</span>
-            <span class="tf-fact-value" title="The junior tour pays no prize money at any level">–</span>
+            <span class="tf-fact-label">Spectators</span>
+            <span class="tf-fact-value" :title="crowdTitle">{{ crowdFigure }}</span>
           </div>
         </div>
 
@@ -505,7 +530,14 @@ const matchMeta = computed(() => {
              none for the opponents, and one face against an empty frame reads worse than two
              names. -->
         <Card class="tf-first">
-          <p class="tf-round">{{ pending.roundLabel }}</p>
+          <!-- The round she is about to play, and the size of the thing she has to get through to
+               win it. The draw size lives HERE rather than in the facts row (see the note on it):
+               "Quarterfinal · 8-player draw" says in one line both where she starts and how far
+               the top is, which is more than either half said on its own. -->
+          <div class="tf-round-row">
+            <p class="tf-round">{{ pending.roundLabel }}</p>
+            <p class="tf-draw">{{ drawSize }}-player draw</p>
+          </div>
           <div class="tf-first-grid">
             <div class="tf-first-side">
               <div class="tf-first-flag">{{ kidFlag }}</div>
@@ -585,6 +617,7 @@ const matchMeta = computed(() => {
           :rank-a="viewerRankA"
           :rank-b="viewerRankB"
           :final-match="isFinalRound"
+          :temperature-c="pending?.temperatureC ?? null"
           @finish="endReplay"
           @end-applause="noteEndApplause"
         />
@@ -917,10 +950,33 @@ const matchMeta = computed(() => {
 }
 
 /* Only the SURFACE is capitalised – it is a proper noun of the sport, and the engine stores it
-   lower-case. "8 Players" and "30 Pts" are not names, and capitalising them was the sentence-case
-   bug this rule exists to avoid. */
+   lower-case. "30 Pts" and a crowd figure are not names, and capitalising them was the
+   sentence-case bug this rule exists to avoid. */
 .tf-fact-value.surface {
   text-transform: capitalize;
+}
+
+/* The first-round card's header line: the round label on the left, the draw size answering it on
+   the right. `.tf-round` lives in src/style.css and carries the 16px gap on its own bottom margin;
+   the row takes that job over so the two readings sit on one baseline. */
+.tf-round-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.tf-round-row .tf-round {
+  margin-bottom: 0;
+}
+
+.tf-draw {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  white-space: nowrap;
 }
 
 /* The first-round pairing: two mirrored panels with the VS between them. */
