@@ -510,6 +510,17 @@ export interface UpcomingEvent {
  *  a player of that age may enter in a year, and how many of them she has already spent. The
  *  domestic tiers are our own invention and are not counted – see ECONOMY.entryCap.
  *  `limit === Number.MAX_SAFE_INTEGER` means unrestricted (17 and over). */
+/** WHICH RUNGS THE ENGINE WILL ACTUALLY LET HER ENTER, as the engine itself decides it
+ *  (`tierOpenFor`). Derived at snapshot time; persists nothing.
+ *
+ *  ⚠ IT EXISTS BECAUSE THE TWO LADDERS BROKE A SHARED ASSUMPTION. `composables/tierState.ts` read
+ *  `enterPointBand` for every tier, which was the one rule while every rung gated on points. Since
+ *  the two-ladder slice, J60 and J300 gate on her ITF RANK POSITION and their bands are `[0, MAX]` -
+ *  so the readout said "Unlocked - enter your first!" about events the engine refuses, which is
+ *  exactly the failure HomeScreen's own comment warns against. The screens now ask the engine
+ *  rather than re-deriving a rule that no longer covers every rung. */
+export type TierOpenMap = Record<TierId, boolean>
+
 export interface EntryCapUsage {
   used: number
   limit: number
@@ -857,6 +868,8 @@ export interface Snapshot {
    *  "capped for the year" apart from "locked on points" and "nothing scheduled". Derived at
    *  snapshot time from the persisted ledger, so it persists nothing of its own. */
   entryCap: EntryCapUsage
+  /** the engine's own per-tier entry verdict - see TierOpenMap */
+  tierOpen: TierOpenMap
   /** WHO SHE TRAINS WITH (v23): the roster coach's id, or null for the parent on the court. */
   coachId: string | null
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */

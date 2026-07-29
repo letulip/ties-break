@@ -76,6 +76,16 @@ export interface TierStateInput {
   /** the ITF annual entry cap for the CURRENT season, straight off the snapshot – the engine's own
    *  count, never re-derived here (the same discipline `pointsToEnter` is under). */
   entryCap: EntryCapUsage
+  /** THE ENGINE'S OWN VERDICT for this rung (`Snapshot.tierOpen`), or undefined for the pure callers
+   *  that predate it. When it says false, this rule reports locked and does not argue.
+   *
+   *  ⚠ WHY A RULE THAT USED TO BE COMPLETE NEEDS AN ORACLE. `enterPointBand` WAS the one entry rule,
+   *  and this function implemented it faithfully. The two-ladder slice moved J60 and J300 onto her
+   *  ITF RANK POSITION and left their bands at `[0, MAX]` - so `points < minPoints` is never true for
+   *  them and this said "Unlocked - enter your first!" about events `enterEvent` refuses. Found by
+   *  playing the game, not by a test: every guard on the entry rule watches the ENGINE, and this is
+   *  the UI's copy of it. The rule is not re-derived here any more; it is asked. */
+  engineOpen?: boolean
 }
 
 /**
@@ -104,6 +114,18 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       pointsToEnter: minPoints,
       note: pointsLockNote(minPoints),
       title: `${tier.label} – locked: reach ${minPoints} pts to enter (she has ${input.points})`,
+    }
+  }
+  // Past the band and STILL refused: an ITF rung she is not high enough in the table for. The band
+  // cannot express this - see `engineOpen` above - so the engine's answer wins.
+  if (input.engineOpen === false) {
+    return {
+      id,
+      kind: 'locked',
+      note: 'Not on the list yet',
+      title:
+        `${tier.label} – locked: entry here is an acceptance list read off her ITF ranking, ` +
+        `and she is not high enough in it yet.`,
     }
   }
   if (input.points > maxPoints) {
@@ -181,6 +203,8 @@ export function useTierStates(): ComputedRef<TierState[]> {
       // No snapshot yet = nothing spent and nothing to say; the age gate/point band answer first.
       entryCap: snap?.entryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
     }
-    return TIER_LADDER.map((id) => tierState(id, input))
+    // ...plus the engine's own verdict per rung, so the readout cannot invite her into an event
+    // `enterEvent` will refuse (see `engineOpen`).
+    return TIER_LADDER.map((id) => tierState(id, { ...input, engineOpen: snap?.tierOpen?.[id] }))
   })
 }
