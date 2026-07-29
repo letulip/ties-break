@@ -61,8 +61,9 @@ restyle by analogy with the system, or leave until it gets its own design.
 - **Reusable components 1–31** (`README.md` §"Переиспользуемые компоненты"). We have built several of
   them ad hoc, twice, inside Home and Season. Extracting the first eight before building six more
   screens is the single highest-leverage step in this wave.
-- **Art slots** (`README.md` §Assets) — mostly already solved from stock; see §4 Q4. Only two are
-  genuinely outstanding and both are the owner's: the onboarding hero and the four play-style poses.
+- **Art slots** (`README.md` §Assets) — solved from stock, see §4 Q4. **One** slot is genuinely
+  outstanding: the four play-style poses on screen R. The onboarding hero is getting a new square
+  master but has a correct stand-in in the meantime.
 - **A coach market** — the engine has `coachSetup: 'parent' | 'hired'`, a boolean. T needs tiers,
   prices, style fit and a weekly budget. That is an engine slice, and it is the same one the owner
   named as the fix for "middle family + hired coach goes bankrupt in 120 careers of 120".
@@ -93,10 +94,10 @@ coach-tier engine slice.
 | trophy, silver medal | use what we already ship |
 | the five coach portraits | **already in `public/images/coaches/` — 16 of them**, wired since wave 2 |
 | champion / runner-up moment photos | we have them; use those |
-| onboarding hero (N) | the owner is finishing it — square, like the rest of ours. Until then default to `jun-norm` |
+| summary portrait (S) | **settled: it is `jun-norm`** — the junior neutral portrait we already ship (`fem-euro-brunnet-jun-norm.webp`). Owner: «первый раз входит в клуб», nothing to draw |
+| onboarding hero (N) | the owner is finishing a new square one. Until it arrives, `jun-norm` again |
 | four play-style poses (R) | the owner will supply; ship a placeholder |
 | trip photo (G) | maybe remade later for every age; not blocking |
-| summary portrait (S) | **the owner asked which screen this is: it is S, the last onboarding step — the full-bleed 346×306 portrait "her at the club entrance" behind the summary card.** He will look and decide whether to reuse an existing one |
 
 **Q5 — density vs scroll: fidelity to the composition, real content may scroll.** Confirmed as a
 general rule, generalising the Season screen decision of 28.07.
