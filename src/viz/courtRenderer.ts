@@ -317,6 +317,12 @@ function roundedRectPath(ctx: CanvasRenderingContext2D, x: number, y: number, w:
   ctx.closePath()
 }
 
+/** U4 (owner, 29.07: nothing overlaps the playing surface). This pill used to be drawn dead centre
+ *  of the canvas - which is the net, i.e. the most-watched square inch of the court, covered for
+ *  0.9s every change of ends. It now sits centred in the TOP RUN-OFF band, the strip between the
+ *  canvas edge and the painted surface, where the Live badge also lives (the badge is left-aligned
+ *  and this is centred, so they never meet). If a viewport is ever short enough that the band
+ *  cannot hold the pill, it is clamped to the canvas edge rather than allowed back onto the court. */
 function drawChangingEndsOverlay(ctx: CanvasRenderingContext2D, vp: Viewport): void {
   const text = 'Changing ends'
   ctx.save()
@@ -329,7 +335,9 @@ function drawChangingEndsOverlay(ctx: CanvasRenderingContext2D, vp: Viewport): v
   const w = ctx.measureText(text).width + paddingX * 2
   const h = textHeight + paddingY * 2
   const cx = vp.width / 2
-  const cy = vp.height / 2
+  // Top edge of the painted (doubles) surface: the run-off band is 0 .. surfaceTop.
+  const surfaceTop = courtToCanvas({ x: -COURT.doublesHalfWidth, y: 0 }, vp).y
+  const cy = Math.min(surfaceTop / 2, Math.max(h / 2 + 2, surfaceTop - h / 2 - 2))
   roundedRectPath(ctx, cx - w / 2, cy - h / 2, w, h, h / 2)
   ctx.fillStyle = 'rgba(15, 23, 42, 0.82)'
   ctx.fill()
