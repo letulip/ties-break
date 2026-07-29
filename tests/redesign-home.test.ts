@@ -117,6 +117,7 @@ describe('weekDateLine – the header date line, in one place', () => {
 /** A coherent-enough facts object for the greeting, which reads exactly two fields of it. */
 function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
   return {
+    travelHomeScene: null, // R14-2: the greeting does not read it; kept explicit so the type is total
     week: 10,
     emotion: 'norm',
     resultFresh: false,
@@ -341,9 +342,17 @@ describe('the coach portraits', () => {
     expect(preloader).toContain('preloadCoachArt') // the self-coached fallback
     expect(preloader).toContain('preloadCoachMarketArt') // her actual coach
     expect(preloader).toContain('game.snapshot?.coachId')
-    // Still a SECOND watch, separate from the age/band one, which is what keeps the budget literal.
-    expect(preloader.match(/watch\(/g) ?? []).toHaveLength(2)
+    // ⚠ RE-AIMED AGAIN (R14-2): 2 -> 3 watches. The journey-home scene joined on its OWN trigger,
+    // for exactly the reason this test exists – it follows the WEEK, not her age band, so folding
+    // it into the age watch would have made the per-band budget a lie. The PROTECTED FACT is the
+    // one in the title and it is unchanged: nothing that is not band-scoped rides the band's watch.
+    // Asserted as a SET of triggers rather than a bare count, so the next addition has to say what
+    // it keys on instead of just bumping a number.
+    expect(preloader.match(/watch\(/g) ?? []).toHaveLength(3)
+    expect(preloader).toContain('game.snapshot?.ageYears') // the band
+    expect(preloader).toContain('travelHomeScene') // the week
     expect(preloader).not.toContain('preloadForAge(age)\n      preloadCoachArt')
+    expect(preloader).not.toContain('preloadForAge(age)\n      preloadTravelHomeArt')
   })
 })
 

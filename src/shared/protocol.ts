@@ -5,7 +5,7 @@
 import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
 import type { SkillKey } from '../engine/development'
 import type { MatchPlayer, Surface } from '../engine/match/types'
-import type { AvatarEmotion, PortraitStage } from './avatarEmotion'
+import type { AvatarEmotion, PortraitEmotion, PortraitStage } from './avatarEmotion'
 import type { EventPreview } from '../engine/season/preview'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
@@ -625,8 +625,10 @@ export type FundsPressure = 'tight' | 'watchful' | 'ok'
  *  nothing they do not carry (the honesty pin in tests/diary.test.ts sweeps exactly that). */
 export interface DiaryFacts {
   week: number
-  /** the ONE face decision, computed engine-side (same inputs the paintings render) */
-  emotion: AvatarEmotion
+  /** the ONE face decision, computed engine-side (same inputs the paintings render).
+   *  `PortraitEmotion`, not `AvatarEmotion`: the decision can land on the painting-only `rehab`
+   *  (R14-1 – the layoff is a state and wears its own picture), and nothing renders a crop of it. */
+  emotion: PortraitEmotion
   /** a competitive result from THIS week is on her face (the emotion above is a result emotion) */
   resultFresh: boolean
   /** fresh result: she won her last match this week */
@@ -663,7 +665,20 @@ export interface DiaryFacts {
   fundsPressure: FundsPressure
   /** a milestone captured THIS week, if any */
   freshMilestone: MilestoneType | null
+  /** the scene of the journey home, on a week she came back from an away tournament; null
+   *  otherwise. See engine/diary.ts travelHomeSceneFor for the rule and the draw. */
+  travelHomeScene: TravelHomeScene | null
 }
+
+/** THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на
+ *  экране Week story как в макете»). Four paintings of the same girl asleep on the way back –
+ *  `fem-euro-brunnet-sleepy-{scene}.webp`.
+ *
+ *  NOT PART OF THE PORTRAIT MATRIX, and deliberately not typed as one: they are NOT band-scoped.
+ *  The same four serve a fourteen-year-old and a woman of thirty-one, because the picture is of a
+ *  journey rather than of a face – she is asleep in all four. Forcing them into `PortraitEmotion`
+ *  would have implied five copies of each that do not exist and never will. */
+export type TravelHomeScene = 'airport' | 'plane' | 'bus' | 'car'
 
 /** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
  *  one line.
@@ -681,7 +696,10 @@ export interface MemoryCard {
   whenLabel: string
   /** the age band she was in at the milestone's week – what makes time felt */
   stage: PortraitStage
-  /** the painting emotion the memory shows (title → happy, injury → injury, …) */
+  /** the painting emotion the memory shows (title → happy, injury → injury, …).
+   *  Stays the NARROW union on purpose: a memory is a picture of a WEEK THAT HAPPENED, so every
+   *  value here is a moment face – `injury` is the week she went down, never the layoff after it
+   *  (R14-1). Nothing a milestone can map to is painting-only. */
   emotion: AvatarEmotion
   line: string
 }

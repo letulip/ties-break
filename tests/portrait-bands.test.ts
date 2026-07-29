@@ -14,21 +14,48 @@
 //      still a real property: every OTHER input still resolves to one of the six faces it always
 //      did, so anger cannot leak into an ordinary loss. The trigger's own behaviour is pinned in
 //      tests/world-trio.test.ts.
+//
+// ⚠ RE-AIMED by ui/art-rehab-sleepy (owner, 29.07: rehab is the layoff STATE, injury is the
+// MOMENT). What moved: there are now TWO emotion sets, not one.
+//
+//   CROPPABLE (7)  norm happy sad serious tired injury angry   – have a 256px crop AND a painting
+//   PAINTED   (8)  ...those, plus REHAB                        – have a painting
+//
+// So the crops loop below still runs over the seven, and the paintings loop runs over the eight.
+// That is NOT the matrix pin being weakened – it is the same pin over the real matrix, and it got
+// STRICTER in the direction that matters: a new test asserts that `rehab` has NO crop on disk and
+// that no url builder can ask for one.
+//
+// WHY REHAB IS PAINTING-ONLY, so the next reader does not "fix" this by cutting five crops:
+// NOTHING IN THE APP RENDERS AN EMOTION CROP. The app header is age-only `norm` (F45-1), Home's
+// corner crop is the same age-only `norm`, and `useKidEmotion().cropUrl` – the one emotional crop
+// seam that exists – has zero consumers in src/components/. Five crops would be five files in
+// every user's download that no code path can request. If a future card DOES want an emotional
+// crop, cut them then and move `rehab` into CROPPABLE_EMOTIONS; until then the types say so
+// (`avatarCropPath` will not accept the face) and these tests say why.
 import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import {
+  CROPPABLE_EMOTIONS,
+  PORTRAIT_EMOTIONS,
   avatarCropPath,
   avatarEmotion,
+  hasCrop,
   idleEmotion,
   portraitStage,
   type AvatarEmotion,
+  type PortraitEmotion,
   type PortraitStage,
 } from '../src/shared/avatarEmotion'
 import { cropUrl, portraitUrl } from '../src/art/preload'
+import { PAINTING_ONLY_FACES } from '../src/art/faceRects'
 import type { TierId } from '../src/engine/season/types'
 
 const STAGES: PortraitStage[] = ['jun', 'young', 'teen', 'adult', 'milf']
-const EMOTIONS: AvatarEmotion[] = ['norm', 'happy', 'sad', 'serious', 'tired', 'injury', 'angry']
+/** the seven faces a 256px crop is cut for – what `avatarCropPath` is total over */
+const EMOTIONS: AvatarEmotion[] = [...CROPPABLE_EMOTIONS]
+/** the eight faces a full painting exists for – what the portrait surfaces accept */
+const PAINTED: PortraitEmotion[] = [...PORTRAIT_EMOTIONS]
 const TIERS: TierId[] = ['local', 'regional', 'national', 'j30', 'j60', 'j300']
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
@@ -85,23 +112,44 @@ describe('the art matrix is complete on disk', () => {
     }
   })
 
-  it('every stage x emotion has a full painting', () => {
+  it('every stage x PAINTED emotion has a full painting – the wider set, rehab included', () => {
     for (const stage of STAGES) {
-      for (const emotion of EMOTIONS) {
+      for (const emotion of PAINTED) {
         const rel = `images/fem-euro-brunnet/fem-euro-brunnet-${stage}-${emotion}.webp`
         expect(existsSync(asset(rel)), `missing painting ${stage}-${emotion}`).toBe(true)
       }
     }
   })
 
-  it('the url builders agree with the files – milf and angry included', () => {
+  it('the url builders agree with the files – milf, angry and rehab included', () => {
     const strip = (u: string) => u.slice(import.meta.env.BASE_URL.length)
     for (const stage of STAGES) {
       for (const emotion of EMOTIONS) {
         expect(existsSync(asset(strip(cropUrl(stage, emotion)))), `cropUrl ${stage}-${emotion}`).toBe(true)
+      }
+      for (const emotion of PAINTED) {
         expect(existsSync(asset(strip(portraitUrl(stage, emotion)))), `portraitUrl ${stage}-${emotion}`).toBe(true)
       }
     }
+  })
+
+  // ⚠ THE OTHER HALF OF THE MATRIX PIN, added by ui/art-rehab-sleepy. "Every painting has a crop"
+  // stopped being true, so the fact has to be stated the other way round or the loop above quietly
+  // becomes the only record of it. These three assertions are what make "painting-only" a property
+  // of the code rather than a comment.
+  it('rehab is PAINTING-ONLY: no crop on disk, and no builder can ask for one', () => {
+    // 1. the files really are absent – the loop above must not be silently satisfiable by cutting
+    //    five crops nobody renders (see the note at the top of this file for why they are not cut)
+    for (const stage of STAGES) {
+      expect(existsSync(asset(`avatars/${stage}-rehab.webp`)), `${stage}-rehab crop should NOT exist`).toBe(false)
+    }
+    // 2. the two unions differ by exactly `rehab`, and the narrowing guard agrees with both
+    expect(PAINTED.filter((e) => !(EMOTIONS as PortraitEmotion[]).includes(e))).toEqual(['rehab'])
+    expect(hasCrop('rehab')).toBe(false)
+    for (const e of EMOTIONS) expect(hasCrop(e), `${e} should be croppable`).toBe(true)
+    // 3. the ART side's own spelling of the same fact (faceRects, which the cutter script reads)
+    //    cannot drift from the type union – add a painting-only face to one and this fails.
+    expect(PAINTING_ONLY_FACES).toEqual(['rehab'])
   })
 })
 
@@ -124,7 +172,7 @@ describe('`angry` is reachable only through its trigger', () => {
     // streak supplied. This is the half of the old "nothing returns angry" pin that is still TRUE
     // and still worth having: the trigger must be the ONLY door, so an ordinary loss – at any tier,
     // in any state – still reads sad/serious exactly as it did before the emotion existed.
-    const results = new Set<AvatarEmotion>()
+    const results = new Set<PortraitEmotion>()
     for (const condition of [0, 39, 40, 59, 60, 100]) {
       for (const injured of [false, true]) {
         results.add(idleEmotion(injured, condition))
@@ -154,16 +202,34 @@ describe('`angry` is reachable only through its trigger', () => {
         results.add(avatarEmotion({ week: 10, condition, injured, lastResult: null }))
       }
     }
-    expect([...results].sort()).toEqual(['happy', 'injury', 'norm', 'sad', 'serious', 'tired'])
+    // ⚠ 'injury' -> 'rehab' (ui/art-rehab-sleepy). The set is the same SIZE and the property is
+    // identical – an ordinary loss, at any tier, in any state, still resolves to one of the six
+    // faces it always did and anger cannot leak in. What changed is only which face the INJURED
+    // arm of the idle ladder returns: the layoff wears the rehab painting for its whole length, and
+    // `injury` became a moment-only face that this function no longer returns at all (the popup and
+    // the Memory card are its two surfaces). Note that is now ASSERTED below, not just implied.
+    expect([...results].sort()).toEqual(['happy', 'norm', 'rehab', 'sad', 'serious', 'tired'])
+    expect(results.has('injury'), 'the emotion ladder must never return the MOMENT face').toBe(false)
     expect(results.has('angry')).toBe(false)
   })
 
   it('IS preloaded now that it can happen – bytes follow reachability', async () => {
-    // The rule never changed, only the answer: warm every face the decision can return, and only
+    // The rule never changed, only the answer: warm every face a SURFACE can request, and only
     // those. `angry` was excluded while it was unreachable and joins the set with its trigger.
-    const { KID_EMOTIONS } = await import('../src/art/preload')
-    expect(KID_EMOTIONS).toContain('angry')
-    expect([...KID_EMOTIONS].sort()).toEqual(['angry', 'happy', 'injury', 'norm', 'sad', 'serious', 'tired'])
+    // ⚠ RE-AIMED (ui/art-rehab-sleepy): one list became two, because the painting set and the crop
+    // set stopped being equal. Both halves of the rule are pinned:
+    //   - `rehab` is warmed as a painting and NOT as a crop (there is no rehab crop);
+    //   - `injury` stays in BOTH even though the ladder no longer returns it – reachability is the
+    //     test, and the injury popup + the Memory card can still request it.
+    const { KID_PAINTING_EMOTIONS, KID_CROP_EMOTIONS } = await import('../src/art/preload')
+    expect(KID_PAINTING_EMOTIONS).toContain('angry')
+    expect([...KID_PAINTING_EMOTIONS].sort()).toEqual([
+      'angry', 'happy', 'injury', 'norm', 'rehab', 'sad', 'serious', 'tired',
+    ])
+    expect([...KID_CROP_EMOTIONS].sort()).toEqual([
+      'angry', 'happy', 'injury', 'norm', 'sad', 'serious', 'tired',
+    ])
+    expect(KID_CROP_EMOTIONS).not.toContain('rehab')
   })
 })
 
@@ -175,17 +241,32 @@ describe('`angry` is reachable only through its trigger', () => {
 // this branch had to do for the 17 it added, and what nobody could do for the 18 that shipped
 // before (they were recovered by cross-correlation instead). This test makes the table complete by
 // construction: add a stage or an emotion and it fails until the rectangle exists.
+//
+// ⚠ IT IS KEYED ON PAINTINGS, NOT ON CROPS (ui/art-rehab-sleepy). The table has a second consumer –
+// the Home hero shows the full painting landscape-cropped and steers `object-position` off the same
+// face centre – so it needs an entry for every PAINTED face, `rehab` included. Without one, a
+// rehab week frames at 50/50, which on a cover window is her knee. The sweep below therefore runs
+// over PAINTED, and the cutter is what decides which of those become files (croppableStems).
 // ---------------------------------------------------------------------------
 describe('the avatar crop table covers every face the code can request', () => {
-  it('has a rectangle for every stage x emotion', async () => {
+  it('has a rectangle for every stage x PAINTED emotion – the Home hero frames by this', async () => {
     const { CROPS } = await import('../scripts/cut-avatar-crops.mjs')
     const missing: string[] = []
     for (const stage of STAGES) {
-      for (const emotion of EMOTIONS) {
+      for (const emotion of PAINTED) {
         if (!(`${stage}-${emotion}` in CROPS)) missing.push(`${stage}-${emotion}`)
       }
     }
-    expect(missing, 'stage x emotion pairs with no crop rectangle').toEqual([])
+    expect(missing, 'stage x emotion pairs with no face rectangle').toEqual([])
+  })
+
+  it('...but the CUTTER skips the painting-only faces – a centre is not a crop', async () => {
+    const { croppableStems, CROPS } = await import('../scripts/cut-avatar-crops.mjs')
+    const stems: string[] = croppableStems()
+    expect(stems.length).toBe(STAGES.length * EMOTIONS.length)
+    expect(stems.filter((s: string) => s.endsWith('-rehab')), 'the cutter must not cut rehab').toEqual([])
+    // and every stem it DOES cut is one the code can build a crop url for
+    for (const stem of stems) expect(stem in CROPS).toBe(true)
   })
 
   it('every rectangle is a square that fits inside the 512px painting', async () => {
