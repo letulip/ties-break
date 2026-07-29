@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 16,
+  "careerId": "c-golden-v14",
+  "seed": "golden-v14",
+  "week": 110,
+  "fundsCents": 738200,
+  "profile": {
+    "kidName": "Nika",
+    "kidLastName": "Halep",
+    "gender": "girl",
+    "country": "RO",
+    "background": "middle",
+    "coachSetup": "hired",
+    "playStyle": "all-court",
+    "birthMonth": 4
+  },
+  "plan": {
+    "train": 75,
+    "rest": 25
+  },
+  "cohort": [
+    {
+      "id": "ai-0",
+      "name": "Aria Costa",
+      "serve": 51,
+      "ret": 48,
+      "composure": 54,
+      "stamina": 57,
+      "nation": "IT",
+      "growth": 1.1
+    },
+    {
+      "id": "ai-1",
+      "name": "Lena Novak",
+      "serve": 54,
+      "ret": 52,
+      "composure": 46,
+      "stamina": 62,
+      "nation": "CZ",
+      "growth": 0.9
+    },
+    {
+      "id": "ai-2",
+      "name": "Sofia Rossi",
+      "serve": 47,
+      "ret": 56,
+      "composure": 63,
+      "stamina": 50,
+      "nation": "ES",
+      "growth": 1.3
+    }
+  ],
+  "results": [
+    {
+      "playerId": "ai-0",
+      "week": 103,
+      "points": 30
+    },
+    {
+      "playerId": "kid",
+      "week": 106,
+      "points": 48,
+      "tier": "regional"
+    }
+  ],
+  "season": [
+    {
+      "id": "2-w112-local",
+      "week": 112,
+      "tier": "local",
+      "surface": "hard",
+      "travelCostCents": 10800,
+      "deadlineWeek": 110
+    },
+    {
+      "id": "2-w116-national",
+      "week": 116,
+      "tier": "national",
+      "surface": "clay",
+      "travelCostCents": 78000,
+      "deadlineWeek": 114
+    }
+  ],
+  "entries": [],
+  "events": [
+    {
+      "id": 0,
+      "week": 0,
+      "type": "info",
+      "text": "Nika's career started.",
+      "keep": true
+    },
+    {
+      "id": 1,
+      "week": 49,
+      "type": "milestone",
+      "keep": true,
+      "milestoneKey": "season-wrap-0",
+      "text": "Season 2031 wrap-up: rank #128 (↑71 vs season start) · 48 pts this season · best Semifinalist · 15-23 (W-L) · funds -$17,700"
+    },
+    {
+      "id": 2,
+      "week": 101,
+      "type": "milestone",
+      "keep": true,
+      "milestoneKey": "season-wrap-1",
+      "text": "Season 2032 wrap-up: rank #74 (↑54 vs season start) · 126 pts this season · best Runner-up · 24-17 (W-L) · funds -$9,400"
+    },
+    {
+      "id": 3,
+      "week": 106,
+      "type": "tournament",
+      "text": "Regional Championship (hard, W106): Nika – Semifinalist (+28 pts)",
+      "finishIdx": 2
+    },
+    {
+      "id": 4,
+      "week": 110,
+      "type": "income",
+      "category": "income",
+      "text": "Parents' contribution",
+      "amountCents": 30000
+    },
+    {
+      "id": 5,
+      "week": 110,
+      "type": "expense",
+      "category": "coaching",
+      "text": "Coaching block: technique drills",
+      "amountCents": -52400
+    },
+    {
+      "id": 6,
+      "week": 110,
+      "type": "expense",
+      "category": "practice",
+      "text": "Court rental + coach – practice match W111",
+      "amountCents": -14300
+    }
+  ],
+  "nextEventId": 7,
+  "kidRank": 61,
+  "prevKidRank": 64,
+  "pendingTournament": null,
+  "bestFinishByTier": {
+    "local": 0,
+    "regional": 2
+  },
+  "lastSeasonSummary": {
+    "seasonYear": 2032,
+    "endRank": 74,
+    "startRank": 128,
+    "points": 126,
+    "wins": 24,
+    "losses": 17,
+    "bestResultText": "best Runner-up",
+    "fundsDeltaCents": -940000,
+    "weeksInjured": 2
+  },
+  "seasonHistory": [
+    {
+      "seasonIndex": 0,
+      "endRank": 128,
+      "points": 48,
+      "wins": 15,
+      "losses": 23,
+      "fundsDeltaCents": -1770000,
+      "endFundsCents": 730000,
+      "bestFinish": 2
+    },
+    {
+      "seasonIndex": 1,
+      "endRank": 74,
+      "points": 126,
+      "wins": 24,
+      "losses": 17,
+      "fundsDeltaCents": -940000,
+      "endFundsCents": 636000,
+      "bestFinish": 1
+    }
+  ],
+  "seasonWins": 3,
+  "seasonLosses": 4,
+  "financeWeeks": [
+    {
+      "week": 109,
+      "byCategory": {
+        "income": 30000,
+        "coaching": -51000
+      }
+    },
+    {
+      "week": 110,
+      "byCategory": {
+        "income": 30000,
+        "coaching": -52400,
+        "practice": -14300
+      }
+    }
+  ],
+  "condition": 84,
+  "injury": null,
+  "injuryHistory": [
+    {
+      "kind": "ankle niggle",
+      "severity": "minor",
+      "week": 96,
+      "weeksOut": 2
+    }
+  ],
+  "physioActive": true,
+  "vacations": [
+    {
+      "week": 114,
+      "packageId": "seaside",
+      "paidCents": 83000
+    }
+  ],
+  "practices": [
+    {
+      "week": 111,
+      "paidCents": 14300,
+      "withCoach": true
+    }
+  ],
+  "recoveryBuff": null,
+  "internationalEntryWeeks": [
+    105,
+    107,
+    109,
+    112
+  ]
+}

@@ -8,6 +8,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SlotMeta } from '../../shared/protocol'
+import { weekLabel } from '../../shared/dates'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
@@ -202,7 +203,9 @@ function toggleHaptics(): void {
           {{ c.kidName }} {{ flagEmoji(c.country) }}
           <span v-if="c.careerId === activeCareerId" class="pill ok">Active</span>
         </div>
-        <div class="hint">W{{ c.week }} · age {{ 14 + Math.floor(c.week / 52) }} · last played {{ fmtDate(c.lastPlayedAt) }}</div>
+        <div class="hint">
+          {{ weekLabel(c.week) }} · age {{ 14 + Math.floor(c.week / 52) }} · last played {{ fmtDate(c.lastPlayedAt) }}
+        </div>
       </div>
       <div class="controls">
         <button :disabled="game.busy || c.careerId === activeCareerId" @click="askLoadCareer(c)">Load</button>
@@ -235,7 +238,7 @@ function toggleHaptics(): void {
         <tr v-for="s in namedSlots" :key="s.slot">
           <td>{{ s.name }}</td>
           <td>{{ fmtDate(s.savedAt) }}</td>
-          <td class="num">{{ s.week }}</td>
+          <td class="num">{{ weekLabel(s.week) }}</td>
           <td class="num">{{ (s.bytes / 1024).toFixed(1) }} KB</td>
           <td>
             <button :disabled="game.busy" @click="game.load(s.slot)">Load</button>

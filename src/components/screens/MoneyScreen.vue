@@ -14,6 +14,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { ECONOMY } from '../../engine/economy'
 import type { FamilyBackground, FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
+import { weekLabel } from '../../shared/dates'
 
 const game = useGameStore()
 
@@ -61,7 +62,7 @@ const startingBudget = computed(() => (game.snapshot ? formatDollars(STARTING_BU
 // category is missing/unknown (pre-round-7 events) falls into 'other'.
 // 'interest' (R9-1, weekly savings interest) is INCOME-side: it rolls into the green income
 // row via the positive-total fold below and must never slice the expense donut.
-type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest'>
+type ExpenseCategory = Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy'>
 const EXPENSE_META: { key: ExpenseCategory; label: string; color: string }[] = [
   { key: 'coaching', label: 'Coaching', color: '#d9f24f' },
   { key: 'travel', label: 'Travel', color: '#4fd2f2' },
@@ -69,6 +70,10 @@ const EXPENSE_META: { key: ExpenseCategory; label: string; color: string }[] = [
   { key: 'gear', label: 'Gear', color: '#f2a54f' },
   { key: 'stringing', label: 'Stringing', color: '#f2668b' },
   { key: 'physio', label: 'Physio & medical', color: '#4fe3a3' },
+  // Season planner (v13): the two planned spends get their own slices – a vacation package is a
+  // real money sink the owner wants to see, and the practice court fee is the small recurring one.
+  { key: 'vacation', label: 'Vacations', color: '#f2e14f' },
+  { key: 'practice', label: 'Practice matches', color: '#7cc0f2' },
   { key: 'other', label: 'Other', color: '#8aa0c6' },
 ]
 const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
@@ -243,7 +248,7 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
       <h2>Ledger</h2>
       <p v-if="!ledgerGroups.length" class="hint" style="margin: 0">No transactions yet.</p>
       <div v-for="group in ledgerGroups" :key="group.week" class="ledger-week">
-        <p class="ledger-week-label">W{{ group.week }}</p>
+        <p class="ledger-week-label">{{ weekLabel(group.week) }}</p>
         <table>
           <tbody>
             <tr v-for="row in group.rows" :key="row.event.id">

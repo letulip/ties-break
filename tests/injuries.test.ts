@@ -46,8 +46,38 @@ function hashOf(draws: number[]): string {
   return fnv1a(draws.map((d) => d.toString()).join(','))
 }
 
-// B1's frozen pre-slice reference: seed bench-working-0, weeks 1..52.
-const REF = { count: 45239, hash: '9f783705', kidRank: 131 }
+// B1's frozen reference: seed bench-working-0, weeks 1..52.
+// ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 draws (hash
+// cae178fc -> e6b0c709), by the AI sub-stream refactor. The canonical AI tournaments moved OFF the
+// main weekly stream onto their own event-scoped `seed:aitour:<event.id>` stream, so the calendar's
+// size is no longer part of the weekly draw count – which is what forced both earlier re-pins
+// (45239 -> 51642 for the J family, and this file's own history before it). What remains on the
+// main stream is base costs + cohort drift only: 52 x (4 x 199 + 3) + 2 sponsor-gift draws.
+// The INVARIANT this file guards – that C's injury and physio work adds no main-stream draws, and
+// that nothing about the player's situation can move the sequence – is untouched and still proven
+// by every other test here. kidRank 131 -> 143 (Part A) -> 141 (Part B) -> 140 -> 141 is a
+// consequence of the ranking, not of the stream.
+//
+// ⚠ kidRank RE-PINNED 140 -> 141 by the rival-life slice, deliberately: cohort players now carry
+// their own accumulated fatigue and a surface/style modifier into every draw, so the AI brackets
+// resolve differently and one more junior ends the year holding counting points. The stream itself
+// (count 41550, hash e6b0c709) is untouched – both halves of that slice are pure derivations off
+// state the world already holds and draw ZERO RNG, which is exactly what this file guards.
+// Full reasoning at the REF declaration in tests/condition.test.ts.
+// 141 -> 140 at wave-3 integration: the surface x style table changes which of her matches she wins, so a different junior ends the year holding counting points. The STREAM is untouched (count/hash identical) - only the ranking derived from it moved.
+//
+// ⚠ kidRank RE-PINNED 140 -> 133 by wave B "first-round loss pays ZERO", deliberately. C1's claim
+// is that INJURY and PHYSIO add no main-stream draws, and that claim is untouched: count 41550 and
+// hash e6b0c709 still reproduce byte-for-byte. What moved is who holds points – `awardAiPoints`
+// writes a row only when `points > 0`, so first-round losers (half of every draw) now bank nothing
+// and seven fewer juniors finish the year in the points; the point-less kid shares that larger
+// 0-point group's dense rank. Full reasoning at the REF declaration in tests/condition.test.ts.
+// ⚠ RE-PINNED 133 -> 135 (29.07, partial seeding). The DRAW SEQUENCE did not move - `count` and
+// `hash` above are untouched and still pass, which is the fact this block exists to protect. What
+// moved is her RANK, a companion pin carried alongside: the bracket now seeds only the top 8 of 32
+// and shuffles everyone else, the kid included, so her results in a 52-week window differ and so
+// does the rank they earn. See docs/specs/rank-plateau.md.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 135 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
   draws: number[]
@@ -166,7 +196,7 @@ function onsetAt(seed: string, physio: boolean): WorldState['injury'] {
 // private per-week sub-streams, so nothing here may move.
 // ---------------------------------------------------------------------------
 describe('C1 — main-stream RNG invariance (blocks merge)', () => {
-  it('reproduces the frozen B capture: count 45239, hash 9f783705', () => {
+  it('reproduces the frozen B capture byte-for-byte (values in REF, not in this title)', () => {
     const { draws, world } = recordRun()
     expect(draws.length).toBe(REF.count)
     expect(hashOf(draws)).toBe(REF.hash)
@@ -934,7 +964,7 @@ describe('advanceWeeks injury stop', () => {
     w.physioActive = false
     w.condition = 0
     const stop = advanceWeeks(w, rngFromSeed(w.seed), 4)
-    expect(stop).toBe('injury')
+    expect(stop).toContain('injury')
     expect(w.week).toBe(1)
     expect(w.injury).not.toBeNull()
   })
@@ -974,10 +1004,19 @@ describe('UI wiring', () => {
     expect(src).toContain('weeksInjured')
   })
 
-  it('HomeScreen binds the injured chip to snapshot.injury kind + return week', () => {
+  it('the injured WHY reaches Home through the D1 note (R13-3 re-aim: the chip left the row)', () => {
+    // ⚠ RE-AIMED by R13-3 (28.07). This pin used to hold Home's availability chip to
+    // `injury.kind` + a weekLabel()-formatted return week. The owner dropped the chip from Home's
+    // condition row (the squares + the D1 note carry the state; the chip duplicated both), so what
+    // the pin now asserts is the SAME guarantee through its surviving surface: the engine's D1
+    // note names the kind and the clock, and Home renders that note verbatim. The chip idiom
+    // itself lives on on the Season screen's layoff plaques (round12-view pins it there).
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
-    expect(src).toContain('injury.kind')
-    expect(src).toMatch(/back wk/)
+    expect(src).not.toContain('avail-chip')
+    expect(src).toContain('diary.conditionNote')
+    const diary = readFileSync(new URL('../src/engine/diary.ts', import.meta.url), 'utf8')
+    expect(diary).toContain('Out with the ${f.injured?.kind')
+    expect(diary).toContain("weeksRemaining ?? 1, 'week'")
     // R9-5 (re-pinned deliberately): the physio toggle + retainer cost moved to MoneyScreen's
     // Budget section – a spending decision lives with the money.
     const money = readFileSync(new URL('../src/components/screens/MoneyScreen.vue', import.meta.url), 'utf8')

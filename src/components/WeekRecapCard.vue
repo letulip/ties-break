@@ -3,8 +3,15 @@
 // a non-tournament week resolves. Pure presentation over the latest snapshot events: no
 // engine changes, no new persisted state. 7 day-dots is a deterministic cosmetic spread of
 // the week's train/rest plan, not a simulated day-by-day log.
-import { computed } from 'vue'
+// R10-12: when the week that just resolved held a booked friendly, the recap is where the player
+// LANDS after pressing "Next week" – so the live "watch it" path starts here too, not only on the
+// Season screen. The flow itself is a full-screen overlay (fixed), so mounting it from inside this
+// card needs nothing from HomeScreen.
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
+import { weekLabel } from '../shared/dates'
+import PracticeFlow from './PracticeFlow.vue'
+import type { WorldMatch } from '../shared/protocol'
 
 defineEmits<{ dismiss: [] }>()
 
@@ -46,12 +53,19 @@ function formatSigned(cents: number): string {
   const sign = dollars < 0 ? '-' : '+'
   return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
 }
+
+// The week's booked friendly, if it was played (an injury cancels + refunds it, and then there is
+// no match event at all). The engine already resolved it; the flow only presents it.
+const friendlyMatch = computed<WorldMatch | null>(
+  () => weekEvents.value.find((e) => e.type === 'match' && e.friendly && e.match)?.match ?? null,
+)
+const practiceLive = ref<WorldMatch | null>(null)
 </script>
 
 <template>
   <section class="recap-card">
     <div class="recap-head">
-      <h2 style="margin: 0">Week recap · W{{ week }}</h2>
+      <h2 style="margin: 0">Week recap · {{ weekLabel(week) }}</h2>
       <button class="link" @click="$emit('dismiss')">Dismiss</button>
     </div>
     <div class="recap-days">
@@ -66,5 +80,17 @@ function formatSigned(cents: number): string {
       <span class="num positive">Income {{ formatSigned(incomeCents) }}</span>
       <span class="num negative">Spend {{ formatSigned(expenseCents) }}</span>
     </div>
+    <!-- R10-12: the friendly she played this week – watch it live, right where the week landed. -->
+    <div v-if="friendlyMatch" class="controls" style="margin-top: 10px">
+      <span class="hint" style="margin: 0">She played her practice match</span>
+      <button class="primary sfx-watch" @click="practiceLive = friendlyMatch">Watch it live →</button>
+    </div>
+    <PracticeFlow
+      v-if="practiceLive"
+      :match="practiceLive"
+      :week="week"
+      :kid-rank="game.snapshot?.kidRank ?? null"
+      @close="practiceLive = null"
+    />
   </section>
 </template>

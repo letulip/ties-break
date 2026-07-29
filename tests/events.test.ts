@@ -135,12 +135,27 @@ describe('news match texts use short names for everyone', () => {
 
 describe('a tournament week the kid entered', () => {
   it('emits travel, per-round match and one tournament event, and awards ranking points', () => {
-    const world = createWorld('tourney-week')
-    const rng = rngFromSeed(world.seed)
-    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEligible(world, event)
-
-    while (world.week < event.week) tickWeek(world, rng)
+    // ⚠ SEED-WALKED by the random-draw change (28.07). This used to be the single seed
+    // 'tourney-week': she met the top seed in every first round, so her run was predictable and a
+    // fixed seed was safe. With a random draw an early exit banks NO points (wave B), so the
+    // fixture now walks until it finds a run that scored - which is the case this test is about.
+    let world!: WorldState
+    let event!: SeasonEvent
+    for (let i = 0; i < 30; i++) {
+      const w = createWorld(`tourney-week-${i}`)
+      const r = rngFromSeed(w.seed)
+      const e = w.season.find((x) => x.week >= 5 && x.deadlineWeek >= w.week)!
+      enterEligible(w, e)
+      while (w.week < e.week) tickWeek(w, r)
+      if (!w.pendingTournament) continue
+      // Peek at the committed finishes without resolving: a scoring run is one she won a round of.
+      const finish = w.pendingTournament.result.finishes[KID_ID]
+      if (finish === undefined || finish >= Math.log2(TIERS[e.tier].drawSize)) continue
+      world = w
+      event = e
+      break
+    }
+    expect(world, 'no seed in 30 produced a scoring run').toBeTruthy()
     expect(world.week).toBe(event.week)
 
     // travel is charged during the tick; the rest of the run is deferred to the reveal flow.
@@ -252,12 +267,27 @@ describe('class-flavored expenses (round-5 item 10)', () => {
 
 describe('kid counting-results transparency (round-5 item 1b)', () => {
   it('exposes the best-6 counted results whose points sum equals the standings points', () => {
-    const world = createWorld('counting')
-    const rng = rngFromSeed(world.seed)
-    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
-    enterEligible(world, event)
-    while (world.week < event.week) tickWeek(world, rng)
-    skipTournament(world)
+    // ⚠ Wave B ("first-round loss pays ZERO") made a losing opener bank nothing, so a single
+    // hard-coded seed is no longer guaranteed to produce a counting result at all – and a run that
+    // scores nothing cannot exercise the transparency claim (0 === 0 passes vacuously). Walk seeds
+    // until she actually WINS a match and banks something, which is the state this test is about.
+    // The walk is deterministic and bounded; the assertions below are unchanged.
+    let world!: WorldState
+    for (let i = 0; i < 40; i++) {
+      const w = createWorld(`counting-${i}`)
+      const rng = rngFromSeed(w.seed)
+      const event = w.season.find((e) => e.week >= 5 && e.deadlineWeek >= w.week)
+      if (!event) continue
+      enterEligible(w, event)
+      while (w.week < event.week) tickWeek(w, rng)
+      if (!w.pendingTournament) continue // injured out / withdrawn – not this test's subject
+      skipTournament(w)
+      if (w.results.some((r) => r.playerId === KID_ID)) {
+        world = w
+        break
+      }
+    }
+    expect(world).toBeDefined()
     const snap = toSnapshot(world)
     expect(snap.countingResults.length).toBeGreaterThanOrEqual(1)
     // each counted kid result carries the tier it was earned at (new r5 field)
@@ -281,15 +311,30 @@ describe('advance stop reasons', () => {
 
     const stop = advanceWeeks(world, rng, 4)
     expect(world.week).toBe(event.week)
-    expect(stop).toBe('tournament')
+    expect(stop).toContain('tournament')
   })
 
-  it('stops before an imminent affordable regional+ deadline (stopReason: deadline)', () => {
+  // *** RE-PINNED 25.07 (season-planner slice, round-9 leftover FIX): the deadline stop now
+  // AND-s in the POINT-BAND eligibility, so the sim no longer halts for a regional/national
+  // deadline the kid could not enter anyway (the owner saw it at W1/W3 with 0 pts). The old
+  // assertion (a FRESH 0-point career stops for the first regional deadline) is therefore
+  // inverted: a fresh kid must NOT be stopped, and a point-eligible kid must still be. ***
+  it('never stops a 0-point kid for a regional+ deadline she cannot enter (round-9 fix)', () => {
     const world = createWorld('adv-deadline')
     const rng = rngFromSeed(world.seed)
-    // ample funds, no entries -> the only early stop available is a deadline warning
+    // ample funds, no entries, ZERO ranking points -> regional (min 65) / national (min 150)
+    // are both out of reach, so no deadline may interrupt the advance.
     const stop = advanceWeeks(world, rng, 20)
-    expect(stop).toBe('deadline')
+    expect(stop).not.toContain('deadline')
+  })
+
+  it('stops before an imminent affordable regional+ deadline she IS eligible for', () => {
+    const world = createWorld('adv-deadline')
+    const rng = rngFromSeed(world.seed)
+    // one counting result puts her inside the regional band [65, 230]
+    world.results.push({ playerId: KID_ID, week: world.week, points: 80, tier: 'regional' })
+    const stop = advanceWeeks(world, rng, 20)
+    expect(stop).toContain('deadline')
     expect(world.week).toBeLessThan(20)
     const soon = world.season.some(
       (e) =>
@@ -308,6 +353,6 @@ describe('advance stop reasons', () => {
     world.fundsCents = -50_000_00
     const stop = advanceWeeks(world, rng, 4)
     expect(world.fundsCents).toBeLessThan(0)
-    expect(stop).toBe('funds')
+    expect(stop).toContain('funds')
   })
 })

@@ -99,6 +99,17 @@ export const useGameStore = defineStore('game', {
         await this.refreshSlots()
       })
     },
+    /** R10-13: cancel an entry before its week starts. Past the deadline the entry fee is NOT
+     *  refunded and the week becomes plannable again (practice/vacation); before the deadline it is
+     *  an ordinary withdrawal with a full refund. */
+    async cancelEntry(eventId: string) {
+      await this.run(async () => {
+        const res = await request({ type: 'cancelEntry', eventId })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
     /** R9-9: skip an entered tournament at its event week (fee forfeited, travel refunded). */
     async skipEvent(eventId: string) {
       await this.run(async () => {
@@ -127,6 +138,43 @@ export const useGameStore = defineStore('game', {
     async tournamentClose() {
       await this.run(async () => {
         const res = await request({ type: 'tournamentClose' })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    // --- season planner (v13) -------------------------------------------------------------
+    /** Book a family vacation on an empty future week (price = the sub-stream quote). */
+    async bookVacation(week: number, packageId: string) {
+      await this.run(async () => {
+        const res = await request({ type: 'bookVacation', week, packageId })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** Cancel a booked vacation before its week starts – full refund. */
+    async cancelVacation(week: number) {
+      await this.run(async () => {
+        const res = await request({ type: 'cancelVacation', week })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** Book a practice match (watchable friendly) on an empty future week. */
+    async bookPractice(week: number, withCoach: boolean) {
+      await this.run(async () => {
+        const res = await request({ type: 'bookPractice', week, withCoach })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** Cancel a booked practice match before its week starts – full refund. */
+    async cancelPractice(week: number) {
+      await this.run(async () => {
+        const res = await request({ type: 'cancelPractice', week })
         if (!res.ok) throw new Error(res.error)
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()

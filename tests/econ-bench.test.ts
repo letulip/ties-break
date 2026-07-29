@@ -1,4 +1,11 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+
+// Whole-horizon career replays are deterministic but SLOW, and they sit close enough to vitest's
+// 5s default that a busy run tips them over - the gate then goes red on timing, not on a claim.
+// Two independent reasons pile up: the suite runs eight files in parallel, and the ladder-up
+// calendar made a 14->18 career far heavier (several draw-32 AI tournaments a week once she reaches
+// the J-tiers). Same generous file-level timeout the fatigue bench already carries, same reason.
+vi.setConfig({ testTimeout: 240_000 })
 import {
   runCareer,
   openCareer,
@@ -19,7 +26,7 @@ import {
   type SeedResult,
 } from '../tools/econ-bench'
 import { STARTING_FUNDS_CENTS, kidPoints, financeWindow } from '../src/engine/world'
-import { PARENT_INCOME_CENTS } from '../src/engine/world'
+import { parentIncomeForWeekCents } from '../src/engine/economy'
 
 // The economy bench (Part C, extended to whole-horizon in Wave 1) is a MEASUREMENT tool: it must be
 // deterministic (same seed+preset+horizon ⇒ identical numbers, no wall-clock/Math.random) and its
@@ -100,7 +107,20 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
     // cats.income = flat contribution x captured weeks + refunds banked inside captured folds –
     // reconstructed here by an independent replay. Middle never banks the (working-only)
     // local-sponsor cameo, so cats.sponsor stays 0.
-    const capturedIncomeWeeks = (horizonWeeks: number) => 49 + 50 * (horizonWeeks / WEEKS_PER_YEAR - 1)
+    // Round 12: the contribution GROWS per season (parentIncomeForWeekCents, +5-10% compounding),
+    // so "weeks x flat constant" became "sum the per-week amount over the captured weeks". The
+    // capture window per season is unchanged: weeks [52k .. 52k+49] of every season whose wrap
+    // lands inside the horizon (49 weeks of season 0, 50 of each later one - week 52k is week 0
+    // of the season and pays too).
+    const capturedIncomeCents = (horizonWeeks: number) => {
+      let total = 0
+      for (let w = 0; w < horizonWeeks; w++) {
+        const year = Math.floor(w / WEEKS_PER_YEAR)
+        const inFold = w % WEEKS_PER_YEAR <= SEASON_WRAP_OFFSET && year * WEEKS_PER_YEAR + SEASON_WRAP_OFFSET <= horizonWeeks
+        if (w > 0 && inFold) total += parentIncomeForWeekCents('bench-middle-0', 'middle', w)
+      }
+      return total
+    }
     for (const h of [H16, H18]) {
       const r = runCareer(middle, 0, h.weeks)
       const { world, rng } = openCareer(middle, 0)
@@ -116,7 +136,7 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
           .filter((e) => e.week === world.week && e.text.startsWith('Entry refunded'))
           .reduce((s, e) => s + (e.amountCents ?? 0), 0)
       }
-      expect(r.cats.income).toBe(PARENT_INCOME_CENTS.middle * capturedIncomeWeeks(h.weeks) + refundsCents)
+      expect(r.cats.income).toBe(capturedIncomeCents(h.weeks) + refundsCents)
       expect(r.cats.sponsor).toBe(0)
     }
   })
@@ -184,11 +204,23 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
   })
 
   it('the 14→18 pro proxy guards the rank arm with hasResults (no rank credit until a counting result)', () => {
-    // The degeneracy the guard fixes: a brand-new career ties at dense-rank 1 (kidRank <= 50) while
-    // holding ZERO counting results. An unguarded `kidRank <= 50` would therefore "reach pro" at week 1.
+    // RE-PINNED by ladder-up Part A (cohort pre-history). The degeneracy this guard was written
+    // against – a brand-new career tying the whole 0-point field at dense-rank 1, so an unguarded
+    // `kidRank <= 50` "reached pro" at week 1 – is now fixed AT SOURCE: the cohort carries a real
+    // season of results, so the point-less kid is the ONLY 0-point player and starts ranked LAST.
+    // The guard is kept (it is still the correct predicate, and it is what stops a future
+    // ranking change from re-opening the hole), but the assertion is inverted to pin the fix.
+    //
+    // ⚠ RE-PINNED 200 -> 195 by wave B "first-round loss pays ZERO" (tune/first-round-zero). She is
+    // no longer the ONLY 0-point player: pre-history draws first-round exits, which are now worth
+    // 0, so a handful of cohort players share the bottom rank with her (5 here). What this test
+    // actually needs is unchanged and is what is asserted: she starts FAR outside the top 50 with
+    // no counting result, so the unguarded `kidRank <= 50` arm would still be wrong at week 1 and
+    // the hasResults guard is still doing real work. Full note in tests/season/prehistory.test.ts.
     const fresh = openCareer(wealthy, 0)
-    expect(fresh.world.kidRank).toBeLessThanOrEqual(REACH_PRO_RANK) // dense-rank tie: she's "#1"
-    expect(kidPoints(fresh.world)).toBe(0) // ...but has no counting result yet
+    expect(fresh.world.kidRank).toBe(195)
+    expect(fresh.world.kidRank).toBeGreaterThan(REACH_PRO_RANK)
+    expect(kidPoints(fresh.world)).toBe(0) // ...and still no counting result
 
     // reachedWeek(pro) must match an INDEPENDENT replay of the GUARDED predicate, and must NOT be the
     // week-1 degenerate value: the rank arm only fires once she owns a counting result (points > 0),
@@ -242,7 +274,9 @@ describe('entries-per-career counter (ranking gate)', () => {
     for (const preset of PRESETS) {
       for (const index of [0, 1, 2]) {
         const r = runCareer(preset, index, H16.weeks)
-        expect(r.entries.total).toBe(r.entries.local + r.entries.regional + r.entries.national)
+        // RE-PINNED by ladder-up Part B: the split covers the whole six-rung catalogue now
+        // (local/regional/national + j30/j60/j300), not the three hard-coded playable tiers.
+        expect(r.entries.total).toBe(Object.values(r.entries.byTier).reduce((s, n) => s + n, 0))
         expect(r.entries.total).toBeGreaterThanOrEqual(0)
         expect(r.entries.total).toBeLessThan(H16.weeks)
       }

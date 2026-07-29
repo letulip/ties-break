@@ -11,15 +11,34 @@
 // from the tick's main rng; parent income / expense factors / sponsor eligibility are pure
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
-import { rngFromSeed, pickInt } from './rng'
+import { rngFromSeed, pickInt, type Rng } from './rng'
 import type { CoachSetup, FamilyBackground, InjurySeverity } from '../shared/protocol'
 import type { TierId } from './season/types'
+import { WEEKS_PER_YEAR } from './season/calendar'
 
 /** The four recurring gear line-items. rackets/shoes/apparel report under the 'gear'
  *  breakdown category; stringing gets its own 'stringing' category (it recurs far more
  *  often, so the owner wants it split out on the Money pie). */
 export type GearCategory = 'rackets' | 'stringing' | 'shoes' | 'apparel'
 export const GEAR_CATEGORIES: readonly GearCategory[] = ['rackets', 'stringing', 'shoes', 'apparel']
+
+/** One family-vacation package of the season planner (docs/specs/season-planner.md §2).
+ *  ONE shared catalogue – money is the only gate. Prices are MIDDLE-anchored bands scaled by
+ *  the wealth corridor at quote time (see vacationPriceCents); the quote is deterministic per
+ *  (seed, week, packageId) so the offer the player sees is exactly what booking charges. */
+export interface VacationPackage {
+  id: string
+  /** player-facing name (short dash only – never an em dash) */
+  label: string
+  /** one-line flavor for the planner sheet */
+  blurb: string
+  /** middle-anchored [min,max] price in whole cents; [0,0] = free */
+  priceCents: [number, number]
+  /** condition gain applied on the vacation week (clamped to 0..100) */
+  conditionGain: number
+  /** injury-tau multiplier carried for ECONOMY.vacation.buffWeeks weeks; 1 = no carry-over buff */
+  buffFactor: number
+}
 
 export interface GearLine {
   /** breakdown category this line reports under */
@@ -57,11 +76,28 @@ export const ECONOMY = {
   // knobs alone can't make an $800/wk-funded season burn, so the contribution comes down
   // (they still front-load a large STARTING reserve; see world.ts STARTING_FUNDS_CENTS).
   // Working is unchanged – it already sat in-band.
+  // WEALTHY RAISED 430 -> 750 (owner, round 12 - his THIRD ask, 27.07 "я уже просил его поднять и
+  // не один раз"). His two full 120k careers both ended the same way: bankrupt around week 120-125,
+  // with travel overtaking the coach as the top cost centre once the international calendar opened.
+  // The old figure was tuned for the round-7 no-tournament burn bands; a real playing season at the
+  // J tiers costs $45-60k/season and the age-cap change already trimmed the schedule, so the burn
+  // band gives way to the owner's number. He asked for 700-800; 750 is the middle of his range.
+  // MIDDLE RAISED 300 -> 425 (owner, round 13, 28.07 - his ask at "400-450" for the SECOND time;
+  // wealthy moved in round 12 but middle never did, and his first Diary-1 playtest burned the whole
+  // 25k reserve inside one season). 425 is the middle of his range. Same trade as the wealthy
+  // re-base: the round-7 idle-year burn band gives way to the owner's number, and the calibration
+  // band in tests/economy.test.ts is re-pinned to the measured window at 425, deliberately.
   parentIncomeCents: {
-    wealthy: 430_00,
-    middle: 300_00,
+    wealthy: 750_00,
+    middle: 425_00,
     working: 245_00,
   } as Record<FamilyBackground, number>,
+
+  // THE PARENTS' CAREERS MOVE TOO (owner, round 12: "с каждым новым годом вклад родителей
+  // приростал процентов на 5-10 рандомно... не фиксированная сумма на всю жизнь"). Each season
+  // boundary the weekly contribution grows by a uniform draw from this band, COMPOUNDING - season
+  // N's income is base x prod(1 + roll_i) over seasons 1..N. Both bounds are knobs.
+  incomeGrowthBand: [0.05, 0.10] as [number, number],
 
   // Weekly base ("coaching") expense draw range in cents, by coaching setup. A parent-coach
   // saves on fees. The draw COUNT is one pickInt per tick regardless of setup/background.
@@ -167,15 +203,98 @@ export const ECONOMY = {
   // Round-9 OWNER REDESIGN (replaces the old restBase/restSlope/trainSlope plan formula AND
   // the flat per-tier tournamentStrain – everything integer, no fractions):
   //  - FATIGUE comes from MATCHES, per kid match played (world.ts matchDrain, applied when the
-  //    run COMMITS at finalizeTournament): straight sets with no tiebreak = 1; a 3-setter OR a
-  //    tiebreak in a 2-setter = 2; +1 more when the match had MORE than 2 tiebreak sets (a
-  //    three-TB epic) – max 3; plus the tier surcharge PER MATCH below. Hardest national
-  //    match = 3 + 2 = 5, so a five-match National run maxes at 25 (the owner's own check).
+  //    run COMMITS at finalizeTournament): straight sets with no tiebreak = 2; a 3-setter OR a
+  //    tiebreak in a 2-setter = 3; +1 more when the match had MORE than 2 tiebreak sets (a
+  //    three-TB epic) – max 4; plus the tier surcharge PER MATCH below. Hardest national
+  //    match = 4 + 2 = 6, so a five-match National run of epics costs 30 + the cumulative ladder.
+  //    (BASE RAISED 1 → 2, owner 26.07; the old "maxes at 25" check was that same run at base 1.)
   //  - RECOVERY comes from TIME: recoveryBase every week, always; on a week with NO kid match
   //    the train/rest slider adds restRecoveryBonus (threshold-based on plan.rest – the 60/40
   //    preset earns +2, 75/25 earns +1, the 85/15 grind earns 0; NEVER interpolated); physio
   //    adds ECONOMY.physio.conditionBonusPerWeek; a blackout week (off-season / exams) adds
   //    blackoutBonus. condition = clamp(condition + recovery − matchDrain, 0, 100).
+  // --- DEVELOPMENT (Phase 4) --------------------------------------------------------------------
+  // Every number the growth model reads, in one object, because this is the block the owner will
+  // want to turn. The shape is docs/plan.md's ("potential + age curves ... weekly training
+  // allocation, coach quality"); these are its first measured values, not its last.
+  development: {
+    /** Headroom rolled per attribute ON TOP of where she starts. A career at the bottom of this
+     *  band is a girl who was never going to make it, and that has to be a career the game can
+     *  tell - so the low end is deliberately small, not merely "less good". */
+    potentialBand: [4, 26] as [number, number],
+    /** She never falls below this, whatever age does to her. */
+    floor: 20,
+    ageCurve: {
+      /** the steep years start here (our START_AGE is 14, so a prologue at 13 is covered) */
+      growthStart: 13,
+      /** ...and ease off into the late teens */
+      growthEnd: 18,
+      /** by the plan's calibration: first points 17-18, top-100 about 4.5 years later */
+      plateauStart: 23,
+      /** peak 23-28 */
+      declineStart: 29,
+      /** share of remaining headroom taken per week at the steepest age */
+      peakRate: 0.0062,
+      /** how much of that is gone by `growthEnd` (0.5 = half the rate at 18 that she had at 13) */
+      growthEase: 0.5,
+      /** across the peak she maintains rather than climbs */
+      plateauRate: 0.0009,
+      /** share of an attribute lost per week at `declineStart` */
+      declineRate: 0.00035,
+      /** ...growing each year past it, so a career ends rather than fading forever */
+      declineAccel: 0.28,
+    },
+    /** The plan slider, end to end. Roughly a factor of two between coasting and committing. */
+    trainAt60: 0.72,
+    trainAt85: 1.28,
+    /** The coach. The tier slice will widen this into a real ladder. */
+    coachParent: 0.82,
+    coachHired: 1.15,
+    /** Competition teaches what practice cannot – capped, because a fourth match in a week is
+     *  fatigue, not education, and the condition model already charges her for that. */
+    matchBonus: 0.18,
+    matchBonusCap: 3,
+    /** One draw per week, shared across the four attributes: a good week is a good week. */
+    weekLuck: [0.55, 1.45] as [number, number],
+    /** Past the peak, composure keeps creeping up – the veteran is slower and calmer. */
+    veteranPoise: 0.004,
+  },
+
+  // THE ACADEMY SCHOLARSHIP (see engine/academy.ts for the whole argument). Reviewed once a year at
+  // the season boundary; the level is continuous, so every knob below scales rather than switches.
+  academy: {
+    /** Junior support only. She is 14 at week 0, so the earliest possible offer is the review that
+     *  makes her 15, and the scholarship ends when she turns 19 – which is when junior tennis ends. */
+    ageBand: [13, 18] as [number, number],
+    /** Rank at review that reads as "a prospect, no argument" – full marks on the results half. */
+    rankFull: 40,
+    /** ...and the rank at which the results half is worth nothing. Sized to a ~200-strong field
+     *  where a career that never scores sits at the tie floor around #120. */
+    rankNone: 130,
+    /** Where the population's ceilings actually lie (measured: p10 56, p50 62, p90 69), so the
+     *  scout's half spans the real distribution instead of saturating at one end. */
+    ceilingBand: [56, 70] as [number, number],
+    /** How much of the verdict is the scout's eye vs her results. Half and half: results make the
+     *  scholarship something to play for, the eye is why a poor 15-year-old gets looked at at all. */
+    scoutWeight: 0.5,
+    /** Need, and need alone, decides how much of that talent is worth backing. Wealthy is 0 –
+     *  a family that can pay, pays. */
+    needFactor: { working: 1, middle: 0.6, wealthy: 0 } as Record<FamilyBackground, number>,
+    /** Tournaments in the last 52 weeks below which the academy passes: they fund players, not
+     *  prospects. Deliberately low – the seasons she cannot afford to travel are exactly the ones
+     *  this is meant to rescue, so the gate must not become "you need money to get money". */
+    minEventsPerYear: 3,
+    /** Below this the academy writes no letter at all. Stops a dribble of $12 scholarships. */
+    minLevel: 0.15,
+    /** Share of a travel bill covered at level 1. Travel is the bill that breaks the family
+     *  (bench: $18k over 14→18 for the working preset, against a $5.7k horizon deficit), so it is
+     *  the one this pays. */
+    travelCover: 0.8,
+    /** The kit grant at each review she is supported through, at level 1 – "и экипа". Paid as
+     *  money rather than as a gear discount because it arrives once a year, not per purchase. */
+    kitCentsAtFull: 900_00,
+  },
+
   condition: {
     start: 100,
     min: 0,
@@ -197,10 +316,38 @@ export const ECONOMY = {
     ] as { minRest: number; bonus: number }[],
     blackoutBonus: 1, // off-season (weeks 49-51) and exam weeks (replaces the old offSeasonGain)
     // Per-match drain components (see world.ts matchDrain).
-    matchFatigue: { straightSets: 1, hardMatch: 2, extraTiebreaks: 1 },
-    // Tier surcharge PER MATCH. itf is EXTRAPOLATED (+3) – the tier is locked in Phase 3, so
-    // the owner has never priced it; revisit when ITF unlocks.
-    tierMatchFatigue: { local: 0, regional: 1, national: 2, itf: 3 } as Record<TierId, number>,
+    // MATCH BASE RAISED 1 → 2 (owner decision 26.07, "a simple match should cost 2, not 1"): the
+    // BASE moved one rung and hardMatch moved with it, because his rule is unchanged – "+1 for a
+    // tiebreak or a third set" – so hardMatch must always be straightSets + 1 (pinned as a pair in
+    // tests/fatigueReference.test.ts). extraTiebreaks and tierMatchFatigue are NOT touched, so a
+    // SIMPLE match now costs 2 (local) … 7 (j300) and the ceiling is 9 (a three-TB J300 epic).
+    // The consequence he asked for: at the shipped ladder C a straight-sets TITLE costs exactly
+    // what the pre-round-9 FLAT tournamentStrain charged (local 8 / regional 16 / national 26),
+    // while a first-round exit still costs a fraction of it.
+    // ONE side effect, deliberate: the practice friendly's max(1, local − 1) used to clamp
+    // (max(1, 0) = 1 for every scoreline); it now subtracts for real, so a straight-sets friendly
+    // still costs 1 but a 3-setter costs 2 and a three-TB epic 3 (docs/specs/fatigue-reference.md).
+    matchFatigue: { straightSets: 2, hardMatch: 3, extraTiebreaks: 1 },
+    // Tier surcharge PER MATCH, one step per rung. The J levels are EXTRAPOLATED above national
+    // (ladder-up): international travel, time-zone changes and a fortnight away from home make
+    // them the most draining weeks she plays. Worst case is a 5-match J300 run at 4 + 5 per match
+    // = 45, + the cumulative ladder 6 = 51 condition – deliberately the heaviest thing in the game
+    // (it was 40 + 6 before the base raise), and OWNER-TUNABLE: the owner has priced local..national
+    // himself, never the J family, so these three are the first numbers the pending tuning pass
+    // should look at – all the more so now that the base under them is one rung higher.
+    tierMatchFatigue: { local: 0, regional: 1, national: 2, j30: 3, j60: 4, j300: 5 } as Record<TierId, number>,
+    // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
+    // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
+    // scoreline drain – the deeper she goes, the more that week grinds her down. The array is the
+    // extra, INDEXED BY MATCH-WITHIN-RUN: index 0 = her first match = 0 extra, index 1 = the
+    // second match, and so on (world.ts runFatigueExtra / tournamentRunStrain).
+    // A run LONGER than the ladder repeats its LAST value – a future draw bigger than the J-tier
+    // 32 (5 matches) must never silently cost 0.
+    // The owner proposed four ladders and the fatigue bench measured all four
+    // (--scenario runfat-a|b|c|d, plus runfat-off for the pre-ladder reference):
+    //   A +1,+2,+3,+4 (10 over a 5-match run) · B +1,+1,+2,+4 (8) · C +1,+1,+2,+2 (6) · D +1×4 (4)
+    // C – the middle of his range – ships as the default; the bench report is what moves it.
+    runFatigueLadder: [0, 1, 1, 2, 2] as number[],
     // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
     // then linear down to `floor` at condition 0:
     //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.
@@ -208,14 +355,60 @@ export const ECONOMY = {
     // slice-B fast-follow the owner proved necessary (won a Regional at 0 condition).
     matchStrengthKnee: 70,
     matchStrengthFloor: 0.55,
+    // RIVALS BECOME REAL (rival-life slice): how many trailing weeks of the results ledger a
+    // COHORT player's condition is reconstructed from. The kid carries a persisted `condition`
+    // counter; a rival cannot (world.cohort is inside every save, and a new field would cost a
+    // schema bump AND re-roll all 199 players), so hers is DERIVED on the fly from the rows she
+    // already has – which means the scan has to be bounded.
+    //
+    // The window is therefore the rival's MEMORY: she carries the last N weeks of competitive
+    // load, not her whole career. That is not just an optimisation – it is the knob that keeps a
+    // heavy schedule from being an unrecoverable death spiral. Elite juniors enter ~20-30 draws a
+    // season (the entrant bands overlap, so the top of the table is a candidate for j30 + j60 +
+    // j300 at once), and at recoveryBase 1/week their drain outruns their recovery permanently:
+    // an unbounded scan pins the whole top of the cohort at condition 0 for the entire season,
+    // which inverts the standings instead of colouring them. Measured on the real calendar
+    // (docs + the rival bench): 16 weeks keeps the field's median in the 70s-80s, leaves a real
+    // dip behind a deep run, and floors nobody all season.
+    rivalFatigueWindowWeeks: 16,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
   // blocks (season-week offsets, blacked out for tournaments). Off-season weeks (49-51) are already
   // event-free and are treated as blackout too (see isBlackoutWeek in world.ts).
   availability: {
-    minConditionToEnter: { local: 20, regional: 30, national: 40, itf: 45 } as Record<TierId, number>,
-    examWeeks: [[24, 25]] as [number, number][], // season-week offsets blacked out for school
+    // The soft fatigue floor per tier, one step per rung (the J levels extrapolate above national,
+    // matching tierMatchFatigue). Racing below the floor is still ALLOWED – it raises a caution,
+    // never a block (the owner's "the parent may push, the game warns").
+    minConditionToEnter: { local: 20, regional: 30, national: 40, j30: 45, j60: 50, j300: 55 } as Record<TierId, number>,
+    examWeeks: [[23, 24]] as [number, number][], // season-week offsets blacked out for school
+    // Moved off 24-25 when the surface blocks landed: week 25 is the FIRST week of the grass
+    // window (25-30), so the old placement ate 1 of only 6 grass weeks a year - a real cost to a
+    // serve-first build, for no design reason. 23-24 is also truer: school ends, THEN grass.
+
+    // THE DOCTOR'S VETO (owner idea R9-19b, cashed in by the Wave-2 fatigue bench 26.07): the one
+    // place where "the parent may push, the game warns" yields to medicine. Below this condition
+    // entering a tournament is a HARD block (availabilityStatus level 'blocked', reason 'medical');
+    // at or above it, fatigue stays the SOFT caution it has always been. The bench found the only
+    // degenerate cell of the whole sweep – a self-coached grinder competing at condition 0 for
+    // ~4.4% of her weeks – and this is the floor under it. Deliberately far below every tier
+    // caution floor (20-45), so normal play never meets it; knob-driven (0 disables it) so the
+    // owner can lower or retire it after seeing the numbers.
+    //
+    // THE DOCTOR NOW CHECKS HER ON ARRIVAL TOO (owner 26.07): "врач точно не пустит ниже 15 на
+    // турнир, если она приезжает". The floor used to gate ENTRY only, and entries commit weeks
+    // ahead of the play week – so a run entered healthy could still be PLAYED at condition 0 with
+    // nothing intervening (the fatigue bench recorded 14 straight weeks of it). It is now re-read on
+    // the play week itself: under the floor she is withdrawn on medical grounds (world.ts tickWeek
+    // step 2). Same knob, two surfaces, one rule.
+    medicalFloor: 15,
+    // ...and the band ABOVE the floor where the doctor talks but does not act – the owner's own
+    // framing: "с состоянием 20 врач вполне может сказать «я вас предупреждаю о последствиях,
+    // формально запретить не могу»". In [medicalFloor, medicalWarningCeiling) she PLAYS and a
+    // warning beat carries his line; the philosophy stays "the parent may push, the game warns".
+    // Knob-driven: set it to medicalFloor (or lower) to silence the warning without touching the
+    // veto, or raise it to make the doctor nag earlier.
+    medicalWarningCeiling: 25,
 
     // Season-Life slice C: fatigue-driven injury risk. ALL of these move only the post-draw
     // threshold tau (or pull from the private per-week `seed:injury:week` sub-stream) – the MAIN
@@ -223,6 +416,26 @@ export const ECONOMY = {
     injuryBaseChance: 0.006, // per healthy week at condition 100
     injuryFatigueSlope: 0.0009, // + per fatigue point (100 - condition)
     injuryPlayingMultiplier: 1.8, // tau *= this the week she competes
+    // R12-4/11 (owner playtest 27.07: "injured ON a family vacation", TWICE in one career). A
+    // resort week used to roll the SAME dice as a training week – `rollInjury` reads fatigue, age,
+    // trailing load and whether she is competing, and a booked vacation touched none of them, so
+    // the week she is furthest from a tennis court was as dangerous as the week she is grinding.
+    //
+    // THE VALUE, and why 0.25. The model's load axis already runs from 1.8 (a competing week) up to
+    // 1.8 again for four straight played weeks; a vacation is the far end of that same axis and
+    // must be a bigger move than any protection money can buy – `physio.riskReduction` is 0.76 (a
+    // retainer, 24% off) and the elite package's carry-over buff is 0.85. A quarter of a training
+    // week's risk puts a fresh kid's holiday at ~0.15%/wk, i.e. one holiday injury per several
+    // hundred vacation weeks, and it stays NONZERO on the owner's own instruction ("holidays do
+    // sprain ankles") – she still climbs, swims and falls over. It rises with a deep condition
+    // deficit, which is honest: the week she most needs the rest is the week her body is most
+    // fragile, and that is exactly when a vacation gets booked.
+    //
+    // POST-DRAW MULTIPLY ON THE THRESHOLD – the same invariance pattern as `physio.riskReduction`
+    // and the recovery buff (see injuryTau). ZERO draws, on any stream: the frozen MAIN capture
+    // cannot move, and neither can the private `seed:injury:week` sequence, so a career that never
+    // books a vacation is byte-identical to before.
+    injuryVacationFactor: 0.25,
     injuryChanceCap: 0.12,
     // Owner research 25.07 (docs/research/injury-stats-by-age.md): girl injury-age curve peaks at 16.
     // Mild by design – the base is already anchored to real junior prevalence (46-54%/season).
@@ -240,6 +453,44 @@ export const ECONOMY = {
       { cum: 0.975, severity: 'major', weeksLo: 8, weeksHi: 14 },
       { cum: 1.0, severity: 'severe', weeksLo: 16, weeksHi: 22 },
     ] as { cum: number; severity: InjurySeverity; weeksLo: number; weeksHi: number }[],
+  },
+
+  // --- THE ITF ANNUAL ENTRY CAP (docs/research/ranking-points-by-tier.md §2 and §6) -----------
+  //
+  // Reality's real brake on "just grind cheap international events" is not the points table, it is
+  // a HARD ELIGIBILITY CAP: Appendix F of the 2026 ITF World Tennis Tour Juniors Regulations limits
+  // how many ITF junior events a player may enter per year, and the limit is tighter the younger
+  // she is. The research counted our calendar at ~26 J30s + 17 J60s + 4 J300s a season, against an
+  // allowance of FOURTEEN events for a 14-year-old. Wave B measured that zeroing the first-round
+  // award did NOT reduce the grind (docs/specs/wave-b-first-round-zero.md) – the count is driven by
+  // eligibility, affordability and calendar density, and this is the eligibility half.
+  //
+  // Counted birthday-to-birthday in the real rule; here that is exactly the 52-week season block,
+  // because `ageAtWeek` and `seasonStartWeek` are the same arithmetic (world.ts) – so the reset is
+  // the season boundary and no second definition of "this year" was invented.
+  entryCap: {
+    // WHY ONLY THESE THREE, and please do not "fix" it later: `local` / `regional` / `national` are
+    // OUR OWN INVENTION – no national result of any kind produces an ITF junior ranking point
+    // (Reg 10's list of Ranking Tournaments is closed and contains only ITF grades), so the ITF has
+    // nothing to say about how many of them a kid plays. Capping them would be inventing a rule and
+    // attributing it to a source. The domestic ladder stays deliberately uncapped; it is also what
+    // she is left with once the allowance is gone, which is the whole point of the change.
+    cappedTiers: ['j30', 'j60', 'j300'] as readonly TierId[],
+    // ITF Appendix F, verbatim: 16 -> 25, 15 -> 18, 14 -> 14, 13 -> 10, 17 and 18 unrestricted,
+    // 12 and under not eligible at all. `default` is the 17+ row; ages below 13 never reach this
+    // table because `TIERS[tier].minAgeYears = 13` refuses them first (availabilityStatus asks the
+    // age gate before the cap), which is also the honest place for "not eligible" to live.
+    //
+    // NOT MODELLED, DELIBERATELY – the merit increases. The same appendix grants +4 events to a
+    // top-20 ITF junior at 14/15 (+4 to a top-50 at 13), and the WTA rulebook grants a year-end
+    // top-5 junior up to 4 extra PRO events. Both are keyed to a world ranking; our field is 199
+    // cohort players plus the kid, so "top 20 of the ITF" has no defensible mapping onto "top 20 of
+    // 200" without an owner decision about what our standings represent. Left out rather than
+    // guessed, and left out in the direction that keeps the cap honest (a bonus only weakens it).
+    perYearByAge: { 13: 10, 14: 14, 15: 18, 16: 25, default: Number.MAX_SAFE_INTEGER } as {
+      [age: number]: number
+      default: number
+    },
   },
 
   // Season-Life slice C: physio + medical costs. ALL prices are MIDDLE-anchored bands. Every
@@ -268,6 +519,110 @@ export const ECONOMY = {
     // the V2 flip 25.07 – at 2 the retainer alone erased every policy difference on hired-coach
     // profiles, see the fatigue bench).
     conditionBonusPerWeek: 1,
+  },
+
+  // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
+  // ONE shared catalogue; money is the only gate. A vacation week is a hard blackout (nothing
+  // enterable) that pays a condition gain on top of a FREE week's recovery, and the two top
+  // packages carry an injury-tau buff for `buffWeeks` weeks (applied POST-draw, so the MAIN
+  // stream stays byte-identical). Prices are middle-anchored bands × wealthCorridor, quoted
+  // from the `seed:vacation:week:packageId` sub-stream. 1-week packages, bookable back-to-back
+  // (2 weeks = deep reset at 2× price – owner approved).
+  vacation: {
+    /** how many weeks a resort/elite recovery buff rides after the vacation week */
+    buffWeeks: 4,
+    packages: [
+      {
+        id: 'staycation',
+        // Labels are deliberately dash-FREE: they get embedded in copy that already carries a
+        // short dash ("Family vacation – {label}"), and a double dash reads badly.
+        label: 'Staycation with friends',
+        blurb: 'No travel, no drills – her own bed and her own people.',
+        priceCents: [0, 0],
+        conditionGain: 12,
+        buffFactor: 1,
+      },
+      {
+        id: 'grandma',
+        label: "Grandma's village",
+        blurb: 'Two trains and a bus – slow food, slow days.',
+        priceCents: [0, 50_00],
+        conditionGain: 14,
+        buffFactor: 1,
+      },
+      {
+        id: 'camping',
+        label: 'Camping road-trip',
+        blurb: 'Tent, lake, no racket in the car.',
+        priceCents: [150_00, 300_00],
+        conditionGain: 16,
+        buffFactor: 1,
+      },
+      {
+        id: 'seaside',
+        label: 'Seaside family hotel',
+        blurb: 'A real holiday – sea, sleep, sun.',
+        priceCents: [600_00, 1000_00],
+        conditionGain: 20,
+        buffFactor: 1,
+      },
+      {
+        id: 'resort',
+        label: 'Sports recovery resort',
+        blurb: 'Pool, physio, massage – rest with a programme.',
+        priceCents: [1800_00, 3000_00],
+        conditionGain: 25,
+        buffFactor: 0.9,
+      },
+      {
+        id: 'elite',
+        label: 'Elite recovery programme',
+        blurb: 'The clinic the pros use – she comes back new.',
+        priceCents: [4000_00, 7000_00],
+        conditionGain: 30,
+        buffFactor: 0.85,
+      },
+    ] as VacationPackage[],
+  },
+
+  // --- Season planner: practice matches (spec §4) -----------------------------------------
+  // A friendly on an empty week: court rental $30-80 × corridor off `seed:practice:week`, plus
+  // an OPTIONAL coach (50% of a coaching session – "the other half is paid by the opponent's
+  // family"; re-priced per coach tier when the coach slice lands). Effect: condition drain
+  // max(1, local-scoreline drain − 1), ZERO ranking points, and the week keeps the base
+  // recovery but FORFEITS the rest-slider bonus (she played, even if friendly).
+  // GUARDRAIL (fatigue-bench finding 25.07: practising every week is self-destructive – mean
+  // condition 47, 41-44% of weeks under 40): booking below `cautionCondition`, or a long enough
+  // run of consecutive practice weeks, raises a CAUTION. It never blocks – the owner's philosophy
+  // is "the parent may push, the game warns".
+  //
+  // WAVE-2 RETUNE (fatigue bench 26.07): the streak arm used to fire on the 3rd week no matter
+  // how fresh she was – careful pushed through 8-11 cautions/season at condition 92, and a warning
+  // nobody believes is worse than none (it trains the player to click through the real ones). The
+  // arm is now gated on ACTUAL strain: 3 in a row only warns below `cautionStreakCondition`, while
+  // `cautionStreakAlways` in a row warns at any condition (a run that long IS strain). The
+  // low-condition arm (`cautionCondition`) is untouched.
+  practice: {
+    courtFeeCents: [30_00, 80_00] as [number, number],
+    coachSessionCents: [120_00, 250_00] as [number, number],
+    coachShare: 0.5,
+    cautionCondition: 55,
+    /** the SHORT streak – warns only while she is under the strain gate below */
+    cautionStreak: 3,
+    /** the short streak's strain gate: 3 match weeks in a row warn only below this condition */
+    cautionStreakCondition: 75,
+    /** a run this long warns at ANY condition – no gate */
+    cautionStreakAlways: 4,
+    /** the rescue prompt fires at or below this condition (spec §4b – an OFFER, never an
+     *  auto-book). WIDENED 65 → 80 (Wave-2): the narrow band meant the offer only ever appeared
+     *  on a deep deficit, where nothing but the expensive packages could clear the target – so
+     *  seaside took 88% of every booking in the bench. A mildly-tired week is exactly where a
+     *  cheap package is the right answer. */
+    rescueCondition: 80,
+    /** the offer pre-highlights the CHEAPEST package sufficient to return her to this condition
+     *  (see recommendVacationPackage) – so the recommendation slides down the ladder as the
+     *  deficit shrinks, instead of always demanding the +20 tier. */
+    rescueTargetCondition: 85,
   },
 } as const
 
@@ -308,6 +663,106 @@ export function gearHitsUpTo(
   return hits
 }
 
+// --- Season planner pricing (pure, sub-stream only) --------------------------------------
+// Both quotes below are pure functions of (seed, week, …) drawn from a PURPOSE-SCOPED
+// sub-stream, never the main weekly stream – so a player's booking cannot move the world's
+// draw sequence (the B1/C1 invariance freezes stay byte-identical). Being pure also means the
+// UI can quote the same price the engine will charge without any extra snapshot payload.
+
+/** One corridor-scaled price: draw the MIDDLE-anchored base from `band`, then map ONE uniform
+ *  roll into the background's wealth corridor (same shape as medicalBillCents/travelBgFactor –
+ *  same roll, disjoint corridors, so working < middle < wealthy per offer). */
+function corridorPrice(rng: Rng, band: readonly [number, number], background: FamilyBackground): number {
+  const base = pickInt(rng, band[0], band[1])
+  const [cLo, cHi] = WEALTH_CORRIDOR[background]
+  const roll = rng()
+  return Math.round(base * (cLo + roll * (cHi - cLo)))
+}
+
+/** The catalogue entry for a package id, or undefined for an unknown id. */
+export function vacationPackage(id: string): VacationPackage | undefined {
+  return ECONOMY.vacation.packages.find((p) => p.id === id)
+}
+
+/** The deterministic price of ONE vacation offer: `rngFromSeed(seed:vacation:week:packageId)`
+ *  (spec §2). Quoted at offer time, charged on booking – same function, same number. */
+export function vacationPriceCents(
+  seed: string,
+  week: number,
+  packageId: string,
+  background: FamilyBackground,
+): number {
+  const pkg = vacationPackage(packageId)
+  if (!pkg) throw new Error(`Unknown vacation package "${packageId}"`)
+  return corridorPrice(rngFromSeed(`${seed}:vacation:${week}:${packageId}`), pkg.priceCents, background)
+}
+
+/** THE vacation pre-highlight, as ONE pure rule (Wave-2 tuning, fatigue bench 26.07).
+ *
+ *  Before this pass the rule lived in three places (the rescue card, the planner sheet, the
+ *  bench) and every copy asked the same question – "the cheapest package that returns her ABOVE
+ *  85" – which on a deep deficit no cheap package can answer, so all three fell through to "the
+ *  most expensive she can afford". Result: seaside 88% of every booking in the bench, grandma
+ *  0.2%, camping 0.4%.
+ *
+ *  The rule now reads HER CURRENT condition: the cheapest package that gets her to
+ *  `targetCondition` (defaulting to ECONOMY.practice.rescueTargetCondition), counting the clamp
+ *  at ECONOMY.condition.max – so on a mild deficit the free staycation IS the answer and the
+ *  recommendation slides up the ladder only as the hole deepens. When nothing on the shelf can
+ *  reach the target (a real crash), it falls back to the biggest reset she can afford.
+ *
+ *  Pure: prices come from the same deterministic quote the booking will charge, so the UI, the
+ *  engine and the bench can never disagree. Returns null only when even the free package is out
+ *  of reach (a prudence budget below zero). */
+export function recommendVacationPackage(input: {
+  seed: string
+  week: number
+  background: FamilyBackground
+  /** her condition TODAY – the deficit the package has to close */
+  condition: number
+  fundsCents: number
+  /** optional prudence cap (the bench's "never spend more than X on one package") */
+  budgetCents?: number
+  /** optional override for the condition the pick aims to restore */
+  targetCondition?: number
+}): string | null {
+  const cap = Math.min(input.fundsCents, input.budgetCents ?? input.fundsCents)
+  const target = input.targetCondition ?? ECONOMY.practice.rescueTargetCondition
+  const priced = ECONOMY.vacation.packages
+    .map((pkg) => ({ pkg, priceCents: vacationPriceCents(input.seed, input.week, pkg.id, input.background) }))
+    .filter((row) => row.priceCents <= cap)
+    // cheapest first, and on a price tie the SMALLER gain first – "cheapest sufficient" has to be
+    // read off the quoted price, not the catalogue order (quotes breathe inside their bands).
+    .sort((a, b) => a.priceCents - b.priceCents || a.pkg.conditionGain - b.pkg.conditionGain)
+  if (priced.length === 0) return null
+  const sufficient = priced.find(
+    (row) => Math.min(ECONOMY.condition.max, input.condition + row.pkg.conditionGain) >= target,
+  )
+  // Nothing clears the target: buy the deepest reset money can buy (the biggest gain, cheapest
+  // among equals) – the crash case the ladder's top tiers exist for.
+  const deepest = priced.reduce((a, b) => (b.pkg.conditionGain > a.pkg.conditionGain ? b : a))
+  return (sufficient ?? deepest).pkg.id
+}
+
+/** The deterministic price of ONE practice-match booking off `rngFromSeed(seed:practice:week)`:
+ *  court rental, plus (optionally) HALF a coaching session for «+ тренер на игру». The court
+ *  draw comes FIRST, so adding the coach never moves the court part of the quote. */
+export function practiceFeeCents(
+  seed: string,
+  week: number,
+  background: FamilyBackground,
+  withCoach: boolean,
+): number {
+  const rng = rngFromSeed(`${seed}:practice:${week}`)
+  const court = corridorPrice(rng, ECONOMY.practice.courtFeeCents, background)
+  if (!withCoach) return court
+  const [cLo, cHi] = ECONOMY.practice.coachSessionCents
+  const base = pickInt(rng, cLo, cHi)
+  const [wLo, wHi] = WEALTH_CORRIDOR[background]
+  const roll = rng()
+  return court + Math.round(base * ECONOMY.practice.coachShare * (wLo + roll * (wHi - wLo)))
+}
+
 /** The gear purchase (if any) that lands EXACTLY on `week` for one category, else null. */
 export function gearHitForWeek(
   seed: string,
@@ -316,4 +771,21 @@ export function gearHitForWeek(
   week: number,
 ): GearHit | null {
   return gearHitsUpTo(seed, category, background, week).find((h) => h.week === week) ?? null
+}
+
+/** The parents' weekly contribution for the season holding `week` - PURE, no stored state.
+ *  Season 0 pays the base; each later season compounds one uniform growth roll from
+ *  `incomeGrowthBand`, drawn off the private `seed:income:<season>` sub-stream (one draw per
+ *  season, keyed by index, so the whole trajectory replays from the seed alone: no schema field,
+ *  no migration, nothing to desync). Rounded to whole cents once, AFTER the compounding, so the
+ *  weekly ledger stays integer. Zero MAIN-stream draws. */
+export function parentIncomeForWeekCents(seedStr: string, background: FamilyBackground, week: number): number {
+  const season = Math.max(0, Math.floor(week / WEEKS_PER_YEAR))
+  let income = ECONOMY.parentIncomeCents[background]
+  const [lo, hi] = ECONOMY.incomeGrowthBand
+  for (let i = 1; i <= season; i++) {
+    const rng = rngFromSeed(`${seedStr}:income:${i}`)
+    income *= 1 + lo + rng() * (hi - lo)
+  }
+  return Math.round(income)
 }

@@ -86,6 +86,25 @@ describe('golden saves corpus', () => {
       expect(migrated.injury === null || typeof migrated.injury === 'object').toBe(true)
       expect(Array.isArray(migrated.injuryHistory)).toBe(true)
       expect(typeof migrated.physioActive).toBe('boolean')
+
+      // v14 season history (R10-9): an array, season-ascending, and every row is the tiny numeric
+      // record – no strings, so a long career can't bloat the save.
+      // v16: the ordering key is the SEASON INDEX, and it must be strictly increasing – the whole
+      // point of the re-key is that two rows can never claim the same season.
+      expect(Array.isArray(migrated.seasonHistory)).toBe(true)
+      const seasons = migrated.seasonHistory.map((h) => h.seasonIndex)
+      expect(seasons).toEqual([...seasons].sort((a, b) => a - b))
+      expect(new Set(seasons).size).toBe(seasons.length)
+      for (const h of migrated.seasonHistory) {
+        expect(typeof h.seasonIndex).toBe('number')
+        // the pre-v16 date-derived key is gone from every migrated row
+        expect('year' in h).toBe(false)
+        expect(typeof h.endRank).toBe('number')
+        expect(typeof h.wins).toBe('number')
+        expect(typeof h.losses).toBe('number')
+        expect(typeof h.fundsDeltaCents).toBe('number')
+        expect(Object.values(h).every((v) => typeof v === 'number')).toBe(true)
+      }
     })
   }
 })

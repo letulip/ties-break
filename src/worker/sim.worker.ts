@@ -4,7 +4,12 @@ import {
   advanceWeeks,
   enterEvent,
   withdrawEvent,
+  cancelEntry,
   skipEvent,
+  bookVacation,
+  cancelVacation,
+  bookPractice,
+  cancelPractice,
   revealTournamentRound,
   skipTournament,
   closeTournament,
@@ -28,6 +33,9 @@ import type { ToWorker, ToUI } from '../shared/protocol'
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
 // The RNG stream position is part of determinism: it is reconstructed by fast-forwarding
 // one draw-batch per elapsed week on load. Cheap now; Phase 1+ will persist stream state properly.
+// The main stream only feeds base costs + cohort drift – both tournament sides run on their own
+// event-scoped streams keyed by (seed, event.id) – so a reloaded career replays its brackets by
+// construction, not because this fast-forward happened to land on exactly the right draw.
 
 let world: WorldState | null = null
 let rng: Rng | null = null
@@ -71,9 +79,11 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     }
     case 'advance': {
       if (!world || !rng) throw new Error('No active career')
-      const stopReason = advanceWeeks(world, rng, msg.weeks)
+      // R11-1: EVERY reason the advance stopped rides along (an injury landing on the wrap-up week
+      // is both 'injury' and 'season-end'); `advance` is still the only message that sets them.
+      const stopReasons = advanceWeeks(world, rng, msg.weeks)
       await autosave(world)
-      return { id: msg.id, ok: true, type: 'snapshot', snapshot: toSnapshot(world, stopReason) }
+      return { id: msg.id, ok: true, type: 'snapshot', snapshot: toSnapshot(world, stopReasons) }
     }
     case 'enterEvent': {
       if (!world) throw new Error('No active career')
@@ -84,6 +94,14 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'withdrawEvent': {
       if (!world) throw new Error('No active career')
       withdrawEvent(world, msg.eventId)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'cancelEntry': {
+      // R10-13: cancel before the event week – past the deadline the fee is forfeited and the week
+      // becomes plannable again; before it, a full refund (the withdrawal path).
+      if (!world) throw new Error('No active career')
+      cancelEntry(world, msg.eventId)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }
@@ -109,6 +127,33 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'tournamentClose': {
       if (!world) throw new Error('No active career')
       closeTournament(world)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    // --- season planner (v13): book/cancel a vacation or a practice match ---------------
+    // Pure player state on the engine side: the price comes off a purpose-scoped sub-stream, so
+    // none of these can move the world's main draw sequence.
+    case 'bookVacation': {
+      if (!world) throw new Error('No active career')
+      bookVacation(world, msg.week, msg.packageId)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'cancelVacation': {
+      if (!world) throw new Error('No active career')
+      cancelVacation(world, msg.week)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'bookPractice': {
+      if (!world) throw new Error('No active career')
+      bookPractice(world, msg.week, msg.withCoach)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'cancelPractice': {
+      if (!world) throw new Error('No active career')
+      cancelPractice(world, msg.week)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import type { KidSkills } from '../src/engine/development'
 import { existsSync, readFileSync } from 'node:fs'
 import { portraitStage } from '../src/shared/avatarEmotion'
 import {
@@ -12,6 +13,7 @@ import {
   accrueCondition,
   matchDrain,
   tournamentRunStrain,
+  runFatigueExtra,
   restRecoveryBonus,
   conditionMatchFactor,
   kidMatchPlayer,
@@ -34,8 +36,8 @@ import { INCOME_CATS } from '../tools/econ-bench'
 // RNG discipline: NOTHING in this pack draws from the MAIN weekly stream —
 // interest is deterministic, strain/recovery/physio-bonus are pure arithmetic,
 // and the coupling only scales the kid's MatchPlayer on the EVENT-scoped
-// `seed:kidtour` stream. The B1/C1 freezes (seed bench-working-0, count 45239,
-// hash 9f783705) stay green untouched; the skip test below re-proves the hash.
+// `seed:kidtour` stream. The B1/C1 freezes (seed bench-working-0) stay green;
+// the skip test below re-proves the capture.
 // ---------------------------------------------------------------------------
 
 // FNV-1a over the stringified draw stream (same fingerprint as B1/C1).
@@ -50,7 +52,13 @@ function fnv1a(s: string): string {
 function hashOf(draws: number[]): string {
   return fnv1a(draws.map((d) => d.toString()).join(','))
 }
-const REF = { count: 45239, hash: '9f783705' } // the frozen B1/C1 capture
+// ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550 (hash cae178fc ->
+// e6b0c709) by the AI sub-stream refactor – the canonical AI tournaments now run on their own
+// event-scoped `seed:aitour:<event.id>` stream, so the calendar's size is no longer part of the
+// weekly draw count (the flaw that forced the earlier 45239 -> 51642 move). R9-9's own claim –
+// that a post-deadline SKIP never perturbs the stream – is unchanged and still proven below.
+// Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709' } // the frozen B1/C1 capture
 
 /** Enter the earliest still-open local event and tick until its week spawns the reveal.
  *  BOUNDED: a random injury before the event week would auto-withdraw the entry (or turn the
@@ -61,15 +69,24 @@ function tickToPending(seed: string, mutate?: (w: WorldState) => void): {
   rng: Rng
   eventId: string
   travelCostCents: number
+  /** ⚠ Phase 4 (v19): she DEVELOPS every week, and the tick grows her (step 3b) AFTER the shadow
+   *  tournament runs (step 2) - you do not improve halfway through a tournament. So a snapshot
+   *  taken inside the tick belongs to the build she woke up with, and anything comparing against it
+   *  must use THIS, not `world.skills` afterwards. */
+  skillsAtEntry: KidSkills
 } {
   const world = createWorld(seed)
   if (mutate) mutate(world)
   const target = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)!
   enterEvent(world, target.id)
   const rng = rngFromSeed(world.seed)
-  for (let i = 0; i < 12 && !world.pendingTournament; i++) tickWeek(world, rng)
+  let skillsAtEntry = { ...world.skills }
+  for (let i = 0; i < 12 && !world.pendingTournament; i++) {
+    skillsAtEntry = { ...world.skills }
+    tickWeek(world, rng)
+  }
   if (!world.pendingTournament) throw new Error(`seed ${seed}: reveal never spawned (injury got in the way?) – pick another seed`)
-  return { world, rng, eventId: target.id, travelCostCents: target.travelCostCents }
+  return { world, rng, eventId: target.id, travelCostCents: target.travelCostCents, skillsAtEntry }
 }
 
 // ---------------------------------------------------------------------------
@@ -215,32 +232,49 @@ describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
 
 // ---------------------------------------------------------------------------
 // R9-7 — match-based fatigue (owner redesign, integer per match), applied when
-// the run COMMITS (finalize). matchDrain = 1 (straight sets, no TB) | 2 (a
-// 3-setter OR a TB in a 2-setter) | 3 (more than 2 TB sets), + the tier's
-// per-match surcharge (local 0 / regional 1 / national 2 / itf 3).
+// the run COMMITS (finalize). matchDrain = 2 (straight sets, no TB) | 3 (a
+// 3-setter OR a TB in a 2-setter) | 4 (more than 2 TB sets), + the tier's
+// per-match surcharge (local 0 / regional 1 / national 2 / j30 3 / j60 4 / j300 5).
+//
+// ⚠ RE-PINNED 26.07 by the MATCH BASE RAISE (owner decision): straightSets 1 → 2 and, because his
+// rule "+1 for a TB or a third set" is unchanged, hardMatch 2 → 3. extraTiebreaks stays 1 and
+// tierMatchFatigue is untouched, so every number in this block moved by exactly one — the SHAPE
+// (grade the scoreline, then surcharge per tier) is the thing under test and it did not change.
 // ---------------------------------------------------------------------------
 describe('R9-7 — match-based fatigue', () => {
-  it('matchDrain grades the scoreline: 1 easy, 2 hard, 3 a three-tiebreak epic', () => {
-    expect(matchDrain('local', '6-4 6-2')).toBe(1) // straight sets, no TB
-    expect(matchDrain('local', '7-6 6-4')).toBe(2) // TB in a 2-setter
-    expect(matchDrain('local', '6-4 3-6 6-2')).toBe(2) // 3 sets
-    expect(matchDrain('local', '7-6 6-7 7-6')).toBe(3) // 3 TB sets → +1 extra
-    expect(matchDrain('local', '7-6 6-7 6-3')).toBe(2) // 2 TBs is still just a hard match
+  it('matchDrain grades the scoreline: 2 easy, 3 hard, 4 a three-tiebreak epic', () => {
+    expect(matchDrain('local', '6-4 6-2')).toBe(2) // straight sets, no TB
+    expect(matchDrain('local', '7-6 6-4')).toBe(3) // TB in a 2-setter
+    expect(matchDrain('local', '6-4 3-6 6-2')).toBe(3) // 3 sets
+    expect(matchDrain('local', '7-6 6-7 7-6')).toBe(4) // 3 TB sets → +1 extra
+    expect(matchDrain('local', '7-6 6-7 6-3')).toBe(3) // 2 TBs is still just a hard match
   })
 
-  it('the tier surcharge is PER MATCH: hardest national match = 5', () => {
-    expect(matchDrain('regional', '6-4 6-2')).toBe(2) // 1 + 1
-    expect(matchDrain('national', '6-4 6-2')).toBe(3) // 1 + 2
-    expect(matchDrain('national', '7-6 6-7 7-6')).toBe(5) // 3 + 2 – the owner's own check
-    expect(matchDrain('itf', '6-4 6-2')).toBe(4) // 1 + 3 (extrapolated tier)
+  it('the tier surcharge is PER MATCH: hardest national match = 6', () => {
+    expect(matchDrain('regional', '6-4 6-2')).toBe(3) // 2 + 1
+    expect(matchDrain('national', '6-4 6-2')).toBe(4) // 2 + 2
+    // RE-PINNED 5 → 6: the owner's original "hardest national match" check, one rung higher. His
+    // "a five-match National run maxes at 25" was this number × 5 at the OLD base; the same run is
+    // now 30 per-match (+ the cumulative ladder) – see docs/specs/fatigue-reference.md.
+    expect(matchDrain('national', '7-6 6-7 7-6')).toBe(6) // 4 + 2
+    // RE-PINNED by ladder-up Part B: the inert `itf` placeholder became the J family, and its
+    // +3 surcharge carried over to j30 unchanged (j60 +4, j300 +5 extrapolate above it).
+    expect(matchDrain('j30', '6-4 6-2')).toBe(5) // 2 + 3
     // a record without a score (defensive) counts as straight sets
-    expect(matchDrain('national', undefined)).toBe(3)
+    expect(matchDrain('national', undefined)).toBe(4)
   })
 
-  it('tournamentRunStrain sums the run: a 5-match National of epics maxes at 25', () => {
-    expect(tournamentRunStrain('national', new Array(5).fill({ score: '7-6 6-7 7-6' }))).toBe(25)
-    expect(tournamentRunStrain('local', [{ score: '6-4 6-2' }, { score: '7-6 4-6 6-3' }])).toBe(3) // 1 + 2
-    expect(tournamentRunStrain('itf', [])).toBe(0) // no matches, no drain
+  // ⚠ RE-PINNED 26.07 by the CUMULATIVE RUN FATIGUE ladder (owner idea; see the dedicated block
+  // below): the per-match drains are unchanged, but a run now also pays the ladder's extra per
+  // SUBSEQUENT match. Variant C ([0,1,1,2,2], +6 over five matches) ships as the default, so the
+  // owner's "five-match National of epics" check moves 25 -> 31 and the 2-match local 3 -> 4.
+  // ⚠ RE-PINNED AGAIN 26.07 by the MATCH BASE RAISE (1 -> 2): the ladder half is untouched, the
+  // per-match half went up one rung per match, so the epic run is 30 + 6 = 36 and the two-match
+  // local is 2 + 3 + 1 = 6.
+  it('tournamentRunStrain sums the run: a 5-match National of epics is 30 + the ladder', () => {
+    expect(tournamentRunStrain('national', new Array(5).fill({ score: '7-6 6-7 7-6' }))).toBe(36) // 30 + 6
+    expect(tournamentRunStrain('local', [{ score: '6-4 6-2' }, { score: '7-6 4-6 6-3' }])).toBe(6) // 2 + 3 + 1
+    expect(tournamentRunStrain('j30', [])).toBe(0) // no matches, no drain
   })
 
   it('no fatigue lands at tick time; the full run drain lands at finalizeTournament', () => {
@@ -255,6 +289,115 @@ describe('R9-7 — match-based fatigue', () => {
     const c = ECONOMY.condition
     const expected = Math.max(c.min, Math.min(c.max, afterTick - strain))
     expect(world.condition).toBe(expected)
+    closeTournament(world)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// CUMULATIVE RUN FATIGUE (owner idea 26.07) — matches at a tournament run every
+// day or every other day, so each SUBSEQUENT match in the SAME run costs EXTRA
+// condition on top of its own scoreline drain: the deeper she goes, the more the
+// week grinds her down. ECONOMY.condition.runFatigueLadder is that extra, indexed
+// by match-within-run (index 0 = her first match = 0 extra); a run longer than the
+// ladder repeats its LAST value, so a future bigger draw can never silently cost 0.
+// Shipped default = the owner's variant C (+1,+1,+2,+2 = 6 over a five-match run).
+// Pure arithmetic on the run's match records – zero RNG, order-sensitive only.
+// ---------------------------------------------------------------------------
+describe('cumulative run fatigue (the ladder)', () => {
+  const LADDER = ECONOMY.condition.runFatigueLadder
+  const straightNat = matchDrain('national', '6-4 6-2') // 4 = base 2 + tier 2 (base raised 26.07)
+
+  it('ships variant C: [0,+1,+1,+2,+2] – 0 extra for the first match, 6 over a five-match run', () => {
+    expect(LADDER).toEqual([0, 1, 1, 2, 2])
+    expect(LADDER[0]).toBe(0) // her FIRST match of the run never costs extra
+    expect(LADDER.reduce((s, x) => s + x, 0)).toBe(6)
+    expect(runFatigueExtra(0)).toBe(0)
+    expect([1, 2, 3, 4].map(runFatigueExtra)).toEqual([1, 1, 2, 2])
+  })
+
+  it('a 1-match run is UNCHANGED: the ladder never touches a first-round exit', () => {
+    for (const tier of ['local', 'regional', 'national', 'j30', 'j60', 'j300'] as const) {
+      for (const score of ['6-4 6-2', '7-6 6-4', '7-6 6-7 7-6']) {
+        expect(tournamentRunStrain(tier, [{ score }])).toBe(matchDrain(tier, score))
+      }
+    }
+  })
+
+  it('a 5-match National run adds EXACTLY the ladder sum on top of the per-match drains', () => {
+    const run = new Array(5).fill({ score: '6-4 6-2' })
+    const perMatch = 5 * straightNat // 20 – what the pre-ladder engine would charge at base 2
+    expect(tournamentRunStrain('national', run)).toBe(perMatch + 6)
+    // and the growth is match-by-match, not a lump at the end
+    // ⚠ RE-PINNED +1/match 26.07 (base raise): the ladder increments below are UNCHANGED, which is
+    // the property this test exists for – only the per-match half moved.
+    const cumulative = [1, 2, 3, 4, 5].map((n) => tournamentRunStrain('national', new Array(n).fill({ score: '6-4 6-2' })))
+    expect(cumulative).toEqual([4, 9, 14, 20, 26])
+    expect(cumulative.map((c, i) => c - (i === 0 ? 0 : cumulative[i - 1]) - straightNat)).toEqual([0, 1, 1, 2, 2])
+  })
+
+  it('a run LONGER than the ladder repeats its LAST value (a bigger future draw can never cost 0)', () => {
+    const last = LADDER[LADDER.length - 1]
+    expect(runFatigueExtra(LADDER.length)).toBe(last)
+    expect(runFatigueExtra(99)).toBe(last)
+    // a 7-match run (draw of 128) = the ladder sum + 2 more repeats of its last rung
+    const seven = new Array(7).fill({ score: '6-4 6-2' })
+    expect(tournamentRunStrain('national', seven)).toBe(7 * straightNat + 6 + 2 * last)
+  })
+
+  it('a SKIPPED run still costs NOTHING: no match records, no drains, no ladder', () => {
+    expect(tournamentRunStrain('j300', [])).toBe(0) // the heaviest tier, zero matches
+    // …and the engine agrees: skipping at the tournament week never reaches finalize. Grind plan
+    // (rest 15 → slider bonus 0), so the retroactive match-free bonus is 0 and the number is exact.
+    const { world, eventId } = tickToPending('r9-skip', (w) => {
+      w.physioActive = false
+      w.plan = { train: 85, rest: 15 }
+      w.condition = 60
+    })
+    const conditionAfterTick = world.condition
+    skipEvent(world, eventId)
+    expect(world.pendingTournament).toBeNull()
+    expect(world.condition).toBe(conditionAfterTick) // no run committed -> no per-match drain, no ladder
+  })
+
+  it('a WALKOVER still costs NOTHING: the trip that never happened has no run to charge', () => {
+    const world = createWorld('runfat-walkover')
+    world.physioActive = false
+    world.plan = { train: 85, rest: 15 } // slider bonus 0 → the only recovery is the base
+    world.condition = 60
+    const target = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)!
+    enterEvent(world, target.id)
+    const rng = rngFromSeed(world.seed)
+    while (world.week < target.week - 1) tickWeek(world, rng)
+    // she arrives at the event week injured: entry fee forfeited, no travel, no run at all
+    world.injury = { kind: 'wrist', severity: 'minor', weeksRemaining: 3, totalWeeks: 3, sinceWeek: world.week }
+    const before = world.condition
+    tickWeek(world, rng)
+    expect(world.week).toBe(target.week)
+    expect(world.events.some((e) => e.week === world.week && e.text.startsWith('Walkover'))).toBe(true)
+    expect(world.pendingTournament).toBeNull()
+    // recovery only (base 1, no slider/physio/blackout) – zero strain, so zero ladder
+    expect(world.condition).toBe(before + ECONOMY.condition.recoveryBase)
+  })
+
+  it('is pure, RNG-free and never mutates the knob array', () => {
+    const snapshot = [...LADDER]
+    const run = new Array(5).fill({ score: '7-6 6-4' })
+    expect(tournamentRunStrain('regional', run)).toBe(tournamentRunStrain('regional', run)) // idempotent
+    expect(LADDER).toEqual(snapshot)
+    expect(tournamentRunStrain.length).toBe(2) // (tier, kidMatches) – no rng parameter
+    expect(runFatigueExtra.length).toBe(1) // (matchIndex) – no rng parameter
+  })
+
+  it('the ladder rides on the COMMITTED run: finalize subtracts drains + ladder together', () => {
+    const { world } = tickToPending('r9-strain-ladder')
+    const afterTick = world.condition
+    const kidMatches = world.pendingTournament!.result.matches.filter((m) => m.aId === KID_ID || m.bId === KID_ID)
+    const flat = kidMatches.reduce((s, m) => s + matchDrain('local', m.score), 0)
+    const withLadder = tournamentRunStrain('local', kidMatches)
+    expect(withLadder).toBe(flat + kidMatches.map((_, i) => runFatigueExtra(i)).reduce((s, x) => s + x, 0))
+    skipTournament(world) // reveal-all -> finalize commits the run
+    const c = ECONOMY.condition
+    expect(world.condition).toBe(Math.max(c.min, Math.min(c.max, afterTick - withLadder)))
     closeTournament(world)
   })
 })
@@ -275,7 +418,7 @@ describe('R9-19 — match-strength coupling', () => {
 
   it('the shadow tournament scales the kid\'s MatchPlayer by the factor (stored snapshot included)', () => {
     // Grind + no physio so she arrives at the event week genuinely worn.
-    const { world } = tickToPending('r9-couple', (w) => {
+    const { world, skillsAtEntry } = tickToPending('r9-couple', (w) => {
       w.physioActive = false
       w.plan = { train: 100, rest: 0 }
       w.condition = 40
@@ -283,7 +426,7 @@ describe('R9-19 — match-strength coupling', () => {
     expect(world.condition).toBeLessThan(100)
     const factor = conditionMatchFactor(world.condition)
     expect(factor).toBeLessThan(1)
-    const raw = kidMatchPlayer(world)
+    const raw = kidMatchPlayer({ ...world, skills: skillsAtEntry })
     const stored = world.pendingTournament!.players[KID_ID]
     expect(stored.serve).toBeCloseTo(raw.serve * factor, 10)
     expect(stored.ret).toBeCloseTo(raw.ret * factor, 10)
@@ -295,9 +438,9 @@ describe('R9-19 — match-strength coupling', () => {
 
   it('at condition 100 the kid plays unscaled (factor exactly 1)', () => {
     // Default profile (hired coach → physio on) + balanced plan keeps her at 100.
-    const { world } = tickToPending('r9-couple-fresh')
+    const { world, skillsAtEntry } = tickToPending('r9-couple-fresh')
     expect(world.condition).toBe(100)
-    const raw = kidMatchPlayer(world)
+    const raw = kidMatchPlayer({ ...world, skills: skillsAtEntry })
     const stored = world.pendingTournament!.players[KID_ID]
     expect(stored.serve).toBe(raw.serve)
     expect(stored.stamina).toBe(raw.stamina)
@@ -393,10 +536,21 @@ describe('R9-9/R9-21a — UI wiring', () => {
     expect(src).toContain('ConfirmDialog')
   })
 
-  it('App.vue can hide the flow (Back) and offers a Resume affordance while the week is paused', () => {
+  it('App.vue can hide the flow (Back) and the paused week can be resumed from ANY tab', () => {
+    // ⚠ RE-AIMED by R13-12 (28.07). The resume affordance used to be a banner (plus, since
+    // R13-8, the Home bar's primary button). R13-12 made the sticky Next-week bar GLOBAL and
+    // dropped the banner: the bar's primary button (playWeek re-opens a pending overlay – the
+    // R13-8 wiring) is now the one resume control, present on every tab because the bar carries
+    // no tab gate. The R9-9a property this pin exists for – no tab can strand the career –
+    // is unchanged; only the surface that guarantees it moved.
     const src = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
     expect(src).toContain('tournamentHidden')
-    expect(src).toContain('Resume')
+    // ⚠ RE-AIMED by wave 2: the bar is Home-only for ADVANCING and global for RESUMING a
+    // paused reveal (see round13-nav.test.ts). What R9-9 cares about is that the shell owns it and
+    // no screen grows one of its own - that is unchanged.
+    expect(src).toContain(`class="next-week-bar"`)
+    expect(src).toContain(`game.snapshot?.pending`)
+    expect(src).toContain('tournamentHidden.value = false') // the re-open path playWeek takes
   })
 
   it('the injury stop is a blocking popup with kind/weeks/withdrawals and an alert sfx — not a toast', () => {
@@ -434,30 +588,49 @@ describe('pt4 — UI wiring', () => {
 
   it('R9-4: Sora reaches the kid name, tournament names and the Season heading', () => {
     const css = read('../src/style.css')
-    for (const sel of ['.kid-name', '.player-name', '.event-tier']) {
+    // ⚠ RE-AIMED by epic/redesign-home (28.07): the kid's name on Home left `.player-name` (the
+    // player card is gone) for `.diary-name` – the 42px headline laid on the hero photograph. The
+    // property is the NAME's, not the card's, and it moved with it.
+    // ⚠ RE-AIMED AGAIN by A2 (28.07): `.kid-name` was the app header's name, and the app header
+    // is gone. `.diary-name` is the only place her name is set now, and it is the headline.
+    for (const sel of ['.diary-name', '.event-tier']) {
       const block = css.slice(css.indexOf(`${sel} {`))
       expect(block.slice(0, block.indexOf('}'))).toContain('var(--font-heading)')
     }
     expect(css).toContain('.season-topbar h2')
   })
 
-  it('R9-8: the Home plan line is unbordered plain text with the tournament name', () => {
-    const home = read('../src/components/screens/HomeScreen.vue')
-    expect(home).toContain('this-week-plan')
-    expect(home).not.toContain('<span class="pill">Training')
+  it('R9-8: the plan line is unbordered plain text with the tournament name', () => {
+    // ⚠ RE-AIMED by R13-12 (28.07): the This-week block left Home for its own tab
+    // (screens/ThisWeekScreen.vue). The property is the block's, not the screen's – it moved
+    // with the block, wording and all.
+    const src = read('../src/components/screens/ThisWeekScreen.vue')
+    expect(src).toContain('this-week-plan')
+    expect(src).not.toContain('<span class="pill">Training')
   })
 
-  it('R9-13/15: all three portrait surfaces run through the shared emotion composable', () => {
-    for (const p of ['../src/App.vue', '../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
+  // PIN MOVED by F45-1 (27.07): the header crop left this set. R9-13/15's point – the surfaces that
+  // show an emotion all take it from ONE composable – still holds for the two that remain; the
+  // header is now age-only by owner decision (tests/round11-followups.test.ts).
+  it('R9-13/15: both emotional portrait surfaces run through the shared emotion composable', () => {
+    for (const p of ['../src/components/screens/HomeScreen.vue', '../src/components/screens/KidScreen.vue']) {
       expect(read(p)).toContain('useKidEmotion')
     }
+    // ⚠ RE-AIMED by A2 (28.07): the static age-only crop moved off the deleted app header onto
+    // Home, beside the date. Home is now the one screen carrying BOTH faces – the big emotional
+    // painting and the small chrome avatar – and they still answer to different composables.
+    expect(read('../src/components/screens/HomeScreen.vue')).toContain('useHeaderAvatar')
+    expect(read('../src/App.vue')).not.toContain('useHeaderAvatar')
   })
 
   it('R9-18: the recap dismissal survives remounts (module scope) and the rule is documented', () => {
-    const home = read('../src/components/screens/HomeScreen.vue')
-    expect(home).toContain('dismissedRecapKey')
-    expect(home).toMatch(/<script lang="ts">/) // the plain (module-scope) block exists
-    expect(home).toContain('THE RULE')
+    // ⚠ RE-AIMED by R13-12 (28.07): the WeekRecapCard moved to the This-week tab, and the
+    // module-scope dismissal – the whole point of R9-18 – moved WITH it (the new screen
+    // re-mounts on tab switches exactly like Home did).
+    const screen = read('../src/components/screens/ThisWeekScreen.vue')
+    expect(screen).toContain('dismissedRecapKey')
+    expect(screen).toMatch(/<script lang="ts">/) // the plain (module-scope) block exists
+    expect(screen).toContain('THE RULE')
   })
 
   it('R9-21b: the Home tab carries an unread-news dot and a soft cue on arrival', () => {
@@ -487,7 +660,7 @@ describe('pt4 — UI wiring', () => {
 // Round-9 pt5 — R9-16 portrait stages by age + the young/teen header crops.
 // ---------------------------------------------------------------------------
 describe('pt5 — R9-16 portrait stages by age', () => {
-  it('portraitStage: jun < 12, young 12-16, teen 17-22, adult beyond', () => {
+  it('portraitStage: jun <11, young 11-16, teen 17-22, adult 23-30, milf 31+', () => {
     expect(portraitStage(10)).toBe('jun')
     // Owner 25.07: young starts at 11 (the childhood prologue will need this boundary).
     expect(portraitStage(11)).toBe('young')
@@ -497,6 +670,9 @@ describe('pt5 — R9-16 portrait stages by age', () => {
     expect(portraitStage(17)).toBe('teen')
     expect(portraitStage(22)).toBe('teen')
     expect(portraitStage(23)).toBe('adult')
+    // Owner 27.07: adult gained an UPPER bound and milf became a real band.
+    expect(portraitStage(30)).toBe('adult')
+    expect(portraitStage(31)).toBe('milf')
   })
 
   it('the 256px header crops exist for every young/teen emotion (sips→256→cwebp q82)', () => {
@@ -524,9 +700,14 @@ describe('pt5 — R9-16 portrait stages by age', () => {
     const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
     expect(read('../src/composables/kidEmotion.ts')).toContain('portraitStage')
     expect(read('../src/components/TournamentFlow.vue')).toContain('kidStage')
-    // the Kid tab glyph grows up at 18 (owner icon pair; man.svg reserved for the boys' tour)
+    // ⚠ RE-AIMED by R13-12 (28.07): the Kid TAB left the bottom bar (the header avatar opens
+    // the screen now), so the R9-16 "tab glyph grows up at 18" wiring went with it – its subject
+    // no longer exists. What SURVIVES of R9-16: the surface that opens the Kid screen still ages
+    // with her (the header avatar resolves through portraitStage – pinned by
+    // tests/round11-followups.test.ts F45-1), and the owner's icon pairs stay on disk, reserved
+    // (woman/man for the future tours, like kid-boy).
     const app = read('../src/App.vue')
-    expect(app).toContain("'woman' : 'kid-girl'")
+    expect(app).not.toContain("'kid-girl'") // no Kid tab entry survives in the shell
     expect(existsSync(new URL('../public/icons/woman.svg', import.meta.url))).toBe(true)
     expect(existsSync(new URL('../public/icons/man.svg', import.meta.url))).toBe(true)
     // onboarding's "first time on court" frame stays jun BY DESIGN (narrative flashback)

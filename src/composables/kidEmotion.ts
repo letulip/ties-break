@@ -1,95 +1,51 @@
-// R9-13/15 – ONE emotion decision for every portrait surface (the header crop, the Home
-// player-card avatar and the Kid screen's big portrait), so they can never disagree. Wraps
-// the pure avatarEmotion helper (R8-6a/6b + R9-11 win-immunity) with the snapshot reads it
-// needs: the freshest kid match (with its tier), the freshest title, condition and injury.
+// R9-13/15 – ONE emotion decision for every portrait surface that is ALLOWED an emotion (the
+// Home photo card and the Kid screen's big portrait), so they can never disagree. The app header
+// is age-only (F45-1) and lives in ./headerAvatar.ts.
 //
-// Tier resolution is structural, not text-parsing: a SeasonEvent id is `${year}-w${week}-${tier}`
-// (calendar.ts), so the match's own eventId names its tier; the title's tier falls back to the
-// tournament summary's label prefix against the closed TIERS catalogue.
+// DIARY-1 MOVED THE DECISION ENGINE-SIDE. This composable used to walk the snapshot's events for
+// her latest result/title and call `avatarEmotion` itself; the diary's copy system needed the very
+// same walk on the other side of the engine/UI line (a phrase licensed by the emotion must be the
+// emotion the painting shows), and one walk in one place is the only way the image and the words
+// can never disagree. The walk now lives in `engine/diary.ts` (lastKidResultOf / lastKidTitleOf,
+// same predicate, same tier resolution), the engine computes the emotion into
+// `snapshot.diary.facts` – with the facts only IT can know, like the rank-climb softener – and
+// this composable reads the decision instead of re-making it. URL building stays here: it is
+// presentation, not judgement.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import {
-  avatarEmotion,
+  avatarCropPath,
   portraitStage,
+  resultShowsOnHerFace,
   type AvatarEmotion,
-  type LastKidResult,
-  type LastKidTitle,
   type PortraitStage,
 } from '../shared/avatarEmotion'
-import { KID_ID } from '../engine/world'
-import { TIERS } from '../engine/season/calendar'
-import type { TierId } from '../engine/season/types'
 
-const TIER_IDS = Object.keys(TIERS) as TierId[]
-
-/** `${year}-w${week}-${tier}` → tier (undefined for an unparseable/foreign id). */
-function tierFromEventId(eventId: string | undefined): TierId | undefined {
-  if (!eventId) return undefined
-  const tail = eventId.split('-').pop()
-  return TIER_IDS.find((t) => t === tail)
-}
-
-/** Tournament-summary events read `${TIERS[tier].label} (…)` – match the label prefix. */
-function tierFromSummaryText(text: string): TierId | undefined {
-  return TIER_IDS.find((t) => text.startsWith(TIERS[t].label))
-}
+/**
+ * R11-2 – which recorded matches are allowed to change her FACE. THE DEFINITION lives in
+ * `shared/avatarEmotion.ts` (fix/world-trio item 3) and is re-exported here unchanged, so every
+ * import path that already pointed at this module keeps working. The one walk that asks it is now
+ * `engine/diary.ts` (lastKidResultOf) – the engine's facts assembly, whose emotion this composable
+ * renders. Its behaviour is byte-identical – `!!e.match && !e.friendly`.
+ */
+export { resultShowsOnHerFace }
 
 export function useKidEmotion() {
   const game = useGameStore()
 
-  // The kid's most recent played match. A result emotion only lasts until the next weekly
-  // tick (avatarEmotion checks week === current), so walking the trailing feed is enough.
-  const lastResult = computed<LastKidResult | null>(() => {
-    const events = game.snapshot?.events
-    if (!events) return null
-    for (let i = events.length - 1; i >= 0; i--) {
-      const e = events[i]
-      const match = e.match
-      if (!match) continue
-      const won = match.winnerId === KID_ID
-      // R8-6a: a loss in the FINAL = runner-up = a good result. The same week's tournament
-      // summary carries finishIdx 1 exactly when her run ended in the final.
-      const lostFinal =
-        !won && events.some((t) => t.type === 'tournament' && t.week === e.week && t.finishIdx === 1)
-      return { week: e.week, won, lostFinal, tier: tierFromEventId(match.eventId) }
-    }
-    return null
-  })
+  // THE decision, as the engine made it at snapshot time (diary facts). Fallback `norm` only for
+  // the no-snapshot mount gap – every real snapshot carries a diary.
+  const emotion = computed<AvatarEmotion>(() => game.snapshot?.diary.facts.emotion ?? 'norm')
 
-  // R9-11: the kid's most recent TITLE (finishIdx 0 on a tournament summary). The 60-event
-  // snapshot window is plenty – the longest immunity is 2 weeks.
-  const lastTitle = computed<LastKidTitle | null>(() => {
-    const events = game.snapshot?.events
-    if (!events) return null
-    for (let i = events.length - 1; i >= 0; i--) {
-      const e = events[i]
-      if (e.type !== 'tournament' || e.finishIdx !== 0) continue
-      const tier = tierFromSummaryText(e.text)
-      if (tier) return { tier, week: e.week }
-    }
-    return null
-  })
-
-  const emotion = computed<AvatarEmotion>(() =>
-    avatarEmotion({
-      week: game.snapshot?.week ?? 0,
-      condition: game.snapshot?.condition ?? 100,
-      injured: !!game.snapshot?.injury,
-      lastResult: lastResult.value,
-      lastTitle: lastTitle.value,
-    }),
-  )
-
-  // R9-16: the portrait stage follows her age (jun < 11, young 11-16, teen 17-22).
+  // R9-16: the portrait stage follows her age (jun < 11, young 11-16, teen 17-22, adult 23-30,
+  // milf 31+).
   const stage = computed<PortraitStage>(() => portraitStage(game.snapshot?.ageYears ?? 14))
 
-  // 256px header/card crops live in public/avatars/{stage}-{emotion}.webp. Crops exist for
-  // jun/young/teen; the adult set is LATER-LIFE content whose crops haven't been cut yet, so
-  // the crop surfaces clamp to teen until then (the full-size adult art below already exists).
-  const cropUrl = computed(() => {
-    const cropStage = stage.value === 'adult' ? 'teen' : stage.value
-    return `${import.meta.env.BASE_URL}avatars/${cropStage}-${emotion.value}.webp`
-  })
+  // 256px card crops live in public/avatars/{stage}-{emotion}.webp. `avatarCropPath` is shared
+  // with the emotion-free header (F45-1), so the two crop surfaces cannot drift apart.
+  const cropUrl = computed(
+    () => `${import.meta.env.BASE_URL}${avatarCropPath(stage.value, emotion.value)}`,
+  )
 
   // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
   // (every stage×emotion exists, adult included).

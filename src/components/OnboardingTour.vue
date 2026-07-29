@@ -15,11 +15,26 @@ interface Step {
   placement: 'above' | 'below'
 }
 
+// R13-12 re-anchored the marks to the new nav: Home is the diary (the plan moved to the
+// This-week tab, which gets its own step), and the Kid step points at the header avatar –
+// the Kid tab is gone from the bottom bar.
+//
+// epic/redesign-home re-aimed ONE of them. The This-week TAB left the bottom bar (the owner's new
+// order is Season · Calendar · Home · Stats · More), and its screen is reached from Home's
+// next-tournament card – so the mark that pointed at `tab-week` points at that card. It is the only
+// anchor in the set that does not live in App.vue's own template, which is exactly why the card
+// carries a `data-tour` attribute of its own rather than the step guessing a position.
 const STEPS: Step[] = [
   {
     selector: '[data-tour="home-header"]',
     title: 'Welcome',
-    text: "This is Home – your kid's card, this week's plan, and the news feed all live here.",
+    text: "This is Home – your kid's diary: her photo, how she is doing, and the news feed.",
+    placement: 'below',
+  },
+  {
+    selector: '[data-tour="kid-avatar"]',
+    title: 'Kid',
+    text: 'Tap her photo any time – her full profile lives behind it.',
     placement: 'below',
   },
   {
@@ -29,15 +44,17 @@ const STEPS: Step[] = [
     placement: 'above',
   },
   {
-    selector: '[data-tour="tab-kid"]',
-    title: 'Kid',
-    text: "The Kid tab shows her full profile.",
+    selector: '[data-tour="next-tournament"]',
+    title: 'This week',
+    text: 'Tap the tournament card to set the training plan and read the last week recap.',
     placement: 'above',
   },
   {
     selector: '[data-tour="next-week"]',
     title: 'Next week',
-    text: 'Tap "Next week" to advance the career, one week at a time.',
+    // R10-7: the button no longer says a literal "Next week" – it names the week's plan – so the
+    // coach-mark points at the button instead of quoting a label that changes.
+    text: 'Tap this button to advance the career, one week at a time. It tells you what the week holds.',
     placement: 'above',
   },
 ]

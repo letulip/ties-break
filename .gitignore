@@ -1,5 +1,49 @@
-node_modules/
+# No trailing slash ON PURPOSE: `node_modules/` matches a DIRECTORY only. Every tb-* worktree
+# shares one install via a `node_modules` SYMLINK, which the slashed rule did not match — so
+# `git add -A` swept the symlink itself into the tree (it shipped in c96ecec, pointing out of the
+# repo into a sibling worktree). Slashless matches the directory and the symlink both.
+node_modules
 dist/
 dev-dist/
 *.local
 .DS_Store
+
+# --- raster art -------------------------------------------------------------------------
+# Raw masters NEVER enter git; only the webp the build produces from them does.
+# The pipeline (scripts/optimize-art.mjs, wired into vite.config.ts) encodes anything dropped
+# into public/images/<set>-jpeg/ and then MOVES the master into art-src/ — out of public/,
+# because Vite copies public/ into dist/ verbatim whether git tracks it or not.
+#
+# NOTE: art-src/ is the author's LOCAL master library. git is not its backup.
+# gitignore has no brace expansion, so each extension gets its own line.
+# No trailing slash ON PURPOSE. A worktree shares one master library by SYMLINKING art-src at the
+# other checkout, and `art-src/` matches a directory but NOT a symlink - so the link showed up as
+# untracked and was one `git add -A` away from being committed as a link pointing outside the repo.
+# (`node_modules` above is spelled without a slash for exactly this reason, and is why it never
+# happened there.)
+art-src
+public/images/*-jpeg/
+
+# Repo-wide, not per-directory. Path-scoped rules only cover the folders someone thought of:
+# public/logo-i-light.png sat untracked and uncaught under the earlier per-folder version, and the
+# next stray will land somewhere else again. Deny everything, then name the exceptions — that is the
+# only shape of this rule that cannot be walked around.
+*.png
+*.jpg
+*.jpeg
+
+# The exceptions, and the whole list of them. PWA manifest icons and apple-touch-icon are not
+# reliably accepted as webp across platforms, so these five stay raster ON PURPOSE. Adding a sixth
+# line here should require an argument.
+!public/favicon.png
+!public/pwa-192.png
+!public/pwa-512.png
+!public/pwa-maskable-512.png
+!public/pwa-apple-180.png
+
+# Author staging inboxes for raw art at the REPO ROOT. Masters live here until they are copied
+# into public/images/<set>-jpeg/ for the pipeline; they must never enter git.
+# The leading slash is load-bearing: unanchored `coaches/` would also swallow
+# public/images/coaches/, i.e. the generated webp we DO ship.
+/coaches/
+/fields/

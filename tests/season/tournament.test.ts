@@ -3,10 +3,11 @@ import {
   selectEntrants,
   runTournament,
   standardSeedOrder,
-  bandForPercentile,
+  isEntrantBand,
+  topBandForPercentile,
   JUNIOR_TOUR,
 } from '../../src/engine/season/tournament'
-import { TIERS } from '../../src/engine/season/calendar'
+import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
 import { generateCohort } from '../../src/engine/season/cohort'
 import { rngFromSeed } from '../../src/engine/rng'
 import { simulateMatch } from '../../src/engine/match/engine'
@@ -43,13 +44,31 @@ describe('standardSeedOrder — seeded bracket', () => {
   })
 })
 
-describe('bandForPercentile — percentile bands', () => {
-  it('maps top 25% → national, next → regional, rest → local', () => {
-    expect(bandForPercentile(0.1)).toBe('national')
-    expect(bandForPercentile(0.25)).toBe('national')
-    expect(bandForPercentile(0.4)).toBe('regional')
-    expect(bandForPercentile(0.6)).toBe('regional')
-    expect(bandForPercentile(0.75)).toBe('local')
+// RE-PINNED by ladder-up Part B. `bandForPercentile` (one tier per player: top 25% national,
+// next regional, rest local) is gone. Six tiers over a 199-strong cohort cannot be partitioned –
+// four of them are 32-draws, so disjoint bands would leave ~33 candidates each and every J300
+// would run with the same 32 players. Entrant windows now OVERLAP per tier (TierDef.entrantPctBand),
+// mirroring the kid's overlapping enterPointBand, and `topBandForPercentile` names a player's
+// strongest rung (which is what the cohort pre-history earns its results at).
+describe('entrant percentile windows', () => {
+  it('isEntrantBand answers the window inclusively', () => {
+    expect(isEntrantBand('local', 0.75)).toBe(true)
+    expect(isEntrantBand('local', 0.2)).toBe(false)
+    expect(isEntrantBand('j300', 0.1)).toBe(true)
+    expect(isEntrantBand('j300', 0.4)).toBe(false)
+  })
+
+  it('the windows overlap – a good junior is a candidate for several rungs at once', () => {
+    const openAt = (pct: number) => TIER_LADDER.filter((t) => isEntrantBand(t, pct))
+    expect(openAt(0.3).length).toBeGreaterThan(1)
+    expect(openAt(0.5).length).toBeGreaterThan(1)
+  })
+
+  it('topBandForPercentile names the strongest rung a player belongs to', () => {
+    expect(topBandForPercentile(0.05)).toBe('j300')
+    expect(topBandForPercentile(0.35)).toBe('j60')
+    expect(topBandForPercentile(0.5)).toBe('j30')
+    expect(topBandForPercentile(0.95)).toBe('local')
   })
 })
 
@@ -57,12 +76,12 @@ describe('selectEntrants — percentile bands per tier', () => {
   const total = ranking.length
   const rankOf = new Map(ranking.map((r) => [r.playerId, r.rank]))
 
-  for (const tier of ['national', 'regional', 'local'] as const) {
+  for (const tier of TIER_LADDER) {
     it(`${tier}: fills to drawSize with in-band players, seeded by rank`, () => {
       const entrants = selectEntrants(ev(tier, 10), cohort, ranking, rngFromSeed(`sel-${tier}`))
       expect(entrants.length).toBe(TIERS[tier].drawSize)
       const ranks = entrants.map((p) => rankOf.get(p.id)!)
-      for (const rank of ranks) expect(bandForPercentile(rank / total)).toBe(tier)
+      for (const rank of ranks) expect(isEntrantBand(tier, rank / total)).toBe(true)
       // entrants are returned in seed order = ascending rank
       expect(ranks).toEqual([...ranks].sort((a, b) => a - b))
       // unique entrants

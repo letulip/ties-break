@@ -53,7 +53,10 @@ price — owner approved). Cancel before the week starts = full refund (mirror o
   coach tier when the coach slice lands.
 - Effect v1 (owner 25.07, integer scale): condition drain = **max(1, local-scoreline drain − 1)**
   — a friendly is one lighter than the same match at a local, never below 1 (straight sets = 1,
-  a 3-set friendly slugfest = 1, an epic = 2). Week-type semantics: a PRACTICE week keeps the
+  a 3-set friendly slugfest = 1, an epic = 2). ⚠ **Those three examples were the base-1 arithmetic
+  and moved with the MATCH BASE RAISE (owner 26.07, straightSets 1 → 2): the FORMULA is unchanged,
+  but it no longer clamps — straight sets = 1, a 3-setter = 2, an epic = 3. The canonical table is
+  `docs/specs/fatigue-reference.md`.** Week-type semantics: a PRACTICE week keeps the
   base recovery (+2) but FORFEITS the slider rest bonus (you played, even if friendly); a
   TOURNAMENT week gets no base recovery (V2); a free week gets base + slider bonus. So the
   weekly ladder reads 0 / +2−drain / +2..+4. A watchable friendly via the EXISTING exhibition
@@ -75,6 +78,47 @@ Fix in the implementation:
 - The scheduled off-season family week (sea) stays a natural default suggestion for everyone.
 - Bench re-run after the slice lands must show every package selling at SOME rate across
   policies before the price ladder is considered tuned.
+
+## 4c. Wave-2 retune (26.07, real-mechanics bench) — the offer band, the streak arm, the veto
+The first bench run on REAL bookings (not the PROJ projection) said §4b had shipped half a lever:
+- **Offer band 65 → 80** (`ECONOMY.practice.rescueCondition`, now inclusive). Below 65 no cheap
+  package can reach the +85 target, so the pre-highlight always fell through to "the most expensive
+  she can afford": seaside took **88%** of every booking, grandma 0.2%, camping 0.4%.
+- **Pre-highlight = cheapest package SUFFICIENT for her CURRENT condition**
+  (`recommendVacationPackage` in economy.ts — ONE pure rule, read by the rescue card, the planner
+  sheet and the bench). The recommendation now slides down the ladder as the deficit shrinks, and
+  the off-season row no longer hard-codes seaside. The +12…+30 gain ladder is NOT re-spaced: that
+  is calendar-sensitive and waits for the Ladder-up slice.
+- **Practice guardrail, streak arm gated on real strain**: 3 match weeks in a row warn only below
+  `cautionStreakCondition` (75); 4 in a row warn at any condition. It used to fire on a perfectly
+  fresh kid — careful pushed through 8-11 cautions/season at condition 92, which is how a warning
+  becomes noise. The low-condition arm (`cautionCondition` 55) is unchanged.
+- **The doctor's veto** (owner R9-19b): condition below `ECONOMY.availability.medicalFloor` (15) is
+  a HARD block on entering, surfaced through `availabilityStatus` as `level: 'blocked'`,
+  `reason: 'medical'` — "Not cleared to play – she needs rest." The first hard body-gate in the
+  game and the one exception to "the parent may push"; fatigue above the floor stays a soft caution.
+  The floor sits far below every tier caution floor (20-45), so only the bench's degenerate cell (a
+  self-coached grinder at condition 0) ever meets it.
+
+## 4d. The veto reaches the FRIENDLY (26.07, owner) — the practice booking gate
+The match-base raise (1 → 2) made the friendly's `max(1, localDrain − 1)` subtraction real, so the
+"practise every week" treadmill turned from a flat plateau into a −0.6 condition/week slide, and the
+veto gated tournaments only: nothing stopped a grinder from booking friendlies while pinned at 0.
+The owner's call — *"the doctor who will not let her travel probably should not clear her for a
+friendly at condition 0"*:
+
+- **`bookPractice` is refused below the floor**, through the SAME predicate the entry gate reads
+  (`medicalBlock`, world.ts). One rule, one owner — the friendly and the tournament print the same
+  sentence, and the planner sheet's Practice tab disables the button and shows that sentence (it also
+  points at the Vacation tab, so the week never becomes a dead end).
+- **A booked friendly whose week ARRIVES under the floor is called off there**, mirroring the
+  tournament arrival check — but the **court rental is refunded in full** (no entry list ever closed
+  on it, and `cancelPractice` already refunds) and the freed week pays the **full** free-week
+  recovery instead of the practice-week rung.
+- **No warning band for a friendly** (hard block below 15, the guardrail's soft caution above it),
+  and **vacations are never gated**: refusing rest below the floor would be the R10-3 dead end again.
+- Measured: weeks at condition 0 in the degenerate cell **32.7% → 2.9%** (pooled 1.40% → 0.36%);
+  `balanced`/`careful` unchanged to the week. See docs/specs/fatigue-reference.md.
 
 ## 5. Closes
 - R5 backlog debt "Vacations as a class differentiator affecting recovery" (Phase 4/5 promise).

@@ -77,10 +77,24 @@ describe('tournament reveal – reveal, do not re-run', () => {
     }
     expect(matches).toBe(kidMatchCount)
 
-    // finalize side effects: exactly one summary, kid points recorded, no summary before finalize
+    // finalize side effects: exactly one summary, no summary before finalize.
     const summaries = world.events.filter((e) => e.type === 'tournament' && e.week === eventWeek)
     expect(summaries.length).toBe(1)
-    expect(world.results.some((r) => r.playerId === KID_ID && r.week === eventWeek)).toBe(true)
+
+    // ⚠ RE-PINNED by wave B "first-round loss pays ZERO" (tune/first-round-zero). This used to
+    // assert a result row unconditionally. Since a first-round exit now banks nothing and
+    // finalizeTournament only pushes a row when `points > 0`, "she played" and "she scored" have
+    // come apart. Assert the RULE rather than one seed's luck: the row exists exactly when she won
+    // at least one match. That is a strictly stronger check than the old unconditional one, and it
+    // holds whichever way this seed's bracket falls.
+    const kidWon = world.pendingTournament!.result.matches.some(
+      (m) => (m.aId === KID_ID || m.bId === KID_ID) && m.winnerId === KID_ID,
+    )
+    const banked = world.results.some((r) => r.playerId === KID_ID && r.week === eventWeek)
+    expect(banked).toBe(kidWon)
+    // ...while the summary event fires either way – the week is always on the record.
+    const playedEvent = world.season.find((e) => e.id === world.pendingTournament!.eventId)!
+    expect(summaries[0].text).toContain(TIERS[playedEvent.tier].label)
   })
 
   it('revealed match records reproduce via simulateMatch (already committed, never re-decided)', () => {
@@ -124,10 +138,30 @@ describe('tournament reveal – reveal, do not re-run', () => {
   // can spectate the tournament past her exit. `probe-2` is a draw of 8 in which the kid loses
   // her opening match, leaving the whole draw (SF, Final) to unfold without her.
   it('once finished, fullBracket spans every round through the Final, incl. non-kid later rounds', () => {
-    const world = buildToPending('probe-2')
-    const event = world.season.find((e) => e.id === world.pendingTournament!.eventId)!
-    const drawSize = TIERS[event.tier].drawSize
-    const finalRound = Math.log2(drawSize) - 1
+    // ⚠ SEED-WALKED by the random-draw change (28.07). The precondition below is that she exits
+    // EARLY, which used to be reliable on any seed - she met the top seed in round one, every time.
+    // Now the draw is random and 'probe-2' happens to send her to the final, which makes the
+    // precondition false. Which seed loses is not the subject; that the FULL bracket keeps running
+    // past her exit is.
+    let world!: WorldState
+    let finalRound = 0
+    for (let i = 0; i < 30; i++) {
+      const w = buildToPending(`probe-2-${i}`)
+      const e = w.season.find((x) => x.id === w.pendingTournament!.eventId)!
+      const fr = Math.log2(TIERS[e.tier].drawSize) - 1
+
+      const finish = w.pendingTournament!.result.finishes[KID_ID]
+      // ⚠ RE-AIMED 29.07 (partial seeding): `finish === 0` excluded only the CHAMPION, but a
+      // RUNNER-UP also plays every round, so there are no "rounds after her exit" to find and the
+      // precondition below fails. She is drawn by her standing now and reaches finals she used to
+      // miss, which is how this surfaced. The protected fact is unchanged: a full bracket must span
+      // rounds she was not in.
+      if (finish === undefined || finish <= 1) continue // champion or runner-up – no early exit
+      world = w
+      finalRound = fr
+      break
+    }
+    expect(world, 'no seed in 30 gave her an early exit').toBeTruthy()
 
     skipTournament(world)
     const view = toSnapshot(world).pending!

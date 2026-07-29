@@ -168,6 +168,33 @@ export function initSfx(): void {
   audioEnabled = true
 }
 
+/**
+ * R10-6 – warm a cue UP FRONT so its first play is instant.
+ *
+ * ROOT CAUSE this exists for: every file here is lazy-loaded on first use (see `loadAudio`), and
+ * the first use pays a HEAD existence probe (`cache: 'no-store'`, so a real round trip) plus the
+ * mp3's own fetch/decode before `play()` makes a sound. Cues that fire throughout a match
+ * (`hit`, `applauseShort`) are warm long before they matter, but `applauseFinal` is the ONE cue
+ * that never plays during play – it is always cold at the exact moment it has to LAND, and its
+ * clips are the biggest in the set (~53-67 KB each, three variants). That cold start is the
+ * "applause comes a beat late" the owner heard.
+ *
+ * Warms EVERY variant of the key (playSfx picks one at random, so warming one is not enough).
+ * Fire-and-forget: nothing plays, so it needs no user gesture and can run before `initSfx()`;
+ * the cache/in-flight maps make repeat calls free; skipped while muted (no point paying for
+ * bytes that will never be heard – unmuting later just falls back to the normal lazy path).
+ */
+export function primeSfx(key: SfxKey): void {
+  if (muted) return
+  for (const file of variantsFor(key)) {
+    void loadAudio(file, key).then((audio) => {
+      // readyState 0 = HAVE_NOTHING: nothing buffered yet, so ask the browser to start. Never
+      // called on an element that already has data (load() would reset a playing cue).
+      if (audio && audio.readyState === 0) audio.load()
+    })
+  }
+}
+
 export function isMuted(): boolean {
   return muted
 }

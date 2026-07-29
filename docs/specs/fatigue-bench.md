@@ -91,7 +91,20 @@ deterministic expected-value integral of the tau formula over the projected fati
 spots (printed in the output): no result/calendar feedback, practices affect neither skills nor
 the overuse counter, midpoint prices, no bookings on exam weeks.
 
-## Not modeled yet – re-run required
-FRIENDLY MATCHES and VACATIONS (season-planner slice) are not in the engine. The PROJ section
-above is arithmetic, not mechanics; the grid (and the headline matrix) MUST be re-run when the
-real mechanics land.
+## ~~Not modeled yet – re-run required~~ → DONE (season-planner slice, 25.07)
+FRIENDLY MATCHES and VACATIONS are now REAL engine mechanics (schema v13). The PROJ arithmetic
+layer is **deleted**; `PLANNER`/`projectPlanner`/`ProjectionResult` are gone. In their place:
+- the headline policies carry a `planner` field (practice habit + rescue/off-season vacation
+  habit + a prudence budget), so every planner column is simulated – bookings go through
+  `bookPractice`/`bookVacation` for NEXT week only, exactly as the UI offers them;
+- a per-policy `planner …` line reports friendlies played + court spend, packages booked + spend,
+  guardrail cautions pushed through, and rescue bookings;
+- a new **PLANNER GRID** (practice {never, alternate, every} × vacation {none, rescue+sea} = 6
+  cells per profile at 104w) replaces the PROJ table; the factorial grid keeps the planner OFF so
+  plan × entry × physio stays an isolated read. The rescue arm tracks the SHIPPED offer band
+  (`ECONOMY.practice.rescueCondition`, widened 65 → 80 by the Wave-2 tuning slice), so the grid
+  always measures the rule the game actually has;
+- a closing **PACKAGE SALES** block answers spec §4b ("every package selling at SOME rate");
+- a closing **DOCTOR'S VETO** block (Wave-2) reports, per policy, how many tournaments the medical
+  floor (`ECONOMY.availability.medicalFloor`) refused and what share of weeks fell under it – the
+  proof that the one hard body-gate only bites the degenerate cell.

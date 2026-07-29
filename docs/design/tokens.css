@@ -1,0 +1,184 @@
+/* Tennis Parent — design tokens
+   Источник: design/Home Screen.dc.html (8 экранов, hifi).
+   Значения точные; не переопределять на глаз. */
+:root {
+  /* Surfaces */
+  --surface-canvas: #0a0e13;
+  --surface-screen: #0f1720;
+  --surface-card: #141d26;
+  --surface-card-alt: #121a22;
+  --surface-card-raised: #151f29;
+  --surface-card-raised-alt: #17212b;
+  --surface-card-gradient: linear-gradient(180deg, #17212b 0%, #121a22 100%);
+  --surface-tabbar: #0c141b;
+  --surface-glass-strong: rgba(15, 23, 32, 0.92);
+  --surface-glass: rgba(10, 15, 20, 0.62);
+  --surface-facts: rgba(20, 29, 38, 0.72);
+
+  /* Borders & dividers */
+  --border-subtle: rgba(255, 255, 255, 0.055);
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.1);
+  --border-glass: rgba(255, 255, 255, 0.14);
+  --border-button: rgba(255, 255, 255, 0.16);
+  --divider: rgba(255, 255, 255, 0.07);
+  --divider-strong: rgba(255, 255, 255, 0.09);
+
+  /* Accent — единственный акцент системы */
+  --accent-lime: #cfe152;
+  --accent-lime-bright: #e8f04a;
+  --accent-lime-chip: #d9e455;
+  --accent-lime-hover: #dcec6a;
+  --on-lime: #111a10;
+  --on-lime-chip: #161f0c;
+  --accent-lime-wash: rgba(207, 225, 82, 0.06);
+  --accent-lime-glow: rgba(207, 225, 82, 0.18);
+  --accent-lime-ink: rgba(207, 225, 82, 0.72);
+
+  /* Semantic */
+  --positive: #4ac96a;
+  --positive-large: #a5db4b;
+  --negative: #ef4b3a;
+  --warning: #f5b942;
+  --mood: #f3c94a;
+  --mood-ink: #3a2f10;
+  --clay: #e2822f;
+  --day-good: #dbe45a;
+  --day-mid: #f0913c;
+  --day-bad: #ef6a3a;
+
+  /* Text */
+  --text-primary: #f2f6f8;
+  --text-on-art: #ffffff;
+  --text-secondary: #e9eef1;
+  --text-secondary-alt: #e3eaee;
+  --text-tertiary: #c3ccd2;
+  --text-tertiary-alt: #a8b3ba;
+  --text-muted: #8e9ba4;
+  --text-faint: #6d7a83;
+  --text-label: #d3dade;
+
+  /* Paper artefacts */
+  --paper-lined: #eae1c8;
+  --paper-card: #eee6d3;
+  --paper-polaroid: #f0ead8;
+  --paper-polaroid-alt: #f3f0e8;
+  --paper-scrap: #e2d6b4;
+  --paper-ink: #2b2721;
+  --paper-ink-soft: #4a4235;
+  --paper-rule: rgba(58, 48, 30, 0.13);
+  --paper-margin-rule: rgba(190, 90, 80, 0.5);
+  --paper-tape: rgba(240, 236, 222, 0.72);
+  --paper-tape-warm: rgba(226, 203, 150, 0.85);
+  --paper-ruling: repeating-linear-gradient(180deg, rgba(58,48,30,0.13) 0px, rgba(58,48,30,0.13) 1px, transparent 1px, transparent 26px);
+
+  /* Calendar event types */
+  --event-training: #46685d;
+  --event-training-alt: #2f5c4e;
+  --event-gym: #3c6b62;
+  --event-school: #57626a;
+  --event-school-long: #5c4550;
+  --event-drills: #7d4326;
+  --event-match: #3b5f7d;
+  --event-match-long: #3d5580;
+  --event-study: #49545d;
+  --event-travel: #584a8c;
+  --event-rest: #3f5665;
+  --event-tournament: #9c5a1c;
+  --event-tournament-border: #d9a441;
+
+  /* Court diagram (экран I) */
+  --court-runoff: linear-gradient(180deg, #1b3a5f 0%, #16304f 100%);
+  --court-surface-hard: #22456f;
+  --court-line: rgba(255, 255, 255, 0.72);
+  --court-line-outer: rgba(255, 255, 255, 0.8);
+  --court-net-cord: rgba(255, 255, 255, 0.95);
+  --court-net-mesh: rgba(255, 255, 255, 0.28);
+  --court-player-self: #ffffff;
+  --court-player-rival: #e8eef4;
+  --court-ball: #e8f04a;
+  --overlay-chip: rgba(8, 13, 18, 0.72);
+  --log-dot-idle: #46545f;
+  --link-skip: #8fb2d6;
+  --dur-rally: 2800ms;
+
+  /* Typography */
+  --font-sans: 'Manrope', system-ui, -apple-system, sans-serif;
+  --font-hand: 'Caveat', cursive;
+  --fs-hero-name: 42px;
+  --fs-display: 23px;
+  --fs-h1: 22px;
+  --fs-h2: 21px;
+  --fs-h3: 20px;
+  --fs-h4: 19px;
+  --fs-stat: 18px;
+  --fs-value-lg: 17px;
+  --fs-value-md: 16px;
+  --fs-body: 15px;
+  --fs-cta: 14.5px;
+  --fs-body-sm: 13.5px;
+  --fs-label: 13px;
+  --fs-label-sm: 12.5px;
+  --fs-caption: 12px;
+  --fs-caption-sm: 11.5px;
+  --fs-tab: 11px;
+  --fs-micro: 10.5px;
+  --fs-micro-sm: 10px;
+  --fs-event: 8.5px;
+  --ls-display: -0.025em;
+  --ls-heading: -0.02em;
+  --ls-label: -0.01em;
+  --ls-tight: -0.015em;
+  --ls-eyebrow: 0.1em;
+  --lh-flat: 1;
+  --lh-dense: 1.25;
+  --lh-caveat: 1.3;
+  --lh-body: 1.35;
+  --lh-quote: 1.42;
+
+  /* Spacing (база — 14px gutter экрана) */
+  --gutter: 14px;
+  --sp-2: 2px;  --sp-4: 4px;  --sp-6: 6px;  --sp-8: 8px;
+  --sp-9: 9px;  --sp-10: 10px; --sp-11: 11px; --sp-12: 12px;
+  --sp-14: 14px; --sp-16: 16px; --sp-18: 18px; --sp-20: 20px;
+  --sp-24: 24px; --sp-26: 26px;
+
+  /* Radius */
+  --r-event: 8px;
+  --r-sm: 10px;
+  --r-segment: 11px;
+  --r-glass: 13px;
+  --r-chip: 14px;
+  --r-card-sm: 15px;
+  --r-card-md: 16px;
+  --r-card: 17px;
+  --r-card-lg: 18px;
+  --r-paper: 2px;
+  --r-pill: 999px;
+  --r-device: 30px;
+
+  /* Shadows */
+  --sh-device: 0 40px 90px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+  --sh-paper: 0 14px 30px rgba(0,0,0,0.45);
+  --sh-paper-md: 0 12px 26px rgba(0,0,0,0.45);
+  --sh-paper-sm: 0 8px 20px rgba(0,0,0,0.45);
+  --sh-cta: 0 8px 24px rgba(207,225,82,0.18);
+  --sh-text-on-art: 0 2px 14px rgba(0,0,0,0.55);
+  --sh-tape: 0 1px 4px rgba(0,0,0,0.3);
+
+  /* Layout */
+  --screen-w: 390px;
+  --screen-h: 844px;
+  --hero-home: 398px;
+  --hero-profile: 392px;
+  --hero-tournament: 300px;
+  --cal-hour: 34px;
+  --cal-2h: 68px;
+
+  /* Motion */
+  --dur-fast: 180ms;
+  --dur-base: 220ms;
+  --dur-slow: 260ms;
+  --dur-ring: 600ms;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
