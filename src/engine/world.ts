@@ -84,6 +84,7 @@ import {
   eliteGateShortfall,
   practiceCoachRateCents,
   selfRateCents,
+  tierOf,
 } from './coach'
 import {
   kitGrantCents,
@@ -103,6 +104,9 @@ import { applySurfaceStyle } from './match/style'
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
 // dependency runs one way: world → diary, exactly like world → condition.
 import { buildDiarySnapshot, milestoneKey } from './diary'
+// The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
+// diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
+import { buildRadar } from './radar'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -1640,6 +1644,13 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
     addEvent(world, {
       week: world.week,
       type: 'info',
+      // ⚠ NOW KEPT, AND TAGGED (skills-radar). Both arms of this command are the moment a coaching
+      // arrangement CHANGED, and the radar's "weeks together" is derived from exactly that moment
+      // (coachSinceWeek) rather than from a new persisted field. A pruned release event would let a
+      // fired coach go on lending his read to the parent who replaced him. Bounded by construction:
+      // one row per hire, and a career has a handful.
+      keep: true,
+      milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
       text: 'You are coaching her yourself again. The weekly bill is court time only.',
     })
     return
@@ -1663,8 +1674,57 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
     week: world.week,
     type: 'info',
     keep: true,
+    // See the release arm above: the tag is what makes "when did this partnership start" a read
+    // over the ledger instead of a persisted field and a migration.
+    milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
     text: `${coach.name} is her coach now – ${COACH_TIER_LABEL[coach.tier]} tier.`,
   })
+}
+
+/** THE TAG ON A COACH-CHANGE EVENT, and the only thing that identifies one. `milestoneKey` already
+ *  exists on every event (it is what makes a milestone fire once), it is never pruned when the event
+ *  is `keep`, and it needs no schema bump - the same trick the academy's offers use
+ *  (`academy-in-<week>`). The week is in the key, so two hires can never collide.
+ *
+ *  A career migrated from a save written before this tag existed simply has no tagged events, and
+ *  `coachSinceWeek` falls back to week 0 - "they have been together as long as anyone can remember",
+ *  which is the right answer for a ledger with no record of a change. */
+const COACH_CHANGE_KEY = 'coach-since-'
+
+/** WHEN THE CURRENT COACHING ARRANGEMENT BEGAN - the radar's "weeks together", derived rather than
+ *  stored (docs/specs/skills-radar.md §2: no schema bump, no migration, no golden save).
+ *
+ *  Week 0 for a career that has never changed coach, and the week of the last hire or release
+ *  otherwise. BOTH arms count: a new coach has to learn her, and so - as far as the ladder is
+ *  concerned - does the parent who takes the court back, because what the rung buys is an eye, and
+ *  the eye left with him. */
+export function coachSinceWeek(world: WorldState): number {
+  let since = 0
+  for (const e of world.events) {
+    if (e.milestoneKey?.startsWith(COACH_CHANGE_KEY) && e.week > since) since = e.week
+  }
+  return since
+}
+
+/** EVERY COMPETITIVE MATCH SHE HAS EVER PLAYED, off the two durable ledgers that already count them:
+ *  the running season W-L counters (v10, incremented per kid match at finalizeTournament) and the
+ *  per-season history rows (v14, appended at each wrap-up as those counters reset).
+ *
+ *  ⚠ NOT `world.events.filter(e => e.match)`. The event feed prunes at EVENTS_CAP, so her match
+ *  records are a rolling window of roughly the last year and a half - measured on a busy career it
+ *  holds 20-40 matches and oscillates rather than grows. The radar needs a count that can only go
+ *  UP (see engine/radar.ts, axisEvidence): a confidence that fell because an old match aged out
+ *  would re-thicken the fog on its own, which is exactly the shimmer the spec forbids.
+ *
+ *  Walkovers and medical withdrawals are absent by construction - they never reach finalize, so
+ *  they were never counted, and she never took the court. Practice friendlies are absent for the
+ *  same reason they are not evidence (R11-2): nothing was on the line. */
+export function matchesEverPlayed(world: WorldState): number {
+  return (
+    world.seasonWins +
+    world.seasonLosses +
+    world.seasonHistory.reduce((sum, h) => sum + h.wins + h.losses, 0)
+  )
 }
 
 /** THE TOURNAMENT-WEEK TOGGLE. Pure state, zero draws on any stream - it changes only what the
@@ -3722,6 +3782,26 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // derivation off state that already exists – no persisted field, no schema bump.
     lossStreak,
     diary,
+    // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
+    // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by
+    // construction. The true `skills` / `potential` go IN and never come out: the snapshot carries
+    // an estimate and a haze, which is the whole point of the slice.
+    radar: buildRadar({
+      seed: world.seed,
+      week: world.week,
+      kidId: KID_ID,
+      skills: world.skills,
+      potential: world.potential,
+      coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
+      coachSinceWeek: coachSinceWeek(world),
+      matchesPlayed: matchesEverPlayed(world),
+      // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
+      // the radar nothing, for the same reason it never shows on her face (R11-2).
+      matches: world.events
+        .filter((e) => e.match !== undefined && !e.friendly)
+        .map((e) => e.match!)
+        .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
+    }),
     lastSeasonSummary: world.lastSeasonSummary,
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
     seasonHistory: world.seasonHistory.map((h) => ({ ...h })),

@@ -13,7 +13,8 @@
     "icons": "node scripts/gen-icons.mjs",
     "art": "node scripts/optimize-art.mjs",
     "bench:econ": "vite-node tools/econ-bench.ts",
-    "bench:fatigue": "vite-node tools/fatigue-bench.ts"
+    "bench:fatigue": "vite-node tools/fatigue-bench.ts",
+    "bench:radar": "vite-node tools/radar-bench.ts"
   },
   "dependencies": {
     "pinia": "^3.0.0",

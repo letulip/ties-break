@@ -3,6 +3,7 @@
 
 // Type-only imports (erased at compile – no runtime dependency on the engine).
 import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
+import type { SkillKey } from '../engine/development'
 import type { MatchPlayer, Surface } from '../engine/match/types'
 import type { AvatarEmotion, PortraitStage } from './avatarEmotion'
 import type { EventPreview } from '../engine/season/preview'
@@ -694,6 +695,37 @@ export interface DiarySnapshot {
   memory: MemoryCard | null
 }
 
+// --- the skills radar (docs/specs/skills-radar.md, decisions.md #11) ----------
+// ONE AXIS OF THE FOG-OF-WAR CONTOUR, and the whole of what the UI is ever told about her build.
+// NOT ONE FIELD HERE IS A TRUE VALUE: `shownValue` is an estimate that is deliberately wrong while
+// she is undiscovered, and the two ceiling edges are a haze over a `potential` the screen never
+// receives. A surface cannot leak what it has never been given.
+//
+// Derived at snapshot time by engine/radar.ts, exactly like `coachMarket` – it persists nothing and
+// bumps no schema. Every number is on the SAME 0..100 axis the four attributes live on.
+
+export interface RadarAxis {
+  /** which attribute – the engine's own `SkillKey`, in `SKILL_KEYS` order */
+  key: SkillKey
+  /** THE ESTIMATE, 0..100. At low confidence it is deliberately wrong, and wrong in a direction
+   *  that is FIXED for the career (drawn once off `seed:read:<axis>`), so the contour converges
+   *  instead of breathing week to week. */
+  shownValue: number
+  /** THE FOG: how far the estimate may be from the truth, in the same points. The true value is
+   *  ALWAYS inside [shownValue - band, shownValue + band] – the band is an honest claim, not a
+   *  decoration. 0 = fully discovered; `RADAR_BAND_MAX` (12) = she is a stranger. */
+  band: number
+  /** THE OUTER HAZE over her ceiling. The true potential always lies at or below `ceilingHi`; the
+   *  width narrows with confidence toward a FLOOR (`CEILING_FLOOR_HALF`) and stops there, and the
+   *  midpoint is deliberately off-centre – you learn the range, never the number. `ceilingLo` is
+   *  never drawn below `shownValue` (a ceiling under where she already stands is incoherent). */
+  ceilingLo: number
+  ceilingHi: number
+  /** the coach's sentence about this axis, or null when he has nothing to say yet. Words only –
+   *  no numbers, ever (decisions.md #11: "axes without numbers"). */
+  note: string | null
+}
+
 export interface Snapshot {
   schemaVersion: number
   careerId: string
@@ -781,6 +813,10 @@ export interface Snapshot {
    *  note, Memory). Derived at snapshot time – only the milestone ledger behind `memory`
    *  persists (schema v18). */
   diary: DiarySnapshot
+  /** THE SKILLS RADAR: four axes, always in `SKILL_KEYS` order (serve, ret, composure, stamina).
+   *  An ESTIMATE of her build and a haze over her ceiling – never the truth, which stays in the
+   *  engine. Derived at snapshot time, persists nothing, bumps no schema. See RadarAxis. */
+  radar: RadarAxis[]
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
