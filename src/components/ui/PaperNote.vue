@@ -16,8 +16,9 @@
 // this slice had, and that is stated here rather than left for the next reader to discover.
 withDefaults(
   defineProps<{
-    /** Degrees. The design's paper rotations: -4 · -3 · -0.8 · -0.5 · +0.4 · +2 · +3 · +6. */
-    tilt?: number
+    /** Degrees as a number, OR any CSS angle (one of the `--tilt-*` tokens, say). The design's own
+     *  paper rotations: -4 · -3 · -0.8 · -0.5 · +0.4 · +2 · +3 · +6. */
+    tilt?: number | string
     /** Ruled stock – the design's 26px repeating rule. */
     ruled?: boolean
     /** A torn bottom edge instead of a clean one. */
@@ -39,7 +40,7 @@ withDefaults(
       'tb-paper--torn': torn,
       'tb-paper--margin': marginRule,
     }"
-    :style="{ transform: `rotate(${tilt}deg)` }"
+    :style="{ transform: `rotate(${typeof tilt === 'number' ? `${tilt}deg` : tilt})` }"
   >
     <span v-if="tape" class="tb-paper-tape" aria-hidden="true"></span>
     <slot />

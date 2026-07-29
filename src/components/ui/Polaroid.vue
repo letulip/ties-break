@@ -13,8 +13,9 @@ withDefaults(
   defineProps<{
     src: string
     alt?: string
-    /** Degrees. The paper rotations the design uses run -4 .. +6; Home's memory sits at -7. */
-    tilt?: number
+    /** Degrees as a number, OR any CSS angle – so a caller can hand it one of the `--tilt-*`
+     *  tokens and keep the angle in the design's own vocabulary rather than in a template. */
+    tilt?: number | string
     /** The photo window's height in px. The frame's WIDTH comes from the caller's own layout. */
     photoHeight?: number
     /** `object-position` and friends – Home steers the crop by the face centre. */
@@ -30,7 +31,7 @@ withDefaults(
   <div
     class="tb-polaroid"
     :class="{ 'tb-polaroid--taped': tape }"
-    :style="{ transform: `rotate(${tilt}deg)` }"
+    :style="{ transform: `rotate(${typeof tilt === 'number' ? `${tilt}deg` : tilt})` }"
   >
     <span v-if="tape" class="tb-polaroid-tape" aria-hidden="true"></span>
     <img :src="src" :alt="alt" :style="{ height: `${photoHeight}px`, ...photoStyle }" />

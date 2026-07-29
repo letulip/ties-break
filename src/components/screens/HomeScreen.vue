@@ -42,6 +42,16 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 import { isTierOpen, useTierStates } from '../../composables/tierState'
 import MatchReplay from '../MatchReplay.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
+// U0 – the shared components (docs/specs/ui-components.md). Home is one of the two screens this
+// slice ports onto them; Season is the other, and the pair is the only honest test that these are
+// components rather than one screen with a wrapper round it. Where Home still carries a rule of its
+// own it is now in this file's <style scoped> block rather than in src/style.css - see the note at
+// the top of that block for why that matters to the five screens being built in parallel.
+import ScreenShell from '../ui/ScreenShell.vue'
+import Card from '../ui/Card.vue'
+import Eyebrow from '../ui/Eyebrow.vue'
+import Polaroid from '../ui/Polaroid.vue'
+import ProgressRing from '../ui/ProgressRing.vue'
 import { playSfx } from '../../audio/sfx'
 
 // The shell owns `tab`; the notecards that are doors ASK it to move. One event, no router.
@@ -192,14 +202,11 @@ const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() =>
 //    number, so 61% and 62% are genuinely different colours. It is the SAME hsl ramp the ten
 //    squares used, which is why nothing the player already learned had to be re-learned.
 //
-// The geometry is the export's: 46px box, r=19, 3px stroke, round cap, started at twelve o'clock.
-const RING_R = 19
-const RING_C = Math.round(2 * Math.PI * RING_R * 10) / 10 // 119.4, the export's own dasharray
+// U0: the geometry (46px box, r=19, 3px stroke, round cap, twelve o'clock start) and the arithmetic
+// that turns a percentage into a dash offset now live in ui/ProgressRing.vue, where the Season
+// card's identical ring reads them too. What stays HERE is the only part that was ever Home's: WHICH
+// COLOUR the arc is, because that is data about her body, not styling.
 const condition = computed(() => game.snapshot?.condition ?? 0)
-const ringOffset = computed(() => {
-  const pct = Math.max(0, Math.min(100, condition.value)) / 100
-  return Math.round(RING_C * (1 - pct) * 10) / 10
-})
 /** The arc's colour: hue 0 (red) at 0 through hue 120 (green) at 100 – slice B's own ramp, now read
  *  continuously instead of in ten steps. */
 const ringColor = computed(() => {
@@ -533,7 +540,10 @@ function openRankHelp(): void {
   <template v-if="game.snapshot">
     <p v-if="game.error" class="error">{{ game.error }}</p>
 
-    <div class="diary">
+    <!-- U0: the page's vertical stack is ScreenShell now. Home used a hand-rolled `.diary` wrapper
+         that did exactly what the shell's body does (a flex column), so the class is gone rather
+         than kept as a synonym. The shell does NOT take the side gutter here – see ScreenShell. -->
+    <ScreenShell>
       <!-- 1 + 2. THE HERO. Full-bleed, and it carries the header: the photograph IS the top of the
            page, not a picture placed on it. Two scrims do the work – one darkens the top so the
            date and the icons read over any of the 35 paintings, one takes the picture down into the
@@ -627,31 +637,22 @@ function openRankHelp(): void {
               <img class="diary-caption-mark" :src="`${base}logo-i-light.svg`" alt="" />
               <p class="diary-caption-text">{{ photoLine }}</p>
             </div>
-            <!-- THE CONDITION RING (the export's ProgressRing, 46px, r=19, 3px stroke). How far
-                 round the arc travels is her condition, and its solid colour is that same number
-                 read on a red-to-green ramp. The label follows the export's Kid-screen pair: the
-                 figure at 15px/800 with the sign small beside it at 10px/700, on one baseline, and
-                 in plain light ink - the ARC is what carries the colour. -->
-            <div class="condition-ring" role="img" :aria-label="conditionAria">
-              <svg width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
-                <circle cx="23" cy="23" r="19" class="condition-ring-track" stroke-width="3" />
-                <circle
-                  cx="23"
-                  cy="23"
-                  r="19"
-                  class="condition-ring-arc"
-                  :stroke="ringColor"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  :stroke-dasharray="RING_C"
-                  :stroke-dashoffset="ringOffset"
-                  transform="rotate(-90 23 23)"
-                />
-              </svg>
-              <span class="condition-ring-value">
-                <b>{{ condition }}</b><i>%</i>
-              </span>
-            </div>
+            <!-- THE CONDITION RING (U0's ProgressRing, 46px, r=19, 3px stroke). How far round the
+                 arc travels is her condition, and its solid colour is that same number read on a
+                 red-to-green ramp - OURS, which is why it is a prop and not a variant. The label
+                 follows the export's Kid-screen pair: the figure at 15px/800 with the sign small
+                 beside it at 10px/700, on one baseline, and in plain light ink - the ARC is what
+                 carries the colour. `on-art` is the one thing this ring needs that Season's does
+                 not: it sits on a photograph, so it brings its own shadow. -->
+            <ProgressRing
+              class="condition-ring"
+              :value="condition / 100"
+              :color="ringColor"
+              :label="conditionAria"
+              on-art
+            >
+              <b>{{ condition }}</b><i>%</i>
+            </ProgressRing>
           </div>
         </div>
       </div>
@@ -659,13 +660,16 @@ function openRankHelp(): void {
       <!-- 3. THE CARD GRID – the visual signature. Two of the four are doors, and they say so by
            lifting under the finger; the two that are not, do not move. -->
       <div class="card-grid">
-        <!-- NEXT TOURNAMENT -> the This-week screen (plan presets, planned spend, week recap). -->
-        <button
+        <!-- NEXT TOURNAMENT -> the This-week screen (plan presets, planned spend, week recap).
+             U0: `<Card as="button">` - the ELEMENT is still what says "this is a door", which is
+             what keeps the lift, the keyboard reach and the focus ring free of any new prop. -->
+        <Card
+          as="button"
           class="note-card"
           data-tour="next-tournament"
           @click="emit('navigate', 'week')"
         >
-          <p class="note-kicker">Next tournament</p>
+          <Eyebrow>Next tournament</Eyebrow>
           <span v-if="recapFresh" class="note-dot" title="A new week recap is waiting"></span>
           <template v-if="nearestEntered">
             <!-- The painted venue, bleeding off the corner under a diagonal dissolve. -->
@@ -685,12 +689,12 @@ function openRankHelp(): void {
             </div>
           </template>
           <p v-else class="note-empty">Nothing entered yet – the calendar is on the Season tab.</p>
-        </button>
+        </Card>
 
         <!-- FAMILY BUDGET -> the wallet. OWNER'S RULING over the export, which shows this week's
              income/spent rows: the current TOTAL, plus income and spending over the last 12 weeks. -->
-        <button class="note-card" @click="emit('navigate', 'money')">
-          <p class="note-kicker">Family budget</p>
+        <Card as="button" class="note-card" @click="emit('navigate', 'money')">
+          <Eyebrow>Family budget</Eyebrow>
           <p class="budget-total" :class="{ negative: fundsCents < 0 }">{{ funds }}</p>
           <div class="budget-rule"></div>
           <p class="budget-window">Last 12 weeks</p>
@@ -731,7 +735,7 @@ function openRankHelp(): void {
           </span>
           </div>
           <p v-else class="note-empty">Nothing has moved yet.</p>
-        </button>
+        </Card>
 
         <!-- COACH NOTE. The export's own layout: his portrait down the left edge, his read on her
              beside it.
@@ -739,7 +743,8 @@ function openRankHelp(): void {
              a door" affordance (the lift on hover/focus), so it arrives keyboard-reachable and
              focus-visible for free - no new pattern, and no price on the card: what changed is that
              it can be opened, not what it says. -->
-        <button
+        <Card
+          as="button"
           class="note-card card-short coach-card"
           aria-label="Coach note - open the Coach Market"
           @click="emit('navigate', 'market')"
@@ -748,33 +753,42 @@ function openRankHelp(): void {
             <img :src="coachPhoto" alt="" />
           </div>
           <div class="coach-body">
-            <p class="note-kicker">Coach note</p>
+            <Eyebrow>Coach note</Eyebrow>
             <p class="coach-line">{{ coachQuote }}</p>
             <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
                  appears only when there is a him. -->
             <p v-if="coachSignature" class="coach-sign">{{ coachSignature }}</p>
           </div>
-        </button>
+        </Card>
 
         <!-- D10: RECENT MEMORY – the painting from the band she was in THEN, on cream paper,
-             tilted and tacked to the card. Time, made visible. -->
-        <article class="note-card card-short">
-          <p class="note-kicker">Recent memory</p>
+             tilted and tacked to the card. Time, made visible.
+             U0: the cream frame, its lip, its shadow and its tilt are the Polaroid component; what
+             stays here is WHERE it is dropped and how wide it is, which only the card it lands on
+             can know. -->
+        <Card as="article" class="note-card card-short">
+          <Eyebrow>Recent memory</Eyebrow>
           <template v-if="memory">
-            <div class="memory-polaroid">
-              <img :src="memoryArt" :style="memoryStyle" alt="" />
-            </div>
+            <Polaroid
+              class="memory-polaroid"
+              :src="memoryArt"
+              :photo-style="memoryStyle"
+              :photo-height="52"
+              tilt="var(--tilt-4)"
+            />
             <span class="memory-tack"></span>
             <p class="memory-line">{{ memory.line }}</p>
             <p class="memory-when">{{ memory.whenLabel }}</p>
           </template>
           <p v-else class="note-empty">Too early for memories.</p>
-        </article>
+        </Card>
       </div>
 
-      <!-- 4. BELOW THE GRID: the ladder and the feed. Same substance, diary chrome. -->
-      <section class="diary-strip">
-        <h2>Season</h2>
+      <!-- 4. BELOW THE GRID: the ladder and the feed. Same substance, diary chrome – and literally
+           the same chrome, which is why they are Cards: the gradient, the hairline and the corners
+           were already one shared rule with the notecards above, and now they are one component. -->
+      <Card as="section" class="diary-strip">
+        <Eyebrow as="h2">Season</Eyebrow>
         <div class="season-strip">
           <template v-for="(chip, i) in seasonChips" :key="chip.id">
             <span
@@ -792,10 +806,10 @@ function openRankHelp(): void {
             <span v-if="i < seasonChips.length - 1" class="strip-arrow">&#8594;</span>
           </template>
         </div>
-      </section>
+      </Card>
 
-      <section id="diary-news" class="diary-strip">
-        <h2>News</h2>
+      <Card id="diary-news" as="section" class="diary-strip">
+        <Eyebrow as="h2">News</Eyebrow>
         <div class="log">
           <p v-if="!newsGroups.length" class="hint" style="margin: 0">No news yet.</p>
           <div v-for="group in newsGroups" :key="group.week" class="news-week">
@@ -821,10 +835,798 @@ function openRankHelp(): void {
             </table>
           </div>
         </div>
-      </section>
-    </div>
+      </Card>
+    </ScreenShell>
 
     <MatchReplay v-if="replayMatch" :match="replayMatch" @close="replayMatch = null" />
     <RankHelpDialog v-if="showRankHelp" @close="showRankHelp = false" />
   </template>
 </template>
+
+<style scoped>
+/* =================================================================================================
+   HOME'S OWN STYLES – moved here from src/style.css by U0
+   =================================================================================================
+   WHY THIS BLOCK IS IN THE SFC AND NOT IN THE SHEET. Six screens are being built on top of this
+   slice, in parallel, in separate worktrees, and `src/style.css` is the one file all six would
+   touch. So the rule from here on is: what all screens share lives in the sheet or in
+   `src/components/ui/`; what ONE screen composes lives scoped in that screen's own file. Every rule
+   below had exactly one consumer – this page – and was sitting in a 4,900-line sheet where the next
+   screen author would have had to read past it.
+
+   WHAT LEFT THIS BLOCK ENTIRELY, because a component owns it now:
+     `.diary`             -> ui/ScreenShell.vue    (it was a flex column and nothing else)
+     the notecard surface -> ui/Card.vue           (gradient + hairline + corners + the 14px inset)
+     `.note-kicker`       -> ui/Eyebrow.vue        (with `.diary-strip h2`, which was already merged
+                                                    into the same rule)
+     the ring's box, track, arc, value and the two shadows it wears on a photograph
+                          -> ui/ProgressRing.vue   (shared with the Season card's identical ring)
+     the polaroid's paper, lip, corner, shadow and tilt
+                          -> ui/Polaroid.vue       (what stays here is WHERE it is dropped)
+
+   Scoping changes specificity by one attribute selector, which is why every rule below was measured
+   against the running app rather than reasoned about: a full computed-style walk of this page, 191
+   nodes and ~50 properties each, before and after.
+
+/* =================================================================================================
+   epic/redesign-home, slice A – THE DIARY PAGE
+   =================================================================================================
+   The full Home restructure the family-diary doc parked as D9/D12 ("SOON, after D2 proves the
+   direction"). D2 proved it, so this is the page, and its geometry is the owner's own design export
+   (docs/design/screens.dc.html, block "A. Home") measured off the markup rather than eyeballed.
+
+   THE FOUR IDEAS THE EXPORT IS BUILT ON, so a later slice can extend it without guessing:
+
+     * THE PHOTOGRAPH IS THE PAGE, not a picture on it. The hero runs edge to edge and MELTS into
+       the panel below through a bottom scrim; the date, the greeting, her name and the caption are
+       all laid ON it. There is no frame, no card and no rounded photo at the top of this screen.
+     * A CARD IS AN OBJECT: a vertical gradient, a translucent hairline, 17px corners, and art that
+       bleeds off its own edge under a soft mask instead of sitting in a box.
+     * ONE COLOUR MEANS "READ THIS". Every card kicker is the lime, at 10px/800 and a tenth of an em
+       of tracking. Nothing else on the page is that colour.
+     * FOUR STEPS OF INK (--ink … --ink-dim), and the export uses all four: headline, sentence,
+       label, and the caption under a label. */
+
+/* --- 1 + 2. THE HERO, which carries the header --------------------------------------------------
+   Full-bleed: it cancels #app's 16px gutter so the photograph reaches both edges of the phone, the
+   way the export draws it. */
+.diary-hero {
+  position: relative;
+  /* Full-bleed: cancel the shell's gutter EXACTLY, on all three sides it touches. */
+  margin: calc(-1 * var(--app-pad-top)) calc(-1 * var(--app-pad-x)) 0;
+  /* A3 (owner, 28.07): the hero is SQUARE, because the paintings are square (512x512) – so at the
+     full width of the phone the whole frame is on screen and nothing is cut. It used to be
+     min(52vh, 420px), which cropped a slice off every painting for no reason anyone asked for. The
+     export's own hero is 398px on a 390px device, i.e. square to within a rounding error.
+     `max-height` keeps a tablet from turning it into a poster; `cover` + the face steering below
+     are still there for the one master that is 458x512 rather than square. */
+  aspect-ratio: 1 / 1;
+  max-height: 60vh;
+  overflow: hidden;
+}
+
+/* The hero photograph fills its square – see the shared rule up by .event-art img. */
+
+/* TWO scrims, and they do two different jobs.
+   TOP: darkens the first 40% so the date and the icons are legible over any of the 35 paintings.
+   BOTTOM: takes the photograph into --panel by 100%, which is what makes the picture read as the
+   page itself rather than as a banner sitting on top of it. */
+.diary-hero-top {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(6, 10, 14, 0.78) 0%, rgba(6, 10, 14, 0.18) 22%, rgba(6, 10, 14, 0) 40%);
+}
+
+.diary-hero-fade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(9, 14, 19, 0) 46%, rgba(11, 17, 23, 0.72) 78%, var(--bg) 100%);
+}
+
+/* A2 (owner, 28.07): the THIRD scrim, and the one the owner asked for. Everything on this page is
+   laid down the LEFT of the painting – date, greeting, name, age, rank – and it runs far below the
+   top scrim's 40%. On the sunlit courts (local-hard-1, national-grass-1) the age and the rank chip
+   simply vanished into the picture. This darkens the left edge and clears well before the middle:
+   her face sits centre-right in all 35 paintings, so the gradient never lands on it. */
+.diary-hero-left {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(6, 10, 14, 0.66) 0%,
+    rgba(6, 10, 14, 0.44) 26%,
+    rgba(6, 10, 14, 0.12) 48%,
+    rgba(6, 10, 14, 0) 64%
+  );
+}
+
+/* The header row, laid on the photograph. A2 put the avatar at its head – the app header that used
+   to carry it is gone. */
+.diary-head {
+  position: absolute;
+  left: 20px;
+  right: 18px;
+  top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The date takes the slack so the two tool icons stay pinned right. */
+.diary-head .diary-date {
+  flex: 1;
+}
+
+/* The small round avatar with the lime ring, moved here from the deleted header – same object, same
+   job (the door to her profile), now sitting on the photograph beside the date. */
+.diary-avatar-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.diary-avatar-btn:hover:not(:disabled) {
+  background: transparent;
+}
+
+.diary-avatar {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--accent);
+  /* The ring needs to hold against a bright court too, so it carries its own dark halo. */
+  box-shadow: 0 0 0 1px rgba(6, 10, 14, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.diary-avatar-btn:hover:not(:disabled) .diary-avatar {
+  border-color: #ffffff;
+}
+
+/* The one-time callout, moved with the avatar it explains. It hangs under the avatar rather than
+   beside it – at 30px there is no room on a 390px screen, and the arrow makes the target obvious. */
+.diary-kid-hint {
+  position: absolute;
+  left: 16px;
+  top: 58px;
+  z-index: 2;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--accent);
+  background: rgba(10, 15, 20, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.diary-kid-hint::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: -5px;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: rgba(10, 15, 20, 0.82);
+  border-left: 1px solid var(--accent);
+  border-top: 1px solid var(--accent);
+}
+
+/* "W27 2033 · Jun 3 – Jun 9" – OUR week label, the year in full, and the week's real days. Built by
+   shared/dates.ts weekDateLine and by nothing else. (The export prints a plain calendar date here;
+   the owner's ruling replaces it, because our whole game speaks in week numbers.) */
+.diary-date {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.86);
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.diary-tools {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.diary-tool {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  display: block;
+}
+
+.diary-tool:hover:not(:disabled) {
+  background: transparent;
+  color: var(--accent);
+}
+
+.diary-tool svg {
+  display: block;
+}
+
+/* The export's unread dot: alert red, ringed by the page so it reads on any painting. */
+.diary-tool-dot {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  box-shadow: 0 0 0 2px rgba(10, 15, 20, 0.55);
+}
+
+/* Her name is the biggest type in the app, and it is the point of the screen. */
+.diary-id {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  top: 74px;
+  pointer-events: none;
+}
+
+.diary-greeting {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  margin: 0 0 4px;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.diary-name {
+  font-family: var(--font-heading);
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: var(--shadow-text-on-art);
+  margin: 0;
+}
+
+.diary-age {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 8px 0 0;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+/* The rank chip – the page's ONE table-number, and the door to the best-6 explainer (round-6: the
+   owner was confused by the windowed ranking twice). It is a button, which is why the old separate
+   "?" is gone: one affordance where there used to be two. */
+.diary-rank {
+  pointer-events: auto;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(10, 15, 20, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.diary-rank:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgba(10, 15, 20, 0.55);
+  color: #ffffff;
+}
+
+/* --- A2b: THE STATE ROW, along the bottom of the photograph ------------------------------------
+   The owner's layout (28.07): the caption chip on the left, the condition ring on its right, and
+   the WHY lines stacked ABOVE both. The lines take the chip's place on a week with no caption, so
+   a strain warning is never what goes missing when the diary chooses to stay quiet. */
+.diary-state {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  pointer-events: none;
+}
+
+.diary-state-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* The WHY lines ride on the picture now, so they carry the on-art shadow like everything else up
+   there, and a scrim of their own where the painting is busy. */
+.diary-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-width: 290px;
+}
+
+/* D1's WHY line. It had no rule of its own while it sat on the page background; on a painting it
+   needs both a colour of its own and the shared on-art shadow. */
+.condition-note {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.82);
+  text-shadow: var(--shadow-text-on-art);
+  text-wrap: pretty;
+}
+
+/* R13-3's strain warning – the one line here that is a warning rather than an observation, which
+   is exactly why it is --warning and the sun above is still --amber. Same value, different job. */
+.condition-note.warn {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+/* THE CAPTION – a frosted chip low on the photograph, with a lime dot glowing beside it. The one
+   phrase the parent wrote about her week; it appears exactly once on the page. */
+.diary-caption {
+  max-width: 250px;
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  padding: 13px 16px 14px;
+  border-radius: var(--radius-frame);
+  background: rgba(10, 15, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* The brand mark, in place of the lime dot that used to sit here (owner, 28.07). The asset is the
+   wordmark's "i" – 9x30, a white stem under a lime ball – so it is drawn at its own aspect and
+   aligned to the first line of the caption rather than centred on the block. */
+.diary-caption-mark {
+  flex: none;
+  display: block;
+  width: 7px;
+  height: 23px;
+  margin-top: 1px;
+}
+
+.diary-caption-text {
+  font-size: 15px;
+  line-height: 1.42;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.96);
+  margin: 0;
+}
+
+/* THE CONDITION RING – the export's ProgressRing (46px box, r=19, 3px stroke, round cap, twelve
+   o'clock start), parked at the bottom-right of the photograph. The 46px box and everything inside
+   it are shared with `.chance-ring` up in the Season card – one rule, so a percentage keeps looking
+   like a percentage everywhere. `margin-left: auto` pins it right even when there is no caption
+   chip to push it there, and that is the only thing here that is this ring's alone. */
+.condition-ring {
+  margin-left: auto;
+}
+
+/* --- 3. THE CARD GRID --------------------------------------------------------------------------- */
+
+.card-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 11px;
+  padding: 2px 0 14px;
+}
+
+/* The gradient, the --card-edge hairline and the 17px corners are THE NOTECARD SURFACE, shared
+   with .friendly-card and .diary-strip further up the sheet. What is left here is what makes this
+   one a card in the grid rather than a strip: its box, its type, its height, its lift. */
+.note-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  text-align: left;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  min-height: 186px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.note-card.card-short {
+  min-height: 138px;
+}
+
+/* Picking a card up: a TAPPABLE card lifts under the finger. A card with nowhere to go does not
+   move – which is the whole affordance, and it costs no chevrons, no "tap to open" copy, no icons. */
+button.note-card {
+  cursor: pointer;
+}
+
+button.note-card:hover:not(:disabled),
+button.note-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-lift);
+  background: linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+button.note-card:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-card);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .note-card,
+  button.note-card:hover:not(:disabled),
+  button.note-card:focus-visible,
+  button.note-card:active:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
+}
+
+.note-title {
+  position: relative;
+  margin: 11px 0 0;
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  max-width: 118px;
+  text-wrap: pretty;
+}
+
+.note-meta {
+  position: relative;
+  margin: 9px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  max-width: 118px;
+}
+
+/* A figure and the word above it – the export's "Travel budget / $137" pair. */
+.note-foot {
+  position: relative;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.note-foot-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-dim);
+  margin: 0;
+}
+
+.note-figure {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin: 2px 0 0;
+}
+
+/* The empty state of any card. Not a hole and not an apology – a plain sentence where the content
+   would be, so a card is finished before it has anything to say. */
+.note-empty {
+  position: relative;
+  margin: 11px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--ink-soft);
+  max-width: 130px;
+  text-wrap: pretty;
+}
+
+/* --- NEXT TOURNAMENT ---------------------------------------------------------------------------- */
+
+/* THE VENUE ART, the export's signature move: the painting bleeds off the card's bottom-right
+   corner as a tall arch, and a diagonal mask dissolves its left edge INTO the card so there is no
+   seam and no frame. src/art/venues.ts decides which painting (stable per event, forever). */
+.venue-art {
+  position: absolute;
+  right: -4px;
+  bottom: 0;
+  width: 112px;
+  height: 136px;
+  border-radius: 56px 56px var(--radius-frame) var(--radius-frame);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(100deg, transparent 4%, #000 44%);
+  mask-image: linear-gradient(100deg, transparent 4%, #000 44%);
+}
+
+/* Fills its frame – see the shared rule up by .event-art img, which is also where the reason
+   `cover` is not optional lives (the venue masters run 626x505 to 625x627). */
+
+/* A fresh recap the player has not read – the dot that used to sit on the This-week tab, re-homed
+   onto the card that now opens that screen. */
+.note-dot {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
+}
+
+/* --- FAMILY BUDGET ------------------------------------------------------------------------------ */
+
+.budget-total {
+  position: relative;
+  font-family: var(--font-heading);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin: 12px 0 0;
+}
+
+.budget-total.negative {
+  color: var(--danger);
+}
+
+.budget-rule {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 12px 0 9px;
+}
+
+.budget-window {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* 66px, not the export's 46 (owner, 28.07): our card carries a single TOTAL where the export
+   stacked Income and Spent rows, so `margin-top: auto` was pushing 20px of nothing above the line.
+   The chart takes that space back rather than the card growing a gap. */
+.budget-chart {
+  display: block;
+  width: 100%;
+  height: 66px;
+  overflow: visible;
+}
+
+/* A2: the export's sparkline – one lime stroke, a soft area under it, and a dot per week whose
+   colour says how that week went. `vector-effect` keeps the 1.8 stroke honest under the
+   `preserveAspectRatio="none"` stretch, which would otherwise squash it horizontally. */
+.budget-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* THE CHART'S OWN BOX. The line and the dots have to share it EXACTLY, and the card is not it:
+   `.note-card` is padded 14px, so a dot layer positioned against the card comes out 28px wider and
+   14px to the left of the chart it annotates - which is exactly how the dots ended up beside the
+   line instead of on it (owner's screenshot, 29.07). Measured after the fix: layer and svg identical
+   to the pixel. */
+.budget-chart-wrap {
+  position: relative;
+  margin-top: auto;
+}
+
+/* The dots are HTML, not SVG (see HomeScreen): the chart stretches to the card's width and an SVG
+   circle inside it stretches with it. Positioned in percent of the SAME box, so they land on the
+   polyline's own vertices, and sized in px, so they stay circles at any card width. */
+.budget-dots {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.budget-dot {
+  position: absolute;
+  width: 5.5px;
+  height: 5.5px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.budget-dot.good {
+  background: var(--day-good);
+}
+
+.budget-dot.mid {
+  background: var(--day-mid);
+}
+
+.budget-dot.bad {
+  background: var(--day-bad);
+}
+
+/* --- COACH -------------------------------------------------------------------------------------- */
+
+/* A2 (owner checked this one against the mockup): the export's geometry, restored. The portrait is
+   a 54px strip standing the FULL height of the card, flush to its left edge – the card's own
+   overflow:hidden rounds it – and everything else lives in the column beside it. Slice A had used
+   the venue card's bleed-and-dissolve here, which reads as decoration; a strip reads as a person
+   standing there. The card drops its padding, because the strip must reach all four edges. */
+.coach-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* A2c/d (owner, 28.07): the portrait is sized by HEIGHT and nothing else. `height:100%; width:auto`
+   means the whole frame is on screen – no vertical crop, which was the ask – and the card shows as
+   much of its width as it has room for. The hard right edge is replaced by a gradient into the
+   card; the mask makes the CARD's own gradient show through, so the two can never be different
+   colours the way a painted overlay would drift. */
+.coach-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 34%, transparent 96%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 34%, transparent 96%);
+}
+
+.coach-art img {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+.coach-body {
+  position: relative;
+  margin-left: 54px;
+  padding: 13px 11px 11px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.coach-line {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.42;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+/* His words need the room, so the text column starts past the opaque part of the portrait and the
+   note is free to run to the bottom of the card. */
+.coach-line {
+  margin-bottom: 0;
+}
+
+/* --- RECENT MEMORY ------------------------------------------------------------------------------ */
+
+/* A REAL polaroid: cream paper, a fat bottom lip, tilted, dropped on the corner of the card. The
+   only light surface in the app, and the reason the card reads as a page from an album. */
+/* Owner, 28.07: leaning further left and pulled in toward the "Recent memory" line, so it reads as
+   a photo dropped ON the card rather than one sliding off its edge. The tack below moves with it -
+   the two are one object. */
+.memory-polaroid {
+  position: absolute;
+  /* Pulled in from the export's -8px, but not to the 2px the first pass tried: the tilt widens the
+     footprint and the handwritten line beside it started running underneath. -4px is as close as it
+     comes without stealing the words' room. */
+  right: -4px;
+  /* Clears the kicker's baseline. The tilt WIDENS its footprint (a rotated 68px box spans 76px), so
+     pulling it in toward the text and leaning it further both push it onto the word "memory" - at
+     18px it clipped the last letter, at 27px it still grazed it. 34px is the first value that keeps
+     the kicker whole; the export starts its polaroid below the kicker line too. */
+  top: 34px;
+  width: 68px;
+}
+
+/* The tack that holds it down - moved with the polaroid it pins. */
+.memory-tack {
+  position: absolute;
+  right: 50px;
+  top: 30px;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-control);
+  background: #151d25;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.memory-tack::after {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* R4: the coach's handwritten sign-off, from the export (§Home.3: «подпись "M. Ricci" - Caveat 17px
+   rgba(207,225,82,.72)»). Its values are the export's, to the digit; the alpha is written against
+   `--accent-rgb` so the brand lime stays repairable in one place the way the token pass required.
+   It is the SECOND place Caveat goes, and for the same reason as the first - a note on a
+   photograph, signed by the person who wrote it. */
+.coach-sign {
+  margin: 6px 0 0;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  color: rgba(var(--accent-rgb), 0.72);
+}
+
+/* A2e: the one line on this page that is genuinely a note written on a photograph, so it is the
+   first place Caveat goes. Bigger than the sans it replaced (17px vs 13.5px) because Caveat's
+   x-height is far smaller - the two look the same size on screen. */
+.memory-line {
+  position: relative;
+  margin: 10px 0 0;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  /* Stops short of the tilted polaroid rather than sliding under it. */
+  max-width: 80px;
+  text-wrap: pretty;
+}
+
+.memory-when {
+  position: relative;
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  max-width: 86px;
+}
+
+/* --- 4. what stays below the grid ---------------------------------------------------------------
+   The tier ladder and the news feed keep their markup (and every rule that pins it) and only change
+   chrome, so the page below the fold reads as more of the same diary rather than the start of an
+   older screen. And it is literally the same chrome: the gradient, the hairline and the corners are
+   THE NOTECARD SURFACE, shared with .note-card and .friendly-card. */
+.diary-strip {
+  margin-bottom: 11px;
+  min-height: 0;
+}
+
+/* The strip's heading is THE LIME EYEBROW – see .note-kicker above, where the shared rule lives.
+   All this one adds is the gap under it; `.diary-strip` is a <section>, so `section h2` used to be
+   the thing quietly supplying the uppercase and the eyebrow rule now says it out loud. */
+.diary-strip h2 {
+  margin: 0 0 12px;
+}
+</style>
