@@ -174,6 +174,8 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
   it('reachedWeek is the FIRST week the target predicate holds (14→16 = national eligibility)', () => {
     // Independent replay of the SAME deterministic career: find the first week kidPoints crosses the
     // national-eligibility proxy (>= REACH_TARGET_MONEY) and confirm runCareer recorded exactly that.
+    // The DOMESTIC table, because national eligibility is a domestic band – see reachedTarget, whose
+    // 14→16 arm was reading the ITF one against it.
     for (const preset of PRESETS) {
       for (const index of [0, 1, 2, 3, 4]) {
         const r = runCareer(preset, index, H16.weeks)
@@ -181,7 +183,7 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
         let firstCross: number | null = null
         for (let i = 0; i < H16.weeks; i++) {
           stepCareerWeek(world, rng)
-          if (firstCross === null && kidPoints(world, 'itf') >= REACH_TARGET_MONEY) firstCross = world.week
+          if (firstCross === null && kidPoints(world, 'domestic') >= REACH_TARGET_MONEY) firstCross = world.week
         }
         expect(r.reachedWeek).toBe(firstCross)
       }
@@ -189,9 +191,15 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
   })
 
   it('a career that clears the target has a non-null reachedWeek; one that never does is null', () => {
-    // The 14→16 money proxy (kidPoints >= 150) is a genuine climb, so some working careers clear it
-    // and others never accumulate 150 points inside 104 weeks – exercising BOTH the non-null and null
-    // branches deterministically.
+    // The 14→16 money proxy (DOMESTIC kidPoints >= 150) is a genuine climb, so some working careers
+    // clear it and others never accumulate 150 points inside 104 weeks – exercising BOTH the non-null
+    // and null branches deterministically.
+    //
+    // THIS ASSERTION CAUGHT A REAL BUG rather than aging into one, and it is worth saying which:
+    // `reachedTarget`'s 14→16 arm was reading her ITF table against a threshold denominated in
+    // domestic points, so the "some clear it" branch went from 28 of these 30 careers to ZERO and
+    // the tracker was pinned at 'never' for three of the four presets. Fixed in tools/econ-bench.ts;
+    // both branches fire again, which is exactly what this case is here to notice.
     const workingH16 = Array.from({ length: 30 }, (_, i) => runCareer(working, i, H16.weeks))
     expect(workingH16.some((r) => r.reachedWeek !== null)).toBe(true) // some clear it
     expect(workingH16.some((r) => r.reachedWeek === null)).toBe(true) // some never do

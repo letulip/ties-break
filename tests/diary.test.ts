@@ -38,7 +38,7 @@ import {
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
-import { TIERS, TIER_SHORT, tierFromLabel } from '../src/engine/season/calendar'
+import { TIER_SHORT, tierFromLabel } from '../src/engine/season/calendar'
 import { TIER_SHORT as TIER_SHORT_VIA_UI } from '../src/composables/weekAhead'
 import { CROPS, facePoint } from '../src/art/faceRects'
 

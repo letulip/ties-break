@@ -270,12 +270,27 @@ export function stepCareerWeek(world: WorldState, rng: Rng): Record<TierId, numb
   return entered
 }
 
-/** True ⇔ the horizon's reach target is currently met. 14→16: national eligibility (points >= 150).
- *  14→18: (ranked AND top-50) OR a 300-point threshold. Keyed on targetAge derived from the horizon. */
+/** True ⇔ the horizon's reach target is currently met. 14→16: national eligibility (DOMESTIC points
+ *  >= 150). 14→18: (ranked AND top-50) OR the ITF points threshold. Keyed on targetAge derived from
+ *  the horizon.
+ *
+ *  ⚠ THE TWO ARMS READ TWO DIFFERENT TABLES, and they have to (docs/specs/two-ladders.md). This used
+ *  to be one `points` local, which was right while there was one ledger and became wrong the moment
+ *  the tracks split: the 1548338 sweep retracked it to 'itf' for the 14→18 arm and silently took the
+ *  14→16 arm with it, against a threshold its own constant documents as DOMESTIC. It is the exact
+ *  failure mode that commit removed the `kidPoints` default to prevent, surviving in the one place
+ *  the compiler could not see it - a single variable serving two questions.
+ *
+ *  It was not a cosmetic slip. On the real ITF scale 150 international points is most of a J60
+ *  title-plus-final, so the 14→16 horizon measured a milestone a working family reached in 0 of 30
+ *  careers and every other preset in 1 of 30 - a reach tracker pinned at 'never', which is not a
+ *  measurement. Read domestically it is 28 of 30 for working: a genuine climb, some careers making
+ *  it and some not, which is what the horizon is FOR. Caught by the guard below that asserts both
+ *  branches fire. */
 function reachedTarget(world: WorldState, horizonWeeks: number): boolean {
   const targetAge = START_AGE_YEARS + Math.floor(horizonWeeks / WEEKS_PER_YEAR)
-  const points = kidPoints(world, 'itf')
   if (targetAge >= 18) {
+    const points = kidPoints(world, 'itf')
     // hasResults mirrors the engine's `ranked` signal (StatsScreen/HomeScreen use
     // `countingResults.length > 0`): the kid isn't really ranked until she owns a counting result.
     // Every kid result carries points > 0 (finalizeTournament only pushes scoring results), so
@@ -285,7 +300,7 @@ function reachedTarget(world: WorldState, horizonWeeks: number): boolean {
     const hasResults = points > 0
     return (hasResults && world.kidRank <= REACH_PRO_RANK) || points >= REACH_PRO_POINTS
   }
-  return points >= REACH_TARGET_MONEY
+  return kidPoints(world, 'domestic') >= REACH_TARGET_MONEY
 }
 
 /**
