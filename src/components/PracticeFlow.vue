@@ -11,6 +11,8 @@
 // change the result and draws no RNG the engine hasn't already drawn.
 import { computed, ref } from 'vue'
 import MatchViewer from './MatchViewer.vue'
+import MatchScene from './MatchScene.vue'
+import { useKidEmotion } from '../composables/kidEmotion'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { computeMatchStats } from '../engine/match/matchStats'
@@ -36,6 +38,12 @@ const props = withDefaults(
 const emit = defineEmits<{ close: [] }>()
 
 const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
+
+// ui-inventory §2, the owner's triage: "PracticeFlow – F Match Day does the same job, it follows
+// that design". So the card before a friendly is the SAME portrait scene the tournament's pre-match
+// card is, down to the glass plate at its foot – one treatment, three callers (see MatchScene.vue).
+// Her age band comes from the shared resolver, never from her age here.
+const { stage: kidStage } = useKidEmotion()
 
 // 'pre' = the VS card, 'live' = the viewer (autoplaying), 'post' = the box score.
 const phase = ref<'pre' | 'live' | 'post'>('pre')
@@ -110,28 +118,28 @@ function close(): void {
     </header>
 
     <div class="tf-body">
-      <!-- The VS card: the friendly is about to be played, exactly like a tournament round. -->
-      <section v-if="phase === 'pre'" class="tf-card tf-vs">
-        <p class="tf-round">Friendly at the club</p>
-        <div class="tf-vs-grid">
-          <div class="tf-side">
-            <div class="tf-side-name">{{ kidShort }}</div>
-            <div v-if="kidRank" class="hint" style="margin: 4px 0 0">#{{ kidRank }}</div>
+      <!-- The VS card: the friendly is about to be played, exactly like a tournament round – which
+           is why it is the same F scene, with the club's own label on it. -->
+      <MatchScene v-if="phase === 'pre'" class="pf-scene" :stage="kidStage" emotion="serious" label="Friendly at the club">
+        <div class="pf-grid">
+          <div class="pf-side">
+            <div class="pf-name">{{ kidShort }}</div>
+            <div v-if="kidRank" class="pf-rank">#{{ kidRank }}</div>
           </div>
-          <div class="tf-vs-mid">vs</div>
-          <div class="tf-side">
-            <div class="tf-side-name">{{ oppShort }}</div>
-            <div class="hint" style="margin: 4px 0 0">sparring partner</div>
+          <div class="pf-vs">vs</div>
+          <div class="pf-side mirrored">
+            <div class="pf-name">{{ oppShort }}</div>
+            <div class="pf-rank">sparring partner</div>
           </div>
         </div>
-        <div class="controls" style="justify-content: center; margin-top: 4px">
+        <div class="controls pf-chips">
           <span class="pill">No ranking points</span>
         </div>
         <div class="tf-actions">
           <button class="primary sfx-watch" @click="watchIt">Watch it</button>
           <button @click="toResult">Skip to result</button>
         </div>
-      </section>
+      </MatchScene>
 
       <!-- Live: the same viewer a tournament round uses, autoplaying from the first point. -->
       <section v-else-if="phase === 'live'" class="tf-card">
@@ -188,3 +196,52 @@ function close(): void {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* The friendly's own two lines on the F scene's glass plate. MatchScene owns the card, the painting
+   and the plate; this is only what is written on it – and it is deliberately the same shape as the
+   tournament's pre-match plate, because it is the same object one rung down. */
+/* Fills the takeover, same as the tournament's own pre-match scene. */
+.pf-scene {
+  flex: 1;
+}
+
+.pf-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.pf-side {
+  min-width: 0;
+}
+
+.pf-side.mirrored {
+  text-align: right;
+}
+
+.pf-name {
+  font-size: 14.5px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.pf-rank {
+  margin-top: 2px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.pf-vs {
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.pf-chips {
+  justify-content: center;
+  margin-top: 10px;
+}
+</style>

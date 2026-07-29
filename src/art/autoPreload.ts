@@ -10,7 +10,13 @@
 // yet, so the fetches never compete with a reveal animation.
 import { watch } from 'vue'
 import { useGameStore } from '../stores/game'
-import { preloadCoachArt, preloadCoachMarketArt, preloadForAge, preloadNextStageIfDue } from './preload'
+import {
+  preloadCoachArt,
+  preloadCoachMarketArt,
+  preloadForAge,
+  preloadNextStageIfDue,
+  preloadTravelHomeArt,
+} from './preload'
 
 export function startArtPreloader(): void {
   const game = useGameStore()
@@ -37,6 +43,16 @@ export function startArtPreloader(): void {
       if (coachId) preloadCoachMarketArt([coachId])
       else if (background) preloadCoachArt(background)
     },
+    { immediate: true },
+  )
+  // R14-2: the journey home, on its own trigger for the same reason the coach has one – it follows
+  // the WEEK, not her age band, and the per-band budget is a rule worth keeping literal. The engine
+  // has already chosen which of the four this week shows, so exactly one file is fetched, at the
+  // weekly tick, before the tab that renders it is opened. Null on every other week and free.
+  watch(
+    () =>
+      [game.snapshot?.diary.facts.travelHomeScene, game.snapshot?.diary.facts.travelHomeMood] as const,
+    ([scene, mood]) => preloadTravelHomeArt(scene, mood),
     { immediate: true },
   )
 }

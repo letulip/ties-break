@@ -25,15 +25,26 @@ const planSheet = readFileSync(new URL('../src/components/PlanWeekSheet.vue', im
 const worldSrc = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
 
+// ⚠ U0 MOVED SEASON'S OWN RULES OUT OF THE SHEET AND INTO ITS SFC, scoped, so that the six screens
+// being built in parallel on top of this slice are not all editing `src/style.css`. Both selectors
+// this file reads – `.week-card.exam` and `.bracket-lines` – had exactly one consumer, this screen.
+// The rules are unchanged; only the file they are written in moved. So the reader searches the sheet
+// AND Season's scoped block, which is also what keeps the round-10 lesson intact: it still finds
+// EVERY occurrence, and a rule that exists twice still fails the `.length` checks below.
+const seasonCss = seasonScreen.slice(seasonScreen.indexOf('<style scoped>'))
+
 /** The body of a CSS rule, by selector (every occurrence – the round-10 lesson). */
 function cssBodies(selector: string): string[] {
   const out: string[] = []
-  for (let from = 0; ; ) {
-    const i = css.indexOf(`${selector} {`, from)
-    if (i < 0) return out
-    out.push(css.slice(i, css.indexOf('}', i)))
-    from = i + 1
+  for (const source of [css, seasonCss]) {
+    for (let from = 0; ; ) {
+      const i = source.indexOf(`${selector} {`, from)
+      if (i < 0) break
+      out.push(source.slice(i, source.indexOf('}', i)))
+      from = i + 1
+    }
   }
+  return out
 }
 
 /** A template/script slice between two unique markers – asserts both exist so a moved block

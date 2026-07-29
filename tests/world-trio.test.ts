@@ -487,11 +487,20 @@ describe('item 3 — the pure decision only COMPARES', () => {
   })
 
   it('anger decays with the result – a stale loss returns her to the idle ladder', () => {
+    // ⚠ RE-AIMED by R14-1: the injured rung of the idle ladder returns `rehab`, not `injury` – the
+    // layoff is a state and wears its own painting for its whole length, while `injury` became the
+    // face of the moment she went down (the popup's, not this function's). The PROTECTED FACT is
+    // untouched and is the whole point of this test: a STALE loss stops driving her face, whatever
+    // the streak was, and the idle ladder takes over. Only the name of the injured rung moved.
     const stale = { week: 9, won: false, lostFinal: false, tier: 'national' as const }
     const long = streak(9, 4)
     expect(avatarEmotion({ ...base, lastResult: stale, lossStreak: long })).toBe('norm')
     expect(avatarEmotion({ ...base, condition: 30, lastResult: stale, lossStreak: long })).toBe('tired')
-    expect(avatarEmotion({ ...base, injured: true, lastResult: stale, lossStreak: long })).toBe('injury')
+    expect(avatarEmotion({ ...base, injured: true, lastResult: stale, lossStreak: long })).toBe('rehab')
+    // and the anger the streak would have caused is gone in every one of those states
+    for (const injured of [false, true]) {
+      expect(avatarEmotion({ ...base, injured, lastResult: stale, lossStreak: long })).not.toBe('angry')
+    }
   })
 
   it('the threshold band is the owner\'s 4..6', () => {

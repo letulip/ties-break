@@ -740,8 +740,18 @@ describe('player-facing copy', () => {
       expect(label).not.toContain('—')
     }
     // ...and the onboarding chooser's own copy, read off the component.
+    // ⚠ COMMENTS STRIPPED FIRST, and that is a narrowing rather than a loosening. This slice runs
+    // from `const COACH_OPTIONS` to `const PLAY_STYLES`, so it swallows whatever explanation sits
+    // between the two – and that comment now quotes the owner in Russian, as the file has always
+    // done everywhere else (29.07, on renaming the play-style art). What a PLAYER reads is the two
+    // labels and the two blurbs in the array; a `//` line above it is not copy, and a rule that
+    // says otherwise stops the file explaining itself in the house's own voice. The protected fact
+    // is unchanged: no Cyrillic and no em dash in the strings this chooser renders.
     const wizard = readFileSync(fileURLToPath(new URL('../src/components/OnboardingWizard.vue', import.meta.url)), 'utf8')
-    const options = wizard.slice(wizard.indexOf('const COACH_OPTIONS'), wizard.indexOf('const PLAY_STYLES'))
+    const options = wizard
+      .slice(wizard.indexOf('const COACH_OPTIONS'), wizard.indexOf('const PLAY_STYLES'))
+      .replace(/^[ \t]*\/\/.*$/gm, '')
+    expect(options).toContain("label: 'Coach yourself'") // the slice is real, not an empty string
     expect(options).not.toMatch(/[Ѐ-ӿ]/)
     expect(options).not.toContain('—')
   })

@@ -148,6 +148,23 @@ describe('screen T, round 3', () => {
     expect(market).not.toContain("'Defense'")
     expect(market).not.toContain('SPECIALISM_LABEL')
   })
+
+  // ⚠ THE ONE SANCTIONED EXCEPTION TO THE RULE ABOVE, pinned here rather than somewhere else so the
+  // rule and its exception are read together. The Kid screen's copy of `counterpuncher` carries a
+  // SOFT HYPHEN (U+00AD) - an invisible character that lets a 120px word wrap inside a 104px paper
+  // scrap, at "Counter-" / "puncher" instead of mid-syllable (owner, 29.07: «может стоит перенос на
+  // вторую строчку сделать?»). It is invisible, so the vocabulary has NOT drifted - and that is what
+  // this asserts: strip the character and the two screens spell the same word. Without the pin the
+  // next reader deletes a character they cannot see and the scrap silently clips again.
+  it('the Kid screen\'s scrap wraps the long one WITHOUT leaving the vocabulary', () => {
+    const kid = read('../src/components/screens/KidScreen.vue')
+    const match = kid.match(/counterpuncher: '([^']+)'/)
+    expect(match, 'the Kid screen still names her style').not.toBeNull()
+    expect(match![1]).toContain('­')
+    expect(match![1].replace(/­/g, '')).toBe('Counterpuncher')
+    // ...and the CSS floor under it, for any label a soft hyphen was never added to
+    expect(kid).toContain('overflow-wrap: break-word')
+  })
 })
 
 describe('screen T, round 4', () => {
@@ -179,7 +196,12 @@ describe('screen T, round 4', () => {
     expect(home).toContain('formatShortName(currentCoach.value.name)')
     // Design §Home.3: «подпись "M. Ricci" - Caveat 17px rgba(207,225,82,.72)». Values to the digit,
     // with the alpha written against the token so the brand lime stays repairable in one place.
-    const rule = css.slice(css.indexOf('.coach-sign {'), css.indexOf('}', css.indexOf('.coach-sign {')))
+    // ⚠ RE-AIMED by U0: `.coach-sign` moved out of src/style.css into HomeScreen's own scoped
+    // block, with the rest of the rules only that page renders. Values unchanged to the digit, and
+    // the alpha is still written against `--accent-rgb` so the brand lime stays repairable in one
+    // place – which is the fact this line is actually protecting.
+    const homeCss = home.slice(home.indexOf('<style scoped>'))
+    const rule = homeCss.slice(homeCss.indexOf('.coach-sign {'), homeCss.indexOf('}', homeCss.indexOf('.coach-sign {')))
     expect(rule).toContain('var(--font-hand)')
     expect(rule).toContain('font-size: 17px')
     expect(rule).toContain('rgba(var(--accent-rgb), 0.72)')

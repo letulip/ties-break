@@ -535,10 +535,20 @@ describe('B7 — snapshot + UI', () => {
     // `round(condition / 10)` (the number of filled squares) is gone. The fact this guards is
     // unchanged and is now checked at the arc: the sweep is the REAL condition, clamped to 0..100,
     // and the geometry comes from the radius rather than from a magic number.
+    // ⚠ RE-AIMED AGAIN by U0 (docs/specs/ui-components.md #6): the ring is a shared component now –
+    // `src/components/ui/ProgressRing.vue` – because Home's condition ring and the Season card's
+    // chance ring were the same object written twice, and a percentage has to look like a percentage
+    // everywhere. So the GEOMETRY and the clamp moved into it, and Home passes `value`.
+    // The protected fact is unchanged and is checked in both halves, which is what makes the move
+    // safe: Home hands the ring her REAL condition (never a constant, never a bucket), and the ring
+    // clamps it to 0..1 and derives its dash offset from its own radius rather than a magic number.
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
+    const ring = readFileSync(new URL('../src/components/ui/ProgressRing.vue', import.meta.url), 'utf8')
     expect(src).not.toContain('Phase 4')
-    expect(src).toMatch(/Math\.min\(100,\s*condition\.value\)\)\s*\/\s*100/)
-    expect(src).toMatch(/RING_C\s*=\s*Math\.round\(2 \* Math\.PI \* RING_R/)
+    expect(src).toContain(':value="condition / 100"')
+    expect(src).toContain('game.snapshot?.condition ?? 0')
+    expect(ring).toMatch(/Math\.max\(0,\s*Math\.min\(1,\s*props\.value\)\)/)
+    expect(ring).toMatch(/2 \* Math\.PI \* r/)
     expect(src).not.toContain('CONDITION_FILLED')
     expect(src).not.toContain('conditionFilled')
   })

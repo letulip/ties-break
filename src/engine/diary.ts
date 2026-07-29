@@ -41,6 +41,8 @@ import type {
   MemoryCard,
   Milestone,
   MilestoneType,
+  TravelHomeMood,
+  TravelHomeScene,
   WorldEvent,
 } from '../shared/protocol'
 import { isExamWeek, isOffSeasonWeek, TIERS, TIER_SHORT, tierFromLabel } from './season/calendar'
@@ -110,7 +112,13 @@ export function milestoneKey(m: Milestone): string {
 }
 
 /** The painting a memory of each milestone type shows. `happy` only for the title – the one
- *  moment that earned it; everything else stays in the composed half of the set. */
+ *  moment that earned it; everything else stays in the composed half of the set.
+ *
+ *  R14-1: `injury` STAYS here and is one of the two surfaces that can still request that painting.
+ *  A Memory is a picture of a week that happened – "ankle strain – her first injury" is the week
+ *  she went down, not the nine that followed it – so the moment face is the right one and the
+ *  layoff's `rehab` would be wrong. Typed on the NARROW union for that reason: nothing a milestone
+ *  maps to is painting-only, so the Memory polaroid keeps a crop it could fall back on. */
 export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   title: 'happy',
   final: 'serious',
@@ -167,11 +175,315 @@ export function fundsPressureOf(fundsCents: number): FundsPressure {
   return 'ok'
 }
 
+// --- the journey home (R14-2) ----------------------------------------------------------------
+//
+// The owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на экране Week
+// story как в макете». Four paintings of her asleep on the way back, on the Weekly Story.
+//
+// (a) WHAT COUNTS AS COMING HOME FROM AN AWAY TRIP — three clauses, all conservative, because on
+//     the Weekly Story this scene REPLACES the week's painting rather than sitting beside it. A
+//     false positive does not add decoration; it swaps correct art for wrong art.
+//
+//     1. IT IS THE WEEK AFTER, not the week of. Two reasons, and they agree. The screen: a week
+//        with a `tournament` event has NO recap at all (composables/weekRecap.ts recapExists), so a
+//        scene set on the tournament week would be a fact no surface can ever render. The fiction:
+//        «после выездов» is *after* the trips – she plays on the Saturday, and the following week's
+//        story opens on her asleep on the way back. So the rule reads WEEK - 1.
+//     2. SHE ACTUALLY PLAYED THERE. A competitive match of hers at that event, off the ledger –
+//        which rules out every way an entry can exist without a journey: the walkover (too injured
+//        to travel), the doctor's medical withdrawal, and the friendly, which is not a trip and not
+//        a result (R11-2). No matches, no journey home.
+//     3. THE FAMILY PAID TO GET HER THERE, net over the week. Same test `travelled` uses and for
+//        the same reason: a skipped tournament refunds its travel in the same week and nets to 0 –
+//        she never boarded.
+//     4. AND SHE STAYED HOME. Back-to-back tournament weeks are ordinary on the calendar (j30 runs
+//        every 2 weeks), and on one of them the journey back is not the week's story – she came in
+//        on Sunday and was gone again by Tuesday, and what happened is the SECOND tournament. The
+//        picture would replace a week of competing with a picture of a car. This clause is also the
+//        one that makes the fact renderable: it is `recapExists`'s own tournament test, read off
+//        the same events plus the in-flight reveal, so a scene can never land on a week that has no
+//        Weekly Story to put it on. Caught by tests/travel-home.test.ts against a live career –
+//        the first draft of this rule had it, and week 43 of seed `travel-home-1` was invisible.
+//
+//     ...and then the LINE: every tier except `local`. A Local Open is the club down the road (the
+//     calendar prices its travel at $60-120 against a Regional's $150-400) and nobody comes home
+//     from it; a Regional Championship is a выезд in the plain sense of the word – another town,
+//     a night away, a drive back. TIER AND NOT COST, deliberately: the academy scholarship pays up
+//     to 80% of a fare, and a J300 abroad is the same journey whether the family or the academy
+//     bought the ticket. Cost is what she paid; tier is where she went.
+//
+// (b) WHICH OF THE FOUR — correlated with the trip, not uniform, because the data supports it and
+//     uniform noise would put her in an airport coming back from the next county. Every tier
+//     already carries a `track`: `itf` is the junior international tour (the calendar's own words:
+//     "international travel out"), `domestic` is local/regional/national. So the international
+//     ladder flies home (airport, plane) and the domestic one drives (bus, car) – which also means
+//     a career that never leaves the domestic ladder never sees an airport, and the first J30 trip
+//     brings a picture she has not seen before.
+//
+//     THE DRAW is a purpose-scoped sub-stream, `seed:travel:<week>` – the same week always produces
+//     the same scene, on any device and any replay, and ZERO draws land on the MAIN weekly stream
+//     (nothing here runs inside the tick at all, so the frozen capture 41550 / e6b0c709 cannot move
+//     by construction). Keyed on the week she comes HOME, which is the week the picture is shown.
+
+/** The two buckets, and the scenes that tell each journey. */
+const TRAVEL_HOME_SCENES: Record<'air' | 'road', readonly TravelHomeScene[]> = {
+  air: ['airport', 'plane'],
+  road: ['bus', 'car'],
+}
+
+/** Her competitive tournament tier in `week`, off the event feed – null when she played none.
+ *  Only the kid's own matches are ever recorded as `match` events (the AI brackets resolve without
+ *  a scoreline), which is the same assumption `lastKidResultOf` above rests on. A friendly is
+ *  skipped by the predicate her face uses (R11-2): a hit-out at the club is not a trip. */
+function playedTierIn(events: readonly WorldEvent[], week: number): TierId | null {
+  for (const e of events) {
+    if (e.week !== week || !e.match || !resultShowsOnHerFace(e)) continue
+    return tierFromEventId(e.match.eventId) ?? null
+  }
+  return null
+}
+
+/** Net travel spend in `week`, in signed cents (negative = the family paid). */
+function travelCentsIn(events: readonly WorldEvent[], week: number): number {
+  return events
+    .filter((e) => e.week === week && e.category === 'travel')
+    .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
+}
+
+/**
+ * The scene of the journey home for `week`, or null. See the note above for the whole argument.
+ * Pure and deterministic: the same arguments always answer the same scene.
+ *
+ * `pendingUnfinished` is clause 4's second half – a reveal in flight belongs to THIS week and has
+ * not written its summary event yet, so the walk alone would not see it.
+ */
+export function travelHomeSceneFor(args: {
+  /** the full retained event log */
+  events: readonly WorldEvent[]
+  /** the week she is HOME – the week the picture would be shown on */
+  week: number
+  seed: string
+  /** a tournament reveal of hers is in flight this week (DiaryWorldView.pendingUnfinished) */
+  pendingUnfinished?: boolean
+}): TravelHomeScene | null {
+  const { events, week, seed } = args
+  const away = week - 1
+  if (away < 0) return null
+  // 4. she stayed home this week – no tournament of hers, resolved or in flight
+  if (args.pendingUnfinished) return null
+  if (playedTierIn(events, week) !== null) return null
+  if (events.some((e) => e.week === week && e.type === 'tournament')) return null
+  // 1-2. she played an away tournament last week...
+  const tier = playedTierIn(events, away)
+  if (tier === null || tier === 'local') return null
+  // 3. ...and the family paid to get her there
+  if (travelCentsIn(events, away) >= 0) return null
+  const pool = TRAVEL_HOME_SCENES[TIERS[tier].track === 'itf' ? 'air' : 'road']
+  const rng = rngFromSeed(`${seed}:travel:${week}`)
+  return pool[Math.floor(rng() * pool.length)]
+}
+
+// --- the journey home, part two: HOW she came back, and what the parent wrote ------------------
+//
+// The owner's 29.07 art drop turned four paintings into twelve – three moods of the same four
+// journeys – and named the rule, verbatim:
+//
+//   «если дошла до финала можем рандомно показывать happy/sleepy разные, если не дошла - sad или
+//    sleepy если сильно устала при этом»
+//
+// Reached the final → happy or sleepy. Fell short → sad, or sleepy if she was worn out anyway.
+//
+// BOTH HALVES ARE FACTS THE ENGINE ALREADY HAS, and using anything else would be inventing a proxy
+// for something the simulation answers outright:
+//   "reached the final" is `finishIdx <= 1` on the away week's tournament summary – the same field
+//       `lastKidResultOf` reads for the runner-up face and `finalizeTournament` writes from the
+//       bracket (0 = champion, 1 = the girl who lost the final).
+//   "worn out" is `condition < TRAVEL_ASLEEP_BELOW` – see the note on that constant. It began as
+//       the `drained` band (below 40) and the owner loosened it after the measurement showed that
+//       band swallowing every late-career journey.
+// Only the coin-flip inside "happy or sleepy" is drawn, on `seed:travelmood:<week>` – its own
+// purpose-scoped sub-stream, so the frozen MAIN capture (41550 / e6b0c709) cannot move.
+//
+// WHAT THE PAINTINGS ACTUALLY SHOW, because the note under them is their caption and a caption that
+// contradicts its picture is worse than no caption: `sleepy` is her ASLEEP (the car at night, head
+// on the seat); `happy` and `sad` are both her AWAKE – laughing at a phone against a sunset, or
+// curled against a rainy window at dusk. So every line that says she slept carries a `slept` claim
+// and is licensed on the sleepy mood, and the honesty pin checks that separately.
+
+/** The reading of the trip she is coming back FROM, plus the state she is in the week she gets home.
+ *  Everything a journey-home note is allowed to know – and, like `DiaryFacts`, everything it may
+ *  assert. Assembled from the event feed and the milestone ledger; nothing new is persisted. */
+export interface TravelHomeFacts {
+  /** the week she is HOME – the week the picture and the note are shown on */
+  week: number
+  /** the week she PLAYED – always `week - 1` */
+  awayWeek: number
+  scene: TravelHomeScene
+  mood: TravelHomeMood
+  tier: TierId
+  /** the ITF ladder: the trip crossed a border, and she came home by air */
+  abroad: boolean
+  /** her finish at the away event – 0 champion, 1 runner-up, … ; null if no summary was written */
+  finishIdx: number | null
+  /** she won the thing */
+  wonTitle: boolean
+  /** she lost the final – the silver */
+  lostFinal: boolean
+  /** champion or runner-up: the owner's «дошла до финала» */
+  reachedFinal: boolean
+  /** how many matches she won on the trip */
+  matchesWon: number
+  /** one match, and she lost it */
+  firstRound: boolean
+  /** her FIRST tournament on the international ladder – see firstAbroadIn for why it is exact.
+   *  Implies `abroad`: a Regional two towns over cannot be her first trip abroad. */
+  firstAbroad: boolean
+  /** she is carrying an injury the week she gets home */
+  injured: boolean
+  /** how long that injury keeps her out in total, in weeks – 0 when she is healthy. A niggle and a
+   *  season-ending one are not the same note, and the pool splits on it. */
+  injuryWeeks: number
+  conditionBand: ConditionBand
+}
+
+/** Her competitive matches at `week`, newest last. Only the kid's own matches are ever recorded as
+ *  `match` events, and a practice friendly is skipped by the same predicate her face uses (R11-2). */
+function kidMatchesIn(events: readonly WorldEvent[], week: number): readonly WorldEvent[] {
+  return events.filter((e) => e.week === week && e.match && resultShowsOnHerFace(e))
+}
+
+/**
+ * Is `awayWeek` her FIRST trip on the international ladder?
+ *
+ * The event feed alone cannot answer this: it is capped (EVENTS_CAP = 400, pruned oldest-first), so
+ * on a five-season career "no earlier ITF match in the log" eventually stops meaning "no earlier ITF
+ * match" and the line would start lying about her tenth trip. The MILESTONE LEDGER is the durable
+ * record – `international` is captured once per career, at the moment the first entry form goes in,
+ * and is never pruned – so the question becomes a pair the two records answer together:
+ *
+ *   1. the ledger says she HAS a first international entry, and
+ *   2. the feed still reaches back at least that far (so clause 3 is a statement about the whole
+ *      career and not about a window), and
+ *   3. the feed holds no ITF match of hers before this one.
+ *
+ * Clause 2 is what makes it degrade correctly: once the log has pruned past the milestone the answer
+ * becomes `false` – silence – rather than a false "her first time". By then it is many seasons ago.
+ */
+function firstAbroadIn(
+  events: readonly WorldEvent[],
+  milestones: readonly Milestone[],
+  awayWeek: number,
+): boolean {
+  const first = milestones.find((m) => m.type === 'international')
+  if (!first) return false
+  if (!events.some((e) => e.week <= first.week)) return false
+  for (const e of events) {
+    if (e.week >= awayWeek || !e.match || !resultShowsOnHerFace(e)) continue
+    const tier = tierFromEventId(e.match.eventId)
+    if (tier && TIERS[tier].track === 'itf') return false
+  }
+  return true
+}
+
+/** ⚠ WHERE «SLEEPY IF SHE WAS WORN OUT» IS DRAWN, and it is NOT the `drained` band.
+ *
+ *  The rule first read `conditionBand === 'drained'` – below 40, the diary's own bottom rung. That
+ *  is exact but it made four of the twelve paintings early-game only: measured on a real career,
+ *  once the international calendar starts, condition never climbs back over 40 and every journey
+ *  home is `sleepy` from the end of season one onward.
+ *
+ *  The owner's ruling on that, 29.07: «это задача игрока поддерживать её состояние, в его же
+ *  интересах. Но можно и ослабить на sad, они не совсем sad, скорее задумчиво спокойные.»
+ *
+ *  BOTH HALVES OF THAT MATTER. He kept the consequence – a parent who runs her into the ground
+ *  gets a daughter asleep in every car, and that is the game arguing its own thesis. What he
+ *  corrected is the reading of the picture: `sad` is not misery. She is awake, curled against a
+ *  rainy window, thinking. The lore says the same thing in §9.6 – understatement always, no
+ *  heightened misery – so a quiet frame does not need her to be well-rested to be true.
+ *
+ *  So sleeping needs her to be genuinely empty rather than merely tired. 20 is half the `drained`
+ *  line and there is no band at it deliberately: the bands are what Home SAYS about her, and this
+ *  is a threshold for what a picture SHOWS, which is a different question and should not silently
+ *  inherit an answer to the other one. */
+export const TRAVEL_ASLEEP_BELOW = 20
+
+/** The owner's rule, and nothing else in it. The ONE draw is the coin inside "happy or sleepy",
+ *  on its own sub-stream keyed to the week she comes home. */
+export function travelHomeMoodFor(args: {
+  reachedFinal: boolean
+  condition: number
+  seed: string
+  week: number
+}): TravelHomeMood {
+  if (args.reachedFinal) {
+    return rngFromSeed(`${args.seed}:travelmood:${args.week}`)() < 0.5 ? 'happy' : 'sleepy'
+  }
+  return args.condition < TRAVEL_ASLEEP_BELOW ? 'sleepy' : 'sad'
+}
+
+/** The whole journey-home reading for `week`, or null on a week she did not come home from one.
+ *  `travelHomeSceneFor` above owns the WHETHER and the mode; this owns the mood and the facts the
+ *  note is licensed by, so the two questions stay one answer. */
+export function travelHomeFactsFor(args: {
+  events: readonly WorldEvent[]
+  milestones: readonly Milestone[]
+  week: number
+  seed: string
+  kidId: string
+  condition: number
+  /** the active injury the week she gets home, or null */
+  injury: { totalWeeks: number } | null
+  pendingUnfinished?: boolean
+}): TravelHomeFacts | null {
+  const scene = travelHomeSceneFor(args)
+  if (scene === null) return null
+  const awayWeek = args.week - 1
+  const tier = playedTierIn(args.events, awayWeek)!
+  const matches = kidMatchesIn(args.events, awayWeek)
+  const matchesWon = matches.filter((e) => e.match!.winnerId === args.kidId).length
+  const summary = args.events.find((e) => e.week === awayWeek && e.type === 'tournament')
+  const finishIdx = summary?.finishIdx ?? null
+  const wonTitle = finishIdx === 0
+  const lostFinal = finishIdx === 1
+  const conditionBand = conditionBandOf(args.condition)
+  const reachedFinal = wonTitle || lostFinal
+  const abroad = TIERS[tier].track === 'itf'
+  return {
+    week: args.week,
+    awayWeek,
+    scene,
+    mood: travelHomeMoodFor({ reachedFinal, condition: args.condition, seed: args.seed, week: args.week }),
+    tier,
+    abroad,
+    finishIdx,
+    wonTitle,
+    lostFinal,
+    reachedFinal,
+    matchesWon,
+    // Read off the MATCHES rather than off `finishIdx === log2(drawSize)`: one played, none won is
+    // the same fact without needing the draw size, and it survives a summary that never arrived.
+    firstRound: matches.length === 1 && matchesWon === 0,
+    // ⚠ `abroad &&` IS THE WHOLE CLAUSE, and leaving it out shipped a lie for one playtest: the
+    // `international` milestone is captured when the ENTRY FORM GOES IN, weeks before the trip, so
+    // from the moment she enters her first J30 the ledger answers yes – and a Regional Championship
+    // she drove to the following Saturday came home under "Her first one in another country". The
+    // milestone answers "has she ever signed up for one"; only the away week's own tier answers
+    // "was THIS the trip". Pinned on a live career in tests/travel-home.test.ts.
+    firstAbroad: abroad && firstAbroadIn(args.events, args.milestones, awayWeek),
+    injured: args.injury !== null,
+    injuryWeeks: args.injury?.totalWeeks ?? 0,
+    conditionBand,
+  }
+}
+
 /** Which of this week's captured milestones the diary calls THE fresh one (a title week also
  *  captures its final – the louder fact wins). */
 const MILESTONE_PRIORITY: readonly MilestoneType[] = ['title', 'final', 'international', 'injury', 'season-rank']
 
-/** Assemble the facts – every field read off state that already exists, zero draws anywhere. */
+/** Assemble the facts – every field read off state that already exists, and (since R14-2) exactly
+ *  TWO that are drawn: `travelHomeScene` and the coin inside `travelHomeMood`, each on its own
+ *  purpose-scoped sub-stream. Rule 2 at the top of this file is unchanged and is what matters –
+ *  zero draws on the MAIN weekly stream, from anything in this module, ever. */
 export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
   const { week } = view
   const lastResult = lastKidResultOf(view.events, view.kidId)
@@ -200,6 +512,16 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
   const freshMilestone =
     MILESTONE_PRIORITY.find((t) => view.milestones.some((m) => m.type === t && m.week === week)) ?? null
+  const travelHome = travelHomeFactsFor({
+    events: view.events,
+    milestones: view.milestones,
+    week,
+    seed: view.seed,
+    kidId: view.kidId,
+    condition: view.condition,
+    injury: view.injury,
+    pendingUnfinished: view.pendingUnfinished,
+  })
   return {
     week,
     emotion,
@@ -224,6 +546,14 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     vacationWeek: view.vacationWeek,
     fundsPressure: fundsPressureOf(view.fundsCents),
     freshMilestone,
+    // R14-2: the two facts here that are drawn rather than read, and they are drawn because there is
+    // no state to read them off – which of four equally-true pictures of the same journey to show,
+    // and (when she reached the final) whether the parent remembers her laughing or asleep, are
+    // questions the simulation does not answer. Purpose-scoped sub-streams (`seed:travel:<week>` and
+    // `seed:travelmood:<week>`), stable for the whole week, zero MAIN draws. Everything else about
+    // the journey IS read – see travelHomeFactsFor.
+    travelHomeScene: travelHome?.scene ?? null,
+    travelHomeMood: travelHome?.mood ?? null,
   }
 }
 
@@ -234,7 +564,8 @@ export type DiarySurface = 'photo' | 'condition'
 /** What a line ASSERTS, as data the honesty pin can hold against the facts. Every tag is a claim
  *  the pin re-checks independently: a `won: true` line licensed on a loss is a failing test, not
  *  a matter of taste. `affect: 'positive'` is the spec's own concrete rule – unselectable while
- *  the emotion is sad, angry or injury. */
+ *  the emotion is sad, angry or rehab (R14-1 renamed the last one: the layoff face, formerly
+ *  `injury`). */
 export interface DiaryClaims {
   affect: 'positive' | 'neutral' | 'negative'
   /** asserts a fresh win this week */
@@ -253,6 +584,9 @@ export interface DiaryClaims {
   angry?: true
   /** asserts an active injury */
   injured?: true
+  /** R14-1: asserts the injury happened THIS week – the onset, not a week of the layoff. A
+   *  strictly stronger claim than `injured`, and the pin checks it separately. */
+  justHurt?: true
   /** asserts a worn body – unselectable at condition ≥ 80 */
   tired?: true
   /** asserts a genuinely fresh body – unselectable below 80 */
@@ -288,6 +622,18 @@ function short(tier: TierId | null): string {
 function plural(n: number, word: string): string {
   return `${n} ${word}${n === 1 ? '' : 's'}`
 }
+
+/** THE WEEK IT HAPPENED (R14-1). Nothing has been ticked off the layoff yet – `rollInjury` sets
+ *  `weeksRemaining = totalWeeks` at onset and decrements at the TOP of every later week, so this is
+ *  true on the onset week and on no other, a one-week injury included.
+ *
+ *  It exists because the split the owner asked for on her FACE has to hold in her PARENT'S VOICE
+ *  too: `idleEmotion` no longer returns `injury` at all, so a licence reading `emotion === 'injury'`
+ *  would be dead copy – but the lines it used to carry are not interchangeable. One of them is
+ *  about the day the ice pack came out; the others are about week six. Derived from facts the diary
+ *  already carries, so no new field and no schema question. */
+const justHurt = (f: DiaryFacts): boolean =>
+  f.injured !== null && f.injured.weeksRemaining === f.injured.totalWeeks
 
 /** An ordinary, healthy, event-free week – the licence behind every quiet line AND the silences. */
 const quiet = (f: DiaryFacts): boolean =>
@@ -434,24 +780,34 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'negative', lost: true, angry: true },
     license: (f) => f.emotion === 'angry',
   },
-  // --- photo card: injured (idle) --------------------------------------------------------------
+  // --- photo card: THE MOMENT she got hurt ------------------------------------------------------
+  // R14-1: these three lines all read `emotion === 'injury'` when that was one meaning wearing two
+  // hats. It is two weeks, and they are not the same week – so each line went to the meaning it was
+  // written for. The ice pack is NEWS: it appears on the counter the evening she comes home hurt,
+  // and by week six it is furniture. Licensed on the onset, which is also the week the blocking
+  // popup fires and the week the `injury` painting is shown – caption, picture and dialog all
+  // naming the same moment.
   {
     surface: 'photo',
     text: 'The ice pack lives on the kitchen counter now.',
-    claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    claims: { affect: 'negative', injured: true, justHurt: true },
+    license: justHurt,
   },
+  // --- photo card: the LAYOFF (idle rehab) ------------------------------------------------------
+  // ...and these two are about the weeks that follow. Watching from the bench and counting down are
+  // both things you can only do once the news has stopped being news – they need the layoff to have
+  // length, which is exactly what the rehab painting behind them shows.
   {
     surface: 'photo',
     text: 'She watches practice from the bench this week.',
     claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    license: (f) => f.emotion === 'rehab',
   },
   {
     surface: 'photo',
     text: 'She counts the weeks to her return out loud.',
     claims: { affect: 'negative', injured: true },
-    license: (f) => f.emotion === 'injury',
+    license: (f) => f.emotion === 'rehab',
   },
   // --- photo card: worn down (idle tired) ------------------------------------------------------
   {
@@ -698,6 +1054,371 @@ export function diaryLine(surface: DiarySurface, facts: DiaryFacts, seed: string
   return typeof pick.text === 'function' ? pick.text(facts) : pick.text
 }
 
+// --- the note on the scrap under the journey painting -----------------------------------------
+//
+// The owner, 29.07: «про неё родительской рукой – так и делай, надо прям красиво, жизненно и уютно
+// сделать. Если травму получила - поддержать как-то словами на записке, если проиграла - тоже».
+//
+// A PARENT WROTE THIS, ABOUT THEIR DAUGHTER, AFTER THE DRIVE HOME. It is not a match report and it
+// is not the game talking. Four rules, and they are what separate this pool from every other string
+// in the app:
+//
+//  1. THIRD PERSON, AND SOMEBODY WHO LOVES HER IS HOLDING THE PEN. "She slept the whole way back" –
+//     never "You reached the final", never her name (the game rolls it; a note that uses it reads
+//     like a certificate). The narrator says "we" where a family would and never says "I".
+//  2. WARM, PLAIN, SMALL. No cheerleading, no lessons, no "champions are made in weeks like this".
+//     The best lines here are almost nothing: one observed detail that happens to carry the week.
+//  3. A LOSS GETS SUPPORT, NOT A CONSOLATION PRIZE. Not one line congratulates her on a good effort.
+//     What a parent actually does is NOTICE her rather than grade her, so that is what these do:
+//     the hood stayed up, she was mostly hungry, she asked what was for dinner.
+//  4. AN INJURY GETS TENDERNESS, and usually by talking about something else entirely.
+//
+// ⚠ NOT THE COACH'S VOICE. The Weekly Story has a second writer on it – the radar's axis notes
+// (engine/radar.ts: "Long matches suit her. The other girl tires first.") speak in the coach's
+// register, and two voices on one card only work if they are audibly different people. The coach
+// ASSESSES and talks about the tennis; the parent OBSERVES and talks about the girl. If a line here
+// could sit in a coaching note, it is in the wrong voice and does not belong in this pool.
+//
+// EVERY LINE MUST BE TRUE OF THE WEEK IT LANDS ON, which is why the pool lives here beside the facts
+// and not in a component: a note about a final on a week she went out in the first round is the one
+// failure that would kill the whole effect. Same discipline as DIARY_POOL – a `claims` object the
+// honesty pin re-checks independently against `TravelHomeFacts`, so a mis-licensed line is a failing
+// test rather than a matter of taste.
+
+/** What a journey-home line ASSERTS, as data the honesty pin can hold against the trip's facts. */
+export interface TravelClaims {
+  /** asserts she won the tournament */
+  title?: true
+  /** asserts she reached the final and lost it */
+  runnerUp?: true
+  /** asserts she did not win it */
+  lost?: true
+  /** asserts she won at least one match on the trip */
+  wonMatches?: true
+  /** asserts one match and no wins – the first-round exit */
+  firstRound?: true
+  /** asserts she is carrying an injury */
+  injured?: true
+  /** asserts a worn-out girl – unselectable above the `drained` rung */
+  tired?: true
+  /** asserts the trip crossed a border (the ITF ladder, so the journey home is air) */
+  abroad?: true
+  /** asserts this was her FIRST tournament abroad */
+  firstAbroad?: true
+  /** asserts a journey by road – bus or car */
+  road?: true
+  /** asserts she was asleep on the way: only the `sleepy` paintings show that, and the other two
+   *  show her awake, so this is a claim about the ART as much as about the week */
+  slept?: true
+}
+
+export interface TravelNote {
+  text: string
+  claims: TravelClaims
+  license: (t: TravelHomeFacts) => boolean
+}
+
+const road = (t: TravelHomeFacts): boolean => !t.abroad
+const asleep = (t: TravelHomeFacts): boolean => t.mood === 'sleepy'
+const awake = (t: TravelHomeFacts): boolean => t.mood !== 'sleepy'
+/** Everything below the injury and the first passport, which take a week to themselves. */
+const ordinary = (t: TravelHomeFacts): boolean => !t.injured && !t.firstAbroad
+/** She lost, and the loss was not the final – the ordinary weeks the junior road is mostly made of. */
+const plainLoss = (t: TravelHomeFacts): boolean => ordinary(t) && !t.reachedFinal
+
+export const TRAVEL_NOTES: readonly TravelNote[] = [
+  // --- SHE WON IT --------------------------------------------------------------------------------
+  {
+    text: 'She won it, and then asked if we could stop for chips.',
+    claims: { title: true, road: true },
+    license: (t) => ordinary(t) && t.wonTitle && road(t),
+  },
+  {
+    text: 'Champion, and she still wanted to know who won the other draw.',
+    claims: { title: true },
+    license: (t) => ordinary(t) && t.wonTitle,
+  },
+  {
+    text: 'She fell asleep with the cup still in the bag on her knees.',
+    claims: { title: true, slept: true },
+    license: (t) => ordinary(t) && t.wonTitle && asleep(t),
+  },
+  {
+    text: 'She won it, and talked the whole way home about one point in the second round.',
+    claims: { title: true, wonMatches: true },
+    license: (t) => ordinary(t) && t.wonTitle && awake(t),
+  },
+  {
+    text: 'A trophy on the back seat and a hoodie she has not taken off since Saturday.',
+    claims: { title: true, road: true },
+    license: (t) => ordinary(t) && t.wonTitle && road(t),
+  },
+  {
+    text: 'She won it. The first thing she did at the gate was ring her grandmother.',
+    claims: { title: true, abroad: true },
+    license: (t) => ordinary(t) && t.wonTitle && t.abroad,
+  },
+  // --- THE SILVER --------------------------------------------------------------------------------
+  // The owner named this one himself («победила, серебро, старалась»). It is a good result and it
+  // still stings, and a parent's note does not try to fix that – it just sits next to her.
+  {
+    text: 'One match short. She has not said a word about it, and neither have we.',
+    claims: { runnerUp: true, lost: true },
+    license: (t) => ordinary(t) && t.lostFinal,
+  },
+  {
+    text: 'She got to the final. On the way back she talked about everything else.',
+    claims: { runnerUp: true, lost: true },
+    license: (t) => ordinary(t) && t.lostFinal && awake(t),
+  },
+  {
+    text: 'Second, and she watched the final back on her phone twice before we were home.',
+    claims: { runnerUp: true, lost: true },
+    license: (t) => ordinary(t) && t.lostFinal && awake(t),
+  },
+  {
+    text: 'She lost the last one and was asleep before the motorway.',
+    claims: { runnerUp: true, lost: true, slept: true, road: true },
+    license: (t) => ordinary(t) && t.lostFinal && asleep(t) && road(t),
+  },
+  {
+    text: 'A final. Asleep the whole way home, the medal still round her neck.',
+    claims: { runnerUp: true, lost: true, slept: true },
+    license: (t) => ordinary(t) && t.lostFinal && asleep(t),
+  },
+  {
+    text: 'Second. She is fine. She said so about four times.',
+    claims: { runnerUp: true, lost: true },
+    license: (t) => ordinary(t) && t.lostFinal,
+  },
+  {
+    text: 'She lost the last match of the week and won every one before it.',
+    claims: { runnerUp: true, lost: true, wonMatches: true },
+    license: (t) => ordinary(t) && t.lostFinal,
+  },
+  // --- SHE WON MATCHES, AND THEN SHE DID NOT -----------------------------------------------------
+  {
+    text: 'She won some and lost the last one. It is the last one that comes home with us.',
+    claims: { lost: true, wonMatches: true },
+    license: (t) => plainLoss(t) && t.matchesWon > 0,
+  },
+  {
+    text: 'Out on Friday. She was mostly hungry on the way back.',
+    claims: { lost: true, wonMatches: true },
+    license: (t) => plainLoss(t) && t.matchesWon > 0,
+  },
+  {
+    text: 'Two days of winning and one of not. She only wanted to talk about the last one.',
+    claims: { lost: true, wonMatches: true },
+    license: (t) => plainLoss(t) && t.matchesWon > 0,
+  },
+  {
+    text: 'A couple of wins, and then not. She still wanted the window seat home.',
+    claims: { lost: true, wonMatches: true, abroad: true },
+    license: (t) => plainLoss(t) && t.matchesWon > 0 && t.abroad,
+  },
+  // --- ONE MATCH, AND THE LONG WAY BACK ----------------------------------------------------------
+  // The junior road is MOSTLY THIS – a first-round exit is the single commonest way a trip ends, and
+  // the pool is sized for that: a family that goes away every other week for four years must not be
+  // handed the same eight sentences. Nothing here grades her. She is noticed, and that is all.
+  {
+    text: 'One match, and a long way back for it. She kept her hood up the whole time.',
+    claims: { lost: true, firstRound: true },
+    license: (t) => ordinary(t) && t.firstRound,
+  },
+  {
+    text: 'She lost the first one and stayed to watch the rest of it anyway.',
+    claims: { lost: true, firstRound: true },
+    license: (t) => ordinary(t) && t.firstRound,
+  },
+  {
+    text: 'Out on the first day. Two flights, for one match.',
+    claims: { lost: true, firstRound: true, abroad: true },
+    license: (t) => ordinary(t) && t.firstRound && t.abroad,
+  },
+  {
+    text: 'The long way home. She did not want to talk and we did not make her.',
+    claims: { lost: true, firstRound: true },
+    license: (t) => ordinary(t) && t.firstRound,
+  },
+  {
+    text: 'She lost her opener. On the way back she slept with her shoes still on.',
+    claims: { lost: true, firstRound: true, slept: true },
+    license: (t) => ordinary(t) && t.firstRound && asleep(t),
+  },
+  {
+    text: 'One match. She wanted to know how far the girl who beat her got.',
+    claims: { lost: true, firstRound: true },
+    license: (t) => ordinary(t) && t.firstRound,
+  },
+  {
+    text: 'Out first, and asking about the next draw before we had found the car.',
+    claims: { lost: true, firstRound: true, road: true },
+    license: (t) => ordinary(t) && t.firstRound && road(t),
+  },
+  {
+    text: 'Beaten in an hour, and then three hours of motorway.',
+    claims: { lost: true, firstRound: true, road: true },
+    license: (t) => ordinary(t) && t.firstRound && road(t),
+  },
+  {
+    text: 'First match, last match. She carried her own bag all the way to the door.',
+    claims: { lost: true, firstRound: true },
+    license: (t) => ordinary(t) && t.firstRound,
+  },
+  // --- ANY WEEK SHE CAME BACK WITHOUT IT ---------------------------------------------------------
+  // Licensed on the loss alone, so they thin out the repetition on the long grinding stretches where
+  // every trip ends the same way.
+  {
+    text: 'She asked what was for dinner before we were out of the car park.',
+    claims: { lost: true, road: true },
+    license: (t) => plainLoss(t) && road(t),
+  },
+  {
+    text: 'She put her headphones in somewhere outside the city and left them in.',
+    claims: { lost: true },
+    license: plainLoss,
+  },
+  {
+    text: 'Home late. She ate standing up at the counter and went straight to bed.',
+    claims: { lost: true },
+    license: plainLoss,
+  },
+  {
+    text: 'A long way for a short week. She slept from the ring road onward.',
+    claims: { lost: true, slept: true, road: true },
+    license: (t) => plainLoss(t) && asleep(t) && road(t),
+  },
+  {
+    text: 'She slept from the gate to the taxi rank and never saw the airport.',
+    claims: { lost: true, slept: true, abroad: true },
+    license: (t) => plainLoss(t) && asleep(t) && t.abroad,
+  },
+  // --- SHE CAME HOME EMPTY ----------------------------------------------------------------------
+  // Licensed on the BODY rather than on the result – but not on a week she reached a final. She got
+  // to the last match of a J300 and the scrap said she went to bed early: true, and a wasted moment.
+  // The loud results speak for themselves; exhaustion speaks on the weeks nothing else is the story.
+  // `tired` is the bottom rung (below 40) – the same one the condition note calls running on empty.
+  {
+    text: 'She slept the whole way back and then went up to bed anyway.',
+    claims: { tired: true, slept: true },
+    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t),
+  },
+  {
+    text: 'She was asleep before we were out of the car park.',
+    claims: { tired: true, slept: true, road: true },
+    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t) && road(t),
+  },
+  {
+    text: 'A whole day of travelling, and she slept most of it.',
+    claims: { tired: true, slept: true, abroad: true },
+    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t) && t.abroad,
+  },
+  {
+    text: 'She ate, she showered, she was gone by half past eight.',
+    claims: { tired: true },
+    license: (t) => plainLoss(t) && t.conditionBand === 'drained',
+  },
+  {
+    text: 'She was asleep in her kit before we had the bags out of the car.',
+    claims: { tired: true, slept: true, road: true },
+    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t) && road(t),
+  },
+  {
+    text: 'Two days home and she is still catching up on the sleep.',
+    claims: { tired: true },
+    license: (t) => plainLoss(t) && t.conditionBand === 'drained',
+  },
+  // --- THE FIRST PASSPORT WEEK -------------------------------------------------------------------
+  // A once-in-a-career journey, and the first time the airport painting can appear at all, so it
+  // takes the note to itself rather than competing with the result lines. Written result-agnostic
+  // on purpose: what the week is about is the distance, not the draw.
+  {
+    text: 'Her first time through an airport with a racquet bag. She kept the ticket.',
+    claims: { firstAbroad: true, abroad: true },
+    license: (t) => !t.injured && t.firstAbroad,
+  },
+  {
+    text: 'The furthest she has ever been from this kitchen. She came back somehow taller.',
+    claims: { firstAbroad: true, abroad: true },
+    license: (t) => !t.injured && t.firstAbroad,
+  },
+  {
+    text: 'Her first one in another country. She wanted to know when the next one is.',
+    claims: { firstAbroad: true, abroad: true },
+    license: (t) => !t.injured && t.firstAbroad,
+  },
+  {
+    text: 'First trip abroad. She slept through the landing and half the drive back.',
+    claims: { firstAbroad: true, abroad: true, slept: true },
+    license: (t) => !t.injured && t.firstAbroad && asleep(t),
+  },
+  {
+    text: 'She listed everyone she met, the whole flight home.',
+    claims: { firstAbroad: true, abroad: true },
+    license: (t) => !t.injured && t.firstAbroad && awake(t),
+  },
+  // --- SHE CAME HOME HURT ------------------------------------------------------------------------
+  // ⚠ THE INJURY TAKES THE NOTE, whatever else the week held. A line about chips on a week she has
+  // just been told she is out for six is tone-deaf, so the licences above all carry `!t.injured` and
+  // these are the only ones left standing. On the engine's own timing the news lands the week she
+  // gets back (`rollInjury` runs at the top of a week, and an injury the week BEFORE would have
+  // walked the tournament over and left no journey at all), so none of these claims she was hurt at
+  // the tournament – they are about a girl who got home and then got the news.
+  {
+    text: 'The bag has not been unpacked. She is not allowed to lift it anyway.',
+    claims: { injured: true },
+    license: (t) => t.injured,
+  },
+  {
+    text: 'We watched something stupid on television and did not mention tennis once.',
+    claims: { injured: true },
+    license: (t) => t.injured,
+  },
+  {
+    // A niggle only. On a layoff of a season this reads as a parent not listening, so it is capped:
+    // three weeks is the band where "it is nothing" is roughly what it turns out to be.
+    text: 'She keeps saying it is nothing. We are getting it looked at anyway.',
+    claims: { injured: true },
+    license: (t) => t.injured && t.injuryWeeks <= 3,
+  },
+  {
+    text: 'A long time to be off it. She has already asked what she can still do.',
+    claims: { injured: true },
+    license: (t) => t.injured && t.injuryWeeks >= 6,
+  },
+  {
+    text: 'She has the calendar out, counting. We took it off her and made tea.',
+    claims: { injured: true },
+    license: (t) => t.injured && t.injuryWeeks >= 6,
+  },
+  {
+    text: 'She is on the sofa with the ice on, working out who she would have played next.',
+    claims: { injured: true },
+    license: (t) => t.injured,
+  },
+  {
+    text: 'She is worried about the wrong thing. She asked if the entry fee comes back.',
+    claims: { injured: true },
+    license: (t) => t.injured,
+  },
+]
+
+/** The note for this journey. Drawn off `seed:travelnote:<week>` – its own purpose-scoped
+ *  sub-stream, stable for the whole week, zero MAIN draws.
+ *
+ *  NEVER SILENT, unlike the photo caption. `diaryLine` is allowed to say nothing because an ordinary
+ *  week saying nothing is itself a statement; this note is the CAPTION of a painting the player is
+ *  looking at, and a picture of a girl asleep in a car with no words under it is a missing string,
+ *  not a quiet week. The coverage sweep in tests/travel-home.test.ts proves the pool answers every
+ *  reachable trip; the fallback is a sentence that is true of every journey there has ever been. */
+export function travelNoteFor(travel: TravelHomeFacts, seed: string): string {
+  const pool = TRAVEL_NOTES.filter((n) => n.license(travel))
+  if (pool.length === 0) return 'A long way there, and a long way back.'
+  const rng = rngFromSeed(`${seed}:travelnote:${travel.week}`)
+  return pool[Math.floor(rng() * pool.length)].text
+}
+
 // --- the greeting (epic/redesign-home) --------------------------------------------------------
 
 /** The four words the diary page can open with. Time of day, nothing else – the greeting is
@@ -825,10 +1546,26 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
   // The caption is selected FIRST: the greeting is allowed to see it, so the two can never say the
   // same thing (greetingFor).
   const photoLine = diaryLine('photo', facts, view.seed)
+  // The journey's full reading, for the note. `assembleDiaryFacts` above has already taken the same
+  // reading for the two fields the FACTS carry (scene and mood) – both calls are pure functions of
+  // the same view, so they agree by construction, and the alternative (threading the object out of
+  // assembleDiaryFacts) would change a signature three suites call directly. Cheap: two filters over
+  // a capped event list, on the weeks it is non-null and on no others.
+  const travelHome = travelHomeFactsFor({
+    events: view.events,
+    milestones: view.milestones,
+    week: view.week,
+    seed: view.seed,
+    kidId: view.kidId,
+    condition: view.condition,
+    injury: view.injury,
+    pendingUnfinished: view.pendingUnfinished,
+  })
   return {
     facts,
     photoLine,
     greeting: greetingFor(facts, photoLine, view.seed),
+    travelNote: travelHome ? travelNoteFor(travelHome, view.seed) : null,
     // The licences cover every state the engine can produce (the coverage sweep in
     // tests/diary.test.ts proves it); the fallback is a sentence that is true of any week at all.
     conditionNote: diaryLine('condition', facts, view.seed) ?? 'The week went by.',

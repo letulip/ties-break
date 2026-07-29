@@ -84,6 +84,7 @@ import {
   eliteGateShortfall,
   practiceCoachRateCents,
   selfRateCents,
+  tierOf,
 } from './coach'
 import {
   kitGrantCents,
@@ -96,13 +97,19 @@ import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, kidSeedIndexIn, JUNIOR_TOUR } from './season/tournament'
-import { previewEvent } from './season/preview'
+import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
 // dependency runs one way: world → diary, exactly like world → condition.
-import { buildDiarySnapshot, milestoneKey } from './diary'
+import { buildDiarySnapshot, lastKidTitleOf, milestoneKey } from './diary'
+// Screen C's three derived tiles (Personality / School / Friends). Same shape of dependency as the
+// diary and the radar: kidLife.ts is world-free and takes a narrow structural view, one way only.
+import { buildKidLife, FRIENDS_WINDOW } from './kidLife'
+// The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
+// diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
+import { axisReadings, buildRadar, buildTrainingRead, type RadarWorldView } from './radar'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -1640,6 +1647,13 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
     addEvent(world, {
       week: world.week,
       type: 'info',
+      // ⚠ NOW KEPT, AND TAGGED (skills-radar). Both arms of this command are the moment a coaching
+      // arrangement CHANGED, and the radar's "weeks together" is derived from exactly that moment
+      // (coachSinceWeek) rather than from a new persisted field. A pruned release event would let a
+      // fired coach go on lending his read to the parent who replaced him. Bounded by construction:
+      // one row per hire, and a career has a handful.
+      keep: true,
+      milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
       text: 'You are coaching her yourself again. The weekly bill is court time only.',
     })
     return
@@ -1663,8 +1677,57 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
     week: world.week,
     type: 'info',
     keep: true,
+    // See the release arm above: the tag is what makes "when did this partnership start" a read
+    // over the ledger instead of a persisted field and a migration.
+    milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
     text: `${coach.name} is her coach now – ${COACH_TIER_LABEL[coach.tier]} tier.`,
   })
+}
+
+/** THE TAG ON A COACH-CHANGE EVENT, and the only thing that identifies one. `milestoneKey` already
+ *  exists on every event (it is what makes a milestone fire once), it is never pruned when the event
+ *  is `keep`, and it needs no schema bump - the same trick the academy's offers use
+ *  (`academy-in-<week>`). The week is in the key, so two hires can never collide.
+ *
+ *  A career migrated from a save written before this tag existed simply has no tagged events, and
+ *  `coachSinceWeek` falls back to week 0 - "they have been together as long as anyone can remember",
+ *  which is the right answer for a ledger with no record of a change. */
+const COACH_CHANGE_KEY = 'coach-since-'
+
+/** WHEN THE CURRENT COACHING ARRANGEMENT BEGAN - the radar's "weeks together", derived rather than
+ *  stored (docs/specs/skills-radar.md §2: no schema bump, no migration, no golden save).
+ *
+ *  Week 0 for a career that has never changed coach, and the week of the last hire or release
+ *  otherwise. BOTH arms count: a new coach has to learn her, and so - as far as the ladder is
+ *  concerned - does the parent who takes the court back, because what the rung buys is an eye, and
+ *  the eye left with him. */
+export function coachSinceWeek(world: WorldState): number {
+  let since = 0
+  for (const e of world.events) {
+    if (e.milestoneKey?.startsWith(COACH_CHANGE_KEY) && e.week > since) since = e.week
+  }
+  return since
+}
+
+/** EVERY COMPETITIVE MATCH SHE HAS EVER PLAYED, off the two durable ledgers that already count them:
+ *  the running season W-L counters (v10, incremented per kid match at finalizeTournament) and the
+ *  per-season history rows (v14, appended at each wrap-up as those counters reset).
+ *
+ *  ⚠ NOT `world.events.filter(e => e.match)`. The event feed prunes at EVENTS_CAP, so her match
+ *  records are a rolling window of roughly the last year and a half - measured on a busy career it
+ *  holds 20-40 matches and oscillates rather than grows. The radar needs a count that can only go
+ *  UP (see engine/radar.ts, axisEvidence): a confidence that fell because an old match aged out
+ *  would re-thicken the fog on its own, which is exactly the shimmer the spec forbids.
+ *
+ *  Walkovers and medical withdrawals are absent by construction - they never reach finalize, so
+ *  they were never counted, and she never took the court. Practice friendlies are absent for the
+ *  same reason they are not evidence (R11-2): nothing was on the line. */
+export function matchesEverPlayed(world: WorldState): number {
+  return (
+    world.seasonWins +
+    world.seasonLosses +
+    world.seasonHistory.reduce((sum, h) => sum + h.wins + h.losses, 0)
+  )
 }
 
 /** THE TOURNAMENT-WEEK TOGGLE. Pure state, zero draws on any stream - it changes only what the
@@ -3590,6 +3653,9 @@ function pendingView(world: WorldState): PendingView | undefined {
     eventId: p.eventId,
     tier: event.tier,
     surface: event.surface,
+    // The weather plate on the live match. Same function the Season card quotes, so one tournament
+    // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
+    temperatureC: eventTemperature(world.seed, event),
     roundLabel: stageLabel(current.round, tier.drawSize),
     opponent: {
       name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
@@ -3605,6 +3671,10 @@ function pendingView(world: WorldState): PendingView | undefined {
     tierLabel: tier.label,
     points: tier.points[kidFinish] ?? 0,
     finishLabel: finishLabel(kidFinish),
+    // The E brief's crowd. Its own `seed:crowd:` sub-stream, so reading it here costs the MAIN
+    // stream nothing (the frozen 41550 / e6b0c709 capture is untouched by construction) and it is
+    // the SAME figure the Season card printed while the event was still upcoming.
+    crowd: eventCrowd(world.seed, event),
   }
 }
 
@@ -3644,6 +3714,35 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     milestones: world.milestones,
     vacationWeek: vacationForWeek(world, world.week) !== undefined,
   })
+  // THE SKILLS RADAR'S VIEW OF HER, assembled ONCE and read twice - by the contour (`buildRadar`)
+  // and by the Weekly Story's training line (`buildTrainingRead`). Hoisted rather than inlined
+  // because the two readings MUST see the same girl: a second literal here would be a second place
+  // for "which matches count" to drift, and the card and the radar would then disagree about how
+  // much anybody can see, on the same screen, in the same week.
+  const radarView: RadarWorldView = {
+    seed: world.seed,
+    week: world.week,
+    kidId: KID_ID,
+    skills: world.skills,
+    // Where she began, recomputed from the seed rather than stored - see RadarWorldView.startSkills.
+    // `growWeek` is the only thing in the engine that moves `world.skills`, so the difference between
+    // these two IS her development, and neither of them ever leaves this object.
+    startSkills: startingSkills(world.seed, world.profile),
+    potential: world.potential,
+    coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
+    coachSinceWeek: coachSinceWeek(world),
+    matchesPlayed: matchesEverPlayed(world),
+    // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
+    // the radar nothing, for the same reason it never shows on her face (R11-2).
+    matches: world.events
+      .filter((e) => e.match !== undefined && !e.friendly)
+      .map((e) => e.match!)
+      .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
+  }
+  // ...and the evidence fold behind BOTH of them, walked once. `axisEvidence` reads the whole
+  // retained match window per axis, so asking the two builders independently would walk it eight
+  // times a snapshot for one girl in one week.
+  const radarReadings = axisReadings(radarView)
   return {
     schemaVersion: world.schemaVersion,
     careerId: world.careerId,
@@ -3722,6 +3821,43 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // derivation off state that already exists – no persisted field, no schema bump.
     lossStreak,
     diary,
+    // HER LIFE OFF THE COURT (engine/kidLife.ts): the Personality / School / Friends tiles screen C
+    // draws. Same discipline as the diary - derived at SNAPSHOT time off `seed:friends:*`
+    // sub-streams, zero MAIN draws, so the frozen capture (41550 / e6b0c709) cannot move.
+    life: buildKidLife({
+      seed: world.seed,
+      week: world.week,
+      ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
+      // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
+      // arithmetic can never disagree with the year the rest of the game prints.
+      seasonYear: seasonYear(seasonIndexOf(world.week)),
+      playStyle: world.profile.playStyle,
+      birthMonth: world.profile.birthMonth,
+      injured: world.injury !== null,
+      // HOW MUCH SHE HAS BEEN AWAY, off the persisted finance ledger rather than the capped event
+      // feed: a week in which a travel bill was actually paid is a week the family was somewhere
+      // else. A local event costs no travel and is therefore correctly NOT a week away.
+      weeksAway: world.financeWeeks.filter(
+        (w) => w.week > world.week - FRIENDS_WINDOW && w.week <= world.week && (w.byCategory.travel ?? 0) < 0,
+      ).length,
+      lossStreak: lossStreak?.losses ?? 0,
+      // Her most recent title off the same walk the diary uses, so two surfaces cannot disagree
+      // about when she last won something.
+      weeksSinceTitle: (() => {
+        const title = lastKidTitleOf(world.events)
+        return title ? world.week - title.week : null
+      })(),
+    }),
+    // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
+    // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by
+    // construction. The true `skills` / `potential` go IN and never come out: the snapshot carries
+    // an estimate and a haze, which is the whole point of the slice.
+    radar: buildRadar(radarView, radarReadings),
+    // ...AND THE SAME FOG, ONE STEP FURTHER ON: what came along this week, in words, for the Weekly
+    // Story's Training card. Design D lists skill gains there; we may not, because a weekly delta
+    // integrates into her exact build and the fog above would be decoration. Same sub-stream
+    // discipline (`seed:train*`), same zero MAIN draws, and NOT ONE NUMBER on the way out.
+    trainingRead: buildTrainingRead(radarView, radarReadings),
     lastSeasonSummary: world.lastSeasonSummary,
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
     seasonHistory: world.seasonHistory.map((h) => ({ ...h })),

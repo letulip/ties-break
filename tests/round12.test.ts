@@ -452,8 +452,15 @@ describe('R12-S2 — "Best result: best Champion"', () => {
 
   it('EVERY consumer checked: nothing relied on the "best " prefix', () => {
     // The popup row (whose label already says "Best result") renders the value raw...
+    // ⚠ RE-AIMED by U2 (29.07): the wrap-up popup's `<table>` became screen D's card grid – the
+    // owner's ruling that the season summary is the Weekly Story at season scale
+    // (docs/specs/ui-inventory.md §2, "они тождественны примерно"). The row is the same row with the
+    // same label and the same value; only its element changed, `<th>Best result</th>` -> a
+    // `<span class="season-key">`. The PROTECTED FACT is untouched and is what both lines below
+    // still assert: this consumer prints the banked string RAW, under a label that already carries
+    // the word "best", so nothing here depends on the value arriving with a "best " prefix.
     const dialog = read('../src/components/SeasonSummaryDialog.vue')
-    expect(dialog).toContain('<th>Best result</th>')
+    expect(dialog).toContain('>Best result</span>')
     expect(dialog).toContain('{{ summary.bestResultText }}')
     // ...the Stats season table never used the string at all – it renders the stored INDEX through
     // finishLabel itself, so it is untouched by this change...

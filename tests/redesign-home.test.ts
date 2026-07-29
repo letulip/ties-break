@@ -31,6 +31,28 @@ const home = read('../src/components/screens/HomeScreen.vue')
 const app = read('../src/App.vue')
 const css = read('../src/style.css')
 
+// ⚠ U0 MOVED HOME'S OWN RULES OUT OF THE SHEET AND INTO THE SFC, scoped, so that five agents
+// building six screens in parallel are not all editing `src/style.css`. Every rule this file used to
+// read out of `css` is still a rule, with the same declarations; it just lives where its one
+// consumer does. These three readers say which file each fact is expected in, so a guard that stops
+// finding its rule fails loudly instead of quietly reading an empty string – which is exactly the
+// "lying test" trap the round-10 pass wrote up.
+/** Home's scoped block – the rules that only this page renders. */
+const homeCss = home.slice(home.indexOf('<style scoped>'))
+/** Home's TEMPLATE, and only the template: the style block below it legitimately quotes the owner in
+ *  Russian, and the copy guards must not read that as player-facing text. */
+const homeTemplate = home.slice(home.indexOf('<template>'), home.lastIndexOf('</template>'))
+/** A shared component's file, for a rule that is no longer any one screen's. */
+const ui = (name: string) => read(`../src/components/ui/${name}.vue`)
+
+/** The body of a rule, by selector, from whichever source is passed. Throws rather than returning
+ *  '' when the selector is absent, so a moved rule can never pass a `toContain` by vacuous truth. */
+function ruleBody(source: string, selector: string): string {
+  const i = source.indexOf(`${selector} {`)
+  if (i < 0) throw new Error(`rule not found: ${selector}`)
+  return source.slice(i, source.indexOf('}', i))
+}
+
 /** A rung of THE RADIUS LADDER, in px, read off :root (owner, 29.07 — every radius in the sheet
  *  is a `--radius-*` token now, so a test that wants the NUMBER has to resolve one). */
 function resolveRadiusToken(sheet: string, token: string): number {
@@ -95,6 +117,11 @@ describe('weekDateLine – the header date line, in one place', () => {
 /** A coherent-enough facts object for the greeting, which reads exactly two fields of it. */
 function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
   return {
+    // R14-2: the greeting reads neither; kept explicit so the type is total. ⚠ The MOOD joined the
+    // journey facts with ui/travel-set – null together with the scene, exactly as the engine builds
+    // them, so this fixture still describes a week she went nowhere.
+    travelHomeScene: null,
+    travelHomeMood: null,
     week: 10,
     emotion: 'norm',
     resultFresh: false,
@@ -319,9 +346,17 @@ describe('the coach portraits', () => {
     expect(preloader).toContain('preloadCoachArt') // the self-coached fallback
     expect(preloader).toContain('preloadCoachMarketArt') // her actual coach
     expect(preloader).toContain('game.snapshot?.coachId')
-    // Still a SECOND watch, separate from the age/band one, which is what keeps the budget literal.
-    expect(preloader.match(/watch\(/g) ?? []).toHaveLength(2)
+    // ⚠ RE-AIMED AGAIN (R14-2): 2 -> 3 watches. The journey-home scene joined on its OWN trigger,
+    // for exactly the reason this test exists – it follows the WEEK, not her age band, so folding
+    // it into the age watch would have made the per-band budget a lie. The PROTECTED FACT is the
+    // one in the title and it is unchanged: nothing that is not band-scoped rides the band's watch.
+    // Asserted as a SET of triggers rather than a bare count, so the next addition has to say what
+    // it keys on instead of just bumping a number.
+    expect(preloader.match(/watch\(/g) ?? []).toHaveLength(3)
+    expect(preloader).toContain('game.snapshot?.ageYears') // the band
+    expect(preloader).toContain('travelHomeScene') // the week
     expect(preloader).not.toContain('preloadForAge(age)\n      preloadCoachArt')
+    expect(preloader).not.toContain('preloadForAge(age)\n      preloadTravelHomeArt')
   })
 })
 
@@ -440,7 +475,10 @@ describe('the diary page: the structure the redesign decided', () => {
 
   it('her FIRST name is the headline – the export puts it at 42px, alone', () => {
     expect(home).toContain('game.snapshot?.profile.kidName')
-    const rule = css.slice(css.indexOf('.diary-name {'), css.indexOf('}', css.indexOf('.diary-name {')))
+    // ⚠ RE-AIMED by U0: `.diary-name` moved out of src/style.css into HomeScreen's own scoped
+    // block. It has exactly one consumer – this page – and it is composition, not vocabulary.
+    // The protected fact is unchanged to the digit: her name is the biggest type in the app.
+    const rule = ruleBody(homeCss, '.diary-name')
     expect(rule).toContain('font-size: 42px')
     expect(rule).toContain('font-weight: 800')
   })
@@ -466,7 +504,9 @@ describe('the diary page: the structure the redesign decided', () => {
   it('the venue painting is picked by the engine-seeded rule, never by the component', () => {
     expect(home).toContain('venueArtUrl(e.tier, e.surface, e.id, s.seed)')
     // The export's signature: art bleeding off the card corner under a diagonal dissolve.
-    const rule = css.slice(css.indexOf('.venue-art {'), css.indexOf('}', css.indexOf('.venue-art {')))
+    // ⚠ RE-AIMED by U0: `.venue-art` moved into HomeScreen's scoped block with the rest of this
+    // page's composition. The arch, the dissolve and both radii are unchanged.
+    const rule = ruleBody(homeCss, '.venue-art')
     expect(rule).toContain('mask-image')
     // ⚠ RE-AIMED by the radius ladder (owner, 29.07). The shape is unchanged; only its bottom two
     // corners changed spelling, from a bare `14px` to the frame rung they were already sitting on.
@@ -551,29 +591,52 @@ describe('the style foundation later slices reuse', () => {
   })
 
   it('the notecard and the "pick it up" affordance are one shared rule', () => {
-    expect(css).toContain('.note-card {')
-    expect(css).toContain('button.note-card:hover:not(:disabled)')
+    // ⚠ RE-AIMED by U0. THE NOTECARD SURFACE IS A COMPONENT NOW – `src/components/ui/Card.vue`,
+    // its default `gradient` variant. It had been merged into one selector list by the css-dry
+    // pass (`.friendly-card, .diary-strip, .note-card`); U0 makes that merge a component, so a
+    // screen asks for the surface by rendering a `<Card>` instead of by remembering a class name.
+    // What is still called `.note-card` is what was always the GRID card's alone – its box, its
+    // type, its height and its lift – and that lives in HomeScreen's scoped block.
+    // The protected facts are unchanged and both are still pinned below: a notecard is a gradient
+    // with a translucent hairline (not a filled rectangle), and a card that is a door lifts.
+    expect(homeCss).toContain('.note-card {')
+    expect(homeCss).toContain('button.note-card:hover:not(:disabled)')
+    // ...and it is still a real `<button>` that carries the affordance, not a div with a handler.
+    expect(home).toContain('as="button"')
     // The card is a GRADIENT with a translucent hairline – the export's idiom, and most of why its
     // cards read as objects rather than as filled rectangles.
-    // ⚠ RE-AIMED by the css-dry pass (docs/specs/css-dry-audit.md): the gradient and the
-    // --card-edge hairline moved out of `.note-card`'s own rule into THE NOTECARD SURFACE, the
-    // shared rule that also dresses `.friendly-card` and `.diary-strip` – three places had been
-    // writing the export's card idiom out by hand. The merged selector list deliberately ENDS with
-    // `.note-card`, so `.note-card {` still names the rule that declares them and the fact being
-    // pinned is unchanged: a notecard is a gradient with a translucent hairline, not a filled
-    // rectangle. It is now pinned for all THREE surfaces at once rather than for this one.
-    const rule = css.slice(css.indexOf('.note-card {'), css.indexOf('}', css.indexOf('.note-card {')))
-    expect(rule).toContain('linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%)')
-    expect(rule).toContain('border: 1px solid var(--card-edge)')
-    expect(css).toContain('prefers-reduced-motion')
+    // ⚠ RE-AIMED TWICE, and the second aim is U0's. FIRST by the css-dry pass
+    // (docs/specs/css-dry-audit.md), which moved the gradient and the --card-edge hairline out of
+    // `.note-card`'s own rule into the shared NOTECARD SURFACE that also dressed `.friendly-card`
+    // and `.diary-strip`. NOW by U0, which turns that shared rule into `<Card>`'s `gradient`
+    // variant. The fact is what it has been through both moves – a notecard is a gradient with a
+    // translucent hairline, not a filled rectangle – and it is still pinned for all three surfaces
+    // at once, because all three now render the same component.
+    const surface = ruleBody(ui('Card'), '.tb-card--gradient')
+    expect(surface).toContain('linear-gradient(180deg, var(--card-top) 0%, var(--card-bottom) 100%)')
+    expect(ruleBody(ui('Card'), '.tb-card')).toContain('border: 1px solid var(--card-edge)')
+    // ...and the three callers really are the three: Home's grid, Home's strips, Season's friendly.
+    expect(home).toContain('class="note-card"')
+    expect(home).toContain('class="diary-strip"')
+    expect(read('../src/components/screens/SeasonScreen.vue')).toContain('class="friendly-card"')
+    // The lift still respects a reduced-motion preference; that rule moved with the card's own box.
+    expect(homeCss).toContain('prefers-reduced-motion')
   })
 
   it('the polaroid is real paper – the one light surface in the app – and it is tilted', () => {
-    const rule = css.slice(css.indexOf('.memory-polaroid {'), css.indexOf('}', css.indexOf('.memory-polaroid {')))
-    expect(rule).toContain('background: var(--polaroid-paper)')
-    expect(rule).toContain('transform: rotate(var(--tilt-4))') // a FIXED angle, not a per-render roll
-    // cream, i.e. genuinely light: the export's #f3f0e8.
+    // ⚠ RE-AIMED by U0: the polaroid is `src/components/ui/Polaroid.vue` now. The paper, the fat
+    // bottom lip, the corner and the shadow are the OBJECT and moved into it; where it is dropped
+    // and how wide it is stayed with the card it is dropped on. The tilt is still the token and
+    // still fixed – it is passed as a value rather than written in a rule, which is why the angle
+    // is asserted at the CALL SITE below instead of in a `transform`.
+    // The protected fact is unchanged: this is real cream paper, and it does not re-roll its angle
+    // on every render (a note that re-tilts per render is a nervous tic and unscreenshotable).
+    expect(ruleBody(ui('Polaroid'), '.tb-polaroid')).toContain('background: var(--polaroid-paper)')
+    expect(home).toContain('tilt="var(--tilt-4)"') // a FIXED angle, not a per-render roll
+    expect(ui('Polaroid')).not.toMatch(/Math\.random/)
+    // cream, i.e. genuinely light: the export's #f3f0e8, and the token is still the sheet's.
     expect(css).toContain('--polaroid-paper: #f3f0e8')
+    expect(css).toContain('--tilt-4: -7deg')
   })
 
   it('the surface tokens ARE the design export, and the dead Home furniture went with them', () => {
@@ -613,21 +676,36 @@ describe('the style foundation later slices reuse', () => {
       expect(existsSync(`${ROOT}public${f.replace(/^\/?/, '/')}`), `missing font file ${f}`).toBe(true)
     }
     // ...and it is used where handwriting belongs, never on a control or a number.
-    expect(css).toContain('font-family: var(--font-hand)')
+    // ⚠ RE-AIMED by U0: the two rules that USE Caveat (`.memory-line`, `.coach-sign`) are Home's
+    // composition and moved into its scoped block; the FAMILY and its @font-face stay in the sheet,
+    // which is what the rest of this test is about. The fact is unchanged – the handwriting is
+    // self-hosted, and something renders in it.
+    expect(homeCss).toContain('font-family: var(--font-hand)')
   })
 })
 
 describe('player copy on every surface this slice touched', () => {
   it('short dash only, and no Cyrillic in anything rendered', () => {
+    // ⚠ RE-AIMED by U0, and this is a re-aim of the EXTRACTION, not of the assertion. The slice was
+    // `src.slice(src.indexOf('<template>'))` – everything from the template to the end of the file –
+    // which was the whole template only while these SFCs had no <style> block after it. U0 gave Home
+    // and Season one, and this codebase writes CSS comments that quote the owner in Russian, which
+    // is normal and allowed. Reading them as player copy would make the guard fail on a legal file
+    // (and, worse, teach the next author to weaken it). Bounding the slice at the LAST `</template>`
+    // restores exactly the region the rule was always about: what the player can read on screen.
+    // Both assertions are untouched and neither is weaker.
     for (const [name, src] of [
       ['HomeScreen.vue', home],
       ['App.vue', app],
       ['OnboardingTour.vue', read('../src/components/OnboardingTour.vue')],
     ] as const) {
-      const template = src.slice(src.indexOf('<template>'))
+      const template = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
       expect(template, `${name} template`).not.toContain('—')
       expect(template, `${name} template`).not.toMatch(/[Ѐ-ӿ]/)
     }
+    // The bound is real: a file whose last `</template>` is missing would silence this test, so the
+    // slice must be non-empty for every source above.
+    expect(homeTemplate.length).toBeGreaterThan(1000)
     // The greeting pool is player copy too, and it is written in the engine.
     for (const g of GREETINGS) {
       expect(g).not.toMatch(/[—А-Яа-яЁё]/)

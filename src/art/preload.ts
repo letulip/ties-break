@@ -23,36 +23,47 @@
 //        only so a cold first paint has them decoded, at 11-20 KiB each)
 //   - finale art      the SAME paintings, for the three finale emotions
 //     -> components/TournamentFlow.vue artUrl (champion / runner-up / early-exit splash)
+//   - journey home    `images/fem-euro-brunnet/fem-euro-brunnet-travel-{mood}-{scene}.webp`
+//     -> the Weekly Story, on a week she came back from an away tournament. NOT band-scoped:
+//        four files serve every age, and only the one the engine picked is ever warmed.
 //
 // Pure side-effect module: importing it does nothing. Safe in a non-DOM (test/worker) context –
 // every entry point no-ops when `Image` is unavailable.
 
-import { portraitStage, type AvatarEmotion, type PortraitStage } from '../shared/avatarEmotion'
-import type { FamilyBackground } from '../shared/protocol'
+import {
+  CROPPABLE_EMOTIONS,
+  PORTRAIT_EMOTIONS,
+  portraitStage,
+  type AvatarEmotion,
+  type PortraitEmotion,
+  type PortraitStage,
+} from '../shared/avatarEmotion'
+import type { FamilyBackground, TravelHomeScene, TravelHomeMood } from '../shared/protocol'
 
 const ART_DIR = 'images/fem-euro-brunnet/'
 const NAME = 'fem-euro-brunnet'
 const COACH_DIR = 'images/coaches/'
 
 /**
- * Every emotion the Kid screen / header can land on — i.e. every value `avatarEmotion()` can
- * actually RETURN, which is what makes a preload worth its bytes.
+ * THE TWO SETS, and they are deliberately different sizes (ui/art-rehab-sleepy).
  *
- * `angry` JOINED THE LIST with its trigger (fix/world-trio item 3: a run of 4-6 straight losses,
- * the exact number drawn per streak). It used to be excluded on the standing rule stated here —
- * "add it the same day a trigger lands, not before" — because warming an unreachable face cost 2
- * files a band for nothing. That day is now: the branch exists, so bytes follow reachability in the
- * other direction. Every value the decision can return, and nothing else, belongs here.
+ * `KID_PAINTING_EMOTIONS` – every face a portrait SURFACE can show: the eight of `PortraitEmotion`.
+ * `KID_CROP_EMOTIONS`     – every face there is a 256px crop of: the seven of `AvatarEmotion`.
+ *
+ * They used to be one list (`KID_EMOTIONS`) because the two art sets were the same set. `rehab`
+ * broke that: it ships as five paintings and no crops, on purpose, because NO surface in the app
+ * renders an emotion crop (the header and Home's corner crop are both the age-only `norm` of
+ * F45-1). Warming `avatars/{stage}-rehab.webp` would be a guaranteed 404 on every band.
+ *
+ * The standing rule is unchanged and is what keeps these honest in BOTH directions: warm every face
+ * a surface can request, and nothing else. `angry` joined when its trigger landed (fix/world-trio:
+ * a run of 4-6 straight losses) rather than when its art did; `injury` STAYS in both lists even
+ * though `avatarEmotion()` no longer returns it, because it is still requestable – the injury popup
+ * paints it at onset and the Memory card paints it for her first injury. Reachability, not the
+ * emotion ladder, is the test.
  */
-export const KID_EMOTIONS: readonly AvatarEmotion[] = [
-  'norm',
-  'happy',
-  'sad',
-  'serious',
-  'tired',
-  'injury',
-  'angry',
-]
+export const KID_PAINTING_EMOTIONS: readonly PortraitEmotion[] = PORTRAIT_EMOTIONS
+export const KID_CROP_EMOTIONS: readonly AvatarEmotion[] = CROPPABLE_EMOTIONS
 
 /** The three the tournament finale can show: champion (happy), runner-up (serious), earlier exit
  *  (sad). Round-5 item 11 still stands – there is no dedicated runner-up painting. */
@@ -62,8 +73,9 @@ function base(): string {
   return import.meta.env.BASE_URL
 }
 
-/** Full-size painting URL – the Kid screen / Home portrait. */
-export function portraitUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
+/** Full-size painting URL – the Kid screen / Home portrait. Takes the WIDE union: every painted
+ *  face has a file, `rehab` included. */
+export function portraitUrl(stage: PortraitStage, emotion: PortraitEmotion): string {
   return `${base()}${ART_DIR}${NAME}-${stage}-${emotion}.webp`
 }
 
@@ -87,9 +99,55 @@ export function finaleUrl(stage: PortraitStage, emotion: AvatarEmotion): string 
 /** 256px crop URL. No clamp any more: `adult` used to redirect to the teen crops because the adult
  *  ones had never been cut, and with `milf` reachable that would have put a teenager's face on a
  *  31-year-old. The missing crops were cut instead, so every stage now has its own — same rule as
- *  shared/avatarEmotion.ts `avatarCropPath`, which is the one the components go through. */
+ *  shared/avatarEmotion.ts `avatarCropPath`, which is the one the components go through.
+ *
+ *  NARROW union on purpose: a painting-only face cannot be spelled here (see KID_CROP_EMOTIONS). */
 export function cropUrl(stage: PortraitStage, emotion: AvatarEmotion): string {
   return `${base()}avatars/${stage}-${emotion}.webp`
+}
+
+// --- the journey home (R14-2) ------------------------------------------------------------------
+//
+// `fem-euro-brunnet-travel-{mood}-{airport,plane,bus,car}.webp` – the journey back from an away
+// tournament, shown on the Weekly Story.
+//
+// ⚠ RENAMED INTO A GROUP (owner, 29.07). The four originals were `-sleepy-{scene}`; the set now has
+// three moods and the owner named the new art `-travel-sleepy-` / `-travel-happy-` / `-travel-sad-`
+// so that every journey picture matches one prefix: «будет одна общая группа, тогда мы все *-travel-*
+// сможем корректно привязать к отдельной логике». Twelve files, 3 moods x 4 modes.
+//
+// NOT BAND-SCOPED, and that is why they get their own builder rather than joining `portraitUrl`.
+// The same twelve serve a fourteen-year-old and a woman of thirty-one: the picture is of a journey,
+// not of a face. Threading them through the stage×emotion matrix would have implied sixty files
+// that do not exist. `TravelHomeScene` (shared/protocol) is the mode union, and the ENGINE picks
+// both mode and mood – see engine/diary.ts.
+
+/** Painting URL for one journey-home picture. `mood` defaults to the original sleepy set, so a
+ *  caller that predates the three-mood art keeps working. */
+export function travelHomeUrl(scene: TravelHomeScene, mood: TravelHomeMood = 'sleepy'): string {
+  return `${base()}${ART_DIR}${NAME}-travel-${mood}-${scene}.webp`
+}
+
+/** Warm the ONE picture this week selected, and only that one.
+ *
+ *  Same rule as everywhere else in this module – never preload what cannot be shown – applied to a
+ *  set where the answer is known in advance: the engine has already decided which of the twelve the
+ *  week shows, so warming any other would be wasted files (~29 KB each) on a week that can only ever
+ *  render one. Called from art/autoPreload.ts on the snapshot's own facts, which land at the weekly
+ *  tick – i.e. before the player opens the tab that renders it.
+ *
+ *  ⚠ THE MOOD IS PART OF THE ANSWER since the art became a group of twelve: warming
+ *  `-travel-sleepy-plane` on a week the engine chose `happy` would fetch a file the card never asks
+ *  for AND leave the one it does ask for cold, which is worse than not preloading at all. Scene and
+ *  mood are null together on the snapshot (engine/diary.ts), so one guard covers both. */
+export function preloadTravelHomeArt(
+  scene: TravelHomeScene | null | undefined,
+  mood: TravelHomeMood | null | undefined,
+): string[] {
+  if (!scene) return []
+  const url = travelHomeUrl(scene, mood ?? 'sleepy')
+  warm(url)
+  return [url]
 }
 
 // --- the coach's face (epic/redesign-home) ---------------------------------------------------
@@ -180,25 +238,32 @@ export function preloadFinaleArt(stage: PortraitStage): string[] {
   return urls
 }
 
-/** The whole Kid-screen set for one stage: 6 full paintings + their 6 crops. ~250-330 KiB of
- *  paintings, so every emotion the week can produce is already in the cache. */
+/** The whole Kid-screen set for one stage: 8 full paintings + the 7 crops that exist. ~250-330 KiB
+ *  of paintings, so every emotion the week can produce is already in the cache.
+ *
+ *  ⚠ THE TWO LOOPS RUN OVER DIFFERENT SETS, and that asymmetry is the feature: `rehab` is warmed as
+ *  a painting and NOT as a crop, because there is no rehab crop to warm. The types enforce it –
+ *  `cropUrl` will not accept the face – so this cannot silently regrow a 404. */
 export function preloadKidArt(stage: PortraitStage): string[] {
-  const urls = [...KID_EMOTIONS.map((e) => portraitUrl(stage, e)), ...KID_EMOTIONS.map((e) => cropUrl(stage, e))]
+  const urls = [
+    ...KID_PAINTING_EMOTIONS.map((e) => portraitUrl(stage, e)),
+    ...KID_CROP_EMOTIONS.map((e) => cropUrl(stage, e)),
+  ]
   for (const u of urls) warm(u)
   return urls
 }
 
 /** Everything one age band needs – the answer to "should the whole age set live in the cache?".
- *  Yes, per band: 6 paintings + 6 crops = 12 files, 361-424 KiB measured across the five bands,
- *  fetched once and then offline. It was 15 files before build/webp-only, when the finale asked
- *  for a duplicate `-fs8` copy of three frames it now shares with the Kid screen. */
+ *  Yes, per band: 8 paintings + 7 crops = 15 files, fetched once and then offline. (It was 12 –
+ *  7+7 – until `rehab` added a painting with no crop; before build/webp-only it was 15 for a
+ *  different reason, a duplicate `-fs8` copy of three finale frames.) */
 export function preloadStage(stage: PortraitStage): string[] {
   return [...preloadKidArt(stage), ...preloadFinaleArt(stage)]
 }
 
 /** ONE file (8-11 KB): the family's default coach portrait, on the first card grid the player sees.
  *  Deliberately NOT folded into `preloadStage`/`preloadForAge` – those are keyed on her age band and
- *  their budget ("14 urls per band, and only the faces the decision can return") is a rule worth
+ *  their budget ("one band's faces, and only the faces a surface can request") is a rule worth
  *  keeping literal. The coach changes with the family, not with the year, so it warms on its own
  *  trigger (src/art/autoPreload.ts watches the background). */
 export function preloadCoachArt(background: FamilyBackground): string[] {

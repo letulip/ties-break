@@ -420,7 +420,9 @@ function dismissSeasonSummary(): void {
       <KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />
       <CoachMarketScreen v-else-if="tab === 'market'" @back="tab = 'kid'" />
       <StatsScreen v-else-if="tab === 'stats'" />
-      <MoneyScreen v-else-if="tab === 'money'" />
+      <!-- U1 (screen G): the Family Budget grew the export's back arrow, and Money is a tabless
+           content state - so it asks the shell to move exactly the way Home and Kid already do. -->
+      <MoneyScreen v-else-if="tab === 'money'" @navigate="tab = $event" />
       <MoreScreen v-else-if="tab === 'more'" />
     </main>
 

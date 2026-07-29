@@ -14,6 +14,11 @@
 //   3. THE WEATHER. Decorative, and labelled as such (the owner: «пока декоративно рандомно»). It
 //      touches nothing the simulation reads.
 //
+//   4. THE CROWD. Decorative too, and built to the weather's pattern rather than a second one of
+//      its own (the owner: «можно как-то прикинуть какие-то коридоры для разного уровня турниров»).
+//      A corridor per tier, so the ladder can be FELT on a card. It touches nothing either – see
+//      the warning on `eventCrowd`, which is the whole point of the field existing at all.
+//
 // WHAT THE PREVIEW CANNOT KNOW, and says so in its own type: the field is drawn from the standings
 // AS THEY ARE TODAY. By the time the event plays they will have moved - other girls will have won
 // and lost. That makes this an estimate about a field she would meet if it started now, which is
@@ -34,10 +39,13 @@
 // So opponents are previewed at full condition: "this is who is there, and this is her chance
 // against them at their best". The card understates rather than flatters.
 //
-// RNG DISCIPLINE. Every draw here comes off `seed:kidtour:<eventId>` - the event's own sub-stream,
-// created fresh, read, and thrown away. Building a preview cannot move the MAIN weekly stream, so
-// the frozen capture is untouched; and because it is the same stream in the same order as the real
-// run, a preview taken on the event's own week names the opponent she actually gets.
+// RNG DISCIPLINE. Every draw that builds the FIELD comes off `seed:kidtour:<eventId>` - the event's
+// own sub-stream, created fresh, read, and thrown away. Building a preview cannot move the MAIN
+// weekly stream, so the frozen capture is untouched; and because it is the same stream in the same
+// order as the real run, a preview taken on the event's own week names the opponent she actually
+// gets. The two decorative readings take the same discipline one step further: each has its OWN
+// purpose-scoped sub-stream (`seed:weather:`, `seed:crowd:`), so decoration cannot perturb even the
+// draw, let alone the world.
 
 import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
@@ -51,7 +59,7 @@ import {
   kidSeedIndexIn,
   selectEntrants,
 } from './tournament'
-import type { AiPlayer, RankingRow, SeasonEvent } from './types'
+import type { AiPlayer, RankingRow, SeasonEvent, TierId } from './types'
 import type { SeasonResult } from './ranking'
 
 /** How the field she would meet compares with her. Three bands, because a card has room for one
@@ -68,6 +76,8 @@ export interface EventPreview {
   fieldStrength: FieldStrength
   /** decorative, deterministic per event; degrees C */
   temperatureC: number
+  /** decorative, deterministic per event; how many people are there to watch – see eventCrowd */
+  crowd: number
 }
 
 /** The kid's slot is the one `runTournament` gives her. The two share `buildDraw` outright – the
@@ -116,6 +126,60 @@ export function eventTemperature(seed: string, event: SeasonEvent): number {
   return Math.round(lo + rng() * (hi - lo))
 }
 
+// THE CROWD, tier by tier. The corridor the owner asked for, and it is NOT invented here: every
+// band below is the venue docs/lore/setting.md §6 already describes, converted to a headcount.
+//
+//   local     "Parents on a wooden bench, one dog."                              10-40
+//   j30       "Still no crowd."                                                  30-90
+//   regional  a proper club, a flip scoreboard, "maybe thirty people"            45-130
+//   j60       "a small stand along one court", a camera nobody is watching      110-320
+//   national  a national training centre, an umpire chair, a real stand         220-650
+//   j300      "a show court, actual seating, a media wall, agents on the fence" 900-2600
+//
+// ⚠ THE ORDER IS PRODUCTION SCALE, NOT PRESTIGE, and the two deliberately disagree: j30 sits BELOW
+// regional and j60 below national, because a J30 abroad is thirty parents from nine countries and a
+// national championship at home is a stand full of people who know her. That is the lore's own
+// reading ("Still no crowd" at the rung that costs $900-2,000 to reach) and it is the point the
+// figure makes: she flies further and further to play in front of fewer and fewer people, until
+// J300 - the one rung where a junior plays in front of strangers. Note also that setting.md §6
+// warns against building on tier PRESTIGE while the points retable is open, and in the same
+// breath that production scale "does not move". This field is banded on the half that does not move.
+//
+// ⚠ DECORATIVE, AND IT MUST STAY DECORATIVE. Nothing in the simulation may read it - not condition,
+// not nerves, not prize money. Those are real systems with their own specs and their own balance
+// evidence; a free number that quietly becomes an input to one of them stops being free and starts
+// needing a schema, a capture re-pin and a balance sweep. Pinned by a grep guard in
+// tests/preview.test.ts, exactly as the weather is.
+//
+// PER EVENT, NOT PER ROUND. A final really does draw more than a first round, but neither surface
+// that shows this number has a round to scale by: `EventPreview` describes an event she has not
+// entered (no round exists yet) and screen E's brief is rendered before round one. Scaling would
+// therefore make the SAME field mean "the first round's crowd" on one card and "the tournament's
+// crowd" on the other, which is worse than not modelling it. If a round ever wants its own gate,
+// it should take a round argument and be a second reading, not a re-interpretation of this one.
+const CROWD_BANDS: Record<TierId, readonly [number, number]> = {
+  local: [10, 40],
+  regional: [45, 130],
+  national: [220, 650],
+  j30: [30, 90],
+  j60: [110, 320],
+  j300: [900, 2600],
+}
+
+/** Decorative crowd. Its own sub-stream so it can never perturb the draw, and keyed on the event so
+ *  a tournament's gate is the same every time the card is rendered. Banded by tier – see the table
+ *  above for where the numbers come from and why nothing may read them.
+ *
+ *  Rounded to a step that grows with the band (5 / 10 / 50), because an estimate that reads "1,473"
+ *  claims a turnstile we do not have. Every band's ends are multiples of their own step, so the
+ *  rounding can never push a figure outside its corridor. */
+export function eventCrowd(seed: string, event: SeasonEvent): number {
+  const rng = rngFromSeed(`${seed}:crowd:${event.id}`)
+  const [lo, hi] = CROWD_BANDS[event.tier]
+  const step = hi >= 1000 ? 50 : hi >= 200 ? 10 : 5
+  return Math.round((lo + rng() * (hi - lo)) / step) * step
+}
+
 /** The whole card's worth of preview for one event. Pure; no MAIN-stream draws; nothing persisted. */
 export function previewEvent(
   world: {
@@ -147,5 +211,6 @@ export function previewEvent(
     opponentRank: opp ? (ranking.find((r) => r.playerId === opp.id)?.rank ?? null) : null,
     fieldStrength: strengthOf(alive, kid, ranking),
     temperatureC: eventTemperature(world.seed, event),
+    crowd: eventCrowd(world.seed, event),
   }
 }
