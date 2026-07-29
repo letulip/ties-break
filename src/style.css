@@ -158,6 +158,30 @@
   /* Real photographic paper – the Memory polaroid, and the only light surface in the whole app. */
   --polaroid-paper: #f3f0e8;
 
+  /* --- THE FOUR PLAY STYLES (owner, 29.07: "а если так, то зачем они нам вообще?") -------------
+     Screen R paints each style card with its own colour: the silhouette (the SVGs ship as black,
+     invisible on this page until they are tinted) and the radar pentagon. The design system names
+     all four (docs/design/tokens.css --style-*), and the values below are ITS values, copied.
+
+     ⚠ THEY ARE DECLARED HERE BECAUSE `docs/design/tokens.css` IS NEVER IMPORTED. That file is a
+     reference, not a stylesheet: nothing in the app links it, so `var(--style-...)` resolves to
+     NOTHING unless this sheet declares it, and a colour that fails resolves to no colour at all -
+     an invisible silhouette on a dark page, with no error anywhere. Onboarding had them on `.ob`
+     and PaperNote had `--paper-ink-soft` on `.tb-paper`, each with a comment promising to lift them
+     here; that is two components hand-syncing a design file, which is what the owner's question was
+     really about. tests/design-tokens.test.ts is now the gate: it scans `src/` for every `var(--x)`
+     the app references and fails if this sheet does not declare it.
+
+     ⚠ AND THE NAMES ARE THE `playStyle` IDS, not the design file's. The design calls them
+     `--style-baseliner` and `--style-bigserve`; our persisted union calls the same two styles
+     `aggressive` and `serve-first`, and the union is the one we cannot rename (it is written into
+     every save). Same reason the pose SVGs were renamed: R now derives BOTH the art and the colour
+     from the id, so there is nothing left to keep in sync by hand. */
+  --style-aggressive: #ef4b3a;
+  --style-counterpuncher: #cfe152;
+  --style-serve-first: #5b9bd5;
+  --style-all-court: #9b7fd4;
+
   /* --- THE PAPER LAYER (U0) -------------------------------------------------------------------
      The design's paper artefacts, taken verbatim from docs/design/tokens.css: warm stock, its
      ruling, the red margin rule of an exercise book, and tape. Nothing on the app's screens uses
@@ -169,6 +193,11 @@
   --paper-lined: #eae1c8;
   --paper-card: #eee6d3;
   --paper-ink: #2b2721;
+  /* The paper layer's SECOND ink, for an annotation on a scrap rather than the writing itself
+     (screen D's "Next goal" label is the first). It shipped declared on `.tb-paper` in PaperNote.vue
+     with a note saying it belonged here "the moment that sheet reopens" - the sheet is open, and it
+     is here. Same value, so nothing on paper moves. */
+  --paper-ink-soft: #4a4235;
   --paper-margin-rule: rgba(190, 90, 80, 0.5);
   --paper-tape: rgba(240, 236, 222, 0.72);
   --paper-ruling: repeating-linear-gradient(
@@ -192,6 +221,20 @@
   /* A2: one shadow for every word that sits on a painting (the export's --sh-text-on-art). The
      left scrim does the heavy lifting; this keeps the edges crisp where the picture is busy. */
   --shadow-text-on-art: 0 2px 14px rgba(0, 0, 0, 0.55);
+
+  /* --- THE CELEBRATION GROUND (screens L and M) -------------------------------------------------
+     The light behind a champion's poster: a wide radial from the top edge, which is what makes the
+     card read as lit rather than filled. `-cool` is the same light from the same place, one step
+     colder, for a final that was lost. Verbatim from docs/design/tokens.css.
+     Same story as the play-style colours above - TournamentFlow.vue had both gradients spelled out
+     at the point of use, with a ⚠ saying they belonged here, because a reference file that is never
+     imported cannot give a screen a token. Declared once, referenced twice.
+     ⚠ NOT `--gold`. The design system names it and the flow's comment listed it alongside these
+     two, but no rule in the app has ever referenced it - L's champion card is lime (`--accent`),
+     which is the app's own call. A token nothing reads is the same dead reference file in
+     miniature, so it stays out until a screen actually asks for it. */
+  --celebration-bg: radial-gradient(120% 68% at 50% 0%, #16283b 0%, #111a24 52%, #101821 100%);
+  --celebration-bg-cool: radial-gradient(120% 68% at 50% 0%, #152532 0%, #111a24 52%, #101821 100%);
 
   --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.42);
   --shadow-card-lift: 0 16px 34px rgba(0, 0, 0, 0.5);

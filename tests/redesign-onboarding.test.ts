@@ -21,8 +21,24 @@ const wizard = read('../src/components/OnboardingWizard.vue')
  *  the handoff's own rule with its em dash, and the player-facing copy guards must not read either
  *  of those as something a player will see. */
 const template = wizard.slice(wizard.indexOf('<template>'), wizard.lastIndexOf('</template>'))
+/** ⚠ THE TEMPLATE WITH ITS COMMENTS TAKEN OUT, and only the copy guards below read it.
+ *  WHAT MOVED: the template used to carry no Russian at all, so the Cyrillic guard could read the
+ *  whole of it. The footer now explains, where the markup is, WHY S grew a Back pill and why the
+ *  tennis ball left every CTA – and both of those are the owner's own words, in Russian, exactly
+ *  as the script block above has always quoted him.
+ *  WHAT DID NOT MOVE: the protected fact. A player never reads an HTML comment – Vue's SFC compiler
+ *  strips them from the production render – so "no Cyrillic and no em dash in what a player sees"
+ *  is now measured on precisely what a player sees, and a stray Cyrillic string in real markup
+ *  still fails. This is the guard getting narrower around its own subject, not looser. */
+const copy = template.replace(/<!--[\s\S]*?-->/g, '')
 /** The scoped block, for the rules that only this screen renders. */
 const css = wizard.slice(wizard.indexOf('<style scoped>'))
+/** ⚠ THE SAME BLOCK WITH ITS COMMENTS OUT, and only the "this rule does NOT exist" guards read it.
+ *  Same move, same reason as `copy` above: this sheet explains itself, and an explanation names the
+ *  things it is explaining. The `:root` guard below started failing the moment a comment recorded
+ *  that four tokens had graduated TO `src/style.css`'s :root. An absence assertion has to be made
+ *  against code, or it is really an assertion about prose. */
+const cssCode = css.replace(/\/\*[\s\S]*?\*\//g, '')
 
 /** A named region of the source, by its two boundary markers. Throws rather than returning '' when
  *  a marker is gone, so a moved constant can never pass a `toContain` by vacuous truth. */
@@ -131,7 +147,7 @@ describe('onboarding is the screen that passes ScreenShell a gutter', () => {
   it('and does NOT re-pad itself on top of the shell', () => {
     // A second horizontal inset here would be the 22 twice. The shell owns the side gutter on this
     // screen; the panes own only their vertical rhythm.
-    expect(css).not.toMatch(/padding:\s*\d+px\s+22px/)
+    expect(cssCode).not.toMatch(/padding:\s*\d+px\s+22px/)
   })
 })
 
@@ -166,8 +182,20 @@ describe('the wizard is built from the shared components, not from hand-rolled c
     expect(template).toContain(':disabled="game.busy"')
   })
 
+  it('NO TENNIS BALL on any onboarding button – the word is the whole button', () => {
+    // Owner, 29.07: «уберите этот мячик на онбординге со всех кнопок, он там не нужен». The design
+    // draws the glyph beside all three CTA words. Written as "no <svg> inside any PrimaryPill on
+    // this screen" rather than as three deletions, so it covers a fourth CTA nobody has added yet.
+    for (const pill of copy.match(/<PrimaryPill[\s\S]*?<\/PrimaryPill>/g) ?? []) {
+      expect(pill, 'a glyph came back onto an onboarding CTA').not.toContain('<svg')
+    }
+    // The three of them, and nothing between the tags but the word.
+    expect([...copy.matchAll(/<PrimaryPill[^>]*>\s*<span>([^<]+)<\/span>\s*<\/PrimaryPill>/g)]
+      .map((m) => m[1])).toEqual(['Begin', 'Start career', 'Next'])
+  })
+
   it('adds no :root block – tokens live in src/style.css and a scoped :root matches nothing', () => {
-    expect(css).not.toContain(':root')
+    expect(cssCode).not.toContain(':root')
   })
 })
 
@@ -176,46 +204,55 @@ describe('the wizard is built from the shared components, not from hand-rolled c
 // ===========================================================================
 describe('R: every play style has a pose that ships, and a colour to paint it', () => {
   const styles = region('const PLAY_STYLES: {', 'const RADAR_OUTER')
+  /** The `PlayStyle` union, read out of the protocol rather than listed here – so a fifth style
+   *  added there fails every test below until R can offer it, paint it and draw it. */
+  const protocol = read('../src/shared/protocol.ts')
+  const IDS = [...protocol
+    .slice(protocol.indexOf('export type PlayStyle'), protocol.indexOf('\n', protocol.indexOf('export type PlayStyle')))
+    .matchAll(/'([^']+)'/g)].map((m) => m[1])
 
   it('covers every PlayStyle the protocol declares, and nothing else', () => {
-    // The union is read out of the protocol, so a fifth style added there fails here until R
-    // offers it – rather than quietly shipping a screen that cannot choose it.
-    const protocol = read('../src/shared/protocol.ts')
-    const union = protocol.slice(protocol.indexOf('export type PlayStyle'), protocol.indexOf('\n', protocol.indexOf('export type PlayStyle')))
-    const declared = [...union.matchAll(/'([^']+)'/g)].map((m) => m[1])
-    expect(declared).toHaveLength(4)
-    expect([...styles.matchAll(/^ {4}id: '([^']+)',$/gm)].map((m) => m[1]).sort()).toEqual([...declared].sort())
+    expect(IDS).toHaveLength(4)
+    expect([...styles.matchAll(/^ {4}id: '([^']+)',$/gm)].map((m) => m[1]).sort()).toEqual([...IDS].sort())
   })
 
-  it('⚠ the pose FILES are not named after the ids, and the mapping is spelled out for it', () => {
-    // docs/specs/ui-inventory.md §4 Q4 says the four SVGs match "the four `playStyle` ids exactly".
-    // Two of them do not: `baseliner` is our `aggressive`, `bigserve` is our `serve-first`. This
-    // test pins the CORRECTION – each style names its own file, and each file exists.
-    const poses = [...styles.matchAll(/pose: '([^']+)'/g)].map((m) => m[1])
-    expect(poses).toEqual(['baseliner', 'counterpuncher', 'bigserve', 'all-court'])
-    for (const pose of poses) {
+  it('⚠ every id has its pose SVG on disk – the FILE is named after the id, so there is no mapping', () => {
+    // WHAT MOVED. This used to pin a CORRECTION: docs/specs/ui-inventory.md §4 Q4 claimed the four
+    // SVGs matched "the four `playStyle` ids exactly", two of them did not (`baseliner` was our
+    // `aggressive`, `bigserve` our `serve-first`), and the screen carried a `pose:` field per style
+    // to translate. The owner ruled the other way (29.07: «переименуй если нужно») and the two FILES
+    // were renamed, because `PlayStyle` is persisted inside `PlayerProfile` and the union is the one
+    // name that cannot move without a save migration.
+    // WHAT DID NOT MOVE: the protected fact, which is the only one that ever mattered – every id the
+    // protocol declares resolves to art that ships. It is now pinned against the ids DIRECTLY rather
+    // than against a hand-written list of four filenames, so it is a stronger assertion than before
+    // and the ui-inventory line it was correcting is true at last.
+    for (const id of IDS) {
       expect(
-        existsSync(new URL(`../public/icons/styles/${pose}.svg`, import.meta.url)),
-        `pose art missing: ${pose}.svg`,
+        existsSync(new URL(`../public/icons/styles/${id}.svg`, import.meta.url)),
+        `pose art missing: ${id}.svg`,
       ).toBe(true)
     }
+    // ...and the screen derives the filename from the id instead of carrying the old table.
+    expect(styles, 'the pose mapping came back').not.toContain('pose:')
+    expect(wizard).toContain('icons/styles/${id}.svg')
   })
 
-  it('the four style colours are declared, because docs/design/tokens.css is never imported', () => {
-    // They are the design system's own values (--style-*), and they resolve only because the screen
-    // declares them on its own root. If they ever graduate to src/style.css, this moves with them.
-    for (const [token, value] of [
-      ['--style-baseliner', '#ef4b3a'],
-      ['--style-counterpuncher', '#cfe152'],
-      ['--style-bigserve', '#5b9bd5'],
-      ['--style-allcourt', '#9b7fd4'],
-    ]) {
-      expect(css, `${token} not declared`).toContain(`${token}: ${value}`)
+  it('⚠ every id has its colour on :root – and the WIZARD no longer declares them', () => {
+    // WHAT MOVED: the four `--style-*` were declared on `.ob` in this component, because
+    // docs/design/tokens.css is a reference nobody imports and the screen had to declare what it
+    // used. They are in src/style.css's :root now, under the ids (owner, 29.07: «а если так, то
+    // зачем они нам вообще?»), and tests/design-tokens.test.ts is the general gate that keeps any
+    // token from going back to being a private copy.
+    // WHAT DID NOT MOVE: that all four resolve, and at the design system's own values. Both are
+    // still checked – here against the ids, there against docs/design/tokens.css.
+    const sheet = read('../src/style.css')
+    for (const id of IDS) {
+      expect(sheet, `--style-${id} is not on :root`).toMatch(new RegExp(`^\\s*--style-${id}:`, 'm'))
     }
-    const design = read('../docs/design/tokens.css')
-    for (const value of ['#ef4b3a', '#cfe152', '#5b9bd5', '#9b7fd4']) {
-      expect(design, `${value} is not the design system's`).toContain(value)
-    }
+    expect(cssCode, 'the wizard is declaring style colours again').not.toMatch(/^\s*--style-/m)
+    // The card asks for its colour by id, so a fifth style needs a token and nothing else.
+    expect(template).toContain("'--tone': `var(--style-${s.id})`")
   })
 
   it('the silhouettes are MASKED rather than dropped in as images – black art on a black page', () => {
@@ -242,11 +279,37 @@ describe('S: the summary shows what the six steps collected', () => {
     }
   })
 
-  it('keeps a way BACK out of the last step, which the mock does not draw', () => {
+  it('⚠ keeps a way BACK out of the last step, and it is the SAME control the step before it uses', () => {
     // "Back keeps the choices already made" is the handoff's own interaction rule, and a summary
-    // you cannot walk back out of is a summary you cannot correct.
+    // you cannot walk back out of is a summary you cannot correct. The mock draws no Back on S.
+    // WHAT MOVED (owner, 29.07: «давай сделаем по аналогии с предыдущим шагом»): it used to be the
+    // quiet underlined line, where N puts Skip. It is now `.ob-back`, the pill R carries, in R's
+    // place. WHAT DID NOT MOVE: that there IS a way back, which is all the old assertion pinned.
     const foot = template.slice(template.indexOf('step === STEP_COUNT'))
-    expect(foot).toContain('@click="back"')
+    expect(foot).toContain('<button class="ob-back" type="button" @click="back">Back</button>')
+    // Same shape as the step before it: a footer ROW, not the solo column N ends on.
+    expect(foot.slice(0, foot.indexOf('>'))).not.toContain('ob-foot--solo')
+  })
+
+  it('⚠ Start career is LARGER than Next – the one button that begins a career, not a step', () => {
+    // Owner, 29.07: "только кнопка старт будет чуть больше Next". Both are the CTA pill in the same
+    // row, so the difference is a modifier on top of `.ob-cta`, and it has to be a real one: every
+    // number on `--start` must exceed the base rule's, or "slightly larger" is a class that does
+    // nothing. Read out of the sheet rather than asserted as literals, so re-tuning either rule
+    // keeps the RELATION honest.
+    expect(template).toContain('class="ob-cta ob-cta--start"')
+    const pad = (rule: string) => {
+      const block = css.slice(css.indexOf(`${rule} {`), css.indexOf('}', css.indexOf(`${rule} {`)))
+      const m = block.match(/padding: (\d+(?:\.\d+)?)px (\d+(?:\.\d+)?)px/)
+      const f = block.match(/font-size: (\d+(?:\.\d+)?)px/)
+      if (!m) throw new Error(`no padding on ${rule}`)
+      return { y: +m[1], x: +m[2], fs: f ? +f[1] : 14.5 }
+    }
+    const next = pad('.ob-cta.primary')
+    const start = pad('.ob-cta--start.primary')
+    expect(start.y).toBeGreaterThan(next.y)
+    expect(start.x).toBeGreaterThan(next.x)
+    expect(start.fs).toBeGreaterThan(next.fs)
   })
 
   it('shows the portrait the owner settled on – jun-norm, "первый раз входит в клуб"', () => {
@@ -266,10 +329,32 @@ describe('S: the summary shows what the six steps collected', () => {
 // ===========================================================================
 describe('the copy a player reads', () => {
   it('carries no Cyrillic and no em dash – the short dash is the house dash', () => {
-    expect(template).not.toMatch(/[Ѐ-ӿ]/)
-    expect(template).not.toContain('—')
+    expect(copy).not.toMatch(/[Ѐ-ӿ]/)
+    expect(copy).not.toContain('—')
     // The mockups themselves spell N's three paragraphs with em dashes; ours do not.
-    expect(template).toContain("You're the parent now – every choice")
+    expect(copy).toContain("You're the parent now – every choice")
+  })
+
+  it('⚠ writes its six headings in the CASE THEY RENDER IN, rather than shouting them in CSS', () => {
+    // Owner, 29.07: «не капс локом, а просто каждое слово с большой буквы, как в остальных всех
+    // экранах». WHAT MOVED: `text-transform: uppercase` came off `.ob-title` and `.ob-hero-title`.
+    // WHAT THIS PROTECTS, which nothing protected before: the pair of them. Dropping the transform
+    // without re-casing the strings ships six sentence-case headings; re-casing them and leaving the
+    // transform on ships the caps he asked us to remove. Neither half can come back on its own.
+    const heads = region('const STEP_HEADS', 'function poseUrl')
+    expect([...heads.matchAll(/title: '([^']+)'/g)].map((m) => m[1])).toEqual([
+      'Raise a Champion', 'Who Is Your Player?', 'Where Are You Starting?',
+      'Family Setup', 'Choose Play Style', 'All Set!',
+    ])
+    expect(copy).toContain('Raise a Champion.<br /><span>Together.</span>')
+    // ...and no heading rule shouts. `capitalize` is banned with it: it would raise the "a" in
+    // "Raise a Champion" and leave the source lying about what the screen says.
+    for (const rule of ['.ob-title', '.ob-hero-title']) {
+      const block = css.slice(css.indexOf(`${rule} {`), css.indexOf('}', css.indexOf(`${rule} {`)))
+      expect(block, `${rule} still transforms its case`).not.toContain('text-transform')
+    }
+    // The face was never the problem – both were Sora (--font-heading) already, and stay Sora.
+    expect(css.match(/font-family: var\(--font-heading\)/g)?.length).toBeGreaterThanOrEqual(2)
   })
 
   it('says which of six steps you are on, out loud as well as in lime', () => {
