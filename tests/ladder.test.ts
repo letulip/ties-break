@@ -12,6 +12,7 @@ import {
   isTierEligible,
   isTierAgeOpen,
   kidPoints,
+  recomputeKidRank,
   availabilityStatus,
   tickWeek,
   skipTournament,
@@ -366,7 +367,15 @@ describe('L7 — age gate (13+), open immediately at our start age', () => {
 describe('L8 — she can only play ONE tournament a week', () => {
   it('a second entry in the same week is refused (and the first stands)', () => {
     const world = createWorld('one-per-week')
+    // One-per-week is a CALENDAR rule, so the fixture has to clear every other gate first – and
+    // since the two ladders (docs/specs/two-ladders.md) that is two piles, not one. The domestic
+    // book opens the domestic rungs and j30's on-ramp; the international book is what j60 and j300
+    // ask for, because they read her ITF RANK and refuse to read a position at all until she owns a
+    // counting ITF result. The stacked pair this seed finds contains a J60, so without the second
+    // pile the FIRST entry was refused and the rule under test was never reached.
     world.results.push({ playerId: KID_ID, week: 0, points: 1500, tier: 'national' })
+    for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: 0, points: 300, tier: 'j300' })
+    recomputeKidRank(world)
     world.fundsCents = 500_000_00
     const byWeek = new Map<number, SeasonEvent[]>()
     for (const e of world.season) {

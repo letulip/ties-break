@@ -12,6 +12,7 @@ import {
   entryCapUsage,
   entryStatus,
   isCappedTier,
+  recomputeKidRank,
   seasonStartWeek,
   tickWeek,
   toSnapshot,
@@ -36,9 +37,18 @@ import type { SeasonEvent, TierId } from '../src/engine/season/types'
 // count (docs/specs/wave-b-first-round-zero.md) – this is the eligibility half of that finding.
 // ---------------------------------------------------------------------------
 
-/** Grant the kid a single counting result so her best-6 (== kidPoints) equals `points`. */
+/** Grant the kid a single counting DOMESTIC result so her domestic best-6 equals `points`. */
 function giveKidPoints(world: WorldState, points: number): void {
   world.results.push({ playerId: KID_ID, week: world.week, points, tier: 'national' })
+}
+
+/** Grant her a real international BOOK – four J300 titles – and refresh the rank cache the ITF
+ *  rungs read. Four is the number, not one: J60 and J300 are an acceptance list, so what they ask
+ *  for is a POSITION (top 120 / top 50), and a position is only as good as the field around it.
+ *  1200 ITF points lands her #21–#35 against the pre-history table on every seed in this file. */
+function giveKidItfStanding(world: WorldState): void {
+  for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'j300' })
+  recomputeKidRank(world)
 }
 
 function injectEvent(
@@ -58,12 +68,19 @@ function injectEvent(
   return e
 }
 
-/** A world where money, points and body are all a non-issue – so the ONLY thing that can refuse
- *  an entry is the cap under test. */
+/** A world where money, points, STANDING and body are all a non-issue – so the ONLY thing that can
+ *  refuse an entry is the cap under test.
+ *
+ *  Standing joined that list with the two ladders (docs/specs/two-ladders.md): a domestic pile no
+ *  longer buys an international entry, because J60 and J300 read her ITF RANK and J30 reads her
+ *  national one. Both halves are therefore seeded – 1000 domestic points to clear every band, and
+ *  an ITF book to put her inside the top 50 – or the cap tests below would be proving the entry
+ *  gate refuses an unranked kid, which is a different test that already exists. */
 function openWorld(seed = 'agecap'): WorldState {
   const world = createWorld(seed)
   world.fundsCents = 9_999_999_00
-  giveKidPoints(world, 1000) // clears every enterPointBand, including j300's 900
+  giveKidPoints(world, 1000) // clears every domestic enterPointBand, and j30's on-ramp at 150
+  giveKidItfStanding(world) // ...and the acceptance list above it
   return world
 }
 

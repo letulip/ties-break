@@ -3,6 +3,7 @@ import {
   createWorld,
   tickWeek,
   enterEvent,
+  recomputeKidRank,
   skipTournament,
   closeTournament,
   KID_ID,
@@ -11,6 +12,7 @@ import {
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import type { SeasonResult } from '../src/engine/season/ranking'
 
 const EVENTS_CAP = 400 // mirrors world.ts
 
@@ -89,14 +91,40 @@ describe('world (phase-3 living season)', () => {
     const target = entered.season.find((e) => e.deadlineWeek >= entered.week)
     expect(target).toBeTruthy()
     // r-gate (season-life-01b): points-based eligibility. This guard is about RNG discipline, not the
-    // ladder, so grant a throwaway result worth the tier's minPoints ONLY for the enterEvent gate
-    // check, then drop it before any tick – the main-stream draws must stay byte-identical to the
-    // skipped world (local's min is 0, needing no grant).
-    const min = TIERS[target!.tier].enterPointBand[0]
-    const marker = { playerId: KID_ID, week: entered.week, points: min, tier: target!.tier }
-    if (min > 0) entered.results.push(marker)
+    // ladder, so grant throwaway results worth what the rung asks ONLY for the enterEvent gate
+    // check, then drop them before any tick – the main-stream draws must stay byte-identical to the
+    // skipped world.
+    //
+    // TWO LADDERS (docs/specs/two-ladders.md): the earliest still-open event on this seed is a J60,
+    // which is an ACCEPTANCE LIST – it reads her ITF rank and refuses to read a position at all
+    // until she owns a counting ITF result, so a single minPoints marker (j60's band is [0, MAX])
+    // opened nothing. Four J300 titles put her inside the list; `recomputeKidRank` is what the gate
+    // actually reads, so the cache is restored alongside the ledger and the world the ticks see is
+    // byte-identical to the one before this block, exactly as it always was.
+    const rank = entered.kidRank
+    const rankDomestic = entered.kidRankDomestic
+    const ledger = entered.results
+    const def = TIERS[target!.tier]
+    const grant: SeasonResult[] =
+      def.enterRank === undefined
+        ? // a domestic rung, or j30 the on-ramp, which reads her DOMESTIC standing whatever it is
+          def.enterPointBand[0] > 0
+          ? [{ playerId: KID_ID, week: entered.week, points: def.enterPointBand[0], tier: 'national' }]
+          : []
+        : Array.from({ length: 4 }, () => ({
+            playerId: KID_ID,
+            week: entered.week,
+            points: 300,
+            tier: 'j300' as const,
+          }))
+    if (grant.length > 0) {
+      entered.results = [...ledger, ...grant]
+      recomputeKidRank(entered)
+    }
     enterEvent(entered, target!.id)
-    if (min > 0) entered.results = entered.results.filter((r) => r !== marker)
+    entered.results = ledger
+    entered.kidRank = rank
+    entered.kidRankDomestic = rankDomestic
     expect(entered.entries).toContain(target!.id)
     expect(skipped.entries).toHaveLength(0)
 
