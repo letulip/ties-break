@@ -695,6 +695,32 @@ export interface DiarySnapshot {
   memory: MemoryCard | null
 }
 
+// --- her life off the court (engine/kidLife.ts) -------------------------------
+// The three tiles of screen C's attribute grid that are about the GIRL rather than her results:
+// Personality, School and Friends. The design draws all three; the engine derives all three, from
+// her play style, her age and birth month, and the week's own facts. Derived at snapshot time
+// exactly like `radar` and `coachMarket` – it persists nothing and bumps no schema.
+
+/** One tile: two short lines, as the design's cells are drawn. Both are `white-space: nowrap` on
+ *  screen C, so both are written to a hard 17-character budget (see TILE_LINE_MAX). */
+export interface KidLifeTile {
+  /** the first line – the fact ("10th grade", "Patient", "Close to Sofia") */
+  lead: string
+  /** the second line – what it means or how it is going ("Oldest in class", "And stubborn") */
+  note: string
+}
+
+export interface KidLife {
+  /** her play style, read as a person and never as tennis. Fixed for the career. */
+  personality: KidLifeTile
+  /** her grade, on a 1-September school year, plus her place in the class by age. Moves once a
+   *  year, and says "Exams this week" while the calendar is holding an exam blackout. */
+  school: KidLifeTile
+  /** who she is closest to this school year, and how that is going this week. Deterministic
+   *  (purpose-scoped sub-streams, never Math.random), and it moves with both clocks. */
+  friends: KidLifeTile
+}
+
 // --- the skills radar (docs/specs/skills-radar.md, decisions.md #11) ----------
 // ONE AXIS OF THE FOG-OF-WAR CONTOUR, and the whole of what the UI is ever told about her build.
 // NOT ONE FIELD HERE IS A TRUE VALUE: `shownValue` is an estimate that is deliberately wrong while
@@ -813,6 +839,10 @@ export interface Snapshot {
    *  note, Memory). Derived at snapshot time – only the milestone ledger behind `memory`
    *  persists (schema v18). */
   diary: DiarySnapshot
+  /** HER LIFE OFF THE COURT: the Personality / School / Friends tiles of screen C, derived in
+   *  engine/kidLife.ts from her play style, her age and birth month, and the week's facts. Derived
+   *  at snapshot time, persists nothing, bumps no schema. */
+  life: KidLife
   /** THE SKILLS RADAR: four axes, always in `SKILL_KEYS` order (serve, ret, composure, stamina).
    *  An ESTIMATE of her build and a haze over her ceiling – never the truth, which stays in the
    *  engine. Derived at snapshot time, persists nothing, bumps no schema. See RadarAxis. */
