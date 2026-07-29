@@ -1130,7 +1130,11 @@ button.primary.risky {
   font-size: 14px;
 }
 
-.dialog-actions {
+/* A ROW OF ACTIONS PUSHED RIGHT. A dialog's Cancel/Confirm pair, and the controls under a booked
+   week on the calendar. `.planned-actions` is last in the list because round11-view.test.ts reads
+   the body of `.planned-actions {` for the flex-end, and this is that rule. */
+.dialog-actions,
+.planned-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
@@ -1140,7 +1144,12 @@ button.primary.risky {
 
 /* `.stop-toast` and its button are up with `.recovered-banner` – the two popups are one rule. */
 
-.this-week-status {
+/* A WRAPPING STRIP OF CHIPS. What she is entered for, and what this week holds: a bare run of
+   pills that folds onto a second line rather than scrolling. (The .controls family at the top of
+   the sheet is the same strip with its items centred on each other; these two do not need that,
+   because everything in them is a pill of the same height.) */
+.this-week-status,
+.entries-strip {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -1888,11 +1897,7 @@ section.bare .event-cards {
   opacity: 0.6;
 }
 
-.entries-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+/* A wrapping strip of chips - see .this-week-status. */
 
 .tournament-summary {
   font-size: 13.5px;
@@ -2878,11 +2883,7 @@ tr.kid-row td {
   gap: 10px;
 }
 
-.planned-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
+/* A row of actions pushed right - see .dialog-actions. */
 
 /* R10-4: a planned week is TWO lines – the WHEN (week + dates) muted on top, the WHAT (the trip or
    the practice match) in full text underneath. As one run-on line it wrapped to three rows at 375px
