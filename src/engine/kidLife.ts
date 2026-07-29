@@ -34,9 +34,15 @@ import { rngFromSeed } from './rng'
 import { isExamWeek, isOffSeasonWeek, WEEKS_PER_YEAR } from './season/calendar'
 import type { KidLife, KidLifeTile, PlayStyle } from '../shared/protocol'
 
-/** The widest a tile line may be. See the copy note above: 115px cell, 9px padding, 11.5px/600 and
- *  `nowrap`. Pinned by test, so a future line that would clip fails the suite instead of the eye. */
-export const TILE_LINE_MAX = 17
+/** The widest a tile line may be, in characters.
+ *
+ *  ⚠ THE REAL CONSTRAINT IS PIXELS: 89px of text inside the cell at 375pt (the narrowest phone the
+ *  app supports - the design's own base is 390), at 11.5px Manrope with -0.01em tracking. Every
+ *  line below was MEASURED against that in the browser, which is the only place font metrics exist;
+ *  six of them were rewritten when the measurement said they clipped. This character cap is the
+ *  cheap proxy the suite can check without a font, and it is deliberately one below where the
+ *  measured lines sit - it catches the careless line, and the browser catches the wide one. */
+export const TILE_LINE_MAX = 16
 
 // =================================================================================================
 // 1. SCHOOL - two cut-offs that do not agree, which is the whole interest of this tile
@@ -119,14 +125,15 @@ function ordinal(n: number): string {
   return `${n}${['th', 'st', 'nd', 'rd'][n % 10] ?? 'th'}`
 }
 
-/** Her standing among classmates, in four bands of three months each. The wording stays on AGE
- *  throughout ("oldest", "youngest") so it can never be misread as a mark. */
+/** Her standing among classmates, in four bands of three months each: September-November at the top
+ *  of the room, June-August at the bottom. The wording stays on AGE throughout ("oldest",
+ *  "youngest") so it can never be misread as a mark. */
 function classStanding(birthMonth: number): string {
   const pos = classAgePosition(birthMonth)
   if (pos <= 3) return 'Oldest in class'
   if (pos <= 6) return 'Older than most'
-  if (pos <= 9) return 'Younger than most'
-  return 'Youngest in class'
+  if (pos <= 9) return 'Young in class'
+  return 'Youngest of all'
 }
 
 /** THE SCHOOL TILE. Grade from age and birth month; the second line is the exam blackout when the
@@ -244,13 +251,13 @@ const FRIEND_LINES: readonly FriendLine[] = [
   // --- she is hurt, so she is home, and being visited -----------------------------------------
   { text: 'She visits a lot', license: (f) => f.injured },
   { text: 'Comes by daily', license: (f) => f.injured },
-  { text: 'Homework together', license: (f) => f.injured },
+  { text: 'Homework here', license: (f) => f.injured },
   // --- the December weeks: nobody is anywhere ---------------------------------------------------
   { text: 'Home all month', license: (f) => !f.injured && f.offSeason },
-  { text: 'Sleepovers again', license: (f) => !f.injured && f.offSeason },
+  { text: 'Sleepovers now', license: (f) => !f.injured && f.offSeason },
   // --- exam fortnight ---------------------------------------------------------------------------
   { text: 'They revise', license: (f) => !f.injured && f.exams && !f.offSeason },
-  { text: 'Studying, mostly', license: (f) => !f.injured && f.exams && !f.offSeason },
+  { text: 'Studying, both', license: (f) => !f.injured && f.exams && !f.offSeason },
   // --- a season lived out of a suitcase ---------------------------------------------------------
   { text: 'Mostly by phone', license: (f) => onTheOrdinaryClock(f) && f.weeksAway >= AWAY_OFTEN },
   { text: 'Voice notes now', license: (f) => onTheOrdinaryClock(f) && f.weeksAway >= AWAY_OFTEN },
@@ -270,8 +277,8 @@ const FRIEND_LINES: readonly FriendLine[] = [
     license: (f) => onTheOrdinaryClock(f) && f.weeksAway > AWAY_RARELY && f.weeksAway < AWAY_OFTEN,
   },
   // --- a stretch at home -------------------------------------------------------------------------
-  { text: 'Round most days', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
-  { text: 'Over after school', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
+  { text: 'Over most days', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
+  { text: 'Over after class', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
   { text: 'Same as ever', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
   { text: 'Two of a pair', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
   // --- and two colours that cut across the bands, because a friend is who you tell ---------------

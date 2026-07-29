@@ -156,7 +156,7 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
 
   it('the class standing is monotone in age and never reads as a mark', () => {
     const notes = [9, 12, 3, 6].map((m) => schoolTile(view({ birthMonth: m })).note)
-    expect(notes).toEqual(['Oldest in class', 'Older than most', 'Younger than most', 'Youngest in class'])
+    expect(notes).toEqual(['Oldest in class', 'Older than most', 'Young in class', 'Youngest of all'])
   })
 })
 
@@ -278,6 +278,10 @@ describe('the copy', () => {
     return [...new Set(out)]
   }
 
+  // ⚠ THE CHEAP HALF OF A TWO-PART GUARD. The real constraint is 89px of cell at 375pt, and font
+  // metrics do not exist in this process – every line was measured in the browser against the real
+  // Manrope, and six were rewritten when the measurement said they clipped. This catches the
+  // careless line; the browser catches the wide one.
   it('fits the design cell: every line is inside the nowrap budget', () => {
     for (const line of everyLine()) {
       expect(line.length, line).toBeLessThanOrEqual(TILE_LINE_MAX)
