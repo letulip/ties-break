@@ -271,4 +271,14 @@ describe('commentary – copy rules', () => {
       expect(b.text.includes('Mila Tran') || b.text.includes('Mila Delgado') || !b.text.includes('Mila')).toBe(true)
     }
   })
+
+  it('a label that is not a person keeps its whole name ("Top seed", not "Top")', () => {
+    // The Season screen's exhibition opponent really is called "Top seed", and the first-name rule
+    // was writing "Top sends it long." Found in the browser, not in the suite.
+    const m = play('copy-label')
+    for (const b of buildCommentary(m, 'Vera Martin', 'Top seed')) {
+      expect(b.text, b.text).not.toMatch(/\bTop\b(?! seed)/)
+      if (b.text.includes('Vera')) expect(b.text).not.toContain('Vera Martin')
+    }
+  })
 })

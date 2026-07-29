@@ -155,15 +155,28 @@ function variant(pointIndex: number, n: number): number {
 
 // --- names --------------------------------------------------------------------------------------
 // Commentary uses FIRST names ("Bianca breaks") the way the design's own log copy does, because a
-// running commentary is spoken about people, not about table rows. The one case that breaks is two
-// players who share a first name, and then BOTH fall back to the name as given - it is better for
-// the whole match to read formally than for two rows to be ambiguous about who did what.
+// running commentary is spoken about people, not about table rows. Two things send a name back to
+// its full form, and both were found by reading real output:
+//
+//   * IT IS NOT A PERSON'S NAME. The Season screen's exhibition opponent is literally called
+//     "Top seed", and taking its first word produced "Top sends it long." A name is treated as
+//     "First Last" only when every word in it is capitalised, which every generated junior and
+//     every kid name is, and "Top seed" is not.
+//   * BOTH GIRLS SHARE A FIRST NAME. Then neither may use it - it is better for the whole match to
+//     read formally than for two rows to be ambiguous about who did what.
 function speakingNames(a: string, b: string): [string, string] {
-  const firstOf = (n: string): string => n.trim().split(' ')[0] ?? ''
-  const fa = firstOf(a)
-  const fb = firstOf(b)
-  if (fa && fb && fa.toLowerCase() !== fb.toLowerCase()) return [fa, fb]
-  return [a.trim(), b.trim()]
+  const personal = (n: string): string | null => {
+    const words = n.trim().split(/\s+/).filter(Boolean)
+    if (words.length < 2) return null
+    if (!words.every((w) => w[0] === w[0].toUpperCase() && w[0] !== w[0].toLowerCase())) return null
+    return words[0]
+  }
+  const fa = personal(a)
+  const fb = personal(b)
+  // The collision rule is symmetric (both go formal); the not-a-person rule is not - a real girl
+  // opposite "Top seed" keeps her first name.
+  if (fa && fb && fa.toLowerCase() === fb.toLowerCase()) return [a.trim(), b.trim()]
+  return [fa ?? a.trim(), fb ?? b.trim()]
 }
 
 // --- the scan -----------------------------------------------------------------------------------

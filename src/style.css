@@ -487,31 +487,12 @@ select {
   overflow-y: auto;
 }
 
-/* --- Match viewer (Package F) ------------------------------------------------ */
-
-.viewer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  margin-top: 4px;
-}
-
-.viewer-canvas {
-  width: 100%;
-  height: auto;
-  aspect-ratio: 2 / 1;
-  display: block;
-  border-radius: var(--radius-control);
-  background: var(--bg);
-}
-
-/* Court canvas wrapper. (Round-7 crowd-reaction pass: the stage/round label pill moved out of
-   here into the tournament replay card's head row, level with "To result →" – see .tf-replay-round.) */
-.viewer-court {
-  width: 100%;
-  line-height: 0; /* no descender gap under the canvas */
-}
+/* --- Match viewer (Package F) ------------------------------------------------
+   ⚠ U4 (screen I): the viewer's own rules – .viewer / .viewer-court / .viewer-canvas /
+   .viewer-readout / .ends-labels / .score-line / .prob-* – MOVED into MatchViewer.vue's
+   `<style scoped>` block with the rest of screen I. They were one screen's business living in
+   shared vocabulary, which is exactly what U0's component pass is undoing. What is left here is
+   what other screens use: the Season watch control and the tab icon below. */
 
 /* Round-7 item 18 / owner amendment: the SeasonScreen this-week watch control is icon-only – the
    play.svg glyph masked to accent-yellow and sized like the bottom-tab icons (.tab-icon, ~20px).
@@ -546,74 +527,6 @@ select {
 
 .watch-play-icon {
   background-color: var(--accent);
-}
-
-.viewer select {
-  background: var(--bg);
-  border: 1px solid var(--line);
-  color: var(--text);
-  border-radius: var(--radius-control);
-  padding: 7px 10px;
-  font-size: 14px;
-}
-
-.viewer-readout {
-  width: 100%;
-  max-width: 340px;
-}
-
-/* --- Round 4 item 1: server-highlight labels row, under the canvas ------------ */
-
-.ends-labels {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.ends-labels .serving {
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.score-line {
-  font-family: var(--font-heading);
-  font-size: 18px;
-  font-weight: 600;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-  margin: 0 0 8px;
-}
-
-.score-line.final {
-  color: var(--accent);
-}
-
-.viewer-readout > .pill {
-  display: block;
-  width: fit-content;
-  margin: 0 auto 12px;
-}
-
-.prob-labels {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--muted);
-  margin: 0 0 4px;
-}
-
-.prob-bar {
-  height: 8px;
-  border-radius: var(--radius-pill);
-  background: var(--line);
-  overflow: hidden;
-}
-
-.prob-fill {
-  height: 100%;
-  background: var(--accent);
 }
 
 /* --- Package I: app shell, tabs, onboarding ---------------------------------- */
@@ -990,7 +903,8 @@ select {
      scaled), forcing a fixed 512px-tall box under a now-narrower width and letting
      the default `object-fit: fill` stretch the square art into a tall strip. Setting
      `height: auto` here overrides that hint so height derives from the image's own
-     aspect ratio at any width, same pattern as .viewer-canvas above. */
+     aspect ratio at any width, same pattern as the match canvas (.mv-canvas, now in
+     MatchViewer.vue's scoped block). */
   width: min(100%, 360px);
   height: auto;
   margin: 0 auto;

@@ -10,10 +10,14 @@ import type { MatchPlayer, Side, Surface } from '../engine/match/types'
 import { buildTimeline, computeEndsSwaps, type EndsState } from '../viz/timeline'
 import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
+import { buildCommentary } from '../viz/commentary'
 import { initSfx, playSfx, primeSfx } from '../audio/sfx'
 import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
 import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
+import { KID_ID } from '../engine/world'
+import Card from './ui/Card.vue'
+import SegmentedRow from './ui/SegmentedRow.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -573,6 +577,19 @@ function playerName(side: Side): string {
   return side === 0 ? props.playerA.name : props.playerB.name
 }
 
+// HER side, when she is in this match at all. The design writes our own girl's name in the accent
+// and everyone else's in white ("у своей игроницы имя лаймом"), and draws the momentum curve from
+// her point of view. Every call site that carries the kid gives her `id: KID_ID` (world.ts
+// kidMatchPlayer, and SeasonScreen's exhibition too), so the viewer can tell without a new prop.
+const kidSide = computed<Side | null>(() =>
+  props.playerA.id === KID_ID ? 0 : props.playerB.id === KID_ID ? 1 : null,
+)
+/** Whose point of view the momentum curve and its caption take: hers, or side A's by default. */
+const heroSide = computed<Side>(() => kidSide.value ?? 0)
+
+/** For the two-row / two-column readouts, in the panel's fixed A-then-B order. */
+const SIDES: readonly Side[] = [0, 1]
+
 // --- round 4 item 1: server-highlight labels row, on the players' CURRENT sides ----
 // Name truncation is the shared formatShortName ("First Last" -> "F. Last"); see
 // docs/specs/round4-viz.md §1 for the row's origin.
@@ -580,29 +597,214 @@ const leftSide = computed<Side>(() => (endsSwappedRef.value ? 1 : 0))
 const rightSide = computed<Side>(() => (endsSwappedRef.value ? 0 : 1))
 
 const currentAnnotated = computed(() => (displayedPointIndex.value >= 0 ? props.match.points[displayedPointIndex.value] : null))
-const scoreLine = computed(() => currentAnnotated.value?.entry.scoreAfter ?? '0-0')
 const winProbA = computed(() => currentAnnotated.value?.winProbA ?? 0.5)
-const probPct = computed(() => Math.round(winProbA.value * 100))
 
-interface SideStats {
-  pointsWon: [number, number]
-  aces: [number, number]
-  dfs: [number, number]
-  breaks: [number, number]
+// --- design I §2: the two player rows and their per-set score cells ----------------------------
+// Best-of-THREE cells, not the export's four. The export draws four boxes and our matches are
+// bo3 (`MatchOptions.bestOf?: 3` is the only value the engine takes), so a fourth box would be a
+// permanently empty dash claiming a format we do not play. Reported as a deliberate deviation.
+const SET_CELLS = 3
+
+interface SetCell {
+  a: string
+  b: string
+  state: 'played' | 'current' | 'future'
+  /** who leads the IN-PROGRESS set – the export fills the leader's cell with the accent */
+  leader: Side | null
 }
 
-const liveStats = computed<SideStats>(() => {
-  const stats: SideStats = { pointsWon: [0, 0], aces: [0, 0], dfs: [0, 0], breaks: [0, 0] }
-  const upto = displayedPointIndex.value
-  for (let i = 0; i <= upto; i++) {
+const setCells = computed<SetCell[]>(() => {
+  const done: [number, number][] = []
+  const games: [number, number] = [0, 0]
+  for (let i = 0; i <= displayedPointIndex.value; i++) {
+    const p = props.match.points[i]
+    if (!p?.gameEnd) continue
+    games[p.entry.winner]++
+    if (p.setEnd) {
+      done.push([games[0], games[1]])
+      games[0] = 0
+      games[1] = 0
+    }
+  }
+  const live = !finished.value && done.length < props.match.result.sets.length
+  return Array.from({ length: SET_CELLS }, (_, i): SetCell => {
+    const set = done[i]
+    if (set) return { a: String(set[0]), b: String(set[1]), state: 'played', leader: null }
+    if (i === done.length && live) {
+      return {
+        a: String(games[0]),
+        b: String(games[1]),
+        state: 'current',
+        leader: games[0] > games[1] ? 0 : games[1] > games[0] ? 1 : null,
+      }
+    }
+    return { a: '–', b: '–', state: 'future', leader: null }
+  })
+})
+
+/** How far into the match we are. Shown once it is over, in place of the live game score. */
+const pointsPlayed = computed(() => Math.max(0, displayedPointIndex.value + 1))
+
+const POINT_NAMES = ['0', '15', '30', '40'] as const
+
+/** THE POINT SCORE OF THE GAME IN PROGRESS ("30-40", "40-A", "TB 3-2").
+ *
+ *  The export gives this slot to a wall clock and labels it "Match time". The engine has no time
+ *  model at all, so a clock here would be a number we made up - and a live tennis view that cannot
+ *  tell you it is 30-40 is missing the most basic thing on a scoreboard. So the slot keeps the
+ *  export's shape and its typography, and carries the one live reading the export's own point log
+ *  used to carry instead (the commentary's score column shows GAMES, not points). */
+const gameScore = computed(() => {
+  if (finished.value || displayedPointIndex.value < 0) return ''
+  const pts: [number, number] = [0, 0]
+  let tiebreak = false
+  for (let i = 0; i <= displayedPointIndex.value; i++) {
     const p = props.match.points[i]
     if (!p) continue
-    stats.pointsWon[p.entry.winner]++
-    if (p.rally.ace) stats.aces[p.entry.server]++
-    if (p.rally.doubleFault) stats.dfs[p.entry.server]++
-    if (p.gameEnd && !p.entry.tiebreak && p.entry.winner !== p.entry.server) stats.breaks[p.entry.winner]++
+    pts[p.entry.winner]++
+    tiebreak = p.entry.tiebreak
+    if (p.gameEnd) {
+      pts[0] = 0
+      pts[1] = 0
+      tiebreak = false
+    }
   }
-  return stats
+  // The point AFTER a completed game is served in the next one, which the flags on the NEXT point
+  // already know; a game boundary therefore reads 0-0 until the first point of the new game lands.
+  const next = props.match.points[displayedPointIndex.value + 1]
+  if (next?.entry.tiebreak) tiebreak = true
+  if (tiebreak) return `TB ${pts[0]}-${pts[1]}`
+  if (pts[0] >= 3 && pts[1] >= 3) {
+    if (pts[0] === pts[1]) return '40-40'
+    return pts[0] > pts[1] ? 'A-40' : '40-A'
+  }
+  return `${POINT_NAMES[pts[0]]}-${POINT_NAMES[pts[1]]}`
+})
+
+// --- design I §4a: MOMENTUM ---------------------------------------------------------------
+// The export's "two polylines + a caption" IS the live win probability we already compute per
+// point (viz/liveProb), drawn from HER point of view. Sampled to at most 48 columns so the shape
+// stays readable in a 104x26 box however long the match runs.
+const MOM_W = 104
+const MOM_H = 26
+const MOM_PAD = 2
+const MOM_MAX_SAMPLES = 48
+
+/** Her win probability after the point currently on screen. */
+const heroProb = computed(() => (heroSide.value === 0 ? winProbA.value : 1 - winProbA.value))
+
+const momentum = computed<{ hero: string; rival: string } | null>(() => {
+  const upto = displayedPointIndex.value
+  if (upto < 1) return null
+  const n = Math.min(upto + 1, MOM_MAX_SAMPLES)
+  const hero: string[] = []
+  const rival: string[] = []
+  for (let i = 0; i < n; i++) {
+    const idx = Math.round((i / (n - 1)) * upto)
+    const pa = props.match.points[idx]?.winProbA ?? 0.5
+    const p = heroSide.value === 0 ? pa : 1 - pa
+    const x = MOM_PAD + (i / (n - 1)) * (MOM_W - MOM_PAD * 2)
+    const span = MOM_H - MOM_PAD * 2
+    hero.push(`${x.toFixed(1)},${(MOM_PAD + (1 - p) * span).toFixed(1)}`)
+    rival.push(`${x.toFixed(1)},${(MOM_PAD + p * span).toFixed(1)}`)
+  }
+  return { hero: hero.join(' '), rival: rival.join(' ') }
+})
+
+/** The export's "Slight edge" caption, as a band of the same probability the curve draws. Seven
+ *  bands, symmetric, and never a claim about how she FEELS – only about where the match stands. */
+const momentumCaption = computed(() => {
+  if (displayedPointIndex.value < 0) return 'Not started'
+  const p = heroProb.value
+  if (p >= 0.9) return 'Almost there'
+  if (p >= 0.7) return 'Well ahead'
+  if (p >= 0.57) return 'Slight edge'
+  if (p > 0.43) return 'Even'
+  if (p > 0.3) return 'Uphill'
+  if (p > 0.1) return 'Well behind'
+  return 'Hanging on'
+})
+
+// --- design I §4b/c: 1st serve % and break points, both live ------------------------------
+interface PanelStats {
+  /** first serves landed in / service points played, per side */
+  firstIn: [number, number]
+  firstPlayed: [number, number]
+  /** break points CONVERTED / had, per side as the returner (the broadcast stat) */
+  bpWon: [number, number]
+  bpHad: [number, number]
+}
+
+const panelStats = computed<PanelStats>(() => {
+  const st: PanelStats = { firstIn: [0, 0], firstPlayed: [0, 0], bpWon: [0, 0], bpHad: [0, 0] }
+  for (let i = 0; i <= displayedPointIndex.value; i++) {
+    const p = props.match.points[i]
+    if (!p) continue
+    const server = p.entry.server
+    const first = p.rally.shots[0]
+    if (first) {
+      st.firstPlayed[server]++
+      // rally.ts always emits the first serve as shots[0]; 'out'/'net' means it was missed.
+      if (first.result !== 'out' && first.result !== 'net') st.firstIn[server]++
+    }
+    if (p.entry.breakPoint) {
+      const returner: Side = server === 0 ? 1 : 0
+      st.bpHad[returner]++
+      if (p.entry.winner === returner) st.bpWon[returner]++
+    }
+  }
+  return st
+})
+
+function pct(n: number, of: number): number {
+  return of ? Math.round((n / of) * 100) : 0
+}
+
+// --- THE COMMENTARY (viz/commentary.ts) --------------------------------------------------------
+// Built once per match, revealed in step with the score: a beat appears exactly when the point it
+// is anchored to has been played on screen. So a 'key'-mode watch reveals them in bursts and a
+// 'skip' hands over the whole story at once, and in all three the text is the same text.
+const commentary = computed(() => buildCommentary(props.match, props.playerA.name, props.playerB.name))
+
+/** Newest first, the way the export stacks the log. */
+const visibleBeats = computed(() =>
+  commentary.value.filter((b) => b.pointIndex <= displayedPointIndex.value).slice().reverse(),
+)
+
+/** The export's log is a fixed-height window with "Show more" under it; four rows is what fits. */
+const LOG_ROWS = 4
+const logExpanded = ref(false)
+const shownBeats = computed(() =>
+  logExpanded.value ? visibleBeats.value : visibleBeats.value.slice(0, LOG_ROWS),
+)
+
+// --- controls: the app's segmented row rather than two <select>s -------------------------------
+// SegmentedRow speaks in VALUES; speed is a number, so this is the one adapter between them (the
+// same shape BracketTabs uses for round ids).
+const VIEW_OPTIONS = [
+  { value: 'full', label: 'Every point', short: 'Full' },
+  { value: 'key', label: 'Key points only', short: 'Key' },
+  { value: 'skip', label: 'Skip to the result', short: 'Skip' },
+] as const
+const SPEED_OPTIONS = [
+  { value: '1', label: 'Normal speed', short: '1×' },
+  { value: '2', label: 'Double speed', short: '2×' },
+  { value: '4', label: 'Quadruple speed', short: '4×' },
+] as const
+
+const viewSeg = computed({
+  get: () => viewMode.value as string,
+  set: (v: string) => {
+    viewMode.value = v as ViewMode
+    playSfx('clickSoft')
+  },
+})
+const speedSeg = computed({
+  get: () => String(speed.value),
+  set: (v: string) => {
+    speed.value = Number(v) as 1 | 2 | 4
+    playSfx('clickSoft')
+  },
 })
 
 // Final full stats: aces/DFs computed from rallies (per spec); everything else
@@ -627,133 +829,656 @@ function servePct(side: Side): number {
 </script>
 
 <template>
-  <div class="viewer">
-    <div class="viewer-court">
-      <canvas ref="canvasRef" class="viewer-canvas"></canvas>
-    </div>
+  <div class="mv">
+    <!-- ===== THE MATCH PANEL (design I, "Панель матча": court, players, serve, stats) ==========
+         One clipped panel with hairline-divided sections, exactly as the export draws it. Screen
+         I's header (tournament, round, "Skip match") and its CTA belong to whichever flow mounts
+         this viewer, not here. -->
+    <Card variant="photo" class="mv-panel">
+      <div class="mv-court">
+        <canvas ref="canvasRef" class="mv-canvas"></canvas>
+        <!-- The export's Live badge. `replay` mode drops it deliberately: docs/specs/ui-inventory
+             §2 says the replay "IS the live match minus the blinking Live and minus shouting". -->
+        <span v-if="props.mode === 'live' && !finished" class="mv-live"
+          ><i class="mv-live-dot" aria-hidden="true"></i>Live</span
+        >
+      </div>
 
-    <div class="ends-labels">
-      <span :class="{ serving: liveServer === leftSide }">
-        {{ formatShortName(playerName(leftSide)) }}{{ liveServer === leftSide ? ' · serving' : '' }}
-      </span>
-      <span :class="{ serving: liveServer === rightSide }">
-        {{ formatShortName(playerName(rightSide)) }}{{ liveServer === rightSide ? ' · serving' : '' }}
-      </span>
-    </div>
+      <!-- Round-4 item 1: who stands at which END right now, and who is serving. The panel's own
+           rows are fixed A-then-B, so this row is the only thing that knows about ends swaps. -->
+      <div class="ends-labels">
+        <span :class="{ serving: liveServer === leftSide }">
+          {{ formatShortName(playerName(leftSide)) }}{{ liveServer === leftSide ? ' · serving' : '' }}
+        </span>
+        <span :class="{ serving: liveServer === rightSide }">
+          {{ formatShortName(playerName(rightSide)) }}{{ liveServer === rightSide ? ' · serving' : '' }}
+        </span>
+      </div>
 
-    <div class="controls">
-      <select v-model="viewMode" @change="playSfx('clickSoft')">
-        <option value="full">Full</option>
-        <option value="key">Key points</option>
-        <option value="skip">Skip</option>
-      </select>
-      <select v-model.number="speed" @change="playSfx('clickSoft')">
-        <option :value="1">1×</option>
-        <option :value="2">2×</option>
-        <option :value="4">4×</option>
-      </select>
-      <!-- Round-7 item 16: live mode autoplays a short match – no Play/Pause control at all.
-           Only replay keeps its single "Watch again"; both modes keep the mode/speed selects. -->
-      <button v-if="props.mode === 'replay'" class="primary sfx-watch" @click="restart">Watch again ↻</button>
-      <button disabled title="Coming in Phase 6">Shout 📣</button>
-    </div>
-
-    <div class="viewer-readout">
-      <template v-if="!finished">
-        <div class="score-line">{{ scoreLine }}</div>
-        <span class="pill">Serving: {{ liveServer !== null ? playerName(liveServer) : '–' }}</span>
-
-        <div class="prob-labels">
-          <span>{{ playerA.name }}</span>
-          <span>{{ probPct }}%</span>
-          <span>{{ playerB.name }}</span>
+      <div class="mv-players">
+        <div v-for="side in SIDES" :key="side" class="mv-prow">
+          <span class="mv-serve-dot" :class="{ on: liveServer === side }" aria-hidden="true"></span>
+          <span class="mv-pname" :class="{ hers: side === kidSide }">{{ playerName(side) }}</span>
+          <span v-if="(side === 0 ? rankA : rankB) != null" class="mv-prank">#{{ side === 0 ? rankA : rankB }}</span>
+          <span class="mv-cells">
+            <span
+              v-for="(cell, i) in setCells"
+              :key="i"
+              class="mv-cell num"
+              :class="[cell.state, { lead: cell.state === 'current' && cell.leader === side }]"
+              >{{ side === 0 ? cell.a : cell.b }}</span
+            >
+          </span>
         </div>
-        <div class="prob-bar"><div class="prob-fill" :style="{ width: probPct + '%' }"></div></div>
+      </div>
 
-        <table style="margin-top: 12px">
-          <thead>
-            <tr>
-              <th></th>
-              <th>{{ playerA.name }}</th>
-              <th>{{ playerB.name }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th>Points won</th>
-              <td class="num">{{ liveStats.pointsWon[0] }}</td>
-              <td class="num">{{ liveStats.pointsWon[1] }}</td>
-            </tr>
-            <tr>
-              <th>Aces</th>
-              <td class="num">{{ liveStats.aces[0] }}</td>
-              <td class="num">{{ liveStats.aces[1] }}</td>
-            </tr>
-            <tr>
-              <th>Double faults</th>
-              <td class="num">{{ liveStats.dfs[0] }}</td>
-              <td class="num">{{ liveStats.dfs[1] }}</td>
-            </tr>
-            <tr>
-              <th>Breaks</th>
-              <td class="num">{{ liveStats.breaks[0] }}</td>
-              <td class="num">{{ liveStats.breaks[1] }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </template>
+      <div class="mv-serving">
+        <span class="pill mv-serve-pill">
+          <template v-if="finished">Final</template>
+          <template v-else>Serving: {{ liveServer !== null ? formatShortName(playerName(liveServer)) : '–' }}</template>
+        </span>
+        <!-- The export's "Match time 00:07" slot. See `gameScore` for why it carries the point
+             score of the game in progress instead of a clock the engine could not honestly tell. -->
+        <span v-if="finished" class="mv-progress">Points played <b class="num">{{ pointsPlayed }}</b></span>
+        <span v-else class="mv-progress mv-gamescore num">{{ gameScore }}</span>
+      </div>
 
-      <template v-else>
-        <div class="score-line final">{{ finalScoreLine }} – {{ winnerName }} wins</div>
+      <div class="mv-stats">
+        <div class="mv-stat">
+          <p class="mv-stat-label">Momentum</p>
+          <svg
+            class="mv-mom"
+            :viewBox="`0 0 ${MOM_W} ${MOM_H}`"
+            :width="MOM_W"
+            :height="MOM_H"
+            role="img"
+            :aria-label="`Momentum: ${momentumCaption}`"
+          >
+            <template v-if="momentum">
+              <polyline class="mv-mom-rival" :points="momentum.rival" />
+              <polyline class="mv-mom-hero" :points="momentum.hero" />
+            </template>
+          </svg>
+          <p class="mv-stat-note">{{ momentumCaption }}</p>
+        </div>
 
-        <table style="margin-top: 12px">
-          <thead>
-            <tr>
-              <th></th>
-              <th>
-                <span class="ph-name">{{ playerA.name }}</span>
-                <span v-if="rankA != null" class="ph-rank">#{{ rankA }}</span>
-              </th>
-              <th>
-                <span class="ph-name">{{ playerB.name }}</span>
-                <span v-if="rankB != null" class="ph-rank">#{{ rankB }}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th>Aces</th>
-              <td class="num">{{ finalAcesDfs.aces[0] }}</td>
-              <td class="num">{{ finalAcesDfs.aces[1] }}</td>
-            </tr>
-            <tr>
-              <th>Double faults</th>
-              <td class="num">{{ finalAcesDfs.dfs[0] }}</td>
-              <td class="num">{{ finalAcesDfs.dfs[1] }}</td>
-            </tr>
-            <tr>
-              <th>Serve %</th>
-              <td class="num">{{ servePct(0) }}%</td>
-              <td class="num">{{ servePct(1) }}%</td>
-            </tr>
-            <tr>
-              <th>Break points</th>
-              <td class="num">{{ match.result.stats[0].breakPointsSaved }}/{{ match.result.stats[0].breakPointsFaced }}</td>
-              <td class="num">{{ match.result.stats[1].breakPointsSaved }}/{{ match.result.stats[1].breakPointsFaced }}</td>
-            </tr>
-            <tr>
-              <th>Breaks</th>
-              <td class="num">{{ match.result.stats[0].breaksWon }}</td>
-              <td class="num">{{ match.result.stats[1].breaksWon }}</td>
-            </tr>
-            <tr>
-              <th>Longest streak</th>
-              <td class="num">{{ match.result.stats[0].longestPointStreak }}</td>
-              <td class="num">{{ match.result.stats[1].longestPointStreak }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </template>
+        <div class="mv-stat">
+          <p class="mv-stat-label">1st serve %</p>
+          <p class="mv-stat-pair">
+            <span class="num" :class="{ hers: heroSide === 0 }">{{ pct(panelStats.firstIn[0], panelStats.firstPlayed[0]) }}%</span>
+            <i class="mv-stat-rule" aria-hidden="true"></i>
+            <span class="num" :class="{ hers: heroSide === 1 }">{{ pct(panelStats.firstIn[1], panelStats.firstPlayed[1]) }}%</span>
+          </p>
+          <span class="mv-bar">
+            <span
+              class="mv-bar-fill"
+              :style="{ width: pct(panelStats.firstIn[heroSide], panelStats.firstPlayed[heroSide]) + '%' }"
+            ></span>
+          </span>
+        </div>
+
+        <div class="mv-stat">
+          <p class="mv-stat-label">Break points</p>
+          <p class="mv-stat-pair">
+            <span class="num" :class="{ hers: heroSide === 0 }">{{ panelStats.bpWon[0] }}/{{ panelStats.bpHad[0] }}</span>
+            <i class="mv-stat-rule" aria-hidden="true"></i>
+            <span class="num" :class="{ hers: heroSide === 1 }">{{ panelStats.bpWon[1] }}/{{ panelStats.bpHad[1] }}</span>
+          </p>
+          <span class="mv-bar-pair">
+            <span v-for="side in SIDES" :key="side" class="mv-bar">
+              <span
+                class="mv-bar-fill"
+                :class="{ dim: side !== heroSide }"
+                :style="{ width: pct(panelStats.bpWon[side], panelStats.bpHad[side]) + '%' }"
+              ></span>
+            </span>
+          </span>
+        </div>
+      </div>
+    </Card>
+
+    <!-- ===== THE COMMENTARY (design I, "Лог очков") ============================================
+         The export's log chrome - rail, dot, accent lead word, score on the right - carrying the
+         beats from viz/commentary.ts instead of one row per point. It REPLACES the point log
+         rather than sitting beside it: the export's own rows already read as sentences ("Rally of
+         9. Bianca wins the point."), and two lists of the same events differing only in density
+         would be one list too many on a phone. Newest first, revealed in step with the score. -->
+    <Card variant="photo" class="mv-log" pad="8px 12px 10px">
+      <p v-if="!shownBeats.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
+      <ol v-else class="mv-log-list">
+        <li v-for="(beat, i) in shownBeats" :key="beat.pointIndex" class="mv-beat" :class="{ latest: i === 0 }">
+          <span class="mv-beat-set">S{{ beat.set }}</span>
+          <span class="mv-beat-dot" aria-hidden="true"></span>
+          <span class="mv-beat-text">
+            <b v-if="beat.lead" class="mv-beat-lead">{{ beat.lead }}</b>
+            {{ beat.text }}
+          </span>
+          <span class="mv-beat-score num">{{ beat.score }}</span>
+        </li>
+      </ol>
+      <button
+        v-if="visibleBeats.length > LOG_ROWS"
+        class="link mv-log-more"
+        @click="logExpanded = !logExpanded"
+      >
+        {{ logExpanded ? 'Show less ⌃' : 'Show more ⌄' }}
+      </button>
+    </Card>
+
+    <!-- ===== CONTROLS =========================================================================
+         The two <select>s became the app's segmented control (U0 SegmentedRow) - the same plate
+         the draw's round switcher uses, so "how much to watch" and "how fast" read as controls
+         rather than as a form. -->
+    <div class="mv-controls">
+      <SegmentedRow
+        v-model="viewSeg"
+        class="mv-seg"
+        :options="VIEW_OPTIONS"
+        group-label="How much of the match to watch"
+      />
+      <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
     </div>
+    <div v-if="props.mode === 'replay' || !finished" class="mv-actions">
+      <button v-if="props.mode === 'replay'" class="primary sfx-watch" @click="restart">Watch again ↻</button>
+      <button v-else disabled title="Coming in Phase 6">Shout 📣</button>
+    </div>
+
+    <!-- ===== THE BOX SCORE, once it is over ================================================== -->
+    <Card v-if="finished" variant="photo" class="mv-boxscore" pad="12px 14px 14px">
+      <p class="mv-final">{{ winnerName }} wins <span class="num">{{ finalScoreLine }}</span></p>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>
+              <span class="ph-name">{{ playerA.name }}</span>
+              <span v-if="rankA != null" class="ph-rank">#{{ rankA }}</span>
+            </th>
+            <th>
+              <span class="ph-name">{{ playerB.name }}</span>
+              <span v-if="rankB != null" class="ph-rank">#{{ rankB }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Aces</th>
+            <td class="num">{{ finalAcesDfs.aces[0] }}</td>
+            <td class="num">{{ finalAcesDfs.aces[1] }}</td>
+          </tr>
+          <tr>
+            <th>Double faults</th>
+            <td class="num">{{ finalAcesDfs.dfs[0] }}</td>
+            <td class="num">{{ finalAcesDfs.dfs[1] }}</td>
+          </tr>
+          <tr>
+            <th>Serve %</th>
+            <td class="num">{{ servePct(0) }}%</td>
+            <td class="num">{{ servePct(1) }}%</td>
+          </tr>
+          <tr>
+            <th>Break points</th>
+            <td class="num">{{ match.result.stats[0].breakPointsSaved }}/{{ match.result.stats[0].breakPointsFaced }}</td>
+            <td class="num">{{ match.result.stats[1].breakPointsSaved }}/{{ match.result.stats[1].breakPointsFaced }}</td>
+          </tr>
+          <tr>
+            <th>Breaks</th>
+            <td class="num">{{ match.result.stats[0].breaksWon }}</td>
+            <td class="num">{{ match.result.stats[1].breaksWon }}</td>
+          </tr>
+          <tr>
+            <th>Longest streak</th>
+            <td class="num">{{ match.result.stats[0].longestPointStreak }}</td>
+            <td class="num">{{ match.result.stats[1].longestPointStreak }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </Card>
   </div>
 </template>
+
+<style scoped>
+/* Screen I's own styles. They live here rather than in src/style.css because the sheet is shared
+   vocabulary and this is one screen's business (docs/specs/ui-components.md, and U0's precedent on
+   Home and Season). Nothing shared is re-declared: `.pill`, `.link`, `.num`, `table` and `.primary`
+   all still come from the sheet. */
+
+.mv {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* --- 1. THE COURT ---------------------------------------------------------------------------
+   The canvas keeps its landscape 2:1 (round-4 §0: the shipped geometry is landscape, and the
+   phase-2 doc's portrait wording was never updated - not reversed here). */
+.mv-court {
+  position: relative;
+  line-height: 0; /* no descender gap under the canvas */
+}
+
+.mv-canvas {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  display: block;
+  background: var(--bg);
+}
+
+/* The export's Live badge: a glass pill over the top-left of the court, with a pulsing dot. */
+.mv-live {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  /* The export's overlay chip is rgba(8,13,18,.72) over the court; the app's own --bg IS that
+     colour, so the badge takes the token rather than a hand-mixed alpha. */
+  background: var(--bg);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.mv-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--danger);
+  animation: mv-live-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes mv-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mv-live-dot {
+    animation: none;
+  }
+}
+
+/* Round-4 item 1's ends row, now court chrome inside the panel. */
+.ends-labels {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 12px 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.ends-labels .serving {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* --- 2. THE PLAYER ROWS --------------------------------------------------------------------- */
+.mv-players {
+  padding: 8px 12px 10px;
+}
+
+.mv-prow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+
+/* The serve indicator. The non-serving row keeps the dot as a transparent spacer so the two names
+   stay on one left edge (the export's own trick). */
+.mv-serve-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.mv-serve-dot.on {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.mv-pname {
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* HERS, in the one accent - the export writes our own girl's name in it and everyone else's white. */
+.mv-pname.hers {
+  color: var(--accent);
+}
+
+.mv-prank {
+  flex: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.mv-cells {
+  flex: none;
+  display: flex;
+  gap: 4px;
+}
+
+.mv-cell {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  font-size: 15px;
+  font-weight: 700;
+  background: transparent;
+  color: var(--text);
+}
+
+/* Played and in-progress sets sit on the sheet's hairline tone, a future one on the fainter card
+   edge - the export's .05/.03 pair, expressed in the two white-alpha tokens the app declares
+   rather than as two new hand-mixed alphas. */
+.mv-cell.played,
+.mv-cell.current {
+  background: var(--line);
+}
+
+/* The leader of the set in progress, filled - the export's one lime cell. */
+.mv-cell.current.lead {
+  background: var(--accent);
+  color: var(--on-lime);
+  font-weight: 800;
+}
+
+.mv-cell.future {
+  background: var(--card-edge);
+  color: var(--ink-dim);
+  font-weight: 600;
+}
+
+/* --- 3. THE SERVE ROW ------------------------------------------------------------------------ */
+.mv-serving {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* The export outlines this pill in the accent and writes it in the accent; `.pill` gives it the
+   capsule and the inset, and this is the only thing that differs. */
+.mv-serve-pill {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+  padding-block: 4px;
+}
+
+.mv-progress {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.mv-progress b {
+  margin-left: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.mv-gamescore {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+/* --- 4. THE THREE STATS ---------------------------------------------------------------------- */
+.mv-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 10px 4px 12px;
+  border-top: 1px solid var(--line);
+}
+
+.mv-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 0 6px;
+  min-width: 0;
+}
+
+.mv-stat + .mv-stat {
+  border-left: 1px solid var(--line);
+}
+
+.mv-stat-label {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--ink-soft);
+}
+
+.mv-stat-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* The momentum curve is the live win probability we already compute, drawn from her side. */
+.mv-mom {
+  width: 100%;
+  max-width: 104px;
+  height: 26px;
+}
+
+.mv-mom-hero,
+.mv-mom-rival {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.mv-mom-hero {
+  stroke: var(--accent);
+  stroke-width: 1.8;
+}
+
+.mv-mom-rival {
+  stroke: var(--ink-dim);
+  stroke-width: 1.4;
+}
+
+.mv-stat-pair {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.mv-stat-pair .hers {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.mv-stat-rule {
+  width: 1px;
+  height: 12px;
+  background: var(--line);
+}
+
+.mv-bar,
+.mv-bar-pair {
+  display: flex;
+  width: 100%;
+  max-width: 104px;
+}
+
+.mv-bar-pair {
+  gap: 6px;
+}
+
+.mv-bar {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--ring-track);
+  overflow: hidden;
+}
+
+.mv-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width var(--dur-slow) ease;
+}
+
+.mv-bar-fill.dim {
+  background: var(--ink-dim);
+}
+
+/* --- THE COMMENTARY LOG ---------------------------------------------------------------------- */
+.mv-log-list {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* The export's timeline rail, behind the dots. Inset top and bottom so it starts and stops with
+   the rows rather than running into the card's edges. */
+.mv-log-list::before {
+  content: '';
+  position: absolute;
+  left: 33px;
+  top: 12px;
+  bottom: 12px;
+  width: 1.5px;
+  background: var(--line);
+}
+
+.mv-beat {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 12px 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 0;
+  font-size: 13px;
+}
+
+.mv-beat + .mv-beat {
+  border-top: 1px solid var(--card-edge);
+}
+
+.mv-beat-set {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.mv-beat-dot {
+  justify-self: center;
+  align-self: center;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ink-dim);
+}
+
+/* The newest beat is the one the eye should land on - the export gives it the bright ball colour
+   and a glow, and lifts its text and score out of the muted stack. */
+.mv-beat.latest .mv-beat-dot {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.mv-beat-text {
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.mv-beat.latest .mv-beat-text {
+  color: var(--ink-2);
+}
+
+.mv-beat-lead {
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.mv-beat-score {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.mv-beat.latest .mv-beat-score {
+  color: var(--text);
+}
+
+.mv-log-empty {
+  margin: 6px 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.mv-log-more {
+  display: block;
+  margin: 2px auto 0;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+/* --- CONTROLS -------------------------------------------------------------------------------- */
+.mv-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.mv-seg {
+  flex: 1;
+  min-width: 0;
+}
+
+.mv-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* --- THE BOX SCORE --------------------------------------------------------------------------- */
+.mv-final {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.mv-final .num {
+  margin-left: 6px;
+  color: var(--text);
+}
+</style>
