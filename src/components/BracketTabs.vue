@@ -8,6 +8,12 @@
 // scrolled into view. Reused for the between-rounds view AND the spectate walk in TournamentFlow.
 import { computed, nextTick, ref, watch } from 'vue'
 import { KID_ID } from '../engine/world'
+// U0: the round switcher is the app's standard segmented control, and this file was its ONE
+// consumer – the pair `.tab-row` / `.tab-pill` had been "shared once" and never got a component.
+// docs/specs/ui-components.md §8 says this makes it official, so the draw is SegmentedRow's real
+// caller. The plate's own CSS stays in `src/style.css` (it is shared vocabulary, and `.bt-tabs`
+// below still reaches its pills through it); what arrives with the component is the CONTRACT.
+import SegmentedRow from './ui/SegmentedRow.vue'
 import type { FullBracketMatch } from '../shared/protocol'
 
 const props = defineProps<{
@@ -64,6 +70,18 @@ watch(tabs, (list) => {
   if (list.length && !list.some((t) => t.round === selected.value)) {
     selected.value = list[list.length - 1].round
   }
+})
+
+// SegmentedRow speaks in VALUES rather than indices, and a round is a number here; this is the one
+// adapter between the two, in one place, rather than an index-to-round map at every read site.
+const segments = computed(() =>
+  tabs.value.map((t) => ({ value: String(t.round), label: t.label, short: t.short })),
+)
+const selectedSeg = computed({
+  get: () => String(selected.value),
+  set: (v: string) => {
+    selected.value = Number(v)
+  },
 })
 
 interface BracketSide {
@@ -126,22 +144,17 @@ watch(
 
 <template>
   <div class="bt">
-    <!-- The app's standard segmented control (.tab-row/.tab-pill) so the draw's round switcher
-         matches every other tab row; `bt-tabs` only adds scroll safety on a narrow phone. Real
-         buttons with aria-pressed + the full stage name as the label (the short "QF" is visual). -->
-    <div class="tab-row on-panel bt-tabs" role="group" aria-label="Draw rounds">
-      <button
-        v-for="t in tabs"
-        :key="t.round"
-        class="tab-pill"
-        :class="{ active: t.round === selected }"
-        :aria-pressed="t.round === selected"
-        :aria-label="t.label"
-        @click="selected = t.round"
-      >
-        {{ t.short }}
-      </button>
-    </div>
+    <!-- The app's standard segmented control (U0's SegmentedRow, on .tab-row/.tab-pill) so the
+         draw's round switcher matches every other tab row; `bt-tabs` only adds scroll safety on a
+         narrow phone. Real buttons with aria-pressed + the full stage name as the label (the short
+         "QF" is visual) – all three of those are now the component's guarantee, not this file's. -->
+    <SegmentedRow
+      v-model="selectedSeg"
+      class="bt-tabs"
+      tone="on-panel"
+      :options="segments"
+      group-label="Draw rounds"
+    />
 
     <div ref="scrollRef" class="bt-scroll">
       <div class="bt-list">

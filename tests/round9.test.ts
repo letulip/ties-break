@@ -593,9 +593,20 @@ describe('pt4 — UI wiring', () => {
     // property is the NAME's, not the card's, and it moved with it.
     // ⚠ RE-AIMED AGAIN by A2 (28.07): `.kid-name` was the app header's name, and the app header
     // is gone. `.diary-name` is the only place her name is set now, and it is the headline.
-    for (const sel of ['.diary-name', '.event-tier']) {
-      const block = css.slice(css.indexOf(`${sel} {`))
-      expect(block.slice(0, block.indexOf('}'))).toContain('var(--font-heading)')
+    // ⚠ RE-AIMED A THIRD TIME, by U0. Both rules moved out of `src/style.css` and into the scoped
+    // block of the screen that is their ONE consumer – `.diary-name` into HomeScreen, `.event-tier`
+    // into SeasonScreen – because six screens are being built in parallel on top of this slice and
+    // the sheet is the file they would all have to edit. The property is still the name's and the
+    // tournament title's, and it still is Sora; only the file it is written in changed.
+    const home = read('../src/components/screens/HomeScreen.vue')
+    const season = read('../src/components/screens/SeasonScreen.vue')
+    for (const [sel, src] of [
+      ['.diary-name', home.slice(home.indexOf('<style scoped>'))],
+      ['.event-tier', season.slice(season.indexOf('<style scoped>'))],
+    ] as const) {
+      const at = src.indexOf(`${sel} {`)
+      expect(at, `${sel} must still be declared somewhere`).toBeGreaterThan(-1)
+      expect(src.slice(at, src.indexOf('}', at))).toContain('var(--font-heading)')
     }
     expect(css).toContain('.season-topbar h2')
   })

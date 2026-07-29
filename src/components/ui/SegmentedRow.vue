@@ -17,14 +17,22 @@
 //   * THE MONEY SCREEN'S 12w/season toggle is `.option-row` / `.option-pill`, a THIRD shape. Money
 //     is U1's screen; converging it belongs with whoever ports it, and it should then come here.
 //
-// The value type is generic so a caller can switch on its own union (a round id, a period id)
-// rather than on an index it has to map back.
+// `.tab-row` / `.tab-pill` stay in `src/style.css` and this component declares NO styles of its own:
+// the plate is shared vocabulary, and the draw's own `.bt-tabs` override still reaches its pills
+// through it. What arrives with the component is the CONTRACT - a segmented row is a NAMED group of
+// real buttons carrying `aria-pressed`, and the chosen one is a value rather than a position.
+//
+// The value is a string rather than an index so a caller can switch on its own union (a round id, a
+// period id) instead of on a position it has to map back.
 defineProps<{
   options: readonly { value: string; label: string; short?: string; title?: string }[]
   /** Bare, so the plate reads as a plate on a page background; `on-panel` inside a panel-toned card. */
   tone?: 'page' | 'on-panel'
-  /** What the group is, for screen readers. A row of pills with no name is a row of mystery. */
-  ariaLabel: string
+  /** What the group is, for screen readers. A row of pills with no name is a row of mystery.
+   *  NOT called `ariaLabel`: Vue would let a caller write `aria-label` and have it fall through to
+   *  the root as a plain attribute instead of binding the prop, which type-checks and then quietly
+   *  does the wrong thing on the wrapper. A distinct name makes that impossible. */
+  groupLabel: string
 }>()
 
 /** `v-model` – the ACTIVE option's value, never an index. */
@@ -36,7 +44,7 @@ const model = defineModel<string>({ required: true })
     class="tab-row tb-seg"
     :class="{ 'on-panel': tone === 'on-panel' }"
     role="group"
-    :aria-label="ariaLabel"
+    :aria-label="groupLabel"
   >
     <button
       v-for="o in options"
@@ -52,10 +60,3 @@ const model = defineModel<string>({ required: true })
     </button>
   </div>
 </template>
-
-<style scoped>
-/* `.tab-row` / `.tab-pill` stay in `src/style.css`: the plate is shared vocabulary, and the draw's
-   own `.bt-tabs` override still reaches its pills through it. What this component adds is the
-   CONTRACT - that a segmented row is a named group of real buttons with `aria-pressed`, and that
-   the chosen one is a value rather than a position. */
-</style>

@@ -179,7 +179,12 @@ describe('screen T, round 4', () => {
     expect(home).toContain('formatShortName(currentCoach.value.name)')
     // Design §Home.3: «подпись "M. Ricci" - Caveat 17px rgba(207,225,82,.72)». Values to the digit,
     // with the alpha written against the token so the brand lime stays repairable in one place.
-    const rule = css.slice(css.indexOf('.coach-sign {'), css.indexOf('}', css.indexOf('.coach-sign {')))
+    // ⚠ RE-AIMED by U0: `.coach-sign` moved out of src/style.css into HomeScreen's own scoped
+    // block, with the rest of the rules only that page renders. Values unchanged to the digit, and
+    // the alpha is still written against `--accent-rgb` so the brand lime stays repairable in one
+    // place – which is the fact this line is actually protecting.
+    const homeCss = home.slice(home.indexOf('<style scoped>'))
+    const rule = homeCss.slice(homeCss.indexOf('.coach-sign {'), homeCss.indexOf('}', homeCss.indexOf('.coach-sign {')))
     expect(rule).toContain('var(--font-hand)')
     expect(rule).toContain('font-size: 17px')
     expect(rule).toContain('rgba(var(--accent-rgb), 0.72)')

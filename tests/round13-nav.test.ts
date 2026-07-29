@@ -138,7 +138,13 @@ describe('R13-12 — the Kid screen opens from her photograph', () => {
 
   it('the hint copy obeys the player-copy rules: short dash, no Cyrillic', () => {
     expect(home).toContain('Tap the photo – her page lives here')
-    const template = home.slice(home.indexOf('<template>'))
+    // ⚠ RE-AIMED by U0 – the EXTRACTION, not the assertion. `slice(indexOf('<template>'))` ran to
+    // the end of the FILE, which was the whole template only while these SFCs had no <style> block.
+    // U0 gave Home and Season one, and CSS comments in this codebase quote the owner in Russian by
+    // convention. Bounding at the last `</template>` reads exactly what the player can see, which is
+    // what the rule was always about. The assertions are untouched and neither is weaker.
+    const template = home.slice(home.indexOf('<template>'), home.lastIndexOf('</template>'))
+    expect(template.length).toBeGreaterThan(1000) // a real bound, never a silent empty slice
     expect(template).not.toContain('—')
     expect(template).not.toMatch(/[\u0400-\u04ff]/)
   })
@@ -187,7 +193,11 @@ describe('R13-12 — the This-week tab owns the plan and the recap', () => {
       'diary.photoLine', // name/phrase
       'diary.conditionNote', // condition + note
       'Next tournament', // the compact summary the diary keeps
-      '<h2>News</h2>',
+      // ⚠ RE-AIMED by U0: the news heading is still an <h2> and still says "News", but it is
+      // rendered by `<Eyebrow as="h2">` now – the lime 10/800/0.1em kicker was already ONE rule
+      // shared between the card kickers and these strip headings, and U0 makes it a component.
+      // The protected fact is unchanged: Home still carries a News section, headed, at the bottom.
+      '<Eyebrow as="h2">News</Eyebrow>',
       'diary.memory', // Memory
       'season-strip', // untouched by the move
     ]) {
@@ -332,7 +342,13 @@ describe('R13-12 — OnboardingTour anchors survive the restructure', () => {
 describe('R13-12 player copy', () => {
   it('no long dash, no Cyrillic in the rendered copy of the touched surfaces', () => {
     for (const src of [app, weekScreen, home, tour]) {
-      const template = src.slice(src.indexOf('<template>'))
+    // ⚠ RE-AIMED by U0 – the EXTRACTION, not the assertion. `slice(indexOf('<template>'))` ran to
+    // the end of the FILE, which was the whole template only while these SFCs had no <style> block.
+    // U0 gave Home and Season one, and CSS comments in this codebase quote the owner in Russian by
+    // convention. Bounding at the last `</template>` reads exactly what the player can see, which is
+    // what the rule was always about. The assertions are untouched and neither is weaker.
+      const template = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+      expect(template.length).toBeGreaterThan(500) // a real bound, never a silent empty slice
       expect(template).not.toContain('—')
       expect(template).not.toMatch(/[Ѐ-ӿ]/)
     }

@@ -20,6 +20,16 @@ import MatchViewer from '../MatchViewer.vue'
 import PracticeFlow from '../PracticeFlow.vue'
 import PlanWeekSheet from '../PlanWeekSheet.vue'
 import TierGuide from '../TierGuide.vue'
+// U0 – the shared components (docs/specs/ui-components.md). Season is the SECOND caller, and the
+// point of it being second: an abstraction that only ever served the screen it was extracted from
+// has been renamed, not extracted. Three of the five it uses needed nothing new to fit
+// (ScreenShell, ProgressRing, PrimaryPill); Card needed its second SURFACE, which is written up in
+// the component - the photograph card here and the notecard on Home were already two shared rules
+// in the sheet, so the variant records a split that existed rather than inventing one.
+import ScreenShell from '../ui/ScreenShell.vue'
+import Card from '../ui/Card.vue'
+import PrimaryPill from '../ui/PrimaryPill.vue'
+import ProgressRing from '../ui/ProgressRing.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleAffinity, surfaceStyleHint } from '../../engine/match/style'
@@ -223,12 +233,9 @@ function coachSays(e: UpcomingEvent): string {
   return `The court ${fit}. ${field}`
 }
 
-/** The ring's arc, on the export's geometry (r=19 of a 46px box). */
-const RING_C = Math.round(2 * Math.PI * 19 * 10) / 10
-function ringOffset(chance: number): number {
-  const p = Math.max(0, Math.min(1, chance))
-  return Math.round(RING_C * (1 - p) * 10) / 10
-}
+// U0: the ring's geometry and the arithmetic that turns a chance into a dash offset left for
+// ui/ProgressRing.vue, which Home's condition ring reads too. Only the COLOUR stays here, and only
+// because it is data.
 /** Her odds read on the same red-to-green ramp the condition ring uses, so a percentage means the
  *  same thing everywhere in the app. */
 function chanceColor(chance: number): string {
@@ -698,6 +705,10 @@ function playExhibition(): void {
   <template v-if="game.snapshot">
     <p v-if="game.error" class="error">{{ game.error }}</p>
 
+    <!-- U0: Season had NO wrapper at all – its blocks were a bare fragment dropped into the app's
+         <main>. That is the thing ScreenShell replaces: the stack is now a named object with the
+         same three regions every screen in this system gets, instead of "whatever <main> does". -->
+    <ScreenShell>
     <!-- Round-6: the Calendar/Standings segmented control is gone – standings moved to
          the new Stats tab, so Season is calendar-only now. The "?" tour-guide button stays.
          Wave 2: restyled to the export's header – the title with the season year under it, and the
@@ -737,7 +748,7 @@ function playExhibition(): void {
         fresher – nothing is booked until you say so.
       </p>
       <div class="controls" style="margin-top: 10px">
-        <button class="primary" @click="openRescue">See the options</button>
+        <PrimaryPill @click="openRescue">See the options</PrimaryPill>
         <button @click="rescueDismissed = true">Not now</button>
       </div>
     </div>
@@ -808,7 +819,15 @@ function playExhibition(): void {
            is about a tournament she can actually enter. -->
       <div class="event-cards">
         <template v-for="row in calendarRows" :key="row.week">
-          <div v-if="row.kind === 'event' && row.event" class="event-card">
+          <!-- U0: `<Card variant="photo">` – the same hairline and corners as Home's notecards over
+               a FLAT dark tone, clipped, laid out as a column so the painting can bleed in behind
+               the words. The 16/16/12 inset is this card's own, so it arrives as `pad`. -->
+          <Card
+            v-if="row.kind === 'event' && row.event"
+            variant="photo"
+            pad="16px 16px 12px"
+            class="event-card"
+          >
             <!-- THE PAINTED COURT, bleeding in from the right under the export's own dissolve, with
                  a vertical scrim over it so the words keep their contrast whatever the picture is
                  doing. Same picker Home uses: one tournament, one photograph. -->
@@ -881,33 +900,17 @@ function playExhibition(): void {
                 <p class="event-coach-label">Coach says:</p>
                 <p class="event-coach-line">{{ coachSays(row.event) }}</p>
               </div>
-              <div
+              <ProgressRing
                 class="chance-ring"
-                role="img"
-                :aria-label="`Her chance to win the first match: ${Math.round(row.event.preview.firstMatchChance * 100)} percent, against ${row.event.preview.opponentName}`"
+                :value="row.event.preview.firstMatchChance"
+                :color="chanceColor(row.event.preview.firstMatchChance)"
+                :label="`Her chance to win the first match: ${Math.round(row.event.preview.firstMatchChance * 100)} percent, against ${row.event.preview.opponentName}`"
                 :title="`First round vs ${row.event.preview.opponentName}`"
               >
-                <svg width="46" height="46" viewBox="0 0 46 46" fill="none" aria-hidden="true">
-                  <circle cx="23" cy="23" r="19" class="chance-ring-track" stroke-width="3" />
-                  <circle
-                    cx="23"
-                    cy="23"
-                    r="19"
-                    class="chance-ring-arc"
-                    :stroke="chanceColor(row.event.preview.firstMatchChance)"
-                    stroke-width="3"
-                    stroke-linecap="round"
-                    :stroke-dasharray="RING_C"
-                    :stroke-dashoffset="ringOffset(row.event.preview.firstMatchChance)"
-                    transform="rotate(-90 23 23)"
-                  />
-                </svg>
-                <span class="chance-ring-value">
-                  <b>{{ Math.round(row.event.preview.firstMatchChance * 100) }}</b><i>%</i>
-                </span>
-              </div>
+                <b>{{ Math.round(row.event.preview.firstMatchChance * 100) }}</b><i>%</i>
+              </ProgressRing>
             </div>
-            
+
             <div class="controls" style="margin-top: 12px">
               <!-- Entered, list still OPEN: an ordinary withdrawal, fee refunded. -->
               <button
@@ -936,14 +939,13 @@ function playExhibition(): void {
               <template v-else>
                 <!-- Fatigued is a soft, warned CHOICE: the Enter stays ACTIVE and amber, with a
                      "race anyway?" warning – never greyed out. -->
-                <button
-                  class="primary"
-                  :class="{ risky: row.event.cautionReason === 'fatigued' }"
+                <PrimaryPill
+                  :risky="row.event.cautionReason === 'fatigued'"
                   :disabled="fundsShort(row.event) || game.busy"
                   @click="askEnter(row.event)"
                 >
                   Enter
-                </button>
+                </PrimaryPill>
                 <span v-if="fundsShort(row.event)" class="hint" style="margin: 0">Not enough funds</span>
                 <p v-else-if="row.event.cautionReason === 'fatigued'" class="caution-note">
                   Exhausted – race anyway? Rest would be wiser.
@@ -957,7 +959,7 @@ function playExhibition(): void {
                    SHE cannot go (the tournament still runs; school owns her week). -->
               <span v-else-if="examReasonShows(row)" class="pill muted lock">Exams this week</span>
             </div>
-          </div>
+          </Card>
 
           <!-- A PLANNED week: the booking reads back with its package/match name + a Cancel. When
                the week also carried a (locked) tournament, the row NAMES it, so a planned week
@@ -978,8 +980,9 @@ function playExhibition(): void {
                the week paintings' 941x536, and the card follows the art rather than cropping it.
                NO BUTTON on it (the owner's call): a booked week is a statement, not a control, and
                cancelling lives where booking does - tap the card and the planner opens. -->
-          <div
+          <Card
             v-else-if="row.kind === 'vacation' && row.vacation && vacationArt(row)"
+            variant="photo"
             class="week-card vacation"
             role="button"
             tabindex="0"
@@ -1005,7 +1008,7 @@ function playExhibition(): void {
                 <span v-if="row.event" class="week-note">Skipping {{ row.event.label }}.</span>
               </div>
             </div>
-          </div>
+          </Card>
           <!-- A package with no painting yet keeps the old row, Cancel included. -->
           <div v-else-if="row.kind === 'vacation' && row.vacation" class="calendar-row-muted planned">
             <span class="planned-lines">
@@ -1038,9 +1041,9 @@ function playExhibition(): void {
             <span class="planned-actions">
               <!-- R10-12: on the week that is next, the friendly is enterable right here – this plays
                    the week (the same single advance the Home bar does) and opens it live. -->
-              <button v-if="row.week === week + 1" class="primary sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
+              <PrimaryPill v-if="row.week === week + 1" class="sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
                 Watch it live →
-              </button>
+              </PrimaryPill>
               <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
             </span>
           </div>
@@ -1050,8 +1053,9 @@ function playExhibition(): void {
                that the tournament cards are cards. Same card, one size down: the painting across
                the top, the week's name, its dates, and the plan button at the foot.
                Exams have no painting yet and render without one (see src/art/weeks.ts). -->
-          <div
+          <Card
             v-else
+            variant="photo"
             class="week-card"
             :class="{ 'off-season': row.kind === 'off-season', exam: row.kind === 'exam' }"
           >
@@ -1070,7 +1074,7 @@ function playExhibition(): void {
                 <span v-else-if="row.kind === 'exam'" class="week-note">School owns this week.</span>
               </div>
             </div>
-          </div>
+          </Card>
         </template>
       </div>
       <!-- R11-5a: the line the owner needed and never had. A tier she can enter but that has nothing
@@ -1090,7 +1094,10 @@ function playExhibition(): void {
          cousin - a BOOKED practice match - lives on the calendar above. -->
     <section class="bare">
       <h2>Friendly match</h2>
-      <div class="friendly-card">
+      <!-- U0: the SAME Card as Home's notecards, and it always was – `.friendly-card`,
+           `.diary-strip` and `.note-card` shared one rule in the sheet. The default `gradient`
+           variant is that rule. -->
+      <Card class="friendly-card">
         <div class="friendly-said">
           <p class="friendly-vs">{{ kidName }} <span>vs</span> Top seed</p>
           <p class="friendly-sub">
@@ -1099,8 +1106,8 @@ function playExhibition(): void {
             <span>No points, no money – a hit-out</span>
           </p>
         </div>
-        <button class="primary friendly-go" @click="playExhibition">Play match</button>
-      </div>
+        <PrimaryPill class="friendly-go" @click="playExhibition">Play match</PrimaryPill>
+      </Card>
       <div class="controls friendly-seed">
         <input v-model="exhibitionSeed" type="text" placeholder="seed (optional)" />
       </div>
@@ -1115,7 +1122,10 @@ function playExhibition(): void {
         mode="live"
       />
     </section>
+    </ScreenShell>
 
+    <!-- The overlays sit OUTSIDE the shell on purpose: each is a full-screen takeover with its own
+         backdrop, so it is not part of this screen's stack. -->
     <PlanWeekSheet
       v-if="planSheet"
       :week="planSheet.week"
@@ -1144,3 +1154,577 @@ function playExhibition(): void {
     <TierGuide v-if="showTierGuide" @close="showTierGuide = false" />
   </template>
 </template>
+
+<style scoped>
+/* =================================================================================================
+   SEASON'S OWN STYLES – moved here from src/style.css by U0
+   =================================================================================================
+   Same rule as Home's: shared things live in `src/style.css` or in `src/components/ui/`; what ONE
+   screen composes lives scoped in that screen's file, so five agents building six screens in
+   parallel are not all editing the same 4,900-line sheet. Every selector below had exactly one
+   consumer, this page.
+
+   WHAT LEFT THIS BLOCK ENTIRELY, because a component owns it now:
+     the photograph card -> ui/Card.vue, `photo` variant. It was the shared rule behind
+                            `.event-card` and `.week-card`; the 16/16/12 inset that was the event
+                            card's alone is now a `pad` prop with the same numbers.
+     the notecard        -> ui/Card.vue, default variant. `.friendly-card` was the sheet's last
+                            hand-rolled copy of it, 14px inset included.
+     the chance ring     -> ui/ProgressRing.vue, shared with Home's condition ring.
+
+   WHAT DELIBERATELY STAYED IN THE SHEET, so the next reader does not "finish the job" wrongly:
+     `:root` token blocks   – a scoped `:root` never matches anything. Two of them sit inside this
+                              region (the coach tiers, the surface colours) and must stay global.
+     `.surface-mark` / `.surface-ring` / `.surf-*` – the design's surface mark. It reads as
+                              Season-only today, but the friendly card, the event card and the
+                              tier guide all use it and it is design-system vocabulary, not
+                              composition.
+     `.event-art img` and friends – ONE rule for "a photograph filling a frame it did not size",
+                              shared with Home's hero and its venue arch. Four consumers, two
+                              screens.
+     `.pill` `.controls` `.hint` `section h2` `.tab-row` `.tab-pill` – the app's own vocabulary.
+
+   Scoping adds one attribute selector of specificity, so every rule here was measured against the
+   running app rather than reasoned about: a computed-style walk keyed by each element's document
+   rect, 236 nodes, before and after.
+
+/* --- Season: event cards, entries strip, bracket, standings ------------------- */
+
+.event-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* The export's list gutter is 14px of the screen; ours already has 16px from #app, so the cards
+   simply stop being inset a second time by a panel. */
+section.bare .event-cards {
+  margin: 0;
+}
+
+/* --- SEASON HEADER + PHASE STRIP (wave 2) --------------------------------------------------------
+   The export's header: the screen's name at 20/800 with the season's own year beneath it. */
+.season-title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.season-year {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Owner, 29.07: the current week rides with the year in the Season header. Quieter than the year
+   itself - it is a locator, not a title. */
+.season-week-now {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+/* Five cells, one per surface block, hairline-separated; the lime one is the week she is standing
+   in. Driven by the engine's SURFACE_BLOCKS, so it cannot describe a season we do not generate. */
+.phase-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0 0 14px;
+}
+
+.phase-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 2px;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.phase-cell:first-child {
+  border-left: none;
+}
+
+.phase-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-2);
+}
+
+.phase-weeks {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.phase-cell.active {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-dialog);
+}
+
+.phase-cell.active .phase-name,
+.phase-cell.active .phase-weeks {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* The cell after the active one keeps its own hairline off, or it doubles up against the border. */
+.phase-cell.active + .phase-cell {
+  border-left-color: transparent;
+}
+
+/* 74% of the card, dissolved away to the left, exactly as the export draws it. */
+.event-art {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 74%;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 42%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 42%);
+  pointer-events: none;
+}
+
+/* The export's four-stop vertical scrim. Without it a bright court eats the type at both ends. */
+.event-art-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 17, 23, 0.55) 0%,
+    rgba(11, 17, 23, 0.12) 34%,
+    rgba(11, 17, 23, 0.55) 78%,
+    rgba(11, 17, 23, 0.86) 100%
+  );
+}
+
+/* Everything after the art is a sibling of it, so it needs to sit above. */
+.event-card > *:not(.event-art) {
+  position: relative;
+}
+
+.event-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.event-tier {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+  max-width: 62%;
+  text-wrap: pretty;
+}
+
+/* The FIGURE is white (owner, 28.07) - it is a reading, and every other reading on these screens is
+   white. Only the sun keeps the amber, which is what makes it read as a sun. */
+.event-weather {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.event-sun {
+  color: var(--amber);
+}
+
+/* WHERE THE EXPORT PRINTS A CITY. The owner moved the surface and dates here; the vertical hairline
+   is the export's own separator. */
+.event-place {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.event-place-sep {
+  width: 1px;
+  height: 13px;
+  background: rgba(255, 255, 255, 0.22);
+  flex: none;
+}
+
+.event-dates {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.event-money {
+  margin-top: 14px;
+}
+
+.event-money-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.event-money-figure {
+  margin: 2px 0 0;
+  font-family: var(--font-heading);
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+/* The line under the travel figure. v21 gave it its job back: the figure is already net of the
+   academy's share, and this says so. It sits ON the venue painting like the figure above it, so it
+   carries the same shadow – `--ink-soft` alone disappears over a bright court. */
+.event-money-sub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  text-shadow: var(--shadow-text-on-art);
+}
+
+/* --- THE WEEK CARD (owner, 28.07) ----------------------------------------------------------------
+   A week with no tournament in it, built exactly like the tournament card: the painting fills the
+   card, dissolves away to the left, and the words sit on it - name at the top, action at the foot,
+   air between. The only difference is the shape, and it comes from the art: these masters are 16:9
+   landscape (941x536), so the CARD takes that ratio rather than the art taking a fixed band.
+   At 324px wide that is a 185px card - the same height the export gives its own cards, which is a
+   coincidence worth keeping. */
+.week-card {
+  aspect-ratio: 941 / 536;
+}
+
+.week-art {
+  position: absolute;
+  inset: 0;
+}
+
+/* Fills its frame (see the shared rule up by .event-art img) and steers its own crop. */
+.week-art img {
+  object-position: center 38%;
+}
+
+/* Dark on the left where the words are, clear on the right where she is - the same reading the
+   hero's scrim on Home makes, for the same reason. */
+.week-art-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(100deg, rgba(8, 12, 17, 0.86) 0%, rgba(8, 12, 17, 0.5) 38%, rgba(8, 12, 17, 0.06) 66%),
+    linear-gradient(180deg, rgba(8, 12, 17, 0.34) 0%, rgba(8, 12, 17, 0) 40%, rgba(8, 12, 17, 0.42) 100%);
+}
+
+/* Title top, controls bottom, the space between them left as space. */
+.week-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* A step under the tournament card's 21px: a training week is a smaller thing than a championship
+   and the type should say so before the words do. */
+.week-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.week-dates {
+  margin: 5px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.week-note {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-shadow: var(--shadow-text-on-art);
+}
+
+.week-controls {
+  margin-top: 0;
+}
+
+.week-controls button {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.week-controls button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+/* Exams are nobody's to plan. R12-1/14's rule survives its row becoming a card: the week is
+   AFFIRMED in the accent colour, never dimmed into looking like a rendering accident. */
+/* THE BOOKED FAMILY WEEK (owner, 29.07) - the same card as a training week, following its own art.
+   The vacation frames are 941x377 where the week paintings are 941x536, so this card is visibly
+   SHORTER in the same feed. That is deliberate: the owner asked for the card to take the picture's
+   shape rather than crop a wide picture into a tall box. It carries no button, so the body needs a
+   little less room at the foot than a plannable week does. */
+.week-card.vacation {
+  aspect-ratio: 941 / 377;
+  cursor: pointer;
+}
+
+.week-card.vacation:hover,
+.week-card.vacation:focus-visible {
+  border-color: var(--accent-soft);
+}
+
+/* The chips on a booked week are read-only facts, not controls, so they sit quieter than the
+   Enter/Plan row they share a class with. */
+.week-card.vacation .week-controls .pill {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.week-card.exam {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+/* THE FRIENDLY CARD – the sandbox hit-out, wearing the same notecard as everything else. The 14px
+   inset went with the surface: it is Card's default, and all three of these were already 14. */
+.friendly-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.friendly-said {
+  flex: 1;
+  min-width: 0;
+}
+
+.friendly-vs {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.friendly-vs span {
+  color: var(--ink-soft);
+  font-weight: 500;
+  margin: 0 4px;
+}
+
+.friendly-sub {
+  margin: 7px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  flex-wrap: wrap;
+}
+
+.friendly-sub .surface-mark {
+  font-size: 12.5px;
+  text-shadow: none;
+}
+
+.friendly-sub .surface-ring {
+  width: 15px;
+  height: 15px;
+}
+
+.friendly-sub .surface-ring i {
+  width: 7px;
+  height: 7px;
+}
+
+.friendly-go {
+  flex: none;
+}
+
+/* The seed box is a developer affordance, not part of the card. */
+.friendly-seed {
+  margin-top: 10px;
+}
+
+/* The entry fee sits with the deadline chips but is NOT one – it is a figure, so it reads white and
+   carries no outline (owner, 28.07). */
+.entry-fee {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-shadow: var(--shadow-text-on-art);
+}
+
+/* THE STATUS ROW. "closes W3", "Entered", the injury chip - one line, above the plaque, wrapping
+   only if it truly must. It used to sit below and stack, which pushed the plaque off the card. */
+.event-card .controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.event-card .controls .pill {
+  white-space: nowrap;
+}
+
+/* THE COACH PLAQUE – frosted glass on the photograph, the export's own idiom. */
+.event-coach {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  border-radius: var(--radius-frame);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 15, 20, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.event-coach-said {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-coach-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.event-coach-line {
+  margin: 5px 0 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #eef3f6;
+  text-wrap: pretty;
+}
+
+/* Owner, 28.07: the card's secondary buttons ("+ Plan week", "Withdraw") were disappearing into the
+   photograph behind them - a 7% outline is enough on a flat panel and not on a painting. */
+.event-card .controls button {
+  border-color: rgba(255, 255, 255, 0.28);
+}
+
+.event-card .controls button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+/* Season structure by surface: the two-row block strip above the Calendar list. The upcoming block
+   is dimmed so the eye lands on the swing she is actually in. */
+.season-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.season-block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+.season-block.upcoming {
+  opacity: 0.6;
+}
+
+/* A wrapping strip of chips - see .this-week-status. */
+
+.tournament-summary {
+  font-size: 13.5px;
+  margin: 0 0 12px;
+}
+
+.bracket-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bracket-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-wash);
+  border-radius: 0 var(--radius-control) var(--radius-control) 0;
+  font-size: 13.5px;
+}
+
+/* R10-15: a win and a loss used to read IDENTICALLY in the this-week list – both wore the default
+   accent rail and tint, so the only signal was "beat" vs "lost to" buried in the sentence. The result
+   is now carried by the row itself, using the palette's own positive/negative pair: --accent (the
+   same green .pill.ok and the rank-up arrow use) for a win, --danger for a loss. The rail thickens
+   from 3px to 4px so the two are separable without relying on hue alone. */
+.bracket-row.won {
+  border-left: 4px solid var(--accent);
+  background: var(--accent-fill);
+}
+
+.bracket-row.lost {
+  border-left: 4px solid var(--danger);
+  background: rgba(242, 102, 79, 0.1);
+}
+
+/* Round-7 item 18: keep the "Watch" label + play icon on one line even when the match text
+   squeezes the button in this flex row. */
+.bracket-row .sfx-watch {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* R12-12 (the owner's second ask – round-11's one-line fix was the practice row): the this-week
+   tournament plaque is TWO lines, the sentence on top and the scoreline on its own line beneath.
+   The stack owns the row's flexible width, so the watch button can never fold the score back into
+   the sentence. */
+.bracket-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.bracket-score {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+</style>

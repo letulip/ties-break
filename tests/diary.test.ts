@@ -732,9 +732,16 @@ describe('surfaces + shared tables', () => {
     // here – the number appears exactly ONCE, it is the engine's own condition rendered verbatim,
     // and none of the WORDS left with it.
     const home = read('../src/components/screens/HomeScreen.vue')
-    const template = home.slice(home.indexOf('<template>'))
+    const template = home.slice(home.indexOf('<template>'), home.lastIndexOf('</template>'))
     expect(template.match(/\{\{ condition \}\}/g) ?? []).toHaveLength(1)
-    expect(template).toContain('class="condition-ring-value"')
+    // ⚠ RE-AIMED by U0: the ring's label element is `.tb-ring-value` inside
+    // `src/components/ui/ProgressRing.vue` now, and the figure is passed to it as slot content –
+    // which is why the `<b>…</b><i>%</i>` pair below is still asserted HERE, on this template.
+    // The protected fact is exactly what it was: the number appears ONCE, inside the ring, as the
+    // engine's own condition, with the sign as its own smaller element on the same baseline.
+    const ring = read('../src/components/ui/ProgressRing.vue')
+    expect(ring).toContain('class="tb-ring-value"')
+    expect(template).toContain('<ProgressRing')
     // ...and the sign is its own element, so it can be the smaller half of the pair.
     expect(template).toMatch(/<b>\{\{ condition \}\}<\/b><i>%<\/i>/)
     expect(home).not.toMatch(/Math\.round\(condition\)/)

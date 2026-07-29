@@ -456,7 +456,13 @@ describe('L10 — UI surfaces cover the whole catalogue and stay fiction-safe', 
       expect(src.includes('—')).toBe(false) // short dash only
       // No Cyrillic in RENDERED copy. Script comments legitimately quote the owner in Russian
       // (the existing convention across the engine), so only the template is checked.
-      const template = src.slice(src.indexOf('<template>'))
+      // ⚠ RE-AIMED by U0 – the EXTRACTION, not the assertion. The slice ran to the end of the FILE,
+      // which was the template only while these SFCs had no <style> block; U0 gave Home and Season
+      // one, and CSS comments follow the same quote-the-owner-in-Russian convention the script
+      // comments do. Bounding at the last `</template>` reads exactly what the player sees, which is
+      // what the comment above already said this was for. The assertion is untouched.
+      const template = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+      expect(template.length, `${rel} template`).toBeGreaterThan(500) // never a silent empty slice
       expect(template).not.toMatch(/[Ѐ-ӿ]/)
     }
   })
