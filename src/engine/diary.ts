@@ -298,9 +298,9 @@ export function travelHomeSceneFor(args: {
 //   "reached the final" is `finishIdx <= 1` on the away week's tournament summary – the same field
 //       `lastKidResultOf` reads for the runner-up face and `finalizeTournament` writes from the
 //       bracket (0 = champion, 1 = the girl who lost the final).
-//   "worn out" is `conditionBand === 'drained'` – the diary's own bottom rung (below 40), which is
-//       the rung the condition note already calls "running on empty". `worn` (40-59) is tired;
-//       «сильно устала» is the one below it.
+//   "worn out" is `condition < TRAVEL_ASLEEP_BELOW` – see the note on that constant. It began as
+//       the `drained` band (below 40) and the owner loosened it after the measurement showed that
+//       band swallowing every late-career journey.
 // Only the coin-flip inside "happy or sleepy" is drawn, on `seed:travelmood:<week>` – its own
 // purpose-scoped sub-stream, so the frozen MAIN capture (41550 / e6b0c709) cannot move.
 //
@@ -385,18 +385,40 @@ function firstAbroadIn(
   return true
 }
 
+/** ⚠ WHERE «SLEEPY IF SHE WAS WORN OUT» IS DRAWN, and it is NOT the `drained` band.
+ *
+ *  The rule first read `conditionBand === 'drained'` – below 40, the diary's own bottom rung. That
+ *  is exact but it made four of the twelve paintings early-game only: measured on a real career,
+ *  once the international calendar starts, condition never climbs back over 40 and every journey
+ *  home is `sleepy` from the end of season one onward.
+ *
+ *  The owner's ruling on that, 29.07: «это задача игрока поддерживать её состояние, в его же
+ *  интересах. Но можно и ослабить на sad, они не совсем sad, скорее задумчиво спокойные.»
+ *
+ *  BOTH HALVES OF THAT MATTER. He kept the consequence – a parent who runs her into the ground
+ *  gets a daughter asleep in every car, and that is the game arguing its own thesis. What he
+ *  corrected is the reading of the picture: `sad` is not misery. She is awake, curled against a
+ *  rainy window, thinking. The lore says the same thing in §9.6 – understatement always, no
+ *  heightened misery – so a quiet frame does not need her to be well-rested to be true.
+ *
+ *  So sleeping needs her to be genuinely empty rather than merely tired. 20 is half the `drained`
+ *  line and there is no band at it deliberately: the bands are what Home SAYS about her, and this
+ *  is a threshold for what a picture SHOWS, which is a different question and should not silently
+ *  inherit an answer to the other one. */
+export const TRAVEL_ASLEEP_BELOW = 20
+
 /** The owner's rule, and nothing else in it. The ONE draw is the coin inside "happy or sleepy",
  *  on its own sub-stream keyed to the week she comes home. */
 export function travelHomeMoodFor(args: {
   reachedFinal: boolean
-  conditionBand: ConditionBand
+  condition: number
   seed: string
   week: number
 }): TravelHomeMood {
   if (args.reachedFinal) {
     return rngFromSeed(`${args.seed}:travelmood:${args.week}`)() < 0.5 ? 'happy' : 'sleepy'
   }
-  return args.conditionBand === 'drained' ? 'sleepy' : 'sad'
+  return args.condition < TRAVEL_ASLEEP_BELOW ? 'sleepy' : 'sad'
 }
 
 /** The whole journey-home reading for `week`, or null on a week she did not come home from one.
@@ -430,7 +452,7 @@ export function travelHomeFactsFor(args: {
     week: args.week,
     awayWeek,
     scene,
-    mood: travelHomeMoodFor({ reachedFinal, conditionBand, seed: args.seed, week: args.week }),
+    mood: travelHomeMoodFor({ reachedFinal, condition: args.condition, seed: args.seed, week: args.week }),
     tier,
     abroad,
     finishIdx,

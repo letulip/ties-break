@@ -434,8 +434,14 @@ function* sweepTravel(): Generator<TravelHomeFacts> {
 }
 
 describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () => {
+  // ⚠ RE-AIMED: the rule takes the CONDITION, not the band. It read `conditionBand === 'drained'`
+  // (below 40) until the measurement showed that line swallowing every late-career journey - the
+  // owner loosened it to TRAVEL_ASLEEP_BELOW (20) and reframed the picture: «они не совсем sad,
+  // скорее задумчиво спокойные». The cases below are unchanged in what they assert; each band is
+  // exercised through a condition inside it.
+  const BAND_CONDITION: Record<ConditionBand, number> = { fresh: 90, ok: 70, worn: 50, drained: 10 }
   const mood = (reachedFinal: boolean, conditionBand: ConditionBand, week = 20, seed = 's') =>
-    travelHomeMoodFor({ reachedFinal, conditionBand, seed, week })
+    travelHomeMoodFor({ reachedFinal, condition: BAND_CONDITION[conditionBand], seed, week })
 
   it('reached the final: happy or sleepy, and BOTH are reachable', () => {
     const seen = new Set<TravelHomeMood>()
@@ -658,7 +664,7 @@ describe('ui/travel-set — on a real career', () => {
         expect(travel.mood).toBe(
           travelHomeMoodFor({
             reachedFinal: travel.reachedFinal,
-            conditionBand: travel.conditionBand,
+            condition: world.condition,
             seed: world.seed,
             week: world.week,
           }),
