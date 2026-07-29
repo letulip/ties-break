@@ -362,3 +362,57 @@ value for the same job (`--on-lime: #111a10`, `--on-lime-chip: #161f0c`). Same s
 tints — three near-identical darks for one job — but it is outside the five questions the owner
 answered, so it stays a finding rather than a change. It wants the same treatment: one token, the
 design system's value.
+
+
+---
+
+# The three open questions, answered by the owner (29.07)
+
+## 1. The alpha ladder: five values became two
+
+There were five alphas doing one apparent job - 0.04, 0.05, 0.06, 0.08, 0.1 - and the owner asked
+whether the ladder was needed at all. Read against what each one actually marks, it is two jobs:
+
+| token | alpha | means | where |
+| --- | --- | --- | --- |
+| `--accent-wash` | 0.06 | **the app marked this for you** | an exam week, a planned week, the recommended package, a hovered result row, the row that is hers |
+| `--accent-fill` | 0.12 | **you marked it, or she won it** | a chosen country or play style, a won bracket row, an unlocked tier |
+
+Five steps could not be told apart on a dark panel anyway. Two can, and the difference now carries a
+meaning instead of a history. `--accent-glow` (0.18, a shadow) and `--accent-soft` (0.45, a border)
+are not fills and keep their own values.
+
+## 2. Uppercase labels: one size, one tracking
+
+The measured spread, six rules:
+
+| rule | was | job |
+| --- | --- | --- |
+| `.news-week-label`, `.ledger-week-label` | 11px / 0.05em | a week divider in a feed |
+| `.tf-bracket-title` | 11px / 0.06em | a title inside the bracket |
+| `.season-summary-kicker` | 11px / 0.08em | the recap's kicker |
+| `.tf-round`, `.tf-champ-label` | 12px / 0.08em | the round name, the champion's label |
+| `.tf-badge` | 12px / 0.05em | a badge |
+
+**One token: `--label-size` 11px, `--label-track` 0.08em.** 11px because four of the six already
+were; 0.08em because it is the widest in use *and* it is the typographically right direction -
+smaller caps need MORE tracking, and the old spread had it backwards (11px at 0.05em while 12px sat
+at 0.08em).
+
+**The eyebrow is not part of this family** and keeps its own values: it is the lime section heading
+the design system specifies at 10px / 800 / 0.1em, and 10px carrying 0.1em is exactly the curve
+11px / 0.08em continues.
+
+## 3. Ink on lime: one value
+
+Three values for one job - `#101d0a` five times, `#111a10` twice, and `tokens.css` naming a third.
+Same drift as the accent tints: one decision, copied by hand, drifting on each copy. **`--on-lime`
+is `#111a10`**, the design system's own, for the same reason `--warning` took its export value: the
+app was behind its own handoff.
+
+## The principle these three share
+
+Every one of them was a decision made once and then re-typed. The rule going forward is the one the
+owner stated: **if two values do the same job, they are one token** - and the token's name says the
+job, not the value. When a genuine second job appears, it gets its own name and the difference
+becomes visible in the stylesheet instead of hiding in a decimal.

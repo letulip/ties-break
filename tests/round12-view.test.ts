@@ -84,7 +84,12 @@ describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says
     const exam = cssBodies('.week-card.exam')
     expect(exam.length).toBe(1)
     expect(exam[0]).toContain('border-color: var(--accent)')
-    expect(exam[0]).toContain('background: rgba(var(--accent-rgb), 0.04)')
+    // ⚠ RE-AIMED 29.07 (the owner collapsed the alpha ladder): the tint is now the named
+    // `--accent-wash`, not a hand-written 0.04. Five alphas were doing two jobs; an exam week is the
+    // app MARKING a week for you, which is the wash. The protected fact is what it always was - the
+    // exam week is affirmed in the accent, never dimmed - and the check is unchanged in strength:
+    // it still demands an accent-derived background and still rejects a literal hex.
+    expect(exam[0]).toContain('background: var(--accent-wash)')
     expect(exam[0]).not.toMatch(/#[0-9a-f]{3,8}/i) // no literal colour may creep back in
     expect(exam[0]).not.toContain('opacity')
     expect(exam[0]).not.toContain('var(--line)')
