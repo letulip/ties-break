@@ -100,6 +100,14 @@ Name/nation pools, world calendar breadth, EN copy pass, onboarding, difficulty 
 
 Rounds 4–5 ✅ (2026-07-23/24, owner-driven polish after live playtests; specs round4-*/round5-*/tournament-experience): foreground tournament flow with match stats and finale arcs, sound (owner's recordings, cut to 10 sfx), careers + save generations, real dates + off-season, best-6 transparency, brand identity (owner's logo, Sora/Manrope), full life-arc art set. Next: Phase 4 — development (skills, age curves, Condition mechanics, radar fog-of-war, plan presets with teeth, RAE birth month; revisit shadow-bracket + early rank milestones).
 
+### NEXT, and they are one piece of work (owner, 29.07 — spec `adult-tour-and-endings.md`)
+The conveyor retires every rival at nineteen and cannot touch the heroine, which exposed three holes at once: **no tier has a maximum age** (she can enter Junior Tour 30 at 25 — `isTierAgeOpen` reads only `minAgeYears` and `selectEntrants` never looks at age), **money only ever leaves** (no junior level pays, correctly, so the career is a pure sink for ever), and **nothing ends** (bankruptcy adds a stop reason and the weeks keep ticking; retirement does not exist for her). In order:
+1. **The adult rungs + prize money** — W15 / W35 / W100 analogs, a `'prize'` income category paid at finalize off a per-tier payout table, first-round money that is a token and not zero, and the cheque deliberately OUTSIDE the wealth corridor. Purely additive; it also deletes the econ bench's biggest caveat.
+2. **The handover at 19** — `maxAgeYears: 18` on the J tiers + an age view in entrant selection. Cannot ship before (1), or nineteen walls her into the domestic ladder.
+3. **The fork at 19** — the player's decision, once, with rank/money/the ended scholarship/what a W15 pays on the table — plus the epilogue surface (the v18 milestone ledger is already the material).
+4. **The other three endings onto that surface** — bankruptcy (today it stalls), the career-ending injury, and the natural decline end.
+Open calls for the owner are listed in §5 of the spec: best-6 vs best-16 for the adult window, whether she keeps the domestic ladder as an adult, whether there is play after the ending, and whether "stop" is ever the right answer.
+
 ### Owner-approved additions (2026-07-22 Q&A, see decisions.md)
 Career profiles + new save model (Package K, before Phase 3 data). Structured events feeding News/Money/Gallery. Month fast-forward with event stops. Viz polish mini-package. Fog-of-war radar (Ph4). Relative-age-effect birth month (Ph4/6). Mom/dad choice (Ph6). Moments gallery (Ph6). Weather (Ph3/4 backlog). Replay storage (~100 B each) + share links. Spacing pass (next UI package).
 
