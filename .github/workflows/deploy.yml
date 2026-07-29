@@ -1,5 +1,27 @@
 name: Test, build and deploy to GitHub Pages
 
+# WHY THIS IS TWO JOBS AND NOT ONE (29.07).
+#
+# It used to be a single `build-deploy` job that checked, tested, built, uploaded the
+# `github-pages` artifact and deployed it. That shape has one failure mode, and we hit it:
+#
+#   Error: Multiple artifacts named "github-pages" were unexpectedly found for this
+#   workflow run. Artifact count is 2.
+#
+# An artifact belongs to the RUN, not to the attempt. So when the deploy step fails once - which
+# it does whenever Pages is not yet set to "GitHub Actions" as its source - and the run is then
+# re-run, the single job uploads a SECOND artifact under the same name, and from then on
+# `deploy-pages` refuses every attempt: the run is permanently poisoned and no amount of
+# re-running clears it. That is exactly the loop this was stuck in.
+#
+# Splitting build from deploy is GitHub's own shape for this, and it is what makes a re-run
+# safe: "Re-run failed jobs" then re-runs `deploy` ALONE, against the artifact `build` already
+# uploaded, adding nothing. (A full "re-run all jobs" still re-uploads - if a run is ever
+# poisoned again, push a commit rather than re-running everything.)
+#
+# The gate does not move: nothing is uploaded until vue-tsc, the whole suite and the production
+# build have all passed inside `build`.
+
 on:
   push:
     branches: [main]
@@ -15,11 +37,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -38,5 +57,13 @@ jobs:
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v5
