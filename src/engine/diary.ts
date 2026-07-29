@@ -298,9 +298,10 @@ export function travelHomeSceneFor(args: {
 //   "reached the final" is `finishIdx <= 1` on the away week's tournament summary – the same field
 //       `lastKidResultOf` reads for the runner-up face and `finalizeTournament` writes from the
 //       bracket (0 = champion, 1 = the girl who lost the final).
-//   "worn out" is `condition < TRAVEL_ASLEEP_BELOW` – see the note on that constant. It began as
-//       the `drained` band (below 40) and the owner loosened it after the measurement showed that
-//       band swallowing every late-career journey.
+//   "worn out" is a WEIGHTED COIN on her condition, not a threshold – see travelSleepChance. It
+//       began as the `drained` band, was loosened to a lower line, and the owner then rejected the
+//       line itself: any hard threshold makes one of the two pictures unreachable for whole
+//       stretches, because condition trends rather than wanders.
 // Only the coin-flip inside "happy or sleepy" is drawn, on `seed:travelmood:<week>` – its own
 // purpose-scoped sub-stream, so the frozen MAIN capture (41550 / e6b0c709) cannot move.
 //
@@ -385,40 +386,49 @@ function firstAbroadIn(
   return true
 }
 
-/** ⚠ WHERE «SLEEPY IF SHE WAS WORN OUT» IS DRAWN, and it is NOT the `drained` band.
+/** ⚠ IT IS A COIN, AND THE COIN IS WEIGHTED BY HOW EMPTY SHE IS.
  *
- *  The rule first read `conditionBand === 'drained'` – below 40, the diary's own bottom rung. That
- *  is exact but it made four of the twelve paintings early-game only: measured on a real career,
- *  once the international calendar starts, condition never climbs back over 40 and every journey
- *  home is `sleepy` from the end of season one onward.
+ *  Three rulings got us here, and the third overrides the second.
  *
- *  The owner's ruling on that, 29.07: «это задача игрока поддерживать её состояние, в его же
- *  интересах. Но можно и ослабить на sad, они не совсем sad, скорее задумчиво спокойные.»
+ *  1. The owner's original rule: «если не дошла - sad или sleepy если сильно устала при этом».
+ *     Implemented as a hard threshold on the `drained` band (below 40).
+ *  2. Measured: condition never climbs back over 40 once the international calendar starts, so
+ *     `sad` became an early-game-only picture. He loosened it - «они не совсем sad, скорее
+ *     задумчиво спокойные» - and the threshold moved to 20.
+ *  3. He rejected the threshold itself: «я тогда её вообще такую не увижу никогда, давай тоже
+ *     рандом сделаем тогда между сном и sad».
  *
- *  BOTH HALVES OF THAT MATTER. He kept the consequence – a parent who runs her into the ground
- *  gets a daughter asleep in every car, and that is the game arguing its own thesis. What he
- *  corrected is the reading of the picture: `sad` is not misery. She is awake, curled against a
- *  rainy window, thinking. The lore says the same thing in §9.6 – understatement always, no
- *  heightened misery – so a quiet frame does not need her to be well-rested to be true.
+ *  He is right about the shape. ANY hard line makes one of the two pictures unreachable for long
+ *  stretches of a career, because condition does not wander across a threshold - it trends. The
+ *  rung above already draws a coin between happy and sleepy; this one should too, and now does.
  *
- *  So sleeping needs her to be genuinely empty rather than merely tired. 20 is half the `drained`
- *  line and there is no band at it deliberately: the bands are what Home SAYS about her, and this
- *  is a threshold for what a picture SHOWS, which is a different question and should not silently
- *  inherit an answer to the other one. */
-export const TRAVEL_ASLEEP_BELOW = 20
+ *  WHAT THE WEIGHT IS FOR. A flat coin would throw away the thing he kept when he ruled on this the
+ *  first time - «это задача игрока поддерживать её состояние, в его же интересах». So the coin is
+ *  weighted, not fair: both pictures are reachable at every condition (his ask), and a parent who
+ *  runs her into the ground still sees her asleep far more often (his design). Linear in condition,
+ *  because a curve here would be a number nobody could explain from the screen.
+ *
+ *  A flat 50/50 is one line - drop the interpolation and return 0.5. */
+export const TRAVEL_SLEEP_CHANCE_EMPTY = 0.85
+export const TRAVEL_SLEEP_CHANCE_FRESH = 0.25
 
-/** The owner's rule, and nothing else in it. The ONE draw is the coin inside "happy or sleepy",
- *  on its own sub-stream keyed to the week she comes home. */
+/** How likely the picture is of her ASLEEP rather than awake and quiet, at this condition. */
+export function travelSleepChance(condition: number): number {
+  const t = Math.max(0, Math.min(100, condition)) / 100
+  return TRAVEL_SLEEP_CHANCE_EMPTY + (TRAVEL_SLEEP_CHANCE_FRESH - TRAVEL_SLEEP_CHANCE_EMPTY) * t
+}
+
+/** The owner's rule. BOTH branches are a coin now, on the same sub-stream keyed to the week she
+ *  comes home - one draw, whichever way the week went. */
 export function travelHomeMoodFor(args: {
   reachedFinal: boolean
   condition: number
   seed: string
   week: number
 }): TravelHomeMood {
-  if (args.reachedFinal) {
-    return rngFromSeed(`${args.seed}:travelmood:${args.week}`)() < 0.5 ? 'happy' : 'sleepy'
-  }
-  return args.condition < TRAVEL_ASLEEP_BELOW ? 'sleepy' : 'sad'
+  const roll = rngFromSeed(`${args.seed}:travelmood:${args.week}`)()
+  if (args.reachedFinal) return roll < 0.5 ? 'happy' : 'sleepy'
+  return roll < travelSleepChance(args.condition) ? 'sleepy' : 'sad'
 }
 
 /** The whole journey-home reading for `week`, or null on a week she did not come home from one.

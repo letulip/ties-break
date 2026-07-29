@@ -436,9 +436,8 @@ function* sweepTravel(): Generator<TravelHomeFacts> {
 describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () => {
   // ⚠ RE-AIMED: the rule takes the CONDITION, not the band. It read `conditionBand === 'drained'`
   // (below 40) until the measurement showed that line swallowing every late-career journey - the
-  // owner loosened it to TRAVEL_ASLEEP_BELOW (20) and reframed the picture: «они не совсем sad,
-  // скорее задумчиво спокойные». The cases below are unchanged in what they assert; each band is
-  // exercised through a condition inside it.
+  // owner then rejected thresholds altogether in favour of a weighted coin - see the re-aimed test
+  // below. Each band is still exercised through a condition inside it.
   const BAND_CONDITION: Record<ConditionBand, number> = { fresh: 90, ok: 70, worn: 50, drained: 10 }
   const mood = (reachedFinal: boolean, conditionBand: ConditionBand, week = 20, seed = 's') =>
     travelHomeMoodFor({ reachedFinal, condition: BAND_CONDITION[conditionBand], seed, week })
@@ -455,15 +454,34 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
     expect([...seen].sort(), 'a constant wearing a draw\'s clothes').toEqual(['happy', 'sleepy'])
   })
 
-  it('fell short: sad – unless she was worn out anyway, and then sleepy', () => {
-    // «сильно устала» is the BOTTOM rung (below 40), the one the condition note calls running on
-    // empty. `worn` (40-59) is tired; it is not that.
-    for (let w = 1; w < 60; w++) {
-      expect(mood(false, 'drained', w), `w${w}`).toBe('sleepy')
-      for (const band of ['fresh', 'ok', 'worn'] as ConditionBand[]) {
-        expect(mood(false, band, w), `w${w} ${band}`).toBe('sad')
+  it('fell short: a WEIGHTED coin – both pictures reachable everywhere, sleep likelier when empty', () => {
+    // ⚠ RE-AIMED, AND THE CLAIM IS STRONGER THAN THE ONE IT REPLACES. This asserted a hard line:
+    // drained → sleepy, everything above → sad. The owner rejected the line itself - «я тогда её
+    // вообще такую не увижу никогда, давай тоже рандом сделаем тогда между сном и sad» - because
+    // condition TRENDS rather than wanders, so any threshold parks one picture out of reach for
+    // whole stretches of a career. What is pinned now is what the design actually promises:
+    //   (a) BOTH moods occur at EVERY condition - the thing a threshold could not give him;
+    //   (b) sleeping still gets likelier the emptier she is - the fatigue meaning he kept when he
+    //       ruled «это задача игрока поддерживать её состояние».
+    // (b) is the half a flat 50/50 would quietly delete, which is why it is measured, not assumed.
+    const share = (condition: number) => {
+      let sleepy = 0
+      for (let w = 1; w < 400; w++) {
+        if (travelHomeMoodFor({ reachedFinal: false, condition, seed: 's', week: w }) === 'sleepy') sleepy++
       }
+      return sleepy / 399
     }
+    const empty = share(0)
+    const mid = share(50)
+    const fresh = share(100)
+    // (a) nothing is ever a certainty, at either end
+    for (const [label, v] of [['empty', empty], ['mid', mid], ['fresh', fresh]] as [string, number][]) {
+      expect(v, `${label}: sleepy never happens`).toBeGreaterThan(0.05)
+      expect(v, `${label}: sad never happens`).toBeLessThan(0.95)
+    }
+    // (b) and it is monotone in how empty she is, by a margin no rounding could produce
+    expect(empty).toBeGreaterThan(mid + 0.15)
+    expect(mid).toBeGreaterThan(fresh + 0.15)
   })
 
   it('DETERMINISTIC: the same seed and week answer the same mood, twice and forever', () => {

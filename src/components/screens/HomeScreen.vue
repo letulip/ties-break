@@ -1579,6 +1579,12 @@ button.note-card:active:not(:disabled) {
    photograph, signed by the person who wrote it. */
 .coach-sign {
   margin: 6px 0 0;
+  /* ⚠ PINNED RIGHT (owner, 29.07): «подпись тренера на карточке на домашнем экране прибей к правой
+     стороне». A signature is the last thing on the note and it sits where a hand stops writing -
+     under the end of the line, not under its beginning. Left-aligned it read as another line of the
+     message rather than as somebody signing it. */
+  align-self: flex-end;
+  text-align: right;
   font-family: var(--font-hand);
   font-size: 17px;
   font-weight: 600;
