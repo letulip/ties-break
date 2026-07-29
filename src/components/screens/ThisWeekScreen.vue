@@ -15,21 +15,42 @@ const dismissedRecapKey = moduleRef<string | null>(null)
 // Each concern is its own <section>, so the economy wave's future controls (coach settings etc.)
 // land as sibling sections instead of a rebuild.
 //
+// U2 – THIS SCREEN IS D, "Weekly Story" (docs/design/README.md §D), and the discovery is worth
+// stating: `docs/specs/ui-inventory.md` §2 listed it as "no design at all" until somebody read it
+// against the handoff. It always had one. What this file owns of D is the FRAME – the centred week
+// line, and the × that closes the story – while the story itself (painting, handwriting, the four
+// cards, the goal scrap) is WeekRecapCard.vue.
+//
+// THE ORDER IS D'S, AND IT IS AN ARGUMENT: header (which week) → the story of the week that just
+// resolved → what you are choosing for the next one. The recap used to sit last, under two blocks
+// about the week ahead, which read the arrow of time backwards – and the tab's own accent dot fires
+// on a FRESH RECAP, so the thing the dot sent the player here to see was the thing furthest down.
+//
+// NO TAB BAR CHANGE, and none is wanted: D is a modal overlay in the handoff and ours is a tab. The
+// owner settled that (ui-inventory §4 Q1 – every screen keeps the navigation it has), so D's × does
+// not close a screen here; it dismisses the story, which is exactly what the card's old "Dismiss"
+// link did, in the design's own position.
+//
 // The sticky advance bar is NOT here and must never move here – it is App.vue's, global on every
 // tab (R13-12: the R9-9a "no tab can strand the career" guarantee rides on that bar now).
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { WEEK_PLAN_PRESETS, type WorldMatch } from '../../shared/protocol'
 import { coachBillRangeCents, coachById, selfRateCents } from '../../engine/coach'
-import { weekLabel, weekRange } from '../../shared/dates'
+import { weekDateLine, weekLabel } from '../../shared/dates'
 import { KID_ID, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
 import WeekRecapCard from '../WeekRecapCard.vue'
+import ScreenShell from '../ui/ScreenShell.vue'
 
 const game = useGameStore()
 
 const week = computed(() => game.snapshot?.week ?? 0)
-const weekDates = computed(() => weekRange(week.value))
+// D's header line. `weekDateLine` is the ONE place that shape is spelled (shared/dates.ts, R11-6) –
+// our week number, the year in full, then the week's real days. It replaces the bare `weekRange`
+// this screen printed under its heading: the header now says WHICH week as well as which days, so
+// the section below it does not have to repeat either.
+const dateLine = computed(() => weekDateLine(week.value))
 
 // --- Round 5 item 9 / R9-18 – the week-recap card. THE RULE (owner: it appeared
 // "sometimes"): the card shows after EVERY resolved non-tournament week – including
@@ -38,6 +59,9 @@ const weekDates = computed(() => weekRange(week.value))
 // Week 0 (career start) has nothing to recap. A dismissal silences exactly one week.
 // R13-12: the EXISTENCE half of the rule moved to composables/weekRecap.ts – the App shell's
 // This-week tab dot reads the same predicate, so the card and the dot cannot disagree.
+// U2: the DISMISSAL is unchanged in every respect except which element carries it. It used to be a
+// "Dismiss" text link inside the card; D puts the close on the header, so the screen's × calls this
+// directly and the card no longer emits anything. One control, one key, same one week silenced.
 const showRecap = computed(
   () =>
     !!game.snapshot &&
@@ -99,10 +123,33 @@ const spendRange = computed<[number, number]>(() => {
 </script>
 
 <template>
-  <template v-if="game.snapshot">
+  <ScreenShell v-if="game.snapshot" class="this-week">
+    <!-- D's header: the week, centred, with the story's close on the right. The left spacer is what
+         centres the line against the × – the design's own three-slot row. -->
+    <template #header>
+      <div class="week-topbar">
+        <span class="week-topbar-slot" aria-hidden="true"></span>
+        <p class="week-topbar-line">{{ dateLine }}</p>
+        <button
+          v-if="showRecap"
+          class="week-topbar-slot week-close"
+          type="button"
+          aria-label="Dismiss this week's story"
+          title="Dismiss this week's story"
+          @click="dismissRecap"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
+        <span v-else class="week-topbar-slot" aria-hidden="true"></span>
+      </div>
+    </template>
+
+    <WeekRecapCard v-if="showRecap" />
+
     <section>
       <h2>This week</h2>
-      <p class="hint" style="margin: 0 0 8px">{{ weekDates }}</p>
       <div class="this-week-status">
         <span v-if="nearestEntered" class="pill ok">
           {{ nearestEntered.label }} · {{ nearestEntered.surface }} · {{ weekLabel(nearestEntered.week) }}
@@ -138,7 +185,52 @@ const spendRange = computed<[number, number]>(() => {
         <span class="negative num">${{ spendRange[0] }}–${{ spendRange[1] }}</span>
       </div>
     </section>
-
-    <WeekRecapCard v-if="showRecap" @dismiss="dismissRecap" />
-  </template>
+  </ScreenShell>
 </template>
+
+<style scoped>
+/* D's header row: three slots, so the week line is centred on the SCREEN rather than on whatever is
+   left over beside the ×. The design's 26/20/16 inset is the phone frame's; ours sits inside the
+   app's own 16px gutter (`--app-pad-x`), so only the vertical part of it is spent here. */
+.week-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 0 16px;
+}
+
+.week-topbar-slot {
+  width: 20px;
+  flex: none;
+}
+
+.week-topbar-line {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  /* D asks for #c3ccd2 – a fifth step of ink this app has never declared (it keeps four: --ink,
+     --ink-2, --ink-soft, --ink-dim). `--ink-2` is the neighbouring step and the one this line is
+     doing the job of; adding a colour to satisfy a header would break the one rule the handoff
+     states twice. */
+  color: var(--ink-2);
+}
+
+/* The × is a real button: it is the story's close, so it needs the keyboard and a focus ring. */
+.week-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.week-close:hover {
+  color: var(--text);
+}
+</style>
