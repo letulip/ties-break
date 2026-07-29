@@ -90,32 +90,40 @@ const CALIBRATION_TIER: Record<FamilyBackground, CoachTier> = {
   wealthy: 'elite',
 }
 
-// ⚠ ALL THREE BANDS RE-BASED, AND THE SIGN FLIPPED. Burn > 0 means net burn; negative means the
-// household saves while she does not play. Every band below is now negative, and that is
-// arithmetic rather than a retune: the OLD calibration charged every family a coach the spec
-// prices as ELITE (the `hired` band's ~$475/wk midpoint), so a working family on $245/wk of parent
-// income was being billed $356/wk for coaching – 145% of its own income – in a year with no
-// tournaments in it. That was the wall, measured. On the ladder that family buys Budget at $120/wk
-// and its idle year turns over.
+// ⚠ RE-BASED AGAIN (Round 2), and this time the WEALTHY cell flips back to a burn. Two knobs moved
+// under it: hours went 4 -> 5 at the balanced plan (the owner's own 4/5/6), which raises every
+// weekly bill by a quarter, and the wealth corridor went back ON coaching, which prices each family
+// in its own market. Together they put an Elite coach in a premium academy at $750/wk against a
+// wealthy family's $750/wk of parent income - so "premium everything must hurt" is back in the idle
+// year for the family it was written about, rather than only in the playing season.
 //
-// Measured (same 16 seeds, sponsor-excluded), with the coaching line that produced it:
-//   working · budget  coaching $6,240/yr   burn mean -$5,441   spread -$5,638 .. -$5,265
-//   middle  · middle  coaching $10,400/yr  burn mean -$9,393   spread -$9,761 .. -$9,028
-//   wealthy · elite   coaching $24,960/yr  burn mean -$8,305   spread -$9,122 .. -$7,464
-// The bands are those windows with about $1k of headroom, pinned so the knobs cannot drift
-// unnoticed in either direction – the same treatment the round-12 and round-13 income re-bases got.
+// The Round-1 note still stands for the other two, and it is worth keeping because it explains what
+// the ORIGINAL bands were really measuring: they charged every family a coach the spec prices as
+// ELITE (the old `hired` band's ~$475/wk midpoint), so a working family on $245/wk of parent income
+// was billed $356/wk for coaching - 145% of its own income - in a year with no tournaments in it.
+// That was the wall, measured, in a test that had been reporting it as a healthy $6.8k burn.
 //
-// FOR THE OWNER, and please do not "fix" it by moving these numbers: an IDLE year is now a saving
-// for all three families, so the round-7 item-1d burn bands no longer discriminate between them and
-// are due a design decision rather than another re-pin. What they were really measuring – "premium
-// everything must hurt" – had already moved to the PLAYING season in round 12 (see the wealthy note
-// below), and the bench is where it now lives: tools/econ-bench.ts still bankrupts a 25k family that
-// buys a Middle coach and plays a full schedule, 113 careers out of 120 over 14→18.
+// Measured (same 16 seeds, sponsor-excluded for working), with the coaching line that produced it:
+//   working · budget  $112/wk  burn mean -$5,667   spread -$6,670 .. -$4,798
+//   middle  · middle  $250/wk  burn mean -$7,334   spread -$9,441 .. -$4,754
+//   wealthy · elite   $750/wk  burn mean +$6,280   spread -$1,126 .. +$13,527
+// The mean bands below are those windows with headroom; the per-seed tolerances are wider because
+// the corridor roll now breathes on the coaching line every week, which it did not in Round 1.
+//
+// FOR THE OWNER, and please do not "fix" it by moving these numbers: an idle year is still a SAVING
+// for the two families below the top, so the round-7 item-1d burn bands no longer discriminate
+// between all three and are due a design decision rather than another re-pin. The bench is where
+// the real question lives now - tools/econ-bench.ts walks each family up its own corridor and
+// reports which rungs it survives.
 const BANDS: Record<FamilyBackground, [number, number]> = {
-  working: [-6_500, -4_500],
-  middle: [-10_500, -8_500],
-  wealthy: [-9_500, -7_000],
+  working: [-6_500, -4_800],
+  middle: [-8_500, -6_000],
+  wealthy: [4_500, 8_000],
 }
+
+/** Per-seed tolerance around each band. The corridor roll moves the coaching line every week, so a
+ *  single season lands further from the batch mean than it did with a corridor-free bill. */
+const SEED_SLACK: Record<FamilyBackground, number> = { working: 2_500, middle: 3_500, wealthy: 8_000 }
 
 describe('economy calibration – 52-week net burn (no tournaments, unsponsored kid)', () => {
   it('the calibration kid really is unsponsored: rank stays well past the valve threshold', () => {
@@ -126,7 +134,7 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     expect(world.kidRank).toBeGreaterThan(ECONOMY.sponsorship.halfPriceMaxRank)
   })
 
-  it('working (budget coach) lands in the -$6.5k..-$4.5k band (batch mean, BEFORE the sponsor cameo)', () => {
+  it('working (budget coach) lands in the -$6.5k..-$4.8k band (batch mean, BEFORE the sponsor cameo)', () => {
     // The sponsor exclusion is UNCHANGED and its reasoning is untouched by the ladder. Working keeps
     // the need-based local sponsor, whose 6% × $500-1500 roll is worth ~$3.1k a season in
     // expectation with a ~$1.7k per-season spread – comparable to the entire measured figure. So a
@@ -141,53 +149,51 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     expect(mean(batchBurns('working'))).toBeLessThan(mean(burns))
   })
 
-  it('middle (middle coach) lands in the -$10.5k..-$8.5k band (mean and every seed)', () => {
+  it('middle (middle coach) lands in the -$8.5k..-$6k band (mean, and every seed inside slack)', () => {
     const burns = batchBurns('middle')
     const [lo, hi] = BANDS.middle
     expect(mean(burns)).toBeGreaterThanOrEqual(lo)
     expect(mean(burns)).toBeLessThanOrEqual(hi)
-    // middle has no sponsor income → tight spread → every seed is in-band too.
     for (const b of burns) {
-      expect(b).toBeGreaterThanOrEqual(lo)
-      expect(b).toBeLessThanOrEqual(hi)
+      expect(b).toBeGreaterThanOrEqual(lo - SEED_SLACK.middle)
+      expect(b).toBeLessThanOrEqual(hi + SEED_SLACK.middle)
     }
   })
 
-  it('wealthy (elite coach) lands in the -$9.5k..-$7k band at the $750/wk income', () => {
-    // The round-12 reading survives the ladder intact: at $750/wk the wealthy family out-earns its
-    // idle spend, and "premium everything must hurt" lives in the PLAYING season, where the bench
-    // measures $243k of gross expense over 14→18. What the ladder changed is only the size of the
-    // saving – Elite at $480/wk is cheaper than the old $250-700 band × the 1.2-1.3 corridor was.
+  it('wealthy (elite coach) BURNS $4.5-8k in an idle year – premium everything hurts again', () => {
+    // ⚠ THE SIGN FLIPPED BACK (Round 2). Round 12 had raised the wealthy income to $750/wk and this
+    // cell became a break-even; Round 1 of the ladder made it a $8.3k saving, because an Elite coach
+    // at four hours and no corridor was $480/wk. With the owner's 5 hours and his corridor, a
+    // premium academy's Elite coach is $750/wk - exactly the family's weekly income - so the idle
+    // year burns, which is what the round-7 "premium everything must hurt" always meant.
     const burns = batchBurns('wealthy')
     const [lo, hi] = BANDS.wealthy
     expect(mean(burns)).toBeGreaterThanOrEqual(lo)
     expect(mean(burns)).toBeLessThanOrEqual(hi)
     for (const b of burns) {
-      expect(b).toBeGreaterThanOrEqual(lo - 3_000) // measured spread + headroom, still bounded
-      expect(b).toBeLessThanOrEqual(hi + 3_000)
+      expect(b).toBeGreaterThanOrEqual(lo - SEED_SLACK.wealthy)
+      expect(b).toBeLessThanOrEqual(hi + SEED_SLACK.wealthy)
     }
   })
 
-  it('ordering: the idle year now sorts by (income − coach price), not by the corridor', () => {
-    // ⚠ RE-AIMED, AND THE CHAIN IS DIFFERENT BECAUSE THE MECHANISM IS. The old assertion was
-    // "working < middle, and wealthy no longer belongs in that ordering" – round 12 had already
-    // broken the original working < middle < wealthy chain by raising the wealthy income, and what
-    // ordered the two remaining families was the wealth corridor on their shared coach band.
-    //
-    // With the corridor off coaching, an idle year is income minus a rung's price, so THAT is what
-    // the ordering now reads. Measured (sponsor-excluded, so the working cell is the stable figure
-    // its own band is measured on):
-    //   working · budget  245/wk income − 120/wk coach   burn -$5,441   saves the LEAST
-    //   wealthy · elite   750/wk income − 480/wk coach   burn -$8,305
-    //   middle  · middle  425/wk income − 200/wk coach   burn -$9,393   saves the MOST
-    // Middle on top is not an accident and is worth stating: it buys the rung with the widest gap
-    // between what the family earns and what the coach charges. Wealthy sits below it because its
-    // gear, travel-free though this year is, is priced for a family that buys everything premium.
+  it('ordering: the top of the ladder burns, and the two rungs below it save', () => {
+    // ⚠ RE-AIMED TWICE. The original read "working < middle, and wealthy no longer belongs in that
+    // ordering" - round 12 had already broken the working < middle < wealthy chain by raising the
+    // wealthy income, and what ordered the two survivors was the corridor on their shared coach
+    // band. Round 1 of the ladder made it "income minus a rung's price". Round 2 restores the
+    // corridor AND raises the hours, and the chain that comes out is a third thing again:
+    //   middle  · middle  425/wk income − 250/wk coach   burn -$7,334   saves the MOST
+    //   working · budget  245/wk income − 112/wk coach   burn -$5,667
+    //   wealthy · elite   750/wk income − 750/wk coach   burn +$6,280   the only one that BURNS
+    // Middle on top is not an accident: it buys the rung with the widest gap between what the family
+    // earns and what its academy charges. And wealthy at the top of the market spends its whole
+    // income on the coach alone, before a single trip - which is the design, stated as a number.
     const w = mean(batchBurns('working', { excludeSponsor: true }))
     const m = mean(batchBurns('middle'))
     const rich = mean(batchBurns('wealthy'))
-    expect(m).toBeLessThan(rich)
-    expect(rich).toBeLessThan(w)
+    expect(m).toBeLessThan(w)
+    expect(w).toBeLessThan(rich)
+    expect(rich).toBeGreaterThan(0) // the only cell in the table that is a burn at all
   })
 })
 
@@ -305,7 +311,31 @@ describe('gear cadence (round-7 a) – each category fires within its window', (
 // (tests/season/calendar.test.ts), medical (tests/injuries.test.ts C11) and the season planner's
 // packages (tests/planner.test.ts P3).
 // ---------------------------------------------------------------------------
-describe('the coaching bill is a market rate (the wealth corridor came OFF it)', () => {
+// ⚠ RE-AIMED TWICE, AND IT IS BACK WHERE IT STARTED - WITH A BETTER REASON.
+//
+// Round 1 inverted this block. It had asserted working < middle < wealthy per week (the coaching
+// bill × `wealthCorridor[background]` off one `seed:coachbg:week` roll), and I inverted it to
+// "every background pays the same" on the argument that the coach TIER already says "poorer
+// families buy cheaper coaches", so keeping the corridor charges the difference twice.
+//
+// Round 2 put it back, because the owner's model is better and is a DIFFERENT claim: the corridor
+// is not a discount for being poor, it is THE MARKET SHE TRAINS IN. The same rung of coach costs
+// different money in a working-class club, an ordinary academy and a premium one - the court, the
+// city and the queue for that coach's time are different. A family does not get a cheaper Middle
+// coach because it is poor; it hires the Middle coach its academy HAS. So the ordering below is
+// asserted again, and the wealthy family paying MORE for the same rung is the point rather than a
+// side effect.
+//
+// WHAT IS NEW SINCE THE ORIGINAL, and why this is not simply the old block restored: the tier is a
+// second, independent dial. The corridor orders the three FAMILIES at one rung; the rung ladder
+// orders the five RUNGS inside one family. Both are asserted here, and the bands' own ascent (which
+// is what makes the second ordering hold) is pinned in tests/coachTiers.test.ts.
+//
+// The third test is untouched through both rounds, and that is the point of it: the corridor was
+// always a POST-draw multiply on a private sub-stream, so the MAIN weekly stream never depended on
+// background - taking it off could not break that and putting it back cannot either.
+// ---------------------------------------------------------------------------
+describe('the coaching bill is priced in the family\'s own market (the wealth corridor)', () => {
   const BACKGROUNDS: FamilyBackground[] = ['working', 'middle', 'wealthy']
 
   // Tick one week and return the week-1 coaching bill in cents.
@@ -318,42 +348,48 @@ describe('the coaching bill is a market rate (the wealth corridor came OFF it)',
     return -bill!.amountCents!
   }
 
-  it('charges every background the SAME bill for the same rung (this is the inverted assertion)', () => {
+  it('orders working < middle < wealthy for the SAME rung, per week, off the same roll', () => {
+    // The corridors are disjoint (≤0.80 < 0.95..1.05 < 1.20≤) and the roll is shared, so the
+    // ordering holds every week rather than only on average. Asserted at EVERY rung, because the
+    // claim is that the whole ladder is priced in every market and not just the middle of it.
     for (const tier of COACH_TIERS) {
       const costs = BACKGROUNDS.map((bg) => weekOneCoaching('coach-market', bg, tier))
-      expect(costs[1]).toBe(costs[0])
-      expect(costs[2]).toBe(costs[0])
-      // ...and it lands inside the rung's own weekly band (hourly band × the hours the plan buys).
-      const world = createWorld('coach-market', { ...DEFAULT_PROFILE, coachTier: tier })
-      const [lo, hi] = coachWeeklyBandCents(tier, ageAtWeek(1), world.plan)
-      expect(costs[0]).toBeGreaterThanOrEqual(lo)
-      expect(costs[0]).toBeLessThanOrEqual(hi)
+      expect(costs[0]).toBeLessThan(costs[1])
+      expect(costs[1]).toBeLessThan(costs[2])
+      // ...and each bill sits inside its rung's weekly envelope for ITS market.
+      BACKGROUNDS.forEach((bg, i) => {
+        const world = createWorld('coach-market', { ...DEFAULT_PROFILE, background: bg, coachTier: tier })
+        const [lo, hi] = coachWeeklyBandCents(tier, ageAtWeek(1), world.plan, bg)
+        expect(costs[i]).toBeGreaterThanOrEqual(lo)
+        expect(costs[i]).toBeLessThanOrEqual(hi)
+      })
     }
   })
 
-  it('orders the RUNGS instead: self < budget < middle < high < elite, off the same draw', () => {
-    // The bands are not disjoint (self $10-30/h overlaps budget $24-36/h), so this is not an
-    // ordering of bands – it is an ordering of the SAME uniform draw mapped through each of them.
-    // `pickInt` is monotone in both endpoints, and every band's lo and hi increase up the ladder,
-    // so the ordering holds PER WEEK rather than only on average. Same argument the old corridor
-    // test made from disjointness, made from monotonicity instead.
-    for (const seed of ['rung-a', 'rung-b', 'rung-c']) {
-      const costs = COACH_TIERS.map((tier) => weekOneCoaching(seed, 'middle', tier))
+  it('orders the RUNGS inside one market: self < budget < middle < high < elite', () => {
+    // The second dial. Rung bands do not overlap between neighbours (self takes the middle of
+    // $10-30/h, budget is $24-36, middle $40-60, high $64-96, elite $96-144), so a career on a
+    // dearer rung really does pay more whatever coach it drew - which is what makes "which rung"
+    // a decision rather than a lottery.
+    for (const bg of BACKGROUNDS) {
+      const costs = COACH_TIERS.map((tier) => weekOneCoaching(`rung-${bg}`, bg, tier))
       for (let i = 1; i < costs.length; i++) expect(costs[i]).toBeGreaterThan(costs[i - 1])
     }
   })
 
-  it('is deterministic: the same seed + rung always yields the same bill', () => {
+  it('is deterministic: the same seed + market + rung always yields the same bill', () => {
     for (const tier of COACH_TIERS) {
-      expect(weekOneCoaching('coach-det', 'middle', tier)).toBe(weekOneCoaching('coach-det', 'middle', tier))
+      for (const bg of BACKGROUNDS) {
+        expect(weekOneCoaching('coach-det', bg, tier)).toBe(weekOneCoaching('coach-det', bg, tier))
+      }
     }
   })
 
   it('never perturbs the MAIN weekly stream: draw count + sequence are background-independent (52w)', () => {
-    // UNCHANGED FROM THE CORRIDOR ERA. The bill was always drawn with one main-stream `pickInt`
-    // and scaled afterwards; now it is drawn with one main-stream `pickInt` and multiplied by
-    // hours. Either way the same seed must produce a byte-identical main-stream sequence for
-    // every background.
+    // UNCHANGED THROUGH BOTH ROUNDS. The bill is drawn with one main-stream `pickInt` and everything
+    // with a decision behind it - rate, hours, corridor - is multiplied on afterwards, off pure
+    // look-ups or private sub-streams. So the same seed must produce a byte-identical main-stream
+    // sequence for every background.
     const capture = (background: FamilyBackground) => {
       const world = createWorld('coach-invariance', { ...DEFAULT_PROFILE, background })
       const base = rngFromSeed(world.seed)

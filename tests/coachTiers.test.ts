@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
   COACH_TIERS,
@@ -9,15 +9,24 @@ import {
   coachHoursForPlan,
   coachIncludesPhysio,
   coachRateBandCents,
-  coachStyleFit,
+  coachSeasonUplift,
   coachWeeklyBandCents,
-  coachWeeklyCostCents,
+  coachWeeklyCents,
+  buildCoachRoster,
+  coachById,
+  coachHireable,
+  eliteGateShortfall,
+  coachFitFor,
+  styleFitBetween,
+  selfRateCents,
+  HIREABLE_TIERS,
 } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
-import { ageAtWeek, createWorld, tickWeek } from '../src/engine/world'
+import { ageAtWeek, coachMarket, createWorld, hireCoach, tickWeek } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type CoachTier, type PlayStyle } from '../src/shared/protocol'
+import { ageFactor, trainFactor } from '../src/engine/development'
 
 // THE COACH LADDER (docs/specs/coach-tiers.md). Five rungs replacing a boolean, priced per hour by
 // age, billed for as many hours as the training split buys, and read against the game she plays.
@@ -77,9 +86,12 @@ describe('RNG discipline – one draw, whatever the ladder does', () => {
 })
 
 describe('hours – the training split feeds the bill, not just the development rate', () => {
-  it('anchors the three plan presets on 3 / 4 / 6 sessions', () => {
-    expect(coachHoursForPlan(WEEK_PLAN_PRESETS.light)).toBe(3)
-    expect(coachHoursForPlan(WEEK_PLAN_PRESETS.balanced)).toBe(4)
+  // ⚠ RE-PINNED 3/4/6 -> 4/5/6 (Round 2). The owner's own numbers, replacing the anchoring I
+  // derived from his price table's "x4 h/wk" reference line. Every weekly bill rises 25% at the
+  // balanced plan as a result, which is why the burn bands and the whole bench moved with it.
+  it('anchors the three plan presets on 4 / 5 / 6 sessions', () => {
+    expect(coachHoursForPlan(WEEK_PLAN_PRESETS.light)).toBe(4)
+    expect(coachHoursForPlan(WEEK_PLAN_PRESETS.balanced)).toBe(5)
     expect(coachHoursForPlan(WEEK_PLAN_PRESETS.grind)).toBe(6)
   })
 
@@ -91,16 +103,18 @@ describe('hours – the training split feeds the bill, not just the development 
       prev = h
     }
     // Below the lightest preset and above the heaviest, the ladder holds rather than running off.
-    expect(coachHoursForPlan({ train: 0, rest: 100 })).toBe(3)
+    expect(coachHoursForPlan({ train: 0, rest: 100 })).toBe(4)
     expect(coachHoursForPlan({ train: 100, rest: 0 })).toBe(6)
   })
 
-  it('doubles the bill from light to grind – the dial the old planFactor never really turned', () => {
+  it('moves the bill by half again from light to grind – the dial the old planFactor never turned', () => {
     // The retired `planFactor` ran 0.91 at train 60 to 1.06 at 85: a 16% spread on a slider that
-    // doubles her development. Hours make it a real dial.
+    // doubles her development. Hours make it a real dial. ⚠ RE-PINNED from 2x to 1.5x with the
+    // owner's 4/5/6 (it was 3/6); the FACT guarded is unchanged - the split moves the bill by a
+    // lot more than a sixth - and 1.5x is exactly 6/4.
     const light = weekOneBill('hours-dial', 'middle', 60)
     const grind = weekOneBill('hours-dial', 'middle', 85)
-    expect(grind / light).toBeCloseTo(2, 5)
+    expect(grind / light).toBeCloseTo(1.5, 3) // 3dp: the bill is rounded to whole cents at each end
   })
 })
 
@@ -134,32 +148,52 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
     }
   })
 
-  it('reproduces the spec\'s weekly table at four hours: $120 / $200 / $320 / $480', () => {
-    // docs/specs/coach-tiers.md §2 converts his 12-16 per-hour row at "x4 h/wk". The midpoint of
-    // each band IS his figure, so the balanced plan (4 sessions) bills exactly his table.
-    const balanced = WEEK_PLAN_PRESETS.balanced
-    const midWeekly = (tier: CoachTier) => {
-      const [lo, hi] = coachWeeklyBandCents(tier, 14, balanced)
+  it('reproduces the owner\'s per-hour table in the MIDDLE corridor: 30 / 50 / 80 / 120 at 12-16', () => {
+    // ⚠ RE-AIMED (Round 2). This used to pin his WEEKLY table ($120/$200/$320/$480 at four hours);
+    // with the corridor back on coaching a weekly figure is a figure per MARKET, so the invariant
+    // moved down to the unit he actually priced in - dollars an hour, in an ordinary academy.
+    // Middle's corridor is [0.95, 1.05], centred on 1.0, so his table IS the middle market's price.
+    const midHourly = (tier: CoachTier) => {
+      const [lo, hi] = coachRateBandCents(tier, 14)
       return (lo + hi) / 2 / 100
     }
-    expect(midWeekly('budget')).toBe(120)
-    expect(midWeekly('middle')).toBe(200)
-    expect(midWeekly('high')).toBe(320)
-    expect(midWeekly('elite')).toBe(480)
+    expect(midHourly('budget')).toBe(30)
+    expect(midHourly('middle')).toBe(50)
+    expect(midHourly('high')).toBe(80)
+    expect(midHourly('elite')).toBe(120)
     // ...and self sits below Budget, which is where the spec puts the parent's rung.
-    expect(midWeekly('self')).toBeLessThan(midWeekly('budget'))
+    expect(midHourly('self')).toBeLessThan(midHourly('budget'))
+    // The middle corridor really is the neutral one: a quote there is his hourly rate x the hours.
+    expect(coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle')).toBe(250_00)
+  })
+
+  it('prices every rung in every market, and the wealthy family pays MORE for the same rung', () => {
+    // The owner's correction, as arithmetic: «для 8к все тиры стоят согласно их коридору, для 25к -
+    // свои цены, для 120к стоят дороже всего». Same coach, same hours, three markets.
+    for (const tier of COACH_TIERS) {
+      const w = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'working')
+      const m = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle')
+      const r = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'wealthy')
+      expect(w).toBeLessThan(m)
+      expect(m).toBeLessThan(r)
+      // ...and the rung's envelope moves with the market too.
+      const [wLo] = coachWeeklyBandCents(tier, 14, WEEK_PLAN_PRESETS.balanced, 'working')
+      const [rLo] = coachWeeklyBandCents(tier, 14, WEEK_PLAN_PRESETS.balanced, 'wealthy')
+      expect(wLo).toBeLessThan(rLo)
+    }
   })
 
   it('every drawn bill lands inside its rung\'s weekly band', () => {
     for (const tier of COACH_TIERS) {
       for (const train of [60, 75, 85]) {
-        const [lo, hi] = coachWeeklyBandCents(tier, ageAtWeek(1), { train, rest: 100 - train })
+        const [lo, hi] = coachWeeklyBandCents(tier, ageAtWeek(1), { train, rest: 100 - train }, 'middle')
         const bill = weekOneBill(`band-${tier}-${train}`, tier, train)
         expect(bill).toBeGreaterThanOrEqual(lo)
         expect(bill).toBeLessThanOrEqual(hi)
       }
     }
-    expect(coachWeeklyCostCents(50_00, WEEK_PLAN_PRESETS.balanced)).toBe(200_00)
+    // The parent's rung takes the MIDDLE of the self band rather than drawing a rate of its own.
+    expect(selfRateCents(14)).toBe(20_00)
   })
 })
 
@@ -177,22 +211,36 @@ describe('fit and development – what the rung is worth', () => {
     const steps = COACH_TIERS.slice(1).map((t, i) => f[t] - f[COACH_TIERS[i]])
     for (let i = 1; i < steps.length; i++) expect(steps[i]).toBeLessThan(steps[i - 1])
     // ...while the price climbs the other way: each rung costs more than the last, by more.
-    const price = COACH_TIERS.map((t) => coachWeeklyCostCents((coachRateBandCents(t, 14)[0] + coachRateBandCents(t, 14)[1]) / 2, WEEK_PLAN_PRESETS.balanced))
+    const price = COACH_TIERS.map((t) => {
+      const [lo, hi] = coachRateBandCents(t, 14)
+      return coachWeeklyCents((lo + hi) / 2, WEEK_PLAN_PRESETS.balanced, 'middle')
+    })
     for (let i = 1; i < price.length; i++) expect(price[i]).toBeGreaterThan(price[i - 1])
   })
 
-  it('gives every play style a great fit somewhere, and reads off her own style', () => {
+  // ⚠ RE-AIMED BY THE ROSTER (Round 2): fit is a fact about the COACH, not the tier. It used to be
+  // `coachStyleFit(tier, style)` off a per-tier great/good table; a coach coaches the game HE plays,
+  // so it is now a question about two STYLES and the tier has nothing to say about it. The pills and
+  // their weights are unchanged, and "a big serve is the expensive build" survives as a fact about
+  // the ROSTER rather than about the fit function - Budget ships no serve-first coach at all.
+  it('reads a coach\'s game against hers, symmetrically, with all-court never wrong', () => {
+    for (const style of PLAY_STYLES) expect(styleFitBetween(style, style)).toBe('great')
+    // First-strike tennis reads across; the counterpuncher is the opposite philosophy.
+    expect(styleFitBetween('aggressive', 'serve-first')).toBe('good')
+    expect(styleFitBetween('serve-first', 'aggressive')).toBe('good')
+    expect(styleFitBetween('aggressive', 'counterpuncher')).toBe('off')
+    expect(styleFitBetween('serve-first', 'counterpuncher')).toBe('off')
+    // The generalist is never `off` for anybody, in either direction - that is the whole job.
     for (const style of PLAY_STYLES) {
-      const fits = COACH_TIERS.map((t) => coachStyleFit(t, style))
-      expect(fits).toContain('great')
+      expect(styleFitBetween('all-court', style)).not.toBe('off')
+      expect(styleFitBetween(style, 'all-court')).not.toBe('off')
     }
-    // Elite is great for all four: what a former tour player buys is that there is nothing she
-    // cannot coach. A big serve is the expensive build – nothing below High can teach one.
-    for (const style of PLAY_STYLES) expect(coachStyleFit('elite', style)).toBe('great')
-    expect(coachStyleFit('self', 'serve-first')).toBe('off')
-    expect(coachStyleFit('budget', 'serve-first')).toBe('off')
-    expect(coachStyleFit('middle', 'serve-first')).toBe('off')
-    expect(coachStyleFit('high', 'serve-first')).toBe('great')
+    // Symmetric, every pair.
+    for (const a of PLAY_STYLES) for (const b of PLAY_STYLES) {
+      expect(styleFitBetween(a, b)).toBe(styleFitBetween(b, a))
+    }
+    // The parent is never wrong for her and never a specialist: he taught her the game.
+    expect(coachFitFor(null, 'serve-first')).toBe('good')
   })
 
   it('keeps the fit pill smaller than one rung of the ladder', () => {
@@ -212,7 +260,212 @@ describe('fit and development – what the rung is worth', () => {
   })
 })
 
-describe('v22 migration – the rung closest to what the career was paying', () => {
+describe('the roster – a market, not a menu', () => {
+  it('is roughly four coaches a tier, one per play style, and every portrait exists on disk', () => {
+    const roster = buildCoachRoster('roster-seed', 14)
+    expect(roster).toHaveLength(16) // the 16 portraits that ship in public/images/coaches
+    for (const tier of HIREABLE_TIERS) {
+      const atTier = roster.filter((c) => c.tier === tier)
+      expect(atTier.length).toBeGreaterThanOrEqual(3)
+      expect(atTier.length).toBeLessThanOrEqual(5)
+    }
+    // Both directions: every slot has art, and every file is used. A missing face is a broken row.
+    const dir = fileURLToPath(new URL('../public/images/coaches', import.meta.url))
+    const files = readdirSync(dir).filter((f) => f.endsWith('.webp')).map((f) => f.replace('.webp', ''))
+    expect([...files].sort()).toEqual([...roster.map((c) => c.id)].sort())
+  })
+
+  it('leaves BUDGET without a serve-first coach – a big serve is the expensive build', () => {
+    const roster = buildCoachRoster('roster-seed', 14)
+    const stylesAt = (tier: CoachTier) => new Set(roster.filter((c) => c.tier === tier).map((c) => c.style))
+    expect(stylesAt('budget').has('serve-first')).toBe(false)
+    // ...and every other rung covers all four, so shopping up the ladder is what fixes it.
+    for (const tier of ['middle', 'high', 'elite'] as CoachTier[]) {
+      expect(stylesAt(tier)).toEqual(new Set(PLAY_STYLES))
+    }
+    // Consequence, stated: a serve-first kid finds nobody great for her at Budget.
+    const budget = roster.filter((c) => c.tier === 'budget')
+    expect(budget.every((c) => coachFitFor(c, 'serve-first') !== 'great')).toBe(true)
+  })
+
+  it('is a pure derivation of the seed: stable across rebuilds, different between careers', () => {
+    expect(buildCoachRoster('same', 14)).toEqual(buildCoachRoster('same', 14))
+    const a = buildCoachRoster('career-a', 14).map((c) => c.name).join()
+    const b = buildCoachRoster('career-b', 14).map((c) => c.name).join()
+    expect(a).not.toBe(b)
+    // The PEOPLE do not move between careers - the faces, rungs and styles are the art's facts.
+    expect(buildCoachRoster('career-a', 14).map((c) => `${c.id}:${c.tier}:${c.style}`)).toEqual(
+      buildCoachRoster('career-b', 14).map((c) => `${c.id}:${c.tier}:${c.style}`),
+    )
+  })
+
+  it('keeps a coach\'s POSITION in his band as she ages, while his price rises with her', () => {
+    const young = buildCoachRoster('aging', 14)
+    const older = buildCoachRoster('aging', 25)
+    young.forEach((c, i) => {
+      expect(older[i].id).toBe(c.id)
+      expect(older[i].name).toBe(c.name)
+      expect(older[i].rateCents).toBeGreaterThan(c.rateCents)
+      // same fraction of the way up his rung's band, at both ages
+      const pos = (r: number, tier: CoachTier, age: number) => {
+        const [lo, hi] = coachRateBandCents(tier, age)
+        return (r - lo) / (hi - lo)
+      }
+      expect(pos(older[i].rateCents, c.tier, 25)).toBeCloseTo(pos(c.rateCents, c.tier, 14), 1)
+    })
+    expect(coachById('aging', 14, young[0].id)?.name).toBe(young[0].name)
+    expect(coachById('aging', 14, null)).toBeNull()
+    expect(coachById('aging', 14, 'no-such-coach')).toBeNull()
+  })
+
+  it('opens a career with a real named coach at the rung onboarding chose', () => {
+    const world = createWorld('opening', { ...DEFAULT_PROFILE, coachTier: 'middle', playStyle: 'serve-first' })
+    const coach = coachById(world.seed, 14, world.coachId)
+    expect(coach).not.toBeNull()
+    expect(coach!.tier).toBe('middle')
+    // ...and it is the one who FITS her, not merely the first in the list.
+    expect(coachFitFor(coach, 'serve-first')).toBe('great')
+    // `self` hires nobody.
+    expect(createWorld('opening-self', { ...DEFAULT_PROFILE, coachTier: 'self' }).coachId).toBeNull()
+  })
+
+  it('hires, fires and refuses – and hiring draws nothing on the main stream', () => {
+    const world = createWorld('hiring', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    expect(world.coachId).toBeNull()
+    expect(world.physioActive).toBe(false)
+    const target = buildCoachRoster(world.seed, 14).find((c) => c.tier === 'high')!
+    hireCoach(world, target.id)
+    expect(world.coachId).toBe(target.id)
+    expect(world.physioActive).toBe(true) // every rung but self is a hire
+    hireCoach(world, null)
+    expect(world.coachId).toBeNull()
+    expect(world.physioActive).toBe(false)
+    expect(() => hireCoach(world, 'nobody')).toThrow(/No such coach/)
+
+    // A poison rng proves the command spends no main-stream draw at all.
+    const poison = createWorld('hiring-rng', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    const id = buildCoachRoster(poison.seed, 14)[0].id
+    expect(() => hireCoach(poison, id)).not.toThrow()
+  })
+
+  it('gates Elite only when the owner turns the gate on, and the shipped state is OFF', () => {
+    // Owner: «элит могу вообще стать доступны для туров, как вариант». Modelled, not switched on.
+    expect(ECONOMY.coach.eliteGate.enabled).toBe(false)
+    const elite = buildCoachRoster('gate', 14).find((c) => c.tier === 'elite')!
+    expect(coachHireable(elite, 0)).toBe(true)
+    expect(eliteGateShortfall(elite, 0)).toBeNull()
+    // ...and one flag makes it live everywhere at once.
+    const gate = ECONOMY.coach.eliteGate as { enabled: boolean; minPoints: number }
+    gate.enabled = true
+    try {
+      expect(coachHireable(elite, 0)).toBe(false)
+      expect(eliteGateShortfall(elite, 0)).toBe(gate.minPoints)
+      expect(coachHireable(elite, gate.minPoints)).toBe(true)
+      const world = createWorld('gate-world', { ...DEFAULT_PROFILE, coachTier: 'self' })
+      expect(() => hireCoach(world, elite.id)).toThrow(/ranking points/)
+      // ...and only Elite is gated.
+      const high = buildCoachRoster(world.seed, 14).find((c) => c.tier === 'high')!
+      expect(() => hireCoach(world, high.id)).not.toThrow()
+    } finally {
+      gate.enabled = false
+    }
+  })
+})
+
+describe('what a rung is worth, computed', () => {
+  const fresh = { skills: [48, 48, 48, 48], potential: [63, 63, 63, 63] }
+  const at = (tier: CoachTier, fit: 'great' | 'good' | 'off' = 'good') =>
+    coachSeasonUplift({
+      ...fresh,
+      plan: WEEK_PLAN_PRESETS.balanced,
+      tier,
+      fit,
+      ageFactor: ageFactor(14),
+      trainFactor: trainFactor(WEEK_PLAN_PRESETS.balanced),
+    })
+
+  it('reproduces the owner\'s own sketch for a fresh 14-year-old: budget 0-2, middle 1-3, high 2-4', () => {
+    // «"budget может добавить 0-2%", "middle 1-3%", "high 2-4%" но всё зависит от ребенка». He wrote
+    // those bands from intuition; this computes them from her headroom, and they land on top of each
+    // other. That agreement is the evidence that this is the quantity he meant - it is NOT a target
+    // the numbers were fitted to, and it will move the moment a knob does, which is the whole reason
+    // the card computes rather than prints.
+    const [bLo, bHi] = at('budget')
+    const [mLo, mHi] = at('middle')
+    const [hLo, hHi] = at('high')
+    expect(bLo).toBeGreaterThanOrEqual(0)
+    expect(bHi).toBeLessThanOrEqual(2)
+    expect(mLo).toBeGreaterThanOrEqual(0.5)
+    expect(mHi).toBeLessThanOrEqual(3)
+    expect(hLo).toBeGreaterThanOrEqual(1)
+    expect(hHi).toBeLessThanOrEqual(4)
+  })
+
+  it('is a RANGE and it climbs the ladder', () => {
+    for (const tier of HIREABLE_TIERS) {
+      const [lo, hi] = at(tier)
+      expect(hi).toBeGreaterThan(lo) // the weekly luck draw is real spread
+    }
+    const mids = HIREABLE_TIERS.map((t) => { const [lo, hi] = at(t); return (lo + hi) / 2 })
+    for (let i = 1; i < mids.length; i++) expect(mids[i]).toBeGreaterThan(mids[i - 1])
+    // Self is the baseline, so it adds nothing over itself.
+    expect(at('self')).toEqual([0, 0])
+  })
+
+  it('IS her headroom – "всё зависит от ребенка" is the mechanic, not a disclaimer', () => {
+    const roomy = coachSeasonUplift({
+      skills: [40, 40, 40, 40], potential: [70, 70, 70, 70],
+      plan: WEEK_PLAN_PRESETS.balanced, tier: 'high', fit: 'good',
+      ageFactor: ageFactor(14), trainFactor: trainFactor(WEEK_PLAN_PRESETS.balanced),
+    })
+    const capped = coachSeasonUplift({
+      skills: [69, 69, 69, 69], potential: [70, 70, 70, 70],
+      plan: WEEK_PLAN_PRESETS.balanced, tier: 'high', fit: 'good',
+      ageFactor: ageFactor(14), trainFactor: trainFactor(WEEK_PLAN_PRESETS.balanced),
+    })
+    expect(roomy[1]).toBeGreaterThan(capped[1] * 3)
+    // A girl already at her ceiling is sold nothing at all, by any coach.
+    const done = coachSeasonUplift({
+      skills: [70, 70, 70, 70], potential: [70, 70, 70, 70],
+      plan: WEEK_PLAN_PRESETS.balanced, tier: 'elite', fit: 'great',
+      ageFactor: ageFactor(14), trainFactor: trainFactor(WEEK_PLAN_PRESETS.balanced),
+    })
+    expect(done).toEqual([0, 0])
+    // ...and it fades as the age curve does: the same coach is worth less to a 24-year-old.
+    const young = at('high')
+    const old = coachSeasonUplift({
+      ...fresh, plan: WEEK_PLAN_PRESETS.balanced, tier: 'high', fit: 'good',
+      ageFactor: ageFactor(24), trainFactor: trainFactor(WEEK_PLAN_PRESETS.balanced),
+    })
+    expect(old[1]).toBeLessThan(young[1])
+  })
+
+  it('never promises: fit moves it, and an off-style coach is worth less than a good one', () => {
+    expect(at('high', 'great')[1]).toBeGreaterThan(at('high', 'good')[1])
+    expect(at('high', 'off')[1]).toBeLessThan(at('high', 'good')[1])
+  })
+})
+
+describe('the coach market slice', () => {
+  it('prices every coach in HER market and marks the one she has', () => {
+    const world = createWorld('market', { ...DEFAULT_PROFILE, background: 'working', coachTier: 'budget' })
+    const rows = coachMarket(world)
+    expect(rows).toHaveLength(16)
+    expect(rows.filter((r) => r.current)).toHaveLength(1)
+    expect(rows.find((r) => r.current)!.tier).toBe('budget')
+    // Working prices are the working corridor's, so every row is cheaper than the same row would be
+    // for a wealthy family - the corridor is the market, and it applies to the whole ladder.
+    const rich = coachMarket(createWorld('market', { ...DEFAULT_PROFILE, background: 'wealthy', coachTier: 'budget' }))
+    rows.forEach((r, i) => expect(r.weeklyCents).toBeLessThan(rich[i].weeklyCents))
+    // Nothing is locked while the elite gate is off.
+    expect(rows.every((r) => r.lockedPoints === null)).toBe(true)
+    // Over-budget is measured against the WEEK'S INCOME, and an 8k family cannot carry an Elite.
+    expect(rows.filter((r) => r.tier === 'elite').every((r) => r.overBudgetCents > 0)).toBe(true)
+    expect(rows.filter((r) => r.tier === 'budget').every((r) => r.overBudgetCents === 0)).toBe(true)
+  })
+})
+
+describe('v22/v23 migration – the owner\'s ruling, and a face for the money', () => {
   /** A minimal v21 save carrying the pre-ladder profile shape. */
   function v21(coachSetup: 'parent' | 'hired', background: 'working' | 'middle' | 'wealthy', train = 75) {
     return {
@@ -263,36 +516,44 @@ describe('v22 migration – the rung closest to what the career was paying', () 
     }
   }
 
-  it('lands a parent-coached career on `self`, whatever it was nominally being billed', () => {
-    // The correction the migration comment argues for: priced literally, the old `parent` band
-    // ($120-400/wk × the corridor) matches a PAID Middle or High coach, because it was a catch-all
-    // base cost with a coach-sized number on it rather than a coach's fee. What that family bought
-    // was no coach, and `self` is the only rung that sells it.
+  // ⚠ RE-AIMED BY THE OWNER'S RULING (Round 2), and it made this test SMALLER. It used to pin a
+  // per-background mapping derived by pricing each save's old weekly bill against every rung and
+  // taking the nearest ('high' for working, 'elite' for middle and wealthy). Asked directly, he
+  // said Elite, and that he does not mind, because there are no players yet - so the arithmetic and
+  // the three frozen pre-v22 constants it needed are gone with it.
+  //
+  // The PROTECTED FACT is unchanged and is the one worth keeping: both mappings are
+  // DEVELOPMENT-NEUTRAL. `self` carries 0.82, exactly the `coachParent` a parent-coached career was
+  // growing at; `elite` carries 1.15, exactly `coachHired`. No migrated career's growth rate moves.
+  it('lands every parent-coached career on `self` and every hired one on `elite`', () => {
     for (const bg of ['working', 'middle', 'wealthy'] as const) {
       expect(migrateSave(v21('parent', bg)).profile.coachTier).toBe('self')
+      expect(migrateSave(v21('hired', bg)).profile.coachTier).toBe('elite')
     }
   })
 
-  it('lands a hired career on the rung nearest its old weekly bill, which depends on who paid it', () => {
-    // The old bill was wealth-corridor scaled and the new one is not, so the same setting really
-    // was charging these three families different amounts:
-    //   working  $475 × 0.75 = $356/wk   middle  $475/wk   wealthy  $475 × 1.25 = $594/wk
-    // against the ladder's own weekly prices at balanced (4 h): budget 120, middle 200, high 320,
-    // elite 480. Nobody is migrated onto `self` – a career that was paying for a coach keeps one.
-    expect(migrateSave(v21('hired', 'working')).profile.coachTier).toBe('high')
-    expect(migrateSave(v21('hired', 'middle')).profile.coachTier).toBe('elite')
-    expect(migrateSave(v21('hired', 'wealthy')).profile.coachTier).toBe('elite')
-    for (const bg of ['working', 'middle', 'wealthy'] as const) {
-      expect(migrateSave(v21('hired', bg)).profile.coachTier).not.toBe('self')
-    }
+  it('is development-neutral: neither mapping moves a migrated career\'s growth rate', () => {
+    expect(coachFactor('self', ECONOMY.coach.selfFit)).toBeCloseTo(0.82, 10) // was coachParent
+    expect(coachFactor('elite', 'good')).toBeCloseTo(1.15, 10) // was coachHired
+  })
+
+  it('v23 gives the migrated career a real coach at the rung it was already paying for', () => {
+    const migrated = migrateSave(v21('hired', 'middle'))
+    expect(migrated.coachId).not.toBeNull()
+    const coach = coachById(migrated.seed, 14, migrated.coachId)
+    expect(coach!.tier).toBe('elite')
+    // ...and picked by FIT, the same rule a fresh career opens on.
+    expect(coachFitFor(coach, migrated.profile.playStyle)).toBe('great')
+    // A parent-coached career keeps nobody.
+    expect(migrateSave(v21('parent', 'working')).coachId).toBeNull()
   })
 
   it('drops the pre-ladder field and is idempotent', () => {
     const migrated = migrateSave(v21('hired', 'middle'))
     expect('coachSetup' in migrated.profile).toBe(false)
-    // Re-migrating an already-v22 save must not re-derive (and cannot, with the old field gone).
     const twice = migrateSave(JSON.parse(JSON.stringify(migrated)))
     expect(twice.profile.coachTier).toBe(migrated.profile.coachTier)
+    expect(twice.coachId).toBe(migrated.coachId)
   })
 })
 

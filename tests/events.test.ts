@@ -235,17 +235,17 @@ describe('class-flavored expenses (round-5 item 10)', () => {
     expect(flavors.has('Physio session') || flavors.has('Massage & recovery')).toBe(true)
   })
 
-  // ⚠ RE-AIMED BY THE COACH LADDER, AND THE ASSERTION IS INVERTED ON PURPOSE. This test read
-  // "scales the base expense by background (working < middle < wealthy) for the same draw" – the
-  // weekly coaching bill was multiplied by the family's wealth corridor. docs/specs/coach-tiers.md
-  // §2 took the corridor OFF coaching: the coach TIER now states the family's price level as a
-  // CHOICE, so scaling it by background as well charged the same difference twice.
+  // ⚠ RE-AIMED TWICE, AND IT IS BACK TO WHAT IT ALWAYS SAID. Round 1 inverted this test - the coach
+  // TIER was going to express the family's price level, so scaling by background as well would have
+  // charged it twice. Round 2 restored it, because the owner's model is better and is a different
+  // claim: the wealth corridor is not a discount for being poor, it is THE MARKET SHE TRAINS IN.
+  // The same rung of coach costs different money in a working-class club, an ordinary academy and a
+  // premium one, so this block's original assertion is right again and the wealthy family paying
+  // most is the point rather than a side effect.
   //
-  // The block's own subject is untouched, which is why the re-aim lands here rather than being
-  // deleted: class still flavours this line, it just flavours the TEXT and not the AMOUNT. The two
-  // tests above (working's public-courts clinic, wealthy's premium recovery lines) are the half
-  // that survived, and this is the half that inverted.
-  it('does NOT scale the base expense by background – a coach charges a market rate', () => {
+  // The block's own subject was never in doubt through either round: class flavours this line. What
+  // moved was only whether it flavours the amount as well as the text. It does.
+  it('scales the base expense by background (working < middle < wealthy) for the same draw', () => {
     const baseCost = (background: 'working' | 'middle' | 'wealthy') => {
       const w = createWorld('bg-cost', { ...DEFAULT_PROFILE, background })
       const rng = rngFromSeed(w.seed)
@@ -254,10 +254,8 @@ describe('class-flavored expenses (round-5 item 10)', () => {
       const ev = w.events.find((e) => e.type === 'expense' && e.week === 1)!
       return -ev.amountCents!
     }
-    expect(baseCost('working')).toBe(baseCost('middle'))
-    expect(baseCost('wealthy')).toBe(baseCost('middle'))
-    // ...and the bill is a real number, so the equality above is not three zeroes agreeing.
-    expect(baseCost('middle')).toBeGreaterThan(0)
+    expect(baseCost('working')).toBeLessThan(baseCost('middle'))
+    expect(baseCost('middle')).toBeLessThan(baseCost('wealthy'))
   })
 
   it('cohort drift + AI results are identical across backgrounds (RNG discipline extended)', () => {

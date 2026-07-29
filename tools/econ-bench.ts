@@ -114,33 +114,33 @@ export interface Preset {
 // is the one each family realistically buys off the ladder: working and middle can both self-coach,
 // middle's paid option is the STANDARD private coach, and wealthy buys the top of the market.
 //
-// ⚠ RE-AIMED BY THE COACH LADDER, four cells to FIVE, and each old cell still has exactly one
-// successor so every before/after comparison survives:
+// ⚠ RE-AIMED TWICE. Round 1 took the old four cells to six; Round 2 takes them to NINE, because the
+// question the owner is buying changed. It is no longer "does the middle family survive a coach" -
+// it is «each family should have a real choice inside its own corridor», so the bench has to walk
+// each family UP its own ladder until it breaks, and report where that is.
 //
-//   old `coachSetup: 'parent'` -> `self`    (rows 1 and 3) - the same rung, the parent on the court
-//   old `coachSetup: 'hired'`  -> `middle`  (row 4) and `elite` (row 5)
+// Every original cell still has a successor, so no before/after comparison is lost:
+//   old `coachSetup: 'parent'` -> `self`   (rows 1 and 4)
+//   old `coachSetup: 'hired'`  -> `middle` (row 6, the 0/120 cell) and `elite` (row 9)
 //
-// WHY `hired` SPLITS IN TWO. It was a single $250-700/wk band whose midpoint (~$475) the spec
-// prices as an ELITE coach, so the middle family was never choosing a coach – it was being handed
-// the most expensive one in the game, and going bankrupt 120 times out of 120 for it. On the ladder
-// the middle family buys `middle` and the wealthy family buys `elite`, which is the whole point:
-// one setting became a choice, and the two families stop sharing an answer.
+// WHY `hired` SPLIT IN TWO: it was a single $250-700/wk band whose midpoint (~$475) the spec prices
+// as an ELITE coach, so the middle family was never choosing a coach - it was being handed the most
+// expensive one in the game and going bankrupt 120 times out of 120 for it.
 //
-// ROWS 2 AND 4 ARE NEW, because the ladder created something to measure. Under one boolean there
-// was nothing between "no coach" and "the most expensive coach in the game", so a family had no
-// choice to get wrong. Budget is the rung that changes that for both families, and its weekly price
-// is also the closest of any rung to what `parent` used to cost a WORKING family. Without these
-// rows the bench would only ever report families paying LESS, and would never test the choice the
-// slice actually gave them.
-//
-// The 25k family gets three rows because it is the family the slice is about: it is the one that
-// went bankrupt 120 times out of 120, and "which rungs can it survive" is the question.
+// AND WHY THE PRICES DIFFER BY BACKGROUND AGAIN (Round 2): the wealth corridor is back on coaching,
+// because it is not a discount for being poor - it is the MARKET she trains in. So `25k middle` and
+// `8k working` on the SAME rung are two different bills, and each family's ladder has to be walked
+// in its own corridor. That is the whole reason rows 1-3, 4-7 and 8-9 exist as three ladders rather
+// than one.
 export const PRESETS: Preset[] = [
   { label: '8k   · working · self-coached', background: 'working', coachTier: 'self' },
   { label: '8k   · working · budget coach', background: 'working', coachTier: 'budget' },
+  { label: '8k   · working · middle coach', background: 'working', coachTier: 'middle' },
   { label: '25k  · middle  · self-coached', background: 'middle', coachTier: 'self' },
   { label: '25k  · middle  · budget coach', background: 'middle', coachTier: 'budget' },
   { label: '25k  · middle  · middle coach', background: 'middle', coachTier: 'middle' },
+  { label: '25k  · middle  · high coach', background: 'middle', coachTier: 'high' },
+  { label: '120k · wealthy · high coach', background: 'wealthy', coachTier: 'high' },
   { label: '120k · wealthy · elite coach', background: 'wealthy', coachTier: 'elite' },
 ]
 
@@ -456,8 +456,13 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[]): str
   out.push(RULE)
   // The weekly band this rung bills at the horizon's OPENING age and the bench's plan – the same
   // arithmetic the engine charges, so the header cannot drift from the coaching row below it.
-  const [wLo, wHi] = coachWeeklyBandCents(preset.coachTier, START_AGE_YEARS, WEEK_PLAN_PRESETS.balanced)
-  const coachRange = `${COACH_TIER_LABEL[preset.coachTier]} $${Math.round(wLo / 100)}-${Math.round(wHi / 100)}/wk at 14`
+  const [wLo, wHi] = coachWeeklyBandCents(
+    preset.coachTier,
+    START_AGE_YEARS,
+    WEEK_PLAN_PRESETS.balanced,
+    preset.background,
+  )
+  const coachRange = `${COACH_TIER_LABEL[preset.coachTier]} coach $${Math.round(wLo / 100)}-${Math.round(wHi / 100)}/wk at 14, ${preset.background} corridor`
   out.push(
     `  PRESET ${preset.label}   [${horizon.label}, ${horizon.weeks} wk / ${horizon.targetAge - START_AGE_YEARS} seasons]`,
   )
