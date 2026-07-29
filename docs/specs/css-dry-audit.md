@@ -29,6 +29,26 @@ consolidated when that checker prints zero.
 That check covers screens no screenshot reaches (dialogs, the tournament flow, the onboarding
 wizard), which screenshots of Home and Season cannot.
 
+## How "not one pixel" was proved
+
+Three layers, because each one alone has a hole in it.
+
+1. **The static check above.** Sound for every element in the app, but it reasons about the sheet
+   rather than measuring it.
+2. **Seven live screens.** Home, Season, Stats, More, Money, This week and Kid, driven from a demo
+   save (`--seed acad-offer --week 120`), compared element by element: the full computed style over
+   ~180 properties including `::before`/`::after`, plus each element's bounding rect. Zero
+   differences at every step.
+3. **A probe over 731 element chains.** Most of the sheet dresses screens a click cannot reach on a
+   loaded save — the tournament flow, the practice flow, the injury dialog, the season summary, the
+   onboarding wizard. So every element chain in every `.vue` template is harvested (tag, classes,
+   real ancestors), rebuilt in the page, measured, and thrown away. Anything the stylesheet has to
+   say about an element, it says to the probe.
+
+The probe was proved to BITE before it was trusted: a deliberate `padding: 16px → 17px` on
+`.tf-card` surfaced as 138 style differences and 31 changed boxes across the flow. It was reverted,
+and every consolidation since has been checked against a baseline captured on the pre-pass sheet.
+
 ## What was consolidated
 
 Ordered as committed. "Lines" is the net change in `src/style.css`.
@@ -53,7 +73,26 @@ Ordered as committed. "Lines" is the net change in `src/style.css`.
 | 16 | The onboarding "picked" state | `.country-tile.selected`, `.choice-card.selected` | byte-identical |
 | 17 | A hidden scrollbar on the draw's two scrollers | `.bt-tabs::-webkit-scrollbar`, `.bt-scroll::-webkit-scrollbar` | byte-identical |
 | 18 | The draw's two vertical stacks | `.bt`, `.bt-list` | byte-identical |
-| 19 | `.calendar-row-muted` declared itself twice, 10 lines apart | the two blocks | additive, no overlap |
+| 19 | A row of actions pushed right | `.dialog-actions`, `.planned-actions` | byte-identical |
+| 20 | A wrapping strip of chips (no cross-axis centring) | `.this-week-status`, `.entries-strip` | byte-identical |
+| 21 | `.calendar-row-muted` declared itself twice, 10 lines apart | the two blocks | additive, no overlap |
+
+### What that came to
+
+|  | before | after | delta |
+|---|---|---|---|
+| declarations | 2033 | 1886 | **−147** |
+| rules | 519 | 505 | −14 |
+| lines of actual CSS (no comments, no blanks) | 3128 | 2988 | **−140** |
+| lines in the file | 4174 | 4172 | −2 |
+
+The last row is the honest one and it is worth reading twice: **the file did not get shorter.**
+147 duplicated declarations came out and roughly the same number of lines of comment went in,
+because in this codebase a rule that serves five surfaces has to say which five and why. The win
+is not size, it is that there is now one place to change the panel shell, the notecard surface, the
+percentage ring and the rest — and that the sheet's existing claims ("built exactly like the
+tournament card", "so a percentage means one thing across the app") are enforced by the cascade
+instead of being promises in a comment.
 
 ### On group 7 and the bare `17px`
 
@@ -155,8 +194,17 @@ nothing at all in common in the app. Folding them into a shared selector list wo
 shorter and strictly worse to read — the next person to change the active tab's colour would move
 thirteen unrelated things. Left alone deliberately; this is where DRY stops being a virtue.
 
-The same goes for `.save-row` (a row in More) and `.recap-head` (a card's head) being byte-identical,
-and for `.pkg-list` matching `.bt`/`.bt-list`: same four declarations, unrelated objects.
+The same goes for the pairs still left in the scan after this pass:
+
+- `.save-row` (a row of controls in More) and `.recap-head` (the head of the week-recap card) —
+  byte-identical four declarations, nothing in common in the app.
+- `.pkg-head` (a vacation package's head row) and `.coach-tooltip-actions` (the tour's Next/Skip) —
+  likewise.
+- `.pkg-list` matching the draw's `.bt`/`.bt-list` — a 10px column in two unrelated places.
+- `.bracket-score`/`.rank-value`, `.button.danger`/`.avail-chip.red`, `.choice-blurb`/`.nm-score`/
+  `.planned-when` — two declarations each, three of them just "muted, 12.5px".
+
+Every one of these would shorten the file and lengthen the next person's afternoon.
 
 ### Dead rules found on the way
 
@@ -182,3 +230,16 @@ test was deleted; both now read the merged rule, and both carry a `⚠ RE-AIMED`
 In both cases the merged selector list deliberately ends with the pinned selector. That is not a
 trick to keep a test quiet: the rule genuinely is that selector's rule, and it genuinely declares the
 property the test is checking. The comment in each test says so, so nobody has to rediscover it.
+
+A third test, `tests/round11-view.test.ts`, reads the body of `.planned-actions {`; the same
+selector-order rule was applied there and the fact — a booked week's controls sit right-aligned —
+is read from the rule that declares it. No comment was added, because nothing about that fact's
+home is surprising: it is still the first rule matching that string in the file.
+
+## One thing found that is not this slice's to fix
+
+`public/ref.tsave` is **committed** to the repo, in `baadffa` ("ui wave U0: the extraction plan").
+It is a 44 KB demo save built by `tools/demo-save.ts` for visual checking, exactly the kind of file
+that should not be in git. This pass regenerated it (same seed, byte-identical, so git saw no
+change) and left it exactly as found — undoing another wave's commit is not a CSS refactor's call.
+Worth someone deciding on deliberately.
