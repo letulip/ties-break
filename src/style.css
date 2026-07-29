@@ -236,7 +236,12 @@ td.num {
   font-variant-numeric: tabular-nums;
 }
 
-.controls {
+/* A WRAPPING ROW OF CHIPS, 8px apart. The app's most-repeated layout: buttons under a card, the
+   condition blocks beside their label, the tier ladder across Home. Three rules said it in three
+   different declaration orders and meant the same thing. */
+.controls,
+.condition-cell,
+.season-strip {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -562,15 +567,25 @@ select {
   }
 }
 
-.splash {
+/* THE FULL-SCREEN TAKEOVER. Three things cover the whole app rather than sitting on it: the
+   splash, the onboarding wizard, and the tournament flow. They are the same five declarations –
+   pinned to the viewport, page-coloured, a column – written out three times, four hundred and two
+   thousand lines apart. What separates them is only how high they stack, and that stays with each:
+   the wizard at 50, the splash and the flow at 55 (nothing shows both). */
+.splash,
+.onboarding,
+.tournament-flow {
   position: fixed;
   inset: 0;
-  z-index: 55;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
+}
+
+.splash {
+  z-index: 55;
   align-items: center;
   justify-content: center;
-  background: var(--bg);
   cursor: pointer;
 }
 
@@ -617,12 +632,8 @@ select {
 
 /* --- Onboarding wizard -------------------------------------------------------- */
 
+/* A full-screen takeover (see .splash) that sits under the splash. */
 .onboarding {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
   z-index: 50;
 }
 
@@ -644,7 +655,12 @@ select {
   background: var(--accent);
 }
 
-.onboarding-body {
+/* THE FLOW BODY. The scrolling middle of a full-screen takeover: a 480px column, centred, taking
+   whatever height the header and footer leave it. The wizard and the tournament flow both need
+   exactly this, so it is one rule; the tournament flow's own stacking (a 16px-gapped column) is
+   the only thing it adds, and that stays with it. */
+.onboarding-body,
+.tf-body {
   flex: 1;
   overflow-y: auto;
   width: 100%;
@@ -751,7 +767,12 @@ select {
   font-size: 11px;
 }
 
-.country-tile.selected {
+/* PICKED, in the wizard. Two grids of choices - her country, then the family's means - and one
+   answer to "which one did I tap": the accent frame plus the faintest lime wash. (That wash is
+   the PRE-redesign lime, #d9f24f, not --accent. True of every accent tint in this sheet, and an
+   open question in docs/specs/css-dry-audit.md rather than something to fix in passing.) */
+.country-tile.selected,
+.choice-card.selected {
   border-color: var(--accent);
   background: rgba(217, 242, 79, 0.08);
 }
@@ -786,10 +807,7 @@ select {
   text-align: left;
 }
 
-.choice-card.selected {
-  border-color: var(--accent);
-  background: rgba(217, 242, 79, 0.08);
-}
+/* Picked - see .country-tile.selected. */
 
 .choice-budget {
   font-variant-numeric: tabular-nums;
@@ -873,12 +891,7 @@ button.danger:hover:not(:disabled) {
 
 /* Season-Life slice B: the condition cell's block bar (R13-3: the availability chip that shared
    this row is gone – the D1 note + the amber strain line beneath carry its meaning). */
-.condition-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+/* A wrapping row of chips – see .controls at the top of the sheet. */
 
 /* THE ONE PILL THAT IS NOT A CAPSULE (owner 26.07: "specifically for this one make them less
    round, the rest seem fine"). It carries the longest text of any chip in the app – a whole injury
@@ -930,12 +943,7 @@ button.primary.risky {
   color: #f2b34f;
 }
 
-.season-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
+/* A wrapping row of chips – see .controls at the top of the sheet. */
 
 .strip-arrow {
   color: var(--muted);
@@ -1965,12 +1973,11 @@ tr.kid-row td {
   max-width: 400px;
 }
 
-/* Round 4 item 4: a clearly-visible, pinned close affordance (replaces the old small
-   text link) so it's unmistakable regardless of what else is in the header row. */
-.replay-close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+/* THE 32px ROUND BUTTON. A single glyph in a real circle, big enough to hit with a thumb: the
+   replay's close, and the Season header's "?". A true circle, so 50% and never --radius-pill –
+   the note on the capsule radius at the top of this file is about exactly this distinction. */
+.replay-close,
+.tier-guide-btn {
   width: 32px;
   height: 32px;
   padding: 0;
@@ -1978,6 +1985,14 @@ tr.kid-row td {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+}
+
+/* Round 4 item 4: a clearly-visible, pinned close affordance (replaces the old small
+   text link) so it's unmistakable regardless of what else is in the header row. */
+.replay-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
   background: var(--panel);
   border: 1px solid var(--line);
   font-size: 16px;
@@ -1985,12 +2000,22 @@ tr.kid-row td {
   z-index: 5;
 }
 
-.replay-header {
+/* A CARD'S HEAD ROW. The title on the left, whatever control the card carries on the right, and
+   12px of air under the pair. Three cards had written the same five declarations out - the match
+   replay, the tournament flow's cards, the Money breakdown. Each keeps only what is its own: the
+   replay's head clears its pinned close button, the breakdown's is allowed to wrap. */
+.replay-header,
+.tf-card-head,
+.breakdown-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+/* Clears the pinned close button in the corner. */
+.replay-header {
   padding-right: 36px;
 }
 
@@ -2083,13 +2108,9 @@ tr.kid-row td {
 
 /* --- Tournament experience: the full-screen reveal flow ----------------------- */
 
+/* A full-screen takeover (see .splash). */
 .tournament-flow {
-  position: fixed;
-  inset: 0;
   z-index: 55;
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
 }
 
 .tf-top {
@@ -2112,13 +2133,8 @@ tr.kid-row td {
   margin-top: 4px;
 }
 
+/* The flow body (see .onboarding-body), stacking its cards. */
 .tf-body {
-  flex: 1;
-  overflow-y: auto;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 8px 24px 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -2171,13 +2187,7 @@ tr.kid-row td {
 
 /* The tournament flow's card is the panel shell and nothing else – see .dialog-card. */
 
-.tf-card-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
+/* A card's head row and nothing else – see .replay-header. */
 
 /* Round-7 crowd-reaction pass: the tournament replay's stage/round label, as a filled accent
    pill inline in the card head row (left of "To result →"). Same accent-bg/dark-text look the
@@ -2194,7 +2204,13 @@ tr.kid-row td {
 }
 
 /* Pre-match VS card */
-.tf-vs {
+/* THE CENTRED CARDS OF THE FLOW. Four of the tournament flow's cards are read down the middle -
+   the pre-match VS, the finale, the entry splash and the between-rounds spectate card - and each
+   carried its own one-line rule saying so. One rule, in the order the player meets them. */
+.tf-vs,
+.tf-splash,
+.tf-spectate,
+.tf-finale {
   text-align: center;
 }
 
@@ -2275,9 +2291,7 @@ tr.kid-row td {
 }
 
 /* Finale */
-.tf-finale {
-  text-align: center;
-}
+/* Centred - see .tf-vs. */
 
 .tf-trophy {
   font-size: 44px;
@@ -2488,9 +2502,7 @@ tr.kid-row td {
   margin: 0 0 0 8px;
 }
 
-.tf-splash {
-  text-align: center;
-}
+/* Centred - see .tf-vs. */
 
 .tf-splash-tier {
   font-size: 18px;
@@ -2514,7 +2526,9 @@ tr.kid-row td {
   margin: 0 0 10px;
 }
 
-.bt {
+/* The draw stacks twice over - the card's own parts, then the round's cells - at one rhythm. */
+.bt,
+.bt-list {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -2529,9 +2543,6 @@ tr.kid-row td {
   overflow-x: auto;
   scrollbar-width: none;
 }
-.bt-tabs::-webkit-scrollbar {
-  display: none;
-}
 .bt-tabs .tab-pill {
   flex: 0 0 auto;
 }
@@ -2544,14 +2555,12 @@ tr.kid-row td {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
+
+/* Both of the draw's scrollers hide their bar - the owner's call: users will work out that it
+   scrolls. `scrollbar-width: none` covers Firefox, this covers WebKit. */
+.bt-tabs::-webkit-scrollbar,
 .bt-scroll::-webkit-scrollbar {
   display: none;
-}
-
-.bt-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 /* A pair of adjacent cells (they feed one match in the next round) + a right-side connector
@@ -2645,9 +2654,7 @@ tr.kid-row td {
 }
 
 /* Round-7 spectate: the between-round card carrying the kid's result line + the walk control. */
-.tf-spectate {
-  text-align: center;
-}
+/* Centred - see .tf-vs. */
 
 .tf-spectate-kid {
   font-size: 13px;
@@ -2745,14 +2752,8 @@ tr.kid-row td {
   color: #101d0a;
 }
 
+/* The 32px round button (see .replay-close), holding its size in the header's flex row. */
 .tier-guide-btn {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -2836,21 +2837,22 @@ tr.kid-row td {
   color: var(--accent);
 }
 
-.calendar-row-muted {
-  border: 1px dashed var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
-}
-
 /* --- Season planner: plannable / planned calendar rows + the "+ Plan week" sheet ---------- */
 
-/* An empty row now carries an action ("+ Plan week") or its booking + a Cancel, so the muted
-   rows lay out as a row instead of a single line of text. */
+/* An UNBOOKED week: a dashed frame, because nothing has been committed to it yet. It carries an
+   action ("+ Plan week") or its booking plus a Cancel, so it lays out as a row rather than as a
+   single line of text.
+   (This was two `.calendar-row-muted` rules ten lines apart - the round-5 frame and the planner
+   wave's layout, appended without either noticing the other. Same selector, no overlapping
+   declaration, so joining them is the same cascade written once.) */
 .calendar-row-muted {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
 }
 
 .calendar-row-muted button {
@@ -3268,13 +3270,10 @@ tr.kid-row td {
 
 /* --- Round 7 item 2: Money breakdown (donut + category rows) ----------------- */
 
+/* A card's head row (see .replay-header) that is allowed to wrap – the toggle beside the title
+   is two segments wide and a narrow phone should drop it to its own line rather than squeeze. */
 .breakdown-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 12px;
 }
 
 /* `.breakdown-toggle .option-pill` is compact too – same rule, up with the top popups. */
