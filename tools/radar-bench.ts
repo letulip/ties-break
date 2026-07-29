@@ -40,6 +40,7 @@ import {
   KID_ID,
   matchesEverPlayed,
   skipTournament,
+  startingSkills,
   tickWeek,
   toSnapshot,
   coachSinceWeek,
@@ -168,6 +169,7 @@ function viewOf(world: WorldState): RadarWorldView {
     week: world.week,
     kidId: KID_ID,
     skills: world.skills,
+    startSkills: startingSkills(world.seed, world.profile),
     potential: world.potential,
     coachTier: snap.coachMarket.find((c) => c.current)?.tier ?? 'self',
     coachSinceWeek: coachSinceWeek(world),
@@ -252,6 +254,10 @@ function syntheticView(seed: string, n: number, score: string, tier: CoachTier =
     week: 52,
     kidId: KID_ID,
     skills: { serve: 50, ret: 50, composure: 50, stamina: 50 },
+    // This bench measures the FOG, which `startSkills` has no part in - it only feeds the Weekly
+    // Story's training line. A girl who has not moved is the neutral fixture for the questions
+    // below, and it keeps the synthetic histories comparable to the live careers above.
+    startSkills: { serve: 50, ret: 50, composure: 50, stamina: 50 },
     potential: { serve: 65, ret: 65, composure: 65, stamina: 65 },
     coachTier: tier,
     coachSinceWeek: 0,

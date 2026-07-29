@@ -162,6 +162,117 @@ export const NOTE_UNTESTED_MIN_MATCHES = 4
 /** ...and how weakly her opponents must have probed a wing to license it. */
 export const NOTE_UNTESTED_MAX = 0.25
 
+// --- WHAT MOVED THIS WEEK, AND THE KNOBS THAT KEEP IT HONEST ------------------------------------
+//
+// THE WEEKLY STORY'S TRAINING CARD (screen D). The design lists her skill gains for the week -
+// "Fitness +6%, Backhand +2%, Serve +8%" - and this game may not draw that card, for a reason that
+// is bigger than the card: PER-WEEK SKILL DELTAS MUST NOT REACH THE UI. Handed one every week, a
+// player sums them from week one and reconstructs her exact current build, and every constant above
+// this line becomes decoration. The owner's ruling, 29.07: «Правильная версия карточки - та же
+// читка в тумане» / «если не сложно туманную - сделайте». So the card says WHAT MOVED and never BY
+// HOW MUCH, and the reading lives HERE, beside the model that owns the truth, because it needs the
+// same three things the contour needs: her build, her ceiling, and how sure anybody can be.
+//
+// THREE RULES, and they are the whole design.
+//
+//  1. IT IS FOGGED, NOT ROUNDED. The question is never "the number, vaguely" - it is CAN ANYONE
+//     TELL YET. So movement is measured in FOG WIDTHS (`bandFor`), not in points: at a band of
+//     twelve she must gain a great deal before anyone may honestly claim to see it, and while he
+//     does not know her ON THE WHOLE - the MEAN of the four wings, not his best-read one - the card
+//     says exactly that, out loud, week after week. A confident read on an axis nobody has evidence
+//     for is the same leak in nicer words.
+//
+//  2. IT IS NOT A NUMERIC SIDE-CHANNEL. A card that spoke every week the serve moved by ANY amount
+//     would hand over the SIGN of every weekly delta, and a patient player integrates that. Four
+//     things stop it being that, and all four are needed:
+//       - THE UNIT IS THE STRETCH, NOT THE WEEK. Nothing is said until cumulative movement crosses
+//         a notch, and most weeks nothing has. A live career crosses roughly fifteen notches in
+//         five years, against two hundred and sixty weeks.
+//       - THE EARLY ONES ARE NEVER REPORTED. Below TRAINING_MIN_CONFIDENCE the card says nobody can
+//         tell, so the biggest crossings of all - a fourteen-year-old's, when she improves fastest
+//         and is understood least - are silently missing from any count anyone tries to keep.
+//       - A SIXTH OF THE REST ARE NEVER MENTIONED EITHER (TRAINING_MENTION_CHANCE), drawn once per
+//         notch. So the crossings a player DOES see are a subset with gaps of unknown size. This is
+//         the weakest of the four legs and the constant says why.
+//       - AND THE NOTCH'S WIDTH IS DENOMINATED IN THE FOG, which lifts for reasons that have
+//         nothing to do with how much she gained: matches played, weeks with the man, his rung.
+//     What reaches the player is a subset of crossings, of moving width, with unknown gaps. That
+//     does not integrate to a number, and it was never going to.
+//
+//  3. THE VOICE IS THE ONE UPSTAIRS. Same coach, same room, same sentences as NOTE_POOL and Home's
+//     COACH_QUOTES: short, plain, present tense, never a digit and never an arrow with a value.
+//
+// AND IT PERSISTS NOTHING, like everything else in this module. "How much has she gained" needs
+// where she STARTED, which is stored nowhere and does not have to be: `startingSkills(seed)` in
+// world.ts is a pure function of the seed, and `growWeek` is the ONLY thing in the whole engine that
+// ever moves `world.skills`. So `skills - startSkills` IS her career's development, derivable at
+// snapshot time off state that already exists. No schema bump, no migration, no golden save.
+
+/** ⚠ DELIBERATELY ABOVE `NOTE_MIN_CONFIDENCE` (0.3), and the gap is the point. "Her serve is her
+ *  weapon" is a CHARACTERISATION - a coach forms one from a few sessions and is allowed to be
+ *  wrong. "It has come on these last weeks" is a claim to have measured her TWICE and compared, and
+ *  that is a stronger thing to assert. Below this the card says nobody can tell yet, which is both
+ *  true and the only honest sentence available.
+ *
+ *  It is also what makes the coach ladder show up on this card: measured on a live career, a
+ *  self-coached family clears this on the serve around week twenty and on composure never, while an
+ *  Elite rung is reading three wings before the first season is out. */
+export const TRAINING_MIN_CONFIDENCE = 0.55
+
+/** The narrowest fog movement is ever measured against, in skill points. Sibling of
+ *  CEILING_FLOOR_HALF and there for a related reason: without it, a fully-discovered girl (an Elite
+ *  rung converges to a band of zero) would divide by nothing and the coach would remark on every
+ *  hundredth she gained - which is a per-week delta channel wearing a sentence. At three points the
+ *  tightest a notch ever gets is three points of real improvement, which is a thing a person can
+ *  actually see happen to a tennis player. */
+export const TRAINING_FOG_FLOOR = 3
+
+/** How many fog widths of cumulative movement make one notch. One: a gain the size of the whole
+ *  error bar on that axis is the smallest movement anybody can claim to have SEEN rather than
+ *  guessed at. */
+export const TRAINING_STEP = 1
+
+/** The share of notches he ever mentions at all, drawn once per notch off `seed:trainstep:*`. Not
+ *  one, and that is rule 2's third leg: a player who counts the remarks is counting a SAMPLE, with
+ *  gaps he cannot see. It is also true to life - a coach does not comment on every improvement he
+ *  notices.
+ *
+ *  ⚠ WHY NOT LOWER, measured rather than assumed. It was 0.7, which silences a notch nearly a third
+ *  of the time; with only two or three wings eligible that stacks, and eight careers per rung showed
+ *  stretches of a YEAR with nothing said. This leg is also the weakest of the four - an adversary
+ *  reading the TIER of the sentence ("starting to show" / "has come on" / "unrecognisable") already
+ *  learns which bracket the notch is in without counting anything, so a coin that hides whole
+ *  crossings buys less than it costs. Legs one, two and four are structural and carry the argument;
+ *  this one only has to stop a naive tally, and a sixth of them missing does that. */
+export const TRAINING_MENTION_CHANCE = 0.85
+
+/** ...and on a week when ANYTHING is standing, the chance he says something rather than getting on
+ *  with the session. The card should be quiet most weeks: a notch stands for thirty to fifty weeks
+ *  on a live career, so this makes each one a remark passed two or three times over a stretch
+ *  rather than a status line that is always on.
+ *
+ *  ⚠ ONE COIN FOR THE WEEK, NOT ONE PER WING, and it was the other way round until a playtest.
+ *  Per-wing coins make the rate scale with how many wings happen to be eligible, and that swings
+ *  between famine and feast for reasons the player cannot see: a measured career ran four wings
+ *  eligible one season and one the next, which at six percent each is a line every four cards and
+ *  then a line every seventeen. One live window went twenty-nine cards without a word. Deciding
+ *  FIRST whether he speaks and only THEN which wing holds the rhythm steady wherever she is. */
+export const TRAINING_SAY_CHANCE = 0.14
+
+/** How long the "nobody can tell yet" line holds its wording before rotating to the next one.
+ *
+ *  Home's coach note has used exactly this idiom since round 7 - `Math.floor(week / 4) % 5` - for
+ *  exactly this reason, and the owner settled it there: a coach's read on the kid should SETTLE for
+ *  a while, not flip every week. Four weeks of the same sentence reads as a standing state; nine of
+ *  them in a row, which is what a fourteen-year-old's first season actually produces, reads as a
+ *  broken card. */
+export const TRAINING_FOG_ROTATE_WEEKS = 4
+
+/** How far a notch must be past the first before the claim escalates from "starting to show" to
+ *  "has come on", and again to "unrecognisable". */
+export const TRAINING_TIER_CLEAR = 2
+export const TRAINING_TIER_DEEP = 4
+
 // --- the view ----------------------------------------------------------------------------------
 
 /** The narrow slice of the world the radar is allowed to read. Assembled by toSnapshot - the
@@ -172,6 +283,11 @@ export interface RadarWorldView {
   kidId: string
   /** her true build. Never leaves the engine. */
   skills: KidSkills
+  /** THE BUILD SHE WAS BORN WITH - `startingSkills(seed)`, a pure function of the seed and stored
+   *  nowhere. `skills - startSkills` is her whole career's development, which is what the Weekly
+   *  Story's Training card reads (see `buildTrainingRead`). Never leaves the engine either: the
+   *  difference is turned into a sentence here and the sentence is all the UI is given. */
+  startSkills: KidSkills
   /** her true ceiling. Never leaves the engine. */
   potential: KidSkills
   /** the rung she trains at TODAY */
@@ -577,22 +693,39 @@ function clamp(x: number, lo: number, hi: number): number {
   return x < lo ? lo : x > hi ? hi : x
 }
 
+/** WHAT HER RECORD SHOWS, per axis, and how sure that makes anybody - the fold BOTH surfaces stand
+ *  on, done once.
+ *
+ *  ⚠ IT IS A PARAMETER OF `buildRadar` AND `buildTrainingRead` RATHER THAN A THIRD CALL INSIDE EACH,
+ *  and that is the only reason it is public. `axisEvidence` walks the whole retained match window
+ *  four times over; before this was hoisted, adding the training read to the snapshot walked it a
+ *  second four times for the same girl in the same week. Callers with one view and two questions
+ *  (i.e. `toSnapshot`) pass this in; anyone with one question can leave it out. */
+export function axisReadings(view: RadarWorldView): Record<SkillKey, { evidence: AxisEvidence; confidence: number }> {
+  const weeksTogether = Math.max(0, view.week - view.coachSinceWeek)
+  const out = {} as Record<SkillKey, { evidence: AxisEvidence; confidence: number }>
+  for (const key of SKILL_KEYS) {
+    const evidence = axisEvidence(view, key)
+    out[key] = { evidence, confidence: axisConfidence(view.coachTier, weeksTogether, evidence.level) }
+  }
+  return out
+}
+
 /** THE FOUR ROWS THE UI DRAWS. Called once per snapshot; nothing here is persisted and nothing here
  *  touches the MAIN stream.
  *
  *  The order is `SKILL_KEYS`, which is the order every other surface in the engine lists her
  *  attributes in - so the radar's axes cannot end up in a different order from the coach market's
  *  uplift projection or the save's own skill block. */
-export function buildRadar(view: RadarWorldView): RadarAxis[] {
-  const weeksTogether = Math.max(0, view.week - view.coachSinceWeek)
+export function buildRadar(view: RadarWorldView, readings: ReturnType<typeof axisReadings> = axisReadings(view)): RadarAxis[] {
   const evidence = {} as Record<SkillKey, AxisEvidence>
   const confidence = {} as Record<SkillKey, number>
   const shown = {} as Record<SkillKey, number>
   const band = {} as Record<SkillKey, number>
 
   for (const key of SKILL_KEYS) {
-    evidence[key] = axisEvidence(view, key)
-    confidence[key] = axisConfidence(view.coachTier, weeksTogether, evidence[key].level)
+    evidence[key] = readings[key].evidence
+    confidence[key] = readings[key].confidence
     band[key] = bandFor(confidence[key])
     // ⚠ ONE DRAW PER CAREER PER AXIS - no week in the key. The DIRECTION of the misreading is fixed
     // for the whole career and only its magnitude shrinks, so the contour converges instead of
@@ -637,6 +770,199 @@ export function buildRadar(view: RadarWorldView): RadarAxis[] {
       ),
     }
   })
+}
+
+// --- WHAT MOVED THIS WEEK, IN WORDS -------------------------------------------------------------
+// The reading itself. See the block above TRAINING_MIN_CONFIDENCE for why it is shaped this way.
+
+/** THE WEEKLY STORY'S TRAINING LINE, or null on a week with nothing to say - which is most weeks,
+ *  and is the point. Carries NOT ONE NUMBER: the card is handed a wing and a sentence, and the
+ *  amount she moved by stays in the engine with everything else that is true. */
+export interface TrainingRead {
+  /** the wing the line is about, or null when the line is about the FOG rather than about her */
+  key: SkillKey | null
+  /** `RADAR_AXIS_LABEL[key]` - the engine's own word for that wing, so `ret` can never reach a
+   *  player as "Ret". Null on a fog line, which is about no wing in particular. */
+  label: string | null
+  /** the coach's sentence. Words only, no digits, ever. */
+  text: string
+}
+
+/** How loud the claim is allowed to be, by how far the movement has got. */
+type MoveTier = 'early' | 'clear' | 'deep'
+
+function moveTierOf(step: number): MoveTier {
+  if (step >= TRAINING_TIER_DEEP) return 'deep'
+  if (step >= TRAINING_TIER_CLEAR) return 'clear'
+  return 'early'
+}
+
+// SAME VOICE AS `NOTE_POOL` ABOVE and as Home's COACH_QUOTES - one coach, three surfaces. Every
+// line is a claim about MOVEMENT and nothing else: not how good the wing is (the radar's own note
+// says that), not how much it moved by (nobody gets that), just that it has come along and roughly
+// how far. Player copy: English, short dash only, and SHORT - this renders in a half-width tile on
+// a 390px frame, so anything past about forty-five characters wraps to a third line.
+const MOVE_POOL: Record<SkillKey, Record<MoveTier, readonly string[]>> = {
+  serve: {
+    early: [
+      'The serve work is starting to show.',
+      'Something has changed on that serve.',
+      'The serve is beginning to look like a shot.',
+    ],
+    clear: [
+      'The serve has come on. People notice it.',
+      'She wins free points she never used to.',
+      'That serve has moved on a long way.',
+    ],
+    deep: [
+      'The serve is not the one she arrived with.',
+      'Her old serve would be unrecognisable now.',
+      'The serve is a real weapon. That is the work.',
+    ],
+  },
+  ret: {
+    early: [
+      'The return is starting to look different.',
+      'She is meeting the ball earlier now.',
+      'The return work is beginning to show.',
+    ],
+    clear: [
+      'The return has come on a long way.',
+      'She hurts people with the return now.',
+      'Big serves do not push her back like they did.',
+    ],
+    deep: [
+      'The return is a different shot entirely.',
+      'She takes the serve early now. All of it work.',
+      'Nothing gets past her the way it once did.',
+    ],
+  },
+  composure: {
+    early: [
+      'She is steadier in the tight games.',
+      'The head is quieter than it was.',
+      'She is starting to hold on in close ones.',
+    ],
+    clear: [
+      'The big points do not shake her now.',
+      'She has grown up out there.',
+      'Nothing rattles her the way it used to.',
+    ],
+    deep: [
+      'She is the calmest girl on the court now.',
+      'The pressure does not touch her any more.',
+      'You would not know she was ever nervous.',
+    ],
+  },
+  stamina: {
+    early: [
+      'She is fresher late in matches.',
+      'The legs are holding up better.',
+      'The gym work is starting to tell.',
+    ],
+    clear: [
+      'A third set does not frighten her now.',
+      'She finishes stronger than she starts.',
+      'The legs have come on a long way.',
+    ],
+    deep: [
+      'She can go all afternoon now.',
+      'Nobody outlasts her any more.',
+      'The other girl breaks first these days.',
+    ],
+  },
+}
+
+/** WHAT HE SAYS WHILE HE CANNOT READ HER AT ALL - rule 1, and the honest state of a fourteen-year-old
+ *  with a coach who met her last month. It is a statement about the FOG and not about her, so it
+ *  carries no information whatever about what moved, which is exactly why it is safe to show every
+ *  single week. It ROTATES on a four-week block (see TRAINING_FOG_ROTATE_WEEKS) from an offset drawn
+ *  per coaching arrangement, so a new man says it his own way and nobody reads the same sentence
+ *  nine weeks running. */
+const FOG_POOL: readonly string[] = [
+  'Too early to tell what the work is doing.',
+  'She puts the hours in. Nobody can read it yet.',
+  'We are still learning what we have here.',
+  'The work goes in. What it is worth, nobody knows.',
+  'Give it a season. There is nothing to read yet.',
+]
+
+/** THE TRAINING CARD'S LINE for one week, or null for a quiet one.
+ *
+ *  Pure, and every draw is on a purpose-scoped sub-stream created fresh and thrown away - like the
+ *  rest of the module, it runs at SNAPSHOT time and cannot move the frozen MAIN capture.
+ *
+ *  ⚠ THE STEP IS NOT MONOTONE, AND THAT IS WANTED. `gained` only ever grows (before the decline
+ *  years), but the band it is divided by JUMPS WIDER when she changes coach, so a notch she had
+ *  passed can be un-passed and crossed again later. That is the right behaviour and not a bug: the
+ *  new man has not seen what the old one saw, and he has to watch her improve for himself before he
+ *  will say it happened. It also costs a would-be integrator another unknown.
+ *
+ *  ⚠ NOTHING IS SAID ABOUT DECLINE. Past the peak `gained` falls and `step` goes to zero, so the
+ *  card simply goes quiet on a veteran instead of narrating her losing it. The adult tour
+ *  (docs/specs/adult-tour-and-endings.md) is where that would be worth writing, with its own pool
+ *  and its own licence; it is deliberately not smuggled in here. */
+export function buildTrainingRead(
+  view: RadarWorldView,
+  readings: ReturnType<typeof axisReadings> = axisReadings(view),
+): TrainingRead | null {
+  const standing: { key: SkillKey; step: number }[] = []
+  let readable = 0
+
+  for (const key of SKILL_KEYS) {
+    const confidence = readings[key].confidence
+    // ⚠ THE MEAN, NOT THE MAXIMUM, and it was the maximum until a playtest. "He can read her" is a
+    // statement about the GIRL, not about her best-understood wing: keyed on the max, one early
+    // reading of her serve switched the "nobody can tell yet" line off while three wings were still
+    // strangers, and the card then went blank for the fifty-odd cards before anything had moved a
+    // whole fog-width. Measured on eight careers a rung, that was the single longest silence the
+    // card produced, and it sat right at the start of the game.
+    readable += confidence / SKILL_KEYS.length
+    // Rule 1: he does not remark on movement he cannot see. This gate runs BEFORE anything is
+    // computed from her true build, so a wing under the floor contributes nothing at all - not a
+    // sentence, not a silence anybody could read a sign off.
+    if (confidence < TRAINING_MIN_CONFIDENCE) continue
+    const gained = view.skills[key] - view.startSkills[key]
+    const step = Math.floor(gained / Math.max(bandFor(confidence), TRAINING_FOG_FLOOR) / TRAINING_STEP)
+    if (step < 1) continue
+    // ...and a fifth of the notches he never mentions at all. One draw per notch, no week in the
+    // key, so a notch he keeps quiet about stays quiet for as long as she stands on it.
+    if (rngFromSeed(`${view.seed}:trainstep:${key}:${step}`)() >= TRAINING_MENTION_CHANCE) continue
+    standing.push({ key, step })
+  }
+
+  // DOES HE SAY ANYTHING THIS WEEK, and only then WHICH WING - both off one stream, because they
+  // are one decision. Taking them in this order is what keeps the rhythm independent of how many
+  // wings happen to be eligible (see TRAINING_SAY_CHANCE), and picking among them rather than always
+  // taking the furthest-travelled one is what stops a single wing owning the card for a season.
+  const say = rngFromSeed(`${view.seed}:trainsay:${view.week}`)
+  if (standing.length > 0 && say() < TRAINING_SAY_CHANCE) {
+    const best = standing[Math.floor(say() * standing.length)]
+    const pool = MOVE_POOL[best.key][moveTierOf(best.step)]
+    // ⚠ THE WEEK IS IN THIS KEY, unlike `axisNote`'s, and the two rules are different on purpose.
+    // The radar's note is a STANDING VERDICT printed beside an axis, and a verdict that reworded
+    // itself weekly would read as noise. This is a man SAYING something on a particular Sunday: the
+    // claim is fixed by the notch, but the words he puts it in are his own that day. Varying them
+    // leaks nothing - the key holds no fact about her - and it is the difference between a coach and
+    // a label that keeps reappearing.
+    const rng = rngFromSeed(`${view.seed}:trainline:${best.key}:${best.step}:${view.week}`)
+    return {
+      key: best.key,
+      label: RADAR_AXIS_LABEL[best.key],
+      text: pool[Math.floor(rng() * pool.length)],
+    }
+  }
+
+  // He knows her, on the whole, and nothing has anything worth saying this week. Silence, and the
+  // card falls back to what it has always shown: the plan and the seven days.
+  if (readable >= TRAINING_MIN_CONFIDENCE) return null
+
+  // ONE DRAW PER COACHING ARRANGEMENT picks where in the pool this man starts; the block index then
+  // STEPS through it, so consecutive blocks can never repeat a sentence and the whole pool is seen.
+  // (A second draw per block would repeat one time in five, which is the thing this is here to fix.)
+  const offset = Math.floor(rngFromSeed(`${view.seed}:trainfog:${view.coachSinceWeek}`)() * FOG_POOL.length)
+  const block = Math.floor(view.week / TRAINING_FOG_ROTATE_WEEKS)
+  return { key: null, label: null, text: FOG_POOL[(offset + block) % FOG_POOL.length] }
 }
 
 /** The per-axis confidence behind a radar, for the bench and the tests. Deliberately NOT on the

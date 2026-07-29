@@ -109,7 +109,7 @@ import { buildDiarySnapshot, lastKidTitleOf, milestoneKey } from './diary'
 import { buildKidLife, FRIENDS_WINDOW } from './kidLife'
 // The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
 // diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
-import { buildRadar } from './radar'
+import { axisReadings, buildRadar, buildTrainingRead, type RadarWorldView } from './radar'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -3714,6 +3714,35 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     milestones: world.milestones,
     vacationWeek: vacationForWeek(world, world.week) !== undefined,
   })
+  // THE SKILLS RADAR'S VIEW OF HER, assembled ONCE and read twice - by the contour (`buildRadar`)
+  // and by the Weekly Story's training line (`buildTrainingRead`). Hoisted rather than inlined
+  // because the two readings MUST see the same girl: a second literal here would be a second place
+  // for "which matches count" to drift, and the card and the radar would then disagree about how
+  // much anybody can see, on the same screen, in the same week.
+  const radarView: RadarWorldView = {
+    seed: world.seed,
+    week: world.week,
+    kidId: KID_ID,
+    skills: world.skills,
+    // Where she began, recomputed from the seed rather than stored - see RadarWorldView.startSkills.
+    // `growWeek` is the only thing in the engine that moves `world.skills`, so the difference between
+    // these two IS her development, and neither of them ever leaves this object.
+    startSkills: startingSkills(world.seed, world.profile),
+    potential: world.potential,
+    coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
+    coachSinceWeek: coachSinceWeek(world),
+    matchesPlayed: matchesEverPlayed(world),
+    // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
+    // the radar nothing, for the same reason it never shows on her face (R11-2).
+    matches: world.events
+      .filter((e) => e.match !== undefined && !e.friendly)
+      .map((e) => e.match!)
+      .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
+  }
+  // ...and the evidence fold behind BOTH of them, walked once. `axisEvidence` reads the whole
+  // retained match window per axis, so asking the two builders independently would walk it eight
+  // times a snapshot for one girl in one week.
+  const radarReadings = axisReadings(radarView)
   return {
     schemaVersion: world.schemaVersion,
     careerId: world.careerId,
@@ -3823,22 +3852,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by
     // construction. The true `skills` / `potential` go IN and never come out: the snapshot carries
     // an estimate and a haze, which is the whole point of the slice.
-    radar: buildRadar({
-      seed: world.seed,
-      week: world.week,
-      kidId: KID_ID,
-      skills: world.skills,
-      potential: world.potential,
-      coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
-      coachSinceWeek: coachSinceWeek(world),
-      matchesPlayed: matchesEverPlayed(world),
-      // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
-      // the radar nothing, for the same reason it never shows on her face (R11-2).
-      matches: world.events
-        .filter((e) => e.match !== undefined && !e.friendly)
-        .map((e) => e.match!)
-        .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
-    }),
+    radar: buildRadar(radarView, radarReadings),
+    // ...AND THE SAME FOG, ONE STEP FURTHER ON: what came along this week, in words, for the Weekly
+    // Story's Training card. Design D lists skill gains there; we may not, because a weekly delta
+    // integrates into her exact build and the fog above would be decoration. Same sub-stream
+    // discipline (`seed:train*`), same zero MAIN draws, and NOT ONE NUMBER on the way out.
+    trainingRead: buildTrainingRead(radarView, radarReadings),
     lastSeasonSummary: world.lastSeasonSummary,
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
     seasonHistory: world.seasonHistory.map((h) => ({ ...h })),

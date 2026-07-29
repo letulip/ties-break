@@ -801,6 +801,25 @@ export interface RadarAxis {
   note: string | null
 }
 
+/** WHAT MOVED THIS WEEK, for the Weekly Story's Training card (screen D) – or null on a week with
+ *  nothing worth saying, which is most of them.
+ *
+ *  ⚠ THIS IS THE SHAPE THAT EXISTS INSTEAD OF SKILL DELTAS, and the reason is the radar's, not the
+ *  card's. Design D lists "Serve +8%"; a Snapshot that carried that number every week would let a
+ *  player sum it from week one and reconstruct her exact build, and the fog above would be
+ *  decoration. So the engine does the reading and hands over the RESULT: a wing, and a sentence.
+ *  There is no number on this object and there must never be one – see engine/radar.ts
+ *  (`buildTrainingRead`) for the four things that keep it from being a delta channel in prose. */
+export interface TrainingRead {
+  /** which wing the line is about, or null when the line is about the fog rather than about her */
+  key: SkillKey | null
+  /** the engine's own word for that wing (`RADAR_AXIS_LABEL`), so `ret` never reaches a player as
+   *  "Ret". Null on a fog line. */
+  label: string | null
+  /** the coach's sentence – words only, never a digit and never an arrow with a value */
+  text: string
+}
+
 export interface Snapshot {
   schemaVersion: number
   careerId: string
@@ -896,6 +915,9 @@ export interface Snapshot {
    *  An ESTIMATE of her build and a haze over her ceiling – never the truth, which stays in the
    *  engine. Derived at snapshot time, persists nothing, bumps no schema. See RadarAxis. */
   radar: RadarAxis[]
+  /** THE WEEKLY STORY'S TRAINING LINE: what came along this week, in words, or null for a quiet
+   *  week. The same fog as `radar`, one step further on – see TrainingRead. */
+  trainingRead: TrainingRead | null
   /** the most recent end-of-season recap (schema v10), or null before the first season ends */
   lastSeasonSummary: SeasonSummary | null
   /** every finished season, oldest first (schema v14, R10-9) – the season-by-season table on
