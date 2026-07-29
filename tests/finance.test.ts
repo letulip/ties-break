@@ -3,8 +3,7 @@ import {
   createWorld,
   tickWeek,
   enterEvent,
-  isTierEligible,
-  kidPoints,
+  tierOpenFor,
   skipTournament,
   closeTournament,
   recomputeKidRank,
@@ -57,7 +56,13 @@ function busyTournamentSeason(seed: string, weeks: number): WorldState {
       if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
       // r-gate: only enter tiers the kid is currently eligible for; enterEvent would otherwise
       // throw for a tier she has not reached yet or has already outgrown.
-      if (!isTierEligible(e.tier, kidPoints(world))) continue
+      //
+      // TWO LADDERS (docs/specs/two-ladders.md): this asks the ENGINE'S OWN gate rather than
+      // re-deriving one, the same correction the two benches took. `isTierEligible` is the DOMESTIC
+      // half only – it reads a points band – and j60/j300 no longer have a meaningful one ([0, MAX]),
+      // so it waved every international event through and enterEvent threw on the rank gate behind
+      // it. One gate, one answer, and a policy that cannot drift from the game.
+      if (!tierOpenFor(world, e.tier)) continue
       if (world.fundsCents < TIERS[e.tier].entryFeeCents + e.travelCostCents) continue
       // Season-Life: skip events under a HARD availability block (e.g. an event scheduled in a
       // school-exam week); enterEvent would throw 'unavailable'. Fatigue is soft, so it's not skipped.

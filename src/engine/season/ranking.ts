@@ -48,12 +48,16 @@ export function windowedBestSum(
   results: SeasonResult[],
   currentWeek: number,
   playerId: string,
+  /** Same track filter `computeRanking` takes, for the same reason: her domestic points and her ITF
+   *  points are two numbers, and every caller has to say which one it is asking for. */
+  countsFor?: (r: SeasonResult) => boolean,
 ): number {
   return results
     .filter(
       (r) =>
         isCountingResult(r) &&
         r.playerId === playerId &&
+        (!countsFor || countsFor(r)) &&
         r.week <= currentWeek &&
         currentWeek - r.week <= WINDOW_WEEKS,
     )
@@ -79,18 +83,36 @@ export function computeRanking(
   results: SeasonResult[],
   currentWeek: number,
   roster?: string[],
+  /** TWO TABLES OUT OF ONE LEDGER (docs/specs/two-ladders.md). A result already carries the tier it
+   *  was won at, so a track is a filter and not a second ledger - which is why two ranking tables
+   *  cost no persisted state, no schema bump and no migration. Absent ⇒ every result counts, which
+   *  is what the pre-history generator and the old single-table callers want. */
+  countsFor?: (r: SeasonResult) => boolean,
 ): RankingRow[] {
   // Keep only counting results inside the window (age ≤ 52 weeks, not in the future).
   const perPlayer = new Map<string, SeasonResult[]>()
   for (const res of results) {
     if (!isCountingResult(res)) continue
+    if (countsFor && !countsFor(res)) continue
     if (res.week > currentWeek || currentWeek - res.week > WINDOW_WEEKS) continue
     const list = perPlayer.get(res.playerId)
     if (list) list.push(res)
     else perPlayer.set(res.playerId, [res])
   }
 
-  // Stable base order: roster first (if given), then any player seen only in results.
+  // WHO IS IN THE TABLE. A roster, when one is passed, is now a FILTER and not merely a base order.
+  //
+  // ⚠ THE BUG THIS CLOSES. It used to seed the order from the roster and then add anybody with a
+  // counting result in the window, roster or not. That was harmless while every id with results
+  // stayed in the cohort for ever - and the junior conveyor made it a bug: a player who leaves at
+  // nineteen keeps her results for 52 weeks, so for a year afterwards she still held a ranking
+  // place, printed as a raw id (her card is gone, so `computeStandings` falls back to the id) and
+  // pushing everyone below her - the kid included - down a spot. Seen live on the Stats screen:
+  // "ai-153", 1715 pts. See docs/specs/junior-conveyor.md.
+  //
+  // With NO roster the old behaviour stands: rank whoever has results. That is what the pre-history
+  // generator and several tests want, and it is a different question ("who scored?") from the one a
+  // roster asks ("where do these players stand?").
   const order: string[] = []
   const seen = new Set<string>()
   const add = (id: string) => {
@@ -100,7 +122,7 @@ export function computeRanking(
     }
   }
   if (roster) for (const id of roster) add(id)
-  for (const res of results) if (isCountingResult(res)) add(res.playerId)
+  else for (const res of results) if (isCountingResult(res)) add(res.playerId)
 
   // Per player: best-6 points sum + recency (latest week among the counted six).
   const rows = order.map((playerId, idx) => {

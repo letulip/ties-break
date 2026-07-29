@@ -103,9 +103,14 @@ describe('R13-2 — the climb softener requires run points, not just table movem
     const world = createWorld('r13-passive-climb')
     const rival = world.cohort[0].id
     // A clean ledger: her one counted result, and one rival result that is about to age out.
+    //
+    // BOTH ROWS SIT ON THE ITF TRACK (docs/specs/two-ladders.md), and they have to: `world.kidRank`
+    // is her ITF rank now, so a domestic row moves the domestic table and leaves the number this
+    // case is about untouched. The mechanism itself is track-blind – a 52-week window decaying a
+    // rival's row out from under her – and it is reproduced here on the ladder the game gates on.
     world.results = [
-      { playerId: KID_ID, week: 30, points: 10, tier: 'local' },
-      { playerId: rival, week: 1, points: 50 },
+      { playerId: KID_ID, week: 30, points: 9, tier: 'j30' }, // a J30 semi-final
+      { playerId: rival, week: 1, points: 30, tier: 'j30' }, // ...against a J30 title
     ]
     world.week = 53 // rival's row is 52 weeks old – still inside the window
     recomputeKidRank(world)

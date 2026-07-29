@@ -243,7 +243,7 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     expect(up.ineligibleReason).toBe('outgrown')
     // surface 3: the advance never stops for a deadline she cannot act on
     const nat = injectEvent(w, { week: w.week + 3, tier: 'regional', deadlineWeek: w.week + 1, id: 'reg-ok' })
-    expect(isTierEligible(nat.tier, kidPoints(w))).toBe(true) // regional IS open at 122
+    expect(isTierEligible(nat.tier, kidPoints(w, 'domestic'))).toBe(true) // regional IS open at 122
     expect(availabilityStatus(w, nat).level).not.toBe('blocked')
   })
 
@@ -251,8 +251,18 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
     // `enterPointBand` may only be read by the two pure band helpers; every gate goes
     // through entryStatus. (This is the structural guard against the R10-5 desync.)
-    const readers = src.split('\n').filter((l) => l.includes('enterPointBand') && !l.trim().startsWith('*'))
-    expect(readers.length).toBeLessThanOrEqual(3)
+    // ⚠ The `//` exclusion joined the `*` one when the coach branch met the two ladders: the Elite
+    // gate's comment has to name `TIERS.national.enterPointBand[0]` to explain WHY its threshold is
+    // 150, and prose cannot re-implement a band. This makes the guard measure what it always meant
+    // - actual readers - rather than mentions. The count below is unchanged, which is the point.
+    const readers = src
+      .split('\n')
+      .filter((l) => l.includes('enterPointBand') && !l.trim().startsWith('*') && !l.trim().startsWith('//'))
+    // ⚠ RE-PINNED 3 -> 4 by the two ladders. The band gained one more legitimate reader and it is
+    // INSIDE the same gate: `entryStatus`'s international branch reads it for the on-ramp rung,
+    // whose bar is domestic points rather than an ITF rank. The protected fact is unchanged - no
+    // SURFACE re-implements the band, every one of them still goes through entryStatus.
+    expect(readers.length).toBeLessThanOrEqual(4)
     // enterEvent must not destructure the band itself any more
     const enterFn = src.slice(src.indexOf('export function enterEvent'), src.indexOf('export function withdrawEvent'))
     expect(enterFn).not.toContain('enterPointBand')
@@ -617,7 +627,7 @@ describe('round-10 invariance — the main weekly stream is untouched', () => {
         return v
       }
       for (let i = 0; i < 24; i++) {
-        const points = kidPoints(w)
+        const points = kidPoints(w, 'domestic')
         for (const e of w.season) {
           if (e.week <= w.week || w.week > e.deadlineWeek || w.entries.includes(e.id)) continue
           if (entryStatus(w, e).level === 'blocked') continue

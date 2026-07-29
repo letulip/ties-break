@@ -480,6 +480,10 @@ export interface UpcomingEvent {
   cautionDetail?: string
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
+  /** the ITF rank an international rung accepts down to, on a card locked by an ACCEPTANCE LIST
+   *  rather than by points (docs/specs/two-ladders.md). The card says "takes the top 50" instead of
+   *  quoting a points number she cannot read off her own table. */
+  rankToEnter?: number
   /** present only when 'capped': the allowance the gate judged THIS event against, so the card can
    *  print "N of M" without re-deriving it. Per-event for the same reason `pointsToEnter` is – an
    *  event in the next season is measured against a different year's allowance than today's. */

@@ -159,11 +159,11 @@ describe('createWorld — the fresh career now opens on a REAL ranking', () => {
 
   it('the KID still starts with 0 points and reads as Unranked (rankLabel behavior)', () => {
     const world = createWorld('fresh-ph')
-    expect(kidPoints(world)).toBe(0)
+    expect(kidPoints(world, 'domestic')).toBe(0)
     expect(windowedBestSum(world.results, world.week, KID_ID)).toBe(0)
   })
 
-  it('RE-PINNED (was rank #1, then #200): the kid starts at the BOTTOM of the table', () => {
+  it('RE-PINNED (was #1, then #200, then #197): her opening rank is an ITF rank now', () => {
     // Before pre-history every AI was tied at 0 points, so the kid shared dense-rank 1 with the
     // entire field – the artifact the owner saw (a brand-new career reading "#1"). With a real
     // table she became the ONLY point-less player, i.e. rank cohort.length + 1 = 200.
@@ -187,7 +187,7 @@ describe('createWorld — the fresh career now opens on a REAL ranking', () => {
     expect(kidRow.points).toBe(0)
     expect(Math.max(...ranking.map((r) => r.rank))).toBe(kidRow.rank)
     // THE MEASURED FACT, pinned so the open decision stays visible:
-    expect(world.kidRank).toBe(197)
+    expect(world.kidRank).toBe(120)
     expect(ranking.filter((r) => r.points === 0).length).toBe(4) // the kid + 3 cohort players
   })
 
@@ -221,10 +221,10 @@ describe('pre-history ages out on its own (no new decay logic)', () => {
 describe('tier access is UNAFFECTED (entry gating is points-based, not rank-based)', () => {
   it('a fresh kid is still local-only and is still refused a regional entry', () => {
     const world = createWorld('ph-gate')
-    expect(kidPoints(world)).toBe(0)
-    expect(isTierEligible('local', kidPoints(world))).toBe(true)
-    expect(isTierEligible('regional', kidPoints(world))).toBe(false)
-    expect(isTierEligible('national', kidPoints(world))).toBe(false)
+    expect(kidPoints(world, 'domestic')).toBe(0)
+    expect(isTierEligible('local', kidPoints(world, 'domestic'))).toBe(true)
+    expect(isTierEligible('regional', kidPoints(world, 'domestic'))).toBe(false)
+    expect(isTierEligible('national', kidPoints(world, 'domestic'))).toBe(false)
 
     const regional = world.season.find((e) => e.tier === 'regional' && e.deadlineWeek >= world.week)
     expect(regional).toBeTruthy()

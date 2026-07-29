@@ -277,6 +277,12 @@ export const ECONOMY = {
     // the screen's locked row all read `coachHireable`). `minPoints` is her EARNED ranking points,
     // the same number the tier ladder gates on, and 150 is national-tier eligibility - "she has
     // results" stated in the currency the rest of the game already uses.
+    //
+    // ⚠ DOMESTIC POINTS, since the two ladders landed. 150 is literally
+    // TIERS.national.enterPointBand[0], so the domestic table is the one that keeps this number
+    // meaning what it was written to mean. Do not repoint it at the ITF table without moving the
+    // threshold too: an ITF gate would make the Elite rung reachable only by families who could
+    // already afford to fly, which is the shape the gate exists to prevent.
     eliteGate: { enabled: false, minPoints: 150 },
 
     // WHAT A RUNG IS WORTH TO HER, RIGHT NOW - the projection screen T prints on every coach row.

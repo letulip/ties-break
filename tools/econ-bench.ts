@@ -44,7 +44,7 @@ import {
   createWorld,
   tickWeek,
   enterEvent,
-  isTierEligible,
+  tierOpenFor,
   kidPoints,
   skipTournament,
   closeTournament,
@@ -94,12 +94,18 @@ export const HORIZONS: Horizon[] = [
 ]
 
 // Reach targets. The engine models NO prize money, so the target is defined against existing state.
-/** 14→16: national-tier eligibility == kidPoints(world) >= 150 (== isTierEligible('national', pts)). */
+/** 14→16: national-tier eligibility, which is a DOMESTIC threshold and did not move - the domestic
+ *  point tables are unchanged by the two-ladder slice, only the international ones are. */
 export const REACH_TARGET_MONEY = 150
 /** 14→18 "pro" proxy: a top-50 rank ONCE she is actually ranked (has a counting result) OR a points
  *  threshold. The `hasResults` guard on the rank arm is REQUIRED – see reachedTarget. */
 export const REACH_PRO_RANK = 50
-export const REACH_PRO_POINTS = 300
+/** ⚠ RE-BASED for the two-ladder slice. This used to be 300 points on the old MIXED scale, where a
+ *  J30 title paid 400 - so it meant "about one good international week". On the real ITF scale 300
+ *  points IS a J300 title, which is a career-defining result and nobody's "pro attempt proxy". The
+ *  equivalent milestone is a real body of international results: 60 ITF points is a J60 title, or a
+ *  J30 title plus a J30 final, or six J30 quarter-finals. */
+export const REACH_PRO_POINTS = 60
 
 export interface Preset {
   /** table label, e.g. "25k  · middle · hired coach" */
@@ -314,7 +320,9 @@ export function stepCareerWeek(
     // One tournament a week: skip the week entirely once something is booked on it.
     if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
     // Ranking gate (before affordability): the kid may only enter tiers her EARNED points open.
-    if (!isTierEligible(e.tier, kidPoints(world))) continue
+    // Two ladders: the domestic rungs read her domestic best-6 and the international ones read her
+    // ITF RANK, so the policy asks the engine's own single gate instead of re-deriving either.
+    if (!tierOpenFor(world, e.tier)) continue
     // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
     // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
     if (availabilityStatus(world, e).level === 'blocked') continue
@@ -338,12 +346,27 @@ export function stepCareerWeek(
   return entered
 }
 
-/** True ⇔ the horizon's reach target is currently met. 14→16: national eligibility (points >= 150).
- *  14→18: (ranked AND top-50) OR a 300-point threshold. Keyed on targetAge derived from the horizon. */
+/** True ⇔ the horizon's reach target is currently met. 14→16: national eligibility (DOMESTIC points
+ *  >= 150). 14→18: (ranked AND top-50) OR the ITF points threshold. Keyed on targetAge derived from
+ *  the horizon.
+ *
+ *  ⚠ THE TWO ARMS READ TWO DIFFERENT TABLES, and they have to (docs/specs/two-ladders.md). This used
+ *  to be one `points` local, which was right while there was one ledger and became wrong the moment
+ *  the tracks split: the 1548338 sweep retracked it to 'itf' for the 14→18 arm and silently took the
+ *  14→16 arm with it, against a threshold its own constant documents as DOMESTIC. It is the exact
+ *  failure mode that commit removed the `kidPoints` default to prevent, surviving in the one place
+ *  the compiler could not see it - a single variable serving two questions.
+ *
+ *  It was not a cosmetic slip. On the real ITF scale 150 international points is most of a J60
+ *  title-plus-final, so the 14→16 horizon measured a milestone a working family reached in 0 of 30
+ *  careers and every other preset in 1 of 30 - a reach tracker pinned at 'never', which is not a
+ *  measurement. Read domestically it is 28 of 30 for working: a genuine climb, some careers making
+ *  it and some not, which is what the horizon is FOR. Caught by the guard below that asserts both
+ *  branches fire. */
 function reachedTarget(world: WorldState, horizonWeeks: number): boolean {
   const targetAge = START_AGE_YEARS + Math.floor(horizonWeeks / WEEKS_PER_YEAR)
-  const points = kidPoints(world)
   if (targetAge >= 18) {
+    const points = kidPoints(world, 'itf')
     // hasResults mirrors the engine's `ranked` signal (StatsScreen/HomeScreen use
     // `countingResults.length > 0`): the kid isn't really ranked until she owns a counting result.
     // Every kid result carries points > 0 (finalizeTournament only pushes scoring results), so
@@ -353,7 +376,7 @@ function reachedTarget(world: WorldState, horizonWeeks: number): boolean {
     const hasResults = points > 0
     return (hasResults && world.kidRank <= REACH_PRO_RANK) || points >= REACH_PRO_POINTS
   }
-  return points >= REACH_TARGET_MONEY
+  return kidPoints(world, 'domestic') >= REACH_TARGET_MONEY
 }
 
 /**
@@ -443,7 +466,7 @@ export function runCareer(
     peakDeficitCents: peak,
     reachedWeek,
     endRank: world.kidRank,
-    endPoints: kidPoints(world),
+    endPoints: kidPoints(world, 'itf'),
     perSeason,
     entries,
     academyCoveredCents,

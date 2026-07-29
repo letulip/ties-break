@@ -112,7 +112,7 @@ export function runPointsCareer(profile: Profile, policy: Policy, index: number)
     losses += f.losses
     if (f.fundsCents < 0) bankrupt = true
 
-    const pts = kidPoints(world)
+    const pts = kidPoints(world, 'itf')
     if (pts > 0 && (bestRank === null || world.kidRank < bestRank)) bestRank = world.kidRank
     for (let k = 0; k < g.length; k++) {
       if (gateWeeks[k] === null && pts >= g[k].points) gateWeeks[k] = f.week
@@ -139,7 +139,7 @@ export function runPointsCareer(profile: Profile, policy: Policy, index: number)
     wins,
     losses,
     survived: !bankrupt,
-    endPoints: kidPoints(world),
+    endPoints: kidPoints(world, 'itf'),
     endRank: world.kidRank,
     bestRank,
   }

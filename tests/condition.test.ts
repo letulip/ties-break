@@ -131,7 +131,11 @@ const REF = {
   // ⚠ RE-PINNED 133 -> 135 (29.07, partial seeding). `count`/`hash`/`head`/`tail` above did NOT
   // move - the main stream is untouched, which is what this block guards. Her RANK moved, because
   // the bracket now seeds the top 8 and shuffles the rest, herself included.
-  kidRank: 135,
+  // ⚠ RE-PINNED 135 -> 126 (29.07, the two ladders). `count`/`hash`/`head`/`tail` did NOT move; the
+  // stream is untouched and that is what this block guards. What moved is the MEANING of kidRank: it
+  // is now her place in the ITF table, not in a single mixed one, so it is a different number about a
+  // different question. See docs/specs/two-ladders.md.
+  kidRank: 126,
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {
