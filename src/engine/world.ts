@@ -103,7 +103,10 @@ import { applySurfaceStyle } from './match/style'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
 // dependency runs one way: world → diary, exactly like world → condition.
-import { buildDiarySnapshot, milestoneKey } from './diary'
+import { buildDiarySnapshot, lastKidTitleOf, milestoneKey } from './diary'
+// Screen C's three derived tiles (Personality / School / Friends). Same shape of dependency as the
+// diary and the radar: kidLife.ts is world-free and takes a narrow structural view, one way only.
+import { buildKidLife, FRIENDS_WINDOW } from './kidLife'
 // The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
 // diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
 import { buildRadar } from './radar'
@@ -3789,6 +3792,33 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // derivation off state that already exists – no persisted field, no schema bump.
     lossStreak,
     diary,
+    // HER LIFE OFF THE COURT (engine/kidLife.ts): the Personality / School / Friends tiles screen C
+    // draws. Same discipline as the diary - derived at SNAPSHOT time off `seed:friends:*`
+    // sub-streams, zero MAIN draws, so the frozen capture (41550 / e6b0c709) cannot move.
+    life: buildKidLife({
+      seed: world.seed,
+      week: world.week,
+      ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
+      // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
+      // arithmetic can never disagree with the year the rest of the game prints.
+      seasonYear: seasonYear(seasonIndexOf(world.week)),
+      playStyle: world.profile.playStyle,
+      birthMonth: world.profile.birthMonth,
+      injured: world.injury !== null,
+      // HOW MUCH SHE HAS BEEN AWAY, off the persisted finance ledger rather than the capped event
+      // feed: a week in which a travel bill was actually paid is a week the family was somewhere
+      // else. A local event costs no travel and is therefore correctly NOT a week away.
+      weeksAway: world.financeWeeks.filter(
+        (w) => w.week > world.week - FRIENDS_WINDOW && w.week <= world.week && (w.byCategory.travel ?? 0) < 0,
+      ).length,
+      lossStreak: lossStreak?.losses ?? 0,
+      // Her most recent title off the same walk the diary uses, so two surfaces cannot disagree
+      // about when she last won something.
+      weeksSinceTitle: (() => {
+        const title = lastKidTitleOf(world.events)
+        return title ? world.week - title.week : null
+      })(),
+    }),
     // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
     // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by
     // construction. The true `skills` / `potential` go IN and never come out: the snapshot carries
