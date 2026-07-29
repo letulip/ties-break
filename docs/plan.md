@@ -120,6 +120,11 @@ urgent it may still go alone; that is the exception, and it should be said out l
 **Never push to `main`.** Everything lands on a branch; the owner reviews and merges. This predates
 the CI rule and outranks it.
 
+**GitHub is the remote we push to.** (Owner, 29.07 – «и всё теперь снова пушим только на github».)
+`origin` is github.com/letulip/ties-break; the GitLab remote stays configured for Pages but branches
+do not go there unless the owner asks. The CI-minutes rule above still stands: it is about not
+spending a pipeline on a branch per fix, whichever host is running the pipeline.
+
 **Green before push.** `npm run check` (vue-tsc + the full suite + the production build) passes
 locally before a branch is pushed, so a red pipeline never spends minutes discovering what a local
 run would have caught. Never chain a push onto the command that runs the gate - read the result,

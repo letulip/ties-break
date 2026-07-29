@@ -129,42 +129,61 @@ function clamp01to100(x: number): number {
 export function generateCohort(seedStr: string, size = 199): AiPlayer[] {
   const rng = rngFromSeed(seedStr)
   const cohort: AiPlayer[] = []
-  for (let i = 0; i < size; i++) {
-    const first = FIRST_NAMES[pickInt(rng, 0, FIRST_NAMES.length - 1)]
-    const last = SURNAMES[pickInt(rng, 0, SURNAMES.length - 1)]
-    const nation = NATION_POOL[pickInt(rng, 0, NATION_POOL.length - 1)]
-    const serve = pickInt(rng, 30, 60)
-    const ret = pickInt(rng, 30, 60)
-    const composure = pickInt(rng, 25, 70)
-    const stamina = pickInt(rng, 30, 70)
-    const growth = 0.5 + rng() // 0.5 .. 1.5
-    // A junior cohort is not one class: it spans the ones just starting and the ones about to age
-    // out. Their ages decide how much growing they have left, which is what turns a flat field into
-    // a conveyor - somebody is always arriving and somebody is always finishing.
-    const ageYears = pickInt(rng, COHORT.ageBand[0], COHORT.ageBand[1])
-    // Headroom on top of where she already is. Most juniors have a little; a few have a lot.
-    const [pLo, pHi] = COHORT.potentialBand
-    const head = () => pLo + rng() * (pHi - pLo)
-    const potential = {
+  for (let i = 0; i < size; i++) cohort.push(makeJunior(rng, `ai-${i}`))
+  return cohort
+}
+
+/** ONE junior, off the passed generator. Extracted so the conveyor's yearly intake (season/
+ *  conveyor.ts) is drawn by the SAME code as the opening field – a girl who arrives in season 4 has
+ *  to be the same kind of object as one who was there at week 0, or the field stops being one
+ *  population.
+ *
+ *  ⚠ THE DRAW ORDER IS LOAD-BEARING and is exactly the order generateCohort has always used:
+ *  name, name, nation, serve, ret, composure, stamina, growth, [age], head ×4. `pickInt` spends one
+ *  value whatever its range, so 13 draws per player when the age is drawn and 12 when it is given.
+ *  Reordering re-maps every existing seed's field – see the SURNAMES note above for what that costs.
+ *
+ *  `ageYears` given ⇒ no age draw (the intake is always 13, so there is nothing to roll). */
+export function makeJunior(rng: Rng, id: string, ageYears?: number): AiPlayer {
+  const first = FIRST_NAMES[pickInt(rng, 0, FIRST_NAMES.length - 1)]
+  const last = SURNAMES[pickInt(rng, 0, SURNAMES.length - 1)]
+  const nation = NATION_POOL[pickInt(rng, 0, NATION_POOL.length - 1)]
+  const serve = pickInt(rng, 30, 60)
+  const ret = pickInt(rng, 30, 60)
+  const composure = pickInt(rng, 25, 70)
+  const stamina = pickInt(rng, 30, 70)
+  const growth = 0.5 + rng() // 0.5 .. 1.5
+  // A junior cohort is not one class: it spans the ones just starting and the ones about to age
+  // out. Their ages decide how much growing they have left, which is what turns a flat field into
+  // a conveyor - somebody is always arriving and somebody is always finishing.
+  const age = ageYears ?? pickInt(rng, COHORT.ageBand[0], COHORT.ageBand[1])
+  // Headroom on top of where she already is. Most juniors have a little; a few have a lot.
+  const [pLo, pHi] = COHORT.potentialBand
+  const head = () => pLo + rng() * (pHi - pLo)
+  return {
+    id,
+    name: `${first} ${last}`,
+    serve,
+    ret,
+    composure,
+    stamina,
+    nation,
+    growth,
+    ageYears: age,
+    potential: {
       serve: serve + head(),
       ret: ret + head(),
       composure: composure + head(),
       stamina: stamina + head(),
-    }
-    cohort.push({
-      id: `ai-${i}`,
-      name: `${first} ${last}`,
-      serve,
-      ret,
-      composure,
-      stamina,
-      nation,
-      growth,
-      ageYears,
-      potential,
-    })
+    },
   }
-  return cohort
+}
+
+/** Her overall standard right now – the mean of the four attributes. The conveyor asks this to
+ *  decide who is worth continuing for; nothing else in the engine needs a single "how good is she"
+ *  number, which is why it lives here and not in the match model. */
+export function power(p: AiPlayer): number {
+  return (p.serve + p.ret + p.composure + p.stamina) / 4
 }
 
 // driftCohort – the cohort's development, and since v20 it has the same SHAPE as the kid's.

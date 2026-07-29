@@ -72,8 +72,12 @@ eligibility with widely varying size is the design, not an accident – see "a s
 ## Not fixed here
 
 - **25k middle + hired coach still dies in 120 careers of 120, at week 61.** That family's problem is
-  a $572/week coach, not the plane tickets. Covering travel cannot and should not rescue it – but a
-  preset that fails 100% of the time is a wall rather than a choice, and it wants its own look.
+  a $572/week coach, not the plane tickets. Covering travel cannot and should not rescue it.
+  **Owner's ruling (29.07): this is not a balance bug and gets no patch here.** It closes when the
+  coach becomes a ladder of tiers at different prices instead of one all-or-nothing hire, and when
+  the weekly training split feeds the coaching bill as well as the development rate – a family that
+  cannot afford a full week of a good coach should be able to buy less of one. Until then the preset
+  is honestly reporting that a middle income cannot carry a top coach at full load.
 - **The cohort does not renew.** Mean rival age walks 16→26 and keeps going; nobody retires, nobody
   arrives. This is the junior conveyor in `living-field.md`, and it is now the binding constraint on
   the field feeling alive.

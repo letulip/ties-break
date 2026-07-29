@@ -69,6 +69,7 @@ import { parentIncomeForWeekCents,
   vacationPriceCents,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort } from './season/cohort'
+import { renewCohort } from './season/conveyor'
 import { growWeek, rollPotential, type KidSkills } from './development'
 import {
   kitGrantCents,
@@ -1858,6 +1859,39 @@ function chargeTravel(world: WorldState, event: SeasonEvent): void {
   })
 }
 
+// --- the junior conveyor -----------------------------------------------------
+// The field turns over once a year: who is still here, and who has just arrived underneath her.
+// The mechanism and its whole argument live in season/conveyor.ts; this is the world-side wiring
+// and the one line of news it is worth.
+
+/** How well a departing player has to have been doing for her leaving to be NEWS. Top-50 of a
+ *  ~200-strong field: somebody the player has plausibly seen in the standings or across a net. */
+const NOTABLE_DEPARTURE_RANK = 50
+
+function turnOverField(world: WorldState, seasonIndex: number): void {
+  // The standings as they stand BEFORE the turnover – the only moment a departing player still has
+  // a rank, because renewCohort removes her from the id list `fullRanking` is built over.
+  const rankBefore = new Map(fullRanking(world).map((r) => [r.playerId, r.rank]))
+  const { left, joined } = renewCohort(world.cohort, world.seed, seasonIndex)
+  if (left.length === 0) return
+
+  // The best-ranked of the ones who stopped. Named because a number alone ("9 players left") is
+  // weather; a name the player has seen in the table is a story.
+  let notable: { name: string; rank: number } | null = null
+  for (const p of left) {
+    const rank = rankBefore.get(p.id)
+    if (rank === undefined || rank > NOTABLE_DEPARTURE_RANK) continue
+    if (!notable || rank < notable.rank) notable = { name: p.name, rank }
+  }
+
+  const base = `A new intake: ${left.length} players have left the tour and ${joined.length} thirteen-year-olds have taken their places.`
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: notable ? `${base} ${notable.name} (#${notable.rank}) is among those who stopped.` : base,
+  })
+}
+
 // --- the academy's annual review ---------------------------------------------
 // Runs at the season boundary, on the rank she CARRIES IN (the one the season just gone earned
 // her) and the year of tournaments behind it. Zero draws on any stream – see engine/academy.ts.
@@ -2481,6 +2515,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // it – the rank the year just gone earned her – which is precisely what an academy reviewing
     // her in the off-season would be looking at. ZERO draws, so it is safe this far up the tick.
     reviewAcademy(world)
+    // 0a0d: AND THE FIELD TURNS OVER. Last, because everything above is about the season that just
+    // ENDED and wants the field that played it – the academy's verdict in particular is a reading
+    // of her standing among those players, not among their replacements. ZERO main-stream draws:
+    // the conveyor runs entirely on `seed:conveyor:<season>`. See season/conveyor.ts.
+    turnOverField(world, seasonIndexOf(world.week))
   }
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.

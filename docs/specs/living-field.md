@@ -1,5 +1,14 @@
 # The Living Field — design document (28.07.2026, pre-code)
 
+> **Partly landed (29.07).** Two of §1's four "does not live" findings are fixed inside the existing
+> 199-player cohort rather than by the three-ring architecture below. **Nobody grows** → v20's age +
+> ceiling curves (`season/cohort.ts`). **Nobody arrives, nobody leaves** → the conveyor, scoped to
+> this one population: `docs/specs/junior-conveyor.md` and `season/conveyor.ts` — §2.1's crunch, the
+> yearly intake and the retirement schedule, with the field size held fixed so the tick's cost does
+> not move. What is still ahead is the SCALE: the ~2,000-strong population, the LIVE/FIELD/ARCHIVE
+> rings (§3) and the separate pro contour (§2.2). Read the sections below as the plan for that; read
+> the two specs above for what the engine does today.
+
 The owner's brief, from three conversations on 27-28.07, verbatim where it matters:
 
 > «мы сейчас считаем топ-200, почему бы не оставить осознанное сдвигаемое окно +/-100 от девочки,
