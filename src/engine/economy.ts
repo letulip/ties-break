@@ -12,7 +12,7 @@
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
 import { rngFromSeed, pickInt, type Rng } from './rng'
-import type { CoachSetup, FamilyBackground, InjurySeverity } from '../shared/protocol'
+import type { CoachTier, FamilyBackground, InjurySeverity, PlayStyle } from '../shared/protocol'
 import type { TierId } from './season/types'
 import { WEEKS_PER_YEAR } from './season/calendar'
 
@@ -54,10 +54,15 @@ export interface GearLine {
 
 // THE app-level wealth-price corridor (owner canon, 25.07): the same [lo, hi] factor band per
 // family background prices travel (ECONOMY.travelBgFactor), every medical bill
-// (ECONOMY.physio.medicalBgFactor) and the weekly coaching/review expense (world.ts
-// resolveBaseCosts, roll from `seed:coachbg:week`) – all three reference this ONE object.
-// Framing: working = public clinics / budget trips, middle = standard, wealthy = private
-// everything. Retuned when real incomes (prize money) land – this constant is the single knob.
+// (ECONOMY.physio.medicalBgFactor) and the season planner's packages (vacationPriceCents /
+// practiceFeeCents) – all of them reference this ONE object. Framing: working = public clinics /
+// budget trips, middle = standard, wealthy = private everything. Retuned when real incomes (prize
+// money) land – this constant is the single knob.
+//
+// ⚠ COACHING LEFT THE CORRIDOR (coach-tiers slice, docs/specs/coach-tiers.md §2). The weekly
+// coaching bill used to be its fourth customer, via a roll from `seed:coachbg:week` in world.ts
+// resolveBaseCosts. The coach TIER now states the family's price level explicitly, so the corridor
+// would have charged the same difference twice. Everything else it prices is untouched.
 const WEALTH_CORRIDOR = {
   working: [0.7, 0.8],
   middle: [0.95, 1.05],
@@ -99,18 +104,106 @@ export const ECONOMY = {
   // N's income is base x prod(1 + roll_i) over seasons 1..N. Both bounds are knobs.
   incomeGrowthBand: [0.05, 0.10] as [number, number],
 
-  // Weekly base ("coaching") expense draw range in cents, by coaching setup. A parent-coach
-  // saves on fees. The draw COUNT is one pickInt per tick regardless of setup/background.
-  // Background scaling happens AFTER the pickInt via the wealth corridor: one uniform roll from
-  // the private `seed:coachbg:week` sub-stream maps into wealthCorridor[background] (see
-  // world.ts resolveBaseCosts) – a post-draw multiply, so the main-stream draw sequence never
-  // depends on background. (Wealth-corridor unification: this replaced the fixed bgExpenseFactor
-  // 0.8/1.0/1.4 – middle's exact ×1.0 pin to the pre-round-7 baseline ended DELIBERATELY, middle
-  // now breathes ±5% weekly like every other corridor-priced bill.)
-  expenseRangeCents: {
-    hired: [250_00, 700_00],
-    parent: [120_00, 400_00],
-  } as Record<CoachSetup, [number, number]>,
+  // --- THE COACH LADDER (docs/specs/coach-tiers.md; the model itself is engine/coach.ts) --------
+  //
+  // REPLACES `expenseRangeCents` – the old two-band weekly draw (hired $250-700, parent $120-400)
+  // scaled by the wealth corridor off `seed:coachbg:week`. Both halves of that are gone: the bands
+  // become a per-tier PER-HOUR ladder, and the corridor comes OFF coaching entirely.
+  //
+  // WHY THE CORRIDOR CAME OFF, in one line: the tier now says explicitly what the corridor used to
+  // say implicitly ("poorer families use cheaper coaches"), so keeping both charges the difference
+  // twice – a working family would pick Budget AND get a discount on it. The corridor still prices
+  // travel (travelBgFactor), medical (physio.medicalBgFactor) and the planner's packages; only
+  // coaching leaves it.
+  //
+  // THE WEEKLY BILL IS `rate x hours`, and the draw COUNT is one pickInt per tick – the same one,
+  // in the same position – whatever tier, age or plan is in play.
+  coach: {
+    // Inclusive upper bounds of the age-rate rows: 12-16 (development), 17-22 (pro), 23+ (peak and
+    // after). His own caveat is why there are three and not four – 17-22 and 22-28 barely differ,
+    // and 29+ holds level because past the peak the work becomes maintenance.
+    ageBandUpper: [16, 22] as [number, number],
+
+    // SESSIONS A WEEK, anchored on the three plan PRESETS rather than on the slider's raw ends.
+    //
+    // THE HALF THE OLD MODEL WAS MISSING: the split scaled the development rate and, through
+    // planFactor, barely scaled the bill (0.91 at train 60 to 1.06 at 85 – a 16% spread on a slider
+    // that doubles her growth). Hours are what a coach actually charges for, so the split now moves
+    // the bill 2x end to end and the family has two dials instead of none: WHICH coach, and HOW
+    // MUCH of him. A High coach at three sessions is affordable where an Elite at six is not.
+    //
+    // WHY ANCHORS AND NOT TWO ENDPOINTS. A straight line from 3 at train 60 to 6 at train 85 puts
+    // BALANCED (75/25) at 4.8, because 75 sits at t=0.6 of that range and not at its middle. That
+    // is 20% above the four hours the spec's whole price table is quoted at, and it silently
+    // over-charges the default plan – which the bench read as the middle family still not making
+    // it. The anchors put each preset where the research says it belongs:
+    //   light 60/40  -> 3   the bottom of the owner's "3-5 sessions a week"
+    //   balanced 75/25 -> 4 the four hours his $120 / $200 / $320 / $480 weekly table is quoted at
+    //   grind 85/15  -> 6   above his range on purpose: the grind IS the dilemma he sketches,
+    //                       "five sessions a week instead of three, progress doubles, injury risk
+    //                       rises", and it should cost half as much again as balanced to take.
+    // Linear between anchors, clamped outside them. Ascending by construction, and the ladder is
+    // read in order, so adding a rung needs no other change.
+    sessionsByTrain: [
+      [60, 3],
+      [75, 4],
+      [85, 6],
+    ] as [number, number][],
+
+    // THE OWNER'S PRICE RESEARCH (29.07), per hour, individual lessons, big-city rate, converted
+    // straight across because per-hour is the unit he priced in. His midpoints, row by row:
+    //   12-16   Budget 30 · Middle 50 · High  80 · Elite 120
+    //   17-22   Budget 35 · Middle 60 · High 100 · Elite 160
+    //   23+     Budget 40 · Middle 65 · High 120 · Elite 200
+    // Each band below is his midpoint +/-20%, so the middle of every band IS his number and the
+    // week-to-week breathing is a fifth either side. The bands are deliberately TIGHTER than the
+    // old ones (parent spanned 3.3x, hired 2.8x): under a ladder the TIER is what varies, and a
+    // weekly roll wide enough to cross two rungs is what made the old single `hired` band unreadable.
+    //
+    // SELF IS THE COURT, NOT THE COACH. The parent's hour is free – that is the whole rung – but
+    // the court is not, and §3 of the spec keeps every tier price inclusive of it rather than
+    // splitting court rental into a line of its own (we already charge it for practice matches).
+    // So `self` is priced at exactly the court rental §3 quotes, $10-30/h, which also lands it
+    // where the spec puts it: below Budget, whose $120/wk at four hours is "the bottom of today's
+    // parent band". A $0 rung would hand the working family the single largest line in the game.
+    hourlyRateCents: {
+      self: [[10_00, 30_00], [11_00, 33_00], [12_00, 36_00]],
+      budget: [[24_00, 36_00], [28_00, 42_00], [32_00, 48_00]],
+      middle: [[40_00, 60_00], [48_00, 72_00], [52_00, 78_00]],
+      high: [[64_00, 96_00], [80_00, 120_00], [96_00, 144_00]],
+      elite: [[96_00, 144_00], [128_00, 192_00], [160_00, 240_00]],
+    } as Record<CoachTier, [number, number][]>,
+
+    // WHAT EACH RUNG IS WORTH. Replaces ECONOMY.development.coachParent (0.82) / coachHired (1.15),
+    // and keeps both of those values as the ENDS of the ladder on purpose – see coachFactor in
+    // engine/coach.ts for the argument. Steps shrink as they climb (+0.13, +0.09, +0.07, +0.04)
+    // while the price roughly doubles every two rungs, so Elite is a luxury rather than an
+    // optimisation.
+    developmentFactor: { self: 0.82, budget: 0.95, middle: 1.04, high: 1.11, elite: 1.15 } as Record<
+      CoachTier,
+      number
+    >,
+
+    // FIT, as screen T's three pills. What the tier's money buys, read against the game she plays:
+    // a club coach taking four kids at once teaches shape and consistency, the standard private
+    // coach builds a rounded game, a technical specialist builds weapons, and a former tour player
+    // has seen all of it. Anything not listed is 'off'.
+    styleFit: {
+      // The parent taught her the game in the backyard: patience and shape are what he can drill.
+      self: { great: [], good: ['all-court', 'counterpuncher'] },
+      budget: { great: ['counterpuncher'], good: ['all-court'] },
+      middle: { great: ['all-court'], good: ['counterpuncher', 'aggressive'] },
+      high: { great: ['aggressive', 'serve-first'], good: ['all-court', 'counterpuncher'] },
+      elite: { great: ['aggressive', 'counterpuncher', 'serve-first', 'all-court'], good: [] },
+    } as Record<CoachTier, { great: PlayStyle[]; good: PlayStyle[] }>,
+
+    // ...and what a pill is worth on the development rate. Deliberately SMALL next to the rung
+    // ladder (which spans 1.40 end to end): fit is a reason to prefer one affordable coach over
+    // another, never a reason to buy up a rung. At these values a Budget coach who is great for her
+    // (0.95 x 1.05 = 0.998) just edges a Middle coach who is wrong for her (1.04 x 0.94 = 0.978),
+    // which is exactly the size of trade the pills are meant to be advertising.
+    fitFactor: { great: 1.05, good: 1.0, off: 0.94 } as Record<'great' | 'good' | 'off', number>,
+  },
 
   // Travel scales with family means (wealthier travel = pricier + a money-sink; poorer = cheaper),
   // and the owner wants the price to sit in a CORRIDOR for every trip, not on a fixed multiplier.
@@ -123,9 +216,11 @@ export const ECONOMY = {
   // export name so call sites stay stable).
   travelBgFactor: WEALTH_CORRIDOR,
 
-  // Weekly expense scale from the time split: train 75% ≈ 1.0, more training costs more.
-  // factor = base + perTrainPercent * plan.train.
-  planFactor: { base: 0.55, perTrainPercent: 0.006 },
+  // ⚠ `planFactor` (base 0.55 + 0.006 x plan.train) IS GONE, and its job moved rather than
+  // vanished. It scaled the weekly coaching bill by the training split, but only from 0.91 at
+  // train 60 to 1.06 at train 85 – a 16% spread on a slider that doubles her development. The
+  // coach ladder replaces it with HOURS (ECONOMY.coach.sessionsAt60/85), which move the bill 2x
+  // end to end, because hours are what a coach actually charges for.
 
   // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), but round-7 b makes the
   // payout NEED-BASED: only a `working`-background kid actually banks it – for everyone else
@@ -247,9 +342,10 @@ export const ECONOMY = {
     /** The plan slider, end to end. Roughly a factor of two between coasting and committing. */
     trainAt60: 0.72,
     trainAt85: 1.28,
-    /** The coach. The tier slice will widen this into a real ladder. */
-    coachParent: 0.82,
-    coachHired: 1.15,
+    /* ⚠ THE COACH MOVED OUT (coach-tiers slice). `coachParent: 0.82` and `coachHired: 1.15` lived
+     * here; they are now the two ENDS of `ECONOMY.coach.developmentFactor`, beside the prices they
+     * are traded against, because "what a rung costs" and "what a rung is worth" are one decision
+     * and were never legible split across two objects. Neither value changed. */
     /** Competition teaches what practice cannot – capped, because a fourth match in a week is
      *  fatigue, not education, and the condition model already charges her for that. */
     matchBonus: 0.18,
@@ -625,11 +721,6 @@ export const ECONOMY = {
     rescueTargetCondition: 85,
   },
 } as const
-
-/** Weekly base-expense scale from the time split (more training ⇒ higher cost). */
-export function planExpenseFactor(trainPercent: number): number {
-  return ECONOMY.planFactor.base + ECONOMY.planFactor.perTrainPercent * trainPercent
-}
 
 export interface GearHit {
   week: number

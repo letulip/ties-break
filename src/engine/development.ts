@@ -36,7 +36,8 @@
 
 import { rngFromSeed } from './rng'
 import { ECONOMY } from './economy'
-import type { CoachSetup, WeekPlan } from '../shared/protocol'
+import { coachFactor, coachStyleFit } from './coach'
+import type { CoachTier, PlayStyle, WeekPlan } from '../shared/protocol'
 
 /** The four attributes the match engine reads. Kept as a bare record so it serialises into the save
  *  as four numbers and nothing else. */
@@ -104,10 +105,9 @@ export function trainFactor(plan: WeekPlan): number {
   return trainAt60 + (trainAt85 - trainAt60) * t
 }
 
-/** The coach, as a multiplier. Two settings today; the coach-tier slice will widen this. */
-export function coachFactor(setup: CoachSetup): number {
-  return setup === 'hired' ? ECONOMY.development.coachHired : ECONOMY.development.coachParent
-}
+// ⚠ RE-AIMED: `coachFactor` moved to engine/coach.ts, and it is no longer a two-way switch – it
+// reads a rung of the ladder AND how that rung fits the game she plays. The two values it used to
+// return (0.82 parent, 1.15 hired) are unchanged, and are now the ends of that ladder.
 
 /** ONE WEEK of development. Pure, total, and the only place skills change.
  *
@@ -120,18 +120,20 @@ export function growWeek(args: {
   potential: KidSkills
   ageYears: number
   plan: WeekPlan
-  coach: CoachSetup
+  coach: CoachTier
+  /** her game, which decides whether this rung can teach it (the great / good / off read) */
+  playStyle: PlayStyle
   matchesThisWeek: number
   seed: string
   week: number
 }): KidSkills {
   const d = ECONOMY.development
-  const { skills, potential, ageYears, plan, coach, matchesThisWeek } = args
+  const { skills, potential, ageYears, plan, coach, playStyle, matchesThisWeek } = args
   const decline = declineFactor(ageYears)
   const rate =
     ageFactor(ageYears) *
     trainFactor(plan) *
-    coachFactor(coach) *
+    coachFactor(coach, coachStyleFit(coach, playStyle)) *
     (1 + Math.min(matchesThisWeek, d.matchBonusCap) * d.matchBonus)
 
   // One draw for the whole week, shared across the attributes: a good week is a good week, and four

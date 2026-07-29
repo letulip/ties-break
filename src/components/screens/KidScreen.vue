@@ -4,7 +4,8 @@ import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
 import CountingResultsTable from '../CountingResultsTable.vue'
 import { useKidEmotion } from '../../composables/kidEmotion'
-import type { CoachSetup, FamilyBackground, PlayStyle } from '../../shared/protocol'
+import type { FamilyBackground, PlayStyle } from '../../shared/protocol'
+import { COACH_TIER_LABEL } from '../../engine/coach'
 
 const game = useGameStore()
 // Raster art ships as webp only (≤512 px, quality 82-75), converted by the build itself
@@ -17,10 +18,6 @@ const BACKGROUND_LABEL: Record<FamilyBackground, string> = {
   wealthy: 'Wealthy',
   middle: 'Middle class',
   working: 'Working class',
-}
-const COACH_LABEL: Record<CoachSetup, string> = {
-  parent: 'Parent-coached',
-  hired: 'Hired coach',
 }
 const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
   aggressive: 'Aggressive baseliner',
@@ -58,7 +55,7 @@ const countryDisplay = computed(() => {
 })
 const birthMonthLabel = computed(() => (game.snapshot ? MONTHS[game.snapshot.profile.birthMonth - 1] ?? '' : ''))
 const backgroundLabel = computed(() => (game.snapshot ? BACKGROUND_LABEL[game.snapshot.profile.background] : ''))
-const coachingLabel = computed(() => (game.snapshot ? COACH_LABEL[game.snapshot.profile.coachSetup] : ''))
+const coachingLabel = computed(() => (game.snapshot ? COACH_TIER_LABEL[game.snapshot.profile.coachTier] : ''))
 const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.snapshot.profile.playStyle] : ''))
 
 // --- Counting results (round-5 item 1b): the kid's best-6, 52-week window. Its point

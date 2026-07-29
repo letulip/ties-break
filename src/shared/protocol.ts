@@ -8,7 +8,11 @@ import type { AvatarEmotion, PortraitStage } from './avatarEmotion'
 import type { EventPreview } from '../engine/season/preview'
 
 export type FamilyBackground = 'wealthy' | 'middle' | 'working'
-export type CoachSetup = 'parent' | 'hired'
+/** The coach ladder (docs/specs/coach-tiers.md), cheapest rung first. Replaces the old
+ *  `CoachSetup = 'parent' | 'hired'` boolean, whose single `hired` band turned out to be a smear
+ *  across three real tiers. `self` is the parent on the court – free as a coach, though the court
+ *  is still rented. See src/engine/coach.ts for what each rung costs and what it is worth. */
+export type CoachTier = 'self' | 'budget' | 'middle' | 'high' | 'elite'
 /** An inclination, not numbers: weights future skill growth (Phase 4), gives build identity now. */
 export type PlayStyle = 'aggressive' | 'counterpuncher' | 'serve-first' | 'all-court'
 
@@ -21,7 +25,8 @@ export interface PlayerProfile {
   /** ISO 3166-1 alpha-2, e.g. 'RU'; flag emoji is derived from it in the UI */
   country: string
   background: FamilyBackground
-  coachSetup: CoachSetup
+  /** which rung of the coach ladder she is on (schema v22) */
+  coachTier: CoachTier
   playStyle: PlayStyle
   /** 1-12 (schema v9). Relative-age-effect groundwork (round-3 QA item 16): picked at
    *  onboarding, purely cosmetic until Phase 4 wires the junior age-group dynamics it's
@@ -35,7 +40,10 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   gender: 'girl',
   country: 'US',
   background: 'middle',
-  coachSetup: 'hired',
+  // A middle-class family's default is the STANDARD private coach, not the dearest one on the
+  // ladder. The old default read `coachSetup: 'hired'`, which the spec's conversion prices at
+  // ~$475/wk – an Elite coach, and precisely the wall this slice exists to close.
+  coachTier: 'middle',
   playStyle: 'all-court',
   birthMonth: 6,
 }
@@ -670,7 +678,7 @@ export interface Snapshot {
   /** the kid's active injury, or null when healthy. Always null in slice B (Slice C populates it). */
   injury: SnapshotInjury | null
   /** whether physio recovery is active (its cost lever is billed in Slice C; in B this just
-   *  reflects/sets the flag, default = coachSetup === 'hired'). */
+   *  reflects/sets the flag, default = every coach tier but self-coached). */
   physioActive: boolean
   /** most recent 60 events, chronological (oldest first) */
   events: WorldEvent[]

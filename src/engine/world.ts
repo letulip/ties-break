@@ -63,7 +63,6 @@ import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
   gearHitForWeek,
-  planExpenseFactor,
   practiceFeeCents,
   vacationPackage,
   vacationPriceCents,
@@ -71,6 +70,7 @@ import { parentIncomeForWeekCents,
 import { generateCohort, driftCohort, ageCohort } from './season/cohort'
 import { renewCohort } from './season/conveyor'
 import { growWeek, rollPotential, type KidSkills } from './development'
+import { coachIncludesPhysio, coachRateBandCents, coachWeeklyCostCents } from './coach'
 import {
   kitGrantCents,
   netTravelCents,
@@ -95,7 +95,7 @@ import { buildDiarySnapshot, milestoneKey } from './diary'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 21
+export const SAVE_SCHEMA_VERSION = 22
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -206,8 +206,10 @@ export interface WorldState {
   injury: (SnapshotInjury & { sinceWeek: number }) | null
   /** append-only injury log, pruned to the last 20 (Slice C writes it; empty in B). */
   injuryHistory: Array<{ kind: string; severity: string; week: number; weeksOut: number }>
-  /** whether physio recovery is active (default = profile.coachSetup === 'hired'). The cost lever
-   *  is billed in Slice C; in B the flag just reflects/sets the toggle. */
+  /** whether physio recovery is active (default = `coachIncludesPhysio(profile.coachTier)`, i.e.
+   *  every rung but self-coached – the old rule was "a hired coach comes with a physio" and
+   *  self-coaching is the only rung that is not a hire). The cost lever is billed in Slice C; in B
+   *  the flag just reflects/sets the toggle. */
   physioActive: boolean
   /** Season planner (v13): booked family-vacation weeks. PURE player state – the price was
    *  quoted/charged from the `:vacation:` sub-stream at booking time, so nothing here can move
@@ -252,7 +254,9 @@ export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
 // knob object). These aliases keep the old call sites + the public PARENT_INCOME_CENTS export
 // (imported by tests) pointing at that one source of truth.
 export const PARENT_INCOME_CENTS = ECONOMY.parentIncomeCents
-const EXPENSE_RANGE = ECONOMY.expenseRangeCents
+// ⚠ `EXPENSE_RANGE = ECONOMY.expenseRangeCents` lived here – the two-band weekly coaching draw.
+// The ladder replaced it with a per-tier, per-age HOURLY band; resolveBaseCosts reads it through
+// `coachRateBandCents` (engine/coach.ts) so the age lookup and the band live in one place.
 
 // Flavor lists are background-aware but a flavor is always chosen with ONE `pickInt`
 // (a single rng() call regardless of list length), so the per-tick draw count is
@@ -1768,17 +1772,22 @@ function resolveParentIncome(world: WorldState): void {
 }
 
 function resolveBaseCosts(world: WorldState, rng: Rng): void {
-  const [lo, hi] = EXPENSE_RANGE[world.profile.coachSetup]
-  // Draw first (byte-identical MAIN-stream pickInt, background-independent), THEN scale by the
-  // background's wealth corridor: ONE uniform roll from the private `seed:coachbg:week` sub-stream
-  // maps into wealthCorridor[background] (mirrors travelBgFactor / medicalBgFactor – same roll,
-  // disjoint corridors, so working < middle < wealthy holds per week). POST-draw multiply only,
-  // so the main-stream draw count/order never depends on background.
-  const [cLo, cHi] = ECONOMY.wealthCorridor[world.profile.background]
-  const coachRoll = rngFromSeed(`${world.seed}:coachbg:${world.week}`)()
-  const expense = Math.round(
-    pickInt(rng, lo, hi) * planExpenseFactor(world.plan.train) * (cLo + coachRoll * (cHi - cLo)),
-  )
+  // THE COACHING BILL = rate x hours (docs/specs/coach-tiers.md; the model is engine/coach.ts).
+  //
+  // ONE MAIN-STREAM DRAW, IN THE SAME POSITION IT ALWAYS HELD. The old bill drew its band with one
+  // `pickInt` here and then multiplied by the plan factor and a wealth-corridor roll; the new one
+  // draws the HOURLY RATE with one `pickInt` here and multiplies by hours. Same draw, same slot,
+  // and the frozen MAIN capture (41550 draws / e6b0c709) cannot see the difference – which is the
+  // whole reason the rate is what gets drawn and the hours are what get multiplied.
+  //
+  // THE WEALTH CORRIDOR IS GONE FROM THIS LINE, deliberately (§2). It used to scale the bill by
+  // `wealthCorridor[background]` off a `seed:coachbg:week` roll, on the fiction that poorer
+  // families use cheaper coaches. The tier says that now, explicitly and as a choice, so the
+  // corridor would be charging the same difference a second time. A coach's rate is a market rate:
+  // the same number for everyone, and what differs is who can pay it. Travel, medical and the
+  // planner's packages keep their corridor.
+  const [lo, hi] = coachRateBandCents(world.profile.coachTier, ageAtWeek(world.week))
+  const expense = coachWeeklyCostCents(pickInt(rng, lo, hi), world.plan)
   world.fundsCents -= expense
   const flavors = world.plan.train >= 70 ? trainFlavors(world.profile.background) : restFlavors(world.profile.background)
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
@@ -2410,7 +2419,7 @@ export function createWorld(
     condition: ECONOMY.condition.start,
     injury: null,
     injuryHistory: [],
-    physioActive: profile.coachSetup === 'hired',
+    physioActive: coachIncludesPhysio(profile.coachTier),
     vacations: [],
     practices: [],
     recoveryBuff: null,
@@ -2450,7 +2459,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.condition = ECONOMY.condition.start
   save.injury = null
   save.injuryHistory = []
-  save.physioActive = save.profile?.coachSetup === 'hired'
+  save.physioActive = coachIncludesPhysio(save.profile?.coachTier ?? DEFAULT_PROFILE.coachTier)
   save.vacations = []
   save.practices = []
   save.recoveryBuff = null
@@ -2691,7 +2700,8 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     potential: world.potential,
     ageYears: ageAtWeek(world.week),
     plan: world.plan,
-    coach: world.profile.coachSetup,
+    coach: world.profile.coachTier,
+    playStyle: world.profile.playStyle,
     matchesThisWeek,
     seed: world.seed,
     week: world.week,

@@ -19,7 +19,8 @@ const dismissedRecapKey = moduleRef<string | null>(null)
 // tab (R13-12: the R9-9a "no tab can strand the career" guarantee rides on that bar now).
 import { computed } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { WEEK_PLAN_PRESETS, type CoachSetup, type WorldMatch } from '../../shared/protocol'
+import { WEEK_PLAN_PRESETS, type WorldMatch } from '../../shared/protocol'
+import { coachWeeklyBandCents } from '../../engine/coach'
 import { weekLabel, weekRange } from '../../shared/dates'
 import { KID_ID, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
@@ -67,20 +68,17 @@ const thisWeekScore = computed<string | null>(() => {
   return null
 })
 
-// --- The plan: preset pills drive game.setPlan(); spend range is a UI-side
-// mirror of src/engine/world.ts EXPENSE_RANGE × planExpenseFactor(train) – kept
-// here as a display estimate, not the source of truth for the actual draw. ---
+// --- The plan: preset pills drive game.setPlan(); the spend range is now the ENGINE's own
+// arithmetic (coachWeeklyBandCents = the tier's hourly band at her age × the hours the split
+// buys), rather than a hand-copied mirror of it. It used to duplicate EXPENSE_RANGE and the plan
+// factor here as literals, which is exactly the drift a shared helper removes. Still an estimate
+// in one sense only: the engine draws ONE rate inside the band, so the bill lands between these. ---
 const PRESET_ORDER = ['grind', 'balanced', 'light'] as const
 const PRESET_LABEL: Record<(typeof PRESET_ORDER)[number], string> = {
   grind: 'Grind 85/15',
   balanced: 'Balanced 75/25',
   light: 'Light 60/40',
 }
-const EXPENSE_RANGE_DOLLARS: Record<CoachSetup, [number, number]> = {
-  hired: [250, 700],
-  parent: [120, 400],
-}
-
 const plan = computed(() => game.snapshot?.plan ?? WEEK_PLAN_PRESETS.balanced)
 const activePreset = computed(() => {
   const p = game.snapshot?.plan
@@ -88,10 +86,10 @@ const activePreset = computed(() => {
   return PRESET_ORDER.find((k) => WEEK_PLAN_PRESETS[k].train === p.train && WEEK_PLAN_PRESETS[k].rest === p.rest) ?? null
 })
 const spendRange = computed<[number, number]>(() => {
-  if (!game.snapshot) return [0, 0]
-  const factor = 0.55 + 0.006 * game.snapshot.plan.train
-  const [lo, hi] = EXPENSE_RANGE_DOLLARS[game.snapshot.profile.coachSetup]
-  return [Math.round(lo * factor), Math.round(hi * factor)]
+  const snap = game.snapshot
+  if (!snap) return [0, 0]
+  const [lo, hi] = coachWeeklyBandCents(snap.profile.coachTier, snap.ageYears, snap.plan)
+  return [Math.round(lo / 100), Math.round(hi / 100)]
 })
 </script>
 
