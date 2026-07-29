@@ -83,7 +83,11 @@ function hashOf(draws: number[]): string {
 // moved is her RANK, a companion pin carried alongside: the bracket now seeds only the top 8 of 32
 // and shuffles everyone else, the kid included, so her results in a 52-week window differ and so
 // does the rank they earn. See docs/specs/rank-plateau.md.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 135 }
+// ⚠ RE-PINNED 135 -> 122 (29.07, the two ladders). `count`/`hash`/`head`/`tail` did NOT move; the
+// stream is untouched and that is what this block guards. What moved is the MEANING of kidRank: it
+// is now her place in the ITF table, not in a single mixed one, so it is a different number about a
+// different question. See docs/specs/two-ladders.md.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 122 }
 
 function injectEvent(
   world: WorldState,

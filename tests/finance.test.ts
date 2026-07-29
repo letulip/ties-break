@@ -57,7 +57,7 @@ function busyTournamentSeason(seed: string, weeks: number): WorldState {
       if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
       // r-gate: only enter tiers the kid is currently eligible for; enterEvent would otherwise
       // throw for a tier she has not reached yet or has already outgrown.
-      if (!isTierEligible(e.tier, kidPoints(world))) continue
+      if (!isTierEligible(e.tier, kidPoints(world, 'domestic'))) continue
       if (world.fundsCents < TIERS[e.tier].entryFeeCents + e.travelCostCents) continue
       // Season-Life: skip events under a HARD availability block (e.g. an event scheduled in a
       // school-exam week); enterEvent would throw 'unavailable'. Fatigue is soft, so it's not skipped.

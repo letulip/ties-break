@@ -17,7 +17,7 @@ const PLAYABLE: TierId[] = [...TIER_LADDER]
 /** Grant the kid a single counting result so her best-6 (== kidPoints) equals `points`. */
 function giveKidPoints(world: WorldState, points: number): void {
   world.results.push({ playerId: KID_ID, week: world.week, points, tier: 'local' })
-  expect(kidPoints(world)).toBe(points)
+  expect(kidPoints(world, 'domestic')).toBe(points)
 }
 
 describe('tier point bands (the tunable thresholds)', () => {
@@ -102,7 +102,7 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
   it('rejects too-few points with a "need <minPoints>" message', () => {
     const { world, event } = firstEventOfTier('gate-low', 'regional')
     // a fresh kid has 0 points, below regional's minPoints (65)
-    expect(kidPoints(world)).toBe(0)
+    expect(kidPoints(world, 'domestic')).toBe(0)
     expect(() => enterEvent(world, event.id)).toThrow(
       `Not enough ranking points for ${TIERS.regional.label} yet (need 65)`,
     )
@@ -127,7 +127,7 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
 
   it('a fresh kid can always enter local (the entry tier, minPoints 0)', () => {
     const { world, event } = firstEventOfTier('gate-fresh', 'local')
-    expect(kidPoints(world)).toBe(0)
+    expect(kidPoints(world, 'domestic')).toBe(0)
     enterEvent(world, event.id)
     expect(world.entries).toContain(event.id)
   })
@@ -136,7 +136,7 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
 describe('upcomingEvents — surfaces eligibility both directions', () => {
   it('a fresh (0-point) kid: local open, regional/national locked (not enough points yet)', () => {
     const world = createWorld('snap-low')
-    expect(kidPoints(world)).toBe(0)
+    expect(kidPoints(world, 'domestic')).toBe(0)
     const upcoming = toSnapshot(world).upcoming
     for (const e of upcoming) {
       expect(e.eligible).toBe(isTierEligible(e.tier, 0))

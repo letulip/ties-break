@@ -147,7 +147,13 @@ export const TIERS: Record<TierId, TierDef> = {
     drawSize: 32,
     entryFeeCents: 400_00,
     travelCostCents: [1600_00, 3200_00],
-    points: [300, 210, 140, 100, 60, 30],
+    // ⚠ THE LAST ENTRY IS 0, NOT THE ITF TABLE'S 30, and the difference is our draw size. Reg 31's
+    // "R32" column means REACHED the round of 32 having won a round, which in a real J300 (draws of
+    // 48-64) is a player who has already won. Our J300 draw is 32, so its last finish index IS the
+    // first-round loser - and Reg 31(a) is explicit that nobody scores until they have won a main
+    // draw round. Copying the 30 across would have paid for losing, which is the exact participation
+    // floor wave B removed. Caught by wave-b-points.test.ts, which is what that test is for.
+    points: [300, 210, 140, 100, 60, 0],
     // Rare by design: four a year, so each one is an event the family plans a season around.
     everyNWeeks: 13,
     // R12-6: same rule as national, for the same reason and with even more room (4 events). The two

@@ -44,7 +44,7 @@ import {
   createWorld,
   tickWeek,
   enterEvent,
-  isTierEligible,
+  tierOpenFor,
   kidPoints,
   skipTournament,
   closeTournament,
@@ -92,12 +92,18 @@ export const HORIZONS: Horizon[] = [
 ]
 
 // Reach targets. The engine models NO prize money, so the target is defined against existing state.
-/** 14→16: national-tier eligibility == kidPoints(world) >= 150 (== isTierEligible('national', pts)). */
+/** 14→16: national-tier eligibility, which is a DOMESTIC threshold and did not move - the domestic
+ *  point tables are unchanged by the two-ladder slice, only the international ones are. */
 export const REACH_TARGET_MONEY = 150
 /** 14→18 "pro" proxy: a top-50 rank ONCE she is actually ranked (has a counting result) OR a points
  *  threshold. The `hasResults` guard on the rank arm is REQUIRED – see reachedTarget. */
 export const REACH_PRO_RANK = 50
-export const REACH_PRO_POINTS = 300
+/** ⚠ RE-BASED for the two-ladder slice. This used to be 300 points on the old MIXED scale, where a
+ *  J30 title paid 400 - so it meant "about one good international week". On the real ITF scale 300
+ *  points IS a J300 title, which is a career-defining result and nobody's "pro attempt proxy". The
+ *  equivalent milestone is a real body of international results: 60 ITF points is a J60 title, or a
+ *  J30 title plus a J30 final, or six J30 quarter-finals. */
+export const REACH_PRO_POINTS = 60
 
 export interface Preset {
   /** table label, e.g. "25k  · middle · hired coach" */
@@ -243,7 +249,9 @@ export function stepCareerWeek(world: WorldState, rng: Rng): Record<TierId, numb
     // One tournament a week: skip the week entirely once something is booked on it.
     if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
     // Ranking gate (before affordability): the kid may only enter tiers her EARNED points open.
-    if (!isTierEligible(e.tier, kidPoints(world))) continue
+    // Two ladders: the domestic rungs read her domestic best-6 and the international ones read her
+    // ITF RANK, so the policy asks the engine's own single gate instead of re-deriving either.
+    if (!tierOpenFor(world, e.tier)) continue
     // Availability gate (Season-Life): skip HARD-blocked events (school exams / injured) the way
     // a parent would – enterEvent throws on them. 'caution' (fatigue) stays enterable by design.
     if (availabilityStatus(world, e).level === 'blocked') continue
@@ -266,7 +274,7 @@ export function stepCareerWeek(world: WorldState, rng: Rng): Record<TierId, numb
  *  14→18: (ranked AND top-50) OR a 300-point threshold. Keyed on targetAge derived from the horizon. */
 function reachedTarget(world: WorldState, horizonWeeks: number): boolean {
   const targetAge = START_AGE_YEARS + Math.floor(horizonWeeks / WEEKS_PER_YEAR)
-  const points = kidPoints(world)
+  const points = kidPoints(world, 'itf')
   if (targetAge >= 18) {
     // hasResults mirrors the engine's `ranked` signal (StatsScreen/HomeScreen use
     // `countingResults.length > 0`): the kid isn't really ranked until she owns a counting result.
@@ -362,7 +370,7 @@ export function runCareer(preset: Preset, index: number, horizonWeeks: number): 
     peakDeficitCents: peak,
     reachedWeek,
     endRank: world.kidRank,
-    endPoints: kidPoints(world),
+    endPoints: kidPoints(world, 'itf'),
     perSeason,
     entries,
     academyCoveredCents,

@@ -456,7 +456,7 @@ describe('L11 — the whole career still runs (integration smoke)', () => {
         if (world.entries.includes(e.id)) continue
         if (world.week > e.deadlineWeek || e.deadlineWeek - world.week > 3) continue
         if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
-        if (!isTierEligible(e.tier, kidPoints(world))) continue
+        if (!isTierEligible(e.tier, kidPoints(world, 'domestic'))) continue
         if (availabilityStatus(world, e).level === 'blocked') continue
         world.fundsCents = 500_000_00
         enterEvent(world, e.id)

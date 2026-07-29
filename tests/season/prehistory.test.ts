@@ -159,7 +159,7 @@ describe('createWorld — the fresh career now opens on a REAL ranking', () => {
 
   it('the KID still starts with 0 points and reads as Unranked (rankLabel behavior)', () => {
     const world = createWorld('fresh-ph')
-    expect(kidPoints(world)).toBe(0)
+    expect(kidPoints(world, 'domestic')).toBe(0)
     expect(windowedBestSum(world.results, world.week, KID_ID)).toBe(0)
   })
 
@@ -221,10 +221,10 @@ describe('pre-history ages out on its own (no new decay logic)', () => {
 describe('tier access is UNAFFECTED (entry gating is points-based, not rank-based)', () => {
   it('a fresh kid is still local-only and is still refused a regional entry', () => {
     const world = createWorld('ph-gate')
-    expect(kidPoints(world)).toBe(0)
-    expect(isTierEligible('local', kidPoints(world))).toBe(true)
-    expect(isTierEligible('regional', kidPoints(world))).toBe(false)
-    expect(isTierEligible('national', kidPoints(world))).toBe(false)
+    expect(kidPoints(world, 'domestic')).toBe(0)
+    expect(isTierEligible('local', kidPoints(world, 'domestic'))).toBe(true)
+    expect(isTierEligible('regional', kidPoints(world, 'domestic'))).toBe(false)
+    expect(isTierEligible('national', kidPoints(world, 'domestic'))).toBe(false)
 
     const regional = world.season.find((e) => e.tier === 'regional' && e.deadlineWeek >= world.week)
     expect(regional).toBeTruthy()

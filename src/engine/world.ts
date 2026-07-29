@@ -2769,7 +2769,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 /** The kid's EARNED ranking points: her windowed best-6 sum at the current week – the same value
  *  `computeRanking` assigns her, an absolute measure of achievement (a fresh kid = 0). Derived on the
  *  fly from the results ledger (no persisted state → no schema bump); the eligibility ladder reads it. */
-export function kidPoints(world: WorldState, track: LadderTrack = 'itf'): number {
+// NO DEFAULT, DELIBERATELY. There are two tables now and "her points" is no longer a question with
+// one answer, so every caller has to say which one it means. Making the argument required turns a
+// silent change of meaning into a compile error - which is what a change of this kind should be.
+export function kidPoints(world: WorldState, track: LadderTrack): number {
   return windowedBestSum(world.results, world.week, KID_ID, inTrack(track))
 }
 

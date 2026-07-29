@@ -41,7 +41,7 @@ import {
   createWorld,
   tickWeek,
   enterEvent,
-  isTierEligible,
+  tierOpenFor,
   kidPoints,
   skipTournament,
   closeTournament,
@@ -731,7 +731,9 @@ export function stepFatigueWeek(
     // (enterEvent enforces it). The season list is already sorted strongest-tier-first within a
     // week (buildSeason), so taking the first eligible one IS "the biggest event she qualifies for".
     if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
-    if (!isTierEligible(e.tier, kidPoints(world))) continue
+    // Two ladders: the domestic rungs read her domestic best-6 and the international ones read her
+    // ITF RANK, so the policy asks the engine's own single gate instead of re-deriving either.
+    if (!tierOpenFor(world, e.tier)) continue
     const avail = availabilityStatus(world, e)
     if (avail.level === 'blocked') {
       // injured / exam blackout / the doctor's veto – enterEvent would throw. Count ONLY the
@@ -1083,7 +1085,7 @@ export function runFatigueCareer(
     if (f.vacationBookedId) vacationsByPackage[f.vacationBookedId] = (vacationsByPackage[f.vacationBookedId] ?? 0) + 1
     wins += f.wins
     losses += f.losses
-    if (kidPoints(world) > 0 && (bestRank === null || world.kidRank < bestRank)) bestRank = world.kidRank
+    if (kidPoints(world, 'itf') > 0 && (bestRank === null || world.kidRank < bestRank)) bestRank = world.kidRank
     if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS) endOfSeasonCondition.push(f.condition)
     if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - 1) postOffSeasonCondition.push(f.condition)
   }
@@ -1140,7 +1142,7 @@ export function runFatigueCareer(
     rivalPlayWeekSamples: rivalPlaySamples,
     bestRank,
     endRank: world.kidRank,
-    endPoints: kidPoints(world),
+    endPoints: kidPoints(world, 'itf'),
   }
 }
 

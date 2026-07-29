@@ -181,7 +181,7 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
         let firstCross: number | null = null
         for (let i = 0; i < H16.weeks; i++) {
           stepCareerWeek(world, rng)
-          if (firstCross === null && kidPoints(world) >= REACH_TARGET_MONEY) firstCross = world.week
+          if (firstCross === null && kidPoints(world, 'itf') >= REACH_TARGET_MONEY) firstCross = world.week
         }
         expect(r.reachedWeek).toBe(firstCross)
       }
@@ -232,7 +232,7 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
         let firstReach: number | null = null
         for (let i = 0; i < H18.weeks; i++) {
           stepCareerWeek(world, rng)
-          const pts = kidPoints(world)
+          const pts = kidPoints(world, 'itf')
           const hasResults = pts > 0 // == computeCountingResults(world).length > 0 (every kid result scores)
           const met = (hasResults && world.kidRank <= REACH_PRO_RANK) || pts >= REACH_PRO_POINTS
           if (firstReach === null && met) firstReach = world.week
