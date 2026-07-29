@@ -36,6 +36,7 @@ import {
   COACH_ACCURACY,
   COACH_EYE,
   NOTE_MIN_CONFIDENCE,
+  RADAR_AXIS_LABEL,
   RADAR_BAND_MAX,
   type RadarWorldView,
 } from '../src/engine/radar'
@@ -678,6 +679,15 @@ describe('radar – a fourteen-year-old in week 1', () => {
     }
     expect(snap.radar.filter((a) => a.note === null)).toHaveLength(2)
     expect(matchesEverPlayed(world)).toBe(0)
+  })
+
+  it('the axis labels are the ENGINE\'s, and cover the four keys – "ret" never reaches a player', () => {
+    for (const k of SKILL_KEYS) {
+      expect(RADAR_AXIS_LABEL[k], k).toBeTruthy()
+      expect(RADAR_AXIS_LABEL[k]).not.toMatch(/[0-9—]|[Ѐ-ӿ]/)
+    }
+    expect(RADAR_AXIS_LABEL.ret).toBe('Return')
+    expect(new Set(Object.values(RADAR_AXIS_LABEL)).size).toBe(SKILL_KEYS.length)
   })
 
   it('bandFor is total and clamped, so a degenerate view still draws', () => {

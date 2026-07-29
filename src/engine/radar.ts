@@ -144,6 +144,17 @@ export const NOTE_MIN_CONFIDENCE = 0.3
  *  time a growth week nudges her over a line. */
 export const NOTE_EDGE = 4
 
+/** WHAT THE AXES ARE CALLED, and the engine owns the words for the same reason it owns
+ *  `COACH_TIER_LABEL` and `TIER_SHORT`: a second copy in a screen is a second chance for two
+ *  surfaces to call the same thing different things. `ret` in particular is an engine field name
+ *  and must never reach a player as one. Short dash only; no numbers, ever. */
+export const RADAR_AXIS_LABEL: Record<SkillKey, string> = {
+  serve: 'Serve',
+  ret: 'Return',
+  composure: 'Composure',
+  stamina: 'Stamina',
+}
+
 /** Matches she must have played before "nobody has tested that wing yet" is a thing worth saying
  *  rather than a statement of the obvious. */
 export const NOTE_UNTESTED_MIN_MATCHES = 4
@@ -215,15 +226,20 @@ export function readScoreline(score: string | undefined): ScoreRead {
 
 /** STAMINA IS UNKNOWN UNTIL SHE HAS PLAYED A LONG MATCH (spec §1, source 3). A straight-sets win
  *  teaches NOTHING about her legs, and that is the point: it is true about her. A deciding set is
- *  the full unit; a two-setter that simply went on and on is most of one. */
+ *  the full unit; a two-setter that simply went on and on is worth most of one. */
 export function staminaUnitsOf(s: ScoreRead): number {
   if (s.decider) return 1
   return s.games >= LONG_MATCH_GAMES ? 0.6 : 0
 }
 
 /** COMPOSURE IS UNKNOWN UNTIL SHE HAS PLAYED A TIGHT ONE. Nothing is learned from a comfortable
- *  afternoon. A deciding set is half a unit on its own; every tiebreak set adds more, and a 7-5 a
- *  little. A three-tiebreak epic saturates - there is only so much one match can prove. */
+ *  afternoon. A deciding set is a third of a unit on its own, every tiebreak set the same again,
+ *  and a 7-5 a little. A three-tiebreak epic saturates - there is only so much one match can prove.
+ *
+ *  ⚠ THE DECIDER'S SHARE WAS 0.5 AND IS 0.35, off the bench: this engine's juniors are closely
+ *  matched, so a third set is the ORDINARY afternoon here (a live career runs 0.24-0.43 composure
+ *  units a match) rather than the rare one the number was written for. At 0.5 the axis separated
+ *  almost nothing between careers. */
 export function composureUnitsOf(s: ScoreRead): number {
   if (s.sets === 0) return 0
   const u = (s.decider ? 0.35 : 0) + 0.35 * s.tiebreaks + 0.2 * s.narrowSets
