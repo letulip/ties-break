@@ -361,17 +361,26 @@ select {
   align-items: center;
 }
 
-.watch-play-icon {
+/* THE MASKED ICON, 20px. An SVG from public/icons/ painted by CSS mask rather than drawn, so it
+   takes whatever colour we hand it and the source file's own fill can never leak through. Two
+   places wanted exactly this - the bottom tabs and the Season screen's watch control - and wrote
+   the same nine declarations out twice. The tenth is the only real difference between them and it
+   stays with each: the tab follows its button's `color`, the watch glyph is always accent. */
+.watch-play-icon,
+.tab-icon {
   display: block;
   width: 20px;
   height: 20px;
-  background-color: var(--accent);
   -webkit-mask-position: center;
   mask-position: center;
   -webkit-mask-size: contain;
   mask-size: contain;
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
+}
+
+.watch-play-icon {
+  background-color: var(--accent);
 }
 
 .viewer select {
@@ -518,16 +527,7 @@ select {
    `color` and `background-color: currentColor` just reads it. Mask ignores the source
    SVG's own fill, so it's safe even against files with a hardcoded fill color. */
 .tab-icon {
-  display: block;
-  width: 20px;
-  height: 20px;
   background-color: currentColor;
-  -webkit-mask-position: center;
-  mask-position: center;
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
 }
 
 .tab-label {
@@ -1723,8 +1723,15 @@ section.bare .event-cards {
 }
 
 /* HER ODDS. Same shape and the same red-to-green ramp as the condition ring on Home, so a
-   percentage means one thing across the app. The number is the ENGINE's (season/preview.ts). */
-.chance-ring {
+   percentage means one thing across the app. The number is the ENGINE's (season/preview.ts).
+   That sentence used to be a claim in a comment while the two rings were written out separately,
+   forty-odd declarations apart, and nothing stopped one of them drifting. They are the same rule
+   now, so the claim is enforced: the 46px box, the figure-and-sign pairing inside it, the weights.
+   `.condition-ring` still adds `margin-left: auto` (it has to pin right on a photograph with no
+   caption beside it) and the on-art text shadow; the two TRACKS and the two ARCS stay apart on
+   purpose - see docs/specs/css-dry-audit.md for the track question and the arc's reason. */
+.chance-ring,
+.condition-ring {
   position: relative;
   width: 46px;
   height: 46px;
@@ -1745,7 +1752,8 @@ section.bare .event-cards {
   transition: stroke-dashoffset 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.chance-ring-value {
+.chance-ring-value,
+.condition-ring-value {
   position: absolute;
   inset: 0;
   display: flex;
@@ -1757,20 +1765,23 @@ section.bare .event-cards {
   font-variant-numeric: tabular-nums;
 }
 
-.chance-ring-value b {
+.chance-ring-value b,
+.condition-ring-value b {
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.02em;
 }
 
-.chance-ring-value i {
+.chance-ring-value i,
+.condition-ring-value i {
   font-size: 10px;
   font-weight: 700;
   font-style: normal;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .chance-ring-arc {
+  .chance-ring-arc,
+  .condition-ring-arc {
     transition: none;
   }
 }
@@ -3750,13 +3761,11 @@ tr.kid-row td {
 }
 
 /* THE CONDITION RING – the export's ProgressRing (46px box, r=19, 3px stroke, round cap, twelve
-   o'clock start), parked at the bottom-right of the photograph. `margin-left: auto` pins it right
-   even when there is no caption chip to push it there. */
+   o'clock start), parked at the bottom-right of the photograph. The 46px box and everything inside
+   it are shared with `.chance-ring` up in the Season card – one rule, so a percentage keeps looking
+   like a percentage everywhere. `margin-left: auto` pins it right even when there is no caption
+   chip to push it there, and that is the only thing here that is this ring's alone. */
 .condition-ring {
-  position: relative;
-  width: 46px;
-  height: 46px;
-  flex: none;
   margin-left: auto;
 }
 
@@ -3786,36 +3795,11 @@ tr.kid-row td {
    The label is LIGHT, not tinted (owner, 28.07) – the arc already carries the colour, and a
    coloured number beside a coloured ring makes two things shouting the same word. It also sits a
    little higher than the export's own offset so the descenderless figure reads centred inside the
-   circle rather than resting on its lower stroke. */
+   circle rather than resting on its lower stroke.
+   All of that is shared with `.chance-ring-value` up in the Season card, b and i included; this
+   ring sits ON a painting, so the shadow is the one thing it adds here. */
 .condition-ring-value {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.5px;
-  padding-top: 12px;
-  color: var(--ink);
-  font-variant-numeric: tabular-nums;
   text-shadow: var(--shadow-text-on-art);
-}
-
-.condition-ring-value b {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-}
-
-.condition-ring-value i {
-  font-size: 10px;
-  font-weight: 700;
-  font-style: normal;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .condition-ring-arc {
-    transition: none;
-  }
 }
 
 /* --- 3. THE CARD GRID --------------------------------------------------------------------------- */
