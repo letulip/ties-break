@@ -19,6 +19,7 @@ import { KID_ID } from '../engine/world'
 import Card from './ui/Card.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import SegmentedRow from './ui/SegmentedRow.vue'
+import WeatherPlate from './ui/WeatherPlate.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -42,8 +43,22 @@ const props = withDefaults(
      *  (which silenced the final's viewer so the finale SCREEN could clap, one click later) is
      *  gone with it – `endApplause` below is how the parent knows not to clap twice. */
     finalMatch?: boolean
+    /** THE WEATHER PLATE'S DATA (owner, 29.07). `EventPreview.temperatureC` for the event THIS
+     *  match belongs to - the same number the Season card printed for that tournament, passed in
+     *  rather than re-derived, because two call sites computing one fact is how they drift.
+     *
+     *  ⚠ NOT WIRED YET, AND THE REASON IS ONE MISSING FIELD. `PendingView` (shared/protocol.ts) -
+     *  what TournamentFlow gets while a tournament is being watched - carries `eventId`, `tier`
+     *  and `surface` but no preview, and `snapshot.upcoming` (which does carry previews) is
+     *  filtered to `week > world.week`, so an event being PLAYED has already dropped out of it.
+     *  The hook is `PendingView.temperatureC: number`, filled where the pending view is built,
+     *  and then `:temperature-c="pending.temperatureC"` at TournamentFlow's two viewer call
+     *  sites. Both files are outside this slice - and `tests/preview.test.ts` deliberately greps
+     *  world.ts for `eventTemperature`, so that guard is the owner's to re-aim, not mine.
+     *  null (default) draws no plate at all, so nothing shows a made-up number in the meantime. */
+    temperatureC?: number | null
   }>(),
-  { mode: 'live', rankA: null, rankB: null, finalMatch: false },
+  { mode: 'live', rankA: null, rankB: null, finalMatch: false, temperatureC: null },
 )
 // `finish` fires once when playback reaches the end (used by TournamentFlow to auto-advance to
 // the post-match card; other callers can ignore it).
@@ -53,9 +68,28 @@ const props = withDefaults(
 const emit = defineEmits<{ finish: []; endApplause: [] }>()
 
 // --- canvas: fixed internal resolution, scaled by devicePixelRatio -----------
-// Landscape court (Package H): wide 2:1 canvas.
+// Landscape court (Package H). Was a flat 2:1 (680x340).
+//
+// AIR ABOVE AND BELOW THE COURT (owner, 29.07: «над и под полем больше воздуха ... чтобы плашка
+// live на поле не заходила»). The principle behind it is bigger than the badge: NOTHING overlaps
+// the playing surface. The court is what the player is watching; every readout is furniture.
+//
+// The lever is the canvas HEIGHT, and it is the only one that buys air for free. `courtScale`
+// (viz/geometry.ts) is `min(availW / 23.77m, availH / 10.97m)`, and at 680 wide the width arm is
+// the smaller one (24.03 px/m vs 32.16) - so the court is WIDTH-bound, and making the canvas
+// taller adds pure run-off without moving a single court pixel. Raising MARGIN instead would have
+// shrunk the court on both axes to buy mostly horizontal run-off we do not need.
+//
+//   court height drawn = 10.97m x 24.03 px/m = 263.6px, unchanged at any canvas height
+//   run-off each side  = (420 - 263.6) / 2   = 78.2px internal
+//                      = ~34px on a 375pt phone (the canvas renders ~299 CSS px wide there)
+//   was               = (340 - 263.6) / 2    = 38.2px internal = ~17px, which the 24px-tall
+//                                              badge overhung by about 13px. That was the bug.
+//
+// The template binds `aspect-ratio` off these two constants rather than restating 2/1, so the
+// element and the drawing surface cannot drift apart again.
 const CSS_W = 680
-const CSS_H = 340
+const CSS_H = 420
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 let ctx: CanvasRenderingContext2D | null = null
 
@@ -837,12 +871,20 @@ function servePct(side: Side): number {
          this viewer, not here. -->
     <Card variant="photo" class="mv-panel">
       <div class="mv-court">
-        <canvas ref="canvasRef" class="mv-canvas"></canvas>
+        <canvas ref="canvasRef" class="mv-canvas" :style="{ aspectRatio: `${CSS_W} / ${CSS_H}` }"></canvas>
+        <!-- BOTH OF THESE SIT IN THE TOP RUN-OFF BAND, NEVER ON THE PLAYING SURFACE (owner,
+             29.07). They are furniture: the court is what the player is watching. The badge is
+             left, the weather right, so they cannot meet however wide the phone is. -->
+
         <!-- The export's Live badge. `replay` mode drops it deliberately: docs/specs/ui-inventory
              §2 says the replay "IS the live match minus the blinking Live and minus shouting". -->
         <span v-if="props.mode === 'live' && !finished" class="mv-live"
           ><i class="mv-live-dot" aria-hidden="true"></i>Live</span
         >
+        <!-- The export puts this bottom-right ON the court as a two-line chip; the owner asked for
+             one line and off the surface, so it is a single row up here. Same plate the Season
+             card draws, so the same fact looks like the same fact. -->
+        <WeatherPlate v-if="temperatureC != null" class="mv-weather" :temperature-c="temperatureC" :size="13" />
       </div>
 
       <!-- Round-4 item 1: who stands at which END right now, and who is serving. The panel's own
@@ -1060,30 +1102,35 @@ function servePct(side: Side): number {
   line-height: 0; /* no descender gap under the canvas */
 }
 
+/* `aspect-ratio` is bound inline from CSS_W/CSS_H so the element and the drawing surface cannot
+   drift apart - see the constants for why the canvas is taller than the court needs. */
 .mv-canvas {
   width: 100%;
   height: auto;
-  aspect-ratio: 2 / 1;
   display: block;
   background: var(--bg);
 }
 
-/* The export's Live badge: a glass pill over the top-left of the court, with a pulsing dot. */
+/* The export's Live badge. It sits in the top RUN-OFF band, never on the playing surface (owner,
+   29.07). At the shipped canvas that band is ~34px on a 375pt phone and this badge is ~19px tall
+   at `top: 6px`, so it clears the surface by ~9px with room for a bigger phone to only add more.
+   Kept smaller than the export's pill for exactly that reason: the constraint is the band. */
 .mv-live {
   position: absolute;
-  top: 8px;
+  top: 6px;
   left: 8px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 3px 10px;
+  gap: 5px;
+  padding: 2px 9px;
   border-radius: var(--radius-pill);
   /* The export's overlay chip is rgba(8,13,18,.72) over the court; the app's own --bg IS that
      colour, so the badge takes the token rather than a hand-mixed alpha. */
   background: var(--bg);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  line-height: 1.6;
+  letter-spacing: 0.04em;
+  line-height: 1.5;
   color: var(--text);
 }
 
@@ -1093,6 +1140,14 @@ function servePct(side: Side): number {
   border-radius: 50%;
   background: var(--danger);
   animation: mv-live-pulse 1.1s ease-in-out infinite;
+}
+
+/* The weather plate's mirror of the badge: same band, other end. Both are furniture in the
+   run-off; neither may touch the surface. */
+.mv-weather {
+  position: absolute;
+  top: 6px;
+  right: 10px;
 }
 
 @keyframes mv-live-pulse {
