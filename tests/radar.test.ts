@@ -823,6 +823,30 @@ describe('training read – NOT ONE NUMBER reaches the card', () => {
     expect(checked).toBeGreaterThan(100)
   })
 
+  it('THE CARD CANNOT ADD ONE EITHER – the Training tile binds the read and nothing else', () => {
+    // A template fact, and templates are exactly what rots quietly. The tile is allowed two numbers,
+    // and they are the PLAYER'S OWN slider (`plan.train` / `plan.rest`) - a decision he made, not a
+    // measurement of her. Anything else interpolated into this block is a leak.
+    const card = readFileSync(new URL('../src/components/WeekRecapCard.vue', import.meta.url), 'utf8')
+    const from = card.indexOf('<Eyebrow>Training</Eyebrow>')
+    const to = card.indexOf('</Card>', from)
+    expect(from, 'the Training tile moved – re-aim this pin, do not delete it').toBeGreaterThan(0)
+    const tile = card.slice(from, to)
+    const bindings = [...tile.matchAll(/\{\{\s*([^}]+?)\s*\}\}/g)].map((m) => m[1])
+    expect(bindings.length).toBeGreaterThan(3)
+    for (const b of bindings) {
+      expect(b, `Training tile interpolates ${b}`).toMatch(
+        /^(plan\.(train|rest)|trainingRead\.(label|text)|DAY_LETTERS\[i\])$/,
+      )
+    }
+    // ...and the wing's NAME is the engine's, never a table in the screen. Both halves: no literal
+    // axis word typed into the markup, and no second `RADAR_AXIS_LABEL` declared in the script -
+    // which is the shape the leak would actually take, and which would print "Ret" at a parent.
+    expect(tile).toContain('trainingRead.label')
+    expect(tile).not.toMatch(/>\s*(Ret|Serve|Return|Composure|Stamina)\s*</)
+    expect(card).not.toMatch(/\bret:\s*['"]/)
+  })
+
   it('player copy: short dash only, no em dash, no Cyrillic, and short enough for the tile', () => {
     const source = read('../src/engine/radar.ts')
     const pools = source.slice(source.indexOf('const MOVE_POOL'), source.indexOf('export function buildTrainingRead'))

@@ -115,6 +115,26 @@ const dayDots = computed<('train' | 'rest')[]>(() => {
 })
 const trainDayCount = computed(() => dayDots.value.filter((d) => d === 'train').length)
 
+// --- WHAT CAME ALONG THIS WEEK (D's Training card, in the fog) ------------------------------------
+// D lists her skill gains here - "Fitness +6%, Backhand +2%, Serve +8%" - and this screen may not
+// draw that, ever. It is not that the Snapshot happens to lack the numbers; it is that giving them
+// to it would break the skills radar next door. Her true attributes never leave the engine
+// (docs/specs/skills-radar.md, decisions.md #11): screen C is handed an ESTIMATE with an error band,
+// and a player handed a weekly delta could sum them from week one and reconstruct her exact build,
+// at which point the fog is decoration. The owner ruled on the alternative, 29.07: «Правильная
+// версия карточки - та же читка в тумане» / «если не сложно туманную - сделайте».
+//
+// So the card says WHAT MOVED and never BY HOW MUCH, and it does not decide that here: the reading
+// is `snapshot.trainingRead`, built by engine/radar.ts beside the model that owns the truth, because
+// it needs the one thing this screen must never have - how sure anybody can be about each wing. On
+// most weeks it is null and the card is exactly what it has always been. See `buildTrainingRead`
+// for why it is quiet, and for the four things that keep it from being a delta channel in prose.
+//
+// ⚠ THE WING'S NAME COMES WITH THE READ (`label` = the engine's RADAR_AXIS_LABEL). There is no
+// table of axis names in this file and there must not be one: the engine field is `ret`, and a
+// screen that capitalised its own field names would print "Ret" at a parent.
+const trainingRead = computed(() => game.snapshot?.trainingRead ?? null)
+
 const weekEvents = computed(() => (game.snapshot?.events ?? []).filter((e) => e.week === week.value))
 const incomeCents = computed(() =>
   weekEvents.value.filter((e) => e.type === 'income').reduce((s, e) => s + (e.amountCents ?? 0), 0),
@@ -287,9 +307,9 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
         </div>
       </Card>
 
-      <!-- TRAINING. D lists skill gains; the Snapshot carries none (see the report/README note),
-           so this card is the week's actual training DECISION and the days it bought – which is what
-           the seven dots have said since round 7, now under a heading that explains them. -->
+      <!-- TRAINING. The week's training DECISION, what it is starting to do to her, and the days it
+           bought. D lists skill gains in the middle slot; we say what moved WITHOUT saying by how
+           much, because a number there would unpick the radar on screen C – see the script. -->
       <Card class="recap-tile" pad="12px 13px">
         <Eyebrow>Training</Eyebrow>
         <div class="recap-rows">
@@ -302,6 +322,13 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
             <span class="recap-row-val num">{{ plan.rest }}%</span>
           </div>
         </div>
+        <template v-if="trainingRead">
+          <span class="recap-hairline"></span>
+          <p class="recap-train-read">
+            <span v-if="trainingRead.label" class="recap-train-axis">{{ trainingRead.label }}</span>
+            <span class="recap-train-text">{{ trainingRead.text }}</span>
+          </p>
+        </template>
         <div class="recap-days" :aria-label="`${trainDayCount} of 7 days training`" role="img">
           <div v-for="(d, i) in dayDots" :key="i" class="recap-day">
             <span class="recap-dot" :class="d" :title="d === 'train' ? 'Training' : 'Rest'"></span>
@@ -478,6 +505,31 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 .recap-balance {
   font-size: 16px;
   font-weight: 800;
+}
+
+/* WHAT CAME ALONG, under the hairline. The wing's name and then the coach's sentence, on the
+   Highlights card's own idiom (12.5px/500, --ink-2) because it is the same object: a short line of
+   prose in a tile. The wing sits above it in the ink the row keys use rather than in the accent -
+   the Eyebrow overhead is already lime, and two accents in one 160px tile fight each other. */
+.recap-train-read {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recap-train-axis {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+
+.recap-train-text {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--ink-2);
 }
 
 /* item 5b's day column (dot + Mon–Sun letter), now the bottom half of the Training card. It is
