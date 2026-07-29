@@ -140,10 +140,10 @@ export const TIERS: Record<TierId, TierDef> = {
     minAgeYears: 13,
     // 400 = one J30 title, or three J30 semi-finals. A real body of international results, not one
     // lucky week.
-    // The acceptance list starts to bite: an ITF ranking inside the top 120 of a ~200-strong field,
-    // which is the same signal `entrantPctBand` uses for everybody else.
+    // The acceptance list starts to bite, and it is EXACTLY the field they draw from: inside the
+    // top 40%, the same number `entrantPctBand` ends on one line below.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterRank: 120,
+    enterPct: 0.4,
     entrantPctBand: [0.05, 0.4],
   },
   j300: {
@@ -169,7 +169,7 @@ export const TIERS: Record<TierId, TierDef> = {
     minAgeYears: 13,
     // 900 ≈ a J60 title plus a deep second run – the point at which she is one of the field's best.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterRank: 50,
+    enterPct: 0.25,
     entrantPctBand: [0.0, 0.25],
   },
 }

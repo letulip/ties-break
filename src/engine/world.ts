@@ -1111,7 +1111,8 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
     // The first international rung has no rank bar - it reads her DOMESTIC points, because she
     // cannot own an international ranking before she has played internationally and a rank gate
     // there would be a closed loop. Above it, the acceptance list takes over.
-    if (tier.enterRank === undefined) {
+    const accepts = acceptanceRank(world, event.tier)
+    if (accepts === undefined) {
       const [minPoints] = tier.enterPointBand
       const domestic = kidPoints(world, 'domestic')
       if (domestic < minPoints) {
@@ -1131,14 +1132,14 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
     // result before it will read a position at all. (The same `hasResults` guard the econ bench
     // already puts on its rank arm, for the same reason.)
     const ranked = kidPoints(world, 'itf') > 0
-    if (!ranked || world.kidRank > tier.enterRank) {
+    if (!ranked || world.kidRank > accepts) {
       return {
         level: 'blocked',
         reason: 'locked',
         detail: ranked
-          ? `${tier.label} takes the top ${tier.enterRank} – she is #${world.kidRank}`
-          : `${tier.label} takes the top ${tier.enterRank} – she has no international ranking yet`,
-        rankToEnter: tier.enterRank,
+          ? `${tier.label} takes the top ${accepts} – she is #${world.kidRank}`
+          : `${tier.label} takes the top ${accepts} – she has no international ranking yet`,
+        rankToEnter: accepts,
       }
     }
     return availabilityStatus(world, event)
@@ -2816,6 +2817,14 @@ export function isTierEligible(tier: TierId, points: number): boolean {
   return minPoints <= points && points <= maxPoints
 }
 
+/** The acceptance list as an absolute position, for the one field we actually have this week. A
+ *  share rather than a count, so it survives the field growing (see TierDef.enterPct). */
+export function acceptanceRank(world: WorldState, tier: TierId): number | undefined {
+  const pct = TIERS[tier].enterPct
+  if (pct === undefined) return undefined
+  return Math.max(1, Math.round(pct * (world.cohort.length + 1)))
+}
+
 /** THE ONE GATE, now that there are two tables (docs/specs/two-ladders.md).
  *
  *  A DOMESTIC rung reads her domestic best-6 against its band, exactly as the single ladder always
@@ -2830,8 +2839,9 @@ export function tierOpenFor(world: WorldState, tier: TierId): boolean {
   const def = TIERS[tier]
   if (def.track === 'itf') {
     // The on-ramp rung reads domestic points; the rungs above it read her ITF rank. See entryStatus.
-    if (def.enterRank === undefined) return isTierEligible(tier, kidPoints(world, 'domestic'))
-    return kidPoints(world, 'itf') > 0 && world.kidRank <= def.enterRank
+    const accepts = acceptanceRank(world, tier)
+    if (accepts === undefined) return isTierEligible(tier, kidPoints(world, 'domestic'))
+    return kidPoints(world, 'itf') > 0 && world.kidRank <= accepts
   }
   return isTierEligible(tier, kidPoints(world, 'domestic'))
 }

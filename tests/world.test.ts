@@ -106,7 +106,7 @@ describe('world (phase-3 living season)', () => {
     const ledger = entered.results
     const def = TIERS[target!.tier]
     const grant: SeasonResult[] =
-      def.enterRank === undefined
+      def.enterPct === undefined
         ? // a domestic rung, or j30 the on-ramp, which reads her DOMESTIC standing whatever it is
           def.enterPointBand[0] > 0
           ? [{ playerId: KID_ID, week: entered.week, points: def.enterPointBand[0], tier: 'national' }]

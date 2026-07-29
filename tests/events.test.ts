@@ -49,7 +49,7 @@ function enterEligible(world: WorldState, event: SeasonEvent): void {
   const rank = world.kidRank
   const rankDomestic = world.kidRankDomestic
   const grant: SeasonResult[] = []
-  if (def.enterRank === undefined) {
+  if (def.enterPct === undefined) {
     const min = def.enterPointBand[0]
     // 'national' is a domestic row whatever the event is – which is the whole point for j30.
     if (min > 0) grant.push({ playerId: KID_ID, week: world.week, points: min, tier: 'national' })

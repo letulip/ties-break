@@ -24,15 +24,26 @@ export interface TierDef {
   /** EXTRA events of this tier placed inside the season's SECOND half, on top of the
    *  `floor(weeks / everyNWeeks)` evenly-spaced ones (R9-20 national densification). */
   secondHalfBonus?: number
-  /** ITF RUNGS ONLY: the worst ITF rank that still gets into the acceptance list. Absent means the
-   *  rung is open to anyone, which is what a J30 is - the research is explicit that a J30 is
+  /** ITF RUNGS ONLY: the acceptance list, as a SHARE OF THE FIELD rather than a rank number.
+   *
+   *  ⚠ A COUNT WOULD BE A TIME BOMB, and it nearly was one. Written as "top 120" it means the top
+   *  60% of today's 199-strong cohort - and `living-field.md` plans a population of two to three
+   *  thousand, where the same 120 silently becomes the top 6%. The rule would change without anybody
+   *  editing it. A share cannot do that.
+   *
+   *  It is deliberately the SAME NUMBER as the tier's own `entrantPctBand[1]`, so the rule is one
+   *  sentence: she is accepted if she would be inside the field they draw from. That is what closes
+   *  rank-plateau.md 2b - both sides of one event finally read one signal - and it is why this is a
+   *  share and not a taste.
+   *
+   *  Absent means the rung is open to anyone, which is what a J30 is - the research is explicit that a J30 is
    *  "genuinely enterable by an unranked 13-year-old near home" and that the gate up the ladder is
    *  the QUEUE, not the fee. Domestic rungs ignore this and keep `enterPointBand`.
    *
    *  This is what closes rank-plateau.md 2b: the AI's field is chosen by standings percentile, so
    *  gating her on standings POSITION makes both sides read the same signal instead of one side
    *  reading an absolute points threshold nobody else obeys. */
-  enterRank?: number
+  enterPct?: number
 
   /** R12-6: the smallest allowed distance, in weeks, between two events OF THIS TIER. Absent (or 1)
    *  means adjacency is fine, which is the historical behaviour and the right one for the dense

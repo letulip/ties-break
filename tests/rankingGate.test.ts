@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  acceptanceRank,
   createWorld,
   enterEvent,
   isTierEligible,
@@ -161,10 +162,10 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
       }
       expect(e.eligible).toBe(false)
       expect(e.ineligibleReason).toBe('locked')
-      if (TIERS[e.tier].enterRank === undefined) {
+      if (TIERS[e.tier].enterPct === undefined) {
         expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0])
       } else {
-        expect(e.rankToEnter).toBe(TIERS[e.tier].enterRank)
+        expect(e.rankToEnter).toBe(acceptanceRank(world, e.tier))
       }
     }
   })
@@ -193,8 +194,8 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
     world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j300' }) // ...a J300 R16
     recomputeKidRank(world)
     expect(kidPoints(world, 'domestic')).toBe(700)
-    expect(world.kidRank).toBeGreaterThan(TIERS.j300.enterRank!) // outside the top 50...
-    expect(world.kidRank).toBeLessThanOrEqual(TIERS.j60.enterRank!) // ...and inside the top 120
+    expect(world.kidRank).toBeGreaterThan(acceptanceRank(world, 'j300')!) // outside the top 50...
+    expect(world.kidRank).toBeLessThanOrEqual(acceptanceRank(world, 'j60')!) // ...and inside the top 120
     const upcoming = toSnapshot(world).upcoming
     expect(upcoming.length).toBeGreaterThan(0)
     for (const e of upcoming) {
