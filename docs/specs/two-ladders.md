@@ -94,3 +94,60 @@ goes in the same measured run as everything else here rather than in its own.
   off the LTA ratios; inside a separate track the National number is free to be whatever reads best).
 - What rank position opens each J rung. It replaces 180 / 400 / 900 points and is the one number
   that decides how fast the international door opens.
+
+
+---
+
+# Measured, 120 seeds per preset, 14→18
+
+| preset | survival before → after | mean season-end rank before → after |
+| --- | --- | --- |
+| 8k working · self-coached | 39/120 → **67/120** | #111 #108 #111 #107 → **#65 #98 #86 #87** |
+| 25k middle · self-coached | 112/120 → **117/120** | #111 #107 #110 #110 → **#69 #99 #92 #88** |
+| 25k middle · hired coach | 0/120 → 0/120 | #98 #109 #124 #124 → #58 #113 #124 #124 |
+| 120k wealthy · hired coach | 120/120 → 120/120 | #101 #88 #83 #90 → **#55 #83 #72 #75** |
+
+**Her rank finally moves, and it finally tells the classes apart.** It sat at ~#110 for both
+self-coached families and ~#88 for the wealthy one, whatever anybody did. It is now #87 / #88 / #75 —
+still not a wide spread, but a real one, and the direction is right.
+
+Season 1 reads flatteringly (#55–#69) because almost nobody holds an ITF point yet, so one result
+ranks her high; it settles from season 2. That is honest thinness rather than a bug — a real junior
+table in January looks like that too — but it is worth knowing before anybody quotes a first-season
+rank.
+
+**Reach is NOT comparable across this table.** `REACH_PRO_POINTS` was re-based 300 → 60 for the new
+scale and the 14→16 arm was reading the wrong table entirely (it had been pinned at "never" for
+three presets of four). The numbers went 69→83%, 71→80%, 87→88%, 100→98%, but the target moved
+underneath them.
+
+## What it exposed: National is now dead content
+
+Entries per career, before → after:
+
+| preset | local | regional | national | j30 | j60 | j300 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 8k working | 17.6 → **34.9** | 23.4 → 26.1 | 3.5 → **0.3** | 24.5 → 12.7 | 2.8 → 9.8 | 0.0 → **0.5** |
+| 25k middle | 18.5 → **39.8** | 23.2 → 26.1 | 3.2 → **0.2** | 31.3 → 13.0 | 2.9 → 11.2 | 0.0 → **0.6** |
+| 120k wealthy | 11.5 → **31.9** | 9.7 → 21.4 | 3.4 → **0.6** | 51.7 → 18.5 | 18.1 → 25.3 | 0.0 → **2.4** |
+
+Two good things and one bad one.
+
+**Good: J300 exists now.** It was entered zero times per career in every preset and is now reached —
+rarely, which is what a prestige rung should be. The ladder has a top that can be climbed.
+
+**Good: the international rungs are earned rather than bought.** The wealthy family's j30 count fell
+by two thirds while its j60 count rose, because the acceptance list moved her up rather than letting
+her farm the entry rung.
+
+**Bad: National collapsed to ~0.3 entries per four-year career.** The cause is precise and it is not
+the two ladders themselves — it is that **National and J30 open on the same threshold**. Both want
+150 domestic points, and the entry policy walks the calendar strongest-tier-first, so the week
+National becomes available is the week J30 does too, and J30 always wins. National is now content
+nobody sees.
+
+The fix is one number: **stagger them** — National at 150, J30 at something higher (250 is a
+regional book plus a national quarter-final, and it makes National the rung you climb THROUGH rather
+than past). It restores the sequence the ladder-up slice designed, Local → Regional → National → the
+world, and it is exactly the "she always plays up" trap from `rank-plateau.md` 2c seen from the other
+side. **Owner's number to pick.**
