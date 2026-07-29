@@ -4,9 +4,21 @@ import { describe, it, expect } from 'vitest'
 import { avatarEmotion, idleEmotion, WIN_IMMUNITY_WEEKS } from '../src/shared/avatarEmotion'
 
 describe('idleEmotion (R8-6b state-aware idle)', () => {
-  it('injury wins over everything', () => {
-    expect(idleEmotion(true, 100)).toBe('injury')
-    expect(idleEmotion(true, 10)).toBe('injury')
+  // ⚠ RE-AIMED by R14-1 (owner, 29.07: «rehab – показываем на главном экране всегда вместо травмы …
+  // до момента восстановления, травму показываем ТОЛЬКО в момент самой травмы»). The PROTECTED FACT
+  // is untouched: being hurt still outranks every condition band, which is what "wins over
+  // everything" has always meant and is the half of this test that could regress. What changed is
+  // WHICH painting the injured arm returns – the layoff is a state and wears the rehab picture for
+  // its whole length; `injury` is the face of the moment she went down and belongs to the popup
+  // that announces it. Both halves are asserted, so neither can drift back.
+  it('being hurt wins over everything – and the whole layoff wears REHAB, not the injury moment', () => {
+    expect(idleEmotion(true, 100)).toBe('rehab')
+    expect(idleEmotion(true, 10)).toBe('rehab')
+    expect(idleEmotion(true, 0)).toBe('rehab')
+    // the moment face is not on this ladder at all
+    for (const condition of [0, 39, 40, 59, 60, 100]) {
+      expect(idleEmotion(true, condition), `condition ${condition}`).not.toBe('injury')
+    }
   })
 
   it('condition bands: <40 tired, <60 serious, else norm', () => {
@@ -39,7 +51,7 @@ describe('avatarEmotion (result freshness + R8-6a runner-up)', () => {
     expect(avatarEmotion({ ...base, lastResult: stale })).toBe('norm')
     expect(avatarEmotion({ ...base, condition: 55, lastResult: stale })).toBe('serious')
     expect(avatarEmotion({ ...base, condition: 30, lastResult: stale })).toBe('tired')
-    expect(avatarEmotion({ ...base, injured: true, lastResult: stale })).toBe('injury')
+    expect(avatarEmotion({ ...base, injured: true, lastResult: stale })).toBe('rehab') // R14-1
   })
 
   it('a stale WIN decays too – no lingering grin through a tired stretch', () => {

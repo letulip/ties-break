@@ -17,7 +17,15 @@
 // (within 2-12 px of the architect's own centre every time).
 
 /** stem (`{stage}-{emotion}`) -> [face centre x, face centre y, square side], in 512px painting
- *  pixels. The side is the CUTTER's window; the photo card only reads the centre. */
+ *  pixels. The side is the CUTTER's window; the photo card only reads the centre.
+ *
+ *  ⚠ THE TABLE IS KEYED ON PAINTINGS, NOT ON CROPS (ui/art-rehab-sleepy). It reads as "the crop
+ *  table" and it is one, but its SECOND consumer – the Home hero's `object-position` – needs a
+ *  face centre for every painting the screen can show, whether or not a 256px crop is ever cut
+ *  from it. `rehab` is the first face where those two sets differ: five paintings, no crops. So it
+ *  has five entries here (Home would otherwise frame a rehab week at 50/50, which on a landscape
+ *  cover window is her knee, not her face) and `PAINTING_ONLY_FACES` below keeps the cutter off
+ *  them. Adding a rectangle here is NOT what ships a crop; being croppable is. */
 export const CROPS: Record<string, [number, number, number]> = {
   'jun-angry': [252, 135, 165],
   'young-angry': [285, 122, 165],
@@ -63,6 +71,30 @@ export const CROPS: Record<string, [number, number, number]> = {
   'teen-serious': [323, 155, 182], // recovered, residual 0.0162
   'teen-tired': [304, 160, 172], // recovered, residual 0.0163
   'teen-injury': [272, 160, 164], // recovered, residual 0.0050
+  // R14-1 – the five REHAB paintings. Face centres read the way the note at the top of this file
+  // describes (a labelled grid over each 512px painting); the `side` column is the set's usual
+  // ~1.5x head height and is unused today, because nothing cuts a crop from these five – it is
+  // recorded so the table stays one shape and so a future crop slice has the window already.
+  'jun-rehab': [225, 125, 155],
+  'young-rehab': [240, 105, 150],
+  'teen-rehab': [252, 118, 150],
+  'adult-rehab': [228, 118, 160],
+  'milf-rehab': [250, 115, 155],
+}
+
+/** The emotions that have a PAINTING but no 256px crop – the set the cutter must skip.
+ *
+ *  This is the art-side spelling of `shared/avatarEmotion.ts`'s `PortraitEmotion \ AvatarEmotion`,
+ *  kept as a literal here so this module stays import-free (the cutter script loads it under bare
+ *  node type-stripping). tests/portrait-bands.test.ts pins the two spellings equal, so they cannot
+ *  drift: add a painting-only face to the union and the test fails until this list agrees. */
+export const PAINTING_ONLY_FACES: readonly string[] = ['rehab']
+
+/** The stems the 256px cutter should cut – every entry except the painting-only faces. */
+export function croppableStems(): string[] {
+  return Object.keys(CROPS).filter(
+    (stem) => !PAINTING_ONLY_FACES.some((e) => stem.endsWith(`-${e}`)),
+  )
 }
 
 /** The paintings are square 512px (portrait-bands pins the files, the cutter reads the metadata –

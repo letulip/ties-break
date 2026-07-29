@@ -2864,6 +2864,21 @@ tr.kid-row td {
   border-radius: var(--radius-panel);
 }
 
+/* R14-1 – THE FACE OF THE MOMENT, and this popup is the only place it appears. Home wears the
+   `rehab` painting for the whole layoff now; `injury` is the picture of the week she went down, so
+   it belongs to the surface that only exists on that week. A landscape band across the top of the
+   card, steered by the same face centre every other painting uses (src/art/faceRects.ts), pulled
+   out to the card's own edges so it reads as the card's header rather than an illustration
+   floating inside it. */
+.injury-stop-art {
+  display: block;
+  width: calc(100% + 32px);
+  height: 116px;
+  margin: -16px -16px 12px;
+  object-fit: cover;
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+}
+
 
 /* --- the bottom nav's Calendar placeholder ------------------------------------------------------
    The owner's bar is Season · Calendar · Home · Stats · More, with HOME IN THE CENTRE – and a centre

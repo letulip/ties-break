@@ -15,9 +15,10 @@ import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import {
   avatarCropPath,
+  hasCrop,
   portraitStage,
   resultShowsOnHerFace,
-  type AvatarEmotion,
+  type PortraitEmotion,
   type PortraitStage,
 } from '../shared/avatarEmotion'
 
@@ -35,7 +36,7 @@ export function useKidEmotion() {
 
   // THE decision, as the engine made it at snapshot time (diary facts). Fallback `norm` only for
   // the no-snapshot mount gap – every real snapshot carries a diary.
-  const emotion = computed<AvatarEmotion>(() => game.snapshot?.diary.facts.emotion ?? 'norm')
+  const emotion = computed<PortraitEmotion>(() => game.snapshot?.diary.facts.emotion ?? 'norm')
 
   // R9-16: the portrait stage follows her age (jun < 11, young 11-16, teen 17-22, adult 23-30,
   // milf 31+).
@@ -43,12 +44,22 @@ export function useKidEmotion() {
 
   // 256px card crops live in public/avatars/{stage}-{emotion}.webp. `avatarCropPath` is shared
   // with the emotion-free header (F45-1), so the two crop surfaces cannot drift apart.
-  const cropUrl = computed(
-    () => `${import.meta.env.BASE_URL}${avatarCropPath(stage.value, emotion.value)}`,
+  //
+  // ⚠ NULL FOR A PAINTING-ONLY FACE, and it has to be able to say null (ui/art-rehab-sleepy).
+  // `rehab` ships as five paintings and no crops – deliberately, because NO surface in the app
+  // renders an emotion crop: the app header is the age-only `norm` of F45-1, Home's corner crop is
+  // the same, and THIS computed has zero consumers in src/components/. It is kept rather than
+  // deleted because it is the documented emotional-crop seam and a future card may want it; what it
+  // may NOT do is hand that card a URL that 404s. So the emotion is narrowed through `hasCrop`
+  // first and the absence is returned as a value the caller must handle, instead of a broken <img>.
+  const cropUrl = computed<string | null>(() =>
+    hasCrop(emotion.value)
+      ? `${import.meta.env.BASE_URL}${avatarCropPath(stage.value, emotion.value)}`
+      : null,
   )
 
   // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
-  // (every stage×emotion exists, adult included).
+  // (every stage×emotion exists, adult and the painting-only `rehab` included).
   const portraitUrl = computed(
     () =>
       `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${emotion.value}.webp`,
