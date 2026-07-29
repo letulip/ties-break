@@ -34,28 +34,31 @@ Legend: ✅ redone to the design · 🎨 design exists, not built · ⏸ design 
 | S | Onboarding · Summary | step 6 | 🎨 |
 | T | Coach Market | *(nothing)* | 🚧 needs coach tiers in the engine |
 
-## 2. Ours with no design at all
+## 2. Ours with no design at all — TRIAGED by the owner (29.07)
 
-These exist, the player uses them, and the handoff does not cover them. Each needs a decision:
-restyle by analogy with the system, or leave until it gets its own design.
+Reference shots of all fifteen are in `docs/design/undesigned/`. His ruling on each:
 
-| Surface | What it is | Note |
-|---|---|---|
-| `SplashScreen.vue` | brand splash, "Tap to start" | already on-brand (logo, Sora/Manrope) |
-| `OnboardingTour.vue` | the 5-step coach-mark tour after onboarding | distinct from N–S; sits over the game |
-| `screens/StatsScreen.vue` | ranking table, counting best-6, season-by-season history | keeps its tab for now (§4 Q1); the design's bar has no Stats slot, which is a later conversation |
-| `screens/MoreScreen.vue` | careers, saves, import/export, sound, about, danger zone | a settings screen; low design value, high utility |
-| `PlanWeekSheet.vue` | the week planner: vacation packages, practice matches | the closest thing we have to H's planning |
-| `SeasonSummaryDialog.vue` | end-of-season recap | the natural sibling of D and L/M |
-| `InjuryStopDialog.vue` | the injury interruption | a real emotional beat with no design |
-| `TierGuide.vue` | the ladder explainer | reachable from Season |
-| `RankHelpDialog.vue` | how the best-6 ranking works | opens from **Home** (the rank chip under her name), not from Stats |
-| `ConfirmDialog.vue` | generic confirm | pure utility |
-| `MatchReplay.vue` | replay of a stored match | feeds off F/I once those land |
-| `PracticeFlow.vue` | the friendly-match flow | shares the match surfaces |
-| `SeasonHistoryTable.vue` | the season-by-season table in Stats | **overflows horizontally at 375px** – see below |
-| `CountingResultsTable.vue` | the counting best-6 table | **not in Stats**: it is used by `KidScreen` and by `RankHelpDialog` |
-| `BracketTabs.vue` | round switcher | shipped wave 1, J/K will absorb it |
+| Surface | Verdict |
+|---|---|
+| `SplashScreen.vue` | **stays as it is** for now |
+| `OnboardingTour.vue` | **keep** – "целиком ок". Check only colours, spacing and radii against the system |
+| `screens/StatsScreen.vue` + its two tables | **do not touch** – its own slice, in the backlog |
+| `screens/MoreScreen.vue` | **keep** – "это наши settings по сути". Same colours/spacing/radii check |
+| `screens/ThisWeekScreen.vue` | coming soon, and **the design already exists**: it is D, Weekly Story |
+| `PlanWeekSheet.vue` | **keep the popup** – the vacation list inside it becomes the picture cards ✅ done. A separate frame for the court rental, maybe, later |
+| `TierGuide.vue` | fine as a reference screen; will be revisited with the points work. **Vertical padding halved** ✅ done |
+| `RankHelpDialog.vue` | **keep** – reference |
+| `SeasonSummaryDialog.vue` | **tidy along the lines of the new Weekly Story** – "они тождественны примерно" |
+| `InjuryStopDialog.vue` | **keep** – reference |
+| `MatchReplay.vue` | it IS the live match minus the blinking Live and minus shouting – so it follows screen I |
+| `PracticeFlow.vue` | **F Match Day does the same job** – it follows that design |
+| `ConfirmDialog.vue` | **keep** – reference |
+| `BracketTabs.vue` | shipped wave 1; J/K will absorb it |
+
+So of fifteen, **seven are done for now** (splash, tour, More, rank help, injury stop, confirm, and the
+planner popup), **three are parked** (Stats and its tables), and **four have a design after all** once
+you read them against the handoff: This Week → D, Season summary → D's idiom, Match replay → I,
+Practice → F. Only Stats genuinely needs a designer, and not yet.
 
 ## 3. What the handoff asks for that we do not have at all
 

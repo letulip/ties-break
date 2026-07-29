@@ -150,10 +150,12 @@
 
   /* THE UNLIT PART OF A PROGRESS RING. Both rings in the app - her odds on a Season card, her
      condition on Home's photograph - draw the full circle in this and then paint the earned arc
-     over it. They used to be two values, 0.12 and 0.18 (owner, 29.07: "всё в единый стиль"), and
-     0.18 is the one that survived: it is Home's, which is signed off, and a track that reads on a
-     painting also reads on a card while the reverse is not true. */
-  --ring-track: rgba(255, 255, 255, 0.18);
+     over it. They used to be two values, 0.12 and 0.18; the owner picked (29.07): "всё в единый
+     стиль... 0.12 мне кажется вполне ок". So the change lands on HOME, not on Season.
+     The argument for 0.18 was that Home is signed off and a track that reads on a painting also
+     reads on a card while the reverse is not true - worth knowing if the condition ring ever looks
+     thin against a bright photograph, because that is the one place this could bite. */
+  --ring-track: rgba(255, 255, 255, 0.12);
 
   /* The design system's own transition length (docs/design/tokens.css --dur-slow). That file is a
      reference, not an import, so the app never saw the token and one of the two ring arcs was
