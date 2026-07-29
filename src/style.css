@@ -2281,11 +2281,24 @@ tr.kid-row td {
   text-align: center;
 }
 
-.tf-round {
+/* THE MUTED SECTION LABEL, 12px. The same object `section h2` is - a quiet uppercase word over a
+   block of content - minus the Sora face, because these two sit inside the tournament flow's cards
+   rather than in a <section>. The round above a VS card and the word "CHAMPION" above a name were
+   the same four declarations written out twice, four hundred lines apart. Only the gap under them
+   differs, and that stays with each.
+   NOTE this is 0.08em. The app's other muted uppercase labels are at 0.05em and 0.06em, and which
+   tracking is right is the one question this cleanup could not answer from evidence - see
+   docs/specs/css-dry-audit.md. Nothing was guessed: only rules that were already identical were
+   folded. */
+.tf-round,
+.tf-champ-label {
   font-size: 12px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted);
+}
+
+.tf-round {
   margin: 0 0 16px;
 }
 
@@ -2730,12 +2743,9 @@ tr.kid-row td {
   margin: 0 0 8px;
 }
 
-/* Champion card (kid exited early – no art for an AI winner). */
+/* Champion card (kid exited early – no art for an AI winner). The label is the muted section
+   label shared with .tf-round; it sits tight against the name under it. */
 .tf-champ-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
   margin: 0;
 }
 

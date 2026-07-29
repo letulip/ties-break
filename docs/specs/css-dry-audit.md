@@ -1,9 +1,18 @@
 # src/style.css — the DRY audit
 
-`src/style.css` is the whole app's stylesheet: 4173 lines, 511 top-level rules, and not one `<style>`
-block anywhere else in `src/` (checked — there are none, scoped or otherwise). It grew by accretion
-across the rounds, so the same visual idea has been written down more than once under whatever name
-the round happened to need. This is the inventory of that, and the record of what was done about it.
+`src/style.css` is the whole app's stylesheet: ~4200 lines, ~500 top-level rules, and not one
+`<style>` block anywhere else in `src/` (checked — there are none, scoped or otherwise). It grew by
+accretion across the rounds, so the same visual idea has been written down more than once under
+whatever name the round happened to need. This is the inventory of that, and the record of what was
+done about it.
+
+**Read in two parts.** The first pass (`css DRY 1–7`) was a PURE refactor: it folded duplicate rules
+together and was not allowed to move a single pixel. It ended by listing five things it had found
+and deliberately not touched, because fixing them would have been a visual change. The owner then
+ruled on all five — every answer was *clean it up* — and the second pass (`css cleanup 1–6`) made
+those changes on purpose. So: everything above "THE CONSISTENCY PRINCIPLE" describes a
+zero-pixel-change refactor, and everything from there down describes deliberate, measured,
+owner-sanctioned changes to how the app looks.
 
 ## How the groups were found
 
@@ -29,7 +38,7 @@ consolidated when that checker prints zero.
 That check covers screens no screenshot reaches (dialogs, the tournament flow, the onboarding
 wizard), which screenshots of Home and Season cannot.
 
-## How "not one pixel" was proved
+## How "not one pixel" was proved (first pass), and "only these pixels" (second)
 
 Three layers, because each one alone has a hole in it.
 
@@ -48,6 +57,19 @@ Three layers, because each one alone has a hole in it.
 The probe was proved to BITE before it was trusted: a deliberate `padding: 16px → 17px` on
 `.tf-card` surfaced as 138 style differences and 31 changed boxes across the flow. It was reverted,
 and every consolidation since has been checked against a baseline captured on the pre-pass sheet.
+
+**For the second pass the question inverts.** Those changes are MEANT to move pixels, so "zero
+differences" would mean the work had not landed. The same three layers run, but the comparison
+buckets every difference by its `before -> after` value pair, which collapses a whole screen into
+the handful of distinct transitions that caused it — and makes an unintended one impossible to hide
+in the noise. A single `color` change shows up as nine property differences (border colours, outline,
+caret and text-decoration all follow `color`), so counting raw differences would have told nobody
+anything; counting *distinct transitions* tells you exactly what changed. Each cleanup commit
+records its own list, and every one of them was checked against the intent before it was committed.
+
+The other half of that check is geometry, reported separately and never bucketed: **no box moved
+anywhere in either pass.** That is the strong claim for the second pass in particular — a corner
+radius or a colour must not be able to reflow a layout, and the numbers confirm none did.
 
 ## What was consolidated
 
@@ -112,9 +134,14 @@ against the running app before the merge: computed `font-family`, `font-size`, `
 `margin-bottom` (0 vs 12px) and `position` (relative vs static) differ. Writing the two implicit
 values down in the shared rule changes no computed value and makes the rule readable on its own.
 
-## What was NOT consolidated, and why
+## What the first pass left open (all now RULED ON — see the next section)
 
 ### The premise that did not survive contact
+
+> **PARTLY RULED (owner, 29.07):** the two lime eyebrows were folded in the first pass; the eight
+> muted labels were re-examined in `css cleanup 6/6` and only the genuinely identical pair was
+> folded. The tracking question below is the ONE thing in this document still open.
+
 
 The brief describes the eyebrow as ten rules all at "10px / weight 800 / letter-spacing 0.1em". It is
 not. Only two of the ten are that: `.note-kicker` and `.diary-strip h2`. The other eight are a
@@ -140,6 +167,10 @@ a pixel change and this pass is not allowed to make one. The two 12px/0.08em rul
 
 ### The card radii
 
+> **RULED (owner, 29.07):** drift — normalise. Done in `css cleanup 5/6`: seven even rungs, every
+> move exactly +1px, `--radius-card` 17→18 so every card in the app is one radius.
+
+
 The brief groups `.event-card`, `.week-card`, `.friendly-card` and `.onboarding-portrait` as one
 "14–18px-radius panel". They are four different radii and were left as four:
 
@@ -155,6 +186,10 @@ rounder, that deserves a sentence in the sheet, because nothing there says so to
 
 ### The accent tints
 
+> **RULED (owner, 29.07):** "причёсываем к новому цвету, надеюсь он один." Done in `css cleanup
+> 4/6`: every tint is built from `--accent-rgb` now. The ALPHA ladder is still open — see below.
+
+
 `rgba(217, 242, 79, α)` appears with five alphas — 0.04, 0.05, 0.06, 0.08, 0.1 — across
 `.week-card.exam`, `.pkg-row.recommended`, `.calendar-row-muted.planned`, `.bracket-row`,
 `.tf-strip-row.won`, `.bt-cell.is-kid`, `.news-match-btn:hover`, `.country-tile.selected`,
@@ -168,6 +203,10 @@ collapse to one token plus one alpha if the owner picks a value.
 
 ### The caution amber
 
+> **RULED (owner, 29.07):** "всё в переменные, если смыслово цвет ту же функцию выполняет —
+> меняй." Done in `css cleanup 3/6`: one `--warning`, on the design system's own `#f5b942`.
+
+
 `#f2b34f` is hard-coded in six places (`.pill.caution`, `button.primary.risky`, `.caution-note`,
 `.rescue-card`, `.rescue-title`, `.pill.muted.lock` uses a seventh, `#d9b26a`). There is an `--amber`
 token, but it is `#f5b942` — a **different** colour. So the caution family cannot simply be pointed
@@ -175,6 +214,10 @@ at `--amber`. **Open question:** should `#f2b34f` become its own token (`--cauti
 caution family move onto `--amber`? The second is a pixel change and was not made.
 
 ### Two ring tracks that are nearly the same
+
+> **RULED (owner, 29.07):** "всё в единый стиль." Done in `css cleanup 2/6`: one `--ring-track`
+> at 0.18, the value that keeps signed-off Home unchanged.
+
 
 `.chance-ring-track` strokes `rgba(255, 255, 255, 0.12)`; `.condition-ring-track` strokes
 `rgba(255, 255, 255, 0.18)`. Everything else about the two rings is now shared (group 5). **Open
@@ -208,10 +251,80 @@ Every one of these would shorten the file and lengthen the next person's afterno
 
 ### Dead rules found on the way
 
+> **RULED (owner, 29.07):** "мёртвые нам не нужны." Done in `css cleanup 1/6`, plus the three
+> `.condition-block*` rules that came up with them.
+
+
 `.condition-cell` and `.surface-note` (plus `.surface-note.suits`) have **no consumer in any template**
 — grepped across all of `src/`. `.surface-note`'s own comment claims it is "still used by the
 season-blocks strip", and it is not. They were left in place: deleting dead rules is a different
 slice from de-duplicating live ones, and this pass was told to change nothing. Worth its own ticket.
+
+## THE CONSISTENCY PRINCIPLE (owner, 29.07: "мы за консистентность всего")
+
+Recorded here at the owner's instruction so it does not get re-litigated one rule at a time. The
+five questions this document raised were all answered the same way — *clean it up* — and the
+answers add up to a rule the next person can apply without asking:
+
+**If two things do the same job, they get the same value, and that value has a name.**
+
+Four corollaries, each of which was an actual decision in this pass:
+
+1. **A token beats a literal, always.** Not for brevity — for repair. When the brand lime moved
+   from `#d9f24f` to `#cfe152`, `--accent` moved and the eleven `rgba()` tints built from it did
+   not, so every highlighted row in the app spent two waves washed in the previous brand colour.
+   Nobody saw it; a 4% wash of an almost-identical lime is invisible on its own. A literal cannot
+   be changed in one place, so it will eventually be wrong in most of them.
+2. **When two values do one job, prefer the one that is already right somewhere else.** The
+   warning colour resolved to `#f5b942` not because it is prettier than `#f2b34f` but because
+   `docs/design/tokens.css` already declares `--warning: #f5b942`. The ring track resolved to 0.18
+   because that is Home's, and Home is signed off. Neither was a taste call, and neither should
+   have to be re-argued.
+3. **Prefer a mechanical rule to a tasteful one.** The radius ladder rounds every odd value UP to
+   the next even. That is arbitrary, and being arbitrary is the point: it decides 7 and 11 and 13
+   without a discussion, it guarantees no corner moves by more than 1px, and anyone can check it.
+   A ladder built by eye would have needed the same conversation again at the next value.
+4. **Name by job, not by value — but a rung is allowed to be a size.** `--warning` is a job.
+   `--radius-panel` is a size named for its most common tenant, and the polaroid's tack sitting on
+   `--radius-control` is the ladder working, not a mistake. Both are recorded in the sheet.
+
+And the limit, which matters as much as the principle: **consistency is not permission to guess.**
+Where the right value could not be read off the export, an owner ruling, or an existing token, the
+values were left alone and written down — see the one remaining question below. A silent
+unification is indistinguishable from a bug that nobody noticed.
+
+## The one question still open: uppercase label tracking
+
+Every muted uppercase label in the sheet, measured:
+
+| Rule | size | tracking | weight | margin |
+|------|------|----------|--------|--------|
+| `section h2` (Sora) | 12px | **0.08em** | — | `0 0 12px` |
+| `.tf-round`, `.tf-champ-label` | 12px | **0.08em** | — | `0 0 16px` / `0` |
+| `.donut-center-cap` (SVG) | 3px | **0.08em** | — | — |
+| `.season-summary-kicker` | 11px | **0.08em** | — | `0 0 4px` |
+| `.tf-bracket-title` | 11px | **0.06em** | — | `0 0 10px` |
+| `.news-week-label`, `.ledger-week-label` | 11px | **0.05em** | — | `0 0 4px` |
+| `th` | 12px | **0.05em** | 500 | — |
+| `.tf-badge` (filled pill) | 12px | **0.05em** | 700 | — |
+
+Two sizes (11 and 12) and three trackings (0.05, 0.06, 0.08) for what looks like one object. Only
+the pair that was already byte-identical — `.tf-round` and `.tf-champ-label` — was folded; nothing
+was normalised, because unlike the radii there is no evidence to round toward:
+
+- The design export does not answer it. `docs/design/tokens.css` has a full type scale and exactly
+  one tracking token, `--ls-label: -0.01em`, which is NEGATIVE and belongs to a tight display
+  label, not to an uppercase eyebrow.
+- Unlike a 1px corner, tracking at 11px is legible: 0.05em vs 0.08em is a visible difference in
+  the width of a word, so this is not a change that can be waved through as invisible.
+
+**The question for the owner:** should every muted uppercase label be 12px/0.08em — the value
+`section h2` already sets, which would make it the app's one section-label idiom and put five of
+the eight rules on it unchanged? If yes it is one rule and three margins. If the 11px ones are
+deliberately a size smaller, then which tracking do they take?
+
+(For reference, the LIME eyebrow — `.note-kicker` / `.diary-strip h2`, 10px/800/0.1em/accent — is
+a different object and is already one rule. It is not part of this question.)
 
 ## Guard tests
 
@@ -235,10 +348,17 @@ In all three cases the merged selector list deliberately ends with the pinned se
 trick to keep a test quiet: the rule genuinely is that selector's rule, and it genuinely declares the
 property the test is checking. The comment in each test says so, so nobody has to rediscover it.
 
-## One thing found that is not this slice's to fix
+## Housekeeping notes
 
-`public/ref.tsave` is **committed** to the repo, in `baadffa` ("ui wave U0: the extraction plan").
-It is a 44 KB demo save built by `tools/demo-save.ts` for visual checking, exactly the kind of file
-that should not be in git. This pass regenerated it (same seed, byte-identical, so git saw no
-change) and left it exactly as found — undoing another wave's commit is not a CSS refactor's call.
-Worth someone deciding on deliberately.
+`public/ref.tsave` — a 44 KB demo save built by `tools/demo-save.ts` for visual checking — was
+committed to the repo in `baadffa` ("ui wave U0"). The first pass found it, left it alone (undoing
+another wave's commit is not a CSS refactor's call) and flagged it. It is **no longer tracked** as
+of the rebase onto the wave branch, which is the right outcome. Both passes rebuilt it as a
+temporary file and deleted it afterwards.
+
+One drift this cleanup did NOT chase, recorded so it is not lost: the ink used on top of the lime
+accent is `#101d0a` in five places and `#111a10` in two, and `docs/design/tokens.css` names a third
+value for the same job (`--on-lime: #111a10`, `--on-lime-chip: #161f0c`). Same story as the accent
+tints — three near-identical darks for one job — but it is outside the five questions the owner
+answered, so it stays a finding rather than a change. It wants the same treatment: one token, the
+design system's value.
