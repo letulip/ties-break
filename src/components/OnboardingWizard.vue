@@ -155,14 +155,22 @@ const PLAY_STYLES: {
 const RADAR_OUTER = '28,6 48.9,21.2 40.9,45.8 15.1,45.8 7.1,21.2'
 const RADAR_INNER = '28,17 38.5,24.6 34.5,36.9 21.6,36.9 17.6,24.6'
 
-/** Step titles and their one-line subtitles. N (step 1) has a headline of its own instead. */
+/** Step titles and their one-line subtitles. N (step 1) has a headline of its own instead.
+ *
+ *  ⚠ THE TITLES ARE WRITTEN IN TITLE CASE, and that is load-bearing rather than a typo. The screen
+ *  used to shout them with `text-transform: uppercase`, which the owner ruled out (29.07); the case
+ *  a heading renders in now lives in the string, so this list reads exactly the way the screen does.
+ *  House convention, taken off the screens he was comparing them to (Season Planner, Family Budget,
+ *  Coach Market): every word capitalised EXCEPT articles and short prepositions – hence "Raise a
+ *  Champion". The SUBTITLES stay sentence case; they are sentences, and every other screen's
+ *  sub-line is one too. */
 const STEP_HEADS: { title: string; sub: string }[] = [
-  { title: 'Raise a champion', sub: '' },
-  { title: 'Who is your player?', sub: "Let's get to know your future champion." },
-  { title: 'Where are you starting?', sub: 'Select your country.' },
-  { title: 'Family setup', sub: 'Your resources and support shape the path.' },
-  { title: 'Choose play style', sub: 'This shapes strengths and training focus.' },
-  { title: 'All set!', sub: "Here's your champion in the making." },
+  { title: 'Raise a Champion', sub: '' },
+  { title: 'Who Is Your Player?', sub: "Let's get to know your future champion." },
+  { title: 'Where Are You Starting?', sub: 'Select your country.' },
+  { title: 'Family Setup', sub: 'Your resources and support shape the path.' },
+  { title: 'Choose Play Style', sub: 'This shapes strengths and training focus.' },
+  { title: 'All Set!', sub: "Here's your champion in the making." },
 ]
 
 /** The pose art for a style, addressed BY ITS ID – see the ⚠ on PLAY_STYLES for why that is safe. */
@@ -282,7 +290,7 @@ function start(): void {
         </ol>
 
         <header v-if="step === 1" class="ob-head ob-head--hero">
-          <h1 class="ob-hero-title">Raise a champion.<br /><span>Together.</span></h1>
+          <h1 class="ob-hero-title">Raise a Champion.<br /><span>Together.</span></h1>
         </header>
         <header v-else class="ob-head">
           <h1 class="ob-title">{{ head.title }}</h1>
@@ -594,39 +602,39 @@ function start(): void {
       </section>
 
       <template #footer>
-        <!-- N and S END the screen with one wide affirmative and a quiet line under it; O–R carry
-             the Back / Next pair. Same footer element, three fillings. -->
+        <!-- N alone ends with one wide affirmative and a quiet line under it – there is nothing to
+             go BACK to from the first step, so the quiet line is Skip. O through S all carry the
+             same Back / affirmative pair. Same footer element, three fillings.
+             ⚠ NO TENNIS BALL ON ANY OF THEM (owner, 29.07: «уберите этот мячик на онбординге со
+             всех кнопок, он там не нужен»). The design draws the glyph beside every CTA word; it
+             was decoration on a button whose word already says what it does, and it is gone from
+             all three. It is NOT gone from the rest of the app - `.ball-icon` in src/style.css is
+             the splash's mark and belongs to nobody here. -->
         <div v-if="step === 1" class="ob-foot ob-foot--solo">
           <PrimaryPill variant="cta" class="ob-cta ob-cta--wide" @click="next">
             <span>Begin</span>
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="8.5" /><path d="M5 6.5c2.6 2 3.9 4.5 3.9 8.4" /><path d="M19 6.5c-2.6 2-3.9 4.5-3.9 8.4" />
-            </svg>
           </PrimaryPill>
           <button class="ob-quiet" type="button" @click="skipToDefaults">Skip for now</button>
         </div>
 
-        <div v-else-if="step === STEP_COUNT" class="ob-foot ob-foot--solo">
-          <PrimaryPill variant="cta" class="ob-cta ob-cta--wide" :disabled="game.busy" @click="start">
+        <!-- ⚠ S CARRIES THE SAME BACK / AFFIRMATIVE PAIR AS THE STEP BEFORE IT (owner, 29.07:
+             «на макете S нет кнопки Назад – давай сделаем по аналогии с предыдущим шагом, только
+             кнопка старт будет чуть больше Next»). The design draws no Back on S at all, and we had
+             it as the quiet underlined line where N puts Skip; it is now the same pill R uses, in
+             the same place, so walking back out of the summary is the same gesture it was on every
+             step before. Start career is the ONE button in the flow that begins a career rather
+             than advancing a step, and `--start` is the size that says so. -->
+        <div v-else-if="step === STEP_COUNT" class="ob-foot">
+          <button class="ob-back" type="button" @click="back">Back</button>
+          <PrimaryPill variant="cta" class="ob-cta ob-cta--start" :disabled="game.busy" @click="start">
             <span>Start career</span>
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="8.5" /><path d="M5 6.5c2.6 2 3.9 4.5 3.9 8.4" /><path d="M19 6.5c-2.6 2-3.9 4.5-3.9 8.4" />
-            </svg>
           </PrimaryPill>
-          <!-- ⚠ THE DESIGN DRAWS NO BACK ON S. A summary you cannot walk back out of is a summary
-               you cannot correct, and "Back keeps the choices already made" is the handoff's own
-               rule, so it stays – as the quiet line, where N puts Skip, rather than as a second
-               pill that would break the composition. -->
-          <button class="ob-quiet" type="button" @click="back">Back</button>
         </div>
 
         <div v-else class="ob-foot">
           <button class="ob-back" type="button" @click="back">Back</button>
           <PrimaryPill variant="cta" class="ob-cta" :disabled="nextDisabled" @click="next">
             <span>Next</span>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="8.5" /><path d="M5 6.5c2.6 2 3.9 4.5 3.9 8.4" /><path d="M19 6.5c-2.6 2-3.9 4.5-3.9 8.4" />
-            </svg>
           </PrimaryPill>
         </div>
       </template>
@@ -712,13 +720,21 @@ function start(): void {
   padding: 26px 0 0;
 }
 
+/* ⚠ TITLE CASE, NOT CAPS (owner, 29.07: «не капс локом, а просто каждое слово с большой буквы, как
+   в остальных всех экранах»). The mock draws every one of these six shouted – "CHOOSE PLAY STYLE" –
+   and no other screen in the app does: Season Planner, Family Budget and Coach Market are all set in
+   Title Case at this size. So the transform is gone and the STRINGS in STEP_HEADS carry the case
+   they render in. Deliberately NOT `text-transform: capitalize`, which would also raise the "a" in
+   "Raise a Champion" and would leave the source reading in a case the screen does not.
+   The same note answers the other half of his message: the face here was ALREADY Sora
+   (`--font-heading`) rather than Manrope, on both of these rules – verified computed in the
+   browser, not just read off the sheet. Only the case was wrong. */
 .ob-title {
   margin: 0;
   font-family: var(--font-heading);
   font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.01em;
-  text-transform: uppercase;
   color: var(--ink);
 }
 
@@ -729,6 +745,9 @@ function start(): void {
   color: var(--muted);
 }
 
+/* N's display headline. Same ruling as `.ob-title` above – the caps are gone, the string carries
+   the case. It is bigger and tracked tighter than a screen title because it is a headline and not
+   a signpost; that difference predates the owner's note and is not what he was pointing at. */
 .ob-hero-title {
   margin: 0;
   font-family: var(--font-heading);
@@ -736,7 +755,6 @@ function start(): void {
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.15;
-  text-transform: uppercase;
   color: var(--ink);
 }
 
@@ -1436,8 +1454,9 @@ function start(): void {
   color: var(--ink-2);
 }
 
-/* The export's CTA, with the design's own inset and the ball beside the word. `.primary` in the
-   selector is what wins the tie against PrimaryPill's own `--cta` padding. */
+/* The export's CTA, with the design's own inset. `.primary` in the selector is what wins the tie
+   against PrimaryPill's own `--cta` padding. (`gap` outlived the tennis ball it used to space; it
+   costs nothing on a one-child button and is what a second element would land on.) */
 .ob-cta.primary {
   display: inline-flex;
   align-items: center;
@@ -1453,7 +1472,18 @@ function start(): void {
   box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.2);
 }
 
-/* The quiet line under a wide CTA: Skip on N, Back on S. */
+/* START CAREER, ONE STEP LARGER THAN NEXT (owner, 29.07: "чуть больше Next"). Same pill, same row,
+   same place – 2px more of vertical inset, 6px more of horizontal, a point more of type and a
+   deeper glow. Four small moves rather than one big one, because the pair still has to sit on one
+   line beside Back at 390px: this is the last button of the flow reading as MORE than a step, not
+   as a different control. */
+.ob-cta--start.primary {
+  padding: 16px 32px;
+  font-size: 15.5px;
+  box-shadow: 0 10px 28px rgba(var(--accent-rgb), 0.22);
+}
+
+/* The quiet line under N's wide CTA: Skip. (It was Back on S too, until S took the pill.) */
 .ob-quiet {
   margin-top: 14px;
   padding: 4px 0;

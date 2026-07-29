@@ -21,10 +21,20 @@ const wizard = read('../src/components/OnboardingWizard.vue')
  *  the handoff's own rule with its em dash, and the player-facing copy guards must not read either
  *  of those as something a player will see. */
 const template = wizard.slice(wizard.indexOf('<template>'), wizard.lastIndexOf('</template>'))
+/** ⚠ THE TEMPLATE WITH ITS COMMENTS TAKEN OUT, and only the copy guards below read it.
+ *  WHAT MOVED: the template used to carry no Russian at all, so the Cyrillic guard could read the
+ *  whole of it. The footer now explains, where the markup is, WHY S grew a Back pill and why the
+ *  tennis ball left every CTA – and both of those are the owner's own words, in Russian, exactly
+ *  as the script block above has always quoted him.
+ *  WHAT DID NOT MOVE: the protected fact. A player never reads an HTML comment – Vue's SFC compiler
+ *  strips them from the production render – so "no Cyrillic and no em dash in what a player sees"
+ *  is now measured on precisely what a player sees, and a stray Cyrillic string in real markup
+ *  still fails. This is the guard getting narrower around its own subject, not looser. */
+const copy = template.replace(/<!--[\s\S]*?-->/g, '')
 /** The scoped block, for the rules that only this screen renders. */
 const css = wizard.slice(wizard.indexOf('<style scoped>'))
 /** ⚠ THE SAME BLOCK WITH ITS COMMENTS OUT, and only the "this rule does NOT exist" guards read it.
- *  This sheet explains itself, and an explanation names the
+ *  Same move, same reason as `copy` above: this sheet explains itself, and an explanation names the
  *  things it is explaining. The `:root` guard below started failing the moment a comment recorded
  *  that four tokens had graduated TO `src/style.css`'s :root. An absence assertion has to be made
  *  against code, or it is really an assertion about prose. */
@@ -172,6 +182,18 @@ describe('the wizard is built from the shared components, not from hand-rolled c
     expect(template).toContain(':disabled="game.busy"')
   })
 
+  it('NO TENNIS BALL on any onboarding button – the word is the whole button', () => {
+    // Owner, 29.07: «уберите этот мячик на онбординге со всех кнопок, он там не нужен». The design
+    // draws the glyph beside all three CTA words. Written as "no <svg> inside any PrimaryPill on
+    // this screen" rather than as three deletions, so it covers a fourth CTA nobody has added yet.
+    for (const pill of copy.match(/<PrimaryPill[\s\S]*?<\/PrimaryPill>/g) ?? []) {
+      expect(pill, 'a glyph came back onto an onboarding CTA').not.toContain('<svg')
+    }
+    // The three of them, and nothing between the tags but the word.
+    expect([...copy.matchAll(/<PrimaryPill[^>]*>\s*<span>([^<]+)<\/span>\s*<\/PrimaryPill>/g)]
+      .map((m) => m[1])).toEqual(['Begin', 'Start career', 'Next'])
+  })
+
   it('adds no :root block – tokens live in src/style.css and a scoped :root matches nothing', () => {
     expect(cssCode).not.toContain(':root')
   })
@@ -257,11 +279,37 @@ describe('S: the summary shows what the six steps collected', () => {
     }
   })
 
-  it('keeps a way BACK out of the last step, which the mock does not draw', () => {
+  it('⚠ keeps a way BACK out of the last step, and it is the SAME control the step before it uses', () => {
     // "Back keeps the choices already made" is the handoff's own interaction rule, and a summary
-    // you cannot walk back out of is a summary you cannot correct.
+    // you cannot walk back out of is a summary you cannot correct. The mock draws no Back on S.
+    // WHAT MOVED (owner, 29.07: «давай сделаем по аналогии с предыдущим шагом»): it used to be the
+    // quiet underlined line, where N puts Skip. It is now `.ob-back`, the pill R carries, in R's
+    // place. WHAT DID NOT MOVE: that there IS a way back, which is all the old assertion pinned.
     const foot = template.slice(template.indexOf('step === STEP_COUNT'))
-    expect(foot).toContain('@click="back"')
+    expect(foot).toContain('<button class="ob-back" type="button" @click="back">Back</button>')
+    // Same shape as the step before it: a footer ROW, not the solo column N ends on.
+    expect(foot.slice(0, foot.indexOf('>'))).not.toContain('ob-foot--solo')
+  })
+
+  it('⚠ Start career is LARGER than Next – the one button that begins a career, not a step', () => {
+    // Owner, 29.07: "только кнопка старт будет чуть больше Next". Both are the CTA pill in the same
+    // row, so the difference is a modifier on top of `.ob-cta`, and it has to be a real one: every
+    // number on `--start` must exceed the base rule's, or "slightly larger" is a class that does
+    // nothing. Read out of the sheet rather than asserted as literals, so re-tuning either rule
+    // keeps the RELATION honest.
+    expect(template).toContain('class="ob-cta ob-cta--start"')
+    const pad = (rule: string) => {
+      const block = css.slice(css.indexOf(`${rule} {`), css.indexOf('}', css.indexOf(`${rule} {`)))
+      const m = block.match(/padding: (\d+(?:\.\d+)?)px (\d+(?:\.\d+)?)px/)
+      const f = block.match(/font-size: (\d+(?:\.\d+)?)px/)
+      if (!m) throw new Error(`no padding on ${rule}`)
+      return { y: +m[1], x: +m[2], fs: f ? +f[1] : 14.5 }
+    }
+    const next = pad('.ob-cta.primary')
+    const start = pad('.ob-cta--start.primary')
+    expect(start.y).toBeGreaterThan(next.y)
+    expect(start.x).toBeGreaterThan(next.x)
+    expect(start.fs).toBeGreaterThan(next.fs)
   })
 
   it('shows the portrait the owner settled on – jun-norm, "первый раз входит в клуб"', () => {
@@ -281,12 +329,33 @@ describe('S: the summary shows what the six steps collected', () => {
 // ===========================================================================
 describe('the copy a player reads', () => {
   it('carries no Cyrillic and no em dash – the short dash is the house dash', () => {
-    expect(template).not.toMatch(/[Ѐ-ӿ]/)
-    expect(template).not.toContain('—')
+    expect(copy).not.toMatch(/[Ѐ-ӿ]/)
+    expect(copy).not.toContain('—')
     // The mockups themselves spell N's three paragraphs with em dashes; ours do not.
-    expect(template).toContain("You're the parent now – every choice")
+    expect(copy).toContain("You're the parent now – every choice")
   })
 
+  it('⚠ writes its six headings in the CASE THEY RENDER IN, rather than shouting them in CSS', () => {
+    // Owner, 29.07: «не капс локом, а просто каждое слово с большой буквы, как в остальных всех
+    // экранах». WHAT MOVED: `text-transform: uppercase` came off `.ob-title` and `.ob-hero-title`.
+    // WHAT THIS PROTECTS, which nothing protected before: the pair of them. Dropping the transform
+    // without re-casing the strings ships six sentence-case headings; re-casing them and leaving the
+    // transform on ships the caps he asked us to remove. Neither half can come back on its own.
+    const heads = region('const STEP_HEADS', 'function poseUrl')
+    expect([...heads.matchAll(/title: '([^']+)'/g)].map((m) => m[1])).toEqual([
+      'Raise a Champion', 'Who Is Your Player?', 'Where Are You Starting?',
+      'Family Setup', 'Choose Play Style', 'All Set!',
+    ])
+    expect(copy).toContain('Raise a Champion.<br /><span>Together.</span>')
+    // ...and no heading rule shouts. `capitalize` is banned with it: it would raise the "a" in
+    // "Raise a Champion" and leave the source lying about what the screen says.
+    for (const rule of ['.ob-title', '.ob-hero-title']) {
+      const block = css.slice(css.indexOf(`${rule} {`), css.indexOf('}', css.indexOf(`${rule} {`)))
+      expect(block, `${rule} still transforms its case`).not.toContain('text-transform')
+    }
+    // The face was never the problem – both were Sora (--font-heading) already, and stay Sora.
+    expect(css.match(/font-family: var\(--font-heading\)/g)?.length).toBeGreaterThanOrEqual(2)
+  })
 
   it('says which of six steps you are on, out loud as well as in lime', () => {
     expect(template).toContain('aria-label')
