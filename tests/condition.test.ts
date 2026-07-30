@@ -345,6 +345,32 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
       const kidRow = snap.standings.find((r) => r.isKid)
       expect(kidRow).toBeDefined()
       expect(kidRow!.rank).toBe(snap.kidRank)
+
+      // THE ALIASES HOLD. `kidRank`/`standings`/`countingResults` are documented as the ITF ladder,
+      // i.e. as aliases of `ladders.itf`. Two names for one fact is exactly how this bug began, so the
+      // aliasing is asserted rather than trusted.
+      expect(snap.standings).toEqual(snap.ladders.itf.standings)
+      expect(snap.countingResults).toEqual(snap.ladders.itf.countingResults)
+      if (snap.ladders.itf.rank !== null) expect(snap.ladders.itf.rank).toBe(snap.kidRank)
+
+      // THE TWO LADDERS ARE SEPARATE CURRENCIES. Neither table's points may be the other's, and a
+      // result counted by one must never be counted by the other.
+      const domTiers = new Set(snap.ladders.domestic.countingResults.map((r) => r.tier))
+      const itfTiers = new Set(snap.ladders.itf.countingResults.map((r) => r.tier))
+      for (const t of domTiers) if (t) expect(TIERS[t].track).toBe('domestic')
+      for (const t of itfTiers) if (t) expect(TIERS[t].track).toBe('itf')
+
+      // `rank: null` MEANS "holds nothing in this table", in both directions - the property every
+      // screen now leans on instead of counting results for itself.
+      for (const track of ['domestic', 'itf'] as const) {
+        const l = snap.ladders[track]
+        expect(l.rank === null).toBe(l.countingResults.length === 0)
+        if (l.countingResults.length === 0) expect(l.points).toBe(0)
+      }
+
+      // ACTIVE LADDER = the spec's rule: the international one once she holds a counting result there,
+      // her national one before that (docs/specs/two-ladders.md, "Which rank is her rank").
+      expect(snap.activeLadder).toBe(snap.ladders.itf.rank !== null ? 'itf' : 'domestic')
     }
   })
 

@@ -70,7 +70,7 @@ const rankMove = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
           <Eyebrow>Ranking</Eyebrow>
           <div class="season-rows">
             <div class="season-row">
-              <span class="season-key">Final rank</span>
+              <span class="season-key">Final international rank</span>
               <span class="season-val">
                 <span class="rank-value">#{{ summary.endRank }}</span>
                 <span v-if="rankMove.dir === 'up'" class="rank-move up">&uarr;{{ rankMove.by }}</span>

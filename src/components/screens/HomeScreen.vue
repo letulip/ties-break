@@ -26,7 +26,7 @@
 // The advance button is NOT here – it is App.vue's sticky bar, global on every tab (R13-12).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import type { PlayStyle, WorldEvent, WorldMatch } from '../../shared/protocol'
+import { LADDER_LABEL, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
 import type { TierId } from '../../engine/season/types'
 import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
@@ -176,11 +176,34 @@ function jumpToNews(): void {
 // truth lives on Stats and in the wallet. Her RANK survives on Home as a single chip because it is
 // the one number that is a story beat rather than a readout, and because it carries the best-6
 // explainer the owner needed twice (round-6). Season points went to Stats with the rest.
-const kidRank = computed(() => game.snapshot?.kidRank ?? null)
+//
+// ⚠ AND IT SAYS WHICH TABLE IT IS (30.07, fix/ranking-truth). There are two - the national one and
+// the international one, two currencies with no exchange rate (docs/specs/two-ladders.md) - and this
+// chip showed a bare "#4" read off `kidRank`, which was a rank folded over BOTH ladders at the time
+// and is the international one now. Either way Stats showed a different number for the same week,
+// which is the owner's «Rank #4 on the home tab and end of season popup seems strange since in stats
+// I can clearly see #128».
+//
+// So the chip reads the ladder the ENGINE says she is competing in (`activeLadder`: international
+// once she holds a counting result there, national before that) and NAMES it. Same source as the
+// Stats screen's default tab, so the two cannot disagree again.
+const activeLadder = computed(() => game.snapshot?.activeLadder ?? 'domestic')
+const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
+const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
+const kidRank = computed(() => ladder.value?.rank ?? null)
 // 'Unranked' until she's earned a counting result (see rankLabel): a point-less kid isn't really
-// ranked, so we don't flash a misleading '#1' on a brand-new career.
-const ranked = computed(() => (game.snapshot?.countingResults.length ?? 0) > 0)
-const prevKidRank = computed(() => game.snapshot?.prevKidRank ?? null)
+// ranked, so we don't flash a misleading '#1' on a brand-new career. `rank: null` is now the engine's
+// own way of saying exactly that, so this stops counting results to find out for itself.
+const ranked = computed(() => kidRank.value !== null)
+// The long form, where a chip has no room: which table, and the one fact about it that matters.
+const rankChipTitle = computed(() =>
+  activeLadder.value === 'domestic'
+    ? 'Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.'
+    : 'Her international ranking – Junior Tour results only. National results do not count towards it. Tap to see how it adds up.',
+)
+// FROM THE SAME TABLE as `kidRank` above. Reading `snapshot.prevKidRank` here would diff her national
+// place against last week's international one; `ladders[t].prevRank` is per-ladder for that reason.
+const prevKidRank = computed(() => ladder.value?.prevRank ?? null)
 // Rank goes UP when the number goes DOWN. null prev (or no change) shows a neutral dash.
 const rankMovement = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
   const now = kidRank.value
@@ -605,9 +628,10 @@ function openRankHelp(): void {
           <button
             class="diary-rank"
             aria-label="How ranking points work"
-            title="How ranking points work"
+            :title="rankChipTitle"
             @click="openRankHelp"
           >
+            <span class="rank-ladder">{{ ladderLabel }}</span>
             <span>{{ rankLabel(kidRank ?? 0, ranked) }}</span>
             <template v-if="ranked">
               <span v-if="rankMovement.dir === 'up'" class="rank-move up">&#8593;{{ rankMovement.by }}</span>
@@ -1128,6 +1152,15 @@ function openRankHelp(): void {
   color: rgba(255, 255, 255, 0.92);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+}
+
+/* WHICH TABLE the number belongs to. Quieter than the rank itself – it is the unit, not the figure –
+   and uppercase/tracked so it reads as a label rather than as a word in a sentence. */
+.rank-ladder {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.72;
 }
 
 .diary-rank:hover:not(:disabled) {

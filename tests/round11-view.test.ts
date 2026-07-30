@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { surfaceStyleAffinity, surfaceStyleHint, SURFACE_STYLE_DELTAS } from '../src/engine/match/style'
-import { HORIZON_WEEKS, isTierOpen, pointsLockNote, tierState, type TierStateInput } from '../src/composables/tierState'
+import { HORIZON_WEEKS, gapInResultsNote, isTierOpen, pointsLockNote, tierState, type TierStateInput } from '../src/composables/tierState'
 import { resultShowsOnHerFace } from '../src/composables/kidEmotion'
 import type { PlayStyle, WorldEvent, WorldMatch } from '../src/shared/protocol'
 import type { Surface } from '../src/engine/match/types'
@@ -254,7 +254,13 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     const s = tierState('national', at(100))
     expect(s.kind).toBe('locked')
     expect(s.pointsToEnter).toBe(TIERS.national.enterPointBand[0])
-    expect(s.note).toBe('Reach 150 pts')
+    // ⚠ RE-AIMED (30.07, fix/ranking-truth), assertion by assertion the SAME facts: below the floor is
+    // 'locked', it carries the threshold, and the note says what it costs. What the note now also says
+    // is WHICH points ("national" - there are two tables and this band is denominated in one of them)
+    // and WHERE SHE STANDS ("100 / 150" rather than a bare target). Both are the owner's item 26,
+    // «мне главное, чтобы было наглядно и однозначно». The wording lives in `pointsLockNote`, which is
+    // pinned directly below.
+    expect(s.note).toBe('100 / 150 national pts')
     expect(isTierOpen(s)).toBe(false)
   })
 
@@ -332,9 +338,89 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
   it('an event card keeps the ENGINE\'s own threshold, not the ladder\'s verdict', () => {
     // Found in the browser: reading the ladder's whole note here let a card the engine had locked
     // print the ladder's "open" state. Same words, but each surface keeps its authoritative number.
-    expect(pointsLockNote(180)).toBe('Reach 180 pts')
+    //
+    // ⚠ RE-AIMED (30.07, fix/ranking-truth). THE PROTECTED FACT IS UNCHANGED and still asserted on the
+    // next two lines: the card's number is the ENGINE's per-event `pointsToEnter`, and the WORDS come
+    // from the one shared function. What moved is the wording itself, twice over, both for the owner's
+    // «мне главное, чтобы было наглядно и однозначно» (item 26):
+    //   * it NAMES ITS CURRENCY. "Reach 180 pts" did not say which of the two point tables it meant,
+    //     and it means the national one - every rung's band is denominated there.
+    //   * it is a FRACTION when the caller knows where she stands, because "how far off am I?" is half
+    //     of what a player is asking and the old copy answered only the other half.
+    // The one-argument form is kept and still tested, for callers that have the threshold but not her
+    // total.
+    expect(pointsLockNote(180)).toBe('Reach 180 national pts')
+    expect(pointsLockNote(180, 112)).toBe('112 / 180 national pts')
     const lock = seasonScreen.slice(seasonScreen.indexOf('function lockLabel'), seasonScreen.indexOf('// --- R11-5a'))
     expect(lock).toContain('e.pointsToEnter')
+  })
+
+  // --- item 26: the gate has to be LEGIBLE, and that is a property a test can hold ----------------
+  // The owner asked for J30's points floor to be replaced by "win a National" and then said what he
+  // actually wanted was for the gate to be «наглядно и однозначно». The threshold stayed (it is
+  // continuous, and it never tells a girl with three National semi-finals she has achieved nothing);
+  // what it gained is her position in it, plus a sentence saying what would close the gap.
+  describe('the domestic gate reads unambiguously', () => {
+    it('the gap is said in TOURNAMENTS, priced off the catalogue rather than hardcoded', () => {
+      // 138 short, holding 112 national points: regional is open to her at 112 (band [65, 250]) and its
+      // semi-final pays 28, so three of them is 84 - not enough; its FINAL pays 48, and three of those
+      // is 144. The function walks best-finish-first and stops at the first plan of <=3 trips.
+      const note = gapInResultsNote(138, 112)
+      expect(note).toBeTruthy()
+      // Whatever it picks, it must be a REAL rung with a REAL finish value that actually closes the gap.
+      const m = /^(?:one|(\d+)) more (.+?)s? at (.+)$/.exec(note!)
+      expect(m, `unparseable: ${note}`).toBeTruthy()
+      const n = m![1] ? Number(m![1]) : 1
+      const tier = Object.values(TIERS).find((t) => t.label === m![3])
+      expect(tier, `no such tier: ${m![3]}`).toBeTruthy()
+      expect(n).toBeLessThanOrEqual(3)
+      // it names a rung she can actually enter right now...
+      const [lo, hi] = tier!.enterPointBand
+      expect(112).toBeGreaterThanOrEqual(lo)
+      expect(112).toBeLessThanOrEqual(hi)
+      // ...and n x (some finish it really pays) does close the gap.
+      expect(tier!.points.some((p) => p > 0 && n * p >= 138 && Math.ceil(138 / p) === n)).toBe(true)
+    })
+
+    it('NEVER offers an international result as a way to close a national-points gap', () => {
+      // The two ladders have no exchange rate (docs/specs/two-ladders.md). Legibility must not be
+      // bought by quietly merging them, so this sweeps the whole plausible range.
+      const itfLabels = Object.values(TIERS).filter((t) => t.track === 'itf').map((t) => t.label)
+      for (let points = 0; points <= 400; points += 7) {
+        for (const gap of [1, 15, 60, 138, 300]) {
+          const note = gapInResultsNote(gap, points)
+          if (note === null) continue
+          for (const label of itfLabels) expect(note, `${points}/${gap}: ${note}`).not.toContain(label)
+        }
+      }
+    })
+
+    it('says nothing rather than something useless: no gap, or no plan inside three trips', () => {
+      expect(gapInResultsNote(0, 100)).toBeNull()
+      expect(gapInResultsNote(-5, 100)).toBeNull()
+      // A gap far past three trips at every rung open to a point-less kid (local tops out at a 30-point
+      // title, so 3 x 30 = 90 is the most it can promise).
+      expect(gapInResultsNote(5_000, 0)).toBeNull()
+    })
+
+    it('the locked tooltip states the gap, her total, the threshold AND which points they are', () => {
+      const s = tierState('national', {
+        ...base,
+        points: 112,
+        engineOpen: false,
+      })
+      expect(s.kind).toBe('locked')
+      // the chip: both halves of the question, in one glance
+      expect(s.note).toBe('112 / 150 national pts')
+      // the tooltip: the distance, where she stands, and the one sentence no number can imply
+      expect(s.title).toContain('38 more national pts')
+      expect(s.title).toContain('112 of 150')
+      expect(s.title).toContain('National points come from Local, Regional and National events')
+      // plain copy only: no jargon, no long dash, no Cyrillic
+      expect(s.title).not.toMatch(/\btrack\b|\bdomestic\b|\bITF\b/)
+      expect(s.note + s.title).not.toContain('—')
+      expect(s.note + s.title).not.toMatch(/[Ѐ-ӿ]/)
+    })
   })
 
   it('the Season screen names the open-but-unscheduled tiers under the calendar', () => {

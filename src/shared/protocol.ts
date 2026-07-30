@@ -2,7 +2,7 @@
 // The worker owns the authoritative state; the UI only ever sees snapshots.
 
 // Type-only imports (erased at compile – no runtime dependency on the engine).
-import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
+import type { LadderTrack, MatchRecord, RankingRow, TierId } from '../engine/season/types'
 import type { SkillKey } from '../engine/development'
 import type { MatchPlayer, Surface } from '../engine/match/types'
 import type { AvatarEmotion, PortraitEmotion, PortraitStage } from './avatarEmotion'
@@ -549,6 +549,58 @@ export interface CountingResult {
   points: number
 }
 
+/** ONE LADDER, EVERYTHING ABOUT IT - see `computeLadderView` in engine/world.ts for the argument.
+ *
+ *  There are two of these on a Snapshot because docs/specs/two-ladders.md designed two tables with
+ *  two currencies and no exchange rate between them. They are the SAME SHAPE on purpose: a screen
+ *  should render "a ladder" once, not branch on which one it was handed. */
+export interface LadderView {
+  /** Her dense place in this table, or NULL when she holds no counting result in it - i.e. she is not
+   *  ranked here at all.
+   *
+   *  ⚠ null IS NOT #1, and the distinction is load-bearing. Competition ranking gives every member of
+   *  a tie the same place, so while nobody holds a point the whole field ties at zero and a point-less
+   *  kid comes out as a single digit. Every screen used to guard that with its own
+   *  `countingResults.length > 0` check; carrying it in the type means none of them can forget. */
+  rank: number | null
+  /** Her place in THIS table at the start of the last resolved week; null before any tick.
+   *
+   *  ⚠ Per-ladder on purpose. A movement arrow is (previous - current), and with one shared "previous
+   *  rank" a screen showing her national place would have diffed it against last week's international
+   *  place - a quieter instance of the bug that produced #4 on Home against #128 in Stats. */
+  prevRank: number | null
+  /** Her windowed best-6 total IN THIS TABLE'S CURRENCY. National points and ITF points are different
+   *  units and must never be added, compared or silently swapped for one another. */
+  points: number
+  /** Top 10 + a window around her, rank order - this table only. */
+  standings: StandingRow[]
+  /** The results THIS table counted, strongest first. Pairs with `rank`: a rank and the results that
+   *  earned it have to come from the same table or the explanation contradicts the number. */
+  countingResults: CountingResult[]
+}
+
+/** Both tables, keyed by the engine's own track names.
+ *
+ *  ⚠ THESE KEYS ARE NOT PLAYER-FACING COPY. The owner's rule is that a player must never need the
+ *  word "track", and "domestic"/"itf" are engine vocabulary. The player-facing labels live in exactly
+ *  one place - `LADDER_LABEL` below - so no screen invents its own name for a table. */
+export type LadderViews = Record<LadderTrack, LadderView>
+
+/** The player-facing name of each table, defined ONCE. "National" and "International" are the words a
+ *  parent would use; nothing in the UI says "domestic", "ITF" or "track". */
+export const LADDER_LABEL: Record<LadderTrack, string> = {
+  domestic: 'National',
+  itf: 'International',
+}
+
+/** The unit each table's points are counted in, for a label that has to name the currency (the Home
+ *  ladder's entry thresholds are all denominated in NATIONAL points - see engine/season/calendar.ts,
+ *  whose own ladder diagram is drawn against "domestic pts"). */
+export const LADDER_POINTS_LABEL: Record<LadderTrack, string> = {
+  domestic: 'national pts',
+  itf: 'international pts',
+}
+
 /** The kid's current run of consecutive COMPETITIVE losses, and the threshold at which this
  *  particular run turns her face angry (fix/world-trio item 3, owner's call).
  *
@@ -900,10 +952,20 @@ export interface Snapshot {
   kidRank: number
   /** the kid's rank at the start of the last resolved week; null before any tick (schema v7) */
   prevKidRank: number | null
-  /** top 10 + 5 around the kid, deduped, rank order */
+  /** top 10 + 5 around the kid, deduped, rank order. THE ITF TABLE - an alias of `ladders.itf`. */
   standings: StandingRow[]
-  /** the kid's counted best-6 results (round-5 item 1b), strongest first */
+  /** the kid's counted best-6 results (round-5 item 1b), strongest first. THE ITF TABLE - an alias of
+   *  `ladders.itf.countingResults`. */
   countingResults: CountingResult[]
+  /** BOTH TABLES (docs/specs/two-ladders.md). `kidRank`, `standings` and `countingResults` above are
+   *  the ITF ones and remain as aliases of `ladders.itf`, so nothing that already reads them changes;
+   *  a test pins the aliasing, because two names for one fact is precisely how the rank bug began. */
+  ladders: LadderViews
+  /** WHICH TABLE SHE IS ACTUALLY COMPETING IN, decided by the engine (`activeLadderOf`) so the screens
+   *  cannot answer it three different ways: the international one once she holds a counting result in
+   *  it, her national one before that. A screen showing "her rank" with no further question asked
+   *  should show THIS ladder's. */
+  activeLadder: LadderTrack
   /** best (smallest) finish index the kid has ever reached per tier (schema v10); drives the
    *  Home season strip's real tier progress. Untouched tiers are absent. */
   bestFinishByTier: Partial<Record<TierId, number>>

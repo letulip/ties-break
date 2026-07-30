@@ -188,3 +188,153 @@ ITF points** at every season boundary, so the acceptance lists gate against a de
 The ordering is the entry policy preferring the strongest open rung — which is correct for J30
 (explicitly "the dense entry level", a rung meant to be passed through) and was only wrong for
 National because National is a marquee event, not an on-ramp.
+
+---
+
+# The half that never shipped: the UI never learned there were two tables
+
+*30.07, branch `fix/ranking-truth`, after the owner played a full season.*
+
+This spec designed two currencies with no exchange rate, and then **every screen kept showing one
+number called "rank" and one called "points"** — both read off the ITF table. The engine was right
+and the surfaces were not, so a career spent on the domestic rungs (which is most of a
+fourteen-year-old's, and *all* of a working-class one's) was invisible to the player who was living
+it. Four items on his list were this, wearing four different clothes.
+
+## §4's first claim was violated, and not by this slice
+
+> **The frozen MAIN capture (41550 draws / `e6b0c709`) must not move.**
+
+It did not move, and it still has not. But `world.kidRank` had **two writers with two different
+meanings**, and one of them was introduced *here*:
+
+| writer | what it wrote | when it ran |
+| --- | --- | --- |
+| `recomputeKidRank` | the ITF rank, plus `kidRankDomestic` beside it | `createWorld`, migration |
+| `recomputeRankAndMilestones` | `computeRanking(results, week, ids)` — **no track predicate**, both ladders folded into one table | the tick's step 5, `finalizeTournament`, `skipTournament` |
+
+The second ran last in every path, so the mixed number always won. `computeStandings` builds its
+table fresh from the ITF fold at snapshot time and so was never affected — which is exactly why
+Home said **#4** and Stats said **#128** in the same week.
+
+`kidRankDomestic` was worse off: nothing in the tick wrote it at all, so it held its **week-0 value
+for an entire career** (75 against a true 100 on the bench fixture; a season mean of 75.7 against a
+true 15.0).
+
+The guard tests could not catch it because they all assert `kidRank` equals a *number* — so they
+moved with the bug and were re-pinned to it. The 135 → 126 re-pin in this slice claims 126 is "her
+place in the ITF table"; it was the mixed place. `tests/condition.test.ts` B1c now asserts an
+**identity** instead — each cache equals the fold it names, every week — and it fails against the
+pre-fix code with the owner's own symptom.
+
+**Re-pinned deliberately: `REF.kidRank` 126 → 119** in condition/injuries/planner. `count`, `hash`,
+`head` and `tail` are byte-identical, re-derived before and after. 118 AI hold counting ITF points at
+week 52 → #119; the mixed table holds 125 → #126. The arithmetic identifies which table each number
+came from.
+
+## The sponsorship valve is dead content (item 27)
+
+> «And there was not a single "local sponsor" donation for a 8k girl through the whole season despite
+> the fact she was good»
+
+There are **two** sponsor mechanisms and only one of them is rank-gated. Measured, 120 seeds × 49
+weeks, per season:
+
+| | 8k working · self | 25k middle · self | 120k wealthy · elite |
+| --- | --- | --- | --- |
+| **gear valve**, ITF-gated (today) | **0.00 · 0/120 seasons** | **0.00 · 0/120** | **0.00 · 0/120** |
+| gear valve, if it read her NATIONAL rank | 12.36 · 113/120 · $348 forgiven | 14.42 · 109/120 · $756 | 21.65 · 119/120 · $2,384 |
+| cash cameo, fired | 3.10 · 113/120 | 0.00 (working-only by design) | 0.00 |
+| cash cameo, **still visible** at season end | **0.65 · 62/120** | – | – |
+
+**The gear valve has never fired for anybody.** `ECONOMY.sponsorship` gates at ITF rank ≤30 (half
+price) and ≤10 (free). A working-class girl's ITF rank averages **#128** and never reaches it; nor
+does the wealthy family's inside one season. It is an award for domestic prominence denominated in a
+currency she does not hold — the same category of error as the two writers, and it arrived here, when
+this slice redefined `kidRank` to mean the ITF table and silently retargeted every gate reading it.
+Her **national** rank averages #15 and is top-30 in 107/120 seasons.
+
+⚠ **Not fixed, because the numbers are the owner's.** Pointing it at the national table (or at the
+better of the two, which measures identically today and follows her up the ladder later) would forgive
+$348–$2,384 a season, and **it is regressive** — it pays the wealthy family seven times what it pays
+the poor one, because that family buys pricier gear more often *and* ranks better domestically. Three
+decisions, all his: which table the valve reads, what the two thresholds are, and whether a
+"sponsorship" that scales with the family's own spending is the story he wants.
+
+**And the cash cameo works but cannot be seen.** It fires 3.10 times a season for an 8k girl and
+banks $500–1500 each time. But the snapshot carries only the trailing 60 events, a 49-week season
+generates far more than that, and so **only 0.65 of those donations per season are still on screen at
+season end — 58 of 120 seasons show none at all**. The Money screen cannot rescue it either: it folds
+every income category into a single "Total income" figure and has a per-category breakdown for
+expenses only. So the owner reporting "not a single donation" is him accurately reporting what the
+game showed him. A per-category **income** breakdown on the Money screen is the fix; it is not in this
+branch.
+
+## Item 26: the gate is legible now, and the mechanism is the one that was already there
+
+> «No points visualisation for local-regional-national is super-strange. If we stick to it we need to
+> change "entrance floor" for j30 from current points to "win national" of some sort»
+>
+> — and, asked which he wanted: «это было на обсуждение, мне главное, чтобы было наглядно и
+> однозначно»
+
+The requirement is a property, not a mechanism. Three shapes were weighed:
+
+1. **Keep the points floor, make the currency visible.**
+2. **Replace it with a milestone** ("win a National").
+3. **Both**: the threshold gates, a milestone-shaped sentence explains it.
+
+**Shipped: 3, and the finding is that most of 1 was the whole bug.** The floor was never illegible —
+it was *invisible*, and in two separate ways:
+
+* `useTierStates` fed `tierState` her points from `snapshot.standings`, **the ITF table**, while every
+  rung's `enterPointBand` is denominated in national points (this file's own ladder diagram is drawn
+  against "domestic pts →", and `entryStatus` reads `kidPoints(world, 'domestic')` for all six rungs).
+  With 604 national points and 4 international ones the owner's Home ladder read Local "Open" and not
+  outgrown, Regional "Reach 65 pts", National "Reach 150 pts", J30 "Reach 250 pts" — every one wrong,
+  with the engine letting her enter all four. That is «Tournaments wrong current active active».
+* The Stats screen showed no national table at all, so the number the ladder was counting **existed
+  nowhere in the UI**.
+
+So: the currency is named (`Reach 250 pts` → `112 / 250 national pts` — a fraction, because "how far
+off am I?" is half the question and the old copy answered only the other half), and the tooltip adds
+what the gap would take, priced off the `TIERS` catalogue so it can never quote a table the engine does
+not pay: *"38 more national pts (she has 112 of 150) – one more semi-final at Regional Championship.
+National points come from Local, Regional and National events."*
+
+**Why not his milestone.** It is coarse in a way that would have cost him a story he already values: a
+girl with three National semi-finals has plainly outgrown the domestic ladder, and a "win a National"
+gate tells her she has achieved nothing. The threshold is continuous, moves every week, and — once
+visible — is *more* legible than a binary, because it shows progress rather than only arrival. His
+stated requirement is met without turning a climb into a coin-flip. **If he still wants the milestone,
+it is one `enterPointBand` and one note away; nothing here forecloses it.**
+
+⚠ **The two currencies stay unmerged.** `gapInResultsNote` reads the domestic rungs only and is swept
+by a test over the whole plausible range to prove it never offers a Junior Tour result as a way to
+close a national-points gap. Legibility must not be bought by quietly making one ladder out of two.
+
+## What the screens do now
+
+* `Snapshot.ladders` carries **both** tables in the same shape (`LadderView`: rank, prevRank, points,
+  standings, countingResults). `rank: null` *is* "not ranked in this table" — the distinction every
+  screen used to re-derive with its own `countingResults.length > 0`.
+* `Snapshot.activeLadder` is the engine's single answer to "which table is she competing in" —
+  §"Which rank is her rank", implemented once, so Home, Stats and the Kid screen cannot disagree
+  again. `kidRank`/`standings`/`countingResults` remain as ITF aliases and the aliasing is pinned.
+* `prevKidRankDomestic` joins `prevKidRank` on the world. Without it, Home's movement arrow would have
+  diffed this week's national place against last week's international one — a quieter instance of the
+  same bug, showing a triumphant "↑107" on a week nothing happened.
+* Stats opens on her active ladder, labelled, with the other one a tap away and the no-exchange-rate
+  rule stated in words. The Kid screen and the rank explainer show the ladder she is on rather than an
+  empty ITF table and "No points yet".
+* Player-facing copy says **National** and **International**, defined once in `LADDER_LABEL`. Nothing
+  says "track", "domestic" or "ITF".
+
+## Still open
+
+* **The season wrap-up's `seasonPoints` adds the two currencies together** (`604 + 4 = 608 pts this
+  season`) — a sum with no meaning, and it is persisted in `SeasonSummary.points` and
+  `seasonHistory`, so splitting it is a schema decision rather than a copy fix. The *rank* on that
+  popup is now named ("International rank #128"), which was the owner's actual complaint.
+* The Money screen's income side has no per-category breakdown — see the cash cameo above.
+* The gear valve's table and thresholds (item 27), the owner's to pick.
