@@ -116,7 +116,10 @@ function close(): void {
        fourth match surface - SeasonScreen's sandbox - did NOT have them, which is how it ended up
        with its control bar under the tab bar. Same classes, same layout, one author: see
        `ui/TakeoverShell.vue`. -->
-  <TakeoverShell title="Practice match">
+  <!-- `screen` is the phase (owner, 31.07): the pre-match card, the match and the box score share one
+       scroller that is never unmounted between them, so the box score used to open at whatever
+       scroll position the match had been left at. -->
+  <TakeoverShell title="Practice match" :screen="phase">
     <template #sub>
       <SurfaceMark :surface="match.surface" size="sm" />
       <span class="hint tf-week-dates">{{ weekLabel(week) }} · {{ weekDates }}</span>
