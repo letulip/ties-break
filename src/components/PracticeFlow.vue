@@ -148,9 +148,15 @@ function close(): void {
         <div class="controls pf-chips">
           <span class="pill">No ranking points</span>
         </div>
+        <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
+             кнопки skip/watch it так логичнее» - and "watch it" is this screen's own label). The
+             affirmative goes under the thumb, at the right-hand end, which is where every other action
+             row in the app already puts it: the box score below, the tournament's pre-match card, and
+             the sheet's `.dialog-actions`. Order only - same handlers, same `.primary`, same
+             `.sfx-watch`. -->
         <div class="tf-actions">
-          <button class="primary sfx-watch" @click="watchIt">Watch it</button>
           <button @click="toResult">Skip to result</button>
+          <button class="primary sfx-watch" @click="watchIt">Watch it</button>
         </div>
       </MatchScene>
 

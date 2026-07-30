@@ -737,9 +737,16 @@ const matchMeta = computed(() => {
             <div class="tf-scene-rank">#{{ pending.opponent.rank }}</div>
           </div>
         </div>
+        <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
+             кнопки skip/watch it так логичнее»). It is the app's own order everywhere else and this
+             card was the outlier: `.dialog-actions` puts Cancel before Confirm, the box score below
+             puts "Watch again" before "Next →", and the friendly's own two are in the same pair. The
+             affirmative belongs under the thumb, which on a phone is the right-hand end of the row -
+             and "the one you usually want is where your thumb already is" is the whole argument. Only
+             the ORDER moved: same handlers, same `.primary` on the same button, same `.sfx-watch`. -->
         <div class="tf-actions">
-          <button class="primary sfx-watch" :disabled="game.busy" @click="watchMatch">Watch match</button>
           <button :disabled="game.busy" @click="showResult">Skip</button>
+          <button class="primary sfx-watch" :disabled="game.busy" @click="watchMatch">Watch match</button>
         </div>
       </MatchScene>
 

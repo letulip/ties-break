@@ -168,6 +168,48 @@ describe('THE BUTTON SHAPE: a button is a pill (owner 30.07)', () => {
   })
 })
 
+// ---------------------------------------------------------------------------
+// THE ACTION ROW (owner, 30.07, second playtest). Two sentences, both about a control saying more
+// than it means: «на экране перед матчем надо поменять местами кнопки skip/watch it так логичнее»
+// and «У begin просто убрать стрелку». One is an ORDER and one is a GLYPH, and the app already had
+// an answer for each - it just was not being kept on the two screens he was looking at.
+// ---------------------------------------------------------------------------
+describe('THE ACTION ROW: the affirmative is last, and it does not point (owner 30.07)', () => {
+  const PRE_MATCH = [
+    // [file, the skip, the affirmative] - the two cards that stand between the player and a match
+    ['src/components/TournamentFlow.vue', 'Skip', 'Watch match'],
+    ['src/components/PracticeFlow.vue', 'Skip to result', 'Watch it'],
+  ] as const
+
+  it('both pre-match cards put the thing you usually want under the thumb', () => {
+    // The app's own order, everywhere else: `.dialog-actions` is Cancel-then-Confirm, both box scores
+    // are "Watch again"-then-primary. These two rows were the outliers, with the primary first.
+    for (const [path, skip, watch] of PRE_MATCH) {
+      const text = readFileSync(join(root, path), 'utf8')
+      const template = /<template>([\s\S]*)<\/template>/.exec(text)?.[1] ?? ''
+      const row = template.slice(template.indexOf('class="tf-actions"'))
+      const skipAt = row.indexOf(`>${skip}<`)
+      const watchAt = row.indexOf(`>${watch}<`)
+      expect(skipAt, `${path}: "${skip}" is in the row`).toBeGreaterThan(-1)
+      expect(watchAt, `${path}: "${watch}" is in the row`).toBeGreaterThan(-1)
+      expect(watchAt, `${path}: the affirmative comes last`).toBeGreaterThan(skipAt)
+      // ...and it is still the primary. Swapping the order must not swap which one is the CTA.
+      const primaryAt = row.indexOf('class="primary')
+      expect(primaryAt, `${path}: the primary is the affirmative`).toBeGreaterThan(skipAt)
+      expect(primaryAt, `${path}: the primary is the affirmative`).toBeLessThan(watchAt)
+    }
+  })
+
+  it('the tournament brief\'s CTA is one word', () => {
+    // «У begin просто убрать стрелку». A lime CTA at the foot of a brief is already the way forward;
+    // the arrow was the button repeating itself, and the design's own copy for it is bare.
+    const flow = readFileSync(join(root, 'src/components/TournamentFlow.vue'), 'utf8')
+    const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
+    expect(template).toContain('>Begin</PrimaryPill>')
+    expect(template, 'the arrow is back on Begin').not.toMatch(/Begin\s*(→|&rarr;)/)
+  })
+})
+
 describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
   // `back`, `close` and `dollar` are the OWNER'S OWN drawings (30.07: «svg иконки закинул в
   // public/icons: dollar sign for a tournament enter page, back and close icons»), normalised into the
