@@ -1990,8 +1990,25 @@ function servePct(side: Side): number {
    ⚠ STILL NEEDED AFTER THE OUTER FRAME CAME OFF (30.07), and it is worth writing the arithmetic down
    rather than re-deriving it next time: the bar is 327px wide now instead of 293, and 327 is still
    short of the 359 the sheet's padding wants. What the extra 34px bought is HEADROOM - the trim
-   brings the two rows to ~275px, so they now clear the bar by 52px instead of overflowing it. */
+   brings the two rows to ~275px, so they now clear the bar by 52px instead of overflowing it.
+   ⚠ AND THAT HEADROOM IS WHAT THE OWNER WAS LOOKING AT, 31.07: «the speed and brevity buttons are
+   bunched to the left of their plates - distribute them evenly across the plate, and make it tidy».
+   `.tab-row` is a plain flex row and `.tab-pill` is content-sized, so the 52px the trim recovered
+   became 26px of empty plate at the RIGHT-HAND END of each of the two rows - the pills sat left, the
+   plate ran on past them, and the two rows did not even end in the same place because "Full/Key/Skip"
+   and "1x/2x/4x" are different widths. `flex: 1` hands each plate's width to its own three pills, so
+   they divide it evenly and both rows end where the plate ends.
+   THE PADDING TRIM STAYS, and it is doing a different job now. `flex: 1` is `1 1 0%`, and a flex
+   item's automatic minimum size is its CONTENT size - so the padding no longer sets the pill's width
+   but still sets the width below which it will not shrink. At the sheet's 16px that floor is the
+   ~359px that overflowed in the first place; at 9px it is ~275px, comfortably inside any phone this
+   app targets. Trimmed padding is what keeps `flex: 1` from being a lie on a narrow screen.
+   SCOPED TO THIS BAR, like the padding above it and for the same reason: `.tab-row`/`.tab-pill` are
+   shared vocabulary with five callers, the draw's round tabs deliberately opt their pills OUT of
+   flexing (`.bt-tabs :deep(.tab-pill) { flex: 0 0 auto }` - they scroll horizontally), and Stats and
+   Money are not this slice's screens to move. */
 .mv-controls :deep(.tab-pill) {
+  flex: 1;
   padding-left: 9px;
   padding-right: 9px;
 }

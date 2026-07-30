@@ -406,6 +406,30 @@ describe('the pinned control bar can never reach the playing surface', () => {
       'padding: 6px 16px',
     )
   })
+
+  it('the pills divide their plate instead of bunching at its left-hand end', () => {
+    // ⚠ ADDED 31.07 (owner: «the speed and brevity buttons are bunched to the left of their plates -
+    // distribute them evenly across the plate, and make it tidy»). It is the previous test's own
+    // headroom, seen from the other side: `.tab-row` is a plain flex row and `.tab-pill` is
+    // content-sized, so the ~52px the padding trim recovered became empty plate at the right-hand end
+    // of each row - and, because "Full/Key/Skip" and "1x/2x/4x" are different widths, the two rows did
+    // not even run out at the same place.
+    const styles = stylesOf(viewer)
+    expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\) \{[^}]*flex: 1/)
+    // THE TRIM IS LOAD-BEARING UNDER `flex: 1`, not leftover: a flex item's automatic minimum size is
+    // its content size, so the padding no longer sets the pill's width but still sets the width below
+    // which it refuses to shrink. At the sheet's 16px that floor is the ~359px that overflowed in the
+    // first place. Deleting the trim as "redundant now" would put the overflow straight back.
+    expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\) \{[^}]*padding-left: 9px/)
+    // SCOPED, like the padding: `.tab-row`/`.tab-pill` have five callers, and the draw's round tabs
+    // deliberately opt OUT of flexing because they scroll horizontally instead.
+    expect(read('../src/style.css'), 'the shared plate learned to flex').not.toMatch(
+      /\.tab-pill \{[^}]*flex:/,
+    )
+    expect(read('../src/components/BracketTabs.vue')).toMatch(
+      /\.bt-tabs :deep\(\.tab-pill\) \{[^}]*flex: 0 0 auto/,
+    )
+  })
 })
 
 describe('one header slot per match screen, and it says where it takes you', () => {
