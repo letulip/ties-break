@@ -139,9 +139,14 @@ export default defineConfig({
     // The real long-term fix is to stop spending two minutes of CPU on Monte-Carlo inside the PR
     // gate - move the two bench files to their own job. That is a decision about what the gate is
     // for, so it waits for the owner rather than being smuggled in here.
-    poolOptions: {
-      forks: { singleFork: !!process.env.CI },
-    },
+    // ⚠ `singleFork: !!process.env.CI` LIVED HERE AND IS GONE (30.07). It existed for exactly one
+    // reason - the Monte-Carlo files fighting the reporter RPC on a 2-core runner - and those files
+    // have left the PR gate (see .github/workflows/simulation.yml). A workaround whose reason has
+    // been removed is worse than no workaround: the next person to read it will assume it is load-
+    // bearing. The gate is 73 fast files and it runs on the default pool, in parallel, in ~14s.
+    //
+    // If flakes ever come back, the honest first question is which file is spending seconds of CPU
+    // and whether it belongs in the gate at all - not how to serialise around it.
     // ⚠ THE GATE STOPS BEING A MONTE-CARLO RUNNER (30.07). The note above ends with "the real
     // long-term fix is to stop spending two minutes of CPU on Monte-Carlo inside the PR gate - move
     // the two bench files to their own job... it waits for the owner". It came due: the suite grew

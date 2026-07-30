@@ -1,0 +1,38 @@
+# THE MONTE-CARLO CALIBRATION, DELIBERATELY OUT OF THE PR GATE.
+#
+# Three files - tests/econ-bench, tests/fatigue-bench, tests/match/calibration - are 143s of CPU
+# and they are not regression tests. Every one of them says so in its own header: they are
+# DETERMINISTIC statistical sweeps (10k-50k simulated matches, 30-seed career replays). They do not
+# catch a flake; they catch a CHANGED MODEL. And you change the match model or the bench perhaps
+# once a wave, on purpose, and when you do you run the bench and read the table - which is the
+# whole point of owning a bench.
+#
+# WHAT THEY COST WHILE THEY LIVED IN THE GATE: three separate "generous file-level timeout"
+# workarounds written into the files themselves, a `singleFork` hack in vite.config.ts, and two red
+# builds in two days - both of them with every assertion passing and vitest's own reporter RPC
+# timing out (`Timeout calling "onTaskUpdate"`, birpc's hard-coded 60s, which nothing in vitest's
+# config can raise). A gate that fails for reasons unrelated to the code teaches people to ignore
+# the gate, which is worse than not having one.
+#
+# SO THEY STILL RUN, JUST NOT IN FRONT OF A PULL REQUEST: weekly, and on demand from the Actions
+# tab. Rot gets caught within a week rather than never. And the working rule, which is the real
+# guard: TOUCH THE MATCH MODEL OR A BENCH TOOL -> run `npm run test:sim` yourself and put the
+# numbers in the PR. That is how every balance change in this project has actually been reviewed.
+name: Simulation calibration
+
+on:
+  schedule:
+    - cron: '0 4 * * 1' # Mondays, 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  simulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:sim

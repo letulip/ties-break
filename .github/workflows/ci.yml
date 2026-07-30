@@ -16,25 +16,9 @@ jobs:
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force
-      # ⚠ THE GATE RUNS THE `unit` PROJECT; THE MONTE-CARLO FILES RUN IN THEIR OWN JOB BELOW.
-      # Nothing is skipped - `sim` runs on the same push, in parallel, and its failure fails the
-      # workflow. Splitting them is why the gate stopped dying on `Timeout calling "onTaskUpdate"`
-      # with 935 of 1561 tests passed and not one assertion failed: three files were 104s of a 183s
-      # suite, and a reporter RPC has a hard-coded 60s. See the note in vite.config.ts.
+      # ⚠ THE GATE RUNS THE `unit` PROJECT. The Monte-Carlo files are NOT in it and that is a
+      # decision, not an omission - see .github/workflows/simulation.yml and the note in
+      # vite.config.ts. They are deterministic statistical calibration, they cost 143s of CPU, and
+      # they have been losing a fight with vitest's reporter RPC for months.
       - run: npm test
       - run: npm run build
-
-  # THE MONTE-CARLO SUITE, on its own runner. Same push, same code, its own core - so the two
-  # bench files and the match calibration get the CPU they need instead of fighting the reporter
-  # for it. It is a REQUIRED part of the gate: this job going red fails the workflow exactly as
-  # the one above does. It is only the contention that is gone, not the coverage.
-  simulation:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run test:sim
