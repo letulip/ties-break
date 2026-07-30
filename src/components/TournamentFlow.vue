@@ -666,21 +666,30 @@ const matchMeta = computed(() => {
              being drawn, and "To result →" went up to the header's own slot - so the row had nothing
              left to carry and the court starts 34px higher (22px of pill + its 12px of air).
              The round is still named on this screen and it is still the same capsule. It just does
-             not rent a row to say it. -->
-      <section v-if="replayOpen && annotated && currentMatch" class="tf-card">
-        <MatchViewer
-          :match="annotated"
-          :player-a="currentMatch.a"
-          :player-b="currentMatch.b"
-          :surface="currentMatch.surface"
-          :rank-a="viewerRankA"
-          :rank-b="viewerRankB"
-          :final-match="isFinalRound"
-          :temperature-c="pending?.temperatureC ?? null"
-          @finish="endReplay"
-          @end-applause="noteEndApplause"
-        />
-      </section>
+             not rent a row to say it.
+             ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO, WHICH IS THE OTHER 36px (owner, 30.07: «на
+             экране матча у нас двойная рамка, она съедает место, давай внешний контур уберем, он не
+             нужен»). It was a 16px-padded, hairline-bordered panel wrapped around a STACK of panels
+             the viewer draws itself - `.mv-panel`, `.mv-log`, `.mv-boxscore` are each a `Card`, so
+             the outer box was a second border around a border and 34px of horizontal padding around
+             nothing. Measured at 375pt: the canvas went 291 -> 327px wide and the painted court with
+             it (244.4 -> 274.9px), and the panel lost 32px of height. The viewer now hangs straight
+             off `.tf-body`, which is what the other two match screens do as well. The section it used
+             to live in went with the class: the `v-if` sits on the component, so the phase chain is
+             unchanged and there is no wrapper left to grow a border again. -->
+      <MatchViewer
+        v-if="replayOpen && annotated && currentMatch"
+        :match="annotated"
+        :player-a="currentMatch.a"
+        :player-b="currentMatch.b"
+        :surface="currentMatch.surface"
+        :rank-a="viewerRankA"
+        :rank-b="viewerRankB"
+        :final-match="isFinalRound"
+        :temperature-c="pending?.temperatureC ?? null"
+        @finish="endReplay"
+        @end-applause="noteEndApplause"
+      />
 
       <!-- =====================================================================================
            F. MATCH DAY – the pre-match card, as the portrait treatment (ui-inventory §4 Q2). The

@@ -1033,16 +1033,33 @@ function servePct(side: Side): number {
           group-label="How much of the match to watch"
         />
         <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
+        <!-- ⚠ SHOUT IS IN THE PINNED BLOCK NOW (owner, 30.07: «на экране live матча кнопку shout тоже
+             надо оставить в sticky блоке»). It used to sit below the bar in `.mv-actions`, on the
+             argument that the bar carries SETTINGS and this is an ACTION - and the argument was wrong
+             about this one button. Shouting at your kid is the thing you would reach for mid-rally,
+             which is the same test that pinned the speed and the view; leaving it outside meant the
+             one control the player might actually want during a point was the one that scrolled away
+             as the log filled. It takes a SECOND ROW of the bar rather than squeezing the two plates
+             onto a third of it - see `.mv-shout`, and the measurement of the attempt that did squeeze
+             them. Still disabled until Phase 6, and still gated on `live`: ui-inventory §2 says
+             the replay "IS the live match minus the blinking Live and minus shouting", so the gate is
+             the same `props.mode === 'live' && !finished` the Live badge itself carries. -->
+        <button
+          v-if="props.mode === 'live' && !finished"
+          class="mv-shout"
+          disabled
+          title="Coming in Phase 6"
+        >
+          Shout 📣
+        </button>
       </div>
-      <!-- NOT in the pinned bar, and the line is deliberate: the bar carries the two SETTINGS you
-           reach for mid-rally (how much, how fast). This row carries an ACTION - one of them
-           disabled until Phase 6, the other only meaningful once the match is already over - and
-           neither is something you hunt for while play is running. -->
-      <div v-if="props.mode === 'replay' || !finished" class="mv-actions">
+      <!-- WHAT IS LEFT OUTSIDE THE PINNED BAR, and it is one button on one mode: "Watch again" only
+           means anything once the match is over, and a replay is never watched while you are waiting
+           for it - so it does not earn permanent screen the way a mid-rally control does. -->
+      <div v-if="props.mode === 'replay'" class="mv-actions">
         <!-- U0's PrimaryPill: `solid` IS `.primary`, so the class stays and the sound layer's
              `.sfx-watch` hook keeps working - what arrives is the one door for the affirmative. -->
-        <PrimaryPill v-if="props.mode === 'replay'" class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
-        <button v-else disabled title="Coming in Phase 6">Shout 📣</button>
+        <PrimaryPill class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
       </div>
 
       <!-- ===== THE BOX SCORE, once it is over ================================================ -->
@@ -1550,35 +1567,68 @@ function servePct(side: Side): number {
    fixed that by taking ~53px off the scroller permanently, for the whole watch, including the
    first point when nothing was wrong; sticky takes NOTHING until the row would otherwise be gone,
    and then puts it exactly where a fixed bar would have been. Same recovery, none of the rent.
-   The floor is --panel so the log and the box score pass UNDER the bar rather than through it. It is
-   the tone of the .tf-card all three match screens put the viewer in, so the plate is invisible
-   there and the row reads exactly as it did - the pills sit on the card and the log slides beneath
-   it. (--bg was the first try and it drew a dark seam across the card even when nothing was pinned.)
+   The floor is opaque so the log and the box score pass UNDER the bar rather than through it, and it
+   is the tone of whatever the viewer is standing on, so the plate is invisible until it pins.
+   ⚠ THAT TONE CHANGED WITH THE OUTER FRAME, 30.07. It was `--panel`, because all three match screens
+   used to put the viewer inside a `--panel`-toned `.tf-card`; the owner has now taken that frame off
+   («давай внешний контур уберем»), so the ground under the viewer is the takeover's own page colour
+   and the floor follows it to `--bg`. Leaving it at `--panel` would have drawn exactly the seam this
+   line used to warn about, with the two tones swapped. The same move is why the segmented plates
+   below are visible at all now: `--panel` on `--bg` reads as a plate, which is what SegmentedRow's
+   default `page` tone is for and what it could not do inside a panel of the same colour.
    The negative margin eats `.mv-below`'s 10px gap and the top padding pays it back, so the plate is
    flush against the log instead of leaving a 10px slot for text to show through; the 8px underneath
-   is the only height this costs, and the head row it replaced gave back 34. */
+   is the only height this costs, and the head row it replaced gave back 34.
+   ⚠ IT IS TWO ROWS NOW, because "Shout" joined it (owner, 30.07: «на экране live матча кнопку shout
+   тоже надо оставить в sticky блоке»). Three controls do not fit one 327px line - the two segmented
+   plates alone want ~275px at this bar's trimmed pill padding and the button is another ~110 - so the
+   shout takes a second row inside the SAME sticky block, which is the whole of what he asked for.
+   ⚠ AND THAT IS WHY THIS IS A GRID AND NOT A FLEX ROW ANY MORE, which is worth writing down because
+   the obvious flex answer is wrong in a way that LOOKS right. `flex-wrap: wrap` plus `flex: 0 0 100%`
+   on the button does force a second line - but only while nothing clamps it, and clamping is exactly
+   what "own row, own width, centred" needs. `max-width: max-content` feeds into the flex item's
+   HYPOTHETICAL main size, so the browser sizes the button at ~109px BEFORE deciding where lines break,
+   finds it fits beside two zero-basis plates, and puts all three on one line: measured 327px wide, 59px
+   tall, and the two plates squeezed to 109px each. Grid decides rows from the template instead of from
+   the items, so `grid-column: 1 / -1` is a row no matter how wide its content is. */
 .mv-controls {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  display: flex;
+  display: grid;
+  /* Two equal tracks for the two plates. `minmax(0, ...)` rather than a bare `1fr`, so a pill row
+     that overflows shrinks its track instead of pushing the grid wider than the bar. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: -10px;
   padding: 10px 0 8px;
-  background: var(--panel);
+  background: var(--bg);
 }
 
+/* The plates were `flex: 1` when this was a row; the tracks size them now. `min-width: 0` stays -
+   it is what lets a plate's own contents shrink rather than overflow. */
 .mv-seg {
-  flex: 1;
   min-width: 0;
+}
+
+/* THE SHOUT, ON ITS OWN ROW OF THE PINNED BLOCK: full width of the bar as a CELL, its own width as a
+   BUTTON. `justify-self` is what the flex version could not express, and it keeps the control the exact
+   size and position it had down in `.mv-actions` - only its parent changed. */
+.mv-shout {
+  grid-column: 1 / -1;
+  justify-self: center;
 }
 
 /* ⚠ "Skip" USED TO RENDER AS "Ski", AND THE SPEED PLATE SAT ON TOP OF IT. The two rows want
    ~359px of pill between them at the shared `.tab-pill` padding of 16px a side; inside a .tf-card
-   on a 375pt phone they get 293px, so the view row overflowed its half and painted over its
+   on a 375pt phone they got 293px, so the view row overflowed its half and painted over its
    neighbour. The padding is the only thing here that was negotiable - the labels are already the
    `short` forms - so it is trimmed for THIS bar alone. The sheet's own 16px is untouched, and so is
-   every other SegmentedRow (the draw's round tabs have room for theirs). */
+   every other SegmentedRow (the draw's round tabs have room for theirs).
+   ⚠ STILL NEEDED AFTER THE OUTER FRAME CAME OFF (30.07), and it is worth writing the arithmetic down
+   rather than re-deriving it next time: the bar is 327px wide now instead of 293, and 327 is still
+   short of the 359 the sheet's padding wants. What the extra 34px bought is HEADROOM - the trim
+   brings the two rows to ~275px, so they now clear the bar by 52px instead of overflowing it. */
 .mv-controls :deep(.tab-pill) {
   padding-left: 9px;
   padding-right: 9px;

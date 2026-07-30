@@ -160,19 +160,25 @@ function close(): void {
            things and both were answered elsewhere: a `.tf-replay-round` pill reading "Practice
            match", which the header above says already, and "To result →", which is now the header's
            own slot. So the row had nothing left of its own to carry, and the court starts 34px
-           higher (22px of pill + its 12px of air) on every friendly. -->
-      <section v-else-if="phase === 'live'" class="tf-card">
-        <MatchViewer
-          :match="annotated"
-          :player-a="match.a"
-          :player-b="match.b"
-          :surface="match.surface"
-          :rank-a="viewerRankA"
-          :rank-b="viewerRankB"
-          mode="live"
-          @finish="toResult"
-        />
-      </section>
+           higher (22px of pill + its 12px of air) on every friendly.
+           ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO (owner, 30.07: «на экране матча у нас двойная
+           рамка, она съедает место, давай внешний контур уберем, он не нужен»). The viewer already
+           draws its own panels - the court, the log and the box score are each a `Card` - so this was
+           a border around a border and 34px of padding around nothing. Measured at 375pt: 291 ->
+           327px of canvas, 244.4 -> 274.9px of painted court, and 32px of height back. See the same
+           note in TournamentFlow.vue; the `v-else-if` moved onto the component so the phase chain is
+           untouched and no wrapper is left to grow an edge again. -->
+      <MatchViewer
+        v-else-if="phase === 'live'"
+        :match="annotated"
+        :player-a="match.a"
+        :player-b="match.b"
+        :surface="match.surface"
+        :rank-a="viewerRankA"
+        :rank-b="viewerRankB"
+        mode="live"
+        @finish="toResult"
+      />
 
       <!-- Box score: her result, with the honest "no ranking points" line. -->
       <section v-else class="tf-card">
