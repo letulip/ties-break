@@ -339,6 +339,13 @@ function scrollToTier(tier: CoachTier): void {
           <!-- WHAT THE RUNG IS WORTH TO HER, computed from her own headroom. Its own line, because
                it is the number the owner asked for and it must never be the thing that truncates. -->
           <span class="cm-uplift">{{ formatUplift(r.upliftPct) }}</span>
+          <!-- WHAT HE DOES ABOUT HER BODY (load slice). The card used to make exactly one claim - the
+               development uplift - so the two differences that wave introduced (how good his medical
+               team is, and how much of the deciding he takes off you) were spent money with nothing on
+               screen to explain it. Prose, not a second number: the measured spread is a few injury
+               weeks over four years and printing a figure would promise precision the run cannot back.
+               Below the uplift, quieter than it, because the uplift is still the card's headline. -->
+          <span class="cm-load">{{ r.loadNote }}</span>
         </span>
         <span class="cm-right">
           <span class="cm-price">{{ formatDollars(r.weeklyCents) }}<i>/wk</i></span>

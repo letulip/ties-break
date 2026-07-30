@@ -476,12 +476,16 @@ const pendingConfirm = ref<PendingConfirm | null>(null)
 function askEnter(e: UpcomingEvent): void {
   // Fatigue is a warned CHOICE: spell out the risk in the confirm, but keep the action available.
   const fatigued = e.cautionReason === 'fatigued'
+  // ...and if the family is paying somebody who would rather she skipped it, the confirm says so in HIS
+  // words. Load slice: it is the one moment the advice can still change the decision, and a warning that
+  // appears only on the card is a warning the player has already scrolled past by the time he taps.
+  const said = e.coachCaution ? `${e.coachCaution} ` : ''
   pendingConfirm.value = {
     message: fatigued
-      ? `${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
+      ? `${said}${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
         `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? Entry fee ${formatDollars(e.entryFeeCents)}.`
-      : `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? Entry fee ${formatDollars(e.entryFeeCents)}.`,
-    confirmLabel: fatigued ? 'Push through' : 'Enter',
+      : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? Entry fee ${formatDollars(e.entryFeeCents)}.`,
+    confirmLabel: fatigued || e.coachCaution ? 'Push through' : 'Enter',
     onConfirm: () => game.enterEvent(e.id),
   }
 }
@@ -987,6 +991,11 @@ function closeExhibition(): void {
                 <p v-else-if="row.event.cautionReason === 'fatigued'" class="caution-note">
                   Exhausted – race anyway? Rest would be wiser.
                 </p>
+                <!-- THE HIRED COACH'S OPINION (load slice). Its own line, below the engine's caution and
+                     never instead of it: `cautionReason` is the RULE (she is under the tier's floor) and
+                     this is a PERSON's read, so a card can carry one, both or neither. Quiet styling on
+                     purpose - it is advice, the Enter stays active, and the card must not look locked. -->
+                <p v-if="row.event.coachCaution" class="coach-note">{{ row.event.coachCaution }}</p>
               </template>
               <!-- She cannot enter this one (locked ahead, or the list has closed), so the week is
                    still hers to plan: a friendly or a family week. The aspirational card stays –

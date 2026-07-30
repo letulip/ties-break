@@ -517,6 +517,19 @@ export interface CoachMarketRow {
   /** [lo, hi] percent of her CURRENT level this rung could add over a season, above what the
    *  parent alone would manage. Computed from her own headroom - see coachSeasonUplift. */
   upliftPct: [number, number]
+  /** WHAT HE DOES ABOUT HER BODY, in one sentence (docs/specs/coach-as-load-manager.md).
+   *
+   *  Added because a ladder nobody can see is not a product. The load wave gave the rungs two new
+   *  differences - how well their medical team protects her (`physioQuality`) and how much of the
+   *  week-to-week deciding they take off the parent (`coachEscalates`) - and both were invisible on the
+   *  one screen where the money is spent. The market card carried a development uplift and nothing else,
+   *  so the whole slice would have read as "the numbers moved for no reason".
+   *
+   *  A SENTENCE, not two more numbers. The uplift range is already the card's quantitative claim, and
+   *  the honest thing to say about load is qualitative: the measured spread between rungs is real but
+   *  small (a few injury weeks over four years), and printing "-2.7 weeks" would promise a precision the
+   *  120-seed run does not support. */
+  loadNote: string
 }
 
 export interface UpcomingEvent {

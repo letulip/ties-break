@@ -75,7 +75,7 @@ import { parentIncomeForWeekCents,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort } from './season/cohort'
 import { renewCohort } from './season/conveyor'
-import { ageFactor, growWeek, relativeAgeYears, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
+import { ageFactor, growWeek, relativeAgeHeadStart, relativeAgeYears, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
 import {
   bestFitCoachAt,
   buildCoachRoster,
@@ -136,6 +136,7 @@ import {
 import { drawBodyRegion } from './body'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
 import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
+import type { CoachTier } from '../shared/protocol'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -523,6 +524,15 @@ export function startingSkills(seed: string, _profile: PlayerProfile): KidSkills
     // worst wing by construction.
     groundstrokes: pickInt(r, 40, 58),
   }
+}
+
+/** Her birth build plus the relative-age head start, clamped to the attribute range. Every skill moves by
+ *  the same amount: eleven extra months of being a junior is not a specialisation. */
+function withHeadStart(skills: KidSkills, birthMonth: number): KidSkills {
+  const bump = relativeAgeHeadStart(birthMonth)
+  const out = { ...skills }
+  for (const k of SKILL_KEYS) out[k] = Math.max(1, Math.min(100, Math.round((out[k] + bump) * 100) / 100))
+  return out
 }
 
 export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; skills?: KidSkills }): MatchPlayer {
@@ -2161,6 +2171,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background) - weeklyIncome),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],
+      loadNote: coachLoadNote(coach.tier),
     }
   })
 }
@@ -3182,7 +3193,18 @@ export function createWorld(
     // Phase 4: her starting build is the SAME derivation that used to be recomputed on demand, so
     // week 0 is byte-identical to the pre-development engine. What changed is that it is now state,
     // and state moves.
-    skills: startingSkills(seed, profile),
+    // ⚠ TASK 55 – AND THE HEAD START HER BIRTH MONTH BOUGHT HER. `startingSkills` stays the pure birth
+    // derivation (the build she was BORN with, seed-only, and the radar's baseline for every existing
+    // save); this adds the eleven months of extra training a January girl has had by the time the game
+    // opens. Applied HERE rather than inside `startingSkills` for two reasons: that function is
+    // documented as the birth build and two girls with the same seed really do have the same one, and
+    // every save written before this existed keeps a radar baseline that has not moved.
+    // POST-DRAW arithmetic, so no stream is touched.
+    skills: withHeadStart(startingSkills(seed, profile), profile.birthMonth),
+    // ⚠ THE CEILING IS ROLLED OFF THE BIRTH BUILD, NOT THE HEAD-STARTED ONE. `rollPotential` adds a band
+    // on top of where she starts, so feeding it the head start would hand the January girl a higher
+    // CEILING as well as a better start - turning a timing effect into a talent effect, which is exactly
+    // what task 55 must not become. Being born in January does not make her able to get better.
     potential: rollPotential(seed, startingSkills(seed, profile)),
     // Nobody is backing her yet. The first review is the season boundary at week 52 – she has to
     // put a year in front of them before anyone writes a letter.
@@ -3902,6 +3924,28 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   // Precedence order, not insertion order: the caller renders them in this sequence, and the
   // medical pair leads it so nothing can bury them (see STOP_PRECEDENCE).
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
+}
+
+/** WHAT EACH RUNG DOES ABOUT HER BODY, for the market card - the load wave's two new differences said
+ *  in one sentence each: how good the medical team is, and how much deciding he takes off the parent.
+ *
+ *  Written as PROSE rather than numbers on purpose. The measured spread between hired rungs is a few
+ *  injury weeks over four years - real, and far too small to print as a figure without promising a
+ *  precision 120 seeds do not support. What IS crisply different is the second half (taps per career run
+ *  6.7 at budget to 2.0 at elite, a 3.4x ladder), and that is a thing a sentence can say honestly. */
+function coachLoadNote(tier: CoachTier): string {
+  switch (tier) {
+    case 'self':
+      return 'You manage her load – every call is yours, and nobody is watching her but you.'
+    case 'budget':
+      return 'Basic physio. He handles the easy calls and brings you the rest.'
+    case 'middle':
+      return 'Proper physio. He decides most weeks himself.'
+    case 'high':
+      return 'A good medical team. He rarely needs to ask you.'
+    case 'elite':
+      return 'The best medical team money buys. He handles her body, and you hear about it after.'
+  }
 }
 
 /** What he says when he would rather she skipped a trip. Three sentences, picked by HOW tired she is

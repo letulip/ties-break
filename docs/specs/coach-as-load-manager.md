@@ -256,3 +256,48 @@ one:
 3. **It makes the fog load-bearing.** §6 already refuses to let the coach touch `potential` because
    that would make the fog decorative. This is the same argument from the other side: the fog now
    *does* something on a week nobody is looking at the radar.
+
+---
+
+## 9. What shipped, and what it measures — the "after"
+
+`npm run bench:load`, 120 paired seeds × 208 weeks, raw runs archived as
+`docs/specs/load-baseline-2026-07-30.txt` (before) and `docs/specs/load-after-2026-07-30.txt` (after).
+
+**Player arm — 75/25, rests every knock, heeds the caution:**
+
+| rung | layoff | rested | wasted | injuries | **taps** | matches | rank |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| self | 37.7 | 26.9 | 1.4 | 10.9 | **14.2** | 99.4 | 103.8 |
+| budget | 28.3 | 20.8 | 3.1 | 8.9 | **6.5** | 124.6 | 87.7 |
+| middle | 26.6 | 20.5 | 3.1 | 8.7 | **4.6** | 124.3 | 86.1 |
+| high | 26.1 | 20.4 | 3.3 | 8.4 | **3.1** | 124.4 | 89.0 |
+| elite | 23.4 | 19.9 | 3.4 | 8.2 | **1.8** | 126.0 | 86.1 |
+
+**Three columns are now monotone ladders across all four hired rungs** — layoff weeks (28.3 → 23.4),
+injuries (8.9 → 8.2) and interruptions (6.5 → 1.8, a 3.6× spread). `budget → elite` is **5.3 weeks**
+against the baseline's **−0.1**. §5's question is answered: the purchase has an honest price.
+
+**And a listener — the parent who believes the coach's line on the card — gets the biggest number in
+the wave:** wasted trips fall **10.2 → 2.8**, and `self → elite` is **33.3 weeks** of a 208-week career.
+Advice is worth nothing until it is followed, which is why that arm had to exist.
+
+### ⚠ 9a. What did NOT move, stated plainly
+
+**Rank does not separate the hired rungs** (87.7 / 86.1 / 89.0 / 86.1 — flat and non-monotone), and it
+will not, for a reason that is structural rather than a tuning miss:
+
+- rank is won by **skill**, and skill is driven by `developmentFactor`, which §6 forbade this slice from
+  touching;
+- the load ladder buys **availability**, and 5 extra weeks convert to only ~1.4 more matches.
+
+So the top of the ladder is sold on **her health and your time**, not on ranking. That is defensible —
+arguably it is the truer product — but it is not what a player will assume, and it is the one thing to
+watch in playtest. If the owner wants the rungs to differ in *results*, the honest lever is
+`developmentFactor`, and §6 should be reopened deliberately rather than drifted into.
+
+**The fog builds the attention ladder, not the outcome one.** §8's mechanism produced the monotone tap
+spread and, on its own, nothing else — a ±12-point misread on a binary decision taken 13 times a career
+cannot move a 208-week outcome. The outcome ladder came from `physioQuality` instead: the boolean §4(c)
+complained about, made into a rung. §8 is still the right mechanism for *who decides and how often*; it
+was the wrong one for *how well it turns out*, and I built it before noticing the difference.

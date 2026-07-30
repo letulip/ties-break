@@ -97,18 +97,35 @@ export function rollPotential(seed: string, start: KidSkills): KidSkills {
 // effect is one of the best-documented in youth sport, and every junior system in the world has it.
 //
 // ⚠ AND THE MODEL IS NOT A PENALTY, IT IS A CLOCK. A December girl does not develop more SLOWLY - she is
-// simply younger than the band she is measured against. So her development curve is not scaled, it is
-// SHIFTED IN TIME: at calendar-age 14 she is developmentally ~13.5, and a January girl ~14.5. That single
-// substitution produces the whole effect, including the parts nobody has to write down:
+// simply younger than the band she is measured against. Her curve is SHIFTED IN TIME, not scaled: at
+// calendar-age 14 she is developmentally ~13.5 and a January girl ~14.5.
 //
-//   * she is behind the field at 14, because the cohort is not shifted with her;
-//   * the gap CLOSES on its own as `ageFactor` flattens - which is exactly how the real effect behaves,
-//     and why it is a junior phenomenon rather than a career-long handicap;
-//   * and it costs nothing to reverse: a January girl gets the mirror image, not a bonus bolted on.
+// ⚠⚠ AND THE SHIFT ALONE IS NOT THE EFFECT - I SHIPPED THAT VERSION FIRST AND IT WAS BACKWARDS. This block
+// used to claim "that single substitution produces the whole effect". It does not, and the failure was
+// quiet enough to be worth recording: `ageFactor` DECREASES with age (the steep years ease off), so making
+// the January girl developmentally OLDER made her develop marginally SLOWER. Both girls still finished at
+// plausible levels, so nothing looked wrong - the model was simply inverted, and a test comparing two
+// careers on one seed is what said so.
 //
-// ONE CALL SITE (world.ts, `growWeek`'s `ageYears`), zero new state, no schema, and NO NEW DRAW - the
-// growth generator's key is unchanged, only the age handed to it. `birthMonth` has been on the profile
-// since onboarding shipped, so every existing save already carries the number this reads.
+// The mistake was thinking the effect is about a RATE. It is not. It is about WHERE SHE IS NOW against the
+// girls she is drawn with: at fourteen the January girl has had eleven more months of training and
+// growing, so she is further along THIS SEASON - bigger, stronger, better - which is why she gets picked,
+// coached and seeded. That is a level, not a slope.
+//
+// SO IT IS TWO HALVES, and together they are the phenomenon rather than half of it:
+//   1. THE HEAD START (`relativeAgeHeadStart`, applied at `createWorld`). She begins ahead or behind.
+//   2. THE CATCH-UP (the `ageFactor` shift, in world.ts at `growWeek`'s `ageYears`). The younger girl sits
+//      earlier in the steep window and gains marginally faster, so the gap NARROWS - which is exactly why
+//      the relative age effect washes out of senior tennis, and it needed no extra code once (1) existed.
+//
+// Zero new state, no schema, and NO NEW DRAW on either half - both are post-draw arithmetic, and the
+// growth generator keeps its key. `birthMonth` has been on the profile since onboarding shipped, so every
+// existing save already carries the number this reads.
+//
+// ⚠ AND THE CEILING IS NOT TOUCHED. `rollPotential` is fed the BIRTH build, never the head-started one -
+// see the note at its call site. Being born in January must not make her able to get BETTER, only to be
+// further along right now; feeding the head start into the ceiling would turn a timing effect into a
+// talent effect, which is the one thing this task must never become.
 //
 // ⚠ NOT IN THIS SLICE: THE PHYSICAL MISMATCH. A late-born girl also plays opponents who are bigger, which
 // should mean more injury exposure - and doing that honestly needs the COHORT to have birth months, which
@@ -128,6 +145,38 @@ export function rollPotential(seed: string, start: KidSkills): KidSkills {
 export function relativeAgeYears(birthMonth: number): number {
   const clamped = Math.max(1, Math.min(12, Math.round(birthMonth)))
   return (6.5 - clamped) / 12
+}
+
+/** What a year of junior development is worth, in skill points, for pricing the head start below.
+ *
+ *  MEASURED, not guessed: the skills run over 14->18 moved her mean attribute from 48.5 to 57.0-58.6
+ *  depending on the coach rung, i.e. ~2.4 points a year. So the eleven months between a January girl and
+ *  a December one is worth about 2.2 points of every attribute - a real edge in a match, and nothing like
+ *  a different player. */
+export const SKILL_POINTS_PER_YEAR = 2.4
+
+/**
+ * HER HEAD START AT WEEK 0, in skill points, for being older inside her own band.
+ *
+ * ⚠ THIS IS THE HALF I FIRST GOT WRONG, and a test caught it. My first wiring shifted ONLY the age handed
+ * to `ageFactor` - and `ageFactor` DECREASES with age (the steep years ease off), so making the January
+ * girl developmentally older made her develop marginally SLOWER. The model produced the exact opposite of
+ * the relative age effect, and it did so quietly: both girls still ended a career at plausible levels.
+ *
+ * The error was thinking the effect is about a RATE. It is not. It is about WHERE SHE IS NOW relative to
+ * the girls she is drawn against: at fourteen the January girl has had eleven more months of training and
+ * growing, so she is simply further along - bigger, stronger, better THIS SEASON. That is why she gets
+ * picked, coached and seeded, and none of it is a statement about her rate.
+ *
+ * So the effect is TWO halves, and together they are the phenomenon:
+ *   1. THE HEAD START, here. She begins ahead, by the offset times what a year is worth.
+ *   2. THE CATCH-UP, which the rate shift already produces for free - the younger girl sits earlier in
+ *      the steep window, so she gains marginally faster and the gap narrows. That is precisely why the
+ *      relative age effect is a JUNIOR phenomenon that washes out in senior tennis, and it needed no
+ *      extra code at all once the first half was right.
+ */
+export function relativeAgeHeadStart(birthMonth: number): number {
+  return relativeAgeYears(birthMonth) * SKILL_POINTS_PER_YEAR
 }
 
 /** How much of the available headroom a week can take, by age. The plan's calibration targets:
