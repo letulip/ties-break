@@ -182,30 +182,42 @@ export function fundsPressureOf(fundsCents: number): FundsPressure {
 // The owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на экране Week
 // story как в макете». Four paintings of her asleep on the way back, on the Weekly Story.
 //
+// ⚠ W4 MOVED IT ONTO THE WEEK IT IS A PICTURE OF (owner, 30.07: «ставить week recap сразу после
+//   турнира, как будто домой едем»). This rule used to read WEEK - 1, and clause 1 below said why in
+//   its own words: a week with a `tournament` event had no recap at all, so a scene set on the
+//   tournament week was a fact no surface could ever render. That limitation is gone – the story now
+//   opens the moment the tournament flow lets go of the week (composables/weekRecap.ts) – and with it
+//   go the two clauses that existed only to dodge it. The picture was always of the drive home from
+//   THIS tournament; it is on this week now, under the finale that just closed.
+//
+//   TWO CLAUSES DELETED, and neither had any other job:
+//     * "it is the week AFTER" – the offset itself. `away` was `week - 1`; it is `week`.
+//     * "and she stayed home" – no tournament of hers this week. Its stated purpose was "the one
+//       that makes the fact renderable: it is `recapExists`'s own tournament test". With the story on
+//       the tournament week, that test is the thing being contradicted rather than mirrored. Its
+//       second argument – that back-to-back tournament weeks should tell the SECOND tournament's
+//       story rather than the first one's drive home – dissolves too: each of those weeks now has its
+//       own story, and each one's painting is its own journey back.
+//   What SURVIVES the move is the pendingUnfinished half: a reveal in flight has not finished being
+//   a week, so there is no journey home yet. It is the same fact the story's own gate refuses on.
+//
 // (a) WHAT COUNTS AS COMING HOME FROM AN AWAY TRIP — three clauses, all conservative, because on
 //     the Weekly Story this scene REPLACES the week's painting rather than sitting beside it. A
 //     false positive does not add decoration; it swaps correct art for wrong art.
 //
-//     1. IT IS THE WEEK AFTER, not the week of. Two reasons, and they agree. The screen: a week
-//        with a `tournament` event has NO recap at all (composables/weekRecap.ts recapExists), so a
-//        scene set on the tournament week would be a fact no surface can ever render. The fiction:
-//        «после выездов» is *after* the trips – she plays on the Saturday, and the following week's
-//        story opens on her asleep on the way back. So the rule reads WEEK - 1.
+//     1. IT IS THE WEEK SHE PLAYED, which is the week she came back. «после выездов» is *after the
+//        trips*, and after a trip is the Sunday of the same week: she plays on the Saturday, gets in
+//        the car, and the week's story opens on her asleep in it. The mockup's own handwriting under
+//        the painting says exactly this – «Bianca quietly fell asleep in the car after the
+//        tournament» – on a page whose header is one week.
 //     2. SHE ACTUALLY PLAYED THERE. A competitive match of hers at that event, off the ledger –
 //        which rules out every way an entry can exist without a journey: the walkover (too injured
 //        to travel), the doctor's medical withdrawal, and the friendly, which is not a trip and not
-//        a result (R11-2). No matches, no journey home.
+//        a result (R11-2). No matches, no journey home. It is also what keeps a bare tournament
+//        SUMMARY from claiming a trip: no revealed match of hers, no scene.
 //     3. THE FAMILY PAID TO GET HER THERE, net over the week. Same test `travelled` uses and for
 //        the same reason: a skipped tournament refunds its travel in the same week and nets to 0 –
 //        she never boarded.
-//     4. AND SHE STAYED HOME. Back-to-back tournament weeks are ordinary on the calendar (j30 runs
-//        every 2 weeks), and on one of them the journey back is not the week's story – she came in
-//        on Sunday and was gone again by Tuesday, and what happened is the SECOND tournament. The
-//        picture would replace a week of competing with a picture of a car. This clause is also the
-//        one that makes the fact renderable: it is `recapExists`'s own tournament test, read off
-//        the same events plus the in-flight reveal, so a scene can never land on a week that has no
-//        Weekly Story to put it on. Caught by tests/travel-home.test.ts against a live career –
-//        the first draft of this rule had it, and week 43 of seed `travel-home-1` was invisible.
 //
 //     ...and then the LINE: every tier except `local`. A Local Open is the club down the road (the
 //     calendar prices its travel at $60-120 against a Regional's $150-400) and nobody comes home
@@ -226,6 +238,11 @@ export function fundsPressureOf(fundsCents: number): FundsPressure {
 //     the same scene, on any device and any replay, and ZERO draws land on the MAIN weekly stream
 //     (nothing here runs inside the tick at all, so the frozen capture 41550 / e6b0c709 cannot move
 //     by construction). Keyed on the week she comes HOME, which is the week the picture is shown.
+//     ⚠ W4 changed WHICH week that is (the tournament week, not the one after), and that is
+//     arithmetic on an existing sub-stream: the same `rngFromSeed` call, one key value different,
+//     still off the MAIN stream. The invariance pin in tests/travel-home.test.ts re-derives 41550 /
+//     e6b0c709 from the live engine with a snapshot taken every week, so it is measured rather than
+//     assumed.
 
 /** The two buckets, and the scenes that tell each journey. */
 const TRAVEL_HOME_SCENES: Record<'air' | 'road', readonly TravelHomeScene[]> = {
@@ -256,30 +273,29 @@ function travelCentsIn(events: readonly WorldEvent[], week: number): number {
  * The scene of the journey home for `week`, or null. See the note above for the whole argument.
  * Pure and deterministic: the same arguments always answer the same scene.
  *
- * `pendingUnfinished` is clause 4's second half – a reveal in flight belongs to THIS week and has
- * not written its summary event yet, so the walk alone would not see it.
+ * `pendingUnfinished` is the one guard that survived W4: a reveal in flight has not finished being a
+ * week – her run is still being played out, so nobody is in a car yet – and it is the same fact the
+ * Weekly Story's own gate refuses on (composables/weekRecap.ts).
  */
 export function travelHomeSceneFor(args: {
   /** the full retained event log */
   events: readonly WorldEvent[]
-  /** the week she is HOME – the week the picture would be shown on */
+  /** the week she PLAYED and drove back from – the week the picture is shown on */
   week: number
   seed: string
   /** a tournament reveal of hers is in flight this week (DiaryWorldView.pendingUnfinished) */
   pendingUnfinished?: boolean
 }): TravelHomeScene | null {
   const { events, week, seed } = args
-  const away = week - 1
-  if (away < 0) return null
-  // 4. she stayed home this week – no tournament of hers, resolved or in flight
+  // Week 0 is the career start: no story to put a picture on, whatever the ledger says.
+  if (week <= 0) return null
+  // her run is still being revealed – the week is not over and she is not on her way anywhere
   if (args.pendingUnfinished) return null
-  if (playedTierIn(events, week) !== null) return null
-  if (events.some((e) => e.week === week && e.type === 'tournament')) return null
-  // 1-2. she played an away tournament last week...
-  const tier = playedTierIn(events, away)
+  // 1-2. she played an away tournament this week...
+  const tier = playedTierIn(events, week)
   if (tier === null || tier === 'local') return null
   // 3. ...and the family paid to get her there
-  if (travelCentsIn(events, away) >= 0) return null
+  if (travelCentsIn(events, week) >= 0) return null
   const pool = TRAVEL_HOME_SCENES[TIERS[tier].track === 'itf' ? 'air' : 'road']
   const rng = rngFromSeed(`${seed}:travel:${week}`)
   return pool[Math.floor(rng() * pool.length)]
@@ -317,10 +333,11 @@ export function travelHomeSceneFor(args: {
  *  Everything a journey-home note is allowed to know – and, like `DiaryFacts`, everything it may
  *  assert. Assembled from the event feed and the milestone ledger; nothing new is persisted. */
 export interface TravelHomeFacts {
-  /** the week she is HOME – the week the picture and the note are shown on */
+  /** the week she PLAYED and drove back from – the week the picture and the note are shown on.
+   *  ⚠ W4 DELETED `awayWeek` rather than leaving it at `week`: it was documented as "always
+   *  `week - 1`", and once the two are the same number, keeping both is a lie waiting for the first
+   *  reader who trusts the name. Everything that used it reads `week` now. */
   week: number
-  /** the week she PLAYED – always `week - 1` */
-  awayWeek: number
   scene: TravelHomeScene
   mood: TravelHomeMood
   tier: TierId
@@ -356,7 +373,7 @@ function kidMatchesIn(events: readonly WorldEvent[], week: number): readonly Wor
 }
 
 /**
- * Is `awayWeek` her FIRST trip on the international ladder?
+ * Is the trip in `tripWeek` her FIRST on the international ladder?
  *
  * The event feed alone cannot answer this: it is capped (EVENTS_CAP = 400, pruned oldest-first), so
  * on a five-season career "no earlier ITF match in the log" eventually stops meaning "no earlier ITF
@@ -375,13 +392,14 @@ function kidMatchesIn(events: readonly WorldEvent[], week: number): readonly Wor
 function firstAbroadIn(
   events: readonly WorldEvent[],
   milestones: readonly Milestone[],
-  awayWeek: number,
+  tripWeek: number,
 ): boolean {
   const first = milestones.find((m) => m.type === 'international')
   if (!first) return false
   if (!events.some((e) => e.week <= first.week)) return false
   for (const e of events) {
-    if (e.week >= awayWeek || !e.match || !resultShowsOnHerFace(e)) continue
+    // `>=` skips this trip's own matches, which is what makes the question "any EARLIER one".
+    if (e.week >= tripWeek || !e.match || !resultShowsOnHerFace(e)) continue
     const tier = tierFromEventId(e.match.eventId)
     if (tier && TIERS[tier].track === 'itf') return false
   }
@@ -449,11 +467,16 @@ export function travelHomeFactsFor(args: {
 }): TravelHomeFacts | null {
   const scene = travelHomeSceneFor(args)
   if (scene === null) return null
-  const awayWeek = args.week - 1
-  const tier = playedTierIn(args.events, awayWeek)!
-  const matches = kidMatchesIn(args.events, awayWeek)
+  const tier = playedTierIn(args.events, args.week)!
+  const matches = kidMatchesIn(args.events, args.week)
   const matchesWon = matches.filter((e) => e.match!.winnerId === args.kidId).length
-  const summary = args.events.find((e) => e.week === awayWeek && e.type === 'tournament')
+  // ⚠ THE SUMMARY IS ALREADY WRITTEN when this can be rendered, and the ordering is worth stating
+  // now that the two are the same week: `finalizeTournament` emits the `tournament` event the moment
+  // her LAST match is revealed and keeps `pending` alive (`finished: true`) for the finale, and the
+  // story does not open until `closeTournament`. So `finishIdx` is never missing on a week the player
+  // can see. The `finishIdx === null` branch below stays anyway – the facts must not depend on that
+  // ordering holding for ever, and the note pool is swept over the null case.
+  const summary = args.events.find((e) => e.week === args.week && e.type === 'tournament')
   const finishIdx = summary?.finishIdx ?? null
   const wonTitle = finishIdx === 0
   const lostFinal = finishIdx === 1
@@ -462,7 +485,6 @@ export function travelHomeFactsFor(args: {
   const abroad = TIERS[tier].track === 'itf'
   return {
     week: args.week,
-    awayWeek,
     scene,
     mood: travelHomeMoodFor({ reachedFinal, condition: args.condition, seed: args.seed, week: args.week }),
     tier,
@@ -479,9 +501,9 @@ export function travelHomeFactsFor(args: {
     // `international` milestone is captured when the ENTRY FORM GOES IN, weeks before the trip, so
     // from the moment she enters her first J30 the ledger answers yes – and a Regional Championship
     // she drove to the following Saturday came home under "Her first one in another country". The
-    // milestone answers "has she ever signed up for one"; only the away week's own tier answers
+    // milestone answers "has she ever signed up for one"; only the trip's own tier answers
     // "was THIS the trip". Pinned on a live career in tests/travel-home.test.ts.
-    firstAbroad: abroad && firstAbroadIn(args.events, args.milestones, awayWeek),
+    firstAbroad: abroad && firstAbroadIn(args.events, args.milestones, args.week),
     injured: args.injury !== null,
     injuryWeeks: args.injury?.totalWeeks ?? 0,
     conditionBand,
