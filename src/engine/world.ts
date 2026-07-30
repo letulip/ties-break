@@ -143,7 +143,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 27
+export const SAVE_SCHEMA_VERSION = 28
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -852,6 +852,15 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
       fundsDeltaCents,
       endFundsCents: world.fundsCents,
       ...(bestFinish === null ? {} : { bestFinish }),
+      // W7: ...and what the year actually COST, gross, which the net above cannot say. The owner:
+      // «было бы очень интересно где-то хранить всю историю затрат за карьеру по годам». Both
+      // numbers are already computed twenty lines up for the summary popup; the summary is
+      // overwritten every year and this list is not, so this is where a career's spending history
+      // survives. It has to be banked HERE because the ledger it comes from
+      // (`world.financeWeeks`) is pruned to a 60-week window - by the time a player asks about
+      // season 1, season 1's rows are gone and no surface can recompute them.
+      spentCents,
+      earnedCents,
     })
     // Bounded: a career this long is beyond the game's horizon, but the save must never grow
     // without a ceiling. Oldest seasons drop out first.

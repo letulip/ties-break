@@ -573,6 +573,29 @@ export function migrateSave(raw: unknown): WorldState {
     v = 27
   }
 
+  // W7 – `seasonHistory` rows `+spentCents +earnedCents` (what each season COST and BROUGHT IN,
+  // gross, in positive cents). The owner: «было бы очень интересно где-то хранить всю историю затрат
+  // за карьеру по годам в каком-то виде.»
+  //
+  // ⚠ IT IS A NO-OP ON PURPOSE, AND THAT IS THE WHOLE POINT OF THE BLOCK. There is nothing to
+  // back-fill and nothing that could be: the figures come off `financeWeeks`, which is pruned to a
+  // 60-week trailing window (`pruneFinanceWeeks`), so every season older than about fourteen months
+  // has had its per-category rows deleted from the save long before this migration runs. The only
+  // other trace is `lastSeasonSummary`, which holds ONE season and is overwritten every year.
+  //
+  // A back-fill would therefore have to invent numbers, and this is the one field where an invented
+  // number is worse than no number at all: the whole feature is a player asking "what has she cost
+  // us", and a fabricated answer to that is a lie with a dollar sign on it. The reader prints
+  // silence for a row without the fields (see `SeasonHistoryEntry.spentCents`), the same contract
+  // `bestFinish` has carried since v14 - so a migrated career shows its seasons honestly as "not
+  // recorded" and starts keeping real figures from its next wrap-up.
+  //
+  // Nothing else moves: no stream is added or reordered, no existing field is read or rewritten, and
+  // the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 27) {
+    v = 28
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

@@ -44,7 +44,7 @@ import { computed, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { ECONOMY } from '../../engine/economy'
 import type { FamilyBackground, FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
-import { weekLabel } from '../../shared/dates'
+import { seasonYear, weekLabel } from '../../shared/dates'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
 // U0 - the shared components (docs/specs/ui-components.md), plus the NINTH, which this screen is
@@ -228,6 +228,60 @@ const donutSegments = computed<DonutSeg[]>(() => {
   })
 })
 const totalExpenseCents = computed(() => expenseRows.value.reduce((s, r) => s + r.cents, 0))
+
+// --- W7: THE CAREER, YEAR BY YEAR --------------------------------------------------------------
+//
+// The owner: «было бы очень интересно где-то хранить всю историю затрат за карьеру по годам в
+// каком-то виде.»
+//
+// ⚠ WHAT WAS CHECKED FIRST, because the honest version of this feature and the dishonest one look
+// identical on screen. The engine keeps TWO records of money and only one of them is a career:
+//
+//   `finance.window12w` / `finance.season`   the category-accurate folds this screen already draws.
+//       They come off `WorldState.financeWeeks`, which `pruneFinanceWeeks` trims to a 60-WEEK
+//       trailing window. Sixty weeks is 1.15 seasons. A five-year career has already deleted four
+//       years of per-category detail from its own save, and there is no backup of it anywhere.
+//   `seasonHistory`                          one row per finished season, capped at 30 seasons -
+//       i.e. beyond any playable career - and never pruned in practice. THIS is the career record,
+//       and it is what this list reads.
+//
+// So the chart he might have expected - spending by category, by year, all the way back - CANNOT BE
+// DRAWN, and drawing it would mean inventing four years of numbers. What can be shown is a true row
+// per season, and that is what this is.
+//
+// ⚠ AND THE NET WAS NOT ENOUGH, which is why this wave also banked the gross. `seasonHistory` has
+// always carried `fundsDeltaCents` - did the year end up or down - and that is not the question he
+// asked. ЗАТРАТЫ is what it COST to keep her playing, and a season of $18k of prize money against
+// $19k of bills reports as "-$1,000" in a net column: a shrug where the real story is that the year
+// cost nineteen thousand dollars. `spentCents` / `earnedCents` are banked at the wrap-up now (see
+// protocol.ts SeasonHistoryEntry and world.ts maybeFireSeasonWrapUp), off the same window the
+// summary popup has always used, so the two can never disagree.
+//
+// ⚠ ROWS WITHOUT THE GROSS FIGURES SAY SO, and are not quietly filled with the net. A season banked
+// before that field existed has no gross number and none can be reconstructed - the ledger behind it
+// was pruned years of game-time ago - so the row prints the balance it DOES have and the panel says
+// plainly why. A zero there would read as "a free season", which is the one thing it certainly was
+// not.
+const seasonRows = computed(() => {
+  const rows = game.snapshot?.seasonHistory ?? []
+  // Newest first: a parent opening this wants last year, not the year she was fourteen.
+  return [...rows]
+    .sort((a, b) => b.seasonIndex - a.seasonIndex)
+    .map((r) => {
+      const recorded = typeof r.spentCents === 'number'
+      return {
+        seasonIndex: r.seasonIndex,
+        yearLabel: `Season ${r.seasonIndex + 1} – ${seasonYear(r.seasonIndex)}`,
+        recorded,
+        // The headline is what the year COST - his question - and the sub-line carries the other
+        // two halves of it: what came in, and what was left when it closed.
+        value: recorded ? formatSigned(-r.spentCents!) : '–',
+        meta: recorded
+          ? `${formatSigned(r.earnedCents ?? 0)} in – ${formatFunds(r.endFundsCents)} left`
+          : `${formatFunds(r.endFundsCents)} left`,
+      }
+    })
+})
 
 // --- THE PAPER ARTEFACTS -----------------------------------------------------------------------
 // The export lays a receipt and a trip polaroid over the space beside the category column. Both are
@@ -488,7 +542,30 @@ function showAllTransactions(): void {
         <p class="money-panel-note">Started this career with {{ startingBudget }}.</p>
       </Card>
 
-      <!-- ============================== 6. THE LEDGER ============================== -->
+      <!-- ============================== 6. THE CAREER, BY YEAR ======================
+           One row per season she has finished. Read-only, and honest about the years it cannot
+           answer for - see the script for why some rows say nothing. -->
+      <Card class="money-panel money-years">
+        <Eyebrow as="h2">Every season</Eyebrow>
+        <p v-if="!seasonRows.length" class="money-panel-note">
+          Her first season is still running – it lands here when the year wraps up.
+        </p>
+        <StatRow
+          v-for="row in seasonRows"
+          :key="row.seasonIndex"
+          class="money-row"
+          :label="row.yearLabel"
+          :meta="row.meta"
+          :value="row.value"
+          :tone="row.recorded ? 'negative' : 'plain'"
+        />
+        <p v-if="seasonRows.some((r) => !r.recorded)" class="money-panel-note">
+          Seasons played before this version kept only the year's balance, so what they cost is not
+          on file. Every season from here on records it.
+        </p>
+      </Card>
+
+      <!-- ============================== 7. THE LEDGER ============================== -->
       <div ref="ledger">
         <Card class="money-panel">
           <Eyebrow as="h2">All transactions</Eyebrow>

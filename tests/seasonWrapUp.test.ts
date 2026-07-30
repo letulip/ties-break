@@ -85,6 +85,37 @@ describe('off-season (Round 5 items 16/21)', () => {
     expect(wraps.length).toBe(1)
   })
 
+  // W7 – THE CAREER'S SPENDING HISTORY, and the reason it has to be banked at the wrap-up rather
+  // than computed when somebody asks. The owner: «было бы очень интересно где-то хранить всю историю
+  // затрат за карьеру по годам в каком-то виде.»
+  //
+  // ⚠ THE FIGURE IS ONLY AVAILABLE FOR ONE MOMENT. It comes off `world.financeWeeks`, which
+  // `pruneFinanceWeeks` trims to a 60-week trailing window every single week, so a season's
+  // per-category rows are gone from the save about fourteen months of game-time after it ends. The
+  // wrap-up is the last tick at which season N's whole ledger is still inside that window. This test
+  // therefore does the thing that would catch a regression a unit test on the wrap-up alone could
+  // not: it runs a career THREE seasons past the first wrap-up and checks season 0's cost is still
+  // on the row, long after the ledger it was read from has been pruned away.
+  it('banks what each season COST, and the figure survives the ledger being pruned', () => {
+    const world = run('season-spend-history', 210)
+    expect(world.seasonHistory.length, 'four seasons wrapped').toBeGreaterThanOrEqual(3)
+    const first = world.seasonHistory.find((h) => h.seasonIndex === 0)!
+    // A season of a real career always costs something - she has a coach, a racquet and a calendar.
+    expect(first.spentCents, 'season 0 cost nothing?').toBeGreaterThan(0)
+    expect(first.earnedCents).toBeGreaterThanOrEqual(0)
+    // ...and the ledger those numbers came from is long gone, which is the whole point of banking.
+    expect(
+      world.financeWeeks.some((w) => w.week < 52),
+      'season 0 still has finance rows – this test is no longer proving anything',
+    ).toBe(false)
+    // GROSS IS NOT NET, and keeping both is the reason the field exists: `fundsDeltaCents` can be a
+    // shrug over a year that cost thousands.
+    for (const h of world.seasonHistory) {
+      expect(h.spentCents, `season ${h.seasonIndex}`).toBeGreaterThan(0)
+      expect(h.earnedCents! - h.spentCents!).toBe(h.fundsDeltaCents)
+    }
+  })
+
   it('fires a second wrap-up (season-wrap-1) at week 101 (49 + 52)', () => {
     const world = run('wrap-up-year1', 102)
     expect(world.events.some((e) => e.milestoneKey === 'season-wrap-0')).toBe(true)
