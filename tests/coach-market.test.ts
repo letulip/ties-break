@@ -168,24 +168,46 @@ describe('screen T, round 3', () => {
 })
 
 describe('screen T, round 4', () => {
-  it('carries the tournament-week toggle beside the regulator, as a real switch', () => {
-    // The other half of weekly coach cost, on the screen where weekly coach cost is decided.
-    expect(market).toContain('game.setCoachOnEventWeeks(')
+  it('⚠ the tournament-travel row is LOCKED, and it says WHEN rather than just refusing', () => {
+    // ⚠ RE-AIMED, AND THE FEATURE BEHIND IT WAS CANCELLED RATHER THAN CHANGED (owner, 30.07): «давай-ка мы
+    // вообще эту механику пока до нормальных чеков и 18+ вообще не будем делать. Никто никуда не ездит.»
+    //
+    // It used to pin a live switch calling `setCoachOnEventWeeks` and a season price pair beside it. Two
+    // measurement passes killed what the switch was for: the boolean cost +$21k at elite for +0.6 skill
+    // points, a run-fatigue discount moved 2 condition points out of ~36, and a match-strength edge came
+    // out NEGATIVE on rank at 30 seeds. Junior tennis has no prize money, so there is nothing for a fare to
+    // be weighed against - the decision only exists on the adult tour.
+    //
+    // SO THE GUARDED FACT MOVED FROM "it is a working switch" TO "it is a locked row that names the reason".
+    // Deleting the row would have lost the place the control belongs; a bare `disabled` would have earned
+    // the "why can't I press this" the app has a standing rule against. The engine field is untouched - no
+    // schema change, and every existing save keeps whatever it had.
+    expect(market).toContain('is-locked')
     expect(market).toContain('role="switch"')
-    expect(market).toContain(':aria-checked="billing.onEventWeeks"')
+    expect(market).toContain('disabled')
+    // it explains itself, and in the app's own register
+    expect(market).toMatch(/no prize money|professional years/)
+    // and the dead switch is really dead: no handler, no live checked state
+    expect(market).not.toContain('setCoachOnEventWeeks(')
+    expect(market).not.toContain('billing.onEventWeeks')
+    // the control itself still exists as a control - it is disabled, not deleted
     expect(css).toContain('.cm-switch')
-    // Reduced motion is honoured, like every other animated control in the sheet.
     expect(css).toMatch(/prefers-reduced-motion[\s\S]{0,200}\.cm-switch/)
+    // ⚠ AND THE PRICE PAIR WENT WITH IT, deliberately: "$X without him · $Y with" has nothing to compare
+    // once there is no "with". Its three CSS rules were swept too (style.css, `.cm-travel-cost`).
+    expect(market).not.toContain('seasonOffCents')
+    // ⚠ THE LINE SURVIVES, THE COMPARISON DOES NOT. Deleting the season pair first took the weekly figure
+    // with it, which was too much - "he costs $X a week" is true whatever she books, and is what the
+    // regulator above is spending. What had to go is the `chosen` marker, which needs two sides.
+    expect(market).toContain('a week at her current plan')
+    expect(css).not.toMatch(/\.cm-travel-cost strong\.chosen/)
   })
 
-  it('prices the toggle from the ENGINE, and usefully before anything is entered', () => {
-    // A season pair is two identical numbers in week 1, which tells a player nothing - so the
-    // per-week cost leads and the pair appears only once there are weeks to count.
+  it('still reads its weekly cost from the ENGINE and derives nothing itself', () => {
+    // The half of the old pricing test that survives the cancellation, and the more important half: the
+    // screen formats cents, it never computes them.
     expect(market).toContain('game.snapshot?.coachBilling')
     expect(market).toContain('billing.weeklyCents')
-    expect(market).toContain('billing.eventWeeks > 0')
-    expect(market).toContain('Nothing entered yet this season')
-    // Still no local arithmetic: the screen formats cents, it does not derive them.
     expect(market).not.toContain('seasonOffCents +')
     expect(market).not.toContain('* billing.eventWeeks')
   })

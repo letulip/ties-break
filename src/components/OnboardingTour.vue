@@ -125,7 +125,7 @@ const tooltipStyle = computed(() => {
       <p class="coach-tooltip-text">{{ step.text }}</p>
       <div class="coach-tooltip-actions">
         <button class="link" @click="skip">Skip tour</button>
-        <button class="primary" @click="next">{{ isLast ? 'Got it' : 'Next →' }}</button>
+        <button class="primary" @click="next">{{ isLast ? 'Got it' : 'Next' }}</button>
       </div>
       <div class="coach-dots">
         <span v-for="(_, i) in STEPS" :key="i" class="dot" :class="{ active: i === stepIndex }"></span>

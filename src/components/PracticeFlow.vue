@@ -131,7 +131,7 @@ function close(): void {
            sitting next to a "To result →" that did the useful thing. So the slot now carries the
            useful thing, and on the box score itself it carries nothing at all: "Done" below is
            already the way out, and two exits on one screen is what he was asking about. -->
-      <button v-if="phase !== 'post'" class="link" @click="toResult">To result →</button>
+      <button v-if="phase !== 'post'" class="link" @click="toResult">To result</button>
     </template>
 
     <!-- The VS card: the friendly is about to be played, exactly like a tournament round – which

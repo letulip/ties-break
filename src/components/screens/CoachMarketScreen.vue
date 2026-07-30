@@ -254,41 +254,46 @@ function scrollToTier(tier: CoachTier): void {
       Every price below is {{ sessionsNow }} sessions a week. More of him costs more.
     </p>
 
-    <!-- THE TOURNAMENT-WEEK TOGGLE. The other half of the weekly cost, beside the regulator. -->
-    <section v-if="billing" class="cm-travel">
+    <!-- ⚠ THE TOURNAMENT-TRAVEL TOGGLE IS LOCKED. The owner cancelled the mechanic behind it on 30.07
+         after two measurement passes failed to make it worth a fare: nobody travels on the junior tour, the
+         coach is a flat weekly cost that produces skill, and the decision belongs to the professional years.
+         His words verbatim are in tests/coach-market.test.ts - THIS IS A TEMPLATE, and the app's own rule
+         (pinned in tests/round13-nav.test.ts) is that no Cyrillic appears inside one, comments included. I
+         put the quote here first and that guard caught it, which is the guard working.
+
+         WHY IT IS DISABLED AND NOT DELETED. Junior tennis has no prize money, so a family cannot decide to
+         spend on a coach's fare against what a week might pay back - there is nothing coming back. The
+         decision only becomes a decision on the adult tour, where a W15 writes a cheque (see
+         docs/specs/adult-tour-and-endings.md §3). Deleting the control would lose the place it belongs;
+         locking it says WHEN it arrives, which is also the honest answer to "why can't I press this".
+         The engine field stays exactly as it shipped - no schema change, no behaviour change, and every
+         existing save keeps whatever it had. -->
+    <section v-if="billing" class="cm-travel is-locked">
       <div class="cm-travel-text">
         <p class="cm-travel-title">Coach travels to tournaments</p>
         <p class="cm-travel-sub">
-          {{
-            billing.onEventWeeks
-              ? 'He travels with her and works between matches.'
-              : 'Competition weeks are not billed – and he is not there.'
-          }}
+          Not on the junior tour – there is no prize money to weigh it against. It arrives with the
+          professional years.
         </p>
       </div>
       <button
         class="cm-switch"
         role="switch"
-        :aria-checked="billing.onEventWeeks"
-        :disabled="game.busy"
-        @click="game.setCoachOnEventWeeks(!billing.onEventWeeks)"
+        :aria-checked="false"
+        disabled
+        aria-label="Coach travel – available in the professional years"
       >
         <span class="cm-switch-knob"></span>
       </button>
     </section>
-    <!-- The price of the toggle, and it has to work BEFORE anything is entered - a season pair is
-         two identical numbers on week 1, which tells a player nothing. So the per-week cost leads
-         (it is true whatever she books) and the season pair only appears once there are weeks to
-         count. -->
+    <!-- ⚠ WHAT HE COSTS A WEEK, AND IT IS NOT THE PRICE OF THE TOGGLE. Deleting the toggle's season pair
+         took this figure with it, which was too much: "$X without him · $Y with" is meaningless once there
+         is no "with", but "he costs $X a week" is true whatever she books and is the one number the
+         regulator above is spending. The rows below quote a rate PER COACH; this is what HER coach costs at
+         HER plan, which is the number the budget meter draws against. Engine-computed - the screen formats
+         cents and derives none. -->
     <p v-if="billing" class="hint cm-travel-cost">
-      <strong>{{ formatDollars(billing.weeklyCents) }}</strong> for each competition week.
-      <template v-if="billing.eventWeeks > 0">
-        {{ billing.eventWeeks }} booked this season:
-        <strong :class="{ chosen: !billing.onEventWeeks }">{{ formatDollars(billing.seasonOffCents) }}</strong>
-        without him &middot;
-        <strong :class="{ chosen: billing.onEventWeeks }">{{ formatDollars(billing.seasonOnCents) }}</strong> with.
-      </template>
-      <template v-else>Nothing entered yet this season.</template>
+      <strong>{{ formatDollars(billing.weeklyCents) }}</strong> a week at her current plan.
     </p>
 
     <!-- Tier chips SCROLL to a section rather than filtering the list to nothing (design §T.1). -->
