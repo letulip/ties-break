@@ -166,3 +166,67 @@ One week a year, derived (`birthdayTurning`), no schema:
 The age is written **in words** because a parent does not say "she is 15 today" — and because the number is
 the point: a December girl turning fourteen in the last month of a season she played as a thirteen-year-old
 is the whole relative-age story in one line.
+
+---
+
+## 5. The field has birthdays too — the effect finished
+
+> «давай сделаем месяцы рождения когорте, доведём эффект до конца»
+
+Until now the kid had a birth month and her 199 rivals were all just "14". So the effect was one-sided:
+she could be behind the field, but the field was internally uniform — and the thing the phenomenon is
+actually famous for, **a junior ladder full of January birthdays**, could not happen, because there were
+no January birthdays to be full of.
+
+### ⚠ The skew is an OUTPUT, never an input
+
+The temptation is to generate the cohort Q1-heavy, because that is what real junior populations look like.
+That would be drawing the conclusion. The over-representation exists *because* the older girls in each
+band win more and survive longer, so the model is a **uniform birth month plus a mechanism**, and the skew
+has to earn itself. If it does not appear, the model is wrong.
+
+**Measured, 30 careers × 5 seasons, birth quarter:**
+
+| | Q1 | Q2 | Q3 | Q4 |
+| --- | --- | --- | --- | --- |
+| as generated | 25% | 25% | 26% | 24% |
+| still on the ladder | 26% | 24% | 25% | 24% |
+| **strongest 20** | **31%** | 26% | 24% | **20%** |
+
+**A 1.55 : 1 Q1-to-Q4 ratio at the top of a field that started uniform**, which is squarely where
+real elite-junior populations sit. It earned it: nothing in the generator says January is better.
+
+Worth noting honestly — **the survival row barely moves** (26/24/25/24). The skew is coming from raw
+strength, not from retirement: over a five-season window the conveyor's `stayChance` does not turn over
+enough of the field for selection to compound. A longer career would show more.
+
+### Two constraints this was built around
+
+**1. `makeJunior`'s draw order is load-bearing** — 13 draws per player, and reordering or adding one
+re-maps every existing seed's entire field. So the birth month cannot come off that generator. It is
+derived from its own `seed:aibirth:<id>` sub-stream instead, and the head start is arithmetic applied
+*after* `makeJunior` returns. **No schema, no migration** — every save already in existence gets birth
+months for free, because they were never stored.
+
+**2. ⚠ The head start is clamped to her ceiling**, and this was a real trap. `COHORT.potentialBand` is
+`[1, 22]` — a junior can be generated with **one** point of headroom. Adding ~1.1 on top would put her
+past her own ceiling, and `step()` takes `Math.max(0, ceiling - current)`, so **she would never develop
+again**. A January birthday would have been a curse for exactly the juniors it was meant to favour.
+Clamping is also the *right* answer, from §1's own argument: a Q1 junior already at her ceiling has simply
+arrived early. Her ceiling does not move — being born in January must not make anyone able to get better.
+
+### What the merge blocker said, and why it was a re-pin
+
+The frozen capture test fired. `count` 41550, `hash` e6b0c709, `head` and `tail` — **all still
+byte-identical**; what moved was the `kidRank` companion pin, **121 → 120**. Every rival now sits
+somewhere inside her own birth year, so the older girls are a point stronger, which changes who wins
+brackets, which changes which juniors end the season holding counting points, which moves the dense rank
+the point-less kid shares by one place. One place, from a ~1.1-point shift across all 199 of them, is the
+size of effect to expect.
+
+Two other fixtures moved with the field and were re-derived rather than relaxed: the cohort band test now
+checks the **generator** against the exact bands and the **shipped field** against bands widened by one
+birthday's worth; and R12-15's dead-click seed was re-derived (its own failure message asked for it — 400
+seeds still produce the state readily).
+
+And the load ladder from wave #70 is unaffected: layoff 27.6 → 22.8 across the hired rungs, taps 5.6 → 1.8.

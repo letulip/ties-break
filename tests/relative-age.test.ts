@@ -43,6 +43,7 @@ import {
 } from '../src/engine/world'
 import { DIARY_POOL, WEEK_NOTES } from '../src/engine/diary'
 import { weekMonth } from '../src/shared/dates'
+import { applyRelativeAge, juniorBirthMonth, makeJunior, power } from '../src/engine/season/cohort'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 
@@ -140,6 +141,88 @@ describe('the band and the girl are two different numbers', () => {
       // ⚠ W6c's own rule, applied to the newest band: a birthday line has no business naming anatomy.
       expect(text.toLowerCase(), `anatomy in "${text}"`).not.toMatch(/\b(leg|ankle|knee|wrist|shoulder|elbow)\b/)
     }
+  })
+})
+
+// =================================================================================================
+// THE FIELD HAS BIRTHDAYS TOO – task 55's second half (owner: «доведём эффект до конца»)
+// =================================================================================================
+describe('the cohort has birth months, and the skew earns itself', () => {
+  it('⚠ DERIVED, NOT STORED – no schema, and every existing save gets one for free', () => {
+    // `makeJunior`'s draw order is load-bearing (13 draws, and reordering re-maps every seed's field), so
+    // the birth month may not come off that generator. It comes off its own sub-stream keyed on the career
+    // seed and the id - which also means it was never persisted and needs no migration.
+    const world = createWorld('cohort-bm')
+    for (const p of world.cohort.slice(0, 20)) {
+      const m = juniorBirthMonth('cohort-bm', p.id)
+      expect(m, p.id).toBeGreaterThanOrEqual(1)
+      expect(m, p.id).toBeLessThanOrEqual(12)
+      expect(juniorBirthMonth('cohort-bm', p.id), 'stable for the career').toBe(m)
+      // ...and it is nowhere on the object, which is the claim
+      expect(Object.keys(p)).not.toContain('birthMonth')
+    }
+    // two careers must not field the same birthdays
+    const a = world.cohort.slice(0, 40).map((p) => juniorBirthMonth('cohort-bm', p.id))
+    const b = world.cohort.slice(0, 40).map((p) => juniorBirthMonth('other-seed', p.id))
+    expect(a).not.toEqual(b)
+  })
+
+  it('UNIFORM at generation – the skew must be an output, never an input', () => {
+    // Generating the field Q1-heavy would be drawing the conclusion. The over-representation has to come
+    // from the older girls winning more, or the model has proved nothing.
+    const counts = [0, 0, 0, 0]
+    for (let s = 0; s < 12; s++) {
+      const seed = `unif-${s}`
+      for (const p of createWorld(seed).cohort) counts[Math.floor((juniorBirthMonth(seed, p.id) - 1) / 3)]++
+    }
+    const total = counts.reduce((x, y) => x + y, 0)
+    for (const [i, c] of counts.entries()) {
+      expect(c / total, `Q${i + 1} share`).toBeGreaterThan(0.21)
+      expect(c / total, `Q${i + 1} share`).toBeLessThan(0.29)
+    }
+  })
+
+  it('⚠ THE HEAD START IS CLAMPED TO HER CEILING – the trap `potentialBand: [1, 22]` sets', () => {
+    // A junior can be generated with ONE point of headroom. Adding ~1.1 on top would put her past her own
+    // ceiling, and `step()` takes `Math.max(0, ceiling - current)` - so she would never develop again. A
+    // January birthday would have been a curse for exactly the juniors it was meant to favour.
+    for (let s = 0; s < 8; s++) {
+      const world = createWorld(`clamp-${s}`)
+      for (const p of world.cohort) {
+        expect(p.serve, `${p.id} serve past ceiling`).toBeLessThanOrEqual(p.potential.serve + 1e-9)
+        expect(p.ret, `${p.id} ret past ceiling`).toBeLessThanOrEqual(p.potential.ret + 1e-9)
+        expect(p.composure, `${p.id} composure`).toBeLessThanOrEqual(p.potential.composure + 1e-9)
+        expect(p.stamina, `${p.id} stamina`).toBeLessThanOrEqual(p.potential.stamina + 1e-9)
+      }
+    }
+  })
+
+  it('the ceiling itself is untouched – January must not make anyone able to get BETTER', () => {
+    // Same rule the kid gets. `applyRelativeAge` moves the attributes and never `potential`.
+    const p = makeJunior(rngFromSeed('one-junior'), 'ai-0')
+    const before = { ...p.potential }
+    applyRelativeAge(p, 'some-seed')
+    expect(p.potential).toEqual(before)
+  })
+
+  it('an older-in-band rival is stronger, and a younger one has more room left', () => {
+    const base = () => makeJunior(rngFromSeed('twin'), 'ai-x')
+    // pick two seeds whose derived month for 'ai-x' lands in Q1 and Q4
+    let janSeed = '', decSeed = ''
+    for (let i = 0; i < 400 && (!janSeed || !decSeed); i++) {
+      const m = juniorBirthMonth(`t-${i}`, 'ai-x')
+      if (m === 1 && !janSeed) janSeed = `t-${i}`
+      if (m === 12 && !decSeed) decSeed = `t-${i}`
+    }
+    expect(janSeed && decSeed, 'the sweep has to find both ends').toBeTruthy()
+    const jan = base()
+    const dec = base()
+    applyRelativeAge(jan, janSeed)
+    applyRelativeAge(dec, decSeed)
+    expect(power(jan), 'January is further along').toBeGreaterThan(power(dec))
+    // ...and the younger one has more of her ceiling still to come
+    const room = (p: typeof jan) => p.potential.serve - p.serve + (p.potential.ret - p.ret)
+    expect(room(dec), 'December has more left to give').toBeGreaterThan(room(jan))
   })
 })
 

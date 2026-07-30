@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { generateCohort, driftCohort } from '../../src/engine/season/cohort'
+import { generateCohort, driftCohort, makeJunior } from '../../src/engine/season/cohort'
+import { relativeAgeHeadStart } from '../../src/engine/development'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { AiPlayer } from '../../src/engine/season/types'
 
@@ -34,17 +35,39 @@ describe('generateCohort — determinism', () => {
 
 describe('generateCohort — age-14 skill bands', () => {
   it('keeps every skill and growth inside the spec bands', () => {
+    // ⚠ RE-AIMED BY TASK 55's COHORT HALF, AND SPLIT INTO THE TWO FACTS IT WAS CONFLATING. `generateCohort`
+    // now applies a birth-month head start AFTER the draws (`applyRelativeAge`), so a December junior
+    // generated on the floor lands just under it - measured, 29.7 against a floor of 30. That is correct: the
+    // band describes what the GENERATOR produces, and where she sits inside her own year is a later,
+    // separate fact about her. The old assertion could not tell those apart.
+    //
+    // So the generator's contract is checked on the BIRTH BUILD, exactly as strictly as before, and the
+    // shipped value is checked against the band widened by the most a birthday can move it. Both halves are
+    // now guarded where they were one loose one.
+    const maxBump = Math.abs(relativeAgeHeadStart(1))
+    expect(maxBump, 'a birthday must not be able to move a junior far').toBeLessThan(1.5)
+    const inBand = (v: number, lo: number, hi: number, what: string) => {
+      expect(v, `${what} under ${lo}`).toBeGreaterThanOrEqual(lo)
+      expect(v, `${what} over ${hi}`).toBeLessThanOrEqual(hi)
+    }
+    // 1. THE GENERATOR, untouched by birthdays - the fact this test has always been about.
+    const rng = rngFromSeed('bands')
+    for (let i = 0; i < 199; i++) {
+      const p = makeJunior(rng, `ai-${i}`)
+      inBand(p.serve, 30, 60, `${p.id} serve`)
+      inBand(p.ret, 30, 60, `${p.id} ret`)
+      inBand(p.composure, 25, 70, `${p.id} composure`)
+      inBand(p.stamina, 30, 70, `${p.id} stamina`)
+      inBand(p.growth, 0.5, 1.5, `${p.id} growth`)
+    }
+    // 2. THE SHIPPED FIELD: the same bands, widened by at most one birthday's worth. `growth` is not
+    //    touched by a birth month at all, so it keeps the exact band.
     for (const p of generateCohort('bands', 199)) {
-      expect(p.serve).toBeGreaterThanOrEqual(30)
-      expect(p.serve).toBeLessThanOrEqual(60)
-      expect(p.ret).toBeGreaterThanOrEqual(30)
-      expect(p.ret).toBeLessThanOrEqual(60)
-      expect(p.composure).toBeGreaterThanOrEqual(25)
-      expect(p.composure).toBeLessThanOrEqual(70)
-      expect(p.stamina).toBeGreaterThanOrEqual(30)
-      expect(p.stamina).toBeLessThanOrEqual(70)
-      expect(p.growth).toBeGreaterThanOrEqual(0.5)
-      expect(p.growth).toBeLessThanOrEqual(1.5)
+      inBand(p.serve, 30 - maxBump, 60 + maxBump, `${p.id} serve`)
+      inBand(p.ret, 30 - maxBump, 60 + maxBump, `${p.id} ret`)
+      inBand(p.composure, 25 - maxBump, 70 + maxBump, `${p.id} composure`)
+      inBand(p.stamina, 30 - maxBump, 70 + maxBump, `${p.id} stamina`)
+      inBand(p.growth, 0.5, 1.5, `${p.id} growth`)
     }
   })
 

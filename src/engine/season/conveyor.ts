@@ -43,7 +43,7 @@
 // Season-scoped ids cannot collide with the opening field's `ai-<i>` or with any other season's.
 
 import { rngFromSeed } from '../rng'
-import { makeJunior, power } from './cohort'
+import { applyRelativeAge, makeJunior, power } from './cohort'
 import type { AiPlayer } from './types'
 
 /** THE CONVEYOR'S KNOBS. Probabilities are per SEASON, and every one of them is a chance to
@@ -119,7 +119,15 @@ export function renewCohort(cohort: AiPlayer[], seedStr: string, seasonIndex: nu
     else left.push(p)
   }
 
-  const joined = left.map((_, n) => makeJunior(rng, `ai-s${seasonIndex}-${n}`, 13))
+  // ⚠ THE INTAKE GETS BIRTH MONTHS TOO, or the effect would decay out of the field. A career runs five
+  // seasons and the conveyor replaces the retirees every year, so by season 3 a large share of the ladder
+  // arrived through here - and if only the opening cohort had birthdays, the Q1 skew would be diluted away
+  // by exactly the mechanism that is supposed to build it. Same call as `generateCohort`, after the draws.
+  const joined = left.map((_, n) => {
+    const p = makeJunior(rng, `ai-s${seasonIndex}-${n}`, 13)
+    applyRelativeAge(p, seedStr)
+    return p
+  })
 
   // Rewrite in place: the array identity is held by WorldState and by every caller that took a
   // reference to it before the boundary.

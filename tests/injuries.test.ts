@@ -101,7 +101,11 @@ function hashOf(draws: number[]): string {
 // ⚠ 121, MEASURED WITH BOTH ROUND-15 SLICES IN. The ranking fix alone gives 119; v25's rally term
 // changes which juniors end the year holding points, and the two compose to 121. Neither branch was
 // wrong - this is what the merged code produces, measured here rather than carried over.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 121 }
+// ⚠ kidRank RE-PINNED 121 -> 120 (30.07, task 55's cohort half). `count` and `hash` are UNTOUCHED and
+// still reproduce byte-for-byte - the birth months come off their own sub-stream and the head start is
+// post-draw arithmetic. What moved is which juniors hold points, because every rival now sits inside her
+// own birth year. Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 120 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

@@ -4,6 +4,8 @@
 
 import { rngFromSeed, pickInt, type Rng } from '../rng'
 import type { AiPlayer } from './types'
+// Task 55: the same head-start pricing the kid uses. One number, one meaning - see `applyRelativeAge`.
+import { relativeAgeHeadStart } from '../development'
 
 /** THE COHORT'S OWN KNOBS (v20). Kept here rather than in ECONOMY because they describe the WORLD's
  *  population, not the family's money - and because the file that reads them is the only file that
@@ -129,7 +131,13 @@ function clamp01to100(x: number): number {
 export function generateCohort(seedStr: string, size = 199): AiPlayer[] {
   const rng = rngFromSeed(seedStr)
   const cohort: AiPlayer[] = []
-  for (let i = 0; i < size; i++) cohort.push(makeJunior(rng, `ai-${i}`))
+  for (let i = 0; i < size; i++) {
+    const p = makeJunior(rng, `ai-${i}`)
+    // ...and where she sits inside her own year. AFTER the draws, off its own sub-stream: see the note
+    // above `juniorBirthMonth` for why it cannot come from `rng`.
+    applyRelativeAge(p, seedStr)
+    cohort.push(p)
+  }
   return cohort
 }
 
@@ -177,6 +185,73 @@ export function makeJunior(rng: Rng, id: string, ageYears?: number): AiPlayer {
       stamina: stamina + head(),
     },
   }
+}
+
+// =================================================================================================
+// THE RELATIVE AGE EFFECT, FOR THE FIELD (task 55, second half – owner: «давай сделаем месяцы рождения
+// когорте, доведём эффект до конца»)
+// =================================================================================================
+//
+// The kid got a birth month and a head start; her rivals were all just "14". So the effect was
+// one-sided: she could be behind the field, but the field was internally uniform, and the thing the
+// phenomenon is actually famous for - THE TOP OF A JUNIOR LADDER BEING FULL OF JANUARY BIRTHDAYS - could
+// not happen, because there were no January birthdays to be full of.
+//
+// ⚠ AND THE SKEW MUST BE AN OUTPUT, NOT AN INPUT. The temptation is to generate the cohort Q1-heavy,
+// because that is what real junior populations look like. That would be drawing the conclusion: the
+// over-representation exists BECAUSE the older girls in each band win more, get selected, and survive -
+// so the honest model is a UNIFORM birth month plus a mechanism, and then the skew has to earn itself.
+// The conveyor is what makes that possible: `renewCohort` sorts by `power` and retires the weakest, so an
+// advantage that shows up as strength turns into an advantage in survival without one line saying so.
+// If the skew does not appear, the model is wrong and the bench will say which.
+//
+// =================================================================================================
+// ⚠ TWO CONSTRAINTS THIS IS BUILT AROUND, and both would be easy to break silently
+// =================================================================================================
+//
+// 1. `makeJunior`'s DRAW ORDER IS LOAD-BEARING (see its own note): 13 draws per player, and reordering or
+//    adding one re-maps every existing seed's entire field. So the birth month CANNOT come off the passed
+//    generator. It is derived from its own sub-stream instead, keyed on the career seed and the player id -
+//    the same trick `coachById` uses for the roster, and it costs zero draws on any stream the tick walks.
+//    That also means NO SCHEMA and NO MIGRATION: every save already in existence gets birth months for
+//    free, because they were never stored.
+//
+// 2. THE HEAD START IS CLAMPED TO HER CEILING, and this one is a real trap. `COHORT.potentialBand` is
+//    [1, 22] - a junior can be generated with as little as ONE point of headroom. Adding ~1.1 points on
+//    top would put her PAST her own ceiling, and `step()` computes `Math.max(0, ceiling - current)`, so
+//    she would stop developing for the rest of her career. A January birthday would have been a curse for
+//    the juniors it was supposed to favour, and only for the ones who had no room to grow anyway.
+//
+//    Clamping is not just the safe answer, it is the RIGHT one, and it is the spec's own argument from
+//    §1: "a faster rate mostly means arriving sooner rather than arriving higher". A Q1 junior who is
+//    already at her ceiling has simply arrived early. Her ceiling does not move - being born in January
+//    must not make anyone able to get BETTER, exactly as it does not for the kid.
+
+/** A rival's birth month, 1-12, uniform. Derived - never stored - so it needs no schema and is stable for
+ *  the whole career. Keyed on the career seed AND the id, so two careers do not field the same birthdays.
+ *
+ *  ⚠ ITS OWN SUB-STREAM, created fresh and thrown away. `makeJunior`'s generator is untouchable (13 draws,
+ *  fixed order, every seed's field depends on it), so this is the only safe place a new random fact about
+ *  a rival can come from. */
+export function juniorBirthMonth(seedStr: string, id: string): number {
+  return 1 + Math.floor(rngFromSeed(`${seedStr}:aibirth:${id}`)() * 12)
+}
+
+/**
+ * Apply her birth month to a freshly-made junior, IN PLACE. Post-draw arithmetic only.
+ *
+ * Priced with the KID's measured `SKILL_POINTS_PER_YEAR` rather than a second constant of its own: the two
+ * populations are generated on the same scale (juniors 30-70, the kid 35-60) and the whole design principle
+ * is that she and the field are the same kind of thing. One number, one meaning.
+ *
+ * The CEILING IS NOT TOUCHED - see constraint 2 above.
+ */
+export function applyRelativeAge(p: AiPlayer, seedStr: string): void {
+  const bump = relativeAgeHeadStart(juniorBirthMonth(seedStr, p.id))
+  p.serve = clamp01to100(Math.min(p.serve + bump, p.potential.serve))
+  p.ret = clamp01to100(Math.min(p.ret + bump, p.potential.ret))
+  p.composure = clamp01to100(Math.min(p.composure + bump, p.potential.composure))
+  p.stamina = clamp01to100(Math.min(p.stamina + bump, p.potential.stamina))
 }
 
 /** Her overall standard right now – the mean of the four attributes. The conveyor asks this to
