@@ -112,6 +112,24 @@ const replayAdvances = ref(false)
 // it via `endApplause`; the finale screen below only claps when nobody watched the final. Still
 // exactly one `applauseFinal` – it just isn't a beat late any more.
 const isFinalRound = computed(() => pending.value?.roundLabel === 'Final')
+/**
+ * WHICH ROUND THE OPEN VIEWER IS ACTUALLY SHOWING.
+ *
+ * ⚠ A BUG THE BADGE INHERITED AND THE 30.07 MOVE MADE VISIBLE. `pending.roundLabel` is the round on
+ * DECK, and `tournamentReveal()` advances it the moment a result is revealed - so on the "Watch
+ * again" path (post-match card -> the viewer, `replayAdvances === false`) it names the round she is
+ * about to play NEXT while the viewer replays the one she just finished. The old `.tf-card-head`
+ * read `pending.roundLabel` straight and mislabelled the same way; it was easier to miss in a row
+ * that scrolled away than on the header line the badge lives on now.
+ *  - watching the upcoming round  -> `pending.roundLabel` IS that round.
+ *  - re-watching the round played -> the last entry on her revealed path, which is that match.
+ */
+const watchedRoundLabel = computed(() => {
+  const p = pending.value
+  if (!p) return ''
+  if (replayAdvances.value) return p.roundLabel
+  return p.bracket[p.bracket.length - 1]?.roundLabel ?? p.roundLabel
+})
 
 // --- Round-7 spectate geometry ------------------------------------------------
 // The Final's round index (log2(draw) - 1) and the round the kid exited in. Single-elim: she
@@ -434,16 +452,53 @@ const matchMeta = computed(() => {
       <div>
         <div class="tf-title">{{ pending.tierLabel }}</div>
         <div class="tf-sub">
-          <span class="pill">{{ SURFACE_EMOJI[pending.surface] }} {{ pending.surface }}</span>
+          <!-- ⚠ THE SURFACE STEPS ASIDE WHILE A MATCH IS ON SCREEN, and it is the one readout on
+               this line that can: the court is painted in it about 20px lower, so "clay" is being
+               said twice and the second saying is the one made of pixels. That is what pays for the
+               round badge below - the line has room for the date plus a full round name, but not for
+               all three (measured at 375pt: 88.5 + 85 fits the 215px the header control leaves,
+               65.3 + 88.5 + 85 does not, and it wrapped, which put 23px BACK onto the header and
+               undid the row we had just recovered). Every other phase keeps the pill: the preview,
+               the pre-match card, the box score and the poster have no court to read it off. -->
+          <span v-if="!replayOpen" class="pill">{{ SURFACE_EMOJI[pending.surface] }} {{ pending.surface }}</span>
           <span class="hint tf-week-dates">{{ weekDates }}</span>
+          <!-- ⚠ THE ROUND BADGE MOVED UP HERE, ONTO THE DATE LINE (owner, 30.07: «on tournament
+               match screen move quarterfinal badge higher nearby date»). It used to sit in the
+               match card's own head row, which existed only to hold it, so the row went with it -
+               see the note at the replay section. Same `.tf-replay-round` capsule, deliberately:
+               it is still the same fact wearing the same clothes, it just costs no row now, because
+               the sub line was already being drawn. Full round name rather than the draw's "QF" -
+               there is room for it once the surface pill stands down, and the badge the owner asked
+               to move said "Quarterfinal". Only while a match is on screen: between rounds the path
+               strip and the draw name their own rounds. And it names the round IN THE VIEWER, not the
+               round on deck - see `watchedRoundLabel` for the mislabel it inherited. -->
+          <span v-if="replayOpen" class="tf-replay-round">{{ watchedRoundLabel }}</span>
         </div>
       </div>
-      <!-- `phase !== 'splash'` used to be a third clause here; the header itself now carries it,
-           so repeating it is a comparison the compiler can prove is always true. The rule is
-           unchanged: the whole-tournament skip is not offered before the run has begun (the splash
-           has its own withdrawal) and not after it has finished. -->
-      <button v-if="!pending.finished && phase !== 'finale'" class="link" :disabled="game.busy" @click="skipAll">
-        Skip tournament →
+      <!-- THE HEADER'S ONE SLOT, filled with whichever exit fits the phase.
+           ⚠ IT USED TO SAY "Skip tournament →" EVEN WHILE A MATCH WAS PLAYING, one card above a
+           "To result →" that meant something else entirely (owner, 30.07: «what's the difference
+           between to results and skip tournament?»). They are genuinely different buttons - one
+           match versus the whole draw - so the fix is not to merge them but to stop offering them
+           at the same time and to make the big one say how big it is:
+             * "To result →"      -> endReplay: leave the live view of THIS match and show ITS box
+                                    score. The tournament carries on round by round.
+             * "Skip all rounds →" -> skipAll: game.tournamentSkip() resolves EVERY remaining round
+                                    at once and lands on the champion / runner-up poster. You do not
+                                    see another match. "Skip tournament" never said that it was the
+                                    rest of the DRAW rather than the rest of this match.
+           Neither is the splash's "Skip this event – withdraw", which forfeits her entry for no
+           points at all; that one keeps its own place and its own confirm.
+           The skip's conditions are unchanged - not before the run has begun, not after it is over -
+           it just yields the slot while a match is being watched. -->
+      <button v-if="replayOpen" class="link" :disabled="game.busy" @click="endReplay">To result →</button>
+      <button
+        v-else-if="!pending.finished && phase !== 'finale'"
+        class="link"
+        :disabled="game.busy"
+        @click="skipAll"
+      >
+        Skip all rounds →
       </button>
     </header>
 
@@ -598,15 +653,15 @@ const matchMeta = computed(() => {
           <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
         </section>
 
-        <!-- Watching a replay (inline) -->
+        <!-- Watching a match (inline).
+             ⚠ THE HEAD ROW IS GONE, AND IT COST 34px. Round-7 moved the stage/round label off the
+             court (where it obstructed play) into a head row of its own, level with "To result →";
+             30.07 finishes the move. The label went UP to the header's date line, which was already
+             being drawn, and "To result →" went up to the header's own slot - so the row had nothing
+             left to carry and the court starts 34px higher (22px of pill + its 12px of air).
+             The round is still named on this screen and it is still the same capsule. It just does
+             not rent a row to say it. -->
       <section v-if="replayOpen && annotated && currentMatch" class="tf-card">
-        <!-- Round-7 crowd-reaction pass: the stage/round label lives here as a pill on the LEFT
-             of the head row, level with "To result →" on the right – no longer an absolute pill
-             over the court (which obstructed play). -->
-        <div class="tf-card-head">
-          <span class="tf-replay-round">{{ pending.roundLabel }}</span>
-          <button class="link" @click="endReplay">To result →</button>
-        </div>
         <MatchViewer
           :match="annotated"
           :player-a="currentMatch.a"
@@ -828,6 +883,31 @@ const matchMeta = computed(() => {
    rule on this screen – the champion card is lime – so it was NOT promoted. See tests/design-tokens.test.ts,
    which now fails the build if a screen references a token this app does not declare.
    ================================================================================================= */
+
+/* --- The header's sub line ---------------------------------------------------------------------- */
+
+/* THE ROUND BADGE, NOW A THIRD ITEM ON THE DATE LINE (owner, 30.07). Two corrections it needs to
+   ride there, neither of which belongs in the sheet - the capsule itself is shared vocabulary and
+   its other consumer is still the friendly's own header:
+     * the 8px is the rhythm `.tf-week-dates` already sets between the surface pill and the date, so
+       the badge keeps the same step instead of butting against "Mar 10–16, 2031";
+     * `inline-block`, because the capsule has vertical padding and an inline box would not reserve
+       height for it - it read as a pill only by luck of the line box.
+   Vue's whitespace-condense drops the newline between the two spans in the template, so the gap has
+   to be a margin; a space in the markup would not survive the compile. */
+.tf-sub .tf-replay-round {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* THE HEADER CONTROL NEVER WRAPS. A wrapped exit is how the header went from 75px to 98px in the
+   first draft of this slice: the flex row gave the sub line what it asked for and the button took
+   two lines for "To result →". A long tier label wrapping the TITLE is the better trade - the title
+   is a name and reads fine on two lines; the control is a control. */
+.tf-top > button {
+  white-space: nowrap;
+}
 
 /* --- E. Tournament (Preview) ------------------------------------------------------------------ */
 
