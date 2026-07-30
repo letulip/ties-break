@@ -147,3 +147,69 @@ well-managed Elite one.
   exactly where it is and the coach's value should come from weeks, not points.
 - No AI coach for the rivals. The cohort does not model load at all and giving it one is a different
   slice.
+
+---
+
+## 7. The baseline, measured — and the premise holds
+
+Added at the start of implementation, because §5 asks for "before and after" and there was no before.
+`npm run bench:load` (new, `tools/load-bench.ts`), 120 paired seeds × 208 weeks, 14→18. The rung is
+**not** in the seed, so every rung faces the same calendar, cohort and girl.
+
+**Grinder arm — 85/15, pushes every knock, enters everything:**
+
+| rung | layoff | wasted trips | **weeks lost** | % of career | injuries | matches |
+| --- | --- | --- | --- | --- | --- | --- |
+| self | 51.8 | 14.8 | **66.6** | 32.0% | 14.7 | 75.3 |
+| budget | 39.2 | 11.4 | **50.5** | 24.3% | 12.2 | 103.3 |
+| middle | 38.6 | 11.4 | **50.0** | 24.0% | 12.0 | 103.7 |
+| high | 39.1 | 11.9 | **51.1** | 24.5% | 12.1 | 103.9 |
+
+**§4(c) is confirmed, and harder than it was stated:**
+
+- `self → budget` = **16 weeks**. The whole ladder's load value, and it is one boolean —
+  `coachIncludesPhysio`.
+- `budget → high` = **0.6 weeks**, across three rungs and roughly **$100k** of fees. That is noise.
+  The four hired rungs are, for load purposes, the same coach.
+
+So there is nothing to redistribute and the slice is additive, exactly as the spec argued. It also
+sets the target: a rung ladder worth buying has to open a gap in a range where **16 weeks** is what
+one boolean already buys, so a 2-week spread across four rungs would be indistinguishable from what
+ships today.
+
+**One interaction the "after" table must be read against.** Wasted trips *fall* as the rung improves
+(14.8 → 11.4), which looks backwards until you see why: a self-coached girl loses 51.8 weeks to
+injury, so she has fewer weeks in which to enter anything. Fewer trips, fewer wasted ones. Weeks-lost
+and trips-wasted are **not independent**, and a change that adds available weeks will add wasted trips
+unless the coach is also warning her off them.
+
+## 8. The mechanism: the coach decides through his own read of her
+
+The one design decision §3 left open — "quality by rung" needs a *mechanism*, and there are only two
+honest candidates.
+
+**Rejected: a hidden oracle.** The injury roll is deterministic given the seed, so a coach could be
+made to know whether pushing this knock *actually* leads to an injury and be right N% of the time by
+rung. This is the obvious implementation and it must not ship: it is foreknowledge, it makes the rung
+a dice-loader rather than a judgement, and no in-world story explains it.
+
+**Chosen: he decides on the facts he can see, and the fog is how much he can see.** The radar already
+models exactly this and it is already measured — a self-coached career ends at fog band **3.7**, an
+Elite one at **0.2**, an eighteen-fold difference in how well anyone knows this girl. So:
+
+- the load decision is a rule over **observable state** — condition, the knock's part and whether it
+  is a repeat, weeks of consecutive play, the tier's own condition floor. No foresight, no new roll.
+- what the rung changes is the **precision of the inputs**: the coach reads her through
+  `axisReadings`' confidence, so a Budget coach is deciding about a girl he has a blurry read of and an
+  Elite coach about one he knows. Same rule, different clarity.
+
+Three things fall out of this, and they are why it is the right choice rather than merely a defensible
+one:
+
+1. **It reuses a measured system instead of adding an unmeasured one.** No new balance surface.
+2. **It answers risk (a) without a cap.** The self-coaching parent gets the same rule and the worst
+   read in the game — 3.7 against 0.2. He is not forbidden from being Richard Williams; he is just
+   the one making calls in the dark, which is the true asymmetry and the owner's own point.
+3. **It makes the fog load-bearing.** §6 already refuses to let the coach touch `potential` because
+   that would make the fog decorative. This is the same argument from the other side: the fog now
+   *does* something on a week nobody is looking at the radar.
