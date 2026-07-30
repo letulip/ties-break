@@ -680,6 +680,12 @@ export interface DiaryFacts {
   examsWeek: boolean
   offSeasonWeek: boolean
   vacationWeek: boolean
+  /** HOW HARD SHE WORKED THIS WEEK – `plan.train`, the percentage the player set (60 / 75 / 85 on
+   *  the presets). W2: the one fact about an ordinary week the diary had no access to, and the only
+   *  one that is the PLAYER's decision rather than the world's. Every other field here is something
+   *  that happened to her; this is something he chose, which is why the week-note pool is licensed on
+   *  it. Derived (the plan lives on the world already) – no schema. */
+  trainPct: number
   fundsPressure: FundsPressure
   /** a milestone captured THIS week, if any */
   freshMilestone: MilestoneType | null
@@ -711,15 +717,19 @@ export type TravelHomeScene = 'airport' | 'plane' | 'bus' | 'car'
 /** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
  *  one line.
  *    `anniversary` – the milestone's week is ~52 weeks ago (±1). The loud one.
- *    `echo`        – the deterministic roughly-every-5-weeks pick off `seed:memory:<week>`.
- *    `recent`      – neither fired, so the card shows her LATEST milestone. A3: the card is titled
- *                    "Recent memory", and a quiet week used to make it say "Too early for memories"
- *                    to a girl four seasons into her career. Silence is a fine thing for a diary
- *                    LINE; on a card with a heading it is a lie. The distinction survives in `kind`
- *                    so the loud weeks can still look different from the quiet ones. */
+ *    `debut`       – the career's OPENING WEEK (W3, owner 30.07). Carries no milestone: week 0 is a
+ *                    fact of every career, so it needs no ledger entry and persists nothing.
+ *    `echo`        – an older memory the rotation came round to.
+ *    `recent`      – the rotation landed on her newest. A3: the card is titled "Recent memory", and a
+ *                    quiet week used to make it say "Too early for memories" to a girl four seasons
+ *                    into her career. Silence is a fine thing for a diary LINE; on a card with a
+ *                    heading it is a lie. The distinction survives in `kind` so the loud weeks can
+ *                    still look different from the quiet ones. */
 export interface MemoryCard {
-  kind: 'anniversary' | 'echo' | 'recent'
-  milestone: Milestone
+  kind: 'anniversary' | 'debut' | 'echo' | 'recent'
+  /** null on the `debut` card ONLY – see `kind`. Widening this costs no schema: `MemoryCard` is
+   *  derived at snapshot time and never saved; the milestone LEDGER behind it is untouched. */
+  milestone: Milestone | null
   /** e.g. "one year ago" (anniversary) or the milestone's week label "W14 '31" (echo/recent) */
   whenLabel: string
   /** the age band she was in at the milestone's week – what makes time felt */
@@ -751,6 +761,11 @@ export interface DiarySnapshot {
    *  by facts of the trip she is coming back from, so it can never describe a final she did not
    *  reach. See engine/diary.ts TRAVEL_NOTES. */
   travelNote: string | null
+  /** THE ORDINARY WEEK'S NOTE, on the same scrap `travelNote` uses (screen D) and in the same
+   *  parent's hand – null on most weeks, and null on every week `travelNote` speaks. W2: the owner's
+   *  «чтобы тренировочные недели не просто скипались ... что происходит на этих неделях». See
+   *  engine/diary.ts WEEK_NOTES for the cadence and the licences. */
+  weekNote: string | null
   /** the Memory card to show this week, or null */
   memory: MemoryCard | null
 }

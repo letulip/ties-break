@@ -16,6 +16,7 @@ import {
   lastKidTitleOf,
   MEMORY_EMOTION,
   MEMORY_LINES,
+  MEMORY_DEBUT_WEEKS,
   MEMORY_MIN_WEEKS,
   milestoneKey,
   selectMemory,
@@ -143,6 +144,9 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       runPointsThisWeek: 0,
       milestones: [],
       vacationWeek: false,
+      // ⚠ W2 added `trainPct` to the view (how hard the PLAYER worked her). This test is about
+      // `rankClimbed` and nothing else; the balanced preset is what a career starts on.
+      trainPct: 75,
       ...over,
     })
     expect(assembleDiaryFacts(view({})).rankClimbed).toBe(true)
@@ -222,6 +226,10 @@ function makeFacts(input: {
     examsWeek: s === 'exams',
     offSeasonWeek: s === 'offSeason',
     vacationWeek: s === 'vacation',
+    // ⚠ W2: the plan the player set. This sweep is the DIARY_POOL honesty pin and no line in that
+    // pool is licensed on the plan, so the fixture holds the balanced preset – the week-note pool
+    // that IS licensed on it has its own sweep, below, for the same reason the journey note does.
+    trainPct: 75,
     fundsPressure: fundsPressureOf(input.fundsCents ?? 50_000_00),
     freshMilestone: null,
     // R14-2: this sweep is about the DIARY_POOL, and no phrase in it is licensed on the journey home
@@ -456,17 +464,48 @@ describe('selection – stable per week, quiet weeks exist', () => {
 describe('Memory – selection', () => {
   const title: Milestone = { type: 'title', week: 10, tier: 'local' }
 
-  it('no memories in the first ~8 weeks of a career – nothing to remember yet', () => {
-    for (let week = 0; week < MEMORY_MIN_WEEKS; week++) {
-      expect(selectMemory([{ type: 'title', week: 0, tier: 'local' }], week, 's', 14)).toBeNull()
+  // ⚠ THE WHOLE BLOCK BELOW WAS RE-AIMED BY W3 (owner, 30.07): «Recent memory "too early for
+  // memories" – why? ... Only after 10 weeks I saw a first memory. I believe we could pin it faster
+  // and maybe make rotation of all previous?»
+  //
+  // TWO THINGS MOVED, and neither of them is a protected fact of this suite:
+  //   1. THE FLOOR. `MEMORY_MIN_WEEKS` 8 -> 4 (how old a MILESTONE must be), and a new
+  //      `MEMORY_DEBUT_WEEKS` (2) gates the function itself, because the career's OPENING WEEK is now
+  //      a memory in its own right (`kind: 'debut'`, `milestone: null`). So "the card is empty at the
+  //      start" is still true and is still pinned – for two weeks instead of eight.
+  //   2. THE DEFAULT BRANCH ROTATES instead of pinning her newest milestone, which is the owner's
+  //      second ask. The echo COIN is therefore gone: the rotation reaches back every week, so a
+  //      probability deciding whether to reach back at all had nothing left to decide.
+  //
+  // WHAT IS STILL PROTECTED, unchanged, and is what these tests are for: the function is a pure
+  // deterministic function of (milestones, week, seed); an anniversary always wins; the card is never
+  // EMPTY once she has anything to remember; and the painting is the band she was in THEN.
+
+  it('the card is empty only at the very start of a career – two weeks, not eight', () => {
+    for (let week = 0; week < MEMORY_DEBUT_WEEKS; week++) {
+      expect(selectMemory([{ type: 'title', week: 0, tier: 'local' }], week, 's', week)).toBeNull()
     }
-    expect(selectMemory([], 100, 's', 14)).toBeNull()
+    // ...and from then on it always answers, even with an empty ledger: the opening week IS the
+    // first memory. This is the owner's "when would it not be too early" made concrete.
+    for (let week = MEMORY_DEBUT_WEEKS; week < 40; week++) {
+      const card = selectMemory([], week, 's', 14)
+      expect(card, `week ${week}`).not.toBeNull()
+      expect(card!.kind).toBe('debut')
+      expect(card!.milestone).toBeNull()
+      expect(card!.line.length).toBeGreaterThan(10)
+    }
   })
 
-  it('a milestone younger than ~8 weeks never echoes', () => {
+  it('a milestone younger than the floor is not yet a memory – the debut card holds the slot', () => {
     for (let week = 10; week < 10 + MEMORY_MIN_WEEKS; week++) {
-      expect(selectMemory([title], week, 's', 14)).toBeNull()
+      const card = selectMemory([title], week, 's', 14)
+      // Not null any more (W3), but it may not be the fresh milestone either: a thing she did this
+      // month is not something she remembers. The debut is what fills the card until it ages in.
+      expect(card!.kind).toBe('debut')
     }
+    // ...and the moment it HAS aged, the rotation can reach it.
+    const reached = Array.from({ length: 12 }, (_, i) => selectMemory([title], 10 + MEMORY_MIN_WEEKS + i, 's', 14)!)
+    expect(reached.some((c) => c.milestone !== null)).toBe(true)
   })
 
   it('the anniversary path: ~52 weeks later (±1) the memory always shows, as "one year ago"', () => {
@@ -477,66 +516,70 @@ describe('Memory – selection', () => {
       expect(card!.whenLabel).toBe('one year ago')
       expect(card!.milestone).toEqual(title)
     }
-    const outside = selectMemory([title], 65, 'anniversary-seed', 14)
-    if (outside) expect(outside.kind).toBe('echo')
+    // Outside the window it is the ordinary rotation again, whichever entry that lands on.
+    const outside = selectMemory([title], 65, 'anniversary-seed', 14)!
+    expect(outside.kind).not.toBe('anniversary')
   })
 
-  it('the echo cadence: deterministic, roughly every 4-6 weeks, and the rest of the weeks are quiet', () => {
-    // ⚠ WIDENED by A3 (28.07): the card is headed "Recent memory" and used to render "Too early for
-    // memories." on every non-echo week – to a player four seasons into her career. So a week that
-    // does not ECHO now falls back to her LATEST milestone (`kind: 'recent'`) and the card is never
-    // empty once she has a memory at all. The cadence this test exists for is unchanged: `echo` is
-    // still ~1 week in 5, and it is still the only kind that reaches back past the newest thing.
-    const kinds: string[] = []
-    for (let week = MEMORY_MIN_WEEKS + 10; week < MEMORY_MIN_WEEKS + 110; week++) {
-      if (week >= 61 && week <= 63) continue // skip the anniversary window
-      const a = selectMemory([title], week, 'cadence-seed', 14)
-      const b = selectMemory([title], week, 'cadence-seed', 14)
-      expect(a).toEqual(b) // pure function of (milestones, week, seed)
+  it('THE ROTATION: every entry in the album comes round, deterministically, with no stored cursor', () => {
+    const first: Milestone = { type: 'title', week: 10, tier: 'local' }
+    const mid: Milestone = { type: 'final', week: 60, tier: 'regional' }
+    const last: Milestone = { type: 'international', week: 100, tier: 'j30' }
+    const seen = new Set<string>()
+    for (let week = 200; week < 240; week++) {
+      const a = selectMemory([first, mid, last], week, 'rotation-seed', 14)
+      const b = selectMemory([first, mid, last], week, 'rotation-seed', 14)
+      expect(a).toEqual(b) // still a pure function of (milestones, week, seed)
       expect(a, `week ${week} left the card empty`).not.toBeNull()
-      kinds.push(a!.kind)
-      expect(a!.whenLabel).toBe('W11 \'31') // weekLabel(10)
+      seen.add(a!.milestone === null ? 'debut' : `${a!.milestone.type}:${a!.milestone.week}`)
     }
-    // p = 0.2 over ~97 weeks: a wide, non-flaky corridor around "every 4-6 weeks"
-    const echoes = kinds.filter((k) => k === 'echo').length
-    expect(echoes).toBeGreaterThanOrEqual(6)
-    expect(echoes).toBeLessThanOrEqual(40)
-    // ...and every other week is the quiet fallback, never nothing.
-    expect(kinds.filter((k) => k === 'recent').length).toBe(kinds.length - echoes)
+    // The opening week and all three milestones, inside forty weeks – this is the owner's
+    // "rotation of all previous". The old code could only ever have shown `last` plus a 1-in-5 echo.
+    expect([...seen].sort()).toEqual(['debut', 'final:60', 'international:100', 'title:10'])
+    // ...and only the newest of them is ever called `recent`, so the kinds still mean something.
+    const kinds = Array.from({ length: 40 }, (_, i) => selectMemory([first, mid, last], 200 + i, 'rotation-seed', 14)!)
+    for (const c of kinds) {
+      if (c.kind === 'recent') expect(c.milestone).toEqual(last)
+      if (c.kind === 'debut') expect(c.milestone).toBeNull()
+    }
   })
 
   it('the card is only ever EMPTY before she has a memory to show', () => {
-    // Before the eight-week floor, and for a career with nothing captured – those two, and no
-    // other case. This is the pin that keeps "Too early for memories." honest.
-    expect(selectMemory([title], MEMORY_MIN_WEEKS - 1, 'seed', 14)).toBeNull()
-    expect(selectMemory([], 300, 'seed', 14)).toBeNull()
-    // A milestone that has not aged yet does not count as one she can remember.
-    expect(selectMemory([{ type: 'title', week: 298, tier: 'local' }], 300, 'seed', 14)).toBeNull()
-    // ...but as soon as one HAS aged, every week answers.
+    // ⚠ W3: "before the eight-week floor" became "before the two-week one", and an empty ledger is
+    // no longer one of the cases – the opening week is itself a memory. This is still the pin that
+    // keeps "Too early for memories." honest; it is just a far smaller window now.
+    expect(selectMemory([title], MEMORY_DEBUT_WEEKS - 1, 'seed', 14)).toBeNull()
+    expect(selectMemory([], 300, 'seed', 14)).not.toBeNull()
     for (let week = 300; week < 340; week++) {
       expect(selectMemory([title], week, 'seed', 14), `week ${week}`).not.toBeNull()
     }
-  })
-
-  it('the quiet fallback shows her LATEST milestone, not an old one', () => {
-    const first: Milestone = { type: 'title', week: 10, tier: 'local' }
-    const later: Milestone = { type: 'final', week: 120, tier: 'regional' }
-    // Week 200 is outside both anniversary windows, so anything showing is echo-or-recent.
-    const card = selectMemory([first, later], 200, 'recent-seed', 14)!
-    if (card.kind === 'recent') expect(card.milestone).toEqual(later)
   })
 
   it('the painting is from the band she was in THEN: a title at 17 shows the teen band at 22', () => {
     const late: Milestone = { type: 'title', week: 160, tier: 'j30' } // age 14 + 3 = 17 -> teen
     for (let week = 168; week < 400; week++) {
       const card = selectMemory([late], week, 'band-seed', 14)
-      if (!card) continue
+      // ⚠ W3: the debut card is also reachable on these weeks and it is a picture of week 0, so the
+      // band assertion belongs to the weeks the rotation lands on the MILESTONE. Same protected
+      // fact: the painting is the band she was in when it happened, not the band she is in now.
+      if (!card || card.milestone === null) continue
       expect(card.stage).toBe('teen')
       expect(card.emotion).toBe('happy')
       expect(card.line).toContain('J30')
       return
     }
-    throw new Error('no echo fired in 232 weeks – cadence broken')
+    throw new Error('the rotation never reached the milestone in 232 weeks')
+  })
+
+  it('the debut card is a picture of the girl who STARTED – her band at week 0, composed', () => {
+    // The onboarding hero is `jun-norm`; the first page of the album is the same picture, so the
+    // card reads as the beginning rather than as a missing entry.
+    const card = selectMemory([], 300, 'debut-seed', 14)!
+    expect(card.stage).toBe('young')
+    expect(card.emotion).toBe('norm')
+    expect(card.whenLabel).toBe("W1 '31")
+    // ...and it is stable per week, like every other line in this module.
+    expect(selectMemory([], 300, 'debut-seed', 14)).toEqual(card)
   })
 
   it('memory emotions stay in the composed register except the title', () => {
@@ -698,11 +741,27 @@ describe('capture + snapshot integration', () => {
     }
   })
 
-  it('a fresh career: no Memory card in its first 8 weeks, ever', () => {
+  // ⚠ RE-AIMED BY W3 (owner, 30.07: «Only after 10 weeks I saw a first memory ... we could pin it
+  // faster»). This test USED to walk the first eight weeks of a live career and demand `null` on
+  // every one of them – which is precisely the behaviour he was complaining about, measured and
+  // guarded. The protected fact underneath it survives and is what the walk now checks: the card
+  // never lies about how far back it can see, and it is empty only while the career genuinely has
+  // nothing behind it. That window is now two weeks (MEMORY_DEBUT_WEEKS), and from week 2 the card
+  // shows the opening week.
+  it('a fresh career: the card is empty for two weeks, then remembers the week it started', () => {
     const world = createWorld('diary-fresh')
     const rng = rngFromSeed(world.seed)
-    for (let i = 0; i < 8; i++) {
-      expect(toSnapshot(world).diary.memory).toBeNull()
+    for (let i = 0; i < 10; i++) {
+      const memory = toSnapshot(world).diary.memory
+      if (world.week < MEMORY_DEBUT_WEEKS) {
+        expect(memory, `week ${world.week}`).toBeNull()
+      } else {
+        expect(memory, `week ${world.week}`).not.toBeNull()
+        // Nothing has aged in yet on a career this young, so it can only be the opening week – and
+        // it may never claim to be a milestone she has not reached.
+        expect(memory!.kind).toBe('debut')
+        expect(memory!.milestone).toBeNull()
+      }
       tickWeek(world, rng)
       if (world.pendingTournament) {
         skipTournament(world)

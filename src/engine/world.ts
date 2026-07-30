@@ -3713,6 +3713,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       .reduce((s, r) => s + r.points, 0),
     milestones: world.milestones,
     vacationWeek: vacationForWeek(world, world.week) !== undefined,
+    // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
+    // decision rather than the world's, and the subject of the ordinary week's note.
+    trainPct: world.plan.train,
   })
   // THE SKILLS RADAR'S VIEW OF HER, assembled ONCE and read twice - by the contour (`buildRadar`)
   // and by the Weekly Story's training line (`buildTrainingRead`). Hoisted rather than inlined
