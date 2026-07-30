@@ -665,10 +665,18 @@ function showAllTransactions(): void {
   padding-top: 10px;
 }
 
-/* The bottom padding is PaperNote's, not this screen's: `torn` owns it, because the saw-tooth mask
-   it applies eats into the bottom edge and the copy has to clear the teeth. */
+/* The bottom padding is PaperNote's, not this screen's: `torn` owns it, because the cut it applies
+   eats into the bottom edge and the copy has to clear it.
+   ⚠ AND THE THREE THIS SCREEN DOES SET NOW GO THROUGH `:deep`, because PaperNote's root is a
+   positioned wrapper since the tape fix. Padding on the wrapper would have been a transparent
+   margin around the receipt rather than an inset inside it - the copy would have sat flush against
+   the paper's edges with 13px of page showing outside them. The WIDTH stays on the wrapper: it is
+   how wide the object is in the artefact column, which is this screen's business. */
 .money-receipt {
   width: 100%;
+}
+
+.money-receipt :deep(.tb-paper) {
   padding-top: 15px;
   padding-left: 13px;
   padding-right: 13px;

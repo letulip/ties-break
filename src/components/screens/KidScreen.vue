@@ -617,12 +617,23 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
                              load-bearing – this Chromium has no dictionary and fell straight through
                              to break-word, which is exactly why the soft hyphen exists.
    `text-wrap: balance` keeps the two lines even instead of leaving one character stranded, and the
-   scrap grows downward from a fixed top edge, so a second line cannot push it off the portrait. */
+   scrap grows downward from a fixed top edge, so a second line cannot push it off the portrait.
+   ⚠ AND THE WHOLE TYPOGRAPHIC HALF NOW GOES THROUGH `:deep`, because PaperNote's root became a
+   positioned wrapper when the tape was moved out of `torn`'s clip-path. This scrap is the one call
+   site that overrides the paper's OWN type - it is the only PaperNote in the app that is not
+   handwriting (see the note at the call site: a play style is a fact, not a diary line) - and
+   `.tb-paper` declares `font-family`, `font-size` and `line-height` on itself, which beat anything
+   inherited from a wrapper. Left up there, this scrap would have quietly reverted to Caveat at 17px
+   and the four labels would have stopped wrapping the way they were measured to. Where the scrap
+   SITS on the portrait is still the wrapper's business. */
 .kid-style-note {
   position: absolute;
   right: 16px;
   bottom: 56px;
   width: 104px;
+}
+
+.kid-style-note :deep(.tb-paper) {
   padding: 13px 12px 15px;
   font-family: var(--font-body);
   font-size: 14px;

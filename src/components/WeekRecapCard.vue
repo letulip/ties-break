@@ -520,11 +520,20 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 }
 
 /* THE NOTE RIDES THE PAINTING. D's own numbers: up 34px over the art, and 2px wider than the
-   content column on both sides, so the scrap is visibly not aligned to the grid the cards obey. */
+   content column on both sides, so the scrap is visibly not aligned to the grid the cards obey.
+   ⚠ WHERE THE PAPER'S OWN BOX IS SET FROM NOW ON. `PaperNote`'s root is a positioned WRAPPER since
+   the tape fix (the tape has to live outside the clip-path, or a torn note loses its top half), so
+   a class on the component lands on that wrapper and not on the sheet. What positions the object -
+   the lift over the painting, the negative margins, the stacking - is the wrapper's business and
+   stays here; the INSET is the paper's and is set through `:deep`. Splitting them this way is what
+   keeps the padding inside the sheet's background instead of becoming a transparent gap around it. */
 .recap-note {
   position: relative;
   z-index: 1;
   margin: -34px -2px 0;
+}
+
+.recap-note :deep(.tb-paper) {
   padding: 16px 62px 18px 26px;
 }
 
@@ -786,12 +795,20 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 }
 
 /* The goal scrap: D's +0.4°, the opposite cut to the note above it, and the label and the goal on
-   one line with the trophy in the corner. */
+   one line with the trophy in the corner.
+   ⚠ THIS IS THE NOTE THE OWNER WAS LOOKING AT when he reported half a strip of tape, so it is the
+   one that pays the most attention to the split above: the flex row lays out the LABEL, THE GOAL
+   and the doodle, which are all slotted INSIDE the sheet, so the row has to be the sheet. Left on
+   the wrapper it would have made flex items of the paper and the tape - and laid the tape out
+   beside the note instead of across its top edge. */
 .recap-goal {
+  margin-top: 16px;
+}
+
+.recap-goal :deep(.tb-paper) {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  margin-top: 16px;
   padding: 18px 66px 18px 22px;
 }
 
