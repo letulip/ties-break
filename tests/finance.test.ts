@@ -120,8 +120,15 @@ describe('financeWeeks — the persisted per-week finance aggregate', () => {
 
   it('skips $0 sponsored line-items – no cash moved, no zero-valued category entry', () => {
     // Force the kid to the very top so gear/stringing get fully covered ($0 line-items).
+    // ⚠ FIXTURE RE-AIMED, NOT THE ASSERTION (30.07, fix/ranking-truth). The protected fact is
+    // unchanged: a $0 line-item is still emitted and still must not leave a zero in the aggregate.
+    // The `tier: 'j300'` is what makes the fixture force the state it claims to - `ECONOMY.sponsorship`
+    // gates on `world.kidRank`, the ITF table, and `inTrack` reads a TIER-LESS result as domestic, so
+    // this 100k row was ranking her #1 domestically and ~#120 internationally. It only ever reached the
+    // valve because the weekly tick overwrote `kidRank` with a both-ladders fold. See the long note at
+    // `topRankedBurn` in tests/economy.test.ts.
     const world = createWorld('zero', { ...DEFAULT_PROFILE, background: 'middle' })
-    world.results.push({ playerId: KID_ID, week: 0, points: 100_000 })
+    world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
     recomputeKidRank(world)
     const rng = rngFromSeed(world.seed)
     for (let i = 0; i < 40; i++) tickWeek(world, rng)

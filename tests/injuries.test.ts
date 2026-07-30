@@ -81,7 +81,16 @@ function hashOf(draws: number[]): string {
 // stream is untouched and that is what this block guards. What moved is the MEANING of kidRank: it
 // is now her place in the ITF table, not in a single mixed one, so it is a different number about a
 // different question. See docs/specs/two-ladders.md.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 126 }
+//
+// ⚠⚠ kidRank RE-PINNED 126 -> 119 (30.07, fix/ranking-truth) - and the re-pin above was WRONG about
+// which table 126 came from. `recomputeRankAndMilestones`, the tick's last writer of `world.kidRank`,
+// still ranked with no track predicate, so 126 was the MIXED (both-ladders) place while the comment
+// claimed ITF. 119 is the ITF place, now by construction: there is one writer. C1's own claim - that
+// INJURY and PHYSIO add no main-stream draws - is UNTOUCHED and still proves itself: count 41550 and
+// hash e6b0c709 reproduce byte-for-byte, re-derived on this branch both before and after the fix.
+// Full reasoning, and the arithmetic that identifies which table each number came from, at the REF
+// declaration in tests/condition.test.ts. The one-writer property is now pinned directly by B1c there.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 119 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {
   draws: number[]
