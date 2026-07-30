@@ -27,9 +27,21 @@ const props = withDefaults(
     playerA: MatchPlayer
     playerB: MatchPlayer
     surface: Surface
-    /** Round 4 item 4: 'replay' swaps Play/Pause + Restart for a single "Watch again"
-     *  button. Defaults to 'live' so existing call sites need no change. */
-    mode?: 'live' | 'replay'
+    /**
+     * IS THIS MATCH HAPPENING NOW, OR IS IT BEING WATCHED BACK? It decides three things and only
+     * three: the blinking Live badge, the shout, and the viewer's own "Watch again ↻".
+     *
+     * ⚠ REQUIRED, AND IT USED TO DEFAULT TO `'live'` "so existing call sites need no change" (round
+     * 4 item 4). That convenience shipped a lie: TournamentFlow mounted this component with NO
+     * `mode` at all, so the busiest match screen in the app blinked a red "Live" over a bracket the
+     * engine had already resolved during the tick, and PracticeFlow said `mode="live"` out loud on a
+     * friendly that was equally already in the save file. A default that is wrong for three call
+     * sites out of four is not a convenience, it is a trap with a nice name - so there is no default
+     * any more and `vue-tsc` fails the build if a new caller forgets to say which it is.
+     * The one genuinely live surface in the app is SeasonScreen's sandbox exhibition: it is
+     * simulated at the moment the button is pressed and written nowhere.
+     */
+    mode: 'live' | 'replay'
     /** Round-5 item 9: each player's current standings rank, shown under their name in the
      *  post-match stats. null (default) hides it – the friendly match passes null for "Top seed". */
     rankA?: number | null
@@ -58,7 +70,7 @@ const props = withDefaults(
      *  null (default) draws no plate at all, so nothing shows a made-up number in the meantime. */
     temperatureC?: number | null
   }>(),
-  { mode: 'live', rankA: null, rankB: null, finalMatch: false, temperatureC: null },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null },
 )
 // `finish` fires once when playback reaches the end (used by TournamentFlow to auto-advance to
 // the post-match card; other callers can ignore it).
@@ -1055,8 +1067,16 @@ function servePct(side: Side): number {
       </div>
       <!-- WHAT IS LEFT OUTSIDE THE PINNED BAR, and it is one button on one mode: "Watch again" only
            means anything once the match is over, and a replay is never watched while you are waiting
-           for it - so it does not earn permanent screen the way a mid-rally control does. -->
-      <div v-if="props.mode === 'replay'" class="mv-actions">
+           for it - so it does not earn permanent screen the way a mid-rally control does.
+           ⚠ `&& finished` IS NEW, 30.07, AND IT IS WHAT THE LINE ABOVE ALREADY CLAIMED. The gate was
+           `mode === 'replay'` alone, so the button sat there through the whole replay - "only means
+           anything once the match is over" was an argument the code did not keep. It matters now
+           because TournamentFlow and PracticeFlow became replays this round: both hand the player
+           their own box score the instant playback ends (`@finish` -> a phase change that unmounts
+           this component in the same flush, before it can paint), so without this they would have
+           grown a second "Watch again" inside the viewer, next to the one their box score already
+           has. MatchReplay is the caller that genuinely needs it: it has no screen after the match. -->
+      <div v-if="props.mode === 'replay' && finished" class="mv-actions">
         <!-- U0's PrimaryPill: `solid` IS `.primary`, so the class stays and the sound layer's
              `.sfx-watch` hook keeps working - what arrives is the one door for the affirmative. -->
         <PrimaryPill class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
@@ -1529,20 +1549,6 @@ function servePct(side: Side): number {
 
 .mv-beat.latest .mv-beat-score {
   color: var(--text);
-}
-
-.mv-log-empty {
-  margin: 6px 0;
-  text-align: center;
-  font-size: 12.5px;
-  color: var(--muted);
-}
-
-.mv-log-more {
-  display: block;
-  margin: 2px auto 0;
-  text-decoration: none;
-  font-weight: 600;
 }
 
 /* --- CONTROLS -------------------------------------------------------------------------------- */

@@ -1746,6 +1746,20 @@ tr.kid-row td {
   padding: 16px 24px 8px;
 }
 
+/* THE HEADER CONTROL NEVER WRAPS. A wrapped exit is how the tournament's header went from 75px to
+   98px in the first draft of the 30.07 slice: the flex row gave the sub line what it asked for and
+   the button took two lines for "To result →". A long title wrapping is the better trade - a title
+   is a name and reads fine on two lines; a control is a control.
+   ⚠ MOVED HERE FROM TournamentFlow.vue'S SCOPED BLOCK, 30.07, and the move is the whole point of
+   `ui/TakeoverShell.vue`: `.tf-top` stopped being one screen's business the moment FOUR surfaces
+   render their header through one component. It could not stay scoped either - the exit is SLOT
+   content, so it carries the caller's scope id and never the shell's, which means a rule written in
+   the shell would not have reached it without `:slotted()`. The header is shared vocabulary; so is
+   this. */
+.tf-top > button {
+  white-space: nowrap;
+}
+
 .tf-title {
   font-size: 17px;
   font-weight: 600;

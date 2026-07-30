@@ -66,7 +66,13 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // pill onto its row when Shout left (a row that holds one button does not need a `v-else`), and the
     // note explaining that sits between the two - more than the 120 characters this pattern allowed.
     // Comments are not markup: stripping them is what every other 30.07 pin in this file already does.
-    expect(markupOf(viewer)).toMatch(/v-if="props\.mode === 'replay'"[\s\S]{0,120}Watch again/)
+    // ⚠ RE-AIMED 30.07: the gate gained `&& finished`, and it is the line's own comment finally being
+    // kept. "Watch again only means anything once the match is over" was written above this button and
+    // was not true of it - it sat there through the whole replay. It has to be true now, because
+    // TournamentFlow and PracticeFlow became replays in the same round and both already hand the player
+    // a box score with a "Watch again" of their own the instant playback ends. The protected fact is
+    // unchanged and narrower: the re-watch belongs to the ONE caller that has no screen after the match.
+    expect(markupOf(viewer)).toMatch(/v-if="props\.mode === 'replay' && finished"[\s\S]{0,120}Watch again/)
     // ⚠ RE-AIMED 30.07, AND THE GATE GOT STRONGER RATHER THAN WEAKER. Shout used to be the `v-else`
     // of the "Watch again" branch, so "the replay does not shout" was true only as a side effect of
     // the two sharing one row. The owner moved it into the pinned bar («на экране live матча кнопку
@@ -77,6 +83,32 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // leaning on the other's markup.
     expect(viewer).toMatch(/v-if="props\.mode === 'live' && !finished"[\s\S]{0,120}title="Coming in Phase 6"/)
     expect(viewer).toContain('Shout 📣')
+  })
+
+  // ⚠ ADDED 30.07. `mode` had a DEFAULT of `'live'`, added in round 4 "so existing call sites need no
+  // change", and the convenience shipped a lie: TournamentFlow mounted the viewer with no `mode` at
+  // all, so the busiest match screen in the app blinked a red "Live" over a bracket the engine had
+  // already resolved during the tick. A prop whose default is wrong for three of its four callers is
+  // the trap, so there is no default - the compiler asks every caller instead.
+  it('`mode` has no default, so no call site can claim to be live by forgetting to say', () => {
+    expect(viewer).toMatch(/^\s*mode: 'live' \| 'replay'$/m)
+    const defaults = /withDefaults\([\s\S]*?\{([^}]*)\},\s*\)/.exec(viewer)?.[1] ?? ''
+    expect(defaults.length, 'the defaults object was not found').toBeGreaterThan(10)
+    expect(defaults, 'mode is back in the defaults').not.toContain('mode')
+    // and every caller says it out loud. Exactly one of them says 'live', and it is the only surface
+    // that is: SeasonScreen's sandbox exhibition is simulated at the moment the button is pressed.
+    const live: string[] = []
+    for (const rel of [
+      '../src/components/TournamentFlow.vue',
+      '../src/components/PracticeFlow.vue',
+      '../src/components/MatchReplay.vue',
+      '../src/components/screens/SeasonScreen.vue',
+    ]) {
+      const m = markupOf(read(rel))
+      expect(m, `${rel} says which mode it is`).toMatch(/mode="(live|replay)"/)
+      if (/mode="live"/.test(m)) live.push(rel)
+    }
+    expect(live).toEqual(['../src/components/screens/SeasonScreen.vue'])
   })
 
   it('the controls are the app\'s segmented control, not two <select>s', () => {
@@ -262,6 +294,23 @@ describe('one header slot per match screen, and it says where it takes you', () 
   const practice = read('../src/components/PracticeFlow.vue')
   const replay = read('../src/components/MatchReplay.vue')
 
+  /**
+   * THE HEADER'S SUB LINE, WHEREVER IT IS WRITTEN.
+   *
+   * ⚠ ADDED 30.07 BECAUSE THE LANDMARKS MOVED, AND ONLY THE LANDMARKS. Two pins below used to slice
+   * their file between `class="tf-sub"` and `</header>` - both of which were markup in TournamentFlow
+   * until `ui/TakeoverShell.vue` took the header away from all four match surfaces (owner: one
+   * component, no needless duplication). The `.tf-sub` element and the `</header>` tag still exist,
+   * once, in the shell; what a CALLER writes now is a `#sub` slot. So this reads the slot, and the
+   * facts underneath are checked exactly as they were.
+   */
+  const subOf = (sfc: string): string => {
+    const m = markupOf(sfc)
+    const at = m.indexOf('<template #sub>')
+    expect(at, 'the header sub line is a #sub slot').toBeGreaterThan(-1)
+    return m.slice(at, m.indexOf('</template>', at))
+  }
+
   it('the tournament never offers the one-match exit and the whole-draw exit at once', () => {
     // Owner: «what's the difference between to results and skip tournament on top of tournament
     // match screen?». They ARE different – endReplay leaves this match for its box score, skipAll
@@ -280,8 +329,9 @@ describe('one header slot per match screen, and it says where it takes you', () 
   it('the round badge rides the date line instead of renting a row', () => {
     // Owner: «on tournament match screen move quarterfinal badge higher nearby date». Same capsule,
     // now inside `.tf-sub`, which was already being drawn – and only while a match is on screen.
-    const markup = markupOf(flow)
-    const sub = markup.slice(markup.indexOf('class="tf-sub"'), markup.indexOf('</header>'))
+    // ⚠ RE-AIMED 30.07: read off the `#sub` slot rather than the `.tf-sub` element, because the
+    // element belongs to the shell now. See `subOf` for the whole of what moved.
+    const sub = subOf(flow)
     expect(sub).toMatch(/v-if="replayOpen" class="tf-replay-round"/)
     // ⚠ RE-AIMED, same slice: this read `pending.roundLabel`, which is the round on DECK. Moving the
     // badge onto the header line exposed a mislabel it had inherited from the old head row – on the
@@ -296,8 +346,9 @@ describe('one header slot per match screen, and it says where it takes you', () 
   it('the surface pill stands down only while a match is on screen', () => {
     // It is the one thing on that line the court below says better – but the preview, the pre-match
     // card, the box score and the poster have no court to read it off, so they keep it.
-    const markup = markupOf(flow)
-    const sub = markup.slice(markup.indexOf('class="tf-sub"'), markup.indexOf('</header>'))
+    // ⚠ RE-AIMED 30.07 for the same reason as the pin above: the sub line is a slot the caller fills,
+    // not an element the caller writes. See `subOf`.
+    const sub = subOf(flow)
     // ⚠ RE-AIMED AT THE INTEGRATION MERGE, and the fact is unchanged. The surface was three
     // hand-written readouts and became one `SurfaceMark` on the icon-system branch (one of the
     // three had `surf-clay` HARD-CODED beside the word "clay", so every other court showed an
@@ -314,7 +365,11 @@ describe('one header slot per match screen, and it says where it takes you', () 
     // those two things, so it went with them – 34px (a 22px pill plus its 12px of air).
     const markup = markupOf(practice)
     expect((markup.match(/Practice match/g) ?? []).length, 'said once, in the header title').toBe(1)
-    expect(markup).toContain('class="tf-title">Practice match')
+    // ⚠ RE-AIMED 30.07: the title is a PROP on `ui/TakeoverShell.vue` now, not a `.tf-title` element
+    // this screen writes. The `.tf-title` div still exists once, in the shell, and it still carries
+    // this string - the protected fact ("said once, in the header title") is checked by the count
+    // above and is unchanged.
+    expect(markup).toContain('title="Practice match"')
     expect(markup).toMatch(/v-if="phase !== 'post'"[\s\S]{0,80}@click="toResult"/)
     // ⚠ The box score's own "Done" is the way out of a finished friendly; a second exit beside it
     // is what the owner was asking about, so the header slot is empty there.
@@ -336,7 +391,15 @@ describe('one header slot per match screen, and it says where it takes you', () 
 
 describe('live and replay open the same way – the popup, which is the one he likes', () => {
   const replay = read('../src/components/MatchReplay.vue')
-  const practice = read('../src/components/PracticeFlow.vue')
+  const shell = read('../src/components/ui/TakeoverShell.vue')
+
+  /** Every place MatchViewer is mounted. The fourth one is the point of the 30.07 slice. */
+  const SURFACES = [
+    ['TournamentFlow', '../src/components/TournamentFlow.vue'],
+    ['PracticeFlow', '../src/components/PracticeFlow.vue'],
+    ['MatchReplay', '../src/components/MatchReplay.vue'],
+    ['SeasonScreen', '../src/components/screens/SeasonScreen.vue'],
+  ] as const
 
   it('the replay is the takeover, not a centred card that cannot scroll', () => {
     // Owner: «I suppose we need the same principle of opening live and replay matches. Maybe a popup
@@ -344,12 +407,43 @@ describe('live and replay open the same way – the popup, which is the one he l
     // stick to it». `.dialog-overlay` centres its child and does not scroll, so a finished replay
     // measured 1243px inside an 812px viewport at y=-215.5: the court, the close button and the
     // bottom of the box score were all off screen with no way to reach them.
+    // ⚠ RE-AIMED 30.07, AND THE THREE CLASSES MOVED ONE FILE ACROSS. They were written out by hand in
+    // MatchReplay, PracticeFlow and TournamentFlow; `ui/TakeoverShell.vue` owns them now, so the three
+    // assertions about the LAYER live where the layer does, and this file's own job is to say the
+    // replay reaches for it. Nothing about the protected fact changed: a replay is a full-screen
+    // takeover with a real scroller, not a centred card.
     const markup = markupOf(replay)
-    expect(markup).toContain('class="tournament-flow"')
-    expect(markup).toContain('class="tf-top"')
-    expect(markup).toContain('class="tf-body"')
+    expect(markup).toContain('<TakeoverShell')
+    const chrome = markupOf(shell)
+    expect(chrome).toContain('class="tournament-flow"')
+    expect(chrome).toContain('class="tf-top"')
+    expect(chrome).toContain('class="tf-body"')
     expect(markup, 'the overlay is what clipped it').not.toContain('class="dialog-overlay"')
     expect(markup).not.toContain('class="replay-card"')
+  })
+
+  // ⚠ ADDED 30.07 (owner: «Есть четвёртое место, где живёт просмотрщик матча - надо все одинаково
+  // сделать оверлеем поверх всего экрана ... Будет один компонент и без ненужных дублей кода»). This is
+  // the pin the fourth surface never had, and its absence is what let the bug live: SeasonScreen's
+  // sandbox exhibition drew the viewer INLINE on a tabbed screen, where the DOCUMENT is the scrollport
+  // and the app's `position: fixed` tab bar owns y=760..812. Measured at 375x812 with the box score on
+  // screen: the pinned control bar sat at y=736.5..791.5, so 31.5 of its 55px were behind the tab bar
+  // and `elementFromPoint` at the bar's own bottom edge returned `.tab-icon`. Inside a takeover the
+  // scrollport is `.tf-body` and the tab bar is covered.
+  it('all FOUR match surfaces open the viewer through the one takeover, and nothing writes its own', () => {
+    for (const [name, rel] of SURFACES) {
+      const markup = markupOf(read(rel))
+      const at = markup.indexOf('<MatchViewer')
+      const shellAt = markup.indexOf('<TakeoverShell')
+      expect(at, `${name} mounts the viewer`).toBeGreaterThan(-1)
+      expect(shellAt, `${name} opens a takeover`).toBeGreaterThan(-1)
+      expect(at, `${name} puts the viewer inside the takeover`).toBeGreaterThan(shellAt)
+      // ...and it does NOT hand-write the chrome any more. Three files agreeing on a layout is how the
+      // fourth came to disagree, so the classes may appear in exactly one place: the component.
+      for (const cls of ['class="tournament-flow"', 'class="tf-top"', 'class="tf-body"']) {
+        expect(markup, `${name} hand-writes ${cls} instead of using the shell`).not.toContain(cls)
+      }
+    }
   })
 
   // ⚠ RE-AIMED 30.07, and the protected fact is the one this test was named for: all three match
@@ -362,23 +456,15 @@ describe('live and replay open the same way – the popup, which is the one he l
   // 32px of height back. So the test now pins the ABSENCE as hard as it used to pin the presence -
   // three screens agreeing on no frame is exactly as protective as three agreeing on one, and a
   // re-added wrapper on one screen would be the drift.
-  it('all three match screens open the viewer the same way – straight into the takeover', () => {
-    const flow = read('../src/components/TournamentFlow.vue')
-    for (const [name, src] of [
-      ['TournamentFlow', flow],
-      ['PracticeFlow', practice],
-      ['MatchReplay', replay],
-    ] as const) {
-      const markup = markupOf(src)
-      const at = markup.indexOf('<MatchViewer')
-      expect(at, `${name} mounts the viewer`).toBeGreaterThan(-1)
-      // it is in the takeover's own scroller...
-      expect(markup.slice(0, at), `${name} puts the viewer in the takeover's scroller`).toContain(
-        'class="tf-body"',
-      )
-      expect(markup, `${name} is a takeover`).toContain('class="tournament-flow"')
-      // ...and no panel is its wrapper. Matched as "a `.tf-card` element whose first content is the
-      // viewer", which is precisely the markup that was deleted - and precisely what would come back.
+  it('no match surface wraps the viewer in a panel of its own', () => {
+    // ⚠ RE-AIMED 30.07 AND SPLIT IN TWO. The half that read "it is in the takeover's own scroller"
+    // moved up to the FOUR-surface pin above, where it is checked against the shell instead of against
+    // three hand-written copies of `class="tf-body"`. What is left here is the other protected fact,
+    // unchanged and now covering the fourth surface too.
+    for (const [name, rel] of SURFACES) {
+      const markup = markupOf(read(rel))
+      // No panel is its wrapper. Matched as "a `.tf-card` element whose first content is the viewer",
+      // which is precisely the markup that was deleted - and precisely what would come back.
       // Deliberately NOT "the file contains no .tf-card": the tournament's draw, box score, spectate
       // card and poster are all still panels, in other phase branches, and must stay ones.
       expect(markup, `${name} wraps the viewer in a panel`).not.toMatch(
@@ -387,7 +473,7 @@ describe('live and replay open the same way – the popup, which is the one he l
     }
   })
 
-  it('exactly one cross is left in the match flow, and it is the replay\'s', () => {
+  it('a cross exists only where the screen decides nothing and has nowhere else to go', () => {
     // Owner: «match screen close should be a cross custom SVG and what this close stands for? does
     // it skip the game or what? maybe it's redundant?». It was redundant on the friendly, where it
     // sat beside a "To result →" that did the useful thing; on a replay it is the only exit there
@@ -395,11 +481,31 @@ describe('live and replay open the same way – the popup, which is the one he l
     // ⚠ RE-AIMED AT THE INTEGRATION MERGE — and this test asked for it. The note here said
     // "ADOPTION POINT for the icon system's cross SVG"; the owner's own `close.svg` and the
     // `IconButton` that carries it landed on the sibling branch in the same round, so the glyph
-    // became a named control with a real asset. THE FACT IS UNCHANGED: exactly one close exists in
-    // the match flow, it is the replay's, and the friendly does not offer one.
-    expect(markupOf(replay)).toMatch(/<IconButton[^>]*icon="close"/)
-    expect(markupOf(replay)).not.toContain('Close ✕')
-    expect(markupOf(practice), 'the friendly no longer offers a close').not.toMatch(/icon="close"/)
-    expect(markupOf(practice)).not.toContain('Close ✕')
+    // became a named control with a real asset.
+    // ⚠ RE-AIMED AGAIN 30.07, AND THE COUNT WENT FROM ONE TO TWO. It was called "exactly one cross is
+    // left in the match flow, and it is the replay's" - a COUNT standing in for the criterion the test's
+    // own note already spelled out. The criterion is what the owner asked about ("what this close stands
+    // for?"), and it is: a cross is right where the screen decides NOTHING and has no screen after it,
+    // and wrong where a useful exit exists. Making SeasonScreen's sandbox exhibition a takeover added a
+    // second surface that meets it exactly - a hit-out that costs nothing, is written nowhere and has no
+    // result screen, so "out" is the only thing an exit there could mean. The half that was really doing
+    // the work is untouched and now enumerated over the whole flow: the two screens that DO have a
+    // useful exit (the friendly's "To result →", the tournament's two) offer no cross, and no screen
+    // types the glyph.
+    const CROSS_IS_THE_ONLY_EXIT = ['../src/components/MatchReplay.vue', '../src/components/screens/SeasonScreen.vue']
+    const HAS_A_USEFUL_EXIT = ['../src/components/PracticeFlow.vue', '../src/components/TournamentFlow.vue']
+    for (const rel of CROSS_IS_THE_ONLY_EXIT) {
+      expect(markupOf(read(rel)), `${rel} needs its cross`).toMatch(/<IconButton[^>]*icon="close"/)
+    }
+    for (const rel of HAS_A_USEFUL_EXIT) {
+      expect(markupOf(read(rel)), `${rel} has a useful exit and must not also offer a close`).not.toMatch(
+        /icon="close"/,
+      )
+    }
+    for (const rel of [...CROSS_IS_THE_ONLY_EXIT, ...HAS_A_USEFUL_EXIT]) {
+      expect(markupOf(read(rel)), `${rel} types the glyph`).not.toContain('Close ✕')
+    }
+    // anti-vacuity: the two lists really are the whole match flow, and they do not overlap
+    expect(new Set([...CROSS_IS_THE_ONLY_EXIT, ...HAS_A_USEFUL_EXIT]).size).toBe(SURFACES.length)
   })
 })
