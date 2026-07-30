@@ -305,6 +305,37 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
     expect(vacationPackage('staycation')!.priceCents).toEqual([0, 0])
   })
 
+  // ⚠ W7 – EXACTLY ONE PACKAGE MAY QUOTE ZERO, and it is the one whose whole design is being free.
+  // The owner: «Grandma's village регулярно стоит 0 или 3 доллара для 8к, мне кажется там можно
+  // какой-то порог цены сделать». `grandma`'s band opened at 0, so a working family was quoted
+  // $0.00-$40.00 uniformly - 1 in 78 quotes rendered "$0" and 1 in 7 came in under five dollars.
+  //
+  // THE CLAIM PINNED HERE IS NOT THE NUMBER, IT IS THE PROPERTY, because a number would just be the
+  // catalogue read back to itself. What must stay true is that a PAID rung cannot quote free: a zero
+  // quote falls through both of `bookVacation`'s free-package carve-outs (`priceCents > 0` guards the
+  // affordability check AND the expense row), so a package that can roll 0 is a package that is
+  // occasionally bookable at negative funds and invisible on the Money screen. That is a real bug
+  // wearing a price tag, and it is what this test would catch if the floor were ever removed.
+  it('only the FREE package can quote nothing - a paid rung never rolls $0', () => {
+    for (const pkg of ECONOMY.vacation.packages) {
+      const free = pkg.priceCents[1] === 0
+      if (free) {
+        expect(pkg.priceCents, `${pkg.id} is the free rung`).toEqual([0, 0])
+        continue
+      }
+      expect(pkg.priceCents[0], `${pkg.id} can be quoted free`).toBeGreaterThan(0)
+      // ...and no career, at any corridor, in any week, can talk it down to nothing
+      for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+        for (let w = 1; w <= 60; w++) {
+          expect(vacationPriceCents('floor-seed', w, pkg.id, bg), `${pkg.id} w${w} ${bg}`).toBeGreaterThan(0)
+        }
+      }
+    }
+    // and the ladder still climbs: every rung's floor clears the one below it
+    const floors = ECONOMY.vacation.packages.map((p) => p.priceCents[0])
+    for (let i = 1; i < floors.length; i++) expect(floors[i]).toBeGreaterThan(floors[i - 1])
+  })
+
   it('quotes deterministically off seed:vacation:week:packageId, inside band × corridor', () => {
     const quote = (bg: FamilyBackground) => vacationPriceCents('quote-seed', 7, 'seaside', bg)
     expect(quote('middle')).toBe(quote('middle')) // deterministic
