@@ -78,6 +78,40 @@ export interface Beat {
   set: number
 }
 
+/** ⚠ THE ROW'S BUDGET, AND THE BUILDER NOW KEEPS IT RATHER THAN HAPPENING TO.
+ *
+ *  `tests/viz/commentary.test.ts` has always asserted "nothing may run away with the row: two or
+ *  three short sentences, never a paragraph" at 120 characters. Nothing in here enforced it - the
+ *  beats concatenated their clauses and the assertion held because no scoreline in the corpus had yet
+ *  produced the worst case. One did, the moment the v25 rally term changed which points the corpus's
+ *  matches turn on: "Bianca breaks from love-forty down. She serves for the set next. Eight shots, and
+ *  it ends with a winner through the middle." - 123 characters, three true sentences, and a row that
+ *  wraps to four lines on a 390px frame.
+ *
+ *  That was a latent hole rather than a consequence of the new attribute: ANY change to a match
+ *  outcome anywhere could have found it, and the next one would have. So the rule now lives beside
+ *  the copy instead of only in the test that checks it. */
+const BEAT_MAX_CHARS = 120
+
+/** Join a beat's clauses in order, keeping each only while the row can still hold it.
+ *
+ *  THE FIRST CLAUSE IS NEVER DROPPED - it is the beat's actual claim ("she breaks from love-forty
+ *  down"), and a beat that cannot say what happened has no reason to exist. What gets dropped is the
+ *  tail, and the beats are all written with the same ordering discipline for exactly that reason:
+ *  the CLAIM first, then what the score means next, and the rally's COLOUR last. Colour is what a
+ *  human editor would cut too. */
+function clauses(...parts: (string | null | undefined)[]): string {
+  const kept: string[] = []
+  for (const part of parts) {
+    const p = part?.trim()
+    if (!p) continue
+    const next = kept.length === 0 ? p : `${kept.join(' ')} ${p}`
+    if (kept.length > 0 && next.length > BEAT_MAX_CHARS) continue
+    kept.push(p)
+  }
+  return kept.join(' ')
+}
+
 /** Six in a row is where a run stops being noise and becomes the thing you remember. */
 const STREAK_MIN = 6
 /** Twelve shots: the top rally bucket is 13-18 shots at 5% of points, and grass takes one off. */
@@ -421,14 +455,12 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
     lastIndex,
     'match',
     'Match.',
-    [
+    clauses(
       match.result.sets.length === 3
         ? `${names[winner]} takes it in three.`
         : `${names[winner]} takes it in straight sets.`,
       mannerLine(mannerOf(points[lastIndex]), names, winner, true),
-    ]
-      .filter(Boolean)
-      .join(' '),
+    ),
     scoreline,
   )
 
@@ -449,7 +481,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
       // A non-final second set can only ever have been won by whoever lost the first, so it is
       // always the leveller. The first set needs no standing - it IS the standing.
       const standing = g.set === 0 ? '' : ' One set each.'
-      push(g.last, 'set', 'Set.', [`${how}${standing}`, manner].filter(Boolean).join(' '), `${g.gamesAfter[0]}-${g.gamesAfter[1]}`)
+      push(g.last, 'set', 'Set.', clauses(`${how}${standing}`, manner), `${g.gamesAfter[0]}-${g.gamesAfter[1]}`)
       continue
     }
 
@@ -483,7 +515,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
       // else, and the tour is women's (JUNIOR_TOUR = 'wta'; the cohort's given-name pool is
       // female). Naming her twice in two short sentences reads like a machine.
       const tail = g.gamesAfter[w] === 5 && g.gamesAfter[loser] <= 4 ? ' She serves for the set next.' : ''
-      push(g.last, 'break', 'Break!', `${base}${tail} ${manner}`.trim())
+      push(g.last, 'break', 'Break!', clauses(`${base}${tail}`, manner))
       continue
     }
 
@@ -503,7 +535,7 @@ export function buildCommentary(match: AnnotatedMatch, playerA: string, playerB:
             ? `${names[w]} saves ${nPoints(g.bpFaced, 'break point')} and holds.`
             : ''
     if (!base) continue
-    push(g.last, 'hold', 'Held.', `${base} ${manner}`.trim())
+    push(g.last, 'hold', 'Held.', clauses(base, manner))
   }
 
   // --- streaks: the longest run of >= STREAK_MIN points in each set, at the point it ended ----

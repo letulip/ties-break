@@ -34,6 +34,9 @@ function field(n: number): MatchPlayer[] {
     ret: 60 - i * 0.1,
     composure: 60,
     stamina: 60,
+    // Level off the ground: this field exists to be a seeding ladder, and the v25 rally term must
+    // not add a second, unrelated gradient to it.
+    groundstrokes: 60,
   }))
 }
 

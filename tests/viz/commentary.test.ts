@@ -8,8 +8,8 @@ import type { MatchPlayer, MatchOptions, Side, Surface } from '../../src/engine/
 
 // Two juniors with different shapes so the corpus below contains blowouts, three-setters and
 // tiebreaks rather than one repeated match.
-const A: MatchPlayer = { id: 'kid', name: 'Bianca Tran', serve: 58, ret: 55, composure: 42, stamina: 61 }
-const B: MatchPlayer = { id: 'opp', name: 'Dana Delgado', serve: 60, ret: 57, composure: 55, stamina: 60 }
+const A: MatchPlayer = { id: 'kid', name: 'Bianca Tran', serve: 58, ret: 55, composure: 42, stamina: 61, groundstrokes: 56 }
+const B: MatchPlayer = { id: 'opp', name: 'Dana Delgado', serve: 60, ret: 57, composure: 55, stamina: 60, groundstrokes: 58 }
 const SURFACES: Surface[] = ['hard', 'clay', 'grass']
 
 function play(seed: string, surface: Surface = 'hard'): AnnotatedMatch {

@@ -480,6 +480,49 @@ export function migrateSave(raw: unknown): WorldState {
     v = 24
   }
 
+  // v24 -> v25: THE FIFTH ATTRIBUTE. `KidSkills` gains `groundstrokes` - damage off the ground, the
+  // leg of a point the model never had (owner, 30.07; docs/specs/skills-radar.md §5).
+  //
+  // THE TWO OBVIOUS BACK-FILLS ARE BOTH WRONG, and saying why is the whole of this block. Her BIRTH
+  // value would open a week-200 career with a fourteen-year-old's forehand - one absurd notch on a
+  // radar that is otherwise about a nineteen-year-old. Her CEILING is wrong for the mirror reason.
+  // Both would read as the game having forgotten five years of her career, which is exactly what it
+  // did NOT do: she has been hitting forehands the whole time. The attribute was not modelled; the
+  // girl was.
+  //
+  // SO SHE IS PLACED AT THE SHARE OF THE NEW AXIS'S HEADROOM SHE HAS TAKEN ON THE OTHER FOUR. A girl
+  // who is two thirds of the way to her ceiling everywhere else is two thirds of the way there off
+  // the ground too, which is the only statement the save actually supports.
+  //
+  // ⚠ A FRESH CAREER LANDS ON EXACTLY `startingSkills`, because `progress` is 0 at week 1. That is
+  // the property v19 established for `skills`/`potential` and it is worth keeping: a new game and a
+  // migrated week-1 game must be the same career, or the migration is inventing history.
+  //
+  // Both new numbers come off the APPENDED draws on `seed:kid` / `seed:potential` (see
+  // world.ts startingSkills and development.ts SKILL_KEYS), so the four attributes this save already
+  // holds are untouched and the two sub-streams' earlier draws are byte-identical. Zero main-stream
+  // draws: this runs at load time, not inside a tick.
+  if (v === 24) {
+    const born = startingSkills(String(save.seed), save.profile as PlayerProfile)
+    const ceiling = rollPotential(String(save.seed), born)
+    const skills = save.skills as Record<string, number> | undefined
+    const potential = save.potential as Record<string, number> | undefined
+    if (skills && potential && skills.groundstrokes === undefined) {
+      const OLD_KEYS = ['serve', 'ret', 'composure', 'stamina'] as const
+      let progress = 0
+      for (const k of OLD_KEYS) {
+        const headroom = ceiling[k] - born[k]
+        // Guard the degenerate ceiling (a career whose potential roll landed on its start) rather
+        // than dividing by it; such an attribute simply contributes no evidence of progress.
+        const share = headroom > 0 ? (skills[k] - born[k]) / headroom : 0
+        progress += Math.max(0, Math.min(1, share)) / OLD_KEYS.length
+      }
+      skills.groundstrokes = born.groundstrokes + progress * (ceiling.groundstrokes - born.groundstrokes)
+      potential.groundstrokes = ceiling.groundstrokes
+    }
+    v = 25
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

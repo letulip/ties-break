@@ -69,7 +69,7 @@ const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8'
 // --- fixtures ----------------------------------------------------------------------------------
 
 function player(id: string, over: Partial<MatchPlayer> = {}): MatchPlayer {
-  return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50, ...over }
+  return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50, ...over }
 }
 
 /** A history of `n` identical matches – the only way to hold everything about a career still except
@@ -94,8 +94,8 @@ function synthView(over: Partial<RadarWorldView> & { n?: number; score?: string;
   // is the neutral fixture: `startSkills` feeds only the Weekly Story's training line, and every
   // case that cares about movement sets it explicitly. Defaulting it to a FIXED fifty would have
   // silently handed a +14 career to every lopsided-skills case in the note sweep below.
-  const skills: KidSkills = over.skills ?? { serve: 50, ret: 50, composure: 50, stamina: 50 }
-  const potential: KidSkills = over.potential ?? { serve: 66, ret: 66, composure: 66, stamina: 66 }
+  const skills: KidSkills = over.skills ?? { serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 }
+  const potential: KidSkills = over.potential ?? { serve: 66, ret: 66, composure: 66, stamina: 66, groundstrokes: 66 }
   return {
     seed: 'radar-test',
     week: 52,
@@ -232,8 +232,8 @@ describe('radar – the fog is an honest claim', () => {
         coachTier: COACH_TIERS[i % COACH_TIERS.length],
         coachSinceWeek: 0,
         week: i,
-        skills: { serve: 20 + (i % 60), ret: 90 - (i % 60), composure: 50, stamina: 35 },
-        potential: { serve: 26 + (i % 60), ret: 96 - (i % 60), composure: 78, stamina: 36 },
+        skills: { serve: 20 + (i % 60), ret: 90 - (i % 60), composure: 50, stamina: 35, groundstrokes: 45 + (i % 30) },
+        potential: { serve: 26 + (i % 60), ret: 96 - (i % 60), composure: 78, stamina: 36, groundstrokes: 55 + (i % 30) },
       })
       for (const a of buildRadar(view)) {
         expect(Math.abs(a.shownValue - view.skills[a.key])).toBeLessThanOrEqual(a.band + 1e-9)
@@ -561,7 +561,7 @@ describe('radar – the note', () => {
               n,
               score,
               coachTier: tier,
-              skills: { serve: 50 + skew, ret: 50 - skew, composure: 50 + skew, stamina: 50 - skew },
+              skills: { serve: 50 + skew, ret: 50 - skew, composure: 50 + skew, stamina: 50 - skew, groundstrokes: 50 + skew },
             })
             for (const a of buildRadar(view)) if (a.note) out.add(a.note)
           }
@@ -649,7 +649,7 @@ describe('radar – the note', () => {
         n: 40,
         score: '6-4 3-6 6-4',
         coachTier: 'elite',
-        skills: { serve: 50 + skew, ret: 50 - skew, composure: 50 + skew, stamina: 50 - skew },
+        skills: { serve: 50 + skew, ret: 50 - skew, composure: 50 + skew, stamina: 50 - skew, groundstrokes: 50 + skew },
       })
       for (const a of buildRadar(view)) {
         expect(a.note, `${a.key} @ skew ${skew}`).not.toBeNull()
@@ -713,20 +713,36 @@ describe('radar – RNG discipline', () => {
 // 9. THE EMPTY STATE (what the screen agent draws on week 1)
 // ---------------------------------------------------------------------------
 describe('radar – a fourteen-year-old in week 1', () => {
-  it('four axes, maximum fog, a wide haze and two honest silences', () => {
+  // ⚠ RE-AIMED FOR THE FIFTH AXIS (v25): 4 -> 5 rows and 2 -> 3 silences. Both numbers are read off
+  // `SKILL_KEYS` rather than written down, so the next axis re-aims this test by existing.
+  //
+  // WHY THREE SILENCES IS THE SAME CLAIM AS TWO, and it is worth spelling out because it looks like a
+  // weakening: the split is not arbitrary. The two axes the SCORELINE speaks for (composure, stamina)
+  // have "nobody knows yet" lines licensed on `units === 0` - never having been in a third set is a
+  // FACT about her, sayable on day one. The three TECHNICAL axes (serve, return, groundstrokes) have
+  // absence lines licensed on `tested`, i.e. on the OPPONENTS she has met, and she has met none, so
+  // there is not yet anything true to say about them. Adding a technical axis therefore adds a
+  // silence, exactly as adding a scoreline axis would have added a sentence. Silence is a state.
+  it('five axes, maximum fog, a wide haze and three honest silences', () => {
     const world = createWorld('radar-empty', { ...DEFAULT_PROFILE, coachTier: 'self' })
     const snap = toSnapshot(world)
-    expect(snap.radar).toHaveLength(4)
+    expect(snap.radar).toHaveLength(SKILL_KEYS.length)
+    expect(snap.radar.map((a) => a.key)).toEqual([...SKILL_KEYS])
     for (const a of snap.radar) {
       expect(a.band).toBeGreaterThan(RADAR_BAND_MAX * 0.9) // she is a stranger
       expect(a.ceilingHi - a.ceilingLo).toBeGreaterThan(2 * CEILING_FLOOR_HALF)
       expect(a.shownValue).toBeGreaterThan(0)
     }
-    expect(snap.radar.filter((a) => a.note === null)).toHaveLength(2)
+    // The three technical wings are silent; the two the scoreline speaks for are not.
+    const silent = snap.radar.filter((a) => a.note === null).map((a) => a.key)
+    expect([...silent].sort()).toEqual(['groundstrokes', 'ret', 'serve'])
+    expect(snap.radar.filter((a) => a.note !== null).map((a) => a.key).sort()).toEqual([
+      'composure', 'stamina',
+    ])
     expect(matchesEverPlayed(world)).toBe(0)
   })
 
-  it('the axis labels are the ENGINE\'s, and cover the four keys – "ret" never reaches a player', () => {
+  it('the axis labels are the ENGINE\'s, and cover every key – "ret" never reaches a player', () => {
     for (const k of SKILL_KEYS) {
       expect(RADAR_AXIS_LABEL[k], k).toBeTruthy()
       expect(RADAR_AXIS_LABEL[k]).not.toMatch(/[0-9—]|[Ѐ-ӿ]/)

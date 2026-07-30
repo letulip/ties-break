@@ -30,6 +30,7 @@
 
 import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from '../condition'
 import { ECONOMY } from '../economy'
+import { rngFromSeed } from '../rng'
 import { TIERS, TIER_LADDER, isBlackoutWeek } from './calendar'
 import type { SeasonResult } from './ranking'
 import type { AiPlayer, TierId } from './types'
@@ -253,15 +254,49 @@ export function styleOf(player: Pick<MatchPlayer, 'serve' | 'ret' | 'stamina'>):
  *  specialist trades one court for another instead of gaining outright. Rivals and the kid are now
  *  provably shaped by the same rule. */
 
+/** HOW HARD A RIVAL HITS OFF THE GROUND (v25) - derived, never stored. Sibling of `styleOf` above,
+ *  and it exists for the same two reasons: a stored field would cost a cohort schema bump, and a
+ *  fifth weekly draw in `driftCohort` would move the frozen MAIN capture. See season/types.ts.
+ *
+ *  ANCHORED ON HER FIRST-STRIKE LEVEL, `(serve + ret) / 2`, so it tracks her development for free -
+ *  a rival who closes on her ceiling hits harder every season, with no new state and no new draws.
+ *  It also reads the styles correctly without being told them, which is the part worth noticing:
+ *  a serve-first rival (serve well ahead of return) lands BELOW her serve, because her groundstroke
+ *  is her weaker half; a counterpuncher (high return, high legs) lands in the middle, because she
+ *  does not hit through people; an aggressive rival (both weapons high) lands high. Exactly what
+ *  `styleOf` says about the same three numbers.
+ *
+ *  THE OFFSET IS WHY THIS IS AN ATTRIBUTE AND NOT A FORMULA. Without it `opp.groundstrokes` would be
+ *  a deterministic function of `opp.serve`/`opp.ret`, and the radar's evidence read for the new axis
+ *  ("has anybody out-hit her") would collapse into a restatement of its serve/return reads. One
+ *  uniform draw off the player's own `gs:<id>` sub-stream gives the field genuine spread on the new
+ *  axis: stable for ever (the id never changes), and ZERO draws on any stream the tick is walking. */
+export const RIVAL_GS_SPREAD = 8
+
+export function rivalGroundstrokes(player: Pick<AiPlayer, 'id' | 'serve' | 'ret'>): number {
+  const base = (player.serve + player.ret) / 2
+  const u = rngFromSeed(`gs:${player.id}`)()
+  return clamp(base + RIVAL_GS_SPREAD * (2 * u - 1), 0, 100)
+}
+
 /** THE one helper both tournament paths call (the kid's shadow run and the canonical AI bracket),
  *  so a rival can never be built two different ways.
  *
  *  Composition order mirrors the kid's exactly (spec §Composition):
  *      base attributes → surface/style modifier → condition factor
  *  applied exactly ONCE. `condition` defaults to full, so a rival with no rows in the fatigue
- *  window (or any caller that has not derived one) is simply fresh. */
+ *  window (or any caller that has not derived one) is simply fresh.
+ *
+ *  ⚠ THE DERIVED GROUNDSTROKE JOINS BEFORE `applySurfaceStyle`, not after, so the surface x style
+ *  table can move it like any other attribute - an aggressive rival on a hard court hits bigger, by
+ *  the same row that does it for the kid. Deriving it afterwards would silently exempt the whole
+ *  cohort from the one row v25 added to that table. */
 export function rivalMatchPlayer(player: AiPlayer, surface: Surface, condition: number = ECONOMY.condition.max): MatchPlayer {
-  const styled = applySurfaceStyle(player, styleOf(player), surface)
+  const styled = applySurfaceStyle(
+    { ...player, groundstrokes: rivalGroundstrokes(player) },
+    styleOf(player),
+    surface,
+  )
   const factor = conditionMatchFactor(condition)
   return {
     id: styled.id,
@@ -270,6 +305,7 @@ export function rivalMatchPlayer(player: AiPlayer, surface: Surface, condition: 
     ret: styled.ret * factor,
     composure: styled.composure * factor,
     stamina: styled.stamina * factor,
+    groundstrokes: styled.groundstrokes * factor,
   }
 }
 

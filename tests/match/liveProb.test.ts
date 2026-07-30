@@ -7,8 +7,11 @@ import { annotateMatch } from '../../src/engine/match/rally'
 import { basePServe } from '../../src/engine/match/point'
 import type { MatchScore, MatchPlayer, MatchOptions, Side } from '../../src/engine/match/types'
 
+// ⚠ `groundstrokes: 50` ON BOTH SIDES BY DEFAULT (v25), and that is not filler - it is what keeps
+// every fixture in this file byte-identical. The rally term in `basePServe` multiplies a DIFFERENCE,
+// so two players level off the ground contribute exactly zero and no calibration band moves.
 function player(overrides: Partial<MatchPlayer> = {}): MatchPlayer {
-  return { id: 'p', name: 'P', serve: 50, ret: 50, composure: 50, stamina: 50, ...overrides }
+  return { id: 'p', name: 'P', serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50, ...overrides }
 }
 function opts(overrides: Partial<MatchOptions> = {}): MatchOptions {
   return { surface: 'hard', tour: 'atp', seed: 'seed-0', ...overrides }

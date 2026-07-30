@@ -8,6 +8,18 @@ export const TOUR_AVG_P: Record<Tour, number> = { atp: 0.63, wta: 0.57 }
 export const SURFACE_SERVE_BONUS: Record<Surface, number> = { hard: 0, grass: 0.015, clay: -0.015 }
 
 const SKILL_K = 0.0016 // p shift per skill point
+
+/** p shift per point of GROUNDSTROKE ADVANTAGE (v25, docs/specs/skills-radar.md §5).
+ *
+ *  DELIBERATELY BELOW `SKILL_K`. The serve is the most valuable shot in tennis, so a ten-point serve
+ *  edge must still outweigh a ten-point forehand; at 0.0011 against 0.0016 it does, by about a third.
+ *
+ *  It multiplies a DIFFERENCE, which is the whole reason this term can be added to a calibrated
+ *  model at all: the rally is contested by both players, so `(server - receiver)` is the honest
+ *  shape, and it is exactly zero when they are level. Every symmetric fixture, every calibration
+ *  band and the tour's average serve percentage are therefore untouched by construction - the same
+ *  "neutral is byte-identical" property match/style.ts is built around. */
+const RALLY_K = 0.0011
 const BASE_CLAMP: [number, number] = [0.42, 0.82]
 const FINAL_CLAMP: [number, number] = [0.3, 0.9]
 const BIG_POINT_MAX_PENALTY = 0.03
@@ -27,11 +39,18 @@ function clamp(x: number, [lo, hi]: [number, number]): number {
 }
 
 // Barnett–Clarke matchup adjustment around the tour average, then surface bonus.
+//
+// THREE LEGS, NOT TWO (v25). The serve is measured against 50 on the server's side, the return
+// against 50 on the receiver's, and the RALLY against THE OTHER PLAYER - because a serve is hit by
+// one person and a rally by both. Whoever hits bigger off the ground therefore holds better AND
+// breaks better, which is what being the bigger hitter means and which neither of the first two
+// terms can say. There is no `- 50` on the third leg on purpose: it is a matchup, not a level.
 export function basePServe(server: MatchPlayer, receiver: MatchPlayer, opts: MatchOptions): number {
   const p =
     TOUR_AVG_P[opts.tour] +
     (server.serve - 50) * SKILL_K -
     (receiver.ret - 50) * SKILL_K +
+    (server.groundstrokes - receiver.groundstrokes) * RALLY_K +
     SURFACE_SERVE_BONUS[opts.surface]
   return clamp(p, BASE_CLAMP)
 }

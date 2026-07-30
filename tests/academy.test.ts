@@ -33,7 +33,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../src/shared/protocol'
 
-const SKILLS = { serve: 60, ret: 60, composure: 60, stamina: 60 }
+const SKILLS = { serve: 60, ret: 60, composure: 60, stamina: 60, groundstrokes: 60 }
 
 function support(level: number): AcademySupport {
   return { level, sinceWeek: 52, seasonIndex: 1, coveredCents: 0 }
@@ -67,7 +67,7 @@ describe('the academy verdict (pure)', () => {
   it('is need-based: a wealthy family is never backed, however good she is', () => {
     const level = reviewLevel({
       rank: 1,
-      potential: { serve: 95, ret: 95, composure: 95, stamina: 95 },
+      potential: { serve: 95, ret: 95, composure: 95, stamina: 95, groundstrokes: 95 },
       background: 'wealthy',
       playedLastYear: 12,
       ageYears: 16,
@@ -81,7 +81,7 @@ describe('the academy verdict (pure)', () => {
     const [minAge, maxAge] = ECONOMY.academy.ageBand
     const args = {
       rank: 10,
-      potential: { serve: 80, ret: 80, composure: 80, stamina: 80 },
+      potential: { serve: 80, ret: 80, composure: 80, stamina: 80, groundstrokes: 80 },
       background: 'working' as const,
       playedLastYear: 10,
     }
@@ -93,7 +93,7 @@ describe('the academy verdict (pure)', () => {
   it('funds players, not prospects: below the minimum year of tournaments it pays nothing', () => {
     const args = {
       rank: 10,
-      potential: { serve: 80, ret: 80, composure: 80, stamina: 80 },
+      potential: { serve: 80, ret: 80, composure: 80, stamina: 80, groundstrokes: 80 },
       background: 'working' as const,
       ageYears: 16,
     }
@@ -105,11 +105,11 @@ describe('the academy verdict (pure)', () => {
     const base = { background: 'working' as const, playedLastYear: 10, ageYears: 16 }
     const mid = reviewLevel({ ...base, rank: 90, potential: SKILLS })
     const better = reviewLevel({ ...base, rank: 45, potential: SKILLS })
-    const taller = reviewLevel({ ...base, rank: 90, potential: { serve: 70, ret: 70, composure: 70, stamina: 70 } })
+    const taller = reviewLevel({ ...base, rank: 90, potential: { serve: 70, ret: 70, composure: 70, stamina: 70, groundstrokes: 70 } })
     expect(better).toBeGreaterThan(mid)
     expect(taller).toBeGreaterThan(mid)
     // Rank #1 with a ceiling above the band and full need: everything saturates, nothing overflows.
-    expect(reviewLevel({ ...base, rank: 1, potential: { serve: 99, ret: 99, composure: 99, stamina: 99 } })).toBe(1)
+    expect(reviewLevel({ ...base, rank: 1, potential: { serve: 99, ret: 99, composure: 99, stamina: 99, groundstrokes: 99 } })).toBe(1)
   })
 
   it('reads the halves it says it reads', () => {
@@ -118,7 +118,12 @@ describe('the academy verdict (pure)', () => {
     expect(resultScore(ECONOMY.academy.rankNone + 50)).toBe(0)
     expect(scoutScore(ECONOMY.academy.ceilingBand[0])).toBe(0)
     expect(scoutScore(ECONOMY.academy.ceilingBand[1])).toBe(1)
-    expect(ceilingOf({ serve: 50, ret: 60, composure: 70, stamina: 80 })).toBe(65)
+    // ⚠ RE-AIMED: `ceilingOf` is the mean over `SKILL_KEYS`, and that is FIVE keys since v25 - it
+    // walks the array rather than naming the attributes, which is why the function itself needed no
+    // change. The answer is still 65, and deliberately so: a fifth value of 65 is the one that holds
+    // the pin's arithmetic still while proving the fold really did widen. The protected fact is
+    // unchanged - `ceilingOf` averages her whole ceiling and nothing else.
+    expect(ceilingOf({ serve: 50, ret: 60, composure: 70, stamina: 80, groundstrokes: 65 })).toBe(65)
   })
 
   it('scales the trip and the kit off that one level', () => {
@@ -199,7 +204,7 @@ describe('the academy in a career', () => {
     dropped.week = 104
     dropped.results.push(...Array.from({ length: 5 }, (_, i) => ({ playerId: 'kid', week: 100 - i, points: 0 })))
     dropped.kidRank = ECONOMY.academy.rankNone + 40
-    dropped.potential = { serve: 30, ret: 30, composure: 30, stamina: 30 }
+    dropped.potential = { serve: 30, ret: 30, composure: 30, stamina: 30, groundstrokes: 30 }
     reviewAcademy(dropped)
     expect(dropped.academy).toBeNull()
     expect(lastEnding(dropped)).toContain('did not make their case')
