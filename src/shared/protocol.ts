@@ -868,8 +868,10 @@ export interface DiaryFacts {
   travelHomeScene: TravelHomeScene | null
   /** HOW she came home, on exactly the weeks `travelHomeScene` is non-null (null on every other
    *  week, and the two are null together by construction). The owner's rule, read off the tournament
-   *  she is coming back FROM and the state she is in: reached the final → happy or sleepy, fell
-   *  short → sad, or sleepy if she was worn out anyway. See engine/diary.ts travelHomeMoodFor. */
+   *  she is coming back FROM and the state she is in: reached the final → happy, or sleepy if she is
+   *  running on empty; fell short → sad, or sleepy if she was worn out anyway. Both branches are a
+   *  coin weighted by her condition, and the final's sits strictly below the other one at every
+   *  condition (W7). See engine/diary.ts travelHomeMoodFor. */
   travelHomeMood: TravelHomeMood | null
   /** W4 – WHAT THE KNOCK IS DOING TO THIS WEEK, or null. `'rest'` = she is spending the week off the
    *  training court; `'push'` = she is training on it and the coach knows.
