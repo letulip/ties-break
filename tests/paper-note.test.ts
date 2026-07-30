@@ -156,13 +156,15 @@ describe('a caller styles the wrapper, and reaches the paper through :deep', () 
 
   const SITES = VUE.filter((p) => p !== PAPER && callers(read(p)).length > 0)
 
-  it('the four call sites are still four – a fifth has to read this file', () => {
+  it('the five call sites are still five – a sixth has to read this file', () => {
     // Vacuous-truth insurance, and a doorbell: PaperNote is shared and the wrapper changed what a
-    // class on it means, so a new caller should arrive having read why. (The calendar's fridge note
-    // is the fifth and lands later in this same wave – it will edit this list, having read it.)
+    // class on it means, so a new caller should arrive having read why. The calendar's fridge note
+    // is the fifth, and it arrived that way: it puts its margin on the wrapper and its inset on the
+    // sheet, which is the split this file exists to keep.
     expect(SITES.map(rel)).toEqual([
       'components/SeasonSummaryDialog.vue',
       'components/WeekRecapCard.vue',
+      'components/screens/CalendarScreen.vue',
       'components/screens/KidScreen.vue',
       'components/screens/MoneyScreen.vue',
     ])
@@ -196,6 +198,7 @@ describe('a caller styles the wrapper, and reaches the paper through :deep', () 
       ['components/screens/MoneyScreen.vue', 'money-receipt'],
       ['components/screens/KidScreen.vue', 'kid-style-note'],
       ['components/SeasonSummaryDialog.vue', 'season-note'],
+      ['components/screens/CalendarScreen.vue', 'cal-note'],
     ]) {
       const css = read(join(SRC, file))
       expect(css, `${file}: .${cls} lost its paper rule`).toContain(`.${cls} :deep(.tb-paper) {`)

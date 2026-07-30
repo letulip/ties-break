@@ -65,6 +65,9 @@ import { useCalendarWeek, useLookAhead, DAY_LONG, type CalendarDay, type DayKind
 // two rulings behind it (the engine keeps no time of day, and the age band is a parameter from the
 // first version).
 import { GRID_HOURS, blockOffset, hourLabel, hourTop, weekGridFor } from '../../composables/weekGrid'
+// The scrap of paper beside the grid. Deliberately NOT licensed against the week - see the module's
+// header for the owner's ruling and for why the pick is made here rather than by the sim.
+import { fridgeNoteFor } from '../../composables/fridgeNote'
 import { useWeekAction } from '../../composables/weekAction'
 // Slice 2: the crossing-out sweep. The SCHEDULE and the preference live in the composable (both paces,
 // the beat holds, the localStorage pair); what is here is the seven spans and the timers.
@@ -73,6 +76,7 @@ import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared
 import { surfaceStyleHint } from '../../engine/match/style'
 import { venueArtUrl } from '../../art/venues'
 import ScreenShell from '../ui/ScreenShell.vue'
+import PaperNote from '../ui/PaperNote.vue'
 import TakeoverShell from '../ui/TakeoverShell.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
@@ -144,6 +148,16 @@ const grid = computed(() => {
   const week = calendar.value
   const snap = game.snapshot
   return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week)) : null
+})
+
+/** THE NOTE ON THE FRIDGE DOOR. Off `(seed, week)` and nothing else, so it is the same scrap every
+ *  time this week is looked at and a different one next week. The WEEK is the calendar's own - the
+ *  one the grid draws and the button plays - so the paper and the picture beside it can never be
+ *  about different weeks. See composables/fridgeNote.ts: no engine draw, no sub-stream, no licence. */
+const fridgeNote = computed(() => {
+  const snap = game.snapshot
+  const week = calendar.value
+  return snap && week ? fridgeNoteFor(snap.seed, week.week) : ''
 })
 
 // --- (d) THE MARKER'S CARD ----------------------------------------------------------------------
@@ -456,6 +470,19 @@ const showGo = computed(() => !game.snapshot?.pending)
           <span>{{ calendar.surfaceNote }}</span>
         </p>
       </Card>
+
+      <!-- THE FRIDGE NOTE. The design tapes a scrap of paper under the grid with a line in a
+           parent's handwriting on it, and this is that scrap. It rides with the GRID rather than
+           with the screen: the weeks that keep the day strip are weeks she is away, in exams or
+           laid up, and those screens are left exactly as they were.
+           ⚠ IT IS NOT LICENSED AGAINST THE WEEK, WHICH IS THE OWNER'S OWN RULING (30.07). A note on
+           a fridge asserts nothing about the week - it is milk, the bins and a rain jacket - so
+           there is nothing for an honesty pin to check. The constraint that survives is about what
+           the pool is MADE of, and it lives with the pool. -->
+      <PaperNote v-if="grid" class="cal-note" :tilt="-0.8" ruled torn tape>
+        <span class="cal-note-label">Notes</span>
+        <span class="cal-note-text">{{ fridgeNote }}</span>
+      </PaperNote>
 
       <!-- ============================================================================
            THE LOOK-AHEAD, and the markers. A row is a BAND rather than seven cells because
@@ -1043,6 +1070,40 @@ const showGo = computed(() => !game.snapshot?.pending)
   margin: 6px 0 0;
   font-size: 11.5px;
   color: var(--ink-soft);
+}
+
+/* --- THE FRIDGE NOTE -----------------------------------------------------------------------------
+   The design's own scrap: narrower than the column it sits under (264 of 390 in the prototype), so
+   it reads as a piece of paper laid on the page rather than as another card in the stack, and tilted
+   off one of the design's own angles.
+   ⚠ THE INSET GOES THROUGH `:deep`, because PaperNote's root is a positioned WRAPPER - the tape has
+   to live outside `torn`'s clip-path or a taped note loses the half of its strip that hangs over the
+   top edge. What positions the scrap on the page is the wrapper's; what is written on the paper is
+   the sheet's. See src/components/ui/PaperNote.vue and tests/paper-note.test.ts. */
+.cal-note {
+  margin: 14px 0 0 4px;
+  max-width: 280px;
+}
+
+.cal-note :deep(.tb-paper) {
+  padding: 14px 26px 18px 18px;
+}
+
+/* The label is the design's small printed word on ruled stock – NOT handwriting, so it takes the
+   body face and the paper's second ink, exactly as screen D's "Next goal" label does. */
+.cal-note-label {
+  display: block;
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--paper-ink-soft);
+}
+
+.cal-note-text {
+  display: block;
+  margin-top: 10px;
+  font-size: 20px;
+  line-height: 1.3;
 }
 
 /* --- THE LOOK-AHEAD ----------------------------------------------------------------------------- */

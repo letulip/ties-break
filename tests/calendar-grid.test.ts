@@ -44,6 +44,7 @@ import {
   type BlockKind,
   type DayBlock,
 } from '../src/composables/weekGrid'
+import { FRIDGE_NOTES, fridgeNoteFor } from '../src/composables/fridgeNote'
 import { calendarWeekFor, gymDayIndex, sessionsForPlan, type CalendarWeekFacts } from '../src/composables/weekDays'
 import { weekDayNumbers } from '../src/shared/dates'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
@@ -51,6 +52,14 @@ import { ECONOMY } from '../src/engine/economy'
 import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
+/** Comments are not code. The house helper (tests/calendar-screen.test.ts, tests/knock.test.ts):
+ *  this codebase documents at length, INCLUDING documenting what it deliberately did not do, so a
+ *  `not.toContain` over raw source fails on a note that merely names the thing it forbids. */
+const codeOf = (src: string) =>
+  src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
 const screen = read('../src/components/screens/CalendarScreen.vue')
 const module_ = read('../src/composables/weekGrid.ts')
 const sheet = read('../src/style.css')
@@ -364,5 +373,110 @@ describe('the calendar renders the grid it is handed', () => {
     const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
     expect(template).not.toMatch(/[Ѐ-ӿ]/)
     expect(template).not.toContain('—')
+  })
+})
+
+// =================================================================================================
+// §4 – THE FRIDGE NOTE. A pool with no licence on it, and the one constraint that survives.
+// =================================================================================================
+//
+// ⚠ THIS POOL IS DELIBERATELY NOT LICENSED AGAINST THE WEEK, AND THAT REVERSES THE SPEC'S OWN FIRST
+// PROPOSAL. The architect wanted it to reuse the diary's WEEK_NOTES honesty pin; the owner overruled
+// it (30.07): «"не забудь дождевик" на неделе, когда она никуда не едет – в том-то и дело, что это
+// ок! нам здесь нужны как раз максимально жизненные записки "от родителей на холодильнике"».
+//
+// He is right. The honesty pin exists to stop the game ASSERTING THINGS ABOUT THE WEEK THAT ARE
+// FALSE, and a note on a fridge asserts nothing about the week - it is milk, the bins and a rain
+// jacket. So there is nothing here for a pin to check, and these tests check the two things there
+// ARE: that the pool stays domestic (which is what makes the licence unnecessary rather than merely
+// skipped), and that the scrap does not change its mind between two looks at the same week.
+describe('the fridge note is a parent\'s handwriting, and it claims nothing about the week', () => {
+  it('⚠ THE ONE CONSTRAINT: nothing in the pool is about tennis, a result, a trip, her body or money', () => {
+    // Expressed as a vocabulary sweep because it CAN be - that is the whole reason the constraint is
+    // a rule about content rather than a machine. A line that cannot say "match" cannot claim she
+    // played one, whatever week it lands on.
+    const FORBIDDEN = [
+      'tennis', 'court', 'racket', 'racquet', 'serve', 'match', 'matches', 'tournament', 'final',
+      'win', 'won', 'wins', 'lose', 'lost', 'beat', 'draw', 'round', 'rank', 'ranking', 'points',
+      'coach', 'train', 'training', 'practice', 'practise', 'drills', 'gym', 'fitness',
+      'injury', 'injured', 'hurt', 'ankle', 'knee', 'wrist', 'shoulder', 'physio', 'rehab',
+      'money', 'cash', 'cost', 'pay', 'paid', 'price', 'fee', 'fees', 'budget',
+      'flight', 'plane', 'airport', 'trip', 'travel', 'hotel', 'luck',
+    ]
+    const bad: string[] = []
+    for (const line of FRIDGE_NOTES) {
+      for (const word of FORBIDDEN) {
+        if (new RegExp(`\\b${word}\\b`, 'i').test(line)) bad.push(`"${line}"  – says "${word}"`)
+      }
+    }
+    expect(bad.join('\n')).toBe('')
+    // ...and the sweep is real: it catches the owner's own counter-example.
+    expect(FORBIDDEN.some((w) => new RegExp(`\\b${w}\\b`, 'i').test('Good luck tomorrow!'))).toBe(true)
+  })
+
+  it('the pool is the size the brief asked for, with no duplicates', () => {
+    expect(FRIDGE_NOTES.length).toBeGreaterThanOrEqual(40)
+    expect(FRIDGE_NOTES.length).toBeLessThanOrEqual(60)
+    expect(new Set(FRIDGE_NOTES).size).toBe(FRIDGE_NOTES.length)
+  })
+
+  it('player copy: short dash only, no Cyrillic, and short enough to be a scrap', () => {
+    for (const line of FRIDGE_NOTES) {
+      expect(line, 'long dash on the fridge').not.toContain('—')
+      expect(line, 'Cyrillic on the fridge').not.toMatch(/[Ѐ-ӿ]/)
+      expect(line.length, `"${line}" is a letter, not a note`).toBeLessThanOrEqual(56)
+      expect(line, `"${line}" does not end`).toMatch(/[.!?]$/)
+      expect(line[0], `"${line}" starts small`).toBe(line[0].toUpperCase())
+    }
+  })
+
+  it('⚠ STABLE FOR A GIVEN (seed, week) – a scrap of paper does not change its mind', () => {
+    // The failure this prevents is not subtle: a note picked at render time would be a different
+    // line every time the tab was opened, which is the one thing a piece of paper cannot do.
+    for (const week of [0, 1, 7, 51, 260]) {
+      expect(fridgeNoteFor('abc', week)).toBe(fridgeNoteFor('abc', week))
+      expect(FRIDGE_NOTES).toContain(fridgeNoteFor('abc', week))
+    }
+    // ...and it is a fact about the CAREER, not about this device: two careers on the same week
+    // read different scraps.
+    const across = new Set(['seed-a', 'seed-b', 'seed-c', 'seed-d'].map((s) => fridgeNoteFor(s, 12)))
+    expect(across.size).toBeGreaterThan(1)
+  })
+
+  it('a season of weeks really does walk the pool, rather than sticking on one line', () => {
+    // The avalanche step in the hash is what buys this; without it consecutive weeks land on
+    // consecutive-ish indexes and a career reads the pool in order.
+    const season = new Set(Array.from({ length: 52 }, (_, w) => fridgeNoteFor('a-real-seed', w)))
+    expect(season.size).toBeGreaterThan(20)
+    // no week is ever without a note
+    for (let w = 0; w < 52; w++) expect(fridgeNoteFor('a-real-seed', w)).not.toBe('')
+  })
+
+  it('⚠ NOT ONE DRAW FROM THE SIM, AND NO SUB-STREAM EITHER', () => {
+    // The MAIN-stream capture (41550 draws, e6b0c709) must not move, and a sub-stream is for
+    // randomness the SIM owns - a venue photograph, a diary greeting. A note taped beside a calendar
+    // is chosen by the screen that draws it. The cheapest place to prove that is the imports.
+    //
+    // ⚠ READ AS CODE, NOT AS PROSE, and this file tripped over it on the first run: the module's own
+    // header EXPLAINS why it does not call `rngFromSeed`, and naming the thing it refuses to do was
+    // enough to fail a raw `not.toContain`. It is the same lesson tests/calendar-screen.test.ts
+    // learned in the opposite direction, and the same `codeOf` strip answers both.
+    const pool = codeOf(read('../src/composables/fridgeNote.ts'))
+    expect(pool).not.toContain('rngFromSeed')
+    expect(pool).not.toContain("from '../engine/")
+    expect(pool).not.toMatch(/^import /m) // it imports nothing at all
+    expect(pool).not.toContain('Math.random')
+    // ...and no licence machinery came in through the back door
+    expect(pool).not.toContain('claims')
+    expect(pool).not.toContain('license')
+  })
+
+  it('the note rides with the GRID, and its week is the grid\'s week', () => {
+    // A note beside a day strip would be a note on a week she is away for. And if the two read
+    // different weeks, the paper and the picture next to it would be about different sevens of days.
+    expect(screen).toContain('<PaperNote v-if="grid" class="cal-note"')
+    expect(screen).toContain('fridgeNoteFor(snap.seed, week.week)')
+    // the design's own object: taped, torn, ruled, tilted off one of its own angles
+    expect(screen).toContain(':tilt="-0.8" ruled torn tape')
   })
 })
