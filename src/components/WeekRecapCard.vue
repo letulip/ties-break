@@ -35,8 +35,7 @@ import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
 import { useWeekAhead } from '../composables/weekAhead'
 import { vacationPackage } from '../engine/economy'
-import { vacationArtUrl, weekArtUrl } from '../art/weeks'
-import { travelHomeUrl } from '../art/preload'
+import { weekArtUrl, weekSceneArtUrl } from '../art/weeks'
 import { weekLabel } from '../shared/dates'
 import PracticeFlow from './PracticeFlow.vue'
 import Card from './ui/Card.vue'
@@ -52,75 +51,39 @@ const week = computed(() => game.snapshot?.week ?? 0)
 const plan = computed(() => game.snapshot?.plan ?? { train: 75, rest: 25 })
 
 // --- THE WEEK PAINTING (D: "Арт недели 286px") ----------------------------------------------------
-// We already ship one per week - `art/weeks.ts` is a pure function of which week it is, no RNG - and
-// the Season feed has been drawing it since 28.07. The recap only ever covers a NON-tournament week
-// (the existence rule), which is exactly the set those paintings were made for, so there is no week
-// this card can reach that has no picture.
 //
-// ...AND ON A WEEK SHE TRAVELLED HOME, THE PAINTING IS THE JOURNEY (owner, 29.07: «sleepy показываем
-// рандомно после выездов на турниры в конце на экране Week story как в макете»). Four new scenes -
-// asleep in an airport, on a plane, on a bus, in a car.
+// ⚠ W5 TOOK THE DECISION OUT OF THIS FILE, AND THAT IS THE POINT OF THE SLICE. What stood here was
+// three chained ternaries – the journey home, else the holiday, else `weekArtUrl(week)` – each with a
+// paragraph of its own explaining why it outranked the next. It worked, and it was a SCREEN deciding
+// what a week was: two kinds of week had a picture and everything else fell through to
+// `weekArtStem`, which answers `training` for every in-year week. So a nine-week layoff drew nine
+// paintings of her doing ladder drills, and nobody could see that from here, because the order was
+// spelled out in a component rather than stated once as a rule.
 //
-// ⚠ WHERE IT GOES, because "как в макете" and "at the end of the week story" can be read two ways
-// and the mockup settles it. Screen D has EXACTLY ONE image slot - `<image-slot id="week-scene">`,
-// the 286px painting at the top - and there is nothing after the goal note but the frame's edge.
-// What makes it conclusive is the mockup's own handwriting, right under that slot: «Bianca quietly
-// fell asleep in the car after the tournament.» The mockup's week IS a come-home-from-a-tournament
-// week, its one painting is therefore the sleepy-in-the-car scene, and the note is its caption. So
-// this is not a second picture bolted to the bottom of the page; it is the week's painting BEING the
-// journey home on the weeks there was one.
-//   It is also the only placement that fixes a content bug rather than adding one: the story never
-//   renders on a tournament week (recapExists), so a travel-home week is a week whose `weekArtStem`
-//   is `training` - she is on court doing ladder drills - on a week she actually spent getting home.
-//   The scene replaces a picture that was wrong, instead of sitting under it.
-// This is flagged in the report; if the owner meant a second image after the goal note, it is a
-// small move and nothing else about the composition depends on it.
+// It is `snapshot.diary.scene` now – ONE answer, from `engine/diary.ts weekSceneFor`, where the
+// priority order is written down and argued against the note pool's own licences (a journey, then the
+// layoff, then the holiday, then the calendar's frame). This file keeps exactly two jobs, and both are
+// properly a screen's:
+//   * the URL, through `weekSceneArtUrl` – one builder, so the preloader and the <img> cannot spell
+//     different filenames (which on the twelve journey pictures would fetch a file it never shows and
+//     show one it never warmed);
+//   * the DESCRIPTION, below, which is player-facing copy about a picture.
 //
-// ⚠ THE STUB IS GONE. This block used to read `travelHomeScene` through a widening cast, because the
-// engine half was being written in a sibling worktree and `DiaryFacts` did not declare the field
-// yet. It declares two now – the mode AND the mood – so both are read straight off the snapshot, and
-// the URL is built by `travelHomeUrl`, the one builder art/preload.ts warms through. That last part
-// matters more than it looks: the preloader and the <img> have to spell the same twelve filenames or
-// every come-home week fetches a file it never shows and shows a file it never warmed.
-const travelHomeScene = computed(() => game.snapshot?.diary.facts.travelHomeScene ?? null)
-const travelHomeMood = computed(() => game.snapshot?.diary.facts.travelHomeMood ?? null)
+// WHERE IT GOES is unchanged and was settled by the mockup: screen D has EXACTLY ONE image slot
+// (`<image-slot id="week-scene">`, the 286px painting at the top) and its own handwriting sits under
+// it – «Bianca quietly fell asleep in the car after the tournament.» The mockup's week is a
+// come-home-from-a-tournament week, so its one painting IS the journey and the note is its caption.
+// Every arm here inherits that: the week's painting IS what the week was.
+const scene = computed(() => game.snapshot?.diary.scene ?? null)
+const artUrl = computed(() => (scene.value ? weekSceneArtUrl(scene.value) : weekArtUrl(week.value)))
 
-// ...AND ON A WEEK SHE SPENT ON HOLIDAY, THE PAINTING IS THAT HOLIDAY (owner, 30.07: «на week recap
-// после отпуска можно использовать картинки соответствующих отпусков»).
+// The generic week frames are decorative – the handwriting under them says what the week was – so they
+// get an empty alt and stay out of the reading order. THE OTHER THREE ARE NOT: each is the only place
+// on the page that says which of several weeks this was, so each says it out loud for anyone who
+// cannot see it.
 //
-// The five packages have had their own frames since 29.07 – the Season feed draws them on its
-// vacation cards and the planner's picker uses the same builder behind each row – and this screen was
-// the one surface that spent the week away and then showed her doing ladder drills, because
-// `weekArtStem` answers `training` for every in-year week with no tournament in it. Same argument as
-// the journey home, one rung quieter: the scene REPLACES a picture that was wrong.
-//
-// ⚠ THE BOOKING, NOT THE BOOLEAN. `diary.facts.vacationWeek` says a holiday resolved this week but not
-// WHICH, and which is the whole point of the item – so the package id comes off `snapshot.vacations`,
-// the same list the Home bar and the Season feed read. Bookings are kept for four trailing weeks
-// after they resolve (prunePlannerBookings), so the week's own row is still there when its story is
-// told. `vacationArtUrl` returns null for a package with no frame yet, and the fallback below covers
-// that without a 404 – exactly the contract the picker relies on.
-const vacationArt = computed<string | null>(() => {
-  const snap = game.snapshot
-  if (!snap || !snap.diary.facts.vacationWeek) return null
-  const booked = snap.vacations.find((v) => v.week === snap.week)
-  return booked ? vacationArtUrl(booked.packageId) : null
-})
-
-// THE ORDER IS THE ORDER OF WHAT THE WEEK WAS, loudest first, and no two branches can be true at
-// once: a journey home needs a competitive match of hers this week, a vacation week refuses
-// tournaments outright (the planner will not book one on an entered week and vice versa), and the
-// week painting is what is left.
-const artUrl = computed(() =>
-  travelHomeScene.value
-    ? travelHomeUrl(travelHomeScene.value, travelHomeMood.value ?? 'sleepy')
-    : (vacationArt.value ?? weekArtUrl(week.value)),
-)
-
-// The week paintings are decorative – the handwriting under them says what the week was. The travel
-// scenes are not: they are the ONE place the story says she spent the week getting home, so they say
-// it out loud for anyone who cannot see them. Both halves of the picture are described, because both
-// carry meaning now: `sleepy` is her asleep, `happy` and `sad` are her awake at the window.
+// The journey describes BOTH halves of its picture, because both carry meaning: `sleepy` is her
+// asleep, `happy` and `sad` are her awake at the window.
 const SCENE_ALT: Record<TravelHomeScene, string> = {
   airport: 'in the airport on the way home',
   plane: 'on the plane home',
@@ -132,18 +95,24 @@ const MOOD_ALT: Record<TravelHomeMood, string> = {
   happy: 'Smiling',
   sad: 'Quiet',
 }
-// The vacation frame is described for the same reason: it is the only place on this page that says
-// WHICH of the five weeks away this was. The name is the catalogue's own label (economy.ts), never a
-// second table in a screen – the Season feed's `packageLabel` reads the same one.
+// The holiday names WHICH of the six weeks away it was, off the catalogue's own label (economy.ts) –
+// never a second table in a screen; the Season feed's `packageLabel` reads the same one.
 const artAlt = computed(() => {
-  if (travelHomeScene.value) {
-    return `${MOOD_ALT[travelHomeMood.value ?? 'sleepy']} ${SCENE_ALT[travelHomeScene.value]}`
+  const s = scene.value
+  if (!s) return ''
+  switch (s.kind) {
+    case 'travel':
+      return `${MOOD_ALT[s.mood]} ${SCENE_ALT[s.scene]}`
+    case 'vacation':
+      return `The family week away – ${vacationPackage(s.packageId)?.label ?? s.packageId}`
+    // The layoff painting is her on the bench with a brace on. It is the one arm whose subject is HER
+    // rather than a place, and the alt says so plainly – the Mood card next to it already carries the
+    // word ("On the mend"), so this does not try to be a second diagnosis.
+    case 'rehab':
+      return 'On the bench, working her way back'
+    case 'week':
+      return ''
   }
-  if (!vacationArt.value) return ''
-  const snap = game.snapshot
-  const booked = snap?.vacations.find((v) => v.week === snap.week)
-  const label = booked ? (vacationPackage(booked.packageId)?.label ?? booked.packageId) : ''
-  return label ? `The family week away – ${label}` : ''
 })
 
 // Mon–Sun letters shown under the day dots (round-7 item 5b).
@@ -509,8 +478,9 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    saying, and 18 is the one every card in the app already sits on - including the Season feed's
    week cards, which draw this same painting. */
 /* ⚠ THE SLOT IS D'S OWN PROPORTION (390x286), NOT ANY PAINTING'S, and it has to be: this frame now
-   holds THREE art families of three shapes - the week paintings at 941x536 (1.76:1), the twelve
-   travel scenes at 512x512 (1:1) and, since W4, the five vacation frames at 941x377 (2.50:1).
+   holds FOUR art families of three shapes - the week paintings at 1.88:1, the twelve travel scenes at
+   1:1, the six vacation frames at 2.50:1 (W4) and, since W5, the five layoff paintings at 1:1, which
+   are portrait masters and share the travel scenes' square.
    Taking the ratio from the picture, the way the Season feed's cards do, would make the story's own
    header jump between a letterbox, a square and a band depending on what the week was, and a 343px
    square is taller than the design's whole slot. So the slot is fixed at the design's shape and

@@ -113,11 +113,27 @@ describe('R14-2 — what counts as coming home from an away trip', () => {
     expect(travelHomeSceneFor({ events, week: 11, seed: 's' }), 'the week AFTER is an ordinary week now').toBeNull()
   })
 
-  it('a Local Open is not a trip – the club down the road never sends her home asleep', () => {
-    expect(travelHomeSceneFor({ events: trip(10, 'local'), week: 10, seed: 's' })).toBeNull()
-    // ...and every rung above it is
-    for (const tier of TIER_LADDER.filter((t) => t !== 'local')) {
+  // ⚠ RE-AIMED BY W5, ON THE OWNER'S OWN CORRECTION. This asserted the exact opposite – no journey home
+  // from a Local Open – and its title carried the argument: "the club down the road never sends her
+  // home asleep". The owner, 30.07: «писал выше, очень даже едут, на автобусе или машине». They very
+  // much do travel, by bus or by car.
+  //
+  // WHAT MOVED is one clause of the WHETHER (`tier === 'local'` was a refusal; it is not), and it moved
+  // because the old argument answered the wrong question: it asked "is this far enough to be a story"
+  // when the rule's job is "did she go somewhere and come back". THE PROTECTED FACT IS UNCHANGED and is
+  // still asserted, one file down, where it always belonged – a false positive on this rule swaps
+  // correct art for wrong art, so the LEDGER tests (she played there, the family paid) are the guard,
+  // and they are untouched: see the suite below and 'needs BOTH halves of the journey'. What a local
+  // career must still never see is an AIRPORT, and that is pinned in its own test at the bottom of the
+  // file, re-aimed to say exactly that instead of "no picture at all".
+  it('EVERY rung sends her home – the tier decides how, never whether (W5)', () => {
+    for (const tier of TIER_LADDER) {
       expect(travelHomeSceneFor({ events: trip(10, tier), week: 10, seed: 's' }), tier).not.toBeNull()
+    }
+    // ...and the local trip is on the ROAD, always: no airport, no plane, ever.
+    for (let w = 1; w < 80; w++) {
+      const scene = travelHomeSceneFor({ events: trip(w, 'local'), week: w, seed: 'local-seed' })
+      expect(ROAD, `a Local Open came home by ${scene}`).toContain(scene!)
     }
   })
 
@@ -168,25 +184,33 @@ describe('R14-2 — what counts as coming home from an away trip', () => {
 })
 
 describe('R14-2 — which of the four, and why it is not uniform', () => {
-  it('the international ladder flies home; the domestic one drives', () => {
-    // `track` is the calendar's own axis – itf is the junior international tour ("international
-    // travel out"), domestic is local/regional/national. A J300 abroad is a plane; a Regional two
-    // towns over is a car. Swept over many seeds so both members of each bucket are seen.
-    const seen: Record<string, Set<TravelHomeScene>> = { itf: new Set(), domestic: new Set() }
-    for (const tier of TIER_LADDER.filter((t) => t !== 'local')) {
-      const bucket = tier.startsWith('j') ? 'itf' : 'domestic'
-      const want = bucket === 'itf' ? AIR : ROAD
-      for (let w = 1; w < 120; w++) {
+  // ⚠ RE-AIMED BY W5 – THE AXIS MOVED, THE CLAIM DID NOT. This read the calendar's `track`: `itf` flies
+  // (airport, plane), `domestic` drives (bus, car), which put NATIONAL in the driving bucket. The owner,
+  // 30.07, drew the line one rung lower: «если локальные или региональные, то без самолетов, если
+  // национальные и выше, то все виды транспорта и настроений».
+  //
+  // WHAT IS STILL ASSERTED, and it is the whole content of the original test: the mode is CORRELATED
+  // with the trip rather than uniform noise, every allowed mode is genuinely reachable (not a constant
+  // wearing a draw's clothes), and no tier can produce a mode it is not allowed. NOTHING IS WEAKENED –
+  // the bottom two rungs are held to a strictly SMALLER set than the old test held them to (`without
+  // planes` is the same two-picture bucket the old `domestic` bucket had), and the top four are checked
+  // to reach all four rather than being unchecked on two of them.
+  it('the tier gate: local and regional stay on the road, national and up take anything (W5)', () => {
+    const ALL = [...ROAD, ...AIR]
+    const GROUND_ONLY: TierId[] = ['local', 'regional']
+    for (const tier of TIER_LADDER) {
+      const want = GROUND_ONLY.includes(tier) ? ROAD : ALL
+      const seen = new Set<TravelHomeScene>()
+      for (let w = 1; w < 200; w++) {
         // ⚠ W4: the trip and the picture are the SAME week now – `trip(w)` where this read `trip(w-1)`.
         const scene = travelHomeSceneFor({ events: trip(w, tier), week: w, seed: `seed-${tier}` })
         expect(scene, `${tier} w${w}`).not.toBeNull()
-        expect(want, `${tier} came home by the wrong mode: ${scene}`).toContain(scene!)
-        seen[bucket].add(scene!)
+        expect(want, `${tier} came home by a mode it may not use: ${scene}`).toContain(scene!)
+        seen.add(scene!)
       }
+      // every mode the tier IS allowed actually happens – so the gate is a gate, not a constant
+      expect([...seen].sort(), `${tier} does not reach its whole pool`).toEqual([...want].sort())
     }
-    // both scenes in each bucket are actually reachable – not a constant wearing a draw's clothes
-    expect([...seen.itf].sort()).toEqual([...AIR].sort())
-    expect([...seen.domestic].sort()).toEqual([...ROAD].sort())
   })
 
   it('DETERMINISTIC: the same seed and week give the same scene, twice and forever', () => {
@@ -371,12 +395,19 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     expect(withSnapshots).toEqual(without)
   })
 
-  it('a career that never leaves town never sees one of these paintings', () => {
-    // Every rung the family can afford early is local; nothing else is entered at all. The rule has
-    // to keep the four scenes out of that career entirely, because on the Weekly Story a scene
-    // REPLACES the week's painting – a false positive is wrong art, not extra art.
+  // ⚠ RE-AIMED BY W5, AND THIS IS WHERE THE DELETED CLAUSE'S REAL CONTENT LIVES NOW. It asserted "never
+  // sees one of these paintings" on a local-only career, and its stated reason was the one that still
+  // holds word for word: «on the Weekly Story a scene REPLACES the week's painting – a false positive is
+  // wrong art, not extra art». Under the owner's correction («очень даже едут, на автобусе или машине»)
+  // a local career DOES come home, so "no painting at all" is no longer the fact that protects against
+  // wrong art. THE FACT THAT DOES is one rung narrower and is asserted here instead: a career that never
+  // leaves town never sees an AIRPORT or a PLANE – on a real career, over sixty weeks, every week
+  // checked. That is the same guard against wrong art, aimed at the art that would actually be wrong.
+  it('a career that never leaves town never sees an airport or a plane', () => {
+    // Every rung the family can afford early is local; nothing else is entered at all.
     const world = createWorld('travel-home-local-only')
     const rng = rngFromSeed(world.seed)
+    let journeys = 0
     for (let i = 0; i < 60; i++) {
       for (const e of world.season) {
         if (e.tier !== 'local') continue
@@ -393,11 +424,15 @@ describe('R14-2 — on the facts object, and on a real career', () => {
         skipTournament(world)
         closeTournament(world)
       }
-      expect(
-        travelHomeSceneFor({ events: world.events, week: world.week, seed: world.seed }),
-        `week ${world.week} of a local-only career`,
-      ).toBeNull()
+      const scene = travelHomeSceneFor({ events: world.events, week: world.week, seed: world.seed })
+      if (scene === null) continue
+      journeys++
+      expect(AIR, `week ${world.week} of a local-only career came home by ${scene}`).not.toContain(scene)
+      expect(ROAD).toContain(scene)
     }
+    // ...and the career really does come home, often – which is the change the owner asked for, and
+    // without this line the assertion above would pass on a career that never travelled at all.
+    expect(journeys, 'a local-only career now has journeys home to paint').toBeGreaterThan(5)
   })
 })
 
@@ -439,11 +474,26 @@ const RESULTS = [
 const BANDS: ConditionBand[] = ['fresh', 'ok', 'worn', 'drained']
 
 /** Every journey the engine can hand the note pool. The mood is swept over all THREE rather than
- *  taken from the rule, which makes the honesty pin strictly stronger than the engine it guards. */
+ *  taken from the rule, which makes the honesty pin strictly stronger than the engine it guards.
+ *
+ *  ⚠ W5 WIDENED IT IN TWO DIMENSIONS, and both are the tier gate's doing – the sweep is strictly
+ *  bigger than it was and nothing was dropped:
+ *
+ *   1. EVERY SCENE FOR EVERY TRIP. It generated `abroad ? AIR : ROAD`, because under the old `track`
+ *      rule those were the only pairings the engine could produce. They are not: a National flies
+ *      (domestic, air) and a J30 can come home on a bus (abroad, road). Sweeping all four against both
+ *      values of `abroad` is what makes the new `air`/`road` claims mean anything – it is exactly the
+ *      combination the old sweep could never see, and the combination that would have shipped "the
+ *      first thing she did at the gate" under a picture of a coach.
+ *   2. EVERY TIER, because `longWay` is read off the tier. `tier` used to be a cosmetic field on the
+ *      fixture (`abroad ? 'j30' : 'regional'`) that no licence looked at; the Local Open now produces
+ *      journeys, and the distance lines are gated on not being one. A sweep that never generated
+ *      `local` would pass while every "three hours of motorway" landed on a twenty-minute bus. */
 function* sweepTravel(): Generator<TravelHomeFacts> {
   for (const result of RESULTS) {
-    for (const abroad of [true, false]) {
-      for (const scene of abroad ? AIR : ROAD) {
+    for (const tier of TIER_LADDER) {
+      const abroad = tier.startsWith('j')
+      for (const scene of ALL_SCENES) {
         for (const mood of ALL_MOODS) {
           for (const band of BANDS) {
             for (const injured of [true, false]) {
@@ -457,7 +507,8 @@ function* sweepTravel(): Generator<TravelHomeFacts> {
                   week: 20,
                   scene,
                   mood,
-                  tier: abroad ? 'j30' : 'regional',
+                  // ⚠ W5: the LADDER's own tier, not a stand-in for `abroad`. `longWay` reads it.
+                  tier,
                   abroad,
                   finishIdx: result.finishIdx,
                   wonTitle: result.finishIdx === 0,
@@ -569,7 +620,20 @@ describe('ui/travel-set — the note may not lie', () => {
     tired: (t) => t.conditionBand === 'drained',
     abroad: (t) => t.abroad,
     firstAbroad: (t) => t.firstAbroad,
-    road: (t) => !t.abroad,
+    // ⚠ W5 RE-DERIVED THIS ONE AND ADDED ITS TWIN. `road` was `!t.abroad`, which was the same thing as
+    // "bus or car" only while the calendar's `track` decided the transport. Under the owner's tier gate
+    // a National comes home by air and a J30 can come home on a bus, so the claim has to be checked
+    // against the PICTURE – which is what the claim was always about: the note is that painting's
+    // caption. Same re-derivation, other bucket, for `air`.
+    road: (t) => t.scene === 'bus' || t.scene === 'car',
+    air: (t) => t.scene === 'airport' || t.scene === 'plane',
+    // ...and the narrow half of the road, which W5 also needed: the road bucket is a bus AND a car, so
+    // "a trophy on the back seat" wants the car and not merely the ground. The live trace found this –
+    // it put a back seat under a coach – which the sweep could not, because before W5 both facts came
+    // off the same `abroad` flag and the pool never distinguished them.
+    car: (t) => t.scene === 'car',
+    // ...and the distance, which became a claim the moment the Local Open started sending her home.
+    longWay: (t) => t.tier !== 'local',
     // the sleepy paintings are the only ones that show her asleep; happy and sad are her awake
     slept: (t) => t.mood === 'sleepy',
   }

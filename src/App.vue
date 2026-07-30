@@ -12,7 +12,7 @@ import { needRefresh, applyUpdate } from './pwa'
 import { useWeekAhead } from './composables/weekAhead'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
-import { recapExists, thisWeekDotShows } from './composables/weekRecap'
+import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
 import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -261,7 +261,15 @@ watch(
     if (tab.value === 'week') markThisWeekSeen()
     // A paused reveal has not finished being a week yet; that falls out of the predicate rather than
     // being listed here, and is the reason `runClosed` needs a door of its own.
-    if ((advanced || runClosed) && recapExists(snap)) tab.value = 'week'
+    //
+    // ⚠ W5 PUT THE SWITCH HERE AND NOWHERE ELSE (owner: «можем сделать отдельную ручку для их
+    // отключения в настройках» / «а если это будет отключаемая опция - вообще нет проблем, спидраннеры
+    // ликуют»). `storyOpensItself` is `recapExists` AND the player's preference, and the composition is
+    // the point: the story still EXISTS on every week with the switch off – the This-week tab still
+    // renders it, the accent dot still fires, Home still has its door – and the only thing that stops
+    // is this navigation. See composables/weekRecap.ts for why the preference may not be folded into
+    // `recapExists` itself, and why it is a localStorage flag rather than a save field.
+    if ((advanced || runClosed) && storyOpensItself(snap)) tab.value = 'week'
   },
 )
 

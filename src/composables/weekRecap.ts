@@ -58,3 +58,94 @@ export function recapExists(snap: RecapFacts | null | undefined): boolean {
 export function thisWeekDotShows(exists: boolean, week: number, lastSeenWeek: number): boolean {
   return exists && week > lastSeenWeek
 }
+
+// =================================================================================================
+// W5 — THE HANDLE THAT TURNS IT OFF
+// =================================================================================================
+//
+// The owner asked for the story on all 52 weeks and, in the same message, offered the valve himself:
+// «Если нужно - можем сделать отдельную ручку для их отключения в настройках.» Then, when asked
+// whether 52 of them would become a chore: «А если это будет отключаемая опция - вообще нет проблем,
+// спидраннеры ликуют.» So this is part of the answer rather than a hedge against a bad one.
+//
+// -------------------------------------------------------------------------------------------------
+// WHAT "OFF" MEANS, and it is the whole design of the switch
+// -------------------------------------------------------------------------------------------------
+//
+// OFF STOPS THE STORY OPENING ITSELF. It does NOT stop the story existing, and it must not:
+//
+//   * `recapExists` is untouched and is not allowed to read this. It answers a question about the
+//     WEEK ("is there a resolved week to tell the story of"), and a preference is not a fact about a
+//     week. Threading it through would make the predicate mean two things at once, and the dot, the
+//     card and the route all read that predicate.
+//   * The This-week tab keeps the card, on every week, for ever. Home keeps its door into it (the
+//     "next tournament" card's tap target) and the tab's own accent dot keeps firing, so a player who
+//     turned the automatic page off can still walk to any week's story deliberately and can still SEE
+//     that there is one waiting. That is the difference between a valve and the game hiding something.
+//   * What goes away is exactly the beat the design added in W1 – «Конец недели (игровой тик) → D.
+//     Weekly Story» – i.e. the navigation App.vue performs at the end of a tick. Nothing else.
+//
+// A speedrunner therefore gets what he was promised: tick, tick, tick, no page in the way. And he has
+// lost no content – it is all one tap away on a tab that tells him when it is fresh.
+//
+// -------------------------------------------------------------------------------------------------
+// ⚠ WHY IT IS `localStorage` AND NOT THE SAVE, which is a schema question and deserves an answer
+// -------------------------------------------------------------------------------------------------
+//
+// A per-career save is the wrong home for "I do not like popups". Three reasons, in order of weight:
+//
+//  1. IT IS NOT A FACT ABOUT THE CAREER. Every field in the save is something that happened to her –
+//     her skills, her ledger, her injuries, the milestones. This is a fact about the PERSON HOLDING
+//     THE PHONE, and it would be wrong the moment he started a second career: he would have to switch
+//     it off again for a daughter he has not met yet.
+//  2. IT WOULD COST A SCHEMA BUMP AND A MIGRATION for a boolean the engine may never read. The save
+//     is at v26 with a migration ladder behind it and golden-save tests over it; adding a preference
+//     to that ladder means every old save has to be told what it prefers.
+//  3. THE APP ALREADY HAS THREE OF EXACTLY THIS, and they work: sound, music and haptics are plain
+//     localStorage flags read and written by pure functions, on their own keys, defaulting ON, usable
+//     before any career is loaded (src/audio/sfx.ts, music.ts, haptics.ts). This is the fourth, and
+//     copying their shape is what makes it obvious to the next reader.
+//
+// AND IT LIVES HERE, in the module that already owns the other two halves of this rule (does a story
+// exist; does the dot show). One import, three questions, and the answers cannot drift apart. It also
+// keeps the flag out of the engine by construction: nothing under src/engine imports a composable.
+//
+// DEFAULT ON. This is the feature, not an opt-in – the absence of the key means the story opens.
+
+const AUTO_OPEN_OFF_KEY = 'tb-week-story-off'
+
+function readOff(): boolean {
+  try {
+    return localStorage.getItem(AUTO_OPEN_OFF_KEY) === '1'
+  } catch {
+    return false // storage unavailable (private mode, tests, ...) – default to ON
+  }
+}
+
+let autoOpenOff = readOff()
+
+/** Has the player turned the automatic page off? The story still EXISTS – see the note above. */
+export function isWeekStoryAutoOpenOff(): boolean {
+  return autoOpenOff
+}
+
+/** Set it, and remember it. Never throws: a session where storage is blocked still honours the
+ *  switch, it just forgets by the next launch. */
+export function setWeekStoryAutoOpenOff(value: boolean): void {
+  autoOpenOff = value
+  try {
+    localStorage.setItem(AUTO_OPEN_OFF_KEY, value ? '1' : '0')
+  } catch {
+    // storage unavailable – the toggle still works for this session, just will not persist
+  }
+}
+
+/** THE DOOR'S OWN PREDICATE: should the end of a week take the player to its story?
+ *
+ *  Kept as a function rather than inlined at App.vue's watcher so the rule is stated once, next to the
+ *  existence rule it composes with, and so a test can hold the two apart – "the story exists AND the
+ *  page does not open itself" is precisely the state the switch is for, and it is easy to break by
+ *  accident from either side. */
+export function storyOpensItself(snap: RecapFacts | null | undefined): boolean {
+  return recapExists(snap) && !isWeekStoryAutoOpenOff()
+}

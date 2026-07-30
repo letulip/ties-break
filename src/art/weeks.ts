@@ -85,3 +85,39 @@ export function vacationArtUrl(packageId: string): string | null {
 /** Exported for the test that checks every shipped package has a painting and every painting is
  *  reachable from a package - the same both-directions check `WEEK_ART` gets. */
 export const VACATION_ART_STEMS: readonly string[] = Object.values(VACATION_ART)
+
+// --- W5: EVERY WEEK'S PAINTING, FROM THE ENGINE'S OWN ANSWER ---------------------------------------
+//
+// The owner, 30.07: «week recap сделаем на каждую неделю ... Для недель с тренировками можем
+// использовать наши арты тренировки, для недель с восстановлением после травмы соответственно. Если
+// был отпуск - есть соответствующие картинки отпуска».
+//
+// THE DECISION IS NOT HERE, and that is the point. `engine/diary.ts weekSceneFor` answers what the
+// week WAS - a journey home, a layoff, a holiday, or the calendar's own frame - and writes down the
+// priority order and the argument for it. This function only spells the filename, which is why it is a
+// switch with no conditions in it: four arms, four builders, total over the union, so a fifth kind of
+// week cannot be added without the compiler asking what it looks like.
+//
+// ⚠ THE VACATION ARM IS THE ONLY ONE THAT CAN FALL BACK, and it is the contract `vacationArtUrl`
+// already documents: the package catalogue is allowed to grow before the art does, so a package with
+// no painting returns null and the caller must not render a 404. It falls back to the week's own
+// frame - which is what this screen drew before it knew about holidays at all.
+
+import { portraitUrl, travelHomeUrl } from './preload'
+import type { WeekScene } from '../shared/protocol'
+
+/** The painting for one week, from the engine's `WeekScene`. Total, and never a 404. */
+export function weekSceneArtUrl(scene: WeekScene): string {
+  switch (scene.kind) {
+    case 'travel':
+      return travelHomeUrl(scene.scene, scene.mood)
+    // The layoff painting is band-scoped (five files, one per age band) and is already warmed by
+    // `preloadKidArt` - it is one of the eight faces every career preloads for her own band.
+    case 'rehab':
+      return portraitUrl(scene.stage, 'rehab')
+    case 'vacation':
+      return vacationArtUrl(scene.packageId) ?? weekArtUrl(scene.week)
+    case 'week':
+      return weekArtUrl(scene.week)
+  }
+}
