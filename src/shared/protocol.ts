@@ -372,8 +372,35 @@ export interface PendingView {
   temperatureC: number
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
-  /** the kid's opponent this round: short name, ISO-2 nation, current standings rank */
-  opponent: { name: string; nation: string; rank: number }
+  /** WHICH TABLE THIS TOURNAMENT IS PLAYED ON – `TIERS[tier].track`, carried rather than re-derived.
+   *
+   *  ⚠ THE BUG THIS CLOSES (31.07, fix/ladder-separation). The owner, after a National: «по итогам
+   *  матча national в таблице пишут # из international». Every rank on this overlay – the splash's
+   *  VS panel, the pre-match scene, the post-match box score, and the two the live MatchViewer
+   *  prints over the players' heads – came from ONE table: the kid's off `Snapshot.kidRank` (the
+   *  ITF alias) and the opponent's off `fullRanking`, which is `rankingFor(world, 'itf')` with its
+   *  name filed off. So a National quarter-final between two girls with no international result
+   *  showed two numbers from a table neither of them was playing in, next to a trophy worth 70
+   *  NATIONAL points. Two currencies with no exchange rate (docs/specs/two-ladders.md) and the one
+   *  screen where both players are on the court at once was quoting the wrong one.
+   *
+   *  It rides on the pending view rather than being re-derived in the component for the same reason
+   *  `temperatureC` does: the event has already dropped out of `upcoming` by the time it is played,
+   *  and a second derivation of "which ladder is this" is a second thing to get wrong. */
+  ladder: LadderTrack
+  /** HER rank in `ladder`, or null when she holds no counting result in it.
+   *
+   *  ⚠ NULL IS NOT #1 and it is not the tie floor either – the same distinction `LadderView.rank`
+   *  carries, for the same reason. This used to be read off `Snapshot.kidRank`, which is a NUMBER at
+   *  all times: with nobody holding a point the whole field ties at zero, competition ranking hands
+   *  every member of that tie the same place, and `recomputeKidRank` falls back to `cohort.length + 1`
+   *  on top of that. So a fourteen-year-old walking into her first Local Open was introduced on the
+   *  splash as "Rank #119". */
+  kidRank: number | null
+  /** the kid's opponent this round: short name, ISO-2 nation, and her rank IN THE SAME TABLE –
+   *  null when she holds no counting result in it, by the identical rule. A rank printed beside
+   *  another rank has to be measured in the same units or the comparison the card invites is a lie. */
+  opponent: { name: string; nation: string; rank: number | null }
   /** the current round's record – MatchReplay source + post-match stats */
   kidMatch?: WorldMatch
   /** revealed rounds so far, the kid's path (oldest first) */
@@ -713,6 +740,26 @@ export type LadderViews = Record<LadderTrack, LadderView>
 export const LADDER_LABEL: Record<LadderTrack, string> = {
   domestic: 'National',
   itf: 'International',
+}
+
+/** HER LADDER AND HER PLACE ON IT, resolved once for the surfaces that want "her rank" and have no
+ *  table of their own to be about.
+ *
+ *  ⚠ IT EXISTS BECAUSE `snapshot.kidRank` IS THE WRONG ANSWER TO AN OBVIOUS QUESTION, and it is the
+ *  answer three surfaces reached for (31.07, fix/ladder-separation): the week recap's rank-move line
+ *  and both friendly-match cards. `kidRank` is the ITF alias and it is always a NUMBER, so an
+ *  unranked girl came out as the tie floor she shares with half the field, in a table the Stats
+ *  screen was calling "Unranked" on the next tab. Home, Stats and the Kid screen already ask
+ *  `ladders[activeLadder]`; this is the same question with one implementation, so the answer cannot
+ *  drift for the fourth surface that needs it.
+ *
+ *  `rank` is null when she holds no counting result in that table – see `LadderView.rank`. */
+export function activeLadderOfSnapshot(
+  snap: Pick<Snapshot, 'ladders' | 'activeLadder'> | null | undefined,
+): { track: LadderTrack; label: string; rank: number | null; points: number } {
+  const track = snap?.activeLadder ?? 'domestic'
+  const view = snap?.ladders[track]
+  return { track, label: LADDER_LABEL[track], rank: view?.rank ?? null, points: view?.points ?? 0 }
 }
 
 /** The unit each table's points are counted in, for a label that has to name the currency (the Home

@@ -6,6 +6,7 @@ import {
   type ArrivalPreview,
   type CountingResult,
   LADDER_LABEL,
+  LADDER_POINTS_LABEL,
   type LadderView,
   type EntryCapUsage,
   type TierOpenMap,
@@ -1368,7 +1369,7 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
         return {
           level: 'blocked',
           reason: 'locked',
-          detail: `${tier.label} takes her on her national standing – ${minPoints} pts needed`,
+          detail: `${tier.label} takes her on her national standing – ${minPoints} ${LADDER_POINTS_LABEL.domestic} needed`,
           pointsToEnter: minPoints,
         }
       }
@@ -1395,16 +1396,26 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
   }
   const minPoints = tier.enterPointBand[0]
   const points = kidPoints(world, 'domestic')
+  // ⚠ THESE TWO SENTENCES NAME THEIR CURRENCY (31.07, fix/ladder-separation), and they are shown to
+  // the player: `enterEvent` throws `gate.detail` and the store puts the message on screen. They said
+  // "ranking points" and "(604 pts)" while the game holds TWO point tables that never convert into
+  // one another - so a girl with 604 national points and 4 international ones was told she did not
+  // have enough "ranking points", which is a sentence she could check against the wrong number on
+  // two different screens. `LADDER_POINTS_LABEL` is the one place those units are spelled.
   if (points < minPoints) {
     return {
       level: 'blocked',
       reason: 'locked',
-      detail: `Not enough ranking points for ${tier.label} yet (need ${minPoints})`,
+      detail: `Not enough ${LADDER_POINTS_LABEL.domestic} for ${tier.label} yet (need ${minPoints})`,
       pointsToEnter: minPoints,
     }
   }
   if (outgrewTier(event.tier, points)) {
-    return { level: 'blocked', reason: 'outgrown', detail: `You've outgrown ${tier.label} (${points} pts)` }
+    return {
+      level: 'blocked',
+      reason: 'outgrown',
+      detail: `You've outgrown ${tier.label} (${points} ${LADDER_POINTS_LABEL.domestic})`,
+    }
   }
   return availabilityStatus(world, event)
 }
@@ -4262,18 +4273,32 @@ function computeCountingResults(world: WorldState, track: LadderTrack = 'itf'): 
  *
  *  Pure derivation over the ledger the world already keeps - no persisted field, no schema bump, no
  *  migration, zero RNG draws. */
+/** HER PLACE IN ONE TABLE, or null when she holds no counting result in it.
+ *
+ *  ⚠ ONE IMPLEMENTATION, TWO CONSUMERS, and the second one is why it was extracted (31.07): the
+ *  tournament overlay prints her rank too, and it must print the SAME number the Home chip and the
+ *  Stats tab are showing at that moment or the app contradicts itself on the one screen where the
+ *  player is looking hardest. That is not automatic - on a reveal week the tick DEFERS the rank
+ *  recompute to `finalizeTournament` (see step 5) while the week's AI results are already in the
+ *  ledger, so a freshly-folded rank and the cached one legitimately differ by a place or two until
+ *  she finishes her run. Reading the cache through one function is what makes the two agree by
+ *  construction instead of by coincidence. */
+function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
+  return computeCountingResults(world, track).length > 0 ? rankIn(world, track) : null
+}
+
 function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
   const counting = computeCountingResults(world, track)
   return {
     // Her place a week ago IN THIS TABLE - see `prevKidRankDomestic` on WorldState for why both are
     // carried rather than one shared "previous rank".
-    prevRank: track === 'itf' ? world.prevKidRank : (world.prevKidRankDomestic ?? null),
+    prevRank: prevRankIn(world, track),
     // UNRANKED IS NOT A NUMBER. With nobody holding a point the whole field ties at zero and
     // competition ranking hands every member of that tie the same place, so a point-less kid reads
     // as a single digit. The screens have always papered over that by asking `countingResults.length
     // > 0` themselves; making it null HERE means they cannot forget, and the two questions ("where
     // is she?" and "is she ranked at all?") stop being one field.
-    rank: counting.length > 0 ? rankIn(world, track) : null,
+    rank: kidLadderRank(world, track),
     points: kidPoints(world, track),
     standings: computeStandings(world, track),
     countingResults: counting,
@@ -4285,6 +4310,13 @@ function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
  *  gate that used the same number to decide her entries. */
 function rankIn(world: WorldState, track: LadderTrack): number {
   return track === 'itf' ? world.kidRank : (world.kidRankDomestic ?? world.cohort.length + 1)
+}
+
+/** ...and her place in the SAME table a week ago. Its own function beside `rankIn` for the reason
+ *  `prevKidRankDomestic` exists at all: a movement is (previous - current), and the two halves have to
+ *  come from one table or the difference is a subtraction across two currencies. */
+function prevRankIn(world: WorldState, track: LadderTrack): number | null {
+  return track === 'itf' ? world.prevKidRank : (world.prevKidRankDomestic ?? null)
 }
 
 /** WHICH TABLE IS SHE ACTUALLY COMPETING IN - one rule, one place, so Home, Stats and the Kid screen
@@ -4385,10 +4417,30 @@ function pendingView(world: WorldState): PendingView | undefined {
   const currentIdx = revealed < kidMatches.length ? revealed : kidMatches.length - 1
   const current = kidMatches[currentIdx]
   const oppId = current.aId === KID_ID ? current.bId : current.aId
-  const ranks = new Map(fullRanking(world).map((r) => [r.playerId, r.rank]))
-  const oppRank = ranks.get(oppId) ?? world.cohort.length + 1
+  // ⚠ THE TABLE THIS TOURNAMENT IS ACTUALLY PLAYED ON – see `PendingView.ladder` for the owner's
+  // report and what it cost. This line used to read `fullRanking(world)`, whose doc comment says
+  // outright "THE table when only one is meant: the ITF one", so every rank the tournament overlay
+  // printed came from the international table even when the trophy on the table paid national points.
+  const track = tier.track
+  const ranks = new Map(rankingFor(world, track).map((r) => [r.playerId, r.rank]))
   const oppNation = world.cohort.find((c) => c.id === oppId)?.nation ?? ''
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
+  // UNRANKED IS NOT A NUMBER, for either girl, and it is the same rule `computeLadderView` applies to
+  // the kid: with nobody holding a point in this table the whole field ties at zero and competition
+  // ranking hands every member of that tie the same place. Asked of the OPPONENT too, because the two
+  // numbers sit side by side on the VS card and a real "#3" against a tie-floor "#119" invites a
+  // comparison that is not there.
+  //
+  // ⚠ TWO SOURCES, DELIBERATELY, AND THE ASYMMETRY IS THE CONSERVATIVE CHOICE. HER number comes
+  // through `kidLadderRank`, i.e. off the same cache `ladders[track].rank` reads, so the overlay can
+  // never print a different place for her than the screens behind it - the exact failure this branch
+  // is about. The OPPONENT's is folded here because nothing caches it and nothing else prints it, so
+  // it has nothing to disagree with. On a reveal week the two can be a place apart (the tick defers
+  // the rank recompute to `finalizeTournament` while the week's AI results are already banked); a
+  // one-place drift between two different players' numbers is invisible, whereas a drift in HERS
+  // between two screens is the bug.
+  const oppRankIn = (id: string): number | null =>
+    windowedBestSum(world.results, world.week, id, inTrack(track)) > 0 ? (ranks.get(id) ?? null) : null
 
   return {
     eventId: p.eventId,
@@ -4398,10 +4450,12 @@ function pendingView(world: WorldState): PendingView | undefined {
     // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
     temperatureC: eventTemperature(world.seed, event),
     roundLabel: stageLabel(current.round, tier.drawSize),
+    ladder: track,
+    kidRank: kidLadderRank(world, track),
     opponent: {
       name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
       nation: oppNation,
-      rank: oppRank,
+      rank: oppRankIn(oppId),
     },
     // Only expose a record to watch while there is still an unrevealed round.
     kidMatch: revealed < kidMatches.length ? kidMatchEvent(world, event, current, p.players).match : undefined,
@@ -4443,8 +4497,20 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       : null,
     events: world.events,
     lossStreak,
-    kidRank: world.kidRank,
-    prevKidRank: world.prevKidRank,
+    // ⚠ HER LADDER, NOT THE INTERNATIONAL ONE (31.07, fix/ladder-separation). This pair feeds exactly
+    // one derivation - `rankClimbed` - and `rankClimbed` licenses three lines that say she "moved up
+    // the table" plus the loss softener behind her face. It was `world.kidRank` / `world.prevKidRank`,
+    // the ITF pair, on a career that is domestic for its whole first year or two: so "she moved up the
+    // table" was a claim about a table she is not in, and the movement it read was mostly the tie floor
+    // drifting as OTHER players' international results aged out of their 52-week windows. R13-2 already
+    // fought this exact battle once - it added the `runPointsThisWeek > 0` licence because "rank is
+    // RELATIVE, so she can climb on a zero-point week purely because rivals' results decayed ... other
+    // people's ageing calendars, not her tennis" - and the earned-points guard cannot do its job while
+    // the points are counted in one table and the climb read off the other.
+    //
+    // `activeLadderOf` is the same one answer Home's chip, the Kid screen and Stats all read.
+    kidRank: rankIn(world, activeLadderOf(world)),
+    prevKidRank: prevRankIn(world, activeLadderOf(world)),
     pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
     // R13-2: the points her run AWARDED this week. finalizeTournament writes a kid row only when
     // points > 0, so a first-round exit leaves none – "> 0" is exactly "she won matches this

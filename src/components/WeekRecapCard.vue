@@ -43,6 +43,7 @@ import Eyebrow from './ui/Eyebrow.vue'
 import PaperNote from './ui/PaperNote.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
+import { LADDER_LABEL, activeLadderOfSnapshot } from '../shared/protocol'
 import type { TravelHomeMood, TravelHomeScene, WorldEvent, WorldMatch } from '../shared/protocol'
 
 const game = useGameStore()
@@ -271,12 +272,26 @@ const energy = computed(() => Math.max(0, Math.min(100, game.snapshot?.condition
 //      contribution and savings interest are not events in anyone's week).
 const HIGHLIGHT_TYPES = new Set<WorldEvent['type']>(['match', 'milestone', 'injury', 'recovery', 'info'])
 
+// ⚠ THE LADDER SHE IS ACTUALLY ON, AND IT SAYS SO (31.07, fix/ladder-separation). This read
+// `snapshot.prevKidRank` / `snapshot.kidRank`, the ITF aliases, and printed a bare "Rank up 4 – now
+// #118" with no table beside it. Two things were wrong with that and only one of them is the label:
+//
+//   * a girl who has never left the country is UNRANKED internationally, and `kidRank` is a number
+//     anyway (the whole point-less field ties at zero and shares one dense place, on top of a
+//     `cohort.length + 1` fallback). So her week's headline could be a move within a tie she is not
+//     a member of, in a table the Stats screen was simultaneously calling "Unranked";
+//   * and the move itself could be somebody else's ageing calendar. `ladders[t].prevRank` is the
+//     per-ladder capture that exists so a movement arrow can never subtract one table from the other.
+//
+// `activeLadder` is the engine's one answer to which table she is competing in - the same one Home's
+// chip, the Kid screen and the Stats screen's default tab read.
 const rankMoveLine = computed<string | null>(() => {
   const snap = game.snapshot
-  if (!snap || snap.prevKidRank === null || snap.prevKidRank === snap.kidRank) return null
-  const by = Math.abs(snap.prevKidRank - snap.kidRank)
-  const dir = snap.prevKidRank > snap.kidRank ? 'up' : 'down'
-  return `Rank ${dir} ${by} – now #${snap.kidRank}`
+  const ladder = snap?.ladders[snap.activeLadder]
+  if (!ladder || ladder.rank === null || ladder.prevRank === null || ladder.prevRank === ladder.rank) return null
+  const by = Math.abs(ladder.prevRank - ladder.rank)
+  const dir = ladder.prevRank > ladder.rank ? 'up' : 'down'
+  return `${LADDER_LABEL[snap.activeLadder]} rank ${dir} ${by} – now #${ladder.rank}`
 })
 
 const highlights = computed<string[]>(() => {
@@ -313,6 +328,8 @@ const friendlyMatch = computed<WorldMatch | null>(
   () => weekEvents.value.find((e) => e.type === 'match' && e.friendly && e.match)?.match ?? null,
 )
 const practiceLive = ref<WorldMatch | null>(null)
+// Same one answer the rank-move line above uses, and the same reason – see `activeLadderOfSnapshot`.
+const activeRank = computed(() => activeLadderOfSnapshot(game.snapshot).rank)
 
 // ⚠ `weekLabel` is imported and used for the practice flow's own header, which needs to name the
 // week it is replaying. The week the STORY covers is printed once, by the screen's header
@@ -455,7 +472,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
       v-if="practiceLive"
       :match="practiceLive"
       :week="week"
-      :kid-rank="game.snapshot?.kidRank ?? null"
+      :kid-rank="activeRank"
       @close="practiceLive = null"
     />
   </section>

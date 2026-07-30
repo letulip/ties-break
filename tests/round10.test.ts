@@ -23,6 +23,7 @@ import {
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { LADDER_POINTS_LABEL } from '../src/shared/protocol'
 import type { StopReason } from '../src/shared/protocol'
 
 // ---------------------------------------------------------------------------
@@ -235,7 +236,12 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     const loc = injectEvent(w, { week: 3, tier: 'local', deadlineWeek: 1 })
 
     // surface 1: entry refuses, with the direction-aware copy
-    expect(() => enterEvent(w, loc.id)).toThrow("You've outgrown Local Open (122 pts)")
+    // ⚠ RE-AIMED 31.07 (fix/ladder-separation): "(122 pts)" is now "(122 national pts)". R10-5's
+    // subject is that ONE rule drives all three surfaces, and that is untouched; only the unit the
+    // rule states its number in has been made explicit, because there are two of them.
+    expect(() => enterEvent(w, loc.id)).toThrow(
+      `You've outgrown Local Open (122 ${LADDER_POINTS_LABEL.domestic})`,
+    )
     expect(w.entries).toEqual([])
     // surface 2: the snapshot names the same reason
     const up = toSnapshot(w).upcoming.find((e) => e.id === loc.id)!

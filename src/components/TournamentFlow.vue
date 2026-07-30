@@ -29,7 +29,8 @@ import { surfaceStyleHint } from '../engine/match/style'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { TIERS } from '../engine/season/calendar'
 import { KID_ID, flipScore } from '../engine/world'
-import { formatShortName } from '../shared/format'
+import { LADDER_LABEL } from '../shared/protocol'
+import { formatShortName, rankLabel } from '../shared/format'
 import { weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
 import type { MatchOptions, Side } from '../engine/match/types'
@@ -67,7 +68,24 @@ const kidFlag = computed(() => flagEmoji(profile.value?.country ?? ''))
 const kidFullName = computed(() =>
   profile.value ? `${profile.value.kidName} ${profile.value.kidLastName}` : '',
 )
-const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
+// ⚠ THE RANKS ON THIS OVERLAY COME FROM THE TABLE THE TOURNAMENT IS PLAYED ON (31.07,
+// fix/ladder-separation). The owner, after a National: «по итогам матча national в таблице пишут # из
+// international, надо проверить всё разделение хорошо». This read `snapshot.kidRank`, which is the ITF
+// alias, while the opponent's came off `fullRanking` on the engine side - so both numbers on the VS
+// card, the pre-match scene, the box score and the live viewer's head-plates were international ones,
+// on a week she was playing for national points. Two currencies with no exchange rate
+// (docs/specs/two-ladders.md), and this is the one screen where both players' numbers sit side by side.
+//
+// The engine answers it now (`PendingView.ladder` / `.kidRank` / `.opponent.rank`), for the same reason
+// `temperatureC` rides on the pending view: the event has already left `upcoming` by the time it is
+// played, so a component re-deriving "which ladder is this" is a second place to get it wrong.
+const kidRank = computed<number | null>(() => pending.value?.kidRank ?? null)
+/** "National" / "International" - the player-facing name of the table these numbers are in, defined
+ *  once in LADDER_LABEL so this screen cannot invent a seventh word for it. */
+const ladderLabel = computed(() => LADDER_LABEL[pending.value?.ladder ?? 'domestic'])
+/** ...and the shared "#N or Unranked" rule, so a girl with no counting result in THIS table is not
+ *  introduced on the splash as the tie floor she shares with half the field. */
+const kidRankText = computed(() => rankLabel(kidRank.value ?? 0, kidRank.value !== null))
 // Snapshot.week stays pinned to the event's own week for the whole reveal (tickWeek never
 // advances again while paused), so this doubles as the tournament's real date range.
 const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
@@ -624,19 +642,25 @@ const matchMeta = computed(() => {
           <p class="tf-round">{{ pending.roundLabel }}</p>
           <p class="tf-draw">{{ drawSize }}-player draw</p>
         </div>
+        <!-- Both ranks are read off the table THIS tournament is played on, and the panel says which
+             one that is - a bare "#118" beside a bare "#4" is a comparison, and a comparison across
+             two tables with no exchange rate is a lie. See `kidRank` above. -->
         <div class="tf-first-grid">
           <div class="tf-first-side">
             <div class="tf-first-flag">{{ kidFlag }}</div>
             <div class="tf-first-name">{{ kidShort }}</div>
-            <div class="tf-first-rank">Rank #{{ kidRank }}</div>
+            <div class="tf-first-rank">{{ kidRankText }}</div>
           </div>
           <div class="tf-first-vs">VS</div>
           <div class="tf-first-side mirrored">
             <div class="tf-first-flag">{{ flagEmoji(pending.opponent.nation) }}</div>
             <div class="tf-first-name">{{ pending.opponent.name }}</div>
-            <div class="tf-first-rank">Rank #{{ pending.opponent.rank }}</div>
+            <div class="tf-first-rank">
+              {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank }}
+            </div>
           </div>
         </div>
+        <p class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
       </Card>
 
       <!-- THE COACH'S READ + THE BUTTON THAT STARTS IT. -->
@@ -755,12 +779,14 @@ const matchMeta = computed(() => {
       <div class="tf-scene-grid">
         <div class="tf-scene-side">
           <div class="tf-scene-name">{{ kidShort }} {{ kidFlag }}</div>
-          <div class="tf-scene-rank">#{{ kidRank }}</div>
+          <div class="tf-scene-rank">{{ kidRankText }}</div>
         </div>
         <div class="tf-scene-vs">vs</div>
         <div class="tf-scene-side mirrored">
           <div class="tf-scene-name">{{ pending.opponent.name }} {{ flagEmoji(pending.opponent.nation) }}</div>
-          <div class="tf-scene-rank">#{{ pending.opponent.rank }}</div>
+          <div class="tf-scene-rank">
+            {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank }}
+          </div>
         </div>
       </div>
       <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
@@ -782,14 +808,18 @@ const matchMeta = computed(() => {
         <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
         <span class="tf-scoreline num">{{ kidScore }}</span>
       </div>
-      <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }}</p>
+      <!-- ⚠ THE RESULTS TABLE THE OWNER WAS LOOKING AT (31.07). It printed her ITF rank under her name
+           whatever the tournament was, so a National box score introduced her as #118 in a table that
+           had just paid her nothing. It names its ladder now, for the same reason the Stats screen
+           does: a rank with no table beside it is only ever right by accident. -->
+      <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }} · {{ ladderLabel }} ranking</p>
       <table>
         <thead>
           <tr>
             <th></th>
             <th>
               <span class="ph-name">{{ kidShort }}</span>
-              <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
+              <span v-if="kidRank !== null" class="ph-rank">#{{ kidRank }}</span>
             </th>
             <th>
               <span class="ph-name">{{ oppShort }}</span>
@@ -1179,6 +1209,13 @@ const matchMeta = computed(() => {
   font-weight: 500;
   color: var(--ink-soft);
   font-variant-numeric: tabular-nums;
+}
+
+/* WHICH TABLE the two numbers above are in – centred under the VS, because it qualifies both sides
+   and belongs to neither. Quiet by design: it is a unit, not a fact about the match. */
+.tf-first-ladder {
+  margin: 8px 0 0;
+  text-align: center;
 }
 
 .tf-first-vs {

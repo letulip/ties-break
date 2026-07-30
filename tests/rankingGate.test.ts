@@ -12,6 +12,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { LADDER_POINTS_LABEL } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // Phase-4 "Season Life" slice 1, increment 2: a POINTS eligibility BAND per tier. A tier is a window
@@ -115,8 +116,13 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
     const { world, event } = firstEventOfTier('gate-low', 'regional')
     // a fresh kid has 0 points, below regional's minPoints (65)
     expect(kidPoints(world, 'domestic')).toBe(0)
+    // ⚠ RE-AIMED 31.07 (fix/ladder-separation), and it is STRICTER than what it replaced. The copy
+    // said "ranking points" / "(120 pts)" while the game holds two point tables that never convert
+    // into one another, so the sentence was checkable against the wrong number. The assertion now
+    // reads the unit out of `LADDER_POINTS_LABEL` rather than spelling it, so it pins that the gate
+    // NAMES ITS CURRENCY without freezing which word that currency is called by.
     expect(() => enterEvent(world, event.id)).toThrow(
-      `Not enough ranking points for ${TIERS.regional.label} yet (need 65)`,
+      `Not enough ${LADDER_POINTS_LABEL.domestic} for ${TIERS.regional.label} yet (need 65)`,
     )
     expect(world.entries).not.toContain(event.id)
   })
@@ -124,7 +130,14 @@ describe('enterEvent — points enforcement (direction-aware messages)', () => {
   it('rejects a graduated (past-the-ceiling) total with an "outgrown" message', () => {
     const { world, event } = firstEventOfTier('gate-grad', 'local')
     giveKidPoints(world, 120) // 120 > local maxPoints (85)
-    expect(() => enterEvent(world, event.id)).toThrow(`You've outgrown ${TIERS.local.label} (120 pts)`)
+    // ⚠ RE-AIMED 31.07 (fix/ladder-separation), and it is STRICTER than what it replaced. The copy
+    // said "ranking points" / "(120 pts)" while the game holds two point tables that never convert
+    // into one another, so the sentence was checkable against the wrong number. The assertion now
+    // reads the unit out of `LADDER_POINTS_LABEL` rather than spelling it, so it pins that the gate
+    // NAMES ITS CURRENCY without freezing which word that currency is called by.
+    expect(() => enterEvent(world, event.id)).toThrow(
+      `You've outgrown ${TIERS.local.label} (120 ${LADDER_POINTS_LABEL.domestic})`,
+    )
     expect(world.entries).not.toContain(event.id)
   })
 

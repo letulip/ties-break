@@ -55,6 +55,7 @@ import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
+import { activeLadderOfSnapshot } from '../../shared/protocol'
 import type { PracticeBooking, UpcomingEvent, VacationBooking, WorldEvent, WorldMatch } from '../../shared/protocol'
 
 const game = useGameStore()
@@ -627,7 +628,14 @@ function openRescue(): void {
 
 // --- kidRank: only needed here now for the Friendly-match viewer's rank-a prop – the
 // full standings table moved to the Stats tab (round-6). ---------------------------
-const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
+//
+// ⚠ HER LADDER, NOT THE INTERNATIONAL ALIAS (31.07, fix/ladder-separation). A friendly is on neither
+// table, so the only question this prop can be answering is "where does she stand", and the app has
+// exactly one answer to that: `Snapshot.activeLadder`. `snapshot.kidRank ?? 0` was the international
+// number AND a number at all times, so an unranked girl went into the viewer's head-plate as the
+// tie-floor place she shares with half the field. (This file is under the fiction guard in
+// tests/ladder.test.ts, which reads the whole source: no trademark here, in copy or in comments.)
+const kidRank = computed(() => activeLadderOfSnapshot(game.snapshot).rank)
 
 // --- this week's tournament: only kid matches are ever recorded as `match`
 // events, so the list below IS the kid's path – nothing else to highlight
