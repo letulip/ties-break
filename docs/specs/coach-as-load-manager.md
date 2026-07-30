@@ -68,19 +68,59 @@ its own balance pass, and this one can be measured against systems that are alre
 
 ## 4. Three risks, and the answer to each
 
-**(a) Self-management must not beat a paid coach.** If a patient player can out-manage Elite, the
-coach ladder we spent two rounds making monotone becomes a trap again. The answer is true to life:
-**a parent cannot be at every session.** His best possible management should top out somewhere
-around Middle and never reach Elite — not because he is worse at deciding, but because he is not
-there. Cap it explicitly and pin the cap.
+**(a) ⚠ THERE IS NO CAP ON THE SELF-COACHED PARENT. I proposed one and the owner was right to
+refuse it.**
+
+My first draft said his management should top out near Middle and never reach Elite. The owner:
+«есть же довольно много примеров в теннисе, где именно родители тренировали своих детей… Может быть
+игрок будет хорош и знает, что и как делать? А нет, так и получит то, что получит.» He is factually
+right and the counter-examples are the strongest available — Bublik's father coached him until the
+cheques arrived, and Richard Williams coached two daughters to world number one with no professional
+background at all. A rule that says a parent *cannot* be that good is a rule the sport disproves.
+
+**The real risk was never realism, it was a dominant strategy**: if self-management is free and can
+match Elite, nobody hires anybody and the ladder is dead content. But the answer to that is not a
+cap on his skill. It is that self-coaching already costs two things, and one of them is a mechanism
+this game has already built and measured:
+
+1. **Attention.** The self-coached parent has to make every one of these decisions himself, every
+   week. That is a real price for a player, and a hired coach is precisely "pay money to stop being
+   asked". The knob-holder pays in taps.
+2. **⚠ HE DECIDES IN THE FOG, and this is the good part.** Measured: a self-coached career ends with
+   a fog band of **3.7** against Elite's **0.2** — an eighteen-fold difference in how well anyone
+   knows this girl. So the parent making the load calls is making them *without a reliable read on
+   his own daughter*. That is not a cap on how well he can decide; it is a cap on **what he can
+   see** — and it is exactly the real asymmetry. Richard Williams could coach to number one, but he
+   also KNEW his daughters. A parent without that read is guessing, and the radar already says so.
+
+So: **skilled play may beat a paid coach, and that is the reward for attention.** Bad play gets what
+it gets. What we must NOT ship is self-management that beats Elite *while also being easier* — and
+the fog is what stops that without a single arbitrary number.
 
 **(b) It must not become a spreadsheet.** Weekly load sliders are exactly the chore the story screen
 was designed to avoid. It has to be **a few decisions with consequences**, in the shape the knock
 already proved: the week stops, asks one thing, and the bill is visible. Not a continuous optimum.
 
-**(c) It moves balance for the third time this week.** Every rank-denominated number was just
-re-tuned. This will move survival, reach and the coach ladder's monotonicity. That is a cost, not a
-blocker — but it means the slice is not done until it is measured.
+**(c) It moves balance, and the owner asked why, since "we are not changing anything, just
+detailing what the coach already does".** The precise answer, because it matters:
+
+**The coach does not currently do anything about load.** Not a little — nothing. Today the plan
+presets, the knock's rest-or-push, physio, vacations and every entry decision are the *player's*, at
+every tier, identically. The only thing a rung changes is `coachIncludesPhysio`, a boolean that is
+true for all four hired rungs equally. So there is nothing to "detail": the behaviour does not exist
+yet.
+
+Which means the slice necessarily **adds capability to the hired tiers** rather than redistributing
+it. An Elite coach who manages load well is new, and fewer lost weeks means more tournaments played,
+which means points, which means rank, which means reach and entries and money. That chain is exactly
+the one the bench measures.
+
+**And the movement IS the feature.** If a hired career's numbers do not move, the coach's automation
+is merely reproducing the average of what players already do, and the slice has built nothing worth
+buying. So the measurement is not a safety check on a neutral change — it is the proof that the
+change happened at all. Every rank-denominated number was re-tuned this week; expect to revisit
+`developmentFactor` LAST, and only if weeks-lost turns out not to carry the coach's value on its
+own.
 
 ## 5. The measurement that makes the purchase legible
 
