@@ -716,13 +716,14 @@ const matchMeta = computed(() => {
            the wrong answer. Nothing else on this screen moves - the badge goes, and with it the
            shout, because a match already in the save file cannot be shouted at. The only genuinely
            live surface left is SeasonScreen's sandbox exhibition, generated at click time.
-           ⚠ ONE LEVER, IF THE OWNER WANTS THE SHOUT ON A TOURNAMENT ROUND. This screen already knows
-           whether the viewer is a FIRST watch or a re-watch - `replayAdvances` is exactly that flag
-           (true when opened from the pre-match card, false on the box score's "Watch again") - so
-           `:mode="replayAdvances ? 'live' : 'replay'"` would put the badge and the shout on a round's
-           first watch only and still keep them off a re-watch. Deliberately NOT taken: the ruling on
-           this branch is that a pre-resolved match is not live, and a one-line change is cheaper to
-           make later than to argue with twice. -->
+           ⚠⚠ AND THE OWNER HAS RULED, 30.07, so the lever below IS taken: «Для меня live это "watch
+           it" и без вариантов, всё остальное replay». That is a cleaner definition than the one this
+           file was using. "Live" here does not mean the engine has not decided yet - it never has,
+           for any surface but the sandbox. It means THE PLAYER HAS NOT SEEN IT YET. A first watch is
+           an outcome he does not know; a re-watch is a recording of one he does.
+           `replayAdvances` is exactly that distinction and always was (true when opened from the
+           pre-match card, false on the box score's "Watch again"), so the badge and the shout land on
+           a round's first watch and stay off every re-watch. -->
     <MatchViewer
       v-if="replayOpen && annotated && currentMatch"
       :match="annotated"
@@ -733,7 +734,7 @@ const matchMeta = computed(() => {
       :rank-b="viewerRankB"
       :final-match="isFinalRound"
       :temperature-c="pending?.temperatureC ?? null"
-      mode="replay"
+      :mode="replayAdvances ? 'live' : 'replay'"
       @finish="endReplay"
       @end-applause="noteEndApplause"
     />

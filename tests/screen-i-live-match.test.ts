@@ -106,9 +106,18 @@ describe('screen I – the design and the rulings it has to keep', () => {
     const defaults = /withDefaults\([\s\S]*?\{([^}]*)\},\s*\)/.exec(viewer)?.[1] ?? ''
     expect(defaults.length, 'the defaults object was not found').toBeGreaterThan(10)
     expect(defaults, 'mode is back in the defaults').not.toContain('mode')
-    // and every caller says it out loud. Exactly one of them says 'live', and it is the only surface
-    // that is: SeasonScreen's sandbox exhibition is simulated at the moment the button is pressed.
-    const live: string[] = []
+    // ⚠ RE-AIMED, AND ON THE OWNER'S OWN DEFINITION OF THE WORD (30.07): «Для меня live это "watch
+    // it" и без вариантов, всё остальное replay». This pin used to require that exactly ONE caller
+    // say 'live' - the sandbox - on the reading that a pre-resolved match is never live. His reading
+    // is cleaner and it is the one the game now uses: LIVE MEANS THE PLAYER HAS NOT SEEN IT YET. The
+    // engine has always decided first, for every surface but the sandbox, so "has the engine decided"
+    // was never the distinction a player could feel; "have I seen this" is.
+    //
+    // THE PROTECTED FACT IS UNCHANGED and is the one that caught the original bug: no caller may be
+    // live BY SILENCE. Every one still states its mode, and a re-watch is still never live. What
+    // moved is that TournamentFlow is allowed to be BOTH, chosen by `replayAdvances` - a first watch
+    // of a round is live, the box score's "Watch again" is not.
+    const modes = new Map<string, string[]>()
     for (const rel of [
       '../src/components/TournamentFlow.vue',
       '../src/components/PracticeFlow.vue',
@@ -116,10 +125,24 @@ describe('screen I – the design and the rulings it has to keep', () => {
       '../src/components/screens/SeasonScreen.vue',
     ]) {
       const m = markupOf(read(rel))
-      expect(m, `${rel} says which mode it is`).toMatch(/mode="(live|replay)"/)
-      if (/mode="live"/.test(m)) live.push(rel)
+      expect(m, `${rel} says which mode it is`).toMatch(/(:mode="|mode=")/)
+      // ⚠ Read the MODE ATTRIBUTES ONLY. A looser sweep for the quoted words also catches the
+      // `mv-live` class and any comment that names them, which is how this pin first came out
+      // claiming a replay screen was live.
+      modes.set(
+        rel,
+        [...m.matchAll(/:?mode="([^"]*)"/g)].flatMap((x) => [...x[1].matchAll(/(live|replay)/g)].map((y) => y[1])),
+      )
     }
-    expect(live).toEqual(['../src/components/screens/SeasonScreen.vue'])
+    // The sandbox is unconditionally live - it simulates at the moment the button is pressed.
+    expect(modes.get('../src/components/screens/SeasonScreen.vue')).toEqual(['live'])
+    // A replay and a friendly's re-watch are never live.
+    expect(modes.get('../src/components/MatchReplay.vue')).toEqual(['replay'])
+    expect(modes.get('../src/components/PracticeFlow.vue')).toEqual(['replay'])
+    // ...and the tournament round decides per watch, off the flag that already knew.
+    expect(markupOf(read('../src/components/TournamentFlow.vue'))).toMatch(
+      /:mode="replayAdvances \? 'live' : 'replay'"/,
+    )
   })
 
   // ⚠ ADDED 30.07 (owner: «можем какой-то набор фраз в дропдаун селект сделать и кнопку рядом.
