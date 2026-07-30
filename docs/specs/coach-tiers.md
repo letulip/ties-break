@@ -186,3 +186,59 @@ Two rules for the copy:
 Prices per class, all six bench presets, and the specific claim restated: **each family should have a
 real choice inside its own corridor** — survive-and-plateau or gamble, at more than one rung, rather
 than one viable rung per class.
+
+---
+
+# Rounds 3 and 4 — the roster's shape, twice corrected
+
+Recorded here because the corrections lived only in a commit message and a code comment, and the
+second one reverses a rule the first one kept.
+
+## Round 3 (29.07): four a tier, and the duplicate parked at Budget
+
+Round 2 shipped Budget with **three** coaches, on a deliberate rule: *"Budget ships no serve-first
+coach — a big serve is the expensive build, and a serve-first kid who shops at the bottom finds
+nobody who fits her."* Middle carried **five**, two of them counterpunchers, purely because five
+middle portraits had to go somewhere.
+
+R3 moved `middle-4` down to Budget. That bought **four a tier all the way up**, left Middle / High /
+Elite at exactly one coach per style, and put the single duplicate where it was argued to read as
+something rather than as an accident — *the club IS defence and consistency, so two defensive coaches
+at the bottom of the market is what a club looks like*, and a counterpuncher gained two Budget prices
+to choose between. The serve-first rule was explicitly **kept**.
+
+The stem stayed `middle-4`: a stem names the master file, not the rung, and the id is what a save
+holds.
+
+## Round 4 (30.07): the owner reverses the serve-first rule
+
+> «2 counterpancher budget, none big serve»
+
+One complaint, not two, and it is **the poorest family's** complaint — Budget is the only rung a
+working-class career can actually shop at, and it was the one rung with a hole in it.
+
+**Why the texture argument loses.** A play style is chosen once, on screen R, before the player has
+any idea what coaching costs, and it is persisted for the whole career. So "serve-first has no great
+fit at Budget" is not texture; it is a fourteen-year-old's irreversible choice quietly taxing the
+family least able to buy its way out. The other three styles each had a great-fit Budget coach who
+was also the **cheapest great fit in the game**; serve-first alone had to find $41/h at Middle
+against $28 at Budget. The rule was only ever visible to a serve-first family, and to them it read
+as the game being broken.
+
+**The fix, and what it costs.** `middle-4` keeps his Budget rung and his portrait, and his style is
+re-read as `serve-first`. `budget-1` keeps the counterpuncher slot — he is the Home card's face for
+the working-class family and the cheapest great-fit counterpuncher in the game, which is the fact R3
+pinned in answer to the owner's *previous* complaint about this rung.
+
+So R3's duplicate is deliberately given up. That is the cheaper of the two things to lose: a
+counterpuncher loses a *second* Budget price, while a serve-first girl was losing the only coach who
+could fit her at all.
+
+**The spread, after:** one coach per style per rung — **4 × 4, sixteen slots, no duplicate anywhere**,
+which is the most even spread this art can produce. R3's structural half (four a tier) survives
+untouched; only the fourth Budget coach's game changed.
+
+Both pins in `tests/coachTiers.test.ts` are re-aimed rather than dropped, with the reasoning above
+next to them. The protected fact under them is unchanged and now asserted over **all four** rungs
+instead of three: *the style spread is a deliberate, asserted shape and not an accident of which
+portraits happened to ship.*

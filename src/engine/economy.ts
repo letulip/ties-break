@@ -197,26 +197,50 @@ export const ECONOMY = {
     // gender is a fact about the file and the style is a reading of what he is doing in it. What the
     // seed draws is the NAME; who these people are does not change between careers.
     //
-    // BUDGET HAS NO SERVE-FIRST COACH, deliberately, and the owner has not objected: a big serve is
-    // the expensive build, the cheap rung teaches shape and consistency, and a serve-first kid who
-    // shops there finds nobody who fits her at all. That is the tier's texture.
+    // ⚠ THE OWNER REVERSED "BUDGET SHIPS NO SERVE-FIRST COACH" (playtest, 30.07): «2 counterpancher
+    // budget, none big serve». Both halves of that sentence are one complaint, and it is the poorest
+    // family's complaint - the only rung a working-class career can actually shop at was the one rung
+    // with a hole in it.
     //
-    // ⚠ THE DUPLICATE MOVED DOWN A RUNG (Round 3). Middle used to carry TWO counterpunchers, purely
-    // because five middle portraits had to go somewhere, and Budget carried three coaches. Moving
-    // `middle-4` to Budget makes it four a tier all the way up, leaves Middle / High / Elite with
-    // exactly one coach per style, and puts the one duplicate in the tier where it reads as
-    // something rather than as an accident: the club IS defence and consistency, so two defensive
-    // coaches at the bottom of the market is what a club looks like. A counterpuncher now has two
-    // Budget coaches to choose between at different prices, which is the roster doing its job.
+    // WHAT THE RULE USED TO SAY, kept because the argument was real and lost anyway: a big serve is
+    // the expensive build, the cheap rung teaches shape and consistency, and a serve-first girl who
+    // shopped at the bottom found nobody who fitted her. That was described as "the tier's texture",
+    // and Round 2 was explicit that the owner had not objected to it.
     //
-    // The portrait stem still says `middle-4` because a stem names the MASTER FILE, not the rung -
-    // the art is a man in an orange jacket explaining something, which is a club coach as readily
-    // as an academy one. Renaming the file would break every save holding that id.
+    // HE HAS NOW, AND HE IS RIGHT, for a reason the texture argument never answered: a play style is
+    // chosen ONCE, on screen R, before the player has any idea what coaching costs - and it is
+    // persisted for the whole career. So "serve-first has no great fit at Budget" is not a texture, it
+    // is a fourteen-year-old's irreversible choice quietly taxing the family least able to buy its
+    // way out. The other three styles each had a great-fit Budget coach who was also the cheapest
+    // great fit IN THE GAME (R3 pinned exactly that); serve-first alone had to find $41/h at Middle
+    // against $28 at Budget. The texture was only ever visible to a serve-first family, and to them it
+    // read as the game being broken.
+    //
+    // ⚠ AND IT COSTS THE R3 DUPLICATE, DELIBERATELY. Round 3 moved `middle-4` down from Middle (which
+    // carried two counterpunchers purely because five middle portraits had to go somewhere) and argued
+    // the duplicate now "reads as something rather than as an accident: the club IS defence and
+    // consistency, so two defensive coaches at the bottom of the market is what a club looks like",
+    // giving a counterpuncher two Budget prices to choose between. That reading was fair and it is
+    // what the owner has just called the bug. It is also the CHEAPER of the two things to give up:
+    // a counterpuncher losing a second Budget price loses a choice between two coaches who fit her,
+    // while a serve-first girl was losing the only coach who could fit her at all. `budget-1` keeps
+    // the counterpuncher slot - he is the Home card's face for the working-class family and the
+    // cheapest great-fit counterpuncher in the game, which is the fact R3 pinned in answer to the
+    // owner's PREVIOUS complaint, and reversing that would re-open a closed issue.
+    //
+    // WHAT SURVIVES INTACT is the structural half of R3, which is the half the owner asked for:
+    // FOUR A TIER, all the way up. The roster is now one coach per style per rung, sixteen slots,
+    // no duplicate anywhere - the most even spread this art can produce.
+    //
+    // The portrait stem still says `middle-4` because a stem names the MASTER FILE, not the rung and
+    // not the style - the art is a man in a cap and an orange jacket, both hands up, mid-explanation,
+    // which is a man showing a serve motion as readily as a defensive shape. Renaming the file would
+    // break every save holding that id, and the id is what a save holds.
     roster: [
       { portrait: 'budget-1', tier: 'budget', style: 'counterpuncher', gender: 'm' },
       { portrait: 'budget-2', tier: 'budget', style: 'all-court', gender: 'f' },
       { portrait: 'budget-3', tier: 'budget', style: 'aggressive', gender: 'f' },
-      { portrait: 'middle-4', tier: 'budget', style: 'counterpuncher', gender: 'm' },
+      { portrait: 'middle-4', tier: 'budget', style: 'serve-first', gender: 'm' },
       { portrait: 'middle-1', tier: 'middle', style: 'all-court', gender: 'f' },
       { portrait: 'middle-2', tier: 'middle', style: 'counterpuncher', gender: 'm' },
       { portrait: 'middle-3', tier: 'middle', style: 'serve-first', gender: 'm' },
