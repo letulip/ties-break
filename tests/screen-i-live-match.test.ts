@@ -81,7 +81,18 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // fact is word for word §2's: the replay is the live match minus the blinking Live and minus
     // shouting. What changed is that the two halves are now gated identically instead of one of them
     // leaning on the other's markup.
-    expect(viewer).toMatch(/v-if="props\.mode === 'live' && !finished"[\s\S]{0,120}title="Coming in Phase 6"/)
+    // ⚠ RE-AIMED AGAIN, 30.07, AND THE STRING IT MATCHED ON IS GONE ON PURPOSE. It read
+    // `title="Coming in Phase 6"`, which was the disabled placeholder's tooltip; the owner asked for
+    // the real control («можем какой-то набор фраз в дропдаун селект сделать и кнопку рядом. Выбрал,
+    // крикнул»), so the placeholder is a phrase picker plus a verb and has no such title. The GATE is
+    // what §2 is about and the gate is untouched - `props.mode === 'live' && !finished`, the Live
+    // badge's own condition, now carried by the row that holds both halves of the control.
+    expect(viewer).toMatch(/v-if="props\.mode === 'live' && !finished" class="mv-shout"/)
+    // Read off `markupOf` for the reason this file's own header gives: the ⚠ note that replaced the
+    // placeholder QUOTES its tooltip, and a pin a comment can satisfy is not a pin.
+    expect(markupOf(viewer), 'the placeholder tooltip outlived the placeholder').not.toContain(
+      'Coming in Phase 6',
+    )
     expect(viewer).toContain('Shout 📣')
   })
 
@@ -109,6 +120,41 @@ describe('screen I – the design and the rulings it has to keep', () => {
       if (/mode="live"/.test(m)) live.push(rel)
     }
     expect(live).toEqual(['../src/components/screens/SeasonScreen.vue'])
+  })
+
+  // ⚠ ADDED 30.07 (owner: «можем какой-то набор фраз в дропдаун селект сделать и кнопку рядом.
+  // Выбрал, крикнул»). Two facts, and the second one is the load-bearing one.
+  it('the shout is a picker plus a verb, and it never enters buildCommentary', () => {
+    const markup = markupOf(viewer)
+    const row = markup.slice(markup.indexOf('class="mv-shout"'), markup.indexOf('class="mv-actions"'))
+    expect(row, 'the phrases are a real dropdown').toMatch(/<select v-model="shoutPhrase"/)
+    expect(row, 'and a button beside it').toMatch(/<button class="mv-shout-go"[^>]*@click="shoutIt"/)
+    // A handful, in the parent's voice, short dash only and no Cyrillic in copy the player reads.
+    const pool = /const SHOUT_PHRASES = \[([\s\S]*?)\] as const/.exec(viewer)?.[1] ?? ''
+    const phrases = [...pool.matchAll(/'([^']+)'/g)].map((m) => m[1])
+    expect(phrases.length, 'a handful, not a phrasebook').toBeGreaterThanOrEqual(4)
+    expect(phrases.length).toBeLessThanOrEqual(8)
+    for (const p of phrases) {
+      expect(p, `"${p}" uses the long dash`).not.toContain('—')
+      expect(p, `"${p}" has Cyrillic in player-facing copy`).not.toMatch(/[Ѐ-ӿ]/)
+      // docs/lore/setting.md §3, and the six phrases tests/travel-home.test.ts already bans from this
+      // family's mouth. A shout notices her; it does not console her and it does not grade her.
+      expect(p, `"${p}" is consolation`).not.toMatch(
+        /\bwell played\b|\bgood effort\b|\bproud of\b|\bnext time\b|\bunlucky\b|\bso close\b/i,
+      )
+    }
+    // ⚠ THE ONE THAT MATTERS. `buildCommentary` is a pure function of the match with a determinism pin
+    // on it - the same match must narrate identically, every replay, forever - and a button press is
+    // not match data. So the shout may reach the LOG but never that function: the two lists meet in
+    // `visibleRows`, at display time, and nowhere earlier.
+    expect(viewer).toMatch(/buildCommentary\(props\.match/)
+    expect(viewer, 'a shout was fed into the deterministic narrator').not.toMatch(
+      /buildCommentary\([^)]*shout/i,
+    )
+    const commentary = read('../src/viz/commentary.ts')
+    expect(commentary.toLowerCase(), 'the pure narrator learned about shouting').not.toContain('shout')
+    // and a fresh watch starts with an empty mouth: the shouts belong to the run, not to the match.
+    expect(viewer).toMatch(/shouts\.value = \[\]/)
   })
 
   it('the controls are the app\'s segmented control, not two <select>s', () => {
