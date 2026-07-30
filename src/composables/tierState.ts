@@ -106,22 +106,28 @@ function openDomesticRungs(points: number): TierId[] {
  */
 export function gapInResultsNote(gap: number, points: number): string | null {
   if (gap <= 0) return null
-  // Strongest open rung first: it is the one she would actually travel to, and it closes the gap in
-  // the fewest trips.
+  // Strongest open rung first: it is the one she would actually travel to, and it pays the most per
+  // trip.
   for (const id of [...openDomesticRungs(points)].reverse()) {
     const t = TIERS[id]
+    // FEWEST TRIPS, then the EASIEST finish that still needs that many. The second half matters more
+    // than it looks: at 110 points, National's 40-point gap is closed by one Regional title (80) and
+    // equally by one Regional final (48), and telling a parent to go and win the thing when reaching
+    // the final would do is advice that is true and unkind. Ties on trip count therefore break toward
+    // the LOWEST finish, which is the highest index in this array.
+    let best: { finish: number; n: number } | null = null
     for (let finish = 0; finish < t.points.length; finish++) {
       const value = t.points[finish]
       if (value <= 0) continue // a first-round exit pays nothing (wave B) and closes no gap
       const n = Math.ceil(gap / value)
-      // Only say it when it is a plan rather than a life sentence. Beyond three trips the honest
-      // answer is the next rung down's headline, which the loop reaches on its own.
-      if (n <= 3) {
-        const phrase = finishPhrase(finish, t.drawSize)
-        return n === 1
-          ? `one more ${phrase} at ${t.label}`
-          : `${n} more ${phrase}s at ${t.label}`
-      }
+      // Only say it when it is a plan rather than a life sentence. Beyond three trips the honest answer
+      // is the next rung down, which the outer loop reaches on its own.
+      if (n > 3) continue
+      if (!best || n < best.n || (n === best.n && finish > best.finish)) best = { finish, n }
+    }
+    if (best) {
+      const phrase = finishPhrase(best.finish, t.drawSize)
+      return best.n === 1 ? `one more ${phrase} at ${t.label}` : `${best.n} more ${phrase}s at ${t.label}`
     }
   }
   return null
@@ -218,24 +224,38 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
         `. National points come from Local, Regional and National events.`,
     }
   }
-  // Past the band and STILL refused: an ITF rung she is not high enough in the table for. The band
-  // cannot express this - see `engineOpen` above - so the engine's answer wins.
-  if (input.engineOpen === false) {
-    return {
-      id,
-      kind: 'locked',
-      note: 'Not on the list yet',
-      title:
-        `${tier.label} – locked: entry here is an acceptance list read off her ITF ranking, ` +
-        `and she is not high enough in it yet.`,
-    }
-  }
+  // ⚠ OUTGROWN COMES BEFORE THE ENGINE FALLBACK, and it did not used to (30.07, fix/ranking-truth).
+  //
+  // Seen in the browser the moment `points` started arriving in the right currency: a girl with 110
+  // national points read "Local · 🔒 Not on the list yet". Local has no list - it is a club draw with a
+  // points CEILING of 85, and she is past it. She had OUTGROWN it, which is the opposite of a lock.
+  //
+  // The mechanism: for a domestic rung `tierOpenFor` is nothing but the band, so `engineOpen === false`
+  // on a domestic rung can ONLY mean "below the floor" (caught above) or "past the ceiling" (here). The
+  // fallback below was written for the J rungs, whose bands are [0, MAX] and whose real gate is an
+  // acceptance list the band cannot express - and its copy says exactly that. Reaching it for a
+  // domestic rung put an international sentence on a local tournament.
+  //
+  // It was invisible before only because this rule was being fed her ITF points, which are ~0 all
+  // through the early game, so `points > maxPoints` was never true and the case never arose.
   if (input.points > maxPoints) {
     return {
       id,
       kind: 'outgrown',
       note: 'Outgrown',
       title: `${tier.label} – outgrown: she is past this level`,
+    }
+  }
+  // In band and STILL refused: an ITF rung she is not high enough in the table for. The band cannot
+  // express this - see `engineOpen` above - so the engine's answer wins.
+  if (input.engineOpen === false) {
+    return {
+      id,
+      kind: 'locked',
+      note: 'Not on the list yet',
+      title:
+        `${tier.label} – locked: entry here is an acceptance list read off her international ` +
+        `ranking, and she is not high enough in it yet.`,
     }
   }
   // The tier is hers on points. Has she any of the year's international allowance left?

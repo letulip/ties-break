@@ -395,12 +395,41 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
       }
     })
 
+    it('picks the FEWEST trips, then the EASIEST finish that still needs that many', () => {
+      // At 110 national points Regional is her rung ([65, 250]) and its points are [80, 48, 28, 14, 0].
+      // A 40-point gap is closed by one title (80) AND by one final (48); both are one trip, so it must
+      // say the kinder true thing.
+      expect(gapInResultsNote(40, 110)).toBe('one more final at Regional Championship')
+      // ...and it does not slide to a weaker finish when that would cost extra trips: 28 (semi-final)
+      // would need two.
+      expect(gapInResultsNote(48, 110)).toBe('one more final at Regional Championship')
+      expect(gapInResultsNote(60, 110)).toBe('one more title at Regional Championship')
+    })
+
     it('says nothing rather than something useless: no gap, or no plan inside three trips', () => {
       expect(gapInResultsNote(0, 100)).toBeNull()
       expect(gapInResultsNote(-5, 100)).toBeNull()
       // A gap far past three trips at every rung open to a point-less kid (local tops out at a 30-point
       // title, so 3 x 30 = 90 is the most it can promise).
       expect(gapInResultsNote(5_000, 0)).toBeNull()
+    })
+
+    it('a rung she is PAST reads Outgrown, not "Not on the list yet"', () => {
+      // Seen in the browser at 110 national points: Local read "🔒 Not on the list yet". Local has no
+      // list - it is a club draw with a points CEILING, and she is past it. The engine agrees she cannot
+      // enter (so `engineOpen` is false), but the reason is the opposite of a lock, and the fallback's
+      // copy is an INTERNATIONAL sentence about an acceptance list. Outgrown now wins the precedence.
+      const s = tierState('local', { ...base, points: 110, engineOpen: false })
+      expect(s.kind).toBe('outgrown')
+      expect(s.note).toBe('Outgrown')
+      expect(s.title).not.toContain('list')
+      // ...and the J rungs, whose bands are [0, MAX] and whose real gate IS a list, still get the
+      // fallback - that is what it was written for.
+      const j60 = tierState('j60', { ...base, points: 110, engineOpen: false })
+      expect(j60.kind).toBe('locked')
+      expect(j60.note).toBe('Not on the list yet')
+      // The copy names no trademark and no jargon.
+      expect(j60.title).not.toMatch(/\bITF\b|\btrack\b|\bdomestic\b/)
     })
 
     it('the locked tooltip states the gap, her total, the threshold AND which points they are', () => {
