@@ -41,12 +41,42 @@ describe('off-season (Round 5 items 16/21)', () => {
     expect(wrap).toBeTruthy()
     expect(wrap!.keep).toBe(true)
     expect(wrap!.text).toContain('Season 2031 wrap-up')
-    expect(wrap!.text).toMatch(/rank #\d+/)
+    // ⚠ RE-AIMED (30.07, fix/ranking-truth). THE PROTECTED FACT IS UNCHANGED - the wrap-up milestone
+    // fires on the tick into week 49, is kept, names the season and STATES WHERE SHE STANDS. What moved
+    // is that "where she stands" is now said honestly in the case this fixture happens to be in.
+    //
+    // This career never enters an event, so she holds no international point, and her `kidRank` is the
+    // dense rank of the entire 0-point tie group - a tie, not a ranking. Printing "#127" for that is
+    // exactly what `rankLabel` exists to refuse, and it read "#127" here while the Stats International
+    // tab read "Unranked" one tab away: the owner's own complaint (Home #4 vs Stats #128) in new clothes.
+    // A career that HAS an international point still prints "International rank #N", asserted below.
+    expect(wrap!.text).toMatch(/International rank #\d+|Unranked internationally/)
     expect(wrap!.text).toMatch(/\d+ pts this season/)
     expect(wrap!.text).toMatch(/\d+-\d+ \(W-L\)/)
     expect(wrap!.text).toMatch(/funds [+-]\$/)
     // the companion off-season flavor line lands the same week
     expect(world.events.some((e) => e.week === 49 && e.type === 'info' && e.text.includes('Off-season'))).toBe(true)
+  })
+
+  it('a girl who HOLDS an international point gets the number; one who does not gets "Unranked"', () => {
+    // The other half of the re-aim above, so neither branch can rot. Both worlds tick the same way; the
+    // only difference is whether an international result sits in the ledger. `j300` because the track,
+    // not the value, is what decides which table a result pays into.
+    const ranked = createWorld('wrap-ranked')
+    ranked.results.push({ playerId: KID_ID, week: 1, points: 300, tier: 'j300' })
+    const unranked = createWorld('wrap-ranked')
+    // ...and a DOMESTIC result of the same size must NOT buy her an international ranking: two
+    // currencies, no exchange rate (docs/specs/two-ladders.md).
+    unranked.results.push({ playerId: KID_ID, week: 1, points: 300, tier: 'national' })
+    for (const w of [ranked, unranked]) {
+      const rng = rngFromSeed(w.seed)
+      for (let i = 0; i < 49; i++) tickWeek(w, rng)
+    }
+    const textOf = (w: typeof ranked) => w.events.find((e) => e.milestoneKey === 'season-wrap-0')!.text
+    expect(textOf(ranked)).toMatch(/International rank #\d+/)
+    expect(textOf(ranked)).not.toContain('Unranked')
+    expect(textOf(unranked)).toContain('Unranked internationally')
+    expect(textOf(unranked)).not.toMatch(/International rank #\d+/)
   })
 
   it('never fires the same year wrap-up twice, even ticking through the whole off-season', () => {

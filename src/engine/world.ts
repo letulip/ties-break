@@ -744,10 +744,18 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
   // old who has not left the country yet ends her season around #130 internationally and that is not
   // a disappointing result, it is an accurate one. `LADDER_LABEL.itf` so the wording matches the
   // screens exactly.
+  // ⚠ AND "UNRANKED" IS NOT A NUMBER. Found in the browser, one screen apart: a working-class girl who
+  // never left the country ended her season with the Stats International tab reading "Unranked" and
+  // this popup reading "#127" - the owner's original complaint, in a new pair of clothes. #127 is the
+  // dense rank of the whole 0-point tie group, which is the thing `rankLabel` exists to refuse to
+  // print. So the popup says what the table says, and the rank move (a diff between two of these
+  // non-numbers) is suppressed with it.
+  const rankedItf = kidPoints(world, 'itf') > 0
+  const rankText = rankedItf ? `${LADDER_LABEL.itf} rank #${world.kidRank}${rankMove}` : `Unranked internationally`
   fireMilestone(
     world,
     `season-wrap-${seasonIndex}`,
-    `Season ${displayYear} wrap-up: ${LADDER_LABEL.itf} rank #${world.kidRank}${rankMove} · ` +
+    `Season ${displayYear} wrap-up: ${rankText} · ` +
       `${seasonPoints} pts this season · ${bestText} · ${wins}-${losses} (W-L) · funds ${fundsText}`,
   )
   addEvent(world, { week: world.week, type: 'info', text: 'Off-season: rest, school, family time.' })
