@@ -52,7 +52,7 @@ import { rankLabel } from '../../shared/format'
 // family background lives on the Money screen where it prices things). `PortraitEmotion`, not
 // `AvatarEmotion` - `rehab` joined the faces with ui/art-rehab-sleepy and the Mood tile can wear it
 // for weeks at a time.
-import type { PlayStyle } from '../../shared/protocol'
+import { LADDER_LABEL, type PlayStyle } from '../../shared/protocol'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_LABEL } from '../../engine/coach'
 // U0 - the shared components (docs/specs/ui-components.md). StatRow is the ninth, and it is not
@@ -154,9 +154,18 @@ const life = computed(() => game.snapshot?.life ?? null)
 // --- THE RANK, on the card that explains it --------------------------------------------------
 // `rankLabel` is the shared rule: a kid with no counting result reads "Unranked" rather than the
 // misleading "#1" that a field of ties at zero points would otherwise hand her.
-const countingResults = computed(() => game.snapshot?.countingResults ?? [])
-const rankText = computed(() => rankLabel(game.snapshot?.kidRank ?? 0, countingResults.value.length > 0))
-const pointsTotal = computed(() => countingResults.value.reduce((sum, c) => sum + c.points, 0))
+//
+// ⚠ THE LADDER SHE IS ACTUALLY ON (30.07, fix/ranking-truth). These three figures read `kidRank` and
+// `countingResults`, which are the ITF table - so a girl with 604 national points and no international
+// result read "Unranked · No points yet" on the page that is meant to be about her, with an empty
+// counting-results table underneath. `activeLadder` is the engine's one answer to which table she is
+// competing in, shared with Home's chip and the Stats screen's default tab.
+const activeLadder = computed(() => game.snapshot?.activeLadder ?? 'domestic')
+const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
+const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
+const countingResults = computed(() => ladder.value?.countingResults ?? [])
+const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ladder.value?.rank != null))
+const pointsTotal = computed(() => ladder.value?.points ?? 0)
 const pointsText = computed(() =>
   countingResults.value.length ? `${pointsTotal.value.toLocaleString('en-US')} pts` : 'No points yet',
 )
@@ -446,12 +455,12 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
              did up there: this is the card that explains where the number comes from, so the
              number and its working now sit together instead of a screen apart. -->
         <p class="kid-rank-line">
-          <b class="kid-rank-value">{{ rankText }}</b>
+          <b class="kid-rank-value">{{ ladderLabel }} {{ rankText }}</b>
           <span class="kid-rank-points">{{ pointsText }}</span>
         </p>
         <p class="kid-panel-note">
-          Her rank counts her six best results from the last 52 weeks. This total is her ranking
-          points.
+          Her {{ ladderLabel.toLowerCase() }} rank counts her six best {{ ladderLabel.toLowerCase() }}
+          results from the last 52 weeks. Full tables are on the Stats tab.
         </p>
         <CountingResultsTable :results="countingResults" />
       </Card>

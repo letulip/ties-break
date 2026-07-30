@@ -5,6 +5,8 @@ import {
   WEEK_PLAN_PRESETS,
   type ArrivalPreview,
   type CountingResult,
+  LADDER_LABEL,
+  type LadderView,
   type EntryCapUsage,
   type TierOpenMap,
   type FamilyBackground,
@@ -167,8 +169,19 @@ export interface WorldState {
    *  Derived like `kidRank` and cached beside it; a career opened before this field existed simply
    *  recomputes it on the next tick, which is why it needs no migration. */
   kidRankDomestic?: number
-  /** kidRank as it stood at the start of the last resolved week; null before any tick (v7). */
+  /** kidRank as it stood at the start of the last resolved week; null before any tick (v7). THE ITF
+   *  one, because `kidRank` is. */
   prevKidRank: number | null
+  /** `kidRankDomestic` as it stood at the start of the last resolved week.
+   *
+   *  ⚠ IT EXISTS SO A MOVEMENT ARROW CANNOT SUBTRACT ONE TABLE FROM THE OTHER. Home's rank chip shows
+   *  whichever ladder she is competing in, and it draws an up/down arrow from (previous - current). With
+   *  only `prevKidRank` on the world that arrow would have compared this week's NATIONAL rank against
+   *  last week's INTERNATIONAL one - a smaller, quieter version of the exact bug this branch fixes, and
+   *  it would have shown a triumphant "↑107" on a week nothing happened. Written beside `prevKidRank`
+   *  by the same one writer. Optional, so a career opened before the field existed needs no migration:
+   *  it is simply null until the next tick, which the arrow already renders as a neutral dash. */
+  prevKidRankDomestic?: number | null
   /** R12-S1 (v17): her dense rank as she ENTERED the season currently in progress – captured at
    *  the top of the tick into the season's first week, and read once, at that season's wrap-up.
    *
@@ -732,11 +745,27 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
   const fundsSign = fundsDeltaCents >= 0 ? '+' : '-'
   const fundsText = `${fundsSign}$${Math.abs(Math.round(fundsDeltaCents / 100)).toLocaleString('en-US')}`
 
+  // ⚠ THE RANK IS NAMED (30.07, fix/ranking-truth). This read a bare "rank #N" off `world.kidRank`,
+  // which was a both-ladders fold at the time, so the popup and Home agreed with each other (#4) and
+  // disagreed with the Stats table (#128) - the owner's «Rank #4 on the home tab and end of season
+  // popup seems strange since in stats I can clearly see #128». `kidRank` is honestly the ITF rank
+  // now, and saying so is what stops the number being read as the only rank she has: a fourteen-year-
+  // old who has not left the country yet ends her season around #130 internationally and that is not
+  // a disappointing result, it is an accurate one. `LADDER_LABEL.itf` so the wording matches the
+  // screens exactly.
+  // ⚠ AND "UNRANKED" IS NOT A NUMBER. Found in the browser, one screen apart: a working-class girl who
+  // never left the country ended her season with the Stats International tab reading "Unranked" and
+  // this popup reading "#127" - the owner's original complaint, in a new pair of clothes. #127 is the
+  // dense rank of the whole 0-point tie group, which is the thing `rankLabel` exists to refuse to
+  // print. So the popup says what the table says, and the rank move (a diff between two of these
+  // non-numbers) is suppressed with it.
+  const rankedItf = kidPoints(world, 'itf') > 0
+  const rankText = rankedItf ? `${LADDER_LABEL.itf} rank #${world.kidRank}${rankMove}` : `Unranked internationally`
   fireMilestone(
     world,
     `season-wrap-${seasonIndex}`,
-    `Season ${displayYear} wrap-up: rank #${world.kidRank}${rankMove} · ${seasonPoints} pts this season · ` +
-      `${bestText} · ${wins}-${losses} (W-L) · funds ${fundsText}`,
+    `Season ${displayYear} wrap-up: ${rankText} · ` +
+      `${seasonPoints} pts this season · ${bestText} · ${wins}-${losses} (W-L) · funds ${fundsText}`,
   )
   addEvent(world, { week: world.week, type: 'info', text: 'Off-season: rest, school, family time.' })
 
@@ -2464,9 +2493,19 @@ function computeShadowTournament(
 // Shared by a normal tick (inline) and finalizeTournament (deferred for a reveal week).
 function recomputeRankAndMilestones(world: WorldState): void {
   world.prevKidRank = world.kidRank
-  const full = computeRanking(world.results, world.week, [...cohortIds(world), KID_ID])
-  const kidRow = full.find((r) => r.playerId === KID_ID)
-  world.kidRank = kidRow?.rank ?? full.length
+  // Both "before" values, captured together, so no surface can diff across the two tables.
+  world.prevKidRankDomestic = world.kidRankDomestic ?? null
+  // ⚠ ONE WRITER, ONE MEANING. This used to rank with `computeRanking(results, week, ids)` and NO
+  // track predicate - so it folded BOTH ladders into one table and wrote that into `kidRank`, while
+  // `recomputeKidRank` wrote the ITF rank into the same field and `computeStandings` rendered the
+  // ITF table. Whichever ran last won, so Home and the season wrap-up showed her combined-table
+  // place (#4 on 604 points) while the Stats table showed her ITF row (#128 on 4) - the owner's
+  // playtest finding, and four items on his list are this one bug wearing different clothes.
+  //
+  // The two-ladder slice removed `kidPoints`' default track for exactly this reason; this call site
+  // survived because it reached for `computeRanking` directly instead. It now defers to the one
+  // function that owns the caches, so the field cannot mean two things again.
+  recomputeKidRank(world)
   // Rank milestones ("top 10/50/1") intentionally removed: in the early season almost no one
   // has points, so the first result rockets her to a single-digit rank and all of them fire at
   // once (reads absurdly). A real "world" ranking belief system belongs to the world-news
@@ -3552,12 +3591,11 @@ function arrivalPreview(world: WorldState): ArrivalPreview | null {
 // the same filter computeRanking applies, named rather than respelled – "counting" has to mean one
 // thing in both places or this list and the standings total drift apart the moment a scoreless row
 // reaches the kid's half of the ledger.
-function computeCountingResults(world: WorldState): CountingResult[] {
+function computeCountingResults(world: WorldState, track: LadderTrack = 'itf'): CountingResult[] {
   // TWO LADDERS: this list EXPLAINS a ranking, so it has to be the same table as the rank beside it.
-  // `standings` and `kidRank` are the ITF one, so this is too - and before she owns an international
-  // result it is honestly empty, which is what "unranked internationally" means. The domestic
-  // equivalent arrives with the domestic table's own surface.
-  return world.results.filter(inTrack('itf'))
+  // Hence the track argument - `ladders[track].countingResults` pairs each list with its own rank,
+  // and an empty ITF list is the honest reading of "unranked internationally".
+  return world.results.filter(inTrack(track))
     .filter(
       (r) =>
         isCountingResult(r) &&
@@ -3570,8 +3608,60 @@ function computeCountingResults(world: WorldState): CountingResult[] {
     .map((r) => ({ week: r.week, tier: r.tier, points: r.points }))
 }
 
-function computeStandings(world: WorldState): StandingRow[] {
-  const full = fullRanking(world)
+/** BOTH TABLES, THE SAME SHAPE - the half of docs/specs/two-ladders.md the UI never got.
+ *
+ *  The spec designed two currencies with no exchange rate and then every screen kept showing ONE
+ *  number called "rank" and ONE called "points", both read off the ITF table. So a career spent on
+ *  the domestic rungs - which is most of a fourteen-year-old's career, and ALL of a working-class
+ *  one's - showed a Stats table reading 4 points while she had 604, a Kid screen reading "No points
+ *  yet", and a Home ladder asking her to "Reach 250 pts" it had already let her past. Three of the
+ *  owner's 30.07 items are that.
+ *
+ *  A LadderView is therefore the unit the screens consume: one table's rank, points, standings and
+ *  the results that earned them, in that table's own currency. Two of them, identically shaped, so a
+ *  screen renders "a ladder" once instead of special-casing which one it has.
+ *
+ *  Pure derivation over the ledger the world already keeps - no persisted field, no schema bump, no
+ *  migration, zero RNG draws. */
+function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
+  const counting = computeCountingResults(world, track)
+  return {
+    // Her place a week ago IN THIS TABLE - see `prevKidRankDomestic` on WorldState for why both are
+    // carried rather than one shared "previous rank".
+    prevRank: track === 'itf' ? world.prevKidRank : (world.prevKidRankDomestic ?? null),
+    // UNRANKED IS NOT A NUMBER. With nobody holding a point the whole field ties at zero and
+    // competition ranking hands every member of that tie the same place, so a point-less kid reads
+    // as a single digit. The screens have always papered over that by asking `countingResults.length
+    // > 0` themselves; making it null HERE means they cannot forget, and the two questions ("where
+    // is she?" and "is she ranked at all?") stop being one field.
+    rank: counting.length > 0 ? rankIn(world, track) : null,
+    points: kidPoints(world, track),
+    standings: computeStandings(world, track),
+    countingResults: counting,
+  }
+}
+
+/** Her cached place in `track`. The caches are the authority (one writer - see recomputeKidRank), so
+ *  this reads them rather than re-folding, which is what keeps a snapshot from disagreeing with the
+ *  gate that used the same number to decide her entries. */
+function rankIn(world: WorldState, track: LadderTrack): number {
+  return track === 'itf' ? world.kidRank : (world.kidRankDomestic ?? world.cohort.length + 1)
+}
+
+/** WHICH TABLE IS SHE ACTUALLY COMPETING IN - one rule, one place, so Home, Stats and the Kid screen
+ *  cannot answer it three ways.
+ *
+ *  docs/specs/two-ladders.md, "Which rank is her rank": the ITF one once she has it, because that is
+ *  the table the international rungs open on and the one the game is about. Before her first counting
+ *  ITF result she is unranked internationally and the screens show her national standing instead.
+ *  "That is the real shape of a junior career, and the moment the first ITF point lands is a beat
+ *  worth having." */
+export function activeLadderOf(world: WorldState): LadderTrack {
+  return kidPoints(world, 'itf') > 0 ? 'itf' : 'domestic'
+}
+
+function computeStandings(world: WorldState, track: LadderTrack = 'itf'): StandingRow[] {
+  const full = rankingFor(world, track)
   const meta = new Map<string, { name: string; nation: string }>()
   for (const p of world.cohort) meta.set(p.id, { name: p.name, nation: p.nation })
   // Full name so the UI can render "V. Last" for the kid like everyone else (formatShortName).
@@ -3828,6 +3918,14 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
     countingResults: computeCountingResults(world),
+    // BOTH TABLES, and which one she is actually competing in. `kidRank`/`standings`/`countingResults`
+    // above are the ITF ones and stay as aliases of `ladders.itf` so nothing that reads them has to
+    // change; the pairing is pinned by a test, because two names for one fact is how this bug started.
+    ladders: {
+      domestic: computeLadderView(world, 'domestic'),
+      itf: computeLadderView(world, 'itf'),
+    },
+    activeLadder: activeLadderOf(world),
     bestFinishByTier: { ...world.bestFinishByTier },
     // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
     // surfacing them is derivation, not schema.

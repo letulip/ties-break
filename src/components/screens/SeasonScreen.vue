@@ -409,7 +409,12 @@ function lockLabel(e: UpcomingEvent): string {
       // R11-5a: the WORDS come from the shared rule, the NUMBER stays the engine's own verdict for
       // THIS event. Reading the ladder's whole note here instead was tried and rejected in the
       // browser: it let a card the engine had locked print the ladder's "open" state.
-      return e.pointsToEnter !== undefined ? pointsLockNote(e.pointsToEnter) : tierStateById.value[e.tier].note
+      // Her NATIONAL points ride along so the card shows the fraction rather than a bare target - the
+      // number stays the engine's per-event verdict, which is what this comment is about; what is added
+      // is where she stands against it. See `pointsLockNote`.
+      return e.pointsToEnter !== undefined
+        ? pointsLockNote(e.pointsToEnter, game.snapshot?.ladders.domestic.points)
+        : tierStateById.value[e.tier].note
   }
 }
 

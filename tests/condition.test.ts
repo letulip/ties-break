@@ -7,6 +7,7 @@ import {
   advanceWeeks,
   accrueCondition,
   availabilityStatus,
+  entryStatus,
   isBlackoutWeek,
   medicalBlock,
   medicalClearance,
@@ -14,12 +15,14 @@ import {
   toSnapshot,
   skipTournament,
   closeTournament,
+  inTrack,
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
+import { computeRanking } from '../src/engine/season/ranking'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
-import { TIERS } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 // ---------------------------------------------------------------------------
@@ -135,21 +138,58 @@ const REF = {
   // stream is untouched and that is what this block guards. What moved is the MEANING of kidRank: it
   // is now her place in the ITF table, not in a single mixed one, so it is a different number about a
   // different question. See docs/specs/two-ladders.md.
-  // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
-  // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
-  // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
-  // comes off a draw APPENDED to `seed:kid` and her ceiling's off one appended to `seed:potential`
-  // (appending leaves every earlier draw byte-identical); `growWeek` still spends exactly one luck
-  // draw for the week; and the COHORT deliberately stores no fifth attribute at all (`AiPlayer =
-  // Omit<MatchPlayer, 'groundstrokes'>`, derived at match time) so `driftCohort` still spends exactly
-  // four main-stream draws per player - which is literally what 41550 is made of.
+  // ⚠⚠⚠ AND THE TWO ROUND-15 SLICES BOTH TOUCHED THIS FIELD, from opposite directions. Both notes
+  // below are kept because both facts are live: the fifth attribute (v25) re-derived the number and
+  // found it unmoved, and the ranking fix changed what the number MEANS. The value here is measured
+  // with BOTH in, not carried over from either branch.
   //
-  // kidRank COULD still have moved, and briefly did: `basePServe` now carries a rally term, so
-  // asymmetric matchups resolve differently and a different set of juniors can end the year in the
-  // points. It read 127 mid-slice and came back to 126 once the aggressive baseliner's groundstroke
-  // cost was split across clay AND grass (match/style.ts) - which is the retune that kept the grass
-  // window the server's. So this is the pre-v25 value, arrived at again rather than left alone.
-  kidRank: 126,
+  // ⚠⚠ RE-PINNED 126 -> 119 (30.07, fix/ranking-truth) - AND THE RE-PIN ABOVE WAS WRONG.
+  //
+  // READ THIS BEFORE TRUSTING THAT LAST PARAGRAPH. It claimed 126 was "her place in the ITF table".
+  // It was not. `recomputeRankAndMilestones` - the weekly tick's step 5, and the LAST writer of
+  // `world.kidRank` in every code path - still called `computeRanking(results, week, ids)` with NO
+  // track predicate, so it folded BOTH ladders into one table and wrote that mixed place into the
+  // field. `recomputeKidRank` did write the real ITF rank, but only at `createWorld` and at
+  // migration, so every tick overwrote it. 126 was the MIXED number wearing an ITF label.
+  //
+  // 119 is the ITF rank, and it is now the ITF rank BY CONSTRUCTION rather than by coincidence:
+  // `recomputeRankAndMilestones` defers to `recomputeKidRank`, the one writer. Checkable against the
+  // definition this block already states above ("how many AI ended the year holding counting
+  // points"): at week 52 of this fixture 118 AI hold counting ITF points, and the point-less kid
+  // shares the dense rank of the 0-point group -> #119. The mixed table has 125 point-holders ->
+  // #126, exactly the old number. The arithmetic says which table each number came from, so this
+  // re-pin is verifiable rather than a matter of taste.
+  //
+  // WHAT DID NOT MOVE - and it is the whole reason this is a companion field rather than the capture:
+  // `count` 41550, `hash` e6b0c709, `head` and `tail` are BYTE-IDENTICAL, re-derived on this branch
+  // both before and after the fix. Nothing in the fix draws; it swaps which of two pure folds over an
+  // existing ledger gets cached in a field. THE FROZEN MAIN CAPTURE HAS NOT MOVED and must not be
+  // re-pinned for this.
+  //
+  // Four items on the owner's 30.07 playtest list were this one bug: Home and the season wrap-up read
+  // `world.kidRank` (mixed, #4) while the Stats table rendered `computeStandings` (ITF, #128); the ITF
+  // acceptance gate compared a mixed rank against an ITF acceptance list; and `kidRankDomestic` was
+  // never refreshed after `createWorld`, so it held its week-0 value for a whole career (75 here,
+  // against a true 100). B1c below pins the one-writer property directly, so this cannot come back.
+  // ⚠ 121, MEASURED WITH BOTH ROUND-15 SLICES IN. The ranking fix alone gives 119; v25's rally term
+  // changes which juniors end the year holding points, and the two compose to 121. Neither branch was
+  // wrong - this is the number the merged code produces, and it was measured here rather than carried
+  // over from either side. Same check as before: it is the ITF fold, and the mixed fold is elsewhere.
+  kidRank: 121,
+  //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
+  //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
+  //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
+  //// comes off a draw APPENDED to `seed:kid` and her ceiling's off one appended to `seed:potential`
+  //// (appending leaves every earlier draw byte-identical); `growWeek` still spends exactly one luck
+  //// draw for the week; and the COHORT deliberately stores no fifth attribute at all (`AiPlayer =
+  //// Omit<MatchPlayer, 'groundstrokes'>`, derived at match time) so `driftCohort` still spends exactly
+  //// four main-stream draws per player - which is literally what 41550 is made of.
+  ////
+  //// kidRank COULD still have moved, and briefly did: `basePServe` now carries a rally term, so
+  //// asymmetric matchups resolve differently and a different set of juniors can end the year in the
+  //// points. It read 127 mid-slice and came back to 126 once the aggressive baseliner's groundstroke
+  //// cost was split across clay AND grass (match/style.ts) - which is the retune that kept the grass
+  //// window the server's. So this is the pre-v25 value, arrived at again rather than left alone.
 }
 
 function recordRun(mutate?: (w: WorldState) => void): { draws: number[]; world: WorldState } {
@@ -231,6 +271,140 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
     expect(aiResults(world)).toEqual(aiResults(base.world))
     // ...but she actually played, so the entered run left a kid match record the baseline lacks.
     expect(world.events.some((e) => e.type === 'match')).toBe(true)
+  })
+
+  // ---------------------------------------------------------------------------
+  // B1c — ONE WRITER, ONE MEANING. The guard the suite was missing, added because the bug it
+  // catches shipped GREEN through everything above (30.07, fix/ranking-truth).
+  //
+  // `world.kidRank` had two writers with two different meanings. `recomputeKidRank` wrote the ITF
+  // rank; `recomputeRankAndMilestones` - the tick's step 5, and the last writer in every path - wrote
+  // a rank computed with NO track predicate, i.e. both ladders folded into one table. Every screen
+  // that reads the cached field (Home, the season wrap-up) disagreed with the Stats table, which is
+  // built fresh from the ITF fold at snapshot time. The owner found it by playing: #4 on Home,
+  // #128 in Stats, same week.
+  //
+  // WHY NOTHING CAUGHT IT. The pins above assert `kidRank` equals a NUMBER, so they moved with the
+  // bug and were re-pinned to it (see the 135 -> 126 note at REF). A number cannot notice that it has
+  // started answering a different question. So this test asserts an IDENTITY instead: the cached
+  // field must equal the fold it claims to be, and the domestic cache must equal the domestic fold.
+  // That holds for any seed, any week and any career, and it fails the moment a second writer with a
+  // different meaning appears - which is the actual invariant, and the only kind of assertion that
+  // could have blocked this.
+  //
+  // Zero draws of its own: both folds are pure functions of the ledger already in the world.
+  // ---------------------------------------------------------------------------
+  /** Enter every event the ENGINE says she may enter, so the career climbs the ladder on its own and
+   *  both ledgers fill. Asking `entryStatus` (rather than guessing a tier) is the same discipline the
+   *  bug was about: never re-derive a rule a named function already owns. */
+  function enterWhatSheCan(world: WorldState): void {
+    const entered = new Set(world.season.filter((e) => world.entries.includes(e.id)).map((e) => e.week))
+    // Strongest rung first, so the career actually climbs instead of grinding the bottom for ever.
+    const byRung = [...world.season].sort((a, b) => TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))
+    for (const e of byRung) {
+      if (e.week <= world.week || world.week > e.deadlineWeek) continue
+      if (world.entries.includes(e.id) || entered.has(e.week)) continue
+      if (entryStatus(world, e).level === 'blocked') continue
+      enterEvent(world, e.id)
+      return
+    }
+  }
+
+  it('B1c — after a tick, kidRank IS the ITF fold and kidRankDomestic IS the domestic fold', () => {
+    const world = createWorld('bench-working-0')
+    world.fundsCents = 9_999_999_00 // affordability is not what this test is about
+    const rng = rngFromSeed(world.seed)
+    let sawMixedDiverge = false
+    // Play a real career rather than an idle one: she must actually hold points, or the two folds
+    // agree trivially and the test proves nothing.
+    enterWhatSheCan(world)
+    for (let i = 0; i < 120; i++) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      world.fundsCents = 9_999_999_00
+      enterWhatSheCan(world)
+
+      const ids = [...world.cohort.map((c) => c.id), KID_ID]
+      const itf = computeRanking(world.results, world.week, ids, inTrack('itf'))
+      const dom = computeRanking(world.results, world.week, ids, inTrack('domestic'))
+      const mixed = computeRanking(world.results, world.week, ids)
+      const itfRank = itf.find((r) => r.playerId === KID_ID)!.rank
+      const domRank = dom.find((r) => r.playerId === KID_ID)!.rank
+      const mixedRank = mixed.find((r) => r.playerId === KID_ID)!.rank
+
+      // THE INVARIANT: each cache is the fold it names, every week.
+      expect(world.kidRank).toBe(itfRank)
+      expect(world.kidRankDomestic).toBe(domRank)
+
+      // ...and the mixed fold - the thing the old second writer produced - must be a DIFFERENT number
+      // somewhere in the career, so this test is genuinely discriminating and not passing by
+      // coincidence.
+      //
+      // ⚠ RE-AIMED AT THE ROUND-15 INTEGRATION, and the claim is the same one made honestly. It was
+      // asserted EVERY week (`if (itfRank !== domRank) expect(mixedRank).not.toBe(itfRank)`), which is
+      // stronger than the fact: the mixed fold CAN coincide with the ITF fold on a given week even
+      // while the two ladders differ, and once v25's rally term moved which juniors hold points, it
+      // did (139 == 139). One coincidental week does not make the test undiscriminating - a career
+      // where mixed NEVER differs would. So the divergence is collected and asserted once, below.
+      if (itfRank !== domRank && mixedRank !== itfRank) sawMixedDiverge = true
+    }
+    // The fixture really did exercise both ladders...
+    expect(world.results.filter((r) => r.playerId === KID_ID && inTrack('domestic')(r)).length).toBeGreaterThan(0)
+    // ...and the mixed fold really is a third, different number, so the invariant above is not
+    // satisfiable by a code path that simply returns the same rank three ways.
+    expect(sawMixedDiverge, 'the mixed fold never differed - this test proves nothing').toBe(true)
+  })
+
+  it('B1c — the Stats standings and the cached kidRank can never disagree (the owner`s #4 vs #128)', () => {
+    // The exact shape of the reported bug: `Snapshot.kidRank` (the cached field, read by Home and the
+    // season wrap-up) against the kid`s row in `Snapshot.standings` (rebuilt from the ITF fold at
+    // snapshot time, read by Stats). They are two paths to one fact and must agree at every tick.
+    const world = createWorld('ranking-truth')
+    world.fundsCents = 9_999_999_00
+    const rng = rngFromSeed(world.seed)
+    enterWhatSheCan(world)
+    for (let i = 0; i < 120; i++) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      world.fundsCents = 9_999_999_00
+      enterWhatSheCan(world)
+      const snap = toSnapshot(world)
+      const kidRow = snap.standings.find((r) => r.isKid)
+      expect(kidRow).toBeDefined()
+      expect(kidRow!.rank).toBe(snap.kidRank)
+
+      // THE ALIASES HOLD. `kidRank`/`standings`/`countingResults` are documented as the ITF ladder,
+      // i.e. as aliases of `ladders.itf`. Two names for one fact is exactly how this bug began, so the
+      // aliasing is asserted rather than trusted.
+      expect(snap.standings).toEqual(snap.ladders.itf.standings)
+      expect(snap.countingResults).toEqual(snap.ladders.itf.countingResults)
+      if (snap.ladders.itf.rank !== null) expect(snap.ladders.itf.rank).toBe(snap.kidRank)
+
+      // THE TWO LADDERS ARE SEPARATE CURRENCIES. Neither table's points may be the other's, and a
+      // result counted by one must never be counted by the other.
+      const domTiers = new Set(snap.ladders.domestic.countingResults.map((r) => r.tier))
+      const itfTiers = new Set(snap.ladders.itf.countingResults.map((r) => r.tier))
+      for (const t of domTiers) if (t) expect(TIERS[t].track).toBe('domestic')
+      for (const t of itfTiers) if (t) expect(TIERS[t].track).toBe('itf')
+
+      // `rank: null` MEANS "holds nothing in this table", in both directions - the property every
+      // screen now leans on instead of counting results for itself.
+      for (const track of ['domestic', 'itf'] as const) {
+        const l = snap.ladders[track]
+        expect(l.rank === null).toBe(l.countingResults.length === 0)
+        if (l.countingResults.length === 0) expect(l.points).toBe(0)
+      }
+
+      // ACTIVE LADDER = the spec's rule: the international one once she holds a counting result there,
+      // her national one before that (docs/specs/two-ladders.md, "Which rank is her rank").
+      expect(snap.activeLadder).toBe(snap.ladders.itf.rank !== null ? 'itf' : 'domestic')
+    }
   })
 
   it('accrueCondition is pure arithmetic (zero draws): a poison rng is never called', () => {

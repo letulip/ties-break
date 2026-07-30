@@ -29,13 +29,17 @@ import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
 import { isCappedTier, isTierAgeOpen } from '../engine/world'
 import { weekRange } from '../shared/dates'
-import type { EntryCapUsage } from '../shared/protocol'
+import { LADDER_POINTS_LABEL, type EntryCapUsage } from '../shared/protocol'
 import type { TierId } from '../engine/season/types'
 
 export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 'scheduled' | 'unscheduled'
 
 /**
  * The ONE wording for a point lock – shared, but the NUMBER always comes from the caller.
+ *
+ * ⚠ AND IT NAMES ITS CURRENCY (30.07, fix/ranking-truth). It used to read "Reach 250 pts", which is
+ * two-thirds of a sentence: there are two point tables and this threshold is denominated in the
+ * NATIONAL one. See `TierStateInput.points` below for the bug that cost.
  *
  * That split is deliberate and was learned the hard way in the browser: a Season card's lock is the
  * ENGINE's verdict on that specific event (`UpcomingEvent.pointsToEnter`), while the Home ladder's is
@@ -44,8 +48,89 @@ export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 's
  * two sources of truth for one sentence, which is the exact class of bug R10-5 was about. So: every
  * surface keeps its own authoritative number and they all borrow the same words.
  */
-export function pointsLockNote(pointsToEnter: number): string {
-  return `Reach ${pointsToEnter} pts`
+export function pointsLockNote(pointsToEnter: number, points?: number): string {
+  // A FRACTION WHEN THE CALLER KNOWS WHERE SHE STANDS. "112 / 250 pts" answers both halves of the
+  // player's question in one glance - what opens this, and how far off is she - where "Reach 250 pts"
+  // answered only the first and left the second on a screen she had to go and find.
+  if (points === undefined) return `Reach ${pointsToEnter} ${LADDER_POINTS_LABEL.domestic}`
+  return `${points} / ${pointsToEnter} ${LADDER_POINTS_LABEL.domestic}`
+}
+
+/** How a finish READS in a sentence. `finishLabel` gives "Semifinalist", which is a person; a gap is
+ *  measured in events, so this gives "semi-final". Same index convention (0 = the title). */
+function finishPhrase(finish: number, drawSize: number): string {
+  switch (finish) {
+    case 0:
+      return 'title'
+    case 1:
+      return 'final'
+    case 2:
+      return 'semi-final'
+    case 3:
+      return 'quarter-final'
+    default:
+      return `round of ${Math.min(2 ** finish, drawSize)}`
+  }
+}
+
+/** The DOMESTIC rungs whose entry band currently holds `points` - the events she could actually go and
+ *  play. Read off the catalogue, never a hand-kept list, so a tuning change cannot strand this. */
+function openDomesticRungs(points: number): TierId[] {
+  return TIER_LADDER.filter((id) => {
+    const t = TIERS[id]
+    if (t.track !== 'domestic') return false
+    const [lo, hi] = t.enterPointBand
+    return points >= lo && points <= hi
+  })
+}
+
+/**
+ * THE GAP, SAID IN TOURNAMENTS INSTEAD OF IN POINTS. Returns null when there is nothing useful to say.
+ *
+ * ⚠ WHY THIS EXISTS, and it is the owner's own framing. He asked (item 26) for the J30 floor to be
+ * replaced by "win a National", because a points threshold was not telling him anything he could act
+ * on. Asked which he wanted, he answered: «это было на обсуждение, мне главное, чтобы было наглядно и
+ * однозначно» - the requirement is that the gate be LEGIBLE and UNAMBIGUOUS, and the mechanism is ours
+ * to choose.
+ *
+ * So the threshold KEEPS the gating - it is continuous, it moves every week, and it never tells a girl
+ * with three National semi-finals that she has achieved nothing - and this sentence supplies the thing
+ * a bare number could not: what she would have to go and do. "138 national pts to go - about two more
+ * semi-finals at Regional Championship" is arithmetic a parent can plan a season around.
+ *
+ * Every value comes from the TIERS catalogue, so this can never quote a points table the engine does
+ * not actually pay. It reads the DOMESTIC rungs only: these gaps are denominated in national points,
+ * and the two ladders have no exchange rate (docs/specs/two-ladders.md) - a sentence that offered a
+ * Junior Tour result as a way to close a national-points gap would quietly merge the two currencies,
+ * which is the one thing that ruling forbids.
+ */
+export function gapInResultsNote(gap: number, points: number): string | null {
+  if (gap <= 0) return null
+  // Strongest open rung first: it is the one she would actually travel to, and it pays the most per
+  // trip.
+  for (const id of [...openDomesticRungs(points)].reverse()) {
+    const t = TIERS[id]
+    // FEWEST TRIPS, then the EASIEST finish that still needs that many. The second half matters more
+    // than it looks: at 110 points, National's 40-point gap is closed by one Regional title (80) and
+    // equally by one Regional final (48), and telling a parent to go and win the thing when reaching
+    // the final would do is advice that is true and unkind. Ties on trip count therefore break toward
+    // the LOWEST finish, which is the highest index in this array.
+    let best: { finish: number; n: number } | null = null
+    for (let finish = 0; finish < t.points.length; finish++) {
+      const value = t.points[finish]
+      if (value <= 0) continue // a first-round exit pays nothing (wave B) and closes no gap
+      const n = Math.ceil(gap / value)
+      // Only say it when it is a plan rather than a life sentence. Beyond three trips the honest answer
+      // is the next rung down, which the outer loop reaches on its own.
+      if (n > 3) continue
+      if (!best || n < best.n || (n === best.n && finish > best.finish)) best = { finish, n }
+    }
+    if (best) {
+      const phrase = finishPhrase(best.finish, t.drawSize)
+      return best.n === 1 ? `one more ${phrase} at ${t.label}` : `${best.n} more ${phrase}s at ${t.label}`
+    }
+  }
+  return null
 }
 
 export interface TierState {
@@ -67,7 +152,23 @@ export interface TierState {
  *  the Snapshot itself) so the rule is a pure function a test can call with three numbers. */
 export interface TierStateInput {
   ageYears: number
-  /** her windowed ranking points – the same figure the Home card and the entry band read */
+  /** HER NATIONAL POINTS - her windowed best-6 in the DOMESTIC table, and nothing else.
+   *
+   *  ⚠ THE BUG THIS COMMENT EXISTS FOR (30.07, fix/ranking-truth). `useTierStates` fed this from
+   *  `snapshot.standings`, which is the ITF table. But EVERY rung's `enterPointBand` is denominated in
+   *  domestic points - engine/season/calendar.ts draws its own ladder diagram against "domestic pts →"
+   *  and the engine's `entryStatus` reads `kidPoints(world, 'domestic')` for all six rungs, the J30
+   *  on-ramp included. So this compared one currency against another's thresholds.
+   *
+   *  What the owner saw on his Home screen, with 604 national points and 4 international ones:
+   *  Local "Open" and NOT outgrown (4 is under its 85 ceiling), Regional "Reach 65 pts", National
+   *  "Reach 150 pts", J30 "Reach 250 pts" - every one of them wrong, and the engine meanwhile letting
+   *  her enter all four. His «Tournaments wrong current active active», and the confusion behind «No
+   *  points visualisation for local-regional-national is super-strange».
+   *
+   *  The reason it was easy to get wrong is worth keeping: `snapshot.standings` is the obvious place to
+   *  find "her points", and it is the right answer to a DIFFERENT question. Hence `Snapshot.ladders`,
+   *  which makes the caller name the table it means. */
   points: number
   /** the snapshot's calendar horizon (`upcoming`), which is what "scheduled soon" MEANS here */
   upcoming: readonly { tier: TierId; week: number }[]
@@ -112,28 +213,49 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       id,
       kind: 'locked',
       pointsToEnter: minPoints,
-      note: pointsLockNote(minPoints),
-      title: `${tier.label} – locked: reach ${minPoints} pts to enter (she has ${input.points})`,
-    }
-  }
-  // Past the band and STILL refused: an ITF rung she is not high enough in the table for. The band
-  // cannot express this - see `engineOpen` above - so the engine's answer wins.
-  if (input.engineOpen === false) {
-    return {
-      id,
-      kind: 'locked',
-      note: 'Not on the list yet',
+      note: pointsLockNote(minPoints, input.points),
+      // THE LONG FORM CARRIES THE PLAN. The chip has room for the fraction; the tooltip has room for
+      // what the fraction would take, and for the one sentence that says which of the two point
+      // tables this threshold is even counted in.
       title:
-        `${tier.label} – locked: entry here is an acceptance list read off her ITF ranking, ` +
-        `and she is not high enough in it yet.`,
+        `${tier.label} – locked: ${minPoints - input.points} more ${LADDER_POINTS_LABEL.domestic} ` +
+        `(she has ${input.points} of ${minPoints})` +
+        `${gapInResultsNote(minPoints - input.points, input.points) ? ` – ${gapInResultsNote(minPoints - input.points, input.points)}` : ''}` +
+        `. National points come from Local, Regional and National events.`,
     }
   }
+  // ⚠ OUTGROWN COMES BEFORE THE ENGINE FALLBACK, and it did not used to (30.07, fix/ranking-truth).
+  //
+  // Seen in the browser the moment `points` started arriving in the right currency: a girl with 110
+  // national points read "Local · 🔒 Not on the list yet". Local has no list - it is a club draw with a
+  // points CEILING of 85, and she is past it. She had OUTGROWN it, which is the opposite of a lock.
+  //
+  // The mechanism: for a domestic rung `tierOpenFor` is nothing but the band, so `engineOpen === false`
+  // on a domestic rung can ONLY mean "below the floor" (caught above) or "past the ceiling" (here). The
+  // fallback below was written for the J rungs, whose bands are [0, MAX] and whose real gate is an
+  // acceptance list the band cannot express - and its copy says exactly that. Reaching it for a
+  // domestic rung put an international sentence on a local tournament.
+  //
+  // It was invisible before only because this rule was being fed her ITF points, which are ~0 all
+  // through the early game, so `points > maxPoints` was never true and the case never arose.
   if (input.points > maxPoints) {
     return {
       id,
       kind: 'outgrown',
       note: 'Outgrown',
       title: `${tier.label} – outgrown: she is past this level`,
+    }
+  }
+  // In band and STILL refused: an ITF rung she is not high enough in the table for. The band cannot
+  // express this - see `engineOpen` above - so the engine's answer wins.
+  if (input.engineOpen === false) {
+    return {
+      id,
+      kind: 'locked',
+      note: 'Not on the list yet',
+      title:
+        `${tier.label} – locked: entry here is an acceptance list read off her international ` +
+        `ranking, and she is not high enough in it yet.`,
     }
   }
   // The tier is hers on points. Has she any of the year's international allowance left?
@@ -196,8 +318,10 @@ export function useTierStates(): ComputedRef<TierState[]> {
     const snap = game.snapshot
     const input: TierStateInput = {
       ageYears: snap?.ageYears ?? 0,
-      // Same source the Home player card already uses for her point total.
-      points: snap?.standings.find((r) => r.isKid)?.points ?? 0,
+      // HER NATIONAL POINTS - the currency every rung's entry band is written in. This used to read
+      // `snap.standings.find(r => r.isKid).points`, the ITF table, and compared it against domestic
+      // thresholds; see `TierStateInput.points` for what that showed the owner.
+      points: snap?.ladders.domestic.points ?? 0,
       upcoming: snap?.upcoming ?? [],
       horizonWeeks: HORIZON_WEEKS,
       // No snapshot yet = nothing spent and nothing to say; the age gate/point band answer first.

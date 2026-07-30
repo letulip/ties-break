@@ -200,9 +200,35 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
 describe('product-sponsorship valve (round-7 amendment)', () => {
   // Force the kid to the very top with a big, in-window result (AI selection excludes the kid, so
   // this touches only the ranking, never the main stream). Then gear/stringing are covered.
+  //
+  // ⚠ FIXTURE RE-AIMED, NOT THE ASSERTION (30.07, fix/ranking-truth). The protected fact is
+  // UNCHANGED and every expectation below still reads exactly as it did: a top-ranked kid gets her
+  // gear subsidised, the line-items are still emitted at $0/half so the Money breakdown shows the
+  // relationship, and the valve draws nothing from the main stream.
+  //
+  // WHAT MOVED IS THE FIXTURE'S OWN CORRECTNESS. The pushed row carried NO `tier`, and `inTrack`
+  // reads a tier-less result as DOMESTIC ("it can only have come from the rungs that existed then").
+  // So this 100k result has been landing in the domestic table, and `recomputeKidRank` correctly
+  // ranked her #1 DOMESTIC and ~#120 ITF - while `ECONOMY.sponsorship` gates on `world.kidRank`,
+  // the ITF one. The fixture only appeared to work because the weekly tick then overwrote
+  // `world.kidRank` with a rank folded over BOTH ladders (the bug this branch fixes), which did see
+  // the 100k row. In other words these four tests were passing THROUGH the bug: they exercised a
+  // table that does not exist in the design.
+  //
+  // Giving the row an ITF tier puts her at the top of the table the valve actually reads, so the
+  // fixture now forces the state its name claims to force. `j300` and a raw 100_000 keep the
+  // "unambiguously #1" intent; the value is deliberately far past any real result so no tuning of
+  // the points tables can quietly unseat her.
+  //
+  // ⚠ AND IT EXPOSED DEAD CONTENT, which is NOT fixed here and is the owner's call - see
+  // docs/specs/two-ladders.md "The sponsorship valve is dead content". Measured over 120 seeds x 49
+  // weeks, a real career trips this valve 0 times per season in ALL NINE bench presets, because it is
+  // an award for domestic prominence denominated in an ITF rank. Her domestic rank averages #15 (top
+  // 30 in 107/120 seasons); her ITF rank averages #128 and never reaches the gate. That is item 27 on
+  // the owner's list and it needs a threshold decision, not a test change.
   function topRankedBurn(seed: string, background: FamilyBackground): { burn: number; world: WorldState } {
     const world = createWorld(seed, { ...DEFAULT_PROFILE, background })
-    world.results.push({ playerId: KID_ID, week: 0, points: 100_000 })
+    world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
     recomputeKidRank(world)
     const rng = rngFromSeed(world.seed)
     const start = STARTING_FUNDS_CENTS[background]
@@ -220,9 +246,12 @@ describe('product-sponsorship valve (round-7 amendment)', () => {
 
   it('subsidising gear never perturbs the main weekly stream (RNG discipline)', () => {
     // Same seed, same background; one kid is forced to rank ≤10 (gear free), the other is not.
+    // ⚠ `tier: 'j300'` for the reason spelled out at `topRankedBurn` above - the valve gates on her
+    // ITF rank, and a tier-less row is a DOMESTIC result, so without a tier this fixture forced the
+    // wrong table and only worked through the two-writers bug.
     const plain = createWorld('valve-rng', { ...DEFAULT_PROFILE, background: 'middle' })
     const sponsored = createWorld('valve-rng', { ...DEFAULT_PROFILE, background: 'middle' })
-    sponsored.results.push({ playerId: KID_ID, week: 0, points: 100_000 })
+    sponsored.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
     recomputeKidRank(sponsored)
     const rngA = rngFromSeed('valve-rng')
     const rngB = rngFromSeed('valve-rng')

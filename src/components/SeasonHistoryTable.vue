@@ -75,7 +75,7 @@ function formatDollars(cents: number): string {
           <thead>
             <tr>
               <th>Season</th>
-              <th>Rank</th>
+              <th>Int. rank</th>
               <th>Pts</th>
               <!-- narrow phones: "W–L" must not break across two lines (the column is the tightest) -->
               <th style="white-space: nowrap">W–L</th>
