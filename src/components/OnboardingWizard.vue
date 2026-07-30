@@ -222,7 +222,13 @@ watch(
   () => profile.birthMonth,
   (m) => {
     const max = daysInBirthMonth(m)
-    if (profile.birthDay > max) profile.birthDay = max
+    // ⚠ THE `Number.isFinite` ARM IS NOT DEFENSIVE NOISE. `v-model.number` on a `<select>` yields NaN if the
+    // bound value ever fails to match an option, and `NaN > max` is FALSE - so a plain `>` clamp would let
+    // it through and a NaN would end up in the PERSISTED profile, where it poisons every date derived from
+    // it. Vue's default `pre` flush means this watcher runs before the day list re-renders, so a real user
+    // cannot reach that state; a probe of mine did, by assigning an option that did not exist, and a field
+    // that goes into a save is worth one comparison.
+    if (!Number.isFinite(profile.birthDay) || profile.birthDay > max) profile.birthDay = Math.min(max, 15)
   },
 )
 
@@ -390,36 +396,42 @@ function start(): void {
           </div>
         </div>
 
-        <div class="ob-field">
-          <label class="ob-label" for="ob-month">Birth month</label>
-          <div class="ob-select-wrap">
-            <svg class="ob-select-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
-            </svg>
-            <select id="ob-month" v-model.number="profile.birthMonth" class="ob-select">
-              <option v-for="(m, i) in MONTHS" :key="m" :value="i + 1">{{ m }}</option>
-            </select>
-            <svg class="ob-select-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M6 9.5l6 6 6-6" />
-            </svg>
-          </div>
-        </div>
+        <!-- HER BIRTHDAY, ON ONE LINE (owner's call, 30.07). I had shipped these as two stacked fields,
+             arguing that at 375px a month name and a day beside each other either truncate the month or
+             shrink both taps. He is right that it is one fact and should read as one, and the width
+             argument is answerable rather than fatal - so it is answered instead of asserted:
 
-        <!-- THE DAY. Its own field rather than a second control inside the month's row: at 375px a
-             month name and a day number side by side either truncate the month or shrink both taps
-             below the control system's minimum. The list follows the month (see birthDays). -->
+               * ONE LABEL for the pair. It is a date, not two settings, and two labels were the real tell
+                 that the old layout had it wrong. The selects carry `aria-label`, so a screen reader still
+                 hears which is which.
+               * THE MONTH GETS THE ROOM IT NEEDS: a 1.5fr / 1fr grid, because "September" is nine
+                 characters and a day is at most two. Sized off the longest label, not split evenly.
+               * THE DAY DROPS ITS ICON. Two calendar glyphs on one line is noise, and the day's 19px was
+                 exactly the width the month was short of. The row keeps one icon, on the left, for the
+                 pair - which is what a date field looks like anyway.
+             Measured in the browser at 375px: no truncation, and both taps stay full-height. -->
         <div class="ob-field">
-          <label class="ob-label" for="ob-day">Birth day</label>
-          <div class="ob-select-wrap">
-            <svg class="ob-select-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M3.5 9.5h17" /><circle cx="12" cy="15" r="1.6" fill="currentColor" stroke="none" />
-            </svg>
-            <select id="ob-day" v-model.number="profile.birthDay" class="ob-select">
-              <option v-for="d in birthDays" :key="d" :value="d">{{ d }}</option>
-            </select>
-            <svg class="ob-select-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M6 9.5l6 6 6-6" />
-            </svg>
+          <label class="ob-label" for="ob-month">Birthday</label>
+          <div class="ob-birthday">
+            <div class="ob-select-wrap">
+              <svg class="ob-select-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3.5" y="5" width="17" height="15.5" rx="3" /><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
+              </svg>
+              <select id="ob-month" v-model.number="profile.birthMonth" class="ob-select" aria-label="Birth month">
+                <option v-for="(m, i) in MONTHS" :key="m" :value="i + 1">{{ m }}</option>
+              </select>
+              <svg class="ob-select-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 9.5l6 6 6-6" />
+              </svg>
+            </div>
+            <div class="ob-select-wrap">
+              <select id="ob-day" v-model.number="profile.birthDay" class="ob-select" aria-label="Birth day">
+                <option v-for="d in birthDays" :key="d" :value="d">{{ d }}</option>
+              </select>
+              <svg class="ob-select-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 9.5l6 6 6-6" />
+              </svg>
+            </div>
           </div>
         </div>
 
@@ -991,6 +1003,20 @@ function start(): void {
    attribute (not a class) is what tells everyone else it cannot be taken. */
 .ob-pick:disabled {
   opacity: 1;
+}
+
+/* HER BIRTHDAY: month and day on one line. The columns are sized off the LONGEST label ("September",
+   nine characters) against a day's two - an even split truncates the month, which is the thing that made
+   me stack them in the first place. `min-width: 0` on the wrap is what lets the grid actually shrink the
+   column instead of the select's intrinsic width winning and overflowing the row. */
+.ob-birthday {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 10px;
+}
+
+.ob-birthday .ob-select-wrap {
+  min-width: 0;
 }
 
 .ob-select-wrap {
