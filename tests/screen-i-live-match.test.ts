@@ -578,3 +578,34 @@ describe('live and replay open the same way – the popup, which is the one he l
     expect(new Set([...CROSS_IS_THE_ONLY_EXIT, ...HAS_A_USEFUL_EXIT]).size).toBe(SURFACES.length)
   })
 })
+
+// =====================================================================================================
+// The owner's 31.07 playtest. Seven items; six of them are this screen's, and they share one sentence –
+// «inside the match the screen should be the match and information about the match, nothing else».
+// =====================================================================================================
+describe('the match screen is the match, and nothing else', () => {
+  const flow = read('../src/components/TournamentFlow.vue')
+
+  it('no list of OTHER matches is drawn above the court', () => {
+    // Owner, 31.07: the live match screen was opening with the rounds already played stacked above the
+    // court. Outside the match that strip is the right thing on the right screen - it is how a player
+    // reads her path between rounds - so this is a placement fix and not a deletion, and the pin has to
+    // say both halves or it would be satisfied by ripping the strip out altogether.
+    const markup = markupOf(flow)
+    // 1. The strip still exists, and it still refuses the finale (the L/M poster draws her whole path
+    //    itself - see §L - so printing it twice one card apart was the older version of this same bug).
+    expect(markup).toContain('class="tf-strip"')
+    expect(markup).toMatch(/v-if="pending\.bracket\.length && phase !== 'finale' && !replayOpen"/)
+    // 2. ...and it is gated on the SAME flag every other piece of tournament furniture on this screen
+    //    already yields to, which is the fact worth protecting: one condition means "a match is on
+    //    screen", so a future row cannot be added that only half-knows about it.
+    expect(flow).toMatch(/const showBracket = computed\(\s*\(\) =>[\s\S]{0,160}!replayOpen\.value/)
+    expect(markup).toMatch(/<SurfaceMark v-if="!replayOpen"/)
+    // 3. and the strip really is ABOVE the viewer in the markup, which is what made it the thing the
+    //    player met first when the screen opened.
+    const stripAt = markup.indexOf('class="tf-strip"')
+    const viewerAt = markup.indexOf('<MatchViewer')
+    expect(stripAt).toBeGreaterThan(-1)
+    expect(viewerAt).toBeGreaterThan(stripAt)
+  })
+})

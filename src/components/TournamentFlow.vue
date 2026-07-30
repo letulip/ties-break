@@ -669,8 +669,20 @@ const matchMeta = computed(() => {
 
     <template v-else>
       <!-- Path so far. NOT on the finale: the L/M poster carries her whole path as its own round
-           strip (design §L), and printing it twice, one card apart, is the same list said twice. -->
-      <div v-if="pending.bracket.length && phase !== 'finale'" class="tf-strip">
+           strip (design §L), and printing it twice, one card apart, is the same list said twice.
+           ⚠ AND NOT WHILE A MATCH IS ON SCREEN EITHER (owner, 31.07: the live match screen was
+           showing the rounds already played above the court, and «inside the match the screen should
+           be the match and information about the match, nothing else»). This strip is the LAST piece
+           of tournament furniture that was still being drawn over the top of the viewer: the draw
+           below it already stands down on `!replayOpen` (see `showBracket`), the round badge and the
+           surface pill already trade places on the header's date line for exactly this reason, and
+           the outer `.tf-card` frame came off on 30.07 to buy the court its width back. A list of
+           finished matches is the clearest case of all - it is the one thing on this screen that is
+           about OTHER matches, it is several rows tall, and it pushes the court down the scroller on
+           the one screen where the court is the whole point. Nothing is lost: between rounds (and on
+           the box score, and on the poster) the strip is still exactly where it was, and the draw
+           tabs below carry the same results in more detail. -->
+      <div v-if="pending.bracket.length && phase !== 'finale' && !replayOpen" class="tf-strip">
         <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
           <span class="tf-strip-round">{{ r.roundLabel }}</span>
           <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
