@@ -114,7 +114,7 @@ import { buildDiarySnapshot, lastKidTitleOf, milestoneKey } from './diary'
 import { buildKidLife, FRIENDS_WINDOW } from './kidLife'
 // The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
 // diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
-import { axisReadings, buildRadar, buildTrainingRead, type RadarWorldView } from './radar'
+import { axisConfidence, axisEvidence, axisReadings, buildRadar, buildTrainingRead, shownSkill, type RadarWorldView } from './radar'
 // W4 – THE KNOCK: the ordinary training week's one event and the decision it puts in front of the
 // parent. Same dependency shape as the diary, kidLife and the radar: knock.ts is world-free and
 // takes a narrow structural view, so world -> knock runs one way and can never cycle.
@@ -132,6 +132,8 @@ import {
 } from './knock'
 // W6c: the anatomy, in a leaf module so diary.ts can read the same twelve parts this draws from.
 import { drawBodyRegion } from './body'
+// The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
+import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -1678,6 +1680,132 @@ export function rollKnock(world: WorldState): void {
       ? `Her ${knock.part} is sore again – the same one. It needs a decision.`
       : `She has picked up a sore ${knock.part}. Not an injury – yet.`,
   })
+  // ⚠ AND IF THE FAMILY IS PAYING SOMEBODY, HE ANSWERS IT – docs/specs/coach-as-load-manager.md §8.
+  // This single line is the routing the whole slice is about: `pendingKnock` is false immediately, so
+  // `advanceWeeks` never halts and the dialog never opens. That is the product - «you are buying your
+  // attention back» - and it is why the rule lives in coachLoad.ts rather than here.
+  //
+  // ⚠ THE EVENT SURVIVES THE DIALOG'S REMOVAL, and that is not decoration. W4 exists because the owner
+  // complained that training weeks «просто скипались»; a slice that silently deleted the stop for four
+  // of five rungs would hand him that complaint back dressed as a feature. So the knock still happens,
+  // still costs (KNOCK_REST_GROWTH or the loaded roll), still takes the week's frame and its scrap - and
+  // `coachDecidedKnock` below writes what was decided into the feed in the coach's own voice. He finds
+  // out what happened to his daughter; he just is not the one deciding.
+  if (coachManagesLoad(tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)))) {
+    coachDecidesKnock(world)
+  }
+}
+
+
+/** The hired coach's answer, taken the moment the knock arrives. Separate from `decideKnock` so the
+ *  parent's path keeps its guard (`decideKnock` throws on an already-answered knock, which is a real
+ *  protection against a double-tap) while this one is an internal step of the same tick.
+ *
+ *  ZERO DRAWS: `coachKnockCall` is arithmetic, and the one draw behind `shownStamina` is the radar's
+ *  per-career `seed:read:stamina` - taken on its own sub-stream, outside the MAIN sequence, exactly as
+ *  `drawKnock` takes `seed:knock:<week>`. The frozen capture (41550 / e6b0c709) cannot move. */
+function coachDecidesKnock(world: WorldState): void {
+  const k = world.knock
+  if (!k || k.choice !== null) return
+  const view = coachLoadViewOf(world)
+  // ⚠ ...UNLESS HE WANTS THE PARENT'S SAY. The call stays unanswered, `pendingKnock` stays true, and the
+  // dialog opens exactly as it does for a self-coached career - which is what keeps W4's content alive on
+  // a career that has a coach (DEFAULT_PROFILE is 'middle', so that is most of them). See coachLoad.ts
+  // `coachEscalates`: the zone scales with his haze, so a cheap coach asks often and an Elite one almost
+  // never - and "you are buying your attention back" becomes a number instead of a slogan.
+  if (coachEscalates(view, k.repeat)) {
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: k.repeat
+        ? `The coach wants to talk about her ${k.part} before anyone decides.`
+        : `The coach is in two minds about the ${k.part}. He is asking us.`,
+    })
+    return
+  }
+  const choice = coachKnockCall(view, k.repeat)
+  k.choice = choice
+  k.untilWeek = knockUntilWeek(k, choice)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    // HIS voice, not the parent's – the feed's `decideKnock` lines are what the family decided, and
+    // these are what they were told. The difference is the thing they are paying for.
+    text:
+      choice === 'rest'
+        ? `The coach is keeping her off the court this week – the ${k.part}.`
+        : `The coach is happy for her to train through the ${k.part}.`,
+  })
+}
+
+// =================================================================================================
+// THE COACH AS LOAD MANAGER (docs/specs/coach-as-load-manager.md) – the world side
+// =================================================================================================
+//
+// The design, the rejected oracle and the both-directions argument all live in engine/coachLoad.ts,
+// which is pure and world-free. This is the half that touches the world: assembling what the coach can
+// SEE, and letting him answer the knock when the family is paying somebody to.
+
+/**
+ * HER SKILLS RADAR VIEW – hoisted out of `toSnapshot` by the load slice, because the COACH now reads it
+ * too and at a different moment (inside the tick, when a knock arrives) than the screens do.
+ *
+ * ⚠ ONE SPELLING, WHICH IS THE WHOLE REASON IT IS A FUNCTION. `toSnapshot`'s own note already argues
+ * this for the two readers it had ("a second literal here would be a second place for 'which matches
+ * count' to drift"); a third reader inside the tick makes it load-bearing rather than tidy. If the
+ * coach acted on a differently-assembled view, he would be managing a girl the radar is not drawing -
+ * and §8's entire claim is that his belief and the radar's contour are the SAME belief.
+ */
+export function radarViewOf(world: WorldState): RadarWorldView {
+  return {
+    seed: world.seed,
+    week: world.week,
+    kidId: KID_ID,
+    skills: world.skills,
+    // Where she began, recomputed from the seed rather than stored - see RadarWorldView.startSkills.
+    // `growWeek` is the only thing in the engine that moves `world.skills`, so the difference between
+    // these two IS her development, and neither of them ever leaves this object.
+    startSkills: startingSkills(world.seed, world.profile),
+    potential: world.potential,
+    coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
+    coachSinceWeek: coachSinceWeek(world),
+    matchesPlayed: matchesEverPlayed(world),
+    // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
+    // the radar nothing, for the same reason it never shows on her face (R11-2).
+    matches: world.events
+      .filter((e) => e.match !== undefined && !e.friendly)
+      .map((e) => e.match!)
+      .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
+  }
+}
+
+/**
+ * WHAT THE COACH CAN SEE OF HER BODY, this week.
+ *
+ * `shownStamina` is the radar's own estimate of the stamina axis - her true value displaced by his
+ * rung's haze, one draw per career with a FIXED SIGN (see radar.ts `shownSkill`). Stamina is the axis
+ * because it is the physical one: a load manager is judging how much tennis she can absorb, and that is
+ * what this attribute means.
+ *
+ * ⚠ CONDITION IS PASSED EXACT, NOT FOGGED, and that asymmetry is deliberate. The condition bar is a
+ * number the game prints for the player outright, so a coach who could not read it would be blinder
+ * than the parent who hired him - which is not a model of a cheap coach, it is a bug. What a cheap coach
+ * gets wrong is how much of it she can AFFORD to spend, and that is `shownStamina`.
+ *
+ * Called at most a handful of times per career (a knock arrives ~15 times over 14->18), so the evidence
+ * fold it costs is not on the weekly path.
+ */
+export function coachLoadViewOf(world: WorldState): CoachLoadView {
+  const view = radarViewOf(world)
+  const weeksTogether = Math.max(0, world.week - coachSinceWeek(world))
+  const confidence = axisConfidence(view.coachTier, weeksTogether, axisEvidence(view, 'stamina').level)
+  return {
+    tier: view.coachTier,
+    shownStamina: shownSkill(view, 'stamina', confidence),
+    condition: world.condition,
+    playedWeeks: playedWeeksInTrailing4(world),
+    confidence,
+  }
 }
 
 /** THE PARENT ANSWERS. The only way an undecided knock clears, and the only way time moves again.
@@ -3759,6 +3887,19 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
+/** What he says when he would rather she skipped a trip. Three sentences, picked by HOW tired she is
+ *  rather than by luck - a draw here would make the same coach say different things about the same
+ *  Tuesday, and the card is re-derived on every snapshot. Player copy: short dash only.
+ *
+ *  The J300 line names the stake because that is the honest argument at the top of the ladder: the
+ *  entry fee and the flights are real money, and a first-round exit spends them for nothing. */
+function coachEntryLine(tier: TierId, condition: number): string {
+  const floor = ECONOMY.availability.minConditionToEnter[tier]
+  if (condition < floor - 5) return 'Your coach would not take her. She is empty.'
+  if (condition < floor) return 'Your coach would skip this one and get her legs back.'
+  return 'Your coach thinks she is a week short of her best for this.'
+}
+
 // --- snapshot ----------------------------------------------------------------
 function upcomingEvents(world: WorldState): UpcomingEvent[] {
   const entered = new Set(world.entries)
@@ -3767,6 +3908,11 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
   // would be the expensive half of this function. Surface-specific scaling still happens per event
   // inside the preview, which is where it belongs.
   const ranking = fullRanking(world)
+  // ...and the same argument for the COACH'S READ OF HER: it is one girl in one week, identical for
+  // every card, and `coachLoadViewOf` walks the retained match window to get there. Once per snapshot,
+  // null on a self-coached career because there is nobody to have an opinion.
+  const coachTier = tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId))
+  const coachLoad = coachManagesLoad(coachTier) ? coachLoadViewOf(world) : null
   return world.season
     .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)
     .sort((a, b) => a.week - b.week)
@@ -3801,6 +3947,25 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
           : gate.level === 'caution'
             ? { cautionReason: gate.reason as 'fatigued', cautionDetail: gate.detail }
             : {}
+      // THE HIRED COACH'S OPINION on this trip (load slice §8). Independent of the gate above: he can
+      // speak on an 'ok' card (his margin is scaled by what he believes about her stamina, so a good
+      // one warns BEFORE the fatigue rule does) and he can stay quiet on a 'caution' one (a cheap coach
+      // who thinks she is tough). That gap is the thing being sold, so the two are never merged.
+      //
+      // Computed here rather than inside `entryStatus` deliberately: `entryStatus` is the ENGINE's
+      // verdict on whether she may enter, and this changes no verdict at all. It is somebody's view.
+      //
+      // ⚠ AND ONLY ON A CARD SHE COULD ACTUALLY ENTER. A test caught this: the advice was being attached to
+      // HARD-BLOCKED cards too - a tier she has no points for, an exam week, a season whose entry cap she
+      // has spent - so a coach was giving his view on a tournament that is not on offer. Worse, it made
+      // "the advice never locks a card" unverifiable, because the card was already locked for its own
+      // reasons and the two were indistinguishable on screen. He speaks about trips she can take.
+      const coachSay =
+        gate.level !== 'blocked' &&
+        coachLoad !== null &&
+        coachWarnsEntry(coachLoad, ECONOMY.availability.minConditionToEnter[e.tier])
+          ? { coachCaution: coachEntryLine(e.tier, world.condition) }
+          : {}
       return {
         id: e.id,
         week: e.week,
@@ -3825,6 +3990,7 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // a FUTURE week by construction, so the closed list is the whole condition.
         cancellable: isEntered && world.week > e.deadlineWeek,
         ...reason,
+        ...coachSay,
       }
     })
 }
@@ -4109,26 +4275,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // because the two readings MUST see the same girl: a second literal here would be a second place
   // for "which matches count" to drift, and the card and the radar would then disagree about how
   // much anybody can see, on the same screen, in the same week.
-  const radarView: RadarWorldView = {
-    seed: world.seed,
-    week: world.week,
-    kidId: KID_ID,
-    skills: world.skills,
-    // Where she began, recomputed from the seed rather than stored - see RadarWorldView.startSkills.
-    // `growWeek` is the only thing in the engine that moves `world.skills`, so the difference between
-    // these two IS her development, and neither of them ever leaves this object.
-    startSkills: startingSkills(world.seed, world.profile),
-    potential: world.potential,
-    coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
-    coachSinceWeek: coachSinceWeek(world),
-    matchesPlayed: matchesEverPlayed(world),
-    // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
-    // the radar nothing, for the same reason it never shows on her face (R11-2).
-    matches: world.events
-      .filter((e) => e.match !== undefined && !e.friendly)
-      .map((e) => e.match!)
-      .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
-  }
+  const radarView = radarViewOf(world)
   // ...and the evidence fold behind BOTH of them, walked once. `axisEvidence` reads the whole
   // retained match window per axis, so asking the two builders independently would walk it eight
   // times a snapshot for one girl in one week.

@@ -48,12 +48,14 @@ import {
   KID_ID,
   matchesEverPlayed,
   pendingKnock,
+  coachLoadViewOf,
   skipTournament,
   tickWeek,
   toSnapshot,
   type WorldState,
 } from '../src/engine/world'
 import { knockRestWeek } from '../src/engine/knock'
+import { coachManagesLoad, coachWarnsEntry } from '../src/engine/coachLoad'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import {
@@ -100,11 +102,21 @@ interface Policy {
   /** null = enter everything she is eligible for. A number = skip if condition is under the tier's
    *  own floor plus this margin, i.e. a parent who reads the caution and believes it. */
   entryMargin: number | null
+  /** does he skip a trip his HIRED coach advises against? Meaningless on a self-coached career, where
+   *  there is nobody to advise - which is exactly why the self row of this arm is the same career as the
+   *  `player` arm's, and a fair control for it. */
+  followsCoach: boolean
 }
 
 const POLICIES: Policy[] = [
-  { id: 'grinder', label: 'grinder 85/15, pushes every knock, enters all', plan: WEEK_PLAN_PRESETS.grind, knock: 'push', entryMargin: null },
-  { id: 'player', label: 'player 75/25, rests every knock, heeds the caution', plan: WEEK_PLAN_PRESETS.balanced, knock: 'rest', entryMargin: 5 },
+  { id: 'grinder', label: 'grinder 85/15, pushes every knock, enters all', plan: WEEK_PLAN_PRESETS.grind, knock: 'push', entryMargin: null, followsCoach: false },
+  { id: 'player', label: 'player 75/25, rests every knock, heeds the caution', plan: WEEK_PLAN_PRESETS.balanced, knock: 'rest', entryMargin: 5, followsCoach: false },
+  // ⚠ THE THIRD ARM, AND WITHOUT IT HALF THE SLICE IS UNMEASURED. `coachWarnsEntry` produces ADVICE, and
+  // advice is worth exactly nothing until somebody acts on it - so both arms above, which enter by their
+  // own fixed margin, are blind to whether a better rung gives better advice. This arm is the parent who
+  // reads the line on the card and believes it. It is also the only arm in which the four hired rungs can
+  // differ on `wasted` at all, because that is the number the advice is about.
+  { id: 'listener', label: 'listener 75/25, rests every knock, SKIPS what the coach warns off', plan: WEEK_PLAN_PRESETS.balanced, knock: 'rest', entryMargin: null, followsCoach: true },
 ]
 
 // =================================================================================================
@@ -122,6 +134,14 @@ interface Career {
   injuries: number
   /** how many knocks the week stopped to ask about */
   knocks: number
+  /** ...of which the PARENT had to answer. On a self-coached career that is all of them; on a hired one
+   *  only the ones the coach escalated. THE SECOND THING THE RUNG SELLS (coachLoad.ts `coachEscalates`):
+   *  "you are buying your attention back" is this number, and it is the one measurement the spec did not
+   *  ask for because the mechanism that produces it did not exist when the spec was written. */
+  taps: number
+  /** ...and how many he handled alone. `knocks - taps`, kept explicitly so a run can be read without
+   *  arithmetic. */
+  handled: number
   /** what she got for the weeks she DID have */
   matches: number
   finalRank: number
@@ -133,15 +153,20 @@ function runCareer(seed: string, tier: CoachTier, policy: Policy, weeks: number)
   const rng = rngFromSeed(world.seed)
   world.plan = { ...policy.plan }
 
-  const c: Career = { layoff: 0, rested: 0, wasted: 0, injuries: 0, knocks: 0, matches: 0, finalRank: 0, weeks }
+  const c: Career = { layoff: 0, rested: 0, wasted: 0, injuries: 0, knocks: 0, taps: 0, handled: 0, matches: 0, finalRank: 0, weeks }
   let lastInjurySince = -1
 
   for (let w = 0; w < weeks; w++) {
+    // His coach's read of her, this week. Null when self-coached: nobody to ask.
+    const coachLoad = policy.followsCoach && coachManagesLoad(tier) ? coachLoadViewOf(world) : null
     // --- entries, the way a player makes them ---------------------------------------------------
     for (const e of world.season.filter((x) => x.week > world.week && x.week <= world.week + 4)) {
       if (world.entries.includes(e.id)) continue
       const floor = ECONOMY.availability.minConditionToEnter[e.tier]
       if (policy.entryMargin !== null && world.condition < floor + policy.entryMargin) continue
+      // The coach's line on the card, taken at face value. Read at ENTRY time, which is when the player
+      // sees it - his condition days or weeks later is not what the card said.
+      if (policy.followsCoach && coachLoad !== null && coachWarnsEntry(coachLoad, floor)) continue
       try {
         if (availabilityStatus(world, e).level === 'blocked') continue
         enterEvent(world, e.id)
@@ -174,9 +199,12 @@ function runCareer(seed: string, tier: CoachTier, policy: Policy, weeks: number)
       lastInjurySince = world.injury.sinceWeek
       c.injuries++
     }
+    // ⚠ THE PARENT ONLY ANSWERS WHAT REACHES HIM NOW. On a hired career the coach has already replied by
+    // the time the tick returns, so `pendingKnock` is false and this does not fire - which is the routing
+    // working, not the bench missing something. `knockHistory` is what counts the knocks themselves.
     if (pendingKnock(world)) {
       decideKnock(world, policy.knock)
-      c.knocks++
+      c.taps++
     }
 
     let wonNothing = false
@@ -188,6 +216,9 @@ function runCareer(seed: string, tier: CoachTier, policy: Policy, weeks: number)
     if (tiredEntry && wonNothing) c.wasted++
   }
 
+  // Every knock this career had, answered by whoever answered it: the retired ones plus any still open.
+  c.knocks = world.knockHistory.length + (world.knock ? 1 : 0)
+  c.handled = Math.max(0, c.knocks - c.taps)
   const snap = toSnapshot(world)
   c.matches = matchesEverPlayed(world)
   c.finalRank = snap.kidRank
@@ -233,7 +264,7 @@ function run(): void {
     console.log(`=== ${policy.label.toUpperCase()} ===`)
     console.log(
       `${pad('rung', 8)}${padL('layoff', 8)}${padL('rested', 8)}${padL('wasted', 8)}${padL('LOST', 7)}` +
-        `${padL('%career', 9)}${padL('injuries', 10)}${padL('knocks', 8)}${padL('matches', 9)}${padL('rank', 7)}`,
+        `${padL('injuries', 10)}${padL('knocks', 8)}${padL('TAPS', 7)}${padL('handled', 9)}${padL('matches', 9)}${padL('rank', 7)}`,
     )
     const lostByTier: Record<string, number> = {}
     for (const tier of TIERS) {
@@ -245,8 +276,9 @@ function run(): void {
       lostByTier[tier] = lost
       console.log(
         `${pad(tier, 8)}${padL(f1(layoff), 8)}${padL(f1(rested), 8)}${padL(f1(wasted), 8)}${padL(f1(lost), 7)}` +
-          `${padL(`${f1((lost / WEEKS) * 100)}%`, 9)}${padL(f1(mean(cs.map((c) => c.injuries))), 10)}` +
-          `${padL(f1(mean(cs.map((c) => c.knocks))), 8)}${padL(f1(mean(cs.map((c) => c.matches))), 9)}` +
+          `${padL(f1(mean(cs.map((c) => c.injuries))), 10)}` +
+          `${padL(f1(mean(cs.map((c) => c.knocks))), 8)}${padL(f1(mean(cs.map((c) => c.taps))), 7)}` +
+          `${padL(f1(mean(cs.map((c) => c.handled))), 9)}${padL(f1(mean(cs.map((c) => c.matches))), 9)}` +
           `${padL(f1(mean(cs.map((c) => c.finalRank))), 7)}`,
       )
     }

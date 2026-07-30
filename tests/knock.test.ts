@@ -65,7 +65,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
 import { restRecoveryBonus, SAVE_SCHEMA_VERSION } from '../src/engine/world'
-import { WEEK_PLAN_PRESETS, type Knock, type WeekPlan } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Knock, type WeekPlan } from '../src/shared/protocol'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -76,14 +76,21 @@ function codeOf(path: string): string {
     .replace(/^\s*\/\/.*$/gm, '')
 }
 
-/** Walk a career, answering every knock the way a player does. Returns what happened, week by week. */
+/** Walk a career, answering every knock the way a player does. Returns what happened, week by week.
+ *
+ *  ⚠ SELF-COACHED, ADDED BY THE LOAD SLICE. `DEFAULT_PROFILE.coachTier` is 'middle', so this used to
+ *  build a HIRED career - and a hired coach now answers the routine knocks himself, leaving the parent
+ *  only the escalated ones. Every test that reaches for this helper is about the PARENT answering (its
+ *  name says so, and `answered` is its return value), so the fixture is the rung where he still does:
+ *  the arrival RATE this measures is a property of `plan.train`, unchanged by who replies. The hired
+ *  path has its own coverage in the routing block below rather than sharing this one. */
 function playAnswering(
   seed: string,
   weeks: number,
   choice: 'rest' | 'push',
   plan: WeekPlan = WEEK_PLAN_PRESETS.balanced,
 ): { world: WorldState; answered: number } {
-  const world = createWorld(seed)
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
   world.plan = { ...plan }
   const rng = rngFromSeed(world.seed)
   let answered = 0
@@ -125,8 +132,15 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
     // `seed:knock:<week>`, its own per-week sub-stream — the identical pattern `rollInjury` has used
     // for `seed:injury:<week>` since slice C — so the MAIN stream still carries base costs + cohort
     // drift and nothing else, whatever the parent decides.
+    // ⚠ RE-AIMED BY THE LOAD SLICE, AND ONLY THE FIXTURE MOVED. `DEFAULT_PROFILE.coachTier` is 'middle',
+    // so `createWorld(seed)` with no profile is a HIRED career - and a hired coach now answers the routine
+    // knocks himself (engine/coachLoad.ts). The parent was therefore asked 0 times and the "must have
+    // exercised the feature" line fired, on a test whose subject is what happens WHEN THE PARENT DECIDES.
+    // The hash and the count both still matched, which is the fact this test exists for. Self-coached is
+    // where the parent path lives now, so that is the fixture; the hired path gets its own capture below,
+    // and it is the stronger of the two because the coach runs INSIDE the tick.
     for (const choice of ['rest', 'push'] as const) {
-      const world = createWorld('bench-working-0')
+      const world = createWorld('bench-working-0', { ...DEFAULT_PROFILE, coachTier: 'self' })
       const base = rngFromSeed(world.seed)
       const draws: number[] = []
       const rng = () => {
@@ -146,6 +160,43 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
       expect(hashOf(draws), `hash (${choice})`).toBe(REF.hash)
       // ...and the run has to have actually exercised the feature, or it proves nothing.
       expect(answered, 'the season must contain knocks for this to mean anything').toBeGreaterThan(0)
+    }
+  })
+
+  it('⚠ AND SO DOES A CAREER WHERE THE COACH ANSWERS THEM, INSIDE THE TICK', () => {
+    // THE LOAD SLICE'S OWN MERGE-BLOCKING CLAIM, and it is a stronger one than the test above. The parent
+    // answers BETWEEN ticks, where a draw could not reach the weekly sequence even carelessly. The COACH
+    // answers inside `rollKnock`, i.e. inside `tickWeek` step 3c - and to answer he reads her, which
+    // means `coachLoadViewOf` -> `axisEvidence` -> `shownSkill`, and `shownSkill` TAKES A DRAW
+    // (`seed:read:stamina`). A per-career sub-stream, so it is safe - but "it is safe" is the kind of
+    // claim that has to be a test, because the whole capture is one careless `rng()` away from moving for
+    // every save in existence.
+    //
+    // Every hired rung, because each one reads her differently and therefore decides differently: if any
+    // of them perturbed the main stream, the count would move on that rung alone.
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      const world = createWorld('bench-working-0', { ...DEFAULT_PROFILE, coachTier: tier })
+      const base = rngFromSeed(world.seed)
+      const draws: number[] = []
+      const rng = () => {
+        const v = base()
+        draws.push(v)
+        return v
+      }
+      let escalated = 0
+      for (let i = 0; i < 52; i++) {
+        tickWeek(world, rng)
+        // the escalated ones still come to the parent - answer them so time keeps moving
+        if (pendingKnock(world)) {
+          decideKnock(world, 'rest')
+          escalated++
+        }
+      }
+      expect(draws.length, `count (${tier})`).toBe(REF.count)
+      expect(hashOf(draws), `hash (${tier})`).toBe(REF.hash)
+      // and the coach really did handle some himself, or this proves nothing about his path
+      const handled = world.knockHistory.length + (world.knock ? 1 : 0) - escalated
+      expect(handled, `${tier} must have answered at least one alone`).toBeGreaterThan(0)
     }
   })
 

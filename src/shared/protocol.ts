@@ -568,6 +568,23 @@ export interface UpcomingEvent {
   cautionReason?: 'fatigued'
   /** human-readable caution copy for the soft-warning UI (short dash). */
   cautionDetail?: string
+  /** THE HIRED COACH'S OWN OPINION about this trip (docs/specs/coach-as-load-manager.md §8), or absent.
+   *
+   *  Present only when a coach is HIRED and he would advise against it; never on a self-coached career,
+   *  because there is nobody to have the opinion. A SENTENCE rather than a flag, for the same reason
+   *  `cautionDetail` is one: the card prints what he said.
+   *
+   *  ⚠ ITS OWN FIELD, NOT A NEW `cautionReason`, and the two are independent on purpose. `'fatigued'`
+   *  is the ENGINE's rule (she is under `minConditionToEnter`), and this is a PERSON's read of her -
+   *  which can fire when the engine's rule does not, because the coach's margin is scaled by what he
+   *  believes about her stamina. A cheap coach who thinks she is tough will stay quiet on a trip the
+   *  fatigue caution is already flagging; an expensive one will speak up before it does. Folding them
+   *  into one enum would have made those two states indistinguishable, and the gap between them IS the
+   *  thing being sold.
+   *
+   *  NEVER A BLOCK. "The parent may push" is a standing rule of this game and the doctor's veto
+   *  (`ineligibleReason: 'medical'`) is its single exception. `eligible` stays true. */
+  coachCaution?: string
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
   /** the ITF rank an international rung accepts down to, on a card locked by an ACCEPTANCE LIST

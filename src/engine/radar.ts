@@ -815,6 +815,25 @@ export function axisReadings(view: RadarWorldView): Record<SkillKey, { evidence:
  *  The order is `SKILL_KEYS`, which is the order every other surface in the engine lists her
  *  attributes in - so the radar's axes cannot end up in a different order from the coach market's
  *  uplift projection or the save's own skill block. */
+/**
+ * WHAT THE COACH THINKS ONE SKILL IS - her true value, displaced by his rung's haze.
+ *
+ * ⚠ ONE DRAW PER CAREER PER AXIS - no week in the key. The DIRECTION of the misreading is fixed for the
+ * whole career and only its MAGNITUDE shrinks, so the contour converges instead of breathing. Clamping
+ * can only ever move the estimate TOWARDS her true value (which is itself inside 0..100), so
+ * `buildRadar`'s honesty invariant survives it.
+ *
+ * EXTRACTED FROM `buildRadar` BY THE LOAD SLICE (docs/specs/coach-as-load-manager.md §8), which needs
+ * exactly one axis at knock time and must not spell this a second way. If the coach's belief about her
+ * stamina were computed by its own formula, the number he acts on and the number the radar draws could
+ * drift - and the whole point of §8 is that they are the SAME belief. Cheap enough to call alone: it is
+ * one hash and one multiply once the band is known.
+ */
+export function shownSkill(view: RadarWorldView, key: SkillKey, confidence: number): number {
+  const u = rngFromSeed(`${view.seed}:read:${key}`)()
+  return clamp(view.skills[key] + (2 * u - 1) * bandFor(confidence), 0, 100)
+}
+
 export function buildRadar(view: RadarWorldView, readings: ReturnType<typeof axisReadings> = axisReadings(view)): RadarAxis[] {
   const evidence = {} as Record<SkillKey, AxisEvidence>
   const confidence = {} as Record<SkillKey, number>
@@ -825,12 +844,7 @@ export function buildRadar(view: RadarWorldView, readings: ReturnType<typeof axi
     evidence[key] = readings[key].evidence
     confidence[key] = readings[key].confidence
     band[key] = bandFor(confidence[key])
-    // ⚠ ONE DRAW PER CAREER PER AXIS - no week in the key. The DIRECTION of the misreading is fixed
-    // for the whole career and only its magnitude shrinks, so the contour converges instead of
-    // breathing. Clamping can only ever move the estimate TOWARDS her true value (which is itself
-    // inside 0..100), so the honesty invariant below survives it.
-    const u = rngFromSeed(`${view.seed}:read:${key}`)()
-    shown[key] = clamp(view.skills[key] + (2 * u - 1) * band[key], 0, 100)
+    shown[key] = shownSkill(view, key, confidence[key])
   }
 
   const shownTotal = SKILL_KEYS.reduce((sum, k) => sum + shown[k], 0)
