@@ -1127,6 +1127,16 @@ button.danger:hover:not(:disabled) {
   font-size: 12px;
   margin: 6px 0 0;
 }
+/* THE HIRED COACH'S OPINION on a trip (load slice). Deliberately NOT `--warning`: it is advice from a
+   person, not the engine refusing anything, and amber next to an active Enter reads as a lock. Muted,
+   same size as the caution above it, so a card carrying both shows a hierarchy - the rule shouts, the
+   man speaks. */
+.coach-note {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+  margin: 4px 0 0;
+}
 button.primary.risky {
   border-color: var(--warning);
   color: var(--warning);
@@ -3257,6 +3267,15 @@ tr.kid-row td {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--ink-soft);
+}
+/* WHAT HE DOES ABOUT HER BODY (load slice). Below the uplift and quieter than it: the uplift is the
+   card's headline claim and this is the second thing the money buys, so it must not compete. Wraps
+   freely - these are sentences, and a 375px card is where they have to survive. */
+.cm-load {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--muted);
+  margin-top: 2px;
 }
 .cm-row.current .cm-uplift {
   color: var(--accent);

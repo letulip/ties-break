@@ -146,6 +146,7 @@ function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
     // ⚠ W4 added `knockChoice`/`knockPart` (what a knock is doing to the week). Null here: this
     // fixture is a week with nothing wrong with her, which is what these suites are about.
     knockChoice: null,
+    birthdayAge: null,
     knockPart: null,
     fundsPressure: 'ok',
     freshMilestone: null,

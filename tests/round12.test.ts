@@ -130,10 +130,21 @@ describe('R12-15 — the dead Play button after an injury (the round\'s worst it
   })
 
   it('REACHABLE IN REAL PLAY, not just in a fixture', () => {
-    // The state the owner hit, found by playing seed "r12-repro-12" the way a player does: enter
-    // the nearest enterable event, press the button, resolve any tournament. The injury lands in
-    // W4 and her W5 entry (deadline W3) is already committed.
-    const world = createWorld('r12-repro-12')
+    // The state the owner hit, found by playing a seed the way a player does: enter the nearest
+    // enterable event, press the button, resolve any tournament, until an injury covers a week she is
+    // already committed to and the deadline has passed.
+    //
+    // ⚠ THE SEED WAS RE-DERIVED (30.07, task 55's cohort half), which is exactly what this test's own
+    // failure message asks for. Giving every rival a birth month changes who wins brackets, so the
+    // careers themselves moved and `r12-repro-12` no longer reaches the state inside 60 weeks. That is
+    // NOT the bug coming back - the state is a coincidence of one career's calendar and injuries, and a
+    // swept 400 seeds still produce it readily (r12-repro-3 / 8 / 14 / 15 / 19 / 20).
+    //
+    // The guarded fact is untouched and is the only reason this test exists: the dead click must be
+    // reachable BY PLAYING, so the fix is proved against a state the engine really produces rather than
+    // against a fixture assembled to look like one. A re-derived seed keeps that; deleting the test, or
+    // hand-building the world, would have thrown it away.
+    const world = createWorld('r12-repro-3')
     const rng = rngFromSeed(world.seed)
     let hit: { week: number; eventWeek: number } | null = null
     for (let i = 0; i < 60 && hit === null; i++) {

@@ -33,6 +33,19 @@ export interface PlayerProfile {
    *  onboarding, purely cosmetic until Phase 4 wires the junior age-group dynamics it's
    *  meant to feed. */
   birthMonth: number
+  /** her birth DAY within that month, 1-28/30/31 (owner, 30.07: «мы же будем ее с ДР на неделе поздравлять
+   *  (и подарки дарить, кстати), чтобы точно знать на какой нам нужен день»).
+   *
+   *  ⚠ IT AFFECTS THE BIRTHDAY WEEK AND NOTHING ELSE - his own framing, and the right scope. The relative
+   *  age effect is a MONTH-resolution idea (position inside the birth year), so `kidAgeExact` and
+   *  `relativeAgeHeadStart` deliberately do not read this: refining 1/12 to 1/365 on a quantity whose whole
+   *  meaning is "which part of the year" buys nothing, and threading a day into the development path would
+   *  add precision nothing reads.
+   *
+   *  AND IT IS THE PLAYER'S, not derived, which is the part I had wrong. I proposed rolling it off the seed;
+   *  he is right that a parent KNOWS his daughter's birthday - and a present has to be plannable, so the
+   *  date has to be something he chose rather than something the game told him. */
+  birthDay: number
 }
 
 export const DEFAULT_PROFILE: PlayerProfile = {
@@ -47,6 +60,7 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   coachTier: 'middle',
   playStyle: 'all-court',
   birthMonth: 6,
+  birthDay: 15,
 }
 
 /** Weekly time split in percent; train + rest === 100. */
@@ -517,6 +531,19 @@ export interface CoachMarketRow {
   /** [lo, hi] percent of her CURRENT level this rung could add over a season, above what the
    *  parent alone would manage. Computed from her own headroom - see coachSeasonUplift. */
   upliftPct: [number, number]
+  /** WHAT HE DOES ABOUT HER BODY, in one sentence (docs/specs/coach-as-load-manager.md).
+   *
+   *  Added because a ladder nobody can see is not a product. The load wave gave the rungs two new
+   *  differences - how well their medical team protects her (`physioQuality`) and how much of the
+   *  week-to-week deciding they take off the parent (`coachEscalates`) - and both were invisible on the
+   *  one screen where the money is spent. The market card carried a development uplift and nothing else,
+   *  so the whole slice would have read as "the numbers moved for no reason".
+   *
+   *  A SENTENCE, not two more numbers. The uplift range is already the card's quantitative claim, and
+   *  the honest thing to say about load is qualitative: the measured spread between rungs is real but
+   *  small (a few injury weeks over four years), and printing "-2.7 weeks" would promise a precision the
+   *  120-seed run does not support. */
+  loadNote: string
 }
 
 export interface UpcomingEvent {
@@ -568,6 +595,23 @@ export interface UpcomingEvent {
   cautionReason?: 'fatigued'
   /** human-readable caution copy for the soft-warning UI (short dash). */
   cautionDetail?: string
+  /** THE HIRED COACH'S OWN OPINION about this trip (docs/specs/coach-as-load-manager.md §8), or absent.
+   *
+   *  Present only when a coach is HIRED and he would advise against it; never on a self-coached career,
+   *  because there is nobody to have the opinion. A SENTENCE rather than a flag, for the same reason
+   *  `cautionDetail` is one: the card prints what he said.
+   *
+   *  ⚠ ITS OWN FIELD, NOT A NEW `cautionReason`, and the two are independent on purpose. `'fatigued'`
+   *  is the ENGINE's rule (she is under `minConditionToEnter`), and this is a PERSON's read of her -
+   *  which can fire when the engine's rule does not, because the coach's margin is scaled by what he
+   *  believes about her stamina. A cheap coach who thinks she is tough will stay quiet on a trip the
+   *  fatigue caution is already flagging; an expensive one will speak up before it does. Folding them
+   *  into one enum would have made those two states indistinguishable, and the gap between them IS the
+   *  thing being sold.
+   *
+   *  NEVER A BLOCK. "The parent may push" is a standing rule of this game and the doctor's veto
+   *  (`ineligibleReason: 'medical'`) is its single exception. `eligible` stays true. */
+  coachCaution?: string
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
   /** the ITF rank an international rung accepts down to, on a card locked by an ACCEPTANCE LIST
@@ -839,6 +883,14 @@ export interface DiaryFacts {
   /** W4: where the live knock is, on exactly the weeks `knockChoice` is non-null. Null together with
    *  it by construction – the note pool needs the part to name it. */
   knockPart: string | null
+  /** THE AGE SHE TURNS THIS WEEK, or null on the other fifty-one (owner, 30.07). Derived from her birth
+   *  month against the calendar - no schema, and it cannot disagree with `kidAgeExact` because both read
+   *  the same two facts.
+   *
+   *  It is a NUMBER rather than a boolean because the age is the point. A December girl turning fourteen in
+   *  the last month of a season she played as a thirteen-year-old is the relative-age story told in one
+   *  line, and it is where the player first meets it. */
+  birthdayAge: number | null
 }
 
 /** THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на

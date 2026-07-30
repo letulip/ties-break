@@ -238,6 +238,63 @@ export function coachIncludesPhysio(tier: CoachTier): boolean {
   return tier !== 'self'
 }
 
+// =================================================================================================
+// ⚠ HOW GOOD THE MEDICAL TEAM IS – the lever the load bench found, and the reason it was needed
+// =================================================================================================
+//
+// docs/specs/coach-as-load-manager.md §4(c) named `coachIncludesPhysio` as the ONE thing a rung has ever
+// changed about her body, and called it "a boolean that is true for every hired rung equally". The load
+// bench then measured what that means, and the answer is blunter than the spec put it:
+//
+//   MEASURED, 120 paired seeds, after the routing landed. Across budget -> middle -> high -> elite:
+//     weeks lost   -0.1     injuries  8.7 / 8.8 / 8.9 / 9.2     rank  86.8 / 85.7 / 89.1 / 86.0
+//   Four rungs, ~$100k of fees between the ends, and NOT ONE of those columns is a ladder. The §8 fog
+//   mechanism produced a real, monotone ladder on how often he INTERRUPTS you (6.7 -> 2.0 taps) and
+//   nothing whatsoever on outcomes - which is what a ±12-point misread on a binary decision taken 13
+//   times a career can honestly be expected to do.
+//
+// So the outcome ladder needed a lever with more leverage, and the honest one was already in the model
+// being wasted: A BUDGET COACH'S PHYSIO AND AN ELITE COACH'S PHYSIO ARE THE SAME PHYSIO. That is the
+// boolean the spec complained about, and it is not a small thing to fix - injury weeks are 28 of a
+// 208-week career even after the routing, so anything that moves them moves everything downstream.
+//
+// ⚠ ADDITIVE, ANCHORED AT BUDGET, and that is deliberate rather than convenient. §4(c) argues the slice
+// "necessarily adds capability to the hired tiers rather than redistributing it", so BUDGET KEEPS EXACTLY
+// TODAY'S NUMBERS (quality 1.0 reproduces `riskReduction` 0.76 and `recoverySpeedup` 0.12 byte for byte)
+// and the rungs above it improve. Nothing that ships today gets worse; the ladder is built upward. The
+// alternative - re-centring on middle and nerfing budget - would have been a balance change nobody asked
+// for, dressed as a fix.
+//
+// ⚠ AND IT IS A POST-DRAW MULTIPLY at both call sites, the invariance pattern `injuryTau` already
+// documents for `knockTauFactor` and the vacation buff: the THRESHOLD moves, the draw does not. Zero
+// draws on any stream, so the frozen MAIN capture (41550 / e6b0c709) cannot move.
+
+/** How much of the physio's effect this rung's medical team actually delivers. 1.0 = today's shipped
+ *  numbers, which is what BUDGET gets - see the note above for why the anchor is there and not in the
+ *  middle. `self` is 0 and unreachable through `physioActive`, which is false without a hire; it is
+ *  listed so the record is total and a self-coached career cannot silently inherit a hired rung's team. */
+const PHYSIO_QUALITY: Record<CoachTier, number> = {
+  self: 0,
+  budget: 1.0,
+  middle: 1.15,
+  high: 1.35,
+  elite: 1.6,
+}
+
+export function physioQuality(tier: CoachTier): number {
+  return PHYSIO_QUALITY[tier]
+}
+
+/** The injury-threshold multiplier her medical team earns. Budget reproduces `riskReduction` exactly. */
+export function physioRiskFactor(tier: CoachTier): number {
+  return 1 - (1 - ECONOMY.physio.riskReduction) * physioQuality(tier)
+}
+
+/** ...and the layoff-length multiplier. Same anchoring: budget is today's `recoverySpeedup`. */
+export function physioRecoveryFactor(tier: CoachTier): number {
+  return 1 - ECONOMY.physio.recoverySpeedup * physioQuality(tier)
+}
+
 // --- THE ROSTER --------------------------------------------------------------------------------
 
 /** Every coach on the market for this career, cheapest tier first.

@@ -179,6 +179,8 @@ export interface DiaryWorldView {
   knockChoice: KnockChoice | null
   /** W4: where it is, on exactly the weeks `knockChoice` is non-null. */
   knockPart: string | null
+  /** the age she turns this week, or null - world.ts derives it from her birth month */
+  birthdayAge: number | null
 }
 
 /** Condition, as the word Home speaks (D3). The 80/60/40 rungs mirror the idle-emotion ladder
@@ -647,6 +649,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     travelHomeMood: travelHome?.mood ?? null,
     // W4: what the knock is doing to this week. Read, not drawn - it is a decision the player made
     // and the world persisted, which is the whole reason the knock cost a schema bump.
+    birthdayAge: view.birthdayAge,
     knockChoice: view.knockChoice,
     knockPart: view.knockPart,
   }
@@ -663,6 +666,13 @@ export type DiarySurface = 'photo' | 'condition'
  *  `injury`). */
 export interface DiaryClaims {
   affect: 'positive' | 'neutral' | 'negative'
+  /** asserts SHE HAS A BIRTHDAY this week - unselectable unless `birthdayAge` is non-null.
+   *
+   *  ⚠ ALWAYS PAIRED WITH `affect: 'neutral'`, and that is the point rather than a shrug. The pin refuses a
+   *  positive-affect line on a sad, angry or laid-up week, and rightly - but "She is fifteen today" makes no
+   *  claim about how the week went. It is a fact, true whether she won, lost or is in a brace, and neutral
+   *  affect is what lets it survive a bad week without lying about one. */
+  birthday?: true
   /** asserts a fresh win this week */
   won?: true
   /** asserts a fresh competitive loss this week */
@@ -745,6 +755,29 @@ const quiet = (f: DiaryFacts): boolean =>
 // – they read a Milestone, not the week's facts). Every line: player-facing English, short dash,
 // the parent's own quiet register. At most ONE line per surface per week, drawn deterministically.
 export const DIARY_POOL: readonly DiaryPhrase[] = [
+  // --- HER BIRTHDAY, on the Home photo card (owner, 30.07: «может на home тоже про это писать») ----
+  //
+  // ⚠ FIRST IN THE POOL, AND THAT IS THE DESIGN DECISION. `photoLine` is one line under her name on the
+  // screen the player opens every week, and every other phrase in it is about TENNIS - a win, a loss, a
+  // rank, a body. A birthday is the one week where the honest headline is not a result, and it is also the
+  // only place the game can say her birth month somewhere he will actually look.
+  //
+  // NO `affect` CLAIM, deliberately. The honesty pin refuses a positive-affect line on a sad, angry or
+  // laid-up week, and rightly - but "She is fifteen today" is not a claim about how the week went. It is a
+  // fact, and it is true whether she won, lost or is in a brace. Claiming `birthday` and nothing else is
+  // what lets it survive a bad week without lying about one.
+  {
+    surface: 'photo',
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today.`,
+    claims: { affect: 'neutral', birthday: true },
+    license: (f) => f.birthdayAge !== null,
+  },
+  {
+    surface: 'photo',
+    text: (f) => `She is ${ageWord(f.birthdayAge)}.`,
+    claims: { affect: 'neutral', birthday: true },
+    license: (f) => f.birthdayAge !== null,
+  },
   // --- photo card (D2): fresh WIN --------------------------------------------------------------
   { surface: 'photo', text: "Can't stop smiling.", claims: { affect: 'positive', won: true }, license: (f) => f.won },
   {
@@ -1683,6 +1716,8 @@ export interface WeekClaims {
   restingKnock?: true
   /** W4: asserts she is TRAINING THROUGH a knock – unselectable unless knockChoice==='push' */
   pushingKnock?: true
+  /** asserts SHE HAS A BIRTHDAY this week - unselectable unless `birthdayAge` is non-null. */
+  birthday?: true
   /** W6c: asserts WHERE THE INJURY IS – unselectable unless her live injury is in this group.
    *
    *  ⚠ THE FIRST CLAIM ON THIS POOL THAT CARRIES A VALUE rather than being a bare `true`, and it had to:
@@ -1728,6 +1763,21 @@ const athome = (f: DiaryFacts): boolean =>
  *  on a week she spent resting a sore ankle, and the pin in tests/diary.test.ts sweeps exactly this
  *  space. A week under a knock is no longer an ordinary week: it has its own band below, the way an
  *  exam week and a layoff do. */
+/** The age she turns, in words. A parent's register, not a scoreboard's - and total on any number a
+ *  career can reach, falling back to the numeral past the years that read naturally as words. */
+const AGE_WORD: Record<number, string> = {
+  13: 'thirteen',
+  14: 'fourteen',
+  15: 'fifteen',
+  16: 'sixteen',
+  17: 'seventeen',
+  18: 'eighteen',
+  19: 'nineteen',
+  20: 'twenty',
+}
+const ageWord = (age: number | null): string => (age === null ? 'a year older' : (AGE_WORD[age] ?? String(age)))
+const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
+
 /** W6c: WHERE HER LIVE INJURY IS, as the pool is allowed to ask. Null when she is healthy, and null
  *  when the part cannot be resolved from the persisted `kind` string - both mean the same thing to a
  *  line that wants to describe her body, which is "say nothing about it". */
@@ -1996,6 +2046,69 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     text: 'She trained through it. The coach said nothing and watched everything.',
     claims: { pushingKnock: true, athome: true },
     license: (f) => athome(f) && f.injured === null && f.knockChoice === 'push',
+  },
+  // --- HER BIRTHDAY (owner, 30.07). ONE WEEK A YEAR, and it ALWAYS speaks. -----------------------
+  //
+  // «нам точно стоит на месяц рождения девочки где-то в записочках может быть писать какие-то
+  // поздравления» - so the scrap says it, and this is the one band with no competing claim on the week:
+  // a birthday is not a tennis fact, so it does not care whether she trained, travelled or was laid up.
+  //
+  // ⚠ AND IT SPLITS ON THE LAYOFF, WHICH A TEST MADE ME DO AND WHICH IS THE BETTER DESIGN. My first version
+  // was licensed on `athome` alone, on the argument that a birthday is not a tennis fact and so does not
+  // compete with a knee brace. That broke the standing rule that A LAYOFF TAKES THE NOTE (every line
+  // licensable on an injured week must claim `injured`) - the rule that stops the page reading as though the
+  // game had not noticed she is hurt. Weakening it for one band would have been the wrong trade for a line
+  // that appears once a year.
+  //
+  // So the birthday gets a LAYOFF VARIANT instead, exactly as the exam fortnight did (W6b): it still always
+  // speaks, and on a week she is laid up it says both things at once. Better copy, too - «Cake, and then she
+  // asked to go and hit» is a lie about a girl in a brace, and I would not have noticed by reading.
+  //
+  // The one thing every arm needs is that she is HOME: a birthday spent in an airport belongs to
+  // TRAVEL_NOTES, which owns that scrap entirely.
+  //
+  // THE AGE IS NAMED IN WORDS, because a parent does not say "she is 15 today", and because the number is
+  // the whole point - a December girl turning fourteen in the last month of a season she played as a
+  // thirteen-year-old is the relative-age story in one line.
+  {
+    text: (f) => `She is ${ageWord(f.birthdayAge)} today. Cake, and then she asked to go and hit.`,
+    claims: { birthday: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+  },
+  {
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She says she feels exactly the same.`,
+    claims: { birthday: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+  },
+  {
+    text: (f) => `Her birthday. ${capitalise(ageWord(f.birthdayAge))}, and taller than her mother now.`,
+    claims: { birthday: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+  },
+  {
+    text: 'Her birthday. She wanted a restring and a new grip, and nothing else.',
+    claims: { birthday: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured === null,
+  },
+  // ...and the same week with a brace on it. Both facts, one sentence each.
+  {
+    // ⚠ NOT "with her leg up", WHICH IS WHAT I WROTE AND WHAT W6c's SWEEP CAUGHT WITHIN THE MINUTE - on a
+    // wrist strain. The owner found that class of error by reading; the guard found this one before it
+    // shipped, which is the whole return on having written it. A birthday line has no business naming a
+    // body part in the first place.
+    text: (f) => `Her birthday, spent on the sofa. ${capitalise(ageWord(f.birthdayAge))}, and furious about it.`,
+    claims: { birthday: true, injured: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured !== null,
+  },
+  {
+    text: (f) => `${capitalise(ageWord(f.birthdayAge))} today, and eight weeks of rehab for a present.`,
+    claims: { birthday: true, injured: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured !== null,
+  },
+  {
+    text: 'Her birthday. She blew out the candles and asked the physio how long.',
+    claims: { birthday: true, injured: true, athome: true },
+    license: (f) => athome(f) && f.birthdayAge !== null && f.injured !== null,
   },
   // --- THE LAYOFF WEEKS. An injury takes the note, the way it does on the journey home. ----------
   //

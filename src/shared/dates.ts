@@ -33,6 +33,58 @@ function weekEnd(week: number): Ymd {
   return dateAtDay(week * 7 + 6)
 }
 
+/** THE CALENDAR MONTH the week's Monday falls in, 1-12.
+ *
+ *  Exported for the age model (world.ts `kidAgeExact`) and for her birthday. A REAL-CALENDAR fact about a
+ *  date, like `weekYear` below and with the same warning: it is not a season identity. The epoch is Monday
+ *  6 Jan 2031, so week 0 is January and the season's own week 1 is too - see the note on the season start
+ *  in docs/specs/relative-age.md. */
+export function weekMonth(week: number): number {
+  return weekStart(week).month + 1
+}
+
+/** How many days her birth month has.
+ *
+ *  ⚠ FEBRUARY IS 28, NOT 29, AND THAT IS PRINCIPLED RATHER THAN LAZY. Her birth year is the band's year -
+ *  2017 for a career opening in 2031 - which is not a leap year, so 29 February is not a date she can have
+ *  been born on. Offering it would mean either a girl with a birthday every four years or a silent clamp,
+ *  and both are worse than not offering it. */
+export function daysInBirthMonth(month: number): number {
+  const m = Math.max(1, Math.min(12, Math.round(month)))
+  return [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1]
+}
+
+/** The career week whose Monday..Sunday span CONTAINS `month`/`day` of `year`, or null when that date is
+ *  outside the career's calendar.
+ *
+ *  ⚠ CAN BE NEGATIVE, AND THE CALLER HAS TO MEAN IT. Week 0 starts Monday 6 Jan 2031, so 1-5 January 2031
+ *  falls in week -1: a girl born on 3 January has already had her birthday by the time the career opens,
+ *  and her first in-game one is in 2032. That is the honest answer rather than a bug - the career started
+ *  after her birthday - and it is why the birthday check compares against the CURRENT week rather than
+ *  assuming every season contains one. */
+export function weekOfDate(month: number, day: number, year: number): number | null {
+  const target = Date.UTC(year, Math.max(1, Math.min(12, Math.round(month))) - 1, Math.max(1, day))
+  const dayOffset = Math.floor((target - EPOCH_UTC) / MS_PER_DAY)
+  const week = Math.floor(dayOffset / 7)
+  // Guard against a date so far out that the arithmetic stops being meaningful.
+  return Number.isFinite(week) ? week : null
+}
+
+/** The FIRST career week whose Monday falls in `month` of `year`, or null when that month is outside the
+ *  career's calendar. Used to find the week her birthday lands in.
+ *
+ *  Walks rather than computes: the epoch is a Monday and months are not week-aligned, so closed-form
+ *  arithmetic would be off by up to six days twelve times a year. A career is a few hundred weeks and this
+ *  is called once per season, so the loop is free. */
+export function firstWeekOfMonth(month: number, year: number): number | null {
+  for (let w = 0; w < 52 * 40; w++) {
+    const d = weekStart(w)
+    if (d.year === year && d.month + 1 === month) return w
+    if (d.year > year || (d.year === year && d.month + 1 > month)) return null
+  }
+  return null
+}
+
 /** The calendar year the week's Monday falls in. A REAL-CALENDAR fact about a date, and nothing
  *  more – it is NOT a season identity and must never be used as one (see `seasonYear` below and
  *  the note above WEEKS_IN_SEASON: it collides at season 5). Kept because the date range genuinely

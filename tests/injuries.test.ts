@@ -10,6 +10,7 @@ import {
   injuryTau,
   ageInjuryFactor,
   consecutivePlayFactor,
+  kidAgeYears,
   playedWeeksInTrailing4,
   toSnapshot,
   financeWindow,
@@ -22,6 +23,9 @@ import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
+// The load wave: the physio's strength is a rung ladder now, not one flat boolean.
+import { COACH_TIERS, physioRiskFactor } from '../src/engine/coach'
+import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { PRESETS, stepCareerWeek, EXPENSE_CATS } from '../tools/econ-bench'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { FamilyBackground, InjurySeverity, PlayerProfile, WorldEvent } from '../src/shared/protocol'
@@ -97,7 +101,11 @@ function hashOf(draws: number[]): string {
 // ⚠ 121, MEASURED WITH BOTH ROUND-15 SLICES IN. The ranking fix alone gives 119; v25's rally term
 // changes which juniors end the year holding points, and the two compose to 121. Neither branch was
 // wrong - this is what the merged code produces, measured here rather than carried over.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 121 }
+// ⚠ kidRank RE-PINNED 121 -> 120 (30.07, task 55's cohort half). `count` and `hash` are UNTOUCHED and
+// still reproduce byte-for-byte - the birth months come off their own sub-stream and the head start is
+// post-draw arithmetic. What moved is which juniors hold points, because every rival now sits inside her
+// own birth year. Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 120 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -172,6 +180,7 @@ function bgProfile(background: FamilyBackground): PlayerProfile {
     coachTier: 'self',
     playStyle: 'all-court',
     birthMonth: 6,
+    birthDay: 15,
   }
 }
 
@@ -569,13 +578,29 @@ describe('C6 — physio ledger + benefit', () => {
     expect(off.events.some((e) => e.week === off.week && e.category === 'physio')).toBe(false)
   })
 
-  it('physioActive lowers tau by riskReduction', () => {
-    const w = createWorld('c6-tau')
-    w.condition = 45
-    w.physioActive = false
-    const bare = injuryTau(w)
-    w.physioActive = true
-    expect(injuryTau(w) / bare).toBeCloseTo(ECONOMY.physio.riskReduction, 10)
+  it('physioActive lowers tau by riskReduction – BY RUNG, and budget is still exactly the old number', () => {
+    // ⚠ RE-AIMED BY THE LOAD WAVE, AND STRICTLY WIDENED. `riskReduction` used to be one flat 0.76 for every
+    // hired rung - which the load bench showed was the whole reason four rungs and ~$100k of fees produced
+    // no difference in injury weeks at all. It scales with the rung now (coach.ts `physioRiskFactor`), so
+    // this fixture (`createWorld` with no profile = 'middle') no longer reads 0.76.
+    //
+    // The guarded fact is unchanged and now checked on all five rungs instead of one - PLUS the anchoring
+    // promise the change was made under: BUDGET REPRODUCES THE SHIPPED CONSTANT EXACTLY, so nothing that
+    // ships today gets worse. That promise is the load of this test now; if a later tuning pass re-centres
+    // the ladder on middle, this is where it has to say so out loud.
+    for (const tier of COACH_TIERS) {
+      const w = createWorld('c6-tau', { ...DEFAULT_PROFILE, coachTier: tier })
+      w.condition = 45
+      w.physioActive = false
+      const bare = injuryTau(w)
+      w.physioActive = true
+      expect(injuryTau(w) / bare, tier).toBeCloseTo(physioRiskFactor(tier), 10)
+    }
+    // the anchor, spelled out
+    expect(physioRiskFactor('budget')).toBeCloseTo(ECONOMY.physio.riskReduction, 10)
+    // ...and the ladder really is one: each rung protects her at least as well as the one below
+    const factors = COACH_TIERS.filter((t) => t !== 'self').map(physioRiskFactor)
+    for (let i = 1; i < factors.length; i++) expect(factors[i]).toBeLessThan(factors[i - 1])
   })
 
   it('physioActive shortens weeksOut: max(1, round(weeksOut * (1 - recoverySpeedup)))', () => {
@@ -699,15 +724,34 @@ describe('C8 — age curve', () => {
     expect(ageInjuryFactor(16)).toBeGreaterThan(ageInjuryFactor(14)) // the peak is real
   })
 
-  it('effective tau at age 16 vs age 14 differs by exactly the factor ratio', () => {
-    const w = createWorld('c8-tau')
-    w.physioActive = false
-    w.condition = 60
-    w.week = 0 // age 14
-    const tau14 = injuryTau(w)
-    w.week = 104 // age 16
-    const tau16 = injuryTau(w)
-    expect(tau16 / tau14).toBeCloseTo(ageInjuryFactor(16) / ageInjuryFactor(14), 10)
+  it('effective tau two seasons apart differs by exactly the age-factor ratio', () => {
+    // ⚠ RE-AIMED, AND THE OLD TITLE WAS THE BUG THE OWNER FOUND IN THE MODEL. It read "age 16 vs age 14"
+    // and set `w.week = 0` with the comment `// age 14` - but `DEFAULT_PROFILE.birthMonth` is JUNE, and a
+    // June girl in the 14s band is THIRTEEN in the January the career opens in. The test was assuming the
+    // band and the girl are the same number, which is exactly what world.ts's age note now separates.
+    //
+    // The guarded fact - `injuryTau` applies the age curve and nothing else between two weeks - is
+    // unchanged and now stated in terms of her REAL ages, so it holds for any birthday instead of only for
+    // a January one. Both birthdays are swept, and the January case preserves the original literal reading.
+    for (const birthMonth of [1, 6, 12]) {
+      const w = createWorld('c8-tau', { ...DEFAULT_PROFILE, birthMonth })
+      w.physioActive = false
+      w.condition = 60
+      w.week = 0
+      const early = injuryTau(w)
+      const ageEarly = kidAgeYears(0, birthMonth)
+      w.week = 104
+      const late = injuryTau(w)
+      const ageLate = kidAgeYears(104, birthMonth)
+      expect(ageLate - ageEarly, `${birthMonth}: two seasons is two years`).toBe(2)
+      expect(late / early, `birthMonth ${birthMonth}`).toBeCloseTo(
+        ageInjuryFactor(ageLate) / ageInjuryFactor(ageEarly),
+        10,
+      )
+    }
+    // and the owner's own case, spelled out: a December girl really is 13 in the opening January
+    expect(kidAgeYears(0, 12)).toBe(13)
+    expect(kidAgeYears(0, 1)).toBe(14)
   })
 
   it('Monte-Carlo direction: more onsets in the age-16 window than the age-14 window', () => {

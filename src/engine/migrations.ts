@@ -19,6 +19,8 @@ import { rollPotential } from './development'
 import { coachIncludesPhysio } from './coach'
 import { COHORT } from './season/cohort'
 import type { PlayerProfile } from '../shared/protocol'
+// v27: her birth day is clamped to her own month, and February is never 29 - see daysInBirthMonth.
+import { daysInBirthMonth } from '../shared/dates'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt } from './rng'
 import { OFF_SEASON_WEEKS, TIERS, tierFromLabel } from './season/calendar'
@@ -549,6 +551,26 @@ export function migrateSave(raw: unknown): WorldState {
     save.knock ??= null
     save.knockHistory ??= []
     v = 26
+  }
+
+  // v27 added the profile's birth DAY (owner, 30.07: the birthday week has to be the right week, because
+  // the family congratulates her on it and eventually brings a present to it).
+  //
+  // BACK-FILLED FROM THE SEED, NOT FROM DEFAULT_PROFILE - the same pattern and the same reason as v9's
+  // `birthMonth` back-fill next door: collapsing every legacy career onto the static default would give
+  // them all the same birthday, and this is a field whose whole job is to be personal. Drawn off its own
+  // `:bd` sub-stream, so no existing stream's sequence moves.
+  //
+  // ⚠ CLAMPED TO HER OWN MONTH. February is 28 (her birth year is the band's, which is never a leap year -
+  // see `daysInBirthMonth`), so a back-filled day can never be a date she could not have been born on.
+  // Reading `birthMonth` here is safe: v9 ran long before this and guarantees it is a number.
+  if (v === 26) {
+    if (save.profile && typeof save.profile.birthDay !== 'number') {
+      const seed = typeof save.seed === 'string' ? save.seed : ''
+      const month = typeof save.profile.birthMonth === 'number' ? save.profile.birthMonth : 6
+      save.profile.birthDay = pickInt(rngFromSeed(`${seed}:bd`), 1, daysInBirthMonth(month))
+    }
+    v = 27
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

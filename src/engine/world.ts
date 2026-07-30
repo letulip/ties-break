@@ -47,7 +47,7 @@ import { formatShortName } from '../shared/format'
 // second week formatter living inside the engine. The engine keeps counting ABSOLUTE weeks and
 // every RNG sub-stream key / save field / pinned capture stays on that index; `weekLabel` is
 // applied only where the engine writes a string a PLAYER reads.
-import { seasonYear, weekLabel } from '../shared/dates'
+import { daysInBirthMonth, seasonYear, weekLabel, weekMonth, weekOfDate, weekYear } from '../shared/dates'
 // The emotion RULES live in shared/ (pure, UI-free, and the composable reads the same module), so
 // the engine borrows the two facts it needs rather than restating them: which recorded matches are
 // allowed to move her face (R11-2's one predicate) and the band a streak's anger threshold sits in.
@@ -75,7 +75,7 @@ import { parentIncomeForWeekCents,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort } from './season/cohort'
 import { renewCohort } from './season/conveyor'
-import { ageFactor, growWeek, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
+import { ageFactor, growWeek, relativeAgeHeadStart, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
 import {
   bestFitCoachAt,
   buildCoachRoster,
@@ -87,6 +87,8 @@ import {
   coachWeeklyCents,
   COACH_TIER_LABEL,
   eliteGateShortfall,
+  physioRecoveryFactor,
+  physioRiskFactor,
   practiceCoachRateCents,
   selfRateCents,
   tierOf,
@@ -114,7 +116,7 @@ import { buildDiarySnapshot, lastKidTitleOf, milestoneKey } from './diary'
 import { buildKidLife, FRIENDS_WINDOW } from './kidLife'
 // The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
 // diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
-import { axisReadings, buildRadar, buildTrainingRead, type RadarWorldView } from './radar'
+import { axisConfidence, axisEvidence, axisReadings, buildRadar, buildTrainingRead, shownSkill, type RadarWorldView } from './radar'
 // W4 – THE KNOCK: the ordinary training week's one event and the decision it puts in front of the
 // parent. Same dependency shape as the diary, kidLife and the radar: knock.ts is world-free and
 // takes a narrow structural view, so world -> knock runs one way and can never cycle.
@@ -132,13 +134,16 @@ import {
 } from './knock'
 // W6c: the anatomy, in a leaf module so diary.ts can read the same twelve parts this draws from.
 import { drawBodyRegion } from './body'
+// The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
+import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
+import type { CoachTier } from '../shared/protocol'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 26
+export const SAVE_SCHEMA_VERSION = 27
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -519,6 +524,15 @@ export function startingSkills(seed: string, _profile: PlayerProfile): KidSkills
     // worst wing by construction.
     groundstrokes: pickInt(r, 40, 58),
   }
+}
+
+/** Her birth build plus the relative-age head start, clamped to the attribute range. Every skill moves by
+ *  the same amount: eleven extra months of being a junior is not a specialisation. */
+function withHeadStart(skills: KidSkills, birthMonth: number): KidSkills {
+  const bump = relativeAgeHeadStart(birthMonth)
+  const out = { ...skills }
+  for (const k of SKILL_KEYS) out[k] = Math.max(1, Math.min(100, Math.round((out[k] + bump) * 100) / 100))
+  return out
 }
 
 export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; skills?: KidSkills }): MatchPlayer {
@@ -927,9 +941,124 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   world.condition = clamp(world.condition + recovery, c.min, c.max)
 }
 
-/** The kid's age (whole years) in a given absolute week – the same arithmetic the snapshot uses. */
+// =================================================================================================
+// HOW OLD SHE IS – the band, and the girl. Two different questions, and they had one answer.
+// =================================================================================================
+//
+// The owner, 30.07: «девочка, родившаяся в декабре, по идее, в этой возрастной группе должна на момент
+// января иметь возраст 13 лет, согласно году рождения и началу занятий в теннис. Или нет?»
+//
+// YES. And the reasoning is worth writing down, because it turns on how tennis is organised:
+//
+//   ⚠ TENNIS IS A CALENDAR-YEAR SPORT. Unlike hockey (August cutoff) or school (September), the ITF
+//   junior circuit bands by YEAR OF BIRTH and runs its season January to November with December off. The
+//   game already has that right - week 1 is January and OFF_SEASON_WEEKS are 49-52 - so there is no
+//   cutoff to move. What was wrong is the AGE.
+//
+//   The career opens in January 2031 with her in the 14s, so every girl in her band was born in 2017. A
+//   girl born in January turns 14 that same month; a girl born in December turns 14 ELEVEN MONTHS LATER
+//   and is genuinely THIRTEEN for almost the whole season - playing the same draws, against the same
+//   girls. That is the relative age effect in its primary form, and it is a fact about her age rather
+//   than a modifier applied to it.
+//
+// SO THERE ARE TWO QUESTIONS AND THEY NEEDED TWO FUNCTIONS:
+//
+//   `ageAtWeek`     THE BAND / THE CAREER CLOCK. Birth-month-free by construction: 14 at week 0, 15 at
+//                   week 52, for everyone. This is what her AGE GROUP is, and what the season's own
+//                   ageing is keyed to.
+//   `kidAgeExact`   THE GIRL. Her real age, from a real birth date on the game's real calendar.
+//
+// ⚠ AND `ageAtWeek` MUST NOT LEARN ABOUT BIRTH MONTHS, which is the reason this is two functions rather
+// than one with a parameter. `coachById(world.seed, ageAtWeek(world.week), world.coachId)` DERIVES THE
+// COACH ROSTER FROM THE AGE - it is a purely functional roster with nothing persisted but the chosen id,
+// which is what lets a saved coach resolve years later without a migration. Make the age depend on her
+// birthday and every December career's roster re-rolls, and their hired coach resolves to a different
+// person or to nobody. Eleven of the nineteen `ageAtWeek` call sites are that roster and its prices.
+// The band is the right input there: a market of coaches for 14-year-olds does not restock because one
+// girl has a late birthday.
+
+/** THE BAND, and the career clock: whole years since the career opened, birth month deliberately absent.
+ *  See the note above for why this must stay birth-month-free - the coach roster is derived from it. */
 export function ageAtWeek(week: number): number {
   return START_AGE_YEARS + Math.floor(week / WEEKS_PER_YEAR)
+}
+
+/** Her BIRTH YEAR: the band's year, which is the same for every girl in it. The career opens in the
+ *  January of `seasonYear(0)`, so a girl in the START_AGE band was born START_AGE years before it. */
+export function kidBirthYear(): number {
+  return weekYear(0) - START_AGE_YEARS
+}
+
+/** HER REAL AGE in `week`, fractional, off the game's own calendar.
+ *
+ *  A January girl is 14.0 at week 0; a December girl is 13.08 and does not turn 14 until week ~48. Feeds
+ *  development (`growWeek`), her eligibility allowance, the injury table and every surface that prints an
+ *  age - everything, in short, that is about the GIRL rather than about her age group. */
+export function kidAgeExact(week: number, birthMonth: number): number {
+  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
+  // Months elapsed since her birthday, as a fraction of a year, measured on the real calendar.
+  const monthsIntoYear = weekMonth(week) - month
+  const yearsSinceBirthYear = weekYear(week) - kidBirthYear()
+  return yearsSinceBirthYear + monthsIntoYear / 12
+}
+
+/** ...and the whole-years version, which is what the age-keyed tables want. */
+export function kidAgeYears(week: number, birthMonth: number): number {
+  return Math.floor(kidAgeExact(week, birthMonth))
+}
+
+/** The career week her birthday falls in for the calendar year containing `week`, or null if that date is
+ *  off the calendar.
+ *
+ *  ⚠ THE WEEK CONTAINING HER ACTUAL DATE, not the first week of her month - which is what this did before
+ *  the day existed. The owner asked for the day precisely so this lands right: «мы же будем ее с ДР на
+ *  неделе поздравлять (и подарки дарить, кстати), чтобы точно знать на какой нам нужен день».
+ *
+ *  CAN BE NEGATIVE, and the caller must not assume every season has one: a girl born 1-5 January had her
+ *  birthday before week 0 began, so her first in-game one is the following year. `birthdayTurning`
+ *  compares against the current week, so that resolves itself. */
+export function birthdayWeek(week: number, birthMonth: number, birthDay: number): number | null {
+  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
+  const day = Math.max(1, Math.min(daysInBirthMonth(month), Math.round(birthDay)))
+  return weekOfDate(month, day, weekYear(week))
+}
+
+/** Is `week` her birthday week, and if so what age does she turn? Null on every other week.
+ *
+ *  DERIVED, NOT PERSISTED - a pure comparison of the calendar against her birth date, so it cannot drift
+ *  out of step with `kidAgeExact`; both read the profile and nothing else. */
+export function birthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
+  if (week !== birthdayWeek(week, birthMonth, birthDay)) return null
+  // On her birthday week she has just reached this age, so the floor of her exact age IS the new number.
+  return kidAgeYears(week, birthMonth)
+}
+
+/** Numbers she is old enough to be told in words. The notes are somebody's voice, and a parent does not
+ *  say "she is 15 today". Past the junior years the words stop being the natural register, so the map
+ *  covers the ages a career can actually reach and the caller falls back to the numeral. */
+const AGE_WORDS: Record<number, string> = {
+  13: 'thirteen',
+  14: 'fourteen',
+  15: 'fifteen',
+  16: 'sixteen',
+  17: 'seventeen',
+  18: 'eighteen',
+  19: 'nineteen',
+  20: 'twenty',
+}
+
+/** THE BIRTHDAY, in the feed. One line, in the family's own register, and it names the AGE because that is
+ *  the fact of the week - the relative-age story is told by her age being 13 in a 14s draw, and this is
+ *  where the player first meets it. */
+function markBirthday(world: WorldState): void {
+  const turning = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
+  if (turning === null) return
+  const words = AGE_WORDS[turning] ?? String(turning)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: `She is ${words} this week.`,
+  })
 }
 
 /** Pure age gate for a tier (ladder-up): the junior tour is 13+, the domestic ladder has no
@@ -1389,7 +1518,11 @@ export function injuryTau(world: WorldState): number {
   const a = ECONOMY.availability
   const fatigue = 100 - world.condition
   let tau = clamp(a.injuryBaseChance + fatigue * a.injuryFatigueSlope, 0, a.injuryChanceCap)
-  tau *= ageInjuryFactor(START_AGE_YEARS + Math.floor(world.week / 52))
+  // ⚠ HER REAL AGE, not the band's. Injury risk is a fact about a BODY - a thirteen-year-old's is not a
+  // fourteen-year-old's - so this is one of the places the girl and her age group genuinely differ, and a
+  // December girl spends her first season on the 13 row. Contrast `entryCapUsage`, which correctly keys
+  // off the BAND: the ITF's annual entry limit is a birth-year rule, and its own note says so.
+  tau *= ageInjuryFactor(kidAgeYears(world.week, world.profile.birthMonth))
   tau *= consecutivePlayFactor(playedWeeksInTrailing4(world))
   if (enteredScheduledThisWeek(world)) tau *= a.injuryPlayingMultiplier
   // R12-4/11: a booked family week is the opposite pole of the load axis above – she is not
@@ -1398,7 +1531,10 @@ export function injuryTau(world: WorldState): number {
   // Read off `vacations` rather than a flag: `rollInjury` runs at step 1c BEFORE `resolveVacation`,
   // and `prunePlannerBookings` keeps the current week, so the booking is always visible here.
   if (vacationForWeek(world, world.week)) tau *= a.injuryVacationFactor
-  if (world.physioActive) tau *= ECONOMY.physio.riskReduction
+  // ⚠ BY RUNG NOW, not one flat boolean - see coach.ts `physioRiskFactor`. A budget team reproduces the
+  // shipped 0.76 exactly, so nothing that ships today changes; the rungs above it protect her better.
+  // POST-DRAW multiply on the threshold, the same invariance pattern as `knockTauFactor` below.
+  if (world.physioActive) tau *= physioRiskFactor(tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)))
   // Season planner: the resort/elite recovery buff is a POST-DRAW multiply on the threshold
   // (spec §2 "invariance-safe"), so the expensive package buys real protection without ever
   // touching the draw sequence.
@@ -1479,7 +1615,13 @@ export function rollInjury(world: WorldState): void {
   const drawnPart = drawBodyRegion(injuryRng)
   const pushing = knockLive(world.knock, world.week) && world.knock!.choice === 'push'
   const part = pushing ? world.knock!.part : drawnPart
-  if (world.physioActive) weeksOut = Math.max(1, Math.round(weeksOut * (1 - ECONOMY.physio.recoverySpeedup)))
+  // ...and the same rung scaling on how long she is out. Budget = today's 12% exactly.
+  if (world.physioActive) {
+    weeksOut = Math.max(
+      1,
+      Math.round(weeksOut * physioRecoveryFactor(tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)))),
+    )
+  }
   const descriptor = band.severity === 'minor' && weeksOut === 1 ? 'niggle' : SEVERITY_DESCRIPTOR[band.severity]
   const kind = `${part} ${descriptor}`
   world.injury = { kind, severity: band.severity, weeksRemaining: weeksOut, totalWeeks: weeksOut, sinceWeek: world.week }
@@ -1678,6 +1820,132 @@ export function rollKnock(world: WorldState): void {
       ? `Her ${knock.part} is sore again – the same one. It needs a decision.`
       : `She has picked up a sore ${knock.part}. Not an injury – yet.`,
   })
+  // ⚠ AND IF THE FAMILY IS PAYING SOMEBODY, HE ANSWERS IT – docs/specs/coach-as-load-manager.md §8.
+  // This single line is the routing the whole slice is about: `pendingKnock` is false immediately, so
+  // `advanceWeeks` never halts and the dialog never opens. That is the product - «you are buying your
+  // attention back» - and it is why the rule lives in coachLoad.ts rather than here.
+  //
+  // ⚠ THE EVENT SURVIVES THE DIALOG'S REMOVAL, and that is not decoration. W4 exists because the owner
+  // complained that training weeks «просто скипались»; a slice that silently deleted the stop for four
+  // of five rungs would hand him that complaint back dressed as a feature. So the knock still happens,
+  // still costs (KNOCK_REST_GROWTH or the loaded roll), still takes the week's frame and its scrap - and
+  // `coachDecidedKnock` below writes what was decided into the feed in the coach's own voice. He finds
+  // out what happened to his daughter; he just is not the one deciding.
+  if (coachManagesLoad(tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)))) {
+    coachDecidesKnock(world)
+  }
+}
+
+
+/** The hired coach's answer, taken the moment the knock arrives. Separate from `decideKnock` so the
+ *  parent's path keeps its guard (`decideKnock` throws on an already-answered knock, which is a real
+ *  protection against a double-tap) while this one is an internal step of the same tick.
+ *
+ *  ZERO DRAWS: `coachKnockCall` is arithmetic, and the one draw behind `shownStamina` is the radar's
+ *  per-career `seed:read:stamina` - taken on its own sub-stream, outside the MAIN sequence, exactly as
+ *  `drawKnock` takes `seed:knock:<week>`. The frozen capture (41550 / e6b0c709) cannot move. */
+function coachDecidesKnock(world: WorldState): void {
+  const k = world.knock
+  if (!k || k.choice !== null) return
+  const view = coachLoadViewOf(world)
+  // ⚠ ...UNLESS HE WANTS THE PARENT'S SAY. The call stays unanswered, `pendingKnock` stays true, and the
+  // dialog opens exactly as it does for a self-coached career - which is what keeps W4's content alive on
+  // a career that has a coach (DEFAULT_PROFILE is 'middle', so that is most of them). See coachLoad.ts
+  // `coachEscalates`: the zone scales with his haze, so a cheap coach asks often and an Elite one almost
+  // never - and "you are buying your attention back" becomes a number instead of a slogan.
+  if (coachEscalates(view, k.repeat)) {
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: k.repeat
+        ? `The coach wants to talk about her ${k.part} before anyone decides.`
+        : `The coach is in two minds about the ${k.part}. He is asking us.`,
+    })
+    return
+  }
+  const choice = coachKnockCall(view, k.repeat)
+  k.choice = choice
+  k.untilWeek = knockUntilWeek(k, choice)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    // HIS voice, not the parent's – the feed's `decideKnock` lines are what the family decided, and
+    // these are what they were told. The difference is the thing they are paying for.
+    text:
+      choice === 'rest'
+        ? `The coach is keeping her off the court this week – the ${k.part}.`
+        : `The coach is happy for her to train through the ${k.part}.`,
+  })
+}
+
+// =================================================================================================
+// THE COACH AS LOAD MANAGER (docs/specs/coach-as-load-manager.md) – the world side
+// =================================================================================================
+//
+// The design, the rejected oracle and the both-directions argument all live in engine/coachLoad.ts,
+// which is pure and world-free. This is the half that touches the world: assembling what the coach can
+// SEE, and letting him answer the knock when the family is paying somebody to.
+
+/**
+ * HER SKILLS RADAR VIEW – hoisted out of `toSnapshot` by the load slice, because the COACH now reads it
+ * too and at a different moment (inside the tick, when a knock arrives) than the screens do.
+ *
+ * ⚠ ONE SPELLING, WHICH IS THE WHOLE REASON IT IS A FUNCTION. `toSnapshot`'s own note already argues
+ * this for the two readers it had ("a second literal here would be a second place for 'which matches
+ * count' to drift"); a third reader inside the tick makes it load-bearing rather than tidy. If the
+ * coach acted on a differently-assembled view, he would be managing a girl the radar is not drawing -
+ * and §8's entire claim is that his belief and the radar's contour are the SAME belief.
+ */
+export function radarViewOf(world: WorldState): RadarWorldView {
+  return {
+    seed: world.seed,
+    week: world.week,
+    kidId: KID_ID,
+    skills: world.skills,
+    // Where she began, recomputed from the seed rather than stored - see RadarWorldView.startSkills.
+    // `growWeek` is the only thing in the engine that moves `world.skills`, so the difference between
+    // these two IS her development, and neither of them ever leaves this object.
+    startSkills: startingSkills(world.seed, world.profile),
+    potential: world.potential,
+    coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
+    coachSinceWeek: coachSinceWeek(world),
+    matchesPlayed: matchesEverPlayed(world),
+    // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
+    // the radar nothing, for the same reason it never shows on her face (R11-2).
+    matches: world.events
+      .filter((e) => e.match !== undefined && !e.friendly)
+      .map((e) => e.match!)
+      .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
+  }
+}
+
+/**
+ * WHAT THE COACH CAN SEE OF HER BODY, this week.
+ *
+ * `shownStamina` is the radar's own estimate of the stamina axis - her true value displaced by his
+ * rung's haze, one draw per career with a FIXED SIGN (see radar.ts `shownSkill`). Stamina is the axis
+ * because it is the physical one: a load manager is judging how much tennis she can absorb, and that is
+ * what this attribute means.
+ *
+ * ⚠ CONDITION IS PASSED EXACT, NOT FOGGED, and that asymmetry is deliberate. The condition bar is a
+ * number the game prints for the player outright, so a coach who could not read it would be blinder
+ * than the parent who hired him - which is not a model of a cheap coach, it is a bug. What a cheap coach
+ * gets wrong is how much of it she can AFFORD to spend, and that is `shownStamina`.
+ *
+ * Called at most a handful of times per career (a knock arrives ~15 times over 14->18), so the evidence
+ * fold it costs is not on the weekly path.
+ */
+export function coachLoadViewOf(world: WorldState): CoachLoadView {
+  const view = radarViewOf(world)
+  const weeksTogether = Math.max(0, world.week - coachSinceWeek(world))
+  const confidence = axisConfidence(view.coachTier, weeksTogether, axisEvidence(view, 'stamina').level)
+  return {
+    tier: view.coachTier,
+    shownStamina: shownSkill(view, 'stamina', confidence),
+    condition: world.condition,
+    playedWeeks: playedWeeksInTrailing4(world),
+    confidence,
+  }
 }
 
 /** THE PARENT ANSWERS. The only way an undecided knock clears, and the only way time moves again.
@@ -2022,6 +2290,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background) - weeklyIncome),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],
+      loadNote: coachLoadNote(coach.tier),
     }
   })
 }
@@ -3043,7 +3312,18 @@ export function createWorld(
     // Phase 4: her starting build is the SAME derivation that used to be recomputed on demand, so
     // week 0 is byte-identical to the pre-development engine. What changed is that it is now state,
     // and state moves.
-    skills: startingSkills(seed, profile),
+    // ⚠ TASK 55 – AND THE HEAD START HER BIRTH MONTH BOUGHT HER. `startingSkills` stays the pure birth
+    // derivation (the build she was BORN with, seed-only, and the radar's baseline for every existing
+    // save); this adds the eleven months of extra training a January girl has had by the time the game
+    // opens. Applied HERE rather than inside `startingSkills` for two reasons: that function is
+    // documented as the birth build and two girls with the same seed really do have the same one, and
+    // every save written before this existed keeps a radar baseline that has not moved.
+    // POST-DRAW arithmetic, so no stream is touched.
+    skills: withHeadStart(startingSkills(seed, profile), profile.birthMonth),
+    // ⚠ THE CEILING IS ROLLED OFF THE BIRTH BUILD, NOT THE HEAD-STARTED ONE. `rollPotential` adds a band
+    // on top of where she starts, so feeding it the head start would hand the January girl a higher
+    // CEILING as well as a better start - turning a timing effect into a talent effect, which is exactly
+    // what task 55 must not become. Being born in January does not make her able to get better.
     potential: rollPotential(seed, startingSkills(seed, profile)),
     // Nobody is backing her yet. The first review is the season boundary at week 52 – she has to
     // put a year in front of them before anyone writes a letter.
@@ -3379,7 +3659,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   world.skills = growWeek({
     skills: world.skills,
     potential: world.potential,
-    ageYears: ageAtWeek(world.week),
+    // ⚠ HER REAL AGE, not the band's - and this REPLACED a hybrid that said the same thing worse. It used
+    // to be `ageAtWeek(week) + relativeAgeYears(birthMonth)`: the band's age plus an offset standing in
+    // for a birthday. `kidAgeExact` is the birthday itself, off the game's own calendar, so the number is
+    // now a fact rather than a correction - and a December girl develops at 13 because she IS 13, which is
+    // the owner's point. Same magnitude, one concept instead of two. No new draw: `growWeek` keeps
+    // `seed:growth:<week>`.
+    ageYears: kidAgeExact(world.week, world.profile.birthMonth),
     plan: world.plan,
     // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR (R4). A competition week she has not bought him
     //     for is a week he is not there, so it develops at the self-coached rate - which is what
@@ -3407,6 +3693,15 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     e6b0c709) cannot move. `ordinaryTrainingWeek` also rules out every week with a pending
   //     tournament, so a knock can never arrive on a week the reveal flow still owns.
   rollKnock(world)
+
+  // 3d. AND SHE HAS A BIRTHDAY. The owner, 30.07: the birth month should show up in the notes.
+  //
+  //     ONE WEEK A YEAR, and it is the first thing in the game that says her birth month out loud. The
+  //     player picks it in onboarding and until now it fed one cosmetic line on screen C - so the number
+  //     deciding her whole relative-age story was invisible. Now the week it names stops and says so.
+  //     ZERO DRAWS: a calendar comparison. Placed after `rollKnock` so a birthday week that also carries
+  //     a knock reads in the order it happened - she came off court sore, and it was her birthday.
+  markBirthday(world)
 
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
@@ -3759,6 +4054,41 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
+/** WHAT EACH RUNG DOES ABOUT HER BODY, for the market card - the load wave's two new differences said
+ *  in one sentence each: how good the medical team is, and how much deciding he takes off the parent.
+ *
+ *  Written as PROSE rather than numbers on purpose. The measured spread between hired rungs is a few
+ *  injury weeks over four years - real, and far too small to print as a figure without promising a
+ *  precision 120 seeds do not support. What IS crisply different is the second half (taps per career run
+ *  6.7 at budget to 2.0 at elite, a 3.4x ladder), and that is a thing a sentence can say honestly. */
+function coachLoadNote(tier: CoachTier): string {
+  switch (tier) {
+    case 'self':
+      return 'You manage her load – every call is yours, and nobody is watching her but you.'
+    case 'budget':
+      return 'Basic physio. He handles the easy calls and brings you the rest.'
+    case 'middle':
+      return 'Proper physio. He decides most weeks himself.'
+    case 'high':
+      return 'A good medical team. He rarely needs to ask you.'
+    case 'elite':
+      return 'The best medical team money buys. He handles her body, and you hear about it after.'
+  }
+}
+
+/** What he says when he would rather she skipped a trip. Three sentences, picked by HOW tired she is
+ *  rather than by luck - a draw here would make the same coach say different things about the same
+ *  Tuesday, and the card is re-derived on every snapshot. Player copy: short dash only.
+ *
+ *  The J300 line names the stake because that is the honest argument at the top of the ladder: the
+ *  entry fee and the flights are real money, and a first-round exit spends them for nothing. */
+function coachEntryLine(tier: TierId, condition: number): string {
+  const floor = ECONOMY.availability.minConditionToEnter[tier]
+  if (condition < floor - 5) return 'Your coach would not take her. She is empty.'
+  if (condition < floor) return 'Your coach would skip this one and get her legs back.'
+  return 'Your coach thinks she is a week short of her best for this.'
+}
+
 // --- snapshot ----------------------------------------------------------------
 function upcomingEvents(world: WorldState): UpcomingEvent[] {
   const entered = new Set(world.entries)
@@ -3767,6 +4097,11 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
   // would be the expensive half of this function. Surface-specific scaling still happens per event
   // inside the preview, which is where it belongs.
   const ranking = fullRanking(world)
+  // ...and the same argument for the COACH'S READ OF HER: it is one girl in one week, identical for
+  // every card, and `coachLoadViewOf` walks the retained match window to get there. Once per snapshot,
+  // null on a self-coached career because there is nobody to have an opinion.
+  const coachTier = tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId))
+  const coachLoad = coachManagesLoad(coachTier) ? coachLoadViewOf(world) : null
   return world.season
     .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)
     .sort((a, b) => a.week - b.week)
@@ -3801,6 +4136,25 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
           : gate.level === 'caution'
             ? { cautionReason: gate.reason as 'fatigued', cautionDetail: gate.detail }
             : {}
+      // THE HIRED COACH'S OPINION on this trip (load slice §8). Independent of the gate above: he can
+      // speak on an 'ok' card (his margin is scaled by what he believes about her stamina, so a good
+      // one warns BEFORE the fatigue rule does) and he can stay quiet on a 'caution' one (a cheap coach
+      // who thinks she is tough). That gap is the thing being sold, so the two are never merged.
+      //
+      // Computed here rather than inside `entryStatus` deliberately: `entryStatus` is the ENGINE's
+      // verdict on whether she may enter, and this changes no verdict at all. It is somebody's view.
+      //
+      // ⚠ AND ONLY ON A CARD SHE COULD ACTUALLY ENTER. A test caught this: the advice was being attached to
+      // HARD-BLOCKED cards too - a tier she has no points for, an exam week, a season whose entry cap she
+      // has spent - so a coach was giving his view on a tournament that is not on offer. Worse, it made
+      // "the advice never locks a card" unverifiable, because the card was already locked for its own
+      // reasons and the two were indistinguishable on screen. He speaks about trips she can take.
+      const coachSay =
+        gate.level !== 'blocked' &&
+        coachLoad !== null &&
+        coachWarnsEntry(coachLoad, ECONOMY.availability.minConditionToEnter[e.tier])
+          ? { coachCaution: coachEntryLine(e.tier, world.condition) }
+          : {}
       return {
         id: e.id,
         week: e.week,
@@ -3825,6 +4179,7 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // a FUTURE week by construction, so the closed list is the whole condition.
         cancellable: isEntered && world.week > e.deadlineWeek,
         ...reason,
+        ...coachSay,
       }
     })
 }
@@ -4101,6 +4456,8 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // off the ankle», about a week she spent on court. `knockGoverns` is the same window the tick
     // actually charges (see its note: growWeek at 3b, rollKnock at 3c), so the frame and the words now
     // agree with the arithmetic instead of with each other.
+    // ...and the one week a year that is about HER rather than about tennis.
+    birthdayAge: birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay),
     knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,
     knockPart: knockGoverns(world.knock, world.week) ? world.knock!.part : null,
   })
@@ -4109,26 +4466,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // because the two readings MUST see the same girl: a second literal here would be a second place
   // for "which matches count" to drift, and the card and the radar would then disagree about how
   // much anybody can see, on the same screen, in the same week.
-  const radarView: RadarWorldView = {
-    seed: world.seed,
-    week: world.week,
-    kidId: KID_ID,
-    skills: world.skills,
-    // Where she began, recomputed from the seed rather than stored - see RadarWorldView.startSkills.
-    // `growWeek` is the only thing in the engine that moves `world.skills`, so the difference between
-    // these two IS her development, and neither of them ever leaves this object.
-    startSkills: startingSkills(world.seed, world.profile),
-    potential: world.potential,
-    coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
-    coachSinceWeek: coachSinceWeek(world),
-    matchesPlayed: matchesEverPlayed(world),
-    // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
-    // the radar nothing, for the same reason it never shows on her face (R11-2).
-    matches: world.events
-      .filter((e) => e.match !== undefined && !e.friendly)
-      .map((e) => e.match!)
-      .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
-  }
+  const radarView = radarViewOf(world)
   // ...and the evidence fold behind BOTH of them, walked once. `axisEvidence` reads the whole
   // retained match window per axis, so asking the two builders independently would walk it eight
   // times a snapshot for one girl in one week.

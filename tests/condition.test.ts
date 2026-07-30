@@ -191,7 +191,19 @@ const REF = {
   // changes which juniors end the year holding points, and the two compose to 121. Neither branch was
   // wrong - this is the number the merged code produces, and it was measured here rather than carried
   // over from either side. Same check as before: it is the ITF fold, and the mixed fold is elsewhere.
-  kidRank: 121,
+  // ⚠⚠ RE-PINNED 121 -> 120 (30.07, task 55's COHORT HALF), and the four numbers above are the reason this
+  // is a re-pin and not a regression: `count` 41550, `hash` e6b0c709, `head` and `tail` are asserted BEFORE
+  // this line and every one of them still passes byte-for-byte. The stream did not move, and it could not
+  // have: the cohort's birth months come off their own `seed:aibirth:<id>` sub-stream and the head start is
+  // arithmetic applied AFTER `makeJunior`'s thirteen draws, so neither the count nor the order of a single
+  // main-stream value changed.
+  //
+  // WHAT MOVED IS WHO IS GOOD. Every rival now sits somewhere inside her own birth year, so the older girls
+  // in each band are a point or so stronger and the younger ones a point weaker - which changes who wins
+  // brackets, which changes which juniors end the season holding counting points, which moves the dense
+  // rank the point-less kid shares by one place. One place, from a change that touches all 199 of them,
+  // is the size of effect to expect from a ~1.1-point shift inside a 30-70 spread.
+  kidRank: 120,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
