@@ -154,6 +154,8 @@ export interface DiaryWorldView {
   milestones: readonly Milestone[]
   /** a booked family vacation resolved this week */
   vacationWeek: boolean
+  /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
+  trainPct: number
 }
 
 /** Condition, as the word Home speaks (D3). The 80/60/40 rungs mirror the idle-emotion ladder
@@ -554,6 +556,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     examsWeek: isExamWeek(week),
     offSeasonWeek: isOffSeasonWeek(week),
     vacationWeek: view.vacationWeek,
+    trainPct: view.trainPct,
     fundsPressure: fundsPressureOf(view.fundsCents),
     freshMilestone,
     // R14-2: the two facts here that are drawn rather than read, and they are drawn because there is
@@ -1429,6 +1432,314 @@ export function travelNoteFor(travel: TravelHomeFacts, seed: string): string {
   return pool[Math.floor(rng() * pool.length)].text
 }
 
+// --- W2: THE ORDINARY WEEK GETS THE SAME SCRAP AND THE SAME HAND ------------------------------
+//
+// The owner, 30.07: «Чтобы тренировочные недели не просто скипались нужно всё-таки видимо пришло
+// время сделать какое-то пошаговый события Что происходит на этих неделях когда нет матчей а только
+// тренировки».
+//
+// WHERE THE HOLE ACTUALLY IS, because "add events" could mean a month of work and the answer turned
+// out to be an object that already exists. The Weekly Story has exactly one thing on it that is a
+// STORY: the handwritten scrap under the painting, in the parent's own hand. On a come-home week it
+// says «She asked what was for dinner before we were out of the car park.» On a training week – the
+// week the owner is complaining about – the same scrap says «Restring – multifilament», because its
+// fallback is the base-cost expense line. The most story-shaped thing on the screen is a RECEIPT on
+// precisely the weeks the screen has nothing else to offer. So the ordinary week gets its own note,
+// on the same scrap, in the same hand, under the same honesty discipline as TRAVEL_NOTES.
+//
+// THE FOUR RULES OF THE TRAVEL POOL HOLD WORD FOR WORD, and they are what stop this being decoration:
+// third person, somebody who loves her holding the pen; warm, plain, small; no grading her; and every
+// line TRUE of the week it lands on, licensed by facts and re-checked by the honesty pin.
+//
+// WHAT IT IS ALLOWED TO TALK ABOUT, and this is the design decision rather than the writing:
+//
+//   THE PLAYER'S OWN DECISION IS THE SUBJECT. `trainPct` is the one fact in DiaryFacts that is HIS
+//   choice and not the world's, and it is the whole content of a training week. Grind (85) is a week
+//   he spent her; Light (60) is a week he gave back. So the pool's biggest band is the three plan
+//   bands, and the notes report the COST and the SLACK of the decision he made – in the kitchen, not
+//   on a chart. That is what makes an ordinary week worth reading rather than tapping through: it is
+//   the only place the game ever says out loud what Grind 85/15 does to a fifteen-year-old.
+//
+//   THE CALENDAR'S OWN WEEKS ALWAYS SPEAK. Exams, the off-season, a family holiday, a practice match
+//   and a layoff are events in her life that happen to have no tournament in them; those weeks are
+//   not "ordinary" and they get a note every time.
+//
+// ...AND IT IS QUIET MOST WEEKS. The training card learned that lesson this wave (buildTrainingRead)
+// and it is the right one: a week that always says something is as dull as a week that never does.
+// The ordinary bands are gated on a coin – `WEEK_NOTE_CHANCE` – so roughly one training week in three
+// carries a note and the rest keep the ledger line they have always had. That fallback is why the
+// gate can exist at all: unlike `travelNote`, silence here is not a missing string, it is the scrap
+// going back to being a receipt.
+//
+// ⚠ THE COIN AND THE PICK ARE ONE SUB-STREAM, `seed:weeknote:<week>` – purpose-scoped, stable for the
+// whole week, and ZERO draws on the MAIN weekly stream (nothing in this module runs inside the tick),
+// so the frozen capture 41550 / e6b0c709 cannot move by construction.
+
+/** What a week note ASSERTS, as data the honesty pin can hold against the week's facts. Same idea as
+ *  `TravelClaims`: a mis-licensed line is a failing test, not a matter of taste. */
+export interface WeekClaims {
+  /** asserts a hard training week – unselectable below WEEK_NOTE_GRIND */
+  grind?: true
+  /** asserts an easy week – unselectable above WEEK_NOTE_LIGHT */
+  light?: true
+  /** asserts a worn body – unselectable above the `worn` rung */
+  tired?: true
+  /** asserts a genuinely fresh body – unselectable below `fresh` */
+  freshBody?: true
+  /** asserts an active injury */
+  injured?: true
+  exams?: true
+  vacation?: true
+  offSeason?: true
+  /** asserts a practice friendly this week */
+  practice?: true
+  /** asserts money is tight */
+  fundsTight?: true
+  /** asserts no tournament and no journey – she was at home this week */
+  athome?: true
+}
+
+export interface WeekNote {
+  text: string
+  claims: WeekClaims
+  license: (f: DiaryFacts) => boolean
+}
+
+/** At or above this the week was a grind; at or below it, a light one. The preset ladder is
+ *  60 / 75 / 85 (WEEK_PLAN_PRESETS), so these are the two ends of it and 75 is the quiet middle. */
+export const WEEK_NOTE_GRIND = 85
+export const WEEK_NOTE_LIGHT = 60
+/** How often an ORDINARY training week says something. The calendar's own weeks ignore this. */
+export const WEEK_NOTE_CHANCE = 1 / 3
+
+/** She was at home and nothing competitive happened – the weeks this pool is for. Note this is
+ *  WIDER than `quiet` above: an exam week, a holiday and a layoff are all weeks with a note here,
+ *  and `quiet` deliberately excludes them. */
+const athome = (f: DiaryFacts): boolean =>
+  !f.playedTournament && !f.travelled && f.travelHomeScene === null
+
+/** An ordinary training week: at home, healthy, and the calendar is holding nothing. */
+const plainTraining = (f: DiaryFacts): boolean =>
+  athome(f) && f.injured === null && !f.examsWeek && !f.offSeasonWeek && !f.vacationWeek && !f.playedPractice
+
+export const WEEK_NOTES: readonly WeekNote[] = [
+  // --- A GRIND WEEK: what 85/15 actually looks like from the kitchen -----------------------------
+  {
+    text: 'Six days on court. She ate like someone twice her size.',
+    claims: { grind: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+  },
+  {
+    text: 'Out before we were up, back after dark. All week.',
+    claims: { grind: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+  },
+  {
+    text: 'She fell asleep on the sofa with her shoes on. Twice.',
+    claims: { grind: true, tired: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND && f.conditionBand !== 'fresh' && f.conditionBand !== 'ok',
+  },
+  {
+    text: 'Three shirts a day this week. The machine has not stopped.',
+    claims: { grind: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+  },
+  {
+    text: 'She asked for an extra hour on Sunday. We said no. She went anyway.',
+    claims: { grind: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+  },
+  {
+    text: 'A blister on her serving hand. She taped it and said nothing.',
+    claims: { grind: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct >= WEEK_NOTE_GRIND,
+  },
+  // --- A LIGHT WEEK: the slack he gave back, and what she did with it ----------------------------
+  {
+    text: 'Two mornings off. She spent both of them at the courts anyway.',
+    claims: { light: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
+  {
+    text: 'A slow week. She baked something and it was mostly edible.',
+    claims: { light: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
+  {
+    text: 'She had time to be fifteen this week. It suited her.',
+    claims: { light: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
+  {
+    text: 'Light week. She and the neighbour argued about a film for an hour.',
+    claims: { light: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
+  {
+    text: 'Rest days, and she was restless by the second one.',
+    claims: { light: true, athome: true },
+    license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
+  // --- THE MIDDLE, AND ANY TRAINING WEEK AT ALL -------------------------------------------------
+  // Licensed on the plain training week alone, so the long stretches at Balanced are not four
+  // sentences deep. Nothing here mentions how hard the week was, because that is the one thing
+  // these do not know.
+  {
+    text: 'Drills, school, dinner, bed. She did not complain once.',
+    claims: { athome: true },
+    license: plainTraining,
+  },
+  {
+    text: 'Same courts, same hours. She is getting quietly better at this.',
+    claims: { athome: true },
+    license: plainTraining,
+  },
+  {
+    text: 'She practised her toss against the garage door until it got dark.',
+    claims: { athome: true },
+    license: plainTraining,
+  },
+  {
+    text: 'A week of nothing much. She read a whole book on the bus.',
+    claims: { athome: true },
+    license: plainTraining,
+  },
+  {
+    text: 'She has started keeping a notebook of what the coach says.',
+    claims: { athome: true },
+    license: plainTraining,
+  },
+  {
+    text: 'New strings, an old grip she refuses to change. Superstition.',
+    claims: { athome: true },
+    license: plainTraining,
+  },
+  {
+    text: 'She watched a match on her phone at the table and forgot to eat.',
+    claims: { athome: true },
+    license: plainTraining,
+  },
+  {
+    text: 'Rain all week. She hit against the wall in the car park instead.',
+    claims: { athome: true },
+    license: plainTraining,
+  },
+  // --- HER BODY, on a week nothing else is the story --------------------------------------------
+  {
+    text: 'She is running on empty and pretending she is not.',
+    claims: { tired: true, athome: true },
+    license: (f) => plainTraining(f) && f.conditionBand === 'drained',
+  },
+  {
+    text: 'Ice on her knee in front of the television. Not a word about it.',
+    claims: { tired: true, athome: true },
+    license: (f) => plainTraining(f) && f.conditionBand === 'drained',
+  },
+  {
+    text: 'She has her legs back. It shows in the way she walks.',
+    claims: { freshBody: true, athome: true },
+    license: (f) => plainTraining(f) && f.conditionBand === 'fresh',
+  },
+  // --- MONEY, which is a training-week subject if ever there was one ----------------------------
+  {
+    text: 'We went through the coaching bill twice. It said the same thing both times.',
+    claims: { fundsTight: true, athome: true },
+    license: (f) => plainTraining(f) && f.fundsPressure === 'tight',
+  },
+  {
+    text: 'She offered to skip a session to save the money. We did not let her.',
+    claims: { fundsTight: true, athome: true },
+    license: (f) => plainTraining(f) && f.fundsPressure === 'tight',
+  },
+  // --- THE CALENDAR'S OWN WEEKS. These ALWAYS speak – see the note above. -----------------------
+  {
+    text: 'Exams. The racquet stood in the hall all week and she looked at it a lot.',
+    claims: { exams: true, athome: true },
+    license: (f) => athome(f) && f.examsWeek && f.injured === null,
+  },
+  {
+    text: 'Revision at the kitchen table until eleven. Tennis waited.',
+    claims: { exams: true, athome: true },
+    license: (f) => athome(f) && f.examsWeek && f.injured === null,
+  },
+  {
+    text: 'She revised with the television on and somehow it worked.',
+    claims: { exams: true, athome: true },
+    license: (f) => athome(f) && f.examsWeek && f.injured === null,
+  },
+  {
+    text: 'A week away as a family. Nobody mentioned rankings once.',
+    claims: { vacation: true, athome: true },
+    license: (f) => athome(f) && f.vacationWeek && f.injured === null,
+  },
+  {
+    text: 'She swam every day and came back with a line across her nose.',
+    claims: { vacation: true, athome: true },
+    license: (f) => athome(f) && f.vacationWeek && f.injured === null,
+  },
+  {
+    text: 'The season is over. She slept until nine and it was glorious.',
+    claims: { offSeason: true, athome: true },
+    license: (f) => athome(f) && f.offSeasonWeek && !f.vacationWeek && f.injured === null,
+  },
+  {
+    text: 'Off-season. The bag is in the cupboard and the house is louder.',
+    claims: { offSeason: true, athome: true },
+    license: (f) => athome(f) && f.offSeasonWeek && !f.vacationWeek && f.injured === null,
+  },
+  {
+    text: 'December. She is teaching her cousin to serve, badly.',
+    claims: { offSeason: true, athome: true },
+    license: (f) => athome(f) && f.offSeasonWeek && !f.vacationWeek && f.injured === null,
+  },
+  {
+    text: 'A hit-out at the club. She played the whole thing like it counted.',
+    claims: { practice: true, athome: true },
+    license: (f) => athome(f) && f.playedPractice && f.injured === null,
+  },
+  {
+    text: 'A practice match, and she still shook hands like it was a final.',
+    claims: { practice: true, athome: true },
+    license: (f) => athome(f) && f.playedPractice && f.injured === null,
+  },
+  // --- THE LAYOFF WEEKS. An injury takes the note, the way it does on the journey home. ----------
+  {
+    text: 'Rehab, three times this week. She counts the sessions down out loud.',
+    claims: { injured: true, athome: true },
+    license: (f) => athome(f) && f.injured !== null,
+  },
+  {
+    text: 'She sat by the court with her homework and watched the others hit.',
+    claims: { injured: true, athome: true },
+    license: (f) => athome(f) && f.injured !== null,
+  },
+  {
+    text: 'The physio says it is going well. She wanted a second opinion.',
+    claims: { injured: true, athome: true },
+    license: (f) => athome(f) && f.injured !== null,
+  },
+]
+
+/**
+ * The ordinary week's note, or null.
+ *
+ * Two decisions, one draw, on `seed:weeknote:<week>`: whether an ordinary training week speaks at
+ * all (WEEK_NOTE_CHANCE – the calendar's own weeks skip this coin), and which of the licensed lines
+ * it speaks. Pure and deterministic: the same week always says the same thing.
+ *
+ * Returns null on a come-home week without being asked to know about one – `athome` reads
+ * `travelHomeScene`, so the scrap can never have two authors in one week.
+ */
+export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
+  const pool = WEEK_NOTES.filter((n) => n.license(facts))
+  if (pool.length === 0) return null
+  const rng = rngFromSeed(`${seed}:weeknote:${facts.week}`)
+  // The coin first, so the pick is drawn off the same stream in the same order every time.
+  const coin = rng()
+  if (plainTraining(facts) && coin >= WEEK_NOTE_CHANCE) return null
+  return pool[Math.floor(rng() * pool.length)].text
+}
+
 // --- the greeting (epic/redesign-home) --------------------------------------------------------
 
 /** The four words the diary page can open with. Time of day, nothing else – the greeting is
@@ -1477,6 +1788,14 @@ function capitalize(s: string): string {
   return s.length > 0 ? s[0].toUpperCase() + s.slice(1) : s
 }
 
+/** How long a memory line may be. The Memory polaroid is a `card-short` (138px) in Home's 2x2 grid,
+ *  and the line is set in the handwriting face beside a 68px photograph – so a long sentence does not
+ *  clip, it STRETCHES the grid row and the card stops matching the coach card next to it. 39 is the
+ *  longest line the pool already had ("First time through to a Regional final.") and it wraps to two
+ *  lines; W3's debut lines were written to the same budget after the first draft's fifty characters
+ *  pushed the card to 207px in the browser. Pinned in tests/diary.test.ts. */
+export const MEMORY_LINE_MAX = 39
+
 export const MEMORY_LINES: readonly MemoryLine[] = [
   { type: 'title', text: (m) => `Her first ${short(m.tier ?? null)} title.` },
   { type: 'title', text: (m) => `The week she won her first ${short(m.tier ?? null)}.` },
@@ -1489,23 +1808,78 @@ export const MEMORY_LINES: readonly MemoryLine[] = [
   { type: 'season-rank', text: (m) => `She ended ${seasonYear(m.seasonIndex ?? 0)} ranked #${m.rank ?? 0}.` },
 ]
 
-/** No memories in the first ~8 weeks of a career – there is nothing to remember yet. The same
- *  distance also ages the milestones an echo may pick from. */
-export const MEMORY_MIN_WEEKS = 8
-/** The echo cadence: ~1 week in 5 shows a card – "roughly every 4-6 weeks". */
-export const MEMORY_ECHO_CHANCE = 0.2
+/** How old a MILESTONE has to be before she remembers it rather than just having done it.
+ *
+ *  ⚠ W3 (owner, 30.07): 8 → 4. «Only after 10 weeks I saw a first memory. I believe we could pin it
+ *  faster». Eight weeks was two months of a card reading "Too early for memories" AFTER her first
+ *  title had already happened – on the live trace her first Local came at W3 and the card stayed
+ *  empty until W11. Four weeks is a month, which is far enough back that "remember" is the right
+ *  word and near enough that the first thing she ever won is on the wall before the first season is
+ *  a third gone. */
+export const MEMORY_MIN_WEEKS = 4
+/** ...and the card is not empty before even that. W3: the career's OPENING WEEK is a memory from
+ *  week 2 onward – see `debutMemory`. Two weeks, because "the week she started" needs one week to
+ *  have finished and one more to be behind her. */
+export const MEMORY_DEBUT_WEEKS = 2
 /** An anniversary is the milestone's week ≈ one season ago, ±1 week. */
 export const MEMORY_ANNIVERSARY_TOLERANCE = 1
+
+/** THE FIRST MEMORY OF ALL – the week the whole thing started.
+ *
+ *  The owner asked when it would stop being "too early", and the answer the card gave was "after
+ *  something has happened to her". That is the wrong answer, because something HAS: she walked into
+ *  a club with a bag she could barely carry, and the game's own onboarding hero is a painting of
+ *  exactly that girl. So the album opens with the week it opens.
+ *
+ *  IT IS NOT A LEDGER ENTRY, and that is the whole reason this is cheap: week 0 happens in every
+ *  career, so there is nothing to capture, nothing to persist and no schema to bump (`MemoryCard`
+ *  is derived). It carries `milestone: null` and is the only card that ever does.
+ *
+ *  The painting is `norm` in the band she started in – the same picture the onboarding hero shows,
+ *  which is what makes this read as the first page of the album rather than as a missing entry.
+ *
+ *  ⚠ AND IT IS WRITTEN TO THE CARD'S OWN BUDGET (MEMORY_LINE_MAX). The first draft ran to fifty
+ *  characters, which is a fine sentence and four lines of handwriting on a 375pt phone: the polaroid
+ *  card grew from 138px to 207px and stopped matching the coach card beside it in the 2x2 grid. The
+ *  existing lines top out at 39 ("First time through to a Regional final."), so that is the family
+ *  these have to join. Measured in the browser, then pinned in tests/diary.test.ts. */
+const DEBUT_LINES: readonly string[] = [
+  'The week it all started.',
+  'Her very first week at the club.',
+  'Week one. New grips, new nerves.',
+  'The first walk through those gates.',
+]
+
+function debutMemory(week: number, seed: string, startAgeYears: number): MemoryCard {
+  const rng = rngFromSeed(`${seed}:memory:debut:${week}`)
+  return {
+    kind: 'debut',
+    milestone: null,
+    whenLabel: weekLabel(0),
+    stage: portraitStage(startAgeYears),
+    emotion: 'norm',
+    line: DEBUT_LINES[Math.floor(rng() * DEBUT_LINES.length)],
+  }
+}
 
 /** The Memory card for this week, or null.
  *
  *  (a) ANNIVERSARY: a milestone whose week is ~52 weeks ago (±1) always shows – "one year ago".
- *  (b) ECHO: otherwise `seed:memory:<week>` decides, deterministically, whether this is one of the
- *      roughly-every-5 weeks that remembers something OTHER than the obvious.
- *  (c) RECENT: and when neither fires, the LATEST aged milestone. The card is headed "Recent
- *      memory", so it may be quiet but it may not be empty – it used to tell a girl four seasons
- *      in that it was "too early for memories". Only null before she HAS a memory: the first eight
- *      weeks, or a career with nothing captured yet.
+ *  (b) THE ROTATION: otherwise the card walks her album, one entry per week, cursor = the week.
+ *      `kind` reports where the walk landed – `recent` on her newest, `debut` on the opening week,
+ *      `echo` on anything older in between.
+ *
+ *  ⚠ W3 – THE ROTATION REPLACES "ALWAYS THE NEWEST" (owner, 30.07: «maybe make rotation of all
+ *  previous? Is it difficult to do?»). It is not difficult, and the reason is worth writing down: it
+ *  needs NO STATE. A cursor that has to be remembered would be a new persisted field, a schema bump
+ *  and a golden save; the WEEK NUMBER is already a monotonic counter every surface agrees on, so
+ *  `week % pool.length` is a rotation that is stable per week, identical on every device and every
+ *  replay, and survives a reload without storing a byte. What it costs is the old guarantee that the
+ *  card showed her latest thing – which was the behaviour the owner asked us to change. The echo coin
+ *  (`MEMORY_ECHO_CHANCE`, ~1 week in 5) is gone with it: the rotation reaches back every week now, so
+ *  a probability that decided whether to reach back at all has nothing left to decide.
+ *
+ *  Only null before she HAS a memory: the first two weeks of a brand-new career, and nothing else.
  *
  *  The painting is the age band she was in at the milestone's week – that is what makes time felt:
  *  a 17-year-old's Memory of her first Local title shows the 14-year-old who won it. */
@@ -1515,33 +1889,23 @@ export function selectMemory(
   seed: string,
   startAgeYears: number,
 ): MemoryCard | null {
-  if (week < MEMORY_MIN_WEEKS) return null
+  if (week < MEMORY_DEBUT_WEEKS) return null
   const aged = milestones.filter((m) => week - m.week >= MEMORY_MIN_WEEKS)
-  if (aged.length === 0) return null
+  // An anniversary is the one thing loud enough to interrupt the rotation.
   const anniversary = aged.find((m) => Math.abs(week - 52 - m.week) <= MEMORY_ANNIVERSARY_TOLERANCE)
-  const rng = rngFromSeed(`${seed}:memory:${week}`)
-  let kind: MemoryCard['kind']
-  let pick: Milestone
-  if (anniversary) {
-    kind = 'anniversary'
-    pick = anniversary
-  } else if (rng() < MEMORY_ECHO_CHANCE) {
-    kind = 'echo'
-    pick = aged[Math.floor(rng() * aged.length)]
-  } else {
-    // The quiet default. `aged` comes off the ledger in capture order, so the last one is the most
-    // recent thing that happened to her.
-    kind = 'recent'
-    pick = aged[aged.length - 1]
-  }
+  const debut = debutMemory(week, seed, startAgeYears)
+  if (!anniversary && aged.length === 0) return debut
+  // The album, oldest first: the opening week, then the milestones in capture order.
+  const pick = anniversary ?? (week % (aged.length + 1) === 0 ? null : aged[(week % (aged.length + 1)) - 1])
+  if (pick === null) return debut
   const lines = MEMORY_LINES.filter((l) => l.type === pick.type)
-  if (lines.length === 0) return null
+  if (lines.length === 0) return debut
   const lineRng = rngFromSeed(`${seed}:diary:${week}:memory`)
   const line = lines[Math.floor(lineRng() * lines.length)].text(pick)
   return {
-    kind,
+    kind: anniversary ? 'anniversary' : pick === aged[aged.length - 1] ? 'recent' : 'echo',
     milestone: pick,
-    whenLabel: kind === 'anniversary' ? 'one year ago' : weekLabel(pick.week),
+    whenLabel: anniversary ? 'one year ago' : weekLabel(pick.week),
     stage: portraitStage(startAgeYears + Math.floor(pick.week / 52)),
     emotion: MEMORY_EMOTION[pick.type],
     line,
@@ -1576,6 +1940,10 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     photoLine,
     greeting: greetingFor(facts, photoLine, view.seed),
     travelNote: travelHome ? travelNoteFor(travelHome, view.seed) : null,
+    // W2: the other author of the same scrap. The two can never both speak – `weekNoteFor`'s own
+    // `athome` licence reads `facts.travelHomeScene`, which is non-null on exactly the weeks
+    // `travelHome` is – so this is one object with two writers rather than two notes.
+    weekNote: weekNoteFor(facts, view.seed),
     // The licences cover every state the engine can produce (the coverage sweep in
     // tests/diary.test.ts proves it); the fallback is a sentence that is true of any week at all.
     conditionNote: diaryLine('condition', facts, view.seed) ?? 'The week went by.',
