@@ -16,14 +16,26 @@
 // persisted state, and the existence rule (composables/weekRecap.ts) is untouched.
 //
 // R10-12 SURVIVES THE REDESIGN: when the week held a booked friendly, this is where the player lands
-// after "Next week", so the live "watch it" path still starts here. D has no such control - our game
+// after "Next week", so the "watch it" path still starts here. D has no such control - our game
 // has a match in that week and the design's does not - so it sits between the grid and the goal
 // note, on the design's own CTA pill.
+//
+// ⚠ IT IS A REPLAY AND THE BUTTON SAYS SO (owner, 30.07: «She played her practice match - Watch it
+// live на кнопке. Ну точно не live, а replay, да?»). He is right, and the fix is one word, but the
+// reason is worth writing down because the same word is on other buttons. EVERY match in this game is
+// resolved by the ENGINE, inside the tick: `PracticeFlow` and `MatchViewer` re-simulate a stored
+// MatchRecord under its stored seed, which is what makes a replay reproduce it point for point. So
+// "live" was never a description of the simulation - at most it described the VIEWING, and on this
+// card it cannot even do that: the sentence next to the button is already in the past tense.
+//   TWO LABELS THAT ARE STILL "live" ARE NOT THIS FILE'S, and are listed in the report rather than
+//   edited: `MatchViewer`'s blinking Live badge (`mode === 'live'`) and `PracticeFlow`'s "Watch it",
+//   both owned by the match-screen wave this round.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
 import { useWeekAhead } from '../composables/weekAhead'
-import { weekArtUrl } from '../art/weeks'
+import { vacationPackage } from '../engine/economy'
+import { vacationArtUrl, weekArtUrl } from '../art/weeks'
 import { travelHomeUrl } from '../art/preload'
 import { weekLabel } from '../shared/dates'
 import PracticeFlow from './PracticeFlow.vue'
@@ -73,10 +85,36 @@ const plan = computed(() => game.snapshot?.plan ?? { train: 75, rest: 25 })
 const travelHomeScene = computed(() => game.snapshot?.diary.facts.travelHomeScene ?? null)
 const travelHomeMood = computed(() => game.snapshot?.diary.facts.travelHomeMood ?? null)
 
+// ...AND ON A WEEK SHE SPENT ON HOLIDAY, THE PAINTING IS THAT HOLIDAY (owner, 30.07: «на week recap
+// после отпуска можно использовать картинки соответствующих отпусков»).
+//
+// The five packages have had their own frames since 29.07 – the Season feed draws them on its
+// vacation cards and the planner's picker uses the same builder behind each row – and this screen was
+// the one surface that spent the week away and then showed her doing ladder drills, because
+// `weekArtStem` answers `training` for every in-year week with no tournament in it. Same argument as
+// the journey home, one rung quieter: the scene REPLACES a picture that was wrong.
+//
+// ⚠ THE BOOKING, NOT THE BOOLEAN. `diary.facts.vacationWeek` says a holiday resolved this week but not
+// WHICH, and which is the whole point of the item – so the package id comes off `snapshot.vacations`,
+// the same list the Home bar and the Season feed read. Bookings are kept for four trailing weeks
+// after they resolve (prunePlannerBookings), so the week's own row is still there when its story is
+// told. `vacationArtUrl` returns null for a package with no frame yet, and the fallback below covers
+// that without a 404 – exactly the contract the picker relies on.
+const vacationArt = computed<string | null>(() => {
+  const snap = game.snapshot
+  if (!snap || !snap.diary.facts.vacationWeek) return null
+  const booked = snap.vacations.find((v) => v.week === snap.week)
+  return booked ? vacationArtUrl(booked.packageId) : null
+})
+
+// THE ORDER IS THE ORDER OF WHAT THE WEEK WAS, loudest first, and no two branches can be true at
+// once: a journey home needs a competitive match of hers this week, a vacation week refuses
+// tournaments outright (the planner will not book one on an entered week and vice versa), and the
+// week painting is what is left.
 const artUrl = computed(() =>
   travelHomeScene.value
     ? travelHomeUrl(travelHomeScene.value, travelHomeMood.value ?? 'sleepy')
-    : weekArtUrl(week.value),
+    : (vacationArt.value ?? weekArtUrl(week.value)),
 )
 
 // The week paintings are decorative – the handwriting under them says what the week was. The travel
@@ -94,11 +132,19 @@ const MOOD_ALT: Record<TravelHomeMood, string> = {
   happy: 'Smiling',
   sad: 'Quiet',
 }
-const artAlt = computed(() =>
-  travelHomeScene.value
-    ? `${MOOD_ALT[travelHomeMood.value ?? 'sleepy']} ${SCENE_ALT[travelHomeScene.value]}`
-    : '',
-)
+// The vacation frame is described for the same reason: it is the only place on this page that says
+// WHICH of the five weeks away this was. The name is the catalogue's own label (economy.ts), never a
+// second table in a screen – the Season feed's `packageLabel` reads the same one.
+const artAlt = computed(() => {
+  if (travelHomeScene.value) {
+    return `${MOOD_ALT[travelHomeMood.value ?? 'sleepy']} ${SCENE_ALT[travelHomeScene.value]}`
+  }
+  if (!vacationArt.value) return ''
+  const snap = game.snapshot
+  const booked = snap?.vacations.find((v) => v.week === snap.week)
+  const label = booked ? (vacationPackage(booked.packageId)?.label ?? booked.packageId) : ''
+  return label ? `The family week away – ${label}` : ''
+})
 
 // Mon–Sun letters shown under the day dots (round-7 item 5b).
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -405,10 +451,14 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
       </Card>
     </div>
 
-    <!-- R10-12: the friendly she played this week – watch it live, right where the week landed. -->
+    <!-- R10-12: the friendly she played this week, replayable right where the week landed.
+         ⚠ W4 renamed this button – see the R10-12 note in the script for the owner's words and for
+         the two labels elsewhere that are NOT this file's to change. The short version: the engine
+         resolved this match inside the tick and the viewer re-simulates the stored record, so nothing
+         here is live, and the sentence beside the button is already in the past tense. -->
     <div v-if="friendlyMatch" class="recap-watch">
       <span class="hint">She played her practice match</span>
-      <PrimaryPill class="sfx-watch" @click="practiceLive = friendlyMatch">Watch it live</PrimaryPill>
+      <PrimaryPill class="sfx-watch" @click="practiceLive = friendlyMatch">Watch the replay</PrimaryPill>
     </div>
 
     <!-- The goal for the week ahead, taped on. -->
@@ -458,15 +508,21 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    ends up visibly squarer than the cards under it. One rung for both keeps what D is actually
    saying, and 18 is the one every card in the app already sits on - including the Season feed's
    week cards, which draw this same painting. */
-/* ⚠ THE SLOT IS D'S OWN PROPORTION (390x286), NOT EITHER PAINTING'S, and it has to be: this frame
-   now holds TWO art families of different shapes - the week paintings at 941x536 (1.76:1) and the
-   four travel scenes at 512x512 (1:1). Taking the ratio from the picture, the way the Season feed's
-   cards do, would make the story's own header jump from a letterbox to a square depending on
-   whether she came home that week, and a 343px square is taller than the design's whole slot. So
-   the slot is fixed at the design's shape and `object-fit: cover` (shared, `.week-art img`) crops
-   into it: the wide painting loses a little width, the square one a little height, and the page
-   keeps one silhouette. `max-height` is D's 286 for the wide screens where the ratio would exceed
-   it. */
+/* ⚠ THE SLOT IS D'S OWN PROPORTION (390x286), NOT ANY PAINTING'S, and it has to be: this frame now
+   holds THREE art families of three shapes - the week paintings at 941x536 (1.76:1), the twelve
+   travel scenes at 512x512 (1:1) and, since W4, the five vacation frames at 941x377 (2.50:1).
+   Taking the ratio from the picture, the way the Season feed's cards do, would make the story's own
+   header jump between a letterbox, a square and a band depending on what the week was, and a 343px
+   square is taller than the design's whole slot. So the slot is fixed at the design's shape and
+   `object-fit: cover` (shared, `.week-art img`) crops into it: the wide painting loses a little
+   width, the square one a little height, and the page keeps one silhouette. `max-height` is D's 286
+   for the wide screens where the ratio would exceed it.
+   ⚠ THE VACATION FRAME PAYS THE MOST FOR THIS - a 2.50:1 picture in a 1.36:1 slot is a 45% centre
+   crop - so it was checked rather than assumed, all five, at this exact ratio: every subject stays in
+   frame and the five stay unmistakably different from each other (a fire pit and friends, hens by a
+   village wall, a lake at sunset, the pool, the physio). Following the art instead, the way the
+   Season feed does, is one line here and a 137px band at 375; it is in the report as the alternative
+   if the owner wants the breadth back rather than one silhouette. */
 .recap-art {
   aspect-ratio: 390 / 286;
   max-height: 286px;

@@ -669,9 +669,17 @@ function openPracticeLive(match: WorldMatch, atWeek: number): void {
   practiceLiveWeek.value = atWeek
   practiceLive.value = match
 }
-/** The booked friendly for next week: play the week, then watch it live. If she got hurt (the
+/** The booked friendly for next week: play the week, then watch the match. If she got hurt (the
  *  engine cancels + refunds the booking) or the advance stopped for another reason, no friendly
- *  lands and nothing opens – the news event explains it, as before. */
+ *  lands and nothing opens – the news event explains it, as before.
+ *
+ *  ⚠ W4 RENAMED THE BUTTON THIS SITS BEHIND, from "Watch it live →" to "Play it and watch →". The
+ *  owner caught the same two words on the Weekly Story's copy of this control – «She played her
+ *  practice match - Watch it live на кнопке. Ну точно не live, а replay, да?» – and they were no
+ *  truer here, one tick removed: this handler ADVANCES THE WEEK, the engine resolves the friendly
+ *  inside that tick exactly as it always did, and PracticeFlow then re-simulates the stored record
+ *  under its stored seed. There is no moment at which anything is being watched as it happens. The
+ *  new label is what the press actually costs and buys, in that order. */
 async function playPracticeWeek(): Promise<void> {
   await game.advance(1)
   const friendly = thisWeekFriendly.value
@@ -1046,9 +1054,13 @@ function playExhibition(): void {
             </span>
             <span class="planned-actions">
               <!-- R10-12: on the week that is next, the friendly is enterable right here – this plays
-                   the week (the same single advance the Home bar does) and opens it live. -->
+                   the week (the same single advance the Home bar does) and opens the match.
+                   ⚠ W4 renamed this label – see `playPracticeWeek` in the script for what it used to
+                   promise and for the owner's words. Nothing here happens as you watch: the click
+                   TICKS THE WEEK, the engine resolves the friendly inside that tick, and the viewer
+                   then re-simulates the stored record. The label is what the press does. -->
               <PrimaryPill v-if="row.week === week + 1" class="sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
-                Watch it live →
+                Play it and watch →
               </PrimaryPill>
               <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
             </span>

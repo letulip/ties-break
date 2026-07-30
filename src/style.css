@@ -2262,7 +2262,8 @@ tr.kid-row td {
 
 /* A week the parent has already planned – a solid (not dashed) frame: it is a real commitment.
    R11-14: and it is a STACK, not a row. Side by side with its controls the text had ~285px minus the
-   buttons: on a practice row carrying both "Watch it live →" and "Cancel" that left about 80px, so
+   buttons: on a practice row carrying both the play control (then "Watch it live →", W4 renamed it
+   "Play it and watch →" – see SeasonScreen) and "Cancel" that left about 80px, so
    "🎾 Practice match + coach" broke mid-phrase across two lines and the date line broke too – four
    text lines for one booking. The owner asked for that label on one line; full width, it is one line
    with room to spare (measured ~170px of the 285px available at 375px). The controls take their own
@@ -2418,14 +2419,11 @@ tr.kid-row td {
   text-shadow: var(--shadow-text-on-art);
 }
 
-/* The price sits on the brightest corner of most of these pictures - a sunlit pool, a lake at
-   golden hour - so the bare pill lost its number. It gets the art backing every other figure on a
-   painted card already has. */
-.pkg-head .pill {
-  background: rgba(12, 18, 25, 0.62);
-  border-color: rgba(255, 255, 255, 0.2);
-  text-shadow: var(--shadow-text-on-art);
-}
+/* ⚠ `.pkg-head .pill` WAS HERE AND IS DELETED, not re-aimed: it gave the price a dark backing while
+   the price sat opposite the package name, and the 30.07 slice moved the price down to `.pkg-actions`
+   without taking the rule with it - so it has been styling nothing at all since (`.pkg-head` holds
+   one label and no chip). Its job is done properly by `.pkg-price`'s own on-art ink further down,
+   which is where the figure actually lives. */
 
 /* The pre-highlight: the cheapest package that brings her back above the target (or the
    off-season family week). Accent frame, never auto-booked. */
@@ -2462,20 +2460,37 @@ tr.kid-row td {
 /* THE PRICE, IN THE CORNER (owner, 30.07). `margin-left: auto` is what makes this the bottom-RIGHT
    corner: whatever else the row is carrying - a Recommended badge, an "Out of reach" note, both or
    neither - stays left and the price-plus-Book pair is pushed to the end. Tabular digits so a column
-   of packages has a column of prices rather than three ragged ones. */
+   of packages has a column of prices rather than three ragged ones.
+
+   ⚠ AND IT IS A FIGURE NOW, NOT A CHIP (owner, 30.07, second pass: «на вкладке брони отпуска давай
+   суммы сделаем крупнее и без обводки вокруг, чтобы явно читались»). It carried `.pill` - 12px in
+   muted grey inside a hairline capsule - which is this app's LABEL treatment, and it was doing two
+   things wrong at once on the one number the parent is choosing between: the capsule gave it the same
+   visual weight as the "Recommended" badge two elements to its left, so the row read as a run of
+   three badges; and 12px muted is the smallest, quietest type on the card.
+     WHAT IT IS INSTEAD, both rungs off docs/design/tokens.css and neither invented: `--fs-value-md`
+   (16px), which is the design's own size for a money figure that has to be read - it is what D gives
+   the Weekly Story's Balance - at the 800 weight D pairs with it there. Against the compact Book
+   button beside it (12px) the price is now the loudest thing in the row, which is the ask.
+     The border, the capsule and the muted ink all left with `.pill`; nothing here has to unset them. */
 .pkg-price {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   /* ON-ART INK. The corner it moved to is over the package's painting (`.pkg-art` dissolves from the
-     right), and `.pill`'s default muted grey on a lit photograph is a price you have to hunt for -
-     found by looking at it at 375. The app's rule for a word laid on a painting: full ink plus the
-     on-art shadow, the same pair `.surface-mark` and the hero captions use. */
+     right), so a price in anything less than full ink is one you have to hunt for - found by looking
+     at it at 375, and truer still now that the figure is bigger and carries no backing of its own.
+     The app's rule for a word laid on a painting: full ink plus the on-art shadow, the same pair
+     `.surface-mark` and the hero captions use. */
   color: var(--text);
   text-shadow: var(--shadow-text-on-art);
 }
 
-/* ...except when it is the recommended row's, where the lime already carries it and `.pill.ok`'s
-   colour must win. */
+/* ...except when it is the recommended row's, where the lime already carries the row and the accent
+   must win. (This used to be `.pill.ok`'s colour arriving through the chip; the chip is gone, so the
+   rule states it outright.) */
 .pkg-price.ok {
   color: var(--accent);
 }
