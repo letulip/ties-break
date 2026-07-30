@@ -352,13 +352,68 @@ export const ECONOMY = {
     eligible: ['working'] as FamilyBackground[],
   },
 
-  // Product-sponsorship valve v1 (round-7 amendment) – the "painful but survivable"
-  // counter-force. A kid whose rank AT PURCHASE TIME is good enough gets her gear subsidised:
-  //   rank ≤ freeMaxRank  → the line-item is $0 ("… – covered by your racket sponsor")
-  //   rank ≤ halfPriceMaxRank → the line-item is halved (" – sponsor covers half")
-  // The event is STILL emitted (amount 0/half) with its gear/stringing category, so the Money
-  // breakdown shows the sponsor relationship rather than the line simply vanishing.
-  sponsorship: { halfPriceMaxRank: 30, freeMaxRank: 10 },
+  // THE LOCAL SPONSOR – a shop in her town backing the local girl who is doing well locally.
+  //
+  // ⚠ REBUILT 30.07 (tune/rank-numbers). It was a "product-sponsorship valve": a PERCENTAGE
+  // discount (half / free) on each gear line-item, gated on `world.kidRank`. Both halves were
+  // wrong, and in two different ways.
+  //
+  // THE GATE WAS WRONG IN KIND, not in degree. `world.kidRank` is her INTERNATIONAL rank, and a
+  // local sponsorship is by concept a DOMESTIC-ladder reward. Gating a shop in her home town on a
+  // world junior ranking is the same category of error as the two rank writers this branch fixed:
+  // an award for domestic prominence denominated in a currency she does not hold. Measured over 120
+  // seeds x 208 weeks it therefore fired for NOBODY, in ANY preset, in ANY season - her ITF rank
+  // sits at #89-#109 and the gate wanted #30. Her NATIONAL rank sits at #8-#18, which is what a
+  // local shop would actually be looking at. So the gate reads the national table.
+  //
+  // THE AMOUNT WAS WRONG BECAUSE IT SCALED WITH THE FAMILY'S OWN SPENDING. A share of a gear bill
+  // is a share of a bill that runs through the wealth corridor (a wealthy family's racket is
+  // $480-650 against a working family's $60-120, bought more often), so the same "half price" paid
+  // the wealthy family $2,384 a season against the working family's $348 - seven times - measured
+  // on the national gate. A local shop's cheque does not know how rich the family is. So the amount
+  // is FLAT: the same figure for every background, and it is the whole mechanic's shape rather than
+  // a multiplier on something else.
+  //
+  // WHY A SEASON'S GRANT RATHER THAN A PER-PURCHASE DISCOUNT. Three reasons, and the third is
+  // decisive:
+  //   * the sources denominate it that way. docs/research/02-tennis-economics.md: junior equipment
+  //     sponsorship is "mostly product-only (racquets/strings/shoes, ~$1k+/yr value), 3-4 year
+  //     terms". The deal IS an annual value, not a discount rate;
+  //   * ECONOMY.academy.kitCentsAtFull already made this exact call for the same reason, and its
+  //     comment says so: paid "as money rather than as a gear discount because it arrives once a
+  //     year, not per purchase";
+  //   * a per-purchase cap CANNOT be flat. The wealthy family buys 39 kit items a year against the
+  //     working family's 25 (ECONOMY.gear cadences), so any per-item figure pays it ~1.6x more
+  //     however the cap is drawn. Only a per-SEASON figure is actually flat.
+  //
+  // AND IT IS MORE VISIBLE, which is the other half of item 27. The old valve was smeared across
+  // 25-39 invisible line-items; two-ladders.md measured the sibling cash cameo losing 3.10 gifts a
+  // season down to 0.65 still on screen at season end, because the snapshot keeps only the trailing
+  // 60 events. One annual lump in the `sponsor` income category survives that window.
+  //
+  // ⚠ THE THRESHOLDS ARE DELIBERATELY THE OLD 30 / 10, moved table but not moved number, so the
+  // owner can read the change as "same gate, honest ladder, flat cheque" rather than having to
+  // attribute a threshold move at the same time.
+  //
+  // ⚠ AND IT IS OPEN TO EVERY BACKGROUND, which is a deliberate difference from its sibling. The
+  // random `ECONOMY.sponsor` cameo is need-based (`eligible: ['working']`) because it is a gift. This
+  // is not a gift - it is EARNED, on the national ladder, and a shop backing the local girl does not
+  // audit her parents' income. Means-testing it would also make the mechanic unmeasurable at the top
+  // end, and how ruinous the road actually is up there is an open question rather than a settled one.
+  // The wealthy family's numbers are reported alongside everybody else's in two-ladders.md §2.
+  sponsorship: {
+    /** NATIONAL rank at or inside which a local shop signs her at all. */
+    maxRank: 30,
+    /** ...and at which the deal steps up - she is one of the best juniors in the country. */
+    topMaxRank: 10,
+    /** What the season's kit deal is worth, flat, every background the same. `~$1k+/yr value`,
+     *  02-tennis-economics.md's figure for a junior product deal, taken at its stated midpoint. */
+    seasonCents: 1_000_00,
+    /** The stepped-up deal. junior-economics.md: "travel sponsorship only after national/
+     *  international wins", and its merit-grant band tops out at £2,000 one-per-player-per-year -
+     *  so the better deal is kit plus a hand with the travel, at the top of that band. */
+    topSeasonCents: 2_000_00,
+  },
 
   // Recurring gear purchases, scheduled DETERMINISTICALLY off a purpose-scoped sub-stream per
   // category (never the main weekly stream). Cadence + price are drawn from that sub-stream.

@@ -1176,7 +1176,10 @@ export interface EntryStatus {
    *  say "Reach N pts"). */
   pointsToEnter?: number
   /** the ITF rank an international rung accepts down to, present only when one is 'locked' - the UI
-   *  says "top 50" rather than a points number she can never read off her own table. */
+   *  says "takes the top N" rather than a points number she can never read off her own table. The
+   *  number is DERIVED from the tier's `enterPct` and the live field size, never written down, so it
+   *  follows both a re-picked acceptance list and a growing population (30.07: the illustrative
+   *  "top 50" that used to sit here was already stale by two re-pins). */
   rankToEnter?: number
   /** 'capped' only: the season allowance behind the verdict (see AvailabilityStatus.entryCap). */
   entryCap?: EntryCapUsage
@@ -2236,29 +2239,70 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
 
 // Recurring gear line-items (round-7 a). Scheduled DETERMINISTICALLY off per-category
 // purpose-scoped sub-streams – NEVER the main weekly `rng` – so they add zero main-stream
-// draws and cohort drift / the RNG replay stay untouched. The product-sponsorship valve
-// (round-7 amendment) reads the kid's cached rank AT PURCHASE TIME to subsidise gear for a
-// well-ranked kid; the line-item is still emitted (halved / zeroed) so the Money breakdown
-// shows the sponsor relationship instead of the cost simply vanishing.
+// draws and cohort drift / the RNG replay stay untouched.
+//
+// ⚠ THE PRODUCT-SPONSORSHIP VALVE HAS LEFT THIS FUNCTION (30.07, tune/rank-numbers). It used to
+// read `world.kidRank` here, at purchase time, and halve or zero the line. Both the table it read
+// and the shape of the subsidy were wrong – the whole argument is on `ECONOMY.sponsorship`, which
+// is now an annual grant gated on her NATIONAL rank (see reviewLocalSponsor). The gear line is a
+// gear line again: the family pays for its kit, and the sponsor's contribution arrives once a year
+// as money, where it can actually be seen.
 function resolveGear(world: WorldState): void {
   const bg = world.profile.background
   for (const category of GEAR_CATEGORIES) {
     const hit = gearHitForWeek(world.seed, category, bg, world.week)
     if (!hit) continue
     const line = ECONOMY.gear[category]
-    let amount = hit.amountCents
-    let text = line.flavor[bg]
-    if (world.kidRank <= ECONOMY.sponsorship.freeMaxRank) {
-      amount = 0
-      text += ' – covered by your racket sponsor'
-    } else if (world.kidRank <= ECONOMY.sponsorship.halfPriceMaxRank) {
-      amount = Math.round(amount / 2)
-      text += ' – sponsor covers half'
-    }
-    world.fundsCents -= amount
-    // `-amount` would be -0 for a fully-covered item; keep it +0 so the event/ledger stay clean.
-    addEvent(world, { week: world.week, type: 'expense', category: line.breakdown, text, amountCents: amount === 0 ? 0 : -amount })
+    world.fundsCents -= hit.amountCents
+    addEvent(world, {
+      week: world.week,
+      type: 'expense',
+      category: line.breakdown,
+      text: line.flavor[bg],
+      amountCents: -hit.amountCents,
+    })
   }
+}
+
+// --- the local sponsor's annual deal -----------------------------------------
+// A shop in her town backing the local girl who is doing well locally. Gated on the NATIONAL table,
+// flat in cash, once a season – the full argument for all three of those is on ECONOMY.sponsorship.
+//
+// RNG DISCIPLINE. Reads two cached numbers and adds an event. ZERO draws on any stream, so it cannot
+// move the frozen MAIN capture (41550 draws / e6b0c709) by one. It runs in the season-boundary block
+// beside reviewAcademy, which is already the "zero draws, this far up the tick is safe" slot, and on
+// the same reading of her year: the rank she CARRIES IN, before this season can touch it.
+
+/** What the local shop's deal is worth this season, in cents – 0 if she is not on their radar.
+ *  Pure, so the tests and the bench can ask directly. `nationalRank` is her place in the DOMESTIC
+ *  table (`world.kidRankDomestic`), never the ITF one. */
+export function localSponsorCents(nationalRank: number): number {
+  const s = ECONOMY.sponsorship
+  if (nationalRank <= s.topMaxRank) return s.topSeasonCents
+  if (nationalRank <= s.maxRank) return s.seasonCents
+  return 0
+}
+
+export function reviewLocalSponsor(world: WorldState): void {
+  // The domestic cache, with the same fallback rankIn uses: a career that has never held a domestic
+  // point sits below the whole field rather than at the top of an empty table.
+  const nationalRank = world.kidRankDomestic ?? world.cohort.length + 1
+  const amount = localSponsorCents(nationalRank)
+  if (amount <= 0) return
+  world.fundsCents += amount
+  const top = nationalRank <= ECONOMY.sponsorship.topMaxRank
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'sponsor',
+    // Names the table, because the whole point of the fix is that this is a DOMESTIC reward and the
+    // player could not previously tell which ladder any gate was reading. LADDER_LABEL keeps the
+    // player-facing word for it in one place.
+    text: top
+      ? `A local sponsor has backed her for the season – kit and a hand with the travel (${LADDER_LABEL.domestic} #${nationalRank})`
+      : `A local sponsor has backed her for the season – her kit for the year (${LADDER_LABEL.domestic} #${nationalRank})`,
+    amountCents: amount,
+  })
 }
 
 /** WHAT THE TRIP COSTS THE FAMILY – the scholarship applied to the calendar's full fare.
@@ -2968,6 +3012,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // it – the rank the year just gone earned her – which is precisely what an academy reviewing
     // her in the off-season would be looking at. ZERO draws, so it is safe this far up the tick.
     reviewAcademy(world)
+    // 0a0c-bis (30.07): AND THE LOCAL SHOP DECIDES, on the same reading of the same year – except
+    // it reads the NATIONAL table, because that is the ladder a local sponsorship is about. ZERO
+    // draws. Idempotent for free: this block runs exactly once per season boundary, so unlike the
+    // academy (whose support persists and must not re-decide itself) there is nothing to guard.
+    reviewLocalSponsor(world)
     // 0a0d: AND THE FIELD TURNS OVER. Last, because everything above is about the season that just
     // ENDED and wants the field that played it – the academy's verdict in particular is a reading
     // of her standing among those players, not among their replacements. ZERO main-stream draws:

@@ -95,8 +95,12 @@ export type WorldEventCategory =
   | 'sponsor'
   /** 'academy' (v21) is an INCOME-side category: the once-a-year kit grant that comes with a
    *  scholarship. The travel half of the same scholarship is NOT booked here – it is taken off the
-   *  travel line itself, exactly like the racket sponsor's gear discount, so the ledger shows the
-   *  reduced price the family actually paid. */
+   *  travel line itself, so the ledger shows the reduced price the family actually paid.
+   *
+   *  ⚠ The comparison this used to draw – "exactly like the racket sponsor's gear discount" – is
+   *  gone with that discount (30.07, tune/rank-numbers). The local sponsor no longer reduces a line;
+   *  it pays a flat annual grant under 'sponsor', the way this kit grant already did. See
+   *  ECONOMY.sponsorship. Travel-cover remains the only price-reducing subsidy in the game. */
   | 'academy'
   | 'income'
   | 'interest'
@@ -496,8 +500,11 @@ export interface UpcomingEvent {
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
   /** the ITF rank an international rung accepts down to, on a card locked by an ACCEPTANCE LIST
-   *  rather than by points (docs/specs/two-ladders.md). The card says "takes the top 50" instead of
-   *  quoting a points number she cannot read off her own table. */
+   *  rather than by points (docs/specs/two-ladders.md). The card says "takes the top N" instead of
+   *  quoting a points number she cannot read off her own table. N is DERIVED from the tier's
+   *  `enterPct` and the live field size (see acceptanceRank), so it moves with a re-picked list and
+   *  with the population - do not quote a literal here, as the "top 50" this comment used to name
+   *  was stale by two re-pins when it was found on 30.07. */
   rankToEnter?: number
   /** present only when 'capped': the allowance the gate judged THIS event against, so the card can
    *  print "N of M" without re-deriving it. Per-event for the same reason `pointsToEnter` is – an

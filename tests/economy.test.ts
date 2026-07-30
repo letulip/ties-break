@@ -11,6 +11,7 @@ import {
   tickWeek,
   recomputeKidRank,
   financeWindow,
+  localSponsorCents,
   STARTING_FUNDS_CENTS,
   KID_ID,
   type WorldState,
@@ -50,8 +51,10 @@ function sponsorIncomeCents(world: WorldState): number {
 }
 
 /** Net funds lost over 52 weeks with NO tournaments entered (fixed costs only). A fresh career
- *  earns no ranking points, so the kid sits at the bottom of the field all year → rank > 30 →
- *  the product-sponsorship valve never fires. These are the owner's UNSPONSORED-kid bands.
+ *  earns no ranking points on EITHER ladder, so the kid sits at the bottom of both tables all year →
+ *  national rank > 30 → the local sponsor's annual review pays her nothing. These are the owner's
+ *  UNSPONSORED-kid bands. (Read "rank > 30" as the NATIONAL rank since 30.07: the sponsorship is a
+ *  flat annual grant gated on the domestic table, not a share of a gear bill gated on the ITF one.)
  *
  *  ⚠ TAKES A COACH RUNG NOW – see CALIBRATION_TIER below for why it has to. */
 function seasonBurnDollars(
@@ -126,12 +129,19 @@ const BANDS: Record<FamilyBackground, [number, number]> = {
 const SEED_SLACK: Record<FamilyBackground, number> = { working: 2_500, middle: 3_500, wealthy: 8_000 }
 
 describe('economy calibration – 52-week net burn (no tournaments, unsponsored kid)', () => {
-  it('the calibration kid really is unsponsored: rank stays well past the valve threshold', () => {
+  it('the calibration kid really is unsponsored: rank stays well past the sponsor threshold', () => {
     const world = createWorld('cal-1', { ...DEFAULT_PROFILE, background: 'middle' })
     const rng = rngFromSeed(world.seed)
     for (let i = 0; i < 52; i++) tickWeek(world, rng)
-    // No results earned → bottom of the field → far past the ≤30 half-price / ≤10 free thresholds.
-    expect(world.kidRank).toBeGreaterThan(ECONOMY.sponsorship.halfPriceMaxRank)
+    // ⚠ RE-AIMED (30.07, tune/rank-numbers): reads the NATIONAL cache now, because that is the table
+    // ECONOMY.sponsorship gates on. THE PROTECTED FACT IS UNCHANGED and it is the whole subject of
+    // the bands below – this kid enters nothing all year, so she earns no points on EITHER ladder and
+    // no sponsor money reaches her. The old line asserted the same thing against `world.kidRank`,
+    // which was the right cache while the gate read the international table and is now simply the
+    // wrong one to be asking. Both are still true; this is the one that guards the bands.
+    expect(world.kidRankDomestic!).toBeGreaterThan(ECONOMY.sponsorship.maxRank)
+    // ...so the annual review pays her nothing, which is what makes these the UNSPONSORED bands.
+    expect(localSponsorCents(world.kidRankDomestic!)).toBe(0)
   })
 
   it('working (budget coach) lands in the -$6.5k..-$4.8k band (batch mean, BEFORE the sponsor cameo)', () => {
@@ -197,61 +207,66 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
   })
 })
 
-describe('product-sponsorship valve (round-7 amendment)', () => {
-  // Force the kid to the very top with a big, in-window result (AI selection excludes the kid, so
-  // this touches only the ranking, never the main stream). Then gear/stringing are covered.
+describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
+  // ⚠ RE-AIMED, NOT WEAKENED (30.07, tune/rank-numbers). The three protected facts are the same
+  // three this block has always guarded, and all three still hold:
+  //   1. a kid who is doing well ends a season materially better off than one who is not, by at
+  //      least $1.5k - the "painful but survivable" counter-force is worth real money;
+  //   2. the sponsor relationship is VISIBLE in the ledger, under a category the Money screen reads,
+  //      rather than a cost quietly shrinking;
+  //   3. it draws nothing from the main weekly stream.
   //
-  // ⚠ FIXTURE RE-AIMED, NOT THE ASSERTION (30.07, fix/ranking-truth). The protected fact is
-  // UNCHANGED and every expectation below still reads exactly as it did: a top-ranked kid gets her
-  // gear subsidised, the line-items are still emitted at $0/half so the Money breakdown shows the
-  // relationship, and the valve draws nothing from the main stream.
+  // WHAT MOVED IS THE MECHANISM UNDERNEATH THEM, and both halves of it were wrong:
+  //   * THE TABLE. `ECONOMY.sponsorship` gated on `world.kidRank`, the INTERNATIONAL rank, for a
+  //     reward that is by concept domestic. Measured over 120 seeds x 208 weeks it fired for nobody
+  //     in any preset in any season (her ITF rank sits #89-#109 against a #30 gate; her NATIONAL
+  //     rank sits #8-#18). It now reads the national table.
+  //   * THE SHAPE. It was a PERCENTAGE off each gear line-item, and a gear bill runs through the
+  //     wealth corridor - so the same rule paid the wealthy family $2,384 a season against the
+  //     working family's $348. It is now a flat per-season grant, the same figure for everybody.
+  // The full argument, including why an annual grant rather than a per-purchase cap, is on
+  // ECONOMY.sponsorship in src/engine/economy.ts.
   //
-  // WHAT MOVED IS THE FIXTURE'S OWN CORRECTNESS. The pushed row carried NO `tier`, and `inTrack`
-  // reads a tier-less result as DOMESTIC ("it can only have come from the rungs that existed then").
-  // So this 100k result has been landing in the domestic table, and `recomputeKidRank` correctly
-  // ranked her #1 DOMESTIC and ~#120 ITF - while `ECONOMY.sponsorship` gates on `world.kidRank`,
-  // the ITF one. The fixture only appeared to work because the weekly tick then overwrote
-  // `world.kidRank` with a rank folded over BOTH ladders (the bug this branch fixes), which did see
-  // the 100k row. In other words these four tests were passing THROUGH the bug: they exercised a
-  // table that does not exist in the design.
-  //
-  // Giving the row an ITF tier puts her at the top of the table the valve actually reads, so the
-  // fixture now forces the state its name claims to force. `j300` and a raw 100_000 keep the
-  // "unambiguously #1" intent; the value is deliberately far past any real result so no tuning of
-  // the points tables can quietly unseat her.
-  //
-  // ⚠ AND IT EXPOSED DEAD CONTENT, which is NOT fixed here and is the owner's call - see
-  // docs/specs/two-ladders.md "The sponsorship valve is dead content". Measured over 120 seeds x 49
-  // weeks, a real career trips this valve 0 times per season in ALL NINE bench presets, because it is
-  // an award for domestic prominence denominated in an ITF rank. Her domestic rank averages #15 (top
-  // 30 in 107/120 seasons); her ITF rank averages #128 and never reaches the gate. That is item 27 on
-  // the owner's list and it needs a threshold decision, not a test change.
+  // AND THE FIXTURE GOES BACK TO A DOMESTIC RESULT. It pushed a tier-less row historically (which
+  // `inTrack` reads as domestic) and was moved to `tier: 'j300'` on 30.07 to chase the ITF gate. Now
+  // that the gate reads the national table, a domestic row is once again the right way to force the
+  // state this block's name claims - stated explicitly as `tier: 'national'` this time rather than
+  // relying on the tier-less default, so no future reader has to know that rule to follow it.
   function topRankedBurn(seed: string, background: FamilyBackground): { burn: number; world: WorldState } {
     const world = createWorld(seed, { ...DEFAULT_PROFILE, background })
-    world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
+    world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
     recomputeKidRank(world)
     const rng = rngFromSeed(world.seed)
     const start = STARTING_FUNDS_CENTS[background]
     for (let i = 0; i < 52; i++) tickWeek(world, rng)
-    // physio + interest excluded for the same reason as seasonBurnDollars (and so the valve
-    // delta compares gear subsidies, not medical luck or reserve size).
+    // physio + interest excluded for the same reason as seasonBurnDollars (and so the delta compares
+    // the sponsorship, not medical luck or reserve size).
     return { burn: (start - world.fundsCents - physioSpendCents(world) + interestEarnedCents(world)) / 100, world }
   }
 
-  it('a rank-≤10 middle kid burns ≥ $1.5k less over 52w than an unsponsored one', () => {
+  it('the flat grant is the SAME cheque for every background (it does not know the family is rich)', () => {
+    // THE POINT OF THE REBUILD, asserted directly rather than inferred from a burn: one number, and
+    // the wealth corridor cannot reach it. The old percentage valve failed exactly here.
+    for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
+      const { world } = topRankedBurn(`flat-${bg}`, bg)
+      const paid = world.events
+        .filter((e) => e.category === 'sponsor' && e.text.includes('backed her for the season'))
+        .reduce((s, e) => s + (e.amountCents ?? 0), 0)
+      expect(paid).toBe(ECONOMY.sponsorship.topSeasonCents)
+    }
+  })
+
+  it('a national-rank-≤10 middle kid burns ≥ $1.5k less over 52w than an unsponsored one', () => {
     const unsponsored = mean(batchBurns('middle'))
     const sponsored = mean(SEEDS.map((s) => topRankedBurn(s, 'middle').burn))
     expect(unsponsored - sponsored).toBeGreaterThanOrEqual(1_500)
   })
 
-  it('subsidising gear never perturbs the main weekly stream (RNG discipline)', () => {
-    // Same seed, same background; one kid is forced to rank ≤10 (gear free), the other is not.
-    // ⚠ `tier: 'j300'` for the reason spelled out at `topRankedBurn` above - the valve gates on her
-    // ITF rank, and a tier-less row is a DOMESTIC result, so without a tier this fixture forced the
-    // wrong table and only worked through the two-writers bug.
+  it('the sponsorship never perturbs the main weekly stream (RNG discipline)', () => {
+    // Same seed, same background; one kid is forced to national rank 1, the other is not.
     const plain = createWorld('valve-rng', { ...DEFAULT_PROFILE, background: 'middle' })
     const sponsored = createWorld('valve-rng', { ...DEFAULT_PROFILE, background: 'middle' })
-    sponsored.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
+    sponsored.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
     recomputeKidRank(sponsored)
     const rngA = rngFromSeed('valve-rng')
     const rngB = rngFromSeed('valve-rng')
@@ -259,27 +274,50 @@ describe('product-sponsorship valve (round-7 amendment)', () => {
       tickWeek(plain, rngA)
       tickWeek(sponsored, rngB)
     }
-    // The valve reads the kid's rank but draws nothing from the main stream: cohort drift and the
-    // AI field resolve identically in both worlds.
+    // The review reads a rank cache and adds an event; it draws nothing. Cohort drift and the AI
+    // field resolve identically in both worlds.
     expect(plain.cohort).toEqual(sponsored.cohort)
     expect(plain.results.filter((r) => r.playerId !== KID_ID)).toEqual(
       sponsored.results.filter((r) => r.playerId !== KID_ID),
     )
-    // ...but the sponsored kid spent less (gear covered), so she ends richer.
+    // ...but the sponsored kid banked the grant, so she ends richer.
     expect(sponsored.fundsCents).toBeGreaterThan(plain.fundsCents)
   })
 
-  it('emits the sponsor-covered gear events (still tagged, so the Money breakdown shows them)', () => {
+  it('emits the sponsorship as a tagged income event (so the Money breakdown shows it)', () => {
     const { world } = topRankedBurn('cal-1', 'middle')
-    const covered = world.events.filter(
-      (e) => e.type === 'expense' && e.text.includes('covered by your racket sponsor'),
-    )
-    expect(covered.length).toBeGreaterThan(0)
-    // covered line-items are $0 but still carry a gear/stringing category
-    for (const e of covered) {
-      expect(e.amountCents).toBe(0)
-      expect(['gear', 'stringing']).toContain(e.category)
+    const paid = world.events.filter((e) => e.category === 'sponsor' && e.text.includes('backed her for the season'))
+    expect(paid.length).toBeGreaterThan(0)
+    for (const e of paid) {
+      expect(e.type).toBe('income')
+      expect(e.amountCents).toBeGreaterThan(0)
+      // It names the table it read. The whole failure mode being fixed here is a gate whose ladder
+      // the player could not see, so the copy has to say which one.
+      expect(e.text).toContain('National')
     }
+  })
+
+  it('...and the gear line-items are plain again – no line claims a sponsor covered it', () => {
+    // The valve used to emit $0 / halved gear rows with " – covered by your racket sponsor" glued on.
+    // That wording is gone with the mechanism; a family pays for its own kit and the sponsor's
+    // contribution arrives once a year as money. Guards against the old copy drifting back in.
+    const { world } = topRankedBurn('cal-2', 'wealthy')
+    for (const e of world.events) {
+      expect(e.text).not.toContain('covered by your racket sponsor')
+      expect(e.text).not.toContain('sponsor covers half')
+    }
+  })
+
+  it('the gate reads the NATIONAL table – an international-only result buys nothing', () => {
+    // The regression that made this dead content, pinned. A kid who is #1 in the world and unranked
+    // at home is not somebody a local shop has heard of; more to the point, the reverse is the case
+    // this mechanic exists for and the two must not be confused again.
+    const world = createWorld('gate-table', { ...DEFAULT_PROFILE, background: 'working' })
+    world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
+    recomputeKidRank(world)
+    expect(world.kidRank).toBe(1) // top of the international table...
+    expect(world.kidRankDomestic!).toBeGreaterThan(ECONOMY.sponsorship.maxRank) // ...nobody at home
+    expect(localSponsorCents(world.kidRankDomestic!)).toBe(0)
   })
 })
 
