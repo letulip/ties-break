@@ -43,6 +43,33 @@ export function weekMonth(week: number): number {
   return weekStart(week).month + 1
 }
 
+/** How many days her birth month has.
+ *
+ *  ⚠ FEBRUARY IS 28, NOT 29, AND THAT IS PRINCIPLED RATHER THAN LAZY. Her birth year is the band's year -
+ *  2017 for a career opening in 2031 - which is not a leap year, so 29 February is not a date she can have
+ *  been born on. Offering it would mean either a girl with a birthday every four years or a silent clamp,
+ *  and both are worse than not offering it. */
+export function daysInBirthMonth(month: number): number {
+  const m = Math.max(1, Math.min(12, Math.round(month)))
+  return [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1]
+}
+
+/** The career week whose Monday..Sunday span CONTAINS `month`/`day` of `year`, or null when that date is
+ *  outside the career's calendar.
+ *
+ *  ⚠ CAN BE NEGATIVE, AND THE CALLER HAS TO MEAN IT. Week 0 starts Monday 6 Jan 2031, so 1-5 January 2031
+ *  falls in week -1: a girl born on 3 January has already had her birthday by the time the career opens,
+ *  and her first in-game one is in 2032. That is the honest answer rather than a bug - the career started
+ *  after her birthday - and it is why the birthday check compares against the CURRENT week rather than
+ *  assuming every season contains one. */
+export function weekOfDate(month: number, day: number, year: number): number | null {
+  const target = Date.UTC(year, Math.max(1, Math.min(12, Math.round(month))) - 1, Math.max(1, day))
+  const dayOffset = Math.floor((target - EPOCH_UTC) / MS_PER_DAY)
+  const week = Math.floor(dayOffset / 7)
+  // Guard against a date so far out that the arithmetic stops being meaningful.
+  return Number.isFinite(week) ? week : null
+}
+
 /** The FIRST career week whose Monday falls in `month` of `year`, or null when that month is outside the
  *  career's calendar. Used to find the week her birthday lands in.
  *

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url'
 import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
 import { COACH_TIERS } from '../src/engine/coach'
+import { daysInBirthMonth } from '../src/shared/dates'
 
 // Backward compatibility is a hard product guarantee: every historical save shape must still
 // load. Each fixture is a world-shaped payload for one schema version; all of them must migrate
@@ -54,6 +55,15 @@ describe('golden saves corpus', () => {
       expect(typeof migrated.profile.birthMonth).toBe('number')
       expect(migrated.profile.birthMonth).toBeGreaterThanOrEqual(1)
       expect(migrated.profile.birthMonth).toBeLessThanOrEqual(12)
+
+      // v27 birth DAY: same contract, and clamped to HER OWN MONTH - a back-filled 30 February would be a
+      // date she could not have been born on, and it would only surface much later as a birthday landing
+      // in a week that does not exist. February is 28 because her birth year is the band's, never a leap
+      // year (see daysInBirthMonth).
+      expect(typeof migrated.profile.birthDay).toBe('number')
+      expect(migrated.profile.birthDay).toBeGreaterThanOrEqual(1)
+      expect(migrated.profile.birthDay, `${file}: ${migrated.profile.birthMonth}/${migrated.profile.birthDay}`)
+        .toBeLessThanOrEqual(daysInBirthMonth(migrated.profile.birthMonth))
 
       // living-world systems exist and the pre-v6 `log` field is gone
       expect(Array.isArray(migrated.cohort)).toBe(true)

@@ -33,6 +33,19 @@ export interface PlayerProfile {
    *  onboarding, purely cosmetic until Phase 4 wires the junior age-group dynamics it's
    *  meant to feed. */
   birthMonth: number
+  /** her birth DAY within that month, 1-28/30/31 (owner, 30.07: «мы же будем ее с ДР на неделе поздравлять
+   *  (и подарки дарить, кстати), чтобы точно знать на какой нам нужен день»).
+   *
+   *  ⚠ IT AFFECTS THE BIRTHDAY WEEK AND NOTHING ELSE - his own framing, and the right scope. The relative
+   *  age effect is a MONTH-resolution idea (position inside the birth year), so `kidAgeExact` and
+   *  `relativeAgeHeadStart` deliberately do not read this: refining 1/12 to 1/365 on a quantity whose whole
+   *  meaning is "which part of the year" buys nothing, and threading a day into the development path would
+   *  add precision nothing reads.
+   *
+   *  AND IT IS THE PLAYER'S, not derived, which is the part I had wrong. I proposed rolling it off the seed;
+   *  he is right that a parent KNOWS his daughter's birthday - and a present has to be plannable, so the
+   *  date has to be something he chose rather than something the game told him. */
+  birthDay: number
 }
 
 export const DEFAULT_PROFILE: PlayerProfile = {
@@ -47,6 +60,7 @@ export const DEFAULT_PROFILE: PlayerProfile = {
   coachTier: 'middle',
   playStyle: 'all-court',
   birthMonth: 6,
+  birthDay: 15,
 }
 
 /** Weekly time split in percent; train + rest === 100. */

@@ -92,21 +92,21 @@ describe('the band and the girl are two different numbers', () => {
 
   it('she really does turn a year older, once, on her own month', () => {
     for (const birthMonth of [1, 6, 12]) {
-      const turns = [...Array(52).keys()].filter((w) => birthdayTurning(w, birthMonth) !== null)
+      const turns = [...Array(52).keys()].filter((w) => birthdayTurning(w, birthMonth, 15) !== null)
       expect(turns.length, `birthMonth ${birthMonth}: one birthday a season`).toBe(1)
       const w = turns[0]
       expect(weekMonth(w), 'and it lands in her own month').toBe(birthMonth)
       // the age she turns is the age she then is
-      expect(birthdayTurning(w, birthMonth)).toBe(kidAgeYears(w, birthMonth))
+      expect(birthdayTurning(w, birthMonth, 15)).toBe(kidAgeYears(w, birthMonth))
     }
   })
 
   it('the birthday reaches the feed, the scrap AND the photo card', () => {
     // The owner asked for both: «где-то в записочках ... может на home тоже про это писать».
     const birthMonth = 3
-    const world = createWorld('bday-surfaces', { ...DEFAULT_PROFILE, birthMonth, coachTier: 'self' })
+    const world = createWorld('bday-surfaces', { ...DEFAULT_PROFILE, birthMonth, birthDay: 15, coachTier: 'self' })
     const rng = rngFromSeed(world.seed)
-    const target = birthdayWeek(0, birthMonth)!
+    const target = birthdayWeek(0, birthMonth, 15)!
     let seen = false
     for (let w = 0; w < 60; w++) {
       tickWeek(world, rng)

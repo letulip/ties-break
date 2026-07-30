@@ -47,7 +47,7 @@ import { formatShortName } from '../shared/format'
 // second week formatter living inside the engine. The engine keeps counting ABSOLUTE weeks and
 // every RNG sub-stream key / save field / pinned capture stays on that index; `weekLabel` is
 // applied only where the engine writes a string a PLAYER reads.
-import { firstWeekOfMonth, seasonYear, weekLabel, weekMonth, weekYear } from '../shared/dates'
+import { daysInBirthMonth, seasonYear, weekLabel, weekMonth, weekOfDate, weekYear } from '../shared/dates'
 // The emotion RULES live in shared/ (pure, UI-free, and the composable reads the same module), so
 // the engine borrows the two facts it needs rather than restating them: which recorded matches are
 // allowed to move her face (R11-2's one predicate) and the band a streak's anger threshold sits in.
@@ -143,7 +143,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 26
+export const SAVE_SCHEMA_VERSION = 27
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -1007,19 +1007,28 @@ export function kidAgeYears(week: number, birthMonth: number): number {
   return Math.floor(kidAgeExact(week, birthMonth))
 }
 
-/** The career week her birthday falls in for the season containing `week`, or null if it is outside the
- *  calendar. One week a year, and it is how the game finally says the birth month out loud. */
-export function birthdayWeek(week: number, birthMonth: number): number | null {
+/** The career week her birthday falls in for the calendar year containing `week`, or null if that date is
+ *  off the calendar.
+ *
+ *  ⚠ THE WEEK CONTAINING HER ACTUAL DATE, not the first week of her month - which is what this did before
+ *  the day existed. The owner asked for the day precisely so this lands right: «мы же будем ее с ДР на
+ *  неделе поздравлять (и подарки дарить, кстати), чтобы точно знать на какой нам нужен день».
+ *
+ *  CAN BE NEGATIVE, and the caller must not assume every season has one: a girl born 1-5 January had her
+ *  birthday before week 0 began, so her first in-game one is the following year. `birthdayTurning`
+ *  compares against the current week, so that resolves itself. */
+export function birthdayWeek(week: number, birthMonth: number, birthDay: number): number | null {
   const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
-  return firstWeekOfMonth(month, weekYear(week))
+  const day = Math.max(1, Math.min(daysInBirthMonth(month), Math.round(birthDay)))
+  return weekOfDate(month, day, weekYear(week))
 }
 
 /** Is `week` her birthday week, and if so what age does she turn? Null on every other week.
  *
- *  DERIVED, NOT PERSISTED - a pure comparison of the calendar against her birth month, so it needs no
- *  schema and cannot drift out of step with `kidAgeExact`. Both read the same two facts. */
-export function birthdayTurning(week: number, birthMonth: number): number | null {
-  if (week !== birthdayWeek(week, birthMonth)) return null
+ *  DERIVED, NOT PERSISTED - a pure comparison of the calendar against her birth date, so it cannot drift
+ *  out of step with `kidAgeExact`; both read the profile and nothing else. */
+export function birthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
+  if (week !== birthdayWeek(week, birthMonth, birthDay)) return null
   // On her birthday week she has just reached this age, so the floor of her exact age IS the new number.
   return kidAgeYears(week, birthMonth)
 }
@@ -1042,7 +1051,7 @@ const AGE_WORDS: Record<number, string> = {
  *  the fact of the week - the relative-age story is told by her age being 13 in a 14s draw, and this is
  *  where the player first meets it. */
 function markBirthday(world: WorldState): void {
-  const turning = birthdayTurning(world.week, world.profile.birthMonth)
+  const turning = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
   if (turning === null) return
   const words = AGE_WORDS[turning] ?? String(turning)
   addEvent(world, {
@@ -4448,7 +4457,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // actually charges (see its note: growWeek at 3b, rollKnock at 3c), so the frame and the words now
     // agree with the arithmetic instead of with each other.
     // ...and the one week a year that is about HER rather than about tennis.
-    birthdayAge: birthdayTurning(world.week, world.profile.birthMonth),
+    birthdayAge: birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay),
     knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,
     knockPart: knockGoverns(world.knock, world.week) ? world.knock!.part : null,
   })

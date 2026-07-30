@@ -174,6 +174,7 @@ function bgProfile(background: FamilyBackground): PlayerProfile {
     coachTier: 'self',
     playStyle: 'all-court',
     birthMonth: 6,
+    birthDay: 15,
   }
 }
 

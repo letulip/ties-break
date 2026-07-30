@@ -61,7 +61,10 @@ describe('the wizard still writes a whole PlayerProfile', () => {
     // `DEFAULT_PROFILE` is the profile's own shape, so a field added to the interface arrives here
     // automatically and this test starts failing until the wizard collects it.
     const fields = Object.keys(DEFAULT_PROFILE)
-    expect(fields.length).toBe(8) // kidName kidLastName gender country background coachTier playStyle birthMonth
+    // ⚠ 9 SINCE v27: `birthDay` joined `birthMonth` (owner, 30.07 - the birthday week has to be the right
+    // week, because the family congratulates her on it). This count is the guard WORKING, not a chore: it
+    // is the line that made the wizard collect the new field instead of shipping a profile with a hole.
+    expect(fields.length).toBe(9) // kidName kidLastName gender country background coachTier playStyle birthMonth birthDay
     for (const field of fields) {
       expect(literal, `onboarding no longer initialises ${field}`).toContain(`${field}:`)
     }
@@ -77,6 +80,7 @@ describe('the wizard still writes a whole PlayerProfile', () => {
     expect(literal).toContain('coachTier: DEFAULT_PROFILE.coachTier')
     expect(literal).toContain("playStyle: 'all-court'")
     expect(literal).toContain('birthMonth: DEFAULT_PROFILE.birthMonth')
+    expect(literal).toContain('birthDay: DEFAULT_PROFILE.birthDay')
     expect(DEFAULT_PROFILE.coachTier).toBe('middle')
     expect(DEFAULT_PROFILE.birthMonth).toBe(6)
   })
