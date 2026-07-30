@@ -31,6 +31,7 @@ import {
   type AvatarEmotion,
   type LastKidResult,
   type LastKidTitle,
+  type PortraitStage,
 } from '../shared/avatarEmotion'
 import type {
   ConditionBand,
@@ -44,6 +45,7 @@ import type {
   MilestoneType,
   TravelHomeMood,
   TravelHomeScene,
+  WeekScene,
   WorldEvent,
 } from '../shared/protocol'
 import { isExamWeek, isOffSeasonWeek, TIERS, TIER_SHORT, tierFromLabel } from './season/calendar'
@@ -155,6 +157,17 @@ export interface DiaryWorldView {
   milestones: readonly Milestone[]
   /** a booked family vacation resolved this week */
   vacationWeek: boolean
+  /** W5: ...and WHICH package, for the frame that names it. Non-null on exactly the weeks
+   *  `vacationWeek` is true and the booking is still on file (bookings are retained four trailing
+   *  weeks after they resolve, so the week's own row is always there when its story is told).
+   *
+   *  ⚠ OPTIONAL, ALONE AMONG THE FIELDS ADDED SINCE R14-2, and the asymmetry is deliberate:
+   *  `trainPct` / `knockChoice` / `knockPart` all feed COPY LICENCES, so a fixture that forgot one
+   *  would silently sweep the wrong space. This one selects a PAINTING and nothing else – no licence
+   *  in either pool reads it – so a view that omits it is a view about the words, and omitting it
+   *  means "no booking on file", which is exactly what `vacations.find()` answers for a week with no
+   *  holiday in it. That world.ts really passes it is pinned in tests/week-scene.test.ts. */
+  vacationPackageId?: string | null
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training
@@ -226,35 +239,66 @@ export function fundsPressureOf(fundsCents: number): FundsPressure {
 //        the same reason: a skipped tournament refunds its travel in the same week and nets to 0 –
 //        she never boarded.
 //
-//     ...and then the LINE: every tier except `local`. A Local Open is the club down the road (the
-//     calendar prices its travel at $60-120 against a Regional's $150-400) and nobody comes home
-//     from it; a Regional Championship is a выезд in the plain sense of the word – another town,
-//     a night away, a drive back. TIER AND NOT COST, deliberately: the academy scholarship pays up
-//     to 80% of a fare, and a J300 abroad is the same journey whether the family or the academy
-//     bought the ticket. Cost is what she paid; tier is where she went.
+//     ...and W5 DELETED THE LINE THAT USED TO BE HERE, on the owner's own correction. It read
+//     "every tier except `local`", and its argument was that a Local Open is the club down the road
+//     (the calendar prices its travel at $60-120 against a Regional's $150-400) so "nobody comes home
+//     from it". The owner, 30.07: «писал выше, очень даже едут, на автобусе или машине» – they very
+//     much do travel, by bus or by car. HE IS RIGHT AND THE OLD ARGUMENT WAS A CATEGORY ERROR: it
+//     answered "is this journey far enough to be a story" when the question is "did she go somewhere
+//     and come back", and the ledger already answers that – the family paid a travel charge, so
+//     somebody drove her. The distance is not what makes the picture true; it is what decides WHICH
+//     picture, which is clause (b)'s job and now genuinely is.
+//     WHAT SURVIVES is the pair of ledger tests above (she played there, the family paid), which is
+//     what keeps a club hit-out down the road from claiming a journey: a friendly is skipped by
+//     `resultShowsOnHerFace`, and a refunded entry nets to zero.
 //
-// (b) WHICH OF THE FOUR — correlated with the trip, not uniform, because the data supports it and
-//     uniform noise would put her in an airport coming back from the next county. Every tier
-//     already carries a `track`: `itf` is the junior international tour (the calendar's own words:
-//     "international travel out"), `domestic` is local/regional/national. So the international
-//     ladder flies home (airport, plane) and the domestic one drives (bus, car) – which also means
-//     a career that never leaves the domestic ladder never sees an airport, and the first J30 trip
-//     brings a picture she has not seen before.
+// (b) WHICH OF THE FOUR — and this is TIER-GATED, in the owner's own words (30.07): «если локальные
+//     или региональные, то без самолетов, если национальные и выше, то все виды транспорта и
+//     настроений».
+//
+//       local, regional          → GROUND ONLY: bus or car. No airports, no planes.
+//       national, j30, j60, j300 → all four modes.
+//
+//     ⚠ IT IS NOT `track` ANY MORE, and that is the whole change. The rule used to read the
+//     calendar's own axis – `itf` flies, `domestic` drives – which put NATIONAL in the driving
+//     bucket. A National Series is six events a season across a whole country; a family flies to
+//     one of those, and the owner drew the line one rung lower than `track` does. So the modes are
+//     a table over `TierId` rather than a fold over `track`: total, so a new tier cannot be added
+//     without somebody deciding how she gets home from it, and readable as the sentence he wrote.
+//     A career that never climbs past Regional still never sees an airport – that half of the old
+//     rule is intact – and the first National trip can now bring a picture she has not seen before,
+//     one rung earlier than it used to.
+//
+//     THE MOODS ARE UNCHANGED AND ARE NOT TIER-GATED. «и настроений» lists what the top of the ladder
+//     has rather than taking anything off the bottom: `travelHomeMoodFor` below is the owner's
+//     earlier rule (reached the final → happy or sleepy; fell short → a weighted coin between sad
+//     and sleepy) and it reads her RESULT and her CONDITION, neither of which knows what tier she
+//     was at. A local title should be allowed to look like a title.
 //
 //     THE DRAW is a purpose-scoped sub-stream, `seed:travel:<week>` – the same week always produces
 //     the same scene, on any device and any replay, and ZERO draws land on the MAIN weekly stream
 //     (nothing here runs inside the tick at all, so the frozen capture 41550 / e6b0c709 cannot move
 //     by construction). Keyed on the week she comes HOME, which is the week the picture is shown.
-//     ⚠ W4 changed WHICH week that is (the tournament week, not the one after), and that is
-//     arithmetic on an existing sub-stream: the same `rngFromSeed` call, one key value different,
-//     still off the MAIN stream. The invariance pin in tests/travel-home.test.ts re-derives 41550 /
-//     e6b0c709 from the live engine with a snapshot taken every week, so it is measured rather than
-//     assumed.
+//     ⚠ W4 changed WHICH week that is (the tournament week, not the one after) and W5 changed the
+//     POOL SIZE on four of the six tiers; both are arithmetic on an existing sub-stream – the same
+//     `rngFromSeed` call, a different value out of it – and neither adds a call anywhere. The
+//     invariance pin in tests/travel-home.test.ts re-derives 41550 / e6b0c709 from the live engine
+//     with a snapshot taken every week, so it is measured rather than assumed.
 
-/** The two buckets, and the scenes that tell each journey. */
-const TRAVEL_HOME_SCENES: Record<'air' | 'road', readonly TravelHomeScene[]> = {
-  air: ['airport', 'plane'],
-  road: ['bus', 'car'],
+const AIR_SCENES: readonly TravelHomeScene[] = ['airport', 'plane']
+const ROAD_SCENES: readonly TravelHomeScene[] = ['bus', 'car']
+
+/** How she can come home from each rung – the owner's tier gate, as a table. TOTAL over `TierId`
+ *  on purpose: adding a tier to the ladder must not silently inherit somebody else's transport. */
+const TRAVEL_HOME_MODES: Record<TierId, readonly TravelHomeScene[]> = {
+  // «если локальные или региональные, то без самолетов» – another town, a night away, a drive back.
+  local: ROAD_SCENES,
+  regional: ROAD_SCENES,
+  // «если национальные и выше, то все виды транспорта» – a country is big enough to fly across.
+  national: [...ROAD_SCENES, ...AIR_SCENES],
+  j30: [...ROAD_SCENES, ...AIR_SCENES],
+  j60: [...ROAD_SCENES, ...AIR_SCENES],
+  j300: [...ROAD_SCENES, ...AIR_SCENES],
 }
 
 /** Her competitive tournament tier in `week`, off the event feed – null when she played none.
@@ -298,12 +342,14 @@ export function travelHomeSceneFor(args: {
   if (week <= 0) return null
   // her run is still being revealed – the week is not over and she is not on her way anywhere
   if (args.pendingUnfinished) return null
-  // 1-2. she played an away tournament this week...
+  // 1-2. she played a tournament this week...
+  // ⚠ W5: `tier === 'local'` is NOT a refusal any more – see clause (a) above for the owner's
+  // correction. Every rung she can play sends her home; the tier decides HOW, not WHETHER.
   const tier = playedTierIn(events, week)
-  if (tier === null || tier === 'local') return null
+  if (tier === null) return null
   // 3. ...and the family paid to get her there
   if (travelCentsIn(events, week) >= 0) return null
-  const pool = TRAVEL_HOME_SCENES[TIERS[tier].track === 'itf' ? 'air' : 'road']
+  const pool = TRAVEL_HOME_MODES[tier]
   const rng = rngFromSeed(`${seed}:travel:${week}`)
   return pool[Math.floor(rng() * pool.length)]
 }
@@ -1147,12 +1193,39 @@ export interface TravelClaims {
   injured?: true
   /** asserts a worn-out girl – unselectable above the `drained` rung */
   tired?: true
-  /** asserts the trip crossed a border (the ITF ladder, so the journey home is air) */
+  /** asserts the trip crossed a BORDER – the ITF ladder. Says nothing about the vehicle.
+   *
+   *  ⚠ W5 SPLIT THIS CLAIM IN TWO, and it was a lie waiting for the first National flight. It used to
+   *  read "the trip crossed a border (the ITF ladder, so the journey home is air)" – one claim doing
+   *  two jobs, which held only while `track` decided the transport. Under the owner's tier gate a
+   *  National trip is domestic AND can come home by plane, and a J30 abroad can come home by bus, so
+   *  "abroad" and "by air" are now independent facts about the same week. Lines that name a vehicle
+   *  (a gate, a flight, a landing, the motorway) claim `air`/`road`; lines that name the DISTANCE
+   *  ("her first one in another country") keep `abroad`. */
   abroad?: true
   /** asserts this was her FIRST tournament abroad */
   firstAbroad?: true
-  /** asserts a journey by road – bus or car */
+  /** asserts a journey by ROAD – the bus or the car painting. Read off the SCENE, never off the tier:
+   *  it is a claim about the picture the line is the caption of. */
   road?: true
+  /** asserts a journey by AIR – the airport or the plane painting. Same rule, other bucket. */
+  air?: true
+  /** asserts THE FAMILY CAR specifically – a back seat, a car park, stopping for chips. A stricter
+   *  claim than `road`, and W5 needed it: the road bucket is a bus AND a car, and a trophy on the back
+   *  seat under a picture of a coach is the same class of error as a gate under a picture of a bus. It
+   *  was survivable while the only road trips were Regionals (four a season); the owner's correction
+   *  made the Local Open a journey too, so the road pictures went from a handful a season to twenty. */
+  car?: true
+  /** asserts HOURS of journey – a motorway, a ring road, "the long way back".
+   *
+   *  ⚠ W5 ADDED THIS, and it is the honesty bill for letting the Local Open send her home. Until now
+   *  no note had ever landed on a local trip (the rule refused the tier outright), so a pool full of
+   *  "three hours of motorway" and "a long way back for it" was safe. It is not any more: the calendar
+   *  prices a Local Open's travel at $60-120 against a Regional's $150-400, which is the difference
+   *  between the club two towns over and the next county. A line about hours of driving under a
+   *  picture of a girl on a twenty-minute bus is exactly the failure this pool's licences exist to
+   *  stop, so the distance lines are gated and the short hop gets lines of its own. */
+  longWay?: true
   /** asserts she was asleep on the way: only the `sleepy` paintings show that, and the other two
    *  show her awake, so this is a claim about the ART as much as about the week */
   slept?: true
@@ -1164,7 +1237,19 @@ export interface TravelNote {
   license: (t: TravelHomeFacts) => boolean
 }
 
-const road = (t: TravelHomeFacts): boolean => !t.abroad
+/** ⚠ W5: THE SCENE, NOT THE TIER. This was `!t.abroad` – true while `track` decided the transport,
+ *  false the moment the owner's tier gate let a National fly home and a J30 come back on a bus. The
+ *  note is the CAPTION of the picture above it, so "we were out of the car park" has to be licensed
+ *  by there being a car in the frame, and nothing else. */
+const road = (t: TravelHomeFacts): boolean => t.scene === 'bus' || t.scene === 'car'
+/** ...and its other half, for the lines that name a gate, a flight or a landing. */
+const air = (t: TravelHomeFacts): boolean => t.scene === 'airport' || t.scene === 'plane'
+/** ...and the narrow half of the road, for the lines that name the family car. See the `car` claim. */
+const inCar = (t: TravelHomeFacts): boolean => t.scene === 'car'
+/** A journey with hours in it – every rung above the Local Open. See the `longWay` claim. */
+const longWay = (t: TravelHomeFacts): boolean => t.tier !== 'local'
+/** ...and its complement: the club two towns over, which W5 made a journey at all. */
+const shortHop = (t: TravelHomeFacts): boolean => t.tier === 'local'
 const asleep = (t: TravelHomeFacts): boolean => t.mood === 'sleepy'
 const awake = (t: TravelHomeFacts): boolean => t.mood !== 'sleepy'
 /** Everything below the injury and the first passport, which take a week to themselves. */
@@ -1175,9 +1260,11 @@ const plainLoss = (t: TravelHomeFacts): boolean => ordinary(t) && !t.reachedFina
 export const TRAVEL_NOTES: readonly TravelNote[] = [
   // --- SHE WON IT --------------------------------------------------------------------------------
   {
+    // ⚠ W5: `inCar`, not `road` – a coach does not pull over for chips. Same edit on the five lines
+    // below that name a back seat, a car park or the car itself; see the `car` claim for why.
     text: 'She won it, and then asked if we could stop for chips.',
-    claims: { title: true, road: true },
-    license: (t) => ordinary(t) && t.wonTitle && road(t),
+    claims: { title: true, road: true, car: true },
+    license: (t) => ordinary(t) && t.wonTitle && inCar(t),
   },
   {
     text: 'Champion, and she still wanted to know who won the other draw.',
@@ -1196,13 +1283,16 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'A trophy on the back seat and a hoodie she has not taken off since Saturday.',
-    claims: { title: true, road: true },
-    license: (t) => ordinary(t) && t.wonTitle && road(t),
+    claims: { title: true, road: true, car: true },
+    license: (t) => ordinary(t) && t.wonTitle && inCar(t),
   },
   {
+    // ⚠ W5: a GATE is an airport gate, so this is licensed on the picture being an airport or a
+    // plane – not on the tier being an international one. Same edit on every line below that names
+    // a vehicle; see the `abroad` claim's own note for why the two came apart.
     text: 'She won it. The first thing she did at the gate was ring her grandmother.',
-    claims: { title: true, abroad: true },
-    license: (t) => ordinary(t) && t.wonTitle && t.abroad,
+    claims: { title: true, air: true },
+    license: (t) => ordinary(t) && t.wonTitle && air(t),
   },
   // --- THE SILVER --------------------------------------------------------------------------------
   // The owner named this one himself («победила, серебро, старалась»). It is a good result and it
@@ -1224,8 +1314,8 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'She lost the last one and was asleep before the motorway.',
-    claims: { runnerUp: true, lost: true, slept: true, road: true },
-    license: (t) => ordinary(t) && t.lostFinal && asleep(t) && road(t),
+    claims: { runnerUp: true, lost: true, slept: true, road: true, longWay: true },
+    license: (t) => ordinary(t) && t.lostFinal && asleep(t) && road(t) && longWay(t),
   },
   {
     text: 'A final. Asleep the whole way home, the medal still round her neck.',
@@ -1260,8 +1350,8 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'A couple of wins, and then not. She still wanted the window seat home.',
-    claims: { lost: true, wonMatches: true, abroad: true },
-    license: (t) => plainLoss(t) && t.matchesWon > 0 && t.abroad,
+    claims: { lost: true, wonMatches: true, air: true },
+    license: (t) => plainLoss(t) && t.matchesWon > 0 && air(t),
   },
   // --- ONE MATCH, AND THE LONG WAY BACK ----------------------------------------------------------
   // The junior road is MOSTLY THIS – a first-round exit is the single commonest way a trip ends, and
@@ -1269,8 +1359,8 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   // handed the same eight sentences. Nothing here grades her. She is noticed, and that is all.
   {
     text: 'One match, and a long way back for it. She kept her hood up the whole time.',
-    claims: { lost: true, firstRound: true },
-    license: (t) => ordinary(t) && t.firstRound,
+    claims: { lost: true, firstRound: true, longWay: true },
+    license: (t) => ordinary(t) && t.firstRound && longWay(t),
   },
   {
     text: 'She lost the first one and stayed to watch the rest of it anyway.',
@@ -1279,13 +1369,13 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'Out on the first day. Two flights, for one match.',
-    claims: { lost: true, firstRound: true, abroad: true },
-    license: (t) => ordinary(t) && t.firstRound && t.abroad,
+    claims: { lost: true, firstRound: true, air: true },
+    license: (t) => ordinary(t) && t.firstRound && air(t),
   },
   {
     text: 'The long way home. She did not want to talk and we did not make her.',
-    claims: { lost: true, firstRound: true },
-    license: (t) => ordinary(t) && t.firstRound,
+    claims: { lost: true, firstRound: true, longWay: true },
+    license: (t) => ordinary(t) && t.firstRound && longWay(t),
   },
   {
     text: 'She lost her opener. On the way back she slept with her shoes still on.',
@@ -1299,13 +1389,13 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'Out first, and asking about the next draw before we had found the car.',
-    claims: { lost: true, firstRound: true, road: true },
-    license: (t) => ordinary(t) && t.firstRound && road(t),
+    claims: { lost: true, firstRound: true, road: true, car: true },
+    license: (t) => ordinary(t) && t.firstRound && inCar(t),
   },
   {
     text: 'Beaten in an hour, and then three hours of motorway.',
-    claims: { lost: true, firstRound: true, road: true },
-    license: (t) => ordinary(t) && t.firstRound && road(t),
+    claims: { lost: true, firstRound: true, road: true, longWay: true },
+    license: (t) => ordinary(t) && t.firstRound && road(t) && longWay(t),
   },
   {
     text: 'First match, last match. She carried her own bag all the way to the door.',
@@ -1317,13 +1407,13 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   // every trip ends the same way.
   {
     text: 'She asked what was for dinner before we were out of the car park.',
-    claims: { lost: true, road: true },
-    license: (t) => plainLoss(t) && road(t),
+    claims: { lost: true, road: true, car: true },
+    license: (t) => plainLoss(t) && inCar(t),
   },
   {
     text: 'She put her headphones in somewhere outside the city and left them in.',
-    claims: { lost: true },
-    license: plainLoss,
+    claims: { lost: true, longWay: true },
+    license: (t) => plainLoss(t) && longWay(t),
   },
   {
     text: 'Home late. She ate standing up at the counter and went straight to bed.',
@@ -1332,13 +1422,13 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'A long way for a short week. She slept from the ring road onward.',
-    claims: { lost: true, slept: true, road: true },
-    license: (t) => plainLoss(t) && asleep(t) && road(t),
+    claims: { lost: true, slept: true, road: true, longWay: true },
+    license: (t) => plainLoss(t) && asleep(t) && road(t) && longWay(t),
   },
   {
     text: 'She slept from the gate to the taxi rank and never saw the airport.',
-    claims: { lost: true, slept: true, abroad: true },
-    license: (t) => plainLoss(t) && asleep(t) && t.abroad,
+    claims: { lost: true, slept: true, air: true },
+    license: (t) => plainLoss(t) && asleep(t) && air(t),
   },
   // --- SHE CAME HOME EMPTY ----------------------------------------------------------------------
   // Licensed on the BODY rather than on the result – but not on a week she reached a final. She got
@@ -1352,10 +1442,12 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'She was asleep before we were out of the car park.',
-    claims: { tired: true, slept: true, road: true },
-    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t) && road(t),
+    claims: { tired: true, slept: true, road: true, car: true },
+    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t) && inCar(t),
   },
   {
+    // ⚠ W5 LEFT THIS ONE ON `abroad`, deliberately: it names no vehicle. A whole day of travelling is
+    // what the DISTANCE costs, and it is equally true of a bus down a country and a pair of flights.
     text: 'A whole day of travelling, and she slept most of it.',
     claims: { tired: true, slept: true, abroad: true },
     license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t) && t.abroad,
@@ -1367,22 +1459,58 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'She was asleep in her kit before we had the bags out of the car.',
-    claims: { tired: true, slept: true, road: true },
-    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t) && road(t),
+    claims: { tired: true, slept: true, road: true, car: true },
+    license: (t) => plainLoss(t) && t.conditionBand === 'drained' && asleep(t) && inCar(t),
   },
   {
     text: 'Two days home and she is still catching up on the sleep.',
     claims: { tired: true },
     license: (t) => plainLoss(t) && t.conditionBand === 'drained',
   },
+  // --- W5: THE SHORT HOP, which is the commonest journey in the game -----------------------------
+  //
+  // The Local Open runs `everyNWeeks: 2` and is the only tier a fresh career can enter at all, so for
+  // the first season and a half this is what "she came home from a tournament" MEANS. Until W5 it
+  // produced no journey and no note; the owner's "очень даже едут, на автобусе или машине" turned it
+  // into roughly twenty pictures a season, and a band of its own is what keeps those twenty from being
+  // the long-haul pool with its distance lines filtered out. Nothing here mentions hours, a motorway
+  // or a gate: the whole register of a local Saturday is that she was back for dinner.
+  {
+    text: 'The club two towns over, and home before dark.',
+    claims: { road: true },
+    license: (t) => ordinary(t) && shortHop(t) && road(t),
+  },
+  {
+    text: 'A short trip back, and she slept through all of it anyway.',
+    claims: { slept: true, road: true },
+    license: (t) => ordinary(t) && shortHop(t) && road(t) && asleep(t),
+  },
+  {
+    text: 'Home in time for dinner, and she talked through the whole of it.',
+    claims: {},
+    license: (t) => ordinary(t) && shortHop(t) && awake(t),
+  },
+  {
+    text: 'A packed lunch, one draw, and she stayed to watch the final.',
+    claims: { lost: true },
+    license: (t) => plainLoss(t) && shortHop(t),
+  },
   // --- THE FIRST PASSPORT WEEK -------------------------------------------------------------------
-  // A once-in-a-career journey, and the first time the airport painting can appear at all, so it
-  // takes the note to itself rather than competing with the result lines. Written result-agnostic
-  // on purpose: what the week is about is the distance, not the draw.
+  // A once-in-a-career journey, so it takes the note to itself rather than competing with the result
+  // lines. Written result-agnostic on purpose: what the week is about is the distance, not the draw.
+  //
+  // ⚠ W5 IS WHY THIS BAND HAS TWO HALVES NOW, and it is the sharpest consequence of the tier gate. It
+  // used to be five lines that all said "airport", because under the old `track` rule the ITF ladder
+  // ALWAYS came home by air – the comment above this band literally read "the first time the airport
+  // painting can appear at all". The J tiers draw from all four modes now, so her first trip abroad can
+  // come home on a bus, and three of these five would then be captions of a picture that has no
+  // aeroplane in it. So: the three that name the flight are licensed on `air`, and the two that name
+  // the DISTANCE are licensed on the trip alone and cover the road case. Both halves are non-empty for
+  // every mode, which is what the coverage sweep checks.
   {
     text: 'Her first time through an airport with a racquet bag. She kept the ticket.',
-    claims: { firstAbroad: true, abroad: true },
-    license: (t) => !t.injured && t.firstAbroad,
+    claims: { firstAbroad: true, abroad: true, air: true },
+    license: (t) => !t.injured && t.firstAbroad && air(t),
   },
   {
     text: 'The furthest she has ever been from this kitchen. She came back somehow taller.',
@@ -1396,13 +1524,26 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
   },
   {
     text: 'First trip abroad. She slept through the landing and half the drive back.',
-    claims: { firstAbroad: true, abroad: true, slept: true },
-    license: (t) => !t.injured && t.firstAbroad && asleep(t),
+    claims: { firstAbroad: true, abroad: true, air: true, slept: true },
+    license: (t) => !t.injured && t.firstAbroad && air(t) && asleep(t),
   },
   {
     text: 'She listed everyone she met, the whole flight home.',
-    claims: { firstAbroad: true, abroad: true },
-    license: (t) => !t.injured && t.firstAbroad && awake(t),
+    claims: { firstAbroad: true, abroad: true, air: true },
+    license: (t) => !t.injured && t.firstAbroad && air(t) && awake(t),
+  },
+  {
+    // ...and the road half of the same week, which W5 made reachable. Same register, no vehicle in
+    // the first line and a bus in the second, because a first border crossing on a coach is a
+    // fourteen-year-old's whole month.
+    text: 'Her first border, and she watched the signs change the whole way.',
+    claims: { firstAbroad: true, abroad: true, road: true },
+    license: (t) => !t.injured && t.firstAbroad && road(t),
+  },
+  {
+    text: 'Two countries in one week, and she never left the ground.',
+    claims: { firstAbroad: true, abroad: true, road: true },
+    license: (t) => !t.injured && t.firstAbroad && road(t),
   },
   // --- SHE CAME HOME HURT ------------------------------------------------------------------------
   // ⚠ THE INJURY TAKES THE NOTE, whatever else the week held. A line about chips on a week she has
@@ -1457,10 +1598,15 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
  *  week saying nothing is itself a statement; this note is the CAPTION of a painting the player is
  *  looking at, and a picture of a girl asleep in a car with no words under it is a missing string,
  *  not a quiet week. The coverage sweep in tests/travel-home.test.ts proves the pool answers every
- *  reachable trip; the fallback is a sentence that is true of every journey there has ever been. */
+ *  reachable trip; the fallback is a sentence that is true of every journey there has ever been.
+ *
+ *  ⚠ W5 REWROTE THE FALLBACK, because the old one was «A long way there, and a long way back.» and
+ *  that is now a CLAIM the week may not carry – the Local Open sends her home too, and it is not a
+ *  long way (see the `longWay` claim). The replacement asserts only that she went and came back,
+ *  which is the definition of the week this function is reached on. */
 export function travelNoteFor(travel: TravelHomeFacts, seed: string): string {
   const pool = TRAVEL_NOTES.filter((n) => n.license(travel))
-  if (pool.length === 0) return 'A long way there, and a long way back.'
+  if (pool.length === 0) return 'There and back, and the bag is by the door again.'
   const rng = rngFromSeed(`${seed}:travelnote:${travel.week}`)
   return pool[Math.floor(rng() * pool.length)].text
 }
@@ -1727,7 +1873,18 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     license: (f) => athome(f) && f.vacationWeek && f.injured === null,
   },
   {
-    text: 'She swam every day and came back with a line across her nose.',
+    // ⚠ W5 REWROTE THIS LINE, and the trace is what found it. It read «She swam every day and came back
+    // with a line across her nose.» – water, which three of the six packages do not have (a campsite, a
+    // village at her grandmother's, friends at home). It was invisible while the picture on a holiday
+    // week was the generic off-season frame; now the frame is that package's own painting, so W50 of the
+    // live trace showed hens by a village wall over a sentence about swimming. The band knows THAT she
+    // was away, not WHERE – so the copy may not either.
+    text: 'A week off the court. She came back browner, and louder at dinner.',
+    claims: { vacation: true, athome: true },
+    license: (f) => athome(f) && f.vacationWeek && f.injured === null,
+  },
+  {
+    text: 'Seven days, no drills. She did not ask about the calendar once.',
     claims: { vacation: true, athome: true },
     license: (f) => athome(f) && f.vacationWeek && f.injured === null,
   },
@@ -1871,6 +2028,110 @@ export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
     : (Math.floor(rngFromSeed(`${seed}:weeknote:entry`)() * pool.length) + facts.week) % pool.length
   const { text } = pool[idx]
   return typeof text === 'function' ? text(facts) : text
+}
+
+// =================================================================================================
+// W5 — THE WEEK'S OWN PICTURE, AS ONE DECISION
+// =================================================================================================
+//
+// The owner, 30.07: «давай пожалуйста week recap сделаем на каждую неделю, это реально результат, на
+// всех поездках он станет живым ... Для недель с тренировками можем использовать наши арты тренировки,
+// для недель с восстановлением после травмы соответственно. Если был отпуск - есть соответствующие
+// картинки отпуска ... это то, что делает игру невероятно живой».
+//
+// A STORY ON EVERY WEEK, and the picture is the half that makes a week a week rather than a page of
+// figures. `recapExists` already answers true on all 52 (it refuses exactly two things and both are
+// right: week 0, which is a career start with nothing behind it, and a reveal still in flight, which
+// has not finished being a week). What was missing is that the PICTURE only knew about two kinds of
+// week – a journey home and a holiday – and everything else fell through to `weekArtStem`, which
+// answers `training` for every in-year week. So a nine-week layoff drew nine paintings of her doing
+// ladder drills.
+//
+// ⚠ WHY IT IS ONE FUNCTION IN THE ENGINE AND NOT FOUR TERNARIES IN A CARD. It was three ternaries in
+// WeekRecapCard.vue, which is how a screen ends up deciding what a week WAS. That is a fact about the
+// week, not a fact about the layout: the Weekly Story renders it, the Season feed draws week frames of
+// its own, and a future surface (a season album, a share card) will want the same answer. A screen
+// that derives it can disagree with a screen that does not, and neither would be wrong on its own
+// terms. So the decision is `weekSceneFor` and it is on the snapshot; the art layer only spells the
+// filename (`art/weeks.ts weekSceneArtUrl`) and the card only writes the alt text.
+//
+// ⚠ AND IT IS CHOSEN FROM FACTS THAT ALREADY EXIST. Not one draw is added: the journey's mode and mood
+// were already drawn (their own sub-streams, `seed:travel:` / `seed:travelmood:`), and the other three
+// arms are pure reads – the live injury, the week's booking, the week number. Nothing in this module
+// runs inside the tick, so the frozen MAIN capture (41550 / e6b0c709) cannot move; the pin in
+// tests/travel-home.test.ts re-derives it with a snapshot taken every single week.
+//
+// -------------------------------------------------------------------------------------------------
+// THE PRIORITY ORDER, WHICH IS THE ONLY REAL DESIGN DECISION HERE
+// -------------------------------------------------------------------------------------------------
+//
+// A week can be several things at once – she came home from a tournament AND is now injured; she was
+// on holiday during the off-season – and there is one frame. The order is:
+//
+//   1. THE JOURNEY HOME     she played somewhere and came back
+//   2. THE LAYOFF           she is carrying an injury (the rehab painting, her age band)
+//   3. THE HOLIDAY          a booked family week resolved (that package's own frame)
+//   4. THE WEEK FRAME       `weekArtUrl` – the off-season's three in order, else `training`
+//
+// AND IT IS NOT AN INVENTION: IT IS `WEEK_NOTES`' OWN ORDER, READ OFF THE LICENCES. The scrap under
+// the painting and the painting itself are two authors on one page, and if they rank the week's facts
+// differently the page contradicts itself. So:
+//
+//   * a journey takes the scrap from every other note (`athome` – the licence every WEEK_NOTES line
+//     carries – is false on a week `travelHomeScene` is non-null), so it takes the frame too;
+//   * the layoff outranks the holiday, the exams, the off-season and the training week in the words:
+//     every one of those licences carries `f.injured === null` and the layoff band carries none. So
+//     rehab outranks the holiday here;
+//   * the holiday outranks the off-season in the words (`offSeason` carries `!f.vacationWeek`), so it
+//     does here. Which is also the right answer on its own terms: the holiday names ONE week out of
+//     the year, December's three frames are a sequence over a block of three.
+//
+// THE TWO COLLISIONS THE BRIEF NAMES, ANSWERED IN THOSE TERMS:
+//
+//   «she came home from a tournament AND is now injured» → THE JOURNEY. On the engine's own timing
+//     `rollInjury` runs at the TOP of a week, and an injury the week before would have walked the
+//     tournament over and left no journey at all – so this is a girl who got home and THEN got the
+//     news. The week she lived was the trip. It is also the one week the frame and the scrap are about
+//     different things, and deliberately: TRAVEL_NOTES' injured band takes the words on exactly that
+//     week, so the picture says where she was and the note says how she is. Two halves of one week,
+//     which is what a week that big deserves.
+//   «she was on holiday during the off-season» → THE HOLIDAY, per the rule above.
+//
+// AND THE ONE THE BRIEF DOES NOT NAME: a holiday DURING a layoff → the rehab painting, because that is
+// where WEEK_NOTES already puts the words. A seaside frame on a week his daughter is in a knee brace
+// would read as the game not noticing, and the scrap on that week says «Rehab, three times this week.»
+
+/**
+ * THE ONE ANSWER to "which painting does this week show". See the order above.
+ *
+ * Pure, deterministic, draw-free: `facts` already carries the journey's mode and mood (drawn on their
+ * own sub-streams when the facts were assembled), and the other three arms are reads.
+ *
+ * ⚠ THE ONSET WEEK OF AN INJURY DRAWS `rehab`, NOT `injury`, and that is R14-1's own split rather than
+ * a shortcut. The owner, 29.07: «rehab – показываем ... до момента восстановления, травму показываем
+ * ТОЛЬКО в момент самой травмы в попапе». The moment she went down belongs to the blocking popup
+ * (InjuryStopDialog) and to the Memory card; the WEEK belongs here, and every week of a layoff is a
+ * week she is not playing.
+ */
+export function weekSceneFor(args: {
+  facts: DiaryFacts
+  /** her age band this week – the layoff painting ships one per band */
+  stage: PortraitStage
+  /** the package a booked holiday resolved into this week, or null */
+  vacationPackageId: string | null
+}): WeekScene {
+  const { facts, stage, vacationPackageId } = args
+  const week = facts.week
+  // 1. she went somewhere and came back
+  if (facts.travelHomeScene !== null) {
+    return { kind: 'travel', week, scene: facts.travelHomeScene, mood: facts.travelHomeMood ?? 'sleepy' }
+  }
+  // 2. she is out
+  if (facts.injured !== null) return { kind: 'rehab', week, stage }
+  // 3. the family went away
+  if (facts.vacationWeek && vacationPackageId !== null) return { kind: 'vacation', week, packageId: vacationPackageId }
+  // 4. the calendar's own frame – December's three, or training
+  return { kind: 'week', week }
 }
 
 // --- the greeting (epic/redesign-home) --------------------------------------------------------
@@ -2072,6 +2333,14 @@ export function buildDiarySnapshot(view: DiaryWorldView): DiarySnapshot {
     facts,
     photoLine,
     greeting: greetingFor(facts, photoLine, view.seed),
+    // W5: WHICH PAINTING THIS WEEK SHOWS, decided once, here, beside the facts it reads. The age band
+    // is the same arithmetic `selectMemory` uses below (start age plus completed years), so no new
+    // view field was needed for it.
+    scene: weekSceneFor({
+      facts,
+      stage: portraitStage(view.startAgeYears + Math.floor(view.week / 52)),
+      vacationPackageId: view.vacationPackageId ?? null,
+    }),
     travelNote: travelHome ? travelNoteFor(travelHome, view.seed) : null,
     // W2: the other author of the same scrap. The two can never both speak – `weekNoteFor`'s own
     // `athome` licence reads `facts.travelHomeScene`, which is non-null on exactly the weeks

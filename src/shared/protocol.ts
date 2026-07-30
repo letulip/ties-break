@@ -856,6 +856,24 @@ export type TravelHomeMood = 'sleepy' | 'happy' | 'sad'
 
 export type TravelHomeScene = 'airport' | 'plane' | 'bus' | 'car'
 
+/** W5 — WHICH PAINTING A WEEK SHOWS (owner, 30.07: «week recap сделаем на каждую неделю ... Для
+ *  недель с тренировками можем использовать наши арты тренировки, для недель с восстановлением после
+ *  травмы соответственно. Если был отпуск - есть соответствующие картинки отпуска»).
+ *
+ *  A DISCRIMINATED UNION AND NOT A URL, because the two are different jobs: the ENGINE decides what
+ *  the week was (`engine/diary.ts weekSceneFor`, which is where the priority order is written down and
+ *  argued), the ART LAYER spells the filename (`art/weeks.ts weekSceneArtUrl`) and the CARD writes the
+ *  description. A screen handed a URL cannot be asked what the week was; a screen handed this cannot
+ *  answer it differently from any other screen.
+ *
+ *  Every arm carries `week`, so the filename builder needs no second argument and the vacation arm can
+ *  fall back to the week frame for a package whose picture has not been painted yet. */
+export type WeekScene =
+  | { kind: 'travel'; week: number; scene: TravelHomeScene; mood: TravelHomeMood }
+  | { kind: 'rehab'; week: number; stage: PortraitStage }
+  | { kind: 'vacation'; week: number; packageId: string }
+  | { kind: 'week'; week: number }
+
 /** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
  *  one line.
  *    `anniversary` – the milestone's week is ~52 weeks ago (±1). The loud one.
@@ -910,6 +928,12 @@ export interface DiarySnapshot {
   weekNote: string | null
   /** the Memory card to show this week, or null */
   memory: MemoryCard | null
+  /** W5: WHICH PAINTING THIS WEEK SHOWS – the journey home, the layoff, the holiday, or the week's
+   *  own frame. One decision, taken in engine/diary.ts (`weekSceneFor`) where the priority order is
+   *  written down, so no surface can derive a different answer. Derived at snapshot time from facts
+   *  that already exist; adds no draw and bumps no schema. `art/weeks.ts weekSceneArtUrl` turns it
+   *  into a filename. */
+  scene: WeekScene
 }
 
 // --- her life off the court (engine/kidLife.ts) -------------------------------

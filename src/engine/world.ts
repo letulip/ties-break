@@ -4105,6 +4105,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       .reduce((s, r) => s + r.points, 0),
     milestones: world.milestones,
     vacationWeek: vacationForWeek(world, world.week) !== undefined,
+    // W5: ...and WHICH holiday, for the frame that names it. The booking is still on file when its
+    // story is told - `prunePlannerBookings` keeps four trailing weeks - and null on every other week.
+    vacationPackageId: vacationForWeek(world, world.week)?.packageId ?? null,
     // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
     // decision rather than the world's, and the subject of the ordinary week's note.
     trainPct: world.plan.train,
