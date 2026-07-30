@@ -1038,3 +1038,71 @@ describe('training read – it is not a delta channel', () => {
     expect(named).toBeGreaterThan(20)
   })
 })
+
+// ---------------------------------------------------------------------------
+// 12. THE PICTURE HAS TO FIT THE WORDS (v25)
+// ---------------------------------------------------------------------------
+// ⚠ WHY THIS BLOCK EXISTS: the fifth axis shipped with a layout bug that the whole suite missed and
+// a single glance in the browser caught. `RADAR_AXIS_LABEL` grew "Groundstrokes" (13 chars, ~96px at
+// the note list's 10px/800/0.08em) and the note label column was a fixed 68px, sized when the longest
+// label was "Composure" - so the label rendered straight over the coach's sentence beside it. Nothing
+// failed, because the numbers live in scoped CSS and an SVG viewBox and no test read either.
+//
+// The column is fixed-width ON PURPOSE (the five sentences align down one edge), so "just let it
+// grow" is not the fix - the fix is that the two layout numbers must be re-measured whenever the
+// longest label changes. This block makes that a failure rather than a discovery: a sixth axis with a
+// longer word fails HERE, with the two numbers named, instead of silently overprinting a sentence.
+//
+// It is a budget check and not a rendering test - vitest has no text metrics - so the per-character
+// cost is stated as a measured constant and the assertion is arithmetic against it.
+describe('the radar draws every word the engine can hand it', () => {
+  const radar = read('../src/components/SkillsRadar.vue')
+
+  /** MEASURED IN CHROME at the note list's own type (10px, weight 800, uppercase, 0.08em tracking),
+   *  not estimated: "Composure" 69px / 9 chars, "Groundstrokes" 96px / 13 chars. 7.4px a character. */
+  const NOTE_LABEL_PX_PER_CHAR = 7.4
+
+  const longest = SKILL_KEYS.reduce((a, k) =>
+    RADAR_AXIS_LABEL[k].length > RADAR_AXIS_LABEL[a].length ? k : a, SKILL_KEYS[0])
+
+  it('gives the note list a column wide enough for the LONGEST axis label', () => {
+    const block = radar.slice(radar.indexOf('.radar-note-axis {'))
+    const width = Number(block.match(/width: (\d+)px/)![1])
+    const needed = RADAR_AXIS_LABEL[longest].length * NOTE_LABEL_PX_PER_CHAR
+    expect(
+      width,
+      `.radar-note-axis is ${width}px; "${RADAR_AXIS_LABEL[longest]}" needs about ${needed.toFixed(0)}px. ` +
+        'Re-measure it in the browser rather than guessing - an overflowing label prints over the coach\'s sentence.',
+    ).toBeGreaterThanOrEqual(needed)
+  })
+
+  it('keeps the svg centred on CX and keeps the flank labels visible', () => {
+    // ⚠ WHAT THIS CAN AND CANNOT CHECK. vitest has no text metrics, so "the longest label fits" is not
+    // assertable here - it was measured in the browser (viewBox 240 -> 300 at v25, because the flank
+    // labels sit at CX +/- 1.16R*cos(angle) and run OUTWARD from there). What IS assertable are the two
+    // structural properties the flanks depend on, and both were silently breakable:
+    //   1. the box is centred on CX, so left and right flanks get equal room;
+    //   2. `overflow: visible` survives on the svg, which is what lets a flank label use the gutter
+    //      outside the viewBox at all. Setting it to hidden would crop the words with no test failing.
+    const viewBox = radar.match(/viewBox="0 0 (\d+) (\d+)"/)!
+    const boxWidth = Number(viewBox[1])
+    const cx = Number(radar.match(/const CX = (\d+)/)![1])
+    expect(cx * 2, 'the box is not centred on CX - one flank has less room than the other').toBe(boxWidth)
+    expect(boxWidth, 'the box was widened to 300 for the five-axis labels; re-measure before shrinking it')
+      .toBeGreaterThanOrEqual(300)
+    const svgCss = radar.slice(radar.indexOf('.radar-svg {'))
+    expect(svgCss.slice(0, svgCss.indexOf('}'))).toContain('overflow: visible')
+  })
+
+  it('reads its labels and its geometry OUT of the engine, so a sixth axis cannot half-land', () => {
+    // No private copy of the axis union, no hand-written label map, no hard-coded corner count -
+    // all three were real hazards here (the local `RadarAxis` block that v25 deleted was one).
+    expect(radar).toContain('RADAR_AXIS_LABEL')
+    expect(radar).toContain('const ORDER: readonly SkillKey[] = SKILL_KEYS')
+    expect(radar).toContain('360 / ORDER.length')
+    expect(radar).not.toMatch(/type RadarAxisKey/)
+    expect(radar).not.toMatch(/index \* 90/)
+    // ...and the guide rings are built from the axis count rather than listed.
+    expect(radar).toContain('ORDER.map(() => 100)')
+  })
+})

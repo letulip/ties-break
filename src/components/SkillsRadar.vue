@@ -58,12 +58,14 @@ const AXIS_LABEL: Record<SkillKey, string> = RADAR_AXIS_LABEL
 // The box. Wider than it is tall because the horizontal labels need room the vertical ones do not,
 // and a viewBox is free.
 //
-// ⚠ 300 WIDE, WAS 240, AND IT IS MEASURED RATHER THAN GUESSED. Five spokes put two labels on each
-// flank instead of one, at shallower angles than the old four did, and the longest word on the
-// picture ("Groundstrokes", ~74px at this font) is end-anchored on the left flank at x = CX - 1.16R.
-// At the old 240/CX=120 that ran off the left edge of the viewBox. The svg is
-// `width: 100%; max-width: 300px`, so a wider viewBox costs a fraction of scale and nothing else -
-// which is cheaper than shortening a word a player reads in order to keep a number in a file.
+// ⚠ 300 WIDE, WAS 240, AND IT IS MEASURED IN THE BROWSER RATHER THAN GUESSED. Five spokes put two
+// labels on each flank instead of one, at shallower angles than the old four did, and the longest word
+// on the picture ("Groundstrokes", 96px at this font) is end-anchored on the left flank at
+// x = CX + 1.16R*cos(198deg). At the old 240/CX=120 it ran off the left edge. The svg is
+// `width: 100%; max-width: 300px` with `overflow: visible`, so a wider viewBox costs a fraction of
+// scale and nothing else - which is cheaper than shortening a word a player reads in order to keep a
+// number in a file. radar.test.ts §12 pins the two structural halves of this (the box is centred on
+// CX; the overflow stays visible) and says why the third is a browser measurement.
 const CX = 150
 const CY = 92
 const R = 62
@@ -305,9 +307,17 @@ const notes = computed(() =>
   align-items: baseline;
 }
 
+/* ⚠ 100px, WAS 68, AND IT IS MEASURED. The width is fixed so the five sentences align down a common
+   left edge - that is the whole reason it is not `auto`. 68px fitted the longest label the engine
+   could produce until v25 ("Composure", 69px, already one pixel over); "Groundstrokes" measures 96px
+   at this size/weight/tracking and was rendering straight over the sentence beside it - caught in the
+   browser, not by the suite, which is why radar.test.ts §12 now budgets this number against
+   RADAR_AXIS_LABEL. 100 rather than exactly 96 so the next word does not have to be shorter than the
+   longest one we happen to ship. The sentence column keeps 220px on a 390px frame, which the 16px
+   hand font already wraps at. */
 .radar-note-axis {
   flex: none;
-  width: 68px;
+  width: 100px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;
