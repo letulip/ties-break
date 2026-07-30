@@ -219,8 +219,15 @@ describe('R13-12 — the This-week tab owns the plan and the recap', () => {
   })
 
   it('the card renders by the SHARED existence rule – the same one the dot reads', () => {
+    // ⚠ W5 ADDED ONE NAME TO THE SHELL'S IMPORT (`storyOpensItself` – the settings handle's door; see
+    // the W1 suite). The protected fact is untouched and is what both lines still assert: the card and
+    // the dot read the SAME module, so neither can hand-copy the rule.
     expect(weekScreen).toContain("import { recapExists } from '../../composables/weekRecap'")
-    expect(app).toContain("import { recapExists, thisWeekDotShows } from './composables/weekRecap'")
+    expect(app).toContain("import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'")
+    // ...and the CARD still renders on `recapExists` alone. The preference stops the page opening
+    // itself; it must never stop the This-week tab from having the week's story on it.
+    expect(weekScreen).toContain('recapExists(game.snapshot)')
+    expect(weekScreen).not.toContain('storyOpensItself')
   })
 })
 
@@ -387,8 +394,17 @@ describe('W1 — the end of a week lands on the story', () => {
     // ⚠ RE-AIMED BY W4: the routing condition grew a SECOND door (`runClosed`, below), so the pin is
     // the assignment rather than the whole line – the protected fact is unchanged and is exactly what
     // it always was: the shell routes to 'week' off the SHARED predicate, never off a hand-copy.
-    expect(app).toContain("recapExists(snap)) tab.value = 'week'")
-    expect(app).toContain("if ((advanced || runClosed) && recapExists(snap))")
+    //
+    // ⚠ RE-AIMED AGAIN BY W5, and only the NAME of the shared predicate moved. The owner asked for a
+    // handle to turn the automatic page off («можем сделать отдельную ручку для их отключения в
+    // настройках»), so the door now reads `storyOpensItself` = `recapExists` AND the player's
+    // preference – and it is still ONE function in composables/weekRecap.ts, still never a hand-copy,
+    // which is the whole protected fact here. What is deliberately NOT re-aimed is the existence rule
+    // itself: `recapExists` may not learn about the preference (the sibling test below reads its body),
+    // because the card and the dot read it and the story must still EXIST when the page is switched off.
+    expect(app).toContain("storyOpensItself(snap)) tab.value = 'week'")
+    expect(app).toContain("if ((advanced || runClosed) && storyOpensItself(snap))")
+    expect(app).toContain("import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'")
     // ...and it must be an ADVANCE of the SAME career, not merely a higher week number. `week` is
     // `snapshot?.week ?? 0`, so the first snapshot of a load reads as 0 -> N; the first draft of this
     // fix opened last week's story on every app start because of it. Caught in the browser.
@@ -503,20 +519,34 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     expect(seasonT).not.toContain('Watch it live')
   })
 
-  it('the painting is the week: journey home, else the holiday, else the week frame', () => {
-    // The order is the order of what the week WAS, and no two can be true at once - a journey needs a
-    // competitive match of hers this week, and a vacation week takes no tournament.
-    expect(card).toContain('travelHomeUrl(travelHomeScene.value, travelHomeMood.value ?? \'sleepy\')')
-    expect(card).toContain('(vacationArt.value ?? weekArtUrl(week.value))')
-    // WHICH holiday comes off the booking, not off the boolean - `facts.vacationWeek` cannot name a
-    // package, and naming one is the whole item.
-    expect(card).toContain("import { vacationArtUrl, weekArtUrl } from '../art/weeks'")
-    expect(card).toContain('snap.vacations.find((v) => v.week === snap.week)')
-    expect(card).toContain('snap.diary.facts.vacationWeek')
-    // ...and it is DESCRIBED, because it is the only place on the page that says which of the five it
-    // was. The name is the catalogue's, never a second table in a screen.
+  // ⚠ RE-AIMED BY W5, AND THE RE-AIM IS THE ITEM. This pinned THE CARD'S OWN TERNARY CHAIN – three
+  // `expect(card).toContain(...)` over an expression that decided, inside a component, what a week was.
+  // The owner asked for a story on every week («week recap сделаем на каждую неделю ... для недель с
+  // восстановлением после травмы соответственно»), and the chain could not grow a fourth arm honestly:
+  // two kinds of week had a picture and every other week fell through to `weekArtStem`, which answers
+  // `training` for every in-year week, so a nine-week layoff drew nine paintings of ladder drills.
+  //
+  // THE DECISION MOVED TO THE ENGINE (`engine/diary.ts weekSceneFor`, on the snapshot as `diary.scene`),
+  // which is where the priority order is now written down and argued. So the pin follows it: what is
+  // asserted here is that the card no longer decides – it renders ONE answer through ONE builder – and
+  // the ORDER itself is pinned as behaviour, on facts, in tests/week-scene.test.ts, which is strictly
+  // stronger than three string matches over a ternary. Every fact the old test protected is still
+  // protected: the journey outranks the holiday, WHICH holiday comes off the booking rather than off the
+  // boolean, and the frame is described for anyone who cannot see it.
+  it('the painting is the week, and the CARD does not decide which – W5', () => {
+    // one answer, one builder: no branch on the week's facts anywhere in this file
+    expect(card).toContain('const scene = computed(() => game.snapshot?.diary.scene ?? null)')
+    expect(card).toContain('weekSceneArtUrl(scene.value)')
+    expect(card).toContain("import { weekArtUrl, weekSceneArtUrl } from '../art/weeks'")
+    // ...and the two things it must NOT do again: read the journey's fields, or find the booking itself
+    expect(card).not.toContain('travelHomeScene.value')
+    expect(card).not.toContain('snap.vacations.find')
+    // the DESCRIPTION stays a screen's job, and still names which of the six weeks away it was, off the
+    // catalogue's own label rather than a second table in a component
     expect(card).toContain("import { vacationPackage } from '../engine/economy'")
     expect(card).toContain('The family week away –')
+    // ...and the layoff frame, which W5 added, says what it is for the same reason
+    expect(card).toContain('On the bench, working her way back')
   })
 
   it('the vacation price is a figure, not a chip: bigger, and no capsule round it', () => {

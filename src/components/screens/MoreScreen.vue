@@ -14,6 +14,7 @@ import IconButton from '../ui/IconButton.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
 import { isHapticsOff, setHapticsOff, supportsHaptics } from '../../audio/haptics'
+import { isWeekStoryAutoOpenOff, setWeekStoryAutoOpenOff } from '../../composables/weekRecap'
 
 const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -192,6 +193,25 @@ function toggleHaptics(): void {
   setHapticsOff(!hapticsOff.value)
   hapticsOff.value = !hapticsOff.value
 }
+
+// --- W5: THE WEEK'S STORY (owner: «можем сделать отдельную ручку для их отключения в настройках») ---
+//
+// THE FOURTH SWITCH ON THIS SCREEN, and deliberately the same object as the other three: a plain
+// localStorage flag ('tb-week-story-off'), read and written by pure functions, default ON, working
+// before a career is even loaded. It belongs here because the owner has called this screen "our
+// settings, essentially", and it belongs in this SHAPE because three switches that behave one way and
+// a fourth that behaves another way is how a settings screen starts lying about what a switch does.
+//
+// ⚠ IT IS NOT A "SHOW THE STORY" SWITCH, and the copy under it has to say so, because the difference is
+// the whole design. OFF stops the week's story OPENING ITSELF at the end of a tick; the story is still
+// there, on the This-week tab, on every week, with its accent dot still telling him when it is fresh.
+// A player who turns this off has lost a page that appeared, not a page that exists – see
+// composables/weekRecap.ts, which owns the rule and the argument for keeping `recapExists` out of it.
+const weekStoryOff = ref(isWeekStoryAutoOpenOff())
+function toggleWeekStory(): void {
+  setWeekStoryAutoOpenOff(!weekStoryOff.value)
+  weekStoryOff.value = !weekStoryOff.value
+}
 </script>
 
 <template>
@@ -331,6 +351,30 @@ function toggleHaptics(): void {
       >
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
         <span class="sound-switch-label">{{ hapticsOff ? 'OFF' : 'ON' }}</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- W5: the week's story. Its own section rather than a fourth row under "Sound", because it is not
+       a sound - and the hint is load-bearing copy: OFF stops the page appearing, not the page. -->
+  <section>
+    <h2>Week story</h2>
+    <div class="career-row">
+      <div>
+        Open at the end of a week
+        <span class="hint" style="margin: 2px 0 0">
+          Off: the story stays on the This week tab – tap over whenever you like
+        </span>
+      </div>
+      <button
+        class="sound-switch"
+        :class="{ on: !weekStoryOff }"
+        role="switch"
+        :aria-checked="!weekStoryOff"
+        @click="toggleWeekStory"
+      >
+        <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
+        <span class="sound-switch-label">{{ weekStoryOff ? 'OFF' : 'ON' }}</span>
       </button>
     </div>
   </section>
