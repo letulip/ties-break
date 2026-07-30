@@ -3114,15 +3114,22 @@ tr.kid-row td {
     transition: none;
   }
 }
+.cm-travel.is-locked .cm-travel-title,
+.cm-travel.is-locked .cm-travel-sub {
+  color: var(--muted);
+}
+
+/* ⚠ THE `strong.chosen` RULE WENT WITH THE COMPARISON IT MARKED (30.07). The coach-travel toggle is locked
+   until the professional years, so the season pair - "$X without him · $Y with" - had nothing left to
+   compare and neither side could be the "chosen" one. The LINE itself survives, carrying the one figure
+   that is true whatever she books: what her coach costs a week. `.cm-travel` and `.cm-switch` stay too -
+   the row is still drawn, disabled, because locking it is what says when it arrives. */
 .cm-travel-cost {
-  margin: 0 0 12px;
+  margin: 8px 0 0;
 }
 .cm-travel-cost strong {
-  font-weight: 700;
-  color: var(--ink-2);
-}
-.cm-travel-cost strong.chosen {
-  color: var(--accent);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
 }
 
 /* A tier is a SECTION, not a filter (design §T.1): dot, name, count, price range. */
