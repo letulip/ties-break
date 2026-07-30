@@ -6,6 +6,7 @@
 // rule lines. Same dialog-overlay/scrollable-card/pinned-close pattern as TierGuide.vue.
 import { useGameStore } from '../stores/game'
 import CountingResultsTable from './CountingResultsTable.vue'
+import IconButton from './ui/IconButton.vue'
 
 defineEmits<{ close: [] }>()
 
@@ -15,7 +16,7 @@ const game = useGameStore()
 <template>
   <div class="dialog-overlay" @click.self="$emit('close')">
     <div class="guide-card">
-      <button class="replay-close" aria-label="Close" title="Close" @click="$emit('close')">✕</button>
+      <IconButton class="replay-close" icon="close" label="Close" title="Close" @click="$emit('close')" />
       <p class="guide-title">How ranking points work</p>
       <CountingResultsTable :results="game.snapshot?.countingResults ?? []" />
       <ul class="rank-help-rules">

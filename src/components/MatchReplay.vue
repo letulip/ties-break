@@ -11,6 +11,7 @@ import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import MatchViewer from './MatchViewer.vue'
+import IconButton from './ui/IconButton.vue'
 
 const props = defineProps<{ match: WorldMatch }>()
 defineEmits<{ close: [] }>()
@@ -30,7 +31,7 @@ const annotated = computed(() => {
 <template>
   <div class="dialog-overlay" @click.self="$emit('close')">
     <div class="replay-card">
-      <button class="replay-close" aria-label="Close replay" title="Close" @click="$emit('close')">✕</button>
+      <IconButton class="replay-close" icon="close" label="Close replay" title="Close" @click="$emit('close')" />
       <div class="replay-header">
         <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
       </div>

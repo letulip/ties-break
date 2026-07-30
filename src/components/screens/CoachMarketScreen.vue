@@ -27,6 +27,7 @@
 import { computed, ref, watchEffect } from 'vue'
 import { useGameStore } from '../../stores/game'
 import ConfirmDialog from '../ConfirmDialog.vue'
+import IconButton from '../ui/IconButton.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
 import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
@@ -211,7 +212,7 @@ function scrollToTier(tier: CoachTier): void {
     <p v-if="game.error" class="error">{{ game.error }}</p>
 
     <section class="bare market-head">
-      <button class="back-link" aria-label="Back" @click="emit('back')">&larr;</button>
+      <IconButton class="back-link" variant="bare" icon="back" label="Back" @click="emit('back')" />
       <div>
         <h2 class="market-title">Coach Market</h2>
         <p class="market-sub">

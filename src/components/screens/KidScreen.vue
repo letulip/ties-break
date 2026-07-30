@@ -60,6 +60,7 @@ import { COACH_TIER_LABEL } from '../../engine/coach'
 import ScreenShell from '../ui/ScreenShell.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
+import IconButton from '../ui/IconButton.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 
@@ -266,9 +267,13 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
         <div class="kid-hero-scrim"></div>
 
         <header class="kid-head">
-          <button class="back-link kid-back" aria-label="Back to Home" @click="emit('navigate', 'home')">
-            &larr;
-          </button>
+          <IconButton
+            class="back-link kid-back"
+            variant="bare"
+            icon="back"
+            label="Back to Home"
+            @click="emit('navigate', 'home')"
+          />
           <div class="kid-id">
             <p class="kid-name-row">
               <span class="kid-name">{{ kidFullName }}</span>
