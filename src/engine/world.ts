@@ -75,7 +75,7 @@ import { parentIncomeForWeekCents,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort } from './season/cohort'
 import { renewCohort } from './season/conveyor'
-import { ageFactor, growWeek, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
+import { ageFactor, growWeek, relativeAgeYears, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
 import {
   bestFitCoachAt,
   buildCoachRoster,
@@ -87,6 +87,8 @@ import {
   coachWeeklyCents,
   COACH_TIER_LABEL,
   eliteGateShortfall,
+  physioRecoveryFactor,
+  physioRiskFactor,
   practiceCoachRateCents,
   selfRateCents,
   tierOf,
@@ -1400,7 +1402,10 @@ export function injuryTau(world: WorldState): number {
   // Read off `vacations` rather than a flag: `rollInjury` runs at step 1c BEFORE `resolveVacation`,
   // and `prunePlannerBookings` keeps the current week, so the booking is always visible here.
   if (vacationForWeek(world, world.week)) tau *= a.injuryVacationFactor
-  if (world.physioActive) tau *= ECONOMY.physio.riskReduction
+  // ⚠ BY RUNG NOW, not one flat boolean - see coach.ts `physioRiskFactor`. A budget team reproduces the
+  // shipped 0.76 exactly, so nothing that ships today changes; the rungs above it protect her better.
+  // POST-DRAW multiply on the threshold, the same invariance pattern as `knockTauFactor` below.
+  if (world.physioActive) tau *= physioRiskFactor(tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)))
   // Season planner: the resort/elite recovery buff is a POST-DRAW multiply on the threshold
   // (spec §2 "invariance-safe"), so the expensive package buys real protection without ever
   // touching the draw sequence.
@@ -1481,7 +1486,13 @@ export function rollInjury(world: WorldState): void {
   const drawnPart = drawBodyRegion(injuryRng)
   const pushing = knockLive(world.knock, world.week) && world.knock!.choice === 'push'
   const part = pushing ? world.knock!.part : drawnPart
-  if (world.physioActive) weeksOut = Math.max(1, Math.round(weeksOut * (1 - ECONOMY.physio.recoverySpeedup)))
+  // ...and the same rung scaling on how long she is out. Budget = today's 12% exactly.
+  if (world.physioActive) {
+    weeksOut = Math.max(
+      1,
+      Math.round(weeksOut * physioRecoveryFactor(tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)))),
+    )
+  }
   const descriptor = band.severity === 'minor' && weeksOut === 1 ? 'niggle' : SEVERITY_DESCRIPTOR[band.severity]
   const kind = `${part} ${descriptor}`
   world.injury = { kind, severity: band.severity, weeksRemaining: weeksOut, totalWeeks: weeksOut, sinceWeek: world.week }
@@ -3507,7 +3518,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   world.skills = growWeek({
     skills: world.skills,
     potential: world.potential,
-    ageYears: ageAtWeek(world.week),
+    // ⚠ TASK 55 – THE RELATIVE AGE EFFECT, and it is this one substitution. `ageAtWeek` is her CALENDAR
+    // age, which is what the tour bands her by; `relativeAgeYears` is how far she sits from the middle of
+    // that band, so the sum is her DEVELOPMENTAL age. A December girl is ~13.5 here at calendar 14 and a
+    // January girl ~14.5 - the cohort is not shifted with her, so she is genuinely behind the field, and
+    // `ageFactor` flattening with age closes the gap by itself. See engine/development.ts for why the
+    // model is a clock rather than a penalty. No new draw: `growWeek` keeps `seed:growth:<week>`.
+    ageYears: ageAtWeek(world.week) + relativeAgeYears(world.profile.birthMonth),
     plan: world.plan,
     // ⚠ HE ONLY COACHES THE WEEKS HE IS PAID FOR (R4). A competition week she has not bought him
     //     for is a week he is not there, so it develops at the self-coached rate - which is what

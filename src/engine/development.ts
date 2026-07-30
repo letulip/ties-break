@@ -84,6 +84,52 @@ export function rollPotential(seed: string, start: KidSkills): KidSkills {
   return out
 }
 
+// =================================================================================================
+// THE RELATIVE AGE EFFECT (task 55) – the birth month stops being decoration
+// =================================================================================================
+//
+// The owner, 30.07, on whether to keep `birthMonth` or take it out: «можно оставить и как раз вместе с
+// №70 здесь же сделать». Kept, and this is it.
+//
+// WHAT IT IS. Junior tennis bands by CALENDAR YEAR, so a girl born in January and one born in December
+// compete in the same 14s - and are up to eleven months apart. At fourteen, eleven months is not a
+// rounding error: it is a real difference in height, strength and how long she has been training. The
+// effect is one of the best-documented in youth sport, and every junior system in the world has it.
+//
+// ⚠ AND THE MODEL IS NOT A PENALTY, IT IS A CLOCK. A December girl does not develop more SLOWLY - she is
+// simply younger than the band she is measured against. So her development curve is not scaled, it is
+// SHIFTED IN TIME: at calendar-age 14 she is developmentally ~13.5, and a January girl ~14.5. That single
+// substitution produces the whole effect, including the parts nobody has to write down:
+//
+//   * she is behind the field at 14, because the cohort is not shifted with her;
+//   * the gap CLOSES on its own as `ageFactor` flattens - which is exactly how the real effect behaves,
+//     and why it is a junior phenomenon rather than a career-long handicap;
+//   * and it costs nothing to reverse: a January girl gets the mirror image, not a bonus bolted on.
+//
+// ONE CALL SITE (world.ts, `growWeek`'s `ageYears`), zero new state, no schema, and NO NEW DRAW - the
+// growth generator's key is unchanged, only the age handed to it. `birthMonth` has been on the profile
+// since onboarding shipped, so every existing save already carries the number this reads.
+//
+// ⚠ NOT IN THIS SLICE: THE PHYSICAL MISMATCH. A late-born girl also plays opponents who are bigger, which
+// should mean more injury exposure - and doing that honestly needs the COHORT to have birth months, which
+// it does not. `ageInjuryFactor` is therefore untouched: bucketing her by a shifted age would flip some
+// girls into a neighbouring integer bucket and call it epidemiology. Named here rather than half-built.
+
+/** How much of a year's head start her birth month gives her over the MIDDLE of her band.
+ *
+ *  The band's median birth month is 6.5, so January (1) is +0.458 years and December (12) is -0.458.
+ *  Symmetric by construction, so a random cohort of birth months is unbiased overall - the effect
+ *  redistributes development timing inside a year, it does not add or remove any.
+ *
+ *  ⚠ CONSISTENT WITH `kidLife.ts`'s STANDING NOTE, which has said since the school tile shipped that
+ *  «its `relativeAge(birthMonth) = (12 - birthMonth) / 12` keeps meaning exactly what it means today».
+ *  That expression is this one plus a constant (it runs 0.917..0 where this runs +0.458..-0.458), so the
+ *  note stays literally true and the two surfaces cannot disagree about who is the older girl. */
+export function relativeAgeYears(birthMonth: number): number {
+  const clamped = Math.max(1, Math.min(12, Math.round(birthMonth)))
+  return (6.5 - clamped) / 12
+}
+
 /** How much of the available headroom a week can take, by age. The plan's calibration targets:
  *  first points at 17-18, top-100 about four and a half years later, peak 23-28, decline from 29. */
 export function ageFactor(ageYears: number): number {

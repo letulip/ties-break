@@ -22,6 +22,9 @@ import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
+// The load wave: the physio's strength is a rung ladder now, not one flat boolean.
+import { COACH_TIERS, physioRiskFactor } from '../src/engine/coach'
+import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { PRESETS, stepCareerWeek, EXPENSE_CATS } from '../tools/econ-bench'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { FamilyBackground, InjurySeverity, PlayerProfile, WorldEvent } from '../src/shared/protocol'
@@ -569,13 +572,29 @@ describe('C6 — physio ledger + benefit', () => {
     expect(off.events.some((e) => e.week === off.week && e.category === 'physio')).toBe(false)
   })
 
-  it('physioActive lowers tau by riskReduction', () => {
-    const w = createWorld('c6-tau')
-    w.condition = 45
-    w.physioActive = false
-    const bare = injuryTau(w)
-    w.physioActive = true
-    expect(injuryTau(w) / bare).toBeCloseTo(ECONOMY.physio.riskReduction, 10)
+  it('physioActive lowers tau by riskReduction – BY RUNG, and budget is still exactly the old number', () => {
+    // ⚠ RE-AIMED BY THE LOAD WAVE, AND STRICTLY WIDENED. `riskReduction` used to be one flat 0.76 for every
+    // hired rung - which the load bench showed was the whole reason four rungs and ~$100k of fees produced
+    // no difference in injury weeks at all. It scales with the rung now (coach.ts `physioRiskFactor`), so
+    // this fixture (`createWorld` with no profile = 'middle') no longer reads 0.76.
+    //
+    // The guarded fact is unchanged and now checked on all five rungs instead of one - PLUS the anchoring
+    // promise the change was made under: BUDGET REPRODUCES THE SHIPPED CONSTANT EXACTLY, so nothing that
+    // ships today gets worse. That promise is the load of this test now; if a later tuning pass re-centres
+    // the ladder on middle, this is where it has to say so out loud.
+    for (const tier of COACH_TIERS) {
+      const w = createWorld('c6-tau', { ...DEFAULT_PROFILE, coachTier: tier })
+      w.condition = 45
+      w.physioActive = false
+      const bare = injuryTau(w)
+      w.physioActive = true
+      expect(injuryTau(w) / bare, tier).toBeCloseTo(physioRiskFactor(tier), 10)
+    }
+    // the anchor, spelled out
+    expect(physioRiskFactor('budget')).toBeCloseTo(ECONOMY.physio.riskReduction, 10)
+    // ...and the ladder really is one: each rung protects her at least as well as the one below
+    const factors = COACH_TIERS.filter((t) => t !== 'self').map(physioRiskFactor)
+    for (let i = 1; i < factors.length; i++) expect(factors[i]).toBeLessThan(factors[i - 1])
   })
 
   it('physioActive shortens weeksOut: max(1, round(weeksOut * (1 - recoverySpeedup)))', () => {
