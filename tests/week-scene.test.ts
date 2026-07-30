@@ -31,6 +31,7 @@ import {
   assembleDiaryFacts,
   buildDiarySnapshot,
   weekSceneFor,
+  WEEK_NOTES,
   type DiaryWorldView,
 } from '../src/engine/diary'
 import {
@@ -253,7 +254,18 @@ describe('W5 — the priority order, which is the only real design decision here
     expect(s.kind).toBe('rehab')
     const snap = buildDiarySnapshot(view({ injury: INJURY, vacationWeek: true, vacationPackageId: 'resort' }))
     expect(snap.scene.kind).toBe('rehab')
-    expect(snap.weekNote, 'and the scrap agrees with the frame').toContain('ehab')
+    // ⚠ W6c RE-AIMED THIS ASSERTION, WHICH WAS MINE AND WAS TOO LITERAL. It matched the substring
+    // 'ehab' - so it was really testing "the note happens to use the word rehab", and it broke the
+    // moment the layoff band grew lines that do not ("Ice on the ankle, twice a day."). The fact it
+    // MEANT is "the scrap is one of the layoff band's own lines", so that is what it now says: the note
+    // is checked for membership in the set of lines licensed on a live injury. Word-independent, and
+    // strictly stronger - a note from any other band now fails, including one that said 'rehab' by luck.
+    const layoffLines = new Set(
+      WEEK_NOTES.filter((n) => n.claims.injured).map((n) =>
+        typeof n.text === 'function' ? n.text(snap.facts) : n.text,
+      ),
+    )
+    expect(layoffLines, 'and the scrap agrees with the frame').toContain(snap.weekNote)
   })
 
   it('THE HOLIDAY WINS over the off-season, because it names ONE week and December names three', () => {

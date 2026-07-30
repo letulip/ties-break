@@ -130,6 +130,8 @@ import {
   KNOCK_REST_CONDITION,
   KNOCK_REST_GROWTH,
 } from './knock'
+// W6c: the anatomy, in a leaf module so diary.ts can read the same twelve parts this draws from.
+import { drawBodyRegion } from './body'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -1413,34 +1415,11 @@ export function injuryTau(world: WorldState): number {
   return Math.min(tau, a.injuryChanceCap)
 }
 
-// Body-region weights (owner research 25.07): ~48% lower-limb / 28% upper / 24% core, with the
-// WTA skew inside `lower` (girls' pattern = ankle+knee sprains take the majority of the lower
-// share) and a lumbar bias inside `core` (teen back trouble). Flattened to one cumulative table
-// so the region costs exactly ONE pull from the private injury generator.
-const BODY_REGIONS: readonly { part: string; weight: number }[] = [
-  { part: 'ankle', weight: 0.48 * 0.3 },
-  { part: 'knee', weight: 0.48 * 0.25 },
-  { part: 'hamstring', weight: 0.48 * 0.15 },
-  { part: 'calf', weight: 0.48 * 0.12 },
-  { part: 'foot', weight: 0.48 * 0.1 },
-  { part: 'hip', weight: 0.48 * 0.08 },
-  { part: 'wrist', weight: 0.28 * 0.25 },
-  { part: 'shoulder', weight: 0.28 * 0.25 },
-  { part: 'elbow', weight: 0.28 * 0.25 },
-  { part: 'forearm', weight: 0.28 * 0.25 },
-  { part: 'lower back', weight: 0.24 * 0.75 },
-  { part: 'abdominal', weight: 0.24 * 0.25 },
-]
-
-function drawBodyRegion(rng: Rng): string {
-  const u = rng() // exactly one pull
-  let cum = 0
-  for (const region of BODY_REGIONS) {
-    cum += region.weight
-    if (u < cum) return region.part
-  }
-  return BODY_REGIONS[BODY_REGIONS.length - 1].part
-}
+// ⚠ THE BODY-REGION TABLE AND `drawBodyRegion` MOVED TO ./body.ts (W6c), unchanged - same twelve
+// entries, same order, same weights, still exactly one pull. They left because diary.ts needed the
+// same vocabulary to stop writing «her leg up on a chair» about a strained wrist, and diary.ts cannot
+// import this file (world -> diary is the direction; the reverse would be a cycle). The move touches
+// no draw: see the note at the top of body.ts for why that is load-bearing.
 
 // kind = "<part> <descriptor>". A 1-week minor reads as a "niggle", a 2-week one as "soreness" –
 // deterministic variety off the already-drawn weeks-out, no extra pull.

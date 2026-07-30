@@ -48,6 +48,8 @@ import {
   weekNoteFor,
 } from '../src/engine/diary'
 import { WEEK_PLAN_PRESETS, type ConditionBand, type DiaryFacts, type FundsPressure } from '../src/shared/protocol'
+// W6c: the anatomy the pin re-derives from, so a claim about her body is checked against her body.
+import { BODY_REGIONS, bodyGroupOf, bodyPartOf, type BodyGroup } from '../src/engine/body'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -110,6 +112,25 @@ const KNOCKS: Partial<DiaryFacts>[] = [
   { knockChoice: 'push', knockPart: 'shoulder' },
 ]
 
+/**
+ * W6c: THE ANATOMY AXIS, and without it the whole slice would have been unguarded.
+ *
+ * The sweep used to cross `[null, 'ankle strain']` - one injury, one group. Every `bodyGroup: 'arm'` and
+ * `'trunk'` line would therefore have been UNLICENSED in every fixture the pin ever generated, so the
+ * pin would have passed while proving nothing about them: the failure mode is a green suite, not a red
+ * one, which is the kind worth writing a comment about.
+ *
+ * EVERY REGION, not one per group. Twelve is cheap, the table is closed, and a group mapping is exactly
+ * the sort of thing that gets a thirteenth member added to one side of it. Plus one kind that resolves to
+ * NO part, which is the case that proves the group lines go quiet rather than guessing - a persisted
+ * `kind` from an older save, or a fixture written by hand.
+ */
+const INJURIES: (DiaryFacts['injured'])[] = [
+  null,
+  ...BODY_REGIONS.map((r) => ({ kind: `${r.part} strain`, weeksRemaining: 3, totalWeeks: 6 })),
+  { kind: 'unspecified complaint', weeksRemaining: 3, totalWeeks: 6 },
+]
+
 function* sweepWeeks(): Generator<DiaryFacts> {
   const calendars: Partial<DiaryFacts>[] = [
     {},
@@ -124,7 +145,7 @@ function* sweepWeeks(): Generator<DiaryFacts> {
       for (const fundsPressure of PRESSURES) {
         for (const calendar of calendars) {
           for (const knock of KNOCKS) {
-            for (const injured of [null, { kind: 'ankle strain', weeksRemaining: 3, totalWeeks: 6 }]) {
+            for (const injured of INJURIES) {
               yield homeWeek({
                 trainPct,
                 condition: BAND_CONDITION[band],
@@ -157,8 +178,12 @@ function renderAll(): string[] {
   return out
 }
 
-/** ONE independent re-derivation per claim, off the facts and NOT off the licence that made it. */
-const HOLDS: Record<string, (f: DiaryFacts) => boolean> = {
+/** ONE independent re-derivation per claim, off the facts and NOT off the licence that made it.
+ *
+ *  ⚠ W6c: THE SIGNATURE GAINED THE CLAIM'S VALUE, because `bodyGroup` is the first claim on this pool
+ *  that carries one. The pin used to skip anything that was not literally `true`, so a valued claim
+ *  would have been silently unverified - decoration that looked like a guard. */
+const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   grind: (f) => f.trainPct >= WEEK_NOTE_GRIND,
   light: (f) => f.trainPct <= WEEK_NOTE_LIGHT,
   tired: (f) => f.conditionBand === 'worn' || f.conditionBand === 'drained',
@@ -174,6 +199,10 @@ const HOLDS: Record<string, (f: DiaryFacts) => boolean> = {
   // above. A rest line on a week she trained through is the exact failure this catches.
   restingKnock: (f) => f.knockChoice === 'rest',
   pushingKnock: (f) => f.knockChoice === 'push',
+  // W6c: re-derived through `bodyGroupOf` off the injury's own `kind`, independently of the licence -
+  // so a leg line on a wrist week is a failing test, which is exactly what shipped and what the owner
+  // caught by reading.
+  bodyGroup: (f, value) => f.injured !== null && bodyGroupOf(f.injured.kind) === value,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -183,9 +212,13 @@ describe('W2 — the ordinary week note is HONEST', () => {
       for (const note of WEEK_NOTES) {
         if (!note.license(f)) continue
         for (const [claim, value] of Object.entries(note.claims)) {
-          if (value !== true) continue
+          // ⚠ W6c REMOVED `if (value !== true) continue`. It was defensive against nothing (every claim
+          // was a bare `true`) right up until `bodyGroup` carried a value - at which point it would have
+          // waved the one claim through that most needed checking. `undefined` still skips, because an
+          // absent claim asserts nothing; anything present is now verified against its value.
+          if (value === undefined) continue
           expect(
-            HOLDS[claim](f),
+            HOLDS[claim](f, value),
             `"${render(note, f)}" claims ${claim} on: ${JSON.stringify({
               train: f.trainPct, band: f.conditionBand, funds: f.fundsPressure,
               exams: f.examsWeek, off: f.offSeasonWeek, vac: f.vacationWeek,
@@ -198,6 +231,77 @@ describe('W2 — the ordinary week note is HONEST', () => {
       }
     }
     expect(checked, 'the sweep has to actually reach the pool').toBeGreaterThan(500)
+  })
+
+  it('⚠ W6c: NO LINE NAMES A BODY PART THAT IS NOT HERS – read the sentence, not the claim', () => {
+    // THE GUARD THE OWNER'S OWN READING IS. He found «She revised with her leg up on a chair» on a girl
+    // with a strained wrist by looking at it, and no machine in this repo could have: `WeekClaims` is a
+    // vocabulary of week TYPES, so "claims exams on a non-exam week" was catchable and "claims a leg on
+    // an arm" was not expressible. The `bodyGroup` claim closes that for lines that DECLARE a group.
+    //
+    // This closes it for the ones that FORGET to. It reads the rendered sentence and asks whether any
+    // anatomy word in it is hers - so a future line that names an ankle without claiming `bodyGroup`
+    // fails here rather than shipping. Two independent nets over the same mistake, which is the right
+    // number for a mistake that reached the owner.
+    //
+    // ⚠ THE VOCABULARY IS ANATOMY ONLY, AND DELIBERATELY NOT THE OBVIOUS LONGER LIST. "back" is absent:
+    // «she is back on court» is a sentence this pool is entitled to write, and a guard that fails on it
+    // would be retired within a week. So the words are the twelve region names plus the two group nouns
+    // the new lines actually use. That leaves a hypothetical future line saying "her back" for an ankle
+    // uncaught - a real gap, stated rather than papered over, and the `bodyGroup` claim is the net that
+    // covers it.
+    const ANATOMY: { word: string; group: BodyGroup }[] = [
+      ...BODY_REGIONS.map((r) => ({ word: r.part, group: bodyGroupOf(r.part)! })),
+      { word: 'leg', group: 'leg' as BodyGroup },
+      { word: 'handed', group: 'arm' as BodyGroup }, // "one-handed", "left-handed"
+    ]
+    let checked = 0
+    for (const f of sweepWeeks()) {
+      const hers = f.injured === null ? null : bodyGroupOf(f.injured.kind)
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f)) continue
+        const sentence = render(note, f).toLowerCase()
+        for (const { word, group } of ANATOMY) {
+          if (!new RegExp(`\\b${word}\\b`).test(sentence)) continue
+          checked++
+          // it may name her own part, or any part in her own group - never another group's
+          expect(
+            group,
+            `"${render(note, f)}" says "${word}" (${group}) on a ${hers ?? 'healthy'} week` +
+              `${f.injured ? ` – she has a ${f.injured.kind}` : ''}`,
+          ).toBe(hers ?? group)
+        }
+      }
+    }
+    expect(checked, 'the sweep has to actually reach lines that name a part').toBeGreaterThan(50)
+  })
+
+  it('W6c: a kind whose part cannot be resolved goes QUIET rather than guessing', () => {
+    // A persisted `kind` from an older save, or one the table no longer recognises. The group lines must
+    // be unselectable - not fall back to a plausible-looking leg - and the generic layoff lines must
+    // still cover the week, or an unresolvable injury would leave the scrap empty.
+    const f = homeWeek({ injured: { kind: 'unspecified complaint', weeksRemaining: 3, totalWeeks: 6 } })
+    const licensed = WEEK_NOTES.filter((n) => n.license(f))
+    expect(licensed.filter((n) => n.claims.bodyGroup), 'no group line may be selectable').toEqual([])
+    expect(licensed.length, 'the week still has to have something to say').toBeGreaterThan(0)
+    expect(weekNoteFor(f, 'unresolved-1')).not.toBeNull()
+    // ...and nothing it can say names a part
+    for (const n of licensed) expect(render(n, f)).not.toMatch(/\binjury\b/)
+  })
+
+  it('W6c: every region is placed in a group, in both directions', () => {
+    // A thirteenth region added to the draw table without being placed would silently answer null and
+    // go quiet - which is safe, and invisible. This makes it loud.
+    for (const r of BODY_REGIONS) {
+      expect(bodyGroupOf(r.part), `${r.part} has no group`).not.toBeNull()
+      expect(bodyPartOf(`${r.part} strain`), `${r.part} is not resolvable from a kind`).toBe(r.part)
+    }
+    // and the multi-word region really survives the lookup, which the naive split-on-space does not
+    expect(bodyPartOf('lower back soreness')).toBe('lower back')
+    expect(bodyGroupOf('lower back soreness')).toBe('trunk')
+    expect(bodyPartOf('nothing recognisable')).toBeNull()
+    // every group is reachable, or a group-licensed band would be dead copy
+    expect(new Set(BODY_REGIONS.map((r) => bodyGroupOf(r.part)))).toEqual(new Set(['leg', 'arm', 'trunk']))
   })
 
   it('an injured week is not offered a line about baking', () => {

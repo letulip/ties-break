@@ -52,6 +52,9 @@ import { isExamWeek, isOffSeasonWeek, TIERS, TIER_SHORT, tierFromLabel } from '.
 import type { TierId } from './season/types'
 import { rngFromSeed } from './rng'
 import { seasonYear, weekLabel } from '../shared/dates'
+// W6c: the anatomy, so a line about her body can know which body it is about. A leaf module – see the
+// note at the top of body.ts for why the twelve parts do not live in world.ts any more.
+import { bodyGroupOf, bodyPartOf, type BodyGroup } from './body'
 
 const TIER_IDS = Object.keys(TIERS) as TierId[]
 
@@ -1680,6 +1683,18 @@ export interface WeekClaims {
   restingKnock?: true
   /** W4: asserts she is TRAINING THROUGH a knock – unselectable unless knockChoice==='push' */
   pushingKnock?: true
+  /** W6c: asserts WHERE THE INJURY IS – unselectable unless her live injury is in this group.
+   *
+   *  ⚠ THE FIRST CLAIM ON THIS POOL THAT CARRIES A VALUE rather than being a bare `true`, and it had to:
+   *  "names a body part" is not one thing to assert, it is three mutually exclusive ones. A line that
+   *  puts her leg up on a chair is honest for a knee and a lie for a wrist, and a boolean claim cannot
+   *  express the difference - which is exactly how «She revised with her leg up on a chair» shipped
+   *  licensed on every injury there is.
+   *
+   *  The honesty pin was skipping non-`true` claim values outright (`if (value !== true) continue`), so
+   *  this would have been decoration; that skip is gone and the pin reads the value. See
+   *  tests/week-notes.test.ts. */
+  bodyGroup?: BodyGroup
 }
 
 export interface WeekNote {
@@ -1713,6 +1728,19 @@ const athome = (f: DiaryFacts): boolean =>
  *  on a week she spent resting a sore ankle, and the pin in tests/diary.test.ts sweeps exactly this
  *  space. A week under a knock is no longer an ordinary week: it has its own band below, the way an
  *  exam week and a layoff do. */
+/** W6c: WHERE HER LIVE INJURY IS, as the pool is allowed to ask. Null when she is healthy, and null
+ *  when the part cannot be resolved from the persisted `kind` string - both mean the same thing to a
+ *  line that wants to describe her body, which is "say nothing about it". */
+const injuredGroup = (f: DiaryFacts): BodyGroup | null =>
+  f.injured === null ? null : bodyGroupOf(f.injured.kind)
+
+/** ...and the part, to name it. The fallback is UNREACHABLE IN SHIPPED COPY by construction: every
+ *  template that calls this is licensed on `injuredGroup(f) !== null`, and a resolved group implies a
+ *  resolved part. It exists so `renderAll` in the test can resolve every template in the pool against
+ *  one fixture without throwing, which is how the voice and length guards read the real sentences. */
+const injuredPart = (f: DiaryFacts): string =>
+  (f.injured === null ? null : bodyPartOf(f.injured.kind)) ?? 'injury'
+
 const plainTraining = (f: DiaryFacts): boolean =>
   athome(f) &&
   f.injured === null &&
@@ -2001,14 +2029,68 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     license: (f) => athome(f) && f.examsWeek && f.injured !== null,
   },
   {
-    text: 'She revised with her leg up on a chair. Nobody had to tell her to sit still.',
-    claims: { exams: true, injured: true, athome: true },
-    license: (f) => athome(f) && f.examsWeek && f.injured !== null,
-  },
-  {
     text: 'A week of papers and physio. The one fortnight she is not missing anything.',
     claims: { exams: true, injured: true, athome: true },
     license: (f) => athome(f) && f.examsWeek && f.injured !== null,
+  },
+  // W6c: ...and the posture line, which is now THREE. It shipped as one - «She revised with her leg up
+  // on a chair» - licensed on `f.injured !== null`, i.e. on every injury, so a girl with a strained
+  // wrist revised with her leg up. The owner caught it: «у нас разные есть, не только нога ... чтобы
+  // нога на спину не показывалась». Each is licensed on its own group and unselectable outside it.
+  {
+    text: 'She revised with her leg up on a chair. Nobody had to tell her to sit still.',
+    claims: { exams: true, injured: true, athome: true, bodyGroup: 'leg' },
+    license: (f) => athome(f) && f.examsWeek && injuredGroup(f) === 'leg',
+  },
+  {
+    text: (f) => `She revised one-handed, the ${injuredPart(f)} strapped up beside her on the table.`,
+    claims: { exams: true, injured: true, athome: true, bodyGroup: 'arm' },
+    license: (f) => athome(f) && f.examsWeek && injuredGroup(f) === 'arm',
+  },
+  {
+    text: 'She revised standing up half the time. Sitting is what it likes least.',
+    claims: { exams: true, injured: true, athome: true, bodyGroup: 'trunk' },
+    license: (f) => athome(f) && f.examsWeek && injuredGroup(f) === 'trunk',
+  },
+  // --- W6c: THE LAYOFF, IN THE PART IT IS ACTUALLY IN -------------------------------------------
+  //
+  // The three generic layoff lines above cover up to a 22-week absence, which is thin - and now that
+  // the anatomy is legible, the obvious place to spend it is the longest band in the game. Two per
+  // group, and every one has to be true of EVERY member of its group (a hip and a foot are both `leg`,
+  // so "twice a day, and she times it herself" is in and "her foot up on a cushion" is out).
+  {
+    text: (f) => `Ice on the ${injuredPart(f)}, twice a day. She times it herself.`,
+    claims: { injured: true, athome: true, bodyGroup: 'leg' },
+    license: (f) => athome(f) && !f.examsWeek && injuredGroup(f) === 'leg',
+  },
+  {
+    text: 'She is walking almost normally now. The limp only shows when she is tired.',
+    claims: { injured: true, athome: true, bodyGroup: 'leg' },
+    license: (f) => athome(f) && !f.examsWeek && injuredGroup(f) === 'leg',
+  },
+  {
+    text: (f) => `Band exercises for the ${injuredPart(f)}, in front of the hall mirror.`,
+    claims: { injured: true, athome: true, bodyGroup: 'arm' },
+    license: (f) => athome(f) && !f.examsWeek && injuredGroup(f) === 'arm',
+  },
+  {
+    // ⚠ NOT "eating left-handed", WHICH IS THE OWNER'S OWN BUG ONE LEVEL DOWN. That is what I wrote
+    // first, and it names WHICH arm - a fact the model does not have. There is no handedness anywhere in
+    // the engine (grep: none), so a left-handed girl with a left wrist would be eating with the injured
+    // one. Same error as a leg on a back, just smaller: the copy asserting something nobody rolled.
+    text: 'She has been doing everything one-handed and finding it funnier than we do.',
+    claims: { injured: true, athome: true, bodyGroup: 'arm' },
+    license: (f) => athome(f) && !f.examsWeek && injuredGroup(f) === 'arm',
+  },
+  {
+    text: 'Ten minutes of core work on a mat in the hall, three times a day.',
+    claims: { injured: true, athome: true, bodyGroup: 'trunk' },
+    license: (f) => athome(f) && !f.examsWeek && injuredGroup(f) === 'trunk',
+  },
+  {
+    text: 'She has stopped picking things up off the floor without thinking about it first.',
+    claims: { injured: true, athome: true, bodyGroup: 'trunk' },
+    license: (f) => athome(f) && !f.examsWeek && injuredGroup(f) === 'trunk',
   },
 ]
 
