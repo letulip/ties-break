@@ -76,7 +76,18 @@ describe('the bottom nav is Season · Calendar · Home · Stats · More, Home in
     expect(app).toContain(
       "type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'",
     )
-    expect(app).toContain(`<KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />`)
+    // ⚠ RE-AIMED BY THE BACK FIX (round 18): this pinned the mount as ONE LINE OF MARKUP, and the fix
+    // reformatted it - the market's two doors now route through `openMarket(from)` so "back" returns to the
+    // screen you actually came from, which is a `$event === 'market' ? ... : ...` and does not fit on the
+    // old line. The FACT is that 'kid' is a live content state with a navigate handler, so that is what it
+    // says now: a mount exists for the tab, and it can navigate. Formatting is not the guarded thing.
+    expect(app).toMatch(/<KidScreen[\s\S]{0,200}?tab === 'kid'/)
+    expect(app).toMatch(/<KidScreen[\s\S]{0,300}?@navigate=/)
+    // ...and the market's back destination is REMEMBERED rather than hard-wired, which is the fix itself.
+    // It was `@back="tab = 'kid'"`, so a player who opened the market from Home was returned somewhere he
+    // had not been. The owner found it by playing.
+    expect(app).toContain(`@back="tab = marketFrom"`)
+    expect(app).toContain('function openMarket(')
     // ⚠ RE-AIMED BY W1 (owner, 30.07: he played a full season and never once saw the Weekly Story).
     // What moved: the mount now carries `@close="tab = 'home'"`, because the story OPENS ITSELF when a
     // week resolves (App.vue's `week` watcher – the handoff's own flow: end of the week -> D, and the
@@ -515,7 +526,11 @@ describe('W4 — the story has a way out, and its painting is the week it is abo
     expect(cardT).not.toContain('Watch it live')
     // ...and the Season screen's copy of the control, which is the same promise one tick removed:
     // the click ticks the week, the engine resolves the friendly, the viewer replays it.
-    expect(seasonT).toContain('Play it and watch →')
+    // ⚠ THE ARROW CAME OFF (round 18): «я просил из убрать со всех кнопок», asked a second time. The
+    // guarded fact is the PROMISE the label makes - "watch", never "live" - and that is untouched; the
+    // decoration is not part of it. tests/ui-control-system.test.ts now bans an arrow on any button label,
+    // so this string cannot quietly grow one back.
+    expect(seasonT).toContain('Play it and watch')
     expect(seasonT).not.toContain('Watch it live')
   })
 

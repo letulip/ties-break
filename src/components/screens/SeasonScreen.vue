@@ -1092,7 +1092,7 @@ function closeExhibition(): void {
                    TICKS THE WEEK, the engine resolves the friendly inside that tick, and the viewer
                    then re-simulates the stored record. The label is what the press does. -->
               <PrimaryPill v-if="row.week === week + 1" class="sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
-                Play it and watch →
+                Play it and watch
               </PrimaryPill>
               <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
             </span>

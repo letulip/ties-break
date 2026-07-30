@@ -59,6 +59,22 @@ const splashDone = ref(false)
 type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'
 const tab = ref<TabId>('home')
 
+// ⚠ WHERE "BACK" GOES FROM THE COACH MARKET, and it used to be a lie. The screen is reachable from TWO
+// places - the Home coaching note and the Kid profile's coach row - and its back button was wired
+// `@back="tab = 'kid'"`, so a player who opened it from Home was returned to a screen he had not come
+// from. The owner found it: «при нажатии на нее я всегда попадаю на профиль героини, а не на главный
+// экран».
+//
+// The market is the only screen in the app that is not a TAB - it has no bar entry and is entered FROM
+// somewhere - so it is the only one that needs this, and one ref is the honest size of the fix. A general
+// nav history would be machinery for a single case, and would then have to answer what "back" means from a
+// tab you reached by tapping the bar (nothing: the bar IS the history).
+const marketFrom = ref<TabId>('kid')
+function openMarket(from: TabId): void {
+  marketFrom.value = from
+  tab.value = 'market'
+}
+
 // Package J: the 'play' tab id stays (per spec – no router, minimal diff) but
 // is now the Season tab (calendar placeholder + the old exhibition block).
 // Round-6: emoji tab glyphs replaced by the owner's SVG icon set (public/icons/*.svg,
@@ -536,15 +552,22 @@ function dismissSeasonSummary(): void {
            next-tournament card opens This week). The shell owns `tab`, so the screen ASKS – one
            event, no router, no store field. `recapFresh` is the This-week dot, still decided by the
            shared rule here (this file owns the per-career seen watermark) and only RENDERED there. -->
-      <HomeScreen v-if="tab === 'home'" :recap-fresh="weekTabDot" @navigate="tab = $event" />
+      <HomeScreen
+        v-if="tab === 'home'"
+        :recap-fresh="weekTabDot"
+        @navigate="$event === 'market' ? openMarket('home') : (tab = $event)"
+      />
       <SeasonScreen v-else-if="tab === 'play'" />
       <!-- W1: the story opens itself at the end of a week (see the `week` watcher above), so its ×
            is a real close now – the design's own "the cross returns to Home" – and not just a
            silencer. (The handoff's wording is quoted in the script block; no Cyrillic may appear in
            a template – tests/round13-nav.test.ts.) -->
       <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />
-      <KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />
-      <CoachMarketScreen v-else-if="tab === 'market'" @back="tab = 'kid'" />
+      <KidScreen
+        v-else-if="tab === 'kid'"
+        @navigate="$event === 'market' ? openMarket('kid') : (tab = $event)"
+      />
+      <CoachMarketScreen v-else-if="tab === 'market'" @back="tab = marketFrom" />
       <StatsScreen v-else-if="tab === 'stats'" />
       <!-- U1 (screen G): the Family Budget grew the export's back arrow, and Money is a tabless
            content state - so it asks the shell to move exactly the way Home and Kid already do. -->

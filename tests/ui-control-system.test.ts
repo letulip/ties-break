@@ -200,6 +200,43 @@ describe('THE ACTION ROW: the affirmative is last, and it does not point (owner 
     }
   })
 
+  it('⚠ NO BUTTON LABEL CARRIES AN ARROW – the third sentence of the same playtest, finally guarded', () => {
+    // «some with arrows, some don't» is quoted at the top of this file, and this file guarded the radii,
+    // the icons and the borders from that same note and NEVER GUARDED THE ARROWS. So the owner had to ask
+    // twice: «на турнирах на кнопках про следующий матч остались стрелки - я просил из убрать со всех
+    // кнопок». Six labels still had one - "Next", "To result" (twice), "Skip all rounds", "Play it and
+    // watch", and the coach-mark tour's "Next". Asking twice for the same thing is what an ungarded rule
+    // costs, so the rule goes here rather than in six diffs.
+    //
+    // ⚠ IT GUARDS BUTTON LABELS, NOT THE CHARACTER. `→` is legitimate PROSE elsewhere and banning the
+    // glyph outright would be a worse rule than none: PlanWeekSheet writes "+8 condition → 85/100", where
+    // the arrow means "becomes" and is the clearest thing on the row. What was asked for is that a control
+    // does not decorate its own label.
+    //
+    // ⚠ AND IT DOES NOT TOUCH THE CHEVRON. `Hire ›` on the coach rows is a list-item affordance, not an
+    // arrow on an action, and quietly folding it in would be me widening his instruction to a glyph he did
+    // not name. Left alone, and named here so the question is his to settle rather than mine to assume.
+    const ARROWS = ['→', '⟶', '➜', '⇒', '&rarr;', '-&gt;']
+    const CONTROLS = ['button', 'PrimaryPill', 'IconButton']
+    const offenders: string[] = []
+    for (const file of VUE) {
+      const src = readFileSync(file, 'utf8').replace(/<!--[\s\S]*?-->/g, '')
+      for (const tag of CONTROLS) {
+        // every <tag ...>label</tag>, label being whatever sits between them
+        const re = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)</${tag}>`, 'g')
+        for (const m of src.matchAll(re)) {
+          const label = m[1]
+          for (const a of ARROWS) {
+            if (label.includes(a)) {
+              offenders.push(`${file.split('/src/')[1]}: <${tag}> "${label.trim().slice(0, 46)}"`)
+            }
+          }
+        }
+      }
+    }
+    expect(offenders, `arrows on button labels:\n  ${offenders.join('\n  ')}`).toEqual([])
+  })
+
   it('the tournament brief\'s CTA is one word', () => {
     // «У begin просто убрать стрелку». A lime CTA at the foot of a brief is already the way forward;
     // the arrow was the button repeating itself, and the design's own copy for it is bare.

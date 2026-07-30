@@ -507,14 +507,14 @@ const matchMeta = computed(() => {
            points at all; that one keeps its own place and its own confirm.
            The skip's conditions are unchanged - not before the run has begun, not after it is over -
            it just yields the slot while a match is being watched. -->
-      <button v-if="replayOpen" class="link" :disabled="game.busy" @click="endReplay">To result →</button>
+      <button v-if="replayOpen" class="link" :disabled="game.busy" @click="endReplay">To result</button>
       <button
         v-else-if="!pending.finished && phase !== 'finale'"
         class="link"
         :disabled="game.busy"
         @click="skipAll"
       >
-        Skip all rounds →
+        Skip all rounds
       </button>
     </template>
 
@@ -808,7 +808,7 @@ const matchMeta = computed(() => {
       <p v-if="matchMeta" class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
       <div class="tf-actions">
         <button class="sfx-watch" :disabled="game.busy" @click="watchAgain">Watch again</button>
-        <button class="primary" :disabled="game.busy" @click="next">Next →</button>
+        <button class="primary" :disabled="game.busy" @click="next">Next</button>
       </div>
     </section>
 
@@ -820,7 +820,7 @@ const matchMeta = computed(() => {
       <p class="hint">She's out – see how the draw finishes.</p>
       <div class="tf-actions">
         <button class="primary" :disabled="game.busy" @click="nextSpectateRound">
-          {{ spectateRound < finalRound ? 'Next round →' : 'Continue' }}
+          {{ spectateRound < finalRound ? 'Next round' : 'Continue' }}
         </button>
       </div>
     </section>
