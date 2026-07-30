@@ -41,6 +41,8 @@ import {
   skipTournament,
   closeTournament,
   toSnapshot,
+  pendingKnock,
+  decideKnock,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { seasonYear } from '../src/shared/dates'
@@ -342,6 +344,10 @@ describe('a real career', () => {
         }
       }
       advanceWeeks(world, rng, 1)
+      // ⚠ W4: a knock BLOCKS the advance until the parent answers, so a loop that never answers
+      // spins on the same week for ever. Answered 'push' so the career under test keeps training as
+      // planned and nothing else about it moves.
+      if (pendingKnock(world)) decideKnock(world, 'push')
       if (world.pendingTournament) {
         skipTournament(world)
         closeTournament(world)

@@ -148,6 +148,9 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       // ⚠ W2 added `trainPct` to the view (how hard the PLAYER worked her). This test is about
       // `rankClimbed` and nothing else; the balanced preset is what a career starts on.
       trainPct: 75,
+      // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
+      knockChoice: null,
+      knockPart: null,
       ...over,
     })
     expect(assembleDiaryFacts(view({})).rankClimbed).toBe(true)
@@ -231,6 +234,9 @@ function makeFacts(input: {
     // pool is licensed on the plan, so the fixture holds the balanced preset – the week-note pool
     // that IS licensed on it has its own sweep, below, for the same reason the journey note does.
     trainPct: 75,
+    // W4: no knock on this fixture - the default week is one with nothing wrong with her.
+    knockChoice: null,
+    knockPart: null,
     fundsPressure: fundsPressureOf(input.fundsCents ?? 50_000_00),
     freshMilestone: null,
     // R14-2: this sweep is about the DIARY_POOL, and no phrase in it is licensed on the journey home

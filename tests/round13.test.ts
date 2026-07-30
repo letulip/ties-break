@@ -66,6 +66,10 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     vacationWeek: false,
     // ⚠ W2 added `trainPct`; this suite is the loss softener and does not read it.
     trainPct: 75,
+    // ⚠ W4 added `knockChoice`/`knockPart` (what a knock is doing to the week). Null here: this
+    // fixture is a week with nothing wrong with her, which is what these suites are about.
+    knockChoice: null,
+    knockPart: null,
     fundsPressure: 'ok',
     freshMilestone: null,
     ...over,
@@ -309,6 +313,10 @@ describe('R13-10 — the ordinary-week pool', () => {
     // ⚠ W2 added `trainPct`; the ordinary-week POOL this suite sweeps is DIARY_POOL, which is
     // not licensed on the plan (WEEK_NOTES is, and has its own sweep in tests/week-notes.test.ts).
     trainPct: 75,
+    // ⚠ W4 added `knockChoice`/`knockPart` (what a knock is doing to the week). Null here: this
+    // fixture is a week with nothing wrong with her, which is what these suites are about.
+    knockChoice: null,
+    knockPart: null,
     fundsPressure: 'ok',
     freshMilestone: null,
   }

@@ -141,6 +141,16 @@ export function growWeek(args: {
   matchesThisWeek: number
   seed: string
   week: number
+  /** W4 – HOW MUCH OF THE WEEK SHE ACTUALLY TRAINED, as a multiplier on the whole rate. Defaults to
+   *  1, so every existing call site is byte-identical and no shipped career's growth moves.
+   *
+   *  ⚠ WHY THIS EXISTS RATHER THAN A LOWER `plan.train`. `trainFactor` clamps `(train - 60) / 25` to
+   *  [0, 1], so a week written as train:40 develops at exactly the Light rate - and a career already
+   *  on Light would have paid NOTHING for it. The knock's rest branch (engine/knock.ts) needs a cost
+   *  that lands at every plan setting, so it is charged here, outside the clamp.
+   *
+   *  ZERO RNG IMPLICATIONS: the luck draw below is unchanged in count, key and position. */
+  loadFactor?: number
 }): KidSkills {
   const d = ECONOMY.development
   const { skills, potential, ageYears, plan, coach, playStyle, matchesThisWeek } = args
@@ -148,6 +158,7 @@ export function growWeek(args: {
   const rate =
     ageFactor(ageYears) *
     trainFactor(plan) *
+    (args.loadFactor ?? 1) *
     coachFactor(tierOf(coach), coachFitFor(coach, playStyle)) *
     (1 + Math.min(matchesThisWeek, d.matchBonusCap) * d.matchBonus)
 

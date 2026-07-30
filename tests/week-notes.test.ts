@@ -21,6 +21,20 @@
 //      calendar's own weeks (exams, the holiday, the off-season, a friendly, a layoff) always speak.
 //   4. THE VOICE AND THE SCRAP. Third person, about her, under 80 characters, short dash only.
 //
+// ⚠ RE-AIMED BY W4 (the knock), and the protected facts are UNCHANGED - they are now checked over a
+// bigger space. Three things moved and none of them weakened:
+//
+//   (a) THE SWEEP GREW A KNOCK AXIS. `sweepWeeks` now crosses every week with knockChoice
+//       null / 'rest' / 'push', so the honesty pin covers the new band instead of leaving it
+//       unchecked. That is 3x the assertions it made before, on the same rule.
+//   (b) `WeekNote.text` MAY NOW BE A TEMPLATE (a knock line has to name the part - "A week off the
+//       ankle"). The voice and length guards therefore measure the RENDERED sentence, resolved
+//       against a representative week, which is the string the player actually reads. Nothing is
+//       skipped: `renderAll` asserts it has resolved every entry in the pool.
+//   (c) 'exams/holiday/off-season/friendly/layoff always speak' GAINED THE TWO KNOCK WEEKS, because
+//       they are the same kind of week - one the calendar (or the player) has put something in, so
+//       the scrap must never fall back to a receipt on it. Same rule, two more members.
+//
 // ⚠ ZERO MAIN-STREAM DRAWS is proved next door, in tests/travel-home.test.ts's byte-identical
 // capture (41550 / e6b0c709), which now touches `diary.weekNote` on every one of 52 weeks.
 import { describe, expect, it } from 'vitest'
@@ -70,6 +84,10 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     offSeasonWeek: false,
     vacationWeek: false,
     trainPct: 75,
+    // ⚠ W4 added `knockChoice`/`knockPart` (what a knock is doing to the week). Null here: this
+    // fixture is a week with nothing wrong with her, which is what these suites are about.
+    knockChoice: null,
+    knockPart: null,
     fundsPressure: 'ok',
     freshMilestone: null,
     travelHomeScene: null,
@@ -78,8 +96,20 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
   }
 }
 
-/** The whole space of weeks she can spend at home: the plan, her body, the wallet, and each of the
- *  calendar's own weeks in turn, healthy and hurt. */
+/** The whole space of weeks she can spend at home: the plan, her body, the wallet, each of the
+ *  calendar's own weeks in turn, healthy and hurt - and (W4) what a knock is doing to the week.
+ *
+ *  ⚠ THE KNOCK AXIS IS SWEPT AGAINST EVERY OTHER AXIS, including states the engine cannot reach (a
+ *  live knock on an injured week - `rollInjury` retires it at onset). That is deliberate and is the
+ *  pin's whole method: it checks the LICENCE SPACE, not the reachable space, so a licence that would
+ *  become wrong the day some other rule changed fails today. */
+const KNOCKS: Partial<DiaryFacts>[] = [
+  { knockChoice: null, knockPart: null },
+  { knockChoice: 'rest', knockPart: 'ankle' },
+  { knockChoice: 'push', knockPart: 'shoulder' },
+  { knockChoice: 'push', knockPart: 'shoulder' },
+]
+
 function* sweepWeeks(): Generator<DiaryFacts> {
   const calendars: Partial<DiaryFacts>[] = [
     {},
@@ -93,13 +123,38 @@ function* sweepWeeks(): Generator<DiaryFacts> {
     for (const band of BANDS) {
       for (const fundsPressure of PRESSURES) {
         for (const calendar of calendars) {
-          for (const injured of [null, { kind: 'ankle strain', weeksRemaining: 3, totalWeeks: 6 }]) {
-            yield homeWeek({ trainPct, condition: BAND_CONDITION[band], fundsPressure, injured, ...calendar })
+          for (const knock of KNOCKS) {
+            for (const injured of [null, { kind: 'ankle strain', weeksRemaining: 3, totalWeeks: 6 }]) {
+              yield homeWeek({
+                trainPct,
+                condition: BAND_CONDITION[band],
+                fundsPressure,
+                injured,
+                ...calendar,
+                ...knock,
+              })
+            }
           }
         }
       }
     }
   }
+}
+
+/** The sentence a note actually puts on the scrap. W4: an entry may be a facts-aware template, so the
+ *  guards below read THIS and not the raw field - it is the string the player sees. */
+function render(note: (typeof WEEK_NOTES)[number], f: DiaryFacts): string {
+  return typeof note.text === 'function' ? note.text(f) : note.text
+}
+
+/** Every line in the pool, rendered against a week that names a part - so the templates resolve to a
+ *  real sentence rather than to "undefined". */
+function renderAll(): string[] {
+  const f = homeWeek({ knockChoice: 'rest', knockPart: 'ankle' })
+  const out = WEEK_NOTES.map((n) => render(n, f))
+  // The whole point of resolving: an unresolved template would sail through every guard below.
+  for (const t of out) expect(t, 'a template that did not resolve').not.toContain('undefined')
+  return out
 }
 
 /** ONE independent re-derivation per claim, off the facts and NOT off the licence that made it. */
@@ -115,6 +170,10 @@ const HOLDS: Record<string, (f: DiaryFacts) => boolean> = {
   practice: (f) => f.playedPractice,
   fundsTight: (f) => f.fundsPressure === 'tight',
   athome: (f) => !f.playedTournament && !f.travelled && f.travelHomeScene === null,
+  // W4: re-derived off the fact, not off the licence that produced the line - same as every entry
+  // above. A rest line on a week she trained through is the exact failure this catches.
+  restingKnock: (f) => f.knockChoice === 'rest',
+  pushingKnock: (f) => f.knockChoice === 'push',
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -127,10 +186,11 @@ describe('W2 — the ordinary week note is HONEST', () => {
           if (value !== true) continue
           expect(
             HOLDS[claim](f),
-            `"${note.text}" claims ${claim} on: ${JSON.stringify({
+            `"${render(note, f)}" claims ${claim} on: ${JSON.stringify({
               train: f.trainPct, band: f.conditionBand, funds: f.fundsPressure,
               exams: f.examsWeek, off: f.offSeasonWeek, vac: f.vacationWeek,
               practice: f.playedPractice, injured: f.injured !== null,
+              knock: f.knockChoice,
             })}`,
           ).toBe(true)
           checked++
@@ -147,7 +207,7 @@ describe('W2 — the ordinary week note is HONEST', () => {
       if (f.injured === null) continue
       const licensed = WEEK_NOTES.filter((n) => n.license(f))
       expect(licensed.length, 'a layoff week must still have words').toBeGreaterThan(0)
-      for (const n of licensed) expect(n.claims.injured, `"${n.text}" on a layoff week`).toBe(true)
+      for (const n of licensed) expect(n.claims.injured, `"${render(n, f)}" on a layoff week`).toBe(true)
     }
   })
 
@@ -159,8 +219,8 @@ describe('W2 — the ordinary week note is HONEST', () => {
     // ...and the middle of the ladder is offered neither.
     const balanced = homeWeek({ trainPct: WEEK_PLAN_PRESETS.balanced.train })
     for (const n of WEEK_NOTES.filter((x) => x.license(balanced))) {
-      expect(n.claims.grind, n.text).toBeUndefined()
-      expect(n.claims.light, n.text).toBeUndefined()
+      expect(n.claims.grind, render(n, balanced)).toBeUndefined()
+      expect(n.claims.light, render(n, balanced)).toBeUndefined()
     }
   })
 
@@ -192,19 +252,67 @@ describe('W2 — the cadence: quiet most weeks, and the calendar always speaks',
     expect(share, 'silence has to be the common case').toBeLessThan(0.5)
   })
 
-  it('exams, the holiday, the off-season, a friendly and a layoff speak EVERY time', () => {
+  it('exams, the holiday, the off-season, a friendly, a layoff AND a knock speak EVERY time', () => {
+    // ⚠ W4 ADDED THE LAST TWO, and for the pool's own reason rather than a new one: the coin exists
+    // so that a week with NOTHING in it can be quiet. A week the player made a decision about is the
+    // opposite of that - it is the one week the scrap must not fall back to a restringing receipt.
     const always: [string, Partial<DiaryFacts>][] = [
       ['exams', { examsWeek: true }],
       ['vacation', { vacationWeek: true }],
       ['off-season', { offSeasonWeek: true }],
       ['practice', { playedPractice: true }],
       ['layoff', { injured: { kind: 'ankle strain', weeksRemaining: 3, totalWeeks: 6 } }],
+      ['knock rested', { knockChoice: 'rest', knockPart: 'ankle' }],
+      ['knock pushed', { knockChoice: 'push', knockPart: 'shoulder' }],
     ]
     for (const [name, over] of always) {
       for (let week = 1; week <= 60; week++) {
         expect(weekNoteFor(homeWeek({ week, ...over }), 'always-seed'), `${name} w${week}`).not.toBeNull()
       }
     }
+  })
+
+  it('⚠ NO TWO CONSECUTIVE WEEKS of an always-speaking band read the same', () => {
+    // BOTH OF THESE CAME OUT OF THE LIVE TRACE, not the suite, and they are the same bug:
+    //   * W17/W18 both read "The lower back held. We watched her serve more closely than usual."
+    //     (a pushed knock governs three weeks off a pool of four);
+    //   * W50/W51 both read "The season is over. She slept until nine and it was glorious."
+    //     (the off-season runs four weeks off a pool of three).
+    // Every line was honest and correctly licensed, and the screen still looked broken. The bands that
+    // ALWAYS speak now step through their pool off a career-stable entry point rather than drawing per
+    // week, so adjacent weeks land on adjacent indices. This test walks every such band across a real
+    // stretch of weeks and every seed it can reach.
+    const bands: [string, Partial<DiaryFacts>][] = [
+      ['knock pushed', { knockChoice: 'push', knockPart: 'lower back' }],
+      ['knock rested', { knockChoice: 'rest', knockPart: 'ankle' }],
+      ['off-season', { offSeasonWeek: true }],
+      ['exams', { examsWeek: true }],
+      ['vacation', { vacationWeek: true }],
+      ['practice', { playedPractice: true }],
+      ['layoff', { injured: { kind: 'ankle strain', weeksRemaining: 3, totalWeeks: 6 } }],
+    ]
+    for (const [name, over] of bands) {
+      for (const seed of ['step-a', 'step-b', 'step-c', 'step-d']) {
+        for (let week = 1; week < 60; week++) {
+          const a = weekNoteFor(homeWeek({ week, ...over }), seed)
+          const b = weekNoteFor(homeWeek({ week: week + 1, ...over }), seed)
+          expect(a, `${name} must speak (w${week})`).not.toBeNull()
+          expect(b, `${name} must speak (w${week + 1})`).not.toBeNull()
+          expect(a, `${name} repeated across w${week}/w${week + 1} on ${seed}: "${a}"`).not.toBe(b)
+        }
+      }
+    }
+  })
+
+  it('...and a long band walks its WHOLE pool rather than repeating its favourites', () => {
+    // A 22-week layoff off a pool of three used to draw freely: the same sentence turned up in
+    // clusters. Stepping guarantees the cycle.
+    const said = new Set<string | null>()
+    for (let week = 20; week < 32; week++) {
+      said.add(weekNoteFor(homeWeek({ week, injured: { kind: 'ankle strain', weeksRemaining: 9, totalWeeks: 12 } }), 'walk-1'))
+    }
+    const layoffLines = WEEK_NOTES.filter((n) => n.claims.injured).length
+    expect(said.size, 'a long layoff should see every line it has').toBe(layoffLines)
   })
 
   it('DETERMINISTIC, and stable for the whole week', () => {
@@ -222,14 +330,16 @@ describe('W2 — the cadence: quiet most weeks, and the calendar always speaks',
     for (const f of sweepWeeks()) {
       expect(
         WEEK_NOTES.some((n) => n.license(f)),
-        `nothing licensed for ${JSON.stringify({ train: f.trainPct, band: f.conditionBand, exams: f.examsWeek, off: f.offSeasonWeek, vac: f.vacationWeek, practice: f.playedPractice, injured: f.injured !== null })}`,
+        `nothing licensed for ${JSON.stringify({ train: f.trainPct, band: f.conditionBand, exams: f.examsWeek, off: f.offSeasonWeek, vac: f.vacationWeek, practice: f.playedPractice, injured: f.injured !== null, knock: f.knockChoice })}`,
       ).toBe(true)
     }
   })
 })
 
 describe('W2 — the note is the PARENT, and it fits on a scrap of paper', () => {
-  const texts = WEEK_NOTES.map((n) => n.text)
+  // ⚠ RE-AIMED: RENDERED sentences, not raw fields (W4 templates). Same budget, same rules, and now
+  // measured on the string the player reads - which for a template is the longer of the two.
+  const texts = renderAll()
 
   it('fits on a scrap: 80 characters, the same budget the journey note keeps', () => {
     for (const t of texts) expect(t.length, t).toBeLessThanOrEqual(80)

@@ -111,6 +111,10 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
         closeTournament(world)
       }
       world.injury = null
+      // ⚠ W4: the walk uses `tickWeek` (which never blocks), but a knock left undecided here would
+      // block the `advanceWeeks` under test one line below and report 'knock' instead of the
+      // collision this test is about. Cleared, not answered: the fixture wants a clean week 48.
+      world.knock = null
     }
     expect(world.week).toBe(WRAP_OFFSET - 1)
     world.condition = 0 // run down, so the pre-picked roll clears tau
@@ -190,7 +194,11 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // entry fee forfeited. It joins the medical pair at the front for the same reason they are
     // there: it costs her real money the moment it lands, so it may never be swallowed by a stop
     // that can wait a click.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover']
+    // ⚠ W4 ADDED 'knock' – and it is the strongest case this test has ever had for existing. A
+    // knock does not merely halt the advance, it BLOCKS it (advanceWeeks returns early), so a
+    // 'knock' with no precedence slot would be filtered out of the return value and the career would
+    // stop dead with the UI told nothing at all. Exactly the class of bug R11-1 was, one degree worse.
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {

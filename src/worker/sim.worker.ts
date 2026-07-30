@@ -12,6 +12,7 @@ import {
   hireCoach,
   setCoachOnEventWeeks,
   cancelPractice,
+  decideKnock,
   revealTournamentRound,
   skipTournament,
   closeTournament,
@@ -179,6 +180,16 @@ async function handle(msg: ToWorker): Promise<ToUI> {
         throw new Error('Week plan must split 100% between training and rest')
       }
       world.plan = { train: msg.plan.train, rest: msg.plan.rest }
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    // W4: the parent answers the knock. This is the ONLY command that can clear an undecided one, and
+    // until it runs `advanceWeeks` refuses to tick at all - so this handler is what makes time move
+    // again. `decideKnock` throws on a knock that is already answered, which is what keeps a
+    // double-tap (or a stale dialog on a reloaded save) from re-deciding a week.
+    case 'decideKnock': {
+      if (!world) throw new Error('No active career')
+      decideKnock(world, msg.choice)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }

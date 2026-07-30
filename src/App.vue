@@ -21,6 +21,7 @@ import TournamentFlow from './components/TournamentFlow.vue'
 import PracticeFlow from './components/PracticeFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
+import KnockDialog from './components/KnockDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import ThisWeekScreen from './components/screens/ThisWeekScreen.vue'
@@ -427,6 +428,21 @@ const showStopToast = computed(() => !!stopReasonText.value && !stopToastDismiss
 function dismissStopToast(): void {
   stopToastDismissed.value = true
 }
+// W4 – THE KNOCK. Gated on the SNAPSHOT FIELD, not on a stop reason, and that difference is the
+// whole reason it cannot be lost.
+//
+// Every other popup here reads `stopReasons`, which only an `advance` ever sets – fine for the eight
+// beats that REPORT something, because a beat that has already happened can wait for the next advance
+// to be re-reported. A knock is a QUESTION, and `advanceWeeks` refuses to tick a single week until it
+// is answered. If this gate read the stop reason, then any action that produces a fresh snapshot
+// without stop reasons (setting the plan, entering an event, hiring a coach, a reload) would clear the
+// dialog and leave the career frozen with nothing on screen explaining why. So it reads
+// `knockPrompt`, which the engine sets from `pendingKnock` – the identical predicate the block is
+// built on. Dialog up exactly when the sim is waiting; no dismiss flag, because there is nothing to
+// dismiss. It outranks the other two overlays for the same reason: they can wait a click and this
+// cannot.
+const showKnock = computed(() => !!game.snapshot?.knockPrompt)
+
 // R9-21a: the injury stop popup – blocking, until Continue. The dialog itself plays the alert sfx
 // on mount.
 //
@@ -437,7 +453,16 @@ function dismissStopToast(): void {
 // with its own dismiss – there is no tab it cannot open over, and the dismiss flags are per
 // snapshot, so it can never re-appear after Continue.
 const showInjuryStop = computed(
-  () => stopReasons.value.includes('injury') && !!game.snapshot?.injury && !injuryStopDismissed.value,
+  () =>
+    stopReasons.value.includes('injury') &&
+    !!game.snapshot?.injury &&
+    !injuryStopDismissed.value &&
+    // W4: one overlay at a time. A knock and a fresh injury cannot land on the same week (a knock only
+    // arrives on a week with no injury, and `rollInjury` retires the live one at onset), so this is
+    // belt-and-braces rather than a real collision – but the ordering rule is worth stating once and
+    // it matches STOP_PRECEDENCE nowhere else: the blocking question comes first, because the injury
+    // report can wait a click and the question is what time is stopped on.
+    !showKnock.value,
 )
 // The end-of-season summary popup: auto-shows when `advance` reports 'season-end' and a summary is
 // present, until the player hits Continue (client-side flag). Same tab-gate removal as above.
@@ -451,7 +476,10 @@ const showSeasonSummary = computed(
     stopReasons.value.includes('season-end') &&
     !!game.snapshot?.lastSeasonSummary &&
     !seasonSummaryDismissed.value &&
-    !showInjuryStop.value,
+    !showInjuryStop.value &&
+    // W4: ...and behind the knock, for the same reason. A wrap-up week is off-season, so a knock can
+    // never arrive on one; this keeps the chain total anyway.
+    !showKnock.value,
 )
 function dismissSeasonSummary(): void {
   seasonSummaryDismissed.value = true
@@ -596,6 +624,11 @@ function dismissSeasonSummary(): void {
     <!-- R9-21a: a fresh injury stops the advance with a BLOCKING popup (kind, layoff, what was
          auto-withdrawn + refunds) and an alert sfx – no more quiet missable toast. -->
     <InjuryStopDialog v-if="showInjuryStop" @continue="injuryStopDismissed = true" />
+
+    <!-- W4: the ordinary training week's one decision – rest the knock or train through it. It emits
+         no event and has no dismiss: answering it IS the exit, and until it is answered the engine
+         will not tick a week. Last in the template so it paints over anything else that is up. -->
+    <KnockDialog v-if="showKnock" />
 
     <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
     <OnboardingTour v-if="showTour" @done="dismissTour" />

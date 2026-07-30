@@ -3,6 +3,7 @@ import { request } from '../worker/client'
 import {
   DEFAULT_PROFILE,
   type CareerMeta,
+  type KnockChoice,
   type PlayerProfile,
   type Snapshot,
   type SlotMeta,
@@ -201,6 +202,15 @@ export const useGameStore = defineStore('game', {
     async setPlan(plan: WeekPlan) {
       await this.run(async () => {
         const res = await request({ type: 'setPlan', plan })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+      })
+    },
+    // W4: answer the knock. Nothing else can clear it and the sim will not tick until it is answered,
+    // so this is the one action on the store that unblocks time.
+    async decideKnock(choice: KnockChoice) {
+      await this.run(async () => {
+        const res = await request({ type: 'decideKnock', choice })
         if (!res.ok) throw new Error(res.error)
         if (res.type === 'snapshot') this.snapshot = res.snapshot
       })
