@@ -56,10 +56,13 @@
 // buttons: Home's floating pill and this screen's CTA read the same label, the same mode and the same
 // blocked state, and the press routes into the shell's one handler. See that file for the whole
 // argument and for the arrival-gate bug it is written against.
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { useCalendarWeek, useLookAhead, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
 import { useWeekAction } from '../../composables/weekAction'
+// Slice 2: the crossing-out sweep. The SCHEDULE and the preference live in the composable (both paces,
+// the beat holds, the localStorage pair); what is here is the seven spans and the timers.
+import { DAY_CROSS_PACE, dayCrossPace, dayCrossRuns, dayCrossSchedule } from '../../composables/dayCross'
 import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
 import { surfaceStyleHint } from '../../engine/match/style'
 import { venueArtUrl } from '../../art/venues'
@@ -169,12 +172,118 @@ function chanceColor(chance: number): string {
   return `hsl(${Math.round(Math.max(0, Math.min(1, chance)) * 120)}, 72%, 48%)`
 }
 
-// --- (e) THE MAIN ACTION ------------------------------------------------------------------------
-/** Hand the press to the shell. Slice 2 puts the crossing-out animation in front of this call; the
- *  handler stays the shell's either way, so nothing about what a press COSTS lives on this screen. */
-function runWeek(): void {
-  if (action.value.disabled) return
+// --- (b) THE DAYS CROSS THEMSELVES OUT ----------------------------------------------------------
+//
+// «простую анимацию вычеркивания дней» – it runs through, or pauses on a match / an injury / a knock
+// and then continues, and it ends on the end-of-week screen. The last clause is already true and costs
+// nothing: the sweep finishes, the advance fires, and App.vue's own door takes the player to the
+// week's story exactly as it does from Home.
+//
+// ⚠ IT IS THE SCREEN'S DECORATION, NOT THE BUTTON'S, and that is why Home's press still advances
+// instantly. The two controls share their STATE (label, mode, blocked) and that is what "one button in
+// two projections" is about; the sweep is a property of the surface that draws seven days, and Home
+// draws none. A player who wants the beat presses it here.
+//
+// CANCELLABLE, AND SKIPPABLE BY A TAP ANYWHERE.
+//   * every timer is held in one array and cleared together, from the skip, from a career/week change,
+//     and from `onBeforeUnmount` - so a tab switch mid-sweep cannot advance a week from a screen that
+//     is no longer on the page, which is the one way an animation in front of an irreversible act can
+//     actually hurt someone;
+//   * a tap during the sweep goes straight to the end: strike everything out, fire the advance. No
+//     confirmation, no "are you sure" - it is a skip, and skips are instant or they are not skips.
+const crossed = ref(0)
+const heldIndex = ref<number | null>(null)
+const running = ref(false)
+/** How long ONE stroke is drawn over – a single step of the sweep, so a line finishes as the next one
+ *  starts. Handed to CSS as a custom property rather than written into the sheet, because the duration
+ *  is one constant with two settings and a stylesheet cannot read a setting. Seeded from the default
+ *  pace so the very first stroke of a session is not drawn instantly. */
+const strokeMs = ref(dayCrossSchedule(new Array(DAY_LONG.length).fill(false), DAY_CROSS_PACE.brisk).strokeMs)
+let timers: ReturnType<typeof setTimeout>[] = []
+
+function clearTimers(): void {
+  for (const t of timers) clearTimeout(t)
+  timers = []
+}
+
+/** Put everything back. Used by the cancel paths; never advances anything by itself. */
+function resetSweep(): void {
+  clearTimers()
+  running.value = false
+  heldIndex.value = null
+  crossed.value = 0
+}
+
+/** The week is over: hand the press to the shell. `running` stays true and the strokes stay drawn until
+ *  this screen unmounts (the story opens over it) or the new week resets them below – a grid that
+ *  un-crosses itself for one frame before the story appears would read as the sweep failing. */
+function finishSweep(): void {
+  clearTimers()
+  heldIndex.value = null
   emit('advance')
+}
+
+// A week landing under the sweep puts the grid back: with the automatic week story switched off the
+// player stays right here, and `calendar` has already recomputed to the NEXT week ahead - which must
+// not arrive pre-crossed.
+watch(
+  () => [game.snapshot?.careerId, game.snapshot?.week].join(':'),
+  () => resetSweep(),
+)
+onBeforeUnmount(resetSweep)
+
+/** THE SKIP. Any tap on the calendar while the sweep is running ends it immediately.
+ *
+ *  ⚠ IT IS A CAPTURE LISTENER, AND THAT IS THE BUG FIX RATHER THAN A FLOURISH. On the bubble phase the
+ *  press that STARTS the sweep also arrives here - the CTA's own handler runs first, sets `running`, and
+ *  the same click then bubbles to the shell and cancels the sweep it had just begun. Measured in the
+ *  browser: the sweep reached seven struck-out days 5ms after the press, every time. On capture the
+ *  order is inverted, so the first press sees `running: false` and falls through to the button, and
+ *  every LATER press - anywhere, the button included - is a skip. No flag, no timer, no guessing at
+ *  which element was tapped. */
+function skipSweep(): void {
+  if (!running.value) return
+  crossed.value = calendar.value?.days.length ?? 0
+  finishSweep()
+}
+/** Is there anything left to skip? The hint is gated on this rather than on `running` alone: `running`
+ *  stays true from the last stroke until the new snapshot lands (it means "the sweep owns this press",
+ *  which is what keeps a second press from starting a second sweep in that gap), and inviting a skip
+ *  when the week is already over would be a control that does nothing. */
+const skippable = computed(() => running.value && crossed.value < (calendar.value?.days.length ?? 0))
+
+// --- (e) THE MAIN ACTION ------------------------------------------------------------------------
+/** Hand the press to the shell – after the sweep, or straight away when there is no sweep to run.
+ *  The handler is the shell's either way, so nothing about what a press COSTS lives on this screen. */
+function runWeek(): void {
+  if (action.value.disabled || running.value) return
+  const week = calendar.value
+  // Off, or a system reduced-motion preference, or a week another surface owns: the old behaviour,
+  // byte for byte - press, advance. That is the whole promise of the switch.
+  if (!week || !dayCrossRuns(week.animates)) {
+    emit('advance')
+    return
+  }
+  const pace = DAY_CROSS_PACE[dayCrossPace()]
+  const plan = dayCrossSchedule(
+    week.days.map((d) => d.beat !== null),
+    pace,
+  )
+  strokeMs.value = plan.strokeMs
+  running.value = true
+  crossed.value = 0
+  week.days.forEach((day, i) => {
+    timers.push(
+      setTimeout(() => {
+        crossed.value = i + 1
+        if (day.beat === null) return
+        // the pause the owner asked for, and it is VISIBLE: the held day pulses while the sweep waits
+        heldIndex.value = i
+        timers.push(setTimeout(() => (heldIndex.value = null), pace.holdMs))
+      }, plan.at[i]),
+    )
+  })
+  timers.push(setTimeout(finishSweep, plan.total))
 }
 /** ⚠ THE SCREEN'S OWN CTA STANDS DOWN WHILE A REVEAL IS PAUSED, and the two controls would otherwise
  *  land on the same pixels. App.vue's floating bar is GLOBAL on `pending` - that is the wave-2 split
@@ -186,7 +295,16 @@ const showGo = computed(() => !game.snapshot?.pending)
 
 <template>
   <template v-if="game.snapshot && calendar">
-    <ScreenShell class="cal" :class="{ 'has-go': showGo }">
+    <!-- THE SKIP: a tap anywhere on the screen ends a running sweep at once. It is on the shell rather
+         than on the grid because a skip the player has to aim at is not a skip, and `skipSweep` is a
+         no-op when nothing is running, so an ordinary tap on an ordinary day costs nothing.
+         `.capture` is load-bearing – see the note at `skipSweep` for the bug it fixes. -->
+    <ScreenShell
+      class="cal"
+      :class="{ 'has-go': showGo, running }"
+      :style="{ '--cal-stroke-ms': `${strokeMs}ms` }"
+      @click.capture="skipSweep"
+    >
       <template #header>
         <div class="cal-topbar">
           <div>
@@ -221,13 +339,23 @@ const showGo = computed(() => !game.snapshot?.pending)
             v-for="d in calendar.days"
             :key="d.index"
             class="cal-day"
-            :class="[`cal-day--${d.kind}`, { 'cal-day--beat': d.beat !== null }]"
+            :class="[
+              `cal-day--${d.kind}`,
+              {
+                'cal-day--beat': d.beat !== null,
+                'cal-day--crossed': d.index < crossed,
+                'cal-day--held': d.index === heldIndex,
+              },
+            ]"
             :aria-label="dayName(d)"
             :title="dayName(d)"
           >
             <span class="cal-day-name" aria-hidden="true">{{ d.short }}</span>
             <span class="cal-day-mark" aria-hidden="true"></span>
             <span class="cal-day-note" aria-hidden="true">{{ d.note }}</span>
+            <!-- THE STROKE. One line per cell, scaled from nothing to full width – so "crossed out" is
+                 a transform on a 1px span and never seven elements being created and destroyed. -->
+            <span class="cal-day-cross" aria-hidden="true"></span>
           </li>
         </ul>
 
@@ -283,8 +411,11 @@ const showGo = computed(() => !game.snapshot?.pending)
            for why that is one composable and not two computeds. -->
       <template v-if="showGo" #footer>
         <div class="cal-go">
+          <!-- A SKIP NOBODY IS TOLD ABOUT IS NOT A SKIP. The hint takes the same slot the blocked
+               reason does, and the two can never collide: a blocked button cannot start a sweep. -->
+          <p v-if="skippable" class="cal-go-note cal-go-skip">Tap anywhere to skip</p>
           <!-- R10-16's doctrine: a disabled control says why, on screen, rather than being dead. -->
-          <p v-if="action.blockedNote" class="cal-go-note">{{ action.blockedNote }}</p>
+          <p v-else-if="action.blockedNote" class="cal-go-note">{{ action.blockedNote }}</p>
           <PrimaryPill
             variant="cta"
             class="cal-go-btn"
@@ -554,6 +685,68 @@ const showGo = computed(() => !game.snapshot?.pending)
   color: var(--accent);
 }
 
+/* --- (b) THE CROSSING-OUT SWEEP -----------------------------------------------------------------
+   One 1px line per cell, drawn left to right by a transform. `scaleX` rather than an animated `width`
+   on purpose: a transform is composited, so seven of them running in sequence cost no layout at all,
+   and the same declaration reverses for free when the grid is put back.
+   The DURATION comes from the composable through `--cal-stroke-ms` (see the note at `strokeMs`): the
+   pace is a setting with two values and a stylesheet cannot read a setting. */
+.cal-day-cross {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  top: 50%;
+  height: 1px;
+  background: var(--ink-2);
+  opacity: 0.85;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--cal-stroke-ms, 280ms) cubic-bezier(0.25, 0.8, 0.3, 1);
+}
+
+.cal-day--crossed .cal-day-cross {
+  transform: scaleX(1);
+}
+
+/* A struck-out day steps back rather than disappearing: the week is still readable behind its own
+   strokes, which is the difference between "these days are gone" and "this grid is now blank". */
+.cal-day--crossed {
+  opacity: 0.5;
+  transition: opacity var(--cal-stroke-ms, 280ms) ease;
+}
+
+/* THE PAUSE, MADE VISIBLE. While the sweep waits on a match, an injury or a knock, that one cell
+   breathes – so the hold reads as the week stopping on something rather than as the animation
+   stuttering. It also un-dims: the point of the pause is to be looked at. */
+.cal-day--held {
+  opacity: 1;
+  animation: cal-held 900ms ease-in-out infinite;
+}
+
+@keyframes cal-held {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--accent-wash);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--accent-wash);
+  }
+}
+
+/* ⚠ AND NONE OF IT RUNS UNDER `prefers-reduced-motion`. The composable already refuses to schedule the
+   sweep (see `dayCrossRuns`), so this is the belt to that braces: it also kills the transitions, so a
+   class left on a cell by a cancelled sweep cannot animate its way back out. An animation is precisely
+   what this OS switch is about. */
+@media (prefers-reduced-motion: reduce) {
+  .cal-day,
+  .cal-day-cross {
+    transition: none;
+  }
+  .cal-day--held {
+    animation: none;
+  }
+}
+
 .cal-readout {
   margin: 12px 0 0;
   font-size: 12.5px;
@@ -706,6 +899,12 @@ const showGo = computed(() => !game.snapshot?.pending)
   color: var(--warning);
   text-align: center;
   pointer-events: auto;
+}
+
+/* The skip hint is not a warning, so it borrows the slot and none of the alarm. */
+.cal-go-skip {
+  border-color: var(--line);
+  color: var(--ink-soft);
 }
 
 .cal-go-btn {

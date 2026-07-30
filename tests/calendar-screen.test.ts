@@ -27,6 +27,12 @@ import {
   sessionsForPlan,
   type CalendarWeekFacts,
 } from '../src/composables/weekDays'
+import {
+  DAY_CROSS_PACE,
+  DAY_CROSS_PACES,
+  DAY_CROSS_PACE_LABEL,
+  dayCrossSchedule,
+} from '../src/composables/dayCross'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Snapshot, type UpcomingEvent } from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
 import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR, isExamWeek, isOffSeasonWeek } from '../src/engine/season/calendar'
@@ -36,6 +42,7 @@ const app = read('../src/App.vue')
 const screen = read('../src/components/screens/CalendarScreen.vue')
 const action = read('../src/composables/weekAction.ts')
 const days = read('../src/composables/weekDays.ts')
+const cross = read('../src/composables/dayCross.ts')
 /** Exactly what the player can see. Comments in this codebase quote the owner in Russian by
  *  convention, in the script AND in the styles, so every copy sweep is bounded to the template –
  *  the same extraction round13-nav.test.ts settled on. */
@@ -559,6 +566,168 @@ describe('the calendar reads the snapshot and nothing else', () => {
     const season = read('../src/components/screens/SeasonScreen.vue')
     expect(season).not.toContain('function dominantSurface')
     expect(season).toContain('import { dominantSurface,')
+  })
+})
+
+// =================================================================================================
+// (b) THE CROSSING-OUT SWEEP. The timeline is numbers, so it is pinned as numbers – no clock, no
+// flakiness, and the owner's two paces are held to being the two paces he asked for.
+// =================================================================================================
+describe('the days cross themselves out', () => {
+  const beatFree = new Array(7).fill(false)
+
+  it('the duration is ONE named constant with the owner\'s two settings behind it', () => {
+    expect(DAY_CROSS_PACE.brisk.sweepMs).toBe(2000) // "~2s"
+    expect(DAY_CROSS_PACE.gentle.sweepMs).toBe(5000) // "~5s"
+    expect(DAY_CROSS_PACES).toEqual(['brisk', 'gentle'])
+    // both are labelled for a picker, and the labels say the number so "by eye" needs no legend
+    for (const p of DAY_CROSS_PACES) expect(DAY_CROSS_PACE_LABEL[p]).toMatch(/\ds$/)
+  })
+
+  it('a quiet week takes exactly the sweep, split evenly across the seven days', () => {
+    for (const id of DAY_CROSS_PACES) {
+      const pace = DAY_CROSS_PACE[id]
+      const plan = dayCrossSchedule(beatFree, pace)
+      expect(plan.at.length, id).toBe(7)
+      expect(plan.total, id).toBe(pace.sweepMs)
+      expect(plan.at.at(-1), id).toBe(pace.sweepMs)
+      // strictly increasing, evenly spaced, and one stroke is one step
+      for (let i = 1; i < plan.at.length; i++) expect(plan.at[i], id).toBeGreaterThan(plan.at[i - 1])
+      expect(plan.strokeMs, id).toBe(Math.round(pace.sweepMs / 7))
+    }
+  })
+
+  it('a beat ADDS a pause and then it continues – it never borrows the time back', () => {
+    const pace = DAY_CROSS_PACE.brisk
+    const quiet = dayCrossSchedule(beatFree, pace)
+    // one beat on Saturday (index 5)
+    const beats = beatFree.map((_, i) => i === 5)
+    const held = dayCrossSchedule(beats, pace)
+    // every day BEFORE the beat is struck at exactly the same moment as on a quiet week...
+    for (let i = 0; i <= 5; i++) expect(held.at[i]).toBe(quiet.at[i])
+    // ...the pause falls AFTER the day it belongs to, so Sunday and the end both move by the hold...
+    expect(held.at[6]).toBe(quiet.at[6] + pace.holdMs)
+    expect(held.total).toBe(quiet.total + pace.holdMs)
+    // ...and three beats cost three holds. The sweep does not speed up to absorb its own pauses.
+    const three = dayCrossSchedule(beatFree.map((_, i) => i === 0 || i === 3 || i === 5), pace)
+    expect(three.total).toBe(quiet.total + 3 * pace.holdMs)
+  })
+
+  it('the pause is legible at either pace: about a fifth of the sweep, and never a stop', () => {
+    for (const id of DAY_CROSS_PACES) {
+      const { sweepMs, holdMs } = DAY_CROSS_PACE[id]
+      const share = holdMs / sweepMs
+      expect(share, id).toBeGreaterThan(0.15)
+      expect(share, id).toBeLessThan(0.25)
+      // ...and a hold is longer than a single step, or it would not read as a hold at all
+      expect(holdMs, id).toBeGreaterThan(sweepMs / 7)
+    }
+  })
+
+  it('it is total: a beat on every day, and an empty week, both schedule cleanly', () => {
+    const all = dayCrossSchedule(new Array(7).fill(true), DAY_CROSS_PACE.brisk)
+    expect(all.total).toBe(2000 + 7 * DAY_CROSS_PACE.brisk.holdMs)
+    const none = dayCrossSchedule([], DAY_CROSS_PACE.brisk)
+    expect(none).toEqual({ at: [], total: 0, strokeMs: 0 })
+  })
+
+  it('WHETHER IT RUNS is one composed question, and three things can answer no', () => {
+    // The week's own half (`animates`) is the composable's; the other two are the player's switch and
+    // the OS's. Composed in one place for the reason `storyOpensItself` is: three surfaces asking the
+    // same question three ways is how they come to disagree.
+    expect(cross).toContain('export function dayCrossRuns(animates: boolean): boolean')
+    expect(cross).toContain('return animates && !isDayCrossOff() && !prefersReducedMotion()')
+    expect(screen).toContain('!dayCrossRuns(week.animates)')
+  })
+
+  it('OFF is byte-for-byte the old behaviour: press, advance', () => {
+    const run = screen.slice(screen.indexOf('function runWeek'), screen.indexOf('/** ⚠ THE SCREEN'))
+    expect(run).toContain("emit('advance')")
+    // the early return is the whole of "off" - no sweep is scheduled and nothing waits
+    expect(run.indexOf("emit('advance')")).toBeLessThan(run.indexOf('running.value = true'))
+  })
+
+  it('the preference is the weekRecap idiom, on its own key, defaulting ON', () => {
+    // The fifth switch of exactly this shape (sfx, music, haptics, the week story). NOT a save field:
+    // it is a fact about the person holding the phone, and it would cost a schema bump and a migration
+    // for a boolean the engine never reads.
+    expect(cross).toContain("const OFF_KEY = 'tb-day-cross-off'")
+    expect(cross).toContain("const PACE_KEY = 'tb-day-cross-pace'")
+    expect(cross).toContain("return localStorage.getItem(OFF_KEY) === '1'")
+    expect(cross).toContain('} catch {')
+    for (const rel of ['../src/stores/game.ts', '../src/engine/world.ts', '../src/shared/protocol.ts']) {
+      expect(read(rel), `${rel} must not know the flag`).not.toContain('dayCross')
+    }
+  })
+
+  it('the switch is on the settings screen, in the shape its four siblings have', () => {
+    const more = read('../src/components/screens/MoreScreen.vue')
+    expect(more).toContain("import {\n  DAY_CROSS_PACES,")
+    expect(more).toContain('const dayCrossOff = ref(isDayCrossOff())')
+    expect(more).toContain('setDayCrossOff(!dayCrossOff.value)')
+    // ...the same role=switch object the other four are, so no switch on this screen behaves oddly
+    expect(more).toContain(':aria-checked="!dayCrossOff"')
+    expect(more).toContain('@click="toggleDayCross"')
+    // ...and BOTH paces are pickable, so the owner chooses by eye rather than by editing a constant
+    expect(more).toContain('v-for="p in DAY_CROSS_PACES"')
+    expect(more).toContain('@click="pickCrossPace(p)"')
+    // the pace control is hidden while the sweep is off – a pace for an animation that does not run
+    expect(more).toContain('v-if="!dayCrossOff" class="career-row"')
+  })
+
+  it('CANCELLABLE: every timer is cleared together, and on unmount', () => {
+    // The one way an animation in front of an irreversible act can hurt: a timer surviving the screen
+    // and advancing a week from a page nobody is looking at.
+    expect(screen).toContain('let timers: ReturnType<typeof setTimeout>[] = []')
+    expect(screen).toContain('for (const t of timers) clearTimeout(t)')
+    expect(screen).toContain('onBeforeUnmount(resetSweep)')
+    // ...and a week landing under the sweep puts the grid back, because with the automatic story off
+    // the player stays on this screen and `calendar` has already moved on to the NEXT week.
+    expect(screen).toContain("() => [game.snapshot?.careerId, game.snapshot?.week].join(':')")
+    expect(screen).toContain('() => resetSweep()')
+  })
+
+  // ⚠ MEASURED, NOT ASSUMED, AND IT FAILED THE FIRST TIME. On the bubble phase the press that STARTS
+  // the sweep also reaches the shell's handler - the CTA's own click runs first and sets `running`, the
+  // same event bubbles up, and the sweep cancels itself. In the browser it reached seven struck-out days
+  // 5ms after the press, every time. Capture inverts the order: the first press sees `running: false`
+  // and falls through to the button; every later press, the button included, is a skip.
+  it('SKIPPABLE: the skip is a CAPTURE listener, or the first press cancels its own sweep', () => {
+    expect(screen).toContain('@click.capture="skipSweep"')
+    expect(screen).not.toContain('@click="skipSweep"')
+  })
+
+  it('SKIPPABLE: a tap anywhere ends it at once, and the hint says so', () => {
+    expect(screen).toContain('skipSweep')
+    const skip = screen.slice(screen.indexOf('function skipSweep'), screen.indexOf('// --- (e) THE MAIN ACTION'))
+    expect(skip).toContain('if (!running.value) return') // an ordinary tap costs nothing
+    expect(skip).toContain('finishSweep()')
+    expect(skip).toContain('crossed.value = calendar.value?.days.length ?? 0')
+    expect(template).toContain('Tap anywhere to skip')
+    // ...and the invitation is gone once there is nothing left to skip, so it is never a dead control
+    expect(screen).toContain('const skippable = computed(() => running.value && crossed.value <')
+    expect(template).toContain('v-if="skippable"')
+    // ...and the press cannot start a second sweep on top of a running one
+    expect(screen).toContain('if (action.value.disabled || running.value) return')
+  })
+
+  it('the stroke is a transform, and reduced motion kills it in the sheet as well', () => {
+    expect(template).toContain('<span class="cal-day-cross" aria-hidden="true"></span>')
+    expect(screen).toContain('transform: scaleX(0)')
+    expect(screen).toContain('.cal-day--crossed .cal-day-cross')
+    // the duration reaches CSS as a property, because the pace is a setting and a sheet cannot read one
+    expect(template).toContain(`'--cal-stroke-ms': \`\${strokeMs}ms\``)
+    expect(screen).toContain('transition: transform var(--cal-stroke-ms, 280ms)')
+    const reduced = screen.slice(screen.indexOf('@media (prefers-reduced-motion: reduce)'))
+    expect(reduced).toContain('transition: none')
+    expect(reduced).toContain('animation: none')
+  })
+
+  it('the sweep ends on the end-of-week screen – through the door that already exists', () => {
+    // «заканчивается на экране конца недели». Nothing new is built for it: the sweep fires the same
+    // `advance` Home's button does, and App.vue's own W1/W4 routing takes it from there.
+    expect(screen).toContain("emit('advance')")
+    expect(app).toContain("storyOpensItself(snap)) tab.value = 'week'")
   })
 })
 
