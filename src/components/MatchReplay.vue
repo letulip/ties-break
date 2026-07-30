@@ -28,13 +28,42 @@ const annotated = computed(() => {
 </script>
 
 <template>
-  <div class="dialog-overlay" @click.self="$emit('close')">
-    <div class="replay-card">
-      <button class="replay-close" aria-label="Close replay" title="Close" @click="$emit('close')">✕</button>
-      <div class="replay-header">
-        <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
+  <!-- ⚠ THIS WAS A CENTRED CARD ON A DIMMED PAGE (`.dialog-overlay` > `.replay-card`) AND IT IS NOW
+       THE SAME TAKEOVER THE LIVE MATCH IS (owner, 30.07: «I suppose we need the same principle of
+       opening live and replay matches. Maybe a popup format (current live) is better – it looks just
+       like a separate screen and works fine, let's stick to it»). The container is the only thing
+       that differed between watching live and watching again: identical viewer, identical panels,
+       one `mode` prop apart, in two different boxes.
+       IT WAS ALSO BROKEN, AND MEASURABLY. `.dialog-overlay` is `display: flex; align-items: center`
+       with `overflow: visible`, so the card was centred and could not scroll. Measured at 375x812
+       once a replay finished and the box score appeared: the card grew to 1243px inside an 812px
+       viewport, sitting at y=-215.5, which put the COURT, the close button and the bottom of the box
+       score outside the window with no way to reach any of them. The takeover's `.tf-body` is a real
+       scroller, so nothing is unreachable at any length.
+       No new CSS: `.tournament-flow` / `.tf-top` / `.tf-body` / `.tf-card` are the shared takeover
+       vocabulary in src/style.css that PracticeFlow and TournamentFlow already dress a match in. -->
+  <div class="tournament-flow">
+    <header class="tf-top">
+      <div>
+        <div class="tf-title">Match replay</div>
+        <div class="tf-sub">
+          <span class="pill">{{ match.a.name }} vs {{ match.b.name }}</span>
+        </div>
       </div>
-      <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" mode="replay" />
+      <!-- THE ONE CROSS LEFT ON THE MATCH SCREENS, and it is the only one that earns its place: a
+           replay has nowhere to go but out. It does exactly what it says - dismisses the overlay -
+           and it cannot lose anything, because a replay decides nothing and the box score is inside
+           the viewer below, not on a screen after it. The friendly's header used to carry the same
+           control and no longer does; there it was competing with "To result →" (see PracticeFlow).
+           ⚠ ADOPT THE CUSTOM CROSS SVG HERE when the icon system lands - this glyph is the last
+           bare ✕ in the match flow, and it is deliberately labelled in the meantime so the control
+           says what it does rather than making the player guess. -->
+      <button class="link" aria-label="Close replay" @click="$emit('close')">Close ✕</button>
+    </header>
+    <div class="tf-body">
+      <section class="tf-card">
+        <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" mode="replay" />
+      </section>
     </div>
   </div>
 </template>
