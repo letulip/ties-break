@@ -3333,3 +3333,90 @@ button.linkish {
 button.linkish:hover:not(:disabled) {
   text-decoration: underline;
 }
+
+/* --- W4: THE KNOCK DIALOG (src/components/KnockDialog.vue) ---------------------------------------
+   The ordinary training week's one decision: she came off court sore, and the parent rests it or
+   sends her back out. It reuses the injury popup's card family outright (.dialog-card
+   .season-summary .injury-stop) because it IS that kind of moment one notch quieter, and everything
+   below is only what the two-choice layout needs on top - the kicker, title, hint and radius all come
+   from rules that already exist.
+
+   NO ART, DELIBERATELY, and it is the one visible difference from the injury stop. That popup exists
+   to show the painting of the week she went down (R14-1); this one exists to ask a question, and a
+   168px picture above two buttons would make the reading the point and the decision the afterthought.
+   The `injury` face would also be a LIE here - nothing has happened to her body yet, which is the
+   whole premise. */
+.knock-line {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.knock-read {
+  margin: 0 0 16px;
+}
+
+/* The two branches, stacked rather than side by side. A row of two would give each about 150px on a
+   375pt phone, and the cost sentence - which is the entire reason this dialog is legible rather than
+   a coin flip - would wrap to four lines inside it. Stacked, each branch gets the full width for its
+   verb and its price, and the order reads as the safe option first.
+
+   ⚠ CARD CORNER, NOT A CAPSULE, AND THE RULE ABOVE DECIDES IT. "A BUTTON IS A PILL" names four shapes
+   and this is the second one: a control you press that is a PANEL rather than a button keeps the
+   card's corner, "because what it looks like is a card". Each branch here is two stacked lines - a
+   verb and the price of taking it - which is the Coach Market row's shape, not the Continue button's.
+   A 999px capsule around 44px of text on two lines would read as a lozenge, and --radius-control is
+   off-limits to anything a `button` selector can reach (pinned in tests/ui-control-system.test.ts). */
+.knock-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.knock-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  padding: 11px 13px;
+  text-align: left;
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-soft);
+  border-radius: var(--radius-frame);
+  color: var(--text);
+  cursor: pointer;
+}
+.knock-choice:hover:not(:disabled) {
+  background: var(--accent-fill);
+}
+.knock-choice:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+/* Pushing through is the warned branch, in the colour the app already uses for "you may, and you were
+   told" (--warning is the fatigue caution's own token). NOT --danger: this is a legitimate move a
+   parent makes every week in real life, and red would read as the game disapproving. */
+.knock-choice--push {
+  background: var(--warning-wash);
+  border-color: rgba(245, 185, 66, 0.4);
+}
+/* ⚠ THE HOVER HAD TO BE OVERRIDDEN, AND THE BROWSER IS WHERE THAT SHOWED UP. The app-wide
+   `button:hover:not(:disabled)` sets `border-color: var(--accent); color: var(--accent)` - so on hover
+   the WARNED branch turned lime, i.e. the one option the coach is uneasy about lit up in the colour
+   this app uses for "yes, this one". Held on the warning hue through the hover instead: the two
+   branches keep their identities under the cursor, which is exactly when the player is deciding. */
+.knock-choice--push:hover:not(:disabled) {
+  background: rgba(245, 185, 66, 0.12);
+  border-color: var(--warning);
+}
+.knock-choice--push:hover:not(:disabled) .knock-choice-verb {
+  color: var(--warning);
+}
+.knock-choice-verb {
+  font-family: var(--font-heading);
+  font-size: 15px;
+}
+.knock-choice-cost {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}

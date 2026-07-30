@@ -12,14 +12,46 @@ import {
   KID_ID,
   PARENT_INCOME_CENTS,
   type WorldState,
+  pendingKnock,
+  decideKnock,
 } from '../src/engine/world'
-import { DEFAULT_PROFILE } from '../src/shared/protocol'
-import { rngFromSeed } from '../src/engine/rng'
+import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
+import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { simulateMatch } from '../src/engine/match/engine'
 import type { SeasonEvent } from '../src/engine/season/types'
 import type { SeasonResult } from '../src/engine/season/ranking'
+
+/** ⚠ W4: ADVANCE THE WAY A PLAYER DOES - answering knocks as they arrive.
+ *
+ *  A knock BLOCKS `advanceWeeks` (it returns `['knock']` and ticks nothing) until the parent answers,
+ *  which is the whole point of the feature: the owner's complaint was that training weeks «просто
+ *  скипались». So a fixture that walks several weeks has to answer, exactly as the dialog does, or it
+ *  stalls on the first sore ankle.
+ *
+ *  ⚠ IT ANSWERS 'rest', AND THAT IS THE CONSIDERED CHOICE. 'push' is the answer that changes least
+ *  about the WEEK (she trains as planned) but the most about the CAREER: it multiplies the injury
+ *  threshold for three weeks, and on the first draft of this helper that is exactly what happened -
+ *  the fixture pushed through a knock in week 1, she tore something in week 2, and the advance under
+ *  test reported 'injury' instead of the reason being asserted. Resting touches nothing these suites
+ *  measure (a share of one week's development, +3 condition) and leaves the injury roll alone.
+ *
+ *  The protected fact is UNCHANGED: it still asserts that N weeks of advancing report the reason
+ *  under test. It just no longer assumes nothing else can happen on the way. */
+function advanceAnswering(world: WorldState, rng: Rng, weeks: number): StopReason[] {
+  const seen = new Set<StopReason>()
+  let left = weeks
+  while (left > 0) {
+    const before = world.week
+    for (const r of advanceWeeks(world, rng, left)) seen.add(r)
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    else if (world.week === before) break // a real stop, not the knock: leave it stopped
+    left -= world.week - before
+  }
+  return STOP_PRECEDENCE.filter((r) => seen.has(r))
+}
+
 
 // The earliest event whose entry deadline has not yet passed.
 function firstEnterable(world: WorldState) {
@@ -353,7 +385,8 @@ describe('advance stop reasons', () => {
     while (world.week < event.week - 1) tickWeek(world, rng)
     expect(world.week).toBe(event.week - 1)
 
-    const stop = advanceWeeks(world, rng, 4)
+    // ⚠ W4: answering knocks on the way - see advanceAnswering.
+    const stop = advanceAnswering(world, rng, 4)
     expect(world.week).toBe(event.week)
     expect(stop).toContain('tournament')
   })

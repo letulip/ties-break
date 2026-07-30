@@ -203,6 +203,12 @@ export type StopReason =
    *  it, so there was nothing to refund). It costs her real money and a real entry, exactly like
    *  'medical', and it used to pass in complete silence. */
   | 'walkover'
+  /** W4: she came off court with a KNOCK and the parent has not answered yet. Unlike every reason
+   *  above it does not merely halt the advance, it BLOCKS it – `advanceWeeks` refuses to tick at all
+   *  while a knock is undecided, the same contract `pendingTournament` has. That is the whole point:
+   *  the owner's complaint was that training weeks «просто скипались», and a stop the player can
+   *  skip past is not a decision. See engine/knock.ts. */
+  | 'knock'
 
 /** R11-1: the order the UI must SURFACE a week's stop reasons in, and the order `advanceWeeks`
  *  returns them in. One advance can stop for SEVERAL true reasons at once (the owner's lost injury
@@ -218,6 +224,16 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // she gets hurt) both fire – the injury dialog leads, the walkover toast rides above it – because
   // they are two different facts and R11-1's whole point is that a week may be several things.
   'walkover',
+  // W4: fourth, above everything that can wait a click, for a stronger reason than the three
+  // medical beats have – the advance CANNOT continue until it is answered (`advanceWeeks` returns
+  // early on an undecided knock). A stop nobody surfaces would strand the career, so it has to
+  // outrank every reason that owns a dismissable toast. It sits BELOW the medical trio because those
+  // have already cost money by the time they fire, and a knock has not cost anything yet.
+  //
+  // It can never collide with 'tournament' or 'season-end' on the same week (a knock only arrives on
+  // an ordinary training week – no tournament, no off-season), but it CAN co-occur with 'deadline'
+  // and 'funds', which is exactly the ordering this line decides.
+  'knock',
   'tournament',
   'season-end',
   'deadline',
@@ -404,6 +420,61 @@ export interface PracticeBooking {
 export interface RecoveryBuff {
   untilWeek: number
   factor: number
+}
+
+// --- THE KNOCK (schema v26) --------------------------------------------------
+// The ordinary training week's one EVENT: she picks up something sore, and the parent decides
+// whether to rest it or send her back out. Owner, 30.07, asking a second time – see engine/knock.ts
+// for the whole design, the anti-farming argument and the RNG discipline.
+
+/** What he chose to do about it. `rest` writes the week off; `push` keeps it and loads the dice. */
+export type KnockChoice = 'rest' | 'push'
+
+/** A knock, as the world persists it. ⚠ THE ONE PIECE OF NEW PERSISTED STATE in this slice, and the
+ *  reason it has to be persisted rather than derived: `choice` is a DECISION THE PLAYER MADE, and a
+ *  decision that does not survive a reload is not a decision. */
+export interface Knock {
+  /** where it hurts – "shoulder", "lower back" … (engine/knock.ts KNOCK_PARTS) */
+  part: string
+  /** the week she came off court with it */
+  sinceWeek: number
+  /** she has been sent back out on THIS part before (engine/knock.ts pushedParts) – the thread */
+  repeat: boolean
+  /** null until he answers. While it is null the advance is BLOCKED, exactly like a pending
+   *  tournament: a week cannot resolve around a question nobody answered. */
+  choice: KnockChoice | null
+  /** the last week this knock still matters. Set when the choice is made (knockUntilWeek): the rest
+   *  week for `rest`, KNOCK_PUSH_WEEKS out for `push`. Equals `sinceWeek` while undecided. */
+  untilWeek: number
+}
+
+/** A retired knock, for the accumulating thread. Bounded by pruning, like `injuryHistory`. */
+export interface KnockRecord {
+  part: string
+  sinceWeek: number
+  untilWeek: number
+  choice: KnockChoice
+  /** it turned into a real injury while he was pushing through it – the thread's bill */
+  brokeDown?: true
+}
+
+/** Everything the decision dialog shows, DERIVED at snapshot time (no schema cost).
+ *
+ *  The copy lives in the engine and not in the template for the reason KidScreen's own header gives:
+ *  a line that lives in the engine can be tested, and a line that lives in a template is decoration.
+ *  `read` is deliberately FOGGED – no number anywhere – which is buildTrainingRead's idiom: the coach
+ *  has an opinion, not a probability readout. */
+export interface KnockPrompt {
+  part: string
+  repeat: boolean
+  /** what happened, in the parent's voice */
+  line: string
+  /** what the coach makes of it */
+  read: string
+  /** ⚠ THE LEGIBILITY REQUIREMENT: one plain sentence per branch, naming the currency he is
+   *  spending. The player must be able to see what he traded. */
+  restCost: string
+  pushCost: string
 }
 
 /** Her academy scholarship as the UI needs it (schema v21). The engine keeps the level; the screens
@@ -756,6 +827,18 @@ export interface DiaryFacts {
    *  she is coming back FROM and the state she is in: reached the final → happy or sleepy, fell
    *  short → sad, or sleepy if she was worn out anyway. See engine/diary.ts travelHomeMoodFor. */
   travelHomeMood: TravelHomeMood | null
+  /** W4 – WHAT THE KNOCK IS DOING TO THIS WEEK, or null. `'rest'` = she is spending the week off the
+   *  training court; `'push'` = she is training on it and the coach knows.
+   *
+   *  ⚠ THE WEEK-NOTE POOL HAD TO LEARN ABOUT THIS OR IT WOULD LIE. W2's ordinary-week band is licensed
+   *  on `plainTraining`, and a rested week would otherwise still be eligible for "Six days on court.
+   *  She ate like someone twice her size." – which the honesty pin exists to catch. So the fact rides
+   *  on the facts object, `plainTraining` excludes it, and the knock gets its own band of lines.
+   *  Derived: `world.knock` is persisted, this is a reading of it. */
+  knockChoice: KnockChoice | null
+  /** W4: where the live knock is, on exactly the weeks `knockChoice` is non-null. Null together with
+   *  it by construction – the note pool needs the part to name it. */
+  knockPart: string | null
 }
 
 /** THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на
@@ -923,6 +1006,18 @@ export interface Snapshot {
   /** whether physio recovery is active (its cost lever is billed in Slice C; in B this just
    *  reflects/sets the flag, default = every coach tier but self-coached). */
   physioActive: boolean
+  /** W4 – THE UNANSWERED KNOCK, or null. Non-null on exactly the weeks a decision is outstanding
+   *  (`knock.choice === null`), which is the same condition `advanceWeeks` blocks on – so the dialog
+   *  and the engine can never disagree about whether the career is waiting for him.
+   *
+   *  DERIVED, not the persisted `Knock`: the copy is assembled per snapshot (buildKnockPrompt) and
+   *  the state it is assembled from lives on the world. Once he answers, this goes null while the
+   *  knock itself stays live for its weeks – there is nothing left to ask. */
+  knockPrompt: KnockPrompt | null
+  /** W4: the knock that is LIVE this week, decided or not – what the week is being spent under.
+   *  Null on a week with nothing wrong. The UI reads `choice` off this to say "resting the ankle"
+   *  rather than re-deriving anything. */
+  knock: Knock | null
   /** most recent 60 events, chronological (oldest first) */
   events: WorldEvent[]
   /** category-accurate spending/income over the full retained finance history (survives the
@@ -1074,6 +1169,8 @@ export type ToWorker =
   | { id: number; type: 'setCoachOnEventWeeks'; on: boolean }
   | { id: number; type: 'cancelPractice'; week: number }
   | { id: number; type: 'setPlan'; plan: WeekPlan }
+  // W4: answer the knock. The ONLY way an undecided knock clears, and the only way time moves again.
+  | { id: number; type: 'decideKnock'; choice: KnockChoice }
   | { id: number; type: 'setPhysio'; active: boolean }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }

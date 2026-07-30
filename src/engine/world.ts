@@ -15,6 +15,9 @@ import {
   type FinanceWindow,
   type FullBracketMatch,
   type InjurySeverity,
+  type Knock,
+  type KnockChoice,
+  type KnockRecord,
   type LossStreak,
   type Milestone,
   type PendingBracketRound,
@@ -112,13 +115,27 @@ import { buildKidLife, FRIENDS_WINDOW } from './kidLife'
 // The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
 // diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
 import { axisReadings, buildRadar, buildTrainingRead, type RadarWorldView } from './radar'
+// W4 – THE KNOCK: the ordinary training week's one event and the decision it puts in front of the
+// parent. Same dependency shape as the diary, kidLife and the radar: knock.ts is world-free and
+// takes a narrow structural view, so world -> knock runs one way and can never cycle.
+import {
+  buildKnockPrompt,
+  drawKnock,
+  knockLive,
+  knockRestWeek,
+  knockTauFactor,
+  knockUntilWeek,
+  offCooldown,
+  KNOCK_REST_CONDITION,
+  KNOCK_REST_GROWTH,
+} from './knock'
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 25
+export const SAVE_SCHEMA_VERSION = 26
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -260,6 +277,24 @@ export interface WorldState {
   /** Season planner (v13): a carry-over injury-tau buff from a resort/elite vacation package;
    *  null when none is running. Applied POST-draw inside injuryTau. */
   recoveryBuff: RecoveryBuff | null
+  /** W4 (v26): THE KNOCK she is carrying, or null. See engine/knock.ts for the whole design.
+   *
+   *  Two states in one field. `choice === null` is a QUESTION the career is stopped on; once he
+   *  answers, it is a CONDITION the next weeks resolve under (a rest week, or a loaded injury roll
+   *  through `untilWeek`). Retired at the top of the tick once `week > untilWeek`.
+   *
+   *  ⚠ THE ONLY REASON THIS SLICE BUMPS THE SCHEMA. `choice` is the player's decision, and a
+   *  decision that evaporates on reload is not one – he could close the app on the dialog and come
+   *  back to a career that had quietly picked for him. Everything else the knock produces (the
+   *  dialog copy, the prompt) is derived at snapshot time and costs nothing. */
+  knock: Knock | null
+  /** W4 (v26): retired knocks, oldest first, pruned to the last KNOCK_HISTORY_MAX.
+   *
+   *  THE ACCUMULATING THREAD, and the reason it is a list rather than a counter: a knock he SENT HER
+   *  BACK OUT ON puts that part of her body on the record, and `pushedParts` reads this to make the
+   *  next one land there ~55% of the time and bite harder when it does. A counter could not say WHICH
+   *  shoulder. It also feeds the cooldown, so one field carries both halves of the rate limit. */
+  knockHistory: KnockRecord[]
   /** Diary-1 D10 (v18): the durable milestone ledger behind the Memory card. The event feed
    *  prunes at 400 rows, so memories need their own record: first title and first final per tier,
    *  the first international entry, the first injury, each season's closing rank – captured AT THE
@@ -1365,6 +1400,15 @@ export function injuryTau(world: WorldState): number {
   // (spec §2 "invariance-safe"), so the expensive package buys real protection without ever
   // touching the draw sequence.
   if (world.recoveryBuff && world.week <= world.recoveryBuff.untilWeek) tau *= world.recoveryBuff.factor
+  // W4 – AND THE KNOCK HE SENT HER BACK OUT ON. The whole cost of the `push` branch, and it is
+  // deliberately the same shape as the three multiplies above: POST-DRAW on the threshold, zero draws
+  // on any stream, so the private `seed:injury:<week>` sequence is byte-identical for a career that
+  // never gets a knock and the frozen MAIN capture (41550 / e6b0c709) cannot move.
+  //
+  // `injuryChanceCap` below still caps it, which matters: at a deep condition deficit the ×2.2 would
+  // otherwise take a worn body past 13%/wk, and the cap is the promise that no single decision can
+  // make her a coin flip.
+  tau *= knockTauFactor(world.knock, world.week)
   return Math.min(tau, a.injuryChanceCap)
 }
 
@@ -1443,7 +1487,18 @@ export function rollInjury(world: WorldState): void {
   const sevRoll = injuryRng()
   const band = bands.find((b) => sevRoll < b.cum) ?? bands[bands.length - 1]
   let weeksOut = pickInt(injuryRng, band.weeksLo, band.weeksHi)
-  const part = drawBodyRegion(injuryRng)
+  // W4 – THE THREAD'S BILL. When she is mid-push on a knock, the injury lands on THAT part. This is
+  // the payoff the accumulating thread exists for: a career that keeps sending her back out does not
+  // collect a series of unrelated Fridays, it breaks the shoulder it has been ignoring, and the news
+  // line says so in as many words.
+  //
+  // ⚠ A POST-DRAW OVERRIDE, NOT A SKIPPED DRAW. `drawBodyRegion` still spends its one pull exactly
+  // where it always did – the override replaces the RESULT, so the `seed:injury:<week>` sequence is
+  // byte-identical and every downstream draw (there are none after this, but the property is what
+  // makes it safe) keeps its position. A career with no knock is untouched, so nothing shipped moves.
+  const drawnPart = drawBodyRegion(injuryRng)
+  const pushing = knockLive(world.knock, world.week) && world.knock!.choice === 'push'
+  const part = pushing ? world.knock!.part : drawnPart
   if (world.physioActive) weeksOut = Math.max(1, Math.round(weeksOut * (1 - ECONOMY.physio.recoverySpeedup)))
   const descriptor = band.severity === 'minor' && weeksOut === 1 ? 'niggle' : SEVERITY_DESCRIPTOR[band.severity]
   const kind = `${part} ${descriptor}`
@@ -1506,8 +1561,16 @@ export function rollInjury(world: WorldState): void {
     text:
       band.severity === 'severe'
         ? `Bad news from the clinic: ${kind} – out ~${wks}. The dream takes a hit.`
-        : `Injury: ${kind} – out ~${wks}.`,
+        : pushing
+          ? `Injury: ${kind} – out ~${wks}. The knock we trained through.`
+          : `Injury: ${kind} – out ~${wks}.`,
   })
+  // ...and the knock is retired, marked with what it cost. An injury SUPERSEDES a knock in both
+  // directions: there is nothing left to load (she is not training) and nothing left to decide, and
+  // `brokeDown` is what lets the history distinguish "he pushed and got away with it" from "he
+  // pushed and this is the bill". Retired here rather than left to expire so a nine-week layoff
+  // cannot come back to a live knock on a body that has been resting.
+  if (world.knock !== null) retireKnock(world, pushing)
 }
 
 /** Weekly physio/medical billing (tick step 1c, LAST). Injured weeks bill rehab regardless of
@@ -1531,6 +1594,130 @@ export function resolvePhysio(world: WorldState): void {
     category: 'physio',
     text: 'Physio / recovery session',
     amountCents: -cost,
+  })
+}
+
+// --- W4: THE KNOCK ------------------------------------------------------------
+//
+// The design, the anti-farming argument and the RNG discipline all live in engine/knock.ts, which
+// holds the dice, the anatomy and the copy. This is the half that touches the world: when a knock
+// arrives, when it retires, and what the parent's answer does to the weeks that follow.
+//
+// ⚠ THE DECISION GOVERNS THE WEEK AHEAD, NOT THE WEEK JUST PLAYED, and that is a structural choice
+// worth stating. `rollKnock` runs at the END of the tick – she came off court on the Friday – so by
+// the time the dialog is on screen the week is already resolved and cannot be edited. The alternative
+// (pausing mid-tick, the way `pendingTournament` does) would let the choice re-write the week it
+// arrived in, at the price of splitting the weekly resolution in half for one feature. Not worth it,
+// and the fiction is better this way round: something happened on Friday, and what you decide is what
+// happens NEXT week.
+
+/** How many retired knocks the world keeps. Enough for the thread (`pushedParts` reads it) and the
+ *  cooldown, small enough that it is never the reason a save grows. */
+export const KNOCK_HISTORY_MAX = 16
+
+/** Is the career waiting for an answer? The ONE predicate `advanceWeeks` blocks on and the snapshot
+ *  builds its prompt from, so the dialog and the engine can never disagree. */
+export function pendingKnock(world: WorldState): boolean {
+  return world.knock !== null && world.knock.choice === null
+}
+
+/** File the current knock away. `brokeDown` marks the ones that turned into a real injury.
+ *
+ *  An UNDECIDED knock retires as `rest`, which is the conservative reading and is only reachable
+ *  through `rollInjury` (an injury landing on the same week the knock arrived, before he could
+ *  answer): he never sent her back out, so the record must not say he did – `pushedParts` would put
+ *  that part on the thread for ever on the strength of a decision nobody made. */
+function retireKnock(world: WorldState, brokeDown = false): void {
+  const k = world.knock
+  if (!k) return
+  world.knockHistory.push({
+    part: k.part,
+    sinceWeek: k.sinceWeek,
+    untilWeek: Math.max(k.untilWeek, world.week),
+    choice: k.choice ?? 'rest',
+    ...(brokeDown ? { brokeDown: true as const } : {}),
+  })
+  if (world.knockHistory.length > KNOCK_HISTORY_MAX) {
+    world.knockHistory.splice(0, world.knockHistory.length - KNOCK_HISTORY_MAX)
+  }
+  world.knock = null
+}
+
+/** A week she spent training at home and nothing else – the only kind of week a knock arrives on.
+ *
+ *  ⚠ DELIBERATELY NARROW, and every clause earns its place. A tournament week already has a story
+ *  (and its own injury multiplier); an off-season or exam week is a blackout and must keep feeling
+ *  like one; a booked family week is the opposite of load; a friendly is a match; and a body already
+ *  laid up cannot pick up a niggle. What is left is exactly the week the owner was complaining
+ *  about – the one with nothing in it but training. */
+export function ordinaryTrainingWeek(world: WorldState): boolean {
+  return (
+    world.injury === null &&
+    world.pendingTournament === null &&
+    !isCompetitionWeek(world) &&
+    !isBlackoutWeek(world.week) &&
+    vacationForWeek(world, world.week) === undefined &&
+    practiceForWeek(world, world.week) === undefined
+  )
+}
+
+/** Retire a knock whose weeks are up. Runs at the TOP of the tick, after `world.week` has moved, so
+ *  a knock is live for weeks `sinceWeek + 1 .. untilWeek` inclusive and `rollInjury` sees the right
+ *  answer on every one of them. Undecided knocks never expire – they block time instead. */
+export function expireKnock(world: WorldState): void {
+  if (world.knock === null || world.knock.choice === null) return
+  if (world.week > world.knock.untilWeek) retireKnock(world)
+}
+
+/** Roll for a knock (tick step 3c, after the week's work). ZERO main-stream draws – `drawKnock`
+ *  reads `seed:knock:<week>`, its own per-week sub-stream – so the frozen capture cannot move.
+ *
+ *  ONE AT A TIME AND RATE-LIMITED: nothing arrives while a knock is open (decided or not) or inside
+ *  KNOCK_COOLDOWN_WEEKS of the last one retiring. See knock.ts's farming note (d). */
+export function rollKnock(world: WorldState): void {
+  if (world.knock !== null) return
+  if (!ordinaryTrainingWeek(world)) return
+  const view = {
+    seed: world.seed,
+    week: world.week,
+    condition: world.condition,
+    plan: world.plan,
+    history: world.knockHistory,
+  }
+  if (!offCooldown(view)) return
+  const knock = drawKnock(view)
+  if (!knock) return
+  world.knock = knock
+  // Type 'info', not 'injury': nothing has happened to her body that costs anything yet, and the 💬
+  // channel is where somebody SAYS something. Calling it an injury in the feed would also make the
+  // Memory card's first-injury milestone a lie by association.
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: knock.repeat
+      ? `Her ${knock.part} is sore again – the same one. It needs a decision.`
+      : `She has picked up a sore ${knock.part}. Not an injury – yet.`,
+  })
+}
+
+/** THE PARENT ANSWERS. The only way an undecided knock clears, and the only way time moves again.
+ *
+ *  Pure state: `untilWeek` is arithmetic and the consequences are read off it later (a rest week by
+ *  `knockRestWeek`, a loaded roll by `knockTauFactor`). ZERO draws, on any stream – which is what
+ *  makes a decision the player can take at any moment safe to put inside a deterministic sim. */
+export function decideKnock(world: WorldState, choice: KnockChoice): void {
+  const k = world.knock
+  if (!k) throw new Error('Nothing to decide')
+  if (k.choice !== null) throw new Error('That knock has already been answered')
+  k.choice = choice
+  k.untilWeek = knockUntilWeek(k, choice)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text:
+      choice === 'rest'
+        ? `Resting the ${k.part} – a week off the training court.`
+        : `Training through the ${k.part}. The coach knows.`,
   })
 }
 
@@ -2906,6 +3093,11 @@ export function createWorld(
     vacations: [],
     practices: [],
     recoveryBuff: null,
+    // W4: nothing hurts yet, and nothing is on her record. Week 1 is the earliest a knock can arrive
+    // (rollKnock runs after the week's work), which is right - she has to train before she can pull
+    // something doing it.
+    knock: null,
+    knockHistory: [],
     milestones: [],
     internationalEntryWeeks: [],
   }
@@ -3024,6 +3216,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     turnOverField(world, seasonIndexOf(world.week))
   }
 
+  // 0a0-w4. W4: retire a knock whose weeks are up. FIRST of the pure-state steps, because everything
+  //         below that reads it – `injuryTau` at step 1c most of all – must see the same answer for
+  //         the whole week. ZERO draws.
+  expireKnock(world)
+
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)
 
@@ -3056,6 +3253,22 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   expireRecoveryBuff(world)
   const playedThisWeek = isCompetitionWeek(world) // injured on the play week => walkover
   accrueCondition(world, playedThisWeek)
+  // 1c-w4. W4: the REST branch's small credit, applied beside the other week-type gains rather than
+  //        inside `accrueCondition` – whose arity-2, zero-RNG contract is pinned by B1 in
+  //        tests/condition.test.ts (`expect(accrueCondition.length).toBe(2)`) and must not gain a
+  //        parameter. Same shape `resolveVacation` uses for its package gain: accrue first, then add.
+  //
+  //        ⚠ SMALL ON PURPOSE (KNOCK_REST_CONDITION = 3, against a Light week's free +3 total). It has
+  //        to be worth less than what the plan slider hands out for nothing, or a knock becomes
+  //        something a player wants – see knock.ts's farming note (b). The value of resting is that
+  //        the injury roll never gets loaded, not this.
+  if (knockRestWeek(world.knock, world.week)) {
+    world.condition = clamp(
+      world.condition + KNOCK_REST_CONDITION,
+      ECONOMY.condition.min,
+      ECONOMY.condition.max,
+    )
+  }
   resolveVacation(world)
   resolvePractice(world)
   resolvePhysio(world)
@@ -3197,7 +3410,23 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     matchesThisWeek,
     seed: world.seed,
     week: world.week,
+    // ⚠ W4 – THE PRICE OF RESTING A KNOCK, and the whole reason `growWeek` gained this knob. She is
+    // doing rehab and light hitting, not training, so the week earns KNOCK_REST_GROWTH of what it
+    // would have. Expressed HERE as a multiplier on the week rather than as a lower `plan.train`
+    // because `trainFactor` clamps below 60 – a career already on Light would otherwise have rested
+    // for free, which is the farming hole this shape closes (knock.ts, note (a)).
+    loadFactor: knockRestWeek(world.knock, world.week) ? KNOCK_REST_GROWTH : 1,
   })
+
+  // 3c. W4 – AND SHE CAME OFF COURT SORE. Deliberately LAST of the things that happen to her body,
+  //     and after `growWeek`: the week's work is done and banked, and the knock is what she is left
+  //     with on the Friday. Anything earlier would read as a knock she then trained through anyway.
+  //
+  //     ZERO main-stream draws – `drawKnock` reads `seed:knock:<week>`, its own per-week sub-stream,
+  //     exactly as `rollInjury` reads `seed:injury:<week>` – so the frozen capture (41550 /
+  //     e6b0c709) cannot move. `ordinaryTrainingWeek` also rules out every week with a pending
+  //     tournament, so a knock can never arrive on a week the reveal flow still owns.
+  rollKnock(world)
 
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
@@ -3472,6 +3701,15 @@ export function skipEvent(world: WorldState, eventId: string): void {
 export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopReason[] {
   // A pending reveal must resolve (and close) before time moves on.
   if (world.pendingTournament) return ['tournament']
+  // ⚠ W4 – AND SO MUST AN UNANSWERED KNOCK. This line is the mechanical heart of the whole slice.
+  //
+  // The owner's complaint was that training weeks «просто скипались» – he pressed +4 and four weeks
+  // of his daughter's life went past without asking him anything. Halting is not enough: a stop the
+  // player can dismiss with one tap and then re-press is a notification, not a decision. So a knock
+  // BLOCKS, on the identical contract `pendingTournament` has above – no tick at all until
+  // `decideKnock` runs. Both branches of the dialog are valid answers, so this can never dead-end a
+  // career (see KnockDialog: there is no third button and no way out that is not a choice).
+  if (pendingKnock(world)) return ['knock']
   const stops = new Set<StopReason>()
   for (let i = 0; i < weeks; i++) {
     const nextWeek = world.week + 1
@@ -3514,6 +3752,9 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     //
     // A tournament this week paused the resolution: stop so the flow can take over.
     if (world.pendingTournament) stops.add('tournament')
+    // W4: she came off court sore and the parent has to answer. The `break` below then ends the
+    // advance, and the guard at the top of this function refuses to restart it until he has.
+    if (pendingKnock(world)) stops.add('knock')
     // Season just wrapped up (the tick landed on the year's first off-season week, week 49 of
     // the year): stop AFTER the wrap-up resolved, before week 50, so the season-summary popup
     // shows. Off-season weeks never carry a tournament, so this can't collide with 'tournament'.
@@ -3867,6 +4108,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
     // decision rather than the world's, and the subject of the ordinary week's note.
     trainPct: world.plan.train,
+    // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
+    // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must
+    // still hold for the week the knock arrived in (its note is about the training that caused it).
+    knockChoice: knockLive(world.knock, world.week) ? world.knock!.choice : null,
+    knockPart: knockLive(world.knock, world.week) && world.knock!.choice !== null ? world.knock!.part : null,
   })
   // THE SKILLS RADAR'S VIEW OF HER, assembled ONCE and read twice - by the contour (`buildRadar`)
   // and by the Weekly Story's training line (`buildTrainingRead`). Hoisted rather than inlined
@@ -3917,6 +4163,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         }
       : null,
     physioActive: world.physioActive,
+    // W4: the knock, and the question it is asking. Both DERIVED (the prompt's copy is assembled per
+    // snapshot off `seed:knockread:<sinceWeek>`, its own sub-stream); only `world.knock` itself is
+    // persisted, and only because `choice` is the player's decision.
+    //
+    // `knockPrompt` is non-null on exactly the weeks `pendingKnock` is true – the same predicate
+    // `advanceWeeks` blocks on – so the dialog cannot be missing on a week the engine has stopped,
+    // and cannot be up on a week it has not.
+    knock: knockLive(world.knock, world.week) ? world.knock : null,
+    knockPrompt: pendingKnock(world) ? buildKnockPrompt(world.knock!, world.seed, world.condition) : null,
     events: world.events.slice(-SNAPSHOT_EVENTS),
     // Category-accurate windows off the persisted ledger (immune to the 60-event cap). season
     // keeps the current MoneyScreen semantics: the current 52-week season block from its first week.

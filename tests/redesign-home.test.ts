@@ -143,6 +143,10 @@ function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
     vacationWeek: false,
     // ⚠ W2 added `trainPct`; the greeting reads neither it nor anything near it.
     trainPct: 75,
+    // ⚠ W4 added `knockChoice`/`knockPart` (what a knock is doing to the week). Null here: this
+    // fixture is a week with nothing wrong with her, which is what these suites are about.
+    knockChoice: null,
+    knockPart: null,
     fundsPressure: 'ok',
     freshMilestone: null,
     ...over,

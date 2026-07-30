@@ -37,6 +37,7 @@ import type {
   DiaryFacts,
   DiarySnapshot,
   FundsPressure,
+  KnockChoice,
   LossStreak,
   MemoryCard,
   Milestone,
@@ -156,6 +157,12 @@ export interface DiaryWorldView {
   vacationWeek: boolean
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
+  /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training
+   *  court, `'push'` on the weeks she is training through it. Assembled by toSnapshot off
+   *  `world.knock`, which is the persisted record of what the player answered. */
+  knockChoice: KnockChoice | null
+  /** W4: where it is, on exactly the weeks `knockChoice` is non-null. */
+  knockPart: string | null
 }
 
 /** Condition, as the word Home speaks (D3). The 80/60/40 rungs mirror the idle-emotion ladder
@@ -567,6 +574,10 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // the journey IS read – see travelHomeFactsFor.
     travelHomeScene: travelHome?.scene ?? null,
     travelHomeMood: travelHome?.mood ?? null,
+    // W4: what the knock is doing to this week. Read, not drawn - it is a decision the player made
+    // and the world persisted, which is the whole reason the knock cost a schema bump.
+    knockChoice: view.knockChoice,
+    knockPart: view.knockPart,
   }
 }
 
@@ -1497,10 +1508,19 @@ export interface WeekClaims {
   fundsTight?: true
   /** asserts no tournament and no journey – she was at home this week */
   athome?: true
+  /** W4: asserts she is spending the week RESTING a knock – unselectable unless knockChoice==='rest' */
+  restingKnock?: true
+  /** W4: asserts she is TRAINING THROUGH a knock – unselectable unless knockChoice==='push' */
+  pushingKnock?: true
 }
 
 export interface WeekNote {
-  text: string
+  /** W4: a facts-aware TEMPLATE is allowed here now, the same shape `DiaryPhrase.text` has always
+   *  had. The knock band needs it – "A week off the ankle" has to name the part, and a pool of eight
+   *  hard-coded parts × four sentences is not a pool, it is a table. Unlike `DiaryPhrase` there is no
+   *  `null` arm: the ordinary week's silence is decided by the coin in `weekNoteFor`, not by a null
+   *  entry, because silence here means the scrap falls back to the ledger line. */
+  text: string | ((f: DiaryFacts) => string)
   claims: WeekClaims
   license: (f: DiaryFacts) => boolean
 }
@@ -1518,9 +1538,21 @@ export const WEEK_NOTE_CHANCE = 1 / 3
 const athome = (f: DiaryFacts): boolean =>
   !f.playedTournament && !f.travelled && f.travelHomeScene === null
 
-/** An ordinary training week: at home, healthy, and the calendar is holding nothing. */
+/** An ordinary training week: at home, healthy, and the calendar is holding nothing.
+ *
+ *  ⚠ W4 ADDED `knockChoice === null`, AND IT IS AN HONESTY FIX, NOT A TIDY-UP. The grind band says
+ *  things like "Six days on court. She ate like someone twice her size." – a sentence that is FALSE
+ *  on a week she spent resting a sore ankle, and the pin in tests/diary.test.ts sweeps exactly this
+ *  space. A week under a knock is no longer an ordinary week: it has its own band below, the way an
+ *  exam week and a layoff do. */
 const plainTraining = (f: DiaryFacts): boolean =>
-  athome(f) && f.injured === null && !f.examsWeek && !f.offSeasonWeek && !f.vacationWeek && !f.playedPractice
+  athome(f) &&
+  f.injured === null &&
+  f.knockChoice === null &&
+  !f.examsWeek &&
+  !f.offSeasonWeek &&
+  !f.vacationWeek &&
+  !f.playedPractice
 
 export const WEEK_NOTES: readonly WeekNote[] = [
   // --- A GRIND WEEK: what 85/15 actually looks like from the kitchen -----------------------------
@@ -1702,6 +1734,62 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     claims: { practice: true, athome: true },
     license: (f) => athome(f) && f.playedPractice && f.injured === null,
   },
+  // --- W4: THE WEEK UNDER A KNOCK. These ALWAYS speak, like the calendar's own weeks. -------------
+  //
+  // AND THAT IS THE POINT. The week he made a decision about is the one week that must never come
+  // back as a receipt for restrung gut – he chose something, and the scrap is where the game tells him
+  // what it looked like. So no coin: `weekNoteFor` gates only `plainTraining`, which a knock week is
+  // not, and these are licensed on the choice he made.
+  //
+  // NOTE THE ASYMMETRY IN THE WRITING, because it is the feature. The rest lines are about a girl
+  // with nothing to do; the push lines are about a girl working with something wrong. Neither judges
+  // him – the register is the pool's own (somebody who loves her holding the pen) – but the push
+  // lines are allowed to be uneasy, because that is what he bought.
+  // ⚠ `f.injured === null` ON EVERY ONE, and the honesty pin is why it is not decoration. THE INJURY
+  // TAKES THE NOTE is a rule this pool already keeps (see the layoff band below), and the pin sweeps
+  // the licence SPACE rather than the states the engine happens to reach – so a line about a quiet
+  // rest week that could co-exist with a live layoff is a failing test, even though `rollInjury`
+  // retires the knock at onset and the combination cannot actually occur.
+  {
+    text: (f) => `A week off the ${f.knockPart}. She was bored by Tuesday and said so by Wednesday.`,
+    claims: { restingKnock: true, athome: true },
+    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'rest',
+  },
+  {
+    text: "Rest week – doctor's orders, and ours. She watched the others hit.",
+    claims: { restingKnock: true, athome: true },
+    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'rest',
+  },
+  {
+    text: (f) => `Ice, stretching, no court. The ${f.knockPart} is quieter than it was.`,
+    claims: { restingKnock: true, athome: true },
+    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'rest',
+  },
+  {
+    text: 'She asked twice if she could go in for an hour. Twice we said no.',
+    claims: { restingKnock: true, athome: true },
+    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'rest',
+  },
+  {
+    text: (f) => `She trained on the ${f.knockPart} all week and did not mention it once.`,
+    claims: { pushingKnock: true, athome: true },
+    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'push',
+  },
+  {
+    text: 'Full week on court. She strapped it up herself before every session.',
+    claims: { pushingKnock: true, athome: true },
+    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'push',
+  },
+  {
+    text: (f) => `The ${f.knockPart} held. We watched her serve more closely than usual.`,
+    claims: { pushingKnock: true, athome: true },
+    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'push',
+  },
+  {
+    text: 'She trained through it. The coach said nothing and watched everything.',
+    claims: { pushingKnock: true, athome: true },
+    license: (f) => athome(f) && f.injured === null && f.knockChoice === 'push',
+  },
   // --- THE LAYOFF WEEKS. An injury takes the note, the way it does on the journey home. ----------
   {
     text: 'Rehab, three times this week. She counts the sessions down out loud.',
@@ -1737,7 +1825,30 @@ export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
   // The coin first, so the pick is drawn off the same stream in the same order every time.
   const coin = rng()
   if (plainTraining(facts) && coin >= WEEK_NOTE_CHANCE) return null
-  return pool[Math.floor(rng() * pool.length)].text
+  // ⚠ A BAND THAT ALWAYS SPEAKS STEPS THROUGH ITS POOL; THE QUIET BAND DRAWS FROM IT.
+  //
+  // THE LIVE TRACE FOUND THIS, not the suite, and it found it twice. W17/W18 of one season both read
+  // "The lower back held. We watched her serve more closely than usual." (a pushed knock governs three
+  // consecutive weeks off a pool of four); W50/W51 of the same season both read "The season is over.
+  // She slept until nine and it was glorious." (the off-season is four weeks off a pool of three). Both
+  // lines were honest and correctly licensed. Both read as a bug.
+  //
+  // THE SHAPE OF THE FIX IS `buildTrainingRead`'s FOG_POOL, and the load-bearing half is WHERE THE DRAW
+  // IS KEYED. Stepping a PER-WEEK draw by an offset achieves nothing, because that draw already moves
+  // every week - which is exactly how the first attempt failed. So the ENTRY POINT is drawn ONCE PER
+  // CAREER, off a stream with no week in it at all, and the WEEK NUMBER walks the pool from there.
+  // Consecutive weeks then land on adjacent indices and cannot collide, and a long band (a 22-week
+  // layoff, a December) is guaranteed to cycle its whole pool instead of repeating its favourites.
+  //
+  // ⚠ AND IT APPLIES ONLY TO THE BANDS THAT ALWAYS SPEAK - `!plainTraining`, which is the calendar's own
+  // weeks, the layoff and the knock. The ordinary training band keeps its free per-week draw, because
+  // WEEK_NOTE_CHANCE already means two speaking weeks rarely sit next to each other, and a rotation
+  // there would make the one band a player sees most often perfectly predictable.
+  const idx = plainTraining(facts)
+    ? Math.floor(rng() * pool.length)
+    : (Math.floor(rngFromSeed(`${seed}:weeknote:entry`)() * pool.length) + facts.week) % pool.length
+  const { text } = pool[idx]
+  return typeof text === 'function' ? text(facts) : text
 }
 
 // --- the greeting (epic/redesign-home) --------------------------------------------------------

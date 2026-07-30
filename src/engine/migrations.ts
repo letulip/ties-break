@@ -523,6 +523,34 @@ export function migrateSave(raw: unknown): WorldState {
     v = 25
   }
 
+  // v25 -> v26: THE KNOCK. The ordinary training week gets one thing that happens and one thing the
+  // parent decides - she comes off court sore, and he rests it or sends her back out (owner, 30.07,
+  // asking a second time: «Чтобы тренировочные недели не просто скипались… пришло время сделать
+  // какое-то пошаговые события»). See engine/knock.ts for the design and the anti-farming argument.
+  //
+  // BACK-FILLED EMPTY, AND UNLIKE v18's MILESTONES THERE IS NOTHING TO RECONSTRUCT. A knock leaves no
+  // trace an old save could carry: it was never rolled, never logged and never persisted, so there is
+  // no earlier evidence to mine the way the milestone ledger could be rebuilt from surviving
+  // tournament events. Inventing a history here would mean inventing decisions the player never made
+  // - and `knockHistory` is precisely the record of his decisions (`pushedParts` reads it to decide
+  // which part of her body is on the thread), so a fabricated row would put a weak shoulder on a
+  // career whose owner never ignored anything.
+  //
+  // A migrated career therefore wakes up with a clean body and a clean record, and the first knock
+  // arrives on its next ordinary training week like any other. That is the honest state: the system
+  // did not exist, so nothing had happened under it.
+  //
+  // ⚠ NOTHING ELSE IN THE SAVE MOVES. The knock's dice are `seed:knock:<week>` and its dialog copy is
+  // `seed:knockread:<sinceWeek>` - two sub-streams that did not exist before, so no existing stream's
+  // sequence shifts by a draw, and the frozen MAIN capture (41550 / e6b0c709) is untouched. The
+  // injury threshold gains a POST-DRAW multiply (`knockTauFactor`) that returns exactly 1 while
+  // `knock` is null, which it is for every migrated save at the moment it loads.
+  if (v === 25) {
+    save.knock ??= null
+    save.knockHistory ??= []
+    v = 26
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
