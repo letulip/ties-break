@@ -60,10 +60,14 @@ const week = computed(() => game.snapshot?.week ?? 0)
 const dateLine = computed(() => weekDateLine(week.value))
 
 // --- Round 5 item 9 / R9-18 – the week-recap card. THE RULE (owner: it appeared
-// "sometimes"): the card shows after EVERY resolved non-tournament week – including
-// multi-week advances, where it recaps the LATEST resolved week – and never after a
-// tournament week (the flow's own cards cover that one) or while a reveal is pending.
-// Week 0 (career start) has nothing to recap. A dismissal silences exactly one week.
+// "sometimes"): the card shows after EVERY RESOLVED week – including multi-week
+// advances, where it recaps the LATEST resolved week – and never while a reveal is
+// pending. Week 0 (career start) has nothing to recap. A dismissal silences one week.
+// ⚠ W4 WIDENED IT BY DELETING A CLAUSE: "and never after a tournament week" is gone. That week is
+// the one the owner most wanted the story of («сразу после турнира, как будто домой едем»), and the
+// only reason it had none was that two full-screen takeovers wanted the same tick. `pending` already
+// says which of them owns the week, so the story simply waits for the flow to let go – see
+// composables/weekRecap.ts for the whole argument and App.vue for the door.
 // R13-12: the EXISTENCE half of the rule moved to composables/weekRecap.ts – the App shell's
 // This-week tab dot reads the same predicate, so the card and the dot cannot disagree.
 // U2: the DISMISSAL is unchanged in every respect except which element carries it. It used to be a

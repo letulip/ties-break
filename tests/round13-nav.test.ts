@@ -237,9 +237,29 @@ describe('R13-12 — the dot rule (unit): a FRESH recap is unseen', () => {
     expect(recapExists({ week: 0, pending: undefined, events: [] })).toBe(false)
   })
 
-  it('never on a tournament week (the flow’s own cards cover it), but an OLD tournament does not block', () => {
-    expect(recapExists({ week: 3, pending: undefined, events: [event({ type: 'tournament', week: 3 })] })).toBe(false)
-    expect(recapExists({ week: 4, pending: undefined, events: [event({ type: 'tournament', week: 3 })] })).toBe(true)
+  // ⚠ RE-AIMED BY W4 (owner, 30.07, twice in one playtest: «увидел экран week recap для прошедшего
+  // турнира, но уже, получается через неделю ... ставить week recap сразу после турнира, как будто
+  // домой едем» / «после турнира не появился week recap»).
+  //
+  // WHAT MOVED: this test asserted the OPPOSITE of its own first line – no story at all on a week
+  // carrying a `tournament` event. That clause existed to keep two full-screen takeovers off one
+  // tick, back when the card was a block on Home that simply appeared; it is deleted, because
+  // `pending` already says which surface owns the week and the story is a ROUTE now, so it can be
+  // TIMED rather than deleted.
+  //
+  // THE PROTECTED FACT IS UNCHANGED, and it is what this test still asserts: the tournament's own
+  // flow and the week's story are never both up. `TournamentFlow`'s `v-if` is `snapshot.pending`, and
+  // the story's gate is `!pending` – so the pair stays mutually exclusive by construction. What moved
+  // is the boundary between them: from "this week has a tournament in it" to "the flow has not let go
+  // of this week yet", one beat later, which is the beat he asked for.
+  it('a tournament week HAS a story once the flow lets go of it – W4', () => {
+    const tourney = [event({ type: 'tournament', week: 3 })]
+    // mid-reveal the flow owns the week – this is the old exclusion's real content
+    expect(recapExists({ week: 3, pending: pendingRun, events: tourney })).toBe(false)
+    // the finale's Continue clears `pending`: the drive home, and its story
+    expect(recapExists({ week: 3, pending: undefined, events: tourney })).toBe(true)
+    // ...and an OLD tournament never blocked the week after it, and still does not
+    expect(recapExists({ week: 4, pending: undefined, events: tourney })).toBe(true)
   })
 
   it('never while a reveal is pending, and never without a snapshot', () => {
@@ -363,11 +383,52 @@ describe('W1 — the end of a week lands on the story', () => {
     // Watching the SNAPSHOT rather than the sticky button: SeasonScreen advances a week too (the
     // hole R11-1 had to patch for the injury dialog), and a story shown on only one of two paths is
     // the bug again.
-    expect(app).toContain("if (advanced && recapExists(snap)) tab.value = 'week'")
+    //
+    // ⚠ RE-AIMED BY W4: the routing condition grew a SECOND door (`runClosed`, below), so the pin is
+    // the assignment rather than the whole line – the protected fact is unchanged and is exactly what
+    // it always was: the shell routes to 'week' off the SHARED predicate, never off a hand-copy.
+    expect(app).toContain("recapExists(snap)) tab.value = 'week'")
+    expect(app).toContain("if ((advanced || runClosed) && recapExists(snap))")
     // ...and it must be an ADVANCE of the SAME career, not merely a higher week number. `week` is
     // `snapshot?.week ?? 0`, so the first snapshot of a load reads as 0 -> N; the first draft of this
     // fix opened last week's story on every app start because of it. Caught in the browser.
-    expect(app).toContain('const advanced = snap.careerId === seenCareerId && snap.week > seenWeek')
+    expect(app).toContain('const sameCareer = snap.careerId === seenCareerId')
+    expect(app).toContain('const advanced = sameCareer && snap.week > seenWeek')
+  })
+
+  // ===========================================================================
+  // W4 — THE RECAP COMES HOME WITH HER. The owner, 30.07: «Я предлагаю ставить week recap сразу
+  // после турнира, как будто домой едем», and, separately, «после турнира не появился week recap».
+  //
+  // W1's trigger is an ADVANCE, and an advance that reaches a tournament comes back with `pending`
+  // set – so there was no story on that snapshot and no advance left to fire on once the flow was
+  // finished. The week's story rode the NEXT tick, a week late, or never arrived at all.
+  // ===========================================================================
+  it('W4 — the tournament run CLOSING is the second door, and it cannot fire on a load', () => {
+    // set -> null on the same career: the finale's Continue (or a post-deadline withdrawal).
+    expect(app).toContain("const runClosed = sameCareer && seenPendingId !== null && !snap.pending")
+    // ...tracked explicitly, exactly like the week, so `undefined -> null` on the first snapshot of a
+    // LOAD is not a close. This is the same trap W1 was caught by in the browser.
+    expect(app).toContain('let seenPendingId: string | null = null')
+    expect(app).toContain('seenPendingId = snap.pending?.eventId ?? null')
+    // ...and a career switch / a fresh career resets it with the rest of the watermark.
+    const reset = app.slice(app.indexOf('if (!snap) {'), app.indexOf('const sameCareer'))
+    expect(reset).toContain('seenPendingId = null')
+  })
+
+  it('W4 — the two takeovers still cannot both be up: the flow renders on the same `pending`', () => {
+    // The old way of keeping them apart was deleting the week's story outright (the exclusion in
+    // composables/weekRecap.ts). The way they are kept apart NOW is that the flow's own `v-if` is the
+    // very fact the story's gate refuses on, so the flow has already unmounted on the snapshot that
+    // opens the story.
+    expect(app).toContain('<TournamentFlow v-if="game.snapshot?.pending && !tournamentHidden"')
+    // ...and the deleted clause is gone from the RULE, not merely bypassed. Read the function body,
+    // not the file: the note above it quotes the deleted line verbatim on purpose, so that whoever
+    // finds this next knows what used to be here and why it went.
+    const rule = read('../src/composables/weekRecap.ts')
+    const body = rule.slice(rule.indexOf('export function recapExists'), rule.indexOf('/** The This-week tab'))
+    expect(body).toContain('return !snap.pending')
+    expect(body).not.toContain('snap.events')
   })
 
   it("the story's × is a real close: it silences the week AND goes back to Home", () => {

@@ -210,25 +210,57 @@ watch(tab, (t) => {
 // week's story every time the app started – caught in the browser, on the very first pass. So the
 // pair (career, week) is tracked explicitly: the story opens when THE SAME career moves FORWARD,
 // which is a tick and nothing else. A load, a career switch and a fresh career all fail that test.
+//
+// --- W4: ...AND A TOURNAMENT WEEK'S STORY OPENS WHEN THE DRIVE HOME STARTS ------------------------
+//
+// The owner, 30.07: «Я предлагаю ставить week recap сразу после турнира, как будто домой едем» – and,
+// separately, «после турнира не появился week recap». Both are one bug and W1's own trigger is half
+// of it: an advance that reaches a tournament comes back with `pending` set, `recapExists` is false
+// on that snapshot (the flow owns the week), and by the time the flow is finished there is no ADVANCE
+// left to fire on. The week's story therefore arrived a week late, riding the NEXT tick – or never,
+// if he took the tournament and then closed the app.
+//
+// So there is a SECOND door, at the other end of the same week: the tournament run CLOSING.
+// `snap.pending` is set the moment the tick reaches the event, survives the finale (`finished: true`)
+// and is cleared by `closeTournament` – the finale's own Continue, or the post-deadline withdrawal.
+// The transition set → null is exactly "the flow has let go of this week", and it is the beat he
+// described: the finale fades, the story opens, she is asleep in the car on the painting.
+//
+// ⚠ TRACKED, NOT WATCHED AS A TRANSITION SHORTHAND, for the same reason `week` is: a plain
+// `watch(() => snap.pending)` fires `undefined → null` on the first snapshot of a load and would open
+// last week's story on every app start, which is precisely the bug W1 was caught by in the browser.
+// `seenPendingId` starts at null and is only ever set from a snapshot of the SAME career, so a load,
+// a career switch and a fresh career all fail the test.
+//
+// ⚠ AND NO TWO TAKEOVERS COLLIDE. The flow is `v-if="game.snapshot?.pending && !tournamentHidden"`,
+// so it has already unmounted on the snapshot that clears `pending` – the tab under it is free. The
+// old way of keeping them apart (deleting the week's story outright – see composables/weekRecap.ts)
+// is what this replaces.
 let seenCareerId: string | null = null
 let seenWeek = -1
+let seenPendingId: string | null = null
 watch(
   () => game.snapshot,
   (snap) => {
     if (!snap) {
       seenCareerId = null
       seenWeek = -1
+      seenPendingId = null
       return
     }
-    const advanced = snap.careerId === seenCareerId && snap.week > seenWeek
+    const sameCareer = snap.careerId === seenCareerId
+    const advanced = sameCareer && snap.week > seenWeek
+    // The run the flow was holding has been let go: revealed to the end and closed, or withdrawn.
+    const runClosed = sameCareer && seenPendingId !== null && !snap.pending
     seenCareerId = snap.careerId
     seenWeek = snap.week
+    seenPendingId = snap.pending?.eventId ?? null
     // The advance can resolve a week WHILE the tab is up – the player is looking at the fresh
     // recap, so it is seen the moment it lands.
     if (tab.value === 'week') markThisWeekSeen()
-    // A tournament week has no story (recapExists) and its own flow reports it; a paused reveal has
-    // not finished being a week yet. Both fall out of the predicate rather than being listed here.
-    if (advanced && recapExists(snap)) tab.value = 'week'
+    // A paused reveal has not finished being a week yet; that falls out of the predicate rather than
+    // being listed here, and is the reason `runClosed` needs a door of its own.
+    if ((advanced || runClosed) && recapExists(snap)) tab.value = 'week'
   },
 )
 
