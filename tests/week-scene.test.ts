@@ -99,6 +99,7 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   vacationPackageId: null,
   trainPct: 75,
   knockChoice: null,
+  birthdayAge: null,
   knockPart: null,
   ...over,
 })

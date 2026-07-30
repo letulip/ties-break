@@ -150,6 +150,7 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
+      birthdayAge: null,
       knockPart: null,
       ...over,
     })
@@ -236,6 +237,7 @@ function makeFacts(input: {
     trainPct: 75,
     // W4: no knock on this fixture - the default week is one with nothing wrong with her.
     knockChoice: null,
+    birthdayAge: null,
     knockPart: null,
     fundsPressure: fundsPressureOf(input.fundsCents ?? 50_000_00),
     freshMilestone: null,
@@ -301,6 +303,7 @@ function claimViolation(c: DiaryClaims, f: DiaryFacts): string | null {
   if (c.rankClimbed && !(f.rankClimbed && f.runPointsThisWeek > 0)) return 'claims an earned rank climb'
   if (c.angry && f.emotion !== 'angry') return 'claims the anger crossing'
   if (c.injured && f.injured === null) return 'claims an injury'
+  if (c.birthday && f.birthdayAge === null) return 'claims a birthday'
   // R14-1: strictly stronger than `injured` – the line asserts the week it HAPPENED. Spelled here
   // independently of engine/diary.ts's `justHurt`, like every other claim in this function.
   if (c.justHurt && !(f.injured !== null && f.injured.weeksRemaining === f.injured.totalWeeks)) {

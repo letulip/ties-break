@@ -10,6 +10,7 @@ import {
   injuryTau,
   ageInjuryFactor,
   consecutivePlayFactor,
+  kidAgeYears,
   playedWeeksInTrailing4,
   toSnapshot,
   financeWindow,
@@ -718,15 +719,34 @@ describe('C8 — age curve', () => {
     expect(ageInjuryFactor(16)).toBeGreaterThan(ageInjuryFactor(14)) // the peak is real
   })
 
-  it('effective tau at age 16 vs age 14 differs by exactly the factor ratio', () => {
-    const w = createWorld('c8-tau')
-    w.physioActive = false
-    w.condition = 60
-    w.week = 0 // age 14
-    const tau14 = injuryTau(w)
-    w.week = 104 // age 16
-    const tau16 = injuryTau(w)
-    expect(tau16 / tau14).toBeCloseTo(ageInjuryFactor(16) / ageInjuryFactor(14), 10)
+  it('effective tau two seasons apart differs by exactly the age-factor ratio', () => {
+    // ⚠ RE-AIMED, AND THE OLD TITLE WAS THE BUG THE OWNER FOUND IN THE MODEL. It read "age 16 vs age 14"
+    // and set `w.week = 0` with the comment `// age 14` - but `DEFAULT_PROFILE.birthMonth` is JUNE, and a
+    // June girl in the 14s band is THIRTEEN in the January the career opens in. The test was assuming the
+    // band and the girl are the same number, which is exactly what world.ts's age note now separates.
+    //
+    // The guarded fact - `injuryTau` applies the age curve and nothing else between two weeks - is
+    // unchanged and now stated in terms of her REAL ages, so it holds for any birthday instead of only for
+    // a January one. Both birthdays are swept, and the January case preserves the original literal reading.
+    for (const birthMonth of [1, 6, 12]) {
+      const w = createWorld('c8-tau', { ...DEFAULT_PROFILE, birthMonth })
+      w.physioActive = false
+      w.condition = 60
+      w.week = 0
+      const early = injuryTau(w)
+      const ageEarly = kidAgeYears(0, birthMonth)
+      w.week = 104
+      const late = injuryTau(w)
+      const ageLate = kidAgeYears(104, birthMonth)
+      expect(ageLate - ageEarly, `${birthMonth}: two seasons is two years`).toBe(2)
+      expect(late / early, `birthMonth ${birthMonth}`).toBeCloseTo(
+        ageInjuryFactor(ageLate) / ageInjuryFactor(ageEarly),
+        10,
+      )
+    }
+    // and the owner's own case, spelled out: a December girl really is 13 in the opening January
+    expect(kidAgeYears(0, 12)).toBe(13)
+    expect(kidAgeYears(0, 1)).toBe(14)
   })
 
   it('Monte-Carlo direction: more onsets in the age-16 window than the age-14 window', () => {

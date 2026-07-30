@@ -263,6 +263,7 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
+      birthdayAge: null,
       knockPart: null,
     ...over,
   })
@@ -596,7 +597,7 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
       seed: 's', week: 11, kidId: KID_ID, startAgeYears: 14, condition: 80, fundsCents: 100_000_00,
       injury: null, events: [], lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
-      trainPct: 75, knockChoice: null, knockPart: null, ...over,   // ⚠ W2/W4: unread here
+      trainPct: 75, knockChoice: null, knockPart: null, birthdayAge: null, ...over,   // ⚠ W2/W4: unread here
     })
     const away = assembleDiaryFacts(view({ events: trip(11, 'national') })) // ⚠ W4: the view's own week
     expect(away.travelHomeScene).not.toBeNull()
@@ -856,7 +857,8 @@ describe('ui/travel-set — on a real career', () => {
       injury: null, events: trip(11, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
       trainPct: 75,   // ⚠ W2: the plan, unread here
-      knockChoice: null, knockPart: null,   // ⚠ W4: no knock on this view
+      knockChoice: null,
+      birthdayAge: null, knockPart: null,   // ⚠ W4: no knock on this view
     }
     expect(buildDiarySnapshot(view)).toEqual(buildDiarySnapshot(view))
     expect(buildDiarySnapshot(view).travelNote).not.toBeNull()

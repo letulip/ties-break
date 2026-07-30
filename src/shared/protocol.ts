@@ -869,6 +869,14 @@ export interface DiaryFacts {
   /** W4: where the live knock is, on exactly the weeks `knockChoice` is non-null. Null together with
    *  it by construction – the note pool needs the part to name it. */
   knockPart: string | null
+  /** THE AGE SHE TURNS THIS WEEK, or null on the other fifty-one (owner, 30.07). Derived from her birth
+   *  month against the calendar - no schema, and it cannot disagree with `kidAgeExact` because both read
+   *  the same two facts.
+   *
+   *  It is a NUMBER rather than a boolean because the age is the point. A December girl turning fourteen in
+   *  the last month of a season she played as a thirteen-year-old is the relative-age story told in one
+   *  line, and it is where the player first meets it. */
+  birthdayAge: number | null
 }
 
 /** THE JOURNEY HOME (owner, 29.07: «sleepy показываем рандомно после выездов на турниры в конце на

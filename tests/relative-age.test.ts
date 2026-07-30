@@ -28,13 +28,21 @@ import {
   SKILL_POINTS_PER_YEAR,
 } from '../src/engine/development'
 import {
+  ageAtWeek,
+  birthdayTurning,
+  birthdayWeek,
   closeTournament,
   createWorld,
   decideKnock,
+  kidAgeExact,
+  kidAgeYears,
   pendingKnock,
   skipTournament,
   tickWeek,
+  toSnapshot,
 } from '../src/engine/world'
+import { DIARY_POOL, WEEK_NOTES } from '../src/engine/diary'
+import { weekMonth } from '../src/shared/dates'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 
@@ -53,6 +61,87 @@ function levelAfter(seed: string, birthMonth: number, weeks: number): number {
   }
   return SKILL_KEYS.reduce((s, k) => s + world.skills[k], 0)
 }
+
+// =================================================================================================
+// THE BAND AND THE GIRL – the owner's second question, 30.07
+// =================================================================================================
+//
+// «девочка, родившаяся в декабре, по идее, в этой возрастной группе должна на момент января иметь возраст
+// 13 лет ... Или нет?» - yes, and this is where that is pinned. Tennis bands by BIRTH YEAR and runs
+// January to November, so a December girl in the 14s is genuinely thirteen for eleven months of it.
+describe('the band and the girl are two different numbers', () => {
+  it('⚠ A DECEMBER GIRL IS 13 IN THE OPENING JANUARY, and a January girl is 14', () => {
+    expect(kidAgeYears(0, 12)).toBe(13)
+    expect(kidAgeYears(0, 1)).toBe(14)
+    // ...and the exact ages bracket a year, which is the eleven months the whole effect is about
+    expect(kidAgeExact(0, 1) - kidAgeExact(0, 12)).toBeCloseTo(11 / 12, 6)
+  })
+
+  it('the BAND is birth-month-free, because the coach roster is derived from it', () => {
+    // ⚠ THE PROPERTY THAT PROTECTS EVERY EXISTING SAVE. `coachById(seed, ageAtWeek(week), coachId)` builds
+    // the roster from the age with nothing persisted but the chosen id. If the age learned about birthdays,
+    // every December career's roster would re-roll and their hired coach would resolve to somebody else.
+    expect(ageAtWeek(0)).toBe(14)
+    expect(ageAtWeek(52)).toBe(15)
+    // and the same career, two birthdays, must offer the same coach
+    const jan = createWorld('band-roster', { ...DEFAULT_PROFILE, birthMonth: 1 })
+    const dec = createWorld('band-roster', { ...DEFAULT_PROFILE, birthMonth: 12 })
+    expect(toSnapshot(dec).coachMarket.map((c) => c.id)).toEqual(toSnapshot(jan).coachMarket.map((c) => c.id))
+  })
+
+  it('she really does turn a year older, once, on her own month', () => {
+    for (const birthMonth of [1, 6, 12]) {
+      const turns = [...Array(52).keys()].filter((w) => birthdayTurning(w, birthMonth) !== null)
+      expect(turns.length, `birthMonth ${birthMonth}: one birthday a season`).toBe(1)
+      const w = turns[0]
+      expect(weekMonth(w), 'and it lands in her own month').toBe(birthMonth)
+      // the age she turns is the age she then is
+      expect(birthdayTurning(w, birthMonth)).toBe(kidAgeYears(w, birthMonth))
+    }
+  })
+
+  it('the birthday reaches the feed, the scrap AND the photo card', () => {
+    // The owner asked for both: «где-то в записочках ... может на home тоже про это писать».
+    const birthMonth = 3
+    const world = createWorld('bday-surfaces', { ...DEFAULT_PROFILE, birthMonth, coachTier: 'self' })
+    const rng = rngFromSeed(world.seed)
+    const target = birthdayWeek(0, birthMonth)!
+    let seen = false
+    for (let w = 0; w < 60; w++) {
+      tickWeek(world, rng)
+      if (pendingKnock(world)) decideKnock(world, 'rest')
+      while (world.pendingTournament) {
+        if (!world.pendingTournament.finished) skipTournament(world)
+        closeTournament(world)
+      }
+      if (world.week !== target) continue
+      seen = true
+      const snap = toSnapshot(world)
+      expect(snap.diary.facts.birthdayAge, 'the facts carry the age').not.toBeNull()
+      // the feed
+      const feed = world.events.filter((e) => e.week === target).map((e) => e.text).join(' | ')
+      expect(feed, 'the feed says it').toMatch(/she is \w+ this week/i)
+      // ...and at least one of the two written surfaces speaks, whatever else the week was
+      const spoke = [snap.diary.weekNote, snap.diary.photoLine].filter((x) => x !== null)
+      expect(spoke.length, 'a birthday must not pass in silence').toBeGreaterThan(0)
+    }
+    expect(seen, 'the fixture has to reach her birthday').toBe(true)
+  })
+
+  it('the birthday copy obeys the app rules and never names a body part', () => {
+    const lines = [...DIARY_POOL.filter((p) => p.claims.birthday), ...WEEK_NOTES.filter((n) => n.claims.birthday)]
+    expect(lines.length, 'the bands have to exist').toBeGreaterThan(4)
+    const f = { birthdayAge: 15, injured: { kind: 'wrist strain', weeksRemaining: 3, totalWeeks: 6 } }
+    for (const l of lines) {
+      const text = typeof l.text === 'function' ? l.text(f as never) : (l.text ?? '')
+      expect(text, `long dash in "${text}"`).not.toContain('—')
+      expect(text, `Cyrillic in "${text}"`).not.toMatch(/[Ѐ-ӿ]/)
+      expect(text, `unresolved template in "${text}"`).not.toContain('undefined')
+      // ⚠ W6c's own rule, applied to the newest band: a birthday line has no business naming anatomy.
+      expect(text.toLowerCase(), `anatomy in "${text}"`).not.toMatch(/\b(leg|ankle|knee|wrist|shoulder|elbow)\b/)
+    }
+  })
+})
 
 describe('task 55 — the relative age effect', () => {
   it('⚠ SYMMETRIC: a random population of birth months is unbiased', () => {

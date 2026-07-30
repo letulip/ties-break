@@ -710,7 +710,14 @@ export const ECONOMY = {
     injuryChanceCap: 0.12,
     // Owner research 25.07 (docs/research/injury-stats-by-age.md): girl injury-age curve peaks at 16.
     // Mild by design – the base is already anchored to real junior prevalence (46-54%/season).
-    ageInjuryFactor: { 14: 0.9, 15: 1.05, 16: 1.2, 17: 1.05, 18: 0.95, default: 0.85 } as {
+    // ⚠ 13 IS EXPLICIT NOW, AND IT DELIBERATELY CHANGES NOTHING. A December-born girl is genuinely 13 for
+    // her first season (world.ts `kidAgeYears`), and before this the row did not exist - she fell through
+    // to `default`, which is the 19+ mature-body value, and 0.85 happened to be a plausible answer. An
+    // accident that produces the right number is still an accident: naming it at the same value makes it a
+    // decision, and stops a later re-tune of `default` (a rule about adults) from silently moving
+    // thirteen-year-olds. The shape peaks at 16, which is the growth spurt; 13 sits below 14 because she
+    // is pre-spurt and carrying smaller loads.
+    ageInjuryFactor: { 13: 0.85, 14: 0.9, 15: 1.05, 16: 1.2, 17: 1.05, 18: 0.95, default: 0.85 } as {
       [age: number]: number
       default: number
     },

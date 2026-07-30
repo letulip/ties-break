@@ -89,6 +89,7 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     // ⚠ W4 added `knockChoice`/`knockPart` (what a knock is doing to the week). Null here: this
     // fixture is a week with nothing wrong with her, which is what these suites are about.
     knockChoice: null,
+    birthdayAge: null,
     knockPart: null,
     fundsPressure: 'ok',
     freshMilestone: null,
@@ -134,6 +135,9 @@ const INJURIES: (DiaryFacts['injured'])[] = [
 function* sweepWeeks(): Generator<DiaryFacts> {
   const calendars: Partial<DiaryFacts>[] = [
     {},
+    // her birthday, which is a week like any other as far as the honesty pin is concerned - and has to be
+    // in the sweep or the new band would be unlicensed in every fixture and prove nothing.
+    { birthdayAge: 15 },
     { examsWeek: true },
     { offSeasonWeek: true },
     { vacationWeek: true },
@@ -203,6 +207,7 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // so a leg line on a wrist week is a failing test, which is exactly what shipped and what the owner
   // caught by reading.
   bodyGroup: (f, value) => f.injured !== null && bodyGroupOf(f.injured.kind) === value,
+  birthday: (f) => f.birthdayAge !== null,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {

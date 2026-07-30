@@ -45,6 +45,7 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     // ui/travel-set and is null on the same weeks, so the pair still says "she came home from nothing".
     travelHomeScene: null,
     travelHomeMood: null,
+    birthdayAge: null,
     week: 10,
     emotion: 'sad', // recomputed below
     resultFresh: true,
@@ -291,6 +292,7 @@ describe('R13-10 — the ordinary-week pool', () => {
     // R14-2 – a quiet week is a week she went nowhere. ⚠ The mood is null with the scene (ui/travel-set).
     travelHomeScene: null,
     travelHomeMood: null,
+    birthdayAge: null,
     week: 10,
     emotion: 'norm',
     resultFresh: false,

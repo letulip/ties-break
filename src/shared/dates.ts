@@ -33,6 +33,31 @@ function weekEnd(week: number): Ymd {
   return dateAtDay(week * 7 + 6)
 }
 
+/** THE CALENDAR MONTH the week's Monday falls in, 1-12.
+ *
+ *  Exported for the age model (world.ts `kidAgeExact`) and for her birthday. A REAL-CALENDAR fact about a
+ *  date, like `weekYear` below and with the same warning: it is not a season identity. The epoch is Monday
+ *  6 Jan 2031, so week 0 is January and the season's own week 1 is too - see the note on the season start
+ *  in docs/specs/relative-age.md. */
+export function weekMonth(week: number): number {
+  return weekStart(week).month + 1
+}
+
+/** The FIRST career week whose Monday falls in `month` of `year`, or null when that month is outside the
+ *  career's calendar. Used to find the week her birthday lands in.
+ *
+ *  Walks rather than computes: the epoch is a Monday and months are not week-aligned, so closed-form
+ *  arithmetic would be off by up to six days twelve times a year. A career is a few hundred weeks and this
+ *  is called once per season, so the loop is free. */
+export function firstWeekOfMonth(month: number, year: number): number | null {
+  for (let w = 0; w < 52 * 40; w++) {
+    const d = weekStart(w)
+    if (d.year === year && d.month + 1 === month) return w
+    if (d.year > year || (d.year === year && d.month + 1 > month)) return null
+  }
+  return null
+}
+
 /** The calendar year the week's Monday falls in. A REAL-CALENDAR fact about a date, and nothing
  *  more – it is NOT a season identity and must never be used as one (see `seasonYear` below and
  *  the note above WEEKS_IN_SEASON: it collides at season 5). Kept because the date range genuinely
