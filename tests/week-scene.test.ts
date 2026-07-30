@@ -37,13 +37,15 @@ import {
   bookVacation,
   closeTournament,
   createWorld,
+  decideKnock,
   enterEvent,
   KID_ID,
+  pendingKnock,
   skipTournament,
   tickWeek,
   toSnapshot,
 } from '../src/engine/world'
-import { weekSceneArtUrl, weekArtUrl } from '../src/art/weeks'
+import { weekSceneArtUrl, weekArtUrl, weekHomeArtUrl, WEEK_HOME_ART_STEMS } from '../src/art/weeks'
 import { portraitUrl, travelHomeUrl } from '../src/art/preload'
 import { rngFromSeed } from '../src/engine/rng'
 import { isOffSeasonWeek } from '../src/engine/season/calendar'
@@ -106,16 +108,93 @@ const scene = (over: Partial<DiaryWorldView> = {}, vacationPackageId: string | n
 
 const INJURY = { kind: 'ankle strain', weeksRemaining: 6, totalWeeks: 9 }
 
+/** W6: the school fortnight, read off the economy's own blackout table rather than written down here -
+ *  a re-tuned block moves these with it. `EXAM_BLOCK` is every week of the first block; `EXAM_WEEK` is
+ *  its opening week. */
+const EXAM_BLOCK: number[] = (() => {
+  const [lo, hi] = ECONOMY.availability.examWeeks[0]
+  return Array.from({ length: hi - lo + 1 }, (_, i) => lo + i)
+})()
+const EXAM_WEEK = EXAM_BLOCK[0]
+
 describe('W5 — the priority order, which is the only real design decision here', () => {
-  it('the four arms, each on a week that is only itself', () => {
+  // ⚠ RE-AIMED BY W6, from four arms to six. The guarded fact is unchanged and only widened: every arm
+  // fires on a week that is ONLY itself. `EXAM_WEEK` is a real offset out of the economy's own blackout
+  // table rather than a literal, so a re-tuned school fortnight moves the fixture with it.
+  it('the six arms, each on a week that is only itself', () => {
     // 1. she went somewhere and came back
     expect(scene({ events: trip(11, 'regional') }).kind).toBe('travel')
     // 2. she is out
     expect(scene({ injury: INJURY }).kind).toBe('rehab')
     // 3. the family went away
     expect(scene({ vacationWeek: true }, 'seaside').kind).toBe('vacation')
-    // 4. ...and everything else is the calendar's own frame
+    // 4. school took the fortnight
+    expect(scene({ week: EXAM_WEEK }).kind).toBe('exam')
+    // 5. she is at home with something sore
+    expect(scene({ knockChoice: 'rest', knockPart: 'ankle' }).kind).toBe('knock')
+    // 6. ...and everything else is the calendar's own frame
     expect(scene().kind).toBe('week')
+  })
+
+  it('W6: A PUSHED KNOCK IS A TRAINING WEEK, and gets no frame of its own', () => {
+    // The whole meaning of the branch is that she trains as planned, so `training` is not a compromise
+    // here - it is the correct picture. The scrap's push band carries the rest of it.
+    const s = scene({ knockChoice: 'push', knockPart: 'shoulder' })
+    expect(s.kind).toBe('week')
+    expect(weekSceneArtUrl(s)).toContain('training')
+    expect(weekSceneArtUrl(s)).not.toContain('chores')
+  })
+
+  it('W6: THE JOURNEY WINS over a rested knock – the rest week can land on a week she travelled', () => {
+    // ⚠ THE FACT THE WHOLE W6 ORDERING TURNS ON: the rest week is the week AFTER the arrival week, and
+    // nothing constrains what that week is. A rested knock does not block entries (it is not an injury),
+    // so she can be resting a wrist and still fly out. Same resolution as the injured journey.
+    expect(scene({ events: trip(11, 'j30'), knockChoice: 'rest', knockPart: 'wrist' }).kind).toBe('travel')
+  })
+
+  it('W6: THE LAYOFF WINS over both new arms – an injury takes the week, as it always has', () => {
+    expect(scene({ injury: INJURY, week: EXAM_WEEK }).kind).toBe('rehab')
+    expect(scene({ injury: INJURY, knockChoice: 'rest', knockPart: 'knee' }).kind).toBe('rehab')
+  })
+
+  it('W6: THE HOLIDAY WINS over a rested knock – he paid for that week', () => {
+    // Its painting is the closest thing the Season feed has to a receipt, and a sore ankle at the
+    // seaside is still the seaside. Same reason the holiday outranks the off-season.
+    const s = scene({ vacationWeek: true, knockChoice: 'rest', knockPart: 'ankle' }, 'seaside')
+    expect(s.kind).toBe('vacation')
+  })
+
+  it('W6: THE EXAM FORTNIGHT WINS over a rested knock – a BLOCK has to read as a block', () => {
+    // The exam block is TWO weeks and a rest week can only ever cover ONE of them, so a knock that
+    // outranked exams would draw the fortnight as two different things - ice on the sofa, then the
+    // racquet in the hall. That is the failure the off-season's fixed three-in-order exists to prevent.
+    const s = scene({ week: EXAM_WEEK, knockChoice: 'rest', knockPart: 'hip' })
+    expect(s.kind).toBe('exam')
+    // ...and BOTH weeks of the block draw the same picture, which is the point
+    const urls = new Set(EXAM_BLOCK.map((w) => weekSceneArtUrl(scene({ week: w }))))
+    expect(EXAM_BLOCK.length, 'the fixture has to be a real block, not one week').toBeGreaterThan(1)
+    expect(urls.size, 'the fortnight must not draw two different pictures').toBe(1)
+  })
+
+  it('W6: both new frames are HER AGE BAND, and the two painted bands really differ', () => {
+    // The same arithmetic the layoff band test uses: her start age plus the completed years, so +52*3
+    // is a girl of 17. `isExamWeek` reads the season offset, so the exam fixture stays an exam week.
+    const bandOf = (s: WeekScene) => ('stage' in s ? s.stage : null)
+    const at = (week: number, over: Partial<DiaryWorldView> = {}) =>
+      buildDiarySnapshot(view({ week, ...over })).scene
+    const cases: [WeekScene['kind'], number, Partial<DiaryWorldView>][] = [
+      ['exam', EXAM_WEEK, {}],
+      ['knock', 11, { knockChoice: 'rest', knockPart: 'ankle' }],
+    ]
+    for (const [kind, week, over] of cases) {
+      const young = at(week, over)
+      const teen = at(week + 52 * 3, over)
+      expect(young.kind, `${kind} at 14`).toBe(kind)
+      expect(teen.kind, `${kind} at 17`).toBe(kind)
+      expect(bandOf(young)).toBe('young')
+      expect(bandOf(teen)).toBe('teen')
+      expect(weekSceneArtUrl(young)).not.toBe(weekSceneArtUrl(teen))
+    }
   })
 
   it('THE JOURNEY WINS over the injury she came home with – the week she LIVED was the trip', () => {
@@ -225,6 +304,37 @@ describe('W5 — every arm names a file that is on disk', () => {
       expect(onDisk(weekSceneArtUrl({ kind: 'week', week: w })), `week ${w}`).toBe(true)
     }
   })
+
+  it('W6: the two at-home frames, ON EVERY BAND – the clamp is what makes that true', () => {
+    // Two frames are painted and `PortraitStage` has five members, so three of the five reach a file
+    // only through `weekHomeBand`. That clamp is the difference between an unreachable branch and a
+    // 404 on the day the prologue or the handover puts her outside 14-19, so it is swept rather than
+    // reasoned about.
+    for (const kind of ['exam', 'knock'] as const) {
+      for (const stage of ['jun', 'young', 'teen', 'adult', 'milf'] as const) {
+        const url = weekSceneArtUrl({ kind, week: 11, stage })
+        expect(url).toBe(weekHomeArtUrl(kind, stage))
+        expect(onDisk(url), url).toBe(true)
+      }
+    }
+  })
+
+  it('W6: BOTH DIRECTIONS – every at-home file on disk is reachable, and vice versa', () => {
+    // The check `WEEK_ART` and `VACATION_ART_STEMS` already get: a stem nothing can request is dead
+    // weight in every player's download, and a stem with no file is a 404. `WEEK_HOME_ART_STEMS` is
+    // the list, and it is derived from the same table the URL builder spells, so the two cannot drift.
+    const reachable = new Set(
+      (['exam', 'knock'] as const).flatMap((kind) =>
+        (['jun', 'young', 'teen', 'adult', 'milf'] as const).map((stage) =>
+          weekHomeArtUrl(kind, stage).replace(/^.*\/(?=[^/]+$)/, '').replace(/\.webp$/, ''),
+        ),
+      ),
+    )
+    expect([...WEEK_HOME_ART_STEMS].sort()).toEqual([...reachable].sort())
+    for (const stem of WEEK_HOME_ART_STEMS) {
+      expect(onDisk(`${import.meta.env.BASE_URL}images/weeks/${stem}.webp`), stem).toBe(true)
+    }
+  })
 })
 
 describe('W5 — a live season: every week has a painting, and it is the week\'s own', () => {
@@ -234,6 +344,7 @@ describe('W5 — a live season: every week has a painting, and it is the week\'s
     const kinds = new Set<WeekScene['kind']>()
     let rehabWeeks = 0
     let localRoad = 0
+    let examWeeks = 0
     for (let i = 0; i < 104; i++) {
       for (const e of world.season) {
         if (e.week > world.week && world.week <= e.deadlineWeek && !world.entries.includes(e.id)) {
@@ -262,6 +373,11 @@ describe('W5 — a live season: every week has a painting, and it is the week\'s
         rehabWeeks++
       }
       if (s.kind === 'vacation') expect(snap.diary.facts.vacationWeek).toBe(true)
+      if (s.kind === 'exam') {
+        expect(snap.diary.facts.examsWeek, `week ${snap.week}`).toBe(true)
+        examWeeks++
+      }
+      if (s.kind === 'knock') expect(snap.diary.facts.knockChoice, `week ${snap.week}`).toBe('rest')
       // the LOCAL journey home, which is what the owner's correction bought (bus or car, never air)
       if (s.kind === 'travel' && world.events.some((e) => e.week === snap.week && e.match?.eventId?.endsWith('-local'))) {
         expect(['bus', 'car'], `a Local Open came home by ${s.scene}`).toContain(s.scene)
@@ -272,6 +388,12 @@ describe('W5 — a live season: every week has a painting, and it is the week\'s
     expect(kinds.has('travel'), 'no journeys home in two seasons').toBe(true)
     expect(kinds.has('week'), 'no ordinary weeks in two seasons').toBe(true)
     expect(rehabWeeks + localRoad, 'the two arms this slice added must be reachable').toBeGreaterThan(0)
+    // W6: the exam fortnight is a CALENDAR fact, so two seasons owe us two blocks of it - four weeks
+    // that used to draw ladder drills. This is the arm that needed no luck at all, which is exactly why
+    // it is asserted here rather than in a fixture.
+    expect(examWeeks, 'two seasons of exam blackouts must paint the exam frame').toBe(
+      2 * ECONOMY.availability.examWeeks.reduce((n, [lo, hi]) => n + (hi - lo + 1), 0),
+    )
   })
 
   it('a booked holiday really paints ITS OWN frame on the week it resolves', () => {
@@ -298,6 +420,41 @@ describe('W5 — a live season: every week has a painting, and it is the week\'s
       seen = true
     }
     expect(seen, 'the fixture has to actually reach the booked week').toBe(true)
+  })
+
+  it('W6: a knock he RESTED really paints the at-home frame on the week she sat out', () => {
+    // The sweep above cannot reach this arm and that is not an oversight: it never answers the prompt,
+    // and an undecided knock keeps `facts.knockChoice` null forever (world.ts:4117 gates on the choice).
+    // So this walks a career and answers every one, the way `tests/knock.test.ts playAnswering` does.
+    //
+    // ⚠ AND IT ASSERTS THE WEEK, NOT JUST THE KIND. The rest week is the week AFTER the arrival week, so
+    // a wire-up that painted the frame on the week the prompt appeared would pass a kind check and be
+    // wrong by one week - she is still training on that Friday.
+    const world = createWorld('week-scene-knock')
+    const rng = rngFromSeed(world.seed)
+    let restFrames = 0
+    let decidedAt = -1
+    for (let i = 0; i < 156; i++) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      if (pendingKnock(world)) {
+        decideKnock(world, 'rest')
+        decidedAt = world.week
+        // the week he decided is a training week she finished - it must NOT wear the at-home frame
+        expect(toSnapshot(world).diary.scene.kind, `decided in week ${world.week}`).not.toBe('knock')
+        continue
+      }
+      const snap = toSnapshot(world)
+      if (snap.diary.scene.kind !== 'knock') continue
+      expect(snap.week, 'the frame belongs to the week AFTER the decision').toBe(decidedAt + 1)
+      expect(snap.diary.facts.knockChoice).toBe('rest')
+      expect(weekSceneArtUrl(snap.diary.scene)).toContain('chores-')
+      restFrames++
+    }
+    expect(restFrames, 'three seasons of resting every knock must paint it at least once').toBeGreaterThan(0)
   })
 
   it('world.ts really passes the booking through – the one optional field on the view', () => {

@@ -13,6 +13,11 @@
 //   * `training` is EVERY in-year week with no tournament in it - a training week, an exam week,
 //     any week the calendar left empty. She is on court or she is not competing; one frame covers
 //     all of it, and a frame she sees forty times a season should be quiet enough to disappear.
+//     ⚠ THE EXAM CLAUSE IS SPENT (W6, and by the same owner): he painted `study-*`, so the school
+//     fortnight has its own frame and no longer borrows this one. The rest of the sentence stands -
+//     `training` is still every OTHER in-year week, and it is still meant to disappear. What killed
+//     the clause is that the frame was not generic on an exam week, it was wrong: she cannot enter
+//     anything that fortnight, and the picture had her doing ladder drills.
 //   * `off-1/2/3` are THE OFF-SEASON, one apiece. The block is exactly three weeks and there are
 //     exactly three paintings, so each week wears its own: the fire, the frozen lake, the warm
 //     court. In order, every year, by the week's position in the block - a fixed mapping, not a
@@ -105,6 +110,45 @@ export const VACATION_ART_STEMS: readonly string[] = Object.values(VACATION_ART)
 
 import { portraitUrl, travelHomeUrl } from './preload'
 import type { WeekScene } from '../shared/protocol'
+import type { PortraitStage } from '../shared/avatarEmotion'
+
+// --- W6: THE TWO WEEKS SHE SPENDS AT HOME (owner's art, 30.07) ------------------------------------
+//
+// `study-*` the exam fortnight, `chores-*` the week a knock is rested. Both are pictures of HER, so
+// both are band-scoped like the layoff painting - and the reason the exam frame exists at all is that
+// `training` was WRONG on it, not merely generic: a week she cannot enter anything drew her doing
+// ladder drills. The knock frame answers the owner's own report on the live trace: «Неделя с заминкой
+// показывает заминку в записке и в сводке - но картинка ей противоречит».
+//
+// ⚠ TWO BANDS PAINTED, FIVE BANDS IN `PortraitStage`, SO THIS CLAMPS - the same call `weekArtStem`
+// makes for the off-season ("the last one repeats instead of the card rendering a 404"), and NOT the
+// call `avatarCropPath` makes (no clamp, because all five of its bands were cut). A career runs 14→19
+// today, which is `young` and `teen` and nothing else, so the clamp is unreachable in the shipped game
+// and exists for the two doors already on the board: the childhood prologue below `young`, and the
+// handover at 19 that may follow her past it.
+const WEEK_HOME_BANDS = ['young', 'teen'] as const
+type WeekHomeBand = (typeof WEEK_HOME_BANDS)[number]
+
+/** Which of the two painted bands a portrait stage reads as. `jun` borrows `young` (the prologue's own
+ *  frames are not painted); everything from `teen` up borrows `teen`. */
+function weekHomeBand(stage: PortraitStage): WeekHomeBand {
+  return stage === 'jun' || stage === 'young' ? 'young' : 'teen'
+}
+
+/** The two at-home frames, by what the week WAS. Named for the picture, like the vacation frames -
+ *  `study` is a girl revising, `chores` is a girl at home with nothing to do, and neither name is an
+ *  engine word. */
+const WEEK_HOME_ART = { exam: 'study', knock: 'chores' } as const
+
+/** The frame for one at-home week. Exported so the preloader and the test can spell it the same way. */
+export function weekHomeArtUrl(kind: keyof typeof WEEK_HOME_ART, stage: PortraitStage): string {
+  return `${import.meta.env.BASE_URL}${WEEK_DIR}${WEEK_HOME_ART[kind]}-${weekHomeBand(stage)}.webp`
+}
+
+/** Every at-home frame that ships, by stem - the both-directions check `WEEK_ART` gets. */
+export const WEEK_HOME_ART_STEMS: readonly string[] = Object.values(WEEK_HOME_ART).flatMap((s) =>
+  WEEK_HOME_BANDS.map((b) => `${s}-${b}`),
+)
 
 /** The painting for one week, from the engine's `WeekScene`. Total, and never a 404. */
 export function weekSceneArtUrl(scene: WeekScene): string {
@@ -117,6 +161,9 @@ export function weekSceneArtUrl(scene: WeekScene): string {
       return portraitUrl(scene.stage, 'rehab')
     case 'vacation':
       return vacationArtUrl(scene.packageId) ?? weekArtUrl(scene.week)
+    case 'exam':
+    case 'knock':
+      return weekHomeArtUrl(scene.kind, scene.stage)
     case 'week':
       return weekArtUrl(scene.week)
   }

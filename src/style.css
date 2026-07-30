@@ -2533,12 +2533,11 @@ tr.kid-row td {
   border: 1px solid var(--accent);
 }
 
-.recap-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
+/* ⚠ `.recap-head`, `.recap-flavor` and `.recap-figures` WENT WITH THE ROUND-5 CARD THEY DRESSED, and
+   the two survivors below are why the sweep waited for the wave to land. The U2 rebuild of screen D
+   replaced the card's head with `Card`'s own and its figures with the day dots + the painting, so those
+   three had zero references in src/ - while `.recap-card` (the frame) and `.recap-dot` (the day dots)
+   are load-bearing and still on the card. Deleting by prefix would have taken both. */
 
 .recap-dot {
   width: 12px;
@@ -2553,17 +2552,6 @@ tr.kid-row td {
 
 .recap-dot.rest {
   background: var(--muted);
-}
-
-.recap-flavor {
-  font-size: 13.5px;
-  margin: 0 0 8px;
-}
-
-.recap-figures {
-  display: flex;
-  gap: 16px;
-  font-size: 13.5px;
 }
 
 /* --- Round 5: Season tab accent dot ------------------------------------------ */
@@ -2714,23 +2702,8 @@ tr.kid-row td {
   color: var(--muted);
 }
 
-.recap-legend {
-  font-size: 11.5px;
-  color: var(--muted);
-  margin: 0 0 8px;
-}
-
-.recap-key {
-  font-size: 11px;
-}
-
-.recap-key.train {
-  color: var(--accent);
-}
-
-.recap-key.rest {
-  color: var(--muted);
-}
+/* ⚠ `.recap-legend` and `.recap-key{,.train,.rest}` went the same way: the day dots carry their own
+   `.recap-day-letter` row now, so the separate legend under them had nothing left to label. */
 
 /* --- Round 7 item 2: Money breakdown (donut + category rows) ----------------- */
 

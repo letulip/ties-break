@@ -121,6 +121,7 @@ import { axisReadings, buildRadar, buildTrainingRead, type RadarWorldView } from
 import {
   buildKnockPrompt,
   drawKnock,
+  knockGoverns,
   knockLive,
   knockRestWeek,
   knockTauFactor,
@@ -4114,8 +4115,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must
     // still hold for the week the knock arrived in (its note is about the training that caused it).
-    knockChoice: knockLive(world.knock, world.week) ? world.knock!.choice : null,
-    knockPart: knockLive(world.knock, world.week) && world.knock!.choice !== null ? world.knock!.part : null,
+    //
+    // ⚠ W6 MADE THAT SENTENCE TRUE. It was the intent and it only held while the knock was UNANSWERED:
+    // the instant he chose, `knockLive` was already true on the ARRIVAL week, so week N's own story
+    // started describing a decision that governs week N+1 – she was drawn at home, and captioned «A week
+    // off the ankle», about a week she spent on court. `knockGoverns` is the same window the tick
+    // actually charges (see its note: growWeek at 3b, rollKnock at 3c), so the frame and the words now
+    // agree with the arithmetic instead of with each other.
+    knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,
+    knockPart: knockGoverns(world.knock, world.week) ? world.knock!.part : null,
   })
   // THE SKILLS RADAR'S VIEW OF HER, assembled ONCE and read twice - by the contour (`buildRadar`)
   // and by the Weekly Story's training line (`buildTrainingRead`). Hoisted rather than inlined

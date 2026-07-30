@@ -272,6 +272,26 @@ export function knockRestWeek(knock: Knock | null, week: number): boolean {
   return knockLive(knock, week) && knock!.choice === 'rest'
 }
 
+/**
+ * Is `week` one of the weeks THE DECISION GOVERNS - i.e. `sinceWeek + 1 .. untilWeek`, answered, and
+ * excluding the knock's own arrival week?
+ *
+ * ⚠ THE ARRIVAL WEEK IS NOT ONE OF THEM, and the tick's own order is the proof rather than the
+ * intention: `growWeek` (step 3b) runs BEFORE `rollKnock` (step 3c), so the week the knock arrives on is
+ * banked at the full rate with `world.knock` still null. She trained six days and came off court sore on
+ * the Friday. The cost - and the loaded roll - start the week after.
+ *
+ * IT EXISTS BECAUSE `knockLive` IS TRUE ON THE ARRIVAL WEEK TOO (`week <= untilWeek` and
+ * `untilWeek >= sinceWeek`), which is harmless for the two engine knobs by accident of that ordering and
+ * NOT harmless for anything that DESCRIBES the week. W6 found it with a picture: the moment he answered
+ * "rest", the still-current week-N story started drawing her at home and captioning it «A week off the
+ * ankle» - about a week she spent on court. The scrap had been doing it since W4. One predicate, so the
+ * frame and the words cannot disagree about which week the decision is about.
+ */
+export function knockGoverns(knock: Knock | null, week: number): boolean {
+  return knockLive(knock, week) && knock!.choice !== null && week > knock!.sinceWeek
+}
+
 // =================================================================================================
 // 5. WHAT THE PLAYER READS
 // =================================================================================================

@@ -43,7 +43,8 @@ import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
-import { vacationArtUrl, weekArtUrl } from '../../art/weeks'
+import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
+import { portraitStage } from '../../shared/avatarEmotion'
 import { rngFromSeed } from '../../engine/rng'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
@@ -146,10 +147,22 @@ const PHASE_STRIP = SURFACE_BLOCKS.map((b) => ({
 }))
 const activePhaseId = computed(() => surfaceBlockFor(week.value).id)
 
-/** The painting for a week with no tournament. Every such week has one - training and exams share
- *  the on-court frame, the three off-season weeks each wear their own (src/art/weeks.ts). */
+/** Her age band, for the band-scoped exam frame. The same one-line derivation `headerAvatar` makes off
+ *  `ageYears`, and not `useKidEmotion` - this screen wants the BAND and none of the emotion machinery. */
+const kidStage = computed(() => portraitStage(game.snapshot?.ageYears ?? 14))
+
+/** The painting for a week with no tournament. Every such week has one: the three off-season weeks
+ *  each wear their own, the exam fortnight wears `study-*` (W6), everything else is the on-court frame
+ *  (src/art/weeks.ts).
+ *
+ *  ⚠ HER CURRENT BAND, ON A ROW THAT MAY BE UP TO CALENDAR_HORIZON WEEKS AWAY, and that is the right
+ *  trade rather than an oversight: the band boundary is `young`→`teen` at 17, so the only rows this can
+ *  get wrong are ones inside a few weeks of a birthday, and the alternative is a screen deriving her
+ *  age at a future week - a fact the snapshot does not carry and the planner has no business computing.
+ *  The recap card, which is the surface that shows a week she actually LIVED, takes its band from the
+ *  engine's own `WeekScene` and is exact. */
 function weekArt(row: CalendarRow): string {
-  return weekArtUrl(row.week)
+  return row.kind === 'exam' ? weekHomeArtUrl('exam', kidStage.value) : weekArtUrl(row.week)
 }
 /** R12-1/14 kept: "Exams" is the owner's own word for it. */
 // THE BOOKED FAMILY WEEK's painting, by package (owner, 29.07). Null when a package has no frame

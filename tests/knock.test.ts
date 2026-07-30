@@ -449,11 +449,23 @@ describe('W4 — the plan decides how often he is asked', () => {
     // An undecided knock is not doing anything to the week yet – it is stopping the NEXT one. So the
     // arriving week's own note is still about the training that caused it, and `knockChoice` on the
     // facts is null. (The `rest`/`push` notes belong to the weeks the decision governs.)
+    //
+    // ⚠ RE-AIMED BY W6, AND ONLY TIGHTENED – THE ASSERTION USED TO CONTRADICT THE SENTENCE ABOVE IT.
+    // The parenthesis was already the rule; the last two lines pinned the opposite, asserting `'rest'`
+    // on week 14 the moment he answered. That is the arrival week: `growWeek` (3b) banked it at the full
+    // rate before `rollKnock` (3c) even drew the knock, so nothing was charged and she spent it on court.
+    // Reading `'rest'` there is what drew her at home and captioned it «A week off the elbow» about a
+    // week of drills. The guarded fact is unchanged and now holds through the decision as well: week 14
+    // is silent whatever he chooses, and week 15 is where the choice speaks.
     const w = createWorld('facts-1')
     w.week = 14
     w.knock = { part: 'elbow', sinceWeek: 14, repeat: false, choice: null, untilWeek: 14 }
     expect(toSnapshot(w).diary.facts.knockChoice).toBeNull()
     decideKnock(w, 'rest')
+    expect(toSnapshot(w).diary.facts.knockChoice, 'the arrival week stays silent AFTER the answer').toBeNull()
+    expect(toSnapshot(w).diary.facts.knockPart).toBeNull()
+    // ...and the week the decision actually governs is where it speaks
+    w.week = 15
     expect(toSnapshot(w).diary.facts.knockChoice).toBe('rest')
     expect(toSnapshot(w).diary.facts.knockPart).toBe('elbow')
   })

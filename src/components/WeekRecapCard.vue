@@ -110,6 +110,14 @@ const artAlt = computed(() => {
     // word ("On the mend"), so this does not try to be a second diagnosis.
     case 'rehab':
       return 'On the bench, working her way back'
+    // W6: the two at-home weeks. Both DO get spoken, on the same rule as the three above - each is the
+    // only place on the page that says which kind of week this was. The knock line names the week and
+    // not the part: the scrap under the painting names the part ("A week off the ankle"), and an alt
+    // that repeated it would read the same fact out twice to the one reader who gets it read out.
+    case 'exam':
+      return 'Revising at home – exams this week'
+    case 'knock':
+      return 'At home, off the court for the week'
     case 'week':
       return ''
   }

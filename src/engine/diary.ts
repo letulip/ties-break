@@ -2071,7 +2071,9 @@ export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
 //   1. THE JOURNEY HOME     she played somewhere and came back
 //   2. THE LAYOFF           she is carrying an injury (the rehab painting, her age band)
 //   3. THE HOLIDAY          a booked family week resolved (that package's own frame)
-//   4. THE WEEK FRAME       `weekArtUrl` – the off-season's three in order, else `training`
+//   4. THE SCHOOL FORTNIGHT the exam blackout (W6, her age band)
+//   5. THE RESTED KNOCK     she is at home off the court (W6, her age band)
+//   6. THE WEEK FRAME       `weekArtUrl` – the off-season's three in order, else `training`
 //
 // AND IT IS NOT AN INVENTION: IT IS `WEEK_NOTES`' OWN ORDER, READ OFF THE LICENCES. The scrap under
 // the painting and the painting itself are two authors on one page, and if they rank the week's facts
@@ -2100,6 +2102,45 @@ export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
 // AND THE ONE THE BRIEF DOES NOT NAME: a holiday DURING a layoff → the rehab painting, because that is
 // where WEEK_NOTES already puts the words. A seaside frame on a week his daughter is in a knee brace
 // would read as the game not noticing, and the scrap on that week says «Rehab, three times this week.»
+//
+// -------------------------------------------------------------------------------------------------
+// W6: WHERE THE TWO NEW FRAMES GO, AND WHY THEY GO UNDER THE HOLIDAY RATHER THAN OVER IT
+// -------------------------------------------------------------------------------------------------
+//
+// ⚠ THE REST WEEK IS THE WEEK AFTER THE ARRIVAL WEEK, which is the fact the whole ordering turns on.
+// `rollKnock` only fires on an `ordinaryTrainingWeek` – no tournament, no blackout, no holiday, no
+// friendly – so the week he DECIDES on is always a plain one. But the decision governs
+// `sinceWeek + 1 .. untilWeek`, and NOTHING constrains what that next week is: the calendar can put
+// exams, the off-season, a booked holiday or an entered tournament there, and a rested knock blocks
+// none of them (it is not an injury – `world.injury` stays null and she stays entry-eligible). So
+// every collision below is reachable, and two of them were found by walking a season rather than by
+// reasoning about one.
+//
+//   A RESTED KNOCK ON A WEEK SHE STILL TRAVELLED → THE JOURNEY, by rule 1, unchanged. Same shape as
+//     the injured journey: the week she LIVED was the trip, and the scrap can carry the other half.
+//   A RESTED KNOCK DURING A HOLIDAY → THE HOLIDAY. He booked that week and paid a quoted price for
+//     it; its painting is the closest thing the Season feed has to a receipt, and a sore ankle at the
+//     seaside is still the seaside. Same reason the holiday outranks the off-season.
+//   A RESTED KNOCK DURING THE EXAM FORTNIGHT → THE EXAMS, and this is the one that needed an argument
+//     rather than a preference. The exam block is TWO weeks and a rest week can only ever cover ONE of
+//     them, so a knock that outranked exams would draw the block as two different things – ice on the
+//     sofa, then the racquet in the hall. That is precisely the failure the off-season's fixed
+//     three-in-order exists to prevent: a BLOCK has to read as a block. The blackout is also the
+//     stronger fact about the week (she could not have entered anything either way), and it is why
+//     resting inside it costs her less: the week was never going to be a training week.
+//
+// ⚠ AND WHAT THIS DOES *NOT* CLAIM ABOUT THE WORDS. On a collision week the note pool holds BOTH
+// bands – `weekNoteFor` filters by licence and the rotation walks the union – so an exams-plus-rest
+// week can be painted `study` and captioned «A week off the ankle.» That is NOT the contradiction W5
+// found in the vacation band (a sentence about swimming over a picture of a village wall): both
+// sentences are true of the same week and neither describes the picture. The frame answers "what was
+// this week", the scrap answers "what was it like"; they are allowed to pick different true halves,
+// and on this week they cannot pick contradictory ones because the licences that would clash
+// (`f.injured === null` on both) already rule each other out.
+//
+// A PUSHED KNOCK GETS NO FRAME AT ALL, deliberately. She trains as planned – that is the entire
+// meaning of the branch – so `training` is not a compromise there, it is the correct picture, and the
+// scrap's push band ("Full week on court. She strapped it up herself") is what says the rest.
 
 /**
  * THE ONE ANSWER to "which painting does this week show". See the order above.
@@ -2130,7 +2171,11 @@ export function weekSceneFor(args: {
   if (facts.injured !== null) return { kind: 'rehab', week, stage }
   // 3. the family went away
   if (facts.vacationWeek && vacationPackageId !== null) return { kind: 'vacation', week, packageId: vacationPackageId }
-  // 4. the calendar's own frame – December's three, or training
+  // 4. school took the fortnight
+  if (facts.examsWeek) return { kind: 'exam', week, stage }
+  // 5. she is at home, off the court, resting something sore
+  if (facts.knockChoice === 'rest') return { kind: 'knock', week, stage }
+  // 6. the calendar's own frame – December's three, or training
   return { kind: 'week', week }
 }
 

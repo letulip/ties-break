@@ -867,11 +867,22 @@ export type TravelHomeScene = 'airport' | 'plane' | 'bus' | 'car'
  *  answer it differently from any other screen.
  *
  *  Every arm carries `week`, so the filename builder needs no second argument and the vacation arm can
- *  fall back to the week frame for a package whose picture has not been painted yet. */
+ *  fall back to the week frame for a package whose picture has not been painted yet.
+ *
+ *  W6 ADDED `exam` AND `knock` (owner's art, 30.07), and each closed a week the frame was contradicting
+ *  rather than merely generalising:
+ *    `exam`  – the school fortnight drew ladder drills on a week she cannot enter anything.
+ *    `knock` – the owner, reading the trace: «Неделя с заминкой показывает заминку в записке и в сводке
+ *              - но картинка ей противоречит». A rested knock is a FOURTH state the art had no frame
+ *              for: not training, not a holiday, not a layoff (`world.injury` stays null and she is
+ *              still entry-eligible) - she is at home, off the court, back on Monday.
+ *  Both are BAND-SCOPED like `rehab`, because both are pictures of HER rather than of a place. */
 export type WeekScene =
   | { kind: 'travel'; week: number; scene: TravelHomeScene; mood: TravelHomeMood }
   | { kind: 'rehab'; week: number; stage: PortraitStage }
   | { kind: 'vacation'; week: number; packageId: string }
+  | { kind: 'exam'; week: number; stage: PortraitStage }
+  | { kind: 'knock'; week: number; stage: PortraitStage }
   | { kind: 'week'; week: number }
 
 /** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
