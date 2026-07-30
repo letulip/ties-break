@@ -192,13 +192,46 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
     // one, and that the gate up the ladder is the queue rather than the fee.
     // ⚠ The acceptance list is a SHARE of the field, not a rank number - a count would silently
     // change meaning when the population grows (living-field.md plans 2-3k against today's 199).
-    // And it is the SAME number as the tier's own entrant band, so the rule is one sentence: she is
-    // accepted if she would be inside the field they draw from.
     expect(TIERS.j30.enterPct).toBeUndefined()
-    expect(TIERS.j60.enterPct).toBe(TIERS.j60.entrantPctBand[1])
-    expect(TIERS.j300.enterPct).toBe(TIERS.j300.entrantPctBand[1])
-    // ...and the acceptance lists tighten as you climb, which is the ladder.
+    //
+    // ⚠ RE-AIMED 30.07 (tune/rank-numbers). THE IDENTITY IS GONE, DELIBERATELY, and it is the whole
+    // finding of that slice's item 1. This used to assert
+    //     enterPct === entrantPctBand[1]
+    // for both rungs - "she is accepted if she would be inside the field they draw from", which is a
+    // genuinely nice sentence and was a defensible identity when nobody had measured it.
+    //
+    // WHY IT HAD TO GO. The two numbers answer two different questions:
+    //   * `entrantPctBand` is where an AI player's AMBITION window sits - a J300 regular is a top-25%
+    //     player, which is a statement about who the tour's J300 field is MADE of;
+    //   * `enterPct` is the ACCEPTANCE CUT - the point at which the tournament stops saying no.
+    // In real tennis the cut sits BELOW the regulars (that is what qualifying and wildcards are for,
+    // and junior-economics.md lists them as the escape hatches we do not model). Making the two equal
+    // therefore set the cut AT the top of the field it draws from, which is the strictest reading
+    // available - and measured against an honest ITF rank it shut the ladder: j60 fell to 0.0-3.4
+    // entries per four-year career and j300 to 0.0-0.1, in all nine presets, on both arms.
+    //
+    // THE FACT THIS TEST NOW PROTECTS is the one that survived the identity: the lists must tighten as
+    // you climb, and they must sit inside the range where the knob still MEANS something. That second
+    // one is measured: the ITF table is only ~120 deep in a 200-strong cohort (everyone without a
+    // counting international result ties at the floor), so any share at or above ~0.65 accepts every
+    // ranked player and the gate silently becomes a no-op - measured: the weeks-on-list count is
+    // identical for every share from 0.65 to 0.90, and careers re-run at 0.65 and 0.70 come out
+    // byte-identical. That is exactly the kind of dead knob a guard should refuse to allow.
+    expect(TIERS.j60.enterPct).toBe(0.5)
+    expect(TIERS.j300.enterPct).toBe(0.4)
+    // ...the acceptance lists tighten as you climb, which is the ladder.
     expect(TIERS.j300.enterPct!).toBeLessThan(TIERS.j60.enterPct!)
+    // ...and neither has drifted into the range where the share stops gating anything.
+    for (const tier of ['j60', 'j300'] as const) {
+      expect(TIERS[tier].enterPct!).toBeLessThan(0.65)
+      // ...nor below its own field's floor, which would be a cut stricter than the draw it fills.
+      expect(TIERS[tier].enterPct!).toBeGreaterThan(TIERS[tier].entrantPctBand[0])
+    }
+    // The cut sits AT or BELOW the top of the band the field is drawn from for j60 and ABOVE it for
+    // j300 - i.e. the prestige rung is the one that admits players from outside its own regular
+    // field. Pinned as a DIRECTION rather than a number so the reason stays visible: without it,
+    // j300's field (top 25%) would be a wall no career in any preset ever cleared.
+    expect(TIERS.j300.enterPct!).toBeGreaterThan(TIERS.j300.entrantPctBand[1])
   })
 
   it('every point total 0..5000 keeps at least one tier open – no gap, ever', () => {

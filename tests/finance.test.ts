@@ -6,7 +6,6 @@ import {
   tierOpenFor,
   skipTournament,
   closeTournament,
-  recomputeKidRank,
   toSnapshot,
   financeWindow,
   availabilityStatus,
@@ -118,22 +117,48 @@ describe('financeWeeks — the persisted per-week finance aggregate', () => {
     expect(weeks).toEqual([...weeks].sort((a, b) => a - b))
   })
 
-  it('skips $0 sponsored line-items – no cash moved, no zero-valued category entry', () => {
-    // Force the kid to the very top so gear/stringing get fully covered ($0 line-items).
-    // ⚠ FIXTURE RE-AIMED, NOT THE ASSERTION (30.07, fix/ranking-truth). The protected fact is
-    // unchanged: a $0 line-item is still emitted and still must not leave a zero in the aggregate.
-    // The `tier: 'j300'` is what makes the fixture force the state it claims to - `ECONOMY.sponsorship`
-    // gates on `world.kidRank`, the ITF table, and `inTrack` reads a TIER-LESS result as domestic, so
-    // this 100k row was ranking her #1 domestically and ~#120 internationally. It only ever reached the
-    // valve because the weekly tick overwrote `kidRank` with a both-ladders fold. See the long note at
-    // `topRankedBurn` in tests/economy.test.ts.
+  it('skips $0 line-items – no cash moved, no zero-valued category entry', () => {
+    // ⚠ FIXTURE RE-AIMED, NOT THE ASSERTION (30.07, tune/rank-numbers). THE PROTECTED FACT IS
+    // UNCHANGED and is the only thing this case has ever been about: a $0 line-item is still EMITTED
+    // as an event (so the Money breakdown can explain why something cost nothing) and must still
+    // never leave a 0 sitting in the `financeWeeks` aggregate.
+    //
+    // WHAT MOVED IS WHERE A $0 ROW COMES FROM. It used to be forced through the product-sponsorship
+    // valve, which halved or zeroed a gear line for a well-ranked kid. That valve is gone - it gated
+    // a domestic reward on the international table and paid a share of a corridor-scaled bill, so it
+    // is now a flat annual grant instead (see ECONOMY.sponsorship). No gear line is ever $0 again,
+    // and a fixture that pushes a 100k result can no longer force this state at all.
+    //
+    // The surviving producer is the COACHING line on a competition week: `coachWorksThisWeek` is
+    // false when `coachOnEventWeeks` is off (the default) and she is in a draw, and the row is still
+    // emitted at $0 - "Competition week – no coaching billed" - for exactly the reason this test
+    // guards. So the fixture enters her in a tournament, which is a more honest way to reach the
+    // state anyway: it is the one the shipped game actually reaches every time she plays.
     const world = createWorld('zero', { ...DEFAULT_PROFILE, background: 'middle' })
-    world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
-    recomputeKidRank(world)
+    expect(world.coachOnEventWeeks).toBe(false) // ...the precondition the $0 coaching row needs
     const rng = rngFromSeed(world.seed)
-    for (let i = 0; i < 40; i++) tickWeek(world, rng)
-    // covered $0 gear events really are being emitted...
-    expect(world.events.some((e) => e.amountCents === 0 && (e.category === 'gear' || e.category === 'stringing'))).toBe(true)
+    let entered = 0
+    for (let i = 0; i < 40; i++) {
+      // Enter every affordable local event as its deadline nears – local's floor is 0 points, so a
+      // fresh kid qualifies without any grant.
+      for (const e of world.season) {
+        if (e.tier !== 'local' || world.entries.includes(e.id)) continue
+        if (world.week > e.deadlineWeek || e.deadlineWeek - world.week > 2) continue
+        if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
+        if (!tierOpenFor(world, e.tier)) continue
+        if (availabilityStatus(world, e).level === 'blocked') continue
+        enterEvent(world, e.id)
+        entered++
+      }
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+    }
+    expect(entered).toBeGreaterThan(0) // the fixture really did put her in draws
+    // $0 line-items really are being emitted...
+    expect(world.events.some((e) => e.amountCents === 0 && e.category === 'coaching')).toBe(true)
     // ...but they never leave a 0 sitting in the aggregate (skipped, since no cash moved).
     for (const wk of world.financeWeeks) {
       for (const v of Object.values(wk.byCategory)) expect(v).not.toBe(0)

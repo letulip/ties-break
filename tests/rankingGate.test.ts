@@ -184,19 +184,28 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
     //       inside j60's top 120 and outside j300's top 50. Without it "the top rungs open" was
     //       simply not a state this world could be in, and the case had nothing left to assert.
     //   (2) j300's lock is no longer a 900-point band – it is an ACCEPTANCE LIST – so the card
-    //       carries `rankToEnter` (top 50) where it used to carry `pointsToEnter` (900). Same
-    //       verdict, same rung, stated in the currency she can actually read off her own table.
+    //       carries `rankToEnter` where it used to carry `pointsToEnter` (900). Same verdict, same
+    //       rung, stated in the currency she can actually read off her own table.
     // WHAT IS UNCHANGED is the fact this case exists for: the SHAPE of the ladder around her – two
     // rungs outgrown below, three open in the middle, and exactly one still to climb above.
+    //
+    // ⚠ FIXTURE RE-AIMED AGAIN (30.07, tune/rank-numbers), and ONLY the fixture. The acceptance lists
+    // were re-picked - j60 0.40 → 0.50 (top 100 here) and j300 0.25 → 0.40 (top 80) - so the old
+    // 156-point book, which put her at #65, is now INSIDE j300's list and the case lost the one state
+    // it needs: a rank that sits BETWEEN the two cuts. Her book shrinks to a J60 title plus a J30
+    // final (78 points, #86 on this seed), which is 6 clear of j300's cut and 14 clear of j60's.
+    //
+    // The two assertions below are written against `acceptanceRank` rather than against literals
+    // precisely so the next re-pick moves them for free; it is the FIXTURE that has to be re-centred
+    // by hand each time, and this note exists so the next person knows that is the job.
     const world = createWorld('snap-top')
     giveKidPoints(world, 700)
     world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j60' }) // a J60 title
-    world.results.push({ playerId: KID_ID, week: world.week, points: 36, tier: 'j60' }) // ...a J60 final
-    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j300' }) // ...a J300 R16
+    world.results.push({ playerId: KID_ID, week: world.week, points: 18, tier: 'j30' }) // ...and a J30 final
     recomputeKidRank(world)
     expect(kidPoints(world, 'domestic')).toBe(700)
-    expect(world.kidRank).toBeGreaterThan(acceptanceRank(world, 'j300')!) // outside the top 50...
-    expect(world.kidRank).toBeLessThanOrEqual(acceptanceRank(world, 'j60')!) // ...and inside the top 120
+    expect(world.kidRank).toBeGreaterThan(acceptanceRank(world, 'j300')!) // outside j300's list...
+    expect(world.kidRank).toBeLessThanOrEqual(acceptanceRank(world, 'j60')!) // ...and inside j60's
     const upcoming = toSnapshot(world).upcoming
     expect(upcoming.length).toBeGreaterThan(0)
     for (const e of upcoming) {
@@ -209,8 +218,10 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
         expect(e.ineligibleReason).toBeUndefined()
       } else if (e.tier === 'j300') {
         expect(e.eligible).toBe(false)
-        expect(e.ineligibleReason).toBe('locked') // #65 – outside the acceptance list, not there yet
-        expect(e.rankToEnter).toBe(50)
+        expect(e.ineligibleReason).toBe('locked') // #86 – outside the acceptance list, not there yet
+        // Derived, not a literal: the card must quote whatever list the tier actually keeps, so this
+        // survives the next re-pick instead of pinning today's 80.
+        expect(e.rankToEnter).toBe(acceptanceRank(world, 'j300'))
       } else {
         expect(e.eligible).toBe(false)
         expect(e.ineligibleReason).toBe('outgrown') // 700 is past the ceiling – too good now
