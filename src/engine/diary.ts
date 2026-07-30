@@ -1930,18 +1930,32 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     license: (f) => plainTraining(f) && f.fundsPressure === 'tight',
   },
   // --- THE CALENDAR'S OWN WEEKS. These ALWAYS speak – see the note above. -----------------------
+  // ⚠ THESE LINES USED TO SAY SHE DID NOT TRAIN, AND THE LEDGER DISAGREED. The owner caught it: «на
+  // неделях экзаменов и деньги за тренера берут ... и записку пишут, что ракетка простояла в углу».
+  // Measured, elite coach: $933 and $873 billed across the fortnight while the scrap said the racquet
+  // never left the hall.
+  //
+  // AND THE COPY IS THE WRONG HALF, not the money - his call, and the right one: «на тренировку можно
+  // доехать». An exam week is a TOURNAMENT blackout, not a training one. She is at home, she cannot enter
+  // anything, and she still goes to the court - less, and around the revision. So the band now says a week
+  // where tennis came SECOND, which is true, instead of a week where it stopped, which was not.
   {
-    text: 'Exams. The racquet stood in the hall all week and she looked at it a lot.',
+    text: 'Exams. She trained early and revised late, and looked tired both ways.',
     claims: { exams: true, athome: true },
     license: (f) => athome(f) && f.examsWeek && f.injured === null,
   },
   {
-    text: 'Revision at the kitchen table until eleven. Tennis waited.',
+    text: 'Revision at the kitchen table until eleven. Tennis got the mornings.',
     claims: { exams: true, athome: true },
     license: (f) => athome(f) && f.examsWeek && f.injured === null,
   },
   {
     text: 'She revised with the television on and somehow it worked.',
+    claims: { exams: true, athome: true },
+    license: (f) => athome(f) && f.examsWeek && f.injured === null,
+  },
+  {
+    text: 'Two sessions all week instead of five. The rest of it was papers.',
     claims: { exams: true, athome: true },
     license: (f) => athome(f) && f.examsWeek && f.injured === null,
   },

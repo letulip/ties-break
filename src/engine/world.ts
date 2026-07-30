@@ -2596,10 +2596,24 @@ export function isCompetitionWeek(world: WorldState): boolean {
   )
 }
 
-/** Is the coach on the clock this week? Every week except a competition week she is not paying him
- *  for - see `coachOnEventWeeks`. Pure, zero draws, and the ONE place the rule lives: the bill and
- *  the development step both ask it, so they can never disagree about whether he was there. */
+/** Is the coach on the clock this week? Pure, zero draws, and the ONE place the rule lives: the bill and
+ *  the development step both ask it, so they can never disagree about whether he was there.
+ *
+ *  ⚠ A BOOKED FAMILY WEEK IS NOT A COACHING WEEK (owner, 30.07). It used to be: a vacation is not a
+ *  COMPETITION week, so this returned true and an elite coach billed $909 for the week the diary describes
+ *  as «A week away as a family. Nobody mentioned rankings once.» - measured, on seed bill-probe W8. The
+ *  family is at the seaside; he is not there, he is not owed, and `growWeek` should not be developing her
+ *  at his rate either. One clause fixes the bill and the development together, which is the whole reason
+ *  they read the same predicate.
+ *
+ *  ⚠ THE LAYOFF STAYS A COACHING WEEK, and that is the owner's call rather than an oversight: «это ок, они
+ *  вполне могут вместе восстанавливаться». She is at home doing rehab and he is part of it.
+ *
+ *  ⚠ AND SO DOES THE EXAM FORTNIGHT - «на тренировку можно доехать». She is home, blacked out from
+ *  tournaments, not from training. What was wrong on those weeks was the COPY, not the money: the notes
+ *  claimed the racquet never left the hall while $933 of coaching was billed. Fixed in engine/diary.ts. */
 export function coachWorksThisWeek(world: WorldState): boolean {
+  if (vacationForWeek(world, world.week) !== undefined) return false
   return world.coachOnEventWeeks || !isCompetitionWeek(world)
 }
 
