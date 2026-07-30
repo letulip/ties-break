@@ -16,12 +16,14 @@
 // it is the design's, it uses the tokens, and it scales.
 //
 // ⚠ THE CSS STAYS IN `src/style.css`, deliberately, and this is the one place in the U-series where
-// a component does NOT bring its own styles. `.surface-mark` / `.surface-ring` are still written by
-// hand in TournamentFlow.vue, which belongs to another slice this round; moving the rules in here
-// would blank that screen's mark the moment this lands. So this component EMITS the existing class
-// contract and the sheet keeps the rules, which also means tests/round11-view.test.ts's CSS-body
-// assertions go on reading exactly what they read before. When TournamentFlow adopts this, the rules
-// can follow it in.
+// a component does NOT bring its own styles. The original reason has EXPIRED - TournamentFlow adopted
+// this component on 30.07, so there is no longer a screen hand-writing `.surface-mark` /
+// `.surface-ring` and the rules could physically follow the markup in here. They are still not moving,
+// for a different and better reason: tests/round11-view.test.ts reads `.surface-ring`'s BODY out of
+// `src/style.css` to pin the export's geometry (19px, the 1.5px icon stroke, the 9px core) and one
+// declared colour per surface, and that guard is about the design system rather than about this file.
+// Moving the rules would mean re-aiming a pin to look somewhere else for facts that did not change,
+// which buys nothing. This component emits the class contract; the sheet owns the drawing.
 //
 // WHAT THE CALLER OWNS: whether the surface is NAMED beside the ring, and how big the ring is. A
 // friendly-match subtitle wants 15px and no name; a calendar row wants 19px and the name.

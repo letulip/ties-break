@@ -15,7 +15,9 @@ import SurfaceMark from './ui/SurfaceMark.vue'
 import MatchScene from './MatchScene.vue'
 import BracketTabs from './BracketTabs.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
+import AppIcon from './ui/AppIcon.vue'
 import Card from './ui/Card.vue'
+import IconButton from './ui/IconButton.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import ProgressRing from './ui/ProgressRing.vue'
 import { playSfx, primeSfx } from '../audio/sfx'
@@ -522,8 +524,25 @@ const matchMeta = computed(() => {
           <img class="tf-hero-art" :src="venueUrl" alt="" />
           <span class="tf-hero-scrim" aria-hidden="true"></span>
           <!-- R9-9: the begin flow is not a one-way door – Back returns to the shell with nothing
-               resolved. It is the design's back-arrow, on the hero where the design puts it. -->
-          <button class="tf-hero-back" :disabled="game.busy" @click="$emit('back')">← Back</button>
+               resolved. It is the design's back-arrow, on the hero where the design puts it (§E:
+               «сверху back-arrow»).
+               ⚠ THE LAST HAND-WRITTEN BACK CONTROL IN THE APP, NOW THE SHARED ONE (owner, 30.07: «Для
+               back я просил везде сделать один компонент и его консистентно использовать, просто иконка
+               с белым fill»). It was a glass pill reading "← Back" - a `&larr;` CHARACTER plus a word,
+               on a plate nothing else in the app wears - while three screen headers had already been
+               converted to `IconButton variant="bare" icon="back"`. Now all four are the same control
+               and the same asset (`public/icons/back.svg`, the owner's own drawing), and
+               tests/ui-control-system.test.ts's allowlist of hand-written back arrows is empty.
+               WHAT THIS SCREEN STILL OWNS is where it sits and what colour it is: white rather than the
+               `.back-link` muted, because it is the only one standing on a photograph. -->
+          <IconButton
+            class="back-link tf-hero-back"
+            variant="bare"
+            icon="back"
+            label="Back"
+            :disabled="game.busy"
+            @click="$emit('back')"
+          />
           <div class="tf-hero-caption">
             <h2 class="tf-hero-title">{{ pending.tierLabel }}</h2>
             <p class="tf-hero-meta">{{ pending.surface }} &middot; {{ weekDates }}</p>
@@ -539,12 +558,22 @@ const matchMeta = computed(() => {
              first-round card below, which is where a draw size actually means something, and it
              is stated there for every tier – `roundLabel` alone would not do it, since a local's
              8-player first round reads "Quarterfinal" and never says 8. -->
+        <!-- ⚠ ALL FOUR GLYPHS ARE ASSETS NOW, NOT INLINE PATHS (owner, 30.07: «иконка prize money не
+             обновилась, проверить» - and he was right, nothing had changed on screen). His own
+             `dollar.svg` had been sitting in public/icons since that morning with a note asking for
+             this exact swap, and `trophy.svg` / `spectators.svg` had been lifted OUT of the three
+             inline `<svg>`s below so the tiles could adopt them without redrawing anything. The
+             paths are deleted with the markup that held them: the whole point of an asset is that
+             there is no second copy to drift, and a dead `d=` attribute is the next drift.
+             The surface tile takes `SurfaceMark` for the same reason («Surface type similar icon
+             across every screen – it means this icon is not a component»); it was the app's last
+             hand-written ring. `:show-name="false"` because the tile labels itself underneath.
+             SIZE STAYS 19px, the size the inline SVGs were, so the 34px tiles are unchanged. Colour
+             comes from `.tf-fact-tile`'s own `--ink-2` through `currentColor` - see AppIcon. -->
         <div class="tf-facts">
           <div class="tf-fact">
             <span class="tf-fact-tile" aria-hidden="true">
-              <span class="surface-mark" :class="`surf-${pending.surface}`">
-                <span class="surface-ring"><i></i></span>
-              </span>
+              <SurfaceMark :surface="pending.surface" :show-name="false" />
             </span>
             <span class="tf-fact-label">Surface</span>
             <span class="tf-fact-value surface">{{ pending.surface }}</span>
@@ -555,32 +584,21 @@ const matchMeta = computed(() => {
                collects points. That is the premise of the whole game, so it earns a cell. -->
           <div class="tf-fact">
             <span class="tf-fact-tile" aria-hidden="true">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 3v18M16 7.5A3.5 3.5 0 0 0 12.5 5h-1a3 3 0 0 0 0 6h1a3 3 0 0 1 0 6h-1A3.5 3.5 0 0 1 8 16.5" />
-              </svg>
+              <AppIcon name="dollar" :size="19" />
             </span>
             <span class="tf-fact-label">Prize money</span>
             <span class="tf-fact-value" title="The junior tour pays no prize money at any level">–</span>
           </div>
           <div class="tf-fact">
             <span class="tf-fact-tile" aria-hidden="true">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 20h6M12 14v6" />
-              </svg>
+              <AppIcon name="trophy" :size="19" />
             </span>
             <span class="tf-fact-label">Winner</span>
             <span class="tf-fact-value">{{ winnerPoints }} pts</span>
           </div>
           <div class="tf-fact">
             <span class="tf-fact-tile" aria-hidden="true">
-              <!-- The design's own three-figure mark: one face forward, two behind it. -->
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <circle cx="12" cy="7.4" r="2.8" />
-                <circle cx="5.8" cy="9.4" r="2.2" />
-                <circle cx="18.2" cy="9.4" r="2.2" />
-                <path d="M12 11.4c-3 0-5.2 1.7-5.2 4.1V18h10.4v-2.5c0-2.4-2.2-4.1-5.2-4.1z" />
-                <path d="M5.8 12.6c-2 0-3.6 1.2-3.6 2.9V18h3.2v-2.5c0-1 .3-1.9.9-2.6a5 5 0 0 0-.5-.3zM18.2 12.6c2 0 3.6 1.2 3.6 2.9V18h-3.2v-2.5c0-1-.3-1.9-.9-2.6a5 5 0 0 1 .5-.3z" />
-              </svg>
+              <AppIcon name="spectators" :size="19" />
             </span>
             <span class="tf-fact-label">Spectators</span>
             <span class="tf-fact-value" :title="crowdTitle">{{ crowdFigure }}</span>
@@ -628,7 +646,11 @@ const matchMeta = computed(() => {
               :color="conditionColor"
               :label="`Her condition going into this tournament: ${Math.round(condition)} percent`"
             />
-            <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">Begin →</PrimaryPill>
+            <!-- ⚠ JUST THE WORD (owner, 30.07: «У begin просто убрать стрелку»). The arrow was doing
+                 nothing the button was not: a lime CTA at the foot of a brief is already the way
+                 forward, and §E's own copy for this control is one word. The design's onboarding CTA
+                 is "Begin" bare as well, so the two now match. -->
+            <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">Begin</PrimaryPill>
           </div>
         </Card>
 
@@ -956,19 +978,26 @@ const matchMeta = computed(() => {
   );
 }
 
-.tf-hero-back {
+/* THE HERO'S BACK CONTROL: placement and ink only, because the control itself is `IconButton` now.
+   ⚠ WHAT LEFT THIS RULE, and why none of it is missed: the glass pill (a border, a translucent plate
+   and two `backdrop-filter` declarations) and the type (`font-size` / `font-weight`, which a masked
+   glyph has no use for). The owner asked for «просто иконка с белым fill» and the pill was the reason
+   this one back control looked unlike the other three. The scrim above it is `rgba(6,10,14,.62)` at
+   the top stop - see `.tf-hero-scrim` - so a white glyph has its contrast without a plate under it.
+   WHITE, not `.back-link`'s `--muted`: `--ink` is the ink the two readings at the foot of this same
+   photograph use, and muted grey on a lit court is the one place that class's default is wrong. The
+   hover is `--accent` for every other IconButton and stays that way here.
+   ⚠ THE COLOUR NEEDS BOTH CLASSES IN THE SELECTOR, and it is not a style choice - a one-class scoped
+   rule LOST here and the button rendered muted (measured: rgb(142,155,164) on screen). `.back-link` in
+   src/style.css is a bare class, but `IconButton`'s own `.tb-iconbtn--bare` is a scoped rule, so it
+   carries a `[data-v-…]` of its own and ties a single scoped class of ours at (0,2,0) - and ties go to
+   whichever component's block was injected last, which is import order and not something a screen
+   should depend on. `.back-link.tf-hero-back` is (0,3,0) and wins outright. */
+.back-link.tf-hero-back {
   position: absolute;
   top: 12px;
   left: 12px;
-  padding: 6px 13px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: var(--radius-pill);
-  background: rgba(10, 15, 20, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  color: var(--ink);
 }
 
 .tf-hero-caption {
