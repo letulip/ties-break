@@ -1970,20 +1970,45 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     license: (f) => athome(f) && f.injured === null && f.knockChoice === 'push',
   },
   // --- THE LAYOFF WEEKS. An injury takes the note, the way it does on the journey home. ----------
+  //
+  // ⚠ W6b ADDED `!f.examsWeek`, AND IT IS THE WORDS FOLLOWING THE PICTURE. The exam fortnight now
+  // outranks the layoff for the FRAME (the owner's ruling – see weekSceneFor's W6b note), and these
+  // three lines under a painting of her revising at the kitchen table would be the page contradicting
+  // itself. The fortnight inside a layoff gets its own band below instead, which says both things.
   {
     text: 'Rehab, three times this week. She counts the sessions down out loud.',
     claims: { injured: true, athome: true },
-    license: (f) => athome(f) && f.injured !== null,
+    license: (f) => athome(f) && f.injured !== null && !f.examsWeek,
   },
   {
     text: 'She sat by the court with her homework and watched the others hit.',
     claims: { injured: true, athome: true },
-    license: (f) => athome(f) && f.injured !== null,
+    license: (f) => athome(f) && f.injured !== null && !f.examsWeek,
   },
   {
     text: 'The physio says it is going well. She wanted a second opinion.',
     claims: { injured: true, athome: true },
-    license: (f) => athome(f) && f.injured !== null,
+    license: (f) => athome(f) && f.injured !== null && !f.examsWeek,
+  },
+  // --- W6b: THE FORTNIGHT INSIDE A LAYOFF. Both facts, in one sentence each. ---------------------
+  //
+  // The one week of the year where the two loudest things about her are true at once and neither is
+  // tennis. The register is the pool's own and the joke is HERS, not the writer's: a girl who cannot
+  // play anyway is the only girl in the house for whom exam fortnight is convenient, and she knows it.
+  {
+    text: 'Exams, and rehab between the papers. She said the timing was almost funny.',
+    claims: { exams: true, injured: true, athome: true },
+    license: (f) => athome(f) && f.examsWeek && f.injured !== null,
+  },
+  {
+    text: 'She revised with her leg up on a chair. Nobody had to tell her to sit still.',
+    claims: { exams: true, injured: true, athome: true },
+    license: (f) => athome(f) && f.examsWeek && f.injured !== null,
+  },
+  {
+    text: 'A week of papers and physio. The one fortnight she is not missing anything.',
+    claims: { exams: true, injured: true, athome: true },
+    license: (f) => athome(f) && f.examsWeek && f.injured !== null,
   },
 ]
 
@@ -2069,9 +2094,9 @@ export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
 // on holiday during the off-season – and there is one frame. The order is:
 //
 //   1. THE JOURNEY HOME     she played somewhere and came back
-//   2. THE LAYOFF           she is carrying an injury (the rehab painting, her age band)
-//   3. THE HOLIDAY          a booked family week resolved (that package's own frame)
-//   4. THE SCHOOL FORTNIGHT the exam blackout (W6, her age band)
+//   2. THE SCHOOL FORTNIGHT the exam blackout (W6, her age band) – W6b moved it up here
+//   3. THE LAYOFF           she is carrying an injury (the rehab painting, her age band)
+//   4. THE HOLIDAY          a booked family week resolved (that package's own frame)
 //   5. THE RESTED KNOCK     she is at home off the court (W6, her age band)
 //   6. THE WEEK FRAME       `weekArtUrl` – the off-season's three in order, else `training`
 //
@@ -2141,6 +2166,38 @@ export function weekNoteFor(facts: DiaryFacts, seed: string): string | null {
 // A PUSHED KNOCK GETS NO FRAME AT ALL, deliberately. She trains as planned – that is the entire
 // meaning of the branch – so `training` is not a compromise there, it is the correct picture, and the
 // scrap's push band ("Full week on court. She strapped it up herself") is what says the rest.
+//
+// -------------------------------------------------------------------------------------------------
+// W6b: THE EXAM FORTNIGHT MOVED ABOVE THE LAYOFF – the owner's ruling, and it costs less than it looks
+// -------------------------------------------------------------------------------------------------
+//
+// The owner, 30.07: «мне кажется картинка с экзаменами в свои недели может превалировать над
+// картинками восстановления на итогах недели». So exams now sit at 2, above the layoff.
+//
+// ⚠ ONLY ONE COLLISION IS REACHABLE, AND IT IS THE ONE HE NAMED. Moving exams above the layoff moves
+// them above the holiday and the knock too, by transitivity – and both of those are inert:
+//   * exams + HOLIDAY cannot happen. `assertPlannable` refuses the booking outright («School exams
+//     that week - no matches, no trips»), so there is no week that is both.
+//   * exams + JOURNEY cannot happen. A blackout week carries no event, so `travelHomeScene` is null on
+//     it, and the journey arm keeps the head of the order regardless.
+//   * exams + a rested KNOCK was already decided the same way one rung lower (the block-reads-as-a-
+//     block argument above), so the move changes nothing there.
+// What is left is exams DURING A LAYOFF, which is common: she is out ~10 weeks a season, so a long one
+// swallows the fortnight roughly a fifth of the time. That is the case the ruling is about and the only
+// behaviour that changes.
+//
+// AND IT IS THE BETTER ANSWER FOR THE REASON HE GAVE – atmosphere. A nine-week layoff draws the same
+// rehab painting nine times; the two exam weeks inside it are a real thing that happened to her, and
+// breaking the sequence with them makes the layoff read as a stretch of her LIFE rather than as a
+// progress bar. It also costs the layoff nothing it needs: the injury still owns the Mood card, the
+// condition note, the availability chips and the Season feed's red band.
+//
+// ⚠ THE WORDS HAD TO MOVE WITH IT, and that is the half a priority change usually forgets. WEEK_NOTES'
+// exam band carries `f.injured === null`, so before this the scrap on an exams-during-a-layoff week said
+// «Rehab, three times this week.» - which under a picture of her revising is the page contradicting
+// itself, the one failure this whole ordering exists to prevent. So the layoff band now carries
+// `!f.examsWeek` and the fortnight inside a layoff has its own three lines, which say BOTH things. Same
+// shape as `offSeason`'s `!f.vacationWeek`.
 
 /**
  * THE ONE ANSWER to "which painting does this week show". See the order above.
@@ -2167,12 +2224,12 @@ export function weekSceneFor(args: {
   if (facts.travelHomeScene !== null) {
     return { kind: 'travel', week, scene: facts.travelHomeScene, mood: facts.travelHomeMood ?? 'sleepy' }
   }
-  // 2. she is out
-  if (facts.injured !== null) return { kind: 'rehab', week, stage }
-  // 3. the family went away
-  if (facts.vacationWeek && vacationPackageId !== null) return { kind: 'vacation', week, packageId: vacationPackageId }
-  // 4. school took the fortnight
+  // 2. school took the fortnight – ABOVE THE LAYOFF, on the owner's ruling (see W6b below)
   if (facts.examsWeek) return { kind: 'exam', week, stage }
+  // 3. she is out
+  if (facts.injured !== null) return { kind: 'rehab', week, stage }
+  // 4. the family went away
+  if (facts.vacationWeek && vacationPackageId !== null) return { kind: 'vacation', week, packageId: vacationPackageId }
   // 5. she is at home, off the court, resting something sore
   if (facts.knockChoice === 'rest') return { kind: 'knock', week, stage }
   // 6. the calendar's own frame – December's three, or training

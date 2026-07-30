@@ -307,12 +307,31 @@ describe('W2 — the cadence: quiet most weeks, and the calendar always speaks',
   it('...and a long band walks its WHOLE pool rather than repeating its favourites', () => {
     // A 22-week layoff off a pool of three used to draw freely: the same sentence turned up in
     // clusters. Stepping guarantees the cycle.
-    const said = new Set<string | null>()
-    for (let week = 20; week < 32; week++) {
-      said.add(weekNoteFor(homeWeek({ week, injured: { kind: 'ankle strain', weeksRemaining: 9, totalWeeks: 12 } }), 'walk-1'))
+    //
+    // ⚠ RE-AIMED BY W6b, AND IT IS THE DENOMINATOR THAT WAS WRONG, NOT THE BEHAVIOUR. This counted the
+    // band by CLAIM (`n.claims.injured`), which stopped meaning "the pool this week draws from" the
+    // moment a second band claimed `injured` too - W6b's fortnight-inside-a-layoff lines. The sweep
+    // still saw its correct 3 and the expectation had silently become 6. So the pool is now computed
+    // the way `weekNoteFor` itself computes it - by LICENCE against these very facts - which is both
+    // the honest denominator and immune to the next band that shares a claim.
+    const layoff = { kind: 'ankle strain', weeksRemaining: 9, totalWeeks: 12 }
+    const walk = (over: Partial<DiaryFacts>, seed: string) => {
+      const said = new Set<string | null>()
+      for (let week = 20; week < 32; week++) said.add(weekNoteFor(homeWeek({ week, ...over }), seed))
+      return said
     }
-    const layoffLines = WEEK_NOTES.filter((n) => n.claims.injured).length
-    expect(said.size, 'a long layoff should see every line it has').toBe(layoffLines)
+    const poolFor = (over: Partial<DiaryFacts>) =>
+      WEEK_NOTES.filter((n) => n.license(homeWeek({ week: 20, ...over }))).length
+
+    expect(walk({ injured: layoff }, 'walk-1').size, 'a long layoff should see every line it has').toBe(
+      poolFor({ injured: layoff }),
+    )
+    // W6b: and the fortnight INSIDE a layoff is a band like any other - it gets the same guarantee,
+    // which is the whole reason it was written as a band instead of one line.
+    expect(
+      walk({ injured: layoff, examsWeek: true }, 'walk-2').size,
+      'exams during a layoff should see every line that band has',
+    ).toBe(poolFor({ injured: layoff, examsWeek: true }))
   })
 
   it('DETERMINISTIC, and stable for the whole week', () => {

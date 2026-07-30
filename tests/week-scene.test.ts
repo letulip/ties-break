@@ -152,9 +152,42 @@ describe('W5 — the priority order, which is the only real design decision here
     expect(scene({ events: trip(11, 'j30'), knockChoice: 'rest', knockPart: 'wrist' }).kind).toBe('travel')
   })
 
-  it('W6: THE LAYOFF WINS over both new arms – an injury takes the week, as it always has', () => {
-    expect(scene({ injury: INJURY, week: EXAM_WEEK }).kind).toBe('rehab')
+  it('W6: THE LAYOFF WINS over a rested knock – an injury takes the week, as it always has', () => {
+    // ⚠ RE-AIMED BY W6b: THE EXAM HALF OF THIS TEST NOW ASSERTS THE OPPOSITE, ONE TEST DOWN. The owner
+    // ruled the fortnight above the layoff («картинка с экзаменами в свои недели может превалировать
+    // над картинками восстановления»), so the layoff no longer wins there. It still wins over the knock,
+    // which is the half nothing touched, and this test keeps guarding exactly that.
     expect(scene({ injury: INJURY, knockChoice: 'rest', knockPart: 'knee' }).kind).toBe('rehab')
+  })
+
+  it('W6b: THE EXAM FORTNIGHT WINS over the layoff – the owner\'s ruling, and the words move with it', () => {
+    // The frame: a fortnight of papers inside a nine-week layoff breaks a sequence of nine identical
+    // rehab paintings with two weeks of her actual life.
+    const s = scene({ injury: INJURY, week: EXAM_WEEK })
+    expect(s.kind).toBe('exam')
+    expect(weekSceneArtUrl(s)).toContain('study-')
+    // ...AND THE SCRAP, which is the half a priority change forgets. The plain layoff lines carry
+    // `!f.examsWeek` now, so the page cannot say «Rehab, three times this week» under a picture of her
+    // revising - the fortnight-inside-a-layoff band takes those weeks and names both facts.
+    const snap = buildDiarySnapshot(view({ injury: INJURY, week: EXAM_WEEK }))
+    expect(snap.scene.kind).toBe('exam')
+    expect(snap.weekNote, 'the fortnight inside a layoff must say something').not.toBeNull()
+    expect(snap.weekNote?.toLowerCase(), 'and it must know about the exams').toMatch(/exam|paper|revis/)
+    // the two facts are BOTH hers this week, so neither may be denied
+    expect(snap.facts.examsWeek).toBe(true)
+    expect(snap.facts.injured).not.toBeNull()
+  })
+
+  it('W6b: the three collisions the move could NOT have broken, because they are unreachable', () => {
+    // Moving exams above the layoff moves them above the holiday and the knock by transitivity. Both
+    // are inert, and this is the pin that says so rather than a paragraph claiming it.
+    //   * a holiday on an exam week cannot be booked at all
+    const w = createWorld('w6b-unreachable')
+    expect(() => bookVacation(w, EXAM_WEEK, 'seaside')).toThrow(/exam/i)
+    //   * a blackout week carries no event, so there is no journey to outrank
+    expect(facts({ week: EXAM_WEEK }).travelHomeScene).toBeNull()
+    //   * and the knock was already ranked below exams one rung lower, so nothing moved there
+    expect(scene({ week: EXAM_WEEK, knockChoice: 'rest', knockPart: 'hip' }).kind).toBe('exam')
   })
 
   it('W6: THE HOLIDAY WINS over a rested knock – he paid for that week', () => {
