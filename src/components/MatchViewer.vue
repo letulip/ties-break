@@ -27,9 +27,21 @@ const props = withDefaults(
     playerA: MatchPlayer
     playerB: MatchPlayer
     surface: Surface
-    /** Round 4 item 4: 'replay' swaps Play/Pause + Restart for a single "Watch again"
-     *  button. Defaults to 'live' so existing call sites need no change. */
-    mode?: 'live' | 'replay'
+    /**
+     * IS THIS MATCH HAPPENING NOW, OR IS IT BEING WATCHED BACK? It decides three things and only
+     * three: the blinking Live badge, the shout, and the viewer's own "Watch again ↻".
+     *
+     * ⚠ REQUIRED, AND IT USED TO DEFAULT TO `'live'` "so existing call sites need no change" (round
+     * 4 item 4). That convenience shipped a lie: TournamentFlow mounted this component with NO
+     * `mode` at all, so the busiest match screen in the app blinked a red "Live" over a bracket the
+     * engine had already resolved during the tick, and PracticeFlow said `mode="live"` out loud on a
+     * friendly that was equally already in the save file. A default that is wrong for three call
+     * sites out of four is not a convenience, it is a trap with a nice name - so there is no default
+     * any more and `vue-tsc` fails the build if a new caller forgets to say which it is.
+     * The one genuinely live surface in the app is SeasonScreen's sandbox exhibition: it is
+     * simulated at the moment the button is pressed and written nowhere.
+     */
+    mode: 'live' | 'replay'
     /** Round-5 item 9: each player's current standings rank, shown under their name in the
      *  post-match stats. null (default) hides it – the friendly match passes null for "Top seed". */
     rankA?: number | null
@@ -58,7 +70,7 @@ const props = withDefaults(
      *  null (default) draws no plate at all, so nothing shows a made-up number in the meantime. */
     temperatureC?: number | null
   }>(),
-  { mode: 'live', rankA: null, rankB: null, finalMatch: false, temperatureC: null },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null },
 )
 // `finish` fires once when playback reaches the end (used by TournamentFlow to auto-advance to
 // the post-match card; other callers can ignore it).
@@ -545,6 +557,10 @@ function resetPlayback(startPlaying: boolean): void {
   currentEvent = timeline.events[0] ?? null
   lastRenderedEvent = null
   seatsPlayedForRun = false
+  // The shouts belong to THE RUN, not to the match: a restart, a "Watch again", a mode change or a
+  // new match prop all start the watch over, and what was shouted at the last one is not part of
+  // this one. (Nothing else has to be undone - a shout changed nothing to undo.)
+  shouts.value = []
   outRng = rngFromSeed(props.match.result.seed + ':outcall')
   outCounter = 0
   outThreshold = pickInt(outRng, 3, 5)
@@ -806,11 +822,122 @@ const visibleBeats = computed(() =>
   commentary.value.filter((b) => b.pointIndex <= displayedPointIndex.value).slice().reverse(),
 )
 
+// --- THE SHOUT (owner, 30.07: «можем какой-то набор фраз в дропдаун селект сделать и кнопку рядом.
+// Выбрал, крикнул.») ----------------------------------------------------------------------------
+//
+// WHAT SHOUTING DOES: it lands in the log, and it does not touch the match. That is not a shortcut,
+// it is the only thing it COULD do here. Every match this component is ever handed is already
+// resolved - `AnnotatedMatch` is built from a finished `MatchResult`, and three of the four callers
+// say so in their own header comments ("watching cannot change the result and draws no RNG the
+// engine hasn't already drawn"). A shout that changed play would mean the VIEW re-deciding a result
+// the engine owns and the save file already holds. Morale is the substrate a real mechanic would
+// need and it does not exist yet (docs/plan.md, Phase 6) - so this is the flavour half, shipped, and
+// the mechanic half stays where the plan put it.
+//
+// AND THE PLAYER IS NOT TOLD EITHER WAY, deliberately. docs/decisions.md: «Shouts from the stands in
+// key points: yes, engagement feature; affect morale at most (maybe nothing – deliberately
+// uncertain, like real life)». So no label promises an effect and none denies one; the row appears,
+// and that is all it claims.
+//
+// THE VOICE. A parent at the side of a junior court, not a crowd at a stadium. docs/lore/setting.md
+// §3 is the register («the drama is in the numbers ... nothing is heightened», «warm ... this is not
+// misery») and §4 is the hard constraint: «parent as observer – they shape circumstances and react,
+// they never decide for her». So NONE of these is an instruction about tennis. They notice her, or
+// they give her room, or they are a parent being domestic at a sports ground - which is exactly what
+// the family diary does («She asked what was for dinner before we were out of the car park»). What
+// is deliberately absent is the whole consolation register `tests/travel-home.test.ts` already bans
+// from this family's mouth once: no "well played", no "good effort", no "unlucky", no "so close".
+//
+// ⚠ AND IT IS THE FIRST SECOND-PERSON COPY IN THE GAME, which is a break and not an oversight. Every
+// other player-facing pool is third person about her with "we" for the family, and the diary's guard
+// greps for `\byou\b` and fails on it. A shout is the one surface where speaking TO her is the whole
+// point, and that guard is about the DIARY's voice - a note written down later - not about a sentence
+// shouted across a fence.
+const SHOUT_PHRASES = [
+  'Still here.',
+  'Take your time.',
+  'I saw that.',
+  'Next one.',
+  'Drink something.',
+  'Enjoy it.',
+] as const
+const shoutPhrase = ref<string>(SHOUT_PHRASES[0])
+
+interface ShoutRow {
+  /** monotonic, so two identical phrases are two rows and the newest sorts on top */
+  n: number
+  pointIndex: number
+  set: number
+  text: string
+}
+const shouts = ref<ShoutRow[]>([])
+let shoutSeq = 0
+
+/** 1-based set the given point belongs to – the log's left rail label. Counted the way
+ *  viz/commentary.ts counts it (one `setEnd` point closes each set), so a shout's rail label can
+ *  never disagree with the beat sitting under it. */
+function setOfPoint(index: number): number {
+  let set = 1
+  for (let i = 0; i < index; i++) if (props.match.points[i]?.setEnd) set++
+  return set
+}
+
+/** Shout the chosen phrase. Anchored to the point on screen, which is what puts it in the right
+ *  place in a log that is ordered by point and read newest-first. */
+function shoutIt(): void {
+  const at = Math.max(0, displayedPointIndex.value)
+  shouts.value.push({ n: ++shoutSeq, pointIndex: at, set: setOfPoint(at), text: shoutPhrase.value })
+  playSfx('click')
+}
+
+/** A row of the log: a commentary beat, or something the parent shouted. ONE flat shape rather than
+ *  a discriminated union, because the template has to read `lead`/`score` off it and a union would
+ *  need narrowing inside the markup to type-check. A shout carries no lead and no score. */
+interface LogRow {
+  key: string
+  kind: 'beat' | 'shout'
+  set: number
+  lead: string | null
+  text: string
+  score: string
+}
+
+/**
+ * THE MERGED LOG, and the merge is the whole reason a shout can be a row at all.
+ *
+ * ⚠ `buildCommentary` IS NOT TOUCHED, AND MUST NOT BE. It is a pure function of the match with a
+ * determinism pin on it: the same match narrates identically, every replay, forever (viz/commentary
+ * .ts, "THE DETERMINISM RULE" - zero random draws, phrase variety from a hash of the point index).
+ * A player action is not match data, so a shout cannot enter that function without making the same
+ * match narrate two different ways depending on what somebody pressed. The two lists therefore stay
+ * separate all the way to the render: `commentary` is derived from the match, `shouts` is a plain
+ * reactive log of presses, and they only meet HERE, in display order.
+ *
+ * Newest first, the way the export stacks the log. Ties go to the shout, because a shout during
+ * point N happens after point N's beat has already appeared on screen.
+ */
+const visibleRows = computed<LogRow[]>(() => {
+  const merged: { pointIndex: number; order: number; row: LogRow }[] = visibleBeats.value.map((b) => ({
+    pointIndex: b.pointIndex,
+    order: 0,
+    row: { key: `b${b.pointIndex}`, kind: 'beat', set: b.set, lead: b.lead, text: b.text, score: b.score },
+  }))
+  for (const s of shouts.value) {
+    merged.push({
+      pointIndex: s.pointIndex,
+      order: s.n,
+      row: { key: `s${s.n}`, kind: 'shout', set: s.set, lead: null, text: s.text, score: '' },
+    })
+  }
+  merged.sort((x, y) => y.pointIndex - x.pointIndex || y.order - x.order)
+  return merged.map((m) => m.row)
+})
+
 /** The export's log is a fixed-height window with "Show more" under it; four rows is what fits. */
 const LOG_ROWS = 4
 const logExpanded = ref(false)
-const shownBeats = computed(() =>
-  logExpanded.value ? visibleBeats.value : visibleBeats.value.slice(0, LOG_ROWS),
+const shownRows = computed(() =>
+  logExpanded.value ? visibleRows.value : visibleRows.value.slice(0, LOG_ROWS),
 )
 
 // --- controls: the app's segmented row rather than two <select>s -------------------------------
@@ -995,22 +1122,36 @@ function servePct(side: Side): number {
            beats from viz/commentary.ts instead of one row per point. It REPLACES the point log
            rather than sitting beside it: the export's own rows already read as sentences ("Rally of
            9. Bianca wins the point."), and two lists of the same events differing only in density
-           would be one list too many on a phone. Newest first, revealed in step with the score. -->
+           would be one list too many on a phone. Newest first, revealed in step with the score.
+           ⚠ AND IT CARRIES WHAT THE PARENT SHOUTED, INTERLEAVED (owner, 30.07). A shout row is the
+           phrase in a `<q>` - real quotation semantics, so the marks are the browser's and a screen
+           reader announces a quotation rather than two typed characters - with no lead and no score,
+           because a shout is not a point and has no games standing after it. It takes the SAME grid
+           as a beat so the rail and the dots still line up down one column. See `visibleRows` for
+           why the two lists only ever meet at the render. -->
       <Card variant="photo" class="mv-log" pad="8px 12px 10px">
-        <p v-if="!shownBeats.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
+        <p v-if="!shownRows.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
         <ol v-else class="mv-log-list">
-          <li v-for="(beat, i) in shownBeats" :key="beat.pointIndex" class="mv-beat" :class="{ latest: i === 0 }">
-            <span class="mv-beat-set">S{{ beat.set }}</span>
+          <li
+            v-for="(row, i) in shownRows"
+            :key="row.key"
+            class="mv-beat"
+            :class="{ latest: i === 0, said: row.kind === 'shout' }"
+          >
+            <span class="mv-beat-set">S{{ row.set }}</span>
             <span class="mv-beat-dot" aria-hidden="true"></span>
             <span class="mv-beat-text">
-              <b v-if="beat.lead" class="mv-beat-lead">{{ beat.lead }}</b>
-              {{ beat.text }}
+              <q v-if="row.kind === 'shout'">{{ row.text }}</q>
+              <template v-else>
+                <b v-if="row.lead" class="mv-beat-lead">{{ row.lead }}</b>
+                {{ row.text }}
+              </template>
             </span>
-            <span class="mv-beat-score num">{{ beat.score }}</span>
+            <span v-if="row.score" class="mv-beat-score num">{{ row.score }}</span>
           </li>
         </ol>
         <button
-          v-if="visibleBeats.length > LOG_ROWS"
+          v-if="visibleRows.length > LOG_ROWS"
           class="link mv-log-more"
           @click="logExpanded = !logExpanded"
         >
@@ -1033,16 +1174,58 @@ function servePct(side: Side): number {
           group-label="How much of the match to watch"
         />
         <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
+        <!-- ⚠ SHOUT IS IN THE PINNED BLOCK (owner, 30.07: «на экране live матча кнопку shout тоже
+             надо оставить в sticky блоке»). It used to sit below the bar in `.mv-actions`, on the
+             argument that the bar carries SETTINGS and this is an ACTION - and the argument was wrong
+             about this one button. Shouting at your kid is the thing you would reach for mid-rally,
+             which is the same test that pinned the speed and the view; leaving it outside meant the
+             one control the player might actually want during a point was the one that scrolled away
+             as the log filled. It takes a SECOND ROW of the bar rather than squeezing the two plates
+             onto a third of it - see `.mv-shout`, and the measurement of the attempt that did squeeze
+             them.
+             ⚠ AND IT IS A REAL CONTROL NOW, NOT A DISABLED PLACEHOLDER (owner, 30.07: «можем какой-то
+             набор фраз в дропдаун селект сделать и кнопку рядом. Выбрал, крикнул»). It read
+             "Shout 📣", disabled, `title="Coming in Phase 6"`; it is a phrase picker and the same
+             verb beside it, and pressing it puts the line in the log. What it does NOT do is touch
+             the match - see `SHOUT_PHRASES` for why that is the only thing it could do and why no
+             label here promises or denies an effect.
+             ⚠ THE PICKER IS A NATIVE `<select>`, AND THAT IS A FINDING RATHER THAN A CHOICE. This app
+             has a control system and it has NO dropdown component: `src/components/ui/` holds eleven
+             components and none of them is one, `SegmentedRow` cannot take six phrases on a 327px bar
+             (its three `short` labels already needed their padding trimmed to fit), and the only
+             designed dropdown in the app is `.ob-select-wrap` in OnboardingWizard - a labelled box
+             with an icon and a chevron, scoped to that screen, built around a real `<select>` with
+             its chrome turned off. What `src/style.css` DOES declare, in the same rule as the text
+             input, is a plain `select` skin, and this is its first live consumer. A native select is
+             also the only version that opens the phone's own picker. So: no seventh control shape
+             invented, no premature component for one caller. The extraction point, if a second caller
+             ever appears, is OnboardingWizard's box - and it should take that box, not this one.
+             The gate is the Live badge's own: ui-inventory §2 says the replay "IS the live match minus
+             the blinking Live and minus shouting", and the owner said it again on 30.07 («На реплее
+             этого Shout вообще не будет, его можно даже не показывать, по принципу live»). After this
+             round three of the four callers are replays, so this is a Season-sandbox control. -->
+        <div v-if="props.mode === 'live' && !finished" class="mv-shout">
+          <select v-model="shoutPhrase" class="mv-shout-pick" aria-label="What to shout">
+            <option v-for="phrase in SHOUT_PHRASES" :key="phrase" :value="phrase">{{ phrase }}</option>
+          </select>
+          <button class="mv-shout-go" @click="shoutIt">Shout 📣</button>
+        </div>
       </div>
-      <!-- NOT in the pinned bar, and the line is deliberate: the bar carries the two SETTINGS you
-           reach for mid-rally (how much, how fast). This row carries an ACTION - one of them
-           disabled until Phase 6, the other only meaningful once the match is already over - and
-           neither is something you hunt for while play is running. -->
-      <div v-if="props.mode === 'replay' || !finished" class="mv-actions">
+      <!-- WHAT IS LEFT OUTSIDE THE PINNED BAR, and it is one button on one mode: "Watch again" only
+           means anything once the match is over, and a replay is never watched while you are waiting
+           for it - so it does not earn permanent screen the way a mid-rally control does.
+           ⚠ `&& finished` IS NEW, 30.07, AND IT IS WHAT THE LINE ABOVE ALREADY CLAIMED. The gate was
+           `mode === 'replay'` alone, so the button sat there through the whole replay - "only means
+           anything once the match is over" was an argument the code did not keep. It matters now
+           because TournamentFlow and PracticeFlow became replays this round: both hand the player
+           their own box score the instant playback ends (`@finish` -> a phase change that unmounts
+           this component in the same flush, before it can paint), so without this they would have
+           grown a second "Watch again" inside the viewer, next to the one their box score already
+           has. MatchReplay is the caller that genuinely needs it: it has no screen after the match. -->
+      <div v-if="props.mode === 'replay' && finished" class="mv-actions">
         <!-- U0's PrimaryPill: `solid` IS `.primary`, so the class stays and the sound layer's
              `.sfx-watch` hook keeps working - what arrives is the one door for the affirmative. -->
-        <PrimaryPill v-if="props.mode === 'replay'" class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
-        <button v-else disabled title="Coming in Phase 6">Shout 📣</button>
+        <PrimaryPill class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
       </div>
 
       <!-- ===== THE BOX SCORE, once it is over ================================================ -->
@@ -1514,6 +1697,28 @@ function servePct(side: Side): number {
   color: var(--text);
 }
 
+/* A SHOUT ROW. The same grid, the same rail, the same dot position - what a reader has to be able to
+   tell at a glance is that this line was SAID rather than played, and two devices do it without any
+   new furniture: the `<q>`'s quotation marks (the browser's own, from real markup) and the italic.
+   The dot takes the accent at half strength: brighter than a spent beat's `--ink-dim`, quieter than
+   the newest beat's glow, so a shout never competes with the point that is actually on screen. */
+.mv-beat.said .mv-beat-dot {
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.mv-beat.said .mv-beat-text {
+  font-style: italic;
+  color: var(--ink-2);
+}
+
+/* The newest row glows whether it is a beat or a shout - it is the same "look here" - so the shout
+   only has to opt OUT of the half-strength dot when it is the newest thing in the log. */
+.mv-beat.said.latest .mv-beat-dot {
+  opacity: 1;
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
 .mv-log-empty {
   margin: 6px 0;
   text-align: center;
@@ -1550,35 +1755,99 @@ function servePct(side: Side): number {
    fixed that by taking ~53px off the scroller permanently, for the whole watch, including the
    first point when nothing was wrong; sticky takes NOTHING until the row would otherwise be gone,
    and then puts it exactly where a fixed bar would have been. Same recovery, none of the rent.
-   The floor is --panel so the log and the box score pass UNDER the bar rather than through it. It is
-   the tone of the .tf-card all three match screens put the viewer in, so the plate is invisible
-   there and the row reads exactly as it did - the pills sit on the card and the log slides beneath
-   it. (--bg was the first try and it drew a dark seam across the card even when nothing was pinned.)
+   The floor is opaque so the log and the box score pass UNDER the bar rather than through it, and it
+   is the tone of whatever the viewer is standing on, so the plate is invisible until it pins.
+   ⚠ THAT TONE CHANGED WITH THE OUTER FRAME, 30.07. It was `--panel`, because all three match screens
+   used to put the viewer inside a `--panel`-toned `.tf-card`; the owner has now taken that frame off
+   («давай внешний контур уберем»), so the ground under the viewer is the takeover's own page colour
+   and the floor follows it to `--bg`. Leaving it at `--panel` would have drawn exactly the seam this
+   line used to warn about, with the two tones swapped. The same move is why the segmented plates
+   below are visible at all now: `--panel` on `--bg` reads as a plate, which is what SegmentedRow's
+   default `page` tone is for and what it could not do inside a panel of the same colour.
    The negative margin eats `.mv-below`'s 10px gap and the top padding pays it back, so the plate is
    flush against the log instead of leaving a 10px slot for text to show through; the 8px underneath
-   is the only height this costs, and the head row it replaced gave back 34. */
+   is the only height this costs, and the head row it replaced gave back 34.
+   ⚠ IT IS TWO ROWS NOW, because "Shout" joined it (owner, 30.07: «на экране live матча кнопку shout
+   тоже надо оставить в sticky блоке»). Three controls do not fit one 327px line - the two segmented
+   plates alone want ~275px at this bar's trimmed pill padding and the button is another ~110 - so the
+   shout takes a second row inside the SAME sticky block, which is the whole of what he asked for.
+   ⚠ AND THAT IS WHY THIS IS A GRID AND NOT A FLEX ROW ANY MORE, which is worth writing down because
+   the obvious flex answer is wrong in a way that LOOKS right. `flex-wrap: wrap` plus `flex: 0 0 100%`
+   on the button does force a second line - but only while nothing clamps it, and clamping is exactly
+   what "own row, own width, centred" needs. `max-width: max-content` feeds into the flex item's
+   HYPOTHETICAL main size, so the browser sizes the button at ~109px BEFORE deciding where lines break,
+   finds it fits beside two zero-basis plates, and puts all three on one line: measured 327px wide, 59px
+   tall, and the two plates squeezed to 109px each. Grid decides rows from the template instead of from
+   the items, so `grid-column: 1 / -1` is a row no matter how wide its content is. */
 .mv-controls {
   position: sticky;
   bottom: 0;
   z-index: 2;
-  display: flex;
+  display: grid;
+  /* Two equal tracks for the two plates. `minmax(0, ...)` rather than a bare `1fr`, so a pill row
+     that overflows shrinks its track instead of pushing the grid wider than the bar. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-top: -10px;
   padding: 10px 0 8px;
-  background: var(--panel);
+  background: var(--bg);
 }
 
+/* The plates were `flex: 1` when this was a row; the tracks size them now. `min-width: 0` stays -
+   it is what lets a plate's own contents shrink rather than overflow. */
 .mv-seg {
+  min-width: 0;
+}
+
+/* THE SHOUT, ON ITS OWN ROW OF THE PINNED BLOCK: full width of the bar as a CELL. `grid-column` is
+   what the flex version could not express - see the note on `.mv-controls` for the measurement of the
+   attempt that put all three controls on one line.
+   ⚠ IT IS THE ROW NOW, NOT THE BUTTON (30.07). `.mv-shout` used to BE the disabled button, centred in
+   its cell with `justify-self`; it is the picker plus the verb, so it is a flex row filling the cell
+   and the centring is gone with the empty space it used to leave. The grid template above is
+   untouched: two tracks for the two segmented plates, and this spans both. */
+.mv-shout {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* THE PHRASE PICKER. It wears the app's own `select` skin from src/style.css (declared in the same
+   rule as the text input, and this is its first live consumer - see the template note). Two local
+   adjustments, both of them about THIS bar rather than about selects:
+     * it takes the row's spare width, and `min-width: 0` is what lets it shrink instead of pushing
+       the bar wider than the takeover's 327px;
+     * `--panel` instead of the skin's `--bg`, because the bar's own floor IS `--bg`. On the floor a
+       `--bg` field reads as a hole with a hairline round it, while the two segmented plates beside it
+       are `--panel` on `--bg` and read as plates. Same tone, so the second row of the bar looks like
+       the first. Precedent: the pill padding below is trimmed for this bar alone in exactly this way,
+       and the shared rule stays shared. */
+.mv-shout-pick {
   flex: 1;
   min-width: 0;
+  background: var(--panel);
+  /* Measured at 375pt: the select came out 36px tall beside a 41px button, because the two shapes
+     resolve their content height off different metrics (a button's line box, a select's UA control
+     height) from the same 8px padding. Stretching is the fix that survives a font change, where
+     hard-coding 41px would not. */
+  align-self: stretch;
+}
+
+.mv-shout-go {
+  flex: none;
 }
 
 /* ⚠ "Skip" USED TO RENDER AS "Ski", AND THE SPEED PLATE SAT ON TOP OF IT. The two rows want
    ~359px of pill between them at the shared `.tab-pill` padding of 16px a side; inside a .tf-card
-   on a 375pt phone they get 293px, so the view row overflowed its half and painted over its
+   on a 375pt phone they got 293px, so the view row overflowed its half and painted over its
    neighbour. The padding is the only thing here that was negotiable - the labels are already the
    `short` forms - so it is trimmed for THIS bar alone. The sheet's own 16px is untouched, and so is
-   every other SegmentedRow (the draw's round tabs have room for theirs). */
+   every other SegmentedRow (the draw's round tabs have room for theirs).
+   ⚠ STILL NEEDED AFTER THE OUTER FRAME CAME OFF (30.07), and it is worth writing the arithmetic down
+   rather than re-deriving it next time: the bar is 327px wide now instead of 293, and 327 is still
+   short of the 359 the sheet's padding wants. What the extra 34px bought is HEADROOM - the trim
+   brings the two rows to ~275px, so they now clear the bar by 52px instead of overflowing it. */
 .mv-controls :deep(.tab-pill) {
   padding-left: 9px;
   padding-right: 9px;

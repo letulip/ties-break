@@ -239,8 +239,12 @@ thirteen unrelated things. Left alone deliberately; this is where DRY stops bein
 
 The same goes for the pairs still left in the scan after this pass:
 
-- `.save-row` (a row of controls in More) and `.recap-head` (the head of the week-recap card) —
-  byte-identical four declarations, nothing in common in the app.
+- ~~`.save-row` (a row of controls in More) and `.recap-head` (the head of the week-recap card) —
+  byte-identical four declarations, nothing in common in the app.~~ **Resolved by deletion, not by
+  extraction (task 65).** The U2 rebuild of screen D gave the card `Card`'s own head, so `.recap-head`
+  had zero references and went, along with `.recap-flavor`, `.recap-figures`, `.recap-legend` and
+  `.recap-key{,.train,.rest}` — the round-5 card's dressing, outlived by the card. `.save-row` stands
+  alone now, which is the answer this pair was always going to get.
 - `.pkg-head` (a vacation package's head row) and `.coach-tooltip-actions` (the tour's Next/Skip) —
   likewise.
 - `.pkg-list` matching the draw's `.bt`/`.bt-list` — a 10px column in two unrelated places.

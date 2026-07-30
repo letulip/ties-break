@@ -25,6 +25,22 @@ import { ECONOMY } from '../src/engine/economy'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
+/** ⚠ W4: PUT THE CAREER INSIDE THE KNOCK COOLDOWN, so the advance under test cannot be interrupted.
+ *
+ *  The tests below assert a SPECIFIC stop reason, and a knock does not merely add a second reason -
+ *  it BLOCKS the advance (`advanceWeeks` returns early and ticks nothing). Answering it and pressing
+ *  on is not equivalent either, because the deadline check is a PRE-TICK guard gated on `i > 0` (so a
+ *  single step always progresses): a restarted advance skips it, which is exactly how the first draft
+ *  of this fix walked past the deadline it was asserting.
+ *
+ *  So the fixture states, in world terms, "she had a knock last week": one retired row puts her inside
+ *  KNOCK_COOLDOWN_WEEKS and nothing new can arrive for four weeks - longer than any advance here. A
+ *  legitimate world state, not a switch, and it leaves the reason under test the only one in play. */
+function noKnocksFor(world: WorldState): void {
+  world.knockHistory = [{ part: 'wrist', sinceWeek: world.week, untilWeek: world.week, choice: 'rest' }]
+}
+
+
 // ---------------------------------------------------------------------------
 // Season-Life slice B — condition/fatigue + availability gate.
 // ---------------------------------------------------------------------------
@@ -682,6 +698,8 @@ describe('B6 — three-surface parity', () => {
     wa.condition = 35
     const natA = injectEvent(wa, { week: wa.week + 3, tier: 'national', deadlineWeek: wa.week + 1 })
     wa.season = [natA]
+    // ⚠ W4: no knock may interrupt the advance under test - see noKnocksFor.
+    noKnocksFor(wa)
     expect(advanceWeeks(wa, rngFromSeed(wa.seed), 4)).toContain('deadline')
   })
 

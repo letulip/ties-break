@@ -12,7 +12,7 @@ import { needRefresh, applyUpdate } from './pwa'
 import { useWeekAhead } from './composables/weekAhead'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
-import { recapExists, thisWeekDotShows } from './composables/weekRecap'
+import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
 import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -21,6 +21,7 @@ import TournamentFlow from './components/TournamentFlow.vue'
 import PracticeFlow from './components/PracticeFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
+import KnockDialog from './components/KnockDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import ThisWeekScreen from './components/screens/ThisWeekScreen.vue'
@@ -210,25 +211,65 @@ watch(tab, (t) => {
 // week's story every time the app started – caught in the browser, on the very first pass. So the
 // pair (career, week) is tracked explicitly: the story opens when THE SAME career moves FORWARD,
 // which is a tick and nothing else. A load, a career switch and a fresh career all fail that test.
+//
+// --- W4: ...AND A TOURNAMENT WEEK'S STORY OPENS WHEN THE DRIVE HOME STARTS ------------------------
+//
+// The owner, 30.07: «Я предлагаю ставить week recap сразу после турнира, как будто домой едем» – and,
+// separately, «после турнира не появился week recap». Both are one bug and W1's own trigger is half
+// of it: an advance that reaches a tournament comes back with `pending` set, `recapExists` is false
+// on that snapshot (the flow owns the week), and by the time the flow is finished there is no ADVANCE
+// left to fire on. The week's story therefore arrived a week late, riding the NEXT tick – or never,
+// if he took the tournament and then closed the app.
+//
+// So there is a SECOND door, at the other end of the same week: the tournament run CLOSING.
+// `snap.pending` is set the moment the tick reaches the event, survives the finale (`finished: true`)
+// and is cleared by `closeTournament` – the finale's own Continue, or the post-deadline withdrawal.
+// The transition set → null is exactly "the flow has let go of this week", and it is the beat he
+// described: the finale fades, the story opens, she is asleep in the car on the painting.
+//
+// ⚠ TRACKED, NOT WATCHED AS A TRANSITION SHORTHAND, for the same reason `week` is: a plain
+// `watch(() => snap.pending)` fires `undefined → null` on the first snapshot of a load and would open
+// last week's story on every app start, which is precisely the bug W1 was caught by in the browser.
+// `seenPendingId` starts at null and is only ever set from a snapshot of the SAME career, so a load,
+// a career switch and a fresh career all fail the test.
+//
+// ⚠ AND NO TWO TAKEOVERS COLLIDE. The flow is `v-if="game.snapshot?.pending && !tournamentHidden"`,
+// so it has already unmounted on the snapshot that clears `pending` – the tab under it is free. The
+// old way of keeping them apart (deleting the week's story outright – see composables/weekRecap.ts)
+// is what this replaces.
 let seenCareerId: string | null = null
 let seenWeek = -1
+let seenPendingId: string | null = null
 watch(
   () => game.snapshot,
   (snap) => {
     if (!snap) {
       seenCareerId = null
       seenWeek = -1
+      seenPendingId = null
       return
     }
-    const advanced = snap.careerId === seenCareerId && snap.week > seenWeek
+    const sameCareer = snap.careerId === seenCareerId
+    const advanced = sameCareer && snap.week > seenWeek
+    // The run the flow was holding has been let go: revealed to the end and closed, or withdrawn.
+    const runClosed = sameCareer && seenPendingId !== null && !snap.pending
     seenCareerId = snap.careerId
     seenWeek = snap.week
+    seenPendingId = snap.pending?.eventId ?? null
     // The advance can resolve a week WHILE the tab is up – the player is looking at the fresh
     // recap, so it is seen the moment it lands.
     if (tab.value === 'week') markThisWeekSeen()
-    // A tournament week has no story (recapExists) and its own flow reports it; a paused reveal has
-    // not finished being a week yet. Both fall out of the predicate rather than being listed here.
-    if (advanced && recapExists(snap)) tab.value = 'week'
+    // A paused reveal has not finished being a week yet; that falls out of the predicate rather than
+    // being listed here, and is the reason `runClosed` needs a door of its own.
+    //
+    // ⚠ W5 PUT THE SWITCH HERE AND NOWHERE ELSE (owner: «можем сделать отдельную ручку для их
+    // отключения в настройках» / «а если это будет отключаемая опция - вообще нет проблем, спидраннеры
+    // ликуют»). `storyOpensItself` is `recapExists` AND the player's preference, and the composition is
+    // the point: the story still EXISTS on every week with the switch off – the This-week tab still
+    // renders it, the accent dot still fires, Home still has its door – and the only thing that stops
+    // is this navigation. See composables/weekRecap.ts for why the preference may not be folded into
+    // `recapExists` itself, and why it is a localStorage flag rather than a save field.
+    if ((advanced || runClosed) && storyOpensItself(snap)) tab.value = 'week'
   },
 )
 
@@ -395,6 +436,21 @@ const showStopToast = computed(() => !!stopReasonText.value && !stopToastDismiss
 function dismissStopToast(): void {
   stopToastDismissed.value = true
 }
+// W4 – THE KNOCK. Gated on the SNAPSHOT FIELD, not on a stop reason, and that difference is the
+// whole reason it cannot be lost.
+//
+// Every other popup here reads `stopReasons`, which only an `advance` ever sets – fine for the eight
+// beats that REPORT something, because a beat that has already happened can wait for the next advance
+// to be re-reported. A knock is a QUESTION, and `advanceWeeks` refuses to tick a single week until it
+// is answered. If this gate read the stop reason, then any action that produces a fresh snapshot
+// without stop reasons (setting the plan, entering an event, hiring a coach, a reload) would clear the
+// dialog and leave the career frozen with nothing on screen explaining why. So it reads
+// `knockPrompt`, which the engine sets from `pendingKnock` – the identical predicate the block is
+// built on. Dialog up exactly when the sim is waiting; no dismiss flag, because there is nothing to
+// dismiss. It outranks the other two overlays for the same reason: they can wait a click and this
+// cannot.
+const showKnock = computed(() => !!game.snapshot?.knockPrompt)
+
 // R9-21a: the injury stop popup – blocking, until Continue. The dialog itself plays the alert sfx
 // on mount.
 //
@@ -405,7 +461,16 @@ function dismissStopToast(): void {
 // with its own dismiss – there is no tab it cannot open over, and the dismiss flags are per
 // snapshot, so it can never re-appear after Continue.
 const showInjuryStop = computed(
-  () => stopReasons.value.includes('injury') && !!game.snapshot?.injury && !injuryStopDismissed.value,
+  () =>
+    stopReasons.value.includes('injury') &&
+    !!game.snapshot?.injury &&
+    !injuryStopDismissed.value &&
+    // W4: one overlay at a time. A knock and a fresh injury cannot land on the same week (a knock only
+    // arrives on a week with no injury, and `rollInjury` retires the live one at onset), so this is
+    // belt-and-braces rather than a real collision – but the ordering rule is worth stating once and
+    // it matches STOP_PRECEDENCE nowhere else: the blocking question comes first, because the injury
+    // report can wait a click and the question is what time is stopped on.
+    !showKnock.value,
 )
 // The end-of-season summary popup: auto-shows when `advance` reports 'season-end' and a summary is
 // present, until the player hits Continue (client-side flag). Same tab-gate removal as above.
@@ -419,7 +484,10 @@ const showSeasonSummary = computed(
     stopReasons.value.includes('season-end') &&
     !!game.snapshot?.lastSeasonSummary &&
     !seasonSummaryDismissed.value &&
-    !showInjuryStop.value,
+    !showInjuryStop.value &&
+    // W4: ...and behind the knock, for the same reason. A wrap-up week is off-season, so a knock can
+    // never arrive on one; this keeps the chain total anyway.
+    !showKnock.value,
 )
 function dismissSeasonSummary(): void {
   seasonSummaryDismissed.value = true
@@ -564,6 +632,11 @@ function dismissSeasonSummary(): void {
     <!-- R9-21a: a fresh injury stops the advance with a BLOCKING popup (kind, layoff, what was
          auto-withdrawn + refunds) and an alert sfx – no more quiet missable toast. -->
     <InjuryStopDialog v-if="showInjuryStop" @continue="injuryStopDismissed = true" />
+
+    <!-- W4: the ordinary training week's one decision – rest the knock or train through it. It emits
+         no event and has no dismiss: answering it IS the exit, and until it is answered the engine
+         will not tick a week. Last in the template so it paints over anything else that is up. -->
+    <KnockDialog v-if="showKnock" />
 
     <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
     <OnboardingTour v-if="showTour" @done="dismissTour" />

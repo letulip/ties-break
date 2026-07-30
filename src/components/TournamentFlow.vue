@@ -15,9 +15,12 @@ import SurfaceMark from './ui/SurfaceMark.vue'
 import MatchScene from './MatchScene.vue'
 import BracketTabs from './BracketTabs.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
+import AppIcon from './ui/AppIcon.vue'
 import Card from './ui/Card.vue'
+import IconButton from './ui/IconButton.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import ProgressRing from './ui/ProgressRing.vue'
+import TakeoverShell from './ui/TakeoverShell.vue'
 import { playSfx, primeSfx } from '../audio/sfx'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
@@ -444,43 +447,50 @@ const matchMeta = computed(() => {
 </script>
 
 <template>
-  <div v-if="pending" class="tournament-flow">
-    <!-- The flow's own header. NOT on the E brief: the hero underneath it carries the tournament's
-         name, its court and its dates, and the design gives that screen a bare back-arrow rather
-         than a title bar. Every other phase still needs to be told which tournament this is. -->
-    <header v-if="phase !== 'splash'" class="tf-top">
-      <div>
-        <div class="tf-title">{{ pending.tierLabel }}</div>
-        <div class="tf-sub">
-          <!-- ⚠ THE SURFACE STEPS ASIDE WHILE A MATCH IS ON SCREEN, and it is the one readout on
-               this line that can: the court is painted in it about 20px lower, so "clay" is being
-               said twice and the second saying is the one made of pixels. That is what pays for the
-               round badge below - the line has room for the date plus a full round name, but not for
-               all three (measured at 375pt: 88.5 + 85 fits the 215px the header control leaves,
-               65.3 + 88.5 + 85 does not, and it wrapped, which put 23px BACK onto the header and
-               undid the row we had just recovered). Every other phase keeps the pill: the preview,
-               the pre-match card, the box score and the poster have no court to read it off. -->
-          <!-- ⚠ ADOPTED AT THE INTEGRATION MERGE: this was the last hand-written surface readout, and
-               the icon-system branch that made `SurfaceMark` listed this exact line as its pending
-               adoption. Its own note is worth keeping in mind - one of the three copies had `surf-clay`
-               HARD-CODED beside the word "clay", so every other court showed an orange ring labelled
-               clay. The conditional below is the one thing the component does not own and must
-               survive: WHETHER the surface is said at all on this line. -->
-          <SurfaceMark v-if="!replayOpen" :surface="pending.surface" size="sm" />
-          <span class="hint tf-week-dates">{{ weekDates }}</span>
-          <!-- ⚠ THE ROUND BADGE MOVED UP HERE, ONTO THE DATE LINE (owner, 30.07: «on tournament
-               match screen move quarterfinal badge higher nearby date»). It used to sit in the
-               match card's own head row, which existed only to hold it, so the row went with it -
-               see the note at the replay section. Same `.tf-replay-round` capsule, deliberately:
-               it is still the same fact wearing the same clothes, it just costs no row now, because
-               the sub line was already being drawn. Full round name rather than the draw's "QF" -
-               there is room for it once the surface pill stands down, and the badge the owner asked
-               to move said "Quarterfinal". Only while a match is on screen: between rounds the path
-               strip and the draw name their own rounds. And it names the round IN THE VIEWER, not the
-               round on deck - see `watchedRoundLabel` for the mislabel it inherited. -->
-          <span v-if="replayOpen" class="tf-replay-round">{{ watchedRoundLabel }}</span>
-        </div>
-      </div>
+  <!-- ⚠ THE TAKEOVER IS A COMPONENT NOW (owner, 30.07: «Есть четвёртое место, где живёт просмотрщик
+       матча - надо все одинаково сделать оверлеем поверх всего экрана ... Будет один компонент и без
+       ненужных дублей кода»). The layer, the header and the scroller were hand-written here, in
+       PracticeFlow and in MatchReplay - three copies that agreed - while the FOURTH match surface,
+       SeasonScreen's sandbox exhibition, had none of them and was inline on a tabbed screen. That is
+       how it ended up with its pinned control bar behind the tab bar. `ui/TakeoverShell.vue` owns the
+       three parts now; the classes, the layout and this screen's five phases are unchanged, and the
+       header's exit stays a SLOT because the four surfaces mean four different things by it. -->
+  <TakeoverShell v-if="pending" :title="phase === 'splash' ? null : pending.tierLabel">
+    <!-- NO HEADER ON THE E BRIEF, which is what the `null` above buys: the hero underneath carries
+         the tournament's name, its court and its dates, and the design gives that screen a bare
+         back-arrow rather than a title bar. Every other phase still needs to be told which
+         tournament this is. -->
+    <template #sub>
+      <!-- ⚠ THE SURFACE STEPS ASIDE WHILE A MATCH IS ON SCREEN, and it is the one readout on
+           this line that can: the court is painted in it about 20px lower, so "clay" is being
+           said twice and the second saying is the one made of pixels. That is what pays for the
+           round badge below - the line has room for the date plus a full round name, but not for
+           all three (measured at 375pt: 88.5 + 85 fits the 215px the header control leaves,
+           65.3 + 88.5 + 85 does not, and it wrapped, which put 23px BACK onto the header and
+           undid the row we had just recovered). Every other phase keeps the pill: the preview,
+           the pre-match card, the box score and the poster have no court to read it off. -->
+      <!-- ⚠ ADOPTED AT THE INTEGRATION MERGE: this was the last hand-written surface readout, and
+           the icon-system branch that made `SurfaceMark` listed this exact line as its pending
+           adoption. Its own note is worth keeping in mind - one of the three copies had `surf-clay`
+           HARD-CODED beside the word "clay", so every other court showed an orange ring labelled
+           clay. The conditional below is the one thing the component does not own and must
+           survive: WHETHER the surface is said at all on this line. -->
+      <SurfaceMark v-if="!replayOpen" :surface="pending.surface" size="sm" />
+      <span class="hint tf-week-dates">{{ weekDates }}</span>
+      <!-- ⚠ THE ROUND BADGE MOVED UP HERE, ONTO THE DATE LINE (owner, 30.07: «on tournament
+           match screen move quarterfinal badge higher nearby date»). It used to sit in the
+           match card's own head row, which existed only to hold it, so the row went with it -
+           see the note at the replay section. Same `.tf-replay-round` capsule, deliberately:
+           it is still the same fact wearing the same clothes, it just costs no row now, because
+           the sub line was already being drawn. Full round name rather than the draw's "QF" -
+           there is room for it once the surface pill stands down, and the badge the owner asked
+           to move said "Quarterfinal". Only while a match is on screen: between rounds the path
+           strip and the draw name their own rounds. And it names the round IN THE VIEWER, not the
+           round on deck - see `watchedRoundLabel` for the mislabel it inherited. -->
+      <span v-if="replayOpen" class="tf-replay-round">{{ watchedRoundLabel }}</span>
+    </template>
+
+    <template #exit>
       <!-- THE HEADER'S ONE SLOT, filled with whichever exit fits the phase.
            ⚠ IT USED TO SAY "Skip tournament →" EVEN WHILE A MATCH WAS PLAYING, one card above a
            "To result →" that meant something else entirely (owner, 30.07: «what's the difference
@@ -506,350 +516,411 @@ const matchMeta = computed(() => {
       >
         Skip all rounds →
       </button>
-    </header>
+    </template>
 
-    <div class="tf-body">
-      <!-- =====================================================================================
-           E. TOURNAMENT (PREVIEW) – the brief, and the flow's very first screen (Round 5 item 6).
-           Hero -> four facts -> the first-round pairing -> the coach's read beside the button.
-           ===================================================================================== -->
-      <template v-if="phase === 'splash'">
-        <!-- THE HERO. The venue this event owns forever (art/venues.ts draws it off the event's own
-             sub-stream), under the design's four-stop scrim so the title keeps its contrast on a
-             bright court. Rounded rather than full-bleed: this is a card in a takeover, not the top
-             of a screen. -->
-        <Card variant="photo" class="tf-hero">
-          <img class="tf-hero-art" :src="venueUrl" alt="" />
-          <span class="tf-hero-scrim" aria-hidden="true"></span>
-          <!-- R9-9: the begin flow is not a one-way door – Back returns to the shell with nothing
-               resolved. It is the design's back-arrow, on the hero where the design puts it. -->
-          <button class="tf-hero-back" :disabled="game.busy" @click="$emit('back')">← Back</button>
-          <div class="tf-hero-caption">
-            <h2 class="tf-hero-title">{{ pending.tierLabel }}</h2>
-            <p class="tf-hero-meta">{{ pending.surface }} &middot; {{ weekDates }}</p>
-          </div>
-        </Card>
-
-        <!-- THE FACTS ROW, and it is the design's own four in the design's own order: Surface /
-             Prize Money / Ranking Points / Spectators.
-             ⚠ THE FOURTH CELL WAS "Draw" FOR ONE SLICE, because the game did not model a crowd. It
-             does now (engine/season/preview.ts `eventCrowd` – a corridor per tier off the event's
-             own `seed:crowd:` sub-stream, decorative, read by nothing), so the handoff's own label
-             is back. The DRAW SIZE did not lose its place with the swap: it moved onto the
-             first-round card below, which is where a draw size actually means something, and it
-             is stated there for every tier – `roundLabel` alone would not do it, since a local's
-             8-player first round reads "Quarterfinal" and never says 8. -->
-        <div class="tf-facts">
-          <div class="tf-fact">
-            <span class="tf-fact-tile" aria-hidden="true">
-              <span class="surface-mark" :class="`surf-${pending.surface}`">
-                <span class="surface-ring"><i></i></span>
-              </span>
-            </span>
-            <span class="tf-fact-label">Surface</span>
-            <span class="tf-fact-value surface">{{ pending.surface }}</span>
-          </div>
-          <!-- "Prize Money", dashed out, is the design's own third fact, and it is true of every
-               event in the game: the junior tour pays nothing at all (engine/season/calendar.ts,
-               "the junior international tour – no prize money"). The family carries the year; she
-               collects points. That is the premise of the whole game, so it earns a cell. -->
-          <div class="tf-fact">
-            <span class="tf-fact-tile" aria-hidden="true">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 3v18M16 7.5A3.5 3.5 0 0 0 12.5 5h-1a3 3 0 0 0 0 6h1a3 3 0 0 1 0 6h-1A3.5 3.5 0 0 1 8 16.5" />
-              </svg>
-            </span>
-            <span class="tf-fact-label">Prize money</span>
-            <span class="tf-fact-value" title="The junior tour pays no prize money at any level">–</span>
-          </div>
-          <div class="tf-fact">
-            <span class="tf-fact-tile" aria-hidden="true">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M9 20h6M12 14v6" />
-              </svg>
-            </span>
-            <span class="tf-fact-label">Winner</span>
-            <span class="tf-fact-value">{{ winnerPoints }} pts</span>
-          </div>
-          <div class="tf-fact">
-            <span class="tf-fact-tile" aria-hidden="true">
-              <!-- The design's own three-figure mark: one face forward, two behind it. -->
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <circle cx="12" cy="7.4" r="2.8" />
-                <circle cx="5.8" cy="9.4" r="2.2" />
-                <circle cx="18.2" cy="9.4" r="2.2" />
-                <path d="M12 11.4c-3 0-5.2 1.7-5.2 4.1V18h10.4v-2.5c0-2.4-2.2-4.1-5.2-4.1z" />
-                <path d="M5.8 12.6c-2 0-3.6 1.2-3.6 2.9V18h3.2v-2.5c0-1 .3-1.9.9-2.6a5 5 0 0 0-.5-.3zM18.2 12.6c2 0 3.6 1.2 3.6 2.9V18h-3.2v-2.5c0-1-.3-1.9-.9-2.6a5 5 0 0 1 .5-.3z" />
-              </svg>
-            </span>
-            <span class="tf-fact-label">Spectators</span>
-            <span class="tf-fact-value" :title="crowdTitle">{{ crowdFigure }}</span>
-          </div>
-        </div>
-
-        <!-- THE FIRST ROUND. Two mirrored player panels either side of a VS. No portraits: we ship
-             none for the opponents, and one face against an empty frame reads worse than two
-             names. -->
-        <Card class="tf-first">
-          <!-- The round she is about to play, and the size of the thing she has to get through to
-               win it. The draw size lives HERE rather than in the facts row (see the note on it):
-               "Quarterfinal · 8-player draw" says in one line both where she starts and how far
-               the top is, which is more than either half said on its own. -->
-          <div class="tf-round-row">
-            <p class="tf-round">{{ pending.roundLabel }}</p>
-            <p class="tf-draw">{{ drawSize }}-player draw</p>
-          </div>
-          <div class="tf-first-grid">
-            <div class="tf-first-side">
-              <div class="tf-first-flag">{{ kidFlag }}</div>
-              <div class="tf-first-name">{{ kidShort }}</div>
-              <div class="tf-first-rank">Rank #{{ kidRank }}</div>
-            </div>
-            <div class="tf-first-vs">VS</div>
-            <div class="tf-first-side mirrored">
-              <div class="tf-first-flag">{{ flagEmoji(pending.opponent.nation) }}</div>
-              <div class="tf-first-name">{{ pending.opponent.name }}</div>
-              <div class="tf-first-rank">Rank #{{ pending.opponent.rank }}</div>
-            </div>
-          </div>
-        </Card>
-
-        <!-- THE COACH'S READ + THE BUTTON THAT STARTS IT. -->
-        <Card class="tf-brief">
-          <div class="tf-brief-said">
-            <p class="tf-brief-label">Coach prediction</p>
-            <p class="tf-brief-line">{{ coachLine }}</p>
-            <p v-if="coachSignature" class="tf-brief-sign">{{ coachSignature }}</p>
-          </div>
-          <div class="tf-brief-go">
-            <p class="tf-brief-ring-label">Her condition</p>
-            <ProgressRing
-              :value="condition / 100"
-              :color="conditionColor"
-              :label="`Her condition going into this tournament: ${Math.round(condition)} percent`"
-            />
-            <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">Begin →</PrimaryPill>
-          </div>
-        </Card>
-
-        <!-- R9-9b: the post-deadline withdrawal, behind a confirm. -->
-        <button class="link tf-skip-entry" :disabled="game.busy" @click="showSkipConfirm = true">
-          Skip this event – withdraw
-        </button>
-      </template>
-
-      <template v-else>
-        <!-- Path so far. NOT on the finale: the L/M poster carries her whole path as its own round
-             strip (design §L), and printing it twice, one card apart, is the same list said twice. -->
-        <div v-if="pending.bracket.length && phase !== 'finale'" class="tf-strip">
-          <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
-            <span class="tf-strip-round">{{ r.roundLabel }}</span>
-            <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
-            <span class="tf-strip-opp">{{ r.oppName }}</span>
-            <span class="tf-strip-score num">{{ r.score }}</span>
-          </div>
-        </div>
-
-        <!-- Round-7 (owner): the draw as a round-tabbed bracket (R32 · R16 · QF · SF · F). The
-             active tab defaults to the kid's current round between rounds (post) and to the
-             spectate round during the walk; the finale renders the same component again below
-             its card. Only revealed rounds are in `fullBracket`, so no tab can leak ahead. -->
-        <section v-if="showBracket" class="tf-card tf-bracket">
-          <p class="tf-bracket-title">Draw</p>
-          <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
-        </section>
-
-        <!-- Watching a match (inline).
-             ⚠ THE HEAD ROW IS GONE, AND IT COST 34px. Round-7 moved the stage/round label off the
-             court (where it obstructed play) into a head row of its own, level with "To result →";
-             30.07 finishes the move. The label went UP to the header's date line, which was already
-             being drawn, and "To result →" went up to the header's own slot - so the row had nothing
-             left to carry and the court starts 34px higher (22px of pill + its 12px of air).
-             The round is still named on this screen and it is still the same capsule. It just does
-             not rent a row to say it. -->
-      <section v-if="replayOpen && annotated && currentMatch" class="tf-card">
-        <MatchViewer
-          :match="annotated"
-          :player-a="currentMatch.a"
-          :player-b="currentMatch.b"
-          :surface="currentMatch.surface"
-          :rank-a="viewerRankA"
-          :rank-b="viewerRankB"
-          :final-match="isFinalRound"
-          :temperature-c="pending?.temperatureC ?? null"
-          @finish="endReplay"
-          @end-applause="noteEndApplause"
+    <!-- =====================================================================================
+         E. TOURNAMENT (PREVIEW) – the brief, and the flow's very first screen (Round 5 item 6).
+         Hero -> four facts -> the first-round pairing -> the coach's read beside the button.
+         ===================================================================================== -->
+    <template v-if="phase === 'splash'">
+      <!-- THE HERO. The venue this event owns forever (art/venues.ts draws it off the event's own
+           sub-stream), under the design's four-stop scrim so the title keeps its contrast on a
+           bright court. Rounded rather than full-bleed: this is a card in a takeover, not the top
+           of a screen. -->
+      <Card variant="photo" class="tf-hero">
+        <img class="tf-hero-art" :src="venueUrl" alt="" />
+        <span class="tf-hero-scrim" aria-hidden="true"></span>
+        <!-- R9-9: the begin flow is not a one-way door – Back returns to the shell with nothing
+             resolved. It is the design's back-arrow, on the hero where the design puts it (§E:
+             «сверху back-arrow»).
+             ⚠ THE LAST HAND-WRITTEN BACK CONTROL IN THE APP, NOW THE SHARED ONE (owner, 30.07: «Для
+             back я просил везде сделать один компонент и его консистентно использовать, просто иконка
+             с белым fill»). It was a glass pill reading "← Back" - a `&larr;` CHARACTER plus a word,
+             on a plate nothing else in the app wears - while three screen headers had already been
+             converted to `IconButton variant="bare" icon="back"`. Now all four are the same control
+             and the same asset (`public/icons/back.svg`, the owner's own drawing), and
+             tests/ui-control-system.test.ts's allowlist of hand-written back arrows is empty.
+             WHAT THIS SCREEN STILL OWNS is where it sits and what colour it is: white rather than the
+             `.back-link` muted, because it is the only one standing on a photograph. -->
+        <IconButton
+          class="back-link tf-hero-back"
+          variant="bare"
+          icon="back"
+          label="Back"
+          :disabled="game.busy"
+          @click="$emit('back')"
         />
+        <div class="tf-hero-caption">
+          <h2 class="tf-hero-title">{{ pending.tierLabel }}</h2>
+          <p class="tf-hero-meta">{{ pending.surface }} &middot; {{ weekDates }}</p>
+        </div>
+      </Card>
+
+      <!-- THE FACTS ROW, and it is the design's own four in the design's own order: Surface /
+           Prize Money / Ranking Points / Spectators.
+           ⚠ THE FOURTH CELL WAS "Draw" FOR ONE SLICE, because the game did not model a crowd. It
+           does now (engine/season/preview.ts `eventCrowd` – a corridor per tier off the event's
+           own `seed:crowd:` sub-stream, decorative, read by nothing), so the handoff's own label
+           is back. The DRAW SIZE did not lose its place with the swap: it moved onto the
+           first-round card below, which is where a draw size actually means something, and it
+           is stated there for every tier – `roundLabel` alone would not do it, since a local's
+           8-player first round reads "Quarterfinal" and never says 8. -->
+      <!-- ⚠ ALL FOUR GLYPHS ARE ASSETS NOW, NOT INLINE PATHS (owner, 30.07: «иконка prize money не
+           обновилась, проверить» - and he was right, nothing had changed on screen). His own
+           `dollar.svg` had been sitting in public/icons since that morning with a note asking for
+           this exact swap, and `trophy.svg` / `spectators.svg` had been lifted OUT of the three
+           inline `<svg>`s below so the tiles could adopt them without redrawing anything. The
+           paths are deleted with the markup that held them: the whole point of an asset is that
+           there is no second copy to drift, and a dead `d=` attribute is the next drift.
+           The surface tile takes `SurfaceMark` for the same reason («Surface type similar icon
+           across every screen – it means this icon is not a component»); it was the app's last
+           hand-written ring. `:show-name="false"` because the tile labels itself underneath.
+           SIZE STAYS 19px, the size the inline SVGs were, so the 34px tiles are unchanged. Colour
+           comes from `.tf-fact-tile`'s own `--ink-2` through `currentColor` - see AppIcon. -->
+      <div class="tf-facts">
+        <div class="tf-fact">
+          <span class="tf-fact-tile" aria-hidden="true">
+            <SurfaceMark :surface="pending.surface" :show-name="false" />
+          </span>
+          <span class="tf-fact-label">Surface</span>
+          <span class="tf-fact-value surface">{{ pending.surface }}</span>
+        </div>
+        <!-- "Prize Money", dashed out, is the design's own third fact, and it is true of every
+             event in the game: the junior tour pays nothing at all (engine/season/calendar.ts,
+             "the junior international tour – no prize money"). The family carries the year; she
+             collects points. That is the premise of the whole game, so it earns a cell. -->
+        <div class="tf-fact">
+          <span class="tf-fact-tile" aria-hidden="true">
+            <AppIcon name="dollar" :size="19" />
+          </span>
+          <span class="tf-fact-label">Prize money</span>
+          <span class="tf-fact-value" title="The junior tour pays no prize money at any level">–</span>
+        </div>
+        <div class="tf-fact">
+          <span class="tf-fact-tile" aria-hidden="true">
+            <AppIcon name="trophy" :size="19" />
+          </span>
+          <span class="tf-fact-label">Winner</span>
+          <span class="tf-fact-value">{{ winnerPoints }} pts</span>
+        </div>
+        <div class="tf-fact">
+          <span class="tf-fact-tile" aria-hidden="true">
+            <AppIcon name="spectators" :size="19" />
+          </span>
+          <span class="tf-fact-label">Spectators</span>
+          <span class="tf-fact-value" :title="crowdTitle">{{ crowdFigure }}</span>
+        </div>
+      </div>
+
+      <!-- THE FIRST ROUND. Two mirrored player panels either side of a VS. No portraits: we ship
+           none for the opponents, and one face against an empty frame reads worse than two
+           names. -->
+      <Card class="tf-first">
+        <!-- The round she is about to play, and the size of the thing she has to get through to
+             win it. The draw size lives HERE rather than in the facts row (see the note on it):
+             "Quarterfinal · 8-player draw" says in one line both where she starts and how far
+             the top is, which is more than either half said on its own. -->
+        <div class="tf-round-row">
+          <p class="tf-round">{{ pending.roundLabel }}</p>
+          <p class="tf-draw">{{ drawSize }}-player draw</p>
+        </div>
+        <div class="tf-first-grid">
+          <div class="tf-first-side">
+            <div class="tf-first-flag">{{ kidFlag }}</div>
+            <div class="tf-first-name">{{ kidShort }}</div>
+            <div class="tf-first-rank">Rank #{{ kidRank }}</div>
+          </div>
+          <div class="tf-first-vs">VS</div>
+          <div class="tf-first-side mirrored">
+            <div class="tf-first-flag">{{ flagEmoji(pending.opponent.nation) }}</div>
+            <div class="tf-first-name">{{ pending.opponent.name }}</div>
+            <div class="tf-first-rank">Rank #{{ pending.opponent.rank }}</div>
+          </div>
+        </div>
+      </Card>
+
+      <!-- THE COACH'S READ + THE BUTTON THAT STARTS IT. -->
+      <Card class="tf-brief">
+        <div class="tf-brief-said">
+          <p class="tf-brief-label">Coach prediction</p>
+          <p class="tf-brief-line">{{ coachLine }}</p>
+          <p v-if="coachSignature" class="tf-brief-sign">{{ coachSignature }}</p>
+        </div>
+        <div class="tf-brief-go">
+          <p class="tf-brief-ring-label">Her condition</p>
+          <ProgressRing
+            :value="condition / 100"
+            :color="conditionColor"
+            :label="`Her condition going into this tournament: ${Math.round(condition)} percent`"
+          />
+          <!-- ⚠ JUST THE WORD (owner, 30.07: «У begin просто убрать стрелку»). The arrow was doing
+               nothing the button was not: a lime CTA at the foot of a brief is already the way
+               forward, and §E's own copy for this control is one word. The design's onboarding CTA
+               is "Begin" bare as well, so the two now match. -->
+          <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">Begin</PrimaryPill>
+        </div>
+      </Card>
+
+      <!-- R9-9b: the post-deadline withdrawal, behind a confirm. -->
+      <button class="link tf-skip-entry" :disabled="game.busy" @click="showSkipConfirm = true">
+        Skip this event – withdraw
+      </button>
+    </template>
+
+    <template v-else>
+      <!-- Path so far. NOT on the finale: the L/M poster carries her whole path as its own round
+           strip (design §L), and printing it twice, one card apart, is the same list said twice. -->
+      <div v-if="pending.bracket.length && phase !== 'finale'" class="tf-strip">
+        <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
+          <span class="tf-strip-round">{{ r.roundLabel }}</span>
+          <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
+          <span class="tf-strip-opp">{{ r.oppName }}</span>
+          <span class="tf-strip-score num">{{ r.score }}</span>
+        </div>
+      </div>
+
+      <!-- Round-7 (owner): the draw as a round-tabbed bracket (R32 · R16 · QF · SF · F). The
+           active tab defaults to the kid's current round between rounds (post) and to the
+           spectate round during the walk; the finale renders the same component again below
+           its card. Only revealed rounds are in `fullBracket`, so no tab can leak ahead. -->
+      <section v-if="showBracket" class="tf-card tf-bracket">
+        <p class="tf-bracket-title">Draw</p>
+        <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
       </section>
 
-      <!-- =====================================================================================
-           F. MATCH DAY – the pre-match card, as the portrait treatment (ui-inventory §4 Q2). The
-           painted scene fills the card, the round rides the top corner, and the glass plate at its
-           foot carries the pairing and the two ways into the match. `serious` is the frame for a
-           match she has not played yet: focused, contained, nothing decided.
-           ===================================================================================== -->
-      <MatchScene
-        v-else-if="phase === 'pre'"
-        class="tf-scene"
-        :stage="kidStage"
-        emotion="serious"
-        :label="pending.roundLabel"
+      <!-- Watching a match (inline).
+           ⚠ THE HEAD ROW IS GONE, AND IT COST 34px. Round-7 moved the stage/round label off the
+           court (where it obstructed play) into a head row of its own, level with "To result →";
+           30.07 finishes the move. The label went UP to the header's date line, which was already
+           being drawn, and "To result →" went up to the header's own slot - so the row had nothing
+           left to carry and the court starts 34px higher (22px of pill + its 12px of air).
+           The round is still named on this screen and it is still the same capsule. It just does
+           not rent a row to say it.
+           ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO, WHICH IS THE OTHER 36px (owner, 30.07: «на
+           экране матча у нас двойная рамка, она съедает место, давай внешний контур уберем, он не
+           нужен»). It was a 16px-padded, hairline-bordered panel wrapped around a STACK of panels
+           the viewer draws itself - `.mv-panel`, `.mv-log`, `.mv-boxscore` are each a `Card`, so
+           the outer box was a second border around a border and 34px of horizontal padding around
+           nothing. Measured at 375pt: the canvas went 291 -> 327px wide and the painted court with
+           it (244.4 -> 274.9px), and the panel lost 32px of height. The viewer now hangs straight
+           off the takeover's own scroller, which is what the other three match screens do as well.
+           The section it used to live in went with the class: the `v-if` sits on the component, so
+           the phase chain is unchanged and there is no wrapper left to grow a border again.
+           ⚠ AND IT SAYS `mode="replay"` NOW, WHERE IT USED TO SAY NOTHING AT ALL - which was a lie
+           the prop's own default told for it. `MatchViewer.mode` defaulted to `'live'` "so existing
+           call sites need no change", and this was the call site that took the default: the busiest
+           match screen in the app blinked a red "Live" badge over a bracket the ENGINE had already
+           resolved during the tick, which is the same contract stated at the top of this file
+           (Q&A 12 - presentation, never a re-decision). The default is gone with this line: `mode`
+           is a REQUIRED prop now, so the next call site has to say which it is instead of inheriting
+           the wrong answer. Nothing else on this screen moves - the badge goes, and with it the
+           shout, because a match already in the save file cannot be shouted at. The only genuinely
+           live surface left is SeasonScreen's sandbox exhibition, generated at click time.
+           ⚠⚠ AND THE OWNER HAS RULED, 30.07, so the lever below IS taken: «Для меня live это "watch
+           it" и без вариантов, всё остальное replay». That is a cleaner definition than the one this
+           file was using. "Live" here does not mean the engine has not decided yet - it never has,
+           for any surface but the sandbox. It means THE PLAYER HAS NOT SEEN IT YET. A first watch is
+           an outcome he does not know; a re-watch is a recording of one he does.
+           `replayAdvances` is exactly that distinction and always was (true when opened from the
+           pre-match card, false on the box score's "Watch again"), so the badge and the shout land on
+           a round's first watch and stay off every re-watch. -->
+    <MatchViewer
+      v-if="replayOpen && annotated && currentMatch"
+      :match="annotated"
+      :player-a="currentMatch.a"
+      :player-b="currentMatch.b"
+      :surface="currentMatch.surface"
+      :rank-a="viewerRankA"
+      :rank-b="viewerRankB"
+      :final-match="isFinalRound"
+      :temperature-c="pending?.temperatureC ?? null"
+      :mode="replayAdvances ? 'live' : 'replay'"
+      @finish="endReplay"
+      @end-applause="noteEndApplause"
+    />
+
+    <!-- =====================================================================================
+         F. MATCH DAY – the pre-match card, as the portrait treatment (ui-inventory §4 Q2). The
+         painted scene fills the card, the round rides the top corner, and the glass plate at its
+         foot carries the pairing and the two ways into the match. `serious` is the frame for a
+         match she has not played yet: focused, contained, nothing decided.
+         ===================================================================================== -->
+    <MatchScene
+      v-else-if="phase === 'pre'"
+      class="tf-scene"
+      :stage="kidStage"
+      emotion="serious"
+      :label="pending.roundLabel"
+    >
+      <div class="tf-scene-grid">
+        <div class="tf-scene-side">
+          <div class="tf-scene-name">{{ kidShort }} {{ kidFlag }}</div>
+          <div class="tf-scene-rank">#{{ kidRank }}</div>
+        </div>
+        <div class="tf-scene-vs">vs</div>
+        <div class="tf-scene-side mirrored">
+          <div class="tf-scene-name">{{ pending.opponent.name }} {{ flagEmoji(pending.opponent.nation) }}</div>
+          <div class="tf-scene-rank">#{{ pending.opponent.rank }}</div>
+        </div>
+      </div>
+      <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
+           кнопки skip/watch it так логичнее»). It is the app's own order everywhere else and this
+           card was the outlier: `.dialog-actions` puts Cancel before Confirm, the box score below
+           puts "Watch again" before "Next →", and the friendly's own two are in the same pair. The
+           affirmative belongs under the thumb, which on a phone is the right-hand end of the row -
+           and "the one you usually want is where your thumb already is" is the whole argument. Only
+           the ORDER moved: same handlers, same `.primary` on the same button, same `.sfx-watch`. -->
+      <div class="tf-actions">
+        <button :disabled="game.busy" @click="showResult">Skip</button>
+        <button class="primary sfx-watch" :disabled="game.busy" @click="watchMatch">Watch match</button>
+      </div>
+    </MatchScene>
+
+    <!-- Post-match box score -->
+    <section v-else-if="phase === 'post'" class="tf-card">
+      <div class="tf-result-head">
+        <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
+        <span class="tf-scoreline num">{{ kidScore }}</span>
+      </div>
+      <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }}</p>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>
+              <span class="ph-name">{{ kidShort }}</span>
+              <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
+            </th>
+            <th>
+              <span class="ph-name">{{ oppShort }}</span>
+              <span v-if="currentOppRank != null" class="ph-rank">#{{ currentOppRank }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in statRows" :key="row.label">
+            <th>{{ row.label }}</th>
+            <td class="num">{{ row.kid }}</td>
+            <td class="num">{{ row.opp }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p v-if="matchMeta" class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
+      <div class="tf-actions">
+        <button class="sfx-watch" :disabled="game.busy" @click="watchAgain">Watch again</button>
+        <button class="primary" :disabled="game.busy" @click="next">Next →</button>
+      </div>
+    </section>
+
+    <!-- Round-7 spectate: after the kid's exit, walk the rounds she isn't in, up to the Final.
+         Her own result stays visible; the draw above (BracketTabs) shows this round. -->
+    <section v-else-if="phase === 'spectate'" class="tf-card tf-spectate">
+      <p class="tf-spectate-kid">{{ kidShort }} – {{ pending.finishLabel }}</p>
+      <p class="tf-round">{{ spectateRoundLabel }}</p>
+      <p class="hint">She's out – see how the draw finishes.</p>
+      <div class="tf-actions">
+        <button class="primary" :disabled="game.busy" @click="nextSpectateRound">
+          {{ spectateRound < finalRound ? 'Next round →' : 'Continue' }}
+        </button>
+      </div>
+    </section>
+
+    <!-- =====================================================================================
+         L. CHAMPION / M. RUNNER-UP – one poster, one `outcome` (the handoff's ResultPoster, §22).
+         Order is the design's: mark -> status -> her name -> the photograph -> who she beat ->
+         the sets -> the chips -> the points -> the round strip -> Continue. The photograph is the
+         only thing that stretches, so the button can never be pushed under the fold.
+         ===================================================================================== -->
+    <template v-else>
+      <!-- Reached the Final: her own poster, gold or silver. -->
+      <Card
+        v-if="pending.kidChampion || isRunnerUp"
+        class="tf-poster"
+        :class="pending.kidChampion ? 'champ' : 'silver'"
       >
-        <div class="tf-scene-grid">
-          <div class="tf-scene-side">
-            <div class="tf-scene-name">{{ kidShort }} {{ kidFlag }}</div>
-            <div class="tf-scene-rank">#{{ kidRank }}</div>
-          </div>
-          <div class="tf-scene-vs">vs</div>
-          <div class="tf-scene-side mirrored">
-            <div class="tf-scene-name">{{ pending.opponent.name }} {{ flagEmoji(pending.opponent.nation) }}</div>
-            <div class="tf-scene-rank">#{{ pending.opponent.rank }}</div>
+        <!-- The trophy and the medal are the art we already ship (owner, §4 Q4) – no slot to
+             fill, nothing to draw. -->
+        <div class="tf-poster-mark">{{ pending.kidChampion ? '🏆' : '🥈' }}</div>
+        <p class="tf-poster-status">{{ pending.kidChampion ? 'Champion' : 'Runner-up' }}</p>
+        <h2 class="tf-poster-name">{{ kidFullName }}</h2>
+        <img class="tf-poster-photo" :src="finalePortrait" :style="finaleFocus" alt="" />
+        <p v-if="finaleOpponent" class="tf-poster-line">
+          {{ pending.kidChampion ? 'def.' : 'lost to' }} <b>{{ finaleOpponent }}</b> in the Final
+        </p>
+        <p v-if="finaleSets.length" class="tf-poster-sets">
+          <span v-for="(s, i) in finaleSets" :key="i">{{ s }}</span>
+        </p>
+        <div class="controls tf-poster-chips">
+          <SurfaceMark :surface="pending.surface" />
+          <span class="pill">{{ pending.tierLabel }}</span>
+        </div>
+        <!-- Lime on BOTH posters: points are always a gain, even on the day she lost the final. -->
+        <p class="tf-poster-points">+{{ pending.points }} pts</p>
+        <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
+          <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
+            <span class="tf-path-round">{{ c.short }}</span>
+            <span class="tf-path-opp">{{ c.won ? 'def.' : 'lost to' }} <b>{{ c.opp }}</b></span>
+            <span class="tf-path-score num">{{ c.score }}</span>
+            <svg class="tf-path-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path v-if="c.won" d="M8 12.4l2.6 2.6L16 9.6" />
+              <path v-else d="M9 9l6 6M15 9l-6 6" />
+            </svg>
           </div>
         </div>
-        <div class="tf-actions">
-          <button class="primary sfx-watch" :disabled="game.busy" @click="watchMatch">Watch match</button>
-          <button :disabled="game.busy" @click="showResult">Skip</button>
-        </div>
-      </MatchScene>
+        <PrimaryPill class="tf-poster-cta" variant="cta" :disabled="game.busy" @click="continueFinale">
+          Continue
+        </PrimaryPill>
+      </Card>
 
-      <!-- Post-match box score -->
-      <section v-else-if="phase === 'post'" class="tf-card">
-        <div class="tf-result-head">
-          <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
-          <span class="tf-scoreline num">{{ kidScore }}</span>
+      <!-- Exited earlier: the same poster with somebody else's name on it. No art for an AI
+           champion, so the photograph's place is taken by her own finish line. -->
+      <Card v-else class="tf-poster out">
+        <div class="tf-poster-mark">🏆</div>
+        <p class="tf-poster-status">Champion</p>
+        <h2 class="tf-poster-name">{{ championName }}</h2>
+        <p class="tf-poster-line">
+          {{ kidShort }} – <b>{{ pending.finishLabel }}</b>
+        </p>
+        <div class="controls tf-poster-chips">
+          <SurfaceMark :surface="pending.surface" />
+          <span class="pill">{{ pending.tierLabel }}</span>
         </div>
-        <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }}</p>
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th>
-                <span class="ph-name">{{ kidShort }}</span>
-                <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
-              </th>
-              <th>
-                <span class="ph-name">{{ oppShort }}</span>
-                <span v-if="currentOppRank != null" class="ph-rank">#{{ currentOppRank }}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in statRows" :key="row.label">
-              <th>{{ row.label }}</th>
-              <td class="num">{{ row.kid }}</td>
-              <td class="num">{{ row.opp }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-if="matchMeta" class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
-        <div class="tf-actions">
-          <button class="sfx-watch" :disabled="game.busy" @click="watchAgain">Watch again</button>
-          <button class="primary" :disabled="game.busy" @click="next">Next →</button>
+        <p class="tf-poster-points">+{{ pending.points }} pts</p>
+        <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
+          <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
+            <span class="tf-path-round">{{ c.short }}</span>
+            <span class="tf-path-opp">{{ c.won ? 'def.' : 'lost to' }} <b>{{ c.opp }}</b></span>
+            <span class="tf-path-score num">{{ c.score }}</span>
+            <svg class="tf-path-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path v-if="c.won" d="M8 12.4l2.6 2.6L16 9.6" />
+              <path v-else d="M9 9l6 6M15 9l-6 6" />
+            </svg>
+          </div>
         </div>
+        <PrimaryPill class="tf-poster-cta" variant="cta" :disabled="game.busy" @click="continueFinale">
+          Continue
+        </PrimaryPill>
+      </Card>
+
+      <!-- The finished draw, below the celebration – same component, same tabs (her round is
+           still the default one, and by now every round is revealed). -->
+      <section v-if="showFinaleBracket" class="tf-card tf-bracket">
+        <p class="tf-bracket-title">Draw</p>
+        <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
       </section>
+    </template>
+    </template>
 
-      <!-- Round-7 spectate: after the kid's exit, walk the rounds she isn't in, up to the Final.
-           Her own result stays visible; the draw above (BracketTabs) shows this round. -->
-      <section v-else-if="phase === 'spectate'" class="tf-card tf-spectate">
-        <p class="tf-spectate-kid">{{ kidShort }} – {{ pending.finishLabel }}</p>
-        <p class="tf-round">{{ spectateRoundLabel }}</p>
-        <p class="hint">She's out – see how the draw finishes.</p>
-        <div class="tf-actions">
-          <button class="primary" :disabled="game.busy" @click="nextSpectateRound">
-            {{ spectateRound < finalRound ? 'Next round →' : 'Continue' }}
-          </button>
-        </div>
-      </section>
-
-      <!-- =====================================================================================
-           L. CHAMPION / M. RUNNER-UP – one poster, one `outcome` (the handoff's ResultPoster, §22).
-           Order is the design's: mark -> status -> her name -> the photograph -> who she beat ->
-           the sets -> the chips -> the points -> the round strip -> Continue. The photograph is the
-           only thing that stretches, so the button can never be pushed under the fold.
-           ===================================================================================== -->
-      <template v-else>
-        <!-- Reached the Final: her own poster, gold or silver. -->
-        <Card
-          v-if="pending.kidChampion || isRunnerUp"
-          class="tf-poster"
-          :class="pending.kidChampion ? 'champ' : 'silver'"
-        >
-          <!-- The trophy and the medal are the art we already ship (owner, §4 Q4) – no slot to
-               fill, nothing to draw. -->
-          <div class="tf-poster-mark">{{ pending.kidChampion ? '🏆' : '🥈' }}</div>
-          <p class="tf-poster-status">{{ pending.kidChampion ? 'Champion' : 'Runner-up' }}</p>
-          <h2 class="tf-poster-name">{{ kidFullName }}</h2>
-          <img class="tf-poster-photo" :src="finalePortrait" :style="finaleFocus" alt="" />
-          <p v-if="finaleOpponent" class="tf-poster-line">
-            {{ pending.kidChampion ? 'def.' : 'lost to' }} <b>{{ finaleOpponent }}</b> in the Final
-          </p>
-          <p v-if="finaleSets.length" class="tf-poster-sets">
-            <span v-for="(s, i) in finaleSets" :key="i">{{ s }}</span>
-          </p>
-          <div class="controls tf-poster-chips">
-            <SurfaceMark :surface="pending.surface" />
-            <span class="pill">{{ pending.tierLabel }}</span>
-          </div>
-          <!-- Lime on BOTH posters: points are always a gain, even on the day she lost the final. -->
-          <p class="tf-poster-points">+{{ pending.points }} pts</p>
-          <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
-            <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
-              <span class="tf-path-round">{{ c.short }}</span>
-              <span class="tf-path-opp">{{ c.won ? 'def.' : 'lost to' }} <b>{{ c.opp }}</b></span>
-              <span class="tf-path-score num">{{ c.score }}</span>
-              <svg class="tf-path-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <path v-if="c.won" d="M8 12.4l2.6 2.6L16 9.6" />
-                <path v-else d="M9 9l6 6M15 9l-6 6" />
-              </svg>
-            </div>
-          </div>
-          <PrimaryPill class="tf-poster-cta" variant="cta" :disabled="game.busy" @click="continueFinale">
-            Continue
-          </PrimaryPill>
-        </Card>
-
-        <!-- Exited earlier: the same poster with somebody else's name on it. No art for an AI
-             champion, so the photograph's place is taken by her own finish line. -->
-        <Card v-else class="tf-poster out">
-          <div class="tf-poster-mark">🏆</div>
-          <p class="tf-poster-status">Champion</p>
-          <h2 class="tf-poster-name">{{ championName }}</h2>
-          <p class="tf-poster-line">
-            {{ kidShort }} – <b>{{ pending.finishLabel }}</b>
-          </p>
-          <div class="controls tf-poster-chips">
-            <SurfaceMark :surface="pending.surface" />
-            <span class="pill">{{ pending.tierLabel }}</span>
-          </div>
-          <p class="tf-poster-points">+{{ pending.points }} pts</p>
-          <div v-if="pathCells.length" class="tf-path" :style="{ gridTemplateColumns: `repeat(${pathCells.length}, 1fr)` }">
-            <div v-for="(c, i) in pathCells" :key="i" class="tf-path-cell" :class="{ lost: !c.won }">
-              <span class="tf-path-round">{{ c.short }}</span>
-              <span class="tf-path-opp">{{ c.won ? 'def.' : 'lost to' }} <b>{{ c.opp }}</b></span>
-              <span class="tf-path-score num">{{ c.score }}</span>
-              <svg class="tf-path-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <path v-if="c.won" d="M8 12.4l2.6 2.6L16 9.6" />
-                <path v-else d="M9 9l6 6M15 9l-6 6" />
-              </svg>
-            </div>
-          </div>
-          <PrimaryPill class="tf-poster-cta" variant="cta" :disabled="game.busy" @click="continueFinale">
-            Continue
-          </PrimaryPill>
-        </Card>
-
-        <!-- The finished draw, below the celebration – same component, same tabs (her round is
-             still the default one, and by now every round is revealed). -->
-        <section v-if="showFinaleBracket" class="tf-card tf-bracket">
-          <p class="tf-bracket-title">Draw</p>
-          <BracketTabs :matches="bracketMatches" :draw-size="drawSize" :active-round="bracketActiveRound" />
-        </section>
-      </template>
-      </template>
-    </div>
-
+    <!-- ⚠ THE CONFIRM MOVED INSIDE THE SCROLLER, and it changes nothing about where it paints. It
+         used to be a sibling of `.tf-body` inside the takeover; `.dialog-overlay` is
+         `position: fixed; inset: 0; z-index: 60`, so it is laid out against the VIEWPORT and is not
+         clipped by `.tf-body`'s `overflow-y: auto` (overflow alone creates no containing block for a
+         fixed child, and no ancestor here sets transform/filter/contain). Its z-index still resolves
+         inside `.tournament-flow`'s stacking context, exactly as before - the only reason it moved is
+         that the shell has one content slot and an `overlay` slot for a single caller would be API
+         nobody else needs. -->
     <ConfirmDialog
       v-if="showSkipConfirm"
       :message="skipConfirmMessage"
@@ -857,7 +928,7 @@ const matchMeta = computed(() => {
       @confirm="confirmSkipEvent"
       @cancel="showSkipConfirm = false"
     />
-  </div>
+  </TakeoverShell>
 </template>
 
 <style scoped>
@@ -907,13 +978,12 @@ const matchMeta = computed(() => {
   vertical-align: middle;
 }
 
-/* THE HEADER CONTROL NEVER WRAPS. A wrapped exit is how the header went from 75px to 98px in the
-   first draft of this slice: the flex row gave the sub line what it asked for and the button took
-   two lines for "To result →". A long tier label wrapping the TITLE is the better trade - the title
-   is a name and reads fine on two lines; the control is a control. */
-.tf-top > button {
-  white-space: nowrap;
-}
+/* ⚠ `.tf-top > button { white-space: nowrap }` LEFT THIS BLOCK FOR `src/style.css`, 30.07. It is
+   what keeps a header exit on one line ("To result →" wrapped in the first draft of the 30.07 slice
+   and cost the header 23px), and it stopped being this screen's business when `ui/TakeoverShell.vue`
+   made FOUR surfaces draw their header through one component. It could not simply move into the
+   shell's scoped block either: the exit is SLOT content, so it carries the CALLER's scope id, never
+   the shell's. The rule now sits beside `.tf-top` itself, which is where the header lives. */
 
 /* --- E. Tournament (Preview) ------------------------------------------------------------------ */
 
@@ -947,19 +1017,26 @@ const matchMeta = computed(() => {
   );
 }
 
-.tf-hero-back {
+/* THE HERO'S BACK CONTROL: placement and ink only, because the control itself is `IconButton` now.
+   ⚠ WHAT LEFT THIS RULE, and why none of it is missed: the glass pill (a border, a translucent plate
+   and two `backdrop-filter` declarations) and the type (`font-size` / `font-weight`, which a masked
+   glyph has no use for). The owner asked for «просто иконка с белым fill» and the pill was the reason
+   this one back control looked unlike the other three. The scrim above it is `rgba(6,10,14,.62)` at
+   the top stop - see `.tf-hero-scrim` - so a white glyph has its contrast without a plate under it.
+   WHITE, not `.back-link`'s `--muted`: `--ink` is the ink the two readings at the foot of this same
+   photograph use, and muted grey on a lit court is the one place that class's default is wrong. The
+   hover is `--accent` for every other IconButton and stays that way here.
+   ⚠ THE COLOUR NEEDS BOTH CLASSES IN THE SELECTOR, and it is not a style choice - a one-class scoped
+   rule LOST here and the button rendered muted (measured: rgb(142,155,164) on screen). `.back-link` in
+   src/style.css is a bare class, but `IconButton`'s own `.tb-iconbtn--bare` is a scoped rule, so it
+   carries a `[data-v-…]` of its own and ties a single scoped class of ours at (0,2,0) - and ties go to
+   whichever component's block was injected last, which is import order and not something a screen
+   should depend on. `.back-link.tf-hero-back` is (0,3,0) and wins outright. */
+.back-link.tf-hero-back {
   position: absolute;
   top: 12px;
   left: 12px;
-  padding: 6px 13px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: var(--radius-pill);
-  background: rgba(10, 15, 20, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
+  color: var(--ink);
 }
 
 .tf-hero-caption {

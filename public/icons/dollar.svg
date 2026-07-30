@@ -1,9 +1,10 @@
 <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
 <!-- THE DOLLAR SIGN - THE OWNER'S OWN ASSET (30.07: «dollar sign for a tournament enter page»).
-     Screen E, the tournament entry brief: the "Prize money" fact tile, which draws its glyph inline
-     today. It replaced a dollar of mine.
-     ⚠ READY FOR ADOPTION, NOT YET ADOPTED. That tile is in TournamentFlow.vue, which belongs to
-     another slice this round: `<AppIcon name="dollar" :size="19" />` in place of the inline <svg>.
+     Screen E, the tournament entry brief: the "Prize money" fact tile. It replaced a dollar of mine.
+     ⚠ ADOPTED 30.07, and the owner had to ask twice: «иконка prize money не обновилась, проверить».
+     Shipping the asset was only half the job - TournamentFlow.vue still drew its own dollar as an
+     inline <svg>, so nothing changed on screen. That tile is now `<AppIcon name="dollar" :size="19" />`
+     and the inline path is deleted rather than left lying beside this file.
      NORMALISED, NOT REDRAWN - see back.svg. `fill-rule`/`clip-rule` are carried over because this
      glyph is a filled outline with holes and evenodd is what makes the holes holes. -->
 <g transform="scale(4.166666667)" fill="currentColor">

@@ -27,6 +27,11 @@ import TierGuide from '../TierGuide.vue'
 // the component - the photograph card here and the notecard on Home were already two shared rules
 // in the sheet, so the variant records a split that existed rather than inventing one.
 import ScreenShell from '../ui/ScreenShell.vue'
+// THE TAKEOVER, AND IT IS THE OTHER HALF OF `ScreenShell` (owner, 30.07: «надо все одинаково сделать
+// оверлеем поверх всего экрана»). `ScreenShell` is the stack a TABBED screen gets; this is the stack a
+// screen that COVERS the tabs gets, and the sandbox exhibition below is the fourth and last place
+// MatchViewer is mounted. It was the one that did not have it - see the note at its call site.
+import TakeoverShell from '../ui/TakeoverShell.vue'
 import Card from '../ui/Card.vue'
 import IconButton from '../ui/IconButton.vue'
 import SurfaceMark from '../ui/SurfaceMark.vue'
@@ -38,7 +43,8 @@ import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
-import { vacationArtUrl, weekArtUrl } from '../../art/weeks'
+import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
+import { portraitStage } from '../../shared/avatarEmotion'
 import { rngFromSeed } from '../../engine/rng'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
@@ -141,10 +147,22 @@ const PHASE_STRIP = SURFACE_BLOCKS.map((b) => ({
 }))
 const activePhaseId = computed(() => surfaceBlockFor(week.value).id)
 
-/** The painting for a week with no tournament. Every such week has one - training and exams share
- *  the on-court frame, the three off-season weeks each wear their own (src/art/weeks.ts). */
+/** Her age band, for the band-scoped exam frame. The same one-line derivation `headerAvatar` makes off
+ *  `ageYears`, and not `useKidEmotion` - this screen wants the BAND and none of the emotion machinery. */
+const kidStage = computed(() => portraitStage(game.snapshot?.ageYears ?? 14))
+
+/** The painting for a week with no tournament. Every such week has one: the three off-season weeks
+ *  each wear their own, the exam fortnight wears `study-*` (W6), everything else is the on-court frame
+ *  (src/art/weeks.ts).
+ *
+ *  ⚠ HER CURRENT BAND, ON A ROW THAT MAY BE UP TO CALENDAR_HORIZON WEEKS AWAY, and that is the right
+ *  trade rather than an oversight: the band boundary is `young`→`teen` at 17, so the only rows this can
+ *  get wrong are ones inside a few weeks of a birthday, and the alternative is a screen deriving her
+ *  age at a future week - a fact the snapshot does not carry and the planner has no business computing.
+ *  The recap card, which is the surface that shows a week she actually LIVED, takes its band from the
+ *  engine's own `WeekScene` and is exact. */
 function weekArt(row: CalendarRow): string {
-  return weekArtUrl(row.week)
+  return row.kind === 'exam' ? weekHomeArtUrl('exam', kidStage.value) : weekArtUrl(row.week)
 }
 /** R12-1/14 kept: "Exams" is the owner's own word for it. */
 // THE BOOKED FAMILY WEEK's painting, by package (owner, 29.07). Null when a package has no frame
@@ -669,9 +687,17 @@ function openPracticeLive(match: WorldMatch, atWeek: number): void {
   practiceLiveWeek.value = atWeek
   practiceLive.value = match
 }
-/** The booked friendly for next week: play the week, then watch it live. If she got hurt (the
+/** The booked friendly for next week: play the week, then watch the match. If she got hurt (the
  *  engine cancels + refunds the booking) or the advance stopped for another reason, no friendly
- *  lands and nothing opens – the news event explains it, as before. */
+ *  lands and nothing opens – the news event explains it, as before.
+ *
+ *  ⚠ W4 RENAMED THE BUTTON THIS SITS BEHIND, from "Watch it live →" to "Play it and watch →". The
+ *  owner caught the same two words on the Weekly Story's copy of this control – «She played her
+ *  practice match - Watch it live на кнопке. Ну точно не live, а replay, да?» – and they were no
+ *  truer here, one tick removed: this handler ADVANCES THE WEEK, the engine resolves the friendly
+ *  inside that tick exactly as it always did, and PracticeFlow then re-simulates the stored record
+ *  under its stored seed. There is no moment at which anything is being watched as it happens. The
+ *  new label is what the press actually costs and buys, in that order. */
 async function playPracticeWeek(): Promise<void> {
   await game.advance(1)
   const friendly = thisWeekFriendly.value
@@ -704,6 +730,11 @@ function playExhibition(): void {
   const opts: MatchOptions = { surface: exhibitionSurface, tour: 'wta', seed }
   const result = simulateMatch(exhibitionPlayerA.value, exhibitionPlayerB, opts)
   exhibitionMatch.value = annotateMatch(result, exhibitionPlayerA.value, exhibitionPlayerB, opts)
+}
+/** Dismiss the takeover. Nothing to commit: the hit-out costs nothing, decides nothing and is not
+ *  written anywhere, so leaving it is the whole of leaving it. */
+function closeExhibition(): void {
+  exhibitionMatch.value = null
 }
 </script>
 
@@ -1046,9 +1077,13 @@ function playExhibition(): void {
             </span>
             <span class="planned-actions">
               <!-- R10-12: on the week that is next, the friendly is enterable right here – this plays
-                   the week (the same single advance the Home bar does) and opens it live. -->
+                   the week (the same single advance the Home bar does) and opens the match.
+                   ⚠ W4 renamed this label – see `playPracticeWeek` in the script for what it used to
+                   promise and for the owner's words. Nothing here happens as you watch: the click
+                   TICKS THE WEEK, the engine resolves the friendly inside that tick, and the viewer
+                   then re-simulates the stored record. The label is what the press does. -->
               <PrimaryPill v-if="row.week === week + 1" class="sfx-watch" :disabled="game.busy" @click="playPracticeWeek">
-                Watch it live →
+                Play it and watch →
               </PrimaryPill>
               <button :disabled="game.busy" @click="askCancelPractice(row)">Cancel</button>
             </span>
@@ -1123,8 +1158,40 @@ function playExhibition(): void {
       <div class="controls friendly-seed">
         <input v-model="exhibitionSeed" type="text" placeholder="seed (optional)" />
       </div>
+      <!-- ⚠ THE VIEWER USED TO BE RIGHT HERE, INLINE, and that was the fourth-place bug the owner
+           found on 30.07 - there is a fourth place the match viewer lives, and all four should open
+           the same way, as an overlay over the whole screen (his words are quoted at the
+           `TakeoverShell` import above; this template stays Latin-only, see tests/ladder.test.ts).
+           It is a takeover below now, with the other three overlays.
+           WHY IT WAS A BUG AND NOT A PREFERENCE, measured at 375x812: on a tabbed screen the
+           DOCUMENT is the scrollport (`main` and `.tb-screen-body` are both `overflow: visible`;
+           the document scrolled to 3054px here), so the viewer's `position: sticky; bottom: 0`
+           control bar pinned against the bottom of the VIEWPORT - where the app's `position: fixed`
+           tab bar lives, at y=760..812. With the box score on screen the bar sat at y=736.5..791.5
+           and 31.5 of its 55px were behind the bar; `elementFromPoint` at the bar's own bottom edge
+           returned `.tab-icon`, so the lower half of both segmented plates could not be tapped.
+           Inside a takeover the scrollport is `.tf-body` and the tab bar is covered, so the bar pins
+           against the bottom of the body with nothing in front of it. -->
+    </section>
+    </ScreenShell>
+
+    <!-- The overlays sit OUTSIDE the shell on purpose: each is a full-screen takeover with its own
+         backdrop, so it is not part of this screen's stack. -->
+    <!-- THE SANDBOX HIT-OUT, and it is the app's ONE genuinely live match. Every other surface
+         replays a record the engine had already resolved and stored during the tick; this one is
+         simulated at the moment the button is pressed, out of her current build, and is written
+         nowhere. So it is the only place `mode="live"` is true - the blinking badge, and the shout.
+         The exit is a cross for the same reason MatchReplay's is: this screen decides nothing and
+         there is no screen after it, so "out" is the only thing an exit could mean here. -->
+    <TakeoverShell v-if="exhibitionMatch" title="Friendly match">
+      <template #sub>
+        <SurfaceMark :surface="exhibitionSurface" size="sm" />
+        <span class="hint tf-week-dates">No points, no money – a hit-out</span>
+      </template>
+      <template #exit>
+        <IconButton icon="close" label="Close the friendly" title="Close" @click="closeExhibition" />
+      </template>
       <MatchViewer
-        v-if="exhibitionMatch"
         :match="exhibitionMatch"
         :player-a="exhibitionPlayerA"
         :player-b="exhibitionPlayerB"
@@ -1133,11 +1200,7 @@ function playExhibition(): void {
         :rank-b="null"
         mode="live"
       />
-    </section>
-    </ScreenShell>
-
-    <!-- The overlays sit OUTSIDE the shell on purpose: each is a full-screen takeover with its own
-         backdrop, so it is not part of this screen's stack. -->
+    </TakeoverShell>
     <PlanWeekSheet
       v-if="planSheet"
       :week="planSheet.week"

@@ -509,9 +509,13 @@ button {
    a bare arrow - the Coach Market shipped it on a circular plate, which made it the odd one out.
    No plate, no border, no padding: the arrow IS the affordance, and it sits beside the generic
    `button` reset because that is what it is a variant of.
-   The app's only other back control is TournamentFlow's "← Back", which lives in a flow's action
-   row rather than a screen header and reads as a labelled button there; it is left alone, and this
-   class is here for the next screen header that needs one.
+   ⚠ IT IS NOW ALL FOUR OF THEM (owner, 30.07: «Для back я просил везде сделать один компонент и его
+   консистентно использовать, просто иконка с белым fill»). This note used to grant one exception -
+   TournamentFlow's "← Back", on the argument that a flow's hero is not a screen header and a labelled
+   button reads fine there. He looked at it and disagreed, so the exception is gone: the tournament
+   hero carries the same `IconButton variant="bare" icon="back"` the three screen headers do, and it
+   overrides only the two things that are genuinely its own - where it sits on the photograph, and
+   white ink instead of the muted default. There is no hand-written back control left in the app.
    ⚠ THE ARROW IS AN ASSET NOW, not a `&larr;` CHARACTER (owner, 30.07: «Custom back arrow SVG in
    public»): public/icons/back.svg, reached through IconButton's `bare` variant. Three screen headers
    had each typed the entity by hand. `font-size` went with the character - a masked glyph has no
@@ -1315,7 +1319,13 @@ button.primary.risky {
    out independently, which is why a sixth surface would have had to guess them.
    What each surface DOESN'T share is its size and whether it scrolls, so that stays with each one
    below. `.injury-stop` (10px) and `.tf-finale.silver` (a gradient border) still override from
-   further down the sheet, exactly as before - grouping changes no specificity. */
+   further down the sheet, exactly as before - grouping changes no specificity.
+   ⚠ TWO OF THESE TENANTS HAVE MOVED OUT and the list has not caught up, so read it as CSS rather than
+   as an inventory of screens. `.replay-card` was the match replay when it was a centred card on a
+   dimmed page; it became the same takeover the live match is (30.07) and no template renders the class
+   any more. `.tf-card` is still four surfaces, but the match viewer is no longer one of them - the
+   owner took the outer frame off all three match screens on 30.07 («давай внешний контур уберем, он
+   не нужен»), so the viewer's own panels are the only box around a court now. */
 .dialog-card,
 .replay-card,
 .tf-card,
@@ -1734,6 +1744,20 @@ tr.kid-row td {
   max-width: 480px;
   margin: 0 auto;
   padding: 16px 24px 8px;
+}
+
+/* THE HEADER CONTROL NEVER WRAPS. A wrapped exit is how the tournament's header went from 75px to
+   98px in the first draft of the 30.07 slice: the flex row gave the sub line what it asked for and
+   the button took two lines for "To result →". A long title wrapping is the better trade - a title
+   is a name and reads fine on two lines; a control is a control.
+   ⚠ MOVED HERE FROM TournamentFlow.vue'S SCOPED BLOCK, 30.07, and the move is the whole point of
+   `ui/TakeoverShell.vue`: `.tf-top` stopped being one screen's business the moment FOUR surfaces
+   render their header through one component. It could not stay scoped either - the exit is SLOT
+   content, so it carries the caller's scope id and never the shell's, which means a rule written in
+   the shell would not have reached it without `:slotted()`. The header is shared vocabulary; so is
+   this. */
+.tf-top > button {
+  white-space: nowrap;
 }
 
 .tf-title {
@@ -2262,7 +2286,8 @@ tr.kid-row td {
 
 /* A week the parent has already planned – a solid (not dashed) frame: it is a real commitment.
    R11-14: and it is a STACK, not a row. Side by side with its controls the text had ~285px minus the
-   buttons: on a practice row carrying both "Watch it live →" and "Cancel" that left about 80px, so
+   buttons: on a practice row carrying both the play control (then "Watch it live →", W4 renamed it
+   "Play it and watch →" – see SeasonScreen) and "Cancel" that left about 80px, so
    "🎾 Practice match + coach" broke mid-phrase across two lines and the date line broke too – four
    text lines for one booking. The owner asked for that label on one line; full width, it is one line
    with room to spare (measured ~170px of the 285px available at 375px). The controls take their own
@@ -2418,14 +2443,11 @@ tr.kid-row td {
   text-shadow: var(--shadow-text-on-art);
 }
 
-/* The price sits on the brightest corner of most of these pictures - a sunlit pool, a lake at
-   golden hour - so the bare pill lost its number. It gets the art backing every other figure on a
-   painted card already has. */
-.pkg-head .pill {
-  background: rgba(12, 18, 25, 0.62);
-  border-color: rgba(255, 255, 255, 0.2);
-  text-shadow: var(--shadow-text-on-art);
-}
+/* ⚠ `.pkg-head .pill` WAS HERE AND IS DELETED, not re-aimed: it gave the price a dark backing while
+   the price sat opposite the package name, and the 30.07 slice moved the price down to `.pkg-actions`
+   without taking the rule with it - so it has been styling nothing at all since (`.pkg-head` holds
+   one label and no chip). Its job is done properly by `.pkg-price`'s own on-art ink further down,
+   which is where the figure actually lives. */
 
 /* The pre-highlight: the cheapest package that brings her back above the target (or the
    off-season family week). Accent frame, never auto-booked. */
@@ -2462,20 +2484,37 @@ tr.kid-row td {
 /* THE PRICE, IN THE CORNER (owner, 30.07). `margin-left: auto` is what makes this the bottom-RIGHT
    corner: whatever else the row is carrying - a Recommended badge, an "Out of reach" note, both or
    neither - stays left and the price-plus-Book pair is pushed to the end. Tabular digits so a column
-   of packages has a column of prices rather than three ragged ones. */
+   of packages has a column of prices rather than three ragged ones.
+
+   ⚠ AND IT IS A FIGURE NOW, NOT A CHIP (owner, 30.07, second pass: «на вкладке брони отпуска давай
+   суммы сделаем крупнее и без обводки вокруг, чтобы явно читались»). It carried `.pill` - 12px in
+   muted grey inside a hairline capsule - which is this app's LABEL treatment, and it was doing two
+   things wrong at once on the one number the parent is choosing between: the capsule gave it the same
+   visual weight as the "Recommended" badge two elements to its left, so the row read as a run of
+   three badges; and 12px muted is the smallest, quietest type on the card.
+     WHAT IT IS INSTEAD, both rungs off docs/design/tokens.css and neither invented: `--fs-value-md`
+   (16px), which is the design's own size for a money figure that has to be read - it is what D gives
+   the Weekly Story's Balance - at the 800 weight D pairs with it there. Against the compact Book
+   button beside it (12px) the price is now the loudest thing in the row, which is the ask.
+     The border, the capsule and the muted ink all left with `.pill`; nothing here has to unset them. */
 .pkg-price {
   margin-left: auto;
   font-variant-numeric: tabular-nums;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
   /* ON-ART INK. The corner it moved to is over the package's painting (`.pkg-art` dissolves from the
-     right), and `.pill`'s default muted grey on a lit photograph is a price you have to hunt for -
-     found by looking at it at 375. The app's rule for a word laid on a painting: full ink plus the
-     on-art shadow, the same pair `.surface-mark` and the hero captions use. */
+     right), so a price in anything less than full ink is one you have to hunt for - found by looking
+     at it at 375, and truer still now that the figure is bigger and carries no backing of its own.
+     The app's rule for a word laid on a painting: full ink plus the on-art shadow, the same pair
+     `.surface-mark` and the hero captions use. */
   color: var(--text);
   text-shadow: var(--shadow-text-on-art);
 }
 
-/* ...except when it is the recommended row's, where the lime already carries it and `.pill.ok`'s
-   colour must win. */
+/* ...except when it is the recommended row's, where the lime already carries the row and the accent
+   must win. (This used to be `.pill.ok`'s colour arriving through the chip; the chip is gone, so the
+   rule states it outright.) */
 .pkg-price.ok {
   color: var(--accent);
 }
@@ -2494,12 +2533,11 @@ tr.kid-row td {
   border: 1px solid var(--accent);
 }
 
-.recap-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
+/* ⚠ `.recap-head`, `.recap-flavor` and `.recap-figures` WENT WITH THE ROUND-5 CARD THEY DRESSED, and
+   the two survivors below are why the sweep waited for the wave to land. The U2 rebuild of screen D
+   replaced the card's head with `Card`'s own and its figures with the day dots + the painting, so those
+   three had zero references in src/ - while `.recap-card` (the frame) and `.recap-dot` (the day dots)
+   are load-bearing and still on the card. Deleting by prefix would have taken both. */
 
 .recap-dot {
   width: 12px;
@@ -2514,17 +2552,6 @@ tr.kid-row td {
 
 .recap-dot.rest {
   background: var(--muted);
-}
-
-.recap-flavor {
-  font-size: 13.5px;
-  margin: 0 0 8px;
-}
-
-.recap-figures {
-  display: flex;
-  gap: 16px;
-  font-size: 13.5px;
 }
 
 /* --- Round 5: Season tab accent dot ------------------------------------------ */
@@ -2675,23 +2702,8 @@ tr.kid-row td {
   color: var(--muted);
 }
 
-.recap-legend {
-  font-size: 11.5px;
-  color: var(--muted);
-  margin: 0 0 8px;
-}
-
-.recap-key {
-  font-size: 11px;
-}
-
-.recap-key.train {
-  color: var(--accent);
-}
-
-.recap-key.rest {
-  color: var(--muted);
-}
+/* ⚠ `.recap-legend` and `.recap-key{,.train,.rest}` went the same way: the day dots carry their own
+   `.recap-day-letter` row now, so the separate legend under them had nothing left to label. */
 
 /* --- Round 7 item 2: Money breakdown (donut + category rows) ----------------- */
 
@@ -3332,4 +3344,91 @@ button.linkish {
 }
 button.linkish:hover:not(:disabled) {
   text-decoration: underline;
+}
+
+/* --- W4: THE KNOCK DIALOG (src/components/KnockDialog.vue) ---------------------------------------
+   The ordinary training week's one decision: she came off court sore, and the parent rests it or
+   sends her back out. It reuses the injury popup's card family outright (.dialog-card
+   .season-summary .injury-stop) because it IS that kind of moment one notch quieter, and everything
+   below is only what the two-choice layout needs on top - the kicker, title, hint and radius all come
+   from rules that already exist.
+
+   NO ART, DELIBERATELY, and it is the one visible difference from the injury stop. That popup exists
+   to show the painting of the week she went down (R14-1); this one exists to ask a question, and a
+   168px picture above two buttons would make the reading the point and the decision the afterthought.
+   The `injury` face would also be a LIE here - nothing has happened to her body yet, which is the
+   whole premise. */
+.knock-line {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.knock-read {
+  margin: 0 0 16px;
+}
+
+/* The two branches, stacked rather than side by side. A row of two would give each about 150px on a
+   375pt phone, and the cost sentence - which is the entire reason this dialog is legible rather than
+   a coin flip - would wrap to four lines inside it. Stacked, each branch gets the full width for its
+   verb and its price, and the order reads as the safe option first.
+
+   ⚠ CARD CORNER, NOT A CAPSULE, AND THE RULE ABOVE DECIDES IT. "A BUTTON IS A PILL" names four shapes
+   and this is the second one: a control you press that is a PANEL rather than a button keeps the
+   card's corner, "because what it looks like is a card". Each branch here is two stacked lines - a
+   verb and the price of taking it - which is the Coach Market row's shape, not the Continue button's.
+   A 999px capsule around 44px of text on two lines would read as a lozenge, and --radius-control is
+   off-limits to anything a `button` selector can reach (pinned in tests/ui-control-system.test.ts). */
+.knock-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.knock-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  padding: 11px 13px;
+  text-align: left;
+  background: var(--accent-wash);
+  border: 1px solid var(--accent-soft);
+  border-radius: var(--radius-frame);
+  color: var(--text);
+  cursor: pointer;
+}
+.knock-choice:hover:not(:disabled) {
+  background: var(--accent-fill);
+}
+.knock-choice:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+/* Pushing through is the warned branch, in the colour the app already uses for "you may, and you were
+   told" (--warning is the fatigue caution's own token). NOT --danger: this is a legitimate move a
+   parent makes every week in real life, and red would read as the game disapproving. */
+.knock-choice--push {
+  background: var(--warning-wash);
+  border-color: rgba(245, 185, 66, 0.4);
+}
+/* ⚠ THE HOVER HAD TO BE OVERRIDDEN, AND THE BROWSER IS WHERE THAT SHOWED UP. The app-wide
+   `button:hover:not(:disabled)` sets `border-color: var(--accent); color: var(--accent)` - so on hover
+   the WARNED branch turned lime, i.e. the one option the coach is uneasy about lit up in the colour
+   this app uses for "yes, this one". Held on the warning hue through the hover instead: the two
+   branches keep their identities under the cursor, which is exactly when the player is deciding. */
+.knock-choice--push:hover:not(:disabled) {
+  background: rgba(245, 185, 66, 0.12);
+  border-color: var(--warning);
+}
+.knock-choice--push:hover:not(:disabled) .knock-choice-verb {
+  color: var(--warning);
+}
+.knock-choice-verb {
+  font-family: var(--font-heading);
+  font-size: 15px;
+}
+.knock-choice-cost {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
 }

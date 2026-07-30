@@ -25,6 +25,8 @@ import {
   tickWeek,
   toSnapshot,
   type WorldState,
+  pendingKnock,
+  decideKnock,
 } from '../src/engine/world'
 import { avatarEmotion } from '../src/shared/avatarEmotion'
 import { rngFromSeed } from '../src/engine/rng'
@@ -147,6 +149,10 @@ describe('R12-15 — the dead Play button after an injury (the round\'s worst it
         }
       }
       advanceWeeks(world, rng, 1)
+      // ⚠ W4: a knock BLOCKS the advance until the parent answers, so a loop that never answers
+      // spins on the same week for ever. Answered 'push' so the career under test keeps training as
+      // planned and nothing else about it moves.
+      if (pendingKnock(world)) decideKnock(world, 'push')
       if (world.pendingTournament) {
         skipTournament(world)
         closeTournament(world)
@@ -549,8 +555,21 @@ describe('R12-4/11 — injured ON a family vacation', () => {
   })
 
   it('the source reads the booking, and multiplies AFTER the roll', () => {
+    // ⚠ RE-AIMED BY W6c, AND THE OLD SPELLING WAS DANGEROUS RATHER THAN MERELY WRONG. It sliced from
+    // `export function injuryTau` to `indexOf('// Body-region weights')` - an end-marker belonging to an
+    // unrelated block that happened to sit underneath. W6c moved that block to engine/body.ts, `indexOf`
+    // returned -1, and `slice(start, -1)` silently became "the whole rest of the file": the pin then read
+    // 2,700 lines, found `rngFromSeed` in some other function, and failed with a message about
+    // `injuryTau`. Had the polarity been the other way round it would have PASSED on anything.
+    //
+    // So the slice now ends at the function's OWN closing brace, and both ends are asserted found -
+    // a marker that goes missing is now a clear failure instead of a silently enormous string.
     const src = read('../src/engine/world.ts')
-    const fn = src.slice(src.indexOf('export function injuryTau'), src.indexOf('// Body-region weights'))
+    const start = src.indexOf('export function injuryTau')
+    expect(start, 'injuryTau not found - renamed?').toBeGreaterThan(-1)
+    const end = src.indexOf('\n}\n', start)
+    expect(end, 'no closing brace after injuryTau').toBeGreaterThan(start)
+    const fn = src.slice(start, end)
     expect(fn).toContain('vacationForWeek(world, world.week)')
     expect(fn).toContain('a.injuryVacationFactor')
     // injuryTau computes a THRESHOLD and never draws – that is what makes every knob in it safe.
