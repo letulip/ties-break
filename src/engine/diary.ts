@@ -1788,6 +1788,14 @@ function capitalize(s: string): string {
   return s.length > 0 ? s[0].toUpperCase() + s.slice(1) : s
 }
 
+/** How long a memory line may be. The Memory polaroid is a `card-short` (138px) in Home's 2x2 grid,
+ *  and the line is set in the handwriting face beside a 68px photograph – so a long sentence does not
+ *  clip, it STRETCHES the grid row and the card stops matching the coach card next to it. 39 is the
+ *  longest line the pool already had ("First time through to a Regional final.") and it wraps to two
+ *  lines; W3's debut lines were written to the same budget after the first draft's fifty characters
+ *  pushed the card to 207px in the browser. Pinned in tests/diary.test.ts. */
+export const MEMORY_LINE_MAX = 39
+
 export const MEMORY_LINES: readonly MemoryLine[] = [
   { type: 'title', text: (m) => `Her first ${short(m.tier ?? null)} title.` },
   { type: 'title', text: (m) => `The week she won her first ${short(m.tier ?? null)}.` },
@@ -1828,12 +1836,18 @@ export const MEMORY_ANNIVERSARY_TOLERANCE = 1
  *  is derived). It carries `milestone: null` and is the only card that ever does.
  *
  *  The painting is `norm` in the band she started in – the same picture the onboarding hero shows,
- *  which is what makes this read as the first page of the album rather than as a missing entry. */
+ *  which is what makes this read as the first page of the album rather than as a missing entry.
+ *
+ *  ⚠ AND IT IS WRITTEN TO THE CARD'S OWN BUDGET (MEMORY_LINE_MAX). The first draft ran to fifty
+ *  characters, which is a fine sentence and four lines of handwriting on a 375pt phone: the polaroid
+ *  card grew from 138px to 207px and stopped matching the coach card beside it in the 2x2 grid. The
+ *  existing lines top out at 39 ("First time through to a Regional final."), so that is the family
+ *  these have to join. Measured in the browser, then pinned in tests/diary.test.ts. */
 const DEBUT_LINES: readonly string[] = [
-  'The week it started – a bag she could barely carry.',
-  'Her first week. The club smelled of new grips.',
-  'Week one. She asked when the first tournament was.',
-  'The beginning – borrowed racquet, borrowed nerve.',
+  'The week it all started.',
+  'Her very first week at the club.',
+  'Week one. New grips, new nerves.',
+  'The first walk through those gates.',
 ]
 
 function debutMemory(week: number, seed: string, startAgeYears: number): MemoryCard {

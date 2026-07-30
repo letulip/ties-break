@@ -14,9 +14,10 @@ import {
   fundsPressureOf,
   lastKidResultOf,
   lastKidTitleOf,
+  MEMORY_DEBUT_WEEKS,
   MEMORY_EMOTION,
   MEMORY_LINES,
-  MEMORY_DEBUT_WEEKS,
+  MEMORY_LINE_MAX,
   MEMORY_MIN_WEEKS,
   milestoneKey,
   selectMemory,
@@ -569,6 +570,38 @@ describe('Memory – selection', () => {
       return
     }
     throw new Error('the rotation never reached the milestone in 232 weeks')
+  })
+
+  it('every memory line fits the polaroid card, debut lines included', () => {
+    // ⚠ W3 ADDED THIS PIN because the browser caught what the suite could not: a fifty-character
+    // debut line does not clip, it STRETCHES Home's 2x2 grid row from 138px to 207px and the memory
+    // card stops matching the coach card beside it. The budget is the longest line the pool already
+    // had; the real constraint is pixels in a handwriting face, and this is the cheap proxy for it.
+    const samples: Milestone[] = [
+      { type: 'title', week: 10, tier: 'j300' },
+      { type: 'final', week: 10, tier: 'regional' },
+      { type: 'international', week: 10, tier: 'j30' },
+      { type: 'injury', week: 10, kind: 'ankle soreness' },
+      { type: 'season-rank', week: 10, seasonIndex: 3, rank: 145 },
+    ]
+    for (const m of samples) {
+      const lines = MEMORY_LINES.filter((l) => l.type === m.type)
+      expect(lines.length, `no line for ${m.type}`).toBeGreaterThan(0)
+      for (const l of lines) {
+        const text = l.text(m)
+        expect(text.length, text).toBeLessThanOrEqual(MEMORY_LINE_MAX)
+        expect(text, text).not.toContain('—')
+      }
+    }
+    // The debut card's own lines go through selectMemory, so they are measured as rendered.
+    const debut = new Set<string>()
+    for (let week = 2; week < 200; week++) debut.add(selectMemory([], week, `s${week}`, 14)!.line)
+    expect(debut.size, 'the opening week must not be one sentence forever').toBeGreaterThan(2)
+    for (const line of debut) {
+      expect(line.length, line).toBeLessThanOrEqual(MEMORY_LINE_MAX)
+      expect(line, line).not.toContain('—')
+      expect(line, line).not.toMatch(/[Ѐ-ӿ]/)
+    }
   })
 
   it('the debut card is a picture of the girl who STARTED – her band at week 0, composed', () => {
