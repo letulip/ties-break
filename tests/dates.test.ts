@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { weekRange, weekYear } from '../src/shared/dates'
+import { weekDayNumbers, weekRange, weekYear } from '../src/shared/dates'
 
 describe('weekRange', () => {
   it('week 0 is the career epoch: Monday Jan 6 – Sunday Jan 12, 2031', () => {
@@ -26,6 +26,30 @@ describe('weekRange', () => {
 
   it('is a pure function of the week index (deterministic, no Date mutation leakage)', () => {
     expect(weekRange(20)).toBe(weekRange(20))
+  })
+})
+
+// The calendar grid's column heads ("Mon 27"). Same `weekStart` every range in this file counts
+// from, so the heads over the grid and the span printed above them are the same seven days.
+describe('weekDayNumbers', () => {
+  it('week 0 is the epoch week, Monday first', () => {
+    expect(weekDayNumbers(0)).toEqual([6, 7, 8, 9, 10, 11, 12])
+  })
+
+  it('a month boundary needs no special case – the numbers are real dates', () => {
+    // week 3: Mon Jan 27 – Sun Feb 2, 2031
+    expect(weekDayNumbers(3)).toEqual([27, 28, 29, 30, 31, 1, 2])
+  })
+
+  it('always seven, and always the days `weekRange` names as the ends of the same week', () => {
+    for (const w of [0, 3, 51, 100, 260]) {
+      const days = weekDayNumbers(w)
+      expect(days.length, `week ${w}`).toBe(7)
+      for (const d of days) expect(d, `week ${w}`).toBeGreaterThan(0)
+      // the first and last are the Monday and the Sunday the human range prints
+      expect(weekRange(w), `week ${w}`).toContain(String(days[0]))
+      expect(weekRange(w), `week ${w}`).toContain(String(days[6]))
+    }
   })
 })
 

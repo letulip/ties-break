@@ -167,6 +167,17 @@ export function weekSpan(week: number): string {
   return `${MONTHS[start.month]} ${start.day} – ${MONTHS[end.month]} ${end.day}`
 }
 
+/** The seven day-of-month numbers of a career week, Monday first: `[27, 28, 29, 30, 1, 2, 3]`.
+ *
+ *  For the calendar grid's column heads, which the design dates ("Mon 27") the way any week view
+ *  does. It lives HERE rather than in the screen for the reason every other formatter in this file
+ *  does: `weekStart` is the one place a week's days are counted from, so the heads over the grid and
+ *  the span printed in the header above them cannot disagree about which Monday this is. A month
+ *  boundary needs no special case - the numbers come from real dates, one day apart. */
+export function weekDayNumbers(week: number): number[] {
+  return [0, 1, 2, 3, 4, 5, 6].map((d) => dateAtDay(week * 7 + d).day)
+}
+
 /** "W27 2033 · Jun 3 – Jun 9" – THE date line of the redesigned Home header (epic/redesign-home).
  *
  *  The owner's own format, and the one place it is spelled: OUR week label (the number the whole

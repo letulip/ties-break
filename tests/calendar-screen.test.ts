@@ -442,11 +442,25 @@ describe('the calendar DISPLAYS the plan and does not edit it', () => {
   // screen was designed to avoid." Seven per-day controls is that chore with a calendar drawn round
   // it, and it is the single most likely thing for a later hand to add "while we are in here" – so the
   // absence is pinned rather than left to the comment at the top of the composable.
-  it('not one control in the grid: no input, no select, no per-day handler', () => {
-    const grid = template.slice(template.indexOf('<ul'), template.indexOf('</ul>'))
-    expect(grid).toContain('cal-day')
-    for (const control of ['<input', '<select', '<textarea', 'type="range"', '@click', 'v-model']) {
-      expect(grid, `the day grid grew a control: ${control}`).not.toContain(control)
+  // ⚠ RE-AIMED, NOT WEAKENED: THE WEEK NOW HAS TWO DRAWINGS AND BOTH MUST BE READ-ONLY. The grid
+  // slice used to be "from the first <ul> to the first </ul>", which was the day strip because it
+  // was the only list on the screen. The time x day grid (§3 of docs/specs/calendar-week-grid.md) is
+  // a second list and it comes first in the template, so the old slice silently stopped covering the
+  // day strip and started covering the grid. One drawing checked instead of two is exactly the
+  // silent hole this family of guards exists to prevent, so the test now takes BOTH lists by name
+  // and asserts each is the drawing it thinks it is before looking for controls in it.
+  it('not one control in EITHER drawing of the week: no input, no select, no per-day handler', () => {
+    const lists = [...template.matchAll(/<ul[\s\S]*?<\/ul>/g)].map((m) => m[0])
+    const timeGrid = lists.find((l) => l.includes('cal-time-cols'))
+    const dayStrip = lists.find((l) => l.includes('cal-grid'))
+    expect(timeGrid, 'the time x day grid has gone').toBeDefined()
+    expect(dayStrip, 'the day strip has gone – it is what every non-ordinary week draws').toBeDefined()
+    expect(dayStrip).toContain('cal-day')
+    expect(timeGrid).toContain('cal-block')
+    for (const drawing of [timeGrid!, dayStrip!]) {
+      for (const control of ['<input', '<select', '<textarea', 'type="range"', '@click', 'v-model']) {
+        expect(drawing, `a drawing of the week grew a control: ${control}`).not.toContain(control)
+      }
     }
     // ...and the screen never writes the plan, on any element.
     expect(screen, 'the calendar sets the training plan').not.toContain('setPlan')

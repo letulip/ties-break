@@ -59,11 +59,17 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { useCalendarWeek, useLookAhead, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
+// The SECOND drawing of the same week: the design's time x day grid. What a day of each kind looks
+// like across a morning and an afternoon is a rule with content in it, so it lives in a pure module
+// beside the day layout rather than in this template - see composables/weekGrid.ts for the owner's
+// two rulings behind it (the engine keeps no time of day, and the age band is a parameter from the
+// first version).
+import { GRID_HOURS, blockOffset, hourLabel, hourTop, weekGridFor } from '../../composables/weekGrid'
 import { useWeekAction } from '../../composables/weekAction'
 // Slice 2: the crossing-out sweep. The SCHEDULE and the preference live in the composable (both paces,
 // the beat holds, the localStorage pair); what is here is the seven spans and the timers.
 import { DAY_CROSS_PACE, dayCrossPace, dayCrossRuns, dayCrossSchedule } from '../../composables/dayCross'
-import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
+import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
 import { surfaceStyleHint } from '../../engine/match/style'
 import { venueArtUrl } from '../../art/venues'
 import ScreenShell from '../ui/ScreenShell.vue'
@@ -118,9 +124,27 @@ const KIND_WORD: Record<DayKind, string> = {
   school: 'school exams',
   rehab: 'rehab',
 }
-function dayName(d: CalendarDay): string {
+function dayName(d: Pick<CalendarDay, 'index' | 'kind'>): string {
   return `${DAY_LONG[d.index]} – ${KIND_WORD[d.kind]}`
 }
+
+/** THE WEEK IN HOURS, or null on a week the grid may not draw.
+ *
+ *  ⚠ NULL IS THE OWNER'S OWN BOUNDARY - «просто визуализация недели для тех, где нет отпусков,
+ *  чемпионатов и поездок» - and it is what keeps the two drawings from being a redesign of the
+ *  first one. A week she spends at a tournament, away with the family, in an exam blackout or laid
+ *  up is a week the engine has told us nothing about the SHAPE of, so it keeps the day strip it has
+ *  today and the grid stands down. `weekGridFor` decides that, not this screen; all this file does
+ *  is choose which of two drawings to render.
+ *
+ *  The dates come from the shared formatter, so the heads over the columns and the span printed in
+ *  the header above them are the same seven days. Her age comes off the snapshot: the calendar does
+ *  not compute it and cannot disagree with the Kid screen about it. */
+const grid = computed(() => {
+  const week = calendar.value
+  const snap = game.snapshot
+  return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week)) : null
+})
 
 // --- (d) THE MARKER'S CARD ----------------------------------------------------------------------
 // «TAPPING A TOURNAMENT MARKER shows just THAT event's card – not the whole Season feed – with
@@ -320,9 +344,19 @@ const showGo = computed(() => !game.snapshot?.pending)
       </template>
 
       <!-- ============================================================================
-           THE WEEK, IN DAYS. The grid is the screen's subject: seven cells, Monday first,
-           one mark each. The plan decides which are sessions, the surface block colours
-           the court days, and nothing in here is a control.
+           THE WEEK, TWICE OVER, AND NEVER BOTH AT ONCE.
+
+           An ORDINARY training week is drawn as the design's time x day grid: seven
+           columns, hours down the side, a coloured block for each thing she does. Every
+           other kind of week - a tournament trip, a family holiday, an exam blackout, a
+           layoff, the off-season - keeps the day strip underneath it, because the engine
+           has told us nothing about the shape of those days and a grid of hours for them
+           would be inventing one. That boundary is the owner's own and it lives in
+           composables/weekGrid.ts; this screen only chooses which drawing to render.
+
+           Both drawings say the same things about a day: what kind it is, whether it has
+           a beat on it, and whether the sweep has crossed it out yet. Nothing in either
+           is a control.
            ============================================================================ -->
       <Card class="cal-week">
         <div class="cal-week-head">
@@ -330,7 +364,62 @@ const showGo = computed(() => !game.snapshot?.pending)
           <span v-if="injuredNow" class="pill avail-chip red" :title="layoffNote">injury</span>
         </div>
 
+        <div v-if="grid" class="cal-time">
+          <!-- The head: the day and its date, off the shared formatter. The strokes live here
+               rather than over the columns - crossing a day off a calendar is a line through its
+               NAME, and a 360px column with a line at its waist reads as a mistake. -->
+          <div class="cal-time-head" aria-hidden="true">
+            <span class="cal-time-gut"></span>
+            <div class="cal-time-days">
+              <span
+                v-for="d in grid"
+                :key="d.index"
+                class="cal-time-day"
+                :class="{ 'cal-time-day--crossed': d.index < crossed }"
+              >
+                <b>{{ d.short }}</b>
+                <i>{{ d.date }}</i>
+                <span class="cal-day-cross"></span>
+              </span>
+            </div>
+          </div>
+
+          <div class="cal-time-body">
+            <div class="cal-time-gut" aria-hidden="true">
+              <span
+                v-for="h in GRID_HOURS"
+                :key="h"
+                class="cal-time-hour"
+                :style="{ top: hourTop(h) }"
+              >{{ hourLabel(h) }}</span>
+            </div>
+            <ul class="cal-time-cols" :aria-label="`The seven days of ${dateLine}`">
+              <li
+                v-for="d in grid"
+                :key="d.index"
+                class="cal-col"
+                :class="{
+                  'cal-col--beat': d.beat !== null,
+                  'cal-col--crossed': d.index < crossed,
+                  'cal-col--held': d.index === heldIndex,
+                }"
+                :aria-label="dayName(d)"
+              >
+                <span
+                  v-for="(b, i) in d.blocks"
+                  :key="i"
+                  class="cal-block"
+                  :class="`cal-block--${b.kind}`"
+                  :style="blockOffset(b)"
+                  :title="b.label"
+                >{{ b.label }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
         <ul
+          v-else
           class="cal-grid"
           :class="`cal-surf-${calendar.surface}`"
           :aria-label="`The seven days of ${dateLine}`"
@@ -685,6 +774,178 @@ const showGo = computed(() => !game.snapshot?.pending)
   color: var(--accent);
 }
 
+/* --- THE TIME x DAY GRID -------------------------------------------------------------------------
+   The design's own screen H: seven columns, the hours down the left, and a coloured block for each
+   thing she does. WHAT IS IN A BLOCK is composables/weekGrid.ts's business and none of this file's;
+   what is here is the canvas it is drawn on.
+
+   THE HOUR IS ONE NUMBER. `--cal-hour-h` sets the row height and everything else follows it - the
+   body's height is twelve of them (07:00 to 19:00), the hairlines repeat every two, and the blocks
+   are positioned in PERCENTAGES of the whole span, so the grid re-scales from one declaration and
+   there is no second table of pixel offsets to keep in step. 30px is measured rather than picked: a
+   two-hour block is then 60px, which holds the design's 8.5px label on two lines inside a 40px-wide
+   column at 375pt, and the whole grid is 360px - about what the mockup gives it.
+
+   ⚠ `--cal-hour-h` IS THIS COMPONENT'S OWN PROPERTY, not a design token, which is exactly what
+   tests/design-tokens.test.ts rule B allows (Card.vue's `--tb-card-pad` is the same idiom): a
+   mechanism, not shared vocabulary. */
+.cal-time {
+  --cal-hour-h: 30px;
+}
+
+.cal-time-head,
+.cal-time-body {
+  display: flex;
+}
+
+/* The gutter the hour labels live in. 32px is "07:00" at 9.5px plus air. */
+.cal-time-gut {
+  position: relative;
+  flex: none;
+  width: 32px;
+}
+
+.cal-time-days,
+.cal-time-cols {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cal-time-head {
+  border-bottom: var(--stroke-hair) solid var(--line);
+}
+
+.cal-time-day {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 0 7px;
+  border-left: var(--stroke-hair) solid var(--line);
+}
+
+/* The day and its date, the design's own pair. The date is the real one (shared/dates.ts), so the
+   heads and the span in the header above them cannot disagree about which Monday this is. */
+.cal-time-day b {
+  font-family: var(--font-body);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--ink-dim);
+}
+
+.cal-time-day i {
+  font-style: normal;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.cal-time-body {
+  height: calc(12 * var(--cal-hour-h));
+}
+
+/* Each label sits ON its own rule rather than above it, which is what makes a block starting at
+   15:00 line up with the words "15:00" instead of hanging under them. */
+.cal-time-hour {
+  position: absolute;
+  left: 0;
+  transform: translateY(-50%);
+  font-family: var(--font-body);
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--ink-dim);
+}
+
+.cal-col {
+  position: relative;
+  border-left: var(--stroke-hair) solid var(--line);
+  /* A rule every two hours – the prototype's own repeating gradient, expressed against the one
+     hour height above so the rules cannot drift away from the labels. */
+  background-image: repeating-linear-gradient(
+    180deg,
+    var(--line) 0 1px,
+    transparent 1px calc(var(--cal-hour-h) * 2)
+  );
+}
+
+/* The three days a week can PAUSE on wear the same soft wash the day strip gives them, and for the
+   same reason: the hold has to land on a column the eye had already noticed. */
+.cal-col--beat {
+  background-color: var(--accent-wash);
+}
+
+.cal-block {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  overflow: hidden;
+  padding: 3px 4px;
+  border-radius: var(--radius-control);
+  font-family: var(--font-body);
+  font-size: 8.5px;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  word-break: break-word;
+  color: var(--ink);
+}
+
+/* THE PALETTE, one static rule per block kind. Written out rather than composed from the kind at
+   runtime for the reason the surface tints above give: a `var(--event-${kind})` built in a template
+   is a token reference no scanner can resolve, and an unresolved custom property paints nothing at
+   all with no error anywhere.
+   ⚠ SIX OF THESE TWELVE CANNOT BE REACHED TODAY, and that is deliberate rather than dead code - the
+   list is the design's palette, and weekGrid.ts's DAY_SHAPES says beside each one what it is waiting
+   for (a later age band, or a kind of week the grid does not draw). Keeping the map complete here
+   means adding a band is a change to the table alone. */
+.cal-block--training {
+  background: var(--event-training);
+}
+.cal-block--trainingAlt {
+  background: var(--event-training-alt);
+}
+.cal-block--gym {
+  background: var(--event-gym);
+}
+.cal-block--school {
+  background: var(--event-school);
+}
+.cal-block--schoolLong {
+  background: var(--event-school-long);
+}
+.cal-block--drills {
+  background: var(--event-drills);
+}
+.cal-block--match {
+  background: var(--event-match);
+}
+.cal-block--matchLong {
+  background: var(--event-match-long);
+}
+.cal-block--study {
+  background: var(--event-study);
+}
+.cal-block--travel {
+  background: var(--event-travel);
+}
+.cal-block--rest {
+  background: var(--event-rest);
+}
+/* The tournament block is the one the design OUTLINES – its border is the thirteenth token, and the
+   only place in the palette where a colour is a stroke rather than a fill. */
+.cal-block--tournament {
+  background: var(--event-tournament);
+  border: var(--stroke-hair) solid var(--event-tournament-border);
+  font-weight: 700;
+}
+
 /* --- (b) THE CROSSING-OUT SWEEP -----------------------------------------------------------------
    One 1px line per cell, drawn left to right by a transform. `scaleX` rather than an animated `width`
    on purpose: a transform is composited, so seven of them running in sequence cost no layout at all,
@@ -715,6 +976,25 @@ const showGo = computed(() => !game.snapshot?.pending)
   transition: opacity var(--cal-stroke-ms, 280ms) ease;
 }
 
+/* THE SAME SWEEP OVER THE TIME GRID. One stroke and one dimming, aimed at the two elements that
+   correspond to the day strip's single cell: the line goes through the day's NAME (crossing a day
+   off a calendar is a line through its head, not through 360px of column) and the column behind it
+   steps back with its blocks. The mechanism, the duration and the reversal are the day strip's,
+   unchanged - `.cal-day-cross` is the same 1px span scaled by the same transform. */
+.cal-time-day--crossed .cal-day-cross {
+  transform: scaleX(1);
+}
+
+.cal-col--crossed {
+  opacity: 0.45;
+  transition: opacity var(--cal-stroke-ms, 280ms) ease;
+}
+
+.cal-col--held {
+  opacity: 1;
+  animation: cal-held 900ms ease-in-out infinite;
+}
+
 /* THE PAUSE, MADE VISIBLE. While the sweep waits on a match, an injury or a knock, that one cell
    breathes – so the hold reads as the week stopping on something rather than as the animation
    stuttering. It also un-dims: the point of the pause is to be looked at. */
@@ -739,10 +1019,12 @@ const showGo = computed(() => !game.snapshot?.pending)
    what this OS switch is about. */
 @media (prefers-reduced-motion: reduce) {
   .cal-day,
-  .cal-day-cross {
+  .cal-day-cross,
+  .cal-col {
     transition: none;
   }
-  .cal-day--held {
+  .cal-day--held,
+  .cal-col--held {
     animation: none;
   }
 }
