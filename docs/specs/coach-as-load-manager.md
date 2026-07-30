@@ -165,6 +165,19 @@ Added at the start of implementation, because §5 asks for "before and after" an
 | middle | 38.6 | 11.4 | **50.0** | 24.0% | 12.0 | 103.7 |
 | high | 39.1 | 11.9 | **51.1** | 24.5% | 12.1 | 103.9 |
 
+**Player arm — 75/25, rests every knock, heeds the fatigue caution:**
+
+| rung | layoff | rested | wasted | **weeks lost** | % | injuries | matches | **rank** |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| self | 38.0 | 26.9 | 1.3 | **66.2** | 31.8% | 10.9 | 99.2 | 103.7 |
+| budget | 28.1 | 26.0 | 3.1 | **57.2** | 27.5% | 8.8 | 125.2 | **85.2** |
+| middle | 27.5 | 26.0 | 3.4 | **56.8** | 27.3% | 8.6 | 125.3 | 85.9 |
+| high | 27.8 | 26.1 | 3.3 | **57.2** | 27.5% | 8.6 | 125.3 | 85.9 |
+| elite | 28.5 | 26.3 | 3.6 | **58.3** | 28.0% | 8.9 | 125.5 | 85.9 |
+
+`budget → elite` = **−1.1 weeks**, the same figure to the decimal as the grinder arm. Both arms
+independently produce the same flat, faintly backwards ladder.
+
 **§4(c) is confirmed, and harder than it was stated:**
 
 - `self → budget` = **16 weeks**. The whole ladder's load value, and it is one boolean —
@@ -182,6 +195,36 @@ ships today.
 injury, so she has fewer weeks in which to enter anything. Fewer trips, fewer wasted ones. Weeks-lost
 and trips-wasted are **not independent**, and a change that adds available weeks will add wasted trips
 unless the coach is also warning her off them.
+
+### ⚠ 7a. And §5's headline metric turns out to be necessary but not sufficient
+
+Put the two arms side by side at the top of the ladder and the problem is unmissable:
+
+| | weeks lost | composition | matches | **rank** |
+| --- | --- | --- | --- | --- |
+| grinder, budget | 50.5 | 39 layoff · 0 rested · 11 wasted | 103.3 | 105.7 |
+| player, budget | 57.2 | 28 layoff · 26 rested · 3 wasted | 125.2 | **85.2** |
+
+**The player arm loses MORE weeks and finishes 20 rank places higher.** So "weeks lost" is not a
+quantity to be minimised — the 26.9 rested weeks are a *purchase*, not a loss, and lumping them in one
+total with layoff weeks hides exactly the decision the slice is about. A layoff week is taken from her;
+a rested week is spent by him, and it buys 10 fewer injuries and 22 more matches.
+
+This is a correction to my own §5, and it matters because the after-table would otherwise be read
+backwards: a coach who correctly rests more knocks will *increase* weeks-lost as measured, and look like
+a regression. So the measurement the slice is judged on becomes:
+
+1. **layoff weeks** — down. This is the number that is unambiguously a loss.
+2. **wasted trips** — down, per available week (not absolute — see the interaction above).
+3. **rested weeks** — free to move in either direction; it is the coach's instrument, not his score.
+4. **rank at 18, and matches played** — the outcome the other three are only proxies for. If rank does
+   not move, nothing that matters happened.
+
+The player-vs-grinder gap also sets an honest ceiling on what the automation can be worth: **~20 rank
+places is what disciplined load management already buys** a player who makes the calls himself. A hired
+coach reproducing that for someone who does not want to make them is a real product; a hired coach
+beating it would mean the rung is doing something a human player cannot, which is the dominant strategy
+in reverse and just as wrong.
 
 ## 8. The mechanism: the coach decides through his own read of her
 
