@@ -49,7 +49,15 @@ jobs:
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force
+      # ⚠ THE GATE RUNS THE `unit` PROJECT; THE MONTE-CARLO FILES RUN IN THEIR OWN JOB BELOW.
+      # Nothing is skipped - `sim` runs on the same push, in parallel, and its failure fails the
+      # workflow. Splitting them is why the gate stopped dying on `Timeout calling "onTaskUpdate"`
+      # with 935 of 1561 tests passed and not one assertion failed: three files were 104s of a 183s
+      # suite, and a reporter RPC has a hard-coded 60s. See the note in vite.config.ts.
       - run: npm test
+      # The Monte-Carlo files, inline here rather than in a second job: deploy publishes an
+      # artefact and must not race a sibling. Same three files, same coverage, one runner.
+      - run: npm run test:sim
       - run: npm run build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
