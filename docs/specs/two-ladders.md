@@ -338,3 +338,86 @@ close a national-points gap. Legibility must not be bought by quietly making one
   popup is now named ("International rank #128"), which was the owner's actual complaint.
 * The Money screen's income side has no per-category breakdown — see the cash cameo above.
 * The gear valve's table and thresholds (item 27), the owner's to pick.
+
+# Measured, 120 seeds per cell, before → after the rank fix
+
+`npm run bench:econ -- --seeds 120`, both arms run identically on this branch (the "before" from an
+isolated checkout of the pre-fix tree, so the two outputs are directly comparable).
+
+## The control: the 14→16 horizon does not move at all
+
+**Reach is byte-identical in all eighteen cells** — 113/120 → 113/120, 110 → 110, 119 → 119, and so
+on. That horizon's target is `kidPoints(world, 'domestic') >= 150`, which reads no rank at all. It is
+the cleanest possible confirmation that the fix changed exactly one thing: the number in
+`world.kidRank`.
+
+## The 14→18 horizon: reach was inflated by the bug
+
+| preset · policy | survived | reach | end funds |
+| --- | --- | --- | --- |
+| 8k working · self · grinder | 120/120 → 120/120 | 79/120 → **1/120** | $45,597 → $43,233 |
+| 8k working · self · player | 120/120 → 120/120 | 102/120 → **5/120** | $48,581 → $45,135 |
+| 8k working · budget · grinder | 115/120 → 112/120 | 116/120 → **17/120** | $21,465 → $17,820 |
+| 8k working · budget · player | 120/120 → 119/120 | 116/120 → **46/120** | $22,104 → $18,356 |
+| 8k working · middle · grinder | 95/120 → 80/120 | 117/120 → **16/120** | $9,957 → $6,801 |
+| 25k middle · self · grinder | 120/120 → 120/120 | 76/120 → **0/120** | $74,645 → $73,587 |
+| 25k middle · budget · player | 120/120 → 120/120 | 118/120 → **50/120** | $41,329 → $38,860 |
+| 25k middle · high · grinder | 71/120 → 52/120 | 117/120 → **8/120** | $3,266 → $824 |
+| 120k wealthy · high · grinder | 120/120 → 120/120 | 118/120 → **23/120** | $131,832 → **$135,969** |
+| 120k wealthy · elite · player | 117/120 → 120/120 | 119/120 → **60/120** | $44,591 → **$48,363** |
+
+The 14→18 target is `(itfPoints > 0 && kidRank <= 50) || itfPoints >= 60`. Its rank arm was reading
+the mixed table, where an 8k girl averaged **#55.7** — just inside a top-50 gate. Her honest ITF rank
+averages **#128** and never got under #103 in 120 single-season measurements. **So the reach figure was
+not degraded by this fix; it was inflated by the bug.** The old number said 79–119 of 120 working-class
+careers reached a "pro attempt" standard. They were nowhere near the top 50 of the world junior table,
+and the game already knew it — the Stats screen was printing #128 the whole time.
+
+Survival barely moves. End funds fall a few percent for the poorer presets (the gear valve had been
+firing 0.34 times a season off the phantom rank and now fires never) and **rise** for the wealthy ones,
+which is the next finding.
+
+## ⚠ What this re-opens: the J60/J300 acceptance lists were calibrated on the phantom rank
+
+Entries per career, 14→18, before → after:
+
+| preset · policy | local | regional | national | j30 | j60 | j300 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 8k working · budget · grinder | 27.3 → 19.1 | 24.9 → 27.6 | 5.6 → **8.0** | 10.5 → **22.3** | 19.1 → **2.3** | 3.6 → **0.0** |
+| 25k middle · middle · grinder | 27.0 → 19.6 | 24.4 → 26.4 | 6.1 → **8.1** | 10.9 → **23.9** | 20.0 → **2.1** | 3.8 → **0.0** |
+| 120k wealthy · elite · grinder | 27.7 → 19.4 | 23.6 → 26.4 | 5.7 → **7.8** | 10.6 → **23.4** | 21.5 → **3.4** | 4.0 → **0.1** |
+
+`j60` gates on `enterPct 0.40` (top 80 of 200) and `j300` on `0.25` (top 50), both read against
+`world.kidRank`. Against the mixed rank (~#55) those lists were open to her almost permanently; against
+her real ITF rank (~#128) they are shut. **So the game was admitting her to J60s and J300s she had not
+earned — the owner's «Tournaments wrong current active active», quantified.** It is also why the wealthy
+family now *ends richer*: a J300 trip is the most expensive week in the game and it was taking four of
+them per career on a rank that did not exist.
+
+**And this un-fixes something this document claimed.** The section above reads *"Good: J300 exists now.
+It was entered zero times per career in every preset and is now reached — rarely, which is what a
+prestige rung should be. The ladder has a top that can be climbed."* That was measured on the buggy
+build. J300 is back to ~0.0–0.1 entries per four-year career, which is the exact problem the two-ladder
+slice set out to solve.
+
+⚠ **Every rank-denominated number in the game was tuned against a table that does not exist**, and they
+all now need re-picking by the owner:
+
+* `j60.enterPct` 0.40 and `j300.enterPct` 0.25 — the acceptance lists. This is the one that decides
+  whether the top of the ladder is climbable at all.
+* `REACH_PRO_RANK` 50 and `REACH_PRO_POINTS` 60 in `tools/econ-bench.ts` — the pro-attempt proxy.
+* `ECONOMY.sponsorship` `halfPriceMaxRank` 30 / `freeMaxRank` 10 — see the sponsor section above.
+* The academy's review reads `world.kidRank` too (`reviewLevel`), so its thresholds are in the same
+  position.
+
+None of them is changed here. The point of this branch is that the number they read is now the number
+it claims to be; what the thresholds should be, against an honest ITF rank, is a design decision and
+it wants its own measured pass.
+
+**Also restated: this document's own headline table is not trustworthy.** The "Measured, 120 seeds per
+preset, 14→18" section near the top reports mean season-end ranks of #65/#98/#86/#87 and reach moving
+83% → 66%. Those were read off `world.kidRank` on a build where it held the mixed place. The honest
+season-end ranks for the same horizon are **S1 #125 · S2 #98 · S3 #95 · S4 #89** for the 8k
+self-coached grinder. The *conclusions* about National becoming a rung again and the stagger working
+still stand — they were measured in domestic points, which never moved — but every rank figure in that
+table needs reading as the mixed number it was.
