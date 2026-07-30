@@ -4623,6 +4623,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // THE ENGINE'S OWN VERDICT PER RUNG (see TierOpenMap in protocol.ts). `tierOpenFor` is the same
     // function `enterEvent` validates against, so a screen can no longer disagree with the gate.
     tierOpen: Object.fromEntries(TIER_LADDER.map((t) => [t, tierOpenFor(world, t)])) as TierOpenMap,
+    // ...AND THE POSITION EACH ACCEPTANCE LIST CUTS AT, for the rungs that have one. Same discipline
+    // as `tierOpen` directly above: the screen asks the engine for the number rather than deriving a
+    // share of a field it would have to be told the size of. Absent on every rung that gates on
+    // points, which is what `acceptanceRank` returning undefined means.
+    tierAcceptance: Object.fromEntries(
+      TIER_LADDER.map((t) => [t, acceptanceRank(world, t)]).filter(([, r]) => r !== undefined),
+    ) as Partial<Record<TierId, number>>,
     coachId: world.coachId,
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),

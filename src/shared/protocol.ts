@@ -1173,6 +1173,17 @@ export interface Snapshot {
   entryCap: EntryCapUsage
   /** the engine's own per-tier entry verdict - see TierOpenMap */
   tierOpen: TierOpenMap
+  /** THE ACCEPTANCE LIST, AS A POSITION, per rung that has one – `acceptanceRank(world, tier)`, absent
+   *  for every rung that gates on points instead.
+   *
+   *  ⚠ IT IS HERE SO THE LOCKED PLAQUE CAN SAY WHEN THE RUNG OPENS (31.07, the owner: «когда
+   *  открываются турниры разных типов? Что-то раньше было в интерфейсе видно и понятно, а теперь не
+   *  очень»). J60 and J300 gate on her ITF rank position, so their `enterPointBand` is `[0, MAX]` and
+   *  every surface that read a band to explain them said either nothing or "0+". The number cannot be
+   *  written down in the UI either: it is `enterPct × (cohort + 1)`, so it moves with a re-picked
+   *  acceptance list AND with the population – the illustrative "top 50" that used to sit in a comment
+   *  was stale by two re-pins when it was found. Derived at snapshot time, persists nothing. */
+  tierAcceptance: Partial<Record<TierId, number>>
   /** WHO SHE TRAINS WITH (v23): the roster coach's id, or null for the parent on the court. */
   coachId: string | null
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
