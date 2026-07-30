@@ -1,0 +1,613 @@
+// SCREEN H – THE CALENDAR. The owner's ask, in five parts, and this file is how each of them stays
+// true: a Calendar tab that is live, the day layout from her training plan across the days with
+// matches marked, injury weeks legible, markers for the tournaments she can actually enter (tapping
+// one opens THAT event's card, enter-or-close), and the main action button.
+//
+// TWO KINDS OF TEST, deliberately, because the slice has two kinds of fact:
+//
+//   1. REAL UNIT TESTS on `composables/weekDays.ts`. The day layout is a RULE with content - a session
+//      count, a rest priority, a precedence between six kinds of week - and a rule is worth pinning on
+//      VALUES. This half would catch a wrong week even if the template were perfect.
+//   2. FILE-READING GUARDS on the screen and the shell. The house discipline (round10/11/12-view,
+//      round13-nav): these are facts about templates, and those are exactly the facts that rot
+//      silently. The two that matter most here are the ones the slice could plausibly regress into -
+//      a per-day editor, and a second week button that computes its own state.
+import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import {
+  DAY_LONG,
+  DAY_SHORT,
+  LOOK_AHEAD_WEEKS,
+  calendarWeekFor,
+  gymDayIndex,
+  isSuitable,
+  layoffReturnWeek,
+  lookAheadFor,
+  sessionDays,
+  sessionsForPlan,
+  type CalendarWeekFacts,
+} from '../src/composables/weekDays'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Snapshot, type UpcomingEvent } from '../src/shared/protocol'
+import { ECONOMY } from '../src/engine/economy'
+import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR, isExamWeek, isOffSeasonWeek } from '../src/engine/season/calendar'
+
+const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
+const app = read('../src/App.vue')
+const screen = read('../src/components/screens/CalendarScreen.vue')
+const action = read('../src/composables/weekAction.ts')
+const days = read('../src/composables/weekDays.ts')
+/** Exactly what the player can see. Comments in this codebase quote the owner in Russian by
+ *  convention, in the script AND in the styles, so every copy sweep is bounded to the template –
+ *  the same extraction round13-nav.test.ts settled on. */
+const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
+
+/** A plain snapshot-shaped fact bag. `calendarWeekFor` takes a `Pick`, so no engine is needed. */
+function facts(over: Partial<CalendarWeekFacts> = {}): CalendarWeekFacts {
+  return {
+    week: 5,
+    plan: WEEK_PLAN_PRESETS.balanced,
+    profile: DEFAULT_PROFILE,
+    injury: null,
+    knock: null,
+    vacations: [],
+    practices: [],
+    upcoming: [],
+    arrival: null,
+    pending: undefined,
+    ...over,
+  }
+}
+function event(over: Partial<UpcomingEvent> = {}): UpcomingEvent {
+  return {
+    id: 'e1',
+    week: 7,
+    tier: 'local',
+    surface: 'hard',
+    label: 'Local Open',
+    entered: false,
+    eligible: true,
+    cancellable: false,
+    deadlineWeek: 6,
+    entryFeeCents: 4000,
+    travelCostCents: 9000,
+    preview: { firstMatchChance: 0.5, opponentName: 'Mirra', fieldStrength: 'even', temperatureC: 21, crowd: 40 },
+    ...over,
+  } as UpcomingEvent
+}
+
+// =================================================================================================
+// (c) THE DAY LAYOUT – 4 / 5 / 6 sessions, as the owner named them
+// =================================================================================================
+describe('the plan, read back as days', () => {
+  it("the three presets ARE the owner's 4 / 5 / 6 – and not because a table says so", () => {
+    // The count is `plan.train` per cent OF SEVEN DAYS, which is what `train` already means
+    // (protocol.ts: train + rest === 100). So the owner's three numbers fall out of the definition
+    // rather than out of a lookup a fourth preset would have to be added to.
+    expect(sessionsForPlan(WEEK_PLAN_PRESETS.light.train)).toBe(4) // 60% of 7 = 4.2
+    expect(sessionsForPlan(WEEK_PLAN_PRESETS.balanced.train)).toBe(5) // 75% of 7 = 5.25
+    expect(sessionsForPlan(WEEK_PLAN_PRESETS.grind.train)).toBe(6) // 85% of 7 = 5.95
+  })
+
+  it('it is total and monotone: more training can never buy fewer days', () => {
+    let last = -1
+    for (let pct = 0; pct <= 100; pct++) {
+      const n = sessionsForPlan(pct)
+      expect(n, `train ${pct}`).toBeGreaterThanOrEqual(0)
+      expect(n, `train ${pct}`).toBeLessThanOrEqual(DAY_SHORT.length)
+      expect(n, `train ${pct} went down`).toBeGreaterThanOrEqual(last)
+      last = n
+    }
+    expect(sessionsForPlan(0)).toBe(0)
+    expect(sessionsForPlan(100)).toBe(DAY_SHORT.length)
+  })
+
+  it('the week opens on court, Sunday is always the first day off, and no two rest days touch', () => {
+    for (const sessions of [4, 5, 6]) {
+      const on = sessionDays(sessions)
+      expect(on.length, `${sessions} sessions`).toBe(sessions)
+      expect(on, `${sessions} sessions: Monday`).toContain(0)
+      expect(on, `${sessions} sessions: Sunday`).not.toContain(6)
+      // ...and the rest days are spread rather than clumped, which is the whole reason the priority
+      // order is a fixed list instead of "take them off the end".
+      const off = [0, 1, 2, 3, 4, 5, 6].filter((d) => !on.includes(d))
+      for (const d of off) expect(off, `${sessions} sessions: ${d} and ${d + 1} both off`).not.toContain(d + 1)
+    }
+  })
+
+  it('the fitness day is Tuesday at every preset, so moving a preset does not reshuffle her week', () => {
+    for (const sessions of [4, 5, 6]) expect(gymDayIndex(sessions), `${sessions} sessions`).toBe(1)
+    expect(DAY_LONG[1]).toBe('Tuesday')
+    // one session a week is on court – there is no week whose only tennis is a gym
+    expect(gymDayIndex(1)).toBeNull()
+    expect(gymDayIndex(0)).toBeNull()
+  })
+
+  it('THE PLAN READS AS COURT TIME: 3 / 4 / 5 court days against one constant gym day', () => {
+    const courtDaysFor = (train: number) =>
+      calendarWeekFor(facts({ plan: { train, rest: 100 - train } }), 6).courtDays
+    expect(courtDaysFor(WEEK_PLAN_PRESETS.light.train)).toBe(3)
+    expect(courtDaysFor(WEEK_PLAN_PRESETS.balanced.train)).toBe(4)
+    expect(courtDaysFor(WEEK_PLAN_PRESETS.grind.train)).toBe(5)
+  })
+
+  it('a booked practice match takes Saturday – the week\'s last court day – at every preset', () => {
+    for (const preset of Object.values(WEEK_PLAN_PRESETS)) {
+      const w = calendarWeekFor(facts({ plan: preset, practices: [{ week: 6, paidCents: 3000, withCoach: false }] }), 6)
+      const match = w.days.filter((d) => d.kind === 'match')
+      expect(match.length, `${preset.train}: exactly one match`).toBe(1)
+      expect(DAY_LONG[match[0].index], `${preset.train}`).toBe('Saturday')
+      expect(w.readout).toContain('Practice match on Saturday.')
+    }
+  })
+
+  // ⚠ THE WEEK'S STORY DREW THIS SAME ROW, DIFFERENTLY, AND THE SLICE FOUND IT. WeekRecapCard has had
+  // a seven-dot train/rest strip since round 7, spread by its own largest-remainder-free rule: for the
+  // balanced preset it rested MONDAY and THURSDAY and trained on SUNDAY. The calendar rests Sunday
+  // first. Both were defensible alone; together they meant the calendar drew Sunday off on the way INTO
+  // a week and the story drew her on court that Sunday on the way out of it, off the identical
+  // `plan.train`. The card imports the rule now, so the two cannot answer differently again.
+  it('the week\'s story draws the SAME days – one rule, both ends of the week', () => {
+    const card = read('../src/components/WeekRecapCard.vue')
+    expect(card).toContain("import { sessionDays, sessionsForPlan } from '../composables/weekDays'")
+    expect(card).toContain('const on = new Set(sessionDays(sessionsForPlan(plan.value.train)))')
+    // ...and the rule it used to keep is GONE from the file rather than merely bypassed
+    expect(card).not.toContain('Math.floor((i * trainDays) / 7)')
+    // the COUNT never differed - both were `round(train% of 7)` - which is why only the placement moved
+    expect(sessionsForPlan(75)).toBe(Math.round((75 / 100) * 7))
+  })
+
+  it('the grid is always seven days, Monday first, whatever kind of week it is', () => {
+    const weeks = [
+      facts(),
+      facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }),
+      facts({ vacations: [{ week: 6, packageId: 'seaside', paidCents: 40000 }] }),
+      facts({ practices: [{ week: 6, paidCents: 3000, withCoach: true }] }),
+    ]
+    for (const f of weeks) {
+      const w = calendarWeekFor(f, 6)
+      expect(w.days.length).toBe(7)
+      expect(w.days.map((d) => d.short)).toEqual([...DAY_SHORT])
+      expect(w.days.map((d) => d.index)).toEqual([0, 1, 2, 3, 4, 5, 6])
+    }
+  })
+})
+
+// =================================================================================================
+// PRECEDENCE – whose week is it? The screen must never show her training through a layoff.
+// =================================================================================================
+describe('a week belongs to exactly one thing, in one order', () => {
+  const injury = { kind: 'ankle soreness', severity: 'minor', totalWeeks: 4, weeksRemaining: 3 } as const
+
+  it('HER BODY OUTRANKS EVERYTHING: a covered week is rehab even with a booking on it', () => {
+    const w = calendarWeekFor(
+      facts({
+        injury: { ...injury },
+        practices: [{ week: 6, paidCents: 3000, withCoach: false }],
+        vacations: [{ week: 6, packageId: 'seaside', paidCents: 40000 }],
+      }),
+      6,
+    )
+    expect(w.days.every((d) => d.kind === 'rehab')).toBe(true)
+    expect(w.title).toBe('On the bench')
+    // it names the injury AND the return week, and the week comes off the same arithmetic every other
+    // surface prints, so the DATE can never differ from the Season screen's plaque
+    expect(w.readout).toContain('ankle soreness')
+    expect(layoffReturnWeek({ week: 5, injury: { ...injury } })).toBe(8)
+  })
+
+  it('the layoff window is EXCLUSIVE of the return week – she is back at the top of it', () => {
+    const f = facts({ week: 5, injury: { ...injury } }) // back in week 8
+    expect(calendarWeekFor(f, 7).days[0].kind).toBe('rehab')
+    expect(calendarWeekFor(f, 8).days[0].kind).not.toBe('rehab')
+    expect(layoffReturnWeek(facts())).toBeNull()
+  })
+
+  it('a committed trip owns the week, and the ENGINE says which trip', () => {
+    const e = event({ week: 6, label: 'Regional Championship', entered: true })
+    const w = calendarWeekFor(
+      facts({
+        upcoming: [e],
+        arrival: { eventId: e.id, tier: 'regional', week: 6, verdict: 'play', outgrown: false },
+      }),
+      6,
+    )
+    expect(w.days.every((d) => d.kind === 'away')).toBe(true)
+    expect(w.title).toBe('Tournament week')
+    expect(w.readout).toContain('Regional Championship')
+  })
+
+  // ⚠ CAUGHT IN THE BROWSER AT 375, not reasoned about: the header's surface mark read "Hard" beside a
+  // headline saying she was away at a Local Open on CLAY. `surfaceBlockFor` answers what a stretch of the
+  // season is MOSTLY made of - the right question for a training week, and the wrong one on a week she is
+  // playing a specific tournament, because the blocks are deliberately weighted mixes rather than single
+  // surfaces. Nobody reads a court beside "TOURNAMENT WEEK" as a fact about the season.
+  it('on a tournament week the court is the TOURNAMENT\'S, and so is the fit verdict', () => {
+    const e = event({ week: 6, surface: 'clay', entered: true })
+    const w = calendarWeekFor(
+      facts({
+        week: 5, // season offset 6 – inside the early HARD block, whose dominant surface is hard
+        upcoming: [e],
+        arrival: { eventId: e.id, tier: 'local', week: 6, verdict: 'play', outgrown: false },
+      }),
+      6,
+    )
+    expect(w.surface).toBe('clay')
+    // ...and a training week in the same block still reads the block, which is what that mark is for
+    expect(calendarWeekFor(facts({ week: 5 }), 6).surface).toBe('hard')
+  })
+
+  it('a booked family week is no tennis at all, and it names the package', () => {
+    const w = calendarWeekFor(facts({ vacations: [{ week: 6, packageId: 'seaside', paidCents: 40000 }] }), 6)
+    expect(w.days.every((d) => d.kind === 'off')).toBe(true)
+    expect(w.title).toBe('Family week')
+    expect(w.readout).not.toBe('')
+  })
+
+  it("the calendar's own blackouts say so instead of pretending to be training weeks", () => {
+    const offSeason = WEEKS_PER_YEAR - OFF_SEASON_WEEKS // the first dead week of season 0
+    expect(isOffSeasonWeek(offSeason)).toBe(true)
+    const off = calendarWeekFor(facts({ week: offSeason - 1 }), offSeason)
+    expect(off.title).toBe('Off-season')
+    expect(off.days.every((d) => d.kind === 'off')).toBe(true)
+
+    const exam = ECONOMY.availability.examWeeks[0][0]
+    expect(isExamWeek(exam)).toBe(true)
+    const school = calendarWeekFor(facts({ week: exam - 1 }), exam)
+    expect(school.title).toBe('Exams')
+    expect(school.days.every((d) => d.kind === 'school')).toBe(true)
+  })
+
+  it('an ordinary week is the plan, and that is the only kind with a mixed grid', () => {
+    const w = calendarWeekFor(facts(), 6)
+    expect(w.title).toBe('Training week')
+    expect(new Set(w.days.map((d) => d.kind))).toEqual(new Set(['court', 'gym', 'rest']))
+    expect(w.readout).toBe('5 sessions – 4 on court, 1 in the gym.')
+  })
+})
+
+// =================================================================================================
+// (b) THE BEATS the crossing-out animation stops for. Slice 2 renders them; the RULE is here,
+// because a pause on a fact the sim has not resolved yet would be the screen guessing.
+// =================================================================================================
+describe('the three beats, and why they can only be these three', () => {
+  it('every beat is a fact that is already on the snapshot BEFORE the tick', () => {
+    const practice = calendarWeekFor(facts({ practices: [{ week: 6, paidCents: 3000, withCoach: false }] }), 6)
+    expect(practice.days.filter((d) => d.beat === 'match').length).toBe(1)
+
+    const hurt = calendarWeekFor(
+      facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }),
+      6,
+    )
+    expect(hurt.days.filter((d) => d.beat === 'injury').length).toBe(1)
+
+    const knocked = calendarWeekFor(
+      facts({ knock: { part: 'shoulder', sinceWeek: 5, repeat: false, choice: 'push', untilWeek: 8 } }),
+      6,
+    )
+    expect(knocked.days.filter((d) => d.beat === 'knock').length).toBe(1)
+    expect(knocked.readout).toContain('sore shoulder')
+  })
+
+  it('a quiet week has no beat at all – the animation just runs through', () => {
+    expect(calendarWeekFor(facts(), 6).days.every((d) => d.beat === null)).toBe(true)
+  })
+
+  it('a beat is never on a day that is not also marked, so the hold lands on something visible', () => {
+    const w = calendarWeekFor(
+      facts({
+        practices: [{ week: 6, paidCents: 3000, withCoach: false }],
+        knock: { part: 'wrist', sinceWeek: 5, repeat: false, choice: 'push', untilWeek: 8 },
+      }),
+      6,
+    )
+    for (const d of w.days.filter((x) => x.beat !== null)) expect(d.kind).not.toBe('rest')
+  })
+
+  // ⚠ THE PREDICATE IS THE ENGINE'S, AND W6 IS WHY. `knockLive` is true on the knock's ARRIVAL week
+  // too, so a surface that DESCRIBES a week and reads it draws her at home during a week she spent on
+  // court – exactly the bug the week's story shipped for two rounds. `knockGoverns` is the predicate
+  // written for descriptions, and this calendar is nothing but a description of weeks.
+  it('a knock that has not been answered yet governs nothing – W6', () => {
+    const undecided = calendarWeekFor(
+      facts({ knock: { part: 'knee', sinceWeek: 5, repeat: false, choice: null, untilWeek: 5 } }),
+      6,
+    )
+    expect(undecided.days.every((d) => d.beat === null)).toBe(true)
+    expect(days).toContain('knockGoverns(snap.knock, week)')
+    expect(days).not.toContain('knockLive(')
+  })
+
+  it('a rested knock takes the training court away – and says so about the booked match too', () => {
+    const rested = calendarWeekFor(
+      facts({
+        knock: { part: 'ankle', sinceWeek: 5, repeat: false, choice: 'rest', untilWeek: 6 },
+        practices: [{ week: 6, paidCents: 3000, withCoach: false }],
+      }),
+      6,
+    )
+    expect(rested.days.filter((d) => d.kind === 'court').length).toBe(0)
+    expect(rested.days.filter((d) => d.kind === 'gym').length).toBe(0)
+    expect(rested.readout).toContain('Resting the ankle')
+    // the engine does NOT cancel a booking on a rested knock (only an injury onset does), so the mark
+    // stays and the sentence names it rather than being contradicted by it
+    expect(rested.days.filter((d) => d.kind === 'match').length).toBe(1)
+    expect(rested.readout).toContain('still stands')
+  })
+
+  it('the animation stands down when another surface owns the week', () => {
+    expect(calendarWeekFor(facts(), 6).animates).toBe(true)
+    const e = event({ week: 6, entered: true })
+    expect(
+      calendarWeekFor(
+        facts({ upcoming: [e], arrival: { eventId: e.id, tier: 'local', week: 6, verdict: 'play', outgrown: false } }),
+        6,
+      ).animates,
+    ).toBe(false)
+    const paused = { eventId: 'x' } as unknown as Snapshot['pending']
+    expect(calendarWeekFor(facts({ pending: paused }), 6).animates).toBe(false)
+  })
+})
+
+// =================================================================================================
+// (d) THE MARKERS – the item the owner called the most valuable one
+// =================================================================================================
+describe('a marker is a tournament she can act on, and nothing else', () => {
+  it('SUITABLE means entered, or enterable with the list still open', () => {
+    expect(isSuitable(event({ entered: true }), 5)).toBe(true)
+    expect(isSuitable(event({ eligible: true, deadlineWeek: 6 }), 5)).toBe(true)
+    // she is in it, and the list has closed – still hers, and the one card she most needs to see
+    expect(isSuitable(event({ entered: true, eligible: false, deadlineWeek: 4 }), 5)).toBe(true)
+  })
+
+  it('...and NOT a locked-ahead one, a closed one, or one she has outgrown', () => {
+    expect(isSuitable(event({ eligible: false, ineligibleReason: 'locked', pointsToEnter: 180 }), 5)).toBe(false)
+    expect(isSuitable(event({ eligible: true, deadlineWeek: 4 }), 5)).toBe(false) // list closed
+    expect(isSuitable(event({ eligible: false, ineligibleReason: 'outgrown' }), 5)).toBe(false)
+    expect(isSuitable(event({ eligible: false, ineligibleReason: 'injured' }), 5)).toBe(false)
+  })
+
+  it('a week whose only tournament is unreachable reads as the training week it IS for her', () => {
+    // The same reading SeasonScreen's `plannable` rule takes: empty means empty FOR HER. The Season
+    // feed keeps the aspirational card; a marker you cannot press would be the twenty-cards problem
+    // one row smaller.
+    const rows = lookAheadFor(
+      facts({ upcoming: [event({ week: 8, eligible: false, ineligibleReason: 'locked', pointsToEnter: 180 })] }),
+    )
+    const row = rows.find((r) => r.week === 8)!
+    expect(row.event).toBeNull()
+    expect(row.kind).toBe('training')
+  })
+
+  it('the rows start the week AFTER the grid and stop inside the snapshot horizon', () => {
+    const rows = lookAheadFor(facts({ week: 5 }))
+    expect(rows.length).toBe(LOOK_AHEAD_WEEKS)
+    expect(rows[0].week).toBe(7) // the grid is week 6
+    // 1 (the grid) + LOOK_AHEAD_WEEKS is exactly the 8 weeks `upcoming` is filled over, so no row can
+    // be drawn over a span the engine has not generated events for.
+    expect(rows.at(-1)!.week).toBe(5 + 1 + LOOK_AHEAD_WEEKS)
+    expect(1 + LOOK_AHEAD_WEEKS).toBe(8)
+    // every row is dated, and the label comes from the shared formatter
+    for (const r of rows) {
+      expect(r.label).toMatch(/^W\d+ '\d\d$/)
+      expect(r.dates).not.toBe('')
+    }
+  })
+
+  it('a row names whatever the week already is, and the layoff chips ride on top of it', () => {
+    const rows = lookAheadFor(
+      facts({
+        week: 5,
+        injury: { kind: 'ankle', severity: 'moderate', weeksRemaining: 6, totalWeeks: 8 },
+        vacations: [{ week: 8, packageId: 'seaside', paidCents: 40000 }],
+        practices: [{ week: 9, paidCents: 3000, withCoach: true }],
+        upcoming: [event({ week: 7, label: 'Local Open' })],
+      }),
+    )
+    const at = (w: number) => rows.find((r) => r.week === w)!
+    expect(at(7).kind).toBe('event')
+    expect(at(7).note).toBe('Local Open')
+    expect(at(8).kind).toBe('vacation')
+    expect(at(9).kind).toBe('practice')
+    expect(at(9).note).toContain('coach')
+    // back in week 11, exclusive: 7..10 are covered, 11 is not
+    expect(at(7).injured).toBe(true)
+    expect(at(10).injured).toBe(true)
+    expect(at(11).injured).toBe(false)
+  })
+})
+
+// =================================================================================================
+// THE GUARDS – the two things this slice could plausibly regress into
+// =================================================================================================
+describe('the calendar DISPLAYS the plan and does not edit it', () => {
+  // docs/specs/coach-as-load-manager.md risk (b): "Weekly load sliders are exactly the chore the story
+  // screen was designed to avoid." Seven per-day controls is that chore with a calendar drawn round
+  // it, and it is the single most likely thing for a later hand to add "while we are in here" – so the
+  // absence is pinned rather than left to the comment at the top of the composable.
+  it('not one control in the grid: no input, no select, no per-day handler', () => {
+    const grid = template.slice(template.indexOf('<ul'), template.indexOf('</ul>'))
+    expect(grid).toContain('cal-day')
+    for (const control of ['<input', '<select', '<textarea', 'type="range"', '@click', 'v-model']) {
+      expect(grid, `the day grid grew a control: ${control}`).not.toContain(control)
+    }
+    // ...and the screen never writes the plan, on any element.
+    expect(screen, 'the calendar sets the training plan').not.toContain('setPlan')
+    expect(screen).not.toContain('WEEK_PLAN_PRESETS')
+  })
+
+  it('the day cells are list items with accessible names – a picture has to say what it is', () => {
+    expect(template).toContain(':aria-label="dayName(d)"')
+    expect(screen).toContain('const KIND_WORD: Record<DayKind, string>')
+    // the marks themselves are decoration and are hidden from the reader
+    expect(template).toContain('<span class="cal-day-mark" aria-hidden="true"></span>')
+  })
+
+  it('the layout is derived in the composable, not in the template', () => {
+    // Every fact on a cell arrives ready-made. A screen that starts asking `plan.train` itself is a
+    // screen that has begun to keep a second copy of the rule.
+    expect(screen).toContain("import { useCalendarWeek, useLookAhead")
+    expect(screen).not.toContain('sessionsForPlan')
+    expect(screen).not.toContain('plan.train')
+    expect(screen).not.toContain('isExamWeek')
+    expect(screen).not.toContain('layoffCoversWeek')
+  })
+})
+
+describe('ONE week button, two projections', () => {
+  it('both controls read the SAME composable, and neither builds a label of its own', () => {
+    // The hazard is the arrival gate's, one surface further out: three places answered "what happens
+    // when this week arrives" separately and one of them lied (engine/world.ts). So the label, the
+    // mode and the blocked state are one computed with two readers.
+    expect(app).toContain("import { useWeekAction } from './composables/weekAction'")
+    expect(screen).toContain("import { useWeekAction } from '../../composables/weekAction'")
+    expect(app).toContain('const weekAction = useWeekAction()')
+    expect(screen).toContain('const action = useWeekAction()')
+    // ...and NEITHER reaches past it to the label's source, which is what would let the two diverge.
+    expect(app).not.toContain('useWeekAhead()')
+    expect(screen).not.toContain('useWeekAhead')
+    // one file composes them, and it is the only one that may
+    expect(action).toContain("import { useWeekAhead, type WeekAheadKind } from './weekAhead'")
+  })
+
+  it('the calendar renders the label and the disabled state it is handed, not its own', () => {
+    expect(template).toContain('{{ action.label }}')
+    expect(template).toContain(':disabled="action.disabled"')
+    expect(app).toContain('{{ weekAction.label }}')
+    expect(app).toContain(':disabled="weekAction.disabled"')
+  })
+
+  it('an unanswered knock blocks BOTH, with a reason on screen rather than a dead control', () => {
+    // `advanceWeeks` refuses to tick while `knock.choice` is null. App.vue only got away with never
+    // asking because KnockDialog paints over its button; that is cover, not an answer, and a second
+    // control drawn on the strength of it is how the arrival gate's three answers came about.
+    expect(action).toContain('const knock = snap?.knockPrompt')
+    expect(action).toContain('disabled: true')
+    expect(action).toContain('blockedNote')
+    // R10-16's doctrine: the reason is on screen where there is room for it.
+    expect(template).toContain('{{ action.blockedNote }}')
+  })
+
+  it('resume stays the shell\'s single arm – the calendar does not draw a second copy of it', () => {
+    // App.vue's floating bar is global on `pending` (that is what lets R13-8's deleted banner stay
+    // deleted). Two controls at the same coordinates would be the duplication, so the screen's own CTA
+    // stands down while a reveal is paused.
+    expect(screen).toContain("const showGo = computed(() => !game.snapshot?.pending)")
+    expect(template).toContain('v-if="showGo" #footer')
+  })
+})
+
+describe('the marker opens ONE event, with enter-or-close', () => {
+  it('it is the app\'s takeover, so there is no feed around the card', () => {
+    expect(template).toContain('<TakeoverShell v-if="marker" :title="marker.label">')
+    expect(screen).toContain("import TakeoverShell from '../ui/TakeoverShell.vue'")
+    // the cross is the close: this card decides one thing and has no screen after it
+    expect(template).toMatch(/<IconButton[^>]*icon="close"/)
+  })
+
+  it('ENTER, and then out – the card is a door in, not an entry manager', () => {
+    expect(template).toContain('@click="enterMarker(marker)"')
+    const enter = screen.slice(screen.indexOf('function enterMarker'), screen.indexOf('const fundsCents'))
+    expect(enter).toContain('game.enterEvent(e.id)')
+    expect(enter).toContain('marker.value = null')
+    // withdrawing and cancelling stay where the whole horizon is in view
+    expect(screen).not.toContain('withdrawEvent')
+    expect(screen).not.toContain('cancelEntry')
+  })
+
+  it('the card carries the numbers, so it can BE its own confirmation', () => {
+    // There is no confirm dialog behind this Enter and there is one on Season, and the difference is
+    // the point: on a feed the fee is one chip among six, here the whole screen is the one event.
+    // ⚠ THE MARKUP AND THE IMPORT, not the file: the screen's own note explains the absence and names
+    // the component, and a guard a comment can answer is not a guard (the trap that let the practice
+    // pin in tests/round13.test.ts go green off a note in the same slice).
+    expect(template).not.toContain('<ConfirmDialog')
+    expect(screen).not.toMatch(/^import .*ConfirmDialog/m)
+    for (const fact of ['entry {{ formatDollars(marker.entryFeeCents) }}', 'Travel budget', 'closes {{ weekLabel(marker.deadlineWeek) }}']) {
+      expect(template, `the card must print ${fact}`).toContain(fact)
+    }
+    // ...and both cautions are the ENGINE's own sentences, never re-worded here
+    expect(template).toContain('{{ marker.coachCaution }}')
+    expect(template).toContain('marker.cautionDetail')
+    expect(screen).toContain('surfaceStyleHint(game.snapshot.profile.playStyle, e.surface)')
+  })
+
+  it('a fatigued entry stays a warned CHOICE, never a block', () => {
+    expect(template).toContain(':risky="marker.cautionReason === \'fatigued\'"')
+    expect(template).toContain(':disabled="fundsShort(marker) || game.busy"')
+  })
+})
+
+describe('the calendar reads the snapshot and nothing else', () => {
+  it('no engine state is reached for, and no fact is derived that the composable owns', () => {
+    for (const forbidden of ['engine/world', 'createWorld', 'tickWeek', 'game.tick(']) {
+      expect(screen, `the screen reaches for ${forbidden}`).not.toContain(forbidden)
+    }
+  })
+
+  it('the composable takes a Pick of the snapshot – so it cannot read what it was not given', () => {
+    expect(days).toContain('export type CalendarWeekFacts = Pick<')
+    // ...and its own inputs are the engine's shared predicates rather than third spellings of them
+    expect(days).toContain("import { layoffCoversWeek } from '../engine/world'")
+    expect(days).toContain('layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, week)')
+    expect(days).toContain("import { surfaceStyleHint } from '../engine/match/style'")
+    expect(days).toContain('dominantSurface(block)')
+  })
+
+  it('`dominantSurface` has ONE home now, and it is the table it reduces', () => {
+    const calendar = read('../src/engine/season/calendar.ts')
+    expect(calendar).toContain('export function dominantSurface(block: SurfaceBlock): Surface')
+    const season = read('../src/components/screens/SeasonScreen.vue')
+    expect(season).not.toContain('function dominantSurface')
+    expect(season).toContain('import { dominantSurface,')
+  })
+})
+
+describe('player copy', () => {
+  it('short dash only, no Cyrillic, in everything the player can see', () => {
+    expect(template.length).toBeGreaterThan(1000) // a real bound, never a silent empty slice
+    expect(template).not.toContain('—')
+    expect(template).not.toMatch(/[Ѐ-ӿ]/)
+    // the composable writes sentences the player reads, so it is swept too
+    expect(days).not.toContain('—')
+  })
+
+  it('NO ARROWS ON BUTTON LABELS – the owner has asked twice', () => {
+    for (const m of template.matchAll(/<(button|PrimaryPill|IconButton)\b[\s\S]*?<\/\1>/g)) {
+      expect(m[0], 'an arrow got onto a button label').not.toMatch(/→|&rarr;|▶/)
+    }
+    // and not smuggled in through the composable's labels either
+    expect(days).not.toMatch(/→|&rarr;|▶/)
+    expect(action).not.toMatch(/→|&rarr;|▶/)
+  })
+
+  it('every sentence the layout can produce is dash-clean and says something', () => {
+    const seen = new Set<string>()
+    const cases: CalendarWeekFacts[] = [
+      facts(),
+      facts({ plan: WEEK_PLAN_PRESETS.grind }),
+      facts({ plan: WEEK_PLAN_PRESETS.light }),
+      facts({ plan: { train: 0, rest: 100 } }),
+      facts({ practices: [{ week: 6, paidCents: 3000, withCoach: false }] }),
+      facts({ vacations: [{ week: 6, packageId: 'grandma', paidCents: 0 }] }),
+      facts({ injury: { kind: 'wrist strain', severity: 'minor', weeksRemaining: 2, totalWeeks: 3 } }),
+      facts({ knock: { part: 'shoulder', sinceWeek: 5, repeat: false, choice: 'push', untilWeek: 8 } }),
+      facts({ knock: { part: 'shoulder', sinceWeek: 5, repeat: false, choice: 'rest', untilWeek: 6 } }),
+      facts({ week: WEEKS_PER_YEAR - OFF_SEASON_WEEKS - 1 }),
+      facts({ week: ECONOMY.availability.examWeeks[0][0] - 1 }),
+    ]
+    for (const f of cases) {
+      const w = calendarWeekFor(f, f.week + 1)
+      for (const s of [w.title, w.readout]) {
+        expect(s, JSON.stringify(f.plan)).not.toBe('')
+        expect(s).not.toContain('—')
+        expect(s).not.toMatch(/[Ѐ-ӿ]/)
+        expect(s).not.toMatch(/undefined|null|NaN/)
+      }
+      seen.add(w.title)
+    }
+    // the sweep really did reach every kind of week
+    expect(seen).toEqual(
+      new Set(['Training week', 'Family week', 'On the bench', 'Off-season', 'Exams']),
+    )
+  })
+})

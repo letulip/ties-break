@@ -42,18 +42,35 @@ describe('the bottom nav is Season · Calendar · Home · Stats · More, Home in
     expect(ids[Math.floor(ids.length / 2)]).toBe('home')
   })
 
-  it('the Calendar slot is a PLACEHOLDER: inert, and it can never route anywhere', () => {
-    // It is in the owner's design and it is not built in this slice. It must look deliberate
-    // (dimmed, disabled) and it must be impossible to reach a screen through it – 'calendar' is
-    // NOT a TabId, so the only thing standing between the slot and a blank screen is `soon`.
-    expect(app).toContain("type NavId = TabId | 'calendar'")
-    expect(app).toContain(`{ id: 'calendar', icon: 'week', label: 'Calendar', soon: true }`)
-    expect(app).toContain(':disabled="t.soon"')
-    expect(app).toContain(`'tab-soon': t.soon`)
+  // ⚠ RE-AIMED BY THE CALENDAR SLICE, AND THE FACT IT GUARDED IS THE ONE THING THAT LEGITIMATELY
+  // CHANGED: screen H is built. This test was called "the Calendar slot is a PLACEHOLDER: inert, and
+  // it can never route anywhere", and it pinned five pieces of machinery that made that true –
+  // `type NavId = TabId | 'calendar'`, `soon: true` on the entry, `:disabled="t.soon"`, the
+  // `'tab-soon': t.soon` class binding, `if (entry.soon) return` in `openNav`, and a
+  // `.tab-btn.tab-soon` rule in the sheet.
+  //
+  // WHY EVERY ONE OF THEM IS NOW ASSERTED ABSENT rather than simply dropped from the test: a reserved
+  // slot and a live one are opposite states of the same seat, so the useful guard is the same shape
+  // pointed the other way. Machinery that dims a tab nothing can reach, left in the file after the
+  // screen lands, is precisely the dead markup the A2 suite below sweeps for – it would read to the
+  // next person as "there is still something unfinished here", which is the opposite of true.
+  //
+  // WHAT IS UNCHANGED, and it is the seat itself: the entry is still the second of five, still
+  // week.svg, still labelled Calendar, and Home is still the middle slot (the test above).
+  it('the Calendar slot is LIVE: it routes to screen H, and the placeholder machinery is gone', () => {
+    expect(app).toContain(`{ id: 'calendar', icon: 'week', label: 'Calendar' }`)
+    expect(app).toContain(`<CalendarScreen v-else-if="tab === 'calendar'"`)
+    expect(app).toContain("import CalendarScreen from './components/screens/CalendarScreen.vue'")
+    // `openNav` is still the ONE writer of `tab` from the bar, and it no longer has a slot to refuse.
     const openNav = app.slice(app.indexOf('function openNav'), app.indexOf('function iconUrl'))
-    expect(openNav).toContain('if (entry.soon) return')
-    // ...and the dimmed treatment is a real rule, not an inline style nobody can find.
-    expect(read('../src/style.css')).toContain('.tab-btn.tab-soon')
+    expect(openNav).toContain('tab.value = entry.id')
+    expect(openNav).not.toContain('soon')
+    // Not one piece of the dimming survives – not the flag, not its bindings, not its rule.
+    expect(app).not.toContain("type NavId")
+    expect(app).not.toContain('soon: true')
+    expect(app).not.toContain(':disabled="t.soon"')
+    expect(app).not.toContain(`'tab-soon'`)
+    expect(read('../src/style.css')).not.toContain('.tab-btn.tab-soon {')
   })
 
   it("the Calendar glyph exists and is its own picture, not a rename of the Season one", () => {
@@ -73,8 +90,13 @@ describe('the bottom nav is Season · Calendar · Home · Stats · More, Home in
     // order two tests above, and that pin is the owner's, so the screen takes the door-and-content
     // route every other tabless screen takes. Its door is the Kid screen's Coaching row - the row
     // already names who coaches her, so "tap it to change that" needs no new concept.
+    // ⚠ RE-AIMED BY THE CALENDAR SLICE: `'calendar'` joined the union, and it is the one member that
+    // arrived by being BUILT rather than by leaving the bar. The protected fact is untouched and is
+    // what the rest of this test is about – 'kid', 'money', 'week' and 'market' are still CONTENT
+    // states with no button in the five-entry bar. 'calendar' is the opposite case (a button that
+    // finally has a screen), so it belongs in the union and NOT in the list below.
     expect(app).toContain(
-      "type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'",
+      "type TabId = 'home' | 'play' | 'calendar' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'",
     )
     expect(app).toContain(`<KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />`)
     // ⚠ RE-AIMED BY W1 (owner, 30.07: he played a full season and never once saw the Weekly Story).
@@ -304,7 +326,7 @@ describe('R13-12 — the dot rule (unit): a FRESH recap is unseen', () => {
 // The advance bar: GLOBAL, in the App shell, in no tab screen.
 // ===========================================================================
 describe('the advance button lives in the App shell, and splits by what a stray tap costs', () => {
-  it('ADVANCING is Home-only; RESUMING a paused tournament stays global', () => {
+  it('the FLOATING bar is Home-only; RESUMING a paused tournament stays global', () => {
     // ⚠ RE-AIMED by wave 2 (owner, 28.07). R13-12 made the button global so no tab could strand a
     // career, and that was right while it sat in a bar of its own. Wave 2 floated it, and floating
     // it lands under the thumb on every screen - where a stray tap SPENDS A WEEK, the one action in
@@ -314,20 +336,47 @@ describe('the advance button lives in the App shell, and splits by what a stray 
     //   * advancing is irreversible  -> Home only. Home is one tap from everywhere.
     //   * resuming a paused reveal costs nothing -> global, which is what lets R13-8's deleted
     //     paused-tournament banner STAY deleted (see the sibling test below).
+    //
+    // ⚠ RE-AIMED, IN ITS TITLE, BY THE CALENDAR SLICE - and only in its title, because the two
+    // assertions below are unchanged and still true. It was called "ADVANCING is Home-only", and that
+    // sentence is no longer a fact about the app: the owner asked for the main action button on the
+    // Calendar screen too ("a real functional screen with the main action button, like Home has"), and
+    // screen H has one. A guard whose NAME claims something false is worse than no guard, so the name
+    // now says what is actually pinned - the FLOATING bar, `.next-week-bar`, and the padding that pays
+    // for it, are Home's (plus resume, everywhere).
+    //
+    // The cost argument survives intact, which is why the calendar is an exception and not a breach:
+    // a stray tap is dangerous on a screen whose subject is elsewhere, and the calendar's whole
+    // subject is the seven days that press spends. The sibling test below is where the calendar is
+    // held to the half that has not moved an inch - the ACT stays the shell's.
     expect(app).toContain(`<div v-if="tab === 'home' || game.snapshot?.pending" class="next-week-bar">`)
     // ...and the room reserved under it follows the same rule rather than being paid on every tab.
     expect(app).toContain(`<main class="app-content with-next-week-bar" :class="{ home: tab === 'home' }">`)
   })
 
-  it('no tab screen carries an advance control of its own', () => {
+  // ⚠ RE-AIMED BY THE CALENDAR SLICE, AND IT GREW A THIRD FILE RATHER THAN LOSING ITS POINT. This read
+  // "no tab screen carries an advance control of its own", over two files, and it was pinning two
+  // different things under one sentence: that a screen does not draw the BAR, and that a screen does
+  // not perform the ACT. Screen H draws a control (the owner asked for one) and performs no act - it
+  // emits `advance` and App.vue's `playWeek` does the work, the same way Home and Kid emit `navigate`
+  // rather than writing `tab`. So the two halves are now stated separately, and the ACT half - the one
+  // that actually protects the career from a duplicated week-advance - covers all three screens.
+  it('no tab screen ADVANCES: the act is the shell\'s, and the bar is nobody else\'s', () => {
     for (const rel of [
       '../src/components/screens/ThisWeekScreen.vue',
       '../src/components/screens/HomeScreen.vue',
+      '../src/components/screens/CalendarScreen.vue',
     ]) {
       const src = read(rel)
       expect(src, `${rel} must not carry the bar`).not.toContain('next-week-bar')
       expect(src, `${rel} must not advance`).not.toContain('game.advance(')
     }
+    // ...and the one screen that DOES carry a week control asks for it by event, so `playWeek` stays
+    // the single door: same handler, same composable, same mode.
+    const cal = read('../src/components/screens/CalendarScreen.vue')
+    expect(cal).toContain('const emit = defineEmits<{ advance: [] }>()')
+    expect(cal).toContain("emit('advance')")
+    expect(app).toContain(`<CalendarScreen v-else-if="tab === 'calendar'" @advance="playWeek(1)" />`)
   })
 })
 

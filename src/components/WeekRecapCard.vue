@@ -34,6 +34,9 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
 import { useWeekAhead } from '../composables/weekAhead'
+// The day layout, ONCE: screen H's calendar grid and this card's dot row are the same fact about the
+// same week, seen from either end of it. See the note above `dayDots`.
+import { sessionDays, sessionsForPlan } from '../composables/weekDays'
 import { vacationPackage } from '../engine/economy'
 import { weekArtUrl, weekSceneArtUrl } from '../art/weeks'
 import { weekLabel } from '../shared/dates'
@@ -126,18 +129,26 @@ const artAlt = computed(() => {
 // Mon–Sun letters shown under the day dots (round-7 item 5b).
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-// Evenly spread `trainDays` "train" dots across 7 slots (largest-remainder-free integer
-// spread – deterministic, no RNG): slot i is a training day iff the running share crosses
-// an integer boundary at i.
+// WHICH DAYS SHE TRAINED, and it is THE SAME ANSWER THE CALENDAR GIVES.
+//
+// ⚠ THIS USED TO SPREAD THE DOTS ITSELF, and the calendar slice found the two screens disagreeing
+// about the same week. This card had a largest-remainder-free integer spread - slot i is a training
+// day iff `floor((i+1)*n/7) > floor(i*n/7)` - which for the balanced preset (5 of 7) rests MONDAY and
+// THURSDAY and trains on SUNDAY. `composables/weekDays.ts` rests Sunday first, then midweek, because
+// that is the shape a junior's week has and because no two rest days may touch. Both were defensible
+// in isolation; together they meant the calendar drew Sunday off on the way INTO a week and this card
+// drew her on court that Sunday on the way out of it, off the identical `plan.train`.
+//
+// So the placement is imported and this file no longer decides. The COUNT never differed - both
+// computed `Math.round(plan.train / 100 * 7)`, which is what `sessionsForPlan` is - so nothing about
+// how many dots are lit has changed, only which ones, and now only one file can answer that.
+//
+// The dots stay TRAIN/REST rather than learning the calendar's court-versus-gym distinction: this tile
+// is a two-number summary of a week that has already happened (see the pin in tests/radar.test.ts for
+// how tightly it is bounded), and the gym day is a detail the grid on screen H has room for.
 const dayDots = computed<('train' | 'rest')[]>(() => {
-  const trainDays = Math.round((plan.value.train / 100) * 7)
-  const dots: ('train' | 'rest')[] = []
-  for (let i = 0; i < 7; i++) {
-    const before = Math.floor((i * trainDays) / 7)
-    const after = Math.floor(((i + 1) * trainDays) / 7)
-    dots.push(after > before ? 'train' : 'rest')
-  }
-  return dots
+  const on = new Set(sessionDays(sessionsForPlan(plan.value.train)))
+  return DAY_LETTERS.map((_, i) => (on.has(i) ? 'train' : 'rest'))
 })
 const trainDayCount = computed(() => dayDots.value.filter((d) => d === 'train').length)
 
