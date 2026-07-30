@@ -236,6 +236,10 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // 2. The run-off band above the painted surface, in internal px and on a 375pt phone (where
     //    the canvas renders about 299 CSS px wide). The furniture in that band - the Live badge
     //    and the weather plate - is ~19px tall at `top: 6px`, so it needs about 25 and gets more.
+    //    ⚠ 31.07: THE BOTTOM BAND IS FURNISHED TOO NOW - the score counter, at `bottom: 6px`, the
+    //    mirror of the row above. The symmetry assertion at the end of this test is what makes one
+    //    measurement cover both, and it is why the counter could take the band without a second
+    //    arithmetic: the same ~19px of reading in the same ~34px of run-off.
     const surfaceTop = courtToCanvas({ x: -COURT.doublesHalfWidth, y: 0 }, vp).y
     const bandOnPhone = surfaceTop * (299 / w)
     expect(bandOnPhone, `run-off is only ${bandOnPhone.toFixed(1)} CSS px on a 375pt phone`).toBeGreaterThan(30)
@@ -254,6 +258,11 @@ describe('screen I – the design and the rulings it has to keep', () => {
   it('the weather plate is one line, off the court, and shares the Season card\'s plate', () => {
     // Owner, 29.07: the decorative temperature that already ships on the Season card, in one line
     // and off the playing surface. Not re-derived here - it arrives as a prop.
+    // ⚠ RE-AIMED 31.07 ONLY IN ITS SLICE, and the protected fact is untouched. The plate lost its
+    // `class="mv-weather"` when the two pieces of top-band furniture became one centred row (owner:
+    // «align the weather element and move it down so it sits on the same line as live»), so the two
+    // absolute offsets that class carried belong to the row now. What this test is for - one line,
+    // off the surface, the Season card's own plate, never re-derived - reads exactly as it did.
     expect(viewer).toContain("import WeatherPlate from './ui/WeatherPlate.vue'")
     expect(templateOf(viewer)).toContain('<WeatherPlate v-if="temperatureC != null"')
     expect(viewer).toContain('temperatureC?: number | null')
@@ -269,8 +278,17 @@ describe('screen I – the design and the rulings it has to keep', () => {
   it('the export\'s clock slot carries a real reading rather than an invented one', () => {
     // The engine has no time model, so "Match time 00:07" cannot be told honestly. The slot keeps
     // its shape and carries the live game score instead (and the point count once it is over).
+    // ⚠ RE-AIMED 31.07: THE SLOT MOVED, THE READING DID NOT. It was the right-hand half of a serve
+    // row under the player rows; the owner had that row's other half deleted as a duplicate and this
+    // half moved into the court's bottom run-off band («move the score counter up so it sits directly
+    // under the court, positioned the way the weather element is, but at the bottom edge»). The
+    // protected fact is the honest one and is unchanged: no invented clock, and both readings the
+    // slot carried are still on the screen. Where they sit is pinned separately, below.
     expect(viewer).toContain('gameScore')
     expect(viewer).toContain('The export gives this slot to a wall clock')
+    // Read off the MARKUP, for this file's own standing reason: `gameScore`'s doc comment QUOTES the
+    // export's label to explain why we do not print it, and a pin a comment can satisfy is not a pin.
+    expect(markupOf(viewer), 'a wall clock came back').not.toContain('Match time')
   })
 })
 
@@ -624,6 +642,88 @@ describe('a hidden screen is a stopped match', () => {
     // (tens of ms) and far below any absence a player would notice as a jump.
     expect(cap).toBeGreaterThan(0.05)
     expect(cap).toBeLessThan(1)
+  })
+})
+
+describe('who is serving is said twice, attached to something, and never in a spare row', () => {
+  const viewer = read('../src/components/MatchViewer.vue')
+  const markup = markupOf(viewer)
+  const styles = stylesOf(viewer)
+
+  it('the serving end is outlined as well as coloured, and the row cannot move when it changes', () => {
+    // Owner, 31.07: «who's serving is already indicated by colour - add an outline on top of that».
+    // ON TOP OF, not instead of - so the accent has to survive alongside the new border.
+    expect(styles).toMatch(/\.ends-labels \.serving \{[^}]*border-color: var\(--accent\)/)
+    expect(styles).toMatch(/\.ends-labels \.serving \{[^}]*color: var\(--accent\)/)
+    // ⚠ THE HALF THAT IS EASY TO "TIDY" AWAY. The capsule is declared on BOTH ends and left
+    // transparent on the one not serving. `.ends-labels` is `justify-content: space-between`, so a
+    // border drawn only on the serving side would change that side's width and both baselines every
+    // time the serve changed hands - which, on a change of ends, is every other game. A row that
+    // twitches once a game is worse than no outline at all.
+    expect(styles).toMatch(/\.ends-labels > span \{[^}]*border: 1px solid transparent/)
+    // ...and the word stays, because colour and an outline are both decoration and neither reaches a
+    // screen reader or a monochrome screen.
+    expect(markup).toContain("' · serving'")
+  })
+
+  it('the third saying of it - the bottom pill - is gone, and the two that are left are attached', () => {
+    // Owner: «remove the duplicate indicator at the bottom». It said the same fact a third time, in
+    // a row of its own, at the far end of the panel from where the eye is. What survives is the two
+    // sayings that are attached to something the player is already looking at: the END directly under
+    // the court, and the serving player's own row.
+    expect(markup, 'the duplicate serve pill is back').not.toContain('mv-serve-pill')
+    expect(markup, 'the row it lived in is back').not.toContain('class="mv-serving"')
+    expect(styles).not.toContain('.mv-serving {')
+    expect(markup, 'the ends row still names the server').toMatch(/liveServer === leftSide/)
+    expect(markup, 'the player row still carries the accent dot').toMatch(
+      /class="mv-serve-dot" :class="\{ on: liveServer === side \}"/,
+    )
+  })
+
+  it('the score counter sits in the court\'s bottom band, the way the weather sits in the top one', () => {
+    // Owner: «move the score counter up so it sits directly under the court, positioned the way the
+    // weather element is, but at the bottom edge - this buys back some vertical space». Taken
+    // structurally rather than by eye: the same right inset as the row above, and a `bottom` that
+    // mirrors that row's `top`, so the two run-off bands are used identically and neither reading is
+    // on the playing surface.
+    const chrome = styles.slice(styles.indexOf('.mv-chrome {'), styles.indexOf('.mv-live {'))
+    const score = styles.slice(styles.indexOf('.mv-score {'), styles.indexOf('.ends-labels {'))
+    expect(chrome).toMatch(/top: 6px/)
+    expect(chrome).toMatch(/right: 10px/)
+    expect(score).toMatch(/bottom: 6px/)
+    expect(score).toMatch(/right: 10px/)
+    // It is INSIDE the court box - that is what "under the court" costs nothing - and it is the last
+    // thing in it, after the top row.
+    const courtAt = markup.indexOf('class="mv-court"')
+    const chromeAt = markup.indexOf('class="mv-chrome"')
+    const scoreAt = markup.indexOf('class="mv-score num"')
+    expect(courtAt).toBeGreaterThan(-1)
+    expect(chromeAt).toBeGreaterThan(courtAt)
+    expect(scoreAt).toBeGreaterThan(chromeAt)
+    // ...and it still says both things the deleted row said, so this was a move and not a loss.
+    expect(viewer).toMatch(
+      /const scoreReadout = computed\([\s\S]{0,60}finished\.value \? `\$\{pointsPlayed\.value\} points` : gameScore\.value/,
+    )
+  })
+
+  it('the Live badge and the weather share ONE row, so they are aligned rather than nudged', () => {
+    // Owner: «align the weather element and move it down so it sits on the same line as live». They
+    // were two absolutely-positioned boxes at the same `top: 6px`, which aligns top EDGES - and the
+    // badge is a 19px pill while the plate is a bare 13px reading, so their centre lines sat 3px
+    // apart. A 3px nudge would have fixed today's two sizes and nothing else; one flex row with
+    // `align-items: center` is true whatever either piece becomes.
+    const chrome = styles.slice(styles.indexOf('.mv-chrome {'), styles.indexOf('.mv-live {'))
+    expect(chrome).toMatch(/display: flex/)
+    expect(chrome).toMatch(/align-items: center/)
+    // The badge is optional (no badge on a replay), so the plate must be held right by the ROW and
+    // not by the badge being there to push it.
+    expect(chrome).toMatch(/justify-content: flex-end/)
+    expect(styles).toMatch(/\.mv-live \{[^}]*margin-right: auto/)
+    // Neither piece may keep a pin of its own, or the row is decoration over two absolute boxes.
+    expect(styles).not.toMatch(/\.mv-live \{[^}]*position: absolute/)
+    expect(styles, 'the weather kept a rule after the row took its offsets').not.toContain('.mv-weather {')
+    // A full-width box over the court that is not a control must not eat taps meant for the canvas.
+    expect(chrome).toMatch(/pointer-events: none/)
   })
 })
 

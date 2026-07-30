@@ -768,7 +768,12 @@ const POINT_NAMES = ['0', '15', '30', '40'] as const
  *  model at all, so a clock here would be a number we made up - and a live tennis view that cannot
  *  tell you it is 30-40 is missing the most basic thing on a scoreboard. So the slot keeps the
  *  export's shape and its typography, and carries the one live reading the export's own point log
- *  used to carry instead (the commentary's score column shows GAMES, not points). */
+ *  used to carry instead (the commentary's score column shows GAMES, not points).
+ *
+ *  ⚠ THE SLOT MOVED ON 31.07 AND THE READING DID NOT. It used to be the right-hand end of a serve
+ *  row under the player rows; the owner had the row's other half deleted as a duplicate and this
+ *  half moved into the court's bottom run-off band, which was already drawn and already empty. Same
+ *  words, same typography, one fewer row of panel - see `scoreReadout` and `.mv-score`. */
 const gameScore = computed(() => {
   if (finished.value || displayedPointIndex.value < 0) return ''
   const pts: [number, number] = [0, 0]
@@ -795,6 +800,19 @@ const gameScore = computed(() => {
   }
   return `${POINT_NAMES[pts[0]]}-${POINT_NAMES[pts[1]]}`
 })
+
+/**
+ * WHAT THE COUNTER UNDER THE COURT SAYS (owner, 31.07 - see `.mv-score` for where it sits).
+ *
+ * Both readings the deleted serve row carried, in one place and unchanged: the point score of the
+ * game in progress while it is being played, and how far the match got once it is over. Neither is
+ * a duplicate of anything else on the screen - the commentary's score column shows GAMES, and the
+ * set cells show sets - which is exactly why the row's OTHER half was the one that went.
+ *
+ * Empty before the first point lands (`gameScore` returns '' there), and the template drops the
+ * element entirely rather than pinning an empty box over the court.
+ */
+const scoreReadout = computed(() => (finished.value ? `${pointsPlayed.value} points` : gameScore.value))
 
 // --- design I §4a: MOMENTUM ---------------------------------------------------------------
 // The export's "two polylines + a caption" IS the live win probability we already compute per
@@ -1065,21 +1083,50 @@ function servePct(side: Side): number {
         <canvas ref="canvasRef" class="mv-canvas" :style="{ aspectRatio: `${CSS_W} / ${CSS_H}` }"></canvas>
         <!-- BOTH OF THESE SIT IN THE TOP RUN-OFF BAND, NEVER ON THE PLAYING SURFACE (owner,
              29.07). They are furniture: the court is what the player is watching. The badge is
-             left, the weather right, so they cannot meet however wide the phone is. -->
+             left, the weather right, so they cannot meet however wide the phone is.
+             ⚠ AND THEY ARE ONE ROW NOW, NOT TWO ABSOLUTE CORNERS (owner, 31.07: «align the weather
+             element and move it down so it sits on the same line as live»). They were pinned
+             separately at the same `top: 6px`, which lines up their TOP EDGES and therefore nothing
+             a reader can see: the badge is a 19px pill (10px text at 1.5, plus 2px of padding each
+             side) and the plate is a bare 13px reading, so their centre lines sat 3px apart and the
+             weather rode high. `top` on two boxes of different heights is not an alignment. One flex
+             row with `align-items: center` is - and it stays true if either piece ever changes size,
+             which is the half a 3px nudge would not have bought. -->
+        <div class="mv-chrome">
+          <!-- The export's Live badge. `replay` mode drops it deliberately: docs/specs/ui-inventory
+               §2 says the replay "IS the live match minus the blinking Live and minus shouting". -->
+          <span v-if="props.mode === 'live' && !finished" class="mv-live"
+            ><i class="mv-live-dot" aria-hidden="true"></i>Live</span
+          >
+          <!-- The export puts this bottom-right ON the court as a two-line chip; the owner asked for
+               one line and off the surface, so it is a single row up here. Same plate the Season
+               card draws, so the same fact looks like the same fact. -->
+          <WeatherPlate v-if="temperatureC != null" :temperature-c="temperatureC" :size="13" />
+        </div>
 
-        <!-- The export's Live badge. `replay` mode drops it deliberately: docs/specs/ui-inventory
-             §2 says the replay "IS the live match minus the blinking Live and minus shouting". -->
-        <span v-if="props.mode === 'live' && !finished" class="mv-live"
-          ><i class="mv-live-dot" aria-hidden="true"></i>Live</span
-        >
-        <!-- The export puts this bottom-right ON the court as a two-line chip; the owner asked for
-             one line and off the surface, so it is a single row up here. Same plate the Season
-             card draws, so the same fact looks like the same fact. -->
-        <WeatherPlate v-if="temperatureC != null" class="mv-weather" :temperature-c="temperatureC" :size="13" />
+        <!-- ===== THE SCORE COUNTER (owner, 31.07: «move the score counter up so it sits directly
+             under the court, positioned the way the weather element is, but at the bottom edge -
+             this buys back some vertical space») ==========================================
+             It used to be the right-hand half of a whole row of its own under the player rows, whose
+             left-hand half was the serve pill this round removes - so with the pill gone the row was
+             a full line of panel height carrying one short reading. Here it costs nothing at all: the
+             bottom run-off band is already drawn, already empty, and already off the playing surface
+             (29.07, the rule the badge and the weather live by). Same right inset as the row above,
+             so the two right-hand readings share one column; `bottom` mirrors that row's `top`, so
+             the two bands are used symmetrically. What it says is unchanged - see `scoreReadout`. -->
+        <span v-if="scoreReadout" class="mv-score num">{{ scoreReadout }}</span>
       </div>
 
       <!-- Round-4 item 1: who stands at which END right now, and who is serving. The panel's own
-           rows are fixed A-then-B, so this row is the only thing that knows about ends swaps. -->
+           rows are fixed A-then-B, so this row is the only thing that knows about ends swaps.
+           ⚠ AND IT IS THE OUTLINED ONE NOW (owner, 31.07: «who's serving is already indicated by
+           colour - add an outline on top of that, and remove the duplicate indicator at the bottom»).
+           The serving end was said in the accent and suffixed "· serving"; it now also wears a
+           hairline capsule in the same accent. The capsule is on BOTH ends - transparent on the one
+           that is not serving - so the row's height and both baselines are fixed and nothing jumps
+           when the serve changes hands. The word stays: colour and an outline are both decoration,
+           and the reading has to survive a screen reader and a monochrome screen. -->
+
       <div class="ends-labels">
         <span :class="{ serving: liveServer === leftSide }">
           {{ formatShortName(playerName(leftSide)) }}{{ liveServer === leftSide ? ' · serving' : '' }}
@@ -1106,16 +1153,22 @@ function servePct(side: Side): number {
         </div>
       </div>
 
-      <div class="mv-serving">
-        <span class="pill mv-serve-pill">
-          <template v-if="finished">Final</template>
-          <template v-else>Serving: {{ liveServer !== null ? formatShortName(playerName(liveServer)) : '–' }}</template>
-        </span>
-        <!-- The export's "Match time 00:07" slot. See `gameScore` for why it carries the point
-             score of the game in progress instead of a clock the engine could not honestly tell. -->
-        <span v-if="finished" class="mv-progress">Points played <b class="num">{{ pointsPlayed }}</b></span>
-        <span v-else class="mv-progress mv-gamescore num">{{ gameScore }}</span>
-      </div>
+      <!-- ===== THE SERVE ROW IS GONE, AND THAT IS THE POINT OF THE 31.07 ITEM ==================
+           It held two things and neither belonged here:
+             * "Serving: B. Tran" - the THIRD saying of a fact the screen already gives twice above,
+               in colour, at the two places the eye is already looking (the ends row directly under
+               the court, and the lime dot on the serving player's own row). The owner named it
+               exactly: «who's serving is already indicated by colour ... remove the duplicate
+               indicator at the bottom». The two survivors are the ones attached to something - an
+               end and a player - and the outline this round adds is on the first of them.
+             * The point score of the game in progress, which is not a duplicate of anything and has
+               moved UP into the court's bottom run-off band (see `.mv-score`), where it costs no
+               height at all.
+           So the row itself had nothing left to hold, and a row is worth ~33px of a phone that is
+           mostly court and log. Its `border-top` went with it; `.mv-stats` draws its own, so the
+           panel's hairline rhythm is unchanged. "Final" went too: the box score directly below says
+           "<winner> wins 6-4 6-3", which is that word plus everything it left out, and the Live badge
+           disappearing at the same instant says it a second time. -->
 
       <div class="mv-stats">
         <div class="mv-stat">
@@ -1376,14 +1429,36 @@ function servePct(side: Side): number {
   background: var(--bg);
 }
 
-/* The export's Live badge. It sits in the top RUN-OFF band, never on the playing surface (owner,
-   29.07). At the shipped canvas that band is ~34px on a 375pt phone and this badge is ~19px tall
-   at `top: 6px`, so it clears the surface by ~9px with room for a bigger phone to only add more.
-   Kept smaller than the export's pill for exactly that reason: the constraint is the band. */
-.mv-live {
+/* THE TOP RUN-OFF BAND'S ROW OF FURNITURE (owner, 31.07: «align the weather element and move it down
+   so it sits on the same line as live»). The badge and the weather plate used to be pinned
+   separately, both at `top: 6px` - which aligns their top EDGES, and they are not the same height
+   (19px pill vs a bare 13px reading), so their centre lines sat 3px apart. One row, centred, is the
+   alignment he asked for and it survives either piece changing size.
+   The insets are the two they already had (8px left for the badge, 10px right for the plate), so
+   nothing moved horizontally; `justify-content: flex-end` plus the badge's own `margin-right: auto`
+   keeps the plate hard right on a replay, where there is no badge to push it there.
+   `pointer-events: none` because this row is now a full-width box over the court and none of it is a
+   control - without it, the dead space between the two readings would swallow taps meant for the
+   canvas. */
+.mv-chrome {
   position: absolute;
   top: 6px;
   left: 8px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* The export's Live badge. It sits in the top RUN-OFF band, never on the playing surface (owner,
+   29.07). At the shipped canvas that band is ~34px on a 375pt phone and this badge is ~19px tall
+   at `top: 6px`, so it clears the surface by ~9px with room for a bigger phone to only add more.
+   Kept smaller than the export's pill for exactly that reason: the constraint is the band.
+   `margin-right: auto` is what holds the left end of the row above - see `.mv-chrome`. */
+.mv-live {
+  margin-right: auto;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -1407,13 +1482,10 @@ function servePct(side: Side): number {
   animation: mv-live-pulse 1.1s ease-in-out infinite;
 }
 
-/* The weather plate's mirror of the badge: same band, other end. Both are furniture in the
-   run-off; neither may touch the surface. */
-.mv-weather {
-  position: absolute;
-  top: 6px;
-  right: 10px;
-}
+/* The weather plate needs no rule of its own any more: it is the other end of `.mv-chrome`, which
+   owns the band, the inset and the centre line for both pieces. It kept a `.mv-weather` class for
+   the two absolute offsets that are now the row's, and a class with no rule behind it is the next
+   thing somebody re-adds a rule to, so it went with them. */
 
 @keyframes mv-live-pulse {
   0%,
@@ -1431,16 +1503,54 @@ function servePct(side: Side): number {
   }
 }
 
-/* Round-4 item 1's ends row, now court chrome inside the panel. */
+/* THE SCORE COUNTER, IN THE BOTTOM RUN-OFF BAND (owner, 31.07: «move the score counter up so it sits
+   directly under the court, positioned the way the weather element is, but at the bottom edge - this
+   buys back some vertical space»).
+   "The way the weather element is" is taken literally and structurally: the same 10px right inset, so
+   the two right-hand readings stand in one column, and `bottom: 6px` mirroring `.mv-chrome`'s
+   `top: 6px`, so the two run-off bands are used identically. The bands are symmetric by construction
+   (see CSS_H's note) and the badge's arithmetic applies unchanged here - ~19px of furniture in ~34px
+   of band on a 375pt phone - so nothing here can reach the playing surface either.
+   Bare rather than plated, like the weather and unlike the Live badge: it is a READING, and the badge
+   wears a plate because it is a status. Same size and weight the deleted row gave it. */
+.mv-score {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+/* Round-4 item 1's ends row, now court chrome inside the panel.
+   ⚠ THE SERVING END IS OUTLINED AS WELL AS COLOURED (owner, 31.07: «who's serving is already
+   indicated by colour - add an outline on top of that»). The capsule is declared on BOTH ends and
+   left transparent on the one that is not serving: the row is `justify-content: space-between`, so a
+   border that appeared only on the serving side would change that side's width and both baselines
+   every time the serve changed hands, which on a change of ends is every other game. Paying 2px of
+   border and 2px of padding on both sides buys a row that never moves.
+   The accent is the same one the row already used, and the word "· serving" stays with it: colour and
+   an outline are decoration, and the reading has to hold up in a screen reader and in monochrome. */
 .ends-labels {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
   padding: 6px 12px 0;
   font-size: 11px;
   color: var(--muted);
 }
 
+.ends-labels > span {
+  min-width: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  padding: 1px 8px;
+}
+
 .ends-labels .serving {
+  border-color: var(--accent);
   color: var(--accent);
   font-weight: 600;
 }
@@ -1535,44 +1645,13 @@ function servePct(side: Side): number {
   font-weight: 600;
 }
 
-/* --- 3. THE SERVE ROW ------------------------------------------------------------------------ */
-.mv-serving {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 9px 12px;
-  border-top: 1px solid var(--line);
-}
-
-/* The export outlines this pill in the accent and writes it in the accent; `.pill` gives it the
-   capsule and the inset, and this is the only thing that differs. */
-.mv-serve-pill {
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 700;
-  padding-block: 4px;
-}
-
-.mv-progress {
-  font-size: 12px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.mv-progress b {
-  margin-left: 6px;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.mv-gamescore {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: 0.01em;
-}
+/* --- 3. THE SERVE ROW IS GONE (owner, 31.07) --------------------------------------------------
+   `.mv-serving`, `.mv-serve-pill`, `.mv-progress` and `.mv-gamescore` went with the markup that
+   used them - the duplicate "Serving: …" pill, and the point score that moved up into the court's
+   bottom band as `.mv-score`. The export's §3 row is a deliberate deviation now rather than an
+   omission: the export has no ends row above the players (we do, and it says the same thing better,
+   attached to an end), and it has a wall clock we cannot honestly tell. Both facts the row carried
+   are still on the screen; neither rents a line to say it. */
 
 /* --- 4. THE THREE STATS ---------------------------------------------------------------------- */
 .mv-stats {
