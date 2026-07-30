@@ -12,7 +12,6 @@
 import { computed, ref } from 'vue'
 import MatchViewer from './MatchViewer.vue'
 import MatchScene from './MatchScene.vue'
-import IconButton from './ui/IconButton.vue'
 import SurfaceMark from './ui/SurfaceMark.vue'
 import { useKidEmotion } from '../composables/kidEmotion'
 import { simulateMatch } from '../engine/match/engine'
@@ -119,7 +118,16 @@ function close(): void {
           <span class="hint tf-week-dates">{{ weekLabel(week) }} · {{ weekDates }}</span>
         </div>
       </div>
-      <IconButton icon="close" label="Close" title="Close" @click="close" />
+      <!-- ⚠ THE HEADER'S ONE SLOT, AND IT USED TO SAY "Close ✕" ON ALL THREE PHASES (owner, 30.07:
+           «what this close stands for? does it skip the game or what? maybe it's redundant?» and
+           «let's put To results instead of Close»). What it DID: dismiss the whole friendly and
+           return to the app. It never skipped or re-decided anything - the engine committed this
+           match during the tick (see the contract at the top of this file) - but on the live phase
+           it was the one door that threw away the box score the player had just paid $73 to watch,
+           sitting next to a "To result →" that did the useful thing. So the slot now carries the
+           useful thing, and on the box score itself it carries nothing at all: "Done" below is
+           already the way out, and two exits on one screen is what he was asking about. -->
+      <button v-if="phase !== 'post'" class="link" @click="toResult">To result →</button>
     </header>
 
     <div class="tf-body">
@@ -146,12 +154,14 @@ function close(): void {
         </div>
       </MatchScene>
 
-      <!-- Live: the same viewer a tournament round uses, autoplaying from the first point. -->
+      <!-- Live: the same viewer a tournament round uses, autoplaying from the first point.
+           ⚠ THE HEAD ROW IS GONE, AND IT COST 34px (owner, 30.07: «let's remove practice match sign
+           nearby a court since we already have one on top of the screen as a header»). It held two
+           things and both were answered elsewhere: a `.tf-replay-round` pill reading "Practice
+           match", which the header above says already, and "To result →", which is now the header's
+           own slot. So the row had nothing left of its own to carry, and the court starts 34px
+           higher (22px of pill + its 12px of air) on every friendly. -->
       <section v-else-if="phase === 'live'" class="tf-card">
-        <div class="tf-card-head">
-          <span class="tf-replay-round">Practice match</span>
-          <button class="link" @click="toResult">To result →</button>
-        </div>
         <MatchViewer
           :match="annotated"
           :player-a="match.a"
