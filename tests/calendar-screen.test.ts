@@ -27,6 +27,7 @@ import {
   sessionsForPlan,
   type CalendarWeekFacts,
 } from '../src/composables/weekDays'
+import { calendarOwnsWeekAhead } from '../src/composables/weekAhead'
 import {
   DAY_CROSS_PACE,
   DAY_CROSS_PACES,
@@ -85,6 +86,16 @@ function event(over: Partial<UpcomingEvent> = {}): UpcomingEvent {
 // =================================================================================================
 // (c) THE DAY LAYOUT – 4 / 5 / 6 sessions, as the owner named them
 // =================================================================================================
+/** Comments stripped, so a note that NAMES a forbidden call is not read as making it. Same helper
+ *  tests/knock.test.ts keeps, and for the same reason: these are source-reading tests, and this codebase
+ *  documents at length - including documenting what it deliberately did not do. */
+function codeOf(src: string): string {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+}
+
 describe('the plan, read back as days', () => {
   it("the three presets ARE the owner's 4 / 5 / 6 – and not because a table says so", () => {
     // The count is `plan.train` per cent OF SEVEN DAYS, which is what `train` already means
@@ -461,6 +472,36 @@ describe('the calendar DISPLAYS the plan and does not edit it', () => {
 })
 
 describe('ONE week button, two projections', () => {
+  it('⚠ A NON-TOURNAMENT WEEK LANDS ON THE CALENDAR, and BOTH doors read one rule', () => {
+    // The owner, 30.07, on his own sentence «вкладку календарь, которую будем делать активной при
+    // нетурнирных неделях»: «второе чтение, добавь автовыбор вкладки». Not DISABLED on a tournament week -
+    // the tab you LAND on when the week ahead is not one.
+    //
+    // ⚠ AND IT IS A DESTINATION, NOT A PAGE THAT OPENS ITSELF. He has already had to correct one of those
+    // (W5's story took the screen and he asked for a handle), so the distinction is load-bearing: nothing
+    // covers what he was doing here, a resolved week simply ends on the screen about the next one. Which is
+    // why it needs no handle - with the story off this replaces a landing on Home, with it on it replaces a
+    // landing on Home after the story.
+    expect(codeOf(app)).toContain('function afterWeekTab()')
+    // BOTH doors, one rule: the direct landing and the story's close. Two spellings would mean turning the
+    // story off silently changed where a week leaves you.
+    expect(codeOf(app)).toContain('tab.value = afterWeekTab()')
+    expect(codeOf(app)).toContain('@close="tab = afterWeekTab()"')
+    // ...and it asks the composable that is already here rather than re-deriving the week ahead
+    expect(codeOf(app)).toContain('calendarOwnsWeekAhead(weekAction.value.kind)')
+  })
+
+  it('the rule itself: a tournament week is the calendar\'s only exception, and a walkover counts as one', () => {
+    // ⚠ 'walkover' IS THE NON-OBVIOUS MEMBER. She is entered and injured, so the week belongs to the
+    // withdrawal and its popup - not to a grid of training days she is not going to do.
+    expect(calendarOwnsWeekAhead('tournament')).toBe(false)
+    expect(calendarOwnsWeekAhead('walkover')).toBe(false)
+    // everything else is a week the calendar is about, including the ones where nothing is played
+    for (const kind of ['training', 'vacation', 'practice', 'exam', 'off-season'] as const) {
+      expect(calendarOwnsWeekAhead(kind), kind).toBe(true)
+    }
+  })
+
   it('both controls read the SAME composable, and neither builds a label of its own', () => {
     // The hazard is the arrival gate's, one surface further out: three places answered "what happens
     // when this week arrives" separately and one of them lied (engine/world.ts). So the label, the
@@ -470,8 +511,14 @@ describe('ONE week button, two projections', () => {
     expect(app).toContain('const weekAction = useWeekAction()')
     expect(screen).toContain('const action = useWeekAction()')
     // ...and NEITHER reaches past it to the label's source, which is what would let the two diverge.
-    expect(app).not.toContain('useWeekAhead()')
-    expect(screen).not.toContain('useWeekAhead')
+    //
+    // ⚠ READ WITH COMMENTS STRIPPED, and the reason is a small lesson about this whole family of tests. A
+    // `not.toContain` over raw source fails on a NOTE that merely names the thing it forbids: the auto-select
+    // slice added a comment to App.vue explaining that it deliberately does NOT call the composable by that
+    // name, and the mention alone turned this red. It is the exact mirror of the `round13` practice pin the
+    // calendar slice found PASSING off a comment - one flaw, two directions - so both are now read as CODE.
+    expect(codeOf(app)).not.toContain('useWeekAhead()')
+    expect(codeOf(screen)).not.toContain('useWeekAhead')
     // one file composes them, and it is the only one that may
     expect(action).toContain("import { useWeekAhead, type WeekAheadKind } from './weekAhead'")
   })

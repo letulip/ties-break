@@ -16,6 +16,7 @@ import { needRefresh, applyUpdate } from './pwa'
 // arrival-gate bug, one surface further out. So the label, the mode the handler below switches on and
 // the blocked state are ONE computed with two readers. See composables/weekAction.ts.
 import { useWeekAction } from './composables/weekAction'
+import { calendarOwnsWeekAhead } from './composables/weekAhead'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
 import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
@@ -288,8 +289,39 @@ watch(
     // is this navigation. See composables/weekRecap.ts for why the preference may not be folded into
     // `recapExists` itself, and why it is a localStorage flag rather than a save field.
     if ((advanced || runClosed) && storyOpensItself(snap)) tab.value = 'week'
+    // ⚠ ...AND OTHERWISE THE CALENDAR TAKES A NON-TOURNAMENT WEEK (owner, 30.07). His sentence was that the
+    // Calendar tab is «активной при нетурнирных неделях», and the second reading is the one he meant: not
+    // DISABLED on a tournament week, but the tab you LAND on when the week ahead is not one. `afterWeekTab`
+    // is the rule; this is one of its two callers.
+    else if (advanced || runClosed) tab.value = afterWeekTab()
   },
 )
+
+/**
+ * WHERE A RESOLVED WEEK LEAVES YOU. Home, or the Calendar when the week ahead is one the calendar is about.
+ *
+ * ⚠ ONE FUNCTION FOR TWO DOORS, and it has to be: a week can land here directly (the switch above, when the
+ * story does not open itself) or via the story's own close. If those two picked their destination separately
+ * they would eventually disagree, and the player would find that turning the story off silently changed
+ * where the game puts him.
+ *
+ * ⚠ AND IT IS A DESTINATION, NOT A PAGE THAT OPENS ITSELF. The owner has already had to correct one of
+ * those - W5's story used to take the screen and he asked for a handle («а если это будет отключаемая опция
+ * - вообще нет проблем») - so the distinction matters and this is on the mild side of it: nothing covers
+ * what he was doing, the week simply ends on the screen that is about the next one. Which is why it needs no
+ * handle of its own: with the story switched off this replaces a landing on Home, and with it on it replaces
+ * a landing on Home after the story. Neither is an interruption.
+ *
+ * The tournament flow is not consulted here because it cannot be up: `runClosed` fires on the snapshot that
+ * CLEARS `pending`, and a paused reveal is not an advance.
+ */
+function afterWeekTab(): TabId {
+  // ⚠ OFF `weekAction`, WHICH IS ALREADY HERE - not a second `useWeekAhead()` and not a re-derivation. The
+  // calendar slice put that composable in front of the week-ahead precisely so one answer serves every
+  // caller, and the week BUTTON already reads it. Asking the same question twice is how the button and the
+  // destination would eventually disagree about what next week is.
+  return calendarOwnsWeekAhead(weekAction.value.kind) ? 'calendar' : 'home'
+}
 
 // --- R13-12: the Kid screen lives behind her photograph ---------------------------
 // A2 moved the avatar itself onto Home (App has no header any more), so the hint's state moved
@@ -570,7 +602,10 @@ function dismissSeasonSummary(): void {
            is a real close now – the design's own "the cross returns to Home" – and not just a
            silencer. (The handoff's wording is quoted in the script block; no Cyrillic may appear in
            a template – tests/round13-nav.test.ts.) -->
-      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />
+      <!-- ⚠ THE STORY'S CLOSE READS THE SAME RULE the direct landing does (`afterWeekTab`). It used to be a
+           literal `tab = 'home'`, which would have meant that switching the story OFF changed where a week
+           leaves you - the handle is about whether the story is SHOWN, never about navigation. -->
+      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = afterWeekTab()" />
       <KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />
       <CoachMarketScreen v-else-if="tab === 'market'" @back="tab = 'kid'" />
       <StatsScreen v-else-if="tab === 'stats'" />

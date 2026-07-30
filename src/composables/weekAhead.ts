@@ -55,6 +55,22 @@ export interface WeekAhead {
 
 const TRAINING: WeekAhead = { kind: 'training', label: 'Training week' }
 
+/**
+ * IS THE WEEK AHEAD ONE THE CALENDAR IS ABOUT? (owner, 30.07: the Calendar tab is «активной при
+ * нетурнирных неделях» - and the second reading of that is the one he meant: not DISABLED on tournament
+ * weeks, but the tab you LAND on when the week ahead is not one.)
+ *
+ * ⚠ 'walkover' COUNTS AS A TOURNAMENT WEEK, and that is the one non-obvious member. She is entered and
+ * injured, so the week belongs to the withdrawal and its popup, not to a grid of training days she is not
+ * going to do.
+ *
+ * A vacation, an exam fortnight and the off-season all count as calendar weeks: nothing is going to be
+ * played, and what the week IS is exactly what the calendar draws.
+ */
+export function calendarOwnsWeekAhead(kind: WeekAheadKind): boolean {
+  return kind !== 'tournament' && kind !== 'walkover'
+}
+
 /** The plan for `snapshot.week + 1`, as a button label. Precedence is "most committed first": a
  *  tournament she paid to enter outranks a booked week, which outranks the calendar's own defaults. */
 export function useWeekAhead(): ComputedRef<WeekAhead> {

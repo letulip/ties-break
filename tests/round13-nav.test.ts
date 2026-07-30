@@ -496,12 +496,20 @@ describe('W1 — the end of a week lands on the story', () => {
     expect(body).not.toContain('snap.events')
   })
 
-  it("the story's × is a real close: it silences the week AND goes back to Home", () => {
+  it("the story's × is a real close: it silences the week AND leaves by the week's own door", () => {
+    // ⚠ RE-AIMED BY THE AUTO-SELECT (owner, 30.07: the Calendar is «активной при нетурнирных неделях», and
+    // the reading he meant is the tab you LAND on). The close used to be a literal `tab = 'home'`; it reads
+    // `afterWeekTab()` now, which is the SAME rule the direct landing uses. That singularity is the point:
+    // if the two picked separately, switching the story off would silently change where a week leaves you,
+    // and the story handle is about whether the story is SHOWN - never about navigation.
+    //
+    // The guarded fact - the × really closes, silences the week, and hands the screen back rather than
+    // stranding the player - is unchanged. Only the destination learned to be two places.
     expect(weekScreen).toContain('const emit = defineEmits<{ close: [] }>()')
     const dismiss = weekScreen.slice(weekScreen.indexOf('function dismissRecap'))
     expect(dismiss.slice(0, 200)).toContain("emit('close')")
     expect(dismiss.slice(0, 200)).toContain('dismissedRecapKey.value')
-    expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />`)
+    expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" @close="tab = afterWeekTab()" />`)
   })
 
   it('Home keeps its door and its dot – the manual route back into the story is untouched', () => {
