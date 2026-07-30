@@ -362,7 +362,12 @@ function toggleWeekStory(): void {
     <div class="career-row">
       <div>
         Open at the end of a week
-        <span class="hint" style="margin: 2px 0 0">
+        <!-- ⚠ `display: block`, and it is not a nicety: `.hint` is styled for a <p> and this is a
+             <span>, so at 375 the sentence ran on from the label ("...end of a week Off: the story
+             stays...") and read as one line of nonsense. Caught in the browser. Haptics' own hint has
+             the same shape and gets away with it only because it is four words on a device that
+             mostly hides it. -->
+        <span class="hint" style="display: block; margin: 2px 0 0">
           Off: the story stays on the This week tab – tap over whenever you like
         </span>
       </div>
