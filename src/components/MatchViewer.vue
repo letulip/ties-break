@@ -470,9 +470,30 @@ function render(): void {
   drawScene(ctx, vp, scene)
 }
 
+/**
+ * THE LARGEST REAL-TIME GAP A SINGLE FRAME MAY CARRY, in seconds.
+ *
+ * ⚠ THIS IS THE HALF OF THE 31.07 VISIBILITY FIX THAT SURVIVES A MISSED EVENT, and it is the half
+ * that actually holds the guarantee. `visibilitychange` (below) is the door, but it is not the only
+ * way a tab stops painting: iOS backgrounds through `pagehide`/`freeze` without always firing it,
+ * and a device can sleep between two frames with nothing dispatched at all. In every one of those
+ * cases rAF stops, `lastTs` keeps the timestamp of the last frame BEFORE the gap, and the first
+ * frame back hands `frame()` the whole absence as one `dtReal` - which `advance()` would then walk
+ * through the timeline in a single call. A minute on the home screen was a minute of match, played
+ * with no one watching and the sound cues fired into an empty room; long enough, and the player came
+ * back to a finished match he never saw.
+ *
+ * A quarter of a second is ~15 frames at 60Hz - far beyond any hitch that is still playback (a bad
+ * GC pause is a few tens of ms) and far below any absence that is not. Clamping COSTS the missing
+ * time rather than skipping any of it: the timeline is a fixed, pre-computed sequence and the walk
+ * is strictly ordered, so every event still plays, in order, exactly once. The only thing that
+ * changes is that the wall clock does not get to fast-forward the match.
+ */
+const MAX_FRAME_DT = 0.25
+
 function frame(ts: number): void {
   if (lastTs === null) lastTs = ts
-  const dtReal = (ts - lastTs) / 1000
+  const dtReal = Math.min((ts - lastTs) / 1000, MAX_FRAME_DT)
   lastTs = ts
   const dt = dtReal * speed.value
   advance(dt)
@@ -480,6 +501,43 @@ function frame(ts: number): void {
   render()
   if (playing.value && !finished.value) {
     rafId = requestAnimationFrame(frame)
+  }
+}
+
+// --- 31.07 item 2: THE MATCH STOPS WHEN THE SCREEN DOES -----------------------------------------
+//
+// Owner: pause the game and the match when the screen is minimised or backgrounded, the way the
+// music does. The music's own listener (src/audio/music.ts, R8-2) is the model this follows
+// deliberately - same event, same "only resume what was actually running" rule - because a player
+// who comes back to a silent app and a running match has been told two different things about
+// whether the game is paused.
+//
+// WHAT WAS ACTUALLY GOING WRONG, and it is not that rAF keeps running - it does not. The damage was
+// all in the RESUME: rAF stops while hidden, `lastTs` holds the last frame before the tab went away,
+// and the first frame back therefore carries the entire absence as one delta. See MAX_FRAME_DT
+// above for that half. This half is the honest one - the match is PAUSED, not merely rate-limited,
+// so nothing plays to an empty room and the pre-roll timer (a `setTimeout`, which is NOT throttled
+// away the way rAF is) cannot start the clock behind the player's back.
+//
+// RESUMING IS CLEAN BY CONSTRUCTION. `pauseInternal()` sets `lastTs = null`, so the first frame after
+// `startClock()` measures zero elapsed time and the clock resumes at exactly the value it was
+// stopped at - no skip, and nothing replayed. Time stops passing; it is never rewound or thrown away.
+//
+// ONE EDGE, stated rather than papered over: hidden DURING the take-your-seats pre-roll, the hold's
+// remainder is dropped and playback begins as soon as the screen comes back (`seatsPlayedForRun` is
+// already true, so `startClock` goes straight to the clock loop). The clip is a pre-match beat, the
+// clock was still at 0, and no match time is involved either way.
+/** Was the match actually running when the screen went away? Only then does coming back start it
+ *  again - a match the player had deliberately paused, or one already finished, stays as it was. */
+let resumeOnVisible = false
+
+function onVisibilityChange(): void {
+  if (document.hidden) {
+    resumeOnVisible = playing.value && !finished.value
+    if (resumeOnVisible) pauseInternal()
+  } else if (resumeOnVisible) {
+    resumeOnVisible = false
+    startClock()
   }
 }
 
@@ -579,6 +637,11 @@ function restart(): void {
 }
 
 onMounted(() => {
+  // 31.07 item 2. Per INSTANCE rather than at module load (which is what music.ts does): that
+  // listener guards one long-lived `<audio>` element, this one guards the rAF clock of a component
+  // that mounts and unmounts four times over, and a module-level handler would have to find the live
+  // one. Feature-guarded so the unit environment, which has no `document`, is untouched.
+  if (typeof document !== 'undefined') document.addEventListener('visibilitychange', onVisibilityChange)
   // R10-6: a final's celebration clip is the one cue that never plays before the moment it has to
   // land, so it is warmed HERE – a whole match's worth of lead time for ~60 KB, and by the deciding
   // point playSfx has nothing left to fetch. (No-op when this isn't a final, or while muted.)
@@ -598,6 +661,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', onVisibilityChange)
   pauseInternal()
   if (musicDuckedForRun) {
     musicDuckedForRun = false

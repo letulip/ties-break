@@ -583,6 +583,50 @@ describe('live and replay open the same way – the popup, which is the one he l
 // The owner's 31.07 playtest. Seven items; six of them are this screen's, and they share one sentence –
 // «inside the match the screen should be the match and information about the match, nothing else».
 // =====================================================================================================
+describe('a hidden screen is a stopped match', () => {
+  const viewer = read('../src/components/MatchViewer.vue')
+
+  it('pauses on visibilitychange the way the music already does, and only resumes what was running', () => {
+    // Owner, 31.07: «pause the game and the match when the screen is minimised, the way music
+    // pauses». src/audio/music.ts's R8-2 listener is the model, and the shared rule is the one worth
+    // pinning: remember whether the thing was ACTUALLY running when the screen went away, and only
+    // then start it again. A match the player had paused on purpose must come back paused.
+    expect(viewer).toContain("addEventListener('visibilitychange', onVisibilityChange)")
+    expect(viewer, 'the listener outlives the component').toContain(
+      "removeEventListener('visibilitychange', onVisibilityChange)",
+    )
+    expect(viewer).toMatch(/resumeOnVisible = playing\.value && !finished\.value/)
+    expect(viewer).toMatch(/if \(resumeOnVisible\) pauseInternal\(\)/)
+    // ...and the music's listener is still the precedent this claims to follow.
+    expect(read('../src/audio/music.ts')).toContain("addEventListener('visibilitychange'")
+  })
+
+  it('the resume is clean: the clock restarts where it stopped, never ahead of it', () => {
+    // `pauseInternal` nulls `lastTs`, and `frame` seeds `lastTs` from the first timestamp it sees –
+    // so the first frame back measures zero elapsed time. That pairing IS the guarantee that no time
+    // is skipped and none is replayed, and it is easy to break by "tidying" either half away.
+    expect(viewer).toMatch(/function pauseInternal\(\)[\s\S]{0,320}lastTs = null/)
+    expect(viewer).toMatch(/function frame\(ts: number\)[\s\S]{0,120}if \(lastTs === null\) lastTs = ts/)
+  })
+
+  it('...and a frame can never carry a whole absence, whatever the browser did or did not fire', () => {
+    // ⚠ THE HALF THAT HOLDS WITHOUT THE EVENT. iOS backgrounds through pagehide/freeze without
+    // reliably firing `visibilitychange`, and a sleeping device dispatches nothing at all – in both
+    // cases rAF simply stops and the first frame back hands `frame()` the entire gap as one delta,
+    // which `advance()` would walk through the timeline in a single call. Clamping COSTS that time
+    // rather than skipping any of it: the timeline is pre-computed and the walk is ordered, so every
+    // event still plays exactly once, in order. Presentation only – the result is the engine's and is
+    // already in the save file.
+    expect(viewer).toContain('const MAX_FRAME_DT =')
+    expect(viewer).toMatch(/const dtReal = Math\.min\(\(ts - lastTs\) \/ 1000, MAX_FRAME_DT\)/)
+    const cap = Number(/const MAX_FRAME_DT = ([\d.]+)/.exec(viewer)?.[1])
+    // Loose enough to be tuned, tight enough that it is still a CLAMP: above a real frame hitch
+    // (tens of ms) and far below any absence a player would notice as a jump.
+    expect(cap).toBeGreaterThan(0.05)
+    expect(cap).toBeLessThan(1)
+  })
+})
+
 describe('the match screen is the match, and nothing else', () => {
   const flow = read('../src/components/TournamentFlow.vue')
 
