@@ -43,6 +43,13 @@ import { recapExists } from '../../composables/weekRecap'
 import WeekRecapCard from '../WeekRecapCard.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 
+// W1: THE × IS A CLOSE NOW. The story opens itself when a week resolves (App.vue's `week` watcher –
+// the design's «Конец недели (игровой тик) → D. Weekly Story ... × возвращает на Home»), so the
+// header's × has to do what the design says it does: put the story away AND take the player back to
+// the page they came from. It still silences exactly one week, which is what it always did; the
+// navigation is the half that was missing while nobody was ever sent here.
+const emit = defineEmits<{ close: [] }>()
+
 const game = useGameStore()
 
 const week = computed(() => game.snapshot?.week ?? 0)
@@ -70,6 +77,7 @@ const showRecap = computed(
 )
 function dismissRecap(): void {
   if (game.snapshot) dismissedRecapKey.value = `${game.snapshot.careerId}:${week.value}`
+  emit('close')
 }
 
 // --- This week: the kid's nearest entered event (soonest upcoming week with
@@ -134,8 +142,8 @@ const spendRange = computed<[number, number]>(() => {
           v-if="showRecap"
           class="week-topbar-slot week-close"
           type="button"
-          aria-label="Dismiss this week's story"
-          title="Dismiss this week's story"
+          aria-label="Close the week's story"
+          title="Close the week's story"
           @click="dismissRecap"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true">
