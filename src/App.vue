@@ -172,11 +172,65 @@ watch(
 watch(tab, (t) => {
   if (t === 'week') markThisWeekSeen()
 })
-// The global advance bar (below) can resolve a week WHILE the tab is up – the player is looking
-// at the fresh recap, so it is seen the moment it lands.
-watch(week, () => {
-  if (tab.value === 'week') markThisWeekSeen()
-})
+
+// --- W1: THE WEEK'S STORY OPENS ITSELF -----------------------------------------------------------
+//
+// The owner, after a full season: «Экран конца недели не показывается вообще ни разу его не увидел».
+//
+// IT WAS NEVER THE GATE. A 52-week live trace (seed `week-trace-1`) says the story EXISTS on 30 of
+// the 52 weeks, `recapExists` answers true on every one of them, the card renders, and `weekTabDot`
+// fires. What is broken is the DOOR. The story is Screen D and it is the This-week screen; the
+// redesign wave then took This-week out of the bottom bar (see the TABS comment above) and left its
+// only entrance inside Home's NEXT TOURNAMENT card – a card whose kicker, title, dates and travel
+// figure are all about the tournament ahead, with the story's presence signalled by an unlabelled
+// 7px dot whose only explanation is a `title` tooltip. There is no hover on a phone. A player has no
+// reason to press "next tournament" to read what happened LAST week, and he never did.
+//
+// So the fix is not a wider predicate, it is the beat the design asked for in the first place. The
+// handoff's own flow line, verbatim (docs/design/README.md §Interactions, "Переходы"):
+//
+//     «Конец недели (игровой тик) → D. Weekly Story как модалка; × возвращает на Home.»
+//
+// End of the week → the Weekly Story; the × returns to Home. That is exactly the × ThisWeekScreen
+// already draws in its header and which, until now, closed a story nobody had been shown.
+//
+// WHY A ROUTE AND NOT AN OVERLAY. The handoff draws D as a modal and ours is a tab, and the owner
+// settled that split (ui-inventory §4 Q1 – every screen keeps the navigation it has), so this does
+// not turn the screen into an overlay: it NAVIGATES to it, which honours both the flow line and Q1,
+// keeps ONE renderer of the card, and adds no component. It also lands the player somewhere useful:
+// the story sits directly above that screen's training-plan presets and planned spend, so the week
+// that just ended and the decision for the next one are on one page.
+//
+// WATCHING THE SNAPSHOT RATHER THAN `playWeek`: the sticky bar is not the only thing that advances a
+// week (SeasonScreen's "Watch it live" calls `game.advance(1)` too – the same hole R11-1 had to patch
+// for the injury dialog), and a story the player only gets on one of two paths is the bug again.
+//
+// ⚠ AND IT HAS TO BE AN ADVANCE, not just a higher number, which a plain `watch(week)` cannot tell.
+// `week` is `snapshot?.week ?? 0`, so the first snapshot of a LOAD reads as 0 → 52 and opened last
+// week's story every time the app started – caught in the browser, on the very first pass. So the
+// pair (career, week) is tracked explicitly: the story opens when THE SAME career moves FORWARD,
+// which is a tick and nothing else. A load, a career switch and a fresh career all fail that test.
+let seenCareerId: string | null = null
+let seenWeek = -1
+watch(
+  () => game.snapshot,
+  (snap) => {
+    if (!snap) {
+      seenCareerId = null
+      seenWeek = -1
+      return
+    }
+    const advanced = snap.careerId === seenCareerId && snap.week > seenWeek
+    seenCareerId = snap.careerId
+    seenWeek = snap.week
+    // The advance can resolve a week WHILE the tab is up – the player is looking at the fresh
+    // recap, so it is seen the moment it lands.
+    if (tab.value === 'week') markThisWeekSeen()
+    // A tournament week has no story (recapExists) and its own flow reports it; a paused reveal has
+    // not finished being a week yet. Both fall out of the predicate rather than being listed here.
+    if (advanced && recapExists(snap)) tab.value = 'week'
+  },
+)
 
 // --- R13-12: the Kid screen lives behind her photograph ---------------------------
 // A2 moved the avatar itself onto Home (App has no header any more), so the hint's state moved
@@ -416,7 +470,11 @@ function dismissSeasonSummary(): void {
            shared rule here (this file owns the per-career seen watermark) and only RENDERED there. -->
       <HomeScreen v-if="tab === 'home'" :recap-fresh="weekTabDot" @navigate="tab = $event" />
       <SeasonScreen v-else-if="tab === 'play'" />
-      <ThisWeekScreen v-else-if="tab === 'week'" />
+      <!-- W1: the story opens itself at the end of a week (see the `week` watcher above), so its ×
+           is a real close now – the design's own "the cross returns to Home" – and not just a
+           silencer. (The handoff's wording is quoted in the script block; no Cyrillic may appear in
+           a template – tests/round13-nav.test.ts.) -->
+      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />
       <KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />
       <CoachMarketScreen v-else-if="tab === 'market'" @back="tab = 'kid'" />
       <StatsScreen v-else-if="tab === 'stats'" />

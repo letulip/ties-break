@@ -18,7 +18,7 @@ import { computed, reactive, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
 import { SURNAMES } from '../engine/season/cohort'
-import { portraitUrl } from '../art/preload'
+import { onboardingHeroUrl, portraitUrl } from '../art/preload'
 import ScreenShell from './ui/ScreenShell.vue'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -26,14 +26,17 @@ import PrimaryPill from './ui/PrimaryPill.vue'
 
 const game = useGameStore()
 
-// THE TWO PAINTINGS, AND WHY THEY ARE THE SAME FILE TODAY.
+// THE TWO PAINTINGS, AND THEY ARE TWO FILES NOW.
 //   S, summary  – SETTLED as `jun-norm` (owner, docs/specs/ui-inventory §4 Q4: «первый раз входит
-//                 в клуб»). Nothing to draw, nothing to ask about.
-//   N, hero     – a new SQUARE master is being finished. Until it lands, `jun-norm` again. Swapping
-//                 it is this ONE line: point HERO_ART at the new file and nothing else moves.
-// build/webp-only: both go through the shared url builder, so neither can drift into a 404 again.
+//                 в клуб»). Nothing to draw, nothing to ask about, and unchanged by the line below.
+//   N, hero     – ⚠ THE OWNER'S SQUARE MASTER LANDED («картинка для первого экрана создания
+//                 персонажа у нас есть, надо поменять»): `welcome-1`, a parent and a daughter on a
+//                 floodlit court at dusk. It has been on disk as a webp since 29.07 while this line
+//                 still pointed at the stand-in, which is the whole of what the playtest found.
+//                 The swap cost exactly what §4 Q4 promised it would - one constant, one call site.
+// build/webp-only: both go through a shared url builder, so neither can drift into a 404 again.
 const SUMMARY_ART = portraitUrl('jun', 'norm')
-const HERO_ART = SUMMARY_ART
+const HERO_ART = onboardingHeroUrl()
 
 const NAMES = [
   'Vera', 'Alexandra', 'Maria', 'Elena', 'Sofia', 'Anna', 'Iga', 'Coco', 'Aryna', 'Mirra',
@@ -777,10 +780,21 @@ function start(): void {
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   /* `bare` in the template strips the app's default `section` furniture (panel, hairline, 16px
-     inset); its bottom margin is the one piece it does not, and a takeover has no rhythm gap. */
-  margin: 0;
-  /* the scroller's own inset, so a focus ring on the last card is not clipped by the footer */
-  padding-bottom: 2px;
+     inset); its bottom margin is the one piece it does not, and a takeover has no rhythm gap.
+     ⚠ THE SCROLLPORT HAS TO HOLD THE FOCUS RING - THE OTHER HALF OF THE OWNER'S BORDER OVERLAP
+     (30.07). This pane is `overflow-y: auto`, and an `overflow` other than `visible` clips on BOTH
+     axes whatever the used value of the other one is. Its content box was exactly its children's
+     box - 22 to 353 at 375pt - and an `outline` is painted OUTSIDE the border box, so every ring in
+     the wizard was sliced off flush at the gutters: measured, the ring on a full-width control
+     wanted 18 to 357 against a clip box of 22 to 353, i.e. 4px amputated on each side, which is why
+     a focused row read as a border running into the edge of the screen rather than as a ring.
+     The old `padding-bottom: 2px` was this same bug, seen once, on one axis, and fixed one pixel
+     short: a 2px ring at a 2px offset needs 4, and the ring is a hairline now, so 3 is exact.
+     3px of inset all round, cancelled by 3px of negative margin on the two axes that have a
+     composition to keep, so the CHILDREN do not move: the design's 22px gutter is untouched and only
+     the clip box grows. */
+  margin: -3px -3px 0;
+  padding: 3px;
 }
 
 .ob-pane::-webkit-scrollbar {
@@ -946,8 +960,20 @@ function start(): void {
   color: var(--muted);
 }
 
+/* ⚠ THE RING IS THE APP'S NOW - src/style.css declares `:focus-visible` once - but THIS RULE STILL
+   HAS TO SPELL IT OUT, and the reason is worth writing down because the obvious shortcut is wrong.
+   The fact protected here is not the ring: a real `<select>` is the focusable thing, while the BOX
+   the player sees is this wrapper (the select's own chrome is turned off), so the ring must be drawn
+   on the PARENT. And the parent is not itself `:focus-visible` - so the app's rule never matches it,
+   and hoisting with `outline-style: solid` alone would draw the ring at the CSS INITIAL width and
+   offset instead: `medium`, which is 3px, at 0. Three times the app's ring, on the one control in the
+   wizard that needs the hoist.
+   The declarations are repeated; the VALUE is not, because it is the same token. That is the whole
+   point of --stroke-hair, and tests/ui-control-system.test.ts bans a px LITERAL here rather than
+   banning the property. Verified in the browser with real keyboard focus: solid 1px at a 2px offset,
+   0px clipped at either gutter. */
 .ob-select-wrap:has(.ob-select:focus-visible) {
-  outline: 2px solid var(--accent);
+  outline: var(--stroke-hair) solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -1503,13 +1529,12 @@ function start(): void {
 }
 
 /* --- keyboard reach -------------------------------------------------------- */
-/* Every choice on O, P, Q and R is a real button, so every one of them is tabbable; this is the
-   ring that says which one has the keyboard. The app has no global focus style, so a screen made
-   of card-buttons has to bring its own. */
-.ob :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+/* ⚠ GONE, AND THE FACT IT PROTECTED IS NOW THE APP'S. This said "every choice on O, P, Q and R is a
+   real button, so every one of them is tabbable; this is the ring that says which one has the
+   keyboard. The app has no global focus style, so a screen made of card-buttons has to bring its
+   own." The app HAS one now - `:focus-visible` in src/style.css - so the wizard no longer brings a
+   second, thicker copy of it. Its `.ob-select-wrap` hoist is above; the pane's clip room is on
+   `.ob-pane`. Nothing about which controls are reachable has changed. */
 
 @media (prefers-reduced-motion: reduce) {
   .ob-pane {

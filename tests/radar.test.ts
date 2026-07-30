@@ -69,7 +69,7 @@ const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8'
 // --- fixtures ----------------------------------------------------------------------------------
 
 function player(id: string, over: Partial<MatchPlayer> = {}): MatchPlayer {
-  return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50, ...over }
+  return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50, ...over }
 }
 
 /** A history of `n` identical matches – the only way to hold everything about a career still except
@@ -94,8 +94,8 @@ function synthView(over: Partial<RadarWorldView> & { n?: number; score?: string;
   // is the neutral fixture: `startSkills` feeds only the Weekly Story's training line, and every
   // case that cares about movement sets it explicitly. Defaulting it to a FIXED fifty would have
   // silently handed a +14 career to every lopsided-skills case in the note sweep below.
-  const skills: KidSkills = over.skills ?? { serve: 50, ret: 50, composure: 50, stamina: 50 }
-  const potential: KidSkills = over.potential ?? { serve: 66, ret: 66, composure: 66, stamina: 66 }
+  const skills: KidSkills = over.skills ?? { serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 }
+  const potential: KidSkills = over.potential ?? { serve: 66, ret: 66, composure: 66, stamina: 66, groundstrokes: 66 }
   return {
     seed: 'radar-test',
     week: 52,
@@ -232,8 +232,8 @@ describe('radar – the fog is an honest claim', () => {
         coachTier: COACH_TIERS[i % COACH_TIERS.length],
         coachSinceWeek: 0,
         week: i,
-        skills: { serve: 20 + (i % 60), ret: 90 - (i % 60), composure: 50, stamina: 35 },
-        potential: { serve: 26 + (i % 60), ret: 96 - (i % 60), composure: 78, stamina: 36 },
+        skills: { serve: 20 + (i % 60), ret: 90 - (i % 60), composure: 50, stamina: 35, groundstrokes: 45 + (i % 30) },
+        potential: { serve: 26 + (i % 60), ret: 96 - (i % 60), composure: 78, stamina: 36, groundstrokes: 55 + (i % 30) },
       })
       for (const a of buildRadar(view)) {
         expect(Math.abs(a.shownValue - view.skills[a.key])).toBeLessThanOrEqual(a.band + 1e-9)
@@ -561,7 +561,7 @@ describe('radar – the note', () => {
               n,
               score,
               coachTier: tier,
-              skills: { serve: 50 + skew, ret: 50 - skew, composure: 50 + skew, stamina: 50 - skew },
+              skills: { serve: 50 + skew, ret: 50 - skew, composure: 50 + skew, stamina: 50 - skew, groundstrokes: 50 + skew },
             })
             for (const a of buildRadar(view)) if (a.note) out.add(a.note)
           }
@@ -649,7 +649,7 @@ describe('radar – the note', () => {
         n: 40,
         score: '6-4 3-6 6-4',
         coachTier: 'elite',
-        skills: { serve: 50 + skew, ret: 50 - skew, composure: 50 + skew, stamina: 50 - skew },
+        skills: { serve: 50 + skew, ret: 50 - skew, composure: 50 + skew, stamina: 50 - skew, groundstrokes: 50 + skew },
       })
       for (const a of buildRadar(view)) {
         expect(a.note, `${a.key} @ skew ${skew}`).not.toBeNull()
@@ -713,20 +713,36 @@ describe('radar – RNG discipline', () => {
 // 9. THE EMPTY STATE (what the screen agent draws on week 1)
 // ---------------------------------------------------------------------------
 describe('radar – a fourteen-year-old in week 1', () => {
-  it('four axes, maximum fog, a wide haze and two honest silences', () => {
+  // ⚠ RE-AIMED FOR THE FIFTH AXIS (v25): 4 -> 5 rows and 2 -> 3 silences. Both numbers are read off
+  // `SKILL_KEYS` rather than written down, so the next axis re-aims this test by existing.
+  //
+  // WHY THREE SILENCES IS THE SAME CLAIM AS TWO, and it is worth spelling out because it looks like a
+  // weakening: the split is not arbitrary. The two axes the SCORELINE speaks for (composure, stamina)
+  // have "nobody knows yet" lines licensed on `units === 0` - never having been in a third set is a
+  // FACT about her, sayable on day one. The three TECHNICAL axes (serve, return, groundstrokes) have
+  // absence lines licensed on `tested`, i.e. on the OPPONENTS she has met, and she has met none, so
+  // there is not yet anything true to say about them. Adding a technical axis therefore adds a
+  // silence, exactly as adding a scoreline axis would have added a sentence. Silence is a state.
+  it('five axes, maximum fog, a wide haze and three honest silences', () => {
     const world = createWorld('radar-empty', { ...DEFAULT_PROFILE, coachTier: 'self' })
     const snap = toSnapshot(world)
-    expect(snap.radar).toHaveLength(4)
+    expect(snap.radar).toHaveLength(SKILL_KEYS.length)
+    expect(snap.radar.map((a) => a.key)).toEqual([...SKILL_KEYS])
     for (const a of snap.radar) {
       expect(a.band).toBeGreaterThan(RADAR_BAND_MAX * 0.9) // she is a stranger
       expect(a.ceilingHi - a.ceilingLo).toBeGreaterThan(2 * CEILING_FLOOR_HALF)
       expect(a.shownValue).toBeGreaterThan(0)
     }
-    expect(snap.radar.filter((a) => a.note === null)).toHaveLength(2)
+    // The three technical wings are silent; the two the scoreline speaks for are not.
+    const silent = snap.radar.filter((a) => a.note === null).map((a) => a.key)
+    expect([...silent].sort()).toEqual(['groundstrokes', 'ret', 'serve'])
+    expect(snap.radar.filter((a) => a.note !== null).map((a) => a.key).sort()).toEqual([
+      'composure', 'stamina',
+    ])
     expect(matchesEverPlayed(world)).toBe(0)
   })
 
-  it('the axis labels are the ENGINE\'s, and cover the four keys – "ret" never reaches a player', () => {
+  it('the axis labels are the ENGINE\'s, and cover every key – "ret" never reaches a player', () => {
     for (const k of SKILL_KEYS) {
       expect(RADAR_AXIS_LABEL[k], k).toBeTruthy()
       expect(RADAR_AXIS_LABEL[k]).not.toMatch(/[0-9—]|[Ѐ-ӿ]/)
@@ -1020,5 +1036,73 @@ describe('training read – it is not a delta channel', () => {
       expect(r.label).not.toBe('Ret')
     }
     expect(named).toBeGreaterThan(20)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 12. THE PICTURE HAS TO FIT THE WORDS (v25)
+// ---------------------------------------------------------------------------
+// ⚠ WHY THIS BLOCK EXISTS: the fifth axis shipped with a layout bug that the whole suite missed and
+// a single glance in the browser caught. `RADAR_AXIS_LABEL` grew "Groundstrokes" (13 chars, ~96px at
+// the note list's 10px/800/0.08em) and the note label column was a fixed 68px, sized when the longest
+// label was "Composure" - so the label rendered straight over the coach's sentence beside it. Nothing
+// failed, because the numbers live in scoped CSS and an SVG viewBox and no test read either.
+//
+// The column is fixed-width ON PURPOSE (the five sentences align down one edge), so "just let it
+// grow" is not the fix - the fix is that the two layout numbers must be re-measured whenever the
+// longest label changes. This block makes that a failure rather than a discovery: a sixth axis with a
+// longer word fails HERE, with the two numbers named, instead of silently overprinting a sentence.
+//
+// It is a budget check and not a rendering test - vitest has no text metrics - so the per-character
+// cost is stated as a measured constant and the assertion is arithmetic against it.
+describe('the radar draws every word the engine can hand it', () => {
+  const radar = read('../src/components/SkillsRadar.vue')
+
+  /** MEASURED IN CHROME at the note list's own type (10px, weight 800, uppercase, 0.08em tracking),
+   *  not estimated: "Composure" 69px / 9 chars, "Groundstrokes" 96px / 13 chars. 7.4px a character. */
+  const NOTE_LABEL_PX_PER_CHAR = 7.4
+
+  const longest = SKILL_KEYS.reduce((a, k) =>
+    RADAR_AXIS_LABEL[k].length > RADAR_AXIS_LABEL[a].length ? k : a, SKILL_KEYS[0])
+
+  it('gives the note list a column wide enough for the LONGEST axis label', () => {
+    const block = radar.slice(radar.indexOf('.radar-note-axis {'))
+    const width = Number(block.match(/width: (\d+)px/)![1])
+    const needed = RADAR_AXIS_LABEL[longest].length * NOTE_LABEL_PX_PER_CHAR
+    expect(
+      width,
+      `.radar-note-axis is ${width}px; "${RADAR_AXIS_LABEL[longest]}" needs about ${needed.toFixed(0)}px. ` +
+        'Re-measure it in the browser rather than guessing - an overflowing label prints over the coach\'s sentence.',
+    ).toBeGreaterThanOrEqual(needed)
+  })
+
+  it('keeps the svg centred on CX and keeps the flank labels visible', () => {
+    // ⚠ WHAT THIS CAN AND CANNOT CHECK. vitest has no text metrics, so "the longest label fits" is not
+    // assertable here - it was measured in the browser (viewBox 240 -> 300 at v25, because the flank
+    // labels sit at CX +/- 1.16R*cos(angle) and run OUTWARD from there). What IS assertable are the two
+    // structural properties the flanks depend on, and both were silently breakable:
+    //   1. the box is centred on CX, so left and right flanks get equal room;
+    //   2. `overflow: visible` survives on the svg, which is what lets a flank label use the gutter
+    //      outside the viewBox at all. Setting it to hidden would crop the words with no test failing.
+    const viewBox = radar.match(/viewBox="0 0 (\d+) (\d+)"/)!
+    const boxWidth = Number(viewBox[1])
+    const cx = Number(radar.match(/const CX = (\d+)/)![1])
+    expect(cx * 2, 'the box is not centred on CX - one flank has less room than the other').toBe(boxWidth)
+    expect(boxWidth, 'the box was widened to 300 for the five-axis labels; re-measure before shrinking it')
+      .toBeGreaterThanOrEqual(300)
+    const svgCss = radar.slice(radar.indexOf('.radar-svg {'))
+    expect(svgCss.slice(0, svgCss.indexOf('}'))).toContain('overflow: visible')
+  })
+
+  it('reads its labels and its geometry OUT of the engine, so a sixth axis cannot half-land', () => {
+    // No private copy of the axis union, no hand-written label map, no hard-coded corner count -
+    // all three were real hazards here (the local `RadarAxis` block that v25 deleted was one).
+    expect(radar).toContain('RADAR_AXIS_LABEL')
+    expect(radar).toContain('const ORDER: readonly SkillKey[] = SKILL_KEYS')
+    expect(radar).toContain('360 / ORDER.length')
+    expect(radar).not.toMatch(/type RadarAxisKey/)
+    expect(radar).not.toMatch(/index \* 90/)
+    // ...and the guide rings are built from the axis count rather than listed.
+    expect(radar).toContain('ORDER.map(() => 100)')
   })
 })

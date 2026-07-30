@@ -202,6 +202,9 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     runPointsThisWeek: 0,
     milestones: [],
     vacationWeek: false,
+    // ⚠ W2 added `trainPct` to the view. This suite is about the JOURNEY HOME; the balanced
+    // preset is the career default and nothing here reads it.
+    trainPct: 75,
     ...over,
   })
 
@@ -308,13 +311,19 @@ describe('R14-2 — on the facts object, and on a real career', () => {
         tickWeek(world, rng)
         if (snapshotEveryWeek) {
           const snap = toSnapshot(world)
-          // touch the new facts, so a lazy getter could not hide a draw. ⚠ THREE now, not one:
+          // touch the new facts, so a lazy getter could not hide a draw. ⚠ FIVE now, not one:
           // ui/travel-set added the mood's coin (`seed:travelmood:<week>`) and the note's selection
-          // (`seed:travelnote:<week>`), and each is a NEW rngFromSeed call inside the snapshot path –
-          // exactly the shape of change this test exists to catch. Same claim, wider surface.
+          // (`seed:travelnote:<week>`), and W2/W3 added the ordinary week's note
+          // (`seed:weeknote:<week>` – a coin AND a pick, on 30 of every 52 weeks) and the debut
+          // memory (`seed:memory:debut:<week>`, drawn on every week of every career). Each is a NEW
+          // rngFromSeed call inside the snapshot path – exactly the shape of change this test exists
+          // to catch. Same claim, wider surface: the count and the sequence below are UNCHANGED,
+          // which is the whole point.
           void snap.diary.facts.travelHomeScene
           void snap.diary.facts.travelHomeMood
           void snap.diary.travelNote
+          void snap.diary.weekNote
+          void snap.diary.memory
         }
       }
       return draws
@@ -495,7 +504,8 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
     const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
       seed: 's', week: 11, kidId: KID_ID, startAgeYears: 14, condition: 80, fundsCents: 100_000_00,
       injury: null, events: [], lossStreak: null, kidRank: 50, prevKidRank: 50,
-      pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false, ...over,
+      pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
+      trainPct: 75, ...over,   // ⚠ W2: the plan, unread here
     })
     const away = assembleDiaryFacts(view({ events: trip(10, 'national') }))
     expect(away.travelHomeScene).not.toBeNull()
@@ -740,6 +750,7 @@ describe('ui/travel-set — on a real career', () => {
       seed: 's', week: 11, kidId: KID_ID, startAgeYears: 14, condition: 30, fundsCents: 100_000_00,
       injury: null, events: trip(10, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
+      trainPct: 75,   // ⚠ W2: the plan, unread here
     }
     expect(buildDiarySnapshot(view)).toEqual(buildDiarySnapshot(view))
     expect(buildDiarySnapshot(view).travelNote).not.toBeNull()

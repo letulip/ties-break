@@ -980,105 +980,123 @@ function servePct(side: Side): number {
       </div>
     </Card>
 
-    <!-- ===== THE COMMENTARY (design I, "Лог очков") ============================================
-         The export's log chrome - rail, dot, accent lead word, score on the right - carrying the
-         beats from viz/commentary.ts instead of one row per point. It REPLACES the point log
-         rather than sitting beside it: the export's own rows already read as sentences ("Rally of
-         9. Bianca wins the point."), and two lists of the same events differing only in density
-         would be one list too many on a phone. Newest first, revealed in step with the score. -->
-    <Card variant="photo" class="mv-log" pad="8px 12px 10px">
-      <p v-if="!shownBeats.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
-      <ol v-else class="mv-log-list">
-        <li v-for="(beat, i) in shownBeats" :key="beat.pointIndex" class="mv-beat" :class="{ latest: i === 0 }">
-          <span class="mv-beat-set">S{{ beat.set }}</span>
-          <span class="mv-beat-dot" aria-hidden="true"></span>
-          <span class="mv-beat-text">
-            <b v-if="beat.lead" class="mv-beat-lead">{{ beat.lead }}</b>
-            {{ beat.text }}
-          </span>
-          <span class="mv-beat-score num">{{ beat.score }}</span>
-        </li>
-      </ol>
-      <button
-        v-if="visibleBeats.length > LOG_ROWS"
-        class="link mv-log-more"
-        @click="logExpanded = !logExpanded"
-      >
-        {{ logExpanded ? 'Show less ⌃' : 'Show more ⌄' }}
-      </button>
-    </Card>
+    <!-- ===== EVERYTHING BELOW THE COURT ========================================================
+         ⚠ THIS WRAPPER IS WHAT KEEPS THE PINNED CONTROL BAR OFF THE PLAYING SURFACE (owner, 30.07:
+         «maybe we need to make lower buttons on match screen fixed so we could use them anytime?»).
+         `.mv-controls` is `position: sticky; bottom: 0`, and a sticky element can only travel
+         inside its own containing block - which is THIS element's content box, not `.mv`'s. Its top
+         edge is the log's top edge, strictly below `.mv-panel`, which is what holds the court. So
+         the bar cannot reach the surface at ANY viewport height, and that is a structural fact
+         rather than an argument from how tall a phone happens to be. Flatten this wrapper away and
+         the guarantee goes with it - see tests/screen-i-live-match.test.ts. -->
+    <div class="mv-below">
+      <!-- ===== THE COMMENTARY (design I, "Лог очков") ==========================================
+           The export's log chrome - rail, dot, accent lead word, score on the right - carrying the
+           beats from viz/commentary.ts instead of one row per point. It REPLACES the point log
+           rather than sitting beside it: the export's own rows already read as sentences ("Rally of
+           9. Bianca wins the point."), and two lists of the same events differing only in density
+           would be one list too many on a phone. Newest first, revealed in step with the score. -->
+      <Card variant="photo" class="mv-log" pad="8px 12px 10px">
+        <p v-if="!shownBeats.length" class="mv-log-empty">Warming up. The first ball is on its way.</p>
+        <ol v-else class="mv-log-list">
+          <li v-for="(beat, i) in shownBeats" :key="beat.pointIndex" class="mv-beat" :class="{ latest: i === 0 }">
+            <span class="mv-beat-set">S{{ beat.set }}</span>
+            <span class="mv-beat-dot" aria-hidden="true"></span>
+            <span class="mv-beat-text">
+              <b v-if="beat.lead" class="mv-beat-lead">{{ beat.lead }}</b>
+              {{ beat.text }}
+            </span>
+            <span class="mv-beat-score num">{{ beat.score }}</span>
+          </li>
+        </ol>
+        <button
+          v-if="visibleBeats.length > LOG_ROWS"
+          class="link mv-log-more"
+          @click="logExpanded = !logExpanded"
+        >
+          {{ logExpanded ? 'Show less ⌃' : 'Show more ⌄' }}
+        </button>
+      </Card>
 
-    <!-- ===== CONTROLS =========================================================================
-         The two <select>s became the app's segmented control (U0 SegmentedRow) - the same plate
-         the draw's round switcher uses, so "how much to watch" and "how fast" read as controls
-         rather than as a form. -->
-    <div class="mv-controls">
-      <SegmentedRow
-        v-model="viewSeg"
-        class="mv-seg"
-        :options="VIEW_OPTIONS"
-        group-label="How much of the match to watch"
-      />
-      <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
-    </div>
-    <div v-if="props.mode === 'replay' || !finished" class="mv-actions">
-      <!-- U0's PrimaryPill: `solid` IS `.primary`, so the class stays and the sound layer's
-           `.sfx-watch` hook keeps working - what arrives is the one door for the affirmative. -->
-      <PrimaryPill v-if="props.mode === 'replay'" class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
-      <button v-else disabled title="Coming in Phase 6">Shout 📣</button>
-    </div>
+      <!-- ===== CONTROLS =======================================================================
+           The two <select>s became the app's segmented control (U0 SegmentedRow) - the same plate
+           the draw's round switcher uses, so "how much to watch" and "how fast" read as controls
+           rather than as a form.
+           PINNED, NOT FIXED (owner, 30.07). A fixed bar would cost its height off the top of every
+           match screen for the whole watch; sticky costs NOTHING until the bar would otherwise be
+           off the bottom, and then it is there. See `.mv-controls` for the measurement. -->
+      <div class="mv-controls">
+        <SegmentedRow
+          v-model="viewSeg"
+          class="mv-seg"
+          :options="VIEW_OPTIONS"
+          group-label="How much of the match to watch"
+        />
+        <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
+      </div>
+      <!-- NOT in the pinned bar, and the line is deliberate: the bar carries the two SETTINGS you
+           reach for mid-rally (how much, how fast). This row carries an ACTION - one of them
+           disabled until Phase 6, the other only meaningful once the match is already over - and
+           neither is something you hunt for while play is running. -->
+      <div v-if="props.mode === 'replay' || !finished" class="mv-actions">
+        <!-- U0's PrimaryPill: `solid` IS `.primary`, so the class stays and the sound layer's
+             `.sfx-watch` hook keeps working - what arrives is the one door for the affirmative. -->
+        <PrimaryPill v-if="props.mode === 'replay'" class="sfx-watch" @click="restart">Watch again ↻</PrimaryPill>
+        <button v-else disabled title="Coming in Phase 6">Shout 📣</button>
+      </div>
 
-    <!-- ===== THE BOX SCORE, once it is over ================================================== -->
-    <Card v-if="finished" variant="photo" class="mv-boxscore" pad="12px 14px 14px">
-      <p class="mv-final">{{ winnerName }} wins <span class="num">{{ finalScoreLine }}</span></p>
-      <table>
-        <thead>
-          <tr>
-            <th></th>
-            <th>
-              <span class="ph-name">{{ playerA.name }}</span>
-              <span v-if="rankA != null" class="ph-rank">#{{ rankA }}</span>
-            </th>
-            <th>
-              <span class="ph-name">{{ playerB.name }}</span>
-              <span v-if="rankB != null" class="ph-rank">#{{ rankB }}</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th>Aces</th>
-            <td class="num">{{ finalAcesDfs.aces[0] }}</td>
-            <td class="num">{{ finalAcesDfs.aces[1] }}</td>
-          </tr>
-          <tr>
-            <th>Double faults</th>
-            <td class="num">{{ finalAcesDfs.dfs[0] }}</td>
-            <td class="num">{{ finalAcesDfs.dfs[1] }}</td>
-          </tr>
-          <tr>
-            <th>Serve %</th>
-            <td class="num">{{ servePct(0) }}%</td>
-            <td class="num">{{ servePct(1) }}%</td>
-          </tr>
-          <tr>
-            <th>Break points</th>
-            <td class="num">{{ match.result.stats[0].breakPointsSaved }}/{{ match.result.stats[0].breakPointsFaced }}</td>
-            <td class="num">{{ match.result.stats[1].breakPointsSaved }}/{{ match.result.stats[1].breakPointsFaced }}</td>
-          </tr>
-          <tr>
-            <th>Breaks</th>
-            <td class="num">{{ match.result.stats[0].breaksWon }}</td>
-            <td class="num">{{ match.result.stats[1].breaksWon }}</td>
-          </tr>
-          <tr>
-            <th>Longest streak</th>
-            <td class="num">{{ match.result.stats[0].longestPointStreak }}</td>
-            <td class="num">{{ match.result.stats[1].longestPointStreak }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </Card>
+      <!-- ===== THE BOX SCORE, once it is over ================================================ -->
+      <Card v-if="finished" variant="photo" class="mv-boxscore" pad="12px 14px 14px">
+        <p class="mv-final">{{ winnerName }} wins <span class="num">{{ finalScoreLine }}</span></p>
+        <table>
+          <thead>
+            <tr>
+              <th></th>
+              <th>
+                <span class="ph-name">{{ playerA.name }}</span>
+                <span v-if="rankA != null" class="ph-rank">#{{ rankA }}</span>
+              </th>
+              <th>
+                <span class="ph-name">{{ playerB.name }}</span>
+                <span v-if="rankB != null" class="ph-rank">#{{ rankB }}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Aces</th>
+              <td class="num">{{ finalAcesDfs.aces[0] }}</td>
+              <td class="num">{{ finalAcesDfs.aces[1] }}</td>
+            </tr>
+            <tr>
+              <th>Double faults</th>
+              <td class="num">{{ finalAcesDfs.dfs[0] }}</td>
+              <td class="num">{{ finalAcesDfs.dfs[1] }}</td>
+            </tr>
+            <tr>
+              <th>Serve %</th>
+              <td class="num">{{ servePct(0) }}%</td>
+              <td class="num">{{ servePct(1) }}%</td>
+            </tr>
+            <tr>
+              <th>Break points</th>
+              <td class="num">{{ match.result.stats[0].breakPointsSaved }}/{{ match.result.stats[0].breakPointsFaced }}</td>
+              <td class="num">{{ match.result.stats[1].breakPointsSaved }}/{{ match.result.stats[1].breakPointsFaced }}</td>
+            </tr>
+            <tr>
+              <th>Breaks</th>
+              <td class="num">{{ match.result.stats[0].breaksWon }}</td>
+              <td class="num">{{ match.result.stats[1].breaksWon }}</td>
+            </tr>
+            <tr>
+              <th>Longest streak</th>
+              <td class="num">{{ match.result.stats[0].longestPointStreak }}</td>
+              <td class="num">{{ match.result.stats[1].longestPointStreak }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </Card>
+    </div>
   </div>
 </template>
 
@@ -1511,14 +1529,59 @@ function servePct(side: Side): number {
 }
 
 /* --- CONTROLS -------------------------------------------------------------------------------- */
+
+/* EVERYTHING BELOW THE COURT, and the reason it is one element: it is the sticky bar's containing
+   block. See the template note - a sticky child cannot leave its containing block, so starting this
+   box below `.mv-panel` is what makes "the bar never touches the playing surface" true by
+   construction instead of true by arithmetic about phone heights. It re-states `.mv`'s own column
+   and gap and nothing else, so wrapping the four changed no spacing. */
+.mv-below {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* THE PINNED CONTROL BAR (owner, 30.07: «maybe we need to make lower buttons on match screen fixed
+   so we could use them anytime?»).
+   ⚠ STICKY, NOT FIXED, AND THE MEASUREMENT IS THE ARGUMENT. On a 375pt phone the takeover's scroller
+   is 737px; the panel + log + this row + the actions come to ~590px, so at the first point the row
+   is already on screen at y=636 and needs no help. Four beats later the log is 220px tall and the
+   row has been pushed to y=806 - off the bottom, which is the bug he hit. A FIXED bar would have
+   fixed that by taking ~53px off the scroller permanently, for the whole watch, including the
+   first point when nothing was wrong; sticky takes NOTHING until the row would otherwise be gone,
+   and then puts it exactly where a fixed bar would have been. Same recovery, none of the rent.
+   The floor is --panel so the log and the box score pass UNDER the bar rather than through it. It is
+   the tone of the .tf-card all three match screens put the viewer in, so the plate is invisible
+   there and the row reads exactly as it did - the pills sit on the card and the log slides beneath
+   it. (--bg was the first try and it drew a dark seam across the card even when nothing was pinned.)
+   The negative margin eats `.mv-below`'s 10px gap and the top padding pays it back, so the plate is
+   flush against the log instead of leaving a 10px slot for text to show through; the 8px underneath
+   is the only height this costs, and the head row it replaced gave back 34. */
 .mv-controls {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   gap: 8px;
+  margin-top: -10px;
+  padding: 10px 0 8px;
+  background: var(--panel);
 }
 
 .mv-seg {
   flex: 1;
   min-width: 0;
+}
+
+/* ⚠ "Skip" USED TO RENDER AS "Ski", AND THE SPEED PLATE SAT ON TOP OF IT. The two rows want
+   ~359px of pill between them at the shared `.tab-pill` padding of 16px a side; inside a .tf-card
+   on a 375pt phone they get 293px, so the view row overflowed its half and painted over its
+   neighbour. The padding is the only thing here that was negotiable - the labels are already the
+   `short` forms - so it is trimmed for THIS bar alone. The sheet's own 16px is untouched, and so is
+   every other SegmentedRow (the draw's round tabs have room for theirs). */
+.mv-controls :deep(.tab-pill) {
+  padding-left: 9px;
+  padding-right: 9px;
 }
 
 .mv-actions {

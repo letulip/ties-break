@@ -26,7 +26,7 @@ import {
   type SeedResult,
 } from '../tools/econ-bench'
 import { STARTING_FUNDS_CENTS, kidPoints, financeWindow } from '../src/engine/world'
-import { parentIncomeForWeekCents } from '../src/engine/economy'
+import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
 
 // The economy bench (Part C, extended to whole-horizon in Wave 1) is a MEASUREMENT tool: it must be
 // deterministic (same seed+preset+horizon ⇒ identical numbers, no wall-clock/Math.random) and its
@@ -99,14 +99,28 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
     expect(incSum).toBe(r.totalIncomeCents)
   })
 
-  it('parent income is the deterministic weekly contribution plus injury-withdrawal refunds (no sponsor for middle)', () => {
+  it('parent income is the deterministic weekly contribution plus injury-withdrawal refunds (sponsor is a separate bucket)', () => {
     // yearStart-aligned folds capture, per season, weeks [52k .. 52k+49]: 49 weeks for season 0
     // (week 0 has no tick) and 50 weeks for every later season. Parent income is a fixed per-week
     // contribution. Season-Life slice C: an injury onset auto-withdraws pre-deadline entries and
     // the refund is an 'income'-category event (same bucket a manual withdrawal always used), so
     // cats.income = flat contribution x captured weeks + refunds banked inside captured folds –
-    // reconstructed here by an independent replay. Middle never banks the (working-only)
-    // local-sponsor cameo, so cats.sponsor stays 0.
+    // reconstructed here by an independent replay.
+    //
+    // ⚠ RE-AIMED 30.07 (tune/rank-numbers). This used to also assert `cats.sponsor === 0`, on the
+    // reasoning that "middle never banks the (working-only) local-sponsor cameo". That reasoning was
+    // sound and is now incomplete: there are TWO sponsor mechanisms sharing the 'sponsor' bucket, and
+    // the second one is new. The random CAMEO is still working-only (ECONOMY.sponsor.eligible) and a
+    // middle career still never banks it. The local sponsor's ANNUAL GRANT is open to every
+    // background on purpose - it is a reward for doing well on the national ladder, not a means-tested
+    // subsidy, and a shop backing the local girl does not audit her parents. So middle now banks
+    // grants and the bucket is non-zero.
+    //
+    // THE PROTECTED FACT IS THE ONE ABOVE IT, and it is untouched: `cats.income` must equal the
+    // independently-replayed parent contribution plus refunds EXACTLY - i.e. no sponsor money has
+    // leaked into the income bucket. That is what this case is for, and asserting the sponsor bucket
+    // is a whole multiple of the grant is a sharper version of the same separation check than
+    // asserting it is zero.
     // Round 12: the contribution GROWS per season (parentIncomeForWeekCents, +5-10% compounding),
     // so "weeks x flat constant" became "sum the per-week amount over the captured weeks". The
     // capture window per season is unchanged: weeks [52k .. 52k+49] of every season whose wrap
@@ -137,7 +151,16 @@ describe('runCareer accounting reconciles with the finance aggregate', () => {
           .reduce((s, e) => s + (e.amountCents ?? 0), 0)
       }
       expect(r.cats.income).toBe(capturedIncomeCents(h.weeks) + refundsCents)
-      expect(r.cats.sponsor).toBe(0)
+      // The sponsor bucket holds ONLY whole annual grants for a middle career (no cameo, which is
+      // working-only), so it is an exact multiple of one of the two grant sizes and never a stray
+      // fraction of the income line.
+      const { seasonCents, topSeasonCents } = ECONOMY.sponsorship
+      expect(r.cats.sponsor % seasonCents === 0 || r.cats.sponsor % topSeasonCents === 0).toBe(true)
+      // ...and it is capped by the number of season boundaries inside the horizon: a grant lands at
+      // weeks 52, 104, 156, 208, and the LAST one falls outside the finance fold (which closes at the
+      // wrap, week 52k+49), so at most `floor(weeks/52) - 1` grants can appear in this bucket.
+      const foldedBoundaries = Math.max(0, Math.floor(h.weeks / WEEKS_PER_YEAR) - 1)
+      expect(r.cats.sponsor).toBeLessThanOrEqual(foldedBoundaries * topSeasonCents)
     }
   })
 })
@@ -234,9 +257,18 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
     // lines assert: with no counting result she starts FAR outside the top 50, so the unguarded
     // `kidRank <= 50` arm would still fire wrongly at week 1.
     //
-    // Worth reading twice: 120 is EXACTLY j60's acceptance list. The engine carries the same
-    // `ranked` guard on its own entry gate for precisely this reason - unranked is not rank one,
-    // and without it a fresh fourteen-year-old would read as #120 and be handed a J60 on day one.
+    // ⚠ A CLAIM THAT WAS HERE AND WAS SIMPLY WRONG, corrected 30.07 (tune/rank-numbers): "120 is
+    // EXACTLY j60's acceptance list". It never was - `acceptanceRank` is `pct x (cohort + 1)`, which
+    // at the then-current `enterPct` 0.40 is 80, not 120 (and is 100 now that the list is 0.50).
+    //
+    // The real relationship is worth stating because it is the reason the `ranked` guard exists on
+    // BOTH the engine's entry gate and this predicate. The tie floor she starts at (#120) is WORSE
+    // than either acceptance list, so on this cohort the rank comparison alone would already refuse
+    // her a J60 - but that is an accident of the pre-history having populated the ITF table. In a
+    // table where nobody held a counting result every player would tie at dense rank ONE, and an
+    // unguarded `kidRank <= N` would hand a fresh fourteen-year-old the whole ladder on day one.
+    // Unranked is not rank one, and the guard is what says so rather than the arithmetic happening
+    // to agree this time.
     const fresh = openCareer(wealthy, 0)
     expect(fresh.world.kidRank).toBe(120)
     expect(fresh.world.kidRank).toBeGreaterThan(REACH_PRO_RANK)

@@ -155,19 +155,39 @@ const balanceCents = computed(() => incomeCents.value + expenseCents.value)
 // the bottom of the painting.
 const flavorText = computed(() => weekEvents.value.find((e) => e.type === 'expense')?.text ?? '')
 
-/** THE SCRAP UNDER THE PAINTING, and on a come-home week it is a DIFFERENT WRITER.
+/** THE SCRAP UNDER THE PAINTING, and it has THREE possible writers now.
  *
- *  The mockup settles this the same way it settled where the journey painting goes – its own
+ *  The mockup settles the shape the same way it settled where the journey painting goes – its own
  *  handwriting under the image reads «Bianca quietly fell asleep in the car after the tournament».
  *  That caption is about the journey in the picture above it, so on a week the picture IS the
  *  journey, the note is the engine's `travelNote`: a line in the PARENT's voice about the girl who
  *  just got back, licensed by the facts of the tournament she came back from (engine/diary.ts).
  *
- *  On every other week the scrap keeps what it has always carried – the week's own base-cost flavour
- *  line ("Coaching block: technique drills"), which is the ledger's voice and belongs to a training
- *  week. The two never both apply: `travelNote` is non-null on exactly the weeks the painting is a
- *  journey, so this is one scrap with two authors rather than two scraps. */
-const noteText = computed(() => game.snapshot?.diary.travelNote ?? flavorText.value)
+ *  W2 ADDS THE SECOND HAND, and it is the one this screen was missing. The owner, 30.07: «чтобы
+ *  тренировочные недели не просто скипались ... что происходит на этих неделях когда нет матчей а
+ *  только тренировки». Until now an ordinary week fell straight through to the base-cost flavour
+ *  line – so the single most story-shaped object on the Weekly Story read "Restring –
+ *  multifilament" on exactly the weeks the screen had nothing else to say. `weekNote` is the same
+ *  parent writing about the same girl on a week she stayed home: what the plan he set actually cost
+ *  her, or what the exam fortnight / the holiday / the layoff looked like from the kitchen.
+ *
+ *  AND THE LEDGER STILL HAS THE SCRAP ON THE QUIET WEEKS. `weekNote` is null roughly two ordinary
+ *  weeks in three (engine/diary.ts WEEK_NOTE_CHANCE), and on those the flavour line is exactly what
+ *  it always was. That is the training card's lesson applied to the scrap: land occasionally, and be
+ *  a receipt the rest of the time.
+ *
+ *  The three can never collide: `travelNote` is non-null on exactly the weeks the painting is a
+ *  journey, and `weekNote`'s own licence is null on every one of those. One scrap, three authors,
+ *  in falling order of how much the week is worth saying out loud. */
+const noteText = computed(
+  () => game.snapshot?.diary.travelNote ?? game.snapshot?.diary.weekNote ?? flavorText.value,
+)
+/** Which hand wrote it – the two prose notes are a sentence and take the smaller type; the ledger
+ *  fragment is 24 characters and keeps the scrap's own 23px. See the `--travel` rule in the style
+ *  block for the measurement. */
+const noteIsProse = computed(
+  () => !!(game.snapshot?.diary.travelNote ?? game.snapshot?.diary.weekNote),
+)
 
 function formatSigned(cents: number): string {
   const dollars = Math.round(cents / 100)
@@ -290,7 +310,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
     <PaperNote
       v-if="noteText"
       class="recap-note"
-      :class="{ 'recap-note--travel': travelHomeScene }"
+      :class="{ 'recap-note--travel': noteIsProse }"
       :tilt="-0.5"
       ruled
       torn
@@ -476,7 +496,13 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    lines and turns the scrap into the card's main content instead of a thing tucked under a
    photograph. One step down the type ramp puts it back at two lines and roughly the visual mass of
    the "Next goal" scrap at the other end of the page. The handwriting, the paper and the tilt are
-   unchanged – this is the same object saying a longer thing. */
+   unchanged – this is the same object saying a longer thing.
+   ⚠ W2 RE-AIMED THE HOOK, NOT THE RULE. The class used to be applied on `travelHomeScene`, which was
+   a proxy for "the note is prose" while the journey was the only prose there was. The ordinary
+   week's note is the same length under the same 80-character cap, so it wants the same treatment –
+   so the hook is now `noteIsProse` and reads WHICH HAND wrote the scrap rather than which picture is
+   above it. Same measurement, same two lines; the name `--travel` stays because the guards in
+   tests/travel-home.test.ts and tests/radar.test.ts read this file for it. */
 .recap-note--travel .recap-note-text {
   font-size: 19px;
   line-height: 1.34;

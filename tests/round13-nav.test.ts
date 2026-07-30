@@ -77,7 +77,15 @@ describe('the bottom nav is Season · Calendar · Home · Stats · More, Home in
       "type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'",
     )
     expect(app).toContain(`<KidScreen v-else-if="tab === 'kid'" @navigate="tab = $event" />`)
-    expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" />`)
+    // ⚠ RE-AIMED BY W1 (owner, 30.07: he played a full season and never once saw the Weekly Story).
+    // What moved: the mount now carries `@close="tab = 'home'"`, because the story OPENS ITSELF when a
+    // week resolves (App.vue's `week` watcher – the handoff's own flow: end of the week -> D, and the
+    // × returns to Home) and a screen the player was SENT to needs its × to be a way back out.
+    // THE PROTECTED FACT IS UNCHANGED and is the only thing this test is about: 'week' is still a
+    // tabless CONTENT state mounted by `tab === 'week'`, with no button in the five-entry bar. The
+    // assertion is split so it pins the state and the id rather than the exact attribute list, which
+    // is what let one added handler read as a nav change.
+    expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'"`)
     expect(app).toContain(`<CoachMarketScreen v-else-if="tab === 'market'"`)
     // ...and the screen asks the shell rather than writing `tab` itself, like every other screen.
     const market = read('../src/components/screens/CoachMarketScreen.vue')
@@ -333,6 +341,47 @@ describe('R13-12 — OnboardingTour anchors survive the restructure', () => {
 
   it('the Welcome step stopped promising the plan on Home (it moved)', () => {
     expect(tour).not.toContain("this week's plan, and the news feed")
+  })
+})
+
+// ===========================================================================
+// W1 — THE WEEKLY STORY IS REACHED, not just reachable.
+//
+// The owner played a full season and never once saw Screen D («Экран конца недели не показывается
+// вообще ни разу его не увидел»). A live 52-week trace (seed `week-trace-1`) said `recapExists` was
+// true on 30 of the 52 weeks, the card rendered on every one of them and `weekTabDot` fired – so
+// nothing about the GATE was broken. What was broken was that the only door to the screen is Home's
+// NEXT TOURNAMENT card, whose entire content is about the tournament ahead, and whose only hint that
+// last week has a story is a 7px dot with a `title` tooltip. There is no hover on a phone.
+//
+// So the story now opens itself when a week resolves, which is what the handoff asked for in the
+// first place (docs/design/README.md §Interactions: the end of the week goes to D, and its × returns
+// to Home). These are template facts, which is exactly the kind of fact that rots silently.
+// ===========================================================================
+describe('W1 — the end of a week lands on the story', () => {
+  it('the shell routes to the story on any advance that leaves one, by the SHARED rule', () => {
+    // Watching the SNAPSHOT rather than the sticky button: SeasonScreen advances a week too (the
+    // hole R11-1 had to patch for the injury dialog), and a story shown on only one of two paths is
+    // the bug again.
+    expect(app).toContain("if (advanced && recapExists(snap)) tab.value = 'week'")
+    // ...and it must be an ADVANCE of the SAME career, not merely a higher week number. `week` is
+    // `snapshot?.week ?? 0`, so the first snapshot of a load reads as 0 -> N; the first draft of this
+    // fix opened last week's story on every app start because of it. Caught in the browser.
+    expect(app).toContain('const advanced = snap.careerId === seenCareerId && snap.week > seenWeek')
+  })
+
+  it("the story's × is a real close: it silences the week AND goes back to Home", () => {
+    expect(weekScreen).toContain('const emit = defineEmits<{ close: [] }>()')
+    const dismiss = weekScreen.slice(weekScreen.indexOf('function dismissRecap'))
+    expect(dismiss.slice(0, 200)).toContain("emit('close')")
+    expect(dismiss.slice(0, 200)).toContain('dismissedRecapKey.value')
+    expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />`)
+  })
+
+  it('Home keeps its door and its dot – the manual route back into the story is untouched', () => {
+    expect(home).toContain(`@click="emit('navigate', 'week')"`)
+    expect(home).toContain('v-if="recapFresh"')
+    expect(app).toContain(':recap-fresh="weekTabDot"')
   })
 })
 

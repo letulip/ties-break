@@ -153,6 +153,7 @@ export const RADAR_AXIS_LABEL: Record<SkillKey, string> = {
   ret: 'Return',
   composure: 'Composure',
   stamina: 'Stamina',
+  groundstrokes: 'Groundstrokes',
 }
 
 /** Matches she must have played before "nobody has tested that wing yet" is a thing worth saying
@@ -368,15 +369,51 @@ export function testedFraction(oppMinusHer: number): number {
   return clamp01((oppMinusHer + TEST_SPAN) / (2 * TEST_SPAN))
 }
 
-/** SERVE AND RETURN SHARPEN WITH MATCHES GENERALLY, AND FASTER AGAINST OPPONENTS WHO TESTED THEM.
- *  Her serve is examined by the other girl's RETURN and her return by the other girl's SERVE - the
- *  cross-pairing is what makes "tested" mean something in tennis rather than in arithmetic.
+/** THE THREE TECHNICAL WINGS, and which of the other girl's shots examines each (v25).
+ *
+ *  Serve and return are CROSS-paired: her serve is examined by the other girl's return and her return
+ *  by the other girl's serve. The groundstroke is SELF-paired - hers are examined by groundstrokes as
+ *  good as hers - because a baseline exchange is a MUTUAL examination, which is true of tennis and is
+ *  a genuinely different question from the other four axes' (see docs/specs/skills-radar.md §5.4).
+ *
+ *  This is why the whole family shares one function: "was the wing tested" is one idea with three
+ *  pairings, and a second copy of the saturating curve would be a second chance for one axis's fog to
+ *  behave unlike the others'. */
+const TESTED_BY: Record<TechnicalAxis, TechnicalAxis> = {
+  serve: 'ret',
+  ret: 'serve',
+  groundstrokes: 'groundstrokes',
+}
+
+export type TechnicalAxis = 'serve' | 'ret' | 'groundstrokes'
+
+/** SERVE, RETURN AND GROUNDSTROKES SHARPEN WITH MATCHES GENERALLY, AND FASTER AGAINST OPPONENTS WHO
+ *  TESTED THEM. The cross- and self-pairings are `TESTED_BY` above.
  *
  *  Both builds come off the match record itself (`WorldMatch.a` / `.b`), which is who actually took
  *  the court that day - condition, surface and style already folded in. */
-export function technicalUnitsOf(axis: 'serve' | 'ret', her: WorldMatch['a'], opp: WorldMatch['a']): number {
-  const tested = axis === 'serve' ? testedFraction(opp.ret - her.serve) : testedFraction(opp.serve - her.ret)
-  return TECHNICAL_BASE_UNIT + (1 - TECHNICAL_BASE_UNIT) * tested
+export function technicalUnitsOf(axis: TechnicalAxis, her: WorldMatch['a'], opp: WorldMatch['a']): number {
+  return TECHNICAL_BASE_UNIT + (1 - TECHNICAL_BASE_UNIT) * testedOf(axis, her, opp)
+}
+
+/** How hard the other girl probed ONE technical wing. `null` when the record cannot say, which is a
+ *  real state and not a defensive shrug - see `axisEvidence`. */
+function testedOf(axis: TechnicalAxis, her: WorldMatch['a'], opp: WorldMatch['a']): number {
+  return testedFraction(opp[TESTED_BY[axis]] - her[axis])
+}
+
+/** ⚠ CAN THIS RECORD SPEAK ABOUT THIS AXIS AT ALL. Pre-v25 match snapshots carry no `groundstrokes`
+ *  - `WorldMatch.a/.b` are `MatchPlayer` blobs frozen at match time, so a career running since v24
+ *  has a rolling window of matches where the field is simply absent.
+ *
+ *  A MISSING VALUE MUST COUNT FOR NOTHING, NOT FOR ZERO. Read as 0 it would say she was out-hit by
+ *  every opponent she ever played, which is a confident false claim rather than an absence of one.
+ *  Excluding the record from `seen` as well as from the sum keeps the per-match RATE honest, so the
+ *  imputation over `matchesPlayed` is not diluted either: a migrated career opens at maximum fog on
+ *  the new axis, hears the coach say so, and sharpens from her next real match onward. */
+function recordSpeaksOf(axis: SkillKey, her: WorldMatch['a'], opp: WorldMatch['a']): boolean {
+  if (axis !== 'groundstrokes') return true
+  return Number.isFinite(her.groundstrokes) && Number.isFinite(opp.groundstrokes)
 }
 
 // --- the evidence fold -------------------------------------------------------------------------
@@ -387,8 +424,8 @@ export interface AxisEvidence {
   units: number
   /** `units` turned into a 0..1 read via the saturating curve */
   level: number
-  /** how hard opponents have probed this wing on average, 0..1. Only meaningful for serve/ret;
-   *  0 for the two axes the scoreline speaks for. */
+  /** how hard opponents have probed this wing on average, 0..1. Only meaningful for the three
+   *  TECHNICAL axes (serve / ret / groundstrokes); 0 for the two the scoreline speaks for. */
   tested: number
 }
 
@@ -415,15 +452,18 @@ export function axisEvidence(view: RadarWorldView, axis: SkillKey): AxisEvidence
   let sum = 0
   let tested = 0
   let seen = 0
+  /** every match of HERS in the window, whether or not it can speak about THIS axis */
+  let heard = 0
   for (const m of view.matches) {
     const her = m.aId === view.kidId ? m.a : m.bId === view.kidId ? m.b : null
     const opp = m.aId === view.kidId ? m.b : m.bId === view.kidId ? m.a : null
     if (!her || !opp) continue
+    heard++
+    if (!recordSpeaksOf(axis, her, opp)) continue
     seen++
-    if (axis === 'serve' || axis === 'ret') {
+    if (axis === 'serve' || axis === 'ret' || axis === 'groundstrokes') {
       sum += technicalUnitsOf(axis, her, opp)
-      tested +=
-        axis === 'serve' ? testedFraction(opp.ret - her.serve) : testedFraction(opp.serve - her.ret)
+      tested += testedOf(axis, her, opp)
     } else {
       const s = readScoreline(m.score)
       sum += axis === 'stamina' ? staminaUnitsOf(s) : composureUnitsOf(s)
@@ -432,7 +472,23 @@ export function axisEvidence(view: RadarWorldView, axis: SkillKey): AxisEvidence
   const meanPerMatch = seen > 0 ? sum / seen : 0
   // The window is a SAMPLE of a career that may be longer than it. Matches it no longer holds are
   // counted at the rate it does hold, so `units` can only grow as she plays.
-  const units = meanPerMatch * Math.max(seen, view.matchesPlayed)
+  //
+  // ⚠ ...AND THE IMPUTATION IS SCALED BY HOW MUCH OF THE WINDOW CAN ACTUALLY SPEAK (v25). This is 1
+  // for every axis except a freshly migrated `groundstrokes`, so for the original four and for any
+  // career born at v25 the line below is byte-identical to the one it replaces.
+  //
+  // WHY IT IS NEEDED, and it is a real hole rather than a defensive flourish: without it, the FIRST
+  // v25 match of a migrated career measures a rate over ONE record and then imputes it across sixty
+  // matches she played before the attribute existed. Measured, that jumps the new axis from maximum
+  // fog to near-certainty in a single week - a contour that snaps into focus, which is the same sin
+  // as one that shimmers. Scaling by the speaking share instead lets the axis sharpen roughly as fast
+  // as her recent history turns over: one speaking record in thirty is worth one match's imputation,
+  // not sixty's, and by the time the window is all v25 she has her whole career's credit back.
+  //
+  // Monotone, which the fold's whole design depends on: pruning takes the OLDEST rows first, so the
+  // non-speaking share can only fall, and `matchesPlayed` only rises.
+  const speaks = heard > 0 ? seen / heard : 1
+  const units = meanPerMatch * Math.max(seen, view.matchesPlayed * speaks)
   return {
     units,
     level: 1 - Math.pow(1 - EVIDENCE_PER_UNIT, units),
@@ -663,6 +719,48 @@ const NOTE_POOL: readonly NoteLine[] = [
     text: 'She lasts. A long week still costs her.',
     license: (r) => r.units > 0 && Math.abs(r.shownEdge) < NOTE_EDGE,
   },
+  // --- groundstrokes (v25) ----------------------------------------------------------------------
+  // The absence lines are licensed the way serve's and return's are - off `tested`, not off `units` -
+  // because every match contains rallies, so "she has not been tested" is a claim about the OPPONENTS
+  // she has met and not about whether she has rallied at all. That is the difference between this axis
+  // and the two the scoreline speaks for, where the absence really is "it has never happened".
+  {
+    key: 'groundstrokes',
+    text: 'Nobody has out-hit her yet. We do not know what she has.',
+    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX,
+    absence: true,
+  },
+  {
+    key: 'groundstrokes',
+    text: 'She has not met a girl who could hurt her from the back.',
+    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX,
+    absence: true,
+  },
+  {
+    key: 'groundstrokes',
+    text: 'She hits through people. That ends points on its own.',
+    license: (r) => r.shownEdge >= NOTE_EDGE,
+  },
+  {
+    key: 'groundstrokes',
+    text: 'The forehand is a shot other girls are afraid of.',
+    license: (r) => r.shownEdge >= NOTE_EDGE,
+  },
+  {
+    key: 'groundstrokes',
+    text: 'She cannot hurt anybody off the ground yet.',
+    license: (r) => r.shownEdge <= -NOTE_EDGE,
+  },
+  {
+    key: 'groundstrokes',
+    text: 'The rally is where she loses matches. That is the work.',
+    license: (r) => r.shownEdge <= -NOTE_EDGE,
+  },
+  {
+    key: 'groundstrokes',
+    text: 'She holds the rally. Winning it is the next thing.',
+    license: (r) => Math.abs(r.shownEdge) < NOTE_EDGE,
+  },
 ]
 
 /** The coach's sentence for one axis, or null when he has nothing to say yet.
@@ -869,6 +967,23 @@ const MOVE_POOL: Record<SkillKey, Record<MoveTier, readonly string[]>> = {
       'She can go all afternoon now.',
       'Nobody outlasts her any more.',
       'The other girl breaks first these days.',
+    ],
+  },
+  groundstrokes: {
+    early: [
+      'There is more on the ball than there was.',
+      'The forehand is starting to bite.',
+      'She is standing up to the rally better.',
+    ],
+    clear: [
+      'She hits through girls she used to rally with.',
+      'The ball comes off her strings differently.',
+      'She ends points off the ground now.',
+    ],
+    deep: [
+      'Nobody wants a rally with her any more.',
+      'The forehand has become the whole match.',
+      'She hits like a girl three years older.',
     ],
   },
 }

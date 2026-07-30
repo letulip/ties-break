@@ -56,6 +56,17 @@ const rankMove = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
     ? { dir: 'up', by: s.startRank - s.endRank }
     : { dir: 'down', by: s.endRank - s.startRank }
 })
+
+// ⚠ IS SHE RANKED INTERNATIONALLY AT ALL? (30.07, fix/ranking-truth.) `endRank` is a dense rank, so a
+// girl who has never played a Junior Tour event carries the whole 0-point tie group's place - #127, not
+// a ranking. Found in the browser: this popup read "#127" while the Stats International tab read
+// "Unranked", one tab apart, which is the owner's original complaint wearing new clothes.
+//
+// Read off the LIVE snapshot rather than the stored summary, and that is correct here rather than
+// convenient: this dialog only ever shows the season that has just wrapped, so "does she hold an
+// international point right now" and "did she hold one at that wrap" are the same question. An older
+// season in the history table cannot be asked it - see two-ladders.md "Still open".
+const rankedItf = computed(() => game.snapshot?.ladders.itf.rank !== null)
 </script>
 
 <template>
@@ -70,15 +81,20 @@ const rankMove = computed<{ dir: 'up' | 'down' | 'flat'; by: number }>(() => {
           <Eyebrow>Ranking</Eyebrow>
           <div class="season-rows">
             <div class="season-row">
-              <span class="season-key">Final rank</span>
+              <span class="season-key">Final international rank</span>
               <span class="season-val">
-                <span class="rank-value">#{{ summary.endRank }}</span>
-                <span v-if="rankMove.dir === 'up'" class="rank-move up">&uarr;{{ rankMove.by }}</span>
-                <span v-else-if="rankMove.dir === 'down'" class="rank-move down">&darr;{{ rankMove.by }}</span>
-                <span v-else class="rank-move flat">–</span>
+                <span class="rank-value">{{ rankedItf ? '#' + summary.endRank : 'Unranked' }}</span>
+                <template v-if="rankedItf">
+                  <span v-if="rankMove.dir === 'up'" class="rank-move up">&uarr;{{ rankMove.by }}</span>
+                  <span v-else-if="rankMove.dir === 'down'" class="rank-move down">&darr;{{ rankMove.by }}</span>
+                  <span v-else class="rank-move flat">–</span>
+                </template>
               </span>
             </div>
-            <p v-if="summary.startRank !== null" class="hint season-summary-from">from #{{ summary.startRank }}</p>
+            <p v-if="rankedItf && summary.startRank !== null" class="hint season-summary-from">from #{{ summary.startRank }}</p>
+            <p v-else-if="!rankedItf" class="hint season-summary-from">
+              She has not played a Junior Tour event yet. Her national standing is on the Stats tab.
+            </p>
             <div class="season-row">
               <span class="season-key">Season points</span>
               <span class="season-val num">{{ summary.points }}</span>

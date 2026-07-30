@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { surfaceStyleAffinity, surfaceStyleHint, SURFACE_STYLE_DELTAS } from '../src/engine/match/style'
-import { HORIZON_WEEKS, isTierOpen, pointsLockNote, tierState, type TierStateInput } from '../src/composables/tierState'
+import { HORIZON_WEEKS, gapInResultsNote, isTierOpen, pointsLockNote, tierState, type TierStateInput } from '../src/composables/tierState'
 import { resultShowsOnHerFace } from '../src/composables/kidEmotion'
 import type { PlayStyle, WorldEvent, WorldMatch } from '../src/shared/protocol'
 import type { Surface } from '../src/engine/match/types'
@@ -30,6 +30,12 @@ import type { TierId } from '../src/engine/season/types'
 // ---------------------------------------------------------------------------
 
 const seasonScreen = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
+// ⚠ ADDED 30.07: the ring mark is a COMPONENT now (owner: «Surface type similar icon across every
+// screen – it means this icon is not a component»). It was hand-written markup in three places, all
+// three of which had drifted apart - one hard-coded the surface as `clay` in both its class and its
+// copy. The facts this file protects did not move, but the markup that carries two of them did, so
+// those two tests read SurfaceMark.vue as well as the screen. See the notes on each.
+const surfaceMark = readFileSync(new URL('../src/components/ui/SurfaceMark.vue', import.meta.url), 'utf8')
 const homeScreen = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
 // PIN MOVED by Diary-1: the result/title walk left composables/kidEmotion.ts for engine/diary.ts
 // (lastKidResultOf), because the diary's copy system needed the same walk engine-side and one walk
@@ -65,19 +71,50 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
   // in the court's colour with the name beside them. That is not a return to R10-11 - what R10-11
   // got wrong was flinging the name away from the mark, and what R11-15 was defending was the name
   // being printed once, next to its colour. Both of those still hold, and both are pinned here.
+  // ⚠ RE-AIMED 30.07. This used to read `class="surface-mark"` / `class="surface-ring"` /
+  // `{{ row.event.surface }}` straight out of SeasonScreen's `.event-place`. Those three strings are
+  // now in SurfaceMark.vue, because the mark is a component - so the assertion is in two halves and
+  // the PROTECTED FACT IS WORD FOR WORD THE SAME: the card carries the export's RING mark (never
+  // R10-11's bare dot), and the surface NAME sits with the ring rather than being flung away from it.
+  // The screen half additionally pins that the card asks for the mark by rendering the component,
+  // which is the thing that stops a fourth hand-written copy appearing.
   it('the card carries the export\'s ring mark, with the name beside it', () => {
     const from = seasonScreen.indexOf('<div class="event-place">')
     expect(from).toBeGreaterThan(0)
     const place = seasonScreen.slice(from, seasonScreen.indexOf('</div>', from))
-    expect(place).toContain('class="surface-mark"')
-    expect(place).toContain('class="surface-ring"')
-    expect(place).toContain('{{ row.event.surface }}') // the NAME sits with the mark
+    // the card asks the component for the mark, and hands it the row's OWN surface
+    expect(place).toContain('<SurfaceMark :surface="row.event.surface"')
     expect(place).not.toContain('surface-dot') // R10-11's bare dot is still gone
     expect(cssBodies('.surface-dot')).toEqual([])
+    // ...and the component is still the export's ring with the name beside it
+    expect(surfaceMark).toContain('class="surface-mark"')
+    expect(surfaceMark).toContain('class="surface-ring"')
+    expect(surfaceMark).toContain('{{ surface }}')
+    // the name is a SIBLING of the ring inside one mark, which is what "beside it" means
+    expect(surfaceMark).toMatch(/<span class="surface-ring"[^>]*><i><\/i><\/span>\s*<template v-if="showName">/)
   })
 
+  // ⚠ RE-AIMED 30.07, same move. R11-15's complaint was DUPLICATION - the court named in the mark
+  // and named again in a caption under it - so the fact is "once per card", not "once per file". The
+  // card now names the surface by rendering exactly one mark, and the mark prints the name once.
   it('the surface name is printed EXACTLY ONCE on the card – R11-15\'s actual complaint', () => {
-    expect(seasonScreen.split('{{ row.event.surface }}').length - 1).toBe(1)
+    const from = seasonScreen.indexOf('<div class="event-place">')
+    const card = seasonScreen.slice(from, seasonScreen.indexOf('</div>', from))
+    expect(card.split('<SurfaceMark').length - 1).toBe(1)
+    expect(surfaceMark.split('{{ surface }}').length - 1).toBe(1)
+    // and the screen prints the raw name nowhere else on the card
+    expect(card).not.toContain('{{ row.event.surface }}')
+  })
+
+  // ⚠ ADDED 30.07 – the reason the component exists, pinned so it cannot come back. One of the three
+  // hand-written marks had the surface baked in TWICE (`class="surface-mark surf-clay"` and the word
+  // "clay" as literal copy), so a friendly on any other court would have shown an orange ring
+  // labelled clay. No template may name a surface in a class again.
+  it('no screen hard-codes a surface into a mark', () => {
+    for (const surf of ['hard', 'clay', 'grass']) {
+      expect(seasonScreen, surf).not.toContain(`surface-mark surf-${surf}`)
+    }
+    expect(surfaceMark).toContain('`surf-${surface}`')
   })
 
   it('the VERDICT still reaches the player, exactly once, through the coach', () => {
@@ -254,7 +291,13 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     const s = tierState('national', at(100))
     expect(s.kind).toBe('locked')
     expect(s.pointsToEnter).toBe(TIERS.national.enterPointBand[0])
-    expect(s.note).toBe('Reach 150 pts')
+    // ⚠ RE-AIMED (30.07, fix/ranking-truth), assertion by assertion the SAME facts: below the floor is
+    // 'locked', it carries the threshold, and the note says what it costs. What the note now also says
+    // is WHICH points ("national" - there are two tables and this band is denominated in one of them)
+    // and WHERE SHE STANDS ("100 / 150" rather than a bare target). Both are the owner's item 26,
+    // «мне главное, чтобы было наглядно и однозначно». The wording lives in `pointsLockNote`, which is
+    // pinned directly below.
+    expect(s.note).toBe('100 / 150 national pts')
     expect(isTierOpen(s)).toBe(false)
   })
 
@@ -332,9 +375,118 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
   it('an event card keeps the ENGINE\'s own threshold, not the ladder\'s verdict', () => {
     // Found in the browser: reading the ladder's whole note here let a card the engine had locked
     // print the ladder's "open" state. Same words, but each surface keeps its authoritative number.
-    expect(pointsLockNote(180)).toBe('Reach 180 pts')
+    //
+    // ⚠ RE-AIMED (30.07, fix/ranking-truth). THE PROTECTED FACT IS UNCHANGED and still asserted on the
+    // next two lines: the card's number is the ENGINE's per-event `pointsToEnter`, and the WORDS come
+    // from the one shared function. What moved is the wording itself, twice over, both for the owner's
+    // «мне главное, чтобы было наглядно и однозначно» (item 26):
+    //   * it NAMES ITS CURRENCY. "Reach 180 pts" did not say which of the two point tables it meant,
+    //     and it means the national one - every rung's band is denominated there.
+    //   * it is a FRACTION when the caller knows where she stands, because "how far off am I?" is half
+    //     of what a player is asking and the old copy answered only the other half.
+    // The one-argument form is kept and still tested, for callers that have the threshold but not her
+    // total.
+    expect(pointsLockNote(180)).toBe('Reach 180 national pts')
+    expect(pointsLockNote(180, 112)).toBe('112 / 180 national pts')
     const lock = seasonScreen.slice(seasonScreen.indexOf('function lockLabel'), seasonScreen.indexOf('// --- R11-5a'))
     expect(lock).toContain('e.pointsToEnter')
+  })
+
+  // --- item 26: the gate has to be LEGIBLE, and that is a property a test can hold ----------------
+  // The owner asked for J30's points floor to be replaced by "win a National" and then said what he
+  // actually wanted was for the gate to be «наглядно и однозначно». The threshold stayed (it is
+  // continuous, and it never tells a girl with three National semi-finals she has achieved nothing);
+  // what it gained is her position in it, plus a sentence saying what would close the gap.
+  describe('the domestic gate reads unambiguously', () => {
+    it('the gap is said in TOURNAMENTS, priced off the catalogue rather than hardcoded', () => {
+      // 138 short, holding 112 national points: regional is open to her at 112 (band [65, 250]) and its
+      // semi-final pays 28, so three of them is 84 - not enough; its FINAL pays 48, and three of those
+      // is 144. The function walks best-finish-first and stops at the first plan of <=3 trips.
+      const note = gapInResultsNote(138, 112)
+      expect(note).toBeTruthy()
+      // Whatever it picks, it must be a REAL rung with a REAL finish value that actually closes the gap.
+      const m = /^(?:one|(\d+)) more (.+?)s? at (.+)$/.exec(note!)
+      expect(m, `unparseable: ${note}`).toBeTruthy()
+      const n = m![1] ? Number(m![1]) : 1
+      const tier = Object.values(TIERS).find((t) => t.label === m![3])
+      expect(tier, `no such tier: ${m![3]}`).toBeTruthy()
+      expect(n).toBeLessThanOrEqual(3)
+      // it names a rung she can actually enter right now...
+      const [lo, hi] = tier!.enterPointBand
+      expect(112).toBeGreaterThanOrEqual(lo)
+      expect(112).toBeLessThanOrEqual(hi)
+      // ...and n x (some finish it really pays) does close the gap.
+      expect(tier!.points.some((p) => p > 0 && n * p >= 138 && Math.ceil(138 / p) === n)).toBe(true)
+    })
+
+    it('NEVER offers an international result as a way to close a national-points gap', () => {
+      // The two ladders have no exchange rate (docs/specs/two-ladders.md). Legibility must not be
+      // bought by quietly merging them, so this sweeps the whole plausible range.
+      const itfLabels = Object.values(TIERS).filter((t) => t.track === 'itf').map((t) => t.label)
+      for (let points = 0; points <= 400; points += 7) {
+        for (const gap of [1, 15, 60, 138, 300]) {
+          const note = gapInResultsNote(gap, points)
+          if (note === null) continue
+          for (const label of itfLabels) expect(note, `${points}/${gap}: ${note}`).not.toContain(label)
+        }
+      }
+    })
+
+    it('picks the FEWEST trips, then the EASIEST finish that still needs that many', () => {
+      // At 110 national points Regional is her rung ([65, 250]) and its points are [80, 48, 28, 14, 0].
+      // A 40-point gap is closed by one title (80) AND by one final (48); both are one trip, so it must
+      // say the kinder true thing.
+      expect(gapInResultsNote(40, 110)).toBe('one more final at Regional Championship')
+      // ...and it does not slide to a weaker finish when that would cost extra trips: 28 (semi-final)
+      // would need two.
+      expect(gapInResultsNote(48, 110)).toBe('one more final at Regional Championship')
+      expect(gapInResultsNote(60, 110)).toBe('one more title at Regional Championship')
+    })
+
+    it('says nothing rather than something useless: no gap, or no plan inside three trips', () => {
+      expect(gapInResultsNote(0, 100)).toBeNull()
+      expect(gapInResultsNote(-5, 100)).toBeNull()
+      // A gap far past three trips at every rung open to a point-less kid (local tops out at a 30-point
+      // title, so 3 x 30 = 90 is the most it can promise).
+      expect(gapInResultsNote(5_000, 0)).toBeNull()
+    })
+
+    it('a rung she is PAST reads Outgrown, not "Not on the list yet"', () => {
+      // Seen in the browser at 110 national points: Local read "🔒 Not on the list yet". Local has no
+      // list - it is a club draw with a points CEILING, and she is past it. The engine agrees she cannot
+      // enter (so `engineOpen` is false), but the reason is the opposite of a lock, and the fallback's
+      // copy is an INTERNATIONAL sentence about an acceptance list. Outgrown now wins the precedence.
+      const s = tierState('local', { ...base, points: 110, engineOpen: false })
+      expect(s.kind).toBe('outgrown')
+      expect(s.note).toBe('Outgrown')
+      expect(s.title).not.toContain('list')
+      // ...and the J rungs, whose bands are [0, MAX] and whose real gate IS a list, still get the
+      // fallback - that is what it was written for.
+      const j60 = tierState('j60', { ...base, points: 110, engineOpen: false })
+      expect(j60.kind).toBe('locked')
+      expect(j60.note).toBe('Not on the list yet')
+      // The copy names no trademark and no jargon.
+      expect(j60.title).not.toMatch(/\bITF\b|\btrack\b|\bdomestic\b/)
+    })
+
+    it('the locked tooltip states the gap, her total, the threshold AND which points they are', () => {
+      const s = tierState('national', {
+        ...base,
+        points: 112,
+        engineOpen: false,
+      })
+      expect(s.kind).toBe('locked')
+      // the chip: both halves of the question, in one glance
+      expect(s.note).toBe('112 / 150 national pts')
+      // the tooltip: the distance, where she stands, and the one sentence no number can imply
+      expect(s.title).toContain('38 more national pts')
+      expect(s.title).toContain('112 of 150')
+      expect(s.title).toContain('National points come from Local, Regional and National events')
+      // plain copy only: no jargon, no long dash, no Cyrillic
+      expect(s.title).not.toMatch(/\btrack\b|\bdomestic\b|\bITF\b/)
+      expect(s.note + s.title).not.toContain('—')
+      expect(s.note + s.title).not.toMatch(/[Ѐ-ӿ]/)
+    })
   })
 
   it('the Season screen names the open-but-unscheduled tiers under the calendar', () => {

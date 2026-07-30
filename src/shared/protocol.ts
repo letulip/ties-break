@@ -2,7 +2,7 @@
 // The worker owns the authoritative state; the UI only ever sees snapshots.
 
 // Type-only imports (erased at compile – no runtime dependency on the engine).
-import type { MatchRecord, RankingRow, TierId } from '../engine/season/types'
+import type { LadderTrack, MatchRecord, RankingRow, TierId } from '../engine/season/types'
 import type { SkillKey } from '../engine/development'
 import type { MatchPlayer, Surface } from '../engine/match/types'
 import type { AvatarEmotion, PortraitEmotion, PortraitStage } from './avatarEmotion'
@@ -95,8 +95,12 @@ export type WorldEventCategory =
   | 'sponsor'
   /** 'academy' (v21) is an INCOME-side category: the once-a-year kit grant that comes with a
    *  scholarship. The travel half of the same scholarship is NOT booked here – it is taken off the
-   *  travel line itself, exactly like the racket sponsor's gear discount, so the ledger shows the
-   *  reduced price the family actually paid. */
+   *  travel line itself, so the ledger shows the reduced price the family actually paid.
+   *
+   *  ⚠ The comparison this used to draw – "exactly like the racket sponsor's gear discount" – is
+   *  gone with that discount (30.07, tune/rank-numbers). The local sponsor no longer reduces a line;
+   *  it pays a flat annual grant under 'sponsor', the way this kit grant already did. See
+   *  ECONOMY.sponsorship. Travel-cover remains the only price-reducing subsidy in the game. */
   | 'academy'
   | 'income'
   | 'interest'
@@ -496,8 +500,11 @@ export interface UpcomingEvent {
   /** the tier's minPoints threshold, present only when 'locked', so the UI can show "Reach N pts". */
   pointsToEnter?: number
   /** the ITF rank an international rung accepts down to, on a card locked by an ACCEPTANCE LIST
-   *  rather than by points (docs/specs/two-ladders.md). The card says "takes the top 50" instead of
-   *  quoting a points number she cannot read off her own table. */
+   *  rather than by points (docs/specs/two-ladders.md). The card says "takes the top N" instead of
+   *  quoting a points number she cannot read off her own table. N is DERIVED from the tier's
+   *  `enterPct` and the live field size (see acceptanceRank), so it moves with a re-picked list and
+   *  with the population - do not quote a literal here, as the "top 50" this comment used to name
+   *  was stale by two re-pins when it was found on 30.07. */
   rankToEnter?: number
   /** present only when 'capped': the allowance the gate judged THIS event against, so the card can
    *  print "N of M" without re-deriving it. Per-event for the same reason `pointsToEnter` is – an
@@ -547,6 +554,58 @@ export interface CountingResult {
   week: number
   tier?: TierId
   points: number
+}
+
+/** ONE LADDER, EVERYTHING ABOUT IT - see `computeLadderView` in engine/world.ts for the argument.
+ *
+ *  There are two of these on a Snapshot because docs/specs/two-ladders.md designed two tables with
+ *  two currencies and no exchange rate between them. They are the SAME SHAPE on purpose: a screen
+ *  should render "a ladder" once, not branch on which one it was handed. */
+export interface LadderView {
+  /** Her dense place in this table, or NULL when she holds no counting result in it - i.e. she is not
+   *  ranked here at all.
+   *
+   *  ⚠ null IS NOT #1, and the distinction is load-bearing. Competition ranking gives every member of
+   *  a tie the same place, so while nobody holds a point the whole field ties at zero and a point-less
+   *  kid comes out as a single digit. Every screen used to guard that with its own
+   *  `countingResults.length > 0` check; carrying it in the type means none of them can forget. */
+  rank: number | null
+  /** Her place in THIS table at the start of the last resolved week; null before any tick.
+   *
+   *  ⚠ Per-ladder on purpose. A movement arrow is (previous - current), and with one shared "previous
+   *  rank" a screen showing her national place would have diffed it against last week's international
+   *  place - a quieter instance of the bug that produced #4 on Home against #128 in Stats. */
+  prevRank: number | null
+  /** Her windowed best-6 total IN THIS TABLE'S CURRENCY. National points and ITF points are different
+   *  units and must never be added, compared or silently swapped for one another. */
+  points: number
+  /** Top 10 + a window around her, rank order - this table only. */
+  standings: StandingRow[]
+  /** The results THIS table counted, strongest first. Pairs with `rank`: a rank and the results that
+   *  earned it have to come from the same table or the explanation contradicts the number. */
+  countingResults: CountingResult[]
+}
+
+/** Both tables, keyed by the engine's own track names.
+ *
+ *  ⚠ THESE KEYS ARE NOT PLAYER-FACING COPY. The owner's rule is that a player must never need the
+ *  word "track", and "domestic"/"itf" are engine vocabulary. The player-facing labels live in exactly
+ *  one place - `LADDER_LABEL` below - so no screen invents its own name for a table. */
+export type LadderViews = Record<LadderTrack, LadderView>
+
+/** The player-facing name of each table, defined ONCE. "National" and "International" are the words a
+ *  parent would use; nothing in the UI says "domestic", "ITF" or "track". */
+export const LADDER_LABEL: Record<LadderTrack, string> = {
+  domestic: 'National',
+  itf: 'International',
+}
+
+/** The unit each table's points are counted in, for a label that has to name the currency (the Home
+ *  ladder's entry thresholds are all denominated in NATIONAL points - see engine/season/calendar.ts,
+ *  whose own ladder diagram is drawn against "domestic pts"). */
+export const LADDER_POINTS_LABEL: Record<LadderTrack, string> = {
+  domestic: 'national pts',
+  itf: 'international pts',
 }
 
 /** The kid's current run of consecutive COMPETITIVE losses, and the threshold at which this
@@ -680,6 +739,12 @@ export interface DiaryFacts {
   examsWeek: boolean
   offSeasonWeek: boolean
   vacationWeek: boolean
+  /** HOW HARD SHE WORKED THIS WEEK – `plan.train`, the percentage the player set (60 / 75 / 85 on
+   *  the presets). W2: the one fact about an ordinary week the diary had no access to, and the only
+   *  one that is the PLAYER's decision rather than the world's. Every other field here is something
+   *  that happened to her; this is something he chose, which is why the week-note pool is licensed on
+   *  it. Derived (the plan lives on the world already) – no schema. */
+  trainPct: number
   fundsPressure: FundsPressure
   /** a milestone captured THIS week, if any */
   freshMilestone: MilestoneType | null
@@ -711,15 +776,19 @@ export type TravelHomeScene = 'airport' | 'plane' | 'bus' | 'car'
 /** The Memory card (D10): a past milestone, the painting from the age band she was in THEN, and
  *  one line.
  *    `anniversary` – the milestone's week is ~52 weeks ago (±1). The loud one.
- *    `echo`        – the deterministic roughly-every-5-weeks pick off `seed:memory:<week>`.
- *    `recent`      – neither fired, so the card shows her LATEST milestone. A3: the card is titled
- *                    "Recent memory", and a quiet week used to make it say "Too early for memories"
- *                    to a girl four seasons into her career. Silence is a fine thing for a diary
- *                    LINE; on a card with a heading it is a lie. The distinction survives in `kind`
- *                    so the loud weeks can still look different from the quiet ones. */
+ *    `debut`       – the career's OPENING WEEK (W3, owner 30.07). Carries no milestone: week 0 is a
+ *                    fact of every career, so it needs no ledger entry and persists nothing.
+ *    `echo`        – an older memory the rotation came round to.
+ *    `recent`      – the rotation landed on her newest. A3: the card is titled "Recent memory", and a
+ *                    quiet week used to make it say "Too early for memories" to a girl four seasons
+ *                    into her career. Silence is a fine thing for a diary LINE; on a card with a
+ *                    heading it is a lie. The distinction survives in `kind` so the loud weeks can
+ *                    still look different from the quiet ones. */
 export interface MemoryCard {
-  kind: 'anniversary' | 'echo' | 'recent'
-  milestone: Milestone
+  kind: 'anniversary' | 'debut' | 'echo' | 'recent'
+  /** null on the `debut` card ONLY – see `kind`. Widening this costs no schema: `MemoryCard` is
+   *  derived at snapshot time and never saved; the milestone LEDGER behind it is untouched. */
+  milestone: Milestone | null
   /** e.g. "one year ago" (anniversary) or the milestone's week label "W14 '31" (echo/recent) */
   whenLabel: string
   /** the age band she was in at the milestone's week – what makes time felt */
@@ -751,6 +820,11 @@ export interface DiarySnapshot {
    *  by facts of the trip she is coming back from, so it can never describe a final she did not
    *  reach. See engine/diary.ts TRAVEL_NOTES. */
   travelNote: string | null
+  /** THE ORDINARY WEEK'S NOTE, on the same scrap `travelNote` uses (screen D) and in the same
+   *  parent's hand – null on most weeks, and null on every week `travelNote` speaks. W2: the owner's
+   *  «чтобы тренировочные недели не просто скипались ... что происходит на этих неделях». See
+   *  engine/diary.ts WEEK_NOTES for the cadence and the licences. */
+  weekNote: string | null
   /** the Memory card to show this week, or null */
   memory: MemoryCard | null
 }
@@ -900,10 +974,20 @@ export interface Snapshot {
   kidRank: number
   /** the kid's rank at the start of the last resolved week; null before any tick (schema v7) */
   prevKidRank: number | null
-  /** top 10 + 5 around the kid, deduped, rank order */
+  /** top 10 + 5 around the kid, deduped, rank order. THE ITF TABLE - an alias of `ladders.itf`. */
   standings: StandingRow[]
-  /** the kid's counted best-6 results (round-5 item 1b), strongest first */
+  /** the kid's counted best-6 results (round-5 item 1b), strongest first. THE ITF TABLE - an alias of
+   *  `ladders.itf.countingResults`. */
   countingResults: CountingResult[]
+  /** BOTH TABLES (docs/specs/two-ladders.md). `kidRank`, `standings` and `countingResults` above are
+   *  the ITF ones and remain as aliases of `ladders.itf`, so nothing that already reads them changes;
+   *  a test pins the aliasing, because two names for one fact is precisely how the rank bug began. */
+  ladders: LadderViews
+  /** WHICH TABLE SHE IS ACTUALLY COMPETING IN, decided by the engine (`activeLadderOf`) so the screens
+   *  cannot answer it three different ways: the international one once she holds a counting result in
+   *  it, her national one before that. A screen showing "her rank" with no further question asked
+   *  should show THIS ladder's. */
+  activeLadder: LadderTrack
   /** best (smallest) finish index the kid has ever reached per tier (schema v10); drives the
    *  Home season strip's real tier progress. Untouched tiers are absent. */
   bestFinishByTier: Partial<Record<TierId, number>>

@@ -8,55 +8,123 @@
 // W-L this season (round-8, the R6 debt): the engine has tracked world.seasonWins/seasonLosses
 // since the season wrap-up work (v10, counted as matches resolve so pruning can't lose them);
 // the Snapshot now simply surfaces both, so the header reads them directly – no event scanning.
-import { computed } from 'vue'
+//
+// ⚠ TWO TABLES, AND THIS SCREEN NOW SAYS WHICH ONE IT IS SHOWING (30.07, fix/ranking-truth).
+//
+// docs/specs/two-ladders.md designed the national table and the ITF table as two currencies with no
+// exchange rate between them, and then this screen kept showing ONE table, unlabelled, called
+// "Standings" – the ITF one. So a girl with 604 national points and 4 international ones read a
+// header saying 4 and a table she did not recognise: the owner's «Tournaments don't give points at
+// all: zero in stats. Wins count alright», and the heart of «No points visualisation for
+// local-regional-national is super-strange».
+//
+// It opens on `snapshot.activeLadder` – the ENGINE's answer to which table she is competing in
+// (international once she holds a counting result there, national before that), so this screen and
+// the Home card cannot disagree – and the other table stays one tap away, because "how far off the
+// world am I?" is a real question even before her first international point.
+//
+// The switch never says "track", "domestic" or "ITF": the words are National and International,
+// defined once in `LADDER_LABEL`.
+import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { formatShortName, rankLabel } from '../../shared/format'
+import { LADDER_LABEL } from '../../shared/protocol'
+import type { LadderTrack } from '../../engine/season/types'
+import SegmentedRow from '../ui/SegmentedRow.vue'
 // R10-9: the season-by-season history sits right under the header tiles – it is the same three
 // figures (rank / points / W-L) for every season she has finished. See SeasonHistoryTable.vue.
 import SeasonHistoryTable from '../SeasonHistoryTable.vue'
+import CountingResultsTable from '../CountingResultsTable.vue'
 
 const game = useGameStore()
 
-const standings = computed(() => game.snapshot?.standings ?? [])
-const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
-const kidPoints = computed(() => game.snapshot?.standings.find((r) => r.isKid)?.points ?? 0)
-// 'Unranked' until she's earned a counting result (a point-less kid isn't really ranked; her
-// dense position only floats to the top because everyone ties at 0).
-const ranked = computed(() => (game.snapshot?.countingResults.length ?? 0) > 0)
+// Which table the player is LOOKING at. Seeded from the engine's `activeLadder`, and re-seeded if
+// that changes under her: the week her first international point lands, the screen should follow her
+// onto the new ladder rather than leave her on the old one. Her own tap wins from then on.
+const shown = ref<LadderTrack>(game.snapshot?.activeLadder ?? 'domestic')
+const touched = ref(false)
+watch(
+  () => game.snapshot?.activeLadder,
+  (next) => {
+    if (next && !touched.value) shown.value = next
+  },
+)
+const shownModel = computed<string>({
+  get: () => shown.value,
+  set: (v) => {
+    touched.value = true
+    shown.value = v as LadderTrack
+  },
+})
+
+const options = computed(() =>
+  (['domestic', 'itf'] as LadderTrack[]).map((t) => ({
+    value: t,
+    label: LADDER_LABEL[t],
+    title:
+      t === 'domestic'
+        ? 'Local, Regional and National results. These are the points that open her next tier.'
+        : 'Junior Tour results only. A national title is worth nothing here – the two tables never meet.',
+  })),
+)
+
+const ladder = computed(() => game.snapshot?.ladders[shown.value])
+const standings = computed(() => ladder.value?.standings ?? [])
+// `rank: null` IS the answer "not ranked in this table at all" – the engine decides it, so this
+// screen no longer counts results to work it out for itself.
+const ranked = computed(() => ladder.value?.rank !== null && ladder.value?.rank !== undefined)
+const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ranked.value))
+const points = computed(() => ladder.value?.points ?? 0)
+const countingResults = computed(() => ladder.value?.countingResults ?? [])
 // This season's W-L, straight off the Snapshot (accumulated at finalizeTournament, reset each
-// season wrap-up).
+// season wrap-up). One figure for both ladders – a win is a win.
 const seasonWins = computed(() => game.snapshot?.seasonWins ?? 0)
 const seasonLosses = computed(() => game.snapshot?.seasonLosses ?? 0)
+
+// The one sentence no arithmetic on this screen can imply, so it has to be said.
+const noExchange = computed(() =>
+  shown.value === 'domestic'
+    ? 'National points open her next tier. They do not count towards her international ranking.'
+    : 'Junior Tour points only. National results do not count here.',
+)
+const emptyNote = computed(() =>
+  shown.value === 'itf'
+    ? 'She has not played a Junior Tour event yet, so she has no international ranking. Her national standing is on the other tab.'
+    : 'No national results yet – her first Local Open will put her on this table.',
+)
 </script>
 
 <template>
   <template v-if="game.snapshot">
     <section>
       <h2>Stats</h2>
+      <!-- WHICH TABLE. Above the tiles, because it governs every figure under it. -->
+      <SegmentedRow v-model="shownModel" :options="options" group-label="Which ranking table" />
       <!-- R10-2: the three tiles are captions, not body copy – each label stays on ONE line
            (.stats-tile-label nowraps; the tile padding/gap were trimmed to pay for it) and
            "Season points" is now "Season pts", which is what actually fits at 375px. -->
       <div class="stats-header-row">
         <div class="stats-tile">
-          <span class="stats-tile-label">Rank</span>
-          <span class="stats-tile-value">{{ rankLabel(kidRank, ranked) }}</span>
+          <span class="stats-tile-label">{{ LADDER_LABEL[shown] }} rank</span>
+          <span class="stats-tile-value">{{ rankText }}</span>
         </div>
         <div class="stats-tile">
-          <span class="stats-tile-label">Season pts</span>
-          <span class="stats-tile-value num">{{ kidPoints }}</span>
+          <span class="stats-tile-label">Points</span>
+          <span class="stats-tile-value num">{{ points }}</span>
         </div>
         <div class="stats-tile">
           <span class="stats-tile-label">W–L</span>
           <span class="stats-tile-value num">{{ seasonWins }}–{{ seasonLosses }}</span>
         </div>
       </div>
+      <p class="hint stats-no-exchange">{{ noExchange }}</p>
     </section>
 
     <SeasonHistoryTable />
 
     <section>
-      <h2>Standings</h2>
-      <table>
+      <h2>{{ LADDER_LABEL[shown] }} ranking</h2>
+      <table v-if="standings.length">
         <thead>
           <tr>
             <th>#</th>
@@ -77,7 +145,24 @@ const seasonLosses = computed(() => game.snapshot?.seasonLosses ?? 0)
           </template>
         </tbody>
       </table>
-      <p class="hint">Your rank: {{ rankLabel(kidRank, ranked) }}</p>
+      <p class="hint">Her rank: {{ rankText }}</p>
+      <p v-if="!ranked" class="hint">{{ emptyNote }}</p>
+    </section>
+
+    <!-- WHERE THE POINTS CAME FROM. The best-6 that add up to the total above, from the SAME table:
+         a rank and the results that earned it have to come from one ladder or the explanation
+         contradicts the number. This is the "points visualisation" the domestic rungs never had. -->
+    <section v-if="countingResults.length">
+      <h2>Counting results</h2>
+      <CountingResultsTable :results="countingResults" />
     </section>
   </template>
 </template>
+
+<style scoped>
+/* The no-exchange-rate line sits tight under the tiles it qualifies. Local to this screen: the
+   shared `.hint` spacing is tuned for standalone paragraphs, and src/style.css is off limits. */
+.stats-no-exchange {
+  margin-top: 8px;
+}
+</style>

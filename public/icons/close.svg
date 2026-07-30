@@ -1,0 +1,14 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- THE CLOSE CROSS - THE OWNER'S OWN ASSET (30.07). It replaces the `✕` CHARACTER five overlays
+     used to type: a glyph from whatever font happened to load, and therefore a different weight and a
+     different optical centre on every device. It also replaced a cross of mine, for the same reason
+     the back arrow did - he drew it.
+     ⚠ THE MATCH SCREEN STILL NEEDS THIS. MatchViewer.vue belongs to another slice this round, so its
+     close is untouched and this asset is ready for it: `<IconButton icon="close" label="Close" />`.
+     NORMALISED, NOT REDRAWN - see back.svg for the full account. His 1024 grid lands on the repo's
+     100 grid by one exact transform (100/1024 = 0.09765625, no rounding at all), and his
+     `fill="#000000"` becomes `currentColor`. -->
+<g transform="scale(0.09765625)" fill="currentColor">
+<path d="M195.2 195.2a64 64 0 0 1 90.496 0L512 421.504 738.304 195.2a64 64 0 0 1 90.496 90.496L602.496 512 828.8 738.304a64 64 0 0 1-90.496 90.496L512 602.496 285.696 828.8a64 64 0 0 1-90.496-90.496L421.504 512 195.2 285.696a64 64 0 0 1 0-90.496z"/>
+</g>
+</svg>

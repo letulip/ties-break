@@ -197,26 +197,50 @@ export const ECONOMY = {
     // gender is a fact about the file and the style is a reading of what he is doing in it. What the
     // seed draws is the NAME; who these people are does not change between careers.
     //
-    // BUDGET HAS NO SERVE-FIRST COACH, deliberately, and the owner has not objected: a big serve is
-    // the expensive build, the cheap rung teaches shape and consistency, and a serve-first kid who
-    // shops there finds nobody who fits her at all. That is the tier's texture.
+    // ⚠ THE OWNER REVERSED "BUDGET SHIPS NO SERVE-FIRST COACH" (playtest, 30.07): «2 counterpancher
+    // budget, none big serve». Both halves of that sentence are one complaint, and it is the poorest
+    // family's complaint - the only rung a working-class career can actually shop at was the one rung
+    // with a hole in it.
     //
-    // ⚠ THE DUPLICATE MOVED DOWN A RUNG (Round 3). Middle used to carry TWO counterpunchers, purely
-    // because five middle portraits had to go somewhere, and Budget carried three coaches. Moving
-    // `middle-4` to Budget makes it four a tier all the way up, leaves Middle / High / Elite with
-    // exactly one coach per style, and puts the one duplicate in the tier where it reads as
-    // something rather than as an accident: the club IS defence and consistency, so two defensive
-    // coaches at the bottom of the market is what a club looks like. A counterpuncher now has two
-    // Budget coaches to choose between at different prices, which is the roster doing its job.
+    // WHAT THE RULE USED TO SAY, kept because the argument was real and lost anyway: a big serve is
+    // the expensive build, the cheap rung teaches shape and consistency, and a serve-first girl who
+    // shopped at the bottom found nobody who fitted her. That was described as "the tier's texture",
+    // and Round 2 was explicit that the owner had not objected to it.
     //
-    // The portrait stem still says `middle-4` because a stem names the MASTER FILE, not the rung -
-    // the art is a man in an orange jacket explaining something, which is a club coach as readily
-    // as an academy one. Renaming the file would break every save holding that id.
+    // HE HAS NOW, AND HE IS RIGHT, for a reason the texture argument never answered: a play style is
+    // chosen ONCE, on screen R, before the player has any idea what coaching costs - and it is
+    // persisted for the whole career. So "serve-first has no great fit at Budget" is not a texture, it
+    // is a fourteen-year-old's irreversible choice quietly taxing the family least able to buy its
+    // way out. The other three styles each had a great-fit Budget coach who was also the cheapest
+    // great fit IN THE GAME (R3 pinned exactly that); serve-first alone had to find $41/h at Middle
+    // against $28 at Budget. The texture was only ever visible to a serve-first family, and to them it
+    // read as the game being broken.
+    //
+    // ⚠ AND IT COSTS THE R3 DUPLICATE, DELIBERATELY. Round 3 moved `middle-4` down from Middle (which
+    // carried two counterpunchers purely because five middle portraits had to go somewhere) and argued
+    // the duplicate now "reads as something rather than as an accident: the club IS defence and
+    // consistency, so two defensive coaches at the bottom of the market is what a club looks like",
+    // giving a counterpuncher two Budget prices to choose between. That reading was fair and it is
+    // what the owner has just called the bug. It is also the CHEAPER of the two things to give up:
+    // a counterpuncher losing a second Budget price loses a choice between two coaches who fit her,
+    // while a serve-first girl was losing the only coach who could fit her at all. `budget-1` keeps
+    // the counterpuncher slot - he is the Home card's face for the working-class family and the
+    // cheapest great-fit counterpuncher in the game, which is the fact R3 pinned in answer to the
+    // owner's PREVIOUS complaint, and reversing that would re-open a closed issue.
+    //
+    // WHAT SURVIVES INTACT is the structural half of R3, which is the half the owner asked for:
+    // FOUR A TIER, all the way up. The roster is now one coach per style per rung, sixteen slots,
+    // no duplicate anywhere - the most even spread this art can produce.
+    //
+    // The portrait stem still says `middle-4` because a stem names the MASTER FILE, not the rung and
+    // not the style - the art is a man in a cap and an orange jacket, both hands up, mid-explanation,
+    // which is a man showing a serve motion as readily as a defensive shape. Renaming the file would
+    // break every save holding that id, and the id is what a save holds.
     roster: [
       { portrait: 'budget-1', tier: 'budget', style: 'counterpuncher', gender: 'm' },
       { portrait: 'budget-2', tier: 'budget', style: 'all-court', gender: 'f' },
       { portrait: 'budget-3', tier: 'budget', style: 'aggressive', gender: 'f' },
-      { portrait: 'middle-4', tier: 'budget', style: 'counterpuncher', gender: 'm' },
+      { portrait: 'middle-4', tier: 'budget', style: 'serve-first', gender: 'm' },
       { portrait: 'middle-1', tier: 'middle', style: 'all-court', gender: 'f' },
       { portrait: 'middle-2', tier: 'middle', style: 'counterpuncher', gender: 'm' },
       { portrait: 'middle-3', tier: 'middle', style: 'serve-first', gender: 'm' },
@@ -328,13 +352,68 @@ export const ECONOMY = {
     eligible: ['working'] as FamilyBackground[],
   },
 
-  // Product-sponsorship valve v1 (round-7 amendment) – the "painful but survivable"
-  // counter-force. A kid whose rank AT PURCHASE TIME is good enough gets her gear subsidised:
-  //   rank ≤ freeMaxRank  → the line-item is $0 ("… – covered by your racket sponsor")
-  //   rank ≤ halfPriceMaxRank → the line-item is halved (" – sponsor covers half")
-  // The event is STILL emitted (amount 0/half) with its gear/stringing category, so the Money
-  // breakdown shows the sponsor relationship rather than the line simply vanishing.
-  sponsorship: { halfPriceMaxRank: 30, freeMaxRank: 10 },
+  // THE LOCAL SPONSOR – a shop in her town backing the local girl who is doing well locally.
+  //
+  // ⚠ REBUILT 30.07 (tune/rank-numbers). It was a "product-sponsorship valve": a PERCENTAGE
+  // discount (half / free) on each gear line-item, gated on `world.kidRank`. Both halves were
+  // wrong, and in two different ways.
+  //
+  // THE GATE WAS WRONG IN KIND, not in degree. `world.kidRank` is her INTERNATIONAL rank, and a
+  // local sponsorship is by concept a DOMESTIC-ladder reward. Gating a shop in her home town on a
+  // world junior ranking is the same category of error as the two rank writers this branch fixed:
+  // an award for domestic prominence denominated in a currency she does not hold. Measured over 120
+  // seeds x 208 weeks it therefore fired for NOBODY, in ANY preset, in ANY season - her ITF rank
+  // sits at #89-#109 and the gate wanted #30. Her NATIONAL rank sits at #8-#18, which is what a
+  // local shop would actually be looking at. So the gate reads the national table.
+  //
+  // THE AMOUNT WAS WRONG BECAUSE IT SCALED WITH THE FAMILY'S OWN SPENDING. A share of a gear bill
+  // is a share of a bill that runs through the wealth corridor (a wealthy family's racket is
+  // $480-650 against a working family's $60-120, bought more often), so the same "half price" paid
+  // the wealthy family $2,384 a season against the working family's $348 - seven times - measured
+  // on the national gate. A local shop's cheque does not know how rich the family is. So the amount
+  // is FLAT: the same figure for every background, and it is the whole mechanic's shape rather than
+  // a multiplier on something else.
+  //
+  // WHY A SEASON'S GRANT RATHER THAN A PER-PURCHASE DISCOUNT. Three reasons, and the third is
+  // decisive:
+  //   * the sources denominate it that way. docs/research/02-tennis-economics.md: junior equipment
+  //     sponsorship is "mostly product-only (racquets/strings/shoes, ~$1k+/yr value), 3-4 year
+  //     terms". The deal IS an annual value, not a discount rate;
+  //   * ECONOMY.academy.kitCentsAtFull already made this exact call for the same reason, and its
+  //     comment says so: paid "as money rather than as a gear discount because it arrives once a
+  //     year, not per purchase";
+  //   * a per-purchase cap CANNOT be flat. The wealthy family buys 39 kit items a year against the
+  //     working family's 25 (ECONOMY.gear cadences), so any per-item figure pays it ~1.6x more
+  //     however the cap is drawn. Only a per-SEASON figure is actually flat.
+  //
+  // AND IT IS MORE VISIBLE, which is the other half of item 27. The old valve was smeared across
+  // 25-39 invisible line-items; two-ladders.md measured the sibling cash cameo losing 3.10 gifts a
+  // season down to 0.65 still on screen at season end, because the snapshot keeps only the trailing
+  // 60 events. One annual lump in the `sponsor` income category survives that window.
+  //
+  // ⚠ THE THRESHOLDS ARE DELIBERATELY THE OLD 30 / 10, moved table but not moved number, so the
+  // owner can read the change as "same gate, honest ladder, flat cheque" rather than having to
+  // attribute a threshold move at the same time.
+  //
+  // ⚠ AND IT IS OPEN TO EVERY BACKGROUND, which is a deliberate difference from its sibling. The
+  // random `ECONOMY.sponsor` cameo is need-based (`eligible: ['working']`) because it is a gift. This
+  // is not a gift - it is EARNED, on the national ladder, and a shop backing the local girl does not
+  // audit her parents' income. Means-testing it would also make the mechanic unmeasurable at the top
+  // end, and how ruinous the road actually is up there is an open question rather than a settled one.
+  // The wealthy family's numbers are reported alongside everybody else's in two-ladders.md §2.
+  sponsorship: {
+    /** NATIONAL rank at or inside which a local shop signs her at all. */
+    maxRank: 30,
+    /** ...and at which the deal steps up - she is one of the best juniors in the country. */
+    topMaxRank: 10,
+    /** What the season's kit deal is worth, flat, every background the same. `~$1k+/yr value`,
+     *  02-tennis-economics.md's figure for a junior product deal, taken at its stated midpoint. */
+    seasonCents: 1_000_00,
+    /** The stepped-up deal. junior-economics.md: "travel sponsorship only after national/
+     *  international wins", and its merit-grant band tops out at £2,000 one-per-player-per-year -
+     *  so the better deal is kit plus a hand with the travel, at the top of that band. */
+    topSeasonCents: 2_000_00,
+  },
 
   // Recurring gear purchases, scheduled DETERMINISTICALLY off a purpose-scoped sub-stream per
   // category (never the main weekly stream). Cadence + price are drawn from that sub-stream.

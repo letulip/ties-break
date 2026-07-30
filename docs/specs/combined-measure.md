@@ -75,3 +75,46 @@ It costs time rather than results: the working self-coached family reaches the p
 3.6 to 6.6 entries per four-year career across every preset, against the 0.2–0.6 that the stagger was
 written to fix. The rung she climbs through is still a rung she climbs through after the coach ladder
 landed on top of it.
+
+---
+
+# ⚠ Corrected 30.07 (`tune/rank-numbers`): every rank in this file is the MIXED rank
+
+*This file was measured on `main` @ `8820613`, which is before the ranking-truth fix. At that point
+`world.kidRank` had **two writers with two different meanings** and the weekly tick's — a rank folded
+over BOTH ladders at once — always won. The full account is in `two-ladders.md`, "The half that never
+shipped". So the "rank at 18" column above, and §2's ladder diagram, report her place in a combined
+table the design does not have.*
+
+`survival` and `end funds` are unaffected: they read money, not rank. §1 (the bankruptcy problem),
+§3's $65k/three-careers trade, §4's entry counts and §5 (National holding) all stand.
+
+## §2's headline claim does not survive, for one of the three ladders
+
+The honest ITF rank at eighteen, same 120 seeds, player arm, measured on the fixed build:
+
+```
+8k working    self #99  ->  budget #78  ->  middle #87      <-- NOT monotone
+25k middle    self #101 ->  budget #81  ->  middle #77  ->  high #107 (broke)
+120k wealthy                             high #70  ->  elite #68
+```
+
+> **Monotone. A better coach produces a better player, at every rung a family can actually hold.**
+
+**False for the 8k working family.** Its Middle coach produces a *worse* player than its Budget coach —
+#87 against #78 — and is worse on the other two axes as well: survival 118/120 against 120/120, and end
+funds **$6,786 against $17,526**. The mechanism is the one this file already named, arriving a rung
+earlier than it claimed: the coach eats the tournament budget, so she trains better and *plays less*.
+
+The claim holds for the other two ladders. The middle family is monotone to its Middle rung
+(#101 → #81 → #77) before High breaks it, and the wealthy family is monotone (#70 → #68) — so §3's
+"Elite finishes ahead of High" survives, by two places rather than the two it originally reported.
+
+**What this means for the wall in §1.** *"The wall moved from 'any coach at all' to 'the rung above
+your means', which is where a wall belongs"* is still the right description — but for the working
+family that rung is **Middle, not High**, and the mixed rank was hiding it by scoring her large
+domestic book as though it were international. A working family's real ceiling is a Budget coach.
+
+⚠ Do not re-measure this file's table by re-running the bench today: the acceptance lists moved in the
+same slice as this correction, so a fresh run is not comparable to the numbers above. The honest
+before/after for the current build is in `two-ladders.md`, "Measured: the acceptance lists re-picked".

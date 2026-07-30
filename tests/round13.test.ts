@@ -64,6 +64,8 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     examsWeek: false,
     offSeasonWeek: false,
     vacationWeek: false,
+    // ⚠ W2 added `trainPct`; this suite is the loss softener and does not read it.
+    trainPct: 75,
     fundsPressure: 'ok',
     freshMilestone: null,
     ...over,
@@ -304,6 +306,9 @@ describe('R13-10 — the ordinary-week pool', () => {
     examsWeek: false,
     offSeasonWeek: false,
     vacationWeek: false,
+    // ⚠ W2 added `trainPct`; the ordinary-week POOL this suite sweeps is DIARY_POOL, which is
+    // not licensed on the plan (WEEK_NOTES is, and has its own sweep in tests/week-notes.test.ts).
+    trainPct: 75,
     fundsPressure: 'ok',
     freshMilestone: null,
   }

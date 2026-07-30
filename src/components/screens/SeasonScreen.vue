@@ -28,11 +28,13 @@ import TierGuide from '../TierGuide.vue'
 // in the sheet, so the variant records a split that existed rather than inventing one.
 import ScreenShell from '../ui/ScreenShell.vue'
 import Card from '../ui/Card.vue'
+import IconButton from '../ui/IconButton.vue'
+import SurfaceMark from '../ui/SurfaceMark.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
-import { applySurfaceStyle, surfaceStyleAffinity, surfaceStyleHint } from '../../engine/match/style'
+import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
@@ -64,16 +66,17 @@ function formatDollars(cents: number): string {
   return `$${Math.round(cents / 100).toLocaleString('en-US')}`
 }
 
-const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
 
 // Surface x play style (docs/specs/surface-style.md): the calendar column stops being flavour, so
 // the card says so in one line – and says nothing at all when the court is neutral for her build.
 function surfaceNote(surface: Surface): string | null {
   return game.snapshot ? surfaceStyleHint(game.snapshot.profile.playStyle, surface) : null
 }
-function surfaceAffinity(surface: Surface): 'suits' | 'against' | 'neutral' {
-  return game.snapshot ? surfaceStyleAffinity(game.snapshot.profile.playStyle, surface) : 'neutral'
-}
+// ⚠ `surfaceAffinity()` went with `SurfaceView` (see the note below). It existed to colour the old
+// surface PILL by whether the court suited her; the ring is coloured by the COURT (`--surface-*`) and
+// the suits/against verdict reaches the player through the coach's plaque, which reads
+// `surfaceStyleHint` directly. The engine rule it wrapped is untouched and still tested against
+// SURFACE_STYLE_DELTAS in tests/round11-view.test.ts.
 
 // R11-15 – the event card's surface PILL, back in the card corner. THIS REVERTS R10-11.
 //
@@ -93,14 +96,13 @@ function surfaceAffinity(surface: Surface): 'suits' | 'against' | 'neutral' {
 // the meaning), and both the verdict and its colour are still CONSUMED from engine/match/style.ts –
 // `surfaceStyleAffinity` colours it, `surfaceStyleHint` words it – so nothing here can drift from
 // SURFACE_STYLE_DELTAS, the table that actually moves her attributes.
-interface SurfaceView {
-  emoji: string
-  affinity: 'suits' | 'against' | 'neutral'
-  /** the verdict alone – "suits her game" / "not her surface" – or null on a neutral court */
-  fit: string | null
-  /** the engine's whole sentence, surface name included, for the pill's title */
-  title: string
-}
+// ⚠ `SurfaceView` AND ITS EMOJI TABLE ARE GONE (owner, 30.07: «Surface type similar icon across every
+// screen – it means this icon is not a component»). It carried four fields and by wave 2 the card was
+// reading exactly one of them - `title`. `emoji` was the last consumer of
+// `const SURFACE_EMOJI = { hard: '🔵', clay: '🟠', grass: '🟢' }`, a line that had been copy-pasted
+// into three files and whose hues are not the `--surface-*` tokens the ring uses, so the same clay
+// court was one orange here and a different orange there. `affinity` and `fit` moved to the coach's
+// plaque a wave ago and are read there directly. What is left is the one thing the card asks for.
 /** The engine's hint MINUS its surface-name prefix. `surfaceStyleHint` writes "Grass – suits her
  *  game"; the pill already says "grass", so only the tail belongs under it. Sliced off the engine's
  *  own string rather than re-written from the affinity, so the two can never word it differently. */
@@ -110,14 +112,10 @@ function surfaceFit(surface: Surface): string | null {
   const dash = hint.indexOf('– ')
   return dash < 0 ? hint : hint.slice(dash + 2)
 }
-function surfaceView(surface: Surface): SurfaceView {
-  return {
-    emoji: SURFACE_EMOJI[surface],
-    affinity: surfaceAffinity(surface),
-    fit: surfaceFit(surface),
-    // Fall back to the bare, capitalised surface id rather than a second copy of the label table.
-    title: surfaceNote(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1),
-  }
+/** The engine's whole sentence, surface name included, for the mark's title. Falls back to the bare,
+ *  capitalised surface id rather than to a second copy of the label table. */
+function surfaceTitle(surface: Surface): string {
+  return surfaceNote(surface) ?? surface.charAt(0).toUpperCase() + surface.slice(1)
 }
 // --- THE SEASON CARD (wave 2, the owner's redesign) ---------------------------------------------
 // The export's big tournament card, one per upcoming event, scrolling. Three of its parts are ours
@@ -411,7 +409,12 @@ function lockLabel(e: UpcomingEvent): string {
       // R11-5a: the WORDS come from the shared rule, the NUMBER stays the engine's own verdict for
       // THIS event. Reading the ladder's whole note here instead was tried and rejected in the
       // browser: it let a card the engine had locked print the ladder's "open" state.
-      return e.pointsToEnter !== undefined ? pointsLockNote(e.pointsToEnter) : tierStateById.value[e.tier].note
+      // Her NATIONAL points ride along so the card shows the fraction rather than a bare target - the
+      // number stays the engine's per-event verdict, which is what this comment is about; what is added
+      // is where she stands against it. See `pointsLockNote`.
+      return e.pointsToEnter !== undefined
+        ? pointsLockNote(e.pointsToEnter, game.snapshot?.ladders.domestic.points)
+        : tierStateById.value[e.tier].note
   }
 }
 
@@ -687,9 +690,12 @@ const kidName = computed(() => game.snapshot?.profile.kidName ?? 'Vera')
 const exhibitionPlayerA = computed<MatchPlayer>(() =>
   game.snapshot
     ? applySurfaceStyle(kidMatchPlayer(game.snapshot), game.snapshot.profile.playStyle, exhibitionSurface)
-    : { id: 'kid', name: kidName.value, serve: 50, ret: 50, composure: 50, stamina: 50 },
+    : { id: 'kid', name: kidName.value, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 },
 )
-const exhibitionPlayerB: MatchPlayer = { id: 'top-seed', name: 'Top seed', serve: 63, ret: 60, composure: 70, stamina: 65 }
+// The fixed sparring block. Her groundstroke (v25) sits between her serve and her return, which is
+// what a strong all-round junior looks like off the ground - the point of this opponent is that she
+// is uniformly good rather than that she has a weakness to find.
+const exhibitionPlayerB: MatchPlayer = { id: 'top-seed', name: 'Top seed', serve: 63, ret: 60, composure: 70, stamina: 65, groundstrokes: 62 }
 const exhibitionSeed = ref('')
 const exhibitionMatch = ref<AnnotatedMatch | null>(null)
 
@@ -723,7 +729,7 @@ function playExhibition(): void {
           <span class="season-week-now">&middot; {{ weekOnly(week) }}</span>
         </p>
       </div>
-      <button class="tier-guide-btn" aria-label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</button>
+      <IconButton class="tier-guide-btn" label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</IconButton>
     </div>
 
     <!-- THE PHASE STRIP. Driven by the engine's own SURFACE_BLOCKS, so it cannot promise a swing the
@@ -852,12 +858,12 @@ function playExhibition(): void {
                  the surface and the dates). R11-15's pill still names the court exactly once. -->
             <div class="event-place">
               <!-- The export's surface mark: two concentric rings in the court's colour, then its
-                   name. It replaces the emoji pill HERE and nowhere else - the pill still carries
-                   R11-15's job on any surface the redesign has not reached. -->
-              <span class="surface-mark" :class="`surf-${row.event.surface}`" :title="surfaceView(row.event.surface).title">
-                <span class="surface-ring" aria-hidden="true"><i></i></span>
-                {{ row.event.surface }}
-              </span>
+                   name. ⚠ IT IS A COMPONENT NOW (owner, 30.07: «Surface type similar icon across
+                   every screen – it means this icon is not a component»). This markup was written
+                   out by hand in three places and all three had drifted apart; SurfaceMark is the
+                   one door. Nothing about what this site renders has changed - same classes, same
+                   ring, same engine title. -->
+              <SurfaceMark :surface="row.event.surface" :title="surfaceTitle(row.event.surface)" />
               <span class="event-place-sep"></span>
               <!-- Owner, 28.07: the week number belongs UP here with the dates, and without its
                    season suffix - "W8 · Feb 20-26, 2034" already says which year twice otherwise. -->
@@ -1101,7 +1107,13 @@ function playExhibition(): void {
         <div class="friendly-said">
           <p class="friendly-vs">{{ kidName }} <span>vs</span> Top seed</p>
           <p class="friendly-sub">
-            <span class="surface-mark surf-clay"><span class="surface-ring" aria-hidden="true"><i></i></span> clay</span>
+            <!-- ⚠ THE SURFACE WAS HARD-CODED TWICE HERE - once as the class `surf-clay` and once as
+                 the literal word "clay" in the copy - so a friendly on any other court would have
+                 shown an orange ring labelled clay. It reads the exhibition's own surface now, which
+                 is the same value the match is actually played on (`exhibitionSurface`). `sm` is the
+                 15px ring this subtitle already used, asked for by name instead of by being a
+                 descendant of `.friendly-sub`. -->
+            <SurfaceMark :surface="exhibitionSurface" size="sm" />
             <span class="event-place-sep"></span>
             <span>No points, no money – a hit-out</span>
           </p>
@@ -1550,20 +1562,11 @@ section.bare .event-cards {
   flex-wrap: wrap;
 }
 
-.friendly-sub .surface-mark {
-  font-size: 12.5px;
-  text-shadow: none;
-}
-
-.friendly-sub .surface-ring {
-  width: 15px;
-  height: 15px;
-}
-
-.friendly-sub .surface-ring i {
-  width: 7px;
-  height: 7px;
-}
+/* ⚠ THE SMALL SURFACE RING MOVED TO `.surface-mark--sm` in src/style.css, and the numbers are
+   unchanged (12.5px type, no text-shadow, a 15px ring around a 7px dot). These three rules sized the
+   mark by WHERE it happened to be - a descendant of this screen's subtitle - which meant the mark
+   had two sizes in the app and no way for a third caller to ask for either. `SurfaceMark`'s
+   `size="sm"` asks for it by name, in the template above. */
 
 .friendly-go {
   flex: none;

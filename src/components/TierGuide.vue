@@ -7,6 +7,7 @@
 import { computed } from 'vue'
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
 import type { TierId } from '../engine/season/types'
+import IconButton from './ui/IconButton.vue'
 
 defineEmits<{ close: [] }>()
 
@@ -48,7 +49,7 @@ const rows = computed<TierRow[]>(() =>
 <template>
   <div class="dialog-overlay" @click.self="$emit('close')">
     <div class="guide-card">
-      <button class="replay-close" aria-label="Close tier guide" title="Close" @click="$emit('close')">✕</button>
+      <IconButton class="replay-close" icon="close" label="Close tier guide" title="Close" @click="$emit('close')" />
       <p class="guide-title">Tour guide</p>
       <div class="guide-table-wrap">
         <table>

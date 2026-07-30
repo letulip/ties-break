@@ -312,6 +312,30 @@
      and it is a material fact rather than a size choice, so it never rounds up to the next rung. */
   --radius-paper: 2px;
 
+  /* --- THE ONE STROKE WEIGHT (owner, 30.07) -------------------------------------------------
+     «Maybe we should stick to thin borders instead and use them everywhere?» - taken as a system
+     decision, not a patch on the screen he found it on. Every drawn edge in this app is ONE
+     hairline. There is no 2px border and no 3px border anywhere, and a guard test says so
+     (tests/ui-control-system.test.ts).
+
+     Why one weight and not two: a border in this UI is never decoration, it is the statement
+     "this is a separate object". A second weight would have to mean something else, and the only
+     candidate - "this object is selected/focused" - is already carried by COLOUR (--accent), which
+     the design's one-accent rule makes unmissable on its own. Two weights meant that the same
+     selected tile read as a 1px box on one screen and a 2px box on the next, and that a 2px focus
+     ring stacked outside a 1px border read as one thick smudged edge rather than as two facts.
+
+     It is a token rather than a literal so the focus ring below and the app's edges cannot drift
+     apart, and so this note has an address. Existing `1px solid var(--line)` declarations are the
+     same value and were left as they are - rewriting a hundred of them would be churn with no
+     rendering change, and the guard test polices the weight either way.
+
+     ⚠ AN EDGE IS NOT A STROKE. `.surface-ring`'s 1.5px is the design's ICON weight (24x24 grid,
+     stroke 1.5-1.9, docs/design/README.md) and is drawn with `border` only because the mark is two
+     concentric circles rather than an SVG. That is artwork, and artwork is not what this rule is
+     about. The guard bans 2px and up, which is where "thin" stops being true. */
+  --stroke-hair: 1px;
+
   color-scheme: dark;
 }
 
@@ -428,14 +452,57 @@ td.num {
   align-items: center;
 }
 
+/* =============================================================================================
+   A BUTTON IS A PILL (owner, 30.07: «Buttons consistency fix, now lots of buttons different, some
+   square, some round, some with arrows, some don't»).
+
+   THE DECISION, and it is the spine of this slice: there is ONE affirmative shape in this app and
+   it is the capsule. The design export has said so all along - docs/design/README.md, design
+   principle 4: «Радиусы карточек 14–18px, кнопки — pill 999px» - and the app had drifted into
+   answering it two ways at once. `.primary` was `--radius-control` (8px) in twelve places, while
+   the same affirmative verb was a 999px capsule in the four places that reached for the export's
+   CTA (App.vue's week button, onboarding's Begin/Next/Start career, Money's "View all
+   transactions", the tournament flow's Begin). Same job, two shapes, chosen by whichever wave
+   shipped the screen. That is exactly what he is looking at.
+
+   ⚠ THIS REVERSES PrimaryPill's OPENING NOTE, on purpose, and the note now records why. That
+   component was written to refuse this change - "rounding `.primary` to 999 would restyle every
+   dialog in the app, which this slice may not do" - which was the right call for a slice with no
+   owner ruling to point at. There is one now, so the refusal expires here rather than being
+   quietly worked around.
+
+   THE FOUR SHAPES, and nothing else may appear:
+     * CAPSULE (--radius-pill) - anything you PRESS. Buttons, segments, chips, switches.
+     * CARD (--radius-frame / --radius-card) - anything you press that is a PANEL rather than a
+       button: the onboarding tiles, Home's notecards, the Coach Market rows. A card-button keeps
+       the card's corner, because what it looks like is a card.
+     * CIRCLE (50%) - a control whose whole label is one glyph. src/components/ui/IconButton.vue.
+     * NO SHAPE - a control that is a word in a sentence: `.link`, `.back-link`, `.ob-quiet`.
+
+   What this costs: --radius-control now has no button tenant. It stays on the ladder because two
+   non-button consumers still sit on it (an input, a news item's left cap) and 8px is a real rung.
+   ============================================================================================= */
 button {
   background: transparent;
-  border: 1px solid var(--line);
+  border: var(--stroke-hair) solid var(--line);
   color: var(--text);
-  border-radius: var(--radius-control);
+  border-radius: var(--radius-pill);
   padding: 8px 16px;
   font-size: 14px;
   cursor: pointer;
+}
+
+/* THE FOCUS RING, ONCE, FOR THE WHOLE APP. Three files had written their own (OnboardingWizard
+   twice, SeasonHistoryTable once), all 2px, and onboarding's was the one the owner tripped over:
+   a 2px ring at 2px offset, drawn OUTSIDE a control that already has a 1px border, inside a
+   scrolling pane whose content box hugs its children exactly - so the ring was both doubled and
+   sliced off 4px at each edge. See `.ob-pane` in OnboardingWizard.vue for the clipping half.
+
+   One hairline, in the accent, offset so it reads as a ring and not as a thicker border. Declared
+   here because "which control has the keyboard" is a property of the app, not of a screen. */
+:focus-visible {
+  outline: var(--stroke-hair) solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* THE BACK CONTROL, once (owner, R3). Top-left back is ONE control across the whole app and it is
@@ -444,14 +511,18 @@ button {
    `button` reset because that is what it is a variant of.
    The app's only other back control is TournamentFlow's "← Back", which lives in a flow's action
    row rather than a screen header and reads as a labelled button there; it is left alone, and this
-   class is here for the next screen header that needs one. */
+   class is here for the next screen header that needs one.
+   ⚠ THE ARROW IS AN ASSET NOW, not a `&larr;` CHARACTER (owner, 30.07: «Custom back arrow SVG in
+   public»): public/icons/back.svg, reached through IconButton's `bare` variant. Three screen headers
+   had each typed the entity by hand. `font-size` went with the character - a masked glyph has no
+   type size, IconButton sizes it - and the three declarations below are what this class was always
+   really saying: no plate, no border, no padding. */
 .back-link {
   flex: none;
   padding: 0;
   border: none;
   background: none;
   color: var(--muted);
-  font-size: 22px;
   line-height: 1;
   cursor: pointer;
 }
@@ -1020,14 +1091,27 @@ button.danger:hover:not(:disabled) {
   border-color: var(--warning);
 }
 
+/* THE ONE LEVER WITH A PRICE ON IT (owner, 30.07: «Physio recovery align price vertical budget
+   screen»). It was `inline-flex` with a 6px gap, so the price sat wherever the label happened to
+   end - mid-row, aligned with nothing. Every other figure on the Family Budget screen is flush to
+   the card's right edge (the three summary cells, every StatRow value, the ledger). A recurring
+   weekly cost is one of those figures, so it reads down that same column now: full width, the price
+   pushed to the end, tabular digits so it lines up with the amounts above it rather than merely
+   ending near them. */
 .physio-toggle {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: center;
   gap: 6px;
   margin-top: 8px;
   font-size: 12.5px;
   color: var(--muted);
   cursor: pointer;
+}
+
+.physio-toggle .physio-cost {
+  margin: 0 0 0 auto;
+  font-variant-numeric: tabular-nums;
 }
 .physio-toggle input {
   cursor: pointer;
@@ -1131,10 +1215,32 @@ button.primary.risky {
   justify-content: space-between;
   gap: 12px;
   max-width: 520px;
-  margin: 0 auto 16px;
+  /* ⚠ THE BOTTOM MARGIN IS `--app-pad-top`, AND THAT IS GEOMETRY RATHER THAN RHYTHM (owner, 30.07:
+     «Injury top popup with dismiss button breaks layout»). It was a flat 16px, which is 8px short of
+     what this strip needs on Home. Home's hero photograph bleeds to the top of the screen by
+     cancelling the app's own inset - `.diary-hero` sets a negative margin of `--app-pad-top` - and
+     that inset is measured from the top of `<main>`, which starts AFTER this strip. So with a
+     ⚠ NB NO CURLY BRACE MAY APPEAR ANYWHERE IN THIS COMMENT. round10.test.ts reads this rule by
+     slicing from the selector to the first closing brace, so one quoted in prose cuts the body short
+     and the radius assertion below finds nothing. Not the test being brittle - it is a stylesheet
+     guard with no parser, and it caught exactly this while the comment was being written.
+     banner on screen the hero began 8px ABOVE the banner's bottom edge, and since both are static
+     with `z-index: auto` the later element in DOM order won: the photograph painted over the
+     banner's entire bottom border and both bottom corners. Hit-tested at the banner's own bottom
+     edge, the topmost element was `IMG.diary-hero-img`.
+     Naming the same token the bleed names is the fix AND the guarantee: the strip clears the bleed
+     exactly, and the day someone re-tunes the app's top inset the two move together instead of
+     re-opening this bug. On every other tab it is 8px more air, which is invisible. */
+  margin: 0 auto var(--app-pad-top);
+  /* AND IT OWNS A LAYER. A popup that can be painted over is not a popup, and the fix above only
+     holds while Home's bleed is exactly 24px. `relative` + a z-index makes that a belt as well as
+     braces: well under the floating week button (39) and the dialog overlays (60), so it still
+     goes behind anything that is genuinely modal. */
+  position: relative;
+  z-index: 2;
   padding: 12px 16px;
   background: var(--panel);
-  border: 1px solid var(--accent);
+  border: var(--stroke-hair) solid var(--accent);
   border-radius: var(--radius-panel);
   font-size: 13px;
 }
@@ -1381,6 +1487,27 @@ tr.milestone td {
   display: block;
 }
 
+/* THE SMALL RING, as a variant of the mark rather than as a descendant of one caller's wrapper.
+   SeasonScreen's friendly-match subtitle had this as `.friendly-sub .surface-ring { width: 15px }`
+   in its own SFC - a size chosen by WHERE the mark happened to be, which meant the mark had two
+   sizes and no way for a third caller to ask for either. `SurfaceMark`'s `size` prop asks for it by
+   name now. The 1.5px stroke is the design's ICON weight (24x24 grid, 1.5-1.9) and stays: it is
+   artwork, not one of the app's edges - see --stroke-hair. */
+.surface-mark--sm {
+  font-size: 12.5px;
+  text-shadow: none;
+}
+
+.surface-mark--sm .surface-ring {
+  width: 15px;
+  height: 15px;
+}
+
+.surface-mark--sm .surface-ring i {
+  width: 7px;
+  height: 7px;
+}
+
 /* The colour rides on the RING only, so the surface name keeps the card's own ink. */
 .surface-mark.surf-hard .surface-ring {
   color: var(--surface-hard);
@@ -1470,30 +1597,18 @@ tr.kid-row td {
   max-width: 400px;
 }
 
-/* THE 32px ROUND BUTTON. A single glyph in a real circle, big enough to hit with a thumb: the
-   replay's close, and the Season header's "?". A true circle, so 50% and never --radius-pill –
-   the note on the capsule radius at the top of this file is about exactly this distinction. */
-.replay-close,
-.tier-guide-btn {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-}
-
-/* Round 4 item 4: a clearly-visible, pinned close affordance (replaces the old small
-   text link) so it's unmistakable regardless of what else is in the header row. */
+/* ⚠ THE 32px ROUND BUTTON MOVED TO src/components/ui/IconButton.vue (variant `plate`), and the
+   protected fact is unchanged: it is still a TRUE CIRCLE at 50% and still 32px, because the note on
+   the capsule radius at the top of this file is about exactly this control. What is left here is
+   the only thing that was ever these two selectors' own business - WHERE each one sits. A corner
+   and a header row are placements, and the component's own note says placement belongs to the
+   caller.
+   Round 4 item 4: a clearly-visible, pinned close affordance (replaces the old small text link) so
+   it's unmistakable regardless of what else is in the header row. */
 .replay-close {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  font-size: 16px;
-  line-height: 1;
   z-index: 5;
 }
 
@@ -2344,6 +2459,33 @@ tr.kid-row td {
   margin-top: 8px;
 }
 
+/* THE PRICE, IN THE CORNER (owner, 30.07). `margin-left: auto` is what makes this the bottom-RIGHT
+   corner: whatever else the row is carrying - a Recommended badge, an "Out of reach" note, both or
+   neither - stays left and the price-plus-Book pair is pushed to the end. Tabular digits so a column
+   of packages has a column of prices rather than three ragged ones. */
+.pkg-price {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  /* ON-ART INK. The corner it moved to is over the package's painting (`.pkg-art` dissolves from the
+     right), and `.pill`'s default muted grey on a lit photograph is a price you have to hunt for -
+     found by looking at it at 375. The app's rule for a word laid on a painting: full ink plus the
+     on-art shadow, the same pair `.surface-mark` and the hero captions use. */
+  color: var(--text);
+  text-shadow: var(--shadow-text-on-art);
+}
+
+/* ...except when it is the recommended row's, where the lime already carries it and `.pill.ok`'s
+   colour must win. */
+.pkg-price.ok {
+  color: var(--accent);
+}
+
+/* It sits with the badges on the left now, not after the button, so it never separates the price
+   from Book. */
+.pkg-unaffordable {
+  margin: 0;
+}
+
 /* `.pkg-actions button` is compact – see THE COMPACT BUTTON up with the top popups. */
 
 /* --- Round 5: week recap card ------------------------------------------------ */
@@ -2412,7 +2554,10 @@ tr.kid-row td {
 
 .coach-highlight {
   position: fixed;
-  border: 2px solid var(--accent);
+  /* One hairline, like every other edge (--stroke-hair). This was 2px, and it did not need to be:
+     what makes the tour's spotlight readable is the 4000px shadow blacking out everything else, not
+     the thickness of the line around the hole. */
+  border: var(--stroke-hair) solid var(--accent);
   border-radius: var(--radius-panel);
   box-shadow: 0 0 0 4000px rgba(6, 10, 20, 0.55);
   pointer-events: none;
@@ -2709,7 +2854,18 @@ tr.kid-row td {
 .injury-stop-art {
   display: block;
   width: calc(100% + 32px);
-  height: 116px;
+  /* 168px, up from 116 (owner, 30.07: «Injury popup art height increase»). 116 was a BAND - a
+     landscape sliver of a portrait painting, in which the face survived the crop only because
+     faceRects steered it there, and everything else about the picture was gone. This popup is the
+     one surface in the whole app that ever shows the `injury` painting (R14-1 above), and the moment
+     it exists for is the moment she went down; a strip is the wrong amount of room for it.
+     At 168 her face, the knee she is holding and the coach coming over are all in the frame.
+     THE CEILING, measured on a 375x667 phone - the shortest screen the app supports. The overlay
+     centres the card inside 16px of padding, so 635px is all there is, and the card's non-art content
+     measures 387 - which puts the hard limit near 247 before Continue leaves the screen. 168 sits
+     well inside that: about 40px of clearance above the card and 40 below. It is chosen for how the
+     picture reads, not to fill the space; the room to go further exists and is not taken. */
+  height: 168px;
   margin: -16px -16px 12px;
   object-fit: cover;
   border-radius: var(--radius-panel) var(--radius-panel) 0 0;

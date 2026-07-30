@@ -24,10 +24,19 @@
 //     with no category breakdown at all. A "This week" tab would therefore have to scrape the
 //     capped transaction feed to fill its own category list - the precise thing the paragraph above
 //     says never to do. Two honest windows beat three where one is a guess.
-//  2. THE DONUT IS GONE. Round-7 item 2 put a dependency-free SVG donut at the top of this screen;
-//     the export's composition has no donut and no room for one, and the reading the donut carried
-//     (each category's SHARE of the spend) survives on the rows themselves, where it was already
-//     printed. Nothing is lost but the ring.
+//  2. THE DONUT IS BACK, BELOW THE PHOTOGRAPH (owner, 30.07: «Family budget – let's add our great
+//     pie chart below the photo, I believe it'd fit there»). ⚠ This overrules what this note said
+//     for one wave - "the export's composition has no donut and no room for one" - and he is right
+//     about the room: the artefact column is 146px wide and stops at the polaroid, with the whole
+//     depth of the category list still to run beside it. The donut is 116px. It fits with 15px to
+//     spare, and the column reads as a receipt, a photo and a chart rather than as two objects and
+//     a gap.
+//     ⚠ AND IT IS MONOCHROME NOW, which is the one thing that changed. The round-7 donut coloured
+//     its nine slices with nine hand-picked hexes (#d9f24f, #4fd2f2, #b07cf2 ...) - nine colours
+//     that are in no token file and that break the export's one-accent rule outright. The ring is
+//     the accent at nine descending strengths instead. Nothing is lost by that: the slices are
+//     already sorted largest-first, so the ramp IS the ranking, and every slice's name and percent
+//     are printed on the row beside it. A legend of nine hues was doing work the rows already did.
 //  3. INCOME IS `--money-in`, NOT THE EXPORT'S `#a5db4b`. The app has one green for "money came in"
 //     and it is a token; adding a second one for this screen alone would break the very principle
 //     the export is written on (docs/design/README.md §3, "цвет = смысл").
@@ -46,6 +55,7 @@ import ScreenShell from '../ui/ScreenShell.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import PaperNote from '../ui/PaperNote.vue'
+import IconButton from '../ui/IconButton.vue'
 import Polaroid from '../ui/Polaroid.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -186,6 +196,39 @@ const expenseRows = computed<BreakdownRow[]>(() => {
 })
 const pctLabel = (pct: number): string => `${Math.round(pct * 100)}%`
 
+// --- THE DONUT (owner, 30.07) ------------------------------------------------------------------
+// Round-7's dependency-free ring, restored under the polaroid. The geometry is verbatim: a
+// circumference of exactly 100 (r = 100 / 2π) so a slice's dash length IS its percentage and no
+// arithmetic is needed to place it, `dashoffset` walking the accumulated fill so the slices sit
+// end-to-end starting at twelve o'clock.
+//
+// THE COLOUR IS THE ACCENT AND NOTHING ELSE. `strength` is the slice's opacity, stepping down from
+// the largest spend to the smallest across whatever number of slices there are - so the ramp always
+// spans the same visual range whether the family spent on three categories or nine. The floor is
+// 0.22 rather than 0 because a slice you cannot see is a slice that looks like a gap in the ring.
+const DONUT_R = 15.915494309189533
+interface DonutSeg {
+  strength: number
+  dasharray: string
+  dashoffset: number
+}
+const donutSegments = computed<DonutSeg[]>(() => {
+  const rows = expenseRows.value
+  const last = Math.max(1, rows.length - 1)
+  let filled = 0
+  return rows.map((r, i) => {
+    const dash = r.pct * 100
+    const seg = {
+      strength: 1 - (i / last) * 0.78,
+      dasharray: `${dash} ${100 - dash}`,
+      dashoffset: 125 - filled,
+    }
+    filled += dash
+    return seg
+  })
+})
+const totalExpenseCents = computed(() => expenseRows.value.reduce((s, r) => s + r.cents, 0))
+
 // --- THE PAPER ARTEFACTS -----------------------------------------------------------------------
 // The export lays a receipt and a trip polaroid over the space beside the category column. Both are
 // REAL here: the receipt is an actual line out of the family's ledger, and the photograph is the
@@ -274,7 +317,13 @@ function showAllTransactions(): void {
            that goes nowhere is worse than no control. The subtitle carries what the player actually
            came for instead - what is in the account right now. -->
       <div class="money-head">
-        <button class="back-link" aria-label="Back to Home" @click="emit('navigate', 'home')">&larr;</button>
+        <IconButton
+          class="back-link"
+          variant="bare"
+          icon="back"
+          label="Back to Home"
+          @click="emit('navigate', 'home')"
+        />
         <div class="money-head-id">
           <h2 class="money-title">Family Budget</h2>
           <p class="money-sub" :class="{ negative: fundsCents < 0 }">
@@ -376,15 +425,50 @@ function showAllTransactions(): void {
               {{ formatFunds(receipt.amountCents ?? 0) }}
             </span>
           </PaperNote>
+          <!-- ⚠ A SQUARE WINDOW ON THE RIGHT PART OF A LONG FRAME (owner, 30.07: «Photo crop for the
+               family budget should be either square for the square frame either square of the right
+               part of a not square (long) frame – there's a face there»). He offered two options and
+               named the axis; this is his second, and it needs no new art.
+               THE ARITHMETIC, because "there's a face there" is a measurement and not a preference.
+               Every trip painting is 512x205 - a very long banner, ratio 2.498 - and in all six she
+               is seated on the RIGHT: her face lands at 66% to 79% of the width (vac-village is the
+               leftmost at 66, vac-elite the rightmost at 79). `object-fit: cover` scales the source
+               to fill the window's SHORT axis, so on a 124x124 window it fills the height and the
+               window keeps 124 of 309.7 scaled px - 40% of the picture, cropped HORIZONTALLY. At the
+               browser default of `50%` that 40% is the middle: it spans 30% to 70% of the source and
+               throws her face away in every single one of them, which is the bug he is reporting.
+               `90%` puts the window at 54%-94%, which holds all six faces with room either side.
+               Polaroid owns the paper; the caller owns the window and where it looks. -->
           <Polaroid
             v-if="tripPhoto"
             class="money-polaroid"
             :src="tripPhoto"
             alt=""
             tilt="-3deg"
-            :photo-height="112"
+            :photo-height="124"
+            :photo-style="{ objectPosition: '90% 50%' }"
             tape
           />
+
+          <!-- THE PIE CHART HE ASKED FOR, under the photo. `aria-hidden` is on the column, so this
+               ring is decoration by construction - which is correct and is why it can be monochrome:
+               every number in it is printed as text on the rows beside it. -->
+          <svg v-if="expenseRows.length" class="donut money-donut" viewBox="0 0 42 42">
+            <circle class="donut-track" cx="21" cy="21" :r="DONUT_R" />
+            <circle
+              v-for="(seg, i) in donutSegments"
+              :key="i"
+              class="donut-seg"
+              cx="21"
+              cy="21"
+              :r="DONUT_R"
+              :stroke-dasharray="seg.dasharray"
+              :stroke-dashoffset="seg.dashoffset"
+              :style="{ opacity: seg.strength }"
+            />
+            <text class="donut-center-num" x="21" y="20.5">{{ formatFunds(-totalExpenseCents) }}</text>
+            <text class="donut-center-cap" x="21" y="25">spent</text>
+          </svg>
         </div>
       </div>
 
@@ -606,9 +690,24 @@ function showAllTransactions(): void {
   padding-right: 10px;
 }
 
+/* A SQUARE PHOTO WINDOW: 124 of paper width minus Polaroid's own 4px lips = a 124px-tall window in a
+   124px-wide one. See the note in the template for why square rather than landscape. */
 .money-polaroid {
   width: 132px;
   margin: 26px 0 0 auto;
+}
+
+/* The donut under the photograph. It is the full width of the artefact column - wider than the
+   polaroid, which is what stops the column reading as one object that got narrower. `--accent` on
+   the segments and the per-slice opacity in the template are the whole palette. */
+.money-donut {
+  width: 100%;
+  height: auto;
+  margin-top: 18px;
+}
+
+.money-donut .donut-seg {
+  stroke: var(--accent);
 }
 
 /* THE ARTEFACTS STEP ASIDE ON A NARROW PHONE. Below 360px of viewport the 146px of paper and the

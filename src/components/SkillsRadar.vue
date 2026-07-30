@@ -23,43 +23,26 @@
 // coach note on Home: one voice, two surfaces.
 //
 // THIS COMPONENT IS PRESENTATION ONLY. It derives nothing, it knows no skills, it never sees the
-// true values: it is handed `RadarAxis[]` and lays it out. The confidence model, the evidence read
-// over WorldMatch and the coach's per-axis sentences are an ENGINE slice being built in parallel
-// (branch feat/skills-radar); until it lands, KidScreen feeds this a stub OF THE FINAL SHAPE, so
-// the swap is a data source and nothing else.
+// true values: it is handed `RadarAxis[]` and lays it out.
 //
-// ⚠ WHERE `RadarAxis` LIVES, and where it is going. It is declared HERE because the engine slice is
-// not merged and `src/shared/protocol.ts` is not this wave's to edit. When the engine puts
-// `radar: RadarAxis[]` on the Snapshot, the type moves to protocol.ts and this block is deleted -
-// the interface below is deliberately identical to docs/specs/skills-radar.md §2 so that move is a
-// cut and paste rather than a reconciliation.
-
-/** The four axes, in draw order: top, right, bottom, left. */
-export type RadarAxisKey = 'serve' | 'ret' | 'composure' | 'stamina'
-
-/** ONE AXIS, exactly as docs/specs/skills-radar.md §2 specifies it. Every figure is on the engine's
- *  own 0-100 skill scale (engine/match/types.ts MatchPlayer) - this component clamps and normalises,
- *  and prints none of them. */
-export interface RadarAxis {
-  key: RadarAxisKey
-  /** The ESTIMATE, not the truth. At low confidence it is deliberately wrong. */
-  shownValue: number
-  /** How wrong it might be: the fog is drawn from `shownValue - band` to `shownValue + band`.
-   *  ⚠ READ AS A HALF-WIDTH (an error radius), because the spec calls it "how wide the error is"
-   *  and an error is naturally symmetric about an estimate. See the report note: if the engine
-   *  means a FULL width, this renderer halves it and nothing else changes. */
-  band: number
-  /** The outer haze: the range her ceiling is known to lie in. Narrows toward, never below, a floor
-   *  width - that floor is what stops the haze from being reverse-engineered into the exact number. */
-  ceilingLo: number
-  ceilingHi: number
-  /** The coach's sentence for this axis, or null when he has nothing to say about it yet. */
-  note: string | null
-}
+// ⚠ THE LOCAL TYPE BLOCK IS GONE, exactly as the note that stood here promised it would be: "when
+// the engine puts `radar: RadarAxis[]` on the Snapshot, the type moves to protocol.ts and this block
+// is deleted". The engine slice landed, `RadarAxis` lives in `src/shared/protocol.ts` keyed on the
+// engine's own `SkillKey`, and KidScreen has been feeding this the real snapshot rows ever since -
+// so the copy here had become a SECOND definition of the axis union that nothing kept in step. v25's
+// fifth attribute is what made that latent: the engine grew an axis the component's own union could
+// not name, and the two would have disagreed silently in a `.find()` that returned undefined.
+//
+// ⚠ FIVE AXES SINCE v25, NOT FOUR (owner, 30.07; docs/specs/skills-radar.md §5). Nothing about the
+// fog model moved - the geometry below is derived from `SKILL_KEYS.length`, so the polygon follows
+// the engine rather than being told separately how many corners to have.
 </script>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { RADAR_AXIS_LABEL } from '../engine/radar'
+import { SKILL_KEYS, type SkillKey } from '../engine/development'
+import type { RadarAxis } from '../shared/protocol'
 
 const props = defineProps<{
   axes: readonly RadarAxis[]
@@ -67,31 +50,42 @@ const props = defineProps<{
   title: string
 }>()
 
-/** The words on the axes. Words, never numbers - and short enough that the bottom one fits the box. */
-const AXIS_LABEL: Record<RadarAxisKey, string> = {
-  serve: 'Serve',
-  ret: 'Return',
-  composure: 'Composure',
-  stamina: 'Stamina',
-}
+/** The words on the axes, READ OUT OF THE ENGINE (`RADAR_AXIS_LABEL`) rather than copied. Its own
+ *  comment gives the reason - a second copy in a screen is a second chance for two surfaces to call
+ *  the same thing different things, and `ret` must never reach a player as an engine field name. */
+const AXIS_LABEL: Record<SkillKey, string> = RADAR_AXIS_LABEL
 
-// The box. 240x194 rather than a square because the two horizontal labels need room the vertical
-// ones do not, and a viewBox is free.
-const CX = 120
+// The box. Wider than it is tall because the horizontal labels need room the vertical ones do not,
+// and a viewBox is free.
+//
+// ⚠ 300 WIDE, WAS 240, AND IT IS MEASURED IN THE BROWSER RATHER THAN GUESSED. Five spokes put two
+// labels on each flank instead of one, at shallower angles than the old four did, and the longest word
+// on the picture ("Groundstrokes", 96px at this font) is end-anchored on the left flank at
+// x = CX + 1.16R*cos(198deg). At the old 240/CX=120 it ran off the left edge. The svg is
+// `width: 100%; max-width: 300px` with `overflow: visible`, so a wider viewBox costs a fraction of
+// scale and nothing else - which is cheaper than shortening a word a player reads in order to keep a
+// number in a file. radar.test.ts §12 pins the two structural halves of this (the box is centred on
+// CX; the overflow stays visible) and says why the third is a browser measurement.
+const CX = 150
 const CY = 92
 const R = 62
 
-/** Draw order is fixed by the contract, not by the order a caller happens to pass: serve is up,
- *  return is right, composure is down, stamina is left, on every render of every career. */
-const ORDER: readonly RadarAxisKey[] = ['serve', 'ret', 'composure', 'stamina']
+/** Draw order is fixed by the contract, not by the order a caller happens to pass - and it is the
+ *  ENGINE's order (`SKILL_KEYS`), which is the order every other surface lists her attributes in.
+ *  Serve is up, and the rest follow clockwise, on every render of every career. */
+const ORDER: readonly SkillKey[] = SKILL_KEYS
 const ordered = computed<RadarAxis[]>(() =>
   ORDER.map((k) => props.axes.find((a) => a.key === k)).filter((a): a is RadarAxis => !!a),
 )
 
+/** Degrees between spokes - 90 at four axes, 72 at five. Derived, so the polygon can never end up
+ *  drawing a different number of corners from the number of rows it was handed. */
+const STEP_DEG = 360 / ORDER.length
+
 const clamp = (v: number): number => Math.max(0, Math.min(100, v))
 
 function pointAt(index: number, value: number): [number, number] {
-  const angle = (-90 + index * 90) * (Math.PI / 180)
+  const angle = (-90 + index * STEP_DEG) * (Math.PI / 180)
   const r = (clamp(value) / 100) * R
   return [CX + r * Math.cos(angle), CY + r * Math.sin(angle)]
 }
@@ -150,8 +144,8 @@ const sharpness = computed(() => {
 /** The spokes and the two guide rings. Decoration, and deliberately faint: they are there so the
  *  shape reads as a measurement rather than as a blob, not so anything can be counted off them. */
 const spokes = computed(() => ORDER.map((_, i) => pointAt(i, 100)))
-const guideOuter = polygon([100, 100, 100, 100])
-const guideInner = polygon([50, 50, 50, 50])
+const guideOuter = polygon(ORDER.map(() => 100))
+const guideInner = polygon(ORDER.map(() => 50))
 
 /** Where a word sits: outside the outer ring, on its own axis. */
 const labels = computed(() =>
@@ -181,7 +175,7 @@ const notes = computed(() =>
 <template>
   <div class="radar">
     <!-- The picture carries no numbers, so its accessible name carries none either. -->
-    <svg class="radar-svg" viewBox="0 0 240 194" role="img" :aria-label="title">
+    <svg class="radar-svg" viewBox="0 0 300 194" role="img" :aria-label="title">
       <defs>
         <filter id="radar-fog" x="-25%" y="-25%" width="150%" height="150%">
           <feGaussianBlur stdDeviation="3.4" />
@@ -313,9 +307,17 @@ const notes = computed(() =>
   align-items: baseline;
 }
 
+/* ⚠ 100px, WAS 68, AND IT IS MEASURED. The width is fixed so the five sentences align down a common
+   left edge - that is the whole reason it is not `auto`. 68px fitted the longest label the engine
+   could produce until v25 ("Composure", 69px, already one pixel over); "Groundstrokes" measures 96px
+   at this size/weight/tracking and was rendering straight over the sentence beside it - caught in the
+   browser, not by the suite, which is why radar.test.ts §12 now budgets this number against
+   RADAR_AXIS_LABEL. 100 rather than exactly 96 so the next word does not have to be shorter than the
+   longest one we happen to ship. The sentence column keeps 220px on a 390px frame, which the 16px
+   hand font already wraps at. */
 .radar-note-axis {
   flex: none;
-  width: 68px;
+  width: 100px;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.08em;

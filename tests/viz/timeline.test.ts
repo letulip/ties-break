@@ -123,7 +123,7 @@ function expectSequence(events: TimelineEvent[], expected: Exp[]) {
 
 // --- simulated fixture (real MatchResult + simplified annotations) ----------
 
-const MIRROR: MatchPlayer = { id: 'm', name: 'Mirror', serve: 50, ret: 50, composure: 50, stamina: 50 }
+const MIRROR: MatchPlayer = { id: 'm', name: 'Mirror', serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 }
 
 /**
  * Build an AnnotatedMatch from a real MatchResult WITHOUT importing rally.ts.

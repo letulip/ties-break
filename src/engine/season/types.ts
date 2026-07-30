@@ -83,7 +83,18 @@ export interface SeasonEvent {
   /** entries close at the END of week - 2 */
   deadlineWeek: number
 }
-export interface AiPlayer extends MatchPlayer {
+/** ⚠ `Omit<MatchPlayer, 'groundstrokes'>` AND THE OMIT IS LOAD-BEARING (v25). A rival does NOT store
+ *  the fifth attribute, for a reason that has nothing to do with tidiness: `driftCohort` spends
+ *  EXACTLY FOUR main-stream draws per player, and `52 x (4 x 199 + 3) + 2 = 41550` is literally what
+ *  the frozen MAIN capture (hash e6b0c709) is made of. A fifth stored attribute would want a fifth
+ *  weekly draw and move it, and it would cost a cohort schema bump on top - `rival-life.md` already
+ *  ruled on the same trade: a stored field shifts every subsequent attribute for all 199.
+ *
+ *  So a rival's groundstroke is DERIVED at match time (`rivalGroundstrokes`), exactly as her play
+ *  STYLE already is (`styleOf` - pure, stored nowhere, moves only when her attributes genuinely
+ *  move). Writing it as an Omit rather than a comment means the compiler refuses any path that hands
+ *  an `AiPlayer` to something wanting a full `MatchPlayer`, which is the mistake this guards. */
+export interface AiPlayer extends Omit<MatchPlayer, 'groundstrokes'> {
   nation: string // ISO-2
   /** hidden growth multiplier 0.5..1.5 – how fast she closes on her ceiling */
   growth: number

@@ -153,12 +153,28 @@ export const TIERS: Record<TierId, TierDef> = {
     points: [60, 36, 18, 10, 5, 0],
     everyNWeeks: 3,
     minAgeYears: 13,
-    // 400 = one J30 title, or three J30 semi-finals. A real body of international results, not one
-    // lucky week.
-    // The acceptance list starts to bite, and it is EXACTLY the field they draw from: inside the
-    // top 40%, the same number `entrantPctBand` ends on one line below.
+    // THE ACCEPTANCE LIST. A share of the field, not a count, so it survives the population growing
+    // from today's ~200 toward the 2-3k living-field.md plans.
+    //
+    // ⚠ 0.50, RE-PICKED FROM 0.40 (30.07, tune/rank-numbers). The old value was not chosen against
+    // any measurement - it was the IDENTITY `enterPct === entrantPctBand[1]`, which read beautifully
+    // ("she is accepted if she would be inside the field they draw from") and was the reason this rung
+    // was shut. The two numbers are not the same question: `entrantPctBand` is where an AI player's
+    // AMBITION window sits (who the field is MADE of), `enterPct` is the ACCEPTANCE CUT (when the
+    // tournament stops saying no). In real tennis the cut sits BELOW the regulars - that is what
+    // qualifying and wildcards are for - so setting it AT the top of the field was the strictest
+    // reading available. Measured against an honest ITF rank it gave 0.0-3.4 j60 entries per
+    // four-year career in all nine presets on both arms: a rung nobody played.
+    //
+    // WHY 0.50 AND NOT MORE. 0.55 makes J60 everybody's home rung and stops the gate telling the
+    // classes apart - a SELF-COACHED working family plays 16.8 J60s a career at 0.55 against 3.0 at
+    // 0.50, and the 8k budget grinder plays 29.5. 0.50 is the largest share that still discriminates.
+    // (And nothing above ~0.65 gates at all: the ITF table is only ~120 deep in a 200-strong cohort
+    // because everyone without a counting international result ties at the floor, so every share from
+    // 0.65 to 0.90 accepts every ranked player - the weeks-on-list count is identical across all of
+    // them, and whole careers re-run at 0.65 and 0.70 are byte-identical. Usable range: 0.40-0.65.)
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.4,
+    enterPct: 0.5,
     entrantPctBand: [0.05, 0.4],
   },
   j300: {
@@ -182,9 +198,29 @@ export const TIERS: Record<TierId, TierDef> = {
     // dense by design, and 26 j30s cannot fit in 49 weeks at 2 apart anyway.
     minGapWeeks: 2,
     minAgeYears: 13,
-    // 900 ≈ a J60 title plus a deep second run – the point at which she is one of the field's best.
+    // THE ACCEPTANCE LIST for the prestige rung.
+    //
+    // ⚠ 0.40, RE-PICKED FROM 0.25 (30.07, tune/rank-numbers), and this one deliberately breaks the
+    // old identity in the other direction: 0.40 is LOOSER than `entrantPctBand[1]` (0.25), so J300
+    // admits players from outside its own regular field. That is the point. The field is drawn from
+    // the top quarter of the table; a girl arriving off the domestic ladder with a J30 book sits at
+    // #89-#109, and a cut at the top of the field she is trying to break into is a cut no career in
+    // any preset ever cleared - measured, 0.0-0.3 entries per four-year career in all eighteen cells.
+    // A prestige rung has to be enterable from below or it is not a rung, it is a ceiling.
+    //
+    // IT STILL TIGHTENS RELATIVE TO j60 (0.40 < 0.50), which is the rule that actually matters: the
+    // ladder gets harder as you climb. What it no longer does is equal its own entrant band.
+    //
+    // WHY 0.40 AND NOT 0.35 OR 0.30. The target was written down before tuning (see
+    // docs/specs/two-ladders.md "What a good career ladder looks like"): J300 is the only four-figure
+    // crowd in the game (900-2,600 against j60's 110-320), the lore's "one rung where a junior plays
+    // in front of strangers", and four exist a season - so it should be 0 for most careers, 1-2 for a
+    // good one and 2-3 for the best, never the four-a-year commute the phantom rank made of it.
+    // Measured per four-year career: 0.30 gives 0.0-0.9 (still nearly absent), 0.35 gives 0.2-1.4,
+    // 0.40 gives 0.3 for the weak presets and 1.8-2.2 for the strong - about one every other season
+    // for a career that earns it, and ~14% of the sixteen on the calendar. That is the target.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.25,
+    enterPct: 0.4,
     entrantPctBand: [0.0, 0.25],
   },
 }

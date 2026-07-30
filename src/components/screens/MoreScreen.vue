@@ -10,6 +10,7 @@ import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SlotMeta } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
 import ConfirmDialog from '../ConfirmDialog.vue'
+import IconButton from '../ui/IconButton.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
 import { isHapticsOff, setHapticsOff, supportsHaptics } from '../../audio/haptics'
@@ -242,7 +243,14 @@ function toggleHaptics(): void {
           <td class="num">{{ (s.bytes / 1024).toFixed(1) }} KB</td>
           <td>
             <button :disabled="game.busy" @click="game.load(s.slot)">Load</button>
-            <button :disabled="game.busy" @click="game.deleteSlot(s.slot)">✕</button>
+            <IconButton
+              variant="bare"
+              icon="close"
+              :icon-size="14"
+              :label="`Delete save ${s.name}`"
+              :disabled="game.busy"
+              @click="game.deleteSlot(s.slot)"
+            />
           </td>
         </tr>
       </tbody>

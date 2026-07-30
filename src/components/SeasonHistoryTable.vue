@@ -75,7 +75,7 @@ function formatDollars(cents: number): string {
           <thead>
             <tr>
               <th>Season</th>
-              <th>Rank</th>
+              <th>Int. rank</th>
               <th>Pts</th>
               <!-- narrow phones: "W–L" must not break across two lines (the column is the tightest) -->
               <th style="white-space: nowrap">W–L</th>
@@ -126,10 +126,13 @@ function formatDollars(cents: number): string {
   overscroll-behavior-x: contain;
 }
 
-.season-history-scroll:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
+/* ⚠ THE RING RULE IS GONE, AND NOTHING REPLACES IT HERE. It said `outline: 2px solid var(--accent)`
+   with a 2px offset; src/style.css now declares `:focus-visible` once for the whole app (three files
+   had brought their own and all three were 2px - the owner's "thin borders everywhere"). Unlike the
+   wizard's select, this element IS the focusable one - the scroller carries the `tabindex` - so the
+   global rule reaches it directly and a local copy would only be a second value waiting to drift.
+   The fact that mattered is untouched: a horizontally-scrolling table stays keyboard-reachable, and
+   it still gets a visible ring - just the app's. */
 
 /* Five columns cannot afford the app's default 12px side inset - that is 120px of a 311px table.
    Scoped, so the eleven other tables in the app keep the inset that is right for them. */

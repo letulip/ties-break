@@ -38,7 +38,10 @@ import { SURFACE_BLOCKS, buildSeason, surfaceBlockFor } from '../src/engine/seas
 
 const STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
 const SURFACES: Surface[] = ['hard', 'clay', 'grass']
-const SKILLS: SkillKey[] = ['serve', 'ret', 'composure', 'stamina']
+// ⚠ FIVE SINCE v25, and this list is what makes the sum-to-zero sweep below cover the new column:
+// the aggressive baseliner's row gained a `groundstrokes` delta (the attribute her style is actually
+// about), and a four-key list would have walked straight past it.
+const SKILLS: SkillKey[] = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes']
 
 /** The calendar's real surface mix, MEASURED off the real calendar rather than hard-coded.
  *
@@ -63,7 +66,7 @@ const CALENDAR_MIX: Record<Surface, number> = (() => {
 })()
 
 function basePlayer(id: string, name: string): MatchPlayer {
-  return { id, name, serve: 50, ret: 50, composure: 50, stamina: 50 }
+  return { id, name, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 }
 }
 
 describe('surface x style — the table', () => {
@@ -145,13 +148,14 @@ describe('surface x style — applySurfaceStyle is a pure function of (player, s
   })
 
   it('all-court returns byte-identical attributes (the pin-safety property)', () => {
-    const p: MatchPlayer = { id: 'k', name: 'K', serve: 47.3, ret: 51.9, composure: 38.5, stamina: 44.1 }
+    const p: MatchPlayer = { id: 'k', name: 'K', serve: 47.3, ret: 51.9, composure: 38.5, stamina: 44.1, groundstrokes: 49.7 }
     for (const surface of SURFACES) {
       const out = applySurfaceStyle(p, 'all-court', surface)
       expect(out.serve).toBe(p.serve)
       expect(out.ret).toBe(p.ret)
       expect(out.composure).toBe(p.composure)
       expect(out.stamina).toBe(p.stamina)
+      expect(out.groundstrokes).toBe(p.groundstrokes)
     }
   })
 
@@ -168,7 +172,7 @@ describe('surface x style — applySurfaceStyle is a pure function of (player, s
   })
 
   it('takes any MatchPlayer — it never reaches into world state (reusable for the AI cohort later)', () => {
-    const ai: MatchPlayer = { id: 'ai-7', name: 'A. Rival', serve: 62, ret: 58, composure: 70, stamina: 64 }
+    const ai: MatchPlayer = { id: 'ai-7', name: 'A. Rival', serve: 62, ret: 58, composure: 70, stamina: 64, groundstrokes: 60 }
     const out = applySurfaceStyle(ai, 'counterpuncher', 'clay')
     expect(out.ret).toBeGreaterThan(ai.ret)
     expect(applySurfaceStyle.length).toBe(3) // (player, style, surface)
@@ -284,6 +288,15 @@ describe('season blocks x style — the balance survives, the calendar gains sig
     //   BLOCKS all-court 49.99 · counter 50.51 · aggressive 50.04 · serve-first 49.47  (spread 1.04)
     // The flat row reproduces the surface-style slice's own report (50.0 / 50.4 / 50.1 / 49.6), so
     // this is the same measurement, not a new one. Blocks widen the spread by 0.2 of a point.
+    //
+    // ⚠ RE-MEASURED AT v25 (the aggressive baseliner's groundstroke row). Every assertion below is a
+    // RANGE and none of them moved; these are the numbers behind them:
+    //   FLAT   all-court 49.83 · counter 50.26 · aggressive 50.52 · serve-first 49.40  (spread 1.12)
+    //   BLOCKS all-court 49.84 · counter 50.39 · aggressive 50.47 · serve-first 49.30  (spread 1.17)
+    // The aggressive baseliner gains about four tenths over the year and takes the top of the flat
+    // row off the counterpuncher, which is the attribute her style never had starting to pay. The
+    // spread widens by a quarter of a point and stays inside the same bounds, so the promise this
+    // test exists for is intact: nobody was re-balanced by a calendar, and nobody is dominant.
     const spreadOf = (mix: Record<Surface, number>): number => {
       const rates = STYLES.map((s) => fieldWinRate(s, mix))
       return Math.max(...rates) - Math.min(...rates)
@@ -306,6 +319,16 @@ describe('season blocks x style — the balance survives, the calendar gains sig
     //   clay swing   counter 52.21 · all-court 50.62 · serve-first 49.03 · aggressive 48.14 (4.07)
     //   grass window serve-first 50.99 · aggressive 50.85 · all-court 49.72 · counter 48.44 (2.54)
     //   hard swings  aggressive 50.8x · counter 50.0x · all-court 49.7x · serve-first 49.40 (1.4x)
+    //
+    // ⚠ RE-MEASURED AT v25, and the `best(grass)` assertion below is the reason the groundstroke row
+    // is shaped the way it is. A grass BLOCK is 69% grass and 25% HARD, so a hard-court-only bonus
+    // leaks into the grass window: at `hard +MID / clay -MID` the aggressive baseliner took the grass
+    // window off the server (51.26 against 50.87) and this test caught it. Paying for the bonus across
+    // clay AND grass instead restores the window and leaves the margin WIDER than it was pre-v25:
+    //   clay swing   counter 52.38 · all-court 50.77 · serve-first 49.16 · aggressive 47.69 (4.70)
+    //   grass window serve-first 51.05 · aggressive 50.72 · all-court 49.76 · counter 48.47 (2.59)
+    // (grass margin 0.33 against 0.04 before; clay spread 4.70 against 4.15). Both blocks still favour
+    // the build they are named for, and both got more decisive - which is what the axis is for.
     // A player who plans her season now gets 2.5-4 points of edge inside her block, against a
     // year-long spread of 1. THAT is what "the calendar tells you when your surface arrives" buys.
     const clay = blockMix('clay')
@@ -409,6 +432,7 @@ function expectedKid(world: WorldState, surface: Surface, atSkills?: KidSkills):
       ret: raw.ret * factor,
       composure: raw.composure * factor,
       stamina: raw.stamina * factor,
+      groundstrokes: raw.groundstrokes * factor,
     },
     world.profile.playStyle,
     surface,
@@ -429,6 +453,7 @@ describe('surface x style — the single composition point in world.ts', () => {
     expect(out.ret).toBeCloseTo(raw.ret * factor * mult.ret, 10)
     expect(out.composure).toBeCloseTo(raw.composure * factor * mult.composure, 10)
     expect(out.stamina).toBeCloseTo(raw.stamina * factor * mult.stamina, 10)
+    expect(out.groundstrokes).toBeCloseTo(raw.groundstrokes * factor * mult.groundstrokes, 10)
     expect(out.ret).toBeGreaterThan(raw.ret * factor) // clay lifts the counterpuncher's return
     // Pure: calling it again cannot compound (it never writes to the world).
     expect(kidMatchPlayerFor(world, 'clay')).toEqual(out)
@@ -446,6 +471,7 @@ describe('surface x style — the single composition point in world.ts', () => {
       expect(out.ret).toBe(raw.ret * factor)
       expect(out.composure).toBe(raw.composure * factor)
       expect(out.stamina).toBe(raw.stamina * factor)
+      expect(out.groundstrokes).toBe(raw.groundstrokes * factor)
     }
   })
 
