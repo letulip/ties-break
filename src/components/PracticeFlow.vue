@@ -12,6 +12,8 @@
 import { computed, ref } from 'vue'
 import MatchViewer from './MatchViewer.vue'
 import MatchScene from './MatchScene.vue'
+import IconButton from './ui/IconButton.vue'
+import SurfaceMark from './ui/SurfaceMark.vue'
 import { useKidEmotion } from '../composables/kidEmotion'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
@@ -37,7 +39,10 @@ const props = withDefaults(
 )
 const emit = defineEmits<{ close: [] }>()
 
-const SURFACE_EMOJI: Record<string, string> = { hard: '🔵', clay: '🟠', grass: '🟢' }
+// ⚠ `SURFACE_EMOJI` IS GONE (owner, 30.07: «Surface type similar icon across every screen – it means
+// this icon is not a component»). That exact line - the same three emoji, byte for byte - had been
+// pasted into three files, and its hues are not the `--surface-*` tokens the ring mark uses, so the
+// same clay court was one orange in the flow and a different orange on the calendar. SurfaceMark.
 
 // ui-inventory §2, the owner's triage: "PracticeFlow – F Match Day does the same job, it follows
 // that design". So the card before a friendly is the SAME portrait scene the tournament's pre-match
@@ -110,11 +115,11 @@ function close(): void {
       <div>
         <div class="tf-title">Practice match</div>
         <div class="tf-sub">
-          <span class="pill">{{ SURFACE_EMOJI[match.surface] }} {{ match.surface }}</span>
+          <SurfaceMark :surface="match.surface" size="sm" />
           <span class="hint tf-week-dates">{{ weekLabel(week) }} · {{ weekDates }}</span>
         </div>
       </div>
-      <button class="link" @click="close">Close ✕</button>
+      <IconButton icon="close" label="Close" title="Close" @click="close" />
     </header>
 
     <div class="tf-body">

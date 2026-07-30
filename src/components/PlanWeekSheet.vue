@@ -19,6 +19,7 @@ import { layoffBlock, medicalBlock, practiceCaution, type PracticeCaution } from
 import { isOffSeasonWeek } from '../engine/season/calendar'
 import { weekLabel, weekRange } from '../shared/dates'
 import { vacationArtUrl } from '../art/weeks'
+import IconButton from './ui/IconButton.vue'
 
 const props = defineProps<{
   week: number
@@ -183,7 +184,7 @@ function askVacation(row: PackageRow): void {
 <template>
   <div class="dialog-overlay" @click.self="emit('close')">
     <div class="plan-sheet">
-      <button class="replay-close" aria-label="Close planner" title="Close" @click="emit('close')">✕</button>
+      <IconButton class="replay-close" icon="close" label="Close planner" title="Close" @click="emit('close')" />
       <p class="guide-title">Plan {{ weekLabel(week) }}</p>
       <p class="hint" style="margin-top: -6px">{{ dates }} · condition {{ condition }}/100</p>
 
@@ -263,9 +264,14 @@ function askVacation(row: PackageRow): void {
               <img :src="row.art" alt="" />
               <span class="pkg-art-scrim"></span>
             </div>
+            <!-- ⚠ THE PRICE LEFT THIS ROW (owner, 30.07: «Vacation price options move to the bottom
+                 right corner of the card in list»). It sat here, opposite the package name, which
+                 put the one number the parent is deciding on at the FAR END of the headline and left
+                 the bottom-right corner - the corner a thumb is already heading for - holding
+                 nothing. It is beside Book now: the cost and the commitment read as one gesture, and
+                 the title line is a title again. -->
             <div class="pkg-head">
               <span class="pkg-label">{{ row.label }}</span>
-              <span class="pill" :class="{ ok: row.recommended }">{{ formatDollars(row.priceCents) }}</span>
             </div>
             <p class="hint pkg-blurb">{{ row.blurb }}</p>
             <p class="hint pkg-effect">
@@ -275,12 +281,13 @@ function askVacation(row: PackageRow): void {
             </p>
             <div class="pkg-actions">
               <span v-if="row.recommended" class="pill ok">Recommended</span>
+              <span v-if="!layoff && !row.affordable" class="hint pkg-unaffordable">Out of reach</span>
+              <span class="pill pkg-price" :class="{ ok: row.recommended }">{{ formatDollars(row.priceCents) }}</span>
               <!-- R12-8b: disabled during the layoff (the note above carries the reason) – a Book
                    that can only throw is the R10-16 dead control this sheet must never grow. -->
               <button class="primary" :disabled="!!layoff || !row.affordable || game.busy" @click="askVacation(row)">
                 Book
               </button>
-              <span v-if="!layoff && !row.affordable" class="hint" style="margin: 0">Out of reach</span>
             </div>
           </div>
         </div>

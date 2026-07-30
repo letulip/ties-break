@@ -30,6 +30,12 @@ import type { TierId } from '../src/engine/season/types'
 // ---------------------------------------------------------------------------
 
 const seasonScreen = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
+// ⚠ ADDED 30.07: the ring mark is a COMPONENT now (owner: «Surface type similar icon across every
+// screen – it means this icon is not a component»). It was hand-written markup in three places, all
+// three of which had drifted apart - one hard-coded the surface as `clay` in both its class and its
+// copy. The facts this file protects did not move, but the markup that carries two of them did, so
+// those two tests read SurfaceMark.vue as well as the screen. See the notes on each.
+const surfaceMark = readFileSync(new URL('../src/components/ui/SurfaceMark.vue', import.meta.url), 'utf8')
 const homeScreen = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
 // PIN MOVED by Diary-1: the result/title walk left composables/kidEmotion.ts for engine/diary.ts
 // (lastKidResultOf), because the diary's copy system needed the same walk engine-side and one walk
@@ -65,19 +71,50 @@ describe('the surface mark on the Season card (R11-15, reversed by the owner in 
   // in the court's colour with the name beside them. That is not a return to R10-11 - what R10-11
   // got wrong was flinging the name away from the mark, and what R11-15 was defending was the name
   // being printed once, next to its colour. Both of those still hold, and both are pinned here.
+  // ⚠ RE-AIMED 30.07. This used to read `class="surface-mark"` / `class="surface-ring"` /
+  // `{{ row.event.surface }}` straight out of SeasonScreen's `.event-place`. Those three strings are
+  // now in SurfaceMark.vue, because the mark is a component - so the assertion is in two halves and
+  // the PROTECTED FACT IS WORD FOR WORD THE SAME: the card carries the export's RING mark (never
+  // R10-11's bare dot), and the surface NAME sits with the ring rather than being flung away from it.
+  // The screen half additionally pins that the card asks for the mark by rendering the component,
+  // which is the thing that stops a fourth hand-written copy appearing.
   it('the card carries the export\'s ring mark, with the name beside it', () => {
     const from = seasonScreen.indexOf('<div class="event-place">')
     expect(from).toBeGreaterThan(0)
     const place = seasonScreen.slice(from, seasonScreen.indexOf('</div>', from))
-    expect(place).toContain('class="surface-mark"')
-    expect(place).toContain('class="surface-ring"')
-    expect(place).toContain('{{ row.event.surface }}') // the NAME sits with the mark
+    // the card asks the component for the mark, and hands it the row's OWN surface
+    expect(place).toContain('<SurfaceMark :surface="row.event.surface"')
     expect(place).not.toContain('surface-dot') // R10-11's bare dot is still gone
     expect(cssBodies('.surface-dot')).toEqual([])
+    // ...and the component is still the export's ring with the name beside it
+    expect(surfaceMark).toContain('class="surface-mark"')
+    expect(surfaceMark).toContain('class="surface-ring"')
+    expect(surfaceMark).toContain('{{ surface }}')
+    // the name is a SIBLING of the ring inside one mark, which is what "beside it" means
+    expect(surfaceMark).toMatch(/<span class="surface-ring"[^>]*><i><\/i><\/span>\s*<template v-if="showName">/)
   })
 
+  // ⚠ RE-AIMED 30.07, same move. R11-15's complaint was DUPLICATION - the court named in the mark
+  // and named again in a caption under it - so the fact is "once per card", not "once per file". The
+  // card now names the surface by rendering exactly one mark, and the mark prints the name once.
   it('the surface name is printed EXACTLY ONCE on the card – R11-15\'s actual complaint', () => {
-    expect(seasonScreen.split('{{ row.event.surface }}').length - 1).toBe(1)
+    const from = seasonScreen.indexOf('<div class="event-place">')
+    const card = seasonScreen.slice(from, seasonScreen.indexOf('</div>', from))
+    expect(card.split('<SurfaceMark').length - 1).toBe(1)
+    expect(surfaceMark.split('{{ surface }}').length - 1).toBe(1)
+    // and the screen prints the raw name nowhere else on the card
+    expect(card).not.toContain('{{ row.event.surface }}')
+  })
+
+  // ⚠ ADDED 30.07 – the reason the component exists, pinned so it cannot come back. One of the three
+  // hand-written marks had the surface baked in TWICE (`class="surface-mark surf-clay"` and the word
+  // "clay" as literal copy), so a friendly on any other court would have shown an orange ring
+  // labelled clay. No template may name a surface in a class again.
+  it('no screen hard-codes a surface into a mark', () => {
+    for (const surf of ['hard', 'clay', 'grass']) {
+      expect(seasonScreen, surf).not.toContain(`surface-mark surf-${surf}`)
+    }
+    expect(surfaceMark).toContain('`surf-${surface}`')
   })
 
   it('the VERDICT still reaches the player, exactly once, through the coach', () => {
