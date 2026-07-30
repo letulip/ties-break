@@ -860,6 +860,43 @@ select {
   padding: 8px 24px 24px;
 }
 
+/* ⚠ THE TAKEOVER'S BOTTOM ROOM IS CONTENT, NOT THE SCROLLPORT'S PADDING - AND IT HAD TO BECOME ONE
+   (owner, 31.07: on the live match screen «the bottom buttons float in the air: there is unpainted
+   space beneath them through which the text commentary shows. Paint it»).
+
+   THE CAUSE, MEASURED IN CHROME ON THE SHIPPED LAYOUT RATHER THAN GUESSED AT. `position: sticky;
+   bottom: 0` does NOT pin against the bottom of the scrollport the way the spec's "sticky view
+   rectangle is the scrollport" wording reads: it pins against the scroll container's CONTENT box.
+   `.tf-body` carries 24px of bottom padding, so the match viewer's pinned control bar came to rest
+   24.0px short of the visible bottom edge, and that strip is inside the scrollport with nothing
+   painting it - padding does not clip, so the commentary log went on scrolling THROUGH it under the
+   bar. `elementFromPoint`, 12px below the bar's own bottom edge, returned a commentary row. That is
+   the "floating in the air" exactly: the bar has an opaque floor (`background: var(--bg)`) and the
+   floor simply stopped 24px early.
+
+   WHY THE ROOM MOVES INSTEAD OF THE BAR GROWING A SKIRT. A painted skirt under the bar has to be
+   exactly as tall as the gap or it covers whatever follows the bar - and on a finished match the box
+   score follows it. Taking the room off the scrollport removes the gap for EVERY sticky child of
+   EVERY takeover, at any viewport height, with no arithmetic to keep in sync: the content box bottom
+   IS the padding box bottom, so `bottom: 0` means the bottom.
+
+   THE ROOM ITSELF IS UNCHANGED, and that is the point of the spacer rather than a plain
+   `padding-bottom: 0`. Measured before and after: `scrollHeight` 839 -> 839, and at the end of the
+   scroll the last card still stands 24.2px off the bottom edge. `margin-top` cancels the column gap
+   the flex container would otherwise add ABOVE the spacer, so the 24px is 24px and not 40.
+   `.onboarding-body` is not a flex container and has no sticky children, so it keeps the padding it
+   has always had - which is why the declaration above stays shared and only `.tf-body` overrides. */
+.tf-body {
+  padding-bottom: 0;
+}
+
+.tf-body::after {
+  content: '';
+  flex: none;
+  height: 24px;
+  margin-top: -16px; /* = .tf-body's own column gap, so the spacer adds the 24px and not 24 + 16 */
+}
+
 .onboarding-step h2 {
   font-family: var(--font-heading);
   font-size: 17px;

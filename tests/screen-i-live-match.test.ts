@@ -363,6 +363,38 @@ describe('the pinned control bar can never reach the playing surface', () => {
     expect(styles).toMatch(/\.mv-shout\s*\{[^}]*grid-column:\s*1 \/ -1/)
   })
 
+  it('...and its floor reaches the bottom, because the takeover stopped padding its scrollport', () => {
+    // ⚠ ADDED 31.07 (owner: «the bottom buttons float in the air: there is unpainted space beneath
+    // them through which the text commentary shows. Paint it»). The bar HAS an opaque floor and
+    // always did - the floor stopped 24px early.
+    //
+    // MEASURED IN CHROME ON THE SHIPPED LAYOUT: `position: sticky; bottom: 0` pins against the scroll
+    // container's CONTENT box, not the scrollport, so `.tf-body`'s 24px of bottom padding left the
+    // pinned bar 24.0px short of the visible bottom edge - and padding does not clip, so the log went
+    // on scrolling through that strip under the bar (`elementFromPoint` 12px below the bar returned a
+    // commentary row). The fix is in the SHEET rather than in the viewer, because a painted skirt on
+    // the bar would have to match the gap exactly or cover the box score that follows it on a
+    // finished match. Take the room off the scrollport and no sticky child of any takeover can have a
+    // gap under it at any viewport height.
+    //
+    // THE ROOM MUST SURVIVE THE MOVE, which is the half a careless "fix" would drop: measured before
+    // and after, scrollHeight 839 -> 839, and the last card still stands 24.2px off the bottom edge.
+    const sheet = read('../src/style.css')
+    const body = sheet.slice(sheet.indexOf('.tf-body {\n  padding-bottom'))
+    expect(body, 'the scrollport is padding the bottom again').toMatch(/^\.tf-body \{\s*padding-bottom: 0;/)
+    // ...and the room it gave up is back as content, so nothing is flush against the bottom edge.
+    expect(sheet).toMatch(/\.tf-body::after \{[\s\S]*?height: 24px/)
+    expect(sheet, 'the spacer would add the column gap on top of the room').toMatch(
+      /\.tf-body::after \{[\s\S]*?margin-top: -16px/,
+    )
+    // The cancelled gap has to BE the gap, or the room silently becomes 24 + whatever it really is.
+    expect(sheet).toMatch(/\.tf-body \{[^}]*gap: 16px/)
+    // The wizard shares the base rule and has no sticky children, so it keeps its padding - the
+    // override is `.tf-body`'s alone.
+    expect(sheet).toMatch(/\.onboarding-body,\s*\n\.tf-body \{[^}]*padding: 8px 24px 24px/)
+    expect(sheet).not.toContain('.onboarding-body::after')
+  })
+
   it('the segmented labels fit the bar, so "Skip" cannot render as "Ski" again', () => {
     // Both rows want ~359px of pill at the sheet's 16px-a-side `.tab-pill` padding; inside a
     // .tf-card on a 375pt phone they get 293px, and the view row used to overflow its half and
