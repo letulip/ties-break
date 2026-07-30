@@ -32,7 +32,7 @@ const blocks = computed(() =>
       results: l?.countingResults ?? [],
       empty:
         t === 'itf'
-          ? 'Nothing here until she plays a Junior Tour event.'
+          ? 'Nothing here until she plays a Junior Tour event – national results do not count towards this ranking.'
           : 'Nothing here until she plays her first Local Open.',
     }
   }),
@@ -50,8 +50,7 @@ const blocks = computed(() =>
       </p>
       <section v-for="b in blocks" :key="b.track" class="rank-help-block">
         <p class="rank-help-heading">{{ b.label }} – {{ b.rank }} · {{ b.points }} pts</p>
-        <CountingResultsTable :results="b.results" />
-        <p v-if="!b.results.length" class="hint">{{ b.empty }}</p>
+        <CountingResultsTable :results="b.results" :empty-note="b.empty" />
       </section>
       <ul class="rank-help-rules">
         <li class="hint">Each ranking = the sum of her 6 best results from the last 52 weeks, in that table.</li>

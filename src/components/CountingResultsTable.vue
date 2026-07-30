@@ -9,7 +9,16 @@ import type { TierId } from '../engine/season/types'
 import type { CountingResult } from '../shared/protocol'
 import { weekLabel } from '../shared/dates'
 
-const props = defineProps<{ results: CountingResult[] }>()
+const props = defineProps<{
+  results: CountingResult[]
+  /** What to say when the list is empty. Optional, defaulting to the copy this component has always
+   *  used - the ONE caller that overrides it is the two-ladder rank explainer, where the generic line
+   *  ("enter a tournament to earn ranking points") is actively wrong: a girl can have played forty
+   *  domestic tournaments and still hold an empty INTERNATIONAL list, because the two tables have no
+   *  exchange rate. A prop rather than a second paragraph at the call site, so the empty state stays
+   *  one sentence in one place. */
+  emptyNote?: string
+}>()
 
 const total = computed(() => props.results.reduce((sum, c) => sum + c.points, 0))
 
@@ -42,5 +51,5 @@ function tierLabel(tier?: TierId): string {
       </tr>
     </tfoot>
   </table>
-  <p v-else class="hint">No counted results yet – enter a tournament to earn ranking points.</p>
+  <p v-else class="hint">{{ emptyNote ?? 'No counted results yet – enter a tournament to earn ranking points.' }}</p>
 </template>
