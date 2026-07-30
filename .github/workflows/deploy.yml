@@ -49,6 +49,8 @@ jobs:
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force
+      # ⚠ The `unit` project only. The Monte-Carlo calibration runs on its own schedule - see
+      # .github/workflows/simulation.yml. A deploy must not be blocked by a statistical sweep.
       - run: npm test
       - run: npm run build
         env:

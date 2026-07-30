@@ -16,5 +16,9 @@ jobs:
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force
+      # ⚠ THE GATE RUNS THE `unit` PROJECT. The Monte-Carlo files are NOT in it and that is a
+      # decision, not an omission - see .github/workflows/simulation.yml and the note in
+      # vite.config.ts. They are deterministic statistical calibration, they cost 143s of CPU, and
+      # they have been losing a fight with vitest's reporter RPC for months.
       - run: npm test
       - run: npm run build

@@ -1,4 +1,4 @@
-import { defineConfig, type Plugin } from 'vitest/config'
+import { defineConfig, configDefaults, type Plugin } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
 import { optimizeArt } from './scripts/optimize-art.mjs'
@@ -42,6 +42,14 @@ function artPipeline(): Plugin {
 }
 
 // BASE_PATH is set by CI to "/<repo-name>/" for GitHub Pages; locally the app serves from "/".
+/** The Monte-Carlo files: 104s of the suite's 183s, and the reason CI's reporter RPC times out.
+ *  Declared once so the two projects below cannot disagree about which files are heavy. */
+const HEAVY_SIM_FILES = [
+  '**/tests/econ-bench.test.ts',
+  '**/tests/fatigue-bench.test.ts',
+  '**/tests/match/calibration.test.ts',
+]
+
 export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [
@@ -131,8 +139,43 @@ export default defineConfig({
     // The real long-term fix is to stop spending two minutes of CPU on Monte-Carlo inside the PR
     // gate - move the two bench files to their own job. That is a decision about what the gate is
     // for, so it waits for the owner rather than being smuggled in here.
-    poolOptions: {
-      forks: { singleFork: !!process.env.CI },
-    },
+    // ⚠ `singleFork: !!process.env.CI` LIVED HERE AND IS GONE (30.07). It existed for exactly one
+    // reason - the Monte-Carlo files fighting the reporter RPC on a 2-core runner - and those files
+    // have left the PR gate (see .github/workflows/simulation.yml). A workaround whose reason has
+    // been removed is worse than no workaround: the next person to read it will assume it is load-
+    // bearing. The gate is 73 fast files and it runs on the default pool, in parallel, in ~14s.
+    //
+    // If flakes ever come back, the honest first question is which file is spending seconds of CPU
+    // and whether it belongs in the gate at all - not how to serialise around it.
+    // ⚠ THE GATE STOPS BEING A MONTE-CARLO RUNNER (30.07). The note above ends with "the real
+    // long-term fix is to stop spending two minutes of CPU on Monte-Carlo inside the PR gate - move
+    // the two bench files to their own job... it waits for the owner". It came due: the suite grew
+    // from ~110s to 183s this round and CI went red again at 935/1561 tests with the same
+    // `Timeout calling "onTaskUpdate"` - not one assertion failed.
+    //
+    // Measured, three files are 104s of the 183: econ-bench 43.6s, fatigue-bench 38.7s,
+    // match/calibration 21.8s. They are Monte-Carlo sweeps over hundreds of simulated careers, and
+    // they are the reason a reporter RPC can sit past birpc's hard-coded 60s.
+    //
+    // NOTHING IS SKIPPED OR DELETED. They move to a project of their own and CI runs BOTH projects
+    // on every push, in two jobs - so every test still guards every change, and the gate no longer
+    // fails for reasons that have nothing to do with the code. A bare `vitest run` still runs the
+    // lot, which is what a developer wants locally.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          exclude: [...configDefaults.exclude, ...HEAVY_SIM_FILES],
+        },
+      },
+      {
+        // ⚠ NO `extends: true` HERE, and it is not an oversight. With it, this project's `include`
+        // MERGES with the root's `tests/**/*.test.ts` and the project collects the whole suite - which
+        // is what it did on the first attempt (76 files instead of 3). Without it the include is the
+        // only one, which is the whole point of the split.
+        test: { name: 'sim', include: HEAVY_SIM_FILES },
+      },
+    ],
   },
 })
