@@ -148,6 +148,13 @@ const recommendedId = computed<string | null>(() =>
       }),
 )
 
+/** ⚠ W4 – THE PRICE READS AS A PRICE (owner, 30.07: «на вкладке брони отпуска давай суммы сделаем
+ *  крупнее и без обводки вокруг, чтобы явно читались»). Nothing about the number CHANGED - it is the
+ *  same `vacationPriceCents` quote the engine charges by; what changed is that the template stopped
+ *  rendering it as a chip. `.pill` gave it a hairline capsule and 12px of muted grey, which put the
+ *  one figure the parent is deciding on at the same visual weight as the "Recommended" badge two
+ *  elements to its left - so the row read as a run of three badges - and made it the quietest type on
+ *  a card whose whole job is to compare five prices. It is `--fs-value-md`/800 now, with no frame. */
 const packageRows = computed<PackageRow[]>(() =>
   ECONOMY.vacation.packages.map((p) => {
     const priceCents = vacationPriceCents(seed.value, props.week, p.id, background.value)
@@ -282,7 +289,12 @@ function askVacation(row: PackageRow): void {
             <div class="pkg-actions">
               <span v-if="row.recommended" class="pill ok">Recommended</span>
               <span v-if="!layoff && !row.affordable" class="hint pkg-unaffordable">Out of reach</span>
-              <span class="pill pkg-price" :class="{ ok: row.recommended }">{{ formatDollars(row.priceCents) }}</span>
+              <!-- ⚠ THE PRICE IS NOT A PILL ANY MORE (owner, 30.07 – his words are on `packageRows`
+                   in the script). `.pill` is this app's CHIP: a 12px capsule in muted ink with a
+                   hairline round it, which is a LABEL treatment, and it was wrong twice over on the
+                   one number the parent is choosing between. It is a FIGURE now - see `.pkg-price` in
+                   src/style.css for the two rungs and where they come from. -->
+              <span class="num pkg-price" :class="{ ok: row.recommended }">{{ formatDollars(row.priceCents) }}</span>
               <!-- R12-8b: disabled during the layoff (the note above carries the reason) – a Book
                    that can only throw is the R10-16 dead control this sheet must never grow. -->
               <button class="primary" :disabled="!!layoff || !row.affordable || game.busy" @click="askVacation(row)">

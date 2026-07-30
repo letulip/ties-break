@@ -237,9 +237,29 @@ describe('R13-12 — the dot rule (unit): a FRESH recap is unseen', () => {
     expect(recapExists({ week: 0, pending: undefined, events: [] })).toBe(false)
   })
 
-  it('never on a tournament week (the flow’s own cards cover it), but an OLD tournament does not block', () => {
-    expect(recapExists({ week: 3, pending: undefined, events: [event({ type: 'tournament', week: 3 })] })).toBe(false)
-    expect(recapExists({ week: 4, pending: undefined, events: [event({ type: 'tournament', week: 3 })] })).toBe(true)
+  // ⚠ RE-AIMED BY W4 (owner, 30.07, twice in one playtest: «увидел экран week recap для прошедшего
+  // турнира, но уже, получается через неделю ... ставить week recap сразу после турнира, как будто
+  // домой едем» / «после турнира не появился week recap»).
+  //
+  // WHAT MOVED: this test asserted the OPPOSITE of its own first line – no story at all on a week
+  // carrying a `tournament` event. That clause existed to keep two full-screen takeovers off one
+  // tick, back when the card was a block on Home that simply appeared; it is deleted, because
+  // `pending` already says which surface owns the week and the story is a ROUTE now, so it can be
+  // TIMED rather than deleted.
+  //
+  // THE PROTECTED FACT IS UNCHANGED, and it is what this test still asserts: the tournament's own
+  // flow and the week's story are never both up. `TournamentFlow`'s `v-if` is `snapshot.pending`, and
+  // the story's gate is `!pending` – so the pair stays mutually exclusive by construction. What moved
+  // is the boundary between them: from "this week has a tournament in it" to "the flow has not let go
+  // of this week yet", one beat later, which is the beat he asked for.
+  it('a tournament week HAS a story once the flow lets go of it – W4', () => {
+    const tourney = [event({ type: 'tournament', week: 3 })]
+    // mid-reveal the flow owns the week – this is the old exclusion's real content
+    expect(recapExists({ week: 3, pending: pendingRun, events: tourney })).toBe(false)
+    // the finale's Continue clears `pending`: the drive home, and its story
+    expect(recapExists({ week: 3, pending: undefined, events: tourney })).toBe(true)
+    // ...and an OLD tournament never blocked the week after it, and still does not
+    expect(recapExists({ week: 4, pending: undefined, events: tourney })).toBe(true)
   })
 
   it('never while a reveal is pending, and never without a snapshot', () => {
@@ -363,11 +383,52 @@ describe('W1 — the end of a week lands on the story', () => {
     // Watching the SNAPSHOT rather than the sticky button: SeasonScreen advances a week too (the
     // hole R11-1 had to patch for the injury dialog), and a story shown on only one of two paths is
     // the bug again.
-    expect(app).toContain("if (advanced && recapExists(snap)) tab.value = 'week'")
+    //
+    // ⚠ RE-AIMED BY W4: the routing condition grew a SECOND door (`runClosed`, below), so the pin is
+    // the assignment rather than the whole line – the protected fact is unchanged and is exactly what
+    // it always was: the shell routes to 'week' off the SHARED predicate, never off a hand-copy.
+    expect(app).toContain("recapExists(snap)) tab.value = 'week'")
+    expect(app).toContain("if ((advanced || runClosed) && recapExists(snap))")
     // ...and it must be an ADVANCE of the SAME career, not merely a higher week number. `week` is
     // `snapshot?.week ?? 0`, so the first snapshot of a load reads as 0 -> N; the first draft of this
     // fix opened last week's story on every app start because of it. Caught in the browser.
-    expect(app).toContain('const advanced = snap.careerId === seenCareerId && snap.week > seenWeek')
+    expect(app).toContain('const sameCareer = snap.careerId === seenCareerId')
+    expect(app).toContain('const advanced = sameCareer && snap.week > seenWeek')
+  })
+
+  // ===========================================================================
+  // W4 — THE RECAP COMES HOME WITH HER. The owner, 30.07: «Я предлагаю ставить week recap сразу
+  // после турнира, как будто домой едем», and, separately, «после турнира не появился week recap».
+  //
+  // W1's trigger is an ADVANCE, and an advance that reaches a tournament comes back with `pending`
+  // set – so there was no story on that snapshot and no advance left to fire on once the flow was
+  // finished. The week's story rode the NEXT tick, a week late, or never arrived at all.
+  // ===========================================================================
+  it('W4 — the tournament run CLOSING is the second door, and it cannot fire on a load', () => {
+    // set -> null on the same career: the finale's Continue (or a post-deadline withdrawal).
+    expect(app).toContain("const runClosed = sameCareer && seenPendingId !== null && !snap.pending")
+    // ...tracked explicitly, exactly like the week, so `undefined -> null` on the first snapshot of a
+    // LOAD is not a close. This is the same trap W1 was caught by in the browser.
+    expect(app).toContain('let seenPendingId: string | null = null')
+    expect(app).toContain('seenPendingId = snap.pending?.eventId ?? null')
+    // ...and a career switch / a fresh career resets it with the rest of the watermark.
+    const reset = app.slice(app.indexOf('if (!snap) {'), app.indexOf('const sameCareer'))
+    expect(reset).toContain('seenPendingId = null')
+  })
+
+  it('W4 — the two takeovers still cannot both be up: the flow renders on the same `pending`', () => {
+    // The old way of keeping them apart was deleting the week's story outright (the exclusion in
+    // composables/weekRecap.ts). The way they are kept apart NOW is that the flow's own `v-if` is the
+    // very fact the story's gate refuses on, so the flow has already unmounted on the snapshot that
+    // opens the story.
+    expect(app).toContain('<TournamentFlow v-if="game.snapshot?.pending && !tournamentHidden"')
+    // ...and the deleted clause is gone from the RULE, not merely bypassed. Read the function body,
+    // not the file: the note above it quotes the deleted line verbatim on purpose, so that whoever
+    // finds this next knows what used to be here and why it went.
+    const rule = read('../src/composables/weekRecap.ts')
+    const body = rule.slice(rule.indexOf('export function recapExists'), rule.indexOf('/** The This-week tab'))
+    expect(body).toContain('return !snap.pending')
+    expect(body).not.toContain('snap.events')
   })
 
   it("the story's × is a real close: it silences the week AND goes back to Home", () => {
@@ -386,11 +447,108 @@ describe('W1 — the end of a week lands on the story', () => {
 })
 
 // ===========================================================================
+// W4 — THE STORY'S OWN FURNITURE. Three more things the owner asked for on the same page, all of
+// them template facts, which is the kind of fact this file exists to keep from rotting quietly.
+//
+//   * «внизу на week recap давай добавим кнопку Proceed посередине, как на home» – a centred bottom
+//     control in Home's shape. It must NOT be an advance: that is the wave-2 split the sibling suite
+//     above pins, so the label names its destination instead of implying a tick.
+//   * «She played her practice match - Watch it live на кнопке. Ну точно не live, а replay, да?»
+//   * «на week recap после отпуска можно использовать картинки соответствующих отпусков»
+// ===========================================================================
+describe('W4 — the story has a way out, and its painting is the week it is about', () => {
+  const card = read('../src/components/WeekRecapCard.vue')
+  const season = read('../src/components/screens/SeasonScreen.vue')
+
+  it('the Proceed pill is Home\'s CTA shape, centred at the bottom, and only on a story week', () => {
+    // ONE shared object for the shape (U0 #7's `cta` variant IS the export's pill, the same thing
+    // Home's button renders by hand), so the two can never drift in appearance...
+    expect(weekScreen).toContain('<PrimaryPill variant="cta" class="week-proceed-btn"')
+    expect(weekScreen).toContain("import PrimaryPill from '../ui/PrimaryPill.vue'")
+    // ...floating, centred, one thumb off the tab bar - Home's own geometry.
+    const bar = weekScreen.slice(weekScreen.indexOf('.week-proceed {'), weekScreen.indexOf('.week-proceed-btn'))
+    expect(bar).toContain('position: fixed')
+    expect(bar).toContain('justify-content: center')
+    expect(bar).toContain('bottom: 58px')
+    // ...and it exists only while there is a story to leave.
+    expect(weekScreen).toContain(`<template v-if="showRecap" #footer>`)
+  })
+
+  it('Proceed is NOT an advance: same handler as the ×, and a label naming where it goes', () => {
+    // ⚠ THE SIBLING PIN IS THE POINT: "no tab screen carries an advance control of its own" (above)
+    // reads this file for the advance bar's class and for `game.advance(`. A bare "Proceed" on a page
+    // about a week that just ended reads as "play the next one", and a stray tap spends the one thing
+    // in this game that cannot be undone - so the copy says the destination.
+    expect(weekScreen).toContain('>Proceed to Home</PrimaryPill>')
+    expect(weekScreen).toContain('@click="dismissRecap"')
+    // one handler behind both controls: the × and the pill silence the same week and go the same way
+    expect(weekScreen.split('@click="dismissRecap"').length - 1).toBe(2)
+  })
+
+  it('nothing on a resolved match is called live any more', () => {
+    // ⚠ THE RENDERED COPY, not the file: both files quote the owner's own words in a note, and those
+    // words contain the old label. That is deliberate - whoever reads these next should find out what
+    // the button used to promise and why it stopped. So the sweep is bounded to the template, which is
+    // the same discipline the Cyrillic pins in this file use and for the same reason.
+    const rendered = (src: string) => src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+    const cardT = rendered(card)
+    const seasonT = rendered(season)
+    expect(cardT.length).toBeGreaterThan(500) // a real bound, never a silent empty slice
+    expect(seasonT.length).toBeGreaterThan(500)
+    expect(cardT).toContain('>Watch the replay</PrimaryPill>')
+    expect(cardT).not.toContain('Watch it live')
+    // ...and the Season screen's copy of the control, which is the same promise one tick removed:
+    // the click ticks the week, the engine resolves the friendly, the viewer replays it.
+    expect(seasonT).toContain('Play it and watch →')
+    expect(seasonT).not.toContain('Watch it live')
+  })
+
+  it('the painting is the week: journey home, else the holiday, else the week frame', () => {
+    // The order is the order of what the week WAS, and no two can be true at once - a journey needs a
+    // competitive match of hers this week, and a vacation week takes no tournament.
+    expect(card).toContain('travelHomeUrl(travelHomeScene.value, travelHomeMood.value ?? \'sleepy\')')
+    expect(card).toContain('(vacationArt.value ?? weekArtUrl(week.value))')
+    // WHICH holiday comes off the booking, not off the boolean - `facts.vacationWeek` cannot name a
+    // package, and naming one is the whole item.
+    expect(card).toContain("import { vacationArtUrl, weekArtUrl } from '../art/weeks'")
+    expect(card).toContain('snap.vacations.find((v) => v.week === snap.week)')
+    expect(card).toContain('snap.diary.facts.vacationWeek')
+    // ...and it is DESCRIBED, because it is the only place on the page that says which of the five it
+    // was. The name is the catalogue's, never a second table in a screen.
+    expect(card).toContain("import { vacationPackage } from '../engine/economy'")
+    expect(card).toContain('The family week away –')
+  })
+
+  it('the vacation price is a figure, not a chip: bigger, and no capsule round it', () => {
+    const sheet = read('../src/components/PlanWeekSheet.vue')
+    // it wore `.pill` - a 12px muted capsule with a hairline, i.e. this app's LABEL treatment
+    expect(sheet).toContain('<span class="num pkg-price"')
+    expect(sheet).not.toContain('class="pill pkg-price"')
+    // ...and the size is a rung that exists: --fs-value-md (16px) at the 800 weight the design pairs
+    // with it for a money figure (D's own Balance). Never a number invented for this row.
+    const css = read('../src/style.css')
+    const price = css.slice(css.indexOf('.pkg-price {'), css.indexOf('.pkg-price.ok'))
+    expect(price).toContain('font-size: 16px')
+    expect(price).toContain('font-weight: 800')
+    expect(price).not.toContain('border')
+    // the dead rule that used to back the price in its OLD corner went with it
+    expect(css).not.toContain('.pkg-head .pill {')
+  })
+})
+
+// ===========================================================================
 // Player copy – every string this item added: short dash only, no Cyrillic.
 // ===========================================================================
 describe('R13-12 player copy', () => {
+  // ⚠ W4 WIDENED THE SWEEP, and found two violations of its own writing while doing it. The list was
+  // App / This-week / Home / Tour, so the two surfaces this slice's items are ABOUT - the story card
+  // itself and the vacation booking sheet - were never checked, and a comment quoting the owner in
+  // Russian went into each of their templates before this pin caught it. The rule is unchanged and no
+  // assertion is relaxed; it simply now reads every template the touched items render through.
   it('no long dash, no Cyrillic in the rendered copy of the touched surfaces', () => {
-    for (const src of [app, weekScreen, home, tour]) {
+    const card = read('../src/components/WeekRecapCard.vue')
+    const sheet = read('../src/components/PlanWeekSheet.vue')
+    for (const src of [app, weekScreen, home, tour, card, sheet]) {
     // ⚠ RE-AIMED by U0 – the EXTRACTION, not the assertion. `slice(indexOf('<template>'))` ran to
     // the end of the FILE, which was the whole template only while these SFCs had no <style> block.
     // U0 gave Home and Season one, and CSS comments in this codebase quote the owner in Russian by

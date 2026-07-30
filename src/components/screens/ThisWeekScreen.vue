@@ -41,6 +41,7 @@ import { weekDateLine, weekLabel } from '../../shared/dates'
 import { KID_ID, flipScore } from '../../engine/world'
 import { recapExists } from '../../composables/weekRecap'
 import WeekRecapCard from '../WeekRecapCard.vue'
+import PrimaryPill from '../ui/PrimaryPill.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 
 // W1: THE × IS A CLOSE NOW. The story opens itself when a week resolves (App.vue's `week` watcher –
@@ -60,10 +61,14 @@ const week = computed(() => game.snapshot?.week ?? 0)
 const dateLine = computed(() => weekDateLine(week.value))
 
 // --- Round 5 item 9 / R9-18 – the week-recap card. THE RULE (owner: it appeared
-// "sometimes"): the card shows after EVERY resolved non-tournament week – including
-// multi-week advances, where it recaps the LATEST resolved week – and never after a
-// tournament week (the flow's own cards cover that one) or while a reveal is pending.
-// Week 0 (career start) has nothing to recap. A dismissal silences exactly one week.
+// "sometimes"): the card shows after EVERY RESOLVED week – including multi-week
+// advances, where it recaps the LATEST resolved week – and never while a reveal is
+// pending. Week 0 (career start) has nothing to recap. A dismissal silences one week.
+// ⚠ W4 WIDENED IT BY DELETING A CLAUSE: "and never after a tournament week" is gone. That week is
+// the one the owner most wanted the story of («сразу после турнира, как будто домой едем»), and the
+// only reason it had none was that two full-screen takeovers wanted the same tick. `pending` already
+// says which of them owns the week, so the story simply waits for the flow to let go – see
+// composables/weekRecap.ts for the whole argument and App.vue for the door.
 // R13-12: the EXISTENCE half of the rule moved to composables/weekRecap.ts – the App shell's
 // This-week tab dot reads the same predicate, so the card and the dot cannot disagree.
 // U2: the DISMISSAL is unchanged in every respect except which element carries it. It used to be a
@@ -75,6 +80,26 @@ const showRecap = computed(
     recapExists(game.snapshot) &&
     dismissedRecapKey.value !== `${game.snapshot.careerId}:${week.value}`,
 )
+// W4 – THE STORY'S WAY OUT, AT THE BOTTOM (owner, 30.07: «внизу на week recap давай добавим кнопку
+// Proceed посередине, как на home, она прямо просится туда»).
+//
+// The shape is Home's: the export's CTA pill, floating, centred, one thumb's reach off the tab bar.
+// He is right that it asks to be there – the story is a PAGE now, it opens itself at the end of every
+// week, and the only way off it was a 20px × in the header, which on a phone is at the far end of a
+// scroll the player has just finished making.
+//
+// ⚠ WHAT IT DOES NOT DO, and the label says so out loud. ADVANCING THE WEEK IS IRREVERSIBLE and lives
+// on Home only – that is the wave-2 rule App.vue's own bar is split by, and the reason this screen is
+// pinned as carrying no advance control (tests/round13-nav.test.ts). A bare "Proceed" on a page whose
+// subject is a week that just ended reads exactly like "play the next one", and a stray tap would
+// spend the one thing in this game that cannot be given back. So it is named for WHERE IT GOES, which
+// is the idiom the match screens were settled on 30.07 (one exit per screen, named for its
+// destination), and where it goes is Home – the design's own «× возвращает на Home», and the screen
+// that does carry the advance.
+//
+// ONE HANDLER, TWO CONTROLS: it is `dismissRecap`, byte for byte the ×. Same key, same one week
+// silenced, same navigation. Two objects that mean different things by the same gesture is how this
+// screen got its "it appears sometimes" bug in the first place.
 function dismissRecap(): void {
   if (game.snapshot) dismissedRecapKey.value = `${game.snapshot.careerId}:${week.value}`
   emit('close')
@@ -131,7 +156,7 @@ const spendRange = computed<[number, number]>(() => {
 </script>
 
 <template>
-  <ScreenShell v-if="game.snapshot" class="this-week">
+  <ScreenShell v-if="game.snapshot" class="this-week" :class="{ 'has-proceed': showRecap }">
     <!-- D's header: the week, centred, with the story's close on the right. The left spacer is what
          centres the line against the × – the design's own three-slot row. -->
     <template #header>
@@ -193,6 +218,14 @@ const spendRange = computed<[number, number]>(() => {
         <span class="negative num">${{ spendRange[0] }}–${{ spendRange[1] }}</span>
       </div>
     </section>
+
+    <!-- The story's way off the page (owner, 30.07). Floating and centred, the same CTA pill Home's
+         week button is - and named for where it goes, because it does NOT spend a week. -->
+    <template v-if="showRecap" #footer>
+      <div class="week-proceed">
+        <PrimaryPill variant="cta" class="week-proceed-btn" @click="dismissRecap">Proceed to Home</PrimaryPill>
+      </div>
+    </template>
   </ScreenShell>
 </template>
 
@@ -240,5 +273,44 @@ const spendRange = computed<[number, number]>(() => {
 
 .week-close:hover {
   color: var(--text);
+}
+
+/* THE PROCEED BAR (owner, 30.07: «как на home»). Home's floating advance button lives in
+   src/style.css, and this is its geometry, deliberately re-stated rather than shared:
+     - the CLASS may not be reused, and this file may not even NAME it. That class is the ADVANCE
+       bar; "no tab screen carries an advance control of its own" is a pinned rule
+       (tests/round13-nav.test.ts) which reads this file for the literal string, and it is right to -
+       two controls that look alike and cost wildly different things must not answer to one name.
+     - the SHAPE is shared, and properly: the pill itself is `PrimaryPill variant="cta"`, which IS
+       the export's CTA (U0 #7) and is the same object Home's button renders by hand. So the two
+       cannot drift in appearance while staying honestly different in meaning.
+   `pointer-events` follows Home's pattern: the strip is transparent to taps so the story scrolls
+   under it, and only the pill takes the press. */
+.week-proceed {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 58px;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  justify-content: center;
+  padding: 0 16px;
+  pointer-events: none;
+  z-index: 39;
+}
+
+.week-proceed-btn {
+  pointer-events: auto;
+  min-width: 206px;
+  max-width: 100%;
+}
+
+/* ...and the page has to end above it. The App shell reserves 96px under the content on every tab
+   that is not Home, which is 7px short of this pill's own footprint (58px of clearance plus its own
+   height) - so the goal scrap's last line sat under the button at 375. This is the difference, paid
+   only on the weeks the button exists. */
+.this-week.has-proceed {
+  padding-bottom: 62px;
 }
 </style>

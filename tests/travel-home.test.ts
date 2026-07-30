@@ -9,15 +9,25 @@
 // over a set that grew. The new suites start at "ui/travel-set" and pin the mood rule and the note's
 // own honesty.
 //
+// ⚠ AND W4 MOVED WHICH WEEK IT LANDS ON (owner, 30.07: «ставить week recap сразу после турнира, как
+// будто домой едем»). Every `week: N + 1` fixture below is `week: N` now, and one whole claim – "a
+// second tournament this week outranks the journey back" – is deleted rather than re-aimed, because
+// the clause it guarded is deleted. The re-aim is explained on each suite; the short version is that
+// claim 1 below was TRUE ONLY BECAUSE the Weekly Story refused to render on a tournament week, and it
+// does not refuse any more. NOTHING WAS WEAKENED: claim 1's own integration test – a real career, a
+// real away trip, and `recapExists` actually true on the week that carries the scene – is untouched,
+// still the test this feature lives or dies by, and it passes against the tournament week.
+//
 // Four paintings of her asleep on the way back – airport / plane / bus / car – and one engine fact
 // that says which, `DiaryFacts.travelHomeScene`. This suite pins the three things that could each
 // silently make the feature wrong or invisible:
 //
-//   1. THE WEEK. A week with a `tournament` event has no recap at all (composables/weekRecap.ts),
-//      so a scene set on the tournament week is a fact no surface can ever render. It lands on the
-//      week AFTER – which is also what «после выездов» says. The integration test at the bottom is
-//      the one that matters: a real career, a real away tournament, and the scene on a week where
-//      `recapExists` is actually true.
+//   1. THE WEEK. A scene on a week the Weekly Story cannot render is a fact nobody ever sees. It
+//      lands on the week she PLAYED, which is the week she drove back and the week whose story now
+//      opens the moment the tournament flow lets go of it – and «после выездов» is after the trip,
+//      i.e. the Sunday of the same week. The integration test at the bottom is the one that matters:
+//      a real career, a real away tournament, and the scene on a week where `recapExists` is
+//      actually true.
 //   2. THE RULE. On the Weekly Story this scene REPLACES the week's painting, so a false positive
 //      swaps correct art for wrong art. A career that never leaves town must never see one.
 //   3. THE DRAW. Deterministic, on a purpose-scoped sub-stream – same seed, same week, same scene,
@@ -88,57 +98,72 @@ function trip(week: number, tier: TierId): WorldEvent[] {
 }
 
 describe('R14-2 — what counts as coming home from an away trip', () => {
-  it('lands on the week AFTER the tournament, never on the tournament week itself', () => {
-    // This is the whole feature: the Weekly Story does not render on a tournament week, so a scene
-    // set there would be invisible. It is also the truer reading of «после выездов».
+  // ⚠ RE-AIMED BY W4, AND THE TITLE IS THE INVERSION. This test read "lands on the week AFTER the
+  // tournament, NEVER on the tournament week itself", and its own body said why: «the Weekly Story
+  // does not render on a tournament week, so a scene set there would be invisible». That premise is
+  // gone (composables/weekRecap.ts – the story opens when the flow lets go of the week), so the
+  // offset it forced goes with it. THE PROTECTED FACT IS UNCHANGED: the scene lands on ONE week, that
+  // week is a week the Weekly Story really renders, and it is over by the next one. The integration
+  // test further down proves the middle claim against a live career and is untouched.
+  it('lands on the tournament week itself – the week she played and drove home', () => {
     const events = trip(10, 'regional')
-    expect(travelHomeSceneFor({ events, week: 10, seed: 's' }), 'the tournament week must be null').toBeNull()
-    expect(travelHomeSceneFor({ events, week: 11, seed: 's' }), 'the week she gets home must have one').not.toBeNull()
-    // ...and it is over by the week after that
-    expect(travelHomeSceneFor({ events, week: 12, seed: 's' })).toBeNull()
+    expect(travelHomeSceneFor({ events, week: 10, seed: 's' }), 'the week she drove home must have one').not.toBeNull()
+    // ...and it is exactly one week: the week before she left, and the week after she is back
+    expect(travelHomeSceneFor({ events, week: 9, seed: 's' })).toBeNull()
+    expect(travelHomeSceneFor({ events, week: 11, seed: 's' }), 'the week AFTER is an ordinary week now').toBeNull()
   })
 
   it('a Local Open is not a trip – the club down the road never sends her home asleep', () => {
-    expect(travelHomeSceneFor({ events: trip(10, 'local'), week: 11, seed: 's' })).toBeNull()
+    expect(travelHomeSceneFor({ events: trip(10, 'local'), week: 10, seed: 's' })).toBeNull()
     // ...and every rung above it is
     for (const tier of TIER_LADDER.filter((t) => t !== 'local')) {
-      expect(travelHomeSceneFor({ events: trip(10, tier), week: 11, seed: 's' }), tier).not.toBeNull()
+      expect(travelHomeSceneFor({ events: trip(10, tier), week: 10, seed: 's' }), tier).not.toBeNull()
     }
   })
 
   it('needs BOTH halves of the journey: she played there, and the family paid to get her there', () => {
     // an entry with no match is a walkover / a medical withdrawal – there was no trip
-    expect(travelHomeSceneFor({ events: [travelAt(10)], week: 11, seed: 's' })).toBeNull()
+    expect(travelHomeSceneFor({ events: [travelAt(10)], week: 10, seed: 's' })).toBeNull()
     // a skipped tournament refunds its travel in the same week and nets to 0 – she never boarded
     const refunded = [...trip(10, 'j30'), travelAt(10, +400_00)]
-    expect(travelHomeSceneFor({ events: refunded, week: 11, seed: 's' })).toBeNull()
+    expect(travelHomeSceneFor({ events: refunded, week: 10, seed: 's' })).toBeNull()
     // a practice friendly is not a trip and not a result (R11-2)
     const friendly: WorldEvent[] = [travelAt(10), { ...matchAt(10, 'regional'), friendly: true }]
-    expect(travelHomeSceneFor({ events: friendly, week: 11, seed: 's' })).toBeNull()
+    expect(travelHomeSceneFor({ events: friendly, week: 10, seed: 's' })).toBeNull()
   })
 
-  it('a SECOND tournament this week outranks the journey back – and that is what makes it visible', () => {
-    // Back-to-back tournament weeks are ordinary (j30 runs every 2 weeks). On one of them the
-    // week's story is the second tournament, not the car; and a week with a tournament has no
-    // Weekly Story at all, so a scene there could never be rendered. Both readings agree.
-    const backToBack = [...trip(10, 'j30'), ...trip(11, 'j30')]
-    expect(travelHomeSceneFor({ events: backToBack, week: 11, seed: 's' })).toBeNull()
-    // ...and the week after the SECOND one does show it
-    expect(travelHomeSceneFor({ events: backToBack, week: 12, seed: 's' })).not.toBeNull()
-    // a reveal still in flight this week is the same situation before its summary event exists
-    expect(
-      travelHomeSceneFor({ events: trip(10, 'j30'), week: 11, seed: 's', pendingUnfinished: true }),
-    ).toBeNull()
-    // and a tournament SUMMARY alone (no match events yet revealed) blocks it too
+  // ⚠ THE CLAIM THIS REPLACES IS DELETED, NOT RE-AIMED, and it is the only deletion in this file.
+  // It was "a SECOND tournament this week outranks the journey back", i.e. no scene on a week that
+  // itself holds a tournament – and the clause it guarded existed for one stated reason: «it is
+  // `recapExists`'s own tournament test ... so a scene can never land on a week that has no Weekly
+  // Story to put it on». Every tournament week has one now, so the clause is a contradiction rather
+  // than a mirror, and back-to-back tournament weeks each tell their own week: two trips, two drives
+  // home, two stories. What that suite ALSO pinned and what is kept below, because neither depended
+  // on the deleted clause: a reveal in flight is not a finished week, and a bare tournament SUMMARY
+  // with no revealed match of hers is not a trip she played.
+  it('a reveal in flight is not a journey home yet, and a summary alone is not a trip', () => {
+    const played = trip(10, 'j30')
+    expect(travelHomeSceneFor({ events: played, week: 10, seed: 's' })).not.toBeNull()
+    // her run is still being played out on screen – nobody is in a car
+    expect(travelHomeSceneFor({ events: played, week: 10, seed: 's', pendingUnfinished: true })).toBeNull()
+    // a summary with no revealed match of hers: a walkover, a withdrawal – she did not play there
     const summaryOnly: WorldEvent[] = [
-      ...trip(10, 'national'),
+      travelAt(11),
       { id: 900, week: 11, type: 'tournament', text: 'National Series (R16)', finishIdx: 3 },
     ]
     expect(travelHomeSceneFor({ events: summaryOnly, week: 11, seed: 's' })).toBeNull()
+    // ...and back-to-back tournament weeks now each carry their own drive home
+    const backToBack = [...trip(10, 'j30'), ...trip(11, 'j30')]
+    expect(travelHomeSceneFor({ events: backToBack, week: 10, seed: 's' })).not.toBeNull()
+    expect(travelHomeSceneFor({ events: backToBack, week: 11, seed: 's' })).not.toBeNull()
   })
 
-  it('week 0 has no week before it', () => {
-    expect(travelHomeSceneFor({ events: trip(-1, 'j30'), week: 0, seed: 's' })).toBeNull()
+  // ⚠ RE-AIMED: the old title was "week 0 has no week before it", which was about the `week - 1`
+  // offset. There is no offset now, so the fact worth pinning is the one that actually matters and
+  // always did – a career START has no story to hang a picture on (`recapExists` refuses week 0), so
+  // the rule must refuse it too even if the ledger somehow held a trip there.
+  it('week 0 is the career start – no story, so no picture', () => {
+    expect(travelHomeSceneFor({ events: trip(0, 'j30'), week: 0, seed: 's' })).toBeNull()
   })
 })
 
@@ -152,7 +177,8 @@ describe('R14-2 — which of the four, and why it is not uniform', () => {
       const bucket = tier.startsWith('j') ? 'itf' : 'domestic'
       const want = bucket === 'itf' ? AIR : ROAD
       for (let w = 1; w < 120; w++) {
-        const scene = travelHomeSceneFor({ events: trip(w - 1, tier), week: w, seed: `seed-${tier}` })
+        // ⚠ W4: the trip and the picture are the SAME week now – `trip(w)` where this read `trip(w-1)`.
+        const scene = travelHomeSceneFor({ events: trip(w, tier), week: w, seed: `seed-${tier}` })
         expect(scene, `${tier} w${w}`).not.toBeNull()
         expect(want, `${tier} came home by the wrong mode: ${scene}`).toContain(scene!)
         seen[bucket].add(scene!)
@@ -165,13 +191,14 @@ describe('R14-2 — which of the four, and why it is not uniform', () => {
 
   it('DETERMINISTIC: the same seed and week give the same scene, twice and forever', () => {
     const events = trip(30, 'j60')
-    const first = travelHomeSceneFor({ events, week: 31, seed: 'career-a' })
+    const first = travelHomeSceneFor({ events, week: 30, seed: 'career-a' })
+    expect(first, 'the fixture has to actually produce a scene').not.toBeNull()
     for (let i = 0; i < 50; i++) {
-      expect(travelHomeSceneFor({ events, week: 31, seed: 'career-a' })).toBe(first)
+      expect(travelHomeSceneFor({ events, week: 30, seed: 'career-a' })).toBe(first)
     }
     // a different seed or a different week may differ – that is what makes it a draw at all
     const bySeed = new Set(
-      Array.from({ length: 40 }, (_, i) => travelHomeSceneFor({ events, week: 31, seed: `career-${i}` })),
+      Array.from({ length: 40 }, (_, i) => travelHomeSceneFor({ events, week: 30, seed: `career-${i}` })),
     )
     expect(bySeed.size).toBeGreaterThan(1)
   })
@@ -179,9 +206,14 @@ describe('R14-2 — which of the four, and why it is not uniform', () => {
   it('the draw does not depend on the events object, only on (seed, week) and the bucket', () => {
     // Two different J300 trips in the same week of the same career answer the same picture, so a
     // re-render or a reload cannot shuffle it.
+    // ⚠ W4: `week: 20` where this read `week: 21`. On the old offset this pair was `null === null` the
+    // moment the offset moved, i.e. the test would have gone on passing while asserting nothing – so
+    // the non-null assertion below is new, and is what makes the equality mean something.
     const a = [travelAt(20, -1600_00), matchAt(20, 'j300')]
     const b = [travelAt(20, -3200_00), matchAt(20, 'j300'), matchAt(20, 'j300')]
-    expect(travelHomeSceneFor({ events: a, week: 21, seed: 's' })).toBe(travelHomeSceneFor({ events: b, week: 21, seed: 's' }))
+    const scene = travelHomeSceneFor({ events: a, week: 20, seed: 's' })
+    expect(scene).not.toBeNull()
+    expect(travelHomeSceneFor({ events: b, week: 20, seed: 's' })).toBe(scene)
   })
 })
 
@@ -208,11 +240,13 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     ...over,
   })
 
+  // ⚠ W4: the fixture's trip is in week 11, the view's own week, where it used to be in week 10. The
+  // claim is unchanged – the facts object carries the scene on a come-home week and null otherwise.
   it('the facts carry it, and an ordinary week carries null', () => {
-    expect(assembleDiaryFacts(view({ events: trip(10, 'national') })).travelHomeScene).not.toBeNull()
+    expect(assembleDiaryFacts(view({ events: trip(11, 'national') })).travelHomeScene).not.toBeNull()
     expect(assembleDiaryFacts(view({})).travelHomeScene).toBeNull()
     // still field-for-field deterministic, which the draw could have broken
-    const v = view({ events: trip(10, 'j30') })
+    const v = view({ events: trip(11, 'j30') })
     expect(assembleDiaryFacts(v)).toEqual(assembleDiaryFacts(v))
   })
 
@@ -413,8 +447,11 @@ function* sweepTravel(): Generator<TravelHomeFacts> {
               for (const injuryWeeks of injured ? [1, 3, 4, 6, 12] : [0])
               for (const firstAbroad of abroad ? [true, false] : [false]) {
                 yield {
+                  // ⚠ W4 deleted `awayWeek` from TravelHomeFacts: it was documented as "always
+                  // `week - 1`" and is now always `week`, so keeping the field would be a name that
+                  // lies to the next reader. The sweep is over the same licence space either way –
+                  // no note in the pool ever read the week number.
                   week: 20,
-                  awayWeek: 19,
                   scene,
                   mood,
                   tier: abroad ? 'j30' : 'regional',
@@ -507,7 +544,7 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
       trainPct: 75, ...over,   // ⚠ W2: the plan, unread here
     })
-    const away = assembleDiaryFacts(view({ events: trip(10, 'national') }))
+    const away = assembleDiaryFacts(view({ events: trip(11, 'national') })) // ⚠ W4: the view's own week
     expect(away.travelHomeScene).not.toBeNull()
     expect(away.travelHomeMood).not.toBeNull()
     const ordinary = assembleDiaryFacts(view({}))
@@ -748,7 +785,8 @@ describe('ui/travel-set — on a real career', () => {
   it('buildDiarySnapshot is field-for-field deterministic with the journey on it', () => {
     const view: DiaryWorldView = {
       seed: 's', week: 11, kidId: KID_ID, startAgeYears: 14, condition: 30, fundsCents: 100_000_00,
-      injury: null, events: trip(10, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
+      // ⚠ W4: the trip is in the view's OWN week now (11), not the one before it.
+      injury: null, events: trip(11, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
       trainPct: 75,   // ⚠ W2: the plan, unread here
     }
