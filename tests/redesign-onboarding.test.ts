@@ -13,6 +13,7 @@
 import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { onboardingHeroUrl } from '../src/art/preload'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 
@@ -312,15 +313,35 @@ describe('S: the summary shows what the six steps collected', () => {
     expect(start.fs).toBeGreaterThan(next.fs)
   })
 
-  it('shows the portrait the owner settled on – jun-norm, "первый раз входит в клуб"', () => {
+  // ⚠ RE-AIMED: THE STAND-IN IS GONE. This used to assert `const HERO_ART = SUMMARY_ART`, i.e. that
+  // N and S drew the SAME file. The owner's square master for N has landed («картинка для первого
+  // экрана создания персонажа у нас есть, надо поменять»), so that equality is exactly the thing
+  // that had to change and asserting it would now pin the bug.
+  //
+  // NOTHING THIS TEST WAS PROTECTING HAS MOVED, and all three protected facts are still asserted
+  // below, one for one:
+  //   1. S still draws `jun-norm` – the owner SETTLED that one («первый раз входит в клуб») and it
+  //      was never in question. Same literal, same file on disk.
+  //   2. The hero is still ONE named constant with ONE call site in the template, which is what
+  //      "swapping it is a one-line change" meant and the only reason this line was ever pinned.
+  //   3. Both files really ship. The old test proved that for one path; there are two now, so it is
+  //      proved for both - and the hero's URL is checked through the BUILDER rather than as a
+  //      hand-written string, so it cannot drift into a 404 the way `-fs8` once did.
+  it('draws the settled portrait on S and the owner\'s own master on N – two files, one line each', () => {
     expect(wizard).toContain("portraitUrl('jun', 'norm')")
     expect(
       existsSync(new URL('../public/images/fem-euro-brunnet/fem-euro-brunnet-jun-norm.webp', import.meta.url)),
     ).toBe(true)
-    // The hero on N is the same file only until the owner's new square master lands, and swapping
-    // it is one line. This pins that it IS one line – a single named constant, not six call sites.
-    expect(wizard).toContain('const HERO_ART = SUMMARY_ART')
+
+    expect(wizard).toContain('const HERO_ART = onboardingHeroUrl()')
     expect(template.match(/HERO_ART/g)).toHaveLength(1)
+    // The builder's own output, resolved against public/ - so the file the app requests is the file
+    // the pipeline produced, and neither can be renamed without this failing.
+    const hero = onboardingHeroUrl().replace(/^\/+/, '')
+    expect(hero).toContain('welcome-1.webp')
+    expect(existsSync(new URL(`../public/${hero}`, import.meta.url)), `missing hero art ${hero}`).toBe(true)
+    // ...and the master itself never shipped: only the webp is committed under public/.
+    expect(existsSync(new URL('../public/images/fem-euro-brunnet-jpeg', import.meta.url))).toBe(false)
   })
 })
 

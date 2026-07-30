@@ -65,9 +65,9 @@ Practice → F. Only Stats genuinely needs a designer, and not yet.
 - **Reusable components 1–31** (`README.md` §"Переиспользуемые компоненты"). We have built several of
   them ad hoc, twice, inside Home and Season. Extracting the first eight before building six more
   screens is the single highest-leverage step in this wave.
-- **Art slots** (`README.md` §Assets) — solved from stock, see §4 Q4. **One** slot is genuinely
-  outstanding: the four play-style poses on screen R. The onboarding hero is getting a new square
-  master but has a correct stand-in in the meantime.
+- **Art slots** (`README.md` §Assets) — solved from stock, see §4 Q4. The four play-style poses on
+  screen R arrived 29.07 and the onboarding hero is wired as of 30.07, so **no slot is outstanding**
+  except the five vacation pictures Q4's last row asks for.
 - **A coach market** — the engine has `coachSetup: 'parent' | 'hired'`, a boolean. T needs tiers,
   prices, style fit and a weekly budget. That is an engine slice, and it is the same one the owner
   named as the fix for "middle family + hired coach goes bankrupt in 120 careers of 120".
@@ -99,7 +99,7 @@ coach-tier engine slice.
 | the five coach portraits | **already in `public/images/coaches/` — 16 of them**, wired since wave 2 |
 | champion / runner-up moment photos | we have them; use those |
 | summary portrait (S) | **settled: it is `jun-norm`** — the junior neutral portrait we already ship (`fem-euro-brunnet-jun-norm.webp`). Owner: «первый раз входит в клуб», nothing to draw |
-| onboarding hero (N) | the owner is finishing a new square one. Until it arrives, `jun-norm` again |
+| onboarding hero (N) | **✅ landed 30.07: `welcome-1.webp`** — the owner's own square master (parent and daughter on a floodlit court at dusk), the scene the handoff describes for N. History, because the two dates are the point: the webp was committed 29.07 (02a63af) and screen N went on drawing the `jun-norm` stand-in for another day, which is what the owner's playtest caught — «картинка для первого экрана создания персонажа у нас есть, надо поменять». The swap cost exactly what this row promised: `HERO_ART = onboardingHeroUrl()`, one constant, one call site. It is NOT band-scoped and so has its own url builder next to `travelHomeUrl` rather than going through `portraitUrl` — one picture serves every career, because nobody has an age yet on screen N. `tests/redesign-onboarding.test.ts` resolves the builder's output against `public/` and asserts the master never shipped |
 | four play-style poses (R) | **arrived 29.07** as SVG: `public/icons/styles/{aggressive,counterpuncher,serve-first,all-court}.svg`, 100×100 viewBox — **the filenames ARE the four `playStyle` ids**, which is what this line originally claimed and, since 29.07, is finally true. History, because the correction that stood here mattered: the art shipped named half for the style and half for the id (`baseliner` for `aggressive`, `bigserve` for `serve-first`), U5 found it and spelled a mapping out in `PLAY_STYLES`, and the owner then ruled «переименуй если нужно» — so the two **files** were renamed and the mapping was deleted. The rename could only go that way: `PlayStyle` is persisted inside `PlayerProfile`, so renaming the union would need a save migration, while a file in `public/` is free. `OnboardingWizard.vue` now derives both the SVG (`icons/styles/<id>.svg`) and the colour (`var(--style-<id>)`) from the id, and `tests/redesign-onboarding.test.ts` reads the union out of `protocol.ts` and asserts each id has art on disk and a token on `:root` — so it cannot drift back into a 404 |
 | trip photo (G) | maybe remade later for every age; not blocking |
 | vacation art, one per package (Season feed + the planner's picker) | **requested 29.07, not yet landed.** Five needed, by package id: `staycation`, `grandma`, `camping`, `seaside`, `resort` |
