@@ -13,6 +13,7 @@ import { computed, ref } from 'vue'
 import MatchViewer from './MatchViewer.vue'
 import MatchScene from './MatchScene.vue'
 import SurfaceMark from './ui/SurfaceMark.vue'
+import TakeoverShell from './ui/TakeoverShell.vue'
 import { useKidEmotion } from '../composables/kidEmotion'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
@@ -109,15 +110,18 @@ function close(): void {
 </script>
 
 <template>
-  <div class="tournament-flow">
-    <header class="tf-top">
-      <div>
-        <div class="tf-title">Practice match</div>
-        <div class="tf-sub">
-          <SurfaceMark :surface="match.surface" size="sm" />
-          <span class="hint tf-week-dates">{{ weekLabel(week) }} · {{ weekDates }}</span>
-        </div>
-      </div>
+  <!-- ⚠ THE TAKEOVER IS A COMPONENT NOW (owner, 30.07: «надо все одинаково сделать оверлеем поверх
+       всего экрана ... Будет один компонент и без ненужных дублей кода»). The layer, the header and
+       the scroller were written out by hand here, in TournamentFlow and in MatchReplay, and the
+       fourth match surface - SeasonScreen's sandbox - did NOT have them, which is how it ended up
+       with its control bar under the tab bar. Same classes, same layout, one author: see
+       `ui/TakeoverShell.vue`. -->
+  <TakeoverShell title="Practice match">
+    <template #sub>
+      <SurfaceMark :surface="match.surface" size="sm" />
+      <span class="hint tf-week-dates">{{ weekLabel(week) }} · {{ weekDates }}</span>
+    </template>
+    <template #exit>
       <!-- ⚠ THE HEADER'S ONE SLOT, AND IT USED TO SAY "Close ✕" ON ALL THREE PHASES (owner, 30.07:
            «what this close stands for? does it skip the game or what? maybe it's redundant?» and
            «let's put To results instead of Close»). What it DID: dismiss the whole friendly and
@@ -128,100 +132,107 @@ function close(): void {
            useful thing, and on the box score itself it carries nothing at all: "Done" below is
            already the way out, and two exits on one screen is what he was asking about. -->
       <button v-if="phase !== 'post'" class="link" @click="toResult">To result →</button>
-    </header>
+    </template>
 
-    <div class="tf-body">
-      <!-- The VS card: the friendly is about to be played, exactly like a tournament round – which
-           is why it is the same F scene, with the club's own label on it. -->
-      <MatchScene v-if="phase === 'pre'" class="pf-scene" :stage="kidStage" emotion="serious" label="Friendly at the club">
-        <div class="pf-grid">
-          <div class="pf-side">
-            <div class="pf-name">{{ kidShort }}</div>
-            <div v-if="kidRank" class="pf-rank">#{{ kidRank }}</div>
-          </div>
-          <div class="pf-vs">vs</div>
-          <div class="pf-side mirrored">
-            <div class="pf-name">{{ oppShort }}</div>
-            <div class="pf-rank">sparring partner</div>
-          </div>
+    <!-- The VS card: the friendly is about to be played, exactly like a tournament round – which
+         is why it is the same F scene, with the club's own label on it. -->
+    <MatchScene v-if="phase === 'pre'" class="pf-scene" :stage="kidStage" emotion="serious" label="Friendly at the club">
+      <div class="pf-grid">
+        <div class="pf-side">
+          <div class="pf-name">{{ kidShort }}</div>
+          <div v-if="kidRank" class="pf-rank">#{{ kidRank }}</div>
         </div>
-        <div class="controls pf-chips">
-          <span class="pill">No ranking points</span>
+        <div class="pf-vs">vs</div>
+        <div class="pf-side mirrored">
+          <div class="pf-name">{{ oppShort }}</div>
+          <div class="pf-rank">sparring partner</div>
         </div>
-        <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
-             кнопки skip/watch it так логичнее» - and "watch it" is this screen's own label). The
-             affirmative goes under the thumb, at the right-hand end, which is where every other action
-             row in the app already puts it: the box score below, the tournament's pre-match card, and
-             the sheet's `.dialog-actions`. Order only - same handlers, same `.primary`, same
-             `.sfx-watch`. -->
-        <div class="tf-actions">
-          <button @click="toResult">Skip to result</button>
-          <button class="primary sfx-watch" @click="watchIt">Watch it</button>
-        </div>
-      </MatchScene>
+      </div>
+      <div class="controls pf-chips">
+        <span class="pill">No ranking points</span>
+      </div>
+      <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
+           кнопки skip/watch it так логичнее» - and "watch it" is this screen's own label). The
+           affirmative goes under the thumb, at the right-hand end, which is where every other action
+           row in the app already puts it: the box score below, the tournament's pre-match card, and
+           the sheet's `.dialog-actions`. Order only - same handlers, same `.primary`, same
+           `.sfx-watch`. -->
+      <div class="tf-actions">
+        <button @click="toResult">Skip to result</button>
+        <button class="primary sfx-watch" @click="watchIt">Watch it</button>
+      </div>
+    </MatchScene>
 
-      <!-- Live: the same viewer a tournament round uses, autoplaying from the first point.
-           ⚠ THE HEAD ROW IS GONE, AND IT COST 34px (owner, 30.07: «let's remove practice match sign
-           nearby a court since we already have one on top of the screen as a header»). It held two
-           things and both were answered elsewhere: a `.tf-replay-round` pill reading "Practice
-           match", which the header above says already, and "To result →", which is now the header's
-           own slot. So the row had nothing left of its own to carry, and the court starts 34px
-           higher (22px of pill + its 12px of air) on every friendly.
-           ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO (owner, 30.07: «на экране матча у нас двойная
-           рамка, она съедает место, давай внешний контур уберем, он не нужен»). The viewer already
-           draws its own panels - the court, the log and the box score are each a `Card` - so this was
-           a border around a border and 34px of padding around nothing. Measured at 375pt: 291 ->
-           327px of canvas, 244.4 -> 274.9px of painted court, and 32px of height back. See the same
-           note in TournamentFlow.vue; the `v-else-if` moved onto the component so the phase chain is
-           untouched and no wrapper is left to grow an edge again. -->
-      <MatchViewer
-        v-else-if="phase === 'live'"
-        :match="annotated"
-        :player-a="match.a"
-        :player-b="match.b"
-        :surface="match.surface"
-        :rank-a="viewerRankA"
-        :rank-b="viewerRankB"
-        mode="live"
-        @finish="toResult"
-      />
+    <!-- The same viewer a tournament round uses, autoplaying from the first point.
+         ⚠ THE HEAD ROW IS GONE, AND IT COST 34px (owner, 30.07: «let's remove practice match sign
+         nearby a court since we already have one on top of the screen as a header»). It held two
+         things and both were answered elsewhere: a `.tf-replay-round` pill reading "Practice
+         match", which the header above says already, and "To result →", which is now the header's
+         own slot. So the row had nothing left of its own to carry, and the court starts 34px
+         higher (22px of pill + its 12px of air) on every friendly.
+         ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO (owner, 30.07: «на экране матча у нас двойная
+         рамка, она съедает место, давай внешний контур уберем, он не нужен»). The viewer already
+         draws its own panels - the court, the log and the box score are each a `Card` - so this was
+         a border around a border and 34px of padding around nothing. Measured at 375pt: 291 ->
+         327px of canvas, 244.4 -> 274.9px of painted court, and 32px of height back. See the same
+         note in TournamentFlow.vue; the `v-else-if` moved onto the component so the phase chain is
+         untouched and no wrapper is left to grow an edge again.
+         ⚠ AND IT IS `mode="replay"` NOW, WHICH FIXES A LIE THIS FILE'S OWN CONTRACT ALREADY NAMED.
+         The header at the top of this file says it plainly: the ENGINE resolved this friendly during
+         the tick and stored the record, and watching "cannot change the result and draws no RNG the
+         engine hasn't already drawn". A blinking red "Live" over a match that is already in the save
+         file is the one claim this screen was making that its own comment contradicted. The phase is
+         still called 'live' - that is about where the player is in THIS flow, which is a different
+         question - and nothing else on the screen moves: the badge goes, and with it the shout,
+         because you cannot shout at a match that has already been played. The only genuinely live
+         surface in the app is SeasonScreen's sandbox exhibition, which is generated at click time. -->
+    <MatchViewer
+      v-else-if="phase === 'live'"
+      :match="annotated"
+      :player-a="match.a"
+      :player-b="match.b"
+      :surface="match.surface"
+      :rank-a="viewerRankA"
+      :rank-b="viewerRankB"
+      mode="replay"
+      @finish="toResult"
+    />
 
-      <!-- Box score: her result, with the honest "no ranking points" line. -->
-      <section v-else class="tf-card">
-        <div class="tf-result-head">
-          <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
-          <span class="tf-scoreline num">{{ kidScore }}</span>
-        </div>
-        <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }} · practice – no ranking points</p>
-        <table>
-          <thead>
-            <tr>
-              <th></th>
-              <th>
-                <span class="ph-name">{{ kidShort }}</span>
-                <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
-              </th>
-              <th>
-                <span class="ph-name">{{ oppShort }}</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in statRows" :key="row.label">
-              <th>{{ row.label }}</th>
-              <td class="num">{{ row.kid }}</td>
-              <td class="num">{{ row.opp }}</td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
-        <div class="tf-actions">
-          <button class="sfx-watch" @click="watchIt">Watch again</button>
-          <button class="primary" @click="close">Done</button>
-        </div>
-      </section>
-    </div>
-  </div>
+    <!-- Box score: her result, with the honest "no ranking points" line. -->
+    <section v-else class="tf-card">
+      <div class="tf-result-head">
+        <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
+        <span class="tf-scoreline num">{{ kidScore }}</span>
+      </div>
+      <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }} · practice – no ranking points</p>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>
+              <span class="ph-name">{{ kidShort }}</span>
+              <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
+            </th>
+            <th>
+              <span class="ph-name">{{ oppShort }}</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="row in statRows" :key="row.label">
+            <th>{{ row.label }}</th>
+            <td class="num">{{ row.kid }}</td>
+            <td class="num">{{ row.opp }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="hint">Avg rally {{ matchMeta.rally }} shots · ~{{ matchMeta.duration }}</p>
+      <div class="tf-actions">
+        <button class="sfx-watch" @click="watchIt">Watch again</button>
+        <button class="primary" @click="close">Done</button>
+      </div>
+    </section>
+  </TakeoverShell>
 </template>
 
 <style scoped>

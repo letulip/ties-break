@@ -27,6 +27,11 @@ import TierGuide from '../TierGuide.vue'
 // the component - the photograph card here and the notecard on Home were already two shared rules
 // in the sheet, so the variant records a split that existed rather than inventing one.
 import ScreenShell from '../ui/ScreenShell.vue'
+// THE TAKEOVER, AND IT IS THE OTHER HALF OF `ScreenShell` (owner, 30.07: «надо все одинаково сделать
+// оверлеем поверх всего экрана»). `ScreenShell` is the stack a TABBED screen gets; this is the stack a
+// screen that COVERS the tabs gets, and the sandbox exhibition below is the fourth and last place
+// MatchViewer is mounted. It was the one that did not have it - see the note at its call site.
+import TakeoverShell from '../ui/TakeoverShell.vue'
 import Card from '../ui/Card.vue'
 import IconButton from '../ui/IconButton.vue'
 import SurfaceMark from '../ui/SurfaceMark.vue'
@@ -713,6 +718,11 @@ function playExhibition(): void {
   const result = simulateMatch(exhibitionPlayerA.value, exhibitionPlayerB, opts)
   exhibitionMatch.value = annotateMatch(result, exhibitionPlayerA.value, exhibitionPlayerB, opts)
 }
+/** Dismiss the takeover. Nothing to commit: the hit-out costs nothing, decides nothing and is not
+ *  written anywhere, so leaving it is the whole of leaving it. */
+function closeExhibition(): void {
+  exhibitionMatch.value = null
+}
 </script>
 
 <template>
@@ -1135,8 +1145,40 @@ function playExhibition(): void {
       <div class="controls friendly-seed">
         <input v-model="exhibitionSeed" type="text" placeholder="seed (optional)" />
       </div>
+      <!-- ⚠ THE VIEWER USED TO BE RIGHT HERE, INLINE, and that was the fourth-place bug the owner
+           found on 30.07 - there is a fourth place the match viewer lives, and all four should open
+           the same way, as an overlay over the whole screen (his words are quoted at the
+           `TakeoverShell` import above; this template stays Latin-only, see tests/ladder.test.ts).
+           It is a takeover below now, with the other three overlays.
+           WHY IT WAS A BUG AND NOT A PREFERENCE, measured at 375x812: on a tabbed screen the
+           DOCUMENT is the scrollport (`main` and `.tb-screen-body` are both `overflow: visible`;
+           the document scrolled to 3054px here), so the viewer's `position: sticky; bottom: 0`
+           control bar pinned against the bottom of the VIEWPORT - where the app's `position: fixed`
+           tab bar lives, at y=760..812. With the box score on screen the bar sat at y=736.5..791.5
+           and 31.5 of its 55px were behind the bar; `elementFromPoint` at the bar's own bottom edge
+           returned `.tab-icon`, so the lower half of both segmented plates could not be tapped.
+           Inside a takeover the scrollport is `.tf-body` and the tab bar is covered, so the bar pins
+           against the bottom of the body with nothing in front of it. -->
+    </section>
+    </ScreenShell>
+
+    <!-- The overlays sit OUTSIDE the shell on purpose: each is a full-screen takeover with its own
+         backdrop, so it is not part of this screen's stack. -->
+    <!-- THE SANDBOX HIT-OUT, and it is the app's ONE genuinely live match. Every other surface
+         replays a record the engine had already resolved and stored during the tick; this one is
+         simulated at the moment the button is pressed, out of her current build, and is written
+         nowhere. So it is the only place `mode="live"` is true - the blinking badge, and the shout.
+         The exit is a cross for the same reason MatchReplay's is: this screen decides nothing and
+         there is no screen after it, so "out" is the only thing an exit could mean here. -->
+    <TakeoverShell v-if="exhibitionMatch" title="Friendly match">
+      <template #sub>
+        <SurfaceMark :surface="exhibitionSurface" size="sm" />
+        <span class="hint tf-week-dates">No points, no money – a hit-out</span>
+      </template>
+      <template #exit>
+        <IconButton icon="close" label="Close the friendly" title="Close" @click="closeExhibition" />
+      </template>
       <MatchViewer
-        v-if="exhibitionMatch"
         :match="exhibitionMatch"
         :player-a="exhibitionPlayerA"
         :player-b="exhibitionPlayerB"
@@ -1145,11 +1187,7 @@ function playExhibition(): void {
         :rank-b="null"
         mode="live"
       />
-    </section>
-    </ScreenShell>
-
-    <!-- The overlays sit OUTSIDE the shell on purpose: each is a full-screen takeover with its own
-         backdrop, so it is not part of this screen's stack. -->
+    </TakeoverShell>
     <PlanWeekSheet
       v-if="planSheet"
       :week="planSheet.week"
