@@ -2,7 +2,9 @@
 <!-- SPECTATORS, the tournament preview's fourth fact tile: the design's own three-figure mark, one
      face forward and two behind it. A FILLED glyph, not a stroked one - the only one of the four
      that is - which is why `fill` carries the colour here and `stroke` carries it in the other
-     three. Verbatim the paths TournamentFlow draws inline today. See back.svg for the grid. -->
+     three. Verbatim the paths TournamentFlow used to draw inline; adopted there 30.07 as
+     `<AppIcon name="spectators" :size="19" />`, and the inline copies are deleted, so these paths now
+     live here only. See back.svg for the grid. -->
 <g transform="scale(4.16667)">
 <circle cx="12" cy="7.4" r="2.8"/>
 <circle cx="5.8" cy="9.4" r="2.2"/>

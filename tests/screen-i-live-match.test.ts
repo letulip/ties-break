@@ -62,8 +62,21 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // Both affordances are gated on the same prop, in the template, so the replay cannot grow
     // either of them back by accident.
     expect(viewer).toMatch(/v-if="props\.mode === 'live' && !finished" class="mv-live"/)
-    expect(viewer).toMatch(/v-if="props\.mode === 'replay'"[\s\S]{0,120}Watch again/)
-    expect(viewer).toMatch(/v-else disabled title="Coming in Phase 6"/)
+    // ⚠ READ OFF `markupOf`, NOT THE RAW FILE, and only because of a comment. The gate moved from the
+    // pill onto its row when Shout left (a row that holds one button does not need a `v-else`), and the
+    // note explaining that sits between the two - more than the 120 characters this pattern allowed.
+    // Comments are not markup: stripping them is what every other 30.07 pin in this file already does.
+    expect(markupOf(viewer)).toMatch(/v-if="props\.mode === 'replay'"[\s\S]{0,120}Watch again/)
+    // ⚠ RE-AIMED 30.07, AND THE GATE GOT STRONGER RATHER THAN WEAKER. Shout used to be the `v-else`
+    // of the "Watch again" branch, so "the replay does not shout" was true only as a side effect of
+    // the two sharing one row. The owner moved it into the pinned bar («на экране live матча кнопку
+    // shout тоже надо оставить в sticky блоке»), which broke that pairing - so it now carries the
+    // condition ITSELF, and it is the same condition the Live badge above is pinned on. The protected
+    // fact is word for word §2's: the replay is the live match minus the blinking Live and minus
+    // shouting. What changed is that the two halves are now gated identically instead of one of them
+    // leaning on the other's markup.
+    expect(viewer).toMatch(/v-if="props\.mode === 'live' && !finished"[\s\S]{0,120}title="Coming in Phase 6"/)
+    expect(viewer).toContain('Shout 📣')
   })
 
   it('the controls are the app\'s segmented control, not two <select>s', () => {
@@ -206,16 +219,29 @@ describe('the pinned control bar can never reach the playing surface', () => {
     expect(stylesOf(viewer)).toContain('.mv-below {')
   })
 
-  it('pins the two SETTINGS and leaves the actions in the flow', () => {
-    // The line is deliberate: how-much and how-fast are what you reach for mid-rally. "Shout" is
-    // disabled until Phase 6 and "Watch again" only means anything once the match is over, so
-    // neither earns permanent screen.
+  it('pins everything you reach for mid-rally, and nothing you do not', () => {
+    // ⚠ RE-AIMED 30.07 (owner: «на экране live матча кнопку shout тоже надо оставить в sticky блоке»).
+    // The old line drew the boundary at SETTINGS-vs-ACTIONS and pinned Shout OUT of the bar on that
+    // basis. He looked at it and the category was the wrong one: the real test is whether you would
+    // reach for the control WHILE A POINT IS BEING PLAYED, which is why the speed and the view are
+    // pinned in the first place - and shouting at your kid is the most mid-rally thing on the screen.
+    // Left outside is exactly what fails that test: "Watch again" cannot be wanted before the match
+    // has finished, and it only exists in replay mode at all. So the protected fact is the same one,
+    // stated by the criterion that actually decided it, and the bar still is not a dumping ground.
     const markup = markupOf(viewer)
     const bar = markup.slice(markup.indexOf('class="mv-controls"'), markup.indexOf('class="mv-actions"'))
     expect(bar).toContain('viewSeg')
     expect(bar).toContain('speedSeg')
+    expect(bar).toContain('Shout')
     expect(bar).not.toContain('Watch again')
-    expect(bar).not.toContain('Shout')
+    // ...and it is ONE sticky block, not a bar with a loose row under it: the shout is a SECOND ROW
+    // of `.mv-controls` rather than a sibling that scrolls away on its own, which is the whole
+    // complaint. Pinned as a full-bar cell, because the flex version of this silently failed - a
+    // `max-width` clamp feeds the hypothetical main size, so all three controls shared one line and
+    // the two plates were squeezed to 109px. See the rule's own note for the measurement.
+    const styles = stylesOf(viewer)
+    expect(styles).toMatch(/\.mv-controls\s*\{[^}]*display:\s*grid/)
+    expect(styles).toMatch(/\.mv-shout\s*\{[^}]*grid-column:\s*1 \/ -1/)
   })
 
   it('the segmented labels fit the bar, so "Skip" cannot render as "Ski" again', () => {
@@ -326,7 +352,17 @@ describe('live and replay open the same way – the popup, which is the one he l
     expect(markup).not.toContain('class="replay-card"')
   })
 
-  it('all three match screens dress the viewer in the same box', () => {
+  // ⚠ RE-AIMED 30.07, and the protected fact is the one this test was named for: all three match
+  // screens open a match THE SAME WAY. What changed is what "the same way" is. It used to be "inside a
+  // `.tf-card`", and the owner has taken that box off: «на экране матча у нас двойная рамка, она
+  // съедает место, давай внешний контур уберем, он не нужен». It was a 16px-padded, hairline-bordered
+  // panel wrapped around a stack of panels the viewer already draws (`.mv-panel`, `.mv-log`,
+  // `.mv-boxscore` are each a `Card`), so it was a border around a border. Measured at 375pt before and
+  // after: the canvas went 291 -> 327px wide, the painted court 244.4 -> 274.9px, and each screen got
+  // 32px of height back. So the test now pins the ABSENCE as hard as it used to pin the presence -
+  // three screens agreeing on no frame is exactly as protective as three agreeing on one, and a
+  // re-added wrapper on one screen would be the drift.
+  it('all three match screens open the viewer the same way – straight into the takeover', () => {
     const flow = read('../src/components/TournamentFlow.vue')
     for (const [name, src] of [
       ['TournamentFlow', flow],
@@ -336,9 +372,18 @@ describe('live and replay open the same way – the popup, which is the one he l
       const markup = markupOf(src)
       const at = markup.indexOf('<MatchViewer')
       expect(at, `${name} mounts the viewer`).toBeGreaterThan(-1)
-      // the nearest wrapper above the viewer is the shared panel shell, in the takeover's scroller
-      expect(markup.slice(0, at), `${name} puts the viewer in a .tf-card`).toContain('class="tf-card"')
+      // it is in the takeover's own scroller...
+      expect(markup.slice(0, at), `${name} puts the viewer in the takeover's scroller`).toContain(
+        'class="tf-body"',
+      )
       expect(markup, `${name} is a takeover`).toContain('class="tournament-flow"')
+      // ...and no panel is its wrapper. Matched as "a `.tf-card` element whose first content is the
+      // viewer", which is precisely the markup that was deleted - and precisely what would come back.
+      // Deliberately NOT "the file contains no .tf-card": the tournament's draw, box score, spectate
+      // card and poster are all still panels, in other phase branches, and must stay ones.
+      expect(markup, `${name} wraps the viewer in a panel`).not.toMatch(
+        /class="tf-card[^"]*"[^>]*>\s*<MatchViewer/,
+      )
     }
   })
 

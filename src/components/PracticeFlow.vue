@@ -148,9 +148,15 @@ function close(): void {
         <div class="controls pf-chips">
           <span class="pill">No ranking points</span>
         </div>
+        <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
+             кнопки skip/watch it так логичнее» - and "watch it" is this screen's own label). The
+             affirmative goes under the thumb, at the right-hand end, which is where every other action
+             row in the app already puts it: the box score below, the tournament's pre-match card, and
+             the sheet's `.dialog-actions`. Order only - same handlers, same `.primary`, same
+             `.sfx-watch`. -->
         <div class="tf-actions">
-          <button class="primary sfx-watch" @click="watchIt">Watch it</button>
           <button @click="toResult">Skip to result</button>
+          <button class="primary sfx-watch" @click="watchIt">Watch it</button>
         </div>
       </MatchScene>
 
@@ -160,19 +166,25 @@ function close(): void {
            things and both were answered elsewhere: a `.tf-replay-round` pill reading "Practice
            match", which the header above says already, and "To result →", which is now the header's
            own slot. So the row had nothing left of its own to carry, and the court starts 34px
-           higher (22px of pill + its 12px of air) on every friendly. -->
-      <section v-else-if="phase === 'live'" class="tf-card">
-        <MatchViewer
-          :match="annotated"
-          :player-a="match.a"
-          :player-b="match.b"
-          :surface="match.surface"
-          :rank-a="viewerRankA"
-          :rank-b="viewerRankB"
-          mode="live"
-          @finish="toResult"
-        />
-      </section>
+           higher (22px of pill + its 12px of air) on every friendly.
+           ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO (owner, 30.07: «на экране матча у нас двойная
+           рамка, она съедает место, давай внешний контур уберем, он не нужен»). The viewer already
+           draws its own panels - the court, the log and the box score are each a `Card` - so this was
+           a border around a border and 34px of padding around nothing. Measured at 375pt: 291 ->
+           327px of canvas, 244.4 -> 274.9px of painted court, and 32px of height back. See the same
+           note in TournamentFlow.vue; the `v-else-if` moved onto the component so the phase chain is
+           untouched and no wrapper is left to grow an edge again. -->
+      <MatchViewer
+        v-else-if="phase === 'live'"
+        :match="annotated"
+        :player-a="match.a"
+        :player-b="match.b"
+        :surface="match.surface"
+        :rank-a="viewerRankA"
+        :rank-b="viewerRankB"
+        mode="live"
+        @finish="toResult"
+      />
 
       <!-- Box score: her result, with the honest "no ranking points" line. -->
       <section v-else class="tf-card">

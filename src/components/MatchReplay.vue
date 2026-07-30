@@ -41,8 +41,9 @@ const annotated = computed(() => {
        viewport, sitting at y=-215.5, which put the COURT, the close button and the bottom of the box
        score outside the window with no way to reach any of them. The takeover's `.tf-body` is a real
        scroller, so nothing is unreachable at any length.
-       No new CSS: `.tournament-flow` / `.tf-top` / `.tf-body` / `.tf-card` are the shared takeover
-       vocabulary in src/style.css that PracticeFlow and TournamentFlow already dress a match in. -->
+       No new CSS: `.tournament-flow` / `.tf-top` / `.tf-body` are the shared takeover vocabulary in
+       src/style.css that PracticeFlow and TournamentFlow already open a match in. (`.tf-card` was in
+       that list until 30.07 took the outer frame off all three - see the note in the body below.) -->
   <div class="tournament-flow">
     <header class="tf-top">
       <div>
@@ -63,9 +64,13 @@ const annotated = computed(() => {
       <IconButton icon="close" label="Close replay" title="Close" @click="$emit('close')" />
     </header>
     <div class="tf-body">
-      <section class="tf-card">
-        <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" mode="replay" />
-      </section>
+      <!-- ⚠ NO PANEL AROUND THE VIEWER, and that is the 30.07 correction (owner: «на экране матча у
+           нас двойная рамка, она съедает место, давай внешний контур уберем, он не нужен»). This was
+           a `.tf-card` - 16px of padding and a hairline - wrapped around a stack of `Card`s the viewer
+           draws itself, so the border was doubled and the padding bought nothing. Measured at 375pt:
+           291 -> 327px of canvas, 244.4 -> 274.9px of painted court, 32px of height back. The takeover
+           vocabulary this screen borrows is now `.tournament-flow` / `.tf-top` / `.tf-body` only. -->
+      <MatchViewer :match="annotated" :player-a="match.a" :player-b="match.b" :surface="match.surface" mode="replay" />
     </div>
   </div>
 </template>

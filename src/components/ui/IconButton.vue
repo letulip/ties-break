@@ -11,6 +11,10 @@
 //   `bare`  – it sits IN a header, in the reading order, and a plate would make it the loudest thing
 //             on a screen whose subject is elsewhere. The glyph IS the affordance (the R3 owner
 //             ruling that took the Coach Market's back arrow off its plate says exactly this).
+//             ⚠ FOUR CALLERS, NOT THREE, SINCE 30.07: the tournament hero's back arrived here too
+//             («Для back я просил везде сделать один компонент и его консистентно использовать»). It
+//             was the app's last hand-written one - a glass pill reading "← Back" - and it is the one
+//             `bare` caller that overrides the colour, because it stands on a photograph.
 //
 // A CIRCLE IS `50%`, NEVER `--radius-pill`. The note at the top of src/style.css is about precisely
 // this control: 999px on a square is clamped to half the height and looks identical, but on anything

@@ -72,9 +72,13 @@ describe('THE STROKE WEIGHT: one hairline, everywhere (owner 30.07)', () => {
     // ⚠ ONE ENTRY, AND IT IS NOT A TASTE EXCEPTION. `.tf-poster.silver` draws a GRADIENT border, which
     // CSS has no border-color for: it is a transparent border plus a `padding-box`/`border-box`
     // background pair showing through it. The 2px is the MECHANISM - at 1px the metal is invisible -
-    // not a weight somebody picked, and the width is load-bearing for the effect. TournamentFlow.vue
-    // also belongs to another slice this round. Listed so the rule still holds everywhere else, and
-    // so re-checking it later is a one-line diff.
+    // not a weight somebody picked, and the width is load-bearing for the effect. Listed so the rule
+    // still holds everywhere else, and so re-checking it later is a one-line diff.
+    // ⚠ THE SECOND HALF OF THIS NOTE EXPIRED, 30.07. It also said "TournamentFlow.vue belongs to
+    // another slice this round", which was a reason to leave the file alone rather than a reason for
+    // the entry. That slice has happened - the screen's back control, its Begin, its four fact tiles
+    // and the frame around its match viewer all changed - and the runner-up's gradient border was
+    // re-read and kept, on the mechanism above and nothing else.
     const KNOWN = ['src/components/TournamentFlow.vue: border: 2px solid transparent']
     expect(offenders.filter((o) => !KNOWN.includes(o)).join('\n')).toBe('')
   })
@@ -164,6 +168,48 @@ describe('THE BUTTON SHAPE: a button is a pill (owner 30.07)', () => {
   })
 })
 
+// ---------------------------------------------------------------------------
+// THE ACTION ROW (owner, 30.07, second playtest). Two sentences, both about a control saying more
+// than it means: «на экране перед матчем надо поменять местами кнопки skip/watch it так логичнее»
+// and «У begin просто убрать стрелку». One is an ORDER and one is a GLYPH, and the app already had
+// an answer for each - it just was not being kept on the two screens he was looking at.
+// ---------------------------------------------------------------------------
+describe('THE ACTION ROW: the affirmative is last, and it does not point (owner 30.07)', () => {
+  const PRE_MATCH = [
+    // [file, the skip, the affirmative] - the two cards that stand between the player and a match
+    ['src/components/TournamentFlow.vue', 'Skip', 'Watch match'],
+    ['src/components/PracticeFlow.vue', 'Skip to result', 'Watch it'],
+  ] as const
+
+  it('both pre-match cards put the thing you usually want under the thumb', () => {
+    // The app's own order, everywhere else: `.dialog-actions` is Cancel-then-Confirm, both box scores
+    // are "Watch again"-then-primary. These two rows were the outliers, with the primary first.
+    for (const [path, skip, watch] of PRE_MATCH) {
+      const text = readFileSync(join(root, path), 'utf8')
+      const template = /<template>([\s\S]*)<\/template>/.exec(text)?.[1] ?? ''
+      const row = template.slice(template.indexOf('class="tf-actions"'))
+      const skipAt = row.indexOf(`>${skip}<`)
+      const watchAt = row.indexOf(`>${watch}<`)
+      expect(skipAt, `${path}: "${skip}" is in the row`).toBeGreaterThan(-1)
+      expect(watchAt, `${path}: "${watch}" is in the row`).toBeGreaterThan(-1)
+      expect(watchAt, `${path}: the affirmative comes last`).toBeGreaterThan(skipAt)
+      // ...and it is still the primary. Swapping the order must not swap which one is the CTA.
+      const primaryAt = row.indexOf('class="primary')
+      expect(primaryAt, `${path}: the primary is the affirmative`).toBeGreaterThan(skipAt)
+      expect(primaryAt, `${path}: the primary is the affirmative`).toBeLessThan(watchAt)
+    }
+  })
+
+  it('the tournament brief\'s CTA is one word', () => {
+    // «У begin просто убрать стрелку». A lime CTA at the foot of a brief is already the way forward;
+    // the arrow was the button repeating itself, and the design's own copy for it is bare.
+    const flow = readFileSync(join(root, 'src/components/TournamentFlow.vue'), 'utf8')
+    const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
+    expect(template).toContain('>Begin</PrimaryPill>')
+    expect(template, 'the arrow is back on Begin').not.toMatch(/Begin\s*(→|&rarr;)/)
+  })
+})
+
 describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
   // `back`, `close` and `dollar` are the OWNER'S OWN drawings (30.07: «svg иконки закинул в
   // public/icons: dollar sign for a tournament enter page, back and close icons»), normalised into the
@@ -242,11 +288,50 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
         if (/✕|✖|&times;/.test(m[1])) offenders.push(`${rel(path)}: close cross as a character`)
       }
     }
-    // ⚠ TournamentFlow's "← Back" is a LABELLED button in a flow's action row, not a screen
-    // header's bare arrow, and MatchViewer's close belongs to another slice this round. Both are
-    // listed rather than silently allowed, so adopting them closes this list to empty.
-    const KNOWN = ['src/components/TournamentFlow.vue: back arrow as a character']
+    // ⚠ THE LIST IS EMPTY, AND THAT IS THE POINT OF HAVING HAD ONE (owner, 30.07: «на экране перед
+    // турниром кнопки Back и Begin остались прежними и со стрелками. Для back я просил везде сделать
+    // один компонент и его консистентно использовать, просто иконка с белым fill»). It held
+    // TournamentFlow's "← Back" on the argument that a labelled button in a flow's hero is a different
+    // object from a screen header's bare arrow. He disagreed, so the hero now carries the same
+    // `IconButton variant="bare" icon="back"` the other three do and the allowlist closed to nothing.
+    // The array stays declared, empty, because that is the shape a future exception has to argue for.
+    const KNOWN: string[] = []
     expect(offenders.filter((o) => !KNOWN.includes(o)).join('\n')).toBe('')
+  })
+
+  // ⚠ ADDED 30.07, and it is the other half of the sentence above: «просто иконка с белым fill». The
+  // ban above is on the CHARACTER; this is on the second SHAPE. A back control that is a word, or a
+  // glass pill, or a plate, is the drift he was pointing at - four screens had one control between
+  // them and the fourth looked nothing like the other three.
+  it('every back control in the app is the one component, and it is a bare icon', () => {
+    const offenders: string[] = []
+    for (const path of VUE) {
+      if (path.endsWith('IconButton.vue')) continue
+      const text = readFileSync(path, 'utf8')
+      const template = /<template>([\s\S]*)<\/template>/.exec(text)?.[1] ?? ''
+      // Anything whose job is "go back" - by handler or by accessible name - has to be the component.
+      for (const m of template.matchAll(/<(button|IconButton)\b[^>]*>/g)) {
+        const tag = m[0]
+        const goesBack = /@click="[^"]*\bback\b/.test(tag) || /label="Back/.test(tag) || /aria-label="Back/.test(tag)
+        if (!goesBack) continue
+        if (m[1] !== 'IconButton') offenders.push(`${rel(path)}: hand-written back control`)
+        else if (!/variant="bare"/.test(tag) || !/icon="back"/.test(tag))
+          offenders.push(`${rel(path)}: back control is not the bare back icon`)
+      }
+    }
+    // ⚠ ONE NAME, AND IT IS NOT A BACK CONTROL IN THIS SENSE. OnboardingWizard's `.ob-back` is the
+    // LEFT HALF OF A WIZARD FOOTER PAIR - `Back` beside `Next` - which the design draws as two pills
+    // with words on them (docs/design/README.md §N–S: «футер `Back` / `Next`», and `Back` is specified
+    // as a pill with 14px/700 type). It is a step control in a form, not the top-left "leave this
+    // screen" affordance the owner's sentence is about, its exact markup is pinned by
+    // tests/redesign-onboarding.test.ts, and turning it into a bare glyph would leave `Next` alone in
+    // the footer with an unlabelled twin. Listed rather than silently skipped.
+    const KNOWN = ['src/components/OnboardingWizard.vue: hand-written back control']
+    expect(offenders.filter((o) => !KNOWN.includes(o)).join('\n')).toBe('')
+    // anti-vacuity: the sweep really did find the four real ones
+    expect(
+      VUE.filter((p) => /<IconButton[^>]*icon="back"/.test(readFileSync(p, 'utf8'))).length,
+    ).toBeGreaterThanOrEqual(4)
   })
 
   it('the 32px round icon button is a component, and it is a CIRCLE', () => {
@@ -275,16 +360,37 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
       const template = /<template>([\s\S]*)<\/template>/.exec(text)?.[1] ?? ''
       if (template.includes('class="surface-ring"')) offenders.push(`${rel(path)}: hand-written ring`)
     }
-    // ⚠ TournamentFlow.vue belongs to another slice this round, so its ring and its copy of the emoji
-    // table are the last two and are LISTED rather than silently allowed - adopting SurfaceMark there
-    // empties this array and the test then holds the whole app. SurfaceMark deliberately leaves the
-    // `.surface-*` rules in src/style.css until that happens, so this file's markup keeps rendering.
-    const KNOWN = [
-      'src/components/TournamentFlow.vue: its own SURFACE_EMOJI table',
-      'src/components/TournamentFlow.vue: hand-written ring',
-    ]
+    // ⚠ EMPTY, 30.07: TournamentFlow's fact tile adopted `SurfaceMark`, and this test now holds the
+    // whole app. It listed two offenders and only ONE of them was ever real - the hand-written ring in
+    // screen E's "Surface" tile, which is gone. The `SURFACE_EMOJI` entry was already stale when it was
+    // written: that table had left TournamentFlow before this file existed (the only mention there now
+    // is a ⚠ note in PracticeFlow explaining the deletion, which is why the check is on a DECLARATION
+    // rather than on the words). The array stays declared, empty, as the shape an exception must take.
+    const KNOWN: string[] = []
     expect(offenders.filter((o) => !KNOWN.includes(o)).join('\n')).toBe('')
     expect(sheet).toContain('.surface-mark--sm')
+    // anti-vacuity: the sweep is looking at files that really do draw marks, through the component
+    expect(VUE.filter((p) => /<SurfaceMark\b/.test(readFileSync(p, 'utf8'))).length).toBeGreaterThanOrEqual(3)
+  })
+
+  // ⚠ ADDED 30.07 (owner: «иконка prize money не обновилась, проверить»). He was right and the reason
+  // is worth a pin of its own: the ASSET had shipped - `public/icons/dollar.svg`, his own drawing, with
+  // a note asking for this exact adoption - and the screen still drew its own dollar as an inline
+  // <svg>, so nothing changed for him. An icon that exists twice is an icon that did not land. The
+  // three tiles that have an asset must reach for it, and the paths they replaced must be DELETED
+  // rather than left in the file to be re-adopted by the next hand.
+  it('screen E\'s fact tiles draw their glyphs from the assets, not from inline paths', () => {
+    const flow = readFileSync(join(root, 'src/components/TournamentFlow.vue'), 'utf8')
+    const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
+    const facts = template.slice(template.indexOf('class="tf-facts"'), template.indexOf('class="tf-first"'))
+    expect(facts, 'the facts row was not found').toContain('tf-fact-tile')
+    for (const name of ['dollar', 'trophy', 'spectators']) {
+      expect(facts, `${name} tile`).toContain(`<AppIcon name="${name}"`)
+    }
+    // the surface tile is the fourth, and it is the component rather than a fourth copy of the ring
+    expect(facts).toContain('<SurfaceMark :surface="pending.surface" :show-name="false" />')
+    // and not one `d=` is left behind in the row
+    expect(facts, 'a replaced path is still in the markup').not.toMatch(/<svg|<path|<circle/)
   })
 })
 

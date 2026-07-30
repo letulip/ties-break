@@ -509,9 +509,13 @@ button {
    a bare arrow - the Coach Market shipped it on a circular plate, which made it the odd one out.
    No plate, no border, no padding: the arrow IS the affordance, and it sits beside the generic
    `button` reset because that is what it is a variant of.
-   The app's only other back control is TournamentFlow's "← Back", which lives in a flow's action
-   row rather than a screen header and reads as a labelled button there; it is left alone, and this
-   class is here for the next screen header that needs one.
+   ⚠ IT IS NOW ALL FOUR OF THEM (owner, 30.07: «Для back я просил везде сделать один компонент и его
+   консистентно использовать, просто иконка с белым fill»). This note used to grant one exception -
+   TournamentFlow's "← Back", on the argument that a flow's hero is not a screen header and a labelled
+   button reads fine there. He looked at it and disagreed, so the exception is gone: the tournament
+   hero carries the same `IconButton variant="bare" icon="back"` the three screen headers do, and it
+   overrides only the two things that are genuinely its own - where it sits on the photograph, and
+   white ink instead of the muted default. There is no hand-written back control left in the app.
    ⚠ THE ARROW IS AN ASSET NOW, not a `&larr;` CHARACTER (owner, 30.07: «Custom back arrow SVG in
    public»): public/icons/back.svg, reached through IconButton's `bare` variant. Three screen headers
    had each typed the entity by hand. `font-size` went with the character - a masked glyph has no
@@ -1315,7 +1319,13 @@ button.primary.risky {
    out independently, which is why a sixth surface would have had to guess them.
    What each surface DOESN'T share is its size and whether it scrolls, so that stays with each one
    below. `.injury-stop` (10px) and `.tf-finale.silver` (a gradient border) still override from
-   further down the sheet, exactly as before - grouping changes no specificity. */
+   further down the sheet, exactly as before - grouping changes no specificity.
+   ⚠ TWO OF THESE TENANTS HAVE MOVED OUT and the list has not caught up, so read it as CSS rather than
+   as an inventory of screens. `.replay-card` was the match replay when it was a centred card on a
+   dimmed page; it became the same takeover the live match is (30.07) and no template renders the class
+   any more. `.tf-card` is still four surfaces, but the match viewer is no longer one of them - the
+   owner took the outer frame off all three match screens on 30.07 («давай внешний контур уберем, он
+   не нужен»), so the viewer's own panels are the only box around a court now. */
 .dialog-card,
 .replay-card,
 .tf-card,
