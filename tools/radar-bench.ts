@@ -236,7 +236,7 @@ function bandsAt(all: Map<string, Mark[]>, tier: CoachTier, week: number): numbe
 /** A synthetic history of `n` identical matches, so the ONLY thing that differs between two
  *  careers is what the scorelines say happened. A live career cannot be held this still. */
 function syntheticView(seed: string, n: number, score: string, tier: CoachTier = 'middle'): RadarWorldView {
-  const build = (id: string) => ({ id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50 })
+  const build = (id: string) => ({ id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 })
   const matches: WorldMatch[] = Array.from({ length: n }, (_, i) => ({
     round: 0,
     aId: KID_ID,
@@ -253,12 +253,12 @@ function syntheticView(seed: string, n: number, score: string, tier: CoachTier =
     seed,
     week: 52,
     kidId: KID_ID,
-    skills: { serve: 50, ret: 50, composure: 50, stamina: 50 },
+    skills: { serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 },
     // This bench measures the FOG, which `startSkills` has no part in - it only feeds the Weekly
     // Story's training line. A girl who has not moved is the neutral fixture for the questions
     // below, and it keeps the synthetic histories comparable to the live careers above.
-    startSkills: { serve: 50, ret: 50, composure: 50, stamina: 50 },
-    potential: { serve: 65, ret: 65, composure: 65, stamina: 65 },
+    startSkills: { serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 },
+    potential: { serve: 65, ret: 65, composure: 65, stamina: 65, groundstrokes: 65 },
     coachTier: tier,
     coachSinceWeek: 0,
     matchesPlayed: n,

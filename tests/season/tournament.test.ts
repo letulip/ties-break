@@ -13,6 +13,16 @@ import { rngFromSeed } from '../../src/engine/rng'
 import { simulateMatch } from '../../src/engine/match/engine'
 import type { AiPlayer, RankingRow, SeasonEvent, TierId } from '../../src/engine/season/types'
 import type { MatchPlayer, Surface } from '../../src/engine/match/types'
+import { rivalGroundstrokes } from '../../src/engine/season/rival'
+
+// ⚠ A COHORT ROW IS NO LONGER A `MatchPlayer` (v25). `AiPlayer` is now
+// `Omit<MatchPlayer, 'groundstrokes'>` on purpose: a rival does not STORE the fifth attribute,
+// because `driftCohort`'s four main-stream draws per player are what the frozen capture is made of,
+// so her groundstroke is derived at match time. This helper is the same derivation production uses
+// (`rivalMatchPlayer`, minus the surface and condition scaling these bracket tests deliberately do
+// without), so what goes into the draw here is what would go into a real one.
+const asField = (ps: AiPlayer[]): MatchPlayer[] =>
+  ps.map((p) => ({ ...p, groundstrokes: rivalGroundstrokes(p) }))
 
 function ev(tier: TierId, week: number, surface: Surface = 'hard'): SeasonEvent {
   return { id: `0-w${week}-${tier}`, week, tier, surface, travelCostCents: 100_00, deadlineWeek: week - 2 }
@@ -24,7 +34,7 @@ function rankByOrder(cohort: AiPlayer[]): RankingRow[] {
 }
 
 function kidPlayer(): MatchPlayer {
-  return { id: 'kid', name: 'The Kid', serve: 52, ret: 50, composure: 55, stamina: 54 }
+  return { id: 'kid', name: 'The Kid', serve: 52, ret: 50, composure: 55, stamina: 54, groundstrokes: 51 }
 }
 
 const cohort = generateCohort('tourney-cohort', 199)
@@ -108,7 +118,7 @@ function expectedTotalPoints(tier: TierId): number {
 describe('runTournament — bracket integrity', () => {
   for (const tier of ['local', 'regional', 'national'] as const) {
     const event = ev(tier, 12, 'clay')
-    const entrants = selectEntrants(event, cohort, ranking, rngFromSeed(`ent-${tier}`))
+    const entrants = asField(selectEntrants(event, cohort, ranking, rngFromSeed(`ent-${tier}`)))
 
     it(`${tier}: drawSize-1 matches, each with a winner from its pairing`, () => {
       const result = runTournament(event, entrants, null, 'W', rngFromSeed(`run-${tier}`))
@@ -161,7 +171,7 @@ describe('runTournament — bracket integrity', () => {
 
 describe('runTournament — the kid enters', () => {
   const event = ev('local', 20, 'grass')
-  const entrants = selectEntrants(event, cohort, ranking, rngFromSeed('kid-ent'))
+  const entrants = asField(selectEntrants(event, cohort, ranking, rngFromSeed('kid-ent')))
   const kid = kidPlayer()
 
   it('keeps the draw at drawSize by bumping the lowest-ranked entrant, kid included', () => {

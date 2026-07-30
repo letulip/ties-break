@@ -93,7 +93,7 @@ import {
   travelCoverShare,
   type AcademySupport,
 } from './academy'
-import { rivalConditions, rivalMatchPlayer } from './season/rival'
+import { rivalConditions, rivalGroundstrokes, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
 import { selectEntrants, runTournament, kidSeedIndexIn, JUNIOR_TOUR } from './season/tournament'
@@ -116,7 +116,7 @@ import { axisReadings, buildRadar, buildTrainingRead, type RadarWorldView } from
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 24
+export const SAVE_SCHEMA_VERSION = 25
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -460,6 +460,13 @@ export function startingSkills(seed: string, _profile: PlayerProfile): KidSkills
     ret: pickInt(r, 40, 58),
     composure: pickInt(r, 35, 55),
     stamina: pickInt(r, 40, 60),
+    // ⚠ APPENDED LAST, AND THAT POSITION IS THE WHOLE MIGRATION STORY (v25). A fifth draw at the END
+    // of a purpose-scoped sub-stream leaves the four above byte-identical - verified, not assumed -
+    // so every career that already exists keeps the exact build it was born with and simply learns
+    // what its forehand was. Putting it anywhere else in this literal would re-roll the world.
+    // The band matches serve/ret: she is a junior, and her groundstroke is neither her best nor her
+    // worst wing by construction.
+    groundstrokes: pickInt(r, 40, 58),
   }
 }
 
@@ -477,6 +484,7 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; sk
     ret: s.ret,
     composure: s.composure,
     stamina: s.stamina,
+    groundstrokes: s.groundstrokes,
   }
 }
 
@@ -499,6 +507,7 @@ export function kidMatchPlayerFor(
       ret: raw.ret * factor,
       composure: raw.composure * factor,
       stamina: raw.stamina * factor,
+      groundstrokes: raw.groundstrokes * factor,
     },
     world.profile.playStyle,
     surface,
@@ -2014,6 +2023,9 @@ function resolvePractice(world: WorldState): void {
     ret: opponent.ret,
     composure: opponent.composure,
     stamina: opponent.stamina,
+    // Her sparring partner's groundstroke comes off the SAME derivation a tournament opponent's
+    // does, so a friendly is not a different game (v25 - the cohort stores no fifth attribute).
+    groundstrokes: rivalGroundstrokes(opponent),
   }
   const seed = `${world.seed}:practicematch:${world.week}:m`
   const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
@@ -2369,7 +2381,7 @@ export function flipScore(score: string): string {
 }
 
 function fallbackPlayer(id: string): MatchPlayer {
-  return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50 }
+  return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 }
 }
 
 // The kid's matches within a full result, in round order (she plays once per round she survives).

@@ -5,8 +5,11 @@ import type { MatchPlayer, MatchOptions, Tour, Surface, MatchResult } from '../.
 
 // All Monte Carlo runs use fixed string seeds, so every number below is deterministic.
 
+// ⚠ `groundstrokes: 50` ON BOTH SIDES BY DEFAULT (v25), and that is not filler - it is what keeps
+// every fixture in this file byte-identical. The rally term in `basePServe` multiplies a DIFFERENCE,
+// so two players level off the ground contribute exactly zero and no calibration band moves.
 function player(overrides: Partial<MatchPlayer> = {}): MatchPlayer {
-  return { id: 'p', name: 'P', serve: 50, ret: 50, composure: 50, stamina: 50, ...overrides }
+  return { id: 'p', name: 'P', serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50, ...overrides }
 }
 
 function baseOpts(over: Partial<MatchOptions> = {}): MatchOptions {

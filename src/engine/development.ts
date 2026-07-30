@@ -39,18 +39,32 @@ import { ECONOMY } from './economy'
 import { coachFactor, coachFitFor, tierOf, type Coach } from './coach'
 import type { PlayStyle, WeekPlan } from '../shared/protocol'
 
-/** The four attributes the match engine reads. Kept as a bare record so it serialises into the save
- *  as four numbers and nothing else. */
+/** The attributes the match engine reads. Kept as a bare record so it serialises into the save as
+ *  numbers and nothing else.
+ *
+ *  ⚠ FIVE SINCE v25 (owner, 30.07: «maybe add one or two other skills to our wind rose»). See
+ *  docs/specs/skills-radar.md §5 for the argument; the short version is that the point model has
+ *  three legs in real tennis - the serve, the return, and the rally that follows - and it had two. */
 export interface KidSkills {
   serve: number
   ret: number
   composure: number
   stamina: number
+  /** 0-100: how much she hurts people OFF THE GROUND - the rally, which is the leg the model was
+   *  missing. Enters `basePServe` as a DIFFERENCE (the rally is contested by both players, unlike
+   *  the serve and the return), so the bigger hitter both holds and breaks better. */
+  groundstrokes: number
 }
 
 export type SkillKey = keyof KidSkills
 
-export const SKILL_KEYS: readonly SkillKey[] = ['serve', 'ret', 'composure', 'stamina']
+/** ⚠ APPEND-ONLY, AND THIS IS NOT A STYLE PREFERENCE - THE ORDER IS A DRAW ORDER. `rollPotential`
+ *  below walks this array taking one draw per key off `seed:potential`, and `startingSkills`
+ *  (world.ts) draws in the same order off `seed:kid`. Appending a key adds its draw at the END of
+ *  those sub-streams, which leaves every earlier draw byte-identical, so no existing career's build
+ *  or ceiling moves by a hundredth. INSERTING one anywhere else would re-roll every career in
+ *  existence from that position on. */
+export const SKILL_KEYS: readonly SkillKey[] = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes']
 
 /** Her ceiling, rolled once per career and never displayed. The band is deliberately wide: a career
  *  where the ceiling is barely above the floor is a real career, and it is the one the game has

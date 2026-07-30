@@ -10,6 +10,8 @@ function annotate(seed: string, a: MatchPlayer, b: MatchPlayer, surface: Surface
   return { annotated: annotateMatch(result, a, b, opts), result }
 }
 
+// `groundstrokes: 50` both sides by default (v25): the rally term multiplies a difference, so a
+// level pair leaves every stat in this file byte-identical.
 const P = (over: Partial<MatchPlayer>): MatchPlayer => ({
   id: 'p',
   name: 'P',
@@ -17,6 +19,7 @@ const P = (over: Partial<MatchPlayer>): MatchPlayer => ({
   ret: 50,
   composure: 50,
   stamina: 50,
+  groundstrokes: 50,
   ...over,
 })
 

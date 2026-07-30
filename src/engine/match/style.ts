@@ -34,8 +34,13 @@ import type { MatchPlayer, Surface } from './types'
 import type { PlayStyle } from '../../shared/protocol'
 
 /** The MatchPlayer fields a court can move. `composure` is deliberately never touched by any row:
- *  big-point nerves are hers, not the court's. */
-export type SkillKey = 'serve' | 'ret' | 'composure' | 'stamina'
+ *  big-point nerves are hers, not the court's.
+ *
+ *  ⚠ A SECOND UNION, ON PURPOSE, and it must stay in step with `development.ts SKILL_KEYS`: this one
+ *  is about what a COURT can do to an attribute, that one about what the SAVE holds. They have had
+ *  the same members since v25 and there is a test that says so - but merging them would make
+ *  match/style.ts import the development model, which is the dependency this file exists without. */
+export type SkillKey = 'serve' | 'ret' | 'composure' | 'stamina' | 'groundstrokes'
 
 /** Signed multiplicative deltas by attribute; absent = 0 = untouched (kept byte-identical). */
 export type StyleDeltas = Partial<Record<SkillKey, number>>
@@ -48,6 +53,9 @@ const MID = 0.04
 /** A tilt, not a weapon – used where a surface only helps a bit (and doubled where a style is
  *  favoured on TWO surfaces, so the third still balances the row to zero). */
 const SMALL = 0.03
+/** HALF A TILT (v25) – for the mirror case of `2 * SMALL`: a bonus on ONE surface paid for across
+ *  the other TWO. `MID = 2 * HALF` exactly, so a row using it still sums to zero. */
+const HALF = 0.02
 
 /** The largest single delta in the table – the guard rail the spec asks for (±3-6%). */
 export const SURFACE_STYLE_MAX_DELTA = 2 * SMALL
@@ -61,6 +69,14 @@ export const SURFACE_STYLE_MAX_DELTA = 2 * SMALL
  *  | counterpuncher | +             | 0             | −             |
  *  | aggressive     | −−            | +             | +             |
  *  | all-court      | 0             | 0             | 0             |
+ *
+ *  ⚠ ONE ROW GAINED A GROUNDSTROKE COLUMN AT v25, AND ONLY ONE - the aggressive baseliner's. The
+ *  three zeros around it are a STATEMENT and not an omission, and it is the point of the whole
+ *  attribute (docs/specs/skills-radar.md §5): a serve-first player's court is decided by her serve, a
+ *  counterpuncher's by her return and her legs, all-court is the zero row by definition, and the
+ *  aggressive baseliner's game IS the groundstroke - which is exactly the attribute she never had.
+ *  Until v25 she was implemented as "a server-and-returner who likes hard courts", which is not what
+ *  an aggressive baseliner is.
  */
 export const SURFACE_STYLE_DELTAS: Record<PlayStyle, Record<Surface, StyleDeltas>> = {
   // Grass: low skid, short points, the engine's own ace rate x1.5 – her serve is a free-point
@@ -79,19 +95,33 @@ export const SURFACE_STYLE_DELTAS: Record<PlayStyle, Record<Surface, StyleDeltas
     grass: { ret: -BIG, stamina: -MID },
   },
   // Hard: a true bounce at a hittable height – first-strike tennis in its natural home, on serve
-  // AND on the return. Grass rewards the first strike too, but the low ball is not what she'd
-  // order. Clay is the punishment: the court gives her winners back, so the drag is double (the
-  // price of being favoured on two of three surfaces – the row still sums to zero).
+  // AND on the return, AND off the ground, which is where her game really lives. Clay is the
+  // punishment: the court gives her winners back, so the drag on the serve is double (the price of
+  // being favoured on two of three surfaces).
+  //
+  // ⚠ THE GROUNDSTROKE IS PAID FOR ON BOTH OTHER COURTS, not on clay alone, and it is MEASURED
+  // rather than chosen for symmetry. Clay gives the ball back; grass never lets it up into her strike
+  // zone at all - so grass takes her serve UP and her groundstroke DOWN, which is the honest reading
+  // of a low-skidding court for a girl whose game is the rally, and is a more interesting sentence
+  // than "grass is fine for everybody who hits hard".
+  //
+  // It is also what keeps a promise this table already made. A grass BLOCK is 69% grass and 25% hard
+  // (tests/surfaceStyle.test.ts blockMix), so a hard-court-only bonus leaks into the grass window
+  // through the back door: at `hard +MID / clay -MID` the aggressive baseliner took the grass window
+  // off the server outright (51.26 against 50.87). Splitting the cost across clay AND grass restores
+  // it AND widens the margin past what it was before v25 - serve-first 51.05 against aggressive
+  // 50.72, where the pre-v25 table had 50.98 against 50.94. The clay swing gets more punishing too
+  // (spread 4.70 against 4.15), which is the right direction for the girl who wants a true bounce.
   aggressive: {
-    hard: { serve: +SMALL, ret: +SMALL },
-    grass: { serve: +SMALL },
-    clay: { serve: -2 * SMALL, ret: -SMALL },
+    hard: { serve: +SMALL, ret: +SMALL, groundstrokes: +MID },
+    grass: { serve: +SMALL, groundstrokes: -HALF },
+    clay: { serve: -2 * SMALL, ret: -SMALL, groundstrokes: -HALF },
   },
   // The zero row. No home surface, no away surface – the build that never draws a bad week.
   'all-court': { hard: {}, clay: {}, grass: {} },
 }
 
-const SKILLS: SkillKey[] = ['serve', 'ret', 'composure', 'stamina']
+const SKILLS: SkillKey[] = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes']
 
 /** Per-attribute multipliers (1 = untouched) for a style on a surface. */
 export function surfaceStyleMultipliers(style: PlayStyle, surface: Surface): Record<SkillKey, number> {
@@ -119,6 +149,7 @@ export function applySurfaceStyle(player: MatchPlayer, style: PlayStyle, surface
     ret: scale('ret'),
     composure: scale('composure'),
     stamina: scale('stamina'),
+    groundstrokes: scale('groundstrokes'),
   }
 }
 

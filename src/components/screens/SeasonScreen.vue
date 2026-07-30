@@ -685,9 +685,12 @@ const kidName = computed(() => game.snapshot?.profile.kidName ?? 'Vera')
 const exhibitionPlayerA = computed<MatchPlayer>(() =>
   game.snapshot
     ? applySurfaceStyle(kidMatchPlayer(game.snapshot), game.snapshot.profile.playStyle, exhibitionSurface)
-    : { id: 'kid', name: kidName.value, serve: 50, ret: 50, composure: 50, stamina: 50 },
+    : { id: 'kid', name: kidName.value, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 },
 )
-const exhibitionPlayerB: MatchPlayer = { id: 'top-seed', name: 'Top seed', serve: 63, ret: 60, composure: 70, stamina: 65 }
+// The fixed sparring block. Her groundstroke (v25) sits between her serve and her return, which is
+// what a strong all-round junior looks like off the ground - the point of this opponent is that she
+// is uniformly good rather than that she has a weakness to find.
+const exhibitionPlayerB: MatchPlayer = { id: 'top-seed', name: 'Top seed', serve: 63, ret: 60, composure: 70, stamina: 65, groundstrokes: 62 }
 const exhibitionSeed = ref('')
 const exhibitionMatch = ref<AnnotatedMatch | null>(null)
 

@@ -16,6 +16,17 @@ export interface MatchPlayer {
   composure: number
   /** 0-100: resistance to late-match fatigue */
   stamina: number
+  /** 0-100: damage off the ground – THE RALLY, added v25 (docs/specs/skills-radar.md §5).
+   *
+   *  The third leg of a point. `serve` acts on the server's side only and `ret` on the receiver's
+   *  only; the rally is contested by BOTH, so this one enters `basePServe` as a difference and is
+   *  worth exactly nothing when the two players are level. That is deliberate: every symmetric
+   *  fixture and every calibration band stays byte-identical.
+   *
+   *  ⚠ `AiPlayer` deliberately does NOT inherit this field – see season/types.ts. The cohort is
+   *  persisted and its weekly drift is what the frozen MAIN capture is made of, so a rival's value
+   *  is DERIVED at match time (`rivalGroundstrokes`). */
+  groundstrokes: number
 }
 
 export interface MatchOptions {

@@ -6,6 +6,7 @@ import {
   reconstructRun,
   rivalCondition,
   rivalConditions,
+  rivalGroundstrokes,
   rivalMatchPlayer,
   styleOf,
 } from '../src/engine/season/rival'
@@ -14,7 +15,7 @@ import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { generateCohort } from '../src/engine/season/cohort'
 import { ECONOMY } from '../src/engine/economy'
 import type { SeasonResult } from '../src/engine/season/ranking'
-import type { TierId } from '../src/engine/season/types'
+import type { AiPlayer, TierId } from '../src/engine/season/types'
 import type { MatchPlayer, Surface } from '../src/engine/match/types'
 import type { PlayStyle } from '../src/shared/protocol'
 import {
@@ -371,10 +372,17 @@ describe('A4 — a deep run leaves a soft week behind her, and it heals', () => 
 const STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
 const SURFACES: Surface[] = ['hard', 'clay', 'grass']
 
-/** A bare MatchPlayer with the given attributes – style reads only serve/ret/stamina. */
+/** A bare MatchPlayer with the given attributes – style reads only serve/ret/stamina, and
+ *  `groundstrokes` is level at 50 so it never tilts a matchup these cases are not about. */
 function player(serve: number, ret: number, stamina: number, composure = 50): MatchPlayer {
-  return { id: 'p', name: 'P', serve, ret, composure, stamina }
+  return { id: 'p', name: 'P', serve, ret, composure, stamina, groundstrokes: 50 }
 }
+
+/** ⚠ A COHORT ROW IS NOT A `MatchPlayer` SINCE v25 - `AiPlayer` is `Omit<MatchPlayer,
+ *  'groundstrokes'>`, because the cohort must not STORE a fifth attribute (`driftCohort`'s four
+ *  main-stream draws per player are what the frozen capture is made of). `rivalMatchPlayer` derives
+ *  it; these composition tests re-derive it the same way so they compare like with like. */
+const withGs = (p: AiPlayer): MatchPlayer => ({ ...p, groundstrokes: rivalGroundstrokes(p) })
 
 describe('B1 — the style thresholds are exported, documented knobs', () => {
   it('sits inside the cohort generation ranges (serve/ret 30-60, stamina 30-70)', () => {
@@ -502,7 +510,7 @@ describe('B5 — rivalMatchPlayer: ONE composition, in the kid order, applied ex
   it('is base -> surface/style -> condition factor, and nothing else', () => {
     const condition = 40
     const built = rivalMatchPlayer(rival, 'clay', condition)
-    const styled = applySurfaceStyle(rival, styleOf(rival), 'clay')
+    const styled = applySurfaceStyle(withGs(rival), styleOf(rival), 'clay')
     const factor = conditionMatchFactor(condition)
     expect(built.serve).toBeCloseTo(styled.serve * factor, 12)
     expect(built.ret).toBeCloseTo(styled.ret * factor, 12)
@@ -514,7 +522,7 @@ describe('B5 — rivalMatchPlayer: ONE composition, in the kid order, applied ex
   it('a fresh rival is her styled self exactly – the condition factor is a no-op above the knee', () => {
     for (const surface of SURFACES) {
       const fresh = rivalMatchPlayer(rival, surface, ECONOMY.condition.max)
-      const styled = applySurfaceStyle(rival, styleOf(rival), surface)
+      const styled = applySurfaceStyle(withGs(rival), styleOf(rival), surface)
       expect(fresh.serve).toBeCloseTo(styled.serve, 12)
       expect(fresh.ret).toBeCloseTo(styled.ret, 12)
     }
@@ -525,7 +533,7 @@ describe('B5 — rivalMatchPlayer: ONE composition, in the kid order, applied ex
   it('a tired rival is strictly weaker on every attribute, and never below the floor', () => {
     const fresh = rivalMatchPlayer(rival, 'hard', ECONOMY.condition.max)
     const spent = rivalMatchPlayer(rival, 'hard', ECONOMY.condition.min)
-    for (const key of ['serve', 'ret', 'composure', 'stamina'] as const) {
+    for (const key of ['serve', 'ret', 'composure', 'stamina', 'groundstrokes'] as const) {
       expect(spent[key]).toBeLessThan(fresh[key])
       expect(spent[key]).toBeCloseTo(fresh[key] * ECONOMY.condition.matchStrengthFloor, 12)
     }
@@ -533,9 +541,23 @@ describe('B5 — rivalMatchPlayer: ONE composition, in the kid order, applied ex
     expect(spent.name).toBe(rival.name)
   })
 
+  // ⚠ RE-AIMED: the expected key set gains `groundstrokes` (v25). The fact this test protects is
+  // unchanged and is the reason it is an EXACT key-set comparison rather than a spot check: what goes
+  // into a bracket is a `MatchPlayer` and NOT a cohort row - `nation`, `growth`, `ageYears` and
+  // `potential` must not ride along into the match model.
+  //
+  // The new key makes that claim STRONGER rather than weaker, and this is the one test that says so:
+  // `groundstrokes` is present on the built player and absent from the stored rival, which is exactly
+  // the v25 arrangement (`AiPlayer = Omit<MatchPlayer, 'groundstrokes'>`, derived at match time so
+  // `driftCohort` keeps its four main-stream draws per player and the frozen capture cannot move).
   it('drops the AiPlayer-only fields: a MatchPlayer goes into the bracket, not a cohort row', () => {
     const built = rivalMatchPlayer(rival, 'hard', 80)
-    expect(Object.keys(built).sort()).toEqual(['composure', 'id', 'name', 'ret', 'serve', 'stamina'])
+    expect(Object.keys(built).sort()).toEqual([
+      'composure', 'groundstrokes', 'id', 'name', 'ret', 'serve', 'stamina',
+    ])
+    // ...and the cohort row it came from still does NOT hold the fifth attribute.
+    expect('groundstrokes' in rival).toBe(false)
+    expect(built.groundstrokes).toBeGreaterThan(0)
   })
 
   it('is deterministic and never mutates the cohort row', () => {

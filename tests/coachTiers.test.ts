@@ -233,8 +233,13 @@ describe('fit and development – what the rung is worth', () => {
   // ⚠ RE-AIMED BY THE ROSTER (Round 2): fit is a fact about the COACH, not the tier. It used to be
   // `coachStyleFit(tier, style)` off a per-tier great/good table; a coach coaches the game HE plays,
   // so it is now a question about two STYLES and the tier has nothing to say about it. The pills and
-  // their weights are unchanged, and "a big serve is the expensive build" survives as a fact about
-  // the ROSTER rather than about the fit function - Budget ships no serve-first coach at all.
+  // their weights are unchanged, and "a big serve is the expensive build" survived R2 as a fact about
+  // the ROSTER rather than about the fit function.
+  //
+  // ⚠ AND THE ROSTER FACT IS GONE (owner, 30.07): Budget ships a serve-first coach now. That changes
+  // nothing here - which is the point of having moved fit off the tier in the first place. This block
+  // is about `styleFitBetween`, a pure question about two STYLES, and it never knew what any rung
+  // stocked. See the roster describe below for the reversal.
   it('reads a coach\'s game against hers, symmetrically, with all-court never wrong', () => {
     for (const style of PLAY_STYLES) expect(styleFitBetween(style, style)).toBe('great')
     // First-strike tennis reads across; the counterpuncher is the opposite philosophy.
@@ -277,6 +282,10 @@ describe('the roster – a market, not a menu', () => {
   // counterpunchers purely because five middle portraits had to go somewhere; moving one to Budget
   // makes every rung four and puts the single duplicate in the tier where it reads as something -
   // the club IS defence and consistency.
+  //
+  // ⚠ STILL FOUR A TIER (30.07), and this half of R3 is the half that survived the owner's reversal
+  // below. What changed is only WHICH GAME the fourth Budget coach plays: the duplicate is gone, so
+  // "four a tier" and "one coach per style per rung" are now the same statement.
   it('is four coaches a tier, and every portrait exists on disk', () => {
     const roster = buildCoachRoster('roster-seed', 14)
     expect(roster).toHaveLength(16) // the 16 portraits that ship in public/images/coaches
@@ -289,29 +298,53 @@ describe('the roster – a market, not a menu', () => {
     expect([...files].sort()).toEqual([...roster.map((c) => c.id)].sort())
   })
 
-  it('leaves BUDGET without a serve-first coach – a big serve is the expensive build', () => {
+  // ⚠ RE-AIMED: THE OWNER REVERSED THIS RULE (playtest 30.07, «2 counterpancher budget, none big
+  // serve»). It used to be titled "leaves BUDGET without a serve-first coach - a big serve is the
+  // expensive build" and it asserted `stylesAt('budget')).not.toContain('serve-first')` plus the
+  // consequence that a serve-first girl finds nobody great for her there. Both of those ARE the bug
+  // he reported, so asserting them now would pin it - and the rule they encoded was a design choice
+  // the owner had merely not objected to, never a fact about the world.
+  //
+  // WHAT THIS TEST WAS REALLY PROTECTING, and it is all still here, strengthened: THE STYLE SPREAD
+  // IS A DELIBERATE, ASSERTED SHAPE AND NOT AN ACCIDENT OF WHICH PORTRAITS HAPPENED TO SHIP. That
+  // was the point of walking every rung and comparing against the whole `PlayStyle` union read out
+  // of the protocol - so a fifth style, or a re-tiered slot, or a duplicate creeping back in, fails
+  // here rather than silently leaving somebody unable to find a coach. The walk now covers ALL FOUR
+  // rungs instead of three, which is a stronger claim than the one it replaces, and the reason the
+  // budget row could be excluded from it has gone away.
+  it('covers all four styles at EVERY rung, budget included – nobody is priced out of a great fit', () => {
     const roster = buildCoachRoster('roster-seed', 14)
     const stylesAt = (tier: CoachTier) => roster.filter((c) => c.tier === tier).map((c) => c.style)
-    expect(stylesAt('budget')).not.toContain('serve-first')
-    // ...and every other rung covers all four exactly once, so shopping up the ladder fixes it.
-    for (const tier of ['middle', 'high', 'elite'] as CoachTier[]) {
-      expect([...stylesAt(tier)].sort()).toEqual([...PLAY_STYLES].sort())
+    for (const tier of HIREABLE_TIERS) {
+      expect([...stylesAt(tier)].sort(), `rung ${tier} is not one coach per style`).toEqual([...PLAY_STYLES].sort())
     }
-    // Consequence, stated: a serve-first kid finds nobody great for her at Budget.
+    // The reversal, stated as the consequence the owner asked for: a serve-first girl now finds a
+    // coach whose game IS hers at the cheapest rung in the market.
     const budget = roster.filter((c) => c.tier === 'budget')
-    expect(budget.every((c) => coachFitFor(c, 'serve-first') !== 'great')).toBe(true)
+    expect(budget.some((c) => coachFitFor(c, 'serve-first') === 'great')).toBe(true)
+    // ...and the duplicate that R3 deliberately parked at Budget is gone from the whole roster, so
+    // "four a tier" and "one per style per rung" cannot drift apart again.
+    for (const tier of HIREABLE_TIERS) {
+      expect(new Set(stylesAt(tier)).size, `rung ${tier} has a duplicate style`).toBe(PLAY_STYLES.length)
+    }
   })
 
-  it('gives EVERY OTHER style a great-fit coach at the cheapest rung (R3)', () => {
-    // The owner reported Budget as short a counterpuncher. It was not - but the screen had renamed
-    // the style to "Defense", so the coach was there and the word was not. This pins the fact he
-    // was reaching for, in the engine where it can be checked: below serve-first, the bottom of the
-    // market always has someone whose game IS hers, and she never has to buy up a rung to find one.
+  // ⚠ RE-AIMED WITH THE RULE ABOVE: the filter `PLAY_STYLES.filter((s) => s !== 'serve-first')` is
+  // gone, because the exception it carved out is exactly what the owner reversed. EVERY style now
+  // clears the bar R3 set for the other three, which is the whole content of «none big serve».
+  it('gives EVERY style a great-fit coach at the cheapest rung, and he is the cheapest in the game', () => {
+    // History, because it is why this test exists at all: the owner once reported Budget as short a
+    // counterpuncher. It was not - the screen had renamed the style to "Defense", so the coach was
+    // there and the word was not. R3 pinned the fact he was reaching for, in the engine where it can
+    // be checked: the bottom of the market always has someone whose game IS hers, and she never has
+    // to buy up a rung to find one. That was true of three styles out of four; it is true of four now.
     const roster = buildCoachRoster('roster-seed', 14)
     const budget = roster.filter((c) => c.tier === 'budget')
-    for (const style of PLAY_STYLES.filter((s) => s !== 'serve-first')) {
+    for (const style of PLAY_STYLES) {
       expect(budget.some((c) => coachFitFor(c, style) === 'great'), `no great fit at budget for ${style}`).toBe(true)
-      // ...and he really is the cheapest same-style coach in the game.
+      // ...and he really is the cheapest same-style coach in the game. The rate bands do not overlap
+      // between rungs (ECONOMY.coach.hourlyRateCents), so this is a claim about the ROSTER's shape
+      // and not about a lucky draw: it holds because budget HAS a great fit for her, at all.
       const greatEverywhere = roster.filter((c) => coachFitFor(c, style) === 'great')
       const cheapest = greatEverywhere.reduce((a, b) => (b.rateCents < a.rateCents ? b : a))
       expect(cheapest.tier).toBe('budget')

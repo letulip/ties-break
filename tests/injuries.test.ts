@@ -81,6 +81,20 @@ function hashOf(draws: number[]): string {
 // stream is untouched and that is what this block guards. What moved is the MEANING of kidRank: it
 // is now her place in the ITF table, not in a single mixed one, so it is a different number about a
 // different question. See docs/specs/two-ladders.md.
+// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
+// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
+// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
+// comes off a draw APPENDED to `seed:kid` and her ceiling's off one appended to `seed:potential`
+// (appending leaves every earlier draw byte-identical); `growWeek` still spends exactly one luck
+// draw for the week; and the COHORT deliberately stores no fifth attribute at all (`AiPlayer =
+// Omit<MatchPlayer, 'groundstrokes'>`, derived at match time) so `driftCohort` still spends exactly
+// four main-stream draws per player - which is literally what 41550 is made of.
+//
+// kidRank COULD still have moved, and briefly did: `basePServe` now carries a rally term, so
+// asymmetric matchups resolve differently and a different set of juniors can end the year in the
+// points. It read 127 mid-slice and came back to 126 once the aggressive baseliner's groundstroke
+// cost was split across clay AND grass (match/style.ts) - which is the retune that kept the grass
+// window the server's. So this is the pre-v25 value, arrived at again rather than left alone.
 const REF = { count: 41550, hash: 'e6b0c709', kidRank: 126 }
 
 function recordRun(mutate?: (w: WorldState) => void, perWeek?: (w: WorldState, week: number) => void): {

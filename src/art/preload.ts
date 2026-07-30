@@ -96,6 +96,22 @@ export function finaleUrl(stage: PortraitStage, emotion: AvatarEmotion): string 
   return portraitUrl(stage, emotion)
 }
 
+// --- the onboarding hero (screen N) -----------------------------------------------------------
+//
+// `welcome-1.webp` - the owner's own square master: a parent and a daughter on a floodlit court at
+// dusk, which is the scene the handoff describes for N. It arrived 29.07 and went through the art
+// pipeline that day (commit 02a63af); until now the screen was still drawing the documented
+// stand-in, `jun-norm`.
+//
+// ITS OWN BUILDER rather than a `portraitUrl` call, for the same reason `travelHomeUrl` has one: it
+// is NOT band-scoped and it is not of a face. One picture serves every career, because the career
+// has not started yet - nobody has an age on screen N.
+
+/** Painting URL for the onboarding hero. The one line the ui-inventory promised a swap would be. */
+export function onboardingHeroUrl(): string {
+  return `${base()}${ART_DIR}welcome-1.webp`
+}
+
 /** 256px crop URL. No clamp any more: `adult` used to redirect to the teen crops because the adult
  *  ones had never been cut, and with `milf` reachable that would have put a teenager's face on a
  *  31-year-old. The missing crops were cut instead, so every stage now has its own — same rule as

@@ -18,7 +18,7 @@ import { computed, reactive, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
 import { SURNAMES } from '../engine/season/cohort'
-import { portraitUrl } from '../art/preload'
+import { onboardingHeroUrl, portraitUrl } from '../art/preload'
 import ScreenShell from './ui/ScreenShell.vue'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -26,14 +26,17 @@ import PrimaryPill from './ui/PrimaryPill.vue'
 
 const game = useGameStore()
 
-// THE TWO PAINTINGS, AND WHY THEY ARE THE SAME FILE TODAY.
+// THE TWO PAINTINGS, AND THEY ARE TWO FILES NOW.
 //   S, summary  – SETTLED as `jun-norm` (owner, docs/specs/ui-inventory §4 Q4: «первый раз входит
-//                 в клуб»). Nothing to draw, nothing to ask about.
-//   N, hero     – a new SQUARE master is being finished. Until it lands, `jun-norm` again. Swapping
-//                 it is this ONE line: point HERO_ART at the new file and nothing else moves.
-// build/webp-only: both go through the shared url builder, so neither can drift into a 404 again.
+//                 в клуб»). Nothing to draw, nothing to ask about, and unchanged by the line below.
+//   N, hero     – ⚠ THE OWNER'S SQUARE MASTER LANDED («картинка для первого экрана создания
+//                 персонажа у нас есть, надо поменять»): `welcome-1`, a parent and a daughter on a
+//                 floodlit court at dusk. It has been on disk as a webp since 29.07 while this line
+//                 still pointed at the stand-in, which is the whole of what the playtest found.
+//                 The swap cost exactly what §4 Q4 promised it would - one constant, one call site.
+// build/webp-only: both go through a shared url builder, so neither can drift into a 404 again.
 const SUMMARY_ART = portraitUrl('jun', 'norm')
-const HERO_ART = SUMMARY_ART
+const HERO_ART = onboardingHeroUrl()
 
 const NAMES = [
   'Vera', 'Alexandra', 'Maria', 'Elena', 'Sofia', 'Anna', 'Iga', 'Coco', 'Aryna', 'Mirra',
