@@ -47,8 +47,40 @@ const JPEG_RE = /\.jpe?g$/i
 const INBOX_RE = /-jpeg$/i
 const FS8_RE = /-fs8$/i
 
-/** Portraits: the 512 px cap the Kid screen and the finale splash render at. */
+/** The DEFAULT cap: the 512 px the Kid screen and the finale splash render a portrait at. */
 const MAX_SIDE = 512
+
+/** ⚠ PER-SET CAPS, because 512 WAS A PORTRAIT NUMBER APPLIED TO EVERY SET BY ACCIDENT (31.07).
+ *
+ *  The owner: the weekly paintings «мылятся» on the recap screens. They do, and the cause was this
+ *  constant reaching further than its own comment claimed. Measured before changing anything:
+ *
+ *    - The week card is `aspect-ratio: 390/286` with `object-fit: cover`, so at 375pt on a 3x phone
+ *      it needs about **825 device pixels of HEIGHT**. Height, not width - a painting wider than the
+ *      card is scaled to fill the height and cropped at the sides, so the height is what binds.
+ *    - `fit: 'inside'` caps the LONGEST side. A 941x377 master therefore ships as 512x205 - and 205
+ *      is then blown up to 825 on screen. **Four times.** The wide vacation frames are the worst
+ *      exactly because they are the widest.
+ *
+ *  So the weeks get their masters' own resolution back. 960 is above every master the set has
+ *  (941 px), and `withoutEnlargement: true` means nothing is invented - each file simply stops being
+ *  thrown away. Measured cost per file at q82: vac-resort 29.8 -> 67.1 KB, study-teen 31.7 -> 80.0
+ *  KB, both comfortably inside MAX_BYTES.
+ *
+ *  ⚠ AND IT COSTS NOTHING AT INSTALL, which is why this is safe to do at all. vite.config's workbox
+ *  block sets `globIgnores: ['**\/images\/**']`, so nothing under public/images is precached - these
+ *  bytes are fetched by the week that shows them. `public/avatars` IS precached and is deliberately
+ *  NOT in this table: its 256px crops are what keep the header working offline.
+ *
+ *  Keyed by the SET directory name (`public/images/<set>/`). Absent = MAX_SIDE. */
+const SET_MAX_SIDE = { weeks: 960 }
+
+/** The cap for a job, from the set its OUTPUT lands in. Reading the target rather than the source
+ *  is deliberate: a master can arrive from `<set>-jpeg/` or be re-encoded in place, and only the
+ *  target says which set it ends up in. */
+function maxSideFor(target) {
+  return SET_MAX_SIDE[basename(dirname(target))] ?? MAX_SIDE
+}
 /** Per-file ceiling for a portrait; the ladder stops at the first quality that fits. */
 const MAX_BYTES = 120 * 1024
 const QUALITY_LADDER = [82, 79, 76, 75]
@@ -209,12 +241,12 @@ function dedupe(jobs) {
   return winners
 }
 
-async function encodePortrait(src) {
+async function encodePortrait(src, maxSide = MAX_SIDE) {
   let buf
   let quality = QUALITY_FLOOR
   for (const q of QUALITY_LADDER) {
     buf = await sharp(src)
-      .resize(MAX_SIDE, MAX_SIDE, { fit: 'inside', withoutEnlargement: true })
+      .resize(maxSide, maxSide, { fit: 'inside', withoutEnlargement: true })
       .webp({ quality: q })
       .toBuffer()
     quality = q
@@ -271,17 +303,31 @@ export async function optimizeArt(options = {}) {
       const key = relative(root, job.target)
       const hash = sha1(job.src)
       const prev = cache[key]
-      if (prev && prev.hash === hash && prev.profile === job.profile && existsSync(job.target)) {
+      // ⚠ THE CAP IS PART OF THE KEY, and leaving it out made a cap change a SILENT NO-OP (31.07).
+      // The cache matched on the source hash and the profile alone, so raising `SET_MAX_SIDE.weeks`
+      // from 512 to 960 re-ran the pipeline to "0 encoded, 106 unchanged" - the masters had not
+      // moved, so every target was declared fresh at the OLD size. Nothing warned, because from the
+      // cache's point of view nothing had happened. Any future retune of a cap, a quality ladder or
+      // a byte ceiling would have gone the same way. An encoding cache has to key on what it
+      // encoded WITH, not only on what it encoded FROM.
+      const maxSide = job.profile === 'logo' ? null : maxSideFor(job.target)
+      if (
+        prev &&
+        prev.hash === hash &&
+        prev.profile === job.profile &&
+        (prev.maxSide ?? null) === maxSide &&
+        existsSync(job.target)
+      ) {
         result.skipped++
       } else {
         const { buf, quality } =
-          job.profile === 'logo' ? await encodeLogo(job.src) : await encodePortrait(job.src)
+          job.profile === 'logo' ? await encodeLogo(job.src) : await encodePortrait(job.src, maxSide)
         if (job.profile === 'portrait' && buf.length > MAX_BYTES) {
           log(`optimize-art: WARNING ${key} is ${(buf.length / 1024).toFixed(1)} KB at the quality floor q${QUALITY_FLOOR}`)
         }
         mkdirSync(dirname(job.target), { recursive: true })
         writeFileSync(job.target, buf)
-        cache[key] = { hash, profile: job.profile, src: relative(root, job.src) }
+        cache[key] = { hash, profile: job.profile, maxSide, src: relative(root, job.src) }
         result.encoded++
         log(`optimize-art: webp ${key} <- ${relative(root, job.src)} (q${quality}, ${(buf.length / 1024).toFixed(1)} KB)`)
       }

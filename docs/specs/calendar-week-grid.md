@@ -67,15 +67,43 @@ Verified on `feat/calendar` and `main` before writing this. **Do not re-derive o
 
 ## 3. Part A — the time × day grid
 
-### 3.1 Scope, stated as a boundary
+### 3.1 ⚠ THE BOUNDARY THIS SECTION DESCRIBED IS GONE (overruled 31.07)
 
-The grid replaces the day columns **only on weeks whose `CalendarDay[]` is the ordinary training
-mix** — that is, weeks made of `court` / `gym` / `rest` / `match`. Weeks that are uniformly `away`,
-`off`, `school` or `rehab` (`weekDays.ts`'s `uniform()` helper builds exactly these) keep today's
-presentation unchanged.
+**This section used to restrict the grid to the ordinary training mix** — `court` / `gym` / `rest` /
+`match` — and send every other week back to a plainer day strip. It read the owner's *"для тех, где
+нет отпусков, чемпионатов и поездок"* as a scope limit, and defended it as the honest option: a grid
+of hours for a week she spends on a plane would be inventing a day.
 
-That boundary is the owner's own — *"для тех, где нет отпусков, чемпионатов и поездок"* — and it is
-also the honest one: a grid of hours for a week she spends on a plane would be inventing a day.
+He overruled it, and he was right:
+
+> «очень даже должна [рисоваться], никакой разницы. Просто содержание сетки будет другим. Расходы на
+> тренера, спарринги и физио всё еще при нас, просто ежедневная школа разбивается на ряд экзаменов в
+> разное время.»
+
+**The grid draws on all eight day kinds. Only the CONTENT differs.**
+
+The old argument does not survive contact with the rest of the file. The grid **already** runs on
+display conventions for the ordinary week — the rest-day priority, the gym on Tuesday, the Saturday
+match — every one of them a stated convention rather than something the engine knows. Refusing
+conventions *only* for the other weeks was not a principle, it was an inconsistency. The real rule is
+the one §3.5 already states and which is unchanged: **the grid may omit, it may not invent** — so each
+week's shape is written down as a convention, and none of them asserts a fact the week does not carry.
+
+And the boundary was worse than inconsistent in practice. Measured at 12 careers × 156 weeks with the
+kid actually entering events, the ordinary mix is **73.8%** of weeks (the rest: 16.0 away, 5.8
+off-season, 3.8 exams, 0.6 rehab) — so better than one week in four fell back to the other drawing,
+silently. The owner updated the app, landed on one of them, and read the swap as the update not
+having arrived. A screen that quietly shows a lesser drawing is indistinguishable from a stale build.
+
+What each week draws, and the reasoning behind each convention, now lives with the code in
+`src/composables/weekGrid.ts` (`DAY_SHAPES`). Two points are worth keeping here because they are
+about honesty rather than layout:
+
+- **An exam week keeps her sessions.** The coach is billed that week and this project already settled
+  that «на тренировку можно доехать» — so a week with no tennis in it would contradict the ledger.
+  The daily school block breaks into papers at scattered times; the plan's own sessions do not move.
+- **A tournament week names no rounds.** Its middle days all carry the identical block, because the
+  week has not been played and printing a second round would assert she survives the first.
 
 ### 3.2 The block model
 
