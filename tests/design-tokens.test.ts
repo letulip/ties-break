@@ -203,6 +203,26 @@ describe('the tokens that used to live in components are on :root, at the design
     expect(read(join(SRC, 'components/ui/PaperNote.vue'))).not.toMatch(/^\s*--paper-ink-soft\s*:/m)
   })
 
+  it('⚠ the thirteen calendar event colours, lifted for screen H\'s time x day grid', () => {
+    // WHAT MOVED: nothing, and that is the point - they had never been lifted at all. All thirteen
+    // lived in `docs/design/tokens.json` / `tokens.css`, which the app never imports, so the first
+    // component to write `var(--event-training)` would have painted a block with no colour and no
+    // error. They are on :root now, at the design's own values, checked against the export below.
+    const EVENT = [
+      '--event-training', '--event-training-alt', '--event-gym', '--event-school',
+      '--event-school-long', '--event-drills', '--event-match', '--event-match-long',
+      '--event-study', '--event-travel', '--event-rest', '--event-tournament',
+      '--event-tournament-border',
+    ]
+    for (const token of EVENT) {
+      expect(sheetTokens.get(token), `${token} is not on :root`).toBeDefined()
+      expect(sheetTokens.get(token), `${token} drifted off the design export`).toBe(designTokens.get(token))
+    }
+    // ...and the design really does name thirteen of them, so a token dropped from the list above
+    // cannot quietly shrink what this test covers.
+    expect([...designTokens.keys()].filter((t) => t.startsWith('--event-')).length).toBe(EVENT.length)
+  })
+
   it('⚠ L and M\'s celebration ground, lifted out of TournamentFlow.vue\'s point of use', () => {
     for (const token of ['--celebration-bg', '--celebration-bg-cool']) {
       expect(sheetTokens.get(token)).toBe(designTokens.get(token))

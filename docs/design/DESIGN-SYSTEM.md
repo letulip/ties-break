@@ -25,7 +25,7 @@ These are decisions, not oversights. When the two disagree, this list wins.
 
 | topic | handoff says | we do | why |
 |---|---|---|---|
-| type | `--font-sans: Manrope`, `--font-hand: Caveat` | **Sora for every heading, Manrope for everything else. No Caveat.** | our self-hosted pair since R5-32; an offline PWA does not fetch fonts, and a third family earns nothing |
+| type | `--font-sans: Manrope`, `--font-hand: Caveat` | **Sora for every heading, Manrope for everything else – and Caveat as the third family, self-hosted, for handwriting on paper only.** | the first two are our self-hosted pair since R5-32 (an offline PWA does not fetch fonts). ⚠ THIS ROW USED TO END "No Caveat" AND WAS STALE FROM 28.07: the owner added Caveat himself that day (A2e) and `public/fonts/caveat-600.woff2` has shipped since, so `--font-hand` is real and `PaperNote` has used it from its first caller. The rule that survives is the one that made the original entry right – a family is only worth its bytes where it *is* the design (ink on a scrap of paper), never for body copy or a heading |
 | bottom nav | Home · Season · Calendar · Bianca · More | **Season · Calendar · Home · Stats · More**, Home centred | Home is the thumb's home; the kid lives behind her photo, not in a tab |
 | coach note | a written quote signed by the coach | **portrait only, no quote** | we do not have a coach voice yet, and inventing one would be the diary's cardinal sin |
 | weather on Home | a temperature chip | **not shown** | owner's call |

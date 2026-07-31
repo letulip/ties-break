@@ -276,9 +276,9 @@ export function fundsPressureOf(fundsCents: number): FundsPressure {
 //
 //     THE MOODS ARE UNCHANGED AND ARE NOT TIER-GATED. «и настроений» lists what the top of the ladder
 //     has rather than taking anything off the bottom: `travelHomeMoodFor` below is the owner's
-//     earlier rule (reached the final → happy or sleepy; fell short → a weighted coin between sad
-//     and sleepy) and it reads her RESULT and her CONDITION, neither of which knows what tier she
-//     was at. A local title should be allowed to look like a title.
+//     earlier rule (reached the final → a weighted coin between happy and sleepy; fell short → a
+//     weighted coin between sad and sleepy) and it reads her RESULT and her CONDITION, neither of
+//     which knows what tier she was at. A local title should be allowed to look like a title.
 //
 //     THE DRAW is a purpose-scoped sub-stream, `seed:travel:<week>` – the same week always produces
 //     the same scene, on any device and any replay, and ZERO draws land on the MAIN weekly stream
@@ -466,6 +466,9 @@ function firstAbroadIn(
 
 /** ⚠ IT IS A COIN, AND THE COIN IS WEIGHTED BY HOW EMPTY SHE IS.
  *
+ *  This is the FELL-SHORT curve. The final has its own, one rung below - see
+ *  `travelFinalSleepChance` and the W7 note under it for why it stopped being a flat 50/50.
+ *
  *  Three rulings got us here, and the third overrides the second.
  *
  *  1. The owner's original rule: «если не дошла - sad или sleepy если сильно устала при этом».
@@ -496,8 +499,104 @@ export function travelSleepChance(condition: number): number {
   return TRAVEL_SLEEP_CHANCE_EMPTY + (TRAVEL_SLEEP_CHANCE_FRESH - TRAVEL_SLEEP_CHANCE_EMPTY) * t
 }
 
-/** The owner's rule. BOTH branches are a coin now, on the same sub-stream keyed to the week she
- *  comes home - one draw, whichever way the week went. */
+// =================================================================================================
+// W7 — THE FINAL STOPS BEING A 50/50, AND WHY THAT WAS THE WHOLE BUG
+// =================================================================================================
+//
+// The owner, twice, a career and a half apart:
+//
+//   «Ни разу не увидел после финала радостную итоговую картинку недели, все время спит. Было 3
+//    финала уже. Состояние нормальное, выше 55%»
+//   «Картинку с радостным общением про подиум увидел только один раз за 1,5 карьеры. В основном
+//    спит.»
+//
+// ⚠ WHAT WAS MEASURED BEFORE ANYTHING WAS TOUCHED, because "make celebration likelier" is the fix
+// you write when you have not found out which arm is winning. Driven on the live engine over 40
+// careers x 4 seasons (a parent who paces her: one entry every three weeks, never below 55
+// condition), reading `toSnapshot(world).diary.scene` - the very object WeekRecapCard binds:
+//
+//   * NO ARM SWALLOWS THE CASE. `weekSceneFor`'s journey arm is first and it won on 443 of 443
+//     weeks she reached a final. Not one final drew the layoff, the exams, the holiday or the
+//     calendar's own frame.
+//   * THE KEY IS NOT WRONG. `happy` appeared on champion and runner-up weeks and on NOTHING else -
+//     0% at semi-final, quarter-final and every early exit - which is `reachedFinal` doing exactly
+//     what it says off `finishIdx`.
+//   * THE ART, THE URL BUILDER AND THE ROUTE ARE ALL FINE. Twelve files ship, `weekSceneArtUrl`
+//     spells the mood into the name, and App.vue opens the story on the tournament week itself.
+//   * AND THE SUB-STREAM IS CLEAN: the first draw of `seed:travelmood:<week>` is uniform to within
+//     1.4% per week over 4000 seeds, and 200k fresh streams fill ten buckets flat. No week bias, no
+//     seed bias, nothing for a fresh career to land on.
+//
+// SO NOTHING WAS BLOCKED. THE CELEBRATION WAS HALVED, BY A COIN THIS FUNCTION TOSSED ITSELF:
+//
+//     if (args.reachedFinal) return roll < 0.5 ? 'happy' : 'sleepy'
+//
+// She WINS THE TITLE and the week's painting shows her asleep 53% of the time (measured, n=293).
+// She loses the final: asleep 47% (n=150). Three finals in a row landing sleepy - the owner's first
+// message - is a one-in-eight run, and he hit it; but the run is not the story. The story is that
+// under this rule a title week and a first-round exit could draw THE SAME PICTURE, and half the
+// time they did.
+//
+// ⚠ AND THE LOSING FACE OF THE COIN IS NOT A NEUTRAL PICTURE - it is the DEFAULT one. `sleepy` is
+// also what an ordinary trip home draws (34-39% of non-final journeys at these conditions, and up
+// to 85% when she is empty), so the coin was not choosing between two ways of saying "she reached a
+// final". It was choosing between saying it and saying nothing at all. That is why the owner's
+// sentence is «в основном спит» rather than «редко радуется»: on the one week of the season that
+// earned its own picture, the game had a 50% chance of drawing the week it draws every other time.
+//
+// -------------------------------------------------------------------------------------------------
+// THE FIX IS THE SHAPE THIS FILE ALREADY ARGUES FOR, ONE RUNG LOWER
+// -------------------------------------------------------------------------------------------------
+//
+// The fell-short branch stopped being a threshold and became a WEIGHTED coin, for reasons written
+// out above `travelSleepChance` - both pictures reachable at every condition (the owner's «давай
+// тоже рандом сделаем»), and sleep likelier the emptier she is («это задача игрока поддерживать её
+// состояние, в его же интересах»). The final branch never got that treatment; it kept the flat coin
+// from the drop before. So it gets it now, with its own pair of endpoints:
+//
+//   * IT ANSWERS THE SENTENCE HE ACTUALLY WROTE. «Состояние нормальное, выше 55%» is him telling us
+//     her condition and expecting it to count for something - and under the old rule it counted for
+//     NOTHING on a final week. It does now: at 55 the drive home is the celebration ~72% of the
+//     time, at the measured mean of a real final week (75) ~82%, and a fresh girl 90%.
+//   * IT KEEPS «РАНДОМНО», which is his own word for this rule. It is still a coin and both faces
+//     are still reachable at every condition - a finalist who has been run into the ground can
+//     still fall asleep in the car, which is the true and the better picture of that week.
+//   * IT SITS STRICTLY BELOW THE ORDINARY CURVE at every condition (0.55→0.05 against 0.85→0.25),
+//     which is the one thing the two curves must never get wrong relative to each other: a girl who
+//     has just played a final is LESS likely to be asleep than a girl at the same condition who
+//     went out on Tuesday. Adrenaline is the reason and the gap is 0.20-0.30 the whole way across.
+//
+// ⚠ WHAT IS DELIBERATELY NOT TOUCHED, and it is the other half of what the measurement found. A
+// deep run is charged its strain by `finalizeTournament` BEFORE the diary reads condition (a title
+// run costs 18 points, a first-round exit 7), so on the fell-short branch the better she does the
+// sleepier the painting is allowed to be. That is a real perversity and it is REPORTED rather than
+// fixed here: that branch chooses between `sleepy` and `sad`, never `happy`, so it cannot be what
+// the owner is missing - and re-weighting it would move how often the `sad` painting shows up,
+// which is a separate ruling of his and not this fix's business.
+//
+// ⚠ NO DRAW MOVES. This is a comparison threshold on a value that was already drawn, on a
+// purpose-scoped sub-stream that nothing in the tick reads. The frozen MAIN capture (41550 /
+// e6b0c709) cannot move by construction, and tests/travel-home.test.ts re-derives it anyway.
+
+/** How likely the painting is of her ASLEEP rather than laughing, on a week she reached the FINAL.
+ *
+ *  Same linear shape as `travelSleepChance` and deliberately parallel to it, so the two rules read
+ *  as one idea at two depths rather than as two inventions. Both faces reachable at every
+ *  condition; strictly below the fell-short curve everywhere. */
+export const TRAVEL_FINAL_SLEEP_CHANCE_EMPTY = 0.55
+export const TRAVEL_FINAL_SLEEP_CHANCE_FRESH = 0.05
+
+/** How likely the FINAL's picture is of her asleep, at this condition. */
+export function travelFinalSleepChance(condition: number): number {
+  const t = Math.max(0, Math.min(100, condition)) / 100
+  return (
+    TRAVEL_FINAL_SLEEP_CHANCE_EMPTY +
+    (TRAVEL_FINAL_SLEEP_CHANCE_FRESH - TRAVEL_FINAL_SLEEP_CHANCE_EMPTY) * t
+  )
+}
+
+/** The owner's rule. BOTH branches are a weighted coin now, on the same sub-stream keyed to the
+ *  week she comes home - one draw, whichever way the week went. */
 export function travelHomeMoodFor(args: {
   reachedFinal: boolean
   condition: number
@@ -505,7 +604,11 @@ export function travelHomeMoodFor(args: {
   week: number
 }): TravelHomeMood {
   const roll = rngFromSeed(`${args.seed}:travelmood:${args.week}`)()
-  if (args.reachedFinal) return roll < 0.5 ? 'happy' : 'sleepy'
+  // W7: was `roll < 0.5 ? 'happy' : 'sleepy'`, a flat coin that drew a title week as an ordinary one
+  // half the time. Note the direction went with it: a LOW roll is now "she slept" on both branches,
+  // so one number means one thing whichever way the week went, and the two curves can be compared
+  // at a glance instead of one of them reading backwards.
+  if (args.reachedFinal) return roll < travelFinalSleepChance(args.condition) ? 'sleepy' : 'happy'
   return roll < travelSleepChance(args.condition) ? 'sleepy' : 'sad'
 }
 
@@ -1223,6 +1326,20 @@ export interface TravelClaims {
   lost?: true
   /** asserts she won at least one match on the trip */
   wonMatches?: true
+  /** asserts she won at least TWO of them – a line that says "two days of winning", "a couple of
+   *  wins", anything that counts.
+   *
+   *  ⚠ W-ITEM-3 SPLIT THIS OFF `wonMatches`, and it is the same shape of split as `abroad` → `air`
+   *  (see that claim's note). The owner, 31.07, after a trip where she won her opener and lost the
+   *  next one: the story said «2 days of wins and one not». It was licensed on `matchesWon > 0`,
+   *  which is what "she won some" needs and NOT what "two days of winning" needs, and the honesty pin
+   *  could not see the difference because the vocabulary had only the one claim in it. One claim
+   *  doing two jobs held only while no line in the pool counted; two lines did.
+   *
+   *  ⚠ AND THE FIX IS THE COUNT, NOT THE WORDING. Softening "Two days" to "some days" would have
+   *  bought the honesty with the only thing these lines have – a parent noticing a specific thing –
+   *  and it is not what was wrong. The sentence is true; it was being said about the wrong week. */
+  wonTwo?: true
   /** asserts one match and no wins – the first-round exit */
   firstRound?: true
   /** asserts she is carrying an injury */
@@ -1379,15 +1496,36 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
     claims: { lost: true, wonMatches: true },
     license: (t) => plainLoss(t) && t.matchesWon > 0,
   },
+  // ⚠ AND TWO THAT ARE TRUE OF EXACTLY ONE WIN, because tightening the counting lines below left the
+  // commonest trip in the game short of words. After a first-round exit, "won the opener and lost the
+  // next" is the way a junior week most often ends – it is what the owner was playing when he found
+  // this – and it had two lines to itself, one of which needs an aeroplane. Same voice, same rule: a
+  // detail noticed, nothing graded.
+  {
+    text: 'She won her first and lost her second. She only talked about the first.',
+    claims: { lost: true, wonMatches: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 1,
+  },
+  {
+    text: 'One win, and out the next day. She asked what was for dinner.',
+    claims: { lost: true, wonMatches: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 1,
+  },
+  // ⚠ THE TWO THAT COUNT. A junior tournament is one week and one match a day, so a parent writing
+  // "two days of winning" is writing `matchesWon === 2` – and these two were licensed on
+  // `matchesWon > 0`, i.e. on ONE win as readily as on three. The owner saw it on the commonest
+  // possible shape of trip: she won her first match, lost her second, and the week's story told him
+  // she had won on two days. It is EXACTLY two, not "two or more": `plainLoss` reaches a semi-final
+  // exit, where three wins would make "two days" as wrong in the other direction.
   {
     text: 'Two days of winning and one of not. She only wanted to talk about the last one.',
-    claims: { lost: true, wonMatches: true },
-    license: (t) => plainLoss(t) && t.matchesWon > 0,
+    claims: { lost: true, wonMatches: true, wonTwo: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 2,
   },
   {
     text: 'A couple of wins, and then not. She still wanted the window seat home.',
-    claims: { lost: true, wonMatches: true, air: true },
-    license: (t) => plainLoss(t) && t.matchesWon > 0 && air(t),
+    claims: { lost: true, wonMatches: true, wonTwo: true, air: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 2 && air(t),
   },
   // --- ONE MATCH, AND THE LONG WAY BACK ----------------------------------------------------------
   // The junior road is MOSTLY THIS – a first-round exit is the single commonest way a trip ends, and

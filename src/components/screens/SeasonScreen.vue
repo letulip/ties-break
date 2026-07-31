@@ -41,7 +41,7 @@ import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
-import { isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
+import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
@@ -55,6 +55,7 @@ import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
+import { activeLadderOfSnapshot } from '../../shared/protocol'
 import type { PracticeBooking, UpcomingEvent, VacationBooking, WorldEvent, WorldMatch } from '../../shared/protocol'
 
 const game = useGameStore()
@@ -189,10 +190,10 @@ function weekOnly(w: number): string {
   return weekLabel(w).split(' ')[0]
 }
 
-/** A block's identity is the surface it is mostly made of - the one the player plans around. */
-function dominantSurface(b: (typeof SURFACE_BLOCKS)[number]): Surface {
-  return (Object.keys(b.weights) as Surface[]).reduce((a, x) => (b.weights[x] > b.weights[a] ? x : a))
-}
+// ⚠ `dominantSurface()` MOVED TO engine/season/calendar.ts, next to the SURFACE_BLOCKS table it
+// reduces (see the note there). The calendar screen needs the same answer for its week grid's court
+// colour, and a one-line reduce copied into a second screen is a line that drifts by an argument.
+// Nothing about what this screen renders changed - same function, same call site, one import.
 /** The season's own year, the same one weekLabel prints – never the calendar year (they diverge at
  *  season 5, which is what week-numbering.test.ts exists to remember). */
 const seasonYearLabel = computed(() => {
@@ -627,7 +628,14 @@ function openRescue(): void {
 
 // --- kidRank: only needed here now for the Friendly-match viewer's rank-a prop – the
 // full standings table moved to the Stats tab (round-6). ---------------------------
-const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
+//
+// ⚠ HER LADDER, NOT THE INTERNATIONAL ALIAS (31.07, fix/ladder-separation). A friendly is on neither
+// table, so the only question this prop can be answering is "where does she stand", and the app has
+// exactly one answer to that: `Snapshot.activeLadder`. `snapshot.kidRank ?? 0` was the international
+// number AND a number at all times, so an unranked girl went into the viewer's head-plate as the
+// tie-floor place she shares with half the field. (This file is under the fiction guard in
+// tests/ladder.test.ts, which reads the whole source: no trademark here, in copy or in comments.)
+const kidRank = computed(() => activeLadderOfSnapshot(game.snapshot).rank)
 
 // --- this week's tournament: only kid matches are ever recorded as `match`
 // events, so the list below IS the kid's path – nothing else to highlight

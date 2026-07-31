@@ -236,6 +236,10 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // 2. The run-off band above the painted surface, in internal px and on a 375pt phone (where
     //    the canvas renders about 299 CSS px wide). The furniture in that band - the Live badge
     //    and the weather plate - is ~19px tall at `top: 6px`, so it needs about 25 and gets more.
+    //    ⚠ 31.07: THE BOTTOM BAND IS FURNISHED TOO NOW - the score counter, at `bottom: 6px`, the
+    //    mirror of the row above. The symmetry assertion at the end of this test is what makes one
+    //    measurement cover both, and it is why the counter could take the band without a second
+    //    arithmetic: the same ~19px of reading in the same ~34px of run-off.
     const surfaceTop = courtToCanvas({ x: -COURT.doublesHalfWidth, y: 0 }, vp).y
     const bandOnPhone = surfaceTop * (299 / w)
     expect(bandOnPhone, `run-off is only ${bandOnPhone.toFixed(1)} CSS px on a 375pt phone`).toBeGreaterThan(30)
@@ -254,6 +258,11 @@ describe('screen I – the design and the rulings it has to keep', () => {
   it('the weather plate is one line, off the court, and shares the Season card\'s plate', () => {
     // Owner, 29.07: the decorative temperature that already ships on the Season card, in one line
     // and off the playing surface. Not re-derived here - it arrives as a prop.
+    // ⚠ RE-AIMED 31.07 ONLY IN ITS SLICE, and the protected fact is untouched. The plate lost its
+    // `class="mv-weather"` when the two pieces of top-band furniture became one centred row (owner:
+    // «align the weather element and move it down so it sits on the same line as live»), so the two
+    // absolute offsets that class carried belong to the row now. What this test is for - one line,
+    // off the surface, the Season card's own plate, never re-derived - reads exactly as it did.
     expect(viewer).toContain("import WeatherPlate from './ui/WeatherPlate.vue'")
     expect(templateOf(viewer)).toContain('<WeatherPlate v-if="temperatureC != null"')
     expect(viewer).toContain('temperatureC?: number | null')
@@ -269,8 +278,17 @@ describe('screen I – the design and the rulings it has to keep', () => {
   it('the export\'s clock slot carries a real reading rather than an invented one', () => {
     // The engine has no time model, so "Match time 00:07" cannot be told honestly. The slot keeps
     // its shape and carries the live game score instead (and the point count once it is over).
+    // ⚠ RE-AIMED 31.07: THE SLOT MOVED, THE READING DID NOT. It was the right-hand half of a serve
+    // row under the player rows; the owner had that row's other half deleted as a duplicate and this
+    // half moved into the court's bottom run-off band («move the score counter up so it sits directly
+    // under the court, positioned the way the weather element is, but at the bottom edge»). The
+    // protected fact is the honest one and is unchanged: no invented clock, and both readings the
+    // slot carried are still on the screen. Where they sit is pinned separately, below.
     expect(viewer).toContain('gameScore')
     expect(viewer).toContain('The export gives this slot to a wall clock')
+    // Read off the MARKUP, for this file's own standing reason: `gameScore`'s doc comment QUOTES the
+    // export's label to explain why we do not print it, and a pin a comment can satisfy is not a pin.
+    expect(markupOf(viewer), 'a wall clock came back').not.toContain('Match time')
   })
 })
 
@@ -345,6 +363,38 @@ describe('the pinned control bar can never reach the playing surface', () => {
     expect(styles).toMatch(/\.mv-shout\s*\{[^}]*grid-column:\s*1 \/ -1/)
   })
 
+  it('...and its floor reaches the bottom, because the takeover stopped padding its scrollport', () => {
+    // ⚠ ADDED 31.07 (owner: «the bottom buttons float in the air: there is unpainted space beneath
+    // them through which the text commentary shows. Paint it»). The bar HAS an opaque floor and
+    // always did - the floor stopped 24px early.
+    //
+    // MEASURED IN CHROME ON THE SHIPPED LAYOUT: `position: sticky; bottom: 0` pins against the scroll
+    // container's CONTENT box, not the scrollport, so `.tf-body`'s 24px of bottom padding left the
+    // pinned bar 24.0px short of the visible bottom edge - and padding does not clip, so the log went
+    // on scrolling through that strip under the bar (`elementFromPoint` 12px below the bar returned a
+    // commentary row). The fix is in the SHEET rather than in the viewer, because a painted skirt on
+    // the bar would have to match the gap exactly or cover the box score that follows it on a
+    // finished match. Take the room off the scrollport and no sticky child of any takeover can have a
+    // gap under it at any viewport height.
+    //
+    // THE ROOM MUST SURVIVE THE MOVE, which is the half a careless "fix" would drop: measured before
+    // and after, scrollHeight 839 -> 839, and the last card still stands 24.2px off the bottom edge.
+    const sheet = read('../src/style.css')
+    const body = sheet.slice(sheet.indexOf('.tf-body {\n  padding-bottom'))
+    expect(body, 'the scrollport is padding the bottom again').toMatch(/^\.tf-body \{\s*padding-bottom: 0;/)
+    // ...and the room it gave up is back as content, so nothing is flush against the bottom edge.
+    expect(sheet).toMatch(/\.tf-body::after \{[\s\S]*?height: 24px/)
+    expect(sheet, 'the spacer would add the column gap on top of the room').toMatch(
+      /\.tf-body::after \{[\s\S]*?margin-top: -16px/,
+    )
+    // The cancelled gap has to BE the gap, or the room silently becomes 24 + whatever it really is.
+    expect(sheet).toMatch(/\.tf-body \{[^}]*gap: 16px/)
+    // The wizard shares the base rule and has no sticky children, so it keeps its padding - the
+    // override is `.tf-body`'s alone.
+    expect(sheet).toMatch(/\.onboarding-body,\s*\n\.tf-body \{[^}]*padding: 8px 24px 24px/)
+    expect(sheet).not.toContain('.onboarding-body::after')
+  })
+
   it('the segmented labels fit the bar, so "Skip" cannot render as "Ski" again', () => {
     // Both rows want ~359px of pill at the sheet's 16px-a-side `.tab-pill` padding; inside a
     // .tf-card on a 375pt phone they get 293px, and the view row used to overflow its half and
@@ -354,6 +404,30 @@ describe('the pinned control bar can never reach the playing surface', () => {
     expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\)/)
     expect(read('../src/style.css'), 'the shared pill padding stays the shared pill padding').toContain(
       'padding: 6px 16px',
+    )
+  })
+
+  it('the pills divide their plate instead of bunching at its left-hand end', () => {
+    // ⚠ ADDED 31.07 (owner: «the speed and brevity buttons are bunched to the left of their plates -
+    // distribute them evenly across the plate, and make it tidy»). It is the previous test's own
+    // headroom, seen from the other side: `.tab-row` is a plain flex row and `.tab-pill` is
+    // content-sized, so the ~52px the padding trim recovered became empty plate at the right-hand end
+    // of each row - and, because "Full/Key/Skip" and "1x/2x/4x" are different widths, the two rows did
+    // not even run out at the same place.
+    const styles = stylesOf(viewer)
+    expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\) \{[^}]*flex: 1/)
+    // THE TRIM IS LOAD-BEARING UNDER `flex: 1`, not leftover: a flex item's automatic minimum size is
+    // its content size, so the padding no longer sets the pill's width but still sets the width below
+    // which it refuses to shrink. At the sheet's 16px that floor is the ~359px that overflowed in the
+    // first place. Deleting the trim as "redundant now" would put the overflow straight back.
+    expect(styles).toMatch(/\.mv-controls :deep\(\.tab-pill\) \{[^}]*padding-left: 9px/)
+    // SCOPED, like the padding: `.tab-row`/`.tab-pill` have five callers, and the draw's round tabs
+    // deliberately opt OUT of flexing because they scroll horizontally instead.
+    expect(read('../src/style.css'), 'the shared plate learned to flex').not.toMatch(
+      /\.tab-pill \{[^}]*flex:/,
+    )
+    expect(read('../src/components/BracketTabs.vue')).toMatch(
+      /\.bt-tabs :deep\(\.tab-pill\) \{[^}]*flex: 0 0 auto/,
     )
   })
 })
@@ -576,5 +650,162 @@ describe('live and replay open the same way – the popup, which is the one he l
     }
     // anti-vacuity: the two lists really are the whole match flow, and they do not overlap
     expect(new Set([...CROSS_IS_THE_ONLY_EXIT, ...HAS_A_USEFUL_EXIT]).size).toBe(SURFACES.length)
+  })
+})
+
+// =====================================================================================================
+// The owner's 31.07 playtest. Seven items; six of them are this screen's, and they share one sentence –
+// «inside the match the screen should be the match and information about the match, nothing else».
+// =====================================================================================================
+describe('a hidden screen is a stopped match', () => {
+  const viewer = read('../src/components/MatchViewer.vue')
+
+  it('pauses on visibilitychange the way the music already does, and only resumes what was running', () => {
+    // Owner, 31.07: «pause the game and the match when the screen is minimised, the way music
+    // pauses». src/audio/music.ts's R8-2 listener is the model, and the shared rule is the one worth
+    // pinning: remember whether the thing was ACTUALLY running when the screen went away, and only
+    // then start it again. A match the player had paused on purpose must come back paused.
+    expect(viewer).toContain("addEventListener('visibilitychange', onVisibilityChange)")
+    expect(viewer, 'the listener outlives the component').toContain(
+      "removeEventListener('visibilitychange', onVisibilityChange)",
+    )
+    expect(viewer).toMatch(/resumeOnVisible = playing\.value && !finished\.value/)
+    expect(viewer).toMatch(/if \(resumeOnVisible\) pauseInternal\(\)/)
+    // ...and the music's listener is still the precedent this claims to follow.
+    expect(read('../src/audio/music.ts')).toContain("addEventListener('visibilitychange'")
+  })
+
+  it('the resume is clean: the clock restarts where it stopped, never ahead of it', () => {
+    // `pauseInternal` nulls `lastTs`, and `frame` seeds `lastTs` from the first timestamp it sees –
+    // so the first frame back measures zero elapsed time. That pairing IS the guarantee that no time
+    // is skipped and none is replayed, and it is easy to break by "tidying" either half away.
+    expect(viewer).toMatch(/function pauseInternal\(\)[\s\S]{0,320}lastTs = null/)
+    expect(viewer).toMatch(/function frame\(ts: number\)[\s\S]{0,120}if \(lastTs === null\) lastTs = ts/)
+  })
+
+  it('...and a frame can never carry a whole absence, whatever the browser did or did not fire', () => {
+    // ⚠ THE HALF THAT HOLDS WITHOUT THE EVENT. iOS backgrounds through pagehide/freeze without
+    // reliably firing `visibilitychange`, and a sleeping device dispatches nothing at all – in both
+    // cases rAF simply stops and the first frame back hands `frame()` the entire gap as one delta,
+    // which `advance()` would walk through the timeline in a single call. Clamping COSTS that time
+    // rather than skipping any of it: the timeline is pre-computed and the walk is ordered, so every
+    // event still plays exactly once, in order. Presentation only – the result is the engine's and is
+    // already in the save file.
+    expect(viewer).toContain('const MAX_FRAME_DT =')
+    expect(viewer).toMatch(/const dtReal = Math\.min\(\(ts - lastTs\) \/ 1000, MAX_FRAME_DT\)/)
+    const cap = Number(/const MAX_FRAME_DT = ([\d.]+)/.exec(viewer)?.[1])
+    // Loose enough to be tuned, tight enough that it is still a CLAMP: above a real frame hitch
+    // (tens of ms) and far below any absence a player would notice as a jump.
+    expect(cap).toBeGreaterThan(0.05)
+    expect(cap).toBeLessThan(1)
+  })
+})
+
+describe('who is serving is said twice, attached to something, and never in a spare row', () => {
+  const viewer = read('../src/components/MatchViewer.vue')
+  const markup = markupOf(viewer)
+  const styles = stylesOf(viewer)
+
+  it('the serving end is outlined as well as coloured, and the row cannot move when it changes', () => {
+    // Owner, 31.07: «who's serving is already indicated by colour - add an outline on top of that».
+    // ON TOP OF, not instead of - so the accent has to survive alongside the new border.
+    expect(styles).toMatch(/\.ends-labels \.serving \{[^}]*border-color: var\(--accent\)/)
+    expect(styles).toMatch(/\.ends-labels \.serving \{[^}]*color: var\(--accent\)/)
+    // ⚠ THE HALF THAT IS EASY TO "TIDY" AWAY. The capsule is declared on BOTH ends and left
+    // transparent on the one not serving. `.ends-labels` is `justify-content: space-between`, so a
+    // border drawn only on the serving side would change that side's width and both baselines every
+    // time the serve changed hands - which, on a change of ends, is every other game. A row that
+    // twitches once a game is worse than no outline at all.
+    expect(styles).toMatch(/\.ends-labels > span \{[^}]*border: 1px solid transparent/)
+    // ...and the word stays, because colour and an outline are both decoration and neither reaches a
+    // screen reader or a monochrome screen.
+    expect(markup).toContain("' · serving'")
+  })
+
+  it('the third saying of it - the bottom pill - is gone, and the two that are left are attached', () => {
+    // Owner: «remove the duplicate indicator at the bottom». It said the same fact a third time, in
+    // a row of its own, at the far end of the panel from where the eye is. What survives is the two
+    // sayings that are attached to something the player is already looking at: the END directly under
+    // the court, and the serving player's own row.
+    expect(markup, 'the duplicate serve pill is back').not.toContain('mv-serve-pill')
+    expect(markup, 'the row it lived in is back').not.toContain('class="mv-serving"')
+    expect(styles).not.toContain('.mv-serving {')
+    expect(markup, 'the ends row still names the server').toMatch(/liveServer === leftSide/)
+    expect(markup, 'the player row still carries the accent dot').toMatch(
+      /class="mv-serve-dot" :class="\{ on: liveServer === side \}"/,
+    )
+  })
+
+  it('the score counter sits in the court\'s bottom band, the way the weather sits in the top one', () => {
+    // Owner: «move the score counter up so it sits directly under the court, positioned the way the
+    // weather element is, but at the bottom edge - this buys back some vertical space». Taken
+    // structurally rather than by eye: the same right inset as the row above, and a `bottom` that
+    // mirrors that row's `top`, so the two run-off bands are used identically and neither reading is
+    // on the playing surface.
+    const chrome = styles.slice(styles.indexOf('.mv-chrome {'), styles.indexOf('.mv-live {'))
+    const score = styles.slice(styles.indexOf('.mv-score {'), styles.indexOf('.ends-labels {'))
+    expect(chrome).toMatch(/top: 6px/)
+    expect(chrome).toMatch(/right: 10px/)
+    expect(score).toMatch(/bottom: 6px/)
+    expect(score).toMatch(/right: 10px/)
+    // It is INSIDE the court box - that is what "under the court" costs nothing - and it is the last
+    // thing in it, after the top row.
+    const courtAt = markup.indexOf('class="mv-court"')
+    const chromeAt = markup.indexOf('class="mv-chrome"')
+    const scoreAt = markup.indexOf('class="mv-score num"')
+    expect(courtAt).toBeGreaterThan(-1)
+    expect(chromeAt).toBeGreaterThan(courtAt)
+    expect(scoreAt).toBeGreaterThan(chromeAt)
+    // ...and it still says both things the deleted row said, so this was a move and not a loss.
+    expect(viewer).toMatch(
+      /const scoreReadout = computed\([\s\S]{0,60}finished\.value \? `\$\{pointsPlayed\.value\} points` : gameScore\.value/,
+    )
+  })
+
+  it('the Live badge and the weather share ONE row, so they are aligned rather than nudged', () => {
+    // Owner: «align the weather element and move it down so it sits on the same line as live». They
+    // were two absolutely-positioned boxes at the same `top: 6px`, which aligns top EDGES - and the
+    // badge is a 19px pill while the plate is a bare 13px reading, so their centre lines sat 3px
+    // apart. A 3px nudge would have fixed today's two sizes and nothing else; one flex row with
+    // `align-items: center` is true whatever either piece becomes.
+    const chrome = styles.slice(styles.indexOf('.mv-chrome {'), styles.indexOf('.mv-live {'))
+    expect(chrome).toMatch(/display: flex/)
+    expect(chrome).toMatch(/align-items: center/)
+    // The badge is optional (no badge on a replay), so the plate must be held right by the ROW and
+    // not by the badge being there to push it.
+    expect(chrome).toMatch(/justify-content: flex-end/)
+    expect(styles).toMatch(/\.mv-live \{[^}]*margin-right: auto/)
+    // Neither piece may keep a pin of its own, or the row is decoration over two absolute boxes.
+    expect(styles).not.toMatch(/\.mv-live \{[^}]*position: absolute/)
+    expect(styles, 'the weather kept a rule after the row took its offsets').not.toContain('.mv-weather {')
+    // A full-width box over the court that is not a control must not eat taps meant for the canvas.
+    expect(chrome).toMatch(/pointer-events: none/)
+  })
+})
+
+describe('the match screen is the match, and nothing else', () => {
+  const flow = read('../src/components/TournamentFlow.vue')
+
+  it('no list of OTHER matches is drawn above the court', () => {
+    // Owner, 31.07: the live match screen was opening with the rounds already played stacked above the
+    // court. Outside the match that strip is the right thing on the right screen - it is how a player
+    // reads her path between rounds - so this is a placement fix and not a deletion, and the pin has to
+    // say both halves or it would be satisfied by ripping the strip out altogether.
+    const markup = markupOf(flow)
+    // 1. The strip still exists, and it still refuses the finale (the L/M poster draws her whole path
+    //    itself - see §L - so printing it twice one card apart was the older version of this same bug).
+    expect(markup).toContain('class="tf-strip"')
+    expect(markup).toMatch(/v-if="pending\.bracket\.length && phase !== 'finale' && !replayOpen"/)
+    // 2. ...and it is gated on the SAME flag every other piece of tournament furniture on this screen
+    //    already yields to, which is the fact worth protecting: one condition means "a match is on
+    //    screen", so a future row cannot be added that only half-knows about it.
+    expect(flow).toMatch(/const showBracket = computed\(\s*\(\) =>[\s\S]{0,160}!replayOpen\.value/)
+    expect(markup).toMatch(/<SurfaceMark v-if="!replayOpen"/)
+    // 3. and the strip really is ABOVE the viewer in the markup, which is what made it the thing the
+    //    player met first when the screen opened.
+    const stripAt = markup.indexOf('class="tf-strip"')
+    const viewerAt = markup.indexOf('<MatchViewer')
+    expect(stripAt).toBeGreaterThan(-1)
+    expect(viewerAt).toBeGreaterThan(stripAt)
   })
 })

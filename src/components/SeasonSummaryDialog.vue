@@ -235,9 +235,17 @@ const rankedItf = computed(() => game.snapshot?.ladders.itf.rank !== null)
   font-weight: 800;
 }
 
+/* ⚠ THE TYPE IS SET ON THE SHEET, NOT ON THE COMPONENT, since PaperNote's root became a wrapper so
+   its tape could survive `torn`'s clip-path. `.tb-paper` declares its own `font-size` (17px), which
+   beats a larger one inherited from an ancestor - so this closing line would have quietly dropped
+   two points had it stayed where it was. Everything that positions the scrap on the page is still
+   the wrapper's. This note is `torn tape` and was the second victim of the same bug. */
 .season-note {
   display: block;
   margin: 0 0 16px;
+}
+
+.season-note :deep(.tb-paper) {
   font-size: 19px;
   text-align: center;
 }

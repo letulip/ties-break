@@ -555,6 +555,60 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
     expect([...seen].sort(), 'a constant wearing a draw\'s clothes').toEqual(['happy', 'sleepy'])
   })
 
+  // ⚠ RE-AIMED BY W7, AND THE CLAIM ABOVE IS THE ONE THAT LET THE BUG SHIP. "Both are reachable" is
+  // true of a flat 50/50 and was true of the flat 50/50 that WAS here – so the suite was perfectly
+  // happy while the owner won three finals in a row and was shown his daughter asleep in the car
+  // every time («ни разу не увидел после финала радостную итоговую картинку недели, все время
+  // спит»). Nothing above is weakened or deleted; what is added is the half that was never asserted:
+  // WHICH of the two the final is supposed to be, and by how much.
+  //
+  // The three claims are the three things W7's rule actually promises, and each is separately
+  // breakable by a plausible edit:
+  //   (a) THE CELEBRATION IS THE ANSWER. At any condition a girl can realistically bring home from
+  //       a final, laughing has to be the MAJORITY picture – otherwise a title week keeps drawing
+  //       the same painting as an ordinary Tuesday, which is the bug.
+  //   (b) SLEEP IS STILL EARNED. It gets likelier the emptier she is, by a margin no rounding could
+  //       produce – the owner's «это задача игрока поддерживать её состояние» survives the fix.
+  //   (c) A FINALIST IS NEVER SLEEPIER THAN A GIRL WHO WENT OUT EARLY at the same condition. This is
+  //       the relationship BETWEEN the two curves and it is the one nobody would think to check by
+  //       reading either function on its own; get it backwards and the game says a final is more
+  //       exhausting to remember than a first-round exit.
+  it('reached the final: the CELEBRATION is the likely answer, and sleep is still earned', () => {
+    const finalSleepShare = (condition: number) => {
+      let sleepy = 0
+      for (let w = 1; w < 400; w++) {
+        if (travelHomeMoodFor({ reachedFinal: true, condition, seed: 's', week: w }) === 'sleepy') sleepy++
+      }
+      return sleepy / 399
+    }
+    const shortSleepShare = (condition: number) => {
+      let sleepy = 0
+      for (let w = 1; w < 400; w++) {
+        if (travelHomeMoodFor({ reachedFinal: false, condition, seed: 's', week: w }) === 'sleepy') sleepy++
+      }
+      return sleepy / 399
+    }
+    // (a) 55 is the number the owner quoted in the report («состояние нормальное, выше 55%»), and it
+    // is below the measured mean of a real final week (~75), so it is the honest floor to pin.
+    for (const condition of [55, 70, 85, 100]) {
+      expect(finalSleepShare(condition), `c${condition}: the final is not the celebration`).toBeLessThan(0.4)
+    }
+    // ...and it is never a certainty either way, at either end – the owner's «давай тоже рандом»
+    expect(finalSleepShare(0), 'an empty finalist can never sleep').toBeGreaterThan(0.05)
+    expect(finalSleepShare(100), 'a fresh finalist always sleeps').toBeLessThan(0.95)
+    expect(finalSleepShare(100), 'a fresh finalist can never sleep').toBeGreaterThan(0.01)
+    // (b) monotone in how empty she is
+    expect(finalSleepShare(0)).toBeGreaterThan(finalSleepShare(50) + 0.15)
+    expect(finalSleepShare(50)).toBeGreaterThan(finalSleepShare(100) + 0.15)
+    // (c) and always calmer than the same girl who lost early
+    for (const condition of [0, 25, 50, 75, 100]) {
+      expect(
+        finalSleepShare(condition),
+        `c${condition}: a finalist is drawn sleepier than an early exit`,
+      ).toBeLessThan(shortSleepShare(condition))
+    }
+  })
+
   it('fell short: a WEIGHTED coin – both pictures reachable everywhere, sleep likelier when empty', () => {
     // ⚠ RE-AIMED, AND THE CLAIM IS STRONGER THAN THE ONE IT REPLACES. This asserted a hard line:
     // drained → sleepy, everything above → sad. The owner rejected the line itself - «я тогда её
@@ -616,6 +670,12 @@ describe('ui/travel-set — the note may not lie', () => {
     runnerUp: (t) => t.lostFinal,
     lost: (t) => !t.wonTitle,
     wonMatches: (t) => t.matchesWon > 0,
+    // ⚠ ADDED WITH THE CLAIM IT CHECKS (31.07). The pin could not catch «2 days of wins and one not»
+    // on a one-win trip because the vocabulary had a single claim for "she won something" and two
+    // lines in the pool were COUNTING. Re-derived here, independently of the licence as the rest are:
+    // a line that says two wins wants two, and `plainLoss` reaches a semi-final exit, so "at least
+    // two" would still let "two days of winning" land on a week that had three.
+    wonTwo: (t) => t.matchesWon === 2,
     firstRound: (t) => t.firstRound,
     injured: (t) => t.injured,
     tired: (t) => t.conditionBand === 'drained',

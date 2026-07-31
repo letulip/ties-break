@@ -122,6 +122,51 @@
   /* Money has two directions and both must read side by side wherever the wallet splits them. */
   --money-in: #4ac96a;
   --money-out: #ef4b3a;
+
+  /* --- WHERE THE MONEY WENT, ONE COLOUR PER CATEGORY (round-19) -------------------------------
+     The owner, 31.07: «до этого pie chart был разноцветный, это было сильно нагляднее. Давай снова
+     его сделаем таким в нашей гамме, а еще вот эти иконки категорий покрасим в соответственные
+     цвета». So this REVERSES the U1 decision to make the donut monochrome, and the reversal is his.
+
+     ⚠ AND IT ANSWERS THE OBJECTION THAT DECISION WAS MADE ON, which is why the values are here and
+     not in the component. Round-7's rainbow was nine hand-picked hexes living inside MoneyScreen -
+     "nine colours that are in no token file" - and U1 was right that a private palette is not a
+     palette. These are declared once, in the app's one vocabulary, and `tests/design-tokens.test.ts`
+     rule B now forbids a second copy of any of them. What U1 removed was the drift, not the colour.
+
+     NOT the `--event-*` family, and the reason is the surface. Those thirteen are built for filled
+     blocks on the calendar's light grid and sit at mid-dark lightness (#46685d, #3b5f7d); as a 3px
+     donut stroke on `--card-top` (#17212b) three of them would be nearly the same dark teal. These
+     are the same HUES lifted into a lightness that survives a dark card and a 12px glyph - the money
+     screen's own reading of the game's colour world, keyed to meaning the same way (travel violet,
+     entry amber like a tournament, practice blue like a match, vacation warm, other grey).
+
+     They are OURS, not the export's, so they are deliberately absent from docs/design/tokens.json -
+     that file is the owner's handoff transcribed, and inventing rows in it would make it lie about
+     what he sent. */
+  /* ⚠ AND THE CALENDAR SHARES THEM (owner, 31.07: «цвета в календаре какие-то грустно-унылые,
+     давай возьмем ту же палитру, что и в кошельке сюда»). Which turns the `--cat-` prefix from a
+     money word into the right one: this is ONE COLOUR PER THING THE FAMILY DOES, and the two screens
+     read it the same way - what an hour costs on the wallet, and where that hour sits in her week.
+     Coaching lime is the money and the drills; travel violet is the fare and the journey; entry
+     amber is the fee and the tournament. That is `цвет = смысл` across two screens rather than one.
+
+     The `--event-*` family stays declared and value-pinned against the design export: it is the
+     record of what the owner sent, and the grid simply no longer paints with it. Three hues below
+     have no wallet side at all (school, study, rest are hours, not spending) and exist for the grid. */
+  --cat-coaching: #cfe152;
+  --cat-travel: #9a86e0;
+  --cat-entry: #e5a23c;
+  --cat-gear: #d97f52;
+  --cat-stringing: #5ec9ac;
+  --cat-physio: #57b0e0;
+  --cat-vacation: #e0748f;
+  --cat-practice: #6f8fd8;
+  --cat-other: #8b95a1;
+  /* The grid-only three: hours with no line on the wallet. */
+  --cat-school: #7f8fa6;
+  --cat-study: #b08fd0;
+  --cat-rest: #56c8d8;
   /* The export's three "how did this day go" colours (tokens.css --day-good/mid/bad). On the budget
      sparkline they are the dots: a week that earned, a week that spent, a week that spent while
      already under water. */
@@ -207,6 +252,41 @@
     transparent 1px,
     transparent 26px
   );
+
+  /* --- THE CALENDAR'S EVENT COLOURS (screen H's time x day grid) --------------------------------
+     All thirteen, verbatim from docs/design/tokens.css's "Calendar event types" block (and the same
+     values in tokens.json, which is that file's source). They are what a block in the week grid is
+     PAINTED with: the design gives every kind of hour its own hue, so a week is readable as a shape
+     before a single label is read - three greens for the training family, two blues for match play,
+     two greys for school and homework, a rust for drills, a violet for travel and an amber for a
+     tournament.
+
+     ⚠ THEY ARE LIFTED, ONCE, FOR THE REASON THE PAPER TOKENS ABOVE WERE. `docs/design/tokens.css`
+     is a REFERENCE and is never imported, so until this block existed every one of these thirteen
+     resolved to nothing at all - and an unresolved custom property is not an error, it is a block
+     painted with no background. tests/design-tokens.test.ts rule B then guarantees the other half:
+     no component may keep a private copy of one of these, so the grid's twelve block kinds all read
+     the same vocabulary.
+
+     ⚠ `--event-travel` AND `--event-tournament(-border)` SHIP WITHOUT A CALLER, deliberately. The
+     grid is drawn for the ORDINARY week only (the spec's §3.1, the owner's own boundary: "для тех,
+     где нет отпусков, чемпионатов и поездок"), and a trip or a draw is by definition not one of
+     those - `weekDays.ts` makes such a week uniformly `away`. They are declared anyway because the
+     palette is the design's and lifting twelve of thirteen would leave the next reader hunting for
+     the missing one. Nothing may invent a caller for them; see the report. */
+  --event-training: #46685d;
+  --event-training-alt: #2f5c4e;
+  --event-gym: #3c6b62;
+  --event-school: #57626a;
+  --event-school-long: #5c4550;
+  --event-drills: #7d4326;
+  --event-match: #3b5f7d;
+  --event-match-long: #3d5580;
+  --event-study: #49545d;
+  --event-travel: #584a8c;
+  --event-rest: #3f5665;
+  --event-tournament: #9c5a1c;
+  --event-tournament-border: #d9a441;
 
   /* The bottom bar sits a step DARKER than the page, so the page floats above it. */
   --nav-bg: #0c141b;
@@ -860,6 +940,43 @@ select {
   padding: 8px 24px 24px;
 }
 
+/* ⚠ THE TAKEOVER'S BOTTOM ROOM IS CONTENT, NOT THE SCROLLPORT'S PADDING - AND IT HAD TO BECOME ONE
+   (owner, 31.07: on the live match screen «the bottom buttons float in the air: there is unpainted
+   space beneath them through which the text commentary shows. Paint it»).
+
+   THE CAUSE, MEASURED IN CHROME ON THE SHIPPED LAYOUT RATHER THAN GUESSED AT. `position: sticky;
+   bottom: 0` does NOT pin against the bottom of the scrollport the way the spec's "sticky view
+   rectangle is the scrollport" wording reads: it pins against the scroll container's CONTENT box.
+   `.tf-body` carries 24px of bottom padding, so the match viewer's pinned control bar came to rest
+   24.0px short of the visible bottom edge, and that strip is inside the scrollport with nothing
+   painting it - padding does not clip, so the commentary log went on scrolling THROUGH it under the
+   bar. `elementFromPoint`, 12px below the bar's own bottom edge, returned a commentary row. That is
+   the "floating in the air" exactly: the bar has an opaque floor (`background: var(--bg)`) and the
+   floor simply stopped 24px early.
+
+   WHY THE ROOM MOVES INSTEAD OF THE BAR GROWING A SKIRT. A painted skirt under the bar has to be
+   exactly as tall as the gap or it covers whatever follows the bar - and on a finished match the box
+   score follows it. Taking the room off the scrollport removes the gap for EVERY sticky child of
+   EVERY takeover, at any viewport height, with no arithmetic to keep in sync: the content box bottom
+   IS the padding box bottom, so `bottom: 0` means the bottom.
+
+   THE ROOM ITSELF IS UNCHANGED, and that is the point of the spacer rather than a plain
+   `padding-bottom: 0`. Measured before and after: `scrollHeight` 839 -> 839, and at the end of the
+   scroll the last card still stands 24.2px off the bottom edge. `margin-top` cancels the column gap
+   the flex container would otherwise add ABOVE the spacer, so the 24px is 24px and not 40.
+   `.onboarding-body` is not a flex container and has no sticky children, so it keeps the padding it
+   has always had - which is why the declaration above stays shared and only `.tf-body` overrides. */
+.tf-body {
+  padding-bottom: 0;
+}
+
+.tf-body::after {
+  content: '';
+  flex: none;
+  height: 24px;
+  margin-top: -16px; /* = .tf-body's own column gap, so the spacer adds the 24px and not 24 + 16 */
+}
+
 .onboarding-step h2 {
   font-family: var(--font-heading);
   font-size: 17px;
@@ -1439,15 +1556,20 @@ tr.milestone td {
    values are unchanged; the 16/16/12 inset that was `.event-card`'s alone is now the `pad` prop the
    caller passes, which is the same number in the same place. */
 
-/* A PHOTOGRAPH FILLING ITS FRAME. Four places show a painting inside a box the layout has already
+/* A PHOTOGRAPH FILLING ITS FRAME. FIVE places show a painting inside a box the layout has already
    sized – the tournament card's court, the week card's master, the venue arch on Home's next-
-   tournament card, and Home's own hero – and all four need the same four declarations: fill the
-   box, never letterbox, and no descender gap under the image. The masters are not one aspect ratio
+   tournament card, Home's own hero, and (since the calendar slice) the court behind the one event a
+   calendar marker opens – and all five need the same four declarations: fill the box, never
+   letterbox, and no descender gap under the image. The masters are not one aspect ratio
    (626x505 to 625x627, 941x536, 512x512), which is exactly why `cover` is not optional here.
-   `.week-art img` steers its crop as well; that one line stays with it. */
+   `.week-art img` steers its crop as well; that one line stays with it.
+   ⚠ THE FIFTH SELECTOR IS WHY THIS RULE IS IN THE SHARED SHEET AT ALL: the calendar's card had these
+   same four declarations written out in its own scoped block for one commit, which is copy number
+   five of a rule whose comment already counted to four. */
 .event-art img,
 .week-art img,
 .venue-art img,
+.cal-card-art img,
 .diary-hero-img {
   display: block;
   width: 100%;
@@ -2894,20 +3016,13 @@ tr.kid-row td {
 }
 
 
-/* --- the bottom nav's Calendar placeholder ------------------------------------------------------
-   The owner's bar is Season · Calendar · Home · Stats · More, with HOME IN THE CENTRE – and a centre
-   only exists if there are five slots. Calendar is not built in this slice, so the slot renders its
-   glyph and its word at a third of the weight, disabled, with no press state and no dot: a tab that
-   is clearly NEXT rather than a tab that is broken. The alternative – four live tabs and a hole –
-   moves Home off centre, which is the one thing the owner's new order is about. */
-.tab-btn.tab-soon {
-  opacity: 0.34;
-  cursor: default;
-}
-
-.tab-btn.tab-soon:hover {
-  color: var(--muted);
-}
+/* ⚠ THE CALENDAR PLACEHOLDER'S TWO RULES ARE GONE (the calendar slice). `.tab-btn.tab-soon` dimmed the
+   reserved fifth slot to a third of the weight and killed its hover, so the bar could keep five seats
+   – and therefore keep Home in the centre, which is the one thing the owner's order is about – while
+   screen H did not exist. It exists now (`components/screens/CalendarScreen.vue`), the slot routes to
+   it, and `soon` is gone from App.vue with its bindings. Two dimming declarations that nothing can
+   render are exactly the dead rules A2's own guard sweeps for, so they left with the flag rather than
+   waiting for a future placeholder to want them back. */
 
 /* The export's bar sits a step darker than the page, with an 11px label. */
 .tab-bar {

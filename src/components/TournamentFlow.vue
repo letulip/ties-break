@@ -17,6 +17,7 @@ import BracketTabs from './BracketTabs.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import AppIcon from './ui/AppIcon.vue'
 import Card from './ui/Card.vue'
+import ConfettiBurst from './ui/ConfettiBurst.vue'
 import IconButton from './ui/IconButton.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import ProgressRing from './ui/ProgressRing.vue'
@@ -29,7 +30,8 @@ import { surfaceStyleHint } from '../engine/match/style'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { TIERS } from '../engine/season/calendar'
 import { KID_ID, flipScore } from '../engine/world'
-import { formatShortName } from '../shared/format'
+import { LADDER_LABEL } from '../shared/protocol'
+import { formatShortName, rankLabel } from '../shared/format'
 import { weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
 import type { MatchOptions, Side } from '../engine/match/types'
@@ -67,7 +69,24 @@ const kidFlag = computed(() => flagEmoji(profile.value?.country ?? ''))
 const kidFullName = computed(() =>
   profile.value ? `${profile.value.kidName} ${profile.value.kidLastName}` : '',
 )
-const kidRank = computed(() => game.snapshot?.kidRank ?? 0)
+// ⚠ THE RANKS ON THIS OVERLAY COME FROM THE TABLE THE TOURNAMENT IS PLAYED ON (31.07,
+// fix/ladder-separation). The owner, after a National: «по итогам матча national в таблице пишут # из
+// international, надо проверить всё разделение хорошо». This read `snapshot.kidRank`, which is the ITF
+// alias, while the opponent's came off `fullRanking` on the engine side - so both numbers on the VS
+// card, the pre-match scene, the box score and the live viewer's head-plates were international ones,
+// on a week she was playing for national points. Two currencies with no exchange rate
+// (docs/specs/two-ladders.md), and this is the one screen where both players' numbers sit side by side.
+//
+// The engine answers it now (`PendingView.ladder` / `.kidRank` / `.opponent.rank`), for the same reason
+// `temperatureC` rides on the pending view: the event has already left `upcoming` by the time it is
+// played, so a component re-deriving "which ladder is this" is a second place to get it wrong.
+const kidRank = computed<number | null>(() => pending.value?.kidRank ?? null)
+/** "National" / "International" - the player-facing name of the table these numbers are in, defined
+ *  once in LADDER_LABEL so this screen cannot invent a seventh word for it. */
+const ladderLabel = computed(() => LADDER_LABEL[pending.value?.ladder ?? 'domestic'])
+/** ...and the shared "#N or Unranked" rule, so a girl with no counting result in THIS table is not
+ *  introduced on the splash as the tie floor she shares with half the field. */
+const kidRankText = computed(() => rankLabel(kidRank.value ?? 0, kidRank.value !== null))
 // Snapshot.week stays pinned to the event's own week for the whole reveal (tickWeek never
 // advances again while paused), so this doubles as the tournament's real date range.
 const weekDates = computed(() => weekRange(game.snapshot?.week ?? 0))
@@ -80,9 +99,22 @@ const drawSize = computed(() => tier.value?.drawSize ?? 0)
 const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
 /** WHICH PAINTING the finale poster hangs. Champion = the happy frame – and note WHAT IS IN IT
  *  (docs/lore/setting.md): "earned delight, holding a small club trophy or a medal, confetti of
- *  the cheap paper kind". That is the owner's §5 ruling in one line – L's confetti is a comparable
- *  effect we ALREADY ship, painted into the photograph, so this screen reuses it instead of
- *  rebuilding eighteen falling rectangles over the top of it. */
+ *  the cheap paper kind".
+ *
+ *  ⚠ THE SECOND HALF OF THIS NOTE IS SPENT, AND THE OWNER SPENT IT. It used to read: "That is the
+ *  owner's §5 ruling in one line – L's confetti is a comparable effect we ALREADY ship, painted
+ *  into the photograph, so this screen reuses it instead of rebuilding eighteen falling rectangles
+ *  over the top of it." The argument was that the painting is the confetti. He looked at the
+ *  shipped screen and disagreed, twice in one message: «На втором месте нет конфетти на финальном
+ *  экране... Мне кажется на втором тоже можно. Всё-таки подиум. На первом тоже нет конфетти.»
+ *
+ *  AND HE IS RIGHT ABOUT THE THING THE ARGUMENT MISSED. Painted-in confetti is part of a
+ *  PHOTOGRAPH, and a photograph is a record of a moment that has already happened. Falling paper is
+ *  the moment happening now, which is what a finale is for – and the runner-up's poster hangs
+ *  `serious`, a painting with nothing celebratory in it at all, so on second place the old argument
+ *  did not even have a picture to point at. Both posters get a real burst now
+ *  (`ui/ConfettiBurst.vue`, ported from Tense Titans as he asked), the painting keeps its own job,
+ *  and this computed is unchanged. */
 const finaleEmotion = computed<AvatarEmotion>(() => {
   if (pending.value?.kidChampion) return 'happy'
   if (isRunnerUp.value) return 'serious'
@@ -133,6 +165,15 @@ const watchedRoundLabel = computed(() => {
   if (replayAdvances.value) return p.roundLabel
   return p.bracket[p.bracket.length - 1]?.roundLabel ?? p.roundLabel
 })
+
+/** WHICH SCREEN THIS FLOW IS SHOWING, for the takeover's scroll reset (owner, 31.07 - see the
+ *  `screen` prop on `ui/TakeoverShell.vue`). `phase` is most of it and is not all of it: `replayOpen`
+ *  swaps the live match in and out INSIDE the 'pre' and 'post' phases, and going from the match to
+ *  its box score is exactly the transition that used to land the player halfway down the page. The
+ *  value is never read for meaning - only for change - so a pair of them joined is the honest shape.
+ *  Deliberately NOT the round: a new round with the same phase is the same screen showing new facts,
+ *  and the player has not gone anywhere. */
+const watchedScreen = computed(() => `${phase.value}:${replayOpen.value}`)
 
 // --- Round-7 spectate geometry ------------------------------------------------
 // The Final's round index (log2(draw) - 1) and the round the kid exited in. Single-elim: she
@@ -455,7 +496,13 @@ const matchMeta = computed(() => {
        how it ended up with its pinned control bar behind the tab bar. `ui/TakeoverShell.vue` owns the
        three parts now; the classes, the layout and this screen's five phases are unchanged, and the
        header's exit stays a SLOT because the four surfaces mean four different things by it. -->
-  <TakeoverShell v-if="pending" :title="phase === 'splash' ? null : pending.tierLabel">
+  <!-- ⚠ `screen` IS WHY THE BRIEF NO LONGER OPENS HALFWAY DOWN (owner, 31.07: «after a transition
+       between screens, always land at the top of the new screen»). One shell holds five of them here
+       and the scroller between them is never unmounted, so the box score inherited however far the
+       player had scrolled the match, and the poster inherited the box score. `phase` alone is not the
+       whole answer - `replayOpen` swaps the live match in and out WITHIN a phase - so the key is the
+       pair, which is exactly `watchedScreen`. -->
+  <TakeoverShell v-if="pending" :title="phase === 'splash' ? null : pending.tierLabel" :screen="watchedScreen">
     <!-- NO HEADER ON THE E BRIEF, which is what the `null` above buys: the hero underneath carries
          the tournament's name, its court and its dates, and the design gives that screen a bare
          back-arrow rather than a title bar. Every other phase still needs to be told which
@@ -624,19 +671,25 @@ const matchMeta = computed(() => {
           <p class="tf-round">{{ pending.roundLabel }}</p>
           <p class="tf-draw">{{ drawSize }}-player draw</p>
         </div>
+        <!-- Both ranks are read off the table THIS tournament is played on, and the panel says which
+             one that is - a bare "#118" beside a bare "#4" is a comparison, and a comparison across
+             two tables with no exchange rate is a lie. See `kidRank` above. -->
         <div class="tf-first-grid">
           <div class="tf-first-side">
             <div class="tf-first-flag">{{ kidFlag }}</div>
             <div class="tf-first-name">{{ kidShort }}</div>
-            <div class="tf-first-rank">Rank #{{ kidRank }}</div>
+            <div class="tf-first-rank">{{ kidRankText }}</div>
           </div>
           <div class="tf-first-vs">VS</div>
           <div class="tf-first-side mirrored">
             <div class="tf-first-flag">{{ flagEmoji(pending.opponent.nation) }}</div>
             <div class="tf-first-name">{{ pending.opponent.name }}</div>
-            <div class="tf-first-rank">Rank #{{ pending.opponent.rank }}</div>
+            <div class="tf-first-rank">
+              {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank }}
+            </div>
           </div>
         </div>
+        <p class="hint tf-first-ladder">{{ ladderLabel }} ranking</p>
       </Card>
 
       <!-- THE COACH'S READ + THE BUTTON THAT STARTS IT. -->
@@ -669,8 +722,20 @@ const matchMeta = computed(() => {
 
     <template v-else>
       <!-- Path so far. NOT on the finale: the L/M poster carries her whole path as its own round
-           strip (design §L), and printing it twice, one card apart, is the same list said twice. -->
-      <div v-if="pending.bracket.length && phase !== 'finale'" class="tf-strip">
+           strip (design §L), and printing it twice, one card apart, is the same list said twice.
+           ⚠ AND NOT WHILE A MATCH IS ON SCREEN EITHER (owner, 31.07: the live match screen was
+           showing the rounds already played above the court, and «inside the match the screen should
+           be the match and information about the match, nothing else»). This strip is the LAST piece
+           of tournament furniture that was still being drawn over the top of the viewer: the draw
+           below it already stands down on `!replayOpen` (see `showBracket`), the round badge and the
+           surface pill already trade places on the header's date line for exactly this reason, and
+           the outer `.tf-card` frame came off on 30.07 to buy the court its width back. A list of
+           finished matches is the clearest case of all - it is the one thing on this screen that is
+           about OTHER matches, it is several rows tall, and it pushes the court down the scroller on
+           the one screen where the court is the whole point. Nothing is lost: between rounds (and on
+           the box score, and on the poster) the strip is still exactly where it was, and the draw
+           tabs below carry the same results in more detail. -->
+      <div v-if="pending.bracket.length && phase !== 'finale' && !replayOpen" class="tf-strip">
         <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
           <span class="tf-strip-round">{{ r.roundLabel }}</span>
           <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
@@ -755,12 +820,14 @@ const matchMeta = computed(() => {
       <div class="tf-scene-grid">
         <div class="tf-scene-side">
           <div class="tf-scene-name">{{ kidShort }} {{ kidFlag }}</div>
-          <div class="tf-scene-rank">#{{ kidRank }}</div>
+          <div class="tf-scene-rank">{{ kidRankText }}</div>
         </div>
         <div class="tf-scene-vs">vs</div>
         <div class="tf-scene-side mirrored">
           <div class="tf-scene-name">{{ pending.opponent.name }} {{ flagEmoji(pending.opponent.nation) }}</div>
-          <div class="tf-scene-rank">#{{ pending.opponent.rank }}</div>
+          <div class="tf-scene-rank">
+            {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank }}
+          </div>
         </div>
       </div>
       <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
@@ -782,14 +849,18 @@ const matchMeta = computed(() => {
         <span class="tf-badge" :class="kidWon ? 'win' : 'loss'">{{ kidWon ? 'Win' : 'Loss' }}</span>
         <span class="tf-scoreline num">{{ kidScore }}</span>
       </div>
-      <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }}</p>
+      <!-- ⚠ THE RESULTS TABLE THE OWNER WAS LOOKING AT (31.07). It printed her ITF rank under her name
+           whatever the tournament was, so a National box score introduced her as #118 in a table that
+           had just paid her nothing. It names its ladder now, for the same reason the Stats screen
+           does: a rank with no table beside it is only ever right by accident. -->
+      <p class="hint" style="margin: 0 0 12px">{{ kidShort }} vs {{ oppShort }} · {{ ladderLabel }} ranking</p>
       <table>
         <thead>
           <tr>
             <th></th>
             <th>
               <span class="ph-name">{{ kidShort }}</span>
-              <span v-if="kidRank" class="ph-rank">#{{ kidRank }}</span>
+              <span v-if="kidRank !== null" class="ph-rank">#{{ kidRank }}</span>
             </th>
             <th>
               <span class="ph-name">{{ oppShort }}</span>
@@ -871,6 +942,11 @@ const matchMeta = computed(() => {
         <PrimaryPill class="tf-poster-cta" variant="cta" :disabled="game.busy" @click="continueFinale">
           Continue
         </PrimaryPill>
+        <!-- The podium's paper, and it falls IN FRONT of the poster - which is why it is last in the
+             card and carries the only z-index on this screen. Both posters get it, on the owner's
+             ruling that a lost final is still a podium. Decoration and nothing else: aria-hidden,
+             never a click target, and it does not mount at all under reduced motion. -->
+        <ConfettiBurst class="tf-poster-confetti" />
       </Card>
 
       <!-- Exited earlier: the same poster with somebody else's name on it. No art for an AI
@@ -1181,6 +1257,13 @@ const matchMeta = computed(() => {
   font-variant-numeric: tabular-nums;
 }
 
+/* WHICH TABLE the two numbers above are in – centred under the VS, because it qualifies both sides
+   and belongs to neither. Quiet by design: it is a unit, not a fact about the match. */
+.tf-first-ladder {
+  margin: 8px 0 0;
+  text-align: center;
+}
+
 .tf-first-vs {
   font-size: 17px;
   font-weight: 700;
@@ -1291,7 +1374,11 @@ const matchMeta = computed(() => {
    champion's card; M's is the same light from the same place, colder by one step. Both are REAL
    tokens now (src/style.css :root) rather than the two gradients this rule used to spell out - see
    the ⚠ at the top of this block, which is why they were literals in the first place. */
+/* `position: relative` is the confetti's doing and is part of the object now: the burst fills the
+   poster with `inset: 0`, so the poster has to be the box it measures itself against. Same shape as
+   Eyebrow's own note about hosting absolutely positioned art. */
 .tf-poster {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1299,6 +1386,13 @@ const matchMeta = computed(() => {
   padding: 18px 14px 14px;
   border-radius: var(--radius-card);
   background: var(--celebration-bg);
+}
+
+/* The burst is the only thing on the poster that is deliberately above everything else. The
+   component sizes and clips itself (`inset: 0`, `border-radius: inherit`); this rule owns only the
+   one thing the CALLER gets to decide, which is that the paper falls in front of the girl. */
+.tf-poster-confetti {
+  z-index: 1;
 }
 
 .tf-poster.silver,

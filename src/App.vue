@@ -3,16 +3,25 @@
 // onboarding wizard when there is no active career. No router – a plain ref
 // switch, per spec.
 import { computed, onMounted, ref, watch } from 'vue'
+import { activeLadderOfSnapshot } from './shared/protocol'
 import type { StopReason, WorldMatch } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
 // R10-7: the sticky bar's primary button says what the week AHEAD holds (tournament / vacation /
 // practice / exams / off-season / training). All of the derivation lives in the composable – this
 // file only renders the label it hands back.
-import { useWeekAhead } from './composables/weekAhead'
+//
+// ⚠ THE CALENDAR SLICE PUT ONE MORE COMPOSABLE IN FRONT OF IT (`useWeekAction`, which reads
+// `useWeekAhead` and nothing else). The Calendar screen has the same main button, and the whole
+// hazard of a second week control is that the two answer "what does this press do" separately - the
+// arrival-gate bug, one surface further out. So the label, the mode the handler below switches on and
+// the blocked state are ONE computed with two readers. See composables/weekAction.ts.
+import { useWeekAction } from './composables/weekAction'
+import { calendarOwnsWeekAhead } from './composables/weekAhead'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
 import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
+import { useScrollReset } from './composables/scrollReset'
 import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -24,6 +33,7 @@ import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import KnockDialog from './components/KnockDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
+import CalendarScreen from './components/screens/CalendarScreen.vue'
 import ThisWeekScreen from './components/screens/ThisWeekScreen.vue'
 import KidScreen from './components/screens/KidScreen.vue'
 import CoachMarketScreen from './components/screens/CoachMarketScreen.vue'
@@ -44,7 +54,7 @@ const game = useGameStore()
 // the avatar itself; the shell only routes. (The guards in tests/round11-followups.test.ts and
 // tests/round13-nav.test.ts are plain text searches, so this file must not name the crop
 // composable or the hint key even in a comment – which is the point.)
-const weekAhead = useWeekAhead()
+const weekAction = useWeekAction()
 
 onMounted(() => game.init())
 
@@ -56,8 +66,27 @@ const splashDone = ref(false)
 // 'money' and 'kid' stay valid CONTENT states without a bottom-tab button. Both are reached from
 // Home now (A2, 28.07): the wallet from the Family budget card, her profile from her photograph.
 // Round-6 dropped Money's tab for Stats; R13-12 dropped the Kid tab for the avatar.
-type TabId = 'home' | 'play' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'
+// ⚠ 'calendar' JOINED THE UNION IN THE CALENDAR SLICE, and it is the one entry here that arrived by
+// being BUILT rather than by moving: the bar has carried a dimmed Calendar placeholder since the
+// redesign wave, reserving the centre seat for Home, and screen H now fills it.
+type TabId = 'home' | 'play' | 'calendar' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'
 const tab = ref<TabId>('home')
+
+// A SCREEN OPENS AT ITS TOP (owner, 31.07: «after a transition between screens, always land at the
+// top of the new screen - today a screen can open already scrolled»).
+//
+// Every screen below is `v-if`'d and therefore mounts fresh, which is exactly why this was missed:
+// the screen is new, the SCROLLER is not. `main.app-content` sets no `overflow`, so the document is
+// the scrollport for all eight content states and it keeps `window.scrollY` across the swap. Scroll
+// to the bottom of Home's news feed, tap Stats, and Stats opens two thirds of the way down.
+//
+// ⚠ ON `tab` AND NOTHING ELSE, deliberately. `tab` is this app's whole navigation - the bar writes
+// it, Home's notecards write it, the market's back button writes it, and the week's story writes it
+// when a tick resolves - so one watcher covers every route in the game, including the ones that are
+// not bar taps. A router's `scrollBehavior` is what this would have been; there is no router (a
+// plain ref switch, per spec), so it is one line here. The takeovers scroll inside `.tf-body`
+// instead and are handled by the shell that owns it.
+useScrollReset(tab)
 
 // ⚠ WHERE "BACK" GOES FROM THE COACH MARKET, and it used to be a lie. The screen is reachable from TWO
 // places - the Home coaching note and the Kid profile's coach row - and its back button was wired
@@ -90,31 +119,39 @@ function openMarket(from: TabId): void {
 //
 // TWO CONSEQUENCES, both deliberate:
 //
-//  1. CALENDAR IS A PLACEHOLDER. It is a real tab in the owner's design and it is NOT built in this
-//     slice. It renders (glyph + word, a third of the weight, disabled, no press state, no dot) so
-//     that Home actually sits in the middle. The alternative – four live tabs – puts Home in seat
-//     two of four, which is not the design; an empty gap in the bar reads as a rendering bug. A
-//     dimmed tab reads as "next". Its glyph is week.svg, the dot-grid calendar freed up below; the
-//     Season tab keeps season.svg (the dated page), so the two are never the same picture.
+//  1. ⚠ CALENDAR IS LIVE AS OF THE CALENDAR SLICE, AND THIS NOTE IS THE HISTORY, because the shape of
+//     the bar was argued from the placeholder and the argument outlived it. For two waves the slot
+//     rendered a glyph and a word at a third of the weight, `disabled`, with no press state and no
+//     dot: the alternative – four live tabs – puts Home in seat two of four, which is not the design,
+//     and an empty gap in the bar reads as a rendering bug, while a dimmed tab reads as "next". The
+//     reservation did its job; screen H (`CalendarScreen.vue`) is now in the seat, so the `soon` flag,
+//     its `disabled`/`aria-disabled` bindings, its `.tab-btn.tab-soon` rule and the guard in
+//     `openNav` are all GONE rather than left behind as machinery nothing can render. Its glyph is
+//     still week.svg, the dot-grid calendar; the Season tab keeps season.svg (the dated page), so the
+//     two are never the same picture.
+//
+//     ⚠ AND THE TAB IS LIVE ON EVERY WEEK, not only on the non-tournament ones the owner named. A tab
+//     that greys out on a third of the weeks is exactly the "reads as broken" the paragraph above was
+//     written to avoid, and the bar's five entries in this order are pinned as his. The SCREEN honours
+//     the sentence instead: on a tournament week it says she is away, its day marks stop pretending
+//     she is training, and its animation stands down for the flow that owns that week.
 //
 //  2. "THIS WEEK" LEFT THE BAR, NOT THE APP. It joins 'money' and 'kid' as a tabless CONTENT state –
 //     the established idiom here – and its door is Home's NEXT TOURNAMENT card, which is exactly
 //     what that screen is about (what she is entered for, what we plan for it, how the last one
 //     went). The fresh-recap dot moved onto that card with it, so nothing that used to be reachable
 //     or noticeable stopped being either.
-type NavId = TabId | 'calendar'
-const TABS: { id: NavId; icon: string; label: string; soon?: true }[] = [
+const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'play', icon: 'season', label: 'Season' },
-  { id: 'calendar', icon: 'week', label: 'Calendar', soon: true },
+  { id: 'calendar', icon: 'week', label: 'Calendar' },
   { id: 'home', icon: 'home', label: 'Home' },
   { id: 'stats', icon: 'stats', label: 'Stats' },
   { id: 'more', icon: 'more', label: 'More' },
 ]
-/** The one writer of `tab` from the bar. A placeholder slot is inert by construction – it can never
- *  route to a screen that does not exist, whatever its `id` says. */
+/** The one writer of `tab` from the bar. Every entry now routes to a screen that exists, which is
+ *  what the deleted `soon` guard was standing in for. */
 function openNav(entry: (typeof TABS)[number]): void {
-  if (entry.soon) return
-  tab.value = entry.id as TabId
+  tab.value = entry.id
 }
 function iconUrl(icon: string): string {
   return `${import.meta.env.BASE_URL}icons/${icon}.svg`
@@ -286,8 +323,39 @@ watch(
     // is this navigation. See composables/weekRecap.ts for why the preference may not be folded into
     // `recapExists` itself, and why it is a localStorage flag rather than a save field.
     if ((advanced || runClosed) && storyOpensItself(snap)) tab.value = 'week'
+    // ⚠ ...AND OTHERWISE THE CALENDAR TAKES A NON-TOURNAMENT WEEK (owner, 30.07). His sentence was that the
+    // Calendar tab is «активной при нетурнирных неделях», and the second reading is the one he meant: not
+    // DISABLED on a tournament week, but the tab you LAND on when the week ahead is not one. `afterWeekTab`
+    // is the rule; this is one of its two callers.
+    else if (advanced || runClosed) tab.value = afterWeekTab()
   },
 )
+
+/**
+ * WHERE A RESOLVED WEEK LEAVES YOU. Home, or the Calendar when the week ahead is one the calendar is about.
+ *
+ * ⚠ ONE FUNCTION FOR TWO DOORS, and it has to be: a week can land here directly (the switch above, when the
+ * story does not open itself) or via the story's own close. If those two picked their destination separately
+ * they would eventually disagree, and the player would find that turning the story off silently changed
+ * where the game puts him.
+ *
+ * ⚠ AND IT IS A DESTINATION, NOT A PAGE THAT OPENS ITSELF. The owner has already had to correct one of
+ * those - W5's story used to take the screen and he asked for a handle («а если это будет отключаемая опция
+ * - вообще нет проблем») - so the distinction matters and this is on the mild side of it: nothing covers
+ * what he was doing, the week simply ends on the screen that is about the next one. Which is why it needs no
+ * handle of its own: with the story switched off this replaces a landing on Home, and with it on it replaces
+ * a landing on Home after the story. Neither is an interruption.
+ *
+ * The tournament flow is not consulted here because it cannot be up: `runClosed` fires on the snapshot that
+ * CLEARS `pending`, and a paused reveal is not an advance.
+ */
+function afterWeekTab(): TabId {
+  // ⚠ OFF `weekAction`, WHICH IS ALREADY HERE - not a second `useWeekAhead()` and not a re-derivation. The
+  // calendar slice put that composable in front of the week-ahead precisely so one answer serves every
+  // caller, and the week BUTTON already reads it. Asking the same question twice is how the button and the
+  // destination would eventually disagree about what next week is.
+  return calendarOwnsWeekAhead(weekAction.value.kind) ? 'calendar' : 'home'
+}
 
 // --- R13-12: the Kid screen lives behind her photograph ---------------------------
 // A2 moved the avatar itself onto Home (App has no header any more), so the hint's state moved
@@ -393,13 +461,23 @@ watch(
 //    watches or skips to the result. No more one-click week that felt like a skip. If the advance
 //    stopped short (a fresh injury cancels + refunds the friendly), nothing opens and the stop's
 //    own dialog explains – same contract as the Season path.
+//
+// ⚠ THE MODE IS ASKED, NOT RE-DERIVED (the calendar slice). This handler used to read
+// `weekAhead.value.kind === 'practice'` itself, which was fine while it was the app's only week
+// control. It is not any more: the Calendar screen's CTA hands its press straight to this function,
+// so "which of the three things does a press do" has to be ONE answer that both buttons can also
+// LABEL themselves from. `weekAction.mode` is that answer.
 const practiceLive = ref<WorldMatch | null>(null)
+// HER rank, on the ladder the engine says she is competing in – a friendly is on neither table, so
+// "her rank" is the only question the card can be asking. This used to pass `snapshot.kidRank`, the
+// ITF alias, which is a number even when she is unranked internationally. See `activeLadderOfSnapshot`.
+const activeRank = computed(() => activeLadderOfSnapshot(game.snapshot).rank)
 async function playWeek(weeks: 1 | 4): Promise<void> {
   if (game.snapshot?.pending) {
     tournamentHidden.value = false
     return
   }
-  const throughPractice = weeks === 1 && weekAhead.value.kind === 'practice'
+  const throughPractice = weeks === 1 && weekAction.value.mode === 'practice'
   await game.advance(weeks)
   if (throughPractice) {
     const s = game.snapshot
@@ -558,11 +636,22 @@ function dismissSeasonSummary(): void {
         @navigate="$event === 'market' ? openMarket('home') : (tab = $event)"
       />
       <SeasonScreen v-else-if="tab === 'play'" />
+      <!-- Screen H, the calendar. It ASKS to play the week rather than doing it: `playWeek` is the
+           app's one advance, and a second caller of `game.advance` is how "what does this press cost"
+           gets answered twice (see composables/weekAction.ts). -->
+      <CalendarScreen v-else-if="tab === 'calendar'" @advance="playWeek(1)" />
       <!-- W1: the story opens itself at the end of a week (see the `week` watcher above), so its ×
            is a real close now – the design's own "the cross returns to Home" – and not just a
            silencer. (The handoff's wording is quoted in the script block; no Cyrillic may appear in
            a template – tests/round13-nav.test.ts.) -->
-      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />
+      <!-- ⚠ THE STORY'S CLOSE READS THE SAME RULE the direct landing does (`afterWeekTab`). It used to be a
+           literal `tab = 'home'`, which would have meant that switching the story OFF changed where a week
+           leaves you - the handle is about whether the story is SHOWN, never about navigation. -->
+      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = afterWeekTab()" />
+      <!-- ⚠ MERGE NOTE (round-19): the calendar branch forked before round-18 landed, so it still
+           carried the flat `tab = 'kid'` market routing. Both halves are kept - the story's close
+           uses the calendar's `afterWeekTab()`, and the market keeps round-18's `marketFrom`, which
+           is the whole point of that fix: the back arrow returns where the market was opened from. -->
       <KidScreen
         v-else-if="tab === 'kid'"
         @navigate="$event === 'market' ? openMarket('kid') : (tab = $event)"
@@ -604,12 +693,12 @@ function dismissSeasonSummary(): void {
            booked practice week opens the flow, everything else advances as before. -->
       <button
         class="primary next-week-btn"
-        :class="`plan-${weekAhead.kind}`"
+        :class="`plan-${weekAction.kind}`"
         data-tour="next-week"
-        :disabled="game.busy"
+        :disabled="weekAction.disabled"
         @click="playWeek(1)"
       >
-        {{ weekAhead.label }}
+        {{ weekAction.label }}
       </button>
     </div>
 
@@ -618,10 +707,8 @@ function dismissSeasonSummary(): void {
         v-for="t in TABS"
         :key="t.id"
         class="tab-btn"
-        :class="{ active: tab === t.id, 'tab-soon': t.soon }"
+        :class="{ active: tab === t.id }"
         :data-tour="`tab-${t.id}`"
-        :disabled="t.soon"
-        :aria-disabled="t.soon"
         @click="openNav(t)"
       >
         <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
@@ -645,7 +732,7 @@ function dismissSeasonSummary(): void {
       v-if="practiceLive"
       :match="practiceLive"
       :week="week"
-      :kid-rank="game.snapshot?.kidRank ?? null"
+      :kid-rank="activeRank"
       @close="practiceLive = null"
     />
 

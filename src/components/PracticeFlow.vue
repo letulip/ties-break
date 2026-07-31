@@ -32,7 +32,15 @@ const props = withDefaults(
     /** the week it was played – the card names it, so an advance-and-watch is never confusing */
     week: number
     /** her standings rank, shown under her name in the box score (the sparring partner has none
-     *  that matters here – a friendly is outside the ranking) */
+     *  that matters here – a friendly is outside the ranking).
+     *
+     *  ⚠ A FRIENDLY BELONGS TO NEITHER TABLE, so this is not "the rank this match is played in" -
+     *  there is no such thing, which is what the "No ranking points" pill on this card already says.
+     *  It is HER rank, and the app has exactly one answer to that: `Snapshot.activeLadder`, the
+     *  ladder she is competing in. The callers hand it in already resolved (see App.vue and
+     *  WeekRecapCard.vue); they used to hand in `snapshot.kidRank`, the ITF alias, which printed an
+     *  international number under a girl who had never left the country. NULL means unranked in that
+     *  table and the row is simply not drawn. */
     kidRank?: number | null
   }>(),
   { kidRank: null },
@@ -116,7 +124,10 @@ function close(): void {
        fourth match surface - SeasonScreen's sandbox - did NOT have them, which is how it ended up
        with its control bar under the tab bar. Same classes, same layout, one author: see
        `ui/TakeoverShell.vue`. -->
-  <TakeoverShell title="Practice match">
+  <!-- `screen` is the phase (owner, 31.07): the pre-match card, the match and the box score share one
+       scroller that is never unmounted between them, so the box score used to open at whatever
+       scroll position the match had been left at. -->
+  <TakeoverShell title="Practice match" :screen="phase">
     <template #sub>
       <SurfaceMark :surface="match.surface" size="sm" />
       <span class="hint tf-week-dates">{{ weekLabel(week) }} · {{ weekDates }}</span>

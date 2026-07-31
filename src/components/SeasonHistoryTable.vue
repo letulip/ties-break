@@ -107,8 +107,16 @@ function formatDollars(cents: number): string {
           </tbody>
         </table>
       </div>
+      <!-- ⚠ AND WHAT THE MIDDLE TWO COLUMNS ARE, because the tiles directly above them now switch
+           tables and these do not (31.07, fix/ladder-separation). Pts and W-L are BANKED per season
+           in `SeasonSummary` / `SeasonHistoryEntry`, one number each, with no record of which ladder
+           they came from - so telling them apart is a schema decision rather than a copy fix, and it
+           is already on the open list (docs/specs/two-ladders.md, "Still open"). Saying plainly what
+           they are costs nothing and stops the reader taking them for the tab they sit under. -->
       <p class="hint">
         Funds is the season's net – underneath it, what the family had left when the year ended.
+        Points and W–L are the whole season, both tables together – unlike the tiles above, which
+        show one table at a time.
       </p>
     </template>
   </section>

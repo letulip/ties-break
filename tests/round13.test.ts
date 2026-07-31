@@ -222,8 +222,25 @@ describe('R13-5 — the practice week plays THROUGH the flow', () => {
     expect(app).not.toContain('@click="game.advance(4)"')
   })
 
+  // ⚠ RE-AIMED BY THE CALENDAR SLICE, AND IT WAS PASSING FOR THE WRONG REASON WHEN THIS WAS WRITTEN,
+  // which is the whole reason it is re-aimed rather than left alone. The assertion was
+  // `expect(app).toContain("weekAhead.value.kind === 'practice'")`. The slice moved that decision out
+  // of App.vue into `composables/weekAction.ts` (two week buttons, one answer - see that file), and
+  // App.vue now reads `weekAction.value.mode === 'practice'`. The test still went green: App.vue's new
+  // comment EXPLAINS the move and quotes the old expression verbatim, so a plain `toContain` matched a
+  // note about the deletion instead of the code. That is the "comments are not code" trap
+  // tests/design-tokens.test.ts documents at length, and a guard that a comment can satisfy is not a
+  // guard.
+  //
+  // THE PROTECTED FACT IS UNCHANGED: a booked practice week does not resolve as a silent tick - it
+  // plays THROUGH the flow, on the friendly the tick resolved. What is asserted now is that fact at
+  // both ends: the mapping lives in the composable (one place), and App.vue branches on it.
   it('a booked practice week opens the R10-12 flow on the resolved friendly', () => {
-    expect(app).toContain("weekAhead.value.kind === 'practice'")
+    const action = read('../src/composables/weekAction.ts')
+    expect(action).toContain("mode: kind === 'practice' ? 'practice' : 'advance'")
+    // read the HANDLER, not the file: the note above the function names the old expression on purpose
+    const handler = app.slice(app.indexOf('async function playWeek'), app.indexOf('// The tournament stop'))
+    expect(handler).toContain("weekAction.value.mode === 'practice'")
     expect(app).toContain('PracticeFlow')
     expect(app).toContain('practiceLive')
   })

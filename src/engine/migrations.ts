@@ -7,10 +7,12 @@ import {
   type WorldEventCategory,
 } from '../shared/protocol'
 import {
+  emptySeasonRecord,
   isCappedTier,
   KID_ID,
   SAVE_SCHEMA_VERSION,
   openingCoachId,
+  seasonStartWeek,
   seedWorldForV6,
   startingSkills,
   type WorldState,
@@ -571,6 +573,98 @@ export function migrateSave(raw: unknown): WorldState {
       save.profile.birthDay = pickInt(rngFromSeed(`${seed}:bd`), 1, daysInBirthMonth(month))
     }
     v = 27
+  }
+
+  // v27 -> v28: THE SEASON W-L, TOLD APART BY LADDER. `world.seasonRecord` joins the two running
+  // counters (owner, 31.07: «national/international разделить победы и поражения, мне кажется они не
+  // должны быть общими»). See `Snapshot.seasonRecord` for why the totals stay where they are.
+  //
+  // THE BACK-FILL IS A RECONSTRUCTION, AND IT IS EXACT WHEREVER THE EVENT FEED STILL REACHES. Unlike
+  // v26's knock there IS earlier evidence to mine, and unlike v10's own "an in-flight season's W-L
+  // can't be reconstructed post-pruning" it does not need the match records: `finalizeTournament` is
+  // the ONLY writer of a `tournament` event, it stamps `finishIdx` on it, and a finish index over a
+  // known draw size IS the match count. She played `rounds - finishIdx` wins and, unless she won the
+  // thing, exactly one loss. The tier comes off the summary's own label prefix through the shared
+  // longest-label-first lookup - the same recipe v10 used to rebuild `bestFinishByTier` and v18 used
+  // to rebuild the milestone ledger, and it is safe for the same reason: "Junior Tour 30" is a prefix
+  // of "Junior Tour 300", so a naive scan would file a J300 run under J30.
+  //
+  // ⚠ ONLY THE CURRENT SEASON, because that is all the field means. The counters reset at every
+  // wrap-up, so a row from a finished season would be double-counting a figure already banked in
+  // `seasonHistory`.
+  //
+  // ⚠ AND THE TOTALS ARE NOT TOUCHED, which is the half worth defending. `matchesEverPlayed` folds
+  // `seasonWins + seasonLosses` into the radar's confidence, and that count is documented as one that
+  // may only ever go UP - a fall would re-thicken the fog on its own, which is the shimmer the radar
+  // spec forbids. So a save whose feed has already pruned past the start of its season keeps its true
+  // total and gets a split that accounts for as much of it as the evidence supports; the remainder is
+  // simply not attributed to either ladder, because nothing left in the save says which one it was.
+  // That costs a migrated career at most the tail of one season on ONE screen, and it is the same
+  // bargain v17 struck for `seasonStartRank`. Idempotent: an existing record is never rebuilt.
+  if (v === 27) {
+    if (save.seasonRecord === undefined) {
+      const record = emptySeasonRecord()
+      const week = typeof save.week === 'number' ? save.week : 0
+      const from = seasonStartWeek(week)
+      for (const e of Array.isArray(save.events) ? save.events : []) {
+        if (e.type !== 'tournament' || typeof e.finishIdx !== 'number' || typeof e.text !== 'string') continue
+        if (typeof e.week !== 'number' || e.week < from || e.week > week) continue
+        const tier = tierFromLabel(e.text)
+        if (!tier) continue
+        const def = TIERS[tier]
+        const rounds = Math.round(Math.log2(def.drawSize))
+        const bucket = record[def.track]
+        bucket.wins += Math.max(0, rounds - e.finishIdx)
+        if (e.finishIdx > 0) bucket.losses += 1
+      }
+      // Defensive clamp: the split is a DECOMPOSITION of the totals and must never claim more than
+      // they hold. It cannot overshoot on a save this engine wrote, but a hand-edited or truncated
+      // one must not produce a screen that reads 13-4 out of a season of 9-3.
+      const capTo = (key: 'wins' | 'losses', total: number) => {
+        const sum = record.domestic[key] + record.itf[key]
+        if (sum <= total) return
+        let over = sum - total
+        for (const t of ['itf', 'domestic'] as const) {
+          const take = Math.min(over, record[t][key])
+          record[t][key] -= take
+          over -= take
+        }
+      }
+      capTo('wins', typeof save.seasonWins === 'number' ? save.seasonWins : 0)
+      capTo('losses', typeof save.seasonLosses === 'number' ? save.seasonLosses : 0)
+      save.seasonRecord = record
+    }
+    v = 28
+  }
+
+  // ⚠ THIS BLOCK WAS WRITTEN AS v27 -> v28 AND IS RENUMBERED HERE (round-19). Two waves of the same
+  // day each appended a schema step and each called it 28: the ladder split above, and this one. They
+  // touch different fields and neither reads the other, so the collision was only ever the NUMBER -
+  // and this one moves because its migration is a deliberate no-op, which makes it the cheaper of the
+  // two to renumber. Append-only is preserved either way: no shipped save has ever seen a 28 that
+  // means "spend history", because neither branch was merged before this one.
+  //
+  // v28 -> v29: `seasonHistory` rows `+spentCents +earnedCents` (what each season COST and BROUGHT IN,
+  // gross, in positive cents). The owner: «было бы очень интересно где-то хранить всю историю затрат
+  // за карьеру по годам в каком-то виде.»
+  //
+  // ⚠ IT IS A NO-OP ON PURPOSE, AND THAT IS THE WHOLE POINT OF THE BLOCK. There is nothing to
+  // back-fill and nothing that could be: the figures come off `financeWeeks`, which is pruned to a
+  // 60-week trailing window (`pruneFinanceWeeks`), so every season older than about fourteen months
+  // has had its per-category rows deleted from the save long before this migration runs. The only
+  // other trace is `lastSeasonSummary`, which holds ONE season and is overwritten every year.
+  //
+  // A back-fill would therefore have to invent numbers, and this is the one field where an invented
+  // number is worse than no number at all: the whole feature is a player asking "what has she cost
+  // us", and a fabricated answer to that is a lie with a dollar sign on it. The reader prints
+  // silence for a row without the fields (see `SeasonHistoryEntry.spentCents`), the same contract
+  // `bestFinish` has carried since v14 - so a migrated career shows its seasons honestly as "not
+  // recorded" and starts keeping real figures from its next wrap-up.
+  //
+  // Nothing else moves: no stream is added or reordered, no existing field is read or rewritten, and
+  // the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 28) {
+    v = 29
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

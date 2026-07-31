@@ -31,12 +31,18 @@
 //     depth of the category list still to run beside it. The donut is 116px. It fits with 15px to
 //     spare, and the column reads as a receipt, a photo and a chart rather than as two objects and
 //     a gap.
-//     ⚠ AND IT IS MONOCHROME NOW, which is the one thing that changed. The round-7 donut coloured
-//     its nine slices with nine hand-picked hexes (#d9f24f, #4fd2f2, #b07cf2 ...) - nine colours
-//     that are in no token file and that break the export's one-accent rule outright. The ring is
-//     the accent at nine descending strengths instead. Nothing is lost by that: the slices are
-//     already sorted largest-first, so the ramp IS the ranking, and every slice's name and percent
-//     are printed on the row beside it. A legend of nine hues was doing work the rows already did.
+//     ⚠ AND IT IS COLOURED AGAIN (round-19, owner: «до этого pie chart был разноцветный, это было
+//     сильно нагляднее. Давай снова его сделаем таким в нашей гамме»). This overrules what stood
+//     here for two waves - "the ring is the accent at nine descending strengths, and nothing is lost
+//     by that, because the slices are sorted largest-first so the ramp IS the ranking".
+//     The ranking was never the missing thing: the name and the percentage are printed on the row
+//     beside every slice, so a ring that only ranks is a ring that repeats. What one hue cannot say
+//     is WHICH spend is which, and that is the only question a reader brings to a pie chart.
+//     The objection that argument rested on is answered rather than ignored: round-7's rainbow was
+//     nine hexes hand-written inside this file, and these nine are `--cat-*` tokens in
+//     `src/style.css`, gated against a second copy by tests/design-tokens.test.ts. The colour comes
+//     back; the private palette does not. And the SAME token paints the category's glyph on its row,
+//     which is what makes the ring readable without a legend.
 //  3. INCOME IS `--money-in`, NOT THE EXPORT'S `#a5db4b`. The app has one green for "money came in"
 //     and it is a token; adding a second one for this screen alone would break the very principle
 //     the export is written on (docs/design/README.md §3, "цвет = смысл").
@@ -44,7 +50,7 @@ import { computed, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { ECONOMY } from '../../engine/economy'
 import type { FamilyBackground, FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
-import { weekLabel } from '../../shared/dates'
+import { seasonYear, weekLabel } from '../../shared/dates'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
 // U0 - the shared components (docs/specs/ui-components.md), plus the NINTH, which this screen is
@@ -169,6 +175,51 @@ const ICON_PATHS: Record<string, string[]> = {
   other: ['M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15z', 'M12 8.2V12l2.4 1.6'],
 }
 
+// ONE COLOUR PER CATEGORY, AND IT IS THE SAME COLOUR IN BOTH PLACES (round-19). The owner:
+// «pie chart был разноцветный, это было сильно нагляднее... а еще вот эти иконки категорий покрасим
+// в соответственные цвета - тогда это будет потрясающе просто и понятно с первого взгляда.»
+//
+// That last clause is the whole design and it is why this table exists rather than two lists: the
+// slice and the glyph beside its name MUST be the same hue, or the reader has to match by position
+// and the chart stops paying for itself. One lookup, two consumers - the ring's stroke and the row's
+// ink - so they cannot drift apart.
+//
+// Values live in `src/style.css` `:root` (see the `--cat-*` block there for why they are ours rather
+// than the export's, and why they are not the `--event-*` family). Nothing here may spell a hex.
+const CAT_COLOR: Record<string, string> = {
+  coaching: 'var(--cat-coaching)',
+  travel: 'var(--cat-travel)',
+  entry: 'var(--cat-entry)',
+  gear: 'var(--cat-gear)',
+  stringing: 'var(--cat-stringing)',
+  physio: 'var(--cat-physio)',
+  vacation: 'var(--cat-vacation)',
+  practice: 'var(--cat-practice)',
+  other: 'var(--cat-other)',
+}
+function catColor(key: string): string {
+  return CAT_COLOR[key] ?? CAT_COLOR.other
+}
+
+// THE THREE GLYPHS THE OWNER DREW (public/icons/*.svg, 31.07). They are FILES, not path data, so
+// they cannot take `stroke: currentColor` the way the other six do - they are masked instead, the
+// same technique the bottom bar's tab icons use, which paints the category's colour THROUGH the
+// artwork's own silhouette. Anything not listed keeps its inline path.
+//
+// ⚠ `racket` IS FILED UNDER STRINGING, NOT GEAR, and it is a judgement call worth naming: a racket
+// is the archetypal "gear" picture, but Gear already ships a kit-bag glyph that reads as a bag of
+// things, while Stringing's inline glyph was an oval with strings across it - a racket drawn badly.
+// So the owner's art replaces the drawing it was already trying to be, and the two rows stay
+// visibly different. One line to move it if he wants it on Gear instead.
+const CAT_ICON_FILE: Record<string, string> = {
+  physio: 'medical-kit-svgrepo-com',
+  stringing: 'racket-svgrepo-com',
+  income: 'incomes-svgrepo-com',
+}
+function iconMask(key: string): string {
+  return `url("${import.meta.env.BASE_URL}icons/${CAT_ICON_FILE[key]}.svg")`
+}
+
 interface BreakdownRow {
   key: string
   label: string
@@ -202,24 +253,29 @@ const pctLabel = (pct: number): string => `${Math.round(pct * 100)}%`
 // arithmetic is needed to place it, `dashoffset` walking the accumulated fill so the slices sit
 // end-to-end starting at twelve o'clock.
 //
-// THE COLOUR IS THE ACCENT AND NOTHING ELSE. `strength` is the slice's opacity, stepping down from
-// the largest spend to the smallest across whatever number of slices there are - so the ramp always
-// spans the same visual range whether the family spent on three categories or nine. The floor is
-// 0.22 rather than 0 because a slice you cannot see is a slice that looks like a gap in the ring.
+// ⚠ THE ACCENT RAMP IS GONE, AND ITS OWN ARGUMENT IS WHY. U1 gave every slice the accent at a
+// descending opacity and defended it like this: "the slices are already sorted largest-first, so the
+// ramp IS the ranking". True - and the ranking was never the thing a reader needs from a ring, since
+// the percentage and the name are printed on the row beside it either way. What the ring alone can
+// say is WHICH spend is which, and one hue at nine strengths cannot say that at all.
+//
+// So the slice now wears its category's colour at full strength, and `strength` went with the ramp.
+// Fading the small slices would have been the old idea surviving as a habit: it would mute exactly
+// the categories whose share is too small to read off the ring, which are the ones that need their
+// colour most.
 const DONUT_R = 15.915494309189533
 interface DonutSeg {
-  strength: number
+  color: string
   dasharray: string
   dashoffset: number
 }
 const donutSegments = computed<DonutSeg[]>(() => {
   const rows = expenseRows.value
-  const last = Math.max(1, rows.length - 1)
   let filled = 0
-  return rows.map((r, i) => {
+  return rows.map((r) => {
     const dash = r.pct * 100
     const seg = {
-      strength: 1 - (i / last) * 0.78,
+      color: catColor(r.key),
       dasharray: `${dash} ${100 - dash}`,
       dashoffset: 125 - filled,
     }
@@ -228,6 +284,60 @@ const donutSegments = computed<DonutSeg[]>(() => {
   })
 })
 const totalExpenseCents = computed(() => expenseRows.value.reduce((s, r) => s + r.cents, 0))
+
+// --- W7: THE CAREER, YEAR BY YEAR --------------------------------------------------------------
+//
+// The owner: «было бы очень интересно где-то хранить всю историю затрат за карьеру по годам в
+// каком-то виде.»
+//
+// ⚠ WHAT WAS CHECKED FIRST, because the honest version of this feature and the dishonest one look
+// identical on screen. The engine keeps TWO records of money and only one of them is a career:
+//
+//   `finance.window12w` / `finance.season`   the category-accurate folds this screen already draws.
+//       They come off `WorldState.financeWeeks`, which `pruneFinanceWeeks` trims to a 60-WEEK
+//       trailing window. Sixty weeks is 1.15 seasons. A five-year career has already deleted four
+//       years of per-category detail from its own save, and there is no backup of it anywhere.
+//   `seasonHistory`                          one row per finished season, capped at 30 seasons -
+//       i.e. beyond any playable career - and never pruned in practice. THIS is the career record,
+//       and it is what this list reads.
+//
+// So the chart he might have expected - spending by category, by year, all the way back - CANNOT BE
+// DRAWN, and drawing it would mean inventing four years of numbers. What can be shown is a true row
+// per season, and that is what this is.
+//
+// ⚠ AND THE NET WAS NOT ENOUGH, which is why this wave also banked the gross. `seasonHistory` has
+// always carried `fundsDeltaCents` - did the year end up or down - and that is not the question he
+// asked. ЗАТРАТЫ is what it COST to keep her playing, and a season of $18k of prize money against
+// $19k of bills reports as "-$1,000" in a net column: a shrug where the real story is that the year
+// cost nineteen thousand dollars. `spentCents` / `earnedCents` are banked at the wrap-up now (see
+// protocol.ts SeasonHistoryEntry and world.ts maybeFireSeasonWrapUp), off the same window the
+// summary popup has always used, so the two can never disagree.
+//
+// ⚠ ROWS WITHOUT THE GROSS FIGURES SAY SO, and are not quietly filled with the net. A season banked
+// before that field existed has no gross number and none can be reconstructed - the ledger behind it
+// was pruned years of game-time ago - so the row prints the balance it DOES have and the panel says
+// plainly why. A zero there would read as "a free season", which is the one thing it certainly was
+// not.
+const seasonRows = computed(() => {
+  const rows = game.snapshot?.seasonHistory ?? []
+  // Newest first: a parent opening this wants last year, not the year she was fourteen.
+  return [...rows]
+    .sort((a, b) => b.seasonIndex - a.seasonIndex)
+    .map((r) => {
+      const recorded = typeof r.spentCents === 'number'
+      return {
+        seasonIndex: r.seasonIndex,
+        yearLabel: `Season ${r.seasonIndex + 1} – ${seasonYear(r.seasonIndex)}`,
+        recorded,
+        // The headline is what the year COST - his question - and the sub-line carries the other
+        // two halves of it: what came in, and what was left when it closed.
+        value: recorded ? formatSigned(-r.spentCents!) : '–',
+        meta: recorded
+          ? `${formatSigned(r.earnedCents ?? 0)} in – ${formatFunds(r.endFundsCents)} left`
+          : `${formatFunds(r.endFundsCents)} left`,
+      }
+    })
+})
 
 // --- THE PAPER ARTEFACTS -----------------------------------------------------------------------
 // The export lays a receipt and a trip polaroid over the space beside the category column. Both are
@@ -376,13 +486,22 @@ function showAllTransactions(): void {
             tone="negative"
           >
             <template #icon>
+              <!-- The owner's own artwork, painted through a mask so the file takes the category's
+                   colour instead of shipping one. Same technique as the bottom bar's tab icons. -->
+              <span
+                v-if="CAT_ICON_FILE[row.key]"
+                class="cat-icon-file"
+                :style="{ '--cat-mask': iconMask(row.key), background: catColor(row.key) }"
+              ></span>
               <svg
+                v-else
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                :style="{ color: catColor(row.key) }"
               >
                 <path v-for="(d, i) in ICON_PATHS[row.key] ?? ICON_PATHS.other" :key="i" :d="d"></path>
               </svg>
@@ -398,17 +517,14 @@ function showAllTransactions(): void {
             :divider="false"
           >
             <template #icon>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 19.4V5.2"></path>
-                <path d="M6.4 10.8L12 5.2l5.6 5.6"></path>
-              </svg>
+              <!-- Income keeps `--money-in`, which is note 3 at the top of this file and is not up
+                   for negotiation by a new picture: the app has ONE green for "money came in". The
+                   owner's incomes glyph replaces the drawn arrow; the colour it wears is the same
+                   token the amount beside it wears. -->
+              <span
+                class="cat-icon-file"
+                :style="{ '--cat-mask': iconMask('income'), background: 'var(--money-in)' }"
+              ></span>
             </template>
           </StatRow>
 
@@ -464,7 +580,7 @@ function showAllTransactions(): void {
               :r="DONUT_R"
               :stroke-dasharray="seg.dasharray"
               :stroke-dashoffset="seg.dashoffset"
-              :style="{ opacity: seg.strength }"
+              :style="{ stroke: seg.color }"
             />
             <text class="donut-center-num" x="21" y="20.5">{{ formatFunds(-totalExpenseCents) }}</text>
             <text class="donut-center-cap" x="21" y="25">spent</text>
@@ -488,7 +604,30 @@ function showAllTransactions(): void {
         <p class="money-panel-note">Started this career with {{ startingBudget }}.</p>
       </Card>
 
-      <!-- ============================== 6. THE LEDGER ============================== -->
+      <!-- ============================== 6. THE CAREER, BY YEAR ======================
+           One row per season she has finished. Read-only, and honest about the years it cannot
+           answer for - see the script for why some rows say nothing. -->
+      <Card class="money-panel money-years">
+        <Eyebrow as="h2">Every season</Eyebrow>
+        <p v-if="!seasonRows.length" class="money-panel-note">
+          Her first season is still running – it lands here when the year wraps up.
+        </p>
+        <StatRow
+          v-for="row in seasonRows"
+          :key="row.seasonIndex"
+          class="money-row"
+          :label="row.yearLabel"
+          :meta="row.meta"
+          :value="row.value"
+          :tone="row.recorded ? 'negative' : 'plain'"
+        />
+        <p v-if="seasonRows.some((r) => !r.recorded)" class="money-panel-note">
+          Seasons played before this version kept only the year's balance, so what they cost is not
+          on file. Every season from here on records it.
+        </p>
+      </Card>
+
+      <!-- ============================== 7. THE LEDGER ============================== -->
       <div ref="ledger">
         <Card class="money-panel">
           <Eyebrow as="h2">All transactions</Eyebrow>
@@ -665,10 +804,18 @@ function showAllTransactions(): void {
   padding-top: 10px;
 }
 
-/* The bottom padding is PaperNote's, not this screen's: `torn` owns it, because the saw-tooth mask
-   it applies eats into the bottom edge and the copy has to clear the teeth. */
+/* The bottom padding is PaperNote's, not this screen's: `torn` owns it, because the cut it applies
+   eats into the bottom edge and the copy has to clear it.
+   ⚠ AND THE THREE THIS SCREEN DOES SET NOW GO THROUGH `:deep`, because PaperNote's root is a
+   positioned wrapper since the tape fix. Padding on the wrapper would have been a transparent
+   margin around the receipt rather than an inset inside it - the copy would have sat flush against
+   the paper's edges with 13px of page showing outside them. The WIDTH stays on the wrapper: it is
+   how wide the object is in the artefact column, which is this screen's business. */
 .money-receipt {
   width: 100%;
+}
+
+.money-receipt :deep(.tb-paper) {
   padding-top: 15px;
   padding-left: 13px;
   padding-right: 13px;
@@ -706,8 +853,29 @@ function showAllTransactions(): void {
   margin-top: 18px;
 }
 
+/* The stroke comes from the template, one `--cat-*` per slice (see CAT_COLOR in the script). The
+   accent stays as the fallback so a category that ever arrives without a colour is a visible ring
+   rather than an invisible gap. */
 .money-donut .donut-seg {
   stroke: var(--accent);
+}
+
+/* THE OWNER'S OWN GLYPHS, painted through their silhouette. A file cannot inherit `currentColor`,
+   so the artwork becomes a mask and the colour is the element's own background - the technique
+   `.tab-icon` already uses for the bottom bar. Sized to StatRow's icon slot, which is what the six
+   inline SVGs fill. */
+.cat-icon-file {
+  display: block;
+  width: 100%;
+  height: 100%;
+  mask-image: var(--cat-mask);
+  -webkit-mask-image: var(--cat-mask);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 /* THE ARTEFACTS STEP ASIDE ON A NARROW PHONE. Below 360px of viewport the 146px of paper and the
