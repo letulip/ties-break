@@ -1223,6 +1223,20 @@ export interface TravelClaims {
   lost?: true
   /** asserts she won at least one match on the trip */
   wonMatches?: true
+  /** asserts she won at least TWO of them – a line that says "two days of winning", "a couple of
+   *  wins", anything that counts.
+   *
+   *  ⚠ W-ITEM-3 SPLIT THIS OFF `wonMatches`, and it is the same shape of split as `abroad` → `air`
+   *  (see that claim's note). The owner, 31.07, after a trip where she won her opener and lost the
+   *  next one: the story said «2 days of wins and one not». It was licensed on `matchesWon > 0`,
+   *  which is what "she won some" needs and NOT what "two days of winning" needs, and the honesty pin
+   *  could not see the difference because the vocabulary had only the one claim in it. One claim
+   *  doing two jobs held only while no line in the pool counted; two lines did.
+   *
+   *  ⚠ AND THE FIX IS THE COUNT, NOT THE WORDING. Softening "Two days" to "some days" would have
+   *  bought the honesty with the only thing these lines have – a parent noticing a specific thing –
+   *  and it is not what was wrong. The sentence is true; it was being said about the wrong week. */
+  wonTwo?: true
   /** asserts one match and no wins – the first-round exit */
   firstRound?: true
   /** asserts she is carrying an injury */
@@ -1379,15 +1393,36 @@ export const TRAVEL_NOTES: readonly TravelNote[] = [
     claims: { lost: true, wonMatches: true },
     license: (t) => plainLoss(t) && t.matchesWon > 0,
   },
+  // ⚠ AND TWO THAT ARE TRUE OF EXACTLY ONE WIN, because tightening the counting lines below left the
+  // commonest trip in the game short of words. After a first-round exit, "won the opener and lost the
+  // next" is the way a junior week most often ends – it is what the owner was playing when he found
+  // this – and it had two lines to itself, one of which needs an aeroplane. Same voice, same rule: a
+  // detail noticed, nothing graded.
+  {
+    text: 'She won her first and lost her second. She only talked about the first.',
+    claims: { lost: true, wonMatches: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 1,
+  },
+  {
+    text: 'One win, and out the next day. She asked what was for dinner.',
+    claims: { lost: true, wonMatches: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 1,
+  },
+  // ⚠ THE TWO THAT COUNT. A junior tournament is one week and one match a day, so a parent writing
+  // "two days of winning" is writing `matchesWon === 2` – and these two were licensed on
+  // `matchesWon > 0`, i.e. on ONE win as readily as on three. The owner saw it on the commonest
+  // possible shape of trip: she won her first match, lost her second, and the week's story told him
+  // she had won on two days. It is EXACTLY two, not "two or more": `plainLoss` reaches a semi-final
+  // exit, where three wins would make "two days" as wrong in the other direction.
   {
     text: 'Two days of winning and one of not. She only wanted to talk about the last one.',
-    claims: { lost: true, wonMatches: true },
-    license: (t) => plainLoss(t) && t.matchesWon > 0,
+    claims: { lost: true, wonMatches: true, wonTwo: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 2,
   },
   {
     text: 'A couple of wins, and then not. She still wanted the window seat home.',
-    claims: { lost: true, wonMatches: true, air: true },
-    license: (t) => plainLoss(t) && t.matchesWon > 0 && air(t),
+    claims: { lost: true, wonMatches: true, wonTwo: true, air: true },
+    license: (t) => plainLoss(t) && t.matchesWon === 2 && air(t),
   },
   // --- ONE MATCH, AND THE LONG WAY BACK ----------------------------------------------------------
   // The junior road is MOSTLY THIS – a first-round exit is the single commonest way a trip ends, and

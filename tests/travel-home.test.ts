@@ -616,6 +616,12 @@ describe('ui/travel-set — the note may not lie', () => {
     runnerUp: (t) => t.lostFinal,
     lost: (t) => !t.wonTitle,
     wonMatches: (t) => t.matchesWon > 0,
+    // ⚠ ADDED WITH THE CLAIM IT CHECKS (31.07). The pin could not catch «2 days of wins and one not»
+    // on a one-win trip because the vocabulary had a single claim for "she won something" and two
+    // lines in the pool were COUNTING. Re-derived here, independently of the licence as the rest are:
+    // a line that says two wins wants two, and `plainLoss` reaches a semi-final exit, so "at least
+    // two" would still let "two days of winning" land on a week that had three.
+    wonTwo: (t) => t.matchesWon === 2,
     firstRound: (t) => t.firstRound,
     injured: (t) => t.injured,
     tired: (t) => t.conditionBand === 'drained',
