@@ -169,6 +169,97 @@ this one cannot be, and that is the point.
 
 ---
 
+## 4b. THE STRATEGY THIS HAS TO SERVE — measured, and it changes §4.3
+
+The owner, after the need curve: «мы видим, что в текущих реалиях, что у 8к, что у 25к всё хорошо.
+Значит у нас есть рычаг… Давай нормальную стратегию строить, чтобы реально надо было выбирать.»
+
+### The diagnosis: caution is free
+
+12 seeds a cell, 14→16, `peakDeficit` = the lowest the balance ever reaches:
+
+| preset · policy | trough | worst seed | survived | week to red |
+|---|---|---|---|---|
+| 8k · self-coached | $7,880 | $6,819 | 12/12 | – |
+| 8k · budget coach · **grinder** | $3,481 | **−$3,191** | **10/12** | 81 |
+| 8k · budget coach · player | $6,364 | $4,639 | 12/12 | – |
+| 8k · middle coach · **grinder** | **$676** | **−$2,860** | **5/12** | **65** |
+| 8k · middle coach · player | $4,179 | −$802 | 11/12 | 90 |
+| 25k · self-coached | $25,000 | **±$0** | 12/12 | – |
+| 25k · budget coach · player | $24,070 | $17,871 | 12/12 | – |
+
+Two readings, and the second is the design problem.
+
+**Danger exists, and it is in exactly one corner** — a working family reaching above its coach rung.
+Same coach, two policies: 10/12 against 5/12. **The owner's own instinct is correct and the game
+already rewards it**: he budgets, picks his tournaments, picks his vacations, and never enters the
+corner where careers die.
+
+⚠ **And that is the problem. Careful play costs nothing.** A 25k family that hires nobody sits at
+$25,000 with a standard deviation of **zero** — it does not spend at all. There is no decision in
+that, because one branch is simply better. A strategy game needs the safe road to have a price, and
+right now it has none: what the player gives up by being careful is invisible, because the ceiling he
+is declining was never made concrete.
+
+### What the three instruments are FOR, restated
+
+Not safety nets. **Each one is a way to buy a ceiling by giving up safety** — which is the decision
+the game is currently missing:
+
+- the **sponsor** buys money with an obligation to play (against a bench that says playing more
+  loses);
+- the **agent** buys access with a permanent tax;
+- the **investor** buys a coach the family cannot afford with a share of a future that may not exist.
+
+⚠ **This replaces §4.3's framing, which the measurement disproved.** I wrote that the investor
+"sells time" — money now to bridge a hard patch, repaid later. **There is no hard patch.** The curve
+is not a dip and a recovery; it is a countdown (week-to-red 65 and 81) or a flat line. So an investor
+is not a bridge. He is **leverage**: he does not save a family, he lets one reach past its income.
+Which is both truer to the sport and a better decision, because it has no safe answer.
+
+### The ladder of instruments, by age
+
+The owner's own sequencing, and it is right — each rung matches what a family that age can actually
+be offered:
+
+**14–15 · kit, not cash.** The local shop sees a strong first season and offers **equipment**, not
+money. ⚠ Strategically this is a different object from a cheque and that is why it goes first: it
+does not add income, it **removes a cost line** (`gear`, `stringing`). It buys no freedom — it makes
+one specific path cheaper. This is also what junior deals really are: `02-tennis-economics.md`'s own
+figure is "mostly product-only (racquets/strings/shoes, ~$1k+/yr value)", which is the shape the
+existing `ECONOMY.sponsorship` already pays in cash for want of a mechanism.
+
+**15–16 · the cash cameo, but earned.** Today `ECONOMY.sponsor` is a 6% weekly roll, paid only to a
+`working` family — a need-based gift with no occasion. It should attach to **a reason**: a title, a
+national final, a first win abroad. Same money, but "the shop backed her because she won something"
+instead of "the shop backed her because you are poor". That converts luck into consequence, and it
+removes the automatic parachute that is currently holding the 8k family up.
+
+**17–18 · the agent.** Access for a percentage. Worthless before prize money exists, so it cannot
+arrive earlier.
+
+**17–19 · the investor**, and the owner has already written the pitch: «бери дорогого тренера и
+будешь миллионером – мне 20% всех будущих призовых». Keep that voice. He is not offering rescue, he
+is **offering a gamble** — and the letter should read like it.
+
+### ⚠ The blocker the investor has, and it must be fixed first
+
+**That pitch is currently a lie the game would punish.** The expensive coach is measurably a trap:
+`25k · high coach` ends at **−$1,487 / −$6,192** with 2–11 careers in 30 surviving, and
+`120k · elite · player` is **worse than high** (17/30 against 30/30, $9,041 against $123,896). Sell a
+player 20% of her future to buy the elite rung today and the game takes her money and her career.
+
+The likely cause is honest and fixable: **the coach ladder was tuned in a world with no prize money.**
+An elite coach that reaches W100 can now pay for herself, and could not before. So before the
+investor ships, the top two rungs need re-measuring against the adult tour — the same "measure, then
+pick" order this project keeps.
+
+**Sequencing consequence:** the investor comes AFTER the coach ladder is re-measured, not before. If
+the elite rung is still a trap after that measurement, then the investor's money must buy something
+else, and that is a design decision to take with the number in hand.
+
+---
+
 ## 5. Rules the implementation may not break
 
 - ⚠ **The frozen MAIN-stream capture (41550 draws / `e6b0c709`) must not move.** Whether an offer
