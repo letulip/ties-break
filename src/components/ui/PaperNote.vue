@@ -51,8 +51,25 @@ withDefaults(
     tape?: boolean
     /** The red margin rule of a school exercise book: 1px, inset 17px, paper on both sides. */
     marginRule?: boolean
+    /**
+     * HOW BIG A PIECE OF PAPER THIS IS, and it is the only thing a LETTER needed that this component
+     * did not already have (docs/specs/offers-and-the-inbox.md §3).
+     *
+     * ⚠ AND ALMOST NONE OF "MAKE IT A LETTER" IS A MODIFICATION, WHICH IS THE POINT OF THE NOTE ON
+     * THE PROP LIST ABOVE. The owner asked for «чистая и аккуратная бумага без скотча, это всё-таки
+     * письмо, а не записка» - and `tape`, `torn` and `marginRule` all default to FALSE, so a plain
+     * `<PaperNote>` is already a clean, untaped, un-torn sheet in the right stock, the right ink and
+     * the right hand. It did not have to be built; it had to be not asked for. `marginRule` stays off
+     * for a reason of the same kind: the red rule is a school exercise book, and a sponsor does not
+     * write to you on one.
+     *
+     * What genuinely differs is PROPORTION. `note` is the base and is unchanged to the pixel: 12/14px,
+     * sized for a line of handwriting tucked beside a photograph. `letter` is correspondence - it
+     * fills the column it is in and carries a page's margin instead of a scrap's padding.
+     */
+    size?: 'note' | 'letter'
   }>(),
-  { tilt: 0, ruled: false, torn: false, tape: false, marginRule: false },
+  { tilt: 0, ruled: false, torn: false, tape: false, marginRule: false, size: 'note' },
 )
 </script>
 
@@ -72,6 +89,7 @@ withDefaults(
         'tb-paper--torn': torn === true || torn === 'left',
         'tb-paper--torn-right': torn === 'right',
         'tb-paper--margin': marginRule,
+        'tb-paper--letter': size === 'letter',
       }"
     >
       <slot />
@@ -118,6 +136,16 @@ withDefaults(
   font-family: var(--font-hand);
   font-size: 17px;
   line-height: 1.3;
+}
+
+/* A LETTER, WHICH IS A PAGE RATHER THAN A CORNER SCRAP. The base padding above is 12/14px, sized for
+   a line of handwriting tucked beside a photograph; correspondence wants a margin on all four sides
+   and wants to FILL its column rather than sit in it. That is the whole of the size variant - the
+   stock, the ink, the corner and the shadow are the ones every other sheet in the app uses.
+   The bottom margin is deeper than the top by design: it is where a letter is signed. */
+.tb-paper--letter {
+  width: 100%;
+  padding: 20px 20px 24px;
 }
 
 /* Lined stock. The ruling is a repeating gradient rather than drawn elements, so the note can hold
