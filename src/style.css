@@ -122,6 +122,37 @@
   /* Money has two directions and both must read side by side wherever the wallet splits them. */
   --money-in: #4ac96a;
   --money-out: #ef4b3a;
+
+  /* --- WHERE THE MONEY WENT, ONE COLOUR PER CATEGORY (round-19) -------------------------------
+     The owner, 31.07: «до этого pie chart был разноцветный, это было сильно нагляднее. Давай снова
+     его сделаем таким в нашей гамме, а еще вот эти иконки категорий покрасим в соответственные
+     цвета». So this REVERSES the U1 decision to make the donut monochrome, and the reversal is his.
+
+     ⚠ AND IT ANSWERS THE OBJECTION THAT DECISION WAS MADE ON, which is why the values are here and
+     not in the component. Round-7's rainbow was nine hand-picked hexes living inside MoneyScreen -
+     "nine colours that are in no token file" - and U1 was right that a private palette is not a
+     palette. These are declared once, in the app's one vocabulary, and `tests/design-tokens.test.ts`
+     rule B now forbids a second copy of any of them. What U1 removed was the drift, not the colour.
+
+     NOT the `--event-*` family, and the reason is the surface. Those thirteen are built for filled
+     blocks on the calendar's light grid and sit at mid-dark lightness (#46685d, #3b5f7d); as a 3px
+     donut stroke on `--card-top` (#17212b) three of them would be nearly the same dark teal. These
+     are the same HUES lifted into a lightness that survives a dark card and a 12px glyph - the money
+     screen's own reading of the game's colour world, keyed to meaning the same way (travel violet,
+     entry amber like a tournament, practice blue like a match, vacation warm, other grey).
+
+     They are OURS, not the export's, so they are deliberately absent from docs/design/tokens.json -
+     that file is the owner's handoff transcribed, and inventing rows in it would make it lie about
+     what he sent. */
+  --cat-coaching: #cfe152;
+  --cat-travel: #9a86e0;
+  --cat-entry: #e5a23c;
+  --cat-gear: #d97f52;
+  --cat-stringing: #5ec9ac;
+  --cat-physio: #57b0e0;
+  --cat-vacation: #e0748f;
+  --cat-practice: #6f8fd8;
+  --cat-other: #8b95a1;
   /* The export's three "how did this day go" colours (tokens.css --day-good/mid/bad). On the budget
      sparkline they are the dots: a week that earned, a week that spent, a week that spent while
      already under water. */

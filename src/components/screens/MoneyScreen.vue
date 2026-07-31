@@ -31,12 +31,18 @@
 //     depth of the category list still to run beside it. The donut is 116px. It fits with 15px to
 //     spare, and the column reads as a receipt, a photo and a chart rather than as two objects and
 //     a gap.
-//     ⚠ AND IT IS MONOCHROME NOW, which is the one thing that changed. The round-7 donut coloured
-//     its nine slices with nine hand-picked hexes (#d9f24f, #4fd2f2, #b07cf2 ...) - nine colours
-//     that are in no token file and that break the export's one-accent rule outright. The ring is
-//     the accent at nine descending strengths instead. Nothing is lost by that: the slices are
-//     already sorted largest-first, so the ramp IS the ranking, and every slice's name and percent
-//     are printed on the row beside it. A legend of nine hues was doing work the rows already did.
+//     ⚠ AND IT IS COLOURED AGAIN (round-19, owner: «до этого pie chart был разноцветный, это было
+//     сильно нагляднее. Давай снова его сделаем таким в нашей гамме»). This overrules what stood
+//     here for two waves - "the ring is the accent at nine descending strengths, and nothing is lost
+//     by that, because the slices are sorted largest-first so the ramp IS the ranking".
+//     The ranking was never the missing thing: the name and the percentage are printed on the row
+//     beside every slice, so a ring that only ranks is a ring that repeats. What one hue cannot say
+//     is WHICH spend is which, and that is the only question a reader brings to a pie chart.
+//     The objection that argument rested on is answered rather than ignored: round-7's rainbow was
+//     nine hexes hand-written inside this file, and these nine are `--cat-*` tokens in
+//     `src/style.css`, gated against a second copy by tests/design-tokens.test.ts. The colour comes
+//     back; the private palette does not. And the SAME token paints the category's glyph on its row,
+//     which is what makes the ring readable without a legend.
 //  3. INCOME IS `--money-in`, NOT THE EXPORT'S `#a5db4b`. The app has one green for "money came in"
 //     and it is a token; adding a second one for this screen alone would break the very principle
 //     the export is written on (docs/design/README.md §3, "цвет = смысл").
@@ -169,6 +175,51 @@ const ICON_PATHS: Record<string, string[]> = {
   other: ['M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15z', 'M12 8.2V12l2.4 1.6'],
 }
 
+// ONE COLOUR PER CATEGORY, AND IT IS THE SAME COLOUR IN BOTH PLACES (round-19). The owner:
+// «pie chart был разноцветный, это было сильно нагляднее... а еще вот эти иконки категорий покрасим
+// в соответственные цвета - тогда это будет потрясающе просто и понятно с первого взгляда.»
+//
+// That last clause is the whole design and it is why this table exists rather than two lists: the
+// slice and the glyph beside its name MUST be the same hue, or the reader has to match by position
+// and the chart stops paying for itself. One lookup, two consumers - the ring's stroke and the row's
+// ink - so they cannot drift apart.
+//
+// Values live in `src/style.css` `:root` (see the `--cat-*` block there for why they are ours rather
+// than the export's, and why they are not the `--event-*` family). Nothing here may spell a hex.
+const CAT_COLOR: Record<string, string> = {
+  coaching: 'var(--cat-coaching)',
+  travel: 'var(--cat-travel)',
+  entry: 'var(--cat-entry)',
+  gear: 'var(--cat-gear)',
+  stringing: 'var(--cat-stringing)',
+  physio: 'var(--cat-physio)',
+  vacation: 'var(--cat-vacation)',
+  practice: 'var(--cat-practice)',
+  other: 'var(--cat-other)',
+}
+function catColor(key: string): string {
+  return CAT_COLOR[key] ?? CAT_COLOR.other
+}
+
+// THE THREE GLYPHS THE OWNER DREW (public/icons/*.svg, 31.07). They are FILES, not path data, so
+// they cannot take `stroke: currentColor` the way the other six do - they are masked instead, the
+// same technique the bottom bar's tab icons use, which paints the category's colour THROUGH the
+// artwork's own silhouette. Anything not listed keeps its inline path.
+//
+// ⚠ `racket` IS FILED UNDER STRINGING, NOT GEAR, and it is a judgement call worth naming: a racket
+// is the archetypal "gear" picture, but Gear already ships a kit-bag glyph that reads as a bag of
+// things, while Stringing's inline glyph was an oval with strings across it - a racket drawn badly.
+// So the owner's art replaces the drawing it was already trying to be, and the two rows stay
+// visibly different. One line to move it if he wants it on Gear instead.
+const CAT_ICON_FILE: Record<string, string> = {
+  physio: 'medical-kit-svgrepo-com',
+  stringing: 'racket-svgrepo-com',
+  income: 'incomes-svgrepo-com',
+}
+function iconMask(key: string): string {
+  return `url("${import.meta.env.BASE_URL}icons/${CAT_ICON_FILE[key]}.svg")`
+}
+
 interface BreakdownRow {
   key: string
   label: string
@@ -202,24 +253,29 @@ const pctLabel = (pct: number): string => `${Math.round(pct * 100)}%`
 // arithmetic is needed to place it, `dashoffset` walking the accumulated fill so the slices sit
 // end-to-end starting at twelve o'clock.
 //
-// THE COLOUR IS THE ACCENT AND NOTHING ELSE. `strength` is the slice's opacity, stepping down from
-// the largest spend to the smallest across whatever number of slices there are - so the ramp always
-// spans the same visual range whether the family spent on three categories or nine. The floor is
-// 0.22 rather than 0 because a slice you cannot see is a slice that looks like a gap in the ring.
+// ⚠ THE ACCENT RAMP IS GONE, AND ITS OWN ARGUMENT IS WHY. U1 gave every slice the accent at a
+// descending opacity and defended it like this: "the slices are already sorted largest-first, so the
+// ramp IS the ranking". True - and the ranking was never the thing a reader needs from a ring, since
+// the percentage and the name are printed on the row beside it either way. What the ring alone can
+// say is WHICH spend is which, and one hue at nine strengths cannot say that at all.
+//
+// So the slice now wears its category's colour at full strength, and `strength` went with the ramp.
+// Fading the small slices would have been the old idea surviving as a habit: it would mute exactly
+// the categories whose share is too small to read off the ring, which are the ones that need their
+// colour most.
 const DONUT_R = 15.915494309189533
 interface DonutSeg {
-  strength: number
+  color: string
   dasharray: string
   dashoffset: number
 }
 const donutSegments = computed<DonutSeg[]>(() => {
   const rows = expenseRows.value
-  const last = Math.max(1, rows.length - 1)
   let filled = 0
-  return rows.map((r, i) => {
+  return rows.map((r) => {
     const dash = r.pct * 100
     const seg = {
-      strength: 1 - (i / last) * 0.78,
+      color: catColor(r.key),
       dasharray: `${dash} ${100 - dash}`,
       dashoffset: 125 - filled,
     }
@@ -430,13 +486,22 @@ function showAllTransactions(): void {
             tone="negative"
           >
             <template #icon>
+              <!-- The owner's own artwork, painted through a mask so the file takes the category's
+                   colour instead of shipping one. Same technique as the bottom bar's tab icons. -->
+              <span
+                v-if="CAT_ICON_FILE[row.key]"
+                class="cat-icon-file"
+                :style="{ '--cat-mask': iconMask(row.key), background: catColor(row.key) }"
+              ></span>
               <svg
+                v-else
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 stroke-width="1.5"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                :style="{ color: catColor(row.key) }"
               >
                 <path v-for="(d, i) in ICON_PATHS[row.key] ?? ICON_PATHS.other" :key="i" :d="d"></path>
               </svg>
@@ -452,17 +517,14 @@ function showAllTransactions(): void {
             :divider="false"
           >
             <template #icon>
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M12 19.4V5.2"></path>
-                <path d="M6.4 10.8L12 5.2l5.6 5.6"></path>
-              </svg>
+              <!-- Income keeps `--money-in`, which is note 3 at the top of this file and is not up
+                   for negotiation by a new picture: the app has ONE green for "money came in". The
+                   owner's incomes glyph replaces the drawn arrow; the colour it wears is the same
+                   token the amount beside it wears. -->
+              <span
+                class="cat-icon-file"
+                :style="{ '--cat-mask': iconMask('income'), background: 'var(--money-in)' }"
+              ></span>
             </template>
           </StatRow>
 
@@ -518,7 +580,7 @@ function showAllTransactions(): void {
               :r="DONUT_R"
               :stroke-dasharray="seg.dasharray"
               :stroke-dashoffset="seg.dashoffset"
-              :style="{ opacity: seg.strength }"
+              :style="{ stroke: seg.color }"
             />
             <text class="donut-center-num" x="21" y="20.5">{{ formatFunds(-totalExpenseCents) }}</text>
             <text class="donut-center-cap" x="21" y="25">spent</text>
@@ -791,8 +853,29 @@ function showAllTransactions(): void {
   margin-top: 18px;
 }
 
+/* The stroke comes from the template, one `--cat-*` per slice (see CAT_COLOR in the script). The
+   accent stays as the fallback so a category that ever arrives without a colour is a visible ring
+   rather than an invisible gap. */
 .money-donut .donut-seg {
   stroke: var(--accent);
+}
+
+/* THE OWNER'S OWN GLYPHS, painted through their silhouette. A file cannot inherit `currentColor`,
+   so the artwork becomes a mask and the colour is the element's own background - the technique
+   `.tab-icon` already uses for the bottom bar. Sized to StatRow's icon slot, which is what the six
+   inline SVGs fill. */
+.cat-icon-file {
+  display: block;
+  width: 100%;
+  height: 100%;
+  mask-image: var(--cat-mask);
+  -webkit-mask-image: var(--cat-mask);
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
 }
 
 /* THE ARTEFACTS STEP ASIDE ON A NARROW PHONE. Below 360px of viewport the 146px of paper and the
