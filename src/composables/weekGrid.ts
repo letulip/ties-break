@@ -260,6 +260,17 @@ const DAY_SHAPES: Partial<Record<AgeBand, Record<OrdinaryKind, readonly DayBlock
 
 /** What a day of a whole-week kind needs to know about itself. */
 export interface DayContext {
+  /** ⚠ IS THIS THE OFF-SEASON RATHER THAN A BOOKED FAMILY WEEK? Both arrive as `off` and the days
+   *  alone cannot tell them apart, so the answer is handed in on `CalendarWeek` (see its own note).
+   *  It belongs in the CONTEXT rather than in the composer because the two weeks need DIFFERENT
+   *  SHAPES, and the composer may only ever remove a block - the rule that stops this screen
+   *  inventing an hour. A fact the table needs to decide with goes to the table.
+   *
+   *  Optional and false by default: the off-season is six weeks of a fifty-two-week year, so every
+   *  other caller would be writing `offSeason: false` as ceremony. The one caller that can tell -
+   *  `weekGridFor` - always passes it, and a test that forgets it gets the common week, which is the
+   *  safe direction. */
+  offSeason?: boolean
   /** 0 = Monday … 6 = Sunday */
   index: number
   /** what the PLAN made of this day – or would have, on a week it does not own. */
@@ -356,6 +367,33 @@ const FAMILY_ARC: readonly (readonly DayBlock[])[] = [
   [{ start: 11, span: 3, kind: 'rest', label: 'Home day' }],
 ]
 
+// ⚠ THE OFF-SEASON IS THE TRAINING BLOCK, NOT A HOLIDAY, and the screen used to say the opposite of
+// the ledger. The owner, 31.07: «в off-season weeks продолжают списываться тренерские расходы. Как
+// там в реальности дела обстоят с этим?»
+//
+// In the real sport it is the hardest physical work of the year: the only stretch with no tournaments
+// to recover for, which is exactly why the fitness base gets built then. A full-time coach is on a
+// retainer and is working more, not less. Our engine already models it correctly - `coachWorksThisWeek`
+// stands the coach down for a booked VACATION and for nothing else, and `growWeek` has no off-season
+// branch, so her skills go on moving.
+//
+// The grid was the part that disagreed. `off` serves both weeks, so the off-season drew the family
+// arc: a picture of a girl doing nothing, over a week that bills a coach and develops her. Not wrong
+// about tennis - wrong about ITSELF, which is the class of defect this screen keeps finding.
+//
+// So the block gets its own shape: court and fitness, no tournaments to play and no school to attend
+// (it is the holidays), and one clear day off at the end of the week because even a pre-season block
+// has one. `training` and `trainingAlt` finally have a caller - they were reserved for exactly this.
+const PRE_SEASON_ARC: readonly (readonly DayBlock[])[] = [
+  [{ start: 9, span: 3, kind: 'training', label: 'Pre-season' }, { start: 15, span: 2, kind: 'gym', label: 'Gym' }],
+  [{ start: 9, span: 3, kind: 'trainingAlt', label: 'Court work' }, { start: 15, span: 2, kind: 'gym', label: 'Fitness' }],
+  [{ start: 9, span: 3, kind: 'training', label: 'Pre-season' }, { start: 15, span: 2, kind: 'gym', label: 'Gym' }],
+  [{ start: 10, span: 3, kind: 'rest', label: 'Recovery' }],
+  [{ start: 9, span: 3, kind: 'trainingAlt', label: 'Court work' }, { start: 15, span: 2, kind: 'gym', label: 'Gym' }],
+  [{ start: 9, span: 3, kind: 'training', label: 'Pre-season' }, { start: 15, span: 2, kind: 'gym', label: 'Fitness' }],
+  [{ start: 11, span: 3, kind: 'rest', label: 'Day off' }],
+]
+
 /** Everything that is her SPORT, as opposed to school, homework, rest, a journey or the family's
  *  own hours. One list, used by the layoff rule below and by nothing else here – the tests keep
  *  their own copy on purpose, because a guard that imports the thing it is guarding checks nothing. */
@@ -387,7 +425,7 @@ function layoffDay(shapes: BandShapes, day: DayContext): readonly DayBlock[] {
 const WEEK_SHAPES: Record<WeekKind, (shapes: BandShapes, day: DayContext) => readonly DayBlock[]> = {
   school: examDay,
   away: (_shapes, day) => TRIP_ARC[day.index] ?? [],
-  off: (_shapes, day) => FAMILY_ARC[day.index] ?? [],
+  off: (_shapes, day) => (day.offSeason === true ? PRE_SEASON_ARC[day.index] ?? [] : FAMILY_ARC[day.index] ?? []),
   rehab: layoffDay,
 }
 
@@ -600,7 +638,7 @@ export function weekGridFor(
       dropOffSeasonStudy(
         week.offSeason,
         d.kind,
-        dropWeekendSchool(d.index, dayBlocksFor(d.kind, band, { index: d.index, role: roles[i] })),
+        dropWeekendSchool(d.index, dayBlocksFor(d.kind, band, { index: d.index, role: roles[i], offSeason: week.offSeason })),
       ),
       seed,
       week.week,

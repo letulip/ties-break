@@ -700,6 +700,28 @@ describe('the calendar reads the snapshot and nothing else', () => {
     expect(season).not.toContain('function dominantSurface')
     expect(season).toContain('import { dominantSurface,')
   })
+
+  // ⚠ THE COACH TALKS ABOUT HER, TO THE PARENT - AND ONE LINE IN TWELVE FORGOT (owner, 31.07: «на
+  // некоторых карточках турниров написано "You should be..." вместо She»).
+  //
+  // `COACH_FIELD_LINES` is three pools of four, drawn deterministically per event, and eleven of the
+  // twelve are in the third person - "She belongs in this one", "A field she should be beating". One
+  // said "You should be among the best here", which addresses the DAUGHTER. That is the wrong person
+  // twice over: this game's second person is the parent, and the coach is speaking to him about her.
+  //
+  // The slip survived because a single line out of twelve appears on roughly one card in twelve, and
+  // nothing was reading the pools. A sweep is: the copy is data, and data with a rule needs a test or
+  // the rule is a habit. Second person is banned outright rather than pattern-matched on "You should",
+  // so the next variant cannot slip through in a different sentence.
+  it('the coach speaks about her in the third person - never to the daughter', () => {
+    const season = read('../src/components/screens/SeasonScreen.vue')
+    const pools = season.slice(season.indexOf('COACH_FIELD_LINES'), season.indexOf('function coachSays'))
+    const lines = [...pools.matchAll(/'([^']+)'/g)].map((m) => m[1]).filter((l) => /[a-z]/.test(l))
+    expect(lines.length, 'the pools should still be twelve lines').toBeGreaterThanOrEqual(12)
+    for (const line of lines) {
+      expect(line, `"${line}" addresses the daughter as "you"`).not.toMatch(/\b(you|your|yours|you're)\b/i)
+    }
+  })
 })
 
 // =================================================================================================
