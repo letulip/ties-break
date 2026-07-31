@@ -105,7 +105,7 @@ export const TIERS: Record<TierId, TierDef> = {
     // The domestic elite is a mid-table field once the real prospects are away on the J tour.
     entrantPctBand: [0.2, 0.7],
   },
-  // --- the junior international tour (age 13+, no prize money) --------------------------------
+  // --- the junior international tour (age 13-18, no prize money) ------------------------------
   // Real ladder: J500/J300/J200/J100/J60/J30, with J30+J60 = 75% of ALL events. We ship the two
   // dense entry levels plus one rare prestige level; the rest is content later. Points scale with
   // the level off the j30 array (j60 = ×1.5, j300 = ×2.5), and j30 already out-scores a National
@@ -121,6 +121,11 @@ export const TIERS: Record<TierId, TierDef> = {
     // THE dense entry level – with regional it is what makes an empty week a choice, not a gap.
     everyNWeeks: 2,
     minAgeYears: 13,
+    // ⚠ AND IT CLOSES AFTER 18 (§4.1). See TierDef.maxAgeYears: real ITF juniors is U18, and until
+    // this landed the three J rungs opened at 13 and shut never. The number lives on all three J
+    // rungs and nowhere else - the domestic ladder is OURS, not the ITF's, and stays open at every
+    // age because it is where an adult who is not good enough still plays (owner's call 2, §6).
+    maxAgeYears: 18,
     // THE DOMESTIC LADDER IS THE ON-RAMP (owner, 29.07). J30 is the one international rung that
     // opens on DOMESTIC points, and everything above it opens on ITF rank. That is how a real
     // career starts: a federation nominates you onto an acceptance list off your national standing,
@@ -153,6 +158,7 @@ export const TIERS: Record<TierId, TierDef> = {
     points: [60, 36, 18, 10, 5, 0],
     everyNWeeks: 3,
     minAgeYears: 13,
+    maxAgeYears: 18, // U18, like every J rung – see TierDef.maxAgeYears and j30 above.
     // THE ACCEPTANCE LIST. A share of the field, not a count, so it survives the population growing
     // from today's ~200 toward the 2-3k living-field.md plans.
     //
@@ -198,6 +204,7 @@ export const TIERS: Record<TierId, TierDef> = {
     // dense by design, and 26 j30s cannot fit in 49 weeks at 2 apart anyway.
     minGapWeeks: 2,
     minAgeYears: 13,
+    maxAgeYears: 18, // U18, like every J rung – see TierDef.maxAgeYears and j30 above.
     // THE ACCEPTANCE LIST for the prestige rung.
     //
     // ⚠ 0.40, RE-PICKED FROM 0.25 (30.07, tune/rank-numbers), and this one deliberately breaks the
@@ -396,8 +403,8 @@ export const TIER_SHORT: Record<TierId, string> = {
   w100: 'W100',
 }
 
-/** Pure age gate for a tier (ladder-up): the junior tour is 13+, the domestic ladder has no
- *  minimum, the adult rungs are 16/16/17. No world/RNG dependency.
+/** Pure age gate for a tier: the junior tour is 13-18, the domestic ladder has no gate at all, the
+ *  adult rungs open at 16/16/17 and never close. No world/RNG dependency.
  *
  *  ⚠ IT LIVES HERE, NEXT TO THE TABLE IT READS, BECAUSE THE COHORT NEEDS IT TOO (task #17). It was
  *  world.ts's `isTierAgeOpen` and only ever asked about the KID – which was harmless while every
@@ -408,12 +415,30 @@ export const TIER_SHORT: Record<TierId, string> = {
  *  (docs/specs/adult-tour-and-endings.md §1). world.ts re-exports it under its historical name, so
  *  every existing call site and test import is untouched.
  *
- *  This is the MINIMUM half of the age question only. The MAXIMUM half – `maxAgeYears` on the J
- *  tiers, so a J30 field is juniors rather than whoever is around – is §4.1 of that spec and is
- *  still open. */
+ *  ⚠ BOTH HALVES LIVE IN THIS ONE EXPRESSION, AND THAT IS THE WHOLE IMPLEMENTATION OF §4.1. The
+ *  ceiling needed no new code path anywhere: `selectEntrants` already filters its universe through
+ *  this predicate to honour the minimum, so widening the predicate gave the AI side the maximum for
+ *  free, and the kid's gate in world.ts reads the same function. One predicate, one rule, both
+ *  populations - which is precisely the property whose ABSENCE was the §1 bug. Had the two halves
+ *  been written in two places, "juniors" would have been true of the kid and false of the field, or
+ *  the reverse, and nobody would have noticed for a release. */
 export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
-  const minAge = TIERS[tier].minAgeYears
-  return minAge === undefined || ageYears >= minAge
+  const { minAgeYears: minAge, maxAgeYears: maxAge } = TIERS[tier]
+  if (minAge !== undefined && ageYears < minAge) return false
+  if (maxAge !== undefined && ageYears > maxAge) return false
+  return true
+}
+
+/** WHY a tier is shut to somebody this age – `'young'`, `'old'`, or null when it is open. Exists so
+ *  the two surfaces that must EXPLAIN the refusal (availabilityStatus' detail line and the planner's
+ *  locked plaque) do not each re-derive it and drift into telling a nineteen-year-old that the
+ *  Junior Tour "opens at 13". Deliberately separate from `isTierAgeOpen`: every gate that only needs
+ *  a yes/no keeps reading the boolean, so no call site is forced to care which end it failed. */
+export function tierAgeBlock(tier: TierId, ageYears: number): 'young' | 'old' | null {
+  const { minAgeYears: minAge, maxAgeYears: maxAge } = TIERS[tier]
+  if (minAge !== undefined && ageYears < minAge) return 'young'
+  if (maxAge !== undefined && ageYears > maxAge) return 'old'
+  return null
 }
 
 // Tier ids ordered by DESCENDING label length – the scan order tierFromLabel needs. "Junior Tour

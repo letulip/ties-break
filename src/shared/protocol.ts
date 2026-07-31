@@ -905,6 +905,43 @@ export interface Milestone {
   rank?: number
 }
 
+// --- THE TITLES LEDGER (schema v31, the Trophy Cabinet) ----------------------------------------
+
+/** Every gold and every silver she has ever taken at ONE tier, as the WEEKS they happened in.
+ *
+ *  ⚠ `finals` MEANS SHE LOST THE FINAL, and it is the one thing about this shape that has to be
+ *  read carefully, because the game already has a second, incompatible sense of the word.
+ *  `MilestoneType: 'final'` means SHE REACHED a final, so a title captures it too (`kidFinish <= 1`
+ *  in finalizeTournament) - correct for a memory ledger, where "the first final she ever played" is
+ *  the moment worth remembering. This ledger counts OBJECTS IN A CABINET: a runner-up plate and a
+ *  winner's trophy are two different pieces of silverware and one week produces exactly one of
+ *  them. If `finals` included titles, the silver plate would light up the first time she WON
+ *  something, and its count would read "5" for a tier she never actually lost a final at. So the
+ *  two arrays are disjoint by construction (`=== 0` and `=== 1`, never `<= 1`) and runner-up is
+ *  countable on its own, which is the only way the silver half of the screen can be honest.
+ *
+ *  WEEKS, NOT COUNTS, and not years either. A count could not answer "in which years", which is
+ *  half of what the owner asked the screen to say; a YEAR could not be recomputed if the season
+ *  arithmetic ever moves, and it would freeze into the save a display decision that belongs to the
+ *  reader. The absolute career week is the engine's own unit for everything else it persists, so it
+ *  is what gets stored, and the screen derives the year with `seasonYear(Math.floor(week / 52))`.
+ *
+ *  ⚠ NOT `weekYear(week)` - that is the real calendar year of that week's Monday, and it COLLIDES:
+ *  a season is 364 days, so the opening Monday drifts back a day and a quarter a year and
+ *  `weekYear(208) === weekYear(260) === 2035`. Two consecutive seasons would print as the same
+ *  year and their trophies would merge into one group. That exact collision already ate a season
+ *  out of the Stats history table once (see `seasonYear` in shared/dates.ts and the v16 migration).
+ *
+ *  Append-only and bounded by how many tournaments a career can play, so it is never pruned - which
+ *  is the whole reason it exists. Ordered by construction: `finalizeTournament` pushes as weeks
+ *  happen, so both arrays are ascending and the screen can group without sorting. */
+export interface TierTrophies {
+  /** the weeks she WON this tier. `kidFinish === 0`. */
+  titles: number[]
+  /** the weeks she LOST A FINAL at this tier. `kidFinish === 1` - never a title. */
+  finals: number[]
+}
+
 /** How drained she is, as a WORD (D3 – Home speaks words; Stats keeps the number). */
 export type ConditionBand = 'fresh' | 'ok' | 'worn' | 'drained'
 
@@ -1285,6 +1322,21 @@ export interface Snapshot {
   /** best (smallest) finish index the kid has ever reached per tier (schema v10); drives the
    *  Home season strip's real tier progress. Untouched tiers are absent. */
   bestFinishByTier: Partial<Record<TierId, number>>
+  /** EVERY TITLE AND EVERY LOST FINAL OF HER CAREER, per tier, as weeks (schema v31). Behind the
+   *  Trophy Cabinet. See `TierTrophies` above for the shape and for why `finals` excludes titles.
+   *
+   *  ⚠ IT IS PERSISTED STATE AND NOT A DERIVATION, WHICH IS UNUSUAL FOR THIS SNAPSHOT, and the
+   *  reason is that nothing already in a save can answer the question. `milestones` is firsts-only
+   *  (its identity is `title:<tier>`, so five J30 titles leave one row); `bestFinishByTier` is a
+   *  single high-water mark with no year on it, and it is OVERWRITTEN the week a silver becomes a
+   *  gold; `results` is pruned to a 52-week ranking window; `events` is capped at 400 rows and only
+   *  the trailing 60 reach this snapshot. A career-wide "how many, and when" is therefore not
+   *  recoverable from any of them, which is exactly what the cabinet has to print.
+   *
+   *  Every tier is present from week 0 with two empty arrays - the screen shows all eighteen
+   *  trophies from the start, locked, so an absent key would be a shape the reader has to defend
+   *  against for no gain. */
+  trophiesByTier: Record<TierId, TierTrophies>
   /** the CURRENT season's kid W-L (round-8, the R6 debt): mirrors the v10 world counters that
    *  accumulate at finalizeTournament and reset at each season wrap-up.
    *

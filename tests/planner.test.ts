@@ -138,13 +138,22 @@ function hashOf(draws: number[]): string {
 // deeper. Same mechanism as the note above, forty times the scale. Full reasoning at the REF
 // declaration in tests/condition.test.ts.
 //
-// ⚠⚠⚠ kidRank RE-PINNED 164 -> 162 (31.07, fix/no-double-booking). `count` 41550 and `hash`
-// e6b0c709 are AGAIN untouched and re-derived byte-for-byte on this branch - which is what P1's
-// claim is actually about, and the claim is unharmed: no plan, no booking and no amount of money can
-// perturb the main stream, and neither can the new no-double-booking rule, because it draws nothing
-// on any stream. What moved is which juniors end the year in the points once a rival stops playing
-// two tournaments in one week. Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 162 }
+// ⚠⚠ kidRank RE-PINNED 164 -> 154 (31.07, §4.1, the junior age cap). `count` 41550 and `hash`
+// e6b0c709 are UNTOUCHED and re-derived byte-for-byte on this branch, which is what P1 exists to
+// protect and which this slice tested harder than any before it: the age cap genuinely changes the
+// per-event draw COUNT on the J rungs (a J30 field is different people now), and the main stream
+// still does not notice, because every one of those draws comes off the event-scoped
+// `seed:aitour:<id>` / `seed:kidtour:<id>` sub-stream. Full reasoning at the REF declaration in
+// tests/condition.test.ts.
+// ⚠ RE-PINNED 154 -> 150 AT THE round-20 MERGE, and the number is why this had to be re-derived
+// rather than resolved. `fix/no-double-booking` measured 162 on its base and `feat/junior-age-cap`
+// measured 154 on its own; neither is the answer, because BOTH make the table above a point-less kid
+// shallower and they stack. A rival can no longer play two of a week's tournaments, and a rival
+// turning 19 now ages out of the J rungs and her results roll out of the 52-week window unreplaced -
+// so fewer distinct totals sit above a girl who holds none. Taking either side's pin would have
+// shipped a number nobody had measured. The STREAM is untouched: count 41550 and hash e6b0c709
+// reproduce byte-for-byte, which is what this block actually guards.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 150 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

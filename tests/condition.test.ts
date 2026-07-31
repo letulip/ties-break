@@ -221,27 +221,39 @@ const REF = {
   // deliberately kept in this object and asserted right after the four capture values, so the next
   // person to see it move has the disproof of "the capture moved" on the four lines above it.
   //
-  // ⚠⚠⚠ RE-PINNED 164 -> 162 (31.07, fix/no-double-booking), and the note above is the reason this
-  // is a re-pin: `count` 41550, `hash` e6b0c709, `head` and `tail` are asserted on the four lines
-  // BEFORE this one and every one of them still passes byte-for-byte, re-derived on this branch.
-  // THE FROZEN CAPTURE DID NOT MOVE, and this change is the strongest test of that claim yet, because
-  // unlike the adult rungs it changes WHO PLAYS rather than what is on the calendar. It cannot move
-  // the stream, by construction and on purpose: the whole design of the fix is that the draws happen
-  // exactly as they always did – `selectEntrants` is called the same number of times, in the same
-  // order, off the same `seed:aitour:<id>` sub-streams, spending the same count – and the new rule is
-  // pure post-draw arithmetic over the arrays they returned, with ZERO draws on any stream. See the
-  // long note above `resolveDoubleBookings` in src/engine/season/tournament.ts for why filtering the
-  // candidate pool BEFORE the draw (the obvious fix) was the one fix this engine may not have.
+  // ⚠⚠⚠ RE-PINNED 164 -> 154 (31.07, §4.1, THE JUNIOR AGE CAP - `maxAgeYears: 18` on j30/j60/j300).
+  // Read the four above it first, exactly as the note above demands, because they are again the
+  // whole argument: `count` 41550, `hash` e6b0c709, `head` and `tail` are asserted BEFORE this line
+  // and every one of them still passes byte-for-byte. THE FROZEN CAPTURE DID NOT MOVE.
   //
-  // WHAT MOVED IS WHO WON, by two places. A rival can no longer be in two of the same week's draws,
-  // so ~31.5% of player-weeks that used to play twice now play once, and the ones who used to sit the
-  // week out (4.5-7.5% of the cohort never played at all) are in a draw instead. Different players
-  // in different brackets means a different set of juniors ends the year holding counting points, and
-  // the dense rank the point-less kid shares at the floor of the table moves with it. Two places, out
-  // of a change that re-deals 17,301 appearances across 199 players, is a SMALL effect – exactly the
-  // size it should be, since the total number of appearances is untouched (the fix redistributes the
-  // calendar's load, it does not add or remove a single draw slot).
-  kidRank: 162,
+  // AND THIS BRANCH IS THE HARDEST TEST THAT CLAIM HAS HAD. The adult-rungs slice argued the capture
+  // was safe because the calendar's SIZE had left the weekly draw count; this slice changes
+  // something strictly more dangerous - the NUMBER OF DRAWS `selectEntrants` SPENDS PER EVENT. The
+  // age gate narrows the candidate pool on the three J rungs, so their per-event draw count really
+  // does move and a J30 field really is different people. The main stream still does not notice,
+  // and the reason is structural rather than lucky: every draw selectEntrants spends comes off the
+  // EVENT-scoped `seed:aitour:<id>` / `seed:kidtour:<id>` sub-stream, while the MAIN stream carries
+  // base costs plus `driftCohort`'s four draws per rival per week - which is literally what 41550 is
+  // made of. "A narrower candidate pool cannot move the capture" is now measured, not argued.
+  //
+  // WHAT MOVED IS THAT THE ITF TABLE FINALLY AGES PEOPLE OUT. The J rungs are U18, so a rival who
+  // turns 19 stops entering them; her existing ITF results then roll out of the 52-week ranking
+  // window and are never replaced, and she drops to the tie at the floor. The table above the
+  // point-less kid is therefore SHALLOWER by about ten distinct totals, so the dense rank she shares
+  // improves by ten. She did not get better - the juniors above her graduated, which is exactly what
+  // a real junior ranking does and what our ITF table has never once done before this commit. It is
+  // the same mechanism as the 120 -> 164 note above, running in the opposite direction and for a
+  // better reason: that number moved because the table got FULLER, this one because it now EMPTIES
+  // at the top the way the sport does.
+  // ⚠ RE-PINNED 154 -> 150 AT THE round-20 MERGE, and the number is why this had to be re-derived
+  // rather than resolved. `fix/no-double-booking` measured 162 on its base and `feat/junior-age-cap`
+  // measured 154 on its own; neither is the answer, because BOTH make the table above a point-less kid
+  // shallower and they stack. A rival can no longer play two of a week's tournaments, and a rival
+  // turning 19 now ages out of the J rungs and her results roll out of the 52-week window unreplaced -
+  // so fewer distinct totals sit above a girl who holds none. Taking either side's pin would have
+  // shipped a number nobody had measured. The STREAM is untouched: count 41550 and hash e6b0c709
+  // reproduce byte-for-byte, which is what this block actually guards.
+  kidRank: 150,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

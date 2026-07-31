@@ -8,6 +8,7 @@ import {
 } from '../shared/protocol'
 import {
   emptySeasonRecord,
+  emptyTrophyLedger,
   isCappedTier,
   KID_ID,
   SAVE_SCHEMA_VERSION,
@@ -695,6 +696,44 @@ export function migrateSave(raw: unknown): WorldState {
       rec.wta = { wins: 0, losses: 0 }
     }
     v = 30
+  }
+
+  // v30 -> v31: `world.trophiesByTier` – THE TITLES LEDGER, behind the Trophy Cabinet. Every title
+  // and every LOST final of her career, per tier, as the absolute weeks they happened in.
+  //
+  // ⚠ THE BACK-FILL IS A DELIBERATE NO-OP, IN THE SENSE v29's SPEND HISTORY ESTABLISHED: the shape
+  // is created, the history is not invented. An existing career wakes up with eighteen empty
+  // shelves, and its next final - won or lost - is the first thing that goes in one.
+  //
+  // NOT because the mining would be hard. Because the evidence is GONE, and the little of it that
+  // survives would produce a confident wrong answer rather than a partial one:
+  //
+  //   * `results` is pruned to the 52-week ranking window, so nothing older than a season is there
+  //     at all - and the kid's row is award-only anyway;
+  //   * `events` is capped at 400 rows, and a busy career burns that in a couple of seasons;
+  //   * `milestones` is FIRSTS-ONLY by identity (`title:<tier>`), so a five-time J30 champion has
+  //     exactly one title row. Reading it would produce a cabinet claiming one J30 title, which is
+  //     not an incomplete answer - it is a WRONG one, stated with a year on it;
+  //   * `bestFinishByTier` is a high-water mark with no week and no count, and the day she won a
+  //     tier it overwrote the runner-up it held. It can say "she has won a J30" and can never say
+  //     when, how many times, or whether she ever lost one.
+  //
+  // v18 mined its ledger from surviving evidence and was careful to document that its "firsts" are
+  // only the earliest STILL-VISIBLE ones - a bargain worth striking there, because a memory that
+  // starts late is still a memory. A trophy cabinet is the other kind of surface: it prints a
+  // NUMBER under each cup, that number is the whole point, and a number reconstructed from a 400-row
+  // window would be wrong in the one direction a cabinet must never be wrong in. The owner, asked
+  // directly: «нас это в данный момент не беспокоит». So the screen shows what exists.
+  //
+  // Nothing else moves: no field is read or rewritten, no sub-stream is added or reordered, and a
+  // push onto an array spends no draw - the frozen MAIN capture (41550 / e6b0c709) is untouched by
+  // construction.
+  if (v === 30) {
+    const cabinet = save.trophiesByTier
+    if (cabinet === undefined || cabinet === null || typeof cabinet !== 'object') {
+      save.trophiesByTier = emptyTrophyLedger()
+    }
+    v = 31
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {
