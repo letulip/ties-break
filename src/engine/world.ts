@@ -115,6 +115,7 @@ import {
 import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
+import { applyKit, kitInjuryFactor, kitWearAt } from './equipment'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
 // dependency runs one way: world → diary, exactly like world → condition.
@@ -597,28 +598,40 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; sk
 }
 
 /** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
- *  CONDITION factor (R9-19) and then by the surface x play-style table (docs/specs/surface-style.md).
- *  Both are pure arithmetic with ZERO RNG, they compose multiplicatively, and every path that puts
- *  her in a match – the shadow tournament, the practice friendly, the exhibition viewer – builds her
- *  here, so the modifiers land exactly once per match. `all-court` (and any untouched attribute)
- *  comes back byte-identical to the pre-slice condition-only scaling. */
+ *  CONDITION factor (R9-19), then by the surface x play-style table (docs/specs/surface-style.md),
+ *  then by the condition of her EQUIPMENT (docs/specs/equipment-and-serve-speed.md §2). All three
+ *  are pure arithmetic with ZERO RNG, they compose multiplicatively, and every path that puts her in
+ *  a match – the shadow tournament, the practice friendly, the exhibition viewer – builds her here,
+ *  so the modifiers land exactly once per match. `all-court` (and any untouched attribute, and every
+ *  attribute of a girl in fresh kit) comes back byte-identical to the pre-slice scaling.
+ *
+ *  ⚠ AND HER AGE IS STAMPED HERE, not resolved when a box score is drawn. `age` is not a skill and
+ *  `basePServe` never reads it; it is the age half of the serve-speed curve (match/serveSpeed.ts).
+ *  It belongs on the snapshot because `WorldMatch.a/.b` freeze this object into the save - a box
+ *  score re-opened three seasons later has to report the serve of the girl who played the match. Her
+ *  REAL age, `kidAgeExact`, not the band's: a December girl genuinely serves a shade slower than a
+ *  January girl in the same draw, which is the relative age effect turning up somewhere it belongs. */
 export function kidMatchPlayerFor(
-  world: { seed: string; profile: PlayerProfile; condition: number },
+  world: { seed: string; profile: PlayerProfile; condition: number; week: number },
   surface: Surface,
 ): MatchPlayer {
   const raw = kidMatchPlayer(world)
   const factor = conditionMatchFactor(world.condition)
-  return applySurfaceStyle(
-    {
-      ...raw,
-      serve: raw.serve * factor,
-      ret: raw.ret * factor,
-      composure: raw.composure * factor,
-      stamina: raw.stamina * factor,
-      groundstrokes: raw.groundstrokes * factor,
-    },
-    world.profile.playStyle,
-    surface,
+  return applyKit(
+    applySurfaceStyle(
+      {
+        ...raw,
+        age: kidAgeExact(world.week, world.profile.birthMonth),
+        serve: raw.serve * factor,
+        ret: raw.ret * factor,
+        composure: raw.composure * factor,
+        stamina: raw.stamina * factor,
+        groundstrokes: raw.groundstrokes * factor,
+      },
+      world.profile.playStyle,
+      surface,
+    ),
+    kitWearAt(world.seed, world.profile.background, world.week),
   )
 }
 
@@ -1713,6 +1726,19 @@ export function injuryTau(world: WorldState): number {
   // (spec §2 "invariance-safe"), so the expensive package buys real protection without ever
   // touching the draw sequence.
   if (world.recoveryBuff && world.week <= world.recoveryBuff.untilWeek) tau *= world.recoveryBuff.factor
+  // THE SECOND HALF OF THE SHOES (equipment-and-serve-speed.md §2). The owner: «в плохих коньках
+  // ребята не могут угнаться за другими в хороших, просто физика так работает» - worn soles cost
+  // movement AND raise injury risk, and the second one lands on a system that already exists.
+  //
+  // ⚠ THE ONE EQUIPMENT EFFECT THAT IS BACKGROUND-NEUTRAL BY CONSTRUCTION, and it is the injury one
+  // on purpose: ECONOMY.gear.shoes has the SAME 10-14 week cadence for every family (only the price
+  // differs), so this factor's whole cycle is identical for a working and a wealthy career. Nobody
+  // buys their daughter out of a rolled ankle.
+  //
+  // Same POST-DRAW shape as the three multiplies above: `rollInjury` has already drawn from
+  // `seed:injury:<week>` before it calls this, `kitWearAt` spends no draw on any stream, and
+  // `injuryTau` keeps its pinned arity of 1. The frozen MAIN capture (41550 / e6b0c709) cannot see it.
+  tau *= kitInjuryFactor(kitWearAt(world.seed, world.profile.background, world.week))
   // W4 – AND THE KNOCK HE SENT HER BACK OUT ON. The whole cost of the `push` branch, and it is
   // deliberately the same shape as the three multiplies above: POST-DRAW on the threshold, zero draws
   // on any stream, so the private `seed:injury:<week>` sequence is byte-identical for a career that
@@ -2668,6 +2694,9 @@ function resolvePractice(world: WorldState): void {
     // Her sparring partner's groundstroke comes off the SAME derivation a tournament opponent's
     // does, so a friendly is not a different game (v25 - the cohort stores no fifth attribute).
     groundstrokes: rivalGroundstrokes(opponent),
+    // ...and for the same reason her AGE comes off the cohort row, so the friendly's box score reads
+    // her serve at her real pace instead of falling back to the career-start age.
+    age: opponent.ageYears,
   }
   const seed = `${world.seed}:practicematch:${world.week}:m`
   const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })

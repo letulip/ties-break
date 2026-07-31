@@ -23,6 +23,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
+import { applyKit, FRESH_KIT, kitMultipliers, kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
 import { INCOME_CATS } from '../tools/econ-bench'
@@ -428,10 +429,15 @@ describe('R9-19 — match-strength coupling', () => {
     expect(factor).toBeLessThan(1)
     const raw = kidMatchPlayer({ ...world, skills: skillsAtEntry })
     const stored = world.pendingTournament!.players[KID_ID]
-    expect(stored.serve).toBeCloseTo(raw.serve * factor, 10)
-    expect(stored.ret).toBeCloseTo(raw.ret * factor, 10)
-    expect(stored.composure).toBeCloseTo(raw.composure * factor, 10)
-    expect(stored.stamina).toBeCloseTo(raw.stamina * factor, 10)
+    // ⚠ RE-AIMED (equipment slice, docs/specs/equipment-and-serve-speed.md §2): the composition point
+    // now carries a THIRD multiplicative term - the condition of her kit - so the expected value names
+    // it instead of the assertion being loosened. It is still an exact identity to ten places, so a
+    // fourth term appearing in `kidMatchPlayerFor` still fails this test, which is the fact it guards.
+    const kit = kitMultipliers(kitWearAt(world.seed, world.profile.background, world.week))
+    expect(stored.serve).toBeCloseTo(raw.serve * factor * kit.serve, 10)
+    expect(stored.ret).toBeCloseTo(raw.ret * factor * kit.ret, 10)
+    expect(stored.composure).toBeCloseTo(raw.composure * factor, 10) // no kit line touches composure
+    expect(stored.stamina).toBeCloseTo(raw.stamina * factor * kit.stamina, 10)
     skipTournament(world)
     closeTournament(world)
   })
@@ -442,8 +448,14 @@ describe('R9-19 — match-strength coupling', () => {
     expect(world.condition).toBe(100)
     const raw = kidMatchPlayer({ ...world, skills: skillsAtEntry })
     const stored = world.pendingTournament!.players[KID_ID]
-    expect(stored.serve).toBe(raw.serve)
-    expect(stored.stamina).toBe(raw.stamina)
+    // ⚠ RE-AIMED (equipment slice): "unscaled" is a claim about the CONDITION factor, and it still
+    // holds exactly - the only thing between `raw` and `stored` is her kit.
+    const kit = kitMultipliers(kitWearAt(world.seed, world.profile.background, world.week))
+    expect(stored.serve).toBe(raw.serve * kit.serve)
+    expect(stored.stamina).toBe(raw.stamina * kit.stamina)
+    // ...and the neutral element is still byte-identical, which is what protects the frozen pins: a
+    // girl in fresh kit at condition 100 plays her raw build to the last bit.
+    expect(applyKit({ ...raw }, FRESH_KIT)).toEqual(raw)
     skipTournament(world)
     closeTournament(world)
   })

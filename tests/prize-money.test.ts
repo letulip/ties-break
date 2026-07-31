@@ -149,6 +149,20 @@ describe('A2/3 — the cheque does NOT scale with the wealth corridor', () => {
 
   // (c) A REAL CAREER. The strongest form: the same seed, the same event, the same run, three
   //     backgrounds - and the `prize` line in the ledger is identical to the cent.
+  //
+  // ⚠ NOTE ADDED BY THE EQUIPMENT SLICE (docs/specs/equipment-and-serve-speed.md §2), because the
+  // shape of this test's claim changed under it even though the test still passes. Background now
+  // reaches her PLAY: the gear cadences differ by family, so a working girl's strings are older on
+  // average and her attributes are a fraction lower at the composition point. Her FINISH can
+  // therefore differ across the three arms in principle.
+  //
+  // It does not here - measured, the equipment gap is 0.17 skill points across a career
+  // (tools/kit-bench.ts §2), far too small to move a finish in this run - and the CHEQUE could not
+  // differ even if it did, because `prizeCentsFor` is a catalogue lookup keyed on tier and finish,
+  // which case (b) above asserts directly and which is the structural half of the claim. If a future
+  // tuning of ECONOMY.equipment ever makes this line fail, the honest reading is "she finished
+  // somewhere else", NOT "the corridor reached the cheque" - check her finish before touching
+  // anything about prize money.
   it('the ledger line is identical to the cent across all three backgrounds', () => {
     const paid = new Set<number>()
     const spent = new Set<number>()

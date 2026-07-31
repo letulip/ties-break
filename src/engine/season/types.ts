@@ -146,7 +146,7 @@ export interface SeasonEvent {
  *  STYLE already is (`styleOf` - pure, stored nowhere, moves only when her attributes genuinely
  *  move). Writing it as an Omit rather than a comment means the compiler refuses any path that hands
  *  an `AiPlayer` to something wanting a full `MatchPlayer`, which is the mistake this guards. */
-export interface AiPlayer extends Omit<MatchPlayer, 'groundstrokes'> {
+export interface AiPlayer extends Omit<MatchPlayer, 'groundstrokes' | 'age'> {
   nation: string // ISO-2
   /** hidden growth multiplier 0.5..1.5 – how fast she closes on her ceiling */
   growth: number

@@ -3,6 +3,7 @@
 // caller draws against the returned p.
 
 import type { Side, Tour, Surface, MatchPlayer, MatchOptions, PointContext } from './types'
+import { LEGACY_SNAPSHOT_AGE, serveSpeedBase } from './serveSpeed'
 
 export const TOUR_AVG_P: Record<Tour, number> = { atp: 0.63, wta: 0.57 }
 export const SURFACE_SERVE_BONUS: Record<Surface, number> = { hard: 0, grass: 0.015, clay: -0.015 }
@@ -20,6 +21,36 @@ const SKILL_K = 0.0016 // p shift per skill point
  *  band and the tour's average serve percentage are therefore untouched by construction - the same
  *  "neutral is byte-identical" property match/style.ts is built around. */
 const RALLY_K = 0.0011
+
+/** p shift per km/h of AGE-DRIVEN SERVE PACE ADVANTAGE (equipment-and-serve-speed slice).
+ *
+ *  The owner: «если можем сделать так, чтобы скорость подачи менялась и на что-то в матче влияла -
+ *  это будет топ». This is that, and it is admissible for exactly the reason `RALLY_K` is: it
+ *  multiplies a DIFFERENCE, so it is zero when the two players match and every symmetric fixture,
+ *  every calibration band and the tour average stay byte-identical by construction.
+ *
+ *  ⚠ IT IS THE AGE HALF OF THE SPEED AND NOTHING ELSE, AND THAT IS NOT A SIMPLIFICATION - IT IS THE
+ *  ONLY PART THAT IS NOT ALREADY IN THIS FORMULA. Her full serve speed is `serveSpeedBase(age) +
+ *  serve x 0.55`. The second half IS `server.serve`, which the first leg above already reads, and her
+ *  equipment already reaches that attribute at the composition point - so a term built on the whole
+ *  speed would count her strings, her condition, her surface and her talent a second time, and would
+ *  be arithmetically indistinguishable from quietly raising SKILL_K. `serveSpeedBase` is the one
+ *  thing here that `basePServe` has never known: how big she is.
+ *
+ *  ⚠ AND IT READS WHOLE YEARS, the BAND rather than the girl (the distinction world.ts argues at
+ *  length for `ageAtWeek` vs `kidAgeExact`). Two reasons, both load-bearing: the cohort stores whole
+ *  years while the kid carries a fraction, so comparing them raw would invent a systematic edge out
+ *  of a rounding mismatch; and the fractional part is the relative age effect, which this game
+ *  ALREADY pays for in skill points (`relativeAgeHeadStart`). Reading it here too would pay for it
+ *  twice. Inside one age band this term is exactly 0.
+ *
+ *  SIZED against the same yardstick as the equipment (SKILL_POINTS_PER_YEAR = 2.4, one year of
+ *  junior development). Per year of age gap at the steepest part of the curve it is worth ~0.7 skill
+ *  points, and even the widest gap this game can produce - a fourteen-year-old against a nineteen-
+ *  year-old, 25 km/h of pace - comes to 2.34, still inside one year of relative age. A tiebreaker
+ *  between players, never a replacement for talent. */
+const PACE_K = 0.00015
+
 const BASE_CLAMP: [number, number] = [0.42, 0.82]
 const FINAL_CLAMP: [number, number] = [0.3, 0.9]
 const BIG_POINT_MAX_PENALTY = 0.03
@@ -40,19 +71,34 @@ function clamp(x: number, [lo, hi]: [number, number]): number {
 
 // Barnett–Clarke matchup adjustment around the tour average, then surface bonus.
 //
-// THREE LEGS, NOT TWO (v25). The serve is measured against 50 on the server's side, the return
-// against 50 on the receiver's, and the RALLY against THE OTHER PLAYER - because a serve is hit by
-// one person and a rally by both. Whoever hits bigger off the ground therefore holds better AND
-// breaks better, which is what being the bigger hitter means and which neither of the first two
-// terms can say. There is no `- 50` on the third leg on purpose: it is a matchup, not a level.
+// FOUR LEGS NOW (v25 made it three). The serve is measured against 50 on the server's side, the
+// return against 50 on the receiver's, and the RALLY against THE OTHER PLAYER - because a serve is
+// hit by one person and a rally by both. Whoever hits bigger off the ground therefore holds better
+// AND breaks better, which is what being the bigger hitter means and which neither of the first two
+// terms can say. There is no `- 50` on those legs on purpose: they are a matchup, not a level.
+//
+// THE FOURTH LEG IS PACE, and it is the same shape for the same reason: a difference, worth exactly
+// nothing between two players of the same age. A sixteen-year-old's serve arrives 13 km/h faster than
+// a fourteen-year-old's before either of them has any talent, and until this line the model could not
+// say that - two girls with `serve: 60` held identically whether one of them was a child. See PACE_K
+// for why it is the AGE half of the speed alone and why it reads whole years.
 export function basePServe(server: MatchPlayer, receiver: MatchPlayer, opts: MatchOptions): number {
   const p =
     TOUR_AVG_P[opts.tour] +
     (server.serve - 50) * SKILL_K -
     (receiver.ret - 50) * SKILL_K +
     (server.groundstrokes - receiver.groundstrokes) * RALLY_K +
+    paceAdvantage(server, receiver) * PACE_K +
     SURFACE_SERVE_BONUS[opts.surface]
   return clamp(p, BASE_CLAMP)
+}
+
+/** The server's age-driven pace edge over the receiver, in km/h. Exactly 0 inside one age band, and
+ *  exactly 0 for any player built without an age (every fixture, every calibration case), so this
+ *  leg can never perturb a number that was calibrated before it existed. */
+export function paceAdvantage(server: MatchPlayer, receiver: MatchPlayer): number {
+  const bandOf = (p: MatchPlayer): number => Math.floor(p.age ?? LEGACY_SNAPSHOT_AGE)
+  return serveSpeedBase(bandOf(server)) - serveSpeedBase(bandOf(receiver))
 }
 
 // Per-point term (already min-capped at FATIGUE_CAP) for one player's stamina.

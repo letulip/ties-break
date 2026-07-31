@@ -22,6 +22,7 @@ import {
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
+import { kitInjuryFactor, kitWearAt } from '../src/engine/equipment'
 import { TIERS } from '../src/engine/season/calendar'
 // The load wave: the physio's strength is a rung ladder now, not one flat boolean.
 import { COACH_TIERS, physioRiskFactor } from '../src/engine/coach'
@@ -131,7 +132,24 @@ function hashOf(draws: number[]): string {
 // so fewer distinct totals sit above a girl who holds none. Taking either side's pin would have
 // shipped a number nobody had measured. The STREAM is untouched: count 41550 and hash e6b0c709
 // reproduce byte-for-byte, which is what this block actually guards.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 150 }
+// ⚠ RE-AIMED 150 -> 151 BY THE EQUIPMENT / SERVE-SPEED SLICE (docs/specs/equipment-and-serve-speed.md),
+// and this is the SECOND time this pin has moved for the reason its own note above predicted: the
+// match model gained a leg, so asymmetric matchups resolve differently and a different set of
+// juniors ends the year in the points. Two legs were added this time - her kit multiplies her
+// attributes at the composition point, and `basePServe` gained a PACE term keyed on the age gap.
+//
+// ⚠ THE CAPTURE ITSELF DID NOT MOVE, AND THAT WAS CHECKED BEFORE THIS LINE WAS TOUCHED: count 41550
+// and hash e6b0c709 reproduce byte-for-byte, verified directly against a raw-tapped 52-tick run. It
+// cannot move by construction either - equipment condition is `week - lastPurchaseWeek` over a
+// constant, the purchase weeks come off the `seed:gear:<category>` sub-streams that already existed,
+// the shoe/injury term is a POST-DRAW multiply on a threshold `rollInjury` has already drawn
+// against, and the pace term is pure arithmetic inside `basePServe`. Zero draws are added to, or
+// removed from, any stream the weekly tick walks.
+//
+// So the STREAM is the invariant and the RANK is a measurement: 151 is one place lower off a
+// point-less kid in a shallow table, which is what a girl whose strings are four weeks old looks
+// like next to a cohort that has no kit at all.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 151 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -759,21 +777,37 @@ describe('C8 — age curve', () => {
     // The guarded fact - `injuryTau` applies the age curve and nothing else between two weeks - is
     // unchanged and now stated in terms of her REAL ages, so it holds for any birthday instead of only for
     // a January one. Both birthdays are swept, and the January case preserves the original literal reading.
+    //
+    // ⚠ RE-AIMED AGAIN (equipment slice, docs/specs/equipment-and-serve-speed.md §2). There is now a SECOND
+    // week-dependent term in `injuryTau`: her shoes, whose traction decays over their 14-week life and
+    // resets on the purchase already on the ledger. Two weeks 104 apart sit at different points of that
+    // cycle, so the raw ratio is no longer the age ratio alone - and that is the new behaviour working, not
+    // a regression.
+    //
+    // The guard is DIVIDED rather than loosened: each tau is normalised by its own known kit factor, and
+    // the residue must still be EXACTLY the age ratio to ten places. So the assertion still fails the
+    // instant a THIRD week-dependent term appears in `injuryTau`, which is the whole thing it was ever
+    // protecting. Naming both terms is strictly stronger than tolerating one.
     for (const birthMonth of [1, 6, 12]) {
       const w = createWorld('c8-tau', { ...DEFAULT_PROFILE, birthMonth })
       w.physioActive = false
       w.condition = 60
       w.week = 0
-      const early = injuryTau(w)
+      const kitEarly = kitInjuryFactor(kitWearAt(w.seed, w.profile.background, 0))
+      const early = injuryTau(w) / kitEarly
       const ageEarly = kidAgeYears(0, birthMonth)
       w.week = 104
-      const late = injuryTau(w)
+      const kitLate = kitInjuryFactor(kitWearAt(w.seed, w.profile.background, 104))
+      const late = injuryTau(w) / kitLate
       const ageLate = kidAgeYears(104, birthMonth)
       expect(ageLate - ageEarly, `${birthMonth}: two seasons is two years`).toBe(2)
       expect(late / early, `birthMonth ${birthMonth}`).toBeCloseTo(
         ageInjuryFactor(ageLate) / ageInjuryFactor(ageEarly),
         10,
       )
+      // ...and the kit term is REAL, not a no-op divided out of an unchanged number: the two weeks must
+      // genuinely sit at different points of the shoe cycle for this re-aim to have been necessary.
+      expect(kitLate, `birthMonth ${birthMonth}: the shoe cycle actually moved`).not.toBeCloseTo(kitEarly, 6)
     }
     // and the owner's own case, spelled out: a December girl really is 13 in the opening January
     expect(kidAgeYears(0, 12)).toBe(13)

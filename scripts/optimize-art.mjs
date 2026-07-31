@@ -225,10 +225,26 @@ function discover(root) {
       const moveTo = set
         ? join(artSrcDir, 'images', `${set}-jpeg`, basename(src))
         : join(artSrcDir, relative(publicDir, src))
-      const stem = basename(src).replace(RASTER_RE, '')
-      // `-fs8` residue and NOT_SHIPPED masters still get out of public/ — they must not ship as raw
-      // bytes either — they just never become a webp.
-      if (FS8_RE.test(stem) || notShipped(stem)) {
+      const rawStem = basename(src).replace(RASTER_RE, '')
+      // ⚠ A DELIVERY DIRECTORY STRIPS `-fs8` INSTEAD OF EVACUATING ON IT (31.07, second pass).
+      //
+      // The first pass renamed the eighteen trophies by hand and left this rule alone, reasoning
+      // that a dead pngquant word should not be baked into eighteen shipping URLs. Correct - and
+      // incomplete, because it made the rename a MANUAL STEP THAT NOBODY IS TOLD ABOUT. The owner
+      // dropped two updated trophies in the next day, still `-fs8` named because that is what his
+      // exporter writes, and this rule silently filed both into art-src WITHOUT ENCODING: the
+      // pipeline reported "0 encoded, 2 raw file(s) moved" and the shipped webp stayed stale. No
+      // error, no warning, nothing on screen. That is the same class of silent no-op as the cache
+      // that ignored a cap change, one directory over.
+      //
+      // A delivery directory exists precisely because a human hands art over there, so it must
+      // accept the names a human's tools produce. `-fs8` names a dithering mode of an encoder this
+      // pipeline does not run; here it is noise on the label, not a verdict on the file. Elsewhere
+      // the rule is UNCHANGED - a stray `-fs8` under `public/images/` is still residue and is still
+      // evacuated unencoded, because there it means "somebody's old output leaked in".
+      const delivered = set !== undefined
+      const stem = delivered ? rawStem.replace(FS8_RE, '') : rawStem
+      if ((FS8_RE.test(stem) && !delivered) || notShipped(stem)) {
         evacuate.push({ src, moveTo })
         continue
       }

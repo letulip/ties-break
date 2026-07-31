@@ -550,14 +550,25 @@ describe('B5 — rivalMatchPlayer: ONE composition, in the kid order, applied ex
   // `groundstrokes` is present on the built player and absent from the stored rival, which is exactly
   // the v25 arrangement (`AiPlayer = Omit<MatchPlayer, 'groundstrokes'>`, derived at match time so
   // `driftCohort` keeps its four main-stream draws per player and the frozen capture cannot move).
+  // ⚠ RE-AIMED AGAIN (equipment/serve-speed slice): the key set gains `age`, and the distinction it
+  // draws is the point rather than an exception to it. `ageYears` is a COHORT field and still must not
+  // ride along - the assertion below says so explicitly. `age` is a MatchPlayer field that the
+  // composition point DERIVES from it, exactly as `groundstrokes` is derived, because the serve-speed
+  // curve (match/serveSpeed.ts) is a function of age and a box score against a sixteen-year-old has to
+  // report a sixteen-year-old's serve. `nation`, `growth` and `potential` are still barred outright.
   it('drops the AiPlayer-only fields: a MatchPlayer goes into the bracket, not a cohort row', () => {
     const built = rivalMatchPlayer(rival, 'hard', 80)
     expect(Object.keys(built).sort()).toEqual([
-      'composure', 'groundstrokes', 'id', 'name', 'ret', 'serve', 'stamina',
+      'age', 'composure', 'groundstrokes', 'id', 'name', 'ret', 'serve', 'stamina',
     ])
     // ...and the cohort row it came from still does NOT hold the fifth attribute.
     expect('groundstrokes' in rival).toBe(false)
     expect(built.groundstrokes).toBeGreaterThan(0)
+    // The cohort's OWN key is still absent from the match model, and the derived one carries its value.
+    expect('ageYears' in built).toBe(false)
+    expect(built.age).toBe(rival.ageYears)
+    // The three that have never been allowed through are still not allowed through.
+    for (const banned of ['nation', 'growth', 'potential']) expect(banned in built).toBe(false)
   })
 
   it('is deterministic and never mutates the cohort row', () => {

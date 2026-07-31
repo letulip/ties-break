@@ -19,6 +19,7 @@ import { COURT } from '../../viz/types'
 import { createScore, awardPoint } from './scoring'
 import { basePServe } from './point'
 import { rngFromSeed, type Rng } from '../rng'
+import { expectedServeSpeed, LEGACY_SNAPSHOT_AGE } from './serveSpeed'
 import { matchWinProbability } from './liveProb'
 
 // --- tunable constants (exported for reference/tests) ------------------------
@@ -87,11 +88,47 @@ function sgn(x: number): 1 | -1 {
 }
 
 // --- serve placement ---------------------------------------------------------
-function aceProbability(opts: MatchOptions): number {
+
+// THE ACE RATE IS THE SERVE SPEED NOW (owner, 31.07: «если можем сделать так, чтобы скорость подачи
+// менялась и на что-то в матче влияла - это будет топ»).
+//
+// ⚠ AND IT COSTS NO DOUBLE COUNTING, which is the only reason it is allowed. Read this file's own
+// header: the engine's log already decided who won the point, and an ace is this layer NARRATING a
+// won point as unreturned. So the speed changes what the match LOOKS like - box score, commentary -
+// and cannot change who wins a single point. Feeding the speed into `basePServe` instead would
+// replace a probability calibrated to 1.2 points over 88,500 matches with a physical model, and
+// that is a project rather than a line.
+//
+// The shipped constants are preserved as the value at ACE_SPEED_REF, so a server of professional
+// pace still aces at exactly the shipped rate on each surface. What is new is everybody else: below
+// ACE_SPEED_FLOOR a serve is simply returnable and the ace disappears, which is why a fourteen-year-
+// old at 117 km/h now aces about a third as often as a nineteen-year-old at 161. That was the point.
+//
+// RNG: the draw is untouched - still exactly one `rng()` per server-won point, in the same place.
+// Only the threshold it is compared against moves, the same post-draw shape `injuryTau` uses.
+
+/** The pace at which the shipped per-tour ace constant is reproduced exactly: a professional first
+ *  serve, the speed the old flat model was implicitly describing for everybody. */
+export const ACE_SPEED_REF = 155
+/** Below this a serve is returnable at this level and aces stop. Roughly a fourteen-year-old's base
+ *  before any skill is added, so a beginner's serve is put back in play. */
+export const ACE_SPEED_FLOOR = 95
+/** Ceiling on the multiplier, so the very biggest server tops out instead of running away. At 1.8 a
+ *  180 km/h serve aces ~11% of the points she wins on serve, which is a real WTA power server. */
+export const ACE_SPEED_MAX_FACTOR = 1.8
+
+/** How much of the shipped ace rate a serve of `speed` km/h earns. Linear from 0 at the floor
+ *  through 1 at the reference, capped. Pure, zero draws. */
+export function aceSpeedFactor(speed: number): number {
+  const raw = (speed - ACE_SPEED_FLOOR) / (ACE_SPEED_REF - ACE_SPEED_FLOOR)
+  return Math.max(0, Math.min(ACE_SPEED_MAX_FACTOR, raw))
+}
+
+function aceProbability(opts: MatchOptions, serverSpeed: number): number {
   let p = ACE_GIVEN_SERVER_WIN[opts.tour]
   if (opts.surface === 'grass') p *= 1.5
   else if (opts.surface === 'clay') p *= 0.6
-  return p
+  return p * aceSpeedFactor(serverSpeed)
 }
 
 // Sign of the serve's landing x, from the deuce/ad court and the receiver's side.
@@ -204,6 +241,8 @@ function generateRally(
   server: Side,
   winner: Side,
   deuceCourt: boolean,
+  /** jitter-free serve speed of each side, km/h - the ace rate's only new input */
+  speeds: [number, number],
 ): Rally {
   const receiver: Side = (1 - server) as Side
   const rng = rngFromSeed(opts.seed + '#' + pointNumber)
@@ -224,8 +263,8 @@ function generateRally(
   const inServeKind: 'serve1' | 'serve2' = firstIn ? 'serve1' : 'serve2'
 
   if (winner === server) {
-    // Server won: chance of an ace (unreturned in-serve).
-    if (rng() < aceProbability(opts)) {
+    // Server won: chance of an ace (unreturned in-serve), scaled by how hard she actually serves.
+    if (rng() < aceProbability(opts, speeds[server])) {
       shots.push(inServe(rng, inServeKind, server, receiver, deuceCourt))
       return { pointNumber, shots, ace: true, doubleFault: false }
     }
@@ -279,6 +318,13 @@ export function annotateMatch(
 ): AnnotatedMatch {
   const pA = basePServe(a, b, opts)
   const pB = basePServe(b, a, opts)
+  // Jitter-free, so the ace rate is a property of the PLAYER and not of the point: within one match
+  // every serve she strikes is the same girl's serve, and the +/-8 is how hard she happened to hit
+  // that one. Resolved once here rather than per point - `expectedServeSpeed` is pure.
+  const speeds: [number, number] = [
+    expectedServeSpeed(a.age ?? LEGACY_SNAPSHOT_AGE, a.serve),
+    expectedServeSpeed(b.age ?? LEGACY_SNAPSHOT_AGE, b.serve),
+  ]
   const score = createScore(opts.firstServer ?? 0)
   const points: AnnotatedPoint[] = []
 
@@ -289,7 +335,7 @@ export function annotateMatch(
     const bTiebreak = score.inTiebreak
     const bSetsLen = score.sets.length
 
-    const rally = generateRally(opts, entry.pointNumber, server, entry.winner, deuceCourt)
+    const rally = generateRally(opts, entry.pointNumber, server, entry.winner, deuceCourt, speeds)
 
     // Advance the FSM, then read post-point flags and live probability.
     awardPoint(score, entry.winner)
