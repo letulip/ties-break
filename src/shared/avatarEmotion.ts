@@ -143,6 +143,20 @@ export const WIN_IMMUNITY_WEEKS: Record<TierId, number> = {
   j30: 2,
   j60: 3,
   j300: 3,
+  // THE ADULT FAMILY OPENS WHERE THE JUNIOR ONE TOPS OUT. A W15 title is the smallest trophy on the
+  // professional tour and it is still the first one anybody has ever handed her a cheque for – she
+  // has won a tournament that grown women were trying to win, and a bad Tuesday three weeks later
+  // does not touch that. So it matches J60/J300 rather than J30, even though it is the family's
+  // BOTTOM rung. W35 sits with it (winning the step up is the same feeling, one rung better), and
+  // W100 buys the extra week nothing else in the game buys – it is the largest thing a nineteen-
+  // year-old in this build can win, four exist a year, and most careers will never take one.
+  //
+  // ⚠ Not a monotone continuation of the J numbers, deliberately. This table is not a ladder, it is
+  // a table of how long a good week lasts, and the junior/adult break is a break in KIND – which is
+  // exactly why 4 appears here and nowhere above J300.
+  w15: 3,
+  w35: 3,
+  w100: 4,
 }
 
 /** The kid's most recent played match, as the caller read it off the snapshot's events. */

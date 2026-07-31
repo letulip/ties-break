@@ -601,12 +601,25 @@ export const ECONOMY = {
     matchFatigue: { straightSets: 2, hardMatch: 3, extraTiebreaks: 1 },
     // Tier surcharge PER MATCH, one step per rung. The J levels are EXTRAPOLATED above national
     // (ladder-up): international travel, time-zone changes and a fortnight away from home make
-    // them the most draining weeks she plays. Worst case is a 5-match J300 run at 4 + 5 per match
-    // = 45, + the cumulative ladder 6 = 51 condition – deliberately the heaviest thing in the game
-    // (it was 40 + 6 before the base raise), and OWNER-TUNABLE: the owner has priced local..national
-    // himself, never the J family, so these three are the first numbers the pending tuning pass
-    // should look at – all the more so now that the base under them is one rung higher.
-    tierMatchFatigue: { local: 0, regional: 1, national: 2, j30: 3, j60: 4, j300: 5 } as Record<TierId, number>,
+    // them the most draining weeks she plays. Worst case USED to be a 5-match J300 run at 4 + 5 per
+    // match = 45, + the cumulative ladder 6 = 51 condition, and OWNER-TUNABLE: the owner has priced
+    // local..national himself, never the J family, so those three are the first numbers the pending
+    // tuning pass should look at – all the more so now that the base under them is one rung higher.
+    //
+    // ⚠ THE W FAMILY EXTRAPOLATES THE SAME +1 STEP, and it takes the "heaviest thing in the game"
+    // title off J300: a 5-match W100 run is 4 + 8 per match = 60, + the ladder 6 = 66. That is not a
+    // typo and it is not (only) arithmetic tidiness – the adult rungs are the same flights as the
+    // junior ones against opponents who are twenty-four and do this for a living, so a W15 week is
+    // a harder week than a J300 week even though it draws a fifth of the crowd. The rungs above are
+    // sparse enough to absorb it (W100 is four a year, `everyNWeeks: 13`), and the step is FORCED
+    // upward anyway by the strict-monotonicity guard in tests/ladder.test.ts L9 – which is the guard
+    // doing its job: the ladder must get harder as you climb, and there is now more ladder.
+    // Same owner-tunable caveat, doubly so: nobody has priced these three by hand yet either.
+    tierMatchFatigue: {
+      local: 0, regional: 1, national: 2,
+      j30: 3, j60: 4, j300: 5,
+      w15: 6, w35: 7, w100: 8,
+    } as Record<TierId, number>,
     // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
     // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
     // scoreline drain – the deeper she goes, the more that week grinds her down. The array is the
@@ -651,7 +664,16 @@ export const ECONOMY = {
     // The soft fatigue floor per tier, one step per rung (the J levels extrapolate above national,
     // matching tierMatchFatigue). Racing below the floor is still ALLOWED – it raises a caution,
     // never a block (the owner's "the parent may push, the game warns").
-    minConditionToEnter: { local: 20, regional: 30, national: 40, j30: 45, j60: 50, j300: 55 } as Record<TierId, number>,
+    //
+    // The W family continues the J family's own +5 step for the same reason and with the same
+    // status: extrapolated, not hand-priced. W100's 70 means nearly every entry to it raises a
+    // caution, which is the honest reading of the heaviest week on the calendar – and it is still a
+    // caution. The one HARD floor in the game is `medicalFloor` (15) below, far under all of these.
+    minConditionToEnter: {
+      local: 20, regional: 30, national: 40,
+      j30: 45, j60: 50, j300: 55,
+      w15: 60, w35: 65, w100: 70,
+    } as Record<TierId, number>,
     examWeeks: [[23, 24]] as [number, number][], // season-week offsets blacked out for school
     // Moved off 24-25 when the surface blocks landed: week 25 is the FIRST week of the grass
     // window (25-30), so the old placement ate 1 of only 6 grass weeks a year - a real cost to a

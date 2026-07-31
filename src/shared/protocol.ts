@@ -116,6 +116,16 @@ export type WorldEventCategory =
    *  it pays a flat annual grant under 'sponsor', the way this kit grant already did. See
    *  ECONOMY.sponsorship. Travel-cover remains the only price-reducing subsidy in the game. */
   | 'academy'
+  /** 'prize' (task #17) is an INCOME-side category: what a tournament pays her, off the finishing
+   *  tier's own `prizeCents` table. THE ONLY INCOME THE TENNIS ITSELF PRODUCES – every other income
+   *  category in this union is somebody deciding to fund her (a parent, a shop, an academy) or a
+   *  bank paying interest on what is left. It exists only on the adult rungs: the junior tour pays
+   *  nothing, ever, which is the real rule and the whole thesis of the game.
+   *
+   *  ⚠ It is also the one category that is NOT priced by the wealth corridor, so the Money breakdown
+   *  shows a working family and a wealthy one exactly the same figure for exactly the same week. See
+   *  TierDef.prizeCents. */
+  | 'prize'
   | 'income'
   | 'interest'
   | 'physio'
@@ -764,10 +774,19 @@ export interface LadderView {
 export type LadderViews = Record<LadderTrack, LadderView>
 
 /** The player-facing name of each table, defined ONCE. "National" and "International" are the words a
- *  parent would use; nothing in the UI says "domestic", "ITF" or "track". */
+ *  parent would use; nothing in the UI says "domestic", "ITF" or "track".
+ *
+ *  ⚠ THE THIRD ONE IS "PROFESSIONAL", NOT "WTA" AND NOT "WORLD TOUR". Two acronyms were available and
+ *  both are engine vocabulary wearing a tour's logo – a parent watching her daughter does not say
+ *  "her WTA ranking", she says the girl has turned professional. It is also the only word that tells
+ *  the third table apart from the second on the axis the player actually feels: a W15 is every bit as
+ *  INTERNATIONAL as a J30 (same flights, same passport, same two weeks away), so naming it by
+ *  geography would have produced two tables called almost the same thing. The break at this table is
+ *  junior/professional, and the label says so. */
 export const LADDER_LABEL: Record<LadderTrack, string> = {
   domestic: 'National',
   itf: 'International',
+  wta: 'Professional',
 }
 
 /** HER LADDER AND HER PLACE ON IT, resolved once for the surfaces that want "her rank" and have no
@@ -796,6 +815,11 @@ export function activeLadderOfSnapshot(
 export const LADDER_POINTS_LABEL: Record<LadderTrack, string> = {
   domestic: 'national pts',
   itf: 'international pts',
+  // ⚠ AND THIS IS THE UNIT THE PLAYER MUST NOT ADD TO THE OTHER TWO. It is the smallest-looking
+  // number on any of the three tables – a W15 title pays 10 where a J300 title pays 300 – and it is
+  // the one that means she is a professional. Naming the currency on every figure is what stops the
+  // Stats screen reading like a demotion the week she steps up (see LadderTrack in season/types.ts).
+  wta: 'professional pts',
 }
 
 /** The kid's current run of consecutive COMPETITIVE losses, and the threshold at which this

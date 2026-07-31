@@ -14,17 +14,24 @@
  * WHOLE HORIZON (Wave 1): instead of one 52-week season, run the SAME world forward to two career
  * milestones and report, per profile, the cumulative chance of surviving (not going bankrupt) and a
  * reach-rate proxy:
- *   14→16 = 104 weeks (2 seasons, "first prize money" proxy)
+ *   14→16 = 104 weeks (2 seasons, the junior sink – no rung she can enter pays anything)
  *   14→18 = 208 weeks (4 seasons, "pro attempt" proxy)
+ *   14→20 = 312 weeks (6 seasons, THE ADULT TOUR – W15 opens at 16, W100 at 17, so this is the
+ *                      first horizon in which the prize-money question can be asked at all)
  * State carries across seasons because we keep ONE createWorld + ONE rngFromSeed for the whole horizon
  * and just tick further – fundsCents, kidRank, the rolling results ledger, bestFinishByTier and
  * lastSeasonSummary all live on the world.
  *
- * *** CAVEAT – prize money is NOT modeled yet. *** Tournaments award POINTS only; income = parent
- * contribution + local sponsor + gear subsidy. So this bench measures SURVIVAL RUNWAY (how long the
- * family bankroll lasts) plus a POINTS/RANK REACH-RATE proxy – NOT earnings. A literal "first prize
- * money" milestone would need a payout income category in finalizeTournament first, which is out of
- * scope for a measurement-only tool.
+ * ⚠ THE STANDING CAVEAT IS GONE (task #17, A2). It read "prize money is NOT modeled yet – tournaments
+ * award POINTS only", and it had been the largest asterisk on every number this tool prints since it
+ * was written. The adult rungs now pay: `finalizeTournament` credits a 'prize' income category off
+ * the finishing tier's own payout table (see TierDef.prizeCents). The survival numbers are therefore
+ * no longer a pure-sink measurement past age 16, the reach targets are no longer standing in for
+ * earnings, and the A4 arm below asks the question the caveat used to make unaskable: WHEN does the
+ * tennis start paying for itself?
+ *
+ * What is still true and still worth saying: the junior tour pays nothing, ever, so for the first two
+ * seasons of every career this is exactly the sink it always was. That is the design, not a gap.
  *
  * Finance read (the correctness crux): the engine prunes financeWeeks to a 60-week trailing window,
  * so financeWindow(fw, 0) at horizon end silently drops every season but the last ~60 weeks. Instead
@@ -87,13 +94,28 @@ export interface Horizon {
   blurb: string
 }
 
-// Two horizons, both iterated in main. weeks = (targetAge - 14) * 52.
+// Three horizons, all iterated in main. weeks = (targetAge - 14) * 52.
+//
+// ⚠ THE THIRD ONE EXISTS BECAUSE THE ADULT TOUR IS UNREACHABLE INSIDE THE OTHER TWO (task #17, A4).
+// W15 has `minAgeYears: 16`, which is week 104 – the exact last week of the 14→16 horizon – so the
+// junior horizon can never see a professional entry, and 14→18 leaves at most two seasons of it. The
+// A4 question ("in what week does prize money first exceed the week's costs?") needs the adult rungs
+// to have been played for long enough to answer honestly, and a horizon that reports "never" because
+// it stopped too early would be the same non-measurement REACH_TARGET_MONEY was before it was
+// re-based. Six seasons takes her to 20 – past the fork at 19 that §4 of
+// docs/specs/adult-tour-and-endings.md will eventually make a decision rather than a birthday.
 export const HORIZONS: Horizon[] = [
-  { label: '14→16', weeks: 104, targetAge: 16, blurb: 'first prize money proxy (national-tier eligibility)' },
-  { label: '14→18', weeks: 208, targetAge: 18, blurb: 'pro attempt proxy (top-50 once ranked, or 300 points)' },
+  { label: '14→16', weeks: 104, targetAge: 16, blurb: 'the junior sink – nothing she can enter pays a cent' },
+  { label: '14→18', weeks: 208, targetAge: 18, blurb: 'pro attempt proxy (top-50 once ranked, or 60 points)' },
+  { label: '14→20', weeks: 312, targetAge: 20, blurb: 'the adult tour – can the tennis start paying for itself?' },
 ]
 
-// Reach targets. The engine models NO prize money, so the target is defined against existing state.
+// Reach targets. ⚠ THEY PREDATE PRIZE MONEY AND STILL DO NOT READ IT (task #17). They were written
+// as proxies precisely BECAUSE the engine modelled no earnings; earnings now exist, so a literal
+// "the week she first covers her own costs" is available and is measured by the A4 block instead.
+// These two stay as they are, unchanged and still points/rank-based, so every historical number in
+// this file's git history is still comparable - re-basing a reach target is a tuning pass with its
+// own sweep, and one is already owed (see the 14→16 saturation pinned in tests/econ-bench.test.ts).
 /** 14→16: national-tier eligibility, which is a DOMESTIC threshold and did not move - the domestic
  *  point tables are unchanged by the two-ladder slice, only the international ones are. */
 export const REACH_TARGET_MONEY = 150
@@ -156,7 +178,10 @@ export const PRESETS: Preset[] = [
  *  either (it has no planner policy – that is the fatigue bench's axis), so they read $0 here and
  *  exist only to keep the category fold exhaustive. */
 export const EXPENSE_CATS: WorldEventCategory[] = ['coaching', 'travel', 'entry', 'gear', 'stringing', 'physio', 'vacation', 'practice', 'other']
-export const INCOME_CATS: WorldEventCategory[] = ['income', 'sponsor', 'academy', 'interest']
+/** ⚠ 'prize' LEADS THE INCOME LIST because it is the only one of the four the TENNIS produces – the
+ *  other three are a parent, a shop and a bank. It reads $0 for every career under 16 and for every
+ *  career that never opens a W15, which is information rather than an empty column. */
+export const INCOME_CATS: WorldEventCategory[] = ['prize', 'income', 'sponsor', 'academy', 'interest']
 
 /** One completed season, captured at its wrap week off world.lastSeasonSummary + that year's finance fold. */
 export interface PerSeason {
@@ -200,6 +225,21 @@ export interface SeedResult {
   /** tournaments entered over the horizon: total plus the ranking-gated per-tier split.
    *  Every tier in the catalogue is live since ladder-up, so total === Σ byTier. */
   entries: { total: number; byTier: Record<TierId, number> }
+  /** A4 (task #17): the first week a `prize` line appeared in the ledger at all – i.e. the week she
+   *  first played a professional main draw and got paid for it, however little. Null if never. */
+  firstPrizeWeek: number | null
+  /** A4, AND THE NUMBER THE SLICE IS FOR: the first week in which that week's PRIZE MONEY exceeded
+   *  that week's total outgoings. Null if it never happened – which is a finding, not a failure.
+   *
+   *  ⚠ WHAT "THE WEEK'S COSTS" MEANS HERE, precisely, because the answer is only as good as the
+   *  reading. It is the magnitude of every negative category in that week's `FinanceWeek` row:
+   *  travel, coaching, gear, stringing, physio, the lot. It does NOT include the entry fee, and that
+   *  is not a choice – `enterEvent` charges the fee the week she COMMITS, up to ENTRY_LOOKAHEAD
+   *  weeks before the draw, so it sits in a different row of the ledger. The reading is therefore
+   *  slightly generous, by one entry fee ($300-600 on the adult rungs) against a cheque that has to
+   *  beat $1,000-3,800 of travel plus the week's coaching. Worth knowing; not worth distorting the
+   *  measure to chase, since a fee three weeks back is genuinely not what that week cost. */
+  prizeBreakEvenWeek: number | null
   /** v21: travel the academy paid for over the horizon, summed at each season wrap. Invisible in
    *  the category fold by design – the scholarship discounts the travel line rather than crediting
    *  an income one – so it is carried here or it is not measurable at all. */
@@ -226,6 +266,7 @@ function zeroCats(): Record<WorldEventCategory, number> {
     academy: 0,
     income: 0,
     interest: 0,
+    prize: 0,
     other: 0,
   }
 }
@@ -410,6 +451,14 @@ export function runCareer(
   let academySeasons = 0
   const perSeason: PerSeason[] = []
 
+  // A4: the prize-money watch. Read off the SAME per-week ledger the Money screen reads, week by
+  // week as the career runs, because `financeWeeks` is pruned to a 60-week trailing window and a
+  // horizon-end scan would silently miss every earlier week – the exact bug the per-season fold
+  // above exists to dodge. `seenWeeks` makes the scan idempotent as rows accumulate and then age out.
+  let firstPrizeWeek: number | null = null
+  let prizeBreakEvenWeek: number | null = null
+  const seenWeeks = new Set<number>()
+
   for (let i = 0; i < horizonWeeks; i++) {
     const e = stepCareerWeek(world, rng, policy)
     for (const tier of TIER_LADDER) {
@@ -420,6 +469,17 @@ export function runCareer(
     if (world.fundsCents < peak) peak = world.fundsCents
     if (bankruptWeek === null && world.fundsCents < 0) bankruptWeek = world.week
     if (reachedWeek === null && reachedTarget(world, horizonWeeks)) reachedWeek = world.week
+
+    for (const fw of world.financeWeeks) {
+      if (seenWeeks.has(fw.week)) continue
+      seenWeeks.add(fw.week)
+      const prize = fw.byCategory.prize ?? 0
+      if (prize <= 0) continue
+      if (firstPrizeWeek === null) firstPrizeWeek = fw.week
+      // Every negative category of that week, as a positive magnitude – see prizeBreakEvenWeek.
+      const outgoings = Object.values(fw.byCategory).reduce((s, v) => s + (v < 0 ? -v : 0), 0)
+      if (prizeBreakEvenWeek === null && prize > outgoings) prizeBreakEvenWeek = fw.week
+    }
 
     // Season wrap: fold this just-finished year's finance and bank its summary. The wrap week is
     // always off-season (no scheduled event, so no pending tournament), so maybeFireSeasonWrapUp has
@@ -469,6 +529,8 @@ export function runCareer(
     endPoints: kidPoints(world, 'itf'),
     perSeason,
     entries,
+    firstPrizeWeek,
+    prizeBreakEvenWeek,
     academyCoveredCents,
     academySeasons,
     naiveNetCents: financeWindow(world.financeWeeks, 0).netCents,
@@ -555,7 +617,7 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[], poli
   }
   out.push(statRow('GROSS EXPENSE', rows.map((r) => r.grossExpenseCents)))
 
-  out.push('  -- income (cumulative; NO prize money – points only) --')
+  out.push('  -- income (cumulative; `prize` is the tennis, the other four are people) --')
   for (const cat of INCOME_CATS) {
     out.push(statRow(cat, rows.map((r) => r.cats[cat])))
   }
@@ -589,12 +651,34 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[], poli
       `travel covered ${fmtUsd(mean(rows.map((r) => r.academyCoveredCents)))} mean`,
   )
 
+  // A4 (task #17): THE WEEK THE ARITHMETIC FLIPS. Two facts, and the second is the one the whole
+  // slice is for: how many careers are ever PAID at all, and how many are ever paid MORE THAN THE
+  // WEEK COST. "never" in either column is a real answer about this ladder, not a broken tracker –
+  // see prizeBreakEvenWeek for exactly what "the week's costs" counts.
+  const paid = rows.filter((r) => r.firstPrizeWeek !== null)
+  const flipped = rows.filter((r) => r.prizeBreakEvenWeek !== null)
+  const medFirst = paid.length ? median(paid.map((r) => r.firstPrizeWeek as number)).toString() : '–'
+  const medFlip = flipped.length ? median(flipped.map((r) => r.prizeBreakEvenWeek as number)).toString() : '–'
+  out.push('  -- prize money (A4: when does the tennis start paying for itself?) --')
+  out.push(
+    '  ' +
+      padEnd('first cheque', LABEL_W) +
+      `${paid.length}/${rows.length} careers ever paid · median week ${medFirst}` +
+      (paid.length ? ` (earliest ${Math.min(...paid.map((r) => r.firstPrizeWeek as number))})` : ''),
+  )
+  out.push(
+    '  ' +
+      padEnd('week it flips', LABEL_W) +
+      `${flipped.length}/${rows.length} careers where a week's prize beat that week's costs · median week ${medFlip}` +
+      (flipped.length ? ` (earliest ${Math.min(...flipped.map((r) => r.prizeBreakEvenWeek as number))})` : ''),
+  )
+
   // SURVIVAL (the headline): cumulative bankruptcy-survival over the FULL horizon.
   const survivors = rows.filter((r) => r.survived)
   const red = rows.filter((r) => r.weeksToBankrupt !== null)
   const redWeeks = red.map((r) => r.weeksToBankrupt as number)
   const medRedWeek = red.length ? median(redWeeks).toString() : '–'
-  out.push('  -- survival & reach (SURVIVAL RUNWAY + points/rank proxy; prize money not modeled) --')
+  out.push('  -- survival & reach (SURVIVAL RUNWAY + points/rank proxy) --')
   out.push(
     '  ' +
       padEnd('survival', LABEL_W) +
@@ -628,14 +712,16 @@ function renderPreset(preset: Preset, horizon: Horizon, rows: SeedResult[], poli
 const policyHeader = (seeds: number): string => [
   'Ties Break – economy bench (measurement only; changes no engine numbers)',
   '',
-  '*** CAVEAT – prize money is NOT modeled yet. Tournaments award POINTS only; income = parent',
-  '    contribution + local sponsor + gear subsidy. This bench measures SURVIVAL RUNWAY (how long the',
-  '    family bankroll lasts) plus a POINTS/RANK REACH-RATE proxy – NOT earnings. A literal "first',
-  '    prize money" needs a payout income category in finalizeTournament first (out of scope here). ***',
+  'PRIZE MONEY IS MODELLED (task #17). The adult rungs pay off TierDef.prizeCents at finalize; the',
+  '    junior and domestic rungs pay nothing and never will, because juniors pay to play. So the first',
+  '    two seasons of every career are still a pure sink, and the A4 block per preset reports when – if',
+  '    ever – a week\'s cheque beats that week\'s costs. The cheque does NOT scale with the wealth',
+  '    corridor: every family below is handed the identical figure for the identical result.',
   '',
   'Horizons run against the SAME continued world (state carries across seasons):',
   `  14→16 = 104 wk (2 seasons) – ${HORIZONS[0].blurb}`,
   `  14→18 = 208 wk (4 seasons) – ${HORIZONS[1].blurb}`,
+  `  14→20 = 312 wk (6 seasons) – ${HORIZONS[2].blurb}`,
   'Finance is folded per season at each wrap (financeWindow from the year start, summed) so it stays',
   '  correct past the engine\'s 60-week ledger pruning – a naive financeWindow(fw,0) would drop early seasons.',
   '',
@@ -669,6 +755,8 @@ function toCsv(all: { horizon: Horizon; preset: Preset; policy: Policy; rows: Se
     'survived',
     'peak_deficit_cents',
     'reached_week',
+    'first_prize_week',
+    'prize_break_even_week',
     'end_rank',
     'end_points',
     'seasons_captured',
@@ -696,6 +784,8 @@ function toCsv(all: { horizon: Horizon; preset: Preset; policy: Policy; rows: Se
         r.survived ? '1' : '0',
         r.peakDeficitCents.toString(),
         r.reachedWeek === null ? '' : r.reachedWeek.toString(),
+        r.firstPrizeWeek === null ? '' : r.firstPrizeWeek.toString(),
+        r.prizeBreakEvenWeek === null ? '' : r.prizeBreakEvenWeek.toString(),
         r.endRank.toString(),
         r.endPoints.toString(),
         r.perSeason.length.toString(),
@@ -802,13 +892,32 @@ export function main(argv: string[] = process.argv.slice(2)): void {
 // Run only when invoked as the CLI script, never when imported. Under vite-node process.argv[1] is
 // the runner (not this file), so the usual argv[1] entry check doesn't apply; the signals that do
 // work are "not inside vitest" (vitest sets process.env.VITEST) and "this file's name is on the
-// command line", which is true of `npm run bench:econ` and of `vite-node tools/econ-bench.ts` alike.
+// command line".
 //
 // ⚠ THE SECOND HALF WAS ADDED BECAUSE ANOTHER TOOL BORROWED THE CAREER LOOP. `stepCareerWeek` and
 // `POLICIES` are exported precisely so a bench does not have to invent a second entry policy, and
 // tools/next-goal-bench.ts takes them up on it - at which point importing this file ran the whole
 // nine-preset economy sweep first, for nobody. The VITEST check alone could not see the difference
 // between "imported by a test" and "imported by another bench".
-if (!process.env.VITEST && process.argv.some((a) => a.includes('econ-bench'))) {
+//
+// ⚠⚠ AND THE NAME CHECK HAD SILENTLY STOPPED FINDING THE NAME (found 31.07 while wiring A4). The
+// installed vite-node (3.2.4) rewrites `process.argv` to ["node", ".../bin/vite-node", ...flags] -
+// the ENTRY FILE is stripped, though the flags after it survive, which is why `--csv` still parsed
+// fine and nothing looked broken. So the predicate was false on every invocation, `main()` never
+// ran, and `npm run bench:econ` had been printing the two lines of npm preamble and exiting 0 for
+// however long that version has been installed. A bench that reports nothing and succeeds is worse
+// than one that crashes: this is the tool the economy is tuned with.
+//
+// The name is still on the command line, just not in `argv` any more - npm puts the whole script
+// body in `npm_lifecycle_script` ("vite-node tools/econ-bench.ts"), so the fix is to look in both
+// places for the same string. It stays a NAME check rather than becoming an unconditional autorun,
+// because that is what keeps `next-goal-bench` from triggering the sweep: its own lifecycle script
+// names itself, not this file. `TB_BENCH_RUN` is the manual override for an invocation that hides
+// the name from both (a bare `npx vite-node tools/econ-bench.ts` on this runner version).
+const NAMED_ON_THE_COMMAND_LINE =
+  process.argv.some((a) => a.includes('econ-bench')) ||
+  (process.env.npm_lifecycle_script ?? '').includes('econ-bench') ||
+  process.env.TB_BENCH_RUN === '1'
+if (!process.env.VITEST && NAMED_ON_THE_COMMAND_LINE) {
   main()
 }

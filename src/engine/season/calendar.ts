@@ -246,6 +246,31 @@ export const TIERS: Record<TierId, TierDef> = {
   // the cap yearly, so a good junior plays her first W15 at sixteen or seventeen. 16 / 16 / 17 below
   // gives her three seasons of overlap with the junior tour, which is what makes the handover at 19 a
   // DECISION with evidence behind it rather than a jump into the dark.
+  // --- and the cheque (A2). THE POINT OF THE WHOLE SLICE -------------------------------------
+  //
+  // Three tables of `prizeCents`, one number per finish, in whole cents, indexed exactly like
+  // `points` above. Real ITF World Tennis Tour singles money, rounded to something a tournament
+  // would actually print. See TierDef.prizeCents for the three rules that make this different in
+  // kind from the points array (a first-round exit is NOT zero; it does not scale with the wealth
+  // corridor; and it exists on the W rungs ONLY, because juniors pay to play).
+  //
+  // SANITY-CHECKED AGAINST `travelCostCents` RATHER THAN TAKEN ON TRUST, which is what the plan
+  // asked for and is where the design actually lives. Trip = entry fee + travel, at the middle
+  // family's corridor (x0.95-1.05; a working family pays x0.7-0.8 and a wealthy one x1.2-1.3 for
+  // exactly the same week, against exactly the same cheque):
+  //
+  //   rung  trip           R32 exit         break-even finish   title
+  //   W15   $1,300-2,500   $130   (~7%)     THE TITLE, barely   $2,200 - i.e. she wins the whole
+  //                                                              thing and roughly covers the trip
+  //   W35   $1,700-3,200   $290   (~12%)    semi-final          $5,000 - clears ~$2,600
+  //   W100  $2,500-4,400   $900   (~26%)    quarter-final       $14,500 - clears ~$11,000
+  //
+  // READ THE W15 ROW AGAIN, because it is the cliff the whole design turns on: at the entry rung of
+  // the professional game, WINNING THE TOURNAMENT approximately pays for having gone. Everything
+  // else is a loss. That is not a balance failure, it is docs/research/02-tennis-economics.md -
+  // Kiranpal Pannu earned $6,771 and spent $34,500 in 2022 - and it is why the ladder has to be
+  // climbed rather than farmed. W35 is where a good week starts to pay for a bad one, and W100 is
+  // where a single result changes the family's year.
   w15: {
     id: 'w15',
     track: 'wta',
@@ -254,6 +279,8 @@ export const TIERS: Record<TierId, TierDef> = {
     entryFeeCents: 300_00,
     travelCostCents: [1000_00, 2200_00],
     points: [10, 6, 3, 2, 1, 0],
+    // $2,200 / $1,300 / $750 / $450 / $250 / $130.
+    prizeCents: [2200_00, 1300_00, 750_00, 450_00, 250_00, 130_00],
     // The dense entry rung of the adult game, exactly as j30 is of the junior one.
     everyNWeeks: 2,
     minAgeYears: 16,
@@ -279,6 +306,8 @@ export const TIERS: Record<TierId, TierDef> = {
     entryFeeCents: 400_00,
     travelCostCents: [1300_00, 2800_00],
     points: [20, 13, 8, 4, 2, 0],
+    // $5,000 / $2,900 / $1,700 / $1,000 / $550 / $290.
+    prizeCents: [5000_00, 2900_00, 1700_00, 1000_00, 550_00, 290_00],
     everyNWeeks: 3,
     minAgeYears: 16,
     // The acceptance list, as a share of the field - see TierDef.enterPct for why a share and never a
@@ -296,20 +325,55 @@ export const TIERS: Record<TierId, TierDef> = {
     entryFeeCents: 600_00,
     travelCostCents: [1900_00, 3800_00],
     points: [100, 65, 40, 25, 12, 0],
+    // $14,500 / $8,500 / $5,000 / $2,900 / $1,650 / $900.
+    prizeCents: [14500_00, 8500_00, 5000_00, 2900_00, 1650_00, 900_00],
     // Rare and planned around, the way j300 is: four a year.
     everyNWeeks: 13,
     minGapWeeks: 2,
     minAgeYears: 17,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     enterPct: 0.25,
-    entrantPctBand: [0.0, 0.25],
+    // ⚠ 0.55, NOT J300's 0.25, AND THE DIFFERENCE IS THE AGE GATE - measured, not guessed. A tier's
+    // entrant window has to be WIDER than its own draw or the field stops moving week to week, and
+    // W100 is the one rung in the game where that is not free: `selectEntrants` filters to the
+    // seventeen-and-overs, and only about a third of the cohort's top quarter is old enough at any
+    // given moment. Candidates left inside the window at its narrowest, over 5 careers x 312 weeks
+    // sampled every 13th week, against a draw of 32:
+    //
+    //   [0, 0.25] -> 14   [0, 0.35] -> 19   [0, 0.40] -> 24
+    //   [0, 0.45] -> 27   [0, 0.50] -> 32   [0, 0.55] -> 36   <- shipped
+    //
+    // At J300's 0.25 the rung could not fill itself from its own window for most of a career, so
+    // `selectEntrants`' backfill ran nearly every time and a "prestige" W100 draw was quietly half
+    // made of whoever was fit - the guard in tests/ladder.test.ts L6 caught it at 0.256 against a
+    // 0.25 window. 0.50 clears the draw exactly, which is no margin at all; 0.55 clears it with four
+    // to spare at the worst week measured.
+    //
+    // IT DOES NOT MAKE W100 A WEAKER FIELD THAN J300, which is the objection to answer. This band is
+    // read against a table that has 199 juniors in it and only ~80 adults; the top 55% of everybody
+    // is roughly the top quarter of the people actually eligible, so the tournament draws from the
+    // same slice of ITS OWN population that J300 draws from of hers. The ACCEPTANCE cut the kid
+    // faces (`enterPct: 0.25`) is untouched and is still the hardest in the game.
+    entrantPctBand: [0.0, 0.55],
   },
 }
 
 /** The catalogue in ladder order, weakest rung first. The single source of truth for "is tier A
  *  above tier B" – used for scheduling precedence, the tier guide, the Home season strip and
- *  every monotonicity check in the tests. */
-export const TIER_LADDER: readonly TierId[] = ['local', 'regional', 'national', 'j30', 'j60', 'j300']
+ *  every monotonicity check in the tests.
+ *
+ *  ⚠ ONE ORDER OVER THREE TABLES, and it is a STRENGTH order, not a points order. The adult rungs
+ *  go on the end because that is what "above" means everywhere this list is read – a W15 draw is a
+ *  harder week than a J300 draw, it costs more to reach, and the scheduler must pick its weeks
+ *  before the dense junior ones bend around them. It emphatically does NOT mean a W15 title is
+ *  worth more POINTS than a J300 title: it is worth 10 against 300, in a different currency, and
+ *  the two are never added (see LadderTrack in season/types.ts). Reading this list as a points
+ *  ranking is the exact error the third table exists to make unrepresentable. */
+export const TIER_LADDER: readonly TierId[] = [
+  'local', 'regional', 'national',
+  'j30', 'j60', 'j300',
+  'w15', 'w35', 'w100',
+]
 
 /** Short tier names for width-starved surfaces (the next-week button, the Home season strip) and
  *  for the diary's own voice ("Still tired from the J30 trip"). MOVED here from
@@ -323,6 +387,33 @@ export const TIER_SHORT: Record<TierId, string> = {
   j30: 'J30',
   j60: 'J60',
   j300: 'J300',
+  // The adult rungs keep the tour's OWN shorthand, which is what everybody in the sport calls them:
+  // a W15 is a W15 on the entry list, in the draw sheet and in the conversation about it. It also
+  // reads next to J30/J60 as a different family at a glance, which is the whole job of this table
+  // on a width-starved surface – one letter apart, one table apart.
+  w15: 'W15',
+  w35: 'W35',
+  w100: 'W100',
+}
+
+/** Pure age gate for a tier (ladder-up): the junior tour is 13+, the domestic ladder has no
+ *  minimum, the adult rungs are 16/16/17. No world/RNG dependency.
+ *
+ *  ⚠ IT LIVES HERE, NEXT TO THE TABLE IT READS, BECAUSE THE COHORT NEEDS IT TOO (task #17). It was
+ *  world.ts's `isTierAgeOpen` and only ever asked about the KID – which was harmless while every
+ *  rung on the calendar opened at 13, and stopped being harmless the moment three rungs opened at
+ *  16+. `season/tournament.ts` cannot import world.ts (cycle), so the choice was one predicate here
+ *  or a second copy of `minAge === undefined || age >= minAge` on the AI side, and a second copy of
+ *  an age rule is precisely how "junior" became a label on a tier rather than a rule about people
+ *  (docs/specs/adult-tour-and-endings.md §1). world.ts re-exports it under its historical name, so
+ *  every existing call site and test import is untouched.
+ *
+ *  This is the MINIMUM half of the age question only. The MAXIMUM half – `maxAgeYears` on the J
+ *  tiers, so a J30 field is juniors rather than whoever is around – is §4.1 of that spec and is
+ *  still open. */
+export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
+  const minAge = TIERS[tier].minAgeYears
+  return minAge === undefined || ageYears >= minAge
 }
 
 // Tier ids ordered by DESCENDING label length – the scan order tierFromLabel needs. "Junior Tour

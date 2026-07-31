@@ -11,11 +11,19 @@ definition. Nothing here is from memory.
 > `extraTiebreaks` (1) and `tierMatchFatigue` (local 0 … j300 5) are untouched. Every table below is
 > the same arithmetic one rung higher, **regenerated from the engine, not hand-edited.**
 
+> **⚠ THE LADDER GREW THREE RUNGS (task #17, 31.07).** W15 / W35 / W100 joined the catalogue with
+> surcharges **6 / 7 / 8**, continuing the same +1-per-rung extrapolation the J family already used.
+> No existing number moved – every table below simply gained three rows, and the ceilings quoted in
+> the prose moved with them (a match now costs **2 to 12**; the heaviest run in the game is a
+> straight-sets W100 title at **56**, taking that title off J300's 41). Pinned, as ever, by
+> `tests/fatigueReference.test.ts`, which is exhaustive over `TierId`.
+
 ## The rule (owner's design, round 9 + round 10; base raised 26.07)
 ```
 one match  = scoreline + tier surcharge
              scoreline: 2 simple (2 sets, no TB) · 3 with a TB or a 3rd set · +1 more if 3 TB sets
              surcharge: local 0 · regional 1 · national 2 · j30 3 · j60 4 · j300 5
+                        w15 6 · w35 7 · w100 8
 one run    = Σ over matches IN ORDER of ( match cost + cumulative ladder[index] )
              ladder index is 0-based WITHIN THE RUN, so the FIRST match never pays extra:
              the cumulative only starts once she plays more than one match that week.
@@ -32,10 +40,13 @@ weeks, +2 physio, +1 blackout week; a tournament week pays no base (V2.1).
 | national | 4 | 5 | 6 |
 | j30 | 5 | 6 | 7 |
 | j60 | 6 | 7 | 8 |
-| j300 | **7** | 8 | **9** |
+| j300 | 7 | 8 | 9 |
+| w15 | 8 | 9 | 10 |
+| w35 | 9 | 10 | 11 |
+| w100 | **10** | 11 | **12** |
 
-So a match costs **2 to 9**: 2 for a straight-sets Local, 9 for a three-tiebreak epic at J300. (It
-was 1 to 8 at the old base.)
+So a match costs **2 to 12**: 2 for a straight-sets Local, 12 for a three-tiebreak epic at W100. (It
+was 2 to 9 before the adult rungs, and 1 to 8 at the old base.)
 
 ## Whole-run cost, all matches simple
 Ladders: `off [0]` · `D [0,1,1,1,1]` · `C [0,1,1,2,2]` (SHIPPED) · `B [0,1,1,2,4]` · `A [0,1,2,3,4]`.
@@ -79,6 +90,21 @@ stop.
 | | **C** | 7 | 15 | 23 | 32 | **41** |
 | | B | 7 | 15 | 23 | 32 | **43** |
 | | A | 7 | 15 | 24 | 34 | **45** |
+| w15 | off | 8 | 16 | 24 | 32 | **40** |
+| | D | 8 | 17 | 26 | 35 | **44** |
+| | **C** | 8 | 17 | 26 | 36 | **46** |
+| | B | 8 | 17 | 26 | 36 | **48** |
+| | A | 8 | 17 | 27 | 38 | **50** |
+| w35 | off | 9 | 18 | 27 | 36 | **45** |
+| | D | 9 | 19 | 29 | 39 | **49** |
+| | **C** | 9 | 19 | 29 | 40 | **51** |
+| | B | 9 | 19 | 29 | 40 | **53** |
+| | A | 9 | 19 | 30 | 42 | **55** |
+| w100 | off | 10 | 20 | 30 | 40 | **50** |
+| | D | 10 | 21 | 32 | 43 | **54** |
+| | **C** | 10 | 21 | 32 | 44 | **56** |
+| | B | 10 | 21 | 32 | 44 | **58** |
+| | A | 10 | 21 | 33 | 46 | **60** |
 
 ## THE result of the base raise: a straight-sets title now costs the OLD FLAT strain, exactly
 Before round 9 the engine charged a FLAT `tournamentStrain` per tournament — **local 8, regional 16,
@@ -93,6 +119,9 @@ won the title. At base 2 under shipped ladder C:
 | j30 | 5 | 31 | 36 | 41 | 34 |
 | j60 | 5 | 36 | 41 | 46 | 34 |
 | j300 | 5 | 41 | 46 | 51 | 34 |
+| w15 | 5 | 46 | 51 | 56 | – |
+| w35 | 5 | 51 | 56 | 61 | – |
+| w100 | 5 | 56 | 61 | 66 | – |
 
 Three for three on the tiers the owner priced himself, to the point. The per-match redesign is now
 **cost-neutral at the top of the draw** while still being far cheaper on an early exit — which is

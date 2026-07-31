@@ -127,7 +127,17 @@ function hashOf(draws: number[]): string {
 // still reproduce byte-for-byte - the birth months come off their own sub-stream and the head start is
 // post-draw arithmetic. What moved is which juniors hold points, because every rival now sits inside her
 // own birth year. Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 120 }
+//
+// ⚠⚠ kidRank RE-PINNED AGAIN 120 -> 164 (31.07, task #17, the adult rungs), and `count` 41550 and
+// `hash` e6b0c709 are AGAIN untouched and re-derived byte-for-byte on this branch. THE FROZEN CAPTURE
+// DID NOT MOVE: the calendar grew from 92 events a season to 139, and since the AI sub-stream
+// refactor the calendar's size is no longer part of the weekly draw count at all (see the REF note in
+// tests/round9.test.ts, "for the last time a calendar change can do it"). What moved is that a much
+// fuller calendar leaves far more juniors holding a counting result, so the tie at the FLOOR of the
+// table - which is where a point-less kid sits - is shared by fewer people and its dense rank is
+// deeper. Same mechanism as the note above, forty times the scale. Full reasoning at the REF
+// declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 164 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

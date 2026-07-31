@@ -25,6 +25,28 @@ export interface TierDef {
   entryFeeCents: number
   travelCostCents: [number, number] // [min,max], drawn per event instance
   points: number[] // by finish: [W, F, SF, QF, R16?, R32?] length matches rounds+1
+  /** WHAT THE CHEQUE IS, in whole cents, by finish – the same index as `points`, one number per
+   *  finish, no draws (task #17 / docs/specs/adult-tour-and-endings.md §3).
+   *
+   *  ⚠ ABSENT MEANS THE RUNG PAYS NOTHING, EVER, AND THAT IS THE JUNIOR TOUR. It is not an oversight
+   *  and not a "not modelled yet": juniors pay to play, which is the real rule and the whole
+   *  "invest without knowing the return" thesis the game is built on. Six of the nine rungs will
+   *  never carry this field.
+   *
+   *  ⚠ AND THE LAST ELEMENT IS NOT ZERO, which is the exact opposite of `points`. Wave B made a
+   *  first-round exit worth 0 ranking points at every rung, because the ITF table really does pay
+   *  nothing until you win a main-draw match. Prize money is not the ITF table: a first-round loser
+   *  is paid, and she is paid roughly $130 against a trip that cost $1,000-2,200. That gap IS the
+   *  design. The junior tour pays nothing ever; the adult tour pays something and the something is
+   *  an insult until she is good, and the player should be able to feel the exact week the
+   *  arithmetic flips. A zero here would have made the two tables the same table again.
+   *
+   *  ⚠ IT DOES NOT SCALE WITH THE WEALTH CORRIDOR. Travel, coaching and medical all do
+   *  (ECONOMY.travelBgFactor / the coach market / the physio bill), because they are prices a family
+   *  pays in the market it lives in. This is not a price, it is a cheque the tournament writes, and
+   *  it is the ONE number in the game that is identical for a working family and a wealthy one. See
+   *  `prizeCentsFor` in world.ts, which is deliberately the only reader and takes no background. */
+  prizeCents?: number[]
   everyNWeeks: number
   /** EXTRA events of this tier placed inside the season's SECOND half, on top of the
    *  `floor(weeks / everyNWeeks)` evenly-spaced ones (R9-20 national densification). */

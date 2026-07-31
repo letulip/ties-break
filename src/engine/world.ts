@@ -64,7 +64,7 @@ import {
   isExamWeek,
   isOffSeasonWeek,
   WEEKS_PER_YEAR,
-  OFF_SEASON_WEEKS, TIER_LADDER } from './season/calendar'
+  OFF_SEASON_WEEKS, TIER_LADDER, isTierAgeOpen } from './season/calendar'
 import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
@@ -144,7 +144,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 29
+export const SAVE_SCHEMA_VERSION = 30
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -195,6 +195,15 @@ export interface WorldState {
    *  Derived like `kidRank` and cached beside it; a career opened before this field existed simply
    *  recomputes it on the next tick, which is why it needs no migration. */
   kidRankDomestic?: number
+  /** her rank in the PROFESSIONAL (WTA) table – the third one, added with the adult rungs (task #17).
+   *
+   *  Same shape and the same reason as `kidRankDomestic` above: derived, cached beside the other two
+   *  by the one writer (`recomputeKidRank`), and OPTIONAL so a career opened before the field existed
+   *  needs no migration – it recomputes on the next tick. Note this is not the same question as
+   *  "has she turned professional": the fallback (below the whole field) is what a girl who has never
+   *  entered a W15 reads, which is why `tierOpenFor`'s wta arm gates on her having a counting result
+   *  before it will read this number at all. */
+  kidRankWta?: number
   /** kidRank as it stood at the start of the last resolved week; null before any tick (v7). THE ITF
    *  one, because `kidRank` is. */
   prevKidRank: number | null
@@ -208,6 +217,10 @@ export interface WorldState {
    *  by the same one writer. Optional, so a career opened before the field existed needs no migration:
    *  it is simply null until the next tick, which the arrow already renders as a neutral dash. */
   prevKidRankDomestic?: number | null
+  /** `kidRankWta` as it stood at the start of the last resolved week – the third member of the pair
+   *  above, written by the same one writer for the same reason: a movement arrow is
+   *  (previous - current) and both halves have to come out of ONE table. Optional, so no migration. */
+  prevKidRankWta?: number | null
   /** R12-S1 (v17): her dense rank as she ENTERED the season currently in progress – captured at
    *  the top of the tick into the season's first week, and read once, at that season's wrap-up.
    *
@@ -653,12 +666,20 @@ function domesticRanking(world: WorldState): RankingRow[] {
 
 /** Refresh the cheap-access rank caches. `kidRank` stays the ITF one - it is the number the ladder
  *  and the standings are about - and the domestic rank rides beside it for the screens that show her
- *  place before she has an international result at all. */
+ *  place before she has an international result at all.
+ *
+ *  THREE FOLDS SINCE THE ADULT RUNGS (task #17), and the third is built exactly like the other two:
+ *  same predicate, same fallback, same one writer. `kidRank` did NOT move to the professional table
+ *  when the third one arrived, and that is a deliberate non-decision – WHICH table is "hers" is
+ *  `activeLadderOf`'s question and the handover at 19 is what answers it (docs/specs/
+ *  adult-tour-and-endings.md §4). This function only guarantees all three are true at once. */
 export function recomputeKidRank(world: WorldState): void {
   const row = fullRanking(world).find((r) => r.playerId === KID_ID)
   world.kidRank = row?.rank ?? world.cohort.length + 1
   const dom = domesticRanking(world).find((r) => r.playerId === KID_ID)
   world.kidRankDomestic = dom?.rank ?? world.cohort.length + 1
+  const wta = rankingFor(world, 'wta').find((r) => r.playerId === KID_ID)
+  world.kidRankWta = wta?.rank ?? world.cohort.length + 1
 }
 
 // --- milestones (never pruned) -----------------------------------------------
@@ -889,9 +910,16 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
 }
 
 /** A zeroed per-ladder W-L, spelled once. Two callers – the season reset above and `createWorld` –
- *  and a third in the migration, which needs the same shape from a different starting point. */
+ *  and a third in the migration, which needs the same shape from a different starting point.
+ *
+ *  ⚠ THREE BUCKETS SINCE v30, and widening it WAS a schema step rather than a free derivation. Every
+ *  other consumer of `LadderTrack` in this file re-folds from the results ledger on the next tick and
+ *  therefore needed no migration (`kidRankWta` is the neighbouring example); this one is a persisted
+ *  running total that only resets at a season boundary, so a save written before the third rung
+ *  existed would carry a two-key object into a three-key type – and `record[track].wins++` in
+ *  `finalizeTournament` would throw on `undefined` the first time she won a W15 match. */
 export function emptySeasonRecord(): Record<LadderTrack, { wins: number; losses: number }> {
-  return { domestic: { wins: 0, losses: 0 }, itf: { wins: 0, losses: 0 } }
+  return { domestic: { wins: 0, losses: 0 }, itf: { wins: 0, losses: 0 }, wta: { wins: 0, losses: 0 } }
 }
 
 // --- finish / stage labels ---------------------------------------------------
@@ -911,6 +939,21 @@ export function finishLabel(finish: number): string {
     default:
       return `Round of ${2 ** finish}`
   }
+}
+
+/** WHAT A FINISH AT `tier` PAYS, in whole cents. 0 on every rung with no `prizeCents` table, which
+ *  is every domestic and junior rung and always will be – juniors pay to play.
+ *
+ *  ⚠ THE SIGNATURE IS THE SPEC. It takes a tier and a finish and NOTHING ELSE: no world, no profile,
+ *  no `FamilyBackground`. That is deliberate and it is the enforcement mechanism for
+ *  docs/specs/adult-tour-and-endings.md §3's third rule – prize money must not scale with the wealth
+ *  corridor – because a function that cannot see the family cannot price by it. Compare
+ *  `travelCostFor`, which takes the world precisely so it CAN. Exported so the bench and the tests
+ *  can ask directly, the way `localSponsorCents` is.
+ *
+ *  Pure arithmetic on a table: zero draws on any stream, so the frozen MAIN capture cannot see it. */
+export function prizeCentsFor(tier: TierId, finish: number): number {
+  return TIERS[tier].prizeCents?.[finish] ?? 0
 }
 
 // Stage name of a match played in the given round of a draw of `drawSize`.
@@ -1089,11 +1132,11 @@ function markBirthday(world: WorldState): void {
 }
 
 /** Pure age gate for a tier (ladder-up): the junior tour is 13+, the domestic ladder has no
- *  minimum. No world/RNG dependency, so the childhood prologue and the tests call it directly. */
-export function isTierAgeOpen(tier: TierId, ageYears: number): boolean {
-  const minAge = TIERS[tier].minAgeYears
-  return minAge === undefined || ageYears >= minAge
-}
+ *  minimum, the adult rungs are 16/16/17. No world/RNG dependency, so the childhood prologue and the
+ *  tests call it directly. MOVED to season/calendar.ts with the adult rungs (task #17) so the AI
+ *  entrant selection can read the same one implementation without importing this file; re-exported
+ *  here under its historical name, so every existing call site keeps working. */
+export { isTierAgeOpen }
 
 // --- the ITF annual entry cap (docs/research/ranking-points-by-tier.md §2) --------------------
 // The knob (the per-age table and the tier set) lives in ECONOMY.entryCap with the rest of the
@@ -1380,41 +1423,56 @@ export interface EntryStatus {
 }
 export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus {
   const tier = TIERS[event.tier]
-  // AN ITF RUNG IS AN ACCEPTANCE LIST, not a points threshold (docs/specs/two-ladders.md). She gets
-  // in on her ITF RANK, the same signal the AI field is drawn on, so the two sides of the same
-  // event finally obey the same rule - see rank-plateau.md 2b for what it cost when they did not.
-  if (tier.track === 'itf') {
-    // The first international rung has no rank bar - it reads her DOMESTIC points, because she
-    // cannot own an international ranking before she has played internationally and a rank gate
-    // there would be a closed loop. Above it, the acceptance list takes over.
+  // AN ITF OR WTA RUNG IS AN ACCEPTANCE LIST, not a points threshold (docs/specs/two-ladders.md).
+  // She gets in on her RANK IN THAT TABLE, the same signal the AI field is drawn on, so the two
+  // sides of the same event finally obey the same rule - see rank-plateau.md 2b for what it cost
+  // when they did not.
+  //
+  // ⚠ ONE ARM FOR BOTH TABLES, AND MERGING THEM IS THE POINT (task #17). This branch used to be
+  // `tier.track === 'itf'` and the domestic fall-through below caught everything else - so the
+  // moment the W rungs existed they fell into the DOMESTIC gate and W15 was refused with "Not
+  // enough national pts for World Tour 15 yet (need 120)", a threshold denominated in the wrong
+  // currency entirely. `tierOpenFor` had already been given its wta arm and said the rung was open,
+  // so the season policy committed to an event `enterEvent` then threw on: the two gates R10-5
+  // exists to keep identical had come apart, and the econ bench crashed on it mid-sweep. Writing
+  // the two tables as ONE arm over `onRamp` is what makes that unrepresentable rather than
+  // remembered - a fourth table would inherit the rule instead of needing this comment again.
+  if (tier.track === 'itf' || tier.track === 'wta') {
+    // THE ON-RAMP IS ALWAYS THE TABLE BELOW. The first rung of a table has no rank bar, because she
+    // cannot own a ranking in a table she has never played in and a rank gate there would be a
+    // closed loop; so J30 reads her DOMESTIC points and W15 reads her ITF JUNIOR points. Above the
+    // on-ramp the acceptance list takes over, in the rung's own table's currency.
+    const onRamp: LadderTrack = tier.track === 'itf' ? 'domestic' : 'itf'
     const accepts = acceptanceRank(world, event.tier)
     if (accepts === undefined) {
       const [minPoints] = tier.enterPointBand
-      const domestic = kidPoints(world, 'domestic')
-      if (domestic < minPoints) {
+      const held = kidPoints(world, onRamp)
+      if (held < minPoints) {
         return {
           level: 'blocked',
           reason: 'locked',
-          detail: `${tier.label} takes her on her national standing – ${minPoints} ${LADDER_POINTS_LABEL.domestic} needed`,
+          detail: `${tier.label} takes her on her ${LADDER_LABEL[onRamp].toLowerCase()} standing – ${minPoints} ${LADDER_POINTS_LABEL[onRamp]} needed`,
           pointsToEnter: minPoints,
         }
       }
       return availabilityStatus(world, event)
     }
-    // ⚠ UNRANKED IS NOT RANK ONE. With nobody holding an ITF point in week 1 the whole field ties at
-    // zero, and competition ranking gives every member of a tie the SAME rank - so a fresh
+    // ⚠ UNRANKED IS NOT RANK ONE. With nobody holding a point in this table in week 1 the whole field
+    // ties at zero, and competition ranking gives every member of a tie the SAME rank - so a fresh
     // fourteen-year-old reads as #1 and the top rungs would open to her on day one. You cannot be on
-    // an acceptance list BY RANKING if you have no ranking, so the gate demands a counting ITF
-    // result before it will read a position at all. (The same `hasResults` guard the econ bench
-    // already puts on its rank arm, for the same reason.)
-    const ranked = kidPoints(world, 'itf') > 0
-    if (!ranked || world.kidRank > accepts) {
+    // an acceptance list BY RANKING if you have no ranking, so the gate demands a counting result IN
+    // THIS TABLE before it will read a position at all. (The same `hasResults` guard the econ bench
+    // already puts on its rank arm, for the same reason.) It matters twice as much on the
+    // professional table, which opens EMPTY for the whole world - see topBandForPercentile.
+    const ranked = kidPoints(world, tier.track) > 0
+    const rank = rankIn(world, tier.track)
+    if (!ranked || rank > accepts) {
       return {
         level: 'blocked',
         reason: 'locked',
         detail: ranked
-          ? `${tier.label} takes the top ${accepts} – she is #${world.kidRank}`
-          : `${tier.label} takes the top ${accepts} – she has no international ranking yet`,
+          ? `${tier.label} takes the top ${accepts} – she is #${rank}`
+          : `${tier.label} takes the top ${accepts} – she has no ${LADDER_LABEL[tier.track].toLowerCase()} ranking yet`,
         rankToEnter: accepts,
       }
     }
@@ -3024,8 +3082,9 @@ function computeShadowTournament(
 // Shared by a normal tick (inline) and finalizeTournament (deferred for a reveal week).
 function recomputeRankAndMilestones(world: WorldState): void {
   world.prevKidRank = world.kidRank
-  // Both "before" values, captured together, so no surface can diff across the two tables.
+  // All THREE "before" values, captured together, so no surface can diff across two tables.
   world.prevKidRankDomestic = world.kidRankDomestic ?? null
+  world.prevKidRankWta = world.kidRankWta ?? null
   // ⚠ ONE WRITER, ONE MEANING. This used to rank with `computeRanking(results, week, ids)` and NO
   // track predicate - so it folded BOTH ladders into one table and wrote that into `kidRank`, while
   // `recomputeKidRank` wrote the ITF rank into the same field and `computeStandings` rendered the
@@ -3103,6 +3162,31 @@ function finalizeTournament(world: WorldState): void {
       world.seasonLosses++
       record[track].losses++
     }
+  }
+
+  // A2: AND THIS IS WHERE THE TENNIS FINALLY PAYS HER (task #17). Same commit point as the points,
+  // off the same finish index, out of the tier's own table – so a result cannot award one without
+  // the other and a skipped event or a walkover pays nothing because it never reaches finalize.
+  //
+  // ⚠ NO WEALTH CORRIDOR ON THIS LINE, AND THAT IS THE WHOLE POINT OF IT. Everything else the family
+  // touches is priced by where they come from: the trip that got her here was multiplied by
+  // ECONOMY.travelBgFactor, the coach is billed in the market they can afford, the physio bill has
+  // its own factor. The cheque is not a price, it is what the tournament pays the person who won the
+  // match, and a working family and a wealthy one are handed the identical piece of paper. It is the
+  // only number in the game of which that is true, and it is what makes the cliff mean the same thing
+  // to everybody. If a future slice wants a background-scaled income, it must NOT reach for this one.
+  const prize = prizeCentsFor(event.tier, kidFinish)
+  if (prize > 0) {
+    world.fundsCents += prize
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'prize',
+      // Names the finish, because the whole design is that the player should be able to read this
+      // line against the travel line two rows up and feel the arithmetic. Short dash only.
+      text: `${tier.label} prize money – ${finishLabel(kidFinish)}`,
+      amountCents: prize,
+    })
   }
 
   // R9-7: the run's physical toll lands HERE, when it commits – per-match, not flat per tier.
@@ -3817,7 +3901,8 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
   return Math.max(1, Math.round(pct * (world.cohort.length + 1)))
 }
 
-/** THE ONE GATE, now that there are two tables (docs/specs/two-ladders.md).
+/** THE ONE GATE, now that there are three tables (docs/specs/two-ladders.md, and the third one in
+ *  docs/specs/adult-tour-and-endings.md).
  *
  *  A DOMESTIC rung reads her domestic best-6 against its band, exactly as the single ladder always
  *  did - those bands are denominated in domestic points and did not move, because the domestic
@@ -3826,7 +3911,23 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
  *  An ITF rung reads her ITF RANK POSITION against `enterRank`. That is the acceptance list, it is
  *  how the real tour works, and it is the same signal `entrantPctBand` already uses to pick the AI
  *  field - which is what closes the "two different entry rules for the same event" finding in
- *  rank-plateau.md 2b. A rung with no `enterRank` is open to anyone, which is what a J30 is. */
+ *  rank-plateau.md 2b. A rung with no `enterRank` is open to anyone, which is what a J30 is.
+ *
+ *  ⚠ A WTA RUNG IS THE ITF ARM ONE TABLE UP, AND THE ON-RAMP READS THE TABLE BELOW IT. This is the
+ *  same shape twice and it has to be, because it is the same problem twice: a player cannot hold a
+ *  ranking in a table she has never played in, so the BOTTOM rung of every table must be opened by
+ *  the table beneath it or the gate is a closed loop.
+ *
+ *      domestic points -> j30      (the on-ramp of the ITF table)
+ *      ITF rank        -> j60/j300
+ *      ITF JUNIOR points -> w15    (the on-ramp of the WTA table)
+ *      WTA rank        -> w35/w100
+ *
+ *  So W15's `enterPointBand` of [120, MAX] is read against her ITF JUNIOR total - the currency of the
+ *  table she is standing in, not the one she is stepping into - exactly as J30's [250, MAX] is read
+ *  against her DOMESTIC total. The tier comments in season/calendar.ts spell out what 120 buys; this
+ *  is the code they describe. Note the on-ramp is detected the same way in both arms - by the tier
+ *  having no `enterPct` at all - so a future W50 that gains an acceptance list needs no change here. */
 export function tierOpenFor(world: WorldState, tier: TierId): boolean {
   const def = TIERS[tier]
   if (def.track === 'itf') {
@@ -3834,6 +3935,12 @@ export function tierOpenFor(world: WorldState, tier: TierId): boolean {
     const accepts = acceptanceRank(world, tier)
     if (accepts === undefined) return isTierEligible(tier, kidPoints(world, 'domestic'))
     return kidPoints(world, 'itf') > 0 && world.kidRank <= accepts
+  }
+  if (def.track === 'wta') {
+    // The on-ramp rung reads ITF JUNIOR points; the rungs above it read her professional rank.
+    const accepts = acceptanceRank(world, tier)
+    if (accepts === undefined) return isTierEligible(tier, kidPoints(world, 'itf'))
+    return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? world.cohort.length + 1) <= accepts
   }
   return isTierEligible(tier, kidPoints(world, 'domestic'))
 }
@@ -4350,14 +4457,18 @@ function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
  *  this reads them rather than re-folding, which is what keeps a snapshot from disagreeing with the
  *  gate that used the same number to decide her entries. */
 function rankIn(world: WorldState, track: LadderTrack): number {
-  return track === 'itf' ? world.kidRank : (world.kidRankDomestic ?? world.cohort.length + 1)
+  if (track === 'itf') return world.kidRank
+  if (track === 'wta') return world.kidRankWta ?? world.cohort.length + 1
+  return world.kidRankDomestic ?? world.cohort.length + 1
 }
 
 /** ...and her place in the SAME table a week ago. Its own function beside `rankIn` for the reason
  *  `prevKidRankDomestic` exists at all: a movement is (previous - current), and the two halves have to
  *  come from one table or the difference is a subtraction across two currencies. */
 function prevRankIn(world: WorldState, track: LadderTrack): number | null {
-  return track === 'itf' ? world.prevKidRank : (world.prevKidRankDomestic ?? null)
+  if (track === 'itf') return world.prevKidRank
+  if (track === 'wta') return world.prevKidRankWta ?? null
+  return world.prevKidRankDomestic ?? null
 }
 
 /** WHICH TABLE IS SHE ACTUALLY COMPETING IN - one rule, one place, so Home, Stats and the Kid screen
@@ -4678,12 +4789,21 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     prevKidRank: world.prevKidRank,
     standings: computeStandings(world),
     countingResults: computeCountingResults(world),
-    // BOTH TABLES, and which one she is actually competing in. `kidRank`/`standings`/`countingResults`
-    // above are the ITF ones and stay as aliases of `ladders.itf` so nothing that reads them has to
-    // change; the pairing is pinned by a test, because two names for one fact is how this bug started.
+    // ALL THREE TABLES, and which one she is actually competing in. `kidRank`/`standings`/
+    // `countingResults` above are the ITF ones and stay as aliases of `ladders.itf` so nothing that
+    // reads them has to change; the pairing is pinned by a test, because two names for one fact is
+    // how this bug started.
+    //
+    // THE THIRD IS BUILT EXACTLY LIKE THE OTHER TWO – same call, same argument, no special case –
+    // which is the whole reason `LadderTrack` was widened rather than the adult rungs folded into
+    // `itf`. Nothing here decides whether the player SEES it: the Stats and rank-help screens still
+    // list two tabs by hand, because a fourteen-year-old with an empty professional table is noise
+    // and the week it stops being noise is the handover at 19 (docs/specs/adult-tour-and-endings.md
+    // §4), which is a slice of its own. The view exists and is correct from week 0 regardless.
     ladders: {
       domestic: computeLadderView(world, 'domestic'),
       itf: computeLadderView(world, 'itf'),
+      wta: computeLadderView(world, 'wta'),
     },
     activeLadder: activeLadderOf(world),
     bestFinishByTier: { ...world.bestFinishByTier },

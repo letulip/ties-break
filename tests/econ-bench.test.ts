@@ -37,6 +37,11 @@ import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
 const middle = PRESETS.find((p) => p.background === 'middle')!
 const working = PRESETS.find((p) => p.background === 'working')!
 const wealthy = PRESETS.find((p) => p.background === 'wealthy')!
+/** The working family that BUYS a coach – the cell where the 14→18 pro proxy still splits the field
+ *  (6 of 30 clear it under the grinder policy). `working` above is the self-coached one, whose
+ *  careers reach 0 of 30 at that horizon: a real answer about that family, and a useless fixture for
+ *  a case whose whole job is to fire BOTH branches of the tracker. */
+const workingCoached = PRESETS.filter((p) => p.background === 'working')[1]!
 
 const H16 = HORIZONS.find((h) => h.weeks === 104)!
 const H18 = HORIZONS.find((h) => h.weeks === 208)!
@@ -193,7 +198,7 @@ describe('finance read is correct PAST the 60-week pruning window (the crux)', (
   })
 })
 
-describe('reach tracker (points/rank proxy – prize money is not modeled)', () => {
+describe('reach tracker (points/rank proxy – NOT the prize-money question, which A4 measures)', () => {
   it('reachedWeek is the FIRST week the target predicate holds (14→16 = national eligibility)', () => {
     // Independent replay of the SAME deterministic career: find the first week kidPoints crosses the
     // national-eligibility proxy (>= REACH_TARGET_MONEY) and confirm runCareer recorded exactly that.
@@ -223,15 +228,43 @@ describe('reach tracker (points/rank proxy – prize money is not modeled)', () 
     // domestic points, so the "some clear it" branch went from 28 of these 30 careers to ZERO and
     // the tracker was pinned at 'never' for three of the four presets. Fixed in tools/econ-bench.ts;
     // both branches fire again, which is exactly what this case is here to notice.
-    const workingH16 = Array.from({ length: 30 }, (_, i) => runCareer(working, i, H16.weeks))
-    expect(workingH16.some((r) => r.reachedWeek !== null)).toBe(true) // some clear it
-    expect(workingH16.some((r) => r.reachedWeek === null)).toBe(true) // some never do
-    for (const r of workingH16) {
+    // ⚠⚠ RE-AIMED AT THE 14→18 HORIZON, NOT WEAKENED (31.07, task #17), AND THE REASON IS ITSELF A
+    // FINDING FOR THE OWNER: the 14→16 target has stopped discriminating. It is 30 of 30 in ALL NINE
+    // presets now (measured), against 28 of 30 for working before the adult rungs - so this case's
+    // null branch has no career left to fire on and, more importantly, `REACH_TARGET_MONEY` (150
+    // domestic points) has quietly become a formality that every family clears by about week 20.
+    //
+    // NOTHING ABOUT THE DOMESTIC LADDER GOT EASIER. The domestic event COUNTS are identical (26/13/6
+    // a season - pinned in tests/season/calendar.test.ts) and so are the point tables. What moved is
+    // WHICH WEEKS they sit on: `buildSeason` phases each tier by `0.5 + index / TIER_LADDER.length`,
+    // so a nine-rung ladder spreads the calendar differently from a six-rung one, the domestic rungs
+    // collide with each other on fewer weeks, and the entry policy - which may take at most ONE event
+    // per week - gets to enter more of the same events. A better-spread calendar is a good thing; a
+    // reach target that 270 careers out of 270 meet is not a measurement, and it is the same failure
+    // mode this file's own note above describes catching in the other direction ("a reach tracker
+    // pinned at 'never', which is not a measurement"). Re-basing it is a tuning decision with its own
+    // sweep, so it is reported rather than done here.
+    //
+    // The CASE is unchanged: both branches of the tracker must fire, because a tracker stuck at one
+    // answer is the bug this was written to notice. It fires them on the horizon that still
+    // discriminates - 14→18 measures 0/30 to 26/30 across the presets - and the saturation of 14→16
+    // is pinned below as a fact, so that re-basing the target makes THAT line fail and brings
+    // somebody back here.
+    const workingH18 = Array.from({ length: 30 }, (_, i) => runCareer(workingCoached, i, H18.weeks))
+    expect(workingH18.some((r) => r.reachedWeek !== null)).toBe(true) // some clear it
+    expect(workingH18.some((r) => r.reachedWeek === null)).toBe(true) // some never do
+    for (const r of workingH18) {
       if (r.reachedWeek !== null) {
         expect(r.reachedWeek).toBeGreaterThan(0)
-        expect(r.reachedWeek).toBeLessThanOrEqual(H16.weeks)
+        expect(r.reachedWeek).toBeLessThanOrEqual(H18.weeks)
       }
     }
+    // ⚠ THE FINDING, PINNED: every working career now clears the 14→16 money proxy. If a tuning pass
+    // re-bases REACH_TARGET_MONEY so it discriminates again, this line fails and the note above gets
+    // re-read - which is the point of writing a regression down rather than deleting the assertion
+    // that noticed it.
+    const workingH16 = Array.from({ length: 30 }, (_, i) => runCareer(working, i, H16.weeks))
+    expect(workingH16.every((r) => r.reachedWeek !== null), '14→16 no longer discriminates').toBe(true)
   })
 
   it('the 14→18 pro proxy guards the rank arm with hasResults (no rank credit until a counting result)', () => {

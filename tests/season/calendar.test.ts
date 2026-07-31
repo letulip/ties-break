@@ -24,7 +24,21 @@ import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 // Tour 60 (band $1,100-2,400) instead of a Local Open (band $60-120) – a different tier, hence a
 // different band, hence a different base. The PROPERTY under test is unchanged: the base pickInt
 // is byte-stable and the background corridor is applied on top of it.
-const TRAVEL_PIN_BASE = 196133
+//
+// ⚠ RE-PINNED AGAIN by the adult rungs (task #17): 196133 -> 229384, for exactly the reason above
+// and by exactly the same mechanism. `buildSeason` places tiers strongest-first and phases them with
+// `tierPhase = 0.5 + index / TIER_LADDER.length`, so a ladder that went from six rungs to nine moves
+// the divisor, moves every non-Local phase, and therefore changes WHICH event is drawn first and out
+// of which band. The pin is a WITNESS to draw-order stability across a change, never a claim about a
+// particular dollar figure, and it is re-derived rather than re-tuned: what it asserts – that the
+// base pickInt is byte-stable and the background corridor multiplies on top of it, never into it –
+// is untouched, and the three assertions that read it are unchanged.
+//
+// ⚠ AND IT IS THE *SEASON* SUB-STREAM, NOT THE MAIN ONE. The frozen MAIN capture (41550 draws, hash
+// e6b0c709) does NOT move with this and did not: the AI sub-stream refactor took the calendar's size
+// out of the weekly draw count, which is what tests/round9.test.ts's REF note means by "for the last
+// time a calendar change can do it". Re-derived on this branch: 41550 / e6b0c709, unchanged.
+const TRAVEL_PIN_BASE = 229384
 
 // Re-derive the per-trip corridor factor exactly as makeEvent does: one uniform roll from the
 // purpose-scoped sub-stream keyed by the event, mapped into the background's [lo,hi] corridor.
@@ -36,7 +50,22 @@ function travelFactor(seedStr: string, e: SeasonEvent, background: FamilyBackgro
 
 // RE-PINNED by ladder-up Part B: the catalogue is the six-rung ladder now, so the counter is
 // derived from TIERS instead of listing the (then four) tiers by hand.
-const SEASON_COUNTS: Record<TierId, number> = { local: 26, regional: 13, national: 6, j30: 26, j60: 17, j300: 4 }
+//
+// ⚠ RE-AIMED, NOT WEAKENED (task #17): the catalogue is nine rungs and the season is 139 events
+// rather than 92. Every existing count is UNCHANGED, which is the load-bearing half of this pin -
+// `everyNWeeks` is a per-tier cadence and `floor(52 / n)` does not know how many other tiers exist,
+// so adding a family cannot thin the junior calendar. What DID move is which WEEK each event sits
+// on (`tierPhase` divides by the ladder's length), which is why the travel-cost pin below is keyed
+// on a specific event rather than on a week number.
+//
+// The three new counts read as their cadences: W15 every 2 weeks (26, the dense entry rung, exactly
+// like j30 and local), W35 every 3 (17, like j60), W100 every 13 (4, like j300). The adult tour is
+// the junior tour's shape one table up, which is what A1 set out to build.
+const SEASON_COUNTS: Record<TierId, number> = {
+  local: 26, regional: 13, national: 6,
+  j30: 26, j60: 17, j300: 4,
+  w15: 26, w35: 17, w100: 4,
+}
 
 function countByTier(events: SeasonEvent[]): Record<TierId, number> {
   const c = Object.fromEntries(Object.keys(TIERS).map((t) => [t, 0])) as Record<TierId, number>
@@ -45,10 +74,15 @@ function countByTier(events: SeasonEvent[]): Record<TierId, number> {
 }
 
 describe('TIERS — tier catalogue', () => {
-  it('has exactly the six tiers with the spec economy numbers (whole cents)', () => {
+  it('has exactly the nine tiers with the spec economy numbers (whole cents)', () => {
     // RE-PINNED by ladder-up Part B: `itf` was replaced by the live j30/j60/j300 family.
-    // The J-level numbers themselves are pinned in tests/ladder.test.ts (L2).
-    expect(Object.keys(TIERS).sort()).toEqual(['j30', 'j300', 'j60', 'local', 'national', 'regional'])
+    // ⚠ RE-AIMED by the adult rungs (task #17): the catalogue is nine, and the assertion is still an
+    // EXACT list rather than a length or a subset - a rung must not be able to appear without
+    // somebody writing it down here. The W-level economy numbers are pinned in tests/ladder.test.ts
+    // (L2) beside the J ones, and their prize tables in tests/prize-money.test.ts.
+    expect(Object.keys(TIERS).sort()).toEqual([
+      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'w100', 'w15', 'w35',
+    ])
 
     expect(TIERS.local.drawSize).toBe(8)
     expect(TIERS.local.everyNWeeks).toBe(2)

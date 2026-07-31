@@ -26,7 +26,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import { SURFACE_BLOCKS, buildSeason, surfaceBlockFor } from '../src/engine/season/calendar'
+import { SURFACE_BLOCKS, buildSeason, surfaceBlockFor, dominantSurface } from '../src/engine/season/calendar'
 
 // ---------------------------------------------------------------------------
 // surface x play-style (docs/specs/surface-style.md).
@@ -361,7 +361,22 @@ describe('season blocks x style — the balance survives, the calendar gains sig
       'serve-first': 'grass',
       aggressive: 'hard-late',
     }
+    // ⚠ "OUTSIDE" MEANS A BLOCK OF ANOTHER SURFACE, NOT MERELY ANOTHER BLOCK (re-aimed 31.07, task
+    // #17), and this is a correction the adult rungs exposed rather than caused. The season has TWO
+    // hard swings – `hard-early` (weeks 0-9) and `hard-late` (31-48) – so for the aggressive player
+    // the old "everywhere else" bucket contained a second block made of her own surface, and the
+    // measurement was reading "is hard-late better for her than hard-early" (it is not, and should
+    // not be: both are hard swings, and the planner's own strip says so). That put the aggressive
+    // cell at 1.48x against a 1.5x bound, i.e. it was passing on a margin of two hundredths of a
+    // ratio, which is not a property, it is luck. Adding three rungs re-phased the calendar
+    // (`tierPhase` divides by the ladder's length), events moved between blocks, and the luck ran out
+    // at 1.48. Comparing her home block to the blocks of OTHER surfaces is what the test's own title
+    // claims and is a far harder bar to clear – the aggressive cell goes to roughly 5x, and the
+    // 1.5x bound now has real room under it for all three styles instead of one.
+    const suitedSurface = (style: PlayStyle) =>
+      SURFACES.find((s) => surfaceStyleHint(style, s)?.includes('suits her game'))!
     for (const [style, blockId] of Object.entries(home) as [PlayStyle, string][]) {
+      const mine = suitedSurface(style)
       let inBlock = 0
       let inBlockTotal = 0
       let outside = 0
@@ -369,10 +384,11 @@ describe('season blocks x style — the balance survives, the calendar gains sig
       for (let s = 0; s < 30; s++) {
         for (const e of buildSeason(`hint-${s}`, 0, 52)) {
           const suits = surfaceStyleHint(style, e.surface) === `${e.surface[0].toUpperCase()}${e.surface.slice(1)} – suits her game`
-          if (surfaceBlockFor(e.week).id === blockId) {
+          const block = surfaceBlockFor(e.week)
+          if (block.id === blockId) {
             inBlockTotal++
             if (suits) inBlock++
-          } else {
+          } else if (dominantSurface(block) !== mine) {
             outsideTotal++
             if (suits) outside++
           }

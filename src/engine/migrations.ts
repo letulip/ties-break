@@ -667,6 +667,36 @@ export function migrateSave(raw: unknown): WorldState {
     v = 29
   }
 
+  // v29 -> v30: `seasonRecord` gains its THIRD bucket – `wta`, the professional table (task #17, the
+  // adult rungs). `LadderTrack` went from two members to three, and this is the only place in the
+  // save where that union is a persisted KEY SET rather than something re-derived on the next tick.
+  //
+  // ⚠ IT IS A BACK-FILL, AND UNIQUELY AMONG THE BACK-FILLS IN THIS FILE IT IS EXACT. v18 mined
+  // surviving evidence and admitted its "firsts" were only the earliest still-visible ones; v28
+  // reconstructed a split and clamped it because the feed had been pruned; v29 refused to guess at
+  // all. This one guesses nothing and loses nothing: W15/W35/W100 did not exist in any shipped
+  // build, so no match in any save that reaches this line can have been played on the professional
+  // table, and zero is not a placeholder for the true value - it IS the true value. The season W-L
+  // invariant (`seasonRecord` sums to `seasonWins`/`seasonLosses`) therefore still holds afterwards,
+  // which is the property the Stats screen's two figures rest on.
+  //
+  // Written defensively rather than as a blind `save.seasonRecord.wta = ...`: a save can arrive here
+  // with `seasonRecord` undefined only if it entered the ladder above v27 (v28's block fills it), but
+  // this file is append-only and a later step must not assume an earlier one's post-condition still
+  // reads the way it did the day it was written.
+  //
+  // Nothing else moves: no stream is added or reordered and no existing number is rewritten, so the
+  // frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 29) {
+    const rec = save.seasonRecord
+    if (rec === undefined || rec === null || typeof rec !== 'object') {
+      save.seasonRecord = emptySeasonRecord()
+    } else if (rec.wta === undefined) {
+      rec.wta = { wins: 0, losses: 0 }
+    }
+    v = 30
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

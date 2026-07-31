@@ -6,7 +6,7 @@
 import { type Rng } from '../rng'
 import type { MatchPlayer, Tour } from '../match/types'
 import { simulateMatch, fastMatchProbability } from '../match/engine'
-import { TIERS, TIER_LADDER } from './calendar'
+import { TIERS, TIER_LADDER, isTierAgeOpen } from './calendar'
 import { ECONOMY } from '../economy'
 import type { AiPlayer, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './types'
 
@@ -36,10 +36,31 @@ export function isEntrantBand(tier: TierId, pct: number): boolean {
 }
 
 /** The STRONGEST tier a player at percentile `pct` is a candidate for – her "home" level, used to
- *  give the cohort a coherent pre-history (season/prehistory.ts). Falls back to the entry tier. */
+ *  give the cohort a coherent pre-history (season/prehistory.ts). Falls back to the entry tier.
+ *
+ *  ⚠ THE PRE-HISTORY IS A JUNIOR PAST, AND THE ADULT RUNGS ARE EXCLUDED FROM IT ON PURPOSE (task
+ *  #17). W100's entrant window is [0, 0.25] – identical to J300's, because both are the prestige rung
+ *  of their own table – so the moment the W family joined TIER_LADDER this walk started handing the
+ *  top quarter of the cohort a professional pre-history. A W result pays into the WTA table and not
+ *  the ITF one, so the junior ranking THE GAME IS ABOUT emptied out: measured on the pinned career,
+ *  the kid's opening ITF rank went #120 -> #1, not because she had improved but because the elite's
+ *  points had left the table she is ranked in.
+ *
+ *  The right answer is not an age gate here (the cohort spans 13-19, so a gate would still have given
+ *  the older third a professional past). It is that THE PROFESSIONAL TABLE STARTS EMPTY, for everyone,
+ *  because nobody in this world has ever played a professional tournament: the rungs opened this
+ *  release. Every WTA point in a career is therefore one somebody actually won, in a draw the engine
+ *  actually ran – which is also what makes W35/W100's acceptance cut mean something instead of being
+ *  measured against a fabrication. This function's own pre-adult behaviour is byte-identical, which is
+ *  why every ranking pin in the suite still reads what it read yesterday.
+ *
+ *  Who is in a LIVE draw is a different question with a different answer – see the age gate in
+ *  `selectEntrants` below, which is where age genuinely belongs. */
 export function topBandForPercentile(pct: number): TierId {
   for (let i = TIER_LADDER.length - 1; i >= 0; i--) {
-    if (isEntrantBand(TIER_LADDER[i], pct)) return TIER_LADDER[i]
+    const tier = TIER_LADDER[i]
+    if (TIERS[tier].track === 'wta') continue
+    if (isEntrantBand(tier, pct)) return tier
   }
   return TIER_LADDER[0]
 }
@@ -88,7 +109,34 @@ export function selectEntrants(
   // Percentile from position: (position + 1) / total lands in (0, 1]. Players
   // absent from the ranking sort to the back.
   const pctOf = (id: string) => ((posOf.get(id) ?? total - 1) + 1) / total
-  const band = cohort.filter((p) => isEntrantBand(event.tier, pctOf(p.id)))
+
+  // ⚠ WHO IS OLD ENOUGH TO BE HERE AT ALL – the universe this whole function draws from (task #17).
+  // The cohort's own age band is [13, 19]: a junior field has always contained the ones just
+  // starting and the ones about to age out, and once three rungs opened at 16+ that spread is what
+  // tells the two tours apart. A W15 draw is the sixteen-to-nineteens; a J30 draw is still
+  // everybody. Without it the adult tour's first season is played by thirteen-year-olds, which is
+  // the mirror image of the bug docs/specs/adult-tour-and-endings.md §1 names ("the field she meets
+  // there can contain 28-year-olds") and which the same one sentence fixes: age is a fact about
+  // people, not a label on a tier. The MAXIMUM half of that sentence – capping the J rungs at 18 so
+  // a junior draw is juniors – is §4.1 and is still open.
+  //
+  // IT IS THE UNIVERSE AND NOT JUST THE BAND, deliberately: both backfills below reach OUTSIDE the
+  // entrant window, and an age rule that the backfills could walk around would be no rule at all -
+  // the tired-elite path would have handed W100 slots straight to the children it just excluded.
+  //
+  // TOTAL: if the age gate leaves fewer players than the draw needs (impossible at the shipped
+  // numbers - the youngest adult rung wants 32 of the ~82 sixteen-year-olds-and-up in a 199 cohort,
+  // and the conveyor's intake keeps the spread) the whole cohort plays, because a draw that cannot
+  // be filled is a crash rather than a compromise. Same discipline as claimWeek's gap retry.
+  const ofAge = cohort.filter((p) => isTierAgeOpen(event.tier, p.ageYears))
+  const eligible = ofAge.length >= drawSize ? ofAge : cohort
+  //
+  // RNG: the age gate changes the candidate COUNT, and therefore the per-event draw count, on the W
+  // rungs ONLY. Every domestic tier has no `minAgeYears` at all and every J tier's is 13 - the bottom
+  // of the cohort's age band and the age the conveyor's intake arrives at - so on the six
+  // pre-existing rungs `ofAge` is the whole cohort on every week of every career and their event
+  // sub-streams are byte-identical. The W rungs have no history to be identical to.
+  const band = eligible.filter((p) => isEntrantBand(event.tier, pctOf(p.id)))
 
   // Position-biased stochastic entry: lower key = more likely to enter. Jitter is a
   // fraction of the draw so strong players usually enter but the field still moves.
@@ -136,7 +184,7 @@ export function selectEntrants(
   // lets a wrecked elite hand its slots to the tier below.
   if (chosen.length < drawSize) {
     const have = new Set(chosen.map((c) => c.p.id))
-    const fill = cohort
+    const fill = eligible
       .filter((p) => !have.has(p.id) && fit(p.id))
       .map((p) => ({ p, pos: posOf.get(p.id) ?? total - 1, key: 0 }))
       .sort((a, b) => a.pos - b.pos)
@@ -144,11 +192,29 @@ export function selectEntrants(
     chosen = chosen.concat(fill)
   }
 
-  // Last resort: a draw must be filled, so if the whole cohort is under the floor the tired ones
+  // Last resort: a draw must be filled, so if everybody eligible is under the floor the tired ones
   // play after all - in key order, so the same players are not always the ones dragged in.
+  //
+  // ⚠ IT REACHES OUTSIDE THE BAND NOW, AND IT HAS TO (task #17). It used to top up from `keyed`,
+  // i.e. from the entrant window alone, which was safe only because every window was deliberately
+  // wider than its own draw - so this branch could never actually run short and the shortfall was
+  // unreachable. The age gate above breaks that guarantee for the W rungs (W100's window is the top
+  // quarter of the table, intersected with "seventeen or older"), and a draw that comes up short
+  // does not degrade gracefully: `buildDraw` hands `standardSeedOrder` a non-power-of-two field and
+  // the bracket reads `undefined` as a player. Falling back to everyone eligible cannot change any
+  // pre-existing tier - reaching this line at all needed a cohort with fewer than `drawSize` fit
+  // players AND a band too small to cover the rest, which on the six original rungs would have
+  // crashed the same way years ago.
   if (chosen.length < drawSize) {
     const have = new Set(chosen.map((c) => c.p.id))
-    chosen = chosen.concat(keyed.filter((c) => !have.has(c.p.id)).slice(0, drawSize - chosen.length))
+    const rest = keyed.filter((c) => !have.has(c.p.id))
+    for (const p of eligible) {
+      if (!have.has(p.id) && !rest.some((c) => c.p.id === p.id)) {
+        rest.push({ p, pos: posOf.get(p.id) ?? total - 1, key: Number.MAX_SAFE_INTEGER })
+      }
+    }
+    rest.sort((a, b) => a.key - b.key || a.pos - b.pos)
+    chosen = chosen.concat(rest.slice(0, drawSize - chosen.length))
   }
 
   // Seed order = ascending standings position (best first).

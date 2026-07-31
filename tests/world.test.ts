@@ -7,11 +7,12 @@ import {
   skipTournament,
   closeTournament,
   KID_ID,
+  START_AGE_YEARS,
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
-import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, isTierAgeOpen, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { SeasonResult } from '../src/engine/season/ranking'
 
 const EVENTS_CAP = 400 // mirrors world.ts
@@ -88,7 +89,15 @@ describe('world (phase-3 living season)', () => {
     const rngB = rngFromSeed('discipline')
 
     // The entered world commits to the earliest still-open event; the skipped world does not.
-    const target = entered.season.find((e) => e.deadlineWeek >= entered.week)
+    //
+    // ⚠ ...THAT SHE IS OLD ENOUGH FOR (task #17). The block below can grant her any book of results
+    // in any table, and no book of results makes a fourteen-year-old sixteen: W15/W35/W100 open at
+    // 16/16/17 and this seed's earliest still-open event is now one of them. The guard is about RNG
+    // DISCIPLINE - that entering an event cannot move the main weekly stream - so WHICH event she
+    // enters is scaffolding, and the filter keeps the scaffolding standing. It has to be `find`
+    // rather than a hardcoded tier for the same reason it always was: the calendar decides.
+    const age = START_AGE_YEARS + Math.floor(entered.week / WEEKS_PER_YEAR)
+    const target = entered.season.find((e) => e.deadlineWeek >= entered.week && isTierAgeOpen(e.tier, age))
     expect(target).toBeTruthy()
     // r-gate (season-life-01b): points-based eligibility. This guard is about RNG discipline, not the
     // ladder, so grant throwaway results worth what the rung asks ONLY for the enterEvent gate

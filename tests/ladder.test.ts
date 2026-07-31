@@ -40,15 +40,25 @@ function countByTier(events: SeasonEvent[]): Record<TierId, number> {
   return c
 }
 
-describe('L1 — the tier catalogue is the J family (itf is gone)', () => {
-  it('has exactly six tiers and no `itf` anywhere', () => {
-    expect([...ALL_TIERS].sort()).toEqual(['j30', 'j300', 'j60', 'local', 'national', 'regional'])
+describe('L1 — the tier catalogue is the J family + the W family (itf is gone)', () => {
+  // ⚠ RE-AIMED, NOT WEAKENED (task #17). Both assertions below are still EXACT lists – the whole
+  // job of this block is that a rung cannot join the game without a human writing its id down twice
+  // – and the `itf` guard is untouched. `itf` is a TRACK now (LadderTrack) and never a TierId, so
+  // "no `itf` anywhere" means exactly what it always meant and the adult rungs do not soften it:
+  // they are `w15`/`w35`/`w100` on track `'wta'`, which is a third table, not a resurrected
+  // placeholder.
+  it('has exactly nine tiers and no `itf` anywhere', () => {
+    expect([...ALL_TIERS].sort()).toEqual([
+      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'w100', 'w15', 'w35',
+    ])
     expect(ALL_TIERS).not.toContain('itf')
   })
 
   it('TIER_LADDER orders the catalogue weakest -> strongest and covers every tier', () => {
     expect([...TIER_LADDER].sort()).toEqual([...ALL_TIERS].sort())
-    expect(TIER_LADDER).toEqual(['local', 'regional', 'national', 'j30', 'j60', 'j300'])
+    expect(TIER_LADDER).toEqual([
+      'local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w100',
+    ])
   })
 
   it('every id field equals its record key, and no tier is locked any more', () => {
@@ -120,14 +130,38 @@ describe('L2 — the J-level table (spec numbers)', () => {
   })
 })
 
-describe('L3 — NO prize money at any level (juniors pay to play)', () => {
-  it('no tier carries a prize field and the engine has no prize payout', () => {
+describe('L3 — NO prize money on the JUNIOR ladder (juniors pay to play)', () => {
+  // ⚠ RE-AIMED AT THE RULE IT WAS ALWAYS ABOUT, NOT WEAKENED (task #17, A2). It used to assert that
+  // NO tier in the game carried a payout and that the string `prizeCents` did not occur in world.ts,
+  // which was the strongest available reading while every rung on the calendar was a junior one. The
+  // adult rungs now pay (docs/specs/adult-tour-and-endings.md §3), so the literal old assertion would
+  // have to be deleted or the feature would not exist - and deleting it would take the actual thesis
+  // with it. The thesis is not "the game has no prize money", it is «juniors pay to play»: the
+  // domestic and junior rungs pay NOTHING, ever, and that is what "invest without knowing the return"
+  // means. So the assertion is now per-TRACK, which is a STRICTER statement than a global grep could
+  // ever be - it survives the feature landing and it will still fail the day somebody quietly
+  // attaches a payout to a J300, which is the failure it was written to catch.
+  it('no domestic or junior tier carries a prize field; only the adult rungs do', () => {
     for (const t of Object.values(TIERS)) {
-      expect(Object.keys(t)).not.toContain('prizeCents')
-      expect(Object.keys(t)).not.toContain('prizeMoneyCents')
+      expect(Object.keys(t)).not.toContain('prizeMoneyCents') // never a second spelling
+      if (t.track === 'wta') {
+        expect(t.prizeCents, `${t.id} must pay`).toBeDefined()
+        expect(t.prizeCents!.length, `${t.id} pays once per finish`).toBe(t.points.length)
+      } else {
+        expect(Object.keys(t), `${t.id} must never pay`).not.toContain('prizeCents')
+      }
     }
+  })
+
+  // The other half of the old grep, kept as a rule about the CODE rather than about the strings in
+  // it: exactly one function in the engine may turn a finish into money, and it must not be able to
+  // see the family's wealth corridor (§3's third rule). A signature that cannot take a background
+  // cannot price by one.
+  it('exactly one payout function exists, and it cannot see the family background', () => {
     const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
-    expect(src).not.toMatch(/prize\w*Cents/)
+    const decls = src.match(/^export function prize\w*\(.*$/gm) ?? []
+    expect(decls).toEqual(['export function prizeCentsFor(tier: TierId, finish: number): number {'])
+    expect(decls[0]).not.toMatch(/background|FamilyBackground|world/i)
   })
 
   it('a J-level week banks points but is pure OUTGOING money (entry + travel, no payout)', () => {
@@ -265,11 +299,23 @@ describe('L4 — the overlapping ladder: there is ALWAYS somewhere to go', () =>
 describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () => {
   const events = buildSeason('ladder-struct', 0, 52)
 
-  it('yields the per-tier season counts, with j30+j60 the clear majority of J events', () => {
+  // ⚠ RE-AIMED, NOT WEAKENED (task #17): three rungs joined, so the exact-count map grew by three.
+  // Every pre-existing count is UNCHANGED and that is the half worth reading - `everyNWeeks` is a
+  // per-tier cadence and `floor(52 / n)` cannot see how many other tiers exist, so a whole new family
+  // cannot thin the junior calendar by a single week. The density claim below is unchanged too, and a
+  // matching one is now asserted for the W family, which ships the same 2/3/13-week shape one table
+  // up: dense, dense, rare.
+  it('yields the per-tier season counts, with the dense rungs the clear majority of each family', () => {
     const counts = countByTier(events)
-    expect(counts).toEqual({ local: 26, regional: 13, national: 6, j30: 26, j60: 17, j300: 4 })
+    expect(counts).toEqual({
+      local: 26, regional: 13, national: 6,
+      j30: 26, j60: 17, j300: 4,
+      w15: 26, w35: 17, w100: 4,
+    })
     const jTotal = counts.j30 + counts.j60 + counts.j300
     expect((counts.j30 + counts.j60) / jTotal).toBeGreaterThan(0.75)
+    const wTotal = counts.w15 + counts.w35 + counts.w100
+    expect((counts.w15 + counts.w35) / wTotal).toBeGreaterThan(0.75)
   })
 
   it('never schedules two events of the SAME tier in one week (ids stay unique)', () => {
@@ -339,7 +385,13 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
 
   it('holds for later year-blocks too', () => {
     const later = buildSeason('ladder-later', 52, 52)
-    expect(countByTier(later)).toEqual({ local: 26, regional: 13, national: 6, j30: 26, j60: 17, j300: 4 })
+    // ⚠ RE-AIMED with its sibling above (task #17): three rungs, three more counts, and every
+    // pre-existing figure unchanged. A year-block is still a year-block whichever year it is.
+    expect(countByTier(later)).toEqual({
+      local: 26, regional: 13, national: 6,
+      j30: 26, j60: 17, j300: 4,
+      w15: 26, w35: 17, w100: 4,
+    })
     for (const e of later) expect(e.week).toBeGreaterThanOrEqual(52)
   })
 })
@@ -374,9 +426,41 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
     }
   })
 
-  it('a higher rung really is a harder field (mean standings position improves up the ladder)', () => {
-    const means = TIER_LADDER.map((t) => meanPos(selectEntrants(ev(t), cohort, ranking, rngFromSeed(`m-${t}`))))
-    for (let i = 1; i < means.length; i++) expect(means[i]).toBeLessThan(means[i - 1])
+  // ⚠ RE-AIMED PER TRACK, NOT WEAKENED (task #17). The claim was "mean standings position improves
+  // all the way up TIER_LADDER", which was exactly right while the ladder was one continuous climb
+  // from Local to J300. With a THIRD TABLE it stops being a well-formed question at one seam and one
+  // only: the step from J300 to W15. A W15 is the BOTTOM rung of the professional tour and a J300 is
+  // the TOP of the junior one, so the adult family restarts wide (its entrant window is [0.15, 0.75])
+  // exactly as J30 restarted wide under National - the fields go 15.97 -> 52.00 at that seam, and
+  // they should. It is the same shape the points make (a J300 title pays 300, a W15 title pays 10)
+  // and for the same reason: she starts again at the bottom of a different table.
+  //
+  // So the monotonicity is asserted WITHIN each family, three times, which is the strictly stronger
+  // reading: it now fails if any rung stops being harder than the one below it in its OWN table,
+  // including inside the new family, where nothing checked it before. Measured on this fixture:
+  //   domestic 113.00 -> 86.94 -> 55.50 · itf 39.53 -> 26.44 -> 15.97 · wta 52.00 -> 40.66 -> 29.75
+  // The cross-family SEAMS are pinned separately below, so the restart cannot silently become a
+  // demotion (a W15 field must still be harder than a Regional one).
+  it('a higher rung really is a harder field, inside each of the three tables', () => {
+    for (const track of ['domestic', 'itf', 'wta'] as const) {
+      const rungs = TIER_LADDER.filter((t) => TIERS[t].track === track)
+      expect(rungs.length).toBe(3)
+      const means = rungs.map((t) => meanPos(selectEntrants(ev(t), cohort, ranking, rngFromSeed(`m-${t}`))))
+      for (let i = 1; i < means.length; i++) {
+        expect(means[i], `${rungs[i]} vs ${rungs[i - 1]}`).toBeLessThan(means[i - 1])
+      }
+    }
+  })
+
+  it('each table restarts wide, but never below the table under it', () => {
+    const mean = (t: TierId) => meanPos(selectEntrants(ev(t), cohort, ranking, rngFromSeed(`m-${t}`)))
+    // The seam is a RESTART: the bottom of a table is an easier field than the top of the one below.
+    expect(mean('j30')).toBeGreaterThan(mean('j300'))
+    expect(mean('w15')).toBeGreaterThan(mean('j300'))
+    // ...and it is still a step UP overall: the entry rung of each table is harder than the entry
+    // rung of the one below it, so nothing about the restart is a demotion.
+    expect(mean('j30')).toBeLessThan(mean('local'))
+    expect(mean('w15')).toBeLessThan(mean('national'))
   })
 
   it('every window is wide enough that the field can actually vary', () => {
@@ -400,11 +484,30 @@ describe('L7 — age gate (13+), open immediately at our start age', () => {
     }
   })
 
-  it('availabilityStatus never blocks a 14-year-old on age (our start is above the gate)', () => {
+  // ⚠ RE-AIMED, NOT WEAKENED (task #17), and this one changed because the WORLD changed rather than
+  // because the test was wrong. It asserted that NO event on a fourteen-year-old's calendar can be
+  // refused on age, which was true when every rung opened at 13 or lower and was the whole content of
+  // "our start is above the gate". Three rungs now open at 16/16/17, so a fourteen-year-old's
+  // calendar contains events she genuinely may not enter, and an assertion that no such event exists
+  // would be asserting the adult tour away.
+  //
+  // The rule it was protecting is intact and is what is asserted now: NOTHING SHE IS OLD ENOUGH FOR
+  // MAY BE REFUSED ON AGE. The junior and domestic rungs are still all open to her on day one, and
+  // the refusals are exactly the rungs whose `minAgeYears` she has not reached - checked against the
+  // tier table rather than against a list, so a re-priced age gate cannot slip past this.
+  it('availabilityStatus blocks a 14-year-old on age for exactly the rungs above her age', () => {
     const world = createWorld('age-gate')
+    let refused = 0
     for (const e of world.season) {
       const status = availabilityStatus(world, e)
-      expect(status.detail ?? '').not.toMatch(/too young/i)
+      const tooYoung = /too young/i.test(status.detail ?? '')
+      expect(tooYoung, `${e.tier} at 14`).toBe(!isTierAgeOpen(e.tier, START_AGE_YEARS))
+      if (tooYoung) refused++
+    }
+    // Not a vacuous pass: her first season really does carry rungs she cannot reach yet.
+    expect(refused).toBeGreaterThan(0)
+    for (const e of world.season.filter((x) => isTierAgeOpen(x.tier, START_AGE_YEARS))) {
+      expect(availabilityStatus(world, e).detail ?? '').not.toMatch(/too young/i)
     }
   })
 })
@@ -425,6 +528,14 @@ describe('L8 — she can only play ONE tournament a week', () => {
     const byWeek = new Map<number, SeasonEvent[]>()
     for (const e of world.season) {
       if (e.deadlineWeek < world.week) continue
+      // ⚠ AND THE ADULT RUNGS ARE FILTERED OUT, WHICH IS NOT A WEAKENING (task #17). The rule under
+      // test is a CALENDAR rule – one body, one week – and the fixture's whole job is to clear every
+      // OTHER gate so that rule is the only thing left standing between her and a second entry. She
+      // is fourteen here, so a W15/W35/W100 on a stacked week is refused on AGE and the throw the
+      // assertion below reads would be the wrong throw entirely: the test would pass while proving
+      // nothing. No third pile of points can fix that, because age is not a pile of points. Filtering
+      // to what a fourteen-year-old may enter is the same move the two piles above already make.
+      if (!isTierAgeOpen(e.tier, START_AGE_YEARS)) continue
       byWeek.set(e.week, [...(byWeek.get(e.week) ?? []), e])
     }
     const stacked = [...byWeek.values()].find((list) => list.length > 1)!
