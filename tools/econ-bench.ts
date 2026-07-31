@@ -799,10 +799,16 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   }
 }
 
-// Run only when invoked as the CLI script, never when imported by the test. Under vite-node
-// process.argv[1] is the runner (not this file), so the usual argv[1] entry check doesn't apply;
-// the reliable signal is simply "not inside vitest" (vitest sets process.env.VITEST). The test
-// imports the exports above without ever triggering the full run.
-if (!process.env.VITEST) {
+// Run only when invoked as the CLI script, never when imported. Under vite-node process.argv[1] is
+// the runner (not this file), so the usual argv[1] entry check doesn't apply; the signals that do
+// work are "not inside vitest" (vitest sets process.env.VITEST) and "this file's name is on the
+// command line", which is true of `npm run bench:econ` and of `vite-node tools/econ-bench.ts` alike.
+//
+// ⚠ THE SECOND HALF WAS ADDED BECAUSE ANOTHER TOOL BORROWED THE CAREER LOOP. `stepCareerWeek` and
+// `POLICIES` are exported precisely so a bench does not have to invent a second entry policy, and
+// tools/next-goal-bench.ts takes them up on it - at which point importing this file ran the whole
+// nine-preset economy sweep first, for nobody. The VITEST check alone could not see the difference
+// between "imported by a test" and "imported by another bench".
+if (!process.env.VITEST && process.argv.some((a) => a.includes('econ-bench'))) {
   main()
 }

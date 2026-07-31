@@ -33,7 +33,9 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
-import { useWeekAhead } from '../composables/weekAhead'
+// The "Next goal" ladder: which round at which tier she is actually aiming at, and the skill line
+// for the long stalls. See composables/nextGoal.ts for the two conventions and the measured threshold.
+import { nextGoalFor } from '../composables/nextGoal'
 // The day layout, ONCE: screen H's calendar grid and this card's dot row are the same fact about the
 // same week, seen from either end of it. See the note above `dayDots`.
 import { sessionDays, sessionsForPlan } from '../composables/weekDays'
@@ -302,21 +304,27 @@ const highlights = computed<string[]>(() => {
 })
 
 // --- THE GOAL NOTE (D's taped scrap) -------------------------------------------------------------
-// D writes "Win one match at the Regional Championship" – the goal for the week ahead. `useWeekAhead`
-// is the app's ONE answer to "what is next week", already player-facing copy (R10-7/R12-15), already
-// reading the engine's arrival verdict rather than guessing. So the note says what the parent has
-// actually committed to, and it can never contradict the button that plays that week.
-const weekAhead = useWeekAhead()
-const goalLine = computed(() => {
-  const w = weekAhead.value
-  const entered = game.snapshot?.upcoming.find((e) => e.entered)
-  // A tournament she is entered for is a GOAL; anything else is a plan, and saying "win a match" of
-  // an exam week would be the copy lying to make itself feel bigger.
-  if ((w.kind === 'tournament' || w.kind === 'walkover') && entered) {
-    return `Win one match at the ${entered.label}`
-  }
-  return w.label
-})
+// D writes "Win one match at the Regional Championship" – the goal for the week ahead.
+//
+// ⚠ IT IS A LADDER NOW, AND WHAT WAS HERE WAS WORSE THAN IT LOOKED. The owner, 30.07: «надо что-то
+// более осмысленное писать про цель, например писать реально, что она на какой-то тир турнира
+// целится, на четверть или полуфинал, на победу потом, т.е. на шаги ее путь разложить. Если долго не
+// получается дойти, то разбавлять какими-то навыками, например next goal: improve stability».
+//
+// The two arms this replaced: entered for a tournament -> "Win one match at the {label}", FOREVER,
+// so a girl with three titles at that rung was still being told to win one match; and otherwise
+// `weekAhead.label`, which is the BUTTON's text - an ordinary week printed "Next goal: Training
+// week", the week's name written twice.
+//
+// The whole ladder lives in composables/nextGoal.ts, with the two conventions it rests on and the
+// bench that set its one threshold. Nothing was added to the Snapshot for it: `TierDef.points` is
+// indexed by finish, so a counting result inverts to the round she reached.
+//
+// ⚠ AND `useWeekAhead` IS GONE FROM THIS CARD, WHICH IS THE POINT RATHER THAN A TIDY-UP. It is still
+// the app's one answer to "what is next week" and it is still what the buttons on Home and the
+// calendar read; what it stopped being is a stand-in for a goal. The two are different questions,
+// and only one of them was ever being answered here.
+const goalLine = computed(() => (game.snapshot ? nextGoalFor(game.snapshot).text : ''))
 
 // The week's booked friendly, if it was played (an injury cancels + refunds it, and then there is
 // no match event at all). The engine already resolved it; the flow only presents it.

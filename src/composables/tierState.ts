@@ -57,8 +57,13 @@ export function pointsLockNote(pointsToEnter: number, points?: number): string {
 }
 
 /** How a finish READS in a sentence. `finishLabel` gives "Semifinalist", which is a person; a gap is
- *  measured in events, so this gives "semi-final". Same index convention (0 = the title). */
-function finishPhrase(finish: number, drawSize: number): string {
+ *  measured in events, so this gives "semi-final". Same index convention (0 = the title).
+ *
+ *  ⚠ EXPORTED FOR THE "NEXT GOAL" LADDER (composables/nextGoal.ts), which names the same rounds in
+ *  the same sentence shape - "Reach the semi-final at the Regional Championship" beside this file's
+ *  "one more semi-final at Regional Championship". Two spellings of "the round after a quarter-final"
+ *  is exactly the drift every shared-vocabulary note in this codebase is about. */
+export function finishPhrase(finish: number, drawSize: number): string {
   switch (finish) {
     case 0:
       return 'title'
