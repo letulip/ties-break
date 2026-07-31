@@ -1232,10 +1232,29 @@ export interface Snapshot {
    *  Home season strip's real tier progress. Untouched tiers are absent. */
   bestFinishByTier: Partial<Record<TierId, number>>
   /** the CURRENT season's kid W-L (round-8, the R6 debt): mirrors the v10 world counters that
-   *  accumulate at finalizeTournament and reset at each season wrap-up. The Snapshot is derived,
-   *  so surfacing them bumps no schema. Drives the Stats header's W–L figure. */
+   *  accumulate at finalizeTournament and reset at each season wrap-up.
+   *
+   *  ⚠ THE TOTAL, BOTH LADDERS TOGETHER, and it stays that on purpose. `matchesEverPlayed` folds it
+   *  with `seasonHistory` into the radar's confidence, which is documented as a count that may only
+   *  ever go UP; `SeasonSummary` and `seasonHistory` bank it per season. Splitting it per ladder is
+   *  `seasonRecord` below, which is ADDED beside it rather than replacing it. */
   seasonWins: number
   seasonLosses: number
+  /** THE SAME W-L, TOLD APART BY LADDER (31.07, the owner: «national/international разделить победы и
+   *  поражения, мне кажется они не должны быть общими»).
+   *
+   *  Every match the counters see is a tournament match, so every one of them is attributable without
+   *  inventing anything: `finalizeTournament` knows the event, the event knows its tier, and the tier
+   *  knows its track. Nothing lands in neither bucket and nothing lands in both – a practice friendly
+   *  never reaches finalize (R11-2: nothing was on the line), and a walkover or a medical withdrawal
+   *  never reaches it either, because she never took the court.
+   *
+   *  ⚠ WHY A SPLIT W-L IS NOT MERELY COSMETIC. The Stats screen switches every other figure it shows
+   *  – rank, points, the standings table, the counting results – with the ladder picker at the top of
+   *  it, and left this one figure standing still underneath. A 24–9 that does not move when the
+   *  National/International switch does reads as a claim that those 24 wins are in the table currently
+   *  on screen, which for a domestic career is false about all of them. */
+  seasonRecord: Record<LadderTrack, { wins: number; losses: number }>
   /** her current run of consecutive competitive losses + the threshold that turns it angry, or
    *  null when her last competitive match was a win (or she has never played one). Derived at
    *  snapshot time from the event log – persists nothing, bumps no schema. */

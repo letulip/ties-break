@@ -144,7 +144,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 27
+export const SAVE_SCHEMA_VERSION = 28
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -259,6 +259,13 @@ export interface WorldState {
   walkoverWeek?: number
   seasonWins: number
   seasonLosses: number
+  /** THE SAME SEASON W-L, PER LADDER (v28). Written beside the two counters above, never instead of
+   *  them – see `Snapshot.seasonRecord` for the owner's ask and `matchesEverPlayed` for why the
+   *  totals had to keep their own home.
+   *
+   *  Optional so a pre-v28 save's `undefined` is a shape the readers already handle; the migration
+   *  fills it in (see migrations.ts v28) and `finalizeTournament` maintains it from there. */
+  seasonRecord?: Record<LadderTrack, { wins: number; losses: number }>
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
    *  point and pruned to a 60-week trailing window. Feeds the Money breakdown/ledger so they
    *  survive the 60-event snapshot cap; see FinanceWeek in protocol.ts. */
@@ -863,9 +870,19 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
   // D10: the season's closing rank joins the durable ledger – one row per season, keyed on the
   // same index as the wrap-up milestone and the history row, so all three name the same season.
   captureMilestone(world, { type: 'season-rank', week: wrapWeek, seasonIndex, rank: world.kidRank })
-  // The season that just wrapped is banked in the summary – start the next one clean.
+  // The season that just wrapped is banked in the summary – start the next one clean. The per-ladder
+  // pair resets WITH the totals it decomposes: they are the same season's matches counted twice, so a
+  // reset that moved only one of them would make the invariant (`seasonRecord` sums to the totals)
+  // false for a whole year, and that invariant is what the Stats screen's two figures rest on.
   world.seasonWins = 0
   world.seasonLosses = 0
+  world.seasonRecord = emptySeasonRecord()
+}
+
+/** A zeroed per-ladder W-L, spelled once. Two callers – the season reset above and `createWorld` –
+ *  and a third in the migration, which needs the same shape from a different starting point. */
+export function emptySeasonRecord(): Record<LadderTrack, { wins: number; losses: number }> {
+  return { domestic: { wins: 0, losses: 0 }, itf: { wins: 0, losses: 0 } }
 }
 
 // --- finish / stage labels ---------------------------------------------------
@@ -3059,10 +3076,24 @@ function finalizeTournament(world: WorldState): void {
 
   // v10: count this season's kid wins/losses as they resolve (never re-parsed from text; pruning
   // can't lose them). Every match on the kid's path is one played match.
+  //
+  // v28: AND THE SAME MATCH IS COUNTED INTO ITS OWN LADDER, one line further on. This is the whole of
+  // the owner's «разделить победы и поражения» and it needs no new fact: the event is right here, the
+  // event carries its tier, and the tier carries its track, so the attribution is read rather than
+  // decided. The two counters and the pair are maintained together on purpose – the pair is a
+  // DECOMPOSITION of the totals, not a replacement for them, and anything that increments one and not
+  // the other breaks the invariant the Stats screen shows both halves of.
+  const track = tier.track
+  const record = (world.seasonRecord ??= emptySeasonRecord())
   for (const m of p.result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
-    if (m.winnerId === KID_ID) world.seasonWins++
-    else world.seasonLosses++
+    if (m.winnerId === KID_ID) {
+      world.seasonWins++
+      record[track].wins++
+    } else {
+      world.seasonLosses++
+      record[track].losses++
+    }
   }
 
   // R9-7: the run's physical toll lands HERE, when it commits – per-match, not flat per tier.
@@ -3363,6 +3394,7 @@ export function createWorld(
     seasonHistory: [],
     seasonWins: 0,
     seasonLosses: 0,
+    seasonRecord: emptySeasonRecord(),
     financeWeeks: [],
     condition: ECONOMY.condition.start,
     injury: null,
@@ -4647,9 +4679,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     activeLadder: activeLadderOf(world),
     bestFinishByTier: { ...world.bestFinishByTier },
     // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
-    // surfacing them is derivation, not schema.
+    // surfacing them is derivation, not schema. THE TOTAL, both ladders; `seasonRecord` below is the
+    // same matches told apart, and the two always agree because finalizeTournament writes both.
     seasonWins: world.seasonWins,
     seasonLosses: world.seasonLosses,
+    seasonRecord: world.seasonRecord ?? emptySeasonRecord(),
     // The run of defeats behind her face, decided HERE and not in the UI: the engine holds the seed
     // (so the per-streak threshold is drawn once, off `seed:angry:<startWeek>`) and the FULL event
     // log (the snapshot only carries the trailing 60, which a long streak could outrun). Pure
