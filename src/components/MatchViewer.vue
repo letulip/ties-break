@@ -1661,9 +1661,19 @@ function servePct(side: Side): number {
    wears a plate because it is a status. Same size and weight the deleted serve row gave it.
    The explicit `grid-column` is not decoration: the score is dropped entirely before the first point
    lands (`scoreReadout` is '' there) and each speed only exists at its own end, so auto-placement
-   would slide whatever survives into column 1 and put a lone reading under the middle of the court. */
+   would slide whatever survives into column 1 and put a lone reading under the middle of the court.
+   ⚠ AND THE ROW IS PINNED TOO, WHICH IS THE OTHER HALF OF THE SAME BUG (owner, 31.07: «правая цифра
+   всё ещё выше возле самого корта»). Naming the column alone is not enough, because auto-placement
+   is SPARSE: it never walks the cursor backwards. The markup is speed-then-score, so when the speed
+   takes column 3 the cursor is already past column 2 and the score CANNOT be placed on row 1 - it
+   opens a second row and the band silently becomes two lines tall. Measured, on this exact markup:
+   left-end serve → band 15px, speed and score on one baseline; right-end serve → band 35px, the
+   speed 22.5px above the score AND back on the playing surface, which the 29.07 rule forbids. The
+   left end was fine only because column 1 leaves the cursor short of column 2. `grid-row: 1` on both
+   readings says the band is one line whatever survives and in whatever order it is written. */
 .mv-score {
   grid-column: 2;
+  grid-row: 1;
   text-align: center;
   font-size: 15px;
   font-weight: 700;
@@ -1681,6 +1691,9 @@ function servePct(side: Side): number {
    the score; with the zero-floor column above, clipping is what a too-narrow phone does instead of
    colliding. */
 .mv-speed {
+  /* `grid-row: 1` here for the same reason `.mv-score` carries it - see the note there. Declared on
+     the shared class rather than on each end so the two ends cannot drift apart again. */
+  grid-row: 1;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
