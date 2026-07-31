@@ -963,13 +963,29 @@ export type OfferState = 'open' | 'signed' | 'refused' | 'expired'
  *  national label, a global one. `public/images/sponsors/<tier>.webp` is the mark, looked up by this
  *  key and by nothing else.
  *
- *  ⚠ ONLY `local` IS REACHABLE TODAY, on purpose. The deal that already exists is a local shop's
- *  (ECONOMY.sponsorship is gated on her NATIONAL rank, which is the ladder a home-town shop reads),
- *  and the other two rungs are a design that has not been written yet - inventing brand names and
- *  thresholds for them now would be guessing at a spec rather than shipping one. The union exists so
- *  the lookup is by tier from the first day rather than a hard-coded filename that has to be found
- *  again later. */
+ *  ⚠ THE RUNG SAYS WHICH OF HER LINES THE DEAL COVERS, AND THAT IS THE WHOLE LADDER (01.08,
+ *  feat/brand-ladder). It is deliberately NOT a prestige number, because a prestige number would be
+ *  a new stat the game would then have to explain. Main carries gear condition - strings, frame,
+ *  shoes, each feeding the match attributes - so "how many of my lines are covered" is a sentence
+ *  the player can already read off a screen he has:
+ *
+ *    local     strings only. The most frequent line and the truest lever (ECONOMY.equipment: the
+ *              string bed dwarfs the frame), but frames and shoes stay hers.
+ *    national  strings and frames.
+ *    global    everything, and a hand with the travel.
+ *
+ *  AND IT IS READ OFF THE ARTWORK RATHER THAN INVENTED HERE, which is the same rule
+ *  `ECONOMY.sponsorship.localBrand` already keeps. The three marks shipped before this slice did:
+ *  local.webp says "STRING HOUSE – LOCAL. HONEST. TIGHT.", national.webp says "NETRALLY
+ *  DISTRIBUTION – STRINGS. FRAMES. NATIONWIDE." and global.webp says "PLAY BEYOND – EQUIP. SUPPORT.
+ *  ELEVATE.". The coverage ladder is written on the pictures; this type only names it. */
 export type SponsorTier = 'local' | 'national' | 'global'
+
+/** THE THREE LINES OF KIT the equipment model reads, and the unit the brand ladder is denominated
+ *  in. `KitWear` is `Record<KitLine, number>` (engine/equipment.ts) so a fourth line - or a renamed
+ *  one - cannot make the two disagree about what a deal covers. Apparel is NOT here: it is not a
+ *  line the match reads, and a kit deal is not a clothing allowance. */
+export type KitLine = 'strings' | 'frame' | 'shoes'
 
 /** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from
  *  `ECONOMY` afterwards, which is the rule that makes the deadline mean something: a letter held for
@@ -989,9 +1005,47 @@ export interface KitOfferTerms {
    *  never sees a penny of it as money. `ECONOMY.sponsorship`'s already-balanced figure. */
   kitAllowanceCents: number
   /** ...AND THE FLOOR UNDER HER KIT'S CONDITION, 0..1 in `KitWear`'s units (0 = as new, 1 = spent).
-   *  A sponsored player restrings when the bed dies, not when the budget allows, so no line of her
-   *  kit is allowed past this much wear while the deal runs. See `kitWearAt`. */
+   *  A sponsored player restrings when the bed dies, not when the budget allows, so no COVERED line
+   *  of her kit is allowed past this much wear while the deal runs. See `kitWearAt`.
+   *
+   *  ⚠ IT APPLIES TO `covers` AND TO NOTHING ELSE (01.08). Before the brand ladder there was one
+   *  rung and it supplied all three lines, so a scalar cap and a per-line cap were the same object.
+   *  They are not any more, and the difference IS the ladder: a local deal keeps her strings fresh
+   *  and lets her frame age exactly as it always did. */
   freshCap: number
+  /** ⚠ WHICH OF HER LINES THIS DEAL COVERS - the rung, as a fact rather than as a label, and the one
+   *  field the whole slice turns on. It governs BOTH halves of what a sponsor does: which gear BILLS
+   *  the brand picks up (`resolveGear`) and which wear lines the freshness ceiling holds down
+   *  (`kitFreshCap` -> `kitWearAt`). One list, both effects, so the letter's promise and the match's
+   *  arithmetic cannot drift apart.
+   *
+   *  Frozen at arrival like every other term: a deal signed when `local` meant one thing goes on
+   *  meaning that for its whole life, which is why this is stored rather than re-derived from
+   *  `tier`. */
+  covers: readonly KitLine[]
+  /** WHAT SHARE OF A TRIP'S FARE THE BRAND PICKS UP, 0..1. Zero for every rung that does not touch
+   *  travel, which today is local and national - `junior-economics.md`: "travel sponsorship only
+   *  after national/international wins", so it is the top rung's and nobody else's.
+   *
+   *  ⚠ IT GOES THROUGH `travelCostFor` AND NOWHERE ELSE. That function is THE definition the charge,
+   *  the refund and the planner's quoted price all read; a second computation of the same discount
+   *  is arbitrageable (enter at the covered price, withdraw at the full refund, repeat). */
+  travelShare: number
+  /** HOW MANY SEASONS IT RUNS. One for the local shop, more for the rungs above it -
+   *  `02-tennis-economics.md` puts junior equipment deals at "3-4 year terms", and a term longer
+   *  than a season is what makes ONE BRAND AT A TIME cost something: a deal that is still running
+   *  when the better letter is written is a deal that turns it away. */
+  seasons: number
+  /** ⚠ THE DOMESTIC STANDING SHE HAS TO KEEP, or absent when the deal does not ask for one.
+   *
+   *  This is the national rung's own term and it is why it exists: domestic points buy exactly two
+   *  things once the ITF tour opens, and one of them is switched off, so National is four weeks a
+   *  season at $120 entry plus $400+ travel that buy nothing for a player already at the top of the
+   *  domestic table. A national-tier deal gated on her place AT HOME means the domestic ladder has a
+   *  job for as long as the contract does: the standings are a rolling 52-week best-6, so a season
+   *  spent entirely abroad decays her domestic points to nothing, she slides out of this band, and
+   *  the brand does not stay. */
+  keepDomesticRank?: number
   /** WHAT SHE OWES IN RETURN: tournaments she must enter over the season for the shop to write
    *  again. A sponsor pays to be SEEN (spec §4.1), and this is the obligation that makes the deal a
    *  decision rather than a free win – the bench says playing more loses. */
@@ -1013,8 +1067,16 @@ export interface Offer {
   state: OfferState
   /** the week the state left `open` – signed, refused, or the week it lapsed. Absent while open. */
   decidedWeek?: number
-  /** SIGNED ONLY: the last week the deal covers. A kit deal runs to the end of the season it was
-   *  offered for; the shop reviews her again at the next boundary and writes, or does not. */
+  /** SIGNED ONLY: the last week the deal covers. A kit deal runs from the week it is signed to the
+   *  end of the LAST season it was offered for - `terms.seasons` of them, starting with the one she
+   *  is about to play - and the brand reviews her in each of their off-seasons.
+   *
+   *  ⚠ IT IS THE SEASON AHEAD, NOT THE ONE JUST GONE (01.08). The letter now arrives in the
+   *  off-season, so the deal she signs in the quiet weeks is the deal she opens the year under -
+   *  which is what the owner asked for («мне кажется было бы логичным их как раз к старту сезона
+   *  привязывать») and what really happens: equipment deals are negotiated in November and December
+   *  and align to the calendar year. Signing early buys the last off-season weeks of fresh kit as a
+   *  bonus; signing late buys the same season, minus the weeks spent thinking. */
   untilWeek?: number
   /** SIGNED ONLY: what the shop has actually spent on her kit under this deal, in cents. The one
    *  number that says what signing was worth – the same job `AcademySupport.coveredCents` does for

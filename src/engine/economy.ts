@@ -470,6 +470,121 @@ export const ECONOMY = {
      *  guaranteed to be as good"). Drawn from `seed:offer:<week>` - never the weekly stream. */
     offerChance: 0.7,
     topOfferChance: 0.9,
+
+    // --- THE BRAND LADDER: the two rungs above the shop (01.08, feat/brand-ladder) ---------------
+    //
+    // WHY IT EXISTS, in the owner's own case. He finished a season #1 NATIONAL and #13
+    // INTERNATIONAL and asked whether two contracts would arrive. They would not: `kitTermsFor` read
+    // only the table above, so a girl who is thirteenth in the world was still being written to by
+    // one shop in her town, and by nobody else. A national top-30 and a world top-30 are not the
+    // same achievement and are not interesting to the same people.
+    //
+    // ⚠ THE RUNG IS COVERAGE, NOT PRESTIGE - see `SponsorTier`. What steps up is WHICH OF HER LINES
+    // the brand supplies (strings / +frames / +shoes +travel), which is legible off the gear the
+    // game already models, rather than a number the game would have to invent and then explain.
+    //
+    // ⚠ AND THE TWO UPPER GATES READ THE INTERNATIONAL TABLE, WHICH IS THE POINT. The local shop
+    // keeps the domestic gate above (`maxRank` / `topMaxRank`) - that argument is unchanged and a
+    // home-town shop reads the ladder she is on at home. A national distributor and a global brand
+    // read the one she is on abroad.
+    //
+    // ⚠ AND THAT IS THE EXACT ERROR two-ladders.md CAUGHT ONCE ("the gear valve has never fired for
+    // anybody": an ITF-rank gate at #30 fired for NOBODY in any preset, because her ITF rank sat at
+    // #89-#109). It is not that error twice, for two reasons, and both are measured rather than
+    // asserted. First, the ladder still has a rung for those careers - the local shop, on the table
+    // they actually hold. Second, the numbers below were picked against a sweep
+    // (tools/brand-gate-bench.ts, 18 preset x policy cells x 12 seeds x 312 weeks, best ITF rank ever
+    // held): 78/216 careers reach #32 and 34/216 reach #8. The self-coached and grinder cells never
+    // reach either - which is the discrimination we want, not a failure - and every managed cell
+    // clears #32 in most seeds. So both rungs are live content, and neither is free.
+    national: {
+      /** Read off `public/images/sponsors/national.webp`, which is a wordmark over "STRINGS.
+       *  FRAMES. NATIONWIDE." - the coverage this rung ships is on the picture. */
+      brand: 'Netrally Distribution',
+      /** ⚠ ITF RANK AT OR INSIDE WHICH THEY WRITE, AND IT IS THE J300 MAIN DRAW.
+       *  = `TIERS.j300.drawSize`, pinned as an equality in tests/offers.test.ts because this file
+       *  cannot import the calendar (calendar.ts imports ECONOMY; the cycle is the reason the number
+       *  is written out here rather than computed). A sponsor pays to be SEEN, and J300 is the one
+       *  rung in the junior game with a four-figure crowd (900-2,600 against j60's 110-320) - the
+       *  lore's "one rung where a junior plays in front of strangers". Inside the world's top 32 she
+       *  would fill that draw on merit, which is precisely when a national distributor's logo starts
+       *  being worth something. */
+      maxItfRank: 32,
+      /** ⚠ ...AND THE DOMESTIC STANDING SHE HAS TO KEEP TO HOLD IT = `maxRank` above, the same top
+       *  30 that opens the local shop. This is National's job on the way OUT and the whole reason
+       *  this rung is gated on two tables at once: her domestic points are a rolling 52-week best-6,
+       *  so a season spent entirely on the international calendar decays them to nothing and she
+       *  slides out of this band. The deal ends when she does. */
+      keepDomesticRank: 30,
+      /** TWO SEASONS. `02-tennis-economics.md` puts junior equipment deals at "3-4 year terms"; our
+       *  whole junior career is four to six seasons, so the real figure is scaled to the game's own
+       *  horizon rather than copied. A term longer than a season is what gives ONE BRAND AT A TIME
+       *  its bite: sign this and the global letter that arrives next winter finds her busy. */
+      seasons: 2,
+      /** WHAT THE SEASON'S KIT IS WORTH, and it is sized on the gear table rather than picked. The
+       *  two lines it names cost, over a season: ~$600 working, ~$1,500 middle, ~$4,200 wealthy
+       *  (ECONOMY.gear cadences x prices). $3,000 covers both outright for the working and middle
+       *  corridors and about two thirds of the wealthy one - which is EXACTLY the relationship
+       *  `seasonCents` already has to the single string line ($1,000 against $312 / $625 / $1,495).
+       *  Same shape, one rung up, so the ladder's economics are one decision rather than three. */
+      seasonCents: 3_000_00,
+      /** The stepped-up local deal's own figure, unmoved. ⚠ AND THAT IS DELIBERATE: what a higher
+       *  rung buys is MORE LINES, not fresher ones. A second freshness number here would quietly
+       *  turn the ladder back into a prestige scale, which is the one thing `SponsorTier` says it is
+       *  not. */
+      freshCap: 0.3,
+      /** WHAT SHE OWES. The pair above steps 6 -> 8; this rung and the one above it keep walking the
+       *  block's own step of two. It is the design's best trap and it has to get worse as the deal
+       *  gets better: the coach's job is load management, the bench has measured three times that
+       *  resting beats racing, and a bigger cheque is a bigger standing bribe to do the thing that
+       *  loses. Ten is comfortably inside the ITF's own annual allowance at the ages that reach this
+       *  rung (25 at sixteen, unrestricted at seventeen), so it is a choice and never a wall. */
+      minEvents: 10,
+    },
+    global: {
+      /** Read off `public/images/sponsors/global.webp` - a wordmark over "EQUIP. SUPPORT.
+       *  ELEVATE.", which is this rung's three promises in the artwork's own words. */
+      brand: 'Play Beyond',
+      /** ⚠ THE LAST EIGHT OF THAT SAME DRAW = `TIERS.j300.drawSize / 4`, pinned in the tests beside
+       *  `national.maxItfRank` for the same reason. National signs the girl who would be IN the
+       *  prestige draw; global signs the one who would still be in it on the last day. Both numbers
+       *  therefore come off ONE figure in the tier table, which is what keeps the ladder's shape a
+       *  reading of the game rather than two round numbers picked to feel right.
+       *
+       *  It leaves the owner's own #13 season one rung short, and that is the intended answer rather
+       *  than an accident: the calendar's standing rule is that "there must ALWAYS be somewhere to
+       *  go". */
+      maxItfRank: 8,
+      /** THREE SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", scaled the same way
+       *  `national.seasons` is. Signing it is the biggest commitment in the game: everything is
+       *  covered, and nothing else can be signed until it runs out. */
+      seasons: 3,
+      /** ⚠ "EVERYTHING" HAS TO MEAN EVERYTHING, and that is what sizes this. All three lines cost
+       *  ~$900 working, ~$2,020 middle, ~$4,700 wealthy over a season, so $5,000 clears the most
+       *  expensive corridor in the game outright. Every other rung's allowance is a ceiling the
+       *  letter is honest about ("up to"); this one is the rung whose letter says "everything", so
+       *  it must not be a promise that runs out in October for a wealthy family. */
+      seasonCents: 5_000_00,
+      /** The same ceiling again, and see `national.freshCap`: the rung buys lines, not freshness. */
+      freshCap: 0.3,
+      /** The step of two, once more: 6 -> 8 -> 10 -> 12. */
+      minEvents: 12,
+      /** ⚠ A HAND WITH THE TRAVEL - the one thing no other rung does, and the reason this is the top
+       *  of the ladder rather than just a third line of kit. `junior-economics.md`: "travel
+       *  sponsorship only after national/international wins", which is exactly this gate.
+       *
+       *  A QUARTER OF THE FARE, and the size is read off the wealth corridor rather than picked: a
+       *  trip costs a wealthy family x1.2-1.3 of the sticker and a middle one x0.95-1.05, so a
+       *  quarter off is worth almost exactly ONE STEP DOWN that corridor. It is deliberately nowhere
+       *  near `ECONOMY.academy.travelCover` (0.8): the academy is a need-based rescue that decides
+       *  whether a working family survives at all, and a brand must not quietly become a second one.
+       *  This helps a family reach further; it does not carry it.
+       *
+       *  ⚠ NOT MEASURED ON THE ECON BENCH YET. It is the one number in this block that is argued
+       *  rather than swept, and travel is the biggest line in the game, so it is the first knob to
+       *  put through econ-bench when the ladder has run for a while. */
+      travelShare: 0.25,
+    },
   },
 
   // Recurring gear purchases, scheduled DETERMINISTICALLY off a purpose-scoped sub-stream per

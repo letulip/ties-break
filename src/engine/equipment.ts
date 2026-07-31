@@ -26,15 +26,25 @@
 // PURE, ZERO RNG. Wear is arithmetic over purchase weeks that the gear sub-streams already decide.
 
 import { ECONOMY, weeksSinceGear } from './economy'
-import type { FamilyBackground } from '../shared/protocol'
+import type { FamilyBackground, KitLine } from '../shared/protocol'
 import type { MatchPlayer } from './match/types'
 
-/** Wear per line, 0 = as new, 1 = at the end of its service life. */
-export interface KitWear {
-  strings: number
-  frame: number
-  shoes: number
-}
+/** Wear per line, 0 = as new, 1 = at the end of its service life.
+ *
+ *  ⚠ KEYED BY `KitLine` RATHER THAN BY THREE HAND-WRITTEN FIELDS (01.08, the brand ladder). A
+ *  sponsorship rung is now a LIST OF LINES it covers, and that list is typed `KitLine[]` in the
+ *  protocol - so if the two were spelled separately a rung could name a line this record does not
+ *  have, and the compiler would not care. One type, one set of keys. */
+export type KitWear = Record<KitLine, number>
+
+/** HOW FRESH SOMEBODY ELSE IS KEEPING HER KIT, PER LINE - a ceiling on wear for the lines a signed
+ *  deal covers, and nothing at all for the lines it does not.
+ *
+ *  ⚠ IT IS PARTIAL, AND THAT IS THE WHOLE BRAND LADDER IN ONE TYPE. Before this slice there was one
+ *  rung, it supplied all three lines, and the cap was a single number; the rungs above it supply
+ *  different SUBSETS, so an absent key has to mean "this line is hers" rather than "no cap given". A
+ *  scalar could not say that. */
+export type KitFreshCap = Partial<KitWear>
 
 /** As-new kit: the neutral element. `applyKit(p, FRESH_KIT)` returns `p` byte-identical. */
 export const FRESH_KIT: KitWear = { strings: 0, frame: 0, shoes: 0 }
@@ -59,10 +69,17 @@ function clamp01(x: number): number {
  *
  * ⚠ `freshCap` IS THE ONE THING THAT IS NOT DERIVED, and it is deliberately the smallest possible
  * shape of that (31.07, the kit sponsor). A signed kit deal means somebody else is supplying her, and
- * a supplied player restrings when the bed dies rather than when the budget allows - so no line of
- * her kit is allowed past this much wear while the deal runs. It is passed IN rather than read off a
- * world, so this function stays pure and every existing caller's answer is byte-identical: the
- * default is `null`, which is "nobody is supplying her", which is what every career was.
+ * a supplied player restrings when the bed dies rather than when the budget allows - so no COVERED
+ * line of her kit is allowed past this much wear while the deal runs. It is passed IN rather than
+ * read off a world, so this function stays pure and every existing caller's answer is byte-identical:
+ * the default is `null`, which is "nobody is supplying her", which is what every career was.
+ *
+ * ⚠ AND IT IS PER LINE SINCE THE BRAND LADDER (01.08). The cap used to be one number over all three
+ * lines, because there was one rung and it supplied all three. It now arrives as a `KitFreshCap`
+ * whose ABSENT KEYS ARE THE DESIGN: a local deal caps `strings` and says nothing about `frame`, so
+ * her frame ages at exactly the rate an unsponsored girl's does. That is what makes "which of my
+ * lines are covered" a real question with a cost attached, and it is why an absent key must never
+ * fall back to some default cap.
  *
  * The cap only ever SUBTRACTS wear, so a sponsored girl sits between her unsponsored self and fresh
  * kit and never past it - `applyKit` can still only ever take attributes down. See engine/offers.ts
@@ -72,19 +89,22 @@ export function kitWearAt(
   seed: string,
   background: FamilyBackground,
   week: number,
-  freshCap: number | null = null,
+  freshCap: KitFreshCap | null = null,
 ): KitWear {
   const e = ECONOMY.equipment
   const sinceStrings = weeksSinceGear(seed, 'stringing', background, week)
   const sinceFrame = weeksSinceGear(seed, 'rackets', background, week)
   const sinceShoes = weeksSinceGear(seed, 'shoes', background, week)
-  const cap = (w: number) => (freshCap === null ? w : Math.min(w, freshCap))
+  const cap = (line: KitLine, w: number) => {
+    const ceiling = freshCap?.[line]
+    return ceiling === undefined ? w : Math.min(w, ceiling)
+  }
   return {
-    strings: cap(clamp01(sinceStrings / e.stringLifeWeeks)),
+    strings: cap('strings', clamp01(sinceStrings / e.stringLifeWeeks)),
     // The frame is the one line with a flat head: sound is sound, however old, and only past
     // `frameSoundWeeks` does it start being the patched racket.
-    frame: cap(clamp01((sinceFrame - e.frameSoundWeeks) / e.framePatchWeeks)),
-    shoes: cap(clamp01(sinceShoes / e.shoeLifeWeeks)),
+    frame: cap('frame', clamp01((sinceFrame - e.frameSoundWeeks) / e.framePatchWeeks)),
+    shoes: cap('shoes', clamp01(sinceShoes / e.shoeLifeWeeks)),
   }
 }
 
