@@ -56,7 +56,7 @@
 // buttons: Home's floating pill and this screen's CTA read the same label, the same mode and the same
 // blocked state, and the press routes into the shell's one handler. See that file for the whole
 // argument and for the arrival-gate bug it is written against.
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { useCalendarWeek, useLookAhead, DAY_LONG, type CalendarDay, type DayKind } from '../../composables/weekDays'
 // The SECOND drawing of the same week: the design's time x day grid. What a day of each kind looks
@@ -92,7 +92,18 @@ import type { UpcomingEvent } from '../../shared/protocol'
 // must be exactly ONE place in the app that performs it. App.vue's `playWeek` is that place; this
 // screen never touches `game.advance`, which is the property tests/round13-nav.test.ts holds every
 // tab screen to.
-const emit = defineEmits<{ advance: [] }>()
+const emit = defineEmits<{ advance: []; autoPlayed: [] }>()
+
+/** ⚠ THE PRESS ARRIVED FROM SOMEWHERE ELSE. «Жмем training week – видим календарь и короткую
+ *  анимацию как неделя проходит» (owner, 31.07): the week button on Home no longer spends the week
+ *  where it is pressed - it brings the player HERE and this screen plays it, because the sweep is
+ *  what stands in for a trip on a week with no tournament in it.
+ *
+ *  ⚠ A ONE-SHOT, AND IT IS CONSUMED ON MOUNT RATHER THAN WATCHED. The shell sets the flag in the same
+ *  tick it switches the tab, so this component is CREATED with the flag already true and a watcher
+ *  would never see it change. Consuming it in `onMounted` and telling the shell to clear it is what
+ *  keeps "open the Calendar tab by hand" from spending a week: the flag is false by then. */
+const props = defineProps<{ autoPlay?: boolean }>()
 
 const game = useGameStore()
 
@@ -107,6 +118,17 @@ const dateLine = computed(() => weekDateLine(week.value + 1))
 /** She is laid up across the week the grid shows – the red chip on the grid's own head. Read off the
  *  layout rather than re-derived: `calendarWeekFor` has already asked the engine's window predicate. */
 const injuredNow = computed(() => calendar.value?.days[0]?.kind === 'rehab')
+/** She is at a tournament across the week the grid shows – the one week whose COURT is her own, and
+ *  therefore the one week that may name it (see the verdict line under the grid).
+ *
+ *  ⚠ THE HEADER'S SURFACE CHIP IS GONE BECAUSE OF THIS, and the owner's reason is the whole of it
+ *  (31.07): «сейчас в календаре пишут про покрытие текущего идущего чемпионата, на который она даже
+ *  не поехала – это лишнее, надо убрать». On a training week `calendar.surface` is the dominant
+ *  surface of the season BLOCK - the court of an event that is running that week and that she is not
+ *  at - so the calendar was reporting somebody else's tournament on a page about her own week.
+ *  `calendarWeekFor` overrides both the surface and its verdict with the EVENT's on a week she is
+ *  playing one, which is why that week keeps its court and every other week now names none. */
+const awayNow = computed(() => calendar.value?.days[0]?.kind === 'away')
 /** The layoff's clock, for the chips' tooltips. Same arithmetic every other surface prints, so the
  *  DATE can never differ from the Season screen's plaque even though the sentence has a different
  *  lead (a calendar has room to name what is wrong with her; a 6px chip has not). */
@@ -342,6 +364,14 @@ function runWeek(): void {
   })
   timers.push(setTimeout(finishSweep, plan.total))
 }
+/** The shell asked for the week to be played here: take the flag off it and run the sweep. See the
+ *  note at `props` for why this is a mount hook and not a watcher. */
+onMounted(() => {
+  if (!props.autoPlay) return
+  emit('autoPlayed')
+  runWeek()
+})
+
 /** ⚠ THE SCREEN'S OWN CTA STANDS DOWN WHILE A REVEAL IS PAUSED, and the two controls would otherwise
  *  land on the same pixels. App.vue's floating bar is GLOBAL on `pending` - that is the wave-2 split
  *  (resuming an overlay costs nothing, so it is available on every tab) and it is what lets R13-8's
@@ -363,16 +393,18 @@ const showGo = computed(() => !game.snapshot?.pending)
       @click.capture="skipSweep"
     >
       <template #header>
+        <!-- ⚠ THE COURT USED TO BE NAMED HERE AND IT WAS SOMEBODY ELSE'S. The header carried a
+             surface mark off `calendar.surface`, which on a training week is the dominant surface of
+             the SEASON BLOCK - that is, the court of whatever tournament is running that week, an
+             event she did not enter and is not at. Struck off by the owner on 31.07 (his sentence is
+             quoted at `awayNow` in the script, where it may be quoted in his own language). It is
+             worse than clutter: a page about HER week was reporting somebody else's tournament. The
+             week she is actually playing one still names its court, one card down. -->
         <div class="cal-topbar">
           <div>
             <h2 class="cal-title">Calendar</h2>
             <p class="cal-dates">{{ dateLine }}</p>
           </div>
-          <SurfaceMark
-            :surface="calendar.surface"
-            size="sm"
-            :title="calendar.surfaceNote ?? calendar.surface"
-          />
         </div>
       </template>
 
@@ -453,7 +485,14 @@ const showGo = computed(() => !game.snapshot?.pending)
         <!-- The read-out. It IS the legend: rather than a row of glyphs and their names, the week says
              what it is in the same parent's voice every other surface in this app uses for a week. -->
         <p class="cal-readout">{{ calendar.readout }}</p>
-        <p v-if="calendar.surfaceNote" class="cal-court">
+        <!-- ⚠ THE COURT'S VERDICT, ON THE ONE WEEK THE COURT IS HERS. `calendarWeekFor` overrides
+             both the surface and the verdict with the EVENT's on a week she is playing one, so this
+             sentence is "clay is not her surface" the week before she plays on clay - which is the
+             useful reading, and the reason the data on `CalendarWeek` survives the header's deletion
+             rather than following it. On every other week it would be the same borrowed fact the
+             owner struck off the header, one card lower, so it is gated on the trip rather than on
+             the verdict merely existing. -->
+        <p v-if="awayNow && calendar.surfaceNote" class="cal-court">
           <SurfaceMark :surface="calendar.surface" size="sm" :show-name="false" />
           <span>{{ calendar.surfaceNote }}</span>
         </p>

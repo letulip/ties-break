@@ -17,7 +17,14 @@ import { needRefresh, applyUpdate } from './pwa'
 // arrival-gate bug, one surface further out. So the label, the mode the handler below switches on and
 // the blocked state are ONE computed with two readers. See composables/weekAction.ts.
 import { useWeekAction } from './composables/weekAction'
+// ⚠ RE-AIMED, NOT RETIRED: `calendarOwnsWeekAhead` used to decide where a week LANDED and now decides
+// which weeks the calendar PLAYS. That is closer to the owner's original sentence than the landing
+// rule ever was - the Calendar tab is «активной при нетурнирных неделях», and a tab that runs the
+// week's animation is active in a way a destination is not.
 import { calendarOwnsWeekAhead } from './composables/weekAhead'
+// The sweep's own preference gate, read here for one reason: the detour to the calendar exists to
+// SHOW the animation, so with the animation off there is no detour and the press behaves as it did.
+import { dayCrossRuns } from './composables/dayCross'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
 import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
@@ -323,39 +330,32 @@ watch(
     // is this navigation. See composables/weekRecap.ts for why the preference may not be folded into
     // `recapExists` itself, and why it is a localStorage flag rather than a save field.
     if ((advanced || runClosed) && storyOpensItself(snap)) tab.value = 'week'
-    // ⚠ ...AND OTHERWISE THE CALENDAR TAKES A NON-TOURNAMENT WEEK (owner, 30.07). His sentence was that the
-    // Calendar tab is «активной при нетурнирных неделях», and the second reading is the one he meant: not
-    // DISABLED on a tournament week, but the tab you LAND on when the week ahead is not one. `afterWeekTab`
-    // is the rule; this is one of its two callers.
-    else if (advanced || runClosed) tab.value = afterWeekTab()
+    // ⚠ ...AND OTHERWISE A RESOLVED WEEK GOES HOME. THIS WAS `afterWeekTab()` AND IT WAS BACKWARDS.
+    //
+    // The calendar used to be where a week ENDED: `afterWeekTab()` sent every non-tournament week to the
+    // Calendar tab, on the strength of the owner's «активной при нетурнирных неделях». Wrong reading, and
+    // he described the flow he wanted in full on 31.07:
+    //
+    //   «жмем training week – видим календарь и короткую анимацию как неделя проходит – если есть
+    //    тренировочный матч, когда доходим до него анимация прекращается и переходим в окно матча – после
+    //    матча либо заканчиваем неделю в training week, либо видим week recap и Proceed to Home, который
+    //    ведет Домой»
+    //
+    // THE CALENDAR IS THE DURING. HOME IS THE AFTER. Landing there at the end cost two things at once: a
+    // button that says «Proceed to Home» did not go home, and - measured in the browser - the player was
+    // left staring at a grid that had just re-rendered to the NEXT week. He watched W5's days cross
+    // themselves out, and the screen he was handed back said W6. That is his other report of the same
+    // beat: «на текущей неделе мы видим расписание текущей недели, а не будущей».
+    //
+    // ⚠ THE OFF-BY-ONE IS NOT IN THE ARITHMETIC, and that was measured before it was changed: through the
+    // whole sweep the header, the column dates and the blocks stay on the week being played (W5, Feb 2-8,
+    // strokes 0 -> 4 -> 7). `tickWeek` increments `world.week` first, but the advance only fires when the
+    // sweep FINISHES, so nothing moves under the animation. The week the calendar names jumps forward
+    // exactly once - when the finished week hands the screen back to it. So the fix is this line, not
+    // `week + 1`, and the calendar keeps naming the week its button plays.
+    else if (advanced || runClosed) tab.value = 'home'
   },
 )
-
-/**
- * WHERE A RESOLVED WEEK LEAVES YOU. Home, or the Calendar when the week ahead is one the calendar is about.
- *
- * ⚠ ONE FUNCTION FOR TWO DOORS, and it has to be: a week can land here directly (the switch above, when the
- * story does not open itself) or via the story's own close. If those two picked their destination separately
- * they would eventually disagree, and the player would find that turning the story off silently changed
- * where the game puts him.
- *
- * ⚠ AND IT IS A DESTINATION, NOT A PAGE THAT OPENS ITSELF. The owner has already had to correct one of
- * those - W5's story used to take the screen and he asked for a handle («а если это будет отключаемая опция
- * - вообще нет проблем») - so the distinction matters and this is on the mild side of it: nothing covers
- * what he was doing, the week simply ends on the screen that is about the next one. Which is why it needs no
- * handle of its own: with the story switched off this replaces a landing on Home, and with it on it replaces
- * a landing on Home after the story. Neither is an interruption.
- *
- * The tournament flow is not consulted here because it cannot be up: `runClosed` fires on the snapshot that
- * CLEARS `pending`, and a paused reveal is not an advance.
- */
-function afterWeekTab(): TabId {
-  // ⚠ OFF `weekAction`, WHICH IS ALREADY HERE - not a second `useWeekAhead()` and not a re-derivation. The
-  // calendar slice put that composable in front of the week-ahead precisely so one answer serves every
-  // caller, and the week BUTTON already reads it. Asking the same question twice is how the button and the
-  // destination would eventually disagree about what next week is.
-  return calendarOwnsWeekAhead(weekAction.value.kind) ? 'calendar' : 'home'
-}
 
 // --- R13-12: the Kid screen lives behind her photograph ---------------------------
 // A2 moved the avatar itself onto Home (App has no header any more), so the hint's state moved
@@ -472,9 +472,33 @@ const practiceLive = ref<WorldMatch | null>(null)
 // "her rank" is the only question the card can be asking. This used to pass `snapshot.kidRank`, the
 // ITF alias, which is a number even when she is unranked internationally. See `activeLadderOfSnapshot`.
 const activeRank = computed(() => activeLadderOfSnapshot(game.snapshot).rank)
+/** The calendar has been asked to PLAY the week, not merely shown. Consumed once, by the screen, the
+ *  moment it mounts – see the detour in `playWeek` and `@auto-played` on the component. */
+const calendarPlays = ref(false)
+
 async function playWeek(weeks: 1 | 4): Promise<void> {
   if (game.snapshot?.pending) {
     tournamentHidden.value = false
+    return
+  }
+  // ⚠ THE PRESS GOES TO THE CALENDAR FIRST, AND THE WEEK PASSES THERE. «Жмем training week – видим
+  // календарь и короткую анимацию как неделя проходит» (31.07). On a week with no tournament in it
+  // the crossing-out sweep is what STANDS IN for a trip: it is the only thing that happens between
+  // pressing and reading the result, and pressing from Home used to skip straight past it. So Home's
+  // press is a detour rather than an advance - the calendar runs its sweep and hands the press back
+  // through `@advance`, which arrives here with `tab === 'calendar'` and spends the week for real.
+  //
+  // THREE GUARDS, and each excludes a week this beat is not about:
+  //   * `weeks === 1`   a four-week skip is not a week anybody watches pass.
+  //   * `calendarOwnsWeekAhead`  a tournament week (and a walkover) belongs to the trip's own flow,
+  //     which is a full-screen overlay - the sweep would be an animation in front of it.
+  //   * `dayCrossRuns`  with the animation switched off or reduced motion set there is nothing to
+  //     detour FOR, and a tab that flicks past on the way to the same result is worse than none.
+  //     It is asked with `true` because the two weeks whose `animates` is false are already excluded
+  //     above: a paused reveal returns at the top of this function, and a trip fails the predicate.
+  if (weeks === 1 && tab.value !== 'calendar' && calendarOwnsWeekAhead(weekAction.value.kind) && dayCrossRuns(true)) {
+    tab.value = 'calendar'
+    calendarPlays.value = true
     return
   }
   const throughPractice = weeks === 1 && weekAction.value.mode === 'practice'
@@ -639,19 +663,27 @@ function dismissSeasonSummary(): void {
       <!-- Screen H, the calendar. It ASKS to play the week rather than doing it: `playWeek` is the
            app's one advance, and a second caller of `game.advance` is how "what does this press cost"
            gets answered twice (see composables/weekAction.ts). -->
-      <CalendarScreen v-else-if="tab === 'calendar'" @advance="playWeek(1)" />
+      <CalendarScreen
+        v-else-if="tab === 'calendar'"
+        :auto-play="calendarPlays"
+        @advance="playWeek(1)"
+        @auto-played="calendarPlays = false"
+      />
       <!-- W1: the story opens itself at the end of a week (see the `week` watcher above), so its ×
            is a real close now – the design's own "the cross returns to Home" – and not just a
            silencer. (The handoff's wording is quoted in the script block; no Cyrillic may appear in
            a template – tests/round13-nav.test.ts.) -->
-      <!-- ⚠ THE STORY'S CLOSE READS THE SAME RULE the direct landing does (`afterWeekTab`). It used to be a
-           literal `tab = 'home'`, which would have meant that switching the story OFF changed where a week
-           leaves you - the handle is about whether the story is SHOWN, never about navigation. -->
-      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = afterWeekTab()" />
+      <!-- ⚠ AND ITS CLOSE GOES HOME, WHICH IS WHAT THE BUTTON ON IT SAYS. It read `afterWeekTab()` for
+           one wave, which sent a resolved week to the Calendar - so a control labelled "Proceed to Home"
+           landed on the calendar, showing the week AFTER the one just played. Both doors out of a week
+           are `home` again (the other is the watcher in the script), so the two still cannot disagree
+           and switching the story off still changes nothing about navigation. The calendar is where a
+           week is WATCHED now; see the detour in `playWeek`. -->
+      <ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />
       <!-- ⚠ MERGE NOTE (round-19): the calendar branch forked before round-18 landed, so it still
-           carried the flat `tab = 'kid'` market routing. Both halves are kept - the story's close
-           uses the calendar's `afterWeekTab()`, and the market keeps round-18's `marketFrom`, which
-           is the whole point of that fix: the back arrow returns where the market was opened from. -->
+           carried the flat `tab = 'kid'` market routing. Both halves are kept - the story's close is
+           the shared one above, and the market keeps round-18's `marketFrom`, which is the whole
+           point of that fix: the back arrow returns where the market was opened from. -->
       <KidScreen
         v-else-if="tab === 'kid'"
         @navigate="$event === 'market' ? openMarket('kid') : (tab = $event)"

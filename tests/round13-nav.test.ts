@@ -13,6 +13,14 @@ import { recapExists, thisWeekDotShows } from '../src/composables/weekRecap'
 import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
+/** Comments are not code. The house helper (tests/calendar-screen.test.ts, tests/knock.test.ts): this
+ *  codebase documents at length, INCLUDING documenting what it deliberately no longer does, so a
+ *  `not.toContain` over raw source fails on a note that merely names the thing it forbids. */
+const codeOf = (src: string) =>
+  src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
 
 const app = read('../src/App.vue')
 const home = read('../src/components/screens/HomeScreen.vue')
@@ -59,7 +67,7 @@ describe('the bottom nav is Season · Calendar · Home · Stats · More, Home in
   // week.svg, still labelled Calendar, and Home is still the middle slot (the test above).
   it('the Calendar slot is LIVE: it routes to screen H, and the placeholder machinery is gone', () => {
     expect(app).toContain(`{ id: 'calendar', icon: 'week', label: 'Calendar' }`)
-    expect(app).toContain(`<CalendarScreen v-else-if="tab === 'calendar'"`)
+    expect(app).toContain(`<CalendarScreen\n        v-else-if="tab === 'calendar'"`)
     expect(app).toContain("import CalendarScreen from './components/screens/CalendarScreen.vue'")
     // `openNav` is still the ONE writer of `tab` from the bar, and it no longer has a slot to refuse.
     const openNav = app.slice(app.indexOf('function openNav'), app.indexOf('function iconUrl'))
@@ -384,10 +392,19 @@ describe('the advance button lives in the App shell, and splits by what a stray 
     }
     // ...and the one screen that DOES carry a week control asks for it by event, so `playWeek` stays
     // the single door: same handler, same composable, same mode.
+    //
+    // ⚠ RE-AIMED (31.07), AND THE RULE IS EXACTLY AS STRICT. The calendar grew a SECOND event when the
+    // week button started routing the player here to watch the week pass («жмем training week – видим
+    // календарь и короткую анимацию как неделя проходит»): `autoPlayed` tells the shell its one-shot
+    // request has been taken. It is a signal, not an act - the screen still cannot advance anything,
+    // which is what the `game.advance(` sweep above holds it to. So the emit pin matches the advance
+    // ARM rather than the whole declaration, and the template pin matches the element's opening
+    // rather than a single line that now carries two more bindings.
     const cal = read('../src/components/screens/CalendarScreen.vue')
-    expect(cal).toContain('const emit = defineEmits<{ advance: [] }>()')
+    expect(cal).toContain('const emit = defineEmits<{ advance: []')
     expect(cal).toContain("emit('advance')")
-    expect(app).toContain(`<CalendarScreen v-else-if="tab === 'calendar'" @advance="playWeek(1)" />`)
+    expect(app).toContain(`<CalendarScreen`)
+    expect(app).toContain(`@advance="playWeek(1)"`)
   })
 })
 
@@ -508,19 +525,26 @@ describe('W1 — the end of a week lands on the story', () => {
   })
 
   it("the story's × is a real close: it silences the week AND leaves by the week's own door", () => {
-    // ⚠ RE-AIMED BY THE AUTO-SELECT (owner, 30.07: the Calendar is «активной при нетурнирных неделях», and
-    // the reading he meant is the tab you LAND on). The close used to be a literal `tab = 'home'`; it reads
-    // `afterWeekTab()` now, which is the SAME rule the direct landing uses. That singularity is the point:
-    // if the two picked separately, switching the story off would silently change where a week leaves you,
-    // and the story handle is about whether the story is SHOWN - never about navigation.
+    // ⚠ RE-AIMED TWICE, AND IT HAS LANDED BACK ON THE HANDOFF'S OWN SENTENCE. The close was a literal
+    // `tab = 'home'`; the auto-select wave made it `afterWeekTab()`, on a reading of «активной при
+    // нетурнирных неделях» that turned the Calendar into where a week ENDS. The owner found the
+    // result on 31.07 - a button labelled "Proceed to Home" landing on the calendar - and described
+    // the flow he had asked for: «после матча либо заканчиваем неделю в training week, либо видим
+    // week recap и Proceed to Home, который ведет Домой». So it is `home` again, which is also what
+    // the design handoff said in the first place («× возвращает на Home», quoted in App.vue).
     //
     // The guarded fact - the × really closes, silences the week, and hands the screen back rather than
-    // stranding the player - is unchanged. Only the destination learned to be two places.
+    // stranding the player - has not moved through any of this. What the pin adds now is that BOTH
+    // doors out of a week name the same destination, which is the property `afterWeekTab` existed to
+    // guarantee and the reason it can be deleted rather than inverted: `home` is written twice
+    // because it is one word, not because there are two rules.
     expect(weekScreen).toContain('const emit = defineEmits<{ close: [] }>()')
     const dismiss = weekScreen.slice(weekScreen.indexOf('function dismissRecap'))
     expect(dismiss.slice(0, 200)).toContain("emit('close')")
     expect(dismiss.slice(0, 200)).toContain('dismissedRecapKey.value')
-    expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" @close="tab = afterWeekTab()" />`)
+    expect(app).toContain(`<ThisWeekScreen v-else-if="tab === 'week'" @close="tab = 'home'" />`)
+    expect(codeOf(app), 'the landing rule is back to one destination').toContain("else if (advanced || runClosed) tab.value = 'home'")
+    expect(codeOf(app), 'the two-destination helper is gone, not inverted').not.toContain('afterWeekTab')
   })
 
   it('Home keeps its door and its dot – the manual route back into the story is untouched', () => {
