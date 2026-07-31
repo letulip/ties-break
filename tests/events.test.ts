@@ -11,13 +11,14 @@ import {
   toSnapshot,
   KID_ID,
   PARENT_INCOME_CENTS,
+  START_AGE_YEARS,
   type WorldState,
   pendingKnock,
   decideKnock,
 } from '../src/engine/world'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
-import { TIERS } from '../src/engine/season/calendar'
+import { TIERS, isTierAgeOpen, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { simulateMatch } from '../src/engine/match/engine'
 import type { SeasonEvent } from '../src/engine/season/types'
@@ -54,8 +55,16 @@ function advanceAnswering(world: WorldState, rng: Rng, weeks: number): StopReaso
 
 
 // The earliest event whose entry deadline has not yet passed.
+//
+// ⚠ ...AND WHOSE AGE GATE SHE CLEARS (task #17). `enterEligible` below can grant her any number of
+// POINTS, in any table, but it cannot make her older, and three rungs now open at 16/16/17 against a
+// career that starts at 14. These cases are about fees, refunds and duplicate entries – "the earliest
+// enterable event" is fixture scaffolding, not the subject – so the filter simply says what the
+// function's name already claimed. The events it skips are the ones a fourteen-year-old genuinely
+// cannot enter, which is `enterEvent` working, not failing.
 function firstEnterable(world: WorldState) {
-  return world.season.find((e) => e.deadlineWeek >= world.week)!
+  const age = START_AGE_YEARS + Math.floor(world.week / WEEKS_PER_YEAR)
+  return world.season.find((e) => e.deadlineWeek >= world.week && isTierAgeOpen(e.tier, age))!
 }
 
 // r-gate (season-life-01b): points-based eligibility. These cases predate the ladder and aren't about

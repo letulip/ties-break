@@ -67,13 +67,19 @@ function event(over: Partial<UpcomingEvent> = {}): UpcomingEvent {
     ...over,
   } as UpcomingEvent
 }
-function facts(over: Partial<GoalFacts> = {}): GoalFacts {
+/** ⚠ `ladders` IS MERGED, NOT REPLACED (task #17). Every case in this file names only the tables it
+ *  is about – almost all of them `{ domestic, itf }` – and when the third table arrived that stopped
+ *  compiling in twenty-four places at once. Widening the parameter here rather than adding
+ *  `wta: ladder()` to twenty-four literals keeps each case saying what it is about, and means a
+ *  FOURTH table would cost this file nothing. Nothing is weakened: an empty `LadderView` is exactly
+ *  what those cases were already asserting against for the table they did not mention. */
+function facts(over: Partial<Omit<GoalFacts, 'ladders'>> & { ladders?: Partial<GoalFacts['ladders']> } = {}): GoalFacts {
   return {
     week: 30,
-    ladders: { domestic: ladder(), itf: ladder() },
     upcoming: [],
     radar: [],
     ...over,
+    ladders: { domestic: ladder(), itf: ladder(), wta: ladder(), ...over.ladders },
   }
 }
 /** A counting result AT a given round of a given tier, priced off the catalogue itself. */
@@ -152,9 +158,16 @@ describe('the rungs escalate, and a small draw does not pretend to have rounds i
     const next = nextRungFor(won)
     expect(next.tier).toBe('national')
     expect(next.firstMatch).toBe(true)
-    // ...and at the top of the ladder there is nothing above, so the goal stays "win it"
-    const top = facts({ ladders: { domestic: ladder(), itf: ladder([result('j300', 0)]) } })
-    expect(nextRungFor(top)).toEqual({ tier: 'j300', finish: 0, firstMatch: false })
+    // ⚠ RE-AIMED, NOT WEAKENED (task #17): the top of the ladder is W100 now, not J300. The claim is
+    // unchanged and is still asserted twice - a title moves the goal to the next rung up, and at the
+    // rung with nothing above it the goal stays "win it". What moved is where the ceiling is, which
+    // is the point of the slice: a J300 title used to end the game's ambitions and now hands her the
+    // first rung of the professional tour. That handover is exactly the beat §4 of
+    // docs/specs/adult-tour-and-endings.md turns into a decision at 19.
+    const wasTop = facts({ ladders: { itf: ladder([result('j300', 0)]) } })
+    expect(nextRungFor(wasTop)).toEqual({ tier: 'w15', finish: 4, firstMatch: true })
+    const top = facts({ ladders: { wta: ladder([result('w100', 0)]) } })
+    expect(nextRungFor(top)).toEqual({ tier: 'w100', finish: 0, firstMatch: false })
   })
 
   it('the goal is about the STRONGEST tier she has played, not the busiest', () => {

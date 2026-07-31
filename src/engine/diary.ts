@@ -304,6 +304,17 @@ const TRAVEL_HOME_MODES: Record<TierId, readonly TravelHomeScene[]> = {
   j30: [...ROAD_SCENES, ...AIR_SCENES],
   j60: [...ROAD_SCENES, ...AIR_SCENES],
   j300: [...ROAD_SCENES, ...AIR_SCENES],
+  // The adult rungs take the J family's own bucket, unchanged. «Национальные и выше» is a rule about
+  // DISTANCE, and a W15 is the same trip as a J30 to within a couple of hundred dollars of airfare –
+  // the calendar prices them at $1,000-2,200 against $900-2,000. She is older and the tournament pays
+  // her something, but the journey home is the same journey home, and this slice deliberately gives
+  // the adult tour NO narrative voice of its own: the four scenes she has always come back in are the
+  // four she comes back in now. When 19 becomes a fork with its own writing (§4 of
+  // docs/specs/adult-tour-and-endings.md), that is where a different register belongs – not here,
+  // where it would only mean the art library grew a fifth mode nobody drew.
+  w15: [...ROAD_SCENES, ...AIR_SCENES],
+  w35: [...ROAD_SCENES, ...AIR_SCENES],
+  w100: [...ROAD_SCENES, ...AIR_SCENES],
 }
 
 /** Her competitive tournament tier in `week`, off the event feed – null when she played none.

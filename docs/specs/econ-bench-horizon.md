@@ -63,6 +63,14 @@ a prior reading and may have drifted — anchor on the **symbol names**.
    reach-rate proxy** — not earnings. Literal "first prize money" would require adding a payout
    income category to `finalizeTournament` first (out of scope for a measurement-only tool).
 
+   > **⚠ DONE, AND THE CAVEAT IS GONE (31.07, task #17 / A2).** The payout income category this item
+   > names as the blocker now exists — `finalizeTournament` credits `'prize'` off the finishing tier's
+   > own `TierDef.prizeCents` table — so the bench prints the earnings it was standing in for. It also
+   > gained a **third horizon, 14→20**, because the adult rungs open at 16/16/17 and the question is
+   > unaskable inside 14→16, and an **A4 block per preset**: how many careers are ever paid at all,
+   > and how many ever have a week whose cheque beats that week's costs. The reach targets in item 5
+   > are deliberately unchanged, so every historical number in this file is still comparable.
+
 7. **Plumbing.** Extend `SeedResult` with: `survived: boolean`, `reachedWeek: number | null`,
    `endRank: number`, `endPoints: number`, and `perSeason: { seasonYear: number; endRank: number;
    points: number; wins: number; losses: number; netCents: number }[]`. Update `renderPreset`,

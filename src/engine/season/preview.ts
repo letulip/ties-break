@@ -164,6 +164,24 @@ const CROWD_BANDS: Record<TierId, readonly [number, number]> = {
   j30: [30, 90],
   j60: [110, 320],
   j300: [900, 2600],
+  // THE ADULT TOUR REPEATS THE JOKE ONE TABLE UP, because the real one does. A W15 is played on an
+  // outside court of a club in a town nobody has heard of, in front of the other players' parents
+  // and a groundsman – twenty to seventy people, which is FEWER than a Regional and fewer even than
+  // a J30. She has just turned professional and the stand is emptier than the one she played her
+  // national under-14s in. That is exactly the shape j30-under-regional already draws, and it is the
+  // same sentence the table's note makes about production scale disagreeing with prestige: this is
+  // the first rung of the WOMEN'S PROFESSIONAL TOUR and it is the quietest room in the game.
+  //
+  // W35 buys a small stand and a few locals (60-200, about a J60's room). W100 is the first adult
+  // week with a real crowd – a proper club with seating, a scoreboard, a couple of hundred paying
+  // spectators and whoever the tournament can pull on finals day (400-1,400) – and note that it is
+  // still SMALLER than a J300's 900-2,600. That is not a mistake either: a J300 is a junior Slam
+  // feeder with agents on the fence and a national federation busing children in, while a W100 is a
+  // Tuesday in a mid-size town. The crowd she plays in front of gets smaller as the tennis gets
+  // better, right up until the tour she is climbing towards, which is off this table entirely.
+  w15: [20, 70],
+  w35: [60, 200],
+  w100: [400, 1400],
 }
 
 /** Decorative crowd. Its own sub-stream so it can never perturb the draw, and keyed on the event so

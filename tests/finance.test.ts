@@ -11,11 +11,12 @@ import {
   availabilityStatus,
   KID_ID,
   PARENT_INCOME_CENTS,
+  START_AGE_YEARS,
   type WorldState,
 } from '../src/engine/world'
 import { DEFAULT_PROFILE, type FinanceWeek } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
-import { TIERS } from '../src/engine/season/calendar'
+import { TIERS, isTierAgeOpen, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { SeasonEvent } from '../src/engine/season/types'
 
 // r-gate (season-life-01b): points-based eligibility. These cases aren't about the ladder, so grant
@@ -28,6 +29,27 @@ function enterEligible(world: WorldState, event: SeasonEvent): void {
   if (min > 0) world.results.push(marker)
   enterEvent(world, event.id)
   if (min > 0) world.results = world.results.filter((r) => r !== marker)
+}
+
+/** The earliest event a FRESH FOURTEEN-YEAR-OLD can actually be made eligible for, which since the
+ *  adult rungs (task #17) is a narrower thing than "the earliest event".
+ *
+ *  ⚠ THE HELPER ABOVE CAN BUY POINTS AND CANNOT BUY YEARS, and it cannot buy the right KIND of points
+ *  either: it grants a marker in the rung's own table, which opens a domestic band but says nothing to
+ *  an acceptance list (J60/J300, W35/W100 read a RANK) and nothing to an on-ramp reading the table
+ *  below it (J30 reads domestic, W15 reads ITF junior). The scaffolding was always only good enough
+ *  for a points-banded rung; it survived on the calendar happening to put one first, and adding a
+ *  family moved which event that is. These cases are about the per-week finance ledger, so the fixture
+ *  says out loud which rungs it can set up rather than hoping. */
+function firstBandedEvent(world: WorldState): SeasonEvent {
+  const age = START_AGE_YEARS + Math.floor(world.week / WEEKS_PER_YEAR)
+  return world.season.find(
+    (e) =>
+      e.deadlineWeek >= world.week &&
+      isTierAgeOpen(e.tier, age) &&
+      TIERS[e.tier].enterPct === undefined &&
+      TIERS[e.tier].track === 'domestic',
+  )!
 }
 
 // Part A – the persisted per-week/per-category finance aggregate (financeWeeks) and the pure
@@ -94,7 +116,7 @@ describe('financeWeeks — the persisted per-week finance aggregate', () => {
   it('records entry fees under entry and travel under travel', () => {
     const world = createWorld('cats')
     const rng = rngFromSeed(world.seed)
-    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+    const event = firstBandedEvent(world)
     enterEligible(world, event) // charges the entry fee at week 0
     const w0 = world.financeWeeks.find((w) => w.week === 0)!
     expect(w0.byCategory.entry).toBe(-TIERS[event.tier].entryFeeCents)

@@ -427,11 +427,17 @@ const coachQuote = computed(() =>
 
 // --- Season strip: REAL tier progress. Reads the kid's best finish per tier off the snapshot: a
 // reached tier shows the short finish label (W/F/SF/QF/R16…) in accent, an untouched one a muted
-// dash. The strip is the whole six-rung ladder. R10-7: the short names come from the ONE shared
+// dash. The strip is the whole nine-rung ladder. R10-7: the short names come from the ONE shared
 // table, which the dynamic Next-week button also reads – so the strip and the button can never call
 // the same tier two different things. This array only carries the LADDER ORDER.
+//
+// ⚠ THE ADULT RUNGS JOIN IT (task #17), spelled out here rather than folded into TIER_LADDER,
+// because the list is deliberately hand-kept: this strip is a nine-chip row on a phone, and the day
+// somebody adds a tenth rung the layout is a decision, not an automatic consequence. Their chips
+// read `locked` for the whole junior half of a career, which is the truth and is the point of a
+// ladder you can see the top of.
 const SEASON_STRIP_TIERS: { id: TierId; short: string }[] = (
-  ['local', 'regional', 'national', 'j30', 'j60', 'j300'] as const
+  ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w100'] as const
 ).map((id) => ({ id, short: TIER_SHORT[id] }))
 // finish index -> short label (reuses the finish-index convention: 0 = champion).
 function shortFinish(finish: number): string {

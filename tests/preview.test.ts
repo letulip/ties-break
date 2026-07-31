@@ -41,6 +41,16 @@ const EXPECTED_BANDS: Record<TierId, readonly [number, number]> = {
   j30: [30, 90],
   j60: [110, 320],
   j300: [900, 2600],
+  // ⚠ RE-AIMED, NOT WEAKENED (task #17): three rungs joined the catalogue and this restatement is
+  // exhaustive over `TierId` on purpose, so it grew by exactly three rows. Read them against j30's
+  // [30, 90] and regional's [45, 130] before assuming they are too low - the table's whole joke is
+  // that its order is PRODUCTION SCALE and not prestige, and W15 keeps it going one table up: the
+  // first rung of the women's professional tour is the emptiest room in the game, quieter than a
+  // Regional and quieter than a J30. Even W100's ceiling sits below J300's, which is also correct:
+  // a junior Slam feeder buses children in, a $100k adult event is a Tuesday in a mid-size town.
+  w15: [20, 70],
+  w35: [60, 200],
+  w100: [400, 1400],
 }
 
 /** The roster `computeRanking` wants: the whole cohort plus her. `cohortIds` is engine-internal, so

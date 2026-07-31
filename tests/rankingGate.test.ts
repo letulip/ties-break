@@ -235,6 +235,25 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
         // Derived, not a literal: the card must quote whatever list the tier actually keeps, so this
         // survives the next re-pick instead of pinning today's 80.
         expect(e.rankToEnter).toBe(acceptanceRank(world, 'j300'))
+      } else if (TIERS[e.tier].track === 'wta') {
+        // ⚠ THE THIRD TABLE JOINS THE CASE, AND IT IS A THIRD KIND OF NOT-YET (task #17). Neither of
+        // the two arms above fits it: she has not OUTGROWN a W15 (nobody outgrows the professional
+        // tour, its ceiling is the MAX sentinel), and it is not the acceptance-list lock J300 wears
+        // either - W15 is an ON-RAMP, so it reads her ITF JUNIOR total against a points threshold,
+        // exactly as J30 reads her domestic one. Her 78-point junior book is a long way short of the
+        // 120 it wants, so the verdict is 'locked' WITH a points number. W35/W100 above it are the
+        // acceptance-list kind, quoted in professional rank she does not have yet.
+        //
+        // This is the shape the whole case is about, one table further on: something outgrown below,
+        // something open in the middle, and something still to climb above - and the ladder now has
+        // enough above her that the third rung of the third table is barely visible from here.
+        expect(e.eligible).toBe(false)
+        expect(e.ineligibleReason).toBe('locked')
+        if (TIERS[e.tier].enterPct === undefined) {
+          expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0]) // W15: the ITF on-ramp
+        } else {
+          expect(e.rankToEnter).toBe(acceptanceRank(world, e.tier)) // W35 / W100: the list
+        }
       } else {
         expect(e.eligible).toBe(false)
         expect(e.ineligibleReason).toBe('outgrown') // 700 is past the ceiling – too good now

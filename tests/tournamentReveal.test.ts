@@ -19,7 +19,21 @@ import { TIERS } from '../src/engine/season/calendar'
 function buildToPending(seed: string): WorldState {
   const world = createWorld(seed)
   const rng = rngFromSeed(seed)
-  const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+  // ⚠ AND IT MUST BE A POINTS-BANDED DOMESTIC RUNG (task #17). The grant below is a one-marker
+  // trick that speaks only one of the three languages the entry gate now speaks: it opens a POINTS
+  // BAND. It says nothing to an acceptance list (J60/J300, W35/W100 read a RANK), nothing to an
+  // on-ramp reading the table beneath it (J30 reads domestic, W15 reads ITF junior), and nothing at
+  // all to an age gate - and she is fourteen here. That was always true; it survived on the calendar
+  // happening to put a domestic event first, and adding a third family moved which event that is.
+  // This case is about the reveal flow, so the fixture states the rung it can set up rather than
+  // relying on an ordering it does not control.
+  const event = world.season.find(
+    (e) =>
+      e.week >= 5 &&
+      e.deadlineWeek >= world.week &&
+      TIERS[e.tier].track === 'domestic' &&
+      TIERS[e.tier].enterPct === undefined,
+  )!
   // r-gate (season-life-01b): points-based eligibility. Grant the kid a throwaway result worth the
   // tier's minPoints ONLY for the enterEvent gate check, then drop it before any tick so nothing
   // downstream shifts (local's min is 0, needing no grant).

@@ -203,7 +203,24 @@ const REF = {
   // brackets, which changes which juniors end the season holding counting points, which moves the dense
   // rank the point-less kid shares by one place. One place, from a change that touches all 199 of them,
   // is the size of effect to expect from a ~1.1-point shift inside a 30-70 spread.
-  kidRank: 120,
+  //
+  // ⚠⚠⚠ RE-PINNED 120 -> 164 (31.07, task #17, THE ADULT RUNGS), and this is the one number in this
+  // object that moved. Read the four above it first, because they are the whole argument: `count`
+  // 41550, `hash` e6b0c709, `head` and `tail` are asserted BEFORE this line and every one of them
+  // still passes byte-for-byte, re-derived on this branch. THE FROZEN CAPTURE DID NOT MOVE. It could
+  // not have, and the reason is written down in tests/round9.test.ts: the AI sub-stream refactor took
+  // the calendar's SIZE out of the weekly draw count ("re-pinned, for the last time a calendar change
+  // can do it"), so adding forty-seven events a season to the calendar costs the main stream exactly
+  // nothing. This branch is the first change to test that claim in anger, and it holds.
+  //
+  // WHAT MOVED IS HOW MANY JUNIORS OWN A COUNTING RESULT. The calendar went from 92 events a season
+  // to 139, so far more of the cohort ends the year holding points - and the kid, who holds none,
+  // shares the tie at the FLOOR of the table with correspondingly fewer people, which pushes the
+  // dense rank they all share downward. It is the same mechanism as the 121 -> 120 note above, at
+  // forty times the scale: she did not get worse, the table got fuller underneath her. The number is
+  // deliberately kept in this object and asserted right after the four capture values, so the next
+  // person to see it move has the disproof of "the capture moved" on the four lines above it.
+  kidRank: 164,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

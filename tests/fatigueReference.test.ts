@@ -21,6 +21,13 @@ import type { TierId } from '../src/engine/season/types'
 // ("+1 for a tiebreak or a third set", "+1 more for a three-TB epic") is unchanged — only the base
 // moved, and hardMatch stays exactly one step above it. extraTiebreaks and tierMatchFatigue are
 // untouched. Every table below is the same arithmetic one rung higher.
+//
+// ⚠ RE-AIMED 31.07 by the ADULT RUNGS (task #17), and this one is a LONGER LADDER rather than a
+// different rule. W15/W35/W100 joined the catalogue with surcharges 6/7/8, continuing the same
+// +1-per-rung extrapolation the J family already used, so a SIMPLE match now costs 2 (Local) … 10
+// (W100) and the ceiling is 12. Not one existing number in this file moved; every table simply grew
+// three rows, because every table here is exhaustive over `TierId` on purpose - a new rung must not
+// be able to reach the engine without somebody writing down what it costs.
 // ---------------------------------------------------------------------------
 
 const SIMPLE = '6-3 6-4' // two sets, no tiebreak
@@ -36,6 +43,15 @@ describe('per-match cost = scoreline + tier surcharge', () => {
     j30: [5, 6, 7],
     j60: [6, 7, 8],
     j300: [7, 8, 9],
+    // ⚠ RE-AIMED, NOT WEAKENED (task #17, the adult rungs). Three tiers joined the ladder and this
+    // table is exhaustive over `TierId` on purpose, so it had to grow - and it grew by the SAME
+    // arithmetic every other row is: `matchDrain = scoreline + tierMatchFatigue[tier]`, with the W
+    // family's surcharges 6/7/8 continuing the J family's +1-per-rung extrapolation. Nothing about
+    // the composition changed, no existing row moved, and the ceiling the file's header quotes moved
+    // 9 -> 12 with it (a three-tiebreak W100 epic is now the most expensive match in the game).
+    w15: [8, 9, 10],
+    w35: [9, 10, 11],
+    w100: [10, 11, 12],
   }
 
   it('the base is the owner-set 2 for a simple match, 3 for a hard one (one step above it)', () => {
@@ -56,10 +72,17 @@ describe('per-match cost = scoreline + tier surcharge', () => {
     }
   })
 
-  it('a match costs 2 to 9 across the whole ladder – 2 at Local, 9 for a J300 epic', () => {
+  // ⚠ RE-AIMED 31.07, NOT WEAKENED (task #17): the ceiling moved 9 -> 12 because three rungs joined
+  // the top of the ladder, so the most expensive match in the game is now a three-tiebreak W100 epic
+  // rather than a J300 one. The assertion still pins BOTH ends of the range against the live engine
+  // and still names which rung holds each end - it is the same test about a longer ladder. The floor
+  // is untouched at 2: a straight-sets Local match costs what it always did.
+  it('a match costs 2 to 12 across the whole ladder – 2 at Local, 12 for a W100 epic', () => {
     const all = TIER_LADDER.flatMap((t) => [matchDrain(t, SIMPLE), matchDrain(t, HARD), matchDrain(t, EPIC)])
     expect(Math.min(...all)).toBe(2)
-    expect(Math.max(...all)).toBe(9)
+    expect(Math.max(...all)).toBe(12)
+    expect(matchDrain('local', SIMPLE)).toBe(2)
+    expect(matchDrain('w100', EPIC)).toBe(12)
   })
 
   it('the tier surcharge is one step per rung, so a tier costs exactly +1 over the tier below', () => {
@@ -111,6 +134,13 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     j30: [5, 11, 17, 24, 31],
     j60: [6, 13, 20, 28, 36],
     j300: [7, 15, 23, 32, 41],
+    // ⚠ RE-AIMED, NOT WEAKENED – same three new rungs, same untouched composition (depth x per-match
+    // + the running sum of ladder C). The line worth reading is the last one: a straight-sets W100
+    // TITLE costs 56 condition, against J300's 41 and the pre-round-9 flat National charge of 26. The
+    // top of the professional ladder is a fortnight of a career, by design and by arithmetic.
+    w15: [8, 17, 26, 36, 46],
+    w35: [9, 19, 29, 40, 51],
+    w100: [10, 21, 32, 44, 56],
   }
 
   it('the shipped ladder is C = [0,1,1,2,2] (change this pin deliberately, never to make a test pass)', () => {
@@ -171,6 +201,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 10, 15, 20, 25],
       j60: [6, 12, 18, 24, 30],
       j300: [7, 14, 21, 28, 35],
+      w15: [8, 16, 24, 32, 40],
+      w35: [9, 18, 27, 36, 45],
+      w100: [10, 20, 30, 40, 50],
     },
     D: {
       local: [2, 5, 8, 11, 14],
@@ -179,6 +212,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 11, 17, 23, 29],
       j60: [6, 13, 20, 27, 34],
       j300: [7, 15, 23, 31, 39],
+      w15: [8, 17, 26, 35, 44],
+      w35: [9, 19, 29, 39, 49],
+      w100: [10, 21, 32, 43, 54],
     },
     C: {
       local: [2, 5, 8, 12, 16],
@@ -187,6 +223,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 11, 17, 24, 31],
       j60: [6, 13, 20, 28, 36],
       j300: [7, 15, 23, 32, 41],
+      w15: [8, 17, 26, 36, 46],
+      w35: [9, 19, 29, 40, 51],
+      w100: [10, 21, 32, 44, 56],
     },
     B: {
       local: [2, 5, 8, 12, 18],
@@ -195,6 +234,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 11, 17, 24, 33],
       j60: [6, 13, 20, 28, 38],
       j300: [7, 15, 23, 32, 43],
+      w15: [8, 17, 26, 36, 48],
+      w35: [9, 19, 29, 40, 53],
+      w100: [10, 21, 32, 44, 58],
     },
     A: {
       local: [2, 5, 9, 14, 20],
@@ -203,6 +245,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 11, 18, 26, 35],
       j60: [6, 13, 21, 30, 40],
       j300: [7, 15, 24, 34, 45],
+      w15: [8, 17, 27, 38, 50],
+      w35: [9, 19, 30, 42, 55],
+      w100: [10, 21, 33, 46, 60],
     },
   }
 

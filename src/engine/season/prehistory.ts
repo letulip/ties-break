@@ -78,6 +78,10 @@ export function generatePreHistory(seedStr: string, cohort: AiPlayer[]): SeasonR
     // matters once the J family is live: if the elite's history were domestic-only, the first
     // week of real J300 results (1000 for a title) would blow the table away instantly.
     const q = (pos + 1) / size
+    // ...at the highest JUNIOR rung, which since task #17 is a narrower statement than it used to be:
+    // the adult rungs are deliberately outside this fabrication, so the professional table opens
+    // empty for the whole world and fills only with results the engine really ran. See
+    // topBandForPercentile for the whole argument and for what it cost when it did not hold.
     const tier = topBandForPercentile(q)
     const points = TIERS[tier].points
 

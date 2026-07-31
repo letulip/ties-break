@@ -100,7 +100,16 @@ export function rungsFor(tier: TierId): GoalRung[] {
 export function ladderStandingFor(
   facts: Pick<GoalFacts, 'ladders'>,
 ): { tier: TierId; finish: number; sinceWeek: number } | null {
-  const read = [...facts.ladders.domestic.countingResults, ...facts.ladders.itf.countingResults]
+  // ⚠ ALL THREE TABLES (task #17). This read the two it knew about, and the day the professional
+  // rungs existed a W15 title would have been invisible to the one surface whose whole job is to say
+  // what she is climbing towards - she would have won her first professional tournament and the goal
+  // card would still have been asking her to reach a J300 semi-final. The fold below is already
+  // per-tier and orders by TIER_LADDER, so the third table needs no special case, only inclusion.
+  const read = [
+    ...facts.ladders.domestic.countingResults,
+    ...facts.ladders.itf.countingResults,
+    ...facts.ladders.wta.countingResults,
+  ]
     .map((r) => ({ ...finishOf(r), week: r.week }))
     .filter((r): r is { tier: TierId; finish: number; week: number } => r.tier !== undefined)
   if (!read.length) return null
@@ -132,7 +141,10 @@ function tierAbove(tier: TierId): TierId | null {
  *  Winning a tier moves her up and starts again at "win one match", which is the owner's own
  *  sentence («потом на победу... т.е. на шаги ее путь разложить») and also what actually happens -
  *  a title at a rung is what opens the next one. At the top of the ladder there is nothing above, so
- *  the goal stays "win it": a J300 title is not a rung anybody climbs past. */
+ *  the goal stays "win it": a W100 title is not a rung anybody climbs past. (It was J300's line until
+ *  the adult rungs landed - and the rung a J300 title now hands her is W15, which is the whole point
+ *  of the fork at 19: the biggest thing she has ever won opens the smallest thing she will ever be
+ *  paid for.) */
 export function nextRungFor(facts: Pick<GoalFacts, 'ladders'>): GoalRung {
   const standing = ladderStandingFor(facts)
   if (!standing) return rungsFor(TIER_LADDER[0])[0]
