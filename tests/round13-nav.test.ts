@@ -8,8 +8,10 @@
 // templates, and those are exactly the facts that silently rot. The dot rule is pinned as REAL
 // unit tests on the pure pair in src/composables/weekRecap.ts.
 import { describe, it, expect } from 'vitest'
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { recapExists, thisWeekDotShows } from '../src/composables/weekRecap'
+import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
@@ -37,17 +39,95 @@ const tour = read('../src/components/OnboardingTour.vue')
 // – Home in the CENTRE, which is the point, and which is why the bar keeps five slots although only
 // four are live. What R13-12 actually pinned – five entries, a fixed order, no Kid – survives
 // verbatim; only the contents of the list moved.
+//
+// ⚠ RE-AIMED AGAIN BY THE TROPHY SLICE (31.07), IN THE FIFTH SEAT ONLY:
+//   Season · Calendar · Home · Stats · Trophies
+//
+// WHY IT IS A RE-CUT AND NOT A SIXTH TAB, which is the fact this test protects and the reason the
+// change lands here rather than in a new assertion: Home's centring is EMERGENT. Nothing centres it
+// – it is the third of five – so the `ids[floor(len / 2)] === 'home'` line below is not a bonus
+// check, it is the mechanism, and a sixth entry would move Home to seat three of six and quietly
+// break the owner's own order. The bar therefore stays at exactly five and something had to leave.
+//
+// WHY IT WAS MORE, AND WHY THAT IS THE OWNER'S CALL RATHER THAN THIS BRANCH'S. He wrote it down on
+// 29.07, in docs/specs/ui-inventory.md §4 Q1, as a thing to do LATER:
+//
+//     "More is becoming redundant — the gear on Home already reaches it — so the bar gets re-cut in
+//      that pass rather than now."
+//
+// This is that pass. Asked again on 31.07 whether More's contents needed rehoming first, he was
+// explicit that they did not: «она уже живет в шестеренке настроек на домашнем экране».
+//
+// ⚠ AND `MoreScreen` IS NOT DELETED, NOT EMPTIED AND NOT MOVED. It keeps every row it has and joins
+// 'money' / 'kid' / 'week' as a tabless CONTENT state, reached by the gear on Home and the gear on
+// the Kid screen – both of which predate this change. The test below pins exactly that, so "More
+// left the bar" can never quietly become "More left the app".
 // ===========================================================================
-describe('the bottom nav is Season · Calendar · Home · Stats · More, Home in the centre', () => {
+describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Home in the centre', () => {
   it('TABS carries exactly the five entries, in order, and no Kid entry', () => {
     const tabs = app.slice(app.indexOf('const TABS'), app.indexOf('/** The one writer'))
     const labels = [...tabs.matchAll(/label: '([^']+)'/g)].map((m) => m[1])
-    expect(labels).toEqual(['Season', 'Calendar', 'Home', 'Stats', 'More'])
+    expect(labels).toEqual(['Season', 'Calendar', 'Home', 'Stats', 'Trophies'])
     const ids = [...tabs.matchAll(/id: '([^']+)'/g)].map((m) => m[1])
-    expect(ids).toEqual(['play', 'calendar', 'home', 'stats', 'more'])
+    expect(ids).toEqual(['play', 'calendar', 'home', 'stats', 'trophies'])
     expect(tabs).not.toContain("'kid'")
-    // Home is the MIDDLE slot – the one fact the new order exists for.
+    // Home is the MIDDLE slot – the one fact the new order exists for, and the reason the bar may
+    // never grow a sixth entry. FIVE, checked explicitly, because "Home is the middle" is silently
+    // satisfiable by an odd-length bar of any size and the owner's design is five.
+    expect(ids).toHaveLength(5)
     expect(ids[Math.floor(ids.length / 2)]).toBe('home')
+  })
+
+  // ⚠ ADDED BY THE TROPHY SLICE, and it guards the half of that change that is easy to lose: More
+  // lost its BUTTON, not its screen. Every row in it (careers, saves, sound, haptics, the danger
+  // zone, About) is still reachable, through doors that already existed.
+  it('More keeps its screen and both its gears – it is a tabless content state now, like Money', () => {
+    // Still mounted, still on the same id.
+    expect(app).toContain(`<MoreScreen v-else-if="tab === 'more'" />`)
+    expect(app).toContain("import MoreScreen from './components/screens/MoreScreen.vue'")
+    expect(app).toContain("'more'") // still in the TabId union
+    // ...and its two doors are the gears that always reached it, on Home and on the Kid screen.
+    expect(codeOf(home)).toContain(`emit('navigate', 'more')`)
+    expect(codeOf(read('../src/components/screens/KidScreen.vue'))).toContain(`emit('navigate', 'more')`)
+  })
+
+  it('the Trophies tab is LIVE: a real screen, a real glyph, and the cabinet art it draws', () => {
+    expect(app).toContain(`{ id: 'trophies', icon: 'trophy', label: 'Trophies' }`)
+    expect(app).toContain(`<TrophiesScreen v-else-if="tab === 'trophies'" />`)
+    expect(app).toContain("import TrophiesScreen from './components/screens/TrophiesScreen.vue'")
+    expect(existsSync(new URL('../public/icons/trophy.svg', import.meta.url))).toBe(true)
+    // ⚠ ALL EIGHTEEN SHIP, AND THEY SHIP AS WEBP UNDER `images/` – the two halves of the art
+    // decision, both of which are silently losable. `-fs8` masters are evacuated and never encoded
+    // (scripts/optimize-art.mjs), so a set routed through under that name would vanish with a log
+    // line that says "moved"; and `images/` is what workbox's `globIgnores` keys on, so a set that
+    // shipped from anywhere else would land 1.6 MB in every install's precache.
+    const trophies = fileURLToPath(new URL('../public/images/trophies', import.meta.url))
+    const files = readdirSync(trophies).filter((f) => f.endsWith('.webp'))
+    expect(files).toHaveLength(18)
+    expect(files.some((f) => f.includes('-fs8'))).toBe(false)
+    for (const tier of TIER_LADDER) {
+      for (const metal of ['gold', 'silver']) {
+        expect(files, `${tier}-${metal}.webp`).toContain(`${tier}-${metal}.webp`)
+      }
+    }
+    expect(read('../vite.config.ts')).toContain("globIgnores: ['**/images/**']")
+  })
+
+  it('the cabinet screen obeys the copy rules and dates by SEASON, never by calendar year', () => {
+    const screen = read('../src/components/screens/TrophiesScreen.vue')
+    // ⚠ THE ROOT `<template>` ELEMENT ONLY, not "everything after it". The idiom elsewhere in this
+    // suite slices to the end of the file, which happens to work only because those components have
+    // no Cyrillic in their `<style>` – and the rule is specifically about the TEMPLATE: script and
+    // style comments may quote the owner in Russian, and this screen's do, at length.
+    const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
+    expect(template).not.toContain('—') // short dash only, in player copy
+    expect(template).not.toMatch(/[Ѐ-ӿ]/) // no Cyrillic inside a template, comments included
+    // ⚠ THE COLLISION PIN. `weekYear(208) === weekYear(260) === 2035`, so a cabinet built on the
+    // calendar year of a week's Monday would merge two consecutive seasons into one group and print
+    // a count under a year that never held it. `seasonYear(floor(week / 52))` is the only correct
+    // derivation and this is the guard that keeps it.
+    expect(codeOf(screen)).toContain('seasonYear(')
+    expect(codeOf(screen)).not.toContain('weekYear(')
   })
 
   // ⚠ RE-AIMED BY THE CALENDAR SLICE, AND THE FACT IT GUARDED IS THE ONE THING THAT LEGITIMATELY

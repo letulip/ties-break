@@ -47,6 +47,7 @@ import CoachMarketScreen from './components/screens/CoachMarketScreen.vue'
 import StatsScreen from './components/screens/StatsScreen.vue'
 import MoneyScreen from './components/screens/MoneyScreen.vue'
 import MoreScreen from './components/screens/MoreScreen.vue'
+import TrophiesScreen from './components/screens/TrophiesScreen.vue'
 
 // Round 5 item 23: a small accent dot on the Season tab until the player has visited it
 // since the last "New events on the calendar" marker. UI-only state (localStorage), no
@@ -76,7 +77,11 @@ const splashDone = ref(false)
 // ⚠ 'calendar' JOINED THE UNION IN THE CALENDAR SLICE, and it is the one entry here that arrived by
 // being BUILT rather than by moving: the bar has carried a dimmed Calendar placeholder since the
 // redesign wave, reserving the centre seat for Home, and screen H now fills it.
-type TabId = 'home' | 'play' | 'calendar' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'
+// ⚠ 'more' JOINED THE TABLESS LIST IN THE TROPHY SLICE – it kept its screen and lost its button. It
+// is the FOURTH member of this group and the only one to arrive by being replaced rather than by
+// being reached from somewhere better; the gear that already reached it is now its only door. See
+// the TABS note below for the owner's ruling. 'trophies' is the button that took the seat.
+type TabId = 'home' | 'play' | 'calendar' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market' | 'trophies'
 const tab = ref<TabId>('home')
 
 // A SCREEN OPENS AT ITS TOP (owner, 31.07: «after a transition between screens, always land at the
@@ -148,12 +153,29 @@ function openMarket(from: TabId): void {
 //     what that screen is about (what she is entered for, what we plan for it, how the last one
 //     went). The fresh-recap dot moved onto that card with it, so nothing that used to be reachable
 //     or noticeable stopped being either.
+//
+// ⚠ THE TROPHY SLICE (31.07): "MORE" LEFT THE BAR AND TROPHIES TOOK ITS SEAT. Fifth of five, not
+// sixth of six, and the count is the load-bearing part: Home's centring is EMERGENT from "five
+// slots, Home third" – there is no rule that centres it – so a sixth entry moves Home off the middle
+// and breaks the owner's own order. tests/round13-nav.test.ts pins exactly that with
+// `ids[floor(len / 2)] === 'home'`.
+//
+// SO SOMETHING HAD TO GO, AND MORE IS THE ONE THE OWNER ALREADY NAMED. docs/specs/ui-inventory.md
+// §4 Q1, written 29.07 and his: «More is becoming redundant — the gear on Home already reaches it —
+// so the bar gets re-cut in that pass rather than now.» This is that pass.
+//
+// ⚠ AND NOTHING INSIDE MORE MOVES OR NEEDS REHOMING. Asked directly on 31.07 he was explicit: «она
+// уже живет в шестеренке настроек на домашнем экране». `MoreScreen` keeps every row it has –
+// careers, saves, sound, haptics, the danger zone, About – and becomes the FOURTH tabless content
+// state ('money', 'kid', 'week', 'more'), reached by the gear on Home (HomeScreen's `.diary-tool`)
+// and by the gear on the Kid screen. Both of those doors predate this change and neither moved; the
+// screen simply stopped having two ways in, one of which cost a fifth of the bottom bar.
 const TABS: { id: TabId; icon: string; label: string }[] = [
   { id: 'play', icon: 'season', label: 'Season' },
   { id: 'calendar', icon: 'week', label: 'Calendar' },
   { id: 'home', icon: 'home', label: 'Home' },
   { id: 'stats', icon: 'stats', label: 'Stats' },
-  { id: 'more', icon: 'more', label: 'More' },
+  { id: 'trophies', icon: 'trophy', label: 'Trophies' },
 ]
 /** The one writer of `tab` from the bar. Every entry now routes to a screen that exists, which is
  *  what the deleted `soon` guard was standing in for. */
@@ -694,6 +716,7 @@ function dismissSeasonSummary(): void {
            content state - so it asks the shell to move exactly the way Home and Kid already do. -->
       <MoneyScreen v-else-if="tab === 'money'" @navigate="tab = $event" />
       <MoreScreen v-else-if="tab === 'more'" />
+      <TrophiesScreen v-else-if="tab === 'trophies'" />
     </main>
 
     <!-- Package N: the sticky week button, floating above the tab bar. R13-12: GLOBAL – it renders
