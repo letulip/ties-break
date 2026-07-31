@@ -372,8 +372,35 @@ export interface PendingView {
   temperatureC: number
   /** stage of the round currently being presented, e.g. "Round of 16", "Final" */
   roundLabel: string
-  /** the kid's opponent this round: short name, ISO-2 nation, current standings rank */
-  opponent: { name: string; nation: string; rank: number }
+  /** WHICH TABLE THIS TOURNAMENT IS PLAYED ON – `TIERS[tier].track`, carried rather than re-derived.
+   *
+   *  ⚠ THE BUG THIS CLOSES (31.07, fix/ladder-separation). The owner, after a National: «по итогам
+   *  матча national в таблице пишут # из international». Every rank on this overlay – the splash's
+   *  VS panel, the pre-match scene, the post-match box score, and the two the live MatchViewer
+   *  prints over the players' heads – came from ONE table: the kid's off `Snapshot.kidRank` (the
+   *  ITF alias) and the opponent's off `fullRanking`, which is `rankingFor(world, 'itf')` with its
+   *  name filed off. So a National quarter-final between two girls with no international result
+   *  showed two numbers from a table neither of them was playing in, next to a trophy worth 70
+   *  NATIONAL points. Two currencies with no exchange rate (docs/specs/two-ladders.md) and the one
+   *  screen where both players are on the court at once was quoting the wrong one.
+   *
+   *  It rides on the pending view rather than being re-derived in the component for the same reason
+   *  `temperatureC` does: the event has already dropped out of `upcoming` by the time it is played,
+   *  and a second derivation of "which ladder is this" is a second thing to get wrong. */
+  ladder: LadderTrack
+  /** HER rank in `ladder`, or null when she holds no counting result in it.
+   *
+   *  ⚠ NULL IS NOT #1 and it is not the tie floor either – the same distinction `LadderView.rank`
+   *  carries, for the same reason. This used to be read off `Snapshot.kidRank`, which is a NUMBER at
+   *  all times: with nobody holding a point the whole field ties at zero, competition ranking hands
+   *  every member of that tie the same place, and `recomputeKidRank` falls back to `cohort.length + 1`
+   *  on top of that. So a fourteen-year-old walking into her first Local Open was introduced on the
+   *  splash as "Rank #119". */
+  kidRank: number | null
+  /** the kid's opponent this round: short name, ISO-2 nation, and her rank IN THE SAME TABLE –
+   *  null when she holds no counting result in it, by the identical rule. A rank printed beside
+   *  another rank has to be measured in the same units or the comparison the card invites is a lie. */
+  opponent: { name: string; nation: string; rank: number | null }
   /** the current round's record – MatchReplay source + post-match stats */
   kidMatch?: WorldMatch
   /** revealed rounds so far, the kid's path (oldest first) */
@@ -713,6 +740,26 @@ export type LadderViews = Record<LadderTrack, LadderView>
 export const LADDER_LABEL: Record<LadderTrack, string> = {
   domestic: 'National',
   itf: 'International',
+}
+
+/** HER LADDER AND HER PLACE ON IT, resolved once for the surfaces that want "her rank" and have no
+ *  table of their own to be about.
+ *
+ *  ⚠ IT EXISTS BECAUSE `snapshot.kidRank` IS THE WRONG ANSWER TO AN OBVIOUS QUESTION, and it is the
+ *  answer three surfaces reached for (31.07, fix/ladder-separation): the week recap's rank-move line
+ *  and both friendly-match cards. `kidRank` is the ITF alias and it is always a NUMBER, so an
+ *  unranked girl came out as the tie floor she shares with half the field, in a table the Stats
+ *  screen was calling "Unranked" on the next tab. Home, Stats and the Kid screen already ask
+ *  `ladders[activeLadder]`; this is the same question with one implementation, so the answer cannot
+ *  drift for the fourth surface that needs it.
+ *
+ *  `rank` is null when she holds no counting result in that table – see `LadderView.rank`. */
+export function activeLadderOfSnapshot(
+  snap: Pick<Snapshot, 'ladders' | 'activeLadder'> | null | undefined,
+): { track: LadderTrack; label: string; rank: number | null; points: number } {
+  const track = snap?.activeLadder ?? 'domestic'
+  const view = snap?.ladders[track]
+  return { track, label: LADDER_LABEL[track], rank: view?.rank ?? null, points: view?.points ?? 0 }
 }
 
 /** The unit each table's points are counted in, for a label that has to name the currency (the Home
@@ -1126,6 +1173,17 @@ export interface Snapshot {
   entryCap: EntryCapUsage
   /** the engine's own per-tier entry verdict - see TierOpenMap */
   tierOpen: TierOpenMap
+  /** THE ACCEPTANCE LIST, AS A POSITION, per rung that has one – `acceptanceRank(world, tier)`, absent
+   *  for every rung that gates on points instead.
+   *
+   *  ⚠ IT IS HERE SO THE LOCKED PLAQUE CAN SAY WHEN THE RUNG OPENS (31.07, the owner: «когда
+   *  открываются турниры разных типов? Что-то раньше было в интерфейсе видно и понятно, а теперь не
+   *  очень»). J60 and J300 gate on her ITF rank position, so their `enterPointBand` is `[0, MAX]` and
+   *  every surface that read a band to explain them said either nothing or "0+". The number cannot be
+   *  written down in the UI either: it is `enterPct × (cohort + 1)`, so it moves with a re-picked
+   *  acceptance list AND with the population – the illustrative "top 50" that used to sit in a comment
+   *  was stale by two re-pins when it was found. Derived at snapshot time, persists nothing. */
+  tierAcceptance: Partial<Record<TierId, number>>
   /** WHO SHE TRAINS WITH (v23): the roster coach's id, or null for the parent on the court. */
   coachId: string | null
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
@@ -1174,10 +1232,29 @@ export interface Snapshot {
    *  Home season strip's real tier progress. Untouched tiers are absent. */
   bestFinishByTier: Partial<Record<TierId, number>>
   /** the CURRENT season's kid W-L (round-8, the R6 debt): mirrors the v10 world counters that
-   *  accumulate at finalizeTournament and reset at each season wrap-up. The Snapshot is derived,
-   *  so surfacing them bumps no schema. Drives the Stats header's W–L figure. */
+   *  accumulate at finalizeTournament and reset at each season wrap-up.
+   *
+   *  ⚠ THE TOTAL, BOTH LADDERS TOGETHER, and it stays that on purpose. `matchesEverPlayed` folds it
+   *  with `seasonHistory` into the radar's confidence, which is documented as a count that may only
+   *  ever go UP; `SeasonSummary` and `seasonHistory` bank it per season. Splitting it per ladder is
+   *  `seasonRecord` below, which is ADDED beside it rather than replacing it. */
   seasonWins: number
   seasonLosses: number
+  /** THE SAME W-L, TOLD APART BY LADDER (31.07, the owner: «national/international разделить победы и
+   *  поражения, мне кажется они не должны быть общими»).
+   *
+   *  Every match the counters see is a tournament match, so every one of them is attributable without
+   *  inventing anything: `finalizeTournament` knows the event, the event knows its tier, and the tier
+   *  knows its track. Nothing lands in neither bucket and nothing lands in both – a practice friendly
+   *  never reaches finalize (R11-2: nothing was on the line), and a walkover or a medical withdrawal
+   *  never reaches it either, because she never took the court.
+   *
+   *  ⚠ WHY A SPLIT W-L IS NOT MERELY COSMETIC. The Stats screen switches every other figure it shows
+   *  – rank, points, the standings table, the counting results – with the ladder picker at the top of
+   *  it, and left this one figure standing still underneath. A 24–9 that does not move when the
+   *  National/International switch does reads as a claim that those 24 wins are in the table currently
+   *  on screen, which for a domestic career is false about all of them. */
+  seasonRecord: Record<LadderTrack, { wins: number; losses: number }>
   /** her current run of consecutive competitive losses + the threshold that turns it angry, or
    *  null when her last competitive match was a win (or she has never played one). Derived at
    *  snapshot time from the event log – persists nothing, bumps no schema. */

@@ -8,7 +8,7 @@ import { generateCohort } from '../../src/engine/season/cohort'
 import { computeRanking, windowedBestSum } from '../../src/engine/season/ranking'
 import { createWorld, tickWeek, kidPoints, isTierEligible, enterEvent, KID_ID } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
-import { DEFAULT_PROFILE } from '../../src/shared/protocol'
+import { DEFAULT_PROFILE, LADDER_POINTS_LABEL } from '../../src/shared/protocol'
 import type { AiPlayer } from '../../src/engine/season/types'
 
 // ---------------------------------------------------------------------------
@@ -228,7 +228,12 @@ describe('tier access is UNAFFECTED (entry gating is points-based, not rank-base
 
     const regional = world.season.find((e) => e.tier === 'regional' && e.deadlineWeek >= world.week)
     expect(regional).toBeTruthy()
-    expect(() => enterEvent(world, regional!.id)).toThrow(/Not enough ranking points/)
+    // ⚠ RE-AIMED 31.07 (fix/ladder-separation): the refusal now names the table its threshold is
+    // counted in ("national pts"), because the game has two and "ranking points" belonged to neither.
+    // The regex still checks the same thing this test is about - that the gate refuses and says why.
+    expect(() => enterEvent(world, regional!.id)).toThrow(
+      new RegExp(`Not enough ${LADDER_POINTS_LABEL.domestic}`),
+    )
 
     const local = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)
     expect(local).toBeTruthy()

@@ -3,6 +3,7 @@
 // onboarding wizard when there is no active career. No router – a plain ref
 // switch, per spec.
 import { computed, onMounted, ref, watch } from 'vue'
+import { activeLadderOfSnapshot } from './shared/protocol'
 import type { StopReason, WorldMatch } from './shared/protocol'
 import { useGameStore } from './stores/game'
 import { needRefresh, applyUpdate } from './pwa'
@@ -450,6 +451,10 @@ watch(
 // so "which of the three things does a press do" has to be ONE answer that both buttons can also
 // LABEL themselves from. `weekAction.mode` is that answer.
 const practiceLive = ref<WorldMatch | null>(null)
+// HER rank, on the ladder the engine says she is competing in – a friendly is on neither table, so
+// "her rank" is the only question the card can be asking. This used to pass `snapshot.kidRank`, the
+// ITF alias, which is a number even when she is unranked internationally. See `activeLadderOfSnapshot`.
+const activeRank = computed(() => activeLadderOfSnapshot(game.snapshot).rank)
 async function playWeek(weeks: 1 | 4): Promise<void> {
   if (game.snapshot?.pending) {
     tournamentHidden.value = false
@@ -710,7 +715,7 @@ function dismissSeasonSummary(): void {
       v-if="practiceLive"
       :match="practiceLive"
       :week="week"
-      :kid-rank="game.snapshot?.kidRank ?? null"
+      :kid-rank="activeRank"
       @close="practiceLive = null"
     />
 

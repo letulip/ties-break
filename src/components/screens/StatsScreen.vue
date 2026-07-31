@@ -77,9 +77,22 @@ const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ranked.value)
 const points = computed(() => ladder.value?.points ?? 0)
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
 // This season's W-L, straight off the Snapshot (accumulated at finalizeTournament, reset each
-// season wrap-up). One figure for both ladders – a win is a win.
-const seasonWins = computed(() => game.snapshot?.seasonWins ?? 0)
-const seasonLosses = computed(() => game.snapshot?.seasonLosses ?? 0)
+// season wrap-up).
+//
+// ⚠ IT FOLLOWS THE SWITCH NOW (31.07, the owner: «national/international разделить победы и
+// поражения, мне кажется они не должны быть общими»). It used to be the TOTAL, with a comment
+// arguing "one figure for both ladders – a win is a win" – and the argument is true about a win and
+// false about this screen. Every other figure here changes when the picker at the top does: the
+// rank, the points, the standings table, the counting results. One tile that did not move read as a
+// claim that those 24 wins were earned in the table currently on screen, which for a domestic career
+// is false about all of them.
+//
+// Every match behind the number is a tournament match, so the split needs no new fact and no guess:
+// see `Snapshot.seasonRecord`. Practice friendlies and walkovers are not in either bucket because
+// they were never counted at all.
+const seasonRecord = computed(() => game.snapshot?.seasonRecord[shown.value] ?? { wins: 0, losses: 0 })
+const seasonWins = computed(() => seasonRecord.value.wins)
+const seasonLosses = computed(() => seasonRecord.value.losses)
 
 // The one sentence no arithmetic on this screen can imply, so it has to be said.
 const noExchange = computed(() =>
@@ -112,8 +125,11 @@ const emptyNote = computed(() =>
           <span class="stats-tile-label">Points</span>
           <span class="stats-tile-value num">{{ points }}</span>
         </div>
+        <!-- The label carries the ladder for the same reason the rank tile's does: three tiles that
+             all change together must all say what they changed to. "W-L" alone, in a row where the
+             two figures beside it are named, reads as the one figure that is about everything. -->
         <div class="stats-tile">
-          <span class="stats-tile-label">W–L</span>
+          <span class="stats-tile-label">{{ LADDER_LABEL[shown] }} W–L</span>
           <span class="stats-tile-value num">{{ seasonWins }}–{{ seasonLosses }}</span>
         </div>
       </div>

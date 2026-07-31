@@ -32,7 +32,15 @@ const props = withDefaults(
     /** the week it was played – the card names it, so an advance-and-watch is never confusing */
     week: number
     /** her standings rank, shown under her name in the box score (the sparring partner has none
-     *  that matters here – a friendly is outside the ranking) */
+     *  that matters here – a friendly is outside the ranking).
+     *
+     *  ⚠ A FRIENDLY BELONGS TO NEITHER TABLE, so this is not "the rank this match is played in" -
+     *  there is no such thing, which is what the "No ranking points" pill on this card already says.
+     *  It is HER rank, and the app has exactly one answer to that: `Snapshot.activeLadder`, the
+     *  ladder she is competing in. The callers hand it in already resolved (see App.vue and
+     *  WeekRecapCard.vue); they used to hand in `snapshot.kidRank`, the ITF alias, which printed an
+     *  international number under a girl who had never left the country. NULL means unranked in that
+     *  table and the row is simply not drawn. */
     kidRank?: number | null
   }>(),
   { kidRank: null },

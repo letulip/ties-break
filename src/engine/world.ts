@@ -6,6 +6,7 @@ import {
   type ArrivalPreview,
   type CountingResult,
   LADDER_LABEL,
+  LADDER_POINTS_LABEL,
   type LadderView,
   type EntryCapUsage,
   type TierOpenMap,
@@ -143,7 +144,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 27
+export const SAVE_SCHEMA_VERSION = 28
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -258,6 +259,13 @@ export interface WorldState {
   walkoverWeek?: number
   seasonWins: number
   seasonLosses: number
+  /** THE SAME SEASON W-L, PER LADDER (v28). Written beside the two counters above, never instead of
+   *  them – see `Snapshot.seasonRecord` for the owner's ask and `matchesEverPlayed` for why the
+   *  totals had to keep their own home.
+   *
+   *  Optional so a pre-v28 save's `undefined` is a shape the readers already handle; the migration
+   *  fills it in (see migrations.ts v28) and `finalizeTournament` maintains it from there. */
+  seasonRecord?: Record<LadderTrack, { wins: number; losses: number }>
   /** per-week/per-category signed-cents finance ledger (v11), accrued at the `addEvent` choke
    *  point and pruned to a 60-week trailing window. Feeds the Money breakdown/ledger so they
    *  survive the 60-event snapshot cap; see FinanceWeek in protocol.ts. */
@@ -862,9 +870,19 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
   // D10: the season's closing rank joins the durable ledger – one row per season, keyed on the
   // same index as the wrap-up milestone and the history row, so all three name the same season.
   captureMilestone(world, { type: 'season-rank', week: wrapWeek, seasonIndex, rank: world.kidRank })
-  // The season that just wrapped is banked in the summary – start the next one clean.
+  // The season that just wrapped is banked in the summary – start the next one clean. The per-ladder
+  // pair resets WITH the totals it decomposes: they are the same season's matches counted twice, so a
+  // reset that moved only one of them would make the invariant (`seasonRecord` sums to the totals)
+  // false for a whole year, and that invariant is what the Stats screen's two figures rest on.
   world.seasonWins = 0
   world.seasonLosses = 0
+  world.seasonRecord = emptySeasonRecord()
+}
+
+/** A zeroed per-ladder W-L, spelled once. Two callers – the season reset above and `createWorld` –
+ *  and a third in the migration, which needs the same shape from a different starting point. */
+export function emptySeasonRecord(): Record<LadderTrack, { wins: number; losses: number }> {
+  return { domestic: { wins: 0, losses: 0 }, itf: { wins: 0, losses: 0 } }
 }
 
 // --- finish / stage labels ---------------------------------------------------
@@ -1368,7 +1386,7 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
         return {
           level: 'blocked',
           reason: 'locked',
-          detail: `${tier.label} takes her on her national standing – ${minPoints} pts needed`,
+          detail: `${tier.label} takes her on her national standing – ${minPoints} ${LADDER_POINTS_LABEL.domestic} needed`,
           pointsToEnter: minPoints,
         }
       }
@@ -1395,16 +1413,26 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
   }
   const minPoints = tier.enterPointBand[0]
   const points = kidPoints(world, 'domestic')
+  // ⚠ THESE TWO SENTENCES NAME THEIR CURRENCY (31.07, fix/ladder-separation), and they are shown to
+  // the player: `enterEvent` throws `gate.detail` and the store puts the message on screen. They said
+  // "ranking points" and "(604 pts)" while the game holds TWO point tables that never convert into
+  // one another - so a girl with 604 national points and 4 international ones was told she did not
+  // have enough "ranking points", which is a sentence she could check against the wrong number on
+  // two different screens. `LADDER_POINTS_LABEL` is the one place those units are spelled.
   if (points < minPoints) {
     return {
       level: 'blocked',
       reason: 'locked',
-      detail: `Not enough ranking points for ${tier.label} yet (need ${minPoints})`,
+      detail: `Not enough ${LADDER_POINTS_LABEL.domestic} for ${tier.label} yet (need ${minPoints})`,
       pointsToEnter: minPoints,
     }
   }
   if (outgrewTier(event.tier, points)) {
-    return { level: 'blocked', reason: 'outgrown', detail: `You've outgrown ${tier.label} (${points} pts)` }
+    return {
+      level: 'blocked',
+      reason: 'outgrown',
+      detail: `You've outgrown ${tier.label} (${points} ${LADDER_POINTS_LABEL.domestic})`,
+    }
   }
   return availabilityStatus(world, event)
 }
@@ -3048,10 +3076,24 @@ function finalizeTournament(world: WorldState): void {
 
   // v10: count this season's kid wins/losses as they resolve (never re-parsed from text; pruning
   // can't lose them). Every match on the kid's path is one played match.
+  //
+  // v28: AND THE SAME MATCH IS COUNTED INTO ITS OWN LADDER, one line further on. This is the whole of
+  // the owner's «разделить победы и поражения» and it needs no new fact: the event is right here, the
+  // event carries its tier, and the tier carries its track, so the attribution is read rather than
+  // decided. The two counters and the pair are maintained together on purpose – the pair is a
+  // DECOMPOSITION of the totals, not a replacement for them, and anything that increments one and not
+  // the other breaks the invariant the Stats screen shows both halves of.
+  const track = tier.track
+  const record = (world.seasonRecord ??= emptySeasonRecord())
   for (const m of p.result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
-    if (m.winnerId === KID_ID) world.seasonWins++
-    else world.seasonLosses++
+    if (m.winnerId === KID_ID) {
+      world.seasonWins++
+      record[track].wins++
+    } else {
+      world.seasonLosses++
+      record[track].losses++
+    }
   }
 
   // R9-7: the run's physical toll lands HERE, when it commits – per-match, not flat per tier.
@@ -3352,6 +3394,7 @@ export function createWorld(
     seasonHistory: [],
     seasonWins: 0,
     seasonLosses: 0,
+    seasonRecord: emptySeasonRecord(),
     financeWeeks: [],
     condition: ECONOMY.condition.start,
     injury: null,
@@ -4262,18 +4305,32 @@ function computeCountingResults(world: WorldState, track: LadderTrack = 'itf'): 
  *
  *  Pure derivation over the ledger the world already keeps - no persisted field, no schema bump, no
  *  migration, zero RNG draws. */
+/** HER PLACE IN ONE TABLE, or null when she holds no counting result in it.
+ *
+ *  ⚠ ONE IMPLEMENTATION, TWO CONSUMERS, and the second one is why it was extracted (31.07): the
+ *  tournament overlay prints her rank too, and it must print the SAME number the Home chip and the
+ *  Stats tab are showing at that moment or the app contradicts itself on the one screen where the
+ *  player is looking hardest. That is not automatic - on a reveal week the tick DEFERS the rank
+ *  recompute to `finalizeTournament` (see step 5) while the week's AI results are already in the
+ *  ledger, so a freshly-folded rank and the cached one legitimately differ by a place or two until
+ *  she finishes her run. Reading the cache through one function is what makes the two agree by
+ *  construction instead of by coincidence. */
+function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
+  return computeCountingResults(world, track).length > 0 ? rankIn(world, track) : null
+}
+
 function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
   const counting = computeCountingResults(world, track)
   return {
     // Her place a week ago IN THIS TABLE - see `prevKidRankDomestic` on WorldState for why both are
     // carried rather than one shared "previous rank".
-    prevRank: track === 'itf' ? world.prevKidRank : (world.prevKidRankDomestic ?? null),
+    prevRank: prevRankIn(world, track),
     // UNRANKED IS NOT A NUMBER. With nobody holding a point the whole field ties at zero and
     // competition ranking hands every member of that tie the same place, so a point-less kid reads
     // as a single digit. The screens have always papered over that by asking `countingResults.length
     // > 0` themselves; making it null HERE means they cannot forget, and the two questions ("where
     // is she?" and "is she ranked at all?") stop being one field.
-    rank: counting.length > 0 ? rankIn(world, track) : null,
+    rank: kidLadderRank(world, track),
     points: kidPoints(world, track),
     standings: computeStandings(world, track),
     countingResults: counting,
@@ -4285,6 +4342,13 @@ function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
  *  gate that used the same number to decide her entries. */
 function rankIn(world: WorldState, track: LadderTrack): number {
   return track === 'itf' ? world.kidRank : (world.kidRankDomestic ?? world.cohort.length + 1)
+}
+
+/** ...and her place in the SAME table a week ago. Its own function beside `rankIn` for the reason
+ *  `prevKidRankDomestic` exists at all: a movement is (previous - current), and the two halves have to
+ *  come from one table or the difference is a subtraction across two currencies. */
+function prevRankIn(world: WorldState, track: LadderTrack): number | null {
+  return track === 'itf' ? world.prevKidRank : (world.prevKidRankDomestic ?? null)
 }
 
 /** WHICH TABLE IS SHE ACTUALLY COMPETING IN - one rule, one place, so Home, Stats and the Kid screen
@@ -4385,10 +4449,30 @@ function pendingView(world: WorldState): PendingView | undefined {
   const currentIdx = revealed < kidMatches.length ? revealed : kidMatches.length - 1
   const current = kidMatches[currentIdx]
   const oppId = current.aId === KID_ID ? current.bId : current.aId
-  const ranks = new Map(fullRanking(world).map((r) => [r.playerId, r.rank]))
-  const oppRank = ranks.get(oppId) ?? world.cohort.length + 1
+  // ⚠ THE TABLE THIS TOURNAMENT IS ACTUALLY PLAYED ON – see `PendingView.ladder` for the owner's
+  // report and what it cost. This line used to read `fullRanking(world)`, whose doc comment says
+  // outright "THE table when only one is meant: the ITF one", so every rank the tournament overlay
+  // printed came from the international table even when the trophy on the table paid national points.
+  const track = tier.track
+  const ranks = new Map(rankingFor(world, track).map((r) => [r.playerId, r.rank]))
   const oppNation = world.cohort.find((c) => c.id === oppId)?.nation ?? ''
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
+  // UNRANKED IS NOT A NUMBER, for either girl, and it is the same rule `computeLadderView` applies to
+  // the kid: with nobody holding a point in this table the whole field ties at zero and competition
+  // ranking hands every member of that tie the same place. Asked of the OPPONENT too, because the two
+  // numbers sit side by side on the VS card and a real "#3" against a tie-floor "#119" invites a
+  // comparison that is not there.
+  //
+  // ⚠ TWO SOURCES, DELIBERATELY, AND THE ASYMMETRY IS THE CONSERVATIVE CHOICE. HER number comes
+  // through `kidLadderRank`, i.e. off the same cache `ladders[track].rank` reads, so the overlay can
+  // never print a different place for her than the screens behind it - the exact failure this branch
+  // is about. The OPPONENT's is folded here because nothing caches it and nothing else prints it, so
+  // it has nothing to disagree with. On a reveal week the two can be a place apart (the tick defers
+  // the rank recompute to `finalizeTournament` while the week's AI results are already banked); a
+  // one-place drift between two different players' numbers is invisible, whereas a drift in HERS
+  // between two screens is the bug.
+  const oppRankIn = (id: string): number | null =>
+    windowedBestSum(world.results, world.week, id, inTrack(track)) > 0 ? (ranks.get(id) ?? null) : null
 
   return {
     eventId: p.eventId,
@@ -4398,10 +4482,12 @@ function pendingView(world: WorldState): PendingView | undefined {
     // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
     temperatureC: eventTemperature(world.seed, event),
     roundLabel: stageLabel(current.round, tier.drawSize),
+    ladder: track,
+    kidRank: kidLadderRank(world, track),
     opponent: {
       name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
       nation: oppNation,
-      rank: oppRank,
+      rank: oppRankIn(oppId),
     },
     // Only expose a record to watch while there is still an unrevealed round.
     kidMatch: revealed < kidMatches.length ? kidMatchEvent(world, event, current, p.players).match : undefined,
@@ -4443,8 +4529,20 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       : null,
     events: world.events,
     lossStreak,
-    kidRank: world.kidRank,
-    prevKidRank: world.prevKidRank,
+    // ⚠ HER LADDER, NOT THE INTERNATIONAL ONE (31.07, fix/ladder-separation). This pair feeds exactly
+    // one derivation - `rankClimbed` - and `rankClimbed` licenses three lines that say she "moved up
+    // the table" plus the loss softener behind her face. It was `world.kidRank` / `world.prevKidRank`,
+    // the ITF pair, on a career that is domestic for its whole first year or two: so "she moved up the
+    // table" was a claim about a table she is not in, and the movement it read was mostly the tie floor
+    // drifting as OTHER players' international results aged out of their 52-week windows. R13-2 already
+    // fought this exact battle once - it added the `runPointsThisWeek > 0` licence because "rank is
+    // RELATIVE, so she can climb on a zero-point week purely because rivals' results decayed ... other
+    // people's ageing calendars, not her tennis" - and the earned-points guard cannot do its job while
+    // the points are counted in one table and the climb read off the other.
+    //
+    // `activeLadderOf` is the same one answer Home's chip, the Kid screen and Stats all read.
+    kidRank: rankIn(world, activeLadderOf(world)),
+    prevKidRank: prevRankIn(world, activeLadderOf(world)),
     pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
     // R13-2: the points her run AWARDED this week. finalizeTournament writes a kid row only when
     // points > 0, so a first-round exit leaves none – "> 0" is exactly "she won matches this
@@ -4557,6 +4655,13 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // THE ENGINE'S OWN VERDICT PER RUNG (see TierOpenMap in protocol.ts). `tierOpenFor` is the same
     // function `enterEvent` validates against, so a screen can no longer disagree with the gate.
     tierOpen: Object.fromEntries(TIER_LADDER.map((t) => [t, tierOpenFor(world, t)])) as TierOpenMap,
+    // ...AND THE POSITION EACH ACCEPTANCE LIST CUTS AT, for the rungs that have one. Same discipline
+    // as `tierOpen` directly above: the screen asks the engine for the number rather than deriving a
+    // share of a field it would have to be told the size of. Absent on every rung that gates on
+    // points, which is what `acceptanceRank` returning undefined means.
+    tierAcceptance: Object.fromEntries(
+      TIER_LADDER.map((t) => [t, acceptanceRank(world, t)]).filter(([, r]) => r !== undefined),
+    ) as Partial<Record<TierId, number>>,
     coachId: world.coachId,
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),
@@ -4574,9 +4679,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     activeLadder: activeLadderOf(world),
     bestFinishByTier: { ...world.bestFinishByTier },
     // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
-    // surfacing them is derivation, not schema.
+    // surfacing them is derivation, not schema. THE TOTAL, both ladders; `seasonRecord` below is the
+    // same matches told apart, and the two always agree because finalizeTournament writes both.
     seasonWins: world.seasonWins,
     seasonLosses: world.seasonLosses,
+    seasonRecord: world.seasonRecord ?? emptySeasonRecord(),
     // The run of defeats behind her face, decided HERE and not in the UI: the engine holds the seed
     // (so the per-streak threshold is drawn once, off `seed:angry:<startWeek>`) and the FULL event
     // log (the snapshot only carries the trailing 60, which a long streak could outrun). Pure

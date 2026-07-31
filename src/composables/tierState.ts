@@ -56,6 +56,49 @@ export function pointsLockNote(pointsToEnter: number, points?: number): string {
   return `${points} / ${pointsToEnter} ${LADDER_POINTS_LABEL.domestic}`
 }
 
+/**
+ * WHEN THIS RUNG OPENS, in the player's words – "age 13 and the top 100 internationally".
+ *
+ * ⚠ THE OWNER ASKED FOR THIS BACK (31.07): «когда открываются турниры разных типов? Что-то раньше
+ * было в интерфейсе видно и понятно, а теперь не очень. Давай может тоже на плашке с замочком
+ * напишем когда открываются?» – and he is describing a real regression rather than a preference. The
+ * two-ladder slice moved J60 and J300 onto an ITF-rank acceptance list and left their
+ * `enterPointBand` at `[0, MAX]`, and every surface that explained a gate by reading a band then said
+ * one of two useless things about them: the Home ladder's plaque said "Not on the list yet" (a state,
+ * not a condition), and the tour guide's opens-at column said **"0+"**, which is not merely vague –
+ * it is the opposite of true about the two hardest rungs in the game.
+ *
+ * ⚠ AND IT IS DERIVED, WHICH IS THE WHOLE POINT. A hand-written table of "J60 opens at…" is exactly
+ * the bug being fixed, one release later: `enterPct` has already been re-picked twice (0.40 → 0.50,
+ * 0.25 → 0.40), J30's floor has moved 150 → 250, and the acceptance CUT is not even a constant –
+ * `acceptanceRank` is `enterPct × (cohort + 1)`, so it follows the population as well as the tuning.
+ * Every clause below is read off `TIERS[id]`, so a rung whose gate is re-tuned re-words itself.
+ *
+ * `acceptsRank` is the engine's own live cut (`Snapshot.tierAcceptance`). Absent, the sentence falls
+ * back to the SHARE, which is what the gate is denominated in anyway and is still exactly true.
+ */
+export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
+  const tier = TIERS[id]
+  const clauses: string[] = []
+  if (tier.minAgeYears !== undefined) clauses.push(`age ${tier.minAgeYears}`)
+  const [minPoints] = tier.enterPointBand
+  if (tier.enterPct !== undefined) {
+    // The acceptance list. Never a points figure: the rungs above the on-ramp do not read one, and
+    // quoting the `[0, MAX]` band they carry instead would be the "0+" this function exists to kill.
+    clauses.push(
+      acceptsRank !== undefined
+        ? `the top ${acceptsRank} internationally`
+        : `the top ${Math.round(tier.enterPct * 100)}% internationally`,
+    )
+  } else if (minPoints > 0) {
+    clauses.push(`${minPoints} ${LADDER_POINTS_LABEL.domestic}`)
+  }
+  // Local: no age gate, no floor. "Open from the start" rather than "0 pts" – a threshold of zero is
+  // not a threshold, and printing one invites the player to look for progress against it.
+  if (clauses.length === 0) return 'open from the start'
+  return clauses.join(' and ')
+}
+
 /** How a finish READS in a sentence. `finishLabel` gives "Semifinalist", which is a person; a gap is
  *  measured in events, so this gives "semi-final". Same index convention (0 = the title).
  *
@@ -192,6 +235,13 @@ export interface TierStateInput {
    *  playing the game, not by a test: every guard on the entry rule watches the ENGINE, and this is
    *  the UI's copy of it. The rule is not re-derived here any more; it is asked. */
   engineOpen?: boolean
+  /** THIS RUNG'S ACCEPTANCE CUT (`Snapshot.tierAcceptance[id]`), or undefined for a rung that gates on
+   *  points instead. The engine's own number, never re-derived – see `tierOpensWhen`. */
+  acceptsRank?: number
+  /** her place in the INTERNATIONAL table, or null when she holds no counting result there. Only the
+   *  acceptance-list lock reads it, and only to finish the sentence "it takes the top 100 – she is
+   *  #128", which is the same sentence `entryStatus` writes on an individual event's card. */
+  itfRank?: number | null
 }
 
 /**
@@ -210,7 +260,11 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       id,
       kind: 'age-locked',
       note: `Opens at ${tier.minAgeYears}`,
-      title: `${tier.label} – opens at age ${tier.minAgeYears}`,
+      // ⚠ THE WHOLE CONDITION, not just the clause that happens to be binding today. An age-locked
+      // J30 also wants 250 national points, and a plaque that mentions only the birthday tells a
+      // twelve-year-old she is one year from the Junior Tour when she is a year AND a domestic
+      // career from it. The chip has room for the nearest gate; the tooltip has room for all of it.
+      title: `${tier.label} – opens at ${tierOpensWhen(id, input.acceptsRank)}`,
     }
   }
   if (input.points < minPoints) {
@@ -253,14 +307,23 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   }
   // In band and STILL refused: an ITF rung she is not high enough in the table for. The band cannot
   // express this - see `engineOpen` above - so the engine's answer wins.
+  //
+  // ⚠ AND IT SAYS WHEN IT OPENS (31.07, the owner's «напишем когда открываются»). "Not on the list
+  // yet" is a STATE, and the plaque next to it on the Regional rung has been printing a condition
+  // with progress against it ("112 / 250 national pts") for a release. This is the same plaque and it
+  // was answering a different question - which is precisely why the ladder stopped being legible when
+  // the top two rungs moved onto an acceptance list. `acceptsRank` is the engine's own cut, so the
+  // number here can never quote a list the gate does not use.
   if (input.engineOpen === false) {
+    const standing =
+      input.itfRank != null ? ` – she is #${input.itfRank}` : ' – she has no international ranking yet'
     return {
       id,
       kind: 'locked',
-      note: 'Not on the list yet',
+      note: input.acceptsRank !== undefined ? `Opens in the top ${input.acceptsRank}` : 'Not on the list yet',
       title:
-        `${tier.label} – locked: entry here is an acceptance list read off her international ` +
-        `ranking, and she is not high enough in it yet.`,
+        `${tier.label} – opens at ${tierOpensWhen(id, input.acceptsRank)}. Entry here is an ` +
+        `acceptance list read off her international ranking${standing}.`,
     }
   }
   // The tier is hers on points. Has she any of the year's international allowance left?
@@ -333,7 +396,15 @@ export function useTierStates(): ComputedRef<TierState[]> {
       entryCap: snap?.entryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
     }
     // ...plus the engine's own verdict per rung, so the readout cannot invite her into an event
-    // `enterEvent` will refuse (see `engineOpen`).
-    return TIER_LADDER.map((id) => tierState(id, { ...input, engineOpen: snap?.tierOpen?.[id] }))
+    // `enterEvent` will refuse (see `engineOpen`), and the engine's own acceptance cut for the rungs
+    // that have one, so the locked plaque can name the list rather than describe a mood about it.
+    return TIER_LADDER.map((id) =>
+      tierState(id, {
+        ...input,
+        engineOpen: snap?.tierOpen?.[id],
+        acceptsRank: snap?.tierAcceptance?.[id],
+        itfRank: snap?.ladders.itf.rank ?? null,
+      }),
+    )
   })
 }
