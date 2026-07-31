@@ -144,6 +144,13 @@ export interface CalendarWeek {
   title: string
   /** the sentence under the grid – the plan, read back as days */
   readout: string
+  /** ⚠ IS THIS WEEK THE OFF-SEASON? `off` serves two different weeks - a booked family package and
+   *  the off-season - and `days` alone cannot tell them apart, only the display `title` could. The
+   *  grid needs the distinction to decide whether a family week carries homework (there is no term
+   *  to miss in the off-season), and it may not ask the engine itself: it is presentation, derived
+   *  from what it is handed. This file is the one that legitimately talks to the calendar, so the
+   *  answer travels as data. */
+  offSeason: boolean
   /** Should the days cross themselves out when the week is played? False when another surface owns
    *  the week: a tournament trip has its own flow and its own screens, and a week whose reveal is
    *  already paused is not a week anybody is about to watch pass. */
@@ -211,7 +218,18 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   const gymIndex = gymDayIndex(sessions)
   const session = sessionDays(sessions)
   const courtDays = session.filter((d) => d !== gymIndex).length
-  const base = { week, sessions, courtDays, gymIndex, surface, surfaceNote, animates: !snap.pending }
+  const base = {
+    week,
+    sessions,
+    courtDays,
+    gymIndex,
+    surface,
+    surfaceNote,
+    // Asked once, here, and carried on the week - see the field's note on CalendarWeek for why the
+    // grid may not ask it itself.
+    offSeason: isOffSeasonWeek(week),
+    animates: !snap.pending,
+  }
 
   // 1. HER BODY. `layoffCoversWeek` is the engine's own arithmetic, not a third spelling of it.
   if (layoffCoversWeek(snap.week, snap.injury?.weeksRemaining, week)) {
