@@ -123,7 +123,15 @@ function hashOf(draws: number[]): string {
 // replaced, and she falls back to the tie at the floor. The table above the point-less kid is
 // therefore SHALLOWER by about ten distinct totals - which is precisely what a real junior ranking
 // does when a player ages out, and it is the first time our ITF table has ever done it.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 154 }
+// ⚠ RE-PINNED 154 -> 150 AT THE round-20 MERGE, and the number is why this had to be re-derived
+// rather than resolved. `fix/no-double-booking` measured 162 on its base and `feat/junior-age-cap`
+// measured 154 on its own; neither is the answer, because BOTH make the table above a point-less kid
+// shallower and they stack. A rival can no longer play two of a week's tournaments, and a rival
+// turning 19 now ages out of the J rungs and her results roll out of the 52-week window unreplaced -
+// so fewer distinct totals sit above a girl who holds none. Taking either side's pin would have
+// shipped a number nobody had measured. The STREAM is untouched: count 41550 and hash e6b0c709
+// reproduce byte-for-byte, which is what this block actually guards.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 150 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

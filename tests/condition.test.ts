@@ -245,7 +245,15 @@ const REF = {
   // the same mechanism as the 120 -> 164 note above, running in the opposite direction and for a
   // better reason: that number moved because the table got FULLER, this one because it now EMPTIES
   // at the top the way the sport does.
-  kidRank: 154,
+  // ⚠ RE-PINNED 154 -> 150 AT THE round-20 MERGE, and the number is why this had to be re-derived
+  // rather than resolved. `fix/no-double-booking` measured 162 on its base and `feat/junior-age-cap`
+  // measured 154 on its own; neither is the answer, because BOTH make the table above a point-less kid
+  // shallower and they stack. A rival can no longer play two of a week's tournaments, and a rival
+  // turning 19 now ages out of the J rungs and her results roll out of the 52-week window unreplaced -
+  // so fewer distinct totals sit above a girl who holds none. Taking either side's pin would have
+  // shipped a number nobody had measured. The STREAM is untouched: count 41550 and hash e6b0c709
+  // reproduce byte-for-byte, which is what this block actually guards.
+  kidRank: 150,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
