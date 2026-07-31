@@ -637,6 +637,36 @@ export function migrateSave(raw: unknown): WorldState {
     v = 28
   }
 
+  // ⚠ THIS BLOCK WAS WRITTEN AS v27 -> v28 AND IS RENUMBERED HERE (round-19). Two waves of the same
+  // day each appended a schema step and each called it 28: the ladder split above, and this one. They
+  // touch different fields and neither reads the other, so the collision was only ever the NUMBER -
+  // and this one moves because its migration is a deliberate no-op, which makes it the cheaper of the
+  // two to renumber. Append-only is preserved either way: no shipped save has ever seen a 28 that
+  // means "spend history", because neither branch was merged before this one.
+  //
+  // v28 -> v29: `seasonHistory` rows `+spentCents +earnedCents` (what each season COST and BROUGHT IN,
+  // gross, in positive cents). The owner: «было бы очень интересно где-то хранить всю историю затрат
+  // за карьеру по годам в каком-то виде.»
+  //
+  // ⚠ IT IS A NO-OP ON PURPOSE, AND THAT IS THE WHOLE POINT OF THE BLOCK. There is nothing to
+  // back-fill and nothing that could be: the figures come off `financeWeeks`, which is pruned to a
+  // 60-week trailing window (`pruneFinanceWeeks`), so every season older than about fourteen months
+  // has had its per-category rows deleted from the save long before this migration runs. The only
+  // other trace is `lastSeasonSummary`, which holds ONE season and is overwritten every year.
+  //
+  // A back-fill would therefore have to invent numbers, and this is the one field where an invented
+  // number is worse than no number at all: the whole feature is a player asking "what has she cost
+  // us", and a fabricated answer to that is a lie with a dollar sign on it. The reader prints
+  // silence for a row without the fields (see `SeasonHistoryEntry.spentCents`), the same contract
+  // `bestFinish` has carried since v14 - so a migrated career shows its seasons honestly as "not
+  // recorded" and starts keeping real figures from its next wrap-up.
+  //
+  // Nothing else moves: no stream is added or reordered, no existing field is read or rewritten, and
+  // the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 28) {
+    v = 29
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

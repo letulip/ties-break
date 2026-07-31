@@ -824,7 +824,33 @@ export const ECONOMY = {
         id: 'grandma',
         label: "Grandma's village",
         blurb: 'Two trains and a bus – slow food, slow days.',
-        priceCents: [0, 50_00],
+        // ⚠ W7 PUT A FLOOR UNDER THIS ONE BAND, and only this one. The owner: «Grandma's village
+        // регулярно стоит 0 или 3 доллара для 8к, мне кажется там можно какой-то порог цены
+        // сделать, но можно и так оставить, в принципе.»
+        //
+        // HE IS DESCRIBING A REAL RATE, not a bad run. The band was `[0, 50_00]` and `corridorPrice`
+        // draws `pickInt(rng, 0, 5000)` then scales by the wealth corridor, so a working family
+        // ([0.7, 0.8]) was quoted $0.00-$40.00 uniformly: measured over 104,000 quotes, 1 in 78
+        // rendered "$0", 1 in 37 rendered "$3", and 1 in 7 came in under five dollars. That is the
+        // package quoting a week away for a family for less than a sandwich.
+        //
+        // ⚠ AND ZERO WAS NOT MERELY CHEAP, IT WAS A DIFFERENT OBJECT. `bookVacation` carves out the
+        // free package twice - `if (priceCents > 0 && funds < priceCents)` skips the affordability
+        // check, and `if (priceCents > 0)` skips the expense row - both correctly, for the
+        // `staycation` rung that IS free by design. A grandma quote that happened to roll 0 fell
+        // through both carve-outs: it was bookable at negative funds and it never appeared on the
+        // Money screen's breakdown. The floor makes those two branches mean what they say again,
+        // because the only package that can reach them is the one whose band is `[0, 0]`.
+        //
+        // THE NUMBER IS THE CATALOGUE'S OWN, NOT A TASTE. $30 is the floor of the practice-court
+        // rental band a few blocks down this same file ($30-80 x corridor) - this economy's answer
+        // to "the smallest thing this family knowingly pays for". A week at grandma's, which the
+        // blurb prices as two trains and a bus, cannot honestly cost less than one hour on a
+        // practice court. The CEILING is untouched at $50, so the floor compresses the band from
+        // below rather than making the package dearer: a working family now sees $21-$40 where it
+        // saw $0-$40, and the ladder reads free -> $21-40 -> $105-240 with no rung able to
+        // impersonate the one below it.
+        priceCents: [30_00, 50_00],
         conditionGain: 14,
         buffFactor: 1,
       },

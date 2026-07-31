@@ -328,6 +328,34 @@ export interface SeasonHistoryEntry {
   /** best tournament finish index that season (0 = champion). Absent when she played none, and
    *  on rows the v14 migration backfilled (the old summary stored only prose for it). */
   bestFinish?: number
+  /** W7 – WHAT THE SEASON COST, gross, in positive cents. The owner: «было бы очень интересно где-то
+   *  хранить всю историю затрат за карьеру по годам в каком-то виде.»
+   *
+   *  ⚠ THE NET WAS ALREADY HERE AND IT IS NOT THE SAME QUESTION. `fundsDeltaCents` answers "did the
+   *  family end the year up or down", which a season of big prize money and bigger bills can report
+   *  as a shrug. He asked about ЗАТРАТЫ – what it cost to keep her playing – and gross spend is the
+   *  only number that says it. Both are kept because both are true and neither implies the other.
+   *
+   *  ⚠ AND IT HAD TO BE BANKED HERE OR IT WAS GONE FOR EVER. The per-category ledger
+   *  (`WorldState.financeWeeks`) is pruned to a 60-week trailing window, so a career keeps roughly
+   *  1.15 YEARS of spending detail and nothing older – season 1's spend is unrecoverable by the time
+   *  season 3 opens, from the save and from anywhere else. `maybeFireSeasonWrapUp` was already
+   *  computing this exact figure off that ledger at the wrap-up (when the whole season is still
+   *  inside the window) and dropping it into `lastSeasonSummary`, which is overwritten every year.
+   *  Banking it costs two numbers a season against a 30-season cap.
+   *
+   *  OPTIONAL, AND THE OPTIONALITY IS LOAD-BEARING: rows written before v28 have no gross figure and
+   *  none can be invented for them, so the surface that reads this must print silence rather than a
+   *  zero. Same contract as `bestFinish` above and `SeasonSummary.spentCents`.
+   *
+   *  BOUNDARY, stated once so both readers agree: the window ENDS at the wrap-up week, so the
+   *  season's last two off-season weeks are not in it. That is deliberate and is the same window
+   *  `SeasonSummary` reports – the figure describes the season she PLAYED. */
+  spentCents?: number
+  /** what the season brought in, gross, in positive cents. Same window, same optionality, and it is
+   *  here so a year can be read as a pair: a season that cost $9k and earned $4k is a different
+   *  story from one that cost $9k and earned nothing, and `fundsDeltaCents` alone tells neither. */
+  earnedCents?: number
 }
 
 // --- Tournament experience (feat/tournament-experience) -----------------------
@@ -915,8 +943,10 @@ export interface DiaryFacts {
   travelHomeScene: TravelHomeScene | null
   /** HOW she came home, on exactly the weeks `travelHomeScene` is non-null (null on every other
    *  week, and the two are null together by construction). The owner's rule, read off the tournament
-   *  she is coming back FROM and the state she is in: reached the final → happy or sleepy, fell
-   *  short → sad, or sleepy if she was worn out anyway. See engine/diary.ts travelHomeMoodFor. */
+   *  she is coming back FROM and the state she is in: reached the final → happy, or sleepy if she is
+   *  running on empty; fell short → sad, or sleepy if she was worn out anyway. Both branches are a
+   *  coin weighted by her condition, and the final's sits strictly below the other one at every
+   *  condition (W7). See engine/diary.ts travelHomeMoodFor. */
   travelHomeMood: TravelHomeMood | null
   /** W4 – WHAT THE KNOCK IS DOING TO THIS WEEK, or null. `'rest'` = she is spending the week off the
    *  training court; `'push'` = she is training on it and the coach knows.

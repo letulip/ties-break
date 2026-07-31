@@ -17,6 +17,7 @@ import BracketTabs from './BracketTabs.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
 import AppIcon from './ui/AppIcon.vue'
 import Card from './ui/Card.vue'
+import ConfettiBurst from './ui/ConfettiBurst.vue'
 import IconButton from './ui/IconButton.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import ProgressRing from './ui/ProgressRing.vue'
@@ -98,9 +99,22 @@ const drawSize = computed(() => tier.value?.drawSize ?? 0)
 const isRunnerUp = computed(() => !pending.value?.kidChampion && pending.value?.finishLabel === 'Runner-up')
 /** WHICH PAINTING the finale poster hangs. Champion = the happy frame – and note WHAT IS IN IT
  *  (docs/lore/setting.md): "earned delight, holding a small club trophy or a medal, confetti of
- *  the cheap paper kind". That is the owner's §5 ruling in one line – L's confetti is a comparable
- *  effect we ALREADY ship, painted into the photograph, so this screen reuses it instead of
- *  rebuilding eighteen falling rectangles over the top of it. */
+ *  the cheap paper kind".
+ *
+ *  ⚠ THE SECOND HALF OF THIS NOTE IS SPENT, AND THE OWNER SPENT IT. It used to read: "That is the
+ *  owner's §5 ruling in one line – L's confetti is a comparable effect we ALREADY ship, painted
+ *  into the photograph, so this screen reuses it instead of rebuilding eighteen falling rectangles
+ *  over the top of it." The argument was that the painting is the confetti. He looked at the
+ *  shipped screen and disagreed, twice in one message: «На втором месте нет конфетти на финальном
+ *  экране... Мне кажется на втором тоже можно. Всё-таки подиум. На первом тоже нет конфетти.»
+ *
+ *  AND HE IS RIGHT ABOUT THE THING THE ARGUMENT MISSED. Painted-in confetti is part of a
+ *  PHOTOGRAPH, and a photograph is a record of a moment that has already happened. Falling paper is
+ *  the moment happening now, which is what a finale is for – and the runner-up's poster hangs
+ *  `serious`, a painting with nothing celebratory in it at all, so on second place the old argument
+ *  did not even have a picture to point at. Both posters get a real burst now
+ *  (`ui/ConfettiBurst.vue`, ported from Tense Titans as he asked), the painting keeps its own job,
+ *  and this computed is unchanged. */
 const finaleEmotion = computed<AvatarEmotion>(() => {
   if (pending.value?.kidChampion) return 'happy'
   if (isRunnerUp.value) return 'serious'
@@ -901,6 +915,11 @@ const matchMeta = computed(() => {
         <PrimaryPill class="tf-poster-cta" variant="cta" :disabled="game.busy" @click="continueFinale">
           Continue
         </PrimaryPill>
+        <!-- The podium's paper, and it falls IN FRONT of the poster - which is why it is last in the
+             card and carries the only z-index on this screen. Both posters get it, on the owner's
+             ruling that a lost final is still a podium. Decoration and nothing else: aria-hidden,
+             never a click target, and it does not mount at all under reduced motion. -->
+        <ConfettiBurst class="tf-poster-confetti" />
       </Card>
 
       <!-- Exited earlier: the same poster with somebody else's name on it. No art for an AI
@@ -1328,7 +1347,11 @@ const matchMeta = computed(() => {
    champion's card; M's is the same light from the same place, colder by one step. Both are REAL
    tokens now (src/style.css :root) rather than the two gradients this rule used to spell out - see
    the ⚠ at the top of this block, which is why they were literals in the first place. */
+/* `position: relative` is the confetti's doing and is part of the object now: the burst fills the
+   poster with `inset: 0`, so the poster has to be the box it measures itself against. Same shape as
+   Eyebrow's own note about hosting absolutely positioned art. */
 .tf-poster {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1336,6 +1359,13 @@ const matchMeta = computed(() => {
   padding: 18px 14px 14px;
   border-radius: var(--radius-card);
   background: var(--celebration-bg);
+}
+
+/* The burst is the only thing on the poster that is deliberately above everything else. The
+   component sizes and clips itself (`inset: 0`, `border-radius: inherit`); this rule owns only the
+   one thing the CALLER gets to decide, which is that the paper falls in front of the girl. */
+.tf-poster-confetti {
+  z-index: 1;
 }
 
 .tf-poster.silver,
