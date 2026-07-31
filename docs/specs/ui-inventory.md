@@ -81,6 +81,16 @@ the design's `Home · Season · Calendar · Bianca · More` is a later job. The 
 **More is becoming redundant** — the gear on Home already reaches it — so the bar gets re-cut in that
 pass rather than now. Every screen in this wave therefore keeps the navigation it has.
 
+> ⚠ **SPENT, 31.07 — the re-cut this paragraph deferred has happened.** The bar is now
+> `Season · Calendar · Home · Stats · Trophies`: the Trophy Cabinet took More's seat, on the reasoning
+> written here and for the reason the seat could not simply be *added* — Home's centring is emergent
+> from "five slots, Home third", so a sixth entry would move it. **More itself is unchanged and
+> nothing in it was rehomed**, which was the owner's own call when asked («она уже живет в шестеренке
+> настроек на домашнем экране»): `MoreScreen` keeps every row and joins `money` / `kid` / `week` as a
+> tabless content state, reached by the gear on Home and the gear on the Kid screen. The rest of Q1
+> stands — the design's own five-tab order is still a later job. Pinned in
+> `tests/round13-nav.test.ts`.
+
 **Q2 — F is NOT a second live match.** The owner's reading, and it is better than the handoff's:
 - **F = the preview / result treatment** — the big portrait scene. Used *before* a match, and reused
   *after* it on the result screens.

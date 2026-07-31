@@ -2,6 +2,8 @@
 //
 // THE AUTHORING FLOW
 //   1. Drop the masters (jpg / jpeg / png) into  public/images/<set>-jpeg/.
+//      (The `-jpeg` in the inbox name is the INBOX marker, not a format claim — png masters have
+//      always been welcome there, and the trophy set is eighteen of them.)
 //   2. Build (or `npm run art`). Each master is encoded to  public/images/<set>/<name>.webp
 //      — longest side <= 512 px, quality ladder 82 -> 75, first step that fits 120 KB wins —
 //      and the master is then MOVED out of public/ into  art-src/images/<set>-jpeg/.
@@ -25,6 +27,22 @@
 // NO "-fs8". That suffix is pngquant-era (Floyd-Steinberg dithering) and means nothing for webp.
 // Leftover `-fs8` masters are evacuated out of public/ but never encoded — otherwise the -fs8
 // webp twins deleted in build/webp-only would grow straight back on the next build.
+//
+// ⚠ AND THAT RULE IS A TRAP FOR ART THAT ARRIVES ALREADY OPTIMISED, which is what the trophy set
+// did (31.07). The owner: «они не сырые, а оптимизированные и их надо перегнать в webp и зашипить
+// в этом виде» — eighteen pngquant outputs, every one of them named `<tier>-<metal>-fs8.png`, and
+// every one of them art we WANT to ship. Routed through as they were, `FS8_RE` would have read
+// them as residue, moved all 1.6 MB into art-src/ and shipped NOTHING, silently and with a log
+// line that says "moved".
+//
+// THE FIX WAS A RENAME AT INTAKE, NOT A NARROWER RULE, and the reason is that the suffix is a lie
+// about the file either way. `-fs8` names a dithering mode of an encoder that is not in this
+// pipeline; carried through, it would bake itself into `images/trophies/j30-gold-fs8.webp` and
+// from there into the URL every trophy cell builds, for ever. So the eighteen masters were filed
+// as `<tier>-<metal>.png` and the rule below is untouched — it still means exactly what it says,
+// and it still catches the residue it was written for. Narrowing it (per-set opt-outs, an
+// allow-list) would have kept a dead word in eighteen shipping filenames to avoid touching a
+// regex, which is the wrong side of that trade.
 //
 // Run standalone: `npm run art`. Runs automatically inside every `vite build` (see vite.config.ts).
 import sharp from 'sharp'
@@ -72,8 +90,25 @@ const MAX_SIDE = 512
  *  bytes are fetched by the week that shows them. `public/avatars` IS precached and is deliberately
  *  NOT in this table: its 256px crops are what keep the header working offline.
  *
+ *  ⚠ TROPHIES: 384, AND IT IS THE OPPOSITE CASE TO `weeks` ABOVE — the same constant reaching too
+ *  FAR rather than not far enough. The masters are 650x650 squares; the Trophy Cabinet draws each
+ *  one in a `max-width: 128px` square plate (two per tier row, at 375pt and at every width above
+ *  it — the plate is capped, so this is the ceiling on every device). 128 x 3 = 384 device pixels
+ *  on a 3x phone, so 384 is exactly what the screen can show and 512 would have shipped a third
+ *  more pixels than any display can resolve, eighteen times over. Measured cost of the difference,
+ *  at q82 across the set: 384 lands the eighteen at ~424 KB against ~684 KB at 512.
+ *
+ *  ⚠ AND THIS SET SHIPS OUT OF `public/images/` FOR THE PRECACHE, NOT FOR TIDINESS. The masters
+ *  arrived in `public/trophies/`, which this pipeline does not scan at all — so they shipped RAW,
+ *  and `globPatterns: ['**\/*.{js,css,html,svg,png,webp,woff2}']` in vite.config put all 1.6 MB of
+ *  them in the SERVICE WORKER PRECACHE: every install, on every device, paying for eighteen
+ *  pictures most careers never unlock. `globIgnores: ['**\/images\/**']` is what holds them out,
+ *  and it is keyed on the directory - so the set's home decides whether it is an install cost or a
+ *  fetch, and `images/trophies/` is the answer. The CacheFirst runtime route (`/images/*.webp`)
+ *  then makes each trophy offline-durable from the first time the cabinet is opened.
+ *
  *  Keyed by the SET directory name (`public/images/<set>/`). Absent = MAX_SIDE. */
-const SET_MAX_SIDE = { weeks: 960 }
+const SET_MAX_SIDE = { weeks: 960, trophies: 384 }
 
 /** The cap for a job, from the set its OUTPUT lands in. Reading the target rather than the source
  *  is deliberate: a master can arrive from `<set>-jpeg/` or be re-encoded in place, and only the
@@ -116,6 +151,31 @@ function notShipped(stem) {
   return NOT_SHIPPED.some((rule) => rule.re.test(stem))
 }
 
+/**
+ * DELIVERY DIRECTORIES: a folder directly under `public/` that art was HANDED OVER in, mapped to
+ * the `public/images/<set>/` it actually belongs to. Everything in it is treated as that set's
+ * inbox — encoded to the set's webp, master filed into `art-src/images/<set>-jpeg/`, folder tidied
+ * away once empty.
+ *
+ * ⚠ THIS EXISTS BECAUSE "THE PIPELINE CANNOT SEE IT" IS A SHIPPING BUG, NOT A NO-OP. The trophy
+ * art was delivered into `public/trophies/` (31.07) and this script scanned only `public/images`
+ * and `public/avatars` — so eighteen PNGs sat in public/ where NOTHING would touch them, and Vite
+ * copies public/ into dist/ verbatim. They shipped raw, at 1.6 MB, and workbox's
+ * `globPatterns` includes `png`, so they also went into the SERVICE WORKER PRECACHE: every
+ * install on every device paying for eighteen pictures a career may never unlock. The `-fs8` rule
+ * would not have saved them either; it would have deleted them from the build instead.
+ *
+ * A gitignore entry does not fix this (Vite copies untracked files too) and neither does a note in
+ * a doc. The only thing that fixes it is the pipeline being able to SEE the directory, so the next
+ * `vite build` on any machine that still has one empties it into the set's real home.
+ *
+ * A row here is meant to be permanent, not a migration step: it says "art for <set> may be handed
+ * over here", and re-dropping a master into `public/trophies/` next year does the right thing
+ * again rather than quietly regressing.
+ */
+const DELIVERY_SET = { trophies: 'trophies' }
+const DELIVERY_DIRS = Object.keys(DELIVERY_SET)
+
 const CACHE_NAME = '.art-cache.json'
 const CACHE_VERSION = 3
 
@@ -152,12 +212,19 @@ function discover(root) {
   const evacuate = []
 
   // --- A. raw art sitting under public/ — the authoring inbox, plus any stray ---------------
-  // A file in `public/images/<set>-jpeg/` belongs to `<set>`; anything else encodes in place.
-  // Either way the raw bytes leave public/ for art-src/, mirroring their path.
-  for (const dir of [join(publicDir, 'images'), join(publicDir, 'avatars')]) {
+  // A file in `public/images/<set>-jpeg/` belongs to `<set>`; a file in a DELIVERY DIRECTORY (see
+  // DELIVERY_DIRS) belongs to the set that directory names; anything else encodes in place.
+  // Either way the raw bytes leave public/ for art-src/.
+  for (const dir of [join(publicDir, 'images'), join(publicDir, 'avatars'), ...DELIVERY_DIRS.map((d) => join(publicDir, d))]) {
     for (const src of listFiles(dir)) {
       if (!RASTER_RE.test(src)) continue
-      const moveTo = join(artSrcDir, relative(publicDir, src))
+      const set = DELIVERY_SET[relative(publicDir, dirname(src))]
+      // A delivery directory is NOT the set's home, so its masters are filed into the set's real
+      // inbox rather than mirrored where they happened to land — otherwise they would sit in
+      // `art-src/<dir>/`, which part B does not scan, and the set could never be re-encoded.
+      const moveTo = set
+        ? join(artSrcDir, 'images', `${set}-jpeg`, basename(src))
+        : join(artSrcDir, relative(publicDir, src))
       const stem = basename(src).replace(RASTER_RE, '')
       // `-fs8` residue and NOT_SHIPPED masters still get out of public/ — they must not ship as raw
       // bytes either — they just never become a webp.
@@ -166,9 +233,11 @@ function discover(root) {
         continue
       }
       const srcDir = dirname(src)
-      const target = INBOX_RE.test(basename(srcDir))
-        ? join(dirname(srcDir), basename(srcDir).replace(INBOX_RE, ''), `${stem}.webp`)
-        : join(srcDir, `${stem}.webp`)
+      const target = set
+        ? join(publicDir, 'images', set, `${stem}.webp`)
+        : INBOX_RE.test(basename(srcDir))
+          ? join(dirname(srcDir), basename(srcDir).replace(INBOX_RE, ''), `${stem}.webp`)
+          : join(srcDir, `${stem}.webp`)
       encode.push({ src, target, profile: 'portrait', moveTo, incoming: true })
     }
   }

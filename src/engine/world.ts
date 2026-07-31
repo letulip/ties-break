@@ -33,6 +33,7 @@ import {
   type SnapshotInjury,
   type StandingRow,
   type StopReason,
+  type TierTrophies,
   type UpcomingEvent,
   type VacationBooking,
   type WeekPlan,
@@ -144,7 +145,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 30
+export const SAVE_SCHEMA_VERSION = 31
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -250,6 +251,21 @@ export interface WorldState {
   /** best (smallest) finish index the kid has ever reached per tier (v10); updated at
    *  tournament finalize. Drives the Home season strip's real tier progress. */
   bestFinishByTier: Partial<Record<TierId, number>>
+  /** THE TITLES LEDGER (v31): every title and every LOST final of her career, per tier, as the
+   *  absolute weeks they happened in. Written beside `bestFinishByTier` at tournament finalize;
+   *  behind the Trophy Cabinet. Full shape and the `finals` warning: `TierTrophies` in protocol.ts.
+   *
+   *  ⚠ IT IS A NEW FACT, NOT A VIEW OF AN OLD ONE, and every neighbour it might have been derived
+   *  from loses the answer on purpose. `bestFinishByTier`, one line up, is a HIGH-WATER MARK: it
+   *  keeps 0 or 1, never both, never a count and never a week, and the day she finally wins the
+   *  tier it overwrites the silver it was holding. `milestones` keeps FIRSTS (`title:<tier>` is its
+   *  whole identity, so a five-time J30 champion has one row). `results` prunes at 52 weeks and
+   *  `events` at 400, of which 60 reach a snapshot. Nothing in a save counts anything career-wide,
+   *  which is why this had to be stored rather than computed.
+   *
+   *  Bounded by the number of finals a career can reach - a handful a season at most - so it is
+   *  never pruned, and pruning it would defeat the one thing it is for. */
+  trophiesByTier: Record<TierId, TierTrophies>
   /** the most recent end-of-season recap (v10); null until the first season wraps up. */
   lastSeasonSummary: SeasonSummary | null
   /** R10-9 (v14): every FINISHED season, oldest first – `lastSeasonSummary` is overwritten each
@@ -920,6 +936,40 @@ function maybeFireSeasonWrapUp(world: WorldState): void {
  *  `finalizeTournament` would throw on `undefined` the first time she won a W15 match. */
 export function emptySeasonRecord(): Record<LadderTrack, { wins: number; losses: number }> {
   return { domestic: { wins: 0, losses: 0 }, itf: { wins: 0, losses: 0 }, wta: { wins: 0, losses: 0 } }
+}
+
+/** A career with nothing in the cabinet yet: every tier present, both arrays empty (v31).
+ *
+ *  Built off TIER_LADDER rather than written out, so a tenth rung is a cabinet shelf the day it is
+ *  added to the ladder and not the day somebody remembers this function - the exact drift the
+ *  hand-written `emptySeasonRecord` above had to be patched for when `LadderTrack` gained `wta`.
+ *
+ *  EVERY TIER, ALWAYS, rather than a `Partial` filled in on first use: the screen draws all
+ *  eighteen trophies from week 0 (locked ones blurred - the reveal is the reward), so "absent" and
+ *  "empty" would have to mean the same thing to every reader anyway. Exported for the migration,
+ *  which needs the identical shape. */
+export function emptyTrophyLedger(): Record<TierId, TierTrophies> {
+  const shelves = {} as Record<TierId, TierTrophies>
+  for (const tier of TIER_LADDER) shelves[tier] = { titles: [], finals: [] }
+  return shelves
+}
+
+/** The cabinet as the SNAPSHOT carries it: every tier, both arrays copied.
+ *
+ *  A level deeper than `{ ...world.bestFinishByTier }` next to it, and that is the point - these
+ *  values are arrays, so a shallow spread would hand the UI the very `titles`/`finals` objects
+ *  `finalizeTournament` pushes onto. The snapshot is a message across the worker boundary, never a
+ *  live view of engine state.
+ *
+ *  Walks TIER_LADDER rather than the stored keys, so a save whose migration predates a new rung
+ *  still reports every shelf the screen expects to draw. */
+function copyTrophyLedger(world: WorldState): Record<TierId, TierTrophies> {
+  const shelves = emptyTrophyLedger()
+  for (const tier of TIER_LADDER) {
+    const row = world.trophiesByTier?.[tier]
+    if (row) shelves[tier] = { titles: [...row.titles], finals: [...row.finals] }
+  }
+  return shelves
 }
 
 // --- finish / stage labels ---------------------------------------------------
@@ -3142,6 +3192,33 @@ function finalizeTournament(world: WorldState): void {
   const priorBest = world.bestFinishByTier[event.tier]
   if (priorBest === undefined || kidFinish < priorBest) world.bestFinishByTier[event.tier] = kidFinish
 
+  // v31: ...AND THE CABINET REMEMBERS EVERY ONE OF THEM, which the line above cannot. That is a
+  // high-water mark: it holds 0 or 1 and never both, it carries no week, and the day she finally
+  // wins a tier it OVERWRITES the runner-up it was holding. Nothing else in the save counts either:
+  // `milestones` keeps firsts (one row per tier however many she wins), `results` prunes at 52
+  // weeks, `events` at 400. So five J30 titles were, until this line, one row and no years.
+  //
+  // ⚠ THE TWO ARRAYS ARE DISJOINT: `=== 0` and `=== 1`, never `<= 1`. The milestone capture eight
+  // lines below deliberately uses `<= 1`, because reaching a first final is the moment a MEMORY
+  // wants and winning it is reaching it. A CABINET is the other question - which piece of
+  // silverware came home - and one week produces exactly one piece. Counted the milestone's way,
+  // the silver plate would light up the first time she WON something and would then claim a tally
+  // of finals she never lost. Runner-up has to be countable on its own or the silver half of the
+  // screen is a lie. (See `TierTrophies` in protocol.ts.)
+  //
+  // No draw, no stream, no reordering - a push onto an array the RNG cannot see. The frozen MAIN
+  // capture (41550 / e6b0c709) is untouched by construction.
+  //
+  // The row is created on demand rather than assumed, and that is v30's lesson written down: a
+  // migration runs ONCE, so a save upgraded today holds exactly today's tiers, and the week a tenth
+  // rung joins TIER_LADDER every one of those saves reaches this line with no shelf for it. That is
+  // precisely how `record[track].wins++` came to throw on `undefined` when `LadderTrack` gained
+  // `wta`. `emptyTrophyLedger` already follows the ladder for NEW careers; this makes the existing
+  // ones grow a shelf the first time they need one, so no future rung needs a migration at all.
+  const cabinet = (world.trophiesByTier[event.tier] ??= { titles: [], finals: [] })
+  if (kidFinish === 0) cabinet.titles.push(world.week)
+  else if (kidFinish === 1) cabinet.finals.push(world.week)
+
   // v10: count this season's kid wins/losses as they resolve (never re-parsed from text; pruning
   // can't lose them). Every match on the kid's path is one played match.
   //
@@ -3483,6 +3560,9 @@ export function createWorld(
     seasonStartRank: null,
     pendingTournament: null,
     bestFinishByTier: {},
+    // v31: eighteen empty shelves. She has won nothing, and the cabinet says so by showing her all
+    // eighteen things she has not won yet.
+    trophiesByTier: emptyTrophyLedger(),
     lastSeasonSummary: null,
     seasonHistory: [],
     seasonWins: 0,
@@ -4807,6 +4887,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     },
     activeLadder: activeLadderOf(world),
     bestFinishByTier: { ...world.bestFinishByTier },
+    // v31: THE CABINET. Copied a level deeper than its neighbour above, because its values are
+    // arrays and a shallow spread would hand the UI the engine's own `titles`/`finals` - the same
+    // objects `finalizeTournament` pushes onto. The snapshot is a message across the worker
+    // boundary and must never be a live view of engine state.
+    trophiesByTier: copyTrophyLedger(world),
     // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
     // surfacing them is derivation, not schema. THE TOTAL, both ladders; `seasonRecord` below is the
     // same matches told apart, and the two always agree because finalizeTournament writes both.
