@@ -904,6 +904,36 @@ describe('the run-off band reads speed · score · speed, and the speed is on th
     expect(left, 'the band is inset unequally, so "in the middle" is off by half the difference').toBe(right)
   })
 
+  it('the band is ONE line whichever end is serving - the row is pinned, not just the column', () => {
+    // ⚠ THIS IS A REAL BUG THAT SHIPPED, and no other check in this suite could have seen it: jsdom
+    // has no layout, so a band that silently becomes two rows tall passes every test we own.
+    // Owner, 31.07, after playing: «левая цифра встала как надо, а правая всё ещё выше возле самого
+    // корта». Only the RIGHT end was wrong, which is the shape of the answer - grid auto-placement
+    // is SPARSE and never walks the cursor backwards. The markup is speed-then-score, so:
+    //   * left  serve → speed takes column 1, cursor stops short of 2, the score fits on row 1;
+    //   * right serve → speed takes column 3, cursor is past 2, the score CANNOT be placed on row 1
+    //     and opens a second one.
+    // Measured in a browser against this exact markup and these exact rules: left → band 15px, the
+    // two readings on one baseline; right → band 35px, the speed 22.5px above the score and back on
+    // the PLAYING SURFACE, which the 29.07 rule forbids outright.
+    // Naming a column without naming a row is what allowed it, so both readings name both.
+    expect(styles).toMatch(/\.mv-score \{[^}]*grid-row: 1/)
+    expect(
+      styles.slice(styles.indexOf('.mv-speed {'), styles.indexOf('.mv-speed.left {')),
+      'the row pin belongs on the shared .mv-speed rule, so the two ends cannot drift apart again',
+    ).toMatch(/grid-row: 1/)
+  })
+
+  it('the two readings sit on one BASELINE, which is not the same as one centre line', () => {
+    // Owner, 31.07: «скорость подачи ... на уровне с цифрами счета посередине». `center` aligns the
+    // BOXES, and the boxes are different heights - 12px against 15px, both at `line-height: 1` - so
+    // their midpoints matched while their digits did not. Measured with the rows pinned: `center`
+    // still leaves the speed 1px high, `baseline` lands it at 0.5px, which is font rounding.
+    // Baseline is what "level with" means for text, and it keeps holding if either size ever moves.
+    const runoff = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('.mv-score {'))
+    expect(runoff).toMatch(/align-items: baseline/)
+  })
+
   it('a three-digit speed can never collide with the score at 375pt', () => {
     // ⚠ STRUCTURAL, NOT ARITHMETICAL, and deliberately so. The sum does work out - "183 km/h" (the
     // model's plateau plus a 90 serve plus the jitter band) is ~52px at 12px, the widest score the
