@@ -73,6 +73,13 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { seasonYear, WEEKS_IN_SEASON } from '../../shared/dates'
 import { TIER_LADDER, TIER_SHORT, TIERS } from '../../engine/season/calendar'
+// ⚠ THE URL BUILDER LEFT THIS FILE, AND THE CABINET IS STILL ITS FIRST CONSUMER (31.07, the podium
+// slice). `artUrl` was a private helper here for exactly as long as this screen was the only place a
+// trophy was drawn; the tournament finale now hangs the same eighteen objects on its podium, so the
+// naming scheme moved to `art/trophies.ts` instead of being spelled a second time next to it. See
+// that file for why — this app has already 404'd a champion splash on two hand-built filenames that
+// disagreed. Nothing about what the cabinet DRAWS changed: same directory, same names, same webp.
+import { trophyArtUrl, type TrophyMetal } from '../../art/trophies'
 import type { TierId } from '../../engine/season/types'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
@@ -114,7 +121,7 @@ interface Cell {
   key: string
   tier: TierId
   /** 'gold' = she won it; 'silver' = she LOST the final. The two are disjoint in the ledger. */
-  metal: 'gold' | 'silver'
+  metal: TrophyMetal
   /** the app's own word for the finish, so the cabinet and the finale never disagree. */
   label: string
   art: string
@@ -146,7 +153,7 @@ const shelves = computed<Shelf[]>(() => {
           tier,
           metal: 'gold' as const,
           label: 'Champion',
-          art: artUrl(tier, 'gold'),
+          art: trophyArtUrl(tier, 'gold'),
           count: titles.length,
           chips: chipsOf(titles),
           won: titles.length > 0,
@@ -159,7 +166,7 @@ const shelves = computed<Shelf[]>(() => {
           tier,
           metal: 'silver' as const,
           label: 'Runner-up',
-          art: artUrl(tier, 'silver'),
+          art: trophyArtUrl(tier, 'silver'),
           count: finals.length,
           chips: chipsOf(finals),
           won: finals.length > 0,
@@ -168,16 +175,6 @@ const shelves = computed<Shelf[]>(() => {
     }
   })
 })
-
-/** `images/trophies/<tier>-<metal>.webp`.
- *
- *  BASE_URL rather than a leading slash: the PWA ships under a sub-path. The set lives under
- *  `images/` on purpose – workbox's `globIgnores: ['**\/images\/**']` keeps all eighteen out of the
- *  precache, so an install pays nothing for a cabinet most careers never fill, and the CacheFirst
- *  runtime route makes each one offline-durable from the first time it is drawn. */
-function artUrl(tier: TierId, metal: 'gold' | 'silver'): string {
-  return `${import.meta.env.BASE_URL}images/trophies/${tier}-${metal}.webp`
-}
 
 const totals = computed(() => {
   let titles = 0

@@ -4,10 +4,14 @@
 // round by round: a VS pre-match card (watch or skip), a post-match box score, a between-rounds
 // path strip, and a champion/eliminated finale. The result is already committed by the engine –
 // this is presentation (Q&A 12), never a re-decision.
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
 import { finaleUrl } from '../art/preload'
+// THE REAL SILVERWARE, and the flight that carries it to the cabinet – see the ⚠ over
+// `herTrophy` and over `continueFinale`.
+import { trophyArtUrl, trophyMetalFor } from '../art/trophies'
+import { armTrophyFlight } from '../composables/trophyArrival'
 import { facePoint } from '../art/faceRects'
 import { venueArtUrl } from '../art/venues'
 import MatchViewer from './MatchViewer.vue'
@@ -278,6 +282,45 @@ const conditionColor = computed(() => `hsl(${Math.round(Math.max(0, Math.min(1, 
 // --- L. Champion / M. Runner-up: the poster ------------------------------------
 // Both screens are one card with one `outcome` (the handoff's own ResultPoster, §22). The parts
 // come off `pending.bracket`, which by the finale holds every round she played, oldest first.
+
+/**
+ * ⚠ THE MARK IS THE REAL TROPHY NOW, AND THE OWNER'S §4 Q4 RULING IS SPENT BY BEING KEPT (31.07).
+ *
+ * This used to be `pending.kidChampion ? '🏆' : '🥈'` under a note reading "the trophy and the medal
+ * are the art we already ship (owner, §4 Q4) – no slot to fill, nothing to draw". That was true when
+ * it was written and the ruling it cites has not changed: `docs/specs/ui-inventory.md` §4 Q4 says of
+ * the trophy and the silver medal, "use what we already ship". WHAT WE SHIP CHANGED. Eighteen
+ * painted cups arrived with the Trophy Cabinet – nine tiers, gold and silver each – so the emoji is
+ * no longer the art we already ship, it is a placeholder standing in front of it.
+ *
+ * The owner, looking at the finished cabinet: «раз у нас есть реальные трофеи, мы бы могли их как
+ * есть рисовать в призах вместо текущих общих эмоджи, каждый титул станет индивидуальным».
+ *
+ * AND THE LAST FOUR WORDS ARE THE FEATURE. A generic cup made a Local Open and a J300 the same
+ * screen with a different word on it; the whole ladder is nine rungs of "the same week, worth more",
+ * and this is the one moment in the game where a rung is supposed to feel like an object. The
+ * painted J300 cup is not the painted local one, so a title now looks like the title it is.
+ *
+ * ⚠ THE URL COMES FROM `art/trophies.ts`, NOT FROM A SECOND STRING HERE. The cabinet draws these
+ * same eighteen files, and two components composing one filename is precisely how the champion
+ * splash 404'd once already (`art/preload.ts`, the `-fs8` note). One builder, two callers.
+ */
+const herTrophy = computed(() =>
+  pending.value ? trophyArtUrl(pending.value.tier, trophyMetalFor(pending.value.kidChampion)) : '',
+)
+/** The GOLD of this tier, for the poster where somebody else lifted it.
+ *
+ *  ⚠ IT IS NOT HERS AND THE POSTER NEVER SAYS IT IS: that card's own name line is the AI champion's,
+ *  and her finish is the line under it ("K. Weber – Semifinalist"). The object still belongs on it,
+ *  because a trophy WAS handed out at that event – it is the third emoji the owner's «вместо текущих
+ *  общих эмоджи» names, and leaving one 🏆 on the third of three sibling posters would have been two
+ *  art styles for one screen. Nothing flies to the cabinet from this card, and nothing should: her
+ *  ledger did not gain a piece of silverware this week. */
+const eventGoldTrophy = computed(() => (pending.value ? trophyArtUrl(pending.value.tier, 'gold') : ''))
+/** The poster's mark, measured at take-off – see `continueFinale`. Only the podium poster carries
+ *  it: it is the only card whose trophy has anywhere to go. */
+const posterMark = useTemplateRef<HTMLImageElement>('posterMark')
+
 const finalRow = computed(() => pending.value?.bracket.at(-1) ?? null)
 /** "def. I. Aigner" / "lost to I. Aigner" – the opponent of the last round she played. */
 const finaleOpponent = computed(() => (finalRow.value ? formatShortName(finalRow.value.oppName) : ''))
@@ -400,7 +443,32 @@ async function skipAll(): Promise<void> {
   await game.tournamentSkip()
   phase.value = 'finale'
 }
+/**
+ * Continue – and, when she is taking something home, the trophy goes to the cabinet in front of her.
+ *
+ * The owner: «Можно даже анимацию сделать "добавления трофея в раздел трофеев" с точечкой зеленой по
+ * итогу». The flight itself is rendered by `App.vue`, because it crosses a boundary this component
+ * cannot: it starts inside a full-screen takeover and lands on the bottom tab bar, which is the
+ * shell's and is about to be uncovered. See `composables/trophyArrival.ts`.
+ *
+ * ⚠ ARMED SYNCHRONOUSLY, BEFORE THE AWAIT, and both halves of that matter:
+ *   * the mark is measured while it is still on screen – one tick later the takeover is unmounting
+ *     and there is no rect left to read;
+ *   * arming also HOLDS THE TAB DOT, and it has to do so before the bar is uncovered. The ledger
+ *     gained this trophy when the engine finalised the run, several taps ago, so the dot's fact is
+ *     already true behind the overlay; without this ordering the dot would be sitting on the tab
+ *     before the trophy set off towards it.
+ *
+ * ⚠ ONLY FROM THE PODIUM. `kidChampion || isRunnerUp` is exactly the pair of finishes that put a
+ * piece of silverware in her cabinet – gold and silver, and there is no third (a knockout draw
+ * leaves two losing semi-finalists and no play-off). A flight from the poster where somebody else
+ * won would animate a cabinet entry that does not exist.
+ *
+ * Under `prefers-reduced-motion` this arms nothing and says so; the trophy is in the cabinet either
+ * way and the dot appears at once. Less motion is not less information.
+ */
 async function continueFinale(): Promise<void> {
+  if (pending.value?.kidChampion || isRunnerUp.value) armTrophyFlight(herTrophy.value, posterMark.value)
   await game.tournamentClose()
 }
 
@@ -909,9 +977,23 @@ const matchMeta = computed(() => {
         class="tf-poster"
         :class="pending.kidChampion ? 'champ' : 'silver'"
       >
-        <!-- The trophy and the medal are the art we already ship (owner, §4 Q4) – no slot to
-             fill, nothing to draw. -->
-        <div class="tf-poster-mark">{{ pending.kidChampion ? '🏆' : '🥈' }}</div>
+        <!-- THE TROPHY SHE ACTUALLY WON, painted, for THIS event's tier: gold on the champion
+             screen, silver on the runner-up screen. Still "the art we already ship" (owner, §4 Q4) -
+             what we ship simply grew eighteen painted cups since that ruling was written. See the
+             note over `herTrophy` in the script for the owner's own words on it.
+             Decorative: the poster says "Champion" or "Runner-up" in words on the very next line, in
+             the colour of its own border and in the name below that, so a reader loses nothing.
+             NOT lazy: it is the first thing on the card the player came here to see. -->
+        <img
+          ref="posterMark"
+          class="tf-poster-mark"
+          :src="herTrophy"
+          alt=""
+          aria-hidden="true"
+          width="88"
+          height="88"
+          decoding="async"
+        />
         <p class="tf-poster-status">{{ pending.kidChampion ? 'Champion' : 'Runner-up' }}</p>
         <h2 class="tf-poster-name">{{ kidFullName }}</h2>
         <img class="tf-poster-photo" :src="finalePortrait" :style="finaleFocus" alt="" />
@@ -952,7 +1034,17 @@ const matchMeta = computed(() => {
       <!-- Exited earlier: the same poster with somebody else's name on it. No art for an AI
            champion, so the photograph's place is taken by her own finish line. -->
       <Card v-else class="tf-poster out">
-        <div class="tf-poster-mark">🏆</div>
+        <!-- The event's gold, and the name under it is the girl who lifted it. No ref and no
+             flight: nothing entered HER cabinet this week. -->
+        <img
+          class="tf-poster-mark"
+          :src="eventGoldTrophy"
+          alt=""
+          aria-hidden="true"
+          width="88"
+          height="88"
+          decoding="async"
+        />
         <p class="tf-poster-status">Champion</p>
         <h2 class="tf-poster-name">{{ championName }}</h2>
         <p class="tf-poster-line">
@@ -1415,9 +1507,19 @@ const matchMeta = computed(() => {
     linear-gradient(135deg, #f4f6fa, #aab2c0 45%, #7d8698 55%, #f4f6fa) border-box;
 }
 
+/* THE MARK IS A PAINTING NOW, NOT A GLYPH. It was `font-size: 52px` on a `<div>` holding an emoji;
+   the type rules are gone with the emoji because an image has no use for them.
+   88 rather than the emoji's 52: a cup is a tall object with a base, a bowl and two handles, and at
+   52px the tier telling – which is the entire point of the swap – is not readable. It is still well
+   inside the master's own resolution (`SET_MAX_SIDE.trophies = 384` in scripts/optimize-art.mjs is
+   128 x 3, so 88px is drawn from more pixels than it needs on any display).
+   `contain`, because the eighteen masters are not all the same aspect and a `cover` would crop the
+   handles off the wide ones. */
 .tf-poster-mark {
-  font-size: 52px;
-  line-height: 1;
+  display: block;
+  width: 88px;
+  height: 88px;
+  object-fit: contain;
 }
 
 /* The design's 0.24em status label. It is the app's MUTED label, not the lime eyebrow – U0's ⚠

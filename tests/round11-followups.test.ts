@@ -86,7 +86,31 @@ describe('F45-1 — the header avatar is age-only, never emotional', () => {
     expect(app).not.toContain('useKidEmotion')
     expect(app).not.toContain('avatarEmotion')
     expect(app).not.toMatch(/avatars\/\$\{/)
-    expect(app).not.toContain('<img')
+    // ⚠ RE-AIMED AGAIN BY THE PODIUM SLICE (31.07), AND ONLY IN ITS PROXY. The claim above is
+    // unchanged and is still the point of this test: the shell shows no face of hers. What changed is
+    // that `expect(app).not.toContain('<img')` was STANDING IN for that claim, and the shell now
+    // renders exactly one picture – the trophy flying from the finale poster to the Trophies tab.
+    // That is an object rather than a portrait, and it is the one image no screen can own: it takes
+    // off inside the tournament takeover and lands on the bottom bar, so neither end is its home.
+    //
+    // The blanket ban is therefore replaced by the thing it was a proxy FOR, in a form no face can
+    // pass – and the replacement is STRICTER, not weaker, in the direction that matters:
+    //   * every path her art can arrive through is named and forbidden outright (`avatars/` is the
+    //     crop directory, `fem-euro` the painting stem, and the two url builders that reach them);
+    //   * and every <img> in the file is ENUMERATED, so a second one cannot appear unnoticed. The
+    //     old assertion could only ever be honoured by deleting it the first day the shell needed an
+    //     image, which is exactly what would have happened here.
+    expect(app).not.toContain('avatars/')
+    expect(app).not.toContain('fem-euro')
+    expect(app).not.toContain('cropUrl')
+    expect(app).not.toContain('portraitUrl')
+    const imgs = [...app.matchAll(/<img\b[\s\S]*?>/g)].map((m) => m[0])
+    expect(imgs, `the shell renders ${imgs.length} images:\n${imgs.join('\n')}`).toHaveLength(1)
+    expect(imgs[0]).toContain('class="trophy-flight"')
+    expect(imgs[0]).toContain(':src="trophyFlight.src"')
+    // ...and it is decoration with no reading of its own: the fact it delivers is the tab dot.
+    expect(imgs[0]).toContain('aria-hidden="true"')
+    expect(imgs[0]).toContain('alt=""')
   })
 
   it('the Home hero and the Kid screen KEEP their emotions', () => {
