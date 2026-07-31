@@ -115,7 +115,15 @@ function hashOf(draws: number[]): string {
 // table - which is where a point-less kid sits - is shared by fewer people and its dense rank is
 // deeper. Same mechanism as the note above, forty times the scale. Full reasoning at the REF
 // declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 164 }
+//
+// ⚠⚠⚠ kidRank RE-PINNED 164 -> 162 (31.07, fix/no-double-booking). `count` 41550 and `hash`
+// e6b0c709 are AGAIN untouched and re-derived byte-for-byte on this branch, which is the whole
+// argument: a rival can no longer be drawn into two of the same week's tournaments, so who plays
+// changes, who wins changes, and which juniors end the year holding points changes with it - but the
+// rule is pure post-draw arithmetic (ZERO draws, on any stream) applied to fields the same
+// `selectEntrants` calls produced in the same order off the same sub-streams. Full reasoning at the
+// REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 162 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

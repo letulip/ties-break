@@ -137,7 +137,14 @@ function hashOf(draws: number[]): string {
 // table - which is where a point-less kid sits - is shared by fewer people and its dense rank is
 // deeper. Same mechanism as the note above, forty times the scale. Full reasoning at the REF
 // declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 164 }
+//
+// ⚠⚠⚠ kidRank RE-PINNED 164 -> 162 (31.07, fix/no-double-booking). `count` 41550 and `hash`
+// e6b0c709 are AGAIN untouched and re-derived byte-for-byte on this branch - which is what P1's
+// claim is actually about, and the claim is unharmed: no plan, no booking and no amount of money can
+// perturb the main stream, and neither can the new no-double-booking rule, because it draws nothing
+// on any stream. What moved is which juniors end the year in the points once a rival stops playing
+// two tournaments in one week. Full reasoning at the REF declaration in tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 162 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

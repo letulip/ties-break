@@ -222,6 +222,213 @@ export function selectEntrants(
   return chosen.map((c) => c.p)
 }
 
+// --- ONE BODY, ONE WEEK ------------------------------------------------------------------------
+//
+// «они физически не могут сразу везде играть, ведь так?» – the owner, 31.07. No, they cannot, and
+// until now nothing said so. `selectEntrants` is called ONCE PER EVENT, each call gets the same
+// condition map (derived once, before any of the week's brackets run) and there is no cross-event
+// exclusion of any kind, so the same rival was drawn into two of the same week's tournaments and
+// played both. Measured on the live engine (tools/double-booked.ts, 6 careers x 156 weeks), read
+// off the results ledger – i.e. what the cohort ACTUALLY played, not what a replica would draw:
+//
+//                                 nine rungs      six rungs (junior-only)
+//     events a season                    139                          92
+//     player-weeks in a draw          45,675                      27,248
+//     DOUBLE-BOOKED player-weeks      14,381 (31.5%)                6,198 (22.7%)
+//     phantom appearances             17,301                       7,600
+//
+// ⚠ AND IT IS NOT AN ADULT-TOUR REGRESSION – IT IS AN OLD DEFECT THE ADULT TOUR MADE VISIBLE. Read
+// the second column: the junior-only calendar, the one every historical bench in this repo was taken
+// on, loses 22.7% of its player-weeks to the same collision, and there is nothing adult about the
+// cause. The junior entrant windows overlap almost completely – j300 [0, 0.25], j60 [0.05, 0.4],
+// j30 [0.12, 0.6], national [0.2, 0.7] – so two junior events on the same week have always drawn
+// twice out of the same slice of the table. What the adult rungs added was WITNESSES, not the bug.
+//
+// It is not a cosmetic impossibility. `walkWindow` in season/rival.ts charges EVERY run of a week
+// and pays ONE week's recovery for all of them:
+//
+//     const recovery = played ? matchWeekRecoveryBase : recoveryBase + ...
+//     if (played) for (const run of played) condition -= run.strain
+//
+// so a rival drawn twice takes two runs' strain against a single week's rest, and the extra
+// appearances land entirely on the players the standings favour.
+//
+// ⚠ IT IS NOT, HOWEVER, THE CAUSE OF THE COHORT-FATIGUE COLLAPSE THE ADULT-TOUR WAVE REPORTED, and
+// this was the first thing measured after the fix rather than assumed. THE COLLISIONS NEVER ADDED
+// TENNIS TO THE WORLD, THEY CONCENTRATED IT: the number of draw slots in a season is a property of
+// the calendar alone (3,616 on nine rungs, 2,112 on six) and this rule does not change it by one.
+// What it changes is WHO plays them. Field measured 8 seeds x 40 ticked weeks, 20-week window:
+//
+//                              nine rungs            six rungs (junior-only)
+//     min median condition     34-36 -> 35-37        69-79 -> 63-70
+//     rivals sitting at 100     9-16 -> 0            75-80 -> 61-64
+//     never played at all     4.5-7.5% -> 0.0%    30.7-33.7% -> 26.6-28.6%
+//     busiest rival, events/s   42.9 -> 35.1          33.8 -> 29.9
+//     mean events per rival     17.8 -> 17.8          10.5 -> 10.5   <- unchanged, by construction
+//
+// The median moves UP on nine rungs and DOWN on six, and both are the same effect seen from either
+// side: spreading a fixed load over more bodies pulls the extremes in. Where the field was wrecked,
+// strain that used to be clamped away on a player already at 0 now lands on somebody who can feel
+// it; where the field was healthy, players who had been idle start paying. So the C3 injury anchor
+// only half returns (1.836 -> 2.032 against a 2.5 corridor floor) and the knee claim stays lost. The
+// cohort on nine rungs is tired because it plays eighteen tournaments a season on `recoveryBase` 1 a
+// week, and the remedy for THAT is a rung that reduces how many draws one rival is ELIGIBLE for –
+// §4.1's `maxAgeYears` on the J tiers. Both guards keep their inverted pins and both carry the
+// measurement; see tests/rivals.test.ts C2 and tests/fatigue-bench.test.ts C3.
+//
+// ⚠ WHY THIS IS POST-DRAW ARITHMETIC AND NOT A FILTER ON THE CANDIDATE POOL. The obvious fix –
+// drop the already-booked players before the draw – is the one fix this engine may not have. Read
+// the note at the top of this file again: the candidate COUNT per tier is a constant of the window
+// *because percentiles come from ORDINAL POSITION*, and `selectEntrants` spends exactly one draw
+// per candidate. A pool that shrinks as the week fills up would make the draw count depend on which
+// events came earlier – i.e. on results, on content and ultimately on player input – and every
+// stream in the game is pinned on that count not moving. So the draws happen EXACTLY as they always
+// did: same calls, same order, same numbers off the same `seed:aitour:<id>` sub-streams. This
+// function runs AFTERWARDS, on the arrays they returned, and it draws NOTHING – on any stream. The
+// frozen MAIN capture (41550 draws / e6b0c709) cannot move by construction: it never enters the
+// tick's weekly `rng` at all, and tests/knock.test.ts re-derives it from the live engine anyway.
+//
+// THE TWO RULES, and both are ORDINAL facts – a tier's rung and a player's standings position –
+// never a new random number:
+//
+//   1. THE HIGHER TIER KEEPS HER. Given a W35 and a J30 on the same Tuesday, she goes to the W35:
+//      it is the more important week, it costs more to reach and it is the one a player plans a
+//      season around. `TIER_LADDER` is the project's single source of truth for "is tier A above
+//      tier B" (season/calendar.ts) and it is a STRENGTH order, so this is a lookup, not a
+//      judgement. `buildSeason` already emits a week strongest-tier-first, so the natural order is
+//      usually the right one – the sort below states the rule anyway, because a rule that depends
+//      on another module's sort staying the way it is today is not a rule.
+//
+//   2. THE LOSING EVENT BACKFILLS BY STANDINGS POSITION. It takes the next player who is not
+//      already booked this week, best standing first – which is exactly the tie-break
+//      `selectEntrants`' own two backfills use, so a slot vacated by this rule is filled by the
+//      same kind of player it would have been filled by there. It reaches OUTSIDE the entrant band
+//      for the same reason those do, and it honours the age gate for the same reason they do: an
+//      age rule a backfill can walk around is no rule at all, and handing a W100 slot to a
+//      thirteen-year-old to avoid a collision would trade one impossibility for a worse one.
+//
+// THE ORDER OF PREFERENCE WHEN A SLOT HAS TO BE FILLED, weakest excuse last:
+//   a. unbooked, old enough, and above the tier's condition floor  – a player who could have been
+//      drawn here in the first place;
+//   b. unbooked and old enough, floor ignored – the tired ones play, exactly as `selectEntrants`'
+//      own last resort lets them, because a draw that cannot be filled is a crash and not a
+//      compromise;
+//   c. the event's OWN drawn entrants, handed back. Reachable only when the WEEK IS
+//      OVER-SUBSCRIBED – when the calendar has scheduled more slots than the world has players –
+//      and it is not hypothetical: season offset 48, the last playable week before the off-season,
+//      collects ALL NINE rungs in every season of every seed, because `claimWeek` pushes each
+//      tier's overshooting final event down against the off-season wall. 248 slots, 199 rivals.
+//      Nothing a selection rule can do about that: 49 of those slots have no fifth-of-a-person to
+//      put in them. So the surplus events keep the players they drew – the collision is then a fact
+//      about the CALENDAR, and it is left visible instead of being smeared over the whole week.
+//      Flagged for the owner; the fix is in the scheduler, not here, and it is deliberately not
+//      taken on this branch because moving a claimed week changes `pickSurface`'s block lookup and
+//      therefore the SURFACE of real events.
+//      FOR THE OWNER, the one alternative considered and not taken: (c) could instead fill from the
+//      LEAST-BOOKED players, which would cap every rival at two events on such a week rather than
+//      letting a popular one collect three (measured 654 players carrying 882 phantom appearances,
+//      i.e. 1.35 each). It spreads the same total strain over more bodies – strictly a tuning call
+//      about whether concentrated or distributed overload is the lesser evil, and not one to smuggle
+//      in under a correctness fix.
+//   d. anybody at all, by standing. Unreachable today (it needs `entrants` itself to have come in
+//      short, which `selectEntrants`' own total-escape already prevents) and present for the same
+//      reason `claimWeek`'s gap retry is: a future cadence change must not be able to turn a tuning
+//      decision into a crash. `buildDraw` reads a short field as `undefined` players.
+//
+// SCOPE: THE CANONICAL BRACKETS, WHICH IS THE WHOLE OF THE PROBLEM. `runAiTournament` is the ONLY
+// live write site for a rival's ledger row (world.ts), and a ledger row is what `rivalConditions`
+// reconstructs a rival's week from – so the load this fixes is the entire load the cohort carries.
+// The kid's shadow run (`computeShadowTournament`) deliberately stays out of it: it draws its field
+// on the separate `seed:kidtour:<id>` stream and already IS a different universe from the canonical
+// bracket for the same event, it writes no rival rows, and pulling it in would move every kid
+// result in every pinned career to fix nothing that is measured.
+//
+// A ONE-EVENT WEEK RETURNS UNTOUCHED, by an early exit rather than by arithmetic that happens to be
+// the identity – 66 of the 852 event weeks measured above, and on those the engine is byte-identical.
+
+/** One event and the field its own sub-stream drew for it, before any cross-event rule is applied. */
+export interface DrawnEvent {
+  event: SeasonEvent
+  entrants: readonly AiPlayer[]
+}
+
+/** Make the week physically possible: no rival in two of its draws. Returns `eventId -> entrants`,
+ *  each list the tier's full `drawSize` and SORTED BY STANDING (best first) – the same contract
+ *  `selectEntrants` gives `buildDraw`, because it is the same consumer.
+ *
+ *  PURE, and ZERO RNG DRAWS ON ANY STREAM. See the long note above for why that is the requirement
+ *  and not merely a nicety. */
+export function resolveDoubleBookings(
+  drawn: readonly DrawnEvent[],
+  cohort: readonly AiPlayer[],
+  ranking: readonly RankingRow[],
+  /** the week's rival conditions, exactly as `selectEntrants` takes them; absent ⇒ nobody is gated */
+  conditions?: ReadonlyMap<string, number>,
+): Map<string, AiPlayer[]> {
+  const out = new Map<string, AiPlayer[]>()
+  // One event cannot collide with itself. Explicit, so "the engine does not move on a single-event
+  // week" is a property of the code rather than a consequence of the sort being stable.
+  if (drawn.length < 2) {
+    for (const d of drawn) out.set(d.event.id, [...d.entrants])
+    return out
+  }
+
+  const total = ranking.length || cohort.length
+  const posOf = new Map<string, number>()
+  ranking.forEach((r, i) => posOf.set(r.playerId, i)) // 0 = best standing
+  const posFor = (id: string) => posOf.get(id) ?? total - 1
+
+  // Rule 1. Strongest rung first. The id tie-break is unreachable at the shipped calendar
+  // (`buildSeason` tracks occupancy PER TIER, so a tier runs at most one event in a week) and is
+  // here so the order is TOTAL – an ordering that is only deterministic while an invariant in
+  // another module holds is a latent non-determinism, and this one would show up as a save that
+  // replays differently.
+  const order = [...drawn].sort(
+    (a, b) =>
+      TIER_LADDER.indexOf(b.event.tier) - TIER_LADDER.indexOf(a.event.tier) ||
+      (a.event.id < b.event.id ? -1 : a.event.id > b.event.id ? 1 : 0),
+  )
+
+  const booked = new Set<string>()
+  for (const { event, entrants } of order) {
+    const drawSize = TIERS[event.tier].drawSize
+    const floor = ECONOMY.availability.minConditionToEnter[event.tier]
+    const fit = (id: string) => (conditions?.get(id) ?? ECONOMY.condition.max) >= floor
+
+    // Whoever the event drew and nobody has claimed: the overwhelming majority of every field.
+    const field = entrants.filter((p) => !booked.has(p.id))
+    const have = new Set(field.map((p) => p.id))
+    const fill = (pool: readonly AiPlayer[]) => {
+      for (const p of pool) {
+        if (field.length >= drawSize) return
+        if (have.has(p.id)) continue
+        field.push(p)
+        have.add(p.id)
+      }
+    }
+
+    if (field.length < drawSize) {
+      // Rule 2: best standing first, age gate honoured, fit players before tired ones.
+      const free = cohort
+        .filter((p) => !booked.has(p.id) && isTierAgeOpen(event.tier, p.ageYears))
+        .sort((a, b) => posFor(a.id) - posFor(b.id))
+      fill(free.filter((p) => fit(p.id))) // (a)
+      fill(free) // (b)
+    }
+    if (field.length < drawSize) {
+      fill(entrants) // (c) – the week is over-subscribed; see (c) in the note above
+      fill([...cohort].sort((a, b) => posFor(a.id) - posFor(b.id))) // (d) – never a short draw
+    }
+
+    // Back into standings order, which is the contract `buildDraw` seeds off. Stable, and keyed on
+    // the same positions `selectEntrants` used, so an untouched field comes out exactly as it went in.
+    field.sort((a, b) => posFor(a.id) - posFor(b.id))
+    for (const p of field) booked.add(p.id)
+    out.set(event.id, field)
+  }
+  return out
+}
+
 // Resolve one match. Kid matches (either side is the kid) run the full engine under
 // a deterministic event-scoped seed and record seed + scoreline. AI-AI matches draw
 // once against the closed-form win probability.
