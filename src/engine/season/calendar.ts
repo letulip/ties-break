@@ -360,6 +360,22 @@ export function surfaceBlockFor(week: number): SurfaceBlock {
   return SURFACE_BLOCKS.find((b) => offset >= b.from && offset <= b.to) ?? SURFACE_BLOCKS[0]
 }
 
+/** A BLOCK'S IDENTITY IS THE SURFACE IT IS MOSTLY MADE OF – the one the player plans around.
+ *
+ *  ⚠ IT MOVED HERE FROM SeasonScreen.vue, and the move is the point: the calendar screen wants the
+ *  same answer for the week grid's court colour that Season's phase strip prints as a block name, and
+ *  the one-line reduce below is exactly the kind of line that gets typed twice and then drifts by an
+ *  argument (`>=` versus `>` decides a two-way tie differently). It belongs next to `SURFACE_BLOCKS`
+ *  anyway: the table is the knob, so "which surface is this block" is a fact about the table.
+ *
+ *  Ties break toward the surface that comes FIRST in the table's own key order, which is stable
+ *  because the weights are literals in one place. No block in `SURFACE_BLOCKS` is tied today. */
+export function dominantSurface(block: SurfaceBlock): Surface {
+  return (Object.keys(block.weights) as Surface[]).reduce((a, x) =>
+    block.weights[x] > block.weights[a] ? x : a,
+  )
+}
+
 /** The surface for an event on `week`, given ONE already-drawn uniform in [0,1). Split out from the
  *  draw so it is testable without an Rng and so the caller owns the draw – which is what keeps the
  *  season sub-stream byte-identical (see pickSurface). */

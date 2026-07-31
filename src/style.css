@@ -208,6 +208,41 @@
     transparent 26px
   );
 
+  /* --- THE CALENDAR'S EVENT COLOURS (screen H's time x day grid) --------------------------------
+     All thirteen, verbatim from docs/design/tokens.css's "Calendar event types" block (and the same
+     values in tokens.json, which is that file's source). They are what a block in the week grid is
+     PAINTED with: the design gives every kind of hour its own hue, so a week is readable as a shape
+     before a single label is read - three greens for the training family, two blues for match play,
+     two greys for school and homework, a rust for drills, a violet for travel and an amber for a
+     tournament.
+
+     ⚠ THEY ARE LIFTED, ONCE, FOR THE REASON THE PAPER TOKENS ABOVE WERE. `docs/design/tokens.css`
+     is a REFERENCE and is never imported, so until this block existed every one of these thirteen
+     resolved to nothing at all - and an unresolved custom property is not an error, it is a block
+     painted with no background. tests/design-tokens.test.ts rule B then guarantees the other half:
+     no component may keep a private copy of one of these, so the grid's twelve block kinds all read
+     the same vocabulary.
+
+     ⚠ `--event-travel` AND `--event-tournament(-border)` SHIP WITHOUT A CALLER, deliberately. The
+     grid is drawn for the ORDINARY week only (the spec's §3.1, the owner's own boundary: "для тех,
+     где нет отпусков, чемпионатов и поездок"), and a trip or a draw is by definition not one of
+     those - `weekDays.ts` makes such a week uniformly `away`. They are declared anyway because the
+     palette is the design's and lifting twelve of thirteen would leave the next reader hunting for
+     the missing one. Nothing may invent a caller for them; see the report. */
+  --event-training: #46685d;
+  --event-training-alt: #2f5c4e;
+  --event-gym: #3c6b62;
+  --event-school: #57626a;
+  --event-school-long: #5c4550;
+  --event-drills: #7d4326;
+  --event-match: #3b5f7d;
+  --event-match-long: #3d5580;
+  --event-study: #49545d;
+  --event-travel: #584a8c;
+  --event-rest: #3f5665;
+  --event-tournament: #9c5a1c;
+  --event-tournament-border: #d9a441;
+
   /* The bottom bar sits a step DARKER than the page, so the page floats above it. */
   --nav-bg: #0c141b;
 
@@ -1439,15 +1474,20 @@ tr.milestone td {
    values are unchanged; the 16/16/12 inset that was `.event-card`'s alone is now the `pad` prop the
    caller passes, which is the same number in the same place. */
 
-/* A PHOTOGRAPH FILLING ITS FRAME. Four places show a painting inside a box the layout has already
+/* A PHOTOGRAPH FILLING ITS FRAME. FIVE places show a painting inside a box the layout has already
    sized – the tournament card's court, the week card's master, the venue arch on Home's next-
-   tournament card, and Home's own hero – and all four need the same four declarations: fill the
-   box, never letterbox, and no descender gap under the image. The masters are not one aspect ratio
+   tournament card, Home's own hero, and (since the calendar slice) the court behind the one event a
+   calendar marker opens – and all five need the same four declarations: fill the box, never
+   letterbox, and no descender gap under the image. The masters are not one aspect ratio
    (626x505 to 625x627, 941x536, 512x512), which is exactly why `cover` is not optional here.
-   `.week-art img` steers its crop as well; that one line stays with it. */
+   `.week-art img` steers its crop as well; that one line stays with it.
+   ⚠ THE FIFTH SELECTOR IS WHY THIS RULE IS IN THE SHARED SHEET AT ALL: the calendar's card had these
+   same four declarations written out in its own scoped block for one commit, which is copy number
+   five of a rule whose comment already counted to four. */
 .event-art img,
 .week-art img,
 .venue-art img,
+.cal-card-art img,
 .diary-hero-img {
   display: block;
   width: 100%;
@@ -2894,20 +2934,13 @@ tr.kid-row td {
 }
 
 
-/* --- the bottom nav's Calendar placeholder ------------------------------------------------------
-   The owner's bar is Season · Calendar · Home · Stats · More, with HOME IN THE CENTRE – and a centre
-   only exists if there are five slots. Calendar is not built in this slice, so the slot renders its
-   glyph and its word at a third of the weight, disabled, with no press state and no dot: a tab that
-   is clearly NEXT rather than a tab that is broken. The alternative – four live tabs and a hole –
-   moves Home off centre, which is the one thing the owner's new order is about. */
-.tab-btn.tab-soon {
-  opacity: 0.34;
-  cursor: default;
-}
-
-.tab-btn.tab-soon:hover {
-  color: var(--muted);
-}
+/* ⚠ THE CALENDAR PLACEHOLDER'S TWO RULES ARE GONE (the calendar slice). `.tab-btn.tab-soon` dimmed the
+   reserved fifth slot to a third of the weight and killed its hover, so the bar could keep five seats
+   – and therefore keep Home in the centre, which is the one thing the owner's order is about – while
+   screen H did not exist. It exists now (`components/screens/CalendarScreen.vue`), the slot routes to
+   it, and `soon` is gone from App.vue with its bindings. Two dimming declarations that nothing can
+   render are exactly the dead rules A2's own guard sweeps for, so they left with the flag rather than
+   waiting for a future placeholder to want them back. */
 
 /* The export's bar sits a step darker than the page, with an 11px label. */
 .tab-bar {

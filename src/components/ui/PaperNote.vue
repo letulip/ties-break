@@ -57,22 +57,49 @@ withDefaults(
 </script>
 
 <template>
+  <!-- THE WRAPPER EXISTS SO THE TAPE CAN SURVIVE `torn` – see the ⚠ note in the style block. It is
+       the component's ROOT, so a caller's class, style and listeners land here; the sheet is the
+       box inside it. A caller that wants to paint ON the paper reaches it with
+       `:deep(.tb-paper)`, and every one of the five call sites does. -->
   <div
-    class="tb-paper"
-    :class="{
-      'tb-paper--ruled': ruled,
-      'tb-paper--torn': torn === true || torn === 'left',
-      'tb-paper--torn-right': torn === 'right',
-      'tb-paper--margin': marginRule,
-    }"
+    class="tb-paper-wrap"
     :style="{ transform: `rotate(${typeof tilt === 'number' ? `${tilt}deg` : tilt})` }"
   >
+    <div
+      class="tb-paper"
+      :class="{
+        'tb-paper--ruled': ruled,
+        'tb-paper--torn': torn === true || torn === 'left',
+        'tb-paper--torn-right': torn === 'right',
+        'tb-paper--margin': marginRule,
+      }"
+    >
+      <slot />
+    </div>
     <span v-if="tape" class="tb-paper-tape" aria-hidden="true"></span>
-    <slot />
   </div>
 </template>
 
 <style scoped>
+/* ⚠ THE TAPE WAS BEING CLIPPED AWAY, AND IT IS THE SHADOW BUG ONE ELEMENT OVER (owner, 30.07: «на
+   этой бумажке есть нижняя часть "скотча", а верхней нет, можем сделать по типу как на family
+   budget сделано, что она прям приклеена была зрительно?»).
+   `clip-path` clips EVERY DESCENDANT, not just the box it is set on. The tape sits at `top: -8px` -
+   half above the sheet and half on it, which is the whole of what makes a strip of tape read as
+   stuck to something - and on a `torn` note the polygon removed everything outside the paper's
+   silhouette, so only the half lying ON the paper survived. Hence a bottom edge of tape with no top.
+   The comparison the owner drew is exact: MoneyScreen's trip photo is a `Polaroid` with `tape` and
+   NO clip-path at all, so its full strip shows and that is what reads as glued down.
+   THE FIX is structural rather than a style, because no value of `top` can escape a clip: the tape
+   stopped being a CHILD of the clipped element. This wrapper is a plain positioned box with no
+   painting of its own, the sheet is inside it, and the tape is the sheet's SIBLING - outside the
+   polygon, above it in paint order, and rotated with it because the tilt is on the wrapper.
+   ⚠ THE SAME FAILURE HAD ALREADY BEEN FOUND ONCE HERE, for the box-shadow (see the drop-shadow note
+   below), and the tape was missed while the fix was being written for the element next to it. */
+.tb-paper-wrap {
+  position: relative;
+}
+
 .tb-paper {
   /* ⚠ `--paper-ink-soft` USED TO BE DECLARED HERE and has moved to `src/style.css`'s :root, beside
      the other five paper tokens, exactly as the note that stood here said it should. It was a
@@ -143,6 +170,10 @@ withDefaults(
   filter: drop-shadow(var(--shadow-paper));
 }
 
+/* Positioned against the WRAPPER, which is the sheet's own box (the sheet is a block child and the
+   wrapper has no padding of its own), so the strip lands on exactly the pixels it always did – it
+   is simply no longer inside the polygon that used to cut its top half off. It keeps the cheap
+   box-shadow rather than the torn sheet's `drop-shadow`, because tape is a rectangle. */
 .tb-paper-tape {
   position: absolute;
   left: 50%;

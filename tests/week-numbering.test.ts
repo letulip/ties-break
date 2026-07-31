@@ -165,6 +165,11 @@ const WEEK_PRINTING_FILES = [
   'components/PlanWeekSheet.vue',
   'components/PracticeFlow.vue',
   'components/WeekRecapCard.vue',
+  // The calendar (screen H) prints a week in three places: its header's date line, the week label on
+  // every look-ahead row, and the entry deadline on the one event a marker opens. Added to this list
+  // when the screen landed – a screen that dates seven weeks in a column is exactly the surface a raw
+  // absolute week would be most visible on.
+  'components/screens/CalendarScreen.vue',
   'components/screens/HomeScreen.vue',
   'components/screens/MoneyScreen.vue',
   'components/screens/MoreScreen.vue',

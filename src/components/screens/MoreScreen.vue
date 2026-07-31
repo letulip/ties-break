@@ -15,6 +15,16 @@ import { isMuted, setMuted } from '../../audio/sfx'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
 import { isHapticsOff, setHapticsOff, supportsHaptics } from '../../audio/haptics'
 import { isWeekStoryAutoOpenOff, setWeekStoryAutoOpenOff } from '../../composables/weekRecap'
+import {
+  DAY_CROSS_PACES,
+  DAY_CROSS_PACE_LABEL,
+  dayCrossPace,
+  isDayCrossOff,
+  prefersReducedMotion,
+  setDayCrossOff,
+  setDayCrossPace,
+  type DayCrossPaceId,
+} from '../../composables/dayCross'
 
 const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -212,6 +222,32 @@ function toggleWeekStory(): void {
   setWeekStoryAutoOpenOff(!weekStoryOff.value)
   weekStoryOff.value = !weekStoryOff.value
 }
+
+// --- THE CALENDAR'S CROSSING-OUT SWEEP (the calendar slice) -----------------------------------------
+//
+// THE FIFTH SWITCH ON THIS SCREEN, and the fourth one in a row that is the same object: a plain
+// localStorage flag behind pure functions, default ON, working before a career loads. Sound, music,
+// haptics and the week's story all behave this way, and «пятый, который ведёт себя иначе» is how a
+// settings screen starts lying about what a switch does.
+//
+// ⚠ IT HAS A SECOND CONTROL, AND THAT IS THE POINT OF IT. The owner asked for a ~2s and a ~5s variant
+// so he can pick BY EYE rather than by reading a number in a diff, so the pace is a live setting and
+// not a rebuild. It uses the app's existing `option-pill` row - the same object the training-plan
+// presets are - and it only appears while the sweep is ON, because a pace for an animation that does
+// not run is a control that does nothing.
+const dayCrossOff = ref(isDayCrossOff())
+function toggleDayCross(): void {
+  setDayCrossOff(!dayCrossOff.value)
+  dayCrossOff.value = !dayCrossOff.value
+}
+const crossPace = ref(dayCrossPace())
+function pickCrossPace(id: DayCrossPaceId): void {
+  setDayCrossPace(id)
+  crossPace.value = id
+}
+/** The OS switch outranks both, and the screen says so instead of offering a control that is quietly
+ *  overruled – the same honesty the "Not supported on this device" hint under Haptics is for. */
+const reducedMotion = prefersReducedMotion()
 </script>
 
 <template>
@@ -381,6 +417,49 @@ function toggleWeekStory(): void {
         <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
         <span class="sound-switch-label">{{ weekStoryOff ? 'OFF' : 'ON' }}</span>
       </button>
+    </div>
+  </section>
+
+  <!-- The calendar's crossing-out sweep. Its own section, beside the week story rather than under
+       "Sound", because the two are the same kind of thing: beats around the end of a week. -->
+  <section>
+    <h2>Calendar animation</h2>
+    <div class="career-row">
+      <div>
+        Cross out the days
+        <span class="hint" style="display: block; margin: 2px 0 0">
+          Off: the week plays straight through, as before
+        </span>
+        <span v-if="reducedMotion" class="hint" style="display: block; margin: 2px 0 0">
+          Your device asks for reduced motion – the sweep stays off
+        </span>
+      </div>
+      <button
+        class="sound-switch"
+        :class="{ on: !dayCrossOff }"
+        role="switch"
+        :aria-checked="!dayCrossOff"
+        @click="toggleDayCross"
+      >
+        <span class="sound-switch-track"><span class="sound-switch-knob"></span></span>
+        <span class="sound-switch-label">{{ dayCrossOff ? 'OFF' : 'ON' }}</span>
+      </button>
+    </div>
+    <!-- Both paces ship so the owner can pick by eye. Hidden while the sweep is off: a pace for an
+         animation that does not run is a control that does nothing. -->
+    <div v-if="!dayCrossOff" class="career-row">
+      <div>Pace</div>
+      <div class="option-row">
+        <button
+          v-for="p in DAY_CROSS_PACES"
+          :key="p"
+          class="option-pill"
+          :class="{ selected: crossPace === p }"
+          @click="pickCrossPace(p)"
+        >
+          {{ DAY_CROSS_PACE_LABEL[p] }}
+        </button>
+      </div>
     </div>
   </section>
 

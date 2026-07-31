@@ -33,7 +33,12 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useKidEmotion } from '../composables/kidEmotion'
-import { useWeekAhead } from '../composables/weekAhead'
+// The "Next goal" ladder: which round at which tier she is actually aiming at, and the skill line
+// for the long stalls. See composables/nextGoal.ts for the two conventions and the measured threshold.
+import { nextGoalFor } from '../composables/nextGoal'
+// The day layout, ONCE: screen H's calendar grid and this card's dot row are the same fact about the
+// same week, seen from either end of it. See the note above `dayDots`.
+import { sessionDays, sessionsForPlan } from '../composables/weekDays'
 import { vacationPackage } from '../engine/economy'
 import { weekArtUrl, weekSceneArtUrl } from '../art/weeks'
 import { weekLabel } from '../shared/dates'
@@ -126,18 +131,26 @@ const artAlt = computed(() => {
 // Mon–Sun letters shown under the day dots (round-7 item 5b).
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
-// Evenly spread `trainDays` "train" dots across 7 slots (largest-remainder-free integer
-// spread – deterministic, no RNG): slot i is a training day iff the running share crosses
-// an integer boundary at i.
+// WHICH DAYS SHE TRAINED, and it is THE SAME ANSWER THE CALENDAR GIVES.
+//
+// ⚠ THIS USED TO SPREAD THE DOTS ITSELF, and the calendar slice found the two screens disagreeing
+// about the same week. This card had a largest-remainder-free integer spread - slot i is a training
+// day iff `floor((i+1)*n/7) > floor(i*n/7)` - which for the balanced preset (5 of 7) rests MONDAY and
+// THURSDAY and trains on SUNDAY. `composables/weekDays.ts` rests Sunday first, then midweek, because
+// that is the shape a junior's week has and because no two rest days may touch. Both were defensible
+// in isolation; together they meant the calendar drew Sunday off on the way INTO a week and this card
+// drew her on court that Sunday on the way out of it, off the identical `plan.train`.
+//
+// So the placement is imported and this file no longer decides. The COUNT never differed - both
+// computed `Math.round(plan.train / 100 * 7)`, which is what `sessionsForPlan` is - so nothing about
+// how many dots are lit has changed, only which ones, and now only one file can answer that.
+//
+// The dots stay TRAIN/REST rather than learning the calendar's court-versus-gym distinction: this tile
+// is a two-number summary of a week that has already happened (see the pin in tests/radar.test.ts for
+// how tightly it is bounded), and the gym day is a detail the grid on screen H has room for.
 const dayDots = computed<('train' | 'rest')[]>(() => {
-  const trainDays = Math.round((plan.value.train / 100) * 7)
-  const dots: ('train' | 'rest')[] = []
-  for (let i = 0; i < 7; i++) {
-    const before = Math.floor((i * trainDays) / 7)
-    const after = Math.floor(((i + 1) * trainDays) / 7)
-    dots.push(after > before ? 'train' : 'rest')
-  }
-  return dots
+  const on = new Set(sessionDays(sessionsForPlan(plan.value.train)))
+  return DAY_LETTERS.map((_, i) => (on.has(i) ? 'train' : 'rest'))
 })
 const trainDayCount = computed(() => dayDots.value.filter((d) => d === 'train').length)
 
@@ -291,21 +304,27 @@ const highlights = computed<string[]>(() => {
 })
 
 // --- THE GOAL NOTE (D's taped scrap) -------------------------------------------------------------
-// D writes "Win one match at the Regional Championship" – the goal for the week ahead. `useWeekAhead`
-// is the app's ONE answer to "what is next week", already player-facing copy (R10-7/R12-15), already
-// reading the engine's arrival verdict rather than guessing. So the note says what the parent has
-// actually committed to, and it can never contradict the button that plays that week.
-const weekAhead = useWeekAhead()
-const goalLine = computed(() => {
-  const w = weekAhead.value
-  const entered = game.snapshot?.upcoming.find((e) => e.entered)
-  // A tournament she is entered for is a GOAL; anything else is a plan, and saying "win a match" of
-  // an exam week would be the copy lying to make itself feel bigger.
-  if ((w.kind === 'tournament' || w.kind === 'walkover') && entered) {
-    return `Win one match at the ${entered.label}`
-  }
-  return w.label
-})
+// D writes "Win one match at the Regional Championship" – the goal for the week ahead.
+//
+// ⚠ IT IS A LADDER NOW, AND WHAT WAS HERE WAS WORSE THAN IT LOOKED. The owner, 30.07: «надо что-то
+// более осмысленное писать про цель, например писать реально, что она на какой-то тир турнира
+// целится, на четверть или полуфинал, на победу потом, т.е. на шаги ее путь разложить. Если долго не
+// получается дойти, то разбавлять какими-то навыками, например next goal: improve stability».
+//
+// The two arms this replaced: entered for a tournament -> "Win one match at the {label}", FOREVER,
+// so a girl with three titles at that rung was still being told to win one match; and otherwise
+// `weekAhead.label`, which is the BUTTON's text - an ordinary week printed "Next goal: Training
+// week", the week's name written twice.
+//
+// The whole ladder lives in composables/nextGoal.ts, with the two conventions it rests on and the
+// bench that set its one threshold. Nothing was added to the Snapshot for it: `TierDef.points` is
+// indexed by finish, so a counting result inverts to the round she reached.
+//
+// ⚠ AND `useWeekAhead` IS GONE FROM THIS CARD, WHICH IS THE POINT RATHER THAN A TIDY-UP. It is still
+// the app's one answer to "what is next week" and it is still what the buttons on Home and the
+// calendar read; what it stopped being is a stand-in for a goal. The two are different questions,
+// and only one of them was ever being answered here.
+const goalLine = computed(() => (game.snapshot ? nextGoalFor(game.snapshot).text : ''))
 
 // The week's booked friendly, if it was played (an injury cancels + refunds it, and then there is
 // no match event at all). The engine already resolved it; the flow only presents it.
@@ -509,11 +528,20 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 }
 
 /* THE NOTE RIDES THE PAINTING. D's own numbers: up 34px over the art, and 2px wider than the
-   content column on both sides, so the scrap is visibly not aligned to the grid the cards obey. */
+   content column on both sides, so the scrap is visibly not aligned to the grid the cards obey.
+   ⚠ WHERE THE PAPER'S OWN BOX IS SET FROM NOW ON. `PaperNote`'s root is a positioned WRAPPER since
+   the tape fix (the tape has to live outside the clip-path, or a torn note loses its top half), so
+   a class on the component lands on that wrapper and not on the sheet. What positions the object -
+   the lift over the painting, the negative margins, the stacking - is the wrapper's business and
+   stays here; the INSET is the paper's and is set through `:deep`. Splitting them this way is what
+   keeps the padding inside the sheet's background instead of becoming a transparent gap around it. */
 .recap-note {
   position: relative;
   z-index: 1;
   margin: -34px -2px 0;
+}
+
+.recap-note :deep(.tb-paper) {
   padding: 16px 62px 18px 26px;
 }
 
@@ -775,12 +803,20 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 }
 
 /* The goal scrap: D's +0.4°, the opposite cut to the note above it, and the label and the goal on
-   one line with the trophy in the corner. */
+   one line with the trophy in the corner.
+   ⚠ THIS IS THE NOTE THE OWNER WAS LOOKING AT when he reported half a strip of tape, so it is the
+   one that pays the most attention to the split above: the flex row lays out the LABEL, THE GOAL
+   and the doodle, which are all slotted INSIDE the sheet, so the row has to be the sheet. Left on
+   the wrapper it would have made flex items of the paper and the tape - and laid the tape out
+   beside the note instead of across its top edge. */
 .recap-goal {
+  margin-top: 16px;
+}
+
+.recap-goal :deep(.tb-paper) {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  margin-top: 16px;
   padding: 18px 66px 18px 22px;
 }
 
