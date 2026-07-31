@@ -271,6 +271,15 @@ export interface DayContext {
    *  `weekGridFor` - always passes it, and a test that forgets it gets the common week, which is the
    *  safe direction. */
   offSeason?: boolean
+  /** WHICH family package this week is, when it is one – `ECONOMY.vacation.packages`' own id. Optional
+   *  and absent on every caller but the calendar, exactly like `offSeason` above.
+   *
+   *  ⚠ IT ARRIVES AS DATA, NOT AS A LOOKUP, and that is not a style choice: this module may not import
+   *  from `../engine/` (a guard enforces it, and it caught me reaching for `isOffSeasonWeek` once
+   *  already). The composer knows the booking and hands the id down, exactly as it hands `offSeason`
+   *  down. An unknown id simply falls back to the generic family arc, so a new package in the
+   *  catalogue degrades to today's behaviour rather than to an empty week. */
+  vacationId?: string
   /** 0 = Monday … 6 = Sunday */
   index: number
   /** what the PLAN made of this day – or would have, on a week it does not own. */
@@ -386,13 +395,103 @@ const FAMILY_ARC: readonly (readonly DayBlock[])[] = [
 // has one. `training` and `trainingAlt` finally have a caller - they were reserved for exactly this.
 const PRE_SEASON_ARC: readonly (readonly DayBlock[])[] = [
   [{ start: 9, span: 3, kind: 'training', label: 'Pre-season' }, { start: 15, span: 2, kind: 'gym', label: 'Gym' }],
-  [{ start: 9, span: 3, kind: 'trainingAlt', label: 'Court work' }, { start: 15, span: 2, kind: 'gym', label: 'Fitness' }],
+  [{ start: 9, span: 3, kind: 'trainingAlt', label: 'Court work' }, { start: 15, span: 2, kind: 'gym', label: 'Cardio' }],
   [{ start: 9, span: 3, kind: 'training', label: 'Pre-season' }, { start: 15, span: 2, kind: 'gym', label: 'Gym' }],
-  [{ start: 10, span: 3, kind: 'rest', label: 'Recovery' }],
+  [{ start: 10, span: 3, kind: 'rest', label: 'Rest day' }],
   [{ start: 9, span: 3, kind: 'trainingAlt', label: 'Court work' }, { start: 15, span: 2, kind: 'gym', label: 'Gym' }],
-  [{ start: 9, span: 3, kind: 'training', label: 'Pre-season' }, { start: 15, span: 2, kind: 'gym', label: 'Fitness' }],
+  [{ start: 9, span: 3, kind: 'training', label: 'Pre-season' }, { start: 15, span: 2, kind: 'gym', label: 'Cardio' }],
   [{ start: 11, span: 3, kind: 'rest', label: 'Day off' }],
 ]
+
+// ⚠ ONE ARC PER PACKAGE, AND THEY NARRATE THE LADDER THAT IS ALREADY IN THE MODEL.
+//
+// Owner, 31.07: «для каждого типа отпуска свое расписание недели... а то сейчас куда бы ни поехала и
+// расписание одинаковое, и week recap, ну кроме картинки».
+//
+// He is right about the symptom and the fix has one hard rule: these must not be six flavours of
+// nothing. `ECONOMY.vacation.packages` already differ by `conditionGain` – 12 / 14 / 16 / 20 / 25 /
+// 30 – so the week HAS a real ladder in it and the player has never been able to see it. Each arc
+// below is that number drawn: how much of the week is actually recovery, and what it costs to get
+// there. A staycation is her own bed and her own life going on around her; the clinic at the top is
+// treatment with a timetable. Invent a difference these numbers do not have and the grid becomes
+// decoration that will drift the first time somebody re-tunes a package.
+//
+// TRAVEL IS PART OF THE PRICE. Grandma is "two trains and a bus" and camping is a road-trip, so both
+// spend a day at each end getting there – which is exactly why their gain sits below the seaside's
+// for a similar kind of rest. The staycation has no travel at all, and that is its whole pitch.
+//
+// ⚠ `Study` RIDES IN ALL FIVE WEEKDAY ARMS, as in FAMILY_ARC, for the reason that table states: the
+// table asserts and the composer may only REMOVE. `dropOffSeasonStudy` and the weekend rule take it
+// away where there is no term to miss. A travel day is the one exception - homework does not happen
+// on a train with the bags - and that is an assertion about the day, not the composer editing it.
+const VACATION_ARCS: Record<string, readonly (readonly DayBlock[])[]> = {
+  // 12 – the cheapest and the least recovery, because nothing about her life pauses. Her own bed,
+  // her own people, and the household carrying on around her.
+  staycation: [
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 3, kind: 'rest', label: 'Home day' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 12, span: 4, kind: 'vacation', label: 'Her pals' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 3, kind: 'rest', label: 'Lie-in' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 12, span: 4, kind: 'vacation', label: 'Her pals' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 4, kind: 'vacation', label: 'Out all day' }],
+    [{ start: 11, span: 4, kind: 'vacation', label: 'Her pals' }],
+    [{ start: 11, span: 3, kind: 'rest', label: 'Home day' }],
+  ],
+  // 14 – two trains and a bus at each end, and slow days in the middle. The travel is the reason
+  // this sits barely above a staycation despite being a week away.
+  grandma: [
+    [{ start: 8, span: 5, kind: 'travel', label: 'Two trains' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 4, kind: 'vacation', label: 'Slow day' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 4, kind: 'vacation', label: 'The garden' }],
+    [{ start: 10, span: 3, kind: 'rest', label: 'Long lunch' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 4, kind: 'vacation', label: 'Slow day' }],
+    [{ start: 10, span: 4, kind: 'vacation', label: 'The river' }],
+    [{ start: 9, span: 5, kind: 'travel', label: 'Long way home' }],
+  ],
+  // 16 – outdoors and on her feet all week. Genuinely restorative for a tennis player because none
+  // of it is tennis, but a tent is not a hotel bed, and the road eats both ends.
+  camping: [
+    [{ start: 8, span: 5, kind: 'travel', label: 'Road-trip out' }],
+    [{ start: 10, span: 5, kind: 'vacation', label: 'The lake' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 4, kind: 'vacation', label: 'Walk' }],
+    [{ start: 10, span: 5, kind: 'vacation', label: 'The lake' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 4, kind: 'vacation', label: 'Camp day' }],
+    [{ start: 10, span: 4, kind: 'vacation', label: 'Last swim' }],
+    [{ start: 9, span: 5, kind: 'travel', label: 'Road-trip home' }],
+  ],
+  // 20 – the first package that is simply a holiday. She sleeps, and that is the point: no programme,
+  // no drive, nothing to be on time for.
+  seaside: [
+    [{ start: 9, span: 4, kind: 'travel', label: 'Travel out' }],
+    [{ start: 10, span: 2, kind: 'rest', label: 'Lie-in' }, { start: 12, span: 4, kind: 'vacation', label: 'The sea' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 5, kind: 'vacation', label: 'The sea' }],
+    [{ start: 10, span: 2, kind: 'rest', label: 'Lie-in' }, { start: 12, span: 4, kind: 'vacation', label: 'The pool' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 5, kind: 'vacation', label: 'The sea' }],
+    [{ start: 10, span: 5, kind: 'vacation', label: 'Last day' }],
+    [{ start: 10, span: 4, kind: 'travel', label: 'Flight home' }],
+  ],
+  // 25 – rest WITH A PROGRAMME, which is the blurb's own phrase and the honest reason it gains more
+  // than a beach: somebody is managing the recovery instead of hoping for it.
+  resort: [
+    [{ start: 9, span: 3, kind: 'travel', label: 'Travel out' }, { start: 15, span: 2, kind: 'physio', label: 'Check-up' }],
+    [{ start: 9, span: 2, kind: 'physio', label: 'Physio' }, { start: 12, span: 3, kind: 'vacation', label: 'Pool' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 2, kind: 'physio', label: 'Rub-down' }, { start: 14, span: 3, kind: 'rest', label: 'Rest' }],
+    [{ start: 9, span: 2, kind: 'physio', label: 'Physio' }, { start: 12, span: 3, kind: 'vacation', label: 'Pool' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 2, kind: 'physio', label: 'Rub-down' }, { start: 14, span: 3, kind: 'rest', label: 'Rest' }],
+    [{ start: 10, span: 3, kind: 'physio', label: 'Last one' }, { start: 14, span: 2, kind: 'rest', label: 'Rest' }],
+    [{ start: 10, span: 4, kind: 'travel', label: 'Home' }],
+  ],
+  // 30 – the clinic the pros use. Almost the whole week is treatment, on somebody else's timetable,
+  // and the two loose hours read as the exception rather than the shape.
+  elite: [
+    [{ start: 9, span: 3, kind: 'travel', label: 'Travel out' }, { start: 14, span: 3, kind: 'physio', label: 'Tests' }],
+    [{ start: 9, span: 3, kind: 'physio', label: 'Physio' }, { start: 14, span: 2, kind: 'gym', label: 'Moving' }],
+    [{ start: 9, span: 3, kind: 'physio', label: 'Physio' }, { start: 14, span: 2, kind: 'rest', label: 'Rest' }],
+    [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 3, kind: 'physio', label: 'Physio' }, { start: 15, span: 2, kind: 'gym', label: 'Moving' }],
+    [{ start: 9, span: 3, kind: 'physio', label: 'Physio' }, { start: 14, span: 2, kind: 'rest', label: 'Rest' }],
+    [{ start: 9, span: 3, kind: 'physio', label: 'Final review' }, { start: 13, span: 3, kind: 'vacation', label: 'Free time' }],
+    [{ start: 10, span: 4, kind: 'travel', label: 'Home' }],
+  ],
+}
 
 /** Everything that is her SPORT, as opposed to school, homework, rest, a journey or the family's
  *  own hours. One list, used by the layoff rule below and by nothing else here – the tests keep
@@ -425,7 +524,13 @@ function layoffDay(shapes: BandShapes, day: DayContext): readonly DayBlock[] {
 const WEEK_SHAPES: Record<WeekKind, (shapes: BandShapes, day: DayContext) => readonly DayBlock[]> = {
   school: examDay,
   away: (_shapes, day) => TRIP_ARC[day.index] ?? [],
-  off: (_shapes, day) => (day.offSeason === true ? PRE_SEASON_ARC[day.index] ?? [] : FAMILY_ARC[day.index] ?? []),
+  // Three weeks wear one kind, and they are told apart by DATA the composer hands down rather than by
+  // anything this module could look up: the off-season block, a named family package, and the generic
+  // family week a package we do not recognise falls back to.
+  off: (_shapes, day) =>
+    (day.offSeason === true
+      ? PRE_SEASON_ARC
+      : (day.vacationId !== undefined ? VACATION_ARCS[day.vacationId] : undefined) ?? FAMILY_ARC)[day.index] ?? [],
   rehab: layoffDay,
 }
 
@@ -638,7 +743,15 @@ export function weekGridFor(
       dropOffSeasonStudy(
         week.offSeason,
         d.kind,
-        dropWeekendSchool(d.index, dayBlocksFor(d.kind, band, { index: d.index, role: roles[i], offSeason: week.offSeason })),
+        dropWeekendSchool(
+          d.index,
+          dayBlocksFor(d.kind, band, {
+            index: d.index,
+            role: roles[i],
+            offSeason: week.offSeason,
+            vacationId: week.vacationId,
+          }),
+        ),
       ),
       seed,
       week.week,

@@ -503,10 +503,14 @@ describe('W5 — a live season: every week has a painting, and it is the week\'s
     expect(restFrames, 'three seasons of resting every knock must paint it at least once').toBeGreaterThan(0)
   })
 
-  it('world.ts really passes the booking through – the one optional field on the view', () => {
-    // `vacationPackageId` is the only OPTIONAL field on DiaryWorldView (it feeds no copy licence, so a
-    // fixture may omit it), which means a missing wire-up would show up as "every holiday draws the
-    // training frame" rather than as a type error. So the wire-up is pinned.
+  it('world.ts really passes the booking through – the frame AND, now, the words', () => {
+    // ⚠ RE-AIMED, NOT WEAKENED (31.07). This used to be titled "the one optional field on the view"
+    // and its reason was that `vacationPackageId` fed no copy licence, so a fixture could omit it and
+    // a missing wire-up would surface as "every holiday draws the training frame" rather than as a
+    // type error. The field now licenses one photo line and one condition line PER PACKAGE, so it is
+    // required on `DiaryWorldView` and a fixture that omits it no longer compiles.
+    // The wire-up pin stays exactly as it was, and it is worth MORE than before: the same one line in
+    // world.ts is now the only thing standing between six holidays and one sentence.
     const world = read('../src/engine/world.ts')
     expect(world).toContain('vacationPackageId: vacationForWeek(world, world.week)?.packageId ?? null')
   })

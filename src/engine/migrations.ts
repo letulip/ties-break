@@ -818,6 +818,47 @@ export function migrateSave(raw: unknown): WorldState {
     v = 33
   }
 
+  // v33 -> v34: THE ON-RAMPS SHE HAS ALREADY CROSSED.
+  //
+  // `WorldState.onRampCleared` latches the bottom rung of each table open once she has cleared its
+  // band, because the band is denominated in a ROLLING 52-WEEK window and the evidence therefore
+  // deletes itself (see the field's own note, and tools/j30-onramp-lock.ts for what that cost).
+  //
+  // ⚠ THE BACK-FILL IS EXACT, NOT BEST-EFFORT, and that is worth spelling out because a save's
+  // `results` are pruned to 52 weeks and would have made it a guess. `bestFinishByTier` is a
+  // HIGH-WATER MARK that is never pruned: a tier appears in it if she has ever finished an event
+  // there. So "has she ever been on the ITF table" is answerable exactly, for every existing save,
+  // however long ago it happened - which is the difference between a girl keeping the access she
+  // earned and a girl being asked to earn it twice.
+  //
+  // Three sources, OR-ed, weakest last:
+  //   * a finish recorded at any rung of the table          - durable, never pruned;
+  //   * a counting result on it inside the current window   - she is out there right now;
+  //   * the on-ramp's band met today                        - the standard the rung asks for.
+  // The last two are what `latchOnRamps` re-checks on every tick anyway, so they are here only so a
+  // migrated save is already correct BEFORE its first tick - nothing depends on them being complete.
+  //
+  // Written defensively and idempotently (an already-filled object is left alone, a malformed one
+  // replaced) for the append-only reason v30 states. No field is removed, no sub-stream is added or
+  // reordered, and not one draw is taken - so the frozen MAIN capture (41550 / e6b0c709) cannot move.
+  if (v === 33) {
+    const best = (save.bestFinishByTier ?? {}) as Record<string, unknown>
+    const played = (tiers: string[]) => tiers.some((t) => best[t] !== undefined)
+    const results = Array.isArray(save.results) ? (save.results as { playerId?: string; tier?: string }[]) : []
+    const hasResultOn = (tiers: string[]) =>
+      results.some((r) => r.playerId === KID_ID && typeof r.tier === 'string' && tiers.includes(r.tier))
+    const ITF = ['j30', 'j60', 'j300']
+    const WTA = ['w15', 'w35', 'w100']
+    const current = save.onRampCleared as { itf?: unknown; wta?: unknown } | undefined
+    if (!current || typeof current !== 'object') {
+      save.onRampCleared = {
+        itf: played(ITF) || hasResultOn(ITF),
+        wta: played(WTA) || hasResultOn(WTA),
+      }
+    }
+    v = 34
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

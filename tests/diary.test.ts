@@ -38,6 +38,7 @@ import {
   toSnapshot,
   withdrawEvent,
 } from '../src/engine/world'
+import { ECONOMY } from '../src/engine/economy'
 import { migrateSave } from '../src/engine/migrations'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIER_SHORT, tierFromLabel } from '../src/engine/season/calendar'
@@ -145,6 +146,7 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       runPointsThisWeek: 0,
       milestones: [],
       vacationWeek: false,
+      vacationPackageId: null,
       // ⚠ W2 added `trainPct` to the view (how hard the PLAYER worked her). This test is about
       // `rankClimbed` and nothing else; the balanced preset is what a career starts on.
       trainPct: 75,
@@ -231,6 +233,7 @@ function makeFacts(input: {
     examsWeek: s === 'exams',
     offSeasonWeek: s === 'offSeason',
     vacationWeek: s === 'vacation',
+    vacationPackageId: null,
     // ⚠ W2: the plan the player set. This sweep is the DIARY_POOL honesty pin and no line in that
     // pool is licensed on the plan, so the fixture holds the balanced preset – the week-note pool
     // that IS licensed on it has its own sweep, below, for the same reason the journey note does.
@@ -939,5 +942,119 @@ describe('surfaces + shared tables', () => {
     // the walk itself lives engine-side now – the composable must not have kept a copy
     expect(composable).not.toContain('lastResult')
     expect(composable).not.toContain('finishIdx')
+  })
+})
+
+// =================================================================================================
+// ⚠ SIX HOLIDAYS, SIX NOTES - AND THE SENTENCES CLIMB WITH WHAT THE WEEK ACTUALLY GAVE HER
+// =================================================================================================
+//
+// Owner, 31.07: «Со своими итоговыми записками на week recap, а то сейчас куда бы ни поехала и
+// расписание одинаковое, и week recap, ну кроме картинки».
+//
+// He named the cause precisely. `vacationPackageId` reached the diary from the day the paintings
+// shipped, and `weekSceneFor` was the ONLY thing that read it - so six different weeks away were
+// captioned with one sentence and told apart by the picture alone.
+describe('a week away says which week away it was', () => {
+  const IDS = ECONOMY.vacation.packages.map((p) => p.id)
+  // Built off the file's own `makeFacts` so the week is a REAL vacation week in every other respect;
+  // only the package id varies, which is the one thing under test.
+  const away = (packageId: string | null): DiaryFacts => ({
+    ...makeFacts({ condition: 90, injured: false, result: null, rankClimbed: false, losses: 0, scenario: 'vacation' }),
+    vacationPackageId: packageId,
+  })
+
+  for (const surface of ['photo', 'condition'] as const) {
+    it(`every package has its own ${surface} line, and no two are the same sentence`, () => {
+      // Derived from the catalogue: a seventh package fails here rather than quietly inheriting the
+      // generic sentence, which is the exact failure this whole block is about.
+      const lines = IDS.map((id) => {
+        const pool = DIARY_POOL.filter((p) => p.surface === surface && p.license(away(id)))
+        const own = pool.filter((p) => typeof p.text === 'string' && p.license(away(id)) && !p.license(away(null)))
+        expect(own.length, `${id} has no ${surface} line of its own`).toBeGreaterThan(0)
+        return own.map((p) => p.text as string)
+      })
+      const flat = lines.flat()
+      expect(new Set(flat).size, 'two packages share a sentence').toBe(flat.length)
+    })
+  }
+
+  it('the generic line survives, and fires exactly where it is still right', () => {
+    // ⚠ NOT DELETED. Bookings are retained four trailing weeks; past that the save genuinely does not
+    // know where she went, and "A week away. The racquet stayed home." is the honest sentence for a
+    // week whose destination has been forgotten. It is narrowed to that case, not removed.
+    const forgotten = DIARY_POOL.filter((p) => p.surface === 'photo' && p.license(away(null)))
+    expect(forgotten.some((p) => p.text === 'A week away. The racquet stayed home.')).toBe(true)
+    // ...and it must NOT compete with a package's own line on a week that knows its package.
+    const known = DIARY_POOL.filter((p) => p.surface === 'photo' && p.license(away('seaside')))
+    expect(known.some((p) => p.text === 'A week away. The racquet stayed home.')).toBe(false)
+  })
+
+  it('⚠ a cheap week never claims what an expensive one delivers', () => {
+    // The honesty rule of this file, applied to the new pool. The packages differ by `conditionGain`
+    // (12 -> 30) and the sentences are written to climb with it; the machine-checkable half of that
+    // is that the two ENDS of the ladder do not swap lines - a staycation reading like the clinic is
+    // the diary's cardinal sin wearing a sun hat.
+    const ladder = [...ECONOMY.vacation.packages].sort((a, b) => a.conditionGain - b.conditionGain)
+    const lineFor = (id: string) =>
+      DIARY_POOL.filter((p) => p.surface === 'condition' && p.license(away(id)) && !p.license(away(null)))
+        .map((p) => p.text as string)
+        .join(' ')
+    expect(lineFor(ladder[0].id)).not.toBe(lineFor(ladder[ladder.length - 1].id))
+    // Every one of them still claims a POSITIVE condition week, because every package is rest.
+    for (const p of ECONOMY.vacation.packages) {
+      const pool = DIARY_POOL.filter((x) => x.surface === 'condition' && x.license(away(p.id)) && !x.license(away(null)))
+      for (const line of pool) expect(line.claims.affect, `${p.id} must read as a good week`).toBe('positive')
+    }
+  })
+})
+
+// =================================================================================================
+// ⚠ A PERMANENT FACT IS NEVER READ OUT OF A WINDOW THAT MOVES
+// =================================================================================================
+//
+// Owner, 31.07: «кажется в Important moments на экране профиля девочки вообще ничего не происходит.
+// Может этот блок вообще стоит убрать из верстки?»
+//
+// It should not be removed - it had no data, for a reason that is a whole class of bug in this app
+// rather than a feature being wrong. The strip scraped `snapshot.events` for milestone rows. Those
+// rows carry `keep: true`, so `pruneEvents` never touches them IN THE WORLD - but the snapshot ships
+// `events.slice(-60)`, and that slice is POSITIONAL. Sixty newer rows is a couple of months of play,
+// so a first title from season one falls out and never comes back: the block works for a fortnight
+// and then fails silently for ever, which is worse than never working because nothing tells you.
+//
+// The same shape has now bitten twice (the radar's evidence was the other). So this pins the rule.
+describe('the durable ledger reaches the screen that needs it', () => {
+  it('the snapshot carries `milestones` whole, not a slice of the feed', () => {
+    const world = createWorld('moments-ledger')
+    world.milestones = [
+      { type: 'title', week: 3, tier: 'local' },
+      { type: 'international', week: 40, tier: 'j30' },
+    ]
+    const snap = toSnapshot(world)
+    expect(snap.milestones).toHaveLength(2)
+    expect(snap.milestones.map((m) => m.type)).toEqual(['title', 'international'])
+  })
+
+  it('...and it survives a feed long enough to have flushed the milestone events out of it', () => {
+    // The failing case, built exactly as a real career reaches it: far more than SNAPSHOT_EVENTS
+    // ordinary rows on top of an old milestone. The feed forgets; the ledger must not.
+    const world = createWorld('moments-flush')
+    world.milestones = [{ type: 'title', week: 3, tier: 'local' }]
+    for (let i = 0; i < 200; i++) {
+      world.events.push({ id: i, week: 10 + i, type: 'expense', text: 'a bill' })
+    }
+    const snap = toSnapshot(world)
+    expect(snap.events.some((e) => e.type === 'milestone'), 'the feed has flushed, as designed').toBe(false)
+    expect(snap.milestones, 'the ledger has not').toHaveLength(1)
+  })
+
+  it('⚠ the Kid screen reads the LEDGER and not the feed', () => {
+    // Source-level, and deliberately so: jsdom renders no layout and the failure mode here is not a
+    // thrown error but an empty strip on a save nobody in CI plays for long enough to reach.
+    const kid = readFileSync(new URL('../src/components/screens/KidScreen.vue', import.meta.url), 'utf8')
+    const moments = kid.slice(kid.indexOf('const moments = computed'), kid.indexOf('// --- THE SKILLS RADAR'))
+    expect(moments).toContain('snap.milestones')
+    expect(moments, 'the moments strip is back on the volatile feed').not.toContain('snap.events')
   })
 })

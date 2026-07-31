@@ -238,16 +238,72 @@ const COACH_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
     'A field she should be beating.',
   ],
 }
+
+// ⚠ THE COACH AND THE RING WERE ANSWERING DIFFERENT QUESTIONS, AND THE CARD PRINTED THEM AS ONE.
+//
+// Owner, 31.07: «иногда попадается "On paper this is hers to lose" при 92% =) и в обратную сторону
+// тоже бывает». Both halves of that are real, and they are two different faults:
+//
+//   * THE SEAM. The ring is `firstMatchChance` – her odds against ONE named opponent in the first
+//     round. The coach's line comes off `fieldStrength` – the share of the WHOLE field ranked above
+//     her. A strong field can hand her a soft opener; a field she towers over can hand her the one
+//     player in it who beats her. Measured over 150,336 cards (tools/coach-line-drift.ts): the two
+//     read as contradicting each other on 22.5% of them – "this field is strong" beside a ring of
+//     77% on 15.6%, and a favourite line beside a ring of 22% on 6.9%. Nearly one card in four.
+//     The fix is NOT to make one of them lie. Both facts are worth having, so the coach says the
+//     second one out loud when it cuts against the first, which is what a coach actually does.
+//
+//   * THE UNDERSTATEMENT, which is the one he quoted, and it is only 1.8% of cards. "Hers to lose"
+//     is a HEDGE – it means the result is in doubt and the doubt is on her side. On a ring of 92%
+//     there is no doubt to hedge, so the line reads as a joke. That is a copy problem, fixed by not
+//     offering hedged wordings on a card the ring already calls a near-certainty.
+const RING_COMFORTABLE = 0.65
+const RING_HARD = 0.35
+const RING_CERTAIN = 0.85
+
+/** Wordings that imply the result is in doubt. Held apart from the pools rather than removed: they
+ *  are good lines on a card where the doubt is real, and only wrong where it is not. */
+const HEDGED_LINES = new Set(['On paper this is hers to lose.', 'A field she should be beating.'])
+
+/** What the coach adds when the draw cuts against the field – three wordings each, off the event's
+ *  own sub-stream like the field line, so a card never changes between renders and two cards on
+ *  screen together do not echo. Silent when the two agree, which is 77.5% of cards: a seam that
+ *  fired every time would stop being information and become wallpaper. */
+const DRAW_CLAUSES: Record<'kind' | 'cruel', readonly string[]> = {
+  kind: [
+    'The draw has been kind, though.',
+    'Her first one is winnable, though.',
+    'She has a way in, though – look who she opens against.',
+  ],
+  cruel: [
+    'She has drawn the one who can stop her, though.',
+    'Of everyone here, she drew the wrong one first.',
+    'The first round is the hard part, though.',
+  ],
+}
+
 function coachSays(e: UpcomingEvent): string {
   // `surfaceFit` is the engine's own verdict with the surface name sliced off (R11-15) – the card
   // names the court once, beside its ring, so the coach must not name it a second time.
   const fit = surfaceFit(e.surface)
-  const pool = COACH_FIELD_LINES[e.preview.fieldStrength]
-  const field = pool[Math.floor(rngFromSeed(`${game.snapshot?.seed ?? ''}:coachsay:${e.id}`)() * pool.length)]
-  if (!fit) return field
+  const chance = e.preview.firstMatchChance
+  const strength = e.preview.fieldStrength
+  const pick = (pool: readonly string[], salt: string) =>
+    pool[Math.floor(rngFromSeed(`${game.snapshot?.seed ?? ''}:${salt}:${e.id}`)() * pool.length)]
+
+  // Filtering shortens the pool and therefore changes which line the same draw lands on – still
+  // deterministic per event, which is all the sub-stream ever promised.
+  const all = COACH_FIELD_LINES[strength]
+  const pool = chance >= RING_CERTAIN ? all.filter((l) => !HEDGED_LINES.has(l)) : all
+  const parts = [pick(pool.length ? pool : all, 'coachsay')]
+
+  if (strength === 'strong' && chance >= RING_COMFORTABLE) parts.push(pick(DRAW_CLAUSES.kind, 'coachdraw'))
+  else if (strength === 'favourite' && chance <= RING_HARD) parts.push(pick(DRAW_CLAUSES.cruel, 'coachdraw'))
+
   // "suits her game" -> "The court suits her game." Capitalised into a sentence, because the coach
   // speaks in sentences and the engine's fragment does not.
-  return `The court ${fit}. ${field}`
+  if (fit) parts.unshift(`The court ${fit}.`)
+  return parts.join(' ')
 }
 
 // U0: the ring's geometry and the arithmetic that turns a chance into a dash offset left for

@@ -116,11 +116,24 @@ const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6] as const
  *  kinds are shaped by the day INDEX and by the role the plan would have given the day, so a block
  *  that runs off the bottom of the canvas or a label that breaks mid-word can now hide on a
  *  Wednesday of a trip week - which is exactly where nobody looks. */
+// ⚠ EVERY CONTEXT AN `off` WEEK CAN CARRY, not just the default one (31.07). `off` serves the
+// off-season block, the six named family packages and the generic family week, and the arc it draws
+// depends ENTIRELY on the context - so a sweep that passes no context checked exactly one of eight
+// drawings and would have let a block run off the bottom of the canvas on the other seven.
+// Built off the catalogue, so a seventh package is swept the day it is added.
+const OFF_CONTEXTS: { offSeason?: boolean; vacationId?: string }[] = [
+  {},
+  { offSeason: true },
+  ...ECONOMY.vacation.packages.map((p) => ({ vacationId: p.id })),
+]
+
 const ALL_BLOCKS = (): DayBlock[] =>
   populatedBands().flatMap((band) =>
     ALL_KINDS.flatMap((kind) =>
       DAY_INDEXES.flatMap((index) =>
-        (ORDINARY_KINDS as readonly OrdinaryKind[]).flatMap((role) => dayBlocksFor(kind, band, { index, role })),
+        (ORDINARY_KINDS as readonly OrdinaryKind[]).flatMap((role) =>
+          OFF_CONTEXTS.flatMap((ctx) => dayBlocksFor(kind, band, { index, role, ...ctx })),
+        ),
       ),
     ),
   )
@@ -221,12 +234,15 @@ describe('a block is drawable, and it is not an invention', () => {
       for (const kind of ALL_KINDS) {
         for (const index of DAY_INDEXES) {
           for (const role of ORDINARY_KINDS) {
-            const blocks = [...dayBlocksFor(kind, band, { index, role })].sort((a, b) => a.start - b.start)
-            for (let i = 1; i < blocks.length; i++) {
-              expect(
-                blocks[i].start,
-                `${band}/${kind}[${index}]/${role}: "${blocks[i].label}" starts inside "${blocks[i - 1].label}"`,
-              ).toBeGreaterThanOrEqual(blocks[i - 1].start + blocks[i - 1].span)
+            // ...and over every `off` context too - the six family packages each draw their own day.
+            for (const ctx of OFF_CONTEXTS) {
+              const blocks = [...dayBlocksFor(kind, band, { index, role, ...ctx })].sort((a, b) => a.start - b.start)
+              for (let i = 1; i < blocks.length; i++) {
+                expect(
+                  blocks[i].start,
+                  `${band}/${kind}[${index}]/${role}/${JSON.stringify(ctx)}: "${blocks[i].label}" starts inside "${blocks[i - 1].label}"`,
+                ).toBeGreaterThanOrEqual(blocks[i - 1].start + blocks[i - 1].span)
+              }
             }
           }
         }
@@ -857,5 +873,86 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
     expect(screen).toMatch(/rehab: 'home',/)
     // the design's own object: taped, torn, ruled, tilted off one of its own angles
     expect(screen).toContain(':tilt="-0.8" ruled torn tape')
+  })
+})
+
+// =================================================================================================
+// ⚠ SIX HOLIDAYS, SIX WEEKS - AND THEY NARRATE A LADDER THAT WAS ALREADY IN THE MODEL
+// =================================================================================================
+//
+// Owner, 31.07: «для каждого типа отпуска свое расписание недели, как думаешь? ... а то сейчас куда
+// бы ни поехала и расписание одинаковое, и week recap, ну кроме картинки».
+//
+// The hard rule this suite exists to keep is NOT "they must differ" - six flavours of nothing would
+// satisfy that and would drift the first time somebody re-tuned a package. It is that the drawing
+// must be a readout of something real. `ECONOMY.vacation.packages` already differ by
+// `conditionGain` (12 / 14 / 16 / 20 / 25 / 30), so the week HAS a ladder in it, and these tests
+// pin the grid against THAT rather than against my taste in labels.
+describe('each family package draws its own week', () => {
+  const arcFor = (packageId: string) =>
+    gridFor({ vacations: [{ week: 6, packageId, paidCents: 40000 }] })
+  const kindsIn = (packageId: string) =>
+    new Set(arcFor(packageId).flatMap((d) => d.blocks.map((b) => b.kind)))
+  const IDS = ECONOMY.vacation.packages.map((p) => p.id)
+
+  it('every package in the catalogue has an arc, and no two weeks are the same drawing', () => {
+    // Derived from the catalogue, not a list of six strings: a seventh package added tomorrow fails
+    // here rather than silently falling back to the generic family week.
+    const drawings = new Set(IDS.map((id) => JSON.stringify(arcFor(id).map((d) => d.blocks))))
+    expect(drawings.size, `${IDS.length} packages must draw ${IDS.length} different weeks`).toBe(IDS.length)
+  })
+
+  it('⚠ NO TENNIS ON ANY OF THEM - a family week is a family week', () => {
+    // The one thing every arc must still agree on, and the reason the week exists at all. `physio`
+    // and `gym` at the recovery end are NOT tennis: they are the treatment the package sells.
+    const TENNIS = ['training', 'trainingAlt', 'drills', 'match', 'matchLong', 'tournament']
+    for (const id of IDS) {
+      for (const kind of TENNIS) {
+        expect([...kindsIn(id)], `${id} put ${kind} in a week with no tennis in it`).not.toContain(kind)
+      }
+    }
+  })
+
+  it('the recovery ladder is drawn: the more the package gives her, the more of the week is treatment', () => {
+    // `physio` hours against `conditionGain`, over the whole catalogue. Not a hand-written expectation
+    // per package - a MONOTONICITY, so the two can never drift apart: re-tune a gain and this test
+    // starts asking the arc to follow it.
+    const physioHours = (id: string) =>
+      arcFor(id)
+        .flatMap((d) => d.blocks)
+        .filter((b) => b.kind === 'physio')
+        .reduce((n, b) => n + b.span, 0)
+    const ladder = [...ECONOMY.vacation.packages].sort((a, b) => a.conditionGain - b.conditionGain)
+    const hours = ladder.map((p) => physioHours(p.id))
+    for (let i = 1; i < hours.length; i++) {
+      expect(
+        hours[i],
+        `${ladder[i].id} (gain ${ladder[i].conditionGain}) must not draw less treatment than ${ladder[i - 1].id} (gain ${ladder[i - 1].conditionGain})`,
+      ).toBeGreaterThanOrEqual(hours[i - 1])
+    }
+    // ...and the ends of the ladder are genuinely different weeks, or the monotonicity above is
+    // satisfied by six zeroes.
+    expect(hours[hours.length - 1], 'the top of the ladder draws no treatment at all').toBeGreaterThan(0)
+    expect(hours[0], 'the cheapest package should not be a clinic').toBe(0)
+  })
+
+  it('the packages that travel spend a day at each end, and the staycation spends none', () => {
+    // This is why grandma (14) and camping (16) sit below the seaside (20) for a similar kind of rest:
+    // the road is part of the price, and the grid says so. The staycation's whole pitch is that there
+    // is no journey - «no travel, no drills».
+    const travelDays = (id: string) => arcFor(id).filter((d) => d.blocks.some((b) => b.kind === 'travel')).length
+    expect(travelDays('staycation')).toBe(0)
+    for (const id of IDS.filter((x) => x !== 'staycation')) {
+      expect(travelDays(id), `${id} is a week away and must show the journey`).toBeGreaterThanOrEqual(1)
+    }
+  })
+
+  it('an unknown package falls back to the generic family week rather than to an empty one', () => {
+    // A save carrying a package this build does not know about (an older or newer catalogue) must
+    // still draw a week. Degrading to today's behaviour is fine; degrading to seven blank columns is
+    // the failure this screen was built to stop.
+    const unknown = gridFor({ vacations: [{ week: 6, packageId: 'no-such-package', paidCents: 0 }] })
+    expect(unknown.length).toBe(7)
+    expect(unknown.every((d) => d.blocks.length > 0)).toBe(true)
   })
 })

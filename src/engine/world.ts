@@ -174,7 +174,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 33
+export const SAVE_SCHEMA_VERSION = 34
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -251,6 +251,28 @@ export interface WorldState {
    *  above, written by the same one writer for the same reason: a movement arrow is
    *  (previous - current) and both halves have to come out of ONE table. Optional, so no migration. */
   prevKidRankWta?: number | null
+  /** THE ON-RAMPS SHE HAS ALREADY CROSSED (v34). An on-ramp is a THRESHOLD, not a standing condition.
+   *
+   *  ⚠ WHY THIS IS STATE AND NOT DERIVED, which is the whole reason for the schema bump. Both
+   *  on-ramps are denominated in the table BELOW them - J30 reads her domestic best-6, W15 reads her
+   *  ITF junior best-6 - and both of those are ROLLING 52-WEEK windows. So the evidence that she once
+   *  cleared the bar deletes itself: a season spent abroad ages out every domestic result, and from
+   *  eighteen the J rungs are shut on AGE so no junior point can ever be earned again. Derived, this
+   *  question has no honest answer a year later; latched, it has exactly one.
+   *
+   *  Owner, 31.07, playing: «не может играть в J серии, потому что ранг в national упал» - and
+   *  «въезд – это порог, который переходят один раз, а не условие, которое держат постоянно».
+   *  Measured before the fix (tools/j30-onramp-lock.ts): 209/216 careers went through the J30 door
+   *  and were shut out again, 160/216 of them while J60 or J300 stood OPEN.
+   *
+   *  ⚠ ACCEPTANCE LISTS DO NOT LATCH, AND MUST NOT. Only the bottom rung of each table is an on-ramp.
+   *  J60/J300/W35/W100 are acceptance cuts read against a CURRENT ranking, which is how a real entry
+   *  list works - you do not get into a draw on a ranking you held two years ago. The latch guarantees
+   *  a way back ONTO the table; it never guarantees a place in a field.
+   *
+   *  Written by `latchOnRamps`, which rides with `recomputeKidRank` so it cannot be forgotten at a
+   *  call site. Pure state: no draw on any stream, so the frozen MAIN capture cannot move. */
+  onRampCleared: { itf: boolean; wta: boolean }
   /** R12-S1 (v17): her dense rank as she ENTERED the season currently in progress – captured at
    *  the top of the tick into the season's first week, and read once, at that season's wrap-up.
    *
@@ -754,6 +776,63 @@ export function recomputeKidRank(world: WorldState): void {
   world.kidRankDomestic = dom?.rank ?? world.cohort.length + 1
   const wta = rankingFor(world, 'wta').find((r) => r.playerId === KID_ID)
   world.kidRankWta = wta?.rank ?? world.cohort.length + 1
+  latchOnRamps(world)
+}
+
+/** The bottom rung of a table – the one with no acceptance list, whose band is read against the
+ *  table BELOW it. Derived from the catalogue rather than written down as 'j30' / 'w15', so a future
+ *  table (or a re-shaped one) needs no edit here and cannot silently disagree with `tierOpenFor`,
+ *  which detects an on-ramp exactly the same way. */
+function onRampTierOf(track: LadderTrack): TierId | undefined {
+  return TIER_LADDER.find((t) => TIERS[t].track === track && TIERS[t].enterPct === undefined)
+}
+
+/** ⚠ SET ONCE, NEVER CLEARED (v34). Latches the moment she can prove she belongs on a table, by
+ *  either of the two things that prove it:
+ *    * she meets the on-ramp's band today - the standard the rung was always asking for; or
+ *    * she holds a counting result on the table itself, which is a stronger proof than the band.
+ *
+ *  The second clause matters more than it looks: it is what latches a girl whose domestic points
+ *  have ALREADY decayed but who is visibly out there playing J60s, which is the exact state the
+ *  owner was in when he reported this.
+ *
+ *  Rides with `recomputeKidRank` deliberately - that is the one writer for everything derived from
+ *  the ranking tables, it runs on every tick AND on load, so a migrated save latches on the way in
+ *  without the migration having to guess. Pure state: zero draws, no stream touched. */
+/** ⚠ THE ONE READER, and the reason it is an OR rather than a plain flag lookup.
+ *
+ *  The latch is PURELY ADDITIVE: "the band is met right now" OR "it was met once". Written that way,
+ *  nothing can depend on WHEN `latchOnRamps` last ran - the live half always answers correctly on its
+ *  own and the memory only ever adds. A flag-only read would have made every caller order-sensitive:
+ *  anything that puts points on a world and asks the gate before the next tick (a test, a bench, a
+ *  future tool) would see a stale `false` and be refused on points she is visibly holding. That is a
+ *  trap to leave behind for somebody, and it costs one `||` to not leave it.
+ *
+ *  So the flag can only ever KEEP a door open, never open one that was not already earned. */
+function onRampOpen(world: WorldState, track: 'itf' | 'wta'): boolean {
+  if (world.onRampCleared?.[track]) return true
+  const rung = onRampTierOf(track)
+  if (!rung) return false
+  // The band is denominated in the table below: the ITF on-ramp reads domestic, the WTA one reads ITF.
+  const below: LadderTrack = track === 'itf' ? 'domestic' : 'itf'
+  return isTierEligible(rung, kidPoints(world, below))
+}
+
+function latchOnRamps(world: WorldState): void {
+  // ⚠ DEFENSIVE, AND IT IS NOT PARANOIA - it is the v30 rule biting for real. The migration ladder
+  // calls `recomputeKidRank` on its way through the EARLY steps (`seedWorldForV6`), which is long
+  // before the v33 -> v34 step that creates this field, so a save can genuinely be sitting in this
+  // function without it. A later step may never assume an earlier one's post-condition.
+  if (!world.onRampCleared || typeof world.onRampCleared !== 'object') {
+    world.onRampCleared = { itf: false, wta: false }
+  }
+  for (const track of ['itf', 'wta'] as const) {
+    if (world.onRampCleared[track]) continue
+    // Either proof will do: the band the rung asks for, or a counting result on the table itself -
+    // which is the stronger of the two and the one that covers a girl whose domestic book has
+    // already decayed while she is visibly out there playing J60s.
+    if (onRampOpen(world, track) || kidPoints(world, track) > 0) world.onRampCleared[track] = true
+  }
 }
 
 // --- milestones (never pruned) -----------------------------------------------
@@ -1577,8 +1656,15 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
     const accepts = acceptanceRank(world, event.tier)
     if (accepts === undefined) {
       const [minPoints] = tier.enterPointBand
-      const held = kidPoints(world, onRamp)
-      if (held < minPoints) {
+      // ⚠ THE LATCH, NOT THE LIVE BAND (v34) - and this line is why R10-5's rule matters. Reading
+      // `kidPoints(world, onRamp) < minPoints` here is what USED to be written, and it is a second
+      // implementation of `tierOpenFor`'s on-ramp arm: the moment that arm started latching, this one
+      // went on refusing entry to a girl the calendar was showing an open rung to, and the bench
+      // crashed on the disagreement mid-sweep - the identical failure this comment block already
+      // describes from task #17. Both arms now read the one piece of state.
+      // The MESSAGE is unchanged and still names the band, because for a girl who has not crossed yet
+      // the band is exactly what she needs: that is how the latch gets set.
+      if (!onRampOpen(world, tier.track)) {
         return {
           level: 'blocked',
           reason: 'locked',
@@ -3934,6 +4020,11 @@ export function createWorld(
     // whole cohort, because she is the only player without a counting result).
     kidRank: cohort.length + 1,
     prevKidRank: null,
+    // Both shut. She starts on zero points in every table, so she has cleared nothing - and the
+    // `recomputeKidRank` at the end of this function will not open them either, which is the on-ramp
+    // doing its job. The FIRST thing this game asks of her is to earn her way onto the domestic
+    // table, and that has not changed.
+    onRampCleared: { itf: false, wta: false },
     // Phase 4: her starting build is the SAME derivation that used to be recomputed on demand, so
     // week 0 is byte-identical to the pre-development engine. What changed is that it is now state,
     // and state moves.
@@ -4464,15 +4555,19 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
 export function tierOpenFor(world: WorldState, tier: TierId): boolean {
   const def = TIERS[tier]
   if (def.track === 'itf') {
-    // The on-ramp rung reads domestic points; the rungs above it read her ITF rank. See entryStatus.
+    // The on-ramp rung is a threshold she crossed once (see WorldState.onRampCleared and
+    // `latchOnRamps`); the rungs above it read her CURRENT ITF rank, because they are acceptance
+    // lists and an entry list is never judged on a ranking she used to hold.
     const accepts = acceptanceRank(world, tier)
-    if (accepts === undefined) return isTierEligible(tier, kidPoints(world, 'domestic'))
+    if (accepts === undefined) return onRampOpen(world, 'itf')
     return kidPoints(world, 'itf') > 0 && world.kidRank <= accepts
   }
   if (def.track === 'wta') {
-    // The on-ramp rung reads ITF JUNIOR points; the rungs above it read her professional rank.
+    // Same shape one table up, and the latch matters MORE here: the J rungs shut at eighteen on age,
+    // so from her birthday she can never earn another junior point - a W15 on-ramp read against a
+    // rolling junior window would close on its own a year later with nothing she could do about it.
     const accepts = acceptanceRank(world, tier)
-    if (accepts === undefined) return isTierEligible(tier, kidPoints(world, 'itf'))
+    if (accepts === undefined) return onRampOpen(world, 'wta')
     return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? world.cohort.length + 1) <= accepts
   }
   return isTierEligible(tier, kidPoints(world, 'domestic'))
@@ -5269,6 +5364,17 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     knock: knockLive(world.knock, world.week) ? world.knock : null,
     knockPrompt: pendingKnock(world) ? buildKnockPrompt(world.knock!, world.seed, world.condition) : null,
     events: world.events.slice(-SNAPSHOT_EVENTS),
+    // ⚠ THE DURABLE LEDGER, WHOLE, and it is here because the 60-event window above is exactly the
+    // wrong source for it. Milestone EVENTS carry `keep: true` so they survive `pruneEvents` in the
+    // world - but `slice(-60)` is positional, so a first title from four seasons ago falls out of the
+    // SNAPSHOT the moment sixty newer rows exist, which is a couple of months of play. The Kid
+    // screen's moments strip was reading the feed and therefore emptied itself permanently (owner,
+    // 31.07: «в Important moments на экране профиля девочки вообще ничего не происходит»); its own
+    // source comment had already diagnosed this and filed the fix as "a small engine ask" rather than
+    // doing it. This is that ask. `world.milestones` is v18 state and never prunes, it is capped by
+    // identity rather than by count (one row per first), and it is tiny - so it ships whole and no
+    // surface has to reconstruct a durable fact from a volatile window ever again.
+    milestones: world.milestones,
     // Category-accurate windows off the persisted ledger (immune to the 60-event cap). season
     // keeps the current MoneyScreen semantics: the current 52-week season block from its first week.
     finance: {

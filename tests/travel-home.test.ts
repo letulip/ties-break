@@ -258,6 +258,7 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     runPointsThisWeek: 0,
     milestones: [],
     vacationWeek: false,
+    vacationPackageId: null,
     // ⚠ W2 added `trainPct` to the view. This suite is about the JOURNEY HOME; the balanced
     // preset is the career default and nothing here reads it.
     trainPct: 75,
@@ -651,6 +652,7 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
       seed: 's', week: 11, kidId: KID_ID, startAgeYears: 14, condition: 80, fundsCents: 100_000_00,
       injury: null, events: [], lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
+      vacationPackageId: null,
       trainPct: 75, knockChoice: null, knockPart: null, birthdayAge: null, ...over,   // ⚠ W2/W4: unread here
     })
     const away = assembleDiaryFacts(view({ events: trip(11, 'national') })) // ⚠ W4: the view's own week
@@ -916,6 +918,7 @@ describe('ui/travel-set — on a real career', () => {
       // ⚠ W4: the trip is in the view's OWN week now (11), not the one before it.
       injury: null, events: trip(11, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
+      vacationPackageId: null,
       trainPct: 75,   // ⚠ W2: the plan, unread here
       knockChoice: null,
       birthdayAge: null, knockPart: null,   // ⚠ W4: no knock on this view
