@@ -666,3 +666,64 @@ describe('R13-12 player copy', () => {
     }
   })
 })
+
+// ===========================================================================
+// 31.07 item 7 – A SCREEN OPENS AT ITS TOP.
+//
+// Owner: «after a transition between screens, always land at the top of the new screen – an
+// autoscroll/scroll reset. Today a screen can open already scrolled.» This is a navigation fact, so
+// it is pinned here rather than with the match screen the rest of that day's items belong to.
+//
+// The subtlety worth pinning is WHY it happened at all in an app where every screen is `v-if`'d and
+// therefore mounts fresh: the screen is new, the SCROLLER is not. There are exactly two scrollers in
+// the game and a screen change unmounts neither of them.
+// ===========================================================================
+describe('a screen opens at its top, on both of the app\'s two scrollers', () => {
+  const shell = read('../src/components/ui/TakeoverShell.vue')
+  const composable = read('../src/composables/scrollReset.ts')
+
+  it('the tabbed screens reset the DOCUMENT, off `tab` and nothing narrower', () => {
+    // `main.app-content` sets no `overflow`, so the document is the scrollport for all eight content
+    // states and keeps `window.scrollY` across a swap: scroll to the bottom of Home's news feed, tap
+    // Stats, and Stats opens two thirds of the way down.
+    expect(app).toContain("import { useScrollReset } from './composables/scrollReset'")
+    expect(app).toMatch(/^useScrollReset\(tab\)$/m)
+    // ⚠ ON `tab`, WHICH IS THE WHOLE OF THIS APP'S NAVIGATION - the bar writes it, Home's notecards
+    // write it, the market's back button writes it, and the end of a week writes it (W1). A watcher
+    // on the bar's click handler instead would have covered the taps and missed every other route,
+    // which is most of them.
+    expect(app).toMatch(/function openNav\([\s\S]{0,200}tab\.value = entry\.id as TabId/)
+    expect(app, 'the document is still the scrollport for a tabbed screen').not.toMatch(
+      /\.app-content \{[^}]*overflow/,
+    )
+  })
+
+  it('the takeovers reset `.tf-body`, and the shell owns it rather than four callers reaching in', () => {
+    // A takeover holds several screens in one scroller that is never unmounted between them: the
+    // tournament walks a brief, a pre-match card, the live match, a box score and a poster through
+    // the same `.tf-body`, so each inherited the previous one's scroll position.
+    expect(shell).toContain("import { useScrollReset } from '../../composables/scrollReset'")
+    expect(shell).toMatch(/useScrollReset\(\(\) => props\.screen, bodyRef\)/)
+    expect(shell).toContain('<div ref="bodyRef" class="tf-body">')
+    // The two multi-screen callers say which screen they are on; the two single-screen ones mount a
+    // fresh shell each time and have nothing to say.
+    const flow = read('../src/components/TournamentFlow.vue')
+    expect(flow).toContain(':screen="watchedScreen"')
+    // ⚠ `phase` ALONE IS NOT THE ANSWER for the tournament: `replayOpen` swaps the live match in and
+    // out WITHIN a phase, and match -> box score is exactly the transition that used to land the
+    // player halfway down the page.
+    expect(flow).toMatch(/const watchedScreen = computed\(\(\) => `\$\{phase\.value\}:\$\{replayOpen\.value\}`\)/)
+    expect(read('../src/components/PracticeFlow.vue')).toContain(':screen="phase"')
+  })
+
+  it('the reset waits a tick, and is never animated', () => {
+    // AFTER `nextTick`: reset on the same tick and the old screen's taller content is still in the
+    // DOM, so a document scroll to 0 is undone by the browser's own scroll anchoring as the swap
+    // lands. And NOT smooth - three screens in this app scroll on purpose (the coach market's tier
+    // chips, Home's news jump, Money's ledger) and each is smooth because the player pressed
+    // something; arriving at a new screen is not a journey across it.
+    expect(composable).toMatch(/void nextTick\(\(\) => scrollToTop\(/)
+    expect(composable).not.toContain("behavior: 'smooth'")
+    expect(composable).toContain("if (typeof window !== 'undefined')")
+  })
+})

@@ -21,6 +21,7 @@ import { calendarOwnsWeekAhead } from './composables/weekAhead'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
 import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
+import { useScrollReset } from './composables/scrollReset'
 import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
@@ -70,6 +71,22 @@ const splashDone = ref(false)
 // redesign wave, reserving the centre seat for Home, and screen H now fills it.
 type TabId = 'home' | 'play' | 'calendar' | 'week' | 'kid' | 'stats' | 'money' | 'more' | 'market'
 const tab = ref<TabId>('home')
+
+// A SCREEN OPENS AT ITS TOP (owner, 31.07: «after a transition between screens, always land at the
+// top of the new screen - today a screen can open already scrolled»).
+//
+// Every screen below is `v-if`'d and therefore mounts fresh, which is exactly why this was missed:
+// the screen is new, the SCROLLER is not. `main.app-content` sets no `overflow`, so the document is
+// the scrollport for all eight content states and it keeps `window.scrollY` across the swap. Scroll
+// to the bottom of Home's news feed, tap Stats, and Stats opens two thirds of the way down.
+//
+// ⚠ ON `tab` AND NOTHING ELSE, deliberately. `tab` is this app's whole navigation - the bar writes
+// it, Home's notecards write it, the market's back button writes it, and the week's story writes it
+// when a tick resolves - so one watcher covers every route in the game, including the ones that are
+// not bar taps. A router's `scrollBehavior` is what this would have been; there is no router (a
+// plain ref switch, per spec), so it is one line here. The takeovers scroll inside `.tf-body`
+// instead and are handled by the shell that owns it.
+useScrollReset(tab)
 
 // ⚠ WHERE "BACK" GOES FROM THE COACH MARKET, and it used to be a lie. The screen is reachable from TWO
 // places - the Home coaching note and the Kid profile's coach row - and its back button was wired

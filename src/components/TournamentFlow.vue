@@ -166,6 +166,15 @@ const watchedRoundLabel = computed(() => {
   return p.bracket[p.bracket.length - 1]?.roundLabel ?? p.roundLabel
 })
 
+/** WHICH SCREEN THIS FLOW IS SHOWING, for the takeover's scroll reset (owner, 31.07 - see the
+ *  `screen` prop on `ui/TakeoverShell.vue`). `phase` is most of it and is not all of it: `replayOpen`
+ *  swaps the live match in and out INSIDE the 'pre' and 'post' phases, and going from the match to
+ *  its box score is exactly the transition that used to land the player halfway down the page. The
+ *  value is never read for meaning - only for change - so a pair of them joined is the honest shape.
+ *  Deliberately NOT the round: a new round with the same phase is the same screen showing new facts,
+ *  and the player has not gone anywhere. */
+const watchedScreen = computed(() => `${phase.value}:${replayOpen.value}`)
+
 // --- Round-7 spectate geometry ------------------------------------------------
 // The Final's round index (log2(draw) - 1) and the round the kid exited in. Single-elim: she
 // plays contiguous rounds 0..bracket.length-1, so her exit round is bracket.length-1 (once
@@ -487,7 +496,13 @@ const matchMeta = computed(() => {
        how it ended up with its pinned control bar behind the tab bar. `ui/TakeoverShell.vue` owns the
        three parts now; the classes, the layout and this screen's five phases are unchanged, and the
        header's exit stays a SLOT because the four surfaces mean four different things by it. -->
-  <TakeoverShell v-if="pending" :title="phase === 'splash' ? null : pending.tierLabel">
+  <!-- ⚠ `screen` IS WHY THE BRIEF NO LONGER OPENS HALFWAY DOWN (owner, 31.07: «after a transition
+       between screens, always land at the top of the new screen»). One shell holds five of them here
+       and the scroller between them is never unmounted, so the box score inherited however far the
+       player had scrolled the match, and the poster inherited the box score. `phase` alone is not the
+       whole answer - `replayOpen` swaps the live match in and out WITHIN a phase - so the key is the
+       pair, which is exactly `watchedScreen`. -->
+  <TakeoverShell v-if="pending" :title="phase === 'splash' ? null : pending.tierLabel" :screen="watchedScreen">
     <!-- NO HEADER ON THE E BRIEF, which is what the `null` above buys: the hero underneath carries
          the tournament's name, its court and its dates, and the design gives that screen a bare
          back-arrow rather than a title bar. Every other phase still needs to be told which
@@ -707,8 +722,20 @@ const matchMeta = computed(() => {
 
     <template v-else>
       <!-- Path so far. NOT on the finale: the L/M poster carries her whole path as its own round
-           strip (design §L), and printing it twice, one card apart, is the same list said twice. -->
-      <div v-if="pending.bracket.length && phase !== 'finale'" class="tf-strip">
+           strip (design §L), and printing it twice, one card apart, is the same list said twice.
+           ⚠ AND NOT WHILE A MATCH IS ON SCREEN EITHER (owner, 31.07: the live match screen was
+           showing the rounds already played above the court, and «inside the match the screen should
+           be the match and information about the match, nothing else»). This strip is the LAST piece
+           of tournament furniture that was still being drawn over the top of the viewer: the draw
+           below it already stands down on `!replayOpen` (see `showBracket`), the round badge and the
+           surface pill already trade places on the header's date line for exactly this reason, and
+           the outer `.tf-card` frame came off on 30.07 to buy the court its width back. A list of
+           finished matches is the clearest case of all - it is the one thing on this screen that is
+           about OTHER matches, it is several rows tall, and it pushes the court down the scroller on
+           the one screen where the court is the whole point. Nothing is lost: between rounds (and on
+           the box score, and on the poster) the strip is still exactly where it was, and the draw
+           tabs below carry the same results in more detail. -->
+      <div v-if="pending.bracket.length && phase !== 'finale' && !replayOpen" class="tf-strip">
         <div v-for="(r, i) in pending.bracket" :key="i" class="tf-strip-row" :class="{ won: r.kidWon }">
           <span class="tf-strip-round">{{ r.roundLabel }}</span>
           <span class="tf-strip-result">{{ r.kidWon ? 'W' : 'L' }}</span>
