@@ -1,31 +1,36 @@
-// HOW OFTEN DOES THE GRID ACTUALLY DRAW? — owner, 31.07: he updated the app, sees the new coloured
-// donut on Family Budget (same wave) and does NOT see the new calendar.
+// WHAT DOES THE GRID ACTUALLY DRAW? — and this bench has been re-aimed once, on 31.07.
 //
-// The grid is deliberately bounded: `weekGridFor` returns null unless EVERY day of the week is one
-// of court / gym / rest / match (`isOrdinaryWeek`), and those weeks keep the day strip the first
-// calendar wave shipped. That boundary is the owner's own - «для тех, где нет отпусков, чемпионатов
-// и поездок» - so a week away, on holiday, in an exam blackout, in the off-season or laid up shows
-// the old drawing BY DESIGN.
+// IT WAS BUILT TO ANSWER "how often does the grid draw AT ALL". The owner updated the app, saw the
+// new coloured donut on Family Budget (same wave) and did NOT see the new calendar; `weekGridFor`
+// returned null unless every day of the week was one of court / gym / rest / match, and every other
+// week fell back to the day strip the first calendar wave shipped. This bench measured that share
+// and the answer was the reason the boundary went: 26.2% of weeks - better than one in four - drew
+// the other, plainer thing.
 //
-// What was never measured is the SHARE. If an ordinary week is rare, the feature is bounded into
-// near-invisibility and the boundary needs rethinking rather than defending.
+// ⚠ THE BOUNDARY IS GONE (owner: «очень даже должна [рисоваться], никакой разницы. Просто содержание
+// сетки будет другим»), so the old question now has a constant answer: 100%. What is worth measuring
+// instead is the MIX - how often a player meets each KIND of week, and therefore how much of the new
+// content is on screen in an ordinary career. A week type that turns up in 0.1% of weeks is a week
+// type nobody will ever see, which is a design fact rather than a bug, and it is better known than
+// guessed at.
 import { createWorld, tickWeek, toSnapshot, enterEvent } from '../src/engine/world'
 import { calendarWeekFor } from '../src/composables/weekDays'
-import { isOrdinaryWeek } from '../src/composables/weekGrid'
+import { bandFor, weekGridFor } from '../src/composables/weekGrid'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
+import { weekDayNumbers } from '../src/shared/dates'
 import type { Snapshot } from '../src/shared/protocol'
 
 const SEEDS = 12
 const WEEKS = 156
 
-let ordinary = 0
 let entered = 0
 let total = 0
-const byReason = new Map<string, number>()
+let emptyColumns = 0
+const byKind = new Map<string, number>()
 
 function bump(k: string) {
-  byReason.set(k, (byReason.get(k) ?? 0) + 1)
+  byKind.set(k, (byKind.get(k) ?? 0) + 1)
 }
 
 for (let s = 0; s < SEEDS; s++) {
@@ -35,7 +40,7 @@ for (let s = 0; s < SEEDS; s++) {
   for (let w = 0; w < WEEKS; w++) {
     const snap = toSnapshot(world) as Snapshot
     // Enter whatever is on offer, the way a playing parent does - otherwise the bench measures a
-    // career that never travels, which is exactly the case the grid is best at and would flatter it.
+    // career that never travels, which is exactly the case the grid used to be best at.
     for (const e of snap.upcoming) {
       if (e.entered) continue
       try {
@@ -48,21 +53,20 @@ for (let s = 0; s < SEEDS; s++) {
     const fresh = toSnapshot(world) as Snapshot
     const week = calendarWeekFor(fresh, fresh.week + 1)
     total++
-    if (isOrdinaryWeek(week.days)) {
-      ordinary++
-      bump('ordinary (the grid draws)')
-    } else {
-      const kinds = new Set(week.days.map((d) => d.kind))
-      bump([...kinds].sort().join('+'))
-    }
+    const kinds = new Set(week.days.map((d) => d.kind))
+    bump(kinds.size === 1 ? [...kinds][0] : 'training mix')
+    // ...and the property the boundary used to guarantee by refusing to draw: no column of any week
+    // is ever blank. A silent empty column is what a badly added band or arc would look like.
+    const grid = weekGridFor(week, fresh.ageYears, weekDayNumbers(week.week), fresh.seed)
+    for (const day of grid) if (day.blocks.length === 0) emptyColumns++
     tickWeek(world, rng)
   }
 }
 
 console.log(`entries made: ${entered}`)
-console.log(`careers=${SEEDS}  weeks each=${WEEKS}  weeks looked at=${total}`)
-console.log(`\nTHE GRID DRAWS ON ${((ordinary / total) * 100).toFixed(1)}% OF WEEKS\n`)
-console.log('what the other weeks are:')
-for (const [k, n] of [...byReason.entries()].sort((a, b) => b[1] - a[1])) {
+console.log(`careers=${SEEDS}  weeks each=${WEEKS}  weeks looked at=${total}  bands seen: ${bandFor(14)}`)
+console.log(`\nTHE GRID DRAWS ON 100% OF WEEKS. What it draws:\n`)
+for (const [k, n] of [...byKind.entries()].sort((a, b) => b[1] - a[1])) {
   console.log(`  ${((n / total) * 100).toFixed(1).padStart(5)}%  ${k}`)
 }
+console.log(`\nempty columns anywhere in ${total * 7} days drawn: ${emptyColumns}`)

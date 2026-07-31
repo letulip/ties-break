@@ -16,9 +16,15 @@
 //       one tennis block on a day the plan bought one session, and that is checked as arithmetic
 //       against `weekDays.ts` rather than trusted to the table's author.
 //
-//   (b) THE BOUNDARY. «...для тех, где нет отпусков, чемпионатов и поездок.» A week she spends at a
-//       tournament, away with the family, in an exam blackout or laid up keeps the day strip it has.
-//       Every one of those is swept below, from the same `calendarWeekFor` the screen reads.
+//   (b) ⚠ THE BOUNDARY – AND THE OWNER OVERRULED IT ON 31.07. It used to read: «...для тех, где нет
+//       отпусков, чемпионатов и поездок», a week away / off / in exams / laid up keeps the day strip
+//       it has. Asked directly whether the exam fortnight should draw hours he answered «очень даже
+//       должна, никакой разницы. Просто содержание сетки будет другим», and he is right - the grid
+//       already ran on display conventions for the ordinary week, so refusing them for the other
+//       four was a line drawn where the argument happened to stop rather than a matter of honesty.
+//       What this file pins now is the replacement rule: EVERY week draws, and each draws the week
+//       it actually is - the trip has no drills in it, the family week has no tennis at all, the
+//       exam week keeps exactly the sessions the plan bought.
 //
 //   (c) THE AGE BAND IS A PARAMETER FROM THE FIRST VERSION. «...надо заложить в архитектуру.» The
 //       completeness test is the mechanical half of that instruction: a band that is half added -
@@ -37,15 +43,23 @@ import {
   hourLabel,
   hourTop,
   isOrdinaryKind,
-  isOrdinaryWeek,
   populatedBands,
   weekGridFor,
   type AgeBand,
   type BlockKind,
   type DayBlock,
+  type OrdinaryKind,
 } from '../src/composables/weekGrid'
-import { FRIDGE_NOTES, fridgeNoteFor } from '../src/composables/fridgeNote'
-import { calendarWeekFor, gymDayIndex, sessionsForPlan, type CalendarWeekFacts } from '../src/composables/weekDays'
+import { EXAM_NOTES, FRIDGE_NOTES, TRIP_NOTES, fridgeNoteFor } from '../src/composables/fridgeNote'
+import {
+  calendarWeekFor,
+  gymDayIndex,
+  sessionDays,
+  sessionsForPlan,
+  type CalendarWeek,
+  type CalendarWeekFacts,
+  type DayKind,
+} from '../src/composables/weekDays'
 import { weekDayNumbers } from '../src/shared/dates'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
@@ -85,22 +99,55 @@ function gridFor(over: Partial<CalendarWeekFacts> = {}, week = 6, age = 14) {
   return weekGridFor(calendarWeekFor(facts(over), week), age, weekDayNumbers(week))
 }
 
+/** What the plan made of a day, spelled out HERE rather than imported from the composable that
+ *  applies it. Two independent spellings is the point: if the grid ever stops putting the exam
+ *  week's sessions on the days the plan bought, this diverges instead of agreeing with the bug. */
+function planRoleOf(week: CalendarWeek, index: number): OrdinaryKind {
+  const session = new Set(sessionDays(week.sessions))
+  return !session.has(index) ? 'rest' : index === week.gymIndex ? 'gym' : 'court'
+}
+
+/** Every day kind there is – the four the plan mixes, and the four a whole week is made of. Spelled
+ *  out rather than imported so that a ninth `DayKind` is a decision somebody has to make here too. */
+const ALL_KINDS: DayKind[] = ['court', 'gym', 'rest', 'match', 'away', 'off', 'school', 'rehab']
+const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6] as const
+
+/** ⚠ SWEPT OVER EVERY DAY OF EVERY WEEK, not just over the four ordinary shapes. The whole-week
+ *  kinds are shaped by the day INDEX and by the role the plan would have given the day, so a block
+ *  that runs off the bottom of the canvas or a label that breaks mid-word can now hide on a
+ *  Wednesday of a trip week - which is exactly where nobody looks. */
 const ALL_BLOCKS = (): DayBlock[] =>
-  populatedBands().flatMap((band) => ORDINARY_KINDS.flatMap((kind) => dayBlocksFor(kind, band)))
+  populatedBands().flatMap((band) =>
+    ALL_KINDS.flatMap((kind) =>
+      DAY_INDEXES.flatMap((index) =>
+        (ORDINARY_KINDS as readonly OrdinaryKind[]).flatMap((role) => dayBlocksFor(kind, band, { index, role })),
+      ),
+    ),
+  )
 
 // =================================================================================================
 // (c) THE AGE BAND – the completeness the owner asked for
 // =================================================================================================
 describe('the layout table is complete for every band it carries', () => {
-  it('⚠ every populated band covers every ordinary day kind', () => {
+  it('⚠ every populated band covers every day kind – all EIGHT of them now', () => {
     // THE HALF-ADDED BAND is the failure this exists for: a later hand adds `senior-school` with a
     // court day and a gym day in it, forgets rest and match, and two columns of a shipped week
     // render empty with no error anywhere.
+    //
+    // ⚠ WIDENED, NOT WEAKENED (31.07): it swept the four ordinary kinds because they were the only
+    // ones drawn. All eight draw now, so all eight are covered - and the two travel days of a trip
+    // week are exactly the kind of column that would render empty unnoticed, because nobody opens a
+    // career on a Sunday of a tournament week to check.
     const bands = populatedBands()
     expect(bands.length, 'no band is populated at all').toBeGreaterThan(0)
     for (const band of bands) {
-      for (const kind of ORDINARY_KINDS) {
-        expect(dayBlocksFor(kind, band).length, `band ${band} has nothing for a ${kind} day`).toBeGreaterThan(0)
+      for (const kind of ALL_KINDS) {
+        for (const index of DAY_INDEXES) {
+          expect(
+            dayBlocksFor(kind, band, { index, role: 'court' }).length,
+            `band ${band} has nothing for a ${kind} day on index ${index}`,
+          ).toBeGreaterThan(0)
+        }
       }
     }
   })
@@ -126,15 +173,28 @@ describe('the layout table is complete for every band it carries', () => {
     // Unreachable today (the test above pins that), and it must stay honest if it ever is reached:
     // drawing a fourteen-year-old's school day for an adult would be the invention the module's
     // header refuses. An empty column is at least not a lie.
+    //
+    // ⚠ AND THE GATE IS ON THE BAND, WHICH IS WHY THE TRIP WEEK IS IN THIS SWEEP TOO. A trip arc
+    // carries no school furniture, so it was tempting to let it answer for any band - and that is
+    // precisely how a half-added band would ship looking half-finished instead of failing here.
     for (const band of ['senior-school', 'full-time'] as AgeBand[]) {
-      for (const kind of ORDINARY_KINDS) expect(dayBlocksFor(kind, band)).toEqual([])
+      for (const kind of ALL_KINDS) {
+        for (const index of DAY_INDEXES) expect(dayBlocksFor(kind, band, { index, role: 'court' })).toEqual([])
+      }
     }
   })
 
   it('the band is a PARAMETER of the layout function, not a constant inside it', () => {
     // The owner's instruction was architectural: «надо заложить в архитектуру». A signature that
     // takes the band is the whole of what he asked for, so it is pinned as a signature.
-    expect(module_).toContain('export function dayBlocksFor(kind: DayKind, band: AgeBand): DayBlock[]')
+    //
+    // ⚠ RE-AIMED (31.07): the signature grew a third parameter - the DAY, because the four weeks the
+    // grid used to refuse are a sequence rather than a mix (a trip travels out before it comes home,
+    // an exam falls on the day the school puts it). The rule pinned here is unchanged and is the
+    // only one it ever meant: the BAND is a parameter and not a constant. So it matches the
+    // signature's opening rather than its full arity, the same way the screen's call-site pin below
+    // stopped re-typing every argument the composable earns.
+    expect(module_).toContain('export function dayBlocksFor(kind: DayKind, band: AgeBand')
     expect(module_).toContain('export function bandFor(ageYears: number): AgeBand')
   })
 })
@@ -154,14 +214,21 @@ describe('a block is drawable, and it is not an invention', () => {
   })
 
   it('no two blocks in one day overlap', () => {
+    // ⚠ AND THE EXAM WEEK IS WHY THIS SWEEP GREW THE DAY LOOP. The papers are dropped INTO the
+    // ordinary day's shape - that is the whole trick of the week, her session stays where it was -
+    // so an exam scheduled at 15:00 would silently draw on top of the drill rather than beside it.
     for (const band of populatedBands()) {
-      for (const kind of ORDINARY_KINDS) {
-        const blocks = [...dayBlocksFor(kind, band)].sort((a, b) => a.start - b.start)
-        for (let i = 1; i < blocks.length; i++) {
-          expect(
-            blocks[i].start,
-            `${band}/${kind}: "${blocks[i].label}" starts inside "${blocks[i - 1].label}"`,
-          ).toBeGreaterThanOrEqual(blocks[i - 1].start + blocks[i - 1].span)
+      for (const kind of ALL_KINDS) {
+        for (const index of DAY_INDEXES) {
+          for (const role of ORDINARY_KINDS) {
+            const blocks = [...dayBlocksFor(kind, band, { index, role })].sort((a, b) => a.start - b.start)
+            for (let i = 1; i < blocks.length; i++) {
+              expect(
+                blocks[i].start,
+                `${band}/${kind}[${index}]/${role}: "${blocks[i].label}" starts inside "${blocks[i - 1].label}"`,
+              ).toBeGreaterThanOrEqual(blocks[i - 1].start + blocks[i - 1].span)
+            }
+          }
         }
       }
     }
@@ -172,20 +239,70 @@ describe('a block is drawable, and it is not an invention', () => {
   // tennis blocks on it would make the picture and the sentence disagree about the same week, off
   // the same `plan.train`, on the same screen - which is precisely the class of bug the day strip
   // itself was built to close (the story card and the calendar disagreeing about Sunday).
-  it('ONE session a day: the picture cannot claim more tennis than the plan bought', () => {
-    const TENNIS: BlockKind[] = ['training', 'trainingAlt', 'drills', 'match', 'matchLong']
+  //
+  // ⚠ RE-AIMED FOR EIGHT KINDS, AND SHARPENED RATHER THAN LOOSENED (31.07). It used to read "more
+  // than the PLAN bought" and it only ever looked at the four ordinary kinds, because they were the
+  // only ones drawn. Now that a trip draws too, the naive widening would have been WRONG: a
+  // tournament block is not a session the plan paid for, so counting it against `plan.train` would
+  // measure the wrong thing and the rule would have had to be relaxed to pass. So the rule is
+  // restated in three parts, each stricter than the one line it replaces:
+  //
+  //   1. NO DAY OF ANY KIND draws two pieces of sport. One day, one thing.
+  //   2. `drills` MEANS "the session the plan bought". It may appear only on the weeks the plan owns
+  //      - the ordinary mix and the exam fortnight, where her hours survive - and never on a trip,
+  //      a family week or a layoff. That is the old arithmetic, now with a name it can be checked by.
+  //   3. the weeks whose read-out says there is no tennis draw none.
+  it('⚠ ONE session a day: the picture cannot claim more tennis than the WEEK bought', () => {
+    const TENNIS: BlockKind[] = ['training', 'trainingAlt', 'drills', 'match', 'matchLong', 'tournament']
     for (const band of populatedBands()) {
-      for (const kind of ORDINARY_KINDS) {
-        const blocks = dayBlocksFor(kind, band)
-        const tennis = blocks.filter((b) => TENNIS.includes(b.kind))
-        const gym = blocks.filter((b) => b.kind === 'gym')
-        expect(tennis.length + gym.length, `${band}/${kind} draws more than one session`).toBeLessThanOrEqual(1)
-        // ...and the day kinds that ARE a session draw exactly one, or the grid would be quieter
-        // than the week it is drawing.
-        if (kind === 'court' || kind === 'match') expect(tennis.length, `${band}/${kind}`).toBe(1)
-        if (kind === 'gym') expect(gym.length, `${band}/${kind}`).toBe(1)
-        if (kind === 'rest') expect(tennis.length + gym.length, `${band}/rest`).toBe(0)
+      for (const kind of ALL_KINDS) {
+        for (const index of DAY_INDEXES) {
+          for (const role of ORDINARY_KINDS) {
+            const where = `${band}/${kind}[${index}]/${role}`
+            const blocks = dayBlocksFor(kind, band, { index, role })
+            const tennis = blocks.filter((b) => TENNIS.includes(b.kind))
+            const gym = blocks.filter((b) => b.kind === 'gym')
+            expect(tennis.length + gym.length, `${where} draws more than one session`).toBeLessThanOrEqual(1)
+
+            // (1) the ordinary four, exactly as before – the day kinds that ARE a session draw one,
+            // or the grid would be quieter than the week it is drawing.
+            if (kind === 'court' || kind === 'match') expect(tennis.length, where).toBe(1)
+            if (kind === 'gym') expect(gym.length, where).toBe(1)
+            if (kind === 'rest') expect(tennis.length + gym.length, where).toBe(0)
+
+            // (2) the plan's own block, on the plan's own weeks only.
+            const drills = blocks.filter((b) => b.kind === 'drills').length
+            if (kind === 'away' || kind === 'off' || kind === 'rehab') {
+              expect(drills, `${where} spends a session the plan did not buy`).toBe(0)
+            }
+            if (kind === 'school' && role === 'court') {
+              expect(drills, `${where}: an exam day dropped the session the coach is billed for`).toBe(1)
+            }
+
+            // (3) the weeks that say "no tennis" out loud, and the one that says "no court".
+            if (kind === 'off' || kind === 'rehab') {
+              expect(tennis.length + gym.length, `${where}: the read-out says there is no tennis`).toBe(0)
+            }
+          }
+        }
       }
+    }
+  })
+
+  it('⚠ AND A TRIP\'S TENNIS IS THE TRIP\'S, never the plan\'s – no round is named', () => {
+    // The other half of the restatement. A tournament week has tennis in it and none of it is the
+    // plan's, so the check is about WHICH block appears rather than how many: the event days wear
+    // the outlined `tournament` block, the venue hit wears `training`, and neither is `drills`.
+    const trip = DAY_INDEXES.map((index) => dayBlocksFor('away', 'school', { index, role: 'court' }))
+    expect(trip.flat().some((b) => b.kind === 'tournament'), 'a trip week draws no tournament at all').toBe(true)
+    expect(trip.flat().filter((b) => b.kind === 'travel').length, 'out and back').toBe(2)
+    // ⚠ NOT ONE ROUND IS NAMED, and this is the pin for it: the week has not been played, so a block
+    // reading "R2" on the Thursday would assert she came through Wednesday. Every event day says the
+    // same thing, which is when the tournament is on - not how far she got.
+    const eventLabels = new Set(trip.flat().filter((b) => b.kind === 'tournament').map((b) => b.label))
+    expect(eventLabels.size, 'the event days do not all say the same thing').toBe(1)
+    for (const b of trip.flat()) {
+      expect(b.label, `"${b.label}" names a round`).not.toMatch(/\b(R\d|QF|SF|final|round|semi|quarter)\b/i)
     }
   })
 
@@ -194,12 +311,22 @@ describe('a block is drawable, and it is not an invention', () => {
     // number `calendarWeekFor` counted, at every preset.
     for (const preset of Object.values(WEEK_PLAN_PRESETS)) {
       const week = calendarWeekFor(facts({ plan: preset }), 6)
-      const grid = weekGridFor(week, 14, weekDayNumbers(6))!
-      expect(grid, `${preset.train}: no grid on an ordinary week`).not.toBeNull()
+      const grid = weekGridFor(week, 14, weekDayNumbers(6))
       const courtCols = grid.filter((d) => d.blocks.some((b) => b.kind === 'drills')).length
       const gymCols = grid.filter((d) => d.blocks.some((b) => b.kind === 'gym')).length
       expect(courtCols, `${preset.train}: court days`).toBe(week.courtDays)
       expect(gymCols, `${preset.train}: the one gym day`).toBe(gymDayIndex(sessionsForPlan(preset.train)) === null ? 0 : 1)
+
+      // ⚠ AND THE EXAM FORTNIGHT BUYS THE SAME TENNIS, which is the owner's whole point: «расходы на
+      // тренера... всё еще при нас, просто ежедневная школа разбивается на ряд экзаменов». The coach
+      // is billed that week, nothing in the engine gates training on an exam week, and this project
+      // already settled that «на тренировку можно доехать» - so an exam week draws exactly the
+      // sessions an ordinary week at the same preset draws, on exactly the same days.
+      const examWeek = ECONOMY.availability.examWeeks[0][0]
+      const exams = weekGridFor(calendarWeekFor(facts({ plan: preset, week: examWeek - 1 }), examWeek), 14, weekDayNumbers(examWeek))
+      expect(exams.filter((d) => d.blocks.some((b) => b.kind === 'drills')).length, `${preset.train}: exam-week court days`)
+        .toBe(week.courtDays)
+      expect(exams.filter((d) => d.blocks.some((b) => b.kind === 'gym')).length, `${preset.train}: exam-week gym`).toBe(gymCols)
     }
   })
 
@@ -209,7 +336,7 @@ describe('a block is drawable, and it is not an invention', () => {
   // grind preset Saturday is an ordinary court day (rest is claimed Sunday first, then midweek).
   it('⚠ SHE IS NOT AT SCHOOL AT THE WEEKEND, whatever the plan makes of those days', () => {
     for (const preset of Object.values(WEEK_PLAN_PRESETS)) {
-      const grid = weekGridFor(calendarWeekFor(facts({ plan: preset }), 6), 14, weekDayNumbers(6))!
+      const grid = weekGridFor(calendarWeekFor(facts({ plan: preset }), 6), 14, weekDayNumbers(6))
       for (const day of grid.filter((d) => d.short === 'SAT' || d.short === 'SUN')) {
         expect(
           day.blocks.some((b) => b.kind === 'school' || b.kind === 'schoolLong'),
@@ -220,24 +347,56 @@ describe('a block is drawable, and it is not an invention', () => {
       const monday = grid[0]
       if (monday.kind !== 'rest') expect(monday.blocks.some((b) => b.kind === 'school')).toBe(true)
     }
+    // ⚠ AND NO PAPER FALLS ON A SATURDAY EITHER. An exam is a `school` block, so the same rule covers
+    // it - which is the argument for having put the weekday rule in the composer rather than in the
+    // table, made a second time by a week the table did not exist for when it was written.
+    const examWeek = ECONOMY.availability.examWeeks[0][0]
+    const exams = weekGridFor(calendarWeekFor(facts({ week: examWeek - 1 }), examWeek), 14, weekDayNumbers(examWeek))
+    for (const day of exams.filter((d) => d.short === 'SAT' || d.short === 'SUN')) {
+      expect(day.blocks.some((b) => b.label === 'Exam'), `${day.short} sits a paper`).toBe(false)
+    }
+    // a layoff week is still a school week: she is off the court, not off the register
+    const hurt = weekGridFor(
+      calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }), 6),
+      14,
+      weekDayNumbers(6),
+    )
+    expect(hurt[0].blocks.some((b) => b.kind === 'school'), 'a laid-up Monday skipped school').toBe(true)
+    expect(hurt[5].blocks.some((b) => b.kind === 'school'), 'a laid-up Saturday went to school').toBe(false)
   })
 
   it('the weekday rule only ever REMOVES – it cannot invent an hour', () => {
     // The direction is the whole argument for putting it in the composer rather than in the table:
     // the table stays the one place a day's shape is decided, and the weekend can only decline to
     // assert something, never add to it.
-    const grid = weekGridFor(calendarWeekFor(facts(), 6), 14, weekDayNumbers(6))!
-    for (const day of grid) {
-      const shape = dayBlocksFor(day.kind, 'school')
-      expect(day.blocks.length, `${day.short}`).toBeLessThanOrEqual(shape.length)
-      for (const block of day.blocks) {
-        expect(shape, `${day.short} grew a block the table does not have`).toContainEqual(block)
+    //
+    // ⚠ RUN OVER EVERY KIND OF WEEK NOW, not just the ordinary one: the composer's job grew (it hands
+    // the table the day index and the plan's role), and "only ever removes" is the property that
+    // stops that growth from turning into a second place where a day's shape gets decided.
+    const weeks: [string, CalendarWeek][] = [
+      ['ordinary', calendarWeekFor(facts(), 6)],
+      ['exams', calendarWeekFor(facts({ week: ECONOMY.availability.examWeeks[0][0] - 1 }), ECONOMY.availability.examWeeks[0][0])],
+      ['layoff', calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }), 6)],
+    ]
+    for (const [what, week] of weeks) {
+      const grid = weekGridFor(week, 14, weekDayNumbers(week.week))
+      for (const day of grid) {
+        const shape = dayBlocksFor(day.kind, 'school', {
+          index: day.index,
+          role: day.kind === 'court' || day.kind === 'gym' || day.kind === 'rest' || day.kind === 'match'
+            ? day.kind
+            : planRoleOf(week, day.index),
+        })
+        expect(day.blocks.length, `${what}/${day.short}`).toBeLessThanOrEqual(shape.length)
+        for (const block of day.blocks) {
+          expect(shape, `${what}/${day.short} grew a block the table does not have`).toContainEqual(block)
+        }
       }
     }
   })
 
   it('a booked friendly shows up as the day\'s main event, on the day the strip marks', () => {
-    const grid = gridFor({ practices: [{ week: 6, paidCents: 3000, withCoach: false }] })!
+    const grid = gridFor({ practices: [{ week: 6, paidCents: 3000, withCoach: false }] })
     const match = grid.filter((d) => d.blocks.some((b) => b.kind === 'matchLong'))
     expect(match.length).toBe(1)
     expect(match[0].short).toBe('SAT')
@@ -254,58 +413,138 @@ describe('a block is drawable, and it is not an invention', () => {
       expect(b.label.length, `"${b.label}" will not fit a 40px column`).toBeLessThanOrEqual(18)
     }
   })
+
+  it('⚠ NO WORD LONGER THAN SIX CHARACTERS, because the column is 35px and it breaks mid-word', () => {
+    // Measured in the browser at 375pt, not preferred: a block is about 35-40px wide and the label
+    // wraps with `break-word`, so an eight-letter word has nowhere to break but inside itself -
+    // "Strength" came out as "Streng / th" and the shipped "Practice match" as "Practi / ce match".
+    // The rule was written down at COURT_SESSIONS and applied only to the two session lists; it is a
+    // fact about EVERY label in the file, so it is swept over every label in the file. That is how
+    // the one violator that shipped got found, and it is "Match play" now.
+    for (const b of ALL_BLOCKS()) {
+      for (const word of b.label.split(/[\s–-]+/)) {
+        expect(word.length, `"${b.label}": "${word}" breaks mid-word in a 35px block`).toBeLessThanOrEqual(6)
+      }
+    }
+  })
 })
 
 // =================================================================================================
 // (b) THE BOUNDARY – which weeks may be drawn as a grid at all
 // =================================================================================================
-describe('the grid is drawn for the ordinary week and for nothing else', () => {
+describe('⚠ the grid is drawn on EVERY week, and only its content differs', () => {
   it('an ordinary training week gets seven dated columns', () => {
-    const grid = gridFor()!
-    expect(grid).not.toBeNull()
+    const grid = gridFor()
     expect(grid.length).toBe(7)
     expect(grid.map((d) => d.short)).toEqual(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'])
     // the heads are dated off the shared formatter, never re-derived here
     expect(grid.map((d) => d.date)).toEqual(weekDayNumbers(6))
   })
 
-  it('⚠ every week another surface owns keeps the day strip – the grid returns null', () => {
+  // ⚠ THIS TEST IS THE OVERRULED BOUNDARY, TURNED ROUND. It used to assert that each of these five
+  // weeks drew NOTHING - `expect(grid).toBeNull()` - on the strength of «...для тех, где нет
+  // отпусков, чемпионатов и поездок». The owner was asked directly and answered «очень даже должна
+  // [рисоваться], никакой разницы. Просто содержание сетки будет другим», so the same five cases now
+  // assert what each week DRAWS. Deleting the case list and starting again would have quietly lost
+  // the coverage; every week that used to be pinned as blank is still pinned, now by its content.
+  const trip = () => {
+    const e = { id: 'e1', week: 6, tier: 'local', surface: 'hard', label: 'Local Open', entered: true,
+      eligible: true, cancellable: false, deadlineWeek: 5, entryFeeCents: 0, travelCostCents: 0,
+      preview: { firstMatchChance: 0.5, opponentName: 'M', fieldStrength: 'even', temperatureC: 20, crowd: 40 } }
+    return gridFor({
+      upcoming: [e as never],
+      arrival: { eventId: 'e1', tier: 'local', week: 6, verdict: 'play', outgrown: false },
+    })
+  }
+  const offSeason = () => {
+    const w = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+    return weekGridFor(calendarWeekFor(facts({ week: w - 1 }), w), 14, weekDayNumbers(w))
+  }
+  const examWeek = () => {
+    const w = ECONOMY.availability.examWeeks[0][0]
+    return weekGridFor(calendarWeekFor(facts({ week: w - 1 }), w), 14, weekDayNumbers(w))
+  }
+  const family = () => gridFor({ vacations: [{ week: 6, packageId: 'seaside', paidCents: 40000 }] })
+  const layoff = () => gridFor({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } })
+
+  it('⚠ not one of the five weeks that used to stand down draws an empty column', () => {
     const cases: [string, ReturnType<typeof gridFor>][] = [
-      ['a tournament trip', (() => {
-        const e = { id: 'e1', week: 6, tier: 'local', surface: 'hard', label: 'Local Open', entered: true,
-          eligible: true, cancellable: false, deadlineWeek: 5, entryFeeCents: 0, travelCostCents: 0,
-          preview: { firstMatchChance: 0.5, opponentName: 'M', fieldStrength: 'even', temperatureC: 20, crowd: 40 } }
-        return gridFor({
-          upcoming: [e as never],
-          arrival: { eventId: 'e1', tier: 'local', week: 6, verdict: 'play', outgrown: false },
-        })
-      })()],
-      ['a family week', gridFor({ vacations: [{ week: 6, packageId: 'seaside', paidCents: 40000 }] })],
-      ['a layoff', gridFor({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } })],
-      ['the off-season', (() => {
-        const w = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
-        return weekGridFor(calendarWeekFor(facts({ week: w - 1 }), w), 14, weekDayNumbers(w))
-      })()],
-      ['an exam block', (() => {
-        const w = ECONOMY.availability.examWeeks[0][0]
-        return weekGridFor(calendarWeekFor(facts({ week: w - 1 }), w), 14, weekDayNumbers(w))
-      })()],
+      ['a tournament trip', trip()],
+      ['a family week', family()],
+      ['a layoff', layoff()],
+      ['the off-season', offSeason()],
+      ['an exam block', examWeek()],
     ]
-    for (const [what, grid] of cases) expect(grid, `${what} drew a grid of hours`).toBeNull()
+    for (const [what, grid] of cases) {
+      expect(grid.length, `${what} lost its seven columns`).toBe(7)
+      for (const day of grid) {
+        expect(day.blocks.length, `${what}: ${day.short} is an empty column`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('the trip week is a journey out, a hit, the draw, and a journey home', () => {
+    const grid = trip()
+    expect(grid[0].blocks[0].kind, 'Monday does not travel').toBe('travel')
+    expect(grid[6].blocks[0].kind, 'Sunday does not come home').toBe('travel')
+    expect(grid.filter((d) => d.blocks.some((b) => b.kind === 'tournament')).length).toBeGreaterThanOrEqual(3)
+    // she is not at school and she is not spending the plan's sessions – the family is away
+    expect(grid.flatMap((d) => d.blocks).some((b) => b.kind === 'school' || b.kind === 'drills')).toBe(false)
+  })
+
+  it('a family week has no tennis in it, and is not empty either', () => {
+    for (const [what, grid] of [['booked', family()], ['off-season', offSeason()]] as const) {
+      const blocks = grid.flatMap((d) => d.blocks)
+      // the read-out says "no tennis at all this week" in as many words, so the picture says it too
+      for (const kind of ['drills', 'gym', 'training', 'match', 'matchLong', 'tournament'] as BlockKind[]) {
+        expect(blocks.some((b) => b.kind === kind), `${what} drew ${kind}`).toBe(false)
+      }
+      expect(blocks.some((b) => b.kind === 'vacation'), `${what}: the family's own hours`).toBe(true)
+    }
+  })
+
+  it('⚠ the exam fortnight breaks school up and KEEPS her sessions – the owner\'s own sentence', () => {
+    // «Просто ежедневная школа разбивается на ряд экзаменов в разное время», and «расходы на тренера,
+    // спарринги и физио всё еще при нас». So: no 08-13 block anywhere, papers at more than one hour,
+    // at least one weekday with no paper at all, and the plan's own sessions untouched.
+    const grid = examWeek()
+    const blocks = grid.flatMap((d) => d.blocks)
+    const papers = blocks.filter((b) => b.label === 'Exam')
+    expect(papers.length, 'no papers in the exam week').toBeGreaterThan(2)
+    expect(new Set(papers.map((b) => b.start)).size, 'every paper at the same hour is not a scatter').toBeGreaterThan(1)
+    expect(blocks.some((b) => b.kind === 'school' && b.span >= 5), 'the daily school block survived').toBe(false)
+    expect(grid.slice(0, 5).some((d) => !d.blocks.some((b) => b.label === 'Exam')), 'a paper every single day').toBe(true)
+    expect(blocks.some((b) => b.kind === 'drills'), 'she stopped training in the exam week').toBe(true)
+  })
+
+  it('a layoff keeps her hours and takes the sport out of them', () => {
+    const grid = layoff()
+    const blocks = grid.flatMap((d) => d.blocks)
+    expect(blocks.some((b) => b.kind === 'physio'), 'nothing rehab-shaped in a rehab week').toBe(true)
+    for (const kind of ['drills', 'gym', 'match', 'matchLong', 'tournament', 'training'] as BlockKind[]) {
+      expect(blocks.some((b) => b.kind === kind), `a laid-up week drew ${kind}`).toBe(false)
+    }
+    // the physio hours land on the days the plan bought – the coach still works the week
+    const week = calendarWeekFor(facts({ injury: { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 4 } }), 6)
+    const worked = grid.filter((d) => d.blocks.some((b) => b.kind === 'physio')).map((d) => d.index)
+    expect(worked).toEqual(sessionDays(week.sessions))
   })
 
   it('a rested knock is still an ordinary week – she is at home, not away', () => {
-    // The boundary is about weeks ANOTHER SURFACE owns, not about weeks with bad news in them. A
-    // knock leaves her at home on a week of rest days, which is a shape the grid can draw honestly.
+    // A knock leaves her at home on a week of rest days, which the grid draws as rest days.
     const grid = gridFor({ knock: { part: 'ankle', sinceWeek: 5, repeat: false, choice: 'rest', untilWeek: 6 } })
-    expect(grid).not.toBeNull()
-    expect(grid!.every((d) => d.blocks.every((b) => b.kind !== 'drills'))).toBe(true)
+    expect(grid.every((d) => d.blocks.every((b) => b.kind !== 'drills'))).toBe(true)
   })
 
   it('the four ordinary kinds are exactly the ones `weekDays.ts` mixes', () => {
+    // ⚠ `isOrdinaryWeek` IS GONE, and this is the pin that says so rather than a deletion nobody
+    // reads: it was the boundary predicate, it gated the drawing, and a predicate that gates nothing
+    // is worse than no predicate - the next hand would wire it back up. `isOrdinaryKind` stays,
+    // because the SHAPE TABLE still has two halves: a day whose shape is a fact about its kind, and
+    // a day whose shape is a fact about where it falls in the week.
     for (const kind of ['court', 'gym', 'rest', 'match'] as const) expect(isOrdinaryKind(kind)).toBe(true)
     for (const kind of ['away', 'off', 'school', 'rehab'] as const) expect(isOrdinaryKind(kind)).toBe(false)
-    expect(isOrdinaryWeek([])).toBe(false) // never a grid over nothing
+    expect(module_).not.toContain('isOrdinaryWeek')
   })
 })
 
@@ -345,21 +584,20 @@ describe('a block lands where its hour is', () => {
 // THE SCREEN – it chooses between two drawings and derives neither of them itself
 // =================================================================================================
 describe('the calendar renders the grid it is handed', () => {
-  it('the grid is the ordinary week\'s drawing and the day strip is every other week\'s', () => {
+  it('⚠ ONE drawing of the week, on every week – the second one is deleted, not disabled', () => {
     const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
     expect(template).toContain('<div v-if="grid" class="cal-time">')
-    // ⚠ RE-AIMED (31.07): the day strip's condition moved from `v-else` to `v-if="!grid"` because a
-    // one-line NOTE now sits between them, saying WHY the hours are not drawn. The rule this pins is
-    // unchanged and is the only one it ever meant - the two drawings are alternatives and never both
-    // - so it now checks the condition rather than the adjacency an `v-else` happened to give it.
-    // The owner's own bug report is why the note exists: he updated the app, landed on one of the
-    // 26% of weeks where the grid stands down, and read the other drawing as the update not having
-    // arrived. A silent swap between two drawings is indistinguishable from a stale build.
-    expect(template).toContain('v-if="!grid"\n          class="cal-grid"')
-    expect(template, 'the stand-down line is the grid\'s alternative').toMatch(
-      /<p v-else class="cal-standdown">/,
-    )
-    // one composable answers "may this week be a grid", and the screen does not re-derive it
+    // ⚠ RE-AIMED TWICE, AND THIS TIME IT LOST HALF ITS SUBJECT. It used to pin that the day strip was
+    // the grid's alternative (`v-if="!grid"`), then that a stand-down line sat between the two saying
+    // WHY the hours were not drawn. The owner overruled the boundary itself on 31.07 - the grid draws
+    // on every week - so BOTH of those branches became unreachable, and an unreachable branch in this
+    // codebase gets deleted rather than left for the next hand to wonder about. What the pin protects
+    // now is that the deletion was real: no second drawing, no stand-down line, no CSS for either.
+    expect(template, 'the day strip came back').not.toContain('cal-grid')
+    expect(template, 'the stand-down line came back').not.toContain('cal-standdown')
+    expect(screen, 'the deleted drawing left its stylesheet behind').not.toContain('.cal-day-mark')
+    expect(screen, 'the deleted drawing left its stylesheet behind').not.toContain('.cal-day--court')
+    // one composable answers what a week's hours are, and the screen does not re-derive it
     // ⚠ RE-AIMED (round-19): a fourth argument joined the call - the career SEED, which names the
     // court and gym sessions so two consecutive weeks do not read as a photocopy. The rule this pins
     // is that the screen COMPOSES and does not decide, so it matches the call's opening rather than
@@ -388,9 +626,13 @@ describe('the calendar renders the grid it is handed', () => {
     // The palette is written out as static rules on purpose (a `var(--event-${kind})` built in a
     // template is a reference no scanner can resolve). This is the pin that the map is COMPLETE:
     // a thirteenth kind added to the type with no rule would paint with no background at all.
+    // ⚠ FOURTEEN NOW: `physio` and `vacation` joined the type when the four weeks the grid used to
+    // refuse arrived with hours in them (a layoff has physio in it, a family week has the family).
+    // Both take a `--cat-*` the wallet already declares - the same hue means the same thing on both
+    // screens - which is exactly what this pin exists to keep true of a NEW kind as well as an old.
     const KINDS: BlockKind[] = [
       'training', 'trainingAlt', 'gym', 'school', 'schoolLong', 'drills',
-      'match', 'matchLong', 'study', 'travel', 'rest', 'tournament',
+      'match', 'matchLong', 'study', 'travel', 'rest', 'tournament', 'physio', 'vacation',
     ]
     for (const kind of KINDS) {
       const rule = screen.match(new RegExp(`\\.cal-block--${kind}\\s*\\{([^}]*)\\}`))
@@ -408,9 +650,12 @@ describe('the calendar renders the grid it is handed', () => {
     expect(screen).toContain('border: var(--stroke-hair) solid var(--cat-coaching)')
   })
 
-  it('the sweep still crosses the week out, on whichever drawing is up', () => {
-    // The crossing-out animation is shipped behaviour and the grid replaces a DRAWING, not the
-    // screen's logic. Both drawings answer the same two pieces of state.
+  it('the sweep still crosses the week out, on every kind of week', () => {
+    // The crossing-out animation is shipped behaviour and the grid replaced a DRAWING, not the
+    // screen's logic. ⚠ RE-AIMED (31.07): it used to say "on whichever drawing is up" - there is one
+    // drawing now, and the classes it answers to are the grid's, which are the ones that survived.
+    // The columns it strikes are the same seven on a trip week as on a training week, because the
+    // sweep reads `d.index` and the week's kind never enters into it.
     expect(screen).toContain("'cal-time-day--crossed': d.index < crossed")
     expect(screen).toContain("'cal-col--crossed': d.index < crossed")
     expect(screen).toContain("'cal-col--held': d.index === heldIndex")
@@ -443,10 +688,18 @@ describe('the calendar renders the grid it is handed', () => {
 // ARE: that the pool stays domestic (which is what makes the licence unnecessary rather than merely
 // skipped), and that the scrap does not change its mind between two looks at the same week.
 describe('the fridge note is a parent\'s handwriting, and it claims nothing about the week', () => {
-  it('⚠ THE ONE CONSTRAINT: nothing in the pool is about tennis, a result, a trip, her body or money', () => {
+  it('⚠ THE ONE CONSTRAINT: nothing in the DOMESTIC pool is about tennis, a result, a trip, her body or money', () => {
     // Expressed as a vocabulary sweep because it CAN be - that is the whole reason the constraint is
     // a rule about content rather than a machine. A line that cannot say "match" cannot claim she
     // played one, whatever week it lands on.
+    //
+    // ⚠ AND IT SWEEPS `FRIDGE_NOTES` ONLY, WHICH IS A SPLIT AND NOT A LOOPHOLE (31.07). The owner
+    // added «записочки в духе "удачи на экзамене" или "держим за тебя кулачки"» - notes that speak to
+    // a week that HAS something in it. Those live in their own pools and are exempt from this sweep
+    // BY DESIGN, and the exemption is stated here rather than expressed by quietly widening the
+    // sweep's input: the domestic pool is the one that lands on any week at all, so it is the one
+    // that may never make a claim. The sub-pools land on exactly the week their claim is true of,
+    // and the test below is what holds them to it.
     const FORBIDDEN = [
       'tennis', 'court', 'racket', 'racquet', 'serve', 'match', 'matches', 'tournament', 'final',
       'win', 'won', 'wins', 'lose', 'lost', 'beat', 'draw', 'round', 'rank', 'ranking', 'points',
@@ -470,10 +723,42 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
     expect(FRIDGE_NOTES.length).toBeGreaterThanOrEqual(40)
     expect(FRIDGE_NOTES.length).toBeLessThanOrEqual(60)
     expect(new Set(FRIDGE_NOTES).size).toBe(FRIDGE_NOTES.length)
+    // the two week pools are deliberately small – they only have one week each to be true on
+    for (const [what, pool] of [['exams', EXAM_NOTES], ['a trip', TRIP_NOTES]] as const) {
+      expect(pool.length, `${what}: not enough scraps to avoid a photocopy`).toBeGreaterThanOrEqual(6)
+      expect(new Set(pool).size, `${what}: duplicates`).toBe(pool.length)
+      // ...and no line belongs to two pools, which would make the mood do nothing on that week
+      for (const line of pool) expect(FRIDGE_NOTES, `"${line}" is in the domestic pool too`).not.toContain(line)
+    }
+  })
+
+  it('⚠ THE WEEK POOLS MAY CLAIM ONE THING – the week\'s own fact – AND NOTHING ELSE', () => {
+    // The honesty pin's own logic, not an exception to it: "Good luck in the exam" is forbidden on an
+    // ordinary week because there is nothing to wish her luck for, and fine on the week she sits her
+    // papers because it is simply true. So the sweep here is over the things that are NOT true yet on
+    // either week: a RESULT, a ROUND, an opponent, a mark. The week has not been played when this
+    // scrap is read - it is taped up beside a picture of the week ahead.
+    const UNKNOWABLE = [
+      'won', 'win', 'wins', 'lost', 'beat', 'champion', 'title', 'trophy', 'final', 'semi',
+      'quarter', 'round', 'passed', 'failed', 'grade', 'mark', 'marks', 'score', 'ranked',
+    ]
+    for (const [what, pool] of [['exams', EXAM_NOTES], ['a trip', TRIP_NOTES]] as const) {
+      for (const line of pool) {
+        for (const word of UNKNOWABLE) {
+          expect(
+            new RegExp(`\\b${word}\\b`, 'i').test(line),
+            `${what}: "${line}" claims "${word}", which the week has not decided yet`,
+          ).toBe(false)
+        }
+      }
+    }
+    // ...and each pool really is about its own week, or the split buys nothing
+    expect(EXAM_NOTES.some((l) => /exam/i.test(l)), 'the exam pool never mentions the exams').toBe(true)
+    expect(TRIP_NOTES.some((l) => /luck|crossed|out there/i.test(l)), 'the trip pool wishes her nothing').toBe(true)
   })
 
   it('player copy: short dash only, no Cyrillic, and short enough to be a scrap', () => {
-    for (const line of FRIDGE_NOTES) {
+    for (const line of [...FRIDGE_NOTES, ...EXAM_NOTES, ...TRIP_NOTES]) {
       expect(line, 'long dash on the fridge').not.toContain('—')
       expect(line, 'Cyrillic on the fridge').not.toMatch(/[Ѐ-ӿ]/)
       expect(line.length, `"${line}" is a letter, not a note`).toBeLessThanOrEqual(56)
@@ -488,6 +773,13 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
     for (const week of [0, 1, 7, 51, 260]) {
       expect(fridgeNoteFor('abc', week)).toBe(fridgeNoteFor('abc', week))
       expect(FRIDGE_NOTES).toContain(fridgeNoteFor('abc', week))
+      // the mood picks the POOL and nothing else – same week, same index, other paper
+      expect(fridgeNoteFor('abc', week, 'exam')).toBe(fridgeNoteFor('abc', week, 'exam'))
+      expect(EXAM_NOTES).toContain(fridgeNoteFor('abc', week, 'exam'))
+      expect(TRIP_NOTES).toContain(fridgeNoteFor('abc', week, 'trip'))
+      // ⚠ AND THE DEFAULT IS THE DOMESTIC POOL, unchanged line for unchanged line: adding the moods
+      // must not have reshuffled a single scrap in a career that already existed.
+      expect(fridgeNoteFor('abc', week, 'home')).toBe(fridgeNoteFor('abc', week))
     }
     // ...and it is a fact about the CAREER, not about this device: two careers on the same week
     // read different scraps.
@@ -524,10 +816,21 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
   })
 
   it('the note rides with the GRID, and its week is the grid\'s week', () => {
-    // A note beside a day strip would be a note on a week she is away for. And if the two read
-    // different weeks, the paper and the picture next to it would be about different sevens of days.
+    // If the two read different weeks, the paper and the picture next to it would be about different
+    // sevens of days.
     expect(screen).toContain('<PaperNote v-if="grid" class="cal-note"')
-    expect(screen).toContain('fridgeNoteFor(snap.seed, week.week)')
+    // ⚠ RE-AIMED (31.07): a third argument joined the call - which POOL this week's scrap comes from.
+    // The rule pinned is unchanged (one week, read once, shared by the paper and the picture), so it
+    // matches the call's opening rather than its arity. The mapping itself is pinned just below.
+    expect(screen).toContain('fridgeNoteFor(snap.seed, week.week')
+    // the week's kind chooses the pool, and it is a total map – a ninth DayKind fails to compile
+    expect(screen).toContain('const NOTE_MOOD: Record<DayKind, NoteMood>')
+    expect(screen).toMatch(/away: 'trip',/)
+    expect(screen).toMatch(/school: 'exam',/)
+    // ...and a family week and a layoff stay DOMESTIC on purpose: how those weeks go is not a fact
+    // the fridge has before they are played.
+    expect(screen).toMatch(/off: 'home',/)
+    expect(screen).toMatch(/rehab: 'home',/)
     // the design's own object: taped, torn, ruled, tilted off one of its own angles
     expect(screen).toContain(':tilt="-0.8" ruled torn tape')
   })

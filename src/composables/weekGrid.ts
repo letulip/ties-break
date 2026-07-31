@@ -1,8 +1,9 @@
 // THE WEEK, LAID OUT IN HOURS – the blocks screen H draws inside its time x day grid.
 //
 // `composables/weekDays.ts` answers WHAT each of the seven days is (a court day, the gym day, the
-// rest day, the booked match). This file answers what one of those days LOOKS LIKE across a
-// morning and an afternoon. It is a layer on top of that file and it changes nothing in it.
+// rest day, the booked match, and the four whole-week kinds: away, off, exams, rehab). This file
+// answers what one of those days LOOKS LIKE across a morning and an afternoon. It is a layer on top
+// of that file and it changes nothing in it.
 //
 // -------------------------------------------------------------------------------------------------
 // ⚠ THE ENGINE KEEPS NO TIME OF DAY, AND IT NEVER WILL. THIS IS VISUALISATION.
@@ -15,7 +16,51 @@
 // and for the same reason: the engine resolves whole WEEKS, so the alternative to a stated
 // convention is not a truer layout, it is no layout at all. What the grid may never do is assert a
 // fact the week does not contain - which is why the rule below draws exactly one tennis session on a
-// day the plan bought one session, and why a week she spends on a plane keeps the day strip it has.
+// day the plan bought one session, and why a family week draws no tennis at all.
+//
+// -------------------------------------------------------------------------------------------------
+// ⚠ AND IT IS DRAWN ON EVERY WEEK – THE OWNER OVERRULED THE BOUNDARY THAT USED TO BE HERE (31.07)
+// -------------------------------------------------------------------------------------------------
+// The first version drew a grid ONLY for a week made of court / gym / rest / match, and every other
+// week fell back to a plainer day strip. The trailing half of his 30.07 sentence was read as a
+// scope line («...для тех, где нет отпусков, чемпионатов и поездок»). Asked directly whether the
+// exam fortnight should draw hours, he answered:
+//
+//   «очень даже должна [рисоваться], никакой разницы. Просто содержание сетки будет другим. Расходы
+//    на тренера, спарринги и физио всё еще при нас, просто ежедневная школа разбивается на ряд
+//    экзаменов в разное время.»
+//
+// He is right, and the objection was inconsistent with this very file. The grid ALREADY runs on
+// display conventions for the ordinary week - the rest-day priority, the gym on Tuesday, the
+// Saturday match, school owning the middle of the day - all of them facts the engine does not keep.
+// Refusing conventions only for the OTHER four weeks was not honesty, it was a boundary drawn where
+// the argument happened to stop. So the four weeks below get their conventions written down in the
+// same voice as the ordinary week's, and every one of them is stated rather than implied.
+//
+// THE FOUR, AND WHAT EACH ONE IS BUILT FROM:
+//
+//   `school` (the exam fortnight)  HER HOURS ARE STILL HERS. The daily 08-13 school block breaks up
+//        into a handful of exams at scattered times - his own sentence - and the training the plan
+//        bought still happens: the coach is billed that week (nothing in the engine gates training
+//        on an exam week; `isExamWeek` only shuts tournaments and bookings), and this project
+//        already settled that «на тренировку можно доехать». So an exam day keeps the plan's own
+//        session block, in the plan's own hour. The week is the ordinary week with school swapped
+//        for papers, which is exactly what he described.
+//
+//   `away` (the tournament trip)  THE TRIP, AS A SEQUENCE: travel out, a hit on court at the venue,
+//        the tournament across the middle of the week, travel home. ⚠ NO ROUND IS EVER NAMED. The
+//        week has not been played; "R1" then "R2" on two days would assert she survives the first,
+//        which is the one thing a picture drawn BEFORE the draw resolves may not say. Every day of
+//        the event carries the same block, and it says WHEN THE TOURNAMENT IS, not when she plays.
+//
+//   `off` (a booked family week, or the off-season)  NO TENNIS - the read-out under the grid says
+//        so in as many words - AND THE WEEK IS NOT EMPTY. It is the family's week, so it is drawn
+//        with the family's hours in it.
+//
+//   `rehab` (the layoff)  THE PLAN'S HOURS SURVIVE AND THEIR CONTENT CHANGES: physio and light work
+//        instead of court time. The coach still works a layoff week - settled earlier, «они вполне
+//        могут вместе восстанавливаться» - so the hours the plan bought are still drawn; what is in
+//        them is not tennis.
 //
 // -------------------------------------------------------------------------------------------------
 // WHAT A DAY IS MADE OF, AND WHERE EACH PIECE COMES FROM
@@ -32,16 +77,20 @@
 // This is sanctioned by the owner's own instruction about the bands (see AgeBand): school hours
 // dominate the day at fourteen, they shorten, and then they go.
 //
-// WHAT IS DELIBERATELY NOT HERE: a morning run, a second court session, physio, a stretch - all of
-// them plausible, none of them anything the engine models or the week's own read-out mentions. A
-// calendar that invents facts is worse than no calendar (weekDays.ts's own header), and furniture
-// that comes with a band is not the same as furniture invented to fill a column.
+// WHAT IS DELIBERATELY NOT HERE: a morning run, a second court session, a stretch - all of them
+// plausible, none of them anything the engine models or the week's own read-out mentions. A calendar
+// that invents facts is worse than no calendar (weekDays.ts's own header), and furniture that comes
+// with a band - or with a week the engine has already named "a trip", "a holiday", "exams", "a
+// layoff" - is not the same as furniture invented to fill a column.
 //
 // ⚠ AND IT IS A PURE MODULE, no Vue and no store, for the argument `weekDays.ts` already makes about
-// itself: a rule with content in it - a table of shapes, a band, a boundary between two drawings -
-// is a rule worth pinning on values, and a rule inside a template is decoration that cannot be
-// tested. The screen composes; this file decides.
+// itself: a rule with content in it - a table of shapes, a band, an arc for a week away - is a rule
+// worth pinning on values, and a rule inside a template is decoration that cannot be tested. The
+// screen composes; this file decides.
 import type { CalendarDay, CalendarWeek, DayBeat, DayKind } from './weekDays'
+// ...and the one VALUE this file takes from the day layout: which day indexes the plan bought. It is
+// imported rather than re-derived on purpose - see `planRoles`.
+import { sessionDays } from './weekDays'
 import { hash32 } from './fridgeNote'
 
 /** One coloured block in the grid. Hours are PRESENTATION – see the header. */
@@ -52,17 +101,18 @@ export interface DayBlock {
   span: number
   /** which `event` colour family the block wears */
   kind: BlockKind
-  /** the words in the block, e.g. "Tennis drills". Player copy: short dash, no Cyrillic. */
+  /** the words in the block, e.g. "Tennis drills". Player copy: short dash, no Cyrillic, and ⚠ NO
+   *  WORD LONGER THAN SIX CHARACTERS – see the note at COURT_SESSIONS, it is measured. */
   label: string
 }
 
-/** The design system's `event` palette, one member per kind of hour. All thirteen colours are on
- *  `:root` (src/style.css); six of the twelve KINDS have no caller yet and that is written down at
- *  `DAY_SHAPES` rather than left as a puzzle. */
+/** The design system's `event` palette, one member per kind of hour. Every one is on `:root`
+ *  (src/style.css); the three that still have no caller are written down at `DAY_SHAPES` rather
+ *  than left as a puzzle. */
 export type BlockKind =
   | 'training' | 'trainingAlt' | 'gym' | 'school' | 'schoolLong'
   | 'drills' | 'match' | 'matchLong' | 'study' | 'travel' | 'rest'
-  | 'tournament'
+  | 'tournament' | 'physio' | 'vacation'
 
 /** The first and last hour the grid has room for, and the labelled rules between them. 07:00–19:00
  *  is the mockup's own span (docs/design/screenshots/H-calendar-week.webp); a block outside it would
@@ -72,24 +122,19 @@ export const GRID_END_HOUR = 19
 /** Every second hour carries a label and a hairline – the prototype's own 68px-per-two-hours rule. */
 export const GRID_HOURS: readonly number[] = [7, 9, 11, 13, 15, 17, 19]
 
-/** THE ORDINARY WEEK, as a set. These four are what a week made of her own training plan contains;
- *  `weekDays.ts`'s `uniform()` builds every other kind of week out of a single one of `away`, `off`,
- *  `school` and `rehab`, and those weeks keep the day strip they already have (see `isOrdinaryWeek`). */
+/** THE ORDINARY WEEK, as a set. These four are what a week made of her own training plan contains,
+ *  and they are the kinds whose shape is a fact about the KIND rather than about the date: what she
+ *  does on a court day is the same whether it is Monday or Thursday.
+ *
+ *  The other four (`weekDays.ts`'s `uniform()` weeks) are the opposite - a trip is a SEQUENCE, and
+ *  an exam falls on the day it falls on - so they are shaped per day index, one function down. */
 export const ORDINARY_KINDS = ['court', 'gym', 'rest', 'match'] as const
 export type OrdinaryKind = (typeof ORDINARY_KINDS)[number]
+/** The four a whole week is made of, every day the same kind. */
+export type WeekKind = Exclude<DayKind, OrdinaryKind>
 
 export function isOrdinaryKind(kind: DayKind): kind is OrdinaryKind {
   return (ORDINARY_KINDS as readonly DayKind[]).includes(kind)
-}
-
-/** ⚠ THE BOUNDARY, AND IT IS THE OWNER'S OWN – «для тех, где нет отпусков, чемпионатов и поездок».
- *
- *  The grid replaces the day strip ONLY on a week made of the ordinary training mix. A week she
- *  spends at a tournament, on a family holiday, in an exam blackout, in the off-season or laid up is
- *  a week the engine has told us nothing about the shape of, and a grid of hours for it would be
- *  inventing a day rather than drawing one. Those weeks keep exactly the screen they have today. */
-export function isOrdinaryWeek(days: readonly CalendarDay[]): boolean {
-  return days.length > 0 && days.every((d) => isOrdinaryKind(d.kind))
 }
 
 // =================================================================================================
@@ -108,8 +153,8 @@ export function isOrdinaryWeek(days: readonly CalendarDay[]): boolean {
 //
 // ADDING A BAND IS ADDING TWO ROWS - one to `BAND_FROM` (from what age) and one to `DAY_SHAPES`
 // (what a day of each kind looks like in it). It is not a rewrite, and a HALF-added band fails the
-// gate: tests/calendar-grid.test.ts pins that every band the table carries covers every ordinary day
-// kind, and that every band `bandFor` can return has a row at all. The alternative - a missing row
+// gate: tests/calendar-grid.test.ts pins that every band the table carries covers every day kind,
+// and that every band `bandFor` can return has a row at all. The alternative - a missing row
 // resolving to an empty column - is exactly the silent failure this codebase keeps writing tests
 // against.
 
@@ -135,17 +180,17 @@ export function bandFor(ageYears: number): AgeBand {
  *  `Partial` on the OUTER record and total on the inner one is the type saying what the paragraph
  *  above says: a band may be absent, but a band that is present is complete.
  *
- *  ⚠ SIX OF THE TWELVE BLOCK KINDS HAVE NO CALLER, and each is waiting for something specific
+ *  ⚠ THREE OF THE FOURTEEN BLOCK KINDS HAVE NO CALLER, and each is waiting for something specific
  *  rather than being decoration:
- *    `travel`, `tournament`  a trip and a draw are not an ordinary week (see `isOrdinaryWeek`), so
- *                            under today's boundary nothing can reach them. The owner cancelled the
- *                            coach-travel mechanic on 30.07 and the brief says in as many words not
- *                            to invent a caller for `travel`.
- *    `training`, `trainingAlt`, `match`  the SECOND session of a day. At fourteen there is one, and
- *                            drawing two would contradict the sentence under the grid. They are what
- *                            the hours school gives back get filled with in the later bands.
+ *    `trainingAlt`, `match`  the SECOND session of a day. At fourteen there is one, and drawing two
+ *                            would contradict the sentence under the grid. They are what the hours
+ *                            school gives back get filled with in the later bands.
  *    `schoolLong`            a day that is nothing but school. The design draws one (its Friday);
- *                            ours would be an exam week, and an exam week is not an ordinary one. */
+ *                            ours would have been the exam week, and the exam week turned out to be
+ *                            the opposite of that - the owner's own reading is that the daily block
+ *                            BREAKS UP, so an exam day has more air in it than an ordinary one.
+ *  (`travel`, `tournament`, `physio` and `vacation` were on that list until 31.07. The four weeks
+ *  the grid used to refuse are their callers - see WEEK_SHAPES.) */
 const DAY_SHAPES: Partial<Record<AgeBand, Record<OrdinaryKind, readonly DayBlock[]>>> = {
   // FOURTEEN. School owns the middle of the day, the tennis is what happens after it, and the
   // evening has homework in it - which is why a training week at this age reads as a busy week even
@@ -169,7 +214,7 @@ const DAY_SHAPES: Partial<Record<AgeBand, Record<OrdinaryKind, readonly DayBlock
     // the one shape with no school in it and why the match owns the middle of the day rather than an
     // hour after school. `matchLong` is the design's own three-hour "Practice Match Play".
     match: [
-      { start: 10, span: 3, kind: 'matchLong', label: 'Practice match' },
+      { start: 10, span: 3, kind: 'matchLong', label: 'Match play' },
       { start: 18, span: 1, kind: 'study', label: 'Study' },
     ],
     // ⚠ A REST DAY GOES TO SCHOOL, and this shape used to omit it. The omission was defended like
@@ -197,19 +242,158 @@ const DAY_SHAPES: Partial<Record<AgeBand, Record<OrdinaryKind, readonly DayBlock
   },
 }
 
+// =================================================================================================
+// THE FOUR WEEKS THAT ARE NOT A MIX – away, off, exams, rehab
+// =================================================================================================
+//
+// A day of one of these kinds cannot be shaped by its KIND alone, and that is the one structural
+// difference from the table above. Two reasons, and they are different reasons:
+//
+//   THE DATE MATTERS. A trip is a sequence - you travel out before you come home - and an exam falls
+//   on the day the school puts it. So these shapes take the day INDEX.
+//
+//   THE PLAN STILL EXISTS UNDERNEATH. On the exam week and the layoff week the family is still
+//   paying for her hours, so the shape takes the ROLE the plan would have given the day (court, the
+//   gym, or rest) and dresses it differently. That is the owner's own point about the exam week -
+//   «расходы на тренера, спарринги и физио всё еще при нас» - and it is what keeps the picture and
+//   the plan in step: an exam week draws exactly the sessions the plan bought, not one more.
+
+/** What a day of a whole-week kind needs to know about itself. */
+export interface DayContext {
+  /** 0 = Monday … 6 = Sunday */
+  index: number
+  /** what the PLAN made of this day – or would have, on a week it does not own. */
+  role: OrdinaryKind
+}
+
+/** The context a caller that has none gets: Monday, and a rest day. Deliberately the QUIETEST day
+ *  the tables can produce, so a caller that forgets to say which day it is asks for the least the
+ *  grid can assert rather than the most. */
+const ANY_DAY: DayContext = { index: 0, role: 'rest' }
+
+/** A band's row of ordinary shapes – what the four functions below dress up. */
+type BandShapes = Record<OrdinaryKind, readonly DayBlock[]>
+
+/** ⚠ THE EXAM HOURS, and the scatter IS the content. «Ежедневная школа разбивается на ряд экзаменов
+ *  в разное время»: one paper Monday morning, one after lunch on Tuesday, a long one on Wednesday,
+ *  nothing on Thursday, one late Friday morning. Two days of the fortnight carrying no paper at all
+ *  is what makes the week read as scattered rather than as school with a new label - and a Thursday
+ *  with a free morning is the shape a parent recognises from an exam fortnight.
+ *
+ *  Every one of them ends by 15:00, which is not an accident: the plan's session sits at 15:00 in
+ *  every ordinary shape, and an exam that ran into it would be the grid double-booking her. */
+const EXAM_HOURS: readonly (readonly [start: number, span: number] | null)[] = [
+  [9, 2], [13, 2], [9, 3], null, [11, 2], null, null,
+]
+
+/** THE EXAM FORTNIGHT. The ordinary day, with the 08–13 school block broken up into a paper - and
+ *  the plan's own session left exactly where it was, because she still trains.
+ *
+ *  ⚠ A BOOKED FRIENDLY CANNOT REACH THIS WEEK, and the code says so instead of trusting it: the
+ *  engine refuses to schedule one in an exam fortnight («School exams that week – no matches, no
+ *  trips», engine/world.ts), so `planRoles` never produces a `match` here. It is handled anyway,
+ *  because the alternative was silent and wrong - the match shape owns 10:00-13:00 and Monday's paper
+ *  starts at 09:00, so an unreachable path drew two blocks on top of each other. The exams are the
+ *  week's identity, so the paper wins and the day falls back to the court shape underneath it. */
+function examDay(shapes: BandShapes, day: DayContext): readonly DayBlock[] {
+  const paper = EXAM_HOURS[day.index]
+  const role = day.role === 'match' ? 'court' : day.role
+  // The daily block BREAKS UP: it is removed, and what replaces it is a paper or nothing at all.
+  const rest = shapes[role].filter((b) => b.kind !== 'school' && b.kind !== 'schoolLong')
+  if (!paper) return rest
+  return [{ start: paper[0], span: paper[1], kind: 'school', label: 'Exam' }, ...rest]
+}
+
+/** ⚠ THE TRIP, AND NOT ONE ROUND IS NAMED. Travel out, a hit on court at the venue, the tournament
+ *  across the middle of the week, travel home. Every day of the event carries the SAME block, and
+ *  what it says is when the tournament is on - not that she is still in it. The week has not been
+ *  played: a block reading "R2" on the Thursday would assert she came through Wednesday, which is
+ *  the sim's call and not the calendar's.
+ *
+ *  The court hit is `training` rather than `drills` on purpose, and it is the one invariant that
+ *  keeps this week from lying about the plan: `drills` MEANS "the session the plan bought", every
+ *  week, everywhere. A trip does not spend the plan's sessions - the family is away - so the hour
+ *  she spends on court at the venue is a different kind of hour and wears a different colour. */
+const TRIP_ARC: readonly (readonly DayBlock[])[] = [
+  [{ start: 9, span: 4, kind: 'travel', label: 'Travel out' }],
+  [{ start: 10, span: 2, kind: 'training', label: 'Court hit' }],
+  [{ start: 10, span: 4, kind: 'tournament', label: 'Draw day' }],
+  [{ start: 10, span: 4, kind: 'tournament', label: 'Draw day' }],
+  [{ start: 10, span: 4, kind: 'tournament', label: 'Draw day' }],
+  [{ start: 10, span: 4, kind: 'tournament', label: 'Draw day' }],
+  [{ start: 11, span: 4, kind: 'travel', label: 'Travel home' }],
+]
+
+/** THE FAMILY'S WEEK. Two weeks reach this shape - a booked package and the off-season - and the one
+ *  thing they share is the one thing the read-out under the grid already says out loud: «no tennis
+ *  at all this week». So there is no tennis in it, and no school either: both weeks are weeks the
+ *  household has taken, one by booking it and one because the tour is shut at the turn of the year.
+ *
+ *  ⚠ AND IT IS NOT AN EMPTY COLUMN, which is the whole reason the owner wanted the grid drawn here:
+ *  "no tennis" is a fact about her week, not an absence of one. The hours are the family's. */
+const FAMILY_ARC: readonly (readonly DayBlock[])[] = [
+  [{ start: 10, span: 3, kind: 'vacation', label: 'Family time' }],
+  [{ start: 10, span: 4, kind: 'vacation', label: 'Day out' }],
+  [{ start: 9, span: 3, kind: 'rest', label: 'Time off' }, { start: 14, span: 3, kind: 'vacation', label: 'Family time' }],
+  [{ start: 10, span: 4, kind: 'vacation', label: 'Day out' }],
+  [{ start: 11, span: 3, kind: 'vacation', label: 'Family time' }],
+  [{ start: 10, span: 4, kind: 'vacation', label: 'Day out' }],
+  [{ start: 11, span: 3, kind: 'rest', label: 'Home day' }],
+]
+
+/** Everything that is her SPORT, as opposed to school, homework, rest, a journey or the family's
+ *  own hours. One list, used by the layoff rule below and by nothing else here – the tests keep
+ *  their own copy on purpose, because a guard that imports the thing it is guarding checks nothing. */
+const SPORT_KINDS: readonly BlockKind[] = [
+  'training', 'trainingAlt', 'drills', 'match', 'matchLong', 'tournament', 'gym',
+]
+
+/** THE LAYOFF. Her hours survive and their content changes: the coach still works a week she is
+ *  laid up (settled earlier, «они вполне могут вместе восстанавливаться»), so the session the plan
+ *  bought is still drawn and what happens in it is rehab rather than tennis.
+ *
+ *  ⚠ AND SHE STILL GOES TO SCHOOL, for the argument the rest day already had to learn: a layoff is
+ *  a layoff FROM TENNIS. School was never the plan's to give or take away, and a fourteen-year-old
+ *  with a bad ankle is in a classroom on Tuesday morning like everybody else. */
+function layoffDay(shapes: BandShapes, day: DayContext): readonly DayBlock[] {
+  return shapes[day.role].map((b) =>
+    // ⚠ EVERY kind of sport, not just the drill: the hour survives, the sport does not. Written
+    // against the LIST rather than against `drills` alone so a later band that fills a day with a
+    // second session, or a booked friendly that somehow reaches a layoff week, cannot leak a match
+    // onto a week she is not allowed to play in.
+    SPORT_KINDS.includes(b.kind)
+      ? { ...b, kind: 'physio' as const, label: b.kind === 'gym' ? 'Physio' : 'Rehab gym' }
+      : b,
+  )
+}
+
+/** One shaper per whole-week kind. A `Record` rather than a switch so the type carries the
+ *  completeness: a ninth `DayKind` would fail to compile here rather than draw an empty column. */
+const WEEK_SHAPES: Record<WeekKind, (shapes: BandShapes, day: DayContext) => readonly DayBlock[]> = {
+  school: examDay,
+  away: (_shapes, day) => TRIP_ARC[day.index] ?? [],
+  off: (_shapes, day) => FAMILY_ARC[day.index] ?? [],
+  rehab: layoffDay,
+}
+
 /** THE LAYOUT RULE. `band` is a PARAMETER, not a constant, because her week is supposed to change
  *  shape as she grows up (owner, 30.07) – school shrinks, then goes, and the hours it held fill
  *  with something else. Adding a band is adding a row to DAY_SHAPES; it is not a rewrite.
  *
- *  Returns [] for a day kind that is not part of an ordinary week: those weeks never draw a grid at
- *  all (`isOrdinaryWeek`), so an empty list is the honest answer rather than a fallback shape. It is
- *  also [] for a band with no row yet, which is unreachable while `bandFor` returns only populated
- *  bands - and is pinned as unreachable rather than papered over with the school row, because
- *  drawing a fourteen-year-old's school day for an adult would be the invention this file refuses. */
-export function dayBlocksFor(kind: DayKind, band: AgeBand): DayBlock[] {
-  if (!isOrdinaryKind(kind)) return []
+ *  `day` is the third parameter for the reason the section above gives: the four whole-week kinds
+ *  are a sequence, not a mix. The ordinary four ignore it - what she does on a court day is a
+ *  consequence of the plan and not of the date - which is why it has a default.
+ *
+ *  Returns [] for a band with no row yet. That is unreachable while `bandFor` returns only populated
+ *  bands, and it is pinned as unreachable rather than papered over with the school row, because
+ *  drawing a fourteen-year-old's school day for an adult would be the invention this file refuses.
+ *  ⚠ THE GATE IS ON THE BAND, NOT ON THE KIND, so a half-added band draws nothing on a trip week
+ *  either - a trip arc that survived a missing band would be a silent hole in the same gate. */
+export function dayBlocksFor(kind: DayKind, band: AgeBand, day: DayContext = ANY_DAY): DayBlock[] {
   const shapes = DAY_SHAPES[band]
-  return shapes ? shapes[kind].map((b) => ({ ...b })) : []
+  if (!shapes) return []
+  const blocks = isOrdinaryKind(kind) ? shapes[kind] : WEEK_SHAPES[kind](shapes, day)
+  return blocks.map((b) => ({ ...b }))
 }
 
 /** The bands the table actually carries – for the completeness gate, and for `dayBlocksFor`'s own
@@ -278,7 +462,8 @@ export function hourLabel(hour: number): string {
  *  to omit school itself, on the grounds that a rest day is usually Sunday - and the cost was a
  *  fourteen-year-old with no school on a Wednesday, the same falsehood pointing the other way. The
  *  table asserts school on every weekday shape and this strips it from Sat/Sun; one rule, in the one
- *  place that knows the date. */
+ *  place that knows the date. It covers the EXAM week too, at no cost: a paper is a `school` block,
+ *  so a Saturday exam could not survive this even if the table grew one. */
 const WEEKEND: readonly number[] = [5, 6]
 function dropWeekendSchool(index: number, blocks: DayBlock[]): DayBlock[] {
   if (!WEEKEND.includes(index)) return blocks
@@ -307,10 +492,13 @@ function dropWeekendSchool(index: number, blocks: DayBlock[]): DayBlock[] {
 // fridge note keeps, and for the same reason (see composables/fridgeNote.ts).
 //
 // ⚠ EVERY WORD HERE IS AT MOST SIX CHARACTERS, and that is a layout constraint measured in a
-// browser rather than a style preference. A block is about 40px wide at 375pt and the label wraps
+// browser rather than a style preference. A block is about 35-40px wide at 375pt and the label wraps
 // with `break-word`, so a longer word is broken mid-syllable: "Rally patterns" came out as "Rally
 // patter / ns", and even "Strength" - eight characters - came out as "Streng / th". Two six-letter
-// words wrap cleanly between themselves; one long word has nowhere to break but inside itself.
+// words wrap cleanly between themselves; one long word has nowhere to break but inside itself. It
+// is a rule about EVERY label in this file, not only these two lists (the block "Practice match"
+// broke as "Practi / ce match" for the same reason and is "Match play" now), and a test sweeps them
+// all.
 const COURT_SESSIONS: readonly string[] = [
   'Tennis drills',
   'Serve work',
@@ -339,9 +527,26 @@ function namedSession(blocks: DayBlock[], seed: string, week: number, index: num
   })
 }
 
-/** The seven columns for a week, or NULL when this week is not one the grid may draw (§ the
- *  boundary above). Null rather than an empty array on purpose: the screen has to choose between two
- *  drawings, and "no columns" and "not this kind of week" are different answers.
+/** WHAT THE PLAN MADE OF EACH DAY, for the two weeks that keep her hours without keeping her sport.
+ *
+ *  On an ordinary week this is simply what `d.kind` already says, and nothing reads it. On the exam
+ *  week and the layoff week `weekDays.ts` has flattened all seven days to one kind - the week's own
+ *  identity outranks the plan there - but the plan is still bought and still billed, so the shape
+ *  needs to know which days it paid for.
+ *
+ *  ⚠ IT IS THE SAME RULE, NOT A SECOND COPY OF IT: `sessionDays` and the week's own `gymIndex` are
+ *  `weekDays.ts`'s, imported rather than re-derived, so the exam week's sessions land on exactly the
+ *  days an ordinary week's would. A second spelling here is how the picture and the plan would drift
+ *  apart on the one week nobody looks at twice. */
+function planRoles(week: CalendarWeek): OrdinaryKind[] {
+  const session = new Set(sessionDays(week.sessions))
+  return week.days.map((d) => (!session.has(d.index) ? 'rest' : d.index === week.gymIndex ? 'gym' : 'court'))
+}
+
+/** The seven columns for a week. EVERY week – the grid is drawn on all eight day kinds and only the
+ *  CONTENT differs (owner, 31.07: «очень даже должна, никакой разницы, просто содержание сетки будет
+ *  другим»). It used to return null on the four weeks the plan does not own, and the screen kept a
+ *  second, plainer drawing for them; both are gone.
  *
  *  `seed` names the sessions (see above) and is optional so every existing test can build a grid
  *  without one - an empty seed leaves the table's own labels untouched. */
@@ -350,15 +555,20 @@ export function weekGridFor(
   ageYears: number,
   dates: readonly number[],
   seed = '',
-): GridDay[] | null {
-  if (!isOrdinaryWeek(week.days)) return null
+): GridDay[] {
   const band = bandFor(ageYears)
-  return week.days.map((d, i) => ({
+  const roles = planRoles(week)
+  return week.days.map((d: CalendarDay, i) => ({
     index: d.index,
     short: d.short,
     date: dates[i] ?? 0,
     kind: d.kind,
     beat: d.beat,
-    blocks: namedSession(dropWeekendSchool(d.index, dayBlocksFor(d.kind, band)), seed, week.week, d.index),
+    blocks: namedSession(
+      dropWeekendSchool(d.index, dayBlocksFor(d.kind, band, { index: d.index, role: roles[i] })),
+      seed,
+      week.week,
+      d.index,
+    ),
   }))
 }

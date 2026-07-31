@@ -67,7 +67,7 @@ import { useCalendarWeek, useLookAhead, DAY_LONG, type CalendarDay, type DayKind
 import { GRID_HOURS, blockOffset, hourLabel, hourTop, weekGridFor } from '../../composables/weekGrid'
 // The scrap of paper beside the grid. Deliberately NOT licensed against the week - see the module's
 // header for the owner's ruling and for why the pick is made here rather than by the sim.
-import { fridgeNoteFor } from '../../composables/fridgeNote'
+import { fridgeNoteFor, type NoteMood } from '../../composables/fridgeNote'
 import { useWeekAction } from '../../composables/weekAction'
 // Slice 2: the crossing-out sweep. The SCHEDULE and the preference live in the composable (both paces,
 // the beat holds, the localStorage pair); what is here is the seven spans and the timers.
@@ -132,14 +132,14 @@ function dayName(d: Pick<CalendarDay, 'index' | 'kind'>): string {
   return `${DAY_LONG[d.index]} – ${KIND_WORD[d.kind]}`
 }
 
-/** THE WEEK IN HOURS, or null on a week the grid may not draw.
+/** THE WEEK IN HOURS. Null only when there is no snapshot to draw one from.
  *
- *  ⚠ NULL IS THE OWNER'S OWN BOUNDARY - «просто визуализация недели для тех, где нет отпусков,
- *  чемпионатов и поездок» - and it is what keeps the two drawings from being a redesign of the
- *  first one. A week she spends at a tournament, away with the family, in an exam blackout or laid
- *  up is a week the engine has told us nothing about the SHAPE of, so it keeps the day strip it has
- *  today and the grid stands down. `weekGridFor` decides that, not this screen; all this file does
- *  is choose which of two drawings to render.
+ *  ⚠ IT USED TO BE NULL ON FOUR KINDS OF WEEK, AND THE OWNER OVERRULED THAT (31.07): «очень даже
+ *  должна [рисоваться], никакой разницы. Просто содержание сетки будет другим.» A trip, a family
+ *  week, the exam fortnight and a layoff all draw the grid now, each with its own content, and this
+ *  screen no longer keeps a second, plainer drawing for them. What each week is made of and the
+ *  convention behind it live in composables/weekGrid.ts, where the ordinary week's conventions
+ *  already lived; this file draws what it is handed.
  *
  *  The dates come from the shared formatter, so the heads over the columns and the span printed in
  *  the header above them are the same seven days. Her age comes off the snapshot: the calendar does
@@ -150,28 +150,33 @@ const grid = computed(() => {
   return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week), snap.seed) : null
 })
 
-/** WHY THE HOURS ARE NOT DRAWN THIS WEEK, in one line. Null-safe: it is only rendered when `grid`
- *  is null, and every kind that can get there has a sentence. `weekGrid.ts` owns the boundary; this
- *  only reports it, so the two can never disagree about which weeks are ordinary.
+/** WHICH POOL THE SCRAP COMES FROM. The domestic pool is the default and stays unlicensed (the
+ *  owner's 30.07 ruling, in full, in composables/fridgeNote.ts); the two week pools exist because on
+ *  a week that HAS a big fact in it a note about that fact is simply true - «удачи на экзамене»,
+ *  «держим за тебя кулачки» (31.07).
  *
- *  Player copy: short dash, no Cyrillic. */
-const standDownNote = computed(() => {
-  const kind = calendar.value?.days[0]?.kind
-  if (kind === 'away') return 'She is away at a tournament – the trip has its own page.'
-  if (kind === 'off') return 'No tennis this week – the hours are hers.'
-  if (kind === 'school') return 'Exams – school has the week, and the courts can wait.'
-  if (kind === 'rehab') return 'She is in rehab – the week belongs to the physio.'
-  return 'A week the plan does not shape – the days are below.'
-})
+ *  ⚠ A FAMILY WEEK AND A LAYOFF STAY DOMESTIC, deliberately: "enjoy the holiday" and "hope it heals"
+ *  are claims about how the week GOES, and the fridge does not know that in advance. Exams and a
+ *  tournament are facts the week already contains before it is played. */
+const NOTE_MOOD: Record<DayKind, NoteMood> = {
+  court: 'home',
+  gym: 'home',
+  rest: 'home',
+  match: 'home',
+  away: 'trip',
+  off: 'home',
+  school: 'exam',
+  rehab: 'home',
+}
 
-/** THE NOTE ON THE FRIDGE DOOR. Off `(seed, week)` and nothing else, so it is the same scrap every
- *  time this week is looked at and a different one next week. The WEEK is the calendar's own - the
- *  one the grid draws and the button plays - so the paper and the picture beside it can never be
+/** THE NOTE ON THE FRIDGE DOOR. Off `(seed, week)` and the week's own kind, so it is the same scrap
+ *  every time this week is looked at and a different one next week. The WEEK is the calendar's own -
+ *  the one the grid draws and the button plays - so the paper and the picture beside it can never be
  *  about different weeks. See composables/fridgeNote.ts: no engine draw, no sub-stream, no licence. */
 const fridgeNote = computed(() => {
   const snap = game.snapshot
   const week = calendar.value
-  return snap && week ? fridgeNoteFor(snap.seed, week.week) : ''
+  return snap && week ? fridgeNoteFor(snap.seed, week.week, NOTE_MOOD[week.days[0]?.kind ?? 'court']) : ''
 })
 
 // --- (d) THE MARKER'S CARD ----------------------------------------------------------------------
@@ -372,19 +377,18 @@ const showGo = computed(() => !game.snapshot?.pending)
       </template>
 
       <!-- ============================================================================
-           THE WEEK, TWICE OVER, AND NEVER BOTH AT ONCE.
+           THE WEEK, ONCE, ON EVERY WEEK OF A CAREER.
 
-           An ORDINARY training week is drawn as the design's time x day grid: seven
-           columns, hours down the side, a coloured block for each thing she does. Every
-           other kind of week - a tournament trip, a family holiday, an exam blackout, a
-           layoff, the off-season - keeps the day strip underneath it, because the engine
-           has told us nothing about the shape of those days and a grid of hours for them
-           would be inventing one. That boundary is the owner's own and it lives in
-           composables/weekGrid.ts; this screen only chooses which drawing to render.
+           The design's time x day grid: seven columns, hours down the side, a coloured
+           block for each thing she does. It used to draw only on an ordinary training
+           week, and the other four kinds - a trip, a family week, the exam fortnight, a
+           layoff - fell back to a plainer strip of seven day cells. The owner overruled
+           that on 31.07: the grid draws on every week and only its CONTENT differs. The
+           strip and its stand-down line are deleted rather than left unreachable.
 
-           Both drawings say the same things about a day: what kind it is, whether it has
-           a beat on it, and whether the sweep has crossed it out yet. Nothing in either
-           is a control.
+           What each kind of week is made of, and the convention behind every hour in it,
+           is composables/weekGrid.ts's business and none of this file's. Nothing here is
+           a control.
            ============================================================================ -->
       <Card class="cal-week">
         <div class="cal-week-head">
@@ -446,47 +450,6 @@ const showGo = computed(() => !game.snapshot?.pending)
           </div>
         </div>
 
-        <!-- ⚠ THE BOUNDARY SAYS SO NOW, AND IT USED TO BE SILENT. The grid stands down on a week the
-             engine has told us nothing about the shape of - a trip, a holiday, an exam blackout, a
-             layoff, the off-season - and the day strip appears in its place with no explanation.
-             Measured over 12 careers x 156 weeks WITH the kid entering events: that is 26.2% of
-             weeks (16.0 away, 5.8 off-season, 3.8 exams, 0.6 rehab), so better than one week in
-             four shows the other drawing. The owner opened the app after an update, landed on one of
-             them, and read it as the update not having arrived - which is exactly what a silent
-             swap between two drawings looks like. A week is not a broken build; it just has to say
-             which it is. -->
-        <p v-else class="cal-standdown">{{ standDownNote }}</p>
-
-        <ul
-          v-if="!grid"
-          class="cal-grid"
-          :class="`cal-surf-${calendar.surface}`"
-          :aria-label="`The seven days of ${dateLine}`"
-        >
-          <li
-            v-for="d in calendar.days"
-            :key="d.index"
-            class="cal-day"
-            :class="[
-              `cal-day--${d.kind}`,
-              {
-                'cal-day--beat': d.beat !== null,
-                'cal-day--crossed': d.index < crossed,
-                'cal-day--held': d.index === heldIndex,
-              },
-            ]"
-            :aria-label="dayName(d)"
-            :title="dayName(d)"
-          >
-            <span class="cal-day-name" aria-hidden="true">{{ d.short }}</span>
-            <span class="cal-day-mark" aria-hidden="true"></span>
-            <span class="cal-day-note" aria-hidden="true">{{ d.note }}</span>
-            <!-- THE STROKE. One line per cell, scaled from nothing to full width – so "crossed out" is
-                 a transform on a 1px span and never seven elements being created and destroyed. -->
-            <span class="cal-day-cross" aria-hidden="true"></span>
-          </li>
-        </ul>
-
         <!-- The read-out. It IS the legend: rather than a row of glyphs and their names, the week says
              what it is in the same parent's voice every other surface in this app uses for a week. -->
         <p class="cal-readout">{{ calendar.readout }}</p>
@@ -497,13 +460,13 @@ const showGo = computed(() => !game.snapshot?.pending)
       </Card>
 
       <!-- THE FRIDGE NOTE. The design tapes a scrap of paper under the grid with a line in a
-           parent's handwriting on it, and this is that scrap. It rides with the GRID rather than
-           with the screen: the weeks that keep the day strip are weeks she is away, in exams or
-           laid up, and those screens are left exactly as they were.
-           ⚠ IT IS NOT LICENSED AGAINST THE WEEK, WHICH IS THE OWNER'S OWN RULING (30.07). A note on
-           a fridge asserts nothing about the week - it is milk, the bins and a rain jacket - so
-           there is nothing for an honesty pin to check. The constraint that survives is about what
-           the pool is MADE of, and it lives with the pool. -->
+           parent's handwriting on it, and this is that scrap. It rides with the GRID, which is now
+           every week of a career rather than the ordinary ones only.
+           ⚠ THE POOL IS NOT LICENSED AGAINST THE WEEK, WHICH IS THE OWNER'S OWN RULING (30.07). A
+           note on a fridge asserts nothing about the week - it is milk, the bins and a rain jacket -
+           so there is nothing for an honesty pin to check. What 31.07 added is a small layer on top:
+           on the two weeks that carry a fact a parent would mention - the exams, a tournament - the
+           scrap may speak to it, because on that week it is true. See `NOTE_MOOD` above. -->
       <PaperNote v-if="grid" class="cal-note" :tilt="-0.8" ruled torn tape>
         <span class="cal-note-label">Notes</span>
         <span class="cal-note-text">{{ fridgeNote }}</span>
@@ -694,11 +657,13 @@ const showGo = computed(() => !game.snapshot?.pending)
   color: var(--ink-soft);
 }
 
-/* --- THE WEEK GRID ------------------------------------------------------------------------------
-   Seven equal columns inside the card's own 14px inset. Measured at 375: 375 - 32 (the app gutter)
-   - 28 (the card) - 2 (its hairline) = 313px of track, less 6 gaps of 4px, so a cell is 41.3px. The
-   day name is the widest thing in it ("MON" at 9px/800/0.06em ~ 24px), which is what sets the type
-   size rather than taste. */
+/* --- THE WEEK CARD -------------------------------------------------------------------------------
+   ⚠ THE SEVEN-CELL DAY STRIP THAT USED TO LIVE HERE IS GONE, with its court tints, its marks, its
+   per-kind dots and the one-line note that said why the hours were not drawn. The grid draws on
+   every week now (owner, 31.07), so every one of those rules was a rule for an unreachable branch -
+   and this file's own house rule is that a dead branch gets deleted rather than commented out.
+   What SURVIVED the deletion and is still shared with the grid: `.cal-day-cross`, the 1px stroke,
+   because the sweep draws it through the day NAME in the grid's head. */
 .cal-week {
   margin: 0;
 }
@@ -709,121 +674,6 @@ const showGo = computed(() => !game.snapshot?.pending)
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 10px;
-}
-
-.cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* THE COURT'S COLOUR, once per surface. Written out as three static rules rather than composed from
-   the surface id at runtime, because a `var(--surface-${id})` built in a template is a token
-   reference no scanner can resolve - and tests/design-tokens.test.ts exists precisely because an
-   unresolved custom property fails silently (no colour at all, no error anywhere). */
-.cal-grid.cal-surf-hard {
-  --cal-court: var(--surface-hard);
-}
-.cal-grid.cal-surf-clay {
-  --cal-court: var(--surface-clay);
-}
-.cal-grid.cal-surf-grass {
-  --cal-court: var(--surface-grass);
-}
-
-.cal-day {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 0 8px;
-  border: var(--stroke-hair) solid var(--line);
-  border-radius: var(--radius-chip);
-  background: rgba(255, 255, 255, 0.014);
-  min-height: 54px;
-}
-
-.cal-day-name {
-  font-family: var(--font-body);
-  font-size: 9px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  color: var(--ink-dim);
-}
-
-/* THE MARK. One 10px dot, and its colour is the whole legend: the block's court for a court day,
-   the app's accent for the one thing that is a MATCH, muted for everything else. A rest day draws a
-   ring rather than a fill, so an empty-looking cell is still deliberately empty. */
-.cal-day-mark {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius-pill);
-  background: var(--ink-dim);
-}
-
-.cal-day--court .cal-day-mark {
-  background: var(--cal-court, var(--ink-2));
-}
-
-.cal-day--gym .cal-day-mark {
-  background: none;
-  border: var(--stroke-hair) solid var(--cal-court, var(--ink-2));
-}
-
-.cal-day--rest .cal-day-mark {
-  width: 10px;
-  height: 2px;
-  border-radius: var(--radius-pill);
-  background: var(--ink-dim);
-  opacity: 0.65;
-}
-
-.cal-day--match .cal-day-mark {
-  background: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-wash);
-}
-
-.cal-day--away .cal-day-mark,
-.cal-day--rehab .cal-day-mark {
-  background: none;
-  border: var(--stroke-hair) solid var(--ink-soft);
-}
-
-.cal-day--off .cal-day-mark,
-.cal-day--school .cal-day-mark {
-  width: 10px;
-  height: 2px;
-  background: var(--ink-dim);
-}
-
-/* The three days a week can PAUSE on wear a soft wash, so the animation's hold in slice 2 lands on a
-   cell the eye had already noticed. */
-.cal-day--beat {
-  background: var(--accent-wash);
-  border-color: var(--accent-soft);
-}
-
-.cal-day--rehab.cal-day--beat {
-  background: var(--warning-wash);
-  border-color: var(--warning);
-}
-
-.cal-day-note {
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--ink-soft);
-  /* Empty on most days: the box is reserved either way so the seven cells stay one height. */
-  min-height: 10px;
-  line-height: 10px;
-}
-
-.cal-day--match .cal-day-note {
-  color: var(--accent);
 }
 
 /* --- THE TIME x DAY GRID -------------------------------------------------------------------------
@@ -995,16 +845,19 @@ const showGo = computed(() => !game.snapshot?.pending)
 .cal-block--rest {
   background: var(--cat-rest);
 }
-/* The one-line reason the hours are not drawn. A quiet aside, not a warning: nothing is wrong. */
-.cal-standdown {
-  margin: 0 0 12px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.35;
+/* The two the wallet had and the grid did not, until the four weeks the grid used to refuse arrived
+   with hours in them: the physio blue of a layoff week, the warm pink of a family one. Same reading
+   on both screens - what an hour costs there is what it is here. */
+.cal-block--physio {
+  background: var(--cat-physio);
+}
+.cal-block--vacation {
+  background: var(--cat-vacation);
 }
 
 /* The tournament block is the one the design OUTLINES – its border is the thirteenth token, and the
-   only place in the palette where a colour is a stroke rather than a fill. */
+   only place in the palette where a colour is a stroke rather than a fill. Its caller is the trip
+   week's middle days (weekGrid.ts's TRIP_ARC), which is what it was always waiting for. */
 .cal-block--tournament {
   background: var(--cat-entry);
   border: var(--stroke-hair) solid var(--cat-coaching);
@@ -1030,22 +883,10 @@ const showGo = computed(() => !game.snapshot?.pending)
   transition: transform var(--cal-stroke-ms, 280ms) cubic-bezier(0.25, 0.8, 0.3, 1);
 }
 
-.cal-day--crossed .cal-day-cross {
-  transform: scaleX(1);
-}
-
-/* A struck-out day steps back rather than disappearing: the week is still readable behind its own
-   strokes, which is the difference between "these days are gone" and "this grid is now blank". */
-.cal-day--crossed {
-  opacity: 0.5;
-  transition: opacity var(--cal-stroke-ms, 280ms) ease;
-}
-
-/* THE SAME SWEEP OVER THE TIME GRID. One stroke and one dimming, aimed at the two elements that
-   correspond to the day strip's single cell: the line goes through the day's NAME (crossing a day
-   off a calendar is a line through its head, not through 360px of column) and the column behind it
-   steps back with its blocks. The mechanism, the duration and the reversal are the day strip's,
-   unchanged - `.cal-day-cross` is the same 1px span scaled by the same transform. */
+/* THE SWEEP OVER THE GRID. One stroke and one dimming: the line goes through the day's NAME
+   (crossing a day off a calendar is a line through its head, not through 360px of column) and the
+   column behind it steps back with its blocks. A struck-out day steps back rather than disappearing,
+   which is the difference between "these days are gone" and "this grid is now blank". */
 .cal-time-day--crossed .cal-day-cross {
   transform: scaleX(1);
 }
@@ -1055,15 +896,10 @@ const showGo = computed(() => !game.snapshot?.pending)
   transition: opacity var(--cal-stroke-ms, 280ms) ease;
 }
 
-.cal-col--held {
-  opacity: 1;
-  animation: cal-held 900ms ease-in-out infinite;
-}
-
-/* THE PAUSE, MADE VISIBLE. While the sweep waits on a match, an injury or a knock, that one cell
+/* THE PAUSE, MADE VISIBLE. While the sweep waits on a match, an injury or a knock, that one column
    breathes – so the hold reads as the week stopping on something rather than as the animation
    stuttering. It also un-dims: the point of the pause is to be looked at. */
-.cal-day--held {
+.cal-col--held {
   opacity: 1;
   animation: cal-held 900ms ease-in-out infinite;
 }
@@ -1083,12 +919,10 @@ const showGo = computed(() => !game.snapshot?.pending)
    class left on a cell by a cancelled sweep cannot animate its way back out. An animation is precisely
    what this OS switch is about. */
 @media (prefers-reduced-motion: reduce) {
-  .cal-day,
   .cal-day-cross,
   .cal-col {
     transition: none;
   }
-  .cal-day--held,
   .cal-col--held {
     animation: none;
   }

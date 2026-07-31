@@ -273,6 +273,15 @@ describe('a week belongs to exactly one thing, in one order', () => {
     const school = calendarWeekFor(facts({ week: exam - 1 }), exam)
     expect(school.title).toBe('Exams')
     expect(school.days.every((d) => d.kind === 'school')).toBe(true)
+    // ⚠ AND THE EXAM WEEK'S SENTENCE HAD TO CHANGE WITH THE PICTURE (31.07). It read «School owns
+    // this week – nothing is hers to plan», which was written when the calendar refused to draw the
+    // week at all. The grid draws it now, with her sessions in it, so a sentence saying nothing is
+    // hers would sit directly under four blocks of training. What is actually blacked out is the
+    // ENTRY list - `isExamWeek` gates tournaments and bookings and never touched training - so the
+    // read-out names that and says the sessions stand. Pinned, so it cannot drift back.
+    expect(school.readout).toContain('no tournaments')
+    expect(school.readout, 'the sessions the coach is billed for are unclaimed again').toContain('sessions stand')
+    expect(school.readout).not.toContain('nothing is hers to plan')
   })
 
   it('an ordinary week is the plan, and that is the only kind with a mixed grid', () => {
@@ -442,36 +451,37 @@ describe('the calendar DISPLAYS the plan and does not edit it', () => {
   // screen was designed to avoid." Seven per-day controls is that chore with a calendar drawn round
   // it, and it is the single most likely thing for a later hand to add "while we are in here" – so the
   // absence is pinned rather than left to the comment at the top of the composable.
-  // ⚠ RE-AIMED, NOT WEAKENED: THE WEEK NOW HAS TWO DRAWINGS AND BOTH MUST BE READ-ONLY. The grid
-  // slice used to be "from the first <ul> to the first </ul>", which was the day strip because it
-  // was the only list on the screen. The time x day grid (§3 of docs/specs/calendar-week-grid.md) is
-  // a second list and it comes first in the template, so the old slice silently stopped covering the
-  // day strip and started covering the grid. One drawing checked instead of two is exactly the
-  // silent hole this family of guards exists to prevent, so the test now takes BOTH lists by name
-  // and asserts each is the drawing it thinks it is before looking for controls in it.
-  it('not one control in EITHER drawing of the week: no input, no select, no per-day handler', () => {
+  // ⚠ RE-AIMED TWICE, AND NEVER WEAKENED. (1) The slice used to be "from the first <ul> to the first
+  // </ul>", which was the day strip because it was the only list on the screen; the time x day grid
+  // arrived as a second list and the old slice silently stopped covering the strip. So it took BOTH
+  // lists by name. (2) The owner then overruled the boundary between them (31.07: the grid draws on
+  // every week), the day strip was DELETED, and a test looking for two drawings would have failed on
+  // the one that is gone. It now takes the one drawing there is - by name, still, so that a third
+  // one arriving cannot inherit this pin by accident - and it additionally asserts the deleted
+  // drawing STAYED deleted, which is the half of the coverage that would otherwise have been lost.
+  it('not one control in the week\'s drawing: no input, no select, no per-day handler', () => {
     const lists = [...template.matchAll(/<ul[\s\S]*?<\/ul>/g)].map((m) => m[0])
     const timeGrid = lists.find((l) => l.includes('cal-time-cols'))
-    const dayStrip = lists.find((l) => l.includes('cal-grid'))
     expect(timeGrid, 'the time x day grid has gone').toBeDefined()
-    expect(dayStrip, 'the day strip has gone – it is what every non-ordinary week draws').toBeDefined()
-    expect(dayStrip).toContain('cal-day')
     expect(timeGrid).toContain('cal-block')
-    for (const drawing of [timeGrid!, dayStrip!]) {
-      for (const control of ['<input', '<select', '<textarea', 'type="range"', '@click', 'v-model']) {
-        expect(drawing, `a drawing of the week grew a control: ${control}`).not.toContain(control)
-      }
+    expect(template, 'the deleted day strip is back – it needs its own read-only pin').not.toContain('cal-grid')
+    for (const control of ['<input', '<select', '<textarea', 'type="range"', '@click', 'v-model']) {
+      expect(timeGrid!, `the drawing of the week grew a control: ${control}`).not.toContain(control)
     }
     // ...and the screen never writes the plan, on any element.
     expect(screen, 'the calendar sets the training plan').not.toContain('setPlan')
     expect(screen).not.toContain('WEEK_PLAN_PRESETS')
   })
 
-  it('the day cells are list items with accessible names – a picture has to say what it is', () => {
+  it('the day columns are list items with accessible names – a picture has to say what it is', () => {
     expect(template).toContain(':aria-label="dayName(d)"')
     expect(screen).toContain('const KIND_WORD: Record<DayKind, string>')
-    // the marks themselves are decoration and are hidden from the reader
-    expect(template).toContain('<span class="cal-day-mark" aria-hidden="true"></span>')
+    // ⚠ RE-AIMED (31.07): the mark it used to check was the day strip's 10px dot, and the strip is
+    // deleted. The rule is the one it always was - the DRAWING is decoration and the reader gets the
+    // sentence - so it now points at the grid's own decoration, the blocks and the hour rules, which
+    // carry no accessible text of their own and sit inside a column that names the day out loud.
+    expect(template).toContain('<div class="cal-time-head" aria-hidden="true">')
+    expect(template).toContain('<div class="cal-time-gut" aria-hidden="true">')
   })
 
   it('the layout is derived in the composable, not in the template', () => {
@@ -773,9 +783,14 @@ describe('the days cross themselves out', () => {
   })
 
   it('the stroke is a transform, and reduced motion kills it in the sheet as well', () => {
-    expect(template).toContain('<span class="cal-day-cross" aria-hidden="true"></span>')
+    // ⚠ RE-AIMED (31.07): the stroke used to be drawn in TWO places - once through the day strip's
+    // cell and once through the grid's day head - and the strip is deleted. The mechanism pinned here
+    // is unchanged (a 1px span scaled by a composited transform, never an animated width, and the
+    // duration handed to CSS as a property because a stylesheet cannot read a setting); what moved is
+    // that there is one drawing to strike instead of two. The head's own span is checked in the grid
+    // suite, so this points at the surviving RULE rather than at the deleted element.
     expect(screen).toContain('transform: scaleX(0)')
-    expect(screen).toContain('.cal-day--crossed .cal-day-cross')
+    expect(screen).toContain('.cal-time-day--crossed .cal-day-cross')
     // the duration reaches CSS as a property, because the pace is a setting and a sheet cannot read one
     expect(template).toContain(`'--cal-stroke-ms': \`\${strokeMs}ms\``)
     expect(screen).toContain('transition: transform var(--cal-stroke-ms, 280ms)')
