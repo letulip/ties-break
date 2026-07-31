@@ -4,12 +4,17 @@ import type { MatchPlayer, Surface } from '../match/types'
 /** The playable ladder. The domestic rungs (`local` → `regional` → `national`) hand over to the
  *  junior international tour (`j30` → `j60` → `j300`); the inert `itf` placeholder was replaced by
  *  that family in the ladder-up slice. J500/J200/J100 analogues are content for later. */
-export type TierId = 'local' | 'regional' | 'national' | 'j30' | 'j60' | 'j300'
+export type TierId = 'local' | 'regional' | 'national' | 'j30' | 'j60' | 'j300' | 'w15' | 'w35' | 'w100'
 /** WHICH TABLE A RESULT PAYS INTO. Two currencies with no exchange rate between them, which is how
  *  the real sport works: Reg 10's list of ranking tournaments is closed and contains only ITF grades,
  *  so a national title produces exactly ZERO ITF points, while federations import ITF results at
  *  their own valuation and never the reverse. See docs/specs/two-ladders.md. */
-export type LadderTrack = 'domestic' | 'itf'
+export type LadderTrack = 'domestic' | 'itf' | 'wta'
+/** ⚠ THREE TABLES, NOT TWO, AND THE THIRD IS THE ADULT ONE (task #17, owner's call 31.07). Real
+ *  tennis keeps a junior ITF ranking and a senior WTA ranking as separate tables - a seventeen-year-old
+ *  holds both at once, and winning a junior Slam earns her exactly zero WTA points. Folding the adult
+ *  rungs into `itf` would have put a J300 title and a W15 title in one column with one currency, which
+ *  is the "two currencies, no exchange rate" error the ladder audit had just finished removing. */
 
 export interface TierDef {
   id: TierId

@@ -223,6 +223,87 @@ export const TIERS: Record<TierId, TierDef> = {
     enterPct: 0.4,
     entrantPctBand: [0.0, 0.25],
   },
+  // --- the adult tour: the ITF World Tennis Tour, and the first money she is ever paid ------------
+  //
+  // ⚠ THIS IS A THIRD TABLE, not a continuation of the junior one. See LadderTrack in season/types.ts
+  // for why: a seventeen-year-old holds a junior ITF ranking and a senior WTA ranking at the same
+  // time, and a junior Slam pays exactly zero WTA points. The two never mix.
+  //
+  // THE REAL LADDER, so the numbers are checkable rather than invented: the women's professional
+  // ladder is W15 -> W35 -> W50 -> W75 -> W100 (the number is the tournament's PRIZE MONEY in
+  // thousands of dollars), then WTA 125, then WTA 250/500/1000, then the four Slams. We ship the two
+  // dense entry rungs plus one rare prestige rung - exactly the shape the J family ships, and for the
+  // same reason: W15 and W35 are where a real career actually begins, and everything above W100 is
+  // beyond a nineteen-year-old's horizon (see docs/specs/adult-tour-and-endings.md).
+  //
+  // THE POINTS ARE THE WTA TABLE'S OWN: a W15 title is 10 points, a W35 title 20, a W100 title 100.
+  // ⚠ AND THEY LOOK TINY BESIDE THE JUNIOR NUMBERS ON PURPOSE - a J300 title pays 300 and a W15 title
+  // pays 10. That is not a scaling mistake, it is the whole point of the fork at 19: she arrives at
+  // the adult tour with a junior ranking that buys her nothing, and starts again at the bottom of a
+  // table where the numbers are smaller and mean more. The two columns are never added.
+  //
+  // AGE. The ITF age-eligibility rule lets a fourteen-year-old play a handful of pro events and lifts
+  // the cap yearly, so a good junior plays her first W15 at sixteen or seventeen. 16 / 16 / 17 below
+  // gives her three seasons of overlap with the junior tour, which is what makes the handover at 19 a
+  // DECISION with evidence behind it rather than a jump into the dark.
+  w15: {
+    id: 'w15',
+    track: 'wta',
+    label: 'World Tour 15',
+    drawSize: 32,
+    entryFeeCents: 300_00,
+    travelCostCents: [1000_00, 2200_00],
+    points: [10, 6, 3, 2, 1, 0],
+    // The dense entry rung of the adult game, exactly as j30 is of the junior one.
+    everyNWeeks: 2,
+    minAgeYears: 16,
+    // ⚠ THE JUNIOR TABLE IS THE ON-RAMP, and this is the same rule j30 keeps one track down: the
+    // bottom rung of a table is opened by the table BELOW it, because a player cannot hold a ranking
+    // in a table she has never played in, and a rank gate on the first rung would be a closed loop.
+    // So W15 reads her ITF JUNIOR points, and W35/W100 read her WTA rank (`enterPct`), which is
+    // precisely the j30 / j60+j300 split.
+    //
+    // 120 ITF junior points is a J60 title, or a J300 quarter-final, or a full book of J30 results -
+    // a junior who has actually won something abroad. Below that the adult tour is not a rung she is
+    // climbing to, it is a wall she would pay $1,300 to walk into.
+    enterPointBand: [120, Number.MAX_SAFE_INTEGER],
+    // The bottom of the professional game is a wide field: everyone from a first-year pro to a
+    // former top-200 on the way back down.
+    entrantPctBand: [0.15, 0.75],
+  },
+  w35: {
+    id: 'w35',
+    track: 'wta',
+    label: 'World Tour 35',
+    drawSize: 32,
+    entryFeeCents: 400_00,
+    travelCostCents: [1300_00, 2800_00],
+    points: [20, 13, 8, 4, 2, 0],
+    everyNWeeks: 3,
+    minAgeYears: 16,
+    // The acceptance list, as a share of the field - see TierDef.enterPct for why a share and never a
+    // count. Deliberately the same number as this tier's own `entrantPctBand[1]`, which is the rule
+    // j60 settled: she is accepted if she would be inside the field they draw from.
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    enterPct: 0.5,
+    entrantPctBand: [0.08, 0.5],
+  },
+  w100: {
+    id: 'w100',
+    track: 'wta',
+    label: 'World Tour 100',
+    drawSize: 32,
+    entryFeeCents: 600_00,
+    travelCostCents: [1900_00, 3800_00],
+    points: [100, 65, 40, 25, 12, 0],
+    // Rare and planned around, the way j300 is: four a year.
+    everyNWeeks: 13,
+    minGapWeeks: 2,
+    minAgeYears: 17,
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    enterPct: 0.25,
+    entrantPctBand: [0.0, 0.25],
+  },
 }
 
 /** The catalogue in ladder order, weakest rung first. The single source of truth for "is tier A
