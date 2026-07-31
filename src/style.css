@@ -144,6 +144,16 @@
      They are OURS, not the export's, so they are deliberately absent from docs/design/tokens.json -
      that file is the owner's handoff transcribed, and inventing rows in it would make it lie about
      what he sent. */
+  /* ⚠ AND THE CALENDAR SHARES THEM (owner, 31.07: «цвета в календаре какие-то грустно-унылые,
+     давай возьмем ту же палитру, что и в кошельке сюда»). Which turns the `--cat-` prefix from a
+     money word into the right one: this is ONE COLOUR PER THING THE FAMILY DOES, and the two screens
+     read it the same way - what an hour costs on the wallet, and where that hour sits in her week.
+     Coaching lime is the money and the drills; travel violet is the fare and the journey; entry
+     amber is the fee and the tournament. That is `цвет = смысл` across two screens rather than one.
+
+     The `--event-*` family stays declared and value-pinned against the design export: it is the
+     record of what the owner sent, and the grid simply no longer paints with it. Three hues below
+     have no wallet side at all (school, study, rest are hours, not spending) and exist for the grid. */
   --cat-coaching: #cfe152;
   --cat-travel: #9a86e0;
   --cat-entry: #e5a23c;
@@ -153,6 +163,10 @@
   --cat-vacation: #e0748f;
   --cat-practice: #6f8fd8;
   --cat-other: #8b95a1;
+  /* The grid-only three: hours with no line on the wallet. */
+  --cat-school: #7f8fa6;
+  --cat-study: #b08fd0;
+  --cat-rest: #56c8d8;
   /* The export's three "how did this day go" colours (tokens.css --day-good/mid/bad). On the budget
      sparkline they are the dots: a week that earned, a week that spent, a week that spent while
      already under water. */

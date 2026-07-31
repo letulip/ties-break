@@ -350,7 +350,11 @@ describe('the calendar renders the grid it is handed', () => {
     expect(template).toContain('<div v-if="grid" class="cal-time">')
     expect(template).toContain('v-else\n          class="cal-grid"')
     // one composable answers "may this week be a grid", and the screen does not re-derive it
-    expect(screen).toContain('weekGridFor(week, snap.ageYears, weekDayNumbers(week.week))')
+    // ⚠ RE-AIMED (round-19): a fourth argument joined the call - the career SEED, which names the
+    // court and gym sessions so two consecutive weeks do not read as a photocopy. The rule this pins
+    // is that the screen COMPOSES and does not decide, so it matches the call's opening rather than
+    // its full arity, which would have to be re-typed every time the composable earns a parameter.
+    expect(screen).toContain('weekGridFor(week, snap.ageYears, weekDayNumbers(week.week)')
     expect(screen).not.toContain('isOrdinaryWeek')
   })
 
@@ -381,12 +385,17 @@ describe('the calendar renders the grid it is handed', () => {
     for (const kind of KINDS) {
       const rule = screen.match(new RegExp(`\\.cal-block--${kind}\\s*\\{([^}]*)\\}`))
       expect(rule, `no colour rule for a ${kind} block`).not.toBeNull()
-      const token = rule![1].match(/var\((--event-[a-z-]+)\)/)
-      expect(token, `the ${kind} block is not painted from the event palette`).not.toBeNull()
+      // ⚠ RE-AIMED (round-19): the family moved from `--event-*` to `--cat-*`. The owner found the
+      // calendar «грустно-унылые» and asked for the wallet's palette, which is the brighter set and
+      // now means the same thing on both screens (see the `--cat-*` block in src/style.css). The RULE
+      // is unchanged and is the one that matters: every kind has a rule, and its colour is a declared
+      // token rather than a hex typed into a component.
+      const token = rule![1].match(/var\((--cat-[a-z-]+)\)/)
+      expect(token, `the ${kind} block is not painted from a declared palette`).not.toBeNull()
       expect(sheet, `${token![1]} is not on :root`).toContain(`${token![1]}:`)
     }
     // ...and the outlined one is the only one with a stroke, which is what the thirteenth token is
-    expect(screen).toContain('border: var(--stroke-hair) solid var(--event-tournament-border)')
+    expect(screen).toContain('border: var(--stroke-hair) solid var(--cat-coaching)')
   })
 
   it('the sweep still crosses the week out, on whichever drawing is up', () => {

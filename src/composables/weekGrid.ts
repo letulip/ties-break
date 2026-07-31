@@ -42,6 +42,7 @@
 // is a rule worth pinning on values, and a rule inside a template is decoration that cannot be
 // tested. The screen composes; this file decides.
 import type { CalendarDay, CalendarWeek, DayBeat, DayKind } from './weekDays'
+import { hash32 } from './fridgeNote'
 
 /** One coloured block in the grid. Hours are PRESENTATION – see the header. */
 export interface DayBlock {
@@ -284,10 +285,72 @@ function dropWeekendSchool(index: number, blocks: DayBlock[]): DayBlock[] {
   return blocks.filter((b) => b.kind !== 'school' && b.kind !== 'schoolLong')
 }
 
+// =================================================================================================
+// WHAT THE SESSION ACTUALLY WAS — variety without a second session
+// =================================================================================================
+//
+// The owner, 31.07: «можем ли как-то tennis drills разложить на что-то разное, детализировать и, как
+// вариант, перемешивать на разных неделях... это должно добавить динамики и разнообразия».
+//
+// ⚠ WHAT VARIES IS THE CONTENT OF THE HOUR, NOT THE SHAPE OF THE WEEK, and the split is the whole
+// design. Which days are court, gym, rest and match is a READABLE CONSEQUENCE of the plan preset -
+// `weekDays.ts` fixes the rest-day priority on purpose, "so the shape of her week does not shuffle
+// when he moves a preset". Shuffling the days would take that back: the player would move a slider
+// and watch the week rearrange for reasons he cannot see, which is the opposite of a consequence.
+//
+// But WHAT she did in her court hour was never modelled at all. The engine sells "a session on
+// court" and says nothing about whether it was serves or footwork - so naming it costs no honesty,
+// because there is no fact here to contradict. One hour stays one hour; only the word changes.
+//
+// Deterministic per (seed, week, day): the same career always sees the same Tuesday, and two
+// consecutive weeks do not read as a photocopy. No engine draw and no sub-stream - the same rule the
+// fridge note keeps, and for the same reason (see composables/fridgeNote.ts).
+//
+// ⚠ EVERY WORD HERE IS AT MOST SIX CHARACTERS, and that is a layout constraint measured in a
+// browser rather than a style preference. A block is about 40px wide at 375pt and the label wraps
+// with `break-word`, so a longer word is broken mid-syllable: "Rally patterns" came out as "Rally
+// patter / ns", and even "Strength" - eight characters - came out as "Streng / th". Two six-letter
+// words wrap cleanly between themselves; one long word has nowhere to break but inside itself.
+const COURT_SESSIONS: readonly string[] = [
+  'Tennis drills',
+  'Serve work',
+  'Return work',
+  'Rally work',
+  'Point play',
+  'Speed work',
+  'Volley work',
+  'Net play',
+]
+
+/** The gym hour gets the same treatment, from a shorter list: it is one session a week, so it would
+ *  otherwise be the one block that reads identically in every week of a career. */
+const GYM_SESSIONS: readonly string[] = ['Gym', 'Core work', 'Leg work', 'Gym drills']
+
+function namedSession(blocks: DayBlock[], seed: string, week: number, index: number): DayBlock[] {
+  if (!seed) return blocks
+  return blocks.map((b) => {
+    if (b.kind === 'drills') {
+      return { ...b, label: COURT_SESSIONS[hash32(`${seed}:sess:${week}:${index}`) % COURT_SESSIONS.length] }
+    }
+    if (b.kind === 'gym') {
+      return { ...b, label: GYM_SESSIONS[hash32(`${seed}:gym:${week}:${index}`) % GYM_SESSIONS.length] }
+    }
+    return b
+  })
+}
+
 /** The seven columns for a week, or NULL when this week is not one the grid may draw (§ the
  *  boundary above). Null rather than an empty array on purpose: the screen has to choose between two
- *  drawings, and "no columns" and "not this kind of week" are different answers. */
-export function weekGridFor(week: CalendarWeek, ageYears: number, dates: readonly number[]): GridDay[] | null {
+ *  drawings, and "no columns" and "not this kind of week" are different answers.
+ *
+ *  `seed` names the sessions (see above) and is optional so every existing test can build a grid
+ *  without one - an empty seed leaves the table's own labels untouched. */
+export function weekGridFor(
+  week: CalendarWeek,
+  ageYears: number,
+  dates: readonly number[],
+  seed = '',
+): GridDay[] | null {
   if (!isOrdinaryWeek(week.days)) return null
   const band = bandFor(ageYears)
   return week.days.map((d, i) => ({
@@ -296,6 +359,6 @@ export function weekGridFor(week: CalendarWeek, ageYears: number, dates: readonl
     date: dates[i] ?? 0,
     kind: d.kind,
     beat: d.beat,
-    blocks: dropWeekendSchool(d.index, dayBlocksFor(d.kind, band)),
+    blocks: namedSession(dropWeekendSchool(d.index, dayBlocksFor(d.kind, band)), seed, week.week, d.index),
   }))
 }

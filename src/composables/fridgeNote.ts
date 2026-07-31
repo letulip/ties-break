@@ -111,7 +111,7 @@ export const FRIDGE_NOTES: readonly string[] = [
  *  presentation choice, and it would be misleading for the note to arrive through the same door the
  *  match engine's dice do. The avalanche step is what makes consecutive weeks land far apart in the
  *  pool instead of walking through it in order. */
-function hash32(text: string): number {
+export function hash32(text: string): number {
   let h = 2166136261 >>> 0
   for (let i = 0; i < text.length; i++) {
     h ^= text.charCodeAt(i)

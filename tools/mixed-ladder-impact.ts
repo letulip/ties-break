@@ -19,13 +19,13 @@ import { TIERS } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { rngFromSeed } from '../src/engine/rng'
 import type { SeasonResult } from '../src/engine/season/ranking'
-import type { Track } from '../src/engine/season/types'
+import type { LadderTrack } from '../src/engine/season/types'
 
 const SEEDS = 10
 const WEEKS = 156
 
 const onlyTrack =
-  (track: Track) =>
+  (track: LadderTrack) =>
   (r: SeasonResult): boolean =>
     r.tier ? TIERS[r.tier].track === track : track === 'domestic'
 
@@ -36,7 +36,7 @@ function topKOverlap(a: { playerId: string }[], b: { playerId: string }[], k: nu
   return B.filter((id) => A.has(id)).length / Math.max(1, Math.min(k, a.length, b.length))
 }
 
-const rows: { track: Track; k: number; overlap: number[]; seedSwap: number[] }[] = [
+const rows: { track: LadderTrack; k: number; overlap: number[]; seedSwap: number[] }[] = [
   { track: 'domestic', k: 8, overlap: [], seedSwap: [] },
   { track: 'domestic', k: 32, overlap: [], seedSwap: [] },
   { track: 'itf', k: 8, overlap: [], seedSwap: [] },

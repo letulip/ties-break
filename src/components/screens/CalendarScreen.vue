@@ -147,7 +147,7 @@ function dayName(d: Pick<CalendarDay, 'index' | 'kind'>): string {
 const grid = computed(() => {
   const week = calendar.value
   const snap = game.snapshot
-  return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week)) : null
+  return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week), snap.seed) : null
 })
 
 /** THE NOTE ON THE FRIDGE DOOR. Off `(seed, week)` and nothing else, so it is the same scrap every
@@ -921,55 +921,60 @@ const showGo = computed(() => !game.snapshot?.pending)
   line-height: 1.25;
   letter-spacing: -0.02em;
   word-break: break-word;
-  color: var(--ink);
+  /* ⚠ DARK INK, and it changed with the palette. The blocks used to be the `--event-*` family - mid-
+     dark fills that wanted light text - and they are the `--cat-*` brights now (owner, 31.07: the
+     calendar's colours were «грустно-унылые»). Lime, mint and amber under `--ink` would be light on
+     light. This is the paper layer's ink, which is the darkest one the app declares. */
+  color: var(--paper-ink);
 }
 
-/* THE PALETTE, one static rule per block kind. Written out rather than composed from the kind at
-   runtime for the reason the surface tints above give: a `var(--event-${kind})` built in a template
-   is a token reference no scanner can resolve, and an unresolved custom property paints nothing at
-   all with no error anywhere.
+/* THE PALETTE, one static rule per block kind, and it is the WALLET'S palette (see the `--cat-*`
+   block in src/style.css for why the two screens share one). Written out rather than composed from
+   the kind at runtime for the reason the surface tints above give: a `var(--cat-${kind})` built in a
+   template is a token reference no scanner can resolve, and an unresolved custom property paints
+   nothing at all with no error anywhere.
    ⚠ SIX OF THESE TWELVE CANNOT BE REACHED TODAY, and that is deliberate rather than dead code - the
    list is the design's palette, and weekGrid.ts's DAY_SHAPES says beside each one what it is waiting
    for (a later age band, or a kind of week the grid does not draw). Keeping the map complete here
    means adding a band is a change to the table alone. */
 .cal-block--training {
-  background: var(--event-training);
+  background: var(--cat-coaching);
 }
 .cal-block--trainingAlt {
-  background: var(--event-training-alt);
+  background: var(--cat-gear);
 }
 .cal-block--gym {
-  background: var(--event-gym);
+  background: var(--cat-physio);
 }
 .cal-block--school {
-  background: var(--event-school);
+  background: var(--cat-school);
 }
 .cal-block--schoolLong {
-  background: var(--event-school-long);
+  background: var(--cat-other);
 }
 .cal-block--drills {
-  background: var(--event-drills);
+  background: var(--cat-stringing);
 }
 .cal-block--match {
-  background: var(--event-match);
+  background: var(--cat-practice);
 }
 .cal-block--matchLong {
-  background: var(--event-match-long);
+  background: var(--cat-practice);
 }
 .cal-block--study {
-  background: var(--event-study);
+  background: var(--cat-study);
 }
 .cal-block--travel {
-  background: var(--event-travel);
+  background: var(--cat-travel);
 }
 .cal-block--rest {
-  background: var(--event-rest);
+  background: var(--cat-rest);
 }
 /* The tournament block is the one the design OUTLINES – its border is the thirteenth token, and the
    only place in the palette where a colour is a stroke rather than a fill. */
 .cal-block--tournament {
-  background: var(--event-tournament);
-  border: var(--stroke-hair) solid var(--event-tournament-border);
+  background: var(--cat-entry);
+  border: var(--stroke-hair) solid var(--cat-coaching);
   font-weight: 700;
 }
 
