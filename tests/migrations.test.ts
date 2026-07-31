@@ -408,6 +408,50 @@ describe('save migrations', () => {
     expect(migrateSave(current)).toEqual(current)
   })
 
+  // v33 -> v34: THE ON-RAMP BACK-FILL, and it is EXACT rather than best-effort.
+  //
+  // A save's `results` are pruned to 52 weeks, so "has she ever been on the ITF table" is not a
+  // question the results ledger can answer a year later - which is the whole reason the field has to
+  // exist at all. `bestFinishByTier` can: it is a HIGH-WATER MARK that is never pruned, so a tier
+  // appears in it if she has ever finished an event there, however long ago. That is the difference
+  // between a girl keeping the access she earned and a girl being asked to earn it twice.
+  it('v33 -> v34 latches the on-ramp from the never-pruned high-water marks', () => {
+    const base = {
+      schemaVersion: 33,
+      seed: 's',
+      week: 400,
+      profile: { kidLastName: 'X', background: 'middle', coachTier: 'self', birthMonth: 1, birthDay: 1 },
+      results: [], // a year on from anything she played - the ledger has forgotten it
+    }
+    // She finished J60s once upon a time. The evidence survives, so the door does.
+    const played = migrateSave({ ...base, bestFinishByTier: { local: 0, j60: 5 } })
+    expect(played.onRampCleared).toEqual({ itf: true, wta: false })
+
+    // She never left the domestic table. Nothing latches, and that is correct - the on-ramp is a
+    // rung, not a formality, and a migration must not hand her a table she never reached.
+    const homeOnly = migrateSave({ ...base, bestFinishByTier: { local: 0, national: 2 } })
+    expect(homeOnly.onRampCleared).toEqual({ itf: false, wta: false })
+
+    // The adult table latches on its own marks, independently of the junior one.
+    const pro = migrateSave({ ...base, bestFinishByTier: { j300: 1, w15: 3 } })
+    expect(pro.onRampCleared).toEqual({ itf: true, wta: true })
+  })
+
+  // Append-only means idempotent: a second pass must not overwrite what the first decided, and a
+  // save that already carries the field is left exactly as it is.
+  it('v33 -> v34 leaves an existing onRampCleared alone', () => {
+    const migrated = migrateSave({
+      schemaVersion: 33,
+      seed: 's',
+      week: 10,
+      profile: { kidLastName: 'X', background: 'middle', coachTier: 'self', birthMonth: 1, birthDay: 1 },
+      results: [],
+      bestFinishByTier: {},
+      onRampCleared: { itf: true, wta: true },
+    })
+    expect(migrated.onRampCleared).toEqual({ itf: true, wta: true })
+  })
+
   it('rejects saves from a future schema', () => {
     expect(() => migrateSave({ schemaVersion: 999, seed: 's', week: 1 })).toThrow(/newer/)
   })

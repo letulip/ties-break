@@ -88,6 +88,63 @@ goes in the same measured run as everything else here rather than in its own.
   keep a points band, in national points, rescaled.
 - Guard tests get re-aimed with a ⚠ note, never deleted.
 
+## 4b. THE ON-RAMP IS A THRESHOLD, NOT A STANDING CONDITION (v34, 31.07)
+
+§2 gives every table a bottom rung with no acceptance list, read off the table BELOW it, because a
+player cannot hold a ranking in a table she has never played in and a rank gate there would be a
+closed loop. That shape is right. **How it was read was not.**
+
+Both on-ramp bands are denominated in a **rolling 52-week window** – J30 against her domestic best-6,
+W15 against her ITF junior best-6 – and the gate was re-evaluated every single week. So the evidence
+that she once cleared the bar *deletes itself*:
+
+- a season spent abroad earns no domestic result, the old ones age out, and the J30 door closes
+  behind her. **The better she does internationally, the more certainly it shuts.**
+- from eighteen the J rungs are shut on AGE, so no junior point can ever be earned again – and 52
+  weeks later the W15 on-ramp closes on its own, with nothing she could have done about it. That is a
+  wall built across the handover at 19 (task #47) out of two rules that are each fine alone.
+
+Owner, playing, 31.07: «бусинка много времени за сезон провела на J серии, побеждая и занимая там
+крутые места, получила global спонсора и возможность w15, но теперь не может играть в J серии, потому
+что ранг в national упал» – and, on the rule: «въезд – это порог, который переходят один раз, а не
+условие, которое держат постоянно».
+
+**Measured** (`tools/j30-onramp-lock.ts`, 216 careers, 14→20, the econ bench's own presets and
+policies), separating "has not arrived yet" – which is the on-ramp doing its job – from "arrived and
+was thrown back out":
+
+| | before | after |
+|---|---|---|
+| went through the J30 door, then shut out again | **209/216** | 0/216 |
+| locked out of J30 while J60 or J300 stood OPEN | **160/216** | 0/216 |
+| weeks in that state, median / worst | 53 / 151 | – |
+| domestic best-6 when the lock first bit | 235, against a floor of 250 | – |
+| 18+ with nothing open on either real table | **188/216** | 7/216 |
+
+The seven that remain never cleared the W15 standard at all. That is a girl who did not make it, and
+it wants an ending (#47), not a rule change.
+
+**The fix.** `WorldState.onRampCleared` latches per table, set by `latchOnRamps` the moment she can
+prove she belongs there – either the band met, or a counting result on the table itself, which is the
+stronger proof and the one that covers a girl whose domestic book has already decayed while she is
+visibly out there playing J60s.
+
+⚠ **Acceptance lists do NOT latch, and must not.** Only the bottom rung of a table is an on-ramp.
+J60/J300/W35/W100 are entry cuts read against a **current** ranking, because no real entry list
+admits you on a ranking you held two years ago. The latch guarantees a way back **onto** a table; it
+never guarantees a place in a field. This is also what the real sport does: ITF junior entry is by
+ITF junior ranking, and a national ranking matters only to a player who has no ITF one yet.
+
+⚠ **It had to be state.** The question "did she ever clear this" has no honest derived answer once
+the window has rolled – which is the whole reason the ratchet existed. Schema v34, back-filled
+EXACTLY from `bestFinishByTier` (a high-water mark that is never pruned); see the corpus README.
+
+⚠ **And it caught a second copy of the rule.** `entryStatus` re-derived the on-ramp comparison
+instead of reading `tierOpenFor`, so the calendar offered a J30 that `enterEvent` then threw on – the
+identical failure task #17 hit, found the identical way (the bench crashed mid-sweep). Both arms now
+read the one piece of state, and `tests/rankingGate.test.ts` pins that they agree on every rung
+across the states that have pulled them apart.
+
 ## 5. Open, and the owner's to answer when we get there
 
 - The domestic table's own values (the research doc proposes Local 50 / Regional 160 / National 1000

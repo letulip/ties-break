@@ -3,6 +3,7 @@ import {
   acceptanceRank,
   createWorld,
   enterEvent,
+  entryStatus,
   isTierEligible,
   kidPoints,
   recomputeKidRank,
@@ -260,4 +261,173 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
       }
     }
   })
+})
+
+// ---------------------------------------------------------------------------
+// THE ON-RAMP IS A THRESHOLD, NOT A STANDING CONDITION (v34).
+//
+// Owner, 31.07, playing: «бусинка много времени за сезон провела на J серии, побеждая и занимая
+// там крутые места, получила global спонсора и возможность w15, но теперь не может играть в J
+// серии, потому что ранг в national упал» - and, on the rule: «въезд – это порог, который
+// переходят один раз, а не условие, которое держат постоянно».
+//
+// WHAT WAS WRONG. Both on-ramps are denominated in the table BELOW them (J30 reads her domestic
+// best-6, W15 reads her ITF junior best-6) and both of those are ROLLING 52-WEEK windows. So a
+// season spent abroad aged out every domestic result and the door she had come through closed
+// behind her - the better she did internationally, the more certainly it shut. Measured before the
+// fix (tools/j30-onramp-lock.ts, 216 careers): 209 went through the J30 door and were shut out
+// again, and 160 of those were locked out of J30 while J60 or J300 stood OPEN.
+// ---------------------------------------------------------------------------
+describe('an on-ramp she has crossed stays crossed', () => {
+  it('J30 survives a season abroad that ages out every domestic point', () => {
+    const world = createWorld('onramp-ratchet')
+    // She earns the domestic standard the rung asks for, and the door opens.
+    giveKidPoints(world, TIERS.j30.enterPointBand[0])
+    recomputeKidRank(world)
+    expect(tierOpenFor(world, 'j30')).toBe(true)
+    expect(world.onRampCleared.itf).toBe(true)
+
+    // A year abroad: the domestic results age out of the rolling window entirely. This is the exact
+    // state the owner reported - nothing about her got worse, she simply stopped playing at home.
+    world.results = world.results.filter((r) => r.playerId !== KID_ID)
+    world.week += 60
+    recomputeKidRank(world)
+    expect(kidPoints(world, 'domestic')).toBe(0)
+    expect(tierOpenFor(world, 'j30')).toBe(true)
+  })
+
+  it('...and the latch is EARNED - a fresh career is still shut out of it', () => {
+    // The other half of the rule, and the one that keeps it a rung rather than a formality: nothing
+    // latches for free. A girl who has never cleared the domestic standard has no J30.
+    const world = createWorld('onramp-fresh')
+    recomputeKidRank(world)
+    expect(world.onRampCleared.itf).toBe(false)
+    expect(tierOpenFor(world, 'j30')).toBe(false)
+  })
+
+  it('a counting result on the table latches it even with the band already decayed', () => {
+    // The clause that matters most in practice: she is visibly out there playing J60s while her
+    // domestic book reads zero. Being ON the table is stronger evidence than the band that lets you
+    // onto it, so it must latch too - otherwise the owner's own save would have had to earn the
+    // on-ramp a second time before it could reopen.
+    const world = createWorld('onramp-abroad')
+    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'j60' })
+    recomputeKidRank(world)
+    expect(kidPoints(world, 'domestic')).toBe(0)
+    expect(world.onRampCleared.itf).toBe(true)
+    expect(tierOpenFor(world, 'j30')).toBe(true)
+  })
+
+  it('⚠ ACCEPTANCE LISTS DO NOT LATCH - J300 still wants a rank she holds TODAY', () => {
+    // The deliberate limit of the rule, and it is not an oversight. Only the bottom rung of a table
+    // is an on-ramp; J60/J300/W35/W100 are acceptance cuts, and a real entry list is never judged on
+    // a ranking held two years ago. The latch guarantees a way back ONTO the table. It never
+    // guarantees a place in a field.
+    const world = createWorld('onramp-acceptance')
+    world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'j300' })
+    recomputeKidRank(world)
+    expect(world.onRampCleared.itf).toBe(true)
+
+    // Her international results age out; the on-ramp holds, the acceptance list does not.
+    world.results = world.results.filter((r) => r.playerId !== KID_ID)
+    world.week += 60
+    recomputeKidRank(world)
+    expect(tierOpenFor(world, 'j30'), 'the on-ramp is hers for good').toBe(true)
+    expect(tierOpenFor(world, 'j300'), 'the draw is not').toBe(false)
+  })
+
+  it('W15 survives eighteen, which is where this rule earns its keep', () => {
+    // ⚠ THE HARDER HALF. The J rungs shut at eighteen on AGE, so from her birthday she cannot earn
+    // another junior point however well she plays - and a W15 on-ramp read against a rolling junior
+    // window would therefore close on its own a year later with nothing she could do about it. That
+    // is a wall across the handover at 19 (task #47), built out of two rules that are each fine
+    // alone. Measured before the fix: 188/216 careers had at least one week at 18+ with NOTHING open
+    // on either the ITF or the WTA table, median 47 weeks of it.
+    const world = createWorld('onramp-eighteen')
+    world.results.push({ playerId: KID_ID, week: world.week, points: TIERS.w15.enterPointBand[0], tier: 'j300' })
+    recomputeKidRank(world)
+    expect(tierOpenFor(world, 'w15')).toBe(true)
+    expect(world.onRampCleared.wta).toBe(true)
+
+    world.results = world.results.filter((r) => r.playerId !== KID_ID)
+    world.week += 60
+    recomputeKidRank(world)
+    expect(kidPoints(world, 'itf')).toBe(0)
+    expect(tierOpenFor(world, 'w15')).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// ⚠ ONE RULE, NOT TWO THAT AGREE TODAY.
+//
+// `tierOpenFor` (what the calendar draws) and `entryStatus` (what `enterEvent` and `advanceWeeks`
+// enforce) are two functions answering one question, and this project has now watched them come
+// apart TWICE for the same reason - both times because someone taught one arm a new rule and left
+// the other reading the old signal:
+//   * task #17, when W15 fell into the domestic gate and was refused in the wrong currency;
+//   * v34, when the on-ramp started latching in `tierOpenFor` and `entryStatus` went on comparing
+//     live points, so the calendar offered a J30 that `enterEvent` then threw on.
+// Both times the econ bench crashed on the disagreement mid-sweep, which is a poor substitute for a
+// test. This is the test: over every rung, in states that pull the two arms apart, they must return
+// the same verdict.
+// ---------------------------------------------------------------------------
+describe('the calendar and the turnstile never disagree', () => {
+  // Each state is chosen to have broken one of the arms at some point in this file's history.
+  const STATES: { label: string; apply: (w: WorldState) => void }[] = [
+    { label: 'fresh, nothing earned', apply: () => {} },
+    {
+      label: 'domestic standard met, nothing played abroad',
+      apply: (w) => giveKidPoints(w, TIERS.j30.enterPointBand[0]),
+    },
+    {
+      label: 'on the ITF table with the domestic book already decayed',
+      apply: (w) => {
+        w.results.push({ playerId: KID_ID, week: w.week, points: 300, tier: 'j300' })
+      },
+    },
+    {
+      label: 'crossed both on-ramps, then every result aged out',
+      apply: (w) => {
+        w.results.push({ playerId: KID_ID, week: w.week, points: 300, tier: 'j300' })
+        recomputeKidRank(w)
+        w.results = w.results.filter((r) => r.playerId !== KID_ID)
+        w.week += 60
+      },
+    },
+    { label: 'outgrown the domestic rungs', apply: (w) => giveKidPoints(w, 700) },
+  ]
+
+  for (const state of STATES) {
+    it(`agrees on every rung – ${state.label}`, () => {
+      const world = createWorld(`two-gates-${state.label.length}`)
+      state.apply(world)
+      recomputeKidRank(world)
+      for (const tier of TIER_LADDER) {
+        // A synthetic event of this tier, far enough out that no deadline or availability rule can
+        // colour the verdict - the ONLY thing under test here is the ranking gate.
+        const event: SeasonEvent = {
+          id: `probe-${tier}`,
+          week: world.week + 6,
+          tier,
+          surface: 'hard',
+          travelCostCents: 0,
+          deadlineWeek: world.week + 4,
+        }
+        const blocked = entryStatus(world, event).level === 'blocked'
+        const open = tierOpenFor(world, tier)
+        // An event can be blocked for reasons that are not the ranking gate (age caps, exams). What
+        // must never happen is the other direction: the calendar saying OPEN on a rung the turnstile
+        // refuses on RANKING, which is the state that crashed the bench.
+        if (open) {
+          const status = entryStatus(world, event)
+          expect(
+            status.level === 'blocked' && status.reason === 'locked',
+            `${tier}: the calendar says open, the turnstile says locked`,
+          ).toBe(false)
+        } else {
+          expect(blocked, `${tier}: the calendar says shut, the turnstile lets her through`).toBe(true)
+        }
+      }
+    })
+  }
 })
