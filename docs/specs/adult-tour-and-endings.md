@@ -137,3 +137,103 @@ game stops asking somewhere in the thirties, and before that it is hers to make.
 2. **The handover** — `maxAgeYears` on the J tiers + age-aware entrant selection.
 3. **The fork at 19** + the epilogue surface.
 4. **Bankruptcy and injury endings**, onto that same surface.
+
+---
+
+## 6. The owner's calls on §5 — settled 30.07.2026
+
+He answered all four at once («согласен со всеми четырьмя»), against the recommendations below. Recorded here
+because until now they lived only in a conversation.
+
+**1. The adult ranking window is BEST-16, not our best-6.** The WTA rule, and it is the one that makes a full
+professional season worth playing and a thin one visibly thin. Under best-6 "playing more" is worth nothing
+past six results — which would waste the availability currency the whole load-manager wave built, exactly at
+the point the game starts being about scheduling.
+
+**2. She KEEPS the domestic ladder as an adult.** It is ours, not the ITF's, and it is where an adult who is
+not good enough still plays — which is most of them, and is the truth. Farming Regionals at 24 reads
+uncomfortable; taking it away is a demotion the game should let her FEEL rather than write as a rule.
+
+**3. NO play after the ending, in v1.** The epilogue is a scroll, not a handover. The dynasty / second-child
+meta stays in the post-v1 backlog; if it ever lands, an epilogue can become a handover screen, and that
+direction is much cheaper than the reverse.
+
+**4. "STOP" CAN BE THE RIGHT ANSWER at 19, and it is a real ending without shame.** A game about honest
+economics in which "continue" is always correct lies precisely where it promised not to. Break-even is
+around WTA 150 and about 251 women a year clear it. If she is 19, outside the real, and the family is at
+zero, the game has earned the right to say so. Otherwise the four endings are three failures and one
+success, rather than four fates.
+
+---
+
+## 7. The work plan
+
+Two waves, in this order, because §4.1 cannot ship first: cap the junior tiers before the adult rungs exist
+and 19 is a wall into Local/Regional/National rather than a fork.
+
+### Wave A — the adult tour (task #17)
+
+**A1. The rungs.** W15 → W35 → W100 in `season/calendar.ts`, built the way the J family was: overlapping
+`enterPointBand` so two rungs are always open, `everyNWeeks` cadence, `entrantPctBand`, surface blocks,
+travel by tier. W100 is rare and prestigious — four a year, like J300.
+
+**A2. Prize money, and it is the cliff.** A new `'prize'` income category paid at `finalizeTournament` off a
+per-tier payout table indexed by finish, exactly parallel to the existing `points` array. One number per
+finish, zero draws.
+- ⚠ **A first-round loss is NOT zero here** — it is a token, ~$100 against a $900+ trip. The junior tour pays
+  nothing ever; the adult tour pays something and the something is an insult until she is good. The player
+  should be able to feel the exact week the arithmetic flips.
+- ⚠ **Prize money must NOT scale with the wealth corridor.** Travel, coaching and medical all do; the cheque
+  does not. It is the one number in the game that is identical for a working family and a wealthy one.
+- On the day this lands, the standing caveat "prize money is NOT modeled" comes out of `tools/econ-bench.ts`
+  and the reach targets stop being proxies.
+
+**A3. The ranking window.** Best-16 on the adult rungs per the owner's call (1). This is the risky half of
+Wave A: it changes what a season is worth, so it needs its own bench pass rather than a re-read of the
+existing one.
+
+**A4. Measure.** `bench:econ` and a new adult-tour arm: does the cliff produce a real valley? The number to
+watch is the week prize money first exceeds the week's costs, and how many careers ever reach it.
+
+### Wave B — the handover and the four endings (task #47)
+
+**B1. The cap.** `maxAgeYears: 18` on the J tiers (real ITF juniors is U18) plus an age view in
+`selectEntrants`, so a J30 field is juniors and a W15 field is adults. Blocked on A1.
+
+**B2. The fork at 19.** One decision, once, with everything on the table: her rank, the family balance, the
+scholarship that has just ended (junior support — already true in the code), and what a W15 costs against
+what it pays. Continue → the adult tour. Stop → epilogue. Per the owner's call (4), "stop" must be able to be
+the right answer and must read as an ending rather than a failure.
+
+**B3. The epilogue surface.** Built on the durable milestone ledger (`world.milestones`, v18) — it is already
+her life, written down. A scroll, not a handover (owner's call 3).
+
+**B4. Bankruptcy as a real ending.** Today `fundsCents < 0` only adds a `'funds'` stop reason and the weeks
+keep ticking. It wants a **warning phase** before the fact — a season where the family is visibly running
+out, the planner refuses trips, the conversation happens — and then a definition sharp enough to code. A
+candidate: "funds below zero and unable to fund the cheapest entry on the calendar for N consecutive weeks".
+⚠ N is a design decision, not an obvious one, and it should be measured before it is picked.
+
+**B5. The career-ending injury.** In the fiction, not the code. Either a severity above the current band or an
+accumulation rule (`injuryHistory` is persisted and already counts). Rare enough to be a story, never a
+difficulty setting.
+
+**B6. The natural end.** Her decline starts at 29 (`ageCurve.declineStart`); the field's hard stop is 34
+(`CONVEYOR.hardRetireAge`). Hers should be a decision with a floor: the game stops asking somewhere in the
+thirties, and before that it is hers to make.
+
+### Order, and what can be done in parallel
+
+A1 → A2 → A3 → A4 must be sequential (each measures the last). In Wave B, **B4/B5/B6 are independent of
+B1/B2/B3** and of each other — three endings that share only the epilogue surface — so they can be split
+across agents once B3 exists. B1 and B2 are the critical path and should not be split.
+
+### The risks worth naming before starting
+
+- **A3 (best-16) is a balance change disguised as a rule change.** It alters what every adult season is
+  worth. Measure before and after, on the same seeds, or we will not know which of A2 and A3 moved things.
+- **B2 is the most expensive click in the game** and it lands on systems that were all re-tuned in the last
+  week. Expect the fork's numbers to need a second pass after the first playtest, and do not tune them
+  before that playtest exists.
+- **The endings need art.** Four of them, plus an epilogue. That is the owner's, and it should be asked for
+  early rather than discovered at the end — the art has been the long pole twice already.
