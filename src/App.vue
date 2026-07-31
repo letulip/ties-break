@@ -28,6 +28,10 @@ import { dayCrossRuns } from './composables/dayCross'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
 import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
+// The Trophies tab's dot and the trophy that flies there to leave it. Same shape as the line above:
+// the PREDICATE is a pure function in the composable and this file only wires it to a watermark, so
+// "when does the dot show" is one testable sentence rather than a computed buried in a shell.
+import { trophyDotShows, trophyPieces, useTrophyFlight } from './composables/trophyArrival'
 import { useScrollReset } from './composables/scrollReset'
 import { playSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
@@ -423,6 +427,79 @@ watch(latestNewsId, (now, before) => {
   if (tab.value === 'home') markNewsSeen()
 })
 
+// --- THE TROPHIES TAB'S DOT (31.07, the podium slice) --------------------------------------------
+//
+// ⚠ IT ASSERTS A FACT, NOT AN "UNREAD". Home's bell states the house rule in its own words – "the
+// bell's dot asserts one FACT and not the 'unread' it cannot know" – and this dot's fact is:
+//
+//     THE CABINET HOLDS A PIECE OF SILVERWARE THAT ARRIVED AFTER THE LAST TIME IT WAS OPENED.
+//
+// `trophiesByTier` only ever grows, so the count of pieces in it is monotonic and the watermark is
+// that count at the player's last visit. `pieces > seen` is then arithmetic on two integers, and it
+// stops being true the instant the cabinet is opened – which is why the dot goes out then, rather
+// than because we have decided anybody has "seen" anything. The long argument is in the composable.
+//
+// The watermark is per career, in localStorage, like the news and This-week ones: careers advance
+// independently, so a global key would collide (the R9-21b lesson).
+const trophySeenKey = () => `tb:lastSeenTrophies:${game.snapshot?.careerId ?? ''}`
+const trophyPieceCount = computed(() => trophyPieces(game.snapshot))
+/** ⚠ A MISSING WATERMARK IS THE CURRENT COUNT, NEVER ZERO. A career with trophies and no stored
+ *  watermark – a save from before this shipped, another device – is a case where the app does not
+ *  KNOW whether the cabinet was ever opened, and a dot must not claim a fact it cannot hold. Reading
+ *  the present count asserts nothing and lets the next trophy be the first one it speaks about. Same
+ *  discipline as `if (lastSeenNewsId.value < 0) markNewsSeen()` above. */
+function storedTrophyWatermark(): number {
+  const stored = localStorage.getItem(trophySeenKey())
+  return stored === null ? trophyPieceCount.value : Number(stored)
+}
+const seenTrophyPieces = ref(storedTrophyWatermark())
+// The flight is armed by the finale (`TournamentFlow`'s Continue) and rendered below; while it is in
+// the air the dot is held, so it lands WITH the trophy instead of already being there when it
+// arrives. Nothing is withheld from anybody by that: the ledger gained this trophy several taps ago,
+// behind a full-screen takeover that covers the bar.
+const { flight: trophyFlight } = useTrophyFlight()
+const trophyTabDot = computed(() =>
+  trophyDotShows(trophyPieceCount.value, seenTrophyPieces.value, trophyFlight.value !== null),
+)
+/** Where the flying trophy is, how big, and how far it still has to go – handed to the element as
+ *  custom properties, the ConfettiBurst idiom: one keyframe, and everything that varies is a number
+ *  set per element. */
+const trophyFlightStyle = computed<Record<string, string> | undefined>(() => {
+  const f = trophyFlight.value
+  if (!f) return undefined
+  return {
+    left: `${f.left}px`,
+    top: `${f.top}px`,
+    width: `${f.size}px`,
+    height: `${f.size}px`,
+    '--trophy-dx': `${f.dx}px`,
+    '--trophy-dy': `${f.dy}px`,
+    '--trophy-scale': String(f.scale),
+  }
+})
+function markTrophiesSeen(): void {
+  seenTrophyPieces.value = trophyPieceCount.value
+  localStorage.setItem(trophySeenKey(), String(trophyPieceCount.value))
+}
+watch(
+  () => game.snapshot?.careerId,
+  () => {
+    // switching careers re-reads THAT career's own watermark, and writes one for a career that has
+    // never had one – so a plain load never invents a trophy the player has not been shown.
+    seenTrophyPieces.value = storedTrophyWatermark()
+    if (localStorage.getItem(trophySeenKey()) === null) markTrophiesSeen()
+  },
+)
+watch(tab, (t) => {
+  if (t === 'trophies') markTrophiesSeen()
+})
+// A trophy landing while the cabinet is ALREADY the open screen is seen the moment it lands – the
+// same clause the news watermark carries for the Home tab, and the reason neither dot can appear on
+// the screen that would clear it.
+watch(trophyPieceCount, () => {
+  if (tab.value === 'trophies') markTrophiesSeen()
+})
+
 // --- coach-mark onboarding tour (item 10) ------------------------------------
 const showTour = ref(false)
 function dismissTour(): void {
@@ -771,10 +848,32 @@ function dismissSeasonSummary(): void {
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
         <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. -->
         <span v-else-if="t.id === 'home' && homeHasNews" class="tab-dot"></span>
+        <!-- The trophy dot, and it is the SAME object as the two above: same class, same accent, no
+             private treatment. What differs is the sentence it asserts, and that is a fact rather
+             than a guess about attention – the cabinet holds something that arrived since it was
+             last opened. See `trophyTabDot` in the script. -->
+        <span v-else-if="t.id === 'trophies' && trophyTabDot" class="tab-dot"></span>
         <!-- epic/redesign-home: the fresh-recap dot left this bar with the This-week tab – it is on
              Home's Next-tournament card now, which is the door to that screen. -->
       </button>
     </nav>
+
+    <!-- THE TROPHY ON ITS WAY TO THE CABINET. The owner asked for the trophy being ADDED to the
+         trophies section, ending in the dot above, and the path crosses a boundary no single screen
+         owns: it takes off from the finale poster inside the tournament takeover and lands on the
+         bar. So the shell flies it, at the root, and the finale only says "one left, from here"
+         (`armTrophyFlight`). Both ends were measured at take-off, so this element has nothing left
+         to work out – it is a picture with a start, an offset and a duration.
+         Decoration with a job: aria-hidden and never a click target, because the fact it delivers is
+         delivered by the dot, which stays. Not mounted at all under reduced motion. -->
+    <img
+      v-if="trophyFlight"
+      class="trophy-flight"
+      :src="trophyFlight.src"
+      :style="trophyFlightStyle"
+      alt=""
+      aria-hidden="true"
+    />
 
     <!-- Foreground tournament: a full-screen overlay shown whenever a reveal is in progress.
          R9-9a: the splash's Back hides it (nothing resolved); the global bar's primary button

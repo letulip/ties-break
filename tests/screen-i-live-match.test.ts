@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { courtToCanvas, courtScale, type Viewport } from '../src/viz/geometry'
 import { COURT } from '../src/viz/types'
 
@@ -240,11 +240,25 @@ describe('screen I – the design and the rulings it has to keep', () => {
     //    mirror of the row above. The symmetry assertion at the end of this test is what makes one
     //    measurement cover both, and it is why the counter could take the band without a second
     //    arithmetic: the same ~19px of reading in the same ~34px of run-off.
+    //    ⚠ AND THE SERVE SPEED JOINED IT AT THE BAND'S ENDS (owner, after playing). It shares the
+    //    counter's single line and is SMALLER than it (12px against 15px, see `.mv-speed`), so the
+    //    band's tallest furniture is still the counter and the arithmetic above is still the whole
+    //    arithmetic. That size relation is what this pin depends on, so it is asserted rather than
+    //    assumed - a speed that grew past the score would be a second measurement to make.
     const surfaceTop = courtToCanvas({ x: -COURT.doublesHalfWidth, y: 0 }, vp).y
     const bandOnPhone = surfaceTop * (299 / w)
     expect(bandOnPhone, `run-off is only ${bandOnPhone.toFixed(1)} CSS px on a 375pt phone`).toBeGreaterThan(30)
     // Symmetric, so the bottom has the same air the owner asked for.
     expect(surfaceTop).toBeCloseTo(h - courtToCanvas({ x: COURT.doublesHalfWidth, y: 0 }, vp).y, 6)
+
+    // ...and the bottom band's tallest reading is still the score counter, which is what lets the
+    // one measurement above stand for both bands (see the ⚠ note).
+    const styles = stylesOf(viewer)
+    const sizeIn = (rule: string): number => {
+      const block = styles.slice(styles.indexOf(rule), styles.indexOf('}', styles.indexOf(rule)))
+      return Number(/font-size: ([\d.]+)px/.exec(block)?.[1])
+    }
+    expect(sizeIn('.mv-speed {')).toBeLessThan(sizeIn('.mv-score {'))
   })
 
   it('the "Changing ends" pill left the middle of the court for the run-off band', () => {
@@ -742,12 +756,26 @@ describe('who is serving is said twice, attached to something, and never in a sp
     // structurally rather than by eye: the same right inset as the row above, and a `bottom` that
     // mirrors that row's `top`, so the two run-off bands are used identically and neither reading is
     // on the playing surface.
+    //
+    // ⚠ RE-AIMED BY THE SERVE-SPEED SLICE, and only where it had to move. The counter is no longer
+    // pinned to the band's right edge with its own `position: absolute` - it is the middle column of
+    // `.mv-runoff`, which is the box that now owns the band (owner, after playing: «этот счет сета
+    // ... поставим посередине, а справа и слева ... будем скорость подачи писать»). So the two
+    // offsets this test reads belong to the ROW now, exactly as the weather plate's did when the top
+    // band became `.mv-chrome` one slice earlier - same widening, same reason. What the pin is FOR
+    // is untouched and still asserted here: the band is used the way the top one is, the counter is
+    // inside the court box rather than costing a row of panel, and it still says both things the
+    // deleted serve row said.
     const chrome = styles.slice(styles.indexOf('.mv-chrome {'), styles.indexOf('.mv-live {'))
-    const score = styles.slice(styles.indexOf('.mv-score {'), styles.indexOf('.ends-labels {'))
+    const runoff = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('.mv-score {'))
     expect(chrome).toMatch(/top: 6px/)
     expect(chrome).toMatch(/right: 10px/)
-    expect(score).toMatch(/bottom: 6px/)
-    expect(score).toMatch(/right: 10px/)
+    expect(runoff).toMatch(/bottom: 6px/)
+    expect(runoff).toMatch(/right: 10px/)
+    // Neither reading may keep an absolute pin of its own, or the row is decoration over two boxes
+    // that are really still stuck to the band's corners - the mistake `.mv-chrome` was made to end.
+    expect(styles).not.toMatch(/\.mv-score \{[^}]*position: absolute/)
+    expect(styles).not.toMatch(/\.mv-speed \{[^}]*position: absolute/)
     // It is INSIDE the court box - that is what "under the court" costs nothing - and it is the last
     // thing in it, after the top row.
     const courtAt = markup.indexOf('class="mv-court"')
@@ -780,6 +808,158 @@ describe('who is serving is said twice, attached to something, and never in a sp
     expect(styles, 'the weather kept a rule after the row took its offsets').not.toContain('.mv-weather {')
     // A full-width box over the court that is not a control must not eat taps meant for the canvas.
     expect(chrome).toMatch(/pointer-events: none/)
+  })
+})
+
+// =====================================================================================================
+// THE SERVE SPEED, ON THE COURT (owner, after playing on 31.07):
+//
+//   «на экране матча давай вот этот счет сета (справа внизу 0-0 под полем) поставим посередине,
+//    а справа и слева, в зависимости от того, кто подает, будем скорость подачи писать - это будет топ»
+//
+// Two changes to one band, and the pins below are in the order of how much it costs to get them
+// wrong. The FIRST is not about layout at all: this is the second reader of a number the box score
+// already reports, and two readings of one serve that disagree are worse than no reading at all.
+// =====================================================================================================
+describe('the serve speed on the court is the same number the box score reports', () => {
+  const viewer = read('../src/components/MatchViewer.vue')
+
+  it('⚠ the per-point speed stream is seeded in EXACTLY ONE file, and it is not the viewer', () => {
+    // The same discipline the trophy URL slice just established: a fact that two screens must agree
+    // on gets ONE producer, and the pin is a whole-tree count rather than a spot check, because a
+    // second seeding is only ever added by someone who did not know the first existed.
+    //
+    // `<match seed>:spd:<point number>` IS the agreement. Reproduce that string anywhere else - even
+    // correctly, even today - and the two readings are one refactor away from drifting: change the
+    // draw order, or add a third serve kind, and only one copy learns about it.
+    const walk = (dir: URL): URL[] =>
+      readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+        const child = new URL(e.name + (e.isDirectory() ? '/' : ''), dir)
+        return e.isDirectory() ? walk(child) : /\.(ts|vue)$/.test(e.name) ? [child] : []
+      })
+    const seeders = walk(new URL('../src/', import.meta.url)).filter((f) =>
+      // The seeding itself, not prose about it: a template literal that interpolates into ':spd:'.
+      /\$\{[^}]*\}:spd:/.test(readFileSync(f, 'utf8')),
+    )
+    const names = seeders.map((f) => f.pathname.split('/src/')[1])
+    expect(names, `the ':spd:' stream is seeded in ${names.length} files`).toEqual([
+      'engine/match/serveSpeed.ts',
+    ])
+  })
+
+  it('both readers go through pointServeSpeeds - the viewer imports it and derives nothing', () => {
+    // The box score's avg/max rows...
+    const stats = read('../src/engine/match/matchStats.ts')
+    expect(stats).toContain("import { pointServeSpeeds } from './serveSpeed'")
+    expect(stats).toContain('pointServeSpeeds(seed, point, playerA, playerB)')
+    // ...and the live reading under the court, from the same call.
+    expect(viewer).toContain("import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'")
+    expect(viewer).toContain('pointServeSpeeds(props.match.result.seed, point, props.playerA, props.playerB)')
+    // The viewer may not reach past it for any piece of the model, which is how a "just this once"
+    // second derivation starts. (tests/match/matchStats.test.ts proves the two agree numerically;
+    // this pin is what stops a future change from having to be caught numerically at all.)
+    expect(viewer).not.toMatch(/serveSpeedOf|expectedServeSpeed|serveSpeedBase|SPEED_JITTER|SECOND_SERVE_DROP/)
+  })
+
+  it('the seed came off the match it already had - no new prop, no new snapshot field', () => {
+    // `AnnotatedMatch.result` is a `MatchResult` and `MatchResult.seed` is the match's own seed, so
+    // the fact was already on the props. The same is true of the ages and the serve skills, which
+    // ride `MatchPlayer`. Nothing was added to the payload for this reading, and the pin says so in
+    // the two places it could have been: the prop list, and the number of props the callers pass.
+    const propsBlock = viewer.slice(viewer.indexOf('defineProps<{'), viewer.indexOf('}>(),'))
+    for (const invented of ['seed', 'serveSpeed', 'speeds', 'kmh']) {
+      expect(propsBlock, `a "${invented}" prop was added for a fact the viewer already had`).not.toContain(
+        `${invented}?:`,
+      )
+    }
+    expect(viewer).toContain('props.match.result.seed')
+  })
+})
+
+describe('the run-off band reads speed · score · speed, and the speed is on the server\'s side', () => {
+  const viewer = read('../src/components/MatchViewer.vue')
+  const markup = markupOf(viewer)
+  const styles = stylesOf(viewer)
+
+  it('the score is CENTRED on the court, not centred on what the speed left over', () => {
+    // Owner: «этот счет сета ... поставим посередине». `1fr auto 1fr` is what makes that true of the
+    // COURT rather than of the row's remaining space - and it has to be, because only one end is
+    // ever occupied, so a `space-between` score would sit off centre nearly all the time and jump
+    // sideways every time a serve landed.
+    const runoff = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('.mv-score {'))
+    expect(runoff).toMatch(/display: grid/)
+    expect(runoff).toMatch(/grid-template-columns: minmax\(0, 1fr\) auto minmax\(0, 1fr\)/)
+    expect(runoff).not.toMatch(/justify-content: space-between/)
+    // The middle column, explicitly - the score is dropped before the first point lands and each
+    // speed only exists at its own end, so auto-placement would put a lone reading in column 1.
+    expect(styles).toMatch(/\.mv-score \{[^}]*grid-column: 2/)
+    expect(styles).toMatch(/\.mv-speed\.left \{[^}]*grid-column: 1/)
+    expect(styles).toMatch(/\.mv-speed\.right \{[^}]*grid-column: 3/)
+    // ...and the two insets are EQUAL, or the middle column is not the court's middle. Measured at
+    // 375pt, an 8/10 pair (which is what the top row uses, for the Live badge's sake) puts the score
+    // 1px off centre - invisible, but free to get exactly right.
+    const runoffRule = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('}', styles.indexOf('.mv-runoff {')))
+    const left = /left: (\d+)px/.exec(runoffRule)?.[1]
+    const right = /right: (\d+)px/.exec(runoffRule)?.[1]
+    expect(left, 'the band is inset unequally, so "in the middle" is off by half the difference').toBe(right)
+  })
+
+  it('a three-digit speed can never collide with the score at 375pt', () => {
+    // ⚠ STRUCTURAL, NOT ARITHMETICAL, and deliberately so. The sum does work out - "183 km/h" (the
+    // model's plateau plus a 90 serve plus the jitter band) is ~52px at 12px, the widest score the
+    // band can hold is "196 points" at ~85px, and the band is ~279px wide on a 375pt phone - but a
+    // guarantee that rests on a sum is one longer string away from being false.
+    // `minmax(0, 1fr)` gives the EDGE columns a zero floor, so under pressure they are the ones that
+    // give; `nowrap` + `clip` means the speed then loses its tail instead of wrapping onto the
+    // playing surface above or sliding under the score.
+    const runoff = styles.slice(styles.indexOf('.mv-runoff {'), styles.indexOf('.mv-score {'))
+    expect(runoff).toContain('minmax(0, 1fr)')
+    const speed = styles.slice(styles.indexOf('.mv-speed {'), styles.indexOf('.mv-speed.left {'))
+    expect(speed).toMatch(/white-space: nowrap/)
+    expect(speed).toMatch(/overflow: hidden/)
+    // A row of readings over the court that is not a control must not eat taps meant for the canvas,
+    // the same rule `.mv-chrome` lives by.
+    expect(runoff).toMatch(/pointer-events: none/)
+  })
+
+  it('the reading sits at the END of the player who struck it, and moves when the serve does', () => {
+    // Owner: «справа и слева, в зависимости от того, кто подает». The end is resolved through the
+    // SAME `leftSide` the ends-labels row uses, so the speed and the server's name can never end up
+    // on opposite sides of the screen; and it is keyed off the side that STRUCK the serve rather
+    // than off `liveServer`, which is the one difference that matters when the two could disagree.
+    expect(viewer).toMatch(/liveServeSpeed\.value\.side === leftSide\.value \? 'left' : 'right'/)
+    // One element that moves between the columns, so there is one piece of markup to keep true.
+    expect(markup).toContain('<span v-if="serveSpeedEnd" class="mv-speed num" :class="serveSpeedEnd"')
+    // km/h, and an integer - `serveSpeedOf` rounds, so the template must not re-format it.
+    expect(markup).toContain('km/h')
+    expect(markup).not.toMatch(/toFixed|Math\.round\(liveServeSpeed/)
+  })
+
+  it('the reading covers the serve and the reply, then goes - never a whole rally, never a flash', () => {
+    // The two failure modes pull opposite ways: a number left up through a twenty-shot rally reads
+    // as if it described the ball in play, and one taken down when the ball is struck is a 0.28s
+    // flash at ×2 (the speed the viewer opens on). "Serve +1" is the window tennis already has.
+    expect(viewer).toContain('const SERVE_READING_SHOTS = 1')
+    expect(viewer).toMatch(/onScreen - latest\.shotIndex > SERVE_READING_SHOTS/)
+    // The POINT-END beat falls back to the shot the point ended on, which is the half that saves the
+    // ace / service winner / double fault from being the flash - those points ARE one or two shots
+    // long, so without it they would be the only ones that never got read.
+    expect(viewer).toMatch(/point\.rally\.shots\.length - 1/)
+    // ⚠ AN ALLOW-LIST OF TWO EVENT KINDS, and it is a deny-list that this pin exists to prevent
+    // coming back. Measured on a live match: with the ceremony beats let through, a game-ending ace
+    // held its number through point-end, the quiet gap, game-end, ITS gap and the change of ends -
+    // four seconds at ×1, eight if it also ended a set. Allow-listing 'shot' and 'point-end' rules
+    // out those, the match-end curtain, and any beat a future slice invents, all at once. It also
+    // rules out 'point-start', which is what stops a reading surviving into a point it did not come
+    // from and sitting under the wrong player when the serve changes hands.
+    expect(viewer).toMatch(/ev\.kind !== 'shot' && ev\.kind !== 'point-end'/)
+    for (const ceremony of ['game-end', 'set-end', 'change-ends', 'gap']) {
+      expect(
+        viewer.slice(viewer.indexOf('function serveReadingFor'), viewer.indexOf('function updatePlayers')),
+        `serveReadingFor learned about '${ceremony}' - the allow-list became a deny-list`,
+      ).not.toContain(`'${ceremony}'`)
+    }
+    expect(viewer).toMatch(/liveServeSpeed\.value = null/)
   })
 })
 

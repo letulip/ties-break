@@ -108,7 +108,9 @@ const MAX_SIDE = 512
  *  then makes each trophy offline-durable from the first time the cabinet is opened.
  *
  *  Keyed by the SET directory name (`public/images/<set>/`). Absent = MAX_SIDE. */
-const SET_MAX_SIDE = { weeks: 960, trophies: 384 }
+// `sponsors`: a letterhead on a PaperNote at 375pt is ~160 CSS px wide, so 320 covers a 2x screen
+// with headroom and nothing above that is ever drawn. Measured off the letter, not guessed.
+const SET_MAX_SIDE = { weeks: 960, trophies: 384, sponsors: 320 }
 
 /** The cap for a job, from the set its OUTPUT lands in. Reading the target rather than the source
  *  is deliberate: a master can arrive from `<set>-jpeg/` or be re-encoded in place, and only the
@@ -173,7 +175,14 @@ function notShipped(stem) {
  * over here", and re-dropping a master into `public/trophies/` next year does the right thing
  * again rather than quietly regressing.
  */
-const DELIVERY_SET = { trophies: 'trophies' }
+// ⚠ `sponsors` JOINED ON 31.07, and it is the row that proves the paragraph above was worth
+// writing. The trophies taught the lesson - art handed into a directory this script cannot see
+// ships raw - and the very next delivery landed in `public/sponsors/`, three letterhead logos for
+// the offer letters. Without a row here they would have been copied into dist verbatim. They are
+// JPG rather than PNG, so workbox's `globPatterns` (js/css/html/svg/png/webp/woff2) would NOT have
+// precached them - which makes this the quieter version of the same bug: no install cost, just
+// three unoptimised files shipping forever with nothing reporting it.
+const DELIVERY_SET = { trophies: 'trophies', sponsors: 'sponsors' }
 const DELIVERY_DIRS = Object.keys(DELIVERY_SET)
 
 const CACHE_NAME = '.art-cache.json'

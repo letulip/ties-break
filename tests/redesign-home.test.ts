@@ -473,7 +473,14 @@ describe('the diary page: the structure the redesign decided', () => {
     }
     // Two tools, the export's two: the bell and the gear. Inline SVG at the export's own 22px /
     // 1.7 stroke – no icon FILE, so nothing can 404 and nothing needs a mask.
-    expect(home.match(/class="diary-tool"/g) ?? []).toHaveLength(2)
+    //
+    // ⚠ RE-AIMED FROM TWO TO THREE, NOT WEAKENED (31.07, the offers inbox). The owner asked for the
+    // inbox to live here by name: «можно завести inbox на home возле колокольчика». What this case
+    // has always protected is unchanged and is not the COUNT: it is that the tool row is inline SVG
+    // at the export's 22px / 1.7 stroke with no icon file behind it, and that the gear goes to the tab
+    // that already owns settings rather than inventing a screen. All three of those still hold, and
+    // the envelope is drawn to the same rule as the bell beside it.
+    expect(home.match(/class="diary-tool"/g) ?? []).toHaveLength(3)
     expect(home).toContain('stroke-width="1.7"')
     expect(existsSync(new URL('../public/icons/bell.svg', import.meta.url))).toBe(false)
     // ...and the gear goes to the tab that already owns settings, rather than inventing a screen.

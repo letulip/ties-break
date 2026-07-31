@@ -42,6 +42,8 @@ import { TIER_SHORT } from '../../composables/weekAhead'
 import { isTierOpen, useTierStates } from '../../composables/tierState'
 import MatchReplay from '../MatchReplay.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
+// THE INBOX (docs/specs/offers-and-the-inbox.md) – the popup behind the second tool, beside the bell.
+import InboxSheet from '../InboxSheet.vue'
 // U0 – the shared components (docs/specs/ui-components.md). Home is one of the two screens this
 // slice ports onto them; Season is the other, and the pair is the only honest test that these are
 // components rather than one screen with a wrapper round it. Where Home still carries a rule of its
@@ -169,6 +171,23 @@ const newsThisWeek = computed(() =>
 function jumpToNews(): void {
   playSfx('clickSoft')
   document.getElementById('diary-news')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// THE INBOX, beside the bell (docs/specs/offers-and-the-inbox.md §2). The owner asked for it there
+// by name: «можно завести inbox на home возле колокольчика».
+//
+// ⚠ ITS DOT COPIES THE BELL'S DISCIPLINE EXACTLY, one line up: it asserts one FACT and not the
+// "unread" it cannot know. The fact is "an offer is open and its deadline has not passed", and the
+// ENGINE holds it - `snapshot.offerOpen`, decided beside the offers themselves, rather than a
+// predicate this screen re-derives and could get subtly out of step with. It goes out on its own,
+// because the last open offer being signed, refused or expiring is the same event as that turning
+// false. What it must never mean is "you have not looked at this": the engine cannot know that, and a
+// dot that claims to is a dot that lies on the second visit.
+const offerOpen = computed(() => game.snapshot?.offerOpen ?? false)
+const showInbox = ref(false)
+function openInbox(): void {
+  playSfx('clickSoft')
+  showInbox.value = true
 }
 
 // --- her rank: the page's one table-number -----------------------------------------------------
@@ -610,6 +629,16 @@ function openRankHelp(): void {
               </svg>
               <span v-if="newsThisWeek" class="diary-tool-dot"></span>
             </button>
+            <!-- THE INBOX. An envelope at the export's own 22px / 1.7 stroke, inline like the bell,
+                 so nothing can 404 and nothing needs a mask. Its dot is the ENGINE's fact - see the
+                 note beside `offerOpen` in the script for what it does and does not assert. -->
+            <button class="diary-tool" aria-label="Open the inbox" title="Inbox" @click="openInbox">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2.5" y="5" width="19" height="14" rx="2"></rect>
+                <path d="M3 6.5 12 13l9-6.5"></path>
+              </svg>
+              <span v-if="offerOpen" class="diary-tool-dot"></span>
+            </button>
             <button class="diary-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="3.2"></circle>
@@ -868,6 +897,7 @@ function openRankHelp(): void {
 
     <MatchReplay v-if="replayMatch" :match="replayMatch" @close="replayMatch = null" />
     <RankHelpDialog v-if="showRankHelp" @close="showRankHelp = false" />
+    <InboxSheet v-if="showInbox" @close="showInbox = false" />
   </template>
 </template>
 

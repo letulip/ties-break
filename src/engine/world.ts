@@ -21,6 +21,8 @@ import {
   type KnockRecord,
   type LossStreak,
   type Milestone,
+  type KitOfferTerms,
+  type Offer,
   type PendingBracketRound,
   type PendingView,
   type PlayerProfile,
@@ -70,6 +72,7 @@ import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './
 import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
+  type GearCategory,
   gearHitForWeek,
   practiceFeeCents,
   vacationPackage,
@@ -143,6 +146,20 @@ import {
 } from './knock'
 // W6c: the anatomy, in a leaf module so diary.ts can read the same twelve parts this draws from.
 import { drawBodyRegion } from './body'
+// THE INBOX (v32, docs/specs/offers-and-the-inbox.md). Same dependency shape as the knock and the
+// diary: offers.ts is world-free and takes plain arguments, so world -> offers runs one way. Its
+// only randomness is its own `seed:offer:<week>` sub-stream, so nothing it does can reach the MAIN
+// weekly stream the frozen capture (41550 / e6b0c709) measures.
+import {
+  activeKitDeal,
+  dealForSeasonEnding,
+  expireOffers,
+  hasLiveOffer,
+  kitFreshCap,
+  raiseKitOffer,
+  refuseOffer as refuseOfferIn,
+  signOffer as signOfferIn,
+} from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
 import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
 import type { CoachTier } from '../shared/protocol'
@@ -152,7 +169,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 31
+export const SAVE_SCHEMA_VERSION = 32
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -347,6 +364,18 @@ export interface WorldState {
    *  next one land there ~55% of the time and bite harder when it does. A counter could not say WHICH
    *  shoulder. It also feeds the cooldown, so one field carries both halves of the rate limit. */
   knockHistory: KnockRecord[]
+  /** THE INBOX (v32): every letter this career has been sent, oldest first – open, signed, refused
+   *  and expired alike. docs/specs/offers-and-the-inbox.md §2; the mechanism is engine/offers.ts.
+   *
+   *  ⚠ IT IS ON THE WORLD AND NOT IN THE EVENT FEED, and the spec makes that a rule rather than a
+   *  preference (§5): a SIGNED DEAL HAS TO OUTLIVE EVERY PRUNE. `events` caps at 400 rows and a busy
+   *  career burns that in a couple of seasons, so a contract announced in the feed is a contract that
+   *  silently stops existing - and "silently" is the whole problem, because the thing it would stop
+   *  paying is her equipment. The same argument `trophiesByTier` makes one field up.
+   *
+   *  Bounded by construction: the shop reviews once a season and writes at most one letter, so this
+   *  is a handful of rows per career and is never pruned. Pruning it would defeat what it is for. */
+  offers: Offer[]
   /** Diary-1 D10 (v18): the durable milestone ledger behind the Memory card. The event feed
    *  prunes at 400 rows, so memories need their own record: first title and first final per tier,
    *  the first international entry, the first injury, each season's closing rank – captured AT THE
@@ -612,7 +641,7 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; sk
  *  REAL age, `kidAgeExact`, not the band's: a December girl genuinely serves a shade slower than a
  *  January girl in the same draw, which is the relative age effect turning up somewhere it belongs. */
 export function kidMatchPlayerFor(
-  world: { seed: string; profile: PlayerProfile; condition: number; week: number },
+  world: { seed: string; profile: PlayerProfile; condition: number; week: number; offers?: Offer[] },
   surface: Surface,
 ): MatchPlayer {
   const raw = kidMatchPlayer(world)
@@ -631,7 +660,12 @@ export function kidMatchPlayerFor(
       world.profile.playStyle,
       surface,
     ),
-    kitWearAt(world.seed, world.profile.background, world.week),
+    // ⚠ AND THE SPONSOR'S FLOOR UNDER HER KIT, WHICH IS A FOURTH READING AND NOT A FOURTH TERM. The
+    // multiplication is unchanged - it is still exactly `applyKit(applySurfaceStyle(raw × factor))` -
+    // and what a signed kit deal moves is the WEAR that goes in, never the arithmetic. `kitFreshCap`
+    // is null for every career that has not signed one, so an unsponsored girl is byte-identical to
+    // what she was.
+    kitWearAt(world.seed, world.profile.background, world.week, kitFreshCap(world.offers ?? [], world.week)),
   )
 }
 
@@ -1738,7 +1772,15 @@ export function injuryTau(world: WorldState): number {
   // Same POST-DRAW shape as the three multiplies above: `rollInjury` has already drawn from
   // `seed:injury:<week>` before it calls this, `kitWearAt` spends no draw on any stream, and
   // `injuryTau` keeps its pinned arity of 1. The frozen MAIN capture (41550 / e6b0c709) cannot see it.
-  tau *= kitInjuryFactor(kitWearAt(world.seed, world.profile.background, world.week))
+  //
+  // ⚠ AND A SIGNED KIT DEAL PUTS A FLOOR UNDER HER SOLES TOO (v32), which follows from the shoes
+  // being real rather than from any new rule: the sponsor's cap is applied inside `kitWearAt`, so the
+  // one function that decides how worn her shoes are answers the same way here and at the composition
+  // point. It cannot make her safer than new shoes and it draws nothing, so the shape above is
+  // unchanged: a post-draw multiply that is exactly 1 for a girl in fresh kit.
+  tau *= kitInjuryFactor(
+    kitWearAt(world.seed, world.profile.background, world.week, kitFreshCap(world.offers, world.week)),
+  )
   // W4 – AND THE KNOCK HE SENT HER BACK OUT ON. The whole cost of the `push` branch, and it is
   // deliberately the same shape as the three multiplies above: POST-DRAW on the threshold, zero draws
   // on any stream, so the private `seed:injury:<week>` sequence is byte-identical for a career that
@@ -2900,35 +2942,80 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
 // is now an annual grant gated on her NATIONAL rank (see reviewLocalSponsor). The gear line is a
 // gear line again: the family pays for its kit, and the sponsor's contribution arrives once a year
 // as money, where it can actually be seen.
+//
+// ⚠ ...AND A SIGNED KIT DEAL SENDS SOME OF THESE BILLS TO THE SHOP (v32). This is the sponsorship
+// arriving as PRODUCT, which is what the sources say a junior deal actually is, and it is a
+// deliberately different animal from the percentage valve that was removed on 30.07:
+//   * it is capped by a PER-SEASON allowance, which ECONOMY.sponsorship's own argument identifies as
+//     the only shape of subsidy that can be flat. The wealth corridor can raise the BILL but not the
+//     ceiling, so a rich family cannot extract more of it by buying a more expensive racket;
+//   * it covers the three lines the equipment model reads - racquets, strings, shoes - and not
+//     apparel, because it is a kit deal and not a clothing allowance;
+//   * the line is still EMITTED, at the amount the family actually paid ($0 when the shop took the
+//     whole of it), so the Money breakdown shows the relationship instead of a cost quietly
+//     vanishing. Exactly `chargeTravel`'s pattern with the academy's cover, and the $0-line handling
+//     the finance aggregate already has (it never stores a zero-valued category entry).
+/** The gear lines a kit sponsor supplies. Apparel is NOT one of them: this is a kit deal. */
+const KIT_DEAL_CATEGORIES: readonly GearCategory[] = ['rackets', 'stringing', 'shoes']
+
 function resolveGear(world: WorldState): void {
   const bg = world.profile.background
+  const deal = activeKitDeal(world.offers, world.week)
+  const terms = deal ? (deal.terms as KitOfferTerms) : null
   for (const category of GEAR_CATEGORIES) {
     const hit = gearHitForWeek(world.seed, category, bg, world.week)
     if (!hit) continue
     const line = ECONOMY.gear[category]
-    world.fundsCents -= hit.amountCents
+    // What the shop picks up of this line: everything, up to whatever is left of the allowance.
+    const remaining = deal && terms ? Math.max(0, terms.kitAllowanceCents - (deal.coveredCents ?? 0)) : 0
+    const covered =
+      deal && terms && KIT_DEAL_CATEGORIES.includes(category) ? Math.min(hit.amountCents, remaining) : 0
+    const paid = hit.amountCents - covered
+    if (deal && covered > 0) deal.coveredCents = (deal.coveredCents ?? 0) + covered
+    world.fundsCents -= paid
     addEvent(world, {
       week: world.week,
       type: 'expense',
       category: line.breakdown,
-      text: line.flavor[bg],
-      amountCents: -hit.amountCents,
+      text: covered > 0 ? `${line.flavor[bg]} – on ${terms!.brand}` : line.flavor[bg],
+      amountCents: -paid,
     })
   }
 }
 
 // --- the local sponsor's annual deal -----------------------------------------
 // A shop in her town backing the local girl who is doing well locally. Gated on the NATIONAL table,
-// flat in cash, once a season – the full argument for all three of those is on ECONOMY.sponsorship.
+// flat, once a season – the full argument for all three of those is on ECONOMY.sponsorship.
 //
-// RNG DISCIPLINE. Reads two cached numbers and adds an event. ZERO draws on any stream, so it cannot
-// move the frozen MAIN capture (41550 draws / e6b0c709) by one. It runs in the season-boundary block
-// beside reviewAcademy, which is already the "zero draws, this far up the tick is safe" slot, and on
-// the same reading of her year: the rank she CARRIES IN, before this season can touch it.
+// ⚠ AND SINCE 31.07 IT ARRIVES AS A LETTER RATHER THAN AS WEATHER. This function used to do
+// `world.fundsCents += amount` and drop a line in the feed; the player was never asked. It now RAISES
+// AN OFFER (docs/specs/offers-and-the-inbox.md §4.1), which the parent signs or refuses inside a
+// four-week window, and signing pays in KIT rather than in money – the shop covers her racquet,
+// string and shoe bills up to the allowance and keeps her kit fresh while it does. The old cheque is
+// gone entirely: «кит вместо денег». What has NOT moved is the gate (her national rank) or the
+// figure (ECONOMY.sponsorship's already-balanced $1,000 / $2,000), so this slice changes the SHAPE of
+// a decision rather than the size of a number.
+//
+// ⚠ AND THE SHOP ONLY WRITES AGAIN IF SHE PLAYED. A sponsor pays to be seen, and the obligation is
+// the whole cost of the deal (spec §4.1): a season inside the deal that did not reach
+// `minEventsPerSeason` entries ends the relationship. Nothing is clawed back – a junior kit deal is
+// not a loan – the contract simply lapses at the boundary and is not renewed.
+//
+// RNG DISCIPLINE. Reads two cached numbers, counts entries off a persisted ledger, and takes exactly
+// ONE draw – on `seed:offer:<week>`, its own purpose-scoped sub-stream, created and discarded inside
+// `raiseKitOffer`. ZERO draws on the main weekly stream, so the frozen MAIN capture (41550 draws /
+// e6b0c709) cannot move by one. It runs in the season-boundary block beside reviewAcademy, which is
+// already the "zero main-stream draws, this far up the tick is safe" slot, and on the same reading of
+// her year: the rank she CARRIES IN, before this season can touch it.
 
 /** What the local shop's deal is worth this season, in cents – 0 if she is not on their radar.
  *  Pure, so the tests and the bench can ask directly. `nationalRank` is her place in the DOMESTIC
- *  table (`world.kidRankDomestic`), never the ITF one. */
+ *  table (`world.kidRankDomestic`), never the ITF one.
+ *
+ *  ⚠ IT IS AN ALLOWANCE NOW, NOT A CHEQUE. The number is unchanged and the gate is unchanged; what
+ *  changed is that it is the ceiling on what the shop SPENDS on her kit rather than what it hands
+ *  over. See ECONOMY.sponsorship, and `KitOfferTerms.kitAllowanceCents` for where a signed deal
+ *  freezes it. */
 export function localSponsorCents(nationalRank: number): number {
   const s = ECONOMY.sponsorship
   if (nationalRank <= s.topMaxRank) return s.topSeasonCents
@@ -2936,26 +3023,112 @@ export function localSponsorCents(nationalRank: number): number {
   return 0
 }
 
+/** How many tournaments she entered in the season that ENDED at `boundaryWeek` – the count a kit
+ *  deal's obligation is judged on, and it is the count the season really played (spec §5: "nothing
+ *  may be offered that cannot be honoured"). Read off `world.results` plus the entry ledger would
+ *  double-count a withdrawal, so it reads the one record that is written per entry and never
+ *  rewritten: the tournament events her season produced. */
+function eventsPlayedInSeason(world: WorldState, boundaryWeek: number): number {
+  const from = boundaryWeek - WEEKS_PER_YEAR
+  return world.events.filter((e) => e.type === 'tournament' && e.week >= from && e.week < boundaryWeek).length
+}
+
+// ⚠ THE WHOLE INBOX GETS THE SAME FEED BUDGET THE CHEQUE HAD: AT MOST ONE ROW PER SEASON BOUNDARY.
+// This looks like a writing preference and is a MEASURED constraint, so it is worth stating before
+// anyone adds a second `addEvent` to this file.
+//
+// `pruneEvents` trims to EVENTS_CAP = 400 by COUNT, oldest-first. So every non-match row a feature
+// adds permanently displaces a MATCH from the retained window - and `axisEvidence` measures the
+// radar's rate over exactly the matches that window still holds. Measured on the radar bench's own
+// careers (radar-mono-elite, 150 weeks): adding ONE extra row a season - an "offer expired" line -
+// pushed the worst weekly re-widening of the fog from 0.36 to 0.64 points, straight through the 0.5
+// bound tests/radar.test.ts guards, without anything about the radar itself changing. The evidence
+// base got thinner, which is exactly what that test is for.
+//
+// So this function says everything the sponsor has to say in ONE line: what last season's deal was
+// worth, and whether they are writing again. Signing, refusing and expiring write NOTHING here - the
+// player took those actions himself (behind a confirm, in the case of the one that matters), and the
+// inbox holds all three states for the life of the career, which the feed could never do anyway.
 export function reviewLocalSponsor(world: WorldState): void {
   // The domestic cache, with the same fallback rankIn uses: a career that has never held a domestic
   // point sits below the whole field rather than at the top of an empty table.
   const nationalRank = world.kidRankDomestic ?? world.cohort.length + 1
-  const amount = localSponsorCents(nationalRank)
-  if (amount <= 0) return
-  world.fundsCents += amount
-  const top = nationalRank <= ECONOMY.sponsorship.topMaxRank
-  addEvent(world, {
-    week: world.week,
-    type: 'income',
-    category: 'sponsor',
-    // Names the table, because the whole point of the fix is that this is a DOMESTIC reward and the
-    // player could not previously tell which ladder any gate was reading. LADDER_LABEL keeps the
-    // player-facing word for it in one place.
-    text: top
-      ? `A local sponsor has backed her for the season – kit and a hand with the travel (${LADDER_LABEL.domestic} #${nationalRank})`
-      : `A local sponsor has backed her for the season – her kit for the year (${LADDER_LABEL.domestic} #${nationalRank})`,
-    amountCents: amount,
-  })
+
+  // 1. THE SEASON JUST GONE, IF IT WAS UNDER A DEAL. What the shop actually spent is the one number
+  //    that says what signing was worth - the same job `AcademySupport.coveredCents` does - and the
+  //    entry count is what decides whether they write again.
+  const ending = dealForSeasonEnding(world.offers, world.week)
+  const endingTerms = ending ? (ending.terms as KitOfferTerms) : null
+  const played = ending ? eventsPlayedInSeason(world, world.week) : 0
+  // ⚠ FAILING THE OBLIGATION COSTS THE DEAL, NOT THE FAMILY'S SAVINGS (spec §4.1). Nothing is clawed
+  //   back - a junior kit deal is not a loan, and NOT ONE LINE BELOW TOUCHES `world.fundsCents`. The
+  //   contract simply reaches `untilWeek` like any other and is not renewed this year; the shop is
+  //   free to write again the year after, because the penalty is a missed season and not a blacklist.
+  //   This is the promise the LETTER makes in the shop's own words, and the two have to agree.
+  const obligationMet = !ending || !endingTerms || played >= endingTerms.minEventsPerSeason
+  // ...and the verdict is recorded ON the letter, so the inbox can still answer "what happened to
+  // that deal?" a decade later. The count is the one the season really played (spec §5).
+  if (ending) ending.eventsPlayed = played
+
+  // 2. AND WHETHER THEY WRITE AGAIN. A shop that was let down does not; everybody else is subject to
+  //    the roll, because an offer that always comes round again is an offer with no cost to letting
+  //    it expire.
+  const offer = obligationMet
+    ? raiseKitOffer({ offers: world.offers, seed: world.seed, week: world.week, nationalRank })
+    : null
+
+  // 3. ONE LINE, CARRYING WHICHEVER OF THOSE ACTUALLY HAPPENED. It names the TABLE, because the whole
+  //    point of the 30.07 fix was that this is a DOMESTIC reward and the player could not previously
+  //    tell which ladder any gate was reading; and it names the INBOX, because a letter nobody opens
+  //    is worse than the cheque it replaced.
+  const parts: string[] = []
+  if (ending && endingTerms) {
+    // ⚠ WHAT THE SEASON OF KIT WAS WORTH IS REPORTED EITHER WAY, and the lapse case is the one that
+    //   needs it most: a deal that ends because she did not play enough is precisely the moment the
+    //   player should be able to see what he just lost. Reporting the value only on a renewal would
+    //   make the number a reward for having done well, which is the opposite of what it is for.
+    const worth = `$${Math.round((ending.coveredCents ?? 0) / 100).toLocaleString('en-US')}`
+    parts.push(
+      obligationMet
+        ? `${endingTerms.brand} kitted her out all season – ${worth} of kit, ${played} events played.`
+        : `${endingTerms.brand} kitted her out all season – ${worth} of kit – but they asked for ${endingTerms.minEventsPerSeason} events and she played ${played}, so they are not renewing.`,
+    )
+  }
+  if (offer) {
+    const terms = offer.terms as KitOfferTerms
+    parts.push(
+      `A letter from ${terms.brand} – they want to kit her out for the season (${LADDER_LABEL.domestic} #${nationalRank}). It is in the inbox.`,
+    )
+  }
+  if (parts.length === 0) return
+  addEvent(world, { week: world.week, type: 'info', text: parts.join(' ') })
+}
+
+/** THE PARENT SIGNS. Returns the signed offer, or throws with the engine's own reason – past the
+ *  deadline, already answered, or no such letter. Irreversible: there is no unsign, on purpose.
+ *
+ *  Writes NOTHING in the feed, on the budget stated above `reviewLocalSponsor`: he did this himself,
+ *  behind a confirm that restated the deal, and the letter carries "Signed" in the inbox for the rest
+ *  of the career - which is longer than any feed row survives. */
+export function acceptOffer(world: WorldState, offerId: string): Offer {
+  const signed = signOfferIn(world.offers, offerId, world.week)
+  if (!signed) throw new Error(offerAnswerErrorFor(world, offerId))
+  return signed
+}
+
+/** THE PARENT REFUSES. Terminal in the same way signing is: a "no" he could take back would make the
+ *  deadline a formality on the other side of the decision. Same feed budget, same reason. */
+export function declineOffer(world: WorldState, offerId: string): Offer {
+  const refused = refuseOfferIn(world.offers, offerId, world.week)
+  if (!refused) throw new Error(offerAnswerErrorFor(world, offerId))
+  return refused
+}
+
+function offerAnswerErrorFor(world: WorldState, offerId: string): string {
+  const offer = world.offers.find((o) => o.id === offerId)
+  if (!offer) return 'That letter is not in the inbox.'
+  if (offer.state === 'signed') return 'That deal is already signed.'
+  return 'That offer has already gone.'
 }
 
 /** WHAT THE TRIP COSTS THE FAMILY – the scholarship applied to the calendar's full fare.
@@ -3497,13 +3670,43 @@ function pruneResults(world: WorldState): void {
   world.results = world.results.filter((r) => world.week - r.week <= RESULTS_WINDOW)
 }
 
+// ⚠ HER MATCHES ARE PRUNED LAST, AND THE RADAR IS WHY (31.07).
+//
+// `radarViewOf` builds the radar's whole evidence base by scraping `world.events` for her own
+// competitive match records - and this function trims that feed BY COUNT, oldest-first. Those two
+// facts together make an undocumented coupling with teeth: **every non-match row any feature adds
+// permanently displaces one of her matches from the window `axisEvidence` measures over.** The
+// offers slice found it the expensive way - one extra row per season pushed the radar's worst fog
+// re-widening from 0.36 to 0.64 against a 0.5 bound - and designed around it rather than into it.
+//
+// Designing around it does not scale, because the pressure is not the new feature. Measured on a
+// career that plays no tournaments at all, the retained feed is 217 expense + 168 income rows out
+// of 400: the window the radar reads is **overwhelmingly bookkeeping**. Money rows accrue every
+// single week of a career; her matches accrue only on the weeks she competes. Left alone, the
+// arithmetic guarantees that the longer a career runs the less of her tennis the radar can see -
+// which is the exact opposite of what a confidence model is supposed to do.
+//
+// So the budget is unchanged and only the ORDER OF SACRIFICE moves: milestones first (they always
+// were), then her competitive matches, then everything else. The cap still bites at the same size,
+// the feed is still bounded, and a feature that writes to the feed can no longer quietly cost the
+// radar its evidence. A practice friendly is deliberately NOT protected - the radar ignores
+// friendlies by design (R11-2), so protecting one would spend the budget on a row it will not read.
+function isRadarEvidence(e: WorldEvent): boolean {
+  return e.match !== undefined && !e.friendly && (e.match.aId === KID_ID || e.match.bId === KID_ID)
+}
+
 function pruneEvents(world: WorldState): void {
   if (world.events.length <= EVENTS_CAP) return
   const kept = world.events.filter((e) => e.keep)
-  const rest = world.events.filter((e) => !e.keep)
+  const evidence = world.events.filter((e) => !e.keep && isRadarEvidence(e))
+  const rest = world.events.filter((e) => !e.keep && !isRadarEvidence(e))
   const overflow = world.events.length - EVENTS_CAP
-  const trimmed = overflow >= rest.length ? [] : rest.slice(overflow)
-  world.events = [...kept, ...trimmed].sort((a, b) => a.id - b.id)
+  // Ordinary rows go first. Only if dropping every one of them is still not enough does the trim
+  // reach her matches, oldest-first as before.
+  const restTrimmed = overflow >= rest.length ? [] : rest.slice(overflow)
+  const stillOver = Math.max(0, overflow - rest.length)
+  const evidenceTrimmed = stillOver >= evidence.length ? [] : evidence.slice(stillOver)
+  world.events = [...kept, ...evidenceTrimmed, ...restTrimmed].sort((a, b) => a.id - b.id)
 }
 
 // Drop finance-ledger weeks older than the 60-week trailing window (retain week >= week - 59).
@@ -3665,6 +3868,10 @@ export function createWorld(
     // something doing it.
     knock: null,
     knockHistory: [],
+    // v32: nobody has written to her yet, and nobody can until she has put a season in front of
+    // them. The first review is the season boundary at week 52 - the same moment the academy makes
+    // up its mind, and for the same reason.
+    offers: [],
     milestones: [],
     internationalEntryWeeks: [],
   }
@@ -3787,6 +3994,22 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         below that reads it – `injuryTau` at step 1c most of all – must see the same answer for
   //         the whole week. ZERO draws.
   expireKnock(world)
+
+  // 0a0-inbox (v32). ⚠ AND A LETTER LEFT TOO LONG IS GONE. The window is the feature, not a courtesy
+  //         (docs/specs/offers-and-the-inbox.md §2): an offer past its deadline lapses, whether or not
+  //         the parent ever opened it, and the inbox dot goes out on its own when the last one does.
+  //         Beside `expireKnock` because it is the same kind of step - a deadline the world keeps for
+  //         the player rather than a decision it makes for him - and ZERO draws, so it is safe this
+  //         far up the tick.
+  //
+  // ⚠ AND IT DELIBERATELY WRITES NOTHING IN THE FEED, which is the one place this slice had to give
+  // something up. See the note on `reviewLocalSponsor` for the measurement: a non-match event row
+  // permanently displaces a MATCH from the 400-row cap, and the radar's estimate is measured over the
+  // matches that window still holds. So the whole inbox is held to the same feed budget as the cheque
+  // it replaced - one row per season boundary and not one more - and an expiry is carried by the two
+  // surfaces that already carry it truthfully: the dot goes out, and the letter itself says "Expired"
+  // in the inbox for as long as the career lasts.
+  expireOffers(world.offers, world.week)
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)
@@ -4988,6 +5211,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // objects `finalizeTournament` pushes onto. The snapshot is a message across the worker
     // boundary and must never be a live view of engine state.
     trophiesByTier: copyTrophyLedger(world),
+    // v32: THE INBOX, copied one level deep for the same reason the cabinet above is - the snapshot
+    // crosses the worker boundary and must never be a live view of engine state. `terms` is copied
+    // too, because a screen holding the engine's own terms object could mutate the contract it is
+    // rendering. (`Offer` is flat apart from `terms`, so two spreads is the whole of it.)
+    offers: world.offers.map((o) => ({ ...o, terms: { ...o.terms } })),
+    // ...AND THE DOT, DECIDED HERE. It asserts one FACT - an offer is open and its deadline has not
+    // passed - exactly as the bell's dot asserts that the week put something in the feed. It is never
+    // "unread": the engine cannot know what the player has looked at, and neither can this.
+    offerOpen: hasLiveOffer(world.offers, world.week),
     // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
     // surfacing them is derivation, not schema. THE TOTAL, both ladders; `seasonRecord` below is the
     // same matches told apart, and the two always agree because finalizeTournament writes both.

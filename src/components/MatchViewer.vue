@@ -15,6 +15,7 @@ import { initSfx, playSfx, primeSfx } from '../audio/sfx'
 import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
 import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
+import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'
 import { KID_ID } from '../engine/world'
 import Card from './ui/Card.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
@@ -117,6 +118,15 @@ const finished = ref(false)
 const displayedPointIndex = ref(-1)
 /** Server of the point currently in flight (live, updates as soon as it starts). */
 const liveServer = ref<Side | null>(null)
+/**
+ * THE SPEED OF THE SERVE CURRENTLY BEING TALKED ABOUT, and which side struck it (owner, 31.07:
+ * «а справа и слева, в зависимости от того, кто подает, будем скорость подачи писать - это будет
+ * топ»). Null when there is no serve to talk about - see `serveReadingFor` for the rule.
+ *
+ * `side` is the side that STRUCK it, not `liveServer`, so the reading can never end up under the
+ * wrong player: both come off the same point, but only this one comes off the shot itself.
+ */
+const liveServeSpeed = ref<StruckServe | null>(null)
 
 // --- playback clock + timeline walk (plain, non-reactive: read only inside the
 // rAF frame/render loop, never in the template) --------------------------------
@@ -170,6 +180,71 @@ function currentShotContext(): { hitter: Side; target: CourtPoint } | null {
   const shot = props.match.points[currentEvent.pointIndex]?.rally.shots[currentEvent.shotIndex]
   if (!shot) return null
   return { hitter: shot.by, target: shot.bounce }
+}
+
+// --- 31.07: THE SERVE SPEED, LIVE, AT THE SERVER'S END OF THE RUN-OFF BAND ----------------------
+//
+// Owner, after playing: «а справа и слева, в зависимости от того, кто подает, будем скорость подачи
+// писать - это будет топ».
+//
+// ⚠ THE NUMBER IS NOT COMPUTED HERE. `serveSpeed.pointServeSpeeds` is the one place the per-point
+// speed stream is seeded and read, and the box score's "Max serve" row goes through the same call -
+// so the reading on the court and the reading in the stats table are one number by construction.
+// Re-deriving it in this file, however carefully, is how two readings of one serve come to disagree,
+// and that is worse than not showing it at all.
+//
+/**
+ * HOW LONG THE READING STAYS UP: the serve, and the reply to it.
+ *
+ * The two failure modes are both real and they pull opposite ways. Leave it up for the whole point
+ * and a twenty-shot rally ends with a stale number sitting under the court, as if it described the
+ * ball currently in play. Take it down when the ball is struck and it is a 0.55s flash at ×1 - a
+ * quarter of a second at ×2, which is the speed the viewer opens on - and a reading nobody can
+ * actually read is decoration.
+ *
+ * So it lives for the serve and for the answer to it - "serve +1", which is the phrase tennis
+ * already has for exactly this window. TWO event kinds carry it and everything else is nothing:
+ *
+ *   * a SHOT: the last serve struck at or before it, if that serve is this shot or the one before
+ *     it. The reply is the last moment the serve is still the thing that happened; from the third
+ *     strike on it is a rally, and the number is history.
+ *   * the point's own POINT-END beat, judged the same way against the shot the point ended on. This
+ *     is the half that saves the short points: an ace, a service winner and a double fault ARE one
+ *     or two shots long, so without it they would be the only points whose reading really did flash.
+ *
+ * ⚠ AN ALLOW-LIST OF TWO, NOT A DENY-LIST, and that is the point of writing it this way. Everything
+ * else falls out right for free: the point-start, so a reading can never survive into a point it did
+ * not come from and sit under the wrong player when the serve changes hands; the match-end curtain;
+ * and - measured on a live match, which is what sent this back for a second pass - the CEREMONY
+ * beats. A game-ending ace used to hold its number through point-end, the quiet gap, game-end, its
+ * gap and the change of ends: four seconds at ×1, and eight if it also ended a set. That is a
+ * different kind of stale from the twenty-shot rally and just as wrong.
+ *
+ * What is left is ~1s of screen time at ×1 in both cases - 0.55 + 0.42 for a rally, 0.55 + 0.50 for
+ * an ace - so the reading is the same length whatever the point turns out to be, and it is gone well
+ * before the next ball is served either way. Timeline seconds, so it shortens with the playback
+ * speed exactly as the bounce marks (MARK_DECAY) already do.
+ */
+const SERVE_READING_SHOTS = 1
+
+function serveReadingFor(ev: TimelineEvent | null): StruckServe | null {
+  if (!ev || (ev.kind !== 'shot' && ev.kind !== 'point-end')) return null
+  const point = props.match.points[ev.pointIndex]
+  if (!point) return null
+  // Which shot of this point is on screen: the one a 'shot' event names, or - on the point-end beat
+  // - the shot the point ended on.
+  const onScreen = ev.kind === 'shot' && ev.shotIndex !== undefined ? ev.shotIndex : point.rally.shots.length - 1
+  if (onScreen < 0) return null
+  const struck = pointServeSpeeds(props.match.result.seed, point, props.playerA, props.playerB)
+  // The last serve struck at or before that shot - so a point that went to a second serve reports
+  // the second serve, which is the one actually struck (and the model strikes it slower).
+  let latest: StruckServe | null = null
+  for (const s of struck) {
+    if (s.shotIndex > onScreen) break
+    latest = s
+  }
+  if (!latest || onScreen - latest.shotIndex > SERVE_READING_SHOTS) return null
+  return latest
 }
 
 /** Per frame: the shot's hitter recovers toward their own baseline center; the other
@@ -450,8 +525,12 @@ function render(): void {
 
   // 'hit' fires once per shot, exactly when its flight event becomes current (shot start,
   // not flight end).
+  // The serve reading rides the same gate: it is a pure function of the event on screen (see
+  // serveReadingFor), so recomputing it only when that event changes is both exact and free -
+  // once every ~0.4s of playback rather than sixty times a second.
   if (currentEvent !== lastRenderedEvent) {
     if (currentEvent?.kind === 'shot') gatedSfx('hit')
+    liveServeSpeed.value = serveReadingFor(currentEvent)
     lastRenderedEvent = currentEvent
   }
 
@@ -614,6 +693,10 @@ function resetPlayback(startPlaying: boolean): void {
   finished.value = false
   currentEvent = timeline.events[0] ?? null
   lastRenderedEvent = null
+  // Explicit rather than left to render()'s gate: on an EMPTY timeline `currentEvent` and
+  // `lastRenderedEvent` are both null, the gate never fires, and the last run's reading would sit
+  // under a court with no match on it.
+  liveServeSpeed.value = null
   seatsPlayedForRun = false
   // The shouts belong to THE RUN, not to the match: a restart, a "Watch again", a mode change or a
   // new match prop all start the watch over, and what was shouted at the last one is not part of
@@ -813,6 +896,20 @@ const gameScore = computed(() => {
  * element entirely rather than pinning an empty box over the court.
  */
 const scoreReadout = computed(() => (finished.value ? `${pointsPlayed.value} points` : gameScore.value))
+
+/**
+ * WHICH END OF THE RUN-OFF BAND THE SPEED IS WRITTEN AT, or null when there is nothing to write.
+ *
+ * Owner: «справа и слева, в зависимости от того, кто подает». The band is directly under the court
+ * and the court is landscape (viz/geometry: side 0 defends the LEFT half), so an end really is a
+ * left and a right - the same mapping `.ends-labels` already uses one row further down, through the
+ * same `leftSide`. The reading therefore sits with the player who struck the serve, and crosses the
+ * screen when the serve does: on a change of ends, because the players swapped; on a change of
+ * serve, because the server did.
+ */
+const serveSpeedEnd = computed<'left' | 'right' | null>(() =>
+  liveServeSpeed.value === null ? null : liveServeSpeed.value.side === leftSide.value ? 'left' : 'right',
+)
 
 // --- design I §4a: MOMENTUM ---------------------------------------------------------------
 // The export's "two polylines + a caption" IS the live win probability we already compute per
@@ -1104,17 +1201,26 @@ function servePct(side: Side): number {
           <WeatherPlate v-if="temperatureC != null" :temperature-c="temperatureC" :size="13" />
         </div>
 
-        <!-- ===== THE SCORE COUNTER (owner, 31.07: «move the score counter up so it sits directly
+        <!-- ===== THE BOTTOM RUN-OFF BAND: SPEED · SCORE · SPEED =============================
+             The score counter came here on 31.07 («move the score counter up so it sits directly
              under the court, positioned the way the weather element is, but at the bottom edge -
-             this buys back some vertical space») ==========================================
-             It used to be the right-hand half of a whole row of its own under the player rows, whose
-             left-hand half was the serve pill this round removes - so with the pill gone the row was
-             a full line of panel height carrying one short reading. Here it costs nothing at all: the
-             bottom run-off band is already drawn, already empty, and already off the playing surface
-             (29.07, the rule the badge and the weather live by). Same right inset as the row above,
-             so the two right-hand readings share one column; `bottom` mirrors that row's `top`, so
-             the two bands are used symmetrically. What it says is unchanged - see `scoreReadout`. -->
-        <span v-if="scoreReadout" class="mv-score num">{{ scoreReadout }}</span>
+             this buys back some vertical space»), pinned to the band's right end. It is CENTRED now,
+             and the two ends carry the serve speed, at the end of whoever struck it (owner, after
+             playing: the score in the middle, the serve speed left and right depending on who is
+             serving). The band itself is unchanged - already drawn, already empty, already off the
+             playing surface, which is the 29.07 rule the Live badge and the weather live by too.
+             Three fixed grid columns rather than a flex row, because the score has to be centred on
+             the COURT and not on whatever is left after the speed: `1fr auto 1fr` centres the middle
+             column no matter which end is occupied, and only one end ever is. See `.mv-runoff`. -->
+        <div class="mv-runoff">
+          <!-- ONE element that moves between the two end columns, not two that take turns being
+               hidden: the class IS the end (see `.mv-speed.left` / `.mv-speed.right`), so there is
+               one piece of markup and one place a future change to the reading has to be made. -->
+          <span v-if="serveSpeedEnd" class="mv-speed num" :class="serveSpeedEnd"
+            >{{ liveServeSpeed?.kmh }}<i class="mv-speed-unit">km/h</i></span
+          >
+          <span v-if="scoreReadout" class="mv-score num">{{ scoreReadout }}</span>
+        </div>
       </div>
 
       <!-- Round-4 item 1: who stands at which END right now, and who is serving. The panel's own
@@ -1503,25 +1609,100 @@ function servePct(side: Side): number {
   }
 }
 
-/* THE SCORE COUNTER, IN THE BOTTOM RUN-OFF BAND (owner, 31.07: «move the score counter up so it sits
-   directly under the court, positioned the way the weather element is, but at the bottom edge - this
-   buys back some vertical space»).
-   "The way the weather element is" is taken literally and structurally: the same 10px right inset, so
-   the two right-hand readings stand in one column, and `bottom: 6px` mirroring `.mv-chrome`'s
-   `top: 6px`, so the two run-off bands are used identically. The bands are symmetric by construction
-   (see CSS_H's note) and the badge's arithmetic applies unchanged here - ~19px of furniture in ~34px
-   of band on a 375pt phone - so nothing here can reach the playing surface either.
-   Bare rather than plated, like the weather and unlike the Live badge: it is a READING, and the badge
-   wears a plate because it is a status. Same size and weight the deleted row gave it. */
-.mv-score {
+/* THE BOTTOM RUN-OFF BAND'S ROW: SPEED · SCORE · SPEED.
+   The score arrived here on 31.07 («move the score counter up so it sits directly under the court,
+   positioned the way the weather element is, but at the bottom edge - this buys back some vertical
+   space»), at the band's right end. The owner then asked, after playing, for the score in the MIDDLE
+   and the serve speed at the ends: «этот счет сета ... поставим посередине, а справа и слева, в
+   зависимости от того, кто подает, будем скорость подачи писать».
+   The band is untouched: `bottom: 6px` still mirrors `.mv-chrome`'s `top: 6px`, so the two run-off
+   bands are still used identically, and the badge's arithmetic still applies - ~19px of furniture in
+   the ~34px of band a 375pt phone draws (see CSS_H, and the symmetry assertion in
+   tests/screen-i-live-match.test.ts), so nothing here reaches the playing surface either.
+   The inset is the counter's own 10px, on BOTH sides. Measured at 375pt, the 8px left / 10px right
+   pair the top row uses put the score 1px off the court's centre line - invisible, but "posередине"
+   is cheap to make exactly true and there is nothing to trade it against: the top row's 8px belongs
+   to the Live badge, which is a PLATE, so its text actually starts at 8 + 9 = 17px and the left end
+   of this band was never in a column with it anyway. Two bare readings, one inset, an exact middle.
+
+   ⚠ GRID, NOT FLEX, AND THE TWO EDGE COLUMNS ARE `minmax(0, 1fr)`. Both halves are load-bearing:
+     * `1fr auto 1fr` centres the middle column on the COURT. `space-between` would centre the score
+       on whatever space the speed left over, so it would jump sideways every time a serve landed and
+       jump back when the reading cleared - and only ONE end is ever occupied, so it would be off
+       centre nearly all the time.
+     * `minmax(0, 1fr)` (rather than a bare `1fr`, whose floor is min-content) is what makes a
+       collision impossible instead of merely unlikely. A three-digit speed reads ~52px at 12px and
+       the widest score the band can hold is "196 points" at ~85px, which is ~205px of a ~279px band
+       on a 375pt phone - fine, but the guarantee should not rest on that sum. With a zero floor the
+       EDGE column is the one that gives, and `.mv-speed`'s `nowrap` + `clip` means it loses its tail
+       rather than pushing the score off centre or sliding under it.
+   `pointer-events: none` for the same reason `.mv-chrome` has it: this is a full-width box over the
+   court and none of it is a control, so the dead space between the readings must not swallow taps. */
+.mv-runoff {
   position: absolute;
+  left: 10px;
   right: 10px;
   bottom: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* Bare rather than plated, like the weather and unlike the Live badge: it is a READING, and the badge
+   wears a plate because it is a status. Same size and weight the deleted serve row gave it.
+   The explicit `grid-column` is not decoration: the score is dropped entirely before the first point
+   lands (`scoreReadout` is '' there) and each speed only exists at its own end, so auto-placement
+   would slide whatever survives into column 1 and put a lone reading under the middle of the court. */
+.mv-score {
+  grid-column: 2;
+  text-align: center;
   font-size: 15px;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.01em;
   color: var(--text);
+}
+
+/* THE SERVE SPEED, AT THE END OF WHOEVER STRUCK IT.
+   Smaller than the score on purpose: the score is what the player is following and the speed is the
+   colour commentary next to it, so a 15px speed at both ends would give the band three equal
+   readings and no subject. 12px also keeps the widest possible reading ("183 km/h" - the model's
+   plateau plus a 90 serve plus the jitter band) comfortably inside its column.
+   `nowrap` + `clip` so the reading can never wrap into the playing surface above it or spill across
+   the score; with the zero-floor column above, clipping is what a too-narrow phone does instead of
+   colliding. */
+.mv-speed {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+}
+
+.mv-speed.left {
+  grid-column: 1;
+  text-align: left;
+}
+
+.mv-speed.right {
+  grid-column: 3;
+  text-align: right;
+}
+
+/* The unit, muted and a shade smaller: km/h is the same three characters on every serve, so it is
+   the label and the number is the reading. `<i>` un-italicised, the same way `.mv-live-dot` uses one
+   as a bare decorative box. */
+.mv-speed-unit {
+  margin-left: 3px;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 /* Round-4 item 1's ends row, now court chrome inside the panel.

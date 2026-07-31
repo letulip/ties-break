@@ -60,12 +60,22 @@ export interface DayCrossPace {
  *  The holds are ~1/5 of the sweep in both, so a pause is legible at either pace without either
  *  turning into a stop. */
 export const DAY_CROSS_PACE: Record<DayCrossPaceId, DayCrossPace> = {
-  brisk: { sweepMs: 2000, holdMs: 420 },
+  // ⚠ 2000 -> 3000 (owner, 31.07, after playing): «настройка Pace в 2 секунды выглядит ну слишком
+  // быстро, давай сделаем хотя бы 3 так будет оптимально и прочитать и прочувствовать».
+  //
+  // The note above argued 2s from arithmetic - fifty-two sweeps a season, so the gentle pace spends
+  // about four minutes a season on it - and that arithmetic is still right about the CEILING. What
+  // it got wrong is the floor: it optimised for the cost of the animation and never asked whether
+  // the animation had time to be READ. Seven days are struck out in that window, one of which may
+  // hold a beat; at 2s a day gets under 300ms, which is a flicker rather than a moment. 3s buys
+  // ~430ms a day and costs 52 seconds a season. `gentle` stays at 5 for whoever wants it slower,
+  // which is the owner's own framing: «5 оставим для тех, кто любит по-медленнее».
+  brisk: { sweepMs: 3000, holdMs: 620 },
   gentle: { sweepMs: 5000, holdMs: 900 },
 }
 
 export const DAY_CROSS_PACE_LABEL: Record<DayCrossPaceId, string> = {
-  brisk: 'Brisk 2s',
+  brisk: 'Brisk 3s',
   gentle: 'Gentle 5s',
 }
 

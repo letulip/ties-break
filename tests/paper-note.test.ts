@@ -156,18 +156,48 @@ describe('a caller styles the wrapper, and reaches the paper through :deep', () 
 
   const SITES = VUE.filter((p) => p !== PAPER && callers(read(p)).length > 0)
 
-  it('the five call sites are still five – a sixth has to read this file', () => {
+  it('the six call sites are still six – a seventh has to read this file', () => {
     // Vacuous-truth insurance, and a doorbell: PaperNote is shared and the wrapper changed what a
     // class on it means, so a new caller should arrive having read why. The calendar's fridge note
     // is the fifth, and it arrived that way: it puts its margin on the wrapper and its inset on the
     // sheet, which is the split this file exists to keep.
+    //
+    // ⚠ RE-AIMED FROM FIVE TO SIX, NOT WEAKENED (31.07, the offers inbox). The doorbell rang and the
+    // sixth caller came through it. `OfferLetter.vue` is the sponsor's letter, and it is the first
+    // caller that is a PAGE rather than a scrap - it asks for `size="letter"`, which is the one thing
+    // the component genuinely did not have, and it asks for NONE of `tape` / `torn` / `marginRule`,
+    // which is the whole point of the spec's §3: a letter is what a PaperNote already is when you
+    // stop asking it for things. It reaches the sheet through `:deep` like the other five, so the
+    // sweep below covers it with no exception.
     expect(SITES.map(rel)).toEqual([
+      'components/OfferLetter.vue',
       'components/SeasonSummaryDialog.vue',
       'components/WeekRecapCard.vue',
       'components/screens/CalendarScreen.vue',
       'components/screens/KidScreen.vue',
       'components/screens/MoneyScreen.vue',
     ])
+  })
+
+  it('⚠ THE LETTER DOES NOT TILT, and it is the one caller that must not', () => {
+    // docs/specs/offers-and-the-inbox.md §3. Every other piece of paper in this game is laid down
+    // «всегда с небольшим наклоном и тенью», and that is right for an ARTEFACT - a memory, a receipt,
+    // a note dropped on a surface. A letter you are deciding on is a letter you are HOLDING, square
+    // to the reader; the tilt is exactly what makes paper read as FOUND rather than as addressed to
+    // you. This is pinned mechanically because the spec predicted the failure in words: "otherwise
+    // the next person will 'fix' it back to the house angle".
+    // ⚠ COMMENTS ARE NOT CODE, the same `codeOf` discipline the top of this file keeps – and here it
+    // is load-bearing rather than tidy: the letter's own header QUOTES `<PaperNote>` while explaining
+    // why the tilt is zero, so a raw scan finds the prose before it finds the markup.
+    const letter = codeOf(read(join(SRC, 'components/OfferLetter.vue')))
+    const tag = letter.slice(letter.indexOf('<PaperNote'), letter.indexOf('>', letter.indexOf('<PaperNote')))
+    expect(tag, 'the letter is a page, so it takes the letter size').toContain('size="letter"')
+    expect(tag, 'the letter grew the house tilt').toMatch(/:tilt="0"/)
+    // ...and it asks for none of the three scrap treatments, because a sponsor does not tape his
+    // letter to your fridge, tear it off a pad, or write it on an exercise book.
+    for (const prop of ['tape', 'torn', 'marginRule', 'margin-rule']) {
+      expect(tag, `the letter asked for ${prop}`).not.toContain(prop)
+    }
   })
 
   it('no caller sets a paper property on the wrapper', () => {

@@ -2702,6 +2702,68 @@ tr.kid-row td {
   background: var(--accent);
 }
 
+/* --- THE TROPHY FLYING TO THE CABINET (31.07, the podium slice) -----------------------------------
+   The owner: «Можно даже анимацию сделать "добавления трофея в раздел трофеев" с точечкой зеленой по
+   итогу».
+
+   IT LIVES IN THE SHEET RATHER THAN IN A SCREEN because it crosses two of them: the trophy takes off
+   from the finale poster inside `TournamentFlow`'s takeover and lands on the tab bar, which is the
+   shell's. `App.vue` has no <style> block by design, and this rule's neighbour is the `.tab-dot`
+   above it — the dot is what the flight is FOR.
+
+   ⚠ THE DOT IT LEAVES BEHIND IS THE SAME `.tab-dot` AS SEASON'S AND HOME'S, deliberately: same class,
+   same 7px, same `--accent`. A bespoke arrival animation on one of three dots would be a private
+   idiom wearing the shared vocabulary's clothes. The flight is the animation; the dot is the fact.
+
+   ⚠ REDUCED MOTION NEEDS NO RULE HERE, and that is not an oversight. The element is never mounted
+   under it (`armTrophyFlight` refuses in script — the ConfettiBurst rule, because an `animation:
+   none` variant would still mount an image and leave it lying over the bar). The dot appears anyway,
+   immediately: less motion is not less information. */
+.trophy-flight {
+  /* Set per flight by App.vue's style binding. Declared here as well so the element is INERT rather
+     than broken if it is ever handed nothing — a trophy that does not move is a shrug, a trophy
+     translated by an unresolved property is an asset that vanishes — and so every `var()` below
+     resolves for tests/design-tokens.test.ts rule A without a fallback at each point of use. */
+  --trophy-dx: 0px;
+  --trophy-dy: 0px;
+  --trophy-scale: 1;
+  /* ⚠ MUST MATCH `TROPHY_FLIGHT_MS` in src/composables/trophyArrival.ts. That constant decides when
+     the tab dot is released; this one decides when the trophy actually gets there. If they drift
+     apart the dot lands before the trophy does, which is worse than not animating at all. */
+  --trophy-flight-dur: 720ms;
+  position: fixed;
+  /* Over the tab bar (40) and over the takeover it is leaving (55), under anything modal (60). The
+     overlay unmounts in the same tick the flight starts, so the one frame they may share is a frame
+     in which the trophy should be seen coming OUT of the poster. */
+  z-index: 56;
+  object-fit: contain;
+  pointer-events: none;
+  animation: tb-trophy-flight var(--trophy-flight-dur) cubic-bezier(0.36, 0, 0.66, 1) forwards;
+}
+
+/* The arc. At 55% of the time it is 58% of the way across but only 34% of the way down, so the path
+   bows above the straight line and reads as a lob rather than a slide — the same reason the confetti
+   spreads its start delays: a rigid, linear motion reads as a UI element moving, not an object being
+   put somewhere. The scale meets it half way, and the fade is spent entirely in the last eighth, so
+   the cup is still solid when it reaches the tab and disappears INTO it. */
+@keyframes tb-trophy-flight {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+  55% {
+    transform: translate3d(calc(var(--trophy-dx) * 0.58), calc(var(--trophy-dy) * 0.34), 0)
+      scale(calc((1 + var(--trophy-scale)) / 2));
+  }
+  88% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(var(--trophy-dx), var(--trophy-dy), 0) scale(var(--trophy-scale));
+    opacity: 0;
+  }
+}
+
 /* --- Round 5: onboarding coach-mark tour -------------------------------------- */
 
 .coach-tour {

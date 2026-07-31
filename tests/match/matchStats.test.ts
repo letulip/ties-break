@@ -6,9 +6,11 @@ import type { MatchOptions, MatchPlayer, Surface } from '../../src/engine/match/
 import {
   expectedServeSpeed,
   LEGACY_SNAPSHOT_AGE,
+  pointServeSpeeds,
   SECOND_SERVE_DROP,
   SPEED_JITTER,
 } from '../../src/engine/match/serveSpeed'
+import type { Side } from '../../src/engine/match/types'
 
 function annotate(seed: string, a: MatchPlayer, b: MatchPlayer, surface: Surface = 'hard') {
   const opts: MatchOptions = { surface, tour: 'wta', seed }
@@ -122,6 +124,60 @@ describe('computeMatchStats', () => {
     // the reason SPEED_PER_SKILL and the logistic's steepness are what they are.
     expect(expectedServeSpeed(14, 40)).toBeCloseTo(117, 0)
     expect(expectedServeSpeed(19, 75)).toBeCloseTo(161, 0)
+  })
+
+  // ⚠ THE PIN THE COURT SCREEN'S LIVE SERVE SPEED RESTS ON (owner, 31.07, after playing: the score
+  // centred under the court and «в зависимости от того, кто подает, будем скорость подачи писать»).
+  //
+  // That reading is the SECOND reader of this number. The first is the "Max serve" row of the box
+  // score right below it, and a live 158 followed a click later by a max of 161 for a match whose
+  // fastest serve was that one is the kind of disagreement that makes a player stop trusting every
+  // other number on the screen too.
+  //
+  // They cannot disagree because there is one loop - `pointServeSpeeds` - and both call it. This test
+  // is what makes that claim checkable rather than architectural: it re-derives the box score's whole
+  // serve-speed block from the per-point readings the VIEWER walks, and demands the two be equal.
+  // A second stream, a changed draw order, or a serve counted twice all fail here.
+  it('the per-point readings and the box score are one number: avg/max re-derive exactly', () => {
+    const a = P({ id: 'a', name: 'A', serve: 71, age: 15.6 })
+    const b = P({ id: 'b', name: 'B', serve: 44, ret: 58 }) // no age -> LEGACY_SNAPSHOT_AGE
+    for (const seed of ['agree-1', 'agree-2', 'agree-3']) {
+      const { annotated } = annotate(seed, a, b)
+      const box = computeMatchStats(annotated, a, b)
+
+      const sum: [number, number] = [0, 0]
+      const count: [number, number] = [0, 0]
+      const max: [number, number] = [0, 0]
+      let serves = 0
+      let seconds = 0
+      for (const point of annotated.points) {
+        const struck = pointServeSpeeds(annotated.result.seed, point, a, b)
+        // Every serve SHOT in the point is read exactly once, in strike order, and nothing else is.
+        const serveShots = point.rally.shots
+          .map((s, i) => ({ s, i }))
+          .filter(({ s }) => s.kind === 'serve1' || s.kind === 'serve2')
+        expect(struck.map((r) => r.shotIndex)).toEqual(serveShots.map(({ i }) => i))
+        expect(struck.map((r) => r.side)).toEqual(serveShots.map(({ s }) => s.by))
+        expect(struck.map((r) => r.secondServe)).toEqual(serveShots.map(({ s }) => s.kind === 'serve2'))
+        for (const r of struck) {
+          sum[r.side] += r.kmh
+          count[r.side]++
+          if (r.kmh > max[r.side]) max[r.side] = r.kmh
+          serves++
+          if (r.secondServe) seconds++
+        }
+        // Re-reading a point is free of side effects on the stream - the viewer looks the same point
+        // up on every frame the serve is on screen, so this is the property that makes that safe.
+        expect(pointServeSpeeds(annotated.result.seed, point, a, b)).toEqual(struck)
+      }
+
+      const avg = (side: Side): number => (count[side] ? Math.round(sum[side] / count[side]) : 0)
+      expect(box.serveSpeed.max).toEqual(max)
+      expect(box.serveSpeed.avg).toEqual([avg(0), avg(1)])
+      // The fixture has to actually exercise both branches, or "they agree" is a claim about nothing.
+      expect(serves).toBeGreaterThan(annotated.points.length) // some points went to a second serve
+      expect(seconds).toBeGreaterThan(0)
+    }
   })
 
   it('duration estimate is totalPoints * 42 s formatted h:mm', () => {
