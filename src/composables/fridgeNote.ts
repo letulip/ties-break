@@ -45,6 +45,31 @@
 // What that buys is the same thing a stream would: the note is STABLE for a given week. It does not
 // reshuffle on a re-render, on a tab switch, or after a reload, which matters because a scrap of
 // paper that changes its mind every time you look at it is not a scrap of paper.
+//
+// -------------------------------------------------------------------------------------------------
+// ⚠ AND ON A WEEK WITH A BIG FACT IN IT, THE SCRAP MAY SPEAK TO THAT FACT (owner, 31.07)
+// -------------------------------------------------------------------------------------------------
+// «и записочки в духе "удачи на экзамене" или "держим за тебя кулачки"».
+//
+// ⚠ THIS DOES NOT REVERSE THE RULING ABOVE, AND THE DIFFERENCE IS THE WHOLE POINT. The domestic pool
+// stays unlicensed and stays the default: "don't forget the rain jacket" on a week she goes nowhere
+// is fine, because a note about the household asserts nothing about the week. What is added is a
+// small layer ON TOP - two sub-pools, keyed to a week that HAS something in it - and it follows from
+// the honesty pin rather than being an exception to it:
+//
+//   THE PIN SAYS A CLAIM MAY NOT BE FALSE. It does not say a note may not make one. "Good luck
+//   tomorrow!" is forbidden on an ordinary training week because there is nothing to wish her luck
+//   for; on the week she sits her exams, or the week she is away at a tournament, it is simply true.
+//
+// So the split is: the DOMESTIC pool may never claim anything (which is why its vocabulary sweep in
+// tests/calendar-grid.test.ts can be a word list), and the two week pools may claim exactly the one
+// fact their week already contains and nothing else. The sub-pools are therefore EXEMPT from that
+// sweep by design, and the test states the exemption instead of loosening the sweep - a pool that
+// quietly stopped being swept is how "Good luck tomorrow!" gets back onto an ordinary week.
+//
+// WHICH WEEK GETS WHICH POOL is not decided here: the screen knows what kind of week it is drawing
+// and maps it (CalendarScreen's `NOTE_MOOD`), so this file needs no engine facts and keeps its "it
+// imports nothing at all" property.
 
 /** THE POOL. Household noise, in a parent's hand: chores, small kindnesses, the ordinary business of
  *  a family. Player copy rules in full - short dash "–" and never "—", no Cyrillic.
@@ -105,6 +130,49 @@ export const FRIDGE_NOTES: readonly string[] = [
   'Dentist appointment on the calendar. Do not forget.',
 ]
 
+/** WHICH SCRAP THIS WEEK GETS. `home` is the unlicensed domestic pool and the default for every week
+ *  in a career; the other two are the weeks that have a fact big enough for a parent to mention.
+ *
+ *  ⚠ IT IS A NARROW LIST ON PURPOSE - the owner named exams and tournaments, and those are the two
+ *  facts a note can be sure of BEFORE the week is played. A family week and a layoff are deliberately
+ *  `home`: "enjoy the holiday" is a claim about how the week goes, and a fridge does not know. */
+export type NoteMood = 'home' | 'exam' | 'trip'
+
+/** THE EXAM WEEK'S SCRAPS. «Удачи на экзамене». Every line here is true on the week it is pinned to
+ *  and false on any other, which is exactly why it is a separate pool rather than an addition to the
+ *  one above. Nothing claims a RESULT - a parent can wish her luck; a fridge cannot know the mark. */
+export const EXAM_NOTES: readonly string[] = [
+  'Good luck in the exam. You know this stuff.',
+  'Exam day – eat something first, please.',
+  'Pencil case is by the door. Good luck!',
+  'You have revised enough. Get some sleep.',
+  'Whatever the paper says, we are proud of you.',
+  'Deep breath. Read the question twice.',
+  'Left you a snack for after the exam.',
+  'Good luck today. Text me when it is done.',
+]
+
+/** THE TOURNAMENT WEEK'S SCRAPS. «Держим за тебя кулачки». Same rule, one week over: she IS entered
+ *  and she IS going (the engine's own `arrival` is what makes the week a trip), so a note about the
+ *  trip is true. Nothing here names a round, a result or an opponent - the draw has not been played,
+ *  and the grid beside the paper is under the same rule. */
+export const TRIP_NOTES: readonly string[] = [
+  'Fingers crossed for you. All of us.',
+  'Kit bag is packed. Trainers by the door.',
+  'Have fun out there. That is the whole job.',
+  'We are all thinking of you today.',
+  'Play your game. Nothing else to do.',
+  'Do not forget the charger this time.',
+  'Whatever happens, ice cream on the way home.',
+  'Good luck. Ring us when you get there.',
+]
+
+const POOLS: Record<NoteMood, readonly string[]> = {
+  home: FRIDGE_NOTES,
+  exam: EXAM_NOTES,
+  trip: TRIP_NOTES,
+}
+
 /** A 32-bit FNV-1a with an avalanche finish – local, tiny and deliberately NOT `engine/rng.ts`.
  *
  *  See the header: the sim's RNG is for randomness the sim owns. This is a stable index for a
@@ -124,7 +192,13 @@ export function hash32(text: string): number {
 }
 
 /** The note taped beside a given week's grid. Stable for that (seed, week) forever: the same career
- *  reopened a year later shows the same scrap on the same week. */
-export function fridgeNoteFor(seed: string, week: number): string {
-  return FRIDGE_NOTES[hash32(`${seed}:fridge:${week}`) % FRIDGE_NOTES.length]
+ *  reopened a year later shows the same scrap on the same week.
+ *
+ *  ⚠ THE KEY DOES NOT CARRY THE MOOD, and that is deliberate rather than an oversight: the hash is
+ *  the week's own number, and the mood only chooses which pool the index falls in. So a domestic week
+ *  reads the identical line it read before the sub-pools existed, and no career's scraps were
+ *  reshuffled by adding them. */
+export function fridgeNoteFor(seed: string, week: number, mood: NoteMood = 'home'): string {
+  const pool = POOLS[mood]
+  return pool[hash32(`${seed}:fridge:${week}`) % pool.length]
 }

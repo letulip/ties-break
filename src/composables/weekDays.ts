@@ -288,7 +288,17 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       ...base,
       days: uniform('school', null, 'Exams'),
       title: 'Exams',
-      readout: 'School owns this week – nothing is hers to plan.',
+      // ⚠ IT USED TO SAY «School owns this week – nothing is hers to plan.» AND THE PICTURE NOW
+      // CONTRADICTS IT. The calendar draws the exam fortnight as a grid of hours since 31.07, and the
+      // owner's own reading of that week is that the daily school block breaks up into papers WHILE
+      // the training stands: «расходы на тренера, спарринги и физио всё еще при нас». The engine
+      // agrees and always did - `isExamWeek` gates tournaments and bookings (world.ts) and touches
+      // nothing about training - so "nothing is hers to plan" was only ever true of the ENTRY list,
+      // and the sentence read as though she spent the week at a desk. This says which is which.
+      readout:
+        sessions === 0
+          ? 'Exams this week – no tournaments, and no sessions booked either.'
+          : `Exams this week – no tournaments, but her ${sessions} sessions stand.`,
     }
   }
 

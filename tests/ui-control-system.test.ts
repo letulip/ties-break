@@ -304,6 +304,55 @@ describe('THE ICON IS A COMPONENT (owner 30.07)', () => {
     expect(strays.join('\n')).toBe('')
   })
 
+  // ⚠ THE BUDGET'S CATEGORY GLYPHS ARE THE SAME MECHANISM WITH A DIFFERENT FAILURE MODE, and it had
+  // no gate at all until 31.07. `CAT_ICON_FILE` maps a spending category to a file under
+  // public/icons; the file becomes a CSS mask and the category's own `--cat-*` colour is painted
+  // through it. A name that does not match a file masks to NOTHING - no error, no glyph, an empty
+  // 20px hole beside a row that still has its label and its money. That is precisely the silent
+  // failure this suite exists for, so the map is swept.
+  it('every category glyph the Family Budget names is a file that is really there', () => {
+    const money = readFileSync(join(root, 'src/components/screens/MoneyScreen.vue'), 'utf8')
+    const map = /const CAT_ICON_FILE: Record<string, string> = \{([\s\S]*?)\}/.exec(money)?.[1] ?? ''
+    const rows = [...map.matchAll(/(\w+):\s*'([^']+)'/g)].map((m) => [m[1], m[2]] as const)
+    expect(rows.length, 'CAT_ICON_FILE could not be read').toBeGreaterThanOrEqual(6)
+    for (const [key, file] of rows) {
+      expect(existsSync(join(root, 'public/icons', `${file}.svg`)), `${key} -> ${file}.svg`).toBe(true)
+    }
+    // ...and every one of them is a category the screen actually draws a row for, or the picture is
+    // filed under a name nothing will ever ask for.
+    for (const [key] of rows) {
+      expect(money.includes(`key: '${key}'`) || key === 'income', `${key} is not a row on this screen`).toBe(true)
+    }
+  })
+
+  it('⚠ the fee glyph is filed under `entry`, and NOT under the category its filename names', () => {
+    // THE TRAP IS THE FILENAME. `interest-discount-fee-svgrepo-com.svg` is the picture the owner
+    // asked for on the fees budget - tournament ENTRY fees - and `interest` is a real and different
+    // category in this codebase: R9-1's weekly savings interest, which is INCOME-side and which
+    // MoneyScreen's own `EXPENSE_META` note says must never appear as a spending row. Routing the
+    // file by its name would have created a spending row for an income category, in a table keyed by
+    // category, with nothing to show it had happened.
+    const money = readFileSync(join(root, 'src/components/screens/MoneyScreen.vue'), 'utf8')
+    const map = /const CAT_ICON_FILE: Record<string, string> = \{([\s\S]*?)\}/.exec(money)?.[1] ?? ''
+    expect(map).toContain("entry: 'interest-discount-fee-svgrepo-com'")
+    expect(map, 'the filename routed itself into an income category').not.toMatch(/^\s*interest:/m)
+    // the income category the name belongs to is still excluded from the spending rows entirely
+    expect(money).toContain("Exclude<WorldEventCategory, 'income' | 'sponsor' | 'interest' | 'academy'>")
+  })
+
+  it('a glyph the owner replaced leaves no inline path behind it', () => {
+    // `ICON_PATHS` is keyed by category, so a path nothing renders does not read as dead code - it
+    // reads as a live alternative. One drawing per row, from one place.
+    const money = readFileSync(join(root, 'src/components/screens/MoneyScreen.vue'), 'utf8')
+    const paths = /const ICON_PATHS: Record<string, string\[\]> = \{([\s\S]*?)\n\}/.exec(money)?.[1] ?? ''
+    const files = /const CAT_ICON_FILE: Record<string, string> = \{([\s\S]*?)\}/.exec(money)?.[1] ?? ''
+    for (const [, key] of files.matchAll(/(\w+):\s*'[^']+'/g)) {
+      expect(paths, `${key} has both a file and an inline path`).not.toMatch(new RegExp(`^\\s*${key}:`, 'm'))
+    }
+    // ...and `other` survives, because it is the fallback every unmapped row lands on
+    expect(paths).toMatch(/^\s*other:/m)
+  })
+
   it('AppIcon is the one door to those files, and it takes no colour', () => {
     const icon = readFileSync(join(root, 'src/components/ui/AppIcon.vue'), 'utf8')
     // BASE_URL, not a leading slash: the PWA ships under a sub-path.
