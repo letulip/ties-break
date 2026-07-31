@@ -138,13 +138,14 @@ function hashOf(draws: number[]): string {
 // deeper. Same mechanism as the note above, forty times the scale. Full reasoning at the REF
 // declaration in tests/condition.test.ts.
 //
-// ⚠⚠⚠ kidRank RE-PINNED 164 -> 162 (31.07, fix/no-double-booking). `count` 41550 and `hash`
-// e6b0c709 are AGAIN untouched and re-derived byte-for-byte on this branch - which is what P1's
-// claim is actually about, and the claim is unharmed: no plan, no booking and no amount of money can
-// perturb the main stream, and neither can the new no-double-booking rule, because it draws nothing
-// on any stream. What moved is which juniors end the year in the points once a rival stops playing
-// two tournaments in one week. Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 162 }
+// ⚠⚠ kidRank RE-PINNED 164 -> 154 (31.07, §4.1, the junior age cap). `count` 41550 and `hash`
+// e6b0c709 are UNTOUCHED and re-derived byte-for-byte on this branch, which is what P1 exists to
+// protect and which this slice tested harder than any before it: the age cap genuinely changes the
+// per-event draw COUNT on the J rungs (a J30 field is different people now), and the main stream
+// still does not notice, because every one of those draws comes off the event-scoped
+// `seed:aitour:<id>` / `seed:kidtour:<id>` sub-stream. Full reasoning at the REF declaration in
+// tests/condition.test.ts.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 154 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
