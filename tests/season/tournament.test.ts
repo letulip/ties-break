@@ -8,7 +8,7 @@ import {
   topBandForPercentile,
   JUNIOR_TOUR,
 } from '../../src/engine/season/tournament'
-import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, isTierAgeOpen } from '../../src/engine/season/calendar'
 import { generateCohort } from '../../src/engine/season/cohort'
 import { rngFromSeed } from '../../src/engine/rng'
 import { simulateMatch } from '../../src/engine/match/engine'
@@ -282,8 +282,14 @@ describe('resolveDoubleBookings — a rival cannot be in two of a week\'s draws'
     expect(added.length).toBeGreaterThan(0)
     // exactly the best-standing players who were free – the same tie-break selectEntrants' own two
     // backfills use, so a slot vacated by this rule is filled by the kind of player it would have been
+    // ⚠ RE-AIMED AT THE round-20 MERGE, and the RULE did not move - the definition of "free" did.
+    // `maxAgeYears: 18` landed on the J rungs in the same merge, so `isTierAgeOpen` now refuses a
+    // nineteen-year-old for a J30 the way it always refused a twelve-year-old. The resolver honours
+    // that (it inherits the same predicate); this expectation did not, so it asked for a backfill
+    // list containing players the engine is correct to skip. A player who cannot enter the tier was
+    // never "free" for it - the test was simply written before the ceiling existed.
     const free = cohort
-      .filter((p) => !booked.has(p.id) && !kept.has(p.id))
+      .filter((p) => !booked.has(p.id) && !kept.has(p.id) && isTierAgeOpen(j30.event.tier, p.ageYears))
       .sort((a, b) => pos(a.id) - pos(b.id))
       .slice(0, added.length)
     expect([...added].sort((a, b) => pos(a.id) - pos(b.id)).map((p) => p.id)).toEqual(free.map((p) => p.id))
