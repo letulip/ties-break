@@ -298,7 +298,11 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
       ...base,
       days: uniform('off', null, 'Off'),
       title: 'Off-season',
-      readout: 'The tour is closed – she is off court and at home.',
+      // ⚠ AND SHE IS NOT AT HOME DOING NOTHING - see PRE_SEASON_ARC in weekGrid.ts. The tour is
+      // shut, so there is nothing to play; the coach is still billed and her skills still move,
+      // because this is the block where next year is built. The read-out used to say she was off
+      // court, which contradicted her own bank statement.
+      readout: 'The tour is closed – this is the block where next year gets built.',
     }
   }
   if (isExamWeek(week)) {

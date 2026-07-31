@@ -492,15 +492,39 @@ describe('⚠ the grid is drawn on EVERY week, and only its content differs', ()
     expect(grid.flatMap((d) => d.blocks).some((b) => b.kind === 'school' || b.kind === 'drills')).toBe(false)
   })
 
-  it('a family week has no tennis in it, and is not empty either', () => {
-    for (const [what, grid] of [['booked', family()], ['off-season', offSeason()]] as const) {
-      const blocks = grid.flatMap((d) => d.blocks)
-      // the read-out says "no tennis at all this week" in as many words, so the picture says it too
-      for (const kind of ['drills', 'gym', 'training', 'match', 'matchLong', 'tournament'] as BlockKind[]) {
-        expect(blocks.some((b) => b.kind === kind), `${what} drew ${kind}`).toBe(false)
-      }
-      expect(blocks.some((b) => b.kind === 'vacation'), `${what}: the family's own hours`).toBe(true)
+  // ⚠ RE-AIMED (31.07): THESE ARE TWO DIFFERENT WEEKS AND THE TEST WAS TREATING THEM AS ONE. Both
+  // arrive as the `off` kind, so this looped over a booked family week and the off-season together and
+  // demanded no tennis in either. That was right about the holiday and WRONG ABOUT THE OFF-SEASON,
+  // and wrong in a way the game itself contradicted: `coachWorksThisWeek` stands the coach down for a
+  // booked vacation and for nothing else, and `growWeek` has no off-season branch - so the engine
+  // bills a coach and moves her skills through a week this picture drew as doing nothing. In the real
+  // sport the off-season IS the training block, the hardest physical work of the year, precisely
+  // because there is no tournament to be fresh for.
+  //
+  // So the rule splits along the line the game already draws. Neither half is weakened: the holiday
+  // still may not draw one minute of sport, and the off-season now has to draw some, because a week
+  // that bills a coach and shows an empty court is the screen contradicting the ledger.
+  it('a booked family week has no tennis in it, and is not empty either', () => {
+    const blocks = family().flatMap((d) => d.blocks)
+    for (const kind of ['drills', 'gym', 'training', 'trainingAlt', 'match', 'matchLong', 'tournament'] as BlockKind[]) {
+      expect(blocks.some((b) => b.kind === kind), `a booked week drew ${kind}`).toBe(false)
     }
+    expect(blocks.some((b) => b.kind === 'vacation'), "the family's own hours").toBe(true)
+  })
+
+  it('⚠ the OFF-SEASON is the training block, because the coach is billed for it', () => {
+    const blocks = offSeason().flatMap((d) => d.blocks)
+    // Court work and fitness, which is what the bill is for.
+    expect(blocks.some((b) => b.kind === 'training' || b.kind === 'trainingAlt'), 'no court work').toBe(true)
+    expect(blocks.some((b) => b.kind === 'gym'), 'no fitness work').toBe(true)
+    // ...but nothing to PLAY: the tour is shut, so no match and no tournament may appear.
+    for (const kind of ['match', 'matchLong', 'tournament', 'drills'] as BlockKind[]) {
+      expect(blocks.some((b) => b.kind === kind), `the off-season drew ${kind}`).toBe(false)
+    }
+    // No school - it is the holidays - and at least one day genuinely off, because even a pre-season
+    // block has one.
+    expect(blocks.some((b) => b.kind === 'school'), 'the off-season drew school').toBe(false)
+    expect(blocks.some((b) => b.kind === 'rest'), 'a block with no rest day at all').toBe(true)
   })
 
   it('⚠ the exam fortnight breaks school up and KEEPS her sessions – the owner\'s own sentence', () => {

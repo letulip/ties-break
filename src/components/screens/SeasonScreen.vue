@@ -232,7 +232,7 @@ const COACH_FIELD_LINES: Record<FieldStrength, readonly string[]> = {
     'Nothing here she has not seen before.',
   ],
   favourite: [
-    'You should be among the best here.',
+    'She should be among the best here.',
     'She is one of the strongest in this draw.',
     'On paper this is hers to lose.',
     'A field she should be beating.',
