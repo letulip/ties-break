@@ -52,7 +52,8 @@ import { rankLabel } from '../../shared/format'
 // family background lives on the Money screen where it prices things). `PortraitEmotion`, not
 // `AvatarEmotion` - `rehab` joined the faces with ui/art-rehab-sleepy and the Mood tile can wear it
 // for weeks at a time.
-import { LADDER_LABEL, type PlayStyle } from '../../shared/protocol'
+import { LADDER_LABEL, type Milestone, type PlayStyle } from '../../shared/protocol'
+import { TIER_SHORT } from '../../engine/season/calendar'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_LABEL } from '../../engine/coach'
 // U0 - the shared components (docs/specs/ui-components.md). StatRow is the ninth, and it is not
@@ -197,11 +198,22 @@ const coachTierLabel = computed(() =>
 // careers it would be the only thing on the timeline; the year-by-year figures are the Stats
 // screen's season table, and this strip is for the FIRSTS.
 //
-// ⚠ THE DURABLE MILESTONE LEDGER IS NOT ON THE SNAPSHOT. `world.milestones` (a typed
-// `Milestone[]`, schema v18) never prunes, but the Snapshot carries only the trailing 60 events
-// plus the single milestone behind the Memory card - so a first title from four seasons ago can
-// age out of this strip while still being remembered by the engine. Surfacing the ledger is a
-// small engine ask and it is written up in the wave report rather than reached for here.
+// ⚠ THIS STRIP NOW READS THE DURABLE LEDGER, WHICH IS THE WHOLE FIX (owner, 31.07: «в Important
+// moments на экране профиля девочки вообще ничего не происходит. Может этот блок вообще стоит убрать
+// из верстки?»).
+//
+// It should NOT be removed - it had no data, and the reason was a source, not a feature. It used to
+// scrape `snapshot.events` for `type === 'milestone'`. Those events do carry `keep: true`, so
+// `pruneEvents` never touches them in the world - but the snapshot takes `events.slice(-60)`, and
+// that slice is POSITIONAL. Sixty newer rows is a couple of months of play, so a first title from
+// season one drops out of the strip and never comes back, and from then on the block renders exactly
+// two nodes: "Career start" and "Today". Working for a fortnight and then failing silently for ever
+// is worse than never working, because nothing ever tells you.
+//
+// The previous note here diagnosed this correctly and filed the fix as "a small engine ask ...
+// written up in the wave report rather than reached for here". It was never reached for. It is done
+// now: `Snapshot.milestones` carries `world.milestones` whole - v18 state, one row per identity,
+// never pruned - and this reads THAT.
 type MomentIcon = 'start' | 'title' | 'mark' | 'today'
 interface Moment {
   key: string
@@ -210,28 +222,34 @@ interface Moment {
   icon: MomentIcon
   now?: boolean
 }
-/** Short labels for the milestone keys the engine actually fires. A sentence with an emoji in it
- *  (which is what the event's own `text` is) cannot live in a 10px nowrap node. */
-function momentLabel(key: string): string | null {
-  if (key === 'first-title') return 'First title'
-  if (key === 'first-national') return 'First National win'
-  if (key.startsWith('academy-in-')) return 'Academy backing'
-  if (key.startsWith('season-')) return null // see the note above
-  return 'Milestone'
+/** A typed milestone into a label a 10px nowrap node can hold. The ledger's rows carry their tier,
+ *  so a title says WHICH title - "First J30 title" is a moment, "Milestone" is a shrug. */
+function momentLabel(m: Milestone): string | null {
+  const at = m.tier ? TIER_SHORT[m.tier] : null
+  if (m.type === 'title') return at ? `First ${at} title` : 'First title'
+  if (m.type === 'final') return at ? `First ${at} final` : 'First final'
+  if (m.type === 'international') return 'First trip abroad'
+  // Deliberately not shown. An injury IS remembered by the ledger and the diary speaks about it, but
+  // this strip is the four things she has DONE - a hurt ankle between two titles reads as an
+  // achievement in a row of achievements. `season-rank` is excluded for a plainer reason: it fires
+  // every single year, so it would crowd every real first out of a two-slot window within a season.
+  return null
 }
 const moments = computed<Moment[]>(() => {
   const snap = game.snapshot
   if (!snap) return []
   const fired: Moment[] = []
-  for (const e of snap.events) {
-    if (e.type !== 'milestone' || !e.milestoneKey) continue
-    const label = momentLabel(e.milestoneKey)
+  // Oldest first, so `slice(-2)` below really is her two most recent firsts. The ledger is captured
+  // in week order and never re-sorted, but sorting here costs nothing and makes this independent of
+  // that being true for ever.
+  for (const m of [...snap.milestones].sort((a, b) => a.week - b.week)) {
+    const label = momentLabel(m)
     if (!label) continue
     fired.push({
-      key: e.milestoneKey,
+      key: `${m.type}:${m.tier ?? ''}:${m.week}`,
       label,
-      when: weekLabel(e.week),
-      icon: e.milestoneKey === 'first-title' ? 'title' : 'mark',
+      when: weekLabel(m.week),
+      icon: m.type === 'title' ? 'title' : 'mark',
     })
   }
   // Four columns, as the export draws: her first week, the two most recent firsts, and today.

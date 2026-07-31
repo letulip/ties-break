@@ -160,17 +160,22 @@ export interface DiaryWorldView {
   milestones: readonly Milestone[]
   /** a booked family vacation resolved this week */
   vacationWeek: boolean
-  /** W5: ...and WHICH package, for the frame that names it. Non-null on exactly the weeks
-   *  `vacationWeek` is true and the booking is still on file (bookings are retained four trailing
-   *  weeks after they resolve, so the week's own row is always there when its story is told).
+  /** W5: ...and WHICH package. Non-null on exactly the weeks `vacationWeek` is true and the booking
+   *  is still on file (bookings are retained four trailing weeks after they resolve, so the week's
+   *  own row is always there when its story is told).
    *
-   *  ⚠ OPTIONAL, ALONE AMONG THE FIELDS ADDED SINCE R14-2, and the asymmetry is deliberate:
-   *  `trainPct` / `knockChoice` / `knockPart` all feed COPY LICENCES, so a fixture that forgot one
-   *  would silently sweep the wrong space. This one selects a PAINTING and nothing else – no licence
-   *  in either pool reads it – so a view that omits it is a view about the words, and omitting it
-   *  means "no booking on file", which is exactly what `vacations.find()` answers for a week with no
-   *  holiday in it. That world.ts really passes it is pinned in tests/week-scene.test.ts. */
-  vacationPackageId?: string | null
+   *  ⚠ NO LONGER OPTIONAL, AND THE OLD NOTE HERE EXPLAINS EXACTLY WHY IT COULD NOT STAY SO. It read:
+   *  "`trainPct` / `knockChoice` / `knockPart` all feed COPY LICENCES, so a fixture that forgot one
+   *  would silently sweep the wrong space. This one selects a PAINTING and nothing else - no licence
+   *  in either pool reads it - so a view that omits it is a view about the words."
+   *
+   *  That reasoning was right, and it is what changed: the photo and condition pools now license on
+   *  this field, one line per package (owner, 31.07: «куда бы ни поехала ... week recap, ну кроме
+   *  картинки» - the picture was the ONLY thing it moved). So it has joined the class the note
+   *  describes, and it takes that class's rule with it: a fixture that omitted it would still build,
+   *  still pass, and quietly sweep the generic sentence instead of the six new ones. Required.
+   *  That world.ts really passes it is pinned in tests/week-scene.test.ts. */
+  vacationPackageId: string | null
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training
@@ -750,6 +755,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     examsWeek: isExamWeek(week),
     offSeasonWeek: isOffSeasonWeek(week),
     vacationWeek: view.vacationWeek,
+    vacationPackageId: view.vacationPackageId ?? null,
     trainPct: view.trainPct,
     fundsPressure: fundsPressureOf(view.fundsCents),
     freshMilestone,
@@ -1090,11 +1096,54 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', exams: true },
     license: (f) => f.examsWeek && !f.resultFresh && f.emotion === 'norm',
   },
+  // ⚠ ONE CAPTION PER PACKAGE (owner, 31.07: «Со своими итоговыми записками на week recap, а то
+  // сейчас куда бы ни поехала и расписание одинаковое, и week recap, ну кроме картинки»). He is
+  // exactly right about the cause: `vacationPackageId` already reaches the diary and was being used
+  // for the PICTURE alone, so six different weeks were captioned with one sentence.
+  // The generic line below is kept and NARROWED to the case it is actually for - a week whose booking
+  // has aged off the four-week retention, where the save genuinely no longer knows where she went.
   {
     surface: 'photo',
     text: 'A week away. The racquet stayed home.',
     claims: { affect: 'neutral', vacation: true },
-    license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm',
+    license: (f) =>
+      f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && (f.vacationPackageId ?? null) === null,
+  },
+  {
+    surface: 'photo',
+    text: 'Her own bed all week. Half the street in the kitchen.',
+    claims: { affect: 'neutral', vacation: true },
+    license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'staycation',
+  },
+  {
+    surface: 'photo',
+    text: 'Two trains and a bus. She slept on both trains.',
+    claims: { affect: 'neutral', vacation: true },
+    license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'grandma',
+  },
+  {
+    surface: 'photo',
+    text: 'The racquet did not come. The tent did.',
+    claims: { affect: 'neutral', vacation: true },
+    license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'camping',
+  },
+  {
+    surface: 'photo',
+    text: 'Sea, sleep, sun – in that order, every day.',
+    claims: { affect: 'neutral', vacation: true },
+    license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'seaside',
+  },
+  {
+    surface: 'photo',
+    text: 'A week of swimming pools and physio beds.',
+    claims: { affect: 'neutral', vacation: true },
+    license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'resort',
+  },
+  {
+    surface: 'photo',
+    text: 'A clinic full of people who do this for a living.',
+    claims: { affect: 'neutral', vacation: true },
+    license: (f) => f.vacationWeek && !f.resultFresh && f.emotion === 'norm' && f.vacationPackageId === 'elite',
   },
   {
     surface: 'photo',
@@ -1238,11 +1287,52 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     claims: { affect: 'neutral', exams: true },
     license: (f) => f.examsWeek && f.injured === null,
   },
+  // ⚠ AND THE CONDITION NOTE CLIMBS WITH `conditionGain`, WHICH IS THE HALF THAT MAKES THIS HONEST.
+  // The packages are 12 / 14 / 16 / 20 / 25 / 30, so the sentences do not merely differ - they say
+  // more the more the week actually gave her. A staycation that read like the clinic would be the
+  // diary's cardinal sin (a note claiming something the ledger does not support), just quieter.
+  // Generic line narrowed to a booking that has aged off retention, exactly as the photo pool above.
   {
     surface: 'condition',
     text: 'A family week away – she came back lighter.',
     claims: { affect: 'positive', vacation: true },
-    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh,
+    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && (f.vacationPackageId ?? null) === null,
+  },
+  {
+    surface: 'condition',
+    text: 'A week at home – nothing special, and it worked.',
+    claims: { affect: 'positive', vacation: true },
+    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'staycation',
+  },
+  {
+    surface: 'condition',
+    text: "A week at her grandmother's – slow food, slow days, and it shows.",
+    claims: { affect: 'positive', vacation: true },
+    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'grandma',
+  },
+  {
+    surface: 'condition',
+    text: 'A week outdoors – tired legs, clear head.',
+    claims: { affect: 'positive', vacation: true },
+    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'camping',
+  },
+  {
+    surface: 'condition',
+    text: 'A week by the sea, and she slept through most of it.',
+    claims: { affect: 'positive', vacation: true },
+    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'seaside',
+  },
+  {
+    surface: 'condition',
+    text: 'Rest with a programme – she came back moving properly.',
+    claims: { affect: 'positive', vacation: true },
+    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'resort',
+  },
+  {
+    surface: 'condition',
+    text: 'The full programme, and it worked – she came back new.',
+    claims: { affect: 'positive', vacation: true },
+    license: (f) => f.vacationWeek && f.injured === null && !f.resultFresh && f.vacationPackageId === 'elite',
   },
   {
     surface: 'condition',

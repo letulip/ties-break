@@ -1143,6 +1143,15 @@ export interface DiaryFacts {
   examsWeek: boolean
   offSeasonWeek: boolean
   vacationWeek: boolean
+  /** WHICH family package that week was – the catalogue's own id, or null when she was not away (or
+   *  when the booking has aged off the four-week retention and the save no longer knows).
+   *
+   *  ⚠ IT FEEDS COPY LICENCES NOW, which is a change of category rather than a new field: it reached
+   *  the diary from the day the paintings shipped, but only `weekSceneFor` read it, so six different
+   *  holidays were captioned with one sentence (owner, 31.07: «куда бы ни поехала ... week recap, ну
+   *  кроме картинки»). The photo and condition pools now license on it, one line per package, and the
+   *  sentences climb with `conditionGain` so a staycation cannot claim what the clinic delivers. */
+  vacationPackageId: string | null
   /** HOW HARD SHE WORKED THIS WEEK – `plan.train`, the percentage the player set (60 / 75 / 85 on
    *  the presets). W2: the one fact about an ordinary week the diary had no access to, and the only
    *  one that is the PLAYER's decision rather than the world's. Every other field here is something
@@ -1539,6 +1548,16 @@ export interface Snapshot {
    *  note, Memory). Derived at snapshot time – only the milestone ledger behind `memory`
    *  persists (schema v18). */
   diary: DiarySnapshot
+  /** THE DURABLE MILESTONE LEDGER, whole (`world.milestones`, schema v18) – her firsts, one row per
+   *  identity, never pruned.
+   *
+   *  ⚠ IT IS ON THE SNAPSHOT BECAUSE `events` IS THE WRONG PLACE TO READ A PERMANENT FACT FROM.
+   *  `events` is capped at the trailing 60 rows, positionally, so any surface that scrapes a
+   *  milestone out of it works for a couple of months and then silently empties – which is precisely
+   *  what happened to the Kid screen's moments strip. `diary.memory` is not a substitute either: it
+   *  is ONE rotating card, chosen for this week's story, not the list. A surface that wants "what has
+   *  she done so far" reads this. */
+  milestones: readonly Milestone[]
   /** HER LIFE OFF THE COURT: the Personality / School / Friends tiles of screen C, derived in
    *  engine/kidLife.ts from her play style, her age and birth month, and the week's facts. Derived
    *  at snapshot time, persists nothing, bumps no schema. */

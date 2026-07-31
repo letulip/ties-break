@@ -710,3 +710,59 @@ describe('L11 — the whole career still runs (integration smoke)', () => {
     expect(entered.has('j300')).toBe(true)
   })
 })
+
+// =================================================================================================
+// ⚠ THE COACH MAY NOT CONTRADICT THE RING HE IS STANDING NEXT TO
+// =================================================================================================
+//
+// Owner, 31.07: «на карточках турниров иногда попадается "On paper this is hers to lose" при 92% =)
+// и в обратную сторону тоже бывает».
+//
+// The two clauses answer different questions - the ring is her odds against ONE named first-round
+// opponent, the coach's line is banded off the share of the WHOLE field ranked above her - so they
+// can disagree honestly, and on a card with no seam between them the disagreement reads as one
+// sentence contradicting itself. Measured over 150,336 cards (tools/coach-line-drift.ts): 22.5%.
+//
+// The fix is NOT to make one of them lie: both facts are worth having, so the coach says the second
+// one out loud when it cuts against the first. This pins that the mechanism is there, because the
+// alternative - deleting one of the two numbers - is the tempting wrong answer and would pass every
+// other test in this file.
+describe('the tournament card does not argue with itself', () => {
+  const src = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
+  const coach = src.slice(src.indexOf('const RING_COMFORTABLE'), src.indexOf('// U0: the ring'))
+
+  it('there is a seam, and it fires on exactly the two combinations that contradict', () => {
+    // A strong field with a soft opener, and a field she towers over with the one player who beats
+    // her. Both directions, or the "и в обратную сторону" half goes unfixed.
+    expect(coach).toMatch(/strength === 'strong' && chance >= RING_COMFORTABLE/)
+    expect(coach).toMatch(/strength === 'favourite' && chance <= RING_HARD/)
+    expect(coach).toContain('DRAW_CLAUSES.kind')
+    expect(coach).toContain('DRAW_CLAUSES.cruel')
+  })
+
+  it('the seam has VARIETY, like the field lines it joins', () => {
+    // It fires on 22.5% of cards. One wording would be wallpaper inside a season, which is the same
+    // complaint that gave the field lines four wordings each in the first place.
+    const clauses = src.slice(src.indexOf('const DRAW_CLAUSES'), src.indexOf('function coachSays'))
+    expect((clauses.match(/'/g) ?? []).length / 2, 'fewer than three wordings per direction').toBeGreaterThanOrEqual(6)
+  })
+
+  it('hedged wordings are withheld on a card the ring already calls a near-certainty', () => {
+    // The owner's actual sighting, and it is a different fault from the seam: "hers to lose" means
+    // the result is in doubt, and at 92% there is no doubt to hedge. Only 1.8% of cards, and a copy
+    // problem rather than a logic one - so it is fixed by not offering the line, not by a clause.
+    expect(coach).toContain('HEDGED_LINES')
+    expect(coach).toMatch(/chance >= RING_CERTAIN/)
+  })
+
+  it('...and every phrase still comes off the EVENT sub-stream, so a card never changes under him', () => {
+    // The property the original design bought and this must not spend: one tournament, one line, for
+    // ever - and no draw on the MAIN stream.
+    // The salt is a parameter now (`pick(pool, salt)`), so the sub-stream names appear as the
+    // arguments rather than inline in the key - which is the shape, not a weakening of the pin.
+    expect(coach).toMatch(/:\$\{salt\}:/)
+    expect(coach).toContain("'coachsay'")
+    expect(coach).toContain("'coachdraw'")
+    expect(coach).not.toMatch(/Math\.random/)
+  })
+})

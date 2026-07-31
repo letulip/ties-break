@@ -5364,6 +5364,17 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     knock: knockLive(world.knock, world.week) ? world.knock : null,
     knockPrompt: pendingKnock(world) ? buildKnockPrompt(world.knock!, world.seed, world.condition) : null,
     events: world.events.slice(-SNAPSHOT_EVENTS),
+    // ⚠ THE DURABLE LEDGER, WHOLE, and it is here because the 60-event window above is exactly the
+    // wrong source for it. Milestone EVENTS carry `keep: true` so they survive `pruneEvents` in the
+    // world - but `slice(-60)` is positional, so a first title from four seasons ago falls out of the
+    // SNAPSHOT the moment sixty newer rows exist, which is a couple of months of play. The Kid
+    // screen's moments strip was reading the feed and therefore emptied itself permanently (owner,
+    // 31.07: «в Important moments на экране профиля девочки вообще ничего не происходит»); its own
+    // source comment had already diagnosed this and filed the fix as "a small engine ask" rather than
+    // doing it. This is that ask. `world.milestones` is v18 state and never prunes, it is capped by
+    // identity rather than by count (one row per first), and it is tiny - so it ships whole and no
+    // surface has to reconstruct a durable fact from a volatile window ever again.
+    milestones: world.milestones,
     // Category-accurate windows off the persisted ledger (immune to the 60-event cap). season
     // keeps the current MoneyScreen semantics: the current 52-week season block from its first week.
     finance: {

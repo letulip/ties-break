@@ -151,6 +151,10 @@ export interface CalendarWeek {
    *  from what it is handed. This file is the one that legitimately talks to the calendar, so the
    *  answer travels as data. */
   offSeason: boolean
+  /** WHICH family package she is on, when she is on one – the catalogue's own id, or undefined on
+   *  every other week. Carried as data for the same reason `offSeason` is: `weekGrid.ts` may not
+   *  import from the engine, so the composer looks the booking up and the grid only ever reads. */
+  vacationId?: string
   /** Should the days cross themselves out when the week is played? False when another surface owns
    *  the week: a tournament trip has its own flow and its own screens, and a week whose reveal is
    *  already paused is not a week anybody is about to watch pass. */
@@ -282,12 +286,19 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   // 3. THE BOOKINGS the player made on the Season screen.
   const vacation = snap.vacations.find((v) => v.week === week)
   if (vacation) {
-    const label = vacationPackage(vacation.packageId)?.label ?? vacation.packageId
+    const pkg = vacationPackage(vacation.packageId)
+    const label = pkg?.label ?? vacation.packageId
     return {
       ...base,
       days: uniform('off', null, 'Away'),
       title: 'Family week',
-      readout: `${label} – no tennis at all this week.`,
+      // ⚠ THE READOUT SAYS WHAT THIS PARTICULAR WEEK IS NOW. It used to be one sentence for all six
+      // packages, which is the half of the owner's complaint the grid does not cover: «куда бы ни
+      // поехала и расписание одинаковое, и week recap». The package's own blurb is already written,
+      // already in the catalogue and already what the picker showed him when he chose it - so the
+      // week reads back the promise he bought instead of a generic line under six different grids.
+      readout: pkg?.blurb ? `${label} – ${pkg.blurb.charAt(0).toLowerCase()}${pkg.blurb.slice(1)}` : `${label} – no tennis at all this week.`,
+      vacationId: vacation.packageId,
     }
   }
 

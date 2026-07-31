@@ -85,6 +85,7 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     examsWeek: false,
     offSeasonWeek: false,
     vacationWeek: false,
+    vacationPackageId: null,
     trainPct: 75,
     // ⚠ W4 added `knockChoice`/`knockPart` (what a knock is doing to the week). Null here: this
     // fixture is a week with nothing wrong with her, which is what these suites are about.
