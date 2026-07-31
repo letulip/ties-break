@@ -155,21 +155,21 @@ const DAY_SHAPES: Partial<Record<AgeBand, Record<OrdinaryKind, readonly DayBlock
     court: [
       { start: 8, span: 5, kind: 'school', label: 'School' },
       { start: 15, span: 2, kind: 'drills', label: 'Tennis drills' },
-      { start: 18, span: 1, kind: 'study', label: 'Homework' },
+      { start: 18, span: 1, kind: 'study', label: 'Study' },
     ],
     // The week's one fitness session, in the same slot the court session takes - so switching a
     // preset moves BLOCKS rather than re-shaping her day (the same stability `GYM_PRIORITY` buys).
     gym: [
       { start: 8, span: 5, kind: 'school', label: 'School' },
       { start: 15, span: 2, kind: 'gym', label: 'Gym' },
-      { start: 18, span: 1, kind: 'study', label: 'Homework' },
+      { start: 18, span: 1, kind: 'study', label: 'Study' },
     ],
     // The booked friendly. It lands on Saturday at every preset (weekDays.ts), which is why this is
     // the one shape with no school in it and why the match owns the middle of the day rather than an
     // hour after school. `matchLong` is the design's own three-hour "Practice Match Play".
     match: [
       { start: 10, span: 3, kind: 'matchLong', label: 'Practice match' },
-      { start: 18, span: 1, kind: 'study', label: 'Homework' },
+      { start: 18, span: 1, kind: 'study', label: 'Study' },
     ],
     // ⚠ A REST DAY DRAWS ONE BLOCK AND SAYS NOTHING ELSE, and the omission is deliberate. Sunday is
     // always the first rest day claimed, so this shape is Sunday far more often than it is anything
@@ -245,6 +245,25 @@ export function hourLabel(hour: number): string {
   return `${String(hour).padStart(2, '0')}:00`
 }
 
+/** ⚠ NOBODY IS AT SCHOOL ON A SATURDAY, AND THE SHAPE TABLE CANNOT KNOW THAT.
+ *
+ *  `dayBlocksFor` is keyed by DAY KIND - the signature the brief fixes, and the right one, because
+ *  what she does is a consequence of the plan rather than of the date. School is the one piece of
+ *  furniture that is a fact about the WEEKDAY instead: `weekDays.ts` claims rest days Sunday first,
+ *  then midweek, so at the grind preset SATURDAY is an ordinary court day - and the grid drew her
+ *  into a classroom on it. Caught in the browser, not reasoned about.
+ *
+ *  So the weekday rule is applied HERE, where the day index is actually known, and it only ever
+ *  REMOVES a block. That direction is the whole argument: the table stays the single place a day's
+ *  shape is decided, and this cannot invent an hour - it can only decline to assert one. The
+ *  midweek rest days are the mirror case and are left alone for the same reason (see the `rest`
+ *  shape): the grid may omit school, it may not invent it. */
+const WEEKEND: readonly number[] = [5, 6]
+function dropWeekendSchool(index: number, blocks: DayBlock[]): DayBlock[] {
+  if (!WEEKEND.includes(index)) return blocks
+  return blocks.filter((b) => b.kind !== 'school' && b.kind !== 'schoolLong')
+}
+
 /** The seven columns for a week, or NULL when this week is not one the grid may draw (§ the
  *  boundary above). Null rather than an empty array on purpose: the screen has to choose between two
  *  drawings, and "no columns" and "not this kind of week" are different answers. */
@@ -257,6 +276,6 @@ export function weekGridFor(week: CalendarWeek, ageYears: number, dates: readonl
     date: dates[i] ?? 0,
     kind: d.kind,
     beat: d.beat,
-    blocks: dayBlocksFor(d.kind, band),
+    blocks: dropWeekendSchool(d.index, dayBlocksFor(d.kind, band)),
   }))
 }

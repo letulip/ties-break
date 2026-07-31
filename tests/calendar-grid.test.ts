@@ -203,6 +203,39 @@ describe('a block is drawable, and it is not an invention', () => {
     }
   })
 
+  // ⚠ CAUGHT IN THE BROWSER AT 375, not reasoned about: the grid drew "School" on a SATURDAY. The
+  // shape table is keyed by day KIND, which is the right key for everything she chooses to do and
+  // the wrong one for the single piece of furniture that is a fact about the DATE - and at the
+  // grind preset Saturday is an ordinary court day (rest is claimed Sunday first, then midweek).
+  it('⚠ SHE IS NOT AT SCHOOL AT THE WEEKEND, whatever the plan makes of those days', () => {
+    for (const preset of Object.values(WEEK_PLAN_PRESETS)) {
+      const grid = weekGridFor(calendarWeekFor(facts({ plan: preset }), 6), 14, weekDayNumbers(6))!
+      for (const day of grid.filter((d) => d.short === 'SAT' || d.short === 'SUN')) {
+        expect(
+          day.blocks.some((b) => b.kind === 'school' || b.kind === 'schoolLong'),
+          `${preset.train}: ${day.short} has her in a classroom`,
+        ).toBe(false)
+      }
+      // ...and the weekdays still do have school on them, or the rule has eaten the band's furniture
+      const monday = grid[0]
+      if (monday.kind !== 'rest') expect(monday.blocks.some((b) => b.kind === 'school')).toBe(true)
+    }
+  })
+
+  it('the weekday rule only ever REMOVES – it cannot invent an hour', () => {
+    // The direction is the whole argument for putting it in the composer rather than in the table:
+    // the table stays the one place a day's shape is decided, and the weekend can only decline to
+    // assert something, never add to it.
+    const grid = weekGridFor(calendarWeekFor(facts(), 6), 14, weekDayNumbers(6))!
+    for (const day of grid) {
+      const shape = dayBlocksFor(day.kind, 'school')
+      expect(day.blocks.length, `${day.short}`).toBeLessThanOrEqual(shape.length)
+      for (const block of day.blocks) {
+        expect(shape, `${day.short} grew a block the table does not have`).toContainEqual(block)
+      }
+    }
+  })
+
   it('a booked friendly shows up as the day\'s main event, on the day the strip marks', () => {
     const grid = gridFor({ practices: [{ week: 6, paidCents: 3000, withCoach: false }] })!
     const match = grid.filter((d) => d.blocks.some((b) => b.kind === 'matchLong'))
