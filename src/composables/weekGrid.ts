@@ -171,12 +171,28 @@ const DAY_SHAPES: Partial<Record<AgeBand, Record<OrdinaryKind, readonly DayBlock
       { start: 10, span: 3, kind: 'matchLong', label: 'Practice match' },
       { start: 18, span: 1, kind: 'study', label: 'Study' },
     ],
-    // ⚠ A REST DAY DRAWS ONE BLOCK AND SAYS NOTHING ELSE, and the omission is deliberate. Sunday is
-    // always the first rest day claimed, so this shape is Sunday far more often than it is anything
-    // else - and a school block here would put her in a classroom on a Sunday, which is an assertion
-    // and a false one. On the midweek rest days the grid is quiet about school instead of wrong
-    // about it, which is the right way round: this screen may omit, it may not invent.
-    rest: [{ start: 9, span: 3, kind: 'rest', label: 'Rest' }],
+    // ⚠ A REST DAY GOES TO SCHOOL, and this shape used to omit it. The omission was defended like
+    // this: "Sunday is always the first rest day claimed, so this shape is Sunday far more often
+    // than anything else - and a school block here would put her in a classroom on a Sunday, which
+    // is an assertion and a false one. On the midweek rest days the grid is quiet about school
+    // instead of wrong about it."
+    //
+    // Half right, and the wrong half showed up on screen: at the balanced preset Wednesday is a rest
+    // day, and the week drew her with no school on a Wednesday - which is exactly as false as the
+    // Sunday it was avoiding, in the other direction. REST IS A REST FROM TENNIS. A fourteen-year-old
+    // does not skip Wednesday because she is not training that afternoon; the plan buys her court
+    // time, and school was never the plan's to give or take away.
+    //
+    // The Sunday problem is real and it was already solved one function down: `dropWeekendSchool`
+    // knows the day INDEX, which this table cannot, and strips school from Saturday and Sunday
+    // whatever shape produced it. So the honest arrangement is the one that was already half built -
+    // the table asserts school on every weekday shape, the weekday rule removes it on the weekend,
+    // and the rule that only ever REMOVES is what keeps the screen from inventing a day.
+    rest: [
+      { start: 8, span: 5, kind: 'school', label: 'School' },
+      { start: 15, span: 3, kind: 'rest', label: 'Rest' },
+      { start: 18, span: 1, kind: 'study', label: 'Study' },
+    ],
   },
 }
 
@@ -255,9 +271,13 @@ export function hourLabel(hour: number): string {
  *
  *  So the weekday rule is applied HERE, where the day index is actually known, and it only ever
  *  REMOVES a block. That direction is the whole argument: the table stays the single place a day's
- *  shape is decided, and this cannot invent an hour - it can only decline to assert one. The
- *  midweek rest days are the mirror case and are left alone for the same reason (see the `rest`
- *  shape): the grid may omit school, it may not invent it. */
+ *  shape is decided, and this cannot invent an hour - it can only decline to assert one.
+ *
+ *  ⚠ THE `rest` SHAPE NOW LEANS ON THIS, which is what it should have done from the start. It used
+ *  to omit school itself, on the grounds that a rest day is usually Sunday - and the cost was a
+ *  fourteen-year-old with no school on a Wednesday, the same falsehood pointing the other way. The
+ *  table asserts school on every weekday shape and this strips it from Sat/Sun; one rule, in the one
+ *  place that knows the date. */
 const WEEKEND: readonly number[] = [5, 6]
 function dropWeekendSchool(index: number, blocks: DayBlock[]): DayBlock[] {
   if (!WEEKEND.includes(index)) return blocks
