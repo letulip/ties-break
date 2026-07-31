@@ -20,12 +20,14 @@ import {
   conditionMatchFactor,
   kidMatchPlayer,
   kidMatchPlayerFor,
+  kidAgeExact,
   skipTournament,
   closeTournament,
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { applyKit, kitWearAt } from '../src/engine/equipment'
 import { SURFACE_BLOCKS, buildSeason, surfaceBlockFor, dominantSurface } from '../src/engine/season/calendar'
 
 // ---------------------------------------------------------------------------
@@ -438,20 +440,31 @@ function tickToPending(
  *  afterwards - you do not improve halfway through a tournament. So a snapshot taken inside the
  *  tick must be compared against her PRE-tick build, not against the one she finished the week
  *  with. Callers that never ticked can leave it out. */
-function expectedKid(world: WorldState, surface: Surface, atSkills?: KidSkills): MatchPlayer {
+/** ⚠ AND `atWeek` MATTERS SINCE THE EQUIPMENT SLICE (docs/specs/equipment-and-serve-speed.md §2).
+ *  The composition point now carries a third multiplicative term - the condition of her kit - and it
+ *  is a function of the WEEK, so this mirror has to be told which week the snapshot was taken in.
+ *  `tickWeek` advances the clock, so a caller reading a snapshot after the tick must pass the week
+ *  the match was actually played in or it will compare against a different point of the shoe cycle.
+ *  Same class of care as `atSkills` above, for the same reason: read her as the match saw her. */
+function expectedKid(world: WorldState, surface: Surface, atSkills?: KidSkills, atWeek?: number): MatchPlayer {
   const raw = kidMatchPlayer(atSkills ? { ...world, skills: atSkills } : world)
   const factor = conditionMatchFactor(world.condition)
-  return applySurfaceStyle(
-    {
-      ...raw,
-      serve: raw.serve * factor,
-      ret: raw.ret * factor,
-      composure: raw.composure * factor,
-      stamina: raw.stamina * factor,
-      groundstrokes: raw.groundstrokes * factor,
-    },
-    world.profile.playStyle,
-    surface,
+  const week = atWeek ?? world.week
+  return applyKit(
+    applySurfaceStyle(
+      {
+        ...raw,
+        age: kidAgeExact(week, world.profile.birthMonth),
+        serve: raw.serve * factor,
+        ret: raw.ret * factor,
+        composure: raw.composure * factor,
+        stamina: raw.stamina * factor,
+        groundstrokes: raw.groundstrokes * factor,
+      },
+      world.profile.playStyle,
+      surface,
+    ),
+    kitWearAt(world.seed, world.profile.background, week),
   )
 }
 
@@ -511,7 +524,7 @@ describe('surface x style — the single composition point in world.ts', () => {
     }
     expect(world, 'no seed in 30 gave her a multi-round run').toBeTruthy()
     const event = world.season.find((e) => e.id === world.pendingTournament!.eventId)!
-    const expected = expectedKid(world, event.surface, atEntry)
+    const expected = expectedKid(world, event.surface, atEntry, event.week)
     const stored = world.pendingTournament!.players[KID_ID]
     expect(stored.serve).toBeCloseTo(expected.serve, 10)
     expect(stored.ret).toBeCloseTo(expected.ret, 10)
@@ -540,7 +553,7 @@ describe('surface x style — the single composition point in world.ts', () => {
     const friendly = world.events.find((e) => e.type === 'match' && e.friendly)
     expect(friendly).toBeDefined()
     const kidSide = friendly!.match!.aId === KID_ID ? friendly!.match!.a : friendly!.match!.b
-    const expected = expectedKid(world, 'hard', skillsAtMatch)
+    const expected = expectedKid(world, 'hard', skillsAtMatch, friendly!.week)
     // condition moved when the friendly resolved, so compare the RATIO the table imposes instead.
     const mult = surfaceStyleMultipliers('aggressive', 'hard')
     expect(mult.serve).toBeGreaterThan(1) // hard suits the aggressive kid

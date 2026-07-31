@@ -301,6 +301,11 @@ export function rivalMatchPlayer(player: AiPlayer, surface: Surface, condition: 
   return {
     id: styled.id,
     name: styled.name,
+    // Her age comes STRAIGHT off the cohort row, which has carried `ageYears` since v20. It feeds
+    // the serve-speed curve and, through it, her ace rate (match/serveSpeed.ts) - so a box score
+    // against a sixteen-year-old reports a sixteen-year-old's serve. Not a skill; `basePServe` never
+    // reads it, and no draw is spent resolving it.
+    age: player.ageYears,
     serve: styled.serve * factor,
     ret: styled.ret * factor,
     composure: styled.composure * factor,

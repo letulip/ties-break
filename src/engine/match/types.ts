@@ -27,6 +27,20 @@ export interface MatchPlayer {
    *  persisted and its weekly drift is what the frozen MAIN capture is made of, so a rival's value
    *  is DERIVED at match time (`rivalGroundstrokes`). */
   groundstrokes: number
+  /** Her age in years at the moment she stepped on court, FRACTIONAL (a December girl is 13.08 in
+   *  her first January). Not a skill and never read by `basePServe` – it is the age half of the
+   *  serve-speed curve (match/serveSpeed.ts) and, through it, of the ace rate.
+   *
+   *  ⚠ IT BELONGS ON THE SNAPSHOT, which is why it lives here rather than being resolved at render
+   *  time. `WorldMatch.a/.b` freeze a MatchPlayer into the save, so a box score re-opened three
+   *  seasons later must still report the serve of the girl who played it, not of the girl she has
+   *  since become. Resolving her age from today's world would have quietly re-aged every historical
+   *  match every week.
+   *
+   *  OPTIONAL because pre-branch snapshots were frozen without it (see LEGACY_SNAPSHOT_AGE); the
+   *  live composition points always set it. ⚠ `AiPlayer` does not inherit it either - the cohort
+   *  already carries `ageYears`, and two ages on one row is one age too many. */
+  age?: number
 }
 
 export interface MatchOptions {

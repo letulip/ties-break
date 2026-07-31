@@ -253,7 +253,24 @@ const REF = {
   // so fewer distinct totals sit above a girl who holds none. Taking either side's pin would have
   // shipped a number nobody had measured. The STREAM is untouched: count 41550 and hash e6b0c709
   // reproduce byte-for-byte, which is what this block actually guards.
-  kidRank: 150,
+  // ⚠ RE-AIMED 150 -> 151 BY THE EQUIPMENT / SERVE-SPEED SLICE (docs/specs/equipment-and-serve-speed.md),
+  // and this is the SECOND time this pin has moved for the reason its own note above predicted: the
+  // match model gained a leg, so asymmetric matchups resolve differently and a different set of
+  // juniors ends the year in the points. Two legs were added this time - her kit multiplies her
+  // attributes at the composition point, and `basePServe` gained a PACE term keyed on the age gap.
+  //
+  // ⚠ THE CAPTURE ITSELF DID NOT MOVE, AND THAT WAS CHECKED BEFORE THIS LINE WAS TOUCHED: count 41550
+  // and hash e6b0c709 reproduce byte-for-byte, verified directly against a raw-tapped 52-tick run. It
+  // cannot move by construction either - equipment condition is `week - lastPurchaseWeek` over a
+  // constant, the purchase weeks come off the `seed:gear:<category>` sub-streams that already existed,
+  // the shoe/injury term is a POST-DRAW multiply on a threshold `rollInjury` has already drawn
+  // against, and the pace term is pure arithmetic inside `basePServe`. Zero draws are added to, or
+  // removed from, any stream the weekly tick walks.
+  //
+  // So the STREAM is the invariant and the RANK is a measurement: 151 is one place lower off a
+  // point-less kid in a shallow table, which is what a girl whose strings are four weeks old looks
+  // like next to a cohort that has no kit at all.
+  kidRank: 151,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

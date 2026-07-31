@@ -507,9 +507,15 @@ describe('R12-4/11 — injured ON a family vacation', () => {
     return world
   }
 
+  // ⚠ RE-AIMED (equipment slice): the two worlds now share ONE seed. The comment below always claimed
+  // they were "the same world, minus the booking" and they never quite were - they were built from
+  // 'r12-4-on' and 'r12-4-off'. That was harmless while nothing in `injuryTau` was seed-dependent; her
+  // shoes now are, because gear purchase weeks come off `seed:gear:shoes` and two seeds buy shoes in
+  // different weeks. Making the sentence true is the fix, and the guarded fact - that a vacation week
+  // multiplies tau by EXACTLY the knob and nothing else - is asserted to the same twelve places.
   it('a vacation week multiplies tau DOWN, by exactly the knob', () => {
-    const onHoliday = vacationWorld('r12-4-on')
-    const working = vacationWorld('r12-4-off')
+    const onHoliday = vacationWorld('r12-4-same')
+    const working = vacationWorld('r12-4-same')
     working.vacations = [] // same world, minus the booking
     expect(injuryTau(onHoliday)).toBeCloseTo(
       injuryTau(working) * ECONOMY.availability.injuryVacationFactor,

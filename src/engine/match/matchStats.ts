@@ -1,14 +1,29 @@
 // Owner item 14 – a box score for a played match, derived purely from the annotated match.
 // The engine's log decides WHO wins each point; the rally annotation adds the shot-level detail
-// (winners, errors, aces, double faults). Serve speeds are a deterministic cosmetic layer, seeded
-// per point from the match seed so the same match always reports the same speeds. Pure and total.
+// (winners, errors, aces, double faults). Serve speeds are seeded per point from the match seed so
+// the same match always reports the same speeds. Pure and total.
+//
+// ⚠ THE SPEED IS NO LONGER "A DETERMINISTIC COSMETIC LAYER", which is what this header used to call
+// it, and the owner's complaint was exactly that: «лишь бы он на что-то влиял вообще». Two things
+// changed and neither one feeds km/h back into who wins a point:
+//
+//   1. The model itself moved to ./serveSpeed.ts and grew an AGE term, so the number is now her
+//      age's number rather than a constant with her skill added to it.
+//   2. The ace rate in ./rally.ts is derived FROM that speed. An ace is a description of a point the
+//      engine has already awarded (rally.ts's own header: "It never influences outcomes"), so
+//      narrating more of them costs nothing and double-counts nothing.
+//
+// `basePServe` still decides points from `serve` alone. Feeding the km/h in on top would count the
+// same talent twice - and `basePServe` is calibrated to 1.2 points over 88,500 simulated matches, so
+// that swap is a project of its own and deliberately not this one.
 //
 // Note: `AnnotatedMatch` carries no player skills, so the two players are passed in for the serve
-// skill the speed model needs (a documented widening of the item's one-arg signature).
+// skill and the age the speed model needs (a documented widening of the item's one-arg signature).
 
 import type { AnnotatedMatch } from '../../viz/types'
 import type { MatchPlayer, Side } from './types'
 import { rngFromSeed } from '../rng'
+import { LEGACY_SNAPSHOT_AGE, serveSpeedOf } from './serveSpeed'
 
 export interface MatchStats {
   /** rally shots that ended the point as a clean winner, by side */
@@ -25,18 +40,9 @@ export interface MatchStats {
   durationEstimate: string
 }
 
-// Serve speed model: base 128 km/h + serve skill * 0.45, jittered +/-8, second serves 14 slower.
-// One rng per point (seeded from the match seed + point number) drives every serve shot in it.
-const SPEED_BASE = 128
-const SPEED_PER_SKILL = 0.45
-const SPEED_JITTER = 8
-const SECOND_SERVE_DROP = 14
-
-function serveSpeed(rng: () => number, serveSkill: number, secondServe: boolean): number {
-  const jitter = (rng() * 2 - 1) * SPEED_JITTER
-  const speed = SPEED_BASE + serveSkill * SPEED_PER_SKILL + jitter - (secondServe ? SECOND_SERVE_DROP : 0)
-  return Math.round(speed)
-}
+// The speed model lives in ./serveSpeed.ts (age curve + skill term + jitter), because rally.ts needs
+// the same numbers for the ace rate and two copies of a curve is one copy too many. One rng per
+// point (seeded from the match seed + point number) drives every serve shot in it - unchanged.
 
 /** Format seconds as `h:mm` (e.g. 7014 s -> "1:56"). */
 export function formatDuration(totalSeconds: number): string {
@@ -53,6 +59,7 @@ export function computeMatchStats(
   playerB: MatchPlayer,
 ): MatchStats {
   const serveSkill: [number, number] = [playerA.serve, playerB.serve]
+  const age: [number, number] = [playerA.age ?? LEGACY_SNAPSHOT_AGE, playerB.age ?? LEGACY_SNAPSHOT_AGE]
   const winners: [number, number] = [0, 0]
   const unforcedErrors: [number, number] = [0, 0]
   const aces: [number, number] = [0, 0]
@@ -76,7 +83,7 @@ export function computeMatchStats(
     for (const shot of rally.shots) {
       if (shot.kind === 'serve1' || shot.kind === 'serve2') {
         const side = shot.by
-        const spd = serveSpeed(speedRng, serveSkill[side], shot.kind === 'serve2')
+        const spd = serveSpeedOf(speedRng, age[side], serveSkill[side], shot.kind === 'serve2')
         speedSum[side] += spd
         speedCount[side]++
         if (spd > speedMax[side]) speedMax[side] = spd

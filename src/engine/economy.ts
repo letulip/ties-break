@@ -460,6 +460,71 @@ export const ECONOMY = {
     },
   } as Record<GearCategory, GearLine>,
 
+  // --- EQUIPMENT CONDITION: what the three lines above are actually WORTH -------------------
+  // docs/specs/equipment-and-serve-speed.md §2. Until this block existed the gear lines were pure
+  // outgoings: the game already said she plays a worse racket and restrings half as often, and then
+  // never let that matter. Nothing new is bought here - the spend that is already on the ledger
+  // becomes the thing that keeps her equipment honest.
+  //
+  // ⚠ IT IS CONDITION, NOT VINTAGE, and that is the owner's own correction from playing padel:
+  // «я вот в падел играю и знаю, что чиненая ракетка работает хуже, чем пусть и старая, но целая».
+  // So nothing here reads "how expensive was it" - every line reads WEEKS SINCE THE LAST PURCHASE
+  // against an ABSOLUTE service life. A string bed dies after so many weeks of play no matter whose
+  // daughter is hitting with it.
+  //
+  // ⚠ AND THE ABSOLUTE LIFE IS THE WHOLE ANTI-DESTINY MECHANISM. Normalising wear by the FAMILY'S
+  // OWN cadence instead would make every background sit at the same average freshness and the block
+  // would do nothing; normalising by PRICE would let money buy strokes directly, which is the one
+  // outcome the spec forbids. An absolute life gives exactly the intended sentence: the wealthy
+  // family restrings inside the life and the working family stretches past it.
+  //
+  // SIZING, AND IT IS MEASURED (tools/kit-bench.ts). The anchor is the relative age effect -
+  // SKILL_POINTS_PER_YEAR = 2.4, what a year of junior development is worth. The whole swing from
+  // worst kit to best, all three lines at once, must come in UNDER one year of relative age, because
+  // the owner's rule is that «если девочка плохо играет - она и с лучшим тренером и в лучшем экипе
+  // будет это делать точно так же». Fresh kit is exactly neutral (factor 1) and every line only ever
+  // subtracts, which is also what keeps the shipped balance intact for a family that buys on time.
+  //
+  // RNG: ZERO DRAWS ANYWHERE. Wear is `week - lastPurchaseWeek` over a constant, and the purchase
+  // weeks come off the gear sub-streams that already existed. The frozen MAIN capture
+  // (41550 / e6b0c709) cannot see any of this.
+  equipment: {
+    /** STRINGS - the biggest and truest lever, and it is CONTROL rather than power. In real tennis
+     *  the gap between a fresh bed and a dead one dwarfs the gap between a good frame and a great
+     *  one, and it shows up as balls landing long rather than as pace. Hence `ret`/`groundstrokes`
+     *  carry it and `serve` takes a token share - the spec's "a couple of km/h", which is what it
+     *  really is. 5 weeks of life against restring cadences of 4 (working) / 3 (middle) / 2
+     *  (wealthy): the wealthy girl never leaves the fresh end, the working girl lives at 0.6 wear. */
+    stringLifeWeeks: 5,
+    stringWear: { ret: 0.03, groundstrokes: 0.03, serve: 0.01 },
+
+    /** FRAME - integrity, a small constant, and the ONE line that is genuinely binary in spirit. A
+     *  sound frame is neutral however old it is (`soundWeeks` of exactly nothing), and only past its
+     *  service life does it become the patched racket that works worse than an old whole one. At 13
+     *  sound weeks the wealthy cadence (10-12) never reaches it at all and the working cadence
+     *  (14-18) always does, which is precisely the sentence the price table was already implying. */
+    frameSoundWeeks: 13,
+    framePatchWeeks: 6,
+    frameWear: { serve: 0.008, groundstrokes: 0.008 },
+
+    /** SHOES - traction, and TWO effects rather than one (owner: «в плохих коньках ребята не могут
+     *  угнаться за другими в хороших, просто физика так работает»). Movement has no attribute of its
+     *  own, so it lands where movement actually pays: `ret` (reaching the ball at all) and `stamina`
+     *  (chasing costs more when you slip).
+     *
+     *  ⚠ SHOES ARE THE BACKGROUND-NEUTRAL LINE ON PURPOSE. Their cadence is 10-14 for EVERY
+     *  background - only the price differs - so wear here is identical for a working and a wealthy
+     *  career and contributes exactly zero to the background gap. That is deliberate and it is the
+     *  safest possible home for the injury half: a richer family must never be able to buy its
+     *  daughter out of getting hurt. */
+    shoeLifeWeeks: 14,
+    shoeWear: { ret: 0.014, stamina: 0.018 },
+    /** ...and the second effect: worn shoes multiply the weekly injury threshold by up to this much
+     *  again. A POST-DRAW multiply inside `injuryTau`, the same invariance-safe shape as the
+     *  vacation recovery buff - the roll is already drawn, only the threshold moves. */
+    shoeInjuryRise: 0.2,
+  },
+
   // R9-1: weekly deterministic savings interest on a POSITIVE balance, credited on the
   // carried-in funds as each week opens (before any of the week's flows). ~3.1%/yr – a
   // realistic family savings account. round(fundsCents × apyWeekly), emitted only when
@@ -1108,6 +1173,38 @@ export function practiceFeeCents(
   const roll = rng()
   const hours = ECONOMY.practice.coachHours * ECONOMY.practice.coachShare
   return court + Math.round(coachHourlyCents * hours * (wLo + roll * (wHi - wLo)))
+}
+
+/** How many weeks her kit in `category` has been in service at `week` - the ONE input every
+ *  equipment-condition rule takes (engine/equipment.ts).
+ *
+ *  Week 0 is brand-new kit, so before the first purchase this is simply `week`. After it, it is the
+ *  weeks since the most recent hit. Walks the SAME sub-stream in the SAME order as `gearHitsUpTo`
+ *  (so the two can never disagree about when she bought) but without building the array - this runs
+ *  on every match composition and once per week, where `gearHitsUpTo`'s allocation would be waste.
+ *
+ *  Pure, and zero MAIN-stream draws: the sub-stream is created fresh from the seed and discarded. */
+export function weeksSinceGear(
+  seed: string,
+  category: GearCategory,
+  background: FamilyBackground,
+  week: number,
+): number {
+  const line = ECONOMY.gear[category]
+  const [cadLo, cadHi] = line.cadenceWeeks[background]
+  const [prLo, prHi] = line.priceCents[background]
+  const rng = rngFromSeed(`${seed}:gear:${category}`)
+  let w = 0
+  let last = 0
+  while (true) {
+    w += pickInt(rng, cadLo, cadHi)
+    if (w > week) break
+    // The price draw must be spent even though it is unused here, or the NEXT cadence draw would
+    // read a different number than `gearHitsUpTo` reads and the two functions would drift apart.
+    pickInt(rng, prLo, prHi)
+    last = w
+  }
+  return week - last
 }
 
 /** The gear purchase (if any) that lands EXACTLY on `week` for one category, else null. */
