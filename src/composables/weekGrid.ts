@@ -331,12 +331,27 @@ const TRIP_ARC: readonly (readonly DayBlock[])[] = [
  *
  *  ⚠ AND IT IS NOT AN EMPTY COLUMN, which is the whole reason the owner wanted the grid drawn here:
  *  "no tennis" is a fact about her week, not an absence of one. The hours are the family's. */
+// ⚠ AND SHE STILL HAS HOMEWORK ON A WEEKDAY (owner, 31.07): «когда я беру отпуск для восстановления
+// бусинки на учебных неделях, мне кажется будет круто оставлять по паре часов на уроки на буднях,
+// она всё-таки учится, и мы так же делали сами, когда школу пропускали».
+//
+// A booked family week in term time is not a week off school - it is a week of school missed, which
+// every parent who has done it knows means the work comes with you. Two hours on a weekday morning
+// is what that looks like, and it costs the day nothing: the family's own hours start at 10 or 11
+// in every arm of this arc.
+//
+// ⚠ IT IS ASSERTED HERE AND REMOVED IN THE COMPOSER, which is the direction this file has kept since
+// the school rule: the table decides a day's shape and the composer may only ever take a block away.
+// So `Study` sits in all five weekday arms, and two rules downstream strip it - the weekend, and the
+// OFF-SEASON, where there is no term to miss. Adding it in the composer would have been the shorter
+// diff and the wrong one: it would make the composer able to invent an hour, which is the property
+// that keeps this screen from drawing a day the engine never had.
 const FAMILY_ARC: readonly (readonly DayBlock[])[] = [
-  [{ start: 10, span: 3, kind: 'vacation', label: 'Family time' }],
-  [{ start: 10, span: 4, kind: 'vacation', label: 'Day out' }],
-  [{ start: 9, span: 3, kind: 'rest', label: 'Time off' }, { start: 14, span: 3, kind: 'vacation', label: 'Family time' }],
-  [{ start: 10, span: 4, kind: 'vacation', label: 'Day out' }],
-  [{ start: 11, span: 3, kind: 'vacation', label: 'Family time' }],
+  [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 3, kind: 'vacation', label: 'Family time' }],
+  [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 4, kind: 'vacation', label: 'Day out' }],
+  [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 14, span: 3, kind: 'vacation', label: 'Family time' }],
+  [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 4, kind: 'vacation', label: 'Day out' }],
+  [{ start: 9, span: 2, kind: 'study', label: 'Study' }, { start: 11, span: 3, kind: 'vacation', label: 'Family time' }],
   [{ start: 10, span: 4, kind: 'vacation', label: 'Day out' }],
   [{ start: 11, span: 3, kind: 'rest', label: 'Home day' }],
 ]
@@ -470,6 +485,23 @@ function dropWeekendSchool(index: number, blocks: DayBlock[]): DayBlock[] {
   return blocks.filter((b) => b.kind !== 'school' && b.kind !== 'schoolLong')
 }
 
+/** ⚠ THERE IS NO TERM TO MISS IN THE OFF-SEASON, so the homework the family week carries (see
+ *  FAMILY_ARC) comes off there. The same shape serves a booked holiday and the off-season - the two
+ *  arrive as one `DayKind` and only the week's TITLE tells them apart, which is a display string - so
+ *  ⚠ AND THE FACT IS HANDED IN, NOT FETCHED - a guard caught the first attempt at exactly this. This
+ *  module may not import from `../engine/`: it is presentation and it is derived from what it is
+ *  given, which is the property `tests/calendar-grid.test.ts` calls "NOTHING NEW ON THE PAYLOAD".
+ *  Reaching for `isOffSeasonWeek` here would have been the short diff and a hole in that rule.
+ *  `weekDays.ts` already asks the calendar this question (it is the module that legitimately talks to
+ *  the engine), so the answer travels on `CalendarWeek` and arrives as data.
+ *
+ *  Removes only, like its neighbour above: the table asserts the study hour, and this declines to
+ *  draw it on a week where school is not running. */
+function dropOffSeasonStudy(offSeason: boolean, kind: DayKind, blocks: DayBlock[]): DayBlock[] {
+  if (kind !== 'off' || !offSeason) return blocks
+  return blocks.filter((b) => b.kind !== 'study')
+}
+
 // =================================================================================================
 // WHAT THE SESSION ACTUALLY WAS — variety without a second session
 // =================================================================================================
@@ -565,7 +597,11 @@ export function weekGridFor(
     kind: d.kind,
     beat: d.beat,
     blocks: namedSession(
-      dropWeekendSchool(d.index, dayBlocksFor(d.kind, band, { index: d.index, role: roles[i] })),
+      dropOffSeasonStudy(
+        week.offSeason,
+        d.kind,
+        dropWeekendSchool(d.index, dayBlocksFor(d.kind, band, { index: d.index, role: roles[i] })),
+      ),
       seed,
       week.week,
       d.index,

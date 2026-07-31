@@ -710,7 +710,12 @@ describe('the days cross themselves out', () => {
   const beatFree = new Array(7).fill(false)
 
   it('the duration is ONE named constant with the owner\'s two settings behind it', () => {
-    expect(DAY_CROSS_PACE.brisk.sweepMs).toBe(2000) // "~2s"
+    // ⚠ RE-PINNED 2000 -> 3000 (owner, 31.07, after playing): «настройка Pace в 2 секунды выглядит
+    // ну слишком быстро… а 5 оставим для тех, кто любит по-медленнее». The RULE is unchanged and is
+    // the one this test is named for - one named constant with two settings behind it - so only the
+    // brisk number moved. Seven days share the sweep, so 2s gave a day under 300ms: a flicker rather
+    // than a moment. 3s buys ~430ms a day and costs 52 seconds across a season.
+    expect(DAY_CROSS_PACE.brisk.sweepMs).toBe(3000)
     expect(DAY_CROSS_PACE.gentle.sweepMs).toBe(5000) // "~5s"
     expect(DAY_CROSS_PACES).toEqual(['brisk', 'gentle'])
     // both are labelled for a picker, and the labels say the number so "by eye" needs no legend
@@ -759,7 +764,9 @@ describe('the days cross themselves out', () => {
 
   it('it is total: a beat on every day, and an empty week, both schedule cleanly', () => {
     const all = dayCrossSchedule(new Array(7).fill(true), DAY_CROSS_PACE.brisk)
-    expect(all.total).toBe(2000 + 7 * DAY_CROSS_PACE.brisk.holdMs)
+    // Reads the constant rather than repeating it, so a future pace change cannot make this
+    // assertion quietly describe a pace the app no longer has.
+    expect(all.total).toBe(DAY_CROSS_PACE.brisk.sweepMs + 7 * DAY_CROSS_PACE.brisk.holdMs)
     const none = dayCrossSchedule([], DAY_CROSS_PACE.brisk)
     expect(none).toEqual({ at: [], total: 0, strokeMs: 0 })
   })
