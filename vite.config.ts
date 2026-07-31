@@ -167,6 +167,29 @@ export default defineConfig({
         test: {
           name: 'unit',
           exclude: [...configDefaults.exclude, ...HEAVY_SIM_FILES],
+          // ⚠ 20s, AND IT IS A CONTENTION BUDGET RATHER THAN A SLOW-TEST ALLOWANCE (31.07).
+          //
+          // The owner could not merge: CI failed three runs in a row on `week-notes.test.ts` W2 with
+          // "Test timed out in 5000ms". It is not a hang and it is not that test. Measured on an idle
+          // machine that sweep runs in **1236 ms** - four times inside the old ceiling - and the same
+          // CI job reports 231s of TEST time inside 90s of WALL time, i.e. every core saturated with
+          // 84 files at once. A heavy test that loses that race is starved, not broken.
+          //
+          // The signature confirms it: the failure MOVES. Two agents independently reported this flake
+          // on different files on different runs (`week-notes`, `radar`, `world`, `coach-load`), and it
+          // reproduces on a pristine tree about one run in three. One slow test fails in one place;
+          // contention fails wherever the scheduler happens to squeeze.
+          //
+          // ⚠ AND I MISDIAGNOSED IT ONCE ALREADY - I told the owner it was my own parallel benches
+          // stealing CPU. It is not: this is GitHub Actions, where those benches do not exist. The
+          // cause is the suite competing with itself, which is a property of the suite.
+          //
+          // Raising the ceiling is the honest fix rather than the lazy one, because the thing the old
+          // number measured was never this test's cost - it was how much CPU it happened to get. What
+          // 5000ms actually enforced was "no test may be unlucky", and the sweeps here grow every time
+          // a note, an axis or a licence is added. 20s is far above the 1.2s real cost and still low
+          // enough to catch a genuine hang, which is the only thing a timeout is for.
+          testTimeout: 20_000,
         },
       },
       {

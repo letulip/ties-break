@@ -632,10 +632,27 @@ describe('C1 — a cohort row carries exactly what it is meant to, and nothing e
 describe('C2 — a real season produces genuinely tired rivals, and nobody is pinned all season', () => {
   const world = runWorld('rival-wiring', 40)
 
-  it('the ledger feeds the derivation: some of the field is under the strength knee', () => {
+  it('the ledger feeds the derivation: the field SPANS, tired to fresh', () => {
     const conds = world.cohort.map((p) => rivalConditions(world.results, world.week).get(p.id) ?? ECONOMY.condition.max)
     expect(conds.some((c) => c < ECONOMY.condition.matchStrengthKnee)).toBe(true)
-    expect(conds.some((c) => c === ECONOMY.condition.max)).toBe(true) // ...and some are fresh
+    // ⚠ RE-AIMED, AND THE RE-AIM IS THE FIX WORKING (31.07, fix/no-double-booking). This line used to
+    // read `conds.some((c) => c === ECONOMY.condition.max)` – "...and some are fresh" – and it passed
+    // for a reason nobody wanted: a player sits at EXACTLY 100 only when she has no ledger row in the
+    // whole 16-week fatigue window, i.e. when she has not played a single tournament in four months.
+    // Measured before the fix, 8 seeds x 40 ticked weeks: 9-16 of the 199 were untouched at any given
+    // moment and 4.5-7.5% of the cohort never played AT ALL, while the players the standings favour
+    // were drawn into two of the same week's draws and carried 37.7-42.9 events a season. The old
+    // assertion was reading the "exhausted elite and a crowd of extras" split that the availability
+    // gate's own note describes, and calling it freshness.
+    //
+    // The fix removes the crowd: nobody is double-booked on a fillable week, so the load spreads and
+    // EVERY rival now plays (share who never play: 4.5-7.5% -> 0.0%; busiest rival 42.9 -> 35.1
+    // events a season). Untouched-at-100 correctly goes to zero, and the claim is restated at the
+    // level the world now holds – the field still spans, and its top is genuinely fresh rather than
+    // merely idle. Measured on this seed: min 0 · median 35 · p90 64 · max 96, with 16 of 199 above
+    // the knee and the lowest per-week maximum over the window at 95.
+    expect(conds.some((c) => c >= ECONOMY.condition.matchStrengthKnee)).toBe(true)
+    expect(Math.max(...conds) - Math.min(...conds)).toBeGreaterThan(50)
   })
 
   it('NO rival sits at the floor for the whole season, and the FIELD is never inverted', () => {
@@ -748,6 +765,51 @@ describe('C2 — a real season produces genuinely tired rivals, and nobody is pi
     // ...and the loss of the old "above the strength knee every week" claim is pinned as a FACT, so
     // that if a later slice (§4.1's age cap) gives the field its condition back, this line fails and
     // somebody has to come back and restore the stronger assertion above rather than leave it weak.
+    //
+    // ⚠⚠⚠ THE TRIPWIRE WAS AIMED AT THE WRONG SUSPECT, AND THIS IS THE DISPROOF (31.07,
+    // fix/no-double-booking). The note above names ONE cause – "the same 199 rivals now fill 139
+    // events a season" – and the branch that followed it went after the most obvious half of that:
+    // the same rival was being drawn into TWO of a week's tournaments and playing both, 14,381 of
+    // 45,675 player-weeks in a draw (31.5%), 17,301 appearances the calendar does not contain. That
+    // is fixed; it is now 0% on every week the calendar does not over-subscribe (see C5 below). AND
+    // THE MEDIAN DID NOT COME BACK. Measured with this very block's methodology, 8 seeds x 40 ticked
+    // weeks x 199 rivals, window 20w:
+    //     before the fix   minMedian 34-36 · worst floored 11-13/20 · heavy 5-11 · ever 23.1-27.1%
+    //     after  the fix   minMedian 35-37 · worst floored 11-13/20 · heavy 4-12 · ever 23.6-28.1%
+    //
+    // WHY, and it is arithmetic rather than a mystery: DOUBLE-BOOKING NEVER ADDED TENNIS TO THE
+    // WORLD, IT CONCENTRATED IT. The number of draw slots a season contains is a property of the
+    // calendar alone – 3,616 of them over 199 rivals, ~18 events per rival per season – and the fix
+    // does not change it by one. What it changes is the DISTRIBUTION: the busiest rival went 42.9 ->
+    // 35.1 events a season and the share who never played at all went 4.5-7.5% -> 0.0%. Total strain
+    // is untouched, so the median cannot move much, and it moved 1-2 points (upward, because strain
+    // spent on a player already clamped at 0 is strain that lands on nobody).
+    //
+    // SO THE CAUSE IS THE LOAD ITSELF: ~18 tournaments a season each, against a recovery of
+    // `recoveryBase` 1 a week and no slider, no physio and no vacation. The note above is right that
+    // the fix is a rung that reduces how many draws one rival is eligible for (§4.1's `maxAgeYears`
+    // on the J tiers), and this branch is the evidence that nothing short of that will do it – the
+    // knob sweep in the note ruled out `rivalFatigueWindowWeeks`, and this rules out the collisions.
+    // The assertion below is therefore LEFT AS IT IS, still inverted, still honest, still waiting.
+    //
+    // ⚠⚠⚠⚠ AND THE 93-96 THIS BLOCK REMEMBERS IS ITSELF SUSPECT, WHICH IS THE FINDING THE OWNER
+    // SHOULD READ FIRST. The collision is NOT an adult-tour bug: re-measured on the junior-only
+    // calendar (the three W rungs' cadence zeroed, so `buildSeason` rebuilds the 92-event season this
+    // block's "before" column came from), 6,198 of 27,248 player-weeks in a draw – 22.7% – were
+    // double-booked there too, and 30.7-33.7% of the cohort never played at all. The overlapping
+    // junior windows are the whole cause (j300 [0, 0.25], j60 [0.05, 0.4], j30 [0.12, 0.6], national
+    // [0.2, 0.7]); the adult rungs only made it visible. So the "field" behind every historical
+    // number in this repo was an over-worked third playing twice a week and an idle third not playing
+    // at all, and 93-96 is the median of THAT distribution. Same methodology, junior-only arm:
+    //     before the fix   minMedian 69-79 · at 100: 75-80 of 199 · never played 30.7-33.7%
+    //     after  the fix   minMedian 63-70 · at 100: 61-64 of 199 · never played 26.6-28.6%
+    // The median goes DOWN there and UP on nine rungs, and it is one effect seen from two sides:
+    // spreading a fixed load over more bodies pulls the extremes in. (Those junior-arm numbers are a
+    // MODEL of the old calendar on today's engine – `tierPhase` still divides by a nine-rung ladder,
+    // so the weeks land differently and the absolutes sit below the historical 93-96. The before/after
+    // WITHIN the arm is a fair comparison; the cross-branch one is not.)
+    // FOR THE OWNER: relative comparisons in the old benches probably survive – the defect was in both
+    // arms of every A/B – but absolute statements about the FIELD's health do not.
     expect(Math.min(...medians), 'the knee claim is currently LOST - see the note above').toBeLessThan(
       ECONOMY.condition.matchStrengthKnee,
     )
@@ -858,5 +920,158 @@ describe('C5 — a legacy ledger (every AI row tier-less) still ticks', () => {
       expect(c).toBeGreaterThanOrEqual(ECONOMY.condition.min)
       expect(c).toBeLessThanOrEqual(ECONOMY.condition.max)
     }
+  })
+})
+
+// ---------------------------------------------------------------------------
+describe('C5 — one body, one week: a rival is never in two of a week\'s draws', () => {
+  // THE OWNER'S QUESTION, 31.07: «они физически не могут сразу везде играть, ведь так?» They cannot,
+  // and until fix/no-double-booking nothing in the code said so. `selectEntrants` was called once per
+  // event, each call seeing the same condition map and knowing nothing about the week's other events,
+  // so the players the standings favour were drawn into two tournaments on the same Tuesday and
+  // played both — and `walkWindow` (season/rival.ts) charges EVERY run of a week against ONE week's
+  // recovery, which is how it became the field's fatigue problem rather than a cosmetic one.
+  //
+  // MEASURED off the results ledger, 6 careers x 156 weeks (tools/double-booked.ts), on BOTH arms of
+  // the calendar — because this is NOT an adult-tour bug, it is an old one the adult tour made
+  // visible. The junior entrant windows overlap almost completely (j300 [0, 0.25], j60 [0.05, 0.4],
+  // j30 [0.12, 0.6], national [0.2, 0.7]), so two junior events on one week have always drawn twice
+  // out of the same slice of the table:
+  //
+  //   nine rungs (139 events/season)   before  45,675 player-weeks · 14,381 doubled (31.5%) · 17,301 phantom
+  //                                    after   62,094 player-weeks ·    654 doubled ( 1.1%) ·    882 phantom
+  //   six rungs  ( 92 events/season)   before  27,248 player-weeks ·  6,198 doubled (22.7%) ·  7,600 phantom
+  //                                    after   34,848 player-weeks ·      0 doubled ( 0.0%) ·      0 phantom
+  //
+  // The junior arm reaches EXACTLY zero because no junior week is over-subscribed (its heaviest wants
+  // 136 slots of 199). Every one of the nine-rung arm's remaining 654 sits on a week the CALENDAR
+  // cannot fill — see the second test.
+  //
+  // A ROW IS AN APPEARANCE (the contract at the top of season/rival.ts): `runAiTournament` writes one
+  // result row per entrant of every draw it runs, so two rows for one player in one week IS a rival
+  // in two draws. That is why this guard reads the ledger rather than re-deriving the fields — it
+  // asserts what the engine DID, not what a replica of it would have done.
+  it('no rival holds two ledger rows for the same week, on any fillable week', () => {
+    const world = createWorld('one-body-one-week')
+    const rng = rngFromSeed(world.seed)
+    let checkedWeeks = 0
+    let checkedMultiEventWeeks = 0
+    for (let i = 0; i < 40; i++) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      const scheduled = world.season.filter((e) => e.week === world.week)
+      if (scheduled.length === 0) continue
+      const slots = scheduled.reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
+      if (slots > world.cohort.length) continue // over-subscribed: see the sibling case below
+      checkedWeeks++
+      if (scheduled.length > 1) checkedMultiEventWeeks++
+      const rows = new Map<string, number>()
+      for (const r of world.results) {
+        if (r.week !== world.week || r.playerId === KID_ID) continue
+        rows.set(r.playerId, (rows.get(r.playerId) ?? 0) + 1)
+      }
+      for (const [id, n] of rows) expect(n, `${id} played ${n} events in week ${world.week}`).toBe(1)
+      // ...and the week is still fully played: every slot of every draw has somebody in it.
+      expect([...rows.values()].reduce((a, b) => a + b, 0)).toBe(slots)
+    }
+    // the fixture really did exercise the rule, and not just single-event weeks
+    expect(checkedWeeks).toBeGreaterThan(0)
+    expect(checkedMultiEventWeeks).toBeGreaterThan(0)
+  })
+
+  it('holds on the JUNIOR-ONLY calendar too – this was never an adult-tour bug', () => {
+    // ⚠ THE FRAMING THIS TEST EXISTS FOR. The defect was found while investigating the adult-tour
+    // wave's fatigue regression, which makes it very easy to file as an adult-tour bug. It is not:
+    // the junior entrant windows overlap almost completely (j300 [0, 0.25], j60 [0.05, 0.4], j30
+    // [0.12, 0.6], national [0.2, 0.7]), so two junior events on one week have ALWAYS drawn twice out
+    // of the same slice of the table. Measured on the junior-only season: 6,198 of 27,248 player-weeks
+    // in a draw were double-booked before the fix, and 0 after – exactly zero, not "zero on fillable
+    // weeks", because no junior week is over-subscribed (its heaviest wants 136 slots of 199).
+    //
+    // The arm is simulated by CADENCE rather than by a checkout: `buildSeason` skips a tier whose
+    // `everyNWeeks` is 0, so zeroing the three W rungs rebuilds the 92-event calendar. Restored in a
+    // `finally` – TIERS is module state shared by every test in the file.
+    const adult: TierId[] = ['w15', 'w35', 'w100']
+    const cadences = adult.map((t) => TIERS[t].everyNWeeks)
+    for (const t of adult) TIERS[t].everyNWeeks = 0
+    try {
+      const world = createWorld('one-body-one-week-juniors')
+      const rng = rngFromSeed(world.seed)
+      let weeks = 0
+      let events = 0
+      for (let i = 0; i < 40; i++) {
+        tickWeek(world, rng)
+        if (world.pendingTournament) {
+          skipTournament(world)
+          closeTournament(world)
+        }
+        const scheduled = world.season.filter((e) => e.week === world.week)
+        events += scheduled.length
+        if (scheduled.length < 2) continue
+        weeks++
+        // the junior calendar can always be filled – assert that too, so the "exactly zero" claim
+        // above is known to be about the rule and not about a week that happened to be small
+        const slots = scheduled.reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
+        expect(slots, 'a junior week is never over-subscribed').toBeLessThanOrEqual(world.cohort.length)
+        const rows = new Map<string, number>()
+        for (const r of world.results) {
+          if (r.week !== world.week || r.playerId === KID_ID) continue
+          rows.set(r.playerId, (rows.get(r.playerId) ?? 0) + 1)
+        }
+        for (const [id, n] of rows) expect(n, `${id} played ${n} junior events in week ${world.week}`).toBe(1)
+      }
+      expect(weeks, 'junior weeks with two or more events').toBeGreaterThan(0)
+      // ...and it really is the six-rung season, not the nine-rung one with the W draws empty
+      expect(events).toBeGreaterThan(0)
+      expect(world.season.every((e) => TIERS[e.tier].track !== 'wta')).toBe(true)
+    } finally {
+      adult.forEach((t, i) => (TIERS[t].everyNWeeks = cadences[i]))
+    }
+  })
+
+  it('...and where it CANNOT hold, the calendar is the reason and the excess is exactly the shortfall', () => {
+    // ⚠ THE ONE RESIDUE, AND IT IS A SECOND BUG WEARING THIS ONE'S CLOTHES. A week is
+    // OVER-SUBSCRIBED when the calendar schedules more draw slots than the world has rivals; then
+    // somebody must play twice and no selection rule can help. It is not hypothetical and it is not
+    // rare-and-random: SEASON OFFSET 48 — the last playable week before the off-season — collects ALL
+    // NINE rungs, in every season of every seed, because `claimWeek` searches outward from each
+    // tier's ideal week and every tier whose last event of the year overshoots week 51 gets clamped
+    // and then pushed DOWN onto the first free week under the off-season reservation. That is
+    // 8 + 16 + 32x7 = 248 slots for 199 rivals.
+    //
+    // The rule's last resort hands those events back their OWN drawn entrants (season/tournament.ts,
+    // preference (c)) rather than smearing the collision across the week, so the damage stays
+    // attributable. This test pins the arithmetic: the phantom appearances on such a week are exactly
+    // the slots the world has nobody to fill, never more.
+    //
+    // FOR THE OWNER: the fix is in the scheduler — `buildSeason` should refuse to pile every rung's
+    // December event onto one week — and it is deliberately NOT taken here, because moving a claimed
+    // week changes `pickSurface`'s block lookup and therefore the surface of real events.
+    const world = createWorld('one-body-one-week')
+    const rng = rngFromSeed(world.seed)
+    let over = 0
+    for (let i = 0; i < 104; i++) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+      const scheduled = world.season.filter((e) => e.week === world.week)
+      const slots = scheduled.reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
+      if (slots <= world.cohort.length) continue
+      over++
+      expect(world.week % 52, 'the over-subscribed week is the one before the off-season').toBe(48)
+      const rows = new Map<string, number>()
+      for (const r of world.results) {
+        if (r.week !== world.week || r.playerId === KID_ID) continue
+        rows.set(r.playerId, (rows.get(r.playerId) ?? 0) + 1)
+      }
+      const phantom = [...rows.values()].reduce((a, n) => a + n - 1, 0)
+      expect(phantom, 'phantom appearances').toBe(slots - world.cohort.length)
+    }
+    expect(over, 'the 9-rung week really does occur').toBeGreaterThan(0)
   })
 })

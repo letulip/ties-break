@@ -28,7 +28,7 @@ import {
 } from '../src/engine/world'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
 import { reconstructRun, rivalCondition, rivalConditions } from '../src/engine/season/rival'
-import { selectEntrants } from '../src/engine/season/tournament'
+import { resolveDoubleBookings, selectEntrants } from '../src/engine/season/tournament'
 import { generateCohort } from '../src/engine/season/cohort'
 import { generatePreHistory } from '../src/engine/season/prehistory'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
@@ -62,7 +62,15 @@ function runWeeks(seed: string, weeks: number): WorldState {
  *
  *  ⚠ The fatigue map became load-bearing here (28.07): rivals are now gated on condition the same
  *  way the kid is, so a wrecked player is not in the draw at all. Rebuilding without it silently
- *  produced a DIFFERENT, larger field - which is what this helper's own test caught. */
+ *  produced a DIFFERENT, larger field - which is what this helper's own test caught.
+ *
+ *  ⚠⚠ AND THE WEEK IS RESOLVED BEFORE IT IS PLAYED (31.07, fix/no-double-booking) - the same lesson
+ *  a second time, and it is why this helper is a helper. A rival may no longer appear in two of a
+ *  week's draws, so "what the engine draws" is a two-step answer: every event draws its own field on
+ *  its own sub-stream exactly as before, and THEN `resolveDoubleBookings` decides the week (the
+ *  higher tier keeps her; the loser backfills by standings position). Replaying only the first step
+ *  reconstructs a field the engine no longer plays, which is precisely the failure R1 exists to
+ *  catch - and did catch. Both steps here, in the tick's own order. */
 function entrantsOfWeek(world: WorldState, week: number): Set<string> {
   const ranking = computeRanking(
     world.results.filter((r) => r.playerId !== KID_ID),
@@ -70,11 +78,15 @@ function entrantsOfWeek(world: WorldState, week: number): Set<string> {
     world.cohort.map((p) => p.id),
   )
   const fatigue = rivalConditions(world.results, week)
+  const drawn = world.season
+    .filter((e) => e.week === week)
+    .map((event) => ({
+      event,
+      entrants: selectEntrants(event, world.cohort, ranking, rngFromSeed(`${world.seed}:aitour:${event.id}`), fatigue),
+    }))
   const out = new Set<string>()
-  for (const e of world.season) {
-    if (e.week !== week) continue
-    const rng = rngFromSeed(`${world.seed}:aitour:${e.id}`)
-    for (const p of selectEntrants(e, world.cohort, ranking, rng, fatigue)) out.add(p.id)
+  for (const field of resolveDoubleBookings(drawn, world.cohort, ranking, fatigue).values()) {
+    for (const p of field) out.add(p.id)
   }
   return out
 }

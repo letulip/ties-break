@@ -104,7 +104,13 @@ import {
 import { rivalConditions, rivalGroundstrokes, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
-import { selectEntrants, runTournament, kidSeedIndexIn, JUNIOR_TOUR } from './season/tournament'
+import {
+  selectEntrants,
+  resolveDoubleBookings,
+  runTournament,
+  kidSeedIndexIn,
+  JUNIOR_TOUR,
+} from './season/tournament'
 import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
@@ -3324,14 +3330,33 @@ export function closeTournament(world: WorldState): void {
 // 41550 / e6b0c709 is untouched by construction – points are post-draw arithmetic, read off a table
 // after the bracket has already been resolved. The ledger roughly doubles in size (a 32-draw writes
 // 32 rows instead of 16); it is still pruned on the same 52-week rule and stays ~2k rows.
-function runAiTournament(
+//
+// ⚠ SPLIT IN TWO BY THE NO-DOUBLE-BOOKING RULE (31.07), AND THE SPLIT IS THE LOAD-BEARING PART.
+// The draw and the bracket used to be one call because they share one `aiRng`: `selectEntrants`
+// spends the first N numbers of `seed:aitour:<id>` and `runTournament` continues from N+1. A rule
+// that has to see EVERY event of the week before ANY bracket runs cannot be written inside a
+// function shaped like that – but re-seeding a second stream for the bracket would restart it at
+// draw 0 and move every AI result ever recorded. So `drawAiEntrants` makes the draw and hands the
+// LIVE RNG OBJECT on; `runAiTournament` resumes on exactly the number it would have read anyway.
+// Same stream, same position, same values: the split is invisible to every sub-stream in the game.
+function drawAiEntrants(
   world: WorldState,
   event: SeasonEvent,
   aiRanking: RankingRow[],
   fatigue: Map<string, number>,
+): { event: SeasonEvent; entrants: AiPlayer[]; rng: Rng } {
+  const rng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
+  return { event, entrants: selectEntrants(event, world.cohort, aiRanking, rng, fatigue), rng }
+}
+
+function runAiTournament(
+  world: WorldState,
+  event: SeasonEvent,
+  entrants: AiPlayer[],
+  aiRng: Rng,
+  fatigue: Map<string, number>,
 ): void {
-  const aiRng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
-  const field = rivalField(selectEntrants(event, world.cohort, aiRanking, aiRng, fatigue), event, fatigue)
+  const field = rivalField(entrants, event, fatigue)
   const result = runTournament(event, field, null, world.seed, aiRng)
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {
@@ -3856,7 +3881,26 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer
   //    touches the weekly draw count. The main stream ends here carrying base costs + drift only.
-  for (const e of scheduled) runAiTournament(world, e, aiRanking, rivalFatigue)
+  //
+  //    ⚠ DRAW THE WHOLE WEEK, THEN RESOLVE IT, THEN PLAY IT (31.07 – «они физически не могут сразу
+  //    везде играть, ведь так?»). It used to be one loop that drew and played each event in turn,
+  //    which is why the same rival could be in two of a week's draws: each `selectEntrants` call saw
+  //    the same condition map and nothing else about the week. The three phases below are the ONLY
+  //    way to say "not twice" without touching a draw:
+  //      4a. every event draws its field exactly as it always did – same stream, same order, same
+  //          count. Safe to hoist because it always was independent of the brackets: `aiRanking` and
+  //          `rivalFatigue` are snapshots taken above, `world.cohort` is read-only here, and
+  //          `runAiTournament`'s ledger rows are never read back inside the same week. So phase 4a
+  //          returns, event for event, precisely what the old loop's first line returned.
+  //      4b. pure post-draw arithmetic on those arrays – higher tier keeps her, the loser backfills
+  //          by standings position. ZERO draws on any stream (season/tournament.ts).
+  //      4c. the brackets play, in the ORIGINAL calendar order and each on the very number of its
+  //          own sub-stream it was going to read, so the ledger's row order is unchanged too.
+  const weekDraws = scheduled.map((e) => drawAiEntrants(world, e, aiRanking, rivalFatigue))
+  const weekFields = resolveDoubleBookings(weekDraws, world.cohort, aiRanking, rivalFatigue)
+  for (const d of weekDraws) {
+    runAiTournament(world, d.event, weekFields.get(d.event.id) ?? d.entrants, d.rng, rivalFatigue)
+  }
 
   // 5-6. rank recompute + housekeeping. For a reveal week these are deferred to finalizeTournament
   //      (after the kid's points land), so the rank milestones keep their id order behind the kid's

@@ -220,7 +220,28 @@ const REF = {
   // forty times the scale: she did not get worse, the table got fuller underneath her. The number is
   // deliberately kept in this object and asserted right after the four capture values, so the next
   // person to see it move has the disproof of "the capture moved" on the four lines above it.
-  kidRank: 164,
+  //
+  // ⚠⚠⚠ RE-PINNED 164 -> 162 (31.07, fix/no-double-booking), and the note above is the reason this
+  // is a re-pin: `count` 41550, `hash` e6b0c709, `head` and `tail` are asserted on the four lines
+  // BEFORE this one and every one of them still passes byte-for-byte, re-derived on this branch.
+  // THE FROZEN CAPTURE DID NOT MOVE, and this change is the strongest test of that claim yet, because
+  // unlike the adult rungs it changes WHO PLAYS rather than what is on the calendar. It cannot move
+  // the stream, by construction and on purpose: the whole design of the fix is that the draws happen
+  // exactly as they always did – `selectEntrants` is called the same number of times, in the same
+  // order, off the same `seed:aitour:<id>` sub-streams, spending the same count – and the new rule is
+  // pure post-draw arithmetic over the arrays they returned, with ZERO draws on any stream. See the
+  // long note above `resolveDoubleBookings` in src/engine/season/tournament.ts for why filtering the
+  // candidate pool BEFORE the draw (the obvious fix) was the one fix this engine may not have.
+  //
+  // WHAT MOVED IS WHO WON, by two places. A rival can no longer be in two of the same week's draws,
+  // so ~31.5% of player-weeks that used to play twice now play once, and the ones who used to sit the
+  // week out (4.5-7.5% of the cohort never played at all) are in a draw instead. Different players
+  // in different brackets means a different set of juniors ends the year holding counting points, and
+  // the dense rank the point-less kid shares at the floor of the table moves with it. Two places, out
+  // of a change that re-deals 17,301 appearances across 199 players, is a SMALL effect – exactly the
+  // size it should be, since the total number of appearances is untouched (the fix redistributes the
+  // calendar's load, it does not add or remove a single draw slot).
+  kidRank: 162,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

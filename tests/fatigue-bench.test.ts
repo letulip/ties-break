@@ -331,6 +331,41 @@ describe('policy ordering (the load-management axis)', () => {
     // See the block above for the measurement and the cause. This line FAILS the day the field gets
     // its condition back (§4.1's age cap), which is exactly when somebody should be here restoring
     // `> 2.5` and deleting this assertion. Until then it is the honest record of a lost anchor.
+    //
+    // *** ⚠⚠⚠ HALF-WAY BACK, AND THE OTHER HALF SAYS THE DIAGNOSIS ABOVE IS INCOMPLETE: 1.836 ->
+    // 2.032 (31.07, fix/no-double-booking). RE-READ as every note in this block demands. NO KNOB
+    // MOVED: a rival can no longer be drawn into two of the same week's tournaments and play both,
+    // which was 31.5% of all player-weeks in a draw (14,381 of 45,675, creating 17,301 appearances
+    // the calendar does not contain). MEASURED, same cells, N=10, 104w, paired seeds:
+    //     before  injuries 123 grinder / 67 careful = 1.836
+    //     after   injuries 126 grinder /  62 careful = 2.032 · grinder meanCond 24.4 · careful 73.0
+    //
+    // MECHANISM, and it is the SAME asymmetry every note in this block has found: the GRINDER BARELY
+    // MOVES (123 -> 126) because she is saturated, and the whole swing is the CAREFUL parent's
+    // (67 -> 62, -7%). Reason 1 of the note above – "the field she meets is exhausted, so the one
+    // policy that arrives fresh wins rounds she used to lose and plays more matches per entry" – is
+    // exactly the term that shrinks: the field is no longer playing 42.9 events a season at its top
+    // and 0 at its bottom, so the opponents she meets are less lopsidedly wrecked.
+    //
+    // AND REASON 1 IS ALSO WHY THIS DOES NOT FINISH THE JOB. The field's MEDIAN condition did not
+    // recover (34-36 -> 35-37, measured in tests/rivals.test.ts C2, which this note has always called
+    // its sibling symptom), because double-booking never added tennis to the world – it concentrated
+    // it. The number of draw slots in a season is a property of the calendar alone (3,616 over 199
+    // rivals, ~18 events each), and the fix redistributes them without changing the total by one. So
+    // the cohort's fatigue is the LOAD, not the collisions, and the remedy is still §4.1's
+    // `maxAgeYears` – a rung that reduces how many draws one rival is eligible for. The bound below
+    // is LEFT INVERTED at 2.5, because the corridor is still lost and this is still the honest record
+    // of it; it is simply 0.2 closer to firing than it was.
+    //
+    // ⚠ AND THE 2.98 AT THE TOP OF THIS NOTE IS ITSELF SUSPECT, which every number in this block
+    // inherits. The collision was NOT introduced by the adult rungs: re-measured on the junior-only
+    // calendar (the 92-event season this bench's whole history was taken on), 22.7% of player-weeks
+    // in a draw were double-booked there too, and 30.7-33.7% of the cohort never played at all. Every
+    // anchor this block records – 3.05, 2.94, 3.12, 2.98 – was measured against a field that was an
+    // over-worked third and an idle third. The RELATIVE readings almost certainly survive, because
+    // the defect sat in both arms of every A/B this file ran; the ABSOLUTE ones about how tired the
+    // opposition was do not. Flagged for the owner rather than acted on: re-deriving a year of
+    // anchors is a decision about what the benches are for. ***
     expect(ratio, 'the >= 2.5 C3 corridor is currently LOST – see the note above').toBeLessThan(2.5)
   })
 })
