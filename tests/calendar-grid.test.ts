@@ -348,7 +348,17 @@ describe('the calendar renders the grid it is handed', () => {
   it('the grid is the ordinary week\'s drawing and the day strip is every other week\'s', () => {
     const template = screen.slice(screen.indexOf('<template>'), screen.lastIndexOf('</template>'))
     expect(template).toContain('<div v-if="grid" class="cal-time">')
-    expect(template).toContain('v-else\n          class="cal-grid"')
+    // ⚠ RE-AIMED (31.07): the day strip's condition moved from `v-else` to `v-if="!grid"` because a
+    // one-line NOTE now sits between them, saying WHY the hours are not drawn. The rule this pins is
+    // unchanged and is the only one it ever meant - the two drawings are alternatives and never both
+    // - so it now checks the condition rather than the adjacency an `v-else` happened to give it.
+    // The owner's own bug report is why the note exists: he updated the app, landed on one of the
+    // 26% of weeks where the grid stands down, and read the other drawing as the update not having
+    // arrived. A silent swap between two drawings is indistinguishable from a stale build.
+    expect(template).toContain('v-if="!grid"\n          class="cal-grid"')
+    expect(template, 'the stand-down line is the grid\'s alternative').toMatch(
+      /<p v-else class="cal-standdown">/,
+    )
     // one composable answers "may this week be a grid", and the screen does not re-derive it
     // ⚠ RE-AIMED (round-19): a fourth argument joined the call - the career SEED, which names the
     // court and gym sessions so two consecutive weeks do not read as a photocopy. The rule this pins

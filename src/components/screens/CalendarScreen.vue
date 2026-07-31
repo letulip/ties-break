@@ -150,6 +150,20 @@ const grid = computed(() => {
   return week && snap ? weekGridFor(week, snap.ageYears, weekDayNumbers(week.week), snap.seed) : null
 })
 
+/** WHY THE HOURS ARE NOT DRAWN THIS WEEK, in one line. Null-safe: it is only rendered when `grid`
+ *  is null, and every kind that can get there has a sentence. `weekGrid.ts` owns the boundary; this
+ *  only reports it, so the two can never disagree about which weeks are ordinary.
+ *
+ *  Player copy: short dash, no Cyrillic. */
+const standDownNote = computed(() => {
+  const kind = calendar.value?.days[0]?.kind
+  if (kind === 'away') return 'She is away at a tournament – the trip has its own page.'
+  if (kind === 'off') return 'No tennis this week – the hours are hers.'
+  if (kind === 'school') return 'Exams – school has the week, and the courts can wait.'
+  if (kind === 'rehab') return 'She is in rehab – the week belongs to the physio.'
+  return 'A week the plan does not shape – the days are below.'
+})
+
 /** THE NOTE ON THE FRIDGE DOOR. Off `(seed, week)` and nothing else, so it is the same scrap every
  *  time this week is looked at and a different one next week. The WEEK is the calendar's own - the
  *  one the grid draws and the button plays - so the paper and the picture beside it can never be
@@ -432,8 +446,19 @@ const showGo = computed(() => !game.snapshot?.pending)
           </div>
         </div>
 
+        <!-- ⚠ THE BOUNDARY SAYS SO NOW, AND IT USED TO BE SILENT. The grid stands down on a week the
+             engine has told us nothing about the shape of - a trip, a holiday, an exam blackout, a
+             layoff, the off-season - and the day strip appears in its place with no explanation.
+             Measured over 12 careers x 156 weeks WITH the kid entering events: that is 26.2% of
+             weeks (16.0 away, 5.8 off-season, 3.8 exams, 0.6 rehab), so better than one week in
+             four shows the other drawing. The owner opened the app after an update, landed on one of
+             them, and read it as the update not having arrived - which is exactly what a silent
+             swap between two drawings looks like. A week is not a broken build; it just has to say
+             which it is. -->
+        <p v-else class="cal-standdown">{{ standDownNote }}</p>
+
         <ul
-          v-else
+          v-if="!grid"
           class="cal-grid"
           :class="`cal-surf-${calendar.surface}`"
           :aria-label="`The seven days of ${dateLine}`"
@@ -970,6 +995,14 @@ const showGo = computed(() => !game.snapshot?.pending)
 .cal-block--rest {
   background: var(--cat-rest);
 }
+/* The one-line reason the hours are not drawn. A quiet aside, not a warning: nothing is wrong. */
+.cal-standdown {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
 /* The tournament block is the one the design OUTLINES – its border is the thirteenth token, and the
    only place in the palette where a colour is a stroke rather than a fill. */
 .cal-block--tournament {
