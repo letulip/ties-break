@@ -1645,7 +1645,14 @@ function servePct(side: Side): number {
   bottom: 6px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
+  /* ⚠ BASELINE, NOT CENTRE (owner, 31.07: «скорость подачи надо ниже подвинуть, на уровне с цифрами
+     счета посередине»). `center` aligns the two BOXES, and the boxes are different heights - the
+     speed is 12px against the score's 15px, both at `line-height: 1` - so their midpoints matched
+     while their digits did not, and the smaller reading floated about 1.5px high. Two numbers on one
+     row that do not sit on one line read as two rows badly stacked.
+     Baseline is what "level with" means for text: the glyphs stand on the same line whatever size
+     they are, so the speed can stay deliberately smaller (see `.mv-speed`) without looking lifted. */
+  align-items: baseline;
   gap: 8px;
   pointer-events: none;
 }
