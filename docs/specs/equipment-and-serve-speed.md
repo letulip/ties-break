@@ -133,3 +133,41 @@ right that this is a lever rather than a verdict: «хочешь, трать н�
 exactly on it. ⚠ But an investment that buys *only* the coach starves the travel that earns the
 points — so the package has to be sized against **coach plus the season of travel that uses him**, or
 the player buys half a thing and loses honestly for the wrong reason.
+
+
+---
+
+## 4. BACKLOG: the first/second serve split — a calibration project, not a formula change
+
+Deferred by the owner, 31.07: «про вторую подачу в доку или беклог запиши, чтобы не потерялось.
+Сделаем по-позже.»
+
+**What it is.** Today `basePServe` is ONE probability that the server wins the point, and the second
+serve exists only as cosmetics (`−14 km/h` in the speed readout). Real tennis lives in the split: a
+first serve goes in ~60-65% of the time and wins ~65-70% of those; a second serve wins ~48%. Double
+faults, second-serve pressure and the entire texture of a service game are in there, and we model
+none of it.
+
+**Why it cannot ride along with the speed work.** The difference-term trick (§ above) works because a
+new input can be made to vanish at the reference point. **A split cannot vanish**: decomposing one
+hold probability into two that multiply back to it means re-establishing the overall hold rate, which
+is the calibrated quantity. Everything tuned on top of it — the surface × play-style table, the coach
+ladder, the academy, the two ladders, the rank-plateau work, the econ bench's reach targets, and
+every golden pin holding them — was fitted against today's number.
+
+⚠ **Start with the bench, not the formula.** The order this project keeps: build the harness that
+measures **hold percentage, first-serve-in percentage and first/second-serve win percentages against
+real WTA figures** first, prove it reproduces today's model inside its own error bars, and only then
+show it a new model. `tools/odds-calibration.ts` is the shape to copy — it already proves
+`fastMatchProbability` and `simulateMatch` agree to 1.2 points over 88,500 matches, and it is the
+tool that would say whether a split preserved that.
+
+**What it would buy, and it is the reason to do it eventually.** Serve speed would become causal
+rather than a tiebreaker; double faults and second-serve nerves would become real instead of narrated;
+and — the strongest argument — **the match viewer and the model would finally be the same thing**,
+which matters more here than in most sims because the watchable match is this game's stated
+differentiator.
+
+**⚠ One thing it does NOT threaten:** the frozen MAIN-stream capture (41550 / `e6b0c709`). Matches
+draw from their own `seed:aitour:` / match-seed streams, so outcomes would move while the main
+stream's count and order would not. Everything else about the balance would move at once.
