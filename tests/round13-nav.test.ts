@@ -692,7 +692,14 @@ describe('a screen opens at its top, on both of the app\'s two scrollers', () =>
     // write it, the market's back button writes it, and the end of a week writes it (W1). A watcher
     // on the bar's click handler instead would have covered the taps and missed every other route,
     // which is most of them.
-    expect(app).toMatch(/function openNav\([\s\S]{0,200}tab\.value = entry\.id as TabId/)
+    // ⚠ RE-AIMED IN round-19, AND THE CAST IS WHAT LEFT. This used to require `tab.value = entry.id
+    // as TabId`, which was true of `main` and stopped being true one branch over: the calendar slice
+    // made the Calendar tab live, deleted the `if (entry.soon) return` guard above this line, and with
+    // no placeholder left in `TABS` every entry id IS a `TabId`, so the assertion the cast existed to
+    // silence went with it. The RULE this pins is unchanged and is the only one it ever meant - the
+    // bar's handler writes `tab`, so a watcher on `tab` sees every tap. Pinning the spelling of a cast
+    // was pinning the placeholder era by accident.
+    expect(app).toMatch(/function openNav\([\s\S]{0,200}tab\.value = entry\.id/)
     expect(app, 'the document is still the scrollport for a tabbed screen').not.toMatch(
       /\.app-content \{[^}]*overflow/,
     )
