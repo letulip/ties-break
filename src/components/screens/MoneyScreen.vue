@@ -158,19 +158,14 @@ const EXPENSE_KEYS = new Set<string>(EXPENSE_META.map((m) => m.key))
 // The export's glyphs, redrawn on its own grid (24x24, 1.5 stroke, round caps) and stored as path
 // data rather than nine copies of an <svg> element. `stroke: currentColor` is StatRow's contract,
 // so every one of them is drawn in the row's own ink.
+// ⚠ THREE ROWS LEFT THIS TABLE ON 31.07 AND THEY WERE DELETED RATHER THAN KEPT "just in case".
+// `entry`, `gear` and `vacation` are drawn from the owner's own files now (see CAT_ICON_FILE), and
+// the map is keyed by CATEGORY - so a path that nothing renders does not read as dead code, it reads
+// as a live alternative somebody might switch back to. There is one drawing per row and one place it
+// comes from. Anything still here is a glyph he has not replaced.
 const ICON_PATHS: Record<string, string[]> = {
   coaching: ['M12 5.2a3.2 3.2 0 1 1 0 6.4 3.2 3.2 0 0 1 0-6.4z', 'M5.5 19.5c0-3.3 2.9-5.2 6.5-5.2s6.5 1.9 6.5 5.2'],
   travel: ['M3 15.5l18-5.6-2-3.2-4.6 1.5-5.2-4.4-2.2.7 3 4.9-4 1.3-2.6-1.9-1.6.5z', 'M4.5 19.5h15'],
-  entry: [
-    'M8 4h8v4.5a4 4 0 0 1-8 0z',
-    'M12 12.6V16',
-    'M8.6 19.6h6.8',
-    'M8 5.2H5.6v1.2A2.9 2.9 0 0 0 8 9.2M16 5.2h2.4v1.2A2.9 2.9 0 0 1 16 9.2',
-  ],
-  gear: ['M4.5 6.5h15v13h-15z', 'M9 6.5V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v1.5', 'M4.5 12h15'],
-  stringing: ['M12 3.4a5.2 6.4 0 1 1 0 12.8 5.2 6.4 0 0 1 0-12.8z', 'M12 16.2V21', 'M6.9 9.8h10.2M12 3.6v12.4'],
-  physio: ['M4.5 4.5h15v15h-15z', 'M12 9v6M9 12h6'],
-  vacation: ['M12 6.6a5.4 5.4 0 1 1 0 10.8 5.4 5.4 0 0 1 0-10.8z', 'M12 2.6v1.6M12 19.8v1.6M2.6 12h1.6M19.8 12h1.6'],
   practice: ['M12 3.6a8.4 8.4 0 1 1 0 16.8 8.4 8.4 0 0 1 0-16.8z', 'M5.2 6.6c3.6 2.2 3.6 8.6 0 10.8M18.8 6.6c-3.6 2.2-3.6 8.6 0 10.8'],
   other: ['M12 4.5a7.5 7.5 0 1 1 0 15 7.5 7.5 0 0 1 0-15z', 'M12 8.2V12l2.4 1.6'],
 }
@@ -201,20 +196,29 @@ function catColor(key: string): string {
   return CAT_COLOR[key] ?? CAT_COLOR.other
 }
 
-// THE THREE GLYPHS THE OWNER DREW (public/icons/*.svg, 31.07). They are FILES, not path data, so
-// they cannot take `stroke: currentColor` the way the other six do - they are masked instead, the
-// same technique the bottom bar's tab icons use, which paints the category's colour THROUGH the
-// artwork's own silhouette. Anything not listed keeps its inline path.
+// THE GLYPHS THE OWNER DREW (public/icons/*.svg). They are FILES, not path data, so they cannot take
+// `stroke: currentColor` the way the inline ones do - they are masked instead, the same technique the
+// bottom bar's tab icons use, which paints the category's colour THROUGH the artwork's own
+// silhouette. Anything not listed keeps its inline path.
 //
 // ⚠ `racket` IS FILED UNDER STRINGING, NOT GEAR, and it is a judgement call worth naming: a racket
-// is the archetypal "gear" picture, but Gear already ships a kit-bag glyph that reads as a bag of
-// things, while Stringing's inline glyph was an oval with strings across it - a racket drawn badly.
-// So the owner's art replaces the drawing it was already trying to be, and the two rows stay
-// visibly different. One line to move it if he wants it on Gear instead.
+// is the archetypal "gear" picture, but Gear now ships his sneaker, while Stringing's inline glyph
+// was an oval with strings across it - a racket drawn badly. So the owner's art replaces the drawing
+// it was already trying to be, and the two rows stay visibly different.
+//
+// ⚠ AND `interest-discount-fee` IS THE ENTRY-FEE PICTURE, NOT AN `interest` ONE. The filename is a
+// trap: `interest` is a real and DIFFERENT category in this codebase - R9-1's weekly savings
+// interest - which is INCOME-side and which EXPENSE_META's own note says must never appear as a
+// spending row. What the owner asked for is the fees budget, so the file is bound to `entry`
+// (tournament entry fees) and the word in its name is ignored. Binding it by filename would have
+// created a spending row for an income category, silently, in a table keyed by category.
 const CAT_ICON_FILE: Record<string, string> = {
   physio: 'medical-kit-svgrepo-com',
   stringing: 'racket-svgrepo-com',
   income: 'incomes-svgrepo-com',
+  gear: 'sneakers-svgrepo-com',
+  entry: 'interest-discount-fee-svgrepo-com',
+  vacation: 'sun-fog-svgrepo-com',
 }
 function iconMask(key: string): string {
   return `url("${import.meta.env.BASE_URL}icons/${CAT_ICON_FILE[key]}.svg")`
