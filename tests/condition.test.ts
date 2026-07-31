@@ -220,7 +220,32 @@ const REF = {
   // forty times the scale: she did not get worse, the table got fuller underneath her. The number is
   // deliberately kept in this object and asserted right after the four capture values, so the next
   // person to see it move has the disproof of "the capture moved" on the four lines above it.
-  kidRank: 164,
+  //
+  // ⚠⚠⚠ RE-PINNED 164 -> 154 (31.07, §4.1, THE JUNIOR AGE CAP - `maxAgeYears: 18` on j30/j60/j300).
+  // Read the four above it first, exactly as the note above demands, because they are again the
+  // whole argument: `count` 41550, `hash` e6b0c709, `head` and `tail` are asserted BEFORE this line
+  // and every one of them still passes byte-for-byte. THE FROZEN CAPTURE DID NOT MOVE.
+  //
+  // AND THIS BRANCH IS THE HARDEST TEST THAT CLAIM HAS HAD. The adult-rungs slice argued the capture
+  // was safe because the calendar's SIZE had left the weekly draw count; this slice changes
+  // something strictly more dangerous - the NUMBER OF DRAWS `selectEntrants` SPENDS PER EVENT. The
+  // age gate narrows the candidate pool on the three J rungs, so their per-event draw count really
+  // does move and a J30 field really is different people. The main stream still does not notice,
+  // and the reason is structural rather than lucky: every draw selectEntrants spends comes off the
+  // EVENT-scoped `seed:aitour:<id>` / `seed:kidtour:<id>` sub-stream, while the MAIN stream carries
+  // base costs plus `driftCohort`'s four draws per rival per week - which is literally what 41550 is
+  // made of. "A narrower candidate pool cannot move the capture" is now measured, not argued.
+  //
+  // WHAT MOVED IS THAT THE ITF TABLE FINALLY AGES PEOPLE OUT. The J rungs are U18, so a rival who
+  // turns 19 stops entering them; her existing ITF results then roll out of the 52-week ranking
+  // window and are never replaced, and she drops to the tie at the floor. The table above the
+  // point-less kid is therefore SHALLOWER by about ten distinct totals, so the dense rank she shares
+  // improves by ten. She did not get better - the juniors above her graduated, which is exactly what
+  // a real junior ranking does and what our ITF table has never once done before this commit. It is
+  // the same mechanism as the 120 -> 164 note above, running in the opposite direction and for a
+  // better reason: that number moved because the table got FULLER, this one because it now EMPTIES
+  // at the top the way the sport does.
+  kidRank: 154,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

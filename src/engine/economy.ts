@@ -781,6 +781,12 @@ export const ECONOMY = {
     // table because `TIERS[tier].minAgeYears = 13` refuses them first (availabilityStatus asks the
     // age gate before the cap), which is also the honest place for "not eligible" to live.
     //
+    // ⚠ AND SINCE §4.1 THE SAME IS NOW TRUE AT THE TOP: ages above 18 never reach this table
+    // either, because `maxAgeYears = 18` on the same three rungs refuses them first. So `default`
+    // is exactly the 17-18 row it was always meant to be, rather than an open-ended "17+" that
+    // quietly also answered for a twenty-five-year-old. The table's domain and the tiers' age
+    // window are now the same interval, which is what makes the `default` key honest.
+    //
     // NOT MODELLED, DELIBERATELY – the merit increases. The same appendix grants +4 events to a
     // top-20 ITF junior at 14/15 (+4 to a top-50 at 13), and the WTA rulebook grants a year-end
     // top-5 junior up to 4 extra PRO events. Both are keyed to a world ranking; our field is 199

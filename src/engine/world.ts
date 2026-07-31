@@ -64,7 +64,7 @@ import {
   isExamWeek,
   isOffSeasonWeek,
   WEEKS_PER_YEAR,
-  OFF_SEASON_WEEKS, TIER_LADDER, isTierAgeOpen } from './season/calendar'
+  OFF_SEASON_WEEKS, TIER_LADDER, isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
@@ -1131,12 +1131,13 @@ function markBirthday(world: WorldState): void {
   })
 }
 
-/** Pure age gate for a tier (ladder-up): the junior tour is 13+, the domestic ladder has no
- *  minimum, the adult rungs are 16/16/17. No world/RNG dependency, so the childhood prologue and the
+/** Pure age gate for a tier: the junior tour is 13-18, the domestic ladder has no gate, the adult
+ *  rungs are 16/16/17 and never close. No world/RNG dependency, so the childhood prologue and the
  *  tests call it directly. MOVED to season/calendar.ts with the adult rungs (task #17) so the AI
  *  entrant selection can read the same one implementation without importing this file; re-exported
- *  here under its historical name, so every existing call site keeps working. */
-export { isTierAgeOpen }
+ *  here under its historical name, so every existing call site keeps working. `tierAgeBlock` is its
+ *  companion for the two surfaces that must say WHICH end she failed (§4.1). */
+export { isTierAgeOpen, tierAgeBlock }
 
 // --- the ITF annual entry cap (docs/research/ranking-points-by-tier.md §2) --------------------
 // The knob (the per-age table and the tier set) lives in ECONOMY.entryCap with the rest of the
@@ -1177,8 +1178,9 @@ export function entryCapUsage(world: WorldState, week: number): EntryCapUsage {
  *  surfaces (enterEvent / upcomingEvents / advanceWeeks) so the gate can never desync. Precedence
  *  is injured > too-young > capped > unavailable > medical > fatigued.
  *   - 'blocked' HARD stops entry: `injured` (she is already out), `unavailable` (too young for the
- *     tier / school exams / off-season / a booked family vacation – WEEK-level reasons, so they
- *     name the week), `capped` (the annual entry cap: she has spent this SEASON's allowance of
+ *     tier, or AGED OUT of it – the junior rungs are U18 since §4.1, and that is the one refusal
+ *     here that never lifts / school exams / off-season / a booked family vacation – WEEK-level
+ *     reasons, so they name the week), `capped` (the annual entry cap: she has spent this SEASON's allowance of
  *     international entries – the one block that lifts by itself, when the year turns), and
  *     `medical` (the doctor's veto below ECONOMY.availability.medicalFloor).
  *   - 'caution' is a SOFT warning that still ALLOWS entry: `fatigued` (condition below the tier's
@@ -1323,15 +1325,36 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   if (layoff !== null) {
     return { level: 'blocked', reason: 'injured', detail: injuredDetail(layoff.weeksRemaining) }
   }
-  // Ladder-up: the junior international tour opens at 13. Our detailed sim starts at 14, so this
-  // never fires today – it is wired now so the childhood prologue (Phase 6) inherits the rule for
-  // free instead of re-deriving it, and so the tier table stays the single source of truth.
-  const minAge = TIERS[event.tier].minAgeYears
-  if (minAge !== undefined && !isTierAgeOpen(event.tier, ageAtWeek(event.week))) {
+  // THE TIER'S AGE GATE, BOTH ENDS OF IT (§4.1). The junior tour runs 13-18, the adult rungs open at
+  // 16/16/17, the domestic ladder is open at every age for ever (owner's call 2 – it is ours, not
+  // the ITF's, and it is where an adult who is not good enough still plays).
+  //
+  // ⚠ THE `minAge !== undefined` SHORT-CIRCUIT IS GONE, and removing it is load-bearing rather than
+  // tidying: it meant a tier with a MAXIMUM and no minimum would never have been checked at all,
+  // and `isTierAgeOpen` would have been consulted only for permission it had already granted. No
+  // shipped tier has that shape today (all three J rungs carry both), so this is a trap disarmed
+  // before it fires rather than a bug fixed – but it is exactly the shape a "domestic veterans"
+  // rung or an U14 rung would take, and the failure would have been silent.
+  //
+  // ⚠ AND THIS IS THE FIRST GATE IN THE GAME THAT CAN CLOSE BEHIND HER. Every other refusal here is
+  // a "not yet" – earn the points, heal, wait for the allowance to reset. Ageing out of the junior
+  // tour is permanent, it arrives on a birthday she cannot plan around, and on the season she turns
+  // 19 it removes J30/J60/J300 from her calendar in one week. That is the intended shape of §4 and
+  // NOT a bug: the adult rungs (W15 from 16) have been open beside them for three seasons by then,
+  // so what she loses is half a calendar she has already replaced rather than the whole of it. The
+  // FORK that makes this a decision instead of an event – rank, balance, the ended scholarship, what
+  // a W15 costs against what it pays – is §4.2 A / B2, still to come, and the copy below is
+  // deliberately plain until it exists so nothing promises a screen that is not there.
+  const ageBlock = tierAgeBlock(event.tier, ageAtWeek(event.week))
+  if (ageBlock !== null) {
+    const tier = TIERS[event.tier]
     return {
       level: 'blocked',
       reason: 'unavailable',
-      detail: `${TIERS[event.tier].label} opens at ${minAge} – she is too young.`,
+      detail:
+        ageBlock === 'young'
+          ? `${tier.label} opens at ${tier.minAgeYears} – she is too young.`
+          : `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${ageAtWeek(event.week)} she has aged out.`,
     }
   }
   // THE ITF ANNUAL ENTRY CAP – she has used her year's international allowance.

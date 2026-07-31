@@ -110,32 +110,47 @@ export function selectEntrants(
   // absent from the ranking sort to the back.
   const pctOf = (id: string) => ((posOf.get(id) ?? total - 1) + 1) / total
 
-  // ⚠ WHO IS OLD ENOUGH TO BE HERE AT ALL – the universe this whole function draws from (task #17).
-  // The cohort's own age band is [13, 19]: a junior field has always contained the ones just
-  // starting and the ones about to age out, and once three rungs opened at 16+ that spread is what
-  // tells the two tours apart. A W15 draw is the sixteen-to-nineteens; a J30 draw is still
-  // everybody. Without it the adult tour's first season is played by thirteen-year-olds, which is
-  // the mirror image of the bug docs/specs/adult-tour-and-endings.md §1 names ("the field she meets
-  // there can contain 28-year-olds") and which the same one sentence fixes: age is a fact about
-  // people, not a label on a tier. The MAXIMUM half of that sentence – capping the J rungs at 18 so
-  // a junior draw is juniors – is §4.1 and is still open.
+  // ⚠ WHO IS OLD ENOUGH TO BE HERE AT ALL – the universe this whole function draws from (task #17,
+  // completed by §4.1). The cohort's own age band is [13, 19]: a junior field has always contained
+  // the ones just starting and the ones about to age out, and that spread is what tells the two
+  // tours apart. A W15 draw is the sixteen-and-overs; a J30 draw is the eighteen-and-unders; the
+  // three-year overlap between them is deliberate and is what makes the fork at 19 a decision made
+  // with evidence rather than a wall (see TierDef.maxAgeYears).
+  //
+  // BOTH ENDS OF THE RULE ARRIVED THROUGH THIS ONE LINE, and neither needed its own code. Task #17
+  // added the minimum, so the adult tour's first season would not be played by thirteen-year-olds;
+  // §4.1 added the maximum to `isTierAgeOpen` itself, so the junior tour stopped being played by
+  // nineteen-year-olds. Measured on the shipped calendar before the ceiling: 13.7% of a J300 draw
+  // and 11.3% of a J30 draw were 19 or older. That is the bug §1 of
+  // docs/specs/adult-tour-and-endings.md names from the other side ("the field she meets there can
+  // contain 28-year-olds"), and the fix is the same sentence for both: age is a fact about people,
+  // not a label on a tier.
   //
   // IT IS THE UNIVERSE AND NOT JUST THE BAND, deliberately: both backfills below reach OUTSIDE the
   // entrant window, and an age rule that the backfills could walk around would be no rule at all -
-  // the tired-elite path would have handed W100 slots straight to the children it just excluded.
+  // the tired-elite path would have handed W100 slots straight to the children it just excluded,
+  // and now would have handed J300 slots back to the adults who have just aged out of them.
   //
-  // TOTAL: if the age gate leaves fewer players than the draw needs (impossible at the shipped
-  // numbers - the youngest adult rung wants 32 of the ~82 sixteen-year-olds-and-up in a 199 cohort,
-  // and the conveyor's intake keeps the spread) the whole cohort plays, because a draw that cannot
-  // be filled is a crash rather than a compromise. Same discipline as claimWeek's gap retry.
+  // TOTAL: if the age gate leaves fewer players than the draw needs the whole cohort plays, because
+  // a draw that cannot be filled is a crash rather than a compromise (same discipline as claimWeek's
+  // gap retry). It cannot fire at the shipped numbers from either end - the J rungs want 32 of the
+  // ~170 eighteen-and-unders and the youngest adult rung 32 of the ~82 sixteen-and-overs, in a 199
+  // cohort whose conveyor intake keeps arriving at 13.
   const ofAge = cohort.filter((p) => isTierAgeOpen(event.tier, p.ageYears))
   const eligible = ofAge.length >= drawSize ? ofAge : cohort
   //
-  // RNG: the age gate changes the candidate COUNT, and therefore the per-event draw count, on the W
-  // rungs ONLY. Every domestic tier has no `minAgeYears` at all and every J tier's is 13 - the bottom
-  // of the cohort's age band and the age the conveyor's intake arrives at - so on the six
-  // pre-existing rungs `ofAge` is the whole cohort on every week of every career and their event
-  // sub-streams are byte-identical. The W rungs have no history to be identical to.
+  // RNG: the age gate changes the candidate COUNT, and therefore the per-event draw count, on every
+  // rung that HAS one - which since §4.1 means the J rungs too, not the W rungs alone. Their event
+  // sub-streams are NOT byte-identical to the pre-cap ones and cannot be: a J30 field really is
+  // different people now.
+  //
+  // ⚠ NONE OF THAT IS ON THE MAIN WEEKLY STREAM, which is the invariant that matters and the reason
+  // this was safe to widen. Every draw here comes off the event-scoped `seed:aitour:<id>` /
+  // `seed:kidtour:<id>` sub-stream (see the callers in world.ts), so the frozen MAIN capture -
+  // 41550 draws / hash e6b0c709, which is `driftCohort` spending exactly four draws per rival per
+  // week and nothing else - is untouched BY CONSTRUCTION rather than by luck. Verified: it
+  // re-derives byte-for-byte on this branch. The three domestic rungs carry no age gate at all, so
+  // their sub-streams are byte-identical as well.
   const band = eligible.filter((p) => isEntrantBand(event.tier, pctOf(p.id)))
 
   // Position-biased stochastic entry: lower key = more likely to enter. Jitter is a

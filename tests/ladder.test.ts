@@ -472,7 +472,7 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
   })
 })
 
-describe('L7 — age gate (13+), open immediately at our start age', () => {
+describe('L7 — age gate (the junior tour is 13-18), open immediately at our start age', () => {
   it('the J levels are shut below 13 and open from 13 up; the domestic ladder has no gate', () => {
     for (const t of ['j30', 'j60', 'j300'] as TierId[]) {
       expect(isTierAgeOpen(t, 12)).toBe(false)
@@ -482,6 +482,45 @@ describe('L7 — age gate (13+), open immediately at our start age', () => {
     for (const t of ['local', 'regional', 'national'] as TierId[]) {
       expect(isTierAgeOpen(t, 8)).toBe(true)
     }
+  })
+
+  // ⚠ THE CEILING, ADDED BY §4.1 (docs/specs/adult-tour-and-endings.md) - the symmetric half of the
+  // case above, and the half that did not exist for three releases. Real ITF juniors is U18, and
+  // until this landed the J rungs opened at 13 and closed NEVER: a nineteen-year-old still played
+  // J30s and 13.7% of a measured J300 field was 19 or older. `living-field.md` §2.1 has described
+  // the rule all along ("nobody dominates the junior tour at 19 because nobody IS in the junior tour
+  // at 19"); this is the assertion that it is finally true of the code.
+  it('the J levels CLOSE after 18, and neither the domestic nor the adult ladder ever closes', () => {
+    for (const t of ['j30', 'j60', 'j300'] as TierId[]) {
+      expect(TIERS[t].maxAgeYears, `${t} carries the cap`).toBe(18)
+      expect(isTierAgeOpen(t, 18), `${t} at 18`).toBe(true) // the whole season she turns 18
+      expect(isTierAgeOpen(t, 19), `${t} at 19`).toBe(false) // ...and never again
+      expect(isTierAgeOpen(t, 25), `${t} at 25`).toBe(false)
+    }
+    // The domestic ladder is OURS, not the ITF's, and stays open at every age – owner's call 2: it is
+    // where an adult who is not good enough still plays, which is most of them.
+    for (const t of ['local', 'regional', 'national'] as TierId[]) {
+      expect(TIERS[t].maxAgeYears).toBeUndefined()
+      expect(isTierAgeOpen(t, 30)).toBe(true)
+    }
+    // The adult rungs open at 16/16/17 and never close – the fork at 19 is a decision, not a wall,
+    // precisely because these are still here on the far side of it.
+    for (const t of ['w15', 'w35', 'w100'] as TierId[]) {
+      expect(TIERS[t].maxAgeYears).toBeUndefined()
+      expect(isTierAgeOpen(t, 30)).toBe(true)
+    }
+  })
+
+  // THE OVERLAP IS THE POINT, and it is what makes 19 a fork rather than a cliff: for three whole
+  // seasons she holds both tours at once and can price one against the other with real results.
+  it('16-18 is a genuine overlap – both tours open at once', () => {
+    for (const age of [16, 17, 18]) {
+      expect(isTierAgeOpen('j30', age), `j30 at ${age}`).toBe(true)
+      expect(isTierAgeOpen('w15', age), `w15 at ${age}`).toBe(true)
+    }
+    // ...and at 19 the junior half is gone while the adult half remains.
+    expect(isTierAgeOpen('j30', 19)).toBe(false)
+    expect(isTierAgeOpen('w15', 19)).toBe(true)
   })
 
   // ⚠ RE-AIMED, NOT WEAKENED (task #17), and this one changed because the WORLD changed rather than

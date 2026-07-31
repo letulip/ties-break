@@ -115,7 +115,15 @@ function hashOf(draws: number[]): string {
 // table - which is where a point-less kid sits - is shared by fewer people and its dense rank is
 // deeper. Same mechanism as the note above, forty times the scale. Full reasoning at the REF
 // declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 164 }
+//
+// ⚠⚠ kidRank RE-PINNED 164 -> 154 (31.07, §4.1, the junior age cap), and `count` 41550 and `hash`
+// e6b0c709 are AGAIN untouched and re-derived byte-for-byte. Full reasoning at the REF declaration
+// in tests/condition.test.ts; the short version is that the J rungs are U18 now, so a rival who
+// turns 19 stops entering them, her old ITF results roll out of the 52-week window and are never
+// replaced, and she falls back to the tie at the floor. The table above the point-less kid is
+// therefore SHALLOWER by about ten distinct totals - which is precisely what a real junior ranking
+// does when a player ages out, and it is the first time our ITF table has ever done it.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 154 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

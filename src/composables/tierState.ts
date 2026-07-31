@@ -10,7 +10,12 @@
 // about a tier she was genuinely short of points for: a muted dash.
 //
 // So the states are now told apart, in words:
-//   'age-locked'  the junior tour is 13+ and she is younger (kept wired for the childhood prologue)
+//   'age-locked'  the tier's age window does not contain her – she is younger than `minAgeYears`
+//                 (the junior tour is 13+, the adult rungs 16/16/17), or since §4.1 OLDER than
+//                 `maxAgeYears` (the junior tour is U18). ⚠ ONE KIND, TWO OPPOSITE SENTENCES: the
+//                 planner's job is the same either way (not enterable, nothing to say about
+//                 scheduling), but "Opens at 13" and "Under-19" are a countdown and a closed door,
+//                 so `tierState` branches on `tierAgeBlock` to pick the words.
 //   'locked'      she is BELOW enterPointBand[0] – "Reach N pts", the one real lock
 //   'outgrown'    her windowed points are past enterPointBand[1] (unchanged behaviour)
 //   'capped'      she has spent this YEAR's allowance of international entries (the ITF annual
@@ -27,7 +32,7 @@
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
-import { isCappedTier, isTierAgeOpen } from '../engine/world'
+import { isCappedTier, tierAgeBlock } from '../engine/world'
 import { weekRange } from '../shared/dates'
 import { LADDER_POINTS_LABEL, type EntryCapUsage } from '../shared/protocol'
 import type { TierId } from '../engine/season/types'
@@ -80,7 +85,17 @@ export function pointsLockNote(pointsToEnter: number, points?: number): string {
 export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
   const tier = TIERS[id]
   const clauses: string[] = []
-  if (tier.minAgeYears !== undefined) clauses.push(`age ${tier.minAgeYears}`)
+  // ⚠ A RANGE WHEN THE RUNG HAS AN END (§4.1), because "age 13" for a tier she will be thrown out of
+  // at 19 is a half-truth on the one surface whose entire job is to state the gate. Still derived
+  // from `TIERS`, so a re-priced cap re-words itself; still starts with `age ${minAgeYears}`, so the
+  // clause reads the same way and every caller that greps for it still finds it.
+  if (tier.minAgeYears !== undefined) {
+    clauses.push(
+      tier.maxAgeYears !== undefined
+        ? `age ${tier.minAgeYears}-${tier.maxAgeYears}`
+        : `age ${tier.minAgeYears}`,
+    )
+  }
   const [minPoints] = tier.enterPointBand
   if (tier.enterPct !== undefined) {
     // The acceptance list. Never a points figure: the rungs above the on-ramp do not read one, and
@@ -255,7 +270,24 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   const tier = TIERS[id]
   const [minPoints, maxPoints] = tier.enterPointBand
 
-  if (!isTierAgeOpen(id, input.ageYears)) {
+  // ⚠ THE AGE LOCK HAS TWO ENDS SINCE §4.1, AND THEY ARE OPPOSITE KINDS OF NEWS. "Opens at 13" is a
+  // countdown - a rung she is walking towards. "Aged out" is a door that has shut behind her, and
+  // printing the OPENING sentence for it would tell a nineteen-year-old that the Junior Tour opens
+  // at 13, which is both absurd and cruel. Same one `kind`, because the planner's job is identical
+  // either way (the rung is not enterable and has nothing to say about scheduling); different
+  // sentence, because the player's job is not.
+  const ageBlock = tierAgeBlock(id, input.ageYears)
+  if (ageBlock === 'old') {
+    return {
+      id,
+      kind: 'age-locked',
+      note: `Under-${tier.maxAgeYears! + 1}`,
+      // No `tierOpensWhen` here on purpose: every clause it can write is a condition she could still
+      // meet, and none of them is true any more. The tooltip states the rule and her age against it.
+      title: `${tier.label} is under-${tier.maxAgeYears! + 1} – at ${input.ageYears} she has aged out of it.`,
+    }
+  }
+  if (ageBlock === 'young') {
     return {
       id,
       kind: 'age-locked',

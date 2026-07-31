@@ -85,6 +85,31 @@ export interface TierDef {
   /** Minimum age in years to enter. Absent = no age gate. The junior tour opens at 13; our
    *  detailed sim starts at 14, so it never bites today – it is here for the childhood prologue. */
   minAgeYears?: number
+  /** MAXIMUM age in years to enter, INCLUSIVE – she may play the whole season she turns this age
+   *  and never again (§4.1 of docs/specs/adult-tour-and-endings.md). Absent = the rung never ages
+   *  anybody out, which is every domestic and every adult rung.
+   *
+   *  ⚠ IT IS THE SYMMETRIC HALF OF `minAgeYears` AND IT IS THE OLDER HALF OF THE SAME SENTENCE.
+   *  For three releases "junior" was a LABEL ON A TIER rather than a rule about people: the J rungs
+   *  opened at 13 and closed never, so a nineteen-year-old still played J30s and a J300 draw and a
+   *  W15 draw were drawn from the same 199. The rivals only APPEARED to obey a junior tour because
+   *  the conveyor deleted them from the world at the crunch – a substitution for a tour they should
+   *  have been leaving, which is exactly the hole §1 of that spec names.
+   *
+   *  ⚠ 18 IS THE REAL RULE, NOT A BALANCE KNOB. ITF juniors is U18: eligibility runs to the end of
+   *  the year a player turns 18. It is capped here because it is TRUE. It has a large and welcome
+   *  side effect on the field's condition (see the report on feat/junior-age-cap), and that side
+   *  effect is emphatically NOT what the number was chosen for – the collapse it partly relieves is
+   *  a POPULATION problem, 199 rivals against a calendar docs/specs/living-field.md sizes for
+   *  ~2,000, and no age rule fixes that. Anybody retuning this number for the field's sake is
+   *  tuning the wrong knob and should read living-field.md instead.
+   *
+   *  ⚠ AND IT IS WHY THE OVERLAP IS REAL. W15 opens at 16 and the J rungs close after 18, so a
+   *  sixteen-to-eighteen-year-old holds both tours at once and arrives at nineteen having seen what
+   *  each one costs and pays. That is what makes the fork at 19 (§4.2 A) a decision made with
+   *  evidence rather than a wall she walks into on a birthday. Capping without the adult rungs
+   *  underneath would have been the wall, which is why §7 sequences this second. */
+  maxAgeYears?: number
   /** AI entrant-selection WINDOW on standings PERCENTILE (`(position + 1) / fieldSize`, 0 = best):
    *  a cohort player is a candidate for this tier's draws iff her percentile sits inside it.
    *  Windows OVERLAP for the same reason `enterPointBand` does – a junior plays several rungs at
