@@ -942,6 +942,97 @@ export interface TierTrophies {
   finals: number[]
 }
 
+// --- THE INBOX (schema v32) --------------------------------------------------------------------
+// docs/specs/offers-and-the-inbox.md §2. One durable list on the world: the letters somebody has
+// written to this family, and what the parent did about each one.
+//
+// ⚠ THIS SLICE CARRIES THE KIT SPONSOR AND NOTHING ELSE, on the spec's own build order (§6): it is
+// the smallest step that proves the whole shape - arrival, deadline, sign, refuse, expiry - against
+// a number that is already balanced. The agent (§4.2) and the investor (§4.3) are later slices and
+// deliberately have no representation here yet; `OfferKind` is a union of one so that adding them is
+// a widening rather than a redesign.
+
+/** Which instrument wrote. One member today – see the note above. */
+export type OfferKind = 'kit'
+
+/** Where an offer is in its life. `open` is the only state a decision is possible in; the other
+ *  three are terminal and the letter stays in the inbox as a record of what was chosen. */
+export type OfferState = 'open' | 'signed' | 'refused' | 'expired'
+
+/** WHOSE LETTERHEAD IS ON THE PAPER. The brand ladder a sponsor climbs: the shop in her town, a
+ *  national label, a global one. `public/images/sponsors/<tier>.webp` is the mark, looked up by this
+ *  key and by nothing else.
+ *
+ *  ⚠ ONLY `local` IS REACHABLE TODAY, on purpose. The deal that already exists is a local shop's
+ *  (ECONOMY.sponsorship is gated on her NATIONAL rank, which is the ladder a home-town shop reads),
+ *  and the other two rungs are a design that has not been written yet - inventing brand names and
+ *  thresholds for them now would be guessing at a spec rather than shipping one. The union exists so
+ *  the lookup is by tier from the first day rather than a hard-coded filename that has to be found
+ *  again later. */
+export type SponsorTier = 'local' | 'national' | 'global'
+
+/** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from
+ *  `ECONOMY` afterwards, which is the rule that makes the deadline mean something: a letter held for
+ *  three weeks is the same letter, and the spec's §2 warning ("terms never improve while you hold
+ *  the letter") is enforced by the terms being a snapshot rather than a formula.
+ *
+ *  ⚠ EVERY FIELD HERE IS ON THE PAPER, and that is a hard rule rather than a nicety
+ *  (spec §3): "a letter whose consequence is not on its face is a trap rather than a decision". If a
+ *  term is added to this interface it has to appear in the letter's own words in the same commit. */
+export interface KitOfferTerms {
+  /** whose letterhead – see SponsorTier. */
+  tier: SponsorTier
+  /** the shop's name, as it signs the letter. */
+  brand: string
+  /** WHAT THE SHOP SPENDS ON HER KIT over the season, in cents. A ceiling, not a cheque: it pays her
+   *  racquet, string and shoe bills as they land until this much has been spent, and the family
+   *  never sees a penny of it as money. `ECONOMY.sponsorship`'s already-balanced figure. */
+  kitAllowanceCents: number
+  /** ...AND THE FLOOR UNDER HER KIT'S CONDITION, 0..1 in `KitWear`'s units (0 = as new, 1 = spent).
+   *  A sponsored player restrings when the bed dies, not when the budget allows, so no line of her
+   *  kit is allowed past this much wear while the deal runs. See `kitWearAt`. */
+  freshCap: number
+  /** WHAT SHE OWES IN RETURN: tournaments she must enter over the season for the shop to write
+   *  again. A sponsor pays to be SEEN (spec §4.1), and this is the obligation that makes the deal a
+   *  decision rather than a free win – the bench says playing more loses. */
+  minEventsPerSeason: number
+}
+
+export type OfferTerms = KitOfferTerms
+
+/** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
+ *  needs to be honoured for a season and then reviewed. */
+export interface Offer {
+  id: string
+  kind: OfferKind
+  /** the week it arrived, and the week it expires. Same contract as `SeasonEvent.deadlineWeek`:
+   *  inside the window it can be signed or refused; past it, it is gone. */
+  week: number
+  deadlineWeek: number
+  terms: OfferTerms
+  state: OfferState
+  /** the week the state left `open` – signed, refused, or the week it lapsed. Absent while open. */
+  decidedWeek?: number
+  /** SIGNED ONLY: the last week the deal covers. A kit deal runs to the end of the season it was
+   *  offered for; the shop reviews her again at the next boundary and writes, or does not. */
+  untilWeek?: number
+  /** SIGNED ONLY: what the shop has actually spent on her kit under this deal, in cents. The one
+   *  number that says what signing was worth – the same job `AcademySupport.coveredCents` does for
+   *  the scholarship, and reported the same way at the season boundary. */
+  coveredCents?: number
+  /** SIGNED ONLY, written at the season boundary that reviewed it: how many tournaments she actually
+   *  entered while the deal ran.
+   *
+   *  ⚠ IT IS HERE SO THE OUTCOME IS VISIBLE AFTER THE FACT (owner, 31.07: «надо при подписании
+   *  прояснить, что будет, если девочка не выполнит условия, сейчас это непонятно совсем»). The
+   *  letter tells him what failing the obligation costs BEFORE he signs; this is what lets the inbox
+   *  tell him afterwards whether it happened, and against which number. An obligation that fails
+   *  silently is the same invisibility one step later.
+   *
+   *  Absent while the deal is still running – it is the review's verdict, not a live counter. */
+  eventsPlayed?: number
+}
+
 /** How drained she is, as a WORD (D3 – Home speaks words; Stats keeps the number). */
 export type ConditionBand = 'fresh' | 'ok' | 'worn' | 'drained'
 
@@ -1337,6 +1428,23 @@ export interface Snapshot {
    *  trophies from the start, locked, so an absent key would be a shape the reader has to defend
    *  against for no gain. */
   trophiesByTier: Record<TierId, TierTrophies>
+  /** THE INBOX (schema v32): every letter this career has been sent, oldest first – open, signed,
+   *  refused and expired alike. See `Offer`.
+   *
+   *  ⚠ PERSISTED STATE, LIKE `trophiesByTier` AND FOR THE SAME REASON: a signed deal has to outlive
+   *  every prune. The event feed caps at 400 rows and only the trailing 60 reach this snapshot, so a
+   *  contract that lives in the feed is a contract that silently stops existing two seasons later.
+   *  Bounded by construction – at most a handful of letters a season – so it is never pruned. */
+  offers: Offer[]
+  /** ⚠ THE INBOX DOT, AND THE ENGINE DECIDES IT. Exactly the bell's discipline (HomeScreen's own
+   *  comment: "the bell's dot asserts one FACT and not the 'unread' it cannot know"): this asserts
+   *  that AN OFFER IS OPEN AND ITS DEADLINE HAS NOT PASSED, which is a fact the engine holds. It is
+   *  never "unread" – the engine cannot know what the player has looked at, and a dot that claims to
+   *  is a dot that lies on the second visit.
+   *
+   *  It goes out on its own: the last open offer being signed, refused or expiring is the same
+   *  event as this turning false. */
+  offerOpen: boolean
   /** the CURRENT season's kid W-L (round-8, the R6 debt): mirrors the v10 world counters that
    *  accumulate at finalizeTournament and reset at each season wrap-up.
    *
@@ -1441,6 +1549,11 @@ export type ToWorker =
   | { id: number; type: 'setPlan'; plan: WeekPlan }
   // W4: answer the knock. The ONLY way an undecided knock clears, and the only way time moves again.
   | { id: number; type: 'decideKnock'; choice: KnockChoice }
+  // THE INBOX (v32): answer a letter. Both are refused past the deadline – the window is the
+  // feature, not a courtesy – and `signOffer` is irreversible by design, which is why the UI puts a
+  // ConfirmDialog in front of it and the engine puts nothing in front of the confirm.
+  | { id: number; type: 'signOffer'; offerId: string }
+  | { id: number; type: 'refuseOffer'; offerId: string }
   | { id: number; type: 'setPhysio'; active: boolean }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }

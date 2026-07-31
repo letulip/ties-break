@@ -56,18 +56,35 @@ function clamp01(x: number): number {
  * anyway and goes further into the red. So the purchase weeks of a career are a pure function of
  * two things the save already holds, and condition is a pure function of those weeks. There is no
  * durable state to add, no migration, no fixture and no README row.
+ *
+ * ⚠ `freshCap` IS THE ONE THING THAT IS NOT DERIVED, and it is deliberately the smallest possible
+ * shape of that (31.07, the kit sponsor). A signed kit deal means somebody else is supplying her, and
+ * a supplied player restrings when the bed dies rather than when the budget allows - so no line of
+ * her kit is allowed past this much wear while the deal runs. It is passed IN rather than read off a
+ * world, so this function stays pure and every existing caller's answer is byte-identical: the
+ * default is `null`, which is "nobody is supplying her", which is what every career was.
+ *
+ * The cap only ever SUBTRACTS wear, so a sponsored girl sits between her unsponsored self and fresh
+ * kit and never past it - `applyKit` can still only ever take attributes down. See engine/offers.ts
+ * `kitFreshCap` for why a ceiling rather than a shorter purchase cadence.
  */
-export function kitWearAt(seed: string, background: FamilyBackground, week: number): KitWear {
+export function kitWearAt(
+  seed: string,
+  background: FamilyBackground,
+  week: number,
+  freshCap: number | null = null,
+): KitWear {
   const e = ECONOMY.equipment
   const sinceStrings = weeksSinceGear(seed, 'stringing', background, week)
   const sinceFrame = weeksSinceGear(seed, 'rackets', background, week)
   const sinceShoes = weeksSinceGear(seed, 'shoes', background, week)
+  const cap = (w: number) => (freshCap === null ? w : Math.min(w, freshCap))
   return {
-    strings: clamp01(sinceStrings / e.stringLifeWeeks),
+    strings: cap(clamp01(sinceStrings / e.stringLifeWeeks)),
     // The frame is the one line with a flat head: sound is sound, however old, and only past
     // `frameSoundWeeks` does it start being the patched racket.
-    frame: clamp01((sinceFrame - e.frameSoundWeeks) / e.framePatchWeeks),
-    shoes: clamp01(sinceShoes / e.shoeLifeWeeks),
+    frame: cap(clamp01((sinceFrame - e.frameSoundWeeks) / e.framePatchWeeks)),
+    shoes: cap(clamp01(sinceShoes / e.shoeLifeWeeks)),
   }
 }
 

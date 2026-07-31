@@ -401,18 +401,75 @@ export const ECONOMY = {
   // audit her parents' income. Means-testing it would also make the mechanic unmeasurable at the top
   // end, and how ruinous the road actually is up there is an open question rather than a settled one.
   // The wealthy family's numbers are reported alongside everybody else's in two-ladders.md §2.
+  // ⚠ AND IT IS PAID IN KIT NOW, NOT IN CASH (31.07, feat/offers-inbox-slice). The owner's first
+  // rung on docs/specs/offers-and-the-inbox.md's ladder of instruments: «кит вместо денег». Nothing
+  // above changes - the gate is the same national table, the figure is the same figure - but the
+  // money never reaches the balance. The shop pays her racquet / string / shoe bills as they land
+  // until `seasonCents` of them have been paid, and keeps her kit fresh while it does.
+  //
+  // WHY THAT IS NOT THE VALVE THIS BLOCK ALREADY REJECTED, which is the first question a reader of
+  // the argument above should ask. The old valve was a PERCENTAGE of each gear line with no ceiling,
+  // so it paid a share of a corridor-scaled bill and handed the wealthy family $2,384 against the
+  // working family's $348. This is the per-SEASON figure the paragraph above calls the only flat
+  // shape there is - it is simply SPENT on kit rather than handed over, and a family cannot spend
+  // more of it by being rich. The direction of the residual difference is also the honest one: a
+  // working family's covered lines run to roughly the whole allowance, so she gets her kit paid for,
+  // and a wealthy family's run far past it, so the shop covers a slice of a bill she could always
+  // afford. And the FRESHNESS half is flat by construction (see `freshCap`) and worth most to
+  // exactly the family that was stretching a string bed past its life.
+  //
+  // WHY IT HAD TO BECOME A DECISION. `02-tennis-economics.md` calls a junior deal "mostly
+  // product-only (racquets/strings/shoes, ~$1k+/yr value)" - which is what this block has been
+  // paying in cash for want of a mechanism. Main now carries equipment condition, so there is
+  // somewhere real for the product to land, and once it lands somewhere real it is worth being asked
+  // about. See engine/offers.ts.
   sponsorship: {
     /** NATIONAL rank at or inside which a local shop signs her at all. */
     maxRank: 30,
     /** ...and at which the deal steps up - she is one of the best juniors in the country. */
     topMaxRank: 10,
     /** What the season's kit deal is worth, flat, every background the same. `~$1k+/yr value`,
-     *  02-tennis-economics.md's figure for a junior product deal, taken at its stated midpoint. */
+     *  02-tennis-economics.md's figure for a junior product deal, taken at its stated midpoint.
+     *  Now a CEILING ON WHAT THE SHOP SPENDS on her kit rather than a cheque - see the note above. */
     seasonCents: 1_000_00,
     /** The stepped-up deal. junior-economics.md: "travel sponsorship only after national/
      *  international wins", and its merit-grant band tops out at £2,000 one-per-player-per-year -
      *  so the better deal is kit plus a hand with the travel, at the top of that band. */
     topSeasonCents: 2_000_00,
+    /** The name on the letterhead, and it is READ OFF THE ART rather than invented here: the owner's
+     *  own `public/images/sponsors/local.webp` is a racket and a reel of string over the words
+     *  "STRING HOUSE – LOCAL. HONEST. TIGHT.". The mark is the signature on the letter, so the two
+     *  have to agree; a name picked in this file would have been a second source of truth for the
+     *  same shop. ONE rung only - the national and global marks are the brand ladder, which is a
+     *  later slice (see `SponsorTier`). */
+    localBrand: 'String House',
+    /** HOW FRESH THE SHOP KEEPS HER KIT, as a ceiling on `KitWear` (0 = as new, 1 = spent). The
+     *  standard deal at 0.5 leaves her at the middle of every service life rather than the dead end;
+     *  the stepped-up deal at 0.3 is nearer to always-fresh. Sized SMALL on purpose: the whole
+     *  equipment swing is already under one year of relative age (ECONOMY.equipment), so a cap can
+     *  only ever be worth a fraction of that, which is the correct order of magnitude for a junior
+     *  kit deal and keeps the anti-destiny bound this block's neighbour measures. */
+    freshCap: 0.5,
+    topFreshCap: 0.3,
+    /** WHAT SHE OWES: tournaments entered over the season for the shop to write again. A sponsor
+     *  pays to be SEEN, so it wants her playing - and this is the trap the whole design is built
+     *  around (spec §4.1): the coach's job is load management and the bench has measured three times
+     *  that resting beats racing, so a kit deal is a standing bribe to do the thing that loses.
+     *  Sized off what a junior season already contains rather than off what would hurt: six is
+     *  roughly the entry cap's own shape at the younger ages, so an ordinary season clears it and a
+     *  season spent nursing her does not. */
+    minEvents: 6,
+    topMinEvents: 8,
+    /** HOW LONG THE PARENT HAS TO THINK. The owner asked for exactly this - «давать человеку
+     *  какое-то время на подумать» - and the number has to be long enough to be a real pause and
+     *  short enough that the letter is still the season's business. Four weeks. */
+    decideWeeks: 4,
+    /** WHETHER THE SHOP WRITES AT ALL in a season she qualifies for. Not 1, on purpose: an offer
+     *  that is guaranteed to come round again is an offer with no cost to letting it expire, and
+     *  spec §2 asks for the reverse ("an offer left to expire is gone, and the next one is not
+     *  guaranteed to be as good"). Drawn from `seed:offer:<week>` - never the weekly stream. */
+    offerChance: 0.7,
+    topOfferChance: 0.9,
   },
 
   // Recurring gear purchases, scheduled DETERMINISTICALLY off a purpose-scoped sub-stream per

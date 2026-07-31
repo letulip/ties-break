@@ -12,6 +12,8 @@ import {
   recomputeKidRank,
   financeWindow,
   localSponsorCents,
+  acceptOffer,
+  declineOffer,
   STARTING_FUNDS_CENTS,
   KID_ID,
   type WorldState,
@@ -232,34 +234,89 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
   // that the gate reads the national table, a domestic row is once again the right way to force the
   // state this block's name claims - stated explicitly as `tier: 'national'` this time rather than
   // relying on the tier-less default, so no future reader has to know that rule to follow it.
-  function topRankedBurn(seed: string, background: FamilyBackground): { burn: number; world: WorldState } {
+  //
+  // ============================================================================================
+  // ⚠ RE-AIMED AGAIN, NOT WEAKENED (31.07, feat/offers-inbox-slice). The three protected facts are
+  // the same three, all three still hold, and one of them is now asserted HARDER than it was.
+  //
+  // WHAT MOVED IS THAT IT IS PAID IN KIT AND THE PLAYER IS ASKED. `reviewLocalSponsor` used to add
+  // $1,000 or $2,000 to the balance at the season boundary; it now raises an OFFER, and signing
+  // makes the shop pay her racquet/string/shoe bills up to that same allowance and keep her kit
+  // fresh while it does (docs/specs/offers-and-the-inbox.md §4.1, «кит вместо денег»). Neither the
+  // gate nor the figure moved - only the shape of the thing.
+  //
+  // SO EVERY FIXTURE IN THIS BLOCK NOW SIGNS THE LETTER, and that is the change rather than an
+  // accommodation of it: a deal nobody signs is worth nothing, on purpose. The arms are a SIGN and a
+  // REFUSE on the same seed, which is a cleaner comparison than the old "ranked vs unranked" pair -
+  // both careers see the identical draw sequence and the only difference is the answer.
+  //
+  //   1. doing well is still worth REAL MONEY, and still at least the same $1,500 a season - it is
+  //      simply money she does not spend rather than money she is given;
+  //   2. the relationship is still VISIBLE, and in more places than before: the gear rows name the
+  //      shop, and the boundary line reports what the season of kit was worth;
+  //   3. it still draws NOTHING from the main weekly stream. There IS a draw now (whether the shop
+  //      writes at all) and it is on `seed:offer:<week>` - its own sub-stream. tests/offers.test.ts
+  //      replays the frozen capture against a career that signs every letter it gets.
+  // ============================================================================================
+
+  /** A career forced to the top of the national table, ticked to its first season boundary, given
+   *  the shop's letter and made to answer it - then ticked through the season that answer covers. */
+  function seasonUnderDeal(
+    seed: string,
+    background: FamilyBackground,
+    answer: 'sign' | 'refuse',
+  ): { world: WorldState; covered: number; startOfSeason: number } {
     const world = createWorld(seed, { ...DEFAULT_PROFILE, background })
     world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
     recomputeKidRank(world)
     const rng = rngFromSeed(world.seed)
-    const start = STARTING_FUNDS_CENTS[background]
     for (let i = 0; i < 52; i++) tickWeek(world, rng)
-    // physio + interest excluded for the same reason as seasonBurnDollars (and so the delta compares
-    // the sponsorship, not medical luck or reserve size).
-    return { burn: (start - world.fundsCents - physioSpendCents(world) + interestEarnedCents(world)) / 100, world }
+    const offer = world.offers.find((o) => o.state === 'open')
+    // A silent no-offer would make every assertion below vacuously true, which is the one way this
+    // block could rot without ever going red.
+    expect(offer, `${seed}/${background}: no letter arrived at the first boundary`).toBeDefined()
+    if (answer === 'sign') acceptOffer(world, offer!.id)
+    else declineOffer(world, offer!.id)
+    const startOfSeason = world.fundsCents
+    for (let i = 0; i < 52; i++) tickWeek(world, rng)
+    return { world, covered: offer!.coveredCents ?? 0, startOfSeason }
   }
 
-  it('the flat grant is the SAME cheque for every background (it does not know the family is rich)', () => {
-    // THE POINT OF THE REBUILD, asserted directly rather than inferred from a burn: one number, and
-    // the wealth corridor cannot reach it. The old percentage valve failed exactly here.
+  it('the allowance is the SAME ceiling for every background (it does not know the family is rich)', () => {
+    // THE POINT OF THE 30.07 REBUILD, AND IT SURVIVES BEING SPENT ON KIT RATHER THAN HANDED OVER.
+    // The old percentage valve failed exactly here: a share of a corridor-scaled gear bill paid the
+    // wealthy family seven times what it paid the working one. A per-SEASON ceiling cannot, because
+    // the wealth corridor can raise the BILL and not the CAP - so the most any background can take
+    // out of this deal is one number, and it is the same number.
+    const cap = ECONOMY.sponsorship.topSeasonCents
     for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
-      const { world } = topRankedBurn(`flat-${bg}`, bg)
-      const paid = world.events
-        .filter((e) => e.category === 'sponsor' && e.text.includes('backed her for the season'))
-        .reduce((s, e) => s + (e.amountCents ?? 0), 0)
-      expect(paid).toBe(ECONOMY.sponsorship.topSeasonCents)
+      const { covered } = seasonUnderDeal(`flat-${bg}`, bg, 'sign')
+      expect(covered, `${bg} spent more than the allowance`).toBeLessThanOrEqual(cap)
+      expect(covered, `${bg} got nothing out of a signed deal`).toBeGreaterThan(0)
     }
+    // ...and the ceiling BINDS at the top of the corridor, which is what makes the sentence above a
+    // claim rather than an accident of small numbers: a wealthy family's kit bill runs past $2,000 a
+    // season, so it takes the whole allowance and not a cent more.
+    expect(seasonUnderDeal('flat-wealthy', 'wealthy', 'sign').covered).toBe(cap)
   })
 
-  it('a national-rank-≤10 middle kid burns ≥ $1.5k less over 52w than an unsponsored one', () => {
-    const unsponsored = mean(batchBurns('middle'))
-    const sponsored = mean(SEEDS.map((s) => topRankedBurn(s, 'middle').burn))
-    expect(unsponsored - sponsored).toBeGreaterThanOrEqual(1_500)
+  it('a national-rank-<=10 middle kid keeps >= $1.5k more over the covered season than one who refused', () => {
+    // Fact (1), and it is a DIRECT measurement now rather than a batch mean: the same seed, the same
+    // draws, one signature apart. What she keeps is what the shop paid for.
+    const signed = seasonUnderDeal('cal-1', 'middle', 'sign')
+    const refused = seasonUnderDeal('cal-1', 'middle', 'refuse')
+    const kept = signed.world.fundsCents - signed.startOfSeason - (refused.world.fundsCents - refused.startOfSeason)
+    expect(kept / 100).toBeGreaterThanOrEqual(1_500)
+    // ...and every cent of it came out of the KIT LINES and nowhere else, which is the assertion that
+    // says the deal pays in equipment rather than in money. (`kept` itself is a shade LARGER than the
+    // covered total, and correctly so: money she did not spend sits in the account earning R9-1's
+    // savings interest, so the balances diverge by a few dollars more than the kit did. Comparing the
+    // gear buckets instead measures the mechanism rather than its second-order tail.)
+    const kitSpend = (w: WorldState) => {
+      const cats = financeWindow(w.financeWeeks, 0).byCategory
+      return -((cats.gear ?? 0) + (cats.stringing ?? 0))
+    }
+    expect(kitSpend(refused.world) - kitSpend(signed.world)).toBe(signed.covered)
   })
 
   it('the sponsorship never perturbs the main weekly stream (RNG discipline)', () => {
@@ -274,38 +331,65 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
       tickWeek(plain, rngA)
       tickWeek(sponsored, rngB)
     }
-    // The review reads a rank cache and adds an event; it draws nothing. Cohort drift and the AI
-    // field resolve identically in both worlds.
+    // The review reads a rank cache, adds an event and draws once on `seed:offer:<week>` - its own
+    // sub-stream, created and thrown away. Cohort drift and the AI field resolve identically.
     expect(plain.cohort).toEqual(sponsored.cohort)
     expect(plain.results.filter((r) => r.playerId !== KID_ID)).toEqual(
       sponsored.results.filter((r) => r.playerId !== KID_ID),
     )
-    // ...but the sponsored kid banked the grant, so she ends richer.
-    expect(sponsored.fundsCents).toBeGreaterThan(plain.fundsCents)
+    // ⚠ AND THE MONEY NO LONGER MOVES AT THE BOUNDARY, which is the whole slice in one assertion. The
+    // ranked kid used to end week 52 richer by the grant; she now ends it holding a LETTER, and the
+    // two balances are identical to the cent until somebody signs something.
+    expect(sponsored.fundsCents).toBe(plain.fundsCents)
+    expect(sponsored.offers.filter((o) => o.state === 'open')).toHaveLength(1)
+    expect(plain.offers).toHaveLength(0)
   })
 
-  it('emits the sponsorship as a tagged income event (so the Money breakdown shows it)', () => {
-    const { world } = topRankedBurn('cal-1', 'middle')
-    const paid = world.events.filter((e) => e.category === 'sponsor' && e.text.includes('backed her for the season'))
-    expect(paid.length).toBeGreaterThan(0)
-    for (const e of paid) {
-      expect(e.type).toBe('income')
-      expect(e.amountCents).toBeGreaterThan(0)
-      // It names the table it read. The whole failure mode being fixed here is a gate whose ladder
-      // the player could not see, so the copy has to say which one.
-      expect(e.text).toContain('National')
-    }
+  it('the ledger says who paid, and the boundary says what the season of kit was worth', () => {
+    // Fact (2). The old mechanism was defended for being VISIBLE - one annual lump in the `sponsor`
+    // income category, against a valve smeared over 25-39 invisible line-items. Kit has to clear the
+    // same bar, and it clears it in two places rather than one.
+    const { world } = seasonUnderDeal('cal-2', 'middle', 'sign')
+    const covered = world.events.filter(
+      (e) => e.type === 'expense' && e.text.includes(ECONOMY.sponsorship.localBrand),
+    )
+    expect(covered.length, 'no gear row names the shop that paid for it').toBeGreaterThan(0)
+    // The line is still EMITTED at what the family actually paid, so the Money breakdown shows the
+    // relationship instead of a cost quietly vanishing - `chargeTravel`'s pattern with the academy.
+    for (const e of covered) expect(e.amountCents).toBeLessThanOrEqual(0)
+    // ...and the season's total is reported at the next boundary, the way the academy's cover is -
+    // ⚠ INCLUDING WHEN THE DEAL LAPSES, which is this fixture's case. She never entered a tournament,
+    // so the obligation (`minEventsPerSeason`) went unmet and the shop is not renewing; the line still
+    // says what the year of kit was worth, because a deal ending is exactly when the player needs to
+    // see what he has just lost.
+    const report = world.events.filter((e) => e.text.includes('kitted her out all season'))
+    expect(report.length).toBe(1)
+    expect(report[0].text).toContain('not renewing')
+    expect(report[0].text).toMatch(/\$[\d,]+ of kit/)
   })
 
-  it('...and the gear line-items are plain again – no line claims a sponsor covered it', () => {
-    // The valve used to emit $0 / halved gear rows with " – covered by your racket sponsor" glued on.
-    // That wording is gone with the mechanism; a family pays for its own kit and the sponsor's
-    // contribution arrives once a year as money. Guards against the old copy drifting back in.
-    const { world } = topRankedBurn('cal-2', 'wealthy')
+  it('...and the gear line-items are not a PERCENTAGE again - the old valve stays dead', () => {
+    // ⚠ RE-AIMED, NOT WEAKENED. Both original pins are kept verbatim: the 30.07 valve's exact copy
+    // may never come back. What this case is really guarding is the SHAPE, and that is now stated
+    // outright as well - the shop's contribution is capped per SEASON, so no gear row can ever be
+    // reduced by a fraction of itself. A per-item share is what paid the wealthy family seven times
+    // the working family's subsidy and is the thing that must not return; a bill somebody else paid
+    // in full, up to a flat annual ceiling, is a different animal (see ECONOMY.sponsorship).
+    const { world, covered } = seasonUnderDeal('cal-2', 'wealthy', 'sign')
     for (const e of world.events) {
       expect(e.text).not.toContain('covered by your racket sponsor')
       expect(e.text).not.toContain('sponsor covers half')
     }
+    expect(covered).toBeLessThanOrEqual(ECONOMY.sponsorship.topSeasonCents)
+    // Every row the shop touched was paid IN FULL or not at all, bar the single row the allowance
+    // ran out on - never a share of each.
+    const partPaid = world.events.filter(
+      (e) =>
+        e.type === 'expense' &&
+        e.text.includes(ECONOMY.sponsorship.localBrand) &&
+        (e.amountCents ?? 0) < 0,
+    )
+    expect(partPaid.length, 'more than one row was part-paid - that is a percentage valve').toBeLessThanOrEqual(1)
   })
 
   it('the gate reads the NATIONAL table – an international-only result buys nothing', () => {

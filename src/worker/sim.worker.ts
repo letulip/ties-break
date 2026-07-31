@@ -13,6 +13,8 @@ import {
   setCoachOnEventWeeks,
   cancelPractice,
   decideKnock,
+  acceptOffer,
+  declineOffer,
   revealTournamentRound,
   skipTournament,
   closeTournament,
@@ -190,6 +192,25 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'decideKnock': {
       if (!world) throw new Error('No active career')
       decideKnock(world, msg.choice)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    // THE INBOX (v32): the parent answers a letter. Both handlers go through the engine, which
+    // re-checks the deadline - the UI's disabled button is a courtesy and the engine's refusal is the
+    // rule, so a stale screen on a reloaded save cannot sign something that has already gone.
+    //
+    // ⚠ SIGNING IS IRREVERSIBLE AND THERE IS DELIBERATELY NO COMMAND TO UNDO IT. The confirm the UI
+    // puts in front of this is the whole of the protection, which is the same bargain every
+    // destructive action in More strikes.
+    case 'signOffer': {
+      if (!world) throw new Error('No active career')
+      acceptOffer(world, msg.offerId)
+      await autosave(world)
+      return snapshotMsg(msg.id, world)
+    }
+    case 'refuseOffer': {
+      if (!world) throw new Error('No active career')
+      declineOffer(world, msg.offerId)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }

@@ -736,6 +736,43 @@ export function migrateSave(raw: unknown): WorldState {
     v = 31
   }
 
+  // v31 -> v32: `world.offers` – THE INBOX. Every letter this career has been sent, and what the
+  // parent did about each one. docs/specs/offers-and-the-inbox.md §2; the mechanism lives in
+  // engine/offers.ts and this slice carries the kit sponsor alone.
+  //
+  // ⚠ THE BACK-FILL IS EMPTY, AND UNLIKE v29's AND v31's NO-OPS THAT IS NOT A BARGAIN WITH A PRUNED
+  // LOG - THERE IS GENUINELY NOTHING TO RECONSTRUCT. v18 mined surviving evidence, v28 rebuilt a
+  // split from finish indices, v31 declined to guess at a count it could not see. All three were
+  // looking at a record of things that HAD HAPPENED. An offer is a record of a DECISION, and no
+  // decision was ever taken: until this version the kit deal was not a decision at all. It was
+  // weather - `reviewLocalSponsor` added $1,000 or $2,000 to the balance at the season boundary and
+  // wrote a line in the feed, and the player was never asked. There is no earlier state that means
+  // "he signed" or "he refused", because there was nothing to sign.
+  //
+  // This is v26's case exactly, and for the same reason: fabricating rows here would mean fabricating
+  // decisions the player never made, which is the one thing a ledger OF decisions must never contain.
+  // A migrated career therefore wakes up with an empty inbox and gets its first real letter at its
+  // next season boundary, like any other.
+  //
+  // ⚠ AND THE CASH IT WAS RECEIVING SIMPLY STOPS, which is worth being explicit about because it is
+  // the one migration in this file that leaves a career materially poorer. Nothing is clawed back -
+  // every grant already banked stays banked, and the events that announced them stay in the feed -
+  // but the season boundary after the update raises a letter instead of a cheque, and the parent has
+  // to sign it. That is the whole point of the slice («кит вместо денег») rather than a side effect
+  // of it, and the deal she can sign is worth the same figure in kit that it used to be in money.
+  //
+  // Written defensively (an absent or non-array value is rebuilt whole) for the append-only reason
+  // v30 states: a later step must not assume an earlier one's post-condition still reads the way it
+  // did the day it was written.
+  //
+  // Nothing else moves: no field is read or rewritten, and the one sub-stream this slice adds
+  // (`seed:offer:<week>`) did not exist before, so no existing stream shifts by a draw and the frozen
+  // MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 31) {
+    if (!Array.isArray(save.offers)) save.offers = []
+    v = 32
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

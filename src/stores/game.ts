@@ -215,6 +215,25 @@ export const useGameStore = defineStore('game', {
         if (res.type === 'snapshot') this.snapshot = res.snapshot
       })
     },
+    /** THE INBOX (v32): sign a letter. Irreversible – the UI puts a ConfirmDialog in front of this
+     *  and there is no unsign command to reach for afterwards. */
+    async signOffer(offerId: string) {
+      await this.run(async () => {
+        const res = await request({ type: 'signOffer', offerId })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** ...and refuse one. Terminal in the same way, so the deadline means something on both sides. */
+    async refuseOffer(offerId: string) {
+      await this.run(async () => {
+        const res = await request({ type: 'refuseOffer', offerId })
+        if (!res.ok) throw new Error(res.error)
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
     async setPhysio(active: boolean) {
       await this.run(async () => {
         const res = await request({ type: 'setPhysio', active })
