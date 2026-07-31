@@ -2058,8 +2058,23 @@ export function rollKnock(world: WorldState): void {
   addEvent(world, {
     week: world.week,
     type: 'info',
+    // ⚠ IT REPORTS, IT DOES NOT DEMAND - and the repeat line used to end "It needs a decision."
+    // (owner, 31.07: «а где сам decision? кто его должен принимать?»). It was written before the
+    // routing below existed, and the routing is what made it a lie on the commonest path there is.
+    //
+    // Three things can happen to a knock. With no load-managing coach the dialog opens and the parent
+    // decides; with one who escalates, the dialog opens too and he says he is asking. On the third
+    // path - a coach who simply takes the call, which is what DEFAULT_PROFILE's middle rung does - the
+    // choice is made two lines down and NOBODY ASKS THE PLAYER. The feed then told him a decision was
+    // needed, and immediately afterwards told him what the coach had decided: the shape of having been
+    // asked and ignored.
+    //
+    // So the arrival line states the fact and stops. THE DEMAND IS THE DIALOG, and where there is no
+    // dialog there is no demand to make - the coach's own line says what he did instead. That is
+    // correct on all three paths without branching on any of them, which is why it is a deletion
+    // rather than a condition.
     text: knock.repeat
-      ? `Her ${knock.part} is sore again – the same one. It needs a decision.`
+      ? `Her ${knock.part} is sore again – the same one.`
       : `She has picked up a sore ${knock.part}. Not an injury – yet.`,
   })
   // ⚠ AND IF THE FAMILY IS PAYING SOMEBODY, HE ANSWERS IT – docs/specs/coach-as-load-manager.md §8.
