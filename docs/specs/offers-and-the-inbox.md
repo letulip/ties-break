@@ -74,8 +74,33 @@ know. When the last open offer is signed, refused or expires, the dot goes out o
 
 ## 3. The letter
 
-A `PaperNote` with `tape`, a `tilt` from the design's own angles, and `torn` with a direction. Under
-it, two controls: **Sign** and **Refuse** — and, quietly, how many weeks are left.
+A `PaperNote` — but **a letter, not a scrap**, and the owner named the difference: «надо
+модифицировать, чтобы была чистая и аккуратная бумага без скотча, это всё-таки письмо, а не
+записка».
+
+⚠ **And almost none of that is a modification, which is worth checking before anyone writes CSS.**
+`tape`, `torn` and `marginRule` are all **opt-in props** that default to false, and the component's
+base is already exactly a letter's stock: `--paper-card`, `--radius-paper`, `--shadow-paper`,
+`--paper-ink`, Caveat. A plain `<PaperNote>` is a clean, untaped, un-torn sheet today. Nothing has to
+be built to get there — it has to be *not asked for*.
+
+What genuinely differs is **proportion and posture**, and there are exactly two:
+
+1. **A letter is a page, not a corner scrap.** The base padding is `12px 14px`, sized for a line of
+   handwriting tucked beside a photograph. Correspondence wants a margin — call it the `letter` size
+   variant, and let it fill the column rather than sit in it.
+2. ⚠ **A letter does not tilt, and it is the first paper object in this game that must not.** The
+   handoff's principle 1 says paper is laid on the page «всегда с небольшим наклоном и тенью» — and
+   that is right for an *artefact*: a memory, a receipt, a note dropped on a surface. A letter you
+   are deciding on is a letter you are **holding**, square to the reader. The tilt is what makes
+   everything else read as found rather than addressed to you. So `tilt` stays 0 here, deliberately,
+   and that exception is worth a comment where the caller sets it — otherwise the next person will
+   "fix" it back to the house angle.
+
+`marginRule` stays off for the same class of reason: the red rule is a school exercise book, and a
+sponsor does not write to you on one.
+
+Under the letter, two controls: **Sign** and **Refuse** — and, quietly, how many weeks are left.
 
 Player copy rules apply in full: short dash "–", never "—", **no Cyrillic anywhere in a template**.
 
