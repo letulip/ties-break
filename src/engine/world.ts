@@ -3497,13 +3497,43 @@ function pruneResults(world: WorldState): void {
   world.results = world.results.filter((r) => world.week - r.week <= RESULTS_WINDOW)
 }
 
+// ⚠ HER MATCHES ARE PRUNED LAST, AND THE RADAR IS WHY (31.07).
+//
+// `radarViewOf` builds the radar's whole evidence base by scraping `world.events` for her own
+// competitive match records - and this function trims that feed BY COUNT, oldest-first. Those two
+// facts together make an undocumented coupling with teeth: **every non-match row any feature adds
+// permanently displaces one of her matches from the window `axisEvidence` measures over.** The
+// offers slice found it the expensive way - one extra row per season pushed the radar's worst fog
+// re-widening from 0.36 to 0.64 against a 0.5 bound - and designed around it rather than into it.
+//
+// Designing around it does not scale, because the pressure is not the new feature. Measured on a
+// career that plays no tournaments at all, the retained feed is 217 expense + 168 income rows out
+// of 400: the window the radar reads is **overwhelmingly bookkeeping**. Money rows accrue every
+// single week of a career; her matches accrue only on the weeks she competes. Left alone, the
+// arithmetic guarantees that the longer a career runs the less of her tennis the radar can see -
+// which is the exact opposite of what a confidence model is supposed to do.
+//
+// So the budget is unchanged and only the ORDER OF SACRIFICE moves: milestones first (they always
+// were), then her competitive matches, then everything else. The cap still bites at the same size,
+// the feed is still bounded, and a feature that writes to the feed can no longer quietly cost the
+// radar its evidence. A practice friendly is deliberately NOT protected - the radar ignores
+// friendlies by design (R11-2), so protecting one would spend the budget on a row it will not read.
+function isRadarEvidence(e: WorldEvent): boolean {
+  return e.match !== undefined && !e.friendly && (e.match.aId === KID_ID || e.match.bId === KID_ID)
+}
+
 function pruneEvents(world: WorldState): void {
   if (world.events.length <= EVENTS_CAP) return
   const kept = world.events.filter((e) => e.keep)
-  const rest = world.events.filter((e) => !e.keep)
+  const evidence = world.events.filter((e) => !e.keep && isRadarEvidence(e))
+  const rest = world.events.filter((e) => !e.keep && !isRadarEvidence(e))
   const overflow = world.events.length - EVENTS_CAP
-  const trimmed = overflow >= rest.length ? [] : rest.slice(overflow)
-  world.events = [...kept, ...trimmed].sort((a, b) => a.id - b.id)
+  // Ordinary rows go first. Only if dropping every one of them is still not enough does the trim
+  // reach her matches, oldest-first as before.
+  const restTrimmed = overflow >= rest.length ? [] : rest.slice(overflow)
+  const stillOver = Math.max(0, overflow - rest.length)
+  const evidenceTrimmed = stillOver >= evidence.length ? [] : evidence.slice(stillOver)
+  world.events = [...kept, ...evidenceTrimmed, ...restTrimmed].sort((a, b) => a.id - b.id)
 }
 
 // Drop finance-ledger weeks older than the 60-week trailing window (retain week >= week - 59).
