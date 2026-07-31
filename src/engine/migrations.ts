@@ -773,6 +773,51 @@ export function migrateSave(raw: unknown): WorldState {
     v = 32
   }
 
+  // v32 -> v33: `offer.terms` gains `covers` / `travelShare` / `seasons` – THE BRAND LADDER. A
+  // sponsorship rung stopped being one shop and became three, and the rung says WHICH OF HER
+  // EQUIPMENT LINES the deal covers (strings / +frames / everything + a hand with the travel). See
+  // `SponsorTier` for the design and ECONOMY.sponsorship for every number.
+  //
+  // ⚠ THIS ONE BACK-FILLS RATHER THAN DECLINING TO, WHICH IS THE OPPOSITE OF v32 A LINE ABOVE - and
+  // the difference is exactly the one v32's own comment draws. v32 refused to mine because an offer
+  // is a record of a DECISION and no decision had ever been taken. Here a decision HAS been taken:
+  // a v32 career may be sitting on a signed contract this very week, and the three new fields are
+  // not a guess about what the player chose - they are the terms of the deal he already agreed to,
+  // written down. Refusing to fill them would not be modesty, it would be losing a contract.
+  //
+  // ⚠ AND THE VALUE IS THE OLD BEHAVIOUR, NOT THE NEW RUNG'S. Every v32 deal is a `local` one, and
+  // under v32 a local deal covered ALL THREE LINES: `KIT_DEAL_CATEGORIES` was ['rackets',
+  // 'stringing', 'shoes'] and the freshness cap applied to every line of `KitWear`. Under v33 a
+  // local deal covers her strings alone. So a back-fill of `TIER_COVERS.local` would quietly take
+  // two lines away from a contract the letter had already promised them on - it would be re-writing
+  // history in the brand's favour, on paper the player still has in his inbox. `activeKitDeal` has
+  // said since the day it shipped that "a deal signed under one set of numbers is honoured under
+  // those numbers for its whole life"; this is that rule meeting its first real test, and the
+  // migration honours the letter that was actually sent.
+  //
+  // `travelShare` is 0 (no rung paid for travel before this version) and `seasons` is 1 (every v32
+  // deal ran for exactly one season, which is what `untilWeek` on those saves already says - and
+  // `untilWeek` is NOT recomputed here for the same reason `covers` is not: the term she signed is
+  // the term she gets).
+  //
+  // Written defensively (a malformed terms object is skipped rather than trusted, an already-filled
+  // one is left alone) for the append-only reason v30 states, which also makes it idempotent.
+  //
+  // Nothing else moves: no field is removed, no sub-stream is added or reordered, and the arrival
+  // draw stays on `seed:offer:<week>` where it has been since v32 - so the frozen MAIN capture
+  // (41550 / e6b0c709) is untouched by construction.
+  if (v === 32) {
+    const ALL_LINES = ['strings', 'frame', 'shoes']
+    for (const offer of Array.isArray(save.offers) ? save.offers : []) {
+      const terms = (offer as unknown as { terms?: Record<string, unknown> } | null)?.terms
+      if (!terms || typeof terms !== 'object') continue
+      if (!Array.isArray(terms.covers)) terms.covers = ALL_LINES
+      if (typeof terms.travelShare !== 'number') terms.travelShare = 0
+      if (typeof terms.seasons !== 'number') terms.seasons = 1
+    }
+    v = 33
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

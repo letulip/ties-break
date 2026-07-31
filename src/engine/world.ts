@@ -21,6 +21,7 @@ import {
   type KnockRecord,
   type LossStreak,
   type Milestone,
+  type KitLine,
   type KitOfferTerms,
   type Offer,
   type PendingBracketRound,
@@ -152,12 +153,16 @@ import { drawBodyRegion } from './body'
 // weekly stream the frozen capture (41550 / e6b0c709) measures.
 import {
   activeKitDeal,
-  dealForSeasonEnding,
+  dealUnderReview,
+  endDealWithSeason,
   expireOffers,
   hasLiveOffer,
+  isSponsorReviewWeek,
   kitFreshCap,
+  kitTravelShare,
   raiseKitOffer,
   refuseOffer as refuseOfferIn,
+  seasonLastWeek,
   signOffer as signOfferIn,
 } from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
@@ -169,7 +174,7 @@ import type { CoachTier } from '../shared/protocol'
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
 // in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
 
-export const SAVE_SCHEMA_VERSION = 32
+export const SAVE_SCHEMA_VERSION = 33
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -2970,8 +2975,19 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
 //     whole of it), so the Money breakdown shows the relationship instead of a cost quietly
 //     vanishing. Exactly `chargeTravel`'s pattern with the academy's cover, and the $0-line handling
 //     the finance aggregate already has (it never stores a zero-valued category entry).
-/** The gear lines a kit sponsor supplies. Apparel is NOT one of them: this is a kit deal. */
-const KIT_DEAL_CATEGORIES: readonly GearCategory[] = ['rackets', 'stringing', 'shoes']
+/** ⚠ WHICH BILL IS WHICH LINE - the one place the equipment model's vocabulary (`KitLine`: strings /
+ *  frame / shoes, what the MATCH reads) is mapped onto the ledger's (`GearCategory`: stringing /
+ *  rackets / shoes, what the FAMILY pays). A rung names lines; a gear hit names a category; without
+ *  a single mapping the two would be joined by a string comparison at each site and a national deal
+ *  could end up paying a bill it does not cover.
+ *
+ *  Apparel is deliberately absent from the values: it is not a line the match reads and a kit deal
+ *  is not a clothing allowance, so no rung can ever cover it. */
+const GEAR_CATEGORY_LINE: Partial<Record<GearCategory, KitLine>> = {
+  stringing: 'strings',
+  rackets: 'frame',
+  shoes: 'shoes',
+}
 
 function resolveGear(world: WorldState): void {
   const bg = world.profile.background
@@ -2981,10 +2997,14 @@ function resolveGear(world: WorldState): void {
     const hit = gearHitForWeek(world.seed, category, bg, world.week)
     if (!hit) continue
     const line = ECONOMY.gear[category]
-    // What the shop picks up of this line: everything, up to whatever is left of the allowance.
+    // What the brand picks up of this line: everything, up to whatever is left of the allowance -
+    // and ONLY if the deal actually covers this line. That is the brand ladder arriving at the till:
+    // a local deal pays her restringing and leaves the racket on the family, a national one adds the
+    // frame, and only the top rung pays for everything.
     const remaining = deal && terms ? Math.max(0, terms.kitAllowanceCents - (deal.coveredCents ?? 0)) : 0
-    const covered =
-      deal && terms && KIT_DEAL_CATEGORIES.includes(category) ? Math.min(hit.amountCents, remaining) : 0
+    const kitLine = GEAR_CATEGORY_LINE[category]
+    const inDeal = !!terms && !!kitLine && terms.covers.includes(kitLine)
+    const covered = deal && terms && inDeal ? Math.min(hit.amountCents, remaining) : 0
     const paid = hit.amountCents - covered
     if (deal && covered > 0) deal.coveredCents = (deal.coveredCents ?? 0) + covered
     world.fundsCents -= paid
@@ -2998,30 +3018,53 @@ function resolveGear(world: WorldState): void {
   }
 }
 
-// --- the local sponsor's annual deal -----------------------------------------
-// A shop in her town backing the local girl who is doing well locally. Gated on the NATIONAL table,
-// flat, once a season – the full argument for all three of those is on ECONOMY.sponsorship.
+// --- the sponsors decide, in the off-season -----------------------------------
+// Who is willing to put this girl in their kit next year, and on what terms. Three rungs since
+// 01.08 (feat/brand-ladder) – the full argument for every number is on ECONOMY.sponsorship, the
+// argument for the SHAPE is `SponsorTier`, and the mechanism is engine/offers.ts.
 //
-// ⚠ AND SINCE 31.07 IT ARRIVES AS A LETTER RATHER THAN AS WEATHER. This function used to do
+// ⚠ SINCE 31.07 IT ARRIVES AS A LETTER RATHER THAN AS WEATHER. This function used to do
 // `world.fundsCents += amount` and drop a line in the feed; the player was never asked. It now RAISES
 // AN OFFER (docs/specs/offers-and-the-inbox.md §4.1), which the parent signs or refuses inside a
-// four-week window, and signing pays in KIT rather than in money – the shop covers her racquet,
-// string and shoe bills up to the allowance and keeps her kit fresh while it does. The old cheque is
-// gone entirely: «кит вместо денег». What has NOT moved is the gate (her national rank) or the
-// figure (ECONOMY.sponsorship's already-balanced $1,000 / $2,000), so this slice changes the SHAPE of
-// a decision rather than the size of a number.
+// four-week window, and signing pays in KIT rather than in money. The old cheque is gone entirely:
+// «кит вместо денег».
 //
-// ⚠ AND THE SHOP ONLY WRITES AGAIN IF SHE PLAYED. A sponsor pays to be seen, and the obligation is
-// the whole cost of the deal (spec §4.1): a season inside the deal that did not reach
-// `minEventsPerSeason` entries ends the relationship. Nothing is clawed back – a junior kit deal is
-// not a loan – the contract simply lapses at the boundary and is not renewed.
+// ⚠ AND SINCE 01.08 IT IS A LADDER RATHER THAN A SINGLE SHOP. The owner finished a season #1
+// national and #13 international and asked whether two contracts would arrive; they did not, because
+// the terms function read the DOMESTIC table and nothing else. A girl who is thirteenth in the world
+// is interesting to very different people than a shop in her town. So `local` keeps the domestic
+// gate it always had and two rungs above it read the INTERNATIONAL one, and what steps up is WHICH
+// OF HER LINES the brand covers – strings, then frames, then everything and a hand with the travel.
 //
-// RNG DISCIPLINE. Reads two cached numbers, counts entries off a persisted ledger, and takes exactly
+// ⚠ AND IT HAPPENS IN THE OFF-SEASON, NOT ON WEEK ONE (01.08; owner: «мне кажется было бы логичным
+// их как раз к старту сезона привязывать… Что в реальности происходит в этом плане?»). In the real
+// sport sponsorship is negotiated in November and December so that the deal is signed and effective
+// when the season opens in January – you go out already kitted. The letter used to land on the first
+// week of the new year and its four-week window ran through the first tournaments, which is the worst
+// possible moment to be weighing a contract; the quiet weeks are where a decision like this belongs.
+// The RANK IT READS DID NOT MOVE: her competitive year is over before the off-season starts (the
+// calendar puts nothing in weeks 49-51), so reading the table three weeks earlier reads the same
+// table. `isSponsorReviewWeek` is what keeps it firing exactly once a season now that the window it
+// fires in is three weeks wide rather than one.
+//
+// ⚠ AND A BRAND ONLY STAYS IF SHE HELD UP HER END. Two conditions, judged in this same off-season:
+//   * SHE PLAYED. A sponsor pays to be SEEN, and a season inside the deal that did not reach
+//     `minEventsPerSeason` entries ends the relationship (spec §4.1). This is the design's best trap
+//     and it gets worse as the deal gets better – the coach's whole job is load management, and a
+//     bigger contract is a bigger standing bribe to do the thing the bench says loses.
+//   * AND, FOR THE NATIONAL RUNG, SHE IS STILL SOMEBODY AT HOME. `keepDomesticRank` is the one term
+//     that gives the domestic ladder a job on the way OUT: her domestic points are a rolling 52-week
+//     best-6, so a season spent entirely abroad decays them to nothing and she slides out of the
+//     band. Stop playing National, slide down the table, lose the letter.
+// Nothing is clawed back in either case – a junior kit deal is not a loan – the contract simply ends
+// with the season it failed and the brand does not write this winter.
+//
+// RNG DISCIPLINE. Reads two cached numbers, counts entries off a persisted ledger, and takes at most
 // ONE draw – on `seed:offer:<week>`, its own purpose-scoped sub-stream, created and discarded inside
 // `raiseKitOffer`. ZERO draws on the main weekly stream, so the frozen MAIN capture (41550 draws /
-// e6b0c709) cannot move by one. It runs in the season-boundary block beside reviewAcademy, which is
-// already the "zero main-stream draws, this far up the tick is safe" slot, and on the same reading of
-// her year: the rank she CARRIES IN, before this season can touch it.
+// e6b0c709) cannot move by one. It runs in the same zero-draw region at the top of the tick that the
+// season-boundary block occupies, and on the same reading of her year: the rank she carries out of
+// the season just played, before the next one can touch it.
 
 /** What the local shop's deal is worth this season, in cents – 0 if she is not on their radar.
  *  Pure, so the tests and the bench can ask directly. `nationalRank` is her place in the DOMESTIC
@@ -3038,14 +3081,21 @@ export function localSponsorCents(nationalRank: number): number {
   return 0
 }
 
-/** How many tournaments she entered in the season that ENDED at `boundaryWeek` – the count a kit
+/** How many tournaments she entered in the season that is finishing at `reviewWeek` – the count a kit
  *  deal's obligation is judged on, and it is the count the season really played (spec §5: "nothing
  *  may be offered that cannot be honoured"). Read off `world.results` plus the entry ledger would
  *  double-count a withdrawal, so it reads the one record that is written per entry and never
- *  rewritten: the tournament events her season produced. */
-function eventsPlayedInSeason(world: WorldState, boundaryWeek: number): number {
-  const from = boundaryWeek - WEEKS_PER_YEAR
-  return world.events.filter((e) => e.type === 'tournament' && e.week >= from && e.week < boundaryWeek).length
+ *  rewritten: the tournament events her season produced.
+ *
+ *  ⚠ THE 52-WEEK WINDOW STILL LANDS ON EXACTLY ONE SEASON now that the review moved into the
+ *  off-season, and that is worth stating because it looks as though it should not. The window is
+ *  `[reviewWeek - 52, reviewWeek)`, which from the first off-season week reaches back over this
+ *  season's whole competitive block AND the previous season's three off-season weeks – and those are
+ *  event-free by construction (`isOffSeasonWeek`; the calendar schedules nothing in them). So the
+ *  count is this season's tournaments and no other's. */
+function eventsPlayedInSeason(world: WorldState, reviewWeek: number): number {
+  const from = reviewWeek - WEEKS_PER_YEAR
+  return world.events.filter((e) => e.type === 'tournament' && e.week >= from && e.week < reviewWeek).length
 }
 
 // ⚠ THE WHOLE INBOX GETS THE SAME FEED BUDGET THE CHEQUE HAD: AT MOST ONE ROW PER SEASON BOUNDARY.
@@ -3064,56 +3114,83 @@ function eventsPlayedInSeason(world: WorldState, boundaryWeek: number): number {
 // worth, and whether they are writing again. Signing, refusing and expiring write NOTHING here - the
 // player took those actions himself (behind a confirm, in the case of the one that matters), and the
 // inbox holds all three states for the life of the career, which the feed could never do anyway.
-export function reviewLocalSponsor(world: WorldState): void {
-  // The domestic cache, with the same fallback rankIn uses: a career that has never held a domestic
-  // point sits below the whole field rather than at the top of an empty table.
+export function reviewSponsors(world: WorldState): void {
+  // Both cached ranks, with the same fallback rankIn uses: a career that has never held a point in a
+  // table sits below the whole field rather than at the top of an empty one. `itfRanked` is the
+  // guard that stops an empty table reading as a standing at all - see `SponsorStanding`.
   const nationalRank = world.kidRankDomestic ?? world.cohort.length + 1
+  const standing = {
+    nationalRank,
+    itfRank: world.kidRank,
+    itfRanked: kidPoints(world, 'itf') > 0,
+  }
 
-  // 1. THE SEASON JUST GONE, IF IT WAS UNDER A DEAL. What the shop actually spent is the one number
-  //    that says what signing was worth - the same job `AcademySupport.coveredCents` does - and the
-  //    entry count is what decides whether they write again.
-  const ending = dealForSeasonEnding(world.offers, world.week)
-  const endingTerms = ending ? (ending.terms as KitOfferTerms) : null
-  const played = ending ? eventsPlayedInSeason(world, world.week) : 0
-  // ⚠ FAILING THE OBLIGATION COSTS THE DEAL, NOT THE FAMILY'S SAVINGS (spec §4.1). Nothing is clawed
-  //   back - a junior kit deal is not a loan, and NOT ONE LINE BELOW TOUCHES `world.fundsCents`. The
-  //   contract simply reaches `untilWeek` like any other and is not renewed this year; the shop is
-  //   free to write again the year after, because the penalty is a missed season and not a blacklist.
-  //   This is the promise the LETTER makes in the shop's own words, and the two have to agree.
-  const obligationMet = !ending || !endingTerms || played >= endingTerms.minEventsPerSeason
+  // 1. THE SEASON NOW FINISHING, IF IT WAS UNDER A DEAL. What the brand actually spent is the one
+  //    number that says what signing was worth - the same job `AcademySupport.coveredCents` does -
+  //    and the two conditions below are what decide whether it stays.
+  const deal = dealUnderReview(world.offers, world.week)
+  const dealTerms = deal ? (deal.terms as KitOfferTerms) : null
+  const played = deal ? eventsPlayedInSeason(world, world.week) : 0
+  // ⚠ FAILING EITHER CONDITION COSTS THE DEAL, NOT THE FAMILY'S SAVINGS (spec §4.1). Nothing is
+  //   clawed back - a junior kit deal is not a loan, and NOT ONE LINE BELOW TOUCHES
+  //   `world.fundsCents`. The contract ends with the season it failed and the brand is free to write
+  //   again the year after, because the penalty is a missed season and not a blacklist. This is the
+  //   promise the LETTER makes in the brand's own words, and the two have to agree.
+  const playedEnough = !dealTerms || played >= dealTerms.minEventsPerSeason
+  // ...and the second one is the national rung's own, and the reason the domestic ladder still
+  // matters to a girl who has left it behind. `keepDomesticRank` is absent on every other rung, so
+  // this reads true for them without a tier check.
+  const keptAtHome = !dealTerms?.keepDomesticRank || nationalRank <= dealTerms.keepDomesticRank
+  const heldUp = playedEnough && keptAtHome
   // ...and the verdict is recorded ON the letter, so the inbox can still answer "what happened to
   // that deal?" a decade later. The count is the one the season really played (spec §5).
-  if (ending) ending.eventsPlayed = played
+  if (deal) deal.eventsPlayed = played
+  // A deal that failed does not limp to its contractual end: it stops with the season it failed.
+  // A deal that held up simply runs on - a two-season contract has another year to go.
+  if (deal && !heldUp) endDealWithSeason(deal, world.week)
 
-  // 2. AND WHETHER THEY WRITE AGAIN. A shop that was let down does not; everybody else is subject to
-  //    the roll, because an offer that always comes round again is an offer with no cost to letting
-  //    it expire.
-  const offer = obligationMet
-    ? raiseKitOffer({ offers: world.offers, seed: world.seed, week: world.week, nationalRank })
+  // 2. AND WHETHER ANYBODY WRITES. ⚠ ONE BRAND AT A TIME is enforced inside `raiseKitOffer`, which
+  //    refuses while a deal is running or a letter is unanswered - so a multi-season contract that
+  //    is only halfway through turns the next rung away by itself and there is no second rule here
+  //    to keep in step with it. What this line adds is the ONE case the offers module cannot see: a
+  //    brand that was let down this season does not turn round and write a fresh letter in the same
+  //    winter, even though its own contract has just been ended.
+  const offer = heldUp
+    ? raiseKitOffer({ offers: world.offers, seed: world.seed, week: world.week, standing })
     : null
 
-  // 3. ONE LINE, CARRYING WHICHEVER OF THOSE ACTUALLY HAPPENED. It names the TABLE, because the whole
-  //    point of the 30.07 fix was that this is a DOMESTIC reward and the player could not previously
-  //    tell which ladder any gate was reading; and it names the INBOX, because a letter nobody opens
-  //    is worse than the cheque it replaced.
+  // 3. ONE LINE, CARRYING WHICHEVER OF THOSE ACTUALLY HAPPENED. It names the TABLE the letter was
+  //    gated on, because the whole point of the 30.07 fix was that the player could not tell which
+  //    ladder any gate was reading - and the brand ladder makes that question sharper rather than
+  //    softer, since the rungs read different tables on purpose. And it names the INBOX, because a
+  //    letter nobody opens is worse than the cheque it replaced.
   const parts: string[] = []
-  if (ending && endingTerms) {
-    // ⚠ WHAT THE SEASON OF KIT WAS WORTH IS REPORTED EITHER WAY, and the lapse case is the one that
-    //   needs it most: a deal that ends because she did not play enough is precisely the moment the
-    //   player should be able to see what he just lost. Reporting the value only on a renewal would
-    //   make the number a reward for having done well, which is the opposite of what it is for.
-    const worth = `$${Math.round((ending.coveredCents ?? 0) / 100).toLocaleString('en-US')}`
+  if (deal && dealTerms) {
+    // ⚠ WHAT THE SEASON OF KIT WAS WORTH IS REPORTED EITHER WAY, and the failure case is the one
+    //   that needs it most: a deal that ends is precisely the moment the player should be able to
+    //   see what he just lost. Reporting the value only on a renewal would make the number a reward
+    //   for having done well, which is the opposite of what it is for.
+    const worth = `$${Math.round((deal.coveredCents ?? 0) / 100).toLocaleString('en-US')}`
+    const running = (deal.untilWeek ?? 0) > seasonLastWeek(world.week)
     parts.push(
-      obligationMet
-        ? `${endingTerms.brand} kitted her out all season – ${worth} of kit, ${played} events played.`
-        : `${endingTerms.brand} kitted her out all season – ${worth} of kit – but they asked for ${endingTerms.minEventsPerSeason} events and she played ${played}, so they are not renewing.`,
+      !playedEnough
+        ? `${dealTerms.brand} kitted her out all season – ${worth} of kit – but they asked for ${dealTerms.minEventsPerSeason} events and she played ${played}, so they are done.`
+        : !keptAtHome
+          ? `${dealTerms.brand} kitted her out all season – ${worth} of kit – but they back a girl inside the ${LADDER_LABEL.domestic} top ${dealTerms.keepDomesticRank} and she is #${nationalRank}, so they are done.`
+          : running
+            ? `${dealTerms.brand} kitted her out all season – ${worth} of kit, ${played} events played. They have another year to run.`
+            : `${dealTerms.brand} kitted her out all season – ${worth} of kit, ${played} events played.`,
     )
   }
   if (offer) {
     const terms = offer.terms as KitOfferTerms
-    parts.push(
-      `A letter from ${terms.brand} – they want to kit her out for the season (${LADDER_LABEL.domestic} #${nationalRank}). It is in the inbox.`,
-    )
+    // WHICH TABLE EARNED IT, named, because the three rungs deliberately read two different ones and
+    // "why is this brand writing to me" is exactly the question a player should be able to answer.
+    const gate =
+      terms.tier === 'local'
+        ? `${LADDER_LABEL.domestic} #${nationalRank}`
+        : `${LADDER_LABEL.itf} #${world.kidRank}`
+    parts.push(`A letter from ${terms.brand} – they want to put her in their kit (${gate}). It is in the inbox.`)
   }
   if (parts.length === 0) return
   addEvent(world, { week: world.week, type: 'info', text: parts.join(' ') })
@@ -3151,26 +3228,53 @@ function offerAnswerErrorFor(world: WorldState, offerId: string): string {
  *  THE ONE definition, and it has to be: the charge (chargeTravel), the refund (skipEvent) and the
  *  price the planner quotes (the snapshot's UpcomingEvent) all read this. If any of them computed
  *  its own number the discount would be arbitrageable – enter at the covered price, withdraw at the
- *  full refund, bank the difference, repeat for every J30 on the calendar. */
+ *  full refund, bank the difference, repeat for every J30 on the calendar.
+ *
+ *  ⚠ AND SINCE THE BRAND LADDER IT CARRIES A SECOND HAND (01.08). The top rung of the sponsorship
+ *  ladder pays a share of the fare - `junior-economics.md`: "travel sponsorship only after
+ *  national/international wins" - and it arrives HERE, in the one definition, for exactly the reason
+ *  the paragraph above gives. A sponsor discount computed at the till and not at the refund would be
+ *  free money in four keystrokes.
+ *
+ *  The two covers COMPOSE rather than add: the brand takes its share of what the family still owes
+ *  after the academy has taken its own, so a girl carrying both is never handed more than the fare.
+ *  A scholarship at 80% plus a brand at 25% is 85% of a trip covered, not 105%. */
 export function travelCostFor(world: WorldState, event: SeasonEvent): number {
-  return netTravelCents(event.travelCostCents, world.academy)
+  const afterAcademy = netTravelCents(event.travelCostCents, world.academy)
+  const share = kitTravelShare(world.offers, world.week)
+  if (share <= 0) return afterAcademy
+  return afterAcademy - Math.round(afterAcademy * share)
+}
+
+/** What the ACADEMY alone took off this fare - its own tally must never be credited with the brand's
+ *  share, or a season of sponsored travel would inflate the scholarship's reported value. */
+function academyCoverOf(world: WorldState, event: SeasonEvent): number {
+  return event.travelCostCents - netTravelCents(event.travelCostCents, world.academy)
 }
 
 function chargeTravel(world: WorldState, event: SeasonEvent): void {
   const net = travelCostFor(world, event)
   const covered = event.travelCostCents - net
+  const byAcademy = academyCoverOf(world, event)
   world.fundsCents -= net
-  if (world.academy && covered > 0) world.academy.coveredCents += covered
+  if (world.academy && byAcademy > 0) world.academy.coveredCents += byAcademy
+  // WHO PAID FOR IT, on the line itself. Two payers can reduce the same fare and the family should
+  // be able to tell which one did - a cost that quietly shrinks is the dishonesty this text exists
+  // to prevent, and "quietly shrank by a different amount than last month" is the same fault twice.
+  const brandShare = kitTravelShare(world.offers, world.week)
+  const deal = brandShare > 0 ? activeKitDeal(world.offers, world.week) : null
+  const payer = deal
+    ? world.academy
+      ? `academy ${Math.round(travelCoverShare(world.academy) * 100)}% + ${(deal.terms as KitOfferTerms).brand} ${Math.round(brandShare * 100)}%`
+      : `${(deal.terms as KitOfferTerms).brand} covers ${Math.round(brandShare * 100)}%`
+    : `academy covers ${Math.round(travelCoverShare(world.academy) * 100)}%`
   addEvent(world, {
     week: world.week,
     type: 'expense',
     category: 'travel',
     // The sponsor valve's wording, for the same reason: the line is still emitted at its reduced
     // amount so the Money breakdown shows the relationship instead of the cost quietly shrinking.
-    text:
-      covered > 0
-        ? `Travel to ${TIERS[event.tier].label} – academy covers ${Math.round(travelCoverShare(world.academy) * 100)}%`
-        : `Travel to ${TIERS[event.tier].label}`,
+    text: covered > 0 ? `Travel to ${TIERS[event.tier].label} – ${payer}` : `Travel to ${TIERS[event.tier].label}`,
     amountCents: -net,
   })
 }
@@ -3993,17 +4097,32 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // it – the rank the year just gone earned her – which is precisely what an academy reviewing
     // her in the off-season would be looking at. ZERO draws, so it is safe this far up the tick.
     reviewAcademy(world)
-    // 0a0c-bis (30.07): AND THE LOCAL SHOP DECIDES, on the same reading of the same year – except
-    // it reads the NATIONAL table, because that is the ladder a local sponsorship is about. ZERO
-    // draws. Idempotent for free: this block runs exactly once per season boundary, so unlike the
-    // academy (whose support persists and must not re-decide itself) there is nothing to guard.
-    reviewLocalSponsor(world)
     // 0a0d: AND THE FIELD TURNS OVER. Last, because everything above is about the season that just
     // ENDED and wants the field that played it – the academy's verdict in particular is a reading
     // of her standing among those players, not among their replacements. ZERO main-stream draws:
     // the conveyor runs entirely on `seed:conveyor:<season>`. See season/conveyor.ts.
     turnOverField(world, seasonIndexOf(world.week))
   }
+
+  // 0a0c-bis (30.07, MOVED 01.08): AND THE SPONSORS DECIDE – in the OFF-SEASON, which is where a
+  //         contract for next year is really agreed. It used to sit inside the boundary block above,
+  //         so the letter landed on week 1 of the new season and the parent spent the first four
+  //         weeks of competition weighing it; the owner asked for it to be tied to the start of the
+  //         season instead («мне кажется было бы логичным их как раз к старту сезона привязывать»),
+  //         and in the real sport equipment deals are negotiated in November and December so the
+  //         player opens the year already kitted.
+  //
+  //         ⚠ THE ONCE-A-SEASON GUARANTEE IS NOW EXPLICIT, and it has to be. The boundary block gave
+  //         it away free – `week % 52 === 0` is one week – but the off-season is three
+  //         (OFF_SEASON_WEEKS), so the same call made naively would raise a fresh letter every one of
+  //         them. `isSponsorReviewWeek` is the FIRST off-season week and no other; it is the same
+  //         arithmetic `maybeFireSeasonWrapUp` fires on, which is the precedent for a once-a-year
+  //         off-season step.
+  //
+  //         Placed here, in the same zero-main-draw region the boundary block occupies, and for the
+  //         same reason: it takes at most one draw and that draw is on `seed:offer:<week>`, its own
+  //         sub-stream. The frozen MAIN capture (41550 / e6b0c709) cannot see it.
+  if (isSponsorReviewWeek(world.week)) reviewSponsors(world)
 
   // 0a0-w4. W4: retire a knock whose weeks are up. FIRST of the pure-state steps, because everything
   //         below that reads it – `injuryTau` at step 1c most of all – must see the same answer for
@@ -4517,7 +4636,10 @@ export function skipEvent(world: WorldState, eventId: string): void {
   // chargeTravel used minutes ago, so a scholarship can never be turned into free money by entering
   // and withdrawing; the covered part is handed back to the academy's season tally at the same time.
   const paid = travelCostFor(world, event)
-  const covered = event.travelCostCents - paid
+  // ...and the academy's tally is handed back exactly what it was credited, never the brand's share
+  // as well (see `academyCoverOf`): two payers, two ledgers, and a withdrawal must unwind each of
+  // them by its own contribution.
+  const covered = academyCoverOf(world, event)
   world.fundsCents += paid
   if (world.academy && covered > 0) world.academy.coveredCents = Math.max(0, world.academy.coveredCents - covered)
   addEvent(world, {

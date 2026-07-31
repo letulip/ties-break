@@ -259,18 +259,54 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
   //      replays the frozen capture against a career that signs every letter it gets.
   // ============================================================================================
 
-  /** A career forced to the top of the national table, ticked to its first season boundary, given
-   *  the shop's letter and made to answer it - then ticked through the season that answer covers. */
+  // ============================================================================================
+  // ⚠ RE-AIMED A THIRD TIME, NOT WEAKENED (01.08, feat/brand-ladder). Two of the three protected
+  // facts have MOVED OBJECT, because the object itself changed: one shop became a three-rung ladder,
+  // and the rung says WHICH OF HER EQUIPMENT LINES the deal covers (`SponsorTier`).
+  //
+  //   * `local` now covers HER STRINGS ALONE - frames and shoes stay hers. So the local deal is
+  //     deliberately worth LESS than it was: measured on this block's own fixture it covers $311 /
+  //     $638 / $1,548 a season (working / middle / wealthy) against the three-line $900 / $2,000 /
+  //     $2,000 it covered before. That is the design and not a regression - the entry rung is meant
+  //     to be a shop with one van, and what makes the ladder worth climbing is that the rungs above
+  //     it cover more of her.
+  //   * So FACT (1) - "doing well is worth real money, at least $1.5k a season" - is asserted where
+  //     it now lives: on the ladder. A `global` deal covers $872 / $2,054 / $5,000, and a middle
+  //     family keeps $2,087 by signing one. The local shop is asserted separately, for what it
+  //     actually is: real money, and less of it.
+  //   * FACT (2) and FACT (3) are untouched in every respect.
+  //
+  // ⚠ AND ONE MEASURED CONSEQUENCE IS FLAGGED RATHER THAN TUNED AWAY, because it is a balance
+  // decision with history and this project measures before it picks. The 30.07 rebuild's central
+  // claim is that a per-SEASON ceiling is the only flat shape there is, and its evidence was that
+  // the ceiling BINDS at the top of the wealth corridor. With `local` down to one line that is no
+  // longer true of the STEPPED-UP local deal: a wealthy family's string bill is ~$1,495 against a
+  // $2,000 top allowance, so the cap does not bite and the corridor shows through at ~5x (against
+  // ~2.2x before). It still binds on the rung whose allowance was sized for the lines it covers -
+  // `global` pays a wealthy family exactly its $5,000 ceiling - so the mechanism is intact and it is
+  // `ECONOMY.sponsorship.topSeasonCents` that is now sized for a deal it no longer describes.
+  // Moving it is a tuning pass with its own sweep and it is reported, not smuggled in here.
+  // ============================================================================================
+
+  /** A career forced to the top of the national table, ticked to its first OFF-SEASON review, given
+   *  the shop's letter and made to answer it - then ticked through the season that answer covers.
+   *
+   *  ⚠ 49 RATHER THAN 52 (01.08): the review moved out of the season boundary and into the first
+   *  quiet week, because that is when a contract for next year is really agreed. */
   function seasonUnderDeal(
     seed: string,
     background: FamilyBackground,
     answer: 'sign' | 'refuse',
+    intl: 'none' | 'world-class' = 'none',
   ): { world: WorldState; covered: number; startOfSeason: number } {
     const world = createWorld(seed, { ...DEFAULT_PROFILE, background })
     world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
+    // ...and, for the upper rungs, a body of INTERNATIONAL results, because that is the table they
+    // read. Nothing else about the fixture differs.
+    if (intl === 'world-class') world.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'j300' })
     recomputeKidRank(world)
     const rng = rngFromSeed(world.seed)
-    for (let i = 0; i < 52; i++) tickWeek(world, rng)
+    for (let i = 0; i < 49; i++) tickWeek(world, rng)
     const offer = world.offers.find((o) => o.state === 'open')
     // A silent no-offer would make every assertion below vacuously true, which is the one way this
     // block could rot without ever going red.
@@ -295,16 +331,32 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
       expect(covered, `${bg} got nothing out of a signed deal`).toBeGreaterThan(0)
     }
     // ...and the ceiling BINDS at the top of the corridor, which is what makes the sentence above a
-    // claim rather than an accident of small numbers: a wealthy family's kit bill runs past $2,000 a
-    // season, so it takes the whole allowance and not a cent more.
-    expect(seasonUnderDeal('flat-wealthy', 'wealthy', 'sign').covered).toBe(cap)
+    // claim rather than an accident of small numbers: a wealthy family's kit bill runs past the
+    // allowance, so it takes the whole thing and not a cent more.
+    // ⚠ RE-AIMED ONTO THE RUNG WHERE THE ALLOWANCE STILL DESCRIBES THE DEAL (01.08) - see the block
+    //   note above. `local` covers one line now and a $2,000 top allowance no longer bites on a
+    //   ~$1,495 string bill; `global` covers all three and its $5,000 ceiling does. The claim being
+    //   guarded ("the corridor can raise the BILL and never the CAP") is the same claim, measured
+    //   where it is measurable, and `topSeasonCents` being sized for a deal it no longer describes
+    //   is reported as a tuning question rather than answered here.
+    const top = ECONOMY.sponsorship.global.seasonCents
+    const rich = seasonUnderDeal('flat-rich-top', 'wealthy', 'sign', 'world-class')
+    expect((rich.world.offers[0].terms as { tier: string }).tier).toBe('global')
+    expect(rich.covered).toBe(top)
   })
 
-  it('a national-rank-<=10 middle kid keeps >= $1.5k more over the covered season than one who refused', () => {
+  it('a middle kid on a full deal keeps >= $1.5k more over the covered season than one who refused', () => {
     // Fact (1), and it is a DIRECT measurement now rather than a batch mean: the same seed, the same
-    // draws, one signature apart. What she keeps is what the shop paid for.
-    const signed = seasonUnderDeal('cal-1', 'middle', 'sign')
-    const refused = seasonUnderDeal('cal-1', 'middle', 'refuse')
+    // draws, one signature apart. What she keeps is what the brand paid for.
+    // ⚠ RE-AIMED ONTO THE LADDER (01.08): the fact is "doing well is worth real money" and the local
+    //   shop is deliberately no longer the rung that proves it - it covers her strings. A career
+    //   that has climbed to a brand which covers her kit clears the same $1,500 it always had to.
+    // ⚠ THE SEED CHANGED WITH THE RUNG, and not to make anything pass: whether a brand writes is a
+    //   draw on `seed:offer:<week>` at that rung's own chance, so a seed the shop wrote to is not
+    //   automatically one the world wrote to. Nothing is stubbed - this is a letter the engine
+    //   really raised, on its own stream, for a seed it really said yes to.
+    const signed = seasonUnderDeal('cal-0', 'middle', 'sign', 'world-class')
+    const refused = seasonUnderDeal('cal-0', 'middle', 'refuse', 'world-class')
     const kept = signed.world.fundsCents - signed.startOfSeason - (refused.world.fundsCents - refused.startOfSeason)
     expect(kept / 100).toBeGreaterThanOrEqual(1_500)
     // ...and every cent of it came out of the KIT LINES and nowhere else, which is the assertion that
@@ -317,6 +369,24 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
       return -((cats.gear ?? 0) + (cats.stringing ?? 0))
     }
     expect(kitSpend(refused.world) - kitSpend(signed.world)).toBe(signed.covered)
+  })
+
+  it('⚠ ...and the local shop is still worth REAL money – less of it, and only on her strings', () => {
+    // The other half of the re-aim above, so that narrowing `local` to one line cannot quietly
+    // become narrowing it to nothing. The entry rung has to keep being a deal worth signing:
+    // measured, it pays a middle family a few hundred dollars a season and every cent of it comes
+    // out of the stringing bucket - which is the coverage claim, in the ledger.
+    const signed = seasonUnderDeal('cal-local-worth', 'middle', 'sign')
+    const refused = seasonUnderDeal('cal-local-worth', 'middle', 'refuse')
+    expect((signed.world.offers[0].terms as { tier: string }).tier).toBe('local')
+    expect(signed.covered / 100).toBeGreaterThan(200)
+    const bucket = (w: WorldState, cat: 'gear' | 'stringing') =>
+      -(financeWindow(w.financeWeeks, 0).byCategory[cat] ?? 0)
+    // Strings: the shop paid for them, so the family's own stringing bill fell by exactly that much.
+    expect(bucket(refused.world, 'stringing') - bucket(signed.world, 'stringing')).toBe(signed.covered)
+    // ⚠ Racquets and shoes: NOT one cent. They are on the `gear` line and they stayed hers, which is
+    //   the whole difference between this rung and the two above it.
+    expect(bucket(signed.world, 'gear')).toBe(bucket(refused.world, 'gear'))
   })
 
   it('the sponsorship never perturbs the main weekly stream (RNG discipline)', () => {
@@ -364,7 +434,10 @@ describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
     // see what he has just lost.
     const report = world.events.filter((e) => e.text.includes('kitted her out all season'))
     expect(report.length).toBe(1)
-    expect(report[0].text).toContain('not renewing')
+    // ⚠ RE-AIMED (01.08) IN ITS WORDING ONLY: "not renewing" became "they are done", because a rung
+    //   whose term can outlast a season does not merely decline to renew - it ENDS. Same fact, same
+    //   line, same figure on it.
+    expect(report[0].text).toContain('they are done')
     expect(report[0].text).toMatch(/\$[\d,]+ of kit/)
   })
 

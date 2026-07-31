@@ -29,13 +29,22 @@ const letters = computed(() => [...(game.snapshot?.offers ?? [])].reverse())
 const open = computed(() => letters.value.filter((o) => o.state === 'open' && week.value <= o.deadlineWeek))
 
 const pendingSign = ref<Offer | null>(null)
+/** WHAT SIGNING COVERS, in the same words the paper used. `frame` is a racquet to a reader and a
+ *  frame to the equipment model; the letter already made that translation and the confirm must not
+ *  make a different one. */
+const LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquets', shoes: 'shoes' }
 const confirmMessage = computed(() => {
   if (!pendingSign.value) return ''
   const t = pendingSign.value.terms as KitOfferTerms
   const value = `$${Math.round(t.kitAllowanceCents / 100).toLocaleString('en-US')}`
+  const words = t.covers.map((l) => LINE_WORDS[l] ?? l)
+  const covered = words.length === 1 ? words[0] : `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
+  const seasons = (t.seasons ?? 1) === 1 ? 'a season' : `${t.seasons} seasons`
   // The deal, restated, and the one thing the letter cannot say for itself: that this cannot be
-  // undone. No editorialising beyond that – the game does not tell him whether it is a good idea.
-  return `Sign with ${t.brand}? They kit her out for the season – up to ${value} – and she must enter at least ${t.minEventsPerSeason} tournaments. This cannot be undone.`
+  // undone. No editorialising beyond that – the game does not tell him whether it is a good idea,
+  // and in particular it does not mention that signing turns other brands away. That is a term, it
+  // is on the paper, and a confirm that argued the case would be counselling rather than confirming.
+  return `Sign with ${t.brand}? They cover her ${covered} for ${seasons} – up to ${value} – and she must enter at least ${t.minEventsPerSeason} tournaments a season. This cannot be undone.`
 })
 
 function askSign(id: string): void {

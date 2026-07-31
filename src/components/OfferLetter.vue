@@ -52,8 +52,46 @@ const base = import.meta.env.BASE_URL
 
 const terms = computed(() => props.offer.terms as KitOfferTerms)
 /** THE LETTERHEAD, BY TIER. `public/images/sponsors/<tier>.webp` - never a filename written out at a
- *  call site, so the day the national and global rungs exist they need no change here. */
+ *  call site, which is why the national and global rungs needed no change here at all. */
 const markUrl = computed(() => `${base}images/sponsors/${terms.value.tier}.webp`)
+
+/** ⚠ WHAT THEY COVER, IN THE BRAND'S OWN WORDS - the sentence the whole ladder exists to make
+ *  readable. The rung is COVERAGE, not prestige (see `SponsorTier`), so the line that names the
+ *  covered kit IS the difference between the three letters, and it is generated from `covers` rather
+ *  than written three times: a rung whose coverage changed and whose letter did not would be the
+ *  exact trap spec §3 forbids. */
+const LINE_WORDS: Record<string, string> = {
+  strings: 'strings',
+  frame: 'racquets',
+  shoes: 'shoes',
+}
+const coveredWords = computed(() => terms.value.covers.map((l) => LINE_WORDS[l] ?? l))
+const coveredList = computed(() => {
+  const words = coveredWords.value
+  if (words.length === 0) return 'nothing'
+  if (words.length === 1) return words[0]
+  return `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
+})
+/** ...AND WHAT THEY DO NOT, which is the half a player can act on. A letter that lists what is
+ *  covered and stays quiet about the rest reads as "everything" to anyone who is not counting, and
+ *  the whole decision is what is still hers to buy. */
+const uncoveredList = computed(() => {
+  const missing = (['strings', 'frame', 'shoes'] as const)
+    .filter((l) => !terms.value.covers.includes(l))
+    .map((l) => LINE_WORDS[l])
+  if (missing.length === 0) return ''
+  if (missing.length === 1) return missing[0]
+  return `${missing.slice(0, -1).join(', ')} and ${missing[missing.length - 1]}`
+})
+const travelPct = computed(() => Math.round((terms.value.travelShare ?? 0) * 100))
+/** A brand writing to a family says "three seasons", not "3 seasons" - the letter is handwritten and
+ *  a numeral in the middle of a sentence reads as a form. Falls back to the numeral past the terms
+ *  this game can actually issue rather than carrying a dictionary. */
+const SEASON_WORDS = ['', 'One season', 'Two seasons', 'Three seasons', 'Four seasons']
+const seasonWord = computed(() => {
+  const n = terms.value.seasons ?? 1
+  return SEASON_WORDS[n] ?? `${n} seasons`
+})
 
 const live = computed(() => props.offer.state === 'open' && props.week <= props.offer.deadlineWeek)
 /** How long is left, in whole weeks, counting the current one. The quiet half of the owner's ask:
@@ -74,11 +112,16 @@ const settled = computed(() => {
   switch (o.state) {
     case 'signed': {
       const t = o.terms as KitOfferTerms
-      if (o.eventsPlayed === undefined) return `Signed – running until the end of the season.`
+      // ⚠ A MULTI-SEASON DEAL IS REVIEWED EVERY YEAR AND ENDS ONCE, so "has it been reviewed" and
+      // "is it over" stopped being the same question when the ladder shipped. `untilWeek` is the
+      // only one of the two that says whether she is still in their kit this week.
+      const running = props.week <= (o.untilWeek ?? -1)
+      if (o.eventsPlayed === undefined) return running ? 'Signed – they are kitting her out.' : 'Signed.'
       const asked = t.minEventsPerSeason
+      if (running) return `Signed – they are kitting her out. ${o.eventsPlayed} of ${asked} events last season.`
       return o.eventsPlayed >= asked
-        ? `Signed. She played ${o.eventsPlayed} of the ${asked} events they asked for, and the deal ran its season.`
-        : `Signed. She played ${o.eventsPlayed} of the ${asked} events they asked for, so it was not renewed. Nothing was paid back.`
+        ? `Signed. She played ${o.eventsPlayed} of the ${asked} events they asked for, and the deal ran its course.`
+        : `Signed. She played ${o.eventsPlayed} of the ${asked} events they asked for, so it ended. Nothing was paid back.`
     }
     case 'refused':
       return 'Turned down.'
@@ -101,12 +144,29 @@ const settled = computed(() => {
       <!-- THE DEAL, IN THE WORDS THE BUTTON COMMITS TO. Generated from the terms themselves; the
            last line is the FAILURE MODE, and the script header above says why it has to be here. -->
       <ul class="offer-terms">
-        <li>Racquets, strings and shoes – up to {{ dollars(terms.kitAllowanceCents) }} of kit over the season, on us.</li>
-        <li>We keep it fresh. She will not play a match on a dead string bed.</li>
-        <li>In return she enters at least {{ terms.minEventsPerSeason }} tournaments this season – we are paying to be seen.</li>
         <li>
-          One season. Play them and we will write again next year; fall short and we shake hands at
-          the end of it and part friends. Either way the kit is hers and there is nothing to pay back.
+          Her {{ coveredList }} – up to {{ dollars(terms.kitAllowanceCents) }} of kit over the
+          season, on us.<template v-if="uncoveredList"> Her {{ uncoveredList }} stay hers.</template>
+        </li>
+        <li>
+          We keep {{ coveredWords.length === 1 ? 'them' : 'it all' }} fresh. She will not play a
+          match on dead {{ coveredWords[0] }}.
+        </li>
+        <li v-if="travelPct > 0">And we will take {{ travelPct }}% of what a trip costs her.</li>
+        <li>In return she enters at least {{ terms.minEventsPerSeason }} tournaments a season – we are paying to be seen.</li>
+        <!-- ⚠ EXCLUSIVITY IS A TERM AND BELONGS ON THE PAPER. It is the counterweight to the
+             coverage – one brand at a time is what stops a career collecting all three rungs – and
+             a player who cannot read it here would be committing to it blind. In the brand's own
+             voice, plainly, the way a commercial term is really written. -->
+        <li>And while she is in our kit she is in nobody else's.</li>
+        <li>
+          {{ seasonWord }}, starting with the one ahead.
+          <template v-if="terms.keepDomesticRank">
+            We back a girl who is somebody at home, so she stays inside the national top
+            {{ terms.keepDomesticRank }} while we are with her.
+          </template>
+          Hold up your end and we will write again after; fall short and we shake hands at the end of
+          that season and part friends. Either way the kit is hers and there is nothing to pay back.
         </li>
       </ul>
       <p class="offer-sign-off">– {{ terms.brand }}</p>

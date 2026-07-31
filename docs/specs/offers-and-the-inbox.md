@@ -134,6 +134,74 @@ directly on the system the coach exists to manage.
 Failing the obligation should cost the deal, not the family's savings: the contract lapses at the
 season boundary and is not renewed. Nothing is clawed back — a junior kit deal is not a loan.
 
+### 4.1b The brand ladder — three rungs, and the rung is COVERAGE (shipped 01.08)
+
+The owner, after a season finishing **#1 national and #13 international**, asked whether two
+contracts would arrive. They did not: `kitTermsFor` read the domestic table and nothing else, so the
+single local shop was all there was. **A girl who is thirteenth in the world is interesting to very
+different people than a shop in her town.**
+
+⚠ **The rung says WHICH OF HER EQUIPMENT LINES IT COVERS, and that is the whole design.** It is
+deliberately not a prestige number: a prestige number is a new stat the game would then have to
+explain, and main already carries gear condition (strings / frame / shoes, each feeding the match
+attributes). "How many of my lines are covered" is a sentence the player can read off a screen he
+already has.
+
+| rung | covers | gate | term | asks |
+|---|---|---|---|---|
+| `local` — String House | **strings** | DOMESTIC top 30 (`maxRank`), stepped at top 10 | 1 season | 6 / 8 events |
+| `national` — Netrally Distribution | **strings + frames** | **ITF top 32**, and she must STAY in the domestic top 30 | 2 seasons | 10 events |
+| `global` — Play Beyond | **everything, plus a quarter of the airfare** | **ITF top 8** | 3 seasons | 12 events |
+
+The brand names are read off the artwork rather than invented — `local.webp` says "STRING HOUSE –
+LOCAL. HONEST. TIGHT.", `national.webp` "NETRALLY DISTRIBUTION – STRINGS. FRAMES. NATIONWIDE.",
+`global.webp` "PLAY BEYOND – EQUIP. SUPPORT. ELEVATE.". The middle one's tagline **is** the coverage
+this slice ships, which is the strongest evidence the ladder was read off the pictures.
+
+**Where the thresholds come from.** Not two round numbers picked to feel right: both are one figure
+in the tier catalogue. `TIERS.j300.drawSize` is 32, and J300 is the only four-figure crowd in the
+game (900–2,600 spectators against j60's 110–320) — the lore's "one rung where a junior plays in
+front of strangers". A sponsor pays to be SEEN, so **national signs the girl who would fill that
+draw on merit, and global signs the one who would still be in it on the last day** (`drawSize / 4`).
+The owner's own #13 therefore clears the national rung and leaves the global one one step above her,
+which is the calendar's standing rule that "there must ALWAYS be somewhere to go".
+
+⚠ **And it is not two-ladders.md's dead-gate mistake twice.** That document records an ITF-rank
+sponsor gate at #30 firing for NOBODY, because a career's ITF rank sat at #89–#109. Two things make
+this different and both are measured (`tools/brand-gate-bench.ts`, 18 preset × policy cells × 12
+seeds × 312 weeks, best ITF rank ever held): the ladder still has a rung for those careers — the
+local shop, on the table they actually hold — and **78/216 careers reach #32, 34/216 reach #8**. The
+self-coached and grinder cells never reach either, which is the discrimination the ladder wants; the
+managed cells clear #32 in most seeds.
+
+⚠ **One brand at a time.** A signed deal turns a competing letter away until it ends, or a career
+collects all three rungs and the ladder means nothing. That is the counterweight to the coverage and
+it is **the price of caution**: the upper rungs run for two and three seasons, so signing the
+national deal at sixteen means the global letter next winter finds her busy. The term is stated on
+the paper — *"while she is in our kit she is in nobody else's"* — because a player who cannot read
+it there is committing to it blind.
+
+**National stops being dead content on the way OUT.** Domestic points buy exactly two things once
+the ITF tour opens — the kit sponsor and an elite-coach gate that is disabled — while `national`'s
+`enterPointBand` keeps it on the calendar for ever at $120 entry plus $400+ travel. So the national
+rung is gated on her world ranking to ARRIVE and on her place AT HOME to SURVIVE: the domestic table
+is a rolling 52-week best-6, so a season spent entirely abroad decays her points to nothing, she
+slides out of the top 30, and the brand goes. **Stop playing National, slide down the table, lose
+the letter** — a job for the domestic ladder that lasts exactly as long as the contract does, and no
+new mechanic to explain.
+
+⚠ **The letter arrives in the OFF-SEASON** (owner, 01.08: «мне кажется было бы логичным их как раз к
+старту сезона привязывать… Что в реальности происходит в этом плане?»). In the real sport
+sponsorship is negotiated in November and December so the deal is signed and effective when the
+season opens; equipment deals align to the calendar year. It used to land on week 1 and its
+four-week window ran through the first tournaments. It now fires on the FIRST off-season week and no
+other (`isSponsorReviewWeek`) — the once-a-season guarantee the season boundary used to give away
+for free, made explicit now that the window it fires in is three weeks wide. The rank it reads did
+not move: the calendar puts nothing in weeks 49–51, so reading the table three weeks earlier reads
+the same table. The four-week window deliberately runs two weeks into the new year rather than being
+shortened to fit; what matters is that the deal is signable before the season opens, which it is
+from the day it arrives.
+
 ### 4.2 The agent — sells access, costs a percentage
 
 ⚠ **An agent is worthless until there is money to take a cut of, so it belongs to the adult tour and
