@@ -751,4 +751,21 @@ describe('W4 — the schema (v26)', () => {
     // evaporates on reload is not one. Everything else the knock produces is derived per snapshot.
     expect(codeOf('../src/engine/migrations.ts')).toContain('save.knockHistory ??= []')
   })
+  // ⚠ THE FEED MAY NOT DEMAND A DECISION THE PLAYER WILL NOT BE OFFERED (owner, 31.07: «а где сам
+  // decision? кто его должен принимать?»). He saw "It needs a decision." on a career whose middle-rung
+  // coach had already taken the call two lines later - the shape of having been asked and ignored.
+  //
+  // The rule is about WHO ASKS, not about wording: the dialog is the demand, and on the path where no
+  // dialog opens there is nothing to demand. So the arrival line reports the fact and stops, on every
+  // path, and this pins that it cannot grow a demand back - in any phrasing, not just the old one.
+  it('the knock ARRIVAL line reports, it never asks - the dialog is what asks', () => {
+    const src = read('../src/engine/world.ts')
+    const block = src.slice(src.indexOf('const knock = drawKnock(view)'), src.indexOf('coachManagesLoad(tierOf('))
+    const lines = [...block.matchAll(/`([^`]*\$\{knock\.part\}[^`]*)`/g)].map((m) => m[1])
+    expect(lines.length, 'the two arrival lines should still be here').toBe(2)
+    for (const line of lines) {
+      expect(line, `"${line}" asks the player for something`).not.toMatch(/decision|decide|choose|what do you/i)
+    }
+  })
+
 })
