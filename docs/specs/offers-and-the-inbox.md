@@ -260,6 +260,91 @@ else, and that is a design decision to take with the number in hand.
 
 ---
 
+## 4c. THE INVESTOR IS THE ONE INSTRUMENT THAT LIES — and that is the design
+
+The owner, on being told the pitch is a lie the game would punish:
+
+> «и это хорошо! Надо эту идею развить, сыграть на жадности и кажущейся легкости пути, где гарантии
+> не просто нет, а быть не может в принципе.»
+
+⚠ **This reverses §4b's conclusion and it is the better reading.** I treated "the elite coach is
+measurably a trap" as a blocker to be fixed before the investor could ship honestly. It is not a
+blocker. **It is the trap he walks you into**, and building the instrument around it is more truthful
+than tuning the trap away.
+
+The reason it is truthful: this is what the money actually is. Nobody offering a tennis parent
+$30,000 for a share of a fourteen-year-old is offering a fair price, because **a fair price cannot
+exist** — the asset is a child who may or may not become someone, and the person selling you the
+dream knows the base rates and you do not.
+
+### The heart of it: he asks you to bet on a number the game has never shown you
+
+This connects to machinery that already exists, and that is the strongest argument for it.
+
+`potential` is **hidden by construction**. The radar shows a band, never a value — its own comment:
+*"the two ceiling edges are a haze over a `potential` the screen never shows… you learn the range,
+never the number."* Every other system in this game is honest about its costs up front. The radar is
+honest about one thing only: **that it cannot tell you how good she is.**
+
+**The investor is the fog with money on it.** He asks the parent to sell a share of his daughter's
+future earnings against his own guess about a number the game has deliberately, permanently refused
+to reveal. There is no guarantee not because we withheld one, but because — as the owner puts it —
+**there cannot be one in principle.** That is the same sentence the radar has been saying since it
+shipped; the investor is the first system that charges money for disagreeing with it.
+
+### ⚠ THE ONE RULE THAT KEEPS IT A DECISION
+
+**It has to sometimes work.**
+
+A trap that always loses is not a decision, it is a punishment — and it fails in exactly the same way
+"caution is free" fails, only mirrored: the correct play becomes "always refuse", and we are back to a
+branch that is simply better. The gamble must be **bad, not hopeless**.
+
+Three properties that keep it honest:
+
+1. **The odds are genuinely poor and genuinely non-zero.** Rare enough that the story is usually the
+   cautionary one; real enough that a player who hears "somebody's daughter actually made it" is
+   hearing the truth.
+2. **The player's OTHER choices move the odds.** Load management, which events she enters, when he
+   takes the money — these already decide careers (10/12 against 5/12 on the same coach). The
+   investor should amplify what the parent does, not replace it. Otherwise it is a coin flip wearing
+   a decision's clothes.
+3. ⚠ **The game never editorialises.** No warning beyond the standard confirm, no diary line that
+   wags a finger, no "are you sure? this is usually a mistake". The whole point is that it looks
+   easy. A game that tips its hand has taken the decision away and left the player with homework.
+
+### The pitch: every number true, the implication false
+
+The letter should be **factually honest and emotionally predatory**, which is exactly how this works
+in life:
+
+- *"20% of prize money until she is 22"* — a fact, and it will be honoured exactly.
+- *"With the right coach she could be top 100"* — true of somebody, unknowable of her.
+- *"You'll be a millionaire"* — the owner's own phrasing for the pitch, and the part that is a hope
+  wearing a fact's clothes.
+
+⚠ **Tone matters and should not be gleeful.** This game's subject is a parent gambling with a child's
+future; the letters must be warm, plausible and likeable, because that is what makes them work. A
+moustache-twirling villain teaches nothing — the man who ruins you is charming, believes his own
+pitch, and sends a nice letter.
+
+### The second letter
+
+A family that took the money and is now bleeding **gets another offer, on worse terms**. That is how
+it goes, and it is the cheapest possible way to make a spiral feel like one: the first letter is a
+choice, the second is the first letter's consequence pretending to be a choice.
+
+### What this changes about the coach ladder
+
+§4b said the top rungs must be re-measured before the investor ships. **That is now optional rather
+than blocking** — but it is still worth doing, for a different reason: we need to know whether elite
+coaching is a trap *always* or only *for a family that cannot carry it*. Those are different games.
+If the elite rung genuinely pays for a career that reaches W100, the investor's pitch is a bad bet
+with a real prize at the end, which is property (1) above, satisfied by the economy rather than by a
+dice roll. **Measure it to find out which instrument we are building — not to decide whether to
+build it.**
+---
+
 ## 5. Rules the implementation may not break
 
 - ⚠ **The frozen MAIN-stream capture (41550 draws / `e6b0c709`) must not move.** Whether an offer
