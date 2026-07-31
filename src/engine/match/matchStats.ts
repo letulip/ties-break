@@ -22,8 +22,7 @@
 
 import type { AnnotatedMatch } from '../../viz/types'
 import type { MatchPlayer, Side } from './types'
-import { rngFromSeed } from '../rng'
-import { LEGACY_SNAPSHOT_AGE, serveSpeedOf } from './serveSpeed'
+import { pointServeSpeeds } from './serveSpeed'
 
 export interface MatchStats {
   /** rally shots that ended the point as a clean winner, by side */
@@ -41,8 +40,15 @@ export interface MatchStats {
 }
 
 // The speed model lives in ./serveSpeed.ts (age curve + skill term + jitter), because rally.ts needs
-// the same numbers for the ace rate and two copies of a curve is one copy too many. One rng per
-// point (seeded from the match seed + point number) drives every serve shot in it - unchanged.
+// the same numbers for the ace rate and two copies of a curve is one copy too many.
+//
+// ⚠ AND SO DOES THE SEEDING NOW (31.07). One rng per point, seeded from the match seed + the point
+// number, with every serve in the point drawing from it in strike order - unchanged in every
+// respect except that the loop that does it is `serveSpeed.pointServeSpeeds` rather than eight lines
+// of this file. The owner asked for the serve speed LIVE on the court screen, which made the box
+// score the second reader of a number rather than the only one; the two must not be able to
+// disagree, so there is exactly one loop and both call it. Copying it back here would be a bug even
+// if the copy started out identical.
 
 /** Format seconds as `h:mm` (e.g. 7014 s -> "1:56"). */
 export function formatDuration(totalSeconds: number): string {
@@ -58,8 +64,6 @@ export function computeMatchStats(
   playerA: MatchPlayer,
   playerB: MatchPlayer,
 ): MatchStats {
-  const serveSkill: [number, number] = [playerA.serve, playerB.serve]
-  const age: [number, number] = [playerA.age ?? LEGACY_SNAPSHOT_AGE, playerB.age ?? LEGACY_SNAPSHOT_AGE]
   const winners: [number, number] = [0, 0]
   const unforcedErrors: [number, number] = [0, 0]
   const aces: [number, number] = [0, 0]
@@ -78,17 +82,14 @@ export function computeMatchStats(
     if (rally.ace) aces[point.entry.server]++
     if (rally.doubleFault) doubleFaults[point.entry.server]++
 
-    // Per-point serve-speed rng: every serve struck in the point draws from it, in order.
-    const speedRng = rngFromSeed(`${seed}:spd:${point.entry.pointNumber}`)
+    // The serves, from the one shared per-point stream (see the note above).
+    for (const struck of pointServeSpeeds(seed, point, playerA, playerB)) {
+      speedSum[struck.side] += struck.kmh
+      speedCount[struck.side]++
+      if (struck.kmh > speedMax[struck.side]) speedMax[struck.side] = struck.kmh
+    }
     for (const shot of rally.shots) {
-      if (shot.kind === 'serve1' || shot.kind === 'serve2') {
-        const side = shot.by
-        const spd = serveSpeedOf(speedRng, age[side], serveSkill[side], shot.kind === 'serve2')
-        speedSum[side] += spd
-        speedCount[side]++
-        if (spd > speedMax[side]) speedMax[side] = spd
-        continue
-      }
+      if (shot.kind === 'serve1' || shot.kind === 'serve2') continue
       // A rally stroke: a clean winner is by the point winner; a net/out error is by the loser.
       if (shot.result === 'winner') winners[shot.by]++
       else if ((shot.result === 'net' || shot.result === 'out') && shot.by === loser) unforcedErrors[shot.by]++

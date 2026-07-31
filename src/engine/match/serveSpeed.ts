@@ -22,6 +22,17 @@
 //
 // PURE, ZERO RNG. Every consumer (the box score, the ace rate, any future prologue screen) reads the
 // same two functions, so the number on one screen can never disagree with the number on another.
+//
+// ⚠ AND SINCE 31.07 THAT PROMISE COVERS THE JITTERED NUMBER TOO - see `pointServeSpeeds` at the foot
+// of this file. The owner asked for the speed of the serve ON THE COURT SCREEN, live, next to the
+// player who struck it; that is a SECOND reader of a number the box score already reports, and two
+// readers of one serve that disagree is worse than no reading at all. The seeding recipe (which
+// stream, and in what order the serves draw from it) therefore moved down here beside the model
+// instead of being copied into the viewer.
+
+import type { AnnotatedPoint } from '../../viz/types'
+import { rngFromSeed } from '../rng'
+import type { MatchPlayer, Side } from './types'
 
 /** Small-child asymptote: the floor the curve flattens onto below about age 8. */
 const SPEED_FLOOR = 48
@@ -83,4 +94,65 @@ export function expectedServeSpeed(ageYears: number, serveSkill: number): number
 export function serveSpeedOf(rng: () => number, ageYears: number, serveSkill: number, secondServe: boolean): number {
   const jitter = (rng() * 2 - 1) * SPEED_JITTER
   return Math.round(expectedServeSpeed(ageYears, serveSkill) + jitter - (secondServe ? SECOND_SERVE_DROP : 0))
+}
+
+/** A serve as it was actually struck in a point, tied to the shot it is. */
+export interface StruckServe {
+  /** index into the point's `rally.shots`, so a caller watching one shot can find its own reading */
+  shotIndex: number
+  /** who struck it */
+  side: Side
+  /** km/h, integer - the number both the box score and the court screen report */
+  kmh: number
+  /** true for a second serve, which the model strikes SECOND_SERVE_DROP slower */
+  secondServe: boolean
+}
+
+/**
+ * EVERY SERVE STRUCK IN ONE POINT, IN THE ORDER IT WAS STRUCK, IN KM/H.
+ *
+ * ⚠ THIS IS THE ONLY PLACE THE PER-POINT SPEED STREAM IS SEEDED OR READ, and that is the whole
+ * reason it exists. Two things have to be true at once for the screen not to lie:
+ *
+ *   1. The seed is per POINT (`<match seed>:spd:<point number>`), so a match always reports the same
+ *      speeds however many times it is re-opened, re-simulated or watched back.
+ *   2. Every serve in the point draws from that one stream IN STRIKE ORDER - first serve, then the
+ *      second if there was one. Draw them in a different order, or open a second stream for the
+ *      second reader, and the live number stops being the number the box score sums.
+ *
+ * Both callers - `matchStats.computeMatchStats` (the box score's avg/max rows) and MatchViewer's
+ * live reading in the court's bottom run-off band - go through here, so they agree BY CONSTRUCTION
+ * rather than by two implementations happening to match. tests/match/matchStats.test.ts re-derives
+ * the box score from this function's output to prove the two readings are one number.
+ *
+ * `pointNumber` is taken off `point.entry` rather than `point.rally` deliberately: the box score has
+ * always seeded from the log entry's number, and asking each caller to remember which of the two to
+ * pass is exactly the drift this function is here to remove.
+ *
+ * Pure and total: a point with no serve shots at all returns an empty list.
+ */
+export function pointServeSpeeds(
+  seed: string,
+  point: AnnotatedPoint,
+  playerA: MatchPlayer,
+  playerB: MatchPlayer,
+): StruckServe[] {
+  const age: [number, number] = [playerA.age ?? LEGACY_SNAPSHOT_AGE, playerB.age ?? LEGACY_SNAPSHOT_AGE]
+  const serveSkill: [number, number] = [playerA.serve, playerB.serve]
+  const rng = rngFromSeed(`${seed}:spd:${point.entry.pointNumber}`)
+  const struck: StruckServe[] = []
+  const shots = point.rally.shots
+  for (let i = 0; i < shots.length; i++) {
+    const shot = shots[i]
+    if (shot.kind !== 'serve1' && shot.kind !== 'serve2') continue
+    const side = shot.by
+    const secondServe = shot.kind === 'serve2'
+    struck.push({
+      shotIndex: i,
+      side,
+      kmh: serveSpeedOf(rng, age[side], serveSkill[side], secondServe),
+      secondServe,
+    })
+  }
+  return struck
 }
