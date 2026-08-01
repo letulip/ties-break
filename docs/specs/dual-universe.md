@@ -131,12 +131,78 @@ argued against a field that no longer exists. To keep the two runs attributable,
 **code fingerprint** header (`git rev-parse HEAD` of the worktree, `-dirty` when the tree is not
 clean) on stdout and stamps it into every CSV row; the tables in §4 carry it too.
 
-## 4. Results
+## 4. Results – BASELINE #1
 
-*Pending – filled by the post-sweep commit. The threshold and prediction above are frozen; nothing
-above this line moves once the numbers land.*
+Run 2026-08-01, code fingerprint **bcae9df3d167** (clean tree), 30 paired seeds. §2 and §3 above
+are exactly as committed before this sweep existed (aa02268); nothing above the §4 line has moved.
+The paired-horizon cross-check passed: every 208w measurement byte-agrees with its 416w twin, so
+one table below covers both horizons.
+
+| week | med rank real | med rank cf | med suppr. | spread | neg / zero / pos | peer Δ (mean) | careers w/ inversion | events in window (mean) | double-paid pts/season | news≠table champion |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 104 | #21 | #23 | **0** | −7..+7 | 14 / 7 / 9 | **+24.5** | **17/30 (57%)** | 23.9 | **5383** | 92.1% |
+| 208 | #108.5 | #107.5 | **0** | −3..+5 | 4 / 18 / 8 | −0.4 | 5/30 (17%) | 9.7 (9 careers: 0) | 3711 | 91.2% |
+| 312 | #97.5 | #97.5 | 0 | 0..0 | 0 / 30 / 0 | 0.0 | 0/30 | 1.4 (28 careers: 0) | 2525 | 91.0% |
+| 416 | #88 | #88 | 0 | 0..0 | 0 / 30 / 0 | 0.0 | 0/30 | 5.6 (17 careers: 0) | 1988 | 90.5% |
+
+Supporting tracks: domestic suppression −3..+2 (17 careers non-zero) at 104, gone by 208; WTA
+suppression appears once she plays W15/W35 (−4..+6 at 208, 13 careers non-zero; −2..+3 at 416) and
+its median is 0 everywhere. Cumulative double-paid volume: **~15,900 canonical points per career**
+banked by AI players out of her entered events (~5,400/season while she is active).
+
+**The §2 prediction is half-falsified, and the falsified half is the finding.** Suppression is NOT
+"> 0 by construction": per-seed it is symmetric around zero (14 negative vs 9 positive at week
+104). The §2 reasoning missed that the counterfactual does not only *remove* the canonical payout
+from her rivals – it *re-awards the same tier's points* to the shadow bracket's beneficiaries, who
+live in the same table neighbourhood. The swap changes WHICH rivals hold the points, barely how
+many sit above her. Meanwhile the second §2 prediction verified exactly: the volume is enormous
+(5,400 pts/season ≈ a full second calendar) and it scatters – peers carry +24.5 points of best-6
+each at week 104 while her rank stays put. Both universes pay the same neighbourhood; identity
+moves, mass does not.
+
+**A career-shape discovery the bench forced into the open** (the reason weeks 312/416 are near-
+vacuous): in this cell she stops entering ANYTHING around week ~167–215 – junior tiers age-cap
+away and most careers never (or only briefly, 13/30 late) hold W-tier eligibility. At 312, 28 of
+30 careers have an empty 52-week window, so real ≡ counterfactual by construction; `kid_points_itf`
+median is 0 and the #97.5 "rank" is the zero-point tie block. Those cells say nothing about the
+bias – and quite a lot about the cell: rank-plateau's 312/416 rows were measured under an older
+calendar in which she kept playing. Worth its own question some day; not this page's.
+
+**What the double-pay measurably does, then** – not a ladder distortion but two integrity wounds
+and a volume:
+
+1. **Beaten-rival inversions are the lived experience of the bug**: at the height of her junior
+   activity (week 104) **57% of careers** contain at least one rival who is above her on the very
+   table while she beat him on court that season – and who would be below her had her bracket been
+   the paying one. Up to 3 such rivals per career. By the pre-registered week-208 read it thins to
+   17% only because she has mostly stopped playing by then.
+2. **The news lies about ~91% of her events** (claim 3 quantified): the announced (shadow)
+   champion differs from the champion the table paid (canonical) in 90.5–92.1% of played events.
+   Two independent 32-draws over one pool almost never agree – so the on-screen contradiction is
+   not an edge case, it is the norm of every tournament week she plays.
+3. **The phantom volume is real**: ~5,400 pts/season of canonical payouts from her entered events,
+   +24.5 best-6 points on her direct peers at week 104 – it inflates the field she is racing
+   without systematically displacing her.
 
 ## 5. Verdict
 
-*Pending – the §2 threshold applied to §4, computed by the bench itself (`verdict()`), not
-eyeballed. Phase B remains the owner's gate either way.*
+Computed by `verdict()` against the §2 threshold, not eyeballed:
+
+| pre-registered condition | measured | trip? |
+| --- | --- | --- |
+| median ITF suppression > 10 places at any (horizon, week) cell | 0 at every cell (worst single seed: +7) | **no** |
+| beaten-rival inversions in > 25% of careers at week 208 | 17% (5/30) | **no** |
+
+**⇒ NOT MATERIAL under the pre-registered threshold. Phase B is closed unbuilt**, per §2's own
+terms – the rank bias this bench was sent to find is not there at the registered magnitude, and
+rank-plateau §5 already owns the actual plateau (condition, not points).
+
+What this page does NOT decide: whether the week-104 inversion rate (57%) and the ~91%
+champion-news contradiction – tone and integrity findings, both outside the registered threshold –
+justify a differently-scoped slice (e.g. fixing the news line alone, a UI-truth fix with no ledger
+change). That is the owner's question; re-registering a new threshold after seeing these numbers
+would be exactly the practice this document format exists to prevent, so it is left here as data.
+
+The §3 gate stands regardless: if a Phase B conversation ever reopens, the FIRST step is the
+required re-run of this bench after `feat/living-field` merges, fingerprint attached, tables
+appended below.
