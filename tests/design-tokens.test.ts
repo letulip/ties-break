@@ -233,3 +233,31 @@ describe('the tokens that used to live in components are on :root, at the design
     expect(flow).not.toContain('radial-gradient(120% 68% at 50% 0%')
   })
 })
+
+// ===============================================================================================
+// THE APP CHROME OUTSIDE CSS — the PWA manifest and the theme-color meta (P6 (e))
+// ===============================================================================================
+describe('the PWA chrome colors track style.css --bg', () => {
+  // WHY THIS PIN EXISTS: `--bg` moved #0f172a → #0a0e13 on 28.07 (the darker palette) and the two
+  // copies CSS cannot see — vite.config.ts's manifest `theme_color`/`background_color` and
+  // index.html's `<meta name="theme-color">` — stayed behind for four days: the Android status bar
+  // and the install splash flashed the old slate over the new ink. Three copies of one color with
+  // no gate is the exact failure class this file was built to close; now all three are read
+  // against the sheet's own declaration, so the NEXT palette change fails here until it is whole.
+  //
+  // ⚠ src/viz/courtRenderer.ts (`BG = '#0f172a'`) is DELIBERATELY not in this pin: that is the
+  // match-scene CANVAS backdrop — a design choice about the court's own night, not app chrome —
+  // and syncing it is a call for the owner, not a token gate. If that choice is ever revisited,
+  // it gets its own line here, not a silent ride-along.
+  it('manifest theme_color, manifest background_color and the meta tag all equal --bg', () => {
+    const bg = /(?<![-\w])--bg:\s*(#[0-9a-f]{6})/i.exec(stripComments(read(SHEET)))?.[1]
+    expect(bg, 'src/style.css must declare --bg as a 6-digit hex').toBeDefined()
+
+    const indexHtml = read(fileURLToPath(new URL('../index.html', import.meta.url)))
+    expect(indexHtml, 'index.html theme-color meta').toContain(`<meta name="theme-color" content="${bg}" />`)
+
+    const viteConfig = read(fileURLToPath(new URL('../vite.config.ts', import.meta.url)))
+    expect(viteConfig, 'manifest theme_color').toContain(`theme_color: '${bg}'`)
+    expect(viteConfig, 'manifest background_color').toContain(`background_color: '${bg}'`)
+  })
+})

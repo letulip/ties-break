@@ -67,8 +67,11 @@ export default defineConfig({
         name: 'Ties Break: Ace Parent',
         short_name: 'Ties Break',
         description: 'Raise a tennis star: an honest career simulation.',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        // = style.css --bg (the 28.07 darker palette). Pinned to it by tests/design-tokens.test.ts:
+        // these two and index.html's meta are the copies CSS cannot reach, and they lagged the
+        // palette by four days once already (Android status bar + install splash on the old slate).
+        theme_color: '#0a0e13',
+        background_color: '#0a0e13',
         display: 'standalone',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
