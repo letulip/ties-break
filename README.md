@@ -29,26 +29,29 @@ Concept / planning phase (July 2026). See [docs/decisions.md](docs/decisions.md)
 
 ## Source Code & License
 
-**tl;dr:** You can view, fork, and study the source code for personal or educational purposes. You **cannot** use it to create a competing public product, redistribute it as your own, or run a commercial service based on this code without explicit permission.
+This project is **source-available** under the [PolyForm Shield License 1.0.0](LICENSE).
 
-This project is **source-available** — not open source in the traditional sense.
+**The [LICENSE](LICENSE) file is the authoritative text; if this summary and LICENSE disagree, LICENSE wins.**
+
+In plain words:
 
 - **✅ Allowed:**
-  - Reading, forking, and inspecting the code for learning.
+  - Reading, forking, and studying the code for learning.
   - Running the app locally for personal use.
-  - Submitting bug reports or feature suggestions via Issues.
   - Creating private modifications for your own gameplay.
+  - Passing copies along, provided the license terms and the Required Notice travel with them.
+  - Submitting bug reports or feature suggestions via Issues.
 
-- **❌ Not Allowed:**
-  - Deploying a public instance of this game (or a derivative) without written authorization.
-  - Using the code to build a competing tennis management game or any commercial product.
-  - Selling, sublicensing, or redistributing the source code or any compiled version.
-  - Removing or obscuring the original copyright and license notices.
+- **❌ Not allowed:**
+  - Providing any product that competes with this game – a public deployment of it (or a derivative), a portal build, a commercial reskin, a competing tennis management game built from this code. Free of charge still counts as competing.
+  - Stripping the license terms or the Required Notice from copies you pass along.
 
-**Why this model?**  
-We believe in transparency (you can check the math, the economy, and the match engine) — but `Ties Break: Ace Parent` is a commercial creative work, and its code represents years of research and design. If you'd like to use the code under a commercial license (e.g., for a port, adaptation, or institutional use), please reach out via GitHub Issues or email.
+**Why this model?**
+We believe in transparency (you can check the math, the economy, and the match engine) – but `Ties Break: Ace Parent` is a commercial creative work. PolyForm Shield keeps the learning open and the competing closed. If you'd like to use the code beyond what the license grants (e.g., for a port, adaptation, or institutional use), please reach out via GitHub Issues.
 
-**Contributions:**  
-We welcome community feedback and suggestions. However, we do not accept unsolicited pull requests that add new features — we want to keep the creative vision coherent. If you'd like to contribute, please open an Issue first to discuss.
+**Privacy:** everything stays on your device – no accounts, no analytics, no third-party requests. Details in [PRIVACY.md](PRIVACY.md).
 
-© 2026 [Igor Vladimirskiy / T Software]. All rights reserved.
+**Contributions:**
+We welcome community feedback and suggestions. However, we do not accept unsolicited pull requests that add new features – we want to keep the creative vision coherent. If you'd like to contribute, please open an Issue first to discuss. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+© 2026 Igor Vladimirskiy. All rights reserved where not licensed.
