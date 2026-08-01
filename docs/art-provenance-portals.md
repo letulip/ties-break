@@ -24,7 +24,7 @@ The requirement that actually bites is ownership, same page:
 > **3.5.** The creator owns the copyright to all materials.
 
 That is an attestation the owner must be able to make for every set – which is exactly
-what the manifest records. **The `pending` rows in `public/images/README.md` are the
+what the manifest records. **Closed 01.08.2026 – every row is attested** (owner: «все сеты AI-генерация ChatGPT + обработка в Figma»). Historical framing of the gate, kept for the record: **the `pending` rows in `public/images/README.md` were the
 thing to close before a Yandex submission**, not the AI method itself. (Same-page bonus:
 3.5 also notes a game may include its Privacy Policy in text form – our PRIVACY.md link
 on the More screen covers that shape.)
@@ -52,7 +52,8 @@ way.
   docs at all as of 2026-08-01.
 - What both effectively demand is what the manifest provides: a rights-ownership
   attestation (Yandex 3.5) and consistent visual quality (CrazyGames). The open item is
-  the owner filling the `pending` method/attestation cells in the manifest.
+  the owner filling the `pending` method/attestation cells in the manifest – DONE 01.08.2026,
+  all six sets attested first-hand.
 - "No rule found" is a snapshot, not a guarantee – portal policies are drifting
   industry-wide (Steam-style AI disclosure forms are spreading). **Re-verify both pages
   when the portal builds actually go in**, and keep the manifest current so any future
