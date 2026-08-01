@@ -12,25 +12,28 @@ never invented by a builder.
 
 | set | files | depicts | source | method | rights holder | attested |
 |-----|-------|---------|--------|--------|---------------|----------|
-| `fem-euro-brunnet` | 64 | the daughter's portraits – archetype × age-stage × emotion, plus story frames (bride, funeral, graduated, pregnant, farewell, retired) | owner-supplied | unrecorded – attestation pending | owner (Igor Vladimirskiy) | pending |
-| `fields` | 20 | court and venue backdrops per tournament tier × surface (clay / grass / hard / venue) | owner-supplied | unrecorded – attestation pending | owner (Igor Vladimirskiy) | pending |
-| `weeks` | 14 | week-type cards – training, study, chores, days off, vacations | owner-supplied | unrecorded – attestation pending | owner (Igor Vladimirskiy) | pending |
+| `fem-euro-brunnet` | 64 | the daughter's portraits – archetype × age-stage × emotion, plus story frames (bride, funeral, graduated, pregnant, farewell, retired) | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner in Figma | owner (Igor Vladimirskiy) | 2026-08-01 |
+| `fields` | 20 | court and venue backdrops per tournament tier × surface (clay / grass / hard / venue) | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner in Figma | owner (Igor Vladimirskiy) | 2026-08-01 |
+| `weeks` | 14 | week-type cards – training, study, chores, days off, vacations | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner in Figma | owner (Igor Vladimirskiy) | 2026-08-01 |
 | `trophies` | 18 | trophy pieces per tournament tier, gold and silver | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner (masters arrived pngquant-optimized, re-encoded to webp by `scripts/optimize-art.mjs`) | owner (Igor Vladimirskiy) | 2026-08-01 |
-| `coaches` | 16 | coach portraits per tier (budget / middle / high / elite) | owner-supplied | unrecorded – attestation pending | owner (Igor Vladimirskiy) | pending |
-| `sponsors` | 3 | sponsor tier art (local / national / global) | owner-supplied | unrecorded – attestation pending | owner (Igor Vladimirskiy) | pending |
+| `coaches` | 16 | coach portraits per tier (budget / middle / high / elite) | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner in Figma | owner (Igor Vladimirskiy) | 2026-08-01 |
+| `sponsors` | 3 | sponsor tier art (local / national / global) | owner-supplied | AI-assisted – generated with ChatGPT image generation, post-processed by the owner in Figma | owner (Igor Vladimirskiy) | 2026-08-01 |
 
-**Working assumption until attested:** the painted sets are treated as the same class as
-the trophies – AI-assisted generation with owner post-processing – because that is the one
-method attested so far and nothing in the repo records another. That assumption is what the
-portal-policy analysis keys off; it is deliberately NOT written into the rows above, because
-a manifest cell is a claim and "pending" is the only honest claim a builder can make for
-them. Owner: replacing each `pending` with a method and a date is a one-line edit per row.
+**Fully attested 01.08.2026.** The owner, asked directly: «все сеты AI-генерация ChatGPT +
+обработка в Figma». Every row above now carries that method first-hand – no builder
+assumption remains in this table. Portal reading unchanged and favourable: Yandex Games
+explicitly allows pre-generated AI materials (their requirement 1.23) and gates on rights
+ownership (3.5), which is exactly what these rows attest; CrazyGames has no AI rule in its
+developer docs (re-verify both at submission time – see the portals note).
 
 Notes:
 
-- **Masters are not in git.** Raw masters live in `art-src/` (gitignored, the owner's local
-  library only – see the pipeline header in `scripts/optimize-art.mjs`). The committed webp
-  under this folder ARE the shipping art: longest side ≤ 512 px, quality ladder 82 → 75.
+- **Masters are not in git – and they are not laptop-only either.** The working masters live
+  in `art-src/` (gitignored – see the pipeline header in `scripts/optimize-art.mjs`), and the
+  AUTHORING originals live in the owner's Figma, which is the versioned, recoverable master
+  store (owner, 01.08: «бекап весь в фигме»). Losing the laptop loses a re-encode
+  convenience, not the art. The committed webp under this folder ARE the shipping art:
+  longest side ≤ 512 px, quality ladder 82 → 75.
 - **Hygiene:** `.DS_Store` is gitignored, but Vite copies `public/` into `dist/` verbatim
   whether git tracks a file or not – check the deploy output for stray dotfiles now and then.
 - Asset provenance elsewhere: music in [`../music/README.md`](../music/README.md), sound
