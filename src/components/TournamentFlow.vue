@@ -33,9 +33,10 @@ import { computeMatchStats } from '../engine/match/matchStats'
 import { surfaceStyleHint } from '../engine/match/style'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { TIERS } from '../engine/season/calendar'
-import { KID_ID, flipScore } from '../engine/world'
+import { KID_ID, flipScore, prizeCentsFor } from '../engine/world'
 import { LADDER_LABEL } from '../shared/protocol'
 import { formatShortName, rankLabel } from '../shared/format'
+import { formatCents } from '../shared/money'
 import { weekRange } from '../shared/dates'
 import type { AvatarEmotion } from '../shared/avatarEmotion'
 import type { MatchOptions, Side } from '../engine/match/types'
@@ -221,6 +222,11 @@ const venueUrl = computed(() =>
 )
 /** Winner's points at this tier – `points[0]` of the tier table, the design's "Ranking Points". */
 const winnerPoints = computed(() => tier.value?.points[0] ?? 0)
+/** Winner's CHEQUE at this tier – the design's "Prize Money" fact, read through `prizeCentsFor`
+ *  because types.ts names that function the payout table's ONLY reader and this screen must not
+ *  become a second one. 0 on the whole junior tour (juniors pay to play – the game's thesis), and
+ *  the template renders that zero as the dash it always was. */
+const winnerPrizeCents = computed(() => (pending.value ? prizeCentsFor(pending.value.tier, 0) : 0))
 /**
  * "SPECTATORS" – the design's fourth fact, and now a real (if decorative) figure.
  *
@@ -700,16 +706,27 @@ const matchMeta = computed(() => {
           <span class="tf-fact-label">Surface</span>
           <span class="tf-fact-value surface">{{ pending.surface }}</span>
         </div>
-        <!-- "Prize Money", dashed out, is the design's own third fact, and it is true of every
-             event in the game: the junior tour pays nothing at all (engine/season/calendar.ts,
-             "the junior international tour – no prize money"). The family carries the year; she
-             collects points. That is the premise of the whole game, so it earns a cell. -->
+        <!-- "Prize Money" is the design's own third fact. The DASH was written when it was true of
+             every event in the game, and on the junior tour it still is (engine/season/calendar.ts,
+             "the junior international tour – no prize money"): the family carries the year; she
+             collects points. That premise earns the cell – and since task #17 the W rungs BREAK it
+             on purpose, which is the other half of the same story: the cheque is the first money
+             the tennis itself has ever produced. So the cell reads the tier's own payout table
+             (via `winnerPrizeCents` – the engine's one reader of it) and prints the winner's
+             cheque where one exists, the dash where none does. A W15 card saying "–" over a
+             $2,200 title was the stowaway the living-field smoke caught. -->
         <div class="tf-fact">
           <span class="tf-fact-tile" aria-hidden="true">
             <AppIcon name="dollar" :size="19" />
           </span>
           <span class="tf-fact-label">Prize money</span>
-          <span class="tf-fact-value" title="The junior tour pays no prize money at any level">–</span>
+          <span
+            v-if="winnerPrizeCents > 0"
+            class="tf-fact-value"
+            title="The winner's cheque at this tier"
+            >{{ formatCents(winnerPrizeCents) }}</span
+          >
+          <span v-else class="tf-fact-value" title="The junior tour pays no prize money at any level">–</span>
         </div>
         <div class="tf-fact">
           <span class="tf-fact-tile" aria-hidden="true">

@@ -313,3 +313,41 @@ function playOneAdultEvent(seed: string, background: FamilyBackground): WorldSta
   }
   throw new Error(`${seed}/${background}: never played a W15 in 160 weeks - the fixture needs re-centring`)
 }
+
+// =================================================================================================
+// W1-QUICK stowaway — THE FACTS ROW STOPS DASHING OUT MONEY THAT EXISTS.
+//
+// Found in the living-field browser smoke: a W15 card's "Prize money" cell printed the dash, under
+// a title claiming "the junior tour pays no prize money at any level" — while TIERS.w15 has carried
+// a real `prizeCents` table since task #17 and the finale banks the cheque off it. The cell was
+// written when the dash WAS true of every event in the game and nobody re-visited it when the W
+// rungs arrived. The dash stays exactly where it is true — the junior rungs, whose no-payout rule
+// is the design's own thesis (A2/1 above) — and the W rungs print the winner's cheque off the
+// tier's OWN table, through `prizeCentsFor` (types.ts names it the table's only reader; the UI
+// must not become a second one) and the app's one money formatter.
+// =================================================================================================
+describe('the tournament facts row prints the cheque where one exists, the dash where none does', () => {
+  const flow = readFileSync(new URL('../src/components/TournamentFlow.vue', import.meta.url), 'utf8')
+  const template = /<template>([\s\S]*)<\/template>/.exec(flow)?.[1] ?? ''
+  const facts = template.slice(template.indexOf('class="tf-facts"'), template.indexOf('class="tf-first"'))
+
+  it('the money arm reads the tier\'s own table through the engine\'s one reader and the shared formatter', () => {
+    expect(flow).toMatch(/import \{[^}]*prizeCentsFor[^}]*\} from '\.\.\/engine\/world'/)
+    expect(flow).toContain("import { formatCents } from '../shared/money'")
+    expect(flow).toContain('prizeCentsFor(pending.value.tier, 0)')
+    expect(facts, 'the cell renders the winner\'s cheque').toContain('{{ formatCents(winnerPrizeCents) }}')
+    expect(facts, 'the money arm only shows when the tier actually pays').toContain('v-if="winnerPrizeCents > 0"')
+  })
+
+  it('the dash arm survives, with its junior-tour truth, for the rungs that pay nothing', () => {
+    expect(facts).toContain('v-else')
+    expect(facts).toContain('title="The junior tour pays no prize money at any level">–<')
+  })
+
+  it('...and the engine really does branch the two directions the template shows', () => {
+    // The anchors the source pin leans on: a W winner's cheque is real money, a junior "winner's
+    // cheque" is exactly zero (A2/1's rule, restated at the surface's own read).
+    expect(prizeCentsFor('w15', 0)).toBe(2200_00)
+    for (const tier of JUNIOR_TIERS) expect(prizeCentsFor(tier, 0), tier).toBe(0)
+  })
+})
