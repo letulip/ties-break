@@ -31,6 +31,7 @@ import IconButton from '../ui/IconButton.vue'
 import { coachPortraitUrl, preloadCoachMarketArt } from '../../art/preload'
 import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, type StyleFit } from '../../engine/coach'
 import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
+import { formatCents } from '../../shared/money'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
@@ -48,9 +49,6 @@ const PLAY_STYLE_LABEL: Record<PlayStyle, string> = {
 const FIT_LABEL: Record<StyleFit, string> = { great: 'Great fit', good: 'Good fit', off: 'Off-style' }
 const FIT_CLASS: Record<StyleFit, string> = { great: 'fit-great', good: 'fit-good', off: 'fit-off' }
 
-function formatDollars(cents: number): string {
-  return `$${Math.round(cents / 100).toLocaleString('en-US')}`
-}
 /** One decimal, and always a range - the luck band is real spread and the copy must carry it. */
 function formatUplift([lo, hi]: [number, number]): string {
   return `+${lo.toFixed(1)}-${hi.toFixed(1)}% a season`
@@ -181,9 +179,9 @@ const confirmMessage = computed(() => {
     delta === 0
       ? 'Your weekly coaching bill does not change.'
       : delta > 0
-        ? `Your weekly coaching bill rises by ${formatDollars(delta)}.`
-        : `Your weekly coaching bill falls by ${formatDollars(-delta)}.`
-  return `Hire ${r.name} at ${formatDollars(r.weeklyCents)} a week? ${change}`
+        ? `Your weekly coaching bill rises by ${formatCents(delta)}.`
+        : `Your weekly coaching bill falls by ${formatCents(-delta)}.`
+  return `Hire ${r.name} at ${formatCents(r.weeklyCents)} a week? ${change}`
 })
 function askHire(row: Row): void {
   if (row.current || row.lockedPoints !== null) return
@@ -227,13 +225,13 @@ function scrollToTier(tier: CoachTier): void {
       <div class="budget-top">
         <span class="budget-label">Coaching budget</span>
         <span class="budget-free"
-          ><strong>{{ formatDollars(freeCents) }}</strong> /week free</span
+          ><strong>{{ formatCents(freeCents) }}</strong> /week free</span
         >
       </div>
       <div class="budget-bar"><i :style="{ width: meterPct + '%' }"></i></div>
       <p class="budget-legend">
-        <span class="legend-dot committed"></span>{{ formatDollars(committedCents) }} committed
-        <span class="legend-dot cap"></span>{{ formatDollars(capCents) }} weekly cap
+        <span class="legend-dot committed"></span>{{ formatCents(committedCents) }} committed
+        <span class="legend-dot cap"></span>{{ formatCents(capCents) }} weekly cap
       </p>
     </section>
 
@@ -293,7 +291,7 @@ function scrollToTier(tier: CoachTier): void {
          HER plan, which is the number the budget meter draws against. Engine-computed - the screen formats
          cents and derives none. -->
     <p v-if="billing" class="hint cm-travel-cost">
-      <strong>{{ formatDollars(billing.weeklyCents) }}</strong> a week at her current plan.
+      <strong>{{ formatCents(billing.weeklyCents) }}</strong> a week at her current plan.
     </p>
 
     <!-- Tier chips SCROLL to a section rather than filtering the list to nothing (design §T.1). -->
@@ -320,7 +318,7 @@ function scrollToTier(tier: CoachTier): void {
         <span class="tier-dot"></span>
         <span class="tier-name">{{ g.label }} tier</span>
         <span class="tier-count">{{ g.rows.length }} coaches</span>
-        <span class="tier-range">{{ formatDollars(g.loCents) }}-{{ formatDollars(g.hiCents) }} /wk</span>
+        <span class="tier-range">{{ formatCents(g.loCents) }}-{{ formatCents(g.hiCents) }} /wk</span>
       </p>
 
       <!-- The portrait is FULL-BLEED down the left edge, sized by height, masked into the card -
@@ -353,13 +351,13 @@ function scrollToTier(tier: CoachTier): void {
           <span class="cm-load">{{ r.loadNote }}</span>
         </span>
         <span class="cm-right">
-          <span class="cm-price">{{ formatDollars(r.weeklyCents) }}<i>/wk</i></span>
+          <span class="cm-price">{{ formatCents(r.weeklyCents) }}<i>/wk</i></span>
           <span v-if="r.current" class="cm-action is-current">Current</span>
           <span v-else-if="r.lockedPoints !== null" class="cm-action is-locked"
             >{{ r.lockedPoints }} pts short</span
           >
           <span v-else-if="r.overBudgetCents > 0" class="cm-action is-over"
-            >{{ formatDollars(r.overBudgetCents) }} over</span
+            >{{ formatCents(r.overBudgetCents) }} over</span
           >
           <span v-else class="cm-action is-hire">Hire &rsaquo;</span>
         </span>

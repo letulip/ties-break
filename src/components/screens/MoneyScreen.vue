@@ -49,8 +49,13 @@
 import { computed, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { ECONOMY } from '../../engine/economy'
-import type { FamilyBackground, FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
+// STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
+// world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
+// nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
+import { STARTING_FUNDS_CENTS } from '../../engine/world'
+import type { FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
 import { seasonYear, weekLabel } from '../../shared/dates'
+import { formatCents, formatCentsSigned } from '../../shared/money'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
 // U0 - the shared components (docs/specs/ui-components.md), plus the NINTH, which this screen is
@@ -88,28 +93,14 @@ const physioCostLabel = computed(() => {
   return `$${Math.round((lo * cLo) / 100)}-${Math.round((hi * cHi) / 100)}/wk`
 })
 
-// Dollar figures per docs/specs/detour-ui-screens.md; must match
-// src/engine/world.ts STARTING_FUNDS_CENTS (wealthy 120k / middle 25k / working 8k).
-const STARTING_BUDGET: Record<FamilyBackground, number> = { wealthy: 120_000, middle: 25_000, working: 8_000 }
-
-function formatFunds(cents: number): string {
-  const dollars = Math.round(cents / 100)
-  const sign = dollars < 0 ? '-' : ''
-  return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
-}
-function formatSigned(cents: number): string {
-  const dollars = Math.round(cents / 100)
-  const sign = dollars < 0 ? '-' : '+'
-  return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
-}
-function formatDollars(dollars: number): string {
-  return `$${dollars.toLocaleString('en-US')}`
-}
-
 const week = computed(() => game.snapshot?.week ?? 0)
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
-const funds = computed(() => formatFunds(fundsCents.value))
-const startingBudget = computed(() => (game.snapshot ? formatDollars(STARTING_BUDGET[game.snapshot.profile.background]) : ''))
+const funds = computed(() => formatCents(fundsCents.value))
+// The engine's own starting budget, in the engine's own cents. The hand-kept DOLLAR table that sat
+// here fed the one formatter in the app that took dollars instead of cents – the ×100 trap P6 was
+// written about – and its "must match world.ts" comment was the drift this screen now cannot have:
+// retune the engine, and this line retunes with it. tests/money-format.test.ts pins the wiring.
+const startingBudget = computed(() => (game.snapshot ? formatCents(STARTING_FUNDS_CENTS[game.snapshot.profile.background]) : ''))
 
 // --- THE PERIOD SWITCHER -----------------------------------------------------------------------
 // U0's SegmentedRow finally absorbs this control. Its own header says so: "THE MONEY SCREEN'S
@@ -335,10 +326,10 @@ const seasonRows = computed(() => {
         recorded,
         // The headline is what the year COST - his question - and the sub-line carries the other
         // two halves of it: what came in, and what was left when it closed.
-        value: recorded ? formatSigned(-r.spentCents!) : '–',
+        value: recorded ? formatCentsSigned(-r.spentCents!) : '–',
         meta: recorded
-          ? `${formatSigned(r.earnedCents ?? 0)} in – ${formatFunds(r.endFundsCents)} left`
-          : `${formatFunds(r.endFundsCents)} left`,
+          ? `${formatCentsSigned(r.earnedCents ?? 0)} in – ${formatCents(r.endFundsCents)} left`
+          : `${formatCents(r.endFundsCents)} left`,
       }
     })
 })
@@ -450,16 +441,16 @@ function showAllTransactions(): void {
       <Card class="money-summary" pad="14px 4px">
         <div class="money-cell">
           <p class="money-cell-label">Total income</p>
-          <p class="money-cell-figure positive">{{ formatFunds(incomeCents) }}</p>
+          <p class="money-cell-figure positive">{{ formatCents(incomeCents) }}</p>
         </div>
         <div class="money-cell money-cell-mid">
           <p class="money-cell-label">Total spent</p>
-          <p class="money-cell-figure negative">{{ formatFunds(-spentCents) }}</p>
+          <p class="money-cell-figure negative">{{ formatCents(-spentCents) }}</p>
         </div>
         <div class="money-cell money-cell-end">
           <p class="money-cell-label">Balance</p>
           <p class="money-cell-figure" :class="netCents < 0 ? 'negative' : 'positive'">
-            {{ formatSigned(netCents) }}
+            {{ formatCentsSigned(netCents) }}
           </p>
         </div>
       </Card>
@@ -486,7 +477,7 @@ function showAllTransactions(): void {
             class="money-row"
             :label="row.label"
             :meta="pctLabel(row.pct)"
-            :value="formatFunds(-row.cents)"
+            :value="formatCents(-row.cents)"
             tone="negative"
           >
             <template #icon>
@@ -516,7 +507,7 @@ function showAllTransactions(): void {
             v-if="incomeCents > 0"
             class="money-row"
             label="Income"
-            :value="formatSigned(incomeCents)"
+            :value="formatCentsSigned(incomeCents)"
             tone="positive"
             :divider="false"
           >
@@ -542,7 +533,7 @@ function showAllTransactions(): void {
             <span class="money-receipt-line">{{ receipt.text }}</span>
             <span class="money-receipt-line">{{ weekLabel(receipt.week) }}</span>
             <span class="money-receipt-line money-receipt-sum">
-              {{ formatFunds(receipt.amountCents ?? 0) }}
+              {{ formatCents(receipt.amountCents ?? 0) }}
             </span>
           </PaperNote>
           <!-- ⚠ A SQUARE WINDOW ON THE RIGHT PART OF A LONG FRAME (owner, 30.07: «Photo crop for the
@@ -586,7 +577,7 @@ function showAllTransactions(): void {
               :stroke-dashoffset="seg.dashoffset"
               :style="{ stroke: seg.color }"
             />
-            <text class="donut-center-num" x="21" y="20.5">{{ formatFunds(-totalExpenseCents) }}</text>
+            <text class="donut-center-num" x="21" y="20.5">{{ formatCents(-totalExpenseCents) }}</text>
             <text class="donut-center-cap" x="21" y="25">spent</text>
           </svg>
         </div>
@@ -643,8 +634,8 @@ function showAllTransactions(): void {
               :key="row.event.id"
               class="money-row"
               :label="row.event.text"
-              :meta="formatFunds(row.balanceAfter)"
-              :value="formatSigned(row.event.amountCents ?? 0)"
+              :meta="formatCents(row.balanceAfter)"
+              :value="formatCentsSigned(row.event.amountCents ?? 0)"
               :tone="(row.event.amountCents ?? 0) < 0 ? 'negative' : 'positive'"
             />
           </div>

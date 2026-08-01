@@ -54,6 +54,7 @@ import { HORIZON_WEEKS, hiddenTier, pointsLockNote, preferredWeekEvent, useTierS
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
+import { formatCents } from '../../shared/money'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
 import type { AnnotatedMatch } from '../../viz/types'
@@ -71,9 +72,6 @@ const playIconStyle = {
   maskImage: `url(${base}icons/play.svg)`,
 }
 
-function formatDollars(cents: number): string {
-  return `$${Math.round(cents / 100).toLocaleString('en-US')}`
-}
 
 
 // Surface x play style (docs/specs/surface-style.md): the calendar column stops being flavour, so
@@ -561,15 +559,15 @@ function askEnter(e: UpcomingEvent): void {
   pendingConfirm.value = {
     message: fatigued
       ? `${said}${e.cautionDetail ?? 'Exhausted – racing risks injury.'} ` +
-        `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? Entry fee ${formatDollars(e.entryFeeCents)}.`
-      : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? Entry fee ${formatDollars(e.entryFeeCents)}.`,
+        `Enter ${e.label} (${weekLabel(e.week)}, ${e.surface}) anyway? Entry fee ${formatCents(e.entryFeeCents)}.`
+      : `${said}Enter ${e.label} (${weekLabel(e.week)}, ${e.surface})? Entry fee ${formatCents(e.entryFeeCents)}.`,
     confirmLabel: fatigued || e.coachCaution ? 'Push through' : 'Enter',
     onConfirm: () => game.enterEvent(e.id),
   }
 }
 function askWithdraw(e: UpcomingEvent): void {
   pendingConfirm.value = {
-    message: `Withdraw from ${e.label} (${weekLabel(e.week)})? Entry fee ${formatDollars(e.entryFeeCents)} will be refunded.`,
+    message: `Withdraw from ${e.label} (${weekLabel(e.week)})? Entry fee ${formatCents(e.entryFeeCents)} will be refunded.`,
     confirmLabel: 'Withdraw',
     onConfirm: () => game.withdrawEvent(e.id),
   }
@@ -582,7 +580,7 @@ function askCancelEntry(e: UpcomingEvent): void {
   pendingConfirm.value = {
     message:
       `Cancel her entry to ${e.label} (${weekLabel(e.week)})? Entries closed on ${weekLabel(e.deadlineWeek)}, so the ` +
-      `${formatDollars(e.entryFeeCents)} entry fee is NOT refunded. The week frees up for a practice ` +
+      `${formatCents(e.entryFeeCents)} entry fee is NOT refunded. The week frees up for a practice ` +
       `match or a family week.`,
     confirmLabel: 'Cancel the entry',
     onConfirm: () => game.cancelEntry(e.id),
@@ -614,7 +612,7 @@ function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number
   pendingConfirm.value = {
     message:
       (p.caution.level === 'caution' ? `${p.caution.detail} ` : '') +
-      `${what} in ${weekLabel(p.week)} – ${formatDollars(p.feeCents)}. No ranking points.`,
+      `${what} in ${weekLabel(p.week)} – ${formatCents(p.feeCents)}. No ranking points.`,
     confirmLabel: p.caution.level === 'caution' ? 'Push through' : 'Book it',
     onConfirm: () => game.bookPractice(p.week, p.withCoach),
   }
@@ -624,7 +622,7 @@ function confirmPractice(p: { week: number; withCoach: boolean; feeCents: number
 function confirmVacation(v: { week: number; packageId: string; label: string; priceCents: number; gain: number }): void {
   pendingConfirm.value = {
     message:
-      `${v.label} in ${weekLabel(v.week)} – ${v.priceCents === 0 ? 'free' : formatDollars(v.priceCents)}, ` +
+      `${v.label} in ${weekLabel(v.week)} – ${v.priceCents === 0 ? 'free' : formatCents(v.priceCents)}, ` +
       `+${v.gain} condition. No tournaments that week.`,
     confirmLabel: 'Book it',
     onConfirm: () => game.bookVacation(v.week, v.packageId),
@@ -636,7 +634,7 @@ function askCancelVacation(row: CalendarRow): void {
   const booking = row.vacation!
   pendingConfirm.value = {
     message: `Cancel ${packageLabel(booking.packageId)} in ${weekLabel(row.week)}? ${
-      booking.paidCents > 0 ? `${formatDollars(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
+      booking.paidCents > 0 ? `${formatCents(booking.paidCents)} comes back in full.` : 'Nothing was paid for it.'
     }`,
     confirmLabel: 'Cancel the trip',
     onConfirm: () => game.cancelVacation(row.week),
@@ -645,7 +643,7 @@ function askCancelVacation(row: CalendarRow): void {
 function askCancelPractice(row: CalendarRow): void {
   const booking = row.practice!
   pendingConfirm.value = {
-    message: `Cancel the practice match in ${weekLabel(row.week)}? ${formatDollars(booking.paidCents)} comes back in full.`,
+    message: `Cancel the practice match in ${weekLabel(row.week)}? ${formatCents(booking.paidCents)} comes back in full.`,
     confirmLabel: 'Cancel the match',
     onConfirm: () => game.cancelPractice(row.week),
   }
@@ -1002,7 +1000,7 @@ function closeExhibition(): void {
 
             <div class="event-money">
               <p class="event-money-label">Travel budget</p>
-              <p class="event-money-figure">{{ formatDollars(row.event.travelCostCents) }}</p>
+              <p class="event-money-figure">{{ formatCents(row.event.travelCostCents) }}</p>
               <!-- v21: the figure above is already NET of the scholarship, so without this line the
                    player just sees a smaller number and no reason for it. -->
               <p v-if="academyCoverPct > 0" class="event-money-sub">academy covers {{ academyCoverPct }}%</p>
@@ -1011,7 +1009,7 @@ function closeExhibition(): void {
             <div class="controls">
               <!-- The entry fee reads as a FIGURE, in white, on the same row as the deadline chips
                    (owner, 28.07) - it is money, like the travel budget above it, not a caption. -->
-              <span class="entry-fee">entry {{ formatDollars(row.event.entryFeeCents) }}</span>
+              <span class="entry-fee">entry {{ formatCents(row.event.entryFeeCents) }}</span>
               <!-- R12-8b: the layoff covers this WEEK, whatever the event's own lock says – a
                    points-locked card names the band first (lock precedence), so without the chip
                    the injury never appeared on it at all. -->
@@ -1145,7 +1143,7 @@ function closeExhibition(): void {
                 <!-- R12-8b: a kept booking inside the layoff still wears the week's truth. -->
                 <span v-if="row.injured" class="pill avail-chip red" :title="layoffNote">injury</span>
                 <span v-if="vacationGain(row) > 0" class="pill">+{{ vacationGain(row) }} condition</span>
-                <span class="pill">{{ formatDollars(row.vacation.paidCents) }}</span>
+                <span class="pill">{{ formatCents(row.vacation.paidCents) }}</span>
                 <span v-if="row.event" class="week-note">Skipping {{ row.event.label }}.</span>
               </div>
             </div>

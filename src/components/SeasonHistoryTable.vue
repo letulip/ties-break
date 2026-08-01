@@ -40,6 +40,7 @@ import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { finishLabel } from '../engine/world'
 import { seasonYear } from '../shared/dates'
+import { formatCents, formatCentsSigned } from '../shared/money'
 import type { SeasonHistoryEntry } from '../shared/protocol'
 
 const game = useGameStore()
@@ -48,16 +49,6 @@ const game = useGameStore()
 // the engine stores the list oldest-first (append-only).
 const rows = computed<SeasonHistoryEntry[]>(() => [...(game.snapshot?.seasonHistory ?? [])].reverse())
 
-function formatSigned(cents: number): string {
-  const dollars = Math.round(cents / 100)
-  const sign = dollars < 0 ? '-' : '+'
-  return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
-}
-function formatDollars(cents: number): string {
-  const dollars = Math.round(cents / 100)
-  const sign = dollars < 0 ? '-' : ''
-  return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
-}
 </script>
 
 <template>
@@ -99,9 +90,9 @@ function formatDollars(cents: number): string {
               <td class="num" style="white-space: nowrap">{{ r.wins }}–{{ r.losses }}</td>
               <td class="num">
                 <span class="ph-name" :class="r.fundsDeltaCents < 0 ? 'negative' : 'positive'">
-                  {{ formatSigned(r.fundsDeltaCents) }}
+                  {{ formatCentsSigned(r.fundsDeltaCents) }}
                 </span>
-                <span class="ph-rank">{{ formatDollars(r.endFundsCents) }} left</span>
+                <span class="ph-rank">{{ formatCents(r.endFundsCents) }} left</span>
               </td>
             </tr>
           </tbody>

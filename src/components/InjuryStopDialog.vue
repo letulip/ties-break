@@ -22,6 +22,7 @@ import type { InjurySeverity } from '../shared/protocol'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { weekLabel } from '../shared/dates'
+import { formatCents } from '../shared/money'
 import { facePoint } from '../art/faceRects'
 
 defineEmits<{ continue: [] }>()
@@ -64,9 +65,6 @@ const refundCents = computed(() =>
     .filter((e) => e.week === week.value && e.text.startsWith('Entry refunded'))
     .reduce((s, e) => s + (e.amountCents ?? 0), 0),
 )
-function formatDollars(cents: number): string {
-  return `$${Math.round(cents / 100).toLocaleString('en-US')}`
-}
 
 // The dialog only ever mounts off a real click ("Next week"), so the audio gate is open.
 onMounted(() => playSfx('ooh'))
@@ -100,7 +98,7 @@ onMounted(() => playSfx('ooh'))
             <td>
               <template v-if="withdrawnEntries.length">
                 <div v-for="(entry, i) in withdrawnEntries" :key="i">Withdrawn: {{ entry }}</div>
-                <div v-if="refundCents > 0" class="positive num">Fees refunded: +{{ formatDollars(refundCents) }}</div>
+                <div v-if="refundCents > 0" class="positive num">Fees refunded: +{{ formatCents(refundCents) }}</div>
               </template>
               <template v-else>Nothing – every entry stands</template>
             </td>

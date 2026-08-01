@@ -14,6 +14,7 @@ import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { ECONOMY, practiceFeeCents, recommendVacationPackage, vacationPriceCents } from '../engine/economy'
 import { practiceCoachRateCents } from '../engine/coach'
+import { formatCents } from '../shared/money'
 import { ageAtWeek } from '../engine/world'
 import { layoffBlock, medicalBlock, practiceCaution, type PracticeCaution } from '../engine/world'
 import { isOffSeasonWeek } from '../engine/season/calendar'
@@ -37,9 +38,9 @@ const emit = defineEmits<{
 
 const game = useGameStore()
 
-function formatDollars(cents: number): string {
-  return cents === 0 ? 'free' : `$${Math.round(cents / 100).toLocaleString('en-US')}`
-}
+// 'free' for a zero fee is THIS SHEET'S copy, not a money contract - the shared formatter would
+// print "$0", and a court that costs nothing to book reads better as a word than as a zero.
+const feeLabel = (cents: number): string => (cents === 0 ? 'free' : formatCents(cents))
 
 const tab = ref<'practice' | 'vacation'>(props.initialTab ?? 'practice')
 const withCoach = ref(false)
@@ -214,16 +215,16 @@ function askVacation(row: PackageRow): void {
           </p>
           <div class="plan-line">
             <span>Court rental</span>
-            <span class="num negative">{{ formatDollars(courtCents) }}</span>
+            <span class="num negative">{{ feeLabel(courtCents) }}</span>
           </div>
           <label class="physio-toggle">
             <input v-model="withCoach" type="checkbox" />
-            + coach for the match ({{ formatDollars(coachExtraCents) }} – the other half is on the
+            + coach for the match ({{ feeLabel(coachExtraCents) }} – the other half is on the
             opponent's family)
           </label>
           <div class="plan-line plan-total">
             <span>Total</span>
-            <span class="num negative">{{ formatDollars(practiceFee) }}</span>
+            <span class="num negative">{{ feeLabel(practiceFee) }}</span>
           </div>
           <!-- R12-5b: the LAYOFF outranks even the doctor – availabilityStatus ranks injured above
                medical, and the sheet keeps that order. One hard block renders at a time. -->
@@ -294,7 +295,7 @@ function askVacation(row: PackageRow): void {
                    hairline round it, which is a LABEL treatment, and it was wrong twice over on the
                    one number the parent is choosing between. It is a FIGURE now - see `.pkg-price` in
                    src/style.css for the two rungs and where they come from. -->
-              <span class="num pkg-price" :class="{ ok: row.recommended }">{{ formatDollars(row.priceCents) }}</span>
+              <span class="num pkg-price" :class="{ ok: row.recommended }">{{ feeLabel(row.priceCents) }}</span>
               <!-- R12-8b: disabled during the layoff (the note above carries the reason) – a Book
                    that can only throw is the R10-16 dead control this sheet must never grow. -->
               <button class="primary" :disabled="!!layoff || !row.affordable || game.busy" @click="askVacation(row)">

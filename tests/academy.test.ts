@@ -390,7 +390,9 @@ describe('the scholarship is visible where the money is', () => {
     expect(src).toContain('academyCoverPct')
     expect(src).toContain('academy covers {{ academyCoverPct }}%')
     // The figure it explains is the engine's net price, not the calendar's sticker.
-    expect(src).toContain('formatDollars(row.event.travelCostCents)')
+    // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars → the shared formatCents; the protected
+    // fact — the figure is the engine's NET price — is unchanged.
+    expect(src).toContain('formatCents(row.event.travelCostCents)')
   })
 
   it('reports the season total in the wrap-up, and hides the row when nobody backed her', () => {

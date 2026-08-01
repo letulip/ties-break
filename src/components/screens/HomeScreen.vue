@@ -30,6 +30,7 @@ import { LADDER_LABEL, type PlayStyle, type WorldEvent, type WorldMatch } from '
 import type { TierId } from '../../engine/season/types'
 import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
+import { formatCents } from '../../shared/money'
 import { KID_ID, flipScore, practiceCaution } from '../../engine/world'
 import { ECONOMY } from '../../engine/economy'
 import { useKidEmotion } from '../../composables/kidEmotion'
@@ -301,7 +302,7 @@ const nextDates = computed(() => (nearestEntered.value ? weekRange(nearestEntere
 // go either way; here the label already says "Travel budget" and nothing about it is ever positive,
 // so the sign only made it look like a balance in trouble.
 const nextTravel = computed(() =>
-  nearestEntered.value ? formatFunds(Math.abs(nearestEntered.value.travelCostCents)) : '',
+  nearestEntered.value ? formatCents(Math.abs(nearestEntered.value.travelCostCents)) : '',
 )
 // The painted venue. src/art/venues.ts picks it from the event's own id on a purpose-scoped
 // sub-stream, so a tournament's photograph is the same one every render, every reload and every
@@ -318,12 +319,7 @@ const nextVenue = computed(() => {
 // folds (snapshot.finance.weekly12 – see world.ts financeSeries). Card and wallet read one ledger,
 // so they can never disagree about a week. The whole card opens the wallet.
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
-function formatFunds(cents: number): string {
-  const dollars = Math.round(cents / 100)
-  const sign = dollars < 0 ? '-' : ''
-  return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
-}
-const funds = computed(() => formatFunds(fundsCents.value))
+const funds = computed(() => formatCents(fundsCents.value))
 
 // THE BUDGET SPARKLINE. The export draws a lime polyline with a soft area under it and one dot per
 // point, and the owner ruled we take it (A2, 28.07) over slice A's paired bars. Geometry is the
