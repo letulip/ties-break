@@ -1,0 +1,327 @@
+// THE FIELD TIER, PHASE W – the professional population behind the W tables (01.08, the owner:
+// «Население - это критично»). docs/specs/living-field.md §3 names three rings; this module is the
+// FIELD ring's first landing, scoped to the W track only.
+//
+// WHY IT EXISTS, measured before a line was written: the game holds ONE population of 199 juniors
+// serving three ranking tables, so a W15 – the entry rung of the WOMEN'S PROFESSIONAL TOUR – drew
+// its field by percentile band over a MIXED-currency table. The median W15 entrant sat at position
+// ~53/200 with mean core skill 50.2, WEAKER than a J300 field (median position 20, skill 53.9).
+// The owner's ITF-#6 girl won five W15 titles in a row losing one match total (26-1). A real W15
+// is full of hungry professionals aged 17-30; ours was full of resting fourteen-year-olds.
+//
+// THE DESIGN, in one sentence: ~300 professional players exist for the W track, DERIVED and NEVER
+// PERSISTED – a pure function of (worldSeed, seasonIndex) – holding virtual W-table points so the
+// merged W standings interleave them honestly with the LIVE players' earned rows.
+//
+// =================================================================================================
+// ⚠ THE INVARIANT THIS MODULE IS BUILT AROUND: the frozen MAIN capture (41550 draws / e6b0c709)
+// CANNOT move, BY CONSTRUCTION rather than by care.
+// =================================================================================================
+//
+// Every number here comes off `rngFromSeed(`${seed}:field:${seasonIndex}:<n>`)` – a fresh,
+// purpose-scoped generator per player, created, read in a fixed order and thrown away. Not one draw
+// is taken from any stream the tick walks: not the MAIN weekly stream (base costs + driftCohort's
+// 4×199 and nothing else), not `seed:aitour:`, not `seed:kidtour:`. Field pros are not in
+// `world.cohort`, so `driftCohort` never sees them (no fifth weekly draw, no schema bump), the
+// conveyor never rolls for them, and the save never carries them. Delete this file and every save
+// still loads – that is what "derived" means here.
+//
+// WHAT MAY LEGITIMATELY CHANGE DOWNSTREAM: the composition of the W rungs' event sub-streams
+// (`seed:kidtour:<id>` for her shadow runs and previews). Entrant sets are a documented mutable
+// class – they have changed with every band/age re-pick – and the candidate-count-per-window
+// discipline in selectEntrants is preserved (one draw per candidate, count a function of the window
+// and the universe size, never of results content). The canonical `seed:aitour:` brackets stay
+// LIVE-only and are byte-identical (see `universeForTier`).
+//
+// PER-SEASON REGENERATION (`seasonIndex` in the key) is the phase-W turnover model: a new season
+// deals a new field, which is cheap, stable WITHIN the season (previews and draws agree week to
+// week), and honest enough until phase 2 gives the pros real aging and careers. Stored state for a
+// field pro is ZERO, which is §2.3's "one card index, generated lazily" holding for the pro contour.
+
+import { rngFromSeed, pickInt } from '../rng'
+import { FIRST_NAMES, NATION_POOL, SURNAMES } from './cohort'
+import { rivalGroundstrokes } from './rival'
+import { TIERS, WEEKS_PER_YEAR } from './calendar'
+import type { AiPlayer, RankingRow, TierId } from './types'
+
+/** Which storey of the professional pyramid a pro was generated into. Labels, not numbers, so a
+ *  bench printout reads as people; the ordering the ranking needs comes from `wtaPoints`. */
+export type FieldStrengthTier = 'elite' | 'contender' | 'journeyman'
+
+/** One professional of the FIELD tier. An `AiPlayer` on purpose – she flows through the SAME
+ *  machinery a cohort rival does (`selectEntrants`' age gate and bands, `rivalMatchPlayer`'s
+ *  surface/style/condition build) with zero new code paths – plus what makes her a pro:
+ *
+ *  - `groundstrokes` is stored EQUAL to what `rivalGroundstrokes` derives for her id, so the type
+ *    carries the fifth attribute the brief asks for while the engine's derived read agrees with it
+ *    byte-for-byte (one meaning, two access paths, no divergence possible).
+ *  - `wtaPoints` is her virtual standing row – see `mergedWtaRanking`.
+ *  - `growth`/`potential` exist to satisfy the AiPlayer contract and are inert in phase W: field
+ *    pros are regenerated each season, never drifted (they are not in `world.cohort`), so growth is
+ *    1 and the ceiling is where she stands. Phase 2 gives the pro contour a real curve. */
+export interface FieldPro extends AiPlayer {
+  strengthTier: FieldStrengthTier
+  groundstrokes: number
+  /** her derived W-table points for THIS season – the virtual standing row's value */
+  wtaPoints: number
+}
+
+// =================================================================================================
+// THE CALIBRATION TABLE – every strength constant of the field, in ONE place (bench-first
+// discipline: these numbers move only with a tools/field-quality.ts re-run in hand).
+// =================================================================================================
+//
+// THE PYRAMID: the top ~30 clearly stronger than today's best juniors, a middle ~120 at
+// strong-junior level, a tail ~150 the strong junior can beat but must respect. Core = the mean of
+// the four generated attributes, the same `power()` the conveyor reads, so the bench compares like
+// with like.
+//
+// ⚠ THE BANDS WERE TUNED DOWN FROM THE FIRST DRAFT, WITH THE BENCH IN HAND (01.08) – this is the
+// brief's own "tune the strength distribution constants and re-run" clause being exercised, and
+// the arithmetic that forced it is worth keeping: W15's entrant window opens at percentile 0.15 of
+// the merged ~500-row table, and entry is position-biased, so a W15 field IS roughly the players
+// ranked #75-140. Under ANY points curve that rises with skill, those positions hold the 75th-140th
+// strongest pros – with the draft pyramid (elite 60-70 / middle 52-62 / tail 45-55) that meant mean
+// core 56.8, dead level with the reference strong junior (power 56.75), and her title chance
+// measured 3% against a 15-35% target. No points-curve shape can fix that (rank order ≈ skill
+// order); only the pyramid itself can. One notch down, the window holds the top journeymen and the
+// contenders' middle – beatable but real – and the elite storey still towers over every junior.
+//
+// THE POINTS BANDS speak the W table's own currency (a W15 title pays 10, a W35 title 20, a W100
+// title 100, best-6 window): journeymen hold W15-round money, contenders hold W15-title-to-W35
+// money, elites hold W35-title-to-W100 money. Two shaping terms on top, both measured:
+//
+//  * `ageRamp`: points also scale with how long she has BEEN a pro. A 19-year-old with a
+//    contender's game has not accumulated a contender's ranking yet – she is exactly the hungry
+//    riser a real W15 field is full of – so young pros sit deeper in the table than their skill
+//    says, and a W15 window carries the occasional under-ranked shark. Ramps linearly from
+//    `ageRampFloor` at 16 to 1.0 at `ageRampFullAt`. (This term deliberately blurs strict
+//    tier-monotonicity of points: age is allowed to outrank youth at equal skill, which is how the
+//    real table reads.)
+//  * `jitter`: a small multiplicative wobble so equal cores do not produce a points staircase.
+//
+// CALIBRATED 01.08 against tools/field-quality.ts (targets from the brief): the reference
+// strong-junior build (serve 66/ret 50/comp 57/stam 54/ground 65) wins a W15 title in 15-35% of
+// entered events; a 50-point LIVE row (five W15 titles) lands ~#40-80 of the merged table, not #9;
+// a W35 field is measurably stronger than a W15 field. Measured numbers live beside the pin in
+// tests/season/fieldPros.test.ts and in docs/specs/living-field.md.
+export const FIELD = {
+  /** id prefix – the namespace that keeps field ids disjoint from `ai-*` / `ai-s*-*` / 'kid' */
+  idPrefix: 'fp-',
+  /** professionals per season. ~300 against 199 juniors ≈ the merged ~500-row W table. */
+  size: 300,
+  /** a professional field: 16 (the ITF age-eligibility floor the W rungs use) to 30 */
+  ageBand: [16, 30] as [number, number],
+  /** the pyramid, top first. `core` is the band the tier's mean-of-four is drawn from; `pts` is
+   *  the tier's points band, lerped by where her core sits in the band (`gamma` bends the lerp –
+   *  2 makes the elite top-heavy, so one or two 300+ names exist and the median elite does not).
+   *  Bands are disjoint in base points, so points are monotone in strength BEFORE the age ramp
+   *  and jitter blur the seams – which they are allowed to do (see above). */
+  tiers: [
+    { id: 'elite' as const, count: 30, core: [56, 66] as [number, number], pts: [85, 450] as [number, number], gamma: 2 },
+    { id: 'contender' as const, count: 120, core: [43, 53] as [number, number], pts: [18, 64] as [number, number], gamma: 1 },
+    { id: 'journeyman' as const, count: 150, core: [38, 48] as [number, number], pts: [2, 16] as [number, number], gamma: 1 },
+  ],
+  /** per-attribute spread around the drawn core (uniform ± this), so a pro has a shape, not a bar */
+  attrSpread: 6,
+  /** how much of her skill-implied points a 16-year-old pro has banked (ramps to 1 by full age) */
+  ageRampFloor: 0.65,
+  ageRampFullAt: 23,
+  /** multiplicative points wobble: ×(1 ± this) */
+  jitter: 0.1,
+  /** salted re-draw attempts on a name collision before the collision is accepted (the LIVE cohort
+   *  itself carries two "Uma Tamm" – persisted, not ours to fix – so acceptance is the precedent) */
+  nameRedraws: 8,
+} as const
+
+/** Field-pro ids live in their own namespace. One predicate, exported, so every surface that must
+ *  resolve an id (the full-bracket view, the champion news line, the VS card's rank) asks the same
+ *  question instead of re-spelling a prefix. */
+export function isFieldProId(id: string): boolean {
+  return id.startsWith(FIELD.idPrefix)
+}
+
+/** THE SEASON A WEEK BELONGS TO – deliberately the same arithmetic as world.ts's `seasonIndexOf`.
+ *  It is re-stated here because season/* cannot import world.ts (module layering: world.ts imports
+ *  season/*), and the two MUST agree or the field would turn over on a different week than the
+ *  conveyor does. Pinned against the world's own function in tests/season/fieldPros.test.ts. */
+export function fieldSeasonOf(week: number): number {
+  return Math.floor(week / WEEKS_PER_YEAR)
+}
+
+function clamp01to100(x: number): number {
+  return x < 0 ? 0 : x > 100 ? 100 : x
+}
+
+/** A tier's points for a core drawn inside its band: the band lerp, bent by gamma. */
+function pointsForCore(tier: (typeof FIELD.tiers)[number], core: number): number {
+  const [cLo, cHi] = tier.core
+  const t = Math.max(0, Math.min(1, (core - cLo) / (cHi - cLo)))
+  const [pLo, pHi] = tier.pts
+  return pLo + (pHi - pLo) * Math.pow(t, tier.gamma)
+}
+
+/** How much of her skill-implied ranking a pro of `age` has accumulated. */
+function ageRamp(age: number): number {
+  const [lo] = FIELD.ageBand
+  if (age >= FIELD.ageRampFullAt) return 1
+  const t = (age - lo) / (FIELD.ageRampFullAt - lo)
+  return FIELD.ageRampFloor + (1 - FIELD.ageRampFloor) * Math.max(0, t)
+}
+
+// ONE pro. Draw order per player is FIXED (first name, surname, nation, core, four attribute
+// offsets, age, points jitter) off her own `${seed}:field:${seasonIndex}:${n}` stream – reordering
+// re-maps every seed's field, exactly as the cohort's own draw-order note warns. Name collisions
+// are resolved off SALTED side-streams (`...:name:<attempt>`) so a re-draw can never shift the base
+// stream: two worlds whose cohorts differ get fields that differ in NAMES ONLY, never in skills,
+// points, ages or nations.
+function makeFieldPro(
+  seed: string,
+  seasonIndex: number,
+  n: number,
+  tier: (typeof FIELD.tiers)[number],
+  taken: Set<string>,
+): FieldPro {
+  const rng = rngFromSeed(`${seed}:field:${seasonIndex}:${n}`)
+  const id = `${FIELD.idPrefix}${n}`
+
+  let first = FIRST_NAMES[pickInt(rng, 0, FIRST_NAMES.length - 1)]
+  let last = SURNAMES[pickInt(rng, 0, SURNAMES.length - 1)]
+  const nation = NATION_POOL[pickInt(rng, 0, NATION_POOL.length - 1)]
+
+  const [cLo, cHi] = tier.core
+  const core = cLo + rng() * (cHi - cLo)
+  const spread = FIELD.attrSpread
+  const serve = clamp01to100(core + spread * (2 * rng() - 1))
+  const ret = clamp01to100(core + spread * (2 * rng() - 1))
+  const composure = clamp01to100(core + spread * (2 * rng() - 1))
+  const stamina = clamp01to100(core + spread * (2 * rng() - 1))
+
+  const [aLo, aHi] = FIELD.ageBand
+  const ageYears = pickInt(rng, aLo, aHi)
+
+  const jitterRoll = rng()
+
+  // DEDUPE, against the LIVE cohort's names and within the field itself, by salted re-draw. The
+  // base stream is already fully consumed above, so however many attempts this takes, every other
+  // fact about her – and about every other pro – is untouched.
+  for (let attempt = 1; taken.has(`${first} ${last}`) && attempt <= FIELD.nameRedraws; attempt++) {
+    const salt = rngFromSeed(`${seed}:field:${seasonIndex}:${n}:name:${attempt}`)
+    first = FIRST_NAMES[pickInt(salt, 0, FIRST_NAMES.length - 1)]
+    last = SURNAMES[pickInt(salt, 0, SURNAMES.length - 1)]
+  }
+  taken.add(`${first} ${last}`)
+
+  const wtaPoints = Math.max(
+    1,
+    Math.round(pointsForCore(tier, core) * ageRamp(ageYears) * (1 + FIELD.jitter * (2 * jitterRoll - 1))),
+  )
+
+  const pro: FieldPro = {
+    id,
+    name: `${first} ${last}`,
+    nation,
+    serve,
+    ret,
+    composure,
+    stamina,
+    // Inert in phase W – see the FieldPro doc comment. She is finished growing because nothing
+    // ever drifts her; next season deals a new field instead.
+    growth: 1,
+    ageYears,
+    potential: { serve, ret, composure, stamina },
+    strengthTier: tier.id,
+    // Stored = derived, one value: see FieldPro. rivalGroundstrokes reads only (id, serve, ret).
+    groundstrokes: 0,
+    wtaPoints,
+  }
+  pro.groundstrokes = rivalGroundstrokes(pro)
+  return pro
+}
+
+// The memo: the field is asked for by every W-table read (rank caches, standings, entry gates,
+// previews), so it is derived once per (seed, season, cohort-names) and handed back by reference –
+// WHICH ALSO MATTERS FOR CORRECTNESS, not just cost: `selectEntrants` positions candidates by id
+// against a ranking built from the same array, and one instance means the two can never be built
+// from different name-collision resolutions. Single entry, like rival.ts's runsIndexCache: a world
+// is played one at a time.
+let memo: { key: string; pros: FieldPro[] } | null = null
+
+/** THE FIELD, for one season of one world: ~300 professionals, derived, never persisted.
+ *
+ *  `takenNames` is the LIVE cohort's names (pass `world.cohort.map(p => p.name)`), so no new
+ *  pro duplicates a girl the player already knows. Within a season the cohort's names are fixed
+ *  (the conveyor renames only at the boundary, the same boundary this regenerates on), so the
+ *  result is STABLE for the whole season: previews taken in week 10 and the draw run in week 12
+ *  see the same three hundred people. */
+export function fieldProsFor(
+  seed: string,
+  seasonIndex: number,
+  takenNames: readonly string[] = [],
+): FieldPro[] {
+  const key = `${seed} ${seasonIndex} ${takenNames.join(' ')}`
+  if (memo && memo.key === key) return memo.pros
+  const taken = new Set(takenNames)
+  const pros: FieldPro[] = []
+  let n = 0
+  for (const tier of FIELD.tiers) {
+    for (let i = 0; i < tier.count; i++) pros.push(makeFieldPro(seed, seasonIndex, n++, tier, taken))
+  }
+  memo = { key, pros }
+  return pros
+}
+
+// =================================================================================================
+// THE MERGED W TABLE – LIVE rows as earned, field rows as derived, ONE ranking.
+// =================================================================================================
+//
+// The professional table used to be 200 rows of whom ~199 held zero; now it is the LIVE table's
+// rows (earned points, exactly as computeRanking folded them – kid included when the caller's live
+// table includes her) interleaved with the field's virtual rows. Sorting rules, all deterministic:
+//
+//   1. points, descending – the only thing a ranking is;
+//   2. on a points tie, LIVE before FIELD – an earned point outranks a derived one, so a LIVE girl
+//      never loses a tie to a simulation artefact;
+//   3. inside each side, the incoming order – the LIVE table's own recency/roster order survives,
+//      and the field's generation order is stable per season.
+//
+// Rank numbers are competition-style ("1224"), the same convention computeRanking uses, so a
+// merged table reads like every other table in the game.
+export function mergedWtaRanking(live: readonly RankingRow[], pros: readonly FieldPro[]): RankingRow[] {
+  const rows = [
+    ...live.map((r, i) => ({ playerId: r.playerId, points: r.points, live: 1, ord: i })),
+    ...pros.map((p, i) => ({ playerId: p.id, points: p.wtaPoints, live: 0, ord: i })),
+  ]
+  rows.sort((a, b) => b.points - a.points || b.live - a.live || a.ord - b.ord)
+  const out: RankingRow[] = []
+  let rank = 0
+  let prevPoints: number | null = null
+  rows.forEach((row, i) => {
+    if (prevPoints === null || row.points !== prevPoints) {
+      rank = i + 1
+      prevPoints = row.points
+    }
+    out.push({ playerId: row.playerId, points: row.points, rank })
+  })
+  return out
+}
+
+/** WHO MAY BE DRAWN INTO A TIER'S EVENTS – the one seam where the field joins the game.
+ *
+ *  W-track tiers draw from LIVE cohort ∪ field pros; every other tier draws from the LIVE cohort
+ *  alone, and returns the SAME ARRAY INSTANCE it was handed so "the junior tour is untouched" is a
+ *  reference-equality fact a test can pin, not a diff to re-review. The J-tier mixed-table
+ *  percentile problem is real and is explicitly phase 2 (docs/specs/living-field.md).
+ *
+ *  ⚠ THE CANONICAL AI BRACKETS DO NOT COME THROUGH HERE. `drawAiEntrants` (world.ts) passes
+ *  `world.cohort` directly, ON PURPOSE: canonical brackets WRITE result rows, and a field pro must
+ *  never write into `world.results` – the ledger is persisted state with a 52-week prune sized for
+ *  199 players, and a pro's fatigue/standing is derived, not recorded. Consequence, accepted and
+ *  documented: AI W-tour news names LIVE players only in phase W. */
+export function universeForTier(
+  tier: TierId,
+  cohort: AiPlayer[],
+  pros: readonly FieldPro[],
+): AiPlayer[] {
+  return TIERS[tier].track === 'wta' ? [...cohort, ...pros] : cohort
+}
