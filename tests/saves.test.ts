@@ -5,7 +5,9 @@ import {
   readSlot,
   listSlots,
   deleteSlot,
-  autosave,
+  commitAutosave,
+  adoptAutosave,
+  SaveConflictError,
   readLatestAutosave,
   listCareers,
   deleteCareer,
@@ -64,7 +66,7 @@ describe('save slots (careers + generations)', () => {
   it('writes, lists, reads and deletes a named slot', async () => {
     const cid = 'c-basic'
     const world = worldAt('basic', 30, cid)
-    const meta = await writeNamed(world, 'keep')
+    const meta = await writeNamed(world, 'keep', 1)
     expect(meta.week).toBe(30)
     expect(meta.careerId).toBe(cid)
     expect(meta.bytes).toBeGreaterThan(0)
@@ -81,7 +83,7 @@ describe('save slots (careers + generations)', () => {
 
   it('alternates autosave generations a,b,a and keeps both readable', async () => {
     const cid = 'c-alt'
-    for (let i = 1; i <= 3; i++) await autosave(worldAt('alt', i, cid))
+    for (let i = 1; i <= 3; i++) await commitAutosave(worldAt('alt', i, cid), i)
 
     // gen a received save #1 then save #3; gen b received save #2
     expect((await readSlot(`auto:${cid}:a`)).week).toBe(3)
@@ -89,16 +91,19 @@ describe('save slots (careers + generations)', () => {
 
     const slots = await listSlots(cid)
     expect(slots).toHaveLength(2)
+    // W1-INTEGRITY-A: each commit stamped its own revision on its generation – unique per commit.
+    expect(slots.map((s) => s.revision).sort()).toEqual([2, 3])
 
     const latest = await readLatestAutosave(cid)
     expect(latest.recovered).toBe(false)
     expect(latest.world.week).toBe(3)
+    expect(latest.revision).toBe(3)
   })
 
   it('falls back to the previous generation when the newer autosave is corrupted', async () => {
     const cid = 'c-corrupt'
-    await autosave(worldAt('cor', 1, cid)) // gen a
-    await autosave(worldAt('cor', 2, cid)) // gen b (newer)
+    await commitAutosave(worldAt('cor', 1, cid), 1) // gen a
+    await commitAutosave(worldAt('cor', 2, cid), 2) // gen b (newer)
 
     // Flip a byte in the newer generation's stored payload.
     const raw = await openRaw()
@@ -113,16 +118,19 @@ describe('save slots (careers + generations)', () => {
     await txDone(t)
     raw.close()
 
-    const { world, recovered } = await readLatestAutosave(cid)
+    const { world, recovered, revision } = await readLatestAutosave(cid)
     expect(recovered).toBe(true)
     expect(world.week).toBe(1) // the intact older generation
+    // The adoption point is the HIGHEST revision on disk, not the loaded record's own (1):
+    // adopting 1 would make the next CAS commit (2) collide with the corrupt corpse forever.
+    expect(revision).toBe(2)
   })
 
   it('isolates careers: five autosaves each keep two slots and never evict across careers', async () => {
     const A = 'c-alpha'
     const B = 'c-beta'
-    for (let i = 1; i <= 5; i++) await autosave(worldAt('alpha', i, A))
-    for (let i = 1; i <= 5; i++) await autosave(worldAt('beta', i, B))
+    for (let i = 1; i <= 5; i++) await commitAutosave(worldAt('alpha', i, A), i)
+    for (let i = 1; i <= 5; i++) await commitAutosave(worldAt('beta', i, B), i)
 
     expect(await listSlots(A)).toHaveLength(2)
     expect(await listSlots(B)).toHaveLength(2)
@@ -139,13 +147,85 @@ describe('save slots (careers + generations)', () => {
 
   it('overwrites a named save in place (name sanitized)', async () => {
     const cid = 'c-named'
-    await writeNamed(worldAt('nm', 5, cid), 'My Slot!!')
-    await writeNamed(worldAt('nm', 9, cid), 'My Slot!!')
+    await writeNamed(worldAt('nm', 5, cid), 'My Slot!!', 1)
+    await writeNamed(worldAt('nm', 9, cid), 'My Slot!!', 2)
 
     const named = (await listSlots(cid)).filter((s) => s.slot.startsWith('manual:'))
     expect(named).toHaveLength(1)
     expect(named[0].slot).toBe(`manual:${cid}:myslot`)
     expect((await readSlot(named[0].slot)).week).toBe(9)
+  })
+
+  // --- W1-INTEGRITY-A: the CAS + one-transaction commit ---------------------------------------
+
+  it('CAS: a commit at a revision the disk already holds is refused, and refused ATOMICALLY', async () => {
+    const cid = 'c-cas'
+    await commitAutosave(worldAt('cas', 3, cid), 1)
+    await commitAutosave(worldAt('cas', 7, cid), 2)
+
+    // A stale writer (same career loaded earlier, e.g. another tab) tries to commit revision 2
+    // again with different content. The refusal must be the TYPED conflict…
+    await expect(commitAutosave(worldAt('cas', 99, cid), 2)).rejects.toBeInstanceOf(SaveConflictError)
+    await expect(commitAutosave(worldAt('cas', 99, cid), 2)).rejects.toMatchObject({
+      diskRevision: 2,
+      attemptedRevision: 2,
+    })
+
+    // …and because record + careers row ride ONE transaction that the CAS aborts, NEITHER moved:
+    // the same real abort machinery any storage failure takes, exercised end to end.
+    const latest = await readLatestAutosave(cid)
+    expect(latest.world.week).toBe(7)
+    expect(latest.revision).toBe(2)
+    const meta = (await listCareers()).find((c) => c.careerId === cid)
+    expect(meta?.revision).toBe(2)
+    expect(meta?.week).toBe(7)
+    const weeks = (await listSlots(cid)).map((s) => s.week).sort()
+    expect(weeks).toEqual([3, 7]) // week-99 bytes exist nowhere
+  })
+
+  it('adopt: a world from outside the disk lineage (import) appends disk+1 instead of clobbering', async () => {
+    const cid = 'c-adopt'
+    // Fresh career: nothing on disk yet -> revision 1.
+    const fresh = await adoptAutosave(worldAt('ad', 1, cid))
+    expect(fresh.revision).toBe(1)
+    await commitAutosave(worldAt('ad', 2, cid), 2)
+
+    // Importing an OLD export of the same career (its file knows nothing about revisions):
+    // the adopt allocates 3 – the import becomes the newest state without erasing the lineage.
+    const imported = await adoptAutosave(worldAt('ad', 1, cid))
+    expect(imported.revision).toBe(3)
+    const latest = await readLatestAutosave(cid)
+    expect(latest.revision).toBe(3)
+    expect(latest.world.week).toBe(1)
+  })
+
+  it('newest-generation choice follows REVISION, not the wall clock', async () => {
+    const cid = 'c-revorder'
+    await commitAutosave(worldAt('ro', 4, cid), 1)
+    await commitAutosave(worldAt('ro', 5, cid), 2)
+
+    // Rewind the newer generation's savedAt below the older one's – the kind of lie a clock
+    // jump (or two module instances' monotonic counters) can tell. Revision must still win.
+    const raw = await openRaw()
+    const t = raw.transaction(STORE, 'readwrite')
+    const store = t.objectStore(STORE)
+    for (const gen of ['a', 'b'] as const) {
+      const req = store.get(`auto:${cid}:${gen}`)
+      req.onsuccess = () => {
+        const rec = req.result as { revision?: number; savedAt: number } | undefined
+        if (rec?.revision === 2) {
+          rec.savedAt = 1 // long "before" revision 1's timestamp
+          store.put(rec)
+        }
+      }
+    }
+    await txDone(t)
+    raw.close()
+
+    const latest = await readLatestAutosave(cid)
+    expect(latest.world.week).toBe(5)
+    expect(latest.revision).toBe(2)
+    expect(latest.recovered).toBe(false)
   })
 
   it('migrates a v1 database to v2: career-scoped slots + backfilled careers', async () => {

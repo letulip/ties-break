@@ -24,10 +24,12 @@ import {
   toSnapshot,
   type WorldState,
 } from '../engine/world'
-import { mainStateConsistent, resumeMain, type MainRngState } from '../engine/rng'
+import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
 import {
-  autosave,
+  commitAutosave,
+  adoptAutosave,
+  SaveConflictError,
   writeNamed,
   readSlot,
   readLatestAutosave,
@@ -37,7 +39,7 @@ import {
   deleteCareer,
   touchCareer,
 } from '../db/saves'
-import type { ToWorker, ToUI } from '../shared/protocol'
+import type { StopReason, ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
 // The RNG stream position is part of determinism, and since v35 IT LIVES ON THE WORLD
@@ -52,8 +54,40 @@ import type { ToWorker, ToUI } from '../shared/protocol'
 // The main stream only feeds base costs + cohort drift – both tournament sides run on their own
 // event-scoped streams keyed by (seed, event.id) – so a reloaded career replays its brackets by
 // construction, whatever position the main stream holds.
+//
+// W1-INTEGRITY-A (Codex TB-02 + TB-03) — THE COMMITTED PAIR AND THE CANDIDATE RULE. `world` is no
+// longer mutated in place by commands: every mutation runs against a structuredClone of the
+// committed world (rngMain included — the v35 serializable pair is exactly what makes the clone a
+// complete resumable universe), is PERSISTED as one IndexedDB transaction, and only then replaces
+// `world` and bumps `committedRevision`. A thrown engine refusal or a failed persist therefore
+// leaves the committed pair — memory, disk, revision, and the snapshot the UI holds — bit-for-bit
+// unchanged, which is what lets the UI retry without double-applying. Measured before adopting the
+// clone (tools/clone-bench.ts): structuredClone of a 20-season world is ~2.2 ms, ~41% of the
+// gzip+sha256 each mutation already paid, so TB-03's copy-on-write fallback is not needed.
 
 let world: WorldState | null = null
+
+/** The monotonic revision of the committed `world` (0 = no active career). Adopted from disk on
+ *  every load, advanced by exactly one per committed mutation/restore. The revision is the
+ *  optimistic-concurrency token of the whole pipeline: mutating requests carry the
+ *  `baseRevision` they were issued against, and a mismatch is a typed STALE_REVISION refusal
+ *  rather than a command silently applied to state the caller has never seen. */
+let committedRevision = 0
+
+/** TB-02's typed conflict: the mutation was issued against a revision that is no longer the
+ *  committed one. Carries the CURRENT revision so the caller can refresh and re-decide. */
+class StaleRevisionError extends Error {
+  constructor(
+    readonly currentRevision: number,
+    readonly baseRevision: number,
+  ) {
+    super(
+      `Stale revision: the command was based on revision ${baseRevision}, ` +
+        `but the world is at revision ${currentRevision} – refresh and try again`,
+    )
+    this.name = 'StaleRevisionError'
+  }
+}
 
 const post = (msg: ToUI) => (self as unknown as { postMessage(m: unknown, t?: Transferable[]): void }).postMessage(
   msg,
@@ -65,9 +99,21 @@ function makeCareerId(seed: string): string {
   return `c-${seed}-${Date.now().toString(36)}`
 }
 
-function snapshotMsg(id: number, w: WorldState, recovered = false): ToUI {
-  const msg: ToUI = { id, ok: true, type: 'snapshot', snapshot: toSnapshot(w) }
-  return recovered ? { ...msg, recovered: true } : msg
+function snapshotMsg(
+  id: number,
+  w: WorldState,
+  opts: { recovered?: boolean; restoredFrom?: string; stopReasons?: StopReason[] } = {},
+): ToUI {
+  const msg: ToUI = {
+    id,
+    ok: true,
+    type: 'snapshot',
+    snapshot: toSnapshot(w, opts.stopReasons),
+    revision: committedRevision,
+  }
+  if (opts.recovered) (msg as { recovered?: true }).recovered = true
+  if (opts.restoredFrom !== undefined) (msg as { restoredFrom?: string }).restoredFrom = opts.restoredFrom
+  return msg
 }
 
 /** The load-time verifier (v35): is the persisted MAIN position one this career could actually
@@ -92,7 +138,7 @@ function recoverMainState(w: WorldState): MainRngState {
   return replayMainState(w.seed, w.profile, w.week)
 }
 
-/** Shared tail of the three load paths: verify the persisted position, repair it if it fails, and
+/** Shared tail of the load paths: verify the persisted position, repair it if it fails, and
  *  say which happened — the boolean feeds straight into the snapshot's `recovered` flag. */
 function ensureMainState(w: WorldState): boolean {
   if (verifyMainState(w)) return false
@@ -100,154 +146,160 @@ function ensureMainState(w: WorldState): boolean {
   return true
 }
 
+/**
+ * TB-03 — THE CANDIDATE-STATE COMMIT, the shape of every mutating command:
+ *
+ *     capture committed state            (`world`, `committedRevision`)
+ *             ↓
+ *     create candidate world + RNG       (structuredClone; rngMain rides along, so resumeMain
+ *             ↓                           draws against the CANDIDATE's pair — the committed
+ *     execute command                     pair does not move a single draw)
+ *             ↓
+ *     persist save + metadata            (ONE IndexedDB transaction, resolved on `complete`;
+ *             ↓                           CAS-refused if the disk is ahead — src/db/saves.ts)
+ *     commit candidate + publish
+ *
+ * Failure at ANY arrow leaves the committed pair untouched: an engine refusal throws before the
+ * persist, a storage failure rejects before the commit, and in both cases the error response the
+ * UI receives describes a world that genuinely did not change. Success means the returned
+ * snapshot corresponds exactly to bytes that are already durable — never "applied in memory,
+ * hopefully saved soon".
+ *
+ * `baseRevision` is checked FIRST: a command issued against a snapshot the worker has since moved
+ * past must not run at all (TB-02's stale-refusal), not even against a candidate.
+ *
+ * The closure's `world` parameter deliberately shadows the module's committed `world`: inside a
+ * command body "the world" IS the candidate, and the shadowing makes it impossible for a handler
+ * to accidentally reach the committed copy (also what keeps the W1-QUICK tick-guard source pins
+ * in tests/dev-fast-forward.test.ts matching on the same `world.…` spelling they always did).
+ */
+async function mutate(
+  id: number,
+  baseRevision: number,
+  command: (world: WorldState, rng: Rng) => StopReason[] | void,
+): Promise<ToUI> {
+  if (!world) throw new Error('No active career')
+  if (baseRevision !== committedRevision) throw new StaleRevisionError(committedRevision, baseRevision)
+
+  const candidate = structuredClone(world)
+  const rng = resumeMain(candidate.rngMain)
+  const stopReasons = command(candidate, rng) ?? undefined
+
+  await commitAutosave(candidate, committedRevision + 1)
+  world = candidate
+  committedRevision += 1
+  return snapshotMsg(id, candidate, { stopReasons })
+}
+
 async function handle(msg: ToWorker): Promise<ToUI> {
   switch (msg.type) {
+    // ------------------------------------------------------------------ lifecycle
     case 'new': {
       const seed = msg.seed.trim() || 'wildcard'
       // createWorld owns the stream's birth now: `rngMain` is position zero, on the world.
-      world = createWorld(seed, msg.profile, makeCareerId(seed))
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      // Candidate-first like every other path: the fresh world only becomes the active one after
+      // its first autosave is durable, so a storage failure cannot strand an unsaveable career.
+      const candidate = createWorld(seed, msg.profile, makeCareerId(seed))
+      const { revision } = await adoptAutosave(candidate)
+      world = candidate
+      committedRevision = revision
+      return snapshotMsg(msg.id, candidate)
     }
+    // ------------------------------------------------------------------ mutations
     case 'tick': {
-      if (!world) throw new Error('No active career')
-      // ⚠ THE RAW LOOP MUST NOT OUTRUN A DECISION (P6 (c)). `advanceWeeks` refuses to move time
-      // while a reveal or an unanswered knock is open – that contract is the whole W4 slice – but
-      // this loop used to skip those guards: with a reveal open, tickWeek keeps running, skips
-      // recomputeRankAndMilestones/housekeep/maybeFireSeasonWrapUp every subsequent week, and can
-      // overwrite the unresolved reveal with a fresh computeShadowTournament. So the same two
-      // predicates hold here, in both positions. At ENTRY it is a refusal – the typed error every
-      // handler uses, because the caller asked for something the engine forbids. MID-LOOP it is a
-      // stop: the returned snapshot then carries the pending state, so the UI mounts the
-      // tournament flow / knock dialog exactly as it does after `advance`. Fewer ticks than asked
-      // is RNG-safe – ⚠ re-aimed at v35, same conclusion, sturdier reason: this line used to lean
-      // on the load-time replay walking `world.week` ticks rather than the requested count; now the
-      // persisted `world.rngMain` advances only with draws that actually happened, so however early
-      // the loop stops, the position on the world IS the position — by construction, not by
-      // convention.
-      if (world.pendingTournament || pendingKnock(world)) {
-        throw new Error('A decision is open – resolve the tournament or knock before skipping weeks')
-      }
-      const rng = resumeMain(world.rngMain)
-      for (let i = 0; i < msg.weeks; i++) {
-        if (world.pendingTournament || pendingKnock(world)) break
-        tickWeek(world, rng)
-      }
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world, rng) => {
+        // ⚠ THE RAW LOOP MUST NOT OUTRUN A DECISION (P6 (c)). `advanceWeeks` refuses to move time
+        // while a reveal or an unanswered knock is open – that contract is the whole W4 slice – but
+        // this loop used to skip those guards: with a reveal open, tickWeek keeps running, skips
+        // recomputeRankAndMilestones/housekeep/maybeFireSeasonWrapUp every subsequent week, and can
+        // overwrite the unresolved reveal with a fresh computeShadowTournament. So the same two
+        // predicates hold here, in both positions. At ENTRY it is a refusal – the typed error every
+        // handler uses, because the caller asked for something the engine forbids. MID-LOOP it is a
+        // stop: the returned snapshot then carries the pending state, so the UI mounts the
+        // tournament flow / knock dialog exactly as it does after `advance`. Fewer ticks than asked
+        // is RNG-safe – ⚠ re-aimed at v35, same conclusion, sturdier reason: this line used to lean
+        // on the load-time replay walking `world.week` ticks rather than the requested count; now the
+        // persisted `world.rngMain` advances only with draws that actually happened, so however early
+        // the loop stops, the position on the world IS the position — by construction, not by
+        // convention.
+        // ⚠ Re-aimed again at W1-INTEGRITY-A, conclusion unchanged: `world` here is the CANDIDATE
+        // (the mutate() closure parameter shadows the committed module state on purpose), a clone of
+        // the committed world — so both predicates read exactly the state they always read, and a
+        // refusal now provably leaves the committed world without a single tick applied.
+        if (world.pendingTournament || pendingKnock(world)) {
+          throw new Error('A decision is open – resolve the tournament or knock before skipping weeks')
+        }
+        for (let i = 0; i < msg.weeks; i++) {
+          if (world.pendingTournament || pendingKnock(world)) break
+          tickWeek(world, rng)
+        }
+      })
     }
     case 'advance': {
-      if (!world) throw new Error('No active career')
       // R11-1: EVERY reason the advance stopped rides along (an injury landing on the wrap-up week
       // is both 'injury' and 'season-end'); `advance` is still the only message that sets them.
-      const rng = resumeMain(world.rngMain)
-      const stopReasons = advanceWeeks(world, rng, msg.weeks)
-      await autosave(world)
-      return { id: msg.id, ok: true, type: 'snapshot', snapshot: toSnapshot(world, stopReasons) }
+      return mutate(msg.id, msg.baseRevision, (world, rng) => advanceWeeks(world, rng, msg.weeks))
     }
     case 'enterEvent': {
-      if (!world) throw new Error('No active career')
-      enterEvent(world, msg.eventId)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => enterEvent(world, msg.eventId))
     }
     case 'withdrawEvent': {
-      if (!world) throw new Error('No active career')
-      withdrawEvent(world, msg.eventId)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => withdrawEvent(world, msg.eventId))
     }
     case 'cancelEntry': {
       // R10-13: cancel before the event week – past the deadline the fee is forfeited and the week
       // becomes plannable again; before it, a full refund (the withdrawal path).
-      if (!world) throw new Error('No active career')
-      cancelEntry(world, msg.eventId)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => cancelEntry(world, msg.eventId))
     }
     case 'skipEvent': {
       // R9-9: post-deadline withdrawal at the event week (fee forfeited, travel refunded).
-      if (!world) throw new Error('No active career')
-      skipEvent(world, msg.eventId)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => skipEvent(world, msg.eventId))
     }
     case 'tournamentReveal': {
-      if (!world) throw new Error('No active career')
-      revealTournamentRound(world)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => revealTournamentRound(world))
     }
     case 'tournamentSkip': {
-      if (!world) throw new Error('No active career')
-      skipTournament(world)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => skipTournament(world))
     }
     case 'tournamentClose': {
-      if (!world) throw new Error('No active career')
-      closeTournament(world)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => closeTournament(world))
     }
     // --- season planner (v13): book/cancel a vacation or a practice match ---------------
     // Pure player state on the engine side: the price comes off a purpose-scoped sub-stream, so
     // none of these can move the world's main draw sequence.
     case 'bookVacation': {
-      if (!world) throw new Error('No active career')
-      bookVacation(world, msg.week, msg.packageId)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => bookVacation(world, msg.week, msg.packageId))
     }
     case 'cancelVacation': {
-      if (!world) throw new Error('No active career')
-      cancelVacation(world, msg.week)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => cancelVacation(world, msg.week))
     }
     case 'bookPractice': {
-      if (!world) throw new Error('No active career')
-      bookPractice(world, msg.week, msg.withCoach)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => bookPractice(world, msg.week, msg.withCoach))
     }
     case 'hireCoach': {
-      if (!world) throw new Error('No active career')
-      hireCoach(world, msg.coachId)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => hireCoach(world, msg.coachId))
     }
     case 'setCoachOnEventWeeks': {
-      if (!world) throw new Error('No active career')
-      setCoachOnEventWeeks(world, msg.on)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => setCoachOnEventWeeks(world, msg.on))
     }
     case 'cancelPractice': {
-      if (!world) throw new Error('No active career')
-      cancelPractice(world, msg.week)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => cancelPractice(world, msg.week))
     }
     case 'setPlan': {
-      if (!world) throw new Error('No active career')
-      const total = msg.plan.train + msg.plan.rest
-      if (total !== 100 || msg.plan.train < 0 || msg.plan.rest < 0) {
-        throw new Error('Week plan must split 100% between training and rest')
-      }
-      world.plan = { train: msg.plan.train, rest: msg.plan.rest }
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => {
+        const total = msg.plan.train + msg.plan.rest
+        if (total !== 100 || msg.plan.train < 0 || msg.plan.rest < 0) {
+          throw new Error('Week plan must split 100% between training and rest')
+        }
+        world.plan = { train: msg.plan.train, rest: msg.plan.rest }
+      })
     }
     // W4: the parent answers the knock. This is the ONLY command that can clear an undecided one, and
     // until it runs `advanceWeeks` refuses to tick at all - so this handler is what makes time move
     // again. `decideKnock` throws on a knock that is already answered, which is what keeps a
     // double-tap (or a stale dialog on a reloaded save) from re-deciding a week.
     case 'decideKnock': {
-      if (!world) throw new Error('No active career')
-      decideKnock(world, msg.choice)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => decideKnock(world, msg.choice))
     }
     // THE INBOX (v32): the parent answers a letter. Both handlers go through the engine, which
     // re-checks the deadline - the UI's disabled button is a courtesy and the engine's refusal is the
@@ -257,93 +309,253 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     // puts in front of this is the whole of the protection, which is the same bargain every
     // destructive action in More strikes.
     case 'signOffer': {
-      if (!world) throw new Error('No active career')
-      acceptOffer(world, msg.offerId)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      // braces: accept/declineOffer return the Offer for their engine callers; the pipeline's
+      // closure contract is StopReason[] | void, and an Offer is neither.
+      return mutate(msg.id, msg.baseRevision, (world) => {
+        acceptOffer(world, msg.offerId)
+      })
     }
     case 'refuseOffer': {
-      if (!world) throw new Error('No active career')
-      declineOffer(world, msg.offerId)
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => {
+        declineOffer(world, msg.offerId)
+      })
     }
     case 'setPhysio': {
       // Season-Life slice B: the toggle just reflects/sets the flag (default = hired coach). Its
       // recovery/cost lever is billed in Slice C; no engine draw, no schema impact here.
-      if (!world) throw new Error('No active career')
-      world.physioActive = msg.active
-      await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return mutate(msg.id, msg.baseRevision, (world) => {
+        world.physioActive = msg.active
+      })
     }
+    // ------------------------------------------------------------------ persistence
     case 'save': {
       if (!world) throw new Error('No active career')
-      await writeNamed(world, msg.slot ?? 'manual')
-      return { id: msg.id, ok: true, type: 'slots', slots: await listSlots(world.careerId) }
+      // Named saves stamp the revision they captured but allocate none: the world did not change.
+      await writeNamed(world, msg.slot ?? 'manual', committedRevision)
+      return { id: msg.id, ok: true, type: 'slots', slots: await listSlots(world.careerId), revision: committedRevision }
     }
     case 'saveNamed': {
       if (!world) throw new Error('No active career')
-      await writeNamed(world, msg.name)
-      return { id: msg.id, ok: true, type: 'slots', slots: await listSlots(world.careerId) }
+      await writeNamed(world, msg.name, committedRevision)
+      return { id: msg.id, ok: true, type: 'slots', slots: await listSlots(world.careerId), revision: committedRevision }
     }
-    // --- the three load paths (v35): verify-and-resume, O(1). None of them replays; the shared
-    // `ensureMainState` repairs a corrupt position and its answer IS the `recovered` flag, on the
-    // same channel (and the same UI surfacing) the autosave-generation fallback has always used.
-    case 'load': {
-      world = await readSlot(msg.slot)
-      const rngRecovered = ensureMainState(world)
-      // Opening it counts as playing it, or the next boot ignores the choice - see touchCareer.
-      await touchCareer(world.careerId)
-      return snapshotMsg(msg.id, world, rngRecovered)
-    }
+    // --- the load paths (v35, re-aimed at W1-INTEGRITY-A): verify-and-resume, O(1). None of them
+    // replays; the shared `ensureMainState` repairs a corrupt position and its answer IS the
+    // `recovered` flag, on the same channel (and the same UI surfacing) the autosave-generation
+    // fallback has always used. ⚠ The third load path this comment used to cover — `load`, which
+    // swapped the worker's world WITHOUT committing an autosave — is GONE, replaced by
+    // `restoreSlot` below: that gap was verified as the "restore rolls back on relaunch" defect
+    // (readLatestAutosave picked the newer pre-restore generation), TB-01's whole reason to exist.
     case 'loadCareer': {
-      const { world: loaded, recovered } = await readLatestAutosave(msg.careerId)
-      world = loaded
+      const { world: loaded, recovered, revision } = await readLatestAutosave(msg.careerId)
       // Two independent recoveries can happen on one load — the older autosave GENERATION stood in
       // for an unreadable newer one, and/or the RNG position was rebuilt — and the player is told
       // about either through the one flag, because the message to them is the same: "this career
       // was repaired on the way in".
       const rngRecovered = ensureMainState(loaded)
+      // Opening it counts as playing it, or the next boot ignores the choice - see touchCareer.
       await touchCareer(loaded.careerId)
-      return snapshotMsg(msg.id, loaded, recovered || rngRecovered)
+      world = loaded
+      // The disk's highest known revision, NOT the loaded record's own: after a generation
+      // fallback the corpse generation still owns a higher number, and the next CAS commit must
+      // clear it (readLatestAutosave documents the wedge this avoids).
+      committedRevision = revision
+      return snapshotMsg(msg.id, loaded, { recovered: recovered || rngRecovered })
+    }
+    /**
+     * TB-01 — RESTORE AS A COMMITTED REVISION. Restoring a slot IS a mutation of the career's
+     * timeline, so it takes the mutation path's whole bargain: validate into a candidate, allocate
+     * the next revision (never reuse the historical record's — the restored state is a NEW commit
+     * whose content happens to be old), persist as the NEWEST autosave + careers row in one
+     * transaction, and only then replace the worker's world. The ok response therefore already
+     * means "restore → close → relaunch reopens the restored state", because on relaunch
+     * readLatestAutosave finds this commit as the newest generation. A persistence failure leaves
+     * the pre-restore world active and durable, exactly as if the restore was never asked for.
+     * Named saves are untouched by construction — this writes only the autosave rotation.
+     */
+    case 'restoreSlot': {
+      const candidate = await readSlot(msg.slot)
+      const rngRecovered = ensureMainState(candidate)
+      let revision: number
+      if (world && candidate.careerId === world.careerId) {
+        // The ordinary restore (MoreScreen: previous autosave / a named save of the active
+        // career): the next revision of the lineage the worker is already playing, CAS-guarded.
+        revision = committedRevision + 1
+        await commitAutosave(candidate, revision)
+      } else {
+        // A slot of ANOTHER career (no surface does this today, but the command stays total):
+        // restoring it is switching to it, so adopt that career's disk lineage instead.
+        ;({ revision } = await adoptAutosave(candidate))
+      }
+      world = candidate
+      committedRevision = revision
+      return snapshotMsg(msg.id, candidate, { recovered: rngRecovered, restoredFrom: msg.slot })
+    }
+    case 'importSave': {
+      // Candidate-first: decode and repair BEFORE touching module state, adopt the disk lineage
+      // (an import over an existing career appends a revision rather than clobbering it), and only
+      // commit memory once the autosave is durable.
+      const candidate = await decodeExportFile(new Uint8Array(msg.bytes))
+      const rngRecovered = ensureMainState(candidate)
+      const { revision } = await adoptAutosave(candidate)
+      world = candidate
+      committedRevision = revision
+      return snapshotMsg(msg.id, candidate, { recovered: rngRecovered })
     }
     case 'deleteSlot': {
       await deleteSlot(msg.slot)
       const careerId = world?.careerId
-      return { id: msg.id, ok: true, type: 'slots', slots: careerId ? await listSlots(careerId) : [] }
+      return {
+        id: msg.id,
+        ok: true,
+        type: 'slots',
+        slots: careerId ? await listSlots(careerId) : [],
+        revision: committedRevision,
+      }
     }
     case 'deleteCareer': {
       await deleteCareer(msg.careerId)
       if (world?.careerId === msg.careerId) {
         world = null
+        committedRevision = 0
       }
-      return { id: msg.id, ok: true, type: 'careers', careers: await listCareers() }
+      return { id: msg.id, ok: true, type: 'careers', careers: await listCareers(), revision: committedRevision }
+    }
+    // ------------------------------------------------------------------ queries
+    case 'getSnapshot': {
+      // The stale-revision refresh path: a caller refused with STALE_REVISION re-reads the
+      // committed world instead of guessing. Read-only by construction.
+      if (!world) throw new Error('No active career')
+      return snapshotMsg(msg.id, world)
     }
     case 'listSlots': {
       const careerId = msg.careerId ?? world?.careerId
-      return { id: msg.id, ok: true, type: 'slots', slots: careerId ? await listSlots(careerId) : [] }
+      return {
+        id: msg.id,
+        ok: true,
+        type: 'slots',
+        slots: careerId ? await listSlots(careerId) : [],
+        revision: committedRevision,
+      }
     }
     case 'listCareers':
-      return { id: msg.id, ok: true, type: 'careers', careers: await listCareers() }
+      return { id: msg.id, ok: true, type: 'careers', careers: await listCareers(), revision: committedRevision }
     case 'exportSave': {
       if (!world) throw new Error('No active career')
       const bytes = await encodeExportFile(world)
       const filename = `tennis-sim_${world.seed}_w${world.week}.tsave`
-      return { id: msg.id, ok: true, type: 'exported', bytes: bytes.buffer as ArrayBuffer, filename }
-    }
-    case 'importSave': {
-      world = await decodeExportFile(new Uint8Array(msg.bytes))
-      const rngRecovered = ensureMainState(world)
-      await autosave(world)
-      return snapshotMsg(msg.id, world, rngRecovered)
+      return {
+        id: msg.id,
+        ok: true,
+        type: 'exported',
+        bytes: bytes.buffer as ArrayBuffer,
+        filename,
+        revision: committedRevision,
+      }
     }
   }
 }
 
+function errorMsg(id: number, err: unknown): ToUI {
+  if (err instanceof StaleRevisionError) {
+    return { id, ok: false, error: err.message, code: 'STALE_REVISION', revision: err.currentRevision }
+  }
+  if (err instanceof SaveConflictError) {
+    return { id, ok: false, error: err.message, code: 'SAVE_CONFLICT', revision: err.diskRevision }
+  }
+  return { id, ok: false, error: err instanceof Error ? err.message : String(err) }
+}
+
+// =================================================================================================
+// W1-INTEGRITY-A (Codex TB-02) — THE SERIALIZED PIPELINE.
+//
+// Every message runs TO COMPLETION — engine work AND its persistence — before the next one starts.
+// The previous dispatcher fired `handle(e.data).then(post)` per message with no queue, so any
+// handler awaiting its autosave yielded to the next message: two commands could interleave between
+// one command's mutation and its persist (the verified load-bearing defect #2 of this wave), two
+// autosaves could race the same generation choice, and a snapshot could serialize a world another
+// command was mid-mutating. One promise chain retires the whole class.
+//
+// CLASSIFICATION of the protocol (TB-02 asks for it recorded; the queue treats them uniformly —
+// see WHY below the table):
+//
+//   message            class        world     storage                    revision
+//   -----------------  -----------  --------  -------------------------  -----------------------
+//   new                lifecycle    replaces  autosave+meta (adopt)      allocates disk+1
+//   tick               mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   advance            mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   enterEvent         mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   withdrawEvent      mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   cancelEntry        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   skipEvent          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   tournamentReveal   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   tournamentSkip     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   tournamentClose    mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   bookVacation       mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   cancelVacation     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   bookPractice       mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   hireCoach          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setCoachOnEventWeeks mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   cancelPractice     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setPlan            mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   decideKnock        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   signOffer          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   refuseOffer        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setPhysio          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   save/saveNamed     persistence  reads     named record+meta (1 tx)   stamps current, no bump
+//   deleteSlot         persistence  none      deletes a record           unchanged
+//   deleteCareer       persistence  may null  deletes records+meta       resets to 0 if active
+//   restoreSlot        lifecycle    replaces  autosave+meta (CAS/adopt)  +1 of the restored lineage
+//   loadCareer         lifecycle    replaces  touch lastPlayedAt only    adopts disk max
+//   importSave         lifecycle    replaces  autosave+meta (adopt)      allocates disk+1
+//   getSnapshot        query        reads     none                       unchanged
+//   listSlots          query        none      reads                      unchanged
+//   listCareers        query        none      reads                      unchanged
+//   exportSave         query        reads     none                       unchanged
+//
+// WHY QUERIES RIDE THE SAME QUEUE even though TB-02 permits them to read a captured committed
+// revision concurrently: with the candidate rule, `world` is never mid-mutation, so a concurrent
+// query would in fact be safe TODAY — but "safe because every current handler is candidate-shaped"
+// is an invariant a future handler can silently break, while "safe because nothing runs
+// concurrently" cannot be broken without deleting the queue. The cost is a listSlots waiting out
+// an advance, which the store's sequential awaits impose anyway. Revisit only with a measured
+// UI-latency reason, and then only for the four queries above.
+//
+// A FAILED COMMAND CANNOT POISON THE QUEUE: each task settles through its own catch (errors become
+// error responses), and the chain advances off BOTH settle arms. If posting the RESPONSE itself
+// throws (a non-cloneable reply — nothing today can produce one), the final catch keeps the chain
+// alive and the client's per-command timeout owns that request's fate.
+// =================================================================================================
+
+/** Development-only slow-entry diagnostic (TB-02's last bullet). 2s is far above any healthy
+ *  command (a 4-week advance is tens of ms; a 52-week dev tick ~hundreds) and far below the
+ *  client's timeouts, so a warning here is an early smell, not noise. */
+const SLOW_ENTRY_MS = 2000
+
+let queue: Promise<void> = Promise.resolve()
+
 self.onmessage = (e: MessageEvent<ToWorker>) => {
-  handle(e.data)
-    .then(post)
-    .catch((err: unknown) =>
-      post({ id: e.data.id, ok: false, error: err instanceof Error ? err.message : String(err) }),
-    )
+  const task = async (): Promise<void> => {
+    const t0 = performance.now()
+    // Two phases on purpose: the reply is DECIDED before it is posted, so a throw out of `post`
+    // (a non-cloneable reply — nothing today can produce one) can never convert a command that
+    // COMMITTED into an error response claiming it did not run. TB-03's "never report the action
+    // itself as failed after it ran" applies to the transport too.
+    let reply: ToUI
+    try {
+      reply = await handle(e.data)
+    } catch (err) {
+      reply = errorMsg(e.data.id, err)
+    }
+    try {
+      post(reply)
+    } catch {
+      // The client's per-command timeout owns this request's fate; the queue keeps serving.
+    }
+    const elapsed = performance.now() - t0
+    if (import.meta.env?.DEV && elapsed > SLOW_ENTRY_MS) {
+      console.warn(`[sim.worker] slow queue entry: '${e.data.type}' took ${Math.round(elapsed)}ms`)
+    }
+  }
+  queue = queue.then(task, task).catch(() => {})
 }

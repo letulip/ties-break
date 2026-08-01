@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { request } from '../worker/client'
+import { request, WorkerRestartError } from '../worker/client'
 import {
   DEFAULT_PROFILE,
   type CareerMeta,
@@ -7,8 +7,33 @@ import {
   type PlayerProfile,
   type Snapshot,
   type SlotMeta,
+  type ToUI,
   type WeekPlan,
+  type WorkerErrorCode,
 } from '../shared/protocol'
+
+// W1-INTEGRITY-A: the store is the worker pipeline's UI-side ledger. It tracks the committed
+// `revision` off every response and hands it back as `baseRevision` on every mutation, so a
+// command can only ever apply to the exact state the player was looking at when they chose it —
+// the worker refuses anything else with a typed STALE_REVISION (see `run`'s catch for how both
+// typed failures recover).
+
+/** A worker refusal, with the machine-readable half of the wire error preserved. The plain
+ *  `new Error(res.error)` this replaces flattened STALE_REVISION / SAVE_CONFLICT into prose,
+ *  which left `run()` no honest way to dispatch recovery. Exported for the Settings/import
+ *  surfaces (W1-INTEGRITY-B's seam) to reuse. */
+export class CommandRejected extends Error {
+  constructor(
+    message: string,
+    readonly code?: WorkerErrorCode,
+    readonly revision?: number,
+  ) {
+    super(message)
+    this.name = 'CommandRejected'
+  }
+}
+
+type OkReply = Extract<ToUI, { ok: true }>
 
 export const useGameStore = defineStore('game', {
   state: () => ({
@@ -22,11 +47,21 @@ export const useGameStore = defineStore('game', {
      *  (to decide whether to launch the coach-mark tour) then patches it back to false. */
     firstEverCareer: false,
     persisted: null as boolean | null,
+    /** the worker's committed revision as of the last response seen – the `baseRevision`
+     *  every mutation carries (W1-INTEGRITY-A) */
+    revision: 0,
     busy: false,
     error: '',
     ready: false,
   }),
   actions: {
+    /** Unwrap a worker reply: absorb the committed revision, throw typed on refusal. Returning
+     *  the ok-narrowed union keeps each action's `res.type === '…'` dispatch type-safe. */
+    takeOk(res: ToUI): OkReply {
+      if (!res.ok) throw new CommandRejected(res.error, res.code, res.revision)
+      this.revision = res.revision
+      return res
+    },
     async init() {
       if (navigator.storage?.persist) {
         this.persisted = (await navigator.storage.persisted()) || (await navigator.storage.persist())
@@ -44,10 +79,67 @@ export const useGameStore = defineStore('game', {
       try {
         return await fn()
       } catch (err) {
+        // TB-05: the worker died (crash / undeliverable message / timeout) and was torn down.
+        // TB-03 makes the recovery unambiguous — every ok response was durable, so the last
+        // committed autosave IS the last state the player was truthfully shown as saved. Reload
+        // it through the fresh worker the next request spawns; never retry the failed command
+        // itself, because whether it committed is exactly what a dead worker cannot answer.
+        if (err instanceof WorkerRestartError) {
+          await this.reloadAfterRestart()
+          return undefined
+        }
+        if (err instanceof CommandRejected && err.code === 'STALE_REVISION') {
+          // TB-02: the command was based on a state the worker has since moved past (two surfaces
+          // racing; the busy-flag usually prevents it, the worker's refusal is the guarantee).
+          // Adopt the current revision, re-fetch the committed snapshot so the player decides
+          // against what IS, and say why nothing happened.
+          await this.refreshAfterStale(err)
+          return undefined
+        }
+        if (err instanceof CommandRejected && err.code === 'SAVE_CONFLICT') {
+          // TB-04 (CAS half): the disk holds newer progress than this tab's world — another tab
+          // committed since we loaded. The write was refused with nothing clobbered. Full tab
+          // ownership (Web Locks lease, read-only secondary tabs) is deferred by the launch plan;
+          // until then the honest move is to say it plainly and let the player reload by hand.
+          this.error = 'Another tab has newer progress for this career – reload before continuing here.'
+          return undefined
+        }
         this.error = err instanceof Error ? err.message : String(err)
       } finally {
         this.busy = false
       }
+    },
+    /** The TB-05 recovery tail: a fresh worker boots empty, so reload the last committed
+     *  autosave of the career the player was in and tell them where time resumed. Raw
+     *  `request` on purpose — this runs inside `run`'s catch, not as a nested action. */
+    async reloadAfterRestart() {
+      const careerId = this.snapshot?.careerId
+      if (!careerId) {
+        this.error = 'The simulation restarted. Try again.'
+        return
+      }
+      try {
+        const res = this.takeOk(await request({ type: 'loadCareer', careerId }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+        // The required copy (TB-05): the player is told whether unsaved work may have been lost —
+        // under TB-03 nothing past the last ok response ever existed, and that is the saved week.
+        this.error = 'Simulation restarted from the last saved week.'
+      } catch {
+        // Even the reload failed (storage denied, second crash): stay honest, stay recoverable —
+        // the next tap retries through another fresh worker.
+        this.error = 'The simulation crashed. Try again, or reopen the app to continue.'
+      }
+    },
+    async refreshAfterStale(err: CommandRejected) {
+      if (typeof err.revision === 'number') this.revision = err.revision
+      try {
+        const res = this.takeOk(await request({ type: 'getSnapshot' }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+      } catch {
+        /* no active career or a fresh failure – the copy below still explains the refusal */
+      }
+      this.error = 'That action was based on an outdated screen – it was refreshed. Try again.'
     },
     async newCareer(seed: string, profile: PlayerProfile = DEFAULT_PROFILE) {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
@@ -57,8 +149,7 @@ export const useGameStore = defineStore('game', {
       // very first career ever, not whatever it becomes after refreshCareers() below.
       const wasEmpty = this.careers.length === 0
       await this.run(async () => {
-        const res = await request({ type: 'new', seed: finalSeed, profile })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'new', seed: finalSeed, profile }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         this.recovered = false
         if (wasEmpty) this.firstEverCareer = true
@@ -68,8 +159,7 @@ export const useGameStore = defineStore('game', {
     },
     async tick(weeks: number) {
       await this.run(async () => {
-        const res = await request({ type: 'tick', weeks })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'tick', weeks, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
         await this.refreshCareers()
@@ -77,8 +167,7 @@ export const useGameStore = defineStore('game', {
     },
     async advance(weeks: 1 | 4) {
       await this.run(async () => {
-        const res = await request({ type: 'advance', weeks })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'advance', weeks, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
         await this.refreshCareers()
@@ -86,16 +175,14 @@ export const useGameStore = defineStore('game', {
     },
     async enterEvent(eventId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'enterEvent', eventId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'enterEvent', eventId, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
     },
     async withdrawEvent(eventId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'withdrawEvent', eventId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'withdrawEvent', eventId, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -105,8 +192,7 @@ export const useGameStore = defineStore('game', {
      *  an ordinary withdrawal with a full refund. */
     async cancelEntry(eventId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'cancelEntry', eventId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'cancelEntry', eventId, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -114,32 +200,28 @@ export const useGameStore = defineStore('game', {
     /** R9-9: skip an entered tournament at its event week (fee forfeited, travel refunded). */
     async skipEvent(eventId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'skipEvent', eventId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'skipEvent', eventId, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
     },
     async tournamentReveal() {
       await this.run(async () => {
-        const res = await request({ type: 'tournamentReveal' })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'tournamentReveal', baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
     },
     async tournamentSkip() {
       await this.run(async () => {
-        const res = await request({ type: 'tournamentSkip' })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'tournamentSkip', baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
     },
     async tournamentClose() {
       await this.run(async () => {
-        const res = await request({ type: 'tournamentClose' })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'tournamentClose', baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -148,8 +230,9 @@ export const useGameStore = defineStore('game', {
     /** Book a family vacation on an empty future week (price = the sub-stream quote). */
     async bookVacation(week: number, packageId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'bookVacation', week, packageId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(
+          await request({ type: 'bookVacation', week, packageId, baseRevision: this.revision }),
+        )
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -157,8 +240,7 @@ export const useGameStore = defineStore('game', {
     /** Cancel a booked vacation before its week starts – full refund. */
     async cancelVacation(week: number) {
       await this.run(async () => {
-        const res = await request({ type: 'cancelVacation', week })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'cancelVacation', week, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -166,8 +248,9 @@ export const useGameStore = defineStore('game', {
     /** Book a practice match (watchable friendly) on an empty future week. */
     async bookPractice(week: number, withCoach: boolean) {
       await this.run(async () => {
-        const res = await request({ type: 'bookPractice', week, withCoach })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(
+          await request({ type: 'bookPractice', week, withCoach, baseRevision: this.revision }),
+        )
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -175,8 +258,7 @@ export const useGameStore = defineStore('game', {
     /** Hire a coach off the market, or pass `null` to put the parent back on the court. */
     async hireCoach(coachId: string | null) {
       await this.run(async () => {
-        const res = await request({ type: 'hireCoach', coachId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'hireCoach', coachId, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -184,8 +266,9 @@ export const useGameStore = defineStore('game', {
     /** Buy the coach for competition weeks too, or send him home for them. */
     async setCoachOnEventWeeks(on: boolean) {
       await this.run(async () => {
-        const res = await request({ type: 'setCoachOnEventWeeks', on })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(
+          await request({ type: 'setCoachOnEventWeeks', on, baseRevision: this.revision }),
+        )
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -193,16 +276,14 @@ export const useGameStore = defineStore('game', {
     /** Cancel a booked practice match before its week starts – full refund. */
     async cancelPractice(week: number) {
       await this.run(async () => {
-        const res = await request({ type: 'cancelPractice', week })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'cancelPractice', week, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
     },
     async setPlan(plan: WeekPlan) {
       await this.run(async () => {
-        const res = await request({ type: 'setPlan', plan })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'setPlan', plan, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
       })
     },
@@ -210,8 +291,7 @@ export const useGameStore = defineStore('game', {
     // so this is the one action on the store that unblocks time.
     async decideKnock(choice: KnockChoice) {
       await this.run(async () => {
-        const res = await request({ type: 'decideKnock', choice })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'decideKnock', choice, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
       })
     },
@@ -219,8 +299,7 @@ export const useGameStore = defineStore('game', {
      *  and there is no unsign command to reach for afterwards. */
     async signOffer(offerId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'signOffer', offerId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'signOffer', offerId, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
@@ -228,44 +307,46 @@ export const useGameStore = defineStore('game', {
     /** ...and refuse one. Terminal in the same way, so the deadline means something on both sides. */
     async refuseOffer(offerId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'refuseOffer', offerId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'refuseOffer', offerId, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })
     },
     async setPhysio(active: boolean) {
       await this.run(async () => {
-        const res = await request({ type: 'setPhysio', active })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'setPhysio', active, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
       })
     },
     async saveManual() {
       await this.run(async () => {
-        const res = await request({ type: 'save', slot: 'manual' })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'save', slot: 'manual' }))
         if (res.type === 'slots') this.slots = res.slots
       })
     },
     async saveNamed(name: string) {
       await this.run(async () => {
-        const res = await request({ type: 'saveNamed', name })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'saveNamed', name }))
         if (res.type === 'slots') this.slots = res.slots
       })
     },
-    async load(slot: string) {
+    /** TB-01: restore a slot AS THE ACTIVE STATE. The worker commits it as the newest autosave
+     *  before replying ok, so a restore that answered is a restore that survives a relaunch —
+     *  this replaced `load`, whose restored world evaporated on the next boot. */
+    async restoreSlot(slot: string) {
       await this.run(async () => {
-        const res = await request({ type: 'load', slot })
-        if (!res.ok) throw new Error(res.error)
-        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        const res = this.takeOk(await request({ type: 'restoreSlot', slot }))
+        if (res.type === 'snapshot') {
+          this.snapshot = res.snapshot
+          this.recovered = res.recovered ?? false
+        }
+        await this.refreshSlots()
+        await this.refreshCareers()
       })
     },
     async loadCareer(careerId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'loadCareer', careerId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'loadCareer', careerId }))
         if (res.type === 'snapshot') {
           this.snapshot = res.snapshot
           this.recovered = res.recovered ?? false
@@ -275,15 +356,13 @@ export const useGameStore = defineStore('game', {
     },
     async deleteSlot(slot: string) {
       await this.run(async () => {
-        const res = await request({ type: 'deleteSlot', slot })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'deleteSlot', slot }))
         if (res.type === 'slots') this.slots = res.slots
       })
     },
     async deleteCareer(careerId: string) {
       await this.run(async () => {
-        const res = await request({ type: 'deleteCareer', careerId })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'deleteCareer', careerId }))
         if (res.type === 'careers') this.careers = res.careers
         if (this.snapshot?.careerId === careerId) {
           this.snapshot = null
@@ -293,16 +372,21 @@ export const useGameStore = defineStore('game', {
     },
     async refreshSlots() {
       const res = await request({ type: 'listSlots' })
-      if (res.ok && res.type === 'slots') this.slots = res.slots
+      if (res.ok && res.type === 'slots') {
+        this.revision = res.revision
+        this.slots = res.slots
+      }
     },
     async refreshCareers() {
       const res = await request({ type: 'listCareers' })
-      if (res.ok && res.type === 'careers') this.careers = res.careers
+      if (res.ok && res.type === 'careers') {
+        this.revision = res.revision
+        this.careers = res.careers
+      }
     },
     async exportSave() {
       await this.run(async () => {
-        const res = await request({ type: 'exportSave' })
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'exportSave' }))
         if (res.type !== 'exported') return
         const blob = new Blob([res.bytes], { type: 'application/octet-stream' })
         const url = URL.createObjectURL(blob)
@@ -316,8 +400,7 @@ export const useGameStore = defineStore('game', {
     async importSave(file: File) {
       await this.run(async () => {
         const bytes = await file.arrayBuffer()
-        const res = await request({ type: 'importSave', bytes }, [bytes])
-        if (!res.ok) throw new Error(res.error)
+        const res = this.takeOk(await request({ type: 'importSave', bytes }, [bytes]))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshCareers()
         await this.refreshSlots()

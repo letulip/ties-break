@@ -11,6 +11,20 @@ import type { SlotMeta, CareerMeta } from '../shared/protocol'
 //
 // The `saves` store keeps keyPath `slot`; the `careers` store (keyPath `careerId`) holds one
 // meta row per career. DB schema migrations are append-only `if (oldVersion < N)` blocks.
+//
+// W1-INTEGRITY-A (Codex TB-03 + TB-04's CAS half): every write that commits career progress goes
+// through ONE readwrite transaction over BOTH stores, chained on IDB request callbacks and resolved
+// only on the transaction's `complete` event – so the save record and the careers row cannot
+// diverge, whatever interrupts the tab. Each record carries the `revision` it captured (see
+// SlotMeta in shared/protocol.ts – the envelope, NOT the WorldState payload, holds it: no schema
+// bump), and the careers row carries the career's highest committed revision. That row is the
+// COMPARE-AND-SWAP anchor: `commitAutosave` refuses (SaveConflictError, transaction aborted, both
+// stores untouched) whenever the on-disk revision is not strictly older than the one being
+// written, so a stale tab gets a typed conflict instead of silently clobbering newer progress.
+// ⚠ This is deliberately only the CAS half of Codex TB-04. The full cross-tab lease – Web Locks
+// ownership, BroadcastChannel revision broadcasts, read-only secondary tabs with "Take control
+// here" – is DEFERRED by docs/plans/launch-plan-2026-08.md (phone-first single-player; the CAS
+// alone closes the data-loss). Recorded in the adoption ledger as partially adopted.
 
 const DB_NAME = 'tennis-sim'
 const DB_VERSION = 2
@@ -151,22 +165,14 @@ function tx(database: IDBDatabase, stores: string | string[], mode: IDBTransacti
 }
 
 function toMeta(r: SaveRecord): SlotMeta {
-  return { slot: r.slot, careerId: r.careerId, savedAt: r.savedAt, week: r.week, seed: r.seed, bytes: r.bytes }
-}
-
-async function buildRecord(slot: string, world: WorldState): Promise<SaveRecord> {
-  const { payload, checksum } = await compressWorld(world)
   return {
-    slot,
-    careerId: world.careerId,
-    savedAt: nextSavedAt(),
-    week: world.week,
-    seed: world.seed,
-    bytes: payload.byteLength,
-    kidName: world.profile.kidName,
-    country: world.profile.country,
-    checksum,
-    payload,
+    slot: r.slot,
+    careerId: r.careerId,
+    savedAt: r.savedAt,
+    week: r.week,
+    seed: r.seed,
+    bytes: r.bytes,
+    revision: r.revision,
   }
 }
 
@@ -177,9 +183,143 @@ async function getRecord(slot: string): Promise<SaveRecord | undefined> {
     | undefined
 }
 
-async function putRecord(record: SaveRecord): Promise<void> {
+// --- the one-transaction commit (W1-INTEGRITY-A) ------------------------------
+
+/** The typed CAS refusal: the on-disk career revision is not older than the write's. Thrown with
+ *  the transaction ABORTED, so neither the record nor the careers row moved. The worker maps it to
+ *  the wire code 'SAVE_CONFLICT'; `diskRevision` is what the conflict was measured against. */
+export class SaveConflictError extends Error {
+  constructor(
+    readonly diskRevision: number,
+    readonly attemptedRevision: number,
+  ) {
+    super(
+      `Save conflict: this career is at revision ${diskRevision} on disk, ` +
+        `refusing to overwrite it with revision ${attemptedRevision}`,
+    )
+    this.name = 'SaveConflictError'
+  }
+}
+
+/** Newer-generation ordering: committed revision first (the commit order – a clock cannot be one
+ *  across tabs and process restarts), `savedAt` as the tie-break for pre-revision records. */
+function recNewer(a: SaveRecord, b: SaveRecord): boolean {
+  const ra = a.revision ?? 0
+  const rb = b.revision ?? 0
+  return ra !== rb ? ra > rb : a.savedAt > b.savedAt
+}
+
+interface AutosaveCommit {
+  meta: SlotMeta
+  revision: number
+}
+
+/**
+ * The single write path for career progress: save record + careers row, ONE readwrite transaction,
+ * resolved only on `complete` (a request's `success` does not mean durability – the transaction
+ * can still abort after it). Everything async (gzip, sha256) happens BEFORE the transaction opens,
+ * because an awaited non-IDB promise auto-commits an open IndexedDB transaction (see idb.ts).
+ *
+ * Two modes, one flow:
+ *   cas    the caller knows its committed revision and writes `revision`; refused with
+ *          SaveConflictError when the on-disk row is already at that revision or ahead – the
+ *          TB-04 compare-and-swap that keeps a stale tab from clobbering newer progress.
+ *   adopt  the world arrives from OUTSIDE the disk lineage (new career, imported file) and has no
+ *          base to compare; the next revision is allocated INSIDE the transaction as
+ *          disk revision + 1, so even an import over a live career cannot clobber – it appends.
+ */
+async function runAutosaveTx(
+  world: WorldState,
+  opts: { mode: 'cas'; revision: number } | { mode: 'adopt' },
+): Promise<AutosaveCommit> {
+  const { payload, checksum } = await compressWorld(world)
+  const savedAt = nextSavedAt()
   const database = await db()
-  await reqToPromise(tx(database, STORE, 'readwrite').objectStore(STORE).put(record))
+
+  return new Promise<AutosaveCommit>((resolve, reject) => {
+    const transaction = tx(database, [STORE, CAREERS], 'readwrite')
+    const saves = transaction.objectStore(STORE)
+    const careers = transaction.objectStore(CAREERS)
+
+    let out: AutosaveCommit | null = null
+    let failure: Error | null = null
+    const fail = (err: Error): void => {
+      failure ??= err
+      try {
+        transaction.abort()
+      } catch {
+        /* already aborting/finished – the reject below still carries `failure` */
+      }
+    }
+
+    transaction.oncomplete = () =>
+      out ? resolve(out) : reject(failure ?? new Error('Autosave commit finished without writing'))
+    transaction.onabort = () => reject(failure ?? transaction.error ?? new Error('Autosave commit aborted'))
+    transaction.onerror = () => {
+      failure ??= transaction.error ?? new Error('Autosave commit failed')
+    }
+
+    // 1. The careers row – the CAS anchor – read INSIDE the same transaction that will write it.
+    const metaReq = careers.get(world.careerId)
+    metaReq.onsuccess = () => {
+      const existing = metaReq.result as CareerMeta | undefined
+      const diskRevision = existing?.revision ?? 0
+      const revision = opts.mode === 'adopt' ? diskRevision + 1 : opts.revision
+      if (opts.mode === 'cas' && revision <= diskRevision) {
+        fail(new SaveConflictError(diskRevision, revision))
+        return
+      }
+
+      // 2. Both generations, same transaction: pick the OLDER one to overwrite.
+      const aReq = saves.get(autoSlot(world.careerId, 'a'))
+      const bReq = saves.get(autoSlot(world.careerId, 'b'))
+      let pending = 2
+      const results: (SaveRecord | undefined)[] = [undefined, undefined]
+      const step = (): void => {
+        if (--pending > 0) return
+        const [recA, recB] = results
+        let gen: Generation
+        if (!recA) gen = 'a'
+        else if (!recB) gen = 'b'
+        else gen = recNewer(recA, recB) ? 'b' : 'a'
+
+        const record: SaveRecord = {
+          slot: autoSlot(world.careerId, gen),
+          careerId: world.careerId,
+          savedAt,
+          week: world.week,
+          seed: world.seed,
+          bytes: payload.byteLength,
+          kidName: world.profile.kidName,
+          country: world.profile.country,
+          revision,
+          checksum,
+          payload,
+        }
+        const meta: CareerMeta = {
+          careerId: world.careerId,
+          kidName: world.profile.kidName,
+          country: world.profile.country,
+          seed: world.seed,
+          createdAt: existing?.createdAt ?? savedAt,
+          lastPlayedAt: savedAt,
+          week: world.week,
+          revision,
+        }
+        saves.put(record)
+        careers.put(meta)
+        out = { meta: toMeta(record), revision }
+      }
+      aReq.onsuccess = () => {
+        results[0] = aReq.result as SaveRecord | undefined
+        step()
+      }
+      bReq.onsuccess = () => {
+        results[1] = bReq.result as SaveRecord | undefined
+        step()
+      }
+    }
+  })
 }
 
 // --- careers -----------------------------------------------------------------
@@ -188,22 +328,6 @@ export async function listCareers(): Promise<CareerMeta[]> {
   const database = await db()
   const rows = (await reqToPromise(tx(database, CAREERS, 'readonly').objectStore(CAREERS).getAll())) as CareerMeta[]
   return rows.sort((a, b) => b.lastPlayedAt - a.lastPlayedAt)
-}
-
-async function upsertCareer(world: WorldState, playedAt: number): Promise<void> {
-  const database = await db()
-  const store = tx(database, CAREERS, 'readwrite').objectStore(CAREERS)
-  const existing = (await reqToPromise(store.get(world.careerId))) as CareerMeta | undefined
-  const meta: CareerMeta = {
-    careerId: world.careerId,
-    kidName: world.profile.kidName,
-    country: world.profile.country,
-    seed: world.seed,
-    createdAt: existing?.createdAt ?? playedAt,
-    lastPlayedAt: playedAt,
-    week: world.week,
-  }
-  await reqToPromise(store.put(meta))
 }
 
 /** OPENING a career counts as playing it (owner, 29.07).
@@ -263,49 +387,126 @@ export async function deleteSlot(slot: string): Promise<void> {
   await reqToPromise(tx(database, STORE, 'readwrite').objectStore(STORE).delete(slot))
 }
 
-export async function writeNamed(world: WorldState, name: string): Promise<SlotMeta> {
-  const record = await buildRecord(namedSlot(world.careerId, name), world)
-  await putRecord(record)
-  await upsertCareer(world, record.savedAt)
-  return toMeta(record)
+/**
+ * Write a named slot AND refresh the careers row in one transaction (TB-03's "record and metadata
+ * cannot diverge", applied to the manual path too). The record stamps the committed `revision` it
+ * captured. A named write is the player's explicit act on a slot of their own naming, so it is
+ * never CAS-refused – but the careers row only moves FORWARD: `week`/`revision` update only when
+ * this write's revision is not behind the row (a named save from a stale tab must not regress the
+ * career list's resume pointer), while `lastPlayedAt` always bumps (saving is playing).
+ */
+export async function writeNamed(world: WorldState, name: string, revision: number): Promise<SlotMeta> {
+  const { payload, checksum } = await compressWorld(world)
+  const savedAt = nextSavedAt()
+  const database = await db()
+
+  return new Promise<SlotMeta>((resolve, reject) => {
+    const transaction = tx(database, [STORE, CAREERS], 'readwrite')
+    let out: SlotMeta | null = null
+    transaction.oncomplete = () =>
+      out ? resolve(out) : reject(new Error('Named save finished without writing'))
+    transaction.onabort = () => reject(transaction.error ?? new Error('Named save aborted'))
+    transaction.onerror = () => {
+      /* the abort that follows carries transaction.error */
+    }
+
+    const record: SaveRecord = {
+      slot: namedSlot(world.careerId, name),
+      careerId: world.careerId,
+      savedAt,
+      week: world.week,
+      seed: world.seed,
+      bytes: payload.byteLength,
+      kidName: world.profile.kidName,
+      country: world.profile.country,
+      revision,
+      checksum,
+      payload,
+    }
+    transaction.objectStore(STORE).put(record)
+
+    const careers = transaction.objectStore(CAREERS)
+    const metaReq = careers.get(world.careerId)
+    metaReq.onsuccess = () => {
+      const existing = metaReq.result as CareerMeta | undefined
+      const ahead = revision >= (existing?.revision ?? 0)
+      careers.put({
+        careerId: world.careerId,
+        kidName: world.profile.kidName,
+        country: world.profile.country,
+        seed: world.seed,
+        createdAt: existing?.createdAt ?? savedAt,
+        lastPlayedAt: savedAt,
+        week: ahead ? world.week : (existing?.week ?? world.week),
+        revision: ahead ? revision : existing?.revision,
+      } satisfies CareerMeta)
+      out = toMeta(record)
+    }
+  })
 }
 
 // --- autosave (two alternating generations) ----------------------------------
 
-/** Write to the older generation (a/b), then refresh the career's meta. */
-export async function autosave(world: WorldState): Promise<SlotMeta> {
-  const recA = await getRecord(autoSlot(world.careerId, 'a'))
-  const recB = await getRecord(autoSlot(world.careerId, 'b'))
-  let gen: Generation
-  if (!recA) gen = 'a'
-  else if (!recB) gen = 'b'
-  else gen = recA.savedAt <= recB.savedAt ? 'a' : 'b'
+// ⚠ The old `autosave(world)` – write record, then careers row, in two separate transactions with
+// no revision anywhere – is GONE, replaced by the two commits below. Its callers (every worker
+// mutation) now go through the candidate-commit path in sim.worker.ts, which is what makes "the
+// response said ok" and "the bytes are durable" the same statement.
 
-  const record = await buildRecord(autoSlot(world.careerId, gen), world)
-  await putRecord(record)
-  await upsertCareer(world, record.savedAt)
-  return toMeta(record)
+/** Commit the next revision of a career the caller is already playing (CAS mode – see
+ *  runAutosaveTx). `revision` must be the caller's committed revision + 1. */
+export async function commitAutosave(world: WorldState, revision: number): Promise<SlotMeta> {
+  const { meta } = await runAutosaveTx(world, { mode: 'cas', revision })
+  return meta
+}
+
+/** Commit a world that arrived from OUTSIDE the disk lineage (new career, imported file):
+ *  allocates disk revision + 1 inside the transaction and returns it for the caller to adopt. */
+export async function adoptAutosave(world: WorldState): Promise<{ meta: SlotMeta; revision: number }> {
+  return runAutosaveTx(world, { mode: 'adopt' })
 }
 
 /**
  * Read the latest autosave for a career: try the newer generation first, and on a
  * checksum/decode failure fall back to the older one. `recovered` is true only when that
  * fallback actually happened (the newer generation existed but was unreadable).
+ *
+ * "Newer" is decided by committed revision (savedAt only for pre-revision records – see recNewer):
+ * the revision is the commit order by construction, while savedAt is a wall clock.
+ *
+ * `revision` is the ADOPTION POINT for the caller's committed-revision counter: the highest
+ * revision known on disk for this career – whichever generation actually loaded – so the next
+ * CAS commit (adopted + 1) is ahead of everything, including a newer-but-corrupt generation the
+ * fallback skipped (adopting the LOADED record's revision there would wedge every later commit
+ * against the corpse's higher number).
  */
-export async function readLatestAutosave(careerId: string): Promise<{ world: WorldState; recovered: boolean }> {
-  const gens = [await getRecord(autoSlot(careerId, 'a')), await getRecord(autoSlot(careerId, 'b'))]
+export async function readLatestAutosave(
+  careerId: string,
+): Promise<{ world: WorldState; recovered: boolean; revision: number }> {
+  // One readonly transaction for all three rows: a commit from another tab cannot interleave a
+  // torn view of generation pair + careers row into this read.
+  const database = await db()
+  const transaction = tx(database, [STORE, CAREERS], 'readonly')
+  const saves = transaction.objectStore(STORE)
+  const [recA, recB, meta] = (await Promise.all([
+    reqToPromise(saves.get(autoSlot(careerId, 'a'))),
+    reqToPromise(saves.get(autoSlot(careerId, 'b'))),
+    reqToPromise(transaction.objectStore(CAREERS).get(careerId)),
+  ])) as [SaveRecord | undefined, SaveRecord | undefined, CareerMeta | undefined]
+
+  const gens = [recA, recB]
     .filter((r): r is SaveRecord => r !== undefined)
-    .sort((a, b) => b.savedAt - a.savedAt) // newest first
+    .sort((a, b) => (recNewer(a, b) ? -1 : 1)) // newest first
 
   if (gens.length === 0) throw new Error(`No autosave for career "${careerId}"`)
+  const revision = Math.max(meta?.revision ?? 0, ...gens.map((g) => g.revision ?? 0))
 
   try {
     const world = await decompressWorld(gens[0].payload, gens[0].checksum)
-    return { world, recovered: false }
+    return { world, recovered: false, revision }
   } catch (err) {
     if (gens.length > 1) {
       const world = await decompressWorld(gens[1].payload, gens[1].checksum)
-      return { world, recovered: true }
+      return { world, recovered: true, revision }
     }
     throw err
   }

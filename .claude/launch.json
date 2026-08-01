@@ -18,6 +18,11 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview", "--", "--port", "4410"],
       "port": 4410
+    },
+    {
+      "name": "tb-inta",
+      "url": "http://localhost:5640",
+      "port": 5640
     }
   ]
 }

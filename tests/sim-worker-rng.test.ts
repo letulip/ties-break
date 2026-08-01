@@ -44,6 +44,8 @@ interface Reply {
   recovered?: true
   snapshot?: { week: number }
   bytes?: ArrayBuffer
+  /** W1-INTEGRITY-A: every ok reply carries the committed revision; mutations must send it back */
+  revision?: number
 }
 
 const waiters = new Map<number, (r: Reply) => void>()
@@ -123,9 +125,10 @@ describe('a load verifies and resumes — it never replays', () => {
     // below. A legitimate world, and it leaves the property under test the only thing in play.
     world.knock = null
     world.knockHistory = [{ part: 'wrist', sinceWeek: world.week, untilWeek: world.week, choice: 'rest' }]
-    await importIntoWorker(world)
+    const imported = await importIntoWorker(world)
 
-    const ticked = await send({ type: 'tick', weeks: 3 })
+    // W1-INTEGRITY-A: a mutation carries the revision it was decided against – the import reply's.
+    const ticked = await send({ type: 'tick', weeks: 3, baseRevision: imported.revision! })
     expect(ticked.ok, ticked.error).toBe(true)
 
     const after = await exportedWorld()

@@ -120,10 +120,11 @@ function askRestorePrevious(): void {
   if (!prev) return
   pendingConfirm.value = {
     message: 'Restore the previous autosave? This replaces your current progress with the earlier generation.',
-    onConfirm: async () => {
-      await game.load(prev.slot)
-      await game.refreshSlots()
-    },
+    // W1-INTEGRITY-A (TB-01): `restoreSlot`, not `load` — the worker commits the restored state as
+    // the NEWEST autosave before answering, so closing the app right here keeps the restore
+    // (the old `load` swapped memory only, and a relaunch silently rolled back to pre-restore).
+    // The action refreshes slots/careers itself; the manual refreshSlots chaser is gone with it.
+    onConfirm: () => game.restoreSlot(prev.slot),
   }
 }
 
@@ -304,7 +305,10 @@ const reducedMotion = prefersReducedMotion()
           <td class="num">{{ weekLabel(s.week) }}</td>
           <td class="num">{{ (s.bytes / 1024).toFixed(1) }} KB</td>
           <td>
-            <button :disabled="game.busy" @click="game.load(s.slot)">Load</button>
+            <!-- W1-INTEGRITY-A (TB-01): loading a named save makes it the ACTIVE state, so it goes
+                 through restoreSlot – committed as the newest autosave before the button unbusies,
+                 and therefore still the active state after a relaunch. -->
+            <button :disabled="game.busy" @click="game.restoreSlot(s.slot)">Load</button>
             <IconButton
               variant="bare"
               icon="close"
