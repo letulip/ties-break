@@ -8,6 +8,15 @@
 #
 # --force on vue-tsc: `-b` trusts its incremental cache, which has hidden real type errors before
 # (a duplicate-import TS2300 shipped past a cached build on 25.07). Always a full check.
+#
+# ⚠ SIMULATION CALIBRATION (`npm run test:sim`) IS GITHUB-ONLY, ON PURPOSE (P6 (d), 01.08).
+# "Mirrors the GitHub workflows" above deliberately does NOT extend to the weekly Monte-Carlo
+# calibration job (.github/workflows/simulation.yml, cron Mondays 04:00 UTC): the working rule for
+# match-model changes is run-test:sim-locally-and-paste-the-numbers (see that workflow's header),
+# GitLab's role here is PR-gate mirror + Pages, and a second scheduler would double the
+# red-on-green surface while burning the quota minutes this repo counts, on a report nobody reads
+# on this remote. If GitLab ever becomes the primary remote, port simulation.yml then - do not
+# quietly add a sim job to `test`.
 
 default:
   image: node:22
