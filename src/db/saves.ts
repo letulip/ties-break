@@ -67,17 +67,32 @@ export function closeDb(): Promise<void> {
 }
 
 function db(): Promise<IDBDatabase> {
-  dbPromise ??= openDB(DB_NAME, DB_VERSION, (database, oldVersion, tx) => {
-    if (oldVersion < 1) {
-      database.createObjectStore(STORE, { keyPath: 'slot' })
-    }
-    if (oldVersion < 2) {
-      const careers = database.objectStoreNames.contains(CAREERS)
-        ? tx.objectStore(CAREERS)
-        : database.createObjectStore(CAREERS, { keyPath: 'careerId' })
-      migrateV1toV2(tx.objectStore(STORE), careers)
-    }
-  })
+  if (!dbPromise) {
+    // ⚠ A REJECTED OPEN MUST NOT BE CACHED (W1-INTEGRITY-B, TB-06: "a retried database open can
+    // succeed without reloading the page"). This promise memoises the connection, and before this
+    // catch it memoised FAILURE with exactly the same enthusiasm: one denied/blocked open at boot
+    // and every later call – including the recovery screen's own Retry – re-awaited the same dead
+    // promise until the tab was reloaded. So a rejection now clears the cache on its way out
+    // (identity-checked: by the time this async catch runs, closeDb() or a newer open may already
+    // have replaced `dbPromise`, and clobbering a HEALTHY successor with null would re-open a
+    // second connection for no reason). The error still propagates to the caller unchanged –
+    // resetting is not retrying, it only leaves the door unlocked for whoever retries next.
+    const attempt: Promise<IDBDatabase> = openDB(DB_NAME, DB_VERSION, (database, oldVersion, tx) => {
+      if (oldVersion < 1) {
+        database.createObjectStore(STORE, { keyPath: 'slot' })
+      }
+      if (oldVersion < 2) {
+        const careers = database.objectStoreNames.contains(CAREERS)
+          ? tx.objectStore(CAREERS)
+          : database.createObjectStore(CAREERS, { keyPath: 'careerId' })
+        migrateV1toV2(tx.objectStore(STORE), careers)
+      }
+    }).catch((err: unknown) => {
+      if (dbPromise === attempt) dbPromise = null
+      throw err
+    })
+    dbPromise = attempt
+  }
   return dbPromise
 }
 

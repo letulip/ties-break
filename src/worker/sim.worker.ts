@@ -332,9 +332,20 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       return { id: msg.id, ok: true, type: 'exported', bytes: bytes.buffer as ArrayBuffer, filename }
     }
     case 'importSave': {
-      world = await decodeExportFile(new Uint8Array(msg.bytes))
-      const rngRecovered = ensureMainState(world)
-      await autosave(world)
+      // COMMIT-OR-NOTHING (W1-INTEGRITY-B, TB-06). Decode + validate + migrate happen inside
+      // `decodeExportFile` (the full untrusted-input gate, saveCodec/saveGuard), the RNG position
+      // is verified-or-repaired, and the imported career is PERSISTED – all on a local candidate.
+      // `world` moves only on the last line, so a failure at ANY step (a hostile file, a full
+      // disk, a denied IndexedDB) leaves the active career, its autosave chain and the player's
+      // screen exactly as they were. The old order assigned `world` first and autosaved after,
+      // which meant a failed write left the worker playing a career the database had never heard
+      // of. `ensureMainState` stays repair-not-reject on this path deliberately: the v35 suite
+      // (tests/sim-worker-rng.test.ts) pins that a recoverable rngMain imports loudly
+      // (`recovered: true`) rather than stranding the player's own backup.
+      const candidate = await decodeExportFile(new Uint8Array(msg.bytes))
+      const rngRecovered = ensureMainState(candidate)
+      await autosave(candidate)
+      world = candidate
       return snapshotMsg(msg.id, world, rngRecovered)
     }
   }

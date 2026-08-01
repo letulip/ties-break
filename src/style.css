@@ -736,6 +736,34 @@ select {
   padding: 48px 16px;
 }
 
+/* STORAGE RECOVERY (W1-INTEGRITY-B): the screen shown when IndexedDB refuses to open at boot –
+   the failure exit of init()'s loading -> ready | recovery transition. Same quiet column layout
+   as onboarding rather than a modal: this is a full app state, not an interruption of one. */
+.recovery-screen {
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 64px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.recovery-screen h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.recovery-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.recovery-actions button {
+  width: 100%;
+}
+
 /* A2 (owner, 28.07): THE APP HEADER IS GONE, and its whole rule set with it – .app-header,
    .avatar-btn, .kid-name, .status-pill and .kid-hint. The avatar and its callout live on Home's
    photograph now (.diary-avatar-btn / .diary-kid-hint), her name is the 42px hero headline, and
