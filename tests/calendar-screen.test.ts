@@ -662,7 +662,9 @@ describe('the marker opens ONE event, with enter-or-close', () => {
     // pin in tests/round13.test.ts go green off a note in the same slice).
     expect(template).not.toContain('<ConfirmDialog')
     expect(screen).not.toMatch(/^import .*ConfirmDialog/m)
-    for (const fact of ['entry {{ formatDollars(marker.entryFeeCents) }}', 'Travel budget', 'closes {{ weekLabel(marker.deadlineWeek) }}']) {
+    // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars → the shared formatCents (identical string
+    // on screen, one formatter for the app); the card still prints all three facts.
+    for (const fact of ['entry {{ formatCents(marker.entryFeeCents) }}', 'Travel budget', 'closes {{ weekLabel(marker.deadlineWeek) }}']) {
       expect(template, `the card must print ${fact}`).toContain(fact)
     }
     // ...and both cautions are the ENGINE's own sentences, never re-worded here

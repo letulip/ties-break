@@ -12,7 +12,7 @@ import {
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
-import { tierOpensWhen, tierState, type TierStateInput } from '../src/composables/tierState'
+import { entryBandTrack, tierOpensWhen, tierState, type TierStateInput } from '../src/composables/tierState'
 import { activeLadderOfSnapshot, LADDER_POINTS_LABEL } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
 
@@ -207,15 +207,26 @@ describe('S3 — the locked plaque says WHEN the rung opens, off the tier defini
         expect(said).toContain('top 100 internationally')
         expect(said).not.toContain(LADDER_POINTS_LABEL.domestic)
       } else if (tier.enterPointBand[0] > 0) {
-        // A POINTS rung names its floor AND its currency - there are two point tables and this
+        // A POINTS rung names its floor AND its currency - there are THREE point tables and this
         // threshold is denominated in one of them.
-        expect(said).toContain(`${tier.enterPointBand[0]} ${LADDER_POINTS_LABEL.domestic}`)
+        // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins, round-15's find): this expected the DOMESTIC label
+        // on every points rung, which was true until W15 - whose band is ITF junior points (the
+        // on-ramp reads the table below, two-ladders.md §4b) - and the hardcoded label in
+        // `tierOpensWhen` then agreed with the wrong expectation: "age 16 and 120 national pts".
+        // The currency now comes from `entryBandTrack`, the same per-track rule the engine's
+        // entryStatus arm uses, so the guard re-derives instead of naming a table.
+        expect(said).toContain(`${tier.enterPointBand[0]} ${LADDER_POINTS_LABEL[entryBandTrack(id)]}`)
       } else {
         // Local: no age gate, no floor. A threshold of zero is not a threshold.
         expect(said).toBe('open from the start')
       }
-      // Never the international currency, on any rung: no gate in the game is denominated in it.
-      expect(said).not.toContain(LADDER_POINTS_LABEL.itf)
+      // ⚠ RE-AIMED 01.08, same find. This read "never the international currency, on any rung: no
+      // gate in the game is denominated in it" - false since W15 exists. The protected fact, kept
+      // exact: the international unit appears on PRECISELY the rungs whose points gate is
+      // denominated there (today: w15 alone), and on no other - a wrong-table label anywhere else
+      // still fails here.
+      const itfDenominated = tier.enterPct === undefined && tier.enterPointBand[0] > 0 && entryBandTrack(id) === 'itf'
+      expect(said.includes(LADDER_POINTS_LABEL.itf), id).toBe(itfDenominated)
     }
   })
 

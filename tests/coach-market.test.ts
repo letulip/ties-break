@@ -30,7 +30,10 @@ describe('screen T renders what the design specified', () => {
     expect(market).toContain('is-current')
     expect(market).toContain('is-over')
     expect(market).toContain('overBudgetCents')
-    expect(market).toContain('formatDollars(r.overBudgetCents)')
+    // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars died with the shared money module — the
+    // fact protected is unchanged (the shortfall is shown in MONEY, off overBudgetCents); only the
+    // formatter's name moved, to src/shared/money's formatCents.
+    expect(market).toContain('formatCents(r.overBudgetCents)')
     // ...and the over-budget row is dashed and dimmed rather than hidden.
     expect(css).toContain('.cm-row.blocked')
     expect(css).toMatch(/\.cm-row\.blocked\s*\{[^}]*border-style: dashed/)

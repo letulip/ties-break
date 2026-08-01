@@ -35,7 +35,7 @@ import { TIERS, TIER_LADDER } from '../engine/season/calendar'
 import { isCappedTier, tierAgeBlock } from '../engine/world'
 import { weekRange } from '../shared/dates'
 import { LADDER_POINTS_LABEL, type EntryCapUsage } from '../shared/protocol'
-import type { TierId } from '../engine/season/types'
+import type { LadderTrack, TierId } from '../engine/season/types'
 
 export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 'scheduled' | 'unscheduled'
 
@@ -103,11 +103,34 @@ export function preferredWeekEvent<E extends { tier: TierId; entered: boolean }>
 }
 
 /**
+ * THE TABLE A RUNG'S ENTRY THRESHOLD IS COUNTED IN – the UI's copy of `entryStatus`'s own on-ramp
+ * rule (world.ts): the bottom rung of a table is opened by the table BELOW it, because a player
+ * cannot hold a ranking in a table she has never played in. So j30 (itf's on-ramp) reads her
+ * DOMESTIC standing, w15 (wta's on-ramp) reads her ITF JUNIOR standing, and the domestic rungs
+ * read their own table. Written per TRACK, exactly like the engine's arm, so a fourth table would
+ * inherit the rule instead of needing a fourth label fix (docs/specs/two-ladders.md §4b).
+ *
+ * The acceptance rungs above the on-ramps (j60/j300/w35/w100) never carry a points threshold –
+ * their gate is a rank cut – so for them this answer is never printed; it is still the honest one.
+ */
+export function entryBandTrack(id: TierId): Extract<LadderTrack, 'domestic' | 'itf'> {
+  const track = TIERS[id].track
+  return track === 'wta' ? 'itf' : 'domestic'
+}
+
+/**
  * The ONE wording for a point lock – shared, but the NUMBER always comes from the caller.
  *
  * ⚠ AND IT NAMES ITS CURRENCY (30.07, fix/ranking-truth). It used to read "Reach 250 pts", which is
  * two-thirds of a sentence: there are two point tables and this threshold is denominated in the
  * NATIONAL one. See `TierStateInput.points` below for the bug that cost.
+ *
+ * ⚠ THE CURRENCY IS THE TIER'S OWN (01.08, chore/w1-quick-wins, round-15's find). "Denominated in
+ * the NATIONAL one" above was true of every rung that existed when it was written and became a lie
+ * with W15, whose band is ITF junior points – the hardcoded label then printed "58 / 120 national
+ * pts" on a W15 lock chip: domestic numerator, domestic label, ITF threshold. The caller now names
+ * the tier and the label comes off `entryBandTrack` + `LADDER_POINTS_LABEL`, never a spelled-out
+ * string – and the CALLER must supply `points` from that same table (see the two call sites).
  *
  * That split is deliberate and was learned the hard way in the browser: a Season card's lock is the
  * ENGINE's verdict on that specific event (`UpcomingEvent.pointsToEnter`), while the Home ladder's is
@@ -116,12 +139,13 @@ export function preferredWeekEvent<E extends { tier: TierId; entered: boolean }>
  * two sources of truth for one sentence, which is the exact class of bug R10-5 was about. So: every
  * surface keeps its own authoritative number and they all borrow the same words.
  */
-export function pointsLockNote(pointsToEnter: number, points?: number): string {
+export function pointsLockNote(tier: TierId, pointsToEnter: number, points?: number): string {
+  const unit = LADDER_POINTS_LABEL[entryBandTrack(tier)]
   // A FRACTION WHEN THE CALLER KNOWS WHERE SHE STANDS. "112 / 250 pts" answers both halves of the
   // player's question in one glance - what opens this, and how far off is she - where "Reach 250 pts"
   // answered only the first and left the second on a screen she had to go and find.
-  if (points === undefined) return `Reach ${pointsToEnter} ${LADDER_POINTS_LABEL.domestic}`
-  return `${points} / ${pointsToEnter} ${LADDER_POINTS_LABEL.domestic}`
+  if (points === undefined) return `Reach ${pointsToEnter} ${unit}`
+  return `${points} / ${pointsToEnter} ${unit}`
 }
 
 /**
@@ -169,7 +193,10 @@ export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
         : `the top ${Math.round(tier.enterPct * 100)}% internationally`,
     )
   } else if (minPoints > 0) {
-    clauses.push(`${minPoints} ${LADDER_POINTS_LABEL.domestic}`)
+    // The band's OWN currency (01.08): this clause fires for the domestic rungs and both on-ramps,
+    // and w15's band is ITF junior points – "age 16 and 120 national pts" was the same wrong-label
+    // bug pointsLockNote had, one sentence over.
+    clauses.push(`${minPoints} ${LADDER_POINTS_LABEL[entryBandTrack(id)]}`)
   }
   // Local: no age gate, no floor. "Open from the start" rather than "0 pts" – a threshold of zero is
   // not a threshold, and printing one invites the player to look for progress against it.
@@ -320,6 +347,12 @@ export interface TierStateInput {
    *  acceptance-list lock reads it, and only to finish the sentence "it takes the top 100 – she is
    *  #128", which is the same sentence `entryStatus` writes on an individual event's card. */
   itfRank?: number | null
+  /** HER ITF JUNIOR POINTS - her windowed best-6 in the INTERNATIONAL table (01.08, round-15's
+   *  find). Only the w15 band arm reads it: W15's threshold is denominated THERE (`entryBandTrack`),
+   *  and comparing/printing her domestic total against it was the "58 / 120 national pts" chip.
+   *  Optional for the pure callers that predate it - a wta rung then reads 0, which is the safe
+   *  direction (locked with an honest label) for a caller that did not say where she stands. */
+  itfPoints?: number
 }
 
 /**
@@ -362,20 +395,40 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
       title: `${tier.label} – opens at ${tierOpensWhen(id, input.acceptsRank)}`,
     }
   }
-  if (input.points < minPoints) {
+  // ⚠ THE BAND IS COMPARED IN ITS OWN CURRENCY (01.08, round-15's find). `input.points` is her
+  // DOMESTIC total, and that is the right ruler for the domestic rungs and for j30's on-ramp - but
+  // W15's band is ITF JUNIOR points (`entryBandTrack`), and holding her domestic 58 against its ITF
+  // 120 produced both a wrong verdict (a lock the engine may not agree with) and a wrong chip
+  // ("58 / 120 national pts"). The numerator, the comparison, the note and the title all read the
+  // ONE number below, so they cannot mix tables among themselves.
+  const bandTrack = entryBandTrack(id)
+  const bandPoints = bandTrack === 'itf' ? (input.itfPoints ?? 0) : input.points
+  if (bandPoints < minPoints) {
+    // WHERE THE MISSING POINTS ARE EARNED, by table. The domestic sentence is the one this arm has
+    // always said; the international one is its exact mirror for the w15 on-ramp - the J rungs are
+    // the only events that pay the currency that band is counted in. Prose in a table rather than
+    // derived from TIERS: "Local, Regional and National" are the player's short names, not the
+    // catalogue's labels, and LADDER_LABEL supplies the currency word either way.
+    const earnedAt: Record<'domestic' | 'itf', string> = {
+      domestic: 'National points come from Local, Regional and National events.',
+      itf: 'International points come from Junior Tour events.',
+    }
     return {
       id,
       kind: 'locked',
       pointsToEnter: minPoints,
-      note: pointsLockNote(minPoints, input.points),
+      note: pointsLockNote(id, minPoints, bandPoints),
       // THE LONG FORM CARRIES THE PLAN. The chip has room for the fraction; the tooltip has room for
       // what the fraction would take, and for the one sentence that says which of the two point
       // tables this threshold is even counted in.
+      // The gap-in-results plan is DOMESTIC arithmetic (gapInResultsNote reads the domestic rungs
+      // only - the two ladders have no exchange rate), so an ITF-denominated gap states the table
+      // and stops rather than offering a plan priced in the wrong currency.
       title:
-        `${tier.label} – locked: ${minPoints - input.points} more ${LADDER_POINTS_LABEL.domestic} ` +
-        `(she has ${input.points} of ${minPoints})` +
-        `${gapInResultsNote(minPoints - input.points, input.points) ? ` – ${gapInResultsNote(minPoints - input.points, input.points)}` : ''}` +
-        `. National points come from Local, Regional and National events.`,
+        `${tier.label} – locked: ${minPoints - bandPoints} more ${LADDER_POINTS_LABEL[bandTrack]} ` +
+        `(she has ${bandPoints} of ${minPoints})` +
+        `${bandTrack === 'domestic' && gapInResultsNote(minPoints - bandPoints, bandPoints) ? ` – ${gapInResultsNote(minPoints - bandPoints, bandPoints)}` : ''}` +
+        `. ${earnedAt[bandTrack]}`,
     }
   }
   // ⚠ OUTGROWN COMES BEFORE THE ENGINE FALLBACK, and it did not used to (30.07, fix/ranking-truth).
@@ -392,7 +445,10 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   //
   // It was invisible before only because this rule was being fed her ITF points, which are ~0 all
   // through the early game, so `points > maxPoints` was never true and the case never arose.
-  if (input.points > maxPoints) {
+  // (`bandPoints`, like the floor above: a ceiling is denominated in the same table as its floor.
+  // Identical reads for every rung this arm can fire on - only the domestic rungs have a real
+  // ceiling, and there bandPoints IS input.points.)
+  if (bandPoints > maxPoints) {
     return {
       id,
       kind: 'outgrown',
@@ -499,6 +555,8 @@ export function useTierStates(): ComputedRef<TierState[]> {
         engineOpen: snap?.tierOpen?.[id],
         acceptsRank: snap?.tierAcceptance?.[id],
         itfRank: snap?.ladders.itf.rank ?? null,
+        // ...and her ITF junior total, for the one band denominated there (w15 - see itfPoints).
+        itfPoints: snap?.ladders.itf.points ?? 0,
       }),
     )
   })

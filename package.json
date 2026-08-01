@@ -19,7 +19,7 @@
     "bench:radar": "vite-node tools/radar-bench.ts",
     "test": "vitest run --project unit",
     "test:watch": "vitest",
-    "test:sim": "vitest run --project sim",
+    "test:sim": "vitest run --project sim --no-file-parallelism",
     "test:all": "vitest run"
   },
   "dependencies": {

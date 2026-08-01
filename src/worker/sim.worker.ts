@@ -2,6 +2,7 @@ import {
   createWorld,
   tickWeek,
   advanceWeeks,
+  pendingKnock,
   enterEvent,
   withdrawEvent,
   cancelEntry,
@@ -79,7 +80,23 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     }
     case 'tick': {
       if (!world || !rng) throw new Error('No active career')
-      for (let i = 0; i < msg.weeks; i++) tickWeek(world, rng)
+      // ⚠ THE RAW LOOP MUST NOT OUTRUN A DECISION (P6 (c)). `advanceWeeks` refuses to move time
+      // while a reveal or an unanswered knock is open – that contract is the whole W4 slice – but
+      // this loop used to skip those guards: with a reveal open, tickWeek keeps running, skips
+      // recomputeRankAndMilestones/housekeep/maybeFireSeasonWrapUp every subsequent week, and can
+      // overwrite the unresolved reveal with a fresh computeShadowTournament. So the same two
+      // predicates hold here, in both positions. At ENTRY it is a refusal – the typed error every
+      // handler uses, because the caller asked for something the engine forbids. MID-LOOP it is a
+      // stop: the returned snapshot then carries the pending state, so the UI mounts the
+      // tournament flow / knock dialog exactly as it does after `advance`. Fewer ticks than asked
+      // is RNG-safe – restoreRng replays by `world.week` count, not by the request.
+      if (world.pendingTournament || pendingKnock(world)) {
+        throw new Error('A decision is open – resolve the tournament or knock before skipping weeks')
+      }
+      for (let i = 0; i < msg.weeks; i++) {
+        if (world.pendingTournament || pendingKnock(world)) break
+        tickWeek(world, rng)
+      }
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }

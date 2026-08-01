@@ -42,6 +42,7 @@ import { sessionDays, sessionsForPlan } from '../composables/weekDays'
 import { vacationPackage } from '../engine/economy'
 import { weekArtUrl, weekSceneArtUrl } from '../art/weeks'
 import { weekLabel } from '../shared/dates'
+import { formatCentsSigned } from '../shared/money'
 import PracticeFlow from './PracticeFlow.vue'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
@@ -226,11 +227,6 @@ const noteIsProse = computed(
   () => !!(game.snapshot?.diary.travelNote ?? game.snapshot?.diary.weekNote),
 )
 
-function formatSigned(cents: number): string {
-  const dollars = Math.round(cents / 100)
-  const sign = dollars < 0 ? '-' : '+'
-  return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
-}
 
 // --- MOOD (D's third card) -----------------------------------------------------------------------
 // D draws a 38px yellow smiley with painted brows. WE HAVE HER ACTUAL FACE, and the engine already
@@ -388,11 +384,11 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
         <div class="recap-rows">
           <div class="recap-row">
             <span class="recap-row-key">Income</span>
-            <span class="recap-row-val num positive">{{ formatSigned(incomeCents) }}</span>
+            <span class="recap-row-val num positive">{{ formatCentsSigned(incomeCents) }}</span>
           </div>
           <div class="recap-row">
             <span class="recap-row-key">Spent</span>
-            <span class="recap-row-val num negative">{{ formatSigned(expenseCents) }}</span>
+            <span class="recap-row-val num negative">{{ formatCentsSigned(expenseCents) }}</span>
           </div>
         </div>
         <span class="recap-hairline"></span>
@@ -401,7 +397,7 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
           <span
             class="recap-balance num"
             :class="balanceCents < 0 ? 'negative' : 'positive'"
-          >{{ formatSigned(balanceCents) }}</span>
+          >{{ formatCentsSigned(balanceCents) }}</span>
         </div>
       </Card>
 

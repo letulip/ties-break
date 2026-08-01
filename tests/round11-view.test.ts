@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { surfaceStyleAffinity, surfaceStyleHint, SURFACE_STYLE_DELTAS } from '../src/engine/match/style'
-import { HORIZON_WEEKS, gapInResultsNote, isTierOpen, pointsLockNote, tierState, type TierStateInput } from '../src/composables/tierState'
+import { HORIZON_WEEKS, entryBandTrack, gapInResultsNote, isTierOpen, pointsLockNote, tierState, type TierStateInput } from '../src/composables/tierState'
+import { LADDER_POINTS_LABEL } from '../src/shared/protocol'
 import { resultShowsOnHerFace } from '../src/composables/kidEmotion'
 import type { PlayStyle, WorldEvent, WorldMatch } from '../src/shared/protocol'
 import type { Surface } from '../src/engine/match/types'
@@ -386,10 +387,45 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     //     of what a player is asking and the old copy answered only the other half.
     // The one-argument form is kept and still tested, for callers that have the threshold but not her
     // total.
-    expect(pointsLockNote(180)).toBe('Reach 180 national pts')
-    expect(pointsLockNote(180, 112)).toBe('112 / 180 national pts')
+    //
+    // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins, round-15's find). "every rung's band is denominated
+    // there" - the claim three lines up - stopped being true the day W15 arrived: its band is ITF
+    // JUNIOR points (the on-ramp reads the table below, docs/specs/two-ladders.md §4b), and this
+    // function hardcoded the domestic label, so a W15 lock chip printed "58 / 120 national pts".
+    // The wording rule is UNCHANGED and still pinned below; what moved is that the function now
+    // takes the TIER and names the currency of that tier's own threshold table. The per-rung
+    // coverage lives in the describe right below this one.
+    expect(pointsLockNote('regional', 180)).toBe('Reach 180 national pts')
+    expect(pointsLockNote('regional', 180, 112)).toBe('112 / 180 national pts')
     const lock = seasonScreen.slice(seasonScreen.indexOf('function lockLabel'), seasonScreen.indexOf('// --- R11-5a'))
     expect(lock).toContain('e.pointsToEnter')
+  })
+
+  // --- W1-QUICK stowaway: the lock names the currency OF THE TIER'S OWN TABLE ---------------------
+  // Round-15's browser find: the W15 lock chip said "58 / 120 national pts" for a band denominated
+  // in ITF junior points - the numerator was her domestic total, the label the domestic one, and the
+  // threshold the engine's ITF-denominated 120. `entryStatus`'s on-ramp arm already knew the rule
+  // (j30 reads her DOMESTIC standing, w15 her ITF JUNIOR standing - the on-ramp is always the table
+  // below); the UI's copy of the sentence now derives from the same mapping via `entryBandTrack`,
+  // never a hardcoded label - so a fourth table would inherit the rule instead of a fourth bug.
+  describe('pointsLockNote names each rung\'s own currency', () => {
+    it('every rung labels its threshold with LADDER_POINTS_LABEL of its band track', () => {
+      for (const id of TIER_LADDER) {
+        const expected = LADDER_POINTS_LABEL[entryBandTrack(id)]
+        expect(pointsLockNote(id, 120), id).toBe(`Reach 120 ${expected}`)
+        expect(pointsLockNote(id, 120, 58), id).toBe(`58 / 120 ${expected}`)
+      }
+    })
+
+    it('the two on-ramps read the table below; the domestic rungs read their own', () => {
+      // The named cases the mapping exists for, pinned in words so a re-track re-reads this:
+      expect(entryBandTrack('j30')).toBe('domestic') // ITF's on-ramp = her national standing
+      expect(entryBandTrack('w15')).toBe('itf') // WTA's on-ramp = her ITF junior standing
+      for (const id of ['local', 'regional', 'national'] as const) expect(entryBandTrack(id)).toBe('domestic')
+      // ...and the chip copy those two facts were found through:
+      expect(pointsLockNote('w15', 120, 58)).toBe(`58 / 120 ${LADDER_POINTS_LABEL.itf}`)
+      expect(pointsLockNote('j30', 250, 180)).toBe(`180 / 250 ${LADDER_POINTS_LABEL.domestic}`)
+    })
   })
 
   // --- item 26: the gate has to be LEGIBLE, and that is a property a test can hold ----------------

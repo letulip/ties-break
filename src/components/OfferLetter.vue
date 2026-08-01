@@ -42,6 +42,7 @@
 // is the same invisibility one step later.
 import { computed } from 'vue'
 import type { KitOfferTerms, Offer } from '../shared/protocol'
+import { formatCents } from '../shared/money'
 import PaperNote from './ui/PaperNote.vue'
 
 const props = defineProps<{ offer: Offer; week: number }>()
@@ -97,7 +98,6 @@ const live = computed(() => props.offer.state === 'open' && props.week <= props.
 /** How long is left, in whole weeks, counting the current one. The quiet half of the owner's ask:
  *  «давать человеку какое-то время на подумать». */
 const weeksLeft = computed(() => Math.max(0, props.offer.deadlineWeek - props.week + 1))
-const dollars = (cents: number) => `$${Math.round(cents / 100).toLocaleString('en-US')}`
 
 /** What the paper says has already happened, for a letter that is no longer a decision. Kept in the
  *  inbox rather than deleted, because "what did I do about that?" is a real question and the answer
@@ -145,7 +145,7 @@ const settled = computed(() => {
            last line is the FAILURE MODE, and the script header above says why it has to be here. -->
       <ul class="offer-terms">
         <li>
-          Her {{ coveredList }} – up to {{ dollars(terms.kitAllowanceCents) }} of kit over the
+          Her {{ coveredList }} – up to {{ formatCents(terms.kitAllowanceCents) }} of kit over the
           season, on us.<template v-if="uncoveredList"> Her {{ uncoveredList }} stay hers.</template>
         </li>
         <li>
