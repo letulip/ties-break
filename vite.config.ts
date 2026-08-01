@@ -43,9 +43,12 @@ function artPipeline(): Plugin {
 
 // BASE_PATH is set by CI to "/<repo-name>/" for GitHub Pages; locally the app serves from "/".
 /** The Monte-Carlo files: 104s of the suite's 183s, and the reason CI's reporter RPC times out.
- *  Declared once so the two projects below cannot disagree about which files are heavy. */
+ *  Declared once so the two projects below cannot disagree about which files are heavy.
+ *  econ-reach is the reach-tracker describe SPLIT OUT of econ-bench (P6 (d)): that describe alone
+ *  was ~40s, and no sim file may sit near birpc's hard 60s RPC ceiling on a 2-core runner. */
 const HEAVY_SIM_FILES = [
   '**/tests/econ-bench.test.ts',
+  '**/tests/econ-reach.test.ts',
   '**/tests/fatigue-bench.test.ts',
   '**/tests/match/calibration.test.ts',
 ]
@@ -64,8 +67,11 @@ export default defineConfig({
         name: 'Ties Break: Ace Parent',
         short_name: 'Ties Break',
         description: 'Raise a tennis star: an honest career simulation.',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        // = style.css --bg (the 28.07 darker palette). Pinned to it by tests/design-tokens.test.ts:
+        // these two and index.html's meta are the copies CSS cannot reach, and they lagged the
+        // palette by four days once already (Android status bar + install splash on the old slate).
+        theme_color: '#0a0e13',
+        background_color: '#0a0e13',
         display: 'standalone',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
@@ -217,6 +223,20 @@ export default defineConfig({
         // MERGES with the root's `tests/**/*.test.ts` and the project collects the whole suite - which
         // is what it did on the first attempt (76 files instead of 3). Without it the include is the
         // only one, which is the whole point of the split.
+        //
+        // ⚠ THE SIM RUN IS SERIALISED - BUT THE SWITCH LIVES ON THE `test:sim` SCRIPT, NOT HERE.
+        // WHY serialise (P6 (d)): birpc gives every worker RPC a HARD-CODED 60s timeout
+        // (node_modules/birpc DEFAULT_TIMEOUT = 6e4 - not configurable in vitest 3.2.7), and these
+        // files are minutes of synchronous Monte-Carlo. Run in parallel on the weekly 2-core runner,
+        // the forks and the main process fight for cores and a pending `onTaskUpdate` ack can sit
+        // past the minute - `test:sim` then exits 1 with every test green (reproduced twice, even on
+        // an idle 10-core machine). One file at a time leaves the main process a core, so acks flow.
+        // WHY not `fileParallelism: false` right here, which is where you would look for it: vitest
+        // 3.2.7 IGNORES it at project level - createForksPool builds ONE pool for the whole run off
+        // the ROOT config (`vitest.config.fileParallelism` / `vitest.config.poolOptions`, verified
+        // in dist source), so a project-level flag changes nothing (measured: 288% CPU, files
+        // overlapping). The honest lever is the CLI flag on the one script that runs this project:
+        // package.json `test:sim` carries `--no-file-parallelism`. `npm test` (unit) is untouched.
         test: { name: 'sim', include: HEAVY_SIM_FILES },
       },
     ],

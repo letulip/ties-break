@@ -30,6 +30,12 @@ const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
 const confirmingNewCareer = ref(false)
 
+// P6 (c): the ▶▶ 52 fast-forward is a DEV TOOL and must not ship – it drives the worker's raw
+// `tick` command, which (unlike `advance`) never stops for deadlines, injuries or the season wrap.
+// This flag is the build-time half of the fix; the worker's own refusal of a pending
+// tournament/knock is the other, and neither is sufficient alone (tests/dev-fast-forward.test.ts).
+const isDev = import.meta.env.DEV
+
 // game.tick()/setPlan() don't refresh `careers` (only newCareer/loadCareer/deleteCareer/
 // importSave do – see game.ts), so the active career's week/lastPlayedAt can go stale
 // while the player stays on Home ticking weeks. App.vue mounts this screen fresh each
@@ -341,8 +347,10 @@ const reducedMotion = prefersReducedMotion()
       </div>
     </template>
 
-    <hr class="card-divider" />
-    <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
+    <!-- Dev builds only (P6 (c)) – see `isDev` in the script. The divider goes with the button:
+         a rule above an element that is not there is dead chrome in every player's build. -->
+    <hr v-if="isDev" class="card-divider" />
+    <button v-if="isDev" :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
   </section>
 
   <section>

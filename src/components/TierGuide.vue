@@ -19,6 +19,7 @@ import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
 import { tierOpensWhen } from '../composables/tierState'
+import { formatCents } from '../shared/money'
 import type { TierId } from '../engine/season/types'
 import IconButton from './ui/IconButton.vue'
 
@@ -28,9 +29,6 @@ const game = useGameStore()
 
 const TIER_ORDER: TierId[] = [...TIER_LADDER]
 
-function formatDollars(cents: number): string {
-  return `$${Math.round(cents / 100).toLocaleString('en-US')}`
-}
 
 interface TierRow {
   id: TierId
@@ -49,8 +47,8 @@ const rows = computed<TierRow[]>(() =>
       id,
       label: t.label,
       drawSize: t.drawSize,
-      entryFee: formatDollars(t.entryFeeCents),
-      travelRange: `${formatDollars(t.travelCostCents[0])}–${formatDollars(t.travelCostCents[1])}`,
+      entryFee: formatCents(t.entryFeeCents),
+      travelRange: `${formatCents(t.travelCostCents[0])}–${formatCents(t.travelCostCents[1])}`,
       points: t.points.join(' / '),
       // The gate the ENGINE applies, in one clause per condition – see `tierOpensWhen`. The live
       // acceptance cut comes off the snapshot for the two rungs that have one, so the guide quotes

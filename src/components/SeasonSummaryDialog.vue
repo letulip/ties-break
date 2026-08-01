@@ -24,6 +24,7 @@
 // object, and recolouring it is the owner's call and he has not made it.
 import { computed } from 'vue'
 import { useGameStore } from '../stores/game'
+import { formatCentsSigned } from '../shared/money'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 import PaperNote from './ui/PaperNote.vue'
@@ -34,11 +35,6 @@ defineEmits<{ continue: [] }>()
 const game = useGameStore()
 const summary = computed(() => game.snapshot?.lastSeasonSummary ?? null)
 
-function formatSigned(cents: number): string {
-  const dollars = Math.round(cents / 100)
-  const sign = dollars < 0 ? '-' : '+'
-  return `${sign}$${Math.abs(dollars).toLocaleString('en-US')}`
-}
 
 // R11-12a: the owner read the single net-delta line as the season's SPEND and compared it against
 // the wallet's "This season" total, which is gross spend – two right numbers that look like one
@@ -128,18 +124,18 @@ const rankedItf = computed(() => game.snapshot?.ladders.itf.rank !== null)
           <div class="season-rows">
             <div v-if="spentCents !== undefined" class="season-row">
               <span class="season-key">Spent this season</span>
-              <span class="season-val num negative">{{ formatSigned(-spentCents) }}</span>
+              <span class="season-val num negative">{{ formatCentsSigned(-spentCents) }}</span>
             </div>
             <div v-if="earnedCents !== undefined" class="season-row">
               <span class="season-key">Earned this season</span>
-              <span class="season-val num positive">{{ formatSigned(earnedCents) }}</span>
+              <span class="season-val num positive">{{ formatCentsSigned(earnedCents) }}</span>
             </div>
             <!-- v21: the scholarship never shows up in "Earned" – its travel half is a discount on
                  the travel line, not income – so this is the only place the year's help is a number.
                  Hidden at zero: a family nobody backed should not read a row of dashes. -->
             <div v-if="(summary.academyCoveredCents ?? 0) > 0" class="season-row">
               <span class="season-key">Academy covered</span>
-              <span class="season-val num positive">{{ formatSigned(summary.academyCoveredCents ?? 0) }}</span>
+              <span class="season-val num positive">{{ formatCentsSigned(summary.academyCoveredCents ?? 0) }}</span>
             </div>
           </div>
           <span class="season-hairline"></span>
@@ -148,7 +144,7 @@ const rankedItf = computed(() => game.snapshot?.ladders.itf.rank !== null)
             <span
               class="season-net num"
               :class="{ negative: summary.fundsDeltaCents < 0, positive: summary.fundsDeltaCents >= 0 }"
-            >{{ formatSigned(summary.fundsDeltaCents) }}</span>
+            >{{ formatCentsSigned(summary.fundsDeltaCents) }}</span>
           </div>
         </Card>
       </div>

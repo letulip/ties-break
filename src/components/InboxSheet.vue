@@ -14,6 +14,7 @@
 // committing is the same sentence the letter made.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
+import { formatCents } from '../shared/money'
 import type { KitOfferTerms, Offer } from '../shared/protocol'
 import OfferLetter from './OfferLetter.vue'
 import ConfirmDialog from './ConfirmDialog.vue'
@@ -36,7 +37,7 @@ const LINE_WORDS: Record<string, string> = { strings: 'strings', frame: 'racquet
 const confirmMessage = computed(() => {
   if (!pendingSign.value) return ''
   const t = pendingSign.value.terms as KitOfferTerms
-  const value = `$${Math.round(t.kitAllowanceCents / 100).toLocaleString('en-US')}`
+  const value = formatCents(t.kitAllowanceCents)
   const words = t.covers.map((l) => LINE_WORDS[l] ?? l)
   const covered = words.length === 1 ? words[0] : `${words.slice(0, -1).join(', ')} and ${words[words.length - 1]}`
   const seasons = (t.seasons ?? 1) === 1 ? 'a season' : `${t.seasons} seasons`

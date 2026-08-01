@@ -73,6 +73,7 @@ import { useWeekAction } from '../../composables/weekAction'
 // the beat holds, the localStorage pair); what is here is the seven spans and the timers.
 import { DAY_CROSS_PACE, dayCrossPace, dayCrossRuns, dayCrossSchedule } from '../../composables/dayCross'
 import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
+import { formatCents } from '../../shared/money'
 import { surfaceStyleHint } from '../../engine/match/style'
 import { venueArtUrl } from '../../art/venues'
 import ScreenShell from '../ui/ScreenShell.vue'
@@ -230,9 +231,6 @@ function enterMarker(e: UpcomingEvent): void {
 const fundsCents = computed(() => game.snapshot?.fundsCents ?? 0)
 function fundsShort(e: UpcomingEvent): boolean {
   return fundsCents.value < e.entryFeeCents
-}
-function formatDollars(cents: number): string {
-  return `$${Math.round(cents / 100).toLocaleString('en-US')}`
 }
 /** The share of every trip the academy pays, as a percentage – the travel figure below is already net
  *  of it, and a smaller number with no explanation is worse than no discount (v21). */
@@ -609,12 +607,12 @@ const showGo = computed(() => !game.snapshot?.pending)
 
         <div class="cal-card-money">
           <p class="cal-card-money-label">Travel budget</p>
-          <p class="cal-card-money-figure">{{ formatDollars(marker.travelCostCents) }}</p>
+          <p class="cal-card-money-figure">{{ formatCents(marker.travelCostCents) }}</p>
           <p v-if="academyCoverPct > 0" class="cal-card-money-sub">academy covers {{ academyCoverPct }}%</p>
         </div>
 
         <div class="controls cal-card-chips">
-          <span class="entry-fee">entry {{ formatDollars(marker.entryFeeCents) }}</span>
+          <span class="entry-fee">entry {{ formatCents(marker.entryFeeCents) }}</span>
           <span class="pill">closes {{ weekLabel(marker.deadlineWeek) }}</span>
           <span v-if="marker.entered" class="pill ok">Entered</span>
         </div>
