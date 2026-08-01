@@ -182,3 +182,7 @@ ceiling was never the ladder. It was her calendar.
   plateau.
 - **She always plays up** (§2c) — which the rest-floor table now reframes: playing up while wrecked
   is the trap, and the fix for both may be the same one.
+- **The double-pay term was never isolated here.** Every entered event is played twice and paid
+  twice (canonical bracket + her shadow run, only her row committed), so she can never take points
+  off a rival. Now measured on this page's own cell and method, against a pre-registered threshold:
+  `docs/specs/dual-universe.md` (P5 Phase A, `npm run bench:dual`).
