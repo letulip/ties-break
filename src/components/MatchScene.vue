@@ -11,51 +11,48 @@
 //   * TournamentFlow, the pre-match card of every tournament round;
 //   * PracticeFlow, the same card for a booked friendly ("F Match Day does the same job" –
 //     ui-inventory §2);
-//   * TournamentFlow again, on the finale, where the poster's photograph is the same painting under
-//     the same crop rule (the poster frames it rather than bleeding it, so it composes the frame
-//     itself – see `.tf-poster-photo` there).
+//   * TournamentFlow again, on the finale, where the poster's photograph keeps the face-table crop
+//     (the poster frames a small square, so a crop is its whole mechanism – see `.tf-poster-photo`
+//     there).
 //
-// WHAT IT OWNS: the card, the painting, the crop, the two scrims and the round pill. WHAT THE
-// CALLER OWNS: what is written on the glass plate. Same division as ui/Polaroid.vue – the frame is
-// the object, where it sits and what is in it is the screen's business.
+// WHAT IT OWNS: the card, the painting, the two scrims and the round pill. WHAT THE CALLER OWNS:
+// what is written on the glass plate. Same division as ui/Polaroid.vue – the frame is the object,
+// where it sits and what is in it is the screen's business.
 //
 // THE PAINTING IS HERS. We ship no match-scene art and none is coming (owner, §4 Q4: "art is
 // settled"), so F's `match-live` slot is filled by the emotion-correct portrait the rest of the app
-// already uses – warmed by src/art/preload.ts before the tournament week opens, and cropped through
-// the SAME face table (src/art/faceRects.ts) as Home's hero, so her face lands in frame instead of
-// her knees.
+// already uses – warmed by src/art/preload.ts before the tournament week opens.
+//
+// ⚠ THE WHOLE PAINTING, UNCROPPED (owner, 01.08): «ничего не надо нормировать, просто изображение
+// в полную высоту и всё, какое есть - такое и ок». This card used to be a fixed-height cover crop
+// steered by the face table (src/art/faceRects.ts), and the crop was the complaint: the paintings
+// frame her head at different sizes (teen-serious 182px of 512 against young-serious 124), so the
+// close-up jumped from band to band and the teen band read far too tight. A scale-normalisation
+// pass was designed and REJECTED – the ruling is that the scene simply shows the painting. So the
+// card is the painting's own square (width-bound, aspect-ratio 1/1), the img is `contain` and can
+// crop nothing, and this component no longer reads the face table at all. The scrims and the glass
+// plate ride over the art exactly as before – the foot of a full painting is her midriff rather
+// than her knees, which is what the plate always wanted to sit on anyway.
 import { computed } from 'vue'
 import Card from './ui/Card.vue'
 import { finaleUrl } from '../art/preload'
-import { facePoint } from '../art/faceRects'
 import type { AvatarEmotion, PortraitStage } from '../shared/avatarEmotion'
 
-const props = withDefaults(
-  defineProps<{
-    /** her age band – the caller reads it off `useKidEmotion()`, never off her age directly */
-    stage: PortraitStage
-    /** which painting: `serious` before a match she is about to play, `happy` / `sad` after */
-    emotion: AvatarEmotion
-    /** the round pill over the top-left corner ("Quarterfinal", "Friendly at the club") */
-    label?: string
-    /** the scene's height in px. The design's F fills the screen; ours sits in a scrolling
-     *  takeover, so the caller says how much of it this scene is worth. */
-    height?: number
-  }>(),
-  { label: '', height: 396 },
-)
+const props = defineProps<{
+  /** her age band – the caller reads it off `useKidEmotion()`, never off her age directly */
+  stage: PortraitStage
+  /** which painting: `serious` before a match she is about to play, `happy` / `sad` after */
+  emotion: AvatarEmotion
+  /** the round pill over the top-left corner ("Quarterfinal", "Friendly at the club") */
+  label?: string
+}>()
 
 const src = computed(() => finaleUrl(props.stage, props.emotion))
-/** `object-position` off the ONE crop table, exactly like Home's photo card. */
-const focus = computed(() => {
-  const p = facePoint(`${props.stage}-${props.emotion}`)
-  return { objectPosition: `${p.x}% ${p.y}%` }
-})
 </script>
 
 <template>
-  <Card variant="photo" class="scene" :style="{ minHeight: `${height}px` }">
-    <img class="scene-art" :src="src" :style="focus" alt="" />
+  <Card variant="photo" class="scene">
+    <img class="scene-art" :src="src" alt="" />
     <!-- The design's two scrims (§F): a light one at the head so the round pill keeps its edge, and
          the heavy 220px one at the foot that the glass plate sits in. -->
     <span class="scene-scrim" aria-hidden="true"></span>
@@ -68,17 +65,27 @@ const focus = computed(() => {
 
 <style scoped>
 /* `Card variant="photo"` is already a clipped flex column with no inset, which is exactly what a
-   card a painting bleeds into needs; all this adds is the positioning context for the art. */
+   card a painting bleeds into needs; all this adds is the positioning context for the art.
+
+   ⚠ THE CARD IS THE PAINTING'S OWN SQUARE (owner, 01.08 – see the header). The paintings are
+   512x512, so `aspect-ratio: 1 / 1` on the card IS "the image at full height": width-bound, the
+   whole painting, nothing cropped. The old fixed `height` prop went with the crop – a fixed height
+   plus a full painting would letterbox, and a prop nobody passed was already just the number 396. */
 .scene {
   position: relative;
+  aspect-ratio: 1 / 1;
 }
 
+/* `contain`, not `cover`, and on a square box over a square painting the two would render the same
+   pixels today – the point of saying `contain` is that this img CANNOT crop, whatever shape a
+   future card or a future painting takes. No `object-position`: there is nothing to steer when
+   everything is in frame. */
 .scene-art {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* Values from the design's F (docs/design/README.md §F "Сцена"): the foot scrim runs to

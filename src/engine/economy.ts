@@ -576,7 +576,7 @@ export const ECONOMY = {
        *  A QUARTER OF THE FARE, and the size is read off the wealth corridor rather than picked: a
        *  trip costs a wealthy family x1.2-1.3 of the sticker and a middle one x0.95-1.05, so a
        *  quarter off is worth almost exactly ONE STEP DOWN that corridor. It is deliberately nowhere
-       *  near `ECONOMY.academy.travelCover` (0.8): the academy is a need-based rescue that decides
+       *  near `ECONOMY.academy.travelCover` (0.75 since R15-7): the academy is a need-based rescue that decides
        *  whether a working family survives at all, and a brand must not quietly become a second one.
        *  This helps a family reach further; it does not carry it.
        *
@@ -796,8 +796,21 @@ export const ECONOMY = {
     minLevel: 0.15,
     /** Share of a travel bill covered at level 1. Travel is the bill that breaks the family
      *  (bench: $18k over 14→18 for the working preset, against a $5.7k horizon deficit), so it is
-     *  the one this pays. */
-    travelCover: 0.8,
+     *  the one this pays.
+     *
+     *  ⚠ 0.8 -> 0.75 (R15-7, owner 01.08: «потолок скидки на поездки можно и по-меньше сделать
+     *  может быть немного»). A nudge, not a rebuild - and MEASURED before shipping, because the
+     *  academy is THE survival mechanism for working-background careers. The econ bench's working
+     *  presets at 30 seeds, before -> after: BACKING and SURVIVAL hold (backed 27-30/30 -> 27-30/30,
+     *  max -2 careers per 30; survival deltas -3..+3, both directions), so the mechanism itself is
+     *  intact and the change ships. What visibly gives is TRIP VOLUME at the long horizons: a
+     *  backed family's net fare rises a few percent, the affordability-gated policy books fewer
+     *  international weeks (self-coached grinder j30 entries 55 -> 45 over 14->20, covered travel
+     *  mean $7.5k -> $5.7k), and the points-denominated reach proxy softens with it (worst working
+     *  cell 24 -> 16 of 30 at 14->18). Flagged in the round-15 report for the owner's call rather
+     *  than smoothed over: it is the intended lever doing exactly its arithmetic, at a size he may
+     *  or may not want. If a future pass lowers the ceiling further, run this same arm first. */
+    travelCover: 0.75,
     /** The kit grant at each review she is supported through, at level 1 – "и экипа". Paid as
      *  money rather than as a gear discount because it arrives once a year, not per purchase. */
     kitCentsAtFull: 900_00,
@@ -843,19 +856,25 @@ export const ECONOMY = {
     // local..national himself, never the J family, so those three are the first numbers the pending
     // tuning pass should look at – all the more so now that the base under them is one rung higher.
     //
-    // ⚠ THE W FAMILY EXTRAPOLATES THE SAME +1 STEP, and it takes the "heaviest thing in the game"
-    // title off J300: a 5-match W100 run is 4 + 8 per match = 60, + the ladder 6 = 66. That is not a
-    // typo and it is not (only) arithmetic tidiness – the adult rungs are the same flights as the
-    // junior ones against opponents who are twenty-four and do this for a living, so a W15 week is
-    // a harder week than a J300 week even though it draws a fifth of the crowd. The rungs above are
-    // sparse enough to absorb it (W100 is four a year, `everyNWeeks: 13`), and the step is FORCED
-    // upward anyway by the strict-monotonicity guard in tests/ladder.test.ts L9 – which is the guard
-    // doing its job: the ladder must get harder as you climb, and there is now more ladder.
-    // Same owner-tunable caveat, doubly so: nobody has priced these three by hand yet either.
+    // ⚠ THE W FAMILY IS REPRICED ONE STEP OVER THE J FAMILY (R15-6, owner asked directly 01.08 and
+    // agreed the W15 drops were too deep for what the field is today). The original W surcharges
+    // (6/7/8) extrapolated "+1 per rung over J300" on the argument that a W15 field is full of
+    // adults who do this for a living. MEASURED, it is not - not yet: today's W15 entrant field
+    // median sits at position ~53 of 200 on the mixed table (mean skill 50.2) against the J300
+    // field's ~20 (53.9), so the softest international field in the game was priced as its hardest
+    // week. The W family now steps +1 over the J ENTRY rungs instead (j30 3 -> w15 4), keeping +1
+    // per rung inside its own family.
+    //
+    // ⚠ PRICED FOR TODAY'S SOFT FIELDS, ON PURPOSE, AND THAT IS A DATED DECISION: when the
+    // living-field population lands and the W fields become real professionals rather than the top
+    // half of a junior table, w35/w100 must be re-priced UPWARD - measured against the actual
+    // entrant fields, not guessed. The seam j300 (5) -> w15 (4) DROPS by design and the ladder
+    // guard (tests/ladder.test.ts L9) is re-aimed per family to hold exactly this shape: monotone
+    // inside each family, and the W family never priced above where its fields actually are.
     tierMatchFatigue: {
       local: 0, regional: 1, national: 2,
       j30: 3, j60: 4, j300: 5,
-      w15: 6, w35: 7, w100: 8,
+      w15: 4, w35: 5, w100: 6,
     } as Record<TierId, number>,
     // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
     // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
@@ -869,6 +888,17 @@ export const ECONOMY = {
     //   A +1,+2,+3,+4 (10 over a 5-match run) · B +1,+1,+2,+4 (8) · C +1,+1,+2,+2 (6) · D +1×4 (4)
     // C – the middle of his range – ships as the default; the bench report is what moves it.
     runFatigueLadder: [0, 1, 1, 2, 2] as number[],
+    // ⚠ ...AND THE W FAMILY RUNS ON HIS LADDER D (R15-6, owner 01.08: «может быть будет иметь смысл
+    // использовать другой кумулятивный механизм для мировой серии, с меньшими надбавками просто. Я
+    // несколько тогда предлагал»). He is pointing back at his own four measured ladders above - D
+    // is the flattest of them, +1 per subsequent match, 4 over a 5-match run against C's 6 - and it
+    // lands on the same finding the surcharge reprice above rests on: today's W fields are the
+    // softest international draws in the game, so the professional week grinds a run down GENTLY
+    // rather than steeply. Domestic and J rungs keep ladder C untouched (their whole-run tables in
+    // tests/fatigueReference.test.ts must not move a cell); the split is per FAMILY, applied inside
+    // `runFatigueExtra` (engine/condition.ts) so the kid and the rival cohort inherit it from the
+    // one implementation together. A straight-sets W15 title run: 5x(2+4) + 4 = 34, from 46.
+    runFatigueLadderWta: [0, 1, 1, 1, 1] as number[],
     // R9-19: coupling ON, owner curve – NO penalty while condition >= knee (fresh enough),
     // then linear down to `floor` at condition 0:
     //   condFactor = condition >= knee ? 1.0 : floor + (1 − floor) × condition / knee.
@@ -902,14 +932,19 @@ export const ECONOMY = {
     // matching tierMatchFatigue). Racing below the floor is still ALLOWED – it raises a caution,
     // never a block (the owner's "the parent may push, the game warns").
     //
-    // The W family continues the J family's own +5 step for the same reason and with the same
-    // status: extrapolated, not hand-priced. W100's 70 means nearly every entry to it raises a
-    // caution, which is the honest reading of the heaviest week on the calendar – and it is still a
-    // caution. The one HARD floor in the game is `medicalFloor` (15) below, far under all of these.
+    // ⚠ THE W FLOORS MOVED WITH THE SURCHARGES (R15-6, same ruling, same date - see
+    // tierMatchFatigue). The old 60/65/70 continued the J family's +5 extrapolation and priced the
+    // W15 as the most gatekept week in the game while its measured field is the softest
+    // international draw there is (median entrant ~#53 of 200 against J300's ~#20). The family now
+    // steps +5 over the J ENTRY rungs (j30 45 -> w15 50), keeps +5 inside itself, and the seam
+    // j300 (55) -> w15 (50) DROPS on purpose - the same dated decision as the surcharge: when the
+    // living-field population makes the W fields real, w35/w100 are re-priced upward, measured.
+    // W100's old 70 meant nearly every entry raised a caution; at 60 it still cautions any career
+    // that arrives worn, and the one HARD floor in the game is still `medicalFloor` (15) below.
     minConditionToEnter: {
       local: 20, regional: 30, national: 40,
       j30: 45, j60: 50, j300: 55,
-      w15: 60, w35: 65, w100: 70,
+      w15: 50, w35: 55, w100: 60,
     } as Record<TierId, number>,
     examWeeks: [[23, 24]] as [number, number][], // season-week offsets blacked out for school
     // Moved off 24-25 when the surface blocks landed: week 25 is the FIRST week of the grass

@@ -228,6 +228,8 @@ function momentLabel(m: Milestone): string | null {
   const at = m.tier ? TIER_SHORT[m.tier] : null
   if (m.type === 'title') return at ? `First ${at} title` : 'First title'
   if (m.type === 'final') return at ? `First ${at} final` : 'First final'
+  // R15-5: the first cheque is one of the things she has DONE - the week the tennis first paid.
+  if (m.type === 'prize') return 'First prize money'
   if (m.type === 'international') return 'First trip abroad'
   // Deliberately not shown. An injury IS remembered by the ledger and the diary speaks about it, but
   // this strip is the four things she has DONE - a hurt ankle between two titles reads as an

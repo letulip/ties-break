@@ -592,6 +592,10 @@ describe('Memory – selection', () => {
     const samples: Milestone[] = [
       { type: 'title', week: 10, tier: 'j300' },
       { type: 'final', week: 10, tier: 'regional' },
+      // R15-5: the cheque rung is always a W rung (junior tennis pays nothing), and the no-tier arm
+      // covers a defensively-absent tier.
+      { type: 'prize', week: 10, tier: 'w15' },
+      { type: 'prize', week: 10 },
       { type: 'international', week: 10, tier: 'j30' },
       { type: 'injury', week: 10, kind: 'ankle soreness' },
       { type: 'season-rank', week: 10, seasonIndex: 3, rank: 145 },
@@ -627,14 +631,17 @@ describe('Memory – selection', () => {
     expect(selectMemory([], 300, 'debut-seed', 14)).toEqual(card)
   })
 
-  it('memory emotions stay in the composed register except the title', () => {
+  it('memory emotions stay in the composed register except the title and the cheque', () => {
     expect(MEMORY_EMOTION.title).toBe('happy')
+    // R15-5: the first cheque earned the same smile the first title did - the week the tennis
+    // stopped being only a bill.
+    expect(MEMORY_EMOTION.prize).toBe('happy')
     expect(MEMORY_EMOTION.injury).toBe('injury')
     for (const t of ['final', 'international', 'season-rank'] as const) {
       expect(['norm', 'serious']).toContain(MEMORY_EMOTION[t])
     }
     // every milestone type has at least one line – a memory can never be a blank card
-    for (const t of ['title', 'final', 'international', 'injury', 'season-rank'] as const) {
+    for (const t of ['title', 'final', 'prize', 'international', 'injury', 'season-rank'] as const) {
       expect(MEMORY_LINES.some((l) => l.type === t), t).toBe(true)
     }
   })
@@ -644,6 +651,8 @@ describe('Memory – selection', () => {
     expect(milestoneKey({ type: 'final', week: 1, tier: 'local' })).not.toBe(milestoneKey({ type: 'title', week: 1, tier: 'local' }))
     expect(milestoneKey({ type: 'injury', week: 1, kind: 'a' })).toBe(milestoneKey({ type: 'injury', week: 9, kind: 'b' }))
     expect(milestoneKey({ type: 'international', week: 1 })).toBe(milestoneKey({ type: 'international', week: 5, tier: 'j60' }))
+    // R15-5: the first cheque is per CAREER - a W35 cheque two seasons later is not a second first.
+    expect(milestoneKey({ type: 'prize', week: 1, tier: 'w15' })).toBe(milestoneKey({ type: 'prize', week: 90, tier: 'w35' }))
     expect(milestoneKey({ type: 'season-rank', week: 49, seasonIndex: 0 })).not.toBe(milestoneKey({ type: 'season-rank', week: 101, seasonIndex: 1 }))
   })
 })

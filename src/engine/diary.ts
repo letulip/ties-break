@@ -111,6 +111,10 @@ export function milestoneKey(m: Milestone): string {
       return `${m.type}:${m.tier ?? '?'}`
     case 'international':
     case 'injury':
+    // R15-5: the first PRIZE MONEY is per career, like the first passport week - the memorable
+    // thing is that the tennis paid her at all, not which rung wrote the cheque (the tier rides on
+    // the row for the memory line, it is just not the identity).
+    case 'prize':
       return m.type
     case 'season-rank':
       return `season-rank:${m.seasonIndex ?? -1}`
@@ -128,6 +132,9 @@ export function milestoneKey(m: Milestone): string {
 export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   title: 'happy',
   final: 'serious',
+  // R15-5: the first cheque is the other moment that earned the smile - it is the week the tennis
+  // stopped being only a bill.
+  prize: 'happy',
   international: 'norm',
   injury: 'injury',
   'season-rank': 'norm',
@@ -688,8 +695,10 @@ export function travelHomeFactsFor(args: {
 }
 
 /** Which of this week's captured milestones the diary calls THE fresh one (a title week also
- *  captures its final – the louder fact wins). */
-const MILESTONE_PRIORITY: readonly MilestoneType[] = ['title', 'final', 'international', 'injury', 'season-rank']
+ *  captures its final – the louder fact wins). R15-5: `prize` sits under the results themselves -
+ *  a first W15 title week also banks the first cheque, and "she won it" is the louder fact than
+ *  "it paid" - but above the passport and the rest. */
+const MILESTONE_PRIORITY: readonly MilestoneType[] = ['title', 'final', 'prize', 'international', 'injury', 'season-rank']
 
 /** Assemble the facts – every field read off state that already exists, and (since R14-2) exactly
  *  TWO that are drawn: `travelHomeScene` and the coin inside `travelHomeMood`, each on its own
@@ -2747,6 +2756,9 @@ export const MEMORY_LINES: readonly MemoryLine[] = [
   { type: 'final', text: (m) => `First time through to a ${short(m.tier ?? null)} final.` },
   { type: 'international', text: (m) => (m.tier ? `Her first international entry – ${short(m.tier)}.` : 'Her first international entry.') },
   { type: 'international', text: (m) => (m.tier ? `The first passport week – ${short(m.tier)}.` : 'The first passport week.') },
+  // R15-5: the first cheque, in the parent's voice and inside the 39-char budget the card sets.
+  { type: 'prize', text: (m) => (m.tier ? `First prize money – a ${short(m.tier)} cheque.` : 'First prize money – a real cheque.') },
+  { type: 'prize', text: () => 'The first week the tennis paid her.' },
   { type: 'injury', text: (m) => `${capitalize(m.kind ?? 'an injury')} – her first injury.` },
   { type: 'season-rank', text: (m) => `Season ${seasonYear(m.seasonIndex ?? 0)} closed at #${m.rank ?? 0}.` },
   { type: 'season-rank', text: (m) => `She ended ${seasonYear(m.seasonIndex ?? 0)} ranked #${m.rank ?? 0}.` },

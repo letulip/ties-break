@@ -280,6 +280,11 @@ export interface DayContext {
    *  down. An unknown id simply falls back to the generic family arc, so a new package in the
    *  catalogue degrades to today's behaviour rather than to an empty week. */
   vacationId?: string
+  /** IS THIS WEEK IN THE SCHOOL SUMMER HOLIDAYS (R15-8)? Data, like the two above - `weekDays.ts`
+   *  computes it (`isSummerWeek`) and it rides in on `CalendarWeek.summer`. Optional and false by
+   *  default for the same reason `offSeason` is: a test that forgets it gets the term-time week,
+   *  which is the safe direction. Only the ORDINARY day shapes read it - see `summerOrdinary`. */
+  summer?: boolean
   /** 0 = Monday … 6 = Sunday */
   index: number
   /** what the PLAN made of this day – or would have, on a week it does not own. */
@@ -519,6 +524,48 @@ function layoffDay(shapes: BandShapes, day: DayContext): readonly DayBlock[] {
   )
 }
 
+// =================================================================================================
+// ⚠ THE SUMMER HOLIDAYS – the ordinary week with the school taken out of it (R15-8, owner 01.08)
+// =================================================================================================
+//
+// «2 месяца обычно после экзаменов... просто меньше учебы в календаре писать, пару-тройку часов в
+// неделю». Season-weeks 25-33 (the window is `weekDays.ts`'s SUMMER_WEEKS and arrives as DATA on the
+// context - this module still imports nothing from the engine). What changes is exactly what he
+// said and nothing else:
+//
+//   * the 08-13 school block is GONE from every ordinary shape - it is the holidays;
+//   * the evening homework hour survives on TWO weekdays only, relabelled for what it is now -
+//     "Summer read", a couple of hours a week, in the hour the shape already owned (same slot, so
+//     no summer day can ever collide with the session the plan bought);
+//   * Tuesday and Thursday (indexes 1 and 3), fixed, for the same reason the gym owns Tuesday: a
+//     deterministic shape, not a shuffle.
+//
+// ⚠ ORDINARY SHAPES ONLY, and the boundary is the owner's own second ruling: «на каникулярных
+// неделях Study снимается - чего это? там подготовка к экзаменам идет во всю». A booked FAMILY week
+// keeps its Study hours all year round - a holiday taken in summer still has next year's exams
+// coming - so the family and vacation arcs are untouched by this window, and the sweep pins them
+// byte-identical in and out of it. The exam fortnight (23-24) sits BEFORE the window and cannot
+// meet it; the off-season (49-51) has its own arc and its own study rule.
+const SUMMER_STUDY_DAYS: readonly number[] = [1, 3]
+const SUMMER_STUDY_LABEL = 'Summer read'
+
+/** An ordinary day's shape, in the holidays: school removed, the homework hour kept on the two
+ *  reading days and removed on the rest. REMOVES OR RELABELS, never adds and never moves - the same
+ *  discipline the composer's weekend rule keeps, so a summer day can never invent an hour or slide
+ *  one onto the plan's session. */
+function summerOrdinary(blocks: readonly DayBlock[], index: number): readonly DayBlock[] {
+  const out: DayBlock[] = []
+  for (const b of blocks) {
+    if (b.kind === 'school' || b.kind === 'schoolLong') continue
+    if (b.kind === 'study') {
+      if (SUMMER_STUDY_DAYS.includes(index)) out.push({ ...b, label: SUMMER_STUDY_LABEL })
+      continue
+    }
+    out.push(b)
+  }
+  return out
+}
+
 /** One shaper per whole-week kind. A `Record` rather than a switch so the type carries the
  *  completeness: a ninth `DayKind` would fail to compile here rather than draw an empty column. */
 const WEEK_SHAPES: Record<WeekKind, (shapes: BandShapes, day: DayContext) => readonly DayBlock[]> = {
@@ -550,7 +597,13 @@ const WEEK_SHAPES: Record<WeekKind, (shapes: BandShapes, day: DayContext) => rea
 export function dayBlocksFor(kind: DayKind, band: AgeBand, day: DayContext = ANY_DAY): DayBlock[] {
   const shapes = DAY_SHAPES[band]
   if (!shapes) return []
-  const blocks = isOrdinaryKind(kind) ? shapes[kind] : WEEK_SHAPES[kind](shapes, day)
+  // R15-8: the holidays reshape the ORDINARY kinds only - the four whole-week kinds keep their own
+  // arcs whatever the season says (see the note over `summerOrdinary` for the owner's boundary).
+  const blocks = isOrdinaryKind(kind)
+    ? day.summer === true
+      ? summerOrdinary(shapes[kind], day.index)
+      : shapes[kind]
+    : WEEK_SHAPES[kind](shapes, day)
   return blocks.map((b) => ({ ...b }))
 }
 
@@ -749,6 +802,7 @@ export function weekGridFor(
             index: d.index,
             role: roles[i],
             offSeason: week.offSeason,
+            summer: week.summer,
             vacationId: week.vacationId,
           }),
         ),

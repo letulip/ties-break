@@ -282,3 +282,45 @@ describe('the avatar crop table covers every face the code can request', () => {
     }
   })
 })
+
+// ---------------------------------------------------------------------------
+// THE PRE-MATCH SCENE SHOWS THE WHOLE PAINTING (round 15, owner 01.08).
+//
+// «ничего не надо нормировать, просто изображение в полную высоту и всё, какое есть - такое и ок».
+// MatchScene used to be a fixed-height cover crop steered by the face table, and the paintings
+// frame her head at different sizes (teen-serious 182 of 512 against young-serious 124), so the
+// close-up jumped from band to band. A scale-normalisation pass was designed and REJECTED - the
+// ruling is that the scene simply shows the painting, whole. These pins are what keep a future
+// "improvement" from quietly reintroducing the crop.
+// ---------------------------------------------------------------------------
+describe('MatchScene renders the painting uncropped', () => {
+  const scene = read('../src/components/MatchScene.vue')
+  /** Comments are not code – the house helper (tests/calendar-grid.test.ts and friends). The
+   *  scene's own header NAMES the crop it stopped doing, which is the convention, and a raw
+   *  `not.toContain` would fail on the note that explains the rule it enforces. */
+  const code = scene
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+
+  it('⚠ the art is `contain` in the painting\'s own square – never a cover crop', () => {
+    expect(code, 'the cover crop came back').not.toContain('object-fit: cover')
+    expect(scene).toContain('object-fit: contain')
+    // The card is the painting's own square: width-bound, full height, nothing to crop.
+    expect(scene).toContain('aspect-ratio: 1 / 1')
+    // ...and the fixed-height prop went with the crop: a fixed height over a full painting would
+    // letterbox, and no caller ever passed it anyway.
+    expect(code).not.toContain('height?: number')
+  })
+
+  it('⚠ it no longer reads the face table – there is nothing to steer when everything is in frame', () => {
+    expect(code).not.toContain('facePoint')
+    expect(code).not.toContain('faceRects')
+    expect(code).not.toContain('object-position')
+    // The OTHER face-table consumers are deliberately untouched: the Home hero and the finale
+    // poster frame small windows, so a crop is their whole mechanism. The finale's crop is pinned
+    // here so "remove it from MatchScene" can never creep into "remove it everywhere".
+    expect(read('../src/components/TournamentFlow.vue')).toContain('facePoint')
+    expect(read('../src/components/screens/HomeScreen.vue')).toContain('facePoint')
+  })
+})

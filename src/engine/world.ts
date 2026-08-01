@@ -3489,15 +3489,43 @@ export function reviewAcademy(world: WorldState): void {
 
   // "и экипа" – the kit, once a year, as money rather than as a per-purchase discount, because it
   // arrives as a delivery and not as a coupon.
+  //
+  // ⚠ THE GRANT STANDS DOWN UNDER A LIVE KIT DEAL (owner, 01.08: «мне кажется, что это справедливо»).
+  // Until round 15 the academy paid the full grant while a signed brand deal covered the same
+  // equipment lines - the family was being paid twice for one string bed. The academy is not naive:
+  // at review time it reads the deal in force (`activeKitDeal`, the same one answer the wear model
+  // and the travel share read) and funds only the UNCOVERED lines, a third of the grant per line.
+  // Full coverage (the global rung: strings + frame + shoes) pays nothing, and the review SAYS SO in
+  // the feed instead of going silent - a line that used to arrive every year and quietly stops is a
+  // bug report waiting to be filed. The review is a flow, not persisted terms: nothing here touches
+  // the schema, and a deal signed or lapsed between reviews is simply read fresh next year.
+  // Zero draws, like everything in this review.
   const kit = kitGrantCents(level)
-  if (kit > 0) {
-    world.fundsCents += kit
+  const deal = activeKitDeal(world.offers, world.week)
+  const covers = deal ? (deal.terms as KitOfferTerms).covers : []
+  const brand = deal ? (deal.terms as KitOfferTerms).brand : ''
+  const grant = Math.round((kit * (3 - covers.length)) / 3)
+  if (kit > 0 && covers.length >= 3) {
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: `No academy kit grant this year – ${brand} already kits her out.`,
+    })
+  } else if (grant > 0) {
+    world.fundsCents += grant
+    // The income row says what the money is FOR when a brand holds some of her lines - the parent
+    // reading the ledger must be able to tell a two-thirds grant from a full one.
+    const uncovered = (['strings', 'frame', 'shoes'] as KitLine[]).filter((l) => !covers.includes(l))
+    const LINE_WORD: Record<KitLine, string> = { strings: 'strings', frame: 'frames', shoes: 'shoes' }
+    const listOf = (lines: KitLine[]) => lines.map((l) => LINE_WORD[l]).join(' and ')
     addEvent(world, {
       week: world.week,
       type: 'income',
       category: 'academy',
-      text: 'Academy kit grant – rackets, strings and shoes for the season',
-      amountCents: kit,
+      text: deal
+        ? `Academy kit grant – ${listOf(uncovered)}; ${brand} covers her ${listOf([...covers])}.`
+        : 'Academy kit grant – rackets, strings and shoes for the season',
+      amountCents: grant,
     })
   }
 }
@@ -3758,6 +3786,19 @@ function finalizeTournament(world: WorldState): void {
       text: `${tier.label} prize money – ${finishLabel(kidFinish)}`,
       amountCents: prize,
     })
+    // D10 + R15-5: THE FIRST CHEQUE IS A MILESTONE (owner, 01.08: «я believe it's a very memorable
+    // moment»). The first week the tennis pays her anything at all - after years of the family
+    // paying for everything - is a beat the career keeps: captured into the durable ledger (one row
+    // per career, `milestoneKey` collapses repeats) and fired once into the feed with the real
+    // figure on it, because "$130 for a first-round exit" and "$2,200 for the title" are different
+    // memories and the ledger line two rows up already taught the player to read the number.
+    // Same commit point as the cheque itself, so a walkover or a skip can never fire it. Zero draws.
+    captureMilestone(world, { type: 'prize', week: world.week, tier: event.tier })
+    fireMilestone(
+      world,
+      'first-prize',
+      `💰 First prize money – $${Math.round(prize / 100).toLocaleString('en-US')} at the ${tier.label}!`,
+    )
   }
 
   // R9-7: the run's physical toll lands HERE, when it commits – per-match, not flat per tier.
@@ -5537,6 +5578,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     tierAcceptance: Object.fromEntries(
       TIER_LADDER.map((t) => [t, acceptanceRank(world, t)]).filter(([, r]) => r !== undefined),
     ) as Partial<Record<TierId, number>>,
+    // R15-9: THE ON-RAMP LATCHES, read-only, for the SLIDING TIER WINDOW - the calendar hides the
+    // rungs a latch says she has definitively left behind (a copy, like every object on this
+    // message: the snapshot must never be a live view of engine state). Surfacing widens the
+    // snapshot only; the persisted v34 field and the entry gates are untouched.
+    onRampCleared: { ...world.onRampCleared },
     coachId: world.coachId,
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),

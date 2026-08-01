@@ -31,7 +31,7 @@ import {
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
-import { DEFAULT_PROFILE, type FamilyBackground } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type FamilyBackground, type KitLine, type Offer } from '../src/shared/protocol'
 
 const SKILLS = { serve: 60, ret: 60, composure: 60, stamina: 60, groundstrokes: 60 }
 
@@ -216,6 +216,96 @@ function lastEnding(world: WorldState): string {
   expect(ended.length).toBeGreaterThan(0)
   return ended[ended.length - 1].text
 }
+
+// =================================================================================================
+// THE KIT GRANT STANDS DOWN UNDER A LIVE KIT DEAL (round 15, owner 01.08: «мне кажется, что это
+// справедливо»). Until this round the review paid the full grant while a signed brand deal covered
+// the same lines – the family was paid twice for one string bed. The review now funds only the
+// UNCOVERED lines, a third per line, and full coverage swaps the income row for an info line so the
+// grant never just silently vanishes. The review is a flow, not persisted terms: no schema change.
+// =================================================================================================
+describe('the kit grant stands down under a live kit deal', () => {
+  /** A backed career pushed to its SECOND review (week 104), with the review's own gates held
+   *  open: enough played weeks in the window and a rank that reads as a prospect. Driven through
+   *  reviewAcademy directly, the same idiom as the endings test above. */
+  const backedAt104 = () => {
+    const w = runCareer('acad-offer', 'working', 60)
+    expect(w.academy).not.toBeNull()
+    w.week = 104
+    w.kidRank = ECONOMY.academy.rankFull
+    w.results.push(...Array.from({ length: 5 }, (_, i) => ({ playerId: 'kid', week: 100 - i, points: 0 })))
+    return w
+  }
+  const signedDeal = (covers: KitLine[], brand: string): Offer => ({
+    id: 'kit-100',
+    kind: 'kit',
+    week: 100,
+    deadlineWeek: 103,
+    state: 'signed',
+    decidedWeek: 100,
+    untilWeek: 155,
+    coveredCents: 0,
+    terms: {
+      tier: covers.length >= 3 ? 'global' : 'local',
+      brand,
+      kitAllowanceCents: 100_00,
+      freshCap: 0.5,
+      minEventsPerSeason: 6,
+      covers,
+      travelShare: 0,
+      seasons: 1,
+    },
+  })
+  const reviewGrant = (w: WorldState) => w.events.filter((e) => e.category === 'academy' && e.week === 104)
+
+  it('no deal: the full grant, under the classic line', () => {
+    const w = backedAt104()
+    reviewAcademy(w)
+    const grants = reviewGrant(w)
+    expect(grants).toHaveLength(1)
+    expect(grants[0].amountCents).toBe(kitGrantCents(w.academy!.level))
+    expect(grants[0].text).toBe('Academy kit grant – rackets, strings and shoes for the season')
+  })
+
+  it('a local deal covers her strings: two thirds of the grant, and the row says what it is for', () => {
+    const w = backedAt104()
+    w.offers.push(signedDeal(['strings'], 'Baseline Sports'))
+    reviewAcademy(w)
+    const grants = reviewGrant(w)
+    expect(grants).toHaveLength(1)
+    expect(grants[0].amountCents).toBe(Math.round((kitGrantCents(w.academy!.level) * 2) / 3))
+    expect(grants[0].text).toBe('Academy kit grant – frames and shoes; Baseline Sports covers her strings.')
+  })
+
+  it('a global deal covers everything: no grant, and the feed says why instead of going quiet', () => {
+    const w = backedAt104()
+    w.offers.push(signedDeal(['strings', 'frame', 'shoes'], 'Meteor'))
+    const fundsBefore = w.fundsCents
+    reviewAcademy(w)
+    expect(reviewGrant(w)).toHaveLength(0)
+    expect(w.fundsCents).toBe(fundsBefore)
+    const info = w.events.filter((e) => e.week === 104 && e.type === 'info' && e.text.includes('kit grant'))
+    expect(info).toHaveLength(1)
+    expect(info[0].text).toBe('No academy kit grant this year – Meteor already kits her out.')
+    // ...and the scholarship itself is untouched: the deal displaces the KIT, never the backing.
+    expect(w.academy).not.toBeNull()
+    expect(w.academy!.level).toBeGreaterThan(0)
+  })
+
+  it('the stand-down reads the ONE deal answer everything else reads', () => {
+    // `activeKitDeal` is the single definition of "a deal is in force this week" (offers.ts). A
+    // review that re-derived it – say by scanning `state === 'signed'` without the week window –
+    // would stand the grant down under a deal that already lapsed. A lapsed deal pays in full.
+    const w = backedAt104()
+    const lapsed = signedDeal(['strings', 'frame', 'shoes'], 'Meteor')
+    lapsed.untilWeek = 103 // ran out the week before the review
+    w.offers.push(lapsed)
+    reviewAcademy(w)
+    const grants = reviewGrant(w)
+    expect(grants).toHaveLength(1)
+    expect(grants[0].amountCents).toBe(kitGrantCents(w.academy!.level))
+  })
+})
 
 describe('the scholarship cannot be turned into free money', () => {
   it('refunds a post-deadline withdrawal at the price she actually paid', () => {

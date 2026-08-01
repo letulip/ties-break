@@ -58,11 +58,14 @@
 // file. Same argument `composables/weekRecap.ts` makes for the recap predicate.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
-import { dominantSurface, isExamWeek, isOffSeasonWeek, surfaceBlockFor } from '../engine/season/calendar'
+import { WEEKS_PER_YEAR, dominantSurface, isExamWeek, isOffSeasonWeek, surfaceBlockFor } from '../engine/season/calendar'
 import { layoffCoversWeek } from '../engine/world'
 import { knockGoverns } from '../engine/knock'
 import { surfaceStyleHint } from '../engine/match/style'
 import { vacationPackage } from '../engine/economy'
+// R15-9: the sliding tier window and the stacked-week pick - the SAME two rules the Season screen
+// reads, so the look-ahead markers and the season rows cannot disagree about which events exist.
+import { hiddenTier, preferredWeekEvent } from './tierState'
 import { weekLabel, weekSpan } from '../shared/dates'
 import type { Surface } from '../engine/match/types'
 import type { Snapshot, UpcomingEvent } from '../shared/protocol'
@@ -151,6 +154,10 @@ export interface CalendarWeek {
    *  from what it is handed. This file is the one that legitimately talks to the calendar, so the
    *  answer travels as data. */
   offSeason: boolean
+  /** IS THIS WEEK INSIDE THE SCHOOL SUMMER HOLIDAYS (R15-8)? Carried as data for the same reason
+   *  `offSeason` is - the grid may not ask the calendar itself - and read by the grid to swap the
+   *  school furniture of an ORDINARY week for the holidays' light study. See `SUMMER_WEEKS`. */
+  summer: boolean
   /** WHICH family package she is on, when she is on one – the catalogue's own id, or undefined on
    *  every other week. Carried as data for the same reason `offSeason` is: `weekGrid.ts` may not
    *  import from the engine, so the composer looks the booking up and the grid only ever reads. */
@@ -162,11 +169,35 @@ export interface CalendarWeek {
 }
 
 /** The snapshot facts the layout reads. A `Pick`, so a test can hand in a plain object – the
- *  `RecapFacts` idiom from composables/weekRecap.ts. */
+ *  `RecapFacts` idiom from composables/weekRecap.ts.
+ *
+ *  ⚠ `onRampCleared` IS OPTIONAL ON THE FACTS AND REQUIRED ON THE SNAPSHOT (R15-9): the live screen
+ *  always has the latches, while every existing test fixture predates them - and a fixture without
+ *  latches must mean "hide nothing", which is exactly what `hiddenTier` does with undefined. Making
+ *  it required here would force ceremony onto two dozen fact bags to say the thing absence says. */
 export type CalendarWeekFacts = Pick<
   Snapshot,
   'week' | 'plan' | 'profile' | 'injury' | 'knock' | 'vacations' | 'practices' | 'upcoming' | 'arrival' | 'pending'
->
+> &
+  Partial<Pick<Snapshot, 'onRampCleared'>>
+
+/** THE SUMMER HOLIDAYS, as season-week offsets (R15-8, owner 01.08): «2 месяца обычно после
+ *  экзаменов... просто меньше учебы в календаре писать, пару-тройку часов в неделю». The exam
+ *  fortnight is season-weeks 23-24 (`ECONOMY.availability.examWeeks`), so the holidays open the
+ *  week after the last paper and run nine weeks - about the two months he named - and are over
+ *  well before the off-season block at 49.
+ *
+ *  ⚠ A DISPLAY FACT, NOT AN ENGINE ONE, exactly like the grid's hours: nothing in the sim gates on
+ *  summer (school itself is furniture the grid draws, not a thing the engine bills), so the window
+ *  lives HERE, in the module that legitimately talks to the calendar, and rides to the grid as DATA
+ *  on `CalendarWeek` - weekGrid.ts may not import from the engine and does not need to. */
+export const SUMMER_WEEKS: readonly [number, number] = [25, 33]
+
+/** Is this week inside the school summer holidays? Season-week arithmetic, total over any week. */
+export function isSummerWeek(week: number): boolean {
+  const seasonWeek = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return seasonWeek >= SUMMER_WEEKS[0] && seasonWeek <= SUMMER_WEEKS[1]
+}
 
 /** How many sessions `plan.train` buys, as a share of the seven days. Total and monotone: a higher
  *  train percentage can never buy fewer sessions. */
@@ -230,8 +261,9 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
     surface,
     surfaceNote,
     // Asked once, here, and carried on the week - see the field's note on CalendarWeek for why the
-    // grid may not ask it itself.
+    // grid may not ask it itself. Summer travels the same way (R15-8).
     offSeason: isOffSeasonWeek(week),
+    summer: isSummerWeek(week),
     animates: !snap.pending,
   }
 
@@ -470,7 +502,16 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
   for (let w = first; w < first + LOOK_AHEAD_WEEKS; w++) {
     const vacation = snap.vacations.find((v) => v.week === w)
     const practice = snap.practices.find((p) => p.week === w)
-    const event = snap.upcoming.find((e) => e.week === w && isSuitable(e, snap.week)) ?? null
+    // R15-9: the sliding window hides the rungs she has definitively left (entered events always
+    // survive - isSuitable's first arm), and a week that stacks several suitable events markers the
+    // PREFERRED one - entered first, then the highest visible rung - through the same pick the
+    // Season rows use, instead of whichever the list happened to put first.
+    const event = preferredWeekEvent(
+      snap.upcoming.filter(
+        (e) =>
+          e.week === w && isSuitable(e, snap.week) && (e.entered || !hiddenTier(e.tier, snap.onRampCleared)),
+      ),
+    )
     const exam = isExamWeek(w)
     const offSeason = isOffSeasonWeek(w)
     const kind: LookAheadRow['kind'] = vacation

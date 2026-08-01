@@ -10,6 +10,10 @@
 // test imports (`from '../src/engine/world'`) keep working unchanged.
 
 import { ECONOMY } from './economy'
+// The tier CATALOGUE only - a static table, so this module still knows nothing about WorldState.
+// It is what lets the run-fatigue ladder be per-FAMILY (R15-6) without a second spelling of
+// "which track is this tier" anywhere.
+import { TIERS } from './season/calendar'
 import type { TierId } from './season/types'
 
 export function clamp(x: number, lo: number, hi: number): number {
@@ -41,15 +45,26 @@ export function matchDrain(tier: TierId, score: string | undefined): number {
 /** CUMULATIVE RUN FATIGUE (owner idea 26.07): the EXTRA condition the n-th match of ONE tournament
  *  run costs on top of its own scoreline drain, because the rounds are played on consecutive (or
  *  every-other) days - the deeper she goes, the more the week grinds her down. `matchIndex` is
- *  0-based WITHIN THE RUN, so a first match always costs 0 extra. A run longer than
- *  ECONOMY.condition.runFatigueLadder repeats the ladder's LAST value (a bigger future draw must
- *  never silently cost nothing). Pure integer arithmetic, zero draws.
+ *  0-based WITHIN THE RUN, so a first match always costs 0 extra. A run longer than the ladder
+ *  repeats the ladder's LAST value (a bigger future draw must never silently cost nothing). Pure
+ *  integer arithmetic, zero draws.
+ *
+ *  ⚠ THE LADDER IS PER FAMILY SINCE R15-6 (owner, 01.08: «может быть будет иметь смысл использовать
+ *  другой кумулятивный механизм для мировой серии, с меньшими надбавками просто. Я несколько тогда
+ *  предлагал»): the domestic and junior rungs keep his measured ladder C ([0,1,1,2,2]) exactly as
+ *  shipped, and the W family runs on his flattest proposal D ([0,1,1,1,1]) - see
+ *  ECONOMY.condition.runFatigueLadderWta for why that is the honest price of today's soft
+ *  professional fields. The TIER therefore has to be named: there is no family-free answer any
+ *  more, and a default would be a silent way to charge a W run the junior ladder.
  *
  *  Lives HERE, next to matchDrain, rather than in world.ts: the rival-life slice moved the whole
  *  drain family into this module so the cohort inherits it, and the ladder must apply to BOTH sides
- *  or a deep run would grind only the player. */
-export function runFatigueExtra(matchIndex: number): number {
-  const ladder = ECONOMY.condition.runFatigueLadder
+ *  or a deep run would grind only the player. The kid (finalizeTournament) and the rivals
+ *  (rival.ts reconstructRun) both arrive through `tournamentRunStrain`, so the split reaches the
+ *  two sides from one implementation by construction. */
+export function runFatigueExtra(matchIndex: number, tier: TierId): number {
+  const ladder =
+    TIERS[tier].track === 'wta' ? ECONOMY.condition.runFatigueLadderWta : ECONOMY.condition.runFatigueLadder
   if (ladder.length === 0) return 0
   return ladder[Math.max(0, Math.min(matchIndex, ladder.length - 1))]
 }
@@ -59,7 +74,7 @@ export function runFatigueExtra(matchIndex: number): number {
  *  National run of epics = 30 per-match + 6 ladder (variant C) = 36. A walkover or a skipped event
  *  never reaches finalize, so it has no records and costs nothing, ladder included. */
 export function tournamentRunStrain(tier: TierId, matches: { score?: string }[]): number {
-  return matches.reduce((sum, m, i) => sum + matchDrain(tier, m.score) + runFatigueExtra(i), 0)
+  return matches.reduce((sum, m, i) => sum + matchDrain(tier, m.score) + runFatigueExtra(i, tier), 0)
 }
 
 /** R9-19 (coupling ON, owner curve): NO strength penalty while she is fresh enough

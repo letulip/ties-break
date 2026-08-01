@@ -224,6 +224,57 @@ describe('A2/4 — the payout lands where the points do, and nowhere else', () =
   })
 })
 
+// =================================================================================================
+// R15-5 — THE FIRST CHEQUE IS A MILESTONE (owner, 01.08: «я believe it's a very memorable moment»).
+// Captured at the same commit point as the money itself, so a walkover or a skipped event can no
+// more create the memory than it can create the cheque. Zero draws: capture and fire are pure
+// state, so the frozen MAIN capture cannot see any of this.
+// =================================================================================================
+describe('R15-5 — the first prize money is a milestone, once per career', () => {
+  it('captures {type: prize, tier} and fires the feed line once, with the real figure on it', () => {
+    const world = playOneAdultEvent('prize-milestone', 'middle')
+    const cheques = world.events.filter((e) => e.category === 'prize')
+    expect(cheques.length).toBeGreaterThan(0)
+
+    // The durable ledger holds ONE prize row, at the cheque's own week, naming the rung that paid.
+    const captured = world.milestones.filter((m) => m.type === 'prize')
+    expect(captured).toHaveLength(1)
+    expect(captured[0].tier).toBe('w15')
+    expect(captured[0].week).toBe(cheques[0].week)
+
+    // The feed line fires once, and it carries the actual amount – "$130 for a first-round exit"
+    // and "$2,200 for the title" are different memories, so the figure is the cheque's own.
+    const fired = world.events.filter((e) => e.milestoneKey === 'first-prize')
+    expect(fired).toHaveLength(1)
+    const amount = `$${Math.round((cheques[0].amountCents ?? 0) / 100).toLocaleString('en-US')}`
+    expect(fired[0].text).toBe(`💰 First prize money – ${amount} at the World Tour 15!`)
+    expect(fired[0].text).not.toContain('—')
+
+    // ...and a SECOND cheque adds nothing to either ledger: first means first.
+    const rng = rngFromSeed(`${world.seed}:continue`)
+    for (let i = 0; i < 80 && world.events.filter((e) => e.category === 'prize').length < 2; i++) {
+      for (const e of world.season) {
+        if (world.entries.includes(e.id) || e.deadlineWeek < world.week) continue
+        if (e.tier !== 'w15') continue
+        if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) continue
+        try {
+          enterEvent(world, e.id)
+        } catch {
+          /* a gate – keep ticking */
+        }
+      }
+      tickWeek(world, rng)
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+      }
+    }
+    expect(world.events.filter((e) => e.category === 'prize').length).toBeGreaterThan(1)
+    expect(world.milestones.filter((m) => m.type === 'prize')).toHaveLength(1)
+    expect(world.events.filter((e) => e.milestoneKey === 'first-prize')).toHaveLength(1)
+  })
+})
+
 /** Run one career forward to a completed W15 run and stop. The kid is aged into eligibility by
  *  ticking rather than by editing, so the age gate, the entry gate and the payout are all the real
  *  ones; the ITF book is what opens W15's on-ramp (120 junior points). */

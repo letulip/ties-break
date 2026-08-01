@@ -885,8 +885,13 @@ export interface ArrivalPreview {
 // can never assert something the simulation did not do. src/engine/diary.ts owns the whole system.
 
 /** The durable moments a career keeps forever (D10, schema v18). Captured AT THE MOMENT they
- *  happen; a dozen rows per career, so the ledger needs no pruning. */
-export type MilestoneType = 'title' | 'final' | 'international' | 'injury' | 'season-rank'
+ *  happen; a dozen rows per career, so the ledger needs no pruning.
+ *
+ *  ⚠ `prize` joined in round 15 (owner, 01.08: «я believe it's a very memorable moment») – the week
+ *  the tennis first PAID her, which on this ladder means her first W-family finish deep enough to
+ *  cash. No schema bump: the milestones array is opaque to the migration ladder (rows pass through
+ *  untouched), so widening the union is a new capture, not a new shape. */
+export type MilestoneType = 'title' | 'final' | 'prize' | 'international' | 'injury' | 'season-rank'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
@@ -895,7 +900,7 @@ export interface Milestone {
   /** the absolute career week it happened */
   week: number
   /** title/final: the tier it happened at. international: the tier of the first entry (absent on
-   *  a migrated save that only knows the week). */
+   *  a migrated save that only knows the week). prize: the tier that paid her first cheque. */
   tier?: TierId
   /** injury: the injury kind, e.g. "ankle soreness" */
   kind?: string
@@ -1437,6 +1442,14 @@ export interface Snapshot {
    *  acceptance list AND with the population – the illustrative "top 50" that used to sit in a comment
    *  was stale by two re-pins when it was found. Derived at snapshot time, persists nothing. */
   tierAcceptance: Partial<Record<TierId, number>>
+  /** THE ON-RAMP LATCHES (v34 state, surfaced read-only in R15-9): has she EVER cleared the way
+   *  onto each upper table. The calendar's SLIDING TIER WINDOW reads them - once a latch is set the
+   *  rungs below that door are hidden from the event feed (never from the engine: entry gates and
+   *  `entryStatus` are untouched, and National is never hidden - see `hiddenTier` in
+   *  composables/tierState.ts). Owner, 01.08: «если j30 уже точно outgrown, то его не надо
+   *  показывать. Скользящее окно... Я сомневаюсь, что реальные теннисистки с доступом к w15 думают
+   *  как бы им успеть на j30». */
+  onRampCleared: { itf: boolean; wta: boolean }
   /** WHO SHE TRAINS WITH (v23): the roster coach's id, or null for the parent on the court. */
   coachId: string | null
   /** THE COACH MARKET (screen T): every coach, priced and read for her. Derived, never stored. */
