@@ -257,6 +257,10 @@ export interface MeasurePoint {
    *  events inside the current 52w window (older events differ in neither ledger). */
   beatenConsidered: number
   inversions: number
+  /** played events inside the current 52w window – the events the swap actually touches. When this
+   *  is 0 the two ledgers coincide and every delta above is exactly 0 BY CONSTRUCTION (she has no
+   *  tournament activity in the ranking window), which is a fact about the career, not the bias. */
+  playedInWindow: number
   /** metric (d): CANONICAL points banked by AI players out of her entered events – career-cumulative
    *  at this week, and normalised per season. This is the raw double-paid volume. */
   playedEvents: number
@@ -308,7 +312,8 @@ function measure(world: WorldState, played: readonly PlayedEventCapture[]): Meas
   const peerMeanCf = peers.length ? mean(peers.map((id) => pointsOf(cfItf, id))) : 0
 
   const playedSoFar = played.filter((p) => p.week <= w)
-  const beaten = playedSoFar.filter((p) => w - p.week <= WINDOW_WEEKS).flatMap((p) => p.beatenIds)
+  const playedInWindow = playedSoFar.filter((p) => w - p.week <= WINDOW_WEEKS)
+  const beaten = playedInWindow.flatMap((p) => p.beatenIds)
   const doublePaidPts = playedSoFar.reduce(
     (s, p) => s + p.canonicalRows.reduce((t, r) => t + r.points, 0),
     0,
@@ -329,6 +334,7 @@ function measure(world: WorldState, played: readonly PlayedEventCapture[]): Meas
     peersN: peers.length,
     beatenConsidered: new Set(beaten).size,
     inversions: countInversions(beaten, realItf, cfItf, KID_ID),
+    playedInWindow: playedInWindow.length,
     playedEvents: playedSoFar.length,
     doublePaidPts,
     doublePaidPerSeason: w === 0 ? 0 : doublePaidPts / (w / WEEKS_PER_YEAR),
@@ -426,6 +432,9 @@ export interface CellSummary {
   meanInversions: number
   meanDoublePaidPerSeason: number
   meanPlayedPerSeason: number
+  /** mean played events inside the 52w window at this measurement – 0 means the cell is vacuous
+   *  (no activity for the swap to touch), which the spec must report as such. */
+  meanPlayedInWindow: number
   contradictionShare: number
 }
 
@@ -453,6 +462,7 @@ export function summarise(runs: readonly DualRun[], horizonWeeks: number, week: 
     meanInversions: mean(pts.map((p) => p.inversions)),
     meanDoublePaidPerSeason: mean(pts.map((p) => p.doublePaidPerSeason)),
     meanPlayedPerSeason: mean(pts.map((p) => (p.week === 0 ? 0 : p.playedEvents / (p.week / WEEKS_PER_YEAR)))),
+    meanPlayedInWindow: mean(pts.map((p) => p.playedInWindow)),
     contradictionShare: playedTotal === 0 ? 0 : contradTotal / playedTotal,
   }
 }
@@ -534,6 +544,7 @@ export function toCsv(runs: readonly DualRun[], fingerprint: string): string {
     'peers_n',
     'beaten_considered',
     'inversions',
+    'played_in_window',
     'played_events',
     'double_paid_pts',
     'double_paid_per_season',
@@ -564,6 +575,7 @@ export function toCsv(runs: readonly DualRun[], fingerprint: string): string {
           p.peersN,
           p.beatenConsidered,
           p.inversions,
+          p.playedInWindow,
           p.playedEvents,
           p.doublePaidPts,
           p.doublePaidPerSeason.toFixed(1),
@@ -621,7 +633,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
     console.log(`HORIZON ${h.weeks}w – rank suppression (real − counterfactual, ITF table; +ve = double-pay costs her places)`)
     console.log(
       '  ' +
-        ['week', 'rankReal', 'rankCf', 'medSupp', 'min..max', 'domSupp', 'wtaSupp', 'peerΔ', 'inv n/N', 'dblPaid/ssn', 'contra%']
+        ['week', 'rankReal', 'rankCf', 'medSupp', 'min..max', 'domSupp', 'wtaSupp', 'peerΔ', 'inv n/N', 'inWin', 'dblPaid/ssn', 'contra%']
           .map((c) => pad(c, 12))
           .join(''),
     )
@@ -639,6 +651,7 @@ export function main(argv: string[] = process.argv.slice(2)): void {
             s.medianSuppressionWta,
             s.meanPeerDelta.toFixed(1),
             `${s.careersWithInversion}/${s.seeds}`,
+            s.meanPlayedInWindow.toFixed(1),
             s.meanDoublePaidPerSeason.toFixed(0),
             (s.contradictionShare * 100).toFixed(1),
           ]
