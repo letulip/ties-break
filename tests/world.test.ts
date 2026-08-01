@@ -11,7 +11,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
-import { rngFromSeed } from '../src/engine/rng'
+import { rngFromSeed, resumeMain, mainStateConsistent } from '../src/engine/rng'
 import { TIERS, TIER_LADDER, isTierAgeOpen, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { SeasonResult } from '../src/engine/season/ranking'
 
@@ -173,15 +173,6 @@ describe('AI tournaments replay across a save/reload', () => {
       .sort()
   }
 
-  // Exactly what sim.worker.ts's restoreRng does: a fresh stream fast-forwarded by one draw-batch
-  // per elapsed week against a probe career.
-  function restoreRng(loaded: WorldState) {
-    const r = rngFromSeed(loaded.seed)
-    const probe = createWorld(loaded.seed, loaded.profile)
-    for (let w = 0; w < loaded.week; w++) tickWeek(probe, r)
-    return r
-  }
-
   function newWorld(freezeCohort: boolean): WorldState {
     const world = createWorld('replay-mid-season')
     // Frozen skills isolate the RNG question: drift still draws its 4 per player, it just lands
@@ -190,9 +181,11 @@ describe('AI tournaments replay across a save/reload', () => {
     return world
   }
 
+  // v35: ticked through `resumeMain(world.rngMain)` — the worker's own arrangement — so the
+  // persisted position advances with the draws and the deep-equal below can include it.
   function runTo(week: number, freezeCohort = false): WorldState {
     const world = newWorld(freezeCohort)
-    const rng = rngFromSeed(world.seed)
+    const rng = resumeMain(world.rngMain)
     for (let i = 0; i < week; i++) tickWeek(world, rng)
     return world
   }
@@ -202,18 +195,23 @@ describe('AI tournaments replay across a save/reload', () => {
     return migrateSave(JSON.parse(JSON.stringify(world))) as unknown as WorldState
   }
 
-  it('a mid-season save/reload reproduces the same AI champions', () => {
+  // ⚠ THE THEOREM THE WHOLE v35 FEATURE RESTS ON (P3): a straight run and a run that was saved,
+  // migrated and resumed are THE SAME WORLD — not the same champions, not the same results, the
+  // same EVERYTHING, `rngMain` included. Champions-only was the honest assertion while the resumed
+  // stream was rebuilt by replay; now that the position is state, the deep-equal is the contract.
+  it('a mid-season save/reload resumes into the SAME world (full deep-equal, rngMain included)', () => {
     const straight = runTo(30)
 
     const reloaded = saveReload(runTo(20))
-    const restored = restoreRng(reloaded)
+    // What the worker does on load now: verify the persisted pair, resume from it. No replay.
+    expect(mainStateConsistent(reloaded.seed, reloaded.rngMain)).toBe(true)
+    const restored = resumeMain(reloaded.rngMain)
     for (let i = 0; i < 10; i++) tickWeek(reloaded, restored)
 
+    // Non-vacuity: the window really contained brackets to reproduce.
     expect(championsFrom(straight, 21).length).toBeGreaterThan(0)
-    expect(championsFrom(reloaded, 21)).toEqual(championsFrom(straight, 21))
-    expect(reloaded.results.filter((r) => r.playerId !== KID_ID)).toEqual(
-      straight.results.filter((r) => r.playerId !== KID_ID),
-    )
+    expect(reloaded.rngMain).toEqual(straight.rngMain)
+    expect(reloaded).toEqual(straight)
   })
 
   it('...even if the reloaded main stream lands on the WRONG draw (replay-safe by construction)', () => {

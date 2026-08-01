@@ -80,10 +80,28 @@ function giveKidPoints(world: WorldState, points: number): void {
 }
 
 // ---------------------------------------------------------------------------
-// B1 — THE INVARIANT (blocks merge). The per-week MAIN RNG stream must be
-// byte-identical before and after the slice, and must never depend on player
-// input, funds, plan, or condition. Frozen reference captured from the
+// B1 — THE INVARIANT (blocks merge). The MAIN RNG stream must never depend on
+// player input, funds, plan, or condition — proved PAIRWISE, baseline against
+// action-laden run, under the same code. Reference values captured from the
 // step-1c-stubbed (pre-slice) build for seed "bench-working-0", weeks 1..52.
+//
+// ⚠ DOWNGRADED AT v35 FROM LOAD-BEARING TO DOCUMENTATION (P3, rng-persistence).
+// Until v35 this count/hash was a CHANGE-GATE: the load path rebuilt every
+// career's stream position by replaying its weeks, so the per-week draw count
+// had to be stable across code versions or every loaded save silently moved
+// onto the wrong draw — and any feature adding a MAIN draw was forbidden, on
+// pain of the re-pin ritual this comment block's own history documents three
+// times. The position is now PERSISTED PER CAREER (`WorldState.rngMain`) and
+// a load verifies-and-resumes, so no career anywhere depends on the historical
+// count being reproducible. What this REF is now: the documented measurement
+// of what a bench-working-0 year costs the main stream — kept because it makes
+// an ACCIDENTAL drift loud and the composition arithmetic below it legible.
+// A wave that legitimately adds, removes or reorders a MAIN draw UPDATES THESE
+// NUMBERS FREELY (and the migration-replay pin in tests/migrations.test.ts
+// with them, consciously — see the tripwire note there). What it must still
+// prove is the PAIRWISE half: its action arm and its baseline arm tap
+// identical sequences. Player choices cannot re-roll the world's dice; that
+// half is permanent, and it is the half every test below asserts.
 // ---------------------------------------------------------------------------
 //
 // ⚠ RE-PINNED, FOR THE LAST TIME A CALENDAR CHANGE CAN DO IT: 51642 -> 41550, hash cae178fc ->
@@ -317,7 +335,7 @@ function aiResults(world: WorldState) {
 }
 
 describe('B1 — main-stream RNG invariance (blocks merge)', () => {
-  it('reproduces the frozen pre-slice draw sequence byte-for-byte', () => {
+  it('matches the documented capture (⚠ informational pin since v35 — update freely with real draw changes)', () => {
     const { draws, world } = recordRun()
     expect(draws.length).toBe(REF.count)
     expect(hashOf(draws)).toBe(REF.hash)
@@ -563,7 +581,7 @@ describe('B1b — the main stream is base costs + cohort drift, and nothing else
       const sponsorHit = week[2] < ECONOMY.sponsor.rollChance
       expect(week.length).toBe(driftDraws + (sponsorHit ? 4 : 3))
     }
-    expect(draws.length).toBe(REF.count) // ...and the 52 weeks sum to the frozen pin
+    expect(draws.length).toBe(REF.count) // ...and the 52 weeks sum to the documented pin (informational since v35)
   })
 
   it('CONTENT IS FREE: extra events on the calendar never move the main stream', () => {

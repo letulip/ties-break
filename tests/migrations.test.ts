@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
+import { mainStateConsistent } from '../src/engine/rng'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 
 describe('save migrations', () => {
@@ -450,6 +453,47 @@ describe('save migrations', () => {
       onRampCleared: { itf: true, wta: true },
     })
     expect(migrated.onRampCleared).toEqual({ itf: true, wta: true })
+  })
+
+  // v34 -> v35: THE PERSISTED MAIN POSITION (P3). The migration performs the ONE final probe
+  // replay — byte-identical to what every load used to do — and stamps the resulting `{s, n}`
+  // into the save, after which the replay never runs again for that career.
+  //
+  // ⚠ THE PIN BELOW IS THE TRIPWIRE, and it is the whole reason this test reads a REAL fixture
+  // rather than a hand-shaped payload. The migration replays under CURRENT `tickWeek`; if a future
+  // change silently adds, removes or reorders a MAIN-stream draw, the replayed position for this
+  // fixture MOVES — and this frozen expectation is what makes that loud instead of silent. A red
+  // here after an engine change means: the weekly draw budget moved, and every v34-or-older career
+  // will now be stamped with a position computed under the NEW budget (the recovery-fallback
+  // best-effort answer, exactly the status quo every pre-v35 load lived with). Decide consciously,
+  // then re-pin.
+  it('v34 -> v35 stamps the persisted MAIN position (frozen pin = the replay tripwire)', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v34.json', import.meta.url)), 'utf8'))
+    const migrated = migrateSave(raw)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
+    // seed golden-v27, week 60: the replay's own output, frozen the day v35 shipped. The count
+    // reads straight off the tick's budget — 60 × (3 base + 4×199 drift) + 2 sponsor hits = 47942.
+    expect(migrated.rngMain).toEqual({ s: 1815598547, n: 47942 })
+    expect(mainStateConsistent(migrated.seed, migrated.rngMain)).toBe(true)
+  })
+
+  it('v34 -> v35 is idempotent: a stamped position is never recomputed', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v34.json', import.meta.url)), 'utf8'))
+    const once = migrateSave(raw)
+    const again = migrateSave(JSON.parse(JSON.stringify(once)))
+    expect(again.rngMain).toEqual(once.rngMain)
+    expect(again).toEqual(once)
+  })
+
+  // Corruption is CAUGHT AT LOAD, not at migration: `migrateSave` deliberately does not police a
+  // v35 payload (append-only blocks upgrade versions; they do not audit the current one). The
+  // redundancy check the worker runs is what trips — pinned here so the recovery trigger's
+  // sensitivity is a tested fact rather than a comment.
+  it('a hand-corrupted v35 position fails the redundancy check (the worker recovery trigger)', () => {
+    const raw = JSON.parse(readFileSync(fileURLToPath(new URL('./fixtures/saves/v34.json', import.meta.url)), 'utf8'))
+    const migrated = migrateSave(raw)
+    expect(mainStateConsistent(migrated.seed, { s: (migrated.rngMain.s + 1) | 0, n: migrated.rngMain.n })).toBe(false)
+    expect(mainStateConsistent(migrated.seed, { s: migrated.rngMain.s, n: migrated.rngMain.n + 1 })).toBe(false)
   })
 
   it('rejects saves from a future schema', () => {

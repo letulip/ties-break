@@ -692,8 +692,10 @@ describe('item 3 — the snapshot carries it, and the MAIN stream never sees it'
     const with_ = record(true)
     expect(with_.length).toBe(without.length)
     expect(with_).toEqual(without)
-    // and the frozen count itself, so a drift is loud here as well as in condition.test.ts
-    expect(without.length).toBe(41550)
+    // ⚠ v35: the frozen-count echo (41550) left this line — one documented pin lives in
+    // condition.test.ts B1 and drifts are loud THERE; a second copy here was the old regime's
+    // re-pin tax in miniature. Non-vacuity is all this arm still owes.
+    expect(without.length).toBeGreaterThan(0)
   })
 })
 

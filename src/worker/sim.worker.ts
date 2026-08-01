@@ -2,7 +2,9 @@ import {
   createWorld,
   tickWeek,
   advanceWeeks,
+  maxMainDraws,
   pendingKnock,
+  replayMainState,
   enterEvent,
   withdrawEvent,
   cancelEntry,
@@ -22,7 +24,7 @@ import {
   toSnapshot,
   type WorldState,
 } from '../engine/world'
-import { rngFromSeed, type Rng } from '../engine/rng'
+import { mainStateConsistent, resumeMain, type MainRngState } from '../engine/rng'
 import { encodeExportFile, decodeExportFile } from '../engine/saveCodec'
 import {
   autosave,
@@ -38,14 +40,20 @@ import {
 import type { ToWorker, ToUI } from '../shared/protocol'
 
 // The worker owns the authoritative world state (plain objects, non-reactive) for the ACTIVE career.
-// The RNG stream position is part of determinism: it is reconstructed by fast-forwarding
-// one draw-batch per elapsed week on load. Cheap now; Phase 1+ will persist stream state properly.
+// The RNG stream position is part of determinism, and since v35 IT LIVES ON THE WORLD
+// (`world.rngMain`) — the "Phase 1+ will persist stream state properly" promise this header made
+// for thirty schema versions, kept. Handlers draw through `resumeMain(world.rngMain)`, which
+// mutates the pair in place, so the autosave that follows every mutation persists the live
+// position by construction — and the module-level `rng` mirror that had to be kept in sync with
+// `world` by hand across every handler is gone, which retires that standing desync hazard outright.
+// A load VERIFIES the persisted pair (the s/n redundancy algebra + a plausibility bound) and
+// resumes in O(1); the old whole-career replay survives only as `recoverMainState`, reachable
+// solely behind a failed check, and announces itself with the snapshot's `recovered: true` flag.
 // The main stream only feeds base costs + cohort drift – both tournament sides run on their own
 // event-scoped streams keyed by (seed, event.id) – so a reloaded career replays its brackets by
-// construction, not because this fast-forward happened to land on exactly the right draw.
+// construction, whatever position the main stream holds.
 
 let world: WorldState | null = null
-let rng: Rng | null = null
 
 const post = (msg: ToUI) => (self as unknown as { postMessage(m: unknown, t?: Transferable[]): void }).postMessage(
   msg,
@@ -62,24 +70,47 @@ function snapshotMsg(id: number, w: WorldState, recovered = false): ToUI {
   return recovered ? { ...msg, recovered: true } : msg
 }
 
-function restoreRng(loaded: WorldState): Rng {
-  const r = rngFromSeed(loaded.seed)
-  const probe = createWorld(loaded.seed, loaded.profile)
-  for (let w = 0; w < loaded.week; w++) tickWeek(probe, r)
-  return r
+/** The load-time verifier (v35): is the persisted MAIN position one this career could actually
+ *  hold? Three arms, weakest first — shape (JSON rot can delete a field the type says exists),
+ *  the s/n redundancy algebra (corruption of either field breaks it with probability ~1−2⁻³²;
+ *  the pair IS the checksum), and the plausibility bound (a pair can satisfy the algebra and
+ *  still claim more draws than the weekly budget allows — see `maxMainDraws` for the derivation).
+ *  Read-only on purpose: deciding is this function's job, repairing is `recoverMainState`'s. */
+function verifyMainState(w: WorldState): boolean {
+  const st = w.rngMain as MainRngState | undefined
+  if (!st || typeof st !== 'object' || typeof st.s !== 'number' || typeof st.n !== 'number') return false
+  if (!mainStateConsistent(w.seed, st)) return false
+  return st.n <= maxMainDraws(w.week, w.cohort.length)
+}
+
+/** Corruption recovery — the ONLY replay left in this file, and it is not a load path: it is
+ *  unreachable except through a failed `verifyMainState`. Best-effort by design: it replays under
+ *  CURRENT code, so it lands where current code says the career's weeks cost, not where history
+ *  did — exactly what every load did on every boot before v35, now demoted to the emergency exit
+ *  and surfaced to the player as `recovered: true` instead of happening silently for ever. */
+function recoverMainState(w: WorldState): MainRngState {
+  return replayMainState(w.seed, w.profile, w.week)
+}
+
+/** Shared tail of the three load paths: verify the persisted position, repair it if it fails, and
+ *  say which happened — the boolean feeds straight into the snapshot's `recovered` flag. */
+function ensureMainState(w: WorldState): boolean {
+  if (verifyMainState(w)) return false
+  w.rngMain = recoverMainState(w)
+  return true
 }
 
 async function handle(msg: ToWorker): Promise<ToUI> {
   switch (msg.type) {
     case 'new': {
       const seed = msg.seed.trim() || 'wildcard'
+      // createWorld owns the stream's birth now: `rngMain` is position zero, on the world.
       world = createWorld(seed, msg.profile, makeCareerId(seed))
-      rng = rngFromSeed(world.seed)
       await autosave(world)
       return snapshotMsg(msg.id, world)
     }
     case 'tick': {
-      if (!world || !rng) throw new Error('No active career')
+      if (!world) throw new Error('No active career')
       // ⚠ THE RAW LOOP MUST NOT OUTRUN A DECISION (P6 (c)). `advanceWeeks` refuses to move time
       // while a reveal or an unanswered knock is open – that contract is the whole W4 slice – but
       // this loop used to skip those guards: with a reveal open, tickWeek keeps running, skips
@@ -89,10 +120,15 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // handler uses, because the caller asked for something the engine forbids. MID-LOOP it is a
       // stop: the returned snapshot then carries the pending state, so the UI mounts the
       // tournament flow / knock dialog exactly as it does after `advance`. Fewer ticks than asked
-      // is RNG-safe – restoreRng replays by `world.week` count, not by the request.
+      // is RNG-safe – ⚠ re-aimed at v35, same conclusion, sturdier reason: this line used to lean
+      // on the load-time replay walking `world.week` ticks rather than the requested count; now the
+      // persisted `world.rngMain` advances only with draws that actually happened, so however early
+      // the loop stops, the position on the world IS the position — by construction, not by
+      // convention.
       if (world.pendingTournament || pendingKnock(world)) {
         throw new Error('A decision is open – resolve the tournament or knock before skipping weeks')
       }
+      const rng = resumeMain(world.rngMain)
       for (let i = 0; i < msg.weeks; i++) {
         if (world.pendingTournament || pendingKnock(world)) break
         tickWeek(world, rng)
@@ -101,9 +137,10 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       return snapshotMsg(msg.id, world)
     }
     case 'advance': {
-      if (!world || !rng) throw new Error('No active career')
+      if (!world) throw new Error('No active career')
       // R11-1: EVERY reason the advance stopped rides along (an injury landing on the wrap-up week
       // is both 'injury' and 'season-end'); `advance` is still the only message that sets them.
+      const rng = resumeMain(world.rngMain)
       const stopReasons = advanceWeeks(world, rng, msg.weeks)
       await autosave(world)
       return { id: msg.id, ok: true, type: 'snapshot', snapshot: toSnapshot(world, stopReasons) }
@@ -249,19 +286,26 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       await writeNamed(world, msg.name)
       return { id: msg.id, ok: true, type: 'slots', slots: await listSlots(world.careerId) }
     }
+    // --- the three load paths (v35): verify-and-resume, O(1). None of them replays; the shared
+    // `ensureMainState` repairs a corrupt position and its answer IS the `recovered` flag, on the
+    // same channel (and the same UI surfacing) the autosave-generation fallback has always used.
     case 'load': {
       world = await readSlot(msg.slot)
-      rng = restoreRng(world)
+      const rngRecovered = ensureMainState(world)
       // Opening it counts as playing it, or the next boot ignores the choice - see touchCareer.
       await touchCareer(world.careerId)
-      return snapshotMsg(msg.id, world)
+      return snapshotMsg(msg.id, world, rngRecovered)
     }
     case 'loadCareer': {
       const { world: loaded, recovered } = await readLatestAutosave(msg.careerId)
       world = loaded
-      rng = restoreRng(loaded)
+      // Two independent recoveries can happen on one load — the older autosave GENERATION stood in
+      // for an unreadable newer one, and/or the RNG position was rebuilt — and the player is told
+      // about either through the one flag, because the message to them is the same: "this career
+      // was repaired on the way in".
+      const rngRecovered = ensureMainState(loaded)
       await touchCareer(loaded.careerId)
-      return snapshotMsg(msg.id, loaded, recovered)
+      return snapshotMsg(msg.id, loaded, recovered || rngRecovered)
     }
     case 'deleteSlot': {
       await deleteSlot(msg.slot)
@@ -272,7 +316,6 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       await deleteCareer(msg.careerId)
       if (world?.careerId === msg.careerId) {
         world = null
-        rng = null
       }
       return { id: msg.id, ok: true, type: 'careers', careers: await listCareers() }
     }
@@ -290,9 +333,9 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     }
     case 'importSave': {
       world = await decodeExportFile(new Uint8Array(msg.bytes))
-      rng = restoreRng(world)
+      const rngRecovered = ensureMainState(world)
       await autosave(world)
-      return snapshotMsg(msg.id, world)
+      return snapshotMsg(msg.id, world, rngRecovered)
     }
   }
 }

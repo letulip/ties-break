@@ -132,11 +132,19 @@ function clamp01to100(x: number): number {
   return x < 0 ? 0 : x > 100 ? 100 : x
 }
 
+/** THE FIELD'S SIZE — one number, named (v35). It was `generateCohort`'s default parameter alone
+ *  until the persisted-RNG slice needed it a second time: the MAIN weekly draw budget is
+ *  `base costs + 4 × this` (see world.ts `maxMainDraws`), and a plausibility bound derived from a
+ *  different 199 than the one the field is built from would be two numbers pretending to be one.
+ *  The conveyor replaces leavers one-for-one (season/conveyor.ts), so the size never moves over a
+ *  career — which is exactly what lets a draw-count bound be stated per week at all. */
+export const COHORT_SIZE = 199
+
 // generateCohort – `size` age-14 juniors, deterministic from `seedStr`. Skills sit
 // in the spec bands; growth is a hidden 0.5..1.5 multiplier. Draw order per player
 // is fixed (name, name, nation, serve, ret, composure, stamina, growth) so the
 // stream count is constant regardless of size.
-export function generateCohort(seedStr: string, size = 199): AiPlayer[] {
+export function generateCohort(seedStr: string, size = COHORT_SIZE): AiPlayer[] {
   const rng = rngFromSeed(seedStr)
   const cohort: AiPlayer[] = []
   for (let i = 0; i < size; i++) {

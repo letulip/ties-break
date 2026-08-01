@@ -12,7 +12,7 @@
 // the file it writes is exactly the file the app would have written.
 import { writeFileSync } from 'node:fs'
 import { createWorld, tickWeek, enterEvent, skipTournament, closeTournament } from '../src/engine/world'
-import { rngFromSeed } from '../src/engine/rng'
+import { resumeMain } from '../src/engine/rng'
 import { encodeExportFile } from '../src/engine/saveCodec'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../src/shared/protocol'
 
@@ -33,7 +33,13 @@ async function main(): Promise<void> {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachTier })
   // Enough money that the demo is about the CALENDAR, not about affordability.
   world.fundsCents = 500_000_00
-  const rng = rngFromSeed(world.seed)
+  // v35: this file SERIALIZES its world, so it draws through the persisted position and the
+  // exported demo carries a TRUE `rngMain`. A raw tap here would still verify on import — a
+  // week-45 world with the pair at position zero satisfies the algebra and the bound — but the
+  // app would then resume the demo's main stream from zero, quietly replaying draws its weeks
+  // already spent. Serializers draw through the world's own pair; benches that never serialize
+  // keep their raw taps.
+  const rng = resumeMain(world.rngMain)
 
   for (let w = 0; w < target; w++) {
     // Enter whatever the gate allows, so the feed has entered cards as well as open ones.

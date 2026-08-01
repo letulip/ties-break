@@ -7,11 +7,14 @@
 // expiry - against a number that is already balanced.
 //
 // The four things this file exists to hold still:
-//   1. ⚠ THE FROZEN MAIN CAPTURE (41550 / e6b0c709) DOES NOT MOVE, even for a career that signs every
-//      letter it is sent. Whether the shop writes is randomness, and it comes off `seed:offer:<week>` -
-//      a purpose-scoped sub-stream, created, read once and thrown away, exactly as `seed:weather:` and
-//      `seed:crowd:` are. This is the same guard shape `tests/knock.test.ts` keeps for the knock,
-//      which is the closest precedent: a per-week sub-stream drawn from INSIDE `tickWeek`.
+//   1. ⚠ THE INBOX CANNOT REACH THE MAIN STREAM, even for a career that signs every letter it is
+//      sent — proved PAIRWISE since v35 (the signing/refusing arm against the letters-ignored
+//      baseline, byte-identical MAIN taps; the one documented capture lives in
+//      tests/condition.test.ts B1). Whether the shop writes is randomness, and it comes off
+//      `seed:offer:<week>` - a purpose-scoped sub-stream, created, read once and thrown away,
+//      exactly as `seed:weather:` and `seed:crowd:` are. This is the same guard shape
+//      `tests/knock.test.ts` keeps for the knock, which is the closest precedent: a per-week
+//      sub-stream drawn from INSIDE `tickWeek`.
 //   2. THE WINDOW IS REAL in both directions - an answer inside it is honoured, an answer past it is
 //      refused, and an unanswered letter is gone rather than merely stale.
 //   3. ⚠ TERMS NEVER IMPROVE WHILE THE LETTER IS HELD. An offer that quietly got better for waiting
@@ -73,9 +76,10 @@ const codeOf = (src: string) =>
     .replace(/^\s*\/\/.*$/gm, '')
 
 // =================================================================================================
-// 1. ⚠ THE FROZEN CAPTURE - blocks merge
+// 1. ⚠ MAIN-STREAM INVARIANCE - blocks merge. Pairwise since v35 (P3, rng-persistence): the
+// cross-suite constant retired with the load replay it guarded; each test below compares its
+// action arm against the letters-ignored baseline built by the same harness, same code.
 // =================================================================================================
-const REF = { count: 41550, hash: 'e6b0c709' }
 
 function fnv1a(s: string): string {
   let h = 0x811c9dc5
@@ -110,18 +114,22 @@ function recordRun(opts: {
 }
 
 describe('⚠ the inbox adds NO main-stream draws (blocks merge)', () => {
-  it('a career that signs every letter it gets still reproduces 41550 / e6b0c709', () => {
-    // `reviewLocalSponsor` runs INSIDE `tickWeek`, at the season boundary, which is exactly where a
-    // careless draw moves the capture. It reads `seed:offer:<week>` - its own per-week sub-stream,
-    // created and discarded - so the weekly sequence cannot see it.
+  /** The shop only writes to a ranked girl, so every arm of the A/B — baseline included — forces
+   *  her onto its radar the same way; the pair differs ONLY in what the parent does about the
+   *  letters. A vacuous pass would prove only that an absent feature draws nothing. */
+  const ontoTheRadar = (w: WorldState) => {
+    w.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
+    recomputeKidRank(w)
+  }
+
+  it('a career that signs every letter taps the letters-ignored baseline byte-for-byte', () => {
+    // `reviewLocalSponsor` runs INSIDE `tickWeek`, at the season boundary, which is exactly where
+    // a careless draw perturbs the weekly sequence. It reads `seed:offer:<week>` - its own
+    // per-week sub-stream, created and discarded - so the weekly sequence cannot see it.
+    const base = recordRun({ mutate: ontoTheRadar })
     let signed = 0
     const { draws, world } = recordRun({
-      mutate: (w) => {
-        // Force her onto the shop's radar so a letter actually arrives; a vacuous pass would prove
-        // only that an absent feature draws nothing.
-        w.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
-        recomputeKidRank(w)
-      },
+      mutate: ontoTheRadar,
       each: (w) => {
         for (const o of w.offers) {
           if (!isOfferLive(o, w.week)) continue
@@ -130,32 +138,22 @@ describe('⚠ the inbox adds NO main-stream draws (blocks merge)', () => {
         }
       },
     })
-    expect(draws.length).toBe(REF.count)
-    expect(hashOf(draws)).toBe(REF.hash)
+    expect(draws.length).toBe(base.draws.length)
+    expect(hashOf(draws)).toBe(hashOf(base.draws))
     expect(signed, 'no letter was ever signed - the case proves nothing').toBeGreaterThan(0)
     expect(world.offers.some((o) => o.state === 'signed')).toBe(true)
   })
 
-  it('...and so does one that refuses every letter, and one that ignores them all', () => {
-    const base = recordRun({
-      mutate: (w) => {
-        w.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
-        recomputeKidRank(w)
-      },
-    })
+  it('...and so does one that refuses every letter', () => {
+    const base = recordRun({ mutate: ontoTheRadar })
     const refusing = recordRun({
-      mutate: (w) => {
-        w.results.push({ playerId: KID_ID, week: 0, points: 100_000, tier: 'national' })
-        recomputeKidRank(w)
-      },
+      mutate: ontoTheRadar,
       each: (w) => {
         for (const o of w.offers) if (isOfferLive(o, w.week)) declineOffer(w, o.id)
       },
     })
-    for (const run of [base, refusing]) {
-      expect(run.draws.length).toBe(REF.count)
-      expect(hashOf(run.draws)).toBe(REF.hash)
-    }
+    expect(refusing.draws.length).toBe(base.draws.length)
+    expect(hashOf(refusing.draws)).toBe(hashOf(base.draws))
     // The answer changes the world and never the stream.
     expect(refusing.world.offers.some((o) => o.state === 'refused')).toBe(true)
     expect(base.world.offers.some((o) => o.state === 'open' || o.state === 'expired')).toBe(true)
@@ -181,8 +179,8 @@ describe('the offer module draws only on its own purpose-scoped sub-stream', () 
   it('every stream it opens is `seed:offer:` and nothing else', () => {
     // A CLOSED ALLOWLIST rather than a generic pattern, the shape tests/preview.test.ts established:
     // a second sub-stream has to be added here deliberately, by somebody who has read this comment,
-    // instead of appearing by accident. The bare `${seed}` is the MAIN weekly stream the frozen
-    // capture measures, and it must never appear in this module.
+    // instead of appearing by accident. The bare `${seed}` is the MAIN weekly stream — the one whose
+    // position careers persist as `rngMain` since v35 — and it must never appear in this module.
     const src = codeOf(read('../src/engine/offers.ts'))
     const keys = [...src.matchAll(/rngFromSeed\(`([^`]+)`\)/g)].map((m) => m[1])
     expect(keys.length, 'the sweep found no draws at all - the regex has gone stale').toBeGreaterThan(0)

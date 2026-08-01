@@ -59,7 +59,12 @@ function hashOf(draws: number[]): string {
 // weekly draw count (the flaw that forced the earlier 45239 -> 51642 move). R9-9's own claim –
 // that a post-deadline SKIP never perturbs the stream – is unchanged and still proven below.
 // Full reasoning at the REF declaration in tests/condition.test.ts.
-const REF = { count: 41550, hash: 'e6b0c709' } // the frozen B1/C1 capture
+//
+// ⚠ AND THEN THE CONSTANT ITSELF RETIRED, AT v35 (P3, rng-persistence): the REF that lived on this
+// line is gone because no loaded career depends on the historical draw count any more — the
+// position is persisted per career, and the skip test below is PAIRWISE now: the skipping career
+// against the never-entered baseline, same harness, same code, byte-identical MAIN taps. The one
+// documented capture lives at the REF declaration in tests/condition.test.ts B1.
 
 /** Enter the earliest still-open local event and tick until its week spawns the reveal.
  *  BOUNDED: a random injury before the event week would auto-withdraw the entry (or turn the
@@ -521,23 +526,31 @@ describe('R9-9 — skipEvent at the tournament week', () => {
     expect(() => skipEvent(world, eventId)).toThrow('No tournament to skip this week')
   })
 
-  it('skipping never perturbs the main stream: the frozen B1/C1 capture reproduces', () => {
-    const world = createWorld('bench-working-0')
-    const target = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)!
-    enterEvent(world, target.id)
-    const base = rngFromSeed(world.seed)
-    const draws: number[] = []
-    const rng = () => {
-      const v = base()
-      draws.push(v)
-      return v
+  it('skipping never perturbs the main stream: enter-and-skip taps the never-entered baseline (A/B)', () => {
+    const run = (enter: boolean): number[] => {
+      const world = createWorld('bench-working-0')
+      if (enter) {
+        const target = world.season.find((e) => e.tier === 'local' && e.deadlineWeek >= world.week)!
+        enterEvent(world, target.id)
+      }
+      const base = rngFromSeed(world.seed)
+      const draws: number[] = []
+      const rng = () => {
+        const v = base()
+        draws.push(v)
+        return v
+      }
+      for (let i = 0; i < 52; i++) {
+        tickWeek(world, rng)
+        if (world.pendingTournament) skipEvent(world, world.pendingTournament.eventId)
+      }
+      return draws
     }
-    for (let i = 0; i < 52; i++) {
-      tickWeek(world, rng)
-      if (world.pendingTournament) skipEvent(world, world.pendingTournament.eventId)
-    }
-    expect(draws.length).toBe(REF.count)
-    expect(hashOf(draws)).toBe(REF.hash)
+    const baseline = run(false)
+    const skipping = run(true)
+    expect(baseline.length).toBeGreaterThan(0)
+    expect(skipping.length).toBe(baseline.length)
+    expect(hashOf(skipping)).toBe(hashOf(baseline))
   })
 })
 
