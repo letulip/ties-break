@@ -10,7 +10,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { recapExists, thisWeekDotShows } from '../src/composables/weekRecap'
+import { consumePostAdvanceNav, holdPostAdvanceNav, recapExists, thisWeekDotShows } from '../src/composables/weekRecap'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { Snapshot, WorldEvent } from '../src/shared/protocol'
 
@@ -344,7 +344,10 @@ describe('R13-12 — the This-week tab owns the plan and the recap', () => {
     // the W1 suite). The protected fact is untouched and is what both lines still assert: the card and
     // the dot read the SAME module, so neither can hand-copy the rule.
     expect(weekScreen).toContain("import { recapExists } from '../../composables/weekRecap'")
-    expect(app).toContain("import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'")
+    // ⚠ RE-AIMED 01.08, not weakened: the shell's import gained `consumePostAdvanceNav` (the one-shot
+    // navigation hold - see "the post-advance navigation can be claimed" below). The pin's job is
+    // unchanged: the shell reads the shared rules from weekRecap.ts and re-derives none of them.
+    expect(app).toContain("import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'")
     // ...and the CARD still renders on `recapExists` alone. The preference stops the page opening
     // itself; it must never stop the This-week tab from having the week's story on it.
     expect(weekScreen).toContain('recapExists(game.snapshot)')
@@ -561,7 +564,10 @@ describe('W1 — the end of a week lands on the story', () => {
     // because the card and the dot read it and the story must still EXIST when the page is switched off.
     expect(app).toContain("storyOpensItself(snap)) tab.value = 'week'")
     expect(app).toContain("if ((advanced || runClosed) && storyOpensItself(snap))")
-    expect(app).toContain("import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'")
+    // ⚠ RE-AIMED 01.08, not weakened: the shell's import gained `consumePostAdvanceNav` (the one-shot
+    // navigation hold - see "the post-advance navigation can be claimed" below). The pin's job is
+    // unchanged: the shell reads the shared rules from weekRecap.ts and re-derives none of them.
+    expect(app).toContain("import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'")
     // ...and it must be an ADVANCE of the SAME career, not merely a higher week number. `week` is
     // `snapshot?.week ?? 0`, so the first snapshot of a load reads as 0 -> N; the first draft of this
     // fix opened last week's story on every app start because of it. Caught in the browser.
@@ -836,5 +842,65 @@ describe('a screen opens at its top, on both of the app\'s two scrollers', () =>
     expect(composable).toMatch(/void nextTick\(\(\) => scrollToTop\(/)
     expect(composable).not.toContain("behavior: 'smooth'")
     expect(composable).toContain("if (typeof window !== 'undefined')")
+  })
+})
+
+// =================================================================================================
+// ⚠ "PLAY IT AND WATCH →" LEADS TO THE PRE-MATCH SCREEN, NOT TO THE RECAP
+// =================================================================================================
+//
+// Owner, 01.08: «Фикс Play it and watch обязателен - он должен вести на пре-матч экран». The Season
+// screen's button advances the week and opens PracticeFlow, whose FIRST phase is the pre-match VS
+// card - and App.vue's post-advance watcher then switched the tab (to the story, else to Home),
+// unmounting the Season screen together with the flow it had just opened. Every press landed on the
+// week recap. Two features claimed one beat, and the navigation won by construction.
+//
+// The fix is a ONE-SHOT HOLD owned by weekRecap.ts, next to the story rules it composes with: the
+// screen that advances AND opens its own takeover claims the post-advance navigation, once.
+describe('the post-advance navigation can be claimed, once, by the screen that owns the beat', () => {
+  it('the hold is one-shot: consume reads true exactly once', () => {
+    expect(consumePostAdvanceNav(), 'a hold nobody set must read false').toBe(false)
+    holdPostAdvanceNav()
+    expect(consumePostAdvanceNav(), 'the set hold reads true once').toBe(true)
+    expect(consumePostAdvanceNav(), 'and never twice').toBe(false)
+  })
+
+  it('App consumes the hold BEFORE both switches, and only on a week that really advanced', () => {
+    const app = read('../src/App.vue')
+    // The claim must silence the story switch AND the Home fallback - either one unmounts the
+    // claimant - so it is read once into `navHeld` ahead of both branches.
+    const consumeAt = app.indexOf('consumePostAdvanceNav()')
+    const storySwitch = app.indexOf("storyOpensItself(snap)) tab.value = 'week'")
+    const homeFallback = app.indexOf("(advanced || runClosed) tab.value = 'home'")
+    expect(consumeAt, 'App must consume the hold').toBeGreaterThan(-1)
+    expect(consumeAt, 'consume before the story switch').toBeLessThan(storySwitch)
+    expect(consumeAt, 'consume before the Home fallback').toBeLessThan(homeFallback)
+    // Gated on (advanced || runClosed): a snapshot that did not advance (an entry, a plan change)
+    // must not eat a hold set for an advance that is still coming.
+    expect(app).toContain('(advanced || runClosed) && consumePostAdvanceNav()')
+  })
+
+  it('the Season screen claims before its practice advance, and clears a stale claim after', () => {
+    const season = read('../src/components/screens/SeasonScreen.vue')
+    const hold = season.indexOf('holdPostAdvanceNav()')
+    const advance = season.indexOf('await game.advance(1)')
+    const clear = season.indexOf('consumePostAdvanceNav()')
+    expect(hold, 'the claim exists').toBeGreaterThan(-1)
+    // The watcher fires INSIDE the awaited advance - the claim after the call would be too late.
+    expect(hold, 'claim strictly before the advance').toBeLessThan(advance)
+    // A knock can block the week before it ticks; the unspent claim is cleared right after, or it
+    // would silence the navigation of some unrelated later advance.
+    expect(clear, 'the stale-claim clear exists').toBeGreaterThan(advance)
+  })
+
+  it('the recap itself is untouched: the hold suppresses navigation, never existence', () => {
+    // The story must still exist and mark itself fresh on a held week - the This-week dot and the
+    // tab both keep working; only the auto-switch is silenced. So the hold must live OUTSIDE
+    // `recapExists` and `storyOpensItself`, not inside either.
+    const recap = read('../src/composables/weekRecap.ts')
+    const existsBody = recap.slice(recap.indexOf('export function recapExists'), recap.indexOf('export function storyOpensItself'))
+    const opensBody = recap.slice(recap.indexOf('export function storyOpensItself'), recap.indexOf('postAdvanceNavHeld'))
+    expect(existsBody).not.toContain('postAdvanceNav')
+    expect(opensBody).not.toContain('postAdvanceNav')
   })
 })

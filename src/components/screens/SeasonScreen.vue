@@ -51,6 +51,7 @@ import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder.
 import { HORIZON_WEEKS, pointsLockNote, useTierStates, type TierState } from '../../composables/tierState'
 import { TIER_SHORT } from '../../composables/weekAhead'
+import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
@@ -767,7 +768,17 @@ function openPracticeLive(match: WorldMatch, atWeek: number): void {
  *  under its stored seed. There is no moment at which anything is being watched as it happens. The
  *  new label is what the press actually costs and buys, in that order. */
 async function playPracticeWeek(): Promise<void> {
+  // ⚠ CLAIM THE POST-ADVANCE NAVIGATION FIRST (owner, 01.08: «он должен вести на пре-матч экран»).
+  // App.vue's watcher fires INSIDE the awaited advance - the snapshot lands before the next line
+  // here runs - so the claim has to be made before the call, not after it. Without it the watcher
+  // switched tabs (story, or Home), this screen unmounted, and the flow this function opens two
+  // lines down was destroyed before the player ever saw its pre-match card.
+  holdPostAdvanceNav()
   await game.advance(1)
+  // A week that never ticked (a knock blocks before anything happens) leaves the claim unspent -
+  // the watcher only consumes it on a week that actually advanced. Clear it, or it would silence
+  // the navigation of some unrelated later advance. Idempotent when the watcher already took it.
+  consumePostAdvanceNav()
   const friendly = thisWeekFriendly.value
   if (friendly?.match && game.snapshot) openPracticeLive(friendly.match, game.snapshot.week)
 }
