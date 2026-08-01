@@ -68,5 +68,6 @@ Each was handed to an independent skeptic instructed to refute it by reading the
 6. [Performance & robustness](06-performance-robustness.md)
 7. [Testing & tooling](07-testing-tooling.md)
 8. [Cross-cutting gaps](08-cross-cutting-gaps.md) – licensing, fonts/art provenance, release discipline, localization one-way door, dormant ad hooks never designed, privacy statement
+9. [Proposals](09-proposals.md) – nine build-ready proposal packages (P1–P9) derived from these findings, with priorities, efforts, dependencies and a recommended wave order; full documents in [proposals/](proposals/)
 
 *Method note: 7 independent reviewer agents (one per dimension, read-only, file:line evidence required), findings deduplicated, the 6 most severe verifiable claims re-investigated by adversarial skeptic agents, then a completeness critic hunting blind spots between dimensions. 14 agents, ~556 file reads/greps/commands in total.*
