@@ -117,7 +117,14 @@ describe('preload urls resolve to files that actually ship', () => {
         .filter((n) => !n.startsWith('.'))
         .flatMap((n) => (statSync(dir + n).isDirectory() ? walk(`${dir}${n}/`) : [dir + n]))
 
-    const stray = walk(`${PUBLIC}images/`).filter((f) => !f.endsWith('.webp'))
+    // ⚠ RE-AIMED 01.08, not weakened: `README.md` joined the allowed set. The P7 legal wave put the
+    // art provenance manifest at public/images/README.md - the exact per-folder convention
+    // public/music/README.md and public/sounds/README.md already follow - and this guard predates
+    // it. Documentation is not raw art: it ships nothing (the precache glob has no .md and
+    // globIgnores covers images/**), and the manifest is the file that ANSWERS the rights question
+    // this directory used to be unable to answer. Everything else non-webp still fails exactly as
+    // before - the allowance is the one literal filename, never a blanket extension.
+    const stray = walk(`${PUBLIC}images/`).filter((f) => !f.endsWith('.webp') && !f.endsWith('/README.md'))
 
     // git is the authority on "committed". If it cannot answer (no git, exported tarball), treat
     // every offender as tracked – failing loudly beats silently losing the guard.
