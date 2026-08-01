@@ -1,0 +1,27 @@
+name: Feature request
+description: Pitch an idea BEFORE building anything - per CONTRIBUTING.md, feature PRs without a prior Issue are closed
+labels: [idea]
+body:
+  - type: textarea
+    id: pitch
+    attributes:
+      label: The pitch
+      description: What should the game do, and what does the player feel when it works?
+    validations:
+      required: true
+  - type: checkboxes
+    id: pillars
+    attributes:
+      label: Which pillar does it serve?
+      description: The game holds three pillars (README). An idea that serves none of them is probably for a different game – that's fine, but say so.
+      options:
+        - label: The match is a show (visualization, watchability)
+        - label: Honest brutal economics (money, funding, tradeoffs)
+        - label: The child is a person, not an asset (morale, relationship, life)
+  - type: textarea
+    id: scope
+    attributes:
+      label: Rough scope (optional)
+      description: If you already know what it touches (screens, engine, saves), sketch it.
+    validations:
+      required: false
