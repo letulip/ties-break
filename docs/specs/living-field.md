@@ -9,6 +9,12 @@
 > rings (§3) and the separate pro contour (§2.2). Read the sections below as the plan for that; read
 > the two specs above for what the engine does today.
 
+> **The FIELD ring landed for the W track (01.08, `feat/living-field`).** §8 below is the
+> implemented architecture — ~300 derived professionals behind the professional table, the merged W
+> standings, and the W rungs drawing from them — with the calibration table and the measured
+> numbers. §§2-3 remain the plan for the full three-ring build; §8 is what the engine does today
+> and the phase-2 list it leaves behind.
+
 The owner's brief, from three conversations on 27-28.07, verbatim where it matters:
 
 > «мы сейчас считаем топ-200, почему бы не оставить осознанное сдвигаемое окно +/-100 от девочки,
@@ -206,6 +212,104 @@ Each slice is a branch, each gets the full gate, S2 carries the schema bump.
    ever by the player? Substrate lands in S2 either way.
 4. **The archive**: do retired players stay browsable forever (a "where are they now" screen is
    nearly free) or fade after N seasons?
+
+## 8. The FIELD tier, phase W — implemented (01.08, `feat/living-field`)
+
+The owner's ruling that scheduled this slice ahead of everything else in the plan: **«Население -
+это критично»**. The measured problem it answers is §1's, one table up: the professional (WTA)
+table held no professionals. A W15 field was drawn by percentile band over a MIXED-currency table
+of 199 juniors, its median entrant sat at position ~53/200 with mean core skill 50.2 — WEAKER than
+a J300 field (median position 20, skill 53.9) — and the owner's ITF-#6 girl won five W15 titles in
+a row losing one match total. Five W15 titles then printed **#9** on the professional table,
+because the table was 199 zero rows and her.
+
+### 8.1 What exists now
+
+**~300 field professionals for the W track** (`season/fieldPros.ts`), each { id `fp-<n>`, name,
+nation, age 16-30, the four attributes + a stored-equals-derived groundstroke, a strength storey
+`elite | contender | journeyman`, and virtual W points }. They are **pure derivation, never
+persisted**: every fact comes off `rngFromSeed(`${seed}:field:<seasonIndex>:<n>`)` — a fresh
+purpose-scoped generator per player — so the MAIN weekly stream is untouched BY CONSTRUCTION (the
+frozen capture 41550/`e6b0c709` re-derives green on this branch, which is §3.2's hard rule
+holding). Not in `world.cohort` (no fifth `driftCohort` draw, no conveyor roll), not in the save
+(schema stays 34, no migration), regenerated each season (`seasonIndex` in the key = phase-W
+turnover: stable within a season so previews and draws agree, new faces each year). Names come from
+the cohort's own pools, deduped against the LIVE cohort and within the field by salted re-draw —
+the two persisted "Uma Tamm" stay, no new collisions join them.
+
+**The merged W standings** (`mergedWtaRanking`): LIVE rows exactly as `computeRanking` folds them
+(earned points, kid included) interleaved with the field's virtual rows — points descending, earned
+beats derived on ties, competition rank numbers. Every read of the W table flows through one line
+in `rankingFor(world, 'wta')`: `kidRankWta` (her HONEST rank — five W15 titles now lands ~#52, the
+whole point), the Stats standings (already windowed top-10 + around her, so ~500 rows cost
+nothing), the tournament overlay's opponent ranks, and the entry gates. `acceptanceRank` reads the
+merged size for W rungs — the enterPct SHARES survive the field growing, exactly as their comment
+promised: w35 "top 100 of 200" became "top 250 of 500", w100 "top 50" became "top 125", and the
+girl with five W15 titles still clears both.
+
+**Her W draws are made of the merged field**: `computeShadowTournament` and the Season-card preview
+hand `selectEntrants` the union universe (LIVE cohort ∪ field pros) positioned by the merged W
+standings, for W-track events ONLY — `universeForTier` returns the cohort BY REFERENCE for the six
+other rungs, and a guard pins that with reference equality. The percentile-band machinery on top is
+byte-identical; LIVE rows fold without the kid, the same independence rule `aiRanking` has always
+had. Field pros enter fresh (condition 100): they carry no fatigue ledger in phase W — a named
+simplification, conservative in the hard direction (the field she meets is at its best).
+
+**The canonical AI W-brackets stay LIVE-only.** They write result rows; a field pro must never
+write into `world.results` (persisted, pruned, sized for 199). Consequence, accepted: news lines
+about AI W-tour winners still name LIVE players in phase W. Her own shadow brackets DO contain
+field pros — they award nothing to anyone but her, snapshot her opponents by value into the match
+record (replays stay self-contained), and the champion news line resolves fp- names through the
+derivation.
+
+### 8.2 The calibration, measured (tools/field-quality.ts; 16 worlds, 400 W15 / 208 W35 events)
+
+The bench ticks each world 40 real engine weeks first — canonical brackets filling the ledger,
+rivals earning and tiring — because that is the state a career actually meets its W15s in, and it
+is what the static week-0 probe got wrong (it read BEFORE at 22%, missing the fatigue that made
+the owner's five-in-a-row possible). Reference build = the owner's real case: serve 66 / ret 50 /
+composure 57 / stamina 54 / ground 65, fresh, run through the full engine bracket on the event's
+own `seed:kidtour:` stream.
+
+|                                    | BEFORE (mixed table, LIVE only) | AFTER (merged, cohort ∪ field) |
+|---|---|---|
+| W15 field mean core                | 49.4 (wrecked — mid-season fatigue) | 49.0 (fresh professionals) |
+| W15 median entrant position        | 67/199 of the mixed table       | 94/499 of the merged table |
+| **P(she wins a W15 title)**        | **83.0%** — the five-in-a-row reality | **20.5%** — target 15-35% ✓ |
+| W35 field mean core                | —                               | 51.0 (measurably above W15 ✓) |
+| P(W35 title)                       | —                               | 16.3% |
+
+The honest-rank pins, from the same run: 51 of 300 pros hold >50 W points, so a LIVE girl with
+five W15 titles lands **#52 of 500** (pinned to the promised #40-80 in
+`tests/season/fieldPros.test.ts`); accepts w35 **top 250**, w100 **top 125**.
+
+The strength table (ONE table, `FIELD` in fieldPros.ts): elite 30 @ core 56-66 (measured mean
+61.8), contender 120 @ 43-53 (47.8), journeyman 150 @ 38-48 (43.1); per-tier points bands 85-450 /
+18-64 / 2-16, an age ramp (young pros hold 0.65..1.0 of their skill-implied points — the
+under-ranked young shark, and the reason a 28-year-old outranks a 19-year-old of equal game), and
+a ±10% jitter. ⚠ The middle and tail sit ~one notch below the design draft (52-62 / 45-55), moved
+WITH THE BENCH IN HAND under the brief's own tuning clause: W15's window over a ~500 table is
+roughly the players ranked #75-140, and under any skill-monotone points curve those ARE the
+75th-140th strongest — the draft pyramid put mean core 56.8 there, dead level with the reference
+junior, and measured her title chance at 3%. No points-curve shape can fix rank order equalling
+skill order; only the pyramid could move, and the elite storey did not (it still towers over every
+junior).
+
+### 8.3 Phase 2 — what this slice deliberately leaves
+
+- **J and domestic tiers keep the LIVE-only universe.** The mixed-table percentile issue for J
+  tiers (§1's band trap, junior edition) is real and untouched.
+- **Field-pro fatigue.** Phase W's pros are always fresh; a derived seasonal schedule (or §3.3's
+  allotment shape) would let a tired pro sit a week out.
+- **Field pros in the canonical AI brackets and the news** — requires either fp-safe result rows
+  or the §3.3 title lottery, so AI W-tour news can name a professional.
+- **Aging and turnover ACROSS seasons** — today the field re-deals per season; §2.2's pro contour
+  (careers, peaks at 23-24, retirements, the graduating junior joining the field) is the real
+  design.
+- **Name-pool widening** — 44×210 combinations serve 199+300 players; the pool should grow before
+  the population does (append-only, see the SURNAMES note in cohort.ts).
+- **The Stats World-Tour chip** — the wta tab rides in a parallel wave (feat/round15); the data
+  under it (`ladders.wta`) is finished here and works whichever lands first.
 
 ---
 *Grounded in: `cohort.ts` (199 / 8 draws / 0.05-growth), `world.ts` `runAiTournament`

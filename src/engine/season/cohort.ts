@@ -30,7 +30,13 @@ export const COHORT = {
 } as const
 
 // 44 given names × 210 surnames (R11-13) – a broad pool so 199 juniors read as distinct.
-const FIRST_NAMES = [
+//
+// EXPORTED since the living-field slice (01.08): the FIELD tier (season/fieldPros.ts) draws its
+// ~300 professionals from the SAME pools, so the world has one naming vocabulary – a W15 field and
+// a J30 field read as the same world's people. Export-only change: the array itself is untouched,
+// and the APPEND-ONLY / order rules in the SURNAMES note below apply here identically (the cohort
+// draw indexes by pool length).
+export const FIRST_NAMES = [
   'Aria', 'Bela', 'Camila', 'Dasha', 'Elena', 'Freya', 'Gaia', 'Hana',
   'Ines', 'Jana', 'Kaia', 'Lena', 'Mila', 'Nora', 'Oksana', 'Petra',
   'Quinn', 'Rina', 'Sasha', 'Tara', 'Uma', 'Vera', 'Wren', 'Xenia',
@@ -118,7 +124,9 @@ const NATION_WEIGHTS: Array<[string, number]> = [
   ['BG', 1], ['NO', 1], ['HU', 1], ['TN', 1], ['KR', 1], ['PT', 1],
 ]
 
-const NATION_POOL: string[] = NATION_WEIGHTS.flatMap(([code, w]) => Array<string>(w).fill(code))
+// EXPORTED with FIRST_NAMES (living-field, 01.08) and for the same reason: the FIELD tier's
+// professionals come from the same tennis nations in the same proportions as the juniors do.
+export const NATION_POOL: string[] = NATION_WEIGHTS.flatMap(([code, w]) => Array<string>(w).fill(code))
 
 function clamp01to100(x: number): number {
   return x < 0 ? 0 : x > 100 ? 100 : x
