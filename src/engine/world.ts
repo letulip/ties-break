@@ -1,4 +1,4 @@
-import { type Rng, rngFromSeed, pickInt } from './rng'
+import { type Rng, type MainRngState, rngFromSeed, pickInt, initMainState, resumeMain } from './rng'
 import {
   DEFAULT_PROFILE,
   STOP_PRECEDENCE,
@@ -79,7 +79,7 @@ import { parentIncomeForWeekCents,
   vacationPackage,
   vacationPriceCents,
 } from './economy'
-import { generateCohort, driftCohort, ageCohort } from './season/cohort'
+import { generateCohort, driftCohort, ageCohort, COHORT_SIZE } from './season/cohort'
 import { renewCohort } from './season/conveyor'
 import { ageFactor, growWeek, relativeAgeHeadStart, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
 import {
@@ -182,9 +182,22 @@ import type { CoachTier } from '../shared/protocol'
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
 // per-week MAIN-stream draw count is independent of player input (see RNG discipline
-// in docs/specs/phase3-world.md) so the load-time RNG replay stays valid.
+// in docs/specs/phase3-world.md).
+//
+// ⚠ THE RNG REGIME CHANGED AT v35 (docs/review/proposals/P3-rng-persistence.md). The MAIN stream's
+// position is now PERSISTED PER CAREER (`rngMain: {s, n}` below): a load verifies the pair and
+// resumes — it no longer rebuilds the position by replaying every week ever played. Two things
+// follow, and they are different claims:
+//   * INPUT-INDEPENDENCE IS STILL LAW, proved as pairwise A/B — a no-action run and an
+//     action-laden run under the same code must tap identical MAIN sequences (player choices
+//     cannot re-roll the world's dice). That is a fairness property and it is permanent.
+//   * CROSS-VERSION DRAW-COUNT STABILITY IS NOT REQUIRED ANY MORE. The frozen capture
+//     (41550 / e6b0c709, tests/condition.test.ts B1) is a documented measurement now, not a
+//     change-gate: a wave that legitimately adds a MAIN draw updates the pin and moves on,
+//     because no loaded career depends on the historical count being reproducible — each carries
+//     its own position.
 
-export const SAVE_SCHEMA_VERSION = 34
+export const SAVE_SCHEMA_VERSION = 35
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -214,6 +227,14 @@ export interface WorldState {
   careerId: string
   seed: string
   week: number
+  /** THE PERSISTED MAIN POSITION (v35): mulberry32's register + the cumulative draw count. The
+   *  worker draws through `resumeMain(world.rngMain)`, which mutates this pair in place — so every
+   *  autosave carries the live position by construction and a load RESUMES instead of replaying
+   *  the whole career. The two fields are redundant on purpose (`s = seed32 + n·STEP mod 2³²`):
+   *  the pair is its own checksum, and `mainStateConsistent` is the load-time verifier. Only the
+   *  MAIN stream has state at all — every sub-stream is re-derived at its call site from a
+   *  purpose-scoped seed string, which is why nothing else needed persisting. */
+  rngMain: MainRngState
   fundsCents: number
   profile: PlayerProfile
   plan: WeekPlan
@@ -4113,6 +4134,9 @@ export function createWorld(
     careerId,
     seed,
     week: 0,
+    // v35: the MAIN stream is born at position zero, ON the world. From here on the position and
+    // the career are one object — the worker resumes from this pair and its draws advance it.
+    rngMain: initMainState(seed),
     fundsCents,
     profile,
     plan: { ...WEEK_PLAN_PRESETS.balanced },
@@ -4201,6 +4225,43 @@ export function createWorld(
   recomputeKidRank(world)
   world.seasonStartRank = world.kidRank // R12-S1 – see the field above
   return world
+}
+
+// --- v35: the ONE remaining replay, and the budget its verifier is bounded by --------------------
+
+/** The probe replay: a fresh world on the same seed, ticked `weeks` times, drawing through a
+ *  resumed position so the returned state carries BOTH the register and the count.
+ *
+ *  This is byte-for-byte what the worker's `restoreRng` used to do on EVERY load. Under v35 it has
+ *  exactly two callers left, and both are terminal: the v34 -> v35 migration (which stamps its
+ *  output into the save, once per career, and never runs again) and the worker's
+ *  `recoverMainState` (reachable only from a failed consistency check on a corrupted save). It is
+ *  valid for the same reason the old replay was — the per-week MAIN draw count is independent of
+ *  player input, so a probe with no entries walks the same positions the real career did — and it
+ *  is best-effort in the same way too: it replays under CURRENT code, so it lands where current
+ *  code says, not where history did. v35 freezes that answer once instead of re-rolling it on
+ *  every load for ever (see the migration block's note in migrations.ts). */
+export function replayMainState(seed: string, profile: PlayerProfile, weeks: number): MainRngState {
+  const st = initMainState(seed)
+  const rng = resumeMain(st)
+  const probe = createWorld(seed, profile)
+  for (let w = 0; w < weeks; w++) tickWeek(probe, rng)
+  return st
+}
+
+/** The MOST MAIN draws `weeks` of career can legitimately have spent — the plausibility half of
+ *  the load-time verifier (the redundancy check `mainStateConsistent` is the other, sharper half).
+ *
+ *  Derived from what the weekly tick actually spends TODAY, not from a remembered cost table:
+ *  `resolveBaseCosts` draws 3 (jitter, flavor, sponsor roll) plus 1 more when the roll hits, and
+ *  `driftCohort` draws exactly 4 per rival (see the tick's own header) — so a week costs at most
+ *  4 + 4×field. The 8 keeps the bound GENEROUS on purpose: it is corruption detection, not
+ *  accounting, and a bound that has to be re-derived every time a draw is added would be the old
+ *  frozen-capture tax wearing a new hat. Floored at COHORT_SIZE because the draws were made
+ *  against the GENERATED field: a v6/v7-era fixture persists a trimmed shape-sample of its
+ *  cohort, but the probe that computed its position drifted all 199. */
+export function maxMainDraws(weeks: number, cohortSize: number): number {
+  return weeks * (8 + 4 * Math.max(cohortSize, COHORT_SIZE))
 }
 
 /** Hydrate the Phase-3 systems onto a pre-v6 save. Idempotent for v6+. */

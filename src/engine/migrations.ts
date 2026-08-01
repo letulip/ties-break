@@ -13,6 +13,7 @@ import {
   KID_ID,
   SAVE_SCHEMA_VERSION,
   openingCoachId,
+  replayMainState,
   seasonStartWeek,
   seedWorldForV6,
   startingSkills,
@@ -25,7 +26,7 @@ import type { PlayerProfile } from '../shared/protocol'
 // v27: her birth day is clamped to her own month, and February is never 29 - see daysInBirthMonth.
 import { daysInBirthMonth } from '../shared/dates'
 import { pickSurname } from './season/cohort'
-import { rngFromSeed, pickInt } from './rng'
+import { rngFromSeed, pickInt, type MainRngState } from './rng'
 import { OFF_SEASON_WEEKS, TIERS, tierFromLabel } from './season/calendar'
 import { milestoneKey } from './diary'
 import { WEEKS_IN_SEASON, weekYear } from '../shared/dates'
@@ -857,6 +858,46 @@ export function migrateSave(raw: unknown): WorldState {
       }
     }
     v = 34
+  }
+
+  // v34 -> v35: THE PERSISTED MAIN POSITION (docs/review/proposals/P3-rng-persistence.md).
+  // `WorldState.rngMain` — mulberry32's register plus the cumulative MAIN draw count — becomes
+  // state, and loading a career stops replaying every week it ever played just to move a 32-bit
+  // number to the right place.
+  //
+  // ⚠ THIS BLOCK RUNS THE REPLAY IT RETIRES, ONCE, AND THAT IS THE WHOLE DESIGN. `replayMainState`
+  // is byte-identical to what `restoreRng` did on every single load until today: a fresh probe
+  // world on the same seed, one `tickWeek` per elapsed week, no entries — valid because the
+  // per-week MAIN draw count is independent of player input. The difference is the tense: every
+  // load PAID this forever; this block pays it for the LAST time per career and writes the answer
+  // down. tests/migrations.test.ts pins the computed `{s, n}` for the v34 fixture as a frozen
+  // expectation, so a future tickWeek change that would silently drift this replay goes loudly red
+  // instead.
+  //
+  // ⚠ AND IT IS A LIVE-HELPER CALL, WHICH THIS FILE OTHERWISE AVOIDS — accepted DELIBERATELY (the
+  // review's own LOW finding, docs/review/01-architecture.md). The usual argument against reaching
+  // into live code from a migration is that the helper drifts and the migration silently changes
+  // meaning. Here that drift is (a) exactly as dangerous as it already was for every load under
+  // the old regime — the replay IS what loads did — and (b) pinned by the fixture expectation
+  // above, which is more protection than the old per-load replay ever had.
+  //
+  // Defensive and idempotent like every block above: a well-formed pair already present is never
+  // recomputed (a second pass through this file must not re-roll a position the first one stamped
+  // — and more importantly, must not OVERWRITE a live position with a week-boundary one). The
+  // deeper integrity question — does the pair actually satisfy the s/n algebra — deliberately does
+  // NOT live here: append-only blocks upgrade versions, they do not audit the current one. The
+  // worker's `verifyMainState` audits every load and routes a corrupt pair through
+  // `recoverMainState`, which replays exactly like this block does.
+  if (v === 34) {
+    const st = save.rngMain as MainRngState | undefined
+    if (!st || typeof st.s !== 'number' || typeof st.n !== 'number') {
+      save.rngMain = replayMainState(
+        String(save.seed),
+        save.profile as PlayerProfile,
+        typeof save.week === 'number' ? save.week : 0,
+      )
+    }
+    v = 35
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

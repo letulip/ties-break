@@ -2,7 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { migrateSave } from '../src/engine/migrations'
-import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
+import { SAVE_SCHEMA_VERSION, maxMainDraws } from '../src/engine/world'
+import { mainStateConsistent } from '../src/engine/rng'
 import { COACH_TIERS } from '../src/engine/coach'
 import { daysInBirthMonth } from '../src/shared/dates'
 
@@ -102,6 +103,21 @@ describe('golden saves corpus', () => {
       expect(migrated.injury === null || typeof migrated.injury === 'object').toBe(true)
       expect(Array.isArray(migrated.injuryHistory)).toBe(true)
       expect(typeof migrated.physioActive).toBe('boolean')
+
+      // v35 persisted MAIN position: present on EVERY migrated fixture (the v34 block stamps it via
+      // the one-time replay when it is absent), and the pair must satisfy BOTH halves of the
+      // load-time verifier — the s/n redundancy algebra, and the plausibility bound derived from
+      // the weekly draw budget. A fixture failing here would ship a career that greets its first
+      // post-update load with a recovery replay it should never have needed.
+      expect(typeof migrated.rngMain).toBe('object')
+      expect(typeof migrated.rngMain.s).toBe('number')
+      expect(typeof migrated.rngMain.n).toBe('number')
+      expect(mainStateConsistent(migrated.seed, migrated.rngMain), `${file}: rngMain fails the redundancy check`).toBe(true)
+      expect(migrated.rngMain.n).toBeGreaterThanOrEqual(0)
+      expect(
+        migrated.rngMain.n,
+        `${file}: rngMain.n implausible for week ${migrated.week}`,
+      ).toBeLessThanOrEqual(maxMainDraws(migrated.week, migrated.cohort.length))
 
       // v14 season history (R10-9): an array, season-ascending, and every row is the tiny numeric
       // record – no strings, so a long career can't bloat the save.
