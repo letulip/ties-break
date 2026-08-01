@@ -80,8 +80,12 @@ const workerGlobal = {
 // Must exist before the worker module evaluates (it assigns self.onmessage at top level).
 ;(globalThis as unknown as { self: unknown }).self = workerGlobal
 
+/** Omit that DISTRIBUTES over a union: plain Omit<ToWorker, 'id'> collapses the message union to
+ *  its common keys ({ id, type }) and rejects every payload field. */
+type WorkerMsg<T = ToWorker> = T extends { id: number } ? Omit<T, 'id'> : never
+
 let nextId = 1
-function send(msg: Omit<ToWorker, 'id'>): Promise<Reply> {
+function send(msg: WorkerMsg): Promise<Reply> {
   return new Promise((resolve) => {
     const id = nextId++
     waiters.set(id, resolve)
