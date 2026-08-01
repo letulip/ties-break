@@ -75,8 +75,10 @@ half); + one stowaway found by the living-field smoke.
 - `src/shared/money.ts`: `formatCents`/`formatCentsSigned`; all 15 call sites converted; the
   dollars-in `formatDollars` trap dies; DRY-gate test.
 - MoneyScreen reads `STARTING_FUNDS_CENTS` from the engine (hand copy deleted).
-- `▶▶ 52 (dev)` gated `import.meta.env.DEV` AND the worker `tick` handler refuses
-  `pendingTournament || pendingKnock` — defense in both layers.
+- The worker `tick` handler refuses `pendingTournament || pendingKnock` — the save-corruption
+  path is closed. ⚠ The DEV gate on the button itself was landed and REVERSED the same day by
+  the owner («у нас не прод и нет игроков») — the deployed build is his playtest device; the
+  v-if returns the day the game has players who are not the owner.
 - `test:sim` reliably green: split the reach-tracker describe, `it.each` the preset loops,
   `fileParallelism: false` for the sim project. ⚠ The weekly calibration cron first fires
   Monday 03.08 — one red run is accepted and is itself the repro; land this before the second.

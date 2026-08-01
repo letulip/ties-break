@@ -22,21 +22,28 @@ import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type ToWorker } from '../src/shared
 // week and able to overwrite the unresolved reveal with a fresh computeShadowTournament. The exact
 // "weeks just got skipped" failure the W4 knock slice exists to prevent.
 //
-// Neither layer alone is the fix (P6's own framing): the v-if removes the button from prod builds,
-// and the worker guard means no caller of the raw `tick` command — now or future — can tick
-// through an open decision. Source pins hold the first layer; a real worker round-trip holds the
-// second, because a guard whose only witness is a regex is a guard a refactor can silently drop.
+// ⚠ RE-AIMED THE SAME DAY IT LANDED, by the owner (01.08): «у нас не прод и нет игроков. Если
+// нужна для разработки - можно вернуть». The v-if layer is GONE - the deployed build is the
+// owner's own playtest device and the button is his tool, so hiding it there took the tool from
+// the only person it was built for. What this suite still pins, and harder than before:
+//   * the BUTTON EXISTS UNGATED - so a future hand re-reading P6 cannot silently re-hide it
+//     without meeting this test and the ruling in its comment (when the game has players who are
+//     not the owner, that is the moment the one-line v-if returns, deliberately);
+//   * the WORKER GUARD - the half that ever protected a save - is untouched: no caller of the raw
+//     `tick` command, button or not, can tick through an open knock or an unrevealed tournament.
+// Source pins hold the visibility ruling; a real worker round-trip holds the guard, because a
+// guard whose only witness is a regex is a guard a refactor can silently drop.
 // =================================================================================================
 
-describe('layer 1 — the source carries both halves', () => {
+describe('layer 1 — the source carries the ruling and the guard', () => {
   const more = readFileSync(new URL('../src/components/screens/MoreScreen.vue', import.meta.url), 'utf8')
   const worker = readFileSync(new URL('../src/worker/sim.worker.ts', import.meta.url), 'utf8')
 
-  it('MoreScreen gates the ▶▶ button behind import.meta.env.DEV', () => {
-    expect(more).toContain('const isDev = import.meta.env.DEV')
+  it('the ▶▶ button ships UNGATED — the owner ruling, not an accident', () => {
     const button = more.split('\n').find((l) => l.includes('▶▶ 52 (dev)'))
-    expect(button, 'the dev fast-forward button exists').toBeDefined()
-    expect(button, 'the button is v-if-gated to dev builds').toContain('v-if="isDev"')
+    expect(button, 'the fast-forward button exists').toBeDefined()
+    expect(button, 'no build gate on the button - see the ruling in the component comment').not.toContain('v-if')
+    expect(more, 'the dead flag went with the gate').not.toContain('const isDev')
   })
 
   it("the worker's tick case refuses at entry and stops mid-loop, on the same two predicates advanceWeeks blocks on", () => {
