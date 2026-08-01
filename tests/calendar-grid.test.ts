@@ -52,8 +52,10 @@ import {
 } from '../src/composables/weekGrid'
 import { EXAM_NOTES, FRIDGE_NOTES, TRIP_NOTES, fridgeNoteFor } from '../src/composables/fridgeNote'
 import {
+  SUMMER_WEEKS,
   calendarWeekFor,
   gymDayIndex,
+  isSummerWeek,
   sessionDays,
   sessionsForPlan,
   type CalendarWeek,
@@ -121,18 +123,25 @@ const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6] as const
 // depends ENTIRELY on the context - so a sweep that passes no context checked exactly one of eight
 // drawings and would have let a block run off the bottom of the canvas on the other seven.
 // Built off the catalogue, so a seventh package is swept the day it is added.
-const OFF_CONTEXTS: { offSeason?: boolean; vacationId?: string }[] = [
+const OFF_CONTEXTS: { offSeason?: boolean; vacationId?: string; summer?: boolean }[] = [
   {},
   { offSeason: true },
   ...ECONOMY.vacation.packages.map((p) => ({ vacationId: p.id })),
 ]
+
+// ⚠ ...AND EVERY ONE OF THEM IN AND OUT OF THE SUMMER HOLIDAYS (R15-8). Summer reshapes the
+// ordinary day kinds - school out, the light study in - so its labels and its overlap behaviour
+// have to be swept exactly like every other shape's, and the doubled matrix is also what pins the
+// owner's boundary: the family and vacation arcs must draw the SAME week whichever half of the
+// year it is booked in (their own suite asserts that identity below).
+const SWEEP_CONTEXTS = OFF_CONTEXTS.flatMap((ctx) => [ctx, { ...ctx, summer: true }])
 
 const ALL_BLOCKS = (): DayBlock[] =>
   populatedBands().flatMap((band) =>
     ALL_KINDS.flatMap((kind) =>
       DAY_INDEXES.flatMap((index) =>
         (ORDINARY_KINDS as readonly OrdinaryKind[]).flatMap((role) =>
-          OFF_CONTEXTS.flatMap((ctx) => dayBlocksFor(kind, band, { index, role, ...ctx })),
+          SWEEP_CONTEXTS.flatMap((ctx) => dayBlocksFor(kind, band, { index, role, ...ctx })),
         ),
       ),
     ),
@@ -234,8 +243,9 @@ describe('a block is drawable, and it is not an invention', () => {
       for (const kind of ALL_KINDS) {
         for (const index of DAY_INDEXES) {
           for (const role of ORDINARY_KINDS) {
-            // ...and over every `off` context too - the six family packages each draw their own day.
-            for (const ctx of OFF_CONTEXTS) {
+            // ...and over every `off` context too - the six family packages each draw their own day -
+            // and the whole matrix again inside the summer window (R15-8).
+            for (const ctx of SWEEP_CONTEXTS) {
               const blocks = [...dayBlocksFor(kind, band, { index, role, ...ctx })].sort((a, b) => a.start - b.start)
               for (let i = 1; i < blocks.length; i++) {
                 expect(
@@ -954,5 +964,102 @@ describe('each family package draws its own week', () => {
     const unknown = gridFor({ vacations: [{ week: 6, packageId: 'no-such-package', paidCents: 0 }] })
     expect(unknown.length).toBe(7)
     expect(unknown.every((d) => d.blocks.length > 0)).toBe(true)
+  })
+})
+
+// =================================================================================================
+// ⚠ R15-8 – THE SUMMER HOLIDAYS: less school on the calendar, and ONLY on the ordinary weeks
+// =================================================================================================
+//
+// Owner, 01.08: «2 месяца обычно после экзаменов... просто меньше учебы в календаре писать,
+// пару-тройку часов в неделю» - and, on the first draft's reach into the family weeks: «на
+// каникулярных неделях Study снимается - чего это? там подготовка к экзаменам идет во всю». So the
+// window reshapes the ORDINARY week only - school out, a light "Summer read" hour on two fixed
+// weekdays - and the family/vacation arcs keep their study hours all year round.
+describe('the summer holidays take the school out of the ordinary week', () => {
+  const EXAM = ECONOMY.availability.examWeeks[0]
+
+  it('the window opens the week after the last paper and is over long before the off-season', () => {
+    expect(SUMMER_WEEKS[0]).toBe(EXAM[1] + 1)
+    for (const w of [EXAM[0], EXAM[1]]) expect(isSummerWeek(w), `exam week ${w}`).toBe(false)
+    for (let w = SUMMER_WEEKS[0]; w <= SUMMER_WEEKS[1]; w++) expect(isSummerWeek(w), `week ${w}`).toBe(true)
+    for (let w = WEEKS_PER_YEAR - OFF_SEASON_WEEKS; w < WEEKS_PER_YEAR; w++) {
+      expect(isSummerWeek(w), `off-season week ${w}`).toBe(false)
+    }
+    // ...and it is season-week arithmetic, so every season has a summer.
+    expect(isSummerWeek(SUMMER_WEEKS[0] + WEEKS_PER_YEAR)).toBe(true)
+    expect(isSummerWeek(EXAM[0] + WEEKS_PER_YEAR)).toBe(false)
+    // The flag rides to the grid as DATA on the week - the same road offSeason takes.
+    expect(calendarWeekFor(facts({ week: 25 }), 26).summer).toBe(true)
+    expect(calendarWeekFor(facts(), 6).summer).toBe(false)
+  })
+
+  it('⚠ a summer ordinary week carries exactly the light study – two hours, TUE and THU, no school', () => {
+    for (const preset of Object.values(WEEK_PLAN_PRESETS)) {
+      const week = calendarWeekFor(facts({ plan: preset, week: 25 }), 26)
+      const grid = weekGridFor(week, 14, weekDayNumbers(26))
+      // No school block anywhere - it is the holidays.
+      expect(grid.flatMap((d) => d.blocks).some((b) => b.kind === 'school' || b.kind === 'schoolLong'),
+        `${preset.train}: school in the holidays`).toBe(false)
+      // Exactly two study hours, on the two fixed weekdays, and they say what they are.
+      const study = grid.flatMap((d) => d.blocks.filter((b) => b.kind === 'study').map((b) => ({ day: d.short, ...b })))
+      expect(study.length, `${preset.train}: study hours`).toBe(2)
+      expect(study.map((s) => s.day)).toEqual(['TUE', 'THU'])
+      for (const s of study) {
+        expect(s.label).toBe('Summer read')
+        expect(s.span).toBe(1)
+      }
+      // ...and the plan's own tennis is untouched: the sessions are about the plan, not the term.
+      const courtCols = grid.filter((d) => d.blocks.some((b) => b.kind === 'drills')).length
+      expect(courtCols, `${preset.train}: summer court days`).toBe(week.courtDays)
+    }
+  })
+
+  it('a booked friendly still owns its summer Saturday', () => {
+    const grid = weekGridFor(
+      calendarWeekFor(facts({ week: 25, practices: [{ week: 26, paidCents: 3000, withCoach: false }] }), 26),
+      14,
+      weekDayNumbers(26),
+    )
+    const match = grid.filter((d) => d.blocks.some((b) => b.kind === 'matchLong'))
+    expect(match.length).toBe(1)
+    expect(match[0].short).toBe('SAT')
+  })
+
+  it('⚠ the family and vacation arcs draw the IDENTICAL week in and out of the window', () => {
+    // The owner's boundary, pinned as an identity rather than as a list of kept blocks: exam prep
+    // runs through the holidays, so a week away in July studies exactly like a week away in March.
+    const arcAt = (packageId: string, w: number) =>
+      weekGridFor(
+        calendarWeekFor(facts({ week: w - 1, vacations: [{ week: w, packageId, paidCents: 40000 }] }), w),
+        14,
+        weekDayNumbers(w),
+      ).map((d) => d.blocks)
+    for (const p of ECONOMY.vacation.packages) {
+      expect(isSummerWeek(26)).toBe(true)
+      expect(arcAt(p.id, 26), p.id).toEqual(arcAt(p.id, 6))
+      // ...and the study hours really are still in the summer drawing, where the arc asserts them -
+      // the identity above must not be satisfied by both halves losing them.
+      const summer = arcAt(p.id, 26).flat()
+      const termTime = arcAt(p.id, 6).flat()
+      expect(summer.filter((b) => b.kind === 'study').length).toBe(termTime.filter((b) => b.kind === 'study').length)
+    }
+    // The generic family week too - a package the catalogue no longer knows still keeps its study.
+    const generic = (w: number) =>
+      weekGridFor(
+        calendarWeekFor(facts({ week: w - 1, vacations: [{ week: w, packageId: 'no-such-package', paidCents: 0 }] }), w),
+        14,
+        weekDayNumbers(w),
+      ).map((d) => d.blocks)
+    expect(generic(26)).toEqual(generic(6))
+    expect(generic(26).flat().some((b) => b.kind === 'study')).toBe(true)
+  })
+
+  it('the exam fortnight sits BEFORE the window and draws exactly what it always drew', () => {
+    // Papers, scattered hours, her sessions standing - the existing exam suite pins the content;
+    // this pins that summer cannot reach it: the fortnight ends the week before the window opens.
+    const grid = weekGridFor(calendarWeekFor(facts({ week: EXAM[0] - 1 }), EXAM[0]), 14, weekDayNumbers(EXAM[0]))
+    expect(grid.flatMap((d) => d.blocks).filter((b) => b.label === 'Exam').length).toBeGreaterThan(2)
+    expect(grid.flatMap((d) => d.blocks).some((b) => b.label === 'Summer read')).toBe(false)
   })
 })

@@ -312,8 +312,8 @@ describe('cumulative run fatigue (the ladder)', () => {
     expect(LADDER).toEqual([0, 1, 1, 2, 2])
     expect(LADDER[0]).toBe(0) // her FIRST match of the run never costs extra
     expect(LADDER.reduce((s, x) => s + x, 0)).toBe(6)
-    expect(runFatigueExtra(0)).toBe(0)
-    expect([1, 2, 3, 4].map(runFatigueExtra)).toEqual([1, 1, 2, 2])
+    expect(runFatigueExtra(0, 'national')).toBe(0)
+    expect([1, 2, 3, 4].map((i) => runFatigueExtra(i, 'national'))).toEqual([1, 1, 2, 2])
   })
 
   it('a 1-match run is UNCHANGED: the ladder never touches a first-round exit', () => {
@@ -338,8 +338,8 @@ describe('cumulative run fatigue (the ladder)', () => {
 
   it('a run LONGER than the ladder repeats its LAST value (a bigger future draw can never cost 0)', () => {
     const last = LADDER[LADDER.length - 1]
-    expect(runFatigueExtra(LADDER.length)).toBe(last)
-    expect(runFatigueExtra(99)).toBe(last)
+    expect(runFatigueExtra(LADDER.length, 'national')).toBe(last)
+    expect(runFatigueExtra(99, 'national')).toBe(last)
     // a 7-match run (draw of 128) = the ladder sum + 2 more repeats of its last rung
     const seven = new Array(7).fill({ score: '6-4 6-2' })
     expect(tournamentRunStrain('national', seven)).toBe(7 * straightNat + 6 + 2 * last)
@@ -386,7 +386,11 @@ describe('cumulative run fatigue (the ladder)', () => {
     expect(tournamentRunStrain('regional', run)).toBe(tournamentRunStrain('regional', run)) // idempotent
     expect(LADDER).toEqual(snapshot)
     expect(tournamentRunStrain.length).toBe(2) // (tier, kidMatches) – no rng parameter
-    expect(runFatigueExtra.length).toBe(1) // (matchIndex) – no rng parameter
+    // ⚠ RE-AIMED 01.08 (R15-6): (matchIndex, tier) – the ladder went per-FAMILY (C for domestic+J,
+    // the owner's D for the W rungs), so the tier must be named and the arity is 2 now. The rule
+    // this pin protects is unchanged and still holds: neither parameter is an Rng, so the function
+    // CANNOT draw – which is the whole point of pinning the signature.
+    expect(runFatigueExtra.length).toBe(2) // (matchIndex, tier) – still no rng parameter
   })
 
   it('the ladder rides on the COMMITTED run: finalize subtracts drains + ladder together', () => {
@@ -395,7 +399,7 @@ describe('cumulative run fatigue (the ladder)', () => {
     const kidMatches = world.pendingTournament!.result.matches.filter((m) => m.aId === KID_ID || m.bId === KID_ID)
     const flat = kidMatches.reduce((s, m) => s + matchDrain('local', m.score), 0)
     const withLadder = tournamentRunStrain('local', kidMatches)
-    expect(withLadder).toBe(flat + kidMatches.map((_, i) => runFatigueExtra(i)).reduce((s, x) => s + x, 0))
+    expect(withLadder).toBe(flat + kidMatches.map((_, i) => runFatigueExtra(i, 'local')).reduce((s, x) => s + x, 0))
     skipTournament(world) // reveal-all -> finalize commits the run
     const c = ECONOMY.condition
     expect(world.condition).toBe(Math.max(c.min, Math.min(c.max, afterTick - withLadder)))

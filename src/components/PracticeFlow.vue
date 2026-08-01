@@ -251,8 +251,10 @@ function close(): void {
    and the plate; this is only what is written on it – and it is deliberately the same shape as the
    tournament's pre-match plate, because it is the same object one rung down. */
 /* Fills the takeover, same as the tournament's own pre-match scene. */
+/* ⚠ NOT `flex: 1` ANY MORE (R15-3) - same reason as TournamentFlow's .tf-scene: the scene is the
+   painting's own square since the owner's 01.08 ruling, and stretching a square letterboxes it. */
 .pf-scene {
-  flex: 1;
+  flex: none;
 }
 
 .pf-grid {

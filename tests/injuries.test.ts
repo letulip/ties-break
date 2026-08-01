@@ -149,7 +149,18 @@ function hashOf(draws: number[]): string {
 // So the STREAM is the invariant and the RANK is a measurement: 151 is one place lower off a
 // point-less kid in a shallow table, which is what a girl whose strings are four weeks old looks
 // like next to a cohort that has no kit at all.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 151 }
+// ⚠ RE-PINNED 151 -> 152 BY R15-6 (01.08, the W-family reprice), the same class of move this pin's
+// own history documents twice already. TWO of the three levers reach this fixture and both are
+// post-draw: the W availability floors (60/65/70 -> 50/55/60) govern which SIXTEEN-PLUS RIVALS are
+// fit to take a W15/W35 draw in the kid's first season, and the W surcharges (6/7/8 -> 4/5/6) set
+// what those weeks cost them - so a different set of juniors ends the year in the points and her
+// dense ITF place moves by one. Attributed by partial revert (scratchpad probe, R15 report): floors
+// alone -> 157, surcharges alone -> 138, the per-family run ladder alone -> no effect at this
+// horizon; ALL THREE reverted reproduces 151 exactly, so nothing else in the round touches this
+// fixture. THE CAPTURE ITSELF DID NOT MOVE: count 41550 and hash e6b0c709 reproduce byte-for-byte
+// (asserted first, in this very test), which is what this block actually guards - fatigue,
+// availability and rival condition are all post-draw arithmetic by construction.
+const REF = { count: 41550, hash: 'e6b0c709', kidRank: 152 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

@@ -57,14 +57,22 @@ const shownModel = computed<string>({
   },
 })
 
+// ⚠ ALL THREE TABLES (01.08, round 15). The switch was hardcoded ['domestic', 'itf'], so her whole
+// professional season - seasonRecord.wta and ladders.wta have both been on the snapshot since
+// v30/v33 - was invisible on the one screen whose job is tables. A 26-1 W15 record existed nowhere
+// in the UI. The tooltip map below is a TOTAL Record on purpose: a fourth LadderTrack member fails
+// to compile here until somebody writes its tooltip, and the options list is derived from the map,
+// so the switch can never silently trail the type again (the unit guard pins the derivation).
+const LADDER_TIP: Record<LadderTrack, string> = {
+  domestic: 'Local, Regional and National results. These are the points that open her next tier.',
+  itf: 'Junior Tour results only. A national title is worth nothing here – the two tables never meet.',
+  wta: 'W15 and up – the paid tour. Junior points never cross over.',
+}
 const options = computed(() =>
-  (['domestic', 'itf'] as LadderTrack[]).map((t) => ({
+  (Object.keys(LADDER_TIP) as LadderTrack[]).map((t) => ({
     value: t,
     label: LADDER_LABEL[t],
-    title:
-      t === 'domestic'
-        ? 'Local, Regional and National results. These are the points that open her next tier.'
-        : 'Junior Tour results only. A national title is worth nothing here – the two tables never meet.',
+    title: LADDER_TIP[t],
   })),
 )
 
@@ -94,17 +102,20 @@ const seasonRecord = computed(() => game.snapshot?.seasonRecord[shown.value] ?? 
 const seasonWins = computed(() => seasonRecord.value.wins)
 const seasonLosses = computed(() => seasonRecord.value.losses)
 
-// The one sentence no arithmetic on this screen can imply, so it has to be said.
-const noExchange = computed(() =>
-  shown.value === 'domestic'
-    ? 'National points open her next tier. They do not count towards her international ranking.'
-    : 'Junior Tour points only. National results do not count here.',
-)
-const emptyNote = computed(() =>
-  shown.value === 'itf'
-    ? 'She has not played a Junior Tour event yet, so she has no international ranking. Her national standing is on the other tab.'
-    : 'No national results yet – her first Local Open will put her on this table.',
-)
+// The one sentence no arithmetic on this screen can imply, so it has to be said. Total maps, like
+// LADDER_TIP above and for the same reason: a fourth table cannot ship without its sentences.
+const NO_EXCHANGE: Record<LadderTrack, string> = {
+  domestic: 'National points open her next tier. They do not count towards her international ranking.',
+  itf: 'Junior Tour points only. National results do not count here.',
+  wta: 'Professional points only. Junior and national results do not count here.',
+}
+const EMPTY_NOTE: Record<LadderTrack, string> = {
+  domestic: 'No national results yet – her first Local Open will put her on this table.',
+  itf: 'She has not played a Junior Tour event yet, so she has no international ranking. Her national standing is on the other tab.',
+  wta: 'She has not played a professional event yet. The paid tour starts at the World Tour 15, from age 16.',
+}
+const noExchange = computed(() => NO_EXCHANGE[shown.value])
+const emptyNote = computed(() => EMPTY_NOTE[shown.value])
 </script>
 
 <template>

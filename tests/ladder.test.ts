@@ -586,18 +586,36 @@ describe('L8 — she can only play ONE tournament a week', () => {
 })
 
 describe('L9 — the ECONOMY ripple covers every tier', () => {
-  it('minConditionToEnter and tierMatchFatigue are exhaustive and rise up the ladder', () => {
-    for (const key of ['minConditionToEnter'] as const) {
-      const table = ECONOMY.availability[key] as Record<TierId, number>
+  // ⚠ RE-AIMED 01.08 (R15-6), NOT WEAKENED - the same move L6's field guard made under task #17,
+  // now on the cost tables. The whole-ladder "rises every rung" claim was true while the W family
+  // extrapolated +1 over J300, and it is exactly the claim the owner overruled: measured, today's
+  // W15 entrant field (median ~#53 of 200) is SOFTER than J300's (~#20), so the professional entry
+  // rungs are repriced one step over the J ENTRY rungs and the j300 -> w15 seam DROPS on purpose -
+  // in the surcharge (5 -> 4) and in the availability floor (55 -> 50) together. What is pinned
+  // now is stronger where it matters and honest at the seam: exhaustive over TierId, strictly
+  // rising INSIDE each of the three families, the domestic -> junior seam still a step UP, and the
+  // junior -> professional seam pinned as the deliberate drop it is, so a hand that "fixes" the
+  // dip meets this test and the owner's ruling in the knob's comment together. When the
+  // living-field population makes the W fields real, w35/w100 move UP - measured - and this pin
+  // moves with them.
+  it('minConditionToEnter and tierMatchFatigue are exhaustive and rise inside each family', () => {
+    const families = ['domestic', 'itf', 'wta'] as const
+    const rungsOf = (track: (typeof families)[number]) => TIER_LADDER.filter((t) => TIERS[t].track === track)
+    for (const table of [
+      ECONOMY.availability.minConditionToEnter as Record<TierId, number>,
+      ECONOMY.condition.tierMatchFatigue as Record<TierId, number>,
+    ]) {
       expect(Object.keys(table).sort()).toEqual([...ALL_TIERS].sort())
-      for (let i = 1; i < TIER_LADDER.length; i++) {
-        expect(table[TIER_LADDER[i]]).toBeGreaterThan(table[TIER_LADDER[i - 1]])
+      for (const track of families) {
+        const rungs = rungsOf(track)
+        for (let i = 1; i < rungs.length; i++) {
+          expect(table[rungs[i]], `${rungs[i]} vs ${rungs[i - 1]}`).toBeGreaterThan(table[rungs[i - 1]])
+        }
       }
-    }
-    const fatigue = ECONOMY.condition.tierMatchFatigue as Record<TierId, number>
-    expect(Object.keys(fatigue).sort()).toEqual([...ALL_TIERS].sort())
-    for (let i = 1; i < TIER_LADDER.length; i++) {
-      expect(fatigue[TIER_LADDER[i]]).toBeGreaterThan(fatigue[TIER_LADDER[i - 1]])
+      // The seams: up into the junior tour, DOWN into the professional one (the R15-6 reprice).
+      expect(table.j30).toBeGreaterThan(table.national)
+      expect(table.w15).toBeLessThan(table.j300)
+      expect(table.w15).toBeGreaterThan(table.j30)
     }
   })
 

@@ -270,7 +270,18 @@ const REF = {
   // So the STREAM is the invariant and the RANK is a measurement: 151 is one place lower off a
   // point-less kid in a shallow table, which is what a girl whose strings are four weeks old looks
   // like next to a cohort that has no kit at all.
-  kidRank: 151,
+  // ⚠ RE-PINNED 151 -> 152 BY R15-6 (01.08, the W-family reprice), the same class of move this pin's
+  // own history documents twice already. TWO of the three levers reach this fixture and both are
+  // post-draw: the W availability floors (60/65/70 -> 50/55/60) govern which SIXTEEN-PLUS RIVALS are
+  // fit to take a W15/W35 draw in the kid's first season, and the W surcharges (6/7/8 -> 4/5/6) set
+  // what those weeks cost them - so a different set of juniors ends the year in the points and her
+  // dense ITF place moves by one. Attributed by partial revert (scratchpad probe, R15 report): floors
+  // alone -> 157, surcharges alone -> 138, the per-family run ladder alone -> no effect at this
+  // horizon; ALL THREE reverted reproduces 151 exactly, so nothing else in the round touches this
+  // fixture. THE CAPTURE ITSELF DID NOT MOVE: count 41550 and hash e6b0c709 reproduce byte-for-byte
+  // (asserted first, in this very test), which is what this block actually guards - fatigue,
+  // availability and rival condition are all post-draw arithmetic by construction.
+  kidRank: 152,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -410,6 +421,7 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
     world.fundsCents = 9_999_999_00 // affordability is not what this test is about
     const rng = rngFromSeed(world.seed)
     let sawMixedDiverge = false
+    let sawDomestic = false
     // Play a real career rather than an idle one: she must actually hold points, or the two folds
     // agree trivially and the test proves nothing.
     enterWhatSheCan(world)
@@ -421,6 +433,7 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
       }
       world.fundsCents = 9_999_999_00
       enterWhatSheCan(world)
+      if (world.results.some((r) => r.playerId === KID_ID && inTrack('domestic')(r))) sawDomestic = true
 
       const ids = [...world.cohort.map((c) => c.id), KID_ID]
       const itf = computeRanking(world.results, world.week, ids, inTrack('itf'))
@@ -447,7 +460,15 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
       if (itfRank !== domRank && mixedRank !== itfRank) sawMixedDiverge = true
     }
     // The fixture really did exercise both ladders...
-    expect(world.results.filter((r) => r.playerId === KID_ID && inTrack('domestic')(r)).length).toBeGreaterThan(0)
+    //
+    // ⚠ RE-AIMED 01.08 (R15-6): COLLECTED DURING THE LOOP, asserted once - the exact move the
+    // mixed-diverge check above already made, for the same reason. It used to read the ledger AFTER
+    // week 120, but `world.results` is the rolling 52-week ranking window: a career that spends its
+    // last year on the international rungs (which is what a career that CLIMBS does, and the W
+    // reprice let this fixture climb a little further) ages its domestic rows out of the window by
+    // the end, and the assert failed on the pruning, not on the property. The property is "the
+    // fixture exercised both ladders", and the loop is where that is observable.
+    expect(sawDomestic, 'the fixture never held a domestic result - the folds were never both live').toBe(true)
     // ...and the mixed fold really is a third, different number, so the invariant above is not
     // satisfiable by a code path that simply returns the same rank three ways.
     expect(sawMixedDiverge, 'the mixed fold never differed - this test proves nothing').toBe(true)

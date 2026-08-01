@@ -54,7 +54,7 @@ const R = ECONOMY.condition
 
 /** The ladder's total extra over a FIVE-match run (variant C shipped: 0+1+1+2+2 = 6) – read from
  *  the knob so re-tuning the ladder does not re-break the arithmetic below. */
-const LADDER5 = Array.from({ length: 5 }, (_, i) => runFatigueExtra(i)).reduce((s, x) => s + x, 0)
+const LADDER5 = Array.from({ length: 5 }, (_, i) => runFatigueExtra(i, 'j300')).reduce((s, x) => s + x, 0)
 
 /** One ledger row for `ai-x` at `week`, finishing `finish` at `tier`. */
 function row(tier: TierId, finish: number, week: number, playerId = 'ai-x'): SeasonResult {
@@ -145,7 +145,7 @@ describe('A1 — reconstruction: (tier, points) round-trips to the right match c
     expect(run.strain).toBe(tournamentRunStrain('j300', new Array(5).fill({})))
     // A ONE-match run is ladder-free on both sides – her first match of a run never pays extra.
     expect(reconstructRun(row('local', 3, 4)).strain).toBe(matchDrain('local', undefined)) // 1
-    expect(runFatigueExtra(0)).toBe(0)
+    expect(runFatigueExtra(0, 'local')).toBe(0)
   })
 
   it('the ladder is SHARED, not copied: re-tuning the knob moves the cohort too', () => {

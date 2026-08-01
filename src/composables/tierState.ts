@@ -39,6 +39,69 @@ import type { TierId } from '../engine/season/types'
 
 export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 'scheduled' | 'unscheduled'
 
+// =================================================================================================
+// ⚠ R15-9 – THE SLIDING TIER WINDOW. Visibility only: nothing here touches a gate.
+// =================================================================================================
+//
+// Owner, 01.08: «если j30 уже точно outgrown, то его не надо показывать. Скользящее окно... Я
+// сомневаюсь, что реальные теннисистки с доступом к w15 думают как бы им успеть на j30». The
+// outgrown filter the calendar already had is points-based, and J30's band is [250, MAX] - a
+// ceiling of MAX means it never reads as outgrown, so a girl playing W15s was still offered J30s
+// forever. The domestic rungs age out on points; the ON-RAMP rungs age out on the LATCH: once
+// `onRampCleared` says she has definitively crossed onto a table, the rungs below its door are
+// noise, and the window slides up behind her.
+//
+//   itf latched  ->  local and regional leave the feed (she is an international player now)
+//   wta latched  ->  j30 leaves too (nobody with a W15 book is racing to catch a J30)
+//
+// ⚠ NATIONAL IS NEVER HIDDEN, and it is an exemption with a paying customer: the national-rung
+// brand deal's keep-condition reads her DOMESTIC top 30 (`KitOfferTerms.keepDomesticRank`), so the
+// one domestic rung that maintains that rank has to stay on the calendar however far she has
+// climbed. It is also the marquee event the stagger made a rung again - hidden, it would be dead
+// content twice over.
+//
+// ⚠ VISIBILITY, NEVER ACCESS. `entryStatus` / `tierOpenFor` are untouched: an ENTERED event always
+// renders (the callers keep their entered-first arms), and a hidden tier she somehow holds an entry
+// in still shows, because a committed week is the one card she must be able to act on (R10-3).
+
+/** The latches, as the snapshot carries them. Optional everywhere it is consumed, so a caller with
+ *  no snapshot yet (or an old test fixture) simply hides nothing - the safe direction. */
+export interface OnRampLatches {
+  itf: boolean
+  wta: boolean
+}
+
+/** Is this rung OFF the calendar for her now? The whole rule, one place, both consumers (the Season
+ *  feed and the Calendar look-ahead), so the two lists cannot disagree about what exists. */
+export function hiddenTier(tier: TierId, latches?: OnRampLatches | null): boolean {
+  if (!latches) return false
+  if (tier === 'local' || tier === 'regional') return latches.itf
+  if (tier === 'j30') return latches.wta
+  return false
+}
+
+/** THE PICK for a week that stacks several events into one slot: the entered one if any (she is IN
+ *  it - R10-3's lesson), otherwise the highest rung. The Season rows and the Calendar markers both
+ *  pick through this, because the old shape - a Map whose LAST write won - showed the WEAKEST tier
+ *  of every stacked week (buildSeason sorts a week strongest-first, so last is weakest), which is
+ *  exactly why the owner never saw a J300 in the feed: every J300 week also holds a denser rung,
+ *  and the denser rung always overwrote it. */
+export function preferredWeekEvent<E extends { tier: TierId; entered: boolean }>(events: readonly E[]): E | null {
+  let best: E | null = null
+  for (const e of events) {
+    if (!best) {
+      best = e
+      continue
+    }
+    if (e.entered !== best.entered) {
+      if (e.entered) best = e
+      continue
+    }
+    if (TIER_LADDER.indexOf(e.tier) > TIER_LADDER.indexOf(best.tier)) best = e
+  }
+  return best
+}
+
 /**
  * The ONE wording for a point lock – shared, but the NUMBER always comes from the caller.
  *

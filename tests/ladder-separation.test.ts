@@ -375,3 +375,42 @@ describe('S5 — the tour guide is derived from the catalogue it explains', () =
     }
   })
 })
+
+describe('S6 — the Stats switch covers every table there is (round 15, item 2)', () => {
+  const src = readFileSync(new URL('../src/components/screens/StatsScreen.vue', import.meta.url), 'utf8')
+
+  it('⚠ the options are DERIVED from a total Record over LadderTrack – a fourth table fails to compile, not to render', () => {
+    // The bug this guards against already shipped once: the switch was hardcoded
+    // ['domestic', 'itf'], so ladders.wta and seasonRecord.wta - on the snapshot since v30/v33 -
+    // were invisible on the one screen whose job is tables. Her 26-1 W15 season existed nowhere.
+    // The fix derives the options from `LADDER_TIP: Record<LadderTrack, string>`, which the type
+    // system forces to stay total: a fourth LadderTrack member will not compile until somebody
+    // writes its tooltip, and the moment they do, the switch shows it.
+    expect(src).toContain('const LADDER_TIP: Record<LadderTrack, string>')
+    expect(src).toContain('(Object.keys(LADDER_TIP) as LadderTrack[])')
+    // ...and the hardcoded pair is gone for good.
+    expect(src).not.toContain("(['domestic', 'itf'] as LadderTrack[])")
+    // All three tables have a tooltip TODAY - the runtime half of the compile-time claim above.
+    for (const track of ['domestic:', 'itf:', 'wta:']) expect(src).toContain(track)
+  })
+
+  it('the professional tab has its three sentences, in the file\'s own voice', () => {
+    // The tooltip, the no-exchange line and the empty-table note - the three sentences every tab
+    // needs. Short dash only; the words "Professional" / "World Tour" belong to the shared tables.
+    expect(src).toContain('W15 and up – the paid tour. Junior points never cross over.')
+    expect(src).toContain('Professional points only. Junior and national results do not count here.')
+    expect(src).toContain('She has not played a professional event yet.')
+    const template = src.slice(src.indexOf('<template>'), src.lastIndexOf('</template>'))
+    expect(template).not.toContain('—')
+    expect(template).not.toMatch(/[Ѐ-ӿ]/)
+  })
+
+  it('the wta tiles read the same snapshot seams the other two tabs read', () => {
+    // Not a render test - a seam test: the screen reads `ladders[shown]` and `seasonRecord[shown]`,
+    // so the third option gets rank/points/standings/counting-results/W-L for free the moment it is
+    // in the options list. What is pinned is that the seams are the SHARED ones, not per-track
+    // forks that could drift.
+    expect(src).toContain('game.snapshot?.ladders[shown.value]')
+    expect(src).toContain('game.snapshot?.seasonRecord[shown.value]')
+  })
+})

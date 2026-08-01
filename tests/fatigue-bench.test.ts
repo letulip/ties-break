@@ -745,7 +745,7 @@ describe('run-fatigue ladder scenarios (owner idea 26.07)', () => {
     // pack (expected extra ~1.01 vs ~0.71 per run), must still be visible in condition. ***
     const strain = (id: string) =>
       withScenario(byId(id), () =>
-        [0, 1, 2, 3, 4].reduce((sum, i) => sum + runFatigueExtra(i), 0),
+        [0, 1, 2, 3, 4].reduce((sum, i) => sum + runFatigueExtra(i, 'national'), 0),
       )
     expect(strain('runfat-off')).toBe(0)
     expect(strain('runfat-d')).toBeLessThan(strain('runfat-a')) // +1 flat < +1,+2,+3,+4
