@@ -50,7 +50,7 @@ import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
 // window (`hiddenTier`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
-import { HORIZON_WEEKS, hiddenTier, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
+import { HORIZON_WEEKS, entryBandTrack, hiddenTier, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
@@ -503,11 +503,15 @@ function lockLabel(e: UpcomingEvent): string {
       // R11-5a: the WORDS come from the shared rule, the NUMBER stays the engine's own verdict for
       // THIS event. Reading the ladder's whole note here instead was tried and rejected in the
       // browser: it let a card the engine had locked print the ladder's "open" state.
-      // Her NATIONAL points ride along so the card shows the fraction rather than a bare target - the
-      // number stays the engine's per-event verdict, which is what this comment is about; what is added
-      // is where she stands against it. See `pointsLockNote`.
+      // Her points IN THE THRESHOLD'S OWN TABLE ride along so the card shows the fraction rather
+      // than a bare target - the number stays the engine's per-event verdict, which is what this
+      // comment is about; what is added is where she stands against it. See `pointsLockNote`.
+      // ⚠ 01.08 (round-15's find): this used to hand over `ladders.domestic.points` unconditionally,
+      // and the engine's `pointsToEnter` for a W15 is INTERNATIONAL junior points - the chip then
+      // read "58 / 120 national pts", her domestic total over an international threshold under a
+      // domestic label. `entryBandTrack` is the one rule for which table a rung's threshold lives in.
       return e.pointsToEnter !== undefined
-        ? pointsLockNote(e.pointsToEnter, game.snapshot?.ladders.domestic.points)
+        ? pointsLockNote(e.tier, e.pointsToEnter, game.snapshot?.ladders[entryBandTrack(e.tier)].points)
         : tierStateById.value[e.tier].note
   }
 }
