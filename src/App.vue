@@ -75,6 +75,22 @@ onMounted(() => game.init())
 // ref, not persisted: "every launch" means every page load, not "once ever".
 const splashDone = ref(false)
 
+// STORAGE RECOVERY (W1-INTEGRITY-B, TB-06). init() is a total transition now – `loading -> ready |
+// recovery` – and this is recovery's screen: the one place a denied/broken IndexedDB stops being an
+// endless "Loading…" and becomes a decision. Three doors, all existing flows merely SURFACED here:
+//   * Retry re-runs init() – it can actually succeed without a reload because db/saves.ts no
+//     longer caches a rejected open;
+//   * Import a save routes through game.importSave – if the write lands, storage is back and the
+//     store flips itself to ready; if not, the failure is rendered right here instead of vanishing;
+//   * Start new career walks into the ordinary onboarding wizard after an explicit tap – nothing
+//     is deleted, and the wizard's own error line reports any save failures that follow.
+const recoveryFileInput = ref<HTMLInputElement | null>(null)
+function onRecoveryImportPicked(e: Event): void {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) game.importSave(file)
+  if (recoveryFileInput.value) recoveryFileInput.value.value = ''
+}
+
 // 'money' and 'kid' stay valid CONTENT states without a bottom-tab button. Both are reached from
 // Home now (A2, 28.07): the wallet from the Family budget card, her profile from her photograph.
 // Round-6 dropped Money's tab for Stats; R13-12 dropped the Kid tab for the avatar.
@@ -728,7 +744,30 @@ function dismissSeasonSummary(): void {
     <button class="primary" @click="applyUpdate">Update</button>
   </div>
 
-  <div v-if="!game.ready" class="app-loading">Loading…</div>
+  <!-- Storage recovery: the failure path OUT of the splash. Never behind splashDone – a player
+       whose database is broken must meet the choices, not a wordmark waiting on data. -->
+  <div v-if="game.phase === 'recovery'" class="recovery-screen">
+    <h2>Saved games can't be reached</h2>
+    <p class="hint">
+      The browser refused to open this game's storage – this can happen in private browsing, when
+      disk is full, or after a browser update.
+    </p>
+    <p v-if="game.initError" class="error">{{ game.initError }}</p>
+    <div class="recovery-actions">
+      <button class="primary" :disabled="game.busy" @click="game.retryInit()">Retry</button>
+      <button :disabled="game.busy" @click="recoveryFileInput?.click()">Import a save file</button>
+      <button :disabled="game.busy" @click="game.startFreshFromRecovery()">Start a new career</button>
+    </div>
+    <input ref="recoveryFileInput" type="file" accept=".tsave" hidden @change="onRecoveryImportPicked" />
+    <p v-if="game.saveOp?.op === 'import' && game.saveOp.status === 'error'" class="error">
+      {{ game.saveOp.message }}
+    </p>
+    <p class="hint">
+      Nothing has been deleted – if storage comes back, your careers will still be here.
+    </p>
+  </div>
+
+  <div v-else-if="!game.ready" class="app-loading">Loading…</div>
 
   <SplashScreen v-else-if="!splashDone" @done="splashDone = true" />
 

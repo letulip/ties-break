@@ -35,6 +35,14 @@ export class CommandRejected extends Error {
 
 type OkReply = Extract<ToUI, { ok: true }>
 
+/** Which save-management operation a status row is about – the UI maps these to labels/retries. */
+export type SaveOpKind = 'save' | 'load' | 'delete' | 'delete-career' | 'export' | 'import'
+export interface SaveOpStatus {
+  op: SaveOpKind
+  status: 'pending' | 'ok' | 'error'
+  message?: string
+}
+
 export const useGameStore = defineStore('game', {
   state: () => ({
     snapshot: null as Snapshot | null,
@@ -53,6 +61,16 @@ export const useGameStore = defineStore('game', {
     busy: false,
     error: '',
     ready: false,
+    /** INIT IS A TOTAL TRANSITION (W1-INTEGRITY-B, TB-06): `loading -> ready | recovery`, no third
+     *  exit. `ready` (above) stays as the legacy boolean every screen already reads; this field is
+     *  the full state, and `recovery` is the one `ready` could never express – the database said
+     *  no, and the app must SAY so and offer a way forward instead of spinning on the splash. */
+    phase: 'loading' as 'loading' | 'ready' | 'recovery',
+    /** what went wrong when `phase === 'recovery'` – rendered verbatim on the recovery screen */
+    initError: '',
+    /** The last save-management operation's visible outcome (TB-19: every persistence result gets
+     *  pending/success/failure feedback). One row, newest wins – More renders it. */
+    saveOp: null as SaveOpStatus | null,
   }),
   actions: {
     /** Unwrap a worker reply: absorb the committed revision, throw typed on refusal. Returning
@@ -63,15 +81,50 @@ export const useGameStore = defineStore('game', {
       return res
     },
     async init() {
-      if (navigator.storage?.persist) {
-        this.persisted = (await navigator.storage.persisted()) || (await navigator.storage.persist())
+      this.phase = 'loading'
+      this.initError = ''
+      try {
+        if (navigator.storage?.persist) {
+          this.persisted = (await navigator.storage.persisted()) || (await navigator.storage.persist())
+        }
+        // The probe is a DIRECT request, not refreshCareers(): that helper swallows a failed reply
+        // on purpose (fine mid-game, where stale lists beat noise), and swallowing it HERE is how
+        // the old init turned "IndexedDB denied" into "fresh install" – it booted a player with
+        // years of careers straight into the onboarding wizard, and the first hint anything was
+        // wrong came when their new career failed to autosave. A failed probe now lands in
+        // `recovery` with the actual error, and every path out of it is explicit.
+        const res = await request({ type: 'listCareers' })
+        if (!res.ok) {
+          this.initError = res.error
+          this.phase = 'recovery'
+          return
+        }
+        if (res.type === 'careers') this.careers = res.careers
+        if (!this.snapshot && this.careers.length) {
+          const mostRecent = [...this.careers].sort((a, b) => b.lastPlayedAt - a.lastPlayedAt)[0]
+          await this.loadCareer(mostRecent.careerId)
+        }
+        this.ready = true
+        this.phase = 'ready'
+      } catch (err) {
+        // A crashed worker rejects every pending request (client.ts) – without this catch that
+        // rejection would fly out of onMounted unhandled and the splash would spin forever.
+        this.initError = err instanceof Error ? err.message : String(err)
+        this.phase = 'recovery'
       }
-      await this.refreshCareers()
-      if (!this.snapshot && this.careers.length) {
-        const mostRecent = [...this.careers].sort((a, b) => b.lastPlayedAt - a.lastPlayedAt)[0]
-        await this.loadCareer(mostRecent.careerId)
-      }
+    },
+    /** The recovery screen's Retry. Works WITHOUT a reload because db/saves.ts no longer caches a
+     *  rejected open – a fresh init really does knock on IndexedDB again. */
+    async retryInit() {
+      await this.init()
+    },
+    /** The recovery screen's "start a new career": an explicit player decision to walk past the
+     *  storage failure into onboarding. Nothing is deleted – if the database comes back, every
+     *  career is still there – but a new career's saves may fail until it does, and those
+     *  failures now surface (the wizard renders `error`, More renders `saveOp`). */
+    startFreshFromRecovery() {
       this.ready = true
+      this.phase = 'ready'
     },
     async run<T>(fn: () => Promise<T>): Promise<T | undefined> {
       this.busy = true
@@ -140,6 +193,15 @@ export const useGameStore = defineStore('game', {
         /* no active career or a fresh failure – the copy below still explains the refusal */
       }
       this.error = 'That action was based on an outdated screen – it was refreshed. Try again.'
+    },
+    /** `run`, plus a visible outcome (TB-19). Save-management actions route through this so the
+     *  result – pending, then ok or a typed error – is STATE the More screen renders, instead of
+     *  a string that only four unrelated screens happened to show. `run` still owns busy/error. */
+    async runOp<T>(op: SaveOpKind, fn: () => Promise<T>): Promise<T | undefined> {
+      this.saveOp = { op, status: 'pending' }
+      const out = await this.run(fn)
+      this.saveOp = this.error ? { op, status: 'error', message: this.error } : { op, status: 'ok' }
+      return out
     },
     async newCareer(seed: string, profile: PlayerProfile = DEFAULT_PROFILE) {
       // Empty seed -> generate a readable one store-side (UI randomness is fine outside the engine).
@@ -319,14 +381,8 @@ export const useGameStore = defineStore('game', {
       })
     },
     async saveManual() {
-      await this.run(async () => {
+      await this.runOp('save', async () => {
         const res = this.takeOk(await request({ type: 'save', slot: 'manual' }))
-        if (res.type === 'slots') this.slots = res.slots
-      })
-    },
-    async saveNamed(name: string) {
-      await this.run(async () => {
-        const res = this.takeOk(await request({ type: 'saveNamed', name }))
         if (res.type === 'slots') this.slots = res.slots
       })
     },
@@ -334,7 +390,7 @@ export const useGameStore = defineStore('game', {
      *  before replying ok, so a restore that answered is a restore that survives a relaunch —
      *  this replaced `load`, whose restored world evaporated on the next boot. */
     async restoreSlot(slot: string) {
-      await this.run(async () => {
+      await this.runOp('load', async () => {
         const res = this.takeOk(await request({ type: 'restoreSlot', slot }))
         if (res.type === 'snapshot') {
           this.snapshot = res.snapshot
@@ -344,8 +400,14 @@ export const useGameStore = defineStore('game', {
         await this.refreshCareers()
       })
     },
+    async saveNamed(name: string) {
+      await this.runOp('save', async () => {
+        const res = this.takeOk(await request({ type: 'saveNamed', name }))
+        if (res.type === 'slots') this.slots = res.slots
+      })
+    },
     async loadCareer(careerId: string) {
-      await this.run(async () => {
+      await this.runOp('load', async () => {
         const res = this.takeOk(await request({ type: 'loadCareer', careerId }))
         if (res.type === 'snapshot') {
           this.snapshot = res.snapshot
@@ -355,13 +417,13 @@ export const useGameStore = defineStore('game', {
       })
     },
     async deleteSlot(slot: string) {
-      await this.run(async () => {
+      await this.runOp('delete', async () => {
         const res = this.takeOk(await request({ type: 'deleteSlot', slot }))
         if (res.type === 'slots') this.slots = res.slots
       })
     },
     async deleteCareer(careerId: string) {
-      await this.run(async () => {
+      await this.runOp('delete-career', async () => {
         const res = this.takeOk(await request({ type: 'deleteCareer', careerId }))
         if (res.type === 'careers') this.careers = res.careers
         if (this.snapshot?.careerId === careerId) {
@@ -385,7 +447,7 @@ export const useGameStore = defineStore('game', {
       }
     },
     async exportSave() {
-      await this.run(async () => {
+      await this.runOp('export', async () => {
         const res = this.takeOk(await request({ type: 'exportSave' }))
         if (res.type !== 'exported') return
         const blob = new Blob([res.bytes], { type: 'application/octet-stream' })
@@ -398,12 +460,18 @@ export const useGameStore = defineStore('game', {
       })
     },
     async importSave(file: File) {
-      await this.run(async () => {
+      await this.runOp('import', async () => {
         const bytes = await file.arrayBuffer()
         const res = this.takeOk(await request({ type: 'importSave', bytes }, [bytes]))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshCareers()
         await this.refreshSlots()
+        // A successful import IS a way out of storage recovery – the write went through, so the
+        // database is back (or was never the problem). Flip to ready so the shell mounts the game.
+        if (this.phase === 'recovery') {
+          this.ready = true
+          this.phase = 'ready'
+        }
       })
     },
   },
