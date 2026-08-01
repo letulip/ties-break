@@ -81,8 +81,10 @@ half); + one stowaway found by the living-field smoke.
   `fileParallelism: false` for the sim project. ⚠ The weekly calibration cron first fires
   Monday 03.08 — one red run is accepted and is itself the repro; land this before the second.
 - Theme sync `#0f172a` → `#0a0e13` (vite.config + index.html) + a design-tokens pin.
-- **Stowaway:** the W-tier tournament header prints "Prize money –" although `prizeCents`
-  exists — find the header's source and read the table (surfacing bug, no engine change).
+- **Stowaways:** the W-tier tournament header prints "Prize money –" although `prizeCents`
+  exists (surfacing bug, no engine change); and the W15 lock chip prints "58 / 120 national
+  pts" for a band denominated in ITF junior points — `pointsLockNote` hardcodes the domestic
+  label (round-15's find).
 
 Exit: gate + a browser pass over Money/More/Season headers; the cron's next run green.
 
@@ -342,6 +344,10 @@ Status legend: ✅ done (merged or in wave/2026-08-01) · 🔜 mapped to a wave 
 | Champion-news ≠ paid champion in ~91% of her events | 🔜 W3-BALANCE (owner decision with both baselines) |
 | "Prize money –" on W-tier headers | 🔜 W1-QUICK stowaway |
 | In-match injury does not exist | 🔜 W3-INMATCH (the owner's 01.08 ask) |
+| `pointsLockNote` names the wrong currency on W15 locks | 🔜 W1-QUICK stowaway (round-15's find) |
+| `activeLadderOf` never returns 'wta' — no surface auto-opens on the professional table | 👤 with W2-CONTRACT: WHEN the pro table becomes "her" table is the handover-at-19 question |
+| `bench:fatigue --scenario runfat-*` patches only the C-family run ladder | 🔜 W3-BALANCE (the harness consolidation absorbs it) |
+| Academy travelCover 0.75: safety gate passed (backed 27-30/30 unchanged) but long-horizon trip volume thins (j30 entries 55→45 over 14→20; worst working reach cell 24→16/30 at 14→18) | 👤 the size is the owner's call — 0.75 ships in the wave, the measured cost is on the table |
 | Trophy twin-masters / delivery door / 60-day cache | ✅ fix/trophy-masters |
 | Practice button lost its pre-match screen | ✅ fix/practice-prematch |
 
