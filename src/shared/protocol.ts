@@ -1604,6 +1604,10 @@ export interface SlotMeta {
   week: number
   seed: string
   bytes: number
+  /** W1-INTEGRITY-A: the committed revision this record captured. Lives on the save RECORD
+   *  envelope, NOT inside WorldState – the payload/schema is untouched (no schema bump). Optional
+   *  because records written before this wave have none; they read as revision 0. */
+  revision?: number
 }
 
 /** One career the player can switch between; backs the Careers list in the UI. */
@@ -1616,42 +1620,62 @@ export interface CareerMeta {
   createdAt: number
   lastPlayedAt: number
   week: number
+  /** W1-INTEGRITY-A: the highest committed revision of this career on disk – the compare-and-swap
+   *  anchor every autosave write checks before it may clobber (see src/db/saves.ts). Optional for
+   *  rows written before this wave; absent reads as 0. */
+  revision?: number
 }
+
+/** W1-INTEGRITY-A: machine-readable error kinds the UI can dispatch on. Everything else stays a
+ *  plain human-readable `error` string, exactly as before – `code` is additive.
+ *   STALE_REVISION  the mutation's `baseRevision` is not the worker's committed revision; the
+ *                   response's `revision` carries the current one so the caller can refresh.
+ *   SAVE_CONFLICT   the on-disk career revision is ahead of the one being written (another tab
+ *                   committed since we loaded) – the write was refused, nothing was clobbered. */
+export type WorkerErrorCode = 'STALE_REVISION' | 'SAVE_CONFLICT'
 
 export type ToWorker =
   | { id: number; type: 'new'; seed: string; profile: PlayerProfile }
-  | { id: number; type: 'tick'; weeks: number }
-  | { id: number; type: 'advance'; weeks: 1 | 4 }
-  | { id: number; type: 'enterEvent'; eventId: string }
-  | { id: number; type: 'withdrawEvent'; eventId: string }
-  | { id: number; type: 'tournamentReveal' }
-  | { id: number; type: 'tournamentSkip' }
-  | { id: number; type: 'tournamentClose' }
+  | { id: number; type: 'tick'; weeks: number; baseRevision: number }
+  | { id: number; type: 'advance'; weeks: 1 | 4; baseRevision: number }
+  | { id: number; type: 'enterEvent'; eventId: string; baseRevision: number }
+  | { id: number; type: 'withdrawEvent'; eventId: string; baseRevision: number }
+  | { id: number; type: 'tournamentReveal'; baseRevision: number }
+  | { id: number; type: 'tournamentSkip'; baseRevision: number }
+  | { id: number; type: 'tournamentClose'; baseRevision: number }
   // R9-9: withdraw POST-deadline at the event week – fee forfeited, travel refunded, no run.
-  | { id: number; type: 'skipEvent'; eventId: string }
+  | { id: number; type: 'skipEvent'; eventId: string; baseRevision: number }
   // R10-13: cancel an entry before its week starts. Past the deadline the fee is FORFEITED and the
   // week becomes plannable again (the escape from the R10-3 dead end); before it, a full refund.
-  | { id: number; type: 'cancelEntry'; eventId: string }
+  | { id: number; type: 'cancelEntry'; eventId: string; baseRevision: number }
   // Season planner: book/cancel a vacation or a practice match on an empty FUTURE week.
   // Cancelling before the week starts refunds in full (mirror of entry withdrawal).
-  | { id: number; type: 'bookVacation'; week: number; packageId: string }
-  | { id: number; type: 'cancelVacation'; week: number }
-  | { id: number; type: 'bookPractice'; week: number; withCoach: boolean }
-  | { id: number; type: 'hireCoach'; coachId: string | null }
-  | { id: number; type: 'setCoachOnEventWeeks'; on: boolean }
-  | { id: number; type: 'cancelPractice'; week: number }
-  | { id: number; type: 'setPlan'; plan: WeekPlan }
+  | { id: number; type: 'bookVacation'; week: number; packageId: string; baseRevision: number }
+  | { id: number; type: 'cancelVacation'; week: number; baseRevision: number }
+  | { id: number; type: 'bookPractice'; week: number; withCoach: boolean; baseRevision: number }
+  | { id: number; type: 'hireCoach'; coachId: string | null; baseRevision: number }
+  | { id: number; type: 'setCoachOnEventWeeks'; on: boolean; baseRevision: number }
+  | { id: number; type: 'cancelPractice'; week: number; baseRevision: number }
+  | { id: number; type: 'setPlan'; plan: WeekPlan; baseRevision: number }
   // W4: answer the knock. The ONLY way an undecided knock clears, and the only way time moves again.
-  | { id: number; type: 'decideKnock'; choice: KnockChoice }
+  | { id: number; type: 'decideKnock'; choice: KnockChoice; baseRevision: number }
   // THE INBOX (v32): answer a letter. Both are refused past the deadline – the window is the
   // feature, not a courtesy – and `signOffer` is irreversible by design, which is why the UI puts a
   // ConfirmDialog in front of it and the engine puts nothing in front of the confirm.
-  | { id: number; type: 'signOffer'; offerId: string }
-  | { id: number; type: 'refuseOffer'; offerId: string }
-  | { id: number; type: 'setPhysio'; active: boolean }
+  | { id: number; type: 'signOffer'; offerId: string; baseRevision: number }
+  | { id: number; type: 'refuseOffer'; offerId: string; baseRevision: number }
+  | { id: number; type: 'setPhysio'; active: boolean; baseRevision: number }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }
-  | { id: number; type: 'load'; slot: string }
+  // W1-INTEGRITY-A (TB-01): restore a slot AS THE ACTIVE CAREER – the restored state is committed
+  // as the NEWEST autosave before the response says ok, so restore → close → relaunch reopens it.
+  // This replaced the old `load`, which swapped the worker's world WITHOUT writing an autosave: a
+  // relaunch then picked the newer pre-restore generation and silently rolled the restore back.
+  // Loading-for-inspection (read without becoming the active career) is deliberately NOT this
+  // command; no surface needs it today, and when one does it must be a separate query.
+  | { id: number; type: 'restoreSlot'; slot: string }
+  // W1-INTEGRITY-A: read-only snapshot of the committed world – the stale-revision refresh path.
+  | { id: number; type: 'getSnapshot' }
   | { id: number; type: 'listSlots'; careerId?: string }
   | { id: number; type: 'deleteSlot'; slot: string }
   | { id: number; type: 'listCareers' }
@@ -1660,9 +1684,29 @@ export type ToWorker =
   | { id: number; type: 'exportSave' }
   | { id: number; type: 'importSave'; bytes: ArrayBuffer }
 
+// Every success carries `revision` – the worker's committed revision AFTER the command (unchanged
+// by queries). Mutating requests send it back as `baseRevision`; the worker rejects a stale one
+// with code STALE_REVISION instead of applying the command to state the caller has not seen.
 export type ToUI =
-  | { id: number; ok: true; type: 'snapshot'; snapshot: Snapshot; recovered?: true }
-  | { id: number; ok: true; type: 'slots'; slots: SlotMeta[] }
-  | { id: number; ok: true; type: 'careers'; careers: CareerMeta[] }
-  | { id: number; ok: true; type: 'exported'; bytes: ArrayBuffer; filename: string }
-  | { id: number; ok: false; error: string }
+  | {
+      id: number
+      ok: true
+      type: 'snapshot'
+      snapshot: Snapshot
+      revision: number
+      recovered?: true
+      /** set only by `restoreSlot`: the slot the active state was restored from */
+      restoredFrom?: string
+    }
+  | { id: number; ok: true; type: 'slots'; slots: SlotMeta[]; revision: number }
+  | { id: number; ok: true; type: 'careers'; careers: CareerMeta[]; revision: number }
+  | { id: number; ok: true; type: 'exported'; bytes: ArrayBuffer; filename: string; revision: number }
+  | {
+      id: number
+      ok: false
+      error: string
+      /** absent for ordinary engine refusals; see WorkerErrorCode for the typed kinds */
+      code?: WorkerErrorCode
+      /** on STALE_REVISION / SAVE_CONFLICT: the revision the conflict was measured against */
+      revision?: number
+    }

@@ -4,8 +4,8 @@
 // skip), and About. Destructive/generation-switching actions go through the shared
 // ConfirmDialog popup; "New career" keeps its pre-existing inline confirm (only the
 // copy changed) since it doesn't touch any stored data.
-import { computed, onMounted, ref } from 'vue'
-import { useGameStore } from '../../stores/game'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useGameStore, type SaveOpKind } from '../../stores/game'
 import { sanitizeName } from '../../db/saves'
 import type { CareerMeta, SlotMeta } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
@@ -59,6 +59,47 @@ function runConfirm(): void {
   action?.onConfirm()
 }
 
+// --- Save-operation feedback (W1-INTEGRITY-B, TB-19) ------------------------------------------
+//
+// EVERY save-management result is visible here now. The store has captured these errors since the
+// beginning (`run()` writes `error`), but this screen never rendered them – so a failed import, a
+// full-disk save, a delete that did not happen all LOOKED like success, on the one screen whose
+// whole job is the player's data. The store's `saveOp` is the typed row (which op, pending/ok/
+// error, message); this block owns how it reads.
+//
+// `retrySaveAction` is the last save operation as a closure, recorded at its trigger – so Retry
+// re-runs THE SAME operation with the same arguments (including a re-import of the same File
+// object, which stays readable after the picker closes). It is deliberately per-screen-visit
+// state: More mounts fresh on every visit (plain v-if chain in App.vue), and a Retry button that
+// outlived the list it acted on would be a trap.
+const OP_LABEL: Record<SaveOpKind, string> = {
+  save: 'Save',
+  load: 'Load',
+  delete: 'Delete save',
+  'delete-career': 'Delete career',
+  export: 'Export',
+  import: 'Import',
+}
+const retrySaveAction = ref<(() => void) | null>(null)
+/** run a save operation AND remember it as the Retry target */
+function tracked(fn: () => void): void {
+  retrySaveAction.value = fn
+  fn()
+}
+// Success rows auto-dismiss (a permanent "Export – done" is noise by the second look); error rows
+// stay until the next operation replaces them, because an error the player never saw is the exact
+// bug this block exists to fix.
+const okVisible = ref(false)
+let okTimer: ReturnType<typeof setTimeout> | undefined
+watch(
+  () => game.saveOp,
+  (op) => {
+    clearTimeout(okTimer)
+    okVisible.value = op?.status === 'ok'
+    if (op?.status === 'ok') okTimer = setTimeout(() => (okVisible.value = false), 2500)
+  },
+)
+
 function flagEmoji(code: string): string {
   if (!code) return ''
   return String.fromCodePoint(...[...code].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65))
@@ -88,7 +129,7 @@ function askLoadCareer(c: CareerMeta): void {
   if (c.careerId === activeCareerId.value) return
   pendingConfirm.value = {
     message: `Load ${c.kidName}'s career? Your currently active career stays saved.`,
-    onConfirm: () => game.loadCareer(c.careerId),
+    onConfirm: () => tracked(() => game.loadCareer(c.careerId)),
   }
 }
 function askDeleteCareer(c: CareerMeta): void {
@@ -96,7 +137,21 @@ function askDeleteCareer(c: CareerMeta): void {
     message: `Delete ${c.kidName}'s career? This removes ALL of its saves – autosave and named – for good.`,
     danger: true,
     confirmLabel: 'Delete',
-    onConfirm: () => game.deleteCareer(c.careerId),
+    onConfirm: () => tracked(() => game.deleteCareer(c.careerId)),
+  }
+}
+
+/** TB-19: a named save's delete now goes through the same ConfirmDialog every other destructive
+ *  action here uses. It was the ONE immediate deletion on the screen – a bare ✕ one tap from
+ *  "Load", no confirm, no undo, on data the player named on purpose. Confirmation is reserved for
+ *  the irreversible (TB-19's own trade-off note) and this is exactly that: there is no trash bin
+ *  behind it. Ordinary reversible settings on this screen stay immediate. */
+function askDeleteSlot(name: string, slot: string): void {
+  pendingConfirm.value = {
+    message: `Delete the save "${name}"? There is no undo.`,
+    danger: true,
+    confirmLabel: 'Delete',
+    onConfirm: () => tracked(() => game.deleteSlot(slot)),
   }
 }
 
@@ -120,10 +175,11 @@ function askRestorePrevious(): void {
   if (!prev) return
   pendingConfirm.value = {
     message: 'Restore the previous autosave? This replaces your current progress with the earlier generation.',
-    onConfirm: async () => {
-      await game.load(prev.slot)
-      await game.refreshSlots()
-    },
+    // W1-INTEGRITY-A (TB-01): `restoreSlot`, not `load` — the worker commits the restored state as
+    // the NEWEST autosave before answering, so closing the app right here keeps the restore
+    // (the old `load` swapped memory only, and a relaunch silently rolled back to pre-restore).
+    // The action refreshes slots/careers itself; the manual refreshSlots chaser is gone with it.
+    onConfirm: () => game.restoreSlot(prev.slot),
   }
 }
 
@@ -143,13 +199,16 @@ function trySaveAs(): void {
   }
 }
 async function doSaveAs(name: string): Promise<void> {
+  retrySaveAction.value = () => doSaveAs(name)
   await game.saveNamed(name)
   saveName.value = ''
 }
 
 function onImportPicked(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
-  if (file) game.importSave(file)
+  // The File object outlives the picker, so Retry can re-read the same file after a transient
+  // failure (worker hiccup, storage pressure) without asking the player to find it again.
+  if (file) tracked(() => game.importSave(file))
   if (fileInput.value) fileInput.value.value = ''
 }
 
@@ -304,14 +363,20 @@ const reducedMotion = prefersReducedMotion()
           <td class="num">{{ weekLabel(s.week) }}</td>
           <td class="num">{{ (s.bytes / 1024).toFixed(1) }} KB</td>
           <td>
-            <button :disabled="game.busy" @click="game.load(s.slot)">Load</button>
+            <!-- W1-INTEGRITY-A (TB-01): loading a named save makes it the ACTIVE state, so it
+                 goes through restoreSlot - committed as the newest autosave before the button
+                 unbusies, and therefore still the active state after a relaunch. Wrapped in B's
+                 `tracked` so the TB-19 status row can offer Retry on exactly this operation. -->
+            <button :disabled="game.busy" @click="tracked(() => game.restoreSlot(s.slot))">Load</button>
+            <!-- TB-19: the delete beside it is routed through the shared ConfirmDialog - it was
+                 the screen's one unconfirmed irreversible action. See askDeleteSlot. -->
             <IconButton
               variant="bare"
               icon="close"
               :icon-size="14"
               :label="`Delete save ${s.name}`"
               :disabled="game.busy"
-              @click="game.deleteSlot(s.slot)"
+              @click="askDeleteSlot(s.name, s.slot)"
             />
           </td>
         </tr>
@@ -324,15 +389,40 @@ const reducedMotion = prefersReducedMotion()
     </div>
 
     <div class="controls" style="margin-top: 12px">
-      <button :disabled="game.busy" @click="game.exportSave()">Export to file</button>
+      <button :disabled="game.busy" @click="tracked(() => game.exportSave())">Export to file</button>
       <button :disabled="game.busy" @click="fileInput?.click()">Import from file</button>
       <input ref="fileInput" type="file" accept=".tsave" hidden @change="onImportPicked" />
       <span class="pill" :class="{ ok: game.persisted }">
         storage: {{ game.persisted === null ? 'unknown' : game.persisted ? 'persistent' : 'best-effort' }}
       </span>
     </div>
+
+    <!-- TB-19: every save operation's outcome, rendered. Pending while it runs, a brief "done"
+         on success, and a failure stays on screen WITH a Retry – previously all of these ended in
+         silence on this screen, success and failure alike. -->
+    <p v-if="game.saveOp?.status === 'pending'" class="hint save-op-row">
+      {{ OP_LABEL[game.saveOp.op] }}…
+    </p>
+    <p v-else-if="game.saveOp?.status === 'ok' && okVisible" class="hint save-op-row">
+      {{ OP_LABEL[game.saveOp.op] }} – done
+    </p>
+    <p v-else-if="game.saveOp?.status === 'error'" class="error save-op-row">
+      {{ OP_LABEL[game.saveOp.op] }} failed – {{ game.saveOp.message }}
+      <button
+        v-if="retrySaveAction"
+        class="link"
+        style="margin-left: 8px"
+        :disabled="game.busy"
+        @click="retrySaveAction()"
+      >Retry</button>
+    </p>
+
     <p v-if="game.persisted === false" class="hint">
       Your browser may clear saves under storage pressure – export a backup file now and then.
+    </p>
+    <p class="hint">
+      Export files hold this career's readable data – name, progress, finances – so treat a backup
+      like the personal file it is.
     </p>
   </section>
 
@@ -356,6 +446,10 @@ const reducedMotion = prefersReducedMotion()
          documents both halves of that bargain. -->
     <hr class="card-divider" />
     <button :disabled="game.busy || !game.snapshot" @click="game.tick(52)">▶▶ 52 (dev)</button>
+    <!-- The screen's one NON-save operation. Save results render in the Saves strip above; this
+         line catches everything else (the fast-forward refusing over an open knock/reveal), which
+         previously failed silently here – More never rendered `game.error` at all. -->
+    <p v-if="game.error && game.error !== game.saveOp?.message" class="error">{{ game.error }}</p>
   </section>
 
   <section>

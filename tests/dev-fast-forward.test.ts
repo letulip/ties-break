@@ -73,13 +73,21 @@ interface Reply {
   ok: boolean
   error?: string
   snapshot?: { week: number; stopReasons?: string[] }
+  /** W1-INTEGRITY-A: every ok reply carries the committed revision; mutations must send it back */
+  revision?: number
 }
 
 const waiters = new Map<number, (r: Reply) => void>()
+/** The committed revision as of the last ok reply — what a real client tracks off responses and
+ *  hands back as `baseRevision`. The guard tests below MUST send a live one: a stale value would
+ *  be refused as STALE_REVISION before the tick guard even runs, and the suite would then be
+ *  pinning the wrong refusal. */
+let lastRevision = 0
 const workerGlobal = {
   onmessage: null as null | ((e: { data: ToWorker }) => void),
   postMessage(m: unknown) {
     const r = m as Reply
+    if (r.ok && typeof r.revision === 'number') lastRevision = r.revision
     waiters.get(r.id)?.(r)
     waiters.delete(r.id)
   },
@@ -149,13 +157,14 @@ describe('layer 2 — a pending decision makes tick throw, and the world does no
   it('an open tournament reveal refuses the tick and holds the week', async () => {
     const week = await loadIntoWorker(pendingTournamentWorld())
 
-    const refusal = await send({ type: 'tick', weeks: 52 })
+    const refusal = await send({ type: 'tick', weeks: 52, baseRevision: lastRevision })
     expect(refusal.ok).toBe(false)
     expect(refusal.error).toContain('resolve the tournament or knock')
 
     // ...and the world behind the refusal is exactly where it was: the next advance re-reports the
-    // SAME stop at the SAME week instead of having silently ticked past it.
-    const after = await send({ type: 'advance', weeks: 1 })
+    // SAME stop at the SAME week instead of having silently ticked past it. (Same baseRevision on
+    // purpose: a refused command commits nothing, so the revision did not move either.)
+    const after = await send({ type: 'advance', weeks: 1, baseRevision: lastRevision })
     expect(after.ok).toBe(true)
     expect(after.snapshot!.week).toBe(week)
     expect(after.snapshot!.stopReasons).toContain('tournament')
@@ -164,20 +173,20 @@ describe('layer 2 — a pending decision makes tick throw, and the world does no
   it('an unanswered knock refuses the tick and holds the week', async () => {
     const week = await loadIntoWorker(pendingKnockWorld())
 
-    const refusal = await send({ type: 'tick', weeks: 1 })
+    const refusal = await send({ type: 'tick', weeks: 1, baseRevision: lastRevision })
     expect(refusal.ok).toBe(false)
     expect(refusal.error).toContain('resolve the tournament or knock')
 
-    const after = await send({ type: 'advance', weeks: 1 })
+    const after = await send({ type: 'advance', weeks: 1, baseRevision: lastRevision })
     expect(after.ok).toBe(true)
     expect(after.snapshot!.week).toBe(week)
     expect(after.snapshot!.stopReasons).toContain('knock')
 
     // ...and the refusal is the DECISION's, not the command's: the moment the knock is answered,
     // the same tick goes through. This is what keeps the guard from being read as "tick is broken".
-    const decided = await send({ type: 'decideKnock', choice: 'rest' })
+    const decided = await send({ type: 'decideKnock', choice: 'rest', baseRevision: lastRevision })
     expect(decided.ok).toBe(true)
-    const ticked = await send({ type: 'tick', weeks: 1 })
+    const ticked = await send({ type: 'tick', weeks: 1, baseRevision: lastRevision })
     expect(ticked.ok, ticked.error).toBe(true)
     expect(ticked.snapshot!.week).toBe(week + 1)
   }, 60_000)
