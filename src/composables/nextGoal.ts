@@ -262,8 +262,16 @@ export function nextGoalFor(facts: GoalFacts): NextGoal {
   if (entered) {
     const standing = ladderStandingFor(facts)
     const best = standing && standing.tier === entered.tier ? standing.finish : bestAt(facts, entered.tier)
-    const here = rungAfter(entered.tier, best) ?? { tier: entered.tier, finish: 0, firstMatch: false }
-    return { text: rungLine(here, entered.label), kind: 'rung', rung: here, weeks }
+    const here = rungAfter(entered.tier, best)
+    if (here) return { text: rungLine(here, entered.label), kind: 'rung', rung: here, weeks }
+    // ⚠ SHE ALREADY HOLDS THIS TIER'S TITLE, so this draw has no rung left to name (owner, playing,
+    // 01.08: the scrap read "Next goal: Win the World Tour 15" the week AFTER she won the W15 -
+    // she was entered for the next one, `rungAfter` was null because the title is hers, and the old
+    // fallback `{finish: 0}` printed "win it again"). A repeat title is not a goal, it is a chore -
+    // so the scrap escalates to the GLOBAL rung instead, under the TIER's own label rather than the
+    // entered event's: she may be playing another W15 this week, but what she is climbing towards
+    // is the World Tour 35, and that is the only honest sentence left at this draw.
+    return { text: rungLine(rung, TIERS[rung.tier].label), kind: 'rung', rung, weeks }
   }
   // STUCK, and the coach has a diagnosis: say the thing she can actually work on this week.
   if (weeks >= STUCK_AFTER_WEEKS) {
@@ -274,9 +282,20 @@ export function nextGoalFor(facts: GoalFacts): NextGoal {
 }
 
 /** Her best readable finish at ONE tier, or null – for the entered-tournament arm, where the rung is
- *  about that draw rather than about the strongest tier she has ever played. */
+ *  about that draw rather than about the strongest tier she has ever played.
+ *
+ *  ⚠ ALL THREE TABLES (01.08, round 15) - the same latent twin `ladderStandingFor`'s fold already
+ *  fixed under task #17, one function down and unnoticed. This read the two tables it knew about, so
+ *  a girl entered for a W15 while her STANDING sat at a different tier (a W35 book, say) had her W15
+ *  results invisible to this arm and was told to win one match at a draw she had already gone deep
+ *  in. The filter below is already per-tier, so the third table needs no special case, only
+ *  inclusion. */
 function bestAt(facts: Pick<GoalFacts, 'ladders'>, tier: TierId): number | null {
-  const here = [...facts.ladders.domestic.countingResults, ...facts.ladders.itf.countingResults]
+  const here = [
+    ...facts.ladders.domestic.countingResults,
+    ...facts.ladders.itf.countingResults,
+    ...facts.ladders.wta.countingResults,
+  ]
     .map(finishOf)
     .filter((r): r is { tier: TierId; finish: number } => r !== null && r.tier === tier)
   return here.length ? Math.min(...here.map((r) => r.finish)) : null

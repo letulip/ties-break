@@ -98,9 +98,29 @@ export default defineConfig({
         // ~361-424 KiB, src/art/preload.ts warms the band she is IN (so a finale popup never
         // renders ahead of its art), and once fetched a painting is offline-durable for 60 days.
         // maxEntries 80 still comfortably holds the whole reachable set (35 files) plus headroom.
+        // ⚠ CACHEFIRST NEVER REVALIDATES, AND THE OWNER'S UPDATED TROPHIES PROVED IT (01.08). He
+        // replaced two trophy paintings; the new webps reached main the same evening - and his
+        // phone kept showing the old ones, because a CacheFirst entry at the SAME URL is served
+        // without ever asking the network again for 60 days. Deploys cannot touch it. So the art
+        // route splits in two, by how the art actually changes:
         runtimeCaching: [
           {
-            // webp only: after build/webp-only nothing else can exist under /images/.
+            // THE SMALL, ITERATED SETS - trophies and sponsor letterheads (≤ ~32 KiB each). The
+            // owner repaints these; a repaint must reach a phone on its own. StaleWhileRevalidate
+            // serves the cached copy instantly and refetches behind it, so an update self-applies
+            // one view later, offline still works, and the revalidation traffic is a few KiB.
+            urlPattern: ({ url }) => /\/images\/(trophies|sponsors)\/.*\.webp$/.test(url.pathname),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'tb-art-small-v1',
+              expiration: { maxEntries: 48, maxAgeSeconds: 60 * 60 * 24 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
+          {
+            // THE BIG CHARACTER PAINTINGS keep CacheFirst - one band is ~361-424 KiB and a phone
+            // must not re-ask for it on every view. The freshness cost above is accepted HERE
+            // because these change ~never; if a band is ever repainted, bump the cache name.
             urlPattern: ({ url }) => /\/images\/.*\.webp$/.test(url.pathname),
             handler: 'CacheFirst',
             options: {

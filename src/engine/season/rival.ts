@@ -86,11 +86,25 @@ function runStrain(tier: TierId, matches: number): number {
  *  half the game. Keyed on array IDENTITY (withScenario patches in a fresh copy and restores the
  *  original instance), which is also how the rest of the engine treats ECONOMY: a knob object is
  *  replaced, never scribbled on in place. */
-let runsIndexCache: { ladder: readonly number[]; byPoints: Map<number, RivalRun[]>; fallback: RivalRun } | null = null
+// ⚠ KEYED ON BOTH LADDERS SINCE R15-6. The strain column reads `runFatigueExtra`, which is
+// per-family now (C for domestic+J, the owner's D for the W rungs), so the index is a function of
+// TWO knob arrays and must watch both identities - a cache keyed on the C ladder alone survived a
+// swap of the W one and quietly served the cohort stale professional strains. Caught by this
+// round's own attribution probe, not by a test: the probe swapped `runFatigueLadderWta` mid-process
+// and the rivals did not move.
+let runsIndexCache: {
+  ladder: readonly number[]
+  ladderWta: readonly number[]
+  byPoints: Map<number, RivalRun[]>
+  fallback: RivalRun
+} | null = null
 
 function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } {
   const ladder = ECONOMY.condition.runFatigueLadder
-  if (runsIndexCache && runsIndexCache.ladder === ladder) return runsIndexCache
+  const ladderWta = ECONOMY.condition.runFatigueLadderWta
+  if (runsIndexCache && runsIndexCache.ladder === ladder && runsIndexCache.ladderWta === ladderWta) {
+    return runsIndexCache
+  }
   const byPoints = new Map<number, RivalRun[]>()
   for (const tier of TIER_LADDER) {
     const rounds = Math.log2(TIERS[tier].drawSize)
@@ -111,7 +125,7 @@ function runsIndex(): { byPoints: Map<number, RivalRun[]>; fallback: RivalRun } 
   // matches no tier at all (a hand-edited or future-tier save). One match at the entry tier: never a
   // crash, and never free. Her first match of a run pays 0 ladder, so this is pure matchDrain.
   const fallback: RivalRun = { tier: TIER_LADDER[0], matches: 1, strain: runStrain(TIER_LADDER[0], 1) }
-  runsIndexCache = { ladder, byPoints, fallback }
+  runsIndexCache = { ladder, ladderWta, byPoints, fallback }
   return runsIndexCache
 }
 

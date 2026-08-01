@@ -27,7 +27,7 @@ import { calendarOwnsWeekAhead } from './composables/weekAhead'
 import { dayCrossRuns } from './composables/dayCross'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
-import { recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
+import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
 // The Trophies tab's dot and the trophy that flies there to leave it. Same shape as the line above:
 // the PREDICATE is a pure function in the composable and this file only wires it to a watermark, so
 // "when does the dot show" is one testable sentence rather than a computed buried in a shell.
@@ -355,7 +355,17 @@ watch(
     // renders it, the accent dot still fires, Home still has its door – and the only thing that stops
     // is this navigation. See composables/weekRecap.ts for why the preference may not be folded into
     // `recapExists` itself, and why it is a localStorage flag rather than a save field.
-    if ((advanced || runClosed) && storyOpensItself(snap)) tab.value = 'week'
+    // ⚠ A SCREEN THAT OPENED ITS OWN TAKEOVER ON THIS ADVANCE OWNS THE BEAT (owner, 01.08: «Фикс
+    // Play it and watch обязателен - он должен вести на пре-матч экран»). "Play it and watch →"
+    // advances the week and opens PracticeFlow at its pre-match card - and this watcher then
+    // switched the tab out from under it, so the flow unmounted with its screen and the player
+    // landed on the recap instead, every time. The hold is one-shot and claimed right before the
+    // advance (see weekRecap.ts); it must silence BOTH branches below, because either one unmounts
+    // the claimant. The story is untouched - it exists, the dot marks it fresh, it is one tap away.
+    const navHeld = (advanced || runClosed) && consumePostAdvanceNav()
+    if (navHeld) {
+      // stay where the claimant is - it is already showing the result of the week
+    } else if ((advanced || runClosed) && storyOpensItself(snap)) tab.value = 'week'
     // ⚠ ...AND OTHERWISE A RESOLVED WEEK GOES HOME. THIS WAS `afterWeekTab()` AND IT WAS BACKWARDS.
     //
     // The calendar used to be where a week ENDED: `afterWeekTab()` sent every non-tournament week to the

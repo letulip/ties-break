@@ -1,0 +1,47 @@
+name: Bug report
+description: Something broke, looked wrong, or a career went sideways
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what happened instead?
+      placeholder: I played the W15 final at 2x speed and the score line showed...
+    validations:
+      required: true
+  - type: input
+    id: week
+    attributes:
+      label: Week label
+      description: The week shown in the app when it happened (top of Home, e.g. "Y2 W17").
+    validations:
+      required: false
+  - type: input
+    id: schema
+    attributes:
+      label: Save schema version
+      description: More → About → "Save schema" (e.g. v22).
+    validations:
+      required: false
+  - type: input
+    id: seed
+    attributes:
+      label: Seed
+      description: More → About → "Seed" (tap to copy). The engine is deterministic – with a seed we can usually replay your exact career.
+    validations:
+      required: false
+  - type: input
+    id: device
+    attributes:
+      label: Device / browser
+      placeholder: iPhone 15, iOS 19 Safari (installed as PWA)
+    validations:
+      required: false
+  - type: textarea
+    id: save-file
+    attributes:
+      label: Save export (optional)
+      description: If the bug lives in a specific career, export it (More → Saves → "Export to file") and attach the .tsave here. Note - the save contains the child name you chose; rename the career first if you'd rather not share it.
+    validations:
+      required: false

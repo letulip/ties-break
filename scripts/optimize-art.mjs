@@ -182,8 +182,20 @@ function notShipped(stem) {
 // JPG rather than PNG, so workbox's `globPatterns` (js/css/html/svg/png/webp/woff2) would NOT have
 // precached them - which makes this the quieter version of the same bug: no install cost, just
 // three unoptimised files shipping forever with nothing reporting it.
-const DELIVERY_SET = { trophies: 'trophies', sponsors: 'sponsors' }
-const DELIVERY_DIRS = Object.keys(DELIVERY_SET)
+// ⚠ THE SHIPPED WEBP DIRECTORY IS A DELIVERY DOOR TOO (01.08, third pass - and the reason there is
+// a third pass is that the second one fixed a door the owner does not use). 31.07 taught
+// `public/trophies/` to accept `-fs8` names; the owner's actual drops land in
+// `public/images/trophies/` - NEXT TO THE WEBPS HE IS REPLACING, which is the natural place to put
+// a replacement - and there the stray--fs8 rule still filed both of his updated trophies into
+// art-src WITHOUT ENCODING. Same silent no-op, third door. A human replaces a file where he can see
+// the file, so the directory that shows the result must accept the master.
+const DELIVERY_SET = {
+  trophies: 'trophies',
+  sponsors: 'sponsors',
+  'images/trophies': 'trophies',
+  'images/sponsors': 'sponsors',
+}
+const DELIVERY_DIRS = ['trophies', 'sponsors']
 
 const CACHE_NAME = '.art-cache.json'
 const CACHE_VERSION = 3
@@ -231,10 +243,15 @@ function discover(root) {
       // A delivery directory is NOT the set's home, so its masters are filed into the set's real
       // inbox rather than mirrored where they happened to land — otherwise they would sit in
       // `art-src/<dir>/`, which part B does not scan, and the set could never be re-encoded.
-      const moveTo = set
-        ? join(artSrcDir, 'images', `${set}-jpeg`, basename(src))
-        : join(artSrcDir, relative(publicDir, src))
       const rawStem = basename(src).replace(RASTER_RE, '')
+      const ext = basename(src).slice(rawStem.length)
+      // The master is FILED UNDER ITS STRIPPED NAME (01.08): filing `j30-gold-fs8.png` next to the
+      // `j30-gold.png` already in the inbox would recreate the very twin pair the collision guard
+      // below exists to outlaw - the next run would then refuse to build until a human deleted one.
+      const filedName = set ? `${rawStem.replace(FS8_RE, '')}${ext}` : basename(src)
+      const moveTo = set
+        ? join(artSrcDir, 'images', `${set}-jpeg`, filedName)
+        : join(artSrcDir, relative(publicDir, src))
       // ⚠ A DELIVERY DIRECTORY STRIPS `-fs8` INSTEAD OF EVACUATING ON IT (31.07, second pass).
       //
       // The first pass renamed the eighteen trophies by hand and left this rule alone, reasoning
@@ -376,6 +393,32 @@ export async function optimizeArt(options = {}) {
   const artSrcDir = join(root, 'art-src')
 
   const { encode, evacuate } = discover(root)
+
+  // ⚠ TWO SOURCES FOR ONE TARGET IS AN ERROR, NOT A RACE (01.08). The first trophy import left every
+  // master behind twice - `<stem>.png` beside `<stem>-fs8.png` - and once delivery dirs learned to
+  // strip `-fs8`, both mapped to the same webp. Which one won depended on scan order and on what the
+  // cache happened to remember, so the shipped image could flip between OLD and NEW from one build to
+  // the next with every run logging success. The owner's updated trophies vanished into exactly this.
+  // A pipeline that cannot say which file is the master must stop and ask, loudly, at build time -
+  // the alternative is a webp that lies with confidence.
+  {
+    const byTarget = new Map()
+    for (const job of encode) {
+      const list = byTarget.get(job.target) ?? []
+      list.push(job.src)
+      byTarget.set(job.target, list)
+    }
+    const clashes = [...byTarget.entries()].filter(([, srcs]) => srcs.length > 1)
+    if (clashes.length) {
+      const lines = clashes
+        .map(([target, srcs]) => `  ${relative(root, target)}\n${srcs.map((s) => `    <- ${relative(root, s)}`).join('\n')}`)
+        .join('\n')
+      throw new Error(
+        `optimize-art: ${clashes.length} target(s) have more than one master - delete or rename the stale twin(s):\n${lines}`,
+      )
+    }
+  }
+
   const result = { encoded: 0, skipped: 0, evacuated: 0 }
 
   if (!encode.length && !evacuate.length) {

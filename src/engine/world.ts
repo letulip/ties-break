@@ -117,6 +117,16 @@ import {
   JUNIOR_TOUR,
 } from './season/tournament'
 import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
+// THE FIELD TIER (living-field phase W, 01.08). Field pros are DERIVED, NEVER PERSISTED – see
+// season/fieldPros.ts for the whole argument. world.ts only ever asks three questions of them:
+// the merged W ranking, the W-event candidate universe, and a name for an fp- id on a surface.
+import {
+  fieldProsFor,
+  isFieldProId,
+  mergedWtaRanking,
+  universeForTier,
+  type FieldPro,
+} from './season/fieldPros'
 import { simulateMatch } from './match/engine'
 import { applySurfaceStyle } from './match/style'
 import { applyKit, kitInjuryFactor, kitWearAt } from './equipment'
@@ -746,8 +756,26 @@ export function inTrack(track: LadderTrack): (r: SeasonResult) => boolean {
   return (r) => (r.tier ? TIERS[r.tier].track === track : track === 'domestic')
 }
 
+/** THE FIELD, for this world as it stands this week – ~300 derived professionals (living-field
+ *  phase W, 01.08). Memoised inside fieldProsFor; regenerates only when the season index turns
+ *  over, which is the same boundary the conveyor renames the cohort on, so "stable within a
+ *  season" holds for both populations at once. Pure derivation, ZERO draws on any stream the tick
+ *  walks – the frozen MAIN capture (41550 / e6b0c709) cannot see this function. */
+function fieldProsOf(world: WorldState): FieldPro[] {
+  return fieldProsFor(world.seed, seasonIndexOf(world.week), world.cohort.map((p) => p.name))
+}
+
 function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] {
-  return computeRanking(world.results, world.week, [...cohortIds(world), KID_ID], inTrack(track))
+  const live = computeRanking(world.results, world.week, [...cohortIds(world), KID_ID], inTrack(track))
+  // ⚠ THE W TABLE IS THE MERGED TABLE, everywhere it is read (living-field phase W, 01.08). The
+  // professional table used to be ~199 zero rows and whatever the canonical W brackets had paid the
+  // juniors – which is why five W15 titles printed "#9" and the acceptance cuts measured nothing.
+  // LIVE rows keep exactly the fold above (earned points, kid included); the field's virtual rows
+  // interleave by points, earned-beats-derived on ties. ONE merged view by construction: rank
+  // caches (kidRankWta), the Stats standings, the tournament overlay's opponent ranks and the
+  // entry gates all flow through this line, so no surface can see a different W table.
+  if (track !== 'wta') return live
+  return mergedWtaRanking(live, fieldProsOf(world))
 }
 
 /** THE table when only one is meant: the ITF one. It is what opens the international rungs and what
@@ -3461,15 +3489,43 @@ export function reviewAcademy(world: WorldState): void {
 
   // "и экипа" – the kit, once a year, as money rather than as a per-purchase discount, because it
   // arrives as a delivery and not as a coupon.
+  //
+  // ⚠ THE GRANT STANDS DOWN UNDER A LIVE KIT DEAL (owner, 01.08: «мне кажется, что это справедливо»).
+  // Until round 15 the academy paid the full grant while a signed brand deal covered the same
+  // equipment lines - the family was being paid twice for one string bed. The academy is not naive:
+  // at review time it reads the deal in force (`activeKitDeal`, the same one answer the wear model
+  // and the travel share read) and funds only the UNCOVERED lines, a third of the grant per line.
+  // Full coverage (the global rung: strings + frame + shoes) pays nothing, and the review SAYS SO in
+  // the feed instead of going silent - a line that used to arrive every year and quietly stops is a
+  // bug report waiting to be filed. The review is a flow, not persisted terms: nothing here touches
+  // the schema, and a deal signed or lapsed between reviews is simply read fresh next year.
+  // Zero draws, like everything in this review.
   const kit = kitGrantCents(level)
-  if (kit > 0) {
-    world.fundsCents += kit
+  const deal = activeKitDeal(world.offers, world.week)
+  const covers = deal ? (deal.terms as KitOfferTerms).covers : []
+  const brand = deal ? (deal.terms as KitOfferTerms).brand : ''
+  const grant = Math.round((kit * (3 - covers.length)) / 3)
+  if (kit > 0 && covers.length >= 3) {
+    addEvent(world, {
+      week: world.week,
+      type: 'info',
+      text: `No academy kit grant this year – ${brand} already kits her out.`,
+    })
+  } else if (grant > 0) {
+    world.fundsCents += grant
+    // The income row says what the money is FOR when a brand holds some of her lines - the parent
+    // reading the ledger must be able to tell a two-thirds grant from a full one.
+    const uncovered = (['strings', 'frame', 'shoes'] as KitLine[]).filter((l) => !covers.includes(l))
+    const LINE_WORD: Record<KitLine, string> = { strings: 'strings', frame: 'frames', shoes: 'shoes' }
+    const listOf = (lines: KitLine[]) => lines.map((l) => LINE_WORD[l]).join(' and ')
     addEvent(world, {
       week: world.week,
       type: 'income',
       category: 'academy',
-      text: 'Academy kit grant – rackets, strings and shoes for the season',
-      amountCents: kit,
+      text: deal
+        ? `Academy kit grant – ${listOf(uncovered)}; ${brand} covers her ${listOf([...covers])}.`
+        : 'Academy kit grant – rackets, strings and shoes for the season',
+      amountCents: grant,
     })
   }
 }
@@ -3549,11 +3605,41 @@ function computeShadowTournament(
   // and the run's every round shares this ONE build. Fractional skills are fine for the match engine.
   const kid = kidMatchPlayerFor(world, event.surface)
   const kidRng = rngFromSeed(`${world.seed}:kidtour:${event.id}`)
-  const entrants = selectEntrants(event, world.cohort, ranking, kidRng, fatigue)
+  // ⚠ HER W-TIER DRAWS ARE MADE OF THE MERGED FIELD (living-field phase W, 01.08). For a W-track
+  // event the candidate universe becomes LIVE cohort ∪ field pros and the positions come from the
+  // MERGED W standings – which is the whole fix: a W15 used to draw by percentile over the MIXED
+  // table (median entrant ~53/200, mean skill 50.2, weaker than a J300 field), because the mixed
+  // table was the only table there was. The percentile-band machinery on top is byte-identical.
+  //
+  // Built to the same independence rule as `aiRanking`: LIVE rows fold WITHOUT the kid (results
+  // and roster both), so who turns up to her W15 never depends on what she has done – the exact
+  // property the mixed `ranking` argument already has for every other tier. Field pros carry no
+  // fatigue ledger in phase W, so `fatigue` simply has no entry for them and `rivalField` reads
+  // them fresh at 100 – a real simplification, named in the spec as phase-2 work, and conservative
+  // in the right direction (the field she meets is at its best).
+  //
+  // RNG: everything below stays on `seed:kidtour:<id>`, the event's own sub-stream. The candidate
+  // COUNT changed for the three W rungs – a documented event-sub-stream composition change, the
+  // same class as every band/age re-pick – and the MAIN capture is untouched by construction.
+  const isW = TIERS[event.tier].track === 'wta'
+  const pros = isW ? fieldProsOf(world) : null
+  const universe = pros ? universeForTier(event.tier, world.cohort, pros) : world.cohort
+  const selRanking = pros
+    ? mergedWtaRanking(
+        computeRanking(
+          world.results.filter((r) => r.playerId !== KID_ID),
+          world.week,
+          cohortIds(world),
+          inTrack('wta'),
+        ),
+        pros,
+      )
+    : ranking
+  const entrants = selectEntrants(event, universe, selRanking, kidRng, fatigue)
   const field = rivalField(entrants, event, fatigue)
   // v21b: she goes into the draw AT HER STANDING, not at the bottom of it - the same place the
   // acceptance list would give her - and is seeded, or not, on the terms everybody else gets.
-  const result = runTournament(event, field, kid, world.seed, kidRng, kidSeedIndexIn(field, ranking, KID_ID))
+  const result = runTournament(event, field, kid, world.seed, kidRng, kidSeedIndexIn(field, selRanking, KID_ID))
   const players: Record<string, MatchPlayer> = { [KID_ID]: { ...kid } }
   for (const m of result.matches) {
     if (m.aId !== KID_ID && m.bId !== KID_ID) continue
@@ -3700,6 +3786,19 @@ function finalizeTournament(world: WorldState): void {
       text: `${tier.label} prize money – ${finishLabel(kidFinish)}`,
       amountCents: prize,
     })
+    // D10 + R15-5: THE FIRST CHEQUE IS A MILESTONE (owner, 01.08: «я believe it's a very memorable
+    // moment»). The first week the tennis pays her anything at all - after years of the family
+    // paying for everything - is a beat the career keeps: captured into the durable ledger (one row
+    // per career, `milestoneKey` collapses repeats) and fired once into the feed with the real
+    // figure on it, because "$130 for a first-round exit" and "$2,200 for the title" are different
+    // memories and the ledger line two rows up already taught the player to read the number.
+    // Same commit point as the cheque itself, so a walkover or a skip can never fire it. Zero draws.
+    captureMilestone(world, { type: 'prize', week: world.week, tier: event.tier })
+    fireMilestone(
+      world,
+      'first-prize',
+      `💰 First prize money – $${Math.round(prize / 100).toLocaleString('en-US')} at the ${tier.label}!`,
+    )
   }
 
   // R9-7: the run's physical toll lands HERE, when it commits – per-match, not flat per tier.
@@ -3735,7 +3834,14 @@ function finalizeTournament(world: WorldState): void {
   // champion, the summary + first-title milestone already celebrate it, so only report others.
   const championId = Object.entries(p.result.finishes).find(([, f]) => f === 0)?.[0]
   if (championId && championId !== KID_ID) {
-    const champName = world.cohort.find((c) => c.id === championId)?.name ?? p.players[championId]?.name ?? championId
+    // A W draw's champion can be a field pro now (living-field phase W, 01.08), and she is in
+    // neither the cohort nor `players` unless the kid met her – so the derived field is the third
+    // place to ask before falling back to the raw id.
+    const champName =
+      world.cohort.find((c) => c.id === championId)?.name ??
+      p.players[championId]?.name ??
+      (isFieldProId(championId) ? fieldProsOf(world).find((c) => c.id === championId)?.name : undefined) ??
+      championId
     addEvent(world, {
       week: world.week,
       type: 'info',
@@ -4518,11 +4624,24 @@ export function isTierEligible(tier: TierId, points: number): boolean {
 }
 
 /** The acceptance list as an absolute position, for the one field we actually have this week. A
- *  share rather than a count, so it survives the field growing (see TierDef.enterPct). */
+ *  share rather than a count, so it survives the field growing (see TierDef.enterPct).
+ *
+ *  ⚠ AND THE FIELD GREW (living-field phase W, 01.08) – this is the sentence that design bought.
+ *  A W rung's list is a share of the MERGED professional table (cohort + kid + ~300 field pros,
+ *  ~500 rows), because that is the population its events are drawn from now; the ITF rungs keep
+ *  reading the cohort+kid table their own events draw from. Nobody edited a rule: W35's 0.5 was
+ *  "top 100 of 200" yesterday and is "top 250 of 500" today, against a rank that is honest for the
+ *  same reason it is larger. Measured on a fresh world: w35 accepts 250, w100 accepts 125, and a
+ *  girl with five W15 titles (~#61 merged) still clears both – the door did not move, the room got
+ *  real. */
 export function acceptanceRank(world: WorldState, tier: TierId): number | undefined {
   const pct = TIERS[tier].enterPct
   if (pct === undefined) return undefined
-  return Math.max(1, Math.round(pct * (world.cohort.length + 1)))
+  const fieldSize =
+    TIERS[tier].track === 'wta'
+      ? world.cohort.length + 1 + fieldProsOf(world).length
+      : world.cohort.length + 1
+  return Math.max(1, Math.round(pct * fieldSize))
 }
 
 /** THE ONE GATE, now that there are three tables (docs/specs/two-ladders.md, and the third one in
@@ -4901,6 +5020,20 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
   // would be the expensive half of this function. Surface-specific scaling still happens per event
   // inside the preview, which is where it belongs.
   const ranking = fullRanking(world)
+  // ...and the W cards get the W world (living-field phase W, 01.08). A W-track preview must draw
+  // from the population its bracket will actually be made of – LIVE cohort ∪ field pros, positioned
+  // by the merged W standings – or the card would name a junior the professional draw does not
+  // contain. Same lazy-once shape as `ranking` above, paid only on windows that actually show a W
+  // card; `previewEvent`'s own contract is untouched, it is simply handed the professional
+  // universe as the cohort (the parameter always WAS "who can be drawn").
+  let wtaCtx: { universe: AiPlayer[]; ranking: RankingRow[] } | null = null
+  const wtaWorldFor = (e: SeasonEvent) => {
+    wtaCtx ??= {
+      universe: universeForTier(e.tier, world.cohort, fieldProsOf(world)),
+      ranking: rankingFor(world, 'wta'),
+    }
+    return { seed: world.seed, week: world.week, cohort: wtaCtx.universe, results: world.results }
+  }
   // ...and the same argument for the COACH'S READ OF HER: it is one girl in one week, identical for
   // every card, and `coachLoadViewOf` walks the retained match window to get there. Once per snapshot,
   // null on a self-coached career because there is nobody to have an opinion.
@@ -4967,7 +5100,10 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // What the Season card can honestly say before she plays: her odds in round one against
         // the field as it stands TODAY, how strong that field is, and the (decorative) weather.
         // See season/preview.ts for what this estimate does and does not claim.
-        preview: previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
+        preview:
+          TIERS[e.tier].track === 'wta'
+            ? previewEvent(wtaWorldFor(e), e, wtaCtx!.ranking, kidMatchPlayerFor(world, e.surface))
+            : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
         // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
         // entering will actually cost, and it is the same number chargeTravel will take.
         travelCostCents: travelCostFor(world, e),
@@ -5118,6 +5254,11 @@ function computeStandings(world: WorldState, track: LadderTrack = 'itf'): Standi
   const full = rankingFor(world, track)
   const meta = new Map<string, { name: string; nation: string }>()
   for (const p of world.cohort) meta.set(p.id, { name: p.name, nation: p.nation })
+  // The W table's virtual rows carry real names and flags too (living-field phase W, 01.08) – the
+  // fallback below would otherwise print "fp-141" the day the Stats screen grows its World Tour
+  // tab. The table itself stays windowed exactly as every table always was (top 10 + around the
+  // kid, built a few lines down), so ~500 rows cost the snapshot nothing.
+  if (track === 'wta') for (const p of fieldProsOf(world)) meta.set(p.id, { name: p.name, nation: p.nation })
   // Full name so the UI can render "V. Last" for the kid like everyone else (formatShortName).
   meta.set(KID_ID, {
     name: `${world.profile.kidName} ${world.profile.kidLastName}`.trim(),
@@ -5143,8 +5284,15 @@ function computeStandings(world: WorldState, track: LadderTrack = 'itf'): Standi
 
 // Any id -> short display name, for anyone who could appear in a bracket (kid or AI),
 // not just the kid's own opponents (unlike `players`, which only snapshots those).
+// Field pros resolve through the same derivation that drew them (living-field phase W, 01.08):
+// the id encodes nothing, but fieldProsOf is season-stable and memoised, so a W draw's full
+// bracket names its professionals as cheaply as the cohort array names the juniors.
 function playerShortName(world: WorldState, id: string): string {
   if (id === KID_ID) return formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
+  if (isFieldProId(id)) {
+    const fp = fieldProsOf(world).find((p) => p.id === id)
+    return formatShortName(fp?.name ?? id)
+  }
   const ai = world.cohort.find((c) => c.id === id)
   return formatShortName(ai?.name ?? id)
 }
@@ -5222,8 +5370,14 @@ function pendingView(world: WorldState): PendingView | undefined {
   // the rank recompute to `finalizeTournament` while the week's AI results are already banked); a
   // one-place drift between two different players' numbers is invisible, whereas a drift in HERS
   // between two screens is the bug.
+  // A FIELD PRO IS ALWAYS RANKED (living-field phase W, 01.08): her points are virtual, so the
+  // ledger fold below would read 0 and print her "unranked" – on the very row the merged table
+  // ranks her by. The earned-points guard exists to stop TIE-FLOOR ranks being printed for players
+  // with nothing; a pro's standing row is never that, by construction (wtaPoints >= 1).
   const oppRankIn = (id: string): number | null =>
-    windowedBestSum(world.results, world.week, id, inTrack(track)) > 0 ? (ranks.get(id) ?? null) : null
+    isFieldProId(id) || windowedBestSum(world.results, world.week, id, inTrack(track)) > 0
+      ? (ranks.get(id) ?? null)
+      : null
 
   return {
     eventId: p.eventId,
@@ -5424,6 +5578,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     tierAcceptance: Object.fromEntries(
       TIER_LADDER.map((t) => [t, acceptanceRank(world, t)]).filter(([, r]) => r !== undefined),
     ) as Partial<Record<TierId, number>>,
+    // R15-9: THE ON-RAMP LATCHES, read-only, for the SLIDING TIER WINDOW - the calendar hides the
+    // rungs a latch says she has definitively left behind (a copy, like every object on this
+    // message: the snapshot must never be a live view of engine state). Surfacing widens the
+    // snapshot only; the persisted v34 field and the entry gates are untouched.
+    onRampCleared: { ...world.onRampCleared },
     coachId: world.coachId,
     coachMarket: coachMarket(world),
     coachBilling: coachBilling(world),

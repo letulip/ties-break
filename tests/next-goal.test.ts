@@ -254,6 +254,46 @@ describe('the goal the card prints', () => {
       nextGoalFor(facts({ ladders: standing, upcoming: [event({ entered: true, tier: 'local', label: 'Spring Local Open' })] })).text,
     ).toBe('Win one match at the Spring Local Open')
   })
+
+  it('⚠ A TITLE SHE ALREADY HOLDS NEVER PRINTS "WIN IT AGAIN" – the goal escalates past the draw', () => {
+    // The owner's own screen (01.08): she won the W15, was entered for the NEXT W15, and the scrap
+    // read "Next goal: Win the World Tour 15". `rungAfter` is null when the title is hers, and the
+    // old fallback printed {finish: 0} - the tier's own title, again. The arm now falls through to
+    // the GLOBAL rung under the TIER's label (never the entered event's - she is not climbing the
+    // event she is entered for, she is climbing the ladder above it).
+    const won = facts({
+      upcoming: [event({ entered: true, tier: 'w15', label: 'World Tour 15 Monastir' })],
+      ladders: { wta: ladder([result('w15', 0)]) },
+    })
+    const goal = nextGoalFor(won)
+    expect(goal.text).toBe('Win one match at the World Tour 35')
+    expect(goal.rung).toEqual({ tier: 'w35', finish: 4, firstMatch: true })
+    // ...and the same shape one table down, where the rung above a won Regional is National.
+    const reg = facts({
+      upcoming: [event({ entered: true, tier: 'regional', label: 'Regional Championship' })],
+      ladders: { domestic: ladder([result('regional', 0)]) },
+    })
+    expect(nextGoalFor(reg).text).toBe('Win one match at the National Series')
+    // At the very top of the ladder there is nothing above, so "win it" IS the honest goal - the
+    // one case the old fallback was right about, kept right.
+    const top = facts({
+      upcoming: [event({ entered: true, tier: 'w100', label: 'World Tour 100 Dubai' })],
+      ladders: { wta: ladder([result('w100', 0)]) },
+    })
+    expect(nextGoalFor(top).text).toBe('Win the World Tour 100')
+  })
+
+  it('⚠ `bestAt` READS ALL THREE TABLES – a W15 result is not invisible to the entered arm', () => {
+    // The latent twin of the ladderStandingFor fold (task #17): her STANDING sits at W35 (the
+    // stronger tier), she is entered for a W15, and her W15 semi-final lives in the wta table -
+    // which `bestAt` did not fold. The goal then asked her to win one match at a draw she had
+    // already gone deep in.
+    const f = facts({
+      upcoming: [event({ entered: true, tier: 'w15', label: 'World Tour 15 Antalya' })],
+      ladders: { wta: ladder([result('w35', 3), result('w15', 2)]) },
+    })
+    expect(nextGoalFor(f).text).toBe('Reach the final at the World Tour 15 Antalya')
+  })
 })
 
 // =================================================================================================

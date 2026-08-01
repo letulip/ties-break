@@ -2,6 +2,7 @@
   "name": "ties-break",
   "private": true,
   "version": "0.1.0",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,6 +11,7 @@
     "check": "vue-tsc -b --force && vitest run --project unit && vite build",
     "icons": "node scripts/gen-icons.mjs",
     "art": "node scripts/optimize-art.mjs",
+    "bench:dual": "vite-node tools/dual-universe-bench.ts",
     "bench:econ": "vite-node tools/econ-bench.ts",
     "bench:fatigue": "vite-node tools/fatigue-bench.ts",
     "bench:knock": "vite-node tools/knock-rate.ts",

@@ -48,9 +48,11 @@ import { portraitStage } from '../../shared/avatarEmotion'
 import { rngFromSeed } from '../../engine/rng'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
-// R11-5a: the ONE tier-state rule, shared with the Home season ladder.
-import { HORIZON_WEEKS, pointsLockNote, useTierStates, type TierState } from '../../composables/tierState'
+// R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
+// window (`hiddenTier`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
+import { HORIZON_WEEKS, hiddenTier, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
 import { TIER_SHORT } from '../../composables/weekAhead'
+import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
 import type { MatchOptions, MatchPlayer, Surface } from '../../engine/match/types'
 import type { TierId } from '../../engine/season/types'
@@ -345,8 +347,16 @@ const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.cover
 // engine still held the entry, so every booking was refused. Total dead end. An ENTERED event is
 // never decluttered – she is IN it, and it is the one card she most needs to act on.
 const upcoming = computed(() => game.snapshot?.upcoming ?? [])
+// ⚠ R15-9: THE SLIDING TIER WINDOW rides beside the outgrown filter (see `hiddenTier` in
+// composables/tierState.ts for the whole rule and the owner's ruling). The outgrown filter is
+// points-based and J30's ceiling is MAX, so it alone left J30 on a professional's calendar for
+// ever; the window hides the rungs the on-ramp LATCHES say she has left behind - local/regional
+// once the international door is crossed, j30 once the professional one is. Entered events always
+// survive both filters: she is IN them (R10-3), and a committed week must stay actionable.
 const visibleUpcoming = computed(() =>
-  upcoming.value.filter((e) => e.entered || e.ineligibleReason !== 'outgrown'),
+  upcoming.value.filter(
+    (e) => e.entered || (e.ineligibleReason !== 'outgrown' && !hiddenTier(e.tier, game.snapshot?.onRampCleared)),
+  ),
 )
 const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
 const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
@@ -393,8 +403,19 @@ const layoffNote = computed(() => {
   return s?.injury ? `Injured – back ${weekLabel(s.week + s.injury.weeksRemaining)}` : ''
 })
 const calendarRows = computed<CalendarRow[]>(() => {
+  // ⚠ R15-9: ONE ROW PER WEEK, AND THE PICK IS NOW A RULE RATHER THAN AN ACCIDENT. This used to be
+  // `for (e of visibleUpcoming) byWeek.set(e.week, e)` - a Map whose LAST write wins. The season
+  // list orders a stacked week strongest-tier-first (buildSeason), so "last" was the WEAKEST tier,
+  // and the rare rungs never surfaced: every J300 week also carries a denser event, and the denser
+  // event always overwrote it (the owner: he had never seen a J300 card). `preferredWeekEvent` is
+  // the shared pick - entered first, then the highest visible rung - and the Calendar screen's
+  // markers pick through the same function, so the two surfaces cannot disagree about which
+  // tournament a week IS.
   const byWeek = new Map<number, UpcomingEvent>()
-  for (const e of visibleUpcoming.value) byWeek.set(e.week, e)
+  for (const e of visibleUpcoming.value) {
+    const held = byWeek.get(e.week)
+    byWeek.set(e.week, preferredWeekEvent(held ? [held, e] : [e])!)
+  }
   const rows: CalendarRow[] = []
   for (let w = week.value + 1; w <= week.value + CALENDAR_HORIZON; w++) {
     const e = byWeek.get(w)
@@ -767,7 +788,17 @@ function openPracticeLive(match: WorldMatch, atWeek: number): void {
  *  under its stored seed. There is no moment at which anything is being watched as it happens. The
  *  new label is what the press actually costs and buys, in that order. */
 async function playPracticeWeek(): Promise<void> {
+  // ⚠ CLAIM THE POST-ADVANCE NAVIGATION FIRST (owner, 01.08: «он должен вести на пре-матч экран»).
+  // App.vue's watcher fires INSIDE the awaited advance - the snapshot lands before the next line
+  // here runs - so the claim has to be made before the call, not after it. Without it the watcher
+  // switched tabs (story, or Home), this screen unmounted, and the flow this function opens two
+  // lines down was destroyed before the player ever saw its pre-match card.
+  holdPostAdvanceNav()
   await game.advance(1)
+  // A week that never ticked (a knock blocks before anything happens) leaves the claim unspent -
+  // the watcher only consumes it on a week that actually advanced. Clear it, or it would silence
+  // the navigation of some unrelated later advance. Idempotent when the watcher already took it.
+  consumePostAdvanceNav()
   const friendly = thisWeekFriendly.value
   if (friendly?.match && game.snapshot) openPracticeLive(friendly.match, game.snapshot.week)
 }

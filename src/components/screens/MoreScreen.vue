@@ -483,6 +483,32 @@ const reducedMotion = prefersReducedMotion()
             </button>
           </td>
         </tr>
+        <!-- P7: the app's first external links. PRIVACY.md at the repo root is the single source
+             of truth (and the policy URL portals ask for); this row only surfaces it. The Issues
+             link rides along per review 08:26 - the bug form there asks for the seed and schema
+             shown two rows up. `color: inherit` because nothing in the app styles a bare <a> yet:
+             browser-default blue on the dark theme would be the loudest thing on the screen. -->
+        <tr>
+          <th>Privacy</th>
+          <td>
+            Everything stays on this device – no accounts, no analytics.
+            <span class="hint" style="display: block; margin: 2px 0 0">
+              <a
+                href="https://github.com/letulip/ties-break/blob/main/PRIVACY.md"
+                target="_blank"
+                rel="noopener"
+                style="color: inherit"
+              >Privacy note</a>
+              ·
+              <a
+                href="https://github.com/letulip/ties-break/issues"
+                target="_blank"
+                rel="noopener"
+                style="color: inherit"
+              >GitHub Issues</a>
+            </span>
+          </td>
+        </tr>
       </tbody>
     </table>
   </section>

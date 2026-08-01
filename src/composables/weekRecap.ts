@@ -149,3 +149,38 @@ export function setWeekStoryAutoOpenOff(value: boolean): void {
 export function storyOpensItself(snap: RecapFacts | null | undefined): boolean {
   return recapExists(snap) && !isWeekStoryAutoOpenOff()
 }
+
+// --- THE ONE-SHOT NAVIGATION HOLD ------------------------------------------------------------
+//
+// Owner, 01.08: «Фикс Play it and watch обязателен - он должен вести на пре-матч экран». The button
+// on the Season screen advances the week and then opens PracticeFlow, whose first phase IS the
+// pre-match card - but App.vue's post-advance watcher fired first and switched the tab (to the
+// story, or failing that to Home), unmounting the Season screen together with the flow it had just
+// opened. The player pressed "Play it and watch →" and watched nothing: he landed on the week
+// recap, every time.
+//
+// So a screen that is about to advance the week AND open its own takeover on the result may claim
+// the post-advance beat, ONCE. The hold suppresses BOTH switches - the story's and the Home
+// fallback - because either one unmounts the claimant. It does not touch `recapExists`,
+// `storyOpensItself` or the This-week dot: the story still exists, still marks itself fresh, and is
+// still one tap away; the only thing held is the navigation, for one advance.
+//
+// ⚠ MODULE STATE, LIKE `autoOpenOff` ABOVE, AND ONE-SHOT BY CONSTRUCTION. `consume` reads and
+// clears in one move, so a hold can never outlive the single watcher pass it was set for - except
+// when the advance never lands at all (a knock blocks it before the tick), in which case the
+// claimant clears its own stale hold right after the advance returns. Both sides of that contract
+// are pinned in tests/round13-nav.test.ts.
+let postAdvanceNavHeld = false
+
+/** Claim the next post-advance navigation. Call ONLY right before `game.advance`, and pair it with
+ *  a `consumePostAdvanceNav()` after the advance returns, to clear a hold a blocked week left. */
+export function holdPostAdvanceNav(): void {
+  postAdvanceNavHeld = true
+}
+
+/** Read-and-clear. True exactly once per hold. */
+export function consumePostAdvanceNav(): boolean {
+  const held = postAdvanceNavHeld
+  postAdvanceNavHeld = false
+  return held
+}

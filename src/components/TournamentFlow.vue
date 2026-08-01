@@ -1420,8 +1420,12 @@ const matchMeta = computed(() => {
 /* The design's F scene is `flex: 1` of the screen and this one is too – a match day is not a card
    floating in a field of page colour. `min-height` on the component keeps it from collapsing when
    there is a path strip above it. */
+/* ⚠ NOT `flex: 1` ANY MORE (R15-3). Stretching the scene to fill the takeover was the fixed-height
+   crop's design ("F fills the screen"); the owner's 01.08 ruling made the card the painting's own
+   square (see MatchScene.vue), and a stretched square letterboxes - the pill floats over a blank
+   band instead of over her head. The card takes its aspect height and the takeover scrolls. */
 .tf-scene {
-  flex: 1;
+  flex: none;
 }
 
 /* MatchScene owns the card, the painting and the glass plate; this is only what is written on it. */
