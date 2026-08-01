@@ -181,7 +181,15 @@ function hashOf(draws: number[]): string {
 // fixture. THE CAPTURE ITSELF DID NOT MOVE: count 41550 and hash e6b0c709 reproduce byte-for-byte
 // (asserted first, in this very test), which is what this block actually guards - fatigue,
 // availability and rival condition are all post-draw arithmetic by construction.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 152 }
+//
+// ⚠ THE CROSS-VERSION CONSTANT RETIRED AT v35 (P3, rng-persistence): `count`/`hash` left this
+// object because no loaded career depends on the historical draw count any more — the position is
+// persisted per career, and P1 below is PAIRWISE now: a booking-heavy career against the
+// nothing-booked baseline, same harness, same code, byte-identical MAIN taps. The single
+// documented capture (and the regime-change story) lives at the REF declaration in
+// tests/condition.test.ts B1. `kidRank` stays: it was never the capture, it is the companion
+// MEASUREMENT, and the whole re-pin history above is the argument for keeping it pinned.
+const REF = { kidRank: 152 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -268,7 +276,8 @@ describe('P1 — main-stream RNG invariance with a planner-heavy career', () => 
     return { draws, world }
   }
 
-  it('booking a practice EVERY week never perturbs the main stream', () => {
+  it('booking a practice EVERY week never perturbs the main stream (A/B)', () => {
+    const base = record()
     const { draws, world } = record((w) => {
       const next = w.week + 1
       w.fundsCents = 9_999_999_00
@@ -278,14 +287,15 @@ describe('P1 — main-stream RNG invariance with a planner-heavy career', () => 
         /* blackout / conflict weeks are simply not bookable */
       }
     })
-    expect(draws.length).toBe(REF.count)
-    expect(hashOf(draws)).toBe(REF.hash)
+    expect(draws.length).toBe(base.draws.length)
+    expect(hashOf(draws)).toBe(hashOf(base.draws))
     expect(world.kidRank).toBe(REF.kidRank)
     // ...and she really did play friendlies (the branch was exercised)
     expect(world.events.some((e) => e.friendly === true)).toBe(true)
   })
 
-  it('booking vacations (incl. the buffed resort) never perturbs the main stream', () => {
+  it('booking vacations (incl. the buffed resort) never perturbs the main stream (A/B)', () => {
+    const base = record()
     const { draws, world } = record((w) => {
       const next = w.week + 1
       w.fundsCents = 9_999_999_00
@@ -295,8 +305,8 @@ describe('P1 — main-stream RNG invariance with a planner-heavy career', () => 
         /* not bookable this week */
       }
     })
-    expect(draws.length).toBe(REF.count)
-    expect(hashOf(draws)).toBe(REF.hash)
+    expect(draws.length).toBe(base.draws.length)
+    expect(hashOf(draws)).toBe(hashOf(base.draws))
     expect(world.kidRank).toBe(REF.kidRank)
     expect(world.events.some((e) => e.text.startsWith('Family vacation'))).toBe(true)
   })

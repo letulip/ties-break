@@ -12,8 +12,9 @@
 // SIX THINGS ARE PINNED HERE, and the first two are the ones that block a merge:
 //
 //   1. ⚠ ZERO MAIN-STREAM DRAWS. The knock draws INSIDE the weekly tick, which is exactly the shape
-//      that can move the frozen capture (41550 / e6b0c709) — so it is re-derived here directly,
-//      against a career that answers a knock every time one arrives, and the sub-stream keys are held
+//      that can perturb the weekly sequence — so it is proved PAIRWISE here (v35 regime: an
+//      answering career against the unanswered baseline, byte-identical MAIN taps; the one
+//      documented capture lives in tests/condition.test.ts B1), and the sub-stream keys are held
 //      to a closed allowlist so a fourth stream cannot be added without reading this.
 //   2. THE ADVANCE IS BLOCKED, NOT MERELY HALTED. This is the feature: the complaint was that weeks
 //      «просто скипались», and a stop that can be dismissed and re-pressed is a notification.
@@ -65,7 +66,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
 import { restRecoveryBonus, SAVE_SCHEMA_VERSION } from '../src/engine/world'
-import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Knock, type WeekPlan } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Knock, type PlayerProfile, type WeekPlan } from '../src/shared/protocol'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
 
@@ -121,17 +122,33 @@ function hashOf(draws: number[]): string {
   return fnv1a(draws.map(String).join(',')).toString(16).padStart(8, '0')
 }
 
-/** ⚠ THE FROZEN CAPTURE, re-derived here. Same harness as tests/condition.test.ts B1: seed
- *  `bench-working-0`, 52 ticks, every MAIN draw recorded. */
-const REF = { count: 41550, hash: 'e6b0c709' }
+/** ⚠ THE CONSTANT RETIRED AT v35 (P3, rng-persistence): the cross-suite capture `{41550,
+ *  e6b0c709}` left this file because no loaded career depends on the historical draw count any
+ *  more — the position is persisted per career, and the one documented capture lives at
+ *  tests/condition.test.ts B1. What this suite proves is unchanged and PAIRWISE now: the
+ *  BASELINE arm is the same career with every knock left UNANSWERED (the no-action run — a knock
+ *  the parent ignores is exactly the feature idling), and each action arm must tap the identical
+ *  MAIN sequence. Same harness as B1: seed `bench-working-0`, 52 ticks, every MAIN draw recorded. */
+function baselineRun(profile: PlayerProfile): { draws: number[] } {
+  const world = createWorld('bench-working-0', profile)
+  const base = rngFromSeed(world.seed)
+  const draws: number[] = []
+  const rng = () => {
+    const v = base()
+    draws.push(v)
+    return v
+  }
+  for (let i = 0; i < 52; i++) tickWeek(world, rng)
+  return { draws }
+}
 
 describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => {
-  it('a career that answers a knock every time still reproduces 41550 / e6b0c709', () => {
+  it('a career that answers a knock every time taps the unanswered baseline byte-for-byte', () => {
     // THE CLAIM THIS PROVES, and it is the one claim that could sink the slice: `rollKnock` runs
-    // INSIDE `tickWeek` (step 3c), which is exactly where a careless draw moves the capture. It reads
-    // `seed:knock:<week>`, its own per-week sub-stream — the identical pattern `rollInjury` has used
-    // for `seed:injury:<week>` since slice C — so the MAIN stream still carries base costs + cohort
-    // drift and nothing else, whatever the parent decides.
+    // INSIDE `tickWeek` (step 3c), which is exactly where a careless draw moves the weekly
+    // sequence. It reads `seed:knock:<week>`, its own per-week sub-stream — the identical pattern
+    // `rollInjury` has used for `seed:injury:<week>` since slice C — so the MAIN stream still
+    // carries base costs + cohort drift and nothing else, whatever the parent decides.
     // ⚠ RE-AIMED BY THE LOAD SLICE, AND ONLY THE FIXTURE MOVED. `DEFAULT_PROFILE.coachTier` is 'middle',
     // so `createWorld(seed)` with no profile is a HIRED career - and a hired coach now answers the routine
     // knocks himself (engine/coachLoad.ts). The parent was therefore asked 0 times and the "must have
@@ -139,6 +156,7 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
     // The hash and the count both still matched, which is the fact this test exists for. Self-coached is
     // where the parent path lives now, so that is the fixture; the hired path gets its own capture below,
     // and it is the stronger of the two because the coach runs INSIDE the tick.
+    const baseline = baselineRun({ ...DEFAULT_PROFILE, coachTier: 'self' })
     for (const choice of ['rest', 'push'] as const) {
       const world = createWorld('bench-working-0', { ...DEFAULT_PROFILE, coachTier: 'self' })
       const base = rngFromSeed(world.seed)
@@ -156,8 +174,8 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
           answered++
         }
       }
-      expect(draws.length, `count (${choice})`).toBe(REF.count)
-      expect(hashOf(draws), `hash (${choice})`).toBe(REF.hash)
+      expect(draws.length, `count (${choice})`).toBe(baseline.draws.length)
+      expect(hashOf(draws), `hash (${choice})`).toBe(hashOf(baseline.draws))
       // ...and the run has to have actually exercised the feature, or it proves nothing.
       expect(answered, 'the season must contain knocks for this to mean anything').toBeGreaterThan(0)
     }
@@ -172,8 +190,12 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
     // claim that has to be a test, because the whole capture is one careless `rng()` away from moving for
     // every save in existence.
     //
-    // Every hired rung, because each one reads her differently and therefore decides differently: if any
-    // of them perturbed the main stream, the count would move on that rung alone.
+    // Every hired rung, because each one reads her differently and therefore decides differently: if
+    // any of them perturbed the main stream, that rung would diverge from the baseline alone. The
+    // baseline is the SELF-COACHED unanswered run — the strongest possible contrast, because on it
+    // the in-tick coach path never executes at all: four rungs of coach reads against no coach
+    // whatsoever, and the MAIN sequence must not be able to tell.
+    const baseline = baselineRun({ ...DEFAULT_PROFILE, coachTier: 'self' })
     for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
       const world = createWorld('bench-working-0', { ...DEFAULT_PROFILE, coachTier: tier })
       const base = rngFromSeed(world.seed)
@@ -192,8 +214,8 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
           escalated++
         }
       }
-      expect(draws.length, `count (${tier})`).toBe(REF.count)
-      expect(hashOf(draws), `hash (${tier})`).toBe(REF.hash)
+      expect(draws.length, `count (${tier})`).toBe(baseline.draws.length)
+      expect(hashOf(draws), `hash (${tier})`).toBe(hashOf(baseline.draws))
       // and the coach really did handle some himself, or this proves nothing about his path
       const handled = world.knockHistory.length + (world.knock ? 1 : 0) - escalated
       expect(handled, `${tier} must have answered at least one alone`).toBeGreaterThan(0)

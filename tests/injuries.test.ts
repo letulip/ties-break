@@ -160,7 +160,14 @@ function hashOf(draws: number[]): string {
 // fixture. THE CAPTURE ITSELF DID NOT MOVE: count 41550 and hash e6b0c709 reproduce byte-for-byte
 // (asserted first, in this very test), which is what this block actually guards - fatigue,
 // availability and rival condition are all post-draw arithmetic by construction.
-const REF = { count: 41550, hash: 'e6b0c709', kidRank: 152 }
+// ⚠ THE CROSS-VERSION CONSTANT RETIRED AT v35 (P3, rng-persistence): `count`/`hash` left this
+// object because no loaded career depends on the historical draw count any more — the position is
+// persisted per career and every C1 test below is PAIRWISE, action arm against baseline arm under
+// the same code. The single documented capture (and the whole story of the regime change) lives at
+// the REF declaration in tests/condition.test.ts B1. `kidRank` stays: it was never the capture, it
+// is the companion MEASUREMENT — "how many AI ended the year holding counting points" — and its
+// re-pin history above is exactly why it remains worth pinning.
+const REF = { kidRank: 152 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -289,19 +296,23 @@ function onsetAt(seed: string, physio: boolean): WorldState['injury'] {
 }
 
 // ---------------------------------------------------------------------------
-// C1 — THE INVARIANT (blocks merge): the B+C build reproduces slice B's frozen
-// MAIN-stream draw sequence byte-for-byte. Injuries/physio draw ONLY from the
-// private per-week sub-streams, so nothing here may move.
+// C1 — THE INVARIANT (blocks merge): an injured career and an untouched one
+// tap the identical MAIN-stream draw sequence. Injuries/physio draw ONLY from
+// the private per-week sub-streams, so nothing here may move.
 // ---------------------------------------------------------------------------
+// ⚠ CONVERTED TO PAIRWISE A/B AT v35 (P3): every test compares an ACTION-LADEN run against the
+// no-action BASELINE under the same code — the property (injuries/physio cannot reach the MAIN
+// stream) is exactly what it always was; only the yardstick changed from a cross-version constant
+// to the baseline arm beside it.
 describe('C1 — main-stream RNG invariance (blocks merge)', () => {
-  it('reproduces the frozen B capture byte-for-byte (values in REF, not in this title)', () => {
+  it('the baseline year is alive, and the rank companion holds', () => {
     const { draws, world } = recordRun()
-    expect(draws.length).toBe(REF.count)
-    expect(hashOf(draws)).toBe(REF.hash)
+    // Non-vacuity for every pairwise test below: the year really spends draws, every week.
+    expect(draws.length).toBeGreaterThan(52 * 4 * world.cohort.length)
     expect(world.kidRank).toBe(REF.kidRank)
   })
 
-  it('physio on/off and pre-seeded injury history never perturb the main stream', () => {
+  it('physio on/off and pre-seeded injury history never perturb the main stream (A/B)', () => {
     const base = recordRun()
     const variants: Array<(w: WorldState) => void> = [
       (w) => (w.physioActive = true),
@@ -310,22 +321,23 @@ describe('C1 — main-stream RNG invariance (blocks merge)', () => {
     ]
     for (const mutate of variants) {
       const v = recordRun(mutate)
-      expect(v.draws.length).toBe(REF.count)
-      expect(hashOf(v.draws)).toBe(REF.hash)
+      expect(v.draws.length).toBe(base.draws.length)
+      expect(hashOf(v.draws)).toBe(hashOf(base.draws))
       expect(v.world.cohort).toEqual(base.world.cohort)
       expect(aiResults(v.world)).toEqual(aiResults(base.world))
-      expect(v.world.kidRank).toBe(REF.kidRank)
+      expect(v.world.kidRank).toBe(base.world.kidRank)
     }
   })
 
-  it('a mid-run injury (forced) + its rehab billing never perturb the main stream', () => {
+  it('a mid-run injury (forced) + its rehab billing never perturb the main stream (A/B)', () => {
+    const base = recordRun()
     const { draws } = recordRun(undefined, (w, week) => {
       // Force an injury the moment week 10 resolves: the following 6 ticks exercise the
       // full injured path (countdown, rehab billing, recovery event) against live state.
       if (week === 10) setInjury(w, 5, 5)
     })
-    expect(draws.length).toBe(REF.count)
-    expect(hashOf(draws)).toBe(REF.hash)
+    expect(draws.length).toBe(base.draws.length)
+    expect(hashOf(draws)).toBe(hashOf(base.draws))
   })
 
   it('rollInjury/resolvePhysio take only `world` – no rng parameter exists to misuse', () => {

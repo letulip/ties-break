@@ -393,7 +393,10 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     }
     const withSnapshots = run(true)
     const without = run(false)
-    expect(withSnapshots.length).toBe(41550)
+    // ⚠ v35: the raw-count assertion (41550) left this line — the constant is condition.test.ts
+    // B1's documented pin now, kept in ONE place. The pairwise equality below is this test's whole
+    // claim and always was; the count here only needs to prove the year was not vacuous.
+    expect(withSnapshots.length).toBeGreaterThan(0)
     expect(withSnapshots).toEqual(without)
   })
 
