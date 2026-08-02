@@ -295,6 +295,83 @@ junior, and measured her title chance at 3%. No points-curve shape can fix rank 
 skill order; only the pyramid could move, and the elite storey did not (it still towers over every
 junior).
 
+### 8.2b Phase 2 — the fourth storey and week exclusivity (02.08, W2-FIELD2)
+
+Ruling 3 unchanged: still derived, still per-season, zero persisted bytes, zero schema. What
+changed is the SHAPE of the pyramid and the rule that governs a shared week.
+
+**The measurement that opened the wave**, taken on `main` before a line moved (tools/field-quality.ts
+widened from two rungs to six, 16 worlds):
+
+| rung | field mean core | P(reference strong junior takes the title) |
+| --- | --- | --- |
+| W15 | 51.4 | **8.8%** — against a shipped 15–35% target |
+| W35 | 53.8 | 6.8% |
+| W50 | 57.3 | 1.6% |
+| W75 | 59.7 | 0.6% |
+| W100 | 59.7 | 1.0% |
+| WTA 125 | 59.7 | 2.1% |
+
+Two defects in one table. The top **three rungs drew the same field to one decimal** — every window
+from W75 up opened at percentile 0, entry is position-biased, and there was nothing above a
+thirty-strong elite storey for a WTA 125 to reach for. And **W15's title probability had drifted to
+8.8%** since the phase-W calibration read 20.5%: W2-LADDER's 25 extra draws a season give the LIVE
+cohort real W points, LIVE girls rise in the merged table, and every pro they pass is pushed down
+into the W15 window. Nobody chose that; nobody had re-run the bench.
+
+**`tourElite`** — 64 pros, core [67, 77], points 550–11,000 at gamma 3 (median ≈ 1,900, one or two
+names a season over 9,000). `FIELD.size` 300 → 364; the three shipped storeys keep their counts.
+The core band is solved from two measurements rather than chosen: the TOP is the midpoint of what a
+career can become (20k `rollPotential` rolls — p99 73.2, max 80.8), so the world #1 is reachable and
+only by a near-max career; the MEDIAN is set so the reference strong junior beats it 21.6%, the same
+number as her own W15 title target (a median elite is a coin flip for her at 47.3%). Its points are
+borrowed from a tour we do not simulate — 250/500/1000/Slams are act 3 — which is why no career and
+no derived pro can EARN a five-figure row inside today's calendar.
+
+**The windows slide instead of nesting.** Nested prefixes (`[0, x]` with x shrinking) are what made
+three rungs one field; every rung now has a top as well as a bottom, because in the real sport a W75
+does not draw the world's head. Measured, shipped (16 worlds, up to 400 events a rung, exclusivity
+live):
+
+| rung | band | field core | P(title) | candidates min/mean |
+| --- | --- | --- | --- | --- |
+| W15 | [0.35, 0.85] | 48.3 | **19.5%** | 214 / 273 |
+| W35 | [0.25, 0.72] | 50.3 | 17.6% | 204 / 250 |
+| W50 | [0.18, 0.60] | 52.6 | 8.2% | 195 / 227 |
+| W75 | [0.12, 0.49] | 57.5 | 0.6% | 154 / 179 |
+| W100 | [0.08, 0.39] | 65.3 | 0.0% | 145 / 155 |
+| WTA 125 | [0.03, 0.29] | 71.3 | 0.0% | 128 / 134 |
+
+Strictly monotone, W15 restored, and **0.0% of every rung's draw comes from outside its own band** —
+no window is quietly made of backfill, which is the failure W100's own comment records.
+
+**Week exclusivity** (`weekFieldExclusion`, season/tournament.ts): when two W rungs share a week the
+higher one draws first, off its own `seed:kidtour:` sub-stream, and its members leave the lower
+rung's candidate window. Order is TIER_LADDER with an event-id tie-break, so it is total. It is a
+separate mechanism from `resolveDoubleBookings` because that one is post-draw arithmetic over the
+canonical brackets and a field pro has no ledger row to rearrange. Scope: the W track; a non-W event
+gets the empty set on the first line. Measured effect on the weeks where it bites — a W50 sharing a
+week with a W100 draws a field of core 51.4 against 52.6 on a clear week, and her title chance there
+is 14.1% against 8.2%. One pro plays one event a week, and it is visible.
+
+**⚠ THE ONE TARGET THAT MOVED, and it is arithmetic.** A 50-point LIVE row (five W15 titles) lands
+**#118 of 564**, not the phase-W promise of #40–80. 64 professionals now exist above the old
+450-point ceiling, so such a row cannot rank above #65 whatever any constant says; holding #40–80
+would mean pricing the whole elite storey below 50 points, which opens a ~450-point cliff between
+#64 and #65 and makes the standings' head — the one thing the storey exists to fix — read wrong. The
+head now reads #1 10,721 · #10 6,131 · #32 2,026 · #64 396 · #100 60 · #300 7. The pin in
+`tests/season/fieldPros.test.ts` is re-aimed to #85–150 with that argument beside it.
+
+**⚠ THE COHORT COST W2-LADDER HANDED OVER: measured, and the fix is out of this slice's scope.** Its
+finding was 25 extra W draws a season landing on the same ~82 sixteen-plus LIVE rivals. The
+population does NOT relieve it and cannot: the canonical `seed:aitour:` brackets are LIVE-only by
+`universeForTier`'s scope fence, so 364 professionals absorb exactly zero W draws — measured, 4.50 W
+result rows per rival over a 20-week window before the wave and 4.50 after. What the band re-measure
+did do is spread the same load: heavy-floored rivals 20–27 → 10–20 of 199, at the price of the
+ever-floored share rising 27.6–33.7% → 33.7–38.2%. The fatigue bench's rival-side gate therefore
+stays at 40 (measured `rivalCondMean` 46.3 → 45.4); W2-LADDER's hope of restoring it to 50 is not
+recoverable without the §8.3 item below.
+
 ### 8.3 Phase 2 — what this slice deliberately leaves
 
 - **J and domestic tiers keep the LIVE-only universe.** The mixed-table percentile issue for J

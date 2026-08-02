@@ -296,6 +296,40 @@ acceptable; the top-3 names churned completely — the cost above, now measured.
 
 ---
 
+## 8b. §8 as built — W2-FIELD2 (02.08)
+
+All three items shipped; the full measured tables live in `docs/specs/living-field.md` §8.2b, which
+is the page to read before touching any of these constants again. What the owner needs from here:
+
+1. **The fourth storey exists.** 64 `tourElite` pros, core [67, 77], 550–11,000 points — the head of
+   the merged table now reads #1 10,721 · #10 6,131 · #32 2,026 · #64 396 · #100 60 rather than
+   topping out at 452. `FIELD.size` 300 → 364. Still derived, still per-season, still zero schema:
+   delete `fieldPros.ts` and every save loads.
+2. **Six rungs, six fields.** The wave opened by finding that W75/W100/WTA 125 drew the SAME field to
+   one decimal (all three at mean core 59.7) — three labels on one draw — and that W15's title
+   probability had drifted to 8.8% against its 15–35% target without anybody re-running the bench.
+   Both are fixed and measured: 48.3 < 50.3 < 52.6 < 57.5 < 65.3 < 71.3 across the family, W15 back
+   at 19.5%.
+3. **Week exclusivity holds on the W track**, ordered by TIER_LADDER, and it is visible: a W50 that
+   shares its week with a W100 draws a measurably softer field (core 51.4 vs 52.6) and her title
+   chance there is 14.1% vs 8.2%.
+
+⚠ **TWO THINGS FOR THE OWNER, both measured, neither fixable inside this wave's scope:**
+
+- **Five W15 titles is now #118 of 564, not #52 of 500.** Arithmetic, not a nerf: 64 professionals
+  now sit above the old ceiling, so a 50-point row cannot rank above #65 whatever the constants say.
+  §8's own «Today's ceiling (450) models ~#130» is what made the old number possible.
+- **The cohort's W load is NOT relieved by the population, and cannot be.** §9b handed this wave the
+  re-measure and the population was the named fix. Canonical AI brackets are LIVE-only by design (a
+  derived pro must never write a persisted result row), so 364 pros absorb exactly zero W draws —
+  4.50 W rows per rival per 20-week window before and after, to two decimals. What the band
+  re-measure did do is SPREAD the load (heavy-floored rivals 20–27 → 10–20 of 199) at the price of a
+  higher ever-floored share (27.6–33.7% → 33.7–38.2%, against a 0.40 guard). The real remedy is
+  living-field §8.3's «field pros in the canonical brackets», which needs fp-safe result rows and is
+  act-3 work by construction.
+
+---
+
 ## 9. The waves
 
 Revised Phase-2 order (launch-plan-2026-08.md updated to match). Schema renumbering: **v36 =
