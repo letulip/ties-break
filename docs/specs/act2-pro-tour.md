@@ -56,6 +56,21 @@ Two more the same evening, answering the wave's own findings:
 10. **The sponsor lives on.** «надо как-то лечить, спонсор вполне может жить и дальше» — the brand
     ladder learns to read a professional's standing, §7 and §9b.
 
+And three the same evening that change the shape of the whole project — §11 is where they live:
+
+11. **The ladder is a SLIDING WINDOW with two bounds per rung**, tuned so she has a real choice on
+    3–5 weeks of every 8 («чтобы нам одновременно и было в каких турнирах выступать 3-5 недель из 8
+    доступных или иными словами 20-30 турниров в год в среднем было, а где играть уже можно
+    выбрать»). It REPLACES the two-type visibility rule of ruling 4 rather than sitting beside it
+    («всё так, да»): the feed shows exactly what is in the window, and a rung she has passed is not
+    hidden — it is no longer open.
+12. **The climb takes as long as it does in life** («чтобы до топовых турниров она доросла как в
+    жизни примерно, не за 1-2 года»), and the window's numbers are what pace it.
+13. **The professional table gets the REAL points-to-rank curve** («согласен с первым вариантом,
+    настоящая кривая. Всё так, мы воссоздаем максимально всю лестницу с небольшими корректировками
+    и допущениями с нашей стороны»), with the consequence accepted in the same breath: the top of
+    the world is out of her reach until the act-3 rungs exist.
+
 ---
 
 ## 2. The ladder, complete
@@ -379,7 +394,92 @@ than code.
 
 ---
 
-## 10. What already landed on wave/pro-prep (this branch)
+## 11. The window, the pace, and the real curve (03.08 — rulings 11–13)
+
+The three rulings above are one design, arrived at from the owner's own worked example of the
+ladder («Local доступ 0-100, Regional 80-180, National 150-250, J30 = National + 0-100, J60 80-180
+(280), J300 150(250)-500, W15 = J60 (300) и 0-80 — цифры примерные, я хочу показать логику
+скользящего окна»). Written down before it is built, because each half explains the others.
+
+### 11.1 The window
+
+Every rung gets a window with BOTH bounds, in its own table's currency, and the windows overlap so
+that two or three neighbours are live at once. She enters a rung when she reaches its floor and
+leaves it when she passes its ceiling — so a rung she has outgrown is not hidden from a feed, it is
+CLOSED by the engine. The junk goes away as a class rather than being filtered.
+
+What exists today is the bottom half only: `enterPointBand` carries a real ceiling on the domestic
+rungs (which is why Local already reports `outgrown`), while every J and W rung has
+`Number.MAX_SAFE_INTEGER` above it and is gated by rank acceptance below. The missing ceiling IS
+the junk: measured on the owner's W230 career, 48 of the 64 entries left in his season sat at rungs
+whose STRONGEST entrant is weaker than she is.
+
+⚠ CURRENCY: keep each table's native one rather than forcing points everywhere. Domestic rungs take
+the owner's numbers directly. J and W rungs keep RANK acceptance as the floor — that is how the
+real tour admits players and how our own fields are drawn — and express the ceiling in the same
+currency: the rung closes when her standing passes the best entrant it draws
+(`entrantPctBand[0]` × field size). Same intent, no second exchange rate.
+
+**MEASURED, 3 seeds, a full season built by today's calendar** — weeks that carry at least one
+event of the window, out of 52, and the same as "weeks per 8":
+
+| window | weeks/52 | per 8 |
+| --- | --- | --- |
+| National + J30 | 29 | 4.5 ✅ |
+| J30 + J60 | 33 | 5.1 ✅ |
+| J300 + W15 | 28 | 4.3 ✅ |
+| W15 + W35 | 33 | 5.1 ✅ |
+| W35 + W50 | 24 | 3.7 ✅ |
+| Regional + National | 18 | 2.8 ✗ |
+| J60 + J300 | 19 | 2.9 ✗ |
+| W50 + W75 | 17 | 2.6 ✗ |
+| W75 + W100 | 11 | 1.7 ✗ |
+| W100 + WTA 125 | 7 | 1.1 ✗ |
+
+Three-rung windows carry 5.2–6.0 per 8 through the middle of the ladder and fall to 3.1 at
+W50+W75+W100 and 2.2 at W75+W100+125. So: **the natural width is three, and it widens further at
+the top** — the owner's own answer («может быть в этом случае добавить еще диапазон, не вижу
+проблем. 50 + 75 + 100 + 125, когда какой-то совсем перерастает - добавляем новый, а старый
+уходит»). At the very top it stops sliding altogether: ruling 4's successor there is the mandatory
+regime (§6), where the big events are compulsory and the rungs below stay open as filler —
+«предыдущие тиры никуда не уходят».
+
+### 11.2 The pace, and why the curve had to be settled first
+
+The window's numbers pace the career, so they can only be written against a table whose points mean
+what they mean in the sport. Ours do not yet. Measured on the owner's W230 career:
+
+| position | our table holds | the real WTA |
+| --- | --- | --- |
+| #10 | 245 pts | 4,000 |
+| #50 | 58 | 1,400 |
+| #100 | 41 | 850 |
+| #150 | 32 | 520 |
+| #300 | 9 | 190 |
+| #500 | 0 | 75 |
+
+Her 104 points read as **#27** here and as roughly **#350–400** in reality — a fourteen-fold
+position error, and the whole reason the top arrives in two seasons. ⚠ THE POINTS SYSTEM IS ALREADY
+REAL: the chart rows are the 2026 tables and the window is best-16 over 52 weeks. What is missing is
+the SHAPE OF THE POPULATION that holds those points, and the events that generate the big totals.
+
+### 11.3 The ceiling this implies, and what it does to act 3
+
+A season of our shipped calendar offers 4 WTA 125, 4 W100 and 8 W75. Winning all sixteen — a
+perfect, unreachable season — is **1,500 points ≈ real #45**. That is the mathematical ceiling of
+the ladder as shipped, and the same arithmetic explains the junior side: a real junior #1 banks
+thousands at junior Slams and Grade A events we do not have, which is why 300 ITF points read as #6
+here and as ~#150–200 in reality.
+
+The owner chose the real curve over a compressed one, with the consequence stated: **the top of the
+world is legitimately out of her reach until act 3 exists.** The v1 story is therefore the honest
+climb to the edge of the real top-100 — which is exactly the zone the game is about (break-even
+≈ #150, 02-tennis-economics.md).
+
+⚠ **AND THAT PROMOTES ACT 3 FROM CONTENT TO STRUCTURE.** 250 / 500 / 1000 / Slams are not "more
+tournaments later": they are the top half of the same ladder, the only source of the points the
+real curve is made of, the only thing that fills the window above W75, and the home of the
+mandatory regime the owner wants. Planned as optional in §9, it is now on the critical path.
 
 - **The «мировые очки странно считаются» defect, found and fixed**: the three rank caches are
   persisted, phase W redefined the W table, and a pre-phase-W save woke up with chip «#9» over a
