@@ -29,7 +29,9 @@ import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { LADDER_LABEL } from '../../shared/protocol'
-import { TIERS } from '../../engine/season/calendar'
+import { TIERS, TIER_SHORT } from '../../engine/season/calendar'
+import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
+import { finishPhrase } from '../../composables/tierState'
 import type { LadderTrack } from '../../engine/season/types'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 // R10-9: the season-by-season history sits right under the header tiles – it is the same three
@@ -102,6 +104,29 @@ const ranked = computed(() => ladder.value?.rank !== null && ladder.value?.rank 
 const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ranked.value))
 const points = computed(() => ladder.value?.points ?? 0)
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
+
+// --- THE WINDOW BLOCK (W2-LADDER §3: defending points made VISIBLE) ------------------------------
+// Three facts the rolling window has always had and never said: how full it is against the shown
+// table's own width (six, or sixteen on the professional table), the weakest counted value (the
+// bar a new result must clear once the window is full), and the NEXT DROP - the oldest counted
+// result, what it was, and the week the 52-week window lets it go. All derived from the counting
+// list the table below already shows, so the block and the table cannot disagree.
+const windowInfo = computed(() => {
+  const list = countingResults.value
+  const snap = game.snapshot
+  if (!list.length || !snap) return null
+  const cap = BEST_N_BY_TRACK[shown.value]
+  const weakest = Math.min(...list.map((r) => r.points))
+  const oldest = list.reduce((a, b) => (b.week < a.week ? b : a))
+  // windowedBestSum keeps a result while `week - r.week <= 52`, so it drops AT r.week + 53.
+  const dropInWeeks = oldest.week + 53 - snap.week
+  const finish = oldest.tier ? TIERS[oldest.tier].points.indexOf(oldest.points) : -1
+  const what =
+    oldest.tier && finish >= 0
+      ? `${TIER_SHORT[oldest.tier]} ${finishPhrase(finish, TIERS[oldest.tier].drawSize)}`
+      : 'Oldest result'
+  return { cap, counted: list.length, full: list.length >= cap, weakest, what, dropPts: oldest.points, dropInWeeks }
+})
 // This season's W-L, straight off the Snapshot (accumulated at finalizeTournament, reset each
 // season wrap-up).
 //
@@ -216,6 +241,21 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
          contradicts the number. This is the "points visualisation" the domestic rungs never had. -->
     <section v-if="!archiveShown && countingResults.length">
       <h2>Counting results</h2>
+      <!-- THE WINDOW, said out loud (W2-LADDER §3). One line for where the window stands, one for
+           what it is about to let go - the "очковое окно возможностей" the owner asked to see. -->
+      <template v-if="windowInfo">
+        <p class="hint stats-window-line">
+          Counting {{ windowInfo.counted }} of a best-{{ windowInfo.cap }} window.
+          <template v-if="windowInfo.full">
+            Weakest counted: {{ windowInfo.weakest }} pts – a new result must beat it to raise the total.
+          </template>
+          <template v-else>The window has room – any scoring result counts in full.</template>
+        </p>
+        <p class="hint stats-window-drop">
+          Next drop: {{ windowInfo.what }}, {{ windowInfo.dropPts }} pts – leaves the window in
+          {{ windowInfo.dropInWeeks }} {{ windowInfo.dropInWeeks === 1 ? 'week' : 'weeks' }}.
+        </p>
+      </template>
       <CountingResultsTable :results="countingResults" />
     </section>
   </template>

@@ -41,7 +41,7 @@ import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
 import { KID_ID, kidMatchPlayer, isCappedProTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
-import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
+import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
@@ -463,6 +463,18 @@ const calendarRows = computed<CalendarRow[]>(() => {
 
 function packageLabel(packageId: string): string {
   return vacationPackage(packageId)?.label ?? packageId
+}
+
+// THE DEFENDING BADGE's number (W2-LADDER §3): the counted PROFESSIONAL result exactly 52 weeks
+// behind this card's week - the slot this event replaces in her rolling window. W-track cards
+// only: the badge is about the professional window, and a junior card wearing a WTA number would
+// invite the cross-currency reading two-ladders.md forbids. Null = no badge (nothing counted at
+// that slot, or not a W event).
+function defendingPts(e: UpcomingEvent): number | null {
+  if (TIERS[e.tier].track !== 'wta') return null
+  const counted = game.snapshot?.ladders.wta.countingResults ?? []
+  const r = counted.find((c) => c.week === e.week - 52)
+  return r ? r.points : null
 }
 
 // THE PRO BUDGET LINE (W2-LADDER §5): «Pro entries this season: N of M», finite seasons only.
@@ -1048,6 +1060,18 @@ function closeExhibition(): void {
                 {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
               </span>
               <span v-if="row.event.entered" class="pill ok">Entered</span>
+              <!-- THE DEFENDING BADGE (W2-LADDER §3: «очковое окно возможностей», made visible).
+                   Last year's counted result at this exact week is about to age out of her rolling
+                   professional window - the week she plays (or skips) this card is the week those
+                   points leave. The number is the counted result's own; the rule is the engine's
+                   52-week window, restated nowhere. -->
+              <span
+                v-if="defendingPts(row.event) !== null"
+                class="pill defend-chip"
+                :title="`Her counted result from this week last year (${defendingPts(row.event)} pts) leaves the 52-week professional window as this week arrives.`"
+              >
+                defending {{ defendingPts(row.event) }} pts
+              </span>
               <!-- R10-5: an entry that survived the band crossing is COMMITTED, not illegal – but it
                    must SAY so. The owner played a Local at 122 points with nothing on screen to
                    explain it, because the card had been decluttered away entirely. -->
@@ -1433,6 +1457,14 @@ section.bare .event-cards {
   font-size: 12px;
   font-weight: 500;
   color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The defending badge (W2-LADDER §3): the accent register the Entered pill already uses - points
+   at stake is good news to act on, not a warning - with the number kept tabular. */
+.defend-chip {
+  color: var(--accent);
+  border-color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
