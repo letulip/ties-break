@@ -335,12 +335,12 @@ live):
 
 | rung | band | field core | P(title) | candidates min/mean |
 | --- | --- | --- | --- | --- |
-| W15 | [0.35, 0.85] | 48.3 | **19.5%** | 214 / 273 |
-| W35 | [0.25, 0.72] | 50.3 | 17.6% | 204 / 250 |
-| W50 | [0.18, 0.60] | 52.6 | 8.2% | 195 / 227 |
-| W75 | [0.12, 0.49] | 57.5 | 0.6% | 154 / 179 |
-| W100 | [0.08, 0.39] | 65.3 | 0.0% | 145 / 155 |
-| WTA 125 | [0.03, 0.29] | 71.3 | 0.0% | 128 / 134 |
+| W15 | [0.22, 0.72] | 48.5 | **19.8%** | 226 / 273 |
+| W35 | [0.185, 0.62] | 50.4 | 13.1% | 202 / 237 |
+| W50 | [0.145, 0.52] | 55.1 | 2.3% | 177 / 204 |
+| W75 | [0.105, 0.42] | 60.0 | 0.0% | 139 / 162 |
+| W100 | [0.065, 0.33] | 65.9 | 0.0% | 124 / 137 |
+| WTA 125 | [0.025, 0.26] | 70.7 | 0.0% | 119 / 125 |
 
 Strictly monotone, W15 restored, and **0.0% of every rung's draw comes from outside its own band** —
 no window is quietly made of backfill, which is the failure W100's own comment records.
@@ -365,17 +365,66 @@ The clean A/B, same seeds, same bands, the rule off and on (`--no-exclusivity`, 
 | W100 | 65.9 → 65.3 | 0.0% → 0.0% | 153 → 145 |
 | WTA 125 | 71.3 → 71.3 | 0.0% → 0.0% | 128 → 128 |
 
+(Taken on the pre-lift bands, i.e. before §8.2c; the rule's SHAPE — every rung but the top one
+softens — is what it establishes, and that is a property of the rule rather than of the calibration.)
+
 Every rung softens except the top one, which has nothing above it to lose people to — the rule's own
 shape, read off the measurement. The price is 20–50 candidates at the narrowest week, and every
 window still holds four draws' worth with the out-of-band share at 0.0%.
 
-**⚠ THE ONE TARGET THAT MOVED, and it is arithmetic.** A 50-point LIVE row (five W15 titles) lands
-**#118 of 564**, not the phase-W promise of #40–80. 64 professionals now exist above the old
-450-point ceiling, so such a row cannot rank above #65 whatever any constant says; holding #40–80
-would mean pricing the whole elite storey below 50 points, which opens a ~450-point cliff between
-#64 and #65 and makes the standings' head — the one thing the storey exists to fix — read wrong. The
-head now reads #1 10,721 · #10 6,131 · #32 2,026 · #64 396 · #100 60 · #300 7. The pin in
-`tests/season/fieldPros.test.ts` is re-aimed to #85–150 with that argument beside it.
+### 8.2c The points curve — the owner's pacing ruling (03.08)
+
+The fourth storey fixed the head and left the defect that actually sets the pace: **the table was
+flat under her.** Pre-wave, a 104-point girl read as world #27 in a table whose #300 held 9 points
+and whose #500 held 0 — a ~14× position error against the real ladder, and the reason a career
+reached the top of the world in two seasons. The owner's ruling, 03.08: «согласен с первым
+вариантом, настоящая кривая. Всё так, мы воссоздаем максимально всю лестницу с небольшими
+корректировками и допущениями с нашей стороны» — the merged table takes the REAL points-to-rank
+curve, and the consequence he accepted with it is that the top of that table is legitimately out of
+her reach until act 3 builds the 250/500/1000/Slam rungs (our shipped ladder's theoretical maximum
+season is ~1,500 points ≈ real #45).
+
+So the whole pyramid was lifted, not just topped. Achieved fit, printed by every bench run:
+
+| rank | #1 | #10 | #50 | #100 | #150 | #300 | #500 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| REAL | ~10,500 | 4,000 | 1,400 | 850 | 520 | 190 | 75 |
+| OURS | 10,469 | 4,308 | 1,340 | 822 | 513 | 189 | **0** |
+
+Rows below #50 are stable to a few percent across seeds (#50 1,249–1,340 · #100 822–869 · #300
+184–194); the head is a 1-in-64 order statistic over a gamma-6.5 band and varies (#10 measured
+4,067–6,244 across four seeds).
+
+**What the fit buys, checked against this project's own published arithmetic** (act2-pro-tour.md §2,
+written as a design target and untrue of the old table): year 3 «≈ 400–650 pts → #150–200» measures
+#183 at 400 and #132 at 650; year 4 «700–1,000 → top-100» measures #87 at 1,000; year 5+ «1,400+ →
+top-50» measures #49 at 1,400.
+
+**⚠ #500 IS THE ONE ANCHOR THIS BUILD CANNOT REACH, and it is a population limit, not a calibration
+one.** 364 derived pros hold points; rows 365+ of the merged table are the LIVE cohort, mostly on
+zero. Matching #500 = 75 needs a fifth storey and `FIELD.size` near 520 — a merged table of ~704
+rows, which re-opens every `entrantPctBand` and the sponsor gate that is derived from the table's
+size. Reported, not taken.
+
+**⚠⚠ AND THE ONE THING THE OWNER MUST DECIDE BEFORE THIS MERGES — THE ACCEPTANCE CUTS.** `enterPct`
+is a SHARE of the merged table and was left exactly where W2-LADDER measured it. Against a lifted
+curve those shares bite in POINTS rather than in places. Measured on a fresh world:
+
+| her points | 50 | 100 | 160 | 250 | 400 | 650 | 1,000 | 1,400 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| merged rank | #365 | #365 | #331 | #252 | #183 | #132 | #87 | #49 |
+| rungs open above W15 | none | none | none | W35 | +W50 | +W75, W100 | +WTA 125 | all |
+
+against cuts of W35 top 282 · W50 226 · W75 169 · W100 141 · WTA 125 113. A W35 therefore needs ~250
+W points, and a best-16 window filled with nothing but W15 **titles** caps at 160 — **the rung above
+the entry rung is not reachable from the entry rung alone.** W15 itself is unaffected (its gate is
+her ITF junior points, not the W table). The fix is `enterPct`'s derivation or a different acceptance
+rule, both beyond the FIELD table, so this is reported with its numbers rather than invented.
+
+A 50-point LIVE row (five W15 titles) consequently lands **#365 of 564**, not the phase-W promise of
+#40–80 — which was only ever reachable because the field held nobody in the middle. The pin in
+`tests/season/fieldPros.test.ts` is re-aimed to #300–420, and what it defends is unchanged: the
+number it exists to kill is «#9».
 
 **⚠ THE COHORT COST W2-LADDER HANDED OVER: measured, and the fix is out of this slice's scope.** Its
 finding was 25 extra W draws a season landing on the same ~82 sixteen-plus LIVE rivals. The

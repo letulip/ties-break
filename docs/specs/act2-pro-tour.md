@@ -308,17 +308,33 @@ is the page to read before touching any of these constants again. What the owner
 2. **Six rungs, six fields.** The wave opened by finding that W75/W100/WTA 125 drew the SAME field to
    one decimal (all three at mean core 59.7) — three labels on one draw — and that W15's title
    probability had drifted to 8.8% against its 15–35% target without anybody re-running the bench.
-   Both are fixed and measured: 48.3 < 50.3 < 52.6 < 57.5 < 65.3 < 71.3 across the family, W15 back
-   at 19.5%.
+   Both are fixed and measured: 48.5 < 50.4 < 55.1 < 60.0 < 65.9 < 70.7 across the family, W15 back
+   at 19.8%.
 3. **Week exclusivity holds on the W track**, ordered by TIER_LADDER, and it is visible: a W50 that
    shares its week with a W100 draws a measurably softer field (core 51.4 vs 52.6) and her title
    chance there is 14.1% vs 8.2%.
 
-⚠ **TWO THINGS FOR THE OWNER, both measured, neither fixable inside this wave's scope:**
+4. **The merged table takes the REAL points-to-rank curve** (the owner's pacing ruling, 03.08:
+   «согласен с первым вариантом, настоящая кривая»). The whole pyramid was lifted, not just topped —
+   the pre-wave table's #300 held 9 points and its #500 held 0, so a 104-point girl read as world
+   #27 against a real ~#350-400, and that flatness is what let a career reach the top of the world in
+   two seasons. Achieved: #1 10,469 · #10 4,308 · #50 1,340 · #100 822 · #150 513 · #300 189 against
+   real anchors of ~10,500 / 4,000 / 1,400 / 850 / 520 / 190. §2's own season arithmetic is now TRUE
+   of the engine: 400 pts → #183, 650 → #132, 1,000 → #87, 1,400 → #49.
 
-- **Five W15 titles is now #118 of 564, not #52 of 500.** Arithmetic, not a nerf: 64 professionals
-  now sit above the old ceiling, so a 50-point row cannot rank above #65 whatever the constants say.
-  §8's own «Today's ceiling (450) models ~#130» is what made the old number possible.
+⚠ **THREE THINGS FOR THE OWNER, all measured, none fixable inside this wave's scope:**
+
+- **⚠⚠ THE ACCEPTANCE CUTS NEED A DECISION BEFORE THIS MERGES.** `enterPct` is a share of the merged
+  table and was left where W2-LADDER measured it; against the lifted curve those shares now bite in
+  POINTS. Measured: she is #365 at 50 pts, #331 at 160, #252 at 250, #183 at 400, #132 at 650,
+  #87 at 1,000 — against cuts of W35 top 282 · W50 226 · W75 169 · W100 141 · WTA 125 113. So a W35
+  needs ~250 W points and a best-16 window of nothing but W15 TITLES caps at 160: **the rung above
+  the entry rung is not reachable from the entry rung alone.** W15 is unaffected (its gate is her
+  ITF junior points). The remedy is `enterPct`'s derivation or a different acceptance rule — beyond
+  the FIELD table, so reported rather than invented.
+- **Five W15 titles is now #365 of 564, not #52 of 500.** Not a nerf — it is the pacing ruling. 50
+  WTA points is past #600 in the real world; #40-80 was only ever reachable because the table held
+  nobody in the middle.
 - **The cohort's W load is NOT relieved by the population, and cannot be.** §9b handed this wave the
   re-measure and the population was the named fix. Canonical AI brackets are LIVE-only by design (a
   derived pro must never write a persisted result row), so 364 pros absorb exactly zero W draws —

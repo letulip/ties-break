@@ -113,18 +113,26 @@ export interface FieldPro extends AiPlayer {
 // RE-CALIBRATED 02.08 (W2-FIELD2), same bench, 16 worlds × up to 400 events a rung. Two of those
 // three targets hold and the third moved for a reason worth stating in the table it lives in:
 //
-//   ✓ W15 title probability 19.5% (it had drifted to 8.8% on this branch before the wave — see the
+//   ✓ W15 title probability 20.3% (it had drifted to 8.8% on this branch before the wave — see the
 //     W family's band note in calendar.ts for the arithmetic that did it).
-//   ✓ six rungs, six measurably different fields: 48.3 < 50.3 < 52.6 < 57.5 < 65.3 < 71.3.
-//   ⚠ A 50-POINT LIVE ROW NOW LANDS #118 OF 564, NOT #40-80, AND THAT IS ARITHMETIC RATHER THAN A
-//     REGRESSION. 64 professionals now exist ABOVE the old 450-point ceiling, so five W15 titles
-//     cannot rank above #65 whatever else is true; holding #40-80 would have meant pricing the
-//     WHOLE elite storey under 50 points, which opens a ~450-point cliff between #64 and #65 and
-//     makes the standings' head — the one thing the fourth storey exists to fix — read wrong. The
-//     property the target was defending is intact and stronger: five W15 titles printed "#9" before
-//     the field ring existed, and the head of the table it is measured against is now real
-//     (#1 10,721 · #10 6,131 · #32 2,026 · #64 396 · #100 60). The pin in
+//   ✓ six rungs, six measurably different fields: 48.3 < 50.5 < 55.2 < 59.8 < 65.8 < 70.8.
+//   ⚠ A 50-POINT LIVE ROW NOW LANDS #365 OF 564, NOT #40-80, AND THAT IS THE PACING REQUIREMENT
+//     RATHER THAN A REGRESSION. Five W15 titles is 50 WTA points; in the real table 50 points is
+//     past #600. #40-80 was only ever reachable because the field held nobody in the middle — it IS
+//     the "top of the world in two seasons" defect, seen from her side of the table. The property
+//     the old target defended survives and is stronger: the number this pin exists to kill is "#9",
+//     and the head she is now measured against is a real one. The pin in
 //     tests/season/fieldPros.test.ts is re-aimed to the measured band, not deleted.
+//   ⚠⚠ AND THE ONE THING THE OWNER MUST DECIDE BEFORE THIS MERGES: the ACCEPTANCE CUTS were left
+//     exactly where W2-LADDER measured them (`enterPct`, a share of the merged table), and against
+//     the lifted curve those shares now bite in points rather than in places. Measured, fresh world:
+//         50 pts -> #365   100 -> #365   160 -> #331   250 -> #252   400 -> #183   650 -> #132
+//         1000 -> #87      1400 -> #49
+//     against cuts of w35 top 282 · w50 226 · w75 169 · w100 141 · wta125 113. So a W35 needs ~250
+//     W points, and a best-16 window filled with nothing but W15 TITLES caps at 160 — the rung
+//     above the entry rung is unreachable from the entry rung alone. That is a change beyond this
+//     table (it is `enterPct`'s derivation, or a different acceptance rule), so it is REPORTED and
+//     not invented: the numbers are here, the decision is the owner's.
 // =================================================================================================
 // ⚠ THE FOURTH STOREY (W2-FIELD2, 02.08 – act2-pro-tour.md §8.1, owner ruling 3 intact: still
 // DERIVED, still PER-SEASON, no persistence, no schema).
@@ -165,12 +173,43 @@ export interface FieldPro extends AiPlayer {
 // Floor = elite's ceiling + 1 = 67; top = 77; the ±6 attribute spread and the gamma-bent points
 // lerp copy the storey below unchanged.
 //
-// THE POINTS BAND IS BORROWED FROM A TOUR WE DO NOT SIMULATE, and that is deliberate rather than
-// sloppy: 550–11,000 is the real WTA scale, earned at the 250/500/1000/Slam rungs act 3 will build.
-// Our own calendar tops out at 125 a title, so no derived pro and no career can EARN a five-figure
-// row inside this game today – the storey is the world these people live in, seen from the ITF
-// rungs where the career actually is. gamma 3 is what makes it read like a real head: the median
-// tourElite lands around 1,850 and one or two names a season clear 9,000.
+// THE POINTS BANDS ARE BORROWED FROM A TOUR WE DO NOT SIMULATE, and that is deliberate rather than
+// sloppy: the real WTA scale is earned at the 250/500/1000/Slam rungs act 3 will build. Our own
+// calendar tops out at 125 a title, so no derived pro and no career can EARN a five-figure row
+// inside this game today – the storeys describe the world these people live in, seen from the ITF
+// rungs where the career actually is.
+//
+// =================================================================================================
+// ⚠⚠ THE WHOLE DISTRIBUTION WAS LIFTED, NOT JUST TOPPED (W2-FIELD2, the owner's pacing requirement
+// via the architect: «the climb must take roughly as long as it does in life, not 1-2 seasons»).
+// =================================================================================================
+//
+// THE DEFECT, measured on the pre-wave table: our points-to-rank curve was FLAT UNDER HER. A
+// 104-point girl read as world #27 in a table whose #300 held 9 points and whose #500 held 0, while
+// 104 real WTA points is somewhere around #350-400. A 14x position error, and it is the whole reason
+// a career reached the top of the world in two seasons: the table had nobody in the middle for her
+// to have to pass. Adding a storey ON TOP fixes the head and leaves that untouched, which is why
+// this table's shipped shape is a lift of all four storeys rather than a fourth one bolted on.
+//
+// THE TARGET IS THE REAL CURVE'S OWN ANCHORS, and the achieved fit is measured, not asserted
+// (tools/field-quality.ts prints `merged table head` on every run):
+//
+//     rank      #1      #10     #50    #100    #150    #300    #500
+//     REAL   ~10500    4000    1400     850     520     190      75
+//     OURS    10469    4308    1340     822     513     189       0   <- see the ⚠ below
+//
+// ⚠ #500 IS THE ONE ANCHOR THIS TABLE CANNOT REACH, AND IT IS A POPULATION LIMIT RATHER THAN A
+// CALIBRATION ONE. 364 derived pros hold points; rows 365+ of the merged table are the LIVE cohort,
+// most of them on zero. Matching #500 = 75 needs a fifth storey and FIELD.size somewhere near 520,
+// which re-opens every `entrantPctBand` and the sponsor derivation that reads this size. Flagged for
+// the owner, deliberately NOT taken here.
+//
+// WHAT THE FIT BUYS, checked against act2-pro-tour.md §2's own season arithmetic — which was written
+// as a design target and was not true of the old table: year 3 ("≈ 400-650 pts → #150-200") now
+// measures #183 at 400 and #132 at 650; year 4 ("700-1,000 → top-100") measures #87 at 1,000; year
+// 5+ ("1,400+ → top-50") measures #49 at 1,400. The spec's own ladder is the curve's, to the place.
+//
+// gamma 6.5 on the top storey is what makes the head read like a real one rather than 64 co-#1s.
 export const FIELD = {
   /** id prefix – the namespace that keeps field ids disjoint from `ai-*` / `ai-s*-*` / 'kid' */
   idPrefix: 'fp-',
@@ -194,10 +233,10 @@ export const FIELD = {
    *  table reads, and a storey appended at the bottom of the literal would put the world #1 at
    *  `fp-300`. */
   tiers: [
-    { id: 'tourElite' as const, count: 64, core: [67, 77] as [number, number], pts: [550, 11000] as [number, number], gamma: 3 },
-    { id: 'elite' as const, count: 30, core: [56, 66] as [number, number], pts: [85, 450] as [number, number], gamma: 2 },
-    { id: 'contender' as const, count: 120, core: [43, 53] as [number, number], pts: [18, 64] as [number, number], gamma: 1 },
-    { id: 'journeyman' as const, count: 150, core: [38, 48] as [number, number], pts: [2, 16] as [number, number], gamma: 1 },
+    { id: 'tourElite' as const, count: 64, core: [67, 77] as [number, number], pts: [1400, 11500] as [number, number], gamma: 6.5 },
+    { id: 'elite' as const, count: 30, core: [56, 66] as [number, number], pts: [1000, 1400] as [number, number], gamma: 1 },
+    { id: 'contender' as const, count: 120, core: [43, 53] as [number, number], pts: [350, 1000] as [number, number], gamma: 1.6 },
+    { id: 'journeyman' as const, count: 150, core: [38, 48] as [number, number], pts: [150, 350] as [number, number], gamma: 1.4 },
   ],
   /** per-attribute spread around the drawn core (uniform ± this), so a pro has a shape, not a bar */
   attrSpread: 6,

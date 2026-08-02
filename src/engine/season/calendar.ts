@@ -375,26 +375,34 @@ export const TIERS: Record<TierId, TierDef> = {
     // MEASURED, the shipped set (16 worlds × up to 400 events a rung, fourth storey live,
     // exclusivity on — tools/field-quality.ts, the run that shipped this table):
     //
-    //     rung     band            field core   P(title)   candidates (min/mean)
-    //     w15      [0.35, 0.85]       48.3        19.5%        214 / 273
-    //     w35      [0.25, 0.72]       50.3        17.6%        204 / 250
-    //     w50      [0.18, 0.60]       52.6         8.2%        195 / 227
-    //     w75      [0.12, 0.49]       57.5         0.6%        154 / 179
-    //     w100     [0.08, 0.39]       65.3         0.0%        145 / 155
-    //     wta125   [0.03, 0.29]       71.3         0.0%        128 / 134
+    //     rung     band              field core   P(title)   candidates (min/mean)
+    //     w15      [0.22,  0.72]        48.5        19.8%        226 / 273
+    //     w35      [0.185, 0.62]        50.4        13.1%        202 / 237
+    //     w50      [0.145, 0.52]        55.1         2.3%        177 / 204
+    //     w75      [0.105, 0.42]        60.0         0.0%        139 / 162
+    //     w100     [0.065, 0.33]        65.9         0.0%        124 / 137
+    //     wta125   [0.025, 0.26]        70.7         0.0%        119 / 125
     //
-    // Strictly monotone in field strength, W15 back at 19.5% (the shipped calibration read 20.5%),
+    // ⚠ THE FLOORS ARE LOWER THAN THE FIRST SHIPPED SET (w15 0.35 -> 0.22 and so on up), and the
+    // reason is the POINTS LIFT in fieldPros.ts rather than a second opinion about the fields. When
+    // every derived pro holds three-figure points, the LIVE cohort's rows sink beneath all 364 of
+    // them, so the same percentile now lands on a DIFFERENT person: the table's top 65% is
+    // professionals and its tail is the junior cohort. The bands were re-swept against that table
+    // (w15 floor: 0.20 -> 16.0% · 0.24 -> 25.7% · 0.28 -> 34.0% · 0.32 -> 33.0%), which is why 0.22
+    // and not 0.35 is what holds the W15 title rate where it belongs.
+    //
+    // Strictly monotone in field strength, W15 at 19.8% (the shipped calibration read 20.5%),
     // and every window still holds four draws' worth of candidates at its NARROWEST week — the
     // out-of-band share is 0.0% on every rung, i.e. no draw is being quietly made of backfill (the
     // failure W100's own note records). W15's floor sweep, the same run, is the evidence the 0.35 is
-    // not a taste: 0.20 → 10.7% · 0.25 → 11.7% · 0.30 → 15.0% · 0.35 → 22.0% · 0.40 → 24.7%.
+    // not a taste — see the floor sweep in the table note above.
     //
     // ⚠ AND `enterPct` DELIBERATELY DID NOT MOVE WITH THEM. The old sentence "she is accepted if she
     // would be inside the field they draw from" (the w35 note below) cannot survive a window with a
     // FLOOR: read literally it would now refuse a player for being too STRONG, which is not what an
     // acceptance list is. The acceptance chain is W2-LADDER's, measured on its own terms, and it
     // stays exactly where that wave left it.
-    entrantPctBand: [0.35, 0.85],
+    entrantPctBand: [0.22, 0.72],
   },
   w35: {
     id: 'w35',
@@ -417,7 +425,7 @@ export const TIERS: Record<TierId, TierDef> = {
     enterPct: 0.5,
     // W2-FIELD2, measured - the family table is on w15 above. One rung up from the entry rung, so
     // one step up the table: field core 50.3 against W15's 48.1, 206 candidates at the narrowest.
-    entrantPctBand: [0.25, 0.72],
+    entrantPctBand: [0.185, 0.62],
   },
   w50: {
     id: 'w50',
@@ -447,14 +455,14 @@ export const TIERS: Record<TierId, TierDef> = {
     // -> wta125 0.2. 0.4 is deliberately J300's cut one table down - the same "prestige rung has to
     // be enterable from below" argument, one family up.
     enterPct: 0.4,
-    // ⚠ RE-MEASURED BY W2-FIELD2 — [0.02, 0.40] -> [0.18, 0.60]. W2-LADDER's own reading (the
+    // ⚠ RE-MEASURED BY W2-FIELD2 — [0.02, 0.40] -> [0.145, 0.52]. W2-LADDER's own reading (the
     // deepest window in the family, floor 0.02 so "the merged table's head must be REACHABLE here
     // without being resident") was the right instinct against a table whose head was one thirty-
     // strong storey; against the fourth storey a floor of 0.02 makes the world's top 11 residents of
     // a W50, which is exactly the inversion the family note on w15 measures. The dense middle rung
     // keeps the family's WIDEST window (0.42 of the table, 195 candidates at the narrowest week) -
-    // that part of W2-LADDER's reading is untouched. Field core 52.6, P(title) 8.2%.
-    entrantPctBand: [0.18, 0.6],
+    // that part of W2-LADDER's reading is untouched. Field core 55.1, P(title) 2.3%.
+    entrantPctBand: [0.145, 0.52],
   },
   w75: {
     id: 'w75',
@@ -476,14 +484,14 @@ export const TIERS: Record<TierId, TierDef> = {
     minAgeYears: 17,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     enterPct: 0.3,
-    // ⚠ RE-MEASURED BY W2-FIELD2 — [0, 0.35] -> [0.12, 0.49]. This is one of the three rungs whose
+    // ⚠ RE-MEASURED BY W2-FIELD2 — [0, 0.35] -> [0.105, 0.42]. This is one of the three rungs whose
     // fields were IDENTICAL before the fourth storey (w75/w100/wta125 all measured field core 59.7,
     // median entrant 33/499): a shared floor of 0 plus position-biased entry meant all three drew
     // the same head. The floor is what separates them now. W75's slice is the elite storey and the
     // contenders' top - the players a first-year top-200 professional actually meets - and the world
-    // top-70 are above its window rather than merely unlikely in it. Field core 57.5, P(title) 0.6%,
-    // 154 candidates at the narrowest week.
-    entrantPctBand: [0.12, 0.49],
+    // top-70 are above its window rather than merely unlikely in it. Field core 60.0, P(title) 0.0%,
+    // 139 candidates at the narrowest week.
+    entrantPctBand: [0.105, 0.42],
   },
   w100: {
     id: 'w100',
@@ -522,15 +530,15 @@ export const TIERS: Record<TierId, TierDef> = {
     // untouched.
     //
     // ⚠ AND W2-FIELD2 IS THAT RECALIBRATION — the FOURTH measurement this band has carried:
-    // [0, 0.30] -> [0.08, 0.39]. The note above is right that 0.30 tightened monotonically at the
+    // [0, 0.30] -> [0.065, 0.33]. The note above is right that 0.30 tightened monotonically at the
     // CEILING; what it could not fix was the FLOOR, shared at 0 with the two rungs either side, and
     // that is what made w75/w100/wta125 one field wearing three labels (all three measured field
     // core 59.7, median entrant 33/499). With the fourth storey resident at the head, a floor of
-    // 0.08 puts the world top-45 above this window and leaves W100 the elite storey - measured
-    // field core 65.3 against W75's 57.5 and the 125's 71.3, 145 candidates at the narrowest week,
+    // 0.065 puts the world top-37 above this window and leaves W100 the elite storey - measured
+    // field core 65.9 against W75's 60.0 and the 125's 70.7, 124 candidates at the narrowest week,
     // 0.0% of the draw from outside the band. The ceiling widens 0.30 -> 0.39 to keep the window's
     // DEPTH while its floor rises: a window that only slid up would have starved.
-    entrantPctBand: [0.08, 0.39],
+    entrantPctBand: [0.065, 0.33],
   },
   wta125: {
     id: 'wta125',
@@ -576,19 +584,19 @@ export const TIERS: Record<TierId, TierDef> = {
     // [0, 0.25] tightens at BOTH ends at every step, which is what keeps the L6 guard's family
     // monotonicity true with six rungs: shipped-band minima 190 / 150 / 133 / 110.
     //
-    // ⚠ AND THE CHAIN ABOVE IS HISTORICAL SINCE W2-FIELD2 — [0, 0.25] -> [0.03, 0.29]. The measured
+    // ⚠ AND THE CHAIN ABOVE IS HISTORICAL SINCE W2-FIELD2 — [0, 0.25] -> [0.025, 0.26]. The measured
     // fact the chain could not see: floors of 0 on three consecutive rungs made three identical
     // fields, so "tightens at both ends" was true of the numbers and false of the tennis. The new
-    // chain slides instead of nesting (w15 [0.35, 0.85] · w35 [0.25, 0.72] · w50 [0.18, 0.60] ·
-    // w75 [0.12, 0.49] · w100 [0.08, 0.39] · wta125 [0.03, 0.29] — both ends still step down at
-    // every rung) and the 125's field finally IS the top of the world: measured field core 71.3
-    // against W100's 65.3, median entrant #35 of 564, 128 candidates at the narrowest week.
+    // chain slides instead of nesting (w15 [0.22, 0.72] · w35 [0.185, 0.62] · w50 [0.145, 0.52] ·
+    // w75 [0.105, 0.42] · w100 [0.065, 0.33] · wta125 [0.025, 0.26] — both ends still step down at
+    // every rung) and the 125's field finally IS the top of the world: measured field core 70.7
+    // against W100's 65.9, median entrant #32 of 564, 119 candidates at the narrowest week.
     //
-    // THE FLOOR IS 0.03, NOT 0. The very top of the merged table — the two or three names on 9,000+
+    // THE FLOOR IS 0.025, NOT 0. The very top of the merged table — the two or three names on 9,000+
     // points — plays a tour this game does not simulate yet (act 3's 250/500/1000/Slams); a WTA 125
-    // whose top seed is the world #1 would be as wrong as a W100 whose top seed is. 0.03 of 564 is
-    // the top ~17 rows, which is what a 125's entry list actually excludes.
-    entrantPctBand: [0.03, 0.29],
+    // whose top seed is the world #1 would be as wrong as a W100 whose top seed is. 0.025 of 564 is
+    // the top ~14 rows, which is what a 125's entry list actually excludes.
+    entrantPctBand: [0.025, 0.26],
   },
 }
 

@@ -5,7 +5,8 @@
 //      the save's populations (world.cohort, world.results stay fp-free through live ticks);
 //   2. the merged W table is a real ranking – strictly ordered, every LIVE points-holder exactly
 //      once, competition rank numbers;
-//   3. the calibration – the honest-rank promise ("five W15 titles is ~#40-80, not #9") and the
+//   3. the calibration – the honest-rank promise ("five W15 titles is not #9"), the merged table's
+//      points-to-rank curve against the REAL WTA anchors (W2-FIELD2's pacing requirement), and the
 //      acceptance cuts at the grown field size;
 //   4. the scope fence – W rungs draw from cohort ∪ field, every other rung provably from the
 //      cohort alone (phase 2 owns the J/domestic side).
@@ -109,13 +110,32 @@ describe('the field is a pure derivation', () => {
     const elites = pros.filter((p) => p.strengthTier === 'elite')
     const meanCore = (xs: typeof pros) => xs.reduce((s, p) => s + power(p), 0) / xs.length
     expect(meanCore(top)).toBeGreaterThan(meanCore(elites) + 8)
-    // 2. TOP-HEAVY, which is what `gamma: 3` buys: one or two genuine world-#1-scale names exist and
+    // 2. TOP-HEAVY, which is what the storey's gamma buys: one or two genuine world-#1-scale names exist and
     //    the MEDIAN of the storey does not. Without this the storey is 64 co-#1s and the table's
     //    head reads like a spreadsheet.
     const pts = top.map((p) => p.wtaPoints).sort((a, b) => b - a)
     const median = pts[Math.floor(pts.length / 2)]
     expect(pts[0]).toBeGreaterThan(8000)
     expect(median).toBeLessThan(pts[0] / 3)
+    // ...and the CURVE below it is the real one's, which is the pacing requirement's own test: the
+    // table must not go flat under her. Anchors from the real WTA rows, ±40% (the bench prints the
+    // exact fit; this pin is the shape, not the decimals).
+    const merged = mergedWtaRanking([], pros)
+    const near = (rank: number, real: number) => {
+      const got = merged[rank - 1].points
+      expect(got, `#${rank} holds ${got}, real ~${real}`).toBeGreaterThan(real * 0.6)
+      expect(got, `#${rank} holds ${got}, real ~${real}`).toBeLessThan(real * 1.4)
+    }
+    near(50, 1400)
+    near(100, 850)
+    near(150, 520)
+    near(300, 190)
+    // The HEAD is a 1-in-64 order statistic over a gamma-6.5 band, so it is genuinely seed-noisy
+    // (measured #10 across four seeds: 4067 / 4308 / 5033 / 6244 against a real ~4000) and gets a
+    // wide band rather than a false precision. The rows below #50 are what the pacing rests on and
+    // they are stable to a few percent: #50 1249-1340, #100 822-869, #300 184-194.
+    expect(merged[9].points).toBeGreaterThan(2500)
+    expect(merged[9].points).toBeLessThan(7500)
     // 3. WORLD-SCALE, and the seam with the storey below is CONTINUOUS rather than a cliff: the
     //    weakest tourElite lands near the strongest elite, so the standings do not fall off a
     //    ledge at #64. (Points are not strictly monotone across the seam – the age ramp is allowed
@@ -177,26 +197,27 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     // inside the promise would not shuffle this file – but #9, the number this slice exists to
     // kill, could never come back.
     //
-    // ⚠⚠ RE-AIMED #40-80 -> #85-150 BY THE FOURTH STOREY (W2-FIELD2), AND IT IS ARITHMETIC, NOT A
-    // WEAKENING. 64 professionals now exist above the old 450-point ceiling; five W15 titles are 50
-    // points; so this row CANNOT rank above #65 whatever any constant says. Measured after the
-    // wave: 117 pros hold more than 50 W points and she lands #118 of 564. Holding the old range
-    // would have required pricing the entire elite storey below 50 points, which puts a ~450-point
-    // cliff between #64 and #65 and makes the standings' head – the one thing the storey exists to
-    // fix – read wrong.
+    // ⚠⚠ RE-AIMED #40-80 -> #300-420 BY W2-FIELD2's POINTS LIFT, AND IT IS THE PACING REQUIREMENT
+    // RATHER THAN A WEAKENING (the owner, via the architect: «the climb must take roughly as long
+    // as it does in life, not 1-2 seasons»). Five W15 titles is 50 WTA points, and 50 real points is
+    // past #600 in the world. The old #40-80 was only reachable because the field held NOBODY in the
+    // middle: the pre-wave table's #300 held 9 points and its #500 held 0, so any real result
+    // teleported her up it. That flatness IS the "top of the world in two seasons" defect, seen from
+    // her side of the table, and the whole distribution was lifted to the real curve's anchors to
+    // remove it (FIELD's table carries the achieved fit).
     //
-    // WHAT THE PIN DEFENDS IS UNCHANGED and is now strictly harder to lose: a girl who has won the
-    // ENTRY RUNG of the professional game five times is not near the top of the world. The floor at
-    // 85 is what kills #9 (and #52, and anything else that would put her among people on four-figure
-    // points); the ceiling at 150 is what catches the opposite failure – a storey so heavy that the
-    // table stops noticing a real result at all.
+    // WHAT THE PIN DEFENDS IS UNCHANGED and is now much harder to lose: the number this test exists
+    // to kill is "#9" - five titles at the ENTRY RUNG of the professional game printing a top-ten
+    // world ranking. The floor at 300 kills it with three hundred places to spare; the ceiling at
+    // 420 catches the opposite failure, a field so heavy that a real result moves nothing at all.
+    // Measured: 364 of 364 pros hold more than 50 W points, and she lands #365 of 564.
     const world = createWorld('field-cal-pin')
     for (let i = 0; i < 5; i++) {
       world.results.push({ playerId: KID_ID, week: world.week, points: 10, tier: 'w15' })
     }
     recomputeKidRank(world)
-    expect(world.kidRankWta).toBeGreaterThanOrEqual(85)
-    expect(world.kidRankWta).toBeLessThanOrEqual(150)
+    expect(world.kidRankWta).toBeGreaterThanOrEqual(300)
+    expect(world.kidRankWta).toBeLessThanOrEqual(420)
   })
 
   it('acceptance cuts read the merged field size on the W rungs, the live table elsewhere', () => {
