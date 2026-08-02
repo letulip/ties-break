@@ -709,6 +709,16 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
   // rise; the W family pins its exact interpolated steps (a decrease AND a prestige
   // re-extrapolation both still fail), and both tables keep the floor = 30 + 5 x surcharge pairing
   // so one retune note governs the pair.
+  // ⚠⚠ RE-AIMED AGAIN 03.08 (W2-FATIGUE), AND THIS RE-AIM RETIRES THE PAIRING RATHER THAN MOVING IT.
+  // The fatigue re-price (docs/specs/fatigue-reprice-2026-08.md §2-3) took the W surcharges into the
+  // 2-3 band while leaving the entry floors exactly where R15-6 put them, because `floor = 30 + 5 x
+  // surcharge` had fused two different questions: what a week COSTS her body (travel and adaptation
+  // - repriced) and how fresh she must BE to start one (arrival safety - not in the spec's remit,
+  // and §7 leaves the owner's own numbers alone). Carried through, the formula would have put
+  // W100's floor at 45, BELOW J300's 55, so the biggest event in the game would caution later than
+  // a junior one. NOTHING IS WEAKENED: each table is now pinned on its own terms, exhaustively and
+  // rung by rung, so a decrease inside a family, a broken seam, a missing rung and a prestige
+  // re-extrapolation all still fail here - the two tables simply stopped being one number.
   it('minConditionToEnter and tierMatchFatigue are exhaustive and rise inside each family', () => {
     const families = ['domestic', 'itf'] as const
     const rungsOf = (track: 'domestic' | 'itf' | 'wta') => TIER_LADDER.filter((t) => TIERS[t].track === track)
@@ -731,15 +741,24 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
       // The seams: up into the junior tour, DOWN into the professional one (the R15-6 reprice).
       expect(table.j30).toBeGreaterThan(table.national)
       expect(table.w15).toBeLessThan(table.j300)
-      expect(table.w15).toBeGreaterThan(table.j30)
     }
-    // The exact interpolated steps, pinned once for both tables through the pairing.
-    expect(ECONOMY.condition.tierMatchFatigue.w50).toBe(5)
-    expect(ECONOMY.condition.tierMatchFatigue.w75).toBe(6)
-    expect(ECONOMY.condition.tierMatchFatigue.wta125).toBe(6)
+    // ⚠ `w15 > j30` USED TO SIT IN THAT LOOP AND IS NOW PER TABLE, because the two tables answer it
+    // differently since W2-FATIGUE: the FLOOR still steps up over j30 (50 vs 45 - she must arrive
+    // fresher for a professional week than for a junior one), while the SURCHARGE no longer does
+    // (2 vs 3 - the professional week costs her less per match, which is the whole re-price). One
+    // formula could not hold both, which is exactly why the pairing was retired.
+    expect(ECONOMY.availability.minConditionToEnter.w15).toBeGreaterThan(ECONOMY.availability.minConditionToEnter.j30)
+    expect(ECONOMY.condition.tierMatchFatigue.w15).toBeLessThan(ECONOMY.condition.tierMatchFatigue.j30)
+    // THE TWO TABLES, PINNED RUNG BY RUNG on their own terms (the pairing that used to do this in
+    // one line is retired - see the note above). Written out so a re-tune of either is a deliberate
+    // edit to this file rather than a silent consequence of touching the other.
+    expect(rungsOf('wta').map((t) => ECONOMY.condition.tierMatchFatigue[t])).toEqual([2, 2, 2, 3, 3, 3])
+    expect(rungsOf('wta').map((t) => ECONOMY.availability.minConditionToEnter[t])).toEqual([50, 55, 55, 60, 60, 60])
+    // ...and the floors keep the one property that made the pairing worth having: the professional
+    // family is gatekept ABOVE every domestic rung and never below the junior tour's entry rung.
     for (const t of rungsOf('wta')) {
-      expect(ECONOMY.availability.minConditionToEnter[t], `${t} floor pairing`).toBe(
-        30 + 5 * ECONOMY.condition.tierMatchFatigue[t],
+      expect(ECONOMY.availability.minConditionToEnter[t], `${t} floor vs national`).toBeGreaterThan(
+        ECONOMY.availability.minConditionToEnter.national,
       )
     }
   })

@@ -42,6 +42,22 @@ import type { TierId } from '../src/engine/season/types'
 //      below moved - and the W family runs his flattest proposal D ([0,1,1,1,1]).
 // A straight-sets W15 TITLE run therefore costs 34 (was 46), W35 39 (was 51), W100 44 (was 56),
 // and the ceiling of a single match is 10 (a three-TB W100 epic), was 12.
+//
+// ⚠ RE-AIMED 03.08 (W2-FATIGUE, docs/specs/fatigue-reprice-2026-08.md §2-3): THE W SURCHARGES DROP
+// AGAIN, 4/5/5/6/6/6 -> 2/2/2/3/3/3, and this time the argument is the SCHEDULE rather than the
+// field. The surcharge is charged PER MATCH, so a deep run multiplies it - 61% of a W35 title's 41
+// condition was surcharge - and the owner's «это же работа, она привыкла» is an argument about
+// exactly that number: it prices international travel and a fortnight from home, written for a
+// schoolgirl who flies to a J300 twice a year, and a professional grinding W35s must not pay more
+// per match than that fifteen-year-old does. R15-6's dense pair (4/5/5) compresses onto 2 and its
+// prestige pair (6/6/6) onto 3, so the family's internal seam is where it was.
+// ⚠ TWO PROPERTIES THIS FILE PINNED HAD TO MOVE WITH IT, and both are re-aimed rather than deleted:
+// the J -> W seam now drops by THREE (a W15 match costs what a NATIONAL one does, both 4 - see the
+// knob's comment for why that is the ruling), and the most expensive match in the game is a
+// three-tiebreak J300 epic at 9 again, because the J family has reclaimed the top of the ladder.
+// Every domestic and junior cell below is BYTE-IDENTICAL, which is spec §6.5 ("the junior era does
+// not move") asserted rather than asserted about.
+// A straight-sets W15/W35/W50 TITLE run now costs 24 (was 34/39/39) and a W75/W100/125 one 29.
 // ---------------------------------------------------------------------------
 
 const SIMPLE = '6-3 6-4' // two sets, no tiebreak
@@ -57,24 +73,21 @@ describe('per-match cost = scoreline + tier surcharge', () => {
     j30: [5, 6, 7],
     j60: [6, 7, 8],
     j300: [7, 8, 9],
-    // ⚠ RE-AIMED AGAIN 01.08 (R15-6), NOT WEAKENED - same composition, repriced surcharges. The W
-    // rows were 8/9/10 · 9/10/11 · 10/11/12 under the +1-over-J300 extrapolation; the owner's
-    // ruling (see the file header) prices the family one step over the J ENTRY rungs instead,
-    // because today's W fields are measurably the softest international draws in the game. The
-    // arithmetic is untouched: `matchDrain = scoreline + tierMatchFatigue[tier]`, +1 per rung
-    // INSIDE the family, and a W15 simple (6) now equals a J60 simple - which is roughly what
-    // their fields actually are.
-    w15: [6, 7, 8],
-    w35: [7, 8, 9],
-    // ⚠ W2-LADDER: the middle rungs INTERPOLATE inside the R15-6 family (ends pinned 4 .. 6), they
-    // do not extend it - raw w50 5 / w75 5.5, the half rounded UP because the accumulator is
-    // integer end to end, and the 125 takes w100's 6 rather than a prestige +1 (its field today is
-    // drawn from the same merged-table slice; W2-FIELD2's fourth storey is what re-prices it,
-    // measured). See the knob's comment in economy.ts.
-    w50: [7, 8, 9],
-    w75: [8, 9, 10],
-    w100: [8, 9, 10],
-    wta125: [8, 9, 10],
+    // ⚠ RE-AIMED AGAIN 03.08 (W2-FATIGUE), NOT WEAKENED - same composition, repriced surcharges for
+    // the third time. These rows were 8/9/10 · 9/10/11 · 10/11/12 (the +1-over-J300 extrapolation),
+    // then 6/7/8 · 7/8/9 · 8/9/10 (R15-6, priced against the measured field). They are now priced
+    // against the SEASON: `matchDrain = scoreline + tierMatchFatigue[tier]` is untouched, the family
+    // is monotone non-decreasing across its two pairs, and a W15 simple (4) now equals a NATIONAL
+    // simple - the deliberate seam the file header explains.
+    w15: [4, 5, 6],
+    w35: [4, 5, 6],
+    // The W2-LADDER middle rungs still INTERPOLATE inside the family rather than extending it; with
+    // the ends at 2 and 3 there is no integer between them, so w50 rides with the dense pair and
+    // w75/wta125 with the prestige pair - the same grouping R15-6's 5/6 split made, compressed.
+    w50: [4, 5, 6],
+    w75: [5, 6, 7],
+    w100: [5, 6, 7],
+    wta125: [5, 6, 7],
   }
 
   it('the base is the owner-set 2 for a simple match, 3 for a hard one (one step above it)', () => {
@@ -95,17 +108,22 @@ describe('per-match cost = scoreline + tier surcharge', () => {
     }
   })
 
-  // ⚠ RE-AIMED 31.07 (9 -> 12, the adult rungs), RE-AIMED AGAIN 01.08 (12 -> 10, R15-6): the W
-  // reprice pulled the family's surcharges down to 4/5/6, so the most expensive match in the game
-  // is a three-tiebreak W100 epic at 10. The assertion still pins BOTH ends of the range against
-  // the live engine and still names which rung holds each end. The floor is untouched at 2: a
-  // straight-sets Local match costs what it always did.
-  it('a match costs 2 to 10 across the whole ladder – 2 at Local, 10 for a W100 epic', () => {
+  // ⚠ RE-AIMED 31.07 (9 -> 12, the adult rungs), 01.08 (12 -> 10, R15-6), and 03.08 (10 -> 9,
+  // W2-FATIGUE) - and the third re-aim moves WHICH RUNG HOLDS THE TOP, which is the finding worth
+  // asserting. With the W surcharges at 2/3 the most expensive match in the game is a
+  // three-tiebreak J300 epic at 9: the junior tour's hardest week is once again the hardest week
+  // there is, which is precisely the owner's own frame (the travel tax belongs to the schoolgirl
+  // flying out twice a year, not to the professional on her own tour). The assertion still pins
+  // BOTH ends against the live engine and names the rung holding each. The floor is untouched at 2:
+  // a straight-sets Local match costs what it always did.
+  it('a match costs 2 to 9 across the whole ladder – 2 at Local, 9 for a J300 epic', () => {
     const all = TIER_LADDER.flatMap((t) => [matchDrain(t, SIMPLE), matchDrain(t, HARD), matchDrain(t, EPIC)])
     expect(Math.min(...all)).toBe(2)
-    expect(Math.max(...all)).toBe(10)
+    expect(Math.max(...all)).toBe(9)
     expect(matchDrain('local', SIMPLE)).toBe(2)
-    expect(matchDrain('w100', EPIC)).toBe(10)
+    expect(matchDrain('j300', EPIC)).toBe(9)
+    // ...and the professional family now sits UNDER the junior one, end to end.
+    expect(matchDrain('w100', EPIC)).toBeLessThan(matchDrain('j300', EPIC))
   })
 
   // ⚠ RE-AIMED 01.08 (R15-6), AND THIS IS THE PIN THE REPRICE HAD TO MOVE. It read "+1 over the
@@ -124,6 +142,13 @@ describe('per-match cost = scoreline + tier surcharge', () => {
   // exactly as shipped; the W family is non-decreasing with its exact steps written out (so a
   // hand cannot smuggle a decrease OR a prestige re-extrapolation past this test); and both seams
   // keep their original assertions.
+  // ⚠ RE-AIMED AGAIN 03.08 (W2-FATIGUE), AND ONLY THE W HALF MOVES. The domestic and junior strict
+  // +1 is asserted unchanged - that is spec §6.5 in this file. What is re-aimed is the professional
+  // family's exact steps (2/2/2/3/3/3 -> simple 4/4/4/5/5/5) and the size of the seam: it dropped by
+  // ONE while the family was priced against its field, and it drops by THREE now that it is priced
+  // against the season, landing a W15 match level with a NATIONAL one. Still pinned exactly, so a
+  // hand that "fixes" the dip upward - or smuggles in a prestige re-extrapolation, or a decrease
+  // inside the family - meets this test and the knob's comment together.
   it('surcharges: strict +1 inside domestic and J; the W family non-decreasing with pinned steps; the J -> W seam drops by design', () => {
     for (const track of ['domestic', 'itf'] as const) {
       const rungs = TIER_LADDER.filter((t) => TIERS[t].track === track)
@@ -132,19 +157,22 @@ describe('per-match cost = scoreline + tier surcharge', () => {
         expect(matchDrain(rungs[i], SIMPLE), `${rungs[i]} vs ${rungs[i - 1]}`).toBe(below + 1)
       }
     }
-    // The W family, rung by rung - the exact interpolated shape, not merely "non-decreasing".
+    // The W family, rung by rung - the exact compressed shape, not merely "non-decreasing".
     const w = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
     expect(w).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
-    expect(w.map((t) => matchDrain(t, SIMPLE))).toEqual([6, 7, 7, 8, 8, 8])
+    expect(w.map((t) => matchDrain(t, SIMPLE))).toEqual([4, 4, 4, 5, 5, 5])
     for (let i = 1; i < w.length; i++) {
       expect(matchDrain(w[i], SIMPLE), `${w[i]} vs ${w[i - 1]}`).toBeGreaterThanOrEqual(matchDrain(w[i - 1], SIMPLE))
     }
     // The domestic -> junior seam still steps UP (+1, j30 over national)...
     expect(matchDrain('j30', SIMPLE)).toBe(matchDrain('national', SIMPLE) + 1)
-    // ...and the junior -> professional seam steps DOWN, w15 landing level with j60: the entry rung
-    // of the adult game is priced one step over the entry rung of the junior one, not over its top.
-    expect(matchDrain('w15', SIMPLE)).toBe(matchDrain('j300', SIMPLE) - 1)
-    expect(matchDrain('w15', SIMPLE)).toBe(matchDrain('j30', SIMPLE) + 1)
+    // ...and the junior -> professional seam steps DOWN by three, w15 landing level with NATIONAL:
+    // the entry rung of the adult game is priced where the top domestic rung is, because what this
+    // table charges for is travel-and-adaptation and she is the one girl who does it for a living.
+    expect(matchDrain('w15', SIMPLE)).toBe(matchDrain('j300', SIMPLE) - 3)
+    expect(matchDrain('w15', SIMPLE)).toBe(matchDrain('national', SIMPLE))
+    // ...and the whole professional family stays at or below the junior tour's ENTRY rung.
+    for (const t of w) expect(matchDrain(t, SIMPLE), `${t} vs j30`).toBeLessThanOrEqual(matchDrain('j30', SIMPLE))
   })
 
   it('a score-less record (a defensive path) is charged as straight sets, never as free', () => {
@@ -194,23 +222,23 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     j30: [5, 11, 17, 24, 31],
     j60: [6, 13, 20, 28, 36],
     j300: [7, 15, 23, 32, 41],
-    // ⚠ RE-AIMED 01.08 (R15-6), NOT WEAKENED, and BOTH levers show in these three rows: the
-    // per-match half is the repriced surcharge (4/5/6) and the ladder half is the owner's own
-    // variant D ([0,1,1,1,1] - «с меньшими надбавками просто») instead of C. Depth x per-match +
-    // the running D sum 0,1,2,3,4. The line worth reading is still the last one: a straight-sets
-    // W15 TITLE run costs 34 (was 46), W35 39 (was 51), W100 44 (was 56) - and every domestic and
-    // junior cell above is BYTE-IDENTICAL to the 26.07 tables, which is the other half of the
-    // ruling: only the professional family moved.
-    w15: [6, 13, 20, 27, 34],
-    w35: [7, 15, 23, 31, 39],
-    // W2-LADDER rows: same ladder D, the interpolated surcharges (see the per-match table above).
-    // w50 rides with w35's arithmetic one simple-match step up; w75 and the 125 land on w100's
-    // rows exactly, because their per-match cost is w100's - the family's top three rungs cost
-    // the same run today, and W2-FIELD2's recalibration is what will split them.
-    w50: [7, 15, 23, 31, 39],
-    w75: [8, 17, 26, 35, 44],
-    w100: [8, 17, 26, 35, 44],
-    wta125: [8, 17, 26, 35, 44],
+    // ⚠ RE-AIMED 03.08 (W2-FATIGUE), NOT WEAKENED, and ONE lever moved: the per-match half is the
+    // repriced surcharge (2/2/2/3/3/3), the ladder half is still the owner's own variant D
+    // ([0,1,1,1,1] - «с меньшими надбавками просто»), which the spec keeps on purpose (§3: it is 10%
+    // of the bill and it is the one part of the model that is not about travel). Depth x per-match +
+    // the running D sum 0,1,2,3,4. The line worth reading is the last one: a straight-sets W15/W35/
+    // W50 TITLE run costs 24 (was 34/39/39) and a W75/W100/125 one 29 (was 44) - and every domestic
+    // and junior cell above is BYTE-IDENTICAL to the 26.07 tables, which is the other half of the
+    // ruling: only the professional family moved, again.
+    w15: [4, 9, 14, 19, 24],
+    w35: [4, 9, 14, 19, 24],
+    // W2-LADDER rows: same ladder D, the compressed surcharges (see the per-match table above). With
+    // the family's ends at 2 and 3 the middle rungs cannot interpolate any finer, so w50 rides with
+    // the dense pair and w75/wta125 with w100 - the same grouping as before, one band lower.
+    w50: [4, 9, 14, 19, 24],
+    w75: [5, 11, 17, 23, 29],
+    w100: [5, 11, 17, 23, 29],
+    wta125: [5, 11, 17, 23, 29],
   }
 
   it('the shipped ladders are C = [0,1,1,2,2] for domestic+J and D = [0,1,1,1,1] for the W family (change deliberately, never to make a test pass)', () => {
@@ -261,11 +289,12 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
   // Cost at depth 1..5 = depth × per-match + the ladder's running sum. Generated from the engine
   // at base 2 and copied here; a base or ladder change fails this and the doc together.
   //
-  // ⚠ RE-AIMED 01.08 (R15-6): the grid patches BOTH family knobs to each variant, so every cell
-  // still answers the one question it always did - "what would ladder X charge this run" - across
-  // the whole nine-rung catalogue. The W columns are recomputed for the repriced surcharges
-  // (4/5/6); the shipped SPLIT (C for dom+J, D for the W family) is pinned in the shipped-tables
-  // suite above, not here - this grid is the menu, that pin is the order.
+  // ⚠ RE-AIMED 01.08 (R15-6) and again 03.08 (W2-FATIGUE): the grid patches BOTH family knobs to
+  // each variant, so every cell still answers the one question it always did - "what would ladder X
+  // charge this run" - across the whole twelve-rung catalogue. Only the W columns are recomputed,
+  // for the compressed surcharges (2/2/2/3/3/3); the domestic and junior columns are byte-identical
+  // through both re-aims. The shipped SPLIT (C for dom+J, D for the W family) is pinned in the
+  // shipped-tables suite above, not here - this grid is the menu, that pin is the order.
   const LADDERS: Record<string, number[]> = {
     off: [0],
     D: [0, 1, 1, 1, 1],
@@ -281,12 +310,12 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 10, 15, 20, 25],
       j60: [6, 12, 18, 24, 30],
       j300: [7, 14, 21, 28, 35],
-      w15: [6, 12, 18, 24, 30],
-      w35: [7, 14, 21, 28, 35],
-      w50: [7, 14, 21, 28, 35],
-      w75: [8, 16, 24, 32, 40],
-      w100: [8, 16, 24, 32, 40],
-      wta125: [8, 16, 24, 32, 40],
+      w15: [4, 8, 12, 16, 20],
+      w35: [4, 8, 12, 16, 20],
+      w50: [4, 8, 12, 16, 20],
+      w75: [5, 10, 15, 20, 25],
+      w100: [5, 10, 15, 20, 25],
+      wta125: [5, 10, 15, 20, 25],
     },
     D: {
       local: [2, 5, 8, 11, 14],
@@ -295,12 +324,12 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 11, 17, 23, 29],
       j60: [6, 13, 20, 27, 34],
       j300: [7, 15, 23, 31, 39],
-      w15: [6, 13, 20, 27, 34],
-      w35: [7, 15, 23, 31, 39],
-      w50: [7, 15, 23, 31, 39],
-      w75: [8, 17, 26, 35, 44],
-      w100: [8, 17, 26, 35, 44],
-      wta125: [8, 17, 26, 35, 44],
+      w15: [4, 9, 14, 19, 24],
+      w35: [4, 9, 14, 19, 24],
+      w50: [4, 9, 14, 19, 24],
+      w75: [5, 11, 17, 23, 29],
+      w100: [5, 11, 17, 23, 29],
+      wta125: [5, 11, 17, 23, 29],
     },
     C: {
       local: [2, 5, 8, 12, 16],
@@ -309,12 +338,12 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 11, 17, 24, 31],
       j60: [6, 13, 20, 28, 36],
       j300: [7, 15, 23, 32, 41],
-      w15: [6, 13, 20, 28, 36],
-      w35: [7, 15, 23, 32, 41],
-      w50: [7, 15, 23, 32, 41],
-      w75: [8, 17, 26, 36, 46],
-      w100: [8, 17, 26, 36, 46],
-      wta125: [8, 17, 26, 36, 46],
+      w15: [4, 9, 14, 20, 26],
+      w35: [4, 9, 14, 20, 26],
+      w50: [4, 9, 14, 20, 26],
+      w75: [5, 11, 17, 24, 31],
+      w100: [5, 11, 17, 24, 31],
+      wta125: [5, 11, 17, 24, 31],
     },
     B: {
       local: [2, 5, 8, 12, 18],
@@ -323,12 +352,12 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 11, 17, 24, 33],
       j60: [6, 13, 20, 28, 38],
       j300: [7, 15, 23, 32, 43],
-      w15: [6, 13, 20, 28, 38],
-      w35: [7, 15, 23, 32, 43],
-      w50: [7, 15, 23, 32, 43],
-      w75: [8, 17, 26, 36, 48],
-      w100: [8, 17, 26, 36, 48],
-      wta125: [8, 17, 26, 36, 48],
+      w15: [4, 9, 14, 20, 28],
+      w35: [4, 9, 14, 20, 28],
+      w50: [4, 9, 14, 20, 28],
+      w75: [5, 11, 17, 24, 33],
+      w100: [5, 11, 17, 24, 33],
+      wta125: [5, 11, 17, 24, 33],
     },
     A: {
       local: [2, 5, 9, 14, 20],
@@ -337,12 +366,12 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j30: [5, 11, 18, 26, 35],
       j60: [6, 13, 21, 30, 40],
       j300: [7, 15, 24, 34, 45],
-      w15: [6, 13, 21, 30, 40],
-      w35: [7, 15, 24, 34, 45],
-      w50: [7, 15, 24, 34, 45],
-      w75: [8, 17, 27, 38, 50],
-      w100: [8, 17, 27, 38, 50],
-      wta125: [8, 17, 27, 38, 50],
+      w15: [4, 9, 15, 22, 30],
+      w35: [4, 9, 15, 22, 30],
+      w50: [4, 9, 15, 22, 30],
+      w75: [5, 11, 18, 26, 35],
+      w100: [5, 11, 18, 26, 35],
+      wta125: [5, 11, 18, 26, 35],
     },
   }
 

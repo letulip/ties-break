@@ -61,7 +61,13 @@ with a delta block. Determinism holds per scenario.
 
 ## V2 + V2.1 SHIPPED (owner verdict 25.07 "V2 хорош" + "все чуть ниже к концу сезона")
 The ENGINE DEFAULTS are now the full V2.1 set: recoveryBase 1 (free-week ladder 1/2/3),
-matchWeekRecoveryBase 0, physio bonus 1. The affected condition/round-9 pins (B2/B3/B4,
+matchWeekRecoveryBase 0, physio bonus 1.
+⚠ **AND `recoveryBase` IS 8 SINCE W2-FATIGUE** (03.08, docs/specs/fatigue-reprice-2026-08.md §3), so
+the free-week ladder reads **8 / 9 / 10** and the `baseline` scenario below runs THAT. V2.1's shape
+is untouched — matchWeekRecoveryBase is still 0 and the physio bonus still 1; only the base moved,
+because the professional season the re-price is written for drains ~12.5 an event and a rest week
+returning 3 could never balance it. The `v2` and `legacy` reference scenarios still patch back their
+own historical values, so the audit trail of both decisions survives in one output. The affected condition/round-9 pins (B2/B3/B4,
 R9-10/R9-14) were re-pinned deliberately; the draw-count invariance freezes stayed green
 untouched. Bench scenarios since the flip: `baseline` = shipped knobs (full: headline + grid +
 PROJ), `v2` = the previous candidate patched back (recoveryBase 2; headline + PROJ – the audit

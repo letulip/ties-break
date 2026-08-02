@@ -280,13 +280,37 @@ describe('A3 — the same drain + the same time recovery the kid uses', () => {
     expect(rivalCondition([row('local', 3, 1)], 'ai-x', 1 + 5 * R.max)).toBe(R.max)
   })
 
+  // ⚠ RE-AIMED 03.08 (W2-FATIGUE: recoveryBase 1 -> 8), AND THE RE-AIM IS ITSELF THE FINDING - the
+  // «shared implementation forces a re-measure» case the re-price spec's §7 names by name. The
+  // window itself is UNTOUCHED at 16 (it is the owner's number and the spec forbids turning it);
+  // what moved underneath it is how long a drain can still be SEEN.
+  //
+  // The old second assertion put one J300 title at the window's OLDEST week and demanded a visible
+  // dent 15 weeks later. At recoveryBase 1 that was easy - the title cost 41 and fifteen quiet weeks
+  // repaid 15. At recoveryBase 8 the same fifteen weeks repay 120, and `walkWindow` clamps to
+  // [0, 100] every week, so ANY drain parked at the oldest edge is fully repaid before the read: a
+  // rival who was floored outright climbs 0 -> 100 in thirteen weeks. So the window is now strictly
+  // longer than the memory the VALUE can hold - it bounds the WORK the scan does, which is what its
+  // name and its own comment in economy.ts claim, and no longer doubles as the memory itself.
+  //
+  // Both halves of the original claim are still asserted, on weeks where they are observable:
+  // outside the window is exactly `max` (the boundary), inside it is strictly below (the scan really
+  // does read those rows), plus the repayment horizon itself, so the fact above is pinned rather
+  // than merely described.
   it('is bounded work: only the last ECONOMY.condition.rivalFatigueWindowWeeks weeks are scanned', () => {
     const window = R.rivalFatigueWindowWeeks
     expect(window).toBeGreaterThan(0)
     const ancient = [row('j300', 0, 100 - window - 1)] // one week outside the window
     expect(rivalCondition(ancient, 'ai-x', 100)).toBe(R.max)
-    const inside = [row('j300', 0, 100 - window + 1)]
+    const inside = [row('j300', 0, 99)] // inside, and still inside the repayment horizon
     expect(rivalCondition(inside, 'ai-x', 100)).toBeLessThan(R.max)
+    // THE HORIZON, pinned: a J300 title costs `drain` and a quiet week repays `recoveryBase`, so the
+    // dent is gone after ceil(drain / recoveryBase) weeks - and that is well inside the window now.
+    const drain = 5 * matchDrain('j300', undefined) + LADDER5
+    const repaid = Math.ceil(drain / R.recoveryBase)
+    expect(repaid).toBeLessThan(window)
+    expect(rivalCondition([row('j300', 0, 100 - repaid)], 'ai-x', 100)).toBe(R.max)
+    expect(rivalCondition([row('j300', 0, 100 - repaid + 1)], 'ai-x', 100)).toBeLessThan(R.max)
   })
 
   it('is deterministic and pure: same ledger, same week, same number – and the ledger is not mutated', () => {

@@ -856,7 +856,28 @@ export const ECONOMY = {
     // every MATCH-FREE week recovers this base (was 2) – the free-week ladder is now
     // grinder +1 / balanced +2 / careful +3 via the slider bonus, so every policy ARRIVES at
     // the season wrap below 100 and the off-season + a planner vacation earn their keep.
-    recoveryBase: 1,
+    //
+    // ⚠⚠ 1 -> 8 (W2-FATIGUE, docs/specs/fatigue-reprice-2026-08.md §3). THE OTHER HALF OF THE SAME
+    // DECISION as the W surcharge reprice below, and it could not be anything else: at the shipped
+    // surcharge a rest week would have had to return SEVENTEEN for the owner's season to balance,
+    // and that is not rest, that is convalescence. So both dials move towards each other instead.
+    //
+    // THE NUMBER IS THE SEASON EQUATION'S, not a taste. His design (§1) is twenty events on every
+    // second week, fatigue that ACCUMULATES, and «то, что за off-season РЕАЛЬНО восстановить с 1
+    // большим или парой небольших отпусков» - which is arithmetic: arrive at the off-season door
+    // around 45-50, so twenty play+rest PAIRS cost ~55, so each pair costs ~2.75, so a rest week
+    // must return within ~2.75 of what an average event drains. At the repriced surcharge an average
+    // professional event costs ~12.5, so the rest week owes ~10 = base 8 + the 60/40 slider's 2.
+    // The vacation table below is denominated in exactly this unit (18/22/26/32/40/48 = 2.2 … 6.0
+    // rest weeks at base 8), which is why the two tables have to move in one pass.
+    //
+    // ⚠ IT IS GLOBAL, SO THE JUNIOR ERA AND THE COHORT GET IT TOO - deliberate, not collateral. The
+    // spec moves what a WEEK returns, not what a professional week returns; the junior COST tables
+    // are untouched (not one cell of tests/fatigueReference.test.ts's domestic/J rows moves). What
+    // does move is how fast anybody comes back, kid and rivals alike, and the rival half is
+    // re-measured rather than re-tuned - see `rivalFatigueWindowWeeks` below, whose whole premise
+    // ("at recoveryBase 1/week their drain outruns their recovery permanently") this number retires.
+    recoveryBase: 8,
     // V2 SHIPPED (owner verdict 25.07 "V2 хорош", after two fatigue-bench rounds): a tournament
     // week is travel + competition, not rest – NO base recovery on a week the kid plays. The
     // knob stays (the bench's 'legacy' scenario patches it back to 2 for reference runs).
@@ -914,10 +935,44 @@ export const ECONOMY = {
     // against the measured field, never extrapolated by prestige", and today a 125 field is drawn
     // from the same merged-table slice as a W100's - when W2-FIELD2's fourth storey makes the 125
     // field real, IT gets re-priced upward with w35/w100, measured, per the dated note above.
+    //
+    // ⚠⚠ AND NOW THE WHOLE W FAMILY IS REPRICED DOWN INTO THE 2-3 BAND (W2-FATIGUE,
+    // docs/specs/fatigue-reprice-2026-08.md §2-3; owner 03.08: «по усталости нам надо комплексно
+    // что-то сделать, я чувствую. Значит надо все рычаги потрогать»). R15-6 above moved this family
+    // for the FIELD it meets; this moves it for the SCHEDULE she keeps, and those are two different
+    // arguments that happen to pull the same lever.
+    //
+    // THE ARITHMETIC THAT FORCED IT. The surcharge is charged PER MATCH, so the depth of a run
+    // multiplies it: of a W35 title's 41 condition, 25 WERE THE SURCHARGE (61%) against 12 of
+    // scoreline and 4 of cumulative ladder. Cutting the ladder instead - the intuitive move - buys 4
+    // points and costs the story, so the ladder stays (see runFatigueLadderWta). And the owner's own
+    // frame is an argument about exactly this number: «это же работа, она привыкла». The surcharge
+    // prices international travel, time zones and a fortnight from home - written for a schoolgirl
+    // who flies to a J300 twice a year. A professional grinding W35s is conditioned for her own tour
+    // and must not pay more per match than that fifteen-year-old does.
+    //
+    // THE SHAPE IS THE SHIPPED ONE COMPRESSED, never a new table: R15-6's dense pair (w15/w35/w50 at
+    // 4/5/5) all land on 2 and its prestige pair (w75/w100/wta125 at 6) on 3, so the family's one
+    // internal seam stays exactly where it was and the family stays monotone non-decreasing. W35 = 2
+    // is the value the ACCEPTANCE picks rather than the middle of the proposed range: a title (five
+    // matches, two of them 3-setters) costs 26 and she comes home at 74%, inside spec §6.3's 70-78;
+    // at surcharge 3 the same run costs 31 and she comes home at 69%, outside it.
+    //
+    // ⚠ SO THE J -> W SEAM NOW DROPS BY THREE, AND A W15 MATCH COSTS WHAT A NATIONAL ONE DOES (both
+    // 4). That is the ruling and not an artefact: what this table prices is travel-and-adaptation,
+    // and the one girl in the game who does this for a living is the one it should cost least. The
+    // guards (tests/fatigueReference.test.ts, tests/ladder.test.ts L9) are RE-AIMED onto the new
+    // seam, not relaxed - a decrease inside the family and a prestige re-extrapolation both still
+    // fail there.
+    //
+    // ⚠ THE ENTRY FLOORS DID NOT MOVE WITH THEM, so R15-6's `floor = 30 + 5 x surcharge` pairing is
+    // retired (see minConditionToEnter for the argument and the re-aimed guard). Two different
+    // questions had been given one answer: what a week COSTS her body, and how fresh she must be to
+    // start one.
     tierMatchFatigue: {
       local: 0, regional: 1, national: 2,
       j30: 3, j60: 4, j300: 5,
-      w15: 4, w35: 5, w50: 5, w75: 6, w100: 6, wta125: 6,
+      w15: 2, w35: 2, w50: 2, w75: 3, w100: 3, wta125: 3,
     } as Record<TierId, number>,
     // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
     // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
@@ -964,6 +1019,14 @@ export const ECONOMY = {
     // which inverts the standings instead of colouring them. Measured on the real calendar
     // (docs + the rival bench): 16 weeks keeps the field's median in the 70s-80s, leaves a real
     // dip behind a deep run, and floors nobody all season.
+    //
+    // ⚠ W2-FATIGUE RETIRED THAT PREMISE AND LEFT THE NUMBER ALONE, ON PURPOSE. `recoveryBase` is
+    // now 8, so an elite rival's recovery no longer loses to her drain and the window is no longer
+    // the thing standing between the cohort and a season pinned at 0 - it is now just her MEMORY,
+    // which is what the paragraph above says it always was. The re-price's §7 names this window as
+    // the owner's, "except where the shared implementation forces a re-measure", so it was
+    // re-MEASURED and not re-tuned: the fatigue bench's rival columns (mean cohort condition and
+    // the share arriving below `matchStrengthKnee`) are the receipt, reported with the wave.
     rivalFatigueWindowWeeks: 16,
   },
 
@@ -988,6 +1051,17 @@ export const ECONOMY = {
     // surcharge: 4->50, 5->55, 6->60), so the floors interpolate exactly as the surcharges do -
     // w50 with the dense pair at 55, w75/wta125 with the prestige pair at 60 - and one retune
     // note (tierMatchFatigue above) governs both tables.
+    //
+    // ⚠⚠ THAT PAIRING IS RETIRED AS OF W2-FATIGUE, AND THIS TABLE IS DELIBERATELY UNCHANGED. The
+    // fatigue re-price (docs/specs/fatigue-reprice-2026-08.md §2-3) took the W surcharges into the
+    // 2-3 band; carried through `30 + 5 x surcharge` that would have put W100's entry floor at 45 -
+    // BELOW J300's 55 - so the biggest event in the game would caution later than a junior one. The
+    // pairing was a derivation rule for interpolating new rungs, and it quietly fused two different
+    // questions: what a week COSTS her body (travel and adaptation, which the spec repriced) and how
+    // fresh she must BE to start one (arrival safety, which nobody asked to move - it is not in the
+    // spec's §2-5 and §7 leaves the owner's own numbers alone). The floors stay where R15-6 put them;
+    // tests/ladder.test.ts L9 is re-aimed to pin this table on its own terms, and it still refuses a
+    // decrease inside the family, a broken seam, or a missing rung.
     minConditionToEnter: {
       local: 20, regional: 30, national: 40,
       j30: 45, j60: 50, j300: 55,
@@ -1183,6 +1257,28 @@ export const ECONOMY = {
   // stream stays byte-identical). Prices are middle-anchored bands × wealthCorridor, quoted
   // from the `seed:vacation:week:packageId` sub-stream. 1-week packages, bookable back-to-back
   // (2 weeks = deep reset at 2× price – owner approved).
+  //
+  // ⚠⚠ THE WHOLE TABLE WAS LIFTED 03.08 (W2-FATIGUE, docs/specs/fatigue-reprice-2026-08.md §4;
+  // owner: «надо все приподнять»): 12/14/16/20/25/30 -> 18/22/26/32/40/48, prices untouched. It is
+  // the same decision as `recoveryBase` and had to move in the same pass, because THIS TABLE IS
+  // DENOMINATED IN REST WEEKS: at the new base of 8 the ladder reads 2.2 · 2.7 · 3.2 · 4.0 · 5.0 ·
+  // 6.0 rest weeks, which is the shape the spec's §4 table specifies to the decimal. Left at
+  // 12..30 against a base of 8 the ELITE week would have been worth less than four rest weeks and
+  // the free one barely more than one, i.e. the whole ladder would have quietly become a rounding
+  // error the season no longer needed.
+  //
+  // TWO PROPERTIES IT IS BUILT FOR, both of them tested rather than asserted:
+  //   * THE FREE WEEK IS A REAL MID-SEASON TOOL. At 18 the staycation is worth over two rest weeks,
+  //     so «в течение сезона она сможет брать мини отпуска на неделю иногда» is a move rather than
+  //     a gesture - one week out after a hard block genuinely buys the block back.
+  //   * MONEY BUYS RECOVERY SPEED, NOT RECOVERY. 18 -> 48 is the honest-economics thesis applied to
+  //     the body: the elite week alone nearly closes a season's deficit and the free one does not.
+  //     ⚠ AND THE WEALTH CORRIDOR MUST NEVER SCALE THE GAIN ITSELF - the same package restores the
+  //     same condition for every family, exactly as prize money pays the same cheque (the rule
+  //     act2-pro-tour.md §3 sets for money). It is true by construction: `resolveVacation` adds
+  //     `pkg.conditionGain` flat and the corridor is applied ONLY in `vacationPriceCents`, which is
+  //     the one thing about a holiday a family's means may decide. Pinned in tests/planner.test.ts
+  //     P3 so it stays true by construction rather than by luck.
   vacation: {
     /** how many weeks a resort/elite recovery buff rides after the vacation week */
     buffWeeks: 4,
@@ -1194,7 +1290,7 @@ export const ECONOMY = {
         label: 'Staycation with friends',
         blurb: 'No travel, no drills – her own bed and her own people.',
         priceCents: [0, 0],
-        conditionGain: 12,
+        conditionGain: 18,
         buffFactor: 1,
       },
       {
@@ -1228,7 +1324,7 @@ export const ECONOMY = {
         // saw $0-$40, and the ladder reads free -> $21-40 -> $105-240 with no rung able to
         // impersonate the one below it.
         priceCents: [30_00, 50_00],
-        conditionGain: 14,
+        conditionGain: 22,
         buffFactor: 1,
       },
       {
@@ -1236,7 +1332,7 @@ export const ECONOMY = {
         label: 'Camping road-trip',
         blurb: 'Tent, lake, no racket in the car.',
         priceCents: [150_00, 300_00],
-        conditionGain: 16,
+        conditionGain: 26,
         buffFactor: 1,
       },
       {
@@ -1244,7 +1340,7 @@ export const ECONOMY = {
         label: 'Seaside family hotel',
         blurb: 'A real holiday – sea, sleep, sun.',
         priceCents: [600_00, 1000_00],
-        conditionGain: 20,
+        conditionGain: 32,
         buffFactor: 1,
       },
       {
@@ -1252,7 +1348,7 @@ export const ECONOMY = {
         label: 'Sports recovery resort',
         blurb: 'Pool, physio, massage – rest with a programme.',
         priceCents: [1800_00, 3000_00],
-        conditionGain: 25,
+        conditionGain: 40,
         buffFactor: 0.9,
       },
       {
@@ -1260,7 +1356,7 @@ export const ECONOMY = {
         label: 'Elite recovery programme',
         blurb: 'The clinic the pros use – she comes back new.',
         priceCents: [4000_00, 7000_00],
-        conditionGain: 30,
+        conditionGain: 48,
         buffFactor: 0.85,
       },
     ] as VacationPackage[],

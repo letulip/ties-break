@@ -414,8 +414,10 @@ const PRE_SEASON_ARC: readonly (readonly DayBlock[])[] = [
 // расписание одинаковое, и week recap, ну кроме картинки».
 //
 // He is right about the symptom and the fix has one hard rule: these must not be six flavours of
-// nothing. `ECONOMY.vacation.packages` already differ by `conditionGain` – 12 / 14 / 16 / 20 / 25 /
-// 30 – so the week HAS a real ladder in it and the player has never been able to see it. Each arc
+// nothing. `ECONOMY.vacation.packages` already differ by `conditionGain` – 18 / 22 / 26 / 32 / 40 /
+// 48 (the W2-FATIGUE lift of 03.08; the ladder's SHAPE and order are untouched, the whole table
+// simply moved up a band) – so the week HAS a real ladder in it and the player has never been able
+// to see it. Each arc
 // below is that number drawn: how much of the week is actually recovery, and what it costs to get
 // there. A staycation is her own bed and her own life going on around her; the clinic at the top is
 // treatment with a timetable. Invent a difference these numbers do not have and the grid becomes

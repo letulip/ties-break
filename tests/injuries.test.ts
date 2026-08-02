@@ -178,7 +178,12 @@ function hashOf(draws: number[]): string {
 // different set of juniors ends the year holding counting ITF points and her dense place moves by
 // one - the same post-draw composition mechanism every re-pin above records. THE CAPTURE ITSELF IS
 // UNTOUCHED: count 41550 and hash e6b0c709 reproduce byte-for-byte.
-const REF = { kidRank: 137 }
+// ⚠ RE-PINNED 137 -> 125 BY W2-FATIGUE (the fatigue re-price). `recoveryBase` 1 -> 8 reaches every
+// body in the world through the one shared condition math, so the strength coupling resolves the
+// year's brackets on a fresher field and a different set of juniors ends it holding counting points.
+// Same post-draw mechanism as every re-pin above; the full argument lives at the B1 REF in
+// tests/condition.test.ts. THE MAIN CAPTURE IS UNTOUCHED (B1 asserts it byte-for-byte).
+const REF = { kidRank: 125 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
