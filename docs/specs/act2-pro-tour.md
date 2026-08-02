@@ -339,14 +339,24 @@ is the page to read before touching any of these constants again. What the owner
 
 ⚠ **THREE THINGS FOR THE OWNER, all measured, none fixable inside this wave's scope:**
 
-- **⚠⚠ THE ACCEPTANCE CUTS NEED A DECISION BEFORE THIS MERGES.** `enterPct` is a share of the merged
-  table and was left where W2-LADDER measured it; against the lifted curve those shares now bite in
-  POINTS. Measured: she is #365 at 50 pts, #331 at 160, #252 at 250, #183 at 400, #132 at 650,
-  #87 at 1,000 — against cuts of W35 top 282 · W50 226 · W75 169 · W100 141 · WTA 125 113. So a W35
-  needs ~250 W points and a best-16 window of nothing but W15 TITLES caps at 160: **the rung above
-  the entry rung is not reachable from the entry rung alone.** W15 is unaffected (its gate is her
-  ITF junior points). The remedy is `enterPct`'s derivation or a different acceptance rule — beyond
-  the FIELD table, so reported rather than invented.
+- **✅ THE ACCEPTANCE CUTS WERE RE-DERIVED AND THE LADDER IS UNBLOCKED.** `enterPct` was a share of
+  the merged table, and against the lifted curve a share bit in points: W35's 0.5 resolved to ~219 W
+  points while a perfect best-16 of W15 titles caps at 160 — the second rung was unreachable from
+  the first. The W rungs now carry the real tour's own entry ranges as ABSOLUTE cuts
+  (`TierDef.acceptsRank`: W35 700 · W50 550 · W75 450 · W100 350 · WTA 125 250; W15 stays the
+  on-ramp on ITF junior points). The ITF and domestic rungs keep the share — their tables are
+  population artefacts, ours is anchored to the real world. Receipt, 6 careers × 9 seasons: best
+  rank reached #449–468, so under the old cuts **not one career would have cleared even W35 in its
+  life**; under the new ones W35/W50 are open from her first professional week.
+- **⚠⚠ AND THE CLIMB IS NOW GATED BY FATIGUE RATHER THAN BY POINTS — an owner decision, not this
+  wave's.** W75 opened in 1 career of 6, W100 and WTA 125 in none. Not the cut and not her game: she
+  reaches core 73.7, stronger than any field she meets, and still enters **7.5–8 events a season
+  across every tier** against a calendar offering ~70 W events. Swept across entry disciplines the
+  volume barely moves (8.7 / 7.0 / 12.0 / 8.3 / 9.0 events at rest margins 0/5/10/15/20) — grinding
+  wrecks her, resting starves her, and the ceiling is `recoveryBase` 1/week against a title-depth
+  run. Measured and left alone.
+- **The sponsor gates followed the cut they are derived from**: `national.maxWtaRank` 125 → 350 and
+  `global` 31 → 87, because both are read off W100's acceptance list by a rule nobody changed.
 - **Five W15 titles is now #365 of 564, not #52 of 500.** Not a nerf — it is the pacing ruling. 50
   WTA points is past #600 in the real world; #40-80 was only ever reachable because the table held
   nobody in the middle.

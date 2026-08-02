@@ -518,12 +518,19 @@ export const ECONOMY = {
        *  Pinned against both figures in tests/offers.test.ts, the same way the junior pair is
        *  pinned against `TIERS.j300.drawSize`.
        *
-       *  ⚠ 125 -> 141 BY W2-FIELD2, AND IT MOVED BECAUSE IT IS A DERIVATION AND NOT A CONSTANT.
-       *  The fourth storey took FIELD.size 300 -> 364, so the merged table is 564 rows and a
-       *  quarter of it is 141. Nobody chose a looser sponsor gate: the rule ("National signs the
-       *  girl who would be IN the W100 draw") is unchanged and the population under it grew. The
-       *  test that failed on this line is the reason the derivation is pinned at all. */
-      maxWtaRank: 141,
+       *  ⚠ 125 -> 350 BY W2-FIELD2, IN TWO STEPS, AND BOTH ARE THE DERIVATION MOVING RATHER THAN A
+       *  DECISION. The rule has not changed a word - National signs the girl who would be IN the
+       *  W100 draw, i.e. on W100's acceptance list, whatever that list currently is.
+       *    1. the fourth storey took the merged table 500 -> 564 rows, so the old SHARE (0.25) went
+       *       125 -> 141;
+       *    2. then the share itself was retired. Against a table carrying the real points-to-rank
+       *       curve a share bites in real ranks - it made the W ladder unwalkable - so the W rungs
+       *       took the real tour's own cuts, and a real W100 accepts to about #350.
+       *  So this is `TIERS.w100.acceptsRank`, read straight. It IS a looser gate than before, and
+       *  that follows from the table being honest rather than compressed: #350 of a 564-row
+       *  professional field is a different player from #141 of a table whose #300 held nine points.
+       *  Flagged for the owner in the wave report rather than smoothed over. */
+      maxWtaRank: 350,
       /** ⚠ ...AND THE DOMESTIC STANDING SHE HAS TO KEEP TO HOLD IT = `maxRank` above, the same top
        *  30 that opens the local shop. This is National's job on the way OUT and the whole reason
        *  this rung is gated on two tables at once: her domestic points are a rolling 52-week best-6,
@@ -580,13 +587,13 @@ export const ECONOMY = {
       maxItfRank: 8,
       /** ⚠ THE PROFESSIONAL FIGURE, and it is the same reading one rung up (02.08): National signs
        *  the girl who would be in the prestige draw, Global the one who would still be in it on the
-       *  last day - the last quarter. Junior: 8 of the J300's 32. Professional: 35 of the 141 who
+       *  last day - the last quarter. Junior: 8 of the J300's 32. Professional: 87 of the 350 who
        *  would be accepted into a W100 (`national.maxWtaRank` / 4, rounded down as the junior pair
        *  divides exactly). Pinned beside its neighbour in tests/offers.test.ts.
        *
-       *  ⚠ 31 -> 35 BY W2-FIELD2, for the reason its neighbour carries: the merged W table grew by
-       *  the fourth storey's 64 rows, and both figures are quarters of it rather than picked. */
-      maxWtaRank: 35,
+       *  ⚠ 31 -> 87 BY W2-FIELD2, for exactly the reason its neighbour carries: this is a quarter of
+       *  W100's acceptance list, and that list was re-derived from the real tour's own cut. */
+      maxWtaRank: 87,
       /** THREE SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", scaled the same way
        *  `national.seasons` is. Signing it is the biggest commitment in the game: everything is
        *  covered, and nothing else can be signed until it runs out. */

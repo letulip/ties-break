@@ -12,7 +12,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, hasAcceptanceList } from '../src/engine/season/calendar'
 import { LADDER_POINTS_LABEL } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -177,7 +177,7 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
       }
       expect(e.eligible).toBe(false)
       expect(e.ineligibleReason).toBe('locked')
-      if (TIERS[e.tier].enterPct === undefined) {
+      if (!hasAcceptanceList(e.tier)) {
         expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0])
       } else {
         expect(e.rankToEnter).toBe(acceptanceRank(world, e.tier))
@@ -250,7 +250,7 @@ describe('upcomingEvents — surfaces eligibility both directions', () => {
         // enough above her that the third rung of the third table is barely visible from here.
         expect(e.eligible).toBe(false)
         expect(e.ineligibleReason).toBe('locked')
-        if (TIERS[e.tier].enterPct === undefined) {
+        if (!hasAcceptanceList(e.tier)) {
           expect(e.pointsToEnter).toBe(TIERS[e.tier].enterPointBand[0]) // W15: the ITF on-ramp
         } else {
           expect(e.rankToEnter).toBe(acceptanceRank(world, e.tier)) // W35 / W100: the list

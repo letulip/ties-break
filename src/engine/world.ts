@@ -69,7 +69,7 @@ import {
   isExamWeek,
   isOffSeasonWeek,
   WEEKS_PER_YEAR,
-  OFF_SEASON_WEEKS, TIER_LADDER, isTierAgeOpen, tierAgeBlock } from './season/calendar'
+  OFF_SEASON_WEEKS, TIER_LADDER, hasAcceptanceList, isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
@@ -893,7 +893,7 @@ export function refreshDerivedRankCaches(world: WorldState): boolean {
  *  table (or a re-shaped one) needs no edit here and cannot silently disagree with `tierOpenFor`,
  *  which detects an on-ramp exactly the same way. */
 function onRampTierOf(track: LadderTrack): TierId | undefined {
-  return TIER_LADDER.find((t) => TIERS[t].track === track && TIERS[t].enterPct === undefined)
+  return TIER_LADDER.find((t) => TIERS[t].track === track && !hasAcceptanceList(t))
 }
 
 /** ⚠ SET ONCE, NEVER CLEARED (v34). Latches the moment she can prove she belongs on a table, by
@@ -4838,18 +4838,26 @@ export function isTierEligible(tier: TierId, points: number): boolean {
   return minPoints <= points && points <= maxPoints
 }
 
-/** The acceptance list as an absolute position, for the one field we actually have this week. A
- *  share rather than a count, so it survives the field growing (see TierDef.enterPct).
+/** The acceptance list as an absolute position, for the one field we actually have this week.
  *
- *  ⚠ AND THE FIELD GREW (living-field phase W, 01.08) – this is the sentence that design bought.
- *  A W rung's list is a share of the MERGED professional table (cohort + kid + ~300 field pros,
- *  ~500 rows), because that is the population its events are drawn from now; the ITF rungs keep
- *  reading the cohort+kid table their own events draw from. Nobody edited a rule: W35's 0.5 was
- *  "top 100 of 200" yesterday and is "top 250 of 500" today, against a rank that is honest for the
- *  same reason it is larger. Measured on a fresh world: w35 accepts 250, w100 accepts 125, and a
- *  girl with five W15 titles (~#61 merged) still clears both – the door did not move, the room got
- *  real. */
+ *  ⚠ ONE FUNCTION, TWO UNITS, AND THE UNIT IS A PROPERTY OF THE TABLE (W2-FIELD2). The ITF and
+ *  domestic rungs keep a SHARE (`enterPct`): their tables are population artefacts – 199 juniors
+ *  with no external anchor – so position 120 means nothing except "of these people", and a count
+ *  there really would be the time bomb TierDef.enterPct describes.
+ *
+ *  The W rungs take an ABSOLUTE RANK (`acceptsRank`), because their table stopped being an
+ *  artefact. Since this wave the merged W standings carry the REAL points-to-rank curve, so #350
+ *  in it is an attempt at world #350; the real tour's entry lists are rank cuts (a W100 accepts to
+ *  about #350 whether the world holds 500 players or 5,000), and a share of OUR population is the
+ *  thing that would drift. It had already drifted: W35's 0.5 resolved to ~219 W points against a
+ *  best-16 W15-title ceiling of 160, i.e. the second rung was unreachable from the first.
+ *
+ *  ⚠ THE FIELD GREW ONCE BEFORE (living-field phase W, 01.08) and the share survived it, which is
+ *  why the share was right then: W35's 0.5 went from "top 100 of 200" to "top 250 of 500" with
+ *  nobody editing a rule. What changed is not the size of the table but its MEANING. */
 export function acceptanceRank(world: WorldState, tier: TierId): number | undefined {
+  const absolute = TIERS[tier].acceptsRank
+  if (absolute !== undefined) return Math.max(1, absolute)
   const pct = TIERS[tier].enterPct
   if (pct === undefined) return undefined
   const fieldSize =
