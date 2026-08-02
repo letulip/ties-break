@@ -809,6 +809,29 @@ export function activeLadderOfSnapshot(
   return { track, label: LADDER_LABEL[track], rank: view?.rank ?? null, points: view?.points ?? 0 }
 }
 
+/** WHICH TABLE HOME'S RANK CHIP NAMES - or null for NO CHIP AT ALL (architect's ruling, 02.08, on
+ *  the owner's «нужна ли она там вообще?»).
+ *
+ *  The chip is her current WORKING track, which is `activeLadder` (the engine's one answer - see
+ *  `activeLadderOf`: professional once any W result has ever counted, and from that moment
+ *  PERMANENTLY; junior while she holds a counting J result; national before either). What this
+ *  helper adds is only the empty case: before her first counting result in ANY table there is no
+ *  place to report, and a chip reading "Unranked" over a brand-new career is a readout with nothing
+ *  to read - so it is not drawn at all.
+ *
+ *  ⚠ THE PROFESSIONAL ARM RETURNS EVEN WHEN `rank` IS NULL. "She is a professional now" is decided
+ *  once and outlives any 52-week drought that empties her live window; on such a week the chip
+ *  honestly reads Professional + Unranked rather than pretending she is a junior again. A pure
+ *  selection over snapshot fields - no rank is re-derived here (the engine owns all three). */
+export function rankChipTrack(
+  snap: Pick<Snapshot, 'ladders' | 'activeLadder'> | null | undefined,
+): LadderTrack | null {
+  if (!snap) return null
+  const track = snap.activeLadder
+  if (track === 'wta') return 'wta'
+  return snap.ladders[track].rank !== null ? track : null
+}
+
 /** The unit each table's points are counted in, for a label that has to name the currency (the Home
  *  ladder's entry thresholds are all denominated in NATIONAL points - see engine/season/calendar.ts,
  *  whose own ladder diagram is drawn against "domestic pts"). */

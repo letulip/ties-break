@@ -537,7 +537,23 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
 
       // ACTIVE LADDER = the spec's rule: the international one once she holds a counting result there,
       // her national one before that (docs/specs/two-ladders.md, "Which rank is her rank").
-      expect(snap.activeLadder).toBe(snap.ladders.itf.rank !== null ? 'itf' : 'domestic')
+      // ⚠ RE-AIMED, NOT WEAKENED (02.08, the Home-chip ruling): the professional table joined the
+      // rule as a ONE-WAY DOOR. Any W finish that ever SCORED makes 'wta' the answer for the rest
+      // of the career - read off `bestFinishByTier`, the never-pruned mark, because the result rows
+      // themselves age out of the 52-week window (see `wtaEverCounted` in world.ts). A scored row
+      // of the tier's points table IS a counting result (isCountingResult = points > 0). The junior
+      // identity is unchanged for every week before that door; ladder-separation S7 pins the door
+      // itself in both directions.
+      const wtaEver = (Object.keys(snap.bestFinishByTier) as TierId[]).some(
+        (t) => TIERS[t].track === 'wta' && TIERS[t].points[snap.bestFinishByTier[t]!] > 0,
+      )
+      expect(snap.activeLadder).toBe(
+        wtaEver || snap.ladders.wta.rank !== null
+          ? 'wta'
+          : snap.ladders.itf.rank !== null
+            ? 'itf'
+            : 'domestic',
+      )
     }
   })
 
