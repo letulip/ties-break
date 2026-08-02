@@ -40,7 +40,8 @@ flowchart TD
   W2E --> W2P[W2-PSYCHE v38<br/>1 agent, L]
   W2E --> W2T[W2-TEMPO pacing + onboarding<br/>1 agent, M]
   W2E --> W3I[W3-INMATCH in-match injury<br/>1 agent, L]
-  W2F2 --> W2W[W2-WINDOW sliding window, both bounds<br/>1 agent, L]
+  W2F2 --> W2FA[W2-FATIGUE re-pricing the week<br/>1 agent, L]
+  W2FA --> W2W[W2-WINDOW sliding window, both bounds<br/>1 agent, L]
   W2W --> W3A[W3-ACT2 the top half of the ladder<br/>sized on arrival]
   W2F2 --> W3B[W3-BALANCE harness + reprices<br/>1 agent, L]
   W2P --> W4M[W4-MOBILE platform wave<br/>1-2 agents, L]
@@ -217,7 +218,23 @@ medians 20/30 for j300/j60 fields), field-pro fatigue, pros in canonical bracket
 widening → **W3-ACT2's field half**, sized when act 3 opens. The P5-A re-run requirement transfers
 to W2-FIELD2's exit (its spec §3 requires the second baseline before any Phase B talk).
 
-### W2-WINDOW · The sliding window, both bounds (1 agent · L · entry: W2-FIELD2 merged)
+### W2-FATIGUE · Re-pricing the week (1 agent · L · entry: W2-FIELD2 merged; runs BEFORE W2-WINDOW)
+
+⚠ NEW 03.08 — source docs/specs/fatigue-reprice-2026-08.md, and it must land before the window
+because a window she cannot walk through changes nothing. The owner: «по усталости нам надо
+комплексно что-то сделать... надо все рычаги потрогать». Measured: a W35 title costs 41 and a rest
+week returns 3, so the model sustains 3-15 events a season against a target of 20-30. The bill is
+61% tier surcharge (charged PER match), 29% scoreline, 10% cumulative - so the surcharge is the
+dial, the cumulative stays. Levers: W surcharge 4-6 → 2-3; recovery base 1 → 6-8; the six vacation
+packages 12/14/16/20/25/30 → 18/22/26/32/40/48.
+
+⚠⚠ AND THE INJURY CURVE IS RE-CALIBRATED IN THE SAME WAVE, SECOND, AFTER the fatigue re-measure -
+never simultaneously, or the result is unattributable. The owner's own warning («как бы мы себе в
+ногу не стрельнули усталостью») is already true on the shipped build: at the condition the current
+model parks her in, a season carries a 96-98% chance of an injury against the researched 46-54%.
+Acceptance is five benched numbers, spec §6.
+
+### W2-WINDOW · The sliding window, both bounds (1 agent · L · entry: W2-FATIGUE merged)
 
 ⚠ NEW 03.08, and it displaces ruling 4's visibility rule rather than adding to it — source:
 act2-pro-tour.md §11 (rulings 11–13, with the owner's own worked band table). Every rung gets a
