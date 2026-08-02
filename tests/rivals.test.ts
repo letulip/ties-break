@@ -796,8 +796,36 @@ describe('C2 — a real season produces genuinely tired rivals, and nobody is pi
     // fourth storey and the field-quality bench gets recalibrated per rung. Re-measure THIS sweep
     // there; if the live cohort's W load is not relieved by that wave's design, this bound is the
     // evidence to bring the owner.
+    //
+    // ✅⚠ W2-FIELD2 RE-MEASURED IT, AND THE ANSWER IS HALF GOOD AND HALF STRUCTURAL. The note above
+    // asks the next wave whether the population relieves the load. It does not, and it CANNOT: the
+    // canonical `seed:aitour:` brackets are LIVE-ONLY by fieldPros.ts's own scope fence (a derived
+    // pro must never write into `world.results`), so 364 professionals absorb exactly ZERO of the
+    // 25 extra W draws a season. Measured directly: W result rows per rival over the window are
+    // 4.50 before the wave and 4.50 after, to two decimals, by construction. Letting pros into the
+    // canonical brackets needs fp-safe result rows, which living-field.md §8.3 books for act 3 BY
+    // NAME - so this is reported as a coupling, not resolved by inventing one.
+    //
+    // WHAT DID MOVE is WHO carries the load, and it moved a long way. The wave slid every W
+    // entrant window down the table (w15 [0.15, 0.75] -> [0.35, 0.85] and so on up), so the W draws
+    // stop landing on the same top slice of the cohort. Same sweep as every re-pin above (8 seeds x
+    // 40 ticked weeks x 199 rivals, window 20w), the two band sets on identical code:
+    //     PRE  (W2-LADDER bands)   worst 14-15/20 · heavy 20-27 · ever 27.6-33.7% · minMedian 29-31
+    //     POST (W2-FIELD2 bands)   worst 13-14/20 · heavy 10-20 · ever 33.7-38.2% · minMedian 27-31
+    // and on THIS test's own seed: heavy 27 -> 9, ever 34.2% -> 35.7%, minMedian 29 -> 27.
+    //
+    // That is the same trade `resolveDoubleBookings`' own note describes from the other side:
+    // spreading a fixed load over more bodies pulls the extremes in. Heavy pinning is cut by about
+    // 60%, and the price is that MORE rivals touch the floor at least once.
+    //
+    // SO (2) TIGHTENS AND THE SHARE DOES NOT. 30 -> 25, from the sweep's measured 20 the way 30 was
+    // set from 28 and 15 from 12 - never onto today's number. The ever-floored bound STAYS at 0.40:
+    // it moved the wrong way (33.7-38.2% against a 0.40 bound is the tightest this guard has ever
+    // been) and tightening a bound a change just pushed toward would be dishonest. ⚠ FLAGGED FOR
+    // THE OWNER: at 38.2% there is one wave of headroom left on that line, and the remedy is the
+    // act-3 item above rather than another band move.
     const heavy = [...flooredWeeks.values()].filter((n) => n >= weeks / 2).length
-    expect(heavy, 'rivals floored for half the window').toBeLessThanOrEqual(30)
+    expect(heavy, 'rivals floored for half the window').toBeLessThanOrEqual(25)
     expect(flooredWeeks.size / world.cohort.length, 'share ever floored').toBeLessThan(0.4)
     // 3. coloured, not inverted: the median rival is never at or near the floor, and never under the
     //    doctor's veto - so the table still sorts on tennis rather than on exhaustion.

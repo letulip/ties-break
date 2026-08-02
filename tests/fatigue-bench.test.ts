@@ -685,6 +685,16 @@ describe('run-fatigue ladder scenarios (owner idea 26.07)', () => {
     // COHORT number - it moves with the scenario switch below, which is this test's actual claim -
     // and the remedy for the level itself is the living-field population (W2-FIELD2 re-measures;
     // tests/rivals.test.ts C2 carries the full sweep and the mechanism).
+    //
+    // ✅⚠ W2-FIELD2 RE-MEASURED IT AND THE BOUND STAYS AT 40. Same cell, same three seeds, the two
+    // band sets on identical code: off.rivalCondMean 46.3 (W2-LADDER bands) -> 45.4 (shipped), and
+    // the runfat-a arm 42.4 -> 42.0. So the level did NOT come back toward 50 and the 50 is not
+    // recoverable by this wave: the population grew by 64 professionals and absorbed exactly none
+    // of the cohort's W load, because the canonical `seed:aitour:` brackets are LIVE-only by
+    // fieldPros.ts's scope fence. The full argument, the sweep and the act-3 item that would fix it
+    // live in tests/rivals.test.ts C2. Bound left where W2-LADDER set it - 40 against a measured
+    // 45.4 is the same margin the re-bound was chosen with, and tightening onto 45 would pin
+    // today's number.
     expect(off.rivalCondMean).toBeGreaterThan(40)
     expect(off.rivalCondMean).toBeLessThan(ECONOMY.condition.max)
     // THE assertion: the steepest ladder tires her opponents too.
