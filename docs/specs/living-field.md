@@ -358,19 +358,16 @@ The clean A/B, same seeds, same bands, the rule off and on (`--no-exclusivity`, 
 
 | rung | core OFF → ON | P(title) OFF → ON | candidates at the narrowest OFF → ON |
 | --- | --- | --- | --- |
-| W15 | 48.8 → 48.3 | 16.0% → 19.5% | 267 → 214 |
-| W35 | 51.4 → 50.3 | 15.5% → 17.6% | 265 → 204 |
-| W50 | 53.8 → 52.6 | 4.3% → 8.2% | 236 → 195 |
-| W75 | 58.7 → 57.5 | 0.6% → 0.6% | 172 → 154 |
-| W100 | 65.9 → 65.3 | 0.0% → 0.0% | 153 → 145 |
-| WTA 125 | 71.3 → 71.3 | 0.0% → 0.0% | 128 → 128 |
-
-(Taken on the pre-lift bands, i.e. before §8.2c; the rule's SHAPE — every rung but the top one
-softens — is what it establishes, and that is a property of the rule rather than of the calibration.)
+| W15 | 49.2 → 48.5 | 19.5% → 19.8% | 282 → 226 |
+| W35 | 51.2 → 50.4 | 12.8% → 13.1% | 245 → 202 |
+| W50 | 56.1 → 55.1 | 1.2% → 2.3% | 211 → 177 |
+| W75 | 61.2 → 60.0 | 0.0% → 0.0% | 161 → 139 |
+| W100 | 66.6 → 65.9 | 0.0% → 0.0% | 136 → 124 |
+| WTA 125 | 70.7 → 70.7 | 0.0% → 0.0% | 119 → 119 |
 
 Every rung softens except the top one, which has nothing above it to lose people to — the rule's own
-shape, read off the measurement. The price is 20–50 candidates at the narrowest week, and every
-window still holds four draws' worth with the out-of-band share at 0.0%.
+shape, read off the measurement. The price is 12–56 candidates at the narrowest week, and every
+window still holds three to seven draws' worth with the out-of-band share at 0.0%.
 
 ### 8.2c The points curve — the owner's pacing ruling (03.08)
 
