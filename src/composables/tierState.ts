@@ -53,10 +53,11 @@ export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 's
 // #77's resolution - third occurrence of visibility-vs-access, settled for the feed the way
 // `engineOpen` settled it for the plaques):
 //
-//   working  = the HIGHEST rung `Snapshot.tierOpen` says is open to her. Bands overlap by design,
-//              so several rungs are usually open at once - the highest is the one she is actually
-//              climbing at, and the ones below it leave the feed however open they remain. That
-//              subsumes every rule this module used to keep by hand: the points-outgrown filter,
+//   working  = the highest rung `Snapshot.tierOpen` says is open to her AND THAT ACTUALLY HAS
+//              TENNIS IN THE HORIZON. Bands overlap by design, so several rungs are usually open
+//              at once - the highest PLAYABLE one is where she is actually climbing, and the ones
+//              below it leave the feed however open they remain. That subsumes every rule this
+//              module used to keep by hand: the points-outgrown filter,
 //              R15-9's two latch rules, and the domestic collapse («Если national доступен -
 //              показывать только их» - when National is the working rung, Local/Regional are
 //              below the pair by construction).
@@ -69,10 +70,23 @@ export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 's
 // {National,J30} -> {J30,J60} -> ... - which is exactly the spec's "overlap across the year is
 // how she transitions between them; the pair slides, the count never grows".
 //
-// ⚠ THE AER SUBSTITUTION RIDES INSIDE THE BUDGET, never as a third row (§4/§5): a week whose pair
-// events are all professional and all refused by the pro cap shows the strongest OPEN, eligible
-// below-pair event of that week in their place - a J while she is young enough, the top open
-// domestic rung after - so a capped week still reads as tennis rather than as a wall.
+// ⚠ THE SUBSTITUTION RIDES INSIDE THE BUDGET, never as a third row (§4/§5): a week the pair leaves
+// EMPTY - because the cap refused every pair event, or because the pair simply has nothing that
+// week - shows the strongest OPEN, eligible below-pair event in its place: a J while she is young
+// enough, the top open domestic rung after. So a week still reads as tennis rather than as a wall.
+//
+// ⚠ BOTH HALVES OF THIS RULE ARE THE GATE'S FINDINGS, NOT THE FIRST DESIGN (02.08, the owner's
+// save at W38 '34 measured against the pre-wave build). The first shape read `working` as the
+// highest OPEN rung full stop and substituted only on cap refusals, and on a real career that
+// emptied the feed completely: the oracle opens W50/W75/WTA 125 to a 17-year-old at merged #61 -
+// acceptance percentiles, honestly earned - while those rungs are rare (cadence 4/6/13) and had no
+// event within her horizon. Nothing above them exists, so the pair collapsed to one eventless
+// rung, and every rung where she actually plays sat below it: the pre-wave feed offered W15, J300,
+// W35, J60 and W100 over the same weeks, the new one offered a single already-entered J60 and
+// eight training weeks. That is precisely the failure the owner named when he approved the AER
+// («игрок должен иметь возможность играть, если не w-серии то где-то еще, чтобы не скучал»), and
+// the two-type budget must never be the thing that causes it. Hence: a rung with no tennis in the
+// horizon cannot BE the working rung, and a week the pair leaves blank borrows from below.
 //
 // ⚠ R15-9's NATIONAL EXEMPTION IS SUPERSEDED by the later two-type ruling, and the cost is named
 // rather than hidden: the national-rung brand deal's keep-condition reads her DOMESTIC top 30, and
@@ -115,8 +129,17 @@ export function feedContext(input: {
 }): FeedContext {
   const open = input.tierOpen
   if (!open) return { pair: [...TIER_LADDER], substitutes: new Set() }
-  let working: TierId = TIER_LADDER[0]
-  for (const t of TIER_LADDER) if (open[t]) working = t
+  // THE WORKING RUNG IS THE HIGHEST OPEN ONE WITH TENNIS IN THE HORIZON. The fallback - the
+  // highest open rung, whatever the calendar holds - is what a horizon with no events at all
+  // (off-season, a long layoff) reads, and it keeps the pair defined at every week.
+  const openRungs = TIER_LADDER.filter((t) => open[t])
+  const scheduled = new Set(input.upcoming.map((e) => e.tier))
+  const playable = openRungs.filter((t) => scheduled.has(t))
+  const working = playable.length
+    ? playable[playable.length - 1]
+    : openRungs.length
+      ? openRungs[openRungs.length - 1]
+      : TIER_LADDER[0]
   const above = TIER_LADDER.slice(TIER_LADDER.indexOf(working) + 1)
   const adjacent = above.find((t) => tierAgeBlock(t, input.ageYears) !== 'old')
   const pair: TierId[] = adjacent ? [working, adjacent] : [working]
@@ -129,11 +152,17 @@ export function feedContext(input: {
     else byWeek.set(e.week, [e])
   }
   for (const events of byWeek.values()) {
-    const pairEvents = events.filter((e) => pair.includes(e.tier) && !e.entered)
-    const allCapped =
-      pairEvents.length > 0 &&
+    // An ENTERED event of any rung already fills the week (`feedShows`' first arm), so a week she
+    // is committed to never borrows - she has her tennis, and R10-3's committed card is the one
+    // she must act on.
+    if (events.some((e) => e.entered)) continue
+    const pairEvents = events.filter((e) => pair.includes(e.tier))
+    // The week is EMPTY for her when the pair brings nothing at all, or brings only professional
+    // events the pro cap has refused. Both cases borrow the same way.
+    const emptyForHer =
+      pairEvents.length === 0 ||
       pairEvents.every((e) => TIERS[e.tier].track === 'wta' && e.ineligibleReason === 'capped')
-    if (!allCapped) continue
+    if (!emptyForHer) continue
     const fallback = events
       .filter((e) => !pair.includes(e.tier) && open[e.tier] === true && e.eligible)
       .sort((a, b) => TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))[0]

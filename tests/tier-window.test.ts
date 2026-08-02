@@ -122,6 +122,46 @@ describe('the AER substitution rides INSIDE the budget', () => {
   })
 })
 
+// ⚠ THE GATE'S FINDING, PINNED SO IT CANNOT COME BACK (02.08). Measured on the owner's own career
+// at W38 '34 against the pre-wave build: the oracle opens W50/W75/WTA 125 to her (merged #61,
+// acceptance percentiles honestly cleared) while those rungs are rare and had NO event in her
+// horizon. Reading `working` as "the highest open rung" therefore pointed the pair at an eventless
+// top of the ladder with nothing above it, and every rung where she actually plays sat below: the
+// pre-wave feed offered W15/J300/W35/J60/W100 over those weeks, the first version of this rule
+// offered one already-entered J60 and eight training weeks. The owner's boredom clause governs
+// («игрок должен иметь возможность играть... чтобы не скучал»), so the rule has two floors now.
+describe('the feed can never be emptier than the tennis she has', () => {
+  const open = openMap(['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
+
+  it('an eventless rung cannot be the working rung - the pair follows the calendar', () => {
+    // Her horizon holds J300 and W15 only; W50/W75/WTA125 are open but rare and absent.
+    const upcoming = [row('j300', 40), row('w15', 39)]
+    const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming })
+    expect(ctx.pair[0]).toBe('w15')
+    expect(feedShows(upcoming[1], ctx)).toBe(true)
+  })
+
+  it('a week the pair leaves empty borrows the strongest open, eligible event below it', () => {
+    const upcoming = [row('w15', 39), row('j300', 40), row('national', 40)]
+    const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming })
+    // Pair {w15, w35}: week 40 has neither, so the J300 rides in - and ONLY the J300.
+    expect(feedShows(upcoming[1], ctx)).toBe(true)
+    expect(feedShows(upcoming[2], ctx)).toBe(false)
+  })
+
+  it('a week she is already entered in borrows nothing - she has her tennis', () => {
+    const upcoming = [row('w15', 39), row('j60', 43, { entered: true }), row('national', 43)]
+    const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming })
+    expect(feedShows(upcoming[1], ctx)).toBe(true) // the committed card, always (R10-3)
+    expect(feedShows(upcoming[2], ctx)).toBe(false) // no second row beside it
+  })
+
+  it('with no tennis at all in the horizon the pair still resolves (off-season, layoff)', () => {
+    const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming: [] })
+    expect(ctx.pair).toEqual(['wta125'])
+  })
+})
+
 describe('visibility is not access: the engine never reads the feed rule', () => {
   it('the engine sources are free of the feed vocabulary', () => {
     for (const rel of ['../src/engine/world.ts', '../src/engine/season/calendar.ts']) {
