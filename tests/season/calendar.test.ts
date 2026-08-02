@@ -38,7 +38,12 @@ import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 // e6b0c709) does NOT move with this and did not: the AI sub-stream refactor took the calendar's size
 // out of the weekly draw count, which is what tests/round9.test.ts's REF note means by "for the last
 // time a calendar change can do it". Re-derived on this branch: 41550 / e6b0c709, unchanged.
-const TRAVEL_PIN_BASE = 229384
+//
+// ⚠ RE-PINNED AGAIN by W2-LADDER: 229384 -> 204489, the task-#17 mechanism a third time. The
+// ladder went 9 -> 12, `tierPhase`'s divisor moved with it, and the first event of
+// buildSeason('travel-pin', 0, 52) is now a W35 (band $1,300-2,800). Same witness, same three
+// assertions, value re-derived from the live engine (scratchpad probe) rather than tuned.
+const TRAVEL_PIN_BASE = 204489
 
 // Re-derive the per-trip corridor factor exactly as makeEvent does: one uniform roll from the
 // purpose-scoped sub-stream keyed by the event, mapped into the background's [lo,hi] corridor.

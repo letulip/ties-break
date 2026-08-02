@@ -9,6 +9,7 @@ import {
   JUNIOR_TOUR,
 } from '../../src/engine/season/tournament'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from '../../src/engine/season/calendar'
+import { fieldProsFor, universeForTier } from '../../src/engine/season/fieldPros'
 import { generateCohort } from '../../src/engine/season/cohort'
 import { rngFromSeed } from '../../src/engine/rng'
 import { simulateMatch } from '../../src/engine/match/engine'
@@ -84,15 +85,28 @@ describe('entrant percentile windows', () => {
 })
 
 describe('selectEntrants — percentile bands per tier', () => {
-  const total = ranking.length
-  const rankOf = new Map(ranking.map((r) => [r.playerId, r.rank]))
+  // ⚠ THE W RUNGS RUN OVER THEIR OWN UNIVERSE (W2-LADDER re-aim; the L6 note in
+  // tests/ladder.test.ts carries the whole argument). Their entrant bands are MEASURED against the
+  // merged ~500-row population the engine actually hands them (universeForTier: cohort ∪ field
+  // pros), and the W2-LADDER windows are tight enough that a bare 199-cohort cannot hold a draw's
+  // worth of seventeen-and-overs inside them - the backfill would escape the band and this suite
+  // would be asserting a scarcity the real path does not have. The junior and domestic rungs keep
+  // the bare-cohort fixture they always had.
+  const pros = fieldProsFor('tourney-cohort', 0, cohort.map((p) => p.name))
+  const wUniverse = universeForTier('w15', cohort, pros)
+  const wRanking = rankByOrder(wUniverse)
+  const isW = (tier: TierId) => TIERS[tier].track === 'wta'
 
   for (const tier of TIER_LADDER) {
     it(`${tier}: fills to drawSize with in-band players, seeded by rank`, () => {
-      const entrants = selectEntrants(ev(tier, 10), cohort, ranking, rngFromSeed(`sel-${tier}`))
+      const universe = isW(tier) ? wUniverse : cohort
+      const table = isW(tier) ? wRanking : ranking
+      const total = table.length
+      const rankOf = new Map(table.map((r) => [r.playerId, r.rank]))
+      const entrants = selectEntrants(ev(tier, 10), universe, table, rngFromSeed(`sel-${tier}`))
       expect(entrants.length).toBe(TIERS[tier].drawSize)
       const ranks = entrants.map((p) => rankOf.get(p.id)!)
-      for (const rank of ranks) expect(isEntrantBand(tier, rank / total)).toBe(true)
+      for (const rank of ranks) expect(isEntrantBand(tier, rank / total), tier).toBe(true)
       // entrants are returned in seed order = ascending rank
       expect(ranks).toEqual([...ranks].sort((a, b) => a - b))
       // unique entrants

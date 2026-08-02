@@ -209,10 +209,16 @@ describe('R2 — nobody is charged zero strain for a week she played', () => {
   it('one first-round exit costs exactly one score-less match at that tier – the shared drain', () => {
     // The unit form of the whole slice: playing costs, whatever it paid. Read off the engine's own
     // drain family (never a private rival formula), at every tier.
+    //
+    // ⚠ "WHATEVER IT PAID" GAINED A SECOND VALUE with W2-LADDER: the real chart pays a nominal 1
+    // to an opening-round loser from W50 up (tests/wave-b-points.test.ts NOMINAL_ONE_TIERS), so an
+    // exit row is scoreless at most rungs and a 1-point row at the chart-1 trio. The DRAIN claim -
+    // this test's actual subject - is identical either way, and asserting the split here keeps the
+    // fixture honest about what the engine really writes.
     for (const tier of TIER_LADDER) {
       const rounds = Math.log2(TIERS[tier].drawSize)
       const exit = row(tier, rounds, 10)
-      expect(exit.points).toBe(0)
+      expect(exit.points).toBe(['w50', 'w75', 'wta125'].includes(tier) ? 1 : 0)
       expect(rivalCondition([exit], 'ai-x', 10)).toBe(R.max - matchDrain(tier, undefined))
       // ...and it is strictly worse than the same week spent at home.
       expect(rivalCondition([exit], 'ai-x', 10)).toBeLessThan(rivalCondition([], 'ai-x', 10))
