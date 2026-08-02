@@ -135,6 +135,35 @@ transitions between them; the pair slides, the count never grows.
 - The AER boredom guard (§5) substitutes INSIDE the two-type budget: a week whose W option is
   capped offers the J/domestic fallback in its place, never as a third row.
 
+⚠ **TWO FLOORS THE GATE ADDED (02.08, measured on the owner's own career at W38 '34 against the
+pre-wave build).** The first implementation read the working rung as «the highest rung the oracle
+opens» and emptied the feed completely: W50/W75/WTA 125 are open to a 17-year-old at merged #61
+(acceptance percentiles, honestly cleared) and are RARE — none had an event in her horizon, and
+nothing sits above WTA 125, so the pair collapsed to one eventless rung while every rung where she
+actually plays sat below it. Pre-wave the same weeks offered W15, J300, W35, J60 and W100; the new
+feed offered one already-entered J60 and eight training weeks. The owner's boredom clause governs,
+so the rule now carries two floors: **a rung with no tennis in the horizon cannot BE the working
+rung**, and **a week the pair leaves blank borrows the strongest open, eligible below-pair event**
+(the AER substitution generalised from «capped» to «empty»; never a third row; never on a week she
+is already entered in).
+
+⚠ **AND THE READING THIS FORCES, for the owner to confirm**: what ships is «at most two STANDING
+types, plus a borrowed card on a week that would otherwise be blank». On a sparse season tail —
+where the calendar scatters one event per rung across six rungs — the horizon can therefore show
+more than two labels, even though she still plays at most one event a week and the pair itself
+never grows. The strict reading («never more than two labels visible, ever») is available and its
+price is blank weeks; «чтобы не скучал» is why it was not chosen.
+
+⚠ **THE CALENDAR-COVERAGE GAP UNDER IT (tools/boredom-guard.ts, W2-LADDER).** At a sane appetite
+the pro cap never even binds (0 refusals over 12 careers × 260 weeks). Under a maximal grinder it
+refuses 176 entries across 65 weeks, and 14 of those weeks offer nothing else — every one a
+CALENDAR gap, not a cap number: season offsets 32/40/44 carry W events and no J or domestic event
+at all, offset 38 only an outgrown Regional. No `proPerYearByAge` value can fix a week with no
+alternative on it, and neither floor above can borrow from an empty week. Two candidate remedies,
+both beyond this wave and both an owner's call: **co-phase the W rungs with their J mirrors** in
+`tierPhase` (one line, but it re-deals every world's calendar), or **densify the second-half
+domestic/J coverage** (a priced knob). The tool exits 1 on violations so the red stays loud.
+
 ---
 
 ## 5. The age-eligibility rule (AER), with the boredom guard
@@ -266,6 +295,42 @@ priced unknowns), merited AER increases if v1 shipped flat.
 
 Psyche (v38) keeps its own wave after ENDINGS, unchanged in scope; its conduct events plug into
 the §6 penalty sources when both exist.
+
+---
+
+## 9b. W2-LADDER as built — the deltas from this spec (02.08)
+
+The wave shipped §§2–6 with four departures worth carrying forward, all evidence-led:
+
+1. **The points rows are the 2026 chart's, not this spec's design values** — the research doc won
+   every disagreement, exactly as §2's ⚠ said it would: W50 **50**/33/20/11/6/1, W75 **75**/49/29/
+   16/9/1, WTA 125 125/81/49/27/15/1. The nominal 1 from W50 up (a first-round exit is no longer
+   zero on the upper rungs) re-aimed wave-B's zero-tail guard per family; W100's 0 stays canon.
+2. **The cheques follow the real purses' fractions, not the rung's name**: W50 ≈ $6k of a $40k
+   purse, W75 ≈ $9k of $60k. This spec's $7.5k/$11k assumed name-equals-purse — the misreading the
+   research corrects. WTA 125 keeps $20k.
+3. **W100's entrant band was re-measured 0.55 → 0.30** with the new probe (tools/band-probe.ts).
+   Post-field the old scarcity is historical: the shipped minima are 190 (W50), 150 (W75), 133
+   (W100), 110 (WTA 125) candidates against a draw of 32.
+4. **Fatigue**: surcharges interpolate inside the R15-6 family ends — W50 **5**, W75 **6**, WTA 125
+   takes W100's **6** (a prestige +1 was rejected); floors keep the 30+5× pairing at 55/60/60.
+
+Cohort cost, measured and re-bounded: +25 W draws a season on the same ~82 sixteen-plus rivals →
+17–28 heavy-floored of 199. The fix is population, not pricing — **W2-FIELD2 re-measures this**.
+
+⚠ **AN OWNER'S CALL THE WAVE RAISED AND DID NOT DECIDE**: R15-9's national exemption is superseded
+by ruling 4, so a W-era career meets Nationals only as substituted weeks — and the national kit
+deal's keep-condition reads her DOMESTIC top 30. Deep in the professional era that deal will lapse
+at renewal unless she is substituted into Nationals often enough. The alternative (a standing third
+row for National) is exactly what ruling 4 forbids, so this is a sponsor-side decision, not a feed
+one: either the domestic gate learns to read a professional's standing, or the lapse is the honest
+consequence of turning pro. Recorded at `feedContext`, in tests/tier-window.test.ts and here.
+
+⚠ **PLACEHOLDER ART, FLAGGED FOR THE OWNER**: the three new rungs ship trophy pairs that are BYTE
+COPIES of shipped masters (W50 ← W35; W75, WTA 125 ← W100), by `cp`, no new art invented — the same
+stand-in rule `art/venues.ts` already lives by. Six real masters (gold+silver × three rungs) are an
+art ask whenever he wants them; the file names are already correct, so they replace files rather
+than code.
 
 ---
 
