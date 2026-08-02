@@ -7,6 +7,7 @@
 // Player copy rule throughout: the short dash "–", never "—", and no Cyrillic in anything a player
 // reads.
 import { describe, it, expect } from 'vitest'
+import { worldSource, worldFunction } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
   advanceWeeks,
@@ -433,8 +434,9 @@ describe('R12-S1 — the season-start rank is captured, not replayed from a prun
   })
 
   it('the wrap-up no longer replays the ranking at the season start', () => {
-    const src = read('../src/engine/world.ts')
-    const fn = src.slice(src.indexOf('function maybeFireSeasonWrapUp'), src.indexOf('// --- finish / stage labels'))
+    // the wrap-up function wherever the P4 decomposition has moved it to (world/milestones.ts)
+    const fn = worldFunction('maybeFireSeasonWrapUp')
+    expect(fn).not.toBe('')
     // Comments are stripped first: the note above the fix QUOTES the old call, on purpose, so the
     // next reader can see what was replaced – and prose must never satisfy or trip a code guard.
     const code = fn
@@ -492,8 +494,8 @@ describe('R12-S2 — "Best result: best Champion"', () => {
     expect(history).not.toContain('bestResultText')
     // ...and the news/milestone sentence embeds it as one clause among several, so it reads without
     // the adjective. Guard that the only two writers are the summary field and that milestone.
-    const src = read('../src/engine/world.ts')
-    expect(src.match(/bestText/g)!.length).toBe(3) // the const, the milestone, the summary field
+    // across world.ts and every world/*.ts part – `bestText` lives in world/milestones.ts now
+    expect(worldSource().match(/bestText/g)!.length).toBe(3) // the const, the milestone, the summary field
   })
 
   it('a summary banked BEFORE this change keeps its stored wording – a recap is a record', () => {
