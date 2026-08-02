@@ -115,6 +115,7 @@ import {
   resolveDoubleBookings,
   runTournament,
   kidSeedIndexIn,
+  weekFieldExclusion,
   JUNIOR_TOUR,
 } from './season/tournament'
 import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
@@ -3780,7 +3781,15 @@ function computeShadowTournament(
         pros,
       )
     : ranking
-  const entrants = selectEntrants(event, universe, selRanking, kidRng, fatigue)
+  // ⚠ AND ONE PRO PLAYS ONE EVENT A WEEK (W2-FIELD2, act2-pro-tour.md §8.2). When two W rungs land
+  // on the same week the HIGHER one draws first and its field leaves this window – the professional
+  // half of the rule `resolveDoubleBookings` already enforces on the canonical brackets, which
+  // cannot reach here because a field pro has no ledger row to rearrange. Deterministic, ordered by
+  // TIER_LADDER, and it draws nothing on THIS event's stream (see `weekFieldExclusion`).
+  const excluded = pros
+    ? weekFieldExclusion(event, world.season, universe, selRanking, world.seed, fatigue)
+    : undefined
+  const entrants = selectEntrants(event, universe, selRanking, kidRng, fatigue, excluded)
   const field = rivalField(entrants, event, fatigue)
   // v21b: she goes into the draw AT HER STANDING, not at the bottom of it - the same place the
   // acceptance list would give her - and is seeded, or not, on the terms everybody else gets.
@@ -5301,14 +5310,21 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
   // contain. Same lazy-once shape as `ranking` above, paid only on windows that actually show a W
   // card; `previewEvent`'s own contract is untouched, it is simply handed the professional
   // universe as the cohort (the parameter always WAS "who can be drawn").
-  let wtaCtx: { universe: AiPlayer[]; ranking: RankingRow[] } | null = null
+  let wtaCtx: { universe: AiPlayer[]; ranking: RankingRow[]; conditions: Map<string, number> } | null = null
   const wtaWorldFor = (e: SeasonEvent) => {
     wtaCtx ??= {
       universe: universeForTier(e.tier, world.cohort, fieldProsOf(world)),
       ranking: rankingFor(world, 'wta'),
+      conditions: rivalConditions(world.results, world.week),
     }
     return { seed: world.seed, week: world.week, cohort: wtaCtx.universe, results: world.results }
   }
+  // ...and the card obeys the same week-exclusivity rule its own bracket will (W2-FIELD2 §8.2), or
+  // it would name an opponent the higher rung has already taken. Computed HERE because only this
+  // function holds `world.season`; `previewEvent`'s own contract stays a single event's worth of
+  // inputs. Lazy per card and only on the W track — a J or domestic card never asks.
+  const wtaExclusionFor = (e: SeasonEvent) =>
+    weekFieldExclusion(e, world.season, wtaCtx!.universe, wtaCtx!.ranking, world.seed, wtaCtx!.conditions)
   // ...and the same argument for the COACH'S READ OF HER: it is one girl in one week, identical for
   // every card, and `coachLoadViewOf` walks the retained match window to get there. Once per snapshot,
   // null on a self-coached career because there is nobody to have an opinion.
@@ -5377,7 +5393,13 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // See season/preview.ts for what this estimate does and does not claim.
         preview:
           TIERS[e.tier].track === 'wta'
-            ? previewEvent(wtaWorldFor(e), e, wtaCtx!.ranking, kidMatchPlayerFor(world, e.surface))
+            ? previewEvent(
+                wtaWorldFor(e),
+                e,
+                wtaCtx!.ranking,
+                kidMatchPlayerFor(world, e.surface),
+                wtaExclusionFor(e),
+              )
             : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
         // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
         // entering will actually cost, and it is the same number chargeTravel will take.

@@ -3,7 +3,7 @@
 // run the full point engine under an event-scoped seed (replayable); AI-AI matches
 // resolve from the closed-form win probability with a single RNG draw.
 
-import { type Rng } from '../rng'
+import { rngFromSeed, type Rng } from '../rng'
 import type { MatchPlayer, Tour } from '../match/types'
 import { simulateMatch, fastMatchProbability } from '../match/engine'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from './calendar'
@@ -100,6 +100,10 @@ export function selectEntrants(
    *  results in the fatigue window and is fresh. Optional so the bench and the older tests can call
    *  this without one - and when it is absent, nobody is gated, which is the pre-gate behaviour. */
   conditions?: ReadonlyMap<string, number>,
+  /** WEEK EXCLUSIVITY (W2-FIELD2): players a HIGHER W rung already drew for this same week. Empty
+   *  or absent ⇒ byte-identical to the pre-rule function, which is what every non-W caller gets.
+   *  See `weekFieldExclusion` below for who computes it and why it is not a filter on the pool. */
+  excluded?: ReadonlySet<string>,
 ): AiPlayer[] {
   const total = ranking.length || cohort.length
   const posOf = new Map<string, number>()
@@ -137,7 +141,22 @@ export function selectEntrants(
   // ~170 eighteen-and-unders and the youngest adult rung 32 of the ~82 sixteen-and-overs, in a 199
   // cohort whose conveyor intake keeps arriving at 13.
   const ofAge = cohort.filter((p) => isTierAgeOpen(event.tier, p.ageYears))
-  const eligible = ofAge.length >= drawSize ? ofAge : cohort
+  //
+  // ⚠ AND WHO IS ALREADY PLAYING SOMEWHERE ELSE THIS WEEK (W2-FIELD2, act2-pro-tour.md §8.2). The
+  // exclusion lands HERE, on the universe, for exactly the reason the age gate does one line up:
+  // both backfills below reach OUTSIDE the entrant window, so a rule they could walk around would
+  // be no rule at all - the tired-elite path would hand a W15 slot straight back to the pro the
+  // W100 drew an hour earlier, and "one pro plays one event a week" would be true of the band and
+  // false of the draw.
+  //
+  // IT YIELDS TO FILLABILITY, in the same order the age gate's own escape does: a draw that cannot
+  // be filled is a crash, not a compromise. So the ladder is free-and-of-age → of-age → everybody,
+  // and the exclusivity rule is the first thing dropped rather than the last. It cannot fire at the
+  // shipped numbers (the narrowest measured W window holds ~110 candidates against a draw of 32 and
+  // at most one higher rung takes 32 of them), and it is here so a future cadence change cannot
+  // turn a tuning decision into an undefined player in a bracket.
+  const free = excluded && excluded.size ? ofAge.filter((p) => !excluded.has(p.id)) : ofAge
+  const eligible = free.length >= drawSize ? free : ofAge.length >= drawSize ? ofAge : cohort
   //
   // RNG: the age gate changes the candidate COUNT, and therefore the per-event draw count, on every
   // rung that HAS one - which since §4.1 means the J rungs too, not the W rungs alone. Their event
@@ -235,6 +254,80 @@ export function selectEntrants(
   // Seed order = ascending standings position (best first).
   chosen.sort((a, b) => a.pos - b.pos)
   return chosen.map((c) => c.p)
+}
+
+// --- ONE BODY, ONE WEEK, ON THE PROFESSIONAL SIDE TOO -------------------------------------------
+//
+// WEEK EXCLUSIVITY FOR THE W TRACK (W2-FIELD2, act2-pro-tour.md §8.2: «when two W rungs share a
+// week, the HIGHER tier's field is drawn first and its members are excluded from the lower window»).
+//
+// WHY IT IS A SEPARATE MECHANISM FROM `resolveDoubleBookings` BELOW, and not the same rule twice.
+// That one is POST-DRAW arithmetic over the CANONICAL brackets: it may not touch a candidate pool,
+// because the canonical `seed:aitour:` draw count is what every persisted AI result in the game was
+// recorded against. This one runs on the MERGED universe - LIVE cohort ∪ derived field pros - which
+// exists only on the `seed:kidtour:` side (her shadow run and the Season card's preview of it), and
+// there the pool is the only place the rule CAN live: a field pro has no ledger row for
+// `resolveDoubleBookings` to rearrange, and the two rungs' fields are built by two independent
+// calls that never meet. So the higher rung simply draws first and the lower one is handed the
+// list.
+//
+// DETERMINISTIC, AND THE ORDER IS `TIER_LADDER`, never a map's iteration order: the week's W events
+// are sorted strongest-rung-first with an event-id tie-break, so the resolution is TOTAL even if
+// `buildSeason` ever emits two events of one tier on one week. Each higher rung is drawn off its
+// OWN `seed:kidtour:<id>` sub-stream - the very numbers it would read if she had entered THAT event
+// instead - so the exclusion set is the same whichever event of the week is being asked about, and
+// a preview and the bracket it previews agree by construction rather than by luck.
+//
+// ⚠ RNG: this creates its own generators and hands them nothing. Not one draw on the MAIN weekly
+// stream (the frozen capture 41550 / e6b0c709 cannot see this function), not one on any
+// `seed:aitour:` bracket, and not one on the CALLER's own stream - `selectEntrants` below is given
+// a fresh `rngFromSeed` per higher event, read and thrown away. The caller's event then draws off
+// its own stream exactly as it always did, from the first number.
+//
+// ⚠ AND THE CANDIDATE COUNT: this DOES change how many numbers the lower rung's own sub-stream
+// spends, which is the documented mutable class (`seed:kidtour:<id>` composition has moved with
+// every band and age re-pick this engine has had). What it may never depend on is PLAYER INPUT, and
+// it does not: the exclusion is a function of (seed, week's calendar, the kid-free merged standings,
+// the rivals' conditions) - the same four inputs `computeShadowTournament` already builds its own
+// draw from, all of them independent of what she has entered or won.
+//
+// ⚠ SCOPE: THE W TRACK ONLY. A non-W event returns the empty set on the first line, so the six
+// junior/domestic rungs are byte-identical - their universes are LIVE-only and the mixed-percentile
+// question there is phase 2 by name (docs/specs/living-field.md §8.3).
+
+/** Everyone a HIGHER W rung of the same week has already drawn. Empty for a non-W event, for a week
+ *  with a single W rung on it, and for any caller that does not pass a season. */
+export function weekFieldExclusion(
+  event: SeasonEvent,
+  season: readonly SeasonEvent[],
+  universe: AiPlayer[],
+  ranking: readonly RankingRow[],
+  seed: string,
+  conditions?: ReadonlyMap<string, number>,
+): Set<string> {
+  const booked = new Set<string>()
+  if (TIERS[event.tier].track !== 'wta') return booked
+  const rung = TIER_LADDER.indexOf(event.tier)
+  const above = season
+    .filter(
+      (e) =>
+        e.week === event.week &&
+        e.id !== event.id &&
+        TIERS[e.tier].track === 'wta' &&
+        TIER_LADDER.indexOf(e.tier) > rung,
+    )
+    .sort(
+      (a, b) =>
+        TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier) ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    )
+  for (const e of above) {
+    const rng = rngFromSeed(`${seed}:kidtour:${e.id}`)
+    for (const p of selectEntrants(e, universe, ranking as RankingRow[], rng, conditions, booked)) {
+      booked.add(p.id)
+    }
+  }
+  return booked
 }
 
 // --- ONE BODY, ONE WEEK ------------------------------------------------------------------------

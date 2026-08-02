@@ -91,11 +91,12 @@ function drawnField(
   conditions: ReadonlyMap<string, number>,
   kid: MatchPlayer,
   seed: string,
+  excluded?: ReadonlySet<string>,
 ): MatchPlayer[] {
   const rng = rngFromSeed(`${seed}:kidtour:${event.id}`)
   // `conditions` decides WHO is drawn (the same availability gate the bracket applies); the max
   // below decides how strong they are. See the two notes at the top of this file.
-  const entrants = selectEntrants(event, cohort, ranking, rng, conditions).map((p) =>
+  const entrants = selectEntrants(event, cohort, ranking, rng, conditions, excluded).map((p) =>
     rivalMatchPlayer(p, event.surface, ECONOMY.condition.max),
   )
   return buildDraw(event, entrants, kid, kidSeedIndexIn(entrants, ranking, kid.id), rng)
@@ -219,6 +220,10 @@ export function previewEvent(
   event: SeasonEvent,
   ranking: RankingRow[],
   kid: MatchPlayer,
+  /** WEEK EXCLUSIVITY (W2-FIELD2): whoever a HIGHER W rung of this same week has already drawn. The
+   *  CALLER computes it, because only the caller holds the season – and it must, or the card would
+   *  name an opponent the bracket will not contain. See `weekFieldExclusion`. */
+  excluded?: ReadonlySet<string>,
 ): EventPreview {
   const alive = drawnField(
     event,
@@ -227,6 +232,7 @@ export function previewEvent(
     rivalConditions(world.results, world.week),
     kid,
     world.seed,
+    excluded,
   )
   const opp = firstRoundOpponent(alive, kid)
   const posOf = new Map<string, number>()

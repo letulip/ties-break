@@ -6,10 +6,11 @@ import {
   standardSeedOrder,
   isEntrantBand,
   topBandForPercentile,
+  weekFieldExclusion,
   JUNIOR_TOUR,
 } from '../../src/engine/season/tournament'
 import { TIERS, TIER_LADDER, isTierAgeOpen } from '../../src/engine/season/calendar'
-import { fieldProsFor, universeForTier } from '../../src/engine/season/fieldPros'
+import { fieldProsFor, mergedWtaRanking, universeForTier } from '../../src/engine/season/fieldPros'
 import { generateCohort } from '../../src/engine/season/cohort'
 import { rngFromSeed } from '../../src/engine/rng'
 import { simulateMatch } from '../../src/engine/match/engine'
@@ -339,5 +340,116 @@ describe('resolveDoubleBookings — a rival cannot be in two of a week\'s draws'
       const min = TIERS[event.tier].minAgeYears!
       for (const p of fields.get(event.id)!) expect(ageOf.get(p.id)!, `${p.id} in a ${event.tier}`).toBeGreaterThanOrEqual(min)
     }
+  })
+})
+
+// =================================================================================================
+// WEEK EXCLUSIVITY ON THE W TRACK (W2-FIELD2, act2-pro-tour.md §8.2) – «one pro plays one event a
+// week», which is the fact the two-type feed already promises the player about HER.
+//
+// Why it needs its own guard rather than riding on `resolveDoubleBookings` above: that rule is
+// post-draw arithmetic over the CANONICAL brackets and the LIVE cohort, and a field pro is in
+// neither. Her shadow draws and the Season card's previews are the only place the merged universe
+// exists, and there the two rungs' fields come from two independent `selectEntrants` calls that
+// never meet. So the higher rung draws first and hands the lower one a list.
+// =================================================================================================
+describe('weekFieldExclusion — the higher W rung draws first', () => {
+  const pros = fieldProsFor('excl-cohort', 0, cohort.map((p) => p.name))
+  const universe = universeForTier('w15', cohort, pros)
+  // The structure the engine draws against: pros by points, the point-less cohort beneath them.
+  const merged = mergedWtaRanking(
+    cohort.map((p) => ({ playerId: p.id, points: 0, rank: 1 })),
+    pros,
+  )
+  const SEED = 'excl-seed'
+  const week = 10
+  /** A week carrying every W rung – the worst case the calendar can build, and the case that shows
+   *  the rule is transitive (each rung excludes everyone ABOVE it, not just its immediate senior). */
+  const season: SeasonEvent[] = (['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]).map((t) =>
+    ev(t, week),
+  )
+  const drawWith = (tier: TierId, from: SeasonEvent[] = season) => {
+    const e = from.find((x) => x.tier === tier)!
+    const excluded = weekFieldExclusion(e, from, universe, merged, SEED)
+    return {
+      excluded,
+      entrants: selectEntrants(e, universe, merged, rngFromSeed(`${SEED}:kidtour:${e.id}`), undefined, excluded),
+    }
+  }
+
+  it('nobody drawn by a higher rung appears in a lower rung`s field, all the way down the family', () => {
+    const seen = new Map<string, TierId>()
+    // Strongest first, exactly as the rule resolves them.
+    for (const tier of ['wta125', 'w100', 'w75', 'w50', 'w35', 'w15'] as TierId[]) {
+      const { entrants } = drawWith(tier)
+      expect(entrants).toHaveLength(TIERS[tier].drawSize)
+      for (const p of entrants) {
+        expect(seen.get(p.id), `${p.id} is in ${seen.get(p.id)} AND ${tier} in the same week`).toBeUndefined()
+        seen.set(p.id, tier)
+      }
+    }
+    // Six full draws off one week, and 192 different people played them.
+    expect(seen.size).toBe(6 * 32)
+  })
+
+  it('the window still FILLS after the exclusion – no draw quietly made of backfill', () => {
+    // W100's own band comment records the failure this catches: a "prestige" draw half filled by
+    // `selectEntrants`' out-of-window backfill. Exclusivity narrows the window on a shared week, so
+    // this is where it would first show.
+    for (const tier of ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]) {
+      const { entrants } = drawWith(tier)
+      const [lo, hi] = TIERS[tier].entrantPctBand
+      const outOfBand = entrants.filter((p) => {
+        const pct = (merged.findIndex((r) => r.playerId === p.id) + 1) / merged.length
+        return pct < lo || pct > hi
+      })
+      expect(outOfBand.map((p) => p.id), `${tier} backfilled`).toEqual([])
+      // ...and the age gate is still honoured through the narrower window.
+      const min = TIERS[tier].minAgeYears!
+      for (const p of entrants) expect(p.ageYears, `${p.id} in ${tier}`).toBeGreaterThanOrEqual(min)
+    }
+  })
+
+  it('the order is TIER_LADDER, never the calendar`s – a reshuffled week resolves identically', () => {
+    const reversed = [...season].reverse()
+    for (const tier of ['w15', 'w50', 'w100'] as TierId[]) {
+      const a = drawWith(tier, season)
+      const b = drawWith(tier, reversed)
+      expect([...b.excluded].sort()).toEqual([...a.excluded].sort())
+      expect(b.entrants.map((p) => p.id)).toEqual(a.entrants.map((p) => p.id))
+    }
+  })
+
+  it('scope fence: a non-W event and a lone W event both get the EMPTY set', () => {
+    // The six junior/domestic rungs keep LIVE-only universes and are untouched by this wave
+    // (living-field.md §8.3 books them for act 3), so the rule refuses them on its first line.
+    const mixedWeek: SeasonEvent[] = [ev('j300', week), ev('j60', week), ev('w100', week)]
+    for (const tier of ['j300', 'j60'] as TierId[]) {
+      const e = mixedWeek.find((x) => x.tier === tier)!
+      expect(weekFieldExclusion(e, mixedWeek, universe, merged, SEED).size).toBe(0)
+    }
+    // ...and a W rung with nothing above it on the week is byte-identical to the pre-rule draw.
+    const lone = ev('w15', week)
+    expect(weekFieldExclusion(lone, [lone], universe, merged, SEED).size).toBe(0)
+    const withRule = selectEntrants(
+      lone,
+      universe,
+      merged,
+      rngFromSeed(`${SEED}:kidtour:${lone.id}`),
+      undefined,
+      weekFieldExclusion(lone, [lone], universe, merged, SEED),
+    )
+    const without = selectEntrants(lone, universe, merged, rngFromSeed(`${SEED}:kidtour:${lone.id}`))
+    expect(withRule.map((p) => p.id)).toEqual(without.map((p) => p.id))
+  })
+
+  it('a DIFFERENT week is not touched, and the set is deterministic', () => {
+    const other = season.map((e) => ev(e.tier, week + 1))
+    const here = weekFieldExclusion(season.find((e) => e.tier === 'w15')!, [...season, ...other], universe, merged, SEED)
+    const only = weekFieldExclusion(season.find((e) => e.tier === 'w15')!, season, universe, merged, SEED)
+    expect([...here].sort()).toEqual([...only].sort())
+    expect([...weekFieldExclusion(season[0], season, universe, merged, SEED)].sort()).toEqual(
+      [...weekFieldExclusion(season[0], season, universe, merged, SEED)].sort(),
+    )
   })
 })
