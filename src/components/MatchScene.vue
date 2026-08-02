@@ -46,11 +46,11 @@ const props = defineProps<{
   /** the round pill over the top-left corner ("Quarterfinal", "Friendly at the club") */
   label?: string
   /** FILL THE CALLER'S COLUMN instead of being the painting's own square (owner, 02.08: «вернуть
-   *  картину на весь экран, как в макете»). The design's F is `flex:1; min-height:0` of the screen
-   *  with the art slot at `inset:0` – this prop is that geometry. The 01.08 whole-painting ruling
-   *  is NOT reopened by it: the img stays `contain`, so however tall the card is stretched the
-   *  painting renders complete, width-bound, and the box's spare height falls under the scrims.
-   *  Default off – the friendly's card keeps the square. */
+   *  картину на весь экран, как в макете», and 03.08 again: «занимала всё возможное пространство,
+   *  надо вернуть увеличение для этого»). The design's F is `flex:1; min-height:0` of the screen
+   *  with the art slot at `inset:0`, and this prop is that geometry PLUS the magnification that
+   *  makes it read like F – see `.scene--fill .scene-art` for why `cover` here is not the crop the
+   *  01.08 ruling rejected. Default off – the friendly's card keeps the whole painting. */
   fill?: boolean
 }>()
 
@@ -108,12 +108,27 @@ const src = computed(() => finaleUrl(props.stage, props.emotion))
   object-fit: contain;
 }
 
-/* Filled, the box is taller than the painting and `contain` has a band to place – it goes ABOVE
-   her: the painting sits on the card's foot, so the glass plate keeps riding the art (the whole
-   point of the treatment) and the spare height reads as sky under the head scrim, with the round
-   pill on it. Centering instead would detach the plate from the painting on both ends. */
+/* ⚠ FILLED, THE PAINTING IS MAGNIFIED TO COVER THE BOX - and this is the owner's 03.08 second pass
+   on the same screen: «я бы хотел, чтобы картинка вела себя как на макете F. Match Day, т.е.
+   занимала всё возможное пространство, надо вернуть увеличение для этого». The first pass released
+   the square and left the img `contain`, which is why it did not read like F: a square painting in
+   a portrait box leaves a dead band, and the design's art slot is `inset: 0` with nothing behind
+   it. `cover` is the magnification he is asking for.
+
+   IT DOES NOT REOPEN THE 01.08 RULING, and the difference is worth stating because the two sound
+   alike. What was rejected then was NORMALISATION - a per-painting scale steered by the face table,
+   so that every band framed her head at one size; the complaint was a fixed 396px window that
+   turned teen-serious into a tight close-up. This is one geometry for every painting, no face
+   table, no per-band number: the picture fills the space it is given. The friendly's card is
+   untouched (`fill` defaults off) and keeps the whole painting in its own square.
+
+   TOP, NOT BOTTOM. Under `cover` the crop lands on whichever axis is not binding, and on the wide
+   boxes (desktop, landscape) that is the vertical one - so anchoring at the top keeps her head
+   complete and spends the crop at the foot, which is where the glass plate sits anyway. On the
+   tall mobile box the height binds, the crop is horizontal and symmetric, and this line is inert. */
 .scene--fill .scene-art {
-  object-position: center bottom;
+  object-fit: cover;
+  object-position: center top;
 }
 
 /* Values from the design's F (docs/design/README.md §F "Сцена"): the foot scrim runs to

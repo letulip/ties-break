@@ -157,12 +157,20 @@ export function feedContext(input: {
     // she must act on.
     if (events.some((e) => e.entered)) continue
     const pairEvents = events.filter((e) => pair.includes(e.tier))
-    // The week is EMPTY for her when the pair brings nothing at all, or brings only professional
-    // events the pro cap has refused. Both cases borrow the same way.
-    const emptyForHer =
-      pairEvents.length === 0 ||
+    // ⚠ A CAP-REFUSED WEEK BORROWS. A MERELY EMPTY ONE DOES NOT (03.08, and this is a REVERSAL of
+    // the same day's earlier floor - the owner's two rulings settled it in opposite directions and
+    // the later one wins). The AER substitution is ruling 2: the tour's age rule refused her, so
+    // the game owes her tennis somewhere else. Extending it to "the pair brought nothing this week"
+    // was my own generalisation, written before ruling 9 - «пустые недели это нормально, она же не
+    // может постоянно играть» - and it produced exactly what he called junk on his own W230 career:
+    // at eighteen, WTA #27, four of the six cards in an eight-week horizon were borrowed W15s, a
+    // J60 and a J30. A world #27 is not offered a $15k, and a feed that offers it reads as noise
+    // rather than as choice. Blank weeks are the honest answer now that the planner's counter
+    // states the season's whole supply out loud.
+    const capRefused =
+      pairEvents.length > 0 &&
       pairEvents.every((e) => TIERS[e.tier].track === 'wta' && e.ineligibleReason === 'capped')
-    if (!emptyForHer) continue
+    if (!capRefused) continue
     const fallback = events
       .filter((e) => !pair.includes(e.tier) && open[e.tier] === true && e.eligible)
       .sort((a, b) => TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))[0]
