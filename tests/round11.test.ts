@@ -48,7 +48,17 @@ const APP = readFileSync(new URL('../src/App.vue', import.meta.url), 'utf8')
 const injuryRollAt = (seed: string, week: number): number => rngFromSeed(`${seed}:injury:${week}`)()
 /** tau at condition 0, age 14, no play, no physio: clamp(.006 + 100*.0009) = .096, x0.9 age = .0864
  *  (the same figure tests/injuries.test.ts derives; x0.9 again here for margin). */
-const TAU_C0_AGE14 = 0.0864
+// ⚠ DERIVED FROM THE KNOBS SINCE W2-FATIGUE, NOT WRITTEN DOWN. It was the literal 0.0864 that the
+// shipped trio (base .006 + slope .0009 x 100 fatigue, x0.9 for age 14) happened to produce, and the
+// injury re-calibration (docs/specs/fatigue-reprice-2026-08.md §5) moved all three under it: the same
+// composition is now 0.0162, and every fixture that hunts a firing seed against it went quiet at once.
+// A constant that has to be recomputed by hand whenever the model is tuned is a trap, so it is
+// computed here the way `injuryTau` computes it - the fixtures track the engine from now on.
+const TAU_C0_AGE14 =
+  Math.min(
+    ECONOMY.availability.injuryBaseChance + 100 * ECONOMY.availability.injuryFatigueSlope,
+    ECONOMY.availability.injuryChanceCap,
+  ) * ECONOMY.availability.ageInjuryFactor[14]
 
 function findSeed(prefix: string, fires: number[], quiet: number[]): string {
   for (let i = 0; i < 8000; i++) {
