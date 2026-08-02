@@ -539,9 +539,16 @@ describe('scenarios (V2.1 SHIPPED as baseline; v2/legacy patched live)', () => {
   const legacy = SCENARIOS.find((s) => s.id === 'legacy')!
   const v2 = SCENARIOS.find((s) => s.id === 'v2')!
 
-  it('RE-PINNED 25.07: the V2.1 values ARE the shipped engine defaults', () => {
+  // ⚠ RE-PINNED 03.08 (W2-FATIGUE: recoveryBase 1 -> 8, docs/specs/fatigue-reprice-2026-08.md §3),
+  // AND THE TWO REFERENCE SCENARIOS CHANGED SIDES. `v2` (base 2) and `legacy` (2/2/2) were both
+  // MORE generous than the shipped engine and are now both LESS: the re-price raised the base past
+  // them, so they have gone from "the candidates we rejected for being too kind" to "the audit
+  // trail of a season that could not be recovered". Their patches are untouched on purpose - they
+  // are history, and history does not get retuned - but every direction this block asserts about
+  // them is re-aimed below, with the reversal stated rather than smuggled.
+  it('RE-PINNED 25.07 and again 03.08: the shipped values ARE the engine defaults', () => {
     expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0) // tournament week = travel + competition
-    expect(ECONOMY.condition.recoveryBase).toBe(1) // free-week ladder 1/2/3 ("все чуть ниже к концу сезона")
+    expect(ECONOMY.condition.recoveryBase).toBe(8) // free-week ladder 8/9/10 (the W2 re-price)
     expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
     // scenario roles: baseline unpatched + full; v2 = previous candidate; legacy = round-9 audit
     expect(SCENARIOS.find((s) => s.id === 'baseline')!.patch).toEqual({})
@@ -559,21 +566,25 @@ describe('scenarios (V2.1 SHIPPED as baseline; v2/legacy patched live)', () => {
       expect(ECONOMY.physio.conditionBonusPerWeek).toBe(2)
       return runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
     })
-    // restored exactly to the shipped V2.1 values
+    // restored exactly to the shipped values
     expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0)
-    expect(ECONOMY.condition.recoveryBase).toBe(1)
+    expect(ECONOMY.condition.recoveryBase).toBe(8)
     expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
-    // legacy (far more recovery) rides higher than the shipped baseline; baseline reproduces after
-    expect(legacyRun.meanCondition).toBeGreaterThan(before.meanCondition)
+    // ⚠ DIRECTION REVERSED 03.08, and it is the same fact this line always asserted: the scenario
+    // that recovers MORE rides higher. `legacy` used to be that one (2/2/2 against 1/0/1); the
+    // re-price took the shipped base to 8, so a grinder's free weeks - which is most of her year -
+    // now pay 8 where legacy pays 2, and legacy rides BELOW. What is guarded is unchanged: the patch
+    // really reaches the run, and the baseline reproduces byte-for-byte afterwards.
+    expect(legacyRun.meanCondition).toBeLessThan(before.meanCondition)
     expect(runFatigueCareer(middleSelf, grinder, 0, H52.weeks)).toEqual(before)
 
-    // v2 (recoveryBase 2) recovers more than the shipped V2.1 baseline, and also restores
+    // v2 (recoveryBase 2) recovers LESS than the shipped baseline now, and also restores
     const v2run = withScenario(v2, () => {
       expect(ECONOMY.condition.recoveryBase).toBe(2)
       return runFatigueCareer(middleSelf, grinder, 0, H52.weeks)
     })
-    expect(ECONOMY.condition.recoveryBase).toBe(1)
-    expect(v2run.meanCondition).toBeGreaterThan(before.meanCondition)
+    expect(ECONOMY.condition.recoveryBase).toBe(8)
+    expect(v2run.meanCondition).toBeLessThan(before.meanCondition)
   })
 
   it('restores even when the run throws', () => {
@@ -583,7 +594,7 @@ describe('scenarios (V2.1 SHIPPED as baseline; v2/legacy patched live)', () => {
       }),
     ).toThrow('boom')
     expect(ECONOMY.condition.matchWeekRecoveryBase).toBe(0)
-    expect(ECONOMY.condition.recoveryBase).toBe(1)
+    expect(ECONOMY.condition.recoveryBase).toBe(8)
     expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
   })
 
