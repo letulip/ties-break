@@ -25,7 +25,6 @@ import {
   type RecoveryBuff,
   type SeasonHistoryEntry,
   type SeasonSummary,
-  type CoachMarketRow,
   type Snapshot,
   type SnapshotInjury,
   type StandingRow,
@@ -63,7 +62,7 @@ import {
   isOffSeasonWeek,
   WEEKS_PER_YEAR,
   OFF_SEASON_WEEKS, TIER_LADDER } from './season/calendar'
-import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
+import { clamp, matchDrain, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
@@ -75,19 +74,12 @@ import { parentIncomeForWeekCents,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort, COHORT_SIZE } from './season/cohort'
 import { renewCohort } from './season/conveyor'
-import { ageFactor, growWeek, relativeAgeHeadStart, rollPotential, SKILL_KEYS, trainFactor, type KidSkills } from './development'
+import { growWeek, rollPotential, type KidSkills } from './development'
 import {
-  bestFitCoachAt,
-  buildCoachRoster,
   coachById,
   coachCorridorFactor,
-  coachFitFor,
   coachIncludesPhysio,
-  coachSeasonUplift,
   coachWeeklyCents,
-  COACH_TIER_LABEL,
-  eliteGateShortfall,
-  practiceCoachRateCents,
   selfRateCents,
   tierOf,
 } from './coach'
@@ -118,8 +110,6 @@ import {
   universeForTier,
 } from './season/fieldPros'
 import { simulateMatch } from './match/engine'
-import { applySurfaceStyle } from './match/style'
-import { applyKit, kitWearAt } from './equipment'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
 // dependency runs one way: world → diary, exactly like world → condition.
@@ -155,13 +145,15 @@ import {
   expireOffers,
   hasLiveOffer,
   isSponsorReviewWeek,
-  kitFreshCap,
   pruneEntryLetters,
 } from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
 import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
-import type { CoachTier } from '../shared/protocol'
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket } from './world/coachMarket'
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket }
+import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from './world/player'
+export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio }
 import { enterEvent, withdrawEvent, cancelEntry } from './world/entries'
@@ -563,100 +555,8 @@ const UPCOMING_WEEKS = 8 // calendar horizon surfaced in a snapshot
 // historical names so every existing `from ...engine/world` call site keeps working.
 export { seasonIndexOf, seasonStartWeek, financeWindow, financeSeries }
 
-// --- the kid as a match player -----------------------------------------------
-// The kid has no persisted skills in Phase 3 (development lands in Phase 4), so the
-// starting build is derived deterministically from the world seed. Stable across a
-// career, and snapshotted into every kid-match event for replay.
-/** The build she is BORN with – the pre-Phase-4 derivation, unchanged, from `seed:kid`.
- *  createWorld seeds `world.skills` with it and the v19 migration back-fills old saves with it, so
- *  adding development moved nobody's starting point by a hundredth. */
-export function startingSkills(seed: string, _profile: PlayerProfile): KidSkills {
-  const r = rngFromSeed(seed + ':kid')
-  return {
-    serve: pickInt(r, 40, 58),
-    ret: pickInt(r, 40, 58),
-    composure: pickInt(r, 35, 55),
-    stamina: pickInt(r, 40, 60),
-    // ⚠ APPENDED LAST, AND THAT POSITION IS THE WHOLE MIGRATION STORY (v25). A fifth draw at the END
-    // of a purpose-scoped sub-stream leaves the four above byte-identical - verified, not assumed -
-    // so every career that already exists keeps the exact build it was born with and simply learns
-    // what its forehand was. Putting it anywhere else in this literal would re-roll the world.
-    // The band matches serve/ret: she is a junior, and her groundstroke is neither her best nor her
-    // worst wing by construction.
-    groundstrokes: pickInt(r, 40, 58),
-  }
-}
-
-/** Her birth build plus the relative-age head start, clamped to the attribute range. Every skill moves by
- *  the same amount: eleven extra months of being a junior is not a specialisation. */
-function withHeadStart(skills: KidSkills, birthMonth: number): KidSkills {
-  const bump = relativeAgeHeadStart(birthMonth)
-  const out = { ...skills }
-  for (const k of SKILL_KEYS) out[k] = Math.max(1, Math.min(100, Math.round((out[k] + bump) * 100) / 100))
-  return out
-}
-
-export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; skills?: KidSkills }): MatchPlayer {
-  // Her CURRENT build when the world has one (every world does since v19); the birth derivation is
-  // the fallback for the handful of pure callers that build a player without a full world.
-  const s = world.skills ?? startingSkills(world.seed, world.profile)
-  return {
-    id: KID_ID,
-    // Round-7 item 17: full "First Last" (was first-name-only) so the match viewer's
-    // under-court labels short-name the kid the same way the opponent already is
-    // ("V. Martin", not "Vera"). formatShortName is applied at the display layer.
-    name: `${world.profile.kidName} ${world.profile.kidLastName}`.trim(),
-    serve: s.serve,
-    ret: s.ret,
-    composure: s.composure,
-    stamina: s.stamina,
-    groundstrokes: s.groundstrokes,
-  }
-}
-
-/** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
- *  CONDITION factor (R9-19), then by the surface x play-style table (docs/specs/surface-style.md),
- *  then by the condition of her EQUIPMENT (docs/specs/equipment-and-serve-speed.md §2). All three
- *  are pure arithmetic with ZERO RNG, they compose multiplicatively, and every path that puts her in
- *  a match – the shadow tournament, the practice friendly, the exhibition viewer – builds her here,
- *  so the modifiers land exactly once per match. `all-court` (and any untouched attribute, and every
- *  attribute of a girl in fresh kit) comes back byte-identical to the pre-slice scaling.
- *
- *  ⚠ AND HER AGE IS STAMPED HERE, not resolved when a box score is drawn. `age` is not a skill and
- *  `basePServe` never reads it; it is the age half of the serve-speed curve (match/serveSpeed.ts).
- *  It belongs on the snapshot because `WorldMatch.a/.b` freeze this object into the save - a box
- *  score re-opened three seasons later has to report the serve of the girl who played the match. Her
- *  REAL age, `kidAgeExact`, not the band's: a December girl genuinely serves a shade slower than a
- *  January girl in the same draw, which is the relative age effect turning up somewhere it belongs. */
-export function kidMatchPlayerFor(
-  world: { seed: string; profile: PlayerProfile; condition: number; week: number; offers?: Offer[] },
-  surface: Surface,
-): MatchPlayer {
-  const raw = kidMatchPlayer(world)
-  const factor = conditionMatchFactor(world.condition)
-  return applyKit(
-    applySurfaceStyle(
-      {
-        ...raw,
-        age: kidAgeExact(world.week, world.profile.birthMonth),
-        serve: raw.serve * factor,
-        ret: raw.ret * factor,
-        composure: raw.composure * factor,
-        stamina: raw.stamina * factor,
-        groundstrokes: raw.groundstrokes * factor,
-      },
-      world.profile.playStyle,
-      surface,
-    ),
-    // ⚠ AND THE SPONSOR'S FLOOR UNDER HER KIT, WHICH IS A FOURTH READING AND NOT A FOURTH TERM. The
-    // multiplication is unchanged - it is still exactly `applyKit(applySurfaceStyle(raw × factor))` -
-    // and what a signed kit deal moves is the WEAR that goes in, never the arithmetic. `kitFreshCap`
-    // is null for every career that has not signed one, so an unsponsored girl is byte-identical to
-    // what she was.
-    kitWearAt(world.seed, world.profile.background, world.week, kitFreshCap(world.offers ?? [], world.week)),
-  )
-}
-
+// player: moved to world/player.ts (P4 extraction). Imported back below and re-exported under
+// the historical names, so every existing `from '...engine/world'` call site keeps working.
 
 // --- rolling calendar --------------------------------------------------------
 // Extend the season in whole deterministic year-blocks until at least
@@ -1030,217 +930,7 @@ export function cancelVacation(world: WorldState, week: number): void {
  *  for a friendly – above the floor the guardrail's soft caution owns the whole range). That is the
  *  same hard body-gate `availabilityStatus` applies to a tournament, reading the same
  *  `medicalBlock`. */
-// --- THE COACH MARKET (v23) --------------------------------------------------------------------
-
-/** The coach a career OPENS with, from the rung onboarding chose.
- *
- *  `self` means nobody: the parent is on the court, and there is no id to store. Otherwise it is
- *  the coach at that rung who suits her game best, cheapest first among equals - which is what a
- *  parent walking into an academy and naming a budget actually gets. Pure: the roster is derived
- *  from the seed and nothing is drawn on the main stream. */
-export function openingCoachId(seed: string, profile: PlayerProfile): string | null {
-  if (profile.coachTier === 'self') return null
-  return bestFitCoachAt(seed, START_AGE_YEARS, profile.coachTier, profile.playStyle)?.id ?? null
-}
-
-/** The friendly's coach rate for one week of THIS world - a thin read of the pure rule in
- *  engine/coach.ts, so the planner sheet and the engine quote the same number. */
-export function practiceCoachRateFor(world: WorldState, week: number): number {
-  return practiceCoachRateCents(world.seed, ageAtWeek(week), world.coachId, world.profile.playStyle)
-}
-
-/** THE HIRE, and it is deliberately cheap to do: no signing fee, no notice period, effective from
- *  the next weekly bill.
- *
- *  Whether swapping coach mid-season should COST something is an open question the spec raises
- *  (§5 - "a free swap makes the choice weightless") and not one this slice answers, so the command
- *  is built to take a fee later without changing shape: the refusals live here in one place, and
- *  the only mutation is the id.
- *
- *  ZERO RNG on any stream - the roster is a derivation and the id is a string. The frozen MAIN
- *  capture cannot move, and neither can the week's own bill until the week actually turns.
- *
- *  `null` fires the parent back onto the court, which must always be allowed: a family that cannot
- *  pay has to be able to stop paying. */
-export function hireCoach(world: WorldState, coachId: string | null): void {
-  if (coachId === null) {
-    if (world.coachId === null) return
-    world.coachId = null
-    world.physioActive = false
-    addEvent(world, {
-      week: world.week,
-      type: 'info',
-      // ⚠ NOW KEPT, AND TAGGED (skills-radar). Both arms of this command are the moment a coaching
-      // arrangement CHANGED, and the radar's "weeks together" is derived from exactly that moment
-      // (coachSinceWeek) rather than from a new persisted field. A pruned release event would let a
-      // fired coach go on lending his read to the parent who replaced him. Bounded by construction:
-      // one row per hire, and a career has a handful.
-      keep: true,
-      milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
-      text: 'You are coaching her yourself again. The weekly bill is court time only.',
-    })
-    return
-  }
-  const coach = coachById(world.seed, ageAtWeek(world.week), coachId)
-  if (!coach) throw new Error('No such coach')
-  if (world.coachId === coach.id) return
-  // ⚠ DOMESTIC, and the merge with the two ladders is why this now has to say so out loud. The
-  // gate's threshold (ECONOMY.coach.eliteGate.minPoints = 150) was written as "national-tier
-  // eligibility" - it IS TIERS.national.enterPointBand[0] - so the domestic table is the one that
-  // preserves its meaning. Reading ITF points here would also make the Elite rung strictly
-  // downstream of money (no international travel, no ITF points, no Elite coach ever), which is the
-  // opposite of the "earned rather than bought" shape the owner asked the gate for.
-  const short = eliteGateShortfall(coach, kidPoints(world, 'domestic'))
-  if (short !== null) {
-    throw new Error(`${coach.name} only takes players with results – ${short} more ranking points`)
-  }
-  world.coachId = coach.id
-  world.physioActive = coachIncludesPhysio(coach.tier)
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    keep: true,
-    // See the release arm above: the tag is what makes "when did this partnership start" a read
-    // over the ledger instead of a persisted field and a migration.
-    milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
-    text: `${coach.name} is her coach now – ${COACH_TIER_LABEL[coach.tier]} tier.`,
-  })
-}
-
-/** THE TAG ON A COACH-CHANGE EVENT, and the only thing that identifies one. `milestoneKey` already
- *  exists on every event (it is what makes a milestone fire once), it is never pruned when the event
- *  is `keep`, and it needs no schema bump - the same trick the academy's offers use
- *  (`academy-in-<week>`). The week is in the key, so two hires can never collide.
- *
- *  A career migrated from a save written before this tag existed simply has no tagged events, and
- *  `coachSinceWeek` falls back to week 0 - "they have been together as long as anyone can remember",
- *  which is the right answer for a ledger with no record of a change. */
-const COACH_CHANGE_KEY = 'coach-since-'
-
-/** WHEN THE CURRENT COACHING ARRANGEMENT BEGAN - the radar's "weeks together", derived rather than
- *  stored (docs/specs/skills-radar.md §2: no schema bump, no migration, no golden save).
- *
- *  Week 0 for a career that has never changed coach, and the week of the last hire or release
- *  otherwise. BOTH arms count: a new coach has to learn her, and so - as far as the ladder is
- *  concerned - does the parent who takes the court back, because what the rung buys is an eye, and
- *  the eye left with him. */
-export function coachSinceWeek(world: WorldState): number {
-  let since = 0
-  for (const e of world.events) {
-    if (e.milestoneKey?.startsWith(COACH_CHANGE_KEY) && e.week > since) since = e.week
-  }
-  return since
-}
-
-/** EVERY COMPETITIVE MATCH SHE HAS EVER PLAYED, off the two durable ledgers that already count them:
- *  the running season W-L counters (v10, incremented per kid match at finalizeTournament) and the
- *  per-season history rows (v14, appended at each wrap-up as those counters reset).
- *
- *  ⚠ NOT `world.events.filter(e => e.match)`. The event feed prunes at EVENTS_CAP, so her match
- *  records are a rolling window of roughly the last year and a half - measured on a busy career it
- *  holds 20-40 matches and oscillates rather than grows. The radar needs a count that can only go
- *  UP (see engine/radar.ts, axisEvidence): a confidence that fell because an old match aged out
- *  would re-thicken the fog on its own, which is exactly the shimmer the spec forbids.
- *
- *  Walkovers and medical withdrawals are absent by construction - they never reach finalize, so
- *  they were never counted, and she never took the court. Practice friendlies are absent for the
- *  same reason they are not evidence (R11-2): nothing was on the line. */
-export function matchesEverPlayed(world: WorldState): number {
-  return (
-    world.seasonWins +
-    world.seasonLosses +
-    world.seasonHistory.reduce((sum, h) => sum + h.wins + h.losses, 0)
-  )
-}
-
-/** THE TOURNAMENT-WEEK TOGGLE. Pure state, zero draws on any stream - it changes only what the
- *  arithmetic downstream of an unchanged pickInt does with the number it drew, so the frozen MAIN
- *  capture cannot move. Takes effect from the NEXT tick; this week's bill is already written. */
-export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
-  if (world.coachOnEventWeeks === on) return
-  world.coachOnEventWeeks = on
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    text: on
-      ? 'Your coach travels to tournaments now – billed on competition weeks too.'
-      : 'Your coach stays home on tournament weeks – those weeks are no longer billed.',
-  })
-}
-
-/** WHAT THE COACH COSTS OVER A SEASON, both ways, so the toggle can be priced rather than guessed.
- *
- *  `weeklyCents` is the same either way - what differs is HOW MANY weeks are billed, so the honest
- *  pair of numbers is the season, not the week. Counted off the season she is actually in: the
- *  off-season weeks are already unbilled for everyone, and `eventWeeks` is the weeks of it she is
- *  entered for. Derived at snapshot time; persists nothing. */
-export function coachBilling(world: WorldState): {
-  onEventWeeks: boolean
-  weeklyCents: number
-  eventWeeks: number
-  seasonOffCents: number
-  seasonOnCents: number
-} {
-  const age = ageAtWeek(world.week)
-  const coach = coachById(world.seed, age, world.coachId)
-  const rate = coach ? coach.rateCents : selfRateCents(age)
-  const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background)
-  const seasonStart = seasonStartWeek(world.week)
-  const seasonEnd = seasonStart + WEEKS_PER_YEAR
-  const inSeason = (w: number) => w >= seasonStart && w < seasonEnd
-  const eventWeeks = new Set(
-    world.season.filter((e) => inSeason(e.week) && world.entries.includes(e.id)).map((e) => e.week),
-  ).size
-  // The playable weeks of a season are everything but the off-season block.
-  const playableWeeks = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
-  return {
-    onEventWeeks: world.coachOnEventWeeks,
-    weeklyCents,
-    eventWeeks,
-    seasonOffCents: weeklyCents * Math.max(0, playableWeeks - eventWeeks),
-    seasonOnCents: weeklyCents * playableWeeks,
-  }
-}
-
-/** THE MARKET, as the screen needs it: every coach, priced in HER family's corridor at HER age and
- *  HER plan, read against HER game, with what each rung would add for her.
- *
- *  Derived at snapshot time, so it persists nothing and bumps no schema. The ENGINE decides fit,
- *  price, affordability and the gate; the screen only lays them out - the same division upcoming
- *  events already use, and the reason two surfaces can never disagree about what a coach costs. */
-export function coachMarket(world: WorldState): CoachMarketRow[] {
-  const age = ageAtWeek(world.week)
-  const points = kidPoints(world, 'domestic') // ⚠ the Elite gate's currency – see hireCoach above
-  const weeklyIncome = parentIncomeForWeekCents(world.seed, world.profile.background, world.week)
-  return buildCoachRoster(world.seed, age).map((coach) => {
-    const fit = coachFitFor(coach, world.profile.playStyle)
-    const [upliftLo, upliftHi] = coachSeasonUplift({
-      skills: SKILL_KEYS.map((k) => world.skills[k]),
-      potential: SKILL_KEYS.map((k) => world.potential[k]),
-      plan: world.plan,
-      tier: coach.tier,
-      fit,
-      ageFactor: ageFactor(age),
-      trainFactor: trainFactor(world.plan),
-    })
-    return {
-      id: coach.id,
-      tier: coach.tier,
-      name: coach.name,
-      style: coach.style,
-      fit,
-      weeklyCents: coachWeeklyCents(coach.rateCents, world.plan, world.profile.background),
-      current: world.coachId === coach.id,
-      // AFFORDABLE MEANS "against the week's income", not "against the reserve". A reserve pays for
-      // one week of anything; what the family is actually deciding is whether this bill fits the
-      // money that arrives every week, which is the number the budget meter draws.
-      overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background) - weeklyIncome),
-      lockedPoints: eliteGateShortfall(coach, points),
-      upliftPct: [upliftLo, upliftHi] as [number, number],
-      loadNote: coachLoadNote(coach.tier),
-    }
-  })
-}
+// THE COACH MARKET moved to world/coachMarket.ts (P4 extraction); imported back and re-exported.
 
 export function bookPractice(world: WorldState, week: number, withCoach: boolean): void {
   assertPlannable(world, week, 'practice')
@@ -3111,27 +2801,6 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
 }
 
-/** WHAT EACH RUNG DOES ABOUT HER BODY, for the market card - the load wave's two new differences said
- *  in one sentence each: how good the medical team is, and how much deciding he takes off the parent.
- *
- *  Written as PROSE rather than numbers on purpose. The measured spread between hired rungs is a few
- *  injury weeks over four years - real, and far too small to print as a figure without promising a
- *  precision 120 seeds do not support. What IS crisply different is the second half (taps per career run
- *  6.7 at budget to 2.0 at elite, a 3.4x ladder), and that is a thing a sentence can say honestly. */
-function coachLoadNote(tier: CoachTier): string {
-  switch (tier) {
-    case 'self':
-      return 'You manage her load – every call is yours, and nobody is watching her but you.'
-    case 'budget':
-      return 'Basic physio. He handles the easy calls and brings you the rest.'
-    case 'middle':
-      return 'Proper physio. He decides most weeks himself.'
-    case 'high':
-      return 'A good medical team. He rarely needs to ask you.'
-    case 'elite':
-      return 'The best medical team money buys. He handles her body, and you hear about it after.'
-  }
-}
 
 /** What he says when he would rather she skipped a trip. Three sentences, picked by HOW tired she is
  *  rather than by luck - a draw here would make the same coach say different things about the same
