@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+import { worldFunction } from './worldSource'
 import { readFileSync } from 'node:fs'
 
 // Two of these replay whole careers (49 and 101 weeks, plus a 101-week bench career with a real
@@ -390,7 +391,9 @@ describe('R11-12a — the wrap-up summary reconciles with the wallet', () => {
     // how they came to disagree in the first place.
     const snapshotFold = world.slice(world.indexOf('finance: {'), world.indexOf('financialEvents:'))
     expect(snapshotFold).toContain('seasonStartWeek(world.week)')
-    const wrapUp = world.slice(world.indexOf('function maybeFireSeasonWrapUp'), world.indexOf('// --- finish / stage labels'))
+    // the wrap-up function, wherever the P4 decomposition has moved it to
+    const wrapUp = worldFunction('maybeFireSeasonWrapUp')
+    expect(wrapUp).not.toBe('')
     expect(wrapUp).toContain('seasonStartWeek(world.week)')
     // the money figures come off the finance ledger, NOT the capped events feed
     expect(wrapUp).toContain('financeWindow(world.financeWeeks, yearStart)')
