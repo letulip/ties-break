@@ -31,7 +31,7 @@
 // engine's own TIERS catalogue. No engine helper was added and nothing here re-derives a band.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
-import { TIERS, TIER_LADDER } from '../engine/season/calendar'
+import { TIERS, TIER_LADDER, hasAcceptanceList } from '../engine/season/calendar'
 import { isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
 import { weekRange } from '../shared/dates'
 import { LADDER_POINTS_LABEL, type EntryCapUsage } from '../shared/protocol'
@@ -280,14 +280,23 @@ export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
     )
   }
   const [minPoints] = tier.enterPointBand
-  if (tier.enterPct !== undefined) {
+  // ⚠ "HAS AN ACCEPTANCE LIST" IS ONE QUESTION WITH TWO FIELDS BEHIND IT (W2-FIELD2), which is why
+  // this asks the predicate rather than a field. The ITF and domestic rungs carry a SHARE
+  // (`enterPct`) of a table that is a population artefact; the W rungs carry the real tour's own
+  // ABSOLUTE cut (`acceptsRank`), because their table models real ranks now. Reading `enterPct`
+  // directly here would have silently dropped the acceptance clause from every W rung's note - they
+  // would have fallen through to the points branch below, whose band is `[0, MAX]`, and printed
+  // nothing at all.
+  if (hasAcceptanceList(id)) {
     // The acceptance list. Never a points figure: the rungs above the on-ramp do not read one, and
     // quoting the `[0, MAX]` band they carry instead would be the "0+" this function exists to kill.
-    clauses.push(
-      acceptsRank !== undefined
-        ? `the top ${acceptsRank} internationally`
-        : `the top ${Math.round(tier.enterPct * 100)}% internationally`,
-    )
+    // The LIVE number wins when the caller has one (it is what the engine would actually apply);
+    // the static fallbacks say the same thing in whichever unit the rung is written in.
+    const fallback =
+      tier.acceptsRank !== undefined
+        ? `the top ${tier.acceptsRank} internationally`
+        : `the top ${Math.round(tier.enterPct! * 100)}% internationally`
+    clauses.push(acceptsRank !== undefined ? `the top ${acceptsRank} internationally` : fallback)
   } else if (minPoints > 0) {
     // The band's OWN currency (01.08): this clause fires for the domestic rungs and both on-ramps,
     // and w15's band is ITF junior points – "age 16 and 120 national pts" was the same wrong-label

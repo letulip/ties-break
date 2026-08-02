@@ -403,20 +403,74 @@ zero. Matching #500 = 75 needs a fifth storey and `FIELD.size` near 520 — a me
 rows, which re-opens every `entrantPctBand` and the sponsor gate that is derived from the table's
 size. Reported, not taken.
 
-**⚠⚠ AND THE ONE THING THE OWNER MUST DECIDE BEFORE THIS MERGES — THE ACCEPTANCE CUTS.** `enterPct`
-is a SHARE of the merged table and was left exactly where W2-LADDER measured it. Against a lifted
-curve those shares bite in POINTS rather than in places. Measured on a fresh world:
+### 8.2d The acceptance cuts, re-derived — and what actually gates the climb now
 
-| her points | 50 | 100 | 160 | 250 | 400 | 650 | 1,000 | 1,400 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| merged rank | #365 | #365 | #331 | #252 | #183 | #132 | #87 | #49 |
-| rungs open above W15 | none | none | none | W35 | +W50 | +W75, W100 | +WTA 125 | all |
+**THE BUG THE CURVE EXPOSED.** `enterPct` was a SHARE of the merged table, and that was the right
+unit while the table was a compressed artefact where "the better half" meant "a decent player".
+Against a table carrying the real curve a share bites in real ranks: W35's 0.5 resolved to 282nd
+place ≈ **219 W points**, while a perfect best-16 window of nothing but W15 **titles** caps at
+**160**. The second rung of the ladder was unreachable from the first, and no guard could see it —
+every test in the suite checks one rung at a time.
 
-against cuts of W35 top 282 · W50 226 · W75 169 · W100 141 · WTA 125 113. A W35 therefore needs ~250
-W points, and a best-16 window filled with nothing but W15 **titles** caps at 160 — **the rung above
-the entry rung is not reachable from the entry rung alone.** W15 itself is unaffected (its gate is
-her ITF junior points, not the W table). The fix is `enterPct`'s derivation or a different acceptance
-rule, both beyond the FIELD table, so this is reported with its numbers rather than invented.
+**THE FIX IS THE REAL TOUR'S OWN ENTRY RANGES**, because an acceptance list was never a share of
+anything: it is a rank cut, and the same cut whether the world holds 500 players or 5,000.
+
+| rung | real acceptance range (women's ITF/WTA) | our cut = the range's floor |
+| --- | --- | --- |
+| W15 | ~#400–1000+, unranked players get in | none — it is the on-ramp (ITF junior points) |
+| W35 | ~#250–700 | 700 |
+| W50 | ~#200–550 | 550 |
+| W75 | ~#150–450 | 450 |
+| W100 | ~#120–350 | 350 |
+| WTA 125 | ~#80–250, plus wildcards | 250 |
+
+New field `TierDef.acceptsRank`, read by `acceptanceRank` in preference to `enterPct`. The ITF and
+domestic rungs **keep the share** — their tables are population artefacts with no external anchor,
+so a share is still the honest unit there. One rule per table, stated per table; `hasAcceptanceList`
+is the single predicate everything else asks so the on-ramp cannot be mis-detected.
+
+⚠ The lower cuts are **no-ops by construction**, and that is the finding rather than a shortcut: our
+table is 564 rows deep and a real W35's list reaches #700, i.e. below the whole table. W35 and W50
+admit anybody the table holds — which is what the real rungs do, and it is how «she must always have
+tennis» survives an honest curve.
+
+**THE WALKABILITY RECEIPT** (`tools/ladder-walk.ts`, 6 prospect careers × 9 seasons, entry policy
+"the strongest rung the engine accepts", real brackets, real fatigue, real AER cap):
+
+| season | age | median W pts | median rank | rungs open | entered |
+| --- | --- | --- | --- | --- | --- |
+| 0–3 | 14–17 | 0 | #460–498 | W15, W35, W50 | junior events |
+| 4 | 18 | 0 | #498 | W15, W35, W50 | W15 ×1 |
+| 5 | 19 | 7 | #493 | W15, W35, W50 | W15 ×4 |
+| 6 | 20 | 8 | #510 | W15, W35, W50 | — |
+| 7 | 21 | 3 | #502 | W15, W35, W50 | W35 ×1, W50 ×1 |
+| 8 | 22 | 10 | #490 | W15, W35, W50 | W15 ×2 |
+
+Best merged rank reached, per career: **#460 #449 #468 #462 #452 #463**. Against the retired
+share-based cuts (W35 282 · W50 226 · W75 169 · W100 141 · WTA 125 113) **not one career would have
+cleared even W35 in its whole life**; under the shipped rank cuts W35 and W50 are open from her first
+professional week. That is the blocker removed.
+
+**⚠⚠ AND THE LADDER STILL DOES NOT COMPLETE — IT IS GATED BY FATIGUE, NOT BY POINTS.** W75 opened in
+1 career of 6 (season 8); W100 and WTA 125 in none. The reason is volume, not the cut and not her
+game: she reaches **core 73.7** — stronger than any field she meets — and still enters only
+**7.5–8 events a season across every tier** in her twenties, of which a handful are W-rung. The
+calendar offers ~70 W events a season. Swept across entry disciplines (how far above a rung's
+condition floor she insists on being before booking), the volume barely moves:
+
+| rest margin above the floor | 0 | 5 | 10 | 15 | 20 |
+| --- | --- | --- | --- | --- | --- |
+| events entered, season 7 | 8.7 | 7.0 | 12.0 | 8.3 | 9.0 |
+| mean condition | 48 | 59 | 43 | 59 | 46 |
+
+Grinding wrecks her and resting starves her: the ceiling is `recoveryBase` 1/week against a
+title-depth run's strain, not the policy. **Reported and stopped there** — fatigue pricing is an open
+owner decision and this wave does not pre-empt it.
+
+⚠ The sponsor gates moved with the cut they are derived from, since the rule ("National signs the
+girl who would be IN the W100 draw, Global the one still in it on the last day") reads W100's
+acceptance list: `national.maxWtaRank` 125 → **350**, `global` 31 → **87**. A looser gate, following
+from the table being honest rather than compressed. Flagged, not smoothed.
 
 A 50-point LIVE row (five W15 titles) consequently lands **#365 of 564**, not the phase-W promise of
 #40–80 — which was only ever reachable because the field held nobody in the middle. The pin in

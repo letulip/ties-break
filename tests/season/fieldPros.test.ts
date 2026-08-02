@@ -220,13 +220,30 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     expect(world.kidRankWta).toBeLessThanOrEqual(420)
   })
 
-  it('acceptance cuts read the merged field size on the W rungs, the live table elsewhere', () => {
+  it('acceptance cuts: an absolute rank on the W rungs, a share of the live table elsewhere', () => {
+    // ⚠⚠ RE-AIMED BY W2-FIELD2, AND THE RE-AIM IS THE FIX IT PINS. This asserted that a W rung's cut
+    // is `enterPct` x the merged table's size - a SHARE - which was the right unit for as long as
+    // that table was a compressed artefact. Once the table carried the real points-to-rank curve the
+    // share bit in real ranks: W35's 0.5 resolved to ~219 W points while a perfect best-16 window of
+    // W15 TITLES caps at 160, so the second rung of the ladder was unreachable from the first (six
+    // careers x nine seasons, tools/ladder-walk.ts: best rank ever reached #449-468 against a cut of
+    // 282 - not one of them would have cleared W35 in its life). The W rungs now carry the real
+    // tour's own cuts, and this pins the UNITS rather than the numbers.
     const world = createWorld('field-cal-pin')
-    const mergedSize = world.cohort.length + 1 + FIELD.size // 199 + kid + 300 = 500
-    expect(acceptanceRank(world, 'w35')).toBe(Math.round(TIERS.w35.enterPct! * mergedSize)) // 250
-    expect(acceptanceRank(world, 'w100')).toBe(Math.round(TIERS.w100.enterPct! * mergedSize)) // 125
-    // The ITF rungs' lists did not move by a single place – their events still draw from the
-    // cohort+kid table, so their cut is still a share of THAT field.
+    // The W rungs: an absolute rank, straight off the tier definition, INDEPENDENT of how many
+    // players happen to exist - which is the property that broke when it was a share.
+    for (const tier of ['w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]) {
+      expect(acceptanceRank(world, tier)).toBe(TIERS[tier].acceptsRank)
+      expect(TIERS[tier].enterPct, `${tier} must not carry both units`).toBeUndefined()
+    }
+    // ...and they still TIGHTEN up the ladder, which is the one thing a ladder must do.
+    const cuts = (['w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]).map((t) => TIERS[t].acceptsRank!)
+    for (let i = 1; i < cuts.length; i++) expect(cuts[i]).toBeLessThan(cuts[i - 1])
+    // W15 is the on-ramp: no list at all, because a rank gate on the first rung of a table is a
+    // closed loop. It reads her ITF junior points instead.
+    expect(acceptanceRank(world, 'w15')).toBeUndefined()
+    // The ITF rungs' lists did not move by a single place – their table IS a population artefact
+    // (199 juniors, no external anchor), so a share is still the honest unit there.
     expect(acceptanceRank(world, 'j60')).toBe(Math.round(TIERS.j60.enterPct! * (world.cohort.length + 1)))
     expect(acceptanceRank(world, 'j300')).toBe(Math.round(TIERS.j300.enterPct! * (world.cohort.length + 1)))
   })

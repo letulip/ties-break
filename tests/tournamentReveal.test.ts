@@ -13,7 +13,7 @@ import {
 import { rngFromSeed } from '../src/engine/rng'
 import { simulateMatch } from '../src/engine/match/engine'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
-import { TIERS } from '../src/engine/season/calendar'
+import { TIERS, hasAcceptanceList } from '../src/engine/season/calendar'
 
 // Build a world paused on the kid's entered tournament (pendingTournament set, not yet revealed).
 function buildToPending(seed: string): WorldState {
@@ -32,7 +32,7 @@ function buildToPending(seed: string): WorldState {
       e.week >= 5 &&
       e.deadlineWeek >= world.week &&
       TIERS[e.tier].track === 'domestic' &&
-      TIERS[e.tier].enterPct === undefined,
+      !hasAcceptanceList(e.tier),
   )!
   // r-gate (season-life-01b): points-based eligibility. Grant the kid a throwaway result worth the
   // tier's minPoints ONLY for the enterEvent gate check, then drop it before any tick so nothing

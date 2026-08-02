@@ -12,7 +12,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, hasAcceptanceList } from '../src/engine/season/calendar'
 import { entryBandTrack, tierOpensWhen, tierState, type TierStateInput } from '../src/composables/tierState'
 import { activeLadderOfSnapshot, LADDER_POINTS_LABEL, rankChipTrack } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
@@ -207,10 +207,19 @@ describe('S3 — the locked plaque says WHEN the rung opens, off the tier defini
       // The age gate appears exactly when the definition has one.
       expect(said.includes(`age ${tier.minAgeYears}`)).toBe(tier.minAgeYears !== undefined)
 
-      if (tier.enterPct !== undefined) {
+      if (hasAcceptanceList(id)) {
         // An ACCEPTANCE-LIST rung quotes the list, and must never quote its `[0, MAX]` formality of a
         // band. This is the "0+" the tour guide was printing for the two hardest tiers in the game.
-        expect(said).toContain('top 100 internationally')
+        //
+        // ⚠ RE-AIMED BY W2-FIELD2: "has a list" is now two fields, not one - the ITF rungs keep a
+        // SHARE (`enterPct`) and the W rungs carry the real tour's ABSOLUTE cut (`acceptsRank`), so
+        // the question is asked through `hasAcceptanceList`. Reading `enterPct` here sent every W
+        // rung down the points branch, whose band is `[0, MAX]`, and out through the "open from the
+        // start" door - the exact "0+" this case exists to catch, wearing a different coat.
+        //
+        // The QUOTED NUMBER is whatever that rung's list says: the live `acceptanceRank` when the
+        // caller has one (100 of a 199-cohort ITF table), the tier's own cut otherwise.
+        expect(said).toMatch(/top \d+ internationally/)
         expect(said).not.toContain(LADDER_POINTS_LABEL.domestic)
       } else if (tier.enterPointBand[0] > 0) {
         // A POINTS rung names its floor AND its currency - there are THREE point tables and this
