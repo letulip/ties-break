@@ -20,7 +20,7 @@ import {
   runTournament,
   JUNIOR_TOUR,
 } from '../src/engine/season/tournament'
-import { computeRanking } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { rivalConditions, rivalMatchPlayer } from '../src/engine/season/rival'
 import { fastMatchProbability } from '../src/engine/match/engine'
 import { ECONOMY } from '../src/engine/economy'
@@ -66,7 +66,7 @@ const roster = (w: { cohort: { id: string }[] }) => [...w.cohort.map((p) => p.id
 
 function fixture(seed: string) {
   const world = createWorld(seed)
-  const ranking = computeRanking(world.results, world.week, roster(world))
+  const ranking = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world))
   const event = world.season.find((e) => e.week > world.week)!
   const kid = kidMatchPlayerFor(world, event.surface)
   return { world, ranking, event, kid }
@@ -140,7 +140,7 @@ describe('the preview is stable, and free', () => {
     // preview every upcoming event several times, and check the world is untouched.
     const world = createWorld('pv-free')
     const before = JSON.stringify(world)
-    const ranking = computeRanking(world.results, world.week, roster(world))
+    const ranking = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world))
     for (let i = 0; i < 3; i++) {
       for (const e of world.season.filter((x) => x.week > world.week).slice(0, 8)) {
         previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface))
@@ -195,7 +195,7 @@ describe('what the numbers say', () => {
   it('the chance is a probability, on every tier and surface the calendar can produce', () => {
     for (const seed of ['pv-r1', 'pv-r2', 'pv-r3']) {
       const world = createWorld(seed)
-      const ranking = computeRanking(world.results, world.week, roster(world))
+      const ranking = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world))
       for (const e of world.season.filter((x) => x.week > world.week).slice(0, 12)) {
         const p = previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface))
         expect(p.firstMatchChance, `${seed}/${e.tier}/${e.surface}`).toBeGreaterThan(0)
@@ -214,7 +214,7 @@ describe('what the numbers say', () => {
     let n = 0
     for (let i = 0; i < 12; i++) {
       const world = createWorld(`pv-tier-${i}`)
-      const ranking = computeRanking(world.results, world.week, roster(world))
+      const ranking = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world))
       const l = world.season.find((e) => e.tier === 'local' && e.week > world.week)
       const j = world.season.find((e) => e.tier === 'j30' && e.week > world.week)
       if (!l || !j) continue
@@ -233,7 +233,7 @@ describe('what the numbers say', () => {
     let n = 0
     for (let i = 0; i < 12; i++) {
       const world = createWorld(`pv-band-${i}`)
-      const ranking = computeRanking(world.results, world.week, roster(world))
+      const ranking = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world))
       const l = world.season.find((e) => e.tier === 'local' && e.week > world.week)
       const j = world.season.find((e) => e.tier === 'j30' && e.week > world.week)
       if (!l || !j) continue
@@ -257,13 +257,13 @@ describe('what the numbers say', () => {
     const pBare = previewEvent(
       bare,
       event,
-      computeRanking(bare.results, bare.week, roster(bare)),
+      computeRanking(bare.results, bare.week, BEST_N_BY_TRACK.itf, roster(bare)),
       kidMatchPlayerFor(bare, event.surface),
     )
     const pStrong = previewEvent(
       strong,
       event,
-      computeRanking(strong.results, strong.week, roster(strong)),
+      computeRanking(strong.results, strong.week, BEST_N_BY_TRACK.itf, roster(strong)),
       kidMatchPlayerFor(strong, event.surface),
     )
     // Her standing changed, so the field she is drawn into and how she reads against it changed too.
@@ -426,7 +426,7 @@ describe('every upcoming card on the snapshot carries one', () => {
     // off the same event id.
     const world = createWorld('pv-crowd-handoff')
     for (const e of world.season.filter((x) => x.week > world.week).slice(0, 10)) {
-      const p = previewEvent(world, e, computeRanking(world.results, world.week, roster(world)), kidMatchPlayerFor(world, e.surface))
+      const p = previewEvent(world, e, computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, roster(world)), kidMatchPlayerFor(world, e.surface))
       expect(p.crowd, e.id).toBe(eventCrowd(world.seed, e))
     }
   })

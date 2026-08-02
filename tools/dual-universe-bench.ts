@@ -56,7 +56,7 @@ process.env.TB_BENCH_NO_AUTORUN = '1'
 
 import { execSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
-import { computeRanking } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { inTrack, KID_ID } from '../src/engine/world'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { SeasonResult } from '../src/engine/season/ranking'
@@ -289,8 +289,8 @@ function measure(world: WorldState, played: readonly PlayedEventCapture[]): Meas
   let realItf: RankingRow[] = []
   let cfItf: RankingRow[] = []
   for (const track of TRACKS) {
-    const real = computeRanking(world.results, w, roster, inTrack(track))
-    const cf = computeRanking(cfResults, w, roster, inTrack(track))
+    const real = computeRanking(world.results, w, BEST_N_BY_TRACK[track], roster, inTrack(track))
+    const cf = computeRanking(cfResults, w, BEST_N_BY_TRACK[track], roster, inTrack(track))
     rankReal[track] = rankOf(real, KID_ID)
     rankCf[track] = rankOf(cf, KID_ID)
     if (track === 'itf') {

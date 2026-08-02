@@ -54,6 +54,7 @@ import { rankLabel } from '../../shared/format'
 // for weeks at a time.
 import { LADDER_LABEL, type Milestone, type PlayStyle } from '../../shared/protocol'
 import { TIER_SHORT } from '../../engine/season/calendar'
+import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_LABEL } from '../../engine/coach'
 // U0 - the shared components (docs/specs/ui-components.md). StatRow is the ninth, and it is not
@@ -165,6 +166,12 @@ const activeLadder = computed(() => game.snapshot?.activeLadder ?? 'domestic')
 const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
 const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
+// THE WINDOW WIDTH IS THE TABLE'S OWN (W2-LADDER §3): six on the junior and national tables,
+// sixteen on the professional one - so the heading and the sentence below follow the ladder this
+// card is actually about, off the engine's own constant rather than a copied number.
+const bestN = computed(() => BEST_N_BY_TRACK[activeLadder.value])
+const BEST_N_WORDS: Record<number, string> = { 6: 'six', 16: 'sixteen' }
+const bestNWord = computed(() => BEST_N_WORDS[bestN.value] ?? String(bestN.value))
 const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ladder.value?.rank != null))
 const pointsTotal = computed(() => ladder.value?.points ?? 0)
 const pointsText = computed(() =>
@@ -470,7 +477,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            predates it - and it stays because it is the proof behind the Rank tile above. Markup
            lives in the shared CountingResultsTable.vue (also used by Home's best-6 popover). -->
       <Card class="kid-panel">
-        <Eyebrow as="h2">Counting results (best 6)</Eyebrow>
+        <Eyebrow as="h2">Counting results (best {{ bestN }})</Eyebrow>
         <!-- THE RANK ITSELF, which used to have a tile of its own. It reads better here than it
              did up there: this is the card that explains where the number comes from, so the
              number and its working now sit together instead of a screen apart. -->
@@ -479,7 +486,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
           <span class="kid-rank-points">{{ pointsText }}</span>
         </p>
         <p class="kid-panel-note">
-          Her {{ ladderLabel.toLowerCase() }} rank counts her six best {{ ladderLabel.toLowerCase() }}
+          Her {{ ladderLabel.toLowerCase() }} rank counts her {{ bestNWord }} best {{ ladderLabel.toLowerCase() }}
           results from the last 52 weeks. Full tables are on the Stats tab.
         </p>
         <CountingResultsTable :results="countingResults" />

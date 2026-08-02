@@ -54,9 +54,9 @@ for (let s = 0; s < SEEDS; s++) {
     if (w % 13 !== 12) continue
     const ids = world.cohort.map((p) => p.id)
     const results = world.results.filter((r) => r.playerId !== KID_ID)
-    const mixed = computeRanking(results, world.week, ids)
+    const mixed = computeRanking(results, world.week, 6, ids)
     for (const row of rows) {
-      const split = computeRanking(results, world.week, ids, onlyTrack(row.track))
+      const split = computeRanking(results, world.week, 6, ids, onlyTrack(row.track))
       row.overlap.push(topKOverlap(mixed, split, row.k))
       if (row.k === 8) {
         if (mixed[0]?.playerId !== split[0]?.playerId) topSeedChanged++

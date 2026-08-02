@@ -24,7 +24,7 @@
 // hand.
 
 import { createWorld, tickWeek, kidMatchPlayerFor, acceptanceRank, inTrack, KID_ID } from '../src/engine/world'
-import { computeRanking } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { power } from '../src/engine/season/cohort'
@@ -113,10 +113,10 @@ for (let s = 0; s < SEED_COUNT; s++) {
   const ids = world.cohort.map((p) => p.id)
   const noKid = world.results.filter((r) => r.playerId !== KID_ID)
   // BEFORE: the tick's exact inputs – the mixed canonical table over the LIVE cohort.
-  const mixed = computeRanking(noKid, world.week, ids)
+  const mixed = computeRanking(noKid, world.week, 6, ids)
   // AFTER: the slice's exact inputs – merged W standings over cohort ∪ field pros.
   const pros = fieldProsFor(world.seed, 0, world.cohort.map((p) => p.name))
-  const mergedAi = mergedWtaRanking(computeRanking(noKid, world.week, ids, inTrack('wta')), pros)
+  const mergedAi = mergedWtaRanking(computeRanking(noKid, world.week, BEST_N_BY_TRACK.wta, ids, inTrack('wta')), pros)
   const uni = universeForTier('w15', world.cohort, pros)
   const fatigue = rivalConditions(world.results, world.week)
 
@@ -144,6 +144,7 @@ const over50 = pros.filter((p) => p.wtaPoints > 50).length
 const live = computeRanking(
   [{ playerId: KID_ID, week: 0, points: 50, tier: 'w15' as const }],
   0,
+  BEST_N_BY_TRACK.wta,
   [...world.cohort.map((p) => p.id), KID_ID],
   inTrack('wta'),
 )

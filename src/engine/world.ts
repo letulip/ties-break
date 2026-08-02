@@ -108,7 +108,7 @@ import {
 } from './academy'
 import { rivalConditions, rivalGroundstrokes, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
-import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
+import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
 import {
   selectEntrants,
   resolveDoubleBookings,
@@ -455,6 +455,20 @@ export interface WorldState {
    *  the week identifies the entry uniquely and a withdrawal can remove exactly its own slot.
    *  Pruned to the current season onward at housekeeping, so it is bounded by the cap itself. */
   internationalEntryWeeks: number[]
+  /** THE PRO AER LEDGER (v36, W2-LADDER §5): the absolute WEEK of every PROFESSIONAL (W-rung)
+   *  event she has entered - `internationalEntryWeeks`' exact parallel, one table up, and NEVER
+   *  merged with it: the WTA's age rule is "separate from and additional to" the ITF junior one
+   *  (research §4), so a sixteen-year-old holds both allowances at once and each ledger counts
+   *  only its own family (ECONOMY.entryCap.cappedProTiers vs .cappedTiers).
+   *
+   *  Same construction as the junior array for the same four reasons: a persisted ledger because
+   *  the kid's result row is award-only (a first-round W15 exit leaves no other trace - and at
+   *  w15/w35 it still pays 0); weeks rather than a counter so "how many this season" is a filter
+   *  and a missed reset is impossible; at most one entry per week so the week identifies the slot
+   *  a withdrawal removes; pruned to the current season onward at housekeeping. Entered at
+   *  enter-time, spliced on refunding withdrawal, KEPT on every forfeiting exit - the tour counts
+   *  participation, and a name still on a closed list participated. */
+  proEntryWeeks: number[]
   /** WHO SHE TRAINS WITH (v23): a roster coach's id, or `null` for the parent on the court.
    *
    *  Only the id is stored. The roster itself is a pure derivation of `seed` (engine/coach.ts
@@ -787,7 +801,11 @@ function fieldProsOf(world: WorldState): FieldPro[] {
 }
 
 function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] {
-  const live = computeRanking(world.results, world.week, [...cohortIds(world), KID_ID], inTrack(track))
+  // THE WINDOW SPLIT LANDS HERE (W2-LADDER §3): best-6 for domestic/itf, best-16 for the
+  // professional table, and because this is the ONE fold every table-reader flows through (rank
+  // caches, standings, acceptance cuts, LadderViews), no surface can count a season on the wrong
+  // rule.
+  const live = computeRanking(world.results, world.week, BEST_N_BY_TRACK[track], [...cohortIds(world), KID_ID], inTrack(track))
   // ⚠ THE W TABLE IS THE MERGED TABLE, everywhere it is read (living-field phase W, 01.08). The
   // professional table used to be ~199 zero rows and whatever the canonical W brackets had paid the
   // juniors – which is why five W15 titles printed "#9" and the acceptance cuts measured nothing.
@@ -1441,6 +1459,35 @@ export function entryCapUsage(world: WorldState, week: number): EntryCapUsage {
   const from = seasonStartWeek(week)
   const used = world.internationalEntryWeeks.filter((w) => w >= from && w < from + WEEKS_PER_YEAR).length
   const limit = annualEntryLimit(ageAtWeek(week))
+  return { used, limit, remaining: Math.max(0, limit - used) }
+}
+
+// --- the WTA age-eligibility rule, the PRO cap (W2-LADDER §5) ---------------------------------
+// The junior trio above, mirrored one table up and never merged with it: the real rules are two
+// rules ("separate from and additional to", research §4), so the game keeps two families
+// (ECONOMY.entryCap.cappedTiers / .cappedProTiers), two age tables, two ledgers. Same discipline:
+// pure, zero draws on any stream, the knobs in ECONOMY, only logic here.
+
+/** Is this tier one the WTA's age rule counts? The W family; the domestic ladder stays ours. */
+export function isCappedProTier(tier: TierId): boolean {
+  return ECONOMY.entryCap.cappedProTiers.includes(tier)
+}
+
+/** How many PROFESSIONAL events she may enter in the season she is `ageYears` old. 16 -> 12,
+ *  17 -> 16, 18+ unlimited; 14/15 never reach this table because every W rung's `minAgeYears` is
+ *  16+ and the age gate refuses first (see the knob's note in economy.ts). */
+export function annualProEntryLimit(ageYears: number): number {
+  const table = ECONOMY.entryCap.proPerYearByAge
+  return table[ageYears] ?? table.default
+}
+
+/** Her PRO allowance for the season CONTAINING `week`, and how much is spent - `entryCapUsage`'s
+ *  season-block arithmetic verbatim, over the pro ledger. Scoped to the EVENT's season for the
+ *  same December-horizon reason (see entryCapUsage). */
+export function proEntryCapUsage(world: WorldState, week: number): EntryCapUsage {
+  const from = seasonStartWeek(week)
+  const used = world.proEntryWeeks.filter((w) => w >= from && w < from + WEEKS_PER_YEAR).length
+  const limit = annualProEntryLimit(ageAtWeek(week))
   return { used, limit, remaining: Math.max(0, limit - used) }
 }
 
@@ -3684,6 +3731,7 @@ function computeShadowTournament(
         computeRanking(
           world.results.filter((r) => r.playerId !== KID_ID),
           world.week,
+          BEST_N_BY_TRACK.wta,
           cohortIds(world),
           inTrack('wta'),
         ),
@@ -3740,12 +3788,14 @@ function housekeep(world: WorldState): void {
 }
 
 /** The clause appended to a tournament summary that explains the EFFECTIVE ranking change
- *  (round-5 item 1a). `delta` is the change in the kid's windowed best-6 sum caused by the
+ *  (round-5 item 1a). `delta` is the change in the kid's windowed best-N sum caused by the
  *  new result: `points` when nothing was displaced, `points − displaced` when a counted
- *  result was pushed out, `0` when the result didn't crack the best 6. */
-export function rankingDeltaSuffix(points: number, delta: number): string {
+ *  result was pushed out, `0` when the result didn't crack the best N. `bestN` is the TRACK's
+ *  window width (W2-LADDER §3) so the sentence names the rule it measured against - "best 6" on a
+ *  junior summary, "best 16" on a professional one - instead of quoting the junior rule at both. */
+export function rankingDeltaSuffix(points: number, delta: number, bestN: number): string {
   if (points <= 0) return ''
-  if (delta <= 0) return ' (does not improve best 6)'
+  if (delta <= 0) return ` (does not improve best ${bestN})`
   if (delta < points) return ` (ranking total +${delta})`
   return ''
 }
@@ -3874,15 +3924,22 @@ function finalizeTournament(world: WorldState): void {
   // her opener in, exactly as rival fatigue was. It is left alone here on purpose: it moves injury
   // exposure, which is a tuning decision with its own targets, and folding it into this slice would
   // make the cohort-fatigue measurement unattributable. Flagged for the owner in the commit message.
-  const before = windowedBestSum(world.results, world.week, KID_ID)
+  // ⚠ IN THE EVENT'S OWN TRACK, AT THAT TRACK'S WINDOW WIDTH (W2-LADDER §3 - and a latent bug
+  // fixed by the same stroke). This pair used to fold the WHOLE ledger with no track filter, so
+  // the "best 6" being diffed was a mixed-currency pool: a girl carrying a J300-heavy book who
+  // won a W15 was told "does not improve best 6" about a table her result plainly improved,
+  // because the junior 300s crowded the mixed six. The suffix now diffs the one table the result
+  // pays into, under that table's own N - which is what the sentence always claimed to mean.
+  // (`track` is the v28 attribution const a few lines up - the same fact, read once.)
+  const before = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track))
   if (points > 0) world.results.push({ playerId: KID_ID, week: world.week, points, tier: event.tier })
-  const after = windowedBestSum(world.results, world.week, KID_ID)
+  const after = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track))
   addEvent(world, {
     week: world.week,
     type: 'tournament',
     text:
       `${tier.label} (${event.surface}, ${weekLabel(event.week)}): ${world.profile.kidName} – ` +
-      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before)}`,
+      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before, BEST_N_BY_TRACK[track])}`,
     finishIdx: kidFinish,
   })
   // World news: who actually took the title of the draw she played in. When the kid IS the
@@ -4493,9 +4550,17 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   const scheduled = world.season.filter((e) => e.week === world.week)
   // Canonical ranking excludes the kid so AI-field selection never depends on the kid's own
   // results / entry history – the canonical AI world stays the same world whatever she does.
+  // ⚠ THE MIXED SELECTION TABLE KEEPS THE JUNIOR 6 (W2-LADDER §3, an explicit non-move). This fold
+  // is not one of the three ranking tables - it is the AI side's ordinal ambience, all tracks in
+  // one pot, feeding `selectEntrants`' percentile bands - and the best-16 rule is about what a
+  // PROFESSIONAL SEASON IS WORTH where professional points are read (rankingFor / the merged W
+  // table / kidPoints), none of which flow through here. Widening this one would permute every
+  // event sub-stream's composition to make a selection heuristic agree with a rule it never
+  // implements. The N is stated, not defaulted, so the split cannot land here by accident.
   const aiRanking = computeRanking(
     world.results.filter((r) => r.playerId !== KID_ID),
     world.week,
+    BEST_N_BY_TRACK.itf,
     ids,
   )
 
@@ -4700,7 +4765,7 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 // one answer, so every caller has to say which one it means. Making the argument required turns a
 // silent change of meaning into a compile error - which is what a change of this kind should be.
 export function kidPoints(world: WorldState, track: LadderTrack): number {
-  return windowedBestSum(world.results, world.week, KID_ID, inTrack(track))
+  return windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK[track], inTrack(track))
 }
 
 /** Her domestic best-6 - the number the domestic rungs' bands are denominated in. */
@@ -5255,6 +5320,8 @@ function computeCountingResults(world: WorldState, track: LadderTrack = 'itf'): 
   // TWO LADDERS: this list EXPLAINS a ranking, so it has to be the same table as the rank beside it.
   // Hence the track argument - `ladders[track].countingResults` pairs each list with its own rank,
   // and an empty ITF list is the honest reading of "unranked internationally".
+  // The slice is the TRACK's window width (W2-LADDER §3): sixteen rows on the professional list,
+  // six on the others - the list's sum must equal the rank beside it, and the rank counts best-N.
   return world.results.filter(inTrack(track))
     .filter(
       (r) =>
@@ -5264,7 +5331,7 @@ function computeCountingResults(world: WorldState, track: LadderTrack = 'itf'): 
         world.week - r.week <= RESULTS_WINDOW,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
-    .slice(0, 6)
+    .slice(0, BEST_N_BY_TRACK[track])
     .map((r) => ({ week: r.week, tier: r.tier, points: r.points }))
 }
 
@@ -5497,7 +5564,7 @@ function pendingView(world: WorldState): PendingView | undefined {
   // ranks her by. The earned-points guard exists to stop TIE-FLOOR ranks being printed for players
   // with nothing; a pro's standing row is never that, by construction (wtaPoints >= 1).
   const oppRankIn = (id: string): number | null =>
-    isFieldProId(id) || windowedBestSum(world.results, world.week, id, inTrack(track)) > 0
+    isFieldProId(id) || windowedBestSum(world.results, world.week, id, BEST_N_BY_TRACK[track], inTrack(track)) > 0
       ? (ranks.get(id) ?? null)
       : null
 

@@ -23,7 +23,7 @@
 import { readFileSync } from 'node:fs'
 import { decodeExportFile } from '../src/engine/saveCodec'
 import { KID_ID, inTrack, seasonIndexOf, kidAgeYears, refreshDerivedRankCaches, type WorldState } from '../src/engine/world'
-import { computeRanking, windowedBestSum, isCountingResult, type SeasonResult } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking, windowedBestSum, isCountingResult, type SeasonResult } from '../src/engine/season/ranking'
 import { mergedWtaRanking, fieldProsFor, isFieldProId } from '../src/engine/season/fieldPros'
 import type { RankingRow } from '../src/engine/season/types'
 
@@ -38,7 +38,7 @@ function args(): { save: string } {
 
 function liveWta(world: WorldState): RankingRow[] {
   const roster = [...world.cohort.map((p) => p.id), KID_ID]
-  return computeRanking(world.results, world.week, roster, inTrack('wta'))
+  return computeRanking(world.results, world.week, BEST_N_BY_TRACK.wta, roster, inTrack('wta'))
 }
 
 function mergedAt(world: WorldState, seasonIndex: number): RankingRow[] {
@@ -71,10 +71,10 @@ async function main() {
     .sort((a: SeasonResult, b: SeasonResult) => b.points - a.points || b.week - a.week)
   console.log(`\n1. her counting W results in the 52-week window: ${hers.length}`)
   hers.forEach((r: SeasonResult, i: number) => {
-    const counted = i < 6 ? 'COUNTED' : 'dropped (best-6 full)'
+    const counted = i < BEST_N_BY_TRACK.wta ? 'COUNTED' : `dropped (best-${BEST_N_BY_TRACK.wta} full)`
     console.log(`   w${r.week}  ${r.tier ?? '?'}  ${String(r.points).padStart(3)} pts  ${counted}`)
   })
-  const sum = windowedBestSum(world.results, world.week, KID_ID, isWta)
+  const sum = windowedBestSum(world.results, world.week, KID_ID, BEST_N_BY_TRACK.wta, isWta)
   console.log(`   windowedBestSum = ${sum} pts  (the number every W surface shows for her)`)
 
   // 2. THE TABLE AROUND HER -----------------------------------------------------------------------

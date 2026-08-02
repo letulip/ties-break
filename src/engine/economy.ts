@@ -1084,6 +1084,36 @@ export const ECONOMY = {
       [age: number]: number
       default: number
     },
+
+    // --- THE PRO AER, PARALLEL AND NEVER MERGED (W2-LADDER §5) --------------------------------
+    //
+    // The WTA's own age-eligibility rule - the Capriati rule, which exists for exactly our story -
+    // gets the PARALLEL structure to the junior cap above: its own capped family, its own age
+    // table, its own persisted ledger (`WorldState.proEntryWeeks`, schema v36). The two are never
+    // merged because the real rules are two rules: research §4 is explicit that the professional
+    // age caps are "separate from and additional to the junior caps", so a sixteen-year-old holds
+    // BOTH allowances at once - 25 junior entries AND 12 professional ones - and spending one
+    // never touches the other.
+    //
+    // THE FAMILY is every W rung (the WTA counts professional events, whatever their size); the
+    // domestic ladder stays uncapped here for the same reason it is uncapped above - it is ours.
+    cappedProTiers: ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as readonly TierId[],
+    // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited. 14 and 15 carry 8 and 10
+    // in the real rulebook (research §4) and are DELIBERATELY absent here: every W rung's
+    // `minAgeYears` is 16+, so availabilityStatus refuses a fourteen-year-old on AGE before the
+    // cap is ever consulted - the same "the age gate is the honest place for 'not eligible'"
+    // argument the junior table's note makes about 12-and-under. A rung that ever opens at 14
+    // (the real W15 does, via junior-reserved places) must bring those rows with it.
+    //
+    // NOT MODELLED, DELIBERATELY - the merited increases (a year-end top-5 junior earns up to 4
+    // extra pro events). Same ruling as the junior table's: keyed to a world ranking ours cannot
+    // honestly map, and the spec names it phase 2 or act 3 ("v1 ships the flat table if the bench
+    // says it already paces well" - the boredom-guard receipt in tools/boredom-guard.ts is that
+    // bench).
+    proPerYearByAge: { 16: 12, 17: 16, default: Number.MAX_SAFE_INTEGER } as {
+      [age: number]: number
+      default: number
+    },
   },
 
   // Season-Life slice C: physio + medical costs. ALL prices are MIDDLE-anchored bands. Every

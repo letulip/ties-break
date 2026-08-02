@@ -1,7 +1,7 @@
 // Package L – the rolling ranking. Pure and total: a deterministic function of the
 // results ledger and the current week. No RNG, no mutation of the input.
 
-import type { RankingRow, TierId } from './types'
+import type { LadderTrack, RankingRow, TierId } from './types'
 
 /** ONE APPEARANCE in a draw – "she was in it", with what it paid.
  *
@@ -37,17 +37,42 @@ export function isCountingResult(r: SeasonResult): boolean {
 }
 
 const WINDOW_WEEKS = 52
-const BEST_N = 6
 
-/** A single player's windowed best-6 points sum at `currentWeek` – the exact value
+/** HOW MANY RESULTS A TABLE COUNTS - the adult best-16 window, per track (W2-LADDER;
+ *  act2-pro-tour.md §3, the owner's 30.07 call re-affirmed 02.08).
+ *
+ *  ⚠ THE SPLIT IS THE REAL SPORT'S OWN. The ITF junior ranking counts "the six best singles
+ *  results" (Reg 10, verbatim in ranking-points-by-tier.md §1) and our domestic ladder has always
+ *  mirrored it; the WTA ranking counts SIXTEEN. Under best-6 a professional season was worth
+ *  nothing past six results - "playing more" bought points for nobody - which wasted the
+ *  availability currency the load-manager wave built precisely where scheduling becomes the game:
+ *  fatigue's ladder D prices a dense season at ~15-20 events, so sixteen counted results is
+ *  "almost everything a full season earns", a thin season is visibly thin, and a full one is worth
+ *  playing.
+ *
+ *  ⚠ A PLAIN OBJECT, NOT `as const`, DELIBERATELY: the before/after bench
+ *  (tools/best16-bench.ts) patches `.wta` back to 6 for its A arm and restores it - the same
+ *  patch-and-restore idiom the fatigue bench uses on `matchWeekRecoveryBase`. Engine code never
+ *  writes it. */
+export const BEST_N_BY_TRACK: Record<LadderTrack, number> = { domestic: 6, itf: 6, wta: 16 }
+
+/** A single player's windowed best-N points sum at `currentWeek` – the exact value
  *  `computeRanking` assigns as that player's `points`. Pure; ignores `tier`. Used to
  *  diff the effective ranking delta of a freshly-added result (round-5 item 1).
- *  Scoreless appearances are skipped: they add 0 to the sum but would otherwise consume best-6
- *  slots from a player who has fewer than six counting results. */
+ *  Scoreless appearances are skipped: they add 0 to the sum but would otherwise consume best-N
+ *  slots from a player who has fewer than N counting results.
+ *
+ *  ⚠ `bestN` IS REQUIRED AND SITS BEFORE THE FILTER, DELIBERATELY (W2-LADDER §3). The window
+ *  width stopped being one number when the adult table went to best-16, and a default of 6 here
+ *  would be a silent way to count a professional season on the junior rule - the exact class of
+ *  "one answer to two questions" bug the two-ladders work spent a round unpicking. Every caller
+ *  therefore states its track's N (BEST_N_BY_TRACK above), and the compiler visits them all. */
 export function windowedBestSum(
   results: SeasonResult[],
   currentWeek: number,
   playerId: string,
+  /** the track's window width - BEST_N_BY_TRACK[track] at every real call site */
+  bestN: number,
   /** Same track filter `computeRanking` takes, for the same reason: her domestic points and her ITF
    *  points are two numbers, and every caller has to say which one it is asking for. */
   countsFor?: (r: SeasonResult) => boolean,
@@ -62,11 +87,12 @@ export function windowedBestSum(
         currentWeek - r.week <= WINDOW_WEEKS,
     )
     .sort((a, b) => b.points - a.points || b.week - a.week)
-    .slice(0, BEST_N)
+    .slice(0, bestN)
     .reduce((sum, r) => sum + r.points, 0)
 }
 
-// computeRanking – rolling 52-week window, best-6 results per player, competition
+// computeRanking – rolling 52-week window, best-N results per player (N is the TRACK's window
+// width, stated by every caller – see BEST_N_BY_TRACK), competition
 // ranks (ties share a rank; the next rank skips by the tie count, e.g. 4, 4, 6).
 // Ties on points break by the more recent counted result for *order* only; remaining
 // ties keep a stable order (roster order, then first-appearance in results). Passing
@@ -82,6 +108,12 @@ export function windowedBestSum(
 export function computeRanking(
   results: SeasonResult[],
   currentWeek: number,
+  /** THE TRACK'S WINDOW WIDTH, REQUIRED AND THIRD (W2-LADDER §3): best-6 for domestic/itf, best-16
+   *  for the professional table (BEST_N_BY_TRACK). Required for the same reason `kidPoints` has no
+   *  default track - "how many results count" stopped having one answer, and a silent 6 would fold
+   *  a professional season on the junior rule without a single call site changing. Placed before
+   *  the optional pair so the compiler walks every caller. */
+  bestN: number,
   roster?: string[],
   /** TWO TABLES OUT OF ONE LEDGER (docs/specs/two-ladders.md). A result already carries the tier it
    *  was won at, so a track is a filter and not a second ledger - which is why two ranking tables
@@ -124,12 +156,12 @@ export function computeRanking(
   if (roster) for (const id of roster) add(id)
   else for (const res of results) if (isCountingResult(res)) add(res.playerId)
 
-  // Per player: best-6 points sum + recency (latest week among the counted six).
+  // Per player: best-N points sum + recency (latest week among the counted N).
   const rows = order.map((playerId, idx) => {
     const list = (perPlayer.get(playerId) ?? [])
       .slice()
       .sort((a, b) => b.points - a.points || b.week - a.week)
-    const best = list.slice(0, BEST_N)
+    const best = list.slice(0, bestN)
     const points = best.reduce((sum, x) => sum + x.points, 0)
     const recency = best.length ? Math.max(...best.map((x) => x.week)) : -1
     return { playerId, points, recency, idx }

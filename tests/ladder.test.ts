@@ -24,7 +24,7 @@ import {
   START_AGE_YEARS,
   type WorldState,
 } from '../src/engine/world'
-import type { AiPlayer, RankingRow, SeasonEvent, TierId } from '../src/engine/season/types'
+import type { RankingRow, SeasonEvent, TierId } from '../src/engine/season/types'
 
 // ---------------------------------------------------------------------------
 // Ladder-up Part B — the J-level family (docs/specs/ladder-up.md + ladder-up-impl.md).

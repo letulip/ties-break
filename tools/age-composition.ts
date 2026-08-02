@@ -77,6 +77,7 @@ for (let s = 0; s < SEEDS; s++) {
     const aiRanking = computeRanking(
       world.results.filter((r) => r.playerId !== KID_ID),
       w,
+      6, // the mixed AI-selection ambience keeps the junior window - see world.ts aiRanking
       ids,
     )
     for (const e of world.season) {

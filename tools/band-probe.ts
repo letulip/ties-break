@@ -22,7 +22,7 @@
 // `entrantPctBand` comments (season/calendar.ts) - this file is how they are re-derived.
 
 import { createWorld, tickWeek, inTrack, KID_ID, seasonIndexOf } from '../src/engine/world'
-import { computeRanking } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, isTierAgeOpen } from '../src/engine/season/calendar'
 import { fieldProsFor, mergedWtaRanking } from '../src/engine/season/fieldPros'
@@ -72,6 +72,7 @@ function sampleWeek(world: WorldState): void {
   const live = computeRanking(
     world.results.filter((r) => r.playerId !== KID_ID),
     world.week,
+    BEST_N_BY_TRACK.wta,
     world.cohort.map((p) => p.id),
     inTrack('wta'),
   )

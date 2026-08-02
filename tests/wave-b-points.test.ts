@@ -149,8 +149,8 @@ describe('W-B3 — the participation floor is gone', () => {
       // finalizeTournament only pushes a result when points > 0; mirror that guard.
       if (pts > 0) results.push({ playerId: 'kid', week: w * 2, points: pts, tier: 'j30' })
     }
-    expect(windowedBestSum(results, 52, 'kid')).toBe(0)
-    const rank = computeRanking(results, 52, ['kid'])
+    expect(windowedBestSum(results, 52, 'kid', 6)).toBe(0)
+    const rank = computeRanking(results, 52, 6, ['kid'])
     expect(rank[0].points).toBe(0)
   })
 
@@ -173,8 +173,8 @@ describe('W-B3 — the participation floor is gone', () => {
       }
     }
     expect(zeroSide).toEqual([]) // the grindable rungs leave no row at all (finalize guards on > 0)
-    expect(windowedBestSum(oneSide, 52, 'kid')).toBe(6) // best-6 of pure 1s: one point per slot
-    expect(windowedBestSum(oneSide, 52, 'kid')).toBeLessThan(TIERS.w50.points[2]) // < one W50 SF
+    expect(windowedBestSum(oneSide, 52, 'kid', 6)).toBe(6) // best-6 of pure 1s: one point per slot
+    expect(windowedBestSum(oneSide, 52, 'kid', 16)).toBeLessThan(TIERS.w50.points[2]) // < one W50 SF (best-16 too: 16 x 1 < 20)
   })
 })
 
@@ -228,9 +228,9 @@ describe('W-B3b — THE SIDE EFFECT: "played" and "scored" have come apart', () 
     // points table), not from whether the scoreless rows are written at all – `computeRanking`
     // counts only scoring rows, so dropping them cannot move anybody's total by a single point.
     const ids = cohort.map((p) => p.id)
-    const ranking = computeRanking(rows, 0, ids)
+    const ranking = computeRanking(rows, 0, 6, ids)
     expect(ranking.some((r) => r.points === 0)).toBe(true)
-    expect(computeRanking(rows.filter((r) => r.points > 0), 0, ids)).toEqual(ranking)
+    expect(computeRanking(rows.filter((r) => r.points > 0), 0, 6, ids)).toEqual(ranking)
   })
 })
 

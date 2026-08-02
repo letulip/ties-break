@@ -157,14 +157,19 @@ describe('S2 — the season W-L decomposes, and it decomposes into the right buc
       enterWhatSheCan(world)
 
       const r = world.seasonRecord!
-      expect(r.domestic.wins + r.itf.wins).toBe(world.seasonWins)
-      expect(r.domestic.losses + r.itf.losses).toBe(world.seasonLosses)
+      // ⚠ ALL THREE BUCKETS (W2-LADDER re-aim): the decomposition has been three-way since v30,
+      // and this fixture's career now genuinely reaches a W draw (the 12-rung calendar re-deal
+      // moved which events its greedy policy meets), so a two-bucket sum stopped being the
+      // invariant and started being an undercount. The claim is the same claim, over the whole
+      // partition.
+      expect(r.domestic.wins + r.itf.wins + r.wta.wins).toBe(world.seasonWins)
+      expect(r.domestic.losses + r.itf.losses + r.wta.losses).toBe(world.seasonLosses)
       if (r.domestic.wins > 0) sawDomesticWin = true
       if (r.itf.wins + r.itf.losses > 0) sawItfMatch = true
     }
     const snap = toSnapshot(world)
     expect(snap.seasonRecord).toEqual(world.seasonRecord)
-    expect(snap.seasonRecord.domestic.wins + snap.seasonRecord.itf.wins).toBe(snap.seasonWins)
+    expect(snap.seasonRecord.domestic.wins + snap.seasonRecord.itf.wins + snap.seasonRecord.wta.wins).toBe(snap.seasonWins)
 
     // ...and both buckets have to have been used, or the sum holds trivially.
     expect(sawDomesticWin, 'she never won a domestic match').toBe(true)

@@ -21,7 +21,7 @@ import {
   CELL_POLICY,
   type PlayedEventCapture,
 } from '../tools/dual-universe-bench'
-import { computeRanking, type SeasonResult } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking, type SeasonResult } from '../src/engine/season/ranking'
 import { inTrack, KID_ID } from '../src/engine/world'
 import { TIERS } from '../src/engine/season/calendar'
 import type { RankingRow } from '../src/engine/season/types'
@@ -86,8 +86,8 @@ describe('counterfactualLedger (P5 Phase A – the swap contract)', () => {
 
   it('never moves HER points: best-6 identical over both ledgers', () => {
     const roster = [KID_ID, 'c1', 'c2', 'c3', 'r1', 'r2', 'r3', 'l1']
-    const real = computeRanking(results, 20, roster, inTrack('itf'))
-    const cf = computeRanking(counterfactualLedger(results, played, 20), 20, roster, inTrack('itf'))
+    const real = computeRanking(results, 20, BEST_N_BY_TRACK.itf, roster, inTrack('itf'))
+    const cf = computeRanking(counterfactualLedger(results, played, 20), 20, BEST_N_BY_TRACK.itf, roster, inTrack('itf'))
     expect(pointsOf(cf, KID_ID)).toBe(pointsOf(real, KID_ID))
     // …while the swap visibly moves the RIVALS: c1 loses the canonical title points, r1 gains them
     expect(pointsOf(real, 'c1')).toBeGreaterThan(pointsOf(cf, 'c1'))

@@ -26,7 +26,7 @@ import {
 import { power } from '../../src/engine/season/cohort'
 import { rivalGroundstrokes, rivalConditions } from '../../src/engine/season/rival'
 import { selectEntrants } from '../../src/engine/season/tournament'
-import { computeRanking } from '../../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking } from '../../src/engine/season/ranking'
 import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 import {
@@ -119,7 +119,7 @@ describe('the merged W table is a real ranking', () => {
       { playerId: world.cohort[7].id, week: 0, points: 10, tier: 'w15' as const },
       { playerId: KID_ID, week: 0, points: 50, tier: 'w15' as const },
     ]
-    const live = computeRanking(results, 0, [...world.cohort.map((p) => p.id), KID_ID], inTrack('wta'))
+    const live = computeRanking(results, 0, BEST_N_BY_TRACK.wta, [...world.cohort.map((p) => p.id), KID_ID], inTrack('wta'))
     const pros = prosOf(SEED, 0, world.cohort.map((p) => p.name))
     const merged = mergedWtaRanking(live, pros)
 
@@ -193,11 +193,13 @@ describe('the scope fence – phase W is the W track and nothing else', () => {
     const mixed = computeRanking(
       world.results.filter((r) => r.playerId !== KID_ID),
       world.week,
+      BEST_N_BY_TRACK.itf,
       world.cohort.map((p) => p.id),
     )
     const wtaLive = computeRanking(
       world.results.filter((r) => r.playerId !== KID_ID),
       world.week,
+      BEST_N_BY_TRACK.wta,
       world.cohort.map((p) => p.id),
       inTrack('wta'),
     )

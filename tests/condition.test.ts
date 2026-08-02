@@ -19,7 +19,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { computeRanking } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
@@ -461,9 +461,9 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
       if (world.results.some((r) => r.playerId === KID_ID && inTrack('domestic')(r))) sawDomestic = true
 
       const ids = [...world.cohort.map((c) => c.id), KID_ID]
-      const itf = computeRanking(world.results, world.week, ids, inTrack('itf'))
-      const dom = computeRanking(world.results, world.week, ids, inTrack('domestic'))
-      const mixed = computeRanking(world.results, world.week, ids)
+      const itf = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, ids, inTrack('itf'))
+      const dom = computeRanking(world.results, world.week, BEST_N_BY_TRACK.domestic, ids, inTrack('domestic'))
+      const mixed = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, ids)
       const itfRank = itf.find((r) => r.playerId === KID_ID)!.rank
       const domRank = dom.find((r) => r.playerId === KID_ID)!.rank
       const mixedRank = mixed.find((r) => r.playerId === KID_ID)!.rank

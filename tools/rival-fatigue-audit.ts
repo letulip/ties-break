@@ -142,6 +142,7 @@ export function auditCareer(profile: Profile, policy: Policy, index: number, wee
     const aiRanking = computeRanking(
       world.results.filter((r) => r.playerId !== KID_ID),
       w,
+      6, // the mixed AI-selection ambience keeps the junior window - see world.ts aiRanking
       ids,
     )
     const entrants = new Set<string>()
@@ -288,7 +289,7 @@ function prehistoryRows() {
   return PREHISTORY_SEEDS.map((seed) => {
     const rows = generatePreHistory(seed, generateCohort(seed))
     const zero = rows.filter((r) => r.points === 0).length
-    const ranking = computeRanking(rows, 0, generateCohort(seed).map((p) => p.id))
+    const ranking = computeRanking(rows, 0, 6, generateCohort(seed).map((p) => p.id))
     return { seed, total: rows.length, zero, zeroPct: pct(zero, rows.length), atZeroPoints: ranking.filter((r) => r.points === 0).length }
   })
 }
