@@ -36,7 +36,7 @@ import {
   practiceFeeCents,
 } from '../src/engine/economy'
 import { TIERS } from '../src/engine/season/calendar'
-import type { FamilyBackground, PlayerProfile } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type FamilyBackground, type PlayerProfile } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 /** ⚠ W4: PUT THE CAREER INSIDE THE KNOCK COOLDOWN, so the advance under test cannot be interrupted.
@@ -193,7 +193,22 @@ function hashOf(draws: number[]): string {
 // re-deals, and the AI year resolves on different event sub-streams. P1's pairwise A/B halves are
 // untouched and still byte-identical; the mechanism note lives at the B1 REF in
 // tests/condition.test.ts.
-const REF = { kidRank: 138 }
+// ⚠ RE-PINNED 138 -> 137 BY W2-FIELD2 (the W family's entrant windows re-measured). `selectEntrants`
+// is ONE function, so a W rung's `entrantPctBand` is read by the CANONICAL `seed:aitour:` brackets
+// as well as by her shadow draws: the family's floors rose (w15 0.15 -> 0.35, w35 0.08 -> 0.25, and
+// so on up), a different slice of the 199-cohort is therefore drawn into the W events, and
+// `resolveDoubleBookings` leaves a different set of girls free for the same week's J draws. A
+// different set of juniors ends the year holding counting ITF points and her dense place moves by
+// one - the same post-draw composition mechanism every re-pin above records. THE CAPTURE ITSELF IS
+// UNTOUCHED: count 41550 and hash e6b0c709 reproduce byte-for-byte.
+// ⚠ RE-PINNED 137 -> 125 BY W2-FATIGUE (the fatigue re-price). `recoveryBase` 1 -> 8 reaches every
+// body in the world through the one shared condition math, so the strength coupling resolves the
+// year's brackets on a fresher field and a different set of juniors ends it holding counting points.
+// The A/B assertions ABOVE this line are the ones this block exists for and they are untouched: the
+// booking-heavy career's draw count and hash still equal the baseline career's byte-for-byte, which
+// is what "the planner never perturbs the main stream" means. Full argument at the B1 REF in
+// tests/condition.test.ts.
+const REF = { kidRank: 125 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -361,16 +376,76 @@ describe('P2 — schema v13', () => {
 // P3 — vacation catalogue + deterministic corridor pricing.
 // ---------------------------------------------------------------------------
 describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', () => {
+  // ⚠ RE-PINNED 03.08 (W2-FATIGUE §4, owner «надо все приподнять»): 12/14/16/20/25/30 ->
+  // 18/22/26/32/40/48, PRICES UNTOUCHED. The table is denominated in rest weeks and `recoveryBase`
+  // moved 1 -> 8 in the same pass, so the new ladder is 2.2 · 2.7 · 3.2 · 4.0 · 5.0 · 6.0 rest weeks
+  // - the spec's §4 column to the decimal. Left where it was, the elite week would have been worth
+  // under four rest weeks and the free one barely more than one, i.e. the ladder would have become a
+  // rounding error rather than a decision. The buffs and buffWeeks are deliberately NOT re-tuned:
+  // they are injury protection, which the same wave re-calibrates on its own axis.
   it('has the owner-approved six packages with the spec gains and buffs', () => {
     const ids = ECONOMY.vacation.packages.map((p) => p.id)
     expect(ids).toEqual(['staycation', 'grandma', 'camping', 'seaside', 'resort', 'elite'])
-    expect(ECONOMY.vacation.packages.map((p) => p.conditionGain)).toEqual([12, 14, 16, 20, 25, 30])
+    expect(ECONOMY.vacation.packages.map((p) => p.conditionGain)).toEqual([18, 22, 26, 32, 40, 48])
     expect(vacationPackage('resort')!.buffFactor).toBe(0.9)
     expect(vacationPackage('elite')!.buffFactor).toBe(0.85)
     expect(vacationPackage('staycation')!.buffFactor).toBe(1)
     expect(ECONOMY.vacation.buffWeeks).toBe(4)
     // the staycation is free; the ladder is strictly ascending in price
     expect(vacationPackage('staycation')!.priceCents).toEqual([0, 0])
+    // ...and the gain ladder is strictly ascending too, which is what every copy licence and grid
+    // arc in the game reads (diary.ts, weekGrid.ts): the sentences climb WITH the number.
+    const gains = ECONOMY.vacation.packages.map((p) => p.conditionGain)
+    for (let i = 1; i < gains.length; i++) expect(gains[i]).toBeGreaterThan(gains[i - 1])
+    // The unit the table is written in (spec §4): every rung is a whole number of rest weeks at the
+    // repriced base, which is why the two knobs may never be re-tuned apart.
+    expect(gains.map((g) => g / ECONOMY.condition.recoveryBase)).toEqual([2.25, 2.75, 3.25, 4, 5, 6])
+  })
+
+  // ⚠ MONEY BUYS RECOVERY SPEED, NEVER RECOVERY (spec §4, and the rule act2-pro-tour.md §3 sets for
+  // prize money): the SAME package must restore the SAME condition for every family, and only the
+  // QUOTE may differ. It is true by construction - `resolveVacation` adds `pkg.conditionGain` flat
+  // and the wealth corridor is applied only inside `vacationPriceCents` - and this test is what
+  // keeps it true by construction rather than by luck, because the corridor is a one-line change
+  // away from any number in this file. Both halves are asserted together on purpose: a version of
+  // this test that only checked the gain would pass on a build that had also stopped charging
+  // different families different prices, which would be the opposite bug.
+  it('the wealth corridor prices the week and never scales the gain', () => {
+    const backgrounds = ['working', 'middle', 'wealthy'] as const
+    // Injuries OFF for the arithmetic: `kitWearAt` reads the BACKGROUND, so a live injury stream is
+    // the one thing that could legitimately differ between the three worlds and it would tell us
+    // nothing about the gain. Same patch idiom as P7 below, restored in `finally`.
+    const av = ECONOMY.availability as unknown as { injuryBaseChance: number }
+    const savedBase = av.injuryBaseChance
+    try {
+      av.injuryBaseChance = 0
+      for (const pkg of ECONOMY.vacation.packages) {
+        const gained = backgrounds.map((background) => {
+          const w = createWorld('P3-corridor', { ...DEFAULT_PROFILE, background })
+          w.fundsCents = 100_000_00
+          w.physioActive = false
+          w.condition = 40
+          bookVacation(w, w.week + 1, pkg.id)
+          tickWeek(w, rngFromSeed(w.seed))
+          return w.condition
+        })
+        // the SAME package, the same week, the same starting condition -> the same body
+        expect(new Set(gained).size, `${pkg.id} gain must not vary by background`).toBe(1)
+        // ...and it is the catalogue's own number, on top of the free week's recovery (the default
+        // plan is 75/25, so the slider pays +1) - the gain RIDES on the week, never replaces it.
+        expect(gained[0], `${pkg.id} lands its catalogue gain`).toBe(
+          40 + pkg.conditionGain + ECONOMY.condition.recoveryBase + 1,
+        )
+        // ...and the free package aside, the QUOTE does vary: working < middle < wealthy
+        if (pkg.priceCents[1] > 0) {
+          const quotes = backgrounds.map((b) => vacationPriceCents('P3-corridor', 1, pkg.id, b))
+          expect(quotes[0], `${pkg.id} working < middle`).toBeLessThan(quotes[1])
+          expect(quotes[1], `${pkg.id} middle < wealthy`).toBeLessThan(quotes[2])
+        }
+      }
+    } finally {
+      av.injuryBaseChance = savedBase
+    }
   })
 
   // ⚠ W7 – EXACTLY ONE PACKAGE MAY QUOTE ZERO, and it is the one whose whole design is being free.
@@ -547,15 +622,18 @@ describe('P5 — vacation week mechanics', () => {
   it('applies the package gain on top of a FREE week (base + slider), clamped at 100', () => {
     const w = createWorld('p5-gain', bgProfile('middle'))
     w.physioActive = false
-    w.plan = { train: 75, rest: 25 } // free-week ladder: base 1 + slider 1 = +2
+    w.plan = { train: 75, rest: 25 } // free-week ladder: base + slider 1
     w.condition = 50
     const week = freeWeek(w)
-    bookVacation(w, week, 'camping') // +16
+    bookVacation(w, week, 'camping')
     const rng = rngFromSeed(w.seed)
     while (w.week < week) tickWeek(w, rng)
-    // 50 + 2/wk for the weeks in between + 16 on the vacation week itself
+    // ⚠ DERIVED FROM THE KNOBS SINCE W2-FATIGUE (recoveryBase 1 -> 8, camping +16 -> +26): the claim
+    // under test is the COMPOSITION - the package gain rides ON TOP of the free week's own recovery,
+    // it does not replace it - and hard-coding either half made a re-price look like a broken rule.
+    const freeWeekGain = ECONOMY.condition.recoveryBase + 1 // base + the 75/25 slider
     const plainWeeks = week - 0 // ticks taken
-    expect(w.condition).toBe(Math.min(100, 50 + 2 * plainWeeks + 16))
+    expect(w.condition).toBe(Math.min(100, 50 + freeWeekGain * plainWeeks + vacationPackage('camping')!.conditionGain))
     expect(w.events.some((e) => e.text.includes('Family vacation – Camping road-trip'))).toBe(true)
   })
 
@@ -1051,16 +1129,21 @@ describe('P10 — vacation offer band + cheapest-sufficient pre-highlight', () =
     expect(ECONOMY.practice.rescueTargetCondition).toBe(85)
   })
 
+  // ⚠ RE-AIMED 03.08 (W2-FATIGUE §4 lifted the table 12/14/16/20/25/30 -> 18/22/26/32/40/48). The
+  // RULE is untouched and is the only thing this case tests - "the cheapest package that clears the
+  // target" - so every boundary simply moved down the condition axis by the size of the lift. The
+  // shape worth reading is that the ladder still SLIDES: each rung owns a band of deficits, none is
+  // skipped, and the free week now covers a genuinely useful stretch (67-100 instead of 73-100).
   it('picks the CHEAPEST package sufficient for her CURRENT condition', () => {
-    // gains: staycation +12 · grandma +14 · camping +16 · seaside +20 · resort +25 · elite +30,
+    // gains: staycation +18 · grandma +22 · camping +26 · seaside +32 · resort +40 · elite +48,
     // target 85 -> the ladder slides down as the deficit shrinks.
-    expect(pickAt(80)).toBe('staycation') // 80+12 = 92
-    expect(pickAt(73)).toBe('staycation') // 73+12 = 85 (exactly sufficient)
-    expect(pickAt(72)).toBe('grandma') // 72+12 = 84 short; +14 = 86
-    expect(pickAt(70)).toBe('camping') // +14 = 84 short; +16 = 86
-    expect(pickAt(66)).toBe('seaside') // +16 = 82 short; +20 = 86
-    expect(pickAt(61)).toBe('resort')
-    expect(pickAt(56)).toBe('elite')
+    expect(pickAt(80)).toBe('staycation') // 80+18 = 98
+    expect(pickAt(67)).toBe('staycation') // 67+18 = 85 (exactly sufficient)
+    expect(pickAt(66)).toBe('grandma') // 66+18 = 84 short; +22 = 88
+    expect(pickAt(62)).toBe('camping') // +22 = 84 short; +26 = 88
+    expect(pickAt(58)).toBe('seaside') // +26 = 84 short; +32 = 90
+    expect(pickAt(52)).toBe('resort')
+    expect(pickAt(44)).toBe('elite')
   })
 
   it('a nearly-fresh kid gets the FREE staycation (the clamp at 100 counts as sufficient)', () => {
@@ -1069,7 +1152,7 @@ describe('P10 — vacation offer band + cheapest-sufficient pre-highlight', () =
   })
 
   it('on a deep deficit nothing clears the target, so it falls back to the best she can afford', () => {
-    expect(pickAt(20)).toBe('elite') // 20+30 = 50, still short – buy the biggest reset available
+    expect(pickAt(20)).toBe('elite') // 20+48 = 68, still short – buy the biggest reset available
   })
 
   it('respects the wallet: only affordable packages, and null when even the free one is gone', () => {
@@ -1100,17 +1183,19 @@ describe('P10 — vacation offer band + cheapest-sufficient pre-highlight', () =
         fundsCents: RICH,
         targetCondition: 90,
       }),
-    ).toBe('staycation') // 78+12 = 90 exactly
+    ).toBe('staycation') // 78+18 = 96
     expect(
       recommendVacationPackage({
         seed: 'p10',
         week: 12,
         background: 'wealthy',
-        condition: 77,
+        // ⚠ 77 -> 71 (W2-FATIGUE §4): the same boundary, moved by the size of the table's lift -
+        // what is tested is that an explicit target really does override the knob, not the number.
+        condition: 71,
         fundsCents: RICH,
         targetCondition: 90,
       }),
-    ).toBe('grandma') // 77+12 = 89 short
+    ).toBe('grandma') // 71+18 = 89 short; +22 = 93
   })
 
   it('BOTH pre-highlight surfaces call the one shared helper (no third copy of the rule)', () => {

@@ -80,6 +80,31 @@ export interface TierDef {
    *  reading an absolute points threshold nobody else obeys. */
   enterPct?: number
 
+  /** THE W RUNGS' ACCEPTANCE LIST, AS AN ABSOLUTE RANK (W2-FIELD2). Read by `acceptanceRank` in
+   *  preference to `enterPct` when present.
+   *
+   *  ⚠ YES, THIS IS THE "COUNT" THE FIELD ABOVE CALLS A TIME BOMB — AND THE BOMB WAS DEFUSED BY THE
+   *  POINTS CURVE, WHICH IS THE WHOLE ARGUMENT. `enterPct`'s warning is exactly right about a table
+   *  that is a POPULATION ARTEFACT: "top 120" of 199 juniors silently becomes "top 6%" when the
+   *  population grows, because position 120 means nothing outside that population. The W table stopped
+   *  being that. Since W2-FIELD2 its points are the REAL WTA curve's (#10 ≈ 4,000 · #50 ≈ 1,400 ·
+   *  #100 ≈ 850 · #300 ≈ 190), so position #350 in it is an attempt at world #350 and NOT a share of
+   *  whoever happens to exist. An absolute rank is therefore the only honest unit here: it is a fact
+   *  about the sport, it does not move when `FIELD.size` does, and if the population ever deepens the
+   *  cut keeps meaning what the tour means by it.
+   *
+   *  A SHARE WOULD NOW BE THE BOMB, and that is the bug this field fixes. `enterPct` 0.5 on W35 read
+   *  as "the better half of the field" when the field was compressed; against a table anchored to the
+   *  real world it resolved to ~219 points, while a perfect best-16 of W15 TITLES caps at 160 — the
+   *  second rung of the ladder was unreachable from the first. Measured, not argued.
+   *
+   *  ITF and domestic rungs keep `enterPct`: their tables ARE population artefacts (199 juniors, no
+   *  external anchor), so a share is still the right unit there. One rule per table, stated per table.
+   *
+   *  ⚠ ABSENT DOES NOT MEAN "OPEN TO ANYONE" HERE — that is `enterPct`'s convention and the ON-RAMP's
+   *  meaning (`hasAcceptanceList`). W15 is the on-ramp and has neither field. */
+  acceptsRank?: number
+
   /** R12-6: the smallest allowed distance, in weeks, between two events OF THIS TIER. Absent (or 1)
    *  means adjacency is fine, which is the historical behaviour and the right one for the dense
    *  entry rungs. 2 means "never on consecutive weeks".

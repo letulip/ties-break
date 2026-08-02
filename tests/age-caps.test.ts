@@ -500,9 +500,21 @@ function age16Weeks(count: number): number[] {
 
 /** An open world whose W gates all stand open: elite domestic + ITF books (the on-ramp), plus a
  *  counting W row so the acceptance rungs read a live position for her. */
+// ⚠ 100 -> 400 W POINTS BY W2-FIELD2, AND IT IS A FIXTURE RE-AIM WITH A FINDING BEHIND IT. This
+// world exists so the AER pro cap is the rule that refuses her - every test below is about the CAP.
+// 100 points used to put her inside every W acceptance list (the merged table's #118 against W35's
+// cut of 282), so the cap was the binding refusal. The wave's points lift gives the merged table
+// the real points-to-rank curve, and 100 points is now #365: the RANK gate refuses her first and
+// the cap never speaks. 400 points is #183, comfortably inside W35's cut, so these tests measure
+// the cap again rather than the gate above it.
+//
+// ⚠⚠ THE FINDING ITSELF IS NOT A FIXTURE PROBLEM AND IS FLAGGED FOR THE OWNER: against the lifted
+// curve `enterPct` (a SHARE of the merged table) bites in points, and a W35 now needs ~250 W points
+// while a best-16 window of nothing but W15 titles caps at 160. See docs/specs/living-field.md
+// §8.2c for the measured table; the remedy is beyond this wave's scope.
 function openProWorld(seed = 'procap'): WorldState {
   const world = openWorld(seed)
-  world.results.push({ playerId: KID_ID, week: world.week, points: 100, tier: 'w100' })
+  world.results.push({ playerId: KID_ID, week: world.week, points: 400, tier: 'w100' })
   recomputeKidRank(world)
   return world
 }

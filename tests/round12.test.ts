@@ -144,7 +144,14 @@ describe('R12-15 — the dead Play button after an injury (the round\'s worst it
     // reachable BY PLAYING, so the fix is proved against a state the engine really produces rather than
     // against a fixture assembled to look like one. A re-derived seed keeps that; deleting the test, or
     // hand-building the world, would have thrown it away.
-    const world = createWorld('r12-repro-3')
+    //
+    // ⚠ RE-DERIVED AGAIN (03.08, W2-FATIGUE §5's injury re-calibration), for the third time and for
+    // the reason the note above already gives: this state is a coincidence of one career's calendar
+    // and injuries, and the wave moved the injuries. It is now RARER by construction - the weekly
+    // threshold at a wrecked condition fell from 8.6% to 1.6% - so a sweep of the same 400 seeds
+    // returns eight careers instead of six (r12-repro-102 / 114 / 140 / 201 / 220 / 225 / 235 / 259)
+    // rather than none: the state is still readily reachable by playing, which is the whole claim.
+    const world = createWorld('r12-repro-102')
     const rng = rngFromSeed(world.seed)
     let hit: { week: number; eventWeek: number } | null = null
     for (let i = 0; i < 60 && hit === null; i++) {

@@ -181,12 +181,18 @@ describe('R9-1 — savings interest', () => {
 // + 2 while physioActive, + 1 on blackout weeks. The slider no longer drains.
 // ---------------------------------------------------------------------------
 describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
-  it('match-free weeks: grind 85/15 → +1, balanced 75/25 → +2, light 60/40 → +3 (V2.1 ladder)', () => {
+  it('match-free weeks: grind 85/15 → +8, balanced 75/25 → +9, light 60/40 → +10 (the W2 re-price)', () => {
     // RE-PINNED 25.07 (V2.1: recoveryBase 2 → 1) – the owner's "все чуть ниже к концу сезона".
+    // ⚠ RE-PINNED AGAIN 03.08 (W2-FATIGUE: recoveryBase 1 → 8, docs/specs/fatigue-reprice-2026-08.md
+    // §3). The SHAPE under test is untouched and is the only thing this case was ever about - the
+    // slider's threshold ladder (+0/+1/+2, never interpolated) sits on top of the base exactly as
+    // before. What moved is the base, and it moved because the owner's season equation demands it:
+    // at the shipped 1 a rest week returned 3 against an average professional event of 20, so no
+    // schedule could accumulate fatigue AND be recoverable over an off-season.
     const cases: Array<{ plan: { train: number; rest: number }; gain: number }> = [
-      { plan: { train: 85, rest: 15 }, gain: 1 }, // base 1 + slider 0
-      { plan: { train: 75, rest: 25 }, gain: 2 }, // base 1 + slider 1
-      { plan: { train: 60, rest: 40 }, gain: 3 }, // base 1 + slider 2
+      { plan: { train: 85, rest: 15 }, gain: 8 }, // base 8 + slider 0
+      { plan: { train: 75, rest: 25 }, gain: 9 }, // base 8 + slider 1
+      { plan: { train: 60, rest: 40 }, gain: 10 }, // base 8 + slider 2
     ]
     for (const { plan, gain } of cases) {
       const w = createWorld(`r9-rec-${plan.rest}`)
@@ -218,7 +224,9 @@ describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
     w.plan = { train: 75, rest: 25 }
     w.physioActive = true
     accrueCondition(w, false)
-    expect(w.condition).toBe(53) // 1 base + 1 slider + 1 physio (V2.1 base)
+    // ⚠ RE-PINNED 53 -> 60 (W2-FATIGUE: recoveryBase 1 -> 8). The retainer's OWN number is what this
+    // case is about and it is untouched at 1, asserted on the next line; only the base under it moved.
+    expect(w.condition).toBe(60) // 8 base + 1 slider + 1 physio
     expect(ECONOMY.physio.conditionBonusPerWeek).toBe(1)
   })
 
@@ -229,7 +237,9 @@ describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
     w.week = 49 // off-season → blackout
     w.condition = 50
     accrueCondition(w, false)
-    expect(w.condition).toBe(53) // 1 base + 1 slider + 1 blackout (V2.1 base)
+    // ⚠ RE-PINNED 53 -> 60 (W2-FATIGUE: recoveryBase 1 -> 8). `blackoutBonus` itself is untouched at
+    // 1 - the off-season's edge over an ordinary rest week is the same one point it always was.
+    expect(w.condition).toBe(60) // 8 base + 1 slider + 1 blackout
     w.condition = 99
     accrueCondition(w, false)
     expect(w.condition).toBe(100) // clamped

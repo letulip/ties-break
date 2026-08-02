@@ -171,7 +171,10 @@ describe('the preview is stable, and free', () => {
     expect(src.match(/rivalMatchPlayer\(/g) ?? []).toHaveLength(1)
     expect(src).not.toMatch(/rivalMatchPlayer\([^)]*conditions/)
     // ...and the fatigue map only ever reaches the entrant SELECTION.
-    expect(src).toContain('selectEntrants(event, cohort, ranking, rng, conditions)')
+    // ⚠ RE-AIMED (W2-FIELD2): the call gained a sixth argument, `excluded` – whoever a HIGHER W rung
+    // of the same week has already drawn. It is a SELECTION input like `conditions` beside it and
+    // belongs on exactly this line, so the guard follows the call rather than the spelling.
+    expect(src).toContain('selectEntrants(event, cohort, ranking, rng, conditions, excluded)')
   })
 
   it('draws ONLY on purpose-scoped sub-streams – the frozen capture cannot move', () => {

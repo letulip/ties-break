@@ -1300,7 +1300,8 @@ export const DIARY_POOL: readonly DiaryPhrase[] = [
     license: (f) => f.examsWeek && f.injured === null,
   },
   // ⚠ AND THE CONDITION NOTE CLIMBS WITH `conditionGain`, WHICH IS THE HALF THAT MAKES THIS HONEST.
-  // The packages are 12 / 14 / 16 / 20 / 25 / 30, so the sentences do not merely differ - they say
+  // The packages are 18 / 22 / 26 / 32 / 40 / 48 (W2-FATIGUE lifted the whole table; the ORDER,
+  // which is all these licences read, is untouched), so the sentences do not merely differ - they say
   // more the more the week actually gave her. A staycation that read like the clinic would be the
   // diary's cardinal sin (a note claiming something the ledger does not support), just quieter.
   // Generic line narrowed to a booking that has aged off retention, exactly as the photo pool above.

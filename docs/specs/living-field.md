@@ -295,6 +295,198 @@ junior, and measured her title chance at 3%. No points-curve shape can fix rank 
 skill order; only the pyramid could move, and the elite storey did not (it still towers over every
 junior).
 
+### 8.2b Phase 2 — the fourth storey and week exclusivity (02.08, W2-FIELD2)
+
+Ruling 3 unchanged: still derived, still per-season, zero persisted bytes, zero schema. What
+changed is the SHAPE of the pyramid and the rule that governs a shared week.
+
+**The measurement that opened the wave**, taken on `main` before a line moved (tools/field-quality.ts
+widened from two rungs to six, 16 worlds):
+
+| rung | field mean core | P(reference strong junior takes the title) |
+| --- | --- | --- |
+| W15 | 51.4 | **8.8%** — against a shipped 15–35% target |
+| W35 | 53.8 | 6.8% |
+| W50 | 57.3 | 1.6% |
+| W75 | 59.7 | 0.6% |
+| W100 | 59.7 | 1.0% |
+| WTA 125 | 59.7 | 2.1% |
+
+Two defects in one table. The top **three rungs drew the same field to one decimal** — every window
+from W75 up opened at percentile 0, entry is position-biased, and there was nothing above a
+thirty-strong elite storey for a WTA 125 to reach for. And **W15's title probability had drifted to
+8.8%** since the phase-W calibration read 20.5%: W2-LADDER's 25 extra draws a season give the LIVE
+cohort real W points, LIVE girls rise in the merged table, and every pro they pass is pushed down
+into the W15 window. Nobody chose that; nobody had re-run the bench.
+
+**`tourElite`** — 64 pros, core [67, 77], points 550–11,000 at gamma 3 (median ≈ 1,900, one or two
+names a season over 9,000). `FIELD.size` 300 → 364; the three shipped storeys keep their counts.
+The core band is solved from two measurements rather than chosen: the TOP is the midpoint of what a
+career can become (20k `rollPotential` rolls — p99 73.2, max 80.8), so the world #1 is reachable and
+only by a near-max career; the MEDIAN is set so the reference strong junior beats it 21.6%, the same
+number as her own W15 title target (a median elite is a coin flip for her at 47.3%). Its points are
+borrowed from a tour we do not simulate — 250/500/1000/Slams are act 3 — which is why no career and
+no derived pro can EARN a five-figure row inside today's calendar.
+
+**The windows slide instead of nesting.** Nested prefixes (`[0, x]` with x shrinking) are what made
+three rungs one field; every rung now has a top as well as a bottom, because in the real sport a W75
+does not draw the world's head. Measured, shipped (16 worlds, up to 400 events a rung, exclusivity
+live):
+
+| rung | band | field core | P(title) | candidates min/mean |
+| --- | --- | --- | --- | --- |
+| W15 | [0.22, 0.72] | 48.5 | **19.8%** | 226 / 273 |
+| W35 | [0.185, 0.62] | 50.4 | 13.1% | 202 / 237 |
+| W50 | [0.145, 0.52] | 55.1 | 2.3% | 177 / 204 |
+| W75 | [0.105, 0.42] | 60.0 | 0.0% | 139 / 162 |
+| W100 | [0.065, 0.33] | 65.9 | 0.0% | 124 / 137 |
+| WTA 125 | [0.025, 0.26] | 70.7 | 0.0% | 119 / 125 |
+
+Strictly monotone, W15 restored, and **0.0% of every rung's draw comes from outside its own band** —
+no window is quietly made of backfill, which is the failure W100's own comment records.
+
+**Week exclusivity** (`weekFieldExclusion`, season/tournament.ts): when two W rungs share a week the
+higher one draws first, off its own `seed:kidtour:` sub-stream, and its members leave the lower
+rung's candidate window. Order is TIER_LADDER with an event-id tie-break, so it is total. It is a
+separate mechanism from `resolveDoubleBookings` because that one is post-draw arithmetic over the
+canonical brackets and a field pro has no ledger row to rearrange. Scope: the W track; a non-W event
+gets the empty set on the first line. Measured effect on the weeks where it bites — a W50 sharing a
+week with a W100 draws a field of core 51.4 against 52.6 on a clear week, and her title chance there
+is 14.1% against 8.2%. One pro plays one event a week, and it is visible.
+
+The clean A/B, same seeds, same bands, the rule off and on (`--no-exclusivity`, 16 worlds):
+
+| rung | core OFF → ON | P(title) OFF → ON | candidates at the narrowest OFF → ON |
+| --- | --- | --- | --- |
+| W15 | 49.2 → 48.5 | 19.5% → 19.8% | 282 → 226 |
+| W35 | 51.2 → 50.4 | 12.8% → 13.1% | 245 → 202 |
+| W50 | 56.1 → 55.1 | 1.2% → 2.3% | 211 → 177 |
+| W75 | 61.2 → 60.0 | 0.0% → 0.0% | 161 → 139 |
+| W100 | 66.6 → 65.9 | 0.0% → 0.0% | 136 → 124 |
+| WTA 125 | 70.7 → 70.7 | 0.0% → 0.0% | 119 → 119 |
+
+Every rung softens except the top one, which has nothing above it to lose people to — the rule's own
+shape, read off the measurement. The price is 12–56 candidates at the narrowest week, and every
+window still holds three to seven draws' worth with the out-of-band share at 0.0%.
+
+### 8.2c The points curve — the owner's pacing ruling (03.08)
+
+The fourth storey fixed the head and left the defect that actually sets the pace: **the table was
+flat under her.** Pre-wave, a 104-point girl read as world #27 in a table whose #300 held 9 points
+and whose #500 held 0 — a ~14× position error against the real ladder, and the reason a career
+reached the top of the world in two seasons. The owner's ruling, 03.08: «согласен с первым
+вариантом, настоящая кривая. Всё так, мы воссоздаем максимально всю лестницу с небольшими
+корректировками и допущениями с нашей стороны» — the merged table takes the REAL points-to-rank
+curve, and the consequence he accepted with it is that the top of that table is legitimately out of
+her reach until act 3 builds the 250/500/1000/Slam rungs (our shipped ladder's theoretical maximum
+season is ~1,500 points ≈ real #45).
+
+So the whole pyramid was lifted, not just topped. Achieved fit, printed by every bench run:
+
+| rank | #1 | #10 | #50 | #100 | #150 | #300 | #500 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| REAL | ~10,500 | 4,000 | 1,400 | 850 | 520 | 190 | 75 |
+| OURS | 10,469 | 4,308 | 1,340 | 822 | 513 | 189 | **0** |
+
+Rows below #50 are stable to a few percent across seeds (#50 1,249–1,340 · #100 822–869 · #300
+184–194); the head is a 1-in-64 order statistic over a gamma-6.5 band and varies (#10 measured
+4,067–6,244 across four seeds).
+
+**What the fit buys, checked against this project's own published arithmetic** (act2-pro-tour.md §2,
+written as a design target and untrue of the old table): year 3 «≈ 400–650 pts → #150–200» measures
+#183 at 400 and #132 at 650; year 4 «700–1,000 → top-100» measures #87 at 1,000; year 5+ «1,400+ →
+top-50» measures #49 at 1,400.
+
+**⚠ #500 IS THE ONE ANCHOR THIS BUILD CANNOT REACH, and it is a population limit, not a calibration
+one.** 364 derived pros hold points; rows 365+ of the merged table are the LIVE cohort, mostly on
+zero. Matching #500 = 75 needs a fifth storey and `FIELD.size` near 520 — a merged table of ~704
+rows, which re-opens every `entrantPctBand` and the sponsor gate that is derived from the table's
+size. Reported, not taken.
+
+### 8.2d The acceptance cuts, re-derived — and what actually gates the climb now
+
+**THE BUG THE CURVE EXPOSED.** `enterPct` was a SHARE of the merged table, and that was the right
+unit while the table was a compressed artefact where "the better half" meant "a decent player".
+Against a table carrying the real curve a share bites in real ranks: W35's 0.5 resolved to 282nd
+place ≈ **219 W points**, while a perfect best-16 window of nothing but W15 **titles** caps at
+**160**. The second rung of the ladder was unreachable from the first, and no guard could see it —
+every test in the suite checks one rung at a time.
+
+**THE FIX IS THE REAL TOUR'S OWN ENTRY RANGES**, because an acceptance list was never a share of
+anything: it is a rank cut, and the same cut whether the world holds 500 players or 5,000.
+
+| rung | real acceptance range (women's ITF/WTA) | our cut = the range's floor |
+| --- | --- | --- |
+| W15 | ~#400–1000+, unranked players get in | none — it is the on-ramp (ITF junior points) |
+| W35 | ~#250–700 | 700 |
+| W50 | ~#200–550 | 550 |
+| W75 | ~#150–450 | 450 |
+| W100 | ~#120–350 | 350 |
+| WTA 125 | ~#80–250, plus wildcards | 250 |
+
+New field `TierDef.acceptsRank`, read by `acceptanceRank` in preference to `enterPct`. The ITF and
+domestic rungs **keep the share** — their tables are population artefacts with no external anchor,
+so a share is still the honest unit there. One rule per table, stated per table; `hasAcceptanceList`
+is the single predicate everything else asks so the on-ramp cannot be mis-detected.
+
+⚠ The lower cuts are **no-ops by construction**, and that is the finding rather than a shortcut: our
+table is 564 rows deep and a real W35's list reaches #700, i.e. below the whole table. W35 and W50
+admit anybody the table holds — which is what the real rungs do, and it is how «she must always have
+tennis» survives an honest curve.
+
+**THE WALKABILITY RECEIPT** (`tools/ladder-walk.ts`, 6 prospect careers × 9 seasons, entry policy
+"the strongest rung the engine accepts", real brackets, real fatigue, real AER cap):
+
+| season | age | median W pts | median rank | rungs open | entered |
+| --- | --- | --- | --- | --- | --- |
+| 0–3 | 14–17 | 0 | #460–498 | W15, W35, W50 | junior events |
+| 4 | 18 | 0 | #498 | W15, W35, W50 | W15 ×1 |
+| 5 | 19 | 7 | #493 | W15, W35, W50 | W15 ×4 |
+| 6 | 20 | 8 | #510 | W15, W35, W50 | — |
+| 7 | 21 | 3 | #502 | W15, W35, W50 | W35 ×1, W50 ×1 |
+| 8 | 22 | 10 | #490 | W15, W35, W50 | W15 ×2 |
+
+Best merged rank reached, per career: **#460 #449 #468 #462 #452 #463**. Against the retired
+share-based cuts (W35 282 · W50 226 · W75 169 · W100 141 · WTA 125 113) **not one career would have
+cleared even W35 in its whole life**; under the shipped rank cuts W35 and W50 are open from her first
+professional week. That is the blocker removed.
+
+**⚠⚠ AND THE LADDER STILL DOES NOT COMPLETE — IT IS GATED BY FATIGUE, NOT BY POINTS.** W75 opened in
+1 career of 6 (season 8); W100 and WTA 125 in none. The reason is volume, not the cut and not her
+game: she reaches **core 73.7** — stronger than any field she meets — and still enters only
+**7.5–8 events a season across every tier** in her twenties, of which a handful are W-rung. The
+calendar offers ~70 W events a season. Swept across entry disciplines (how far above a rung's
+condition floor she insists on being before booking), the volume barely moves:
+
+| rest margin above the floor | 0 | 5 | 10 | 15 | 20 |
+| --- | --- | --- | --- | --- | --- |
+| events entered, season 7 | 8.7 | 7.0 | 12.0 | 8.3 | 9.0 |
+| mean condition | 48 | 59 | 43 | 59 | 46 |
+
+Grinding wrecks her and resting starves her: the ceiling is `recoveryBase` 1/week against a
+title-depth run's strain, not the policy. **Reported and stopped there** — fatigue pricing is an open
+owner decision and this wave does not pre-empt it.
+
+⚠ The sponsor gates moved with the cut they are derived from, since the rule ("National signs the
+girl who would be IN the W100 draw, Global the one still in it on the last day") reads W100's
+acceptance list: `national.maxWtaRank` 125 → **350**, `global` 31 → **87**. A looser gate, following
+from the table being honest rather than compressed. Flagged, not smoothed.
+
+A 50-point LIVE row (five W15 titles) consequently lands **#365 of 564**, not the phase-W promise of
+#40–80 — which was only ever reachable because the field held nobody in the middle. The pin in
+`tests/season/fieldPros.test.ts` is re-aimed to #300–420, and what it defends is unchanged: the
+number it exists to kill is «#9».
+
+**⚠ THE COHORT COST W2-LADDER HANDED OVER: measured, and the fix is out of this slice's scope.** Its
+finding was 25 extra W draws a season landing on the same ~82 sixteen-plus LIVE rivals. The
+population does NOT relieve it and cannot: the canonical `seed:aitour:` brackets are LIVE-only by
+`universeForTier`'s scope fence, so 364 professionals absorb exactly zero W draws — measured, 4.50 W
+result rows per rival over a 20-week window before the wave and 4.50 after. What the band re-measure
+did do is spread the same load: heavy-floored rivals 20–27 → 10–20 of 199, at the price of the
+ever-floored share rising 27.6–33.7% → 33.7–38.2%. The fatigue bench's rival-side gate therefore
+stays at 40 (measured `rivalCondMean` 46.3 → 45.4); W2-LADDER's hope of restoring it to 50 is not
+recoverable without the §8.3 item below.
+
 ### 8.3 Phase 2 — what this slice deliberately leaves
 
 - **J and domestic tiers keep the LIVE-only universe.** The mixed-table percentile issue for J

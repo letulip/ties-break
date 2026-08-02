@@ -56,6 +56,21 @@ Two more the same evening, answering the wave's own findings:
 10. **The sponsor lives on.** «надо как-то лечить, спонсор вполне может жить и дальше» — the brand
     ladder learns to read a professional's standing, §7 and §9b.
 
+And three the same evening that change the shape of the whole project — §11 is where they live:
+
+11. **The ladder is a SLIDING WINDOW with two bounds per rung**, tuned so she has a real choice on
+    3–5 weeks of every 8 («чтобы нам одновременно и было в каких турнирах выступать 3-5 недель из 8
+    доступных или иными словами 20-30 турниров в год в среднем было, а где играть уже можно
+    выбрать»). It REPLACES the two-type visibility rule of ruling 4 rather than sitting beside it
+    («всё так, да»): the feed shows exactly what is in the window, and a rung she has passed is not
+    hidden — it is no longer open.
+12. **The climb takes as long as it does in life** («чтобы до топовых турниров она доросла как в
+    жизни примерно, не за 1-2 года»), and the window's numbers are what pace it.
+13. **The professional table gets the REAL points-to-rank curve** («согласен с первым вариантом,
+    настоящая кривая. Всё так, мы воссоздаем максимально всю лестницу с небольшими корректировками
+    и допущениями с нашей стороны»), with the consequence accepted in the same breath: the top of
+    the world is out of her reach until the act-3 rungs exist.
+
 ---
 
 ## 2. The ladder, complete
@@ -296,6 +311,66 @@ acceptable; the top-3 names churned completely — the cost above, now measured.
 
 ---
 
+## 8b. §8 as built — W2-FIELD2 (02.08)
+
+All three items shipped; the full measured tables live in `docs/specs/living-field.md` §8.2b, which
+is the page to read before touching any of these constants again. What the owner needs from here:
+
+1. **The fourth storey exists.** 64 `tourElite` pros, core [67, 77], 550–11,000 points — the head of
+   the merged table now reads #1 10,721 · #10 6,131 · #32 2,026 · #64 396 · #100 60 rather than
+   topping out at 452. `FIELD.size` 300 → 364. Still derived, still per-season, still zero schema:
+   delete `fieldPros.ts` and every save loads.
+2. **Six rungs, six fields.** The wave opened by finding that W75/W100/WTA 125 drew the SAME field to
+   one decimal (all three at mean core 59.7) — three labels on one draw — and that W15's title
+   probability had drifted to 8.8% against its 15–35% target without anybody re-running the bench.
+   Both are fixed and measured: 48.5 < 50.4 < 55.1 < 60.0 < 65.9 < 70.7 across the family, W15 back
+   at 19.8%.
+3. **Week exclusivity holds on the W track**, ordered by TIER_LADDER, and it is visible: a W50 that
+   shares its week with a W100 draws a measurably softer field (core 51.4 vs 52.6) and her title
+   chance there is 14.1% vs 8.2%.
+
+4. **The merged table takes the REAL points-to-rank curve** (the owner's pacing ruling, 03.08:
+   «согласен с первым вариантом, настоящая кривая»). The whole pyramid was lifted, not just topped —
+   the pre-wave table's #300 held 9 points and its #500 held 0, so a 104-point girl read as world
+   #27 against a real ~#350-400, and that flatness is what let a career reach the top of the world in
+   two seasons. Achieved: #1 10,469 · #10 4,308 · #50 1,340 · #100 822 · #150 513 · #300 189 against
+   real anchors of ~10,500 / 4,000 / 1,400 / 850 / 520 / 190. §2's own season arithmetic is now TRUE
+   of the engine: 400 pts → #183, 650 → #132, 1,000 → #87, 1,400 → #49.
+
+⚠ **THREE THINGS FOR THE OWNER, all measured, none fixable inside this wave's scope:**
+
+- **✅ THE ACCEPTANCE CUTS WERE RE-DERIVED AND THE LADDER IS UNBLOCKED.** `enterPct` was a share of
+  the merged table, and against the lifted curve a share bit in points: W35's 0.5 resolved to ~219 W
+  points while a perfect best-16 of W15 titles caps at 160 — the second rung was unreachable from
+  the first. The W rungs now carry the real tour's own entry ranges as ABSOLUTE cuts
+  (`TierDef.acceptsRank`: W35 700 · W50 550 · W75 450 · W100 350 · WTA 125 250; W15 stays the
+  on-ramp on ITF junior points). The ITF and domestic rungs keep the share — their tables are
+  population artefacts, ours is anchored to the real world. Receipt, 6 careers × 9 seasons: best
+  rank reached #449–468, so under the old cuts **not one career would have cleared even W35 in its
+  life**; under the new ones W35/W50 are open from her first professional week.
+- **⚠⚠ AND THE CLIMB IS NOW GATED BY FATIGUE RATHER THAN BY POINTS — an owner decision, not this
+  wave's.** W75 opened in 1 career of 6, W100 and WTA 125 in none. Not the cut and not her game: she
+  reaches core 73.7, stronger than any field she meets, and still enters **7.5–8 events a season
+  across every tier** against a calendar offering ~70 W events. Swept across entry disciplines the
+  volume barely moves (8.7 / 7.0 / 12.0 / 8.3 / 9.0 events at rest margins 0/5/10/15/20) — grinding
+  wrecks her, resting starves her, and the ceiling is `recoveryBase` 1/week against a title-depth
+  run. Measured and left alone.
+- **The sponsor gates followed the cut they are derived from**: `national.maxWtaRank` 125 → 350 and
+  `global` 31 → 87, because both are read off W100's acceptance list by a rule nobody changed.
+- **Five W15 titles is now #365 of 564, not #52 of 500.** Not a nerf — it is the pacing ruling. 50
+  WTA points is past #600 in the real world; #40-80 was only ever reachable because the table held
+  nobody in the middle.
+- **The cohort's W load is NOT relieved by the population, and cannot be.** §9b handed this wave the
+  re-measure and the population was the named fix. Canonical AI brackets are LIVE-only by design (a
+  derived pro must never write a persisted result row), so 364 pros absorb exactly zero W draws —
+  4.50 W rows per rival per 20-week window before and after, to two decimals. What the band
+  re-measure did do is SPREAD the load (heavy-floored rivals 20–27 → 10–20 of 199) at the price of a
+  higher ever-floored share (27.6–33.7% → 33.7–38.2%, against a 0.40 guard). The real remedy is
+  living-field §8.3's «field pros in the canonical brackets», which needs fp-safe result rows and is
+  act-3 work by construction.
+
+---
+
 ## 9. The waves
 
 Revised Phase-2 order (launch-plan-2026-08.md updated to match). Schema renumbering: **v36 =
@@ -379,7 +454,118 @@ than code.
 
 ---
 
-## 10. What already landed on wave/pro-prep (this branch)
+## 11. The window, the pace, and the real curve (03.08 — rulings 11–13)
+
+The three rulings above are one design, arrived at from the owner's own worked example of the
+ladder («Local доступ 0-100, Regional 80-180, National 150-250, J30 = National + 0-100, J60 80-180
+(280), J300 150(250)-500, W15 = J60 (300) и 0-80 — цифры примерные, я хочу показать логику
+скользящего окна»). Written down before it is built, because each half explains the others.
+
+### 11.1 The window
+
+Every rung gets a window with BOTH bounds, in its own table's currency, and the windows overlap so
+that two or three neighbours are live at once. She enters a rung when she reaches its floor and
+leaves it when she passes its ceiling — so a rung she has outgrown is not hidden from a feed, it is
+CLOSED by the engine. The junk goes away as a class rather than being filtered.
+
+What exists today is the bottom half only: `enterPointBand` carries a real ceiling on the domestic
+rungs (which is why Local already reports `outgrown`), while every J and W rung has
+`Number.MAX_SAFE_INTEGER` above it and is gated by rank acceptance below. The missing ceiling IS
+the junk: measured on the owner's W230 career, 48 of the 64 entries left in his season sat at rungs
+whose STRONGEST entrant is weaker than she is.
+
+⚠ CURRENCY: keep each table's native one rather than forcing points everywhere. Domestic rungs take
+the owner's numbers directly. J and W rungs keep RANK acceptance as the floor — that is how the
+real tour admits players and how our own fields are drawn — and express the ceiling in the same
+currency: the rung closes when her standing passes the best entrant it draws
+(`entrantPctBand[0]` × field size). Same intent, no second exchange rate.
+
+**MEASURED, 3 seeds, a full season built by today's calendar** — weeks that carry at least one
+event of the window, out of 52, and the same as "weeks per 8":
+
+| window | weeks/52 | per 8 |
+| --- | --- | --- |
+| National + J30 | 29 | 4.5 ✅ |
+| J30 + J60 | 33 | 5.1 ✅ |
+| J300 + W15 | 28 | 4.3 ✅ |
+| W15 + W35 | 33 | 5.1 ✅ |
+| W35 + W50 | 24 | 3.7 ✅ |
+| Regional + National | 18 | 2.8 ✗ |
+| J60 + J300 | 19 | 2.9 ✗ |
+| W50 + W75 | 17 | 2.6 ✗ |
+| W75 + W100 | 11 | 1.7 ✗ |
+| W100 + WTA 125 | 7 | 1.1 ✗ |
+
+Three-rung windows carry 5.2–6.0 per 8 through the middle of the ladder and fall to 3.1 at
+W50+W75+W100 and 2.2 at W75+W100+125. So: **the natural width is three, and it widens further at
+the top** — the owner's own answer («может быть в этом случае добавить еще диапазон, не вижу
+проблем. 50 + 75 + 100 + 125, когда какой-то совсем перерастает - добавляем новый, а старый
+уходит»). At the very top it stops sliding altogether: ruling 4's successor there is the mandatory
+regime (§6), where the big events are compulsory and the rungs below stay open as filler —
+«предыдущие тиры никуда не уходят».
+
+### 11.2 The pace, and why the curve had to be settled first
+
+The window's numbers pace the career, so they can only be written against a table whose points mean
+what they mean in the sport. Ours do not yet. Measured on the owner's W230 career:
+
+| position | our table holds | the real WTA |
+| --- | --- | --- |
+| #10 | 245 pts | 4,000 |
+| #50 | 58 | 1,400 |
+| #100 | 41 | 850 |
+| #150 | 32 | 520 |
+| #300 | 9 | 190 |
+| #500 | 0 | 75 |
+
+Her 104 points read as **#27** here and as roughly **#350–400** in reality — a fourteen-fold
+position error, and the whole reason the top arrives in two seasons. ⚠ THE POINTS SYSTEM IS ALREADY
+REAL: the chart rows are the 2026 tables and the window is best-16 over 52 weeks. What is missing is
+the SHAPE OF THE POPULATION that holds those points, and the events that generate the big totals.
+
+### 11.3 The ceiling this implies, and what it does to act 3
+
+A season of our shipped calendar offers 4 WTA 125, 4 W100 and 8 W75. Winning all sixteen — a
+perfect, unreachable season — is **1,500 points ≈ real #45**. That is the mathematical ceiling of
+the ladder as shipped, and the same arithmetic explains the junior side: a real junior #1 banks
+thousands at junior Slams and Grade A events we do not have, which is why 300 ITF points read as #6
+here and as ~#150–200 in reality.
+
+The owner chose the real curve over a compressed one, with the consequence stated: **the top of the
+world is legitimately out of her reach until act 3 exists.** The v1 story is therefore the honest
+climb to the edge of the real top-100 — which is exactly the zone the game is about (break-even
+≈ #150, 02-tennis-economics.md).
+
+⚠ **AND THAT PROMOTES ACT 3 FROM CONTENT TO STRUCTURE.** 250 / 500 / 1000 / Slams are not "more
+tournaments later": they are the top half of the same ladder, the only source of the points the
+real curve is made of, the only thing that fills the window above W75, and the home of the
+mandatory regime the owner wants. Planned as optional in §9, it is now on the critical path.
+
+### 11.4 Offered, played, paced — the three numbers W2-WINDOW is graded on
+
+The owner's «3–5 недель из 8» is exactly right, and it describes what she PLAYS rather than what
+she is offered — a real top-100 plays 20–25 events over ~44 playing weeks, which is 3.6–4.5 weeks
+of every 8. Availability in the real sport is far wider: roughly 500 women's ITF events and 60 WTA
+ones a year, so she could play every week and is stopped by money, travel and fatigue instead. That
+gap IS the choice the game is about, so the two numbers must not be set equal — an availability of
+20–30 would leave her playing the whole menu.
+
+| | weeks of 8 | a season |
+| --- | --- | --- |
+| OFFERED — the window's shape (3 rungs, measured §11.1) | 5.2–6.0 | ~34 weeks carry an event |
+| PLAYED — the owner's target, and the real tour's number | 3–5 | 20–30 |
+| **PLAYED TODAY — measured on his W230 career** | **1.7** | **11** |
+
+⚠ **THE THIRD ROW IS WHY "PLAYED" IS A SEPARATE CRITERION.** Eleven events in fifty-two weeks is
+half his target and half a real professional's season, on a career he plays attentively. A wider
+window cannot be assumed to fix it: three causes are already known and only one is the window's —
+his current season block predates W2-LADDER and physically holds no W50/W75/125 (25 events that
+arrive with season 5); the feed spent a day offering junk instead of choice (fixed 03.08); and the
+fatigue ladder was priced for the junior era at ~15–20 events a dense season, which is BELOW what a
+real professional plays. So W2-WINDOW is graded on all three rows, and if the played number cannot
+reach 20–30 without loosening fatigue or travel costs, that is a finding to bring back rather than
+a knob to turn: those numbers are the owner's own, and what the professional era should cost is a
+separate decision from what it should offer.
 
 - **The «мировые очки странно считаются» defect, found and fixed**: the three rank caches are
   persisted, phase W redefined the W table, and a pre-phase-W save woke up with chip «#9» over a

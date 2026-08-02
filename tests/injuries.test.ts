@@ -170,7 +170,20 @@ function hashOf(draws: number[]): string {
 // ⚠ RE-PINNED 152 -> 138 by W2-LADDER: TIER_LADDER 9 -> 12 re-spaces `tierPhase`, the calendar
 // re-deals, and the AI year resolves on different event sub-streams. The MAIN capture is untouched
 // (B1 asserts it byte-for-byte); the mechanism note lives at the B1 REF in tests/condition.test.ts.
-const REF = { kidRank: 138 }
+// ⚠ RE-PINNED 138 -> 137 BY W2-FIELD2 (the W family's entrant windows re-measured). `selectEntrants`
+// is ONE function, so a W rung's `entrantPctBand` is read by the CANONICAL `seed:aitour:` brackets
+// as well as by her shadow draws: the family's floors rose (w15 0.15 -> 0.35, w35 0.08 -> 0.25, and
+// so on up), a different slice of the 199-cohort is therefore drawn into the W events, and
+// `resolveDoubleBookings` leaves a different set of girls free for the same week's J draws. A
+// different set of juniors ends the year holding counting ITF points and her dense place moves by
+// one - the same post-draw composition mechanism every re-pin above records. THE CAPTURE ITSELF IS
+// UNTOUCHED: count 41550 and hash e6b0c709 reproduce byte-for-byte.
+// ⚠ RE-PINNED 137 -> 125 BY W2-FATIGUE (the fatigue re-price). `recoveryBase` 1 -> 8 reaches every
+// body in the world through the one shared condition math, so the strength coupling resolves the
+// year's brackets on a fresher field and a different set of juniors ends it holding counting points.
+// Same post-draw mechanism as every re-pin above; the full argument lives at the B1 REF in
+// tests/condition.test.ts. THE MAIN CAPTURE IS UNTOUCHED (B1 asserts it byte-for-byte).
+const REF = { kidRank: 125 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -276,8 +289,17 @@ function resetForRoll(world: WorldState, seed: string): void {
 
 const rollWorld = createWorld('c-roll-base')
 
-// tau at condition 0, age 14, no play, no physio: clamp(.006+100*.0009)=.096 * 0.9 = .0864
-const TAU_C0_AGE14 = 0.0864
+// ⚠ DERIVED FROM THE KNOBS SINCE W2-FATIGUE, NOT WRITTEN DOWN. It was the literal 0.0864 that the
+// shipped trio (base .006 + slope .0009 x 100 fatigue, x0.9 for age 14) happened to produce, and the
+// injury re-calibration (docs/specs/fatigue-reprice-2026-08.md §5) moved all three under it: the same
+// composition is now 0.0162, and every fixture that hunts a firing seed against it went quiet at once.
+// A constant that has to be recomputed by hand whenever the model is tuned is a trap, so it is
+// computed here the way `injuryTau` computes it - the fixtures track the engine from now on.
+const TAU_C0_AGE14 =
+  Math.min(
+    ECONOMY.availability.injuryBaseChance + 100 * ECONOMY.availability.injuryFatigueSlope,
+    ECONOMY.availability.injuryChanceCap,
+  ) * ECONOMY.availability.ageInjuryFactor[14]
 
 /** First seed (prefix-indexed) whose week-1 occurrence roll fires below `threshold`. */
 function findFiringSeed(prefix: string, threshold: number, from = 0): string {
@@ -587,8 +609,20 @@ describe('C5 — entered-then-injured walkover + auto-withdraw', () => {
     expect(w.fundsCents).not.toBe(fundsBefore - ev.travelCostCents)
   })
 
+  // ⚠ THE SEED SEARCH GREW A SECOND REQUIREMENT (W2-FATIGUE §5), and it is one this fixture always
+  // depended on silently: the layoff has to actually COVER the entered week. F45-2 only withdraws
+  // entries the injury really reaches, so a seed that fires a 1-week niggle at week 1 leaves a week-6
+  // entry standing - correctly. The old search only asked "does the roll fire", and got a long enough
+  // layoff by luck; with the re-calibrated tau it drew a different seed and the luck ran out. Asking
+  // the engine for both facts is the fix, and it makes the fixture say what it means.
   it('pre-deadline entries are auto-withdrawn and refunded at onset', () => {
-    const seed = findFiringSeed('c5-onset', TAU_C0_AGE14 * 0.9)
+    let seed = ''
+    for (let i = 0; i < 4000 && seed === ''; i++) {
+      const candidate = `c5-onset-${i}`
+      const onset = onsetAt(candidate, false)
+      if (onset && onset.totalWeeks >= 6) seed = candidate // the layoff reaches the week-6 entry
+    }
+    expect(seed, 'no seed fires an onset long enough to cover the entered week').not.toBe('')
     const w = createWorld(seed)
     w.physioActive = false
     w.season = []
@@ -676,22 +710,30 @@ describe('C6 — physio ledger + benefit', () => {
   it('physioActive shortens weeksOut: max(1, round(weeksOut * (1 - recoverySpeedup)))', () => {
     // Find a seed where the roll fires under the physio-reduced tau AND the drawn
     // weeks-out is long enough (>= 5) for the 12% cut to actually round down.
+    //
+    // ⚠ THE SEARCH ASKS THE ENGINE NOW (W2-FATIGUE §5), instead of composing a threshold by hand.
+    // It used to hunt a roll below `TAU_C0_AGE14 * riskReduction`, which was a RECONSTRUCTION of
+    // `injuryTau` that quietly omitted the terms the real one has grown - the per-rung
+    // `physioRiskFactor` and the kit-wear factor - and got away with it only because the shipped tau
+    // was big enough to absorb the error. Re-calibrated five times smaller, the reconstruction and
+    // the engine no longer agree, and a fixture that hunts the wrong number reports it as a null
+    // injury. `onsetAt` IS the engine, so this cannot drift again for any knob.
     let from = 0
     for (;;) {
-      const seed = findFiringSeed('c6-speed', TAU_C0_AGE14 * ECONOMY.physio.riskReduction, from)
-      const without = onsetAt(seed, false)
+      if (from > 4000) throw new Error('no seed with a physio-firing roll and a >= 5 week layoff')
+      const seed = `c6-speed-${from++}`
       const withPhysio = onsetAt(seed, true)
-      expect(withPhysio).not.toBeNull() // r < tau*0.76 -> fires under both variants
+      if (withPhysio === null) continue // the roll does not clear the physio-reduced threshold
+      const without = onsetAt(seed, false)
       if (without!.totalWeeks >= 5) {
-        expect(withPhysio!.totalWeeks).toBe(
+        expect(withPhysio.totalWeeks).toBe(
           Math.max(1, Math.round(without!.totalWeeks * (1 - ECONOMY.physio.recoverySpeedup))),
         )
-        expect(withPhysio!.totalWeeks).toBeLessThan(without!.totalWeeks)
-        expect(withPhysio!.severity).toBe(without!.severity) // same draws, same band
-        expect(withPhysio!.kind).toBe(without!.kind)
+        expect(withPhysio.totalWeeks).toBeLessThan(without!.totalWeeks)
+        expect(withPhysio.severity).toBe(without!.severity) // same draws, same band
+        expect(withPhysio.kind).toBe(without!.kind)
         break
       }
-      from = Number(seed.split('-').pop()) + 1
     }
   })
 })
@@ -713,7 +755,13 @@ describe('C7 — injury flavor (Monte-Carlo sample)', () => {
 
   function sample(): { part: string; severity: InjurySeverity; kind: string }[] {
     const out: { part: string; severity: InjurySeverity; kind: string }[] = []
-    for (let s = 0; s < 140; s++) {
+    // ⚠ 140 -> 800 SEEDS (W2-FATIGUE §5). The sample size is not a taste, it is `>= 300 onsets`
+    // divided by tau: at condition 0 the re-calibrated model fires on 1.6% of weeks instead of
+    // 8.6%, so 140 x 52 rolls yielded 134 injuries where it used to yield ~630. Nothing about the
+    // FLAVOUR under test changed - the region table and the descriptor bands are untouched - only
+    // how many rolls it takes to see the distribution. Still one rng derive per roll, so this is
+    // ~42k cheap pure calls.
+    for (let s = 0; s < 800; s++) {
       resetForRoll(rollWorld, `c7-${s}`)
       for (let w = 1; w <= 52; w++) {
         rollWorld.week = w

@@ -40,7 +40,9 @@ flowchart TD
   W2E --> W2P[W2-PSYCHE v38<br/>1 agent, L]
   W2E --> W2T[W2-TEMPO pacing + onboarding<br/>1 agent, M]
   W2E --> W3I[W3-INMATCH in-match injury<br/>1 agent, L]
-  W2F2 --> W3A[W3-ACT2 anchors + mandatories + sponsors<br/>sized on arrival]
+  W2F2 --> W2FA[W2-FATIGUE re-pricing the week<br/>1 agent, L]
+  W2FA --> W2W[W2-WINDOW sliding window, both bounds<br/>1 agent, L]
+  W2W --> W3A[W3-ACT2 the top half of the ladder<br/>sized on arrival]
   W2F2 --> W3B[W3-BALANCE harness + reprices<br/>1 agent, L]
   W2P --> W4M[W4-MOBILE platform wave<br/>1-2 agents, L]
   W4M --> W4Q[W4-QUALITY tests + builds<br/>1 agent, L]
@@ -52,7 +54,9 @@ INTEGRITY agents run in parallel with each other. W2-PSYCHE, W2-TEMPO and W3-INM
 parallel after W2-ENDINGS. The LADDER→FIELD2 lane and the owner's CONTRACT page run in parallel;
 both feed W2-ENDINGS. The P4 extraction lane fills every gap. (02.08: W3-FIELD is retired from
 the graph — ruling 3 keeps per-season generations; its surviving scope IS W2-FIELD2. W3-BALANCE
-and the P5 re-run key on W2-FIELD2 now.)
+and the P5 re-run key on W2-FIELD2 now. 03.08: W2-WINDOW enters between FIELD2 and ACT2 — rulings
+11-13 make the sliding window the ladder's shape and promote ACT2 from content to structure, since
+the real points curve has no source above W75 without it.)
 
 ---
 
@@ -214,13 +218,59 @@ medians 20/30 for j300/j60 fields), field-pro fatigue, pros in canonical bracket
 widening → **W3-ACT2's field half**, sized when act 3 opens. The P5-A re-run requirement transfers
 to W2-FIELD2's exit (its spec §3 requires the second baseline before any Phase B talk).
 
-### W3-ACT2 · Anchors, mandatories, the tour's discipline (entry: W2-ENDINGS + W2-FIELD2 merged; sized on arrival)
+### W2-FATIGUE · Re-pricing the week (1 agent · L · entry: W2-FIELD2 merged; runs BEFORE W2-WINDOW)
 
-Source: act2-pro-tour.md §§6–9. Named calendar anchors (Slams at fixed season weeks, 1000s/500s),
-the mandatory regime for top-50 with zero-point counted slots, the penalty ledger (10 pts/52wk →
-4-week suspension) with letters at every step, sponsors premium/icon + appearance fees, big draws
-(48/96/128 — sim cost and Draw-view are the priced unknowns), merited AER increases, and the
-W3-FIELD leftovers above.
+⚠ NEW 03.08 — source docs/specs/fatigue-reprice-2026-08.md, and it must land before the window
+because a window she cannot walk through changes nothing. The owner: «по усталости нам надо
+комплексно что-то сделать... надо все рычаги потрогать». Measured: a W35 title costs 41 and a rest
+week returns 3, so the model sustains 3-15 events a season against a target of 20-30. The bill is
+61% tier surcharge (charged PER match), 29% scoreline, 10% cumulative - so the surcharge is the
+dial, the cumulative stays. Levers: W surcharge 4-6 → 2-3; recovery base 1 → 6-8; the six vacation
+packages 12/14/16/20/25/30 → 18/22/26/32/40/48.
+
+⚠⚠ AND THE INJURY CURVE IS RE-CALIBRATED IN THE SAME WAVE, SECOND, AFTER the fatigue re-measure -
+never simultaneously, or the result is unattributable. The owner's own warning («как бы мы себе в
+ногу не стрельнули усталостью») is already true on the shipped build: at the condition the current
+model parks her in, a season carries a 96-98% chance of an injury against the researched 46-54%.
+Acceptance is five benched numbers, spec §6.
+
+### W2-WINDOW · The sliding window, both bounds (1 agent · L · entry: W2-FATIGUE merged)
+
+⚠ NEW 03.08, and it displaces ruling 4's visibility rule rather than adding to it — source:
+act2-pro-tour.md §11 (rulings 11–13, with the owner's own worked band table). Every rung gets a
+CEILING as well as a floor, in its own table's currency; the feed shows exactly what is inside the
+window; a rung she has passed CLOSES instead of being filtered.
+
+**Acceptance — three benched numbers, not opinions** (act2-pro-tour.md §11.4):
+
+1. **Offered**: 5–6 playable weeks of every 8 at each stage of the career — the window's own shape,
+   measured per stage the way §11.1's table was.
+2. **PLAYED**: 20–30 events a season on a bench career that tries to play. ⚠ THE OWNER ASKED FOR
+   THIS ONE EXPLICITLY, and it is the criterion that cannot be faked by widening a window: today
+   his own career plays **11 events in 52 weeks** — half his target and half what a real top-100
+   plays (20–25). A window she cannot walk through because fatigue or the wallet says no is a
+   window that changed nothing, and only this number notices.
+3. **Paced**: reaching the top of what exists takes as long as it does in life — no clearing the
+   shipped ladder inside two seasons.
+
+⚠ If (2) cannot be reached without loosening fatigue or the travel economics, STOP and report the
+numbers rather than tuning either: both were measured for the junior era and the owner priced them
+himself. What the pro era should cost is his call, and it is a different question from the window.
+
+### W3-ACT2 · The top half of the ladder (entry: W2-ENDINGS + W2-WINDOW merged; sized on arrival)
+
+⚠ PROMOTED 03.08 FROM CONTENT TO STRUCTURE (act2-pro-tour.md §11.3). With the real points-to-rank
+curve settled, 250 / 500 / 1000 / Slams stop being "more tournaments later": they are the only
+source of the points that curve is made of, the only thing that fills the window above W75 (which
+measures 2.2 playable weeks of 8 today), and the home of the mandatory regime. The shipped ladder's
+mathematical ceiling is ~1,500 points ≈ real #45 — v1 is therefore the honest climb to the edge of
+the real top-100, and this wave is what opens the rest.
+
+Source: act2-pro-tour.md §§6–9 + §11.3. Named calendar anchors (Slams at fixed season weeks,
+1000s/500s), the mandatory regime for top-50 with zero-point counted slots, the penalty ledger
+(10 pts/52wk → 4-week suspension) with letters at every step, sponsors premium/icon + appearance
+fees, big draws (48/96/128 — sim cost and Draw-view are the priced unknowns), merited AER
+increases, and the W3-FIELD leftovers above.
 
 ### W3-INMATCH · The in-match injury (1 agent · L · entry: W2-ENDINGS merged — the last-injury ending is the consumer)
 

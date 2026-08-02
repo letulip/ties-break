@@ -306,7 +306,27 @@ const REF = {
   // `seed:aitour:<id>` sub-streams, and a different set of juniors ends the year holding counting
   // points. Post-draw composition change end to end - count 41550 and hash e6b0c709 reproduce
   // byte-for-byte, asserted lines above this number.
-  kidRank: 138,
+  // ⚠ RE-PINNED 138 -> 137 BY W2-FIELD2 (the W family's entrant windows re-measured). `selectEntrants`
+  // is ONE function, so a W rung's `entrantPctBand` is read by the CANONICAL `seed:aitour:` brackets
+  // as well as by her shadow draws: the family's floors rose (w15 0.15 -> 0.35, w35 0.08 -> 0.25, and
+  // so on up), a different slice of the 199-cohort is therefore drawn into the W events, and
+  // `resolveDoubleBookings` leaves a different set of girls free for the same week's J draws. A
+  // different set of juniors ends the year holding counting ITF points and her dense place moves by
+  // one - the same post-draw composition mechanism every re-pin above records. THE CAPTURE ITSELF IS
+  // UNTOUCHED: count 41550 and hash e6b0c709 reproduce byte-for-byte.
+  // ⚠ RE-PINNED 137 -> 125 BY W2-FATIGUE (the fatigue re-price, docs/specs/fatigue-reprice-2026-08.md).
+  // `recoveryBase` went 1 -> 8, so EVERY body in the world - the kid's and all 199 rivals', through
+  // the one shared `rivalCondition` reconstruction - carries a different condition into every week.
+  // Condition is an input to `conditionMatchFactor`, which scales a player's strength below the knee,
+  // so a fresher field resolves brackets differently and a different set of juniors ends the year
+  // holding counting ITF points. Her dense place among the point-less improves by twelve: she did not
+  // get better, the table above her got shallower - the same mechanism as every re-pin above, driven
+  // this time by the one knob that reaches every player at once.
+  // THE CAPTURE ITSELF DID NOT MOVE, and it cannot: count 41550 and hash e6b0c709 (plus head and
+  // tail) are asserted BEFORE this line in this very test and reproduce byte-for-byte. Condition is
+  // post-draw arithmetic end to end - `accrueCondition` draws nothing on any stream, and the strength
+  // coupling is a multiplier applied inside the EVENT-scoped shadow tournament.
+  kidRank: 125,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -657,31 +677,36 @@ describe('B2 — condition dynamics', () => {
   // RE-PINNED 25.07 (V2.1 shipped: recoveryBase 2 → 1): the free-week ladder is now
   // grind +1 / balanced +2 / light +3 – the owner wants every policy to ARRIVE at the season
   // wrap below 100, with the off-season + a planner vacation doing the restoring.
-  it('balanced 75/25, match-free: +2/wk', () => {
+  // ⚠ RE-PINNED AGAIN 03.08 (W2-FATIGUE: recoveryBase 1 → 8, docs/specs/fatigue-reprice-2026-08.md
+  // §3), so the free-week ladder reads grind +8 / balanced +9 / light +10. His V2.1 intent survives
+  // the raise untouched - a policy still ARRIVES at the wrap below 100, because the professional
+  // schedule the base was re-priced for drains ~12.5 an event; what changed is that the off-season
+  // and a planner vacation can now actually close that deficit, which is §1's third clause.
+  it('balanced 75/25, match-free: +9/wk', () => {
     const w = createWorld('b2-balanced')
     w.physioActive = false
-    w.condition = 60
+    w.condition = 5
     w.plan = { train: 75, rest: 25 }
     for (let i = 0; i < 10; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(80) // base 1 + slider 1 – was +3/wk pre-V2.1
+    expect(w.condition).toBe(95) // base 8 + slider 1 – was +2/wk pre-W2
   })
 
-  it('grind 85/15, match-free: +1/wk (base only – rest 15 earns no slider bonus)', () => {
+  it('grind 85/15, match-free: +8/wk (base only – rest 15 earns no slider bonus)', () => {
     const w = createWorld('b2-grind')
     w.physioActive = false
-    w.condition = 40
+    w.condition = 10
     w.plan = { train: 85, rest: 15 }
     for (let i = 0; i < 10; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(50) // base 1 only – was +2/wk pre-V2.1
+    expect(w.condition).toBe(90) // base 8 only – was +1/wk pre-W2
   })
 
-  it('light 60/40, match-free: +3/wk, clamped at 100', () => {
+  it('light 60/40, match-free: +10/wk, clamped at 100', () => {
     const w = createWorld('b2-rest')
     w.physioActive = false
-    w.condition = 90
+    w.condition = 75
     w.plan = { train: 60, rest: 40 }
     for (let i = 0; i < 4; i++) accrueCondition(w, false)
-    expect(w.condition).toBe(100) // 90 → 93 → 96 → 99 → clamp
+    expect(w.condition).toBe(100) // 75 → 85 → 95 → 100 → clamp
   })
 })
 

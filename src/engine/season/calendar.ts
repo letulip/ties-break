@@ -343,7 +343,66 @@ export const TIERS: Record<TierId, TierDef> = {
     enterPointBand: [120, Number.MAX_SAFE_INTEGER],
     // The bottom of the professional game is a wide field: everyone from a first-year pro to a
     // former top-200 on the way back down.
-    entrantPctBand: [0.15, 0.75],
+    //
+    // ⚠⚠ THE WHOLE W FAMILY'S WINDOWS WERE RE-MEASURED BY W2-FIELD2 (02.08) AND THEY SLIDE NOW
+    // RATHER THAN NEST. Read this note once; the five rungs below refer back to it.
+    //
+    // WHAT FORCED IT, measured on THIS branch before anything moved (tools/field-quality.ts, 16
+    // worlds, six rungs — the printout is in fieldPros.ts's FIELD table too):
+    //
+    //     rung     field mean core    P(the reference strong junior wins the title)
+    //     w15           51.4                      8.8%     <- target 15-35%, ALREADY BROKEN
+    //     w35           53.8                      6.8%
+    //     w50           57.3                      1.6%
+    //     w75           59.7                      0.6%
+    //     w100          59.7                      1.0%
+    //     wta125        59.7                      2.1%
+    //
+    // TWO defects in one table. (a) The top THREE rungs draw the SAME field to one decimal, because
+    // every window from w75 up opened at percentile 0 and entry is position-biased — L6's own guard
+    // says so and names this wave as the fix. (b) W15's title probability had drifted to 8.8%
+    // against the shipped 15-35% target, un-noticed, because the last time anyone ran this bench the
+    // W family was three rungs: W2-LADDER's 25 extra draws a season give the LIVE cohort real W
+    // points, LIVE girls rise in the merged table, and every pro they pass is pushed DOWN into the
+    // W15 window — a stronger W15 field every season, by arithmetic nobody chose.
+    //
+    // THE SHAPE THAT FIXES BOTH: the windows stop being nested prefixes ([0, x] with x shrinking)
+    // and become a SLIDING BAND that walks up the table as the rung gets harder. Floors AND ceilings
+    // both step down at every rung, so the chain still tightens at both ends, but a rung now has a
+    // TOP as well as a bottom: a W75 no longer reaches the head of the world, because in the real
+    // sport it does not. That is what makes six rungs six different fields.
+    //
+    // MEASURED, the shipped set (16 worlds × up to 400 events a rung, fourth storey live,
+    // exclusivity on — tools/field-quality.ts, the run that shipped this table):
+    //
+    //     rung     band              field core   P(title)   candidates (min/mean)
+    //     w15      [0.22,  0.72]        48.5        19.8%        226 / 273
+    //     w35      [0.185, 0.62]        50.4        13.1%        202 / 237
+    //     w50      [0.145, 0.52]        55.1         2.3%        177 / 204
+    //     w75      [0.105, 0.42]        60.0         0.0%        139 / 162
+    //     w100     [0.065, 0.33]        65.9         0.0%        124 / 137
+    //     wta125   [0.025, 0.26]        70.7         0.0%        119 / 125
+    //
+    // ⚠ THE FLOORS ARE LOWER THAN THE FIRST SHIPPED SET (w15 0.35 -> 0.22 and so on up), and the
+    // reason is the POINTS LIFT in fieldPros.ts rather than a second opinion about the fields. When
+    // every derived pro holds three-figure points, the LIVE cohort's rows sink beneath all 364 of
+    // them, so the same percentile now lands on a DIFFERENT person: the table's top 65% is
+    // professionals and its tail is the junior cohort. The bands were re-swept against that table
+    // (w15 floor: 0.20 -> 16.0% · 0.24 -> 25.7% · 0.28 -> 34.0% · 0.32 -> 33.0%), which is why 0.22
+    // and not 0.35 is what holds the W15 title rate where it belongs.
+    //
+    // Strictly monotone in field strength, W15 at 19.8% (the shipped calibration read 20.5%),
+    // and every window still holds four draws' worth of candidates at its NARROWEST week — the
+    // out-of-band share is 0.0% on every rung, i.e. no draw is being quietly made of backfill (the
+    // failure W100's own note records). W15's floor sweep, the same run, is the evidence the 0.35 is
+    // not a taste — see the floor sweep in the table note above.
+    //
+    // ⚠ AND `enterPct` DELIBERATELY DID NOT MOVE WITH THEM. The old sentence "she is accepted if she
+    // would be inside the field they draw from" (the w35 note below) cannot survive a window with a
+    // FLOOR: read literally it would now refuse a player for being too STRONG, which is not what an
+    // acceptance list is. The acceptance chain is W2-LADDER's, measured on its own terms, and it
+    // stays exactly where that wave left it.
+    entrantPctBand: [0.22, 0.72],
   },
   w35: {
     id: 'w35',
@@ -357,12 +416,43 @@ export const TIERS: Record<TierId, TierDef> = {
     prizeCents: [5000_00, 2900_00, 1700_00, 1000_00, 550_00, 290_00],
     everyNWeeks: 3,
     minAgeYears: 16,
-    // The acceptance list, as a share of the field - see TierDef.enterPct for why a share and never a
-    // count. Deliberately the same number as this tier's own `entrantPctBand[1]`, which is the rule
-    // j60 settled: she is accepted if she would be inside the field they draw from.
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.5,
-    entrantPctBand: [0.08, 0.5],
+    // ⚠⚠ THE ACCEPTANCE LIST IS AN ABSOLUTE RANK NOW, NOT A SHARE (W2-FIELD2). Read this note once;
+    // the four rungs above it refer back here.
+    //
+    // WHAT BROKE. `enterPct` was a share of the merged W table, and that was the right unit while
+    // the table was a compressed artefact in which "the better half" meant "a decent player". This
+    // wave gave the table the REAL points-to-rank curve, so a share began biting in real ranks:
+    // W35's 0.5 resolved to 282nd place = ~219 W points on a probe career, while a PERFECT best-16
+    // window of nothing but W15 TITLES caps at 160. The second rung of the ladder was unreachable
+    // from the first. Measured on this branch before the fix, not argued.
+    //
+    // WHAT REPLACES IT: the real tour's own acceptance ranges. An entry list is a rank cut, and it
+    // is the same cut whether 500 or 5,000 players exist - it was never a share of anything.
+    //
+    //     rung        real acceptance range (women's ITF/WTA)     our cut = the range's FLOOR
+    //     W15         ~#400-1000+, unranked players get in        none - it is the on-ramp
+    //     W35         ~#250-700                                   700
+    //     W50         ~#200-550                                   550
+    //     W75         ~#150-450                                   450
+    //     W100        ~#120-350                                   350
+    //     WTA 125     ~#80-250, plus wildcards                    250
+    //
+    // ⚠ THE LOWER CUTS ARE NO-OPS BY CONSTRUCTION, AND THAT IS THE FINDING RATHER THAN A SHORTCUT.
+    // The merged table is 564 rows deep; a real W35's list reaches #700, i.e. BELOW our whole
+    // table. So W35 and W50 admit anybody the table holds - which is exactly what the real rungs
+    // do, and it is why «she must always have tennis» survives an honest curve. The cuts that
+    // actually bite are W100 and WTA 125; W75's 450 sits just above the point-less tie block, so it
+    // opens on her first professional result. See TierDef.acceptsRank for why an absolute number is
+    // the SAFE unit against this table and a share is the bomb.
+    //
+    // ⚠ AND THE `enterPct === entrantPctBand[1]` IDENTITY IS FULLY RETIRED, not merely bent: the
+    // window has a floor now (it would refuse a player for being too STRONG) and the cut is in a
+    // different unit from the window. Two questions, two answers, stated separately.
+    acceptsRank: 700,
+    // W2-FIELD2, measured - the family table is on w15 above. One rung up from the entry rung, so
+    // one step up the table: field core 50.3 against W15's 48.1, 206 candidates at the narrowest.
+    entrantPctBand: [0.185, 0.62],
   },
   w50: {
     id: 'w50',
@@ -391,14 +481,17 @@ export const TIERS: Record<TierId, TierDef> = {
     // The acceptance chain tightens one step per rung: w35 0.5 -> w50 0.4 -> w75 0.3 -> w100 0.25
     // -> wta125 0.2. 0.4 is deliberately J300's cut one table down - the same "prestige rung has to
     // be enterable from below" argument, one family up.
-    enterPct: 0.4,
-    // MEASURED, not guessed - the probe table is on wta125 below (one probe, all four upper rungs,
-    // same method as W100's original table). The shipped band at its narrowest week over 5 careers
-    // x 6 seasons, draw 32: [0.02, 0.40] -> 190 candidates - the deepest window in the family,
-    // as the family's dense middle rung should have. The floor is 0.02, not w35's 0.08: a W50
-    // field carries the contenders' top, and the merged table's head (the elite storey) must be
-    // REACHABLE here without being resident - position-biased entry does the rest.
-    entrantPctBand: [0.02, 0.4],
+    // The real acceptance range's FLOOR (~#200-550) - see the note on w35 for why an
+    // absolute rank replaced the share, and what the share had made unreachable.
+    acceptsRank: 550,
+    // ⚠ RE-MEASURED BY W2-FIELD2 — [0.02, 0.40] -> [0.145, 0.52]. W2-LADDER's own reading (the
+    // deepest window in the family, floor 0.02 so "the merged table's head must be REACHABLE here
+    // without being resident") was the right instinct against a table whose head was one thirty-
+    // strong storey; against the fourth storey a floor of 0.02 makes the world's top 11 residents of
+    // a W50, which is exactly the inversion the family note on w15 measures. The dense middle rung
+    // keeps the family's WIDEST window (0.42 of the table, 195 candidates at the narrowest week) -
+    // that part of W2-LADDER's reading is untouched. Field core 55.1, P(title) 2.3%.
+    entrantPctBand: [0.145, 0.52],
   },
   w75: {
     id: 'w75',
@@ -419,12 +512,17 @@ export const TIERS: Record<TierId, TierDef> = {
     // seventeen-year-old season a widening rather than a repeat.
     minAgeYears: 17,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.3,
-    // MEASURED - probe table on wta125 below. Shipped [0, 0.35] -> 150 candidates at the narrowest
-    // week measured (the age-17 gate costs w75 the 16-year-old field pros and juniors that w50
-    // keeps). Floor 0: from W75 up the elite storey is resident, not visiting; the ceiling steps
-    // 0.40 -> 0.35 so the family's window tightens at every rung on the way to the 125's 0.25.
-    entrantPctBand: [0.0, 0.35],
+    // The real acceptance range's FLOOR (~#150-450) - see the note on w35 for why an
+    // absolute rank replaced the share, and what the share had made unreachable.
+    acceptsRank: 450,
+    // ⚠ RE-MEASURED BY W2-FIELD2 — [0, 0.35] -> [0.105, 0.42]. This is one of the three rungs whose
+    // fields were IDENTICAL before the fourth storey (w75/w100/wta125 all measured field core 59.7,
+    // median entrant 33/499): a shared floor of 0 plus position-biased entry meant all three drew
+    // the same head. The floor is what separates them now. W75's slice is the elite storey and the
+    // contenders' top - the players a first-year top-200 professional actually meets - and the world
+    // top-70 are above its window rather than merely unlikely in it. Field core 60.0, P(title) 0.0%,
+    // 139 candidates at the narrowest week.
+    entrantPctBand: [0.105, 0.42],
   },
   w100: {
     id: 'w100',
@@ -441,7 +539,9 @@ export const TIERS: Record<TierId, TierDef> = {
     minGapWeeks: 2,
     minAgeYears: 17,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
-    enterPct: 0.25,
+    // The real acceptance range's FLOOR (~#120-350) - see the note on w35 for why an
+    // absolute rank replaced the share, and what the share had made unreachable.
+    acceptsRank: 350,
     // ⚠ [0, 0.30], RE-MEASURED BY W2-LADDER'S BAND PROBE - the third measurement this band has
     // carried, each against the world of its day. The original 0.55 was measured against the
     // PRE-FIELD world (199 juniors, ~80 of them 17+): its table read 14 candidates at [0, 0.25]
@@ -461,7 +561,17 @@ export const TIERS: Record<TierId, TierDef> = {
     // W75's 0.35 and the 125's 0.25, and hands W2-FIELD2's recalibration a family whose windows
     // already tighten monotonically. The ACCEPTANCE cut the kid faces (`enterPct: 0.25`) is
     // untouched.
-    entrantPctBand: [0.0, 0.3],
+    //
+    // ⚠ AND W2-FIELD2 IS THAT RECALIBRATION — the FOURTH measurement this band has carried:
+    // [0, 0.30] -> [0.065, 0.33]. The note above is right that 0.30 tightened monotonically at the
+    // CEILING; what it could not fix was the FLOOR, shared at 0 with the two rungs either side, and
+    // that is what made w75/w100/wta125 one field wearing three labels (all three measured field
+    // core 59.7, median entrant 33/499). With the fourth storey resident at the head, a floor of
+    // 0.065 puts the world top-37 above this window and leaves W100 the elite storey - measured
+    // field core 65.9 against W75's 60.0 and the 125's 70.7, 124 candidates at the narrowest week,
+    // 0.0% of the draw from outside the band. The ceiling widens 0.30 -> 0.39 to keep the window's
+    // DEPTH while its floor rises: a window that only slid up would have starved.
+    entrantPctBand: [0.065, 0.33],
   },
   wta125: {
     id: 'wta125',
@@ -486,7 +596,9 @@ export const TIERS: Record<TierId, TierDef> = {
     // The top of the acceptance chain: 0.2, tighter than W100's 0.25 (spec §2 "tune 125 tighter").
     // On a fresh ~500-row merged table that is "takes the top 100" - the hardest cut in the game,
     // as the top rung's should be.
-    enterPct: 0.2,
+    // The real acceptance range's FLOOR (~#80-250, plus wildcards) - see the note on w35 for why an
+    // absolute rank replaced the share, and what the share had made unreachable.
+    acceptsRank: 250,
     // MEASURED, the W100 way - the probe is tools/band-probe.ts (one run, all four upper rungs),
     // candidates left inside the window at its NARROWEST week over 5 careers x 6 seasons sampled
     // every 13th week, age gate applied, against the merged ~500-row universe and a draw of 32:
@@ -506,8 +618,30 @@ export const TIERS: Record<TierId, TierDef> = {
     // The chain w35 [0.08, 0.50] / w50 [0.02, 0.40] / w75 [0, 0.35] / w100 [0, 0.30] / wta125
     // [0, 0.25] tightens at BOTH ends at every step, which is what keeps the L6 guard's family
     // monotonicity true with six rungs: shipped-band minima 190 / 150 / 133 / 110.
-    entrantPctBand: [0.0, 0.25],
+    //
+    // ⚠ AND THE CHAIN ABOVE IS HISTORICAL SINCE W2-FIELD2 — [0, 0.25] -> [0.025, 0.26]. The measured
+    // fact the chain could not see: floors of 0 on three consecutive rungs made three identical
+    // fields, so "tightens at both ends" was true of the numbers and false of the tennis. The new
+    // chain slides instead of nesting (w15 [0.22, 0.72] · w35 [0.185, 0.62] · w50 [0.145, 0.52] ·
+    // w75 [0.105, 0.42] · w100 [0.065, 0.33] · wta125 [0.025, 0.26] — both ends still step down at
+    // every rung) and the 125's field finally IS the top of the world: measured field core 70.7
+    // against W100's 65.9, median entrant #32 of 564, 119 candidates at the narrowest week.
+    //
+    // THE FLOOR IS 0.025, NOT 0. The very top of the merged table — the two or three names on 9,000+
+    // points — plays a tour this game does not simulate yet (act 3's 250/500/1000/Slams); a WTA 125
+    // whose top seed is the world #1 would be as wrong as a W100 whose top seed is. 0.025 of 564 is
+    // the top ~14 rows, which is what a 125's entry list actually excludes.
+    entrantPctBand: [0.025, 0.26],
   },
+}
+
+/** DOES THIS RUNG HAVE AN ACCEPTANCE LIST AT ALL? One predicate, because the answer now lives in
+ *  TWO fields – `enterPct` (a share, the ITF and domestic rungs) and `acceptsRank` (an absolute
+ *  rank, the W rungs) – and "no list" is the ON-RAMP's defining property: the bottom rung of a
+ *  table cannot gate on a ranking in a table she has never played in, so it reads the table below
+ *  instead. Written once so a third unit could never make `onRampTierOf` quietly pick a new rung. */
+export function hasAcceptanceList(tier: TierId): boolean {
+  return TIERS[tier].enterPct !== undefined || TIERS[tier].acceptsRank !== undefined
 }
 
 /** The catalogue in ladder order, weakest rung first. The single source of truth for "is tier A

@@ -206,3 +206,59 @@ would be exactly the practice this document format exists to prevent, so it is l
 The §3 gate stands regardless: if a Phase B conversation ever reopens, the FIRST step is the
 required re-run of this bench after `feat/living-field` merges, fingerprint attached, tables
 appended below.
+
+---
+
+## 6. BASELINE #2 — the required re-run, 02.08.2026 (W2-FIELD2)
+
+Run 2026-08-02, code fingerprint **38a3cd4dc0f1** (clean tree), 30 paired seeds, same cell, same
+horizons, same pre-registered threshold. §§2–3 above are untouched; nothing that could re-register a
+threshold has moved.
+
+**This is the re-run §3 requires.** The obligation was written against `feat/living-field`, which
+landed as the FIELD ring; it transferred to **W2-FIELD2** when W3-FIELD was retired by the owner's
+ruling 3 on 02.08 (docs/plans/launch-plan-2026-08.md). Between the two baselines the W-tier field
+composition changed twice: living-field phase W gave the W rungs a merged universe of ~300 derived
+professionals, and this wave added a fourth storey (`FIELD.size` 300 → 364, a `tourElite` head on
+550–11,000 points) and re-measured every W rung's `entrantPctBand` into a sliding window. Those are
+exactly "the very fields the 312/416 measurement weeks rank her against".
+
+| week | med rank real | med rank cf | med suppr. | spread | peer Δ (mean) | careers w/ inversion | events in window (mean) | double-paid pts/season | news≠table champion |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 104 | #24 | #24 | **0.5** | −4..+8 | **+12.8** | **23/30 (77%)** | 23.9 | **5482** | 90.9% |
+| 208 | #109.5 | #109.5 | **0** | −2..+2 | −0.2 | **0/30 (0%)** | 5.3 | 3612 | 91.8% |
+| 312 | #97.5 | #97.5 | 0 | 0..0 | 0.0 | 0/30 | 0.0 | 2423 | 91.8% |
+| 416 | #88 | #88 | 0 | 0..0 | 0.0 | 0/30 | 4.9 | 1877 | 92.2% |
+
+Median domestic and WTA suppression are 0 at every measured cell. The paired-horizon cross-check
+passed again: every 208w measurement byte-agrees with its 416w twin.
+
+**Against the pre-registered threshold, computed by `verdict()`:**
+
+| pre-registered condition | baseline #1 | baseline #2 | trip? |
+| --- | --- | --- | --- |
+| median ITF suppression > 10 places at any cell | 0 everywhere | 0.5 worst (week 104) | **no** |
+| beaten-rival inversions in > 25% of careers at week 208 | 17% (5/30) | 0% (0/30) | **no** |
+
+**⇒ NOT MATERIAL under the pre-registered threshold on the post-field engine as well.** The §5
+verdict therefore stands on a field that now exists, which is the whole reason §3 demanded this run.
+
+**What moved between the two baselines, recorded as data and nothing else:**
+
+1. **The week-104 inversion rate rose 57% → 77%** (17/30 → 23/30 careers with at least one rival she
+   beat on court sitting above her on the paying table). §5 already lists the inversion rate as a
+   tone-and-integrity finding OUTSIDE the registered threshold; it has got worse, and it is worse in
+   the season where she plays most.
+2. **The week-208 inversion rate fell 17% → 0%**, and the "events in window" column says why: 9.7 →
+   5.3. She is playing even less by then than baseline #1's careers were — the career-shape
+   discovery §4 forced into the open, one notch further along.
+3. **Peer Δ at week 104 halved, +24.5 → +12.8.** The same double-paid volume (5,383 → 5,482
+   pts/season, unchanged inside noise) now scatters across a professional table that is 564 rows
+   deep instead of 199, so less of it lands on the ten places either side of her.
+4. **The news-vs-table contradiction is unchanged at ~91%** (90.5–92.1% → 90.9–92.2%). Two
+   independent 32-draws over one pool still almost never agree, and the fourth storey does not touch
+   that arithmetic.
+
+**No Phase B recommendation is made here, and none is implied by any number above.** §2's terms and
+§5's verdict are the record; whether the inversion rate and the champion-news contradiction justify
+a differently-scoped slice remains the owner's question, exactly as §5 left it.

@@ -66,8 +66,6 @@ import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { OFF_SEASON_WEEKS, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { COHORT_SIZE } from '../src/engine/season/cohort'
-import { FIELD } from '../src/engine/season/fieldPros'
 import type { SeasonEvent } from '../src/engine/season/types'
 import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../src/shared/protocol'
 
@@ -890,10 +888,13 @@ describe('the three rungs, and the tables they read', () => {
   it('⚠ ...and the professional pair is the SAME reading of the professional draw', () => {
     // 02.08: National signs the girl who would be IN the prestige draw, Global the one still in it
     // on the last day - one sentence, read twice, once per table. On the professional side the
-    // prestige draw is W100 and "in it" is its acceptance list: `enterPct` of the merged W table,
-    // which is the field (FIELD.size) plus the cohort plus her.
-    const mergedRows = FIELD.size + COHORT_SIZE + 1
-    expect(s.national.maxWtaRank).toBe(Math.round(TIERS.w100.enterPct! * mergedRows))
+    // prestige draw is W100 and "in it" is its acceptance list.
+    //
+    // ⚠ THE UNIT OF THAT LIST CHANGED (W2-FIELD2) AND THE SENTENCE DID NOT. It used to be
+    // `enterPct` x the merged table's size; the W rungs now carry the real tour's own ABSOLUTE cut,
+    // because a share of a table that models real ranks drifts - it made the W ladder unwalkable
+    // (see TierDef.acceptsRank). So the derivation reads the one figure it always meant.
+    expect(s.national.maxWtaRank).toBe(TIERS.w100.acceptsRank)
     expect(s.global.maxWtaRank).toBe(Math.floor(s.national.maxWtaRank / 4))
     expect(s.global.maxWtaRank).toBeLessThan(s.national.maxWtaRank)
   })
@@ -902,8 +903,16 @@ describe('the three rungs, and the tables they read', () => {
     // THE OWNER'S 02.08 RULING («спонсор вполне может жить и дальше»). Two seasons into the tour
     // her junior and domestic points have decayed to nothing - she stopped entering the events that
     // feed them - so under the junior-only gate NOBODY would write to a top-100 professional.
-    expect(rungFor(pro(61))).toBe('national')
-    expect(rungFor(pro(20))).toBe('global')
+    //
+    // ⚠ THE PROBE RANKS MOVED WITH THE TABLE (W2-FIELD2), and the claim did not. Both professional
+    // gates are derived from W100's acceptance list - "National signs the girl who would be IN the
+    // prestige draw, Global the one still in it on the last day" - and that list stopped being a
+    // share of our population and became the real tour's own cut (350, so global is 87). #61 is
+    // therefore a GLOBAL-grade professional now rather than a national one: the same sentence
+    // against an honest table. What this case is actually about is that a professional standing
+    // alone signs her, so the probes are re-pointed at the three rungs rather than re-argued.
+    expect(rungFor(pro(20))).toBe('global') // deep inside the last quarter of the W100 list
+    expect(rungFor(pro(200))).toBe('national') // on the list, not near the top of it
     // ...and the shop always would: the local rung is "somebody has heard of her".
     expect(rungFor(pro(400))).toBe('local')
     // The guard the junior table keeps, kept here too: an EMPTY professional table is not a world

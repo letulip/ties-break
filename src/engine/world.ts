@@ -69,7 +69,7 @@ import {
   isExamWeek,
   isOffSeasonWeek,
   WEEKS_PER_YEAR,
-  OFF_SEASON_WEEKS, TIER_LADDER, isTierAgeOpen, tierAgeBlock } from './season/calendar'
+  OFF_SEASON_WEEKS, TIER_LADDER, hasAcceptanceList, isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { clamp, conditionMatchFactor, matchDrain, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
@@ -115,6 +115,7 @@ import {
   resolveDoubleBookings,
   runTournament,
   kidSeedIndexIn,
+  weekFieldExclusion,
   JUNIOR_TOUR,
 } from './season/tournament'
 import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
@@ -892,7 +893,7 @@ export function refreshDerivedRankCaches(world: WorldState): boolean {
  *  table (or a re-shaped one) needs no edit here and cannot silently disagree with `tierOpenFor`,
  *  which detects an on-ramp exactly the same way. */
 function onRampTierOf(track: LadderTrack): TierId | undefined {
-  return TIER_LADDER.find((t) => TIERS[t].track === track && TIERS[t].enterPct === undefined)
+  return TIER_LADDER.find((t) => TIERS[t].track === track && !hasAcceptanceList(t))
 }
 
 /** ⚠ SET ONCE, NEVER CLEARED (v34). Latches the moment she can prove she belongs on a table, by
@@ -3780,7 +3781,15 @@ function computeShadowTournament(
         pros,
       )
     : ranking
-  const entrants = selectEntrants(event, universe, selRanking, kidRng, fatigue)
+  // ⚠ AND ONE PRO PLAYS ONE EVENT A WEEK (W2-FIELD2, act2-pro-tour.md §8.2). When two W rungs land
+  // on the same week the HIGHER one draws first and its field leaves this window – the professional
+  // half of the rule `resolveDoubleBookings` already enforces on the canonical brackets, which
+  // cannot reach here because a field pro has no ledger row to rearrange. Deterministic, ordered by
+  // TIER_LADDER, and it draws nothing on THIS event's stream (see `weekFieldExclusion`).
+  const excluded = pros
+    ? weekFieldExclusion(event, world.season, universe, selRanking, world.seed, fatigue)
+    : undefined
+  const entrants = selectEntrants(event, universe, selRanking, kidRng, fatigue, excluded)
   const field = rivalField(entrants, event, fatigue)
   // v21b: she goes into the draw AT HER STANDING, not at the bottom of it - the same place the
   // acceptance list would give her - and is seeded, or not, on the terms everybody else gets.
@@ -4829,18 +4838,26 @@ export function isTierEligible(tier: TierId, points: number): boolean {
   return minPoints <= points && points <= maxPoints
 }
 
-/** The acceptance list as an absolute position, for the one field we actually have this week. A
- *  share rather than a count, so it survives the field growing (see TierDef.enterPct).
+/** The acceptance list as an absolute position, for the one field we actually have this week.
  *
- *  ⚠ AND THE FIELD GREW (living-field phase W, 01.08) – this is the sentence that design bought.
- *  A W rung's list is a share of the MERGED professional table (cohort + kid + ~300 field pros,
- *  ~500 rows), because that is the population its events are drawn from now; the ITF rungs keep
- *  reading the cohort+kid table their own events draw from. Nobody edited a rule: W35's 0.5 was
- *  "top 100 of 200" yesterday and is "top 250 of 500" today, against a rank that is honest for the
- *  same reason it is larger. Measured on a fresh world: w35 accepts 250, w100 accepts 125, and a
- *  girl with five W15 titles (~#61 merged) still clears both – the door did not move, the room got
- *  real. */
+ *  ⚠ ONE FUNCTION, TWO UNITS, AND THE UNIT IS A PROPERTY OF THE TABLE (W2-FIELD2). The ITF and
+ *  domestic rungs keep a SHARE (`enterPct`): their tables are population artefacts – 199 juniors
+ *  with no external anchor – so position 120 means nothing except "of these people", and a count
+ *  there really would be the time bomb TierDef.enterPct describes.
+ *
+ *  The W rungs take an ABSOLUTE RANK (`acceptsRank`), because their table stopped being an
+ *  artefact. Since this wave the merged W standings carry the REAL points-to-rank curve, so #350
+ *  in it is an attempt at world #350; the real tour's entry lists are rank cuts (a W100 accepts to
+ *  about #350 whether the world holds 500 players or 5,000), and a share of OUR population is the
+ *  thing that would drift. It had already drifted: W35's 0.5 resolved to ~219 W points against a
+ *  best-16 W15-title ceiling of 160, i.e. the second rung was unreachable from the first.
+ *
+ *  ⚠ THE FIELD GREW ONCE BEFORE (living-field phase W, 01.08) and the share survived it, which is
+ *  why the share was right then: W35's 0.5 went from "top 100 of 200" to "top 250 of 500" with
+ *  nobody editing a rule. What changed is not the size of the table but its MEANING. */
 export function acceptanceRank(world: WorldState, tier: TierId): number | undefined {
+  const absolute = TIERS[tier].acceptsRank
+  if (absolute !== undefined) return Math.max(1, absolute)
   const pct = TIERS[tier].enterPct
   if (pct === undefined) return undefined
   const fieldSize =
@@ -5301,14 +5318,21 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
   // contain. Same lazy-once shape as `ranking` above, paid only on windows that actually show a W
   // card; `previewEvent`'s own contract is untouched, it is simply handed the professional
   // universe as the cohort (the parameter always WAS "who can be drawn").
-  let wtaCtx: { universe: AiPlayer[]; ranking: RankingRow[] } | null = null
+  let wtaCtx: { universe: AiPlayer[]; ranking: RankingRow[]; conditions: Map<string, number> } | null = null
   const wtaWorldFor = (e: SeasonEvent) => {
     wtaCtx ??= {
       universe: universeForTier(e.tier, world.cohort, fieldProsOf(world)),
       ranking: rankingFor(world, 'wta'),
+      conditions: rivalConditions(world.results, world.week),
     }
     return { seed: world.seed, week: world.week, cohort: wtaCtx.universe, results: world.results }
   }
+  // ...and the card obeys the same week-exclusivity rule its own bracket will (W2-FIELD2 §8.2), or
+  // it would name an opponent the higher rung has already taken. Computed HERE because only this
+  // function holds `world.season`; `previewEvent`'s own contract stays a single event's worth of
+  // inputs. Lazy per card and only on the W track — a J or domestic card never asks.
+  const wtaExclusionFor = (e: SeasonEvent) =>
+    weekFieldExclusion(e, world.season, wtaCtx!.universe, wtaCtx!.ranking, world.seed, wtaCtx!.conditions)
   // ...and the same argument for the COACH'S READ OF HER: it is one girl in one week, identical for
   // every card, and `coachLoadViewOf` walks the retained match window to get there. Once per snapshot,
   // null on a self-coached career because there is nobody to have an opinion.
@@ -5377,7 +5401,13 @@ function upcomingEvents(world: WorldState): UpcomingEvent[] {
         // See season/preview.ts for what this estimate does and does not claim.
         preview:
           TIERS[e.tier].track === 'wta'
-            ? previewEvent(wtaWorldFor(e), e, wtaCtx!.ranking, kidMatchPlayerFor(world, e.surface))
+            ? previewEvent(
+                wtaWorldFor(e),
+                e,
+                wtaCtx!.ranking,
+                kidMatchPlayerFor(world, e.surface),
+                wtaExclusionFor(e),
+              )
             : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
         // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
         // entering will actually cost, and it is the same number chargeTravel will take.

@@ -5,7 +5,8 @@
 //      the save's populations (world.cohort, world.results stay fp-free through live ticks);
 //   2. the merged W table is a real ranking – strictly ordered, every LIVE points-holder exactly
 //      once, competition rank numbers;
-//   3. the calibration – the honest-rank promise ("five W15 titles is ~#40-80, not #9") and the
+//   3. the calibration – the honest-rank promise ("five W15 titles is not #9"), the merged table's
+//      points-to-rank curve against the REAL WTA anchors (W2-FIELD2's pacing requirement), and the
 //      acceptance cuts at the grown field size;
 //   4. the scope fence – W rungs draw from cohort ∪ field, every other rung provably from the
 //      cohort alone (phase 2 owns the J/domestic side).
@@ -72,7 +73,7 @@ describe('the field is a pure derivation', () => {
     }
   })
 
-  it('shape: 300 pros, fp- ids disjoint from every live id, professional ages, the pyramid', () => {
+  it('shape: FIELD.size pros, fp- ids disjoint from every live id, professional ages, the pyramid', () => {
     const world = createWorld(SEED)
     const pros = prosOf(SEED, 0, world.cohort.map((p) => p.name))
     expect(pros.length).toBe(FIELD.size)
@@ -94,6 +95,53 @@ describe('the field is a pure derivation', () => {
     const eliteMean = elites.reduce((s, p) => s + power(p), 0) / elites.length
     expect(eliteMean).toBeGreaterThanOrEqual(60)
     expect(eliteMean).toBeLessThanOrEqual(70)
+  })
+
+  // ⚠ THE FOURTH STOREY (W2-FIELD2, act2-pro-tour.md §8.1). Three claims, and each is the answer to
+  // a way the storey could be built and be useless.
+  it('the fourth storey is a head, not a taller middle: strictly above elite, top-heavy, world-scale', () => {
+    const world = createWorld(SEED)
+    const pros = prosOf(SEED, 0, world.cohort.map((p) => p.name))
+    const top = pros.filter((p) => p.strengthTier === 'tourElite')
+    expect(top.length).toBe(64)
+    // 1. STRICTLY ABOVE the storey below, in SKILL – the band [67, 77] cannot overlap elite's
+    //    [56, 66], so the weakest tourElite still out-cores the strongest elite. Measured with the
+    //    ±6 attribute spread live, so this is the property after the shape is dealt, not before.
+    const elites = pros.filter((p) => p.strengthTier === 'elite')
+    const meanCore = (xs: typeof pros) => xs.reduce((s, p) => s + power(p), 0) / xs.length
+    expect(meanCore(top)).toBeGreaterThan(meanCore(elites) + 8)
+    // 2. TOP-HEAVY, which is what the storey's gamma buys: one or two genuine world-#1-scale names exist and
+    //    the MEDIAN of the storey does not. Without this the storey is 64 co-#1s and the table's
+    //    head reads like a spreadsheet.
+    const pts = top.map((p) => p.wtaPoints).sort((a, b) => b - a)
+    const median = pts[Math.floor(pts.length / 2)]
+    expect(pts[0]).toBeGreaterThan(8000)
+    expect(median).toBeLessThan(pts[0] / 3)
+    // ...and the CURVE below it is the real one's, which is the pacing requirement's own test: the
+    // table must not go flat under her. Anchors from the real WTA rows, ±40% (the bench prints the
+    // exact fit; this pin is the shape, not the decimals).
+    const merged = mergedWtaRanking([], pros)
+    const near = (rank: number, real: number) => {
+      const got = merged[rank - 1].points
+      expect(got, `#${rank} holds ${got}, real ~${real}`).toBeGreaterThan(real * 0.6)
+      expect(got, `#${rank} holds ${got}, real ~${real}`).toBeLessThan(real * 1.4)
+    }
+    near(50, 1400)
+    near(100, 850)
+    near(150, 520)
+    near(300, 190)
+    // The HEAD is a 1-in-64 order statistic over a gamma-6.5 band, so it is genuinely seed-noisy
+    // (measured #10 across four seeds: 4067 / 4308 / 5033 / 6244 against a real ~4000) and gets a
+    // wide band rather than a false precision. The rows below #50 are what the pacing rests on and
+    // they are stable to a few percent: #50 1249-1340, #100 822-869, #300 184-194.
+    expect(merged[9].points).toBeGreaterThan(2500)
+    expect(merged[9].points).toBeLessThan(7500)
+    // 3. WORLD-SCALE, and the seam with the storey below is CONTINUOUS rather than a cliff: the
+    //    weakest tourElite lands near the strongest elite, so the standings do not fall off a
+    //    ledge at #64. (Points are not strictly monotone across the seam – the age ramp is allowed
+    //    to blur it, exactly as FIELD's table says.)
+    const bestElite = Math.max(...elites.map((p) => p.wtaPoints))
+    expect(Math.min(...pts)).toBeGreaterThan(bestElite / 2)
   })
 
   it('names dedupe against the live cohort and within the field', () => {
@@ -143,26 +191,59 @@ describe('the merged W table is a real ranking', () => {
 })
 
 describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
-  it('five W15 titles is ~#40-80 of the merged table – the honest-rank promise', () => {
-    // Measured at calibration: 51 pros above 50 pts, and the 50-point girl lands #52 of 500. The
-    // pin is the RANGE the architecture promises, so a constants re-tune inside the promise does
-    // not shuffle this file – but #9, the number this slice exists to kill, can never come back.
+  it('five W15 titles is a two-figure rank behind a real head – the honest-rank promise', () => {
+    // Measured at the phase-W calibration: 51 pros above 50 pts, and the 50-point girl landed #52
+    // of 500. The pin was the RANGE the architecture promises (#40-80), so a constants re-tune
+    // inside the promise would not shuffle this file – but #9, the number this slice exists to
+    // kill, could never come back.
+    //
+    // ⚠⚠ RE-AIMED #40-80 -> #300-420 BY W2-FIELD2's POINTS LIFT, AND IT IS THE PACING REQUIREMENT
+    // RATHER THAN A WEAKENING (the owner, via the architect: «the climb must take roughly as long
+    // as it does in life, not 1-2 seasons»). Five W15 titles is 50 WTA points, and 50 real points is
+    // past #600 in the world. The old #40-80 was only reachable because the field held NOBODY in the
+    // middle: the pre-wave table's #300 held 9 points and its #500 held 0, so any real result
+    // teleported her up it. That flatness IS the "top of the world in two seasons" defect, seen from
+    // her side of the table, and the whole distribution was lifted to the real curve's anchors to
+    // remove it (FIELD's table carries the achieved fit).
+    //
+    // WHAT THE PIN DEFENDS IS UNCHANGED and is now much harder to lose: the number this test exists
+    // to kill is "#9" - five titles at the ENTRY RUNG of the professional game printing a top-ten
+    // world ranking. The floor at 300 kills it with three hundred places to spare; the ceiling at
+    // 420 catches the opposite failure, a field so heavy that a real result moves nothing at all.
+    // Measured: 364 of 364 pros hold more than 50 W points, and she lands #365 of 564.
     const world = createWorld('field-cal-pin')
     for (let i = 0; i < 5; i++) {
       world.results.push({ playerId: KID_ID, week: world.week, points: 10, tier: 'w15' })
     }
     recomputeKidRank(world)
-    expect(world.kidRankWta).toBeGreaterThanOrEqual(40)
-    expect(world.kidRankWta).toBeLessThanOrEqual(80)
+    expect(world.kidRankWta).toBeGreaterThanOrEqual(300)
+    expect(world.kidRankWta).toBeLessThanOrEqual(420)
   })
 
-  it('acceptance cuts read the merged field size on the W rungs, the live table elsewhere', () => {
+  it('acceptance cuts: an absolute rank on the W rungs, a share of the live table elsewhere', () => {
+    // ⚠⚠ RE-AIMED BY W2-FIELD2, AND THE RE-AIM IS THE FIX IT PINS. This asserted that a W rung's cut
+    // is `enterPct` x the merged table's size - a SHARE - which was the right unit for as long as
+    // that table was a compressed artefact. Once the table carried the real points-to-rank curve the
+    // share bit in real ranks: W35's 0.5 resolved to ~219 W points while a perfect best-16 window of
+    // W15 TITLES caps at 160, so the second rung of the ladder was unreachable from the first (six
+    // careers x nine seasons, tools/ladder-walk.ts: best rank ever reached #449-468 against a cut of
+    // 282 - not one of them would have cleared W35 in its life). The W rungs now carry the real
+    // tour's own cuts, and this pins the UNITS rather than the numbers.
     const world = createWorld('field-cal-pin')
-    const mergedSize = world.cohort.length + 1 + FIELD.size // 199 + kid + 300 = 500
-    expect(acceptanceRank(world, 'w35')).toBe(Math.round(TIERS.w35.enterPct! * mergedSize)) // 250
-    expect(acceptanceRank(world, 'w100')).toBe(Math.round(TIERS.w100.enterPct! * mergedSize)) // 125
-    // The ITF rungs' lists did not move by a single place – their events still draw from the
-    // cohort+kid table, so their cut is still a share of THAT field.
+    // The W rungs: an absolute rank, straight off the tier definition, INDEPENDENT of how many
+    // players happen to exist - which is the property that broke when it was a share.
+    for (const tier of ['w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]) {
+      expect(acceptanceRank(world, tier)).toBe(TIERS[tier].acceptsRank)
+      expect(TIERS[tier].enterPct, `${tier} must not carry both units`).toBeUndefined()
+    }
+    // ...and they still TIGHTEN up the ladder, which is the one thing a ladder must do.
+    const cuts = (['w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]).map((t) => TIERS[t].acceptsRank!)
+    for (let i = 1; i < cuts.length; i++) expect(cuts[i]).toBeLessThan(cuts[i - 1])
+    // W15 is the on-ramp: no list at all, because a rank gate on the first rung of a table is a
+    // closed loop. It reads her ITF junior points instead.
+    expect(acceptanceRank(world, 'w15')).toBeUndefined()
+    // The ITF rungs' lists did not move by a single place – their table IS a population artefact
+    // (199 juniors, no external anchor), so a share is still the honest unit there.
     expect(acceptanceRank(world, 'j60')).toBe(Math.round(TIERS.j60.enterPct! * (world.cohort.length + 1)))
     expect(acceptanceRank(world, 'j300')).toBe(Math.round(TIERS.j300.enterPct! * (world.cohort.length + 1)))
   })

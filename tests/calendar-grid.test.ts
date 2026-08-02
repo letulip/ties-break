@@ -896,7 +896,8 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
 // The hard rule this suite exists to keep is NOT "they must differ" - six flavours of nothing would
 // satisfy that and would drift the first time somebody re-tuned a package. It is that the drawing
 // must be a readout of something real. `ECONOMY.vacation.packages` already differ by
-// `conditionGain` (12 / 14 / 16 / 20 / 25 / 30), so the week HAS a ladder in it, and these tests
+// `conditionGain` (18 / 22 / 26 / 32 / 40 / 48 since the W2-FATIGUE lift - same order, one band
+// higher), so the week HAS a ladder in it, and these tests
 // pin the grid against THAT rather than against my taste in labels.
 describe('each family package draws its own week', () => {
   const arcFor = (packageId: string) =>
