@@ -303,31 +303,45 @@ describe('MatchScene renders the painting uncropped', () => {
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/^\s*\/\/.*$/gm, '')
 
-  it('⚠ the art is `contain` in the painting\'s own square – never a cover crop', () => {
-    expect(code, 'the cover crop came back').not.toContain('object-fit: cover')
-    expect(scene).toContain('object-fit: contain')
-    // The card is the painting's own square: width-bound, full height, nothing to crop.
+  it('⚠ RE-AIMED (03.08): the SQUARE card is still whole-painting; only the FILLED one magnifies', () => {
+    // THE RULE CHANGED BY THE OWNER, AND ONLY FOR THE SCREEN HE CHANGED IT FOR. 03.08: «я бы хотел,
+    // чтобы картинка вела себя как на макете F. Match Day, т.е. занимала всё возможное
+    // пространство, надо вернуть увеличение для этого». So `cover` is no longer banned outright -
+    // it is REQUIRED on `.scene--fill` and still forbidden everywhere else in this component.
+    //
+    // WHAT THE 01.08 RULING ACTUALLY REJECTED, and what this guard still protects: NORMALISATION -
+    // a per-painting scale steered by the face table so every band framed her head at one size,
+    // over a fixed 396px window that turned teen-serious into a tight close-up. The magnification
+    // shipped here is ONE geometry for every painting, no face table, no per-band number. The
+    // face-table bans in the next test are what keep the rejected thing rejected.
+    // Sliced on the COMMENT-STRIPPED source: the prose above each rule names the other rule, so
+    // slicing the raw file finds a sentence rather than a selector.
+    const fillBlock = code.slice(code.indexOf('.scene--fill .scene-art'))
+    expect(fillBlock, 'the fill card must magnify - the owner asked for it twice').toContain('object-fit: cover')
+    // ...and the default card - the friendly's, and any future caller that does not pass `fill` -
+    // still shows the whole painting in its own square. This is the half of 01.08 that stands.
+    const squareBlock = code.slice(code.indexOf('.scene-art {'), code.indexOf('.scene--fill .scene-art'))
+    expect(squareBlock).toContain('object-fit: contain')
+    expect(squareBlock).not.toContain('object-fit: cover')
     expect(scene).toContain('aspect-ratio: 1 / 1')
-    // ...and the fixed-height prop went with the crop: a fixed height over a full painting would
-    // letterbox, and no caller ever passed it anyway.
+    // ...and the fixed-height prop went with the OLD crop and is not coming back: a per-caller
+    // height is how the 396px window happened, and `fill` is a boolean precisely so no number can.
     expect(code).not.toContain('height?: number')
   })
 
   it('⚠ it no longer reads the face table – there is nothing to steer when everything is in frame', () => {
     expect(code).not.toContain('facePoint')
     expect(code).not.toContain('faceRects')
-    // ⚠ RE-AIMED, NOT WEAKENED (02.08, the full-screen pre-match card). This line used to be a bare
-    // `not.toContain('object-position')`. What it has always protected is the CROP not coming back
-    // in steering clothes - a face-table pan only does anything over a `cover` crop, and both the
-    // `cover` ban above and the face-table bans here still hold, so the painting still cannot lose a
-    // pixel. What changed: the fill-mode card (owner: «вернуть картину на весь экран») is TALLER
-    // than the `contain`-ed painting, and `contain` needs telling where the COMPLETE image sits in
-    // the spare band - `center bottom`, on the card's foot, so the glass plate keeps riding the art.
-    // Placement of a whole painting is not a crop. The pin now admits exactly that one declaration
-    // and nothing else: a second object-position - a percentage pair, a facePoint binding - is
-    // still the regression this guard exists for, and still fails it.
+    // ⚠ RE-AIMED TWICE, NEVER WEAKENED (02.08 then 03.08). It began as a bare
+    // `not.toContain('object-position')`, which was right while the scene could not crop at all.
+    // Now the filled card DOES magnify (see above), so an anchor is load-bearing rather than
+    // decorative: `center top` spends the crop at the foot, under the glass plate, and keeps her
+    // head complete on every box shape. THE REGRESSION THIS GUARD EXISTS FOR IS UNCHANGED and is
+    // the line below it: a face-table pan - a percentage pair, a facePoint binding - is how the
+    // per-band close-up came back last time, and it still fails here. One keyword anchor, no
+    // numbers, no face table.
     expect(code.match(/object-position/g) ?? []).toHaveLength(1)
-    expect(scene).toContain('object-position: center bottom')
+    expect(scene).toContain('object-position: center top')
     expect(code).not.toMatch(/object-position:\s*[\d.]+%/)
     // The OTHER face-table consumers are deliberately untouched: the Home hero and the finale
     // poster frame small windows, so a crop is their whole mechanism. The finale's crop is pinned
