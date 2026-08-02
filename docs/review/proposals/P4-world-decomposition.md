@@ -158,3 +158,43 @@ this proposal should adopt that helper before anything else moves.
 `Read` truncates at 2,000 lines ≈ 33k tokens and still misses two thirds of the file. The whole `src/`
 tree is ~730k tokens, and five files are 30% of it. Every wave that has to open the god module pays that
 tax. This is a budget item as much as a maintainability one.
+
+### Wave 1 (2026-08-02, same branch): the ladder and the gates
+
+Four more modules. `world.ts` **6,019 → 4,914 (−18.4%)**; the `world/` package is now 1,244 lines
+across 8 files.
+
+| Module | Lines | Note |
+|---|---|---|
+| `world/constants.ts` | 8 | `KID_ID` – the bottom of the package graph |
+| `world/ladder.ts` | 314 | ranking helpers **+** tier eligibility **+** `rankIn`/`prevRankIn` |
+| `world/bookings.ts` | 24 | `vacationForWeek`, `practiceForWeek`, `vacationBlackoutDetail` |
+| `world/medical.ts` | 523 | condition, doctor's veto, layoff, entry + arrival gates |
+
+**Two structural findings.**
+
+*The ladder cannot be split in two.* `ranking` and `tiers` each measured 4 call-backs apart, and they
+were call-backs **into each other**: the on-ramp latch asks `kidPoints` (tiers), the tier gates ask
+`fieldProsOf`/`inTrack` (ranking). Two files would have been an import cycle. Together they measure
+**2** (`cohortIds`, `KID_ID`) – both of which moved with them. Where this proposal's module map splits
+ranking from eligibility, merge those two entries.
+
+*Medical was never a hard block – just a late one.* It measured **11** call-backs while entryCaps,
+ladder and bookings were still inside world.ts, and **0** once they were out. The lesson generalises:
+the call-back counts in the wave-0 table are **upper bounds that decay as the package fills**, so
+re-measure before declaring a block infeasible. Current standings after wave 1:
+
+| Block | Lines | Call-backs (was) | Blockers |
+|---|---|---|---|
+| **sponsors** | 275 | **0** (1) | – ready now |
+| injury | 269 | 5 (8) | `captureMilestone`, `eventById`, `withdrawEvent`, `refundPractice`, `retireKnock` |
+| knock flow | 265 | 5 (4) | `isCompetitionWeek`, `startingSkills`, `coachSinceWeek`, `matchesEverPlayed`, `playedWeeksInTrailing4` |
+| snapshot | 748 | 20 (35) | needs the command/tournament surface extracted first |
+
+**⚠ A GATE THIS PACKAGE MUST NOT SKIP: `vue-tsc` is not sufficient.** The medical extraction passed a
+clean `vue-tsc -b --force` and then **failed the production build**. The cause: interfaces and type
+aliases (`AvailabilityStatus`, `MedicalClearance`, `EntryStatus`, …) were re-exported through a
+**value** import. TypeScript elides type-only bindings from a value import silently; Rollup sees a
+runtime import of an export that does not exist and dies. Every extraction that moves a type must send
+it out via `export type { … } from './world/<mod>'`, and **`npm run build` belongs in the per-PR gate
+beside the typecheck and the tests** – it is the only check that catches this class.
