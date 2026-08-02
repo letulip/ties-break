@@ -1,23 +1,31 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { hiddenTier, preferredWeekEvent, type OnRampLatches } from '../src/composables/tierState'
+import { feedContext, feedShows, preferredWeekEvent, type FeedEventFacts } from '../src/composables/tierState'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import { createWorld, toSnapshot } from '../src/engine/world'
 import type { TierId } from '../src/engine/season/types'
 
 // =================================================================================================
-// R15-9 — THE SLIDING TIER WINDOW, and the stacked-week pick that rode in with it.
+// THE TWO-TYPE FEED (W2-LADDER §4, owner ruling 4) — and the stacked-week pick that predates it.
 //
-// Owner, 01.08: «если j30 уже точно outgrown, то его не надо показывать. Скользящее окно... Я
-// сомневаюсь, что реальные теннисистки с доступом к w15 думают как бы им успеть на j30» — and, on
-// the feed: he had never seen a J300 card, and «Вот local я в ленте не вижу».
+// ⚠ RE-AIMED, NOT WEAKENED, FROM R15-9's SLIDING WINDOW. The latch window hid three rungs by hand
+// (local/regional behind the itf latch, j30 behind the wta one) and exempted National; the owner's
+// 02.08 ruling replaced the hand-kept list with a RULE — «чтобы не больше 2х типов турниров в год
+// было» — and the rule subsumes every case the old guard pinned: a latched track's lower rungs sit
+// below the working pair by construction, so everything R15-9 hid stays hidden, plus everything
+// the two-type budget hides beyond it. What this file pins now:
+//   1. THE PAIR: derived from the ENGINE's tierOpen oracle (task #77 — never a band or latch read
+//      in the UI), working = highest open rung, adjacent = next not-age-dead rung above.
+//   2. THE SUBSTITUTION: a pro-capped week offers the strongest open below-pair event IN PLACE of
+//      the W row, never as a third type.
+//   3. ENTERED ALWAYS SHOWS (R10-3) — a committed week must stay actionable.
 //
-// TWO DISTINCT DEFECTS, both fixed through one module (composables/tierState.ts):
-//   1. VISIBILITY. The outgrown filter is points-based and the on-ramp rungs have MAX ceilings, so
-//      J30 stayed on a professional's calendar for ever. The window hides rungs by the LATCH.
-//   2. THE STACKED WEEK. SeasonScreen's row map was last-write-wins over a list that orders each
-//      week strongest-first, so the row always showed the WEAKEST tier of a stacked week and the
-//      rare rungs never surfaced. The pick is now a rule: entered first, then the highest rung.
+// ⚠ THE NATIONAL EXEMPTION IS SUPERSEDED, and this note is its tombstone rather than a deletion:
+// R15-9 kept National visible for the brand deal's keep-condition (domestic top 30). Ruling 4 is
+// later and stricter — at most two types, and «Если national доступен - показывать только их» is
+// about the domestic FAMILY, not a standing exemption. The cost (a W-era career sees Nationals
+// only as capped-week substitutes, so the national kit deal's keep-condition becomes hard to hold)
+// is recorded in feedContext's header and the wave report, for the owner.
 // =================================================================================================
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
@@ -27,51 +35,113 @@ const codeOf = (src: string) =>
     .replace(/<!--[\s\S]*?-->/g, '')
     .replace(/^\s*\/\/.*$/gm, '')
 
-describe('the visibility rule, against every latch state', () => {
-  const LATCH_STATES: (OnRampLatches | undefined)[] = [
-    undefined,
-    { itf: false, wta: false },
-    { itf: true, wta: false },
-    { itf: false, wta: true },
-    { itf: true, wta: true },
-  ]
+/** A feed row. `eligible` defaults true; `capped` marks the pro-cap refusal shape. */
+function row(tier: TierId, week: number, over: Partial<FeedEventFacts> = {}): FeedEventFacts {
+  return { id: `${week}-${tier}`, week, tier, entered: false, eligible: true, ...over }
+}
 
-  it('hides exactly the rungs below a crossed door, and nothing before it is crossed', () => {
-    // Nothing latched (or no snapshot at all): the whole ladder shows.
-    for (const latches of [undefined, { itf: false, wta: false }] as const) {
-      for (const tier of TIER_LADDER) expect(hiddenTier(tier, latches), `${tier} unlatched`).toBe(false)
-    }
-    // The international door crossed: the two club rungs leave; the junior tour itself stays.
-    const itf = { itf: true, wta: false }
-    expect(hiddenTier('local', itf)).toBe(true)
-    expect(hiddenTier('regional', itf)).toBe(true)
-    for (const tier of ['j30', 'j60', 'j300', 'w15', 'w35', 'w100'] as TierId[]) {
-      expect(hiddenTier(tier, itf), tier).toBe(false)
-    }
-    // The professional door crossed too: j30 leaves with them; the rungs above never hide.
-    const wta = { itf: true, wta: true }
-    expect(hiddenTier('j30', wta)).toBe(true)
-    for (const tier of ['j60', 'j300', 'w15', 'w35', 'w100'] as TierId[]) {
-      expect(hiddenTier(tier, wta), tier).toBe(false)
+/** A tierOpen map where exactly `open` are open. */
+function openMap(open: TierId[]): Record<TierId, boolean> {
+  return Object.fromEntries(TIER_LADDER.map((t) => [t, open.includes(t)])) as Record<TierId, boolean>
+}
+
+describe('the pair: at most two tier types, from the engine oracle', () => {
+  it('slides across the whole career: fresh -> domestic -> junior -> professional', () => {
+    const pairAt = (open: TierId[], age: number) =>
+      feedContext({ ageYears: age, tierOpen: openMap(open), upcoming: [] }).pair
+    // A fresh kid: local open, regional the door she is walking towards.
+    expect(pairAt(['local'], 14)).toEqual(['local', 'regional'])
+    // The overlap climbs: highest open is the working rung, next above is the pair's other half.
+    expect(pairAt(['local', 'regional'], 14)).toEqual(['regional', 'national'])
+    expect(pairAt(['regional', 'national'], 14)).toEqual(['national', 'j30'])
+    // «Если national доступен - показывать только их»: the domestic family collapses to its top
+    // open rung by construction - local and regional are below the pair.
+    expect(pairAt(['local', 'regional', 'national', 'j30'], 15)).toEqual(['j30', 'j60'])
+    // Deep in the J era: j30 leaves the pair however open it stays (the R15-9 case, subsumed).
+    expect(pairAt(['national', 'j30', 'j60', 'j300'], 17)).toEqual(['j300', 'w15'])
+    // The professional era: the pair is professional, and the rungs below are gone.
+    expect(pairAt(['national', 'j30', 'w15', 'w35'], 17)).toEqual(['w35', 'w50'])
+    // The top of the ladder: one type is legal ("at most two").
+    expect(pairAt(['national', 'w100', 'wta125'], 22)).toEqual(['wta125'])
+  })
+
+  it('the adjacent rung skips doors that have closed for ever, never doors not yet open', () => {
+    // At nineteen the J rungs are age-dead: National's neighbour is the professional tour.
+    expect(feedContext({ ageYears: 19, tierOpen: openMap(['national']), upcoming: [] }).pair).toEqual([
+      'national',
+      'w15',
+    ])
+    // At fifteen W15 is merely EARLY - it shows as the aspirational half, locked ("opens at 16").
+    expect(feedContext({ ageYears: 15, tierOpen: openMap(['national', 'j30', 'j60', 'j300']), upcoming: [] }).pair).toEqual([
+      'j300',
+      'w15',
+    ])
+  })
+
+  it('no oracle (old fixture, no snapshot yet) hides nothing - the safe direction', () => {
+    const ctx = feedContext({ ageYears: 14, tierOpen: undefined, upcoming: [] })
+    for (const tier of TIER_LADDER) expect(feedShows(row(tier, 5), ctx), tier).toBe(true)
+  })
+
+  it('entered events always show, whatever the pair says (R10-3)', () => {
+    const ctx = feedContext({ ageYears: 17, tierOpen: openMap(['w15', 'w35']), upcoming: [] })
+    expect(feedShows(row('local', 5, { entered: true }), ctx)).toBe(true)
+    expect(feedShows(row('local', 5), ctx)).toBe(false)
+  })
+})
+
+describe('the AER substitution rides INSIDE the budget', () => {
+  const open = openMap(['national', 'j30', 'j60', 'w15', 'w35'])
+  it('a week whose pair events are all pro-capped shows the strongest open fallback instead', () => {
+    const upcoming = [
+      row('w35', 10, { eligible: false, ineligibleReason: 'capped' }),
+      row('w50', 10, { eligible: false, ineligibleReason: 'capped' }),
+      row('j60', 10),
+      row('national', 10),
+    ]
+    const ctx = feedContext({ ageYears: 16, tierOpen: open, upcoming })
+    // The pair here is {w35, w50}; both capped -> the strongest OPEN below-pair event substitutes.
+    expect(ctx.pair).toEqual(['w35', 'w50'])
+    expect(feedShows(upcoming[2], ctx)).toBe(true) // the j60 rides in
+    expect(feedShows(upcoming[3], ctx)).toBe(false) // ...and ONLY the strongest - never a third row
+  })
+
+  it('an uncapped pair week substitutes nothing', () => {
+    const upcoming = [row('w35', 10), row('j60', 10)]
+    const ctx = feedContext({ ageYears: 16, tierOpen: open, upcoming })
+    expect(feedShows(upcoming[1], ctx)).toBe(false)
+  })
+
+  it('the fallback must itself be open and eligible - a substitute is a week she can PLAY', () => {
+    const upcoming = [
+      row('w35', 10, { eligible: false, ineligibleReason: 'capped' }),
+      row('j300', 10, { eligible: false }), // scheduled, but the gate says no
+    ]
+    const ctx = feedContext({ ageYears: 16, tierOpen: open, upcoming })
+    expect(feedShows(upcoming[1], ctx)).toBe(false)
+  })
+})
+
+describe('visibility is not access: the engine never reads the feed rule', () => {
+  it('the engine sources are free of the feed vocabulary', () => {
+    for (const rel of ['../src/engine/world.ts', '../src/engine/season/calendar.ts']) {
+      const src = codeOf(read(rel))
+      expect(src).not.toContain('feedShows')
+      expect(src).not.toContain('feedContext')
     }
   })
 
-  it('⚠ NATIONAL IS NEVER HIDDEN, in any latch state there is', () => {
-    // The exemption has a paying customer: the national-rung brand deal's keep-condition reads her
-    // domestic top 30, so the one domestic rung that maintains that rank stays on the calendar
-    // however far she has climbed. Swept over every state rather than the plausible ones.
-    for (const latches of LATCH_STATES) {
-      expect(hiddenTier('national', latches), JSON.stringify(latches)).toBe(false)
-    }
-    // ...and the source says so in words, so the next hand meets the reason before the edit.
-    expect(read('../src/composables/tierState.ts')).toContain('NATIONAL IS NEVER HIDDEN')
-  })
-
-  it('visibility is not access: the engine never reads the window', () => {
-    // The rule is a UI filter. `entryStatus` / `tierOpenFor` / the entry gates know nothing of it -
-    // an event a latch hides is still, as far as the engine cares, hers to enter.
-    expect(codeOf(read('../src/engine/world.ts'))).not.toContain('hiddenTier')
-    expect(codeOf(read('../src/engine/season/calendar.ts'))).not.toContain('hiddenTier')
+  it('both consumers pick through the ONE rule', () => {
+    // The Season rows and the Calendar look-ahead read the same two functions, which is what makes
+    // "the two lists cannot disagree" a property rather than a hope. The last-write-wins map is
+    // gone from the season screen for good.
+    const season = codeOf(read('../src/components/screens/SeasonScreen.vue'))
+    expect(season).toContain('feedShows(e, feed.value)')
+    expect(season).toContain('preferredWeekEvent(')
+    expect(season).not.toContain('for (const e of visibleUpcoming.value) byWeek.set(e.week, e)')
+    const days = codeOf(read('../src/composables/weekDays.ts'))
+    expect(days).toContain('preferredWeekEvent(')
+    expect(days).toContain('feedShows(e, feed)')
   })
 })
 
@@ -84,6 +154,7 @@ describe('the stacked-week pick', () => {
     expect(preferredWeekEvent([ev('j300'), ev('j30'), ev('local')])!.tier).toBe('j300')
     expect(preferredWeekEvent([ev('local'), ev('j30'), ev('j300')])!.tier).toBe('j300')
     expect(preferredWeekEvent([ev('w15'), ev('j300')])!.tier).toBe('w15')
+    expect(preferredWeekEvent([ev('w100'), ev('wta125')])!.tier).toBe('wta125')
   })
 
   it('an ENTERED event beats any tier – a committed week is the card she must act on', () => {
@@ -96,28 +167,17 @@ describe('the stacked-week pick', () => {
   })
 })
 
-describe('the latches reach the UI on the snapshot, as a copy', () => {
-  it('toSnapshot surfaces onRampCleared read-only', () => {
+describe('the oracle reaches the UI on the snapshot, as a copy', () => {
+  it('toSnapshot surfaces tierOpen and onRampCleared read-only', () => {
     const world = createWorld('tier-window-snap')
     const snap = toSnapshot(world)
     expect(snap.onRampCleared).toEqual({ itf: false, wta: false })
     // A copy, never a live view: the snapshot crosses the worker boundary.
     expect(snap.onRampCleared).not.toBe(world.onRampCleared)
-    // ...and it follows the world's own latches, both set and unset.
-    world.onRampCleared = { itf: true, wta: true }
-    expect(toSnapshot(world).onRampCleared).toEqual({ itf: true, wta: true })
-  })
-
-  it('both consumers pick through the ONE rule', () => {
-    // The Season rows and the Calendar look-ahead read the same two functions, which is what makes
-    // "the two lists cannot disagree" a property rather than a hope. The last-write-wins map is
-    // gone from the season screen for good.
-    const season = codeOf(read('../src/components/screens/SeasonScreen.vue'))
-    expect(season).toContain('hiddenTier(e.tier, game.snapshot?.onRampCleared)')
-    expect(season).toContain('preferredWeekEvent(')
-    expect(season).not.toContain('for (const e of visibleUpcoming.value) byWeek.set(e.week, e)')
-    const days = codeOf(read('../src/composables/weekDays.ts'))
-    expect(days).toContain('preferredWeekEvent(')
-    expect(days).toContain('hiddenTier(e.tier, snap.onRampCleared)')
+    // ...and the feed's own input is the per-rung verdict map, total over the ladder.
+    for (const tier of TIER_LADDER) expect(typeof snap.tierOpen[tier], tier).toBe('boolean')
+    // A fresh kid's pair: local working, regional adjacent - derived here as the screens derive it.
+    const ctx = feedContext({ ageYears: snap.ageYears, tierOpen: snap.tierOpen, upcoming: snap.upcoming })
+    expect(ctx.pair[0]).toBe('local')
   })
 })

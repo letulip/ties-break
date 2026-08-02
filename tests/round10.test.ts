@@ -309,10 +309,17 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
   })
 
   it('the calendar no longer hides an ENTERED event just because she outgrew it', () => {
+    // ⚠ RE-AIMED by W2-LADDER §4: the entered-first arm MOVED, it did not weaken. visibleUpcoming
+    // now delegates to the one feed rule, and `feedShows`' first clause is `e.entered ||` - the
+    // R10-3 lesson carried into the new rule verbatim, and pinned there where every consumer
+    // inherits it (the behavioural half is tests/tier-window.test.ts's "entered events always
+    // show"). What this grep keeps asserting is that the SCREEN cannot re-grow a private filter.
     const src = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
     const filter = src.slice(src.indexOf('const visibleUpcoming'), src.indexOf('const myEntries'))
-    expect(filter).toContain('e.entered') // an entered event is never decluttered away
-    expect(filter).toContain("'outgrown'")
+    expect(filter).toContain('feedShows')
+    const rule = readFileSync(new URL('../src/composables/tierState.ts', import.meta.url), 'utf8')
+    const shows = rule.slice(rule.indexOf('export function feedShows'), rule.indexOf('}', rule.indexOf('export function feedShows')))
+    expect(shows).toContain('e.entered ||') // an entered event is never decluttered away
   })
 })
 

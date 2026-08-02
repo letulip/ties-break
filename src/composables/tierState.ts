@@ -40,44 +40,111 @@ import type { LadderTrack, TierId } from '../engine/season/types'
 export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 'scheduled' | 'unscheduled'
 
 // =================================================================================================
-// ⚠ R15-9 – THE SLIDING TIER WINDOW. Visibility only: nothing here touches a gate.
+// ⚠ THE TWO-TYPE FEED (W2-LADDER §4, owner ruling 4). Visibility only: nothing here touches a gate.
 // =================================================================================================
 //
-// Owner, 01.08: «если j30 уже точно outgrown, то его не надо показывать. Скользящее окно... Я
-// сомневаюсь, что реальные теннисистки с доступом к w15 думают как бы им успеть на j30». The
-// outgrown filter the calendar already had is points-based, and J30's band is [250, MAX] - a
-// ceiling of MAX means it never reads as outgrown, so a girl playing W15s was still offered J30s
-// forever. The domestic rungs age out on points; the ON-RAMP rungs age out on the LATCH: once
-// `onRampCleared` says she has definitively crossed onto a table, the rungs below its door are
-// noise, and the window slides up behind her.
+// The owner, 02.08: «мы должны сделать в рассписании так, чтобы игрок четко понимал что он может
+// играть одно единственное для своей недели с некоторым пересечением тиров по году, чтобы не
+// больше 2х типов турниров в год было, если она переросла J - вообще выводим... Если national
+// доступен - показывать только их». At any moment the feed offers events of AT MOST TWO tier
+// types: her WORKING rung and the ADJACENT one she is growing into.
 //
-//   itf latched  ->  local and regional leave the feed (she is an international player now)
-//   wta latched  ->  j30 leaves too (nobody with a W15 book is racing to catch a J30)
+// THE PAIR IS DERIVED FROM THE ENGINE'S OWN ORACLE, never from a band or a latch read here (task
+// #77's resolution - third occurrence of visibility-vs-access, settled for the feed the way
+// `engineOpen` settled it for the plaques):
 //
-// ⚠ NATIONAL IS NEVER HIDDEN, and it is an exemption with a paying customer: the national-rung
-// brand deal's keep-condition reads her DOMESTIC top 30 (`KitOfferTerms.keepDomesticRank`), so the
-// one domestic rung that maintains that rank has to stay on the calendar however far she has
-// climbed. It is also the marquee event the stagger made a rung again - hidden, it would be dead
-// content twice over.
+//   working  = the HIGHEST rung `Snapshot.tierOpen` says is open to her. Bands overlap by design,
+//              so several rungs are usually open at once - the highest is the one she is actually
+//              climbing at, and the ones below it leave the feed however open they remain. That
+//              subsumes every rule this module used to keep by hand: the points-outgrown filter,
+//              R15-9's two latch rules, and the domestic collapse («Если national доступен -
+//              показывать только их» - when National is the working rung, Local/Regional are
+//              below the pair by construction).
+//   adjacent = the next rung above it whose door has not closed for ever (an age-dead rung is
+//              skipped: a nineteen-year-old's ladder steps from National straight to W15). A
+//              rung she is merely too YOUNG for still shows - locked, "opens at 16" - because a
+//              door she is walking towards is aspiration, not noise.
+//
+// The pair SLIDES as the oracle's verdicts change - {Local,Regional} -> {Regional,National} ->
+// {National,J30} -> {J30,J60} -> ... - which is exactly the spec's "overlap across the year is
+// how she transitions between them; the pair slides, the count never grows".
+//
+// ⚠ THE AER SUBSTITUTION RIDES INSIDE THE BUDGET, never as a third row (§4/§5): a week whose pair
+// events are all professional and all refused by the pro cap shows the strongest OPEN, eligible
+// below-pair event of that week in their place - a J while she is young enough, the top open
+// domestic rung after - so a capped week still reads as tennis rather than as a wall.
+//
+// ⚠ R15-9's NATIONAL EXEMPTION IS SUPERSEDED by the later two-type ruling, and the cost is named
+// rather than hidden: the national-rung brand deal's keep-condition reads her DOMESTIC top 30, and
+// once her working pair is professional the Nationals that maintain that rank appear only as
+// capped-week substitutes. A career deep in the W era will therefore let that deal lapse at
+// renewal unless she is capped often enough to be offered Nationals - flagged in the wave report
+// for the owner; the alternative (a third standing row) is exactly what ruling 4 forbids.
 //
 // ⚠ VISIBILITY, NEVER ACCESS. `entryStatus` / `tierOpenFor` are untouched: an ENTERED event always
 // renders (the callers keep their entered-first arms), and a hidden tier she somehow holds an entry
 // in still shows, because a committed week is the one card she must be able to act on (R10-3).
 
-/** The latches, as the snapshot carries them. Optional everywhere it is consumed, so a caller with
- *  no snapshot yet (or an old test fixture) simply hides nothing - the safe direction. */
-export interface OnRampLatches {
-  itf: boolean
-  wta: boolean
+/** What the feed rule needs to know about one upcoming event. A structural subset of
+ *  `UpcomingEvent`, so the pure tests can build rows without the whole preview payload. */
+export interface FeedEventFacts {
+  id: string
+  week: number
+  tier: TierId
+  entered: boolean
+  eligible: boolean
+  ineligibleReason?: string
 }
 
-/** Is this rung OFF the calendar for her now? The whole rule, one place, both consumers (the Season
- *  feed and the Calendar look-ahead), so the two lists cannot disagree about what exists. */
-export function hiddenTier(tier: TierId, latches?: OnRampLatches | null): boolean {
-  if (!latches) return false
-  if (tier === 'local' || tier === 'regional') return latches.itf
-  if (tier === 'j30') return latches.wta
-  return false
+/** The feed's derived state for one snapshot: the at-most-two tier types, and the per-week AER
+ *  substitutes riding inside that budget. Derived once per snapshot, consumed by both feed
+ *  surfaces (the Season rows and the Calendar look-ahead), so the two cannot disagree. */
+export interface FeedContext {
+  /** [working, adjacent?] - adjacent absent only at the very top of the ladder */
+  pair: readonly TierId[]
+  /** event ids substituted INTO the budget on weeks the pro cap emptied */
+  substitutes: ReadonlySet<string>
+}
+
+export function feedContext(input: {
+  ageYears: number
+  /** the engine's per-rung verdict (`Snapshot.tierOpen`); absent (old fixtures, no snapshot yet)
+   *  means hide nothing - the safe direction, exactly as the old latch rule read undefined */
+  tierOpen?: Partial<Record<TierId, boolean>> | null
+  upcoming: readonly FeedEventFacts[]
+}): FeedContext {
+  const open = input.tierOpen
+  if (!open) return { pair: [...TIER_LADDER], substitutes: new Set() }
+  let working: TierId = TIER_LADDER[0]
+  for (const t of TIER_LADDER) if (open[t]) working = t
+  const above = TIER_LADDER.slice(TIER_LADDER.indexOf(working) + 1)
+  const adjacent = above.find((t) => tierAgeBlock(t, input.ageYears) !== 'old')
+  const pair: TierId[] = adjacent ? [working, adjacent] : [working]
+
+  const substitutes = new Set<string>()
+  const byWeek = new Map<number, FeedEventFacts[]>()
+  for (const e of input.upcoming) {
+    const list = byWeek.get(e.week)
+    if (list) list.push(e)
+    else byWeek.set(e.week, [e])
+  }
+  for (const events of byWeek.values()) {
+    const pairEvents = events.filter((e) => pair.includes(e.tier) && !e.entered)
+    const allCapped =
+      pairEvents.length > 0 &&
+      pairEvents.every((e) => TIERS[e.tier].track === 'wta' && e.ineligibleReason === 'capped')
+    if (!allCapped) continue
+    const fallback = events
+      .filter((e) => !pair.includes(e.tier) && open[e.tier] === true && e.eligible)
+      .sort((a, b) => TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))[0]
+    if (fallback) substitutes.add(fallback.id)
+  }
+  return { pair, substitutes }
+}
+
+/** Does the feed show this event? The whole rule, one predicate, both consumers. */
+export function feedShows(e: Pick<FeedEventFacts, 'id' | 'tier' | 'entered'>, ctx: FeedContext): boolean {
+  return e.entered || ctx.pair.includes(e.tier) || ctx.substitutes.has(e.id)
 }
 
 /** THE PICK for a week that stacks several events into one slot: the entered one if any (she is IN
@@ -405,9 +472,20 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   // 120 produced both a wrong verdict (a lock the engine may not agree with) and a wrong chip
   // ("58 / 120 national pts"). The numerator, the comparison, the note and the title all read the
   // ONE number below, so they cannot mix tables among themselves.
+  //
+  // ⚠⚠ AND THE WHOLE BAND ARM YIELDS TO THE ENGINE'S VERDICT (task #77, W2-LADDER - the third
+  // occurrence of visibility-vs-access, closed from the last direction it could still fire). The
+  // oracle used to win only when it said FALSE (the arm below this block); when it said TRUE the
+  // live band could still call the rung locked - and the on-ramps made that a real disagreement,
+  // because their openness is a LATCH ("crossed once") while the band is a rolling window whose
+  // evidence deletes itself. A girl whose junior book had aged out read "68 / 120 international
+  // pts" on a W15 the engine held open for her. `engineOpen === true` therefore short-circuits
+  // every band verdict: locked and outgrown can only be said about a rung the engine has not
+  // already opened. Pure callers that predate the oracle (engineOpen undefined) keep the live
+  // band, exactly as before.
   const bandTrack = entryBandTrack(id)
   const bandPoints = bandTrack === 'itf' ? (input.itfPoints ?? 0) : input.points
-  if (bandPoints < minPoints) {
+  if (input.engineOpen !== true && bandPoints < minPoints) {
     // WHERE THE MISSING POINTS ARE EARNED, by table. The domestic sentence is the one this arm has
     // always said; the international one is its exact mirror for the w15 on-ramp - the J rungs are
     // the only events that pay the currency that band is counted in. Prose in a table rather than
@@ -452,7 +530,7 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
   // (`bandPoints`, like the floor above: a ceiling is denominated in the same table as its floor.
   // Identical reads for every rung this arm can fire on - only the domestic rungs have a real
   // ceiling, and there bandPoints IS input.points.)
-  if (bandPoints > maxPoints) {
+  if (input.engineOpen !== true && bandPoints > maxPoints) {
     return {
       id,
       kind: 'outgrown',

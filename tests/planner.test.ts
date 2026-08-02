@@ -987,8 +987,15 @@ describe('P9 — snapshot + planner UI', () => {
   })
 
   it('SeasonScreen hides OUTGROWN events, keeps locked-ahead ones, and offers "+ Plan week"', () => {
+    // ⚠ RE-AIMED by W2-LADDER §4, NOT WEAKENED: the hand-written outgrown arm
+    // (`ineligibleReason !== 'outgrown'`) became a CONSEQUENCE of the two-type feed - an outgrown
+    // rung sits below the working pair, so `feedShows` hides it without naming it - and the
+    // spec-level claims this test is titled after all still hold: outgrown events disappear
+    // (below-pair), the locked-ahead ADJACENT rung stays (the pair's aspirational half, rendered
+    // through lockLabel), and the emptied weeks offer "+ Plan week". The rule's own unit guard is
+    // tests/tier-window.test.ts; what is pinned here is that this screen consumes it.
     const src = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
-    expect(src).toMatch(/ineligibleReason !== 'outgrown'/)
+    expect(src).toMatch(/feedShows\(e, feed\.value\)/)
     expect(src).toContain('Plan week')
     expect(src).toContain('PlanWeekSheet')
     // locked-ahead events stay visible: the lock label is still rendered

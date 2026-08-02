@@ -49,8 +49,8 @@ import { rngFromSeed } from '../../engine/rng'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
-// window (`hiddenTier`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
-import { HORIZON_WEEKS, entryBandTrack, hiddenTier, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
+// feed rule (`feedContext`/`feedShows`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
+import { HORIZON_WEEKS, entryBandTrack, feedContext, feedShows, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
@@ -345,17 +345,21 @@ const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.cover
 // engine still held the entry, so every booking was refused. Total dead end. An ENTERED event is
 // never decluttered – she is IN it, and it is the one card she most needs to act on.
 const upcoming = computed(() => game.snapshot?.upcoming ?? [])
-// ⚠ R15-9: THE SLIDING TIER WINDOW rides beside the outgrown filter (see `hiddenTier` in
-// composables/tierState.ts for the whole rule and the owner's ruling). The outgrown filter is
-// points-based and J30's ceiling is MAX, so it alone left J30 on a professional's calendar for
-// ever; the window hides the rungs the on-ramp LATCHES say she has left behind - local/regional
-// once the international door is crossed, j30 once the professional one is. Entered events always
-// survive both filters: she is IN them (R10-3), and a committed week must stay actionable.
-const visibleUpcoming = computed(() =>
-  upcoming.value.filter(
-    (e) => e.entered || (e.ineligibleReason !== 'outgrown' && !hiddenTier(e.tier, game.snapshot?.onRampCleared)),
-  ),
+// ⚠ THE TWO-TYPE FEED (W2-LADDER §4, superseding R15-9's latch window - see `feedContext` in
+// composables/tierState.ts for the whole rule and the owner's ruling). The feed offers at most
+// TWO tier types at once - her working rung and the adjacent one, both read off the ENGINE's
+// `tierOpen` oracle - and a week the pro cap emptied substitutes the strongest open J/domestic
+// event INSIDE that budget. Entered events always survive every filter: she is IN them (R10-3),
+// and a committed week must stay actionable. The old points-outgrown arm is subsumed: an outgrown
+// rung sits below the working pair by construction.
+const feed = computed(() =>
+  feedContext({
+    ageYears: game.snapshot?.ageYears ?? 0,
+    tierOpen: game.snapshot?.tierOpen,
+    upcoming: upcoming.value,
+  }),
 )
+const visibleUpcoming = computed(() => upcoming.value.filter((e) => feedShows(e, feed.value)))
 const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
 const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
 const practices = computed<PracticeBooking[]>(() => game.snapshot?.practices ?? [])
