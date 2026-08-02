@@ -1,9 +1,16 @@
 // HOW A PIECE OF SILVERWARE IS ADDRESSED — one function, and it is the only one.
 //
-// Eighteen masters ship as `public/images/trophies/<tier>-<metal>.webp`: nine tiers, gold and silver
-// each. The Trophy Cabinet (`screens/TrophiesScreen.vue`) drew them first and owned the spelling as
-// a private helper; the tournament finale now hangs the same objects on its podium, so the spelling
-// moved OUT of the screen rather than being written a second time next to it.
+// Twenty-four masters ship as `public/images/trophies/<tier>-<metal>.webp`: twelve tiers, gold and
+// silver each. The Trophy Cabinet (`screens/TrophiesScreen.vue`) drew them first and owned the
+// spelling as a private helper; the tournament finale now hangs the same objects on its podium, so
+// the spelling moved OUT of the screen rather than being written a second time next to it.
+//
+// ⚠ THREE PAIRS ARE PLACEHOLDER COPIES, NOT ORIGINALS (W2-LADDER, flagged for the artist): the
+// W50 pair is a byte copy of W35's masters and the W75 and WTA 125 pairs are byte copies of
+// W100's. Copies on disk rather than an alias in this function, deliberately - the naming scheme
+// stays uniform, both direction-checks in tests/trophy-podium.test.ts stay exact, and the day the
+// real masters are cut they replace files instead of deleting a code path. Same rule the venue art
+// already lives by (art/venues.ts: "a stand-in, not a compromise").
 //
 // -------------------------------------------------------------------------------------------------
 // ⚠ WHY THIS IS A MODULE AND NOT A COPIED LINE

@@ -96,14 +96,16 @@ describe('the bottom nav is Season · Calendar · Home · Stats · Trophies, Hom
     expect(app).toContain(`<TrophiesScreen v-else-if="tab === 'trophies'" />`)
     expect(app).toContain("import TrophiesScreen from './components/screens/TrophiesScreen.vue'")
     expect(existsSync(new URL('../public/icons/trophy.svg', import.meta.url))).toBe(true)
-    // ⚠ ALL EIGHTEEN SHIP, AND THEY SHIP AS WEBP UNDER `images/` – the two halves of the art
+    // ⚠ ALL TWENTY-FOUR SHIP, AND THEY SHIP AS WEBP UNDER `images/` – the two halves of the art
     // decision, both of which are silently losable. `-fs8` masters are evacuated and never encoded
     // (scripts/optimize-art.mjs), so a set routed through under that name would vanish with a log
     // line that says "moved"; and `images/` is what workbox's `globIgnores` keys on, so a set that
     // shipped from anywhere else would land 1.6 MB in every install's precache.
+    // (RE-AIMED 18 -> 24 by W2-LADDER: the count follows TIER_LADDER x two metals; the three new
+    // rungs' pairs are placeholder copies of their neighbours' masters - see art/trophies.ts.)
     const trophies = fileURLToPath(new URL('../public/images/trophies', import.meta.url))
     const files = readdirSync(trophies).filter((f) => f.endsWith('.webp'))
-    expect(files).toHaveLength(18)
+    expect(files).toHaveLength(TIER_LADDER.length * 2)
     expect(files.some((f) => f.includes('-fs8'))).toBe(false)
     for (const tier of TIER_LADDER) {
       for (const metal of ['gold', 'silver']) {

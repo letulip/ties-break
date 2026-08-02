@@ -58,7 +58,8 @@ describe('A2/1 — the junior tour pays nothing, ever', () => {
 
 describe('A2/2 — the adult tour pays, and a first-round loss is a token rather than nothing', () => {
   it('every W rung pays once per finish, strictly decreasing, and never 0', () => {
-    expect(WTA_TIERS).toEqual(['w15', 'w35', 'w100'])
+    // W2-LADDER: six paid rungs (W50/W75/WTA125 joined with real-purse tables - see calendar.ts).
+    expect(WTA_TIERS).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
     for (const tier of WTA_TIERS) {
       const table = TIERS[tier].prizeCents!
       expect(table.length, `${tier} pays once per finish`).toBe(TIERS[tier].points.length)
@@ -77,9 +78,16 @@ describe('A2/2 — the adult tour pays, and a first-round loss is a token rather
   // match (Reg 31(a)) and a participation floor was the engine of the "just play J30s" degeneracy.
   // Prize money is not the ranking table: the tournament pays everybody who turns up, and the fact
   // that it pays them almost nothing is the design. If these two ever agree, one of them is wrong.
-  it('the LAST element is 0 for points and non-zero for money, at every adult rung', () => {
+  // ⚠ RE-AIMED by W2-LADDER: the points half of the contrast is the family split now (the real
+  // chart pays a nominal 1 from W50 up - tests/wave-b-points.test.ts NOMINAL_ONE_TIERS carries the
+  // whole ruling), so the claim this block keeps is the half that is really about MONEY: every
+  // adult rung pays a first-round loser real cents, and at the two entry rungs - where the points
+  // are still zero - the two tables genuinely disagree, which is the shape the note above is about.
+  it('the LAST element is the split value for points and non-zero for money, at every adult rung', () => {
     for (const tier of WTA_TIERS) {
-      expect(TIERS[tier].points.at(-1), `${tier} points`).toBe(0)
+      expect(TIERS[tier].points.at(-1), `${tier} points`).toBe(
+        ['w50', 'w75', 'wta125'].includes(tier) ? 1 : 0,
+      )
       expect(TIERS[tier].prizeCents!.at(-1), `${tier} money`).toBeGreaterThan(0)
     }
   })

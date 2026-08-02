@@ -156,7 +156,15 @@ export const WIN_IMMUNITY_WEEKS: Record<TierId, number> = {
   // exactly why 4 appears here and nowhere above J300.
   w15: 3,
   w35: 3,
+  // The W2-LADDER middle rungs sit with their family's shelf (3): a bigger cheque, the same kind
+  // of week. W100 keeps the 4 alone on the W side - the note above still holds, it is the largest
+  // ITF thing she can win - and the 125 matches it: a WTA title proper, rarer than a W100 and the
+  // biggest thing in this build full stop. Still a table of how long a good week lasts, not a
+  // ladder, so 4 stays the ceiling.
+  w50: 3,
+  w75: 3,
   w100: 4,
+  wta125: 4,
 }
 
 /** The kid's most recent played match, as the caller read it off the snapshot's events. */

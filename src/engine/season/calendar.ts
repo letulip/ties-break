@@ -237,17 +237,40 @@ export const TIERS: Record<TierId, TierDef> = {
   // time, and a junior Slam pays exactly zero WTA points. The two never mix.
   //
   // THE REAL LADDER, so the numbers are checkable rather than invented: the women's professional
-  // ladder is W15 -> W35 -> W50 -> W75 -> W100 (the number is the tournament's PRIZE MONEY in
-  // thousands of dollars), then WTA 125, then WTA 250/500/1000, then the four Slams. We ship the two
-  // dense entry rungs plus one rare prestige rung - exactly the shape the J family ships, and for the
-  // same reason: W15 and W35 are where a real career actually begins, and everything above W100 is
-  // beyond a nineteen-year-old's horizon (see docs/specs/adult-tour-and-endings.md).
+  // ladder is W15 -> W35 -> W50 -> W75 -> W100, then WTA 125, then WTA 250/500/1000, then the four
+  // Slams. ⚠ THE NUMBER IS THE WINNER'S POINTS, NOT THE PURSE - the 2024 restructure renamed
+  // W25/W40/W60 to W35/W50/W75 "aligning the tournament naming with the points awarded to the
+  // Winner" (research §4), and the purses stayed where they were: a W35 pays $30,000, a W50
+  // $40,000, a W75 $60,000. (This comment used to claim prize-money-in-thousands; true of W15 and
+  // W100 by coincidence, false of the three middle rungs, corrected with W2-LADDER.) Since
+  // W2-LADDER the family ships COMPLETE through WTA 125 (owner ruling 6): the two middle rungs turn
+  // the shipped ×5 title jump W35 -> W100 into ~×2 steps - a girl with five W15 titles has
+  // somewhere to GROW every half-season instead of one distant cliff - and the 125 gives W100 the
+  // same "one rung above you" pull W100 gives W75. 250s and up are act 3.
   //
   // THE POINTS ARE THE WTA TABLE'S OWN: a W15 title is 10 points, a W35 title 20, a W100 title 100.
   // ⚠ AND THEY LOOK TINY BESIDE THE JUNIOR NUMBERS ON PURPOSE - a J300 title pays 300 and a W15 title
   // pays 10. That is not a scaling mistake, it is the whole point of the fork at 19: she arrives at
   // the adult tour with a junior ranking that buys her nothing, and starts again at the bottom of a
   // table where the numbers are smaller and mean more. The two columns are never added.
+  //
+  // ⚠ W50/W75/WTA125 CARRY THE REAL 2026 CHART'S OWN ROWS, VERIFIED, NOT THE SPEC'S DESIGN VALUES
+  // (W2-LADDER; docs/research/ranking-points-by-tier.md §4, 2026 WTA Official Rulebook VIII.A.5).
+  // The spec table (act2-pro-tour.md §2) proposed 40/60/125 titles with invented round rows; its own
+  // ⚠ says those are "design values pending the in-wave verification ... the research doc wins", and
+  // the research disagrees: the 2024 restructure NAMED every rung after the winner's points (W50
+  // title = 50, W75 = 75, 125 = 125), so shipping a "W50" that pays 40 would break the one naming
+  // rule both real tours share. The three shipped rows above predate that verification and are canon
+  // as-is (spec §2); the seam W35 (20) -> W50 (50) is therefore ×2.5 rather than the real ×1.43,
+  // which is the compressed-canon-meets-real-chart cost, accepted over renaming a real rung.
+  //
+  // ⚠ AND THE LAST ELEMENT IS 1 FROM W50 UP, NOT WAVE B'S 0 - the real chart's own shape: "zero for
+  // a first-round loss at the two bottom rungs, a nominal 1 point higher up" (research §4). Wave B's
+  // rule ("she earns her first point by WINNING one") was aimed at the PARTICIPATION FLOOR, and the
+  // nominal 1 cannot rebuild it: W50+ sit behind the hardest acceptance cuts in the game, the pro
+  // entry cap prices every entry, and a whole best-16 window of 1-point exits is out-paid by one
+  // W50 semi-final - so the guard in tests/wave-b-points.test.ts is RE-AIMED per family, not
+  // weakened.
   //
   // AGE. The ITF age-eligibility rule lets a fourteen-year-old play a handful of pro events and lifts
   // the cap yearly, so a good junior plays her first W15 at sixteen or seventeen. 16 / 16 / 17 below
@@ -270,14 +293,31 @@ export const TIERS: Record<TierId, TierDef> = {
   //   W15   $1,300-2,500   $130   (~7%)     THE TITLE, barely   $2,200 - i.e. she wins the whole
   //                                                              thing and roughly covers the trip
   //   W35   $1,700-3,200   $290   (~12%)    semi-final          $5,000 - clears ~$2,600
+  //   W50   $2,000-3,600   $350   (~13%)    semi-final          $6,000 - clears ~$3,200
+  //   W75   $2,200-3,900   $550   (~18%)    semi-final          $9,000 - clears ~$5,900
   //   W100  $2,500-4,400   $900   (~26%)    quarter-final       $14,500 - clears ~$11,000
+  //   125   $2,800-4,900   $1,300 (~34%)    quarter-final       $20,000 - clears ~$16,100
   //
   // READ THE W15 ROW AGAIN, because it is the cliff the whole design turns on: at the entry rung of
   // the professional game, WINNING THE TOURNAMENT approximately pays for having gone. Everything
   // else is a loss. That is not a balance failure, it is docs/research/02-tennis-economics.md -
   // Kiranpal Pannu earned $6,771 and spent $34,500 in 2022 - and it is why the ladder has to be
   // climbed rather than farmed. W35 is where a good week starts to pay for a bad one, and W100 is
-  // where a single result changes the family's year.
+  // where a single result changes the family's year. The two middle rungs stretch that middle
+  // stanza instead of skipping it - the break-even finish stays a semi-final for three rungs
+  // running while the CLEARED amount roughly doubles per rung, so climbing pays before surviving
+  // gets easier - and the 125 is the first rung where merely reaching the quarters banks a typical
+  // trip twice over.
+  //
+  // ⚠ W50/W75 CHEQUES ARE THE REAL PURSES' FRACTIONS, NOT THE SPEC'S (W2-LADDER, same verification
+  // as the points rows above). The spec's ~$7.5k/~$11k titles assumed name-equals-purse ($50k/$75k
+  // purses at the shipped ~15% champion's fraction) - the exact misreading the research corrects:
+  // the real purses are $40k and $60k (the Aug-2024 press-release rises "never took effect",
+  // research §7c). The shipped three take ~14.5-16.7% of the REAL purse as the title cheque and
+  // ~0.575x per finish step down; applying the same fractions gives $6,000 and $9,000 titles -
+  // within ~$150 of the real 2026 champion's cheques. The 125's ~$20k title keeps the spec's design
+  // value: the research is silent on 125 money, and $20k is the top of the real 125 range - the
+  // same ~15% of a ~$130k purse.
   w15: {
     id: 'w15',
     track: 'wta',
@@ -324,6 +364,68 @@ export const TIERS: Record<TierId, TierDef> = {
     enterPct: 0.5,
     entrantPctBand: [0.08, 0.5],
   },
+  w50: {
+    id: 'w50',
+    track: 'wta',
+    label: 'World Tour 50',
+    drawSize: 32,
+    entryFeeCents: 450_00,
+    travelCostCents: [1500_00, 3100_00],
+    // The real 2026 chart's own row (research §4) - see the family note above for why these are not
+    // the spec's design values. The last element is the chart's nominal 1: W50 is the first rung
+    // where a first-round loser leaves with a point, and the first where the flat 8.3x title/one-win
+    // ratio replaces the entry rungs' steepness.
+    points: [50, 33, 20, 11, 6, 1],
+    // $6,000 / $3,500 / $2,000 / $1,200 / $650 / $350 - the real $40k purse at the shipped three's
+    // ~15% champion's fraction and ~0.575x per finish step (see the cheque note above for why not
+    // the spec's $7.5k). Real 2026 W50 champion's cheque: ~$6,086.
+    prizeCents: [6000_00, 3500_00, 2000_00, 1200_00, 650_00, 350_00],
+    // The family's cadence descends up the ladder: 2 / 3 / 4 / 6 / 13 / 13 for W15..125 (spec §2).
+    // 13 a season - denser than a National, sparser than a W35: the first rung she plans MONTHS
+    // around rather than weeks.
+    everyNWeeks: 4,
+    // Same doorway age as W15/W35: the AER's 16-year-old allowance (12 pro entries) is what
+    // actually meters her first season here, not the doorway itself.
+    minAgeYears: 16,
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    // The acceptance chain tightens one step per rung: w35 0.5 -> w50 0.4 -> w75 0.3 -> w100 0.25
+    // -> wta125 0.2. 0.4 is deliberately J300's cut one table down - the same "prestige rung has to
+    // be enterable from below" argument, one family up.
+    enterPct: 0.4,
+    // MEASURED, not guessed - the probe table is on wta125 below (one probe, all four upper rungs,
+    // same method as W100's original table). The shipped band at its narrowest week over 5 careers
+    // x 6 seasons, draw 32: [0.02, 0.40] -> 190 candidates - the deepest window in the family,
+    // as the family's dense middle rung should have. The floor is 0.02, not w35's 0.08: a W50
+    // field carries the contenders' top, and the merged table's head (the elite storey) must be
+    // REACHABLE here without being resident - position-biased entry does the rest.
+    entrantPctBand: [0.02, 0.4],
+  },
+  w75: {
+    id: 'w75',
+    track: 'wta',
+    label: 'World Tour 75',
+    drawSize: 32,
+    entryFeeCents: 500_00,
+    travelCostCents: [1700_00, 3400_00],
+    // Real 2026 chart row (research §4); nominal 1 for the opening-round loser, as at every rung
+    // from W50 up.
+    points: [75, 49, 29, 16, 9, 1],
+    // $9,000 / $5,200 / $3,000 / $1,750 / $1,000 / $550 - the real $60k purse (NOT the press-release
+    // $70k, research §7c) at the family's fractions. Real 2026 W75 champion's cheque: ~$9,133.
+    prizeCents: [9000_00, 5200_00, 3000_00, 1750_00, 1000_00, 550_00],
+    everyNWeeks: 6,
+    // 17, one year past W50's door (spec §2: minAge 16/17/17): the rung pairs with W100 as the
+    // half of the family a sixteen-year-old can SEE but not enter, which is what makes her first
+    // seventeen-year-old season a widening rather than a repeat.
+    minAgeYears: 17,
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    enterPct: 0.3,
+    // MEASURED - probe table on wta125 below. Shipped [0, 0.35] -> 150 candidates at the narrowest
+    // week measured (the age-17 gate costs w75 the 16-year-old field pros and juniors that w50
+    // keeps). Floor 0: from W75 up the elite storey is resident, not visiting; the ceiling steps
+    // 0.40 -> 0.35 so the family's window tightens at every rung on the way to the 125's 0.25.
+    entrantPctBand: [0.0, 0.35],
+  },
   w100: {
     id: 'w100',
     track: 'wta',
@@ -340,28 +442,71 @@ export const TIERS: Record<TierId, TierDef> = {
     minAgeYears: 17,
     enterPointBand: [0, Number.MAX_SAFE_INTEGER],
     enterPct: 0.25,
-    // ⚠ 0.55, NOT J300's 0.25, AND THE DIFFERENCE IS THE AGE GATE - measured, not guessed. A tier's
-    // entrant window has to be WIDER than its own draw or the field stops moving week to week, and
-    // W100 is the one rung in the game where that is not free: `selectEntrants` filters to the
-    // seventeen-and-overs, and only about a third of the cohort's top quarter is old enough at any
-    // given moment. Candidates left inside the window at its narrowest, over 5 careers x 312 weeks
-    // sampled every 13th week, against a draw of 32:
+    // ⚠ [0, 0.30], RE-MEASURED BY W2-LADDER'S BAND PROBE - the third measurement this band has
+    // carried, each against the world of its day. The original 0.55 was measured against the
+    // PRE-FIELD world (199 juniors, ~80 of them 17+): its table read 14 candidates at [0, 0.25]
+    // and 36 at [0, 0.55], so 0.55 was the narrowest window that cleared the draw with margin, and
+    // anything tighter put the backfill in charge (the L6 guard caught a "prestige" draw at 0.256
+    // against a 0.25 window). The field-pro population (living-field phase W, 300 pros aged 16-30)
+    // made that scarcity historical, and the two rungs W2-LADDER lands AROUND this one forced the
+    // re-measurement: with W75 at [0, 0.35] a 0.55-wide W100 window would have drawn a visibly
+    // SOFTER field one rung up, inverting the family exactly where it must not invert (the L6
+    // monotonicity guard). tools/band-probe.ts, 5 careers x 312 weeks sampled every 13th week,
+    // age-17 gate applied, against a draw of 32:
     //
-    //   [0, 0.25] -> 14   [0, 0.35] -> 19   [0, 0.40] -> 24
-    //   [0, 0.45] -> 27   [0, 0.50] -> 32   [0, 0.55] -> 36   <- shipped
+    //   [0, 0.20] -> 88   [0, 0.25] -> 110   [0, 0.30] -> 133 (min; mean 145)   <- shipped
+    //   [0, 0.40] -> 170  [0, 0.55] -> 232
     //
-    // At J300's 0.25 the rung could not fill itself from its own window for most of a career, so
-    // `selectEntrants`' backfill ran nearly every time and a "prestige" W100 draw was quietly half
-    // made of whoever was fit - the guard in tests/ladder.test.ts L6 caught it at 0.256 against a
-    // 0.25 window. 0.50 clears the draw exactly, which is no margin at all; 0.55 clears it with four
-    // to spare at the worst week measured.
+    // 0.30 clears the draw four times over at the worst week measured, sits strictly between
+    // W75's 0.35 and the 125's 0.25, and hands W2-FIELD2's recalibration a family whose windows
+    // already tighten monotonically. The ACCEPTANCE cut the kid faces (`enterPct: 0.25`) is
+    // untouched.
+    entrantPctBand: [0.0, 0.3],
+  },
+  wta125: {
+    id: 'wta125',
+    track: 'wta',
+    label: 'WTA 125',
+    drawSize: 32,
+    entryFeeCents: 700_00,
+    travelCostCents: [2100_00, 4200_00],
+    // The real 2026 chart row (research §4): 125/81/49/27/15/1 - NOT the spec table's 29/16/8 tail,
+    // which was a design guess the research overrules (see the family note above). The name is the
+    // winner's points, here as at every rung of both real tours.
+    points: [125, 81, 49, 27, 15, 1],
+    // $20,000 / $11,500 / $6,700 / $3,900 / $2,250 / $1,300 - the spec's design cheque kept (the
+    // research is silent on 125 money; $20k = ~15% of a ~$130k purse, the top of the real 125
+    // range), stepped down at the family's ~0.575x per finish.
+    prizeCents: [20000_00, 11500_00, 6700_00, 3900_00, 2250_00, 1300_00],
+    // Rare like W100 (spec §2: "125 rare like W100"): four a year, planned around, never adjacent.
+    everyNWeeks: 13,
+    minGapWeeks: 2,
+    minAgeYears: 17,
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    // The top of the acceptance chain: 0.2, tighter than W100's 0.25 (spec §2 "tune 125 tighter").
+    // On a fresh ~500-row merged table that is "takes the top 100" - the hardest cut in the game,
+    // as the top rung's should be.
+    enterPct: 0.2,
+    // MEASURED, the W100 way - the probe is tools/band-probe.ts (one run, all four upper rungs),
+    // candidates left inside the window at its NARROWEST week over 5 careers x 6 seasons sampled
+    // every 13th week, age gate applied, against the merged ~500-row universe and a draw of 32:
     //
-    // IT DOES NOT MAKE W100 A WEAKER FIELD THAN J300, which is the objection to answer. This band is
-    // read against a table that has 199 juniors in it and only ~80 adults; the top 55% of everybody
-    // is roughly the top quarter of the people actually eligible, so the tournament draws from the
-    // same slice of ITS OWN population that J300 draws from of hers. The ACCEPTANCE cut the kid
-    // faces (`enterPct: 0.25`) is untouched and is still the hardest in the game.
-    entrantPctBand: [0.0, 0.55],
+    //   band        w50(16+)  w75/w100/wta125(17+)
+    //   [0, 0.15]      74        65
+    //   [0, 0.20]      99        88
+    //   [0, 0.25]     124       110
+    //   [0, 0.30]     149       133
+    //   [0, 0.40]     199       170
+    //
+    // Every window above clears the draw three times over - the field-pro population (300 pros,
+    // all 16+ by construction) is what makes the W windows deep where the pre-field W100 needed
+    // 0.55 for a margin of four. [0, 0.25] is picked for the 125 anyway, NOT the minimum that
+    // fills: a prestige window that merely fills is a field that never varies (the J300 lesson,
+    // one table up), and 110 candidates for 32 chairs keeps the position-biased draw a real draw.
+    // The chain w35 [0.08, 0.50] / w50 [0.02, 0.40] / w75 [0, 0.35] / w100 [0, 0.30] / wta125
+    // [0, 0.25] tightens at BOTH ends at every step, which is what keeps the L6 guard's family
+    // monotonicity true with six rungs: shipped-band minima 190 / 150 / 133 / 110.
+    entrantPctBand: [0.0, 0.25],
   },
 }
 
@@ -379,7 +524,7 @@ export const TIERS: Record<TierId, TierDef> = {
 export const TIER_LADDER: readonly TierId[] = [
   'local', 'regional', 'national',
   'j30', 'j60', 'j300',
-  'w15', 'w35', 'w100',
+  'w15', 'w35', 'w50', 'w75', 'w100', 'wta125',
 ]
 
 /** Short tier names for width-starved surfaces (the next-week button, the Home season strip) and
@@ -400,7 +545,13 @@ export const TIER_SHORT: Record<TierId, string> = {
   // on a width-starved surface – one letter apart, one table apart.
   w15: 'W15',
   w35: 'W35',
+  w50: 'W50',
+  w75: 'W75',
   w100: 'W100',
+  // The tour's own shorthand too: everybody in the sport calls these "125s", but a bare number on a
+  // width-starved surface reads as a value, not a name - so the short form keeps the tour prefix,
+  // which is also how the WTA's own calendar prints it.
+  wta125: 'WTA 125',
 }
 
 /** Pure age gate for a tier: the junior tour is 13-18, the domestic ladder has no gate at all, the

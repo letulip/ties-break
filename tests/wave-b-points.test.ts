@@ -86,15 +86,32 @@ describe('W-B1 — the index claim: the LAST points element IS the first-round e
   })
 })
 
-describe('W-B2 — a first-round loss pays ZERO at every tier', () => {
-  it('the last element of every points array is 0', () => {
+// ⚠ RE-AIMED BY W2-LADDER, NOT WEAKENED - the real chart itself split the rule. Wave B's zero was
+// sourced from the ITF junior table (Reg 31(a)) and the professional chart's two BOTTOM rungs,
+// and the 2026 WTA chart pays a NOMINAL 1 to an opening-round loser from W50 up (research §4:
+// "zero for a first-round loss at the two bottom rungs, a nominal 1 point higher up"). So the
+// claim is now the family split the sources actually make: ZERO at every domestic and junior
+// rung and at W15/W35 - every rung the "just play cheap events" grind was possible at - and the
+// chart's own 1 at W50/W75/WTA125. The 1 cannot rebuild the participation floor wave B removed:
+// those rungs sit behind the game's hardest acceptance cuts and the pro entry cap, and a whole
+// window of 1-point exits is out-paid by a single W50 semi-final (W-B3 pins the bound).
+//
+// ⚠ W100's LAST ELEMENT STAYS 0, AND THAT IS CANON, NOT AN OVERSIGHT: the real chart pays it 1,
+// but act2-pro-tour.md §2 rules the three shipped rows (w15/w35/w100) canon as-is - only the NEW
+// rungs took the in-wave verification. So the nominal-1 set is exactly the W2-LADDER trio, and a
+// future owner ruling that re-verifies w100's row should move it and this pin together.
+const NOMINAL_ONE_TIERS: readonly TierId[] = ['w50', 'w75', 'wta125']
+const firstRoundValue = (tier: TierId) => (NOMINAL_ONE_TIERS.includes(tier) ? 1 : 0)
+
+describe('W-B2 — a first-round loss pays ZERO at every rung the grind was possible at', () => {
+  it('the last element of every points array is the family split: 0 everywhere but the chart-1 trio', () => {
     for (const tier of TIER_LADDER) {
       const pts = TIERS[tier].points
-      expect(pts[pts.length - 1]).toBe(0)
+      expect(pts[pts.length - 1], tier).toBe(firstRoundValue(tier))
     }
   })
 
-  it('end to end: run the real bracket, look the loser up in the real table, get 0', () => {
+  it('end to end: run the real bracket, look the loser up in the real table, get the split value', () => {
     for (const tier of TIER_LADDER) {
       const def = TIERS[tier]
       const res = runTournament(eventFor(tier), field(def.drawSize), null, 'seed-wb2', rngFromSeed('wb2'))
@@ -102,7 +119,7 @@ describe('W-B2 — a first-round loss pays ZERO at every tier', () => {
         const loser = m.winnerId === m.aId ? m.bId : m.aId
         // This is byte-for-byte the lookup finalizeTournament/awardAiPoints do:
         //   const points = TIERS[event.tier].points[finish] ?? 0
-        expect(def.points[res.finishes[loser]] ?? 0).toBe(0)
+        expect(def.points[res.finishes[loser]] ?? 0, tier).toBe(firstRoundValue(tier))
       }
     }
   })
@@ -114,7 +131,7 @@ describe('W-B2 — a first-round loss pays ZERO at every tier', () => {
     }
   })
 
-  it('the table is still strictly descending down to the zero, so a deeper run always pays more', () => {
+  it('the table is still strictly descending down to the last slot, so a deeper run always pays more', () => {
     for (const tier of TIER_LADDER) {
       const pts = TIERS[tier].points
       for (let i = 1; i < pts.length; i++) expect(pts[i]).toBeLessThan(pts[i - 1])
@@ -137,16 +154,27 @@ describe('W-B3 — the participation floor is gone', () => {
     expect(rank[0].points).toBe(0)
   })
 
-  it('showing up at all six rungs, losing every opener, is still 0', () => {
-    const results: SeasonResult[] = []
+  // ⚠ RE-AIMED by W2-LADDER: three rungs now pay the chart's nominal 1 at the door (see
+  // NOMINAL_ONE_TIERS above), so "every opener everywhere = 0" stopped being what the sources say.
+  // What the participation-floor claim actually protects is a BOUND, and the bound is pinned in
+  // both directions: the grindable rungs still bank exactly nothing, and the nominal-1 rungs can
+  // never bank more than one point per counted slot - a whole window of first-round exits at the
+  // chart-1 trio is out-paid by ONE W50 semi-final. (Best-6 here; under the adult best-16 the
+  // ceiling is 16, still under W50's 20-point semi-final - the bound survives the window widening.)
+  it('losing every opener everywhere banks 0 from the grindable rungs and only the bounded nominal 1s', () => {
+    const zeroSide: SeasonResult[] = []
+    const oneSide: SeasonResult[] = []
     let week = 1
     for (const tier of TIER_LADDER) {
       for (let i = 0; i < 6; i++) {
         const pts = TIERS[tier].points[TIERS[tier].points.length - 1]
-        if (pts > 0) results.push({ playerId: 'kid', week: week++, points: pts, tier })
+        const bucket = NOMINAL_ONE_TIERS.includes(tier) ? oneSide : zeroSide
+        if (pts > 0) bucket.push({ playerId: 'kid', week: week++, points: pts, tier })
       }
     }
-    expect(windowedBestSum(results, 52, 'kid')).toBe(0)
+    expect(zeroSide).toEqual([]) // the grindable rungs leave no row at all (finalize guards on > 0)
+    expect(windowedBestSum(oneSide, 52, 'kid')).toBe(6) // best-6 of pure 1s: one point per slot
+    expect(windowedBestSum(oneSide, 52, 'kid')).toBeLessThan(TIERS.w50.points[2]) // < one W50 SF
   })
 })
 

@@ -66,7 +66,15 @@ describe('per-match cost = scoreline + tier surcharge', () => {
     // their fields actually are.
     w15: [6, 7, 8],
     w35: [7, 8, 9],
+    // ⚠ W2-LADDER: the middle rungs INTERPOLATE inside the R15-6 family (ends pinned 4 .. 6), they
+    // do not extend it - raw w50 5 / w75 5.5, the half rounded UP because the accumulator is
+    // integer end to end, and the 125 takes w100's 6 rather than a prestige +1 (its field today is
+    // drawn from the same merged-table slice; W2-FIELD2's fourth storey is what re-prices it,
+    // measured). See the knob's comment in economy.ts.
+    w50: [7, 8, 9],
+    w75: [8, 9, 10],
     w100: [8, 9, 10],
+    wta125: [8, 9, 10],
   }
 
   it('the base is the owner-set 2 for a simple match, 3 for a hard one (one step above it)', () => {
@@ -107,13 +115,29 @@ describe('per-match cost = scoreline + tier surcharge', () => {
   // pinned now is the shape that is actually designed: +1 per rung INSIDE each family, and the
   // seam's drop stated as its own assertion - so a hand that "fixes" the dip back up meets this
   // test and the knob's comment together.
-  it('the surcharge is one step per rung INSIDE each family, and the J -> W seam drops by design', () => {
-    for (const track of ['domestic', 'itf', 'wta'] as const) {
+  // ⚠ RE-AIMED (W2-LADDER), NOT WEAKENED, and the reason is arithmetic rather than taste: it read
+  // "+1 per rung inside each family" across every track, which was exact while the W family had
+  // three rungs and is IMPOSSIBLE with six - R15-6 pinned the family's ends for today's soft
+  // fields (w15 4 .. w100 6), and two integers strictly between 5 and 6 do not exist, so the
+  // interpolated middle rungs (w50 5, w75 6, wta125 6) make the W family monotone NON-STRICT by
+  // construction. What is pinned now: the domestic and junior families keep their strict +1
+  // exactly as shipped; the W family is non-decreasing with its exact steps written out (so a
+  // hand cannot smuggle a decrease OR a prestige re-extrapolation past this test); and both seams
+  // keep their original assertions.
+  it('surcharges: strict +1 inside domestic and J; the W family non-decreasing with pinned steps; the J -> W seam drops by design', () => {
+    for (const track of ['domestic', 'itf'] as const) {
       const rungs = TIER_LADDER.filter((t) => TIERS[t].track === track)
       for (let i = 1; i < rungs.length; i++) {
         const below = matchDrain(rungs[i - 1], SIMPLE)
         expect(matchDrain(rungs[i], SIMPLE), `${rungs[i]} vs ${rungs[i - 1]}`).toBe(below + 1)
       }
+    }
+    // The W family, rung by rung - the exact interpolated shape, not merely "non-decreasing".
+    const w = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
+    expect(w).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
+    expect(w.map((t) => matchDrain(t, SIMPLE))).toEqual([6, 7, 7, 8, 8, 8])
+    for (let i = 1; i < w.length; i++) {
+      expect(matchDrain(w[i], SIMPLE), `${w[i]} vs ${w[i - 1]}`).toBeGreaterThanOrEqual(matchDrain(w[i - 1], SIMPLE))
     }
     // The domestic -> junior seam still steps UP (+1, j30 over national)...
     expect(matchDrain('j30', SIMPLE)).toBe(matchDrain('national', SIMPLE) + 1)
@@ -179,7 +203,14 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     // ruling: only the professional family moved.
     w15: [6, 13, 20, 27, 34],
     w35: [7, 15, 23, 31, 39],
+    // W2-LADDER rows: same ladder D, the interpolated surcharges (see the per-match table above).
+    // w50 rides with w35's arithmetic one simple-match step up; w75 and the 125 land on w100's
+    // rows exactly, because their per-match cost is w100's - the family's top three rungs cost
+    // the same run today, and W2-FIELD2's recalibration is what will split them.
+    w50: [7, 15, 23, 31, 39],
+    w75: [8, 17, 26, 35, 44],
     w100: [8, 17, 26, 35, 44],
+    wta125: [8, 17, 26, 35, 44],
   }
 
   it('the shipped ladders are C = [0,1,1,2,2] for domestic+J and D = [0,1,1,1,1] for the W family (change deliberately, never to make a test pass)', () => {
@@ -252,7 +283,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j300: [7, 14, 21, 28, 35],
       w15: [6, 12, 18, 24, 30],
       w35: [7, 14, 21, 28, 35],
+      w50: [7, 14, 21, 28, 35],
+      w75: [8, 16, 24, 32, 40],
       w100: [8, 16, 24, 32, 40],
+      wta125: [8, 16, 24, 32, 40],
     },
     D: {
       local: [2, 5, 8, 11, 14],
@@ -263,7 +297,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j300: [7, 15, 23, 31, 39],
       w15: [6, 13, 20, 27, 34],
       w35: [7, 15, 23, 31, 39],
+      w50: [7, 15, 23, 31, 39],
+      w75: [8, 17, 26, 35, 44],
       w100: [8, 17, 26, 35, 44],
+      wta125: [8, 17, 26, 35, 44],
     },
     C: {
       local: [2, 5, 8, 12, 16],
@@ -274,7 +311,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j300: [7, 15, 23, 32, 41],
       w15: [6, 13, 20, 28, 36],
       w35: [7, 15, 23, 32, 41],
+      w50: [7, 15, 23, 32, 41],
+      w75: [8, 17, 26, 36, 46],
       w100: [8, 17, 26, 36, 46],
+      wta125: [8, 17, 26, 36, 46],
     },
     B: {
       local: [2, 5, 8, 12, 18],
@@ -285,7 +325,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j300: [7, 15, 23, 32, 43],
       w15: [6, 13, 20, 28, 38],
       w35: [7, 15, 23, 32, 43],
+      w50: [7, 15, 23, 32, 43],
+      w75: [8, 17, 26, 36, 48],
       w100: [8, 17, 26, 36, 48],
+      wta125: [8, 17, 26, 36, 48],
     },
     A: {
       local: [2, 5, 9, 14, 20],
@@ -296,7 +339,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       j300: [7, 15, 24, 34, 45],
       w15: [6, 13, 21, 30, 40],
       w35: [7, 15, 24, 34, 45],
+      w50: [7, 15, 24, 34, 45],
+      w75: [8, 17, 27, 38, 50],
       w100: [8, 17, 27, 38, 50],
+      wta125: [8, 17, 27, 38, 50],
     },
   }
 

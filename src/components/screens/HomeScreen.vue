@@ -460,12 +460,18 @@ const coachQuote = computed(() =>
 // the same tier two different things. This array only carries the LADDER ORDER.
 //
 // ⚠ THE ADULT RUNGS JOIN IT (task #17), spelled out here rather than folded into TIER_LADDER,
-// because the list is deliberately hand-kept: this strip is a nine-chip row on a phone, and the day
-// somebody adds a tenth rung the layout is a decision, not an automatic consequence. Their chips
+// because the list is deliberately hand-kept: this strip is a chip row on a phone, and the day
+// somebody adds a rung the layout is a decision, not an automatic consequence. Their chips
 // read `locked` for the whole junior half of a career, which is the truth and is the point of a
 // ladder you can see the top of.
+//
+// ⚠ W2-LADDER: twelve chips, and the layout decision is TAKEN - the strip already wraps
+// (.season-strip is flex-wrap), so the ladder reads as two lines on a phone rather than losing
+// rungs. The feed's two-type rule (act2-pro-tour.md §4) governs the EVENT FEED, not this strip:
+// this row is her whole climb at a glance, achievement plus the top she has not reached, and
+// hiding outgrown rungs here would erase the finishes she earned on them.
 const SEASON_STRIP_TIERS: { id: TierId; short: string }[] = (
-  ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w100'] as const
+  ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as const
 ).map((id) => ({ id, short: TIER_SHORT[id] }))
 // finish index -> short label (reuses the finish-index convention: 0 = champion).
 function shortFinish(finish: number): string {
@@ -489,8 +495,11 @@ interface TierChip {
 }
 const tierStates = useTierStates()
 const seasonChips = computed<TierChip[]>(() =>
-  SEASON_STRIP_TIERS.map(({ id, short }, i) => {
-    const avail = tierStates.value[i]
+  SEASON_STRIP_TIERS.map(({ id, short }) => {
+    // By ID, not by index (W2-LADDER): the old `tierStates.value[i]` zip silently assumed this
+    // hand-kept list and TIER_LADDER agree position by position - true for one release and a trap
+    // for ever. useTierStates is TIER_LADDER-ordered; the find makes the join explicit and total.
+    const avail = tierStates.value.find((s) => s.id === id)!
     const best = game.snapshot?.bestFinishByTier[id]
     // Her earned result outranks every open state: once a tier is on the books the chip's job is to
     // show the finish, and the availability lives in the tooltip.

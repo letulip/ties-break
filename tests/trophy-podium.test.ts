@@ -94,7 +94,9 @@ describe('the podium hangs the real trophy, and there is ONE builder for it', ()
     // ...and nothing ships that no url can reach: art the app can never draw is art nobody knows is
     // dead. This is the direction tests/art/preload.test.ts calls "the complete enumeration".
     expect([...onDisk].sort()).toEqual([...built].sort())
-    expect(built.size).toBe(18)
+    // 18 -> 24 with W2-LADDER's three rungs (the count IS TIER_LADDER x two metals; the new pairs
+    // are placeholder copies of neighbours' masters, flagged in art/trophies.ts).
+    expect(built.size).toBe(TIER_LADDER.length * 2)
   })
 
   it('gold on the champion screen, silver on the runner-up screen', () => {

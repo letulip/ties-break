@@ -99,8 +99,11 @@ describe('a result reads back as the round she reached', () => {
       }
       // the table is strictly decreasing, which is WHY the inversion is unambiguous inside a tier
       for (let i = 1; i < table.length; i++) expect(table[i], `${tier}`).toBeLessThan(table[i - 1])
-      // ...and the last entry is 0 – a first-round loss pays nothing (wave B, task #35)
-      expect(table.at(-1), `${tier}`).toBe(0)
+      // ...and the last entry is the wave-B/W2-LADDER family split: 0 everywhere a first-round
+      // loss pays nothing, the real chart's nominal 1 at W50/W75/WTA125 (see
+      // tests/wave-b-points.test.ts NOMINAL_ONE_TIERS for the whole ruling). The inversion stays
+      // unambiguous either way - strict descent is asserted above.
+      expect(table.at(-1), `${tier}`).toBe(['w50', 'w75', 'wta125'].includes(tier) ? 1 : 0)
     }
   })
 
@@ -158,16 +161,18 @@ describe('the rungs escalate, and a small draw does not pretend to have rounds i
     const next = nextRungFor(won)
     expect(next.tier).toBe('national')
     expect(next.firstMatch).toBe(true)
-    // ⚠ RE-AIMED, NOT WEAKENED (task #17): the top of the ladder is W100 now, not J300. The claim is
-    // unchanged and is still asserted twice - a title moves the goal to the next rung up, and at the
-    // rung with nothing above it the goal stays "win it". What moved is where the ceiling is, which
-    // is the point of the slice: a J300 title used to end the game's ambitions and now hands her the
-    // first rung of the professional tour. That handover is exactly the beat §4 of
-    // docs/specs/adult-tour-and-endings.md turns into a decision at 19.
+    // ⚠ RE-AIMED, NOT WEAKENED (task #17, then W2-LADDER): the top of the ladder is the WTA 125
+    // now. The claim is unchanged and is still asserted twice - a title moves the goal to the next
+    // rung up, and at the rung with nothing above it the goal stays "win it". What moved is where
+    // the ceiling is, twice over: a J300 title hands her the professional tour's first rung, and a
+    // W100 title now hands her the 125 instead of ending the game's ambitions - the ~x2-per-step
+    // growth act2-pro-tour.md §2 built the middle rungs for.
     const wasTop = facts({ ladders: { itf: ladder([result('j300', 0)]) } })
     expect(nextRungFor(wasTop)).toEqual({ tier: 'w15', finish: 4, firstMatch: true })
-    const top = facts({ ladders: { wta: ladder([result('w100', 0)]) } })
-    expect(nextRungFor(top)).toEqual({ tier: 'w100', finish: 0, firstMatch: false })
+    const wasW100 = facts({ ladders: { wta: ladder([result('w100', 0)]) } })
+    expect(nextRungFor(wasW100)).toEqual({ tier: 'wta125', finish: 4, firstMatch: true })
+    const top = facts({ ladders: { wta: ladder([result('wta125', 0)]) } })
+    expect(nextRungFor(top)).toEqual({ tier: 'wta125', finish: 0, firstMatch: false })
   })
 
   it('the goal is about the STRONGEST tier she has played, not the busiest', () => {
@@ -274,13 +279,19 @@ describe('the goal the card prints', () => {
       ladders: { domestic: ladder([result('regional', 0)]) },
     })
     expect(nextGoalFor(reg).text).toBe('Win one match at the National Series')
-    // At the very top of the ladder there is nothing above, so "win it" IS the honest goal - the
-    // one case the old fallback was right about, kept right.
-    const top = facts({
+    // A W100 title escalates to the rung W2-LADDER put above it...
+    const w100 = facts({
       upcoming: [event({ entered: true, tier: 'w100', label: 'World Tour 100 Dubai' })],
       ladders: { wta: ladder([result('w100', 0)]) },
     })
-    expect(nextGoalFor(top).text).toBe('Win the World Tour 100')
+    expect(nextGoalFor(w100).text).toBe('Win one match at the WTA 125')
+    // ...and at the very top of the ladder there is nothing above, so "win it" IS the honest goal -
+    // the one case the old fallback was right about, kept right (the top is the 125 now).
+    const top = facts({
+      upcoming: [event({ entered: true, tier: 'wta125', label: 'WTA 125 Limoges' })],
+      ladders: { wta: ladder([result('wta125', 0)]) },
+    })
+    expect(nextGoalFor(top).text).toBe('Win the WTA 125')
   })
 
   it('⚠ `bestAt` READS ALL THREE TABLES – a W15 result is not invisible to the entered arm', () => {

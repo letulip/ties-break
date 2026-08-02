@@ -3,8 +3,16 @@ import type { MatchPlayer, Surface } from '../match/types'
 
 /** The playable ladder. The domestic rungs (`local` → `regional` → `national`) hand over to the
  *  junior international tour (`j30` → `j60` → `j300`); the inert `itf` placeholder was replaced by
- *  that family in the ladder-up slice. J500/J200/J100 analogues are content for later. */
-export type TierId = 'local' | 'regional' | 'national' | 'j30' | 'j60' | 'j300' | 'w15' | 'w35' | 'w100'
+ *  that family in the ladder-up slice. J500/J200/J100 analogues are content for later.
+ *
+ *  ⚠ THE W FAMILY IS SIX RUNGS SINCE W2-LADDER (act2-pro-tour.md §2, owner ruling 6): W50/W75 fill
+ *  the ×5 hole between W35 and W100, and `wta125` sits above W100 – the WTA's own rung, not an ITF
+ *  one, which is why its id carries the tour's name instead of the W prefix. 250/500/1000/Slams are
+ *  act-3 content and deliberately absent. */
+export type TierId =
+  | 'local' | 'regional' | 'national'
+  | 'j30' | 'j60' | 'j300'
+  | 'w15' | 'w35' | 'w50' | 'w75' | 'w100' | 'wta125'
 /** WHICH TABLE A RESULT PAYS INTO. Two currencies with no exchange rate between them, which is how
  *  the real sport works: Reg 10's list of ranking tournaments is closed and contains only ITF grades,
  *  so a national title produces exactly ZERO ITF points, while federations import ITF results at

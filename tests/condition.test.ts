@@ -299,7 +299,14 @@ const REF = {
   // fixture. THE CAPTURE ITSELF DID NOT MOVE: count 41550 and hash e6b0c709 reproduce byte-for-byte
   // (asserted first, in this very test), which is what this block actually guards - fatigue,
   // availability and rival condition are all post-draw arithmetic by construction.
-  kidRank: 152,
+  // ⚠ RE-PINNED 152 -> 138 BY W2-LADDER (the three new W rungs), the calendar-shape move this pin's
+  // history has absorbed at every ladder change. TIER_LADDER grew 9 -> 12, so `tierPhase` (0.5 +
+  // index/length) re-spaces every tier's ideal weeks and the whole calendar re-deals: same counts
+  // per rung for the old nine, different WEEKS, therefore different event ids, different
+  // `seed:aitour:<id>` sub-streams, and a different set of juniors ends the year holding counting
+  // points. Post-draw composition change end to end - count 41550 and hash e6b0c709 reproduce
+  // byte-for-byte, asserted lines above this number.
+  kidRank: 138,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

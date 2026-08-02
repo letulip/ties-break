@@ -50,7 +50,14 @@ const EXPECTED_BANDS: Record<TierId, readonly [number, number]> = {
   // a junior Slam feeder buses children in, a $100k adult event is a Tuesday in a mid-size town.
   w15: [20, 70],
   w35: [60, 200],
+  // W2-LADDER: the middle rungs continue the production-scale climb (a W50 is a W35 with a second
+  // stand, a W75 the first organised adult week) and both stay BELOW J300's 900-2,600; the 125 is
+  // the first room that OUTGROWS it - a WTA event proper. Same two-file discipline as every row
+  // above: these numbers restate preview.ts's table independently.
+  w50: [90, 280],
+  w75: [150, 500],
   w100: [400, 1400],
+  wta125: [1200, 3500],
 }
 
 /** The roster `computeRanking` wants: the whole cohort plus her. `cohortIds` is engine-internal, so

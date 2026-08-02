@@ -871,10 +871,21 @@ export const ECONOMY = {
     // entrant fields, not guessed. The seam j300 (5) -> w15 (4) DROPS by design and the ladder
     // guard (tests/ladder.test.ts L9) is re-aimed per family to hold exactly this shape: monotone
     // inside each family, and the W family never priced above where its fields actually are.
+    // ⚠ W50/W75/WTA125 (W2-LADDER) INTERPOLATE INSIDE THE PRICED FAMILY, THEY DO NOT EXTEND IT.
+    // R15-6 pinned the family's ends for today's soft fields (w15 4 .. w100 6), so the two middle
+    // rungs land BETWEEN them: the raw interpolation is w50 5 / w75 5.5, and the half rounds UP
+    // because the condition accumulator is integer arithmetic end to end ("no fractions", the
+    // block note above) - so w75 prices with the prestige pair it schedules like (every 6 weeks,
+    // age 17) rather than with the dense pair. Two integers strictly between 5 and 6 do not exist,
+    // so the family is monotone NON-STRICT by construction; the ladder guard (tests/ladder.test.ts
+    // L9) holds exactly that. The 125 takes w100's 6, NOT a +1 step: R15-6's rule is "priced
+    // against the measured field, never extrapolated by prestige", and today a 125 field is drawn
+    // from the same merged-table slice as a W100's - when W2-FIELD2's fourth storey makes the 125
+    // field real, IT gets re-priced upward with w35/w100, measured, per the dated note above.
     tierMatchFatigue: {
       local: 0, regional: 1, national: 2,
       j30: 3, j60: 4, j300: 5,
-      w15: 4, w35: 5, w100: 6,
+      w15: 4, w35: 5, w50: 5, w75: 6, w100: 6, wta125: 6,
     } as Record<TierId, number>,
     // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
     // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
@@ -941,10 +952,14 @@ export const ECONOMY = {
     // living-field population makes the W fields real, w35/w100 are re-priced upward, measured.
     // W100's old 70 meant nearly every entry raised a caution; at 60 it still cautions any career
     // that arrives worn, and the one HARD floor in the game is still `medicalFloor` (15) below.
+    // The W2-LADDER middle rungs keep the floor<->surcharge pairing R15-6 set (floor = 30 + 5 x
+    // surcharge: 4->50, 5->55, 6->60), so the floors interpolate exactly as the surcharges do -
+    // w50 with the dense pair at 55, w75/wta125 with the prestige pair at 60 - and one retune
+    // note (tierMatchFatigue above) governs both tables.
     minConditionToEnter: {
       local: 20, regional: 30, national: 40,
       j30: 45, j60: 50, j300: 55,
-      w15: 50, w35: 55, w100: 60,
+      w15: 50, w35: 55, w50: 55, w75: 60, w100: 60, wta125: 60,
     } as Record<TierId, number>,
     examWeeks: [[23, 24]] as [number, number][], // season-week offsets blacked out for school
     // Moved off 24-25 when the surface blocks landed: week 25 is the FIRST week of the grass
