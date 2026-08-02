@@ -42,6 +42,7 @@ import { ECONOMY } from './economy'
 import { rngFromSeed } from './rng'
 import { isOffSeasonWeek, WEEKS_PER_YEAR } from './season/calendar'
 import type { KitFreshCap } from './equipment'
+import type { TierId } from './season/types'
 import type { KitLine, KitOfferTerms, Offer, SponsorTier } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -411,6 +412,79 @@ export function refuseOffer(offers: Offer[], offerId: string, week: number): Off
   offer.state = 'refused'
   offer.decidedWeek = week
   return offer
+}
+
+// =================================================================================================
+// THE TOURNAMENT DESK (W2-LADDER §6, the informational half of the entry lifecycle)
+// =================================================================================================
+//
+// Owner ruling 1, verbatim: «у нас уже система писем есть для этого, надо использовать. И после
+// регистрации на турниры, где нельзя пропускать тоже можно письма присылать "вы зарегистрированы,
+// надо явиться, отменить можно до... иначе по правилам турнира..." чтобы у игрока было четкое и
+// прозрачное понимание системы.» So: register for a PROFESSIONAL event -> a letter through the
+// EXISTING mail surface; cancel in time -> a short confirmation. NO fines, NO penalty points in
+// this wave - the letter says the tour's rules exist, and the teeth arrive in act 3 (§6's regime),
+// AFTER the habit and the transparency do. That order is the whole point.
+//
+// ⚠ ZERO RANDOMNESS, unlike the sponsor's `shopWritesAt`: the desk always writes, because the
+// letter is a RECEIPT for an action she just took, not weather. No sub-stream is touched, so the
+// arity discipline this file keeps (no Rng parameter anywhere) holds trivially here.
+//
+// ⚠ THE ID IS DERIVED FROM STATE, never a counter: `entry-<eventId>-<n>` where n counts the
+// letters this event has already produced. Deterministic across replays (the same career writes
+// the same inbox), and a cancel-and-re-enter produces distinct rows - the inbox is a record, and
+// a record that overwrote itself would say the second registration never happened.
+
+/** The registration letter, raised by `enterEvent` for W-rung entries. */
+export function raiseEntryLetter(
+  offers: Offer[],
+  week: number,
+  event: { id: string; tier: TierId; week: number; deadlineWeek: number },
+  label: string,
+): Offer {
+  const n = offers.filter((o) => o.kind === 'entry' && o.id.startsWith(`entry-${event.id}-`)).length
+  const offer: Offer = {
+    id: `entry-${event.id}-${n}`,
+    kind: 'entry',
+    week,
+    // Informational: the deadline field carries the event's own cancellation deadline so the
+    // letter surface can quote one number the engine actually enforces (withdrawEvent's rule).
+    deadlineWeek: event.deadlineWeek,
+    terms: { tier: event.tier, label, eventWeek: event.week, freeUntilWeek: event.deadlineWeek },
+    state: 'info',
+  }
+  offers.push(offer)
+  return offer
+}
+
+/** The short confirmation for a free, in-time cancellation, raised by `withdrawEvent`. */
+export function raiseEntryCancelLetter(
+  offers: Offer[],
+  week: number,
+  event: { id: string; tier: TierId; week: number; deadlineWeek: number },
+  label: string,
+): Offer {
+  const n = offers.filter((o) => o.kind === 'entry' && o.id.startsWith(`entry-${event.id}-`)).length
+  const offer: Offer = {
+    id: `entry-${event.id}-${n}`,
+    kind: 'entry',
+    week,
+    deadlineWeek: event.deadlineWeek,
+    terms: { tier: event.tier, label, eventWeek: event.week, freeUntilWeek: event.deadlineWeek, cancelled: true },
+    state: 'info',
+  }
+  offers.push(offer)
+  return offer
+}
+
+/** THE INBOX STAYS BOUNDED (the `Snapshot.offers` note promises "never pruned" about CONTRACTS,
+ *  and it can only keep that promise if the receipts do not pile up for ever): a professional
+ *  career writes ~15-30 desk letters a season, so unlike the sponsor's handful they must age out.
+ *  A year is the window - long enough that "what did I do about that?" still has its answer, and
+ *  the same 52 weeks every other rolling record in the game keeps. Sponsor letters are NEVER
+ *  touched here: a signed deal outlives every prune, which is the whole reason the inbox exists. */
+export function pruneEntryLetters(offers: Offer[], week: number): Offer[] {
+  return offers.filter((o) => o.kind !== 'entry' || week - o.week <= WEEKS_PER_YEAR)
 }
 
 /** The deal that covered the season now finishing, if any - what the off-season review has to judge

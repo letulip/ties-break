@@ -26,7 +26,9 @@ import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
+  cancelEntry,
   createWorld,
+  enterEvent,
   tickWeek,
   toSnapshot,
   recomputeKidRank,
@@ -50,6 +52,7 @@ import {
   kitTermsFor,
   kitTravelShare,
   offerChanceFor,
+  pruneEntryLetters,
   raiseKitOffer,
   rungFor,
   shopWritesAt,
@@ -62,7 +65,8 @@ import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { OFF_SEASON_WEEKS, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE, type KitOfferTerms } from '../src/shared/protocol'
+import type { SeasonEvent } from '../src/engine/season/types'
+import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../src/shared/protocol'
 
 const read = (p: string) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), 'utf8')
 
@@ -1209,5 +1213,83 @@ describe('the v33 schema step', () => {
     expect(terms.covers).toEqual(TIER_COVERS.local)
     expect(terms.travelShare).toBe(0)
     expect(terms.seasons).toBe(1)
+  })
+})
+
+// =================================================================================================
+// THE TOURNAMENT DESK — W2-LADDER §6's informational half (owner ruling 1: the letters system).
+// =================================================================================================
+describe('the tournament desk writes on W-rung registration, and only then', () => {
+  /** An open world aged into the W era by the EVENT's week (the gate reads age there), with the
+   *  books the W15 on-ramp wants. Same idiom as the pro-cap suite in tests/age-caps.test.ts. */
+  function wWorld(seed: string): { world: WorldState; wEvent: SeasonEvent; jEvent: SeasonEvent } {
+    const world = createWorld(seed)
+    world.fundsCents = 9_999_999_00
+    world.results.push({ playerId: KID_ID, week: 0, points: 1500, tier: 'national' })
+    for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: 0, points: 300, tier: 'j300' })
+    recomputeKidRank(world)
+    const wEvent: SeasonEvent = {
+      id: 'desk-w15', week: 110, tier: 'w15', surface: 'hard', travelCostCents: 100_00, deadlineWeek: 108,
+    }
+    const jEvent: SeasonEvent = {
+      id: 'desk-j30', week: 12, tier: 'j30', surface: 'hard', travelCostCents: 100_00, deadlineWeek: 10,
+    }
+    world.season.push(wEvent, jEvent)
+    return { world, wEvent, jEvent }
+  }
+
+  it('a W entry raises the registration letter; a junior entry raises none', () => {
+    const { world, wEvent, jEvent } = wWorld('desk-1')
+    enterEvent(world, jEvent.id)
+    expect(world.offers.filter((o) => o.kind === 'entry')).toEqual([])
+    enterEvent(world, wEvent.id)
+    const letters = world.offers.filter((o) => o.kind === 'entry')
+    expect(letters).toHaveLength(1)
+    const letter = letters[0]
+    expect(letter.state).toBe('info')
+    expect(letter.id).toBe(`entry-${wEvent.id}-0`)
+    const terms = letter.terms as EntryLetterTerms
+    expect(terms.tier).toBe('w15')
+    expect(terms.label).toBe(TIERS.w15.label)
+    expect(terms.eventWeek).toBe(wEvent.week)
+    // The one number on the paper is the number the engine enforces: withdrawEvent's own deadline.
+    expect(terms.freeUntilWeek).toBe(wEvent.deadlineWeek)
+    expect(terms.cancelled).toBeUndefined()
+  })
+
+  it('an informational letter is never LIVE: no dot, no answer path', () => {
+    const { world, wEvent } = wWorld('desk-2')
+    enterEvent(world, wEvent.id)
+    const letter = world.offers.find((o) => o.kind === 'entry')!
+    expect(isOfferLive(letter, world.week)).toBe(false)
+    expect(hasLiveOffer(world.offers, world.week)).toBe(false)
+    expect(toSnapshot(world).offerOpen).toBe(false)
+  })
+
+  it('a free, in-time cancellation writes the confirmation; the two letters are distinct records', () => {
+    const { world, wEvent } = wWorld('desk-3')
+    enterEvent(world, wEvent.id)
+    cancelEntry(world, wEvent.id) // before the deadline -> delegates to the refunding withdrawal
+    const letters = world.offers.filter((o) => o.kind === 'entry')
+    expect(letters).toHaveLength(2)
+    expect(letters.map((o) => o.id)).toEqual([`entry-${wEvent.id}-0`, `entry-${wEvent.id}-1`])
+    expect((letters[1].terms as EntryLetterTerms).cancelled).toBe(true)
+    // ...and a re-registration is a THIRD record, never an overwrite: the inbox is a history.
+    enterEvent(world, wEvent.id)
+    expect(world.offers.filter((o) => o.kind === 'entry')).toHaveLength(3)
+  })
+
+  it('desk letters age out after a year; sponsor letters never do', () => {
+    const world = createWorld('desk-prune')
+    world.offers.push(
+      { id: 'entry-old-0', kind: 'entry', week: 0, deadlineWeek: 0, state: 'info',
+        terms: { tier: 'w15', label: 'World Tour 15', eventWeek: 2, freeUntilWeek: 0 } },
+      { id: 'kit-old', kind: 'kit', week: 0, deadlineWeek: 4, state: 'signed',
+        terms: { tier: 'local', brand: 'x', kitAllowanceCents: 1, freshCap: 1, minEventsPerSeason: 1,
+          covers: ['strings'], travelShare: 0, seasons: 1 } },
+    )
+    const pruned = pruneEntryLetters(world.offers, WEEKS_PER_YEAR + 1)
+    expect(pruned.some((o) => o.id === 'entry-old-0')).toBe(false)
+    expect(pruned.some((o) => o.id === 'kit-old')).toBe(true)
   })
 })

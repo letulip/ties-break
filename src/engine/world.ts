@@ -170,6 +170,9 @@ import {
   isSponsorReviewWeek,
   kitFreshCap,
   kitTravelShare,
+  pruneEntryLetters,
+  raiseEntryCancelLetter,
+  raiseEntryLetter,
   raiseKitOffer,
   refuseOffer as refuseOfferIn,
   seasonLastWeek,
@@ -3807,6 +3810,8 @@ function housekeep(world: WorldState): void {
   pruneFinanceWeeks(world)
   prunePlannerBookings(world)
   pruneInternationalEntries(world)
+  // W2-LADDER §6: the tournament desk's receipts age out after a year; contracts never do.
+  world.offers = pruneEntryLetters(world.offers, world.week)
   ensureSeason(world)
 }
 
@@ -4928,6 +4933,11 @@ export function enterEvent(world: WorldState, eventId: string): void {
   // entry spends one of the season's WTA-age-rule slots, recorded by the EVENT's week.
   if (isCappedProTier(event.tier)) {
     world.proEntryWeeks.push(event.week)
+    // ...and THE TOURNAMENT DESK WRITES (W2-LADDER §6, owner ruling 1): registration on the
+    // professional tour is an obligation, and the obligation is announced through the existing
+    // mail surface the moment it is taken on - "you are entered; cancel free until week N; after
+    // that the tournament's rules apply". Zero draws (a receipt, not weather - see offers.ts).
+    raiseEntryLetter(world.offers, world.week, event, TIERS[event.tier].label)
   }
   addEvent(world, {
     week: world.week,
@@ -4967,6 +4977,10 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   if (isCappedProTier(event.tier)) {
     const at = world.proEntryWeeks.indexOf(event.week)
     if (at >= 0) world.proEntryWeeks.splice(at, 1)
+    // The desk confirms a free, in-time cancellation in writing (§6 step 2) - this path IS the
+    // inside-the-deadline exit (`cancelEntry` delegates here before the deadline; the forfeiting
+    // exits never come through, and act 3 is where those grow teeth).
+    raiseEntryCancelLetter(world.offers, world.week, event, TIERS[event.tier].label)
   }
   addEvent(world, {
     week: world.week,

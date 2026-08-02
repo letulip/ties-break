@@ -41,8 +41,9 @@
 // letter reports what actually happened and against which number. An obligation that fails silently
 // is the same invisibility one step later.
 import { computed } from 'vue'
-import type { KitOfferTerms, Offer } from '../shared/protocol'
+import type { EntryLetterTerms, KitOfferTerms, Offer } from '../shared/protocol'
 import { formatCents } from '../shared/money'
+import { weekLabel, weekRange } from '../shared/dates'
 import PaperNote from './ui/PaperNote.vue'
 
 const props = defineProps<{ offer: Offer; week: number }>()
@@ -50,6 +51,14 @@ const emit = defineEmits<{ sign: [string]; refuse: [string] }>()
 
 /** Vite's base path, so the letterhead resolves under a sub-path deploy the same way the art does. */
 const base = import.meta.env.BASE_URL
+
+// THE TOURNAMENT DESK'S LETTERS (W2-LADDER §6) share the paper and nothing else: no letterhead
+// image (the desk has no brand), no actions (nothing to sign or refuse - the letter is a record),
+// and the one consequence this wave has no number for is stated as the sentence the owner asked
+// for. The kit computeds below stay kit-only; Vue's lazy computeds mean they never evaluate for a
+// desk letter, and the v-if in the template keeps the two papers apart.
+const isEntry = computed(() => props.offer.kind === 'entry')
+const entryTerms = computed(() => props.offer.terms as EntryLetterTerms)
 
 const terms = computed(() => props.offer.terms as KitOfferTerms)
 /** THE LETTERHEAD, BY TIER. `public/images/sponsors/<tier>.webp` - never a filename written out at a
@@ -134,7 +143,40 @@ const settled = computed(() => {
 </script>
 
 <template>
-  <article class="offer-letter">
+  <!-- THE TOURNAMENT DESK (W2-LADDER, §6's informational half): same paper, held square like every
+       letter addressed to you, no letterhead and no buttons - a registration is a record, not a
+       decision. The cancellation confirmation is the same sheet, shorter. -->
+  <article v-if="isEntry" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <template v-if="!entryTerms.cancelled">
+        <p class="offer-body">
+          Your entry for the {{ entryTerms.label }} is confirmed – she is in the draw for
+          {{ weekRange(entryTerms.eventWeek) }}.
+        </p>
+        <ul class="offer-terms">
+          <li>She is expected on court that week.</li>
+          <li>
+            Withdrawal is free until the end of {{ weekLabel(entryTerms.freeUntilWeek) }} – the
+            entry fee comes back and the year's entry is returned.
+          </li>
+          <li>After that the tournament's rules apply – the tour records late withdrawals and absences.</li>
+        </ul>
+      </template>
+      <template v-else>
+        <p class="offer-body">
+          Your withdrawal from the {{ entryTerms.label }} ({{ weekRange(entryTerms.eventWeek) }})
+          is confirmed – in time, free of charge, and nothing is recorded against her. The entry
+          fee is on its way back.
+        </p>
+      </template>
+      <p class="offer-sign-off">– Tournament desk</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <article v-else class="offer-letter">
     <!-- tilt is 0 and STAYS 0 – see the block comment at the top of this file. -->
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <img class="offer-mark" :src="markUrl" :alt="terms.brand" />
