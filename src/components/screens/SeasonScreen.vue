@@ -40,7 +40,7 @@ import ProgressRing from '../ui/ProgressRing.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
-import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
+import { KID_ID, kidMatchPlayer, isCappedProTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
 import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
@@ -461,6 +461,15 @@ function packageLabel(packageId: string): string {
   return vacationPackage(packageId)?.label ?? packageId
 }
 
+// THE PRO BUDGET LINE (W2-LADDER §5): «Pro entries this season: N of M», finite seasons only.
+// The engine's own current-season count (Snapshot.proEntryCap); null hides the line entirely on
+// the seasons the rule does not meter, which is every season but 16 and 17.
+const proBudgetLine = computed<string | null>(() => {
+  const cap = game.snapshot?.proEntryCap
+  if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
+  return `Pro entries this season: ${cap.used} of ${cap.limit}`
+})
+
 // A passed deadline swaps the Enter button for a muted "Entries closed" pill (round-5
 // item 2); an open event only ever disables Enter for insufficient funds.
 function entriesClosed(e: UpcomingEvent): boolean {
@@ -491,8 +500,13 @@ function lockLabel(e: UpcomingEvent): string {
     // reason `pointsToEnter` does – an event in the next season is judged against a different
     // year's allowance. "Year limit" rather than "Locked": the block lifts when the season turns,
     // and the tier ladder's long form says so in full.
+    // ⚠ TWO CAPS, ONE REASON CODE since W2-LADDER §5: a W rung's 'capped' is the TOUR's age rule,
+    // not the ITF junior one, and the refusal names the rule (owner ruling 1's transparency). The
+    // family split is the engine's own (`isCappedProTier`), never guessed from the label.
     case 'capped':
-      return e.entryCap ? `Year limit – ${e.entryCap.used} of ${e.entryCap.limit}` : 'Year limit reached'
+      return e.entryCap
+        ? `${isCappedProTier(e.tier) ? 'Tour age rule' : 'Year limit'} – ${e.entryCap.used} of ${e.entryCap.limit}`
+        : 'Year limit reached'
     // R12-1/14: worded to match the exam row's own label ("Exams") – ONE language for the block,
     // whether the parent reads the row or the card.
     case 'unavailable': {
@@ -859,6 +873,13 @@ function closeExhibition(): void {
           <!-- Owner, 29.07: the week she is actually IN, up here with the year, so it is on
                screen without hunting for it down the feed. -->
           <span class="season-week-now">&middot; {{ weekOnly(week) }}</span>
+        </p>
+        <!-- THE PRO BUDGET (W2-LADDER, spec 5: the player sees the budget). Rendered only on the
+             seasons the tour's age rule actually meters (16 and 17) - an unlimited season would
+             print a MAX_SAFE_INTEGER, and a budget that cannot run out is not a budget. The
+             number is the engine's own count for THIS season, straight off the snapshot. -->
+        <p v-if="proBudgetLine" class="season-pro-budget" :title="'The tour\'s age rule limits how many professional (W) events she may enter this season. A fresh allowance arrives when the season turns; junior and national events are not counted.'">
+          {{ proBudgetLine }}
         </p>
       </div>
       <IconButton class="tier-guide-btn" label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</IconButton>
@@ -1398,6 +1419,16 @@ section.bare .event-cards {
   font-size: 13px;
   font-weight: 500;
   color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The pro budget (W2-LADDER §5) - the season-year line's quiet sibling, one register down: a
+   fact she plans around, not a warning. */
+.season-pro-budget {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 

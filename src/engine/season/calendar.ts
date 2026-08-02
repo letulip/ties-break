@@ -812,7 +812,17 @@ function idealWeek(fromWeek: number, weeks: number, i: number, count: number, ph
 }
 
 /** Phase offset for a tier, spread evenly over one whole cadence across the ladder – so equal-cadence
- *  rungs (local/j30, national/j300) land in each other's gaps rather than on each other. */
+ *  rungs (local/j30, national/j300) land in each other's gaps rather than on each other.
+ *
+ *  ⚠ THE SPREAD HAS A MEASURED COST SINCE W2-LADDER (tools/boredom-guard.ts): with twelve rungs
+ *  the interleave leaves 3-4 W-ONLY weeks a season (offsets 32/40/44 carry professional events and
+ *  nothing else), and a pro-capped sixteen-year-old meets those weeks as "tournaments exist, all
+ *  barred". The guard's receipt classifies every stranded week as THIS coverage gap, never a cap
+ *  number. The candidate fix is the inverse phase policy for the W family - co-phase each W rung
+ *  with its J mirror so a professional week always carries its junior fallback - and it is
+ *  deliberately NOT taken in-wave: changing this formula re-deals every event of every seed a
+ *  second time in one wave (weeks, surfaces, travel, every event sub-stream). Architect's call,
+ *  with the guard's table as the evidence. */
 function tierPhase(tier: TierId): number {
   return 0.5 + TIER_LADDER.indexOf(tier) / TIER_LADDER.length
 }

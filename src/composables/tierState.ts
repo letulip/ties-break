@@ -32,7 +32,7 @@
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { TIERS, TIER_LADDER } from '../engine/season/calendar'
-import { isCappedTier, tierAgeBlock } from '../engine/world'
+import { isCappedProTier, isCappedTier, tierAgeBlock } from '../engine/world'
 import { weekRange } from '../shared/dates'
 import { LADDER_POINTS_LABEL, type EntryCapUsage } from '../shared/protocol'
 import type { LadderTrack, TierId } from '../engine/season/types'
@@ -330,6 +330,10 @@ export interface TierStateInput {
   /** the ITF annual entry cap for the CURRENT season, straight off the snapshot – the engine's own
    *  count, never re-derived here (the same discipline `pointsToEnter` is under). */
   entryCap: EntryCapUsage
+  /** the PRO AER allowance (W2-LADDER §5), the junior cap's parallel one table up – read for the W
+   *  rungs exactly as `entryCap` is read for the J rungs, and never for both at once: the two
+   *  families are disjoint (`isCappedTier` / `isCappedProTier`). */
+  proEntryCap: EntryCapUsage
   /** THE ENGINE'S OWN VERDICT for this rung (`Snapshot.tierOpen`), or undefined for the pure callers
    *  that predate it. When it says false, this rule reports locked and does not argue.
    *
@@ -494,6 +498,22 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
         `(age ${input.ageYears}). Not locked: a fresh allowance arrives next season.`,
     }
   }
+  // The PRO cap's arm (W2-LADDER §5), in the same slot for the same reason - and its copy NAMES
+  // THE RULE, per the owner's transparency ruling: it is the tour's age rule, it is this season's,
+  // and the sentence says what stays open so "capped" can never read as "nothing to play".
+  if (isCappedProTier(id) && input.proEntryCap.remaining <= 0) {
+    const { used, limit } = input.proEntryCap
+    return {
+      id,
+      kind: 'capped',
+      entryCap: input.proEntryCap,
+      note: `Tour age rule – ${used} of ${limit}`,
+      title:
+        `${tier.label} – the tour's age rule allows ${limit} pro entries at ${input.ageYears} and ` +
+        `she has used all ${used}. Not locked: a fresh allowance arrives next season, and the ` +
+        `junior and national events stay open.`,
+    }
+  }
   // She can enter it. The only question left is whether the calendar has one.
   const nextWeek = input.upcoming
     .filter((e) => e.tier === id)
@@ -545,6 +565,7 @@ export function useTierStates(): ComputedRef<TierState[]> {
       horizonWeeks: HORIZON_WEEKS,
       // No snapshot yet = nothing spent and nothing to say; the age gate/point band answer first.
       entryCap: snap?.entryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
+      proEntryCap: snap?.proEntryCap ?? { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER },
     }
     // ...plus the engine's own verdict per rung, so the readout cannot invite her into an event
     // `enterEvent` will refuse (see `engineOpen`), and the engine's own acceptance cut for the rungs

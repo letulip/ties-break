@@ -197,7 +197,9 @@ import type { CoachTier } from '../shared/protocol'
 //     because no loaded career depends on the historical count being reproducible — each carries
 //     its own position.
 
-export const SAVE_SCHEMA_VERSION = 35
+// v36 = W2-LADDER's `proEntryWeeks` (the pro AER ledger); v37/v38 stay reserved for endings/psyche
+// per act2-pro-tour.md §9's renumbering.
+export const SAVE_SCHEMA_VERSION = 36
 
 /** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
 export const START_AGE_YEARS = 14
@@ -1700,6 +1702,25 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
       }
     }
   }
+  // THE PRO AER (W2-LADDER §5) – the same family of rule one table up, in the same slot of the
+  // precedence for the same reason: it is age eligibility from the tour's own book, and "the
+  // allowance is gone until the season turns" is the fact that reshapes the rest of her year.
+  // THE REFUSAL NAMES THE RULE (owner ruling 1's transparency, §5's «the refusal names the rule»):
+  // a parent reading this must know it is the tour's age rule, that it is THIS season's, and what
+  // she is still free to play – the guard that ships with the cap promises tennis exists.
+  if (isCappedProTier(event.tier)) {
+    const cap = proEntryCapUsage(world, event.week)
+    if (cap.remaining <= 0) {
+      return {
+        level: 'blocked',
+        reason: 'capped',
+        detail:
+          `Tour age rule – ${cap.used} of ${cap.limit} pro entries at ${ageAtWeek(event.week)}. ` +
+          `A fresh allowance next season; the junior and national events stay open.`,
+        entryCap: cap,
+      }
+    }
+  }
   // Season planner: a booked family-vacation week is a HARD blackout – the family is away, so
   // nothing is enterable (spec §3). It outranks the exam/off-season blackout copy so the chip
   // names the actual reason she is unavailable.
@@ -3024,6 +3045,8 @@ function prunePlannerBookings(world: WorldState): void {
 function pruneInternationalEntries(world: WorldState): void {
   const from = seasonStartWeek(world.week)
   world.internationalEntryWeeks = world.internationalEntryWeeks.filter((w) => w >= from)
+  // The pro ledger prunes on the same boundary for the same reason - bounded by its own cap.
+  world.proEntryWeeks = world.proEntryWeeks.filter((w) => w >= from)
 }
 
 // --- weekly resolution pieces ------------------------------------------------
@@ -4305,6 +4328,7 @@ export function createWorld(
     offers: [],
     milestones: [],
     internationalEntryWeeks: [],
+    proEntryWeeks: [],
   }
   addEvent(world, {
     week: 0,
@@ -4361,6 +4385,7 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.results = []
   save.entries = []
   save.internationalEntryWeeks = []
+  save.proEntryWeeks = []
   save.season = []
   save.nextEventId = 0
   const oldLog = Array.isArray(save.log) ? save.log : []
@@ -4899,6 +4924,11 @@ export function enterEvent(world: WorldState, eventId: string): void {
     // entry (and a withdrawal of this one) leaves the memory untouched.
     captureMilestone(world, { type: 'international', week: world.week, tier: event.tier })
   }
+  // The PRO ledger, maintained exactly like the junior one and never with it (W2-LADDER §5): a W
+  // entry spends one of the season's WTA-age-rule slots, recorded by the EVENT's week.
+  if (isCappedProTier(event.tier)) {
+    world.proEntryWeeks.push(event.week)
+  }
   addEvent(world, {
     week: world.week,
     type: 'expense',
@@ -4931,6 +4961,12 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
   if (isCappedTier(event.tier)) {
     const at = world.internationalEntryWeeks.indexOf(event.week)
     if (at >= 0) world.internationalEntryWeeks.splice(at, 1)
+  }
+  // The pro slot follows the fee by the same rule: only the refunding withdrawal hands it back
+  // (a name off an open list never participated); every forfeiting exit keeps it.
+  if (isCappedProTier(event.tier)) {
+    const at = world.proEntryWeeks.indexOf(event.week)
+    if (at >= 0) world.proEntryWeeks.splice(at, 1)
   }
   addEvent(world, {
     week: world.week,
@@ -5757,6 +5793,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // The ITF annual cap as it stands TODAY – what the Home ladder needs to tell a tier's state.
     // Derived at snapshot time from the persisted ledger, so it can never disagree with the gate.
     entryCap: entryCapUsage(world, world.week),
+    // ...and the PRO allowance beside it (W2-LADDER §5): the planner prints the budget («pro
+    // entries this season: N of M») and the tier ladder tells "capped" apart from "locked", both
+    // off the engine's own count.
+    proEntryCap: proEntryCapUsage(world, world.week),
     // THE ENGINE'S OWN VERDICT PER RUNG (see TierOpenMap in protocol.ts). `tierOpenFor` is the same
     // function `enterEvent` validates against, so a screen can no longer disagree with the gate.
     tierOpen: Object.fromEntries(TIER_LADDER.map((t) => [t, tierOpenFor(world, t)])) as TierOpenMap,

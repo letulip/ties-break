@@ -1452,6 +1452,13 @@ export interface Snapshot {
    *  "capped for the year" apart from "locked on points" and "nothing scheduled". Derived at
    *  snapshot time from the persisted ledger, so it persists nothing of its own. */
   entryCap: EntryCapUsage
+  /** THE PRO AER allowance for the CURRENT season (W2-LADDER §5, schema v36's `proEntryWeeks`
+   *  behind it) – the junior cap's exact parallel one table up, never merged: the WTA age rule is
+   *  "separate from and additional to" the ITF junior one, so a sixteen-year-old holds both
+   *  budgets at once. The planner's «Pro entries this season: N of M» line and the W rungs'
+   *  "capped" tier state both read THIS, and unlimited seasons read as
+   *  `limit: Number.MAX_SAFE_INTEGER` exactly as the junior field does at 17+. */
+  proEntryCap: EntryCapUsage
   /** the engine's own per-tier entry verdict - see TierOpenMap */
   tierOpen: TierOpenMap
   /** THE ACCEPTANCE LIST, AS A POSITION, per rung that has one – `acceptanceRank(world, tier)`, absent

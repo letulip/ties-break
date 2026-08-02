@@ -900,6 +900,32 @@ export function migrateSave(raw: unknown): WorldState {
     v = 35
   }
 
+  // v35 -> v36: `world.proEntryWeeks` – THE PRO AER LEDGER (W2-LADDER, act2-pro-tour.md §5). The
+  // WTA's own age-eligibility rule (the Capriati rule) gets the junior cap's PARALLEL structure:
+  // its own capped family (the W rungs), its own age table (16 -> 12, 17 -> 16, 18+ unlimited),
+  // and this second persisted ledger – entered at enter-time, spliced on a refunding withdrawal,
+  // kept on every forfeiting exit, exactly like `internationalEntryWeeks` and never merged with it
+  // (the real rules are "separate from and additional to" each other, research §4).
+  //
+  // ⚠ THE BACK-FILL IS AN EMPTY LEDGER, v15's OWN BARGAIN AT ITS OWN VERSION, and the argument
+  // transfers verbatim: nothing in an older save can reconstruct the entries this cap exists to
+  // count. The kid's result row is award-only, so a first-round W15/W35 exit leaves NO row at all;
+  // `world.entries` prunes to future events the week one is played; and unlike v34's latches there
+  // is no never-pruned high-water mark that records ENTRY (bestFinishByTier records finishes, and
+  // a finish is not an entry – a walkover week has the one and not the other). So a migrated
+  // career resumes with this season's pro allowance untouched – the LENIENT direction, on purpose:
+  // the alternative invents a number and possibly locks a loaded sixteen-year-old out of a tier
+  // she was mid-way through. Careers at 18+ never feel it at all (the default row is unlimited).
+  //
+  // Idempotent (an existing array is never touched, so a re-migration cannot drop a slot) and
+  // defensive in v30's sense. Nothing else moves: no sub-stream is added or reordered, not one
+  // draw is taken – the entry cap family is post-draw gating end to end – so the frozen MAIN
+  // capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 35) {
+    if (!Array.isArray(save.proEntryWeeks)) save.proEntryWeeks = []
+    v = 36
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

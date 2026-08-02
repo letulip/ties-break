@@ -256,6 +256,7 @@ describe('S3 — the locked plaque says WHEN the rung opens, off the tier defini
       upcoming: [],
       horizonWeeks: 8,
       entryCap: { used: 0, limit: 14, remaining: 14 },
+      proEntryCap: { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER }, // the pro AER has its own arm; untouched here
     }
     const hasCondition = (s: string) => /\d/.test(s) // a number: an age, a points floor, or a cut
 

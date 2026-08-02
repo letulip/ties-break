@@ -327,6 +327,7 @@ describe('A5 — the UI says WHY, in the wording the other lock states use', () 
     upcoming: [{ tier: 'j30', week: 3 }],
     horizonWeeks: 8,
     entryCap: { used: 14, limit: 14, remaining: 0 },
+    proEntryCap: { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER }, // the pro AER has its own arm; untouched here
   }
 
   it('reports a distinct capped state instead of "scheduled"', () => {
@@ -465,5 +466,162 @@ describe('A7 — schema v15', () => {
   it('never resets an existing ledger on re-migration', () => {
     const save = { ...createWorld('remig'), internationalEntryWeeks: [4, 9, 12] }
     expect(migrateSave(structuredClone(save)).internationalEntryWeeks).toEqual([4, 9, 12])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// P — THE PRO AER (W2-LADDER §5): the junior cap's parallel, never its extension.
+// The WTA age rule is "separate from and additional to" the ITF junior one (research §4), so
+// everything below asserts the two families in the same breath: spending one allowance never
+// touches the other. The gate is tested at the EVENT's week (age and season are both read there),
+// so no fixture has to tick a hundred weeks to be sixteen.
+// ---------------------------------------------------------------------------
+
+import {
+  annualProEntryLimit,
+  isCappedProTier,
+  isTierAgeOpen,
+  proEntryCapUsage,
+} from '../src/engine/world'
+
+/** Her age-16 season: weeks 104-155 (START_AGE 14 at week 0). */
+const AGE16_FROM = 104
+
+/** Clean weeks of the age-16 season (no off-season 49-51, no exams 23-24), for injected events. */
+function age16Weeks(count: number): number[] {
+  const out: number[] = []
+  for (let w = AGE16_FROM + 2; w < AGE16_FROM + WEEKS_PER_YEAR && out.length < count; w++) {
+    const offset = w % WEEKS_PER_YEAR
+    if (offset >= WEEKS_PER_YEAR - 3 || (offset >= 23 && offset <= 24)) continue
+    out.push(w)
+  }
+  return out
+}
+
+/** An open world whose W gates all stand open: elite domestic + ITF books (the on-ramp), plus a
+ *  counting W row so the acceptance rungs read a live position for her. */
+function openProWorld(seed = 'procap'): WorldState {
+  const world = openWorld(seed)
+  world.results.push({ playerId: KID_ID, week: world.week, points: 100, tier: 'w100' })
+  recomputeKidRank(world)
+  return world
+}
+
+/** Enter `n` W15s on distinct clean weeks of her age-16 season. */
+function fillProCap(world: WorldState, n: number): SeasonEvent[] {
+  const events = age16Weeks(40)
+    .slice(-n)
+    .map((w, i) => injectEvent(world, { week: w, tier: 'w15', id: `profill-${i}` }))
+  for (const e of events) enterEvent(world, e.id)
+  return events
+}
+
+describe('P1 — the pro table (spec §5 design values over the real rulebook shape)', () => {
+  it('pins 16 -> 12, 17 -> 16, 18+ unlimited', () => {
+    expect(annualProEntryLimit(16)).toBe(12)
+    expect(annualProEntryLimit(17)).toBe(16)
+    expect(annualProEntryLimit(18)).toBe(Number.MAX_SAFE_INTEGER)
+    expect(annualProEntryLimit(25)).toBe(Number.MAX_SAFE_INTEGER)
+  })
+
+  it('14 and 15 never reach the table: every W rung refuses them on AGE first', () => {
+    // The knob comment's own claim, asserted: the rulebook's 14 -> 8 / 15 -> 10 rows are absent
+    // BECAUSE the doorway is closed at those ages, so the honest refusal is the age gate's.
+    for (const t of ECONOMY.entryCap.cappedProTiers) {
+      expect(isTierAgeOpen(t, 14), t).toBe(false)
+      expect(isTierAgeOpen(t, 15), t).toBe(false)
+    }
+  })
+
+  it('the two families are disjoint and exhaustive over the international rungs', () => {
+    for (const t of TIER_LADDER) {
+      expect(isCappedTier(t) && isCappedProTier(t), `${t} in both families`).toBe(false)
+    }
+    expect(ECONOMY.entryCap.cappedProTiers).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
+  })
+})
+
+describe('P2 — the gate, and the parallel ledgers never touch', () => {
+  it('the 13th W entry of her age-16 season is refused, and the refusal NAMES the tour rule', () => {
+    const world = openProWorld('procap-gate')
+    fillProCap(world, 12)
+    const extra = injectEvent(world, { week: age16Weeks(40)[0], tier: 'w15', id: 'pro-extra' })
+    const gate = entryStatus(world, extra)
+    expect(gate.level).toBe('blocked')
+    expect(gate.reason).toBe('capped')
+    expect(gate.detail).toMatch(/Tour age rule/)
+    expect(gate.detail).toMatch(/12 of 12/)
+    expect(gate.entryCap).toEqual({ used: 12, limit: 12, remaining: 0 })
+    expect(() => enterEvent(world, extra.id)).toThrow(/Tour age rule/)
+  })
+
+  it('spending the whole pro allowance leaves the JUNIOR allowance untouched, and vice versa', () => {
+    const world = openProWorld('procap-parallel')
+    fillProCap(world, 12)
+    const probeWeek = age16Weeks(40)[0]
+    expect(proEntryCapUsage(world, probeWeek)).toEqual({ used: 12, limit: 12, remaining: 0 })
+    // Her junior ledger has not moved by one: a J30 in the same season is still enterable.
+    expect(entryCapUsage(world, probeWeek).used).toBe(0)
+    const j = injectEvent(world, { week: probeWeek, tier: 'j30', id: 'pro-j-fallback' })
+    expect(entryStatus(world, j).level).not.toBe('blocked')
+    enterEvent(world, j.id)
+    // ...and that junior entry did not touch the pro ledger back.
+    expect(entryCapUsage(world, probeWeek).used).toBe(1)
+    expect(proEntryCapUsage(world, probeWeek).used).toBe(12)
+  })
+
+  it('the boredom guard promise in copy: the refusal says what stays open', () => {
+    const world = openProWorld('procap-copy')
+    fillProCap(world, 12)
+    const extra = injectEvent(world, { week: age16Weeks(40)[0], tier: 'w35', id: 'pro-copy' })
+    expect(entryStatus(world, extra).detail).toMatch(/junior and national events stay open/)
+  })
+})
+
+describe('P3 — the slot follows the fee, pro arm', () => {
+  it('a refunding withdrawal frees the pro slot; a forfeiting cancel keeps it spent', () => {
+    const world = openProWorld('procap-refund')
+    const events = fillProCap(world, 12)
+    const probeWeek = age16Weeks(40)[0]
+    expect(proEntryCapUsage(world, probeWeek).remaining).toBe(0)
+    // Before the deadline: withdrawal refunds fee AND slot.
+    withdrawEvent(world, events[0].id)
+    expect(proEntryCapUsage(world, probeWeek)).toEqual({ used: 11, limit: 12, remaining: 1 })
+    // Past the deadline: a cancel forfeits the fee and KEEPS the slot - the list closed with her
+    // name on it, and the tour counts participation.
+    const late = events[1]
+    world.week = late.deadlineWeek + 1
+    cancelEntry(world, late.id)
+    expect(world.proEntryWeeks).toContain(late.week)
+  })
+})
+
+describe('P4 — the allowance is the season\'s, read at the event', () => {
+  it('an event in her age-17 season is judged against the 16-entry allowance, unspent', () => {
+    const world = openProWorld('procap-reset')
+    fillProCap(world, 12) // the whole age-16 allowance
+    const nextSeason = AGE16_FROM + WEEKS_PER_YEAR + 5 // age 17
+    expect(proEntryCapUsage(world, nextSeason)).toEqual({ used: 0, limit: 16, remaining: 16 })
+    const e = injectEvent(world, { week: nextSeason, tier: 'w15', id: 'pro-next-season' })
+    expect(entryStatus(world, e).reason).not.toBe('capped')
+  })
+})
+
+describe('P5 — schema v36', () => {
+  it('a fresh world starts with an empty pro ledger, and v35 saves migrate to one', () => {
+    expect(SAVE_SCHEMA_VERSION).toBe(36)
+    expect(createWorld('fresh-pro').proEntryWeeks).toEqual([])
+    const v35 = JSON.parse(
+      readFileSync(new URL('./fixtures/saves/v35.json', import.meta.url), 'utf8'),
+    ) as Record<string, unknown>
+    const migrated = migrateSave(structuredClone(v35))
+    expect(migrated.schemaVersion).toBe(36)
+    expect(migrated.proEntryWeeks).toEqual([])
+    expect(migrateSave(structuredClone(migrated))).toEqual(migrated)
+  })
+
+  it('never resets an existing pro ledger on re-migration', () => {
+    const save = { ...createWorld('remig-pro'), proEntryWeeks: [110, 117] }
+    expect(migrateSave(structuredClone(save)).proEntryWeeks).toEqual([110, 117])
   })
 })
