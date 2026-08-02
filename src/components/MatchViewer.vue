@@ -16,6 +16,7 @@ import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
 import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
 import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'
+import { matchSpeedDefault, matchViewDefault, type MatchSpeed } from '../composables/matchDefaults'
 import { KID_ID } from '../engine/world'
 import Card from './ui/Card.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
@@ -110,8 +111,14 @@ let ctx: CanvasRenderingContext2D | null = null
 // Named viewMode (not "mode") to avoid colliding with the new `mode` prop
 // ('live'/'replay', round 4 item 4) – Vue's SFC compiler exposes declared prop names as
 // bare template identifiers, so reusing "mode" for both would be ambiguous.
-const viewMode = ref<ViewMode>('key')
-const speed = ref<1 | 2 | 4>(2)
+//
+// ⚠ SEEDED FROM THE SETTINGS, ONCE, AT MOUNT (owner, 02.08: «Default match speed and text match
+// settings setup in settings»). These used to open 'key'/2 for everybody; the openings are the
+// More screen's two pickers now (composables/matchDefaults.ts). The pills below still write ONLY
+// these refs – a mid-match change lasts the match and never becomes the default, which is the
+// one-way contract the composable's header states.
+const viewMode = ref<ViewMode>(matchViewDefault())
+const speed = ref<MatchSpeed>(matchSpeedDefault())
 const playing = ref(false)
 const finished = ref(false)
 /** Index of the last point whose point-end event has fired (-1 = match not started yet). */
@@ -1143,7 +1150,7 @@ const viewSeg = computed({
 const speedSeg = computed({
   get: () => String(speed.value),
   set: (v: string) => {
-    speed.value = Number(v) as 1 | 2 | 4
+    speed.value = Number(v) as MatchSpeed
     playSfx('clickSoft')
   },
 })
