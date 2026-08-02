@@ -96,3 +96,65 @@ TDD order – the net goes up before anything moves:
 ## Dependencies
 
 None hard. Coordination notes: the RNG-persistence proposal (schema v35, review README:15) rewrites the worker/`advanceWeeks` seam – do not run it concurrently with PR14 (lifecycle.ts); either strict order works. P1 (endings) and P2 (morale/relationship) both land in the tick pipeline, commands and snapshot – waves A+B are useful to them immediately, and finishing PR13-15 before those features branch confines their diffs to lifecycle.ts/commands.ts/snapshot.ts (~1,300 lines) instead of the 5,521-line hot-spot.
+
+---
+
+## Field notes: wave 0 shipped, and the coupling MEASURED (2026-08-02, branch `chore/world-split`)
+
+Four extractions are landed and verified against `origin/main` 5d3e8d6 (where `world.ts` had grown to
+**6,019 lines**, up from the 5,521 this proposal was written against):
+
+| Module | Lines out | Contents |
+|---|---|---|
+| `world/ledger.ts` | 98 | `addEvent`, `accrueFinance`, `seasonIndexOf`, `seasonStartWeek`, `financeWindow`, `financeSeries` |
+| `world/age.ts` | 119 | `ageAtWeek`, `kidBirthYear`, `kidAgeExact`, `kidAgeYears`, `birthdayWeek`, `birthdayTurning`, `markBirthday`, `START_AGE_YEARS` |
+| `world/labels.ts` | 42 | `finishLabel`, `prizeCentsFor`, `stageLabel` |
+| `world/entryCaps.ts` | 63 | the six ITF/WTA cap functions |
+
+`world.ts` 6,019 → **5,706**. Verified after every step: `vue-tsc -b --force` clean, **2,230 unit tests
+green (unchanged from baseline)**, sim project 77 green, production build clean with **no Rollup
+circular-dependency warnings**, and a live browser run – new career created, seven weeks ticked,
+calendar generating, finance card correct, zero console errors.
+
+**The type-only trick makes the mechanical form work.** Extracted modules do
+`import type { WorldState } from '../world'`; the import is erased at compile time, so `world.ts` can
+import the values back with no runtime cycle. No `world/types.ts` was needed.
+
+**Where the mechanical form STOPS, measured rather than guessed.** Every candidate block was scanned
+for identifiers it uses that are declared elsewhere in `world.ts` (comments stripped, so these are
+real call-backs, not prose):
+
+| Block | Lines | Real call-backs | The blockers |
+|---|---|---|---|
+| labels | 43 | **0** | – (shipped) |
+| entryCaps | 83 | **0** | – (shipped) |
+| sponsors | 271 | 1 | `kidPoints` |
+| planner | 114 | 2 | `layoffCovering`, `medicalBlock` |
+| milestones+wrap-up | 274 | 3 | `KID_ID`, `finishLabel`, `kidPoints` |
+| knock flow | 174 | 4 | `isCompetitionWeek`, `vacationForWeek`, `practiceForWeek`, `coachLoadViewOf` |
+| injury | 268 | 8 | `captureMilestone`, `withdrawEvent`, `refundPractice`, `retireKnock`, `layoffCovering`, `eventById`, … |
+| coach market | 467 | 10 | `kidPoints`, `assertPlannable`, `fullRanking`, `medicalClearance`, … |
+| medical/availability | 422 | 11 | `entryCapUsage`, `acceptanceRank`, `onRampOpen`, `rankIn`, `outgrewTier`, … |
+| **snapshot** | **762** | **35** | `entryStatus`, `fullRanking`, `coachMarket`, `radarViewOf`, `computeLossStreak`, … |
+
+Combining adjacent blocks does not rescue it: the whole `1222–2374` span (1,153 lines: entryCaps →
+planner) still shows **14** external call-backs. **The entanglement is real, and it is the finding the
+review made** – every seam ends in this one file. Everything below the 0-callback line needs the
+dependency inversion this proposal's PR order specifies, not a span-move. Sequence it by the table
+above: `sponsors` and `planner` become clean the moment `tiers.ts` and `medical.ts` exist, and
+`snapshot.ts` must be **last** because it consumes almost everything.
+
+**A trap this wave hit, worth banking.** Four **source-pin tests** read `world.ts`'s TEXT and assert on
+structure ("exactly one payout function exists", "both surfaces call the same helper"). Moving code
+broke all four – and one broke *silently dangerously*: `round11.test.ts` sliced
+`world.slice(indexOf('function maybeFireSeasonWrapUp'), indexOf('// --- finish / stage labels'))`, and
+when the end marker left with the labels block `indexOf` returned `-1`, so the slice swallowed the rest
+of the file and a `not.toMatch(/amountCents/)` assertion started reading someone else's function. They
+now read the whole module set through **`tests/worldSource.ts`** (`world.ts` + every `world/*.ts`), which
+makes the invariants location-independent – **the remaining extractions need no test edits.** PR0 of
+this proposal should adopt that helper before anything else moves.
+
+**Token dividend, the reason this got pulled forward.** `world.ts` is ~362 KB ≈ **95k tokens**; a plain
+`Read` truncates at 2,000 lines ≈ 33k tokens and still misses two thirds of the file. The whole `src/`
+tree is ~730k tokens, and five files are 30% of it. Every wave that has to open the god module pays that
+tax. This is a budget item as much as a maintainability one.
