@@ -122,8 +122,14 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
   <template v-if="game.snapshot">
     <section>
       <h2>Stats</h2>
-      <!-- WHICH TABLE. Above the tiles, because it governs every figure under it. -->
-      <SegmentedRow v-model="shownModel" :options="options" group-label="Which ranking table" />
+      <!-- WHICH TABLE. Above the tiles, because it governs every figure under it. Carries this
+           screen's own class because the shared plate comes off here - see .stats-ladder-row. -->
+      <SegmentedRow
+        v-model="shownModel"
+        class="stats-ladder-row"
+        :options="options"
+        group-label="Which ranking table"
+      />
       <!-- R10-2: the three tiles are captions, not body copy – each label stays on ONE line
            (.stats-tile-label nowraps; the tile padding/gap were trimmed to pay for it) and
            "Season points" is now "Season pts", which is what actually fits at 375px. -->
@@ -191,5 +197,20 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
    shared `.hint` spacing is tuned for standalone paragraphs, and src/style.css is off limits. */
 .stats-no-exchange {
   margin-top: 8px;
+}
+
+/* ⚠ NO PLATE AROUND THIS SWITCH (owner, 02.08: «Мне не нравится круглая обводка у переключателя
+   уровня турниров в stats, без нее было лучше... Давай просто кнопки оставим и всё»). The shared
+   `.tab-row` plate - panel fill, hairline, pill radius, 4px inset - comes off THIS instance only:
+   the control stays SegmentedRow (same contract, same pills, same lime active fill as the app's
+   plainest active state), and every other caller of the plate keeps it. Scoped-over-shared wins on
+   specificity ((0,2,0) with the data-v attribute vs the sheet's (0,1,0)), so no !important and no
+   sheet edit. `padding: 0` lets the buttons sit flush with the heading above, which is what "just
+   buttons" looks like on this page. */
+.stats-ladder-row {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
 }
 </style>

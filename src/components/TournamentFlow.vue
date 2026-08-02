@@ -576,7 +576,15 @@ const matchMeta = computed(() => {
        player had scrolled the match, and the poster inherited the box score. `phase` alone is not the
        whole answer - `replayOpen` swaps the live match in and out WITHIN a phase - so the key is the
        pair, which is exactly `watchedScreen`. -->
-  <TakeoverShell v-if="pending" :title="phase === 'splash' ? null : pending.tierLabel" :screen="watchedScreen">
+  <!-- `tf-fit` marks the ONE phase whose body is a fitted column rather than a scroller: the
+       pre-match card. The class lands on the shell's root via Vue's attribute fallthrough, and the
+       scoped rules below reach the body through it - see the F section of the style block. -->
+  <TakeoverShell
+    v-if="pending"
+    :title="phase === 'splash' ? null : pending.tierLabel"
+    :screen="watchedScreen"
+    :class="{ 'tf-fit': phase === 'pre' && !replayOpen }"
+  >
     <!-- NO HEADER ON THE E BRIEF, which is what the `null` above buys: the hero underneath carries
          the tournament's name, its court and its dates, and the design gives that screen a bare
          back-arrow rather than a title bar. Every other phase still needs to be told which
@@ -901,6 +909,7 @@ const matchMeta = computed(() => {
       :stage="kidStage"
       emotion="serious"
       :label="pending.roundLabel"
+      fill
     >
       <div class="tf-scene-grid">
         <div class="tf-scene-side">
@@ -1434,15 +1443,43 @@ const matchMeta = computed(() => {
 
 /* --- F. Match Day (the pre-match scene) -------------------------------------------------------- */
 
-/* The design's F scene is `flex: 1` of the screen and this one is too – a match day is not a card
-   floating in a field of page colour. `min-height` on the component keeps it from collapsing when
-   there is a path strip above it. */
-/* ⚠ NOT `flex: 1` ANY MORE (R15-3). Stretching the scene to fill the takeover was the fixed-height
-   crop's design ("F fills the screen"); the owner's 01.08 ruling made the card the painting's own
-   square (see MatchScene.vue), and a stretched square letterboxes - the pill floats over a blank
-   band instead of over her head. The card takes its aspect height and the takeover scrolls. */
-.tf-scene {
-  flex: none;
+/* ⚠ `flex: 1` IS BACK, AND THIS TIME THE WHOLE COLUMN IS SIZED FOR IT (owner, 02.08: «вернуть
+   картину на весь экран, как в макете. И сделать высоту адаптивной, чтобы сыгранные матчи и всё
+   изображение с кнопками влезали в экран по высоте без скролла»). R15-3 had set this to
+   `flex: none` because stretching the 01.08 square letterboxed - and the square is what actually
+   left: `fill` on the component releases the aspect (MatchScene owns that geometry, this rule owns
+   only where the card sits) while the img stays `contain`, so the 01.08 whole-painting ruling holds
+   at any height. The spare band goes ABOVE the art (`.scene--fill .scene-art` anchors it to the
+   foot), so the plate still rides the painting - the exact complaint R15-3 had about the stretch.
+
+   FULL-BLEED, as the design's F draws its art slot: the negative margins cancel `.tf-body`'s 24px
+   gutters, and the corner/border come off with them - a card edge makes no sense on a surface that
+   touches the screen edge. Doubled class beats `Card`'s scoped `.tb-card` radius/border at
+   (0,3,0) vs (0,2,0) - the same tie `.back-link.tf-hero-back` documents; a single scoped class
+   only ties it and injection order decides. */
+.tf-scene.tf-scene {
+  margin: 0 -24px;
+  border: none;
+  border-radius: 0;
+}
+
+/* THE FITTED BODY - the three shared-scroller amendments the pre card needs, keyed off `tf-fit` on
+   the shell's root (which carries this component's scope id, so `:deep` reaches the body). They are
+   NOT changes to `.tf-body` itself: every other phase - and this same shell one tap later, with the
+   viewer open - keeps the scrolling column exactly as `src/style.css` declares it.
+     * no scrollbar: the column is sized to fit by construction (strip and plate keep natural
+       height, the scene absorbs the leftover down to `min-height: 0`), so `hidden` only asserts
+       what the flex arithmetic already made true - and stops one stray pixel of rounding from
+       minting a scrollbar over a screen the owner asked to fit;
+     * no `::after` spacer: the takeover's 24px of bottom room is CONTENT (see style.css), and on
+       the one screen whose art runs to the bottom edge that room would be a page-coloured skirt
+       under the painting. */
+.tf-fit :deep(.tf-body) {
+  overflow-y: hidden;
+}
+
+.tf-fit :deep(.tf-body)::after {
+  content: none;
 }
 
 /* MatchScene owns the card, the painting and the glass plate; this is only what is written on it. */

@@ -1019,3 +1019,49 @@ describe('the match screen is the match, and nothing else', () => {
     expect(viewerAt).toBeGreaterThan(stripAt)
   })
 })
+
+describe('the viewer OPENS on the settings defaults, and a match never writes them (02.08)', () => {
+  // «Default match speed and text match settings setup in settings» - the two dials became
+  // preferences in composables/matchDefaults.ts, the dayCross/weekRecap idiom exactly: plain
+  // localStorage behind pure functions, working (as session state) even where storage is not -
+  // which is also what lets this project's node runner exercise them directly.
+  it('the plumbing round-trips, and falls back to the shipped openings (2×, key)', async () => {
+    const d = await import('../src/composables/matchDefaults')
+    // Under the node runner there is no localStorage, so the getters answer the shipped openings -
+    // the exact values the refs were hard-coded to before this slice.
+    expect(d.MATCH_SPEEDS).toContain(d.matchSpeedDefault())
+    expect(d.MATCH_VIEWS).toContain(d.matchViewDefault())
+    // A set sticks for the session even with no storage behind it (the try/catch contract)...
+    d.setMatchSpeedDefault(4)
+    d.setMatchViewDefault('skip')
+    expect(d.matchSpeedDefault()).toBe(4)
+    expect(d.matchViewDefault()).toBe('skip')
+    // ...and back, so this test leaves the module the way it found it.
+    d.setMatchSpeedDefault(2)
+    d.setMatchViewDefault('key')
+    expect(d.matchSpeedDefault()).toBe(2)
+    expect(d.matchViewDefault()).toBe('key')
+  })
+
+  it('MatchViewer seeds its refs from the getters - and imports no setter', () => {
+    const viewer = read('../src/components/MatchViewer.vue')
+    expect(viewer).toContain("const viewMode = ref<ViewMode>(matchViewDefault())")
+    expect(viewer).toContain('const speed = ref<MatchSpeed>(matchSpeedDefault())')
+    // ⚠ ONE-WAY: the pills mid-match write the refs and only the refs. The viewer cannot even
+    // reach the stored defaults - the setters' one caller is the settings screen.
+    expect(viewer).not.toContain('setMatchSpeedDefault')
+    expect(viewer).not.toContain('setMatchViewDefault')
+  })
+
+  it('the settings screen offers every value of both dials, in the pace row\'s own shape', () => {
+    const more = read('../src/components/screens/MoreScreen.vue')
+    expect(more).toContain('const matchSpeed = ref(matchSpeedDefault())')
+    expect(more).toContain('const matchView = ref(matchViewDefault())')
+    expect(more).toContain('setMatchSpeedDefault(v)')
+    expect(more).toContain('setMatchViewDefault(v)')
+    // both pickers derive from the composable's own total lists - a fourth speed or view mode
+    // shows up here the day it exists, or fails to compile in its Record labels first
+    expect(more).toContain('v-for="s in MATCH_SPEEDS"')
+    expect(more).toContain('v-for="v in MATCH_VIEWS"')
+  })
+})
