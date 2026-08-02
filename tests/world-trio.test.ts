@@ -16,6 +16,7 @@
 //      draw must come from a purpose-scoped sub-stream (the frozen MAIN capture cannot move) and
 //      must be STABLE for the life of one streak (or her face flickers sad/angry on one screen).
 import { describe, it, expect } from 'vitest'
+import { worldSource } from './worldSource'
 import { readFileSync, readdirSync } from 'node:fs'
 import {
   availabilityStatus,
@@ -585,7 +586,7 @@ describe('item 3 — the engine counts the streak', () => {
     expect(resultShowsOnHerFace(played(1, 1, false))).toBe(true)
     expect(resultShowsOnHerFace(friendly(2, 2, false))).toBe(false)
     expect(resultShowsOnHerFace(notPlayed(3, 3))).toBe(false)
-    const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
+    const src = worldSource()
     const walk = src.slice(src.indexOf('export function computeLossStreak'))
     expect(walk.slice(0, 600)).toContain('resultShowsOnHerFace(e)')
   })
@@ -638,7 +639,7 @@ describe('item 3 — the threshold is drawn once, off a purpose-scoped sub-strea
   })
 
   it('the key is the STREAK START, and the sub-stream is scoped to it', () => {
-    const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
+    const src = worldSource()
     expect(src).toContain(':angry:${startWeek}')
     // it is a sub-stream, exactly like `:injury:<week>` and `:aitour:<eventId>`
     expect(src).toMatch(/rngFromSeed\(`\$\{world\.seed\}:angry:\$\{startWeek\}`\)/)

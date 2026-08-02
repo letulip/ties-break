@@ -6,3 +6,12 @@
 
 /** The kid's stable player id inside cohort/ranking/tournament space. */
 export const KID_ID = 'kid'
+
+export const SEASON_MIN_FUTURE = 26 // always keep at least this many future weeks scheduled
+export const SEASON_CHUNK = 52 // generate the calendar one deterministic year-block at a time
+export const RESULTS_WINDOW = 52 // ranking window; results older than this never count → prunable
+export const EVENTS_CAP = 400 // non-`keep` events beyond this are pruned oldest-first
+export const SNAPSHOT_EVENTS = 60 // events surfaced in a snapshot
+export const FINANCE_WEEKS = 60 // trailing weeks of the per-category finance ledger retained (12w + a full 52w season)
+export const SNAPSHOT_FINANCIAL_EVENTS = 50 // financial transactions surfaced to the ledger, cap-independent of `events`
+export const UPCOMING_WEEKS = 8 // calendar horizon surfaced in a snapshot

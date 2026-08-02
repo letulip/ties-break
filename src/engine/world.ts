@@ -3,38 +3,25 @@ import {
   DEFAULT_PROFILE,
   STOP_PRECEDENCE,
   WEEK_PLAN_PRESETS,
-  type ArrivalPreview,
-  type CountingResult,
-  type LadderView,
-  type TierOpenMap,
   type FamilyBackground,
   type FinanceWeek,
-  type FullBracketMatch,
   type Knock,
   type KnockRecord,
-  type LossStreak,
   type Milestone,
   type KitLine,
   type KitOfferTerms,
   type Offer,
-  type PendingBracketRound,
-  type PendingView,
   type PlayerProfile,
   type PracticeBooking,
   type RecoveryBuff,
   type SeasonHistoryEntry,
   type SeasonSummary,
-  type Snapshot,
   type SnapshotInjury,
-  type StandingRow,
   type StopReason,
   type TierTrophies,
-  type UpcomingEvent,
-  type SeasonSupply,
   type VacationBooking,
   type WeekPlan,
   type WorldEvent,
-  type WorldMatch,
 } from '../shared/protocol'
 import { formatShortName } from '../shared/format'
 // THE LAYERING, stated once (fix/world-trio item 2). `src/shared/dates.ts` is deliberately
@@ -44,20 +31,19 @@ import { formatShortName } from '../shared/format'
 // second week formatter living inside the engine. The engine keeps counting ABSOLUTE weeks and
 // every RNG sub-stream key / save field / pinned capture stays on that index; `weekLabel` is
 // applied only where the engine writes a string a PLAYER reads.
-import { seasonYear, weekLabel } from '../shared/dates'
+import { weekLabel } from '../shared/dates'
 // The emotion RULES live in shared/ (pure, UI-free, and the composable reads the same module), so
 // the engine borrows the two facts it needs rather than restating them: which recorded matches are
 // allowed to move her face (R11-2's one predicate) and the band a streak's anger threshold sits in.
 // Type-only on the way back (shared/avatarEmotion imports `type TierId` from engine/season/types),
 // so this is a leaf dependency, not a cycle.
-import { ANGER_STREAK_MAX, ANGER_STREAK_MIN, resultShowsOnHerFace } from '../shared/avatarEmotion'
 import type { MatchPlayer } from './match/types'
-import type { AiPlayer, LadderTrack, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
+import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import {
   TIERS,
   buildSeason,
   WEEKS_PER_YEAR,
-  OFF_SEASON_WEEKS, TIER_LADDER } from './season/calendar'
+  OFF_SEASON_WEEKS } from './season/calendar'
 import { clamp, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
@@ -74,17 +60,15 @@ import {
   coachIncludesPhysio,
   coachWeeklyCents,
   selfRateCents,
-  tierOf,
 } from './coach'
 import {
   kitGrantCents,
-  travelCoverShare,
   reviewLevel,
   type AcademySupport,
 } from './academy'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
-import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
+import { BEST_N_BY_TRACK, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import {
   selectEntrants,
   resolveDoubleBookings,
@@ -92,7 +76,6 @@ import {
   kidSeedIndexIn,
   weekFieldExclusion,
 } from './season/tournament'
-import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
 // THE FIELD TIER (living-field phase W, 01.08). Field pros are DERIVED, NEVER PERSISTED – see
 // season/fieldPros.ts for the whole argument. world.ts only ever asks three questions of them:
 // the merged W ranking, the W-event candidate universe, and a name for an fp- id on a surface.
@@ -104,20 +87,14 @@ import {
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
 // dependency runs one way: world → diary, exactly like world → condition.
-import { buildDiarySnapshot, lastKidTitleOf } from './diary'
 // Screen C's three derived tiles (Personality / School / Friends). Same shape of dependency as the
 // diary and the radar: kidLife.ts is world-free and takes a narrow structural view, one way only.
-import { buildKidLife, FRIENDS_WINDOW } from './kidLife'
 // The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
 // diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
-import { axisReadings, buildRadar, buildTrainingRead } from './radar'
 // W4 – THE KNOCK: the ordinary training week's one event and the decision it puts in front of the
 // parent. Same dependency shape as the diary, kidLife and the radar: knock.ts is world-free and
 // takes a narrow structural view, so world -> knock runs one way and can never cycle.
 import {
-  buildKnockPrompt,
-  knockGoverns,
-  knockLive,
   knockRestWeek,
   KNOCK_REST_CONDITION,
   KNOCK_REST_GROWTH,
@@ -129,15 +106,16 @@ import {
 // weekly stream the frozen capture (41550 / e6b0c709) measures.
 import {
   activeKitDeal,
-  seasonLastWeek,
   expireOffers,
-  hasLiveOffer,
   isSponsorReviewWeek,
   pruneEntryLetters,
 } from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
-import { coachManagesLoad, coachWarnsEntry } from './coachLoad'
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
+import { activeLadderOf, toSnapshot } from './world/snapshot'
+export { activeLadderOf, toSnapshot }
+import { flipScore, fallbackPlayer, kidMatchesOf, kidMatchEvent, computeLossStreak } from './world/matchNews'
+export { flipScore, computeLossStreak }
 import { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek } from './world/knock'
 export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek }
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
@@ -154,7 +132,7 @@ export { enterEvent, withdrawEvent, cancelEntry }
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { fireMilestone, captureMilestone, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger, copyTrophyLedger } from './world/milestones'
+import { fireMilestone, captureMilestone, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
 export { emptySeasonRecord, emptyTrophyLedger }
 import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel } from './world/sponsors'
 export { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor }
@@ -168,13 +146,13 @@ export { isExamWeek, isBlackoutWeek } from './season/calendar'
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, rankingFor, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, outgrewTier, rankIn, prevRankIn } from './world/ladder'
+import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, outgrewTier } from './world/ladder'
 export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, outgrewTier }
-import { KID_ID } from './world/constants'
+import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
 export { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage }
-import { finishLabel, prizeCentsFor, stageLabel } from './world/labels'
+import { finishLabel, prizeCentsFor } from './world/labels'
 export { finishLabel, prizeCentsFor }
 import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, birthdayWeek, birthdayTurning, markBirthday } from './world/age'
 export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, birthdayWeek, birthdayTurning }
@@ -534,14 +512,6 @@ function restFlavors(background: FamilyBackground): string[] {
   return background === 'wealthy' ? WEALTHY_REST_EVENTS : REST_EVENTS
 }
 
-const SEASON_MIN_FUTURE = 26 // always keep at least this many future weeks scheduled
-const SEASON_CHUNK = 52 // generate the calendar one deterministic year-block at a time
-const RESULTS_WINDOW = 52 // ranking window; results older than this never count → prunable
-const EVENTS_CAP = 400 // non-`keep` events beyond this are pruned oldest-first
-const SNAPSHOT_EVENTS = 60 // events surfaced in a snapshot
-const FINANCE_WEEKS = 60 // trailing weeks of the per-category finance ledger retained (12w + a full 52w season)
-const SNAPSHOT_FINANCIAL_EVENTS = 50 // financial transactions surfaced to the ledger, cap-independent of `events`
-const UPCOMING_WEEKS = 8 // calendar horizon surfaced in a snapshot
 
 // THE LEDGER PRIMITIVES moved to world/ledger.ts (P4 extraction). `addEvent`/`accrueFinance` are
 // imported at the top of this file; the pure finance folds are re-exported here under their
@@ -924,48 +894,12 @@ export function reviewAcademy(world: WorldState): void {
 
 // The kid's tournament run. Uses an EVENT-SCOPED sub-RNG only (never the main
 // weekly stream) so entering or skipping never perturbs cohort drift / AI results.
-/** "2-6 6-4 1-6" -> "6-2 4-6 6-1" */
-export function flipScore(score: string): string {
-  return score
-    .split(' ')
-    .map((set) => set.split('-').reverse().join('-'))
-    .join(' ')
-}
 
-function fallbackPlayer(id: string): MatchPlayer {
-  return { id, name: id, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 }
-}
 
 // The kid's matches within a full result, in round order (she plays once per round she survives).
-function kidMatchesOf(result: TournamentResult): MatchRecord[] {
-  return result.matches.filter((m) => m.aId === KID_ID || m.bId === KID_ID)
-}
 
 // One kid match rendered as a News `match` event: identical text/shape to the old inline
 // resolution. Skill snapshots come from the pre-drift `players` map so the record is stable.
-function kidMatchEvent(
-  world: WorldState,
-  event: SeasonEvent,
-  m: MatchRecord,
-  players: Record<string, MatchPlayer>,
-): { text: string; match: WorldMatch } {
-  const tier = TIERS[event.tier]
-  const oppId = m.aId === KID_ID ? m.bId : m.aId
-  const oppName = (players[oppId] ?? fallbackPlayer(oppId)).name
-  const kidWon = m.winnerId === KID_ID
-  const stage = stageLabel(m.round, tier.drawSize)
-  // MatchRecord scores are from bracket side A's perspective; news reads from the kid's.
-  const kidScore = m.score && m.bId === KID_ID ? flipScore(m.score) : m.score
-  // Short names for EVERYONE: cohort names are "First Last"; the kid's full name is
-  // kidName + last name (kidMatchPlayer only carries the first name).
-  const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
-  const a = { ...(players[m.aId] ?? fallbackPlayer(m.aId)) }
-  const b = { ...(players[m.bId] ?? fallbackPlayer(m.bId)) }
-  return {
-    text: `${stage}: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(oppName)} ${kidScore ?? ''}`.trim(),
-    match: { ...m, eventId: event.id, surface: event.surface, oppName, a, b },
-  }
-}
 
 /** RIVALS BECOME REAL: turn the selected cohort rows into the players who actually take the court
  *  for `event` – base attributes → surface/style modifier → condition factor, exactly once and in
@@ -1483,23 +1417,6 @@ function pruneFinanceWeeks(world: WorldState): void {
 // the streak grows – keying on the length would re-draw at every new loss, which is the flicker
 // again. At most one competitive loss can exist per week (one tournament a week, and a bracket
 // eliminates her exactly once), so a start week identifies its streak uniquely.
-export function computeLossStreak(world: WorldState): LossStreak | null {
-  let losses = 0
-  let startWeek = 0
-  for (let i = world.events.length - 1; i >= 0; i--) {
-    const e = world.events[i]
-    if (!resultShowsOnHerFace(e)) continue
-    if (e.match!.winnerId === KID_ID) break
-    losses++
-    startWeek = e.week
-  }
-  if (losses === 0) return null
-  return {
-    losses,
-    startWeek,
-    angerAt: pickInt(rngFromSeed(`${world.seed}:angry:${startWeek}`), ANGER_STREAK_MIN, ANGER_STREAK_MAX),
-  }
-}
 
 // --- lifecycle ---------------------------------------------------------------
 export function createWorld(
@@ -2213,763 +2130,6 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
 }
 
 
-/** What he says when he would rather she skipped a trip. Three sentences, picked by HOW tired she is
- *  rather than by luck - a draw here would make the same coach say different things about the same
- *  Tuesday, and the card is re-derived on every snapshot. Player copy: short dash only.
- *
- *  The J300 line names the stake because that is the honest argument at the top of the ladder: the
- *  entry fee and the flights are real money, and a first-round exit spends them for nothing. */
-function coachEntryLine(tier: TierId, condition: number): string {
-  const floor = ECONOMY.availability.minConditionToEnter[tier]
-  if (condition < floor - 5) return 'Your coach would not take her. She is empty.'
-  if (condition < floor) return 'Your coach would skip this one and get her legs back.'
-  return 'Your coach thinks she is a week short of her best for this.'
-}
 
-// --- snapshot ----------------------------------------------------------------
-
-/** WHAT IS LEFT TO PLAY THIS SEASON, by rung - the planning counter (owner, 02.08: «мне кажется мы
- *  где-то можем сделать каунтер сколько доступных турниров и какого уровня у нас до конца года
- *  вообще осталось, это даст человеку возможность планировать»).
- *
- *  ⚠ IT IS NOT THE FEED, AND THAT IS THE POINT. `upcoming` is eight weeks long and passes through
- *  the two-type rule, so a player planning a season could see neither how much tennis remains nor
- *  which rungs it is on - the very thing that made an ordinary sparse tail read as "there is
- *  nothing left". This counts the WHOLE rest of the season and every rung the ENGINE opens to her,
- *  the rare ones included. Blank weeks are normal and expected (the owner: «пустые недели это
- *  нормально, она же не может постоянно играть» - roughly 20 events a year is one per fortnight,
- *  with more on offer than she can take); what a planner needs is the supply, so that resting is a
- *  choice she can see the cost of rather than a hole she fell into.
- *
- *  AVAILABLE means: ahead of this week, inside THIS season, entry list still open, and the engine's
- *  own gate says she may enter (`entryStatus` level != 'blocked' - a fatigue 'caution' is a week
- *  she can play, which is the same reading the boredom guard uses). Snapshot-only, derived, zero
- *  persistence and zero draws.
- *
- *  COST, MEASURED RATHER THAN ASSUMED (week 160, 60 calls): `toSnapshot` goes 11.3 -> 15.3 ms, so
- *  this asks the entry gate about ~40 events for ~4 ms. Paid once per command rather than per week
- *  of a fast-forward's inner loop, which is why the honest per-event gate is affordable here at
- *  all - and why it is asked about the EVENT's week (an injury layoff covering it) rather than
- *  today's condition, which by then will be whatever the player decides between now and then. */
-function seasonSupply(world: WorldState): SeasonSupply {
-  const entered = new Set(world.entries)
-  const lastWeek = seasonLastWeek(world.week)
-  const byTier = new Map<TierId, { open: number; entered: number }>()
-  for (const e of world.season) {
-    if (e.week <= world.week || e.week > lastWeek) continue
-    const isEntered = entered.has(e.id)
-    // An entry already made is hers whatever the gate says now (R10-3: a committed week survives a
-    // band crossing), so it is counted before the gate is asked.
-    if (!isEntered) {
-      if (world.week > e.deadlineWeek) continue
-      if (entryStatus(world, e).level === 'blocked') continue
-    }
-    const row = byTier.get(e.tier) ?? { open: 0, entered: 0 }
-    row.open += 1
-    if (isEntered) row.entered += 1
-    byTier.set(e.tier, row)
-  }
-  return {
-    weeksLeft: Math.max(0, lastWeek - world.week),
-    // Ladder order, strongest last, the one order every other surface reads (TIER_LADDER).
-    rows: TIER_LADDER.filter((t) => byTier.has(t)).map((tier) => ({ tier, ...byTier.get(tier)! })),
-  }
-}
-
-function upcomingEvents(world: WorldState): UpcomingEvent[] {
-  const entered = new Set(world.entries)
-  // The Season card's preview needs the standings and her match build ONCE for the whole list, not
-  // once per card: both are the same for every event in the window, and rebuilding them per event
-  // would be the expensive half of this function. Surface-specific scaling still happens per event
-  // inside the preview, which is where it belongs.
-  const ranking = fullRanking(world)
-  // ...and the W cards get the W world (living-field phase W, 01.08). A W-track preview must draw
-  // from the population its bracket will actually be made of – LIVE cohort ∪ field pros, positioned
-  // by the merged W standings – or the card would name a junior the professional draw does not
-  // contain. Same lazy-once shape as `ranking` above, paid only on windows that actually show a W
-  // card; `previewEvent`'s own contract is untouched, it is simply handed the professional
-  // universe as the cohort (the parameter always WAS "who can be drawn").
-  let wtaCtx: { universe: AiPlayer[]; ranking: RankingRow[]; conditions: Map<string, number> } | null = null
-  const wtaWorldFor = (e: SeasonEvent) => {
-    wtaCtx ??= {
-      universe: universeForTier(e.tier, world.cohort, fieldProsOf(world)),
-      ranking: rankingFor(world, 'wta'),
-      conditions: rivalConditions(world.results, world.week),
-    }
-    return { seed: world.seed, week: world.week, cohort: wtaCtx.universe, results: world.results }
-  }
-  // ...and the card obeys the same week-exclusivity rule its own bracket will (W2-FIELD2 §8.2), or
-  // it would name an opponent the higher rung has already taken. Computed HERE because only this
-  // function holds `world.season`; `previewEvent`'s own contract stays a single event's worth of
-  // inputs. Lazy per card and only on the W track — a J or domestic card never asks.
-  const wtaExclusionFor = (e: SeasonEvent) =>
-    weekFieldExclusion(e, world.season, wtaCtx!.universe, wtaCtx!.ranking, world.seed, wtaCtx!.conditions)
-  // ...and the same argument for the COACH'S READ OF HER: it is one girl in one week, identical for
-  // every card, and `coachLoadViewOf` walks the retained match window to get there. Once per snapshot,
-  // null on a self-coached career because there is nobody to have an opinion.
-  const coachTier = tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId))
-  const coachLoad = coachManagesLoad(coachTier) ? coachLoadViewOf(world) : null
-  return world.season
-    .filter((e) => e.week > world.week && e.week <= world.week + UPCOMING_WEEKS)
-    .sort((a, b) => a.week - b.week)
-    .map((e) => {
-      // Round-10 R10-5: ONE call, the same `entryStatus` enterEvent and advanceWeeks read, instead
-      // of this function's own copy of the point band + a separate availability call. `eligible`
-      // and `ineligibleReason` therefore describe exactly what enterEvent would do, by construction
-      // rather than by two implementations happening to agree.
-      //
-      // NOTE the scope: this is the ENTRY verdict. It is NOT a verdict on `entered` – a list that
-      // closed with her on it keeps her on it whatever her points did afterwards, so an entered
-      // card must never be treated as a lock (see `cancellable`, and R10-3).
-      const gate = entryStatus(world, e)
-      const isEntered = entered.has(e.id)
-      const reason =
-        gate.level === 'blocked'
-          ? {
-              ineligibleReason: gate.reason as
-                | 'locked'
-                | 'outgrown'
-                | 'injured'
-                | 'unavailable'
-                | 'medical'
-                | 'capped',
-              ...(gate.pointsToEnter !== undefined ? { pointsToEnter: gate.pointsToEnter } : {}),
-              ...(gate.rankToEnter !== undefined ? { rankToEnter: gate.rankToEnter } : {}),
-              // Per-EVENT figures, exactly like pointsToEnter: a card near the year boundary can
-              // be judged against a different season's allowance than today's, so the number it
-              // prints has to be the one the gate actually used.
-              ...(gate.entryCap !== undefined ? { entryCap: gate.entryCap } : {}),
-            }
-          : gate.level === 'caution'
-            ? { cautionReason: gate.reason as 'fatigued', cautionDetail: gate.detail }
-            : {}
-      // THE HIRED COACH'S OPINION on this trip (load slice §8). Independent of the gate above: he can
-      // speak on an 'ok' card (his margin is scaled by what he believes about her stamina, so a good
-      // one warns BEFORE the fatigue rule does) and he can stay quiet on a 'caution' one (a cheap coach
-      // who thinks she is tough). That gap is the thing being sold, so the two are never merged.
-      //
-      // Computed here rather than inside `entryStatus` deliberately: `entryStatus` is the ENGINE's
-      // verdict on whether she may enter, and this changes no verdict at all. It is somebody's view.
-      //
-      // ⚠ AND ONLY ON A CARD SHE COULD ACTUALLY ENTER. A test caught this: the advice was being attached to
-      // HARD-BLOCKED cards too - a tier she has no points for, an exam week, a season whose entry cap she
-      // has spent - so a coach was giving his view on a tournament that is not on offer. Worse, it made
-      // "the advice never locks a card" unverifiable, because the card was already locked for its own
-      // reasons and the two were indistinguishable on screen. He speaks about trips she can take.
-      const coachSay =
-        gate.level !== 'blocked' &&
-        coachLoad !== null &&
-        coachWarnsEntry(coachLoad, ECONOMY.availability.minConditionToEnter[e.tier])
-          ? { coachCaution: coachEntryLine(e.tier, world.condition) }
-          : {}
-      return {
-        id: e.id,
-        week: e.week,
-        tier: e.tier,
-        surface: e.surface,
-        // What the Season card can honestly say before she plays: her odds in round one against
-        // the field as it stands TODAY, how strong that field is, and the (decorative) weather.
-        // See season/preview.ts for what this estimate does and does not claim.
-        preview:
-          TIERS[e.tier].track === 'wta'
-            ? previewEvent(
-                wtaWorldFor(e),
-                e,
-                wtaCtx!.ranking,
-                kidMatchPlayerFor(world, e.surface),
-                wtaExclusionFor(e),
-              )
-            : previewEvent(world, e, ranking, kidMatchPlayerFor(world, e.surface)),
-        // v21: the price the FAMILY pays, scholarship included – the planner has to quote what
-        // entering will actually cost, and it is the same number chargeTravel will take.
-        travelCostCents: travelCostFor(world, e),
-        deadlineWeek: e.deadlineWeek,
-        entryFeeCents: TIERS[e.tier].entryFeeCents,
-        label: TIERS[e.tier].label,
-        entered: isEntered,
-        // A fatigued event is a CAUTION, not a block: she stays eligible. Only a HARD block
-        // (point band, injured, unavailable, medical) removes eligibility.
-        eligible: gate.level !== 'blocked',
-        // R10-13: the entry is COMMITTED (the list has closed) but the week has not started yet –
-        // the only window in which cancelling costs the fee and frees the week. Every row here is
-        // a FUTURE week by construction, so the closed list is the whole condition.
-        cancellable: isEntered && world.week > e.deadlineWeek,
-        ...reason,
-        ...coachSay,
-      }
-    })
-}
-
-/** R12-15/R12-3: the arrival verdict for the entered event on `world.week + 1` – the week the
- *  sticky bar's one button plays (tickWeek increments the week FIRST, so it is always `week + 1`,
- *  never today). Null when no entry sits there.
- *
- *  The DOCTOR's arm is downgraded to 'play' on purpose (see ArrivalPreview): his verdict is re-read
- *  on arrival against a condition that can only have RISEN by then (a tournament week accrues
- *  `matchWeekRecoveryBase` = 0, plus the physio and blackout bonuses, and nothing subtracts before
- *  step 2), so a 'medical' preview can be false by a point or two. Announcing a withdrawal that
- *  then does not happen would replace the old lie with a new one; the medical stop + toast already
- *  make the real thing loud. The layoff and the point band are pure state and cannot move, so those
- *  two ARE previewed. */
-function arrivalPreview(world: WorldState): ArrivalPreview | null {
-  const next = world.week + 1
-  const event = world.season.find((e) => e.week === next && world.entries.includes(e.id))
-  if (!event) return null
-  const status = arrivalStatus(world, event)
-  const injured = status.verdict === 'injured'
-  return {
-    eventId: event.id,
-    tier: event.tier,
-    week: event.week,
-    verdict: injured ? 'injured' : 'play',
-    ...(injured && status.detail !== undefined ? { detail: status.detail } : {}),
-    outgrown: status.outgrown,
-  }
-}
-
-// The kid's counted best-6 results (round-5 item 1b): same window + sort as computeRanking,
-// so their points sum equals the kid's standings points. Strongest first. `isCountingResult` is
-// the same filter computeRanking applies, named rather than respelled – "counting" has to mean one
-// thing in both places or this list and the standings total drift apart the moment a scoreless row
-// reaches the kid's half of the ledger.
-function computeCountingResults(world: WorldState, track: LadderTrack = 'itf'): CountingResult[] {
-  // TWO LADDERS: this list EXPLAINS a ranking, so it has to be the same table as the rank beside it.
-  // Hence the track argument - `ladders[track].countingResults` pairs each list with its own rank,
-  // and an empty ITF list is the honest reading of "unranked internationally".
-  // The slice is the TRACK's window width (W2-LADDER §3): sixteen rows on the professional list,
-  // six on the others - the list's sum must equal the rank beside it, and the rank counts best-N.
-  return world.results.filter(inTrack(track))
-    .filter(
-      (r) =>
-        isCountingResult(r) &&
-        r.playerId === KID_ID &&
-        r.week <= world.week &&
-        world.week - r.week <= RESULTS_WINDOW,
-    )
-    .sort((a, b) => b.points - a.points || b.week - a.week)
-    .slice(0, BEST_N_BY_TRACK[track])
-    .map((r) => ({ week: r.week, tier: r.tier, points: r.points }))
-}
-
-/** BOTH TABLES, THE SAME SHAPE - the half of docs/specs/two-ladders.md the UI never got.
- *
- *  The spec designed two currencies with no exchange rate and then every screen kept showing ONE
- *  number called "rank" and ONE called "points", both read off the ITF table. So a career spent on
- *  the domestic rungs - which is most of a fourteen-year-old's career, and ALL of a working-class
- *  one's - showed a Stats table reading 4 points while she had 604, a Kid screen reading "No points
- *  yet", and a Home ladder asking her to "Reach 250 pts" it had already let her past. Three of the
- *  owner's 30.07 items are that.
- *
- *  A LadderView is therefore the unit the screens consume: one table's rank, points, standings and
- *  the results that earned them, in that table's own currency. Two of them, identically shaped, so a
- *  screen renders "a ladder" once instead of special-casing which one it has.
- *
- *  Pure derivation over the ledger the world already keeps - no persisted field, no schema bump, no
- *  migration, zero RNG draws. */
-/** HER PLACE IN ONE TABLE, or null when she holds no counting result in it.
- *
- *  ⚠ ONE IMPLEMENTATION, TWO CONSUMERS, and the second one is why it was extracted (31.07): the
- *  tournament overlay prints her rank too, and it must print the SAME number the Home chip and the
- *  Stats tab are showing at that moment or the app contradicts itself on the one screen where the
- *  player is looking hardest. That is not automatic - on a reveal week the tick DEFERS the rank
- *  recompute to `finalizeTournament` (see step 5) while the week's AI results are already in the
- *  ledger, so a freshly-folded rank and the cached one legitimately differ by a place or two until
- *  she finishes her run. Reading the cache through one function is what makes the two agree by
- *  construction instead of by coincidence. */
-function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
-  return computeCountingResults(world, track).length > 0 ? rankIn(world, track) : null
-}
-
-function computeLadderView(world: WorldState, track: LadderTrack): LadderView {
-  const counting = computeCountingResults(world, track)
-  return {
-    // Her place a week ago IN THIS TABLE - see `prevKidRankDomestic` on WorldState for why both are
-    // carried rather than one shared "previous rank".
-    prevRank: prevRankIn(world, track),
-    // UNRANKED IS NOT A NUMBER. With nobody holding a point the whole field ties at zero and
-    // competition ranking hands every member of that tie the same place, so a point-less kid reads
-    // as a single digit. The screens have always papered over that by asking `countingResults.length
-    // > 0` themselves; making it null HERE means they cannot forget, and the two questions ("where
-    // is she?" and "is she ranked at all?") stop being one field.
-    rank: kidLadderRank(world, track),
-    points: kidPoints(world, track),
-    standings: computeStandings(world, track),
-    countingResults: counting,
-  }
-}
-
-/** Her cached place in `track`. The caches are the authority (one writer - see recomputeKidRank), so
- *  this reads them rather than re-folding, which is what keeps a snapshot from disagreeing with the
-
-/** HAS A W RESULT EVER COUNTED - the permanent half of `activeLadderOf`'s professional arm.
- *
- *  ⚠ THE EVIDENCE FOR "EVER" CANNOT BE THE RESULTS LEDGER: `world.results` is pruned to the 52-week
- *  window (RESULTS_WINDOW), so a pro on a long layoff would watch her own debut delete itself. The
- *  v34 migration solved the identical problem for the on-ramp latches with `bestFinishByTier` - a
- *  high-water mark written at tournament finalize and NEVER pruned - and this reads the same mark:
- *  a recorded finish whose points-table row pays > 0 was a counting result the week it landed
- *  (`isCountingResult` IS `points > 0`), and the table is monotone non-increasing, so the BEST
- *  finish paying zero means every finish did. Exact, for every save, however long ago it happened -
- *  no new persisted field, no schema bump. */
-function wtaEverCounted(world: WorldState): boolean {
-  return (Object.keys(world.bestFinishByTier) as TierId[]).some((tier) => {
-    const finish = world.bestFinishByTier[tier]
-    return finish !== undefined && TIERS[tier].track === 'wta' && TIERS[tier].points[finish] > 0
-  })
-}
-
-/** WHICH TABLE IS SHE ACTUALLY COMPETING IN - one rule, one place, so Home, Stats and the Kid screen
- *  cannot answer it three ways.
- *
- *  docs/specs/two-ladders.md, "Which rank is her rank": the ITF one once she has it, because that is
- *  the table the international rungs open on and the one the game is about. Before her first counting
- *  ITF result she is unranked internationally and the screens show her national standing instead.
- *  "That is the real shape of a junior career, and the moment the first ITF point lands is a beat
- *  worth having."
- *
- *  ⚠ THE PROFESSIONAL ARM IS A ONE-WAY DOOR (architect's ruling, 02.08, on the owner's «для тех кому
- *  актуально уже и мировую можно показывать, она с ней до конца игры будет»). Her first counting
- *  W-series result makes the professional table her table TO THE END OF THE GAME - it never falls
- *  back to 'itf'/'domestic' when the 52-week window later empties, which is why the arm reads the
- *  never-pruned mark (`wtaEverCounted`) and not the live window alone. The junior arm stays a live
- *  read on purpose: J is a stage she passes through, the paid tour is where the story ends. The
- *  live `kidPoints` OR is the latchOnRamps discipline - the fresh fact answers correctly on its
- *  own, the memory only ever adds, so no caller is order-sensitive on when finalize last ran. */
-export function activeLadderOf(world: WorldState): LadderTrack {
-  if (wtaEverCounted(world) || kidPoints(world, 'wta') > 0) return 'wta'
-  return kidPoints(world, 'itf') > 0 ? 'itf' : 'domestic'
-}
-
-function computeStandings(world: WorldState, track: LadderTrack = 'itf'): StandingRow[] {
-  const full = rankingFor(world, track)
-  const meta = new Map<string, { name: string; nation: string }>()
-  for (const p of world.cohort) meta.set(p.id, { name: p.name, nation: p.nation })
-  // The W table's virtual rows carry real names and flags too (living-field phase W, 01.08) – the
-  // fallback below would otherwise print "fp-141" the day the Stats screen grows its World Tour
-  // tab. The table itself stays windowed exactly as every table always was (top 10 + around the
-  // kid, built a few lines down), so ~500 rows cost the snapshot nothing.
-  if (track === 'wta') for (const p of fieldProsOf(world)) meta.set(p.id, { name: p.name, nation: p.nation })
-  // Full name so the UI can render "V. Last" for the kid like everyone else (formatShortName).
-  meta.set(KID_ID, {
-    name: `${world.profile.kidName} ${world.profile.kidLastName}`.trim(),
-    nation: world.profile.country,
-  })
-  const enrich = (r: RankingRow, gapBefore: boolean): StandingRow => {
-    const m = meta.get(r.playerId) ?? { name: r.playerId, nation: '' }
-    return { ...r, name: m.name, nation: m.nation, isKid: r.playerId === KID_ID, gapBefore }
-  }
-  // Top 10 + a window around the kid, as *positions in `full`* rather than as slices
-  // deduped by id – tracking the underlying index (not the rank number) is what lets
-  // `gapBefore` below tell a genuine omission from a competition-ranking tie-skip,
-  // which also jumps the rank number by more than 1 without anyone being left out.
-  const kidIdx = full.findIndex((r) => r.playerId === KID_ID)
-  const topEnd = Math.min(10, full.length)
-  const aroundStart = kidIdx >= 0 ? Math.max(0, kidIdx - 2) : -1
-  const aroundEnd = kidIdx >= 0 ? Math.min(full.length, kidIdx + 3) : -1
-  const includedIdx: number[] = []
-  for (let i = 0; i < topEnd; i++) includedIdx.push(i)
-  for (let i = Math.max(aroundStart, topEnd); i < aroundEnd; i++) includedIdx.push(i)
-  return includedIdx.map((idx, pos) => enrich(full[idx], pos > 0 && idx !== includedIdx[pos - 1] + 1))
-}
-
-// Any id -> short display name, for anyone who could appear in a bracket (kid or AI),
-// not just the kid's own opponents (unlike `players`, which only snapshots those).
-// Field pros resolve through the same derivation that drew them (living-field phase W, 01.08):
-// the id encodes nothing, but fieldProsOf is season-stable and memoised, so a W draw's full
-// bracket names its professionals as cheaply as the cohort array names the juniors.
-function playerShortName(world: WorldState, id: string): string {
-  if (id === KID_ID) return formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
-  if (isFieldProId(id)) {
-    const fp = fieldProsOf(world).find((p) => p.id === id)
-    return formatShortName(fp?.name ?? id)
-  }
-  const ai = world.cohort.find((c) => c.id === id)
-  return formatShortName(ai?.name ?? id)
-}
-
-// The live view of an in-progress reveal (drives TournamentFlow). Lean: the revealed path, the
-// current round's opponent + record, and the finale copy. Scorelines belong to the record and are
-// never shown by the UI before a match has been watched/skipped.
-function pendingView(world: WorldState): PendingView | undefined {
-  const p = world.pendingTournament
-  if (!p) return undefined
-  const event = eventById(world, p.eventId)
-  if (!event) return undefined
-  const tier = TIERS[event.tier]
-  const kidMatches = kidMatchesOf(p.result)
-  const revealed = p.revealedRounds
-
-  const bracket: PendingBracketRound[] = kidMatches.slice(0, revealed).map((m) => {
-    const oppId = m.aId === KID_ID ? m.bId : m.aId
-    return {
-      roundLabel: stageLabel(m.round, tier.drawSize),
-      oppName: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
-      kidWon: m.winnerId === KID_ID,
-      score: m.score && m.bId === KID_ID ? flipScore(m.score) : m.score,
-    }
-  })
-
-  // Round 5 item 5: the FULL draw (every match, every player). During her run this is bounded
-  // to the kid's played rounds (0..revealed-1; single elim, she plays every round until
-  // eliminated) so later rounds stay spoiler-free. Round-7 (spectate): once her run is FINISHED
-  // there are no spoilers left to protect, so the whole draw is exposed – every round through
-  // the Final – letting the flow spectate the tournament to its conclusion past her exit.
-  // `score` is always normalised to the WINNER's perspective (conventional "W d. L 6-4 ..."
-  // reading) regardless of which bracket side (a/b) actually won – MatchRecord stores it
-  // from side A's perspective, so it only needs flipping when B won.
-  const lastRound = p.finished ? Math.max(...p.result.matches.map((m) => m.round)) : revealed - 1
-  const fullBracket: FullBracketMatch[] =
-    lastRound < 0
-      ? []
-      : p.result.matches
-          .filter((m) => m.round <= lastRound)
-          .map((m) => ({
-            round: m.round,
-            roundLabel: stageLabel(m.round, tier.drawSize),
-            aId: m.aId,
-            bId: m.bId,
-            aName: playerShortName(world, m.aId),
-            bName: playerShortName(world, m.bId),
-            winnerId: m.winnerId,
-            score: m.score && m.winnerId === m.bId ? flipScore(m.score) : m.score,
-          }))
-
-  // The round being presented: the next unrevealed match, or (finished) the last one played.
-  const currentIdx = revealed < kidMatches.length ? revealed : kidMatches.length - 1
-  const current = kidMatches[currentIdx]
-  const oppId = current.aId === KID_ID ? current.bId : current.aId
-  // ⚠ THE TABLE THIS TOURNAMENT IS ACTUALLY PLAYED ON – see `PendingView.ladder` for the owner's
-  // report and what it cost. This line used to read `fullRanking(world)`, whose doc comment says
-  // outright "THE table when only one is meant: the ITF one", so every rank the tournament overlay
-  // printed came from the international table even when the trophy on the table paid national points.
-  const track = tier.track
-  const ranks = new Map(rankingFor(world, track).map((r) => [r.playerId, r.rank]))
-  const oppNation = world.cohort.find((c) => c.id === oppId)?.nation ?? ''
-  const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
-  // UNRANKED IS NOT A NUMBER, for either girl, and it is the same rule `computeLadderView` applies to
-  // the kid: with nobody holding a point in this table the whole field ties at zero and competition
-  // ranking hands every member of that tie the same place. Asked of the OPPONENT too, because the two
-  // numbers sit side by side on the VS card and a real "#3" against a tie-floor "#119" invites a
-  // comparison that is not there.
-  //
-  // ⚠ TWO SOURCES, DELIBERATELY, AND THE ASYMMETRY IS THE CONSERVATIVE CHOICE. HER number comes
-  // through `kidLadderRank`, i.e. off the same cache `ladders[track].rank` reads, so the overlay can
-  // never print a different place for her than the screens behind it - the exact failure this branch
-  // is about. The OPPONENT's is folded here because nothing caches it and nothing else prints it, so
-  // it has nothing to disagree with. On a reveal week the two can be a place apart (the tick defers
-  // the rank recompute to `finalizeTournament` while the week's AI results are already banked); a
-  // one-place drift between two different players' numbers is invisible, whereas a drift in HERS
-  // between two screens is the bug.
-  // A FIELD PRO IS ALWAYS RANKED (living-field phase W, 01.08): her points are virtual, so the
-  // ledger fold below would read 0 and print her "unranked" – on the very row the merged table
-  // ranks her by. The earned-points guard exists to stop TIE-FLOOR ranks being printed for players
-  // with nothing; a pro's standing row is never that, by construction (wtaPoints >= 1).
-  const oppRankIn = (id: string): number | null =>
-    isFieldProId(id) || windowedBestSum(world.results, world.week, id, BEST_N_BY_TRACK[track], inTrack(track)) > 0
-      ? (ranks.get(id) ?? null)
-      : null
-
-  return {
-    eventId: p.eventId,
-    tier: event.tier,
-    surface: event.surface,
-    // The weather plate on the live match. Same function the Season card quotes, so one tournament
-    // has one day. VIEW ASSEMBLY ONLY - see the grep guard in tests/preview.test.ts.
-    temperatureC: eventTemperature(world.seed, event),
-    roundLabel: stageLabel(current.round, tier.drawSize),
-    ladder: track,
-    kidRank: kidLadderRank(world, track),
-    opponent: {
-      name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
-      nation: oppNation,
-      rank: oppRankIn(oppId),
-    },
-    // Only expose a record to watch while there is still an unrevealed round.
-    kidMatch: revealed < kidMatches.length ? kidMatchEvent(world, event, current, p.players).match : undefined,
-    bracket,
-    fullBracket,
-    finished: p.finished,
-    kidChampion: kidFinish === 0,
-    tierLabel: tier.label,
-    points: tier.points[kidFinish] ?? 0,
-    finishLabel: finishLabel(kidFinish),
-    // The E brief's crowd. Its own `seed:crowd:` sub-stream, so reading it here costs the MAIN
-    // stream nothing (the frozen 41550 / e6b0c709 capture is untouched by construction) and it is
-    // the SAME figure the Season card printed while the event was still upcoming.
-    crowd: eventCrowd(world.seed, event),
-  }
-}
-
-export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snapshot {
-  const pending = pendingView(world)
-  // Computed ONCE and shared by the snapshot field and the diary facts – two computations could
-  // never disagree, but one is also cheaper and reads as the single decision it is.
-  const lossStreak = computeLossStreak(world)
-  // Diary-1: the facts + the selected lines, assembled from a narrow view of the world. Selection
-  // draws only from `seed:diary:*` / `seed:memory:*` sub-streams at SNAPSHOT time – zero MAIN
-  // draws, so the frozen capture (41550 / e6b0c709) is untouched by construction.
-  const diary = buildDiarySnapshot({
-    seed: world.seed,
-    week: world.week,
-    kidId: KID_ID,
-    startAgeYears: START_AGE_YEARS,
-    condition: world.condition,
-    fundsCents: world.fundsCents,
-    injury: world.injury
-      ? {
-          kind: world.injury.kind,
-          weeksRemaining: world.injury.weeksRemaining,
-          totalWeeks: world.injury.totalWeeks,
-        }
-      : null,
-    events: world.events,
-    lossStreak,
-    // ⚠ HER LADDER, NOT THE INTERNATIONAL ONE (31.07, fix/ladder-separation). This pair feeds exactly
-    // one derivation - `rankClimbed` - and `rankClimbed` licenses three lines that say she "moved up
-    // the table" plus the loss softener behind her face. It was `world.kidRank` / `world.prevKidRank`,
-    // the ITF pair, on a career that is domestic for its whole first year or two: so "she moved up the
-    // table" was a claim about a table she is not in, and the movement it read was mostly the tie floor
-    // drifting as OTHER players' international results aged out of their 52-week windows. R13-2 already
-    // fought this exact battle once - it added the `runPointsThisWeek > 0` licence because "rank is
-    // RELATIVE, so she can climb on a zero-point week purely because rivals' results decayed ... other
-    // people's ageing calendars, not her tennis" - and the earned-points guard cannot do its job while
-    // the points are counted in one table and the climb read off the other.
-    //
-    // `activeLadderOf` is the same one answer Home's chip, the Kid screen and Stats all read.
-    kidRank: rankIn(world, activeLadderOf(world)),
-    prevKidRank: prevRankIn(world, activeLadderOf(world)),
-    pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
-    // R13-2: the points her run AWARDED this week. finalizeTournament writes a kid row only when
-    // points > 0, so a first-round exit leaves none – "> 0" is exactly "she won matches this
-    // week", the licence behind the earned-climb softener and the good-loss diary lines.
-    runPointsThisWeek: world.results
-      .filter((r) => r.playerId === KID_ID && r.week === world.week)
-      .reduce((s, r) => s + r.points, 0),
-    milestones: world.milestones,
-    vacationWeek: vacationForWeek(world, world.week) !== undefined,
-    // W5: ...and WHICH holiday, for the frame that names it. The booking is still on file when its
-    // story is told - `prunePlannerBookings` keeps four trailing weeks - and null on every other week.
-    vacationPackageId: vacationForWeek(world, world.week)?.packageId ?? null,
-    // W2: how hard the PLAYER worked her this week – the one fact about a training week that is his
-    // decision rather than the world's, and the subject of the ordinary week's note.
-    trainPct: world.plan.train,
-    // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
-    // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must
-    // still hold for the week the knock arrived in (its note is about the training that caused it).
-    //
-    // ⚠ W6 MADE THAT SENTENCE TRUE. It was the intent and it only held while the knock was UNANSWERED:
-    // the instant he chose, `knockLive` was already true on the ARRIVAL week, so week N's own story
-    // started describing a decision that governs week N+1 – she was drawn at home, and captioned «A week
-    // off the ankle», about a week she spent on court. `knockGoverns` is the same window the tick
-    // actually charges (see its note: growWeek at 3b, rollKnock at 3c), so the frame and the words now
-    // agree with the arithmetic instead of with each other.
-    // ...and the one week a year that is about HER rather than about tennis.
-    birthdayAge: birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay),
-    knockChoice: knockGoverns(world.knock, world.week) ? world.knock!.choice : null,
-    knockPart: knockGoverns(world.knock, world.week) ? world.knock!.part : null,
-  })
-  // THE SKILLS RADAR'S VIEW OF HER, assembled ONCE and read twice - by the contour (`buildRadar`)
-  // and by the Weekly Story's training line (`buildTrainingRead`). Hoisted rather than inlined
-  // because the two readings MUST see the same girl: a second literal here would be a second place
-  // for "which matches count" to drift, and the card and the radar would then disagree about how
-  // much anybody can see, on the same screen, in the same week.
-  const radarView = radarViewOf(world)
-  // ...and the evidence fold behind BOTH of them, walked once. `axisEvidence` reads the whole
-  // retained match window per axis, so asking the two builders independently would walk it eight
-  // times a snapshot for one girl in one week.
-  const radarReadings = axisReadings(radarView)
-  return {
-    schemaVersion: world.schemaVersion,
-    careerId: world.careerId,
-    seed: world.seed,
-    week: world.week,
-    ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
-    fundsCents: world.fundsCents,
-    profile: world.profile,
-    plan: world.plan,
-    condition: world.condition,
-    // injury is always null in slice B; drop the persisted-only `sinceWeek` when surfacing it.
-    injury: world.injury
-      ? {
-          kind: world.injury.kind,
-          severity: world.injury.severity,
-          weeksRemaining: world.injury.weeksRemaining,
-          totalWeeks: world.injury.totalWeeks,
-        }
-      : null,
-    physioActive: world.physioActive,
-    // W4: the knock, and the question it is asking. Both DERIVED (the prompt's copy is assembled per
-    // snapshot off `seed:knockread:<sinceWeek>`, its own sub-stream); only `world.knock` itself is
-    // persisted, and only because `choice` is the player's decision.
-    //
-    // `knockPrompt` is non-null on exactly the weeks `pendingKnock` is true – the same predicate
-    // `advanceWeeks` blocks on – so the dialog cannot be missing on a week the engine has stopped,
-    // and cannot be up on a week it has not.
-    knock: knockLive(world.knock, world.week) ? world.knock : null,
-    knockPrompt: pendingKnock(world) ? buildKnockPrompt(world.knock!, world.seed, world.condition) : null,
-    events: world.events.slice(-SNAPSHOT_EVENTS),
-    // ⚠ THE DURABLE LEDGER, WHOLE, and it is here because the 60-event window above is exactly the
-    // wrong source for it. Milestone EVENTS carry `keep: true` so they survive `pruneEvents` in the
-    // world - but `slice(-60)` is positional, so a first title from four seasons ago falls out of the
-    // SNAPSHOT the moment sixty newer rows exist, which is a couple of months of play. The Kid
-    // screen's moments strip was reading the feed and therefore emptied itself permanently (owner,
-    // 31.07: «в Important moments на экране профиля девочки вообще ничего не происходит»); its own
-    // source comment had already diagnosed this and filed the fix as "a small engine ask" rather than
-    // doing it. This is that ask. `world.milestones` is v18 state and never prunes, it is capped by
-    // identity rather than by count (one row per first), and it is tiny - so it ships whole and no
-    // surface has to reconstruct a durable fact from a volatile window ever again.
-    milestones: world.milestones,
-    // Category-accurate windows off the persisted ledger (immune to the 60-event cap). season
-    // keeps the current MoneyScreen semantics: the current 52-week season block from its first week.
-    finance: {
-      window12w: financeWindow(world.financeWeeks, world.week - 11),
-      // ONE definition of "this season" (seasonStartWeek), shared with the wrap-up summary – the
-      // two used to spell the same arithmetic out separately, which is how they came to disagree.
-      season: financeWindow(world.financeWeeks, seasonStartWeek(world.week)),
-      // The same 12 weeks, un-folded, for the Home budget card's chart. Clamped at week 0 so a
-      // young career charts the weeks it has actually lived instead of eleven empty bars. Today's
-      // funds anchor the running balance, so the line's last point is the total printed above it.
-      weekly12: financeSeries(
-        world.financeWeeks,
-        Math.max(0, world.week - 11),
-        world.week,
-        world.fundsCents,
-      ),
-    },
-    financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
-    upcoming: upcomingEvents(world),
-    seasonSupply: seasonSupply(world),
-    // R12-15/R12-3: what next week's entered event will actually DO, so the one button that plays
-    // that week stops promising a tournament the engine has already decided against.
-    arrival: arrivalPreview(world),
-    // Season planner (v13): the bookings the calendar renders, plus the short trailing window the
-    // guardrail's consecutive-practice read needs (the calendar only ever looks at future weeks,
-    // so the tail is invisible there). Prices are re-derivable by the UI from the same pure quote
-    // functions the engine charges (economy.ts), so nothing else is needed on the wire.
-    vacations: world.vacations.map((v) => ({ ...v })),
-    practices: world.practices.map((p) => ({ ...p })),
-    recoveryBuff: world.recoveryBuff ? { ...world.recoveryBuff } : null,
-    academy: world.academy
-      ? {
-          coverShare: travelCoverShare(world.academy),
-          sinceWeek: world.academy.sinceWeek,
-          coveredCents: world.academy.coveredCents,
-        }
-      : null,
-    // The ITF annual cap as it stands TODAY – what the Home ladder needs to tell a tier's state.
-    // Derived at snapshot time from the persisted ledger, so it can never disagree with the gate.
-    entryCap: entryCapUsage(world, world.week),
-    // ...and the PRO allowance beside it (W2-LADDER §5): the planner prints the budget («pro
-    // entries this season: N of M») and the tier ladder tells "capped" apart from "locked", both
-    // off the engine's own count.
-    proEntryCap: proEntryCapUsage(world, world.week),
-    // THE ENGINE'S OWN VERDICT PER RUNG (see TierOpenMap in protocol.ts). `tierOpenFor` is the same
-    // function `enterEvent` validates against, so a screen can no longer disagree with the gate.
-    tierOpen: Object.fromEntries(TIER_LADDER.map((t) => [t, tierOpenFor(world, t)])) as TierOpenMap,
-    // ...AND THE POSITION EACH ACCEPTANCE LIST CUTS AT, for the rungs that have one. Same discipline
-    // as `tierOpen` directly above: the screen asks the engine for the number rather than deriving a
-    // share of a field it would have to be told the size of. Absent on every rung that gates on
-    // points, which is what `acceptanceRank` returning undefined means.
-    tierAcceptance: Object.fromEntries(
-      TIER_LADDER.map((t) => [t, acceptanceRank(world, t)]).filter(([, r]) => r !== undefined),
-    ) as Partial<Record<TierId, number>>,
-    // R15-9: THE ON-RAMP LATCHES, read-only, for the SLIDING TIER WINDOW - the calendar hides the
-    // rungs a latch says she has definitively left behind (a copy, like every object on this
-    // message: the snapshot must never be a live view of engine state). Surfacing widens the
-    // snapshot only; the persisted v34 field and the entry gates are untouched.
-    onRampCleared: { ...world.onRampCleared },
-    coachId: world.coachId,
-    coachMarket: coachMarket(world),
-    coachBilling: coachBilling(world),
-    kidRank: world.kidRank,
-    prevKidRank: world.prevKidRank,
-    standings: computeStandings(world),
-    countingResults: computeCountingResults(world),
-    // ALL THREE TABLES, and which one she is actually competing in. `kidRank`/`standings`/
-    // `countingResults` above are the ITF ones and stay as aliases of `ladders.itf` so nothing that
-    // reads them has to change; the pairing is pinned by a test, because two names for one fact is
-    // how this bug started.
-    //
-    // THE THIRD IS BUILT EXACTLY LIKE THE OTHER TWO – same call, same argument, no special case –
-    // which is the whole reason `LadderTrack` was widened rather than the adult rungs folded into
-    // `itf`. Nothing here decides whether the player SEES it: the Stats and rank-help screens still
-    // list two tabs by hand, because a fourteen-year-old with an empty professional table is noise
-    // and the week it stops being noise is the handover at 19 (docs/specs/adult-tour-and-endings.md
-    // §4), which is a slice of its own. The view exists and is correct from week 0 regardless.
-    ladders: {
-      domestic: computeLadderView(world, 'domestic'),
-      itf: computeLadderView(world, 'itf'),
-      wta: computeLadderView(world, 'wta'),
-    },
-    activeLadder: activeLadderOf(world),
-    bestFinishByTier: { ...world.bestFinishByTier },
-    // v31: THE CABINET. Copied a level deeper than its neighbour above, because its values are
-    // arrays and a shallow spread would hand the UI the engine's own `titles`/`finals` - the same
-    // objects `finalizeTournament` pushes onto. The snapshot is a message across the worker
-    // boundary and must never be a live view of engine state.
-    trophiesByTier: copyTrophyLedger(world),
-    // v32: THE INBOX, copied one level deep for the same reason the cabinet above is - the snapshot
-    // crosses the worker boundary and must never be a live view of engine state. `terms` is copied
-    // too, because a screen holding the engine's own terms object could mutate the contract it is
-    // rendering. (`Offer` is flat apart from `terms`, so two spreads is the whole of it.)
-    offers: world.offers.map((o) => ({ ...o, terms: { ...o.terms } })),
-    // ...AND THE DOT, DECIDED HERE. It asserts one FACT - an offer is open and its deadline has not
-    // passed - exactly as the bell's dot asserts that the week put something in the feed. It is never
-    // "unread": the engine cannot know what the player has looked at, and neither can this.
-    offerOpen: hasLiveOffer(world.offers, world.week),
-    // Round-8 (R6 debt): the running season W-L counters, already persisted since v10 –
-    // surfacing them is derivation, not schema. THE TOTAL, both ladders; `seasonRecord` below is the
-    // same matches told apart, and the two always agree because finalizeTournament writes both.
-    seasonWins: world.seasonWins,
-    seasonLosses: world.seasonLosses,
-    seasonRecord: world.seasonRecord ?? emptySeasonRecord(),
-    // The run of defeats behind her face, decided HERE and not in the UI: the engine holds the seed
-    // (so the per-streak threshold is drawn once, off `seed:angry:<startWeek>`) and the FULL event
-    // log (the snapshot only carries the trailing 60, which a long streak could outrun). Pure
-    // derivation off state that already exists – no persisted field, no schema bump.
-    lossStreak,
-    diary,
-    // HER LIFE OFF THE COURT (engine/kidLife.ts): the Personality / School / Friends tiles screen C
-    // draws. Same discipline as the diary - derived at SNAPSHOT time off `seed:friends:*`
-    // sub-streams, zero MAIN draws, so the frozen capture (41550 / e6b0c709) cannot move.
-    life: buildKidLife({
-      seed: world.seed,
-      week: world.week,
-      ageYears: START_AGE_YEARS + Math.floor(world.week / 52),
-      // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
-      // arithmetic can never disagree with the year the rest of the game prints.
-      seasonYear: seasonYear(seasonIndexOf(world.week)),
-      playStyle: world.profile.playStyle,
-      birthMonth: world.profile.birthMonth,
-      injured: world.injury !== null,
-      // HOW MUCH SHE HAS BEEN AWAY, off the persisted finance ledger rather than the capped event
-      // feed: a week in which a travel bill was actually paid is a week the family was somewhere
-      // else. A local event costs no travel and is therefore correctly NOT a week away.
-      weeksAway: world.financeWeeks.filter(
-        (w) => w.week > world.week - FRIENDS_WINDOW && w.week <= world.week && (w.byCategory.travel ?? 0) < 0,
-      ).length,
-      lossStreak: lossStreak?.losses ?? 0,
-      // Her most recent title off the same walk the diary uses, so two surfaces cannot disagree
-      // about when she last won something.
-      weeksSinceTitle: (() => {
-        const title = lastKidTitleOf(world.events)
-        return title ? world.week - title.week : null
-      })(),
-    }),
-    // THE SKILLS RADAR. Derived here and nowhere else, off `seed:read:*` / `seed:ceil:*` sub-streams
-    // at SNAPSHOT time - zero MAIN draws, so the frozen capture (41550 / e6b0c709) is untouched by
-    // construction. The true `skills` / `potential` go IN and never come out: the snapshot carries
-    // an estimate and a haze, which is the whole point of the slice.
-    radar: buildRadar(radarView, radarReadings),
-    // ...AND THE SAME FOG, ONE STEP FURTHER ON: what came along this week, in words, for the Weekly
-    // Story's Training card. Design D lists skill gains there; we may not, because a weekly delta
-    // integrates into her exact build and the fog above would be decoration. Same sub-stream
-    // discipline (`seed:train*`), same zero MAIN draws, and NOT ONE NUMBER on the way out.
-    trainingRead: buildTrainingRead(radarView, radarReadings),
-    lastSeasonSummary: world.lastSeasonSummary,
-    // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
-    seasonHistory: world.seasonHistory.map((h) => ({ ...h })),
-    ...(stopReasons && stopReasons.length > 0 ? { stopReasons } : {}),
-    ...(pending ? { pending } : {}),
-  }
-}
+// snapshot: moved to world/snapshot.ts (P4 extraction). Imported back below and re-exported under
+// the historical names, so every existing `from '...engine/world'` call site keeps working.

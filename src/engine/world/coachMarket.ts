@@ -12,6 +12,8 @@
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
 import { bestFitCoachAt, buildCoachRoster, coachById, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, selfRateCents } from '../coach'
 import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from '../season/calendar'
+import { ECONOMY } from '../economy'
+import type { TierId } from '../season/types'
 import { ageFactor, SKILL_KEYS, trainFactor } from '../development'
 import type { CoachMarketRow, CoachTier, PlayerProfile } from '../../shared/protocol'
 import { parentIncomeForWeekCents } from '../economy'
@@ -252,4 +254,17 @@ export function coachLoadNote(tier: CoachTier): string {
     case 'elite':
       return 'The best medical team money buys. He handles her body, and you hear about it after.'
   }
+}
+
+/** What he says when he would rather she skipped a trip. Three sentences, picked by HOW tired she is
+ *  rather than by luck - a draw here would make the same coach say different things about the same
+ *  Tuesday, and the card is re-derived on every snapshot. Player copy: short dash only.
+ *
+ *  The J300 line names the stake because that is the honest argument at the top of the ladder: the
+ *  entry fee and the flights are real money, and a first-round exit spends them for nothing. */
+export function coachEntryLine(tier: TierId, condition: number): string {
+  const floor = ECONOMY.availability.minConditionToEnter[tier]
+  if (condition < floor - 5) return 'Your coach would not take her. She is empty.'
+  if (condition < floor) return 'Your coach would skip this one and get her legs back.'
+  return 'Your coach thinks she is a week short of her best for this.'
 }

@@ -25,6 +25,7 @@
 //      story existing. That is the difference between a valve and the game hiding something, and it is
 //      one `&&` away from being broken from either side.
 import { describe, it, expect } from 'vitest'
+import { worldSource } from './worldSource'
 import { existsSync } from 'node:fs'
 import { readFileSync } from 'node:fs'
 import {
@@ -511,7 +512,7 @@ describe('W5 — a live season: every week has a painting, and it is the week\'s
     // required on `DiaryWorldView` and a fixture that omits it no longer compiles.
     // The wire-up pin stays exactly as it was, and it is worth MORE than before: the same one line in
     // world.ts is now the only thing standing between six holidays and one sentence.
-    const world = read('../src/engine/world.ts')
+    const world = worldSource()
     expect(world).toContain('vacationPackageId: vacationForWeek(world, world.week)?.packageId ?? null')
   })
 })

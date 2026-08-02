@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { worldFunction } from './worldSource'
+import { worldFunction, worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 
 // Two of these replay whole careers (49 and 101 weeks, plus a 101-week bench career with a real
@@ -221,9 +221,9 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
   it('the collection loop reads the whole week before breaking (no reason can pre-empt another)', () => {
     // Source guard on the SHAPE of the fix: the per-reason `break`s are what lost the injury, so
     // there must be exactly one break after the tick – the one that ends the advance.
-    const world = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
-    const fn = world.slice(world.indexOf('export function advanceWeeks'))
-    const body = fn.slice(fn.indexOf('tickWeek(world, rng)'), fn.indexOf('// --- snapshot'))
+    const fn = worldFunction('advanceWeeks')
+    expect(fn).not.toBe('')
+    const body = fn.slice(fn.indexOf('tickWeek(world, rng)'))
     const code = body
       .split('\n')
       .filter((line) => !line.trim().startsWith('//')) // prose may say "break" without doing it
@@ -382,7 +382,7 @@ describe('R11-12a — the wrap-up summary reconciles with the wallet', () => {
   })
 
   it('"this season" has ONE definition, shared by the wallet window and the wrap-up', () => {
-    const world = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
+    const world = worldSource()
     expect(seasonStartWeek(0)).toBe(0)
     expect(seasonStartWeek(WRAP_OFFSET)).toBe(0)
     expect(seasonStartWeek(WEEKS_PER_YEAR)).toBe(WEEKS_PER_YEAR)
