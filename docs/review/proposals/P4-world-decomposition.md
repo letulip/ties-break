@@ -243,3 +243,50 @@ the `layoffCovering` count, the `enterPointBand` readers, the `prizeCentsFor` de
 slices. Each encodes an invariant about the module **set** ("exactly one payout function exists"), not
 about a file, so the helper is the correct home and they should need no further edits. Budget roughly
 one repoint per two extractions.
+
+### Wave 3 (2026-08-02, same branch): the snapshot, and the package is done
+
+**`world.ts` 6,019 → 2,135. −64.7%.** Eighteen modules in `world/` totalling 4,313 lines. The
+integration core is now half the size of its own package, and the largest single engine file is
+`world/snapshot.ts` at 817 lines.
+
+| Module | Lines | | Module | Lines |
+|---|---|---|---|---|
+| snapshot | 817 | | milestones | 302 |
+| medical | 523 | | sponsors | 296 |
+| planner | 366 | | knock | 284 |
+| ladder | 314 | | coachMarket | 270 |
+| injury | 301 | | entries | 171 |
+| age | 132 | | ledger | 118 |
+| player | 113 | | entryCaps | 76 |
+| matchNews | 73 | | bookings | 56 |
+| labels | 49 | | knockHistory | 35 |
+| constants | 17 | | | |
+
+**The snapshot had to be last, and the numbers say why.** It measured **35** call-backs into world.ts
+before the package existed, **16** after wave 2, and **0** once the eight caps constants, five
+match-news helpers and `coachEntryLine` had moved down to leaves. It imports fifteen of its own
+siblings. Any attempt to take it early would have produced either a cycle or a rewrite.
+
+**The whole package obeyed one rule and never broke it:** when a block needed something from the
+integration core, the something moved DOWN to the lowest module that needed it – never an upward
+import, never a changed signature, never a behaviour edit. Every call-back count in the wave-0 table
+turned out to be an upper bound that decayed as the package filled; `injury` went 8 → 0, `medical`
+11 → 0, `snapshot` 35 → 0. **Re-measure before declaring any remaining block infeasible.**
+
+**What is left in world.ts (2,135 lines)** and why it belongs there: the `WorldState` interface,
+`createWorld`/`seedWorldForV6`/`replayMainState` (lifecycle), `tickWeek` and `advanceWeeks` (the tick
+pipeline), the tournament resolution (`computeShadowTournament`, `finalizeTournament`,
+`revealTournamentRound`, `skipTournament`, `closeTournament`, `runAiTournament`), `ensureSeason`, the
+weekly resolution pieces (interest, parent income, base costs, gear), the conveyor, the academy
+review, the prune/housekeep family, and `skipEvent`. That is a coherent integration core – it is the
+thing that owns the week – rather than a grab bag.
+
+**Total test maintenance across all three waves: 17 source-pin repoints**, every one to
+`tests/worldSource.ts`. None were behaviour failures; all were tests asserting on the text of one
+file about an invariant that is true of the module set. Two mid-doc-comment cuts and two
+type-as-value re-exports were caught by the typechecker and the build respectively.
+
+**Gate that caught what typecheck could not, twice:** `npm run build`. Both times a type or interface
+was re-exported through a value import – TypeScript elides those silently, Rollup dies. `npm run
+check` (typecheck + unit + build) is the correct per-PR gate; a bare `vue-tsc` is not.
