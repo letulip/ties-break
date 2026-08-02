@@ -786,7 +786,8 @@ describe('W4 — the schema (v26)', () => {
   // dialog opens there is nothing to demand. So the arrival line reports the fact and stops, on every
   // path, and this pins that it cannot grow a demand back - in any phrasing, not just the old one.
   it('the knock ARRIVAL line reports, it never asks - the dialog is what asks', () => {
-    const src = read('../src/engine/world.ts')
+    // world.ts AND every world/*.ts part: rollKnock moved to world/knock.ts with the P4 split
+    const src = worldSource()
     const block = src.slice(src.indexOf('const knock = drawKnock(view)'), src.indexOf('coachManagesLoad(tierOf('))
     const lines = [...block.matchAll(/`([^`]*\$\{knock\.part\}[^`]*)`/g)].map((m) => m[1])
     expect(lines.length, 'the two arrival lines should still be here').toBe(2)

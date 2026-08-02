@@ -11,7 +11,6 @@ import {
   type FinanceWeek,
   type FullBracketMatch,
   type Knock,
-  type KnockChoice,
   type KnockRecord,
   type LossStreak,
   type Milestone,
@@ -52,25 +51,19 @@ import { seasonYear, weekLabel } from '../shared/dates'
 // Type-only on the way back (shared/avatarEmotion imports `type TierId` from engine/season/types),
 // so this is a leaf dependency, not a cycle.
 import { ANGER_STREAK_MAX, ANGER_STREAK_MIN, resultShowsOnHerFace } from '../shared/avatarEmotion'
-import type { MatchPlayer, Surface } from './match/types'
+import type { MatchPlayer } from './match/types'
 import type { AiPlayer, LadderTrack, MatchRecord, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import {
   TIERS,
   buildSeason,
-  isBlackoutWeek,
-  isExamWeek,
-  isOffSeasonWeek,
   WEEKS_PER_YEAR,
   OFF_SEASON_WEEKS, TIER_LADDER } from './season/calendar'
-import { clamp, matchDrain, tournamentRunStrain } from './condition'
+import { clamp, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
   type GearCategory,
   gearHitForWeek,
-  practiceFeeCents,
-  vacationPackage,
-  vacationPriceCents,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort, COHORT_SIZE } from './season/cohort'
 import { renewCohort } from './season/conveyor'
@@ -89,7 +82,7 @@ import {
   reviewLevel,
   type AcademySupport,
 } from './academy'
-import { rivalConditions, rivalGroundstrokes, rivalMatchPlayer } from './season/rival'
+import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
 import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from './season/ranking'
 import {
@@ -98,7 +91,6 @@ import {
   runTournament,
   kidSeedIndexIn,
   weekFieldExclusion,
-  JUNIOR_TOUR,
 } from './season/tournament'
 import { previewEvent, eventCrowd, eventTemperature } from './season/preview'
 // THE FIELD TIER (living-field phase W, 01.08). Field pros are DERIVED, NEVER PERSISTED – see
@@ -109,7 +101,6 @@ import {
   mergedWtaRanking,
   universeForTier,
 } from './season/fieldPros'
-import { simulateMatch } from './match/engine'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
 // dependency runs one way: world → diary, exactly like world → condition.
@@ -119,18 +110,15 @@ import { buildDiarySnapshot, lastKidTitleOf } from './diary'
 import { buildKidLife, FRIENDS_WINDOW } from './kidLife'
 // The skills radar (docs/specs/skills-radar.md, decisions.md #11). Same shape of dependency as the
 // diary: radar.ts is world-free and takes a narrow structural view, so world → radar runs one way.
-import { axisConfidence, axisEvidence, axisReadings, buildRadar, buildTrainingRead, shownSkill, type RadarWorldView } from './radar'
+import { axisReadings, buildRadar, buildTrainingRead } from './radar'
 // W4 – THE KNOCK: the ordinary training week's one event and the decision it puts in front of the
 // parent. Same dependency shape as the diary, kidLife and the radar: knock.ts is world-free and
 // takes a narrow structural view, so world -> knock runs one way and can never cycle.
 import {
   buildKnockPrompt,
-  drawKnock,
   knockGoverns,
   knockLive,
   knockRestWeek,
-  knockUntilWeek,
-  offCooldown,
   KNOCK_REST_CONDITION,
   KNOCK_REST_GROWTH,
 } from './knock'
@@ -148,8 +136,13 @@ import {
   pruneEntryLetters,
 } from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
-import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
+import { coachManagesLoad, coachWarnsEntry } from './coachLoad'
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
+import { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek } from './world/knock'
+export { pendingKnock, ordinaryTrainingWeek, expireKnock, rollKnock, radarViewOf, coachLoadViewOf, decideKnock, isCompetitionWeek }
+import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution, expireRecoveryBuff, resolveVacation, resolvePractice, prunePlannerBookings, pruneInternationalEntries } from './world/planner'
+export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
+export type { PracticeCaution } from './world/planner'
 import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket } from './world/coachMarket'
 export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket }
 import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from './world/player'
@@ -158,8 +151,8 @@ import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryT
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio }
 import { enterEvent, withdrawEvent, cancelEntry } from './world/entries'
 export { enterEvent, withdrawEvent, cancelEntry }
-import { eventById, refundPractice } from './world/bookings'
-import { KNOCK_HISTORY_MAX, retireKnock } from './world/knockHistory'
+import { eventById } from './world/bookings'
+import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
 import { fireMilestone, captureMilestone, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger, copyTrophyLedger } from './world/milestones'
 export { emptySeasonRecord, emptyTrophyLedger }
@@ -591,577 +584,11 @@ export function ensureSeason(world: WorldState): void {
 // injury: moved to world/injury.ts (P4 extraction). Imported back below and re-exported under
 // the historical names, so every existing `from '...engine/world'` call site keeps working.
 
-// --- W4: THE KNOCK ------------------------------------------------------------
-//
-// The design, the anti-farming argument and the RNG discipline all live in engine/knock.ts, which
-// holds the dice, the anatomy and the copy. This is the half that touches the world: when a knock
-// arrives, when it retires, and what the parent's answer does to the weeks that follow.
-//
-// ⚠ THE DECISION GOVERNS THE WEEK AHEAD, NOT THE WEEK JUST PLAYED, and that is a structural choice
-// worth stating. `rollKnock` runs at the END of the tick – she came off court on the Friday – so by
-// the time the dialog is on screen the week is already resolved and cannot be edited. The alternative
-// (pausing mid-tick, the way `pendingTournament` does) would let the choice re-write the week it
-// arrived in, at the price of splitting the weekly resolution in half for one feature. Not worth it,
-// and the fiction is better this way round: something happened on Friday, and what you decide is what
-// happens NEXT week.
+// THE KNOCK moved to world/knock.ts (P4 extraction); imported back and re-exported.
 
-/** Is the career waiting for an answer? The ONE predicate `advanceWeeks` blocks on and the snapshot
- *  builds its prompt from, so the dialog and the engine can never disagree. */
-export function pendingKnock(world: WorldState): boolean {
-  return world.knock !== null && world.knock.choice === null
-}
-
-/** A week she spent training at home and nothing else – the only kind of week a knock arrives on.
- *
- *  ⚠ DELIBERATELY NARROW, and every clause earns its place. A tournament week already has a story
- *  (and its own injury multiplier); an off-season or exam week is a blackout and must keep feeling
- *  like one; a booked family week is the opposite of load; a friendly is a match; and a body already
- *  laid up cannot pick up a niggle. What is left is exactly the week the owner was complaining
- *  about – the one with nothing in it but training. */
-export function ordinaryTrainingWeek(world: WorldState): boolean {
-  return (
-    world.injury === null &&
-    world.pendingTournament === null &&
-    !isCompetitionWeek(world) &&
-    !isBlackoutWeek(world.week) &&
-    vacationForWeek(world, world.week) === undefined &&
-    practiceForWeek(world, world.week) === undefined
-  )
-}
-
-/** Retire a knock whose weeks are up. Runs at the TOP of the tick, after `world.week` has moved, so
- *  a knock is live for weeks `sinceWeek + 1 .. untilWeek` inclusive and `rollInjury` sees the right
- *  answer on every one of them. Undecided knocks never expire – they block time instead. */
-export function expireKnock(world: WorldState): void {
-  if (world.knock === null || world.knock.choice === null) return
-  if (world.week > world.knock.untilWeek) retireKnock(world)
-}
-
-/** Roll for a knock (tick step 3c, after the week's work). ZERO main-stream draws – `drawKnock`
- *  reads `seed:knock:<week>`, its own per-week sub-stream – so the frozen capture cannot move.
- *
- *  ONE AT A TIME AND RATE-LIMITED: nothing arrives while a knock is open (decided or not) or inside
- *  KNOCK_COOLDOWN_WEEKS of the last one retiring. See knock.ts's farming note (d). */
-export function rollKnock(world: WorldState): void {
-  if (world.knock !== null) return
-  if (!ordinaryTrainingWeek(world)) return
-  const view = {
-    seed: world.seed,
-    week: world.week,
-    condition: world.condition,
-    plan: world.plan,
-    history: world.knockHistory,
-  }
-  if (!offCooldown(view)) return
-  const knock = drawKnock(view)
-  if (!knock) return
-  world.knock = knock
-  // Type 'info', not 'injury': nothing has happened to her body that costs anything yet, and the 💬
-  // channel is where somebody SAYS something. Calling it an injury in the feed would also make the
-  // Memory card's first-injury milestone a lie by association.
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    // ⚠ IT REPORTS, IT DOES NOT DEMAND - and the repeat line used to end "It needs a decision."
-    // (owner, 31.07: «а где сам decision? кто его должен принимать?»). It was written before the
-    // routing below existed, and the routing is what made it a lie on the commonest path there is.
-    //
-    // Three things can happen to a knock. With no load-managing coach the dialog opens and the parent
-    // decides; with one who escalates, the dialog opens too and he says he is asking. On the third
-    // path - a coach who simply takes the call, which is what DEFAULT_PROFILE's middle rung does - the
-    // choice is made two lines down and NOBODY ASKS THE PLAYER. The feed then told him a decision was
-    // needed, and immediately afterwards told him what the coach had decided: the shape of having been
-    // asked and ignored.
-    //
-    // So the arrival line states the fact and stops. THE DEMAND IS THE DIALOG, and where there is no
-    // dialog there is no demand to make - the coach's own line says what he did instead. That is
-    // correct on all three paths without branching on any of them, which is why it is a deletion
-    // rather than a condition.
-    text: knock.repeat
-      ? `Her ${knock.part} is sore again – the same one.`
-      : `She has picked up a sore ${knock.part}. Not an injury – yet.`,
-  })
-  // ⚠ AND IF THE FAMILY IS PAYING SOMEBODY, HE ANSWERS IT – docs/specs/coach-as-load-manager.md §8.
-  // This single line is the routing the whole slice is about: `pendingKnock` is false immediately, so
-  // `advanceWeeks` never halts and the dialog never opens. That is the product - «you are buying your
-  // attention back» - and it is why the rule lives in coachLoad.ts rather than here.
-  //
-  // ⚠ THE EVENT SURVIVES THE DIALOG'S REMOVAL, and that is not decoration. W4 exists because the owner
-  // complained that training weeks «просто скипались»; a slice that silently deleted the stop for four
-  // of five rungs would hand him that complaint back dressed as a feature. So the knock still happens,
-  // still costs (KNOCK_REST_GROWTH or the loaded roll), still takes the week's frame and its scrap - and
-  // `coachDecidedKnock` below writes what was decided into the feed in the coach's own voice. He finds
-  // out what happened to his daughter; he just is not the one deciding.
-  if (coachManagesLoad(tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)))) {
-    coachDecidesKnock(world)
-  }
-}
-
-
-/** The hired coach's answer, taken the moment the knock arrives. Separate from `decideKnock` so the
- *  parent's path keeps its guard (`decideKnock` throws on an already-answered knock, which is a real
- *  protection against a double-tap) while this one is an internal step of the same tick.
- *
- *  ZERO DRAWS: `coachKnockCall` is arithmetic, and the one draw behind `shownStamina` is the radar's
- *  per-career `seed:read:stamina` - taken on its own sub-stream, outside the MAIN sequence, exactly as
- *  `drawKnock` takes `seed:knock:<week>`. The frozen capture (41550 / e6b0c709) cannot move. */
-function coachDecidesKnock(world: WorldState): void {
-  const k = world.knock
-  if (!k || k.choice !== null) return
-  const view = coachLoadViewOf(world)
-  // ⚠ ...UNLESS HE WANTS THE PARENT'S SAY. The call stays unanswered, `pendingKnock` stays true, and the
-  // dialog opens exactly as it does for a self-coached career - which is what keeps W4's content alive on
-  // a career that has a coach (DEFAULT_PROFILE is 'middle', so that is most of them). See coachLoad.ts
-  // `coachEscalates`: the zone scales with his haze, so a cheap coach asks often and an Elite one almost
-  // never - and "you are buying your attention back" becomes a number instead of a slogan.
-  if (coachEscalates(view, k.repeat)) {
-    addEvent(world, {
-      week: world.week,
-      type: 'info',
-      text: k.repeat
-        ? `The coach wants to talk about her ${k.part} before anyone decides.`
-        : `The coach is in two minds about the ${k.part}. He is asking us.`,
-    })
-    return
-  }
-  const choice = coachKnockCall(view, k.repeat)
-  k.choice = choice
-  k.untilWeek = knockUntilWeek(k, choice)
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    // HIS voice, not the parent's – the feed's `decideKnock` lines are what the family decided, and
-    // these are what they were told. The difference is the thing they are paying for.
-    text:
-      choice === 'rest'
-        ? `The coach is keeping her off the court this week – the ${k.part}.`
-        : `The coach is happy for her to train through the ${k.part}.`,
-  })
-}
-
-// =================================================================================================
-// THE COACH AS LOAD MANAGER (docs/specs/coach-as-load-manager.md) – the world side
-// =================================================================================================
-//
-// The design, the rejected oracle and the both-directions argument all live in engine/coachLoad.ts,
-// which is pure and world-free. This is the half that touches the world: assembling what the coach can
-// SEE, and letting him answer the knock when the family is paying somebody to.
-
-/**
- * HER SKILLS RADAR VIEW – hoisted out of `toSnapshot` by the load slice, because the COACH now reads it
- * too and at a different moment (inside the tick, when a knock arrives) than the screens do.
- *
- * ⚠ ONE SPELLING, WHICH IS THE WHOLE REASON IT IS A FUNCTION. `toSnapshot`'s own note already argues
- * this for the two readers it had ("a second literal here would be a second place for 'which matches
- * count' to drift"); a third reader inside the tick makes it load-bearing rather than tidy. If the
- * coach acted on a differently-assembled view, he would be managing a girl the radar is not drawing -
- * and §8's entire claim is that his belief and the radar's contour are the SAME belief.
- */
-export function radarViewOf(world: WorldState): RadarWorldView {
-  return {
-    seed: world.seed,
-    week: world.week,
-    kidId: KID_ID,
-    skills: world.skills,
-    // Where she began, recomputed from the seed rather than stored - see RadarWorldView.startSkills.
-    // `growWeek` is the only thing in the engine that moves `world.skills`, so the difference between
-    // these two IS her development, and neither of them ever leaves this object.
-    startSkills: startingSkills(world.seed, world.profile),
-    potential: world.potential,
-    coachTier: tierOf(coachById(world.seed, ageAtWeek(world.week), world.coachId)),
-    coachSinceWeek: coachSinceWeek(world),
-    matchesPlayed: matchesEverPlayed(world),
-    // Her OWN records out of the retained feed, competitive only - a practice friendly teaches
-    // the radar nothing, for the same reason it never shows on her face (R11-2).
-    matches: world.events
-      .filter((e) => e.match !== undefined && !e.friendly)
-      .map((e) => e.match!)
-      .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
-  }
-}
-
-/**
- * WHAT THE COACH CAN SEE OF HER BODY, this week.
- *
- * `shownStamina` is the radar's own estimate of the stamina axis - her true value displaced by his
- * rung's haze, one draw per career with a FIXED SIGN (see radar.ts `shownSkill`). Stamina is the axis
- * because it is the physical one: a load manager is judging how much tennis she can absorb, and that is
- * what this attribute means.
- *
- * ⚠ CONDITION IS PASSED EXACT, NOT FOGGED, and that asymmetry is deliberate. The condition bar is a
- * number the game prints for the player outright, so a coach who could not read it would be blinder
- * than the parent who hired him - which is not a model of a cheap coach, it is a bug. What a cheap coach
- * gets wrong is how much of it she can AFFORD to spend, and that is `shownStamina`.
- *
- * Called at most a handful of times per career (a knock arrives ~15 times over 14->18), so the evidence
- * fold it costs is not on the weekly path.
- */
-export function coachLoadViewOf(world: WorldState): CoachLoadView {
-  const view = radarViewOf(world)
-  const weeksTogether = Math.max(0, world.week - coachSinceWeek(world))
-  const confidence = axisConfidence(view.coachTier, weeksTogether, axisEvidence(view, 'stamina').level)
-  return {
-    tier: view.coachTier,
-    shownStamina: shownSkill(view, 'stamina', confidence),
-    condition: world.condition,
-    playedWeeks: playedWeeksInTrailing4(world),
-    confidence,
-  }
-}
-
-/** THE PARENT ANSWERS. The only way an undecided knock clears, and the only way time moves again.
- *
- *  Pure state: `untilWeek` is arithmetic and the consequences are read off it later (a rest week by
- *  `knockRestWeek`, a loaded roll by `knockTauFactor`). ZERO draws, on any stream – which is what
- *  makes a decision the player can take at any moment safe to put inside a deterministic sim. */
-export function decideKnock(world: WorldState, choice: KnockChoice): void {
-  const k = world.knock
-  if (!k) throw new Error('Nothing to decide')
-  if (k.choice !== null) throw new Error('That knock has already been answered')
-  k.choice = choice
-  k.untilWeek = knockUntilWeek(k, choice)
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    text:
-      choice === 'rest'
-        ? `Resting the ${k.part} – a week off the training court.`
-        : `Training through the ${k.part}. The coach knows.`,
-  })
-}
-
-// --- Season planner: vacations + practice matches ------------------------------
-// docs/specs/season-planner.md. TWO player-planned week types on otherwise empty weeks.
-//
-// RNG DISCIPLINE (the whole reason this slice is safe): a booking is PURE STATE. Prices are
-// quoted from the purpose-scoped sub-streams `seed:vacation:week:packageId` /
-// `seed:practice:week` (economy.ts), and the friendly itself runs on `seed:practicematch:week`
-// – never the MAIN weekly stream. The B1/C1 freezes (count 45239 / hash 9f783705) therefore
-// stay byte-identical no matter how much the parent plans; tests/planner.test.ts P1 re-proves
-// it with a career that books something every single week.
-
-
-/** Guard shared by both booking commands: a plannable week is in the FUTURE, free of the kid's
- *  own entries and of another booking, and she is not laid up through it. Throws the
- *  player-facing reason (short dash copy). `kind` shapes the school/off-season rules: the
- *  off-season is family time (no friendlies) but IS the natural family-vacation week, and an
- *  exam block takes neither.
- *
- *  THE DOCTOR'S VETO REACHES THE FRIENDLY (owner 26.07: "the doctor who will not let her travel
- *  probably should not clear her for a friendly at condition 0"). A match is a match: under
- *  ECONOMY.availability.medicalFloor she is not cleared for one, whoever is standing across the
- *  net. It applies to `practice` ONLY – a VACATION is rest, and refusing that below the floor is
- *  how a week becomes a dead end (R10-3), the exact bug class this gate must not reintroduce.
- *  The verdict comes from the shared `medicalBlock`, so the friendly and the tournament print the
- *  same sentence by construction. Ranked LAST, mirroring `availabilityStatus`: injury and the
- *  week-level reasons (exams, off-season, an existing booking, an entered tournament) name
- *  themselves first, because they are true for any body. */
-function assertPlannable(world: WorldState, week: number, kind: 'vacation' | 'practice'): void {
-  if (!Number.isInteger(week) || week <= world.week) throw new Error('Only a future week can be planned')
-  const layoff = layoffCovering(world, week) // the shared R10-17 window
-  if (layoff !== null) throw new Error(`Injured – back in ${layoff.weeksRemaining} weeks.`)
-  if (isExamWeek(week)) throw new Error('School exams that week – no matches, no trips')
-  if (kind === 'practice' && isOffSeasonWeek(week)) throw new Error('Off-season – family time, no matches')
-  if (vacationForWeek(world, week)) throw new Error('That week is already a family vacation')
-  if (practiceForWeek(world, week)) throw new Error('A practice match is already booked that week')
-  if (world.season.some((e) => e.week === week && world.entries.includes(e.id))) {
-    throw new Error('She is entered in a tournament that week')
-  }
-  if (kind === 'practice') {
-    const medical = medicalBlock(world.condition)
-    if (medical) throw new Error(medical.detail)
-  }
-}
-
-/** Book a family vacation on an empty future week: charges the sub-stream quote (spec §2) and
- *  records the booking. The week becomes a hard blackout; the package's condition gain (and, for
- *  the two top packages, its recovery buff) lands when the week ticks. */
-export function bookVacation(world: WorldState, week: number, packageId: string): void {
-  const pkg = vacationPackage(packageId)
-  if (!pkg) throw new Error('Unknown vacation package')
-  assertPlannable(world, week, 'vacation')
-  const priceCents = vacationPriceCents(world.seed, week, packageId, world.profile.background)
-  // R13-7a: a ZERO-PRICE package is always affordable. The bare `funds < price` refused the free
-  // home-rest week the moment funds went negative (-$1 < $0), i.e. exactly when it is the one
-  // thing a broke family can still book. Nothing is charged, so nothing has to be afforded.
-  if (priceCents > 0 && world.fundsCents < priceCents) throw new Error('Not enough funds for that vacation')
-  world.fundsCents -= priceCents
-  world.vacations.push({ week, packageId, paidCents: priceCents })
-  world.vacations.sort((a, b) => a.week - b.week)
-  if (priceCents > 0) {
-    addEvent(world, {
-      week: world.week,
-      type: 'expense',
-      category: 'vacation',
-      text: `Booked: ${pkg.label} – ${weekLabel(week)}`,
-      amountCents: -priceCents,
-    })
-  }
-  addEvent(world, { week: world.week, type: 'entry', text: `Family vacation booked – ${weekLabel(week)} (${pkg.label})` })
-}
-
-/** Cancel a booked vacation before its week starts: FULL refund (mirror of entry withdrawal). */
-export function cancelVacation(world: WorldState, week: number): void {
-  const booking = vacationForWeek(world, week)
-  if (!booking) throw new Error('No vacation booked that week')
-  if (week <= world.week) throw new Error('That vacation week has already started')
-  world.vacations = world.vacations.filter((v) => v !== booking)
-  const label = vacationPackage(booking.packageId)?.label ?? booking.packageId
-  if (booking.paidCents > 0) {
-    world.fundsCents += booking.paidCents
-    addEvent(world, {
-      week: world.week,
-      type: 'income',
-      category: 'vacation',
-      text: `Vacation refunded: ${label}`,
-      amountCents: booking.paidCents,
-    })
-  }
-  addEvent(world, { week: world.week, type: 'entry', text: `Cancelled the family vacation – ${weekLabel(week)}` })
-}
-
-/** Book a practice match (a watchable friendly) on an empty future week: charges the court
- *  rental off the `:practice:` sub-stream, plus half a coaching session when the coach comes
- *  along. NEVER blocked by the fatigue GUARDRAIL – the caution is advice, not a veto (owner:
- *  "the parent may push, the game warns"); see practiceCaution.
- *
- *  The ONE exception, and it is the doctor's, not the guardrail's: below
- *  ECONOMY.availability.medicalFloor `assertPlannable` refuses outright (there is no warning band
- *  for a friendly – above the floor the guardrail's soft caution owns the whole range). That is the
- *  same hard body-gate `availabilityStatus` applies to a tournament, reading the same
- *  `medicalBlock`. */
+// THE SEASON PLANNER moved to world/planner.ts (P4 extraction); imported back and re-exported.
 // THE COACH MARKET moved to world/coachMarket.ts (P4 extraction); imported back and re-exported.
 
-export function bookPractice(world: WorldState, week: number, withCoach: boolean): void {
-  assertPlannable(world, week, 'practice')
-  const paidCents = practiceFeeCents(world.seed, week, world.profile.background, withCoach, practiceCoachRateFor(world, week))
-  if (world.fundsCents < paidCents) throw new Error('Not enough funds for the court rental')
-  world.fundsCents -= paidCents
-  world.practices.push({ week, paidCents, withCoach })
-  world.practices.sort((a, b) => a.week - b.week)
-  addEvent(world, {
-    week: world.week,
-    type: 'expense',
-    category: 'practice',
-    text: withCoach ? `Court rental + coach – practice match ${weekLabel(week)}` : `Court rental – practice match ${weekLabel(week)}`,
-    amountCents: -paidCents,
-  })
-  addEvent(world, { week: world.week, type: 'entry', text: `Practice match booked – ${weekLabel(week)}` })
-}
-
-/** Cancel a booked practice before its week starts: full refund of the rental. */
-export function cancelPractice(world: WorldState, week: number): void {
-  const booking = practiceForWeek(world, week)
-  if (!booking) throw new Error('No practice match booked that week')
-  if (week <= world.week) throw new Error('That practice week has already started')
-  refundPractice(world, booking, 'Cancelled')
-}
-
-/** How many practice weeks run UNBROKEN immediately before `week` (pure, order-free). */
-export function consecutivePracticeWeeks(practiceWeeks: readonly number[], week: number): number {
-  const booked = new Set(practiceWeeks)
-  let n = 0
-  while (booked.has(week - 1 - n)) n++
-  return n
-}
-
-/** The practice GUARDRAIL as a small pure predicate (fatigue-bench finding 25.07: practising
- *  every single week is self-destructive – mean condition 47, 41-44% of weeks under 40). It is a
- *  CAUTION, never a block: the confirm sheet spells the risk out and the Home chip reads the
- *  strain, but the parent may still push. Reasons: 'tired' (below ECONOMY.practice.cautionCondition)
- *  and 'streak' (a run of consecutive match weeks).
- *
- *  WAVE-2 RETUNE (bench 26.07): the streak arm is GATED on real strain – `cautionStreak` (3) in a
- *  row warns only below `cautionStreakCondition`, while `cautionStreakAlways` (4) in a row warns at
- *  any condition. It used to fire on a perfectly fresh kid (careful pushed through 8-11
- *  cautions/season at condition 92), which is how a warning becomes noise. */
-export interface PracticeCaution {
-  level: 'ok' | 'caution'
-  reasons: Array<'tired' | 'streak'>
-  /** how many match weeks in a row this booking would make (1 = the first) – so the chip and the
-   *  sheet can NAME the run without re-deriving it. */
-  streakWeeks: number
-  /** player-facing warning copy (short dash), absent when clear */
-  detail?: string
-}
-export function practiceCaution(input: {
-  condition: number
-  practiceWeeks: readonly number[]
-  week: number
-}): PracticeCaution {
-  const p = ECONOMY.practice
-  const reasons: Array<'tired' | 'streak'> = []
-  // The booking under consideration closes the run, so it is the (unbroken run before it + 1)-th.
-  const streakWeeks = consecutivePracticeWeeks(input.practiceWeeks, input.week) + 1
-  if (input.condition < p.cautionCondition) reasons.push('tired')
-  const strainedStreak = streakWeeks >= p.cautionStreak && input.condition < p.cautionStreakCondition
-  if (strainedStreak || streakWeeks >= p.cautionStreakAlways) reasons.push('streak')
-  if (reasons.length === 0) return { level: 'ok', reasons, streakWeeks }
-  const parts: string[] = []
-  // Owner's line: «Она уже вымотана – ещё матч?»
-  if (reasons.includes('tired')) parts.push('She is already worn out – another match?')
-  if (reasons.includes('streak')) parts.push(`${streakWeeks} match weeks in a row – that is how bodies break.`)
-  return { level: 'caution', reasons, streakWeeks, detail: parts.join(' ') }
-}
-
-/** Retire an expired recovery buff (pure state). Runs after the week's injury roll, so the last
- *  covered week still gets its protection. */
-function expireRecoveryBuff(world: WorldState): void {
-  if (world.recoveryBuff && world.week > world.recoveryBuff.untilWeek) world.recoveryBuff = null
-}
-
-/** Tick step 1c: resolve a booked vacation week – the package's condition gain on top of the
- *  free-week recovery accrueCondition already granted, plus the resort/elite carry-over buff.
- *  Runs even while she is injured: a family week away is still rest. */
-function resolveVacation(world: WorldState): void {
-  const booking = vacationForWeek(world, world.week)
-  if (!booking) return
-  const pkg = vacationPackage(booking.packageId)
-  if (!pkg) return
-  world.condition = clamp(world.condition + pkg.conditionGain, ECONOMY.condition.min, ECONOMY.condition.max)
-  if (pkg.buffFactor < 1) {
-    world.recoveryBuff = { untilWeek: world.week + ECONOMY.vacation.buffWeeks, factor: pkg.buffFactor }
-  }
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    text:
-      pkg.buffFactor < 1
-        ? `Family vacation – ${pkg.label}: +${pkg.conditionGain} condition, and the recovery holds for ${ECONOMY.vacation.buffWeeks} weeks.`
-        : `Family vacation – ${pkg.label}: +${pkg.conditionGain} condition.`,
-  })
-}
-
-/** Pick the week's sparring partner: a cohort player from the kid's own neighbourhood of the
- *  standings (one draw on the private practice stream). Flavor + a fair hit-out, never a result. */
-function pickSparringPartner(world: WorldState, rng: Rng): AiPlayer {
-  const ranking = fullRanking(world).filter((r) => r.playerId !== KID_ID)
-  const byId = new Map(world.cohort.map((p) => [p.id, p]))
-  const kidIdx = Math.max(0, Math.min(ranking.length - 1, world.kidRank - 1))
-  const lo = Math.max(0, kidIdx - 10)
-  const hi = Math.min(ranking.length - 1, kidIdx + 10)
-  const pick = pickInt(rng, lo, hi) // exactly one pull
-  return byId.get(ranking[pick]?.playerId ?? '') ?? world.cohort[0]
-}
-
-/** Tick step 1c: play a booked practice match. A watchable friendly through the SAME record
- *  shape a tournament match uses (MatchReplay re-simulates from the stored seed), ZERO ranking
- *  points, and the spec's drain: `max(1, local-scoreline drain − 1)` – a friendly is one lighter
- *  than the same match at a local, never free. Injury cancels the week (the rental was already
- *  refunded at onset), and so does the doctor's floor, re-read here on arrival (see below); the
- *  friendly runs on the private `seed:practicematch:week` stream, so it adds no MAIN-stream draws. */
-function resolvePractice(world: WorldState): void {
-  const booking = practiceForWeek(world, world.week)
-  if (!booking) return
-  if (world.injury !== null) {
-    refundPractice(world, booking, 'Injured')
-    return
-  }
-  // THE DOCTOR CHECKS HER ON ARRIVAL HERE TOO. The booking gate reads her condition on the day she
-  // BOOKS, and a booking is made a week ahead – so a friendly signed up for at condition 30 can
-  // still come round with her at 5 (one bad tournament run in between is enough). The floor is
-  // therefore re-read on the play week against the condition she would actually take the court at
-  // (step 1c has already accrued), exactly like the tournament arrival check in tickWeek, and
-  // ranked the same way: injury first, then medicine.
-  //
-  // THE MONEY GOES THE OTHER WAY THAN THE TOURNAMENT'S, deliberately. A medical withdrawal from a
-  // tournament FORFEITS the entry fee, because the list closed with her on it and refunding it
-  // would make the veto a free late exit from any entry the parent regrets. Neither half of that is
-  // true of a friendly: there is no closed list (cancelPractice already refunds in full at any point
-  // before the week), the friendly awards nothing that could be gamed, and the practice
-  // sub-system's own precedent for "her body called it off" – the injury branch right above – is a
-  // FULL refund. So the club simply does not get booked. Consistency inside the practice rules beats
-  // symmetry with a rule whose reason does not apply.
-  //
-  // It does NOT set `medicalWithdrawalWeek` either: that marker exists to HALT an advance so the
-  // player cannot miss a forfeited entry fee (the owner's silent-withdrawal trap). Nothing is lost
-  // here – the money is back and the news feed carries the line – so stopping the fast-forward
-  // would be a nag, not a warning.
-  if (medicalClearance(world.condition) === 'withdraw') {
-    refundPractice(world, booking, 'Medical')
-    // The week is match-free after all, so she earns the FULL free-week recovery that
-    // accrueCondition withheld when it still believed she would play a friendly (it paid
-    // recoveryBase alone, the practice-week rung of the ladder). Written as the DIFFERENCE from a
-    // free week, exactly like the tournament withdrawal in tickWeek: base is already in, only the
-    // rest-slider bonus is owed. Integer, clamped, zero draws.
-    world.condition = clamp(
-      world.condition + restRecoveryBonus(world.plan.rest),
-      ECONOMY.condition.min,
-      ECONOMY.condition.max,
-    )
-    return
-  }
-  const rng = rngFromSeed(`${world.seed}:practicematch:${world.week}`)
-  const opponent = pickSparringPartner(world, rng)
-  const surface: Surface = 'hard' // the home club's courts
-  // She hits at her CURRENT condition, exactly like a tournament run (R9-19 coupling), and on the
-  // court her style earns her (surface-style): one composition point, applied once.
-  const kid = kidMatchPlayerFor(world, surface)
-  const opp: MatchPlayer = {
-    id: opponent.id,
-    name: opponent.name,
-    serve: opponent.serve,
-    ret: opponent.ret,
-    composure: opponent.composure,
-    stamina: opponent.stamina,
-    // Her sparring partner's groundstroke comes off the SAME derivation a tournament opponent's
-    // does, so a friendly is not a different game (v25 - the cohort stores no fifth attribute).
-    groundstrokes: rivalGroundstrokes(opponent),
-    // ...and for the same reason her AGE comes off the cohort row, so the friendly's box score reads
-    // her serve at her real pace instead of falling back to the career-start age.
-    age: opponent.ageYears,
-  }
-  const seed = `${world.seed}:practicematch:${world.week}:m`
-  const result = simulateMatch(kid, opp, { surface, tour: JUNIOR_TOUR, seed })
-  const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
-  const kidWon = result.winner === 0
-  // The spec's drain rule, graded off the real scoreline via the SAME matchDrain the tour uses.
-  const drain = Math.max(1, matchDrain('local', score) - 1)
-  world.condition = clamp(world.condition - drain, ECONOMY.condition.min, ECONOMY.condition.max)
-  const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
-  addEvent(world, {
-    week: world.week,
-    type: 'match',
-    friendly: true,
-    text: `Practice match: ${kidShort} ${kidWon ? 'beat' : 'lost to'} ${formatShortName(opp.name)} ${score} – no ranking points`,
-    match: {
-      round: 0,
-      aId: KID_ID,
-      bId: opp.id,
-      winnerId: kidWon ? KID_ID : opp.id,
-      seed,
-      score,
-      eventId: `practice-w${world.week}`,
-      surface,
-      oppName: opp.name,
-      a: { ...kid },
-      b: { ...opp },
-    },
-  })
-}
-
-/** Housekeeping: bookings are kept for a short TRAILING window after their week resolves, not
- *  dropped on the spot – the guardrail's consecutive-practice streak (and the Home strain chip)
- *  has to be able to see "she already played the last two weeks". Bounded, so the save stays
- *  small no matter how long the career runs. */
-const PLANNER_TRAIL_WEEKS = 4
-function prunePlannerBookings(world: WorldState): void {
-  const from = world.week - PLANNER_TRAIL_WEEKS
-  world.vacations = world.vacations.filter((v) => v.week >= from)
-  world.practices = world.practices.filter((p) => p.week >= from)
-}
-
-/** Drop international entries from seasons that are over: nothing can ever read them again (the
- *  cap is asked per season, and the only seasons reachable are the current one and the next). The
- *  list is therefore bounded by the cap itself – tens of numbers over a whole career, not one per
- *  event played. Same `seasonStartWeek` boundary the cap counts on, so the prune can never eat a
- *  slot the gate still needs. */
-function pruneInternationalEntries(world: WorldState): void {
-  const from = seasonStartWeek(world.week)
-  world.internationalEntryWeeks = world.internationalEntryWeeks.filter((w) => w >= from)
-  // The pro ledger prunes on the same boundary for the same reason - bounded by its own cap.
-  world.proEntryWeeks = world.proEntryWeeks.filter((w) => w >= from)
-}
 
 // --- weekly resolution pieces ------------------------------------------------
 // R9-1: weekly savings interest on a POSITIVE balance, credited on the CARRIED-IN funds as
@@ -1197,22 +624,6 @@ function resolveParentIncome(world: WorldState): void {
   })
 }
 
-/** IS SHE COMPETING THIS WEEK - entered in an event scheduled for it, and healthy enough to play.
- *
- *  ONE definition, two call sites, and they are deliberately evaluated at DIFFERENT points in the
- *  tick: the coaching bill asks at step 1 (before rollInjury) and `accrueCondition` asks at step 1c
- *  (after it). So a fresh injury this week counts as a competition week for the BILL and as a
- *  walkover for CONDITION, which is the honest reading of both - the week opened with her entered
- *  and travelling, and it ended with her not playing.
- *
- *  ENTERED, not merely offered: a calendar full of events she did not enter is a training week.
- *  Pure, zero draws. */
-export function isCompetitionWeek(world: WorldState): boolean {
-  return (
-    world.injury === null &&
-    world.season.some((e) => e.week === world.week && world.entries.includes(e.id))
-  )
-}
 
 /** Is the coach on the clock this week? Pure, zero draws, and the ONE place the rule lives: the bill and
  *  the development step both ask it, so they can never disagree about whether he was there.
