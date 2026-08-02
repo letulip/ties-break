@@ -169,6 +169,9 @@ import {
 import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
 import type { CoachTier } from '../shared/protocol'
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
+import { eventById, refundPractice } from './world/bookings'
+import { KNOCK_HISTORY_MAX, retireKnock } from './world/knockHistory'
+export { KNOCK_HISTORY_MAX }
 import { fireMilestone, captureMilestone, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger, copyTrophyLedger } from './world/milestones'
 export { emptySeasonRecord, emptyTrophyLedger }
 import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel } from './world/sponsors'
@@ -658,10 +661,6 @@ export function kidMatchPlayerFor(
 }
 
 
-function eventById(world: WorldState, id: string): SeasonEvent | undefined {
-  return world.season.find((e) => e.id === id)
-}
-
 // --- rolling calendar --------------------------------------------------------
 // Extend the season in whole deterministic year-blocks until at least
 // SEASON_MIN_FUTURE weeks ahead are scheduled, then drop resolved (past) weeks and
@@ -975,36 +974,10 @@ export function resolvePhysio(world: WorldState): void {
 // and the fiction is better this way round: something happened on Friday, and what you decide is what
 // happens NEXT week.
 
-/** How many retired knocks the world keeps. Enough for the thread (`pushedParts` reads it) and the
- *  cooldown, small enough that it is never the reason a save grows. */
-export const KNOCK_HISTORY_MAX = 16
-
 /** Is the career waiting for an answer? The ONE predicate `advanceWeeks` blocks on and the snapshot
  *  builds its prompt from, so the dialog and the engine can never disagree. */
 export function pendingKnock(world: WorldState): boolean {
   return world.knock !== null && world.knock.choice === null
-}
-
-/** File the current knock away. `brokeDown` marks the ones that turned into a real injury.
- *
- *  An UNDECIDED knock retires as `rest`, which is the conservative reading and is only reachable
- *  through `rollInjury` (an injury landing on the same week the knock arrived, before he could
- *  answer): he never sent her back out, so the record must not say he did – `pushedParts` would put
- *  that part on the thread for ever on the strength of a decision nobody made. */
-function retireKnock(world: WorldState, brokeDown = false): void {
-  const k = world.knock
-  if (!k) return
-  world.knockHistory.push({
-    part: k.part,
-    sinceWeek: k.sinceWeek,
-    untilWeek: Math.max(k.untilWeek, world.week),
-    choice: k.choice ?? 'rest',
-    ...(brokeDown ? { brokeDown: true as const } : {}),
-  })
-  if (world.knockHistory.length > KNOCK_HISTORY_MAX) {
-    world.knockHistory.splice(0, world.knockHistory.length - KNOCK_HISTORY_MAX)
-  }
-  world.knock = null
 }
 
 /** A week she spent training at home and nothing else – the only kind of week a knock arrives on.
@@ -1561,30 +1534,6 @@ export function cancelPractice(world: WorldState, week: number): void {
   if (!booking) throw new Error('No practice match booked that week')
   if (week <= world.week) throw new Error('That practice week has already started')
   refundPractice(world, booking, 'Cancelled')
-}
-
-/** Drop a practice booking and hand the rental back (shared by the player cancel, the injury hook
- *  and the doctor's arrival check, so the money story is identical whichever one fires). */
-function refundPractice(world: WorldState, booking: PracticeBooking, reason: 'Cancelled' | 'Injured' | 'Medical'): void {
-  world.practices = world.practices.filter((p) => p !== booking)
-  world.fundsCents += booking.paidCents
-  addEvent(world, {
-    week: world.week,
-    type: 'income',
-    category: 'practice',
-    text: `Court rental refunded – ${weekLabel(booking.week)}`,
-    amountCents: booking.paidCents,
-  })
-  addEvent(world, {
-    week: world.week,
-    type: 'entry',
-    text:
-      reason === 'Injured'
-        ? `Practice match called off – ${weekLabel(booking.week)} (she is hurt)`
-        : reason === 'Medical'
-          ? `Practice match called off – ${weekLabel(booking.week)} (not cleared to play)`
-          : `Cancelled the practice match – ${weekLabel(booking.week)}`,
-  })
 }
 
 /** How many practice weeks run UNBROKEN immediately before `week` (pure, order-free). */
