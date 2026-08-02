@@ -47,7 +47,7 @@ function mergedAt(world: WorldState, seasonIndex: number): RankingRow[] {
 }
 
 function nameOf(world: WorldState, seasonIndex: number, id: string): string {
-  if (id === KID_ID) return `>>> ${world.kidName ?? 'KID'} <<<`
+  if (id === KID_ID) return `>>> ${world.profile.kidName || 'KID'} <<<`
   if (isFieldProId(id)) {
     const pro = fieldProsFor(world.seed, seasonIndex, world.cohort.map((p) => p.name)).find((p) => p.id === id)
     return pro ? `${pro.name} [field ${pro.strengthTier}]` : id
