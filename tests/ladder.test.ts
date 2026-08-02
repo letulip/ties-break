@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { TIERS, buildSeason, TIER_LADDER, tierFromLabel, isOffSeasonWeek } from '../src/engine/season/calendar'
 import { selectEntrants } from '../src/engine/season/tournament'
-import { fieldProsFor, universeForTier } from '../src/engine/season/fieldPros'
+import { fieldProsFor, isFieldProId, mergedWtaRanking, universeForTier } from '../src/engine/season/fieldPros'
 import { generateCohort } from '../src/engine/season/cohort'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
@@ -418,16 +418,29 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
   // hold a draw's worth of seventeen-and-overs, so the backfill escapes the band and the in-band
   // assertion reports a scarcity the real engine does not have. Same fixture discipline, one
   // universe per family - which is what the engine itself does.
+  //
+  // ⚠⚠ AND THE W RANKING IS THE REAL MERGED TABLE NOW (W2-FIELD2 re-aim). It used to be the
+  // universe's ARRAY ORDER - cohort first, then pros - which was a stand-in nobody had to think
+  // about while every W window opened at percentile 0 and so read the same rows whatever the order
+  // was. This wave gives each rung a FLOOR, and a floor over an arbitrary order measures an
+  // arbitrary slice: at [0.35, 0.85] the array order handed W15 the whole tourElite storey and
+  // measured its field at core 71.3 - stronger than the WTA 125's - which is not a property of the
+  // engine, only of the fixture. `mergedWtaRanking` over an EMPTY live table is the structure the
+  // engine actually draws against (pros by points, the point-less cohort beneath them), so the
+  // windows now select the people they select in a real world.
   const pros = fieldProsFor('ladder-field', 0, cohort.map((p) => p.name))
   const wUniverse = universeForTier('w15', cohort, pros)
-  const wRanking: RankingRow[] = wUniverse.map((p, i) => ({ playerId: p.id, points: wUniverse.length - i, rank: i + 1 }))
+  const wRanking: RankingRow[] = mergedWtaRanking(
+    cohort.map((p) => ({ playerId: p.id, points: 0, rank: 1 })),
+    pros,
+  )
   const posOfCohort = new Map(cohort.map((p, i) => [p.id, i]))
-  const posOfW = new Map(wUniverse.map((p, i) => [p.id, i]))
+  const posOfW = new Map(wRanking.map((r, i) => [r.playerId, i]))
   const isW = (tier: TierId) => TIERS[tier].track === 'wta'
   const universeOf = (tier: TierId) => (isW(tier) ? wUniverse : cohort)
   const rankingOf = (tier: TierId) => (isW(tier) ? wRanking : ranking)
   const pctOf = (tier: TierId, id: string) =>
-    isW(tier) ? (posOfW.get(id)! + 1) / wUniverse.length : (posOfCohort.get(id)! + 1) / cohort.length
+    isW(tier) ? (posOfW.get(id)! + 1) / wRanking.length : (posOfCohort.get(id)! + 1) / cohort.length
   const ev = (tier: TierId): SeasonEvent => ({
     id: `0-w10-${tier}`,
     week: 10,
@@ -471,6 +484,15 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
   // DELIVERABLE (act2-pro-tour.md §8): the fourth storey plus week exclusivity are what make a
   // 125 field beat a W100's "the way W35's beats W15's today" - re-aim this to strict when that
   // lands, with its field-quality run in hand.
+  //
+  // ✅ IT LANDED, AND THIS IS THE RE-AIM THE NOTE ABOVE ASKED FOR (W2-FIELD2, 02.08). The tolerance
+  // clause is gone: all six rungs are strict, because all six floors are now distinct. The
+  // field-quality run that licensed it (16 worlds, up to 400 events a rung, live engine, her own
+  // bracket) reads field mean core 48.3 < 50.3 < 52.6 < 57.5 < 65.3 < 71.3 and P(the reference
+  // strong junior takes the title) 19.5% / 17.6% / 8.2% / 0.6% / 0.0% / 0.0%. On this fixture the
+  // same order reads meanPct 0.383 > 0.281 > 0.213 > 0.153 > 0.111 > 0.063 and mean core
+  // 45.1 < 47.6 < 50.1 < 58.6 < 67.0 < 72.0 - the trio that used to be one field wearing three
+  // labels is three fields.
   it('a higher rung really is a harder field, inside each of the three tables', () => {
     for (const track of ['domestic', 'itf'] as const) {
       const rungs = TIER_LADDER.filter((t) => TIERS[t].track === track)
@@ -501,10 +523,42 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
     // below - each measured as the slice of ITS OWN population (meanPct, see above).
     expect(meanPct('j30')).toBeGreaterThan(meanPct('j300'))
     expect(meanPct('w15')).toBeGreaterThan(meanPct('j300'))
+    expect(meanPct('w15')).toBeGreaterThan(meanPct('wta125'))
     // ...and it is still a step UP overall: the entry rung of each table is harder than the entry
     // rung of the one below it, so nothing about the restart is a demotion.
     expect(meanPct('j30')).toBeLessThan(meanPct('local'))
-    expect(meanPct('w15')).toBeLessThan(meanPct('national'))
+    //
+    // ⚠⚠ THE W-VS-DOMESTIC HALF OF THAT LAST CLAIM IS RETIRED BY W2-FIELD2, AND THE MEASUREMENT IS
+    // THE ARGUMENT. It read `meanPct('w15') < meanPct('national')`, and it was a fair instrument
+    // while every W window opened at percentile 0: a W15 field was then the top slice of its own
+    // table, so its own-table percentile was small and the comparison meant something. This wave
+    // gives every W rung a FLOOR (the fourth storey has to be above the rungs that do not reach it),
+    // so W15's window is its table's 35th-to-85th percentile - measured meanPct 0.383 against
+    // national's 0.284. The comparison is now the 38th percentile of a 563-row PROFESSIONAL table
+    // against the 28th of a 199-row JUNIOR one, which are not the same unit and cannot be ordered.
+    //
+    // WHAT REPLACES IT is the fact the percentile was standing in for, and which no band can fake:
+    // a W15 draw is made of PROFESSIONALS and a National draw is made of children. That is the step
+    // between the tables, it is the whole point of the field ring, and it is a fact about people.
+    const proShare = (tier: TierId) =>
+      selectEntrants(ev(tier), universeOf(tier), rankingOf(tier), rngFromSeed(`p-${tier}`)).filter((p) =>
+        isFieldProId(p.id),
+      ).length
+    expect(proShare('w15')).toBeGreaterThanOrEqual(24) // measured 32/32 on this fixture
+    for (const tier of ['local', 'regional', 'national', 'j30', 'j60', 'j300'] as TierId[]) {
+      expect(proShare(tier), tier).toBe(0)
+    }
+    //
+    // ⚠ FLAGGED FOR THE OWNER, MEASURED AND DELIBERATELY NOT ASSERTED: in RAW SKILL the seam is the
+    // other way round on this fixture - W15's drawn field means core 45.1 against a National's 47.7
+    // and a J300's 46.8. That is not new and it is not this wave's to fix: the shipped pre-wave
+    // engine measured W15 at 51.4 against a J300 field of ~53.9, and living-field.md §8 opens on
+    // exactly this observation. It is structural, because the W15 field's strength is PINNED from
+    // the other end - the reference strong junior must win 15-35% of the W15s she enters
+    // (tools/field-quality.ts, measured 19.5%), and a field she beats one time in five cannot also
+    // out-core the junior rungs she has outgrown. The two claims can only be reconciled by the J
+    // and domestic rungs getting their own candidate universes, which living-field.md §8.3 books
+    // for act 3 by name.
   })
 
   it('every window is wide enough that the field can actually vary', () => {

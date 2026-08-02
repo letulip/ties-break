@@ -306,7 +306,15 @@ const REF = {
   // `seed:aitour:<id>` sub-streams, and a different set of juniors ends the year holding counting
   // points. Post-draw composition change end to end - count 41550 and hash e6b0c709 reproduce
   // byte-for-byte, asserted lines above this number.
-  kidRank: 138,
+  // ⚠ RE-PINNED 138 -> 137 BY W2-FIELD2 (the W family's entrant windows re-measured). `selectEntrants`
+  // is ONE function, so a W rung's `entrantPctBand` is read by the CANONICAL `seed:aitour:` brackets
+  // as well as by her shadow draws: the family's floors rose (w15 0.15 -> 0.35, w35 0.08 -> 0.25, and
+  // so on up), a different slice of the 199-cohort is therefore drawn into the W events, and
+  // `resolveDoubleBookings` leaves a different set of girls free for the same week's J draws. A
+  // different set of juniors ends the year holding counting ITF points and her dense place moves by
+  // one - the same post-draw composition mechanism every re-pin above records. THE CAPTURE ITSELF IS
+  // UNTOUCHED: count 41550 and hash e6b0c709 reproduce byte-for-byte.
+  kidRank: 137,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

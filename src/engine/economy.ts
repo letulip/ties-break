@@ -514,10 +514,16 @@ export const ECONOMY = {
        *  может жить и дальше»). Built exactly as `maxItfRank` above is - off one figure in the tier
        *  table, not picked: National signs the girl who would be IN the prestige draw, and on the
        *  professional side that is W100's acceptance list, `enterPct` 0.25 of the merged W table.
-       *  That table is FIELD.size (300) + the cohort (199) + her = 500 rows, so a quarter of it is
-       *  125. Pinned against both figures in tests/offers.test.ts, the same way the junior pair is
-       *  pinned against `TIERS.j300.drawSize`. */
-      maxWtaRank: 125,
+       *  That table is FIELD.size + the cohort (199) + her, so a quarter of it is this number.
+       *  Pinned against both figures in tests/offers.test.ts, the same way the junior pair is
+       *  pinned against `TIERS.j300.drawSize`.
+       *
+       *  ⚠ 125 -> 141 BY W2-FIELD2, AND IT MOVED BECAUSE IT IS A DERIVATION AND NOT A CONSTANT.
+       *  The fourth storey took FIELD.size 300 -> 364, so the merged table is 564 rows and a
+       *  quarter of it is 141. Nobody chose a looser sponsor gate: the rule ("National signs the
+       *  girl who would be IN the W100 draw") is unchanged and the population under it grew. The
+       *  test that failed on this line is the reason the derivation is pinned at all. */
+      maxWtaRank: 141,
       /** ⚠ ...AND THE DOMESTIC STANDING SHE HAS TO KEEP TO HOLD IT = `maxRank` above, the same top
        *  30 that opens the local shop. This is National's job on the way OUT and the whole reason
        *  this rung is gated on two tables at once: her domestic points are a rolling 52-week best-6,
@@ -574,10 +580,13 @@ export const ECONOMY = {
       maxItfRank: 8,
       /** ⚠ THE PROFESSIONAL FIGURE, and it is the same reading one rung up (02.08): National signs
        *  the girl who would be in the prestige draw, Global the one who would still be in it on the
-       *  last day - the last quarter. Junior: 8 of the J300's 32. Professional: 31 of the 125 who
+       *  last day - the last quarter. Junior: 8 of the J300's 32. Professional: 35 of the 141 who
        *  would be accepted into a W100 (`national.maxWtaRank` / 4, rounded down as the junior pair
-       *  divides exactly). Pinned beside its neighbour in tests/offers.test.ts. */
-      maxWtaRank: 31,
+       *  divides exactly). Pinned beside its neighbour in tests/offers.test.ts.
+       *
+       *  ⚠ 31 -> 35 BY W2-FIELD2, for the reason its neighbour carries: the merged W table grew by
+       *  the fourth storey's 64 rows, and both figures are quarters of it rather than picked. */
+      maxWtaRank: 35,
       /** THREE SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", scaled the same way
        *  `national.seasons` is. Signing it is the biggest commitment in the game: everything is
        *  covered, and nothing else can be signed until it runs out. */

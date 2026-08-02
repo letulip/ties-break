@@ -72,7 +72,7 @@ describe('the field is a pure derivation', () => {
     }
   })
 
-  it('shape: 300 pros, fp- ids disjoint from every live id, professional ages, the pyramid', () => {
+  it('shape: FIELD.size pros, fp- ids disjoint from every live id, professional ages, the pyramid', () => {
     const world = createWorld(SEED)
     const pros = prosOf(SEED, 0, world.cohort.map((p) => p.name))
     expect(pros.length).toBe(FIELD.size)
@@ -94,6 +94,34 @@ describe('the field is a pure derivation', () => {
     const eliteMean = elites.reduce((s, p) => s + power(p), 0) / elites.length
     expect(eliteMean).toBeGreaterThanOrEqual(60)
     expect(eliteMean).toBeLessThanOrEqual(70)
+  })
+
+  // ⚠ THE FOURTH STOREY (W2-FIELD2, act2-pro-tour.md §8.1). Three claims, and each is the answer to
+  // a way the storey could be built and be useless.
+  it('the fourth storey is a head, not a taller middle: strictly above elite, top-heavy, world-scale', () => {
+    const world = createWorld(SEED)
+    const pros = prosOf(SEED, 0, world.cohort.map((p) => p.name))
+    const top = pros.filter((p) => p.strengthTier === 'tourElite')
+    expect(top.length).toBe(64)
+    // 1. STRICTLY ABOVE the storey below, in SKILL – the band [67, 77] cannot overlap elite's
+    //    [56, 66], so the weakest tourElite still out-cores the strongest elite. Measured with the
+    //    ±6 attribute spread live, so this is the property after the shape is dealt, not before.
+    const elites = pros.filter((p) => p.strengthTier === 'elite')
+    const meanCore = (xs: typeof pros) => xs.reduce((s, p) => s + power(p), 0) / xs.length
+    expect(meanCore(top)).toBeGreaterThan(meanCore(elites) + 8)
+    // 2. TOP-HEAVY, which is what `gamma: 3` buys: one or two genuine world-#1-scale names exist and
+    //    the MEDIAN of the storey does not. Without this the storey is 64 co-#1s and the table's
+    //    head reads like a spreadsheet.
+    const pts = top.map((p) => p.wtaPoints).sort((a, b) => b - a)
+    const median = pts[Math.floor(pts.length / 2)]
+    expect(pts[0]).toBeGreaterThan(8000)
+    expect(median).toBeLessThan(pts[0] / 3)
+    // 3. WORLD-SCALE, and the seam with the storey below is CONTINUOUS rather than a cliff: the
+    //    weakest tourElite lands near the strongest elite, so the standings do not fall off a
+    //    ledge at #64. (Points are not strictly monotone across the seam – the age ramp is allowed
+    //    to blur it, exactly as FIELD's table says.)
+    const bestElite = Math.max(...elites.map((p) => p.wtaPoints))
+    expect(Math.min(...pts)).toBeGreaterThan(bestElite / 2)
   })
 
   it('names dedupe against the live cohort and within the field', () => {
@@ -143,17 +171,32 @@ describe('the merged W table is a real ranking', () => {
 })
 
 describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
-  it('five W15 titles is ~#40-80 of the merged table – the honest-rank promise', () => {
-    // Measured at calibration: 51 pros above 50 pts, and the 50-point girl lands #52 of 500. The
-    // pin is the RANGE the architecture promises, so a constants re-tune inside the promise does
-    // not shuffle this file – but #9, the number this slice exists to kill, can never come back.
+  it('five W15 titles is a two-figure rank behind a real head – the honest-rank promise', () => {
+    // Measured at the phase-W calibration: 51 pros above 50 pts, and the 50-point girl landed #52
+    // of 500. The pin was the RANGE the architecture promises (#40-80), so a constants re-tune
+    // inside the promise would not shuffle this file – but #9, the number this slice exists to
+    // kill, could never come back.
+    //
+    // ⚠⚠ RE-AIMED #40-80 -> #85-150 BY THE FOURTH STOREY (W2-FIELD2), AND IT IS ARITHMETIC, NOT A
+    // WEAKENING. 64 professionals now exist above the old 450-point ceiling; five W15 titles are 50
+    // points; so this row CANNOT rank above #65 whatever any constant says. Measured after the
+    // wave: 117 pros hold more than 50 W points and she lands #118 of 564. Holding the old range
+    // would have required pricing the entire elite storey below 50 points, which puts a ~450-point
+    // cliff between #64 and #65 and makes the standings' head – the one thing the storey exists to
+    // fix – read wrong.
+    //
+    // WHAT THE PIN DEFENDS IS UNCHANGED and is now strictly harder to lose: a girl who has won the
+    // ENTRY RUNG of the professional game five times is not near the top of the world. The floor at
+    // 85 is what kills #9 (and #52, and anything else that would put her among people on four-figure
+    // points); the ceiling at 150 is what catches the opposite failure – a storey so heavy that the
+    // table stops noticing a real result at all.
     const world = createWorld('field-cal-pin')
     for (let i = 0; i < 5; i++) {
       world.results.push({ playerId: KID_ID, week: world.week, points: 10, tier: 'w15' })
     }
     recomputeKidRank(world)
-    expect(world.kidRankWta).toBeGreaterThanOrEqual(40)
-    expect(world.kidRankWta).toBeLessThanOrEqual(80)
+    expect(world.kidRankWta).toBeGreaterThanOrEqual(85)
+    expect(world.kidRankWta).toBeLessThanOrEqual(150)
   })
 
   it('acceptance cuts read the merged field size on the W rungs, the live table elsewhere', () => {

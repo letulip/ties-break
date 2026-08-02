@@ -45,8 +45,12 @@ import { TIERS, WEEKS_PER_YEAR } from './calendar'
 import type { AiPlayer, RankingRow, TierId } from './types'
 
 /** Which storey of the professional pyramid a pro was generated into. Labels, not numbers, so a
- *  bench printout reads as people; the ordering the ranking needs comes from `wtaPoints`. */
-export type FieldStrengthTier = 'elite' | 'contender' | 'journeyman'
+ *  bench printout reads as people; the ordering the ranking needs comes from `wtaPoints`.
+ *
+ *  ⚠ FOUR STOREYS SINCE W2-FIELD2 (act2-pro-tour.md §8.1). `tourElite` is the top of the WORLD, not
+ *  the top of our calendar: she plays the 250/500/1000/Slam tour that is act-3 content, which is why
+ *  her points are in the thousands while our own top rung pays 125 a title. See FIELD.tiers. */
+export type FieldStrengthTier = 'tourElite' | 'elite' | 'contender' | 'journeyman'
 
 /** One professional of the FIELD tier. An `AiPlayer` on purpose – she flows through the SAME
  *  machinery a cohort rival does (`selectEntrants`' age gate and bands, `rivalMatchPlayer`'s
@@ -105,19 +109,92 @@ export interface FieldPro extends AiPlayer {
 // entered events; a 50-point LIVE row (five W15 titles) lands ~#40-80 of the merged table, not #9;
 // a W35 field is measurably stronger than a W15 field. Measured numbers live beside the pin in
 // tests/season/fieldPros.test.ts and in docs/specs/living-field.md.
+//
+// RE-CALIBRATED 02.08 (W2-FIELD2), same bench, 16 worlds × up to 400 events a rung. Two of those
+// three targets hold and the third moved for a reason worth stating in the table it lives in:
+//
+//   ✓ W15 title probability 19.5% (it had drifted to 8.8% on this branch before the wave — see the
+//     W family's band note in calendar.ts for the arithmetic that did it).
+//   ✓ six rungs, six measurably different fields: 48.3 < 50.3 < 52.6 < 57.5 < 65.3 < 71.3.
+//   ⚠ A 50-POINT LIVE ROW NOW LANDS #118 OF 564, NOT #40-80, AND THAT IS ARITHMETIC RATHER THAN A
+//     REGRESSION. 64 professionals now exist ABOVE the old 450-point ceiling, so five W15 titles
+//     cannot rank above #65 whatever else is true; holding #40-80 would have meant pricing the
+//     WHOLE elite storey under 50 points, which opens a ~450-point cliff between #64 and #65 and
+//     makes the standings' head — the one thing the fourth storey exists to fix — read wrong. The
+//     property the target was defending is intact and stronger: five W15 titles printed "#9" before
+//     the field ring existed, and the head of the table it is measured against is now real
+//     (#1 10,721 · #10 6,131 · #32 2,026 · #64 396 · #100 60). The pin in
+//     tests/season/fieldPros.test.ts is re-aimed to the measured band, not deleted.
+// =================================================================================================
+// ⚠ THE FOURTH STOREY (W2-FIELD2, 02.08 – act2-pro-tour.md §8.1, owner ruling 3 intact: still
+// DERIVED, still PER-SEASON, no persistence, no schema).
+// =================================================================================================
+//
+// WHY: the shipped ceiling was 450 points, which the spec reads as roughly world #130 – fine while
+// W15/W35/W100 were the whole ladder, absurd the day W2-LADDER shipped a WTA 125, whose real
+// champion is a top-100 player. And it broke the family from the other end, MEASURED before a line
+// of this was written (tools/field-quality.ts, 16 worlds, this branch at 2aebe4f):
+//
+//     rung      field mean core   median entrant pos   P(ref build wins the title)
+//     w15            51.4            105/499                  8.8%
+//     w35            53.8             87/499                  6.8%
+//     w50            57.3             52/499                  1.6%
+//     w75            59.7             33/499                  0.6%
+//     w100           59.7             33/499                  1.0%
+//     wta125         59.7             33/499                  2.1%
+//
+// The top THREE rungs draw the SAME field, to one decimal place, because entry is position-biased
+// (`key = position + rng × 32`) and all three windows open at the same head of a table whose head is
+// one thirty-strong storey. There was nothing above for the 125 to reach for. L6's own guard says
+// so in as many words and names this wave as the fix.
+//
+// WHERE THE BAND COMES FROM – two measurements, and they meet (`--storey-probe`):
+//
+//   * THE TOP is bounded by what a CAREER can become. `rollPotential` gives every attribute
+//     `startingSkills` + U(4, 26); 20,000 rolls read as the mean-of-four this table is denominated
+//     in: p50 63.2 · p90 68.8 · p99 73.2 · max 80.8. A world #1 above the MAX is a backdrop nobody
+//     can ever climb; a world #1 at the p99 is one every good career equals. So the storey's top
+//     sits at the midpoint of those two, core 77 – reachable, and only by a career that rolled
+//     near-max talent and spent a decade realising it.
+//   * THE MEDIAN is bounded by the match engine. `fastMatchProbability`, reference build (power
+//     56.75) vs a flat core: 61.8 → 47.3% · 70 → 25.9% · 72 → 21.6% · 74 → 17.7% · 77 → ~12%. The
+//     storey's median (core 72) therefore holds the girl who is meant to win 15-35% of her W15s to
+//     21.6% – the same number, which is the point: a median elite is a coin flip for her and a
+//     median tourElite is a W15 title. That is a storey rather than a re-labelling.
+//
+// Floor = elite's ceiling + 1 = 67; top = 77; the ±6 attribute spread and the gamma-bent points
+// lerp copy the storey below unchanged.
+//
+// THE POINTS BAND IS BORROWED FROM A TOUR WE DO NOT SIMULATE, and that is deliberate rather than
+// sloppy: 550–11,000 is the real WTA scale, earned at the 250/500/1000/Slam rungs act 3 will build.
+// Our own calendar tops out at 125 a title, so no derived pro and no career can EARN a five-figure
+// row inside this game today – the storey is the world these people live in, seen from the ITF
+// rungs where the career actually is. gamma 3 is what makes it read like a real head: the median
+// tourElite lands around 1,850 and one or two names a season clear 9,000.
 export const FIELD = {
   /** id prefix – the namespace that keeps field ids disjoint from `ai-*` / `ai-s*-*` / 'kid' */
   idPrefix: 'fp-',
-  /** professionals per season. ~300 against 199 juniors ≈ the merged ~500-row W table. */
-  size: 300,
+  /** professionals per season. 300 → 364 with the fourth storey; against 199 juniors that is the
+   *  merged ~564-row W table, still one derivation per read and still zero persisted bytes. The
+   *  pyramid grew at the TOP only: the three shipped storeys keep their counts, because their
+   *  calibration is the one thing in this file that had a bench behind it already. */
+  size: 364,
   /** a professional field: 16 (the ITF age-eligibility floor the W rungs use) to 30 */
   ageBand: [16, 30] as [number, number],
   /** the pyramid, top first. `core` is the band the tier's mean-of-four is drawn from; `pts` is
    *  the tier's points band, lerped by where her core sits in the band (`gamma` bends the lerp –
    *  2 makes the elite top-heavy, so one or two 300+ names exist and the median elite does not).
    *  Bands are disjoint in base points, so points are monotone in strength BEFORE the age ramp
-   *  and jitter blur the seams – which they are allowed to do (see above). */
+   *  and jitter blur the seams – which they are allowed to do (see above).
+   *
+   *  ⚠ ORDER IS THE ID ORDER. `fieldProsFor` walks this array and hands out `fp-<n>` in sequence,
+   *  so putting the new storey FIRST shifts every other pro's `n` by 64 and re-deals every seed's
+   *  field. That is free here and nowhere else: field pros are never persisted, never referenced
+   *  across a season boundary, and are re-derived from scratch on every read. Top-first is how the
+   *  table reads, and a storey appended at the bottom of the literal would put the world #1 at
+   *  `fp-300`. */
   tiers: [
+    { id: 'tourElite' as const, count: 64, core: [67, 77] as [number, number], pts: [550, 11000] as [number, number], gamma: 3 },
     { id: 'elite' as const, count: 30, core: [56, 66] as [number, number], pts: [85, 450] as [number, number], gamma: 2 },
     { id: 'contender' as const, count: 120, core: [43, 53] as [number, number], pts: [18, 64] as [number, number], gamma: 1 },
     { id: 'journeyman' as const, count: 150, core: [38, 48] as [number, number], pts: [2, 16] as [number, number], gamma: 1 },
