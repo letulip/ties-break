@@ -2,7 +2,7 @@ import 'fake-indexeddb/auto'
 import { describe, it, expect, beforeAll } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
-import { createWorld, tickWeek, type WorldState } from '../src/engine/world'
+import { createWorld, SAVE_SCHEMA_VERSION, tickWeek, type WorldState } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { encodeExportFile, decodeExportFile, sha256 } from '../src/engine/saveCodec'
 import {
@@ -135,7 +135,8 @@ describe('layer 1 — hostile files die fast, typed, and named', () => {
 
   it('a future schema is refused BEFORE decompression, with upgrade advice', async () => {
     const file = await encodeExportFile(liveCareer('fuzz-future', 3))
-    new DataView(file.buffer, file.byteOffset, file.byteLength).setUint32(8, 36)
+    // One past today's version, derived - "the future" moves every schema bump, a literal does not.
+    new DataView(file.buffer, file.byteOffset, file.byteLength).setUint32(8, SAVE_SCHEMA_VERSION + 1)
     await expectCode(file, 'future-schema', /newer version .* update the app/i)
   })
 
@@ -207,7 +208,9 @@ describe('layer 2 — the compatibility window holds through the strict gate', (
       // DataView coerces undefined to 0, which is exactly what migrateSave assumes), so each
       // fixture walks the gate as the historical file it is, not as a re-labelled modern one.
       const imported = await decodeExportFile(await encodeExportFile(raw))
-      expect(imported.schemaVersion).toBe(35)
+      // The CURRENT schema, by name: this line is the corpus discipline's other end (every golden
+      // fixture must land on today's version), and a literal here went stale the day v36 shipped.
+      expect(imported.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
       expect(typeof imported.seed).toBe('string')
     })
   }

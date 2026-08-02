@@ -465,7 +465,8 @@ function packageLabel(packageId: string): string {
   return vacationPackage(packageId)?.label ?? packageId
 }
 
-// THE DEFENDING BADGE's number (W2-LADDER §3): the counted PROFESSIONAL result exactly 52 weeks
+// THE DEFENDING BADGE's number (W2-LADDER §3, the owner's «очковое окно возможностей»): the
+// counted PROFESSIONAL result exactly 52 weeks
 // behind this card's week - the slot this event replaces in her rolling window. W-track cards
 // only: the badge is about the professional window, and a junior card wearing a WTA number would
 // invite the cross-currency reading two-ladders.md forbids. Null = no badge (nothing counted at
@@ -517,8 +518,9 @@ function lockLabel(e: UpcomingEvent): string {
     // year's allowance. "Year limit" rather than "Locked": the block lifts when the season turns,
     // and the tier ladder's long form says so in full.
     // ⚠ TWO CAPS, ONE REASON CODE since W2-LADDER §5: a W rung's 'capped' is the TOUR's age rule,
-    // not the ITF junior one, and the refusal names the rule (owner ruling 1's transparency). The
-    // family split is the engine's own (`isCappedProTier`), never guessed from the label.
+    // not the junior Appendix-F one, and the refusal names the rule (owner ruling 1's
+    // transparency). The family split is the engine's own (`isCappedProTier`), never guessed from
+    // the label.
     case 'capped':
       return e.entryCap
         ? `${isCappedProTier(e.tier) ? 'Tour age rule' : 'Year limit'} – ${e.entryCap.used} of ${e.entryCap.limit}`
@@ -1060,11 +1062,12 @@ function closeExhibition(): void {
                 {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
               </span>
               <span v-if="row.event.entered" class="pill ok">Entered</span>
-              <!-- THE DEFENDING BADGE (W2-LADDER §3: «очковое окно возможностей», made visible).
-                   Last year's counted result at this exact week is about to age out of her rolling
-                   professional window - the week she plays (or skips) this card is the week those
-                   points leave. The number is the counted result's own; the rule is the engine's
-                   52-week window, restated nowhere. -->
+              <!-- THE DEFENDING BADGE (W2-LADDER §3: the points window made visible - the
+                   owner's phrase is quoted at `defendingPts` in the script). Last year's counted
+                   result at this exact week is about to age out of her rolling professional
+                   window - the week she plays (or skips) this card is the week those points
+                   leave. The number is the counted result's own; the rule is the engine's 52-week
+                   window, restated nowhere. -->
               <span
                 v-if="defendingPts(row.event) !== null"
                 class="pill defend-chip"

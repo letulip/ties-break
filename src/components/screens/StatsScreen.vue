@@ -105,7 +105,7 @@ const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ranked.value)
 const points = computed(() => ladder.value?.points ?? 0)
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
 
-// --- THE WINDOW BLOCK (W2-LADDER §3: defending points made VISIBLE) ------------------------------
+// --- THE WINDOW BLOCK (W2-LADDER §3: the owner's «очковое окно возможностей», made visible) ------
 // Three facts the rolling window has always had and never said: how full it is against the shown
 // table's own width (six, or sixteen on the professional table), the weakest counted value (the
 // bar a new result must clear once the window is full), and the NEXT DROP - the oldest counted
@@ -242,7 +242,9 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
     <section v-if="!archiveShown && countingResults.length">
       <h2>Counting results</h2>
       <!-- THE WINDOW, said out loud (W2-LADDER §3). One line for where the window stands, one for
-           what it is about to let go - the "очковое окно возможностей" the owner asked to see. -->
+           what it is about to let go - the points window of opportunity the owner asked to see
+           (his phrase is quoted at `windowInfo` in the script, where the house convention allows
+           the original). -->
       <template v-if="windowInfo">
         <p class="hint stats-window-line">
           Counting {{ windowInfo.counted }} of a best-{{ windowInfo.cap }} window.

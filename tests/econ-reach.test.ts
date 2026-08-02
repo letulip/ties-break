@@ -110,9 +110,18 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // branches, which is the strongest thing this case has ever been able to say about 14→16. If a
     // future pass re-saturates the proxy, THIS fails and the whole history above gets re-read -
     // the same bargain as before, one flip later.
+    // ⚠ RE-AIMED AGAIN (W2-LADDER), because the tripwire fired a SECOND time - the third flip of
+    // this line, each recorded above the last. Mechanism this time: TIER_LADDER 9 -> 12 re-spaces
+    // `tierPhase`, the whole calendar re-deals, and the one marginal career (bench-working-29, the
+    // only 14->16 miss at the last revision) meets a friendlier early-season draw order and
+    // crosses inside 104 weeks like the other twenty-nine. Measured at this revision: 30 of 30 -
+    // 14->16 is SATURATED again for the working-self preset, exactly the state the 31.07 pin first
+    // recorded, so the assertion returns to that shape: saturation pinned as a FACT, so the next
+    // pass that un-saturates it (a re-based target, or a calendar that starves the early game)
+    // fails HERE and re-reads this whole history. The horizon that discriminates is 14->18 above,
+    // unchanged.
     const workingH16 = Array.from({ length: 30 }, (_, i) => runCareer(working, i, H16.weeks))
-    expect(workingH16.some((r) => r.reachedWeek !== null), '14→16: nobody reaches - the proxy broke').toBe(true)
-    expect(workingH16.some((r) => r.reachedWeek === null), '14→16 has re-saturated - re-read the notes above').toBe(true)
+    expect(workingH16.every((r) => r.reachedWeek !== null), '14→16 discriminates again - re-read the notes above').toBe(true)
   })
 
   // RE-PINNED by ladder-up Part A (cohort pre-history). The degeneracy this guard was written
