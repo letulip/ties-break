@@ -130,7 +130,7 @@ describe('the AER substitution rides INSIDE the budget', () => {
 // pre-wave feed offered W15/J300/W35/J60/W100 over those weeks, the first version of this rule
 // offered one already-entered J60 and eight training weeks. The owner's boredom clause governs
 // («игрок должен иметь возможность играть... чтобы не скучал»), so the rule has two floors now.
-describe('the feed can never be emptier than the tennis she has', () => {
+describe('the feed follows the calendar, and blank weeks are allowed', () => {
   const open = openMap(['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
 
   it('an eventless rung cannot be the working rung - the pair follows the calendar', () => {
@@ -141,15 +141,24 @@ describe('the feed can never be emptier than the tennis she has', () => {
     expect(feedShows(upcoming[1], ctx)).toBe(true)
   })
 
-  it('a week the pair leaves empty borrows the strongest open, eligible event below it', () => {
+  it('⚠ REVERSED (03.08): a merely empty week borrows NOTHING - only a cap-refused one does', () => {
+    // TWO RULINGS, OPPOSITE DIRECTIONS, THE LATER ONE WINS. The borrow was written the same morning
+    // to stop an empty feed; that afternoon the owner ruled blank weeks NORMAL («пустые недели это
+    // нормально, она же не может постоянно играть») and asked for the supply counter instead. Then
+    // his W230 career showed what the borrow actually produced: at eighteen, WTA #27, four of six
+    // cards in the horizon were a borrowed J30, a J60 and two W15s - «очень много мусора». A world
+    // #27 is not offered a $15k. The AER substitution (ruling 2, the tour's age rule refused her)
+    // is untouched and is pinned by the suite above; this pins that nothing ELSE borrows.
     const upcoming = [row('w15', 39), row('j300', 40), row('national', 40)]
     const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming })
-    // Pair {w15, w35}: week 40 has neither, so the J300 rides in - and ONLY the J300.
-    expect(feedShows(upcoming[1], ctx)).toBe(true)
+    // Pair {w15, w35}: week 40 has neither, and stays blank rather than dredging the rungs below.
+    expect(feedShows(upcoming[1], ctx)).toBe(false)
     expect(feedShows(upcoming[2], ctx)).toBe(false)
   })
 
   it('a week she is already entered in borrows nothing - she has her tennis', () => {
+    // (Belt and braces now that only a cap refusal borrows at all: an entered week is skipped
+    // before the refusal test, so a committed card can never drag a second row in beside it.)
     const upcoming = [row('w15', 39), row('j60', 43, { entered: true }), row('national', 43)]
     const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming })
     expect(feedShows(upcoming[1], ctx)).toBe(true) // the committed card, always (R10-3)
