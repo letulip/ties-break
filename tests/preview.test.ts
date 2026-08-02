@@ -10,6 +10,7 @@
 //   3. IT COSTS THE MAIN STREAM NOTHING. Previews are computed on every snapshot; if one drew from
 //      the weekly stream, merely LOOKING at the Season screen would change the career.
 import { describe, it, expect } from 'vitest'
+import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { previewEvent, eventTemperature, eventCrowd } from '../src/engine/season/preview'
 import {
@@ -350,7 +351,7 @@ describe('the crowd is decoration, and stays decoration', () => {
       expect(read(rel), rel).not.toContain('eventCrowd')
       expect(read(rel), rel).not.toContain(':crowd:')
     }
-    const world = read('../src/engine/world.ts')
+    const world = worldSource()
     expect(world.match(/eventCrowd\(/g) ?? [], 'world.ts uses the crowd more than once').toHaveLength(1)
     expect(world).toContain('crowd: eventCrowd(world.seed, event)')
   })
@@ -400,7 +401,7 @@ describe('the weather is decoration, and stays decoration', () => {
       expect(read(rel), rel).not.toContain('eventTemperature')
       expect(read(rel), rel).not.toContain(':weather:')
     }
-    const world = read('../src/engine/world.ts')
+    const world = worldSource()
     expect(world).not.toContain(':weather:')
     expect(world.match(/eventTemperature\(/g) ?? [], 'world.ts uses the weather more than once').toHaveLength(1)
     expect(world).toContain('temperatureC: eventTemperature(world.seed, event)')

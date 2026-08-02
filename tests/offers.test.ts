@@ -23,6 +23,7 @@
 //      worth doing: `ECONOMY.sponsorship` has been paying a product deal in cash for want of a
 //      mechanism, and main now carries equipment condition.
 import { describe, it, expect } from 'vitest'
+import { worldSource } from './worldSource'
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
@@ -984,7 +985,9 @@ describe('the three rungs, and the tables they read', () => {
     expect(kitTermsFor(worldly(1))!.travelShare).toBeGreaterThan(0)
     // A sponsor discount computed at the till and not at the refund is free money in four
     // keystrokes, so `travelCostFor` is the only place a fare is ever reduced.
-    const src = codeOf(read('../src/engine/world.ts'))
+    // world.ts AND every world/*.ts part – `travelCostFor` moved to world/sponsors.ts with the
+    // P4 decomposition, and the invariant is "exactly one place", not "one place in one file".
+    const src = codeOf(worldSource())
     expect(src.match(/kitTravelShare\(/g)?.length ?? 0).toBeGreaterThan(0)
     expect(src).not.toMatch(/travelCostCents \* [^)\n]*travelShare/)
   })

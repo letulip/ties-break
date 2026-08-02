@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
   KID_ID,
@@ -129,8 +130,7 @@ describe('A2/3 — the cheque does NOT scale with the wealth corridor', () => {
   //     enforcement mechanism, and the two assertions below are its evidence.
   it('prizeCentsFor takes a tier and a finish and nothing else', () => {
     expect(prizeCentsFor.length).toBe(2)
-    const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
-    const decl = src.match(/^export function prizeCentsFor\(.*$/m)?.[0] ?? ''
+    const decl = worldSource().match(/^export function prizeCentsFor\(.*$/m)?.[0] ?? ''
     expect(decl).toBe('export function prizeCentsFor(tier: TierId, finish: number): number {')
   })
 

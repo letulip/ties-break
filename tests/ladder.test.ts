@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { TIERS, buildSeason, TIER_LADDER, tierFromLabel, isOffSeasonWeek } from '../src/engine/season/calendar'
 import { selectEntrants } from '../src/engine/season/tournament'
@@ -161,8 +162,8 @@ describe('L3 — NO prize money on the JUNIOR ladder (juniors pay to play)', () 
   // see the family's wealth corridor (§3's third rule). A signature that cannot take a background
   // cannot price by one.
   it('exactly one payout function exists, and it cannot see the family background', () => {
-    const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
-    const decls = src.match(/^export function prize\w*\(.*$/gm) ?? []
+    // across world.ts AND every world/*.ts part, so the invariant survives the P4 decomposition
+    const decls = worldSource().match(/^export function prize\w*\(.*$/gm) ?? []
     expect(decls).toEqual(['export function prizeCentsFor(tier: TierId, finish: number): number {'])
     expect(decls[0]).not.toMatch(/background|FamilyBackground|world/i)
   })

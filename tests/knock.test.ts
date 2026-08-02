@@ -27,6 +27,7 @@
 //      lands there and bites harder; and a knock that breaks down breaks down on that part.
 //   6. THE VOICE. Short dash, no Cyrillic, third person, and the coach's read carries NO NUMBER.
 import { describe, expect, it } from 'vitest'
+import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
   advanceWeeks,
@@ -412,7 +413,11 @@ describe('W4 — ⚠ neither branch is free progress (the anti-farming pins)', (
   it('a knock is never something he can CAUSE – no action creates one', () => {
     // The other half of "he cannot farm it": the only writer is `rollKnock`, inside the tick, and the
     // only player-facing verb is the answer. If a command could mint a knock the whole argument fails.
-    const world = codeOf('../src/engine/world.ts')
+    // world.ts AND every world/*.ts part: `retireKnock` moved to world/knockHistory.ts with the P4
+    // decomposition, and the invariant is "only these two writers exist", not "in this one file".
+    const world = worldSource()
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
     const writers = [...world.matchAll(/world\.knock = [^\n]+/g)].map((m) => m[0])
     // `rollKnock` assigns the drawn knock; `retireKnock` clears it. Nothing else may write the field.
     expect(writers.sort()).toEqual(['world.knock = knock', 'world.knock = null'])
@@ -781,7 +786,8 @@ describe('W4 — the schema (v26)', () => {
   // dialog opens there is nothing to demand. So the arrival line reports the fact and stops, on every
   // path, and this pins that it cannot grow a demand back - in any phrasing, not just the old one.
   it('the knock ARRIVAL line reports, it never asks - the dialog is what asks', () => {
-    const src = read('../src/engine/world.ts')
+    // world.ts AND every world/*.ts part: rollKnock moved to world/knock.ts with the P4 split
+    const src = worldSource()
     const block = src.slice(src.indexOf('const knock = drawKnock(view)'), src.indexOf('coachManagesLoad(tierOf('))
     const lines = [...block.matchAll(/`([^`]*\$\{knock\.part\}[^`]*)`/g)].map((m) => m[1])
     expect(lines.length, 'the two arrival lines should still be here').toBe(2)

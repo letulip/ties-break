@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { worldFunction } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
   KID_ID,
@@ -253,9 +254,7 @@ describe('A3 — the allowance resets on the season boundary', () => {
   })
 
   it('uses seasonStartWeek rather than a second definition of "this season"', () => {
-    const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
-    const fn = src.slice(src.indexOf('export function entryCapUsage'))
-    expect(fn.slice(0, fn.indexOf('\n}'))).toContain('seasonStartWeek(')
+    expect(worldFunction('entryCapUsage')).toContain('seasonStartWeek(')
   })
 
   it('a full allowance really does clear once the world ticks into the next season', () => {

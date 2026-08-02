@@ -12,6 +12,7 @@
 // F45-1 is a source-reading test on purpose: it is a fact about WIRING, and wiring is exactly what
 // silently rots (same discipline as round10.test.ts / round11-view.test.ts).
 import { describe, it, expect } from 'vitest'
+import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { headerCropUrl } from '../src/composables/headerAvatar'
 import { portraitStage, type PortraitEmotion } from '../src/shared/avatarEmotion'
@@ -362,7 +363,8 @@ describe('F45-2 — an injury withdraws only the entries inside the layoff', () 
 
     // ...and the three surfaces all route through it rather than spelling `world.week +
     // weeksRemaining` again for themselves.
-    const engine = read('../src/engine/world.ts')
+    // world.ts AND every world/*.ts part (P4): the rule is 'one implementation', not 'one file'
+    const engine = worldSource()
     expect(engine.match(/week < world\.week \+ world\.injury\.weeksRemaining/g)).toBeNull()
     expect(engine.match(/layoffCovering\(/g)!.length).toBeGreaterThanOrEqual(4)
   })

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { worldSource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { ECONOMY } from '../src/engine/economy'
 import { flipScore, isExamWeek } from '../src/engine/world'
@@ -22,7 +23,8 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 
 const seasonScreen = readFileSync(new URL('../src/components/screens/SeasonScreen.vue', import.meta.url), 'utf8')
 const planSheet = readFileSync(new URL('../src/components/PlanWeekSheet.vue', import.meta.url), 'utf8')
-const worldSrc = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
+// world.ts AND every world/*.ts part (P4 split): kidMatchEvent lives in world/matchNews.ts now
+const worldSrc = worldSource()
 const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
 
 // ⚠ U0 MOVED SEASON'S OWN RULES OUT OF THE SHEET AND INTO ITS SFC, scoped, so that the six screens

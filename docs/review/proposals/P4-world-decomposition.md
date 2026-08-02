@@ -96,3 +96,197 @@ TDD order – the net goes up before anything moves:
 ## Dependencies
 
 None hard. Coordination notes: the RNG-persistence proposal (schema v35, review README:15) rewrites the worker/`advanceWeeks` seam – do not run it concurrently with PR14 (lifecycle.ts); either strict order works. P1 (endings) and P2 (morale/relationship) both land in the tick pipeline, commands and snapshot – waves A+B are useful to them immediately, and finishing PR13-15 before those features branch confines their diffs to lifecycle.ts/commands.ts/snapshot.ts (~1,300 lines) instead of the 5,521-line hot-spot.
+
+---
+
+## Field notes: wave 0 shipped, and the coupling MEASURED (2026-08-02, branch `chore/world-split`)
+
+Four extractions are landed and verified against `origin/main` 5d3e8d6 (where `world.ts` had grown to
+**6,019 lines**, up from the 5,521 this proposal was written against):
+
+| Module | Lines out | Contents |
+|---|---|---|
+| `world/ledger.ts` | 98 | `addEvent`, `accrueFinance`, `seasonIndexOf`, `seasonStartWeek`, `financeWindow`, `financeSeries` |
+| `world/age.ts` | 119 | `ageAtWeek`, `kidBirthYear`, `kidAgeExact`, `kidAgeYears`, `birthdayWeek`, `birthdayTurning`, `markBirthday`, `START_AGE_YEARS` |
+| `world/labels.ts` | 42 | `finishLabel`, `prizeCentsFor`, `stageLabel` |
+| `world/entryCaps.ts` | 63 | the six ITF/WTA cap functions |
+
+`world.ts` 6,019 → **5,706**. Verified after every step: `vue-tsc -b --force` clean, **2,230 unit tests
+green (unchanged from baseline)**, sim project 77 green, production build clean with **no Rollup
+circular-dependency warnings**, and a live browser run – new career created, seven weeks ticked,
+calendar generating, finance card correct, zero console errors.
+
+**The type-only trick makes the mechanical form work.** Extracted modules do
+`import type { WorldState } from '../world'`; the import is erased at compile time, so `world.ts` can
+import the values back with no runtime cycle. No `world/types.ts` was needed.
+
+**Where the mechanical form STOPS, measured rather than guessed.** Every candidate block was scanned
+for identifiers it uses that are declared elsewhere in `world.ts` (comments stripped, so these are
+real call-backs, not prose):
+
+| Block | Lines | Real call-backs | The blockers |
+|---|---|---|---|
+| labels | 43 | **0** | – (shipped) |
+| entryCaps | 83 | **0** | – (shipped) |
+| sponsors | 271 | 1 | `kidPoints` |
+| planner | 114 | 2 | `layoffCovering`, `medicalBlock` |
+| milestones+wrap-up | 274 | 3 | `KID_ID`, `finishLabel`, `kidPoints` |
+| knock flow | 174 | 4 | `isCompetitionWeek`, `vacationForWeek`, `practiceForWeek`, `coachLoadViewOf` |
+| injury | 268 | 8 | `captureMilestone`, `withdrawEvent`, `refundPractice`, `retireKnock`, `layoffCovering`, `eventById`, … |
+| coach market | 467 | 10 | `kidPoints`, `assertPlannable`, `fullRanking`, `medicalClearance`, … |
+| medical/availability | 422 | 11 | `entryCapUsage`, `acceptanceRank`, `onRampOpen`, `rankIn`, `outgrewTier`, … |
+| **snapshot** | **762** | **35** | `entryStatus`, `fullRanking`, `coachMarket`, `radarViewOf`, `computeLossStreak`, … |
+
+Combining adjacent blocks does not rescue it: the whole `1222–2374` span (1,153 lines: entryCaps →
+planner) still shows **14** external call-backs. **The entanglement is real, and it is the finding the
+review made** – every seam ends in this one file. Everything below the 0-callback line needs the
+dependency inversion this proposal's PR order specifies, not a span-move. Sequence it by the table
+above: `sponsors` and `planner` become clean the moment `tiers.ts` and `medical.ts` exist, and
+`snapshot.ts` must be **last** because it consumes almost everything.
+
+**A trap this wave hit, worth banking.** Four **source-pin tests** read `world.ts`'s TEXT and assert on
+structure ("exactly one payout function exists", "both surfaces call the same helper"). Moving code
+broke all four – and one broke *silently dangerously*: `round11.test.ts` sliced
+`world.slice(indexOf('function maybeFireSeasonWrapUp'), indexOf('// --- finish / stage labels'))`, and
+when the end marker left with the labels block `indexOf` returned `-1`, so the slice swallowed the rest
+of the file and a `not.toMatch(/amountCents/)` assertion started reading someone else's function. They
+now read the whole module set through **`tests/worldSource.ts`** (`world.ts` + every `world/*.ts`), which
+makes the invariants location-independent – **the remaining extractions need no test edits.** PR0 of
+this proposal should adopt that helper before anything else moves.
+
+**Token dividend, the reason this got pulled forward.** `world.ts` is ~362 KB ≈ **95k tokens**; a plain
+`Read` truncates at 2,000 lines ≈ 33k tokens and still misses two thirds of the file. The whole `src/`
+tree is ~730k tokens, and five files are 30% of it. Every wave that has to open the god module pays that
+tax. This is a budget item as much as a maintainability one.
+
+### Wave 1 (2026-08-02, same branch): the ladder and the gates
+
+Four more modules. `world.ts` **6,019 → 4,914 (−18.4%)**; the `world/` package is now 1,244 lines
+across 8 files.
+
+| Module | Lines | Note |
+|---|---|---|
+| `world/constants.ts` | 8 | `KID_ID` – the bottom of the package graph |
+| `world/ladder.ts` | 314 | ranking helpers **+** tier eligibility **+** `rankIn`/`prevRankIn` |
+| `world/bookings.ts` | 24 | `vacationForWeek`, `practiceForWeek`, `vacationBlackoutDetail` |
+| `world/medical.ts` | 523 | condition, doctor's veto, layoff, entry + arrival gates |
+
+**Two structural findings.**
+
+*The ladder cannot be split in two.* `ranking` and `tiers` each measured 4 call-backs apart, and they
+were call-backs **into each other**: the on-ramp latch asks `kidPoints` (tiers), the tier gates ask
+`fieldProsOf`/`inTrack` (ranking). Two files would have been an import cycle. Together they measure
+**2** (`cohortIds`, `KID_ID`) – both of which moved with them. Where this proposal's module map splits
+ranking from eligibility, merge those two entries.
+
+*Medical was never a hard block – just a late one.* It measured **11** call-backs while entryCaps,
+ladder and bookings were still inside world.ts, and **0** once they were out. The lesson generalises:
+the call-back counts in the wave-0 table are **upper bounds that decay as the package fills**, so
+re-measure before declaring a block infeasible. Current standings after wave 1:
+
+| Block | Lines | Call-backs (was) | Blockers |
+|---|---|---|---|
+| **sponsors** | 275 | **0** (1) | – ready now |
+| injury | 269 | 5 (8) | `captureMilestone`, `eventById`, `withdrawEvent`, `refundPractice`, `retireKnock` |
+| knock flow | 265 | 5 (4) | `isCompetitionWeek`, `startingSkills`, `coachSinceWeek`, `matchesEverPlayed`, `playedWeeksInTrailing4` |
+| snapshot | 748 | 20 (35) | needs the command/tournament surface extracted first |
+
+**⚠ A GATE THIS PACKAGE MUST NOT SKIP: `vue-tsc` is not sufficient.** The medical extraction passed a
+clean `vue-tsc -b --force` and then **failed the production build**. The cause: interfaces and type
+aliases (`AvailabilityStatus`, `MedicalClearance`, `EntryStatus`, …) were re-exported through a
+**value** import. TypeScript elides type-only bindings from a value import silently; Rollup sees a
+runtime import of an export that does not exist and dies. Every extraction that moves a type must send
+it out via `export type { … } from './world/<mod>'`, and **`npm run build` belongs in the per-PR gate
+beside the typecheck and the tests** – it is the only check that catches this class.
+
+### Wave 2 (2026-08-02, same branch): sponsors, milestones, entries, injuries
+
+Six more modules. **`world.ts` 6,019 → 3,895 (−35.3%)**; the `world/` package is 2,381 lines across 13
+files, and no file in the engine is over 600 lines any more.
+
+| Module | Lines | Note |
+|---|---|---|
+| `world/sponsors.ts` | 296 | sponsor review, offers, travel cost + academy cover |
+| `world/milestones.ts` | 302 | milestone capture, season wrap-up, trophy ledger |
+| `world/bookings.ts` | 56 | grew: `eventById`, `refundPractice` joined the accessors |
+| `world/knockHistory.ts` | 35 | `KNOCK_HISTORY_MAX` + `retireKnock` |
+| `world/entries.ts` | 171 | `enterEvent`, `withdrawEvent`, `cancelEntry` |
+| `world/injury.ts` | 301 | the whole injury/physio slice |
+
+**The unlock chain, and the rule that produced it.** Injury measured **8** call-backs in wave 0 and
+looked like the hardest mid-sized block. It came out at **0** without a single upward import, by moving
+its dependencies DOWN to the lowest module that needed them, in this order:
+
+1. `eventById` + `refundPractice` → `bookings.ts` (two callers each, neither of them world.ts's core)
+2. `retireKnock` + `KNOCK_HISTORY_MAX` → `knockHistory.ts` — **its own leaf on purpose**: the knock flow
+   retires a knock when it expires and the injury roll retires one when a real injury supersedes it, so
+   leaving it with either would have forced the other to import upward.
+3. those two moves dropped `enterEvent`/`withdrawEvent`/`cancelEntry` to **0** → `entries.ts`
+4. …which made `withdrawEvent` a sibling, and injury fell to **0**.
+
+`skipEvent` deliberately stayed in world.ts: it closes a week through the tick pipeline's deferred
+steps, so it is a tick concern wearing an entry's name.
+
+**Standings after wave 2** (re-probe before starting any of these – the numbers keep decaying):
+
+| Block | Lines | Call-backs (wave 0 → now) | Blockers |
+|---|---|---|---|
+| **planner** | 100 | 2 → **0** | ready now |
+| coach market | 443 | 10 → 3 | `coachLoadNote`, `assertPlannable`, `kidMatchPlayerFor` |
+| knock flow | 265 | 4 → 4 | `isCompetitionWeek`, `startingSkills`, `coachSinceWeek`, `matchesEverPlayed` |
+| snapshot | 748 | 35 → 16 | needs the tournament/match surface out first |
+
+**Test maintenance, the real cost of this package.** Nine source-pin tests broke across the two waves
+and every one was repointed at `tests/worldSource.ts` rather than at a new path: the knock-writer pin,
+the `layoffCovering` count, the `enterPointBand` readers, the `prizeCentsFor` declaration, the
+`kitTravelShare` guard, and the `maybeFireSeasonWrapUp` / `enterEvent` / `injuryTau` / `bestText`
+slices. Each encodes an invariant about the module **set** ("exactly one payout function exists"), not
+about a file, so the helper is the correct home and they should need no further edits. Budget roughly
+one repoint per two extractions.
+
+### Wave 3 (2026-08-02, same branch): the snapshot, and the package is done
+
+**`world.ts` 6,019 → 2,135. −64.7%.** Eighteen modules in `world/` totalling 4,313 lines. The
+integration core is now half the size of its own package, and the largest single engine file is
+`world/snapshot.ts` at 817 lines.
+
+| Module | Lines | | Module | Lines |
+|---|---|---|---|---|
+| snapshot | 817 | | milestones | 302 |
+| medical | 523 | | sponsors | 296 |
+| planner | 366 | | knock | 284 |
+| ladder | 314 | | coachMarket | 270 |
+| injury | 301 | | entries | 171 |
+| age | 132 | | ledger | 118 |
+| player | 113 | | entryCaps | 76 |
+| matchNews | 73 | | bookings | 56 |
+| labels | 49 | | knockHistory | 35 |
+| constants | 17 | | | |
+
+**The snapshot had to be last, and the numbers say why.** It measured **35** call-backs into world.ts
+before the package existed, **16** after wave 2, and **0** once the eight caps constants, five
+match-news helpers and `coachEntryLine` had moved down to leaves. It imports fifteen of its own
+siblings. Any attempt to take it early would have produced either a cycle or a rewrite.
+
+**The whole package obeyed one rule and never broke it:** when a block needed something from the
+integration core, the something moved DOWN to the lowest module that needed it – never an upward
+import, never a changed signature, never a behaviour edit. Every call-back count in the wave-0 table
+turned out to be an upper bound that decayed as the package filled; `injury` went 8 → 0, `medical`
+11 → 0, `snapshot` 35 → 0. **Re-measure before declaring any remaining block infeasible.**
+
+**What is left in world.ts (2,135 lines)** and why it belongs there: the `WorldState` interface,
+`createWorld`/`seedWorldForV6`/`replayMainState` (lifecycle), `tickWeek` and `advanceWeeks` (the tick
+pipeline), the tournament resolution (`computeShadowTournament`, `finalizeTournament`,
+`revealTournamentRound`, `skipTournament`, `closeTournament`, `runAiTournament`), `ensureSeason`, the
+weekly resolution pieces (interest, parent income, base costs, gear), the conveyor, the academy
+review, the prune/housekeep family, and `skipEvent`. That is a coherent integration core – it is the
+thing that owns the week – rather than a grab bag.
+
+**Total test maintenance across all three waves: 17 source-pin repoints**, every one to
+`tests/worldSource.ts`. None were behaviour failures; all were tests asserting on the text of one
+file about an invariant that is true of the module set. Two mid-doc-comment cuts and two
+type-as-value re-exports were caught by the typechecker and the build respectively.
+
+**Gate that caught what typecheck could not, twice:** `npm run build`. Both times a type or interface
+was re-exported through a value import – TypeScript elides those silently, Rollup dies. `npm run
+check` (typecheck + unit + build) is the correct per-PR gate; a bare `vue-tsc` is not.
