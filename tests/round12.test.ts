@@ -590,7 +590,7 @@ describe('R12-4/11 — injured ON a family vacation', () => {
     //
     // So the slice now ends at the function's OWN closing brace, and both ends are asserted found -
     // a marker that goes missing is now a clear failure instead of a silently enormous string.
-    const src = read('../src/engine/world.ts')
+    const src = worldSource()
     const start = src.indexOf('export function injuryTau')
     expect(start, 'injuryTau not found - renamed?').toBeGreaterThan(-1)
     const end = src.indexOf('\n}\n', start)

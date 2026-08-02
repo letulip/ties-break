@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { worldSource, worldFunction } from './worldSource'
 import { readFileSync, readdirSync } from 'node:fs'
 import {
   createWorld,
@@ -254,7 +255,7 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
   })
 
   it('the point band is derived in ONE place – no surface re-implements it', () => {
-    const src = readFileSync(new URL('../src/engine/world.ts', import.meta.url), 'utf8')
+    const src = worldSource()
     // `enterPointBand` may only be read by the two pure band helpers; every gate goes
     // through entryStatus. (This is the structural guard against the R10-5 desync.)
     // ⚠ The `//` exclusion joined the `*` one when the coach branch met the two ladders: the Elite
@@ -270,7 +271,8 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     // SURFACE re-implements the band, every one of them still goes through entryStatus.
     expect(readers.length).toBeLessThanOrEqual(4)
     // enterEvent must not destructure the band itself any more
-    const enterFn = src.slice(src.indexOf('export function enterEvent'), src.indexOf('export function withdrawEvent'))
+    const enterFn = worldFunction('enterEvent')
+    expect(enterFn).not.toBe('')
     expect(enterFn).not.toContain('enterPointBand')
     expect(enterFn).toContain('entryStatus')
     // ...and neither may the snapshot builder
