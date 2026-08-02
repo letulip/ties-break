@@ -611,6 +611,24 @@ export interface CoachMarketRow {
   loadNote: string
 }
 
+/** One rung's remaining supply this season. `open` counts events she may still enter (her own
+ *  entries included); `entered` is how many of those are already hers. */
+export interface SeasonSupplyRow {
+  tier: TierId
+  open: number
+  entered: number
+}
+
+/** THE PLANNING COUNTER: how much tennis is left this season, and on which rungs. Ladder order,
+ *  rungs with nothing left omitted entirely - the list is what she can still do, not a table of
+ *  zeroes. */
+export interface SeasonSupply {
+  /** weeks between now and the season's last week (the off-season is inside the count, because it
+   *  is inside the season block - a card that says "over 12 weeks" must not promise playable ones) */
+  weeksLeft: number
+  rows: SeasonSupplyRow[]
+}
+
 export interface UpcomingEvent {
   id: string
   week: number
@@ -1473,6 +1491,9 @@ export interface Snapshot {
   financialEvents: WorldEvent[]
   /** scheduled events over the next 8 weeks, with entry state */
   upcoming: UpcomingEvent[]
+  /** ...and how much tennis is left in the WHOLE season, by rung - the planning counter. See
+   *  `seasonSupply` in world.ts for what "available" means and why this is not a longer `upcoming`. */
+  seasonSupply: SeasonSupply
   /** R12-15/R12-3: the engine's verdict on the entered event for `week + 1` – the week the sticky
    *  bar's button is about to play – or null when nothing is entered there. See ArrivalPreview. */
   arrival: ArrivalPreview | null

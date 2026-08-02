@@ -46,6 +46,16 @@ sources, in-wave before it lands).
 8. **Sponsor rungs above global: yes, propose** («да, надо продумать, предложи что-то») — §7 is
    that proposal.
 
+Two more the same evening, answering the wave's own findings:
+
+9. **Blank weeks are fine; the SUPPLY has to be visible.** «пустые недели это нормально, она же не
+   может постоянно играть, просто если мы целимся в 20 турниров в год, то это примерно 1 раз в 2
+   недели, при этом в доступности может быть больше. Но мне кажется мы где-то можем сделать каунтер
+   сколько доступных турниров и какого уровня у нас до конца года вообще осталось, это даст человеку
+   возможность планировать.» — the planning counter, §4.
+10. **The sponsor lives on.** «надо как-то лечить, спонсор вполне может жить и дальше» — the brand
+    ladder learns to read a professional's standing, §7 and §9b.
+
 ---
 
 ## 2. The ladder, complete
@@ -154,6 +164,19 @@ more than two labels, even though she still plays at most one event a week and t
 never grows. The strict reading («never more than two labels visible, ever») is available and its
 price is blank weeks; «чтобы не скучал» is why it was not chosen.
 
+✅ **THE PLANNING COUNTER — the owner's answer to the sparse tail (02.08, ruling 9).** He read the
+gap report and refused the premise: «пустые недели это нормально, она же не может постоянно играть,
+просто если мы целимся в 20 турниров в год, то это примерно 1 раз в 2 недели, при этом в
+доступности может быть больше. Но мне кажется мы где-то можем сделать каунтер сколько доступных
+турниров и какого уровня у нас до конца года вообще осталось, это даст человеку возможность
+планировать.» So a blank week is not a defect to engineer away — the supply is meant to exceed the
+schedule, and what the player was missing was not tournaments but *sight of them*. The Season
+planner now carries `Snapshot.seasonSupply`: how many entries are still open for the WHOLE rest of
+the season and on which rungs, counted across every rung the engine opens to her — the rare ones
+the eight-week feed can only mention. Measured on the owner's own career at W38 '34, where the feed
+showed almost nothing: **30 left to enter over 14 weeks · W100 2 · W35 5 · W15 7 · J300 2 · +14
+lower.** The tail is summarised rather than dropped so the arithmetic closes.
+
 ⚠ **THE CALENDAR-COVERAGE GAP UNDER IT (tools/boredom-guard.ts, W2-LADDER).** At a sane appetite
 the pro cap never even binds (0 refusals over 12 careers × 260 weeks). Under a maximal grinder it
 refuses 176 entries across 65 weeks, and 14 of those weeks offer nothing else — every one a
@@ -227,6 +250,14 @@ exactly as real as the other two:
 | tour | WTA ≤ 200 | full kit + a quarterly cash retainer (~$3–8k/yr band) + result bonuses at W75+ |
 | premium | WTA ≤ 50 | retainer ×5–10, appearance fees (events that PAY her to come — a new income line, real at 250s), bonus schedule reaches Slam rounds |
 | icon | WTA ≤ 10 or a Slam SF | the multi-year guarantee; epilogue-grade narrative weight |
+
+⚠ **AND THE EXISTING THREE RUNGS ALREADY READ THE PROFESSIONAL TABLE** (ruling 10 above, shipped):
+national at WTA ≤ 125, global at WTA ≤ 31, local for any professional standing. So this proposal is
+now a genuine extension upward rather than a repair — and `tour`'s WTA ≤ 200 sits deliberately
+BELOW global's 31 in strength while above it in kind, which is the one thing to resolve when it is
+built: either `tour` replaces `global` for professionals, or the two ladders (junior brands,
+professional brands) run side by side with one deal at a time across both. An owner's call at
+build time, not now.
 
 Principles carried over: cheques and retainers do NOT scale with the wealth corridor (the sponsor
 pays the player, not the family's background); a lost gate LAPSES at annual renewal — with a
@@ -318,13 +349,27 @@ The wave shipped §§2–6 with four departures worth carrying forward, all evid
 Cohort cost, measured and re-bounded: +25 W draws a season on the same ~82 sixteen-plus rivals →
 17–28 heavy-floored of 199. The fix is population, not pricing — **W2-FIELD2 re-measures this**.
 
-⚠ **AN OWNER'S CALL THE WAVE RAISED AND DID NOT DECIDE**: R15-9's national exemption is superseded
-by ruling 4, so a W-era career meets Nationals only as substituted weeks — and the national kit
-deal's keep-condition reads her DOMESTIC top 30. Deep in the professional era that deal will lapse
-at renewal unless she is substituted into Nationals often enough. The alternative (a standing third
-row for National) is exactly what ruling 4 forbids, so this is a sponsor-side decision, not a feed
-one: either the domestic gate learns to read a professional's standing, or the lapse is the honest
-consequence of turning pro. Recorded at `feedContext`, in tests/tier-window.test.ts and here.
+✅ **DECIDED (02.08, ruling 10): THE SPONSOR LIVES ON.** The wave raised it as an open question —
+R15-9's national exemption is superseded by ruling 4, so a W-era career meets Nationals only as
+substituted weeks, while the national kit deal's keep-condition read her DOMESTIC top 30. The owner:
+«надо как-то лечить, спонсор вполне может жить и дальше». Built, and the hole turned out to be
+wider than the flag: **both upper rungs read the JUNIOR table and the keep-condition reads the
+DOMESTIC one, and both decay to nothing the moment she turns professional** — every table here is a
+rolling 52-week window and she stops entering the events that feed them. So the brand ladder was
+built to switch itself off exactly when a real sponsor's interest begins. Measured on the owner's
+own career (W193, WTA #61, ITF junior #75): under the shipped rule the only brand that would write
+to a top-61 professional was **the local shop**.
+
+The fix is one predicate, `standingClears(standing, tier)` in offers.ts, used by BOTH questions —
+who writes to her (`rungFor`) and whether the deal she is under holds (`reviewSponsors`) — so a deal
+can never be killed by a rule that would have offered it back the same winter. The professional
+thresholds are built the way the junior pair is, off one figure in the tier table rather than
+picked: National signs the girl who would be IN the prestige draw (junior: the J300 main draw, 32;
+professional: accepted into a W100, `enterPct` 0.25 of the ~500-row merged table = **125**), Global
+the one still in it on the last day (the same quarter: 8 of 32, **31** of 125). A professional also
+always clears the local shop. The junior guard is kept on the new arm: an EMPTY professional table
+is not a world ranking. The deal's other condition — `minEvents`, a sponsor pays to be SEEN — is
+untouched at every rung, so a season spent resting still costs the deal.
 
 ⚠ **PLACEHOLDER ART, FLAGGED FOR THE OWNER**: the three new rungs ship trophy pairs that are BYTE
 COPIES of shipped masters (W50 ← W35; W75, WTA 125 ← W100), by `cp`, no new art invented — the same

@@ -38,6 +38,7 @@ import {
   type StopReason,
   type TierTrophies,
   type UpcomingEvent,
+  type SeasonSupply,
   type VacationBooking,
   type WeekPlan,
   type WorldEvent,
@@ -177,6 +178,7 @@ import {
   refuseOffer as refuseOfferIn,
   seasonLastWeek,
   signOffer as signOfferIn,
+  standingClears,
 } from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
 import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
@@ -3365,6 +3367,11 @@ export function reviewSponsors(world: WorldState): void {
     nationalRank,
     itfRank: world.kidRank,
     itfRanked: kidPoints(world, 'itf') > 0,
+    // The third table, on the same terms as the other two (02.08). `wtaRanked` uses the LIVE
+    // window rather than the never-pruned mark on purpose: a sponsor asks what she is worth NOW,
+    // and a professional who has not scored in a year is not holding a professional standing.
+    wtaRank: world.kidRankWta ?? world.cohort.length + 1,
+    wtaRanked: kidPoints(world, 'wta') > 0,
   }
 
   // 1. THE SEASON NOW FINISHING, IF IT WAS UNDER A DEAL. What the brand actually spent is the one
@@ -3382,7 +3389,16 @@ export function reviewSponsors(world: WorldState): void {
   // ...and the second one is the national rung's own, and the reason the domestic ladder still
   // matters to a girl who has left it behind. `keepDomesticRank` is absent on every other rung, so
   // this reads true for them without a tier check.
-  const keptAtHome = !dealTerms?.keepDomesticRank || nationalRank <= dealTerms.keepDomesticRank
+  //
+  // ⚠ OR THE RUNG'S OWN STANDING, IN WHICHEVER TABLE SHE IS IN (02.08, the owner: «спонсор вполне
+  // может жить и дальше»). The domestic clause was written when going abroad meant going abroad as
+  // a JUNIOR; a professional is not less visible than the girl they signed. `standingClears` is the
+  // one place that question is answered - the same predicate that decides who WRITES to her - so a
+  // deal can never be killed by a rule that would have offered it back the same winter.
+  const keptAtHome =
+    !dealTerms?.keepDomesticRank ||
+    nationalRank <= dealTerms.keepDomesticRank ||
+    standingClears(standing, dealTerms.tier)
   const heldUp = playedEnough && keptAtHome
   // ...and the verdict is recorded ON the letter, so the inbox can still answer "what happened to
   // that deal?" a decade later. The count is the one the season really played (spec §5).
@@ -5223,6 +5239,55 @@ function coachEntryLine(tier: TierId, condition: number): string {
 }
 
 // --- snapshot ----------------------------------------------------------------
+
+/** WHAT IS LEFT TO PLAY THIS SEASON, by rung - the planning counter (owner, 02.08: «мне кажется мы
+ *  где-то можем сделать каунтер сколько доступных турниров и какого уровня у нас до конца года
+ *  вообще осталось, это даст человеку возможность планировать»).
+ *
+ *  ⚠ IT IS NOT THE FEED, AND THAT IS THE POINT. `upcoming` is eight weeks long and passes through
+ *  the two-type rule, so a player planning a season could see neither how much tennis remains nor
+ *  which rungs it is on - the very thing that made an ordinary sparse tail read as "there is
+ *  nothing left". This counts the WHOLE rest of the season and every rung the ENGINE opens to her,
+ *  the rare ones included. Blank weeks are normal and expected (the owner: «пустые недели это
+ *  нормально, она же не может постоянно играть» - roughly 20 events a year is one per fortnight,
+ *  with more on offer than she can take); what a planner needs is the supply, so that resting is a
+ *  choice she can see the cost of rather than a hole she fell into.
+ *
+ *  AVAILABLE means: ahead of this week, inside THIS season, entry list still open, and the engine's
+ *  own gate says she may enter (`entryStatus` level != 'blocked' - a fatigue 'caution' is a week
+ *  she can play, which is the same reading the boredom guard uses). Snapshot-only, derived, zero
+ *  persistence and zero draws.
+ *
+ *  COST, MEASURED RATHER THAN ASSUMED (week 160, 60 calls): `toSnapshot` goes 11.3 -> 15.3 ms, so
+ *  this asks the entry gate about ~40 events for ~4 ms. Paid once per command rather than per week
+ *  of a fast-forward's inner loop, which is why the honest per-event gate is affordable here at
+ *  all - and why it is asked about the EVENT's week (an injury layoff covering it) rather than
+ *  today's condition, which by then will be whatever the player decides between now and then. */
+function seasonSupply(world: WorldState): SeasonSupply {
+  const entered = new Set(world.entries)
+  const lastWeek = seasonLastWeek(world.week)
+  const byTier = new Map<TierId, { open: number; entered: number }>()
+  for (const e of world.season) {
+    if (e.week <= world.week || e.week > lastWeek) continue
+    const isEntered = entered.has(e.id)
+    // An entry already made is hers whatever the gate says now (R10-3: a committed week survives a
+    // band crossing), so it is counted before the gate is asked.
+    if (!isEntered) {
+      if (world.week > e.deadlineWeek) continue
+      if (entryStatus(world, e).level === 'blocked') continue
+    }
+    const row = byTier.get(e.tier) ?? { open: 0, entered: 0 }
+    row.open += 1
+    if (isEntered) row.entered += 1
+    byTier.set(e.tier, row)
+  }
+  return {
+    weeksLeft: Math.max(0, lastWeek - world.week),
+    // Ladder order, strongest last, the one order every other surface reads (TIER_LADDER).
+    rows: TIER_LADDER.filter((t) => byTier.has(t)).map((tier) => ({ tier, ...byTier.get(tier)! })),
+  }
+}
+
 function upcomingEvents(world: WorldState): UpcomingEvent[] {
   const entered = new Set(world.entries)
   // The Season card's preview needs the standings and her match build ONCE for the whole list, not
@@ -5787,6 +5852,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     },
     financialEvents: world.events.filter((e) => e.amountCents !== undefined).slice(-SNAPSHOT_FINANCIAL_EVENTS),
     upcoming: upcomingEvents(world),
+    seasonSupply: seasonSupply(world),
     // R12-15/R12-3: what next week's entered event will actually DO, so the one button that plays
     // that week stops promising a tournament the engine has already decided against.
     arrival: arrivalPreview(world),

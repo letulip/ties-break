@@ -188,6 +188,51 @@ export interface SponsorStanding {
    *  `hasResults` guard the acceptance lists keep (world.ts, `availabilityStatus`) and the econ
    *  bench puts on its rank arm, for the same reason. */
   itfRanked: boolean
+  /** Her place in the PROFESSIONAL table (`world.kidRankWta`) - the merged W standings. */
+  wtaRank: number
+  /** ...and whether it means anything, exactly as `itfRanked` does for the junior one: a counting
+   *  result in THAT table, never a floor tie read as a standing. */
+  wtaRanked: boolean
+}
+
+/** DOES THIS STANDING CLEAR THIS RUNG - by ANY table she competes in. One predicate, because the
+ *  question is asked twice about the same girl: once to decide who writes to her (`rungFor`) and
+ *  once to decide whether the deal she is already under holds (`reviewSponsors`).
+ *
+ *  ⚠ THE PROFESSIONAL ARM IS THE OWNER'S 02.08 RULING («спонсор вполне может жить и дальше»), and
+ *  it closes a hole the two-type feed exposed rather than caused. Both upper rungs read the JUNIOR
+ *  table and National's keep-condition reads the DOMESTIC one - and BOTH of those decay to nothing
+ *  the moment she turns professional, because every table here is a rolling 52-week window and she
+ *  stops entering the events that feed them. So the brand ladder was built to switch itself off at
+ *  exactly the moment a real sponsor's interest begins: a national distributor's logo on a WTA
+ *  player is worth MORE than on a junior, not less. The rule that was written («a season spent
+ *  entirely on the international calendar decays her domestic points and she slides out of the
+ *  band») was true of a junior going abroad - a lateral move inside the same visibility economy -
+ *  and is simply false of a professional.
+ *
+ *  THE PROFESSIONAL NUMBERS ARE BUILT THE SAME WAY THE JUNIOR PAIR IS, off one figure in the tier
+ *  table rather than picked: National signs the girl who would be IN the prestige draw (junior:
+ *  the J300 main draw, 32; professional: accepted into a W100, `enterPct` 0.25 of the ~500-row
+ *  merged table = 125), and Global signs the one who would still be in it on the last day (the
+ *  same quarter: 8 of 32, 31 of 125). See `ECONOMY.sponsorship.*.maxWtaRank`.
+ *
+ *  A professional also always clears the LOCAL shop: the whole rung is "a shop that has heard of
+ *  her", and a girl on the world tour has cleared that bar by definition. */
+export function standingClears(standing: SponsorStanding, tier: SponsorTier): boolean {
+  const s = ECONOMY.sponsorship
+  if (tier === 'global') {
+    return (
+      (standing.itfRanked && standing.itfRank <= s.global.maxItfRank) ||
+      (standing.wtaRanked && standing.wtaRank <= s.global.maxWtaRank)
+    )
+  }
+  if (tier === 'national') {
+    return (
+      (standing.itfRanked && standing.itfRank <= s.national.maxItfRank) ||
+      (standing.wtaRanked && standing.wtaRank <= s.national.maxWtaRank)
+    )
+  }
+  return standing.nationalRank <= s.maxRank || standing.wtaRanked
 }
 
 /** WHICH RUNG WRITES TO HER, or null when nobody does - the whole gate, in one function, so no
@@ -199,12 +244,12 @@ export interface SponsorStanding {
  *  the entry policy walks the calendar strongest-tier-first: an ambitious parent is being written to
  *  by the biggest name that would have him. */
 export function rungFor(standing: SponsorStanding): SponsorTier | null {
-  const s = ECONOMY.sponsorship
-  if (standing.itfRanked && standing.itfRank <= s.global.maxItfRank) return 'global'
-  if (standing.itfRanked && standing.itfRank <= s.national.maxItfRank) return 'national'
-  if (standing.nationalRank <= s.maxRank) return 'local'
-  return null
+  return SPONSOR_TIERS_STRONGEST_FIRST.find((t) => standingClears(standing, t)) ?? null
 }
+
+/** The ladder read the way `rungFor` reads it. `SPONSOR_TIERS` is weakest-first (it is the art
+ *  lookup's order); reversing it HERE, once, keeps the two from disagreeing about the ladder. */
+const SPONSOR_TIERS_STRONGEST_FIRST: readonly SponsorTier[] = [...SPONSOR_TIERS].reverse()
 
 /** What the letter says, given where she finished the year. Pure, so the tests and the bench can ask
  *  directly - the same courtesy `localSponsorCents` extends. Returns null when nobody is writing.

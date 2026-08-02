@@ -510,11 +510,28 @@ export const ECONOMY = {
        *  would fill that draw on merit, which is precisely when a national distributor's logo starts
        *  being worth something. */
       maxItfRank: 32,
+      /** ⚠ ...AND THE PROFESSIONAL RANK THAT SAYS THE SAME THING (02.08, the owner: «спонсор вполне
+       *  может жить и дальше»). Built exactly as `maxItfRank` above is - off one figure in the tier
+       *  table, not picked: National signs the girl who would be IN the prestige draw, and on the
+       *  professional side that is W100's acceptance list, `enterPct` 0.25 of the merged W table.
+       *  That table is FIELD.size (300) + the cohort (199) + her = 500 rows, so a quarter of it is
+       *  125. Pinned against both figures in tests/offers.test.ts, the same way the junior pair is
+       *  pinned against `TIERS.j300.drawSize`. */
+      maxWtaRank: 125,
       /** ⚠ ...AND THE DOMESTIC STANDING SHE HAS TO KEEP TO HOLD IT = `maxRank` above, the same top
        *  30 that opens the local shop. This is National's job on the way OUT and the whole reason
        *  this rung is gated on two tables at once: her domestic points are a rolling 52-week best-6,
        *  so a season spent entirely on the international calendar decays them to nothing and she
-       *  slides out of this band. The deal ends when she does. */
+       *  slides out of this band. The deal ends when she does.
+       *
+       *  ⚠⚠ AND IT IS NOT THE ONLY WAY TO HOLD THE DEAL ANY MORE (02.08). The paragraph above is
+       *  true of a JUNIOR who goes abroad - a lateral move inside the same visibility economy, and
+       *  a brand that paid for a domestic name is entitled to notice. It is simply false of a
+       *  PROFESSIONAL: she is not less visible than the girl they signed, she is more. So the
+       *  keep-condition now reads "still worth being seen with", which the professional rank answers
+       *  too - see `standingClears` in offers.ts, which is the one place either question is asked.
+       *  The deal's other condition (`minEvents`) is untouched and is still the real obligation: a
+       *  sponsor pays to be SEEN, so a season spent resting still costs the deal, at every rung. */
       keepDomesticRank: 30,
       /** TWO SEASONS. `02-tennis-economics.md` puts junior equipment deals at "3-4 year terms"; our
        *  whole junior career is four to six seasons, so the real figure is scaled to the game's own
@@ -555,6 +572,12 @@ export const ECONOMY = {
        *  than an accident: the calendar's standing rule is that "there must ALWAYS be somewhere to
        *  go". */
       maxItfRank: 8,
+      /** ⚠ THE PROFESSIONAL FIGURE, and it is the same reading one rung up (02.08): National signs
+       *  the girl who would be in the prestige draw, Global the one who would still be in it on the
+       *  last day - the last quarter. Junior: 8 of the J300's 32. Professional: 31 of the 125 who
+       *  would be accepted into a W100 (`national.maxWtaRank` / 4, rounded down as the junior pair
+       *  divides exactly). Pinned beside its neighbour in tests/offers.test.ts. */
+      maxWtaRank: 31,
       /** THREE SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", scaled the same way
        *  `national.seasons` is. Signing it is the biggest commitment in the game: everything is
        *  covered, and nothing else can be signed until it runs out. */

@@ -56,6 +56,7 @@ import {
   raiseKitOffer,
   rungFor,
   shopWritesAt,
+  standingClears,
   SPONSOR_TIERS,
   TIER_COVERS,
   type SponsorStanding,
@@ -65,6 +66,8 @@ import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { OFF_SEASON_WEEKS, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { COHORT_SIZE } from '../src/engine/season/cohort'
+import { FIELD } from '../src/engine/season/fieldPros'
 import type { SeasonEvent } from '../src/engine/season/types'
 import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../src/shared/protocol'
 
@@ -238,12 +241,29 @@ const domestic = (nationalRank: number): SponsorStanding => ({
   nationalRank,
   itfRank: 999,
   itfRanked: false,
+  ...unranked.wta,
 })
 /** ...and its international counterpart, for the two rungs the ladder added. */
 const worldly = (itfRank: number, nationalRank = 1): SponsorStanding => ({
   nationalRank,
   itfRank,
   itfRanked: true,
+  ...unranked.wta,
+})
+/** ⚠ RE-AIMED AGAIN (02.08, the professional arm): the standing is THREE tables now. Every fixture
+ *  above is a girl with no professional standing - which is what they all meant when they were
+ *  written - so `unranked.wta` spells that once instead of twice per helper, and the cases that
+ *  are ABOUT the professional table say so by building it themselves (`pro` below). */
+const unranked = { wta: { wtaRank: 999, wtaRanked: false } } as const
+/** A professional standing: her merged W rank, and by default nothing left in the junior or
+ *  domestic tables - the real shape of a career two seasons into the tour. */
+const pro = (wtaRank: number, over: Partial<SponsorStanding> = {}): SponsorStanding => ({
+  nationalRank: 999,
+  itfRank: 999,
+  itfRanked: false,
+  wtaRank,
+  wtaRanked: true,
+  ...over,
 })
 
 /** ⚠ RE-AIMED (01.08): the review moved from the season BOUNDARY into the first OFF-SEASON week, so
@@ -867,6 +887,42 @@ describe('the three rungs, and the tables they read', () => {
     expect(s.global.maxItfRank).toBeLessThan(s.national.maxItfRank)
   })
 
+  it('⚠ ...and the professional pair is the SAME reading of the professional draw', () => {
+    // 02.08: National signs the girl who would be IN the prestige draw, Global the one still in it
+    // on the last day - one sentence, read twice, once per table. On the professional side the
+    // prestige draw is W100 and "in it" is its acceptance list: `enterPct` of the merged W table,
+    // which is the field (FIELD.size) plus the cohort plus her.
+    const mergedRows = FIELD.size + COHORT_SIZE + 1
+    expect(s.national.maxWtaRank).toBe(Math.round(TIERS.w100.enterPct! * mergedRows))
+    expect(s.global.maxWtaRank).toBe(Math.floor(s.national.maxWtaRank / 4))
+    expect(s.global.maxWtaRank).toBeLessThan(s.national.maxWtaRank)
+  })
+
+  it('a professional keeps her sponsor - the tables she leaves cannot un-sign her', () => {
+    // THE OWNER'S 02.08 RULING («спонсор вполне может жить и дальше»). Two seasons into the tour
+    // her junior and domestic points have decayed to nothing - she stopped entering the events that
+    // feed them - so under the junior-only gate NOBODY would write to a top-100 professional.
+    expect(rungFor(pro(61))).toBe('national')
+    expect(rungFor(pro(20))).toBe('global')
+    // ...and the shop always would: the local rung is "somebody has heard of her".
+    expect(rungFor(pro(400))).toBe('local')
+    // The guard the junior table keeps, kept here too: an EMPTY professional table is not a world
+    // ranking, so a fourteen-year-old tied at the floor is not a top-100 pro.
+    expect(rungFor({ nationalRank: 999, itfRank: 999, itfRanked: false, wtaRank: 1, wtaRanked: false })).toBeNull()
+  })
+
+  it('the keep-condition asks the same question the gate does, in whichever table she is in', () => {
+    // `standingClears` is the single predicate both callers use (world.ts's reviewSponsors and
+    // rungFor above), which is what makes "a deal killed by a rule that would have offered it back
+    // the same winter" unrepresentable.
+    expect(standingClears(pro(61), 'national')).toBe(true)
+    expect(standingClears(domestic(1), 'national')).toBe(false) // no international standing at all
+    expect(standingClears(domestic(1), 'local')).toBe(true)
+    // A professional who has stopped scoring holds no professional standing - a sponsor asks what
+    // she is worth now, and the live 52-week window is the honest answer.
+    expect(standingClears({ ...pro(61), wtaRanked: false }, 'national')).toBe(false)
+  })
+
   it('local reads the DOMESTIC table and the two above it read the INTERNATIONAL one', () => {
     // The whole point of the slice, in four lines. A girl who is #1 at home and nowhere abroad gets
     // the shop; the same girl once she is #13 in the world gets a national label.
@@ -881,21 +937,21 @@ describe('the three rungs, and the tables they read', () => {
     // asked whether two contracts would arrive and the answer was no. It is now a national one - and
     // deliberately not the global one, because the calendar's standing rule is that there must
     // always be somewhere to go.
-    expect(rungFor({ nationalRank: 1, itfRank: 13, itfRanked: true })).toBe('national')
+    expect(rungFor({ nationalRank: 1, itfRank: 13, itfRanked: true, ...unranked.wta })).toBe('national')
   })
 
   it('⚠ an empty international table is not a world ranking', () => {
     // Competition ranking ties everyone without a counting result at the floor, and a fresh
     // fourteen-year-old can read as a number that looks like a standing. Without the `itfRanked`
     // guard she would be sent a global contract in her first winter.
-    expect(rungFor({ nationalRank: 1, itfRank: 1, itfRanked: false })).toBe('local')
-    expect(rungFor({ nationalRank: 99, itfRank: 1, itfRanked: false })).toBeNull()
+    expect(rungFor({ nationalRank: 1, itfRank: 1, itfRanked: false, ...unranked.wta })).toBe('local')
+    expect(rungFor({ nationalRank: 99, itfRank: 1, itfRanked: false, ...unranked.wta })).toBeNull()
   })
 
   it('the best rung she clears writes, and only that one', () => {
     // A top-8 girl clears all three gates at once. Three letters in one winter would make the ladder
     // a collection rather than a climb.
-    const terms = kitTermsFor({ nationalRank: 1, itfRank: 1, itfRanked: true })!
+    const terms = kitTermsFor({ nationalRank: 1, itfRank: 1, itfRanked: true, ...unranked.wta })!
     expect(terms.tier).toBe('global')
     expect(terms.covers).toEqual(TIER_COVERS.global)
     expect(terms.travelShare).toBe(s.global.travelShare)

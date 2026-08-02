@@ -487,6 +487,31 @@ const proBudgetLine = computed<string | null>(() => {
   return `Pro entries this season: ${cap.used} of ${cap.limit}`
 })
 
+// THE PLANNING COUNTER (owner, 02.08: «сколько доступных турниров и какого уровня у нас до конца
+// года вообще осталось, это даст человеку возможность планировать»). The engine's own read of the
+// WHOLE remaining season - not this screen's eight-week feed, and deliberately NOT filtered by the
+// two-type rule, so the rare rungs she may enter are counted where the feed can only mention them.
+// Null before the first snapshot and in a season with nothing left, where a row of zeroes would be
+// worse than silence.
+const SUPPLY_RUNGS_SHOWN = 4
+const supplyLine = computed<{ total: number; weeks: number; parts: string[] } | null>(() => {
+  const supply = game.snapshot?.seasonSupply
+  if (!supply || supply.rows.length === 0) return null
+  const total = supply.rows.reduce((n, r) => n + r.open, 0)
+  if (total === 0) return null
+  // Strongest rung first: a planner reads down from the biggest week she could still have.
+  const strongestFirst = [...supply.rows].reverse()
+  const shown = strongestFirst.slice(0, SUPPLY_RUNGS_SHOWN)
+  const parts = shown.map((r) => `${TIER_SHORT[r.tier]} ${r.open}`)
+  // ⚠ THE TAIL IS SUMMARISED, NEVER DROPPED - the arithmetic has to close or the total becomes a
+  // number the player cannot check. A career deep in the W era is technically still allowed into
+  // J30 and National; naming every one of those rungs turned this line into two lines of things
+  // nobody would enter, which is the opposite of a planning aid.
+  const tail = strongestFirst.slice(SUPPLY_RUNGS_SHOWN).reduce((n, r) => n + r.open, 0)
+  if (tail > 0) parts.push(`+${tail} lower`)
+  return { total, weeks: supply.weeksLeft, parts }
+})
+
 // A passed deadline swaps the Enter button for a muted "Entries closed" pill (round-5
 // item 2); an open event only ever disables Enter for insufficient funds.
 function entriesClosed(e: UpcomingEvent): boolean {
@@ -898,6 +923,15 @@ function closeExhibition(): void {
              number is the engine's own count for THIS season, straight off the snapshot. -->
         <p v-if="proBudgetLine" class="season-pro-budget" :title="'The tour\'s age rule limits how many professional (W) events she may enter this season. A fresh allowance arrives when the season turns; junior and national events are not counted.'">
           {{ proBudgetLine }}
+        </p>
+        <!-- THE PLANNING COUNTER: how much tennis is left in the season and on which rungs. It
+             counts the WHOLE season, every rung the engine opens to her - the feed below shows
+             eight weeks and at most two rungs, so without this a sparse stretch reads as an empty
+             career. Blank weeks are normal: a full season is roughly twenty events, one a
+             fortnight, and there is always more on offer than she can take. -->
+        <p v-if="supplyLine" class="season-supply" :title="'Tournaments you can still enter this season, counted across every level open to her - including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.'">
+          {{ supplyLine.total }} left to enter over {{ supplyLine.weeks }} weeks
+          <span class="season-supply-tiers">{{ supplyLine.parts.join(' · ') }}</span>
         </p>
       </div>
       <IconButton class="tier-guide-btn" label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</IconButton>
@@ -1461,6 +1495,22 @@ section.bare .event-cards {
   font-weight: 500;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+}
+
+/* The planning counter, one register quieter than the budget above it: the supply is context for a
+   decision, never the decision. The rung list is dimmer still - it is the detail you look for once
+   the total has told you whether to look at all. */
+.season-supply {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.season-supply-tiers {
+  opacity: 0.7;
+}
+.season-supply-tiers::before {
+  content: '· ';
 }
 
 /* The defending badge (W2-LADDER §3): the accent register the Entered pill already uses - points
