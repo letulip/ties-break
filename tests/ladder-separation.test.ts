@@ -8,12 +8,13 @@ import {
   skipTournament,
   closeTournament,
   toSnapshot,
+  KID_ID,
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { entryBandTrack, tierOpensWhen, tierState, type TierStateInput } from '../src/composables/tierState'
-import { activeLadderOfSnapshot, LADDER_POINTS_LABEL } from '../src/shared/protocol'
+import { activeLadderOfSnapshot, LADDER_POINTS_LABEL, rankChipTrack } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
 
 // =================================================================================================
@@ -156,14 +157,19 @@ describe('S2 — the season W-L decomposes, and it decomposes into the right buc
       enterWhatSheCan(world)
 
       const r = world.seasonRecord!
-      expect(r.domestic.wins + r.itf.wins).toBe(world.seasonWins)
-      expect(r.domestic.losses + r.itf.losses).toBe(world.seasonLosses)
+      // ⚠ ALL THREE BUCKETS (W2-LADDER re-aim): the decomposition has been three-way since v30,
+      // and this fixture's career now genuinely reaches a W draw (the 12-rung calendar re-deal
+      // moved which events its greedy policy meets), so a two-bucket sum stopped being the
+      // invariant and started being an undercount. The claim is the same claim, over the whole
+      // partition.
+      expect(r.domestic.wins + r.itf.wins + r.wta.wins).toBe(world.seasonWins)
+      expect(r.domestic.losses + r.itf.losses + r.wta.losses).toBe(world.seasonLosses)
       if (r.domestic.wins > 0) sawDomesticWin = true
       if (r.itf.wins + r.itf.losses > 0) sawItfMatch = true
     }
     const snap = toSnapshot(world)
     expect(snap.seasonRecord).toEqual(world.seasonRecord)
-    expect(snap.seasonRecord.domestic.wins + snap.seasonRecord.itf.wins).toBe(snap.seasonWins)
+    expect(snap.seasonRecord.domestic.wins + snap.seasonRecord.itf.wins + snap.seasonRecord.wta.wins).toBe(snap.seasonWins)
 
     // ...and both buckets have to have been used, or the sum holds trivially.
     expect(sawDomesticWin, 'she never won a domestic match').toBe(true)
@@ -250,6 +256,7 @@ describe('S3 — the locked plaque says WHEN the rung opens, off the tier defini
       upcoming: [],
       horizonWeeks: 8,
       entryCap: { used: 0, limit: 14, remaining: 14 },
+      proEntryCap: { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER }, // the pro AER has its own arm; untouched here
     }
     const hasCondition = (s: string) => /\d/.test(s) // a number: an age, a points floor, or a cut
 
@@ -423,5 +430,79 @@ describe('S6 — the Stats switch covers every table there is (round 15, item 2)
     // forks that could drift.
     expect(src).toContain('game.snapshot?.ladders[shown.value]')
     expect(src).toContain('game.snapshot?.seasonRecord[shown.value]')
+  })
+})
+
+describe('S7 — the Home chip names her WORKING track, and the professional arm is a one-way door (02.08)', () => {
+  // THE ARCHITECT'S SELECTION RULE, pinned end to end: no counting result anywhere -> no chip at
+  // all; a counting domestic result -> National; a counting J result -> International; ANY counting
+  // W result -> Professional, PERMANENTLY - the window emptying later never hands the chip back to
+  // the junior tables. `activeLadderOf` owns the track (surfaced as `snap.activeLadder`) and
+  // `rankChipTrack` owns only the empty case, so both halves are asserted here.
+  //
+  // Rows are fabricated the way finalizeTournament writes them - a result row AND the
+  // `bestFinishByTier` high-water mark together - because the mark is exactly what makes "ever"
+  // survive the 52-week pruning of the rows (see `wtaEverCounted` in world.ts).
+  it('none -> domestic -> itf -> wta, in that precedence', () => {
+    const world = createWorld('chip-rule')
+
+    // A brand-new career: her table is the national one and there is NOTHING to put on a chip.
+    let snap = toSnapshot(world)
+    expect(snap.activeLadder).toBe('domestic')
+    expect(rankChipTrack(snap)).toBeNull()
+    expect(rankChipTrack(null)).toBeNull()
+
+    // First counting domestic result -> the National chip.
+    world.results.push({ playerId: KID_ID, week: world.week, points: 25, tier: 'local' })
+    world.bestFinishByTier.local = 0
+    snap = toSnapshot(world)
+    expect(snap.activeLadder).toBe('domestic')
+    expect(rankChipTrack(snap)).toBe('domestic')
+
+    // A counting J result outranks the domestic book she still holds.
+    world.results.push({ playerId: KID_ID, week: world.week, points: 12, tier: 'j30' })
+    world.bestFinishByTier.j30 = 2
+    snap = toSnapshot(world)
+    expect(snap.activeLadder).toBe('itf')
+    expect(rankChipTrack(snap)).toBe('itf')
+
+    // ⚠ A SCORELESS W APPEARANCE IS NOT A COUNTING RESULT (isCountingResult IS points > 0): a
+    // first-round exit leaves the mark at the zero row of the points table and must NOT turn the
+    // chip professional - the rule says a COUNTING W result does.
+    world.bestFinishByTier.w15 = TIERS.w15.points.length - 1
+    world.results.push({ playerId: KID_ID, week: world.week, points: 0, tier: 'w15' })
+    snap = toSnapshot(world)
+    expect(snap.activeLadder).toBe('itf')
+    expect(rankChipTrack(snap)).toBe('itf')
+
+    // Her first COUNTING W result -> Professional.
+    world.results.push({ playerId: KID_ID, week: world.week, points: 1, tier: 'w15' })
+    world.bestFinishByTier.w15 = TIERS.w15.points.length - 2
+    snap = toSnapshot(world)
+    expect(snap.activeLadder).toBe('wta')
+    expect(rankChipTrack(snap)).toBe('wta')
+  })
+
+  it('⚠ wta FOREVER: the chip survives the 52-week window deleting every W row', () => {
+    const world = createWorld('chip-forever')
+    // One counting W result, banked the way finalize banks it...
+    world.results.push({ playerId: KID_ID, week: world.week, points: 10, tier: 'w15' })
+    world.bestFinishByTier.w15 = 0
+    expect(toSnapshot(world).activeLadder).toBe('wta')
+
+    // ...then the rows age out of the RESULTS_WINDOW (pruning deletes them; modelled directly so
+    // the case is exact rather than 53 ticks of noise). The live window is empty - she is Unranked
+    // in the professional table - and the chip STAYS professional off the never-pruned mark: the
+    // rule is "to the end of the game", not "while the window holds".
+    world.results = world.results.filter((r) => r.playerId !== KID_ID)
+    const snap = toSnapshot(world)
+    expect(snap.ladders.wta.rank).toBeNull()
+    expect(snap.activeLadder).toBe('wta')
+    expect(rankChipTrack(snap)).toBe('wta')
+    // Never back to the junior tables, whatever they still hold.
+    world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'j300' })
+    world.results.push({ playerId: KID_ID, week: world.week, points: 60, tier: 'national' })
+    expect(toSnapshot(world).activeLadder).toBe('wta')
+    expect(rankChipTrack(toSnapshot(world))).toBe('wta')
   })
 })

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { TIERS, buildSeason, TIER_LADDER, tierFromLabel, isOffSeasonWeek } from '../src/engine/season/calendar'
 import { selectEntrants } from '../src/engine/season/tournament'
+import { fieldProsFor, universeForTier } from '../src/engine/season/fieldPros'
 import { generateCohort } from '../src/engine/season/cohort'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
@@ -23,7 +24,7 @@ import {
   START_AGE_YEARS,
   type WorldState,
 } from '../src/engine/world'
-import type { AiPlayer, RankingRow, SeasonEvent, TierId } from '../src/engine/season/types'
+import type { RankingRow, SeasonEvent, TierId } from '../src/engine/season/types'
 
 // ---------------------------------------------------------------------------
 // Ladder-up Part B — the J-level family (docs/specs/ladder-up.md + ladder-up-impl.md).
@@ -47,9 +48,11 @@ describe('L1 — the tier catalogue is the J family + the W family (itf is gone)
   // "no `itf` anywhere" means exactly what it always meant and the adult rungs do not soften it:
   // they are `w15`/`w35`/`w100` on track `'wta'`, which is a third table, not a resurrected
   // placeholder.
-  it('has exactly nine tiers and no `itf` anywhere', () => {
+  // ⚠ RE-AIMED by W2-LADDER (nine -> twelve): W50/W75 fill the family's ×5 title hole and WTA 125
+  // tops it (act2-pro-tour.md §2, owner ruling 6). Still EXACT lists, still no `itf`.
+  it('has exactly twelve tiers and no `itf` anywhere', () => {
     expect([...ALL_TIERS].sort()).toEqual([
-      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'w100', 'w15', 'w35',
+      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'w100', 'w15', 'w35', 'w50', 'w75', 'wta125',
     ])
     expect(ALL_TIERS).not.toContain('itf')
   })
@@ -57,7 +60,7 @@ describe('L1 — the tier catalogue is the J family + the W family (itf is gone)
   it('TIER_LADDER orders the catalogue weakest -> strongest and covers every tier', () => {
     expect([...TIER_LADDER].sort()).toEqual([...ALL_TIERS].sort())
     expect(TIER_LADDER).toEqual([
-      'local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w100',
+      'local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100', 'wta125',
     ])
   })
 
@@ -305,17 +308,23 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
   // cannot thin the junior calendar by a single week. The density claim below is unchanged too, and a
   // matching one is now asserted for the W family, which ships the same 2/3/13-week shape one table
   // up: dense, dense, rare.
+  // ⚠ RE-AIMED AGAIN (W2-LADDER, nine -> twelve): W50 every 4 (13), W75 every 6 (8), WTA 125 every
+  // 13 (4). Pre-existing counts still untouched; the W density claim now reads the ENTRY PAIR over
+  // all six rungs - 43 of 72 W events a season are W15/W35, which keeps the family bottom-heavy the
+  // way the J one is (the real tour's own supply pyramid, research §4: ~48% of ~600 events are W15).
   it('yields the per-tier season counts, with the dense rungs the clear majority of each family', () => {
     const counts = countByTier(events)
     expect(counts).toEqual({
       local: 26, regional: 13, national: 6,
       j30: 26, j60: 17, j300: 4,
-      w15: 26, w35: 17, w100: 4,
+      w15: 26, w35: 17, w50: 13, w75: 8, w100: 4, wta125: 4,
     })
     const jTotal = counts.j30 + counts.j60 + counts.j300
     expect((counts.j30 + counts.j60) / jTotal).toBeGreaterThan(0.75)
-    const wTotal = counts.w15 + counts.w35 + counts.w100
-    expect((counts.w15 + counts.w35) / wTotal).toBeGreaterThan(0.75)
+    const wTotal = counts.w15 + counts.w35 + counts.w50 + counts.w75 + counts.w100 + counts.wta125
+    expect((counts.w15 + counts.w35) / wTotal).toBeGreaterThan(0.55)
+    // ...and the rare pair stays rare: the prestige rungs together are under a sixth of the family.
+    expect((counts.w100 + counts.wta125) / wTotal).toBeLessThan(1 / 6)
   })
 
   it('never schedules two events of the SAME tier in one week (ids stay unique)', () => {
@@ -385,12 +394,12 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
 
   it('holds for later year-blocks too', () => {
     const later = buildSeason('ladder-later', 52, 52)
-    // ⚠ RE-AIMED with its sibling above (task #17): three rungs, three more counts, and every
-    // pre-existing figure unchanged. A year-block is still a year-block whichever year it is.
+    // ⚠ RE-AIMED with its sibling above (task #17, then W2-LADDER): new rungs, new counts, and
+    // every pre-existing figure unchanged. A year-block is still a year-block whichever year it is.
     expect(countByTier(later)).toEqual({
       local: 26, regional: 13, national: 6,
       j30: 26, j60: 17, j300: 4,
-      w15: 26, w35: 17, w100: 4,
+      w15: 26, w35: 17, w50: 13, w75: 8, w100: 4, wta125: 4,
     })
     for (const e of later) expect(e.week).toBeGreaterThanOrEqual(52)
   })
@@ -400,7 +409,25 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
   const cohort = generateCohort('ladder-field')
   // Standings position = array order, so percentile == (index + 1) / size.
   const ranking: RankingRow[] = cohort.map((p, i) => ({ playerId: p.id, points: cohort.length - i, rank: i + 1 }))
-  const posOf = new Map(cohort.map((p, i) => [p.id, i]))
+  // ⚠ THE W RUNGS ARE MEASURED OVER THEIR OWN UNIVERSE (W2-LADDER re-aim, not a weakening). This
+  // fixture used to hand every rung the bare 199-cohort, which was the W rungs' real universe for
+  // exactly one release: since living-field phase W they draw from LIVE cohort ∪ ~300 field pros
+  // positioned by the MERGED table (universeForTier / computeShadowTournament), and the W2-LADDER
+  // bands are MEASURED against that ~500-row universe (tools/band-probe.ts - shipped-band minima
+  // 190/150/133/110 for w50/w75/w100/wta125). Against a bare 199-cohort those windows cannot even
+  // hold a draw's worth of seventeen-and-overs, so the backfill escapes the band and the in-band
+  // assertion reports a scarcity the real engine does not have. Same fixture discipline, one
+  // universe per family - which is what the engine itself does.
+  const pros = fieldProsFor('ladder-field', 0, cohort.map((p) => p.name))
+  const wUniverse = universeForTier('w15', cohort, pros)
+  const wRanking: RankingRow[] = wUniverse.map((p, i) => ({ playerId: p.id, points: wUniverse.length - i, rank: i + 1 }))
+  const posOfCohort = new Map(cohort.map((p, i) => [p.id, i]))
+  const posOfW = new Map(wUniverse.map((p, i) => [p.id, i]))
+  const isW = (tier: TierId) => TIERS[tier].track === 'wta'
+  const universeOf = (tier: TierId) => (isW(tier) ? wUniverse : cohort)
+  const rankingOf = (tier: TierId) => (isW(tier) ? wRanking : ranking)
+  const pctOf = (tier: TierId, id: string) =>
+    isW(tier) ? (posOfW.get(id)! + 1) / wUniverse.length : (posOfCohort.get(id)! + 1) / cohort.length
   const ev = (tier: TierId): SeasonEvent => ({
     id: `0-w10-${tier}`,
     week: 10,
@@ -409,65 +436,84 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
     travelCostCents: 100_00,
     deadlineWeek: 8,
   })
-  const meanPos = (entrants: AiPlayer[]) =>
-    entrants.reduce((s, p) => s + posOf.get(p.id)!, 0) / entrants.length
+  /** Mean percentile of a rung's drawn field IN ITS OWN TABLE - comparable across tables, which is
+   *  what the seam assertions below compare (a raw position on a 199-row table and one on a
+   *  499-row table are different units). */
+  const meanPct = (tier: TierId) => {
+    const entrants = selectEntrants(ev(tier), universeOf(tier), rankingOf(tier), rngFromSeed(`m-${tier}`))
+    return entrants.reduce((s, p) => s + pctOf(tier, p.id), 0) / entrants.length
+  }
 
   it('every tier fills its draw from inside its own percentile window', () => {
     for (const tier of ALL_TIERS) {
-      const entrants = selectEntrants(ev(tier), cohort, ranking, rngFromSeed(`f-${tier}`))
+      const entrants = selectEntrants(ev(tier), universeOf(tier), rankingOf(tier), rngFromSeed(`f-${tier}`))
       expect(entrants.length).toBe(TIERS[tier].drawSize)
       const [lo, hi] = TIERS[tier].entrantPctBand
       for (const p of entrants) {
-        const pct = (posOf.get(p.id)! + 1) / cohort.length
-        expect(pct).toBeGreaterThanOrEqual(lo)
-        expect(pct).toBeLessThanOrEqual(hi)
+        const pct = pctOf(tier, p.id)
+        expect(pct, `${tier}`).toBeGreaterThanOrEqual(lo)
+        expect(pct, `${tier}`).toBeLessThanOrEqual(hi)
       }
       expect(new Set(entrants.map((p) => p.id)).size).toBe(entrants.length)
     }
   })
 
-  // ⚠ RE-AIMED PER TRACK, NOT WEAKENED (task #17). The claim was "mean standings position improves
-  // all the way up TIER_LADDER", which was exactly right while the ladder was one continuous climb
-  // from Local to J300. With a THIRD TABLE it stops being a well-formed question at one seam and one
-  // only: the step from J300 to W15. A W15 is the BOTTOM rung of the professional tour and a J300 is
-  // the TOP of the junior one, so the adult family restarts wide (its entrant window is [0.15, 0.75])
-  // exactly as J30 restarted wide under National - the fields go 15.97 -> 52.00 at that seam, and
-  // they should. It is the same shape the points make (a J300 title pays 300, a W15 title pays 10)
-  // and for the same reason: she starts again at the bottom of a different table.
-  //
-  // So the monotonicity is asserted WITHIN each family, three times, which is the strictly stronger
-  // reading: it now fails if any rung stops being harder than the one below it in its OWN table,
-  // including inside the new family, where nothing checked it before. Measured on this fixture:
-  //   domestic 113.00 -> 86.94 -> 55.50 · itf 39.53 -> 26.44 -> 15.97 · wta 52.00 -> 40.66 -> 29.75
-  // The cross-family SEAMS are pinned separately below, so the restart cannot silently become a
-  // demotion (a W15 field must still be harder than a Regional one).
+  // ⚠ RE-AIMED PER TRACK under task #17, RE-AIMED AGAIN by W2-LADDER - and this time the top of
+  // the W family is pinned as the CONVERGENCE it measurably is, not the strict staircase it is
+  // not yet. Entry is position-biased (key = position + rng x drawSize), so what separates two
+  // adjacent rungs' fields is their windows' FLOORS: a rung whose floor steps down unlocks head
+  // rows the rung below cannot draw. The floors do step down w15 (0.15) -> w35 (0.08) -> w50
+  // (0.02) -> w75 (0), so strict hardening is asserted that far. w75/w100/wta125 SHARE floor 0 -
+  // their windows differ only in tails the biased draw almost never reaches - so today their
+  // fields are near-identical slices of the merged head, and pretending a strict order exists
+  // there would pin seed noise. What is asserted instead: non-strict monotonicity across the trio
+  // within a measured tolerance, and the trio strictly harder than w50. THE SPLIT IS W2-FIELD2'S
+  // DELIVERABLE (act2-pro-tour.md §8): the fourth storey plus week exclusivity are what make a
+  // 125 field beat a W100's "the way W35's beats W15's today" - re-aim this to strict when that
+  // lands, with its field-quality run in hand.
   it('a higher rung really is a harder field, inside each of the three tables', () => {
-    for (const track of ['domestic', 'itf', 'wta'] as const) {
+    for (const track of ['domestic', 'itf'] as const) {
       const rungs = TIER_LADDER.filter((t) => TIERS[t].track === track)
       expect(rungs.length).toBe(3)
-      const means = rungs.map((t) => meanPos(selectEntrants(ev(t), cohort, ranking, rngFromSeed(`m-${t}`))))
+      const means = rungs.map((t) => meanPct(t))
       for (let i = 1; i < means.length; i++) {
         expect(means[i], `${rungs[i]} vs ${rungs[i - 1]}`).toBeLessThan(means[i - 1])
       }
     }
+    const w = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
+    expect(w).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
+    const means = w.map((t) => meanPct(t))
+    // Strict down the floored rungs...
+    for (let i = 1; i <= 3; i++) {
+      expect(means[i], `${w[i]} vs ${w[i - 1]}`).toBeLessThan(means[i - 1])
+    }
+    // ...and the shared-floor trio never SOFTENS beyond draw noise (one jitter width over the
+    // merged table = 32/499 ≈ 0.064; the tolerance is a quarter of that) while staying strictly
+    // harder than the last floored rung.
+    for (let i = 4; i < means.length; i++) {
+      expect(means[i], `${w[i]} vs ${w[i - 1]}`).toBeLessThan(means[i - 1] + 0.016)
+      expect(means[i], `${w[i]} vs w50`).toBeLessThan(means[2])
+    }
   })
 
   it('each table restarts wide, but never below the table under it', () => {
-    const mean = (t: TierId) => meanPos(selectEntrants(ev(t), cohort, ranking, rngFromSeed(`m-${t}`)))
-    // The seam is a RESTART: the bottom of a table is an easier field than the top of the one below.
-    expect(mean('j30')).toBeGreaterThan(mean('j300'))
-    expect(mean('w15')).toBeGreaterThan(mean('j300'))
+    // The seam is a RESTART: the bottom of a table is an easier field than the top of the one
+    // below - each measured as the slice of ITS OWN population (meanPct, see above).
+    expect(meanPct('j30')).toBeGreaterThan(meanPct('j300'))
+    expect(meanPct('w15')).toBeGreaterThan(meanPct('j300'))
     // ...and it is still a step UP overall: the entry rung of each table is harder than the entry
     // rung of the one below it, so nothing about the restart is a demotion.
-    expect(mean('j30')).toBeLessThan(mean('local'))
-    expect(mean('w15')).toBeLessThan(mean('national'))
+    expect(meanPct('j30')).toBeLessThan(meanPct('local'))
+    expect(meanPct('w15')).toBeLessThan(meanPct('national'))
   })
 
   it('every window is wide enough that the field can actually vary', () => {
     for (const tier of ALL_TIERS) {
       const [lo, hi] = TIERS[tier].entrantPctBand
-      const candidates = Math.round((hi - lo) * 199)
-      expect(candidates).toBeGreaterThan(TIERS[tier].drawSize)
+      // Sized against the population the rung actually draws from - the merged ~500 for the W
+      // family (the band-probe's own universe), the 199-cohort for everybody else.
+      const candidates = Math.round((hi - lo) * universeOf(tier).length)
+      expect(candidates, tier).toBeGreaterThan(TIERS[tier].drawSize)
     }
   })
 })
@@ -503,12 +549,16 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
       expect(TIERS[t].maxAgeYears).toBeUndefined()
       expect(isTierAgeOpen(t, 30)).toBe(true)
     }
-    // The adult rungs open at 16/16/17 and never close – the fork at 19 is a decision, not a wall,
-    // precisely because these are still here on the far side of it.
-    for (const t of ['w15', 'w35', 'w100'] as TierId[]) {
+    // The adult rungs open at 16/16/16/17/17/17 and never close – the fork at 19 is a decision,
+    // not a wall, precisely because these are still here on the far side of it (W2-LADDER: the
+    // spec's minAge chain is 16 for the entry trio's first two plus w50, 17 from w75 up).
+    for (const t of ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]) {
       expect(TIERS[t].maxAgeYears).toBeUndefined()
       expect(isTierAgeOpen(t, 30)).toBe(true)
     }
+    expect(TIERS.w50.minAgeYears).toBe(16)
+    expect(TIERS.w75.minAgeYears).toBe(17)
+    expect(TIERS.wta125.minAgeYears).toBe(17)
   })
 
   // THE OVERLAP IS THE POINT, and it is what makes 19 a fork rather than a cliff: for three whole
@@ -598,9 +648,16 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
   // dip meets this test and the owner's ruling in the knob's comment together. When the
   // living-field population makes the W fields real, w35/w100 move UP - measured - and this pin
   // moves with them.
+  // ⚠ RE-AIMED AGAIN by W2-LADDER, the fatigueReference re-aim's twin: R15-6 pinned the W family's
+  // ENDS (w15 4 .. w100 6 surcharge, 50 .. 60 floor) and the middle rungs INTERPOLATE inside them,
+  // so with six rungs between two pinned ends the family is monotone NON-STRICT by arithmetic
+  // necessity - two integers strictly between 5 and 6 do not exist. Domestic and J keep strict
+  // rise; the W family pins its exact interpolated steps (a decrease AND a prestige
+  // re-extrapolation both still fail), and both tables keep the floor = 30 + 5 x surcharge pairing
+  // so one retune note governs the pair.
   it('minConditionToEnter and tierMatchFatigue are exhaustive and rise inside each family', () => {
-    const families = ['domestic', 'itf', 'wta'] as const
-    const rungsOf = (track: (typeof families)[number]) => TIER_LADDER.filter((t) => TIERS[t].track === track)
+    const families = ['domestic', 'itf'] as const
+    const rungsOf = (track: 'domestic' | 'itf' | 'wta') => TIER_LADDER.filter((t) => TIERS[t].track === track)
     for (const table of [
       ECONOMY.availability.minConditionToEnter as Record<TierId, number>,
       ECONOMY.condition.tierMatchFatigue as Record<TierId, number>,
@@ -612,10 +669,24 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
           expect(table[rungs[i]], `${rungs[i]} vs ${rungs[i - 1]}`).toBeGreaterThan(table[rungs[i - 1]])
         }
       }
+      // The W family: non-decreasing, ends where R15-6 pinned it, floor tied to surcharge.
+      const w = rungsOf('wta')
+      for (let i = 1; i < w.length; i++) {
+        expect(table[w[i]], `${w[i]} vs ${w[i - 1]}`).toBeGreaterThanOrEqual(table[w[i - 1]])
+      }
       // The seams: up into the junior tour, DOWN into the professional one (the R15-6 reprice).
       expect(table.j30).toBeGreaterThan(table.national)
       expect(table.w15).toBeLessThan(table.j300)
       expect(table.w15).toBeGreaterThan(table.j30)
+    }
+    // The exact interpolated steps, pinned once for both tables through the pairing.
+    expect(ECONOMY.condition.tierMatchFatigue.w50).toBe(5)
+    expect(ECONOMY.condition.tierMatchFatigue.w75).toBe(6)
+    expect(ECONOMY.condition.tierMatchFatigue.wta125).toBe(6)
+    for (const t of rungsOf('wta')) {
+      expect(ECONOMY.availability.minConditionToEnter[t], `${t} floor pairing`).toBe(
+        30 + 5 * ECONOMY.condition.tierMatchFatigue[t],
+      )
     }
   })
 

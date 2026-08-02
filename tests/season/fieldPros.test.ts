@@ -26,7 +26,7 @@ import {
 import { power } from '../../src/engine/season/cohort'
 import { rivalGroundstrokes, rivalConditions } from '../../src/engine/season/rival'
 import { selectEntrants } from '../../src/engine/season/tournament'
-import { computeRanking } from '../../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking } from '../../src/engine/season/ranking'
 import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 import {
@@ -119,7 +119,7 @@ describe('the merged W table is a real ranking', () => {
       { playerId: world.cohort[7].id, week: 0, points: 10, tier: 'w15' as const },
       { playerId: KID_ID, week: 0, points: 50, tier: 'w15' as const },
     ]
-    const live = computeRanking(results, 0, [...world.cohort.map((p) => p.id), KID_ID], inTrack('wta'))
+    const live = computeRanking(results, 0, BEST_N_BY_TRACK.wta, [...world.cohort.map((p) => p.id), KID_ID], inTrack('wta'))
     const pros = prosOf(SEED, 0, world.cohort.map((p) => p.name))
     const merged = mergedWtaRanking(live, pros)
 
@@ -178,11 +178,12 @@ describe('the scope fence – phase W is the W track and nothing else', () => {
       // Reference equality, not just equal membership: nothing was even copied for these rungs.
       expect(universeForTier(tier, world.cohort, pros)).toBe(world.cohort)
     }
-    for (const tier of ['w15', 'w35', 'w100'] as TierId[]) {
+    // All six W rungs since W2-LADDER - the fence is per TRACK, so the new rungs inherited it.
+    for (const tier of ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]) {
       const u = universeForTier(tier, world.cohort, pros)
       expect(u.length).toBe(world.cohort.length + pros.length)
     }
-    expect(TIER_LADDER.length).toBe(NON_W.length + 3) // the fence covers the whole catalogue
+    expect(TIER_LADDER.length).toBe(NON_W.length + 6) // the fence covers the whole catalogue
   })
 
   it('selectEntrants over the phase-W universe: every non-W draw is fp-free, a W15 draw is not', () => {
@@ -192,11 +193,13 @@ describe('the scope fence – phase W is the W track and nothing else', () => {
     const mixed = computeRanking(
       world.results.filter((r) => r.playerId !== KID_ID),
       world.week,
+      BEST_N_BY_TRACK.itf,
       world.cohort.map((p) => p.id),
     )
     const wtaLive = computeRanking(
       world.results.filter((r) => r.playerId !== KID_ID),
       world.week,
+      BEST_N_BY_TRACK.wta,
       world.cohort.map((p) => p.id),
       inTrack('wta'),
     )

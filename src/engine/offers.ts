@@ -42,6 +42,7 @@ import { ECONOMY } from './economy'
 import { rngFromSeed } from './rng'
 import { isOffSeasonWeek, WEEKS_PER_YEAR } from './season/calendar'
 import type { KitFreshCap } from './equipment'
+import type { TierId } from './season/types'
 import type { KitLine, KitOfferTerms, Offer, SponsorTier } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -187,6 +188,51 @@ export interface SponsorStanding {
    *  `hasResults` guard the acceptance lists keep (world.ts, `availabilityStatus`) and the econ
    *  bench puts on its rank arm, for the same reason. */
   itfRanked: boolean
+  /** Her place in the PROFESSIONAL table (`world.kidRankWta`) - the merged W standings. */
+  wtaRank: number
+  /** ...and whether it means anything, exactly as `itfRanked` does for the junior one: a counting
+   *  result in THAT table, never a floor tie read as a standing. */
+  wtaRanked: boolean
+}
+
+/** DOES THIS STANDING CLEAR THIS RUNG - by ANY table she competes in. One predicate, because the
+ *  question is asked twice about the same girl: once to decide who writes to her (`rungFor`) and
+ *  once to decide whether the deal she is already under holds (`reviewSponsors`).
+ *
+ *  ⚠ THE PROFESSIONAL ARM IS THE OWNER'S 02.08 RULING («спонсор вполне может жить и дальше»), and
+ *  it closes a hole the two-type feed exposed rather than caused. Both upper rungs read the JUNIOR
+ *  table and National's keep-condition reads the DOMESTIC one - and BOTH of those decay to nothing
+ *  the moment she turns professional, because every table here is a rolling 52-week window and she
+ *  stops entering the events that feed them. So the brand ladder was built to switch itself off at
+ *  exactly the moment a real sponsor's interest begins: a national distributor's logo on a WTA
+ *  player is worth MORE than on a junior, not less. The rule that was written («a season spent
+ *  entirely on the international calendar decays her domestic points and she slides out of the
+ *  band») was true of a junior going abroad - a lateral move inside the same visibility economy -
+ *  and is simply false of a professional.
+ *
+ *  THE PROFESSIONAL NUMBERS ARE BUILT THE SAME WAY THE JUNIOR PAIR IS, off one figure in the tier
+ *  table rather than picked: National signs the girl who would be IN the prestige draw (junior:
+ *  the J300 main draw, 32; professional: accepted into a W100, `enterPct` 0.25 of the ~500-row
+ *  merged table = 125), and Global signs the one who would still be in it on the last day (the
+ *  same quarter: 8 of 32, 31 of 125). See `ECONOMY.sponsorship.*.maxWtaRank`.
+ *
+ *  A professional also always clears the LOCAL shop: the whole rung is "a shop that has heard of
+ *  her", and a girl on the world tour has cleared that bar by definition. */
+export function standingClears(standing: SponsorStanding, tier: SponsorTier): boolean {
+  const s = ECONOMY.sponsorship
+  if (tier === 'global') {
+    return (
+      (standing.itfRanked && standing.itfRank <= s.global.maxItfRank) ||
+      (standing.wtaRanked && standing.wtaRank <= s.global.maxWtaRank)
+    )
+  }
+  if (tier === 'national') {
+    return (
+      (standing.itfRanked && standing.itfRank <= s.national.maxItfRank) ||
+      (standing.wtaRanked && standing.wtaRank <= s.national.maxWtaRank)
+    )
+  }
+  return standing.nationalRank <= s.maxRank || standing.wtaRanked
 }
 
 /** WHICH RUNG WRITES TO HER, or null when nobody does - the whole gate, in one function, so no
@@ -198,12 +244,12 @@ export interface SponsorStanding {
  *  the entry policy walks the calendar strongest-tier-first: an ambitious parent is being written to
  *  by the biggest name that would have him. */
 export function rungFor(standing: SponsorStanding): SponsorTier | null {
-  const s = ECONOMY.sponsorship
-  if (standing.itfRanked && standing.itfRank <= s.global.maxItfRank) return 'global'
-  if (standing.itfRanked && standing.itfRank <= s.national.maxItfRank) return 'national'
-  if (standing.nationalRank <= s.maxRank) return 'local'
-  return null
+  return SPONSOR_TIERS_STRONGEST_FIRST.find((t) => standingClears(standing, t)) ?? null
 }
+
+/** The ladder read the way `rungFor` reads it. `SPONSOR_TIERS` is weakest-first (it is the art
+ *  lookup's order); reversing it HERE, once, keeps the two from disagreeing about the ladder. */
+const SPONSOR_TIERS_STRONGEST_FIRST: readonly SponsorTier[] = [...SPONSOR_TIERS].reverse()
 
 /** What the letter says, given where she finished the year. Pure, so the tests and the bench can ask
  *  directly - the same courtesy `localSponsorCents` extends. Returns null when nobody is writing.
@@ -411,6 +457,79 @@ export function refuseOffer(offers: Offer[], offerId: string, week: number): Off
   offer.state = 'refused'
   offer.decidedWeek = week
   return offer
+}
+
+// =================================================================================================
+// THE TOURNAMENT DESK (W2-LADDER §6, the informational half of the entry lifecycle)
+// =================================================================================================
+//
+// Owner ruling 1, verbatim: «у нас уже система писем есть для этого, надо использовать. И после
+// регистрации на турниры, где нельзя пропускать тоже можно письма присылать "вы зарегистрированы,
+// надо явиться, отменить можно до... иначе по правилам турнира..." чтобы у игрока было четкое и
+// прозрачное понимание системы.» So: register for a PROFESSIONAL event -> a letter through the
+// EXISTING mail surface; cancel in time -> a short confirmation. NO fines, NO penalty points in
+// this wave - the letter says the tour's rules exist, and the teeth arrive in act 3 (§6's regime),
+// AFTER the habit and the transparency do. That order is the whole point.
+//
+// ⚠ ZERO RANDOMNESS, unlike the sponsor's `shopWritesAt`: the desk always writes, because the
+// letter is a RECEIPT for an action she just took, not weather. No sub-stream is touched, so the
+// arity discipline this file keeps (no Rng parameter anywhere) holds trivially here.
+//
+// ⚠ THE ID IS DERIVED FROM STATE, never a counter: `entry-<eventId>-<n>` where n counts the
+// letters this event has already produced. Deterministic across replays (the same career writes
+// the same inbox), and a cancel-and-re-enter produces distinct rows - the inbox is a record, and
+// a record that overwrote itself would say the second registration never happened.
+
+/** The registration letter, raised by `enterEvent` for W-rung entries. */
+export function raiseEntryLetter(
+  offers: Offer[],
+  week: number,
+  event: { id: string; tier: TierId; week: number; deadlineWeek: number },
+  label: string,
+): Offer {
+  const n = offers.filter((o) => o.kind === 'entry' && o.id.startsWith(`entry-${event.id}-`)).length
+  const offer: Offer = {
+    id: `entry-${event.id}-${n}`,
+    kind: 'entry',
+    week,
+    // Informational: the deadline field carries the event's own cancellation deadline so the
+    // letter surface can quote one number the engine actually enforces (withdrawEvent's rule).
+    deadlineWeek: event.deadlineWeek,
+    terms: { tier: event.tier, label, eventWeek: event.week, freeUntilWeek: event.deadlineWeek },
+    state: 'info',
+  }
+  offers.push(offer)
+  return offer
+}
+
+/** The short confirmation for a free, in-time cancellation, raised by `withdrawEvent`. */
+export function raiseEntryCancelLetter(
+  offers: Offer[],
+  week: number,
+  event: { id: string; tier: TierId; week: number; deadlineWeek: number },
+  label: string,
+): Offer {
+  const n = offers.filter((o) => o.kind === 'entry' && o.id.startsWith(`entry-${event.id}-`)).length
+  const offer: Offer = {
+    id: `entry-${event.id}-${n}`,
+    kind: 'entry',
+    week,
+    deadlineWeek: event.deadlineWeek,
+    terms: { tier: event.tier, label, eventWeek: event.week, freeUntilWeek: event.deadlineWeek, cancelled: true },
+    state: 'info',
+  }
+  offers.push(offer)
+  return offer
+}
+
+/** THE INBOX STAYS BOUNDED (the `Snapshot.offers` note promises "never pruned" about CONTRACTS,
+ *  and it can only keep that promise if the receipts do not pile up for ever): a professional
+ *  career writes ~15-30 desk letters a season, so unlike the sponsor's handful they must age out.
+ *  A year is the window - long enough that "what did I do about that?" still has its answer, and
+ *  the same 52 weeks every other rolling record in the game keeps. Sponsor letters are NEVER
+ *  touched here: a signed deal outlives every prune, which is the whole reason the inbox exists. */
+export function pruneEntryLetters(offers: Offer[], week: number): Offer[] {
+  return offers.filter((o) => o.kind !== 'entry' || week - o.week <= WEEKS_PER_YEAR)
 }
 
 /** The deal that covered the season now finishing, if any - what the off-season review has to judge

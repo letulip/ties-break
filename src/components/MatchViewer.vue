@@ -16,6 +16,7 @@ import { duck, restore } from '../audio/music'
 import { formatShortName } from '../shared/format'
 import { rngFromSeed, pickInt, type Rng } from '../engine/rng'
 import { pointServeSpeeds, type StruckServe } from '../engine/match/serveSpeed'
+import { matchSpeedDefault, matchViewDefault, type MatchSpeed } from '../composables/matchDefaults'
 import { KID_ID } from '../engine/world'
 import Card from './ui/Card.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
@@ -110,8 +111,14 @@ let ctx: CanvasRenderingContext2D | null = null
 // Named viewMode (not "mode") to avoid colliding with the new `mode` prop
 // ('live'/'replay', round 4 item 4) – Vue's SFC compiler exposes declared prop names as
 // bare template identifiers, so reusing "mode" for both would be ambiguous.
-const viewMode = ref<ViewMode>('key')
-const speed = ref<1 | 2 | 4>(2)
+//
+// ⚠ SEEDED FROM THE SETTINGS, ONCE, AT MOUNT (owner, 02.08: «Default match speed and text match
+// settings setup in settings»). These used to open 'key'/2 for everybody; the openings are the
+// More screen's two pickers now (composables/matchDefaults.ts). The pills below still write ONLY
+// these refs – a mid-match change lasts the match and never becomes the default, which is the
+// one-way contract the composable's header states.
+const viewMode = ref<ViewMode>(matchViewDefault())
+const speed = ref<MatchSpeed>(matchSpeedDefault())
 const playing = ref(false)
 const finished = ref(false)
 /** Index of the last point whose point-end event has fired (-1 = match not started yet). */
@@ -1143,7 +1150,7 @@ const viewSeg = computed({
 const speedSeg = computed({
   get: () => String(speed.value),
   set: (v: string) => {
-    speed.value = Number(v) as 1 | 2 | 4
+    speed.value = Number(v) as MatchSpeed
     playSfx('clickSoft')
   },
 })
@@ -1171,7 +1178,7 @@ function servePct(side: Side): number {
 
 <template>
   <div class="mv">
-    <!-- ===== THE MATCH PANEL (design I, "Панель матча": court, players, serve, stats) ==========
+    <!-- ===== THE MATCH PANEL (design I, the match panel: court, players, serve, stats) =========
          One clipped panel with hairline-divided sections, exactly as the export draws it. Screen
          I's header (tournament, round, "Skip match") and its CTA belong to whichever flow mounts
          this viewer, not here. -->
@@ -1340,7 +1347,7 @@ function servePct(side: Side): number {
          rather than an argument from how tall a phone happens to be. Flatten this wrapper away and
          the guarantee goes with it - see tests/screen-i-live-match.test.ts. -->
     <div class="mv-below">
-      <!-- ===== THE COMMENTARY (design I, "Лог очков") ==========================================
+      <!-- ===== THE COMMENTARY (design I, the point log) =========================================
            The export's log chrome - rail, dot, accent lead word, score on the right - carrying the
            beats from viz/commentary.ts instead of one row per point. It REPLACES the point log
            rather than sitting beside it: the export's own rows already read as sentences ("Rally of
@@ -1397,8 +1404,7 @@ function servePct(side: Side): number {
           group-label="How much of the match to watch"
         />
         <SegmentedRow v-model="speedSeg" class="mv-seg" :options="SPEED_OPTIONS" group-label="Playback speed" />
-        <!-- ⚠ SHOUT IS IN THE PINNED BLOCK (owner, 30.07: «на экране live матча кнопку shout тоже
-             надо оставить в sticky блоке»). It used to sit below the bar in `.mv-actions`, on the
+        <!-- ⚠ SHOUT IS IN THE PINNED BLOCK (owner, 30.07: keep the shout button in the sticky block on the live match screen). It used to sit below the bar in `.mv-actions`, on the
              argument that the bar carries SETTINGS and this is an ACTION - and the argument was wrong
              about this one button. Shouting at your kid is the thing you would reach for mid-rally,
              which is the same test that pinned the speed and the view; leaving it outside meant the
@@ -1406,8 +1412,7 @@ function servePct(side: Side): number {
              as the log filled. It takes a SECOND ROW of the bar rather than squeezing the two plates
              onto a third of it - see `.mv-shout`, and the measurement of the attempt that did squeeze
              them.
-             ⚠ AND IT IS A REAL CONTROL NOW, NOT A DISABLED PLACEHOLDER (owner, 30.07: «можем какой-то
-             набор фраз в дропдаун селект сделать и кнопку рядом. Выбрал, крикнул»). It read
+             ⚠ AND IT IS A REAL CONTROL NOW, NOT A DISABLED PLACEHOLDER (owner, 30.07: put a set of phrases in a dropdown with a button beside it - pick one, shout it). It read
              "Shout 📣", disabled, `title="Coming in Phase 6"`; it is a phrase picker and the same
              verb beside it, and pressing it puts the line in the log. What it does NOT do is touch
              the match - see `SHOUT_PHRASES` for why that is the only thing it could do and why no
@@ -1424,8 +1429,7 @@ function servePct(side: Side): number {
              invented, no premature component for one caller. The extraction point, if a second caller
              ever appears, is OnboardingWizard's box - and it should take that box, not this one.
              The gate is the Live badge's own: ui-inventory §2 says the replay "IS the live match minus
-             the blinking Live and minus shouting", and the owner said it again on 30.07 («На реплее
-             этого Shout вообще не будет, его можно даже не показывать, по принципу live»). After this
+             the blinking Live and minus shouting", and the owner said it again on 30.07 (there is no Shout on a replay at all - it need not even be shown, same principle as live). After this
              round three of the four callers are replays, so this is a Season-sandbox control. -->
         <div v-if="props.mode === 'live' && !finished" class="mv-shout">
           <select v-model="shoutPhrase" class="mv-shout-pick" aria-label="What to shout">

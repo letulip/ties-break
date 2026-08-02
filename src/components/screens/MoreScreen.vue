@@ -25,6 +25,19 @@ import {
   setDayCrossPace,
   type DayCrossPaceId,
 } from '../../composables/dayCross'
+import {
+  MATCH_SPEEDS,
+  MATCH_SPEED_LABEL,
+  MATCH_VIEWS,
+  MATCH_VIEW_LABEL,
+  MATCH_VIEW_TITLE,
+  matchSpeedDefault,
+  matchViewDefault,
+  setMatchSpeedDefault,
+  setMatchViewDefault,
+  type MatchSpeed,
+} from '../../composables/matchDefaults'
+import type { ViewMode } from '../../viz/types'
 
 const game = useGameStore()
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -313,6 +326,25 @@ function pickCrossPace(id: DayCrossPaceId): void {
 /** The OS switch outranks both, and the screen says so instead of offering a control that is quietly
  *  overruled – the same honesty the "Not supported on this device" hint under Haptics is for. */
 const reducedMotion = prefersReducedMotion()
+
+// --- MATCH OPENINGS (owner, 02.08: «Default match speed and text match settings setup in
+// settings») -------------------------------------------------------------------------------------
+// The viewer's two dials - playback speed and how much of the match the text-and-court playback
+// walks - open on these from now on. Same object as every row above: plain localStorage behind pure
+// functions (composables/matchDefaults.ts), default = the openings the app always shipped (2×,
+// key points). Picked with the pace row's own `.option-pill` idiom, because a set of named values
+// is what that control is for. ⚠ ONE-WAY: the viewer reads these at mount and never writes them -
+// changing a dial mid-match stays a per-match choice (the composable's header owns that contract).
+const matchSpeed = ref(matchSpeedDefault())
+function pickMatchSpeed(v: MatchSpeed): void {
+  setMatchSpeedDefault(v)
+  matchSpeed.value = v
+}
+const matchView = ref(matchViewDefault())
+function pickMatchView(v: ViewMode): void {
+  setMatchViewDefault(v)
+  matchView.value = v
+}
 </script>
 
 <template>
@@ -565,6 +597,52 @@ const reducedMotion = prefersReducedMotion()
           @click="pickCrossPace(p)"
         >
           {{ DAY_CROSS_PACE_LABEL[p] }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- How a match OPENS - the viewer's two dials as defaults. Its own section beside the two
+       animation sections: same kind of thing, a beat the player watches. The rows read only the
+       stored default; the pills inside a running match keep working and never write back here. -->
+  <section>
+    <h2>Match playback</h2>
+    <div class="career-row">
+      <div>
+        Speed
+        <span class="hint" style="display: block; margin: 2px 0 0">
+          How fast a match plays when it opens
+        </span>
+      </div>
+      <div class="option-row">
+        <button
+          v-for="s in MATCH_SPEEDS"
+          :key="s"
+          class="option-pill"
+          :class="{ selected: matchSpeed === s }"
+          @click="pickMatchSpeed(s)"
+        >
+          {{ MATCH_SPEED_LABEL[s] }}
+        </button>
+      </div>
+    </div>
+    <div class="career-row">
+      <div>
+        How much to watch
+        <span class="hint" style="display: block; margin: 2px 0 0">
+          Full: every point · Key: key points only · Skip: straight to the result
+        </span>
+      </div>
+      <div class="option-row">
+        <button
+          v-for="v in MATCH_VIEWS"
+          :key="v"
+          class="option-pill"
+          :class="{ selected: matchView === v }"
+          :title="MATCH_VIEW_TITLE[v]"
+          @click="pickMatchView(v)"
+        >
+          {{ MATCH_VIEW_LABEL[v] }}
         </button>
       </div>
     </div>

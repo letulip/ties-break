@@ -40,8 +40,8 @@ import ProgressRing from '../ui/ProgressRing.vue'
 import { simulateMatch } from '../../engine/match/engine'
 import { annotateMatch } from '../../engine/match/rally'
 import { applySurfaceStyle, surfaceStyleHint } from '../../engine/match/style'
-import { KID_ID, kidMatchPlayer, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
-import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS } from '../../engine/season/calendar'
+import { KID_ID, kidMatchPlayer, isCappedProTier, isExamWeek, flipScore, type PracticeCaution } from '../../engine/world'
+import { dominantSurface, isOffSeasonWeek, surfaceBlockFor, SURFACE_BLOCKS, TIERS } from '../../engine/season/calendar'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl, weekArtUrl, weekHomeArtUrl } from '../../art/weeks'
 import { portraitStage } from '../../shared/avatarEmotion'
@@ -49,8 +49,8 @@ import { rngFromSeed } from '../../engine/rng'
 import type { FieldStrength } from '../../engine/season/preview'
 import { ECONOMY, recommendVacationPackage, vacationPackage } from '../../engine/economy'
 // R11-5a: the ONE tier-state rule, shared with the Home season ladder. R15-9 adds the sliding
-// window (`hiddenTier`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
-import { HORIZON_WEEKS, entryBandTrack, hiddenTier, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
+// feed rule (`feedContext`/`feedShows`) and the stacked-week pick (`preferredWeekEvent`) from the same module.
+import { HORIZON_WEEKS, entryBandTrack, feedContext, feedShows, pointsLockNote, preferredWeekEvent, useTierStates, type TierState } from '../../composables/tierState'
 import { TIER_SHORT } from '../../composables/weekAhead'
 import { consumePostAdvanceNav, holdPostAdvanceNav } from '../../composables/weekRecap'
 import { seasonWeekRange, weekLabel, weekRange } from '../../shared/dates'
@@ -345,17 +345,21 @@ const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.cover
 // engine still held the entry, so every booking was refused. Total dead end. An ENTERED event is
 // never decluttered – she is IN it, and it is the one card she most needs to act on.
 const upcoming = computed(() => game.snapshot?.upcoming ?? [])
-// ⚠ R15-9: THE SLIDING TIER WINDOW rides beside the outgrown filter (see `hiddenTier` in
-// composables/tierState.ts for the whole rule and the owner's ruling). The outgrown filter is
-// points-based and J30's ceiling is MAX, so it alone left J30 on a professional's calendar for
-// ever; the window hides the rungs the on-ramp LATCHES say she has left behind - local/regional
-// once the international door is crossed, j30 once the professional one is. Entered events always
-// survive both filters: she is IN them (R10-3), and a committed week must stay actionable.
-const visibleUpcoming = computed(() =>
-  upcoming.value.filter(
-    (e) => e.entered || (e.ineligibleReason !== 'outgrown' && !hiddenTier(e.tier, game.snapshot?.onRampCleared)),
-  ),
+// ⚠ THE TWO-TYPE FEED (W2-LADDER §4, superseding R15-9's latch window - see `feedContext` in
+// composables/tierState.ts for the whole rule and the owner's ruling). The feed offers at most
+// TWO tier types at once - her working rung and the adjacent one, both read off the ENGINE's
+// `tierOpen` oracle - and a week the pro cap emptied substitutes the strongest open J/domestic
+// event INSIDE that budget. Entered events always survive every filter: she is IN them (R10-3),
+// and a committed week must stay actionable. The old points-outgrown arm is subsumed: an outgrown
+// rung sits below the working pair by construction.
+const feed = computed(() =>
+  feedContext({
+    ageYears: game.snapshot?.ageYears ?? 0,
+    tierOpen: game.snapshot?.tierOpen,
+    upcoming: upcoming.value,
+  }),
 )
+const visibleUpcoming = computed(() => upcoming.value.filter((e) => feedShows(e, feed.value)))
 const myEntries = computed(() => upcoming.value.filter((e) => e.entered))
 const vacations = computed<VacationBooking[]>(() => game.snapshot?.vacations ?? [])
 const practices = computed<PracticeBooking[]>(() => game.snapshot?.practices ?? [])
@@ -461,6 +465,53 @@ function packageLabel(packageId: string): string {
   return vacationPackage(packageId)?.label ?? packageId
 }
 
+// THE DEFENDING BADGE's number (W2-LADDER §3, the owner's «очковое окно возможностей»): the
+// counted PROFESSIONAL result exactly 52 weeks
+// behind this card's week - the slot this event replaces in her rolling window. W-track cards
+// only: the badge is about the professional window, and a junior card wearing a WTA number would
+// invite the cross-currency reading two-ladders.md forbids. Null = no badge (nothing counted at
+// that slot, or not a W event).
+function defendingPts(e: UpcomingEvent): number | null {
+  if (TIERS[e.tier].track !== 'wta') return null
+  const counted = game.snapshot?.ladders.wta.countingResults ?? []
+  const r = counted.find((c) => c.week === e.week - 52)
+  return r ? r.points : null
+}
+
+// THE PRO BUDGET LINE (W2-LADDER §5): «Pro entries this season: N of M», finite seasons only.
+// The engine's own current-season count (Snapshot.proEntryCap); null hides the line entirely on
+// the seasons the rule does not meter, which is every season but 16 and 17.
+const proBudgetLine = computed<string | null>(() => {
+  const cap = game.snapshot?.proEntryCap
+  if (!cap || cap.limit >= Number.MAX_SAFE_INTEGER) return null
+  return `Pro entries this season: ${cap.used} of ${cap.limit}`
+})
+
+// THE PLANNING COUNTER (owner, 02.08: «сколько доступных турниров и какого уровня у нас до конца
+// года вообще осталось, это даст человеку возможность планировать»). The engine's own read of the
+// WHOLE remaining season - not this screen's eight-week feed, and deliberately NOT filtered by the
+// two-type rule, so the rare rungs she may enter are counted where the feed can only mention them.
+// Null before the first snapshot and in a season with nothing left, where a row of zeroes would be
+// worse than silence.
+const SUPPLY_RUNGS_SHOWN = 4
+const supplyLine = computed<{ total: number; weeks: number; parts: string[] } | null>(() => {
+  const supply = game.snapshot?.seasonSupply
+  if (!supply || supply.rows.length === 0) return null
+  const total = supply.rows.reduce((n, r) => n + r.open, 0)
+  if (total === 0) return null
+  // Strongest rung first: a planner reads down from the biggest week she could still have.
+  const strongestFirst = [...supply.rows].reverse()
+  const shown = strongestFirst.slice(0, SUPPLY_RUNGS_SHOWN)
+  const parts = shown.map((r) => `${TIER_SHORT[r.tier]} ${r.open}`)
+  // ⚠ THE TAIL IS SUMMARISED, NEVER DROPPED - the arithmetic has to close or the total becomes a
+  // number the player cannot check. A career deep in the W era is technically still allowed into
+  // J30 and National; naming every one of those rungs turned this line into two lines of things
+  // nobody would enter, which is the opposite of a planning aid.
+  const tail = strongestFirst.slice(SUPPLY_RUNGS_SHOWN).reduce((n, r) => n + r.open, 0)
+  if (tail > 0) parts.push(`+${tail} lower`)
+  return { total, weeks: supply.weeksLeft, parts }
+})
+
 // A passed deadline swaps the Enter button for a muted "Entries closed" pill (round-5
 // item 2); an open event only ever disables Enter for insufficient funds.
 function entriesClosed(e: UpcomingEvent): boolean {
@@ -491,8 +542,14 @@ function lockLabel(e: UpcomingEvent): string {
     // reason `pointsToEnter` does – an event in the next season is judged against a different
     // year's allowance. "Year limit" rather than "Locked": the block lifts when the season turns,
     // and the tier ladder's long form says so in full.
+    // ⚠ TWO CAPS, ONE REASON CODE since W2-LADDER §5: a W rung's 'capped' is the TOUR's age rule,
+    // not the junior Appendix-F one, and the refusal names the rule (owner ruling 1's
+    // transparency). The family split is the engine's own (`isCappedProTier`), never guessed from
+    // the label.
     case 'capped':
-      return e.entryCap ? `Year limit – ${e.entryCap.used} of ${e.entryCap.limit}` : 'Year limit reached'
+      return e.entryCap
+        ? `${isCappedProTier(e.tier) ? 'Tour age rule' : 'Year limit'} – ${e.entryCap.used} of ${e.entryCap.limit}`
+        : 'Year limit reached'
     // R12-1/14: worded to match the exam row's own label ("Exams") – ONE language for the block,
     // whether the parent reads the row or the card.
     case 'unavailable': {
@@ -860,6 +917,22 @@ function closeExhibition(): void {
                screen without hunting for it down the feed. -->
           <span class="season-week-now">&middot; {{ weekOnly(week) }}</span>
         </p>
+        <!-- THE PRO BUDGET (W2-LADDER, spec 5: the player sees the budget). Rendered only on the
+             seasons the tour's age rule actually meters (16 and 17) - an unlimited season would
+             print a MAX_SAFE_INTEGER, and a budget that cannot run out is not a budget. The
+             number is the engine's own count for THIS season, straight off the snapshot. -->
+        <p v-if="proBudgetLine" class="season-pro-budget" :title="'The tour\'s age rule limits how many professional (W) events she may enter this season. A fresh allowance arrives when the season turns; junior and national events are not counted.'">
+          {{ proBudgetLine }}
+        </p>
+        <!-- THE PLANNING COUNTER: how much tennis is left in the season and on which rungs. It
+             counts the WHOLE season, every rung the engine opens to her - the feed below shows
+             eight weeks and at most two rungs, so without this a sparse stretch reads as an empty
+             career. Blank weeks are normal: a full season is roughly twenty events, one a
+             fortnight, and there is always more on offer than she can take. -->
+        <p v-if="supplyLine" class="season-supply" :title="'Tournaments you can still enter this season, counted across every level open to her - including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.'">
+          {{ supplyLine.total }} left to enter over {{ supplyLine.weeks }} weeks
+          <span class="season-supply-tiers">{{ supplyLine.parts.join(' · ') }}</span>
+        </p>
       </div>
       <IconButton class="tier-guide-btn" label="Tour guide" title="Tour guide" @click="showTierGuide = true">?</IconButton>
     </div>
@@ -1023,6 +1096,19 @@ function closeExhibition(): void {
                 {{ week > row.event.deadlineWeek ? 'Closed' : 'closes' }} {{ weekLabel(row.event.deadlineWeek) }}
               </span>
               <span v-if="row.event.entered" class="pill ok">Entered</span>
+              <!-- THE DEFENDING BADGE (W2-LADDER §3: the points window made visible - the
+                   owner's phrase is quoted at `defendingPts` in the script). Last year's counted
+                   result at this exact week is about to age out of her rolling professional
+                   window - the week she plays (or skips) this card is the week those points
+                   leave. The number is the counted result's own; the rule is the engine's 52-week
+                   window, restated nowhere. -->
+              <span
+                v-if="defendingPts(row.event) !== null"
+                class="pill defend-chip"
+                :title="`Her counted result from this week last year (${defendingPts(row.event)} pts) leaves the 52-week professional window as this week arrives.`"
+              >
+                defending {{ defendingPts(row.event) }} pts
+              </span>
               <!-- R10-5: an entry that survived the band crossing is COMMITTED, not illegal – but it
                    must SAY so. The owner played a Local at 122 points with nothing on screen to
                    explain it, because the card had been decluttered away entirely. -->
@@ -1398,6 +1484,40 @@ section.bare .event-cards {
   font-size: 13px;
   font-weight: 500;
   color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The pro budget (W2-LADDER §5) - the season-year line's quiet sibling, one register down: a
+   fact she plans around, not a warning. */
+.season-pro-budget {
+  margin: 2px 0 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The planning counter, one register quieter than the budget above it: the supply is context for a
+   decision, never the decision. The rung list is dimmer still - it is the detail you look for once
+   the total has told you whether to look at all. */
+.season-supply {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.season-supply-tiers {
+  opacity: 0.7;
+}
+.season-supply-tiers::before {
+  content: '· ';
+}
+
+/* The defending badge (W2-LADDER §3): the accent register the Entered pill already uses - points
+   at stake is good news to act on, not a warning - with the number kept tabular. */
+.defend-chip {
+  color: var(--accent);
+  border-color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 

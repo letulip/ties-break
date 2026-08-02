@@ -38,7 +38,12 @@ import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 // e6b0c709) does NOT move with this and did not: the AI sub-stream refactor took the calendar's size
 // out of the weekly draw count, which is what tests/round9.test.ts's REF note means by "for the last
 // time a calendar change can do it". Re-derived on this branch: 41550 / e6b0c709, unchanged.
-const TRAVEL_PIN_BASE = 229384
+//
+// ⚠ RE-PINNED AGAIN by W2-LADDER: 229384 -> 204489, the task-#17 mechanism a third time. The
+// ladder went 9 -> 12, `tierPhase`'s divisor moved with it, and the first event of
+// buildSeason('travel-pin', 0, 52) is now a W35 (band $1,300-2,800). Same witness, same three
+// assertions, value re-derived from the live engine (scratchpad probe) rather than tuned.
+const TRAVEL_PIN_BASE = 204489
 
 // Re-derive the per-trip corridor factor exactly as makeEvent does: one uniform roll from the
 // purpose-scoped sub-stream keyed by the event, mapped into the background's [lo,hi] corridor.
@@ -61,10 +66,15 @@ function travelFactor(seedStr: string, e: SeasonEvent, background: FamilyBackgro
 // The three new counts read as their cadences: W15 every 2 weeks (26, the dense entry rung, exactly
 // like j30 and local), W35 every 3 (17, like j60), W100 every 13 (4, like j300). The adult tour is
 // the junior tour's shape one table up, which is what A1 set out to build.
+//
+// ⚠ RE-AIMED AGAIN (W2-LADDER): the W family is six rungs and the season is 164 events. The three
+// new counts read as their spec cadences too - W50 every 4 (13, a Regional's rhythm one table up),
+// W75 every 6 (8), WTA 125 every 13 (4, rare like W100 and J300, minGap 2). Every pre-existing
+// count is still byte-identical, for the same floor(52/n) reason the task-#17 note above gives.
 const SEASON_COUNTS: Record<TierId, number> = {
   local: 26, regional: 13, national: 6,
   j30: 26, j60: 17, j300: 4,
-  w15: 26, w35: 17, w100: 4,
+  w15: 26, w35: 17, w50: 13, w75: 8, w100: 4, wta125: 4,
 }
 
 function countByTier(events: SeasonEvent[]): Record<TierId, number> {
@@ -74,14 +84,15 @@ function countByTier(events: SeasonEvent[]): Record<TierId, number> {
 }
 
 describe('TIERS — tier catalogue', () => {
-  it('has exactly the nine tiers with the spec economy numbers (whole cents)', () => {
+  it('has exactly the twelve tiers with the spec economy numbers (whole cents)', () => {
     // RE-PINNED by ladder-up Part B: `itf` was replaced by the live j30/j60/j300 family.
-    // ⚠ RE-AIMED by the adult rungs (task #17): the catalogue is nine, and the assertion is still an
-    // EXACT list rather than a length or a subset - a rung must not be able to appear without
-    // somebody writing it down here. The W-level economy numbers are pinned in tests/ladder.test.ts
-    // (L2) beside the J ones, and their prize tables in tests/prize-money.test.ts.
+    // ⚠ RE-AIMED by the adult rungs (task #17), and again by W2-LADDER (nine -> twelve: W50/W75/
+    // WTA 125, act2-pro-tour.md §2). The assertion is still an EXACT list rather than a length or
+    // a subset - a rung must not be able to appear without somebody writing it down here. The
+    // W-level economy numbers are pinned in tests/ladder.test.ts (L2) beside the J ones, and their
+    // prize tables in tests/prize-money.test.ts.
     expect(Object.keys(TIERS).sort()).toEqual([
-      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'w100', 'w15', 'w35',
+      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'w100', 'w15', 'w35', 'w50', 'w75', 'wta125',
     ])
 
     expect(TIERS.local.drawSize).toBe(8)

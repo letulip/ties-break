@@ -19,7 +19,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { computeRanking } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
@@ -299,7 +299,14 @@ const REF = {
   // fixture. THE CAPTURE ITSELF DID NOT MOVE: count 41550 and hash e6b0c709 reproduce byte-for-byte
   // (asserted first, in this very test), which is what this block actually guards - fatigue,
   // availability and rival condition are all post-draw arithmetic by construction.
-  kidRank: 152,
+  // ⚠ RE-PINNED 152 -> 138 BY W2-LADDER (the three new W rungs), the calendar-shape move this pin's
+  // history has absorbed at every ladder change. TIER_LADDER grew 9 -> 12, so `tierPhase` (0.5 +
+  // index/length) re-spaces every tier's ideal weeks and the whole calendar re-deals: same counts
+  // per rung for the old nine, different WEEKS, therefore different event ids, different
+  // `seed:aitour:<id>` sub-streams, and a different set of juniors ends the year holding counting
+  // points. Post-draw composition change end to end - count 41550 and hash e6b0c709 reproduce
+  // byte-for-byte, asserted lines above this number.
+  kidRank: 138,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -454,9 +461,9 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
       if (world.results.some((r) => r.playerId === KID_ID && inTrack('domestic')(r))) sawDomestic = true
 
       const ids = [...world.cohort.map((c) => c.id), KID_ID]
-      const itf = computeRanking(world.results, world.week, ids, inTrack('itf'))
-      const dom = computeRanking(world.results, world.week, ids, inTrack('domestic'))
-      const mixed = computeRanking(world.results, world.week, ids)
+      const itf = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, ids, inTrack('itf'))
+      const dom = computeRanking(world.results, world.week, BEST_N_BY_TRACK.domestic, ids, inTrack('domestic'))
+      const mixed = computeRanking(world.results, world.week, BEST_N_BY_TRACK.itf, ids)
       const itfRank = itf.find((r) => r.playerId === KID_ID)!.rank
       const domRank = dom.find((r) => r.playerId === KID_ID)!.rank
       const mixedRank = mixed.find((r) => r.playerId === KID_ID)!.rank
@@ -537,7 +544,23 @@ describe('B1 — main-stream RNG invariance (blocks merge)', () => {
 
       // ACTIVE LADDER = the spec's rule: the international one once she holds a counting result there,
       // her national one before that (docs/specs/two-ladders.md, "Which rank is her rank").
-      expect(snap.activeLadder).toBe(snap.ladders.itf.rank !== null ? 'itf' : 'domestic')
+      // ⚠ RE-AIMED, NOT WEAKENED (02.08, the Home-chip ruling): the professional table joined the
+      // rule as a ONE-WAY DOOR. Any W finish that ever SCORED makes 'wta' the answer for the rest
+      // of the career - read off `bestFinishByTier`, the never-pruned mark, because the result rows
+      // themselves age out of the 52-week window (see `wtaEverCounted` in world.ts). A scored row
+      // of the tier's points table IS a counting result (isCountingResult = points > 0). The junior
+      // identity is unchanged for every week before that door; ladder-separation S7 pins the door
+      // itself in both directions.
+      const wtaEver = (Object.keys(snap.bestFinishByTier) as TierId[]).some(
+        (t) => TIERS[t].track === 'wta' && TIERS[t].points[snap.bestFinishByTier[t]!] > 0,
+      )
+      expect(snap.activeLadder).toBe(
+        wtaEver || snap.ladders.wta.rank !== null
+          ? 'wta'
+          : snap.ladders.itf.rank !== null
+            ? 'itf'
+            : 'domestic',
+      )
     }
   })
 

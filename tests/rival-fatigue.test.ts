@@ -26,7 +26,7 @@ import {
   closeTournament,
   type WorldState,
 } from '../src/engine/world'
-import { computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
+import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
 import { reconstructRun, rivalCondition, rivalConditions } from '../src/engine/season/rival'
 import { resolveDoubleBookings, selectEntrants } from '../src/engine/season/tournament'
 import { generateCohort } from '../src/engine/season/cohort'
@@ -75,6 +75,7 @@ function entrantsOfWeek(world: WorldState, week: number): Set<string> {
   const ranking = computeRanking(
     world.results.filter((r) => r.playerId !== KID_ID),
     week,
+    BEST_N_BY_TRACK.itf,
     world.cohort.map((p) => p.id),
   )
   const fatigue = rivalConditions(world.results, week)
@@ -209,10 +210,16 @@ describe('R2 — nobody is charged zero strain for a week she played', () => {
   it('one first-round exit costs exactly one score-less match at that tier – the shared drain', () => {
     // The unit form of the whole slice: playing costs, whatever it paid. Read off the engine's own
     // drain family (never a private rival formula), at every tier.
+    //
+    // ⚠ "WHATEVER IT PAID" GAINED A SECOND VALUE with W2-LADDER: the real chart pays a nominal 1
+    // to an opening-round loser from W50 up (tests/wave-b-points.test.ts NOMINAL_ONE_TIERS), so an
+    // exit row is scoreless at most rungs and a 1-point row at the chart-1 trio. The DRAIN claim -
+    // this test's actual subject - is identical either way, and asserting the split here keeps the
+    // fixture honest about what the engine really writes.
     for (const tier of TIER_LADDER) {
       const rounds = Math.log2(TIERS[tier].drawSize)
       const exit = row(tier, rounds, 10)
-      expect(exit.points).toBe(0)
+      expect(exit.points).toBe(['w50', 'w75', 'wta125'].includes(tier) ? 1 : 0)
       expect(rivalCondition([exit], 'ai-x', 10)).toBe(R.max - matchDrain(tier, undefined))
       // ...and it is strictly worse than the same week spent at home.
       expect(rivalCondition([exit], 'ai-x', 10)).toBeLessThan(rivalCondition([], 'ai-x', 10))
@@ -235,10 +242,10 @@ describe('R3 — a scoreless appearance is invisible to the standings', () => {
       { playerId: 'd', week: 21, points: 0, tier: 'local' },
     ]
     const roster = ['a', 'b', 'c', 'd']
-    expect(computeRanking(withBlanks, 30, roster)).toEqual(computeRanking(scoring, 30, roster))
-    expect(windowedBestSum(withBlanks, 30, 'a')).toBe(windowedBestSum(scoring, 30, 'a'))
+    expect(computeRanking(withBlanks, 30, 6, roster)).toEqual(computeRanking(scoring, 30, 6, roster))
+    expect(windowedBestSum(withBlanks, 30, 'a', 6)).toBe(windowedBestSum(scoring, 30, 'a', 6))
     // 'd' has played all season and won nothing: 0 points, last, exactly like a player with no rows.
-    const table = computeRanking(withBlanks, 30, roster)
+    const table = computeRanking(withBlanks, 30, 6, roster)
     expect(table.find((r) => r.playerId === 'd')?.points).toBe(0)
   })
 
@@ -248,7 +255,7 @@ describe('R3 — a scoreless appearance is invisible to the standings', () => {
       ...Array.from({ length: 8 }, (_, i) => ({ playerId: 'a', week: 2 + i, points: 0, tier: 'j30' as TierId })),
       { playerId: 'a', week: 20, points: 18, tier: 'local' },
     ]
-    expect(windowedBestSum(rows, 30, 'a')).toBe(48)
+    expect(windowedBestSum(rows, 30, 'a', 6)).toBe(48)
   })
 
   it('a player seen ONLY in scoreless rows does not appear in a roster-less table', () => {
@@ -256,7 +263,7 @@ describe('R3 — a scoreless appearance is invisible to the standings', () => {
       { playerId: 'a', week: 1, points: 30, tier: 'local' },
       { playerId: 'ghost', week: 2, points: 0, tier: 'j30' },
     ]
-    expect(computeRanking(rows, 10).map((r) => r.playerId)).toEqual(['a'])
+    expect(computeRanking(rows, 10, 6).map((r) => r.playerId)).toEqual(['a'])
   })
 })
 

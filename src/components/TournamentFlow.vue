@@ -562,9 +562,10 @@ const matchMeta = computed(() => {
 </script>
 
 <template>
-  <!-- ⚠ THE TAKEOVER IS A COMPONENT NOW (owner, 30.07: «Есть четвёртое место, где живёт просмотрщик
-       матча - надо все одинаково сделать оверлеем поверх всего экрана ... Будет один компонент и без
-       ненужных дублей кода»). The layer, the header and the scroller were hand-written here, in
+  <!-- ⚠ THE TAKEOVER IS A COMPONENT NOW - the owner's 30.07 ruling, quoted in full on the script
+       side (house convention: his words live where Cyrillic is allowed): he counted a FOURTH place
+       the match viewer lives in, and asked for one overlay component with no duplicated code.
+       The layer, the header and the scroller were hand-written here, in
        PracticeFlow and in MatchReplay - three copies that agreed - while the FOURTH match surface,
        SeasonScreen's sandbox exhibition, had none of them and was inline on a tabbed screen. That is
        how it ended up with its pinned control bar behind the tab bar. `ui/TakeoverShell.vue` owns the
@@ -576,7 +577,15 @@ const matchMeta = computed(() => {
        player had scrolled the match, and the poster inherited the box score. `phase` alone is not the
        whole answer - `replayOpen` swaps the live match in and out WITHIN a phase - so the key is the
        pair, which is exactly `watchedScreen`. -->
-  <TakeoverShell v-if="pending" :title="phase === 'splash' ? null : pending.tierLabel" :screen="watchedScreen">
+  <!-- `tf-fit` marks the ONE phase whose body is a fitted column rather than a scroller: the
+       pre-match card. The class lands on the shell's root via Vue's attribute fallthrough, and the
+       scoped rules below reach the body through it - see the F section of the style block. -->
+  <TakeoverShell
+    v-if="pending"
+    :title="phase === 'splash' ? null : pending.tierLabel"
+    :screen="watchedScreen"
+    :class="{ 'tf-fit': phase === 'pre' && !replayOpen }"
+  >
     <!-- NO HEADER ON THE E BRIEF, which is what the `null` above buys: the hero underneath carries
          the tournament's name, its court and its dates, and the design gives that screen a bare
          back-arrow rather than a title bar. Every other phase still needs to be told which
@@ -652,11 +661,12 @@ const matchMeta = computed(() => {
         <img class="tf-hero-art" :src="venueUrl" alt="" />
         <span class="tf-hero-scrim" aria-hidden="true"></span>
         <!-- R9-9: the begin flow is not a one-way door – Back returns to the shell with nothing
-             resolved. It is the design's back-arrow, on the hero where the design puts it (§E:
-             «сверху back-arrow»).
-             ⚠ THE LAST HAND-WRITTEN BACK CONTROL IN THE APP, NOW THE SHARED ONE (owner, 30.07: «Для
-             back я просил везде сделать один компонент и его консистентно использовать, просто иконка
-             с белым fill»). It was a glass pill reading "← Back" - a `&larr;` CHARACTER plus a word,
+             resolved. It is the design's back-arrow, on the hero where the design puts it (§E puts
+             it at the top).
+             ⚠ THE LAST HAND-WRITTEN BACK CONTROL IN THE APP, NOW THE SHARED ONE - the owner's 30.07
+             ruling (quoted on the script side): one back component everywhere, used consistently,
+             just the icon with a white fill. It was a glass pill reading "← Back" - a `&larr;`
+             CHARACTER plus a word,
              on a plate nothing else in the app wears - while three screen headers had already been
              converted to `IconButton variant="bare" icon="back"`. Now all four are the same control
              and the same asset (`public/icons/back.svg`, the owner's own drawing), and
@@ -686,8 +696,7 @@ const matchMeta = computed(() => {
            first-round card below, which is where a draw size actually means something, and it
            is stated there for every tier – `roundLabel` alone would not do it, since a local's
            8-player first round reads "Quarterfinal" and never says 8. -->
-      <!-- ⚠ ALL FOUR GLYPHS ARE ASSETS NOW, NOT INLINE PATHS (owner, 30.07: «иконка prize money не
-           обновилась, проверить» - and he was right, nothing had changed on screen). His own
+      <!-- ⚠ ALL FOUR GLYPHS ARE ASSETS NOW, NOT INLINE PATHS (owner, 30.07: the prize-money icon had not updated, check it - and he was right, nothing had changed on screen). His own
            `dollar.svg` had been sitting in public/icons since that morning with a note asking for
            this exact swap, and `trophy.svg` / `spectators.svg` had been lifted OUT of the three
            inline `<svg>`s below so the tiles could adopt them without redrawing anything. The
@@ -791,7 +800,7 @@ const matchMeta = computed(() => {
             :color="conditionColor"
             :label="`Her condition going into this tournament: ${Math.round(condition)} percent`"
           />
-          <!-- ⚠ JUST THE WORD (owner, 30.07: «У begin просто убрать стрелку»). The arrow was doing
+          <!-- ⚠ JUST THE WORD - the owner, 30.07: on begin, simply drop the arrow. The arrow was doing
                nothing the button was not: a lime CTA at the foot of a brief is already the way
                forward, and §E's own copy for this control is one word. The design's onboarding CTA
                is "Begin" bare as well, so the two now match. -->
@@ -846,9 +855,9 @@ const matchMeta = computed(() => {
            left to carry and the court starts 34px higher (22px of pill + its 12px of air).
            The round is still named on this screen and it is still the same capsule. It just does
            not rent a row to say it.
-           ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO, WHICH IS THE OTHER 36px (owner, 30.07: «на
-           экране матча у нас двойная рамка, она съедает место, давай внешний контур уберем, он не
-           нужен»). It was a 16px-padded, hairline-bordered panel wrapped around a STACK of panels
+           ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO, WHICH IS THE OTHER 36px - the owner, 30.07:
+           the match screen has a double frame that eats space, drop the outer contour.
+           It was a 16px-padded, hairline-bordered panel wrapped around a STACK of panels
            the viewer draws itself - `.mv-panel`, `.mv-log`, `.mv-boxscore` are each a `Card`, so
            the outer box was a second border around a border and 34px of horizontal padding around
            nothing. Measured at 375pt: the canvas went 291 -> 327px wide and the painted court with
@@ -866,8 +875,7 @@ const matchMeta = computed(() => {
            the wrong answer. Nothing else on this screen moves - the badge goes, and with it the
            shout, because a match already in the save file cannot be shouted at. The only genuinely
            live surface left is SeasonScreen's sandbox exhibition, generated at click time.
-           ⚠⚠ AND THE OWNER HAS RULED, 30.07, so the lever below IS taken: «Для меня live это "watch
-           it" и без вариантов, всё остальное replay». That is a cleaner definition than the one this
+           ⚠⚠ AND THE OWNER HAS RULED, 30.07, so the lever below IS taken: live means "watch it" and nothing else; everything else is replay. That is a cleaner definition than the one this
            file was using. "Live" here does not mean the engine has not decided yet - it never has,
            for any surface but the sandbox. It means THE PLAYER HAS NOT SEEN IT YET. A first watch is
            an outcome he does not know; a re-watch is a recording of one he does.
@@ -901,6 +909,7 @@ const matchMeta = computed(() => {
       :stage="kidStage"
       emotion="serious"
       :label="pending.roundLabel"
+      fill
     >
       <div class="tf-scene-grid">
         <div class="tf-scene-side">
@@ -915,8 +924,7 @@ const matchMeta = computed(() => {
           </div>
         </div>
       </div>
-      <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
-           кнопки skip/watch it так логичнее»). It is the app's own order everywhere else and this
+      <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: swap the skip and watch-it buttons on the pre-match screen, it reads more logically). It is the app's own order everywhere else and this
            card was the outlier: `.dialog-actions` puts Cancel before Confirm, the box score below
            puts "Watch again" before "Next →", and the friendly's own two are in the same pair. The
            affirmative belongs under the thumb, which on a phone is the right-hand end of the row -
@@ -1434,15 +1442,43 @@ const matchMeta = computed(() => {
 
 /* --- F. Match Day (the pre-match scene) -------------------------------------------------------- */
 
-/* The design's F scene is `flex: 1` of the screen and this one is too – a match day is not a card
-   floating in a field of page colour. `min-height` on the component keeps it from collapsing when
-   there is a path strip above it. */
-/* ⚠ NOT `flex: 1` ANY MORE (R15-3). Stretching the scene to fill the takeover was the fixed-height
-   crop's design ("F fills the screen"); the owner's 01.08 ruling made the card the painting's own
-   square (see MatchScene.vue), and a stretched square letterboxes - the pill floats over a blank
-   band instead of over her head. The card takes its aspect height and the takeover scrolls. */
-.tf-scene {
-  flex: none;
+/* ⚠ `flex: 1` IS BACK, AND THIS TIME THE WHOLE COLUMN IS SIZED FOR IT (owner, 02.08: «вернуть
+   картину на весь экран, как в макете. И сделать высоту адаптивной, чтобы сыгранные матчи и всё
+   изображение с кнопками влезали в экран по высоте без скролла»). R15-3 had set this to
+   `flex: none` because stretching the 01.08 square letterboxed - and the square is what actually
+   left: `fill` on the component releases the aspect (MatchScene owns that geometry, this rule owns
+   only where the card sits) while the img stays `contain`, so the 01.08 whole-painting ruling holds
+   at any height. The spare band goes ABOVE the art (`.scene--fill .scene-art` anchors it to the
+   foot), so the plate still rides the painting - the exact complaint R15-3 had about the stretch.
+
+   FULL-BLEED, as the design's F draws its art slot: the negative margins cancel `.tf-body`'s 24px
+   gutters, and the corner/border come off with them - a card edge makes no sense on a surface that
+   touches the screen edge. Doubled class beats `Card`'s scoped `.tb-card` radius/border at
+   (0,3,0) vs (0,2,0) - the same tie `.back-link.tf-hero-back` documents; a single scoped class
+   only ties it and injection order decides. */
+.tf-scene.tf-scene {
+  margin: 0 -24px;
+  border: none;
+  border-radius: 0;
+}
+
+/* THE FITTED BODY - the three shared-scroller amendments the pre card needs, keyed off `tf-fit` on
+   the shell's root (which carries this component's scope id, so `:deep` reaches the body). They are
+   NOT changes to `.tf-body` itself: every other phase - and this same shell one tap later, with the
+   viewer open - keeps the scrolling column exactly as `src/style.css` declares it.
+     * no scrollbar: the column is sized to fit by construction (strip and plate keep natural
+       height, the scene absorbs the leftover down to `min-height: 0`), so `hidden` only asserts
+       what the flex arithmetic already made true - and stops one stray pixel of rounding from
+       minting a scrollbar over a screen the owner asked to fit;
+     * no `::after` spacer: the takeover's 24px of bottom room is CONTENT (see style.css), and on
+       the one screen whose art runs to the bottom edge that room would be a page-coloured skirt
+       under the painting. */
+.tf-fit :deep(.tf-body) {
+  overflow-y: hidden;
+}
+
+.tf-fit :deep(.tf-body)::after {
+  content: none;
 }
 
 /* MatchScene owns the card, the painting and the glass plate; this is only what is written on it. */

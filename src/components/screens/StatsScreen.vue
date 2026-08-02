@@ -29,6 +29,9 @@ import { computed, ref, watch } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { LADDER_LABEL } from '../../shared/protocol'
+import { TIERS, TIER_SHORT } from '../../engine/season/calendar'
+import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
+import { finishPhrase } from '../../composables/tierState'
 import type { LadderTrack } from '../../engine/season/types'
 import SegmentedRow from '../ui/SegmentedRow.vue'
 // R10-9: the season-by-season history sits right under the header tiles – it is the same three
@@ -78,12 +81,52 @@ const options = computed(() =>
 
 const ladder = computed(() => game.snapshot?.ladders[shown.value])
 const standings = computed(() => ladder.value?.standings ?? [])
+
+// --- THE ARCHIVE (W2-LADDER §4: «закрепить, не мозолить») ----------------------------------------
+// Once she has aged out of the junior tour (the J rungs are U18 - TIERS.j30.maxAgeYears, the
+// engine's own rule, not a screen's guess), the International tab stops being a live table she can
+// no longer move and FREEZES to her final standing: the career is pinned, not erased. The peak is
+// the best YEAR-END rank in `seasonHistory` (endRank has always been the ITF fold - world.ts's
+// wrap-up writes `world.kidRank`), which is the honest number a closed career keeps; the live
+// window under it is still emptying week by week, and watching it drain is exactly the «мозолить»
+// the owner asked to stop. Domestic never archives (she keeps that ladder for life, ruling 2) and
+// the professional tab is where her live career now is.
+const J_MAX_AGE = TIERS.j30.maxAgeYears!
+const itfClosed = computed(() => (game.snapshot?.ageYears ?? 0) > J_MAX_AGE)
+const archiveShown = computed(() => shown.value === 'itf' && itfClosed.value)
+const jPeak = computed<number | null>(() => {
+  const ranks = (game.snapshot?.seasonHistory ?? []).map((h) => h.endRank).filter((r) => r > 0)
+  return ranks.length ? Math.min(...ranks) : null
+})
 // `rank: null` IS the answer "not ranked in this table at all" – the engine decides it, so this
 // screen no longer counts results to work it out for itself.
 const ranked = computed(() => ladder.value?.rank !== null && ladder.value?.rank !== undefined)
 const rankText = computed(() => rankLabel(ladder.value?.rank ?? 0, ranked.value))
 const points = computed(() => ladder.value?.points ?? 0)
 const countingResults = computed(() => ladder.value?.countingResults ?? [])
+
+// --- THE WINDOW BLOCK (W2-LADDER §3: the owner's «очковое окно возможностей», made visible) ------
+// Three facts the rolling window has always had and never said: how full it is against the shown
+// table's own width (six, or sixteen on the professional table), the weakest counted value (the
+// bar a new result must clear once the window is full), and the NEXT DROP - the oldest counted
+// result, what it was, and the week the 52-week window lets it go. All derived from the counting
+// list the table below already shows, so the block and the table cannot disagree.
+const windowInfo = computed(() => {
+  const list = countingResults.value
+  const snap = game.snapshot
+  if (!list.length || !snap) return null
+  const cap = BEST_N_BY_TRACK[shown.value]
+  const weakest = Math.min(...list.map((r) => r.points))
+  const oldest = list.reduce((a, b) => (b.week < a.week ? b : a))
+  // windowedBestSum keeps a result while `week - r.week <= 52`, so it drops AT r.week + 53.
+  const dropInWeeks = oldest.week + 53 - snap.week
+  const finish = oldest.tier ? TIERS[oldest.tier].points.indexOf(oldest.points) : -1
+  const what =
+    oldest.tier && finish >= 0
+      ? `${TIER_SHORT[oldest.tier]} ${finishPhrase(finish, TIERS[oldest.tier].drawSize)}`
+      : 'Oldest result'
+  return { cap, counted: list.length, full: list.length >= cap, weakest, what, dropPts: oldest.points, dropInWeeks }
+})
 // This season's W-L, straight off the Snapshot (accumulated at finalizeTournament, reset each
 // season wrap-up).
 //
@@ -122,12 +165,29 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
   <template v-if="game.snapshot">
     <section>
       <h2>Stats</h2>
-      <!-- WHICH TABLE. Above the tiles, because it governs every figure under it. -->
-      <SegmentedRow v-model="shownModel" :options="options" group-label="Which ranking table" />
+      <!-- WHICH TABLE. Above the tiles, because it governs every figure under it. Carries this
+           screen's own class because the shared plate comes off here - see .stats-ladder-row. -->
+      <SegmentedRow
+        v-model="shownModel"
+        class="stats-ladder-row"
+        :options="options"
+        group-label="Which ranking table"
+      />
+      <!-- THE ARCHIVE PLATE (W2-LADDER): a closed junior career is a fact to keep, not a table to
+           watch drain. It replaces the live tiles on this tab only - the rule and the peak, and
+           nothing that still moves. -->
+      <div v-if="archiveShown" class="stats-archive">
+        <p class="stats-archive-title">Junior career – closed at {{ J_MAX_AGE + 1 }}</p>
+        <p v-if="jPeak !== null" class="stats-archive-peak">Peaked #{{ jPeak }} at year-end</p>
+        <p class="hint stats-archive-note">
+          The Junior Tour is under-{{ J_MAX_AGE + 1 }}, so this table is hers for good – it cannot
+          move again. Her live career is on the Pro tab.
+        </p>
+      </div>
       <!-- R10-2: the three tiles are captions, not body copy – each label stays on ONE line
            (.stats-tile-label nowraps; the tile padding/gap were trimmed to pay for it) and
            "Season points" is now "Season pts", which is what actually fits at 375px. -->
-      <div class="stats-header-row">
+      <div v-if="!archiveShown" class="stats-header-row">
         <div class="stats-tile">
           <span class="stats-tile-label">{{ LADDER_LABEL[shown] }} rank</span>
           <span class="stats-tile-value">{{ rankText }}</span>
@@ -144,12 +204,12 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
           <span class="stats-tile-value num">{{ seasonWins }}–{{ seasonLosses }}</span>
         </div>
       </div>
-      <p class="hint stats-no-exchange">{{ noExchange }}</p>
+      <p v-if="!archiveShown" class="hint stats-no-exchange">{{ noExchange }}</p>
     </section>
 
     <SeasonHistoryTable />
 
-    <section>
+    <section v-if="!archiveShown">
       <h2>{{ LADDER_LABEL[shown] }} ranking</h2>
       <table v-if="standings.length">
         <thead>
@@ -176,11 +236,28 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
       <p v-if="!ranked" class="hint">{{ emptyNote }}</p>
     </section>
 
-    <!-- WHERE THE POINTS CAME FROM. The best-6 that add up to the total above, from the SAME table:
+    <!-- WHERE THE POINTS CAME FROM. The best-N that add up to the total above, from the SAME table:
          a rank and the results that earned it have to come from one ladder or the explanation
          contradicts the number. This is the "points visualisation" the domestic rungs never had. -->
-    <section v-if="countingResults.length">
+    <section v-if="!archiveShown && countingResults.length">
       <h2>Counting results</h2>
+      <!-- THE WINDOW, said out loud (W2-LADDER §3). One line for where the window stands, one for
+           what it is about to let go - the points window of opportunity the owner asked to see
+           (his phrase is quoted at `windowInfo` in the script, where the house convention allows
+           the original). -->
+      <template v-if="windowInfo">
+        <p class="hint stats-window-line">
+          Counting {{ windowInfo.counted }} of a best-{{ windowInfo.cap }} window.
+          <template v-if="windowInfo.full">
+            Weakest counted: {{ windowInfo.weakest }} pts – a new result must beat it to raise the total.
+          </template>
+          <template v-else>The window has room – any scoring result counts in full.</template>
+        </p>
+        <p class="hint stats-window-drop">
+          Next drop: {{ windowInfo.what }}, {{ windowInfo.dropPts }} pts – leaves the window in
+          {{ windowInfo.dropInWeeks }} {{ windowInfo.dropInWeeks === 1 ? 'week' : 'weeks' }}.
+        </p>
+      </template>
       <CountingResultsTable :results="countingResults" />
     </section>
   </template>
@@ -191,5 +268,51 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
    shared `.hint` spacing is tuned for standalone paragraphs, and src/style.css is off limits. */
 .stats-no-exchange {
   margin-top: 8px;
+}
+
+/* THE ARCHIVE PLATE (W2-LADDER §4): quiet, final, one card - the visual register of a record
+   rather than a readout. Local to this screen; no new design language. */
+.stats-archive {
+  margin-top: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stats-archive-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.stats-archive-peak {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-archive-note {
+  margin: 2px 0 0;
+}
+
+/* ⚠ NO PLATE AROUND THIS SWITCH (owner, 02.08: «Мне не нравится круглая обводка у переключателя
+   уровня турниров в stats, без нее было лучше... Давай просто кнопки оставим и всё»). The shared
+   `.tab-row` plate - panel fill, hairline, pill radius, 4px inset - comes off THIS instance only:
+   the control stays SegmentedRow (same contract, same pills, same lime active fill as the app's
+   plainest active state), and every other caller of the plate keeps it. Scoped-over-shared wins on
+   specificity ((0,2,0) with the data-v attribute vs the sheet's (0,1,0)), so no !important and no
+   sheet edit. `padding: 0` lets the buttons sit flush with the heading above, which is what "just
+   buttons" looks like on this page. */
+.stats-ladder-row {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
 }
 </style>

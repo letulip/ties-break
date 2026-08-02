@@ -326,7 +326,10 @@ const TRAVEL_HOME_MODES: Record<TierId, readonly TravelHomeScene[]> = {
   // where it would only mean the art library grew a fifth mode nobody drew.
   w15: [...ROAD_SCENES, ...AIR_SCENES],
   w35: [...ROAD_SCENES, ...AIR_SCENES],
+  w50: [...ROAD_SCENES, ...AIR_SCENES],
+  w75: [...ROAD_SCENES, ...AIR_SCENES],
   w100: [...ROAD_SCENES, ...AIR_SCENES],
+  wta125: [...ROAD_SCENES, ...AIR_SCENES],
 }
 
 /** Her competitive tournament tier in `week`, off the event feed – null when she played none.

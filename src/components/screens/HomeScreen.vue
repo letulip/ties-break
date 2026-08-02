@@ -26,8 +26,8 @@
 // The advance button is NOT here – it is App.vue's sticky bar, global on every tab (R13-12).
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
-import { LADDER_LABEL, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
-import type { TierId } from '../../engine/season/types'
+import { LADDER_LABEL, rankChipTrack, type PlayStyle, type WorldEvent, type WorldMatch } from '../../shared/protocol'
+import type { LadderTrack, TierId } from '../../engine/season/types'
 import { weekDateLine, weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { formatCents } from '../../shared/money'
@@ -204,9 +204,18 @@ function openInbox(): void {
 // which is the owner's «Rank #4 on the home tab and end of season popup seems strange since in stats
 // I can clearly see #128».
 //
-// So the chip reads the ladder the ENGINE says she is competing in (`activeLadder`: international
-// once she holds a counting result there, national before that) and NAMES it. Same source as the
-// Stats screen's default tab, so the two cannot disagree again.
+// So the chip reads the ladder the ENGINE says she is competing in (`activeLadder`: professional
+// once any W result has ever counted - permanently from that moment; international while she holds
+// a counting result there; national before that) and NAMES it. Same source as the Stats screen's
+// default tab, so the two cannot disagree again.
+//
+// ⚠ AND IT IS NOT ALWAYS DRAWN (owner, 02.08: «нужна ли она там вообще?» - architect's ruling).
+// `rankChipTrack` returns null before her first counting result in ANY table, and the chip goes
+// with it: "National · Unranked" over a brand-new career was a readout with nothing to read. The
+// moment anything counts anywhere the chip is back for good - the professional arm survives even a
+// window that empties (Professional + Unranked), which is the one-way door the engine's
+// `activeLadderOf` owns. The selection rule is pinned in tests/ladder-separation.test.ts S7.
+const chipTrack = computed(() => rankChipTrack(game.snapshot))
 const activeLadder = computed(() => game.snapshot?.activeLadder ?? 'domestic')
 const ladder = computed(() => game.snapshot?.ladders[activeLadder.value])
 const ladderLabel = computed(() => LADDER_LABEL[activeLadder.value])
@@ -216,11 +225,15 @@ const kidRank = computed(() => ladder.value?.rank ?? null)
 // own way of saying exactly that, so this stops counting results to find out for itself.
 const ranked = computed(() => kidRank.value !== null)
 // The long form, where a chip has no room: which table, and the one fact about it that matters.
-const rankChipTitle = computed(() =>
-  activeLadder.value === 'domestic'
-    ? 'Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.'
-    : 'Her international ranking – Junior Tour results only. National results do not count towards it. Tap to see how it adds up.',
-)
+// A TOTAL Record over LadderTrack (the LADDER_TIP discipline from Stats): a fourth table cannot
+// ship until somebody writes this chip's sentence for it.
+const RANK_CHIP_TITLE: Record<LadderTrack, string> = {
+  domestic:
+    'Her national ranking – Local, Regional and National results. These are the points that open her next tier. Tap to see how they add up.',
+  itf: 'Her international ranking – Junior Tour results only. National results do not count towards it. Tap to see how it adds up.',
+  wta: 'Her professional ranking – W15 and up, the paid tour. Junior points never cross over. Tap to see how it adds up.',
+}
+const rankChipTitle = computed(() => RANK_CHIP_TITLE[activeLadder.value])
 // FROM THE SAME TABLE as `kidRank` above. Reading `snapshot.prevKidRank` here would diff her national
 // place against last week's international one; `ladders[t].prevRank` is per-ladder for that reason.
 const prevKidRank = computed(() => ladder.value?.prevRank ?? null)
@@ -447,12 +460,18 @@ const coachQuote = computed(() =>
 // the same tier two different things. This array only carries the LADDER ORDER.
 //
 // ⚠ THE ADULT RUNGS JOIN IT (task #17), spelled out here rather than folded into TIER_LADDER,
-// because the list is deliberately hand-kept: this strip is a nine-chip row on a phone, and the day
-// somebody adds a tenth rung the layout is a decision, not an automatic consequence. Their chips
+// because the list is deliberately hand-kept: this strip is a chip row on a phone, and the day
+// somebody adds a rung the layout is a decision, not an automatic consequence. Their chips
 // read `locked` for the whole junior half of a career, which is the truth and is the point of a
 // ladder you can see the top of.
+//
+// ⚠ W2-LADDER: twelve chips, and the layout decision is TAKEN - the strip already wraps
+// (.season-strip is flex-wrap), so the ladder reads as two lines on a phone rather than losing
+// rungs. The feed's two-type rule (act2-pro-tour.md §4) governs the EVENT FEED, not this strip:
+// this row is her whole climb at a glance, achievement plus the top she has not reached, and
+// hiding outgrown rungs here would erase the finishes she earned on them.
 const SEASON_STRIP_TIERS: { id: TierId; short: string }[] = (
-  ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w100'] as const
+  ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as const
 ).map((id) => ({ id, short: TIER_SHORT[id] }))
 // finish index -> short label (reuses the finish-index convention: 0 = champion).
 function shortFinish(finish: number): string {
@@ -476,8 +495,11 @@ interface TierChip {
 }
 const tierStates = useTierStates()
 const seasonChips = computed<TierChip[]>(() =>
-  SEASON_STRIP_TIERS.map(({ id, short }, i) => {
-    const avail = tierStates.value[i]
+  SEASON_STRIP_TIERS.map(({ id, short }) => {
+    // By ID, not by index (W2-LADDER): the old `tierStates.value[i]` zip silently assumed this
+    // hand-kept list and TIER_LADDER agree position by position - true for one release and a trap
+    // for ever. useTierStates is TIER_LADDER-ordered; the find makes the join explicit and total.
+    const avail = tierStates.value.find((s) => s.id === id)!
     const best = game.snapshot?.bestFinishByTier[id]
     // Her earned result outranks every open state: once a tier is on the books the chip's job is to
     // show the finish, and the availability lives in the tooltip.
@@ -656,7 +678,10 @@ function openRankHelp(): void {
           <p class="diary-greeting">{{ greeting }}</p>
           <p class="diary-name">{{ kidFirstName }}</p>
           <p class="diary-age">{{ ageYears }} years old {{ flag }}</p>
+          <!-- The chip is drawn only once something counts somewhere - rankChipTrack owns the rule
+               (null = no counting result in any table yet, and nothing to read on a chip). -->
           <button
+            v-if="chipTrack !== null"
             class="diary-rank"
             aria-label="How ranking points work"
             :title="rankChipTitle"

@@ -611,6 +611,24 @@ export interface CoachMarketRow {
   loadNote: string
 }
 
+/** One rung's remaining supply this season. `open` counts events she may still enter (her own
+ *  entries included); `entered` is how many of those are already hers. */
+export interface SeasonSupplyRow {
+  tier: TierId
+  open: number
+  entered: number
+}
+
+/** THE PLANNING COUNTER: how much tennis is left this season, and on which rungs. Ladder order,
+ *  rungs with nothing left omitted entirely - the list is what she can still do, not a table of
+ *  zeroes. */
+export interface SeasonSupply {
+  /** weeks between now and the season's last week (the off-season is inside the count, because it
+   *  is inside the season block - a card that says "over 12 weeks" must not promise playable ones) */
+  weeksLeft: number
+  rows: SeasonSupplyRow[]
+}
+
 export interface UpcomingEvent {
   id: string
   week: number
@@ -809,6 +827,29 @@ export function activeLadderOfSnapshot(
   return { track, label: LADDER_LABEL[track], rank: view?.rank ?? null, points: view?.points ?? 0 }
 }
 
+/** WHICH TABLE HOME'S RANK CHIP NAMES - or null for NO CHIP AT ALL (architect's ruling, 02.08, on
+ *  the owner's «нужна ли она там вообще?»).
+ *
+ *  The chip is her current WORKING track, which is `activeLadder` (the engine's one answer - see
+ *  `activeLadderOf`: professional once any W result has ever counted, and from that moment
+ *  PERMANENTLY; junior while she holds a counting J result; national before either). What this
+ *  helper adds is only the empty case: before her first counting result in ANY table there is no
+ *  place to report, and a chip reading "Unranked" over a brand-new career is a readout with nothing
+ *  to read - so it is not drawn at all.
+ *
+ *  ⚠ THE PROFESSIONAL ARM RETURNS EVEN WHEN `rank` IS NULL. "She is a professional now" is decided
+ *  once and outlives any 52-week drought that empties her live window; on such a week the chip
+ *  honestly reads Professional + Unranked rather than pretending she is a junior again. A pure
+ *  selection over snapshot fields - no rank is re-derived here (the engine owns all three). */
+export function rankChipTrack(
+  snap: Pick<Snapshot, 'ladders' | 'activeLadder'> | null | undefined,
+): LadderTrack | null {
+  if (!snap) return null
+  const track = snap.activeLadder
+  if (track === 'wta') return 'wta'
+  return snap.ladders[track].rank !== null ? track : null
+}
+
 /** The unit each table's points are counted in, for a label that has to name the currency (the Home
  *  ladder's entry thresholds are all denominated in NATIONAL points - see engine/season/calendar.ts,
  *  whose own ladder diagram is drawn against "domestic pts"). */
@@ -957,12 +998,21 @@ export interface TierTrophies {
 // deliberately have no representation here yet; `OfferKind` is a union of one so that adding them is
 // a widening rather than a redesign.
 
-/** Which instrument wrote. One member today – see the note above. */
-export type OfferKind = 'kit'
+/** Which instrument wrote. `kit` is the sponsor; `entry` is THE TOURNAMENT DESK (W2-LADDER §6,
+ *  owner ruling 1: «у нас уже система писем есть для этого, надо использовать») - the letter that
+ *  arrives when she registers for a professional event, and the short confirmation when she
+ *  cancels in time. The agent (§4.2) and the investor (§4.3) still have no representation. */
+export type OfferKind = 'kit' | 'entry'
 
-/** Where an offer is in its life. `open` is the only state a decision is possible in; the other
- *  three are terminal and the letter stays in the inbox as a record of what was chosen. */
-export type OfferState = 'open' | 'signed' | 'refused' | 'expired'
+/** Where an offer is in its life. `open` is the only state a decision is possible in; the others
+ *  are terminal and the letter stays in the inbox as a record.
+ *
+ *  ⚠ `info` IS THE INFORMATIONAL LETTER'S STATE (W2-LADDER §6): a tournament-desk letter is not a
+ *  decision - there is nothing to sign and nothing to refuse - so it is born terminal. It never
+ *  lights the inbox dot (`isOfferLive` reads `open` only), never enters `offerAnswerError`'s happy
+ *  path, and expiry means nothing to it. The obligations it announces get their TEETH in act 3
+ *  (§6's penalty regime); in this wave the letter is the transparency itself. */
+export type OfferState = 'open' | 'signed' | 'refused' | 'expired' | 'info'
 
 /** WHOSE LETTERHEAD IS ON THE PAPER. The brand ladder a sponsor climbs: the shop in her town, a
  *  national label, a global one. `public/images/sponsors/<tier>.webp` is the mark, looked up by this
@@ -1057,7 +1107,26 @@ export interface KitOfferTerms {
   minEventsPerSeason: number
 }
 
-export type OfferTerms = KitOfferTerms
+/** What a TOURNAMENT-DESK letter states (W2-LADDER §6, the informational half of the entry
+ *  lifecycle). Every field is on the paper, per the kit letter's own hard rule - and the one
+ *  consequence this wave has no number for is stated as a sentence instead: «after the deadline
+ *  the tournament's rules apply». The fines and penalty points those rules mean are act-3 content
+ *  (§6's regime); announcing them BEFORE they can bite is this letter's whole job. */
+export interface EntryLetterTerms {
+  /** the rung, and its label as the letter was written (labels may be retuned; letters may not) */
+  tier: TierId
+  label: string
+  /** the week she is expected on court */
+  eventWeek: number
+  /** cancellation is free (fee refunded, the year's slot returned) until the END of this week -
+   *  the event's own entry deadline, restated on paper so the player plans against a date the
+   *  engine actually enforces */
+  freeUntilWeek: number
+  /** true on the short confirmation the desk sends back for a free, in-time cancellation */
+  cancelled?: boolean
+}
+
+export type OfferTerms = KitOfferTerms | EntryLetterTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */
@@ -1422,6 +1491,9 @@ export interface Snapshot {
   financialEvents: WorldEvent[]
   /** scheduled events over the next 8 weeks, with entry state */
   upcoming: UpcomingEvent[]
+  /** ...and how much tennis is left in the WHOLE season, by rung - the planning counter. See
+   *  `seasonSupply` in world.ts for what "available" means and why this is not a longer `upcoming`. */
+  seasonSupply: SeasonSupply
   /** R12-15/R12-3: the engine's verdict on the entered event for `week + 1` – the week the sticky
    *  bar's button is about to play – or null when nothing is entered there. See ArrivalPreview. */
   arrival: ArrivalPreview | null
@@ -1429,6 +1501,13 @@ export interface Snapshot {
    *  "capped for the year" apart from "locked on points" and "nothing scheduled". Derived at
    *  snapshot time from the persisted ledger, so it persists nothing of its own. */
   entryCap: EntryCapUsage
+  /** THE PRO AER allowance for the CURRENT season (W2-LADDER §5, schema v36's `proEntryWeeks`
+   *  behind it) – the junior cap's exact parallel one table up, never merged: the WTA age rule is
+   *  "separate from and additional to" the ITF junior one, so a sixteen-year-old holds both
+   *  budgets at once. The planner's «Pro entries this season: N of M» line and the W rungs'
+   *  "capped" tier state both read THIS, and unlimited seasons read as
+   *  `limit: Number.MAX_SAFE_INTEGER` exactly as the junior field does at 17+. */
+  proEntryCap: EntryCapUsage
   /** the engine's own per-tier entry verdict - see TierOpenMap */
   tierOpen: TierOpenMap
   /** THE ACCEPTANCE LIST, AS A POSITION, per rung that has one – `acceptanceRank(world, tier)`, absent
@@ -1443,12 +1522,11 @@ export interface Snapshot {
    *  was stale by two re-pins when it was found. Derived at snapshot time, persists nothing. */
   tierAcceptance: Partial<Record<TierId, number>>
   /** THE ON-RAMP LATCHES (v34 state, surfaced read-only in R15-9): has she EVER cleared the way
-   *  onto each upper table. The calendar's SLIDING TIER WINDOW reads them - once a latch is set the
-   *  rungs below that door are hidden from the event feed (never from the engine: entry gates and
-   *  `entryStatus` are untouched, and National is never hidden - see `hiddenTier` in
-   *  composables/tierState.ts). Owner, 01.08: «если j30 уже точно outgrown, то его не надо
-   *  показывать. Скользящее окно... Я сомневаюсь, что реальные теннисистки с доступом к w15 думают
-   *  как бы им успеть на j30». */
+   *  onto each upper table. The event feed no longer reads them directly - W2-LADDER §4's
+   *  two-type rule derives its pair from `tierOpen` below (see `feedContext` in
+   *  composables/tierState.ts), and the latches reach the feed THROUGH the oracle (the on-ramp
+   *  rungs' openness IS the latch). Still surfaced: the pure UI reads them for context, and the
+   *  R15-9 story they carry is the two-type rule's ancestor. */
   onRampCleared: { itf: boolean; wta: boolean }
   /** WHO SHE TRAINS WITH (v23): the roster coach's id, or null for the parent on the court. */
   coachId: string | null

@@ -26,7 +26,9 @@ import { describe, it, expect } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import {
+  cancelEntry,
   createWorld,
+  enterEvent,
   tickWeek,
   toSnapshot,
   recomputeKidRank,
@@ -50,9 +52,11 @@ import {
   kitTermsFor,
   kitTravelShare,
   offerChanceFor,
+  pruneEntryLetters,
   raiseKitOffer,
   rungFor,
   shopWritesAt,
+  standingClears,
   SPONSOR_TIERS,
   TIER_COVERS,
   type SponsorStanding,
@@ -62,7 +66,10 @@ import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { OFF_SEASON_WEEKS, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE, type KitOfferTerms } from '../src/shared/protocol'
+import { COHORT_SIZE } from '../src/engine/season/cohort'
+import { FIELD } from '../src/engine/season/fieldPros'
+import type { SeasonEvent } from '../src/engine/season/types'
+import { DEFAULT_PROFILE, type EntryLetterTerms, type KitOfferTerms } from '../src/shared/protocol'
 
 const read = (p: string) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), 'utf8')
 
@@ -234,12 +241,29 @@ const domestic = (nationalRank: number): SponsorStanding => ({
   nationalRank,
   itfRank: 999,
   itfRanked: false,
+  ...unranked.wta,
 })
 /** ...and its international counterpart, for the two rungs the ladder added. */
 const worldly = (itfRank: number, nationalRank = 1): SponsorStanding => ({
   nationalRank,
   itfRank,
   itfRanked: true,
+  ...unranked.wta,
+})
+/** ⚠ RE-AIMED AGAIN (02.08, the professional arm): the standing is THREE tables now. Every fixture
+ *  above is a girl with no professional standing - which is what they all meant when they were
+ *  written - so `unranked.wta` spells that once instead of twice per helper, and the cases that
+ *  are ABOUT the professional table say so by building it themselves (`pro` below). */
+const unranked = { wta: { wtaRank: 999, wtaRanked: false } } as const
+/** A professional standing: her merged W rank, and by default nothing left in the junior or
+ *  domestic tables - the real shape of a career two seasons into the tour. */
+const pro = (wtaRank: number, over: Partial<SponsorStanding> = {}): SponsorStanding => ({
+  nationalRank: 999,
+  itfRank: 999,
+  itfRanked: false,
+  wtaRank,
+  wtaRanked: true,
+  ...over,
 })
 
 /** ⚠ RE-AIMED (01.08): the review moved from the season BOUNDARY into the first OFF-SEASON week, so
@@ -863,6 +887,42 @@ describe('the three rungs, and the tables they read', () => {
     expect(s.global.maxItfRank).toBeLessThan(s.national.maxItfRank)
   })
 
+  it('⚠ ...and the professional pair is the SAME reading of the professional draw', () => {
+    // 02.08: National signs the girl who would be IN the prestige draw, Global the one still in it
+    // on the last day - one sentence, read twice, once per table. On the professional side the
+    // prestige draw is W100 and "in it" is its acceptance list: `enterPct` of the merged W table,
+    // which is the field (FIELD.size) plus the cohort plus her.
+    const mergedRows = FIELD.size + COHORT_SIZE + 1
+    expect(s.national.maxWtaRank).toBe(Math.round(TIERS.w100.enterPct! * mergedRows))
+    expect(s.global.maxWtaRank).toBe(Math.floor(s.national.maxWtaRank / 4))
+    expect(s.global.maxWtaRank).toBeLessThan(s.national.maxWtaRank)
+  })
+
+  it('a professional keeps her sponsor - the tables she leaves cannot un-sign her', () => {
+    // THE OWNER'S 02.08 RULING («спонсор вполне может жить и дальше»). Two seasons into the tour
+    // her junior and domestic points have decayed to nothing - she stopped entering the events that
+    // feed them - so under the junior-only gate NOBODY would write to a top-100 professional.
+    expect(rungFor(pro(61))).toBe('national')
+    expect(rungFor(pro(20))).toBe('global')
+    // ...and the shop always would: the local rung is "somebody has heard of her".
+    expect(rungFor(pro(400))).toBe('local')
+    // The guard the junior table keeps, kept here too: an EMPTY professional table is not a world
+    // ranking, so a fourteen-year-old tied at the floor is not a top-100 pro.
+    expect(rungFor({ nationalRank: 999, itfRank: 999, itfRanked: false, wtaRank: 1, wtaRanked: false })).toBeNull()
+  })
+
+  it('the keep-condition asks the same question the gate does, in whichever table she is in', () => {
+    // `standingClears` is the single predicate both callers use (world.ts's reviewSponsors and
+    // rungFor above), which is what makes "a deal killed by a rule that would have offered it back
+    // the same winter" unrepresentable.
+    expect(standingClears(pro(61), 'national')).toBe(true)
+    expect(standingClears(domestic(1), 'national')).toBe(false) // no international standing at all
+    expect(standingClears(domestic(1), 'local')).toBe(true)
+    // A professional who has stopped scoring holds no professional standing - a sponsor asks what
+    // she is worth now, and the live 52-week window is the honest answer.
+    expect(standingClears({ ...pro(61), wtaRanked: false }, 'national')).toBe(false)
+  })
+
   it('local reads the DOMESTIC table and the two above it read the INTERNATIONAL one', () => {
     // The whole point of the slice, in four lines. A girl who is #1 at home and nowhere abroad gets
     // the shop; the same girl once she is #13 in the world gets a national label.
@@ -877,21 +937,21 @@ describe('the three rungs, and the tables they read', () => {
     // asked whether two contracts would arrive and the answer was no. It is now a national one - and
     // deliberately not the global one, because the calendar's standing rule is that there must
     // always be somewhere to go.
-    expect(rungFor({ nationalRank: 1, itfRank: 13, itfRanked: true })).toBe('national')
+    expect(rungFor({ nationalRank: 1, itfRank: 13, itfRanked: true, ...unranked.wta })).toBe('national')
   })
 
   it('⚠ an empty international table is not a world ranking', () => {
     // Competition ranking ties everyone without a counting result at the floor, and a fresh
     // fourteen-year-old can read as a number that looks like a standing. Without the `itfRanked`
     // guard she would be sent a global contract in her first winter.
-    expect(rungFor({ nationalRank: 1, itfRank: 1, itfRanked: false })).toBe('local')
-    expect(rungFor({ nationalRank: 99, itfRank: 1, itfRanked: false })).toBeNull()
+    expect(rungFor({ nationalRank: 1, itfRank: 1, itfRanked: false, ...unranked.wta })).toBe('local')
+    expect(rungFor({ nationalRank: 99, itfRank: 1, itfRanked: false, ...unranked.wta })).toBeNull()
   })
 
   it('the best rung she clears writes, and only that one', () => {
     // A top-8 girl clears all three gates at once. Three letters in one winter would make the ladder
     // a collection rather than a climb.
-    const terms = kitTermsFor({ nationalRank: 1, itfRank: 1, itfRanked: true })!
+    const terms = kitTermsFor({ nationalRank: 1, itfRank: 1, itfRanked: true, ...unranked.wta })!
     expect(terms.tier).toBe('global')
     expect(terms.covers).toEqual(TIER_COVERS.global)
     expect(terms.travelShare).toBe(s.global.travelShare)
@@ -1209,5 +1269,83 @@ describe('the v33 schema step', () => {
     expect(terms.covers).toEqual(TIER_COVERS.local)
     expect(terms.travelShare).toBe(0)
     expect(terms.seasons).toBe(1)
+  })
+})
+
+// =================================================================================================
+// THE TOURNAMENT DESK — W2-LADDER §6's informational half (owner ruling 1: the letters system).
+// =================================================================================================
+describe('the tournament desk writes on W-rung registration, and only then', () => {
+  /** An open world aged into the W era by the EVENT's week (the gate reads age there), with the
+   *  books the W15 on-ramp wants. Same idiom as the pro-cap suite in tests/age-caps.test.ts. */
+  function wWorld(seed: string): { world: WorldState; wEvent: SeasonEvent; jEvent: SeasonEvent } {
+    const world = createWorld(seed)
+    world.fundsCents = 9_999_999_00
+    world.results.push({ playerId: KID_ID, week: 0, points: 1500, tier: 'national' })
+    for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: 0, points: 300, tier: 'j300' })
+    recomputeKidRank(world)
+    const wEvent: SeasonEvent = {
+      id: 'desk-w15', week: 110, tier: 'w15', surface: 'hard', travelCostCents: 100_00, deadlineWeek: 108,
+    }
+    const jEvent: SeasonEvent = {
+      id: 'desk-j30', week: 12, tier: 'j30', surface: 'hard', travelCostCents: 100_00, deadlineWeek: 10,
+    }
+    world.season.push(wEvent, jEvent)
+    return { world, wEvent, jEvent }
+  }
+
+  it('a W entry raises the registration letter; a junior entry raises none', () => {
+    const { world, wEvent, jEvent } = wWorld('desk-1')
+    enterEvent(world, jEvent.id)
+    expect(world.offers.filter((o) => o.kind === 'entry')).toEqual([])
+    enterEvent(world, wEvent.id)
+    const letters = world.offers.filter((o) => o.kind === 'entry')
+    expect(letters).toHaveLength(1)
+    const letter = letters[0]
+    expect(letter.state).toBe('info')
+    expect(letter.id).toBe(`entry-${wEvent.id}-0`)
+    const terms = letter.terms as EntryLetterTerms
+    expect(terms.tier).toBe('w15')
+    expect(terms.label).toBe(TIERS.w15.label)
+    expect(terms.eventWeek).toBe(wEvent.week)
+    // The one number on the paper is the number the engine enforces: withdrawEvent's own deadline.
+    expect(terms.freeUntilWeek).toBe(wEvent.deadlineWeek)
+    expect(terms.cancelled).toBeUndefined()
+  })
+
+  it('an informational letter is never LIVE: no dot, no answer path', () => {
+    const { world, wEvent } = wWorld('desk-2')
+    enterEvent(world, wEvent.id)
+    const letter = world.offers.find((o) => o.kind === 'entry')!
+    expect(isOfferLive(letter, world.week)).toBe(false)
+    expect(hasLiveOffer(world.offers, world.week)).toBe(false)
+    expect(toSnapshot(world).offerOpen).toBe(false)
+  })
+
+  it('a free, in-time cancellation writes the confirmation; the two letters are distinct records', () => {
+    const { world, wEvent } = wWorld('desk-3')
+    enterEvent(world, wEvent.id)
+    cancelEntry(world, wEvent.id) // before the deadline -> delegates to the refunding withdrawal
+    const letters = world.offers.filter((o) => o.kind === 'entry')
+    expect(letters).toHaveLength(2)
+    expect(letters.map((o) => o.id)).toEqual([`entry-${wEvent.id}-0`, `entry-${wEvent.id}-1`])
+    expect((letters[1].terms as EntryLetterTerms).cancelled).toBe(true)
+    // ...and a re-registration is a THIRD record, never an overwrite: the inbox is a history.
+    enterEvent(world, wEvent.id)
+    expect(world.offers.filter((o) => o.kind === 'entry')).toHaveLength(3)
+  })
+
+  it('desk letters age out after a year; sponsor letters never do', () => {
+    const world = createWorld('desk-prune')
+    world.offers.push(
+      { id: 'entry-old-0', kind: 'entry', week: 0, deadlineWeek: 0, state: 'info',
+        terms: { tier: 'w15', label: 'World Tour 15', eventWeek: 2, freeUntilWeek: 0 } },
+      { id: 'kit-old', kind: 'kit', week: 0, deadlineWeek: 4, state: 'signed',
+        terms: { tier: 'local', brand: 'x', kitAllowanceCents: 1, freshCap: 1, minEventsPerSeason: 1,
+          covers: ['strings'], travelShare: 0, seasons: 1 } },
+    )
+    const pruned = pruneEntryLetters(world.offers, WEEKS_PER_YEAR + 1)
+    expect(pruned.some((o) => o.id === 'entry-old-0')).toBe(false)
+    expect(pruned.some((o) => o.id === 'kit-old')).toBe(true)
   })
 })

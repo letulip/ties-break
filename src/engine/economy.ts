@@ -510,11 +510,28 @@ export const ECONOMY = {
        *  would fill that draw on merit, which is precisely when a national distributor's logo starts
        *  being worth something. */
       maxItfRank: 32,
+      /** ⚠ ...AND THE PROFESSIONAL RANK THAT SAYS THE SAME THING (02.08, the owner: «спонсор вполне
+       *  может жить и дальше»). Built exactly as `maxItfRank` above is - off one figure in the tier
+       *  table, not picked: National signs the girl who would be IN the prestige draw, and on the
+       *  professional side that is W100's acceptance list, `enterPct` 0.25 of the merged W table.
+       *  That table is FIELD.size (300) + the cohort (199) + her = 500 rows, so a quarter of it is
+       *  125. Pinned against both figures in tests/offers.test.ts, the same way the junior pair is
+       *  pinned against `TIERS.j300.drawSize`. */
+      maxWtaRank: 125,
       /** ⚠ ...AND THE DOMESTIC STANDING SHE HAS TO KEEP TO HOLD IT = `maxRank` above, the same top
        *  30 that opens the local shop. This is National's job on the way OUT and the whole reason
        *  this rung is gated on two tables at once: her domestic points are a rolling 52-week best-6,
        *  so a season spent entirely on the international calendar decays them to nothing and she
-       *  slides out of this band. The deal ends when she does. */
+       *  slides out of this band. The deal ends when she does.
+       *
+       *  ⚠⚠ AND IT IS NOT THE ONLY WAY TO HOLD THE DEAL ANY MORE (02.08). The paragraph above is
+       *  true of a JUNIOR who goes abroad - a lateral move inside the same visibility economy, and
+       *  a brand that paid for a domestic name is entitled to notice. It is simply false of a
+       *  PROFESSIONAL: she is not less visible than the girl they signed, she is more. So the
+       *  keep-condition now reads "still worth being seen with", which the professional rank answers
+       *  too - see `standingClears` in offers.ts, which is the one place either question is asked.
+       *  The deal's other condition (`minEvents`) is untouched and is still the real obligation: a
+       *  sponsor pays to be SEEN, so a season spent resting still costs the deal, at every rung. */
       keepDomesticRank: 30,
       /** TWO SEASONS. `02-tennis-economics.md` puts junior equipment deals at "3-4 year terms"; our
        *  whole junior career is four to six seasons, so the real figure is scaled to the game's own
@@ -555,6 +572,12 @@ export const ECONOMY = {
        *  than an accident: the calendar's standing rule is that "there must ALWAYS be somewhere to
        *  go". */
       maxItfRank: 8,
+      /** ⚠ THE PROFESSIONAL FIGURE, and it is the same reading one rung up (02.08): National signs
+       *  the girl who would be in the prestige draw, Global the one who would still be in it on the
+       *  last day - the last quarter. Junior: 8 of the J300's 32. Professional: 31 of the 125 who
+       *  would be accepted into a W100 (`national.maxWtaRank` / 4, rounded down as the junior pair
+       *  divides exactly). Pinned beside its neighbour in tests/offers.test.ts. */
+      maxWtaRank: 31,
       /** THREE SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", scaled the same way
        *  `national.seasons` is. Signing it is the biggest commitment in the game: everything is
        *  covered, and nothing else can be signed until it runs out. */
@@ -871,10 +894,21 @@ export const ECONOMY = {
     // entrant fields, not guessed. The seam j300 (5) -> w15 (4) DROPS by design and the ladder
     // guard (tests/ladder.test.ts L9) is re-aimed per family to hold exactly this shape: monotone
     // inside each family, and the W family never priced above where its fields actually are.
+    // ⚠ W50/W75/WTA125 (W2-LADDER) INTERPOLATE INSIDE THE PRICED FAMILY, THEY DO NOT EXTEND IT.
+    // R15-6 pinned the family's ends for today's soft fields (w15 4 .. w100 6), so the two middle
+    // rungs land BETWEEN them: the raw interpolation is w50 5 / w75 5.5, and the half rounds UP
+    // because the condition accumulator is integer arithmetic end to end ("no fractions", the
+    // block note above) - so w75 prices with the prestige pair it schedules like (every 6 weeks,
+    // age 17) rather than with the dense pair. Two integers strictly between 5 and 6 do not exist,
+    // so the family is monotone NON-STRICT by construction; the ladder guard (tests/ladder.test.ts
+    // L9) holds exactly that. The 125 takes w100's 6, NOT a +1 step: R15-6's rule is "priced
+    // against the measured field, never extrapolated by prestige", and today a 125 field is drawn
+    // from the same merged-table slice as a W100's - when W2-FIELD2's fourth storey makes the 125
+    // field real, IT gets re-priced upward with w35/w100, measured, per the dated note above.
     tierMatchFatigue: {
       local: 0, regional: 1, national: 2,
       j30: 3, j60: 4, j300: 5,
-      w15: 4, w35: 5, w100: 6,
+      w15: 4, w35: 5, w50: 5, w75: 6, w100: 6, wta125: 6,
     } as Record<TierId, number>,
     // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
     // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
@@ -941,10 +975,14 @@ export const ECONOMY = {
     // living-field population makes the W fields real, w35/w100 are re-priced upward, measured.
     // W100's old 70 meant nearly every entry raised a caution; at 60 it still cautions any career
     // that arrives worn, and the one HARD floor in the game is still `medicalFloor` (15) below.
+    // The W2-LADDER middle rungs keep the floor<->surcharge pairing R15-6 set (floor = 30 + 5 x
+    // surcharge: 4->50, 5->55, 6->60), so the floors interpolate exactly as the surcharges do -
+    // w50 with the dense pair at 55, w75/wta125 with the prestige pair at 60 - and one retune
+    // note (tierMatchFatigue above) governs both tables.
     minConditionToEnter: {
       local: 20, regional: 30, national: 40,
       j30: 45, j60: 50, j300: 55,
-      w15: 50, w35: 55, w100: 60,
+      w15: 50, w35: 55, w50: 55, w75: 60, w100: 60, wta125: 60,
     } as Record<TierId, number>,
     examWeeks: [[23, 24]] as [number, number][], // season-week offsets blacked out for school
     // Moved off 24-25 when the surface blocks landed: week 25 is the FIRST week of the grass
@@ -1066,6 +1104,36 @@ export const ECONOMY = {
     // 200" without an owner decision about what our standings represent. Left out rather than
     // guessed, and left out in the direction that keeps the cap honest (a bonus only weakens it).
     perYearByAge: { 13: 10, 14: 14, 15: 18, 16: 25, default: Number.MAX_SAFE_INTEGER } as {
+      [age: number]: number
+      default: number
+    },
+
+    // --- THE PRO AER, PARALLEL AND NEVER MERGED (W2-LADDER §5) --------------------------------
+    //
+    // The WTA's own age-eligibility rule - the Capriati rule, which exists for exactly our story -
+    // gets the PARALLEL structure to the junior cap above: its own capped family, its own age
+    // table, its own persisted ledger (`WorldState.proEntryWeeks`, schema v36). The two are never
+    // merged because the real rules are two rules: research §4 is explicit that the professional
+    // age caps are "separate from and additional to the junior caps", so a sixteen-year-old holds
+    // BOTH allowances at once - 25 junior entries AND 12 professional ones - and spending one
+    // never touches the other.
+    //
+    // THE FAMILY is every W rung (the WTA counts professional events, whatever their size); the
+    // domestic ladder stays uncapped here for the same reason it is uncapped above - it is ours.
+    cappedProTiers: ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as readonly TierId[],
+    // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited. 14 and 15 carry 8 and 10
+    // in the real rulebook (research §4) and are DELIBERATELY absent here: every W rung's
+    // `minAgeYears` is 16+, so availabilityStatus refuses a fourteen-year-old on AGE before the
+    // cap is ever consulted - the same "the age gate is the honest place for 'not eligible'"
+    // argument the junior table's note makes about 12-and-under. A rung that ever opens at 14
+    // (the real W15 does, via junior-reserved places) must bring those rows with it.
+    //
+    // NOT MODELLED, DELIBERATELY - the merited increases (a year-end top-5 junior earns up to 4
+    // extra pro events). Same ruling as the junior table's: keyed to a world ranking ours cannot
+    // honestly map, and the spec names it phase 2 or act 3 ("v1 ships the flat table if the bench
+    // says it already paces well" - the boredom-guard receipt in tools/boredom-guard.ts is that
+    // bench).
+    proPerYearByAge: { 16: 12, 17: 16, default: Number.MAX_SAFE_INTEGER } as {
       [age: number]: number
       default: number
     },

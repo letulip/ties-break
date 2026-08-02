@@ -63,9 +63,9 @@ import { layoffCoversWeek } from '../engine/world'
 import { knockGoverns } from '../engine/knock'
 import { surfaceStyleHint } from '../engine/match/style'
 import { vacationPackage } from '../engine/economy'
-// R15-9: the sliding tier window and the stacked-week pick - the SAME two rules the Season screen
+// W2-LADDER §4: the two-type feed and the stacked-week pick - the SAME two rules the Season screen
 // reads, so the look-ahead markers and the season rows cannot disagree about which events exist.
-import { hiddenTier, preferredWeekEvent } from './tierState'
+import { feedContext, feedShows, preferredWeekEvent } from './tierState'
 import { weekLabel, weekSpan } from '../shared/dates'
 import type { Surface } from '../engine/match/types'
 import type { Snapshot, UpcomingEvent } from '../shared/protocol'
@@ -171,15 +171,16 @@ export interface CalendarWeek {
 /** The snapshot facts the layout reads. A `Pick`, so a test can hand in a plain object – the
  *  `RecapFacts` idiom from composables/weekRecap.ts.
  *
- *  ⚠ `onRampCleared` IS OPTIONAL ON THE FACTS AND REQUIRED ON THE SNAPSHOT (R15-9): the live screen
- *  always has the latches, while every existing test fixture predates them - and a fixture without
- *  latches must mean "hide nothing", which is exactly what `hiddenTier` does with undefined. Making
- *  it required here would force ceremony onto two dozen fact bags to say the thing absence says. */
+ *  ⚠ `tierOpen`/`ageYears` ARE OPTIONAL ON THE FACTS AND REQUIRED ON THE SNAPSHOT (W2-LADDER §4,
+ *  replacing R15-9's optional latches for the same reason): the live screen always has the
+ *  engine's oracle, while the older test fixtures predate it - and a fixture without one must mean
+ *  "hide nothing", which is exactly what `feedContext` does with an absent `tierOpen`. Making them
+ *  required here would force ceremony onto two dozen fact bags to say the thing absence says. */
 export type CalendarWeekFacts = Pick<
   Snapshot,
   'week' | 'plan' | 'profile' | 'injury' | 'knock' | 'vacations' | 'practices' | 'upcoming' | 'arrival' | 'pending'
 > &
-  Partial<Pick<Snapshot, 'onRampCleared'>>
+  Partial<Pick<Snapshot, 'tierOpen' | 'ageYears'>>
 
 /** THE SUMMER HOLIDAYS, as season-week offsets (R15-8, owner 01.08): «2 месяца обычно после
  *  экзаменов... просто меньше учебы в календаре писать, пару-тройку часов в неделю». The exam
@@ -498,19 +499,18 @@ export function isSuitable(e: UpcomingEvent, currentWeek: number): boolean {
  *  booking or a tournament on it, and cancelling the layoff's weeks is not a thing anyone can do). */
 export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
   const rows: LookAheadRow[] = []
+  const feed = feedContext({ ageYears: snap.ageYears ?? 0, tierOpen: snap.tierOpen, upcoming: snap.upcoming })
   const first = snap.week + 2
   for (let w = first; w < first + LOOK_AHEAD_WEEKS; w++) {
     const vacation = snap.vacations.find((v) => v.week === w)
     const practice = snap.practices.find((p) => p.week === w)
-    // R15-9: the sliding window hides the rungs she has definitively left (entered events always
-    // survive - isSuitable's first arm), and a week that stacks several suitable events markers the
-    // PREFERRED one - entered first, then the highest visible rung - through the same pick the
-    // Season rows use, instead of whichever the list happened to put first.
+    // W2-LADDER §4: the TWO-TYPE feed decides what a marker may carry (entered events always
+    // survive - isSuitable's first arm and feedShows' own), and a week that stacks several
+    // suitable events markers the PREFERRED one - entered first, then the highest visible rung -
+    // through the same pick the Season rows use, instead of whichever the list happened to put
+    // first. `feed` is derived once above the loop, so all the rows read one verdict.
     const event = preferredWeekEvent(
-      snap.upcoming.filter(
-        (e) =>
-          e.week === w && isSuitable(e, snap.week) && (e.entered || !hiddenTier(e.tier, snap.onRampCleared)),
-      ),
+      snap.upcoming.filter((e) => e.week === w && isSuitable(e, snap.week) && feedShows(e, feed)),
     )
     const exam = isExamWeek(w)
     const offSeason = isOffSeasonWeek(w)

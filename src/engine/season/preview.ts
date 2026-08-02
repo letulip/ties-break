@@ -181,7 +181,17 @@ const CROWD_BANDS: Record<TierId, readonly [number, number]> = {
   // better, right up until the tour she is climbing towards, which is off this table entirely.
   w15: [20, 70],
   w35: [60, 200],
+  // The W2-LADDER middle rungs continue the same production-scale climb: a W50 is a W35 with a
+  // second stand (90-280, a shade over a J60's room), a W75 is the first adult week that looks
+  // organised on television-less terms (150-500). Both still sit BELOW a J300's 900-2,600 - the
+  // agents-on-the-fence joke holds until W100.
+  w50: [90, 280],
+  w75: [150, 500],
   w100: [400, 1400],
+  // The 125 is the first rung whose room finally OUTGROWS a J300: a WTA event proper, a city
+  // arena's outer configuration, 1,200-3,500 - the tour she was climbing towards starts being
+  // audible from the court. Still decorative; nothing reads it.
+  wta125: [1200, 3500],
 }
 
 /** Decorative crowd. Its own sub-stream so it can never perturb the draw, and keyed on the event so

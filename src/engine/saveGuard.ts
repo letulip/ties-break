@@ -213,6 +213,9 @@ const SPINE: SpineRule[] = [
         ? null
         : 'must carry the on-ramp latches',
   },
+  // The pro AER ledger (v36, W2-LADDER §5): dereferenced by `proEntryCapUsage` on the first
+  // availability read after load, so a v36 file without it is a crash wearing a valid header.
+  { field: 'proEntryWeeks', since: 36, check: anArray },
   {
     // Shape only – s is mulberry32's register and the engine stores it SIGNED (rng.ts: `a |= 0`),
     // so the honest range is int32, both halves. Whether the pair satisfies the s/n algebra is the

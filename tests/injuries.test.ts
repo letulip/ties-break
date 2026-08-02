@@ -167,7 +167,10 @@ function hashOf(draws: number[]): string {
 // the REF declaration in tests/condition.test.ts B1. `kidRank` stays: it was never the capture, it
 // is the companion MEASUREMENT — "how many AI ended the year holding counting points" — and its
 // re-pin history above is exactly why it remains worth pinning.
-const REF = { kidRank: 152 }
+// ⚠ RE-PINNED 152 -> 138 by W2-LADDER: TIER_LADDER 9 -> 12 re-spaces `tierPhase`, the calendar
+// re-deals, and the AI year resolves on different event sub-streams. The MAIN capture is untouched
+// (B1 asserts it byte-for-byte); the mechanism note lives at the B1 REF in tests/condition.test.ts.
+const REF = { kidRank: 138 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

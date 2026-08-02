@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "tb-uifix-dev",
+      "name": "ties-break-dev",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "5199"],
       "port": 5199
@@ -12,17 +12,6 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "preview"],
       "port": 4173
-    },
-    {
-      "name": "tb-r5-season-preview",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "preview", "--", "--port", "4410"],
-      "port": 4410
-    },
-    {
-      "name": "tb-inta",
-      "url": "http://localhost:5640",
-      "port": 5640
     }
   ]
 }

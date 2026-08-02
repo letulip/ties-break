@@ -74,7 +74,7 @@ function measure(label: string): void {
       // without the filter, this replica reconstructs a DIFFERENT, wronger field – the same class of
       // bug tests/rivals.test.ts C3 and tests/rival-fatigue.test.ts' helper were each caught by.
       const prior = world.results.filter((r) => r.week < world.week && r.playerId !== KID_ID)
-      const ranking = computeRanking(prior, world.week, ids)
+      const ranking = computeRanking(prior, world.week, 6, ids)
       const cond = rivalConditions(prior, world.week)
       const seen = new Map<string, number>()
       for (const e of scheduled) {

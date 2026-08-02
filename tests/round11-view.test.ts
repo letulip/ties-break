@@ -262,6 +262,7 @@ describe('R11-5a — the tier ladder tells a point lock apart from an empty cale
     points: 0,
     upcoming: [],
     horizonWeeks: HORIZON_WEEKS,
+    proEntryCap: { used: 0, limit: Number.MAX_SAFE_INTEGER, remaining: Number.MAX_SAFE_INTEGER }, // the pro AER has its own arm; untouched here
     entryCap: { used: 0, limit: 25, remaining: 25 },
   }
   const at = (points: number, upcoming: { tier: TierId; week: number }[] = []): TierStateInput => ({

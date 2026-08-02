@@ -54,8 +54,11 @@ const blocks = computed(() =>
         <CountingResultsTable :results="b.results" :empty-note="b.empty" />
       </section>
       <ul class="rank-help-rules">
-        <li class="hint">Each ranking = the sum of her 6 best results from the last 52 weeks, in that table.</li>
-        <li class="hint">A new result only raises the total if it beats the weakest of those six.</li>
+        <!-- W2-LADDER §3: the window width is per table now - six for National and Junior Tour,
+             sixteen on the professional table (the WTA's own rule). One sentence, both numbers,
+             because this dialog shows all the tables at once. -->
+        <li class="hint">Each ranking = the sum of her best results from the last 52 weeks in that table – the best 6, or the best 16 on the Pro table.</li>
+        <li class="hint">A new result only raises the total if it beats the weakest counted one.</li>
         <li class="hint">Results older than 52 weeks drop out of the window – points must be defended.</li>
         <li class="hint">National points are what open her next tier. The Junior Tour reads her international rank.</li>
       </ul>

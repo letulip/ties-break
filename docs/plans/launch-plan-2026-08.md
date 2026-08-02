@@ -31,13 +31,17 @@ flowchart TD
   W1R --> W1A[W1-INTEGRITY-A worker pipeline<br/>1 agent, L]
   W1R --> W1B[W1-INTEGRITY-B import + recovery<br/>1 agent, M]
   W1Q -.no dependency, just scheduling.-> W1R
+  W1A --> WPP[wave/pro-prep act-2 design + fixes<br/>architect + 1 agent, M]
+  WPP --> W2L[W2-LADDER rungs + best-16 + AER v36<br/>1 agent, XL]
+  W2L --> W2F2[W2-FIELD2 fourth storey + exclusivity<br/>1 agent, L]
   W1A --> W2C[W2-CONTRACT v1 career page<br/>owner, hours]
-  W2C --> W2E[W2-ENDINGS v36<br/>1 agent, L]
-  W2E --> W2P[W2-PSYCHE v37<br/>1 agent, L]
+  W2C --> W2E[W2-ENDINGS v37<br/>1 agent, L]
+  W2F2 --> W2E
+  W2E --> W2P[W2-PSYCHE v38<br/>1 agent, L]
   W2E --> W2T[W2-TEMPO pacing + onboarding<br/>1 agent, M]
   W2E --> W3I[W3-INMATCH in-match injury<br/>1 agent, L]
-  W1A --> W3F[W3-FIELD living-field phase 2<br/>1 agent, XL]
-  W3F --> W3B[W3-BALANCE harness + reprices<br/>1 agent, L]
+  W2F2 --> W3A[W3-ACT2 anchors + mandatories + sponsors<br/>sized on arrival]
+  W2F2 --> W3B[W3-BALANCE harness + reprices<br/>1 agent, L]
   W2P --> W4M[W4-MOBILE platform wave<br/>1-2 agents, L]
   W4M --> W4Q[W4-QUALITY tests + builds<br/>1 agent, L]
   W1A -.gaps between waves.-> P4[P4 world.ts extractions<br/>architect, 15 small PRs]
@@ -45,8 +49,10 @@ flowchart TD
 
 Parallelism at a glance: W1-QUICK can run beside W0. W1-RNG runs ALONE (quiet window). The two
 INTEGRITY agents run in parallel with each other. W2-PSYCHE, W2-TEMPO and W3-INMATCH can run in
-parallel after W2-ENDINGS. W3-FIELD is independent of Phase 2 and can start once W1-INTEGRITY-A
-merges. The P4 extraction lane fills every gap.
+parallel after W2-ENDINGS. The LADDER→FIELD2 lane and the owner's CONTRACT page run in parallel;
+both feed W2-ENDINGS. The P4 extraction lane fills every gap. (02.08: W3-FIELD is retired from
+the graph — ruling 3 keeps per-season generations; its surviving scope IS W2-FIELD2. W3-BALANCE
+and the P5 re-run key on W2-FIELD2 now.)
 
 ---
 
@@ -136,14 +142,39 @@ migrations / MoreScreen vs worker/client), hence parallel-safe.
 
 ## Phase 2 — The product spine
 
+⚠ REVISED 02.08.2026 after the owner opened the pro-career design — the full plan is
+docs/specs/act2-pro-tour.md (his eight rulings recorded there verbatim). What changed against the
+original phase list: the v1 scope is the FULL career into the late thirties (ruling 5), two new
+waves (W2-LADDER, W2-FIELD2) precede the endings, and the schema reservations shift by one:
+**v36 = W2-LADDER (`proEntryWeeks`), v37 = endings, v38 = psyche.** W3-FIELD's «real aging/
+turnover instead of the per-season re-deal» line is RETIRED by ruling 3 (per-season generations
+stay); its surviving scope is folded into W2-FIELD2 below.
+
+### W2-LADDER · The complete W ladder + the adult window (1 agent · XL · entry: wave/pro-prep merged)
+
+Source: act2-pro-tour.md §§2–6. W50/W75/WTA 125 rungs with measured entrant bands; per-track
+BEST_N (wta 16, rest 6) with a same-seeds before/after bench; the AER pro entry cap +
+`proEntryWeeks` (schema v36) + the boredom-guard receipt; the two-type feed rule with
+outgrown-hidden, domestic collapse, the stats archive treatment and task #77's oracle rule;
+registration/cancellation letters (informational half of the entry lifecycle); the ranking-screen
+window block + defending badges on event cards.
+
+### W2-FIELD2 · The field, one storey taller (1 agent · L · entry: W2-LADDER merged)
+
+Source: act2-pro-tour.md §8, under ruling 3 (NO stable identities — per-season re-deal stays).
+The tourElite fourth storey (~64 pros, up to ~11k pts) with field-quality recalibration per rung;
+week exclusivity (higher tier draws first); news stays current-season. Zero schema. The
+top-of-world churn cost is accepted with a pre-scoped playtest trigger (§8 ⚠).
+
 ### W2-CONTRACT · The v1 career contract (owner, one page, hours)
 
 Source: Codex TB-07's decision half. Full career vs honestly-marketed junior chapter; the
 supported endings; epilogue evidence; the replay loop; what stays post-v1.
-adult-tour-and-endings.md §4 + concept-ru.md's six finales are most of the draft. W2-ENDINGS
-implements against this page — it is the entry criterion.
+adult-tour-and-endings.md §4 + concept-ru.md's six finales are most of the draft — and the
+02.08 rulings (act2-pro-tour.md §1) settle its biggest question: the career runs into the late
+thirties. W2-ENDINGS implements against this page — it is the entry criterion.
 
-### W2-ENDINGS · Endings, schema v36 (1 agent · L · entry: W2-CONTRACT signed, W1-INTEGRITY-A merged)
+### W2-ENDINGS · Endings, schema v37 (1 agent · L · entry: W2-CONTRACT signed, W2-FIELD2 merged)
 
 Sources: Claude P1 verbatim (the brief), = Codex TB-07's build half; task #47. Bankruptcy with
 a swept grace window, the last injury, retirement from 19, age-out, the reckoning screen off
@@ -154,7 +185,7 @@ the durable ledgers, epilogue grades. Evidence already in hand: 7/216 bench care
 survival band. README/claims rewritten to the contract (closes Codex's "docs are not a
 trustworthy source" P1 for the product half).
 
-### W2-PSYCHE · Morale + bond, schema v37 (1 agent · L · entry: W2-ENDINGS merged)
+### W2-PSYCHE · Morale + bond, schema v38 (1 agent · L · entry: W2-ENDINGS merged)
 
 Sources: Claude P2 verbatim, = Codex TB-09 in spirit; + the ONE kernel adopted from TB-11: the
 daughter's voice in the investor scene, remembered by the bond — drama without moralising, the
@@ -173,15 +204,23 @@ resources/flexibility/pressure. Both reviews' claim-vs-code tables are the work 
 
 ## Phase 3 — World depth
 
-### W3-FIELD · Living-field phase 2 (1 agent · XL · entry: W1-INTEGRITY-A merged; parallel with Phase 2)
+### W3-FIELD · RETIRED 02.08.2026 — split by the owner's ruling 3 (act2-pro-tour.md §1)
 
-Source: the shipped spec's own §8.3 (neither review — both predate the slice). J/domestic
-candidate universes (their mixed-percentile trap still stands — measured medians 20/30 for
-j300/j60 fields), field-pro fatigue (phase W is always-fresh, conservative-hard), pros in
-canonical AI brackets and the news, real aging/turnover instead of the per-season re-deal,
-name-pool widening. Exit: field-quality bench re-run across ALL tiers; capture/A-B regime
-green; the P5-A bench re-run (its spec §3 REQUIRES this second baseline before any Phase B
-talk).
+«Может быть нам не нужны стабильные как раз, а можно использовать наши генерации» — real
+aging/turnover instead of the per-season re-deal is OFF the plan; per-season generations are the
+architecture. What survives, and where it went: the fourth storey + week exclusivity →
+**W2-FIELD2** (Phase 2); J/domestic candidate universes (the mixed-percentile trap, measured
+medians 20/30 for j300/j60 fields), field-pro fatigue, pros in canonical brackets/news, name-pool
+widening → **W3-ACT2's field half**, sized when act 3 opens. The P5-A re-run requirement transfers
+to W2-FIELD2's exit (its spec §3 requires the second baseline before any Phase B talk).
+
+### W3-ACT2 · Anchors, mandatories, the tour's discipline (entry: W2-ENDINGS + W2-FIELD2 merged; sized on arrival)
+
+Source: act2-pro-tour.md §§6–9. Named calendar anchors (Slams at fixed season weeks, 1000s/500s),
+the mandatory regime for top-50 with zero-point counted slots, the penalty ledger (10 pts/52wk →
+4-week suspension) with letters at every step, sponsors premium/icon + appearance fees, big draws
+(48/96/128 — sim cost and Draw-view are the priced unknowns), merited AER increases, and the
+W3-FIELD leftovers above.
 
 ### W3-INMATCH · The in-match injury (1 agent · L · entry: W2-ENDINGS merged — the last-injury ending is the consumer)
 
@@ -209,7 +248,7 @@ half is the bigger part), balance S (rate parity bench), tests M (injury suites 
 stated differentiator is the watchable match, and this puts its worst moment on screen instead
 of eating it silently before the trip.
 
-### W3-BALANCE · The balance harness + reprices (1 agent · L · entry: W3-FIELD merged)
+### W3-BALANCE · The balance harness + reprices (1 agent · L · entry: W2-FIELD2 merged)
 
 Sources: Codex TB-14 + roadmap items 11–12 + P5-A's quantified finding.
 
@@ -290,7 +329,7 @@ Status legend: ✅ done (merged or in wave/2026-08-01) · 🔜 mapped to a wave 
 | P2 | Morale + bond (pillar 3) | 🔜 W2-PSYCHE |
 | P3 | RNG persistence v35 | 🔜 W1-RNG |
 | P4 | world.ts split, 15 extractions | 🔜 P4 lane (Codex's timing rule adopted) |
-| P5 | Dual-universe: bench then maybe pay one universe | ✅ Phase A shipped, verdict NOT material; Phase B closed; re-run required after W3-FIELD (its spec §3) |
+| P5 | Dual-universe: bench then maybe pay one universe | ✅ Phase A shipped, verdict NOT material; Phase B closed; re-run required after W2-FIELD2 (its spec §3; transferred 02.08 when W3-FIELD was retired) |
 | P6 | Quick wins (money/dev-gate/sim-CI/theme) | 🔜 W1-QUICK |
 | P7 | Legal & provenance | ✅ shipped in this wave (5 manifest attestations = owner's merge gate) |
 | P8 | Mobile wave | 🔜 W4-MOBILE |
