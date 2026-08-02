@@ -85,6 +85,14 @@ const PLAN = argStr('plan', 'light') as 'grind' | 'balanced' | 'light'
 const POLICY = argStr('policy', 'pair') as 'pair' | 'greedy'
 /** The off-season reset under test (spec §4): «1 большим или парой небольших отпусков». */
 const VACATION = argStr('vac', 'elite') as 'elite' | 'two-small' | 'none'
+/** ⚠ THE PHYSIO RETAINER IS THE ONE AXIS THAT DECIDES WHETHER §6.2 READS AS PASSED, so it is a
+ *  flag rather than a default. `conditionBonusPerWeek` is 1 on EVERY week, played or rested, which
+ *  is +52 a season - and the spec's own §3 arithmetic ("a rest week returns 3 today: base 1 + the
+ *  rest-slider bonus 2") counts no retainer at all. So `off` is the SPEC'S reference player and the
+ *  number §6.2's 45-50 band was written about; `on` is what an elite-coached career actually
+ *  carries, and it arrives at the off-season door roughly a season's worth of retainer higher.
+ *  Both are reported in the wave, because they are two honest answers to two different questions. */
+const PHYSIO = argStr('physio', 'off') as 'on' | 'off'
 /** Weeks between the START of one event and the next she will enter. 2 = every second week. */
 const PAIR_GAP = POLICY === 'pair' ? 2 : 1
 /** Her first professional season starts here: age 16 is the earliest `minAgeYears` on any W rung. */
@@ -178,6 +186,7 @@ function probe(seed: string): SeasonRow[] {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, background: 'wealthy', coachTier: 'elite' })
   world.potential = { serve: 80, ret: 78, composure: 78, stamina: 78, groundstrokes: 80 }
   world.plan = { ...WEEK_PLAN_PRESETS[PLAN] }
+  world.physioActive = PHYSIO === 'on'
   const rng = resumeMain(world.rngMain)
 
   // The junior years, ticked WITHOUT entries: she arrives at sixteen fresh (see the header). One
@@ -272,7 +281,7 @@ const flat = all.flat()
 console.log(
   `THE PROFESSIONAL PAIR - ${SEEDS} careers x ${SEASONS} seasons from age 16, policy "${POLICY}" ` +
     `(gap ${PAIR_GAP}w), plan ${PLAN} ${WEEK_PLAN_PRESETS[PLAN].train}/${WEEK_PLAN_PRESETS[PLAN].rest}, ` +
-    `off-season vacation "${VACATION}"`,
+    `off-season vacation "${VACATION}", physio ${PHYSIO}`,
 )
 console.log(
   `  knobs under test: recoveryBase ${ECONOMY.condition.recoveryBase} · W surcharges ` +
@@ -283,7 +292,8 @@ console.log(
 console.log(
   `  a rest week returns ${ECONOMY.condition.recoveryBase} + slider ` +
     `${WEEK_PLAN_PRESETS[PLAN].rest >= 40 ? 2 : WEEK_PLAN_PRESETS[PLAN].rest >= 25 ? 1 : 0}` +
-    ` (+1 physio, +${ECONOMY.condition.blackoutBonus} on a blackout week)`,
+    `${PHYSIO === 'on' ? ` + ${ECONOMY.physio.conditionBonusPerWeek} physio (EVERY week, played or not)` : ''}` +
+    ` (+${ECONOMY.condition.blackoutBonus} on a blackout week)`,
 )
 
 console.log('\n  A TITLE RUN (5 matches, two of them 3-setters) - cost, and what she comes home at:')

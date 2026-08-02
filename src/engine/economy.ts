@@ -1099,9 +1099,50 @@ export const ECONOMY = {
     // Season-Life slice C: fatigue-driven injury risk. ALL of these move only the post-draw
     // threshold tau (or pull from the private per-week `seed:injury:week` sub-stream) – the MAIN
     // weekly draw sequence stays byte-identical (the C1 invariance test guards it).
-    injuryBaseChance: 0.006, // per healthy week at condition 100
-    injuryFatigueSlope: 0.0009, // + per fatigue point (100 - condition)
-    injuryPlayingMultiplier: 1.8, // tau *= this the week she competes
+    // ⚠⚠ ALL THREE RE-CALIBRATED 03.08 (W2-FATIGUE, docs/specs/fatigue-reprice-2026-08.md §5), and
+    // the spec's own §5 is the reason they had to be: «у нас же там еще риск травм растет, как бы мы
+    // себе в ногу не стрельнули усталостью». MEASURED BEFORE THE WAVE, on a career playing the
+    // owner's own season (twenty events, every second week): a 96-100% chance of at least one injury
+    // per season against the researched anchor of 46-54% (docs/research/injury-stats-by-age.md).
+    // The foot was already shot; the re-price is the bandage, not the bullet.
+    //
+    // ⚠ ORDER OF WORK, honoured: the fatigue re-price landed and was MEASURED FIRST, in its own
+    // commit, and this calibration was taken on top of it - never simultaneously, or the result is
+    // unattributable (the mistake act2-pro-tour.md's A3 note warns about for best-16). All numbers
+    // below come from tools/pro-season-probe.ts, 32 careers x 3 professional seasons, the spec's own
+    // reference player (60/40, no retainer), the professional pair schedule.
+    //
+    // WHY ALL THREE MOVED, in the spec's own order of preference, with what each was worth:
+    //   1. THE SLOPE FIRST, and the spec's suggestion of halving it was tried first and measured:
+    //      0.00045 -> 96%, 0.0003 -> 79%, 0.0002 -> 67%, 0.0001 -> 60%. Halving is not close. The
+    //      slope ALONE can reach the band, at about 0.00004 - but that is a 22x cut that leaves a
+    //      wrecked week only 1.7x as dangerous as a fresh one, i.e. it buys the number by deleting
+    //      the mechanic this whole slice is named after. Rejected on those grounds, and the
+    //      measurement is here so the owner can overrule it with one line.
+    //   2. THE COMPETING MULTIPLIER SECOND - and it is the injury axis of the same argument the
+    //      surcharge reprice makes: 1.8 was a junior's match week, and a professional on her own
+    //      tour is conditioned for hers. Worth ~4 points of prevalence on its own (a weak lever
+    //      here: only 20 of 52 weeks carry it).
+    //   3. THE BASE LAST, and it had to move because it is what was actually eating the band: at
+    //      twenty competing weeks, 0.006 x 1.8 x the age and overuse factors contributes ~45%
+    //      season prevalence BEFORE ANY FATIGUE AT ALL. It is halved, not abandoned - and the
+    //      research anchor it is tied to is a PREVALENCE, not a per-week rate. 0.006 was derived so
+    //      that a JUNIOR season produced 46-54%; the professional season has twice the competing
+    //      weeks, so the same anchor demands a smaller base. This is a re-derivation against the
+    //      same research, at the schedule the game now actually offers.
+    //
+    // WHAT THE SHIPPED TRIO MEASURES: 51% season prevalence at the professional pair schedule
+    // (target 46-54), and the fatigue coupling SURVIVES - a week at condition 50 is 3.5x as
+    // dangerous as a fresh one and a wrecked week is 6.0x, against the shipped 8.5x and 16x. The
+    // cliff is flattened, tiredness still plainly hurts, which is exactly what §5 asked for.
+    //
+    // ⚠ AND EVERY ONE OF THESE IS STILL A POST-DRAW THRESHOLD MULTIPLY inside `injuryTau` - that
+    // property is load-bearing and is untouched: zero new draws on any stream, the frozen MAIN
+    // capture byte-identical, the private `seed:injury:week` sequence in the same order it always
+    // was. Only the number a roll is compared against moved.
+    injuryBaseChance: 0.003, // per healthy week at condition 100
+    injuryFatigueSlope: 0.00015, // + per fatigue point (100 - condition)
+    injuryPlayingMultiplier: 1.4, // tau *= this the week she competes
     // R12-4/11 (owner playtest 27.07: "injured ON a family vacation", TWICE in one career). A
     // resort week used to roll the SAME dice as a training week – `rollInjury` reads fatigue, age,
     // trailing load and whether she is competing, and a booked vacation touched none of them, so
