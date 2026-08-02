@@ -50,7 +50,7 @@ import { formatShortName } from '../shared/format'
 // second week formatter living inside the engine. The engine keeps counting ABSOLUTE weeks and
 // every RNG sub-stream key / save field / pinned capture stays on that index; `weekLabel` is
 // applied only where the engine writes a string a PLAYER reads.
-import { daysInBirthMonth, seasonYear, weekLabel, weekMonth, weekOfDate, weekYear } from '../shared/dates'
+import { seasonYear, weekLabel } from '../shared/dates'
 // The emotion RULES live in shared/ (pure, UI-free, and the composable reads the same module), so
 // the engine borrows the two facts it needs rather than restating them: which recorded matches are
 // allowed to move her face (R11-2's one predicate) and the band a streak's anger threshold sits in.
@@ -182,6 +182,8 @@ import {
 import { coachEscalates, coachKnockCall, coachManagesLoad, coachWarnsEntry, type CoachLoadView } from './coachLoad'
 import type { CoachTier } from '../shared/protocol'
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
+import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, birthdayWeek, birthdayTurning, markBirthday } from './world/age'
+export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, birthdayWeek, birthdayTurning }
 
 // Phase 3 world: the living-season integration. The worker owns this state; the UI
 // only ever sees snapshots. All randomness flows from the world RNG stream, and the
@@ -205,8 +207,6 @@ import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries 
 // per act2-pro-tour.md §9's renumbering.
 export const SAVE_SCHEMA_VERSION = 36
 
-/** Detailed weekly simulation starts here; childhood becomes a prologue (Phase 6). */
-export const START_AGE_YEARS = 14
 
 /** The kid's stable player id inside cohort/ranking/tournament space. */
 export const KID_ID = 'kid'
@@ -1208,125 +1208,8 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
   world.condition = clamp(world.condition + recovery, c.min, c.max)
 }
 
-// =================================================================================================
-// HOW OLD SHE IS – the band, and the girl. Two different questions, and they had one answer.
-// =================================================================================================
-//
-// The owner, 30.07: «девочка, родившаяся в декабре, по идее, в этой возрастной группе должна на момент
-// января иметь возраст 13 лет, согласно году рождения и началу занятий в теннис. Или нет?»
-//
-// YES. And the reasoning is worth writing down, because it turns on how tennis is organised:
-//
-//   ⚠ TENNIS IS A CALENDAR-YEAR SPORT. Unlike hockey (August cutoff) or school (September), the ITF
-//   junior circuit bands by YEAR OF BIRTH and runs its season January to November with December off. The
-//   game already has that right - week 1 is January and OFF_SEASON_WEEKS are 49-52 - so there is no
-//   cutoff to move. What was wrong is the AGE.
-//
-//   The career opens in January 2031 with her in the 14s, so every girl in her band was born in 2017. A
-//   girl born in January turns 14 that same month; a girl born in December turns 14 ELEVEN MONTHS LATER
-//   and is genuinely THIRTEEN for almost the whole season - playing the same draws, against the same
-//   girls. That is the relative age effect in its primary form, and it is a fact about her age rather
-//   than a modifier applied to it.
-//
-// SO THERE ARE TWO QUESTIONS AND THEY NEEDED TWO FUNCTIONS:
-//
-//   `ageAtWeek`     THE BAND / THE CAREER CLOCK. Birth-month-free by construction: 14 at week 0, 15 at
-//                   week 52, for everyone. This is what her AGE GROUP is, and what the season's own
-//                   ageing is keyed to.
-//   `kidAgeExact`   THE GIRL. Her real age, from a real birth date on the game's real calendar.
-//
-// ⚠ AND `ageAtWeek` MUST NOT LEARN ABOUT BIRTH MONTHS, which is the reason this is two functions rather
-// than one with a parameter. `coachById(world.seed, ageAtWeek(world.week), world.coachId)` DERIVES THE
-// COACH ROSTER FROM THE AGE - it is a purely functional roster with nothing persisted but the chosen id,
-// which is what lets a saved coach resolve years later without a migration. Make the age depend on her
-// birthday and every December career's roster re-rolls, and their hired coach resolves to a different
-// person or to nobody. Eleven of the nineteen `ageAtWeek` call sites are that roster and its prices.
-// The band is the right input there: a market of coaches for 14-year-olds does not restock because one
-// girl has a late birthday.
-
-/** THE BAND, and the career clock: whole years since the career opened, birth month deliberately absent.
- *  See the note above for why this must stay birth-month-free - the coach roster is derived from it. */
-export function ageAtWeek(week: number): number {
-  return START_AGE_YEARS + Math.floor(week / WEEKS_PER_YEAR)
-}
-
-/** Her BIRTH YEAR: the band's year, which is the same for every girl in it. The career opens in the
- *  January of `seasonYear(0)`, so a girl in the START_AGE band was born START_AGE years before it. */
-export function kidBirthYear(): number {
-  return weekYear(0) - START_AGE_YEARS
-}
-
-/** HER REAL AGE in `week`, fractional, off the game's own calendar.
- *
- *  A January girl is 14.0 at week 0; a December girl is 13.08 and does not turn 14 until week ~48. Feeds
- *  development (`growWeek`), her eligibility allowance, the injury table and every surface that prints an
- *  age - everything, in short, that is about the GIRL rather than about her age group. */
-export function kidAgeExact(week: number, birthMonth: number): number {
-  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
-  // Months elapsed since her birthday, as a fraction of a year, measured on the real calendar.
-  const monthsIntoYear = weekMonth(week) - month
-  const yearsSinceBirthYear = weekYear(week) - kidBirthYear()
-  return yearsSinceBirthYear + monthsIntoYear / 12
-}
-
-/** ...and the whole-years version, which is what the age-keyed tables want. */
-export function kidAgeYears(week: number, birthMonth: number): number {
-  return Math.floor(kidAgeExact(week, birthMonth))
-}
-
-/** The career week her birthday falls in for the calendar year containing `week`, or null if that date is
- *  off the calendar.
- *
- *  ⚠ THE WEEK CONTAINING HER ACTUAL DATE, not the first week of her month - which is what this did before
- *  the day existed. The owner asked for the day precisely so this lands right: «мы же будем ее с ДР на
- *  неделе поздравлять (и подарки дарить, кстати), чтобы точно знать на какой нам нужен день».
- *
- *  CAN BE NEGATIVE, and the caller must not assume every season has one: a girl born 1-5 January had her
- *  birthday before week 0 began, so her first in-game one is the following year. `birthdayTurning`
- *  compares against the current week, so that resolves itself. */
-export function birthdayWeek(week: number, birthMonth: number, birthDay: number): number | null {
-  const month = Math.max(1, Math.min(12, Math.round(birthMonth)))
-  const day = Math.max(1, Math.min(daysInBirthMonth(month), Math.round(birthDay)))
-  return weekOfDate(month, day, weekYear(week))
-}
-
-/** Is `week` her birthday week, and if so what age does she turn? Null on every other week.
- *
- *  DERIVED, NOT PERSISTED - a pure comparison of the calendar against her birth date, so it cannot drift
- *  out of step with `kidAgeExact`; both read the profile and nothing else. */
-export function birthdayTurning(week: number, birthMonth: number, birthDay: number): number | null {
-  if (week !== birthdayWeek(week, birthMonth, birthDay)) return null
-  // On her birthday week she has just reached this age, so the floor of her exact age IS the new number.
-  return kidAgeYears(week, birthMonth)
-}
-
-/** Numbers she is old enough to be told in words. The notes are somebody's voice, and a parent does not
- *  say "she is 15 today". Past the junior years the words stop being the natural register, so the map
- *  covers the ages a career can actually reach and the caller falls back to the numeral. */
-const AGE_WORDS: Record<number, string> = {
-  13: 'thirteen',
-  14: 'fourteen',
-  15: 'fifteen',
-  16: 'sixteen',
-  17: 'seventeen',
-  18: 'eighteen',
-  19: 'nineteen',
-  20: 'twenty',
-}
-
-/** THE BIRTHDAY, in the feed. One line, in the family's own register, and it names the AGE because that is
- *  the fact of the week - the relative-age story is told by her age being 13 in a 14s draw, and this is
- *  where the player first meets it. */
-function markBirthday(world: WorldState): void {
-  const turning = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
-  if (turning === null) return
-  const words = AGE_WORDS[turning] ?? String(turning)
-  addEvent(world, {
-    week: world.week,
-    type: 'info',
-    text: `She is ${words} this week.`,
-  })
-}
+// HER AGE (band, exact age, birthday) moved to world/age.ts (P4 extraction); re-exported below
+// under the historical names so every existing call site keeps working.
 
 /** Pure age gate for a tier: the junior tour is 13-18, the domestic ladder has no gate, the adult
  *  rungs are 16/16/17 and never close. No world/RNG dependency, so the childhood prologue and the
