@@ -664,8 +664,9 @@ function start(): void {
         <!-- N alone ends with one wide affirmative and a quiet line under it – there is nothing to
              go BACK to from the first step, so the quiet line is Skip. O through S all carry the
              same Back / affirmative pair. Same footer element, three fillings.
-             ⚠ NO TENNIS BALL ON ANY OF THEM (owner, 29.07: «уберите этот мячик на онбординге со
-             всех кнопок, он там не нужен»). The design draws the glyph beside every CTA word; it
+             ⚠ NO TENNIS BALL ON ANY OF THEM - the owner's 29.07 ruling (quoted on the script
+             side): drop that little ball from every onboarding button, it is not needed there.
+             The design draws the glyph beside every CTA word; it
              was decoration on a button whose word already says what it does, and it is gone from
              all three. It is NOT gone from the rest of the app - `.ball-icon` in src/style.css is
              the splash's mark and belongs to nobody here. -->
@@ -677,8 +678,8 @@ function start(): void {
         </div>
 
         <!-- ⚠ S CARRIES THE SAME BACK / AFFIRMATIVE PAIR AS THE STEP BEFORE IT (owner, 29.07:
-             «на макете S нет кнопки Назад – давай сделаем по аналогии с предыдущим шагом, только
-             кнопка старт будет чуть больше Next»). The design draws no Back on S at all, and we had
+             the owner: mockup S has no Back button - follow the previous step, with the start button a
+             little larger than Next). The design draws no Back on S at all, and we had
              it as the quiet underlined line where N puts Skip; it is now the same pill R uses, in
              the same place, so walking back out of the summary is the same gesture it was on every
              step before. Start career is the ONE button in the flow that begins a career rather

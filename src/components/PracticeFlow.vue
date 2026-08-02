@@ -118,8 +118,9 @@ function close(): void {
 </script>
 
 <template>
-  <!-- ⚠ THE TAKEOVER IS A COMPONENT NOW (owner, 30.07: «надо все одинаково сделать оверлеем поверх
-       всего экрана ... Будет один компонент и без ненужных дублей кода»). The layer, the header and
+  <!-- ⚠ THE TAKEOVER IS A COMPONENT NOW - the owner's 30.07 ruling, quoted in full on the script
+       side (house convention: his words live where Cyrillic is allowed): every match surface is
+       one overlay component, no duplicated code. The layer, the header and
        the scroller were written out by hand here, in TournamentFlow and in MatchReplay, and the
        fourth match surface - SeasonScreen's sandbox - did NOT have them, which is how it ended up
        with its control bar under the tab bar. Same classes, same layout, one author: see
@@ -162,8 +163,9 @@ function close(): void {
       <div class="controls pf-chips">
         <span class="pill">No ranking points</span>
       </div>
-      <!-- ⚠ SKIP FIRST, WATCH SECOND (owner, 30.07: «на экране перед матчем надо поменять местами
-           кнопки skip/watch it так логичнее» - and "watch it" is this screen's own label). The
+      <!-- ⚠ SKIP FIRST, WATCH SECOND - the owner's 30.07 ruling (quoted on the script side): swap
+           the skip and watch buttons on the pre-match screen, it reads more logically that way.
+           ("watch it" is this screen's own label.) The
            affirmative goes under the thumb, at the right-hand end, which is where every other action
            row in the app already puts it: the box score below, the tournament's pre-match card, and
            the sheet's `.dialog-actions`. Order only - same handlers, same `.primary`, same
@@ -181,8 +183,7 @@ function close(): void {
          match", which the header above says already, and "To result →", which is now the header's
          own slot. So the row had nothing left of its own to carry, and the court starts 34px
          higher (22px of pill + its 12px of air) on every friendly.
-         ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO (owner, 30.07: «на экране матча у нас двойная
-         рамка, она съедает место, давай внешний контур уберем, он не нужен»). The viewer already
+         ⚠ AND THE `.tf-card` AROUND IT IS GONE TOO (owner, 30.07: the match screen has a double frame that eats space, drop the outer contour). The viewer already
          draws its own panels - the court, the log and the box score are each a `Card` - so this was
          a border around a border and 34px of padding around nothing. Measured at 375pt: 291 ->
          327px of canvas, 244.4 -> 274.9px of painted court, and 32px of height back. See the same

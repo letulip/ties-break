@@ -364,8 +364,9 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
           />
         </Card>
 
-        <!-- ⚠ NO FACE ON THIS TILE (owner, 29.07): «в mood давай кружок уберем, и так на большой
-             картинке видно эмоцию вполне». He is right - the hero directly above is the SAME
+        <!-- ⚠ NO FACE ON THIS TILE - the owner's 29.07 ruling (quoted in full on the script side,
+             where the house convention keeps his words): drop the little circle, the big picture
+             already shows the emotion. He is right - the hero directly above is the SAME
              decision at forty times the size, so the 36px crop was the emotion said twice, and the
              smaller saying carried less. The word stays; the picture is the picture above it. -->
         <Card class="kid-tile kid-tile-mood" pad="11px 9px">

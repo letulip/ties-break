@@ -63,8 +63,9 @@ const annotated = computed(() => {
     <template #exit>
       <IconButton icon="close" label="Close replay" title="Close" @click="$emit('close')" />
     </template>
-    <!-- ⚠ NO PANEL AROUND THE VIEWER, and that is the 30.07 correction (owner: «на экране матча у
-         нас двойная рамка, она съедает место, давай внешний контур уберем, он не нужен»). This was
+    <!-- ⚠ NO PANEL AROUND THE VIEWER, and that is the 30.07 correction - the owner's words are on
+         the script side; in short, the match screen had a double frame eating space, so the outer
+         contour goes. This was
          a `.tf-card` - 16px of padding and a hairline - wrapped around a stack of `Card`s the viewer
          draws itself, so the border was doubled and the padding bought nothing. Measured at 375pt:
          291 -> 327px of canvas, 244.4 -> 274.9px of painted court, 32px of height back. -->
