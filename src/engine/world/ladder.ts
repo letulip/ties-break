@@ -295,3 +295,20 @@ export function tierOpenFor(world: WorldState, tier: TierId): boolean {
 export function outgrewTier(tier: TierId, points: number): boolean {
   return points > TIERS[tier].enterPointBand[1]
 }
+
+/** HER PLACE in one named table – the one number every rank surface reads, so a chip and the entry
+ *  gate that used the same number to decide her entries cannot disagree. */
+export function rankIn(world: WorldState, track: LadderTrack): number {
+  if (track === 'itf') return world.kidRank
+  if (track === 'wta') return world.kidRankWta ?? world.cohort.length + 1
+  return world.kidRankDomestic ?? world.cohort.length + 1
+}
+
+/** ...and her place in the SAME table a week ago. Its own function beside `rankIn` for the reason
+ *  `prevKidRankDomestic` exists at all: a movement is (previous - current), and the two halves have to
+ *  come from one table or the difference is a subtraction across two currencies. */
+export function prevRankIn(world: WorldState, track: LadderTrack): number | null {
+  if (track === 'itf') return world.prevKidRank
+  if (track === 'wta') return world.prevKidRankWta ?? null
+  return world.prevKidRankDomestic ?? null
+}
