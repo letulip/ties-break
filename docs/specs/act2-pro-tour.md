@@ -481,6 +481,32 @@ tournaments later": they are the top half of the same ladder, the only source of
 real curve is made of, the only thing that fills the window above W75, and the home of the
 mandatory regime the owner wants. Planned as optional in §9, it is now on the critical path.
 
+### 11.4 Offered, played, paced — the three numbers W2-WINDOW is graded on
+
+The owner's «3–5 недель из 8» is exactly right, and it describes what she PLAYS rather than what
+she is offered — a real top-100 plays 20–25 events over ~44 playing weeks, which is 3.6–4.5 weeks
+of every 8. Availability in the real sport is far wider: roughly 500 women's ITF events and 60 WTA
+ones a year, so she could play every week and is stopped by money, travel and fatigue instead. That
+gap IS the choice the game is about, so the two numbers must not be set equal — an availability of
+20–30 would leave her playing the whole menu.
+
+| | weeks of 8 | a season |
+| --- | --- | --- |
+| OFFERED — the window's shape (3 rungs, measured §11.1) | 5.2–6.0 | ~34 weeks carry an event |
+| PLAYED — the owner's target, and the real tour's number | 3–5 | 20–30 |
+| **PLAYED TODAY — measured on his W230 career** | **1.7** | **11** |
+
+⚠ **THE THIRD ROW IS WHY "PLAYED" IS A SEPARATE CRITERION.** Eleven events in fifty-two weeks is
+half his target and half a real professional's season, on a career he plays attentively. A wider
+window cannot be assumed to fix it: three causes are already known and only one is the window's —
+his current season block predates W2-LADDER and physically holds no W50/W75/125 (25 events that
+arrive with season 5); the feed spent a day offering junk instead of choice (fixed 03.08); and the
+fatigue ladder was priced for the junior era at ~15–20 events a dense season, which is BELOW what a
+real professional plays. So W2-WINDOW is graded on all three rows, and if the played number cannot
+reach 20–30 without loosening fatigue or travel costs, that is a finding to bring back rather than
+a knob to turn: those numbers are the owner's own, and what the professional era should cost is a
+separate decision from what it should offer.
+
 - **The «мировые очки странно считаются» defect, found and fixed**: the three rank caches are
   persisted, phase W redefined the W table, and a pre-phase-W save woke up with chip «#9» over a
   merged table folding to #61 — two surfaces disagreeing until the first tick snapped the chip 52

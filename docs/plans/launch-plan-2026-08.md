@@ -222,9 +222,23 @@ to W2-FIELD2's exit (its spec §3 requires the second baseline before any Phase 
 ⚠ NEW 03.08, and it displaces ruling 4's visibility rule rather than adding to it — source:
 act2-pro-tour.md §11 (rulings 11–13, with the owner's own worked band table). Every rung gets a
 CEILING as well as a floor, in its own table's currency; the feed shows exactly what is inside the
-window; a rung she has passed CLOSES instead of being filtered. Acceptance: 3–5 playable weeks of
-every 8 at each stage of the career (measured per window in §11.1), and a climb paced like a real
-one — no reaching the top of what exists inside two seasons. Both are bench criteria, not opinions.
+window; a rung she has passed CLOSES instead of being filtered.
+
+**Acceptance — three benched numbers, not opinions** (act2-pro-tour.md §11.4):
+
+1. **Offered**: 5–6 playable weeks of every 8 at each stage of the career — the window's own shape,
+   measured per stage the way §11.1's table was.
+2. **PLAYED**: 20–30 events a season on a bench career that tries to play. ⚠ THE OWNER ASKED FOR
+   THIS ONE EXPLICITLY, and it is the criterion that cannot be faked by widening a window: today
+   his own career plays **11 events in 52 weeks** — half his target and half what a real top-100
+   plays (20–25). A window she cannot walk through because fatigue or the wallet says no is a
+   window that changed nothing, and only this number notices.
+3. **Paced**: reaching the top of what exists takes as long as it does in life — no clearing the
+   shipped ladder inside two seasons.
+
+⚠ If (2) cannot be reached without loosening fatigue or the travel economics, STOP and report the
+numbers rather than tuning either: both were measured for the junior era and the owner priced them
+himself. What the pro era should cost is his call, and it is a different question from the window.
 
 ### W3-ACT2 · The top half of the ladder (entry: W2-ENDINGS + W2-WINDOW merged; sized on arrival)
 
