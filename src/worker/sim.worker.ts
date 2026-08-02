@@ -22,6 +22,7 @@ import {
   skipTournament,
   closeTournament,
   toSnapshot,
+  refreshDerivedRankCaches,
   type WorldState,
 } from '../engine/world'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
@@ -139,11 +140,18 @@ function recoverMainState(w: WorldState): MainRngState {
 }
 
 /** Shared tail of the load paths: verify the persisted position, repair it if it fails, and
- *  say which happened — the boolean feeds straight into the snapshot's `recovered` flag. */
+ *  say which happened — the boolean feeds straight into the snapshot's `recovered` flag.
+ *
+ *  ⚠ THE RANK-CACHE REFRESH RIDES HERE ON PURPOSE (wave/pro-prep): every world this worker adopts
+ *  — boot, restore, import — passes through this function, and a save written under an older
+ *  table definition wakes up with stale persisted rank caches (the "#9 chip over a #61 table"
+ *  defect; see `refreshDerivedRankCaches`). The refresh is deterministic and idempotent, so it is
+ *  NOT a recovery: its answer never touches the `recovered` flag the player is warned with. */
 function ensureMainState(w: WorldState): boolean {
-  if (verifyMainState(w)) return false
-  w.rngMain = recoverMainState(w)
-  return true
+  const rngRepaired = !verifyMainState(w)
+  if (rngRepaired) w.rngMain = recoverMainState(w)
+  refreshDerivedRankCaches(w)
+  return rngRepaired
 }
 
 /**

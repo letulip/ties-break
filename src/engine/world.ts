@@ -828,6 +828,40 @@ export function recomputeKidRank(world: WorldState): void {
   latchOnRamps(world)
 }
 
+/** THE ADOPTION-TIME CACHE REFRESH (wave/pro-prep, 02.08). The three rank caches are persisted
+ *  state with one writer (`recomputeKidRank`) – which is exactly how a save written under an OLDER
+ *  definition of a table wakes up stale: living-field phase W redefined the W table (merged field),
+ *  and a pre-phase-W career loaded its chip rank as "#9" off disk while the standings rendered the
+ *  merged table's #61 – two surfaces, two answers, until the first tick snapped the chip 52 places
+ *  with no play behind it (the owner's «мировые очки как-то странно считаются», measured against
+ *  his own save in tools/points-audit.ts). Every load path calls this beside `ensureMainState`:
+ *  recompute the caches against TODAY's table definitions, and for any track whose value MOVED,
+ *  align that track's prev* to the fresh value – a movement arrow must diff one table with itself
+ *  (see `prevKidRankDomestic`), and "old code's table minus new code's" is exactly the
+ *  cross-currency subtraction that rule exists to forbid. Tracks that did not move keep their
+ *  prev*, so an ordinary reload still shows last week's real movement. Pure recompute, no RNG;
+ *  `latchOnRamps` rides along as always (one-way, so a refresh can only latch what the next tick
+ *  would have latched anyway). Returns whether anything moved – callers today ignore it, tests
+ *  pin idempotence through it. */
+export function refreshDerivedRankCaches(world: WorldState): boolean {
+  const before = { itf: world.kidRank, dom: world.kidRankDomestic, wta: world.kidRankWta }
+  recomputeKidRank(world)
+  let moved = false
+  if (world.kidRank !== before.itf) {
+    world.prevKidRank = world.kidRank
+    moved = true
+  }
+  if (world.kidRankDomestic !== before.dom) {
+    world.prevKidRankDomestic = world.kidRankDomestic ?? null
+    moved = true
+  }
+  if (world.kidRankWta !== before.wta) {
+    world.prevKidRankWta = world.kidRankWta ?? null
+    moved = true
+  }
+  return moved
+}
+
 /** The bottom rung of a table – the one with no acceptance list, whose band is read against the
  *  table BELOW it. Derived from the catalogue rather than written down as 'j30' / 'w15', so a future
  *  table (or a re-shaped one) needs no edit here and cannot silently disagree with `tierOpenFor`,
