@@ -198,3 +198,48 @@ aliases (`AvailabilityStatus`, `MedicalClearance`, `EntryStatus`, …) were re-e
 runtime import of an export that does not exist and dies. Every extraction that moves a type must send
 it out via `export type { … } from './world/<mod>'`, and **`npm run build` belongs in the per-PR gate
 beside the typecheck and the tests** – it is the only check that catches this class.
+
+### Wave 2 (2026-08-02, same branch): sponsors, milestones, entries, injuries
+
+Six more modules. **`world.ts` 6,019 → 3,895 (−35.3%)**; the `world/` package is 2,381 lines across 13
+files, and no file in the engine is over 600 lines any more.
+
+| Module | Lines | Note |
+|---|---|---|
+| `world/sponsors.ts` | 296 | sponsor review, offers, travel cost + academy cover |
+| `world/milestones.ts` | 302 | milestone capture, season wrap-up, trophy ledger |
+| `world/bookings.ts` | 56 | grew: `eventById`, `refundPractice` joined the accessors |
+| `world/knockHistory.ts` | 35 | `KNOCK_HISTORY_MAX` + `retireKnock` |
+| `world/entries.ts` | 171 | `enterEvent`, `withdrawEvent`, `cancelEntry` |
+| `world/injury.ts` | 301 | the whole injury/physio slice |
+
+**The unlock chain, and the rule that produced it.** Injury measured **8** call-backs in wave 0 and
+looked like the hardest mid-sized block. It came out at **0** without a single upward import, by moving
+its dependencies DOWN to the lowest module that needed them, in this order:
+
+1. `eventById` + `refundPractice` → `bookings.ts` (two callers each, neither of them world.ts's core)
+2. `retireKnock` + `KNOCK_HISTORY_MAX` → `knockHistory.ts` — **its own leaf on purpose**: the knock flow
+   retires a knock when it expires and the injury roll retires one when a real injury supersedes it, so
+   leaving it with either would have forced the other to import upward.
+3. those two moves dropped `enterEvent`/`withdrawEvent`/`cancelEntry` to **0** → `entries.ts`
+4. …which made `withdrawEvent` a sibling, and injury fell to **0**.
+
+`skipEvent` deliberately stayed in world.ts: it closes a week through the tick pipeline's deferred
+steps, so it is a tick concern wearing an entry's name.
+
+**Standings after wave 2** (re-probe before starting any of these – the numbers keep decaying):
+
+| Block | Lines | Call-backs (wave 0 → now) | Blockers |
+|---|---|---|---|
+| **planner** | 100 | 2 → **0** | ready now |
+| coach market | 443 | 10 → 3 | `coachLoadNote`, `assertPlannable`, `kidMatchPlayerFor` |
+| knock flow | 265 | 4 → 4 | `isCompetitionWeek`, `startingSkills`, `coachSinceWeek`, `matchesEverPlayed` |
+| snapshot | 748 | 35 → 16 | needs the tournament/match surface out first |
+
+**Test maintenance, the real cost of this package.** Nine source-pin tests broke across the two waves
+and every one was repointed at `tests/worldSource.ts` rather than at a new path: the knock-writer pin,
+the `layoffCovering` count, the `enterPointBand` readers, the `prizeCentsFor` declaration, the
+`kitTravelShare` guard, and the `maybeFireSeasonWrapUp` / `enterEvent` / `injuryTau` / `bestText`
+slices. Each encodes an invariant about the module **set** ("exactly one payout function exists"), not
+about a file, so the helper is the correct home and they should need no further edits. Budget roughly
+one repoint per two extractions.
