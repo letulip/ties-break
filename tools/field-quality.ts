@@ -72,7 +72,7 @@ import { TIERS, TIER_LADDER, isTierAgeOpen } from '../src/engine/season/calendar
 import { fastMatchProbability } from '../src/engine/match/engine'
 import { rollPotential } from '../src/engine/development'
 import type { MatchPlayer } from '../src/engine/match/types'
-import { fieldProsFor, isFieldProId, mergedWtaRanking, universeForTier, FIELD } from '../src/engine/season/fieldPros'
+import { fieldProsFor, isFieldProId, mergedWtaRanking, universeForTier } from '../src/engine/season/fieldPros'
 import type { AiPlayer, RankingRow, SeasonEvent, TierId } from '../src/engine/season/types'
 import type { WorldState } from '../src/engine/world'
 
