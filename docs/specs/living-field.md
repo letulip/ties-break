@@ -354,6 +354,21 @@ gets the empty set on the first line. Measured effect on the weeks where it bite
 week with a W100 draws a field of core 51.4 against 52.6 on a clear week, and her title chance there
 is 14.1% against 8.2%. One pro plays one event a week, and it is visible.
 
+The clean A/B, same seeds, same bands, the rule off and on (`--no-exclusivity`, 16 worlds):
+
+| rung | core OFF → ON | P(title) OFF → ON | candidates at the narrowest OFF → ON |
+| --- | --- | --- | --- |
+| W15 | 48.8 → 48.3 | 16.0% → 19.5% | 267 → 214 |
+| W35 | 51.4 → 50.3 | 15.5% → 17.6% | 265 → 204 |
+| W50 | 53.8 → 52.6 | 4.3% → 8.2% | 236 → 195 |
+| W75 | 58.7 → 57.5 | 0.6% → 0.6% | 172 → 154 |
+| W100 | 65.9 → 65.3 | 0.0% → 0.0% | 153 → 145 |
+| WTA 125 | 71.3 → 71.3 | 0.0% → 0.0% | 128 → 128 |
+
+Every rung softens except the top one, which has nothing above it to lose people to — the rule's own
+shape, read off the measurement. The price is 20–50 candidates at the narrowest week, and every
+window still holds four draws' worth with the out-of-band share at 0.0%.
+
 **⚠ THE ONE TARGET THAT MOVED, and it is arithmetic.** A 50-point LIVE row (five W15 titles) lands
 **#118 of 564**, not the phase-W promise of #40–80. 64 professionals now exist above the old
 450-point ceiling, so such a row cannot rank above #65 whatever any constant says; holding #40–80
