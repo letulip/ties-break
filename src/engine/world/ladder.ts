@@ -17,6 +17,7 @@ import type { LadderTrack, RankingRow, TierId } from '../season/types'
 import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPros'
 import { seasonIndexOf } from './ledger'
 import { ageAtWeek } from './age'
+import { proEntryCapUsage } from './entryCaps'
 import { KID_ID } from './constants'
 import type { WorldState } from '../world'
 
@@ -327,6 +328,22 @@ const TERMINAL_RUNGS = 4
 export function tierOutgrown(world: WorldState, tier: TierId): boolean {
   const i = TIER_LADDER.indexOf(tier)
   if (i < 0 || i >= TIER_LADDER.length - TERMINAL_RUNGS) return false
+  // ⚠⚠ THE PRO CAP RE-OPENS THE LADDER BELOW IT - ruling 2, and it is an ACCESS rule rather than the
+  // visibility one it replaces. «игрок должен иметь возможность играть, если не w-серии то где-то
+  // еще, чтобы не скучал»: the tour's own age rule (the AER, §5) caps a sixteen-year-old at 12
+  // professional entries and a seventeen-year-old at 16, and once that allowance is spent the
+  // window - which by then is all professional - has nothing left to offer her for the rest of the
+  // season. MEASURED before this clause, tools/boredom-guard.ts, 8 maximal-grinder careers x 260
+  // weeks: 516 cap refusals over 317 weeks, and 144 of those weeks had NOTHING else, every one of
+  // them because the ceiling had closed the J or domestic event sitting on it. So a spent pro
+  // allowance lifts the ceiling on the NON-professional rungs until the season turns - she may
+  // enter the junior and national tennis she has technically outgrown, which is exactly what
+  // ruling 2 promises and what the old feed-level "substitution" could only ever SHOW her.
+  //
+  // It is deliberately narrow: professional rungs never re-open (the cap is about them), it lasts
+  // only while the allowance is spent, and the allowance resets every season - so it can never be
+  // the reason a twenty-year-old is offered a J30, because `proPerYearByAge` is unlimited from 18.
+  if (TIERS[tier].track !== 'wta' && proEntryCapUsage(world, world.week).remaining <= 0) return false
   const above = TIER_LADDER[i + WINDOW_RUNGS]
   if (!isTierAgeOpen(above, ageAtWeek(world.week))) return false
   return tierFloorOpen(world, above)
