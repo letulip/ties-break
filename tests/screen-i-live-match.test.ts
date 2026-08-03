@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { componentLogic, componentFile } from './worldSource'
 import { readdirSync, readFileSync } from 'node:fs'
 import { courtToCanvas, courtScale, type Viewport } from '../src/viz/geometry'
 import { COURT } from '../src/viz/types'
@@ -32,7 +33,7 @@ const stylesOf = (sfc: string): string =>
   sfc.slice(sfc.indexOf('<style scoped>')).replace(/\/\*[\s\S]*?\*\//g, '')
 
 describe('screen I – the commentary is actually on the screen', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentLogic('components/MatchViewer.vue')
 
   it('the viewer builds the commentary and renders it as the log', () => {
     // A derivation nobody calls is not a feature. The whole point of the slice is that the beats
@@ -55,7 +56,8 @@ describe('screen I – the commentary is actually on the screen', () => {
 })
 
 describe('screen I – the design and the rulings it has to keep', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentLogic('components/MatchViewer.vue')
+  const viewerFile = componentFile('components/MatchViewer.vue')
   const sheet = read('../src/style.css')
 
   it('replay is the live match MINUS the blinking Live and MINUS shouting (ui-inventory §2)', () => {
@@ -90,7 +92,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
     expect(viewer).toMatch(/v-if="props\.mode === 'live' && !finished" class="mv-shout"/)
     // Read off `markupOf` for the reason this file's own header gives: the ⚠ note that replaced the
     // placeholder QUOTES its tooltip, and a pin a comment can satisfy is not a pin.
-    expect(markupOf(viewer), 'the placeholder tooltip outlived the placeholder').not.toContain(
+    expect(markupOf(viewerFile), 'the placeholder tooltip outlived the placeholder').not.toContain(
       'Coming in Phase 6',
     )
     expect(viewer).toContain('Shout 📣')
@@ -170,8 +172,8 @@ describe('screen I – the design and the rulings it has to keep', () => {
     // on it - the same match must narrate identically, every replay, forever - and a button press is
     // not match data. So the shout may reach the LOG but never that function: the two lists meet in
     // `visibleRows`, at display time, and nowhere earlier.
-    expect(viewer).toMatch(/buildCommentary\(props\.match/)
-    expect(viewer, 'a shout was fed into the deterministic narrator').not.toMatch(
+    expect(viewerFile).toMatch(/buildCommentary\(props\.match/)
+    expect(viewerFile, 'a shout was fed into the deterministic narrator').not.toMatch(
       /buildCommentary\([^)]*shout/i,
     )
     const commentary = read('../src/viz/commentary.ts')
@@ -181,7 +183,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
   })
 
   it('the controls are the app\'s segmented control, not two <select>s', () => {
-    expect(templateOf(viewer)).not.toContain('<select')
+    expect(templateOf(viewerFile)).not.toContain('<select')
     expect(viewer).toContain("import SegmentedRow from './ui/SegmentedRow.vue'")
     // Values, never indices – SegmentedRow's contract, and speed is a number so it needs an adapter.
     expect(viewer).toContain('speedSeg')
@@ -282,8 +284,8 @@ describe('screen I – the design and the rulings it has to keep', () => {
     expect(viewer).toContain('temperatureC?: number | null')
     // The number must never be computed twice: the view may not reach for the engine's generator.
     // (Prose about it in the prop's own comment is the point; an IMPORT of it would be the bug.)
-    expect(viewer).not.toMatch(/import[\s\S]{0,80}eventTemperature/)
-    expect(viewer).not.toMatch(/eventTemperature\(/)
+    expect(viewerFile).not.toMatch(/import[\s\S]{0,80}eventTemperature/)
+    expect(viewerFile).not.toMatch(/eventTemperature\(/)
     const plate = read('../src/components/ui/WeatherPlate.vue')
     // Wind does not exist in the engine in any form, so no wind figure may appear here.
     expect(plate).not.toMatch(/m\/s|km\/h|mph/)
@@ -302,7 +304,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
     expect(viewer).toContain('The export gives this slot to a wall clock')
     // Read off the MARKUP, for this file's own standing reason: `gameScore`'s doc comment QUOTES the
     // export's label to explain why we do not print it, and a pin a comment can satisfy is not a pin.
-    expect(markupOf(viewer), 'a wall clock came back').not.toContain('Match time')
+    expect(markupOf(viewerFile), 'a wall clock came back').not.toContain('Match time')
   })
 })
 
@@ -313,7 +315,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
 // put a row back by accident or take the guarantee out from under the pinned bar.
 // =====================================================================================================
 describe('the pinned control bar can never reach the playing surface', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentLogic('components/MatchViewer.vue')
 
   it('is sticky rather than fixed, so it costs no height until it would otherwise be gone', () => {
     // Owner: «maybe we need to make lower buttons on match screen fixed so we could use them
@@ -624,7 +626,7 @@ describe('live and replay open the same way – the popup, which is the one he l
       // which is precisely the markup that was deleted - and precisely what would come back.
       // Deliberately NOT "the file contains no .tf-card": the tournament's draw, box score, spectate
       // card and poster are all still panels, in other phase branches, and must stay ones.
-      expect(markup, `${name} wraps the viewer in a panel`).not.toMatch(
+      expect(markup, `${name} wraps the viewerFile in a panel`).not.toMatch(
         /class="tf-card[^"]*"[^>]*>\s*<MatchViewer/,
       )
     }
@@ -672,7 +674,7 @@ describe('live and replay open the same way – the popup, which is the one he l
 // «inside the match the screen should be the match and information about the match, nothing else».
 // =====================================================================================================
 describe('a hidden screen is a stopped match', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentLogic('components/MatchViewer.vue')
 
   it('pauses on visibilitychange the way the music already does, and only resumes what was running', () => {
     // Owner, 31.07: «pause the game and the match when the screen is minimised, the way music
@@ -716,7 +718,7 @@ describe('a hidden screen is a stopped match', () => {
 })
 
 describe('who is serving is said twice, attached to something, and never in a spare row', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentLogic('components/MatchViewer.vue')
   const markup = markupOf(viewer)
   const styles = stylesOf(viewer)
 
@@ -832,7 +834,8 @@ describe('who is serving is said twice, attached to something, and never in a sp
 // already reports, and two readings of one serve that disagree are worse than no reading at all.
 // =====================================================================================================
 describe('the serve speed on the court is the same number the box score reports', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentLogic('components/MatchViewer.vue')
+  const viewerFile = componentFile('components/MatchViewer.vue')
 
   it('⚠ the per-point speed stream is seeded in EXACTLY ONE file, and it is not the viewer', () => {
     // The same discipline the trophy URL slice just established: a fact that two screens must agree
@@ -868,7 +871,7 @@ describe('the serve speed on the court is the same number the box score reports'
     // The viewer may not reach past it for any piece of the model, which is how a "just this once"
     // second derivation starts. (tests/match/matchStats.test.ts proves the two agree numerically;
     // this pin is what stops a future change from having to be caught numerically at all.)
-    expect(viewer).not.toMatch(/serveSpeedOf|expectedServeSpeed|serveSpeedBase|SPEED_JITTER|SECOND_SERVE_DROP/)
+    expect(viewerFile).not.toMatch(/serveSpeedOf|expectedServeSpeed|serveSpeedBase|SPEED_JITTER|SECOND_SERVE_DROP/)
   })
 
   it('the seed came off the match it already had - no new prop, no new snapshot field', () => {
@@ -878,7 +881,7 @@ describe('the serve speed on the court is the same number the box score reports'
     // the two places it could have been: the prop list, and the number of props the callers pass.
     const propsBlock = viewer.slice(viewer.indexOf('defineProps<{'), viewer.indexOf('}>(),'))
     for (const invented of ['seed', 'serveSpeed', 'speeds', 'kmh']) {
-      expect(propsBlock, `a "${invented}" prop was added for a fact the viewer already had`).not.toContain(
+      expect(propsBlock, `a "${invented}" prop was added for a fact the viewerFile already had`).not.toContain(
         `${invented}?:`,
       )
     }
@@ -887,7 +890,7 @@ describe('the serve speed on the court is the same number the box score reports'
 })
 
 describe('the run-off band reads speed · score · speed, and the speed is on the server\'s side', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentLogic('components/MatchViewer.vue')
   const markup = markupOf(viewer)
   const styles = stylesOf(viewer)
 
@@ -1054,13 +1057,18 @@ describe('the viewer OPENS on the settings defaults, and a match never writes th
   })
 
   it('MatchViewer seeds its refs from the getters - and imports no setter', () => {
-    const viewer = read('../src/components/MatchViewer.vue')
-    expect(viewer).toContain("const viewMode = ref<ViewMode>(matchViewDefault())")
-    expect(viewer).toContain('const speed = ref<MatchSpeed>(matchSpeedDefault())')
+    // ⚠ THE RAW SFC, NOT `componentSource`, and the distinction is load-bearing. This block makes a
+    // NEGATIVE claim about the SFC's OWN imports. `componentSource` widens the text to include every
+    // composable the component imports - correct for "this logic exists somewhere in the component",
+    // wrong here: it would pull in matchDefaults.ts, where `setMatchSpeedDefault` is DEFINED, and the
+    // assertion would fail on the definition it is not talking about. (Found exactly that way.)
+    const viewerFile = componentFile('components/MatchViewer.vue')
+    expect(viewerFile).toContain("const viewMode = ref<ViewMode>(matchViewDefault())")
+    expect(viewerFile).toContain('const speed = ref<MatchSpeed>(matchSpeedDefault())')
     // ⚠ ONE-WAY: the pills mid-match write the refs and only the refs. The viewer cannot even
     // reach the stored defaults - the setters' one caller is the settings screen.
-    expect(viewer).not.toContain('setMatchSpeedDefault')
-    expect(viewer).not.toContain('setMatchViewDefault')
+    expect(viewerFile).not.toContain('setMatchSpeedDefault')
+    expect(viewerFile).not.toContain('setMatchViewDefault')
   })
 
   it('the settings screen offers every value of both dials, in the pace row\'s own shape', () => {

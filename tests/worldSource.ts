@@ -62,6 +62,50 @@ export function diarySource(): string {
   return engineModuleSource('diary')
 }
 
+// -------------------------------------------------------------------------------------------------
+// ⚠ AND THE SAME PROBLEM ARRIVED FOR COMPONENTS. Splitting a 2,300-line SFC means moving logic into
+// `src/composables/*.ts`, and a pin that reads only the `.vue` then asserts against half a component.
+// `componentSource` follows the SFC's own composable imports, so a pin keeps covering the whole
+// thing however far the component is decomposed — the property `engineModuleSource` already has.
+// -------------------------------------------------------------------------------------------------
+
+const SRC = new URL('../src/', import.meta.url)
+
+// ⚠ TWO NAMES, ON PURPOSE, AND THERE IS DELIBERATELY NO `componentSource`.
+//
+// The two questions a component pin can ask are NOT interchangeable, and the ambiguous name invited
+// the wrong one. It cost a real failure the first time it was used: `screen-i-live-match`'s pin
+// "MatchViewer imports no setter" started failing because the widened text now included
+// matchDefaults.ts, where `setMatchSpeedDefault` is DEFINED — the assertion tripped on a definition
+// it was never talking about. Documenting that was not enough; the name is the fix.
+//
+//   componentLogic()  – the SFC PLUS every composable it imports. Answers "this logic exists
+//                       somewhere in the component". Survives extraction, which is the point.
+//                       ⚠ POSITIVE ASSERTIONS ONLY. Never `.not.toContain` against it: widening the
+//                       corpus makes a negative claim over-strict, and it will fail on a definition
+//                       living in a composable. tests/pin-hygiene.test.ts enforces this.
+//   componentFile()   – the .vue ALONE. Answers "this FILE itself does / does not ...", which is the
+//                       only honest source for a negative claim about the component's own imports.
+
+/** The SFC plus every `composables/*` module it imports. POSITIVE assertions only — see above. */
+export function componentLogic(relFromSrc: string): string {
+  const sfc = componentFile(relFromSrc)
+  const parts: string[] = []
+  for (const m of sfc.matchAll(/from '(?:\.\.\/)+composables\/([A-Za-z0-9_]+)'/g)) {
+    try {
+      parts.push(`\n// ==== src/composables/${m[1]}.ts ====\n` + readFileSync(new URL(`composables/${m[1]}.ts`, SRC), 'utf8'))
+    } catch {
+      // a composable that is not a plain .ts file is simply not part of the pin
+    }
+  }
+  return sfc + parts.join('')
+}
+
+/** The `.vue` file alone — the only honest source for a NEGATIVE claim about that file. */
+export function componentFile(relFromSrc: string): string {
+  return readFileSync(new URL(relFromSrc, SRC), 'utf8')
+}
+
 function moduleFunction(src: string, name: string): string {
   const at = src.indexOf(`function ${name}`)
   if (at < 0) return ''

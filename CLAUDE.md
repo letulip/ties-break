@@ -32,6 +32,14 @@ symlinks the binary onto PATH — far too large to vendor, so nothing is added t
 
 **A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it.
 
+**⚠ CODE ONLY. Never point it at `docs/`.** `npm run graph` indexes `src`/`tests`/`tools`/`scripts`
+through tree-sitter — pure AST, genuinely zero model tokens. **Documents and images take a different
+path**: they go through semantic extraction, and with no external key configured the skill's own text
+says *"the host agent itself is the LLM"* — meaning the agent session pays in tokens. This repo's
+docs corpus is large (onsight-poc measured 174 docs ≈ 285k input tokens for a comparable set), so an
+accidental `/graphify` over `docs/` is an expensive mistake, not a free one. If document indexing is
+ever wanted, wire a local Ollama backend first and the cost returns to machine time.
+
 **Use it for orientation:** `god-nodes` (ranks architectural hubs — it independently reproduced the
 P4 analysis, putting `tickWeek` at 177 edges and `createWorld` at 166), `path "A" "B"`, `explain "X"`.
 Neither is expressible as a grep.
@@ -103,6 +111,7 @@ docs/review/     2026-08 full review + P1–P9 proposals
 
 - **Prefer a mounted test to a source pin.** `tests/component/` mounts real components (vitest project `component`, happy-dom). Source pins break on contact with a refactor and prove nothing about behaviour; MatchViewer and SeasonScreen now have mutation-verified nets there, which is what makes them safe to split. Mutate the thing you think you are covering and watch it fail before you believe a green run.
 - Some tests are **source-pin tests**: they read engine source text and assert on structure. When moving code, read it through `tests/worldSource.ts` (`worldSource()`, `diarySource()`, or `engineModuleSource(name)` for any decomposed module) rather than pinning a path. A slice between two markers whose end marker moved returns `-1` and silently swallows the rest of the file.
+- **Component pins ask two different questions, and the helpers are named for them.** `componentLogic(path)` = the SFC **plus every composable it imports** — for POSITIVE claims ("this logic exists somewhere in the component"), and it survives extraction. `componentFile(path)` = the `.vue` **alone** — the only honest source for a NEGATIVE claim about that file ("imports no setter"). Widening a negative assertion makes it over-strict: it trips on a symbol *defined* in a composable it was never talking about. `tests/pin-hygiene.test.ts` enforces this mechanically and is mutation-verified; use one name per source kind per file (`viewer` / `viewerFile`), since the check is file-scoped.
 - **Before moving anything out of a module, run the pin query first:**
   ```bash
   git grep -l "engine/<module>.ts'" -- tests/

@@ -38,7 +38,7 @@
 // ⚠ ZERO MAIN-STREAM DRAWS is proved next door, in tests/travel-home.test.ts's byte-identical
 // capture (41550 / e6b0c709), which now touches `diary.weekNote` on every one of 52 weeks.
 import { describe, expect, it } from 'vitest'
-import { worldSource } from './worldSource'
+import { worldSource, diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
   WEEK_NOTES,
@@ -513,6 +513,7 @@ describe('W2 — the wiring', () => {
     expect(worldSource()).toContain('trainPct: world.plan.train')
     // ...and the pool is licensed on it, which is the whole design decision: an ordinary week's
     // subject is the PLAYER's choice, not the world's.
-    expect(read('../src/engine/diary.ts')).toContain('f.trainPct >= WEEK_NOTE_GRIND')
+    // diary.ts AND every diary/*.ts part: the week-note pool moved to diary/weekNotes.ts.
+    expect(diarySource()).toContain('f.trainPct >= WEEK_NOTE_GRIND')
   })
 })

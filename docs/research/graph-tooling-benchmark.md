@@ -167,3 +167,24 @@ Reproduce: `graphify update . --no-cluster` in a worktree at `b7a9358`, then
 | `world/matchNews.ts` + `world/snapshot.ts` | `preview`, `round11`, `round12-view`, `week-notes`, `week-scene`, `world-trio` |
 | `diary/facts.ts` | `round11-view` |
 | `diary/pool.ts` | `injuries`, `round13` |
+
+## Field trial 1 — the diary pools (2026-08-03)
+
+The first real split run under the usage rule, on `diary.ts` 1,640 → 567 lines (travel notes 480,
+week notes 602 extracted).
+
+**Did the graph change a decision? No — but it was not useless either.**
+
+| Step | Tool | What it gave |
+|---|---|---|
+| what to cut | `god-nodes` | Nothing from `diary.ts` in the top 12 — it is a leaf, not a hub. Confirmed the plan; changed nothing. |
+| is it cleanly cuttable | `affected travelNoteFor` / `weekNoteFor` | Exactly one internal caller each (`buildDiarySnapshot`) plus one importing test. Real orientation value, and faster to read than the hand prober. |
+| what will break | `git grep -l "engine/diary.ts'" -- tests/` | Predicted `diary`, `week-notes`. **`week-notes` broke; `diary` did not.** Recall 1/1, one false positive — exactly the measured 100%/81% shape. |
+
+The graph and the grep were **complementary, not redundant**: `affected` named `travel-home.test.ts`
+(which *imports* the function), the grep named `diary.test.ts` (which *reads the source text*).
+Neither list alone is the at-risk set, and only the grep's members actually broke — because a
+re-exported move leaves imports intact, which is the whole finding of the benchmark above.
+
+**Running score after one real split: the graph earned its keep on orientation, not on impact.** That
+is the rule this document already states, now confirmed in anger rather than in benchmark.
