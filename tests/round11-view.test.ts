@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { surfaceStyleAffinity, surfaceStyleHint, SURFACE_STYLE_DELTAS } from '../src/engine/match/style'
@@ -43,7 +44,8 @@ const homeScreen = readFileSync(new URL('../src/components/screens/HomeScreen.vu
 // in one place is the only way the painting and the phrase can never disagree. The property this
 // file pins – the walk asks resultShowsOnHerFace, not a parallel copy – is unchanged; only the
 // file that carries the walk moved.
-const kidEmotionSrc = readFileSync(new URL('../src/engine/diary.ts', import.meta.url), 'utf8')
+// diary.ts AND every diary/*.ts part: the emotion walk moved to diary/facts.ts with the split.
+const kidEmotionSrc = diarySource()
 const css = readFileSync(new URL('../src/style.css', import.meta.url), 'utf8')
 
 /** The body of a CSS rule, by selector (every occurrence – see the round-10 lesson). */

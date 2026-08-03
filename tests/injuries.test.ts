@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
   createWorld,
@@ -1226,7 +1227,7 @@ describe('UI wiring', () => {
     const src = readFileSync(new URL('../src/components/screens/HomeScreen.vue', import.meta.url), 'utf8')
     expect(src).not.toContain('avail-chip')
     expect(src).toContain('diary.conditionNote')
-    const diary = readFileSync(new URL('../src/engine/diary.ts', import.meta.url), 'utf8')
+    const diary = diarySource()
     expect(diary).toContain('Out with the ${f.injured?.kind')
     expect(diary).toContain("weeksRemaining ?? 1, 'week'")
     // R9-5 (re-pinned deliberately): the physio toggle + retainer cost moved to MoneyScreen's
