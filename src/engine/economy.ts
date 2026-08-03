@@ -931,11 +931,24 @@ export const ECONOMY = {
   // knock - and that is a TRADE, not a punishment: the vacation's own condition package is paid
   // instead, and the weeks she spends racing earn the match bonus instead. The choice is the feature.
   //
-  // SIZING, AND IT IS ARGUED FROM HIS OWN SENTENCE. Nine holiday weeks at +40% of a training week is
-  // ~3.6 extra weeks of development a season. A busy junior season eats 15-20 coaching weeks in
-  // travel, so this is "partially compensates" at the right order of magnitude - it does not replace
-  // a coach, and no amount of summer turns a squandered year into a managed one. MEASURED on
-  // tools/load-bench.ts and reported in the wave notes rather than asserted here.
+  // SIZING, AND IT IS MEASURED (tools/summer-bench.ts, 24 careers x 4 seasons, 14->18):
+  //
+  //   TRAINING-ONLY career   9.0 block weeks a season   +0.35 skill points over the career
+  //   RACING career          3.9 block weeks a season   +0.18 skill points over the career
+  //
+  // The racing row is the design working rather than the design failing: most of her summer is a
+  // tournament, and `summerBlockWeek` stands down on those weeks because a competition week already
+  // has its own bonus and its own bill. So the block is worth most to the girl who is NOT travelling,
+  // which is exactly «частично компенсирует недостаток тренерских недель» read literally. Against the
+  // yardstick it is a help and never the lever: one year of junior development is 2.4 skill points
+  // and the whole coach ladder is 2.26, so a full career of summers is a seventh of a coach.
+  //
+  // AND THE FATIGUE, which is the half that surprised the bench (§1c):
+  //   at the condition CEILING       0.0 - `recoveryBase` is 8 a week, so the -3 is clamped away and
+  //                                  a girl who is not already tired does not notice a fuller summer;
+  //   from a real deficit (start 20) -7.0 condition points by September (93.0 against 100.0).
+  // Both are true and the second is the one the design is defended on: the block bites exactly on the
+  // body that is already carrying a season, which is whose summer this is.
   summerBlock: {
     /** The multiplier on the week's development rate, through `growWeek`'s `loadFactor`. Two sessions
      *  a day is not twice the learning - the coach's hours are what they are, and volume has sharply

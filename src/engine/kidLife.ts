@@ -31,7 +31,7 @@
 // pinned in tests/kidLife.test.ts, not left to a careful author.
 
 import { rngFromSeed } from './rng'
-import { isExamWeek, isOffSeasonWeek, WEEKS_PER_YEAR } from './season/calendar'
+import { isExamWeek, isOffSeasonWeek, isSummerWeek, WEEKS_PER_YEAR } from './season/calendar'
 import type { KidLife, KidLifeTile, PlayStyle } from '../shared/protocol'
 
 /** The widest a tile line may be, in characters.
@@ -138,7 +138,17 @@ function classStanding(birthMonth: number): string {
 
 /** THE SCHOOL TILE. Grade from age and birth month; the second line is the exam blackout when the
  *  calendar is holding one (ECONOMY.availability.examWeeks - real weeks, in which she cannot enter
- *  anything), and her place in the class the rest of the time. */
+ *  anything), the summer training block when the holidays are running, and her place in the class
+ *  the rest of the time.
+ *
+ *  ⚠ THE SUMMER LINE IS A FACT ABOUT HER WEEK NOW, NOT DECORATION (W3-SUMMER). This module's own
+ *  rule 1 is FACTS FIRST - "every line is selected BY facts the simulation already holds" - and until
+ *  this wave the holidays held none: `isSummerWeek` was a display window and the engine did not gate
+ *  on it, so a tile saying anything about summer would have been a line asserting more than the sim
+ *  knew. The engine now develops and fatigues a summer week differently (engine/world/summer.ts), so
+ *  the tile is reporting rather than colouring. It outranks the class standing because it is what the
+ *  week IS; the exam fortnight still outranks it, and cannot collide with it anyway (weeks 23-24
+ *  against 25-33). */
 export function schoolTile(view: KidLifeWorldView): KidLifeTile {
   // Her ITF birth year: `ageYears` is the calendar-year age, so this is total and exact.
   const birthYear = view.seasonYear - view.ageYears
@@ -148,7 +158,11 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
   if (grade === null) return { lead: "School's done", note: 'Tennis full-time' }
   return {
     lead: `${ordinal(grade)} grade`,
-    note: isExamWeek(view.week) ? 'Exams this week' : classStanding(view.birthMonth),
+    note: isExamWeek(view.week)
+      ? 'Exams this week'
+      : isSummerWeek(view.week)
+        ? 'Summer break'
+        : classStanding(view.birthMonth),
   }
 }
 

@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { migrateSave } from '../src/engine/migrations'
 import {
   applyKit,
   DEFAULT_KIT_GRADES,
@@ -491,5 +493,42 @@ describe('the quality ladder — both axes, and it can never buy destiny', () =>
       sinceWeek: { strings: 0, frame: 0, shoes: 0 },
     })
     expect(capped.strings).toBeLessThanOrEqual(0.3)
+  })
+})
+
+describe('W3-KIT — a career from before this wave opens and plays unchanged', () => {
+  // ⚠ THE ACCEPTANCE CHECK, AND IT IS BEHAVIOURAL RATHER THAN STRUCTURAL. goldenSaves.test.ts already
+  // proves every historical fixture MIGRATES; what a schema bump can still get wrong is that the
+  // migrated career then plays differently, which is the failure a player would actually notice. So
+  // this loads the last pre-wave fixture, migrates it, and runs it forward against the SAME save with
+  // the new field stripped out - i.e. against the engine as it behaved before v37 existed.
+  it('v36 migrates onto `composite` and then ticks byte-identically to a world with no kit at all', () => {
+    const raw = readFileSync(new URL('./fixtures/saves/v36.json', import.meta.url), 'utf8')
+    const migrated = migrateSave(JSON.parse(raw))
+    expect(migrated.kit).toEqual(defaultKitState())
+
+    const run = (stripKit: boolean) => {
+      const w = migrateSave(JSON.parse(raw))
+      if (stripKit) delete (w as { kit?: unknown }).kit
+      const rng = rngFromSeed(w.seed)
+      for (let i = 0; i < 30; i++) tickWeek(w, rng)
+      return {
+        skills: { ...w.skills },
+        condition: w.condition,
+        fundsCents: w.fundsCents,
+        injury: w.injury ? { ...w.injury } : null,
+        draws: w.rngMain.n,
+        // The one that matters for the match: her build as she steps on court.
+        onCourt: kidMatchPlayerFor(w, 'hard'),
+      }
+    }
+    const withKit = run(false)
+    const withoutKit = run(true)
+    expect(withKit.skills).toEqual(withoutKit.skills)
+    expect(withKit.condition).toBe(withoutKit.condition)
+    expect(withKit.fundsCents).toBe(withoutKit.fundsCents)
+    expect(withKit.injury).toEqual(withoutKit.injury)
+    expect(withKit.draws).toBe(withoutKit.draws)
+    expect(withKit.onCourt).toEqual(withoutKit.onCourt)
   })
 })

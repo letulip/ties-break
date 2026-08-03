@@ -407,8 +407,21 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   return {
     ...base,
     days,
-    title: 'Training week',
-    readout: trainingReadout({ sessions, courtDays, gymIndex, resting, knockPart: knock?.part ?? null, matchIndex }),
+    // ⚠ THE HOLIDAYS ARE A DIFFERENT WEEK NOW, AND THE TITLE SAYS SO (W3-SUMMER). The engine develops
+    // and fatigues a summer training week differently - two sessions a day, no school - so a week
+    // labelled "Training week" while the sim is running a block would be the screen under-reporting a
+    // real decision the player is living with. A knock she is resting outranks it, because that is
+    // what the week actually is.
+    title: base.summer && !resting ? 'Summer block' : 'Training week',
+    readout: trainingReadout({
+      sessions,
+      courtDays,
+      gymIndex,
+      resting,
+      knockPart: knock?.part ?? null,
+      matchIndex,
+      summer: base.summer,
+    }),
   }
 }
 
@@ -422,6 +435,8 @@ function trainingReadout(x: {
   resting: boolean
   knockPart: string | null
   matchIndex: number | null
+  /** W3-SUMMER: the holidays, in which the ENGINE runs two sessions a day. See the note below. */
+  summer?: boolean
 }): string {
   if (x.resting) {
     // ⚠ A BOOKED FRIENDLY IS NOT CANCELLED BY A RESTED KNOCK - only `rollInjury` cancels bookings - so
@@ -430,12 +445,22 @@ function trainingReadout(x: {
     const match = x.matchIndex === null ? '' : ` The booked match on ${DAY_LONG[x.matchIndex]} still stands.`
     return `Resting the ${x.knockPart ?? 'knock'} – off the training court all week.${match}`
   }
+  // ⚠ THE SUMMER SENTENCE IS THE ENGINE'S, NOT A FLOURISH (W3-SUMMER). Every other clause here reads
+  // the plan back; this one reports a rule the sim runs - `summerBlockWeek` doubles the day's sessions
+  // through `growWeek`'s loadFactor and charges the week 3 condition for it - and the owner's whole
+  // point is that the block must be legible: «сделает прокачку эффективнее и более полной». A player
+  // who cannot see it will book his family holiday straight through it without knowing what he traded.
+  //
+  // It replaces the session line rather than being appended to it, because the count IS different: the
+  // plan's four or five sessions are being run twice a day.
   const plan =
     x.sessions === 0
       ? 'No sessions – a full week off court.'
-      : x.gymIndex === null
-        ? `${x.sessions} sessions, all of them on court.`
-        : `${x.sessions} sessions – ${x.courtDays} on court, 1 in the gym.`
+      : x.summer === true
+        ? `${x.sessions} days on, two sessions a day – no school, so the work doubles up.`
+        : x.gymIndex === null
+          ? `${x.sessions} sessions, all of them on court.`
+          : `${x.sessions} sessions – ${x.courtDays} on court, 1 in the gym.`
   const match = x.matchIndex === null ? '' : ` Practice match on ${DAY_LONG[x.matchIndex]}.`
   const knock = x.knockPart === null ? '' : ` She is training on a sore ${x.knockPart}.`
   return `${plan}${match}${knock}`

@@ -128,6 +128,9 @@ export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matche
 import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
 import { setKitGrade, kitLineViews, kitStateOf, KIT_LINES } from './world/kit'
 export { setKitGrade, kitLineViews, kitStateOf, KIT_LINES }
+// W3-SUMMER: the holidays as a real training block - one predicate, both halves.
+import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
+export { summerBlockWeek, summerLoadFactor, summerConditionCost }
 import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from './world/player'
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio } from './world/injury'
@@ -1792,6 +1795,26 @@ export function tickWeek(world: WorldState, rng: Rng): void {
       ECONOMY.condition.max,
     )
   }
+  // 1c-summer. W3-SUMMER – THE FULLER WEEK'S BILL. She has no school in the holidays, so she trains
+  //        twice a day, and «реальная нагрузка» has to mean the week COSTS more as well as teaching
+  //        more (the growth half is at step 3b). Applied HERE, beside the knock's credit and the
+  //        vacation's gain, for the same reason both of those are: `accrueCondition`'s arity-2,
+  //        zero-RNG contract is pinned by B1 in tests/condition.test.ts and must not gain a
+  //        parameter. Integer, clamped, ZERO draws.
+  //
+  //        ⚠ SHE STILL COMES OUT AHEAD. A free training week returns recoveryBase 8 plus 0-2 from the
+  //        rest slider; the block takes 3 of it back. So a summer week is still restorative - there is
+  //        no travel and no competition in it - and a nine-week block run end to end still leaves her
+  //        measurably more tired than nine ordinary weeks would. The injury model reads condition, so
+  //        the block carries its own risk without a rule of its own.
+  //
+  //        ⚠ AND IT IS SKIPPED ON EVERY WEEK THAT IS NOT HERS TO TRAIN THROUGH - a layoff, a booked
+  //        family week, a tournament, a rested knock. See `summerBlockWeek` for the whole list and for
+  //        why a holiday in July is a trade rather than a punishment.
+  const summerCost = summerConditionCost(world)
+  if (summerCost > 0) {
+    world.condition = clamp(world.condition - summerCost, ECONOMY.condition.min, ECONOMY.condition.max)
+  }
   resolveVacation(world)
   resolvePractice(world)
   resolvePhysio(world)
@@ -1952,7 +1975,19 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // would have. Expressed HERE as a multiplier on the week rather than as a lower `plan.train`
     // because `trainFactor` clamps below 60 – a career already on Light would otherwise have rested
     // for free, which is the farming hole this shape closes (knock.ts, note (a)).
-    loadFactor: knockRestWeek(world.knock, world.week) ? KNOCK_REST_GROWTH : 1,
+    //
+    // ⚠ W3-SUMMER – AND THE OTHER DIRECTION, ON THE SAME KNOB. The holidays have no school in them, so
+    // she is on court twice a day, and the owner's ruling is that this is VOLUME rather than a better
+    // multiplier: «если мы летом сделаем реальную нагрузку с 2 тренировками в день... это как раз
+    // частично компенсирует недостаток тренерских недель в другие периоды». `loadFactor` is exactly
+    // the right channel - its own note calls it "HOW MUCH OF THE WEEK SHE ACTUALLY TRAINED" - and the
+    // coach, the plan slider and the luck draw are all untouched, which is what keeps summer from
+    // being a second, hidden coach.
+    //
+    // The two never multiply into nonsense: `summerBlockWeek` refuses on a rested knock (she is off
+    // the training court, so she cannot also be on it twice a day), so exactly one of these is ever
+    // different from 1. ZERO draw implications - `growWeek` keeps `seed:growth:<week>`, one pull.
+    loadFactor: (knockRestWeek(world.knock, world.week) ? KNOCK_REST_GROWTH : 1) * summerLoadFactor(world),
   })
 
   // 3c. W4 – AND SHE CAME OFF COURT SORE. Deliberately LAST of the things that happen to her body,
