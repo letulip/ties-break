@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { componentSource } from './worldSource'
 import { readdirSync, readFileSync } from 'node:fs'
 import { courtToCanvas, courtScale, type Viewport } from '../src/viz/geometry'
 import { COURT } from '../src/viz/types'
@@ -32,7 +33,7 @@ const stylesOf = (sfc: string): string =>
   sfc.slice(sfc.indexOf('<style scoped>')).replace(/\/\*[\s\S]*?\*\//g, '')
 
 describe('screen I – the commentary is actually on the screen', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentSource('components/MatchViewer.vue')
 
   it('the viewer builds the commentary and renders it as the log', () => {
     // A derivation nobody calls is not a feature. The whole point of the slice is that the beats
@@ -55,7 +56,7 @@ describe('screen I – the commentary is actually on the screen', () => {
 })
 
 describe('screen I – the design and the rulings it has to keep', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentSource('components/MatchViewer.vue')
   const sheet = read('../src/style.css')
 
   it('replay is the live match MINUS the blinking Live and MINUS shouting (ui-inventory §2)', () => {
@@ -313,7 +314,7 @@ describe('screen I – the design and the rulings it has to keep', () => {
 // put a row back by accident or take the guarantee out from under the pinned bar.
 // =====================================================================================================
 describe('the pinned control bar can never reach the playing surface', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentSource('components/MatchViewer.vue')
 
   it('is sticky rather than fixed, so it costs no height until it would otherwise be gone', () => {
     // Owner: «maybe we need to make lower buttons on match screen fixed so we could use them
@@ -672,7 +673,7 @@ describe('live and replay open the same way – the popup, which is the one he l
 // «inside the match the screen should be the match and information about the match, nothing else».
 // =====================================================================================================
 describe('a hidden screen is a stopped match', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentSource('components/MatchViewer.vue')
 
   it('pauses on visibilitychange the way the music already does, and only resumes what was running', () => {
     // Owner, 31.07: «pause the game and the match when the screen is minimised, the way music
@@ -716,7 +717,7 @@ describe('a hidden screen is a stopped match', () => {
 })
 
 describe('who is serving is said twice, attached to something, and never in a spare row', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentSource('components/MatchViewer.vue')
   const markup = markupOf(viewer)
   const styles = stylesOf(viewer)
 
@@ -832,7 +833,7 @@ describe('who is serving is said twice, attached to something, and never in a sp
 // already reports, and two readings of one serve that disagree are worse than no reading at all.
 // =====================================================================================================
 describe('the serve speed on the court is the same number the box score reports', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentSource('components/MatchViewer.vue')
 
   it('⚠ the per-point speed stream is seeded in EXACTLY ONE file, and it is not the viewer', () => {
     // The same discipline the trophy URL slice just established: a fact that two screens must agree
@@ -887,7 +888,7 @@ describe('the serve speed on the court is the same number the box score reports'
 })
 
 describe('the run-off band reads speed · score · speed, and the speed is on the server\'s side', () => {
-  const viewer = read('../src/components/MatchViewer.vue')
+  const viewer = componentSource('components/MatchViewer.vue')
   const markup = markupOf(viewer)
   const styles = stylesOf(viewer)
 
@@ -1054,6 +1055,11 @@ describe('the viewer OPENS on the settings defaults, and a match never writes th
   })
 
   it('MatchViewer seeds its refs from the getters - and imports no setter', () => {
+    // ⚠ THE RAW SFC, NOT `componentSource`, and the distinction is load-bearing. This block makes a
+    // NEGATIVE claim about the SFC's OWN imports. `componentSource` widens the text to include every
+    // composable the component imports - correct for "this logic exists somewhere in the component",
+    // wrong here: it would pull in matchDefaults.ts, where `setMatchSpeedDefault` is DEFINED, and the
+    // assertion would fail on the definition it is not talking about. (Found exactly that way.)
     const viewer = read('../src/components/MatchViewer.vue')
     expect(viewer).toContain("const viewMode = ref<ViewMode>(matchViewDefault())")
     expect(viewer).toContain('const speed = ref<MatchSpeed>(matchSpeedDefault())')

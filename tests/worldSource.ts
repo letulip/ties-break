@@ -62,6 +62,35 @@ export function diarySource(): string {
   return engineModuleSource('diary')
 }
 
+// -------------------------------------------------------------------------------------------------
+// ⚠ AND THE SAME PROBLEM ARRIVED FOR COMPONENTS. Splitting a 2,300-line SFC means moving logic into
+// `src/composables/*.ts`, and a pin that reads only the `.vue` then asserts against half a component.
+// `componentSource` follows the SFC's own composable imports, so a pin keeps covering the whole
+// thing however far the component is decomposed — the property `engineModuleSource` already has.
+// -------------------------------------------------------------------------------------------------
+
+const SRC = new URL('../src/', import.meta.url)
+
+/** An SFC's source plus every `composables/*` module it imports, concatenated.
+ *
+ *  ⚠ FOR POSITIVE ASSERTIONS ONLY — "this logic exists somewhere in the component". A NEGATIVE claim
+ *  about the SFC's own imports (`expect(src).not.toContain('setSomething')`) must read the `.vue`
+ *  directly: widening the text pulls in the composable where the symbol is DEFINED, and the
+ *  assertion fails on a definition it was never talking about. That is not hypothetical — it fired
+ *  on `screen-i-live-match`'s "imports no setter" pin the first time this helper was used. */
+export function componentSource(relFromSrc: string): string {
+  const sfc = readFileSync(new URL(relFromSrc, SRC), 'utf8')
+  const parts: string[] = []
+  for (const m of sfc.matchAll(/from '(?:\.\.\/)+composables\/([A-Za-z0-9_]+)'/g)) {
+    try {
+      parts.push(`\n// ==== src/composables/${m[1]}.ts ====\n` + readFileSync(new URL(`composables/${m[1]}.ts`, SRC), 'utf8'))
+    } catch {
+      // a composable that is not a plain .ts file is simply not part of the pin
+    }
+  }
+  return sfc + parts.join('')
+}
+
 function moduleFunction(src: string, name: string): string {
   const at = src.indexOf(`function ${name}`)
   if (at < 0) return ''
