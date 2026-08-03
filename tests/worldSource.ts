@@ -71,15 +71,25 @@ export function diarySource(): string {
 
 const SRC = new URL('../src/', import.meta.url)
 
-/** An SFC's source plus every `composables/*` module it imports, concatenated.
- *
- *  ⚠ FOR POSITIVE ASSERTIONS ONLY — "this logic exists somewhere in the component". A NEGATIVE claim
- *  about the SFC's own imports (`expect(src).not.toContain('setSomething')`) must read the `.vue`
- *  directly: widening the text pulls in the composable where the symbol is DEFINED, and the
- *  assertion fails on a definition it was never talking about. That is not hypothetical — it fired
- *  on `screen-i-live-match`'s "imports no setter" pin the first time this helper was used. */
-export function componentSource(relFromSrc: string): string {
-  const sfc = readFileSync(new URL(relFromSrc, SRC), 'utf8')
+// ⚠ TWO NAMES, ON PURPOSE, AND THERE IS DELIBERATELY NO `componentSource`.
+//
+// The two questions a component pin can ask are NOT interchangeable, and the ambiguous name invited
+// the wrong one. It cost a real failure the first time it was used: `screen-i-live-match`'s pin
+// "MatchViewer imports no setter" started failing because the widened text now included
+// matchDefaults.ts, where `setMatchSpeedDefault` is DEFINED — the assertion tripped on a definition
+// it was never talking about. Documenting that was not enough; the name is the fix.
+//
+//   componentLogic()  – the SFC PLUS every composable it imports. Answers "this logic exists
+//                       somewhere in the component". Survives extraction, which is the point.
+//                       ⚠ POSITIVE ASSERTIONS ONLY. Never `.not.toContain` against it: widening the
+//                       corpus makes a negative claim over-strict, and it will fail on a definition
+//                       living in a composable. tests/pin-hygiene.test.ts enforces this.
+//   componentFile()   – the .vue ALONE. Answers "this FILE itself does / does not ...", which is the
+//                       only honest source for a negative claim about the component's own imports.
+
+/** The SFC plus every `composables/*` module it imports. POSITIVE assertions only — see above. */
+export function componentLogic(relFromSrc: string): string {
+  const sfc = componentFile(relFromSrc)
   const parts: string[] = []
   for (const m of sfc.matchAll(/from '(?:\.\.\/)+composables\/([A-Za-z0-9_]+)'/g)) {
     try {
@@ -89,6 +99,11 @@ export function componentSource(relFromSrc: string): string {
     }
   }
   return sfc + parts.join('')
+}
+
+/** The `.vue` file alone — the only honest source for a NEGATIVE claim about that file. */
+export function componentFile(relFromSrc: string): string {
+  return readFileSync(new URL(relFromSrc, SRC), 'utf8')
 }
 
 function moduleFunction(src: string, name: string): string {

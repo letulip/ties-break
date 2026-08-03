@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { componentSource } from './worldSource'
+import { componentLogic } from './worldSource'
 import type { KidSkills } from '../src/engine/development'
 import { existsSync, readFileSync } from 'node:fs'
 import { portraitStage } from '../src/shared/avatarEmotion'
@@ -703,7 +703,7 @@ describe('pt4 — UI wiring', () => {
   })
 
   it('R9-23: reaction cues fire at the scoring instant; the *-end event starts are silent', () => {
-    const viewer = componentSource('components/MatchViewer.vue')
+    const viewer = componentLogic('components/MatchViewer.vue')
     expect(viewer).toMatch(/if \(ev\.kind !== 'point-end'\) return/)
     expect(viewer).toContain('match > set > game')
   })
@@ -712,7 +712,7 @@ describe('pt4 — UI wiring', () => {
     const sfx = read('../src/audio/sfx.ts')
     expect(sfx).toContain('preservesPitch')
     expect(sfx).toContain('MAX_RATE = 2')
-    const viewer = componentSource('components/MatchViewer.vue')
+    const viewer = componentLogic('components/MatchViewer.vue')
     expect(viewer).toContain('playLong')
     expect(viewer).toContain('SEATS_PREROLL_MS / Math.min(speed.value, 2)')
   })
