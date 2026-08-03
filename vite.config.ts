@@ -235,8 +235,24 @@ export default defineConfig({
         // 3.2.7 IGNORES it at project level - createForksPool builds ONE pool for the whole run off
         // the ROOT config (`vitest.config.fileParallelism` / `vitest.config.poolOptions`, verified
         // in dist source), so a project-level flag changes nothing (measured: 288% CPU, files
-        // overlapping). The honest lever is the CLI flag on the one script that runs this project:
-        // package.json `test:sim` carries `--no-file-parallelism`. `npm test` (unit) is untouched.
+        // overlapping). The honest lever is the CLI flag on the SCRIPTS that run this project.
+        //
+        // ⚠ AND IT IS A MITIGATION, NOT A CURE - measured 02.08, correcting the paragraph above.
+        // Two gaps were found: `test:sim:quiet` and `test:all` never carried the flag at all (both
+        // reproduced the red-on-green exit), and `test:sim` WITH the flag still exited 1 on one run
+        // and 0 on the very next. The reporter is the second variable: the default reporter
+        // re-renders the per-test tree and keeps far more `onTaskUpdate` acks in flight, so every
+        // sim script now carries `--reporter=dot` too. tests/sim-serialisation.test.ts enforces both
+        // halves mechanically, because a fix applied to one script and not its twins is invisible
+        // until a cron goes red months later - which is how these two gaps survived.
+        //
+        // ⚠ THE DURABLE FIX IS NOT HERE, IT IS IN THE FILES. Per-file totals (02.08, serialised):
+        // fatigue-bench 58.3s, econ-reach 56.6s, econ-bench 34.4s. The first two sit ON the 60s
+        // window, so the run is a coin-flip against a hard timeout however the pool is configured.
+        // Splitting those two files (same tests, same sample sizes, two files each - they run
+        // serially anyway, so wall-clock is unchanged) puts real headroom under the limit and makes
+        // the flags belt-and-braces rather than load-bearing. Left as a follow-up: they are the
+        // calibration gate, and re-splitting them deserves its own wave.
         test: { name: 'sim', include: HEAVY_SIM_FILES },
       },
     ],
