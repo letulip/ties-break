@@ -392,6 +392,29 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
     // closed loop; so J30 reads her DOMESTIC points and W15 reads her ITF JUNIOR points. Above the
     // on-ramp the acceptance list takes over, in the rung's own table's currency.
     const onRamp: LadderTrack = tier.track === 'itf' ? 'domestic' : 'itf'
+    // ⚠ THE CEILING, AND IT IS THE SAME SENTENCE THE DOMESTIC ARM HAS ALWAYS ENDED WITH (W2-WINDOW,
+    // act2-pro-tour.md §11). Every rung has BOTH bounds now: the domestic rungs graduate her out on
+    // points (see `outgrewTier` at the bottom of this function) and the ITF/W rungs graduate her out
+    // when the rung three above opens - a rung she has passed CLOSES rather than being filtered out
+    // of a feed. Measured on the owner's W230 career before this landed: 48 of the 64 entries left in
+    // his season sat at rungs whose STRONGEST entrant is weaker than she is, and every one of them
+    // was enterable.
+    //
+    // ⚠⚠ IT SITS ABOVE THE ON-RAMP BRANCH, AND THE FIRST CUT DID NOT - which is the on-ramp's own
+    // trap, one release later. J30 and W15 have no acceptance list, so `accepts` is undefined for
+    // them and the branch below RETURNS before anything else is asked: `tierOpenFor` was closing
+    // J30 for an eighteen-year-old professional while this gate went on letting her in, and the
+    // Season planner's supply counter (which asks THIS function) advertised eight of them. Found in
+    // the browser on a W-era career, which is exactly where R10-5 says these disagreements surface.
+    // Asked FIRST, it is also the true message: a rung she has outgrown is not a rung that refused
+    // her, and not a rung she has yet to reach.
+    if (tierOutgrown(world, event.tier)) {
+      return {
+        level: 'blocked',
+        reason: 'outgrown',
+        detail: `You've outgrown ${tier.label} – she is past this level`,
+      }
+    }
     const accepts = acceptanceRank(world, event.tier)
     if (accepts === undefined) {
       const [minPoints] = tier.enterPointBand
@@ -420,21 +443,6 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
     // THIS TABLE before it will read a position at all. (The same `hasResults` guard the econ bench
     // already puts on its rank arm, for the same reason.) It matters twice as much on the
     // professional table, which opens EMPTY for the whole world - see topBandForPercentile.
-    // ⚠ THE CEILING, AND IT IS THE SAME SENTENCE THE DOMESTIC ARM HAS ALWAYS ENDED WITH (W2-WINDOW,
-    // act2-pro-tour.md §11). Every rung has BOTH bounds now: the domestic rungs graduate her out on
-    // points (see `outgrewTier` at the bottom of this function) and the ITF/W rungs graduate her out
-    // when the rung three above opens - a rung she has passed CLOSES rather than being filtered out
-    // of a feed. Measured on the owner's W230 career before this landed: 48 of the 64 entries left in
-    // his season sat at rungs whose STRONGEST entrant is weaker than she is, and every one of them
-    // was enterable. It is checked BEFORE the acceptance cut so the message is the true one - a rung
-    // she has outgrown is not a rung that refused her.
-    if (tierOutgrown(world, event.tier)) {
-      return {
-        level: 'blocked',
-        reason: 'outgrown',
-        detail: `You've outgrown ${tier.label} – she is past this level`,
-      }
-    }
     const ranked = kidPoints(world, tier.track) > 0
     const rank = rankIn(world, tier.track)
     if (!ranked || rank > accepts) {

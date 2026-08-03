@@ -12,7 +12,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { TIERS, TIER_LADDER, hasAcceptanceList } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, hasAcceptanceList } from '../src/engine/season/calendar'
 import { LADDER_POINTS_LABEL } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
@@ -395,6 +395,22 @@ describe('the calendar and the turnstile never disagree', () => {
       },
     },
     { label: 'outgrown the domestic rungs', apply: (w) => giveKidPoints(w, 700) },
+    {
+      // ⚠ THE STATE THAT CAUGHT W2-WINDOW'S ON-RAMP TRAP, added because the browser found it and
+      // this sweep did not. With the sliding window a rung CLOSES when the rung three above opens,
+      // so an eighteen-year-old with a professional book has walked past J30 - and J30 is an ON-RAMP,
+      // whose `entryStatus` arm returns before anything else is asked. `tierOpenFor` shut the rung
+      // while the turnstile went on letting her in, and the Season planner's supply counter (which
+      // asks the turnstile) advertised eight J30s to a professional. Every earlier state in this
+      // list is a JUNIOR career, which is why none of them could see it.
+      label: 'a professional: the W table is hers and the junior rungs are behind her',
+      apply: (w) => {
+        w.week += 4 * WEEKS_PER_YEAR // age 18: past W15's door, still inside the J rungs' U18 cap
+        w.results.push({ playerId: KID_ID, week: w.week, points: 300, tier: 'j300' })
+        recomputeKidRank(w) // latches both on-ramps
+        w.results.push({ playerId: KID_ID, week: w.week, points: 100, tier: 'w100' })
+      },
+    },
   ]
 
   for (const state of STATES) {
