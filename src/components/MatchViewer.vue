@@ -865,7 +865,12 @@ const POINT_NAMES = ['0', '15', '30', '40'] as const
  *  half moved into the court's bottom run-off band, which was already drawn and already empty. Same
  *  words, same typography, one fewer row of panel - see `scoreReadout` and `.mv-score`. */
 const gameScore = computed(() => {
-  if (finished.value || displayedPointIndex.value < 0) return ''
+  // ⚠ 0-0 IS A SCORE AND IT SHOWS (04.08). This used to return nothing until the first point
+  // landed, so the counter blinked out of existence at the top of every game - which is exactly
+  // when a viewer looks at it to see who is about to serve for what. `finished` still reads empty:
+  // once the match is over the readout carries the point TOTAL instead (see `scoreReadout`).
+  if (finished.value) return null
+  if (displayedPointIndex.value < 0) return { a: '0', b: '0', tiebreak: false }
   const pts: [number, number] = [0, 0]
   let tiebreak = false
   for (let i = 0; i <= displayedPointIndex.value; i++) {
@@ -883,12 +888,37 @@ const gameScore = computed(() => {
   // already know; a game boundary therefore reads 0-0 until the first point of the new game lands.
   const next = props.match.points[displayedPointIndex.value + 1]
   if (next?.entry.tiebreak) tiebreak = true
-  if (tiebreak) return `TB ${pts[0]}-${pts[1]}`
+  // ⚠ PER SIDE, NOT AS ONE STRING (owner, 04.08: «сделать максимально наглядно 0-0, 0-15, 0-30…
+  // Чтобы точно было видно кто и почему забирает сет. И предлагаю еще выделять желтым цифру нашего
+  // игрока»). The reading is unchanged - what changes is that the two halves stay separable, so the
+  // template can colour HER number and order the pair by which end each player is standing at.
+  if (tiebreak) return { a: String(pts[0]), b: String(pts[1]), tiebreak: true }
   if (pts[0] >= 3 && pts[1] >= 3) {
-    if (pts[0] === pts[1]) return '40-40'
-    return pts[0] > pts[1] ? 'A-40' : '40-A'
+    if (pts[0] === pts[1]) return { a: '40', b: '40', tiebreak: false }
+    return pts[0] > pts[1] ? { a: 'A', b: '40', tiebreak: false } : { a: '40', b: 'A', tiebreak: false }
   }
-  return `${POINT_NAMES[pts[0]]}-${POINT_NAMES[pts[1]]}`
+  return { a: POINT_NAMES[pts[0]], b: POINT_NAMES[pts[1]], tiebreak: false }
+})
+
+/** THE POINT SCORE AS THE COURT SHOWS IT: left number = whoever is standing at the left end.
+ *
+ *  ⚠ IT SWAPS WITH THE PLAYERS, AND THE OWNER ASKED THE RIGHT QUESTION ABOUT IT («правильно ли я
+ *  понимаю, что при смене сторон счет тоже должен меняться сторонами»). Yes - because this readout
+ *  lives UNDER THE COURT rather than in the panel's fixed A-then-B rows. The serve speed already
+ *  crosses the screen on a change of ends for exactly this reason; a score that did not would put
+ *  the left player's points above the right player's feet from the third game on. The panel rows
+ *  above stay A-then-B, which is what a scoreboard is for; this is what the court is for. */
+const courtScore = computed(() => {
+  const g = gameScore.value
+  if (!g) return null
+  const l = leftSide.value
+  return {
+    left: l === 0 ? g.a : g.b,
+    right: l === 0 ? g.b : g.a,
+    tiebreak: g.tiebreak,
+    /** which END her number is at, so the template can accent exactly one of the two */
+    hersAt: kidSide.value === null ? null : kidSide.value === l ? 'left' : 'right',
+  }
 })
 
 /**
@@ -902,7 +932,7 @@ const gameScore = computed(() => {
  * Empty before the first point lands (`gameScore` returns '' there), and the template drops the
  * element entirely rather than pinning an empty box over the court.
  */
-const scoreReadout = computed(() => (finished.value ? `${pointsPlayed.value} points` : gameScore.value))
+const scoreReadout = computed(() => (finished.value ? `${pointsPlayed.value} points` : null))
 
 /**
  * WHICH END OF THE RUN-OFF BAND THE SPEED IS WRITTEN AT, or null when there is nothing to write.
@@ -1226,7 +1256,16 @@ function servePct(side: Side): number {
           <span v-if="serveSpeedEnd" class="mv-speed num" :class="serveSpeedEnd"
             >{{ liveServeSpeed?.kmh }}<i class="mv-speed-unit">km/h</i></span
           >
-          <span v-if="scoreReadout" class="mv-score num">{{ scoreReadout }}</span>
+          <!-- THE POINT SCORE, ONE NUMBER PER END (owner, 04.08). Her number carries the accent,
+               and the pair swaps with the players on a change of ends - see `courtScore`. Split
+               into three spans rather than one string so exactly one digit can be coloured. -->
+          <span v-if="courtScore" class="mv-score num">
+            <i class="mv-score-tb" v-if="courtScore.tiebreak">TB</i>
+            <i class="mv-score-pt" :class="{ hers: courtScore.hersAt === 'left' }">{{ courtScore.left }}</i>
+            <i class="mv-score-sep">-</i>
+            <i class="mv-score-pt" :class="{ hers: courtScore.hersAt === 'right' }">{{ courtScore.right }}</i>
+          </span>
+          <span v-else-if="scoreReadout" class="mv-score num">{{ scoreReadout }}</span>
         </div>
       </div>
 
@@ -1684,6 +1723,35 @@ function servePct(side: Side): number {
   line-height: 1;
   letter-spacing: 0.01em;
   color: var(--text);
+}
+
+/* THE POINT PAIR (owner, 04.08). The digits are `font-style: normal` because they live in <i> –
+   the tag is here to give each number its own box for the accent, not to italicise a score.
+   Tabular figures so 0-0 and 40-40 occupy the same width and the pair does not jitter under the
+   court as points land. */
+.mv-score-pt,
+.mv-score-sep,
+.mv-score-tb {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+}
+/* HER NUMBER, IN THE SAME LIME EVERY OTHER "this one is yours" ON THE SCREEN USES – the player
+   name above it and the stat pairs below both take `--accent` for exactly this job, so the eye
+   learns one colour and reads it everywhere. */
+.mv-score-pt.hers {
+  color: var(--accent);
+}
+.mv-score-sep {
+  margin: 0 2px;
+  opacity: 0.55;
+}
+/* The tiebreak marker keeps its old prefix shape ("TB 5-3") but stops being part of the number, so
+   it cannot inherit the accent when hers is the left digit. */
+.mv-score-tb {
+  margin-right: 5px;
+  font-size: 11px;
+  letter-spacing: var(--label-track);
+  opacity: 0.7;
 }
 
 /* THE SERVE SPEED, AT THE END OF WHOEVER STRUCK IT.

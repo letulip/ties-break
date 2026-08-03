@@ -170,3 +170,40 @@ describe('MatchViewer – the live/replay distinction', () => {
     wrapper.unmount()
   })
 })
+
+// =================================================================================================
+// THE POINT SCORE UNDER THE COURT (owner, 04.08) — three asks, one readout.
+//
+// «сделать максимально наглядно 0-0, 0-15, 0-30, 15-30 и так далее. Чтобы точно было видно кто и
+// почему забирает сет. И предлагаю еще выделять желтым цифру нашего игрока… И правильно ли я
+// понимаю, что при смене сторон счет тоже должен меняться сторонами.»
+//
+// The answer to his question is yes, and it is the reason this readout is not the panel's score
+// cells: it lives UNDER THE COURT, so its two numbers belong to ENDS, not to table rows. The serve
+// speed already crosses the screen on a change of ends; a score that did not would print the left
+// player's points under the right player's feet from the third game on.
+// =================================================================================================
+describe('the point score under the court', () => {
+  it('shows 0-0 before a ball is struck – the counter never blinks out at the top of a game', () => {
+    const w = mountViewer()
+    const score = w.find('.mv-score')
+    expect(score.exists()).toBe(true)
+    expect(score.text().replace(/\s+/g, '')).toBe('0-0')
+  })
+
+  it('⚠ exactly one digit carries the accent, and it is hers', () => {
+    const w = mountViewer()
+    const hers = w.findAll('.mv-score-pt.hers')
+    // The fixture's players are both anonymous (no KID_ID), so nothing is accented – the guard is
+    // that the class is applied per-digit rather than to the pair, so it can never colour both.
+    expect(hers.length).toBeLessThanOrEqual(1)
+    expect(w.findAll('.mv-score-pt')).toHaveLength(2)
+  })
+
+  it('⚠ the digits are separable – the pair is markup, not a formatted string', () => {
+    // This is what makes the accent and the end-swap possible at all. A single interpolated string
+    // (`{{ scoreReadout }}`, which is what this was) can be neither coloured by half nor reordered.
+    const w = mountViewer()
+    expect(w.find('.mv-score-sep').exists()).toBe(true)
+  })
+})

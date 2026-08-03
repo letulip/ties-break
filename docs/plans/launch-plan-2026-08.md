@@ -51,9 +51,9 @@ flowchart TD
   WPP --> W2L[W2-LADDER rungs + best-16 + AER v36<br/>1 agent, XL]
   W2L --> W2F2[W2-FIELD2 fourth storey + exclusivity<br/>1 agent, L]
   W1A --> W2C[W2-CONTRACT v1 career page<br/>owner, hours]
-  W2C --> W2E[W2-ENDINGS v37<br/>1 agent, L]
+  W2C --> W2E[W2-ENDINGS v38<br/>1 agent, L]
   W2F2 --> W2E
-  W2E --> W2P[W2-PSYCHE v38<br/>1 agent, L]
+  W2E --> W2P[W2-PSYCHE v39<br/>1 agent, L]
   W2E --> W2T[W2-TEMPO pacing + onboarding<br/>1 agent, M]
   W2E --> W3I[W3-INMATCH in-match injury<br/>1 agent, L]
   W2F2 --> W2FA[W2-FATIGUE re-pricing the week<br/>1 agent, L]
@@ -166,7 +166,9 @@ migrations / MoreScreen vs worker/client), hence parallel-safe.
 docs/specs/act2-pro-tour.md (his eight rulings recorded there verbatim). What changed against the
 original phase list: the v1 scope is the FULL career into the late thirties (ruling 5), two new
 waves (W2-LADDER, W2-FIELD2) precede the endings, and the schema reservations shift by one:
-**v36 = W2-LADDER (`proEntryWeeks`), v37 = endings, v38 = psyche.** W3-FIELD's «real aging/
+**v36 = W2-LADDER (`proEntryWeeks`), v37 = W3-KIT (the kit ladder, shipped 04.08), v38 = endings,
+v39 = psyche.** ⚠ The reservations shifted once already and will again — a schema number is claimed
+by whichever wave LANDS, never by the plan, so this line is a record rather than a promise. W3-FIELD's «real aging/
 turnover instead of the per-season re-deal» line is RETIRED by ruling 3 (per-season generations
 stay); its surviving scope is folded into W2-FIELD2 below.
 
@@ -194,7 +196,7 @@ adult-tour-and-endings.md §4 + concept-ru.md's six finales are most of the draf
 02.08 rulings (act2-pro-tour.md §1) settle its biggest question: the career runs into the late
 thirties. W2-ENDINGS implements against this page — it is the entry criterion.
 
-### W2-ENDINGS · Endings, schema v37 (1 agent · L · entry: W2-CONTRACT signed, W2-FIELD2 merged)
+### W2-ENDINGS · Endings, schema v38 (1 agent · L · entry: W2-CONTRACT signed, W2-FIELD2 merged)
 
 Sources: Claude P1 verbatim (the brief), = Codex TB-07's build half; task #47. Bankruptcy with
 a swept grace window, the last injury, retirement from 19, age-out, the reckoning screen off
@@ -205,7 +207,7 @@ the durable ledgers, epilogue grades. Evidence already in hand: 7/216 bench care
 survival band. README/claims rewritten to the contract (closes Codex's "docs are not a
 trustworthy source" P1 for the product half).
 
-### W2-PSYCHE · Morale + bond, schema v38 (1 agent · L · entry: W2-ENDINGS merged)
+### W2-PSYCHE · Morale + bond, schema v39 (1 agent · L · entry: W2-ENDINGS merged)
 
 Sources: Claude P2 verbatim, = Codex TB-09 in spirit; + the ONE kernel adopted from TB-11: the
 daughter's voice in the investor scene, remembered by the bond — drama without moralising, the
@@ -249,6 +251,20 @@ never simultaneously, or the result is unattributable. The owner's own warning (
 ногу не стрельнули усталостью») is already true on the shipped build: at the condition the current
 model parks her in, a season carries a 96-98% chance of an injury against the researched 46-54%.
 Acceptance is five benched numbers, spec §6.
+
+### W3-KIT · The kit ladder + the summer block, schema v37 (1 agent · L · SHIPPED 04.08)
+
+Owner's items 9 and 2 of the 04.08 list. Four grades per line (alloy → composite → performance →
+pro) that do exactly two things and both inside the shipped wear curve: where a new one starts on
+it (`startWear`) and how long it lasts (`lifeFactor`). Both axes, per his ruling («я вообще за оба
+подхода одновременно, как с тренерами»): performance flows through the existing wear tables,
+injury through the existing post-draw threshold multiply. Measured — realised alloy→pro swing 1.02
+skill points against the 2.40 anti-destiny bound and the coach ladder's 2.26, so money buys
+longevity and safety rather than a career. Bottom rung costs +11.4% weekly injury risk. Summer is
+VOLUME not a multiplier (loadFactor 1.4, −3 condition, two sessions a day because there is no
+school): +0.35 skill over 14→18 training-only, +0.18 racing, and a family week inside the window
+costs −0.06 over a career — a trade, not a punishment. `composite` is the identity rung, so a
+migrated v36 career is byte-identical.
 
 ### W2-WINDOW · The sliding window, both bounds (1 agent · L · entry: W2-FATIGUE merged)
 
