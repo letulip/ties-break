@@ -32,6 +32,14 @@ symlinks the binary onto PATH — far too large to vendor, so nothing is added t
 
 **A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it.
 
+**⚠ CODE ONLY. Never point it at `docs/`.** `npm run graph` indexes `src`/`tests`/`tools`/`scripts`
+through tree-sitter — pure AST, genuinely zero model tokens. **Documents and images take a different
+path**: they go through semantic extraction, and with no external key configured the skill's own text
+says *"the host agent itself is the LLM"* — meaning the agent session pays in tokens. This repo's
+docs corpus is large (onsight-poc measured 174 docs ≈ 285k input tokens for a comparable set), so an
+accidental `/graphify` over `docs/` is an expensive mistake, not a free one. If document indexing is
+ever wanted, wire a local Ollama backend first and the cost returns to machine time.
+
 **Use it for orientation:** `god-nodes` (ranks architectural hubs — it independently reproduced the
 P4 analysis, putting `tickWeek` at 177 edges and `createWorld` at 166), `path "A" "B"`, `explain "X"`.
 Neither is expressible as a grep.
