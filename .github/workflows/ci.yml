@@ -21,4 +21,7 @@ jobs:
       # vite.config.ts. They are deterministic statistical calibration, they cost 143s of CPU, and
       # they have been losing a fight with vitest's reporter RPC for months.
       - run: npm test
+      # The mounted-component project (P9). Seconds of runtime, and it is the ONLY gate that
+      # catches a UI regression: every other component test in this repo reads source text.
+      - run: npm run test:component
       - run: npm run build

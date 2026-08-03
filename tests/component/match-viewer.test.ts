@@ -53,13 +53,14 @@ describe('MatchViewer – the fixture itself is deterministic', () => {
     const two = fixture('same-seed').match
     expect(two.points.length).toBe(one.points.length)
     expect(two.result.winner).toBe(one.result.winner)
-    expect(two.result.score).toEqual(one.result.score)
+    expect(two.result.sets).toEqual(one.result.sets)
   })
 
   it('a different seed is a different match, so the pin above is not vacuous', () => {
     const a = fixture('seed-one').match
     const b = fixture('seed-two').match
-    expect(a.points.length !== b.points.length || a.result.score !== b.result.score).toBe(true)
+    const setsOf = (m: typeof a) => JSON.stringify(m.result.sets)
+    expect(a.points.length !== b.points.length || setsOf(a) !== setsOf(b)).toBe(true)
   })
 })
 
@@ -135,7 +136,8 @@ describe('MatchViewer – THE MODE CONTRACT, which is what a split must not brea
       props: { match, playerA: a, playerB: b, surface: 'hard' as const, mode: 'replay' as const },
     })
     await clickMode(wrapper, 'Skip')
-    const winnerName = match.result.winner === a.id ? a.name : b.name
+    // `winner` is a Side (0 = playerA, 1 = playerB), not a player id.
+    const winnerName = match.result.winner === 0 ? a.name : b.name
     expect(wrapper.text()).toContain(winnerName)
     wrapper.unmount()
   })
