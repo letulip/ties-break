@@ -18,6 +18,7 @@ import type { SeasonEvent } from '../season/types'
 import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidPoints } from './ladder'
+import { KID_ID } from './constants'
 import type { WorldState } from '../world'
 
 // --- the sponsors decide, in the off-season -----------------------------------
@@ -97,7 +98,25 @@ export function localSponsorCents(nationalRank: number): number {
  *  count is this season's tournaments and no other's. */
 export function eventsPlayedInSeason(world: WorldState, reviewWeek: number): number {
   const from = reviewWeek - WEEKS_PER_YEAR
-  return world.events.filter((e) => e.type === 'tournament' && e.week >= from && e.week < reviewWeek).length
+  // ⚠ THE RESULTS LEDGER, NOT THE FEED (owner, 04.08: «а какие конкретно старты они считают? я много
+  // где играл, ни одной травмы за сезон и очень крутые показатели»). He was right to disbelieve the
+  // number. This read `world.events` — the NEWS FEED — which `pruneEvents` caps at EVENTS_CAP = 400
+  // ROWS and trims oldest-first. Measured on his own W230 career: the sponsor counted 7 tournaments
+  // where the results ledger holds 10, because the feed was at its cap and its earliest surviving
+  // tournament row was week 199 of a window that opens at 178. Everything she played before that had
+  // been displaced by later matches and news.
+  //
+  // So the obligation was judged on a record whose retention depends on HOW MUCH ELSE HAPPENED —
+  // and it fails in the exact direction that punishes the career the term is meant to reward: the
+  // busier her season, the more rows compete for the cap, the fewer of her own tournaments survive
+  // to be counted. A deal could end for "not playing enough" BECAUSE she played a lot.
+  //
+  // `world.results` is the right source and always was: one row per appearance, written at
+  // finalizeTournament, never rewritten, and pruned on a rolling 52-WEEK window (RESULTS_WINDOW) —
+  // by TIME, which is the same unit the question is asked in. A withdrawal writes no row, so the
+  // double-count the original comment feared cannot happen; a scoreless first-round exit writes one
+  // (wave B), which is correct here — a sponsor pays to be SEEN, and she was there.
+  return world.results.filter((r) => r.playerId === KID_ID && r.week >= from && r.week < reviewWeek).length
 }
 
 // ⚠ THE WHOLE INBOX GETS THE SAME FEED BUDGET THE CHEQUE HAD: AT MOST ONE ROW PER SEASON BOUNDARY.

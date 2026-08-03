@@ -63,6 +63,7 @@ import {
   TIER_COVERS,
   type SponsorStanding,
 } from '../src/engine/offers'
+import type { Offer } from '../src/shared/protocol'
 import { migrateSave } from '../src/engine/migrations'
 import { kitWearAt } from '../src/engine/equipment'
 import { ECONOMY } from '../src/engine/economy'
@@ -1188,7 +1189,12 @@ describe('National stops being dead content on the way OUT', () => {
     const review = LETTER_WEEK + WEEKS_PER_YEAR
     // She played plenty...
     for (let i = 0; i < ECONOMY.sponsorship.national.minEvents; i++) {
-      world.events.push({ id: world.nextEventId++, week: WEEKS_PER_YEAR + i, type: 'tournament', text: `event ${i}` })
+      // ⚠ SEEDED INTO THE RESULTS LEDGER, NOT THE NEWS FEED (04.08). `eventsPlayedInSeason` used to
+      // count feed rows, which `pruneEvents` caps at 400 and trims oldest-first - so on a real busy
+      // career her own early tournaments were displaced by later ones and the sponsor undercounted
+      // (measured on the owner's W230 save: 7 counted against 10 played). The fixture followed the
+      // wrong ledger because the code did; both now use the one that is pruned by TIME.
+      world.results.push({ playerId: KID_ID, week: WEEKS_PER_YEAR + i, points: 10, tier: 'national' })
     }
     // ...and slid off the domestic table entirely, which is what a season spent abroad does.
     world.week = review
@@ -1209,7 +1215,12 @@ describe('National stops being dead content on the way OUT', () => {
     const until = world.offers[0].untilWeek!
     const review = LETTER_WEEK + WEEKS_PER_YEAR
     for (let i = 0; i < ECONOMY.sponsorship.national.minEvents; i++) {
-      world.events.push({ id: world.nextEventId++, week: WEEKS_PER_YEAR + i, type: 'tournament', text: `event ${i}` })
+      // ⚠ SEEDED INTO THE RESULTS LEDGER, NOT THE NEWS FEED (04.08). `eventsPlayedInSeason` used to
+      // count feed rows, which `pruneEvents` caps at 400 and trims oldest-first - so on a real busy
+      // career her own early tournaments were displaced by later ones and the sponsor undercounted
+      // (measured on the owner's W230 save: 7 counted against 10 played). The fixture followed the
+      // wrong ledger because the code did; both now use the one that is pruned by TIME.
+      world.results.push({ playerId: KID_ID, week: WEEKS_PER_YEAR + i, points: 10, tier: 'national' })
     }
     world.week = review
     world.kidRankDomestic = 4
