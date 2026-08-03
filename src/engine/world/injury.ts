@@ -117,8 +117,21 @@ export function injuryTau(world: WorldState): number {
   // one function that decides how worn her shoes are answers the same way here and at the composition
   // point. It cannot make her safer than new shoes and it draws nothing, so the shape above is
   // unchanged: a post-draw multiply that is exactly 1 for a girl in fresh kit.
+  //
+  // ⚠ AND THE RUNG SHE IS ON RIDES IN THE SAME WAY (W3-KIT, v37): `world.kit` is read by `kitWearAt`
+  // and comes back out as wear, so the ladder reaches the body through the ONE factor that was
+  // already here rather than through a second multiply. `alloy` shoes are bought at 0.16 of a service
+  // life and die a fifth faster; `pro` shoes barely age. Still post-draw, still arity-1, still
+  // spending nothing on any stream. A career with no `kit` on it (every save before v37, and every
+  // hand-built test world) passes `undefined` and gets the shipped answer byte-identical.
   tau *= kitInjuryFactor(
-    kitWearAt(world.seed, world.profile.background, world.week, kitFreshCap(world.offers, world.week)),
+    kitWearAt(
+      world.seed,
+      world.profile.background,
+      world.week,
+      kitFreshCap(world.offers, world.week),
+      world.kit ?? null,
+    ),
   )
   // W4 – AND THE KNOCK HE SENT HER BACK OUT ON. The whole cost of the `push` branch, and it is
   // deliberately the same shape as the three multiplies above: POST-DRAW on the threshold, zero draws

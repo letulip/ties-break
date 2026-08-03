@@ -10,6 +10,7 @@ import {
   type Milestone,
   type KitLine,
   type KitOfferTerms,
+  type KitState,
   type Offer,
   type PlayerProfile,
   type PracticeBooking,
@@ -48,7 +49,6 @@ import { clamp, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
-  type GearCategory,
   gearHitForWeek,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort, COHORT_SIZE } from './season/cohort'
@@ -123,6 +123,14 @@ export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutive
 export type { PracticeCaution } from './world/planner'
 import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket } from './world/coachMarket'
 export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket }
+// W3-KIT: the till and the shop window. `GEAR_CATEGORY_LINE` comes back from equipment.ts, where it
+// moved so that a rung could be PRICED below world.ts - see the note at `resolveGear`.
+import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
+import { setKitGrade, kitLineViews, kitStateOf, KIT_LINES } from './world/kit'
+export { setKitGrade, kitLineViews, kitStateOf, KIT_LINES }
+// W3-SUMMER: the holidays as a real training block - one predicate, both halves.
+import { summerBlockWeek, summerLoadFactor, summerConditionCost } from './world/summer'
+export { summerBlockWeek, summerLoadFactor, summerConditionCost }
 import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from './world/player'
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio } from './world/injury'
@@ -177,7 +185,7 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 
 // v36 = W2-LADDER's `proEntryWeeks` (the pro AER ledger); v37/v38 stay reserved for endings/psyche
 // per act2-pro-tour.md §9's renumbering.
-export const SAVE_SCHEMA_VERSION = 36
+export const SAVE_SCHEMA_VERSION = 37
 
 
 
@@ -461,6 +469,20 @@ export interface WorldState {
    *  It moves BOTH the bill and the development rate (coachWorksThisWeek), because a coach who is
    *  not paid for a week is not at that week. That is what keeps it a decision. */
   coachOnEventWeeks: boolean
+  /** HER KIT, AS A DECISION (v37, W3-KIT). The rung on each of the three lines the match reads, and
+   *  the week she was last handed a new one of them over the counter. See `KitState`.
+   *
+   *  ⚠ WHY THIS IS THE FIRST PERSISTED THING IN THE EQUIPMENT MODEL, and engine/equipment.ts's own
+   *  headline says why it took this long: wear is DERIVED - the family's gear purchases are a pure
+   *  function of (seed, background), so condition needed no state at all. A rung is not derived,
+   *  because it is a CHOICE, and this engine never re-derives a decision (the same rule that puts
+   *  `offers`, `coachId` and `academy` on the world rather than in a formula).
+   *
+   *  ⚠ OPTIONAL ON THE TYPE so that every hand-built test world and every pure probe keeps compiling
+   *  and keeps answering exactly what it answered before. `kitWearAt` reads `world.kit ?? null` and
+   *  `null` IS the shipped behaviour, so absence is not a hole - it is the identity element. A real
+   *  career always has one: `createWorld` writes it and the v36 -> v37 migration back-fills it. */
+  kit?: KitState
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -709,19 +731,10 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
 //     whole of it), so the Money breakdown shows the relationship instead of a cost quietly
 //     vanishing. Exactly `chargeTravel`'s pattern with the academy's cover, and the $0-line handling
 //     the finance aggregate already has (it never stores a zero-valued category entry).
-/** ⚠ WHICH BILL IS WHICH LINE - the one place the equipment model's vocabulary (`KitLine`: strings /
- *  frame / shoes, what the MATCH reads) is mapped onto the ledger's (`GearCategory`: stringing /
- *  rackets / shoes, what the FAMILY pays). A rung names lines; a gear hit names a category; without
- *  a single mapping the two would be joined by a string comparison at each site and a national deal
- *  could end up paying a bill it does not cover.
- *
- *  Apparel is deliberately absent from the values: it is not a line the match reads and a kit deal
- *  is not a clothing allowance, so no rung can ever cover it. */
-const GEAR_CATEGORY_LINE: Partial<Record<GearCategory, KitLine>> = {
-  stringing: 'strings',
-  rackets: 'frame',
-  shoes: 'shoes',
-}
+// ⚠ `GEAR_CATEGORY_LINE` - the one place the equipment model's vocabulary (`KitLine`) is mapped onto
+// the ledger's (`GearCategory`) - MOVED DOWN to engine/equipment.ts (W3-KIT) and is imported back
+// here. It had to: the quality ladder prices a LINE (`kitLinePriceCents`) and that price is read by
+// the snapshot and by the till, both of which sit below world.ts. Same map, same values, one owner.
 
 function resolveGear(world: WorldState): void {
   const bg = world.profile.background
@@ -731,15 +744,33 @@ function resolveGear(world: WorldState): void {
     const hit = gearHitForWeek(world.seed, category, bg, world.week)
     if (!hit) continue
     const line = ECONOMY.gear[category]
+    const kitLine = GEAR_CATEGORY_LINE[category]
+    // ⚠ AND THE RUNG PRICES THE BILL (W3-KIT). The draw is untouched - `gearHitForWeek` still walks
+    // `seed:gear:<category>` exactly as it always did and returns exactly the same cents - and the
+    // rung MULTIPLIES what comes out of it. So the wealth corridor still sets the base (a wealthy
+    // family's frames were always dearer) and the choice multiplies it, which is the shape
+    // ECONOMY.gear already had. Apparel has no line and no ladder, so it is charged as it always was.
+    //
+    // The consequence is the one that makes this a decision rather than a slider: `pro` frames cost
+    // four times as much EVERY TIME the cadence comes round, so the choice is a standing commitment
+    // to a bigger recurring bill, not a one-off purchase.
+    const gradeFactor =
+      kitLine && world.kit ? ECONOMY.equipment.grades[world.kit.grade[kitLine]].priceFactor : 1
+    const amountCents = Math.round(hit.amountCents * gradeFactor)
     // What the brand picks up of this line: everything, up to whatever is left of the allowance -
     // and ONLY if the deal actually covers this line. That is the brand ladder arriving at the till:
     // a local deal pays her restringing and leaves the racket on the family, a national one adds the
     // frame, and only the top rung pays for everything.
+    //
+    // ⚠ AND THE ALLOWANCE IS A CEILING IN CENTS, WHICH IS WHY THE TWO SYSTEMS COMPOSE INSTEAD OF
+    // FIGHTING. Buying up does not buy MORE sponsorship - the same $1,000 season allowance now covers
+    // fewer, dearer items - so a player who signs a kit deal and then moves every line to `pro` finds
+    // the brand running out in the spring and the family paying the rest. That is the honest trade
+    // and it needed no new rule: `Math.min(amount, remaining)` was always doing it.
     const remaining = deal && terms ? Math.max(0, terms.kitAllowanceCents - (deal.coveredCents ?? 0)) : 0
-    const kitLine = GEAR_CATEGORY_LINE[category]
     const inDeal = !!terms && !!kitLine && terms.covers.includes(kitLine)
-    const covered = deal && terms && inDeal ? Math.min(hit.amountCents, remaining) : 0
-    const paid = hit.amountCents - covered
+    const covered = deal && terms && inDeal ? Math.min(amountCents, remaining) : 0
+    const paid = amountCents - covered
     if (deal && covered > 0) deal.coveredCents = (deal.coveredCents ?? 0) + covered
     world.fundsCents -= paid
     addEvent(world, {
@@ -1523,6 +1554,9 @@ export function createWorld(
     milestones: [],
     internationalEntryWeeks: [],
     proEntryWeeks: [],
+    // v37: the shipped rung on every line. She turns up with the frame most juniors own - the ladder
+    // runs one rung below it and two above, and which way she goes is the parent's money.
+    kit: defaultKitState(),
   }
   addEvent(world, {
     week: 0,
@@ -1766,6 +1800,26 @@ export function tickWeek(world: WorldState, rng: Rng): void {
       ECONOMY.condition.max,
     )
   }
+  // 1c-summer. W3-SUMMER – THE FULLER WEEK'S BILL. She has no school in the holidays, so she trains
+  //        twice a day, and «реальная нагрузка» has to mean the week COSTS more as well as teaching
+  //        more (the growth half is at step 3b). Applied HERE, beside the knock's credit and the
+  //        vacation's gain, for the same reason both of those are: `accrueCondition`'s arity-2,
+  //        zero-RNG contract is pinned by B1 in tests/condition.test.ts and must not gain a
+  //        parameter. Integer, clamped, ZERO draws.
+  //
+  //        ⚠ SHE STILL COMES OUT AHEAD. A free training week returns recoveryBase 8 plus 0-2 from the
+  //        rest slider; the block takes 3 of it back. So a summer week is still restorative - there is
+  //        no travel and no competition in it - and a nine-week block run end to end still leaves her
+  //        measurably more tired than nine ordinary weeks would. The injury model reads condition, so
+  //        the block carries its own risk without a rule of its own.
+  //
+  //        ⚠ AND IT IS SKIPPED ON EVERY WEEK THAT IS NOT HERS TO TRAIN THROUGH - a layoff, a booked
+  //        family week, a tournament, a rested knock. See `summerBlockWeek` for the whole list and for
+  //        why a holiday in July is a trade rather than a punishment.
+  const summerCost = summerConditionCost(world)
+  if (summerCost > 0) {
+    world.condition = clamp(world.condition - summerCost, ECONOMY.condition.min, ECONOMY.condition.max)
+  }
   resolveVacation(world)
   resolvePractice(world)
   resolvePhysio(world)
@@ -1926,7 +1980,19 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // would have. Expressed HERE as a multiplier on the week rather than as a lower `plan.train`
     // because `trainFactor` clamps below 60 – a career already on Light would otherwise have rested
     // for free, which is the farming hole this shape closes (knock.ts, note (a)).
-    loadFactor: knockRestWeek(world.knock, world.week) ? KNOCK_REST_GROWTH : 1,
+    //
+    // ⚠ W3-SUMMER – AND THE OTHER DIRECTION, ON THE SAME KNOB. The holidays have no school in them, so
+    // she is on court twice a day, and the owner's ruling is that this is VOLUME rather than a better
+    // multiplier: «если мы летом сделаем реальную нагрузку с 2 тренировками в день... это как раз
+    // частично компенсирует недостаток тренерских недель в другие периоды». `loadFactor` is exactly
+    // the right channel - its own note calls it "HOW MUCH OF THE WEEK SHE ACTUALLY TRAINED" - and the
+    // coach, the plan slider and the luck draw are all untouched, which is what keeps summer from
+    // being a second, hidden coach.
+    //
+    // The two never multiply into nonsense: `summerBlockWeek` refuses on a rested knock (she is off
+    // the training court, so she cannot also be on it twice a day), so exactly one of these is ever
+    // different from 1. ZERO draw implications - `growWeek` keeps `seed:growth:<week>`, one pull.
+    loadFactor: (knockRestWeek(world.knock, world.week) ? KNOCK_REST_GROWTH : 1) * summerLoadFactor(world),
   })
 
   // 3c. W4 – AND SHE CAME OFF COURT SORE. Deliberately LAST of the things that happen to her body,

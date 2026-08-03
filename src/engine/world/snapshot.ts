@@ -62,6 +62,7 @@ import { arrivalStatus, entryStatus } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import { coachBilling, coachEntryLine, coachMarket } from './coachMarket'
+import { kitLineViews } from './kit'
 import { copyTrophyLedger, emptySeasonRecord } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
@@ -703,6 +704,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     vacations: world.vacations.map((v) => ({ ...v })),
     practices: world.practices.map((p) => ({ ...p })),
     recoveryBuff: world.recoveryBuff ? { ...world.recoveryBuff } : null,
+    // W3-KIT (v37): her three lines, each rung priced, her condition on each. The Money screen is the
+    // shop window - the owner's own suggestion («может быть в ledger?») - and it reads the engine's
+    // prices rather than multiplying a band itself.
+    kit: kitLineViews(world),
     academy: world.academy
       ? {
           coverShare: travelCoverShare(world.academy),

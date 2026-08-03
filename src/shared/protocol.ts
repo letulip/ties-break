@@ -1042,6 +1042,59 @@ export type SponsorTier = 'local' | 'national' | 'global'
  *  line the match reads, and a kit deal is not a clothing allowance. */
 export type KitLine = 'strings' | 'frame' | 'shoes'
 
+/** THE QUALITY LADDER, one rung per line, and the thing the PLAYER chooses (W3-KIT, owner: «давайте
+ *  сделаем эти ручки для ракеток, обуви и прочего, чтобы пользователь мог выбирать»).
+ *
+ *  ⚠ FOUR RUNGS, AND THE SECOND ONE IS THE GAME AS IT SHIPPED. `composite` is exactly today's
+ *  behaviour on every axis - no handicap, the service life `ECONOMY.equipment` already names, the
+ *  injury factor it already produces - which is what lets a career from before this wave migrate onto
+ *  it and open byte-identical. `alloy` sits BELOW it and the two above it are what money buys. See
+ *  `ECONOMY.equipment.grades` for every number and for why the ladder cannot break the anti-destiny
+ *  bound even in principle.
+ *
+ *  ⚠ AND THE ORDER IS THE LADDER'S OWN ORDER - `KIT_GRADES` (engine/equipment.ts) walks it to decide
+ *  what "up" and "down" mean at the till. A rung inserted in the middle re-prices every save that
+ *  holds a rung above it, so the array is the one place the sequence is written down. */
+export type KitGrade = 'alloy' | 'composite' | 'performance' | 'pro'
+
+/** Which rung she is on, per line. Persisted (schema v37) - it is a DECISION the parent took, and a
+ *  decision is the one class of fact this engine never re-derives. */
+export type KitGrades = Record<KitLine, KitGrade>
+
+/** HER KIT AS THE SAVE HOLDS IT (schema v37): the rung on each line, and the week she was last put on
+ *  a brand-new one of them BY CHOICE.
+ *
+ *  ⚠ `sinceWeek` IS NOT A SECOND PURCHASE SCHEDULE. The family's recurring gear buys stay exactly
+ *  where they always were - drawn off `seed:gear:<category>`, billed by `resolveGear` - and this
+ *  records only the over-the-counter purchase the PLAYER made, so that buying a frame today means she
+ *  is holding a new frame today. `kitWearAt` reads whichever of the two is more recent. Zero for a
+ *  line she has never bought by hand, which is what every migrated career carries and what makes the
+ *  migration a no-op on wear. */
+export interface KitState {
+  grade: KitGrades
+  sinceWeek: Record<KitLine, number>
+}
+
+/** One line of her kit, as the Money screen reads it. Derived at snapshot time from `KitState` plus
+ *  `ECONOMY.equipment` - no screen re-derives a price, a rung order or a condition. */
+export interface KitLineView {
+  line: KitLine
+  /** the rung she is on now */
+  grade: KitGrade
+  /** the catalogue's own name for that rung, in the game's fictional-brand voice */
+  label: string
+  /** one line of what it IS - the shop's blurb, not a stat sheet */
+  blurb: string
+  /** her CONDITION on this line right now, 0 = as new, 1 = spent (`kitWearAt`'s units) */
+  wear: number
+  /** what the family's recurring bill for this line costs at each rung, cents - the mid of the
+   *  background's own band times the rung's price factor, so the corridor is visible at the till */
+  rungs: { grade: KitGrade; label: string; blurb: string; priceCents: number; owned: boolean }[]
+  /** true while a signed deal covers this line - the brand is supplying her, so the rung she picks
+   *  changes what she is billed and almost nothing about how fresh she is (see `kitFreshCap`) */
+  sponsored: boolean
+}
+
 /** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from
  *  `ECONOMY` afterwards, which is the rule that makes the deadline mean something: a letter held for
  *  three weeks is the same letter, and the spec's §2 warning ("terms never improve while you hold
@@ -1550,6 +1603,11 @@ export interface Snapshot {
   /** an active resort/elite recovery buff, or null. Surfaced so the UI can show that the
    *  expensive package is still working. */
   recoveryBuff: RecoveryBuff | null
+  /** HER KIT, LINE BY LINE (schema v37): the rung she is on, what it costs to move, and how worn
+   *  each line is right now. Derived at snapshot time from the persisted `KitState` - the SCREEN
+   *  never prices a rung or reads a wear curve, for the reason every other derived block on this
+   *  snapshot exists. */
+  kit: KitLineView[]
   /** her academy scholarship, or null when nobody is backing her (schema v21). Surfaced because
    *  every travel figure the planner quotes is already net of it, and a smaller number with no
    *  explanation is worse than no discount at all. */
@@ -1743,6 +1801,10 @@ export type ToWorker =
   | { id: number; type: 'signOffer'; offerId: string; baseRevision: number }
   | { id: number; type: 'refuseOffer'; offerId: string; baseRevision: number }
   | { id: number; type: 'setPhysio'; active: boolean; baseRevision: number }
+  // W3-KIT: move one line of her kit onto another rung. Moving UP buys the item over the counter
+  // (charged at once, and she is holding a new one from this week); moving DOWN is free and takes
+  // effect at the next scheduled purchase - nobody is refunded for a racket they own.
+  | { id: number; type: 'setKitGrade'; line: KitLine; grade: KitGrade; baseRevision: number }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }
   // W1-INTEGRITY-A (TB-01): restore a slot AS THE ACTIVE CAREER – the restored state is committed

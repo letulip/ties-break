@@ -36,7 +36,7 @@ import {
 } from '../src/composables/dayCross'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type Snapshot, type UpcomingEvent } from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
-import { OFF_SEASON_WEEKS, WEEKS_PER_YEAR, isExamWeek, isOffSeasonWeek } from '../src/engine/season/calendar'
+import { OFF_SEASON_WEEKS, SUMMER_WEEKS, WEEKS_PER_YEAR, isExamWeek, isOffSeasonWeek } from '../src/engine/season/calendar'
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
 const app = read('../src/App.vue')
@@ -312,6 +312,33 @@ describe('a week belongs to exactly one thing, in one order', () => {
     expect(w.title).toBe('Training week')
     expect(new Set(w.days.map((d) => d.kind))).toEqual(new Set(['court', 'gym', 'rest']))
     expect(w.readout).toBe('5 sessions – 4 on court, 1 in the gym.')
+  })
+
+  // ⚠ W3-SUMMER - THE HOLIDAYS ARE A DIFFERENT WEEK, AND THE SCREEN HAS TO SAY WHICH. The owner's
+  // whole point is that the block must be legible («сделает прокачку эффективнее и более полной»): a
+  // player who cannot see it will book his family holiday straight through it without knowing what he
+  // traded. So the title changes and the sentence names the doubled load, and both are pinned here
+  // rather than left to a careful author.
+  it('a summer week says it is a block, and says what the block IS', () => {
+    const w = calendarWeekFor(facts({ week: SUMMER_WEEKS[0] }), SUMMER_WEEKS[0] + 1)
+    expect(w.summer).toBe(true)
+    expect(w.title).toBe('Summer block')
+    expect(w.readout).toContain('two sessions a day')
+    expect(w.readout).toContain('no school')
+    // ...and it is still HER PLAN underneath: the day count is the plan's, not the season's.
+    expect(w.readout).toContain(`${w.sessions} days on`)
+    // A knock she is resting outranks it - that is what the week actually is.
+    const rested = calendarWeekFor(
+      facts({
+        week: SUMMER_WEEKS[0],
+        knock: { part: 'ankle', sinceWeek: SUMMER_WEEKS[0], repeat: false, choice: 'rest', untilWeek: SUMMER_WEEKS[0] + 2 },
+      }),
+      SUMMER_WEEKS[0] + 1,
+    )
+    expect(rested.title).toBe('Training week')
+    expect(rested.readout).toContain('Resting the ankle')
+    // ...and a term-time week is untouched, so nothing that shipped moved.
+    expect(calendarWeekFor(facts(), 6).title).toBe('Training week')
   })
 })
 
@@ -932,6 +959,8 @@ describe('player copy', () => {
       facts({ knock: { part: 'shoulder', sinceWeek: 5, repeat: false, choice: 'rest', untilWeek: 6 } }),
       facts({ week: WEEKS_PER_YEAR - OFF_SEASON_WEEKS - 1 }),
       facts({ week: ECONOMY.availability.examWeeks[0][0] - 1 }),
+      // W3-SUMMER: the holidays are a sixth kind of week now, and its copy is swept like every other.
+      facts({ week: SUMMER_WEEKS[0] }),
     ]
     for (const f of cases) {
       const w = calendarWeekFor(f, f.week + 1)
@@ -945,7 +974,7 @@ describe('player copy', () => {
     }
     // the sweep really did reach every kind of week
     expect(seen).toEqual(
-      new Set(['Training week', 'Family week', 'On the bench', 'Off-season', 'Exams']),
+      new Set(['Training week', 'Family week', 'On the bench', 'Off-season', 'Exams', 'Summer block']),
     )
   })
 })

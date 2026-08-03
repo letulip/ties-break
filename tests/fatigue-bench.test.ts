@@ -35,7 +35,7 @@ import { runFatigueExtra } from '../src/engine/condition'
 import { ECONOMY } from '../src/engine/economy'
 import { matchDrain } from '../src/engine/condition'
 import { reconstructRun } from '../src/engine/season/rival'
-import { TIERS, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
+import { TIERS, WEEKS_PER_YEAR, OFF_SEASON_WEEKS, SUMMER_WEEKS } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 
 // The fatigue bench is a MEASUREMENT tool for the round-9 condition math: it must be
@@ -169,6 +169,39 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
       const exam = ECONOMY.availability.examWeeks.some(([lo, hi]) => offset >= lo && offset <= hi)
       if (offSeason || exam) recovery += k.blackoutBonus
       c = clamp(c + recovery)
+      // ⚠ THE SUMMER TRAINING BLOCK (W3-SUMMER), and it goes exactly HERE because that is where the
+      // engine puts it: after the accrue-and-clamp, before the vacation gain, in its own clamp -
+      // the same slot the knock's rest credit occupies. She has no school in the holidays and trains
+      // twice a day, so the week is fuller and costs `summerBlock.conditionCost`.
+      //
+      // Re-derived from the window and the facts rather than by calling `summerBlockWeek`, exactly as
+      // the blackout arm above re-derives `isBlackoutWeek` - this trace's whole job is to recompute
+      // the arithmetic WITHOUT the engine's own helpers, or it would only be checking that a function
+      // equals itself.
+      //
+      // ⚠ "A COMPETITION WEEK" IS `played || medicalWithdrawal`, NOT `played` ALONE, and getting that
+      // wrong is what this recomputation caught on its first pass (season 2 drifted while season 1
+      // matched). `isCompetitionWeek` asks whether she is ENTERED in a scheduled event and not hurt -
+      // it does not ask whether a run was computed - so a girl withdrawn on the doctor's orders at the
+      // arrival check is still a competition week to the engine, and she gets no training block. That
+      // is right: she is not on court twice a day, she is a girl too tired to be cleared. `played`
+      // alone cannot see her, because no shadow run exists. The three outcomes of being entered are
+      // exactly `played` / `walkover` (which implies `injured`) / `medicalWithdrawal`, so those two
+      // flags plus `injured` reconstruct the predicate completely.
+      //
+      // The rest map one for one: outside the window, a layoff (`injured`), a booked family week
+      // (`vacationResolvedId`).
+      //
+      // ⚠ THE ONE REFUSAL THE FACTS CANNOT SEE IS A RESTED KNOCK, and it is safe here rather than
+      // ignored: `knockRestWeek` needs a knock whose `choice` has been ANSWERED, and this bench never
+      // calls `decideKnock`, so every knock it rolls stays undecided and the branch cannot fire. If a
+      // future bench policy starts answering knocks, this recomputation needs a `knockRested` fact.
+      const summerOffset = ((f.week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+      const inSummer = summerOffset >= SUMMER_WEEKS[0] && summerOffset <= SUMMER_WEEKS[1]
+      const competed = f.played || f.medicalWithdrawal
+      if (inSummer && !f.injured && !competed && !f.vacationResolvedId) {
+        c = clamp(c - ECONOMY.summerBlock.conditionCost)
+      }
       // then the planner's own two effects, in the engine's order: the vacation package's gain,
       // then the friendly's drain.
       if (f.vacationResolvedId) {

@@ -620,13 +620,20 @@ describe('P4 — the allowance is the season\'s, read at the event', () => {
 
 describe('P5 — schema v36', () => {
   it('a fresh world starts with an empty pro ledger, and v35 saves migrate to one', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(36)
+    // ⚠ RE-AIMED FROM `toBe(36)` (W3-KIT bumped the schema to v37). The equality was never this
+    // test's subject - it was a "did you remember the three-part move" tripwire for the P5 wave, and
+    // it fires on every LATER wave too, which is a false positive by construction. What P5 actually
+    // owns is that a v35 save gains the pro ledger and that re-migration is idempotent, both of which
+    // are checked below and neither of which cares what the current version number is. The tripwire
+    // it was standing in for is real and lives where it belongs: `tests/goldenSaves.test.ts` fails the
+    // whole suite until a bump is matched by a `v<N>.json` fixture.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(36)
     expect(createWorld('fresh-pro').proEntryWeeks).toEqual([])
     const v35 = JSON.parse(
       readFileSync(new URL('./fixtures/saves/v35.json', import.meta.url), 'utf8'),
     ) as Record<string, unknown>
     const migrated = migrateSave(structuredClone(v35))
-    expect(migrated.schemaVersion).toBe(36)
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect(migrated.proEntryWeeks).toEqual([])
     expect(migrateSave(structuredClone(migrated))).toEqual(migrated)
   })
