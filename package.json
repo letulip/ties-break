@@ -24,7 +24,9 @@
     "test:all": "vitest run --no-file-parallelism --reporter=dot",
     "test:quiet": "vitest run --project unit --reporter=dot",
     "test:sim:quiet": "vitest run --project sim --no-file-parallelism --reporter=dot",
-    "test:component": "vitest run --project component"
+    "test:component": "vitest run --project component",
+    "graph": "node scripts/graph.mjs",
+    "graph:check": "node scripts/graph.mjs --check"
   },
   "dependencies": {
     "pinia": "^3.0.0",

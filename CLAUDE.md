@@ -19,8 +19,18 @@ Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:l
 
 ## Graphify (code graph) — what it is and is not for
 
-Installed as a skill (`~/.claude/skills/graphify/`). Rebuild with `graphify update . --no-cluster`:
-4.5 s, zero model tokens, 5,366 nodes / 13,748 edges. `graphify-out/` is gitignored — never commit it.
+```bash
+npm run graph        # rebuild — ~5 s, zero model tokens, 5,376 nodes / 13,764 edges
+npm run graph:check  # is it stale? exits 1 if source moved since the build
+```
+
+**Setup (once per machine, not a project dependency):** `pip install graphifyy && graphify install
+--platform claude`. The installer makes its own ~161 MB venv under `~/.claude/skills/graphify` and
+symlinks the binary onto PATH — far too large to vendor, so nothing is added to `package.json`.
+`npm run graph` prints these instructions if it cannot find the binary; `GRAPHIFY_BIN` overrides.
+`graphify-out/` is gitignored — a local artifact, rebuilt in seconds, never committed.
+
+**A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it.
 
 **Use it for orientation:** `god-nodes` (ranks architectural hubs — it independently reproduced the
 P4 analysis, putting `tickWeek` at 177 edges and `createWorld` at 166), `path "A" "B"`, `explain "X"`.
