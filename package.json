@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "check": "npm run context:audit && vue-tsc -b --force && vitest run --project unit && vite build",
+    "check": "npm run context:audit && vue-tsc -b --force && vitest run --project unit --project component && vite build",
     "context:audit": "node scripts/context-audit.mjs --check",
     "icons": "node scripts/gen-icons.mjs",
     "art": "node scripts/optimize-art.mjs",
@@ -23,7 +23,8 @@
     "test:sim": "vitest run --project sim --no-file-parallelism --reporter=dot",
     "test:all": "vitest run --no-file-parallelism --reporter=dot",
     "test:quiet": "vitest run --project unit --reporter=dot",
-    "test:sim:quiet": "vitest run --project sim --no-file-parallelism --reporter=dot"
+    "test:sim:quiet": "vitest run --project sim --no-file-parallelism --reporter=dot",
+    "test:component": "vitest run --project component"
   },
   "dependencies": {
     "pinia": "^3.0.0",
@@ -32,7 +33,9 @@
   "devDependencies": {
     "@types/node": "^24.0.0",
     "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/test-utils": "^2.4.11",
     "fake-indexeddb": "^6.0.0",
+    "happy-dom": "^20.11.1",
     "sharp": "^0.35.3",
     "typescript": "^5.8.0",
     "vite": "^7.0.0",
