@@ -49,7 +49,10 @@ function artPipeline(): Plugin {
 const HEAVY_SIM_FILES = [
   '**/tests/econ-bench.test.ts',
   '**/tests/econ-reach.test.ts',
+  '**/tests/econ-reach-pro.test.ts',
   '**/tests/fatigue-bench.test.ts',
+  '**/tests/fatigue-bench-planner.test.ts',
+  '**/tests/fatigue-bench-policy.test.ts',
   '**/tests/match/calibration.test.ts',
 ]
 
@@ -235,8 +238,37 @@ export default defineConfig({
         // 3.2.7 IGNORES it at project level - createForksPool builds ONE pool for the whole run off
         // the ROOT config (`vitest.config.fileParallelism` / `vitest.config.poolOptions`, verified
         // in dist source), so a project-level flag changes nothing (measured: 288% CPU, files
-        // overlapping). The honest lever is the CLI flag on the one script that runs this project:
-        // package.json `test:sim` carries `--no-file-parallelism`. `npm test` (unit) is untouched.
+        // overlapping). The honest lever is the CLI flag on the SCRIPTS that run this project.
+        //
+        // ⚠ AND IT IS A MITIGATION, NOT A CURE - measured 02.08, correcting the paragraph above.
+        // Two gaps were found: `test:sim:quiet` and `test:all` never carried the flag at all (both
+        // reproduced the red-on-green exit), and `test:sim` WITH the flag still exited 1 on one run
+        // and 0 on the very next. The reporter is the second variable: the default reporter
+        // re-renders the per-test tree and keeps far more `onTaskUpdate` acks in flight, so every
+        // sim script now carries `--reporter=dot` too. tests/sim-serialisation.test.ts enforces both
+        // halves mechanically, because a fix applied to one script and not its twins is invisible
+        // until a cron goes red months later - which is how these two gaps survived.
+        //
+        // ⚠ THE DURABLE FIX IS NOT HERE, IT IS IN THE FILES - AND IT IS NOW DONE.
+        //
+        // WHAT THE MECHANISM ACTUALLY IS, measured rather than assumed: the longest SINGLE test in
+        // the whole sim project is 18s, so no individual test blows a 60s window. vitest tracks each
+        // FILE as a task, and it is that task's ack the timeout applies to - so the metric that
+        // matters is the PER-FILE total, not per-test. Before (02.08, serialised): fatigue-bench
+        // 58.3s, econ-reach 56.6s on one run and 72.1s on the next. Both on or over the line, and
+        // the 56→72s variance on one unchanged file is why this was a coin-flip rather than a rule.
+        //
+        // So the two offenders were split by MEASURED cost, not by eye - the first attempt moved the
+        // wrong 13.7s and left the parent at 55s. Per-describe timings put 38s of fatigue-bench in
+        // `policy ordering` and 18s of econ-reach in the pro-proxy arm; those became their own files.
+        // After (same run, serialised): econ-reach 34.6s, econ-bench 32.3s, econ-reach-pro 21.8s,
+        // fatigue-bench 13.4s, calibration 12.3s, fatigue-bench-planner 7.4s, fatigue-bench-policy.
+        // Worst file 34.6s - 25s of headroom under the ceiling.
+        //
+        // Test counts are unchanged and that is checked, not asserted: 36 `it`/`it.each`
+        // declarations across the three fatigue files (was 36 in one) and 4 across the two econ-reach
+        // files (was 4), 77 expanded tests before and after. Wall-clock is unchanged too, because
+        // this project runs one file at a time regardless.
         test: { name: 'sim', include: HEAVY_SIM_FILES },
       },
     ],
