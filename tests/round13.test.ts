@@ -2,6 +2,7 @@
 // branch: docs/rounds/round-13.md is the ledger; every re-aimed older pin names this round at the
 // spot it moved.
 import { describe, it, expect } from 'vitest'
+import { diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
 import { avatarEmotion } from '../src/shared/avatarEmotion'
@@ -178,7 +179,7 @@ describe('R13-3 — no availability chip on Home', () => {
   })
 
   it('the injured WHY was never the chip\'s alone: the engine note names the kind and the clock', () => {
-    const diary = read('../src/engine/diary.ts')
+    const diary = diarySource()
     expect(diary).toContain('Out with the ${f.injured?.kind')
   })
 })
