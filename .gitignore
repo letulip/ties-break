@@ -54,3 +54,4 @@ public/images/*-jpeg/
 # swept into a commit on 29.07 and had to be filtered back out.
 *.tsave
 
+graphify-out/

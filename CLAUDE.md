@@ -17,6 +17,19 @@ Use `test:quiet` unless you need to read individual test names — same signal, 
 
 Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:load`, `bench:radar`). Always `vue-tsc -b --force`: the incremental cache has hidden real type errors before.
 
+## Graphify (code graph) — what it is and is not for
+
+Installed as a skill (`~/.claude/skills/graphify/`). Rebuild with `graphify update . --no-cluster`:
+4.5 s, zero model tokens, 5,366 nodes / 13,748 edges. `graphify-out/` is gitignored — never commit it.
+
+**Use it for orientation:** `god-nodes` (ranks architectural hubs — it independently reproduced the
+P4 analysis, putting `tickWeek` at 177 edges and `createWorld` at 166), `path "A" "B"`, `explain "X"`.
+Neither is expressible as a grep.
+
+**Do NOT use `affected` as a pre-split impact check.** Benchmarked against the 14 real breakages of
+the `world.ts` split it scored **26% precision and missed one**, because it sees imports — and the
+imports are exactly what survives a re-exported move. Use the grep below instead: **100% recall.**
+
 ## Non-negotiable invariants
 
 **1. The engine never imports the UI.** Zero imports of Vue/Pinia/components anywhere in `src/engine`, `src/worker`, `src/db`, `src/shared`. The worker owns the world; the UI only ever sees `Snapshot`. Every command is re-validated engine-side, so a stale screen cannot corrupt a career.
@@ -70,6 +83,11 @@ docs/review/     2026-08 full review + P1–P9 proposals
 ## Gotchas
 
 - **Prefer a mounted test to a source pin.** `tests/component/` mounts real components (vitest project `component`, happy-dom). Source pins break on contact with a refactor and prove nothing about behaviour; MatchViewer and SeasonScreen now have mutation-verified nets there, which is what makes them safe to split. Mutate the thing you think you are covering and watch it fail before you believe a green run.
-- Some tests are **source-pin tests**: they read engine source text and assert on structure. When moving code, read it through `tests/worldSource.ts` (world.ts + every `world/*.ts`) rather than pinning a path. A slice between two markers whose end marker moved returns `-1` and silently swallows the rest of the file.
+- Some tests are **source-pin tests**: they read engine source text and assert on structure. When moving code, read it through `tests/worldSource.ts` (`worldSource()`, `diarySource()`, or `engineModuleSource(name)` for any decomposed module) rather than pinning a path. A slice between two markers whose end marker moved returns `-1` and silently swallows the rest of the file.
+- **Before moving anything out of a module, run the pin query first:**
+  ```bash
+  git grep -l "engine/<module>.ts'" -- tests/
+  ```
+  Every hit is a pin that will break, and each one needs repointing at the source helper. Measured against the `world.ts` and `diary.ts` splits, this predicted **17 of 17 real breakages (100% recall, 81% precision)** – the four false positives cost seconds to dismiss. Those 20 break events were originally found reactively, one failing test run at a time, purely because nobody ran this query first. See `docs/research/graph-tooling-benchmark.md`.
 - The sim project MUST run serialised: every script that touches it carries `--no-file-parallelism` (birpc has a hard-coded 60s RPC timeout that a minutes-long synchronous Monte-Carlo file will blow past, exiting 1 with every test green). If you add a script that runs the sim project, carry the flag.
 - The `▶▶ 52 (dev)` button in More ships in EVERY build – an owner ruling (the deployed build is the playtest device), not a regression. Its unsafe half is fixed: the worker's `tick` handler now enforces the same open-knock / unrevealed-tournament guards as `advanceWeeks`, refusing at entry and stopping mid-loop. `tests/dev-fast-forward.test.ts` pins both halves.
