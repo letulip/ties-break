@@ -785,9 +785,19 @@ describe('who is serving is said twice, attached to something, and never in a sp
     expect(chromeAt).toBeGreaterThan(courtAt)
     expect(scoreAt).toBeGreaterThan(chromeAt)
     // ...and it still says both things the deleted row said, so this was a move and not a loss.
-    expect(viewer).toMatch(
-      /const scoreReadout = computed\([\s\S]{0,60}finished\.value \? `\$\{pointsPlayed\.value\} points` : gameScore\.value/,
-    )
+    //
+    // ⚠ RE-AIMED (owner, 04.08: «выделять желтым цифру нашего игрока» + «при смене сторон счет тоже
+    // должен меняться сторонами»). This used to pin the exact ternary `finished ? points : gameScore`
+    // — which was a pin on the IMPLEMENTATION of one reading, and the reading has since grown two
+    // requirements that a single interpolated string cannot serve: one digit must be able to take
+    // the accent, and the pair must reorder with the players' ends. So the score is markup now
+    // (`courtScore` → three spans) and the finished reading kept its own. What this line is FOR is
+    // unchanged and is asserted more directly below: BOTH readings still exist on this element, so
+    // the move did not quietly drop one. The behaviour itself is covered by mounted tests in
+    // tests/component/match-viewer.test.ts, which is the net a source pin cannot be.
+    expect(viewer).toMatch(/const scoreReadout = computed\([\s\S]{0,80}pointsPlayed\.value\} points/)
+    expect(viewer).toMatch(/const courtScore = computed\(/)
+    expect(markup).toContain('v-else-if="scoreReadout"')
   })
 
   it('the Live badge and the weather share ONE row, so they are aligned rather than nudged', () => {
