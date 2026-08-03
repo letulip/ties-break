@@ -101,6 +101,39 @@ grep, documented in `CLAUDE.md`:
 git grep -l "engine/<module>.ts'" -- tests/
 ```
 
+## Cross-check against onsight-poc (03.08) — two independent evaluations agree
+
+onsight-poc evaluated the same tool on a Python corpus and reached the same practical rule by a
+different route. Both sets of findings, tested here:
+
+| Property | onsight-poc (Python) | ties-break (TypeScript) |
+|---|---|---|
+| named-node lookup | precise | **precise** – `conditionBandOf` returned 5/5 real call sites |
+| call resolution | **lower bound**: `agents.enforce_ocr_source(...)` module-prefix calls invisible to the AST; both real sites missed | not reproduced – **zero `import * as`** in this repo, and re-export barrels *are* resolved (`prizeCentsFor` → `TournamentFlow.vue` via `imports_from`) |
+| natural-language `query` | noisy – a scorer probe returned i18n dictionaries and a staggle timer | **noisy** – "where is the injury risk calculated" returned 8 nodes from a *funding-roadmap* doc, matched on "risk"; the real answer (`rollInjury`, `injuryTau`) was not in the top 10 |
+| "who breaks if I change this" | grep only | **grep only** – 100% vs 26% precision (above) |
+
+The Python module-prefix defect does **not** transfer to this codebase: TypeScript's explicit named
+imports plus the re-export barrel are both resolved correctly. That is a genuine point in the tool's
+favour here, and it means `affected` is *accurate about references* — it simply does not answer the
+question "what breaks if this moves", because a re-exported move keeps every import intact.
+
+### ⚠ The meta-finding, and it is the most useful one
+
+**In both evaluations the first suspected graph defect turned out to be the evaluator's own search
+error.** onsight blamed the graph for showing two callees instead of four; the real cause was a `sed`
+range that collapsed on its start line. This repo's benchmark initially recorded "graph says 10
+callers, grep says 2" as over-reporting; the real cause was a `grep` scoped to `src/` that never
+looked in `tests/`. Correctly scoped, both numbers were 5 and the graph was right.
+
+The same class of error twice, from two different people, inside the evaluation of a tool whose whole
+job is to be more reliable than ad-hoc search. It is also the class of error that produced the −1
+`indexOf` slice this codebase already documents.
+
+**Rule: when the graph and grep disagree, verify the grep first.** Check its scope (`src/` only? tests
+excluded?), its range arithmetic, and whether the pattern anchors where you think it does. The graph
+has been the correct party in both recorded disputes.
+
 ## The residual point no graph addresses
 
 The knowledge that actually prevented mistakes across both decompositions was **causal, not

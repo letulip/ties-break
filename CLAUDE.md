@@ -30,6 +30,15 @@ Neither is expressible as a grep.
 the `world.ts` split it scored **26% precision and missed one**, because it sees imports — and the
 imports are exactly what survives a re-exported move. Use the grep below instead: **100% recall.**
 
+**Do NOT trust `graphify query` in natural language.** Measured on this corpus it is lexically noisy:
+"where is the injury risk calculated" returned eight nodes from a funding-roadmap doc (matched on
+"risk") and none of `rollInjury` / `injuryTau`. Look symbols up by name instead — that is precise.
+
+**⚠ When the graph and grep disagree, check the grep first.** In both recorded disputes — one here,
+one in onsight-poc — the graph was right and the search was broken (a `grep` scoped to `src/` that
+skipped `tests/`; a `sed` range that collapsed on its start line). Same failure family as the `indexOf`
+slice returning −1. Verify scope, range arithmetic and anchoring before filing a graph bug.
+
 ## Non-negotiable invariants
 
 **1. The engine never imports the UI.** Zero imports of Vue/Pinia/components anywhere in `src/engine`, `src/worker`, `src/db`, `src/shared`. The worker owns the world; the UI only ever sees `Snapshot`. Every command is re-validated engine-side, so a stale screen cannot corrupt a career.
