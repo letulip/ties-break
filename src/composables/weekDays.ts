@@ -172,7 +172,7 @@ export interface CalendarWeek {
  *  `RecapFacts` idiom from composables/weekRecap.ts.
  *
  *  ⚠ `tierOpen`/`ageYears` ARE OPTIONAL ON THE FACTS AND REQUIRED ON THE SNAPSHOT (W2-LADDER §4,
- *  replacing R15-9's optional latches for the same reason): the live screen always has the
+ *  carried into W2-WINDOW's rule unchanged, replacing R15-9's optional latches for the same reason): the live screen always has the
  *  engine's oracle, while the older test fixtures predate it - and a fixture without one must mean
  *  "hide nothing", which is exactly what `feedContext` does with an absent `tierOpen`. Making them
  *  required here would force ceremony onto two dozen fact bags to say the thing absence says. */
@@ -504,8 +504,8 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
   for (let w = first; w < first + LOOK_AHEAD_WEEKS; w++) {
     const vacation = snap.vacations.find((v) => v.week === w)
     const practice = snap.practices.find((p) => p.week === w)
-    // W2-LADDER §4: the TWO-TYPE feed decides what a marker may carry (entered events always
-    // survive - isSuitable's first arm and feedShows' own), and a week that stacks several
+    // W2-WINDOW (act2-pro-tour.md §11): the SLIDING WINDOW decides what a marker may carry (entered
+    // events always survive - isSuitable's first arm and feedShows' own), and a week that stacks several
     // suitable events markers the PREFERRED one - entered first, then the highest visible rung -
     // through the same pick the Season rows use, instead of whichever the list happened to put
     // first. `feed` is derived once above the loop, so all the rows read one verdict.

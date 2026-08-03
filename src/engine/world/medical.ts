@@ -20,7 +20,7 @@ import type { LadderTrack, SeasonEvent } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
 import { ageAtWeek } from './age'
 import { entryCapUsage, proEntryCapUsage, isCappedTier, isCappedProTier } from './entryCaps'
-import { acceptanceRank, kidPoints, onRampOpen, outgrewTier, rankIn } from './ladder'
+import { acceptanceRank, kidPoints, onRampOpen, outgrewTier, rankIn, tierOutgrown } from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
 import type { WorldState } from '../world'
 
@@ -420,6 +420,21 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
     // THIS TABLE before it will read a position at all. (The same `hasResults` guard the econ bench
     // already puts on its rank arm, for the same reason.) It matters twice as much on the
     // professional table, which opens EMPTY for the whole world - see topBandForPercentile.
+    // ⚠ THE CEILING, AND IT IS THE SAME SENTENCE THE DOMESTIC ARM HAS ALWAYS ENDED WITH (W2-WINDOW,
+    // act2-pro-tour.md §11). Every rung has BOTH bounds now: the domestic rungs graduate her out on
+    // points (see `outgrewTier` at the bottom of this function) and the ITF/W rungs graduate her out
+    // when the rung three above opens - a rung she has passed CLOSES rather than being filtered out
+    // of a feed. Measured on the owner's W230 career before this landed: 48 of the 64 entries left in
+    // his season sat at rungs whose STRONGEST entrant is weaker than she is, and every one of them
+    // was enterable. It is checked BEFORE the acceptance cut so the message is the true one - a rung
+    // she has outgrown is not a rung that refused her.
+    if (tierOutgrown(world, event.tier)) {
+      return {
+        level: 'blocked',
+        reason: 'outgrown',
+        detail: `You've outgrown ${tier.label} – she is past this level`,
+      }
+    }
     const ranked = kidPoints(world, tier.track) > 0
     const rank = rankIn(world, tier.track)
     if (!ranked || rank > accepts) {
@@ -455,6 +470,20 @@ export function entryStatus(world: WorldState, event: SeasonEvent): EntryStatus 
       level: 'blocked',
       reason: 'outgrown',
       detail: `You've outgrown ${tier.label} (${points} ${LADDER_POINTS_LABEL.domestic})`,
+    }
+  }
+  // ⚠ ...AND THE LADDER'S OWN CEILING, WHICH THE DOMESTIC RUNGS GET TOO (W2-WINDOW). The band's
+  // ceiling above answers "her points passed this rung"; this one answers "the rung three above
+  // opened, so she has walked past it" - and National's band has no ceiling at all, so without this
+  // arm the top domestic rung would have stayed enterable for ever while `tierOpenFor` called it
+  // shut. `tests/rankingGate.test.ts` caught exactly that ("local: the calendar says shut, the
+  // turnstile lets her through"), which is the R10-5 discipline doing its job: the calendar's
+  // verdict and the turnstile's are one rule or they are a bug.
+  if (tierOutgrown(world, event.tier)) {
+    return {
+      level: 'blocked',
+      reason: 'outgrown',
+      detail: `You've outgrown ${tier.label} – she is past this level`,
     }
   }
   return availabilityStatus(world, event)

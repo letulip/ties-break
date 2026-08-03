@@ -345,13 +345,12 @@ const academyCoverPct = computed(() => Math.round((game.snapshot?.academy?.cover
 // engine still held the entry, so every booking was refused. Total dead end. An ENTERED event is
 // never decluttered – she is IN it, and it is the one card she most needs to act on.
 const upcoming = computed(() => game.snapshot?.upcoming ?? [])
-// ⚠ THE TWO-TYPE FEED (W2-LADDER §4, superseding R15-9's latch window - see `feedContext` in
-// composables/tierState.ts for the whole rule and the owner's ruling). The feed offers at most
-// TWO tier types at once - her working rung and the adjacent one, both read off the ENGINE's
-// `tierOpen` oracle - and a week the pro cap emptied substitutes the strongest open J/domestic
-// event INSIDE that budget. Entered events always survive every filter: she is IN them (R10-3),
-// and a committed week must stay actionable. The old points-outgrown arm is subsumed: an outgrown
-// rung sits below the working pair by construction.
+// ⚠ THE SLIDING WINDOW (act2-pro-tour.md §11, ruling 11 - superseding the two-type feed, which
+// superseded R15-9's latch window; see `feedContext` in composables/tierState.ts for the whole rule
+// and the owner's own worked example). The feed shows exactly the rungs the ENGINE holds open -
+// three through the climb, four at the top - because a rung she has passed is CLOSED by the ladder
+// now rather than filtered out here. Entered events always survive: she is IN them (R10-3), and a
+// committed week must stay actionable.
 const feed = computed(() =>
   feedContext({
     ageYears: game.snapshot?.ageYears ?? 0,

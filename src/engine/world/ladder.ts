@@ -11,11 +11,12 @@
 // imports these values with no runtime cycle. Nothing here draws on any RNG stream: ranks are folded
 // from the ledger, so the frozen MAIN capture cannot notice this file.
 
-import { TIERS, TIER_LADDER, hasAcceptanceList } from '../season/calendar'
+import { TIERS, TIER_LADDER, hasAcceptanceList, isTierAgeOpen } from '../season/calendar'
 import { BEST_N_BY_TRACK, computeRanking, windowedBestSum, type SeasonResult } from '../season/ranking'
 import type { LadderTrack, RankingRow, TierId } from '../season/types'
 import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPros'
 import { seasonIndexOf } from './ledger'
+import { ageAtWeek } from './age'
 import { KID_ID } from './constants'
 import type { WorldState } from '../world'
 
@@ -268,6 +269,73 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
  *  is the code they describe. Note the on-ramp is detected the same way in both arms - by the tier
  *  having no `enterPct` at all - so a future W50 that gains an acceptance list needs no change here. */
 export function tierOpenFor(world: WorldState, tier: TierId): boolean {
+  return tierFloorOpen(world, tier) && !tierOutgrown(world, tier)
+}
+
+/** HOW MANY RUNGS OF THE LADDER ARE LIVE AT ONCE – the sliding window's width (act2-pro-tour.md §11,
+ *  owner ruling 11). Three, and the three are her working rung plus the two she overlaps with.
+ *
+ *  ⚠ MEASURED, NOT PICKED (§11.1). Two-rung windows carry 2.6-5.1 playable weeks of eight and half
+ *  of them are too thin; three-rung windows carry 5.2-6.0 through the middle of the ladder. So three
+ *  is the narrowest width that still leaves a real week-to-week choice at every stage. */
+const WINDOW_RUNGS = 3
+
+/** ...AND THE TOP OF THE LADDER NEVER SLIDES (§11.1's «в этом случае добавить еще диапазон... 50 +
+ *  75 + 100 + 125, когда какой-то совсем перерастает - добавляем новый, а старый уходит», and
+ *  «предыдущие тиры никуда не уходят»). The last four rungs have no ceiling at all, so the window
+ *  WIDENS to four when she reaches the top - which is exactly what the measurement asks for: three
+ *  of the rare top rungs carry only 2.2-2.3 playable weeks of eight, four carry 3.6. Above them is
+ *  act 3's mandatory regime, where the big events are compulsory and the rungs below stay open as
+ *  filler; until it exists, "the ladder ran out" is the honest reason a rung stops closing. */
+const TERMINAL_RUNGS = 4
+
+/** HAS SHE PASSED THIS RUNG? The CEILING half of the window, and the half that did not exist before
+ *  W2-WINDOW on any rung above the domestic three.
+ *
+ *  ⚠ ONE RULE, NO NEW NUMBERS, AND THAT IS THE POINT. A rung closes when the rung THREE ABOVE IT
+ *  opens to her – so its ceiling is the next-but-two rung's floor, read through that rung's own
+ *  gate in that rung's own currency (domestic points for the domestic rungs, an ITF rank for the
+ *  junior ones, the real tour's absolute WTA cuts for the professional ones). Nothing is converted
+ *  between tables, nothing is invented, and a re-tuned floor re-tunes the ceiling under it for free.
+ *
+ *  What it produces, walked end to end: {local} -> {local, regional} -> {local, regional, national}
+ *  -> {regional, national, j30} -> {national, j30, j60} -> {j30, j60, j300} -> {j60, j300, w15} ->
+ *  {j300, w15, w35} -> {w15, w35, w50} -> {w35, w50, w75} -> {w50, w75, w100} -> {w50, w75, w100,
+ *  wta125}. Three rungs at every stage, sliding one at a time, widening to four at the top: the
+ *  owner's own worked example («Local 0-100, Regional 80-180, National 150-250, J30 = National +
+ *  0-100...  цифры примерные, я хочу показать логику скользящего окна») expressed as its logic
+ *  rather than as its numbers.
+ *
+ *  ⚠ WHY THE FLOOR AND NOT THE NET VERDICT. It asks `tierFloorOpen` of the rung above, never
+ *  `tierOpenFor`: reading the net verdict would make the closure a chain, so a rung closing three
+ *  storeys up would RE-OPEN the rung at the bottom (a professional's feed would recover its
+ *  Regionals). "Has she reached it" is the question; "is it still hers" is a different one.
+ *
+ *  ⚠ AND IT IS A ROLLING TEST, NOT A LATCH, ON PURPOSE. If her ranking falls back out of the rung
+ *  above's acceptance list, the rung below re-opens - the window slides DOWN with her. A latch would
+ *  be the boredom failure the owner has ruled against twice: a career that slips must still have
+ *  tennis somewhere, and «игрок должен иметь возможность играть... чтобы не скучал» governs.
+ *
+ *  ⚠⚠ AND THE RUNG ABOVE MUST BE ONE SHE CAN ACTUALLY WALK THROUGH TODAY - THE AGE CLAUSE, and it
+ *  is not a special case, it is the same sentence. The three cross-table seams open on LATCHES
+ *  («she has crossed this table's front door»), and a latch does not know about birthdays: a
+ *  thirteen-year-old with a J300 title holds 300 ITF points, which clears W15's 120-point on-ramp
+ *  instantly - so without this clause J30 would close three years before W15's age gate lets her
+ *  in, and a girl whose acceptance-list rungs then slipped would have NOTHING open. That is exactly
+ *  the boredom failure the owner has ruled against twice, arriving through the ceiling instead of
+ *  through the cap. A door she cannot open yet cannot close the one behind her. */
+export function tierOutgrown(world: WorldState, tier: TierId): boolean {
+  const i = TIER_LADDER.indexOf(tier)
+  if (i < 0 || i >= TIER_LADDER.length - TERMINAL_RUNGS) return false
+  const above = TIER_LADDER[i + WINDOW_RUNGS]
+  if (!isTierAgeOpen(above, ageAtWeek(world.week))) return false
+  return tierFloorOpen(world, above)
+}
+
+/** THE FLOOR half – "has she reached this rung", which is the whole of what `tierOpenFor` used to
+ *  ask. Kept as its own exported name because the ceiling above has to ask it about a DIFFERENT rung
+ *  than the one being judged, and because "reached" and "still hers" are two questions. */
+export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
   const def = TIERS[tier]
   if (def.track === 'itf') {
     // The on-ramp rung is a threshold she crossed once (see WorldState.onRampCleared and

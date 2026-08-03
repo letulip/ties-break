@@ -146,8 +146,8 @@ export { isExamWeek, isBlackoutWeek } from './season/calendar'
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, outgrewTier } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, outgrewTier }
+import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
@@ -1624,7 +1624,12 @@ function releaseOutgrownEntries(world: WorldState): void {
   for (const id of [...world.entries]) {
     const event = eventById(world, id)
     if (!event || world.week > event.deadlineWeek) continue // closed list – fee committed
-    if (!outgrewTier(event.tier, points)) continue // still inside (or under) the band
+    // ⚠ BOTH CEILINGS SINCE W2-WINDOW. `outgrewTier` is the DOMESTIC one (her points passed the
+    // band); `tierOutgrown` is the ladder's own (the rung three above has opened, so she has walked
+    // past this one - act2-pro-tour.md §11). They are the same event for the player and must have
+    // the same consequence, or a W15 entry taken the week before W75 opened would sit in her
+    // schedule as the one card the gate refuses to explain.
+    if (!outgrewTier(event.tier, points) && !tierOutgrown(world, event.tier)) continue
     withdrawEvent(world, id)
     addEvent(world, {
       week: world.week,
