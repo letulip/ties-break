@@ -118,7 +118,23 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // fails HERE and re-reads this whole history. The horizon that discriminates is 14->18 above,
     // unchanged.
     const workingH16 = Array.from({ length: 30 }, (_, i) => runCareer(working, i, H16.weeks))
-    expect(workingH16.every((r) => r.reachedWeek !== null), '14→16 discriminates again - re-read the notes above').toBe(true)
+    // ⚠ RE-AIMED A FOURTH TIME (wave/act2-play), and the bargain held exactly as written: the
+    // tripwire fired on the ASSEMBLY of three waves that were each green alone, which is the one
+    // place an interaction can be caught. Mechanism this time is W2-WINDOW's calendar: placement
+    // now counts in PLAYABLE slots (49, not 52) and takes a bounded seeded jitter per rung, so the
+    // whole season re-deals and the marginal career - bench-working-29, the same one every flip of
+    // this line has turned on - meets a draw order that no longer carries it across inside 104
+    // weeks. Measured at this revision: 29 of 30, so 14->16 DISCRIMINATES again and the case's
+    // original shape ("some clear it, some never do") is true once more.
+    //
+    // Both branches are pinned, which is the strongest thing this case can say: saturation would
+    // fail the second line, a collapse would fail the first, and either way the history above gets
+    // re-read. Note the pattern across four flips - this proxy sits on a knife edge for the
+    // working-self preset and nothing else; the horizon that discriminates for everybody is 14->18
+    // above, unchanged through all of them.
+    const reachedH16 = workingH16.filter((r) => r.reachedWeek !== null).length
+    expect(reachedH16, '14→16 collapsed - re-read the notes above').toBeGreaterThanOrEqual(25)
+    expect(reachedH16, '14→16 saturated again - re-read the notes above').toBeLessThan(workingH16.length)
   })
 
   // RE-PINNED by ladder-up Part A (cohort pre-history). The degeneracy this guard was written
