@@ -55,6 +55,7 @@ import {
   offerChanceFor,
   pruneEntryLetters,
   raiseKitOffer,
+  raiseKitEndLetter,
   rungFor,
   shopWritesAt,
   standingClears,
@@ -589,6 +590,31 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
     expect(activeKitDeal(world.offers, world.offers[0].decidedWeek! - 1)).toBeNull()
   })
 
+  it('⚠ a term served in full also gets its goodbye - the bills are the family\'s again', () => {
+    // The owner's report was about a deal that FAILED, but the same silence hides the happier
+    // ending: a contract that simply runs out stops paying for her kit on a week nobody announced.
+    // Both endings raise a notice; only the copy differs (KitEndReason).
+    const reasons = ['events', 'standing', 'term'] as const
+    for (const r of reasons) {
+      const offers: Offer[] = []
+      const deal: Offer = {
+        id: `kit-${r}`,
+        kind: 'kit',
+        week: 49,
+        deadlineWeek: 53,
+        state: 'signed',
+        terms: kitTermsFor(worldly(4))!,
+        untilWeek: 101,
+      }
+      const notice = raiseKitEndLetter(offers, 101, deal, r, 9)
+      expect(notice.state, r).toBe('info')
+      expect((notice.terms as KitOfferTerms).ended, r).toBe(r)
+      expect((notice.terms as KitOfferTerms).endedEventsPlayed, r).toBe(9)
+      // A notice is never a decision: it cannot be live, so it cannot light the "answer me" dot.
+      expect(isOfferLive(notice, 101), r).toBe(false)
+    }
+  })
+
   it('⚠ FALLING SHORT COSTS THE DEAL AND NOT THE SAVINGS – the letter\'s promise, in code', () => {
     // Spec §4.1, and the thing the letter now says in the shop's own words: "fall short and we shake
     // hands at the end of it and part friends. Either way the kit is hers and there is nothing to pay
@@ -620,8 +646,17 @@ describe('signing pays in equipment, and the equipment reaches the match', () =>
     //    END of it" is what the letter says and now what the code does. It is gone the week after.
     expect(activeKitDeal(world.offers, world.week)).not.toBeNull()
     expect(activeKitDeal(world.offers, 2 * WEEKS_PER_YEAR)).toBeNull()
-    expect(world.offers.filter((o) => o.week === verdictWeek)).toHaveLength(0)
-    expect(world.offers).toHaveLength(1)
+    // ⚠ RE-AIMED (owner, 04.08: «I believe we need to send an email with the termination message»).
+    // What this pinned, and still pins, is that a brand which has just walked away does NOT turn
+    // round and offer her a new contract in the same breath. What it accidentally also pinned was
+    // SILENCE - and silence was the bug: the status line on the signed letter was already correct
+    // and already unread, so the first thing the player noticed was gear bills he thought the brand
+    // was paying. The goodbye now arrives as its own letter, which is what makes the inbox knock.
+    // So the assertion moves from "nothing was raised" to "nothing SIGNABLE was raised".
+    const raisedAtVerdict = world.offers.filter((o) => o.week === verdictWeek)
+    expect(raisedAtVerdict.every((o) => o.state === 'info')).toBe(true)
+    expect(raisedAtVerdict.filter((o) => (o.terms as KitOfferTerms).ended === 'events')).toHaveLength(1)
+    expect(world.offers).toHaveLength(2)
     // 3. ⚠ AND NOTHING WAS CLAWED BACK. The kit the shop bought stays bought: the covered total is
     //    still on the record, and the review that ended the deal took no money at all.
     const covered = world.offers[0].coveredCents ?? 0

@@ -13,9 +13,9 @@
 import { ECONOMY } from '../economy'
 import { TIERS, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
-import { activeKitDeal, dealUnderReview, endDealWithSeason, kitTravelShare, raiseKitOffer, refuseOffer as refuseOfferIn, seasonLastWeek, signOffer as signOfferIn, standingClears } from '../offers'
+import { activeKitDeal, dealUnderReview, endDealWithSeason, kitTravelShare, raiseKitEndLetter, raiseKitOffer, refuseOffer as refuseOfferIn, seasonLastWeek, signOffer as signOfferIn, standingClears } from '../offers'
 import type { SeasonEvent } from '../season/types'
-import { LADDER_LABEL, type KitOfferTerms, type Offer } from '../../shared/protocol'
+import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidPoints } from './ladder'
 import type { WorldState } from '../world'
@@ -164,6 +164,17 @@ export function reviewSponsors(world: WorldState): void {
   // A deal that failed does not limp to its contractual end: it stops with the season it failed.
   // A deal that held up simply runs on - a two-season contract has another year to go.
   if (deal && !heldUp) endDealWithSeason(deal, world.week)
+
+  // ⚠ ...AND THE BRAND SAYS SO IN WRITING (owner, 04.08: «I believe we need to send an email with
+  // the termination message»). The status line on the signed letter was already right and already
+  // unread; the first thing the player actually noticed was gear bills he thought the brand was
+  // paying. So a NEW letter lands in the inbox - which is the surface that knocks - for BOTH ways a
+  // deal can end: the terms it failed, and a term served in full. `untilWeek` is now final either
+  // way, so "does it cover next season" is the one question asked here.
+  if (deal && dealTerms && (deal.untilWeek ?? -1) <= seasonLastWeek(world.week)) {
+    const reason: KitEndReason = !playedEnough ? 'events' : !keptAtHome ? 'standing' : 'term'
+    raiseKitEndLetter(world.offers, world.week, deal, reason, played)
+  }
 
   // 2. AND WHETHER ANYBODY WRITES. ⚠ ONE BRAND AT A TIME is enforced inside `raiseKitOffer`, which
   //    refuses while a deal is running or a letter is unanswered - so a multi-season contract that

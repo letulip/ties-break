@@ -1105,6 +1105,13 @@ export interface KitOfferTerms {
    *  again. A sponsor pays to be SEEN (spec §4.1), and this is the obligation that makes the deal a
    *  decision rather than a free win – the bench says playing more loses. */
   minEventsPerSeason: number
+  /** ⚠ SET ONLY ON THE END-OF-DEAL LETTER (see `KitEndReason`), never on an offer. Its presence is
+   *  what makes a kit letter a NOTICE rather than a proposal: no Sign/Refuse, no deadline, just the
+   *  brand saying what happened and why. The rest of the terms are copied from the deal that ended
+   *  so the notice can quote its own numbers - what they asked for, what she played. */
+  ended?: KitEndReason
+  /** end-of-deal letter only: how many events she actually entered in the season under review. */
+  endedEventsPlayed?: number
 }
 
 /** What a TOURNAMENT-DESK letter states (W2-LADDER §6, the informational half of the entry
@@ -1125,6 +1132,22 @@ export interface EntryLetterTerms {
   /** true on the short confirmation the desk sends back for a free, in-time cancellation */
   cancelled?: boolean
 }
+
+/** WHY A DEAL STOPPED, on the letter the brand sends when it does (owner, 04.08: «I've figured out
+ *  there's no active sponsor. I believe we need to send an email with the termination message»).
+ *
+ *  ⚠ THE MECHANIC AND THE PAPER WERE ALREADY RIGHT - what was missing was the KNOCK. A deal that
+ *  failed its terms updated the status line on the letter she signed a year ago and wrote one line
+ *  into the season feed; nothing arrived, nothing lit the bell, and the first evidence the player
+ *  got was gear bills he thought the brand was paying. A contract ending is news, so it comes as
+ *  news. */
+export type KitEndReason =
+  /** she entered fewer events than the deal asked for */
+  | 'events'
+  /** the national rung's standing clause: she slid out of the band they signed her in */
+  | 'standing'
+  /** it simply ran to the end of its term, terms honoured on both sides */
+  | 'term'
 
 export type OfferTerms = KitOfferTerms | EntryLetterTerms
 
