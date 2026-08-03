@@ -313,12 +313,18 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
   // 13 (4). Pre-existing counts still untouched; the W density claim now reads the ENTRY PAIR over
   // all six rungs - 43 of 72 W events a season are W15/W35, which keeps the family bottom-heavy the
   // way the J one is (the real tour's own supply pyramid, research §4: ~48% of ~600 events are W15).
+  // ⚠ RE-PINNED BY W2-WINDOW, and this time the counts moved for a reason that is not a new rung:
+  // `floor(52 / everyNWeeks)` measured a cadence against the calendar year while only 49 weeks are
+  // playable, so the three weeks of overflow piled onto the season's tail (measured 47:8, 48:11).
+  // `seasonEventCount` rounds against the PLAYABLE span, so every dense rung loses exactly one
+  // event and the rare rungs – four a year, National's 4 + 2 – do not move at all. The density
+  // claims below are unchanged and still pass.
   it('yields the per-tier season counts, with the dense rungs the clear majority of each family', () => {
     const counts = countByTier(events)
     expect(counts).toEqual({
-      local: 26, regional: 13, national: 6,
-      j30: 26, j60: 17, j300: 4,
-      w15: 26, w35: 17, w50: 13, w75: 8, w100: 4, wta125: 4,
+      local: 25, regional: 12, national: 6,
+      j30: 25, j60: 16, j300: 4,
+      w15: 25, w35: 16, w50: 12, w75: 8, w100: 4, wta125: 4,
     })
     const jTotal = counts.j30 + counts.j60 + counts.j300
     expect((counts.j30 + counts.j60) / jTotal).toBeGreaterThan(0.75)
@@ -374,9 +380,18 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
     for (const e of events) perWeek.set(e.week, (perWeek.get(e.week) ?? 0) + 1)
     expect([...perWeek.values()].some((n) => n > 1)).toBe(true)
     // ...and, because equal-cadence rungs are phase-staggered rather than piled on the same weeks,
-    // essentially every playable week of the season carries something to enter.
+    // the great majority of playable weeks carries something to enter.
+    //
+    // ⚠ RE-AIMED BY W2-WINDOW FROM "every week but one" TO A BAND, AND THE OTHER HALF IS NEW. The
+    // old claim was true of a FIXED phase grid: with no seeded jitter the twelve rungs interleaved
+    // into the same 45 weeks of every calendar in every world for ever. Placement is seeded now, so
+    // a handful of weeks come up blank – and that is the owner's own ruling rather than a
+    // regression: «пустые недели это нормально» (ruling 9) and «на каких-то неделях их точно не
+    // будет вообще - это ок» (03.08). Measured across seeds, ~10% of playable weeks are blank. So
+    // the pin now holds BOTH ends – the calendar must stay dense, and it must not be a metronome.
     const playable = 52 - 3 /* off-season */ - 3 /* the floored first weeks */
-    expect(perWeek.size).toBeGreaterThanOrEqual(playable - 1)
+    expect(perWeek.size).toBeGreaterThanOrEqual(playable - 8)
+    expect(perWeek.size).toBeLessThan(playable)
   })
 
   it('still keeps the off-season empty and the first block floored at week 3', () => {
@@ -398,9 +413,9 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
     // ⚠ RE-AIMED with its sibling above (task #17, then W2-LADDER): new rungs, new counts, and
     // every pre-existing figure unchanged. A year-block is still a year-block whichever year it is.
     expect(countByTier(later)).toEqual({
-      local: 26, regional: 13, national: 6,
-      j30: 26, j60: 17, j300: 4,
-      w15: 26, w35: 17, w50: 13, w75: 8, w100: 4, wta125: 4,
+      local: 25, regional: 12, national: 6,
+      j30: 25, j60: 16, j300: 4,
+      w15: 25, w35: 16, w50: 12, w75: 8, w100: 4, wta125: 4,
     })
     for (const e of later) expect(e.week).toBeGreaterThanOrEqual(52)
   })
@@ -680,6 +695,13 @@ describe('L8 — she can only play ONE tournament a week', () => {
       // nothing. No third pile of points can fix that, because age is not a pile of points. Filtering
       // to what a fourteen-year-old may enter is the same move the two piles above already make.
       if (!isTierAgeOpen(e.tier, START_AGE_YEARS)) continue
+      // ⚠ AND THE RUNGS THE BOOK ABOVE HAS OUTGROWN GO TOO (W2-WINDOW), which is the same move
+      // again rather than a third exception. The two piles are what clear the ITF/domestic gates,
+      // and 1,500 domestic points clear them by walking straight past Local (ceiling 85) and
+      // Regional (250): an outgrown rung throws "You've outgrown …", which is once more the WRONG
+      // throw for a test about one body in one week. It only started biting when the calendar
+      // re-deal moved which pair this seed stacks – the fixture was always one lucky draw from it.
+      if (TIERS[e.tier].track === 'domestic' && !isTierEligible(e.tier, 1500)) continue
       byWeek.set(e.week, [...(byWeek.get(e.week) ?? []), e])
     }
     const stacked = [...byWeek.values()].find((list) => list.length > 1)!

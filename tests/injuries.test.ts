@@ -184,7 +184,12 @@ function hashOf(draws: number[]): string {
 // year's brackets on a fresher field and a different set of juniors ends it holding counting points.
 // Same post-draw mechanism as every re-pin above; the full argument lives at the B1 REF in
 // tests/condition.test.ts. THE MAIN CAPTURE IS UNTOUCHED (B1 asserts it byte-for-byte).
-const REF = { kidRank: 125 }
+//
+// ⚠ RE-PINNED 125 -> 123 BY W2-WINDOW, calendar rather than rule: placement is seeded now and
+// every tier's count is measured against the PLAYABLE span, so the cohort meets a different set of
+// draws. Same post-draw mechanism; the placement jitter comes off a purpose-scoped sub-stream
+// (`:calweek:`) and never MAIN, so B1's capture reproduces byte-for-byte.
+const REF = { kidRank: 123 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

@@ -208,7 +208,12 @@ function hashOf(draws: number[]): string {
 // booking-heavy career's draw count and hash still equal the baseline career's byte-for-byte, which
 // is what "the planner never perturbs the main stream" means. Full argument at the B1 REF in
 // tests/condition.test.ts.
-const REF = { kidRank: 125 }
+//
+// ⚠ RE-PINNED 125 -> 123 BY W2-WINDOW, calendar rather than rule: placement is seeded now and every
+// tier's count is measured against the PLAYABLE span, so the cohort meets a different set of draws.
+// The A/B halves above are again untouched - the placement jitter is drawn from a purpose-scoped
+// sub-stream (`:calweek:`), never MAIN, so both arms still tap identical MAIN sequences.
+const REF = { kidRank: 123 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

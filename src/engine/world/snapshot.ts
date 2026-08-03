@@ -579,7 +579,19 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     //
     // `activeLadderOf` is the same one answer Home's chip, the Kid screen and Stats all read.
     kidRank: rankIn(world, activeLadderOf(world)),
-    prevKidRank: prevRankIn(world, activeLadderOf(world)),
+    // ⚠ ...AND SHE MUST ACTUALLY BE RANKED IN IT (W2-WINDOW, found by tests/ladder-separation.test.ts
+    // S4 when the re-dealt calendar moved this seed's first result a week later). `rankIn` falls back
+    // to the cached position, which survives a table's 52-week window emptying; `kidLadderRank` is the
+    // nullable truth the ladder VIEW prints, and the two disagreed for exactly the weeks in which she
+    // holds no counting result in her active table. The diary then said «she moved up the table» about
+    // a table that was showing her a dash - a smaller version of the very bug the note above records.
+    // Nulling the PREVIOUS half is the whole fix: `rankClimbed` is `prevKidRank !== null && kidRank <
+    // prevKidRank`, so an unranked week can no longer claim a climb, and every ranked week is
+    // untouched.
+    prevKidRank:
+      kidLadderRank(world, activeLadderOf(world)) === null
+        ? null
+        : prevRankIn(world, activeLadderOf(world)),
     pendingUnfinished: world.pendingTournament !== null && !world.pendingTournament.finished,
     // R13-2: the points her run AWARDED this week. finalizeTournament writes a kid row only when
     // points > 0, so a first-round exit leaves none – "> 0" is exactly "she won matches this
