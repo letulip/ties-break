@@ -37,14 +37,14 @@ import type {
   MilestoneType,
   WeekScene,
 } from '../shared/protocol'
-import { isExamWeek, isOffSeasonWeek, TIER_SHORT } from './season/calendar'
-import type { TierId } from './season/types'
+import { isExamWeek, isOffSeasonWeek } from './season/calendar'
 import { rngFromSeed } from './rng'
 import { seasonYear, weekLabel } from '../shared/dates'
 // W6c: the anatomy, so a line about her body can know which body it is about. A leaf module – see the
 // note at the top of body.ts for why the twelve parts do not live in world.ts any more.
 import { bodyGroupOf, bodyPartOf, type BodyGroup } from './body'
 import { lastKidResultOf, lastKidTitleOf, milestoneKey, MEMORY_EMOTION, conditionBandOf, fundsPressureOf } from './diary/facts'
+import { short, plural, justHurt, quiet, road, air, inCar, longWay, shortHop, asleep, awake, ordinary, plainLoss, ageWord, capitalise } from './diary/words'
 import type { DiaryWorldView } from './diary/facts'
 import { travelHomeSceneFor, TRAVEL_SLEEP_CHANCE_EMPTY, TRAVEL_SLEEP_CHANCE_FRESH, travelSleepChance, TRAVEL_FINAL_SLEEP_CHANCE_EMPTY, TRAVEL_FINAL_SLEEP_CHANCE_FRESH, travelFinalSleepChance, travelHomeMoodFor, travelHomeFactsFor } from './diary/travelHome'
 import type { TravelHomeFacts } from './diary/travelHome'
@@ -211,37 +211,6 @@ export interface DiaryPhrase {
   license: (f: DiaryFacts) => boolean
 }
 
-/** Short tier name for the diary's voice, total over null ("the J30 trip" / "the tournament trip"). */
-function short(tier: TierId | null): string {
-  return tier ? TIER_SHORT[tier] : 'tournament'
-}
-
-function plural(n: number, word: string): string {
-  return `${n} ${word}${n === 1 ? '' : 's'}`
-}
-
-/** THE WEEK IT HAPPENED (R14-1). Nothing has been ticked off the layoff yet – `rollInjury` sets
- *  `weeksRemaining = totalWeeks` at onset and decrements at the TOP of every later week, so this is
- *  true on the onset week and on no other, a one-week injury included.
- *
- *  It exists because the split the owner asked for on her FACE has to hold in her PARENT'S VOICE
- *  too: `idleEmotion` no longer returns `injury` at all, so a licence reading `emotion === 'injury'`
- *  would be dead copy – but the lines it used to carry are not interchangeable. One of them is
- *  about the day the ice pack came out; the others are about week six. Derived from facts the diary
- *  already carries, so no new field and no schema question. */
-const justHurt = (f: DiaryFacts): boolean =>
-  f.injured !== null && f.injured.weeksRemaining === f.injured.totalWeeks
-
-/** An ordinary, healthy, event-free week – the licence behind every quiet line AND the silences. */
-const quiet = (f: DiaryFacts): boolean =>
-  !f.resultFresh &&
-  f.injured === null &&
-  !f.travelled &&
-  !f.playedTournament &&
-  !f.playedPractice &&
-  !f.examsWeek &&
-  !f.offSeasonWeek &&
-  !f.vacationWeek
 
 // The Diary-1 pool. ~60 lines across the three surfaces (memory lines live in MEMORY_LINES below
 // – they read a Milestone, not the week's facts). Every line: player-facing English, short dash,
@@ -864,25 +833,6 @@ export interface TravelNote {
   license: (t: TravelHomeFacts) => boolean
 }
 
-/** ⚠ W5: THE SCENE, NOT THE TIER. This was `!t.abroad` – true while `track` decided the transport,
- *  false the moment the owner's tier gate let a National fly home and a J30 come back on a bus. The
- *  note is the CAPTION of the picture above it, so "we were out of the car park" has to be licensed
- *  by there being a car in the frame, and nothing else. */
-const road = (t: TravelHomeFacts): boolean => t.scene === 'bus' || t.scene === 'car'
-/** ...and its other half, for the lines that name a gate, a flight or a landing. */
-const air = (t: TravelHomeFacts): boolean => t.scene === 'airport' || t.scene === 'plane'
-/** ...and the narrow half of the road, for the lines that name the family car. See the `car` claim. */
-const inCar = (t: TravelHomeFacts): boolean => t.scene === 'car'
-/** A journey with hours in it – every rung above the Local Open. See the `longWay` claim. */
-const longWay = (t: TravelHomeFacts): boolean => t.tier !== 'local'
-/** ...and its complement: the club two towns over, which W5 made a journey at all. */
-const shortHop = (t: TravelHomeFacts): boolean => t.tier === 'local'
-const asleep = (t: TravelHomeFacts): boolean => t.mood === 'sleepy'
-const awake = (t: TravelHomeFacts): boolean => t.mood !== 'sleepy'
-/** Everything below the injury and the first passport, which take a week to themselves. */
-const ordinary = (t: TravelHomeFacts): boolean => !t.injured && !t.firstAbroad
-/** She lost, and the loss was not the final – the ordinary weeks the junior road is mostly made of. */
-const plainLoss = (t: TravelHomeFacts): boolean => ordinary(t) && !t.reachedFinal
 
 export const TRAVEL_NOTES: readonly TravelNote[] = [
   // --- SHE WON IT --------------------------------------------------------------------------------
@@ -1375,20 +1325,6 @@ const athome = (f: DiaryFacts): boolean =>
  *  on a week she spent resting a sore ankle, and the pin in tests/diary.test.ts sweeps exactly this
  *  space. A week under a knock is no longer an ordinary week: it has its own band below, the way an
  *  exam week and a layoff do. */
-/** The age she turns, in words. A parent's register, not a scoreboard's - and total on any number a
- *  career can reach, falling back to the numeral past the years that read naturally as words. */
-const AGE_WORD: Record<number, string> = {
-  13: 'thirteen',
-  14: 'fourteen',
-  15: 'fifteen',
-  16: 'sixteen',
-  17: 'seventeen',
-  18: 'eighteen',
-  19: 'nineteen',
-  20: 'twenty',
-}
-const ageWord = (age: number | null): string => (age === null ? 'a year older' : (AGE_WORD[age] ?? String(age)))
-const capitalise = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1)
 
 /** W6c: WHERE HER LIVE INJURY IS, as the pool is allowed to ask. Null when she is healthy, and null
  *  when the part cannot be resolved from the persisted `kind` string - both mean the same thing to a
