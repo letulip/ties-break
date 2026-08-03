@@ -38,6 +38,7 @@ test:
   script:
     - npx vue-tsc -b --force
     - npm test
+    - npm run test:component
     - npm run build
   rules:
     - if: $CI_COMMIT_BRANCH != $CI_DEFAULT_BRANCH
@@ -47,6 +48,7 @@ pages:
   script:
     - npx vue-tsc -b --force
     - npm test
+    - npm run test:component
     # BASE_PATH is derived from the real Pages URL, so this works BOTH ways:
     #   classic namespace URL  https://<user>.gitlab.io/ties-break  -> "/ties-break/"
     #   unique-domain URL      https://ties-break-abc123.gitlab.io  -> "/"

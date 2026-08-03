@@ -67,6 +67,9 @@ safe long-lived saves matter more than decorative complexity.
 
 ## Traps that have cost real time
 
+- **Mounted component tests live in `tests/component/`** (vitest project `component`, run by
+  `npm run test:component`). Add UI coverage there rather than as a new source pin, and mutate what
+  you think you are covering before trusting a green run.
 - **Source-pin tests.** Several tests read engine source text and assert on its structure. Read
   engine source through `tests/worldSource.ts` (world.ts plus every `world/*.ts`) rather than pinning
   a path. A slice taken between two markers whose end marker has moved returns `-1` and silently

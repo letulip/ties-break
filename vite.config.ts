@@ -195,7 +195,10 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          exclude: [...configDefaults.exclude, ...HEAVY_SIM_FILES],
+          // ⚠ tests/component/** MUST be excluded here: the root include is tests/**/*.test.ts, so
+          // without this the node-environment unit project picks up the mounted tests and they die on
+          // a missing `document`.
+          exclude: [...configDefaults.exclude, ...HEAVY_SIM_FILES, 'tests/component/**'],
           // ⚠ 20s, AND IT IS A CONTENTION BUDGET RATHER THAN A SLOW-TEST ALLOWANCE (31.07).
           //
           // The owner could not merge: CI failed three runs in a row on `week-notes.test.ts` W2 with
@@ -270,6 +273,36 @@ export default defineConfig({
         // files (was 4), 77 expanded tests before and after. Wall-clock is unchanged too, because
         // this project runs one file at a time regardless.
         test: { name: 'sim', include: HEAVY_SIM_FILES },
+      },
+      {
+        // THE COMPONENT PROJECT (P9). The first tests in this repo that MOUNT anything.
+        //
+        // ⚠ WHY IT EXISTS, and it is not "coverage for its own sake". Until now every test of a
+        // component read the .vue file AS TEXT and asserted on its structure - `expect(src).toContain(
+        // 'onBeforeUnmount(resetSweep)')`. That is a source pin, and a source pin is the opposite of a
+        // safety net: it breaks the moment the file is refactored while proving nothing about what the
+        // component DOES. The P4 wave paid that bill 17 times, once with a slice whose end marker had
+        // moved, which returned -1 and made a negative assertion silently vacuous.
+        //
+        // The engine could be decomposed from 6019 lines to 2135 because 2230 real tests ran after
+        // every extraction. MatchViewer.vue (2239 lines) and SeasonScreen.vue (2022) have no such net,
+        // which is why they have not been touched. This project builds it.
+        //
+        // ⚠ NO `extends: true`, FOR THE REASON THE SIM PROJECT ABOVE ALREADY DOCUMENTS - and this
+        // project walked into it too: with `extends: true` the include MERGED with the root's
+        // `tests/**/*.test.ts` and it collected 112 files instead of 1, running the whole engine suite
+        // under happy-dom. P9's own proposal recommends `extends: true` to inherit the vue() plugin;
+        // that advice is wrong for this repo, and the correction is the line below.
+        //
+        // ⚠ SO THE PLUGIN IS DECLARED HERE INSTEAD. `vue()` is what compiles an SFC's <template> at
+        // all; without it a mount dies on the template block. Declaring it per-project keeps the
+        // include isolated AND the SFCs compiling, which is what both constraints need.
+        plugins: [vue()],
+        test: {
+          name: 'component',
+          include: ['tests/component/**/*.test.ts'],
+          environment: 'happy-dom',
+        },
       },
     ],
   },
