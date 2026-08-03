@@ -130,13 +130,19 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
   function independentTrace(facts: WeekFacts[], restPercent: number, physioActive: boolean): number[] {
     const k = ECONOMY.condition
     const clamp = (x: number) => Math.min(k.max, Math.max(k.min, x))
-    /** the season-planner drain of a friendly, re-derived from its scoreline: max(1, local − 1). */
+    /** the season-planner drain of a friendly, re-derived from its SCORELINE: max(1, scoreline − 1).
+     *  ⚠ THE TIER SURCHARGE IS NOT IN IT SINCE W2-WINDOW, and it never meant to be: the engine's
+     *  formula read `matchDrain('local', …) - 1`, which was the bare scoreline only because Local's
+     *  surcharge happened to be 0. The owner's domestic re-price took it to 1, so `resolvePractice`
+     *  now subtracts the surcharge by name - a practice set against a clubmate has no trip in it -
+     *  and this independent recomputation mirrors that rather than the old coincidence. Shipped
+     *  values unchanged: 1 / 2 / 3. */
     const practiceDrainOf = (score: string): number => {
       const sets = score ? score.split(' ') : []
       const tiebreaks = sets.filter((s) => s === '7-6' || s === '6-7').length
       let d = sets.length >= 3 || tiebreaks >= 1 ? k.matchFatigue.hardMatch : k.matchFatigue.straightSets
       if (tiebreaks > 2) d += k.matchFatigue.extraTiebreaks
-      return Math.max(1, d + k.tierMatchFatigue.local - 1)
+      return Math.max(1, d - 1)
     }
     let c: number = k.start
     const out: number[] = []
