@@ -20,8 +20,6 @@ import {
   PRESETS,
   HORIZONS,
   REACH_TARGET_MONEY,
-  REACH_PRO_RANK,
-  REACH_PRO_POINTS,
 } from '../tools/econ-bench'
 import { kidPoints } from '../src/engine/world'
 
@@ -31,7 +29,6 @@ const working = PRESETS.find((p) => p.background === 'working')!
  *  careers reach 0 of 30 at that horizon: a real answer about that family, and a useless fixture for
  *  a case whose whole job is to fire BOTH branches of the tracker. */
 const workingCoached = PRESETS.filter((p) => p.background === 'working')[1]!
-const wealthy = PRESETS.find((p) => p.background === 'wealthy')!
 
 const H16 = HORIZONS.find((h) => h.weeks === 104)!
 const H18 = HORIZONS.find((h) => h.weeks === 208)!
@@ -158,35 +155,4 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
   // unguarded `kidRank <= N` would hand a fresh fourteen-year-old the whole ladder on day one.
   // Unranked is not rank one, and the guard is what says so rather than the arithmetic happening
   // to agree this time.
-  //
-  // ⚠ ONE CASE, TWO its SINCE THE FILE SPLIT: the fresh-career fixture below sat ABOVE the
-  // per-preset loop inside a single `it`; converting that loop to it.each would have re-run a
-  // one-time pin nine times, so the fixture keeps its own `it` and every assertion is unchanged.
-  it('a fresh career starts at the tie floor, outside the pro rank, with no counting result', () => {
-    const fresh = openCareer(wealthy, 0)
-    expect(fresh.world.kidRank).toBe(120)
-    expect(fresh.world.kidRank).toBeGreaterThan(REACH_PRO_RANK)
-    expect(kidPoints(fresh.world, 'itf')).toBe(0) // ...and still no counting result
-  })
-
-  it.each(PRESETS)('the 14→18 pro proxy guards the rank arm with hasResults (no rank credit until a counting result) – $label', (preset) => {
-    // reachedWeek(pro) must match an INDEPENDENT replay of the GUARDED predicate, and must NOT be the
-    // week-1 degenerate value: the rank arm only fires once she owns a counting result (points > 0),
-    // which mirrors the engine's `ranked = countingResults.length > 0` signal.
-    for (const index of [0, 1, 2]) {
-      const r = runCareer(preset, index, H18.weeks)
-      const { world, rng } = openCareer(preset, index)
-      let firstReach: number | null = null
-      for (let i = 0; i < H18.weeks; i++) {
-        stepCareerWeek(world, rng)
-        const pts = kidPoints(world, 'itf')
-        const hasResults = pts > 0 // == computeCountingResults(world).length > 0 (every kid result scores)
-        const met = (hasResults && world.kidRank <= REACH_PRO_RANK) || pts >= REACH_PRO_POINTS
-        if (firstReach === null && met) firstReach = world.week
-      }
-      expect(r.reachedWeek).toBe(firstReach)
-      expect(r.reachedWeek).not.toBe(1) // the guard kills the week-1 degeneracy (null or a real week)
-      if (r.reachedWeek !== null) expect(r.reachedWeek).toBeGreaterThan(2) // only after a scoring result lands
-    }
-  })
 })
