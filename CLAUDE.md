@@ -17,6 +17,19 @@ Use `test:quiet` unless you need to read individual test names — same signal, 
 
 Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:load`, `bench:radar`). Always `vue-tsc -b --force`: the incremental cache has hidden real type errors before.
 
+## Graphify (code graph) — what it is and is not for
+
+Installed as a skill (`~/.claude/skills/graphify/`). Rebuild with `graphify update . --no-cluster`:
+4.5 s, zero model tokens, 5,366 nodes / 13,748 edges. `graphify-out/` is gitignored — never commit it.
+
+**Use it for orientation:** `god-nodes` (ranks architectural hubs — it independently reproduced the
+P4 analysis, putting `tickWeek` at 177 edges and `createWorld` at 166), `path "A" "B"`, `explain "X"`.
+Neither is expressible as a grep.
+
+**Do NOT use `affected` as a pre-split impact check.** Benchmarked against the 14 real breakages of
+the `world.ts` split it scored **26% precision and missed one**, because it sees imports — and the
+imports are exactly what survives a re-exported move. Use the grep below instead: **100% recall.**
+
 ## Non-negotiable invariants
 
 **1. The engine never imports the UI.** Zero imports of Vue/Pinia/components anywhere in `src/engine`, `src/worker`, `src/db`, `src/shared`. The worker owns the world; the UI only ever sees `Snapshot`. Every command is re-validated engine-side, so a stale screen cannot corrupt a career.
