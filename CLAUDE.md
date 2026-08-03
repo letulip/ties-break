@@ -19,8 +19,18 @@ Benches live in `tools/` (`bench:econ`, `bench:fatigue`, `bench:knock`, `bench:l
 
 ## Graphify (code graph) — what it is and is not for
 
-Installed as a skill (`~/.claude/skills/graphify/`). Rebuild with `graphify update . --no-cluster`:
-4.5 s, zero model tokens, 5,366 nodes / 13,748 edges. `graphify-out/` is gitignored — never commit it.
+```bash
+npm run graph        # rebuild — ~5 s, zero model tokens, 5,376 nodes / 13,764 edges
+npm run graph:check  # is it stale? exits 1 if source moved since the build
+```
+
+**Setup (once per machine, not a project dependency):** `pip install graphifyy && graphify install
+--platform claude`. The installer makes its own ~161 MB venv under `~/.claude/skills/graphify` and
+symlinks the binary onto PATH — far too large to vendor, so nothing is added to `package.json`.
+`npm run graph` prints these instructions if it cannot find the binary; `GRAPHIFY_BIN` overrides.
+`graphify-out/` is gitignored — a local artifact, rebuilt in seconds, never committed.
+
+**A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it.
 
 **Use it for orientation:** `god-nodes` (ranks architectural hubs — it independently reproduced the
 P4 analysis, putting `tickWeek` at 177 edges and `createWorld` at 166), `path "A" "B"`, `explain "X"`.
@@ -29,6 +39,15 @@ Neither is expressible as a grep.
 **Do NOT use `affected` as a pre-split impact check.** Benchmarked against the 14 real breakages of
 the `world.ts` split it scored **26% precision and missed one**, because it sees imports — and the
 imports are exactly what survives a re-exported move. Use the grep below instead: **100% recall.**
+
+**Do NOT trust `graphify query` in natural language.** Measured on this corpus it is lexically noisy:
+"where is the injury risk calculated" returned eight nodes from a funding-roadmap doc (matched on
+"risk") and none of `rollInjury` / `injuryTau`. Look symbols up by name instead — that is precise.
+
+**⚠ When the graph and grep disagree, check the grep first.** In both recorded disputes — one here,
+one in onsight-poc — the graph was right and the search was broken (a `grep` scoped to `src/` that
+skipped `tests/`; a `sed` range that collapsed on its start line). Same failure family as the `indexOf`
+slice returning −1. Verify scope, range arithmetic and anchoring before filing a graph bug.
 
 ## Non-negotiable invariants
 
