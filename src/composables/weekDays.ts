@@ -58,7 +58,14 @@
 // file. Same argument `composables/weekRecap.ts` makes for the recap predicate.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
-import { WEEKS_PER_YEAR, dominantSurface, isExamWeek, isOffSeasonWeek, surfaceBlockFor } from '../engine/season/calendar'
+import {
+  SUMMER_WEEKS,
+  dominantSurface,
+  isExamWeek,
+  isOffSeasonWeek,
+  isSummerWeek,
+  surfaceBlockFor,
+} from '../engine/season/calendar'
 import { layoffCoversWeek } from '../engine/world'
 import { knockGoverns } from '../engine/knock'
 import { surfaceStyleHint } from '../engine/match/style'
@@ -172,7 +179,7 @@ export interface CalendarWeek {
  *  `RecapFacts` idiom from composables/weekRecap.ts.
  *
  *  ⚠ `tierOpen`/`ageYears` ARE OPTIONAL ON THE FACTS AND REQUIRED ON THE SNAPSHOT (W2-LADDER §4,
- *  replacing R15-9's optional latches for the same reason): the live screen always has the
+ *  carried into W2-WINDOW's rule unchanged, replacing R15-9's optional latches for the same reason): the live screen always has the
  *  engine's oracle, while the older test fixtures predate it - and a fixture without one must mean
  *  "hide nothing", which is exactly what `feedContext` does with an absent `tierOpen`. Making them
  *  required here would force ceremony onto two dozen fact bags to say the thing absence says. */
@@ -182,23 +189,19 @@ export type CalendarWeekFacts = Pick<
 > &
   Partial<Pick<Snapshot, 'tierOpen' | 'ageYears'>>
 
-/** THE SUMMER HOLIDAYS, as season-week offsets (R15-8, owner 01.08): «2 месяца обычно после
- *  экзаменов... просто меньше учебы в календаре писать, пару-тройку часов в неделю». The exam
- *  fortnight is season-weeks 23-24 (`ECONOMY.availability.examWeeks`), so the holidays open the
- *  week after the last paper and run nine weeks - about the two months he named - and are over
- *  well before the off-season block at 49.
+/** ⚠ THE SUMMER WINDOW MOVED INTO THE ENGINE (W3-SUMMER) AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
+ *  NAMES, so every existing caller and every test that imports `SUMMER_WEEKS` / `isSummerWeek` from
+ *  this module keeps working unchanged.
  *
- *  ⚠ A DISPLAY FACT, NOT AN ENGINE ONE, exactly like the grid's hours: nothing in the sim gates on
- *  summer (school itself is furniture the grid draws, not a thing the engine bills), so the window
- *  lives HERE, in the module that legitimately talks to the calendar, and rides to the grid as DATA
- *  on `CalendarWeek` - weekGrid.ts may not import from the engine and does not need to. */
-export const SUMMER_WEEKS: readonly [number, number] = [25, 33]
-
-/** Is this week inside the school summer holidays? Season-week arithmetic, total over any week. */
-export function isSummerWeek(week: number): boolean {
-  const seasonWeek = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
-  return seasonWeek >= SUMMER_WEEKS[0] && seasonWeek <= SUMMER_WEEKS[1]
-}
+ *  This file's own note used to defend the window living here: «A DISPLAY FACT, NOT AN ENGINE ONE...
+ *  nothing in the sim gates on summer (school itself is furniture the grid draws, not a thing the
+ *  engine bills)». That was true and it is not any more. The owner ruled that the holidays are a REAL
+ *  training block - «если мы летом сделаем реальную нагрузку с 2 тренировками в день я не вижу
+ *  ничего плохого, это как раз частично компенсирует недостаток тренерских недель в другие периоды» -
+ *  so the sim now develops and fatigues a summer week differently, and a window the engine gates on
+ *  belongs in `season/calendar.ts` beside the exam fortnight and the off-season. The grid still gets
+ *  it as DATA on `CalendarWeek`: weekGrid.ts may not import from the engine, and still does not. */
+export { SUMMER_WEEKS, isSummerWeek }
 
 /** How many sessions `plan.train` buys, as a share of the seven days. Total and monotone: a higher
  *  train percentage can never buy fewer sessions. */
@@ -404,8 +407,21 @@ export function calendarWeekFor(snap: CalendarWeekFacts, week: number): Calendar
   return {
     ...base,
     days,
-    title: 'Training week',
-    readout: trainingReadout({ sessions, courtDays, gymIndex, resting, knockPart: knock?.part ?? null, matchIndex }),
+    // ⚠ THE HOLIDAYS ARE A DIFFERENT WEEK NOW, AND THE TITLE SAYS SO (W3-SUMMER). The engine develops
+    // and fatigues a summer training week differently - two sessions a day, no school - so a week
+    // labelled "Training week" while the sim is running a block would be the screen under-reporting a
+    // real decision the player is living with. A knock she is resting outranks it, because that is
+    // what the week actually is.
+    title: base.summer && !resting ? 'Summer block' : 'Training week',
+    readout: trainingReadout({
+      sessions,
+      courtDays,
+      gymIndex,
+      resting,
+      knockPart: knock?.part ?? null,
+      matchIndex,
+      summer: base.summer,
+    }),
   }
 }
 
@@ -419,6 +435,8 @@ function trainingReadout(x: {
   resting: boolean
   knockPart: string | null
   matchIndex: number | null
+  /** W3-SUMMER: the holidays, in which the ENGINE runs two sessions a day. See the note below. */
+  summer?: boolean
 }): string {
   if (x.resting) {
     // ⚠ A BOOKED FRIENDLY IS NOT CANCELLED BY A RESTED KNOCK - only `rollInjury` cancels bookings - so
@@ -427,12 +445,22 @@ function trainingReadout(x: {
     const match = x.matchIndex === null ? '' : ` The booked match on ${DAY_LONG[x.matchIndex]} still stands.`
     return `Resting the ${x.knockPart ?? 'knock'} – off the training court all week.${match}`
   }
+  // ⚠ THE SUMMER SENTENCE IS THE ENGINE'S, NOT A FLOURISH (W3-SUMMER). Every other clause here reads
+  // the plan back; this one reports a rule the sim runs - `summerBlockWeek` doubles the day's sessions
+  // through `growWeek`'s loadFactor and charges the week 3 condition for it - and the owner's whole
+  // point is that the block must be legible: «сделает прокачку эффективнее и более полной». A player
+  // who cannot see it will book his family holiday straight through it without knowing what he traded.
+  //
+  // It replaces the session line rather than being appended to it, because the count IS different: the
+  // plan's four or five sessions are being run twice a day.
   const plan =
     x.sessions === 0
       ? 'No sessions – a full week off court.'
-      : x.gymIndex === null
-        ? `${x.sessions} sessions, all of them on court.`
-        : `${x.sessions} sessions – ${x.courtDays} on court, 1 in the gym.`
+      : x.summer === true
+        ? `${x.sessions} days on, two sessions a day – no school, so the work doubles up.`
+        : x.gymIndex === null
+          ? `${x.sessions} sessions, all of them on court.`
+          : `${x.sessions} sessions – ${x.courtDays} on court, 1 in the gym.`
   const match = x.matchIndex === null ? '' : ` Practice match on ${DAY_LONG[x.matchIndex]}.`
   const knock = x.knockPart === null ? '' : ` She is training on a sore ${x.knockPart}.`
   return `${plan}${match}${knock}`
@@ -504,8 +532,8 @@ export function lookAheadFor(snap: CalendarWeekFacts): LookAheadRow[] {
   for (let w = first; w < first + LOOK_AHEAD_WEEKS; w++) {
     const vacation = snap.vacations.find((v) => v.week === w)
     const practice = snap.practices.find((p) => p.week === w)
-    // W2-LADDER §4: the TWO-TYPE feed decides what a marker may carry (entered events always
-    // survive - isSuitable's first arm and feedShows' own), and a week that stacks several
+    // W2-WINDOW (act2-pro-tour.md §11): the SLIDING WINDOW decides what a marker may carry (entered
+    // events always survive - isSuitable's first arm and feedShows' own), and a week that stacks several
     // suitable events markers the PREFERRED one - entered first, then the highest visible rung -
     // through the same pick the Season rows use, instead of whichever the list happened to put
     // first. `feed` is derived once above the loop, so all the rows read one verdict.

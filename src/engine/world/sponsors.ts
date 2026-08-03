@@ -13,11 +13,12 @@
 import { ECONOMY } from '../economy'
 import { TIERS, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
-import { activeKitDeal, dealUnderReview, endDealWithSeason, kitTravelShare, raiseKitOffer, refuseOffer as refuseOfferIn, seasonLastWeek, signOffer as signOfferIn, standingClears } from '../offers'
+import { activeKitDeal, dealUnderReview, endDealWithSeason, kitTravelShare, raiseKitEndLetter, raiseKitOffer, refuseOffer as refuseOfferIn, seasonLastWeek, signOffer as signOfferIn, standingClears } from '../offers'
 import type { SeasonEvent } from '../season/types'
-import { LADDER_LABEL, type KitOfferTerms, type Offer } from '../../shared/protocol'
+import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidPoints } from './ladder'
+import { KID_ID } from './constants'
 import type { WorldState } from '../world'
 
 // --- the sponsors decide, in the off-season -----------------------------------
@@ -97,7 +98,25 @@ export function localSponsorCents(nationalRank: number): number {
  *  count is this season's tournaments and no other's. */
 export function eventsPlayedInSeason(world: WorldState, reviewWeek: number): number {
   const from = reviewWeek - WEEKS_PER_YEAR
-  return world.events.filter((e) => e.type === 'tournament' && e.week >= from && e.week < reviewWeek).length
+  // ⚠ THE RESULTS LEDGER, NOT THE FEED (owner, 04.08: «а какие конкретно старты они считают? я много
+  // где играл, ни одной травмы за сезон и очень крутые показатели»). He was right to disbelieve the
+  // number. This read `world.events` — the NEWS FEED — which `pruneEvents` caps at EVENTS_CAP = 400
+  // ROWS and trims oldest-first. Measured on his own W230 career: the sponsor counted 7 tournaments
+  // where the results ledger holds 10, because the feed was at its cap and its earliest surviving
+  // tournament row was week 199 of a window that opens at 178. Everything she played before that had
+  // been displaced by later matches and news.
+  //
+  // So the obligation was judged on a record whose retention depends on HOW MUCH ELSE HAPPENED —
+  // and it fails in the exact direction that punishes the career the term is meant to reward: the
+  // busier her season, the more rows compete for the cap, the fewer of her own tournaments survive
+  // to be counted. A deal could end for "not playing enough" BECAUSE she played a lot.
+  //
+  // `world.results` is the right source and always was: one row per appearance, written at
+  // finalizeTournament, never rewritten, and pruned on a rolling 52-WEEK window (RESULTS_WINDOW) —
+  // by TIME, which is the same unit the question is asked in. A withdrawal writes no row, so the
+  // double-count the original comment feared cannot happen; a scoreless first-round exit writes one
+  // (wave B), which is correct here — a sponsor pays to be SEEN, and she was there.
+  return world.results.filter((r) => r.playerId === KID_ID && r.week >= from && r.week < reviewWeek).length
 }
 
 // ⚠ THE WHOLE INBOX GETS THE SAME FEED BUDGET THE CHEQUE HAD: AT MOST ONE ROW PER SEASON BOUNDARY.
@@ -164,6 +183,17 @@ export function reviewSponsors(world: WorldState): void {
   // A deal that failed does not limp to its contractual end: it stops with the season it failed.
   // A deal that held up simply runs on - a two-season contract has another year to go.
   if (deal && !heldUp) endDealWithSeason(deal, world.week)
+
+  // ⚠ ...AND THE BRAND SAYS SO IN WRITING (owner, 04.08: «I believe we need to send an email with
+  // the termination message»). The status line on the signed letter was already right and already
+  // unread; the first thing the player actually noticed was gear bills he thought the brand was
+  // paying. So a NEW letter lands in the inbox - which is the surface that knocks - for BOTH ways a
+  // deal can end: the terms it failed, and a term served in full. `untilWeek` is now final either
+  // way, so "does it cover next season" is the one question asked here.
+  if (deal && dealTerms && (deal.untilWeek ?? -1) <= seasonLastWeek(world.week)) {
+    const reason: KitEndReason = !playedEnough ? 'events' : !keptAtHome ? 'standing' : 'term'
+    raiseKitEndLetter(world.offers, world.week, deal, reason, played)
+  }
 
   // 2. AND WHETHER ANYBODY WRITES. ⚠ ONE BRAND AT A TIME is enforced inside `raiseKitOffer`, which
   //    refuses while a deal is running or a letter is unanswered - so a multi-season contract that

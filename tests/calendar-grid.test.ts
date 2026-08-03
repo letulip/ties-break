@@ -315,6 +315,45 @@ describe('a block is drawable, and it is not an invention', () => {
     }
   })
 
+  // ⚠ RE-AIMED FOR THE HOLIDAYS (W3-SUMMER), AND THE RULE IS THE SAME RULE. The sweep above passes no
+  // `summer` context, so it kept passing untouched - which is exactly why this arm has to exist: a
+  // guard that goes silent on a new week is worse than one that fails.
+  //
+  // The rule was never "one block of tennis" for its own sake. It is «the picture cannot claim more
+  // tennis than the WEEK bought», and what the week buys changed: the owner ruled the holidays are a
+  // real training block, so `summerBlockWeek` develops those weeks 40% harder and charges them 3
+  // condition, and `trainingReadout` says "two sessions a day" underneath the grid. So on a summer
+  // COURT day the honest picture is two, and everywhere else it is still one.
+  it('⚠ TWO sessions a day in the holidays, and nowhere else - the engine bought them', () => {
+    const TENNIS: BlockKind[] = ['training', 'trainingAlt', 'drills', 'match', 'matchLong', 'tournament']
+    for (const band of populatedBands()) {
+      for (const index of DAY_INDEXES) {
+        for (const role of ORDINARY_KINDS) {
+          for (const kind of ALL_KINDS) {
+            const where = `summer ${band}/${kind}[${index}]/${role}`
+            const blocks = dayBlocksFor(kind, band, { index, role, summer: true })
+            const sport = blocks.filter((b) => TENNIS.includes(b.kind) || b.kind === 'gym')
+            if (kind === 'court') {
+              // The plan's own afternoon drill, plus the morning the school hours gave back.
+              expect(sport.length, `${where} does not draw the block the engine is running`).toBe(2)
+              expect(blocks.filter((b) => b.kind === 'drills').length, where).toBe(1)
+              expect(blocks.filter((b) => b.kind === 'trainingAlt').length, where).toBe(1)
+            } else {
+              expect(sport.length, `${where} draws a second session the week did not buy`).toBeLessThanOrEqual(1)
+            }
+            // ⚠ AND THE DAY IS NO LONGER THAN A TERM-TIME DAY. The extra hour lives INSIDE the span
+            // school used to own, which is the whole reason it may be drawn at all - the holidays give
+            // hours back, they do not add them.
+            const termTime = dayBlocksFor(kind, band, { index, role })
+            const span = (bs: readonly { start: number; span: number }[]) =>
+              bs.length === 0 ? 0 : Math.max(...bs.map((b) => b.start + b.span)) - Math.min(...bs.map((b) => b.start))
+            expect(span(blocks), `${where} runs longer than the same day in term time`).toBeLessThanOrEqual(span(termTime))
+          }
+        }
+      }
+    }
+  })
+
   it('⚠ AND A TRIP\'S TENNIS IS THE TRIP\'S, never the plan\'s – no round is named', () => {
     // The other half of the restatement. A tournament week has tennis in it and none of it is the
     // plan's, so the check is about WHICH block appears rather than how many: the event days wear

@@ -12,7 +12,7 @@
 // look-ups or post-draw scalings that leave the draw sequence untouched.
 
 import { rngFromSeed, pickInt, type Rng } from './rng'
-import type { CoachTier, FamilyBackground, InjurySeverity, PlayStyle } from '../shared/protocol'
+import type { CoachTier, FamilyBackground, InjurySeverity, KitGrade, KitLine, PlayStyle } from '../shared/protocol'
 import type { TierId } from './season/types'
 import { WEEKS_PER_YEAR } from './season/calendar'
 
@@ -734,6 +734,109 @@ export const ECONOMY = {
      *  again. A POST-DRAW multiply inside `injuryTau`, the same invariance-safe shape as the
      *  vacation recovery buff - the roll is already drawn, only the threshold moves. */
     shoeInjuryRise: 0.2,
+
+    /** THE FRAME'S OWN INJURY HALF (W3-KIT, owner: «экип влияет и на травмы и на производительность
+     *  игрока»). A heavy, stiff, dead frame is an ARM story - tennis elbow is the injury a bad racket
+     *  actually causes - and until this wave the frame line had a performance half and no body half at
+     *  all, which made the shoes carry the whole of "equipment hurts people".
+     *
+     *  ⚠ SMALLER THAN THE SHOES' RISE ON PURPOSE, and the ratio is the research's own: the body-region
+     *  table (engine/body.ts) is ~48% lower limb against ~28% upper, so the line that lands on arms
+     *  cannot be priced like the line that lands on ankles. 0.12 against the shoes' 0.20.
+     *
+     *  ⚠ AND IT IS INVISIBLE TO A CAREER THAT BUYS ON CADENCE, WHICH IS WHY IT COULD BE ADDED AT ALL.
+     *  Realised frame wear is 0.041 (working) / 0.010 (middle) / 0.000 (wealthy) - the frame has a flat
+     *  head 13 weeks long and the family replaces it inside that - so this multiplies tau by 1.005 for
+     *  the worst-off shipped career. It only bites on the `alloy` rung, which is a thing the player has
+     *  to choose. Same POST-DRAW multiply as its neighbour: `injuryTau` keeps its pinned arity and
+     *  spends no draw.
+     *
+     *  ⚠ WHAT IS DELIBERATELY *NOT* HERE: steering WHICH part gets hurt. The honest model of a bad
+     *  frame is an elbow, and `drawBodyRegion` spends exactly one pull against a twelve-entry table -
+     *  so aiming the result would mean either a second draw (forbidden: the private `seed:injury:<week>`
+     *  sequence is byte-identical for every career today) or a second region table selected by kit,
+     *  which is a bigger change than this wave's evidence supports. The RATE moves; the anatomy does
+     *  not, and that is stated rather than quietly skipped. */
+    frameInjuryRise: 0.12,
+
+    // --- THE QUALITY LADDER: the rung the PLAYER buys ------------------------------------------
+    //
+    // The owner, W3-KIT: «я вообще за оба подхода одновременно, как с тренерами. Мы же точно знаем,
+    // что начальные ракетки из алюминия тяжелее и хуже во многом, чем начальные композитные, значит
+    // экип влияет и на травмы и на производительность игрока.» So a rung is like a coach rung: it
+    // moves BOTH what she can do and what happens to her body, and the parent pays for it.
+    //
+    // ⚠⚠ THE LADDER CANNOT BREAK THE ANTI-DESTINY BOUND, AND NOT BECAUSE IT WAS TUNED NOT TO. A rung
+    // does exactly two things to the arithmetic and both live INSIDE `kitWearAt`'s existing
+    // `clamp01`: it starts a line partway down its own wear curve (`startWear`), and it stretches or
+    // shortens that curve (`lifeFactor`). So every state the ladder can produce is a state the WEAR
+    // model could already produce, the whole ladder lives inside [FRESH_KIT, SPENT_KIT], and the
+    // nominal swing tools/kit-bench.ts measures against SKILL_POINTS_PER_YEAR is the same 2.01 < 2.40
+    // it was before this wave - structurally, not by choice of coefficient. Nothing new was added to
+    // the modifier channel; the ladder only decides WHERE ON THE OLD CURVE she stands.
+    //
+    // MEASURED (tools/kit-bench.ts §6, and the number is repeated in engine/equipment.ts): the
+    // REALISED alloy -> pro swing, i.e. what a career actually lives at on the bottom rung against
+    // the top one, is what the ladder is really worth. It is reported in skill points against the
+    // same 2.4-point yardstick and against the coach ladder's own 2.26.
+    //
+    // ⚠ THE TOP RUNG IS NEUTRAL-OR-SLOWER-WEARING, NEVER A BONUS. `startWear` is 0 from `composite`
+    // up, so no amount of money can put her ABOVE fresh kit - which is the promise engine/equipment.ts
+    // has made since it shipped ("Fresh kit is exactly neutral... wear only ever subtracts") and the
+    // reason the KID-ONLY asymmetry stays honest: the 199 rivals have no kit bag, so a kid who could
+    // buy her way past neutral would be carrying a bonus the field cannot have.
+    grades: {
+      /** THE ALUMINIUM STARTER - the owner's own example, and the only rung that is worse than the
+       *  game has ever been. Heavy, stiff, and a frame that plays like one already half spent: it is
+       *  slower off the ground and through the ball, it gives up sooner, and it is the rung that
+       *  actually hurts her (a stiff frame's shock goes into the arm - see `frameInjuryRise`).
+       *
+       *  The `startWear` split is the point: the FRAME carries most of it (0.40 of a service life the
+       *  moment it is bought) because that is the item the owner named, while cheap synthetic string
+       *  and flat-soled trainers are a smaller, realer handicap. `lifeFactor` 0.80 - cheap kit also
+       *  dies faster, which is the second half of why it is a false economy. */
+      alloy: { startWear: { strings: 0.20, frame: 0.40, shoes: 0.16 }, lifeFactor: 0.8, priceFactor: 0.55 },
+      /** ⚠ THE GAME AS IT SHIPPED, AND EVERY NUMBER HERE IS THE IDENTITY ELEMENT. No handicap, the
+       *  service lives above exactly as written, prices exactly `ECONOMY.gear`'s. A v36 career
+       *  migrates onto this rung and its wear, its injury threshold and its gear bills are
+       *  byte-identical to what they were - which is the whole reason the rung exists at this
+       *  position rather than at the bottom of the ladder. */
+      composite: { startWear: { strings: 0, frame: 0, shoes: 0 }, lifeFactor: 1, priceFactor: 1 },
+      /** What a serious junior's parents actually buy: a current retail frame, a decent poly bed,
+       *  proper court shoes. It buys no extra POWER - it cannot, see the note above - it buys the
+       *  thing that is actually worth having, which is that her kit is still good in week four. */
+      performance: { startWear: { strings: 0, frame: 0, shoes: 0 }, lifeFactor: 1.4, priceFactor: 2.2 },
+      /** Tour-level kit. Four times the bill, and what it returns is a girl who is never playing
+       *  worn-out equipment - the realised wear that `tools/kit-bench.ts` §2 measures at 0.30-0.40 on
+       *  strings and shoes falls by nearly half. Bounded by fresh kit, like everything else. */
+      pro: { startWear: { strings: 0, frame: 0, shoes: 0 }, lifeFactor: 1.9, priceFactor: 4 },
+    } as Record<KitGrade, { startWear: Record<KitLine, number>; lifeFactor: number; priceFactor: number }>,
+
+    /** THE COPY, kept beside the numbers so a rung cannot ship with a price and no name. Fictional
+     *  brands only (CLAUDE.md: real marks are trademarks), in the parent's register - what the thing
+     *  IS, not what it does to a coefficient. */
+    gradeCopy: {
+      alloy: {
+        strings: { label: 'Club synthetic', blurb: 'Cheap nylon – it goes dead in a fortnight.' },
+        frame: { label: 'Ashline Alloy', blurb: 'Heavy aluminium starter – slow, stiff, hard on the arm.' },
+        shoes: { label: 'Court Basics', blurb: 'Flat soles, no support – she slides when she should grip.' },
+      },
+      composite: {
+        strings: { label: 'Multifil Standard', blurb: 'The usual bed – fine until it is not.' },
+        frame: { label: 'Ashline Composite', blurb: 'The frame most juniors own. Nothing wrong with it.' },
+        shoes: { label: 'Baseline Trainer', blurb: 'Proper court shoes, mid-range.' },
+      },
+      performance: {
+        strings: { label: 'Kestra Control', blurb: 'Holds tension – the bed is still alive in week four.' },
+        frame: { label: 'Kestra Team 98', blurb: 'A current retail frame, and it stays sound far longer.' },
+        shoes: { label: 'Kestra Grip', blurb: 'Real support underfoot. Fewer rolled ankles.' },
+      },
+      pro: {
+        strings: { label: 'Kestra Tour Gut', blurb: 'What the tour restrings with. Fresh, always.' },
+        frame: { label: 'Kestra Pro Stock', blurb: 'Custom-weighted. She will never out-grow it.' },
+        shoes: { label: 'Kestra Tour', blurb: 'Fitted, cushioned, replaced before they wear.' },
+      },
+    } as Record<KitGrade, Record<KitLine, { label: string; blurb: string }>>,
   },
 
   // R9-1: weekly deterministic savings interest on a POSITIVE balance, credited on the
@@ -805,6 +908,63 @@ export const ECONOMY = {
     weekLuck: [0.55, 1.45] as [number, number],
     /** Past the peak, composure keeps creeping up – the veteran is slower and calmer. */
     veteranPoise: 0.004,
+  },
+
+  // =================================================================================================
+  // THE SUMMER TRAINING BLOCK (W3-SUMMER) - nine weeks with no school in them
+  // =================================================================================================
+  //
+  // THE OWNER'S RULING, and it is a correction of an objection rather than a fresh idea: «я играл и
+  // брал отпуска между турнирами пропуская и коучинговые сессии в том числе, если мы летом сделаем
+  // реальную нагрузку с 2 тренировками в день я не вижу ничего плохого, это как раз частично
+  // компенсирует недостаток тренерских недель в другие периоды, т.е. сделает прокачку эффективнее и
+  // более полной.»
+  //
+  // ⚠ SO IT IS VOLUME, NOT A BETTER MULTIPLIER, and that distinction is the whole design. She is not
+  // learning FASTER in the holidays - she is on court twice a day instead of once, because there is
+  // no school, and a fuller week develops more and costs more. That is why it lands on `growWeek`'s
+  // `loadFactor` (the knob whose own note says it is "HOW MUCH OF THE WEEK SHE ACTUALLY TRAINED") and
+  // on the condition accumulator, and not on `trainFactor`, the coach or the luck draw.
+  //
+  // ⚠ AND IT MUST NOT BE MANDATORY. A family that books its holiday in the summer LOSES the block -
+  // `summerBlockWeek` refuses on a vacation week, on a tournament week, on a layoff and on a rested
+  // knock - and that is a TRADE, not a punishment: the vacation's own condition package is paid
+  // instead, and the weeks she spends racing earn the match bonus instead. The choice is the feature.
+  //
+  // SIZING, AND IT IS MEASURED (tools/summer-bench.ts, 24 careers x 4 seasons, 14->18):
+  //
+  //   TRAINING-ONLY career   9.0 block weeks a season   +0.35 skill points over the career
+  //   RACING career          3.9 block weeks a season   +0.18 skill points over the career
+  //
+  // The racing row is the design working rather than the design failing: most of her summer is a
+  // tournament, and `summerBlockWeek` stands down on those weeks because a competition week already
+  // has its own bonus and its own bill. So the block is worth most to the girl who is NOT travelling,
+  // which is exactly «частично компенсирует недостаток тренерских недель» read literally. Against the
+  // yardstick it is a help and never the lever: one year of junior development is 2.4 skill points
+  // and the whole coach ladder is 2.26, so a full career of summers is a seventh of a coach.
+  //
+  // AND THE FATIGUE, which is the half that surprised the bench (§1c):
+  //   at the condition CEILING       0.0 - `recoveryBase` is 8 a week, so the -3 is clamped away and
+  //                                  a girl who is not already tired does not notice a fuller summer;
+  //   from a real deficit (start 20) -7.0 condition points by September (93.0 against 100.0).
+  // Both are true and the second is the one the design is defended on: the block bites exactly on the
+  // body that is already carrying a season, which is whose summer this is.
+  summerBlock: {
+    /** The multiplier on the week's development rate, through `growWeek`'s `loadFactor`. Two sessions
+     *  a day is not twice the learning - the coach's hours are what they are, and volume has sharply
+     *  diminishing returns - so it is +40%, not +100%. */
+    loadFactor: 1.4,
+    /** ...and what the fuller week COSTS her, in condition points, against a free training week's
+     *  `recoveryBase` of 8 plus 0-2 from the rest slider. Three: she still comes out of a summer week
+     *  ahead, which is right (there is no travel and no competition in it), but a nine-week block run
+     *  back to back leaves her measurably more tired than nine ordinary weeks would - and the injury
+     *  model reads condition, so the block carries its own risk without a rule of its own.
+     *
+     *  ⚠ INTEGER, like every other term in the condition accumulator ("no fractions", the owner's own
+     *  round-9 redesign), and subtracted BESIDE `accrueCondition` rather than inside it - the same
+     *  shape the knock's rest credit and the vacation's package gain use, and the reason
+     *  `accrueCondition` keeps the arity-2 zero-RNG contract tests/condition.test.ts pins. */
+    conditionCost: 3,
   },
 
   // THE ACADEMY SCHOLARSHIP (see engine/academy.ts for the whole argument). Reviewed once a year at
@@ -908,6 +1068,11 @@ export const ECONOMY = {
     // ONE side effect, deliberate: the practice friendly's max(1, local − 1) used to clamp
     // (max(1, 0) = 1 for every scoreline); it now subtracts for real, so a straight-sets friendly
     // still costs 1 but a 3-setter costs 2 and a three-TB epic 3 (docs/specs/fatigue-reference.md).
+    // ⚠ AND THE FRIENDLY NO LONGER READS LOCAL'S SURCHARGE AT ALL (W2-WINDOW): with local at 1 the
+    // same formula would have taken the cheapest thing in the game from 1/2/3 to 2/3/4 as a side
+    // effect of pricing a tournament WEEK. `resolvePractice` subtracts the surcharge by name now -
+    // a practice set against a clubmate has no trip in it - so those three values are pinned to the
+    // SCORELINE and cannot move again when Local is re-priced.
     matchFatigue: { straightSets: 2, hardMatch: 3, extraTiebreaks: 1 },
     // Tier surcharge PER MATCH, one step per rung. The J levels are EXTRAPOLATED above national
     // (ladder-up): international travel, time-zone changes and a fortnight away from home make
@@ -976,8 +1141,33 @@ export const ECONOMY = {
     // retired (see minConditionToEnter for the argument and the re-aimed guard). Two different
     // questions had been given one answer: what a week COSTS her body, and how fresh she must be to
     // start one.
+    //
+    // ⚠⚠⚠ AND THE DOMESTIC FAMILY GOES UP BY ONE (W2-WINDOW, owner 03.08: «как для local, Regional и
+    // national мы могли бы легко брать больше condition за них, я считаю, это сделало бы вещи чуть
+    // сложнее и интереснее»). 0/1/2 -> 1/2/3. The J and W families do NOT move - they were priced
+    // last wave against the field and against the schedule, and not one cell of their whole-run
+    // tables in tests/fatigueReference.test.ts changes.
+    //
+    // WHY LOCAL'S 0 WAS THE ONE WORTH FIXING. A surcharge of 0 is not a cheap week, it is NO WEEK:
+    // `matchDrain` = scoreline + surcharge, so a Local match cost exactly what a practice set costs
+    // and the rung contributed nothing at all to the one resource the game is about. A Local title
+    // (three matches) cost 8 of 100 condition against a recovery of 8-10 a rest week, i.e. she could
+    // play every Local on the calendar for free and scheduling was not yet a decision. At 1 the same
+    // title costs 11, which is still cheap - it should be - but it is a number.
+    //
+    // THE SEAM GOES FLAT AT THE TOP, AND THAT IS THE RULING RATHER THAN AN ARTEFACT. National is now
+    // 3, exactly what J30 costs. What this table prices is the week away from ordinary life, and a
+    // National Series week - a 32 draw, five matches, the event the family plans a season around -
+    // is the same kind of week as the entry rung of the international tour. It never INVERTS (the
+    // guard in tests/ladder.test.ts L9 is re-aimed to `>=` for this table only, and the condition
+    // FLOOR table keeps its strict step: 45 to enter a J30 against 40 for a National, because how
+    // fresh she must ARRIVE is the different question W2-FATIGUE already separated out).
+    //
+    // MEASURED, tools/ladder-walk.ts, 6 prospect careers x 8 seasons, before -> after:
+    // entries a season 20.8-29.2 (mean 26.2) -> see the wave report; the early domestic seasons are
+    // where it bites, which is where the owner asked for it to.
     tierMatchFatigue: {
-      local: 0, regional: 1, national: 2,
+      local: 1, regional: 2, national: 3,
       j30: 3, j60: 4, j300: 5,
       w15: 2, w35: 2, w50: 2, w75: 3, w100: 3, wta125: 3,
     } as Record<TierId, number>,
@@ -1413,7 +1603,8 @@ export const ECONOMY = {
   // --- Season planner: practice matches (spec §4) -----------------------------------------
   // A friendly on an empty week: court rental $30-80 × corridor off `seed:practice:week`, plus
   // an OPTIONAL coach. Effect: condition drain
-  // max(1, local-scoreline drain − 1), ZERO ranking points, and the week keeps the base
+  // max(1, local SCORELINE drain − 1) - the tier surcharge is subtracted out by name, see
+  // resolvePractice - ZERO ranking points, and the week keeps the base
   // recovery but FORFEITS the rest-slider bonus (she played, even if friendly).
   // GUARDRAIL (fatigue-bench finding 25.07: practising every week is self-destructive – mean
   // condition 47, 41-44% of weeks under 40): booking below `cautionCondition`, or a long enough

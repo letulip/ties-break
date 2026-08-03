@@ -67,9 +67,16 @@ const EPIC = '7-6 6-7 7-6' // three tiebreak sets
 describe('per-match cost = scoreline + tier surcharge', () => {
   // tier -> [simple, TB-or-3rd-set, 3 TB sets]
   const EXPECTED: Record<TierId, [number, number, number]> = {
-    local: [2, 3, 4],
-    regional: [3, 4, 5],
-    national: [4, 5, 6],
+    // ⚠ RE-PINNED 03.08 BY W2-WINDOW, THE FIRST TIME THE DOMESTIC ROWS HAVE EVER MOVED. The owner:
+    // «как для local, Regional и national мы могли бы легко брать больше condition за них, я считаю,
+    // это сделало бы вещи чуть сложнее и интереснее». Surcharges 0/1/2 -> 1/2/3, so every domestic
+    // cell rises by exactly one. Local's 0 was the one worth fixing: a surcharge of 0 made
+    // `matchDrain` the bare scoreline, so a Local match cost what a practice set costs and the rung
+    // contributed nothing at all to the resource the game is about. The J and W rows below do NOT
+    // move - they were priced last wave and this is the domestic half only.
+    local: [3, 4, 5],
+    regional: [4, 5, 6],
+    national: [5, 6, 7],
     j30: [5, 6, 7],
     j60: [6, 7, 8],
     j300: [7, 8, 9],
@@ -114,13 +121,18 @@ describe('per-match cost = scoreline + tier surcharge', () => {
   // three-tiebreak J300 epic at 9: the junior tour's hardest week is once again the hardest week
   // there is, which is precisely the owner's own frame (the travel tax belongs to the schoolgirl
   // flying out twice a year, not to the professional on her own tour). The assertion still pins
-  // BOTH ends against the live engine and names the rung holding each. The floor is untouched at 2:
-  // a straight-sets Local match costs what it always did.
-  it('a match costs 2 to 9 across the whole ladder – 2 at Local, 9 for a J300 epic', () => {
+  // BOTH ends against the live engine and names the rung holding each.
+  // ⚠ RE-AIMED A FOURTH TIME 03.08 (W2-WINDOW): the FLOOR moves for the first time, 2 -> 3, because
+  // the owner re-priced the domestic family and a straight-sets Local match is the cheapest TOUR
+  // match there is. The ceiling is untouched at 9 (the J300 epic), so the ladder's span narrows
+  // rather than shifts - which is the point of the re-price. The cheapest thing in the GAME is still
+  // 1: that is the practice friendly, and it is pinned separately below precisely because it stopped
+  // riding on Local's surcharge.
+  it('a match costs 3 to 9 across the whole ladder – 3 at Local, 9 for a J300 epic', () => {
     const all = TIER_LADDER.flatMap((t) => [matchDrain(t, SIMPLE), matchDrain(t, HARD), matchDrain(t, EPIC)])
-    expect(Math.min(...all)).toBe(2)
+    expect(Math.min(...all)).toBe(3)
     expect(Math.max(...all)).toBe(9)
-    expect(matchDrain('local', SIMPLE)).toBe(2)
+    expect(matchDrain('local', SIMPLE)).toBe(3)
     expect(matchDrain('j300', EPIC)).toBe(9)
     // ...and the professional family now sits UNDER the junior one, end to end.
     expect(matchDrain('w100', EPIC)).toBeLessThan(matchDrain('j300', EPIC))
@@ -164,13 +176,23 @@ describe('per-match cost = scoreline + tier surcharge', () => {
     for (let i = 1; i < w.length; i++) {
       expect(matchDrain(w[i], SIMPLE), `${w[i]} vs ${w[i - 1]}`).toBeGreaterThanOrEqual(matchDrain(w[i - 1], SIMPLE))
     }
-    // The domestic -> junior seam still steps UP (+1, j30 over national)...
-    expect(matchDrain('j30', SIMPLE)).toBe(matchDrain('national', SIMPLE) + 1)
+    // ⚠ THE DOMESTIC -> JUNIOR SEAM IS FLAT NOW, NOT A STEP UP (W2-WINDOW), and it is the ruling
+    // rather than an artefact: National is a 32 draw, five matches, the event the family plans a
+    // season around, and what this table charges for is the week away from ordinary life. That is
+    // the same kind of week as the entry rung of the international tour. It must never INVERT, which
+    // is what the assertion pins.
+    expect(matchDrain('j30', SIMPLE)).toBe(matchDrain('national', SIMPLE))
+    expect(matchDrain('j60', SIMPLE)).toBeGreaterThan(matchDrain('national', SIMPLE))
     // ...and the junior -> professional seam steps DOWN by three, w15 landing level with NATIONAL:
     // the entry rung of the adult game is priced where the top domestic rung is, because what this
     // table charges for is travel-and-adaptation and she is the one girl who does it for a living.
     expect(matchDrain('w15', SIMPLE)).toBe(matchDrain('j300', SIMPLE) - 3)
-    expect(matchDrain('w15', SIMPLE)).toBe(matchDrain('national', SIMPLE))
+    // ⚠ ...AND W15 IS NOW ONE UNDER NATIONAL RATHER THAN LEVEL WITH IT (W2-WINDOW): the domestic
+    // re-price moved National up and the professional family did not move at all. The sentence the
+    // old pin made ("the entry rung of the adult game is priced where the top domestic rung is") is
+    // simply one rung stronger now, and it is the same argument - she is the one girl who does this
+    // for a living.
+    expect(matchDrain('w15', SIMPLE)).toBe(matchDrain('national', SIMPLE) - 1)
     // ...and the whole professional family stays at or below the junior tour's ENTRY rung.
     for (const t of w) expect(matchDrain(t, SIMPLE), `${t} vs j30`).toBeLessThanOrEqual(matchDrain('j30', SIMPLE))
   })
@@ -216,9 +238,14 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
   // National (5) 26 vs the old flat 8 / 16 / 26. The redesign is now cost-neutral at the top of a
   // draw and still cheap on an early exit, which is what the per-match design was for.
   const EXPECTED: Record<TierId, [number, number, number, number, number]> = {
-    local: [2, 5, 8, 12, 16],
-    regional: [3, 7, 11, 16, 21],
-    national: [4, 9, 14, 20, 26],
+    // ⚠ THE DOMESTIC ROWS MOVE 03.08 (W2-WINDOW, the owner's re-price - see the per-match table).
+    // Depth x per-match + the running C sum 0,1,2,4,6, so each row is its old self plus `depth`. The
+    // headline the note above records moves with it: a straight-sets TITLE now costs Local 11 (was
+    // 8), Regional 24 (16), National 31 (26) - which is what «чуть сложнее» buys. The J and W rows
+    // are BYTE-IDENTICAL, which is the other half of the ruling.
+    local: [3, 7, 11, 16, 21],
+    regional: [4, 9, 14, 20, 26],
+    national: [5, 11, 17, 24, 31],
     j30: [5, 11, 17, 24, 31],
     j60: [6, 13, 20, 28, 36],
     j300: [7, 15, 23, 32, 41],
@@ -271,13 +298,15 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     }
   })
 
-  it("the owner's three-match Local reference case costs 9 (base 7 + ladder 2)", () => {
+  it("the owner's three-match Local reference case costs 12 (base 10 + ladder 2)", () => {
     // Two straight-sets matches and one three-setter, exactly the run he measured in the app.
-    // RE-PINNED 6 → 9 by the base raise: the three per-match drains are 2 + 2 + 3 = 7 (were
+    // RE-PINNED 6 → 9 by the base raise: the three per-match drains were 2 + 2 + 3 = 7 (from
     // 1 + 1 + 2 = 4); the ladder half is unchanged at 2. Same run in tests/round10.test.ts (R10-14).
+    // ⚠ RE-PINNED 9 → 12 by W2-WINDOW's domestic re-price (surcharge 0 → 1, so 3 + 3 + 4 = 10). The
+    // ladder half is STILL 2 - the re-price moved one lever, and the identity below is what says so.
     const run = [{ score: SIMPLE }, { score: SIMPLE }, { score: HARD }]
-    expect(tournamentRunStrain('local', run)).toBe(9)
-    expect(run.reduce((s, m) => s + matchDrain('local', m.score), 0)).toBe(7) // the base half
+    expect(tournamentRunStrain('local', run)).toBe(12)
+    expect(run.reduce((s, m) => s + matchDrain('local', m.score), 0)).toBe(10) // the base half
   })
 })
 
@@ -304,9 +333,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
   }
   const GRID: Record<string, Record<TierId, number[]>> = {
     off: {
-      local: [2, 4, 6, 8, 10],
-      regional: [3, 6, 9, 12, 15],
-      national: [4, 8, 12, 16, 20],
+      local: [3, 6, 9, 12, 15],
+      regional: [4, 8, 12, 16, 20],
+      national: [5, 10, 15, 20, 25],
       j30: [5, 10, 15, 20, 25],
       j60: [6, 12, 18, 24, 30],
       j300: [7, 14, 21, 28, 35],
@@ -318,9 +347,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       wta125: [5, 10, 15, 20, 25],
     },
     D: {
-      local: [2, 5, 8, 11, 14],
-      regional: [3, 7, 11, 15, 19],
-      national: [4, 9, 14, 19, 24],
+      local: [3, 7, 11, 15, 19],
+      regional: [4, 9, 14, 19, 24],
+      national: [5, 11, 17, 23, 29],
       j30: [5, 11, 17, 23, 29],
       j60: [6, 13, 20, 27, 34],
       j300: [7, 15, 23, 31, 39],
@@ -332,9 +361,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       wta125: [5, 11, 17, 23, 29],
     },
     C: {
-      local: [2, 5, 8, 12, 16],
-      regional: [3, 7, 11, 16, 21],
-      national: [4, 9, 14, 20, 26],
+      local: [3, 7, 11, 16, 21],
+      regional: [4, 9, 14, 20, 26],
+      national: [5, 11, 17, 24, 31],
       j30: [5, 11, 17, 24, 31],
       j60: [6, 13, 20, 28, 36],
       j300: [7, 15, 23, 32, 41],
@@ -346,9 +375,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       wta125: [5, 11, 17, 24, 31],
     },
     B: {
-      local: [2, 5, 8, 12, 18],
-      regional: [3, 7, 11, 16, 23],
-      national: [4, 9, 14, 20, 28],
+      local: [3, 7, 11, 16, 23],
+      regional: [4, 9, 14, 20, 28],
+      national: [5, 11, 17, 24, 33],
       j30: [5, 11, 17, 24, 33],
       j60: [6, 13, 20, 28, 38],
       j300: [7, 15, 23, 32, 43],
@@ -360,9 +389,9 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       wta125: [5, 11, 17, 24, 33],
     },
     A: {
-      local: [2, 5, 9, 14, 20],
-      regional: [3, 7, 12, 18, 25],
-      national: [4, 9, 15, 22, 30],
+      local: [3, 7, 12, 18, 25],
+      regional: [4, 9, 15, 22, 30],
+      national: [5, 11, 18, 26, 35],
       j30: [5, 11, 18, 26, 35],
       j60: [6, 13, 21, 30, 40],
       j300: [7, 15, 24, 34, 45],
@@ -400,7 +429,7 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
 })
 
 describe('a PRACTICE friendly stays at the floor of 1 — and now the −1 finally does something', () => {
-  // world.ts playPracticeMatch: drain = max(1, matchDrain('local', score) − 1). The engine-level
+  // world.ts playPracticeMatch: drain = max(1, LOCAL SCORELINE − 1). The engine-level
   // pin (a real booked friendly, condition arithmetic included) is tests/planner.test.ts P6; this is
   // the canonical TABLE behind the doc.
   //
@@ -408,11 +437,23 @@ describe('a PRACTICE friendly stays at the floor of 1 — and now the −1 final
   // was max(1, 0) = 1 and the −1 was dead arithmetic — every friendly cost 1 whatever the scoreline.
   // At base 2 the floor is reached by subtraction instead of by clamping (2 − 1 = 1), so the
   // scoreline finally grades a friendly: a slugfest costs MORE than a straightforward win.
-  const friendlyDrain = (score: string): number => Math.max(1, matchDrain('local', score) - 1)
+  //
+  // ⚠⚠ AND THE FORMULA NAMES WHAT IT SUBTRACTS SINCE W2-WINDOW. It used to read
+  // `max(1, matchDrain('local', score) - 1)`, which was the bare SCORELINE only because Local's
+  // surcharge happened to be 0. The owner's domestic re-price took it to 1, and carried through
+  // unchanged the cheapest thing in the game would have gone 1/2/3 -> 2/3/4 as a side effect of
+  // pricing a tournament WEEK. Two different things had been given one expression: the surcharge
+  // prices the trip, the travel and the days away, and a practice set against a clubmate has none of
+  // them. `resolvePractice` subtracts the surcharge by name now, so the three values below are the
+  // shipped ones, unchanged - and they can no longer move when Local is re-priced again.
+  const friendlyDrain = (score: string): number =>
+    Math.max(1, matchDrain('local', score) - ECONOMY.condition.tierMatchFatigue.local - 1)
 
   it('straight sets still costs exactly 1 – the cheapest thing in the game is unchanged', () => {
     expect(friendlyDrain(SIMPLE)).toBe(1)
-    expect(matchDrain('local', SIMPLE) - 1).toBe(1) // reached by the −1, no longer by the floor
+    // Reached by the −1, no longer by the floor - and read off the SCORELINE, with the tier
+    // surcharge subtracted out by name (W2-WINDOW), so a re-priced Local cannot move it.
+    expect(matchDrain('local', SIMPLE) - ECONOMY.condition.tierMatchFatigue.local - 1).toBe(1)
   })
 
   it('a 3-set friendly now costs 2 (it used to cost 1) and a three-TB epic costs 3', () => {

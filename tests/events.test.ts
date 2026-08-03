@@ -64,7 +64,13 @@ function advanceAnswering(world: WorldState, rng: Rng, weeks: number): StopReaso
 // cannot enter, which is `enterEvent` working, not failing.
 function firstEnterable(world: WorldState) {
   const age = START_AGE_YEARS + Math.floor(world.week / WEEKS_PER_YEAR)
-  return world.season.find((e) => e.deadlineWeek >= world.week && isTierAgeOpen(e.tier, age))!
+  // ⚠ AND THE PROFESSIONAL RUNGS TOO (W2-WINDOW), for the reason the age filter above gives, one
+  // table up: `enterEligible` can grant a domestic book or an ITF one, but it cannot grant a
+  // PROFESSIONAL ranking - so a W rung reaches `enterEvent` and throws "takes the top 450 - she has
+  // no professional ranking yet", killing the fixture on scaffolding rather than on its subject.
+  return world.season.find(
+    (e) => e.deadlineWeek >= world.week && isTierAgeOpen(e.tier, age) && TIERS[e.tier].track !== 'wta',
+  )!
 }
 
 // r-gate (season-life-01b): points-based eligibility. These cases predate the ladder and aren't about
@@ -192,7 +198,9 @@ describe('news match texts use short names for everyone', () => {
   it('renders the kid as "V. Last" and the opponent as "X. Last"', () => {
     const world = createWorld('short-names') // default profile: Vera Martin
     const rng = rngFromSeed(world.seed)
-    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+    const event = world.season.find(
+      (e) => e.week >= 5 && e.deadlineWeek >= world.week && TIERS[e.tier].track !== 'wta',
+    )!
     enterEligible(world, event)
     while (world.week < event.week) tickWeek(world, rng)
     // The tournament week pauses into a reveal; resolve it so the match events are emitted.
@@ -216,7 +224,15 @@ describe('a tournament week the kid entered', () => {
     for (let i = 0; i < 30; i++) {
       const w = createWorld(`tourney-week-${i}`)
       const r = rngFromSeed(w.seed)
-      const e = w.season.find((x) => x.week >= 5 && x.deadlineWeek >= w.week)!
+      // ⚠ AND THE RUNG MUST BE ONE `enterEligible` CAN ACTUALLY OPEN (W2-WINDOW). It grants a
+      // domestic book or an ITF one, which covers every domestic and J rung – it cannot grant a
+      // PROFESSIONAL ranking, so a W rung here throws "takes the top 450 – she has no professional
+      // ranking yet" and the fixture dies on scaffolding rather than on its subject. It only started
+      // biting when the seeded calendar moved which event this seed finds first; the filter says
+      // what the loop already meant, exactly as the age filter in `firstEnterable` does.
+      const e = w.season.find(
+        (x) => x.week >= 5 && x.deadlineWeek >= w.week && TIERS[x.tier].track !== 'wta',
+      )!
       enterEligible(w, e)
       while (w.week < e.week) tickWeek(w, r)
       if (!w.pendingTournament) continue
@@ -270,7 +286,9 @@ describe('a tournament week the kid entered', () => {
     for (const seed of ['champ-a', 'champ-b', 'champ-c', 'champ-d', 'champ-e']) {
       const world = createWorld(seed)
       const rng = rngFromSeed(world.seed)
-      const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+      const event = world.season.find(
+      (e) => e.week >= 5 && e.deadlineWeek >= world.week && TIERS[e.tier].track !== 'wta',
+    )!
       enterEligible(world, event)
       while (world.week < event.week) tickWeek(world, rng)
       skipTournament(world)
@@ -358,7 +376,9 @@ describe('kid counting-results transparency (round-5 item 1b)', () => {
     for (let i = 0; i < 40; i++) {
       const w = createWorld(`counting-${i}`)
       const rng = rngFromSeed(w.seed)
-      const event = w.season.find((e) => e.week >= 5 && e.deadlineWeek >= w.week)
+      const event = w.season.find(
+        (e) => e.week >= 5 && e.deadlineWeek >= w.week && TIERS[e.tier].track !== 'wta',
+      )
       if (!event) continue
       enterEligible(w, event)
       while (w.week < event.week) tickWeek(w, rng)
@@ -388,7 +408,9 @@ describe('advance stop reasons', () => {
   it('stops on the entered tournament week (stopReason: tournament)', () => {
     const world = createWorld('adv-tournament')
     const rng = rngFromSeed(world.seed)
-    const event = world.season.find((e) => e.week >= 5 && e.deadlineWeek >= world.week)!
+    const event = world.season.find(
+      (e) => e.week >= 5 && e.deadlineWeek >= world.week && TIERS[e.tier].track !== 'wta',
+    )!
     enterEligible(world, event)
     // fast-forward to the week just before the event, so advance hits it on the first tick
     while (world.week < event.week - 1) tickWeek(world, rng)

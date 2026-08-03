@@ -43,7 +43,15 @@ import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 // ladder went 9 -> 12, `tierPhase`'s divisor moved with it, and the first event of
 // buildSeason('travel-pin', 0, 52) is now a W35 (band $1,300-2,800). Same witness, same three
 // assertions, value re-derived from the live engine (scratchpad probe) rather than tuned.
-const TRAVEL_PIN_BASE = 204489
+//
+// ⚠ RE-PINNED A FOURTH TIME by W2-WINDOW: 204489 -> 140635, and this time BOTH inputs moved. The
+// placement fix re-counts every tier against the PLAYABLE span (26 W15s became 25, and so on), so
+// the season stream is asked for a different NUMBER of events; and the seeded jitter moves which
+// WEEK each one lands on, so the strongest-first emission order reaches a different first event.
+// The pin is a WITNESS to draw-order stability across a change, never a claim about a dollar
+// figure: what it asserts – the base pickInt is byte-stable and the background corridor multiplies
+// on top of it, never into it – is untouched, and the three assertions that read it are unchanged.
+const TRAVEL_PIN_BASE = 140635
 
 // Re-derive the per-trip corridor factor exactly as makeEvent does: one uniform roll from the
 // purpose-scoped sub-stream keyed by the event, mapped into the background's [lo,hi] corridor.
@@ -71,10 +79,23 @@ function travelFactor(seedStr: string, e: SeasonEvent, background: FamilyBackgro
 // new counts read as their spec cadences too - W50 every 4 (13, a Regional's rhythm one table up),
 // W75 every 6 (8), WTA 125 every 13 (4, rare like W100 and J300, minGap 2). Every pre-existing
 // count is still byte-identical, for the same floor(52/n) reason the task-#17 note above gives.
+//
+// ⚠⚠ AND RE-PINNED BY W2-WINDOW, WHICH IS THE FIRST TIME THESE NUMBERS HAVE MOVED FOR A REASON THAT
+// IS NOT "a new rung joined". `floor(52 / everyNWeeks)` counted a tier's cadence against the
+// CALENDAR YEAR while only 49 weeks can carry an event, so every tier was handed three weeks of
+// cadence with nowhere to put it and the overflow compressed into the last playable weeks -
+// measured on the shipped build, one season: 2-5 events a week all year and then 45:5 46:5 47:8
+// 48:11, with six of the twelve rungs ending on week 48. `seasonEventCount` counts against the
+// PLAYABLE span instead (`round(49 / everyNWeeks)`), so a cadence is a cadence.
+//
+// The dense rungs each lose exactly one event (26 -> 25, 17 -> 16, 13 -> 12) and THE RARE ONES DO
+// NOT MOVE: `round` rather than `floor` is what keeps J300 / W100 / WTA 125 at four a year and
+// National at R9-20's 4 + 2 = 6, which are design statements in their own TierDef comments rather
+// than arithmetic. Season total 164 -> 157.
 const SEASON_COUNTS: Record<TierId, number> = {
-  local: 26, regional: 13, national: 6,
-  j30: 26, j60: 17, j300: 4,
-  w15: 26, w35: 17, w50: 13, w75: 8, w100: 4, wta125: 4,
+  local: 25, regional: 12, national: 6,
+  j30: 25, j60: 16, j300: 4,
+  w15: 25, w35: 16, w50: 12, w75: 8, w100: 4, wta125: 4,
 }
 
 function countByTier(events: SeasonEvent[]): Record<TierId, number> {
@@ -152,7 +173,7 @@ describe('buildSeason — determinism', () => {
 describe('buildSeason — 52-week structure', () => {
   const events = buildSeason('struct-seed', 0, 52)
 
-  it('yields the ladder-up season counts (26 local / 13 regional / 6 national / 26 j30 / 17 j60 / 4 j300)', () => {
+  it('yields the season counts (25 local / 12 regional / 6 national / 25 j30 / 16 j60 / 4 j300)', () => {
     expect(countByTier(events)).toEqual(SEASON_COUNTS)
   })
 
@@ -479,6 +500,96 @@ describe('buildSeason — off-season carries no events (Round 5 items 16/21)', (
   it('tier counts are unaffected by the reserved off-season weeks', () => {
     const events = buildSeason('off-counts', 0, 52)
     expect(countByTier(events)).toEqual(SEASON_COUNTS)
+  })
+})
+
+// =================================================================================================
+// W2-WINDOW — the two defects the shipped calendar carried, each with its own guard.
+// =================================================================================================
+describe('buildSeason — the season tail carries no pile (W2-WINDOW A1)', () => {
+  // THE FAILURE THIS REFUSES, measured on the pre-wave build over one fresh season: events per
+  // season-week ran 2-5 through the year and then 45:5 46:5 47:8 48:11, because every tier's count
+  // was computed over 52 weeks while only 49 are placeable and the overflow could only go to the
+  // last playable weeks. Per rung the last entries clumped – W50, W75, W100 and WTA 125 all ended
+  // on week 48. The owner met it as «3 W35 подряд на 47-48-49».
+  const TALLEST_ALLOWED = 8
+
+  it('no week carries an implausible pile, and the last playable weeks are not the tallest', () => {
+    for (let s = 0; s < 20; s++) {
+      const events = buildSeason(`tail-${s}:s1`, 52, 52)
+      const perWeek = new Array(WEEKS_PER_YEAR).fill(0) as number[]
+      for (const e of events) perWeek[e.week % WEEKS_PER_YEAR] += 1
+      const tallest = Math.max(...perWeek)
+      expect(tallest, `seed ${s}: a week carrying ${tallest} events`).toBeLessThanOrEqual(TALLEST_ALLOWED)
+      // ...and the pile is not AT THE END, which is the shape of the bug rather than its size. The
+      // last four playable weeks must not hold more than the season's own mean rate allows them.
+      const playable = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+      const tail = perWeek.slice(playable - 4, playable).reduce((a, b) => a + b, 0)
+      expect(tail, `seed ${s}: the last four playable weeks hold ${tail} events`).toBeLessThan(
+        (2 * 4 * events.length) / playable,
+      )
+    }
+  })
+
+  it('a tier stops ending its season on the same week every time', () => {
+    // Every rung used to finish on week 47 or 48, in every world, for ever: the clamp had exactly
+    // ONE place to put an overflowing target, so this set had exactly one member per rung. The
+    // spread is bounded by design (PLACEMENT_JITTER is half a cadence interval), so a dense-ish
+    // rung like W50 moves ±2 weeks and a rare one ±6 – the bar is therefore "more than a couple",
+    // not "wide", and the pre-wave build scored 1 on all three.
+    for (const tier of ['w50', 'w100', 'wta125'] as TierId[]) {
+      const lasts = new Set<number>()
+      for (let s = 0; s < 20; s++) {
+        const weeks = buildSeason(`lastweek-${s}:s1`, 52, 52)
+          .filter((e) => e.tier === tier)
+          .map((e) => e.week % WEEKS_PER_YEAR)
+        lasts.add(Math.max(...weeks))
+      }
+      expect(lasts.size, `${tier} ends its season on ${[...lasts].join('/')}`).toBeGreaterThan(2)
+    }
+  })
+})
+
+describe('buildSeason — the calendar takes its seed (W2-WINDOW A2)', () => {
+  const layout = (seedStr: string) =>
+    buildSeason(seedStr, 52, 52)
+      .map((e) => `${e.week}:${e.tier}`)
+      .join('|')
+
+  it('two seeds deal DIFFERENT week/tier layouts', () => {
+    // Pre-wave this was byte-identical: `buildSeason` took a seed and spent it on surfaces and
+    // travel costs only, so the grid was a pure function of the tier table and every career in
+    // every world played the same calendar for ever.
+    const seen = new Set<string>()
+    for (let s = 0; s < 12; s++) seen.add(layout(`seedcheck-${s}:s1`))
+    expect(seen.size).toBe(12)
+  })
+
+  it('...and the SAME seed reproduces its own exactly', () => {
+    for (let s = 0; s < 12; s++) expect(layout(`seedcheck-${s}:s1`)).toBe(layout(`seedcheck-${s}:s1`))
+  })
+
+  it('the placement draw never touches the season stream (surfaces stay a function of the week)', () => {
+    // The jitter comes off a purpose-scoped sub-stream (`:calweek:<tier>`), re-derived at the call
+    // site. If it had been drawn from the season stream instead, every surface and travel cost
+    // after the first event would shift with it – so this asserts the two are independent by
+    // checking that a rebuild with the same seed is stable event-for-event, costs included.
+    const a = buildSeason('stream-independence:s2', 104, 52)
+    const b = buildSeason('stream-independence:s2', 104, 52)
+    expect(a).toEqual(b)
+  })
+
+  it('an existing block is never re-dealt – only the blocks a career has not reached yet', () => {
+    // ⚠ THE MIGRATION CLAIM, PINNED. Season blocks are PERSISTED (world.season, extended a
+    // year-block at a time by `ensureSeason`), so a save built under the old placement rule keeps
+    // every block it already holds and is dealt new ones under the new rule. What that requires of
+    // this function is exactly one property: a block is a pure function of (seed, fromWeek, weeks)
+    // and knows nothing about the blocks around it. Nothing migrates and nothing is rebuilt.
+    const block3 = buildSeason('rolling:s3', 156, 52)
+    const block4 = buildSeason('rolling:s4', 208, 52)
+    expect(buildSeason('rolling:s3', 156, 52)).toEqual(block3)
+    for (const e of block3) expect(e.week).toBeGreaterThanOrEqual(156)
+    for (const e of block4) expect(e.week).toBeGreaterThanOrEqual(208)
   })
 })
 

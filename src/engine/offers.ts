@@ -43,7 +43,7 @@ import { rngFromSeed } from './rng'
 import { isOffSeasonWeek, WEEKS_PER_YEAR } from './season/calendar'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
-import type { KitLine, KitOfferTerms, Offer, SponsorTier } from '../shared/protocol'
+import type { KitEndReason, KitLine, KitOfferTerms, Offer, SponsorTier } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
  *  lookup - a tier, never a filename spelled out at a call site. All three rungs are reachable since
@@ -558,4 +558,37 @@ export function seasonLastWeek(week: number): number {
  *  week is left exactly as it is. */
 export function endDealWithSeason(offer: Offer, reviewWeek: number): void {
   offer.untilWeek = Math.min(offer.untilWeek ?? seasonLastWeek(reviewWeek), seasonLastWeek(reviewWeek))
+}
+
+/** THE BRAND SAYS GOODBYE IN WRITING (owner, 04.08). A deal ending is news, so it arrives as a new
+ *  letter rather than as a changed status line on the one she signed a year ago — that line was
+ *  already correct and already unread, which is exactly the failure this closes.
+ *
+ *  ⚠ IT IS A NOTICE, NOT AN OFFER: `state: 'info'`, so nothing about it can be signed, refused or
+ *  expire, and `raiseKitOffer`'s one-brand-at-a-time rule cannot see it as a live letter. The terms
+ *  are copied from the ended deal so the notice quotes its own numbers instead of re-deriving them
+ *  from a world that has already moved on.
+ *
+ *  ⚠ AND IT IS RAISED FOR EVERY ENDING, including a term served in full — a contract that simply
+ *  ran out is the moment a player most needs to know the bills are his again. `reason` is what the
+ *  copy differs on; see KitEndReason. */
+export function raiseKitEndLetter(
+  offers: Offer[],
+  week: number,
+  ended: Offer,
+  reason: KitEndReason,
+  eventsPlayed: number | undefined,
+): Offer {
+  const terms = ended.terms as KitOfferTerms
+  const notice: Offer = {
+    id: `kit-end-${ended.id}`,
+    kind: 'kit',
+    week,
+    // Informational letters never expire on their own; the inbox's own prune is what bounds them.
+    deadlineWeek: week,
+    terms: { ...terms, ended: reason, endedEventsPlayed: eventsPlayed },
+    state: 'info',
+  }
+  offers.push(notice)
+  return notice
 }

@@ -495,12 +495,23 @@ let finaleSoundPlayed = false
 function noteEndApplause(): void {
   if (isFinalRound.value) finaleSoundPlayed = true
 }
+// ⚠ RE-AIMED (owner, 04.08: «applause on the finals screen has broken»). R10-6 above moved the
+// celebration onto the deciding point, which is right — but it left the CHAMPION CARD silent for
+// the one player who does what the game is built for: he watches his finals. From his seat the
+// screen with the trophy on it makes no sound, and "broken" is a fair description of that.
+//
+// So the card always sounds now, and the two beats stay distinct rather than doubling: if nobody
+// clapped at the deciding point (skip / skip-tournament / resumed into the finale) the card carries
+// the full `applauseFinal`; if the viewer already played it a click ago, the card takes the SHORT
+// cue — a second, smaller swell under the trophy rather than the same big clip twice.
 watch(
   phase,
   (p) => {
-    if (p !== 'finale' || finaleSoundPlayed) return
+    if (p !== 'finale') return
+    if (!pending.value?.kidChampion && !isRunnerUp.value) return
+    const alreadyCelebrated = finaleSoundPlayed
     finaleSoundPlayed = true
-    if (pending.value?.kidChampion || isRunnerUp.value) playSfx('applauseFinal')
+    playSfx(alreadyCelebrated ? 'applauseShort' : 'applauseFinal')
   },
   { immediate: true },
 )

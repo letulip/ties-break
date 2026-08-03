@@ -60,17 +60,16 @@ const facts: FeedEventFacts[] = snap.upcoming.map((e) => ({
   ineligibleReason: e.ineligibleReason,
 }))
 const ctx = feedContext({ ageYears: age, tierOpen: open, upcoming: facts })
-console.log(`\n2. the pair: ${ctx.pair.map((t) => TIER_SHORT[t]).join(' + ')}`)
-const openNotInPair = TIER_LADDER.filter((t) => open[t] && !ctx.pair.includes(t))
-console.log(`   open but outside the pair: ${openNotInPair.map((t) => TIER_SHORT[t]).join(', ') || '(none)'}`)
-console.log(`   substituted events this horizon: ${ctx.substitutes.size}`)
+console.log(`\n2. the window: ${ctx.rungs.map((t: TierId) => TIER_SHORT[t]).join(' + ')}  (${ctx.rungs.length} rungs)`)
+const closed = TIER_LADDER.filter((t) => !open[t])
+console.log(`   closed to her: ${closed.map((t) => TIER_SHORT[t]).join(', ') || '(none)'}`)
 
 // 3. THE HORIZON ----------------------------------------------------------------------------------
 console.log(`\n3. the horizon (${facts.length} events over the snapshot window):`)
 let shown = 0
 for (const f of facts) {
   const gate = entryStatus(world, world.season.find((e) => e.id === f.id)!)
-  const via = f.entered ? 'ENTERED' : ctx.pair.includes(f.tier) ? 'pair' : ctx.substitutes.has(f.id) ? 'SUBSTITUTE' : '—'
+  const via = f.entered ? 'ENTERED' : ctx.rungs.includes(f.tier) ? 'window' : '—'
   const visible = feedShows(f, ctx)
   if (visible) shown++
   const points = TIERS[f.tier].points

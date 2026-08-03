@@ -40,64 +40,74 @@ import type { LadderTrack, TierId } from '../engine/season/types'
 export type TierStateKind = 'age-locked' | 'locked' | 'outgrown' | 'capped' | 'scheduled' | 'unscheduled'
 
 // =================================================================================================
-// ⚠ THE TWO-TYPE FEED (W2-LADDER §4, owner ruling 4). Visibility only: nothing here touches a gate.
+// ⚠ THE SLIDING WINDOW (act2-pro-tour.md §11, owner ruling 11 – «всё так, да»). It REPLACES the
+// two-type feed rule that stood here, and the replacement is a demotion: this module no longer
+// decides anything.
 // =================================================================================================
 //
-// The owner, 02.08: «мы должны сделать в рассписании так, чтобы игрок четко понимал что он может
-// играть одно единственное для своей недели с некоторым пересечением тиров по году, чтобы не
-// больше 2х типов турниров в год было, если она переросла J - вообще выводим... Если national
-// доступен - показывать только их». At any moment the feed offers events of AT MOST TWO tier
-// types: her WORKING rung and the ADJACENT one she is growing into.
+// THE RULE, in one line: THE FEED SHOWS EXACTLY WHAT IS INSIDE THE WINDOW, and the window is every
+// rung the ENGINE holds open. Nothing is filtered here any more, because nothing needs to be – a
+// rung she has passed CLOSES (`tierOutgrown` in engine/world/ladder.ts: a rung's ceiling is the
+// floor of the rung three above, read in that rung's own currency), so the junk goes away as a
+// class instead of being hidden card by card.
 //
-// THE PAIR IS DERIVED FROM THE ENGINE'S OWN ORACLE, never from a band or a latch read here (task
-// #77's resolution - third occurrence of visibility-vs-access, settled for the feed the way
-// `engineOpen` settled it for the plaques):
+// ⚠ WHAT THIS RETIRES, AND WHY IT IS NOT A WEAKENING. Ruling 4 asked for «не больше 2х типов
+// турниров», and the pair rule implemented it by PICKING two rungs out of however many the engine
+// opened – which is the same shape of mistake as filtering an outgrown card: the UI compensating
+// for a ladder with no ceiling. Ruling 11 fixes the ladder instead, and the owner's own worked
+// example is the spec («Local 0-100, Regional 80-180, National 150-250, J30 = National + 0-100 …
+// цифры примерные, я хочу показать логику скользящего окна»). Measured (§11.1): two-rung windows
+// carry 2.6-5.1 playable weeks of eight and half of them are too thin; three-rung windows carry
+// 5.2-6.0 through the middle. So the window is THREE rungs wide and widens to four at the top,
+// which is his own answer («50 + 75 + 100 + 125, когда какой-то совсем перерастает - добавляем
+// новый, а старый уходит»). Every case the pair rule pinned still holds, and holds by construction:
+//   * «если она переросла J - вообще выводим» – the J rungs close when the W ones open;
+//   * «Если national доступен - показывать только их» – Local closes when the international door
+//     does, and Regional when J60 opens, so the domestic family collapses upward on its own;
+//   * R15-9's two latch rules – subsumed the same way, one storey down.
 //
-//   working  = the highest rung `Snapshot.tierOpen` says is open to her AND THAT ACTUALLY HAS
-//              TENNIS IN THE HORIZON. Bands overlap by design, so several rungs are usually open
-//              at once - the highest PLAYABLE one is where she is actually climbing, and the ones
-//              below it leave the feed however open they remain. That subsumes every rule this
-//              module used to keep by hand: the points-outgrown filter,
-//              R15-9's two latch rules, and the domestic collapse («Если national доступен -
-//              показывать только их» - when National is the working rung, Local/Regional are
-//              below the pair by construction).
-//   adjacent = the next rung above it whose door has not closed for ever (an age-dead rung is
-//              skipped: a nineteen-year-old's ladder steps from National straight to W15). A
-//              rung she is merely too YOUNG for still shows - locked, "opens at 16" - because a
-//              door she is walking towards is aspiration, not noise.
+// ⚠ AND THE FLOOR THE PAIR RULE NEEDED IS RETIRED WITH IT, RE-AIMED RATHER THAN DELETED. That rule
+// had to say "a rung with no tennis in the horizon cannot BE the working rung", because reading
+// `working` as the highest open rung pointed the feed at an eventless top of the ladder and emptied
+// it (measured 02.08 on the owner's save at W38 '34: one already-entered J60 and eight training
+// weeks). A window cannot fail that way – three or four rungs are live at once, and the rare top
+// ones are live BESIDE the dense ones they slide out of rather than instead of them. The guard the
+// finding earned lives in tests/tier-window.test.ts and is re-pointed at the window: an open rung
+// with no events in the horizon must never cost her the rungs that do have them.
 //
-// The pair SLIDES as the oracle's verdicts change - {Local,Regional} -> {Regional,National} ->
-// {National,J30} -> {J30,J60} -> ... - which is exactly the spec's "overlap across the year is
-// how she transitions between them; the pair slides, the count never grows".
+// ⚠⚠ THE AER SUBSTITUTION IS RETIRED INTO THE WINDOW, AND IT COULD NOT HAVE SURVIVED AS CODE. It
+// borrowed «the strongest OPEN, eligible event from outside the pair» on a week the pro cap emptied
+// (ruling 2, §5) – and under the window "open" and "inside" are the SAME SET by construction, so
+// the borrow's source is empty and every line of it was unreachable. Deleting unreachable code is
+// not the interesting part; what replaces the RULING is:
 //
-// ⚠ THE SUBSTITUTION RIDES INSIDE THE BUDGET, never as a third row (§4/§5): a week the pair leaves
-// EMPTY - because the cap refused every pair event, or because the pair simply has nothing that
-// week - shows the strongest OPEN, eligible below-pair event in its place: a J while she is young
-// enough, the top open domestic rung after. So a week still reads as tennis rather than as a wall.
+//   THE WINDOW ITSELF IS THE BOREDOM GUARD NOW. The pro cap binds at 16 and 17 only
+//   (`proPerYearByAge` 12 / 16, unlimited from 18), and at those ages the window still carries the
+//   junior rungs beside the professional one – {j60, j300, w15}, then {j300, w15, w35}. A capped
+//   W week therefore still offers her the J events on it, from inside the window, with no borrowing
+//   at all. That is «если не w-серии то где-то еще» satisfied by the ladder rather than patched by
+//   the feed, and it is a stronger answer: the fallback is a rung she can actually ENTER, where the
+//   borrowed card was only ever guaranteed to be visible.
 //
-// ⚠ BOTH HALVES OF THIS RULE ARE THE GATE'S FINDINGS, NOT THE FIRST DESIGN (02.08, the owner's
-// save at W38 '34 measured against the pre-wave build). The first shape read `working` as the
-// highest OPEN rung full stop and substituted only on cap refusals, and on a real career that
-// emptied the feed completely: the oracle opens W50/W75/WTA 125 to a 17-year-old at merged #61 -
-// acceptance percentiles, honestly earned - while those rungs are rare (cadence 4/6/13) and had no
-// event within her horizon. Nothing above them exists, so the pair collapsed to one eventless
-// rung, and every rung where she actually plays sat below it: the pre-wave feed offered W15, J300,
-// W35, J60 and W100 over the same weeks, the new one offered a single already-entered J60 and
-// eight training weeks. That is precisely the failure the owner named when he approved the AER
-// («игрок должен иметь возможность играть, если не w-серии то где-то еще, чтобы не скучал»), and
-// the two-type budget must never be the thing that causes it. Hence: a rung with no tennis in the
-// horizon cannot BE the working rung, and a week the pair leaves blank borrows from below.
+//   ⚠ AND IT HAS A KNOWN CORNER, MEASURED AND REPORTED RATHER THAN PATCHED (tools/boredom-guard.ts,
+//   the receipt in the wave report). A seventeen-year-old already inside W50's acceptance list has
+//   an all-professional window – {w15, w35, w50} – and a capped week there has no junior fallback
+//   inside the window. It needs the maximal-grinder profile to exist at all (at a sane appetite the
+//   cap is never exhausted: 0 refusals over 12 careers x 260 weeks), and the guard exits 1 on any
+//   violation so the red stays loud.
 //
-// ⚠ R15-9's NATIONAL EXEMPTION IS SUPERSEDED by the later two-type ruling, and the cost is named
-// rather than hidden: the national-rung brand deal's keep-condition reads her DOMESTIC top 30, and
-// once her working pair is professional the Nationals that maintain that rank appear only as
-// capped-week substitutes. A career deep in the W era will therefore let that deal lapse at
-// renewal unless she is capped often enough to be offered Nationals - flagged in the wave report
-// for the owner; the alternative (a third standing row) is exactly what ruling 4 forbids.
+// A merely EMPTY week still borrows nothing – ruling 9, «пустые недели это нормально» – which is
+// the 03.08 reversal, and it is now the only rule there is about an empty week.
 //
-// ⚠ VISIBILITY, NEVER ACCESS. `entryStatus` / `tierOpenFor` are untouched: an ENTERED event always
-// renders (the callers keep their entered-first arms), and a hidden tier she somehow holds an entry
-// in still shows, because a committed week is the one card she must be able to act on (R10-3).
+// ⚠ R15-9's NATIONAL EXEMPTION STAYS SUPERSEDED, and the cost is smaller than it was: the
+// national-rung brand deal's keep-condition reads her DOMESTIC top 30, and National now closes when
+// J300 opens rather than surviving as a capped-week substitute. A career deep in the W era will let
+// that deal lapse at renewal. Flagged in the wave report for the owner; the alternative (pinning a
+// rung open for a sponsor's sake) would put the junk back.
+//
+// ⚠ VISIBILITY, NEVER ACCESS – still true, and now in the other direction. This module reads the
+// engine's verdict and never re-derives it; an ENTERED event always renders (the callers keep their
+// entered-first arms), because a committed week is the one card she must be able to act on (R10-3).
 
 /** What the feed rule needs to know about one upcoming event. A structural subset of
  *  `UpcomingEvent`, so the pure tests can build rows without the whole preview payload. */
@@ -110,14 +120,13 @@ export interface FeedEventFacts {
   ineligibleReason?: string
 }
 
-/** The feed's derived state for one snapshot: the at-most-two tier types, and the per-week AER
- *  substitutes riding inside that budget. Derived once per snapshot, consumed by both feed
- *  surfaces (the Season rows and the Calendar look-ahead), so the two cannot disagree. */
+/** The feed's derived state for one snapshot: the rungs inside the window, and the per-week AER
+ *  substitutes riding inside it. Derived once per snapshot, consumed by both feed surfaces (the
+ *  Season rows and the Calendar look-ahead), so the two cannot disagree. */
 export interface FeedContext {
-  /** [working, adjacent?] - adjacent absent only at the very top of the ladder */
-  pair: readonly TierId[]
-  /** event ids substituted INTO the budget on weeks the pro cap emptied */
-  substitutes: ReadonlySet<string>
+  /** THE WINDOW - every rung the engine holds open, ladder order. Three wide through the climb,
+   *  four at the top, one at the very start; never a pick made here. */
+  rungs: readonly TierId[]
 }
 
 export function feedContext(input: {
@@ -128,60 +137,19 @@ export function feedContext(input: {
   upcoming: readonly FeedEventFacts[]
 }): FeedContext {
   const open = input.tierOpen
-  if (!open) return { pair: [...TIER_LADDER], substitutes: new Set() }
-  // THE WORKING RUNG IS THE HIGHEST OPEN ONE WITH TENNIS IN THE HORIZON. The fallback - the
-  // highest open rung, whatever the calendar holds - is what a horizon with no events at all
-  // (off-season, a long layoff) reads, and it keeps the pair defined at every week.
-  const openRungs = TIER_LADDER.filter((t) => open[t])
-  const scheduled = new Set(input.upcoming.map((e) => e.tier))
-  const playable = openRungs.filter((t) => scheduled.has(t))
-  const working = playable.length
-    ? playable[playable.length - 1]
-    : openRungs.length
-      ? openRungs[openRungs.length - 1]
-      : TIER_LADDER[0]
-  const above = TIER_LADDER.slice(TIER_LADDER.indexOf(working) + 1)
-  const adjacent = above.find((t) => tierAgeBlock(t, input.ageYears) !== 'old')
-  const pair: TierId[] = adjacent ? [working, adjacent] : [working]
+  if (!open) return { rungs: [...TIER_LADDER] }
+  // THE WINDOW IS THE ORACLE'S ANSWER, VERBATIM. Every arm the old pair rule needed - pick the
+  // working rung, find the adjacent one, skip an age-dead door, fall back when the horizon is
+  // empty - existed to manufacture a width the ladder did not have. The ladder has it now
+  // (`tierOutgrown`), so there is nothing left to decide: what is open is what is offered.
+  const rungs = TIER_LADDER.filter((t) => open[t])
 
-  const substitutes = new Set<string>()
-  const byWeek = new Map<number, FeedEventFacts[]>()
-  for (const e of input.upcoming) {
-    const list = byWeek.get(e.week)
-    if (list) list.push(e)
-    else byWeek.set(e.week, [e])
-  }
-  for (const events of byWeek.values()) {
-    // An ENTERED event of any rung already fills the week (`feedShows`' first arm), so a week she
-    // is committed to never borrows - she has her tennis, and R10-3's committed card is the one
-    // she must act on.
-    if (events.some((e) => e.entered)) continue
-    const pairEvents = events.filter((e) => pair.includes(e.tier))
-    // ⚠ A CAP-REFUSED WEEK BORROWS. A MERELY EMPTY ONE DOES NOT (03.08, and this is a REVERSAL of
-    // the same day's earlier floor - the owner's two rulings settled it in opposite directions and
-    // the later one wins). The AER substitution is ruling 2: the tour's age rule refused her, so
-    // the game owes her tennis somewhere else. Extending it to "the pair brought nothing this week"
-    // was my own generalisation, written before ruling 9 - «пустые недели это нормально, она же не
-    // может постоянно играть» - and it produced exactly what he called junk on his own W230 career:
-    // at eighteen, WTA #27, four of the six cards in an eight-week horizon were borrowed W15s, a
-    // J60 and a J30. A world #27 is not offered a $15k, and a feed that offers it reads as noise
-    // rather than as choice. Blank weeks are the honest answer now that the planner's counter
-    // states the season's whole supply out loud.
-    const capRefused =
-      pairEvents.length > 0 &&
-      pairEvents.every((e) => TIERS[e.tier].track === 'wta' && e.ineligibleReason === 'capped')
-    if (!capRefused) continue
-    const fallback = events
-      .filter((e) => !pair.includes(e.tier) && open[e.tier] === true && e.eligible)
-      .sort((a, b) => TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier))[0]
-    if (fallback) substitutes.add(fallback.id)
-  }
-  return { pair, substitutes }
+  return { rungs }
 }
 
 /** Does the feed show this event? The whole rule, one predicate, both consumers. */
 export function feedShows(e: Pick<FeedEventFacts, 'id' | 'tier' | 'entered'>, ctx: FeedContext): boolean {
-  return e.entered || ctx.pair.includes(e.tier) || ctx.substitutes.has(e.id)
+  return e.entered || ctx.rungs.includes(e.tier)
 }
 
 /** THE PICK for a week that stacks several events into one slot: the entered one if any (she is IN

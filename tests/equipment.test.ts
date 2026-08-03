@@ -1,9 +1,15 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { migrateSave } from '../src/engine/migrations'
 import {
   applyKit,
+  DEFAULT_KIT_GRADES,
   FRESH_KIT,
+  KIT_GRADES,
   SPENT_KIT,
+  defaultKitState,
   kitInjuryFactor,
+  kitLinePriceCents,
   kitMultipliers,
   kitWearAt,
 } from '../src/engine/equipment'
@@ -17,9 +23,9 @@ import {
 import { aceSpeedFactor, ACE_SPEED_FLOOR, ACE_SPEED_REF, ACE_SPEED_MAX_FACTOR } from '../src/engine/match/rally'
 import { basePServe, paceAdvantage } from '../src/engine/match/point'
 import { SKILL_POINTS_PER_YEAR } from '../src/engine/development'
-import { createWorld, kidMatchPlayerFor, tickWeek } from '../src/engine/world'
+import { createWorld, kidMatchPlayerFor, setKitGrade, tickWeek } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import type { FamilyBackground } from '../src/shared/protocol'
+import type { FamilyBackground, KitGrade, KitState } from '../src/shared/protocol'
 import type { MatchOptions, MatchPlayer } from '../src/engine/match/types'
 
 // ---------------------------------------------------------------------------
@@ -209,15 +215,52 @@ describe('equipment — it must never make background destiny (the hard constrai
     expect(gap).toBeLessThan(SKILL_POINTS_PER_YEAR / 4) // ...and it is nowhere near destiny
   })
 
-  it('the injury half is background-NEUTRAL by construction: nobody buys out of a rolled ankle', () => {
+  // ⚠ RE-AIMED, NOT DELETED (W3-KIT). This guard read "the injury half is background-NEUTRAL by
+  // construction: nobody buys out of a rolled ankle", and it asserted that `kitInjuryFactor` returns
+  // the SAME number for all three families at every week. Its evidence was the shoe cadence, which is
+  // 10-14 for everybody with only the price differing - and that is still true and still checked
+  // below. What broke it is that the frame now has an injury half too (a stiff dead frame is a
+  // tennis-elbow story, `ECONOMY.equipment.frameInjuryRise`), and the frame's CADENCE is not
+  // background-neutral: 14-18 for the working family against 10-12 for the wealthy one.
+  //
+  // So the property being defended has to be stated properly rather than by exact equality, and the
+  // properly-stated version is the sentence the old name was reaching for: THE ANKLE IS NEUTRAL TO
+  // THE CENT. The shoes are the big half (0.20 against the frame's 0.12), their cadence is identical
+  // for every family, and byte equality on that half is still checked below exactly as before. What
+  // is not neutral any more is the ELBOW, and it cannot be: the frame cadence really is 14-18 for the
+  // working family against 10-12 for the wealthy one, so a family that replaces its racket less often
+  // really does hold a deader one. MEASURED over a 14->18 career: the mean spread is 0.005 (half a
+  // per cent of a threshold that sits around 1.08), because realised frame wear is 0.041 / 0.010 /
+  // 0.000 by background - the frame has a flat head 13 weeks long and everyone replaces inside it.
+  // The PEAK, in the fortnight before a working family's frame is replaced, is 0.060.
+  it('the injury half keeps the ANKLE background-neutral: nobody buys out of a rolled ankle', () => {
     // Shoe cadence is 10-14 for every family; only the price differs (ECONOMY.gear.shoes).
     for (const bg of BACKGROUNDS) {
       expect(ECONOMY.gear.shoes.cadenceWeeks[bg]).toEqual(ECONOMY.gear.shoes.cadenceWeeks.working)
     }
-    for (let w = 0; w <= 120; w++) {
+    const HORIZON = 208
+    const totals: Record<string, number> = { working: 0, middle: 0, wealthy: 0 }
+    for (let w = 0; w <= HORIZON; w++) {
+      // THE SHOE HALF ALONE, which is what the guard was ever about: byte equality across every
+      // background, at every week, exactly as before.
+      const shoesOnly = (bg: FamilyBackground) =>
+        1 + kitWearAt('inj', bg, w).shoes * ECONOMY.equipment.shoeInjuryRise
+      for (const bg of BACKGROUNDS) expect(shoesOnly(bg)).toBe(shoesOnly('working'))
+      // ...and no single week's whole-factor spread exceeds the frame half's own size, which is the
+      // most the frame term can possibly contribute.
       const working = kitInjuryFactor(kitWearAt('inj', 'working', w))
-      for (const bg of BACKGROUNDS) expect(kitInjuryFactor(kitWearAt('inj', bg, w))).toBe(working)
+      for (const bg of BACKGROUNDS) {
+        totals[bg] += kitInjuryFactor(kitWearAt('inj', bg, w))
+        expect(Math.abs(kitInjuryFactor(kitWearAt('inj', bg, w)) - working)).toBeLessThanOrEqual(
+          ECONOMY.equipment.frameInjuryRise,
+        )
+      }
     }
+    // AND THE ONE THAT DECIDES IT: over a whole career the elbow gap is a rounding error - under one
+    // per cent of a threshold that is itself a few per cent a week.
+    const mean = (bg: string) => totals[bg] / (HORIZON + 1)
+    expect(mean('working') - mean('wealthy')).toBeGreaterThan(0) // real, not zero
+    expect(mean('working') - mean('wealthy')).toBeLessThan(0.01)
   })
 })
 
@@ -299,5 +342,193 @@ describe('the wiring — a real world composes kit and age exactly once', () => 
     const stale = P({ serve: 60 }) // no `age`, exactly like a MatchPlayer frozen before this slice
     expect(Number.isFinite(expectedServeSpeed(stale.age ?? LEGACY_SNAPSHOT_AGE, stale.serve))).toBe(true)
     expect(LEGACY_SNAPSHOT_AGE).toBe(14) // the age every career opens at
+  })
+})
+
+// =================================================================================================
+// W3-KIT — THE QUALITY LADDER THE PLAYER BUYS
+// =================================================================================================
+//
+// The owner's ruling: «я вообще за оба подхода одновременно, как с тренерами... начальные ракетки из
+// алюминия тяжелее и хуже во многом, чем начальные композитные, значит экип влияет и на травмы и на
+// производительность игрока.» So the tests below check BOTH halves and, above all, the one property
+// the whole design rests on: the ladder cannot leave the interval the wear model already occupied,
+// so the anti-destiny bound survives structurally rather than by a lucky coefficient.
+
+describe('the quality ladder — both axes, and it can never buy destiny', () => {
+  const gradedKit = (grade: KitGrade): KitState => ({
+    grade: { strings: grade, frame: grade, shoes: grade },
+    sinceWeek: { strings: 0, frame: 0, shoes: 0 },
+  })
+
+  it('⚠ THE ONE THAT DECIDES IT: no rung, at any week, can leave [FRESH_KIT, SPENT_KIT]', () => {
+    // This is the anti-destiny bound. §1 of tools/kit-bench.ts measures the nominal swing across
+    // that interval at 2.01 skill points against a yardstick of 2.4, and the ladder is only ever a
+    // position INSIDE it - so the ladder cannot widen the swing however the coefficients are tuned.
+    for (const grade of KIT_GRADES) {
+      for (const bg of BACKGROUNDS) {
+        for (let w = 0; w <= 208; w++) {
+          const wear = kitWearAt(`ladder-${bg}`, bg, w, null, gradedKit(grade))
+          for (const line of ['strings', 'frame', 'shoes'] as const) {
+            expect(wear[line], `${grade}/${bg}/${line}@${w}`).toBeGreaterThanOrEqual(0)
+            expect(wear[line], `${grade}/${bg}/${line}@${w}`).toBeLessThanOrEqual(1)
+          }
+        }
+      }
+    }
+  })
+
+  it('composite is the IDENTITY: a v37 save on it is byte-identical to a pre-v37 career', () => {
+    // The migration's whole promise. `kitWearAt` with no kit at all IS the shipped behaviour, and the
+    // rung every old save lands on has to reproduce it to the last bit - not approximately.
+    for (const bg of BACKGROUNDS) {
+      for (let w = 0; w <= 208; w++) {
+        expect(kitWearAt('identity', bg, w, null, gradedKit('composite'))).toEqual(
+          kitWearAt('identity', bg, w),
+        )
+      }
+    }
+    expect(ECONOMY.equipment.grades.composite.lifeFactor).toBe(1)
+    expect(ECONOMY.equipment.grades.composite.priceFactor).toBe(1)
+    for (const line of ['strings', 'frame', 'shoes'] as const) {
+      expect(ECONOMY.equipment.grades.composite.startWear[line]).toBe(0)
+    }
+  })
+
+  it('the ladder is MONOTONE: a dearer rung is never worse on any line, at any week', () => {
+    // The player-facing promise, and the thing a mistuned `startWear`/`lifeFactor` pair would break
+    // silently: paying more must never make her kit worse.
+    for (let i = 1; i < KIT_GRADES.length; i++) {
+      const lower = gradedKit(KIT_GRADES[i - 1])
+      const higher = gradedKit(KIT_GRADES[i])
+      for (const bg of BACKGROUNDS) {
+        for (let w = 0; w <= 208; w++) {
+          const a = kitWearAt(`mono-${bg}`, bg, w, null, lower)
+          const b = kitWearAt(`mono-${bg}`, bg, w, null, higher)
+          for (const line of ['strings', 'frame', 'shoes'] as const) {
+            expect(b[line], `${KIT_GRADES[i]} vs ${KIT_GRADES[i - 1]} ${line}@${w}`).toBeLessThanOrEqual(a[line] + 1e-12)
+          }
+        }
+      }
+    }
+  })
+
+  it('and it moves BOTH axes - performance AND injury - which is the owner’s ruling', () => {
+    const p = P({ serve: 57, ret: 57, composure: 57, stamina: 57, groundstrokes: 57 })
+    const at = (grade: KitGrade, w: number) => kitWearAt('axes', 'working', w, null, gradedKit(grade))
+    // Half a season in: the alloy girl is playing worse tennis...
+    const alloy = applyKit(p, at('alloy', 26))
+    const pro = applyKit(p, at('pro', 26))
+    expect(pro.serve).toBeGreaterThan(alloy.serve)
+    expect(pro.ret).toBeGreaterThan(alloy.ret)
+    expect(pro.groundstrokes).toBeGreaterThan(alloy.groundstrokes)
+    expect(pro.stamina).toBeGreaterThan(alloy.stamina)
+    // ...and getting hurt more often. Never below 1: the top rung buys back the penalty of worn kit,
+    // it never buys a safety BONUS - which is what keeps "nobody buys their way out" true.
+    expect(kitInjuryFactor(at('alloy', 26))).toBeGreaterThan(kitInjuryFactor(at('pro', 26)))
+    expect(kitInjuryFactor(at('pro', 26))).toBeGreaterThanOrEqual(1)
+    expect(kitInjuryFactor(FRESH_KIT)).toBe(1)
+  })
+
+  it('the FRAME is the arm story the owner named, and it is smaller than the shoes', () => {
+    // A stiff dead frame is tennis elbow; worn soles are a rolled ankle. The research's own
+    // 48%-lower-limb / 28%-upper split is why the frame is priced under the shoes.
+    expect(ECONOMY.equipment.frameInjuryRise).toBeGreaterThan(0)
+    expect(ECONOMY.equipment.frameInjuryRise).toBeLessThan(ECONOMY.equipment.shoeInjuryRise)
+    expect(kitInjuryFactor({ ...FRESH_KIT, frame: 1 })).toBeCloseTo(1 + ECONOMY.equipment.frameInjuryRise, 12)
+  })
+
+  it('a bought line reads as NEW that week, and the family schedule is untouched', () => {
+    // `sinceWeek` is a second CLOCK, not a second schedule: it can only ever pull wear DOWN.
+    const bought: KitState = { grade: { ...DEFAULT_KIT_GRADES }, sinceWeek: { strings: 40, frame: 40, shoes: 40 } }
+    expect(kitWearAt('bought', 'working', 40, null, bought)).toEqual(FRESH_KIT)
+    for (let w = 40; w <= 120; w++) {
+      const withBuy = kitWearAt('bought', 'working', w, null, bought)
+      const without = kitWearAt('bought', 'working', w)
+      for (const line of ['strings', 'frame', 'shoes'] as const) {
+        expect(withBuy[line]).toBeLessThanOrEqual(without[line] + 1e-12)
+      }
+    }
+    // ...and a zero (every migrated save) changes nothing at all.
+    expect(kitWearAt('bought', 'working', 77, null, defaultKitState())).toEqual(kitWearAt('bought', 'working', 77))
+  })
+
+  it('the rung prices the recurring bill through the wealth corridor, not instead of it', () => {
+    for (const bg of BACKGROUNDS) {
+      const composite = kitLinePriceCents(bg, 'frame', 'composite')
+      expect(kitLinePriceCents(bg, 'frame', 'alloy')).toBeLessThan(composite)
+      expect(kitLinePriceCents(bg, 'frame', 'pro')).toBeGreaterThan(composite)
+    }
+    // The corridor still sets the base: a wealthy family's frame is dearer at every rung.
+    for (const grade of KIT_GRADES) {
+      expect(kitLinePriceCents('wealthy', 'frame', grade)).toBeGreaterThan(kitLinePriceCents('working', 'frame', grade))
+    }
+  })
+
+  it('the till: up buys and bills, down is free, and a repeat tap buys nothing', () => {
+    const world = createWorld('kit-till')
+    const before = world.fundsCents
+    setKitGrade(world, 'frame', 'pro')
+    const price = kitLinePriceCents(world.profile.background, 'frame', 'pro')
+    expect(world.fundsCents).toBe(before - price)
+    expect(world.kit!.grade.frame).toBe('pro')
+    expect(world.kit!.sinceWeek.frame).toBe(world.week)
+    // Idempotent: the same rung again is not a second frame.
+    setKitGrade(world, 'frame', 'pro')
+    expect(world.fundsCents).toBe(before - price)
+    // Down the ladder costs nothing and refunds nothing.
+    setKitGrade(world, 'frame', 'alloy')
+    expect(world.fundsCents).toBe(before - price)
+    expect(world.kit!.grade.frame).toBe('alloy')
+    // ...and the ledger says what was bought.
+    expect(world.events.some((e) => e.text.startsWith('Bought:'))).toBe(true)
+    expect(() => setKitGrade(world, 'frame', 'titanium' as KitGrade)).toThrow()
+  })
+
+  it('a signed deal supplies a covered line whatever rung she picked', () => {
+    // The two systems compose rather than fight: the brand's freshness ceiling is applied AFTER the
+    // rung, so on a covered line the ladder mostly moves the BILL - which the brand is paying.
+    const capped = kitWearAt('sponsor', 'working', 60, { strings: 0.3 }, {
+      grade: { strings: 'alloy', frame: 'composite', shoes: 'composite' },
+      sinceWeek: { strings: 0, frame: 0, shoes: 0 },
+    })
+    expect(capped.strings).toBeLessThanOrEqual(0.3)
+  })
+})
+
+describe('W3-KIT — a career from before this wave opens and plays unchanged', () => {
+  // ⚠ THE ACCEPTANCE CHECK, AND IT IS BEHAVIOURAL RATHER THAN STRUCTURAL. goldenSaves.test.ts already
+  // proves every historical fixture MIGRATES; what a schema bump can still get wrong is that the
+  // migrated career then plays differently, which is the failure a player would actually notice. So
+  // this loads the last pre-wave fixture, migrates it, and runs it forward against the SAME save with
+  // the new field stripped out - i.e. against the engine as it behaved before v37 existed.
+  it('v36 migrates onto `composite` and then ticks byte-identically to a world with no kit at all', () => {
+    const raw = readFileSync(new URL('./fixtures/saves/v36.json', import.meta.url), 'utf8')
+    const migrated = migrateSave(JSON.parse(raw))
+    expect(migrated.kit).toEqual(defaultKitState())
+
+    const run = (stripKit: boolean) => {
+      const w = migrateSave(JSON.parse(raw))
+      if (stripKit) delete (w as { kit?: unknown }).kit
+      const rng = rngFromSeed(w.seed)
+      for (let i = 0; i < 30; i++) tickWeek(w, rng)
+      return {
+        skills: { ...w.skills },
+        condition: w.condition,
+        fundsCents: w.fundsCents,
+        injury: w.injury ? { ...w.injury } : null,
+        draws: w.rngMain.n,
+        // The one that matters for the match: her build as she steps on court.
+        onCourt: kidMatchPlayerFor(w, 'hard'),
+      }
+    }
+    const withKit = run(false)
+    const withoutKit = run(true)
+    expect(withKit.skills).toEqual(withoutKit.skills)
+    expect(withKit.condition).toBe(withoutKit.condition)
+    expect(withKit.fundsCents).toBe(withoutKit.fundsCents)
+    expect(withKit.injury).toEqual(withoutKit.injury)
+    expect(withKit.draws).toBe(withoutKit.draws)
+    expect(withKit.onCourt).toEqual(withoutKit.onCourt)
   })
 })
