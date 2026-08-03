@@ -1,4 +1,16 @@
+---
+type: product-concept
+status: reference
+area: narrative
+canonical: false
+last-reviewed: 2026-08-03
+---
+
 # Концепция игры: Ties Break — Ace Parent
+
+> Product-pitch reference, not a shipped-feature inventory. Use
+> [the product and narrative context](context/product-and-narrative.md) before making implementation
+> claims from this document.
 
 *Название утверждено владельцем 22.07.2026: полное **Ties Break: Ace Parent** (сторы/интернет), короткое **Ties Break** (иконка/экран). Двойной смысл: tie-break + «связи рвутся»; Ace Parent = ас-родитель + эйс. Родилось из пасхалок на бортах арт-портретов.*
 

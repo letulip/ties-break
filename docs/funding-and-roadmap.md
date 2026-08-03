@@ -1,7 +1,24 @@
+---
+type: commercial-plan
+status: current
+area: funding
+canonical: true
+last-reviewed: 2026-08-03
+---
+
 <!-- Funding landscape, roadmap and cost model for Ties Break: Ace Parent. Researched 2026-08-01 (4 research agents, web + repo evidence; ~209 sources consulted, key ones linked inline with data years stated). Companion to docs/review/. -->
 <!-- Nothing here is legal, tax or investment advice; entity, tax-residency, trademark and contract items need licensed professionals in the relevant jurisdiction. -->
 
 # Ties Break – Funding Routes, Roadmap & Cost Model (August 2026)
+
+## Current truth
+
+- This is the canonical funding and cost-scenario document, including the cash-constrained solo
+  path. The funding chapter inside `docs/review-codex` remains a dated review artifact.
+- All amounts are planning ranges, not quotes or promises. Revalidate market, legal, residency,
+  platform, and program assumptions before using them externally.
+- Investment readiness depends on current product evidence; verify roadmap claims against the build
+  and current player/market metrics.
 
 How products like this attract money globally, what each route costs and requires, what the market evidence says a tennis-parent sim can earn, and a phased roadmap with investment estimates from "scrappy solo" to "funded studio". Figures are ranges with sources and data years; anything unsourced is marked as an estimate.
 

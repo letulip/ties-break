@@ -1,4 +1,16 @@
+---
+type: review
+status: audit
+area: project-review
+canonical: false
+last-reviewed: 2026-08-03
+baseline: 6295175
+---
+
 # Ties Break full project review
+
+> Point-in-time audit. Verify every finding against current code and tests before treating it as an
+> open issue; later waves have already resolved some findings.
 
 Review baseline: local `main` commit `6295175`, reviewed on 2026-08-01 on branch
 `codex/full-project-review`.

@@ -1,4 +1,16 @@
+---
+type: plan
+status: superseded
+area: delivery
+canonical: false
+last-reviewed: 2026-08-03
+superseded-by: docs/plans/roadmap-2026-08.md
+---
+
 # Strategy & implementation plan
+
+> The positioning and research base remain useful. The implementation ordering in this document
+> is superseded by [Roadmap 2026-08](plans/roadmap-2026-08.md).
 
 Working title: **Tennis Sim**. See [README](../README.md) for positioning, [decisions.md](decisions.md) for owner decisions, [research/](research/) for the evidence base.
 

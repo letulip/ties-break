@@ -1,4 +1,16 @@
+---
+type: lore-bible
+status: reference
+area: narrative
+canonical: false
+last-reviewed: 2026-08-03
+---
+
 # Ties Break: Ace Parent – world, tone and art bible
+
+> Dated tone and art reference. Claims audited against the 2026-07-27 build must be rechecked
+> against current code before they are presented as shipped behavior. Start with
+> [the product and narrative context](../context/product-and-narrative.md).
 
 *For artists, illustrators, video generators and anyone writing prompts for them. Written
 27.07.2026 (R11-10), audited against the shipped build the same day (branch `docs/lore-audit`,

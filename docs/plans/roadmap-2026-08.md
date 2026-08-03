@@ -1,4 +1,20 @@
+---
+type: roadmap
+status: current
+area: delivery
+canonical: true
+last-reviewed: 2026-08-03
+---
+
 # Roadmap 2026-08 — the strategy after two reviews
+
+## Current truth
+
+- This document supersedes the implementation ordering in `docs/plan.md`.
+- Wave entry criteria are merge dependencies; a branch or review document alone does not satisfy
+  them.
+- Before executing a wave, verify its “already done” and schema assumptions against current `main`;
+  this roadmap is dated and implementation may have advanced since a row was written.
 
 Written 01.08.2026, at the assembly of wave/2026-08-01. Supersedes the ordering half of
 [plan.md](../plan.md) (its positioning and research base stand); composes the two independent

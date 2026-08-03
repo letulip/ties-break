@@ -1,4 +1,19 @@
+---
+type: decision-log
+status: current
+area: governance
+canonical: true
+last-reviewed: 2026-08-03
+---
+
 # Design decisions log
+
+## Current truth
+
+- This is the chronological owner-decision record; the newest applicable explicit decision wins.
+- Decisions express product and working intent. Current code and tests still define shipped
+  behavior, and any divergence should be reported rather than silently reconciled.
+- Use [the context index](context-index.md) to load only the decision area relevant to a task.
 
 Owner decisions, newest last. Working agreements – revisit explicitly, don't silently drift.
 
