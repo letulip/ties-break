@@ -1,4 +1,15 @@
+---
+type: design-reference
+status: reference
+area: ui
+canonical: false
+last-reviewed: 2026-08-03
+---
+
 # Handoff: Tennis Parent — мобильная игра (8 экранов)
+
+> Visual handoff reference. Production Vue components, global CSS, shared UI primitives, and their
+> tests define the current implementation. Start with [the UI context](../context/ui-and-design.md).
 
 ## Overview
 Мобильная нарративная игра-менеджер: игрок — родитель юной теннисистки (Bianca Tran, 16 лет).

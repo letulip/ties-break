@@ -1,6 +1,18 @@
+---
+type: review
+status: audit
+area: project-review
+canonical: false
+last-reviewed: 2026-08-03
+baseline: b7a9358
+---
+
 <!-- Full project review, 2026-08-01, reviewed at origin/main b7a9358 (branch docs/full-review). -->
 
 # Ties Break – Full Project Review (2026-08-01)
+
+> Point-in-time audit. Verify every finding against current code and tests before treating it as an
+> open issue; later waves have already resolved some findings.
 
 Independent, adversarial review of the whole project at commit `b7a9358`: architecture, code quality (KISS/DRY), game design & mechanics, concept/plot, UX/PWA, performance/robustness, testing/tooling, plus a cross-cutting gaps pass. Seven independent reviewers, each of the six most severe verifiable findings re-checked by a skeptic agent instructed to refute it, plus a completeness critic. All claims below carry file:line evidence in the chapters.
 

@@ -1,4 +1,20 @@
+---
+type: execution-plan
+status: current
+area: delivery-execution
+canonical: true
+last-reviewed: 2026-08-03
+---
+
 # Launch plan 2026-08 — waves, agents, and the full findings ledger
+
+## Current truth
+
+- This is the detailed execution companion to the canonical August roadmap.
+- Wave assumptions, schema versions, and “already done” rows are dated; verify them against current
+  `main` before launching work.
+- Agent counts optimize elapsed time, not token consumption. Use only the parallelism justified by
+  independent workstreams.
 
 Written 01.08.2026, companion to [roadmap-2026-08.md](roadmap-2026-08.md). The roadmap says WHAT
 and WHY in five phases; this document says WHO and IN WHAT ORDER: every wave as an agent
