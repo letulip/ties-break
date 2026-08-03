@@ -775,6 +775,28 @@ export function isBlackoutWeek(week: number): boolean {
   return isOffSeasonWeek(week) || isExamWeek(week)
 }
 
+/** THE SUMMER HOLIDAYS, as season-week offsets (R15-8, owner 01.08: «2 месяца обычно после
+ *  экзаменов»). The exam fortnight is season-weeks 23-24 (`ECONOMY.availability.examWeeks`), so the
+ *  holidays open the week after the last paper and run nine weeks - about the two months he named -
+ *  and are over well before the off-season block at 49.
+ *
+ *  ⚠ IT USED TO BE A DISPLAY FACT AND IT IS AN ENGINE FACT NOW (W3-SUMMER), which is why it moved
+ *  here from `composables/weekDays.ts`. Its own note there said «nothing in the sim gates on summer
+ *  (school itself is furniture the grid draws)», and that stopped being true the moment the owner
+ *  ruled that summer is a real training block: «если мы летом сделаем реальную нагрузку с 2
+ *  тренировками в день я не вижу ничего плохого, это как раз частично компенсирует недостаток
+ *  тренерских недель в другие периоды». A week the engine develops and fatigues differently is a week
+ *  the CALENDAR has to define, beside its exam and off-season siblings, for exactly the reason those
+ *  two live here. `weekDays.ts` imports it back and re-exports it under its historical name, so every
+ *  existing caller and test is untouched. */
+export const SUMMER_WEEKS: readonly [number, number] = [25, 33]
+
+/** Is this week inside the school summer holidays? Season-week arithmetic, total over any week. */
+export function isSummerWeek(week: number): boolean {
+  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return offset >= SUMMER_WEEKS[0] && offset <= SUMMER_WEEKS[1]
+}
+
 // --- SEASON STRUCTURE BY SURFACE (owner approved 26.07: "звучит круто") ---------------------
 //
 // The surface used to be drawn per event off a FLAT mix (hard .50 / clay .35 / grass .15), which

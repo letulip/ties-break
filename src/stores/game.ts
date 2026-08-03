@@ -3,6 +3,8 @@ import { request, WorkerRestartError } from '../worker/client'
 import {
   DEFAULT_PROFILE,
   type CareerMeta,
+  type KitGrade,
+  type KitLine,
   type KnockChoice,
   type PlayerProfile,
   type Snapshot,
@@ -378,6 +380,15 @@ export const useGameStore = defineStore('game', {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'setPhysio', active, baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
+      })
+    },
+    /** W3-KIT: put one line of her kit on another rung. Moving up buys the item and is billed at
+     *  once; moving down is free and lands at the next scheduled purchase. */
+    async setKitGrade(line: KitLine, grade: KitGrade) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'setKitGrade', line, grade, baseRevision: this.revision }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
       })
     },
     async saveManual() {

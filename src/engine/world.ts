@@ -10,6 +10,7 @@ import {
   type Milestone,
   type KitLine,
   type KitOfferTerms,
+  type KitState,
   type Offer,
   type PlayerProfile,
   type PracticeBooking,
@@ -48,7 +49,6 @@ import { clamp, tournamentRunStrain } from './condition'
 import { parentIncomeForWeekCents,
   ECONOMY,
   GEAR_CATEGORIES,
-  type GearCategory,
   gearHitForWeek,
 } from './economy'
 import { generateCohort, driftCohort, ageCohort, COHORT_SIZE } from './season/cohort'
@@ -123,6 +123,11 @@ export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutive
 export type { PracticeCaution } from './world/planner'
 import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket } from './world/coachMarket'
 export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, coachBilling, coachMarket }
+// W3-KIT: the till and the shop window. `GEAR_CATEGORY_LINE` comes back from equipment.ts, where it
+// moved so that a rung could be PRICED below world.ts - see the note at `resolveGear`.
+import { GEAR_CATEGORY_LINE, defaultKitState } from './equipment'
+import { setKitGrade, kitLineViews, kitStateOf, KIT_LINES } from './world/kit'
+export { setKitGrade, kitLineViews, kitStateOf, KIT_LINES }
 import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from './world/player'
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio } from './world/injury'
@@ -177,7 +182,7 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 
 // v36 = W2-LADDER's `proEntryWeeks` (the pro AER ledger); v37/v38 stay reserved for endings/psyche
 // per act2-pro-tour.md §9's renumbering.
-export const SAVE_SCHEMA_VERSION = 36
+export const SAVE_SCHEMA_VERSION = 37
 
 
 
@@ -461,6 +466,20 @@ export interface WorldState {
    *  It moves BOTH the bill and the development rate (coachWorksThisWeek), because a coach who is
    *  not paid for a week is not at that week. That is what keeps it a decision. */
   coachOnEventWeeks: boolean
+  /** HER KIT, AS A DECISION (v37, W3-KIT). The rung on each of the three lines the match reads, and
+   *  the week she was last handed a new one of them over the counter. See `KitState`.
+   *
+   *  ⚠ WHY THIS IS THE FIRST PERSISTED THING IN THE EQUIPMENT MODEL, and engine/equipment.ts's own
+   *  headline says why it took this long: wear is DERIVED - the family's gear purchases are a pure
+   *  function of (seed, background), so condition needed no state at all. A rung is not derived,
+   *  because it is a CHOICE, and this engine never re-derives a decision (the same rule that puts
+   *  `offers`, `coachId` and `academy` on the world rather than in a formula).
+   *
+   *  ⚠ OPTIONAL ON THE TYPE so that every hand-built test world and every pure probe keeps compiling
+   *  and keeps answering exactly what it answered before. `kitWearAt` reads `world.kit ?? null` and
+   *  `null` IS the shipped behaviour, so absence is not a hole - it is the identity element. A real
+   *  career always has one: `createWorld` writes it and the v36 -> v37 migration back-fills it. */
+  kit?: KitState
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -709,19 +728,10 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
 //     whole of it), so the Money breakdown shows the relationship instead of a cost quietly
 //     vanishing. Exactly `chargeTravel`'s pattern with the academy's cover, and the $0-line handling
 //     the finance aggregate already has (it never stores a zero-valued category entry).
-/** ⚠ WHICH BILL IS WHICH LINE - the one place the equipment model's vocabulary (`KitLine`: strings /
- *  frame / shoes, what the MATCH reads) is mapped onto the ledger's (`GearCategory`: stringing /
- *  rackets / shoes, what the FAMILY pays). A rung names lines; a gear hit names a category; without
- *  a single mapping the two would be joined by a string comparison at each site and a national deal
- *  could end up paying a bill it does not cover.
- *
- *  Apparel is deliberately absent from the values: it is not a line the match reads and a kit deal
- *  is not a clothing allowance, so no rung can ever cover it. */
-const GEAR_CATEGORY_LINE: Partial<Record<GearCategory, KitLine>> = {
-  stringing: 'strings',
-  rackets: 'frame',
-  shoes: 'shoes',
-}
+// ⚠ `GEAR_CATEGORY_LINE` - the one place the equipment model's vocabulary (`KitLine`) is mapped onto
+// the ledger's (`GearCategory`) - MOVED DOWN to engine/equipment.ts (W3-KIT) and is imported back
+// here. It had to: the quality ladder prices a LINE (`kitLinePriceCents`) and that price is read by
+// the snapshot and by the till, both of which sit below world.ts. Same map, same values, one owner.
 
 function resolveGear(world: WorldState): void {
   const bg = world.profile.background
@@ -731,15 +741,33 @@ function resolveGear(world: WorldState): void {
     const hit = gearHitForWeek(world.seed, category, bg, world.week)
     if (!hit) continue
     const line = ECONOMY.gear[category]
+    const kitLine = GEAR_CATEGORY_LINE[category]
+    // ⚠ AND THE RUNG PRICES THE BILL (W3-KIT). The draw is untouched - `gearHitForWeek` still walks
+    // `seed:gear:<category>` exactly as it always did and returns exactly the same cents - and the
+    // rung MULTIPLIES what comes out of it. So the wealth corridor still sets the base (a wealthy
+    // family's frames were always dearer) and the choice multiplies it, which is the shape
+    // ECONOMY.gear already had. Apparel has no line and no ladder, so it is charged as it always was.
+    //
+    // The consequence is the one that makes this a decision rather than a slider: `pro` frames cost
+    // four times as much EVERY TIME the cadence comes round, so the choice is a standing commitment
+    // to a bigger recurring bill, not a one-off purchase.
+    const gradeFactor =
+      kitLine && world.kit ? ECONOMY.equipment.grades[world.kit.grade[kitLine]].priceFactor : 1
+    const amountCents = Math.round(hit.amountCents * gradeFactor)
     // What the brand picks up of this line: everything, up to whatever is left of the allowance -
     // and ONLY if the deal actually covers this line. That is the brand ladder arriving at the till:
     // a local deal pays her restringing and leaves the racket on the family, a national one adds the
     // frame, and only the top rung pays for everything.
+    //
+    // ⚠ AND THE ALLOWANCE IS A CEILING IN CENTS, WHICH IS WHY THE TWO SYSTEMS COMPOSE INSTEAD OF
+    // FIGHTING. Buying up does not buy MORE sponsorship - the same $1,000 season allowance now covers
+    // fewer, dearer items - so a player who signs a kit deal and then moves every line to `pro` finds
+    // the brand running out in the spring and the family paying the rest. That is the honest trade
+    // and it needed no new rule: `Math.min(amount, remaining)` was always doing it.
     const remaining = deal && terms ? Math.max(0, terms.kitAllowanceCents - (deal.coveredCents ?? 0)) : 0
-    const kitLine = GEAR_CATEGORY_LINE[category]
     const inDeal = !!terms && !!kitLine && terms.covers.includes(kitLine)
-    const covered = deal && terms && inDeal ? Math.min(hit.amountCents, remaining) : 0
-    const paid = hit.amountCents - covered
+    const covered = deal && terms && inDeal ? Math.min(amountCents, remaining) : 0
+    const paid = amountCents - covered
     if (deal && covered > 0) deal.coveredCents = (deal.coveredCents ?? 0) + covered
     world.fundsCents -= paid
     addEvent(world, {
@@ -1523,6 +1551,9 @@ export function createWorld(
     milestones: [],
     internationalEntryWeeks: [],
     proEntryWeeks: [],
+    // v37: the shipped rung on every line. She turns up with the frame most juniors own - the ladder
+    // runs one rung below it and two above, and which way she goes is the parent's money.
+    kit: defaultKitState(),
   }
   addEvent(world, {
     week: 0,

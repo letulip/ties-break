@@ -58,7 +58,14 @@
 // file. Same argument `composables/weekRecap.ts` makes for the recap predicate.
 import { computed, type ComputedRef } from 'vue'
 import { useGameStore } from '../stores/game'
-import { WEEKS_PER_YEAR, dominantSurface, isExamWeek, isOffSeasonWeek, surfaceBlockFor } from '../engine/season/calendar'
+import {
+  SUMMER_WEEKS,
+  dominantSurface,
+  isExamWeek,
+  isOffSeasonWeek,
+  isSummerWeek,
+  surfaceBlockFor,
+} from '../engine/season/calendar'
 import { layoffCoversWeek } from '../engine/world'
 import { knockGoverns } from '../engine/knock'
 import { surfaceStyleHint } from '../engine/match/style'
@@ -182,23 +189,19 @@ export type CalendarWeekFacts = Pick<
 > &
   Partial<Pick<Snapshot, 'tierOpen' | 'ageYears'>>
 
-/** THE SUMMER HOLIDAYS, as season-week offsets (R15-8, owner 01.08): «2 месяца обычно после
- *  экзаменов... просто меньше учебы в календаре писать, пару-тройку часов в неделю». The exam
- *  fortnight is season-weeks 23-24 (`ECONOMY.availability.examWeeks`), so the holidays open the
- *  week after the last paper and run nine weeks - about the two months he named - and are over
- *  well before the off-season block at 49.
+/** ⚠ THE SUMMER WINDOW MOVED INTO THE ENGINE (W3-SUMMER) AND IS RE-EXPORTED HERE UNDER ITS HISTORICAL
+ *  NAMES, so every existing caller and every test that imports `SUMMER_WEEKS` / `isSummerWeek` from
+ *  this module keeps working unchanged.
  *
- *  ⚠ A DISPLAY FACT, NOT AN ENGINE ONE, exactly like the grid's hours: nothing in the sim gates on
- *  summer (school itself is furniture the grid draws, not a thing the engine bills), so the window
- *  lives HERE, in the module that legitimately talks to the calendar, and rides to the grid as DATA
- *  on `CalendarWeek` - weekGrid.ts may not import from the engine and does not need to. */
-export const SUMMER_WEEKS: readonly [number, number] = [25, 33]
-
-/** Is this week inside the school summer holidays? Season-week arithmetic, total over any week. */
-export function isSummerWeek(week: number): boolean {
-  const seasonWeek = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
-  return seasonWeek >= SUMMER_WEEKS[0] && seasonWeek <= SUMMER_WEEKS[1]
-}
+ *  This file's own note used to defend the window living here: «A DISPLAY FACT, NOT AN ENGINE ONE...
+ *  nothing in the sim gates on summer (school itself is furniture the grid draws, not a thing the
+ *  engine bills)». That was true and it is not any more. The owner ruled that the holidays are a REAL
+ *  training block - «если мы летом сделаем реальную нагрузку с 2 тренировками в день я не вижу
+ *  ничего плохого, это как раз частично компенсирует недостаток тренерских недель в другие периоды» -
+ *  so the sim now develops and fatigues a summer week differently, and a window the engine gates on
+ *  belongs in `season/calendar.ts` beside the exam fortnight and the off-season. The grid still gets
+ *  it as DATA on `CalendarWeek`: weekGrid.ts may not import from the engine, and still does not. */
+export { SUMMER_WEEKS, isSummerWeek }
 
 /** How many sessions `plan.train` buys, as a share of the seven days. Total and monotone: a higher
  *  train percentage can never buy fewer sessions. */
