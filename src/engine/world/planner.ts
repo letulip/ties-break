@@ -318,7 +318,17 @@ export function resolvePractice(world: WorldState): void {
   const score = result.sets.map((s) => `${s.a}-${s.b}`).join(' ')
   const kidWon = result.winner === 0
   // The spec's drain rule, graded off the real scoreline via the SAME matchDrain the tour uses.
-  const drain = Math.max(1, matchDrain('local', score) - 1)
+  //
+  // ⚠ ...MINUS THE TIER SURCHARGE, EXPLICITLY, SINCE W2-WINDOW. The `- 1` was written when Local's
+  // surcharge was 0, so `matchDrain('local', …)` was the bare SCORELINE and the subtraction meant
+  // "a friendly is one lighter than a real match". The owner's re-price took Local to 1 and the two
+  // readings came apart: carried through unchanged, the cheapest thing in the game would have gone
+  // from 1/2/3 to 2/3/4 as a side effect of pricing a tournament WEEK. They are different things -
+  // the surcharge prices the trip, the travel and the days away, and a practice set against a
+  // clubmate has none of them - so the friendly now subtracts the surcharge by name and keeps the
+  // `- 1` for what it always meant. Shipped values are unchanged (1 / 2 / 3), and they no longer
+  // move when Local is re-priced again.
+  const drain = Math.max(1, matchDrain('local', score) - ECONOMY.condition.tierMatchFatigue.local - 1)
   world.condition = clamp(world.condition - drain, ECONOMY.condition.min, ECONOMY.condition.max)
   const kidShort = formatShortName(`${world.profile.kidName} ${world.profile.kidLastName}`)
   addEvent(world, {

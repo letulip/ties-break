@@ -224,8 +224,17 @@ describe('A2 — a tier-less row (legacy saves / pre-history) is handled explici
     // false candidate rather than by adding a tie-break preference. No knob was touched. Zeroing
     // the first round also collapses SIX readings onto the value 0 – but no row is ever written
     // with 0 points, so that collision is unreachable from a real save. ***
+    // *** RE-PINNED strain 8 -> 11 by W2-WINDOW's DOMESTIC RE-PRICE (tierMatchFatigue local 0 -> 1),
+    // and the WINNING READING DID NOT MOVE, which is the half worth reading. The candidates are now
+    //     local title    3 matches x 3 =  9, + ladder(0,1,1) = 2  -> 11   <- still cheapest
+    //     j30 last-16    2 matches x 5 = 10, + ladder(0,1)   = 1  -> 11   <- now TIED
+    // and `reconstructRun` keeps local because it scans in TIER_LADDER order and a strict `<` never
+    // displaces an earlier equal - a stable, deterministic tie-break rather than a coin flip. That
+    // makes this the tightest the ordering has ever been, so a further +1 on Local would flip it:
+    // FLAGGED FOR THE OWNER exactly as the 26.07 note flagged the previous flip, and it only ever
+    // touches pre-rival-life legacy rows, which carry no `tier` field. ***
     const run = reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })
-    expect(run).toMatchObject({ tier: 'local', matches: 3, strain: 8 })
+    expect(run).toMatchObject({ tier: 'local', matches: 3, strain: 11 })
     expect(run.strain).toBe(tournamentRunStrain('local', new Array(3).fill({}))) // the shared helper
     // ...and it is a pure function: same row, same answer, every time.
     expect(reconstructRun({ playerId: 'ai-x', week: 2, points: 30 })).toEqual(run)

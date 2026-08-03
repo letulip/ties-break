@@ -189,7 +189,13 @@ function hashOf(draws: number[]): string {
 // every tier's count is measured against the PLAYABLE span, so the cohort meets a different set of
 // draws. Same post-draw mechanism; the placement jitter comes off a purpose-scoped sub-stream
 // (`:calweek:`) and never MAIN, so B1's capture reproduces byte-for-byte.
-const REF = { kidRank: 123 }
+const REF = { //
+  // ⚠ RE-PINNED 123 -> 121 BY W2-WINDOW'S DOMESTIC RE-PRICE (tierMatchFatigue 0/1/2 -> 1/2/3).
+  // The cohort runs the same condition math the kid does, so a dearer domestic week resolves the
+  // year's brackets on a slightly more tired field and a different set of juniors ends it holding
+  // counting points. Post-draw arithmetic again: count 41550 and hash e6b0c709 are asserted above
+  // and reproduce byte-for-byte.
+  kidRank: 121 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

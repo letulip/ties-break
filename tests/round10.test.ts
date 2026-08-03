@@ -635,14 +635,19 @@ describe('R10-16 — no popup may render without copy', () => {
 // headline number of the change: the per-match half went 4 → 7 (2 + 2 + 3), the ladder half is
 // unchanged at 2. Nothing was "fixed" here; the knob moved by decision.
 // Same case, same numbers, in tests/fatigueReference.test.ts + docs/specs/fatigue-reference.md.
+//
+// ⚠ RE-PINNED 9 → 12 (03.08, W2-WINDOW's DOMESTIC RE-PRICE: tierMatchFatigue local 0 → 1, the
+// owner's «мы могли бы легко брать больше condition за них... чуть сложнее и интереснее»). Same
+// reference run, one more lever moved: the per-match half went 7 → 10 (3 + 3 + 4), the ladder half
+// is unchanged at 2 for the second time running. Nothing was "fixed" here either.
 // ===========================================================================
-describe('R10-14 — three Local matches cost exactly 9 condition (base raised, pinned)', () => {
-  it('7 per-match + 2 ladder = 9', async () => {
+describe('R10-14 — three Local matches cost exactly 12 condition (domestic repriced, pinned)', () => {
+  it('10 per-match + 2 ladder = 12', async () => {
     const { matchDrain, tournamentRunStrain } = await import('../src/engine/condition')
     const run = [{ score: '6-4 6-4' }, { score: '6-3 6-2' }, { score: '6-4 3-6 7-5' }]
     const perMatch = run.reduce((s, m) => s + matchDrain('local', m.score), 0)
-    expect(perMatch).toBe(7)
-    expect(tournamentRunStrain('local', run)).toBe(9)
+    expect(perMatch).toBe(10)
+    expect(tournamentRunStrain('local', run)).toBe(12)
   })
 })
 

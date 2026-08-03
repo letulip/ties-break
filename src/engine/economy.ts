@@ -908,6 +908,11 @@ export const ECONOMY = {
     // ONE side effect, deliberate: the practice friendly's max(1, local − 1) used to clamp
     // (max(1, 0) = 1 for every scoreline); it now subtracts for real, so a straight-sets friendly
     // still costs 1 but a 3-setter costs 2 and a three-TB epic 3 (docs/specs/fatigue-reference.md).
+    // ⚠ AND THE FRIENDLY NO LONGER READS LOCAL'S SURCHARGE AT ALL (W2-WINDOW): with local at 1 the
+    // same formula would have taken the cheapest thing in the game from 1/2/3 to 2/3/4 as a side
+    // effect of pricing a tournament WEEK. `resolvePractice` subtracts the surcharge by name now -
+    // a practice set against a clubmate has no trip in it - so those three values are pinned to the
+    // SCORELINE and cannot move again when Local is re-priced.
     matchFatigue: { straightSets: 2, hardMatch: 3, extraTiebreaks: 1 },
     // Tier surcharge PER MATCH, one step per rung. The J levels are EXTRAPOLATED above national
     // (ladder-up): international travel, time-zone changes and a fortnight away from home make
@@ -976,8 +981,33 @@ export const ECONOMY = {
     // retired (see minConditionToEnter for the argument and the re-aimed guard). Two different
     // questions had been given one answer: what a week COSTS her body, and how fresh she must be to
     // start one.
+    //
+    // ⚠⚠⚠ AND THE DOMESTIC FAMILY GOES UP BY ONE (W2-WINDOW, owner 03.08: «как для local, Regional и
+    // national мы могли бы легко брать больше condition за них, я считаю, это сделало бы вещи чуть
+    // сложнее и интереснее»). 0/1/2 -> 1/2/3. The J and W families do NOT move - they were priced
+    // last wave against the field and against the schedule, and not one cell of their whole-run
+    // tables in tests/fatigueReference.test.ts changes.
+    //
+    // WHY LOCAL'S 0 WAS THE ONE WORTH FIXING. A surcharge of 0 is not a cheap week, it is NO WEEK:
+    // `matchDrain` = scoreline + surcharge, so a Local match cost exactly what a practice set costs
+    // and the rung contributed nothing at all to the one resource the game is about. A Local title
+    // (three matches) cost 8 of 100 condition against a recovery of 8-10 a rest week, i.e. she could
+    // play every Local on the calendar for free and scheduling was not yet a decision. At 1 the same
+    // title costs 11, which is still cheap - it should be - but it is a number.
+    //
+    // THE SEAM GOES FLAT AT THE TOP, AND THAT IS THE RULING RATHER THAN AN ARTEFACT. National is now
+    // 3, exactly what J30 costs. What this table prices is the week away from ordinary life, and a
+    // National Series week - a 32 draw, five matches, the event the family plans a season around -
+    // is the same kind of week as the entry rung of the international tour. It never INVERTS (the
+    // guard in tests/ladder.test.ts L9 is re-aimed to `>=` for this table only, and the condition
+    // FLOOR table keeps its strict step: 45 to enter a J30 against 40 for a National, because how
+    // fresh she must ARRIVE is the different question W2-FATIGUE already separated out).
+    //
+    // MEASURED, tools/ladder-walk.ts, 6 prospect careers x 8 seasons, before -> after:
+    // entries a season 20.8-29.2 (mean 26.2) -> see the wave report; the early domestic seasons are
+    // where it bites, which is where the owner asked for it to.
     tierMatchFatigue: {
-      local: 0, regional: 1, national: 2,
+      local: 1, regional: 2, national: 3,
       j30: 3, j60: 4, j300: 5,
       w15: 2, w35: 2, w50: 2, w75: 3, w100: 3, wta125: 3,
     } as Record<TierId, number>,
@@ -1413,7 +1443,8 @@ export const ECONOMY = {
   // --- Season planner: practice matches (spec §4) -----------------------------------------
   // A friendly on an empty week: court rental $30-80 × corridor off `seed:practice:week`, plus
   // an OPTIONAL coach. Effect: condition drain
-  // max(1, local-scoreline drain − 1), ZERO ranking points, and the week keeps the base
+  // max(1, local SCORELINE drain − 1) - the tier surcharge is subtracted out by name, see
+  // resolvePractice - ZERO ranking points, and the week keeps the base
   // recovery but FORFEITS the rest-slider bonus (she played, even if friendly).
   // GUARDRAIL (fatigue-bench finding 25.07: practising every week is self-destructive – mean
   // condition 47, 41-44% of weeks under 40): booking below `cautionCondition`, or a long enough

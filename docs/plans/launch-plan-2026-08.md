@@ -273,6 +273,16 @@ window; a rung she has passed CLOSES instead of being filtered.
 numbers rather than tuning either: both were measured for the junior era and the owner priced them
 himself. What the pro era should cost is his call, and it is a different question from the window.
 
+✅ **AS BUILT — act2-pro-tour.md §12 (03.08).** Two of the three things the window needed turned out
+to be in the CALENDAR: every tier's count was measured against 52 weeks while only 49 are placeable
+(so the overflow piled onto weeks 47-48 — measured 8 and 11 events, every world, for ever), and the
+week/tier layout ignored its seed entirely. Both fixed before the window itself. The ceiling that
+shipped is «a rung closes when the rung three above opens, and the top four never close» — no new
+tuning numbers, three rungs wide, four at the top; §11.1's proposed
+`entrantPctBand[0] × field size` formula is NOT what shipped and §12.2 says why. The two-type feed
+rule, its horizon floor and the AER borrow all retire into it. The domestic condition re-price the
+owner asked for ships in the same wave (`tierMatchFatigue` 0/1/2 → 1/2/3).
+
 ### W3-ACT2 · The top half of the ladder (entry: W2-ENDINGS + W2-WINDOW merged; sized on arrival)
 
 ⚠ PROMOTED 03.08 FROM CONTENT TO STRUCTURE (act2-pro-tour.md §11.3). With the real points-to-rank

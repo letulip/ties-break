@@ -761,10 +761,29 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
       for (let i = 1; i < w.length; i++) {
         expect(table[w[i]], `${w[i]} vs ${w[i - 1]}`).toBeGreaterThanOrEqual(table[w[i - 1]])
       }
-      // The seams: up into the junior tour, DOWN into the professional one (the R15-6 reprice).
-      expect(table.j30).toBeGreaterThan(table.national)
+      // The seams: NEVER DOWN into the junior tour, DOWN into the professional one (the R15-6
+      // reprice).
+      //
+      // ⚠ THE FIRST SEAM WAS `>` AND IS `>=` SINCE W2-WINDOW, FOR THE SURCHARGE TABLE ONLY, and the
+      // re-aim is a ruling rather than a relaxation. The owner re-priced the domestic family
+      // («мы могли бы легко брать больше condition за них... чуть сложнее и интереснее»), National
+      // went 2 -> 3 and J30 stayed at 3, so the seam is FLAT at the top rung. That is coherent:
+      // this table prices the week away from ordinary life, and a National Series - a 32 draw, five
+      // matches, the event the family plans a season around - is the same kind of week as the entry
+      // rung of the international tour. What must never happen is an INVERSION, which is exactly
+      // what `>=` still refuses. The FLOOR table keeps the strict step and is asserted separately
+      // below (45 to enter a J30 against 40 for a National): how fresh she must ARRIVE is the
+      // different question W2-FATIGUE already separated out from what a week COSTS.
+      expect(table.j30).toBeGreaterThanOrEqual(table.national)
       expect(table.w15).toBeLessThan(table.j300)
     }
+    // ...and the FLOOR seam is still strict, which is the half the `>=` above deliberately keeps.
+    expect(ECONOMY.availability.minConditionToEnter.j30).toBeGreaterThan(
+      ECONOMY.availability.minConditionToEnter.national,
+    )
+    // The domestic surcharges, pinned rung by rung like the W family below - the owner's own
+    // re-price, so a re-tune is a deliberate edit here rather than a silent consequence.
+    expect(rungsOf('domestic').map((t) => ECONOMY.condition.tierMatchFatigue[t])).toEqual([1, 2, 3])
     // ⚠ `w15 > j30` USED TO SIT IN THAT LOOP AND IS NOW PER TABLE, because the two tables answer it
     // differently since W2-FATIGUE: the FLOOR still steps up over j30 (50 vs 45 - she must arrive
     // fresher for a professional week than for a junior one), while the SURCHARGE no longer does
@@ -790,7 +809,10 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
     // ⚠ RE-PINNED +1 each 26.07 (MATCH BASE RAISE, straightSets 1 → 2): the J extrapolation itself
     // is untouched – tierMatchFatigue is unchanged and the +1-per-rung shape is what this test is
     // about. Only the base under it moved, so every cell went up by exactly one.
-    expect(matchDrain('national', '6-4 6-2')).toBe(4) // 2 + 2
+    // ⚠ RE-PINNED AGAIN 03.08 (W2-WINDOW): National alone moved (surcharge 2 → 3), so the J cells
+    // are byte-identical and the seam from National into J30 is now flat. The +1-per-rung shape
+    // INSIDE the J family - the actual subject - is untouched.
+    expect(matchDrain('national', '6-4 6-2')).toBe(5) // 2 + 3
     expect(matchDrain('j30', '6-4 6-2')).toBe(5) // 2 + 3 (was the itf pin)
     expect(matchDrain('j60', '6-4 6-2')).toBe(6)
     expect(matchDrain('j300', '6-4 6-2')).toBe(7)
