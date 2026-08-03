@@ -250,7 +250,13 @@ describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
 // R9-7 — match-based fatigue (owner redesign, integer per match), applied when
 // the run COMMITS (finalize). matchDrain = 2 (straight sets, no TB) | 3 (a
 // 3-setter OR a TB in a 2-setter) | 4 (more than 2 TB sets), + the tier's
-// per-match surcharge (local 0 / regional 1 / national 2 / j30 3 / j60 4 / j300 5).
+// per-match surcharge (local 1 / regional 2 / national 3 / j30 3 / j60 4 / j300 5).
+//
+// ⚠ RE-PINNED 03.08 BY W2-WINDOW, the DOMESTIC half only (owner: «как для local, Regional и national
+// мы могли бы легко брать больше condition за них... это сделало бы вещи чуть сложнее и интереснее»).
+// 0/1/2 -> 1/2/3, so every Local/Regional/National number in this block moved by exactly one. The J
+// surcharges did not move at all, and the SHAPE this block is about - grade the scoreline, then
+// surcharge per tier - is untouched, exactly as it was through the base raise below.
 //
 // ⚠ RE-PINNED 26.07 by the MATCH BASE RAISE (owner decision): straightSets 1 → 2 and, because his
 // rule "+1 for a TB or a third set" is unchanged, hardMatch 2 → 3. extraTiebreaks stays 1 and
@@ -258,26 +264,27 @@ describe('R9-10/R9-14 — time-based recovery + physio bonus', () => {
 // (grade the scoreline, then surcharge per tier) is the thing under test and it did not change.
 // ---------------------------------------------------------------------------
 describe('R9-7 — match-based fatigue', () => {
-  it('matchDrain grades the scoreline: 2 easy, 3 hard, 4 a three-tiebreak epic', () => {
-    expect(matchDrain('local', '6-4 6-2')).toBe(2) // straight sets, no TB
-    expect(matchDrain('local', '7-6 6-4')).toBe(3) // TB in a 2-setter
-    expect(matchDrain('local', '6-4 3-6 6-2')).toBe(3) // 3 sets
-    expect(matchDrain('local', '7-6 6-7 7-6')).toBe(4) // 3 TB sets → +1 extra
-    expect(matchDrain('local', '7-6 6-7 6-3')).toBe(3) // 2 TBs is still just a hard match
+  it('matchDrain grades the scoreline: 3 easy, 4 hard, 5 a three-tiebreak epic (Local + its 1)', () => {
+    expect(matchDrain('local', '6-4 6-2')).toBe(3) // straight sets, no TB
+    expect(matchDrain('local', '7-6 6-4')).toBe(4) // TB in a 2-setter
+    expect(matchDrain('local', '6-4 3-6 6-2')).toBe(4) // 3 sets
+    expect(matchDrain('local', '7-6 6-7 7-6')).toBe(5) // 3 TB sets → +1 extra
+    expect(matchDrain('local', '7-6 6-7 6-3')).toBe(4) // 2 TBs is still just a hard match
   })
 
-  it('the tier surcharge is PER MATCH: hardest national match = 6', () => {
-    expect(matchDrain('regional', '6-4 6-2')).toBe(3) // 2 + 1
-    expect(matchDrain('national', '6-4 6-2')).toBe(4) // 2 + 2
+  it('the tier surcharge is PER MATCH: hardest national match = 7', () => {
+    expect(matchDrain('regional', '6-4 6-2')).toBe(4) // 2 + 2
+    expect(matchDrain('national', '6-4 6-2')).toBe(5) // 2 + 3
     // RE-PINNED 5 → 6: the owner's original "hardest national match" check, one rung higher. His
     // "a five-match National run maxes at 25" was this number × 5 at the OLD base; the same run is
     // now 30 per-match (+ the cumulative ladder) – see docs/specs/fatigue-reference.md.
-    expect(matchDrain('national', '7-6 6-7 7-6')).toBe(6) // 4 + 2
+    // RE-PINNED AGAIN 6 → 7 by W2-WINDOW's domestic re-price (surcharge 2 → 3).
+    expect(matchDrain('national', '7-6 6-7 7-6')).toBe(7) // 4 + 3
     // RE-PINNED by ladder-up Part B: the inert `itf` placeholder became the J family, and its
     // +3 surcharge carried over to j30 unchanged (j60 +4, j300 +5 extrapolate above it).
     expect(matchDrain('j30', '6-4 6-2')).toBe(5) // 2 + 3
     // a record without a score (defensive) counts as straight sets
-    expect(matchDrain('national', undefined)).toBe(4)
+    expect(matchDrain('national', undefined)).toBe(5)
   })
 
   // ⚠ RE-PINNED 26.07 by the CUMULATIVE RUN FATIGUE ladder (owner idea; see the dedicated block
@@ -287,9 +294,12 @@ describe('R9-7 — match-based fatigue', () => {
   // ⚠ RE-PINNED AGAIN 26.07 by the MATCH BASE RAISE (1 -> 2): the ladder half is untouched, the
   // per-match half went up one rung per match, so the epic run is 30 + 6 = 36 and the two-match
   // local is 2 + 3 + 1 = 6.
-  it('tournamentRunStrain sums the run: a 5-match National of epics is 30 + the ladder', () => {
-    expect(tournamentRunStrain('national', new Array(5).fill({ score: '7-6 6-7 7-6' }))).toBe(36) // 30 + 6
-    expect(tournamentRunStrain('local', [{ score: '6-4 6-2' }, { score: '7-6 4-6 6-3' }])).toBe(6) // 2 + 3 + 1
+  // ⚠ RE-PINNED A THIRD TIME 03.08 (W2-WINDOW, the domestic surcharge +1): the epic National run is
+  // 35 per-match + 6 ladder = 41, and the two-match Local is 3 + 4 + 1 = 8. The ladder half is
+  // untouched again, which is what the identity in the block below asserts.
+  it('tournamentRunStrain sums the run: a 5-match National of epics is 35 + the ladder', () => {
+    expect(tournamentRunStrain('national', new Array(5).fill({ score: '7-6 6-7 7-6' }))).toBe(41) // 35 + 6
+    expect(tournamentRunStrain('local', [{ score: '6-4 6-2' }, { score: '7-6 4-6 6-3' }])).toBe(8) // 3 + 4 + 1
     expect(tournamentRunStrain('j30', [])).toBe(0) // no matches, no drain
   })
 
@@ -344,10 +354,11 @@ describe('cumulative run fatigue (the ladder)', () => {
     const perMatch = 5 * straightNat // 20 – what the pre-ladder engine would charge at base 2
     expect(tournamentRunStrain('national', run)).toBe(perMatch + 6)
     // and the growth is match-by-match, not a lump at the end
-    // ⚠ RE-PINNED +1/match 26.07 (base raise): the ladder increments below are UNCHANGED, which is
-    // the property this test exists for – only the per-match half moved.
+    // ⚠ RE-PINNED +1/match 26.07 (base raise) and again 03.08 (W2-WINDOW's domestic surcharge +1):
+    // both times the ladder increments on the LAST line below are UNCHANGED, which is the property
+    // this test exists for – only the per-match half moved.
     const cumulative = [1, 2, 3, 4, 5].map((n) => tournamentRunStrain('national', new Array(n).fill({ score: '6-4 6-2' })))
-    expect(cumulative).toEqual([4, 9, 14, 20, 26])
+    expect(cumulative).toEqual([5, 11, 17, 24, 31])
     expect(cumulative.map((c, i) => c - (i === 0 ? 0 : cumulative[i - 1]) - straightNat)).toEqual([0, 1, 1, 2, 2])
   })
 

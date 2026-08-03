@@ -77,11 +77,19 @@
 // This is sanctioned by the owner's own instruction about the bands (see AgeBand): school hours
 // dominate the day at fourteen, they shorten, and then they go.
 //
-// WHAT IS DELIBERATELY NOT HERE: a morning run, a second court session, a stretch - all of them
-// plausible, none of them anything the engine models or the week's own read-out mentions. A calendar
-// that invents facts is worse than no calendar (weekDays.ts's own header), and furniture that comes
-// with a band - or with a week the engine has already named "a trip", "a holiday", "exams", "a
-// layoff" - is not the same as furniture invented to fill a column.
+// WHAT IS DELIBERATELY NOT HERE: a morning run, a stretch - both plausible, neither anything the
+// engine models or the week's own read-out mentions. A calendar that invents facts is worse than no
+// calendar (weekDays.ts's own header), and furniture that comes with a band - or with a week the
+// engine has already named "a trip", "a holiday", "exams", "a layoff" - is not the same as furniture
+// invented to fill a column.
+//
+// ⚠ "A SECOND COURT SESSION" WAS ON THAT LIST UNTIL W3-SUMMER, AND IT LEFT BY PASSING THE LIST'S OWN
+// TEST rather than by being excused from it. The owner ruled the summer holidays are a real training
+// block («если мы летом сделаем реальную нагрузку с 2 тренировками в день...»), so the engine now
+// develops and fatigues those weeks differently AND `trainingReadout` says "two sessions a day" on
+// them - which is exactly the two conditions this paragraph demands. It is drawn on the summer weeks
+// and nowhere else. See `summerOrdinary` for the whole argument and for why the extra hour cannot
+// make the day longer than a term-time day.
 //
 // ⚠ AND IT IS A PURE MODULE, no Vue and no store, for the argument `weekDays.ts` already makes about
 // itself: a rule with content in it - a table of shapes, a band, an arc for a week away - is a rule
@@ -180,11 +188,18 @@ export function bandFor(ageYears: number): AgeBand {
  *  `Partial` on the OUTER record and total on the inner one is the type saying what the paragraph
  *  above says: a band may be absent, but a band that is present is complete.
  *
- *  ⚠ THREE OF THE FOURTEEN BLOCK KINDS HAVE NO CALLER, and each is waiting for something specific
+ *  ⚠ TWO OF THE FOURTEEN BLOCK KINDS HAVE NO CALLER, and each is waiting for something specific
  *  rather than being decoration:
- *    `trainingAlt`, `match`  the SECOND session of a day. At fourteen there is one, and drawing two
- *                            would contradict the sentence under the grid. They are what the hours
- *                            school gives back get filled with in the later bands.
+ *    `match`                 the SECOND session of a day, on a day that already has a friendly on it.
+ *                            Still uncalled: the booked match owns its day whole.
+ *    ⚠ `trainingAlt` LEFT THIS LIST IN W3-SUMMER, and it went to the exact caller it was reserved
+ *                            for. Its note read "the SECOND session of a day. At fourteen there is
+ *                            one, and drawing two would contradict the sentence under the grid...
+ *                            they are what the hours school gives back get filled with in the later
+ *                            bands." The holidays are the first week where school gives its hours
+ *                            back INSIDE the first band, the engine models the extra load, and the
+ *                            sentence under the grid now says "two sessions a day" - so nothing is
+ *                            contradicted. See `summerOrdinary`.
  *    `schoolLong`            a day that is nothing but school. The design draws one (its Friday);
  *                            ours would have been the exam week, and the exam week turned out to be
  *                            the opposite of that - the owner's own reading is that the daily block
@@ -551,12 +566,44 @@ function layoffDay(shapes: BandShapes, day: DayContext): readonly DayBlock[] {
 const SUMMER_STUDY_DAYS: readonly number[] = [1, 3]
 const SUMMER_STUDY_LABEL = 'Summer read'
 
+// =================================================================================================
+// ⚠⚠ AND SINCE W3-SUMMER THE HOLIDAYS ADD A MORNING SESSION - THE ONE THING THIS FILE REFUSED TO DO
+// =================================================================================================
+//
+// Two standing rules in this module said no to a second session, and both were RIGHT WHEN WRITTEN and
+// are re-aimed here rather than deleted, because what changed is the engine and not the appetite:
+//
+//   the header's «WHAT IS DELIBERATELY NOT HERE: a morning run, a SECOND COURT SESSION, a stretch -
+//   all of them plausible, none of them anything the engine models or the week's own read-out
+//   mentions», and `DAY_SHAPES`'s note that `trainingAlt` has no caller because "at fourteen there is
+//   one [session], and drawing two would contradict the sentence under the grid".
+//
+// Both objections are answered rather than overruled. THE ENGINE MODELS IT NOW: the owner ruled that
+// summer is real load - «если мы летом сделаем реальную нагрузку с 2 тренировками в день... это как
+// раз частично компенсирует недостаток тренерских недель в другие периоды» - so `summerBlockWeek`
+// multiplies the week's development and charges it condition, which is precisely the "anything the
+// engine models" the header asked for. AND THE READ-OUT MENTIONS IT: `trainingReadout` says "two
+// sessions a day" on exactly these weeks, so the grid and the sentence under it agree.
+//
+// `trainingAlt` is therefore claimed by the caller it was reserved for. The morning session takes the
+// 09-11 slot INSIDE the hours school used to own, so the rule that summer only ever gives hours back
+// still holds: the day is no longer than a term-time day, it is differently filled.
+//
+// ⚠ COURT DAYS ONLY. A rest day stays a rest day and the gym day keeps its one session: the holidays
+// do not repeal the plan, they fill the mornings of the days the plan already bought. And the booked
+// match keeps its own shape for the same reason - a match day is a match day in July too.
+// (⚠ "Early hit" and not "Morning hit": the column is 35px and the guard at the head of
+// tests/calendar-grid.test.ts caps every WORD at six characters. It caught the first draft.)
+const SUMMER_SESSION: DayBlock = { start: 9, span: 2, kind: 'trainingAlt', label: 'Early hit' }
+
 /** An ordinary day's shape, in the holidays: school removed, the homework hour kept on the two
- *  reading days and removed on the rest. REMOVES OR RELABELS, never adds and never moves - the same
- *  discipline the composer's weekend rule keeps, so a summer day can never invent an hour or slide
- *  one onto the plan's session. */
-function summerOrdinary(blocks: readonly DayBlock[], index: number): readonly DayBlock[] {
+ *  reading days and removed on the rest, and a MORNING SESSION added on the days the plan put her on
+ *  court. Removes, relabels, and adds exactly one block whose hour the removed school block already
+ *  owned - so a summer day can never run longer than a term-time day or slide onto the session the
+ *  plan bought. */
+function summerOrdinary(blocks: readonly DayBlock[], kind: OrdinaryKind, index: number): readonly DayBlock[] {
   const out: DayBlock[] = []
+  if (kind === 'court') out.push({ ...SUMMER_SESSION })
   for (const b of blocks) {
     if (b.kind === 'school' || b.kind === 'schoolLong') continue
     if (b.kind === 'study') {
@@ -603,7 +650,7 @@ export function dayBlocksFor(kind: DayKind, band: AgeBand, day: DayContext = ANY
   // arcs whatever the season says (see the note over `summerOrdinary` for the owner's boundary).
   const blocks = isOrdinaryKind(kind)
     ? day.summer === true
-      ? summerOrdinary(shapes[kind], day.index)
+      ? summerOrdinary(shapes[kind], kind, day.index)
       : shapes[kind]
     : WEEK_SHAPES[kind](shapes, day)
   return blocks.map((b) => ({ ...b }))

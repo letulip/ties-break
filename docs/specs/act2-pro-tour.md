@@ -582,3 +582,117 @@ separate decision from what it should offer.
   chip shows the working track and switches to WTA permanently at her first counting W result;
   the stats tier switcher loses its round outline.
 - launch.json pruned to dev + preview (post-integrity housekeeping).
+
+---
+
+## 12. §11 as built — W2-WINDOW (03.08)
+
+The window shipped, and two of the three things it needed turned out to be in the CALENDAR rather
+than in the ladder. Both were measured on `origin/main` before anything moved, and neither was
+visible to the suite: every existing guard asks about one tier, and both defects are properties of
+the whole week grid. `tools/calendar-shape.ts` is the bench behind every number here.
+
+### 12.1 The calendar had to be fixed first
+
+**THE TAIL DUMP.** Each tier's event count was `floor(52 / everyNWeeks)` while only 49 weeks can
+carry an event, so every tier was handed three weeks of cadence with nowhere to put it, and
+`claimWeek` could only push the overflow onto the last playable weeks — always the same ones, for
+every tier at once. Measured, one season: 2-5 events a week through the year and then
+**45:5 · 46:5 · 47:8 · 48:11**, with six of the twelve rungs ending on week 48 in every world for
+ever. That is the owner's «3 W35 подряд на 47-48-49», and `tierPhase` (`0.5 + i/12`, up to 1.42 —
+more than a whole cadence) was the other half: the top rungs targeted weeks past the end of the span
+and the clamp parked them together.
+
+Fixed on the AXIS, not in the clamp: the off-season leaves the span before anything is placed
+(placement counts in playable slots), counts come from `seasonEventCount` = `round(49 / cadence)`,
+and the phase is bounded inside one cadence interval.
+
+| | before | after |
+| --- | --- | --- |
+| tallest week | **11** | 8 |
+| weeks 45-48 (mean events) | 5.0 / 5.0 / 8.0 / 11.0 | 3.8 / 2.9 / 4.1 / 1.4 |
+| last week used, per rung | 47-48 in every world | varies by seed, 41-48 |
+| season total | 164 | 157 |
+
+The dense rungs lose exactly one event each (26/17/13 → 25/16/12); the RARE ones do not move —
+`round` rather than `floor` is what keeps J300 / W100 / WTA 125 at four a year and National at
+R9-20's 4 + 2 = 6, which are design statements in their own `TierDef` comments.
+
+**THE CALENDAR WAS SEED-INDEPENDENT.** `buildSeason` took a seed and spent it on surfaces and travel
+costs only: the week/tier layout was a pure function of the tier table, so `buildSeason('seed-A', …)`
+and `buildSeason('seed-B', …)` were byte-identical and every career in every world played the same
+season for ever. Placement now takes a bounded seeded jitter (half a cadence interval) off a
+purpose-scoped sub-stream `${seed}:calweek:${tier}` — re-derived at the call site, persisting
+nothing, never MAIN and never the season stream. The frozen MAIN capture (41550 / `e6b0c709`)
+reproduces byte-for-byte.
+
+⚠ **EXISTING SAVES KEEP THEIR PAST.** Season blocks are persisted and `ensureSeason` extends them a
+year-block at a time, so a save keeps every block it already holds and is dealt new ones under the
+new rule. Nothing migrates, nothing is rebuilt, and no schema version moved.
+
+### 12.2 The window, as built
+
+Every rung has both bounds. The FLOOR is untouched (`enterPointBand` on the domestic rungs and the
+on-ramps, `acceptsRank` / `enterPct` above them). The CEILING is one rule with no new numbers in it:
+
+> **A rung closes when the rung THREE ABOVE it opens** — its ceiling is the next-but-two rung's
+> floor, read through that rung's own gate in that rung's own currency. Nothing is converted between
+> tables. **The top FOUR rungs never close.**
+
+Walked end to end: `{local}` → `{local, regional}` → `{local, regional, national}` →
+`{regional, national, j30}` → `{national, j30, j60}` → `{j30, j60, j300}` → `{j60, j300, w15}` →
+`{j300, w15, w35}` → `{w15, w35, w50}` → `{w35, w50, w75}` → `{w50, w75, w100}` →
+**`{w50, w75, w100, wta125}`**. Three rungs at every stage, sliding one at a time, widening to four
+at the top — §11.1's measurement (three-rung windows carry 5.2-6.0 playable weeks of eight) and the
+owner's own answer («50 + 75 + 100 + 125, когда какой-то совсем перерастает — добавляем новый, а
+старый уходит») arriving at the same shape.
+
+⚠ **DEVIATION FROM §11.1's PROPOSED CEILING, stated loudly.** §11.1 suggested the ceiling be
+`entrantPctBand[0] × field size` («the rung closes when her standing passes the best entrant it
+draws»). Computed against the shipped table that gives W15 #124 · W35 #104 · W50 #82 · W75 #59 ·
+W100 #37 · 125 #14, and the window it produces is **five to six rungs wide through the middle and
+ZERO at the very top** — the world #10 would have no tournament at all, which contradicts both
+§11.1's own «the natural width is three» and the ruling that the top stops sliding. The rule above
+keeps the spec's INTENT (a rung closes when she has walked past it, in that table's currency) and
+drops the formula.
+
+⚠ **A SECOND CLAUSE THE SEAMS FORCED.** The three cross-table seams open on LATCHES, and a latch
+does not know about birthdays: a thirteen-year-old with a J300 title holds 300 ITF points, which
+clears W15's 120-point on-ramp instantly — so J30 would have closed three years before W15's age
+gate let her in. The ceiling therefore only bites when the rung above is AGE-open for her. A door
+she cannot open yet cannot close the one behind her.
+
+⚠ **THE DOMESTIC BANDS WERE NOT RE-BANDED**, and the owner's worked example is approximate by his
+own word («цифры примерные»). Local still closes at 85 and Regional at 250, so the early game has a
+band (86-149) where Regional is the only open rung. Widening it means moving Local's ceiling and
+Regional's floor, and Regional's 250 is explicitly paired with J30's («the two numbers are one
+decision and must move together») — an Act-1 balance change with its own bench, out of this wave's
+remit. **Finding for the owner**, not a shipped compromise.
+
+### 12.3 What retired into the window
+
+- **The two-type feed rule (ruling 4)** — `feedContext` no longer picks anything. It returns the
+  rungs the engine holds open. Every case ruling 4 named is now true by construction: «если она
+  переросла J — вообще выводим» (the J rungs close when the W ones open), «Если national доступен —
+  показывать только их» (Local closes when the international door does, Regional when J60 opens).
+- **The pair rule's «a rung with no tennis in the horizon cannot be the working rung» floor** — a
+  window of three or four rungs cannot empty the feed the way a pair built around one rung could.
+  Re-pointed in `tests/tier-window.test.ts` rather than deleted.
+- **The AER substitution (ruling 2's borrow)** — it borrowed «the strongest OPEN event from outside
+  the pair», and under the window "open" and "inside" are the same set, so the borrow had no source
+  and every line of it was unreachable. What carries the ruling instead: the pro cap binds at 16 and
+  17 only (`proPerYearByAge` 12 / 16, unlimited after), and at those ages the window still holds the
+  junior rungs BESIDE the professional one — so a capped W week offers her J events she can actually
+  ENTER, rather than a card she could only see.
+
+### 12.4 The domestic rungs got dearer (the owner's tuning ask)
+
+«как для local, Regional и national мы могли бы легко брать больше condition за них, я считаю, это
+сделало бы вещи чуть сложнее и интереснее» — `tierMatchFatigue` local 0 / regional 1 / national 2 →
+**1 / 2 / 3**. The J and W families are untouched (they were re-priced last wave and their whole-run
+tables in `tests/fatigueReference.test.ts` must not move a cell). The domestic → junior seam stops
+being a step UP and becomes FLAT at the top rung: a National Series week — a 32 draw, five matches,
+the biggest domestic event there is — now costs per match exactly what the entry rung of the
+international tour does, which is a coherent sentence rather than an artefact. `tests/ladder.test.ts`
+L9's `j30 > national` is re-aimed to `>=` for the surcharge table only; the condition FLOOR table
+keeps its strict step (45 vs 40).

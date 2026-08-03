@@ -12,6 +12,9 @@ import {
   medicalBlock,
   medicalClearance,
   restRecoveryBonus,
+  summerBlockWeek,
+  summerConditionCost,
+  summerLoadFactor,
   toSnapshot,
   skipTournament,
   closeTournament,
@@ -22,7 +25,7 @@ import {
 import { BEST_N_BY_TRACK, computeRanking } from '../src/engine/season/ranking'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
-import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { SUMMER_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR, isSummerWeek } from '../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 
 /** ⚠ W4: PUT THE CAREER INSIDE THE KNOCK COOLDOWN, so the advance under test cannot be interrupted.
@@ -326,7 +329,22 @@ const REF = {
   // tail) are asserted BEFORE this line in this very test and reproduce byte-for-byte. Condition is
   // post-draw arithmetic end to end - `accrueCondition` draws nothing on any stream, and the strength
   // coupling is a multiplier applied inside the EVENT-scoped shadow tournament.
-  kidRank: 125,
+  //
+  // ⚠ RE-PINNED 125 -> 123 BY W2-WINDOW, and the mechanism is the calendar rather than a rule.
+  // Placement is seeded now (`buildSeason` spent its seed on surfaces and travel only, so every
+  // world played the same weeks for ever) and every tier's count is measured against the PLAYABLE
+  // span instead of the calendar year - so the cohort meets a different set of draws and a
+  // different set of juniors ends the year holding counting points. THE CAPTURE ITSELF DID NOT
+  // MOVE and could not: count 41550 and hash e6b0c709 (plus head and tail) are asserted above this
+  // line in this very test and reproduce byte-for-byte, because the placement jitter is drawn from
+  // a purpose-scoped sub-stream (`:calweek:`) and never from MAIN.
+  //
+  // ⚠ RE-PINNED 123 -> 121 BY W2-WINDOW'S DOMESTIC RE-PRICE (tierMatchFatigue 0/1/2 -> 1/2/3).
+  // The cohort runs the same condition math the kid does, so a dearer domestic week resolves the
+  // year's brackets on a slightly more tired field and a different set of juniors ends it holding
+  // counting points. Post-draw arithmetic again: count 41550 and hash e6b0c709 are asserted above
+  // and reproduce byte-for-byte.
+  kidRank: 121,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -1296,5 +1314,121 @@ describe('the doctor on ARRIVAL — the play-week re-check', () => {
     expect(played.withdrawn).toBe(false) // …and really did not, in the reference run
     expect(pulled.draws.length).toBe(played.draws.length)
     expect(hashOf(pulled.draws)).toBe(hashOf(played.draws))
+  })
+})
+
+// =================================================================================================
+// W3-SUMMER — THE SUMMER TRAINING BLOCK
+// =================================================================================================
+//
+// The owner's correction: «я играл и брал отпуска между турнирами пропуская и коучинговые сессии в
+// том числе, если мы летом сделаем реальную нагрузку с 2 тренировками в день я не вижу ничего
+// плохого, это как раз частично компенсирует недостаток тренерских недель в другие периоды».
+//
+// So the block is VOLUME - a fuller week, not a luckier one - and it has to be checked on both
+// halves at once: it develops more AND it costs condition, and it is never mandatory.
+
+describe('the summer training block — volume, its price, and the trade', () => {
+  const summerWeek = SUMMER_WEEKS[0] + 2
+
+  function worldAt(week: number): ReturnType<typeof createWorld> {
+    const w = createWorld('summer-unit')
+    w.week = week
+    return w
+  }
+
+  it('fires only inside the window, and the window is the calendar’s', () => {
+    for (let w = 0; w < WEEKS_PER_YEAR; w++) {
+      const inWindow = w >= SUMMER_WEEKS[0] && w <= SUMMER_WEEKS[1]
+      expect(summerBlockWeek(worldAt(w)), `week ${w}`).toBe(inWindow)
+      expect(isSummerWeek(w), `isSummerWeek ${w}`).toBe(inWindow)
+    }
+    // ...every season, not just the first.
+    expect(summerBlockWeek(worldAt(summerWeek + WEEKS_PER_YEAR * 3))).toBe(true)
+  })
+
+  it('⚠ IT IS NEVER MANDATORY: a family week in July loses the block, and that is the trade', () => {
+    const w = worldAt(summerWeek)
+    expect(summerBlockWeek(w)).toBe(true)
+    // A booked holiday inside the window: no block that week. She is not on court twice a day at
+    // the seaside, and the package pays her its own rest instead (resolveVacation).
+    w.vacations = [{ week: summerWeek, packageId: 'staycation', paidCents: 0 }]
+    expect(summerBlockWeek(w)).toBe(false)
+    expect(summerLoadFactor(w)).toBe(1)
+    expect(summerConditionCost(w)).toBe(0)
+    // ...and the following week, back home, the block is running again. A holiday costs one week,
+    // not the summer.
+    expect(summerBlockWeek(worldAt(summerWeek + 1))).toBe(true)
+  })
+
+  it('and every other week she is not training through is refused too', () => {
+    const injured = worldAt(summerWeek)
+    injured.injury = { kind: 'ankle strain', severity: 'moderate', weeksRemaining: 3, totalWeeks: 3, sinceWeek: summerWeek }
+    expect(summerBlockWeek(injured), 'a layoff').toBe(false)
+
+    const resting = worldAt(summerWeek)
+    resting.knock = { part: 'wrist', sinceWeek: summerWeek - 1, untilWeek: summerWeek + 1, repeat: false, choice: 'rest' }
+    expect(summerBlockWeek(resting), 'a rested knock').toBe(false)
+
+    // ...and a tournament week: she earns the match bonus and pays the run's own fatigue instead.
+    const playing = worldAt(summerWeek)
+    playing.season = [
+      { id: 'sum-1', week: summerWeek, tier: 'local', surface: 'hard', label: 'Local Open', deadlineWeek: summerWeek - 2 } as never,
+    ]
+    playing.entries = ['sum-1']
+    expect(summerBlockWeek(playing), 'a tournament week').toBe(false)
+  })
+
+  it('the two knobs are the two halves, and they move in opposite directions', () => {
+    const w = worldAt(summerWeek)
+    expect(summerLoadFactor(w)).toBe(ECONOMY.summerBlock.loadFactor)
+    expect(summerLoadFactor(w)).toBeGreaterThan(1) // she develops MORE
+    expect(summerConditionCost(w)).toBe(ECONOMY.summerBlock.conditionCost)
+    expect(summerConditionCost(w)).toBeGreaterThan(0) // ...and the week is FULLER
+    // ⚠ SHE STILL COMES OUT AHEAD. A free training week returns recoveryBase plus the slider; the
+    // block may never turn an ordinary week into a net drain, or nine of them in a row would be a
+    // punishment rather than a choice.
+    expect(ECONOMY.summerBlock.conditionCost).toBeLessThan(ECONOMY.condition.recoveryBase)
+  })
+
+  it('a real career runs the block and pays for it, and the MAIN capture cannot see it', () => {
+    // The end-to-end wiring, on a real tick: skills move further over a summer and condition sits
+    // lower than the same career with the knobs zeroed - and neither run touches the main stream.
+    //
+    // ⚠ THE CONDITION HALF IS MEASURED FROM A DEFICIT, AND THAT IS A FINDING RATHER THAN A FIXTURE
+    // CONVENIENCE. A career that only trains never plays a match, so `matchDrain` never fires,
+    // `recoveryBase` (8/wk) outruns everything and her condition is pinned at the ceiling of 100 all
+    // year - the block's -3 is clamped away and is genuinely invisible. That is TRUE of a girl who
+    // never competes and useless as a measurement, so the run opens at a realistic mid-season
+    // deficit, which is where a body that is actually racing spends the summer. tools/summer-bench.ts
+    // reports the same thing from both ends: 0.0 on the training-only arm, real on the racing one.
+    const run = (loadFactor: number, conditionCost: number) => {
+      const shipped = { ...ECONOMY.summerBlock }
+      Object.assign(ECONOMY.summerBlock, { loadFactor, conditionCost })
+      try {
+        const w = createWorld('summer-e2e')
+        const rng = rngFromSeed(w.seed)
+        for (let i = 0; i < SUMMER_WEEKS[0] - 1; i++) tickWeek(w, rng)
+        w.condition = 20 // a body carrying half a season, which is whose summer this is
+        // Read the condition FIVE weeks into the block, before nine weeks of recovery have taken
+        // both arms back to the ceiling and hidden the difference behind the clamp.
+        for (let i = 0; i < 5; i++) tickWeek(w, rng)
+        const condition = w.condition
+        while (w.week <= SUMMER_WEEKS[1]) tickWeek(w, rng)
+        return { skills: { ...w.skills }, condition, draws: w.rngMain.n }
+      } finally {
+        Object.assign(ECONOMY.summerBlock, shipped)
+      }
+    }
+    const on = run(ECONOMY.summerBlock.loadFactor, ECONOMY.summerBlock.conditionCost)
+    const off = run(1, 0)
+    expect(on.skills.serve).toBeGreaterThan(off.skills.serve)
+    expect(on.skills.groundstrokes).toBeGreaterThan(off.skills.groundstrokes)
+    expect(on.condition).toBeLessThan(off.condition)
+    // ...and she is still RECOVERING across the block: a fuller week is not a net drain.
+    expect(on.condition).toBeGreaterThan(20)
+    // ⚠ ZERO DRAW IMPLICATIONS. Both halves are post-draw arithmetic, so the two runs walk the MAIN
+    // stream to exactly the same position - which is what makes the frozen capture untouchable.
+    expect(on.draws).toBe(off.draws)
   })
 })

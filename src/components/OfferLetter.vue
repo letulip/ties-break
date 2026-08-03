@@ -61,6 +61,21 @@ const isEntry = computed(() => props.offer.kind === 'entry')
 const entryTerms = computed(() => props.offer.terms as EntryLetterTerms)
 
 const terms = computed(() => props.offer.terms as KitOfferTerms)
+
+/** THE GOODBYE, in the brand's own voice, differing on WHY (see KitEndReason). Each reads as a
+ *  person writing, not as a rule firing – the deal ended, and the letter says the true reason
+ *  without scolding: the tour is what has terms, the game does not tell anybody off. */
+const endBody = computed(() => {
+  const t = terms.value
+  const played = t.endedEventsPlayed ?? 0
+  if (t.ended === 'events') {
+    return `We kitted her out all season and enjoyed doing it. We asked for ${t.minEventsPerSeason} tournaments a year and she played ${played}, so this is where we shake hands – our end of it is done.`
+  }
+  if (t.ended === 'standing') {
+    return `We kitted her out all season and enjoyed doing it. We back a girl who is somebody at home, and she has slid out of that band while she has been away, so this is where we shake hands.`
+  }
+  return `That is our term served, and she held up every part of it – ${played} tournaments in our kit this season. We are stopping here for now, with thanks.`
+})
 /** THE LETTERHEAD, BY TIER. `public/images/sponsors/<tier>.webp` - never a filename written out at a
  *  call site, which is why the national and global rungs needed no change here at all. */
 const markUrl = computed(() => `${base}images/sponsors/${terms.value.tier}.webp`)
@@ -170,6 +185,24 @@ const settled = computed(() => {
         </p>
       </template>
       <p class="offer-sign-off">– Tournament desk</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <!-- THE BRAND'S GOODBYE (owner, 04.08). A notice, not a proposal: no Sign, no Refuse, no window –
+       the whole point is that it ARRIVES, because the status line on last year's letter was already
+       right and already unread. Same letterhead, so the player recognises who is writing. -->
+  <article v-else-if="terms.ended" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <img class="offer-mark" :src="markUrl" :alt="terms.brand" />
+      <p class="offer-body">{{ endBody }}</p>
+      <p class="offer-body">
+        Her kit is hers – there is nothing to send back and nothing to pay. From next season her
+        {{ coveredList }} are the family's again.
+      </p>
+      <p class="offer-sign-off">– {{ terms.brand }}</p>
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>

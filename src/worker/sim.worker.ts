@@ -14,6 +14,7 @@ import {
   bookPractice,
   hireCoach,
   setCoachOnEventWeeks,
+  setKitGrade,
   cancelPractice,
   decideKnock,
   acceptOffer,
@@ -335,6 +336,12 @@ async function handle(msg: ToWorker): Promise<ToUI> {
         world.physioActive = msg.active
       })
     }
+    case 'setKitGrade': {
+      // W3-KIT: move one line onto another rung. Re-validated engine-side like every other command
+      // (the line and the rung are both checked against the ladder), and the purchase half is charged
+      // there too - a stale screen cannot buy a frame at last week's price.
+      return mutate(msg.id, msg.baseRevision, (world) => setKitGrade(world, msg.line, msg.grade))
+    }
     // ------------------------------------------------------------------ persistence
     case 'save': {
       if (!world) throw new Error('No active career')
@@ -510,6 +517,7 @@ function errorMsg(id: number, err: unknown): ToUI {
 //   signOffer          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   refuseOffer        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPhysio          mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setKitGrade        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   save/saveNamed     persistence  reads     named record+meta (1 tx)   stamps current, no bump
 //   deleteSlot         persistence  none      deletes a record           unchanged
 //   deleteCareer       persistence  may null  deletes records+meta       resets to 0 if active

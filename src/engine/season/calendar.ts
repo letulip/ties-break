@@ -775,6 +775,28 @@ export function isBlackoutWeek(week: number): boolean {
   return isOffSeasonWeek(week) || isExamWeek(week)
 }
 
+/** THE SUMMER HOLIDAYS, as season-week offsets (R15-8, owner 01.08: «2 месяца обычно после
+ *  экзаменов»). The exam fortnight is season-weeks 23-24 (`ECONOMY.availability.examWeeks`), so the
+ *  holidays open the week after the last paper and run nine weeks - about the two months he named -
+ *  and are over well before the off-season block at 49.
+ *
+ *  ⚠ IT USED TO BE A DISPLAY FACT AND IT IS AN ENGINE FACT NOW (W3-SUMMER), which is why it moved
+ *  here from `composables/weekDays.ts`. Its own note there said «nothing in the sim gates on summer
+ *  (school itself is furniture the grid draws)», and that stopped being true the moment the owner
+ *  ruled that summer is a real training block: «если мы летом сделаем реальную нагрузку с 2
+ *  тренировками в день я не вижу ничего плохого, это как раз частично компенсирует недостаток
+ *  тренерских недель в другие периоды». A week the engine develops and fatigues differently is a week
+ *  the CALENDAR has to define, beside its exam and off-season siblings, for exactly the reason those
+ *  two live here. `weekDays.ts` imports it back and re-exports it under its historical name, so every
+ *  existing caller and test is untouched. */
+export const SUMMER_WEEKS: readonly [number, number] = [25, 33]
+
+/** Is this week inside the school summer holidays? Season-week arithmetic, total over any week. */
+export function isSummerWeek(week: number): boolean {
+  const offset = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  return offset >= SUMMER_WEEKS[0] && offset <= SUMMER_WEEKS[1]
+}
+
 // --- SEASON STRUCTURE BY SURFACE (owner approved 26.07: "звучит круто") ---------------------
 //
 // The surface used to be drawn per event off a FLAT mix (hard .50 / clay .35 / grass .15), which
@@ -880,38 +902,34 @@ function pickSurface(rng: Rng, week: number): Surface {
   return surfaceForWeek(week, rng())
 }
 
-// Claim the free week nearest `target`, searching outward (forward first) within
-// [lo, hi]. `reserved` is the shared off-season block (no tier may schedule into it); `claimed` is
-// THIS TIER's own weeks, so different tiers may share a week – see buildSeason – while a tier never
-// runs two events in the same one. The densest tier claims floor(weeks/2) slots out of
-// `weeks - OFF_SEASON_WEEKS`, so a free slot always exists.
+// Claim the free SLOT nearest `target`, searching outward (forward first) within [0, slots-1].
+// `claimed` is THIS TIER's own slots, so different tiers may share a week – see buildSeason – while
+// a tier never runs two events in the same one.
 //
-// R12-6: `minGap` additionally keeps a tier's events APART – a week is only claimable if no event
-// of the same tier sits within `minGap - 1` weeks of it. It applies to `claimed` ONLY, never to
-// `reserved`: the off-season is a hard exclusion, and spreading the gap over its edges would push
-// every tier's December placement around for no reason.
+// ⚠ IT COUNTS IN PLAYABLE SLOTS, NOT IN WEEKS, AND THAT IS THE FIX FOR THE TAIL DUMP (W2-WINDOW).
+// It used to take a raw week span and carry a `reserved` set holding the off-season, so a target
+// that landed in December was pushed OUT of it – always in the same direction, always onto the same
+// two or three weeks, for every tier at once. Measured on the shipped build, one season: 2-5 events
+// a week through the year and then 45:5 46:5 47:8 48:11, with W15/W35/W50/W75/W100/WTA 125 all
+// ending on week 48. That is the owner's «3 W35 подряд на 47-48-49». The off-season is now removed
+// from the axis BEFORE anything is placed (buildSeason builds the slot list), so there is nothing
+// to be pushed out of and no direction to be pushed in.
 //
-// The two sets used to be one, which is what makes this a split rather than an extra parameter: a
-// gap measured against a set that already contained the off-season would have measured the wrong
-// thing.
+// R12-6: `minGap` keeps a tier's events APART – a slot is only claimable if no event of the same
+// tier sits within `minGap - 1` slots of it. Slots inside one season block are contiguous weeks
+// (the off-season is the block's tail), so a slot distance IS a week distance and the knob keeps
+// meaning exactly what its TierDef comment says.
 //
-// TOTAL BY CONSTRUCTION. If no week in the span satisfies the gap, the search RETRIES at gap 1 –
-// a calendar that cannot honour the constraint must still be built (the old "no free week" throw
-// stays as the genuine over-subscription case). Only the sparse rungs carry a gap today, with 4-6
-// events over 49 placeable weeks, so the retry is unreachable at the shipped numbers; it exists so
-// that raising a cadence can never turn a tuning change into a crash.
-function claimWeek(
-  reserved: Set<number>,
-  claimed: Set<number>,
-  target: number,
-  lo: number,
-  hi: number,
-  minGap = 1,
-): number {
+// TOTAL BY CONSTRUCTION. If no slot satisfies the gap, the search RETRIES at gap 1 – a calendar
+// that cannot honour the constraint must still be built (the old "no free week" throw stays as the
+// genuine over-subscription case). Only the sparse rungs carry a gap today, with 4-6 events over 49
+// playable weeks, so the retry is unreachable at the shipped numbers; it exists so that raising a
+// cadence can never turn a tuning change into a crash.
+function claimSlot(claimed: Set<number>, target: number, lo: number, hi: number, minGap = 1): number {
   const start = Math.min(Math.max(target, lo), hi)
-  const free = (w: number, gap: number): boolean => {
-    if (reserved.has(w) || claimed.has(w)) return false
-    for (let d = 1; d < gap; d++) if (claimed.has(w - d) || claimed.has(w + d)) return false
+  const free = (s: number, gap: number): boolean => {
+    if (claimed.has(s)) return false
+    for (let d = 1; d < gap; d++) if (claimed.has(s - d) || claimed.has(s + d)) return false
     return true
   }
   for (const gap of minGap > 1 ? [minGap, 1] : [1]) {
@@ -930,35 +948,68 @@ function claimWeek(
       }
     }
   }
-  throw new Error('buildSeason: no free week in span (over-subscribed)')
+  throw new Error('buildSeason: no free slot in span (over-subscribed)')
 }
 
-// Evenly-spaced ideal week for the i-th event of a tier that fires `count` times across the span,
-// offset `phase` cadences in (0.5 = mid-interval, the historical value).
-//
-// `phase` exists because two tiers with the SAME cadence would otherwise target exactly the same
-// weeks and stack on top of each other – local and j30 both fire every 2 weeks, national and j300
-// both every 13. Stacking is allowed, but a calendar where 92 events pile onto 39 weeks and leave
-// 7 empty is the opposite of the owner's "always somewhere to go". A per-rung phase interleaves
-// them instead, so the same event count covers far more of the season.
-function idealWeek(fromWeek: number, weeks: number, i: number, count: number, phase = 0.5): number {
-  return fromWeek + Math.floor(((i + phase) * weeks) / count)
-}
-
-/** Phase offset for a tier, spread evenly over one whole cadence across the ladder – so equal-cadence
- *  rungs (local/j30, national/j300) land in each other's gaps rather than on each other.
+/** HOW MANY EVENTS OF THIS TIER A SEASON HOLDS – its cadence measured against the PLAYABLE span,
+ *  never against the calendar year.
  *
- *  ⚠ THE SPREAD HAS A MEASURED COST SINCE W2-LADDER (tools/boredom-guard.ts): with twelve rungs
- *  the interleave leaves 3-4 W-ONLY weeks a season (offsets 32/40/44 carry professional events and
- *  nothing else), and a pro-capped sixteen-year-old meets those weeks as "tournaments exist, all
- *  barred". The guard's receipt classifies every stranded week as THIS coverage gap, never a cap
- *  number. The candidate fix is the inverse phase policy for the W family - co-phase each W rung
- *  with its J mirror so a professional week always carries its junior fallback - and it is
- *  deliberately NOT taken in-wave: changing this formula re-deals every event of every seed a
- *  second time in one wave (weeks, surfaces, travel, every event sub-stream). Architect's call,
- *  with the guard's table as the evidence. */
+ *  ⚠ THIS IS HALF THE TAIL-DUMP FIX (W2-WINDOW), and the arithmetic is the whole bug. The count was
+ *  `floor(weeks / everyNWeeks)` with `weeks` = 52 while only 49 weeks can carry an event, so every
+ *  tier was told to fit 52 weeks of cadence into 49 – and the three events of overflow had nowhere
+ *  to go but the last playable weeks, every tier compressing into the same ones. Counting against
+ *  the playable span instead means a tier's cadence is a cadence: 25 W15s at "every 2 weeks" over 49
+ *  playable weeks really is one a fortnight, where 26 over 49 was one every 1.88 and the remainder
+ *  became a pile.
+ *
+ *  ROUND, NOT FLOOR, and that is deliberate: `floor(49/13)` is 3, and it would quietly cost the game
+ *  a quarter of every rare rung – J300, W100 and WTA 125 are "four a year, so each one is an event
+ *  the family plans a season around" (their own TierDef comments), and National's 4 + 2 = 6 is
+ *  R9-20's own number. Rounding keeps all three, and keeps every dense rung within one event of the
+ *  count it shipped with.
+ *
+ *  IT IS A CONSTANT OF THE TIER TABLE, not of the block: the first career block starts at week 3
+ *  (MIN_FIRST_EVENT_WEEK) and therefore has three fewer slots, but a year-block is still a year-block
+ *  whichever year it is, so the count does not shrink for it – the placement simply packs slightly
+ *  tighter. */
+export function seasonEventCount(tier: TierId): number {
+  const cadence = TIERS[tier].everyNWeeks
+  if (cadence === 0) return 0
+  return Math.max(1, Math.round((WEEKS_PER_YEAR - OFF_SEASON_WEEKS) / cadence))
+}
+
+/** HOW FAR A SEEDED DRAW MAY MOVE AN EVENT off its evenly-spaced ideal, as a share of the tier's own
+ *  cadence interval. 0 = the old fixed grid; 1 = anywhere inside the interval the event owns.
+ *
+ *  0.5 is the pick: half an interval of play is enough that two seeds deal visibly different weeks
+ *  at every rung (a dense rung's event moves ±1 week, a rare rung's ±6), while the tier's OWN rhythm
+ *  is still recognisable – a J300 stays roughly quarterly instead of clustering. It also leaves half
+ *  the interval for `tierPhase` below to keep the deterministic interleave in, which is what stops
+ *  equal-cadence rungs collapsing onto each other. */
+const PLACEMENT_JITTER = 0.5
+
+/** Phase offset for a tier – the DETERMINISTIC half of where its events sit, spread across the
+ *  ladder so equal-cadence rungs (local/j30/w15, national/j300/w100/wta125) land in each other's
+ *  gaps rather than on each other.
+ *
+ *  ⚠ IT IS BOUNDED INTO [JITTER/2, 1 - JITTER/2] NOW, AND THE OLD UNBOUNDED VERSION WAS THE OTHER
+ *  HALF OF THE TAIL DUMP (W2-WINDOW). It read `0.5 + index / 12`, which is 1.42 for the top rung –
+ *  more than a whole cadence – so the last WTA 125 of a season targeted week 57 of a 52-week span
+ *  and every rung above the sixth targeted a week past the end. The clamp inside `claimWeek` then
+ *  did what a clamp does: parked them all on the last playable week. Keeping the phase strictly
+ *  inside one interval makes `(i + phase + jitter) * interval < slots` true by construction, so no
+ *  event can ever be born outside the span it is placed in.
+ *
+ *  ⚠ AND THE W-ONLY-WEEK COST THE OLD NOTE RECORDED IS NOW A SEEDED ONE, not a fixed one. With
+ *  twelve rungs the interleave used to leave 3-4 W-ONLY weeks in EVERY world (offsets 32/40/44
+ *  carried professional events and nothing else – tools/boredom-guard.ts), because the phases were
+ *  a fixed grid: the same three weeks, every seed, for ever. The jitter breaks that pattern per
+ *  world, which retires the "co-phase the W rungs with their J mirrors" candidate fix as the answer
+ *  to a defect that no longer has a fixed address. The guard still exits 1 if a stranded week
+ *  appears, so the red stays loud. */
 function tierPhase(tier: TierId): number {
-  return 0.5 + TIER_LADDER.indexOf(tier) / TIER_LADDER.length
+  const half = PLACEMENT_JITTER / 2
+  return half + (1 - PLACEMENT_JITTER) * (TIER_LADDER.indexOf(tier) / TIER_LADDER.length)
 }
 
 function makeEvent(
@@ -1000,9 +1051,25 @@ function makeEvent(
 export const MIN_FIRST_EVENT_WEEK = 3
 
 // buildSeason – deterministic season for [fromWeek, fromWeek + weeks). Tiers are placed
-// strongest-first (j300 → … → local) so the rare prestige weeks are chosen before the dense ones
-// bend around them. Counts scale as floor(weeks / everyNWeeks) per tier, plus each tier's
-// optional `secondHalfBonus` inside the season's back half.
+// strongest-first (wta125 → … → local) so the rare prestige weeks are chosen before the dense ones
+// bend around them. Counts come from `seasonEventCount` (the cadence measured against the PLAYABLE
+// span), plus each tier's optional `secondHalfBonus` inside the season's back half.
+//
+// ⚠ THE LAYOUT IS SEED-DEPENDENT SINCE W2-WINDOW, AND IT WAS NOT BEFORE. `buildSeason` took a seed
+// and spent it on surfaces and travel costs only: the week/tier grid was a pure function of the tier
+// table, so `buildSeason('seed-A', …)` and `buildSeason('seed-B', …)` produced a byte-identical
+// calendar and every career in every world played the same season for ever. Placement now takes a
+// bounded seeded jitter (see PLACEMENT_JITTER) off a PURPOSE-SCOPED SUB-STREAM –
+// `rngFromSeed(`${seedStr}:calweek:${tier}`)`, re-derived at the call site, persisting nothing,
+// never MAIN and never the season stream the surfaces and costs are drawn from. Same seed, same
+// calendar; different seeds, different calendars.
+//
+// ⚠ AND IT DOES NOT TOUCH A CAREER'S PAST. Season blocks are PERSISTED (world.season, extended by
+// `ensureSeason` a year-block at a time), so a save built under the old rule keeps every block it
+// already holds and is dealt new ones under the new rule. Nothing migrates and nothing is rebuilt:
+// an existing career's remaining weeks look exactly as they did, and its next season is the first
+// one with the new shape. Verified in tests/season/calendar.test.ts ("an existing block is never
+// re-dealt").
 //
 // ONE EVENT PER TIER PER WEEK, NOT ONE EVENT PER WEEK (ladder-up). The pre-J calendar carried 43
 // events over 49 playable weeks and could keep a global one-per-week rule; the J family takes it
@@ -1025,39 +1092,51 @@ export function buildSeason(
   const lo = fromWeek === 0 ? MIN_FIRST_EVENT_WEEK : fromWeek
   const hi = fromWeek + weeks - 1
 
-  // Off-season weeks are reserved for EVERY tier, so no event ever lands there (items 16/21).
-  const offSeason = new Set<number>()
-  for (let w = lo; w <= hi; w++) if (isOffSeasonWeek(w)) offSeason.add(w)
+  // THE PLAYABLE AXIS. The off-season is taken out of the span BEFORE anything is placed (items
+  // 16/21), so no event can land there and – the tail dump's actual cause – nothing has to be
+  // pushed out of it. Slot index 0..slots.length-1 is the axis every placement below counts in.
+  const slots: number[] = []
+  for (let w = lo; w <= hi; w++) if (!isOffSeasonWeek(w)) slots.push(w)
+  const span = slots.length
+  if (span === 0) return events
 
   // Strongest tier first, so the scarce high-tier weeks are picked before the dense ones fill in.
   const order: TierId[] = [...TIER_LADDER].reverse()
   for (const tier of order) {
     const def = TIERS[tier]
-    const cadence = def.everyNWeeks
-    if (cadence === 0) continue
-    // R12-6: the tier's OWN weeks, kept apart from the shared off-season reservation so the min gap
-    // is measured against events, never against December (see claimWeek).
+    if (def.everyNWeeks === 0) continue
+    // R12-6: the tier's OWN slots. The off-season no longer needs a set of its own – it is not on
+    // this axis at all – so the min gap is measured against events and can only ever have been.
     const claimed = new Set<number>()
     const minGap = def.minGapWeeks ?? 1
     const phase = tierPhase(tier)
-    const count = Math.floor(weeks / cadence)
+    // ONE SUB-STREAM PER TIER PER BLOCK, drawn in event order. Purpose-scoped (`:calweek:`), so it
+    // is independent of the season stream below and of MAIN, and re-derived here rather than stored.
+    const place = rngFromSeed(`${seedStr}:calweek:${tier}`)
+    const count = seasonEventCount(tier)
+    const interval = span / count
+    // The i-th event owns the interval [i, i+1) of cadences; `phase` says where in it the rung
+    // sits by construction and `place()` moves it by up to half an interval either way. Both stay
+    // inside the interval, so the result is inside the span and the events stay in order.
+    const jitter = () => phase + PLACEMENT_JITTER * (place() - 0.5)
     for (let i = 0; i < count; i++) {
-      const target = idealWeek(fromWeek, weeks, i, count, phase)
-      const week = claimWeek(offSeason, claimed, target, lo, hi, minGap)
-      events.push(makeEvent(seedStr, week, tier, rng, background))
+      const target = Math.floor((i + jitter()) * interval)
+      const slot = claimSlot(claimed, target, 0, span - 1, minGap)
+      events.push(makeEvent(seedStr, slots[slot], tier, rng, background))
     }
     // R9-20: the extra events a tier gets in the season's SECOND half only (national densification).
     // These are the ones R12-6 is about: they are spread across the half by their own even
     // placement, so without the gap they could land right beside a base-cadence event – and
-    // `claimed` now carries every base week, so the gap is enforced against all of them.
+    // `claimed` now carries every base slot, so the gap is enforced against all of them.
     const bonus = def.secondHalfBonus ?? 0
     if (bonus > 0) {
-      const halfFrom = fromWeek + Math.floor(weeks / 2)
-      const halfWeeks = weeks - Math.floor(weeks / 2)
+      const halfFrom = Math.floor(span / 2)
+      const halfSpan = span - halfFrom
+      const bonusInterval = halfSpan / bonus
       for (let i = 0; i < bonus; i++) {
-        const target = idealWeek(halfFrom, halfWeeks, i, bonus, phase)
-        const week = claimWeek(offSeason, claimed, target, Math.max(lo, halfFrom), hi, minGap)
-        events.push(makeEvent(seedStr, week, tier, rng, background))
+        const target = halfFrom + Math.floor((i + jitter()) * bonusInterval)
+        const slot = claimSlot(claimed, target, halfFrom, span - 1, minGap)
+        events.push(makeEvent(seedStr, slots[slot], tier, rng, background))
       }
     }
   }

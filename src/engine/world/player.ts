@@ -13,7 +13,7 @@ import { kitFreshCap } from '../offers'
 import { conditionMatchFactor } from '../condition'
 import { relativeAgeHeadStart, SKILL_KEYS, type KidSkills } from '../development'
 import type { MatchPlayer, Surface } from '../match/types'
-import type { Offer, PlayerProfile } from '../../shared/protocol'
+import type { KitState, Offer, PlayerProfile } from '../../shared/protocol'
 import { KID_ID } from './constants'
 import { kidAgeExact } from './age'
 
@@ -83,7 +83,16 @@ export function kidMatchPlayer(world: { seed: string; profile: PlayerProfile; sk
  *  REAL age, `kidAgeExact`, not the band's: a December girl genuinely serves a shade slower than a
  *  January girl in the same draw, which is the relative age effect turning up somewhere it belongs. */
 export function kidMatchPlayerFor(
-  world: { seed: string; profile: PlayerProfile; condition: number; week: number; offers?: Offer[] },
+  world: {
+    seed: string
+    profile: PlayerProfile
+    condition: number
+    week: number
+    offers?: Offer[]
+    /** W3-KIT (v37): the rung she is on per line. Optional for the same reason `offers` is - a pure
+     *  caller that builds a player without a full world gets the shipped rung, byte-identical. */
+    kit?: KitState
+  },
   surface: Surface,
 ): MatchPlayer {
   const raw = kidMatchPlayer(world)
@@ -107,7 +116,18 @@ export function kidMatchPlayerFor(
     // and what a signed kit deal moves is the WEAR that goes in, never the arithmetic. `kitFreshCap`
     // is null for every career that has not signed one, so an unsponsored girl is byte-identical to
     // what she was.
-    kitWearAt(world.seed, world.profile.background, world.week, kitFreshCap(world.offers ?? [], world.week)),
+    //
+    // ⚠ AND THE RUNG SHE IS ON, WHICH IS A FIFTH READING AND STILL NOT A FIFTH TERM (W3-KIT, v37).
+    // Same shape as the sponsor's floor: what the ladder moves is the WEAR that goes in - where on
+    // her line's curve a brand-new one of these starts, and how long that curve is - never the
+    // arithmetic. `undefined` is the shipped rung, so a save from before v37 composes byte-identically.
+    kitWearAt(
+      world.seed,
+      world.profile.background,
+      world.week,
+      kitFreshCap(world.offers ?? [], world.week),
+      world.kit ?? null,
+    ),
   )
 }
 

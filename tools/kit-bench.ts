@@ -18,7 +18,17 @@
 // Run: npx vite-node tools/kit-bench.ts
 
 import { ECONOMY } from '../src/engine/economy'
-import { applyKit, FRESH_KIT, SPENT_KIT, kitMultipliers, kitWearAt, type KitWear } from '../src/engine/equipment'
+import {
+  applyKit,
+  FRESH_KIT,
+  KIT_GRADES,
+  SPENT_KIT,
+  kitInjuryFactor,
+  kitMultipliers,
+  kitWearAt,
+  type KitWear,
+} from '../src/engine/equipment'
+import type { KitState } from '../src/shared/protocol'
 import { SKILL_POINTS_PER_YEAR, growWeek, rollPotential, SKILL_KEYS, type KidSkills } from '../src/engine/development'
 import { COACH_TIERS, bestFitCoachAt, tierOf } from '../src/engine/coach'
 import type { CoachTier } from '../src/shared/protocol'
@@ -186,6 +196,78 @@ for (const [younger, older] of [[14, 15], [14, 16], [14, 17], [14, 19]] as const
 console.log('   (exactly 0 inside one age band, by construction - see PACE_K)')
 
 // ---------------------------------------------------------------------------------------------
+// §6 THE QUALITY LADDER (W3-KIT) - the rung the PLAYER buys, in the same currency as everything else.
+//
+// ⚠ THE NOMINAL BOUND IS NOT RE-MEASURED HERE, BECAUSE THE LADDER CANNOT MOVE IT. A rung only
+// decides where on the EXISTING wear curve she stands (`startWear`) and how long that curve is
+// (`lifeFactor`), and both land inside `kitWearAt`'s `clamp01` - so every state the ladder can reach
+// lies inside [FRESH_KIT, SPENT_KIT] and §1's 2.01 IS the ladder's ceiling too, structurally. What
+// is worth measuring is the REALISED swing: what a career actually lives at on each rung.
+// ---------------------------------------------------------------------------------------------
+console.log('\n§6  THE QUALITY LADDER - realised wear and its cost, per rung (working family)')
+console.log('   rung          strings  frame  shoes   |  mean attribute penalty  |  injury factor')
+const rungPenalty: Record<string, number> = {}
+const rungInjury: Record<string, number> = {}
+for (const grade of KIT_GRADES) {
+  const kit: KitState = { grade: { strings: grade, frame: grade, shoes: grade }, sinceWeek: { strings: 0, frame: 0, shoes: 0 } }
+  const acc: KitWear = { strings: 0, frame: 0, shoes: 0 }
+  let penalty = 0
+  let injury = 0
+  let n = 0
+  for (let s = 0; s < 40; s++) {
+    for (let w = 0; w <= HORIZON; w++) {
+      const wear = kitWearAt(`kit-bench-${s}`, 'working', w, null, kit)
+      acc.strings += wear.strings
+      acc.frame += wear.frame
+      acc.shoes += wear.shoes
+      penalty += meanAttr(ref('x', LEVEL)) - meanAttr(applyKit(ref('x', LEVEL), wear))
+      injury += kitInjuryFactor(wear)
+      n++
+    }
+  }
+  rungPenalty[grade] = penalty / n
+  rungInjury[grade] = injury / n
+  console.log(
+    `   ${grade.padEnd(12)}  ${(acc.strings / n).toFixed(3)}   ${(acc.frame / n).toFixed(3)}  ${(acc.shoes / n).toFixed(3)}   |          ${(penalty / n).toFixed(3)}         |  ${(injury / n).toFixed(4)}`,
+  )
+}
+const ladderGapAttr = rungPenalty.alloy - rungPenalty.pro
+// Measured the same way §1 measures the wear swing: build the two REALISED states off the table
+// above, play them against an identical opponent, and bisect the win-rate gap into skill points -
+// so the ladder is quoted in the currency the yardstick is written in.
+function realisedPlayer(grade: (typeof KIT_GRADES)[number]): MatchPlayer {
+  const kit: KitState = { grade: { strings: grade, frame: grade, shoes: grade }, sinceWeek: { strings: 0, frame: 0, shoes: 0 } }
+  // The MEAN wear over a career, applied as one state - the same fold §2 reports.
+  const acc: KitWear = { strings: 0, frame: 0, shoes: 0 }
+  let n = 0
+  for (let s = 0; s < 40; s++) {
+    for (let w = 0; w <= HORIZON; w++) {
+      const wear = kitWearAt(`kit-bench-${s}`, 'working', w, null, kit)
+      acc.strings += wear.strings
+      acc.frame += wear.frame
+      acc.shoes += wear.shoes
+      n++
+    }
+  }
+  return applyKit(ref(grade, LEVEL), { strings: acc.strings / n, frame: acc.frame / n, shoes: acc.shoes / n })
+}
+const wrAlloy = winRate(realisedPlayer('alloy'), ref('opp', LEVEL), 'rung')
+const wrPro = winRate(realisedPlayer('pro'), ref('opp', LEVEL), 'rung')
+const ladderSp = skillPointsFor(wrPro - wrAlloy, LEVEL, 16, 'rung-sp')
+console.log(`\n   REALISED LADDER SWING alloy -> pro: ${ladderGapAttr.toFixed(3)} mean attribute points`)
+console.log(`   win rate vs an identical opponent: alloy ${(wrAlloy * 100).toFixed(2)}%  pro ${(wrPro * 100).toFixed(2)}%`)
+console.log(`   => WORTH ${ladderSp.toFixed(2)} SKILL POINTS on every attribute (bisected, same method as §1)`)
+console.log(
+  `   injury threshold multiplier: alloy ${rungInjury.alloy.toFixed(4)} vs pro ${rungInjury.pro.toFixed(4)}` +
+    `  (+${(((rungInjury.alloy - rungInjury.pro) / rungInjury.pro) * 100).toFixed(1)}% weekly risk on the bottom rung)`,
+)
+console.log('   ...against composite, the rung every shipped save migrates onto:')
+console.log(
+  `     composite penalty ${rungPenalty.composite.toFixed(3)} attr / injury ${rungInjury.composite.toFixed(4)}` +
+    `  – §2's working row is ${realised.working.toFixed(3)} / and MUST match (it is the same numbers)`,
+)
+
+// ---------------------------------------------------------------------------------------------
 // §5 THE VERDICT.
 // ---------------------------------------------------------------------------------------------
 console.log('\n§5  VERDICT against the yardstick')
@@ -194,6 +276,8 @@ const checks: [string, number, number, boolean][] = [
   ['nominal kit swing vs coach ladder', nominalSp, ladderSpread, nominalSp < ladderSpread],
   ['realised background gap', bgGap, SKILL_POINTS_PER_YEAR, bgGap < SKILL_POINTS_PER_YEAR],
   ['realised background gap vs ladder', bgGap, ladderSpread, bgGap < ladderSpread],
+  ['QUALITY LADDER alloy -> pro', ladderSp, SKILL_POINTS_PER_YEAR, ladderSp < SKILL_POINTS_PER_YEAR],
+  ['QUALITY LADDER vs coach ladder', ladderSp, ladderSpread, ladderSp < ladderSpread],
 ]
 for (const [label, value, bound, ok] of checks) {
   console.log(`   ${ok ? 'PASS' : 'FAIL'}  ${label.padEnd(38)} ${value.toFixed(2)}  <  ${bound.toFixed(2)}`)

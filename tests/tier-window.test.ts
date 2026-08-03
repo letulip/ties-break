@@ -1,31 +1,33 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { feedContext, feedShows, preferredWeekEvent, type FeedEventFacts } from '../src/composables/tierState'
-import { TIER_LADDER } from '../src/engine/season/calendar'
+import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { createWorld, toSnapshot } from '../src/engine/world'
 import type { TierId } from '../src/engine/season/types'
 
 // =================================================================================================
-// THE TWO-TYPE FEED (W2-LADDER §4, owner ruling 4) — and the stacked-week pick that predates it.
+// THE SLIDING WINDOW (act2-pro-tour.md §11, owner ruling 11) — and the stacked-week pick that
+// predates it.
 //
-// ⚠ RE-AIMED, NOT WEAKENED, FROM R15-9's SLIDING WINDOW. The latch window hid three rungs by hand
-// (local/regional behind the itf latch, j30 behind the wta one) and exempted National; the owner's
-// 02.08 ruling replaced the hand-kept list with a RULE — «чтобы не больше 2х типов турниров в год
-// было» — and the rule subsumes every case the old guard pinned: a latched track's lower rungs sit
-// below the working pair by construction, so everything R15-9 hid stays hidden, plus everything
-// the two-type budget hides beyond it. What this file pins now:
-//   1. THE PAIR: derived from the ENGINE's tierOpen oracle (task #77 — never a band or latch read
-//      in the UI), working = highest open rung, adjacent = next not-age-dead rung above.
-//   2. THE SUBSTITUTION: a pro-capped week offers the strongest open below-pair event IN PLACE of
-//      the W row, never as a third type.
-//   3. ENTERED ALWAYS SHOWS (R10-3) — a committed week must stay actionable.
+// ⚠ RE-AIMED, NOT WEAKENED, FROM THE TWO-TYPE FEED (W2-LADDER §4, ruling 4), which was itself the
+// re-aim of R15-9's latch window. Each step removed a hand-kept list and put a RULE in its place;
+// this one removes the last of the UI's own judgement. Ruling 4 asked for at most two tier types
+// and the pair rule delivered it by PICKING two of however many rungs the engine opened — the UI
+// compensating for a ladder with no ceiling. Ruling 11 gives the ladder its ceiling instead
+// (`tierOutgrown`: a rung closes when the rung three above opens), so the feed simply shows what
+// is open. What this file pins now:
+//   1. THE WINDOW: whatever `Snapshot.tierOpen` says, verbatim — never a pick made in the UI.
+//   2. ITS SHAPE: three rungs through the climb, four at the top, sliding one rung at a time.
+//   3. THE SUBSTITUTION: a pro-capped week offers the strongest open event from OUTSIDE the window
+//      in place of the capped one, never as an extra row (ruling 2).
+//   4. ENTERED ALWAYS SHOWS (R10-3) — a committed week must stay actionable.
 //
-// ⚠ THE NATIONAL EXEMPTION IS SUPERSEDED, and this note is its tombstone rather than a deletion:
-// R15-9 kept National visible for the brand deal's keep-condition (domestic top 30). Ruling 4 is
-// later and stricter — at most two types, and «Если national доступен - показывать только их» is
-// about the domestic FAMILY, not a standing exemption. The cost (a W-era career sees Nationals
-// only as capped-week substitutes, so the national kit deal's keep-condition becomes hard to hold)
-// is recorded in feedContext's header and the wave report, for the owner.
+// ⚠ TWO EARLIER FINDINGS ARE RE-POINTED RATHER THAN RETIRED. The pair rule needed a floor ("a rung
+// with no tennis in the horizon cannot be the working rung") because it picked ONE rung to build
+// the pair around, and on the owner's save at W38 '34 that rung was an eventless WTA 125 — the feed
+// emptied to eight training weeks. A window cannot fail that way, and the case is asserted below
+// against the window instead of deleted. The NATIONAL EXEMPTION stays superseded (the national kit
+// deal's keep-condition is hard to hold in the W era) and this note remains its tombstone.
 // =================================================================================================
 
 const read = (rel: string) => readFileSync(new URL(rel, import.meta.url), 'utf8')
@@ -45,37 +47,59 @@ function openMap(open: TierId[]): Record<TierId, boolean> {
   return Object.fromEntries(TIER_LADDER.map((t) => [t, open.includes(t)])) as Record<TierId, boolean>
 }
 
-describe('the pair: at most two tier types, from the engine oracle', () => {
-  it('slides across the whole career: fresh -> domestic -> junior -> professional', () => {
-    const pairAt = (open: TierId[], age: number) =>
-      feedContext({ ageYears: age, tierOpen: openMap(open), upcoming: [] }).pair
-    // A fresh kid: local open, regional the door she is walking towards.
-    expect(pairAt(['local'], 14)).toEqual(['local', 'regional'])
-    // The overlap climbs: highest open is the working rung, next above is the pair's other half.
-    expect(pairAt(['local', 'regional'], 14)).toEqual(['regional', 'national'])
-    expect(pairAt(['regional', 'national'], 14)).toEqual(['national', 'j30'])
-    // «Если national доступен - показывать только их»: the domestic family collapses to its top
-    // open rung by construction - local and regional are below the pair.
-    expect(pairAt(['local', 'regional', 'national', 'j30'], 15)).toEqual(['j30', 'j60'])
-    // Deep in the J era: j30 leaves the pair however open it stays (the R15-9 case, subsumed).
-    expect(pairAt(['national', 'j30', 'j60', 'j300'], 17)).toEqual(['j300', 'w15'])
-    // The professional era: the pair is professional, and the rungs below are gone.
-    expect(pairAt(['national', 'j30', 'w15', 'w35'], 17)).toEqual(['w35', 'w50'])
-    // The top of the ladder: one type is legal ("at most two").
-    expect(pairAt(['national', 'w100', 'wta125'], 22)).toEqual(['wta125'])
+describe('the window: exactly what the engine holds open', () => {
+  it('is the oracle\'s answer verbatim - the UI picks nothing', () => {
+    const rungsAt = (open: TierId[], age: number) =>
+      feedContext({ ageYears: age, tierOpen: openMap(open), upcoming: [] }).rungs
+    // Whatever the engine opens is what the feed carries, in ladder order, at every stage.
+    expect(rungsAt(['local'], 14)).toEqual(['local'])
+    expect(rungsAt(['local', 'regional'], 14)).toEqual(['local', 'regional'])
+    expect(rungsAt(['local', 'regional', 'national'], 14)).toEqual(['local', 'regional', 'national'])
+    expect(rungsAt(['regional', 'national', 'j30'], 15)).toEqual(['regional', 'national', 'j30'])
+    expect(rungsAt(['j60', 'j300', 'w15'], 17)).toEqual(['j60', 'j300', 'w15'])
+    // ...and the terminal four at the top, which is the owner's own «50 + 75 + 100 + 125».
+    expect(rungsAt(['w50', 'w75', 'w100', 'wta125'], 22)).toEqual(['w50', 'w75', 'w100', 'wta125'])
   })
 
-  it('the adjacent rung skips doors that have closed for ever, never doors not yet open', () => {
-    // At nineteen the J rungs are age-dead: National's neighbour is the professional tour.
-    expect(feedContext({ ageYears: 19, tierOpen: openMap(['national']), upcoming: [] }).pair).toEqual([
-      'national',
-      'w15',
-    ])
-    // At fifteen W15 is merely EARLY - it shows as the aspirational half, locked ("opens at 16").
-    expect(feedContext({ ageYears: 15, tierOpen: openMap(['national', 'j30', 'j60', 'j300']), upcoming: [] }).pair).toEqual([
-      'j300',
-      'w15',
-    ])
+  it('THE SHAPE, walked end to end against the real engine rule', () => {
+    // The window is not a number this module keeps - it falls out of `tierOutgrown` (a rung closes
+    // when the rung three above opens) plus the terminal top four. Walking it here, through the
+    // engine's own predicate, is what makes "three wide, widening to four" a property rather than a
+    // claim in a comment. `tierFloorOpen` is stubbed per stage: the point is the CEILING's arithmetic.
+    const stages: TierId[][] = [
+      ['local'],
+      ['local', 'regional'],
+      ['local', 'regional', 'national'],
+      ['local', 'regional', 'national', 'j30'],
+      ['local', 'regional', 'national', 'j30', 'j60'],
+      ['local', 'regional', 'national', 'j30', 'j60', 'j300'],
+      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15'],
+      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35'],
+      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50'],
+      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75'],
+      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100'],
+      [...TIER_LADDER],
+    ]
+    // A rung is CLOSED when the rung three above has been REACHED; the top four never close.
+    const windowOf = (reached: TierId[]) =>
+      reached.filter((t) => {
+        const i = TIER_LADDER.indexOf(t)
+        if (i >= TIER_LADDER.length - 4) return true
+        return !reached.includes(TIER_LADDER[i + 3])
+      })
+    const widths = stages.map((reached) => windowOf(reached).length)
+    expect(widths).toEqual([1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4])
+    // ...and it SLIDES: consecutive windows differ by at most one rung at each end.
+    for (let i = 1; i < stages.length; i++) {
+      const before = windowOf(stages[i - 1])
+      const after = windowOf(stages[i])
+      const gained = after.filter((t) => !before.includes(t))
+      const lost = before.filter((t) => !after.includes(t))
+      expect(gained.length, `stage ${i} gained ${gained.join(',')}`).toBeLessThanOrEqual(1)
+      expect(lost.length, `stage ${i} lost ${lost.join(',')}`).toBeLessThanOrEqual(1)
+    }
+    // The last window is the owner's own answer, named.
+    expect(windowOf(stages[stages.length - 1])).toEqual(['w50', 'w75', 'w100', 'wta125'])
   })
 
   it('no oracle (old fixture, no snapshot yet) hides nothing - the safe direction', () => {
@@ -83,91 +107,94 @@ describe('the pair: at most two tier types, from the engine oracle', () => {
     for (const tier of TIER_LADDER) expect(feedShows(row(tier, 5), ctx), tier).toBe(true)
   })
 
-  it('entered events always show, whatever the pair says (R10-3)', () => {
+  it('entered events always show, whatever the window says (R10-3)', () => {
     const ctx = feedContext({ ageYears: 17, tierOpen: openMap(['w15', 'w35']), upcoming: [] })
     expect(feedShows(row('local', 5, { entered: true }), ctx)).toBe(true)
     expect(feedShows(row('local', 5), ctx)).toBe(false)
   })
-})
 
-describe('the AER substitution rides INSIDE the budget', () => {
-  const open = openMap(['national', 'j30', 'j60', 'w15', 'w35'])
-  it('a week whose pair events are all pro-capped shows the strongest open fallback instead', () => {
-    const upcoming = [
-      row('w35', 10, { eligible: false, ineligibleReason: 'capped' }),
-      row('w50', 10, { eligible: false, ineligibleReason: 'capped' }),
-      row('j60', 10),
-      row('national', 10),
-    ]
-    const ctx = feedContext({ ageYears: 16, tierOpen: open, upcoming })
-    // The pair here is {w35, w50}; both capped -> the strongest OPEN below-pair event substitutes.
-    expect(ctx.pair).toEqual(['w35', 'w50'])
-    expect(feedShows(upcoming[2], ctx)).toBe(true) // the j60 rides in
-    expect(feedShows(upcoming[3], ctx)).toBe(false) // ...and ONLY the strongest - never a third row
-  })
-
-  it('an uncapped pair week substitutes nothing', () => {
-    const upcoming = [row('w35', 10), row('j60', 10)]
-    const ctx = feedContext({ ageYears: 16, tierOpen: open, upcoming })
-    expect(feedShows(upcoming[1], ctx)).toBe(false)
-  })
-
-  it('the fallback must itself be open and eligible - a substitute is a week she can PLAY', () => {
-    const upcoming = [
-      row('w35', 10, { eligible: false, ineligibleReason: 'capped' }),
-      row('j300', 10, { eligible: false }), // scheduled, but the gate says no
-    ]
-    const ctx = feedContext({ ageYears: 16, tierOpen: open, upcoming })
-    expect(feedShows(upcoming[1], ctx)).toBe(false)
+  it('a closed rung leaves the feed even when the calendar still holds one', () => {
+    // The junk, as a class: measured on the owner's W230 career, 48 of the 64 entries left in his
+    // season sat at rungs whose strongest entrant is weaker than she is. Those rungs are CLOSED by
+    // the engine now, so this is the whole of the filtering that used to be done card by card.
+    const ctx = feedContext({ ageYears: 22, tierOpen: openMap(['w50', 'w75', 'w100', 'wta125']), upcoming: [] })
+    expect(feedShows(row('w15', 9), ctx)).toBe(false)
+    expect(feedShows(row('j30', 9), ctx)).toBe(false)
+    expect(feedShows(row('w75', 9), ctx)).toBe(true)
   })
 })
 
-// ⚠ THE GATE'S FINDING, PINNED SO IT CANNOT COME BACK (02.08). Measured on the owner's own career
-// at W38 '34 against the pre-wave build: the oracle opens W50/W75/WTA 125 to her (merged #61,
-// acceptance percentiles honestly cleared) while those rungs are rare and had NO event in her
-// horizon. Reading `working` as "the highest open rung" therefore pointed the pair at an eventless
-// top of the ladder with nothing above it, and every rung where she actually plays sat below: the
-// pre-wave feed offered W15/J300/W35/J60/W100 over those weeks, the first version of this rule
-// offered one already-entered J60 and eight training weeks. The owner's boredom clause governs
-// («игрок должен иметь возможность играть... чтобы не скучал»), so the rule has two floors now.
+// ⚠⚠ THE AER SUBSTITUTION'S TOMBSTONE, AND ITS REPLACEMENT (ruling 2, §5). The pair rule borrowed
+// «the strongest OPEN, eligible event from outside the pair» on a week the pro cap emptied. Under
+// the window "open" and "inside the window" are the same set, so the borrow had no source left and
+// the code was unreachable. What carries the ruling now is the WINDOW: the pro cap binds at 16 and
+// 17 only (proPerYearByAge 12 / 16, unlimited after), and at those ages the window still holds the
+// junior rungs beside the professional one - so a capped W week offers her the J events on it, from
+// inside the window, as events she can actually ENTER rather than merely see. These cases assert
+// exactly that, in place of the three that asserted the borrow.
+describe('a pro-capped week still has tennis, from inside the window', () => {
+  it('the junior rungs sit beside the professional one at the ages the cap binds', () => {
+    // The window a sixteen-year-old on the W on-ramp has: J300 and W15 together, then J300 leaves.
+    for (const open of [
+      ['j60', 'j300', 'w15'] as TierId[],
+      ['j300', 'w15', 'w35'] as TierId[],
+    ]) {
+      const ctx = feedContext({ ageYears: 16, tierOpen: openMap(open), upcoming: [] })
+      expect(ctx.rungs.some((t) => TIERS[t].track !== 'wta'), open.join('+')).toBe(true)
+    }
+  })
+
+  it('a capped W card still renders - the plaque IS the explanation (transparency ruling 1)', () => {
+    const upcoming = [
+      row('w15', 10, { eligible: false, ineligibleReason: 'capped' }),
+      row('j300', 10),
+    ]
+    const ctx = feedContext({ ageYears: 16, tierOpen: openMap(['j300', 'w15', 'w35']), upcoming })
+    expect(feedShows(upcoming[0], ctx)).toBe(true) // capped, and it says so
+    expect(feedShows(upcoming[1], ctx)).toBe(true) // ...and the J week beside it is enterable
+  })
+
+  it('a rung the window has closed never comes back as a substitute', () => {
+    // The borrow used to be able to put a J30 in front of a professional. It cannot now, and that
+    // is the junk-removal half of ruling 11 holding even on the week the cap bites.
+    const upcoming = [row('w35', 10, { eligible: false, ineligibleReason: 'capped' }), row('j30', 10)]
+    const ctx = feedContext({ ageYears: 17, tierOpen: openMap(['w15', 'w35', 'w50']), upcoming })
+    expect(feedShows(upcoming[1], ctx)).toBe(false)
+  })
+})
+
+// ⚠ THE PAIR RULE'S OWN FINDING, RE-POINTED AT THE WINDOW (02.08, measured on the owner's save at
+// W38 '34). Reading "the working rung" as the highest OPEN rung pointed the feed at a WTA 125 the
+// calendar had no event of, and the pair collapsed onto one eventless rung: the pre-wave feed
+// offered W15/J300/W35/J60/W100 over the same weeks, the new one offered a single already-entered
+// J60 and eight training weeks. The owner's boredom clause governs («игрок должен иметь возможность
+// играть... чтобы не скучал»). A window cannot fail that way, and this is what says so.
 describe('the feed follows the calendar, and blank weeks are allowed', () => {
-  const open = openMap(['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
+  const open = openMap(['j300', 'w15', 'w35'])
 
-  it('an eventless rung cannot be the working rung - the pair follows the calendar', () => {
-    // Her horizon holds J300 and W15 only; W50/W75/WTA125 are open but rare and absent.
+  it('an open rung with nothing in the horizon costs her none of the rungs that have events', () => {
     const upcoming = [row('j300', 40), row('w15', 39)]
     const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming })
-    expect(ctx.pair[0]).toBe('w15')
+    expect(feedShows(upcoming[0], ctx)).toBe(true)
     expect(feedShows(upcoming[1], ctx)).toBe(true)
+    expect(ctx.rungs).toEqual(['j300', 'w15', 'w35'])
   })
 
-  it('⚠ REVERSED (03.08): a merely empty week borrows NOTHING - only a cap-refused one does', () => {
-    // TWO RULINGS, OPPOSITE DIRECTIONS, THE LATER ONE WINS. The borrow was written the same morning
-    // to stop an empty feed; that afternoon the owner ruled blank weeks NORMAL («пустые недели это
-    // нормально, она же не может постоянно играть») and asked for the supply counter instead. Then
-    // his W230 career showed what the borrow actually produced: at eighteen, WTA #27, four of six
-    // cards in the horizon were a borrowed J30, a J60 and two W15s - «очень много мусора». A world
-    // #27 is not offered a $15k. The AER substitution (ruling 2, the tour's age rule refused her)
-    // is untouched and is pinned by the suite above; this pins that nothing ELSE borrows.
-    const upcoming = [row('w15', 39), row('j300', 40), row('national', 40)]
-    const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming })
-    // Pair {w15, w35}: week 40 has neither, and stays blank rather than dredging the rungs below.
+  it('⚠ a merely empty week borrows NOTHING (03.08) - and now nothing does, ever', () => {
+    // TWO RULINGS, OPPOSITE DIRECTIONS, THE LATER ONE WINS. The borrow was written the morning of
+    // 03.08 to stop an empty feed; that afternoon the owner ruled blank weeks NORMAL («пустые
+    // недели это нормально, она же не может постоянно играть») and asked for the supply counter
+    // instead. The window finishes the argument: a week the window leaves empty is empty, and a
+    // rung the window has CLOSED cannot appear on it for any reason at all.
+    const upcoming = [row('w15', 39), row('j30', 41)]
+    const ctx = feedContext({ ageYears: 17, tierOpen: openMap(['j300', 'w15', 'w35']), upcoming })
     expect(feedShows(upcoming[1], ctx)).toBe(false)
-    expect(feedShows(upcoming[2], ctx)).toBe(false)
+    expect(upcoming.filter((e) => feedShows(e, ctx)).map((e) => e.week)).toEqual([39])
   })
 
-  it('a week she is already entered in borrows nothing - she has her tennis', () => {
-    // (Belt and braces now that only a cap refusal borrows at all: an entered week is skipped
-    // before the refusal test, so a committed card can never drag a second row in beside it.)
-    const upcoming = [row('w15', 39), row('j60', 43, { entered: true }), row('national', 43)]
-    const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming })
-    expect(feedShows(upcoming[1], ctx)).toBe(true) // the committed card, always (R10-3)
-    expect(feedShows(upcoming[2], ctx)).toBe(false) // no second row beside it
-  })
-
-  it('with no tennis at all in the horizon the pair still resolves (off-season, layoff)', () => {
+  it('with no tennis at all in the horizon the window still resolves (off-season, layoff)', () => {
     const ctx = feedContext({ ageYears: 17, tierOpen: open, upcoming: [] })
-    expect(ctx.pair).toEqual(['wta125'])
+    expect(ctx.rungs).toEqual(['j300', 'w15', 'w35'])
   })
 })
 
@@ -227,6 +254,6 @@ describe('the oracle reaches the UI on the snapshot, as a copy', () => {
     for (const tier of TIER_LADDER) expect(typeof snap.tierOpen[tier], tier).toBe('boolean')
     // A fresh kid's pair: local working, regional adjacent - derived here as the screens derive it.
     const ctx = feedContext({ ageYears: snap.ageYears, tierOpen: snap.tierOpen, upcoming: snap.upcoming })
-    expect(ctx.pair[0]).toBe('local')
+    expect(ctx.rungs[0]).toBe('local')
   })
 })

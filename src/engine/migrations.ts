@@ -2,6 +2,8 @@ import {
   DEFAULT_PROFILE,
   WEEK_PLAN_PRESETS,
   type FinanceWeek,
+  type KitGrades,
+  type KitLine,
   type Milestone,
   type SeasonHistoryEntry,
   type WorldEventCategory,
@@ -924,6 +926,49 @@ export function migrateSave(raw: unknown): WorldState {
   if (v === 35) {
     if (!Array.isArray(save.proEntryWeeks)) save.proEntryWeeks = []
     v = 36
+  }
+
+  // v36 -> v37: `world.kit` - THE QUALITY LADDER THE PLAYER CHOOSES (W3-KIT). The equipment model has
+  // had a CONDITION axis since it shipped and no QUALITY axis at all; the owner ruled that it needs
+  // both, «как с тренерами», because an aluminium starter frame really is heavier, slower and harder
+  // on the arm than a composite one. A rung per line is therefore a decision, and this engine never
+  // re-derives a decision - hence the first persisted field the equipment model has ever needed.
+  //
+  // ⚠ THE BACK-FILL IS THE SHIPPED RUNG, AND THAT IS THE ONLY VALUE THAT COULD BE CORRECT. `composite`
+  // is the ladder's identity element by construction: zero `startWear`, `lifeFactor` 1, `priceFactor`
+  // 1 (ECONOMY.equipment.grades). So a migrated career's wear curve, its injury threshold and its gear
+  // bills are BYTE-IDENTICAL to what they were the week before it was loaded, which is what "old saves
+  // open unchanged" has to mean for a field that feeds the match engine. Filling `alloy` instead would
+  // silently make every existing girl worse at everything on load - the exact behavioural surprise
+  // this project's migration rules exist to prevent - and filling `pro` would hand her the top of a
+  // ladder she never bought and leave the owner's own save with nothing to spend on.
+  //
+  // ⚠ `sinceWeek` IS ZERO, WHICH READS AS "NEVER BOUGHT ONE BY HAND" AND IS ALSO A NO-OP. `kitWearAt`
+  // takes the more recent of the scheduled purchase and the hand purchase; `week - 0` is `week`, which
+  // is exactly what `weeksSinceGear` returns before the first scheduled hit, so the minimum is the
+  // scheduled clock on every line at every week. Nothing about her condition moves.
+  //
+  // Defensive and idempotent in v30's sense: an object already carrying a well-formed `grade` is left
+  // alone (a second pass must not reset a rung the player bought), a malformed one is replaced, and a
+  // missing LINE inside an otherwise valid object is filled with the shipped rung rather than left
+  // undefined - `kitWearAt` indexes it directly. No sub-stream is added or reordered and not one draw
+  // is taken: the ladder is post-draw arithmetic end to end (`resolveGear` still bills exactly the
+  // cents `seed:gear:<category>` produces, and multiplies afterwards), so the frozen MAIN capture
+  // (41550 / e6b0c709) is untouched by construction.
+  if (v === 36) {
+    const GRADES: readonly string[] = ['alloy', 'composite', 'performance', 'pro']
+    const LINES = ['strings', 'frame', 'shoes'] as const
+    const current = save.kit as { grade?: Record<string, unknown>; sinceWeek?: Record<string, unknown> } | undefined
+    const grade = {} as KitGrades
+    const sinceWeek = {} as Record<KitLine, number>
+    for (const line of LINES) {
+      const held = current?.grade?.[line]
+      grade[line] = typeof held === 'string' && GRADES.includes(held) ? (held as KitGrades[KitLine]) : 'composite'
+      const since = current?.sinceWeek?.[line]
+      sinceWeek[line] = typeof since === 'number' && Number.isFinite(since) && since >= 0 ? since : 0
+    }
+    save.kit = { grade, sinceWeek }
+    v = 37
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

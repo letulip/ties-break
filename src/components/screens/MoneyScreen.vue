@@ -53,7 +53,14 @@ import { ECONOMY } from '../../engine/economy'
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
 import { STARTING_FUNDS_CENTS } from '../../engine/world'
-import type { FinanceWindow, WorldEvent, WorldEventCategory } from '../../shared/protocol'
+import type {
+  FinanceWindow,
+  KitGrade,
+  KitLine,
+  KitLineView,
+  WorldEvent,
+  WorldEventCategory,
+} from '../../shared/protocol'
 import { seasonYear, weekLabel } from '../../shared/dates'
 import { formatCents, formatCentsSigned } from '../../shared/money'
 import { venueArtUrl } from '../../art/venues'
@@ -62,6 +69,7 @@ import { vacationArtUrl } from '../../art/weeks'
 // the reason for: StatRow. docs/specs/ui-components.md deliberately left it out of that slice
 // ("it comes with the Money screen in U1, where it has a real caller"), and the three rows below -
 // a category, the income line and a ledger entry - are what gave it its shape.
+import ConfirmDialog from '../ConfirmDialog.vue'
 import ScreenShell from '../ui/ScreenShell.vue'
 import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
@@ -398,6 +406,59 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
     .map(([week, weekRows]) => ({ week, rows: weekRows }))
 })
 
+// --- W3-KIT: HER KIT, AND THE RUNG THE FAMILY BUYS ---------------------------------------------
+//
+// The owner: «let's make those handles for rackets, shoes and stuff for a user to choose from.
+// Somewhere in a ledger maybe?» - so the shop window is this screen, beside the money it costs.
+//
+// EVERY NUMBER AND EVERY WORD ON IT IS THE ENGINE'S. `snapshot.kit` carries the rung she is on, the
+// four rungs with their prices, the fictional-brand copy and her CONDITION on each line
+// (engine/world/kit.ts `kitLineViews`). This screen prices nothing, names nothing and grades nothing -
+// the same rule the coach market and the planner keep, and the one that matters most here: a price
+// the screen multiplied itself is a price the till would not honour.
+//
+// ⚠ MOVING UP ASKS FIRST, MOVING DOWN DOES NOT, and that mirrors what the engine does with the money.
+// Up is a purchase charged the moment it is confirmed; down costs nothing and only changes what the
+// family buys next time the cadence comes round. So the confirm is on the irreversible half alone -
+// the discipline `signOffer` established, applied to a much smaller decision.
+const kitLines = computed(() => game.snapshot?.kit ?? [])
+const LINE_TITLE: Record<string, string> = { strings: 'Strings', frame: 'Racket', shoes: 'Shoes' }
+
+/** Her condition on a line, in the parent's words rather than as a number. The bands are the wear
+ *  model's own shape - fresh kit is 0 and a spent line is 1 - and the words stop at four, because a
+ *  fifth would be a precision the model does not have. */
+function wearWord(wear: number): string {
+  if (wear < 0.25) return 'Fresh'
+  if (wear < 0.55) return 'Fine'
+  if (wear < 0.85) return 'Worn'
+  return 'Gone'
+}
+
+interface PendingKit {
+  line: KitLine
+  grade: KitGrade
+  label: string
+  priceCents: number
+}
+const pendingKit = ref<PendingKit | null>(null)
+
+function chooseRung(view: KitLineView, rung: KitLineView['rungs'][number]): void {
+  if (rung.owned || game.busy) return
+  const ladder = view.rungs.map((r) => r.grade)
+  // Down the ladder is free and instant; up the ladder buys the thing, so it asks.
+  if (ladder.indexOf(rung.grade) < ladder.indexOf(view.grade)) {
+    void game.setKitGrade(view.line, rung.grade)
+    return
+  }
+  pendingKit.value = { line: view.line, grade: rung.grade, label: rung.label, priceCents: rung.priceCents }
+}
+
+function confirmKit(): void {
+  const pending = pendingKit.value
+  pendingKit.value = null
+  if (pending) void game.setKitGrade(pending.line, pending.grade)
+}
+
 // The export's CTA. There is no separate transactions SCREEN to open - the ledger is on this page,
 // below the fold - so the button does what the words promise by taking the player to it. The ref is
 // on a plain wrapper and not on the Card: a ref on a component yields the component instance, and
@@ -599,6 +660,42 @@ function showAllTransactions(): void {
         <p class="money-panel-note">Started this career with {{ startingBudget }}.</p>
       </Card>
 
+      <!-- ========================= 5b. HER KIT, AND WHAT IT COSTS ===================
+           W3-KIT. Three lines, four rungs each. The rung she owns is marked; a dearer one asks
+           before it charges, a cheaper one just takes effect at the next purchase. Every price,
+           name and condition word comes off the snapshot - see the script. -->
+      <Card class="money-panel money-kit">
+        <Eyebrow as="h2">Her kit</Eyebrow>
+        <p class="money-panel-note">
+          Better kit lasts longer, plays truer and is kinder to her body – and it is billed every time
+          the family replaces it, not once.
+        </p>
+        <div v-for="view in kitLines" :key="view.line" class="kit-line">
+          <div class="kit-line-head">
+            <span class="kit-line-name">{{ LINE_TITLE[view.line] ?? view.line }}</span>
+            <span class="kit-line-state">{{ wearWord(view.wear) }}</span>
+          </div>
+          <p class="kit-line-blurb">{{ view.blurb }}</p>
+          <div class="kit-rungs">
+            <button
+              v-for="rung in view.rungs"
+              :key="rung.grade"
+              class="kit-rung"
+              :class="{ owned: rung.owned }"
+              :disabled="game.busy"
+              :aria-pressed="rung.owned"
+              @click="chooseRung(view, rung)"
+            >
+              <span class="kit-rung-name">{{ rung.label }}</span>
+              <span class="kit-rung-price">{{ formatCents(rung.priceCents) }}</span>
+            </button>
+          </div>
+          <p v-if="view.sponsored" class="kit-line-sponsored">
+            Her sponsor supplies this line – they keep it fresh whatever she plays.
+          </p>
+        </div>
+      </Card>
+
       <!-- ============================== 6. THE CAREER, BY YEAR ======================
            One row per season she has finished. Read-only, and honest about the years it cannot
            answer for - see the script for why some rows say nothing. -->
@@ -641,6 +738,14 @@ function showAllTransactions(): void {
           </div>
         </Card>
       </div>
+
+      <ConfirmDialog
+        v-if="pendingKit"
+        :message="`Buy the ${pendingKit.label} for ${formatCents(pendingKit.priceCents)}? She plays with it from this week, and every replacement is billed at this level.`"
+        confirm-label="Buy it"
+        @confirm="confirmKit"
+        @cancel="pendingKit = null"
+      />
     </ScreenShell>
   </template>
 </template>
@@ -903,5 +1008,105 @@ function showAllTransactions(): void {
 
 .ledger-week {
   margin-top: 14px;
+}
+
+/* --- 5b. HER KIT ------------------------------------------------------------------------------
+   Three stacked lines, each with a row of four rungs. The rungs WRAP rather than scroll: at 375px
+   four labels of up to sixteen characters cannot sit on one row, and a horizontally scrolling strip
+   of buttons hides the very option a player came to find. Two by two is legible and complete. */
+.kit-line {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.kit-line:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.kit-line-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kit-line-name {
+  font-family: var(--font-heading);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+}
+
+.kit-line-state {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kit-line-blurb {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.kit-rungs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.kit-rung {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.kit-rung:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* The rung she is on is the STATE, not a selection highlight: it stays legible when the card is
+   disabled mid-request, which a colour-only mark would not. */
+.kit-rung.owned {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.kit-rung-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.kit-rung-price {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.kit-line-sponsored {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: var(--money-in);
 }
 </style>

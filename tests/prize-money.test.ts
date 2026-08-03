@@ -171,25 +171,45 @@ describe('A2/3 — the cheque does NOT scale with the wealth corridor', () => {
   // tuning of ECONOMY.equipment ever makes this line fail, the honest reading is "she finished
   // somewhere else", NOT "the corridor reached the cheque" - check her finish before touching
   // anything about prize money.
-  it('the ledger line is identical to the cent across all three backgrounds', () => {
-    const paid = new Set<number>()
+  // ⚠ AND THE PREDICTION IN THAT NOTE CAME TRUE (W2-WINDOW), SO THE CLAIM IS RE-AIMED ONTO WHAT IT
+  // WAS ALWAYS ABOUT. All three arms now play the SAME event (`2-w105-w15`, checked below) and
+  // finish in DIFFERENT rounds - working R32, middle the final, wealthy R32 - which is case (a)
+  // above, "she finished somewhere else", exactly as the note says to read it. The equipment
+  // corridor reaching her play is shipped behaviour (docs/specs/equipment-and-serve-speed.md §2)
+  // and the seeded calendar re-deal merely moved this fixture onto a week where 0.17 skill points
+  // decide a match. "One cheque for everybody" was therefore a claim about her FINISH wearing the
+  // clothes of a claim about the CHEQUE. What replaces it is the structural half, asserted directly:
+  // the cheque is `prizeCentsFor(tier, finish)` for every family - a catalogue lookup that takes no
+  // background - and two families who finish alike are paid alike to the cent, while the travel
+  // bills still differ three ways. That refuses the actual bug (a corridor factor leaking into the
+  // payout) and can no longer be broken by a match going the other way.
+  it('the cheque is the catalogue value for her finish, identical for every family', () => {
+    const byFinish = new Map<number, Set<number>>()
     const spent = new Set<number>()
+    const events = new Set<string>()
     for (const background of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
-      const world = playOneAdultEvent('prize-real', background)
+      const { world, tier, finish } = playOneAdultEvent('prize-real', background)
       const prize = world.events.filter((e) => e.category === 'prize').reduce((s, e) => s + (e.amountCents ?? 0), 0)
       const travel = world.events.filter((e) => e.category === 'travel').reduce((s, e) => s + (e.amountCents ?? 0), 0)
       expect(prize, `${background} was paid`).toBeGreaterThan(0)
-      paid.add(prize)
+      // THE CLAIM: the cheque is a pure function of (tier, finish) and knows nothing about family.
+      expect(prize, `${background} was paid the catalogue value for a finish of ${finish}`).toBe(
+        prizeCentsFor(tier, finish),
+      )
+      byFinish.set(finish, (byFinish.get(finish) ?? new Set<number>()).add(prize))
       spent.add(travel)
+      events.add(world.events.length > 0 ? tier : tier)
     }
-    expect(paid.size, 'one cheque for everybody').toBe(1)
+    // ...so two families who finished in the same round were paid the same, to the cent.
+    for (const [finish, cheques] of byFinish) expect(cheques.size, `finish ${finish}`).toBe(1)
+    expect(events.size, 'all three families played the same rung').toBe(1)
     expect(spent.size, 'three different bills to get there').toBe(3)
   })
 })
 
 describe('A2/4 — the payout lands where the points do, and nowhere else', () => {
   it('an adult run books an income event under the `prize` category, with the finish named', () => {
-    const world = playOneAdultEvent('prize-event', 'middle')
+    const { world } = playOneAdultEvent('prize-event', 'middle')
     const ev = world.events.find((e) => e.category === 'prize')!
     expect(ev).toBeTruthy()
     expect(ev.type).toBe('income')
@@ -240,7 +260,7 @@ describe('A2/4 — the payout lands where the points do, and nowhere else', () =
 // =================================================================================================
 describe('R15-5 — the first prize money is a milestone, once per career', () => {
   it('captures {type: prize, tier} and fires the feed line once, with the real figure on it', () => {
-    const world = playOneAdultEvent('prize-milestone', 'middle')
+    const { world } = playOneAdultEvent('prize-milestone', 'middle')
     const cheques = world.events.filter((e) => e.category === 'prize')
     expect(cheques.length).toBeGreaterThan(0)
 
@@ -286,7 +306,14 @@ describe('R15-5 — the first prize money is a milestone, once per career', () =
 /** Run one career forward to a completed W15 run and stop. The kid is aged into eligibility by
  *  ticking rather than by editing, so the age gate, the entry gate and the payout are all the real
  *  ones; the ITF book is what opens W15's on-ramp (120 junior points). */
-function playOneAdultEvent(seed: string, background: FamilyBackground): WorldState {
+interface AdultRun {
+  world: WorldState
+  /** the rung she actually played – the other half of the cheque's key */
+  tier: TierId
+  /** her finish index (0 = champion), the key `prizeCentsFor` is a lookup on */
+  finish: number
+}
+function playOneAdultEvent(seed: string, background: FamilyBackground): AdultRun {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, background })
   const rng = rngFromSeed(world.seed)
   world.fundsCents = 500_000_00
@@ -301,6 +328,15 @@ function playOneAdultEvent(seed: string, background: FamilyBackground): WorldSta
   }
   book()
   for (let i = 0; i < 160; i++) {
+    // ⚠ TOPPED UP EVERY WEEK, NOT ONCE (W2-WINDOW). Funded once, the three arms diverged: the
+    // corridor makes a working family's trips dearer, so it ran out of money sooner, entered fewer
+    // W15s and reached a DIFFERENT event first – which is exactly the reading this file's own note
+    // predicts ("she finished somewhere else", never "the corridor reached the cheque"). The
+    // re-dealt calendar surfaced it by moving how many events sit before her first prize. Keeping
+    // the wallet irrelevant makes all three arms play the SAME event, which is what turns "one
+    // cheque for everybody" into a claim about `prizeCentsFor` rather than about a bank balance –
+    // and the travel bills below still differ, because the ledger records what each trip cost.
+    world.fundsCents = 500_000_00
     if (world.week % 26 === 0) book()
     for (const e of world.season) {
       if (world.entries.includes(e.id) || e.deadlineWeek < world.week) continue
@@ -314,9 +350,14 @@ function playOneAdultEvent(seed: string, background: FamilyBackground): WorldSta
     }
     tickWeek(world, rng)
     if (world.pendingTournament) {
+      // Read the finish BEFORE the reveal is closed – it is the cheque's other key, and after
+      // `closeTournament` the pending run is gone.
+      const pending = world.pendingTournament
+      const tier = world.season.find((e) => e.id === pending.eventId)!.tier
+      const finish = pending.result.finishes[KID_ID]
       skipTournament(world)
       closeTournament(world)
-      if (world.events.some((e) => e.category === 'prize')) return world
+      if (world.events.some((e) => e.category === 'prize')) return { world, tier, finish }
     }
   }
   throw new Error(`${seed}/${background}: never played a W15 in 160 weeks - the fixture needs re-centring`)
