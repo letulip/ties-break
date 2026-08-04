@@ -3,7 +3,9 @@
 //
 // ⚠ WHY IT LEFT MatchViewer.vue. Measured before the cut: 250 lines with ZERO mutable state – eight
 // computeds and a handful of constants – depending on exactly five things from the component
-// (`props`, and the refs `displayedPointIndex`, `finished`, `liveServeSpeed`, `endsSwappedRef`).
+// (`props`, and the refs `displayedPointIndex`, `finished`, `liveServeSpeed`, `endsSwappedRef`);
+// `onScreenPointIndex` made it six on 04.08, when the score bug turned out to be about the
+// difference between the point on screen and the last point counted (see `scoredPointIndex`).
 // Pure derivation behind a five-value interface is the safest thing an SFC can give up, and it is
 // what let the 2,239-line viewer start coming apart at all.
 //
@@ -32,17 +34,23 @@ export interface PanelStats {
   bpHad: [number, number]
 }
 
-/** The five things the readout needs from the component that owns the playback. */
+/** The six things the readout needs from the component that owns the playback. */
 export interface MatchReadoutInput {
   props: { match: AnnotatedMatch; playerA: MatchPlayer; playerB: MatchPlayer }
   displayedPointIndex: Ref<number>
+  /**
+   * WHICH POINT'S BEAT IS ON SCREEN RIGHT NOW (-1 before anything is), which is NOT the same
+   * question as `displayedPointIndex` and the difference is the whole of the 04.08 score bug –
+   * see `scoredPointIndex` below.
+   */
+  onScreenPointIndex: Ref<number>
   finished: Ref<boolean>
   liveServeSpeed: Ref<StruckServe | null>
   endsSwappedRef: ComputedRef<boolean> | Ref<boolean>
 }
 
 export function useMatchReadout(input: MatchReadoutInput) {
-  const { props, displayedPointIndex, finished, liveServeSpeed, endsSwappedRef } = input
+  const { props, displayedPointIndex, onScreenPointIndex, finished, liveServeSpeed, endsSwappedRef } = input
 
   // --- readout: score / serve / win-probability / stats -------------------------
   function playerName(side: Side): string {
@@ -112,6 +120,29 @@ export function useMatchReadout(input: MatchReadoutInput) {
 
   const POINT_NAMES = ['0', '15', '30', '40'] as const
 
+  /**
+   * HOW MANY POINTS THE SCOREBOARD HAS COUNTED, which is a different question from how many the
+   * playback has SHOWN – and telling the two apart is the whole of the 04.08 "it only reads right at
+   * ×1" bug (owner: «на х2 0-0 почти всё время висит на экране»).
+   *
+   * ⚠ THE SPEED WAS NEVER THE VARIABLE. `displayedPointIndex` is the last point whose point-end beat
+   * has PLAYED, and in 'full' mode that is also the last point of the match that has happened, so the
+   * two coincide and the reading is right. In 'key' mode – the shipped default (matchDefaults:
+   * FALLBACK_VIEW) – `buildTimeline` emits events only for consequential points and drops the rest,
+   * so between two key points sit real, played, uncounted points. `isKeyPoint` takes every `gameEnd`,
+   * so the last SHOWN point is almost always a game-ending one, and a reading anchored to it is
+   * almost always 0-0. Measured on the component fixture: 0-0 held 77.3% of a 'key' run against 20.5%
+   * of the same match in 'full', and the whole run offered four distinct readings instead of eighteen.
+   *
+   * What a scoreboard actually shows while a point is in flight is the score the players are PLAYING
+   * FOR – everything before this point, skipped or not. So: everything up to the point on screen,
+   * and once that point's own beat has completed, the point itself. In 'full' mode this is
+   * `displayedPointIndex` exactly, which is why that mode never showed the bug.
+   */
+  const scoredPointIndex = computed(() =>
+    Math.max(displayedPointIndex.value, onScreenPointIndex.value - 1),
+  )
+
   /** THE POINT SCORE OF THE GAME IN PROGRESS ("30-40", "40-A", "TB 3-2").
    *
    *  The export gives this slot to a wall clock and labels it "Match time". The engine has no time
@@ -130,10 +161,13 @@ export function useMatchReadout(input: MatchReadoutInput) {
     // when a viewer looks at it to see who is about to serve for what. `finished` still reads empty:
     // once the match is over the readout carries the point TOTAL instead (see `scoreReadout`).
     if (finished.value) return null
-    if (displayedPointIndex.value < 0) return { a: '0', b: '0', tiebreak: false }
+    // ⚠ `scoredPointIndex`, NOT `displayedPointIndex` – see the note on that computed. The rest of
+    // this function is unchanged: it was always right about what to count, only about how far.
+    const upto = scoredPointIndex.value
+    if (upto < 0) return { a: '0', b: '0', tiebreak: false }
     const pts: [number, number] = [0, 0]
     let tiebreak = false
-    for (let i = 0; i <= displayedPointIndex.value; i++) {
+    for (let i = 0; i <= upto; i++) {
       const p = props.match.points[i]
       if (!p) continue
       pts[p.entry.winner]++
@@ -146,7 +180,7 @@ export function useMatchReadout(input: MatchReadoutInput) {
     }
     // The point AFTER a completed game is served in the next one, which the flags on the NEXT point
     // already know; a game boundary therefore reads 0-0 until the first point of the new game lands.
-    const next = props.match.points[displayedPointIndex.value + 1]
+    const next = props.match.points[upto + 1]
     if (next?.entry.tiebreak) tiebreak = true
     // ⚠ PER SIDE, NOT AS ONE STRING (owner, 04.08: «сделать максимально наглядно 0-0, 0-15, 0-30…
     // Чтобы точно было видно кто и почему забирает сет. И предлагаю еще выделять желтым цифру нашего
@@ -279,5 +313,5 @@ export function useMatchReadout(input: MatchReadoutInput) {
     return of ? Math.round((n / of) * 100) : 0
   }
 
-  return { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, currentAnnotated, winProbA, SET_CELLS, setCells, pointsPlayed, POINT_NAMES, gameScore, courtScore, scoreReadout, serveSpeedEnd, MOM_W, MOM_H, MOM_PAD, MOM_MAX_SAMPLES, heroProb, momentum, momentumCaption, panelStats, pct }
+  return { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, currentAnnotated, winProbA, SET_CELLS, setCells, pointsPlayed, POINT_NAMES, scoredPointIndex, gameScore, courtScore, scoreReadout, serveSpeedEnd, MOM_W, MOM_H, MOM_PAD, MOM_MAX_SAMPLES, heroProb, momentum, momentumCaption, panelStats, pct }
 }

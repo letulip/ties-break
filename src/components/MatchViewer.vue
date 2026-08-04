@@ -123,6 +123,16 @@ const playing = ref(false)
 const finished = ref(false)
 /** Index of the last point whose point-end event has fired (-1 = match not started yet). */
 const displayedPointIndex = ref(-1)
+/**
+ * Index of the point whose beat is ON SCREEN right now (-1 = nothing is). Mirrored off
+ * `currentEvent` in render(), the same way `liveServer` and `endsSwappedRef` are.
+ *
+ * ⚠ NOT A DUPLICATE OF `displayedPointIndex`, and the gap between them is a whole bug: in 'key'
+ * mode the timeline skips points that were nonetheless PLAYED, so the last point SHOWN is several
+ * points behind the one being served. The scoreboard needs the second number to read the score the
+ * players are playing for – see `scoredPointIndex` in composables/matchReadout.ts.
+ */
+const onScreenPointIndex = ref(-1)
 /** Server of the point currently in flight (live, updates as soon as it starts). */
 const liveServer = ref<Side | null>(null)
 /**
@@ -524,11 +534,22 @@ function visibleMarks(): SceneState['marks'] {
 }
 
 function render(): void {
-  if (!ctx) return
-  const vp: Viewport = { width: CSS_W, height: CSS_H }
+  // ⚠ THE READOUT MIRRORS COME FIRST, ABOVE THE CANVAS GUARD (04.08). They are not drawing work -
+  // they are the reactive facts the TEMPLATE reads, and sitting under `if (!ctx) return` meant that
+  // wherever there is no 2D context (happy-dom, so: every mounted test) the panel froze at its mount
+  // values while the clock ran. That made the component's most refactor-fragile behaviour - the
+  // score walking with the playback - untestable except by hand, which is how it shipped wrong.
+  // In a browser `ctx` is never null, so nothing about the shipped behaviour moves.
   const scenePointIndex = currentEvent ? currentEvent.pointIndex : 0
   liveServer.value = props.match.points[scenePointIndex]?.entry.server ?? null
   endsSwappedRef.value = endsState.swappedDuring[scenePointIndex] ?? false
+  // ⚠ -1 UNTIL THE WALK HAS ACTUALLY BEGUN (`startedCursor > 0`), not merely until an event is
+  // queued. `currentEvent` is already events[0] the moment the timeline is built, and in 'key' mode
+  // that first event belongs to point 3 or 4 - so mirroring it eagerly would print the score of a
+  // game the player has not been shown one ball of, over a static court, during the take-your-seats
+  // hold. Nothing is on screen until something has started; the 04.08 rule that a fresh match opens
+  // on 0-0 is exactly this.
+  onScreenPointIndex.value = startedCursor > 0 && currentEvent ? currentEvent.pointIndex : -1
 
   // 'hit' fires once per shot, exactly when its flight event becomes current (shot start,
   // not flight end).
@@ -541,6 +562,8 @@ function render(): void {
     lastRenderedEvent = currentEvent
   }
 
+  if (!ctx) return
+  const vp: Viewport = { width: CSS_W, height: CSS_H }
   const scene: SceneState = {
     match: props.match,
     pointIndex: scenePointIndex,
@@ -721,6 +744,79 @@ function resetPlayback(startPlaying: boolean): void {
   }
 }
 
+/** First event of `events` belonging to a point AFTER `afterPoint`, or -1 if the timeline has
+ *  nothing left to show. The seek target for a mode change – see `retimeForMode`. */
+function firstEventAfterPoint(events: TimelineEvent[], afterPoint: number): number {
+  for (let i = 0; i < events.length; i++) if (events[i].pointIndex > afterPoint) return i
+  return -1
+}
+
+/**
+ * SWITCHING full <-> key IS NOT A RESTART (owner, 04.08: «при переключении full/key в матче сам матч
+ * начинается заново на каждое нажатие, это жутко раздражает»).
+ *
+ * ⚠ WHY IT RESTARTED: the mode pill's only wiring was `resetPlayback`, which is a FRESH-RUN routine -
+ * it zeroes the clock and both cursors because that is what a new match, a "Watch again" and a mount
+ * need. The mode change reused it for the one thing it genuinely does need (`buildTimeline` with the
+ * new mode), and paid for it with the twelve other lines. Rebuilding the timeline and RESUMING is a
+ * different move, and this is it.
+ *
+ * The seek is by POINT, not by clock time, because the two timelines do not share a time axis at all
+ * (the same match is 580s in 'full' and 184s in 'key'): playback resumes at the first event of the
+ * new timeline belonging to a point she has not seen yet. So key -> full continues with the very next
+ * point of the match, and full -> key continues at the next point the new mode considers worth
+ * showing. `displayedPointIndex` is untouched by design - it is a fact about the MATCH, not about the
+ * timeline, so the score, the set cells and the commentary log all carry across the switch unchanged.
+ *
+ * ⚠ 'skip' IS NOT A POSITION AND SO IT IS NOT PART OF THIS. Going INTO skip means "stop watching,
+ * show me the result", and going OUT of it means "actually, let me watch" - and there is nothing to
+ * resume from, because skip's position is the end of the match. Both directions therefore keep the
+ * old behaviour and go through `resetPlayback`: into skip jumps to the end, out of skip starts the
+ * walk from the top. Pinned both ways in tests/component/match-viewer.test.ts.
+ *
+ * The run's own state (the take-your-seats beat, the shouts, the 'out'-call stream, the music duck)
+ * is deliberately NOT reset either: this is the same watch, seen at a different resolution.
+ */
+function retimeForMode(previousMode: ViewMode): void {
+  if (viewMode.value === 'skip' || previousMode === 'skip' || displayedPointIndex.value < 0) {
+    resetPlayback(playing.value)
+    return
+  }
+  const wasPlaying = playing.value
+  pauseInternal()
+  timeline = buildTimeline(props.match, viewMode.value)
+  // ⚠ THE ANCHOR IS THE POINT ON COURT, NOT THE LAST ONE COMPLETED, and the difference shows on the
+  // screen. In 'key' mode the point being played is several points ahead of the last one whose beat
+  // finished, so anchoring to `displayedPointIndex` would resume 'full' mode BEFORE the point she is
+  // watching - and the counter under the court would visibly step backwards on the click. This is
+  // the same "where she is" that the score readout already uses (matchReadout: `scoredPointIndex`).
+  const anchor = Math.max(displayedPointIndex.value, onScreenPointIndex.value - 1)
+  const resume = firstEventAfterPoint(timeline.events, anchor)
+  // Per-run visual state that belongs to the timeline we just threw away: bounce marks were placed
+  // at times on the OLD axis, and the players are mid-ease toward a shot that is no longer current.
+  marks = []
+  playerPos = [{ ...PLAYER_HOME[0] }, { ...PLAYER_HOME[1] }]
+  liveServeSpeed.value = null
+  lastRenderedEvent = null
+  if (resume < 0) {
+    // Everything she has not seen is already behind her (she switched mode on the last point, or
+    // after the match ended): the honest continuation is the end of the match, not a replay of it.
+    clock = timeline.duration
+    startedCursor = timeline.events.length
+    cursor = timeline.events.length
+    currentEvent = timeline.events[timeline.events.length - 1] ?? null
+    render()
+    finishNow()
+    return
+  }
+  clock = timeline.events[resume].t
+  cursor = resume
+  startedCursor = resume
+  currentEvent = timeline.events[resume]
+  render()
+  if (wasPlaying) startClock()
+}
+
 function restart(): void {
   initSfx()
   resetPlayback(true)
@@ -759,9 +855,10 @@ onBeforeUnmount(() => {
   }
 })
 
-// Mode change: rebuild the timeline and restart, preserving whatever play state
-// was active. A new match prop (re-run exhibition) always restarts and autoplays.
-watch(viewMode, () => resetPlayback(playing.value))
+// Mode change: rebuild the timeline and RESUME where she was, preserving whatever play state was
+// active (see retimeForMode – full <-> key continues, anything involving 'skip' resets).
+// A new match prop (re-run exhibition) always restarts and autoplays.
+watch(viewMode, (_next, previous) => retimeForMode(previous))
 watch(
   () => props.match,
   () => resetPlayback(true),
@@ -778,7 +875,7 @@ watch(finished, (isFinished) => {
 })
 
 // THE READOUT moved to composables/matchReadout.ts (pure derivation, zero mutable state).
-const { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, setCells, courtScore, scoreReadout, serveSpeedEnd, MOM_W, MOM_H, momentum, momentumCaption, panelStats, pct } = useMatchReadout({ props, displayedPointIndex, finished, liveServeSpeed, endsSwappedRef })
+const { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, setCells, courtScore, scoreReadout, serveSpeedEnd, MOM_W, MOM_H, momentum, momentumCaption, panelStats, pct } = useMatchReadout({ props, displayedPointIndex, onScreenPointIndex, finished, liveServeSpeed, endsSwappedRef })
 
 // --- THE COMMENTARY (viz/commentary.ts) --------------------------------------------------------
 // Built once per match, revealed in step with the score: a beat appears exactly when the point it
