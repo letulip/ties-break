@@ -113,12 +113,34 @@ export const HORIZONS: Horizon[] = [
 // Reach targets. ⚠ THEY PREDATE PRIZE MONEY AND STILL DO NOT READ IT (task #17). They were written
 // as proxies precisely BECAUSE the engine modelled no earnings; earnings now exist, so a literal
 // "the week she first covers her own costs" is available and is measured by the A4 block instead.
-// These two stay as they are, unchanged and still points/rank-based, so every historical number in
-// this file's git history is still comparable - re-basing a reach target is a tuning pass with its
-// own sweep, and one is already owed (see the 14→16 saturation pinned in tests/econ-bench.test.ts).
-/** 14→16: national-tier eligibility, which is a DOMESTIC threshold and did not move - the domestic
- *  point tables are unchanged by the two-ladder slice, only the international ones are. */
-export const REACH_TARGET_MONEY = 150
+// They stay points/rank-based on purpose - the money question has its own measure now, and these
+// answer the different question of whether the TENNIS arrived.
+/** 14→16, the DOMESTIC arm.
+ *
+ *  ⚠ RE-BASED 150 → 320 (chore/reach-and-art), and it is the tuning pass five separate notes in
+ *  tests/econ-reach.test.ts said was owed. `npx vite-node tools/reach-sweep.ts` is the sweep behind
+ *  the number and re-running it is how the next re-base gets decided.
+ *
+ *  WHAT 150 WAS: National's `enterPointBand` floor - "she may ENTER the top domestic rung". That was
+ *  a real climb when the calendar was six rungs long. It is not one now: the ladder has been
+ *  re-spaced twice (9 → 12 → 16 rungs, each re-dividing `tierPhase` and re-dealing the whole
+ *  season), and measured at this revision every one of 270 careers clears 150 inside 104 weeks, most
+ *  of them by about week 20. A proxy 270 of 270 careers meet is a formality, not a measurement.
+ *
+ *  WHAT 320 IS, on the same axis, one step along: a National title PLUS a National final. National
+ *  pays [200, 120, …], so 320 is exactly `points[0] + points[1]` inside the windowed best-6 - or,
+ *  equivalently, four Regional titles. The proxy therefore moves from "she is ALLOWED at the top of
+ *  the domestic ladder" to "she is WINNING at the top of it", which is what "a career has visibly
+ *  arrived" has to mean once eligibility is free. It also sits above J30's 250 floor, so a career
+ *  that clears it has gone through the international door and is still winning at home.
+ *
+ *  MEASURED (30 careers x 9 presets, grinder policy, 14→16): 11-14 of 30 clear it, in EVERY preset -
+ *  both branches of the tracker fire everywhere, with a margin of at least eleven careers on each
+ *  side. And it is deliberately NOT a knife edge: the count is flat for every threshold in
+ *  [319, 323] on the tightest preset and [314, 361] on the loosest, so it sits on a plateau rather
+ *  than between two adjacent careers. The four flips this tripwire took between 2026-07-31 and
+ *  2026-08-02 were all ONE career crossing ONE line; a plateau is what stops the fifth. */
+export const REACH_TARGET_MONEY = 320
 /** 14→18 "pro" proxy: a top-50 rank ONCE she is actually ranked (has a counting result) OR a points
  *  threshold. The `hasResults` guard on the rank arm is REQUIRED – see reachedTarget. */
 export const REACH_PRO_RANK = 50
@@ -344,6 +366,15 @@ export function stepCareerWeek(
   policy: Policy = POLICIES[0],
 ): Record<TierId, number> {
   const entered = zeroByTier()
+  // ⚠ W2-ENDINGS: A CAREER THAT HAS ENDED ENTERS NOTHING, and the week still ticks. Since v39 a
+  // family eight consecutive weeks below zero latches BANKRUPTCY, and `enterEvent` refuses on an
+  // ended world - so a bench that walked straight past this crashed on the first bankrupt seed.
+  // Skipping only the ENTRY phase (never the tick) keeps every horizon figure comparable: a career
+  // under water was already entering nothing, because the affordability clause below refused it.
+  if (world.ending) {
+    tickWeek(world, rng)
+    return entered
+  }
   // Entry policy v3: enter each RANKING-ELIGIBLE event affordable by entry+travel as its deadline
   // APPROACHES (within ENTRY_LOOKAHEAD weeks) – a parent commits a few weeks out, not a year ahead.
   //
@@ -387,9 +418,15 @@ export function stepCareerWeek(
   return entered
 }
 
-/** True ⇔ the horizon's reach target is currently met. 14→16: national eligibility (DOMESTIC points
- *  >= 150). 14→18: (ranked AND top-50) OR the ITF points threshold. Keyed on targetAge derived from
- *  the horizon.
+/** True ⇔ the horizon's reach target is currently met. 14→16: the domestic arm (DOMESTIC best-6 >=
+ *  REACH_TARGET_MONEY - National eligibility while that constant was 150, a National title plus a
+ *  National final since it was re-based to 320). 14→18: (ranked AND top-50) OR the ITF points
+ *  threshold. Keyed on targetAge derived from the horizon.
+ *
+ *  ⚠ WHICH CONSTANT A HORIZON READS IS DECIDED HERE AND NOWHERE ELSE, and it is the first thing to
+ *  check before attributing a horizon's numbers to a re-base: `targetAge >= 18` takes the PRO arm,
+ *  so 14→18 and 14→20 never read REACH_TARGET_MONEY at all. Re-basing it moves 14→16 and only
+ *  14→16. The 14→18 horizon is REACH_PRO_RANK / REACH_PRO_POINTS or it is nothing.
  *
  *  ⚠ THE TWO ARMS READ TWO DIFFERENT TABLES, and they have to (docs/specs/two-ladders.md). This used
  *  to be one `points` local, which was right while there was one ledger and became wrong the moment

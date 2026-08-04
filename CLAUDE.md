@@ -30,7 +30,11 @@ symlinks the binary onto PATH — far too large to vendor, so nothing is added t
 `npm run graph` prints these instructions if it cannot find the binary; `GRAPHIFY_BIN` overrides.
 `graphify-out/` is gitignored — a local artifact, rebuilt in seconds, never committed.
 
-**A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it.
+**A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it —
+though the rebuild is now automatic: `.githooks/post-merge` and `post-checkout` fire it in the
+background after every pull, merge and branch switch, and `npm install` points git at them through
+the `prepare` script. Both hooks exit silently when the graphify binary is absent, so a machine
+that never installed it sees nothing.
 
 **⚠ CODE ONLY. Never point it at `docs/`.** `npm run graph` indexes `src`/`tests`/`tools`/`scripts`
 through tree-sitter — pure AST, genuinely zero model tokens. **Documents and images take a different
@@ -126,5 +130,13 @@ docs/review/     2026-08 full review + P1–P9 proposals
   (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
   `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
   pipeline.
+- **Background runs leave chips, and the chips accumulate.** Every `run_in_background` command
+  registers a task that stays listed in the owner's panel after it exits – he has raised the count
+  twice ("почему их уже 20?", "их снова 18 штук"). Backgrounding is still mandatory for anything
+  minutes-long (a silent foreground wait has killed six agents here), but it is NOT for short
+  commands: background a run only when it is expected to take **over ~2 minutes**, and never leave a
+  superseded run alive next to its replacement. After a wave, `git worktree remove` the agents'
+  worktrees and check `pgrep -lf "vite-node|vitest"` is empty – a finished chip costs nothing, but an
+  orphaned bench holds a core.
 - The sim project MUST run serialised: every script that touches it carries `--no-file-parallelism` (birpc has a hard-coded 60s RPC timeout that a minutes-long synchronous Monte-Carlo file will blow past, exiting 1 with every test green). If you add a script that runs the sim project, carry the flag.
 - The `▶▶ 52 (dev)` button in More ships in EVERY build – an owner ruling (the deployed build is the playtest device), not a regression. Its unsafe half is fixed: the worker's `tick` handler now enforces the same open-knock / unrevealed-tournament guards as `advanceWeeks`, refusing at entry and stopping mid-loop. `tests/dev-fast-forward.test.ts` pins both halves.

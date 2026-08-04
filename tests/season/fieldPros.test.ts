@@ -18,6 +18,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   FIELD,
+  careerAt,
   fieldProsFor,
   fieldSeasonOf,
   isFieldProId,
@@ -26,7 +27,7 @@ import {
 } from '../../src/engine/season/fieldPros'
 import { power } from '../../src/engine/season/cohort'
 import { rivalGroundstrokes, rivalConditions } from '../../src/engine/season/rival'
-import { selectEntrants } from '../../src/engine/season/tournament'
+import { ON_RAMP, fillOnRamp, selectEntrants } from '../../src/engine/season/tournament'
 import { BEST_N_BY_TRACK, computeRanking } from '../../src/engine/season/ranking'
 import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../../src/engine/season/types'
@@ -37,6 +38,7 @@ import {
   acceptanceRank,
   seasonIndexOf,
   inTrack,
+  proDoors,
   KID_ID,
 } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
@@ -59,12 +61,67 @@ describe('the field is a pure derivation', () => {
     expect(cold).not.toEqual(a)
   })
 
-  it('the season index turns the field over – natural turnover, nothing stored', () => {
+  // ⚠⚠ RE-AIMED BY W4-LIVES (04.08), AND THE OLD ASSERTION WAS PINNING THE DEFECT.
+  //
+  // It read: `changed.length` (name or serve differing one season later) `> FIELD.size / 2`, with
+  // the comment "Regenerated per season: same ids (the namespace is positional), different people."
+  // That was true and it was the bug: docs/specs/world-strength-audit-2026-08.md measured what it
+  // cost - 47% of professionals got YOUNGER year on year, 0.00 of 364 ever retired, and over 96
+  // measured seasons not one simulated athlete ever held a top-100 chair. The owner's ruling: they
+  // must age, they must leave, and somebody may hold the top for several years running.
+  //
+  // So the property is INVERTED and strengthened rather than dropped: most of the field is the SAME
+  // PERSON a season later and is exactly one year older, and a realistic minority has been replaced.
+  it('a season passes: the same people, one year older, and a minority replaced', () => {
     const s0 = prosOf(SEED, 0)
     const s1 = prosOf(SEED, 1)
-    // Regenerated per season: same ids (the namespace is positional), different people.
-    const changed = s0.filter((p, i) => p.name !== s1[i].name || p.serve !== s1[i].serve)
-    expect(changed.length).toBeGreaterThan(FIELD.size / 2)
+    let stayed = 0
+    let replaced = 0
+    for (let i = 0; i < s0.length; i++) {
+      const before = s0[i]
+      const after = s1[i]
+      // A chair keeps its id and its storey for ever - that is the world's SHAPE, deliberately held.
+      expect(after.id).toBe(before.id)
+      expect(after.strengthTier).toBe(before.strengthTier)
+      // ⚠ IDENTITY IS THE CAREER INDEX, NOT THE NAME. The name dedupe is order-dependent over the
+      // whole field, so a pro can legitimately re-draw her surname when somebody ahead of her in the
+      // array is replaced - the cosmetic edge `makeFieldPro` documents. Comparing names here would
+      // read that as a different person and this test would be about the dedupe instead.
+      if (careerAt(SEED, i, 1).index === careerAt(SEED, i, 0).index) {
+        stayed += 1
+        // THE RULING, AS AN ASSERTION: "+1 to everyone's age when the season ends".
+        expect(after.ageYears, after.id).toBe(before.ageYears + 1)
+        // ...and her GAME does not move, only her book – see `careerArc` for why the two are split.
+        expect(after.ret).toBe(before.ret)
+        expect(after.composure).toBe(before.composure)
+        expect(after.stamina).toBe(before.stamina)
+        expect(after.potential).toEqual(before.potential)
+      } else {
+        replaced += 1
+        // A newcomer is a debutante, never a mid-career import.
+        expect(after.ageYears, after.id).toBeLessThanOrEqual(FIELD.career.debutAge[1])
+        expect(after.ageYears, after.id).toBeGreaterThanOrEqual(FIELD.career.debutAge[0])
+      }
+    }
+    // The rate is a tour's, not foam and not a photograph: measured 27.2 of 364 a season over
+    // 4 seeds x 24 seasons (bench:world section D). The band is wide because this is ONE season of
+    // ONE seed; what it forbids is the two failure modes on either side of it.
+    expect(stayed).toBeGreaterThan(FIELD.size * 0.8)
+    expect(replaced).toBeGreaterThan(0)
+    expect(replaced).toBeLessThan(FIELD.size * 0.2)
+  })
+
+  // The other half of the ruling: they LEAVE, and the chair is refilled by somebody new. Walked over
+  // a whole career's worth of seasons so a departure is certain rather than likely.
+  it('nobody plays for ever: every chair changes hands inside one career span', () => {
+    const span = FIELD.career.retireAge[1] - FIELD.career.debutAge[0] + 1
+    let handedOver = 0
+    for (let i = 0; i < FIELD.size; i++) {
+      if (careerAt(SEED, i, span).index > careerAt(SEED, i, 0).index) handedOver += 1
+    }
+    // A career tops out at retireAge.hi - debutAge.lo seasons, so after that many nobody who was
+    // sitting at season 0 can still be there.
+    expect(handedOver).toBe(FIELD.size)
   })
 
   it('the season arithmetic is the world\'s own seasonIndexOf – the two may never disagree', () => {
@@ -321,12 +378,185 @@ describe('the scope fence – phase W is the W track and nothing else', () => {
   it('a live career never writes a field pro into the save: results and cohort stay fp-free', () => {
     const world = createWorld('field-fence-live')
     const rng = rngFromSeed(world.seed)
-    for (let w = 0; w < 30; w++) tickWeek(world, rng)
+    // ⚠ THE CHAIR COUNT IS ACCUMULATED WEEK BY WEEK, AND THE OLD ONE WAS BROKEN (W3-ONRAMP, 04.08).
+    // It used to be read off `world.season` AFTER the loop – but `ensureSeason` drops resolved weeks
+    // (`world.season = world.season.filter((e) => e.week >= world.week)`), so the denominator was
+    // ONE week's chairs against thirty weeks of rows. It passed only because the numerator was zero,
+    // which is exactly the closed loop this wave came to fix; the moment a LIVE row existed the
+    // comparison read 178 rows against 64 chairs. Counted here as the weeks go by, it is the number
+    // the sentence always meant.
+    let wSlots = 0
+    for (let w = 0; w < 30; w++) {
+      for (const e of world.season) {
+        if (e.week === world.week + 1 && TIERS[e.tier].track === 'wta') wSlots += TIERS[e.tier].drawSize
+      }
+      tickWeek(world, rng)
+    }
     // Thirty weeks of canonical brackets on every rung, W rungs included: the ledger holds
-    // thousands of rows and not one belongs to a derived player – field pros play only in HER
-    // shadow draws, which award nothing to anyone but her.
+    // thousands of rows and not one belongs to a derived player.
+    //
+    // ⚠ THE REASON THIS HOLDS CHANGED UNDER IT, WHICH MAKES IT THE MOST LOAD-BEARING GUARD IN THE
+    // FILE (W3-FIELD3, 04.08). It used to hold trivially – a pro was never in a canonical draw at
+    // all, so she could not write a row from one. She is in them now, on every W rung, and the rule
+    // survives because `runAiTournament` skips the ledger row for an `fp-` id instead. So this
+    // assertion stopped being a restatement of the scope fence and became the ONE mechanical check
+    // that derived players never reach persisted state – delete the skip and this line, and only
+    // this line, catches it. See the superseded fence on `universeForTier` for why the two facts
+    // ("in the draw", "leaves a row") were separated rather than kept together.
     expect(world.results.length).toBeGreaterThan(1000)
     expect(world.results.some((r) => isFieldProId(r.playerId))).toBe(false)
     expect(world.cohort.some((p) => isFieldProId(p.id))).toBe(false)
+    // ...and she really was IN the draws, or the assertion above would be vacuous again. A W event's
+    // ledger rows are strictly fewer than its chairs, because the missing ones are the professionals'.
+    const wRows = world.results.filter((r) => r.tier !== undefined && TIERS[r.tier].track === 'wta' && r.week >= 0)
+    expect(wSlots).toBeGreaterThan(0)
+    expect(wRows.length).toBeLessThan(wSlots)
+  })
+})
+
+// =================================================================================================
+// W3-FIELD3 (04.08) – THE CANONICAL BRACKETS. The two acceptance criteria of the wave that moved
+// fieldPros.ts's scope fence, pinned from the outside: a W event of the real weekly tick is played
+// by professionals, and the world can say the name of one who wins.
+// =================================================================================================
+describe('the canonical W brackets are played by professionals', () => {
+  /** The canonical draw the tick WILL make for `event`, rebuilt exactly as `drawAiEntrants` does:
+   *  the merged universe, the kid-free merged W standings, the event's own `seed:aitour:` stream.
+   *  A mirror rather than an observation, because the canonical field is never stored – the same
+   *  shape `entrantsOfWeek` has in tests/rival-fatigue.test.ts, and for the same reason. */
+  function canonicalDraw(world: ReturnType<typeof createWorld>, event: SeasonEvent) {
+    const pros = fieldProsFor(world.seed, seasonIndexOf(world.week), world.cohort.map((p) => p.name))
+    const ranking = mergedWtaRanking(
+      computeRanking(
+        world.results.filter((r) => r.playerId !== KID_ID),
+        world.week,
+        BEST_N_BY_TRACK.wta,
+        world.cohort.map((p) => p.id),
+        inTrack('wta'),
+      ),
+      pros,
+    )
+    const fatigue = rivalConditions(world.results, world.week)
+    const rng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
+    const drawn = selectEntrants(
+      event,
+      universeForTier(event.tier, world.cohort, pros),
+      ranking,
+      rng,
+      fatigue,
+    )
+    if (TIERS[event.tier].track !== 'wta') return drawn
+    // ⚠ AND THE HELD SLOTS, or this stops being a mirror (W3-ONRAMP, 04.08). The tick fills them
+    // AFTER the week is resolved, from the players nobody has booked (world.ts `fillWeekOnRamps`);
+    // this is a single-event mirror, so the only booked players are the draw's own.
+    return fillOnRamp(
+      event,
+      drawn,
+      ranking,
+      rng,
+      {
+        pool: world.cohort,
+        ranking: computeRanking(
+          world.results.filter((r) => r.playerId !== KID_ID),
+          world.week,
+          BEST_N_BY_TRACK.itf,
+          world.cohort.map((p) => p.id),
+        ),
+        admits: proDoors(world, ranking).at(event.tier),
+        slots: ON_RAMP.slots,
+      },
+      fatigue,
+      new Set(drawn.map((p) => p.id)),
+    )
+  }
+
+  it('a W draw of the live tick is professionals, and every one of them clears the age gate', () => {
+    const world = createWorld('canonical-w-field')
+    const rng = rngFromSeed(world.seed)
+    let checked = 0
+    for (let w = 0; w < 30; w++) {
+      const upcoming = world.season.filter((e) => e.week === world.week + 1 && TIERS[e.tier].track === 'wta')
+      tickWeek(world, rng)
+      if (world.pendingTournament) world.pendingTournament = null
+      for (const event of upcoming) {
+        const drawn = canonicalDraw(world, event)
+        expect(drawn.length, event.id).toBe(TIERS[event.tier].drawSize)
+        // THE POINT OF THE WAVE. Before it, this number was 0 on every W event ever run.
+        expect(drawn.filter((p) => isFieldProId(p.id)).length, event.id).toBeGreaterThan(0)
+        // ...and the gates the fence was protecting are the SAME gates, applied to more people: no
+        // entrant of a professional draw is under the rung's own minimum age. This is the assertion
+        // tools/big-draw-cost.ts measures the counterfactual of at 64 and 128.
+        const min = TIERS[event.tier].minAgeYears ?? 0
+        for (const p of drawn) expect(p.ageYears, `${event.id} ${p.id}`).toBeGreaterThanOrEqual(min)
+        checked++
+      }
+    }
+    expect(checked, 'the fixture really did schedule W events').toBeGreaterThan(0)
+  })
+
+  it('a W-tour champion can be a professional, and the news says her name', () => {
+    // W100 and up make the news (world.ts `NEWSWORTHY_FROM` – a feed-budget cut, not a taste one),
+    // and their cadence is 13 weeks / seeded anchors, so a career has to run a while to collect one.
+    const world = createWorld('canonical-w-news')
+    const rng = rngFromSeed(world.seed)
+    for (let w = 0; w < 60; w++) {
+      tickWeek(world, rng)
+      if (world.pendingTournament) world.pendingTournament = null
+    }
+    const titles = world.events.filter((e) => e.text.includes('won the'))
+    expect(titles.length, 'the W tour reported some champions').toBeGreaterThan(0)
+    // Every name printed is a real person's, never a raw `fp-<n>` leaking onto a surface.
+    for (const t of titles) expect(t.text).not.toContain(FIELD.idPrefix)
+    // ...and at least one of them is a professional's, which is the criterion in one line: before
+    // this wave no canonical W draw contained a pro, so no W-tour news line could ever name one.
+    const proNames = new Set(
+      fieldProsFor(world.seed, 0, world.cohort.map((p) => p.name))
+        .concat(fieldProsFor(world.seed, 1, world.cohort.map((p) => p.name)))
+        .map((p) => p.name.split(' ').slice(-1)[0]),
+    )
+    expect(titles.some((t) => [...proNames].some((n) => t.text.includes(n)))).toBe(true)
+  })
+
+  it('the ledger stays LIVE-sized: a W event writes fewer rows than it has chairs, and no fp row', () => {
+    // The persisted-state half of the shape, measured rather than asserted structurally. A pro in a
+    // canonical draw costs ZERO bytes: she plays, and the tournament does not write her down.
+    const world = createWorld('canonical-w-ledger')
+    const rng = rngFromSeed(world.seed)
+    // The chairs, counted as the calendar reveals them – see the sibling case above for why reading
+    // `world.season` after the loop is a one-week denominator wearing a career's clothes.
+    let wChairs = 0
+    for (let w = 0; w < 40; w++) {
+      for (const e of world.season) {
+        if (e.week === world.week + 1 && TIERS[e.tier].track === 'wta') wChairs += TIERS[e.tier].drawSize
+      }
+      tickWeek(world, rng)
+      if (world.pendingTournament) world.pendingTournament = null
+    }
+    const wRows = world.results.filter((r) => r.tier !== undefined && TIERS[r.tier].track === 'wta')
+    expect(wRows.some((r) => isFieldProId(r.playerId))).toBe(false)
+    // The professionals absorb MOST of the W calendar: a LIVE player with no W points sits below all
+    // 364 of them in the merged table, so the direct acceptances are professional through and
+    // through. What she gets instead is the held slots.
+    //
+    // ⚠⚠ RE-AIMED 0 -> (0, chairs) BY W3-ONRAMP (04.08), AND THE OLD NUMBER WAS THE BUG. This line
+    // read `.toBe(0)` and said so as a FACT rather than a target, with the closed-loop note in
+    // tests/rivals.test.ts C2 spelling out why it was a defect waiting for a wave: a cohort player
+    // could not be drawn into a W event, so she could not earn a W point, so she could never rise
+    // out of the position that kept her out of the draw. The kid was the only player in the world
+    // who would ever hold a W point. The on-ramp opens the same door the kid has always had
+    // (`tierFloorOpen`'s W arm, now asked of a cohort id through `proDoors`), and the assertion
+    // becomes the two-sided one the design actually wants:
+    //
+    //   * NOT ZERO – the loop is open, cohort players are on the professional ladder;
+    //   * STILL BELOW THE CHAIRS – the pros still fill the great majority of every draw, and no
+    //     `fp-` id ever reaches the ledger (asserted one line up, unweakened).
+    //
+    // Measured, 4 worlds x 12 seasons, tools/w-onramp-probe.ts: 0.0 -> 119.8 LIVE W rows a season
+    // (0.60 per cohort player), against ~3,170 the week before W3-FIELD3 – i.e. the world moves
+    // again without the professional tour going back to being played by children.
+    const liveW = wRows.filter((r) => r.playerId !== KID_ID)
+    expect(liveW.length).toBeGreaterThan(0)
+    expect(wChairs).toBeGreaterThan(0)
+    expect(liveW.length).toBeLessThan(wChairs / 2)
   })
 })

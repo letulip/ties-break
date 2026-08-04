@@ -29,6 +29,8 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+import { fieldProsFor } from '../src/engine/season/fieldPros'
+import { seasonIndexOf } from '../src/engine/world/ledger'
 
 // ---------------------------------------------------------------------------
 // Rivals become real — Part A: rival fatigue, DERIVED from the results ledger.
@@ -921,9 +923,72 @@ describe('C2 — a real season produces genuinely tired rivals, and nobody is pi
     // WITHIN the arm is a fair comparison; the cross-branch one is not.)
     // FOR THE OWNER: relative comparisons in the old benches probably survive – the defect was in both
     // arms of every A/B – but absolute statements about the FIELD's health do not.
-    expect(Math.min(...medians), 'the knee claim is currently LOST - see the note above').toBeLessThan(
-      ECONOMY.condition.matchStrengthKnee,
+    //
+    // ✅✅ THE TRIPWIRE FIRED, AND THIS IS IT BEING PAID (W3-FIELD3, 04.08). Every note above ends in
+    // the same sentence – the fix is a POPULATION that absorbs the W draws, and the fence in
+    // fieldPros.ts is what stops it – and W2-FIELD2's own entry ends "letting pros into the canonical
+    // brackets needs fp-safe result rows, which living-field.md §8.3 books BY NAME". That is this
+    // wave: the W-track canonical brackets draw from LIVE ∪ 364 professionals, and a pro leaves no
+    // ledger row. So the assertion the note asked to have restored is restored, at the knee it
+    // originally defended and not at today's number.
+    //
+    // MEASURED, the same sweep as every re-pin above (8 seeds x 40 ticked weeks x 199 rivals, window
+    // 20w), the seam OFF and ON on this very branch – i.e. a clean A/B, same seeds, same code:
+    //     BEFORE (canonical W = LIVE only)   worst 10-19/20 · heavy 1-22 · ever 23.1-31.2% · minMedian 28-36
+    //     AFTER  (canonical W = LIVE ∪ pros) worst  0/20    · heavy 0    · ever  0.0%       · minMedian 95-100
+    // and the mechanism, measured in the unit the coupling was always stated in: W result rows per
+    // rival over the window, 6.79 -> 0.00.
+    for (const m of medians) {
+      expect(m, 'the median rival is fit EVERY week - the knee claim, restored').toBeGreaterThan(
+        ECONOMY.condition.matchStrengthKnee,
+      )
+    }
+    // ⚠⚠ AND THE COST OF THE REPAIR, PINNED AS A FACT SO IT CANNOT BE MISTAKEN FOR A TARGET: the
+    // cohort now carries NO professional load at all. Not less – none. A LIVE junior holds zero W
+    // points, so she sits below all 364 pros in the merged W table, so she is outside every W rung's
+    // entrant window (the widest, W15's, ends at percentile 0.72 and the pros alone fill it), so she
+    // is never drawn, so she can never earn a W point. That is a CLOSED LOOP, and it is the same
+    // closed loop the kid's own gate solves with an on-ramp rule (`tierFloorOpen` reads her ITF
+    // junior points for W15, because "a player cannot hold a ranking in a table she has never played
+    // in"). The AI juniors have no such rule and this wave deliberately does not invent one.
+    //
+    // So the field went from over-worked to under-worked in one step, and the honest reading is that
+    // the load did not get SHARED, it MOVED. Reported for the owner, not tuned here: the knobs are
+    // an AI on-ramp (a junior's ITF standing positioning her in the merged W tail) or a smaller
+    // professional share of each W draw. If either lands, this line fails and its author has to come
+    // back and restate the trade rather than let it drift.
+    //
+    // ✅⚠ IT LANDED, AND THIS IS THE TRADE RESTATED (W3-ONRAMP, 04.08 – the owner: «Замкнутый круг у
+    // ИИ-юниорок - да, надо чинить»). The first of the two knobs named above is what shipped, in the
+    // second of its two forms: a W draw HOLDS `ON_RAMP.slots` (2 of 32) for LIVE players who clear
+    // the rung's own acceptance door – the kid's door, `tierFloorOpen`'s W arm asked of a cohort id
+    // through `proDoors`. Nobody is given a W point she did not win; what opens is the door.
+    //
+    // MEASURED, this block's own methodology and unit (8 seeds x 40 ticked weeks x 199 rivals,
+    // 20-week window, tools/w-onramp-probe.ts – the `ON_RAMP.slots` 0/6 A/B on this very branch):
+    //     BEFORE (W3-FIELD3 as merged)  W rows/rival 0.00 · minMedian 95-100 · worst 0/20 · heavy 0 · ever 0.0%
+    //     AFTER  (the on-ramp)          W rows/rival 0.22 · minMedian 95-100 · worst 0/20 · heavy 0 · ever 0.0%
+    // and against the state this whole block was written about, W2-FIELD2: 6.79 rows/rival and a
+    // median of 28-36. So the load came back to the cohort at ONE THIRTIETH of the weight that broke
+    // it, and the median rival's condition is UNMOVED to the resolution of this measurement - not
+    // merely surviving the bound, identical to the arm with no on-ramp at all. Claims (1), (2) and
+    // (3) above are untouched; nothing was re-bounded to let this through. Part of why is that the
+    // held slots are filled AFTER the week is resolved (world.ts `fillWeekOnRamps`), so an on-ramp
+    // entrant is a player who was not already playing somewhere else that week.
+    //
+    // ⚠ THE ASSERTION IS NOW TWO-SIDED, WHICH IS WHAT IT SHOULD ALWAYS HAVE BEEN. `toBe(0)` could
+    // only ever catch the repair being spent; it could not catch the closed loop it was describing,
+    // because the loop WAS the zero. The bound below is the load the knee claim can carry, set from
+    // the measured 0.22 the way every other bound in this file was set from its measurement – so a
+    // future wave that widens the on-ramp trips this line before it trips the medians.
+    const wRows = world.results.filter(
+      (r) => r.playerId !== KID_ID && r.tier !== undefined && TIERS[r.tier].track === 'wta' && world.week - r.week < weeks,
     )
+    expect(wRows.length, 'the cohort is ON the professional ladder - the loop above, opened').toBeGreaterThan(0)
+    expect(
+      wRows.length / world.cohort.length,
+      'W result rows per rival in the window - the load the knee claim can carry',
+    ).toBeLessThan(1.5)
   })
 })
 
@@ -1035,18 +1100,27 @@ describe('C5 — a legacy ledger (every AI row tier-less) still ticks', () => {
 })
 
 // ---------------------------------------------------------------------------
-/** How far each AGE POOL falls short of a week's demand on it - the four Hall bounds of our
- *  eligibility classes (domestic = everyone; J = 13-18; the W family = 16+; its upper half = 17+).
- *  The classes are nested or disjoint, so these four ARE the binding subsets, and the engine's
- *  residue on an unfillable week is their maximum (measured, the C5 third case pins it). */
+/** How far each AGE POOL falls short of a week's demand on it - the Hall bounds of our eligibility
+ *  classes (domestic = everyone; J = 13-18; the W family = 16+; its upper half = 17+).
+ *  The classes are nested or disjoint, so these ARE the binding subsets, and the engine's
+ *  residue on an unfillable week is their maximum (measured, the C5 third case pins it).
+ *
+ *  ⚠ THE W CLASSES ARE SERVED BY A SECOND POPULATION SINCE W3-FIELD3 (04.08). A W-track canonical
+ *  draw comes from LIVE cohort ∪ the season's ~364 derived professionals (all of them aged 16-30),
+ *  so a W demand is no longer a claim on the cohort's sixteen-plus alone - and the FIRST bound
+ *  splits for the same reason: pros cannot fill a J30, so the "everybody" class is really "the
+ *  non-professional rungs against the cohort". Getting this wrong does not fail loudly, it makes the
+ *  C5 cases skip weeks that are in fact perfectly fillable. */
 function poolShortfalls(world: WorldState, scheduled: SeasonEvent[]): number[] {
   const demand = (pred: (t: TierId) => boolean) =>
     scheduled.filter((e) => pred(e.tier)).reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
   const supply = (pred: (age: number) => boolean) => world.cohort.filter((p) => pred(p.ageYears)).length
+  const pros = fieldProsFor(world.seed, seasonIndexOf(world.week), world.cohort.map((p) => p.name))
+  const proSupply = (pred: (age: number) => boolean) => pros.filter((p) => pred(p.ageYears)).length
   return [
-    demand(() => true) - world.cohort.length,
-    demand((t) => TIERS[t].track === 'wta') - supply((a) => a >= 16),
-    demand((t) => (TIERS[t].minAgeYears ?? 0) >= 17) - supply((a) => a >= 17),
+    demand((t) => TIERS[t].track !== 'wta') - world.cohort.length,
+    demand((t) => TIERS[t].track === 'wta') - (supply((a) => a >= 16) + proSupply((a) => a >= 16)),
+    demand((t) => (TIERS[t].minAgeYears ?? 0) >= 17) - (supply((a) => a >= 17) + proSupply((a) => a >= 17)),
     demand((t) => TIERS[t].track === 'itf') - supply((a) => a >= 13 && a <= 18),
   ]
 }
@@ -1108,7 +1182,28 @@ describe('C5 — one body, one week: a rival is never in two of a week\'s draws'
       }
       for (const [id, n] of rows) expect(n, `${id} played ${n} events in week ${world.week}`).toBe(1)
       // ...and the week is still fully played: every slot of every draw has somebody in it.
-      expect([...rows.values()].reduce((a, b) => a + b, 0)).toBe(slots)
+      //
+      // ⚠ COUNTED ON THE LIVE-ONLY RUNGS SINCE W3-FIELD3 (04.08), because the ledger stopped being a
+      // census of the week. A W-track bracket is contested by derived professionals who leave no
+      // ledger row (world.ts `runAiTournament`), so Σ drawSize over the WHOLE week now over-counts
+      // by exactly the pros' chairs – measured on this fixture, 40 rows against 72 slots. The claim
+      // is unweakened where it still means anything: the six junior/domestic rungs are filled to the
+      // last chair, and the W rungs are held to a CEILING instead (nothing is written that should
+      // not be, and no fp- id is ever written at all). `slots` above is retained for the ceiling.
+      const liveSlots = scheduled
+        .filter((e) => TIERS[e.tier].track !== 'wta')
+        .reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
+      const rowsByTrack = (wta: boolean) =>
+        world.results.filter(
+          (r) =>
+            r.week === world.week &&
+            r.playerId !== KID_ID &&
+            r.tier !== undefined &&
+            (TIERS[r.tier].track === 'wta') === wta,
+        ).length
+      expect(rowsByTrack(false)).toBe(liveSlots)
+      expect(rowsByTrack(true)).toBeLessThanOrEqual(slots - liveSlots)
+      expect([...rows.values()].reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(slots)
     }
     // the fixture really did exercise the rule, and not just single-event weeks
     expect(checkedWeeks).toBeGreaterThan(0)
@@ -1250,7 +1345,20 @@ describe('C5 — one body, one week: a rival is never in two of a week\'s draws'
       const phantom = [...rows.values()].reduce((a, n) => a + n - 1, 0)
       expect(phantom, 'phantom appearances = the max pool deficiency').toBe(Math.max(...shortfalls))
     }
-    expect(over, 'the over-subscribed weeks really do occur').toBeGreaterThan(0)
+    // ⚠⚠ AND AS OF W3-FIELD3 (04.08) THERE ARE NO SUCH WEEKS LEFT – `over` is 0 over 104 weeks, where
+    // it used to find the pre-off-season wall in every season of every seed. That is this branch's
+    // side-effect rather than its aim, and the arithmetic is one line: the shortage was always a W
+    // shortage (a W chair may only hold a sixteen-plus, and the cohort has ~100-126 of them), and a
+    // W chair may now hold any of ~364 professionals as well. `poolShortfalls` above is re-aimed to
+    // count that supply, so the weeks this case used to catch are simply fillable now.
+    //
+    // THE CASE IS KEPT, AND KEPT INVERTED, for exactly the reason C2's knee tripwire was: the
+    // arithmetic inside the loop is the real claim (the engine hands back the FEWEST possible
+    // entrants and wastes nobody), and it must still hold the day a cadence change or a smaller
+    // field brings a shortage back. So the loop is unchanged and the count is pinned at the measured
+    // zero – if a future wave re-creates an over-subscribed week, this line fails and somebody comes
+    // back to read the assertions above rather than discovering them by a mystery in the ledger.
+    expect(over, 'over-subscribed weeks: the W pool is served by the professional field now').toBe(0)
     // THE WALL MUST NOT COME BACK. The last two playable weeks of a season used to carry EVERY
     // rung's final event (312 draw slots for 199 rivals on offset 48 alone). A collision landing
     // there once is ordinary; the season's whole tail collecting them is the bug.

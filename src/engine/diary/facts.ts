@@ -81,6 +81,14 @@ export function milestoneKey(m: Milestone): string {
       return m.type
     case 'season-rank':
       return `season-rank:${m.seasonIndex ?? -1}`
+    // ⚠ W2-ENDINGS: TWO CROSSINGS, TWO IDENTITIES, ONE TYPE. "Break-even" names two different events
+    // that are YEARS apart, and the album needs both: `kind: 'week'` is the first week whose prize
+    // money beat that week's costs (common - it lands in the first professional season), `kind:
+    // 'career'` is the week her prize money to date passed everything the family had ever spent
+    // (measured at 0% across the bench, which is what slot 6's copy is written against). Each can
+    // happen only once, so the kind IS the identity.
+    case 'break-even':
+      return `${m.type}:${m.kind ?? 'career'}`
   }
 }
 
@@ -101,6 +109,9 @@ export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   international: 'norm',
   injury: 'injury',
   'season-rank': 'norm',
+  // W2-ENDINGS: the week the tennis stopped being only a bill FOR GOOD, which is a bigger version of
+  // the same moment `prize` earns the smile for.
+  'break-even': 'happy',
 }
 
 // --- the facts ------------------------------------------------------------------------------

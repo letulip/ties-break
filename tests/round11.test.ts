@@ -209,7 +209,7 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // knock does not merely halt the advance, it BLOCKS it (advanceWeeks returns early), so a
     // 'knock' with no precedence slot would be filtered out of the return value and the career would
     // stop dead with the UI told nothing at all. Exactly the class of bug R11-1 was, one degree worse.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock']
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'ending', 'fork', 'retirement']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {

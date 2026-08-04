@@ -200,25 +200,36 @@ watch is the week prize money first exceeds the week's costs, and how many caree
 **B1. The cap.** `maxAgeYears: 18` on the J tiers (real ITF juniors is U18) plus an age view in
 `selectEntrants`, so a J30 field is juniors and a W15 field is adults. Blocked on A1.
 
-**B2. The fork at 19.** One decision, once, with everything on the table: her rank, the family balance, the
+**B2. The fork at 19.** ✅ **SHIPPED 04.08**, as a three-way choice – college joined it (contract
+§5.1). One decision, once, with everything on the table: her rank, the family balance, the
 scholarship that has just ended (junior support — already true in the code), and what a W15 costs against
 what it pays. Continue → the adult tour. Stop → epilogue. Per the owner's call (4), "stop" must be able to be
 the right answer and must read as an ending rather than a failure.
 
-**B3. The epilogue surface.** Built on the durable milestone ledger (`world.milestones`, v18) — it is already
+**B3. The epilogue surface.** ✅ **SHIPPED 04.08 AS AN ALBUM, not a scroll** – the owner redesigned
+it himself on 05.08 (contract §9): seven polaroids with the selection rule printed on every page,
+and the scroll kept underneath. ⚠ Call 3 below («no play after the ending») was SUPERSEDED by
+contract §5.6 on 05.08: the epilogue ends with an offer of a new career. Built on the durable milestone ledger (`world.milestones`, v18) — it is already
 her life, written down. A scroll, not a handover (owner's call 3).
 
-**B4. Bankruptcy as a real ending.** Today `fundsCents < 0` only adds a `'funds'` stop reason and the weeks
+**B4. Bankruptcy as a real ending.** ✅ **SHIPPED 04.08 (W2-ENDINGS).** N = 12, swept over
+{4,6,8,12,16,24} against career-outcome-targets.md's 60-80% survival row on both bench policies –
+the table and the argument are in docs/specs/endings-and-the-album.md §3. Today `fundsCents < 0` only adds a `'funds'` stop reason and the weeks
 keep ticking. It wants a **warning phase** before the fact — a season where the family is visibly running
 out, the planner refuses trips, the conversation happens — and then a definition sharp enough to code. A
 candidate: "funds below zero and unable to fund the cheapest entry on the calendar for N consecutive weeks".
 ⚠ N is a design decision, not an obvious one, and it should be measured before it is picked.
 
-**B5. The career-ending injury.** In the fiction, not the code. Either a severity above the current band or an
+**B5. The career-ending injury.** ✅ **SHIPPED 04.08, AND THE PROPOSED RULE WAS UNREACHABLE.** «≥2
+prior major/severe layoffs» measures 0.0% on the shipped injury model; re-aimed to WEEKS LOST (a
+fresh severe on a body that has already lost ≥20 weeks), which measures 7.8%. See §5 of the endings
+spec for the instrumentation. In the fiction, not the code. Either a severity above the current band or an
 accumulation rule (`injuryHistory` is persisted and already counts). Rare enough to be a story, never a
 difficulty setting.
 
-**B6. The natural end.** Her decline starts at 29 (`ageCurve.declineStart`); the field's hard stop is 34
+**B6. The natural end.** ✅ **SHIPPED 04.08.** Offered each off-season from 29, refusable every
+time, and the LAST offer is made at 38 – the floor is where the game stops asking, not a rule that
+retires her. The plateau reading (career-contract-v1.md §5.2) asks the same question early. Her decline starts at 29 (`ageCurve.declineStart`); the field's hard stop is 34
 (`CONVEYOR.hardRetireAge`). Hers should be a decision with a floor: the game stops asking somewhere in the
 thirties, and before that it is hers to make.
 

@@ -539,6 +539,19 @@ const TAB_OPTIONS = [
         </div>
       </div>
 
+      <!-- ============================ 1a. THE DEBT STRIP ============================
+           W2-ENDINGS. The WARNING PHASE bankruptcy is required to have (adult-tour-and-endings.md
+           B4: "a season where the family is visibly running out"). It is the countdown, not a mood:
+           the same `snapshot.debt` the stop toast reads, so the two surfaces cannot disagree about
+           how long is left, and one solvent week clears it entirely - which is the sentence that
+           makes it a spell rather than a sentence. -->
+      <p v-if="game.snapshot.debt" class="money-debt" role="status">
+        <strong>{{ game.snapshot.debt.weeks }}</strong>
+        {{ game.snapshot.debt.weeks === 1 ? 'week' : 'weeks' }} below zero &middot;
+        <strong>{{ Math.max(0, game.snapshot.debt.graceWeeks - game.snapshot.debt.weeks) }}</strong>
+        before the money runs out for good. One week back in the black clears it.
+      </p>
+
       <!-- ========================= 1b. THE SECTION SWITCHER =========================
            Three tabs over what used to be one very long page. Which block sits behind which tab,
            and why the summary cannot be parted from the period switcher, is argued at
@@ -806,6 +819,24 @@ const TAB_OPTIONS = [
 </template>
 
 <style scoped>
+/* The debt strip. Amber rather than red: the family is running out, not finished, and the whole
+   point of the grace window is that this state is recoverable right up until it is not. */
+.money-debt {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-control);
+  border: var(--stroke-hair) solid var(--tier-high);
+  background: rgba(226, 130, 47, 0.1);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+
+.money-debt strong {
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
 /* =================================================================================================
    SCREEN G's OWN STYLES, in the SFC for the reason U0 wrote into HomeScreen: six screens are being
    built on top of that slice in parallel and `src/style.css` is the one file all six would touch.

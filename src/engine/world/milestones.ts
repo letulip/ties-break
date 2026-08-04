@@ -14,7 +14,7 @@ import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS, TIER_LADDER } from '../season/calenda
 import { seasonYear } from '../../shared/dates'
 import { milestoneKey } from '../diary'
 import type { LadderTrack, TierId } from '../season/types'
-import { LADDER_LABEL, type Milestone, type TierTrophies } from '../../shared/protocol'
+import { LADDER_LABEL, type Milestone, type TierTrophies, type WorldEventCategory } from '../../shared/protocol'
 import { addEvent, financeWindow, seasonIndexOf, seasonStartWeek } from './ledger'
 import { KID_ID } from './constants'
 import { finishLabel } from './labels'
@@ -34,6 +34,42 @@ export function captureMilestone(world: WorldState, m: Milestone): void {
   const key = milestoneKey(m)
   if (world.milestones.some((x) => milestoneKey(x) === key)) return
   world.milestones.push(m)
+}
+
+/** ⚠ THE TURN, CAPTURED THE WEEK IT HAPPENS AND NEVER RECONSTRUCTED (contract §9.4, and the wave
+ *  brief put it in double capitals). The album's central page – slot 6 – is the week her cumulative
+ *  prize money first passed her cumulative costs. The finance ledger keeps SIXTY WEEKS and the
+ *  crossing may land in season seven, so at epilogue time the arithmetic behind the answer is
+ *  already pruned out of the save. Either this row exists or the page is empty for everybody who
+ *  earned it.
+ *
+ *  ⚠ AND IT IS PRIZE MONEY AGAINST COSTS, not income against costs. Parent wages, sponsor money,
+ *  the academy grant and savings interest all cross the ledger as income; none of them is the tennis
+ *  paying for itself, and §9.2 is about «the break-even the whole game is about». A family that
+ *  merely stayed solvent has not turned – it has been subsidising her, which is the thesis, not the
+ *  exception to it.
+ *
+ *  Idempotent through `captureMilestone` (identity is the type), pure state, zero draws – so it
+ *  runs on the one step that fires on BOTH a normal week and a tournament week and cannot double. */
+export function captureBreakEven(world: WorldState): void {
+  // (a) THE WEEK that paid for itself. Common, and it is the beat a player actually feels - the
+  //     owner watched his own career cross it at seventeen. Read off THIS week's row of the finance
+  //     ledger, which is the only week guaranteed to still be in it.
+  const thisWeek = world.financeWeeks.find((w) => w.week === world.week)
+  if (thisWeek) {
+    const prize = thisWeek.byCategory.prize ?? 0
+    let costs = 0
+    for (const [cat, amt] of Object.entries(thisWeek.byCategory) as [WorldEventCategory, number][]) {
+      if (cat !== 'prize' && amt < 0) costs += -amt
+    }
+    if (prize > 0 && prize > costs) {
+      captureMilestone(world, { type: 'break-even', week: world.week, kind: 'week' })
+    }
+  }
+  // (b) THE CAREER. The one §9.2 asks slot 6 for, and the rare one.
+  const t = world.careerTotals
+  if (!t || t.prizeCents <= t.spentCents) return
+  captureMilestone(world, { type: 'break-even', week: world.week, kind: 'career' })
 }
 
 /** R10-9: how many finished seasons the career history keeps (newest wins). 30 years of junior/

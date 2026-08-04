@@ -28,13 +28,16 @@ import {
 } from '../src/engine/world'
 import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
 import { reconstructRun, rivalCondition, rivalConditions } from '../src/engine/season/rival'
-import { resolveDoubleBookings, selectEntrants } from '../src/engine/season/tournament'
+import { ON_RAMP, fillOnRamp, resolveDoubleBookings, selectEntrants } from '../src/engine/season/tournament'
 import { generateCohort } from '../src/engine/season/cohort'
 import { generatePreHistory } from '../src/engine/season/prehistory'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { matchDrain } from '../src/engine/condition'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
+import { fieldProsFor, isFieldProId, mergedWtaRanking, universeForTier } from '../src/engine/season/fieldPros'
+import { inTrack, proDoors } from '../src/engine/world/ladder'
+import { seasonIndexOf } from '../src/engine/world/ledger'
 import type { TierId } from '../src/engine/season/types'
 
 const R = ECONOMY.condition
@@ -70,7 +73,13 @@ function runWeeks(seed: string, weeks: number): WorldState {
  *  its own sub-stream exactly as before, and THEN `resolveDoubleBookings` decides the week (the
  *  higher tier keeps her; the loser backfills by standings position). Replaying only the first step
  *  reconstructs a field the engine no longer plays, which is precisely the failure R1 exists to
- *  catch - and did catch. Both steps here, in the tick's own order. */
+ *  catch - and did catch. Both steps here, in the tick's own order.
+ *
+ *  ⚠⚠⚠ AND THE WEEK NOW HAS TWO UNIVERSES (W3-FIELD3, 04.08) - the same lesson a THIRD time, which
+ *  is the strongest argument this helper could have for existing. A W-track canonical event draws
+ *  from LIVE cohort ∪ derived field pros against the MERGED W standings; the six junior/domestic
+ *  rungs still draw from the cohort against the mixed junior fold. Rebuilding a W draw against the
+ *  cohort alone reconstructs a field the engine has not played since this wave. */
 function entrantsOfWeek(world: WorldState, week: number): Set<string> {
   const ranking = computeRanking(
     world.results.filter((r) => r.playerId !== KID_ID),
@@ -78,16 +87,83 @@ function entrantsOfWeek(world: WorldState, week: number): Set<string> {
     BEST_N_BY_TRACK.itf,
     world.cohort.map((p) => p.id),
   )
+  const pros = fieldProsFor(world.seed, seasonIndexOf(week), world.cohort.map((p) => p.name))
+  const wtaRanking = mergedWtaRanking(
+    computeRanking(
+      world.results.filter((r) => r.playerId !== KID_ID),
+      week,
+      BEST_N_BY_TRACK.wta,
+      world.cohort.map((p) => p.id),
+      inTrack('wta'),
+    ),
+    pros,
+  )
+  const tourUniverse = universeForTier('w15', world.cohort, pros)
   const fatigue = rivalConditions(world.results, week)
+  const doors = proDoors({ ...world, week }, wtaRanking)
   const drawn = world.season
     .filter((e) => e.week === week)
     .map((event) => ({
       event,
-      entrants: selectEntrants(event, world.cohort, ranking, rngFromSeed(`${world.seed}:aitour:${event.id}`), fatigue),
+      entrants: selectEntrants(
+        event,
+        universeForTier(event.tier, world.cohort, pros),
+        TIERS[event.tier].track === 'wta' ? wtaRanking : ranking,
+        rngFromSeed(`${world.seed}:aitour:${event.id}`),
+        fatigue,
+      ),
+      rng: rngFromSeed(`${world.seed}:aitour:${event.id}`),
     }))
   const out = new Set<string>()
-  for (const field of resolveDoubleBookings(drawn, world.cohort, ranking, fatigue).values()) {
-    for (const p of field) out.add(p.id)
+  const fields = resolveDoubleBookings(drawn, world.cohort, ranking, fatigue, {
+    universe: tourUniverse,
+    ranking: wtaRanking,
+  })
+  // ⚠ THE HELD SLOTS ARE PART OF THE MIRROR NOW (W3-ONRAMP, 04.08), and they land exactly where the
+  // tick puts them: AFTER the week is resolved, strongest rung first, from the players nobody has
+  // booked (world.ts `fillWeekOnRamps`). A mirror that omitted them drew a field the tick never
+  // played – measured on this fixture, six row-holders the replica had never selected, which is the
+  // "ghost" this test is named after arriving from the mirror's side rather than the engine's.
+  //
+  // ⚠ The stream is the EVENT's own, re-derived here and advanced past `selectEntrants`' draws in the
+  // same order the engine advances it, so the on-ramp reads the same numbers.
+  const booked = new Set<string>()
+  for (const field of fields.values()) for (const p of field) booked.add(p.id)
+  const wDrawn = drawn
+    .filter((d) => TIERS[d.event.tier].track === 'wta')
+    .sort(
+      (a, b) =>
+        TIER_LADDER.indexOf(b.event.tier) - TIER_LADDER.indexOf(a.event.tier) ||
+        (a.event.id < b.event.id ? -1 : a.event.id > b.event.id ? 1 : 0),
+    )
+  for (const d of wDrawn) {
+    // advance a fresh stream past the selection draws, exactly as the live rng object stands
+    const rng = rngFromSeed(`${world.seed}:aitour:${d.event.id}`)
+    selectEntrants(
+      d.event,
+      universeForTier(d.event.tier, world.cohort, pros),
+      wtaRanking,
+      rng,
+      fatigue,
+    )
+    const filled = fillOnRamp(
+      d.event,
+      fields.get(d.event.id) ?? d.entrants,
+      wtaRanking,
+      rng,
+      { pool: world.cohort, ranking, admits: doors.at(d.event.tier), slots: ON_RAMP.slots },
+      fatigue,
+      booked,
+    )
+    fields.set(d.event.id, filled)
+    for (const p of filled) booked.add(p.id)
+  }
+  for (const field of fields.values()) {
+    // ⚠ LIVE ONLY, and it is the point of the wave rather than a convenience: a field pro plays the
+    // bracket and leaves NO ledger row (world.ts `runAiTournament`), so "who holds a row" and "who
+    // was in the draw" are the same question only for the live half of the world. The pros' side of
+    // the draw is pinned in tests/season/fieldPros.test.ts.
+    for (const p of field) if (!isFieldProId(p.id)) out.add(p.id)
   }
   return out
 }
@@ -100,22 +176,46 @@ function row(tier: TierId, finish: number, week: number, playerId = 'ai-x'): Sea
 // ---------------------------------------------------------------------------
 
 describe('R1 — every entrant of every draw leaves a row, scoring or not', () => {
-  it('the rows written for a week cover the FULL draw of every event that week', () => {
+  it('the rows written for a week cover the FULL draw of every LIVE-only event that week', () => {
     // The structural form of the claim: `runAiTournament` writes one row per entry in
     // `result.finishes`, and `finishes` is dense over the whole bracket. So the AI rows at a
     // resolved week must number exactly Σ drawSize over that week's events. Under the old guard
     // this was Σ drawSize / 2 – half the field, the half that won at least one match.
+    //
+    // ⚠ RE-AIMED AT THE LIVE-ONLY RUNGS BY W3-FIELD3 (04.08), AND THE CLAIM IS UNWEAKENED WHERE IT
+    // STILL APPLIES. A W-track canonical bracket is now contested by derived professionals who leave
+    // NO ledger row – that is the whole design (fieldPros.ts's superseded scope fence: she plays,
+    // the tournament does not write her down) – so "Σ drawSize" was never going to be the count of a
+    // W event's rows again. What it IS the count of, exactly, is the six junior/domestic rungs, whose
+    // universe did not move by one player; measured on this fixture, 264 rows a week became 72 and
+    // every one of the 72 is a junior in a junior draw. The W side of the same claim is asserted one
+    // test down (row-holders ARE the entrants, live half) and, from the pros' end, in
+    // tests/season/fieldPros.test.ts.
     const world = runWeeks('rival-rows-1', 12)
     let checked = 0
+    let liveOnlySlots = 0
     for (let w = 1; w <= 12; w++) {
       const events = world.season.filter((e) => e.week === w)
       if (events.length === 0) continue
-      const expected = events.reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
-      const rows = world.results.filter((r) => r.week === w && r.playerId !== KID_ID)
+      const liveOnly = events.filter((e) => TIERS[e.tier].track !== 'wta')
+      const expected = liveOnly.reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
+      const rows = world.results.filter(
+        (r) => r.week === w && r.playerId !== KID_ID && r.tier && TIERS[r.tier].track !== 'wta',
+      )
       expect(rows.length).toBe(expected)
+      liveOnlySlots += expected
+      // ...and a W event never writes MORE rows than it has chairs. It writes fewer – the pros' are
+      // missing – but the ceiling is the claim that would break if a pro ever reached the ledger.
+      const wSlots = events.filter((e) => TIERS[e.tier].track === 'wta').reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
+      const wRows = world.results.filter(
+        (r) => r.week === w && r.playerId !== KID_ID && r.tier && TIERS[r.tier].track === 'wta',
+      )
+      expect(wRows.length).toBeLessThanOrEqual(wSlots)
+      expect(wRows.some((r) => isFieldProId(r.playerId))).toBe(false)
       checked++
     }
     expect(checked).toBeGreaterThan(0) // the fixture really did play some weeks
+    expect(liveOnlySlots).toBeGreaterThan(0) // ...and they were not all professional weeks
   })
 
   it('the row-holders ARE the entrants – no ghosts, no omissions', () => {

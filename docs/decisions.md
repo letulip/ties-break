@@ -174,3 +174,86 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
   norm/happy/sad/serious/injury/tired/**angry** + вехи bride/funeral/graduated/retired/farewell/
   pregnant-early/pregnant-last. `angry` есть как тип и как арт, но НИЧТО его пока не выбирает —
   триггер сознательно не придуман, см. открытый вопрос.
+
+## 2026-08-04 — W2-ENDINGS: what got MEASURED, and the two places the measurement changed the design
+
+Implementation record for career-contract-v1.md §4/§9. The contract is the decision; these are the
+numbers it turned into, and the two shapes that had to move because the measurement said so. Full
+tables: `docs/specs/endings-and-the-album.md`.
+
+- **Bankruptcy's grace window is 12 weeks, not the candidate 8.** Swept over {4,6,8,12,16,24}
+  against career-outcome-targets.md's own row (60-80% survival, 14→18) on both bench entry policies.
+  8 leaves the reckless parent surviving 62.2%, one seed set away from failing the target; 12 puts
+  both policies mid-band (74.4% / 80.0%). It is also three times the reckless policy's median debt
+  spell (4w) and a fifth of the careful policy's (60w), and it is exactly the 12-week window the
+  Money screen already draws – so the warning phase needed no new surface.
+- **⚠ THE CAREER-ENDING INJURY'S PROPOSED RULE WAS UNREACHABLE, not merely rare.** P1's «a fresh
+  severe on ≥2 prior major-or-severe layoffs» predicted 1-2%; instrumented over 90 full careers it
+  fires **0.0%** – `severe` is 2.5% of injuries and `major` 7.5%, so three of them in one career is a
+  coincidence the model cannot produce. Re-aimed to WEEKS LOST (a fresh severe on a body that has
+  already lost ≥20 weeks): **7.8%**, median age 31. Physical rather than bookkeeping, and a number
+  the epilogue can print.
+- **⚠ SLOT 6's CROSSING HAPPENS TO NOBODY, and the copy is written to that.** «Break-even» names two
+  events years apart. A WEEK whose prize money beat that week's costs: **46.7% of careers, median
+  age 17** – which is where the owner watched his own career cross it. The CUMULATIVE crossing §9.2
+  asks the album for – prize money past everything the family ever spent: **0 careers in 180**.
+  Prize/spend at the end of a career is a median 8.0%. So the empty page is the COMMON case; both
+  crossings are captured as milestones and the empty face carries the week when there was one («one
+  week, it paid for itself – and in the end $4,120 won against $61,000 spent»). Honest rather than
+  consoling, which is the bar §9.2 sets.
+- **All six endings are reachable and benched**: bankruptcy 51.1% (median age 17), plateau 48.9%
+  (24), natural 41.1% (38), injury 7.8% (31), and the fork's other two answers on 6/9 seeds each.
+  The natural/plateau split is a PLAYER CHOICE and not a game rate, so the bench reports both arms.
+- **Album slot 1 is week zero, not «her first entered event»** – a stated departure from §9.2. No
+  save can answer the latter (milestones keep only the first INTERNATIONAL entry; events, results and
+  bestFinishByTier all lose it), and buying it would have cost a second MilestoneType that no migrated
+  save could back-fill honestly.
+- **The second career starts from a FRESH capital fork**, not the mother's final balance (§5.6's open
+  question, the architect's recommendation taken): carrying the balance is exactly the meta-currency
+  §5.6 rules out.
+- Supersedes adult-tour-and-endings.md §6 call 3 («no play after the ending, in v1») – contract §5.6,
+  05.08, replaced the credits roll with an offer.
+
+## 2026-08-04 – W3-ONRAMP: the AI juniors get the kid's own door
+
+Owner: «Замкнутый круг у ИИ-юниорок - да, надо чинить». Full spec and every measurement in
+`docs/specs/ai-w-onramp.md`; the entry it closes is `living-field.md` §8.3.
+
+- **The loop, measured rather than argued.** `feat/field-in-brackets` put 364 derived professionals
+  into the canonical W draws against a points-sorted merged table, so every point-less cohort player
+  sat at position 364+ of 563 and position-biased entry never reached her. **LIVE W ledger rows: 0.0
+  a season, on every seed** – against 3,170 at the wave's own parent commit. The only player in the
+  world who could ever hold a W point was the kid.
+- **The fix is a HELD SLOT, never a fabricated standing.** A W draw keeps `ON_RAMP.slots` (2 of 32)
+  for LIVE players who clear the rung's own acceptance door – `tierFloorOpen`'s W arm asked of a cohort id (`proDoors`). Junior
+  points open the entry rung; a professional result plus the rung's rank cut open the ones above.
+  `topBandForPercentile`'s ruling that the professional table starts empty for everyone is intact.
+- **It is filled AFTER the week is resolved, and that was a measured correction.** The first build
+  ran the lottery at draw time, so a held slot could land on a junior the same week's J300 had also
+  drawn; `resolveDoubleBookings` then correctly gave her to the higher rung and backfilled the junior
+  event **best standing first** – i.e. every held slot quietly UPGRADED a junior draw, ~100 times a
+  season. Filling from the players the resolved week has left free makes "one body, one week" true of
+  the held slots by construction.
+- **The taper is in the rule, not in ten numbers.** Measured per rung: w15–w75 fill both held slots,
+  W100 0.38, **and nothing at all above it.** No cohort player walks into a WTA 125 or a major.
+- **Her trajectory does not move.** 8 prospect careers × 10 seasons, `--slots 0` vs `4`: events
+  entered 21.3 → 20.7 a season, titles 4.2 → 3.9, mean condition 72.0 → 72.2. She is ~15–20 places
+  worse in seasons 0–1 (she is genuinely behind more people now) and inside the noise thereafter.
+  ⚠ The late career drifts slightly IN HER FAVOUR – best rank reached #209 → #191, and WTA 250 opens
+  for 7 of 8 careers instead of 2 – which 8 careers cannot separate from seed luck. Flagged, not
+  claimed.
+- **The cost is stated, not hidden.** The wave's ledger saving keeps 92% of itself (2,080 → 2,325
+  rows against 5,270 before it). C2's restored knee claim is not spent at all: W rows per rival
+  0.00 → 0.45 against the 6.79 that broke it, and the cohort's median condition is 95–100 either way.
+- **⚠⚠ TWO SIM TRIPWIRES FIRED AND ARE RE-AIMED IN PLACE, AND THIS IS THE PART FOR THE OWNER.** The
+  C3 corridor (`fatigue-bench-policy`) went 2.538 → 2.067 against a floor of 2.5, and the domestic
+  reach proxy (`econ-reach`) 10 → 4 of 30 against a band floor of 6. Swept against the on-ramp's own
+  knob, NEITHER responds to the size of the change (C3 reads 2.538/2.067/1.813/2.067 and reach
+  10/4/5/9 at slots 0/4/6/8), so no setting buys them back and tuning to one would be a number chosen
+  to make a test pass. C3 goes back to the INVERTED pin its own block uses for a lost corridor (so
+  restoring the field's freshness fails the line and brings somebody back); reach keeps both branch
+  assertions and re-aims only its drift band, with the sweep as evidence that the band was derived
+  from the target's plateau rather than the world's. Full argument in the spec §4f.
+- **No schema bump.** The kid's on-ramp latch (`onRampCleared`, v34) is replaced for the cohort by
+  `latchOnRamps`' own second proof – a W-track row inside the 52-week window – so the door costs zero
+  persisted bytes. `SAVE_SCHEMA_VERSION` stays at 39.

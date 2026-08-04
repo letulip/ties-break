@@ -22,12 +22,17 @@ import { isCappedTier, isCappedProTier } from './entryCaps'
 import { chargeMandatoryPenalty, mandatoryBinds } from './mandatory'
 import { ECONOMY } from '../economy'
 import type { WorldState } from '../world'
+import { guardNotEnded } from './endings'
 
 
 /** Enter the kid in a scheduled event: validates deadline / funds / duplicates / ranking
  *  eligibility, then charges the fee immediately (expense event) and records the entry (entry
  *  event). Eligibility is direction-aware: too low to qualify vs graduated out of the tier. */
 export function enterEvent(world: WorldState, eventId: string): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')
   if (world.entries.includes(eventId)) throw new Error('Already entered this event')
@@ -87,8 +92,22 @@ export function enterEvent(world: WorldState, eventId: string): void {
   })
 }
 
-/** Withdraw before the deadline: refunds the fee (income event) + records it (entry event). */
+/** Withdraw before the deadline: refunds the fee (income event) + records it (entry event).
+ *
+ *  ⚠ W2-ENDINGS – THE GUARD IS ON THIS FUNCTION AND NOT ON THE BODY BELOW IT, and the split is the
+ *  fix for a measured bug rather than tidiness. This is BOTH a player command and an ENGINE step:
+ *  the injury auto-withdraw and `releaseOutgrownEntries` both come through here, and both run
+ *  inside `tickWeek`. Guarding the shared implementation made `tickWeek` throw the moment a career
+ *  latched while holding an open entry - which is `tickWeek` failing to be total, the one property
+ *  the whole ending design is built on. So the PLAYER's door is guarded and the engine's own path
+ *  goes straight to `releaseEntry`. Found by tests/travel-home.test.ts, which plays a real career. */
 export function withdrawEvent(world: WorldState, eventId: string): void {
+  guardNotEnded(world)
+  releaseEntry(world, eventId)
+}
+
+/** The withdrawal itself, with no command guard on it – the engine's own path. */
+export function releaseEntry(world: WorldState, eventId: string): void {
   if (!world.entries.includes(eventId)) throw new Error('Not entered in this event')
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')
@@ -153,6 +172,10 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
  *
  *  Pure state, ZERO RNG draws. */
 export function cancelEntry(world: WorldState, eventId: string): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   if (!world.entries.includes(eventId)) throw new Error('Not entered in this event')
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')

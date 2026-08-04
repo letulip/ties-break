@@ -403,8 +403,15 @@ describe('the venue paintings', () => {
 
   it('NEVER promises a surface the engine will not play on', () => {
     // The card names the surface right under the picture. This is the rule that outranks "nearest
-    // tier": regional has no grass court, so a regional grass week borrows the LOCAL grass one
-    // rather than being painted on regional clay.
+    // tier": a lower-tier court on the RIGHT surface beats a same-tier court on the wrong one.
+    //
+    // ⚠ RE-AIMED 04.08, and the reason is that the example it used to carry STOPPED BEING TRUE in
+    // the good direction. It pinned `regional/grass -> ['local-grass-1']`, the one live borrow the
+    // ladder had. The owner shipped `regional-grass-1.webp`, so regional now paints its own grass
+    // and every tier local..j30 covers all three surfaces – there is no gap left anywhere for a
+    // demonstration to stand on. The rule itself is NOT weakened: the exhaustive loop above is the
+    // invariant (no candidate at any tier/surface may name another surface) and it is untouched;
+    // only the worked example moved, from the borrow to the court that replaced it.
     for (const tier of TIERS) {
       for (const surface of SURFACES) {
         for (const stem of venueCandidates(tier, surface)) {
@@ -415,7 +422,7 @@ describe('the venue paintings', () => {
         }
       }
     }
-    expect(venueCandidates('regional', 'grass')).toEqual(['local-grass-1'])
+    expect(venueCandidates('regional', 'grass')).toEqual(['regional-grass-1'])
   })
 
   it('j60 and j300 borrow the j30 set until their own art exists', () => {

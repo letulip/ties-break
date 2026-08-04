@@ -68,7 +68,9 @@ const WINDOW_WEEKS = 52
  *  ⚠ A PLAIN OBJECT, NOT `as const`, DELIBERATELY: the before/after bench
  *  (tools/best16-bench.ts) patches `.wta` back to 6 for its A arm and restores it - the same
  *  patch-and-restore idiom the fatigue bench uses on `matchWeekRecoveryBase`. Engine code never
- *  writes it. */
+ *  writes it. TWO LICENSED WRITERS NOW: tools/ceiling-walk.ts sweeps it (8/12/24/32) to price what
+ *  the window width is worth to a perfect season - docs/specs/ranking-ceiling-2026-08.md section 6,
+ *  where narrowing to best-8 measures as 50 places and widening past 16 as exactly nothing. */
 export const BEST_N_BY_TRACK: Record<LadderTrack, number> = { domestic: 6, itf: 6, wta: 16 }
 
 /** A single player's windowed best-N points sum at `currentWeek` – the exact value

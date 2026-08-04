@@ -17,9 +17,10 @@ import { activeKitDeal, dealUnderReview, endDealWithSeason, kitTravelShare, rais
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
-import { kidPoints } from './ladder'
+import { kidPoints, tableSize } from './ladder'
 import { KID_ID } from './constants'
 import type { WorldState } from '../world'
+import { guardNotEnded } from './endings'
 
 // --- the sponsors decide, in the off-season -----------------------------------
 // Who is willing to put this girl in their kit next year, and on what terms. Three rungs since
@@ -139,7 +140,7 @@ export function reviewSponsors(world: WorldState): void {
   // Both cached ranks, with the same fallback rankIn uses: a career that has never held a point in a
   // table sits below the whole field rather than at the top of an empty one. `itfRanked` is the
   // guard that stops an empty table reading as a standing at all - see `SponsorStanding`.
-  const nationalRank = world.kidRankDomestic ?? world.cohort.length + 1
+  const nationalRank = world.kidRankDomestic ?? tableSize(world, 'domestic')
   const standing = {
     nationalRank,
     itfRank: world.kidRank,
@@ -147,7 +148,10 @@ export function reviewSponsors(world: WorldState): void {
     // The third table, on the same terms as the other two (02.08). `wtaRanked` uses the LIVE
     // window rather than the never-pruned mark on purpose: a sponsor asks what she is worth NOW,
     // and a professional who has not scored in a year is not holding a professional standing.
-    wtaRank: world.kidRankWta ?? world.cohort.length + 1,
+    // ⚠ AND THE W TABLE'S "below the whole field" IS 564, NOT 200 (`tableSize`): it carries 364
+    // derived professionals as well as the cohort, so the old sentinel valued an UNRANKED girl as
+    // world #200 – a top-200 professional's brand, on no ranking at all.
+    wtaRank: world.kidRankWta ?? tableSize(world, 'wta'),
     wtaRanked: kidPoints(world, 'wta') > 0,
   }
 
@@ -249,6 +253,10 @@ export function reviewSponsors(world: WorldState): void {
  *  behind a confirm that restated the deal, and the letter carries "Signed" in the inbox for the rest
  *  of the career - which is longer than any feed row survives. */
 export function acceptOffer(world: WorldState, offerId: string): Offer {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const signed = signOfferIn(world.offers, offerId, world.week)
   if (!signed) throw new Error(offerAnswerErrorFor(world, offerId))
   return signed
@@ -257,6 +265,10 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
 /** THE PARENT REFUSES. Terminal in the same way signing is: a "no" he could take back would make the
  *  deadline a formality on the other side of the decision. Same feed budget, same reason. */
 export function declineOffer(world: WorldState, offerId: string): Offer {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const refused = refuseOfferIn(world.offers, offerId, world.week)
   if (!refused) throw new Error(offerAnswerErrorFor(world, offerId))
   return refused

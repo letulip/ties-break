@@ -221,7 +221,42 @@ function hashOf(draws: number[]): string {
 // season, so the cohort meets 30 more draws and a different set of juniors ends the year holding
 // counting ITF points. The declaration this one mirrors is tests/condition.test.ts B1's REF; the
 // frozen MAIN capture is untouched by construction (every bracket runs on `seed:aitour:<id>`).
-const REF = { kidRank: 123 }
+// ⚠⚠ RE-PINNED 123 -> 89 BY W3-FIELD3 (04.08) – a RULE this time, and the largest move this
+// companion has taken since the adult rungs. The W-track canonical brackets draw from LIVE cohort ∪
+// 364 derived professionals and a professional leaves NO ledger row, so the season's ~98 W events
+// stop landing on the 199 juniors altogether (W result rows per rival over a 20-week window: 6.79 ->
+// 0.00). The cohort plays out the year fresher, its J draws resolve differently, and a different set
+// of juniors ends the year holding counting ITF points. THE A/B HALVES ABOVE THIS LINE ARE THE POINT
+// OF THIS BLOCK AND THEY ARE UNTOUCHED: the booking-heavy career and the baseline still take
+// byte-identical MAIN sequences (same count, same hash), asserted two lines before this constant is
+// ever read. Full argument at the B1 REF in tests/condition.test.ts.
+// ⚠⚠ RE-PINNED 89 -> 90 BY W3-ONRAMP (04.08) – a RULE again, and the exact counter-move to the one
+// above. W3-FIELD3 took the ~98 W events a season off the cohort entirely and this wave hands a
+// SHARE of them back: a W draw holds `ON_RAMP.slots` (2 of 32) for LIVE players who clear the rung's
+// own acceptance door – the kid's door, asked of a cohort id. Measured, tools/w-onramp-probe.ts:
+// LIVE W ledger rows 0.0 -> ~125 a season (~0.6 per cohort player), against ~3,170 before
+// W3-FIELD3. So a couple of dozen juniors of the 199 now hold counting W points, and a table sorted
+// on points puts them ahead of a kid who holds none. Note the SIZE and the direction: two places,
+// downward - the W rows the cohort now earns are on a DIFFERENT track from the one this number folds,
+// so what reaches it is the second-order re-deal of who ends the junior year in the points, not the
+// professional table itself. SHE DID NOTHING DIFFERENT – this fixture's kid
+// enters nothing at all, which is the cleanest possible statement of "the world moved, not her".
+//
+// THE CAPTURE AND THE A/B ARE UNTOUCHED, WHICH IS WHAT THIS BLOCK IS FOR: count 41550, hash
+// e6b0c709, head and tail all reproduce byte-for-byte and are asserted before this constant is ever
+// read. Every draw the on-ramp spends is APPENDED to the event's own `seed:aitour:<id>` sub-stream,
+// after the professional side of the draw has already been keyed.
+//
+// ⚠ RE-AIMED AGAIN BY W4-LIVES (04.08): 90 -> 89, ONE place. The professionals have careers now
+// (FIELD.career) - they age +1 a season and retire - so the population's AGE HISTOGRAM changed
+// shape, `selectEntrants` gates candidates on age, a W event's entrant set changed, which JUNIORS a
+// W week books changed, and the J draws those juniors were no longer free for changed with it.
+// Second-order, on a different track from the one this number folds. SHE DID NOTHING DIFFERENT.
+//
+// ⚠⚠ AND IN THIS FILE THE A/B IS THE POINT: `draws.length` and `hashOf(draws)` are asserted two
+// lines ABOVE this constant and both still pass, so input-independence - the fairness property -
+// is untouched. Only the world's own outcome moved.
+const REF = { kidRank: 89 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

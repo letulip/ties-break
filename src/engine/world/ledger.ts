@@ -27,6 +27,20 @@ export function addEvent(world: WorldState, e: Omit<WorldEvent, 'id'>): void {
 // Fold one financial delta into financeWeeks: find-or-create the week entry (keeping the array
 // week-ascending – the common case is appending the current, newest week) and add into its category.
 export function accrueFinance(world: WorldState, week: number, category: WorldEventCategory, amountCents: number): void {
+  // W2-ENDINGS (v39): the same delta also folds into the CAREER totals, which is the one thing the
+  // window below cannot answer. `financeWeeks` prunes to sixty weeks (FINANCE_WEEKS), so by season
+  // three the early bills are gone from the save – and the epilogue's reckoning, and the break-even
+  // crossing the album's central page is about, are both questions about the whole career.
+  //
+  // ⚠ `prize` IS COUNTED APART FROM the rest of the income, and that separation IS slot 6. Parent
+  // wages, sponsor money, the academy grant and savings interest are all income; none of them is the
+  // tennis paying for itself. Zero draws, at the choke point every money movement already passes.
+  // Defensive `??=` because hand-built probe worlds in tests predate the field.
+  world.careerTotals ??= { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
+  if (amountCents > 0) world.careerTotals.earnedCents += amountCents
+  else world.careerTotals.spentCents += -amountCents
+  if (category === 'prize') world.careerTotals.prizeCents += amountCents
+
   let entry = world.financeWeeks.find((w) => w.week === week)
   if (!entry) {
     entry = { week, byCategory: {} }

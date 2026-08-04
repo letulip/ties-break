@@ -1,0 +1,11 @@
+#!/bin/sh
+# Rebuild the code graph after a merge or pull. ~5 s, zero model tokens, and a stale graph is
+# worse than no graph (CLAUDE.md) — so the rebuild rides the one event that always invalidates it
+# rather than a habit somebody has to remember. Backgrounded and silent: a hook that makes `git
+# pull` feel slow is a hook that gets uninstalled.
+#
+# ⚠ SKIPPED WHEN THE BINARY IS ABSENT. graphify is a per-machine install, not a project
+# dependency, so a fresh clone that has never run it must not see an error on every pull.
+command -v graphify >/dev/null 2>&1 || [ -n "$GRAPHIFY_BIN" ] || exit 0
+(node scripts/graph.mjs >/dev/null 2>&1 &) 
+exit 0

@@ -46,14 +46,27 @@ describe('layer 1 — the source carries the ruling and the guard', () => {
     expect(more, 'the dead flag went with the gate').not.toContain('const isDev')
   })
 
-  it("the worker's tick case refuses at entry and stops mid-loop, on the same two predicates advanceWeeks blocks on", () => {
+  // ⚠ RE-AIMED AT W2-ENDINGS, and WIDENED rather than relaxed. The pin used to name the two
+  // predicates literally (`world.pendingTournament || pendingKnock(world)`) in both positions. Since
+  // v39 there are FIVE things the raw loop must not outrun - the two above plus the terminal latch,
+  // the unanswered fork at nineteen and the natural end's open offer - so the worker folds them into
+  // one `decisionOpen` predicate used in both positions, which is the only way the two can be kept
+  // in step. The pin now asserts THAT: every one of the five is named, and the same function guards
+  // entry and the loop. Layer 2 below still drives the real worker, which is what the header means
+  // by "a guard whose only witness is a regex is a guard a refactor can silently drop".
+  it("the worker's tick case refuses at entry and stops mid-loop, on every predicate advanceWeeks blocks on", () => {
     expect(worker).toMatch(/import \{[\s\S]*?pendingKnock,[\s\S]*?\} from '\.\.\/engine\/world'/)
     const tickCase = worker.slice(worker.indexOf("case 'tick':"), worker.indexOf("case 'advance':"))
+    // the predicate names all five, so nothing the engine blocks on can be missing from the loop
+    expect(tickCase).toContain('w.pendingTournament !== null')
+    expect(tickCase).toContain('pendingKnock(w)')
+    expect(tickCase).toContain('w.ending !== null')
+    expect(tickCase).toContain('w.fork !== null && w.fork.answer === null')
+    expect(tickCase).toContain('w.retirementOffer !== null')
     // entry: a refusal, the typed error every handler uses
-    expect(tickCase).toContain('world.pendingTournament || pendingKnock(world)')
-    expect(tickCase).toMatch(/if \(world\.pendingTournament \|\| pendingKnock\(world\)\) \{\s*\n\s*throw new Error\(/)
-    // mid-loop: a stop before the tick that would run through the decision
-    expect(tickCase).toMatch(/if \(world\.pendingTournament \|\| pendingKnock\(world\)\) break/)
+    expect(tickCase).toMatch(/if \(decisionOpen\(world\)\) \{\s*\n\s*throw new Error\(/)
+    // mid-loop: a stop, on the SAME predicate
+    expect(tickCase).toMatch(/if \(decisionOpen\(world\)\) break/)
   })
 })
 

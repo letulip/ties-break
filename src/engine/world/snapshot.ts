@@ -54,7 +54,9 @@ import {
   UPCOMING_WEEKS,
 } from './constants'
 import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
-import { ageAtWeek, birthdayTurning, START_AGE_YEARS } from './age'
+import { ageAtWeek, birthdayTurning, kidAgeYears, START_AGE_YEARS } from './age'
+// W2-ENDINGS: the epilogue and the debt strip, built by the module that owns the latch.
+import { buildDebtView, buildEndingView } from './endings'
 import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage } from './entryCaps'
 import { acceptanceRank, fieldProsOf, fullRanking, inTrack, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor } from './ladder'
@@ -828,6 +830,18 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     lastSeasonSummary: world.lastSeasonSummary,
     // R10-9: the career's finished seasons, copied out (oldest first) for the Stats history table.
     seasonHistory: world.seasonHistory.map((h) => ({ ...h })),
+    // W2-ENDINGS (v39). The epilogue and the three open questions, all as SNAPSHOT FIELDS rather
+    // than as stop reasons. A stop reason is a property of the last advance and it is gone the next
+    // time anything refreshes; the ending, the fork and the offer are permanent state that has to
+    // survive a reload, which is the argument App.vue already makes for the knock prompt.
+    ending: buildEndingView(world),
+    debt: buildDebtView(world),
+    fork: world.fork && world.fork.answer === null
+      ? { askedWeek: world.fork.askedWeek, ageYears: kidAgeYears(world.fork.askedWeek, world.profile.birthMonth) }
+      : null,
+    retirementOffer: world.retirementOffer,
+    college: world.college,
+    careerTotals: world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 },
     ...(stopReasons && stopReasons.length > 0 ? { stopReasons } : {}),
     ...(pending ? { pending } : {}),
   }

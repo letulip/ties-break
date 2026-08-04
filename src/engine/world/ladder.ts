@@ -18,7 +18,7 @@ import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPr
 import { seasonIndexOf } from './ledger'
 import { ageAtWeek } from './age'
 import { proEntryCapUsage } from './entryCaps'
-import { KID_ID } from './constants'
+import { KID_ID, RESULTS_WINDOW } from './constants'
 import type { WorldState } from '../world'
 
 export function cohortIds(world: WorldState): string[] {
@@ -50,6 +50,36 @@ export function inTrack(track: LadderTrack): (r: SeasonResult) => boolean {
  *  walks – the frozen MAIN capture (41550 / e6b0c709) cannot see this function. */
 export function fieldProsOf(world: WorldState): FieldPro[] {
   return fieldProsFor(world.seed, seasonIndexOf(world.week), world.cohort.map((p) => p.name))
+}
+
+/** HOW MANY ROWS THE TABLE OF `track` HOLDS THIS WEEK – and therefore what "below the whole field"
+ *  is worth as a number.
+ *
+ *  ⚠ THE BUG THIS CLOSES, and it is the "two currencies, no exchange rate" error one more time
+ *  (probe/world-strength, docs/specs/world-strength-audit-2026-08.md §6). Three tables are folded
+ *  from one ledger, and TWO of them are 199 juniors plus the kid – so `world.cohort.length + 1` was
+ *  the right "unranked" sentinel for the domestic and ITF tables and was spelled out by hand at
+ *  every site that needed one. The W table stopped being that shape when living-field phase W
+ *  merged 364 derived professionals into it: it is 564 rows, and 200 is not below its field, it is
+ *  its top 36%. Every W-side `?? world.cohort.length + 1` therefore read a girl with NO ranking at
+ *  all as world #200 – past the acceptance cuts of W35, W50, W75, W100, a WTA 125 and a WTA 250,
+ *  and worth a top-200 professional's brand valuation in `reviewSponsors`.
+ *
+ *  `sponsors.ts` states the intent in as many words – *"a career that has never held a point in a
+ *  table sits below the whole field rather than at the top of an empty one"* – so this is the code
+ *  being made to agree with its own comment rather than a rule being chosen. `world/mandatory.ts`
+ *  already had it right, by using `Number.MAX_SAFE_INTEGER` instead; a number the UI can print is
+ *  the only reason this is the bottom of the table rather than that.
+ *
+ *  It is CONSERVATIVE IN ONE DIRECTION BY CONSTRUCTION: the sentinel can only ever get bigger, so
+ *  the fix can refuse where the old value admitted and never the reverse. And it is behaviour-neutral
+ *  on every path that has a cache, which is all of them in practice – `recomputeKidRank` is the one
+ *  writer, it runs on every tick and on every load, and the kid is always in her own roster. What it
+ *  removes is the landmine underneath that, of exactly the kind `latchOnRamps`' own defensive branch
+ *  exists for: "a later step may never assume an earlier one's post-condition." */
+export function tableSize(world: WorldState, track: LadderTrack): number {
+  const live = world.cohort.length + 1
+  return track === 'wta' ? live + fieldProsOf(world).length : live
 }
 
 export function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] {
@@ -90,11 +120,12 @@ export function domesticRanking(world: WorldState): RankingRow[] {
  *  adult-tour-and-endings.md §4). This function only guarantees all three are true at once. */
 export function recomputeKidRank(world: WorldState): void {
   const row = fullRanking(world).find((r) => r.playerId === KID_ID)
-  world.kidRank = row?.rank ?? world.cohort.length + 1
+  world.kidRank = row?.rank ?? tableSize(world, 'itf')
   const dom = domesticRanking(world).find((r) => r.playerId === KID_ID)
-  world.kidRankDomestic = dom?.rank ?? world.cohort.length + 1
+  world.kidRankDomestic = dom?.rank ?? tableSize(world, 'domestic')
   const wta = rankingFor(world, 'wta').find((r) => r.playerId === KID_ID)
-  world.kidRankWta = wta?.rank ?? world.cohort.length + 1
+  // ⚠ THE W TABLE IS 564 ROWS, NOT 200 – see `tableSize`. The other two are unchanged in value.
+  world.kidRankWta = wta?.rank ?? tableSize(world, 'wta')
   latchOnRamps(world)
 }
 
@@ -235,11 +266,8 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
   if (absolute !== undefined) return Math.max(1, absolute)
   const pct = TIERS[tier].enterPct
   if (pct === undefined) return undefined
-  const fieldSize =
-    TIERS[tier].track === 'wta'
-      ? world.cohort.length + 1 + fieldProsOf(world).length
-      : world.cohort.length + 1
-  return Math.max(1, Math.round(pct * fieldSize))
+  // ONE derivation of "how big is this table", shared with the unranked sentinel – see `tableSize`.
+  return Math.max(1, Math.round(pct * tableSize(world, TIERS[tier].track)))
 }
 
 /** THE ONE GATE, now that there are three tables (docs/specs/two-ladders.md, and the third one in
@@ -368,9 +396,106 @@ export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
     // rolling junior window would close on its own a year later with nothing she could do about it.
     const accepts = acceptanceRank(world, tier)
     if (accepts === undefined) return onRampOpen(world, 'wta')
-    return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? world.cohort.length + 1) <= accepts
+    // ⚠ THE SENTINEL IS THE W TABLE'S OWN SIZE, NOT THE COHORT'S – see `tableSize`. With
+    // `cohort.length + 1` a missing cache read as world #200 and cleared this cut and five above it.
+    return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? tableSize(world, 'wta')) <= accepts
   }
   return isTierEligible(tier, kidPoints(world, 'domestic'))
+}
+
+// =================================================================================================
+// THE SAME DOOR, ASKED OF A COHORT PLAYER (W3-ONRAMP, 04.08) – `tierFloorOpen`'s W arm, read for an
+// AI id instead of for the kid.
+// =================================================================================================
+//
+// WHY IT IS HERE AND NOT IN season/tournament.ts: the rule is the LADDER's, and this module is where
+// the ladder lives. `selectEntrants` is handed the finished predicate (`OnRamp.admits`) and never
+// learns what a track or a ranking table is – the same shape `universeForTier` uses to keep the
+// field's population out of the bracket code.
+//
+// WHY IT IS THE KID'S OWN RULE, LINE FOR LINE, and not a second one tuned for the AI: the closed
+// loop this closes exists precisely BECAUSE the cohort never had her rule. Two doors onto one tour
+// would be two things to keep in step, and the first time they drifted the standings would stop
+// meaning anything. So:
+//
+//     the on-ramp rung (no acceptance list) -> her ITF JUNIOR points against `enterPointBand`
+//     every rung above it                   -> a professional result, AND `acceptsRank` on the
+//                                              merged W table
+//
+// ⚠ THE ONE PLACE IT DIVERGES, AND WHY IT HAS TO. The kid's on-ramp is a LATCH (`onRampCleared`,
+// v34) because "the J rungs shut at eighteen on age, so from her birthday she can never earn another
+// junior point" – a rolling junior window would close her professional door a year later with
+// nothing she could do about it. A latch for 199 rivals would be persisted state and a schema bump,
+// so the cohort gets the SECOND of `latchOnRamps`' two proofs instead of the flag: **a W-track row
+// inside the ranking window**, i.e. she has actually been out there playing professional
+// tournaments this year. That is the stronger of the two proofs in `latchOnRamps`' own words, it is
+// derived from the ledger the pruner already maintains, and it costs zero bytes. What it does not
+// do is remember a player who has been off the professional tour for a full year – which is the
+// honest reading of that state rather than a gap in it.
+export interface ProDoors {
+  /** the rung's acceptance door, for a cohort id */
+  at(tier: TierId): (id: string) => boolean
+}
+
+/** Every W rung's door for this week, folded ONCE. `merged` is the kid-free merged W standings the
+ *  caller has already built (world.ts's `TourWeek.ranking`), so the professional half is two map
+ *  builds over an array the caller already has.
+ *
+ *  ⚠ THE ON-RAMP HALF IS LAZY, AND THAT IS A TICK-COST DECISION RATHER THAN A STYLE ONE. Only the
+ *  entry rung reads the junior table, and only some weeks carry an entry rung – so the extra
+ *  `computeRanking` and the ledger scan behind it are built on first use and never on a week that
+ *  does not ask. `feat/field-in-brackets` bought this tick a real speed-up and this wave is not
+ *  entitled to spend it on a fold nobody reads.
+ *
+ *  ZERO draws on any stream, and `at()` is a W-track question: every caller asks it of a W rung. */
+export function proDoors(world: WorldState, merged: readonly RankingRow[]): ProDoors {
+  const rankOf = new Map<string, number>()
+  const wtaPointsOf = new Map<string, number>()
+  for (const r of merged) {
+    rankOf.set(r.playerId, r.rank)
+    wtaPointsOf.set(r.playerId, r.points)
+  }
+  /** The on-ramp's own currency: the ITF junior table, folded WITHOUT the kid on the same
+   *  independence rule every other AI-side fold obeys – plus the second proof, that she has played a
+   *  professional tournament inside the window. An APPEARANCE, not a counting result: a first-round
+   *  exit is still a week she spent on the tour, which is exactly the split `SeasonResult` was
+   *  widened to carry (wave-b-first-round-zero). */
+  let onRampRead: { itfPointsOf: Map<string, number>; played: Set<string> } | null = null
+  const onRampFacts = () => {
+    if (onRampRead) return onRampRead
+    const itfPointsOf = new Map<string, number>()
+    for (const r of computeRanking(
+      world.results.filter((x) => x.playerId !== KID_ID),
+      world.week,
+      BEST_N_BY_TRACK.itf,
+      cohortIds(world),
+      inTrack('itf'),
+    )) {
+      itfPointsOf.set(r.playerId, r.points)
+    }
+    const played = new Set<string>()
+    for (const r of world.results) {
+      if (r.playerId === KID_ID) continue
+      if (r.week > world.week || world.week - r.week > RESULTS_WINDOW) continue
+      if (r.tier && TIERS[r.tier].track === 'wta') played.add(r.playerId)
+    }
+    onRampRead = { itfPointsOf, played }
+    return onRampRead
+  }
+  return {
+    at(tier: TierId) {
+      const accepts = TIERS[tier].track === 'wta' ? acceptanceRank(world, tier) : undefined
+      if (accepts === undefined) {
+        const { itfPointsOf, played } = onRampFacts()
+        // ⚠ THROUGH `isTierEligible`, NEVER BY RE-SPELLING THE BAND. It is the same helper
+        // `onRampOpen` reads for the kid – one place derives the point band, which is the fact
+        // tests/round10.test.ts R10-5 exists to keep true.
+        return (id: string) => isTierEligible(tier, itfPointsOf.get(id) ?? 0) || played.has(id)
+      }
+      return (id: string) =>
+        (wtaPointsOf.get(id) ?? 0) > 0 && (rankOf.get(id) ?? Number.MAX_SAFE_INTEGER) <= accepts
+    },
+  }
 }
 
 /** The GRADUATED-OUT half of the band, on its own: her points have passed the tier's ceiling.
@@ -385,8 +510,9 @@ export function outgrewTier(tier: TierId, points: number): boolean {
  *  gate that used the same number to decide her entries cannot disagree. */
 export function rankIn(world: WorldState, track: LadderTrack): number {
   if (track === 'itf') return world.kidRank
-  if (track === 'wta') return world.kidRankWta ?? world.cohort.length + 1
-  return world.kidRankDomestic ?? world.cohort.length + 1
+  // ⚠ EACH TABLE'S OWN SIZE IS ITS OWN "unranked" – see `tableSize`. The W one is 564 rows.
+  if (track === 'wta') return world.kidRankWta ?? tableSize(world, 'wta')
+  return world.kidRankDomestic ?? tableSize(world, 'domestic')
 }
 
 /** ...and her place in the SAME table a week ago. Its own function beside `rankIn` for the reason

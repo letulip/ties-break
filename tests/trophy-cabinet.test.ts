@@ -231,7 +231,13 @@ describe('⚠ the v31 back-fill is a deliberate NO-OP – it creates the shape, 
     // reading it would print "1 title, in 2031" under a cup that was won five times - a number with
     // a year on it that never happened. This asserts the premise rather than the behaviour, so the
     // day somebody proposes mining it the test says why not.
-    const world = playCareer('cabinet-firsts', 260)
+    // ⚠ 260 -> 300 WEEKS BY W3-ONRAMP (04.08), for the premise and not for the claim. The case needs
+    // A tier won more than once so that "one milestone row, several trophies" can be observed at
+    // all; the AI on-ramp changed which W rungs accept her and therefore what this fixture's career
+    // wins, and at 260 weeks it now holds local:1 regional:1 j30:1 w35:1 – four cups, no repeat.
+    // Forty more weeks and it is local:2 regional:2, measured both arms (`ON_RAMP.slots` 0 vs 6).
+    // Nothing about the assertion is relaxed: it still demands a genuine repeat winner.
+    const world = playCareer('cabinet-firsts', 300)
     const wonTier = TIER_LADDER.find((t) => world.trophiesByTier[t].titles.length > 1)
     expect(wonTier, 'need a tier won more than once for this to mean anything').toBeDefined()
     const titleRows = world.milestones.filter((m) => m.type === 'title' && m.tier === wonTier)

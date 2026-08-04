@@ -281,6 +281,81 @@ describe('policy ordering (the load-management axis)', () => {
     // the defect sat in both arms of every A/B this file ran; the ABSOLUTE ones about how tired the
     // opposition was do not. Flagged for the owner rather than acted on: re-deriving a year of
     // anchors is a decision about what the benches are for. ***
-    expect(ratio, 'the >= 2.5 C3 corridor is currently LOST – see the note above').toBeLessThan(2.5)
+    //
+    // *** ✅✅ AND THE REST OF THE WAY BACK: 2.032 -> 2.538 (04.08, W3-FIELD3). THE CORRIDOR IS
+    // RECOVERED AND THE INVERTED PIN IS RETIRED, which is precisely what the note four paragraphs up
+    // instructs ("this line FAILS the day the field gets its condition back, which is exactly when
+    // somebody should be here restoring `> 2.5` and deleting this assertion").
+    //
+    // NO KNOB MOVED, AGAIN. The W-track canonical brackets now draw from LIVE cohort ∪ 364 derived
+    // professionals, and a professional leaves no ledger row - so the ~98 W events a season stop
+    // landing on the 199 juniors altogether. This block's own diagnosis, written before the remedy
+    // existed, names the term exactly: "THE FIELD SHE MEETS IS EXHAUSTED … `conditionMatchFactor`
+    // makes a tired opponent weaker, so the careful parent - the one policy that arrives FRESH -
+    // wins rounds she used to lose, goes deeper, and plays more matches per entry." That term is now
+    // gone, and the swing is once more the CAREFUL parent's, exactly as every previous re-read
+    // predicted it would be. Measured in the sibling guard (tests/rivals.test.ts C2, same
+    // methodology as every re-pin there): field median condition 28-36 -> 95-100, W result rows per
+    // rival 6.79 -> 0.00.
+    //
+    // ⚠ RESTORED AT THE CORRIDOR'S FLOOR, NOT AT TODAY'S NUMBER - the discipline every note in this
+    // block insists on. 2.538 sits just inside 2.5, and the needle's own history is ±0.15 around its
+    // anchor on small pooled counts, so this WILL be the tightest bound in the file for a while. That
+    // is the correct place for it: the floor is the owner's C3 corridor, and if a later wave pushes
+    // the ratio back under it, the right response is to re-read this block rather than to lower the
+    // floor. The ">= 3" anchor above remains a separate, looser claim and is untouched.
+    //
+    // ⚠ AND THE SUSPECT-ANCHORS CAVEAT ABOVE NOW CUTS BOTH WAYS: every absolute in this block was
+    // measured against a field that was an over-worked third and an idle third, and the field is now
+    // neither - it is uniformly fresh, because the professional population absorbs the whole W
+    // calendar and the juniors carry only their own six rungs. living-field.md §8.4 reports that as
+    // an OVERSHOOT (LIVE W rows are exactly zero, a closed loop with no AI on-ramp), so if the owner
+    // gives the juniors a route back into the professional draws, this needle moves again. ***
+    //
+    // *** ⚠⚠⚠ AND IT MOVED AGAIN, EXACTLY AS THE LINE ABOVE PREDICTED IT WOULD: 2.538 -> 2.067
+    // (04.08, W3-ONRAMP). The paragraph directly above this one ends "so if the owner gives the
+    // juniors a route back into the professional draws, this needle moves again" - and the owner
+    // did («Замкнутый круг у ИИ-юниорок - да, надо чинить»). RE-READ, not re-pinned blind.
+    //
+    // WHAT SHIPPED: a W draw holds `ON_RAMP.slots` (2 of 32) for LIVE players who clear the rung's
+    // OWN acceptance door, filled after the week is resolved so a held slot can never double-book.
+    // The closed loop W3-FIELD3 left behind - a cohort player could not be drawn into a W event, so
+    // could not earn a W point, so could never leave the position that kept her out - is open: LIVE
+    // W ledger rows 0.0 -> ~125 a season. docs/specs/ai-w-onramp.md.
+    //
+    // ⚠ THE NEEDLE DOES NOT RESPOND TO THE SIZE OF THE CHANGE, WHICH IS THE FINDING. Swept on this
+    // very branch, same cells, N=10, 104w, against the on-ramp's own knob:
+    //     slots 0   grinder 33 / careful 13 = 2.538
+    //     slots 1   grinder 33 / careful 17 = 1.941
+    //     slots 2   grinder 29 / careful 14 = 2.071   <- shipped
+    //     slots 3   grinder 27 / careful 16 = 1.688
+    //     slots 4   grinder 31 / careful 15 = 2.067
+    //     slots 6   grinder 29 / careful 16 = 1.813
+    //     slots 8   grinder 31 / careful 15 = 2.067
+    // ONE held slot per draw moves it as far as EIGHT do. Both counts are small pooled ones (~30 and
+    // ~15 at N=10, half the sample the 3.0-era anchors were taken on), so a two-injury wobble is 0.25
+    // of ratio. There is no setting of this knob that buys the corridor back, and tuning it to 2.5
+    // would be picking a number to make a test pass. (The knob WAS set from this sweep, but for a
+    // different reason: 2 is where the two `econ-reach` bands both hold as shipped.)
+    //
+    // MECHANISM, and it is the SAME one every note in this block has found, now running backwards:
+    // W3-FIELD3 recovered the corridor by taking the cohort's professional load to ZERO, and the
+    // load is what makes the field tired, and a tired field is what lets the careful parent go deep.
+    // Giving the juniors a route back gives some of that term back. The cost is bounded and measured:
+    // the cohort's min median condition is 95-100 with the on-ramp and 95-100 without (C2's own
+    // methodology, tools/w-onramp-probe.ts), i.e. the KNEE claim is not being spent - what moves is
+    // the careful parent's 13 -> 14 on twenty careers.
+    //
+    // ⚠ AND THE DIRECTION CLAIM ABOVE (`> 1.5`) IS NOW THE TIGHT ONE: at 2.071 it holds by ~0.57,
+    // i.e. about five injuries of margin on the careful side. It is the line that must never break;
+    // if a later wave pushes it under 1.5 the property this whole file exists for is gone, and that
+    // is a stop rather than a re-pin.
+    //
+    // ⚠ SO THE PIN GOES BACK TO THE INVERTED FORM THIS BLOCK ALREADY USES FOR A LOST CORRIDOR, which
+    // is the file's own idiom and not a lowered floor: the corridor is pinned as LOST, so the day
+    // somebody restores the field's freshness (or re-prices the injury model) this line FAILS and
+    // brings them here to restore `> 2.5` and delete this assertion. The DIRECTION claim above
+    // (`> 1.5`, the property this test exists for) is untouched and still asserted. ***
+    expect(ratio, 'the C3 corridor is lost again - see the note above, and restore > 2.5').toBeLessThan(2.5)
   })
 })

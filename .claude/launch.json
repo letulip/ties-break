@@ -2,16 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "ties-break-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--", "--port", "5199"],
-      "port": 5199
-    },
-    {
-      "name": "ties-break-preview",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "preview"],
-      "port": 4173
+      "name": "tb-endings",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "5781", "--strictPort"],
+      "port": 5781
     }
   ]
 }

@@ -1,6 +1,7 @@
 import {
   DEFAULT_PROFILE,
   WEEK_PLAN_PRESETS,
+  type CareerTotals,
   type FinanceWeek,
   type KitGrades,
   type KitLine,
@@ -16,6 +17,7 @@ import {
   SAVE_SCHEMA_VERSION,
   openingCoachId,
   replayMainState,
+  kidAgeYears,
   seasonStartWeek,
   seedWorldForV6,
   startingSkills,
@@ -36,6 +38,21 @@ import type { TierId } from './season/types'
 
 // Save-data migrations. Append-only: never renumber, never delete a block.
 // Each `if (v < N)` block upgrades from N-1 to N and must be idempotent for its version.
+
+
+/** The absolute career week she turned nineteen, for the v39 fork back-fill.
+ *
+ *  ⚠ IT IS A SEARCH RATHER THAN A FORMULA, on purpose. `kidAgeYears` folds the birth month into the
+ *  game's real calendar (a December girl is 13.08 at week 0), so "the week she turned 19" is not
+ *  `5 * 52` for anybody but a January girl. Walking the season she crosses into is exact for every
+ *  birth date, costs at most 52 comparisons once per migrated save, and cannot drift if the age
+ *  arithmetic ever moves - which a hard-coded week absolutely would. */
+function nineteenthBirthdayWeek(birthMonth: number, cap: number): number {
+  for (let w = 0; w <= cap; w++) {
+    if (kidAgeYears(w, birthMonth) >= 19) return w
+  }
+  return cap
+}
 
 const EPOCH_SEASON_YEAR = weekYear(0) // 2031 – the year season 0 opened in
 
@@ -995,6 +1012,102 @@ export function migrateSave(raw: unknown): WorldState {
     const held = save.suspendedUntilWeek
     save.suspendedUntilWeek = typeof held === 'number' && Number.isFinite(held) ? held : null
     v = 38
+  }
+
+  // v38 -> v39: WHERE THE CAREER ENDS (W2-ENDINGS, career-contract-v1.md §4). Seven fields, and
+  // every one of them a fact no older save could have held: until this version nothing in the game
+  // could end, so there is no history to reconstruct and no risk of inventing one.
+  //
+  // ⚠ THE ONE BACK-FILL THAT IS NOT THE IDENTITY IS `fork`, AND IT HAD TO BE. The fork at nineteen
+  // is raised on her birthday week and blocks the advance until it is answered, so a career loaded
+  // at twenty-four with `fork: null` would be stopped on the next tick and asked whether she wants
+  // to stop at nineteen - about a decision she visibly made five years ago. She is twenty-four and
+  // still playing; the only truthful reading of that is `continue`, and it is recorded as having
+  // been answered on the birthday week it would have been asked on. A career still UNDER nineteen
+  // gets `null` and is asked on the day, like everybody born after this version.
+  //
+  // ⚠ `careerTotals` IS EXACT FOR A YOUNG CAREER AND A DOCUMENTED UNDERCOUNT FOR AN OLD ONE, which
+  // is the honest half of the same bargain v15 struck. `financeWeeks` prunes to a 60-week window
+  // (FINANCE_WEEKS), so a save past its second season simply does not contain the money it spent in
+  // its first - and `seasonHistory` keeps a NET delta per season, which cannot be split back into
+  // gross in and gross out. The alternative was to invent a plausible number, and a reckoning built
+  // on an invented number is worse than one that starts counting today. NOTE the visible
+  // consequence, stated rather than hidden: a migrated career's album may show the break-even
+  // crossing EARLIER than it truly happened, because the costs behind it were pruned before this
+  // counter existed. Careers begun on v39 are exact.
+  //
+  // ⚠ `debtSinceWeek` RESTARTS THE SPELL rather than reconstructing it. A family loaded under water
+  // gets the full grace window from the week it loads, which is the generous direction on purpose -
+  // the alternative is a career that opens and ends in the same click, for weeks the player was
+  // never warned about because the warning did not exist yet.
+  //
+  // Defensive and idempotent in v30's sense (a well-formed value is left alone, a malformed one is
+  // replaced). No sub-stream is added or reordered and not one draw is taken: every ending is
+  // post-draw state, so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 38) {
+    if (save.ending === undefined || typeof save.ending !== 'object') save.ending = null
+    const funds = typeof save.fundsCents === 'number' ? save.fundsCents : 0
+    const week = typeof save.week === 'number' ? save.week : 0
+    if (typeof save.debtSinceWeek !== 'number') save.debtSinceWeek = funds < 0 ? week : null
+    const totals = save.careerTotals as { earnedCents?: unknown } | undefined
+    if (!totals || typeof totals.earnedCents !== 'number') {
+      const fw = (Array.isArray(save.financeWeeks) ? save.financeWeeks : []) as FinanceWeek[]
+      let earnedCents = 0
+      let spentCents = 0
+      let prizeCents = 0
+      for (const w of fw) {
+        for (const [cat, amt] of Object.entries(w.byCategory ?? {}) as [WorldEventCategory, number][]) {
+          if (amt > 0) earnedCents += amt
+          else spentCents += -amt
+          if (cat === 'prize') prizeCents += amt
+        }
+      }
+      // ⚠ THE CAST IS TYPE-ONLY AND THE MIGRATION IS UNCHANGED (v40 added
+      // `careerTotals.weeksLostToInjury`). A shipped migration writes the shape ITS OWN version
+      // froze - v39 knew three counters - and the v40 block below is what upgrades it. Widening
+      // this line to the new shape would make a v38 save skip straight to a v40 object, which is
+      // exactly the edit the append-only rule forbids.
+      save.careerTotals = { earnedCents, spentCents, prizeCents } as CareerTotals
+    }
+    if (save.fork === undefined || typeof save.fork !== 'object') {
+      const profile = save.profile as PlayerProfile | undefined
+      const birthMonth = profile?.birthMonth ?? DEFAULT_PROFILE.birthMonth
+      const nineteenth = nineteenthBirthdayWeek(birthMonth, week)
+      save.fork = kidAgeYears(week, birthMonth) >= 19 ? { askedWeek: nineteenth, answer: 'continue' } : null
+    }
+    if (save.retirementOffer === undefined || typeof save.retirementOffer !== 'object') {
+      save.retirementOffer = null
+    }
+    if (typeof save.oneMoreYearCount !== 'number') save.oneMoreYearCount = 0
+    if (save.college === undefined || typeof save.college !== 'object') save.college = null
+    v = 39
+  }
+
+  // v40 – THE WEEKS-LOST COUNTER (docs/specs/fatigue-injury-audit-2026-08.md §6).
+  //
+  // `careerTotals.weeksLostToInjury` is the monotone total of the weeks her body has spent off
+  // court. It exists because `injuryHistory` is PRUNED to its last twenty rows by `rollInjury`,
+  // while the career-ending injury (#4) is keyed on the SUM of that list – so the accumulator went
+  // short exactly on the bodies the rule is about. Measured over 90 full careers: 13 reached the
+  // cap, and 1.4% of onsets were judged against a total a mean of 6.1 weeks light.
+  //
+  // ⚠ THE BACK-FILL IS EXACT FOR EVERY CAREER UNDER TWENTY LAYOFFS AND AN HONEST UNDERCOUNT ABOVE
+  // IT, and there is no third option: the pruned rows are gone from the save and no other field
+  // records them (`events` prunes at 400, `milestones` keeps only the FIRST injury, `seasonHistory`
+  // keeps no medical column at all). Undercounting is also the safe direction – `weeksLostSoFar`
+  // takes the LARGER of the counter and the surviving history, so a migrated career can never have
+  // its ending fire on weeks it did not lose, and starts counting exactly from the load.
+  //
+  // Defensive and idempotent in v30's sense; zero draws on any stream, so the frozen MAIN capture
+  // (41550 / e6b0c709) is untouched by construction.
+  if (v === 39) {
+    const totals = (save.careerTotals ?? {}) as { weeksLostToInjury?: unknown }
+    if (typeof totals.weeksLostToInjury !== 'number' || !Number.isFinite(totals.weeksLostToInjury)) {
+      const history = (Array.isArray(save.injuryHistory) ? save.injuryHistory : []) as { weeksOut?: unknown }[]
+      const lost = history.reduce((sum, h) => sum + (typeof h.weeksOut === 'number' ? h.weeksOut : 0), 0)
+      save.careerTotals = { ...(save.careerTotals as object), weeksLostToInjury: lost } as CareerTotals
+    }
+    v = 40
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

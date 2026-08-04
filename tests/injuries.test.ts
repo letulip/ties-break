@@ -14,6 +14,7 @@ import {
   kidAgeYears,
   playedWeeksInTrailing4,
   toSnapshot,
+  autoEndingViewOf,
   financeWindow,
   skipTournament,
   closeTournament,
@@ -21,6 +22,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
+import { weeksLostSoFar } from '../src/engine/ending'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { kitInjuryFactor, kitWearAt } from '../src/engine/equipment'
@@ -200,7 +202,42 @@ const REF = { //
   // season, the cohort meets 30 more draws, and a different set of juniors ends the year with
   // counting ITF points. See the same note on tests/condition.test.ts B1's REF, which is the
   // declaration this one mirrors. The capture itself is untouched by construction.
-  kidRank: 123 }
+  //
+  // ⚠⚠ RE-PINNED 123 -> 89 BY W3-FIELD3 (04.08) – a RULE, not content. The W-track canonical
+  // brackets draw from LIVE cohort ∪ 364 derived professionals and a professional leaves no ledger
+  // row, so the season's ~98 W events stop landing on the cohort (W result rows per rival over a
+  // 20-week window: 6.79 -> 0.00), the juniors play the year fresher, and a different set of them
+  // ends it holding counting ITF points. C1's own claim – that INJURY and PHYSIO add no main-stream
+  // draws – is untouched and still proves itself two lines up: count 41550 and hash e6b0c709
+  // reproduce byte-for-byte, because every W bracket runs on its own `seed:aitour:<id>` sub-stream.
+  // ⚠⚠ RE-PINNED 89 -> 90 BY W3-ONRAMP (04.08) – a RULE again, and the exact counter-move to the one
+  // above. W3-FIELD3 took the ~98 W events a season off the cohort entirely and this wave hands a
+  // SHARE of them back: a W draw holds `ON_RAMP.slots` (2 of 32) for LIVE players who clear the rung's
+  // own acceptance door – the kid's door, asked of a cohort id. Measured, tools/w-onramp-probe.ts:
+  // LIVE W ledger rows 0.0 -> ~125 a season (~0.6 per cohort player), against ~3,170 before
+  // W3-FIELD3. So a couple of dozen juniors of the 199 now hold counting W points, and a table sorted
+  // on points puts them ahead of a kid who holds none. Note the SIZE and the direction: two places,
+  // downward - the W rows the cohort now earns are on a DIFFERENT track from the one this number folds,
+  // so what reaches it is the second-order re-deal of who ends the junior year in the points, not the
+  // professional table itself. SHE DID NOTHING DIFFERENT – this fixture's kid
+  // enters nothing at all, which is the cleanest possible statement of "the world moved, not her".
+  //
+  // THE CAPTURE AND THE A/B ARE UNTOUCHED, WHICH IS WHAT THIS BLOCK IS FOR: count 41550, hash
+  // e6b0c709, head and tail all reproduce byte-for-byte and are asserted before this constant is ever
+  // read. Every draw the on-ramp spends is APPENDED to the event's own `seed:aitour:<id>` sub-stream,
+  // after the professional side of the draw has already been keyed.
+  //
+  // ⚠ RE-AIMED AGAIN BY W4-LIVES (04.08): 90 -> 89, ONE place. The professionals have careers now
+  // (FIELD.career) - they age +1 a season and retire - so the population's AGE HISTOGRAM changed
+  // shape, `selectEntrants` gates candidates on age, a W event's entrant set changed, which JUNIORS
+  // a W week books changed, and the J draws those juniors were no longer free for changed with it.
+  // Second-order, on a different track from the one this number folds. SHE DID NOTHING DIFFERENT.
+  //
+  // THE CAPTURE IS AGAIN UNTOUCHED: count 41550, hash e6b0c709, head and tail all reproduce
+  // byte-for-byte and are checked BEFORE this constant is read. Every draw W4-LIVES adds is on
+  // `seed:fieldcareer:<n>:<k>` or `seed:fieldform:<n>:<season>` - fresh purpose-scoped sub-streams
+  // the weekly tick never walks.
+  kidRank: 89 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -592,6 +629,38 @@ describe('C4 — injured gate + recovery', () => {
     expect(w.injuryHistory).toHaveLength(20)
     expect(w.injuryHistory[0].kind).toBe('entry-5') // oldest 5 pruned away
     expect(w.injuryHistory[19].kind).toBe('entry-24')
+  })
+
+  // ⚠ THE COUNTER THE PRUNE ABOVE MADE NECESSARY (v40, docs/specs/fatigue-injury-audit-2026-08.md
+  // §6). The career-ending injury is keyed on the SUM of the layoffs a body has been through, and
+  // for twenty releases that sum was being taken over the list the test above proves is lossy - so
+  // the rule quietly got HARDER the more broken she was. Measured over 90 full careers: 13 reached
+  // the cap and 1.4% of onsets were judged a mean of 6.1 weeks light.
+  it('careerTotals.weeksLostToInjury counts EVERY layoff, including the ones the prune drops', () => {
+    const w = createWorld('c4-prune-total')
+    for (let i = 0; i < 25; i++) {
+      setInjury(w, 1, 3, `entry-${i}`)
+      w.week += 1
+      rollInjury(w)
+    }
+    // the visible history remembers twenty of the twenty-five; the counter remembers all of them
+    expect(w.injuryHistory).toHaveLength(20)
+    expect(w.injuryHistory.reduce((s, h) => s + h.weeksOut, 0)).toBe(60)
+    expect(w.careerTotals.weeksLostToInjury).toBe(75)
+    // ...and the ending reads the larger of the two, so it sees the whole body
+    expect(weeksLostSoFar(autoEndingViewOf(w))).toBe(75)
+  })
+
+  it('the counter records a layoff only when she RECOVERS from it, never at onset', () => {
+    const w = createWorld('c4-total-onset')
+    const rng = rngFromSeed(w.seed)
+    setInjury(w, 2, 5, 'knee strain')
+    expect(w.careerTotals.weeksLostToInjury).toBe(0) // out, but not yet "already lost"
+    tickWeek(w, rng)
+    expect(w.careerTotals.weeksLostToInjury).toBe(0)
+    tickWeek(w, rng) // clears
+    expect(w.injury).toBeNull()
+    expect(w.careerTotals.weeksLostToInjury).toBe(5)
   })
 })
 

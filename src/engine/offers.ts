@@ -67,10 +67,14 @@ export const SPONSOR_TIERS: readonly SponsorTier[] = [
 /** WHICH LETTERHEAD IMAGE A RUNG PRINTS. `public/images/sponsors/<key>.webp` holds three marks and
  *  the ladder now has six, so the three professional rungs borrow the global mark.
  *
- *  PLACEHOLDER ART, FLAGGED FOR THE OWNER, and it is the same stand-in rule `art/venues.ts` and the
- *  W2-LADDER trophies already live by: no art is invented in code, the mapping is one function, and
- *  three real marks (tour / premium / icon) are an art ask whenever he wants them - they would
- *  replace this function with the identity rather than touching anything else. */
+ *  PLACEHOLDER ART, and it is REGISTERED rather than merely flagged: the three rungs have a row each
+ *  in `docs/art-placeholders.md`, and `tests/art-placeholders.test.ts` asserts that the set of rungs
+ *  this function redirects is exactly the set the registry lists. So a seventh rung added with a
+ *  borrowed mark fails the suite instead of joining the debt silently, and the day `tour.webp` lands
+ *  the same suite says which row to delete. Same stand-in rule `art/venues.ts` and the W2-LADDER
+ *  trophies live by: no art is invented in code, the mapping is one function, and three real marks
+ *  (tour / premium / icon) are an art ask whenever the owner wants them - they would replace this
+ *  function with the identity rather than touching anything else. */
 export function sponsorArtKey(tier: SponsorTier): string {
   return tier === 'tour' || tier === 'premium' || tier === 'icon' ? 'global' : tier
 }
