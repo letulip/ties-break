@@ -28,7 +28,7 @@ import {
 } from '../src/engine/world'
 import { BEST_N_BY_TRACK, computeRanking, isCountingResult, windowedBestSum, type SeasonResult } from '../src/engine/season/ranking'
 import { reconstructRun, rivalCondition, rivalConditions } from '../src/engine/season/rival'
-import { resolveDoubleBookings, selectEntrants } from '../src/engine/season/tournament'
+import { ON_RAMP, fillOnRamp, resolveDoubleBookings, selectEntrants } from '../src/engine/season/tournament'
 import { generateCohort } from '../src/engine/season/cohort'
 import { generatePreHistory } from '../src/engine/season/prehistory'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
@@ -36,7 +36,7 @@ import { matchDrain } from '../src/engine/condition'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
 import { fieldProsFor, isFieldProId, mergedWtaRanking, universeForTier } from '../src/engine/season/fieldPros'
-import { inTrack } from '../src/engine/world/ladder'
+import { inTrack, proDoors } from '../src/engine/world/ladder'
 import { seasonIndexOf } from '../src/engine/world/ledger'
 import type { TierId } from '../src/engine/season/types'
 
@@ -100,6 +100,7 @@ function entrantsOfWeek(world: WorldState, week: number): Set<string> {
   )
   const tourUniverse = universeForTier('w15', world.cohort, pros)
   const fatigue = rivalConditions(world.results, week)
+  const doors = proDoors({ ...world, week }, wtaRanking)
   const drawn = world.season
     .filter((e) => e.week === week)
     .map((event) => ({
@@ -111,12 +112,52 @@ function entrantsOfWeek(world: WorldState, week: number): Set<string> {
         rngFromSeed(`${world.seed}:aitour:${event.id}`),
         fatigue,
       ),
+      rng: rngFromSeed(`${world.seed}:aitour:${event.id}`),
     }))
   const out = new Set<string>()
   const fields = resolveDoubleBookings(drawn, world.cohort, ranking, fatigue, {
     universe: tourUniverse,
     ranking: wtaRanking,
   })
+  // ⚠ THE HELD SLOTS ARE PART OF THE MIRROR NOW (W3-ONRAMP, 04.08), and they land exactly where the
+  // tick puts them: AFTER the week is resolved, strongest rung first, from the players nobody has
+  // booked (world.ts `fillWeekOnRamps`). A mirror that omitted them drew a field the tick never
+  // played – measured on this fixture, six row-holders the replica had never selected, which is the
+  // "ghost" this test is named after arriving from the mirror's side rather than the engine's.
+  //
+  // ⚠ The stream is the EVENT's own, re-derived here and advanced past `selectEntrants`' draws in the
+  // same order the engine advances it, so the on-ramp reads the same numbers.
+  const booked = new Set<string>()
+  for (const field of fields.values()) for (const p of field) booked.add(p.id)
+  const wDrawn = drawn
+    .filter((d) => TIERS[d.event.tier].track === 'wta')
+    .sort(
+      (a, b) =>
+        TIER_LADDER.indexOf(b.event.tier) - TIER_LADDER.indexOf(a.event.tier) ||
+        (a.event.id < b.event.id ? -1 : a.event.id > b.event.id ? 1 : 0),
+    )
+  for (const d of wDrawn) {
+    // advance a fresh stream past the selection draws, exactly as the live rng object stands
+    const rng = rngFromSeed(`${world.seed}:aitour:${d.event.id}`)
+    selectEntrants(
+      d.event,
+      universeForTier(d.event.tier, world.cohort, pros),
+      wtaRanking,
+      rng,
+      fatigue,
+    )
+    const filled = fillOnRamp(
+      d.event,
+      fields.get(d.event.id) ?? d.entrants,
+      wtaRanking,
+      rng,
+      { pool: world.cohort, ranking, admits: doors.at(d.event.tier), slots: ON_RAMP.slots },
+      fatigue,
+      booked,
+    )
+    fields.set(d.event.id, filled)
+    for (const p of filled) booked.add(p.id)
+  }
   for (const field of fields.values()) {
     // ⚠ LIVE ONLY, and it is the point of the wave rather than a convenience: a field pro plays the
     // bracket and leaves NO ledger row (world.ts `runAiTournament`), so "who holds a row" and "who

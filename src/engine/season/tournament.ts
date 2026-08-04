@@ -82,6 +82,182 @@ export function standardSeedOrder(n: number): number[] {
   return seeds
 }
 
+// =================================================================================================
+// THE ON-RAMP, FOR THE AI SIDE (W3-ONRAMP, 04.08) – slots a professional draw holds for the players
+// coming up from the table below it.
+// =================================================================================================
+//
+// WHY IT EXISTS: THE CLOSED LOOP W3-FIELD3 LEFT BEHIND, measured before a line of this was written
+// (tools/w-onramp-probe.ts). That wave made the W-track canonical brackets select from LIVE cohort ∪
+// 364 derived professionals against the MERGED W standings. The merged table sorts on points, every
+// derived pro holds three figures of them and every LIVE player starts on nought – so the whole
+// cohort sits at positions 364+ of a 563-row table, while a W15 draw is filled position-biased
+// (`key = position + rng × drawSize`) from the head of its own band, around #124. A cohort player
+// can therefore never be DRAWN into a W event; never being drawn she can never EARN a W point; never
+// earning one she can never LEAVE position 364. Measured on the shipped engine: **0.0 W-tier ledger
+// rows for LIVE players, per season, on every seed** – against 3,170 a season the week before the
+// wave. The only player in the world who could ever hold a W point was the kid.
+//
+// ⚠ AND IT IS THE SAME SENTENCE THE W15 TIER NOTE ALREADY WRITES, one population over: "a player
+// cannot hold a ranking in a table she has never played in, and a rank gate on the first rung would
+// be a closed loop" (calendar.ts, `w15.enterPointBand`). The KID has had the answer since the adult
+// rungs shipped – her W15 door reads her ITF JUNIOR points, and the rungs above it read her W rank –
+// and the cohort simply never got it. This is that door, opened for everybody.
+//
+// THE SHAPE, in one sentence: a W draw holds `ON_RAMP.slots` of its places for LIVE players who pass
+// the RUNG'S OWN ACCEPTANCE DOOR – the kid's, in the kid's currency – and among them entry is the
+// same position-biased lottery, read on the table they DO have a place in (the AI side's mixed
+// ordinal fold) rather than on the professional one they do not.
+//
+// WHAT IT IS NOT: it is not a fabricated standing. Nobody is given a W point they did not win, so
+// `topBandForPercentile`'s ruling («the professional table starts empty, for everyone, because
+// nobody in this world has ever played a professional tournament») survives intact – what moves is
+// who is allowed through the DOOR, never what is written on the table behind it.
+//
+// ⚠⚠ AND IT IS FILLED AFTER `resolveDoubleBookings`, NOT INSIDE `selectEntrants` – WHICH IS A
+// MEASURED DECISION AND NOT A LAYERING PREFERENCE. The first build ran the lottery inside the draw,
+// which left a held slot free to land on a junior the SAME WEEK'S J300 had already drawn. The engine
+// then resolved that collision exactly as it is supposed to (the higher rung keeps her, the junior
+// event backfills «best standing first» – §"ONE BODY, ONE WEEK" below), and the side effect was that
+// **every held slot quietly UPGRADED a junior draw**: the girl it pulled out was replaced by a
+// stronger one. Measured, ~100 such collisions a season, and two shipped balance tripwires moved on
+// it – tests/econ-reach.test.ts's 14→16 count and the C3 corridor in
+// tests/fatigue-bench-policy.test.ts. Filling after the week is resolved, from the players nobody has
+// booked, makes "one body, one week" true of the held slots BY CONSTRUCTION and leaves the junior
+// tour's fields exactly as the junior tour drew them.
+//
+// The event's own sub-stream does not notice the move: nothing else touches `seed:aitour:<id>`
+// between `selectEntrants` and `runTournament`, so the draws still sit in the same position in the
+// same order, and the candidate COUNT is the band's, never the booked set's.
+//
+// ⚠ SCOPE: THE CANONICAL BRACKETS ONLY, AND THAT IS STATED RATHER THAN DISCOVERED LATER. Her own
+// shadow draws and their previews (`seed:kidtour:`) still fill a W field from professionals alone,
+// so she does not yet MEET the cohort's graduates in the tournament she plays – she only meets them
+// in the standings. The two universes have always differed for one event id (see
+// `announceTourChampion`'s note and docs/specs/dual-universe.md), and widening the seam to her side
+// moves her measured difficulty at every W rung, which is a second change and wants its own
+// measurement. Both halves come through THIS function, so it is three call sites and no new
+// mechanism when the owner wants it.
+
+/** WHO GETS THE HELD SLOTS – everything `fillOnRamp` needs to run the lottery. Built for W rungs
+ *  only; the six junior/domestic rungs never call it and are byte-identical, draws included. */
+export interface OnRamp {
+  /** the LIVE players – `world.cohort`, in world order */
+  pool: readonly AiPlayer[]
+  /** the table they HAVE a place in: the AI side's mixed ordinal fold, folded without the kid */
+  ranking: readonly RankingRow[]
+  /** the rung's own acceptance door, asked per id. See `proDoors` (world/ladder.ts) – it is the
+   *  kid's `tierFloorOpen`, read for a cohort id instead of for her. */
+  admits: (id: string) => boolean
+  /** how many of the draw are held. `ON_RAMP.slots` at every engine call site; a parameter rather
+   *  than a constant read in here so a bench can sweep it without patching the module. */
+  slots: number
+}
+
+/** HOW MANY OF A 32-DRAW ARE HELD, and it is one number for the whole W track on purpose.
+ *
+ *  The real tour's answer is "the qualifiers and the wildcards", which at an ITF W15 is a quarter of
+ *  the draw and at a major is a handful – but the TAPER IS ALREADY IN THE RULE rather than in a
+ *  table of ten numbers: `OnRamp.admits` is the rung's own acceptance cut, so a cohort player is
+ *  admitted to W15 on junior points, to W35/W50/W75 on her first professional result, and to a major
+ *  only once she is genuinely inside its list. A rung nobody clears holds no slots however many it
+ *  reserves, and the constant never has to know which rung it is on.
+ *
+ *  ⚠ A PLAIN OBJECT, NOT A BARE `const`, DELIBERATELY – the same idiom and the same reason as
+ *  `BEST_N_BY_TRACK`: tools/w-onramp-probe.ts sweeps it (`--slots`) and restores it, so the number
+ *  can be re-derived by a bench rather than argued about. Engine code never writes it.
+ *
+ *  TWO of thirty-two (6.3%) – A WILDCARD PAIR, and it is the CONSERVATIVE end of the real anchor on
+ *  purpose. A real 32-draw holds more than this for the players coming up (about four qualifiers,
+ *  plus wildcards); what fixes the number here is not the sport but the three shipped balance
+ *  tripwires the cohort's professional load moves, and the measurement that decided it:
+ *
+ *      slots            0      1      2      3      4      6      8
+ *      C3 ratio      2.538  1.941  2.071  1.688  2.067  1.813  2.067   (tests/fatigue-bench-policy)
+ *      reach 14->16     10      4      6      6      4      5      9   (tests/econ-reach, band 6-20)
+ *      reach 14->18     21     22     23     22     28     22      -   (tests/econ-reach, band 9-24)
+ *
+ *  ⚠ READ THAT AS THE FINDING IT IS: ONE held slot moves them as far as EIGHT do. They are small
+ *  pooled counts over 20-30 careers and they respond to the world being DIFFERENT, not to how
+ *  different - so no setting buys the C3 corridor back, and choosing a number to make them read well
+ *  would be "a number picked to make a test interesting", the failure mode econ-reach's own history
+ *  is a record of. What CAN be chosen honestly is the setting that leaves the most guards standing
+ *  exactly as they shipped, and that is 2: both reach bands hold untouched, and the only assertion
+ *  re-aimed anywhere is the C3 corridor, which cannot be held at any non-zero setting.
+ *
+ *  So the number is small by evidence rather than by taste, and RAISING IT IS AN OWNER DECISION with
+ *  the table above in hand: 6 gives the cohort half again as much professional tennis and costs the
+ *  `econ-reach` 14->16 band a re-aim. docs/specs/ai-w-onramp.md §4f and §5. */
+export const ON_RAMP: { slots: number } = { slots: 2 }
+
+/** THE HELD SLOTS, FILLED – called once per W event after `resolveDoubleBookings` has settled the
+ *  week (see the ⚠⚠ box above for why it is here and not inside `selectEntrants`).
+ *
+ *  `field` is the event's resolved entrants, in standings order. `ranking` is the table the draw is
+ *  SEEDED by (the merged W standings); `onRamp.ranking` is the table the CANDIDATES are read on (the
+ *  AI side's mixed ordinal fold) – two tables on purpose, because a player with no professional
+ *  points has a place in exactly one of them. `booked` is everybody already playing somewhere this
+ *  week, hers included: a held slot may never create the double-booking the week has just resolved.
+ *
+ *  Returns a NEW array of the same length, in standings order, ready for `buildDraw`. */
+export function fillOnRamp(
+  event: SeasonEvent,
+  field: readonly AiPlayer[],
+  ranking: readonly RankingRow[],
+  rng: Rng,
+  onRamp: OnRamp,
+  /** the week's rival conditions, exactly as `selectEntrants` takes them */
+  conditions?: ReadonlyMap<string, number>,
+  booked?: ReadonlySet<string>,
+): AiPlayer[] {
+  // ⚠ FIRST, AND BEFORE A SINGLE DRAW: `slots = 0` must cost nothing on the stream, or the bench's
+  // own A-arm (`tools/w-onramp-probe.ts --slots 0`) would not be the pre-fix world it claims to be.
+  if (onRamp.slots <= 0) return [...field]
+  const total = ranking.length || field.length
+  const posOf = new Map<string, number>()
+  ranking.forEach((r, i) => posOf.set(r.playerId, i))
+  const posFor = (id: string) => posOf.get(id) ?? total - 1
+  const jitter = TIERS[event.tier].drawSize
+  const floor = ECONOMY.availability.minConditionToEnter[event.tier]
+  const fit = (id: string) => (conditions?.get(id) ?? ECONOMY.condition.max) >= floor
+
+  // ONE DRAW PER BAND CANDIDATE, and the gates come AFTER the keying – exactly as the availability
+  // floor in `selectEntrants` does, and for the same reason: the count must be a function of the
+  // WINDOW and the population, never of who happens to be fit, admitted or booked this week.
+  //
+  // THE CEILING OF THE BAND, NOT THE WHOLE BAND. `isEntrantBand` has a floor to keep weak players out
+  // of big draws; for the on-ramp that job belongs to `admits`, in the professional table's own
+  // currency, and reading the floor here as well would rebuild the closed loop one storey up – the
+  // cohort's best juniors sit at the TOP of their own table, so a floor would make them candidates
+  // for the majors alone, where the acceptance cut then refuses them for holding no professional
+  // points. The ceiling is the half that is still meaningful: it is what stops the tail of the junior
+  // field turning up at a WTA 1000.
+  const jTotal = onRamp.ranking.length || onRamp.pool.length
+  const jPos = new Map<string, number>()
+  onRamp.ranking.forEach((r, i) => jPos.set(r.playerId, i))
+  const jPosOf = (id: string) => jPos.get(id) ?? jTotal - 1
+  const ceiling = TIERS[event.tier].entrantPctBand[1]
+  const keyed = onRamp.pool
+    .filter((p) => isTierAgeOpen(event.tier, p.ageYears) && (jPosOf(p.id) + 1) / jTotal <= ceiling)
+    .map((p) => ({ p, key: jPosOf(p.id) + rng() * jitter }))
+  keyed.sort((a, b) => a.key - b.key)
+
+  const take = keyed
+    .filter((c) => !booked?.has(c.p.id) && fit(c.p.id) && onRamp.admits(c.p.id))
+    .slice(0, Math.min(onRamp.slots, field.length))
+    .map((c) => c.p)
+  if (!take.length) return [...field]
+
+  // ...and the players who step aside are the LAST DIRECT ACCEPTANCES – the worst-positioned of the
+  // field as drawn, which is precisely whom a qualifier or a wildcard displaces on a real entry list.
+  //
+  // A held slot is still a slot in THIS draw: the newcomer's seeding position is her real one in the
+  // table the draw is seeded by, which for a player with no professional points is the back of it.
+  // That is what an unseeded wildcard is, and `buildDraw` needs no special case for her.
+  const kept = [...field].sort((a, b) => posFor(a.id) - posFor(b.id)).slice(0, field.length - take.length)
+  return [...kept, ...take].sort((a, b) => posFor(a.id) - posFor(b.id))
+}
+
 // selectEntrants – the AI field for an event. Candidates are the cohort players whose standings
 // percentile falls inside the tier's (overlapping) entrant window; entry among them is stochastic
 // (position-biased) so the field varies, but the returned array is seeded by standings position

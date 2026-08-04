@@ -218,7 +218,24 @@ describe('formula spot-check: independent condition-trace recomputation (byte-eq
         // CUMULATIVE RUN FATIGUE (owner 26.07): the run's i-th match (0-based) also pays the
         // ladder's extra – re-derived here from the knob, including the repeat-last-value rule
         // for a run longer than the ladder. Her first match of the run always pays 0.
-        const ladder = k.runFatigueLadder
+        //
+        // ⚠⚠ AND THERE ARE TWO LADDERS, WHICH THIS RECOMPUTATION DID NOT KNOW UNTIL 04.08. R15-6
+        // split the W family onto the owner's flattest ladder D (`runFatigueLadderWta`, +1 per
+        // subsequent match) and left the domestic and J rungs on C ([0,1,1,2,2]) – the split lives
+        // in `runFatigueExtra` (engine/condition.ts) and is applied per FAMILY. This trace re-derived
+        // from ladder C for EVERY tier, so it over-charged any W run of four or more matches by
+        // exactly one point, and it had simply never met one: the 104-week fixture's last week is a
+        // W15 run of four only on some worlds, and on the shipped one it was a j30. The AI on-ramp
+        // (W3-ONRAMP, docs/specs/ai-w-onramp.md) re-dealt her season, the fixture landed on a
+        // four-match W15 for two of the three policies, and this caught it – engine 80, this
+        // recomputation 79, on the final week and nowhere else.
+        //
+        // ⚠ IT IS THE RECOMPUTATION THAT WAS WRONG, and the branch that exposed it cannot touch this
+        // arithmetic at all (it decides who is in a canonical AI draw, nothing else). Proof, same
+        // code and one knob: at `ON_RAMP.slots = 0` this trace matched byte-for-byte for all three
+        // policies. So the fix is here, and it is the SAME per-family read the engine does.
+        const ladder =
+          TIERS[f.tierPlayed as TierId].track === 'wta' ? k.runFatigueLadderWta : k.runFatigueLadder
         const extra = ladder.length === 0 ? 0 : ladder[Math.min(i, ladder.length - 1)]
         strain += d + k.tierMatchFatigue[f.tierPlayed as TierId] + extra
       })

@@ -213,3 +213,47 @@ tables: `docs/specs/endings-and-the-album.md`.
   §5.6 rules out.
 - Supersedes adult-tour-and-endings.md §6 call 3 («no play after the ending, in v1») – contract §5.6,
   05.08, replaced the credits roll with an offer.
+
+## 2026-08-04 – W3-ONRAMP: the AI juniors get the kid's own door
+
+Owner: «Замкнутый круг у ИИ-юниорок - да, надо чинить». Full spec and every measurement in
+`docs/specs/ai-w-onramp.md`; the entry it closes is `living-field.md` §8.3.
+
+- **The loop, measured rather than argued.** `feat/field-in-brackets` put 364 derived professionals
+  into the canonical W draws against a points-sorted merged table, so every point-less cohort player
+  sat at position 364+ of 563 and position-biased entry never reached her. **LIVE W ledger rows: 0.0
+  a season, on every seed** – against 3,170 at the wave's own parent commit. The only player in the
+  world who could ever hold a W point was the kid.
+- **The fix is a HELD SLOT, never a fabricated standing.** A W draw keeps `ON_RAMP.slots` (2 of 32)
+  for LIVE players who clear the rung's own acceptance door – `tierFloorOpen`'s W arm asked of a cohort id (`proDoors`). Junior
+  points open the entry rung; a professional result plus the rung's rank cut open the ones above.
+  `topBandForPercentile`'s ruling that the professional table starts empty for everyone is intact.
+- **It is filled AFTER the week is resolved, and that was a measured correction.** The first build
+  ran the lottery at draw time, so a held slot could land on a junior the same week's J300 had also
+  drawn; `resolveDoubleBookings` then correctly gave her to the higher rung and backfilled the junior
+  event **best standing first** – i.e. every held slot quietly UPGRADED a junior draw, ~100 times a
+  season. Filling from the players the resolved week has left free makes "one body, one week" true of
+  the held slots by construction.
+- **The taper is in the rule, not in ten numbers.** Measured per rung: w15–w75 fill both held slots,
+  W100 0.38, **and nothing at all above it.** No cohort player walks into a WTA 125 or a major.
+- **Her trajectory does not move.** 8 prospect careers × 10 seasons, `--slots 0` vs `4`: events
+  entered 21.3 → 20.7 a season, titles 4.2 → 3.9, mean condition 72.0 → 72.2. She is ~15–20 places
+  worse in seasons 0–1 (she is genuinely behind more people now) and inside the noise thereafter.
+  ⚠ The late career drifts slightly IN HER FAVOUR – best rank reached #209 → #191, and WTA 250 opens
+  for 7 of 8 careers instead of 2 – which 8 careers cannot separate from seed luck. Flagged, not
+  claimed.
+- **The cost is stated, not hidden.** The wave's ledger saving keeps 92% of itself (2,080 → 2,325
+  rows against 5,270 before it). C2's restored knee claim is not spent at all: W rows per rival
+  0.00 → 0.45 against the 6.79 that broke it, and the cohort's median condition is 95–100 either way.
+- **⚠⚠ TWO SIM TRIPWIRES FIRED AND ARE RE-AIMED IN PLACE, AND THIS IS THE PART FOR THE OWNER.** The
+  C3 corridor (`fatigue-bench-policy`) went 2.538 → 2.067 against a floor of 2.5, and the domestic
+  reach proxy (`econ-reach`) 10 → 4 of 30 against a band floor of 6. Swept against the on-ramp's own
+  knob, NEITHER responds to the size of the change (C3 reads 2.538/2.067/1.813/2.067 and reach
+  10/4/5/9 at slots 0/4/6/8), so no setting buys them back and tuning to one would be a number chosen
+  to make a test pass. C3 goes back to the INVERTED pin its own block uses for a lost corridor (so
+  restoring the field's freshness fails the line and brings somebody back); reach keeps both branch
+  assertions and re-aims only its drift band, with the sweep as evidence that the band was derived
+  from the target's plateau rather than the world's. Full argument in the spec §4f.
+- **No schema bump.** The kid's on-ramp latch (`onRampCleared`, v34) is replaced for the cohort by
+  `latchOnRamps`' own second proof – a W-track row inside the 52-week window – so the door costs zero
+  persisted bytes. `SAVE_SCHEMA_VERSION` stays at 39.

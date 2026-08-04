@@ -667,7 +667,17 @@ describe('capture + snapshot integration', () => {
     let firstInjuryOnset: { week: number; kind: string } | null = null
     const firstTitleByTier = new Map<string, number>()
     const firstFinalByTier = new Map<string, number>()
-    for (let i = 0; i < 220; i++) {
+    // ⚠ 220 -> 260 BY W3-ONRAMP (04.08), AND IT IS THE FIXTURE'S PREMISE THAT MOVED, NOT ITS CLAIM.
+    // This case is about the CAPTURE ("the ledger holds the FIRST injury, at its onset week"); the
+    // horizon is only here to make sure a career this long has one to capture. The AI on-ramp puts
+    // cohort players on the merged W table, which pushes her a few places down it, which changes
+    // which W rungs accept her, which changes what she plays – and on THIS seed the first onset
+    // moved from loop index 90 to 236. Measured both arms with tools/w-onramp-probe.ts's own switch
+    // (`ON_RAMP.slots` 0 vs 6): the career is not less injury-prone, it is a different career.
+    // Every assertion below is unchanged in substance and two of them now DERIVE from the horizon
+    // instead of hard-coding a season count, so the next content wave re-aims nothing.
+    const HORIZON = 260
+    for (let i = 0; i < HORIZON; i++) {
       for (const e of world.season) {
         if (e.week > world.week && world.week <= e.deadlineWeek && !world.entries.includes(e.id)) {
           try {
@@ -699,11 +709,14 @@ describe('capture + snapshot integration', () => {
     expect(injuryMilestone).toBeTruthy()
     expect(injuryMilestone!.week).toBe(firstInjuryOnset!.week)
     expect(injuryMilestone!.kind).toBe(firstInjuryOnset!.kind)
-    // four seasons wrapped -> four season-rank rows, keyed on the season index
+    // every season wrapped inside the horizon -> one season-rank row each, keyed on the season index
+    // (the wrap fires on week 49 of each season, so the count is a function of HORIZON alone).
+    const wrapped = []
+    for (let w = 1; w <= HORIZON; w++) if (w % 52 === 49) wrapped.push((w - 49) / 52)
     const ranks = world.milestones.filter((m) => m.type === 'season-rank')
-    expect(ranks.map((m) => m.seasonIndex)).toEqual([0, 1, 2, 3])
+    expect(ranks.map((m) => m.seasonIndex)).toEqual(wrapped)
     for (const m of ranks) expect(m.week).toBe(m.seasonIndex! * 52 + 49)
-    // she reached at least one final in 220 weeks of playing everything she could
+    // she reached at least one final in a career of playing everything she could
     expect(firstFinalByTier.size).toBeGreaterThan(0)
     for (const [tier, week] of firstTitleByTier) {
       const m = world.milestones.find((x) => x.type === 'title' && x.tier === tier)
@@ -716,7 +729,7 @@ describe('capture + snapshot integration', () => {
       expect(m!.week, `final ${tier}`).toBe(week)
     }
     // and the ledger is bounded the way the schema note promises
-    expect(world.milestones.length).toBeLessThanOrEqual(6 + 6 + 1 + 1 + 5)
+    expect(world.milestones.length).toBeLessThanOrEqual(6 + 6 + 1 + 1 + wrapped.length)
   })
 
   it('the first INTERNATIONAL entry is captured at the entry, and survives a withdrawal', () => {

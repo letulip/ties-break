@@ -26,7 +26,7 @@ import {
 } from '../../src/engine/season/fieldPros'
 import { power } from '../../src/engine/season/cohort'
 import { rivalGroundstrokes, rivalConditions } from '../../src/engine/season/rival'
-import { selectEntrants } from '../../src/engine/season/tournament'
+import { ON_RAMP, fillOnRamp, selectEntrants } from '../../src/engine/season/tournament'
 import { BEST_N_BY_TRACK, computeRanking } from '../../src/engine/season/ranking'
 import { TIERS, TIER_LADDER } from '../../src/engine/season/calendar'
 import type { SeasonEvent, TierId } from '../../src/engine/season/types'
@@ -37,6 +37,7 @@ import {
   acceptanceRank,
   seasonIndexOf,
   inTrack,
+  proDoors,
   KID_ID,
 } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
@@ -321,7 +322,20 @@ describe('the scope fence – phase W is the W track and nothing else', () => {
   it('a live career never writes a field pro into the save: results and cohort stay fp-free', () => {
     const world = createWorld('field-fence-live')
     const rng = rngFromSeed(world.seed)
-    for (let w = 0; w < 30; w++) tickWeek(world, rng)
+    // ⚠ THE CHAIR COUNT IS ACCUMULATED WEEK BY WEEK, AND THE OLD ONE WAS BROKEN (W3-ONRAMP, 04.08).
+    // It used to be read off `world.season` AFTER the loop – but `ensureSeason` drops resolved weeks
+    // (`world.season = world.season.filter((e) => e.week >= world.week)`), so the denominator was
+    // ONE week's chairs against thirty weeks of rows. It passed only because the numerator was zero,
+    // which is exactly the closed loop this wave came to fix; the moment a LIVE row existed the
+    // comparison read 178 rows against 64 chairs. Counted here as the weeks go by, it is the number
+    // the sentence always meant.
+    let wSlots = 0
+    for (let w = 0; w < 30; w++) {
+      for (const e of world.season) {
+        if (e.week === world.week + 1 && TIERS[e.tier].track === 'wta') wSlots += TIERS[e.tier].drawSize
+      }
+      tickWeek(world, rng)
+    }
     // Thirty weeks of canonical brackets on every rung, W rungs included: the ledger holds
     // thousands of rows and not one belongs to a derived player.
     //
@@ -339,9 +353,6 @@ describe('the scope fence – phase W is the W track and nothing else', () => {
     // ...and she really was IN the draws, or the assertion above would be vacuous again. A W event's
     // ledger rows are strictly fewer than its chairs, because the missing ones are the professionals'.
     const wRows = world.results.filter((r) => r.tier !== undefined && TIERS[r.tier].track === 'wta' && r.week >= 0)
-    const wSlots = world.season
-      .filter((e) => e.week >= 0 && e.week <= world.week && TIERS[e.tier].track === 'wta')
-      .reduce((s, e) => s + TIERS[e.tier].drawSize, 0)
     expect(wSlots).toBeGreaterThan(0)
     expect(wRows.length).toBeLessThan(wSlots)
   })
@@ -369,12 +380,37 @@ describe('the canonical W brackets are played by professionals', () => {
       ),
       pros,
     )
-    return selectEntrants(
+    const fatigue = rivalConditions(world.results, world.week)
+    const rng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
+    const drawn = selectEntrants(
       event,
       universeForTier(event.tier, world.cohort, pros),
       ranking,
-      rngFromSeed(`${world.seed}:aitour:${event.id}`),
-      rivalConditions(world.results, world.week),
+      rng,
+      fatigue,
+    )
+    if (TIERS[event.tier].track !== 'wta') return drawn
+    // ⚠ AND THE HELD SLOTS, or this stops being a mirror (W3-ONRAMP, 04.08). The tick fills them
+    // AFTER the week is resolved, from the players nobody has booked (world.ts `fillWeekOnRamps`);
+    // this is a single-event mirror, so the only booked players are the draw's own.
+    return fillOnRamp(
+      event,
+      drawn,
+      ranking,
+      rng,
+      {
+        pool: world.cohort,
+        ranking: computeRanking(
+          world.results.filter((r) => r.playerId !== KID_ID),
+          world.week,
+          BEST_N_BY_TRACK.itf,
+          world.cohort.map((p) => p.id),
+        ),
+        admits: proDoors(world, ranking).at(event.tier),
+        slots: ON_RAMP.slots,
+      },
+      fatigue,
+      new Set(drawn.map((p) => p.id)),
     )
   }
 
@@ -430,15 +466,41 @@ describe('the canonical W brackets are played by professionals', () => {
     // canonical draw costs ZERO bytes: she plays, and the tournament does not write her down.
     const world = createWorld('canonical-w-ledger')
     const rng = rngFromSeed(world.seed)
+    // The chairs, counted as the calendar reveals them – see the sibling case above for why reading
+    // `world.season` after the loop is a one-week denominator wearing a career's clothes.
+    let wChairs = 0
     for (let w = 0; w < 40; w++) {
+      for (const e of world.season) {
+        if (e.week === world.week + 1 && TIERS[e.tier].track === 'wta') wChairs += TIERS[e.tier].drawSize
+      }
       tickWeek(world, rng)
       if (world.pendingTournament) world.pendingTournament = null
     }
     const wRows = world.results.filter((r) => r.tier !== undefined && TIERS[r.tier].track === 'wta')
     expect(wRows.some((r) => isFieldProId(r.playerId))).toBe(false)
-    // The professionals absorb the W calendar entirely at the shipped bands: a LIVE junior holds no
-    // W points, so she sits below all 364 of them in the merged table and outside every W window.
-    // ⚠ PINNED AS A FACT, NOT AS A TARGET – see the closed-loop note in tests/rivals.test.ts C2.
-    expect(wRows.filter((r) => r.playerId !== KID_ID).length).toBe(0)
+    // The professionals absorb MOST of the W calendar: a LIVE player with no W points sits below all
+    // 364 of them in the merged table, so the direct acceptances are professional through and
+    // through. What she gets instead is the held slots.
+    //
+    // ⚠⚠ RE-AIMED 0 -> (0, chairs) BY W3-ONRAMP (04.08), AND THE OLD NUMBER WAS THE BUG. This line
+    // read `.toBe(0)` and said so as a FACT rather than a target, with the closed-loop note in
+    // tests/rivals.test.ts C2 spelling out why it was a defect waiting for a wave: a cohort player
+    // could not be drawn into a W event, so she could not earn a W point, so she could never rise
+    // out of the position that kept her out of the draw. The kid was the only player in the world
+    // who would ever hold a W point. The on-ramp opens the same door the kid has always had
+    // (`tierFloorOpen`'s W arm, now asked of a cohort id through `proDoors`), and the assertion
+    // becomes the two-sided one the design actually wants:
+    //
+    //   * NOT ZERO – the loop is open, cohort players are on the professional ladder;
+    //   * STILL BELOW THE CHAIRS – the pros still fill the great majority of every draw, and no
+    //     `fp-` id ever reaches the ledger (asserted one line up, unweakened).
+    //
+    // Measured, 4 worlds x 12 seasons, tools/w-onramp-probe.ts: 0.0 -> 119.8 LIVE W rows a season
+    // (0.60 per cohort player), against ~3,170 the week before W3-FIELD3 – i.e. the world moves
+    // again without the professional tour going back to being played by children.
+    const liveW = wRows.filter((r) => r.playerId !== KID_ID)
+    expect(liveW.length).toBeGreaterThan(0)
+    expect(wChairs).toBeGreaterThan(0)
+    expect(liveW.length).toBeLessThan(wChairs / 2)
   })
 })

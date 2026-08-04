@@ -40,6 +40,7 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
+import { ON_RAMP } from '../src/engine/season/tournament'
 import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
@@ -53,6 +54,12 @@ const argOf = (name: string, fallback: number): number => {
 const SEEDS = argOf('seeds', 6)
 const SEASONS = argOf('seasons', 8)
 const VERBOSE = args.includes('--verbose')
+// ⚠ THE ON-RAMP IS SWEEPABLE FROM HERE (W3-ONRAMP, 04.08), and this tool is where its effect ON HER
+// is measured: the AI on-ramp changes who is standing in the merged W table, so it moves the
+// acceptance cuts under her feet whether or not it ever changes the field she plays. `--slots 0` is
+// the pre-fix arm. Live-object patch, the same idiom as pro-season-probe's ECONOMY knobs; nothing is
+// written back to any file.
+ON_RAMP.slots = argOf('slots', ON_RAMP.slots)
 
 // ⚠ TEN RUNGS SINCE W3-ACT2, and the walk is graded at the TOP of the ladder now rather than in its
 // middle: act2-pro-tour.md §11.4's PLAYED row (20-30 events a season, the owner's own target and a
