@@ -633,6 +633,205 @@ export const TIERS: Record<TierId, TierDef> = {
     // the top ~14 rows, which is what a 125's entry list actually excludes.
     entrantPctBand: [0.025, 0.26],
   },
+  // --- act 3: the top of the ladder, and the year that has names in it (W3-ACT2) -----------------
+  //
+  // ⚠ WHY THESE EXIST, and it is a MEASUREMENT rather than a content wish (act2-pro-tour.md §11.3).
+  // A perfect, unreachable season of everything W2-LADDER shipped - all four WTA 125s, all four
+  // W100s and all eight W75s - is 1,500 points, which against the real points-to-rank curve the
+  // owner chose is about world #45. That was the mathematical ceiling of the ladder, so «the top of
+  // the world is legitimately out of her reach until act 3 exists» was a fact about arithmetic and
+  // not a scheduling note. The same measurement from the other side: the terminal window
+  // (W50+W75+W100+125) offers 28 events a season, so a player at the top of the ladder who plays
+  // every second week gets ~11 - the ladder ran out of tennis. These four are the fix for both.
+  //
+  // ⚠ THE POINTS ARE THE RESEARCH DOC'S OWN ROWS, VERBATIM, AND THE RESEARCH CORRECTED THE SPEC
+  // ONCE (docs/research/ranking-points-by-tier.md §4, 2026 WTA Official Rulebook VIII.A.5). The
+  // spec table (act2-pro-tour.md §2) gives the WTA 500 row as 500/325/195/108/60/**30**; the
+  // rulebook chart gives 500/325/195/108/60/**1**. The 30 is the spec author reading the chart's
+  // DRAW-SIZE annotation - the research prints the row as "WTA 500 (30/28)" - as a points value.
+  // §2's own ⚠ says the research wins every disagreement, so the last element here is 1, which is
+  // also the shape every rung from W50 up already carries ("a nominal 1 point higher up").
+  //
+  // ⚠ AND THE RESEARCH TABLE IS NORMALISED TO 32 MAIN-DRAW ROWS - it says so on its own first line
+  // ("32 main draw rows") - which is why all four rows below are exactly six numbers long and why
+  // all four draws are 32. See `slam.drawSize` for the measured reason the big draws did not ship.
+  //
+  // ⚠ THE CHEQUES ARE THE SPEC'S DESIGN VALUES AND THE RESEARCH IS SILENT ON THEM. §7's data-quality
+  // note is primary for POINTS above W100 and gives purses only up to W75 ($60k). So §2's ~$40k /
+  // ~$140k / ~$500k / ~$3M champions' cheques are kept as designed, stepped down at the W family's
+  // own ~0.575x per finish. They are the only numbers in this block that are not sourced, and they
+  // are flagged rather than smoothed over.
+  wta250: {
+    id: 'wta250',
+    track: 'wta',
+    label: 'WTA 250',
+    drawSize: 32,
+    entryFeeCents: 800_00,
+    travelCostCents: [2300_00, 4600_00],
+    // Research §4 verbatim. The nominal 1 for a first-round loser, as at every rung from W50 up.
+    points: [250, 163, 98, 54, 30, 1],
+    // $40,000 / $23,000 / $13,200 / $7,600 / $4,400 / $2,500 - the spec's ~$40k title at the
+    // family's ~0.575x step. ⚠ AND THE CLIFF REACHES THIS RUNG TOO, measured rather than assumed:
+    // $2,500 for a first-round exit against a $3,100-5,400 trip is still a loss, so seven rungs of
+    // professional tennis pay less for showing up than showing up costs. It is the WTA 500 above
+    // that flips it ($8,500 against $3,400-5,900), and one rung later than the family's own name
+    // change is the honest place for that to happen: the tour proper starts at 250, the money does
+    // not start until 500. Pinned in tests/prize-money.test.ts, which is where the boundary lives.
+    prizeCents: [40000_00, 23000_00, 13200_00, 7600_00, 4400_00, 2500_00],
+    // NOT ANCHORED, deliberately: the 250 is the FILLER rung of the top window - the week she plays
+    // when no named event is on - and the real calendar treats it the same way (~30 a year, scattered
+    // wherever the big ones are not). Cadence 6 = 8 a season, twice the 125's four, which is the
+    // real 250:125 supply ratio (~30:15) read at our scale.
+    everyNWeeks: 6,
+    // The family's top half opens at 17, as W75/W100/125 do. The doorway is not the gate here - the
+    // acceptance list is (#200), and the AER's own allowance is unlimited from 18.
+    minAgeYears: 17,
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    // The real tour's acceptance range's FLOOR, the same unit and the same reading W2-FIELD2 gave
+    // the six rungs below (see the note on w35): a WTA 250's entry list reaches to about #200.
+    acceptsRank: 200,
+    // ⚠ THE BAND IS MEASURED AGAINST TWO UNIVERSES OF VERY DIFFERENT SIZE, AND W3-ACT2 IS WHERE
+    // THAT STOPPED BEING FREE. Read this note once; the three rungs above refer back to it.
+    //
+    // A `entrantPctBand` is a SHARE, and it is consumed by two callers with different populations:
+    //   * the kid's shadow run and the Season card's preview draw from the MERGED table – LIVE
+    //     cohort ∪ 364 derived field pros, ~563 rows. This is the tennis she actually meets.
+    //   * the CANONICAL AI bracket draws from the LIVE COHORT ALONE, ~200 rows, because a derived
+    //     pro must never write a persisted result row (living-field.md §8.3).
+    // So one share resolves to two candidate counts a factor of ~2.8 apart, and at the top of the
+    // ladder the smaller one runs out first. MEASURED, tools/big-draw-cost.ts, 3 worlds x 208 weeks:
+    // the first-cut Slam band [0, 0.1] left 20 in-band candidates in the canonical universe against
+    // a draw of 32, so 37.5% of a major was `selectEntrants` backfill from outside its own window –
+    // the exact failure the L6 guard exists to catch, arriving through the population rather than
+    // through the number.
+    //
+    // THE FIX IS THE FLOOR OF THE WIDTH, NOT A NEW RULE: every band below is wide enough that the
+    // CANONICAL universe alone clears the draw with margin (44 / 42 / 39 / 37 against 32), and both
+    // ends still step down at every rung, which is what keeps six rungs six fields. Read on the
+    // merged table the same widths give 125 / 117 / 109 / 104 – and the Slam's 104 is, by arithmetic
+    // nobody arranged, exactly the real majors' direct-acceptance depth.
+    entrantPctBand: [0.018, 0.24],
+  },
+  wta500: {
+    id: 'wta500',
+    track: 'wta',
+    label: 'WTA 500',
+    drawSize: 32,
+    entryFeeCents: 900_00,
+    travelCostCents: [2500_00, 5000_00],
+    // Research §4 verbatim - AND THE ROW THE SPEC GOT WRONG. See the family note above: the spec's
+    // last element (30) is the chart's draw-size annotation "(30/28)" misread as points.
+    points: [500, 325, 195, 108, 60, 1],
+    // $140,000 / $80,000 / $46,000 / $26,500 / $15,000 / $8,500.
+    prizeCents: [140000_00, 80000_00, 46000_00, 26500_00, 15000_00, 8500_00],
+    // TEN A SEASON, ON NAMED WEEKS. Real: ~16. The count is what makes §6's mandatory SIX a choice
+    // rather than a timetable - six of ten is a decision about which, six of six would not be.
+    everyNWeeks: 0,
+    anchorWeeks: [4, 10, 15, 19, 24, 28, 33, 39, 43, 47],
+    minAgeYears: 17,
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    // Real acceptance range's floor (~#40-120).
+    acceptsRank: 120,
+    // 42 candidates in the canonical universe, 117 in the merged one - see the note on wta250.
+    entrantPctBand: [0.012, 0.22],
+  },
+  wta1000: {
+    id: 'wta1000',
+    track: 'wta',
+    label: 'WTA 1000',
+    drawSize: 32,
+    entryFeeCents: 1000_00,
+    travelCostCents: [2700_00, 5400_00],
+    // Research §4 verbatim.
+    points: [1000, 650, 390, 215, 120, 65],
+    // $500,000 / $287,000 / $165,000 / $95,000 / $55,000 / $31,000. A first-round exit at a 1000
+    // pays more than a WTA 125 title - which is the real cliff between the tours, not a rounding.
+    prizeCents: [500000_00, 287000_00, 165000_00, 95000_00, 55000_00, 31000_00],
+    // EIGHT A SEASON on named weeks (real: 10, scaled to a grid that also has to hold four Slams
+    // and ten 500s). Placed AROUND the Slams: two in the opening hard swing, two in the clay one,
+    // four across the long autumn hard block, none inside the grass window - which is the real
+    // year's own shape, where the grass weeks belong to Wimbledon and its warm-ups alone.
+    everyNWeeks: 0,
+    anchorWeeks: [5, 8, 12, 18, 31, 37, 41, 45],
+    minAgeYears: 17,
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    // Real direct acceptance for a 1000 runs to roughly #65 (a 56-draw takes ~#50, a 96-draw ~#90).
+    acceptsRank: 65,
+    // 39 candidates in the canonical universe, 109 in the merged one - see the note on wta250.
+    entrantPctBand: [0.006, 0.2],
+  },
+  slam: {
+    id: 'slam',
+    track: 'wta',
+    label: 'Grand Slam',
+    // ⚠⚠ 32, AND THE REAL DRAW IS 128. THE DEVIATION IS STATED HERE BECAUSE IT IS MEASURED, NOT
+    // ASSUMED - tools/big-draw-cost.ts is the receipt and the wave report carries the numbers.
+    //
+    // The cost is NOT the wall clock (a 128-draw is 127 AI-AI matches against a 32-draw's 31, and
+    // `fastMatchProbability` is a closed form). The cost is the POPULATION, and it is structural:
+    //
+    //   * the canonical bracket is LIVE-ONLY by design (`drawAiEntrants` draws from `world.cohort`,
+    //     because a derived field pro must never write a persisted result row - living-field.md
+    //     §8.3, and act2-pro-tour.md §8b names this as act-3 work in its own right);
+    //   * the cohort is 199 players aged 13-19, of whom ~82 clear a W rung's 17+ age gate;
+    //   * `selectEntrants` treats a draw it cannot fill as a crash rather than a compromise, so at
+    //     drawSize 128 its escape ladder falls all the way through to `cohort` - and a Grand Slam
+    //     would be played by 128 of the 199 CHILDREN in the world, thirteen-year-olds included.
+    //     At 64 the age gate survives but the draw eats 64 of the ~82 eligible rivals in one week,
+    //     and the week's other events are then made entirely of backfill (the exact failure the L6
+    //     guard exists to catch).
+    //
+    // So the honest ship is a 32-draw Slam with the deviation loud, and the fix is the one
+    // living-field §8.3 already names - field pros in the canonical brackets, which needs fp-safe
+    // result rows and is its own wave. ⚠ IT ALSO MEANS THE POINTS ROW IS FULLY SOURCED rather than
+    // half-derived: the research table is normalised to 32 main-draw rows, so 2000/1300/780/430/
+    // 240/130 is exactly what the rulebook publishes and no R64/R128 value had to be invented.
+    // A 128-draw Slam would have needed two rows the research does not print.
+    drawSize: 32,
+    entryFeeCents: 0,
+    // ⚠ SHE IS NOT CHARGED TO ENTER A SLAM. Real rule, and it is the one entry fee in the game that
+    // is genuinely zero: the four majors do not levy one. Travel is still hers.
+    travelCostCents: [3000_00, 6000_00],
+    // Research §4 verbatim (2026 WTA Official Rulebook VIII.A.5).
+    points: [2000, 1300, 780, 430, 240, 130],
+    // $3,000,000 / $1,725,000 / $990,000 / $570,000 / $330,000 / $190,000. THE MONEY CLIFF, in one
+    // row: losing the first round of a major pays more than winning every other tournament in this
+    // game put together. That is not a balance failure - docs/research/02-tennis-economics.md is
+    // about a sport in which the same week's work is worth $130 at one rung and $190,000 at another.
+    prizeCents: [3000000_00, 1725000_00, 990000_00, 570000_00, 330000_00, 190000_00],
+    // ⚠ THE FOUR NAMED WEEKS, and they are the whole reason `anchorWeeks` exists. Season-week
+    // offsets against the round-5 date epoch (career week 0 = Mon Jan 6), mapped from the real
+    // calendar onto our 52-week block, and each one lands in the surface block its real counterpart
+    // is played on - which is what `makeEvent`'s dominant-surface rule then makes true of the event:
+    //
+    //     offset  2   mid-January     hard block (0-9)     the season opener
+    //     offset 21   early June      clay block (10-24)   the clay major
+    //     offset 26   early July      grass window (25-30) the grass major - the ONLY one there is
+    //     offset 34   early September hard block (31-48)   the autumn major
+    //
+    // ⚠ OFFSET 2 IS NOT PLACEABLE IN A CAREER'S FIRST BLOCK (MIN_FIRST_EVENT_WEEK is 3, so no event
+    // opens already-closed), so year 0 carries three majors and every year after it four. That is
+    // left as it falls rather than nudged: a career that starts in the third week of January really
+    // has missed the season opener, and at fourteen she was never going to be in it.
+    everyNWeeks: 0,
+    anchorWeeks: [2, 21, 26, 34],
+    minAgeYears: 17,
+    enterPointBand: [0, Number.MAX_SAFE_INTEGER],
+    // ⚠ LOOSER THAN A 1000's, AND THAT IS REAL RATHER THAN A SLIP. A major's main draw is 128 and
+    // its direct acceptance reaches about #104; a 1000 draws 56 or 96 and cuts at ~#50-90. The
+    // biggest event on earth is the EASIEST of the top three to get into, because it has the most
+    // chairs. Nothing reads this as a ceiling (the top four rungs never close - see TERMINAL_RUNGS),
+    // so the non-monotone step cannot leak into the window.
+    acceptsRank: 104,
+    // The head of the merged table, at last. THE FLOOR IS 0 AND ONLY HERE: `wta125`'s own note says
+    // why it kept 0.025 ("the two or three names on 9,000+ points play a tour this game does not
+    // simulate yet") - this is that tour. The world #1 is resident in exactly one rung, and it is
+    // this one. The ceiling reads 37 candidates in the canonical universe and 104 in the merged one,
+    // and the second number is the one worth reading twice: a major's real direct-acceptance list is
+    // the world's top 104. Nobody arranged that - the width came from the canonical draw's own floor
+    // (see the note on wta250) - but it is the check this band would have wanted.
+    entrantPctBand: [0, 0.185],
+  },
 }
 
 /** DOES THIS RUNG HAVE AN ACCEPTANCE LIST AT ALL? One predicate, because the answer now lives in
@@ -659,6 +858,11 @@ export const TIER_LADDER: readonly TierId[] = [
   'local', 'regional', 'national',
   'j30', 'j60', 'j300',
   'w15', 'w35', 'w50', 'w75', 'w100', 'wta125',
+  // W3-ACT2. Sixteen rungs now, and the WINDOW's arithmetic moves with the list rather than with a
+  // number anybody edited: `tierOutgrown` closes a rung when the rung THREE above it opens and the
+  // top FOUR never close, so the terminal window slid from {w50, w75, w100, wta125} to
+  // {wta250, wta500, wta1000, slam} by adding four names to this array and nothing else.
+  'wta250', 'wta500', 'wta1000', 'slam',
 ]
 
 /** Short tier names for width-starved surfaces (the next-week button, the Home season strip) and
@@ -686,6 +890,15 @@ export const TIER_SHORT: Record<TierId, string> = {
   // width-starved surface reads as a value, not a name - so the short form keeps the tour prefix,
   // which is also how the WTA's own calendar prints it.
   wta125: 'WTA 125',
+  // The same rule one rung up, and the same reason: "250" alone is a number, "WTA 250" is a name.
+  wta250: 'WTA 250',
+  wta500: 'WTA 500',
+  wta1000: 'WTA 1000',
+  // ⚠ "Slam" AND NOT THE MAJOR'S NAME. Tournament names in this game are fictional (ITF/WTA/ATP and
+  // the majors' own names are trademarks - see the Style rules), so the four anchored weeks are
+  // four Grand Slams with no city on them. The short form is the category, which is also what a
+  // width-starved surface wants: nobody needs to be told which one it is to know what it is.
+  slam: 'Slam',
 }
 
 /** Pure age gate for a tier: the junior tour is 13-18, the domestic ladder has no gate at all, the
@@ -973,6 +1186,12 @@ function claimSlot(claimed: Set<number>, target: number, lo: number, hi: number,
  *  whichever year it is, so the count does not shrink for it – the placement simply packs slightly
  *  tighter. */
 export function seasonEventCount(tier: TierId): number {
+  // ⚠ AN ANCHORED RUNG IS COUNTED BY ITS OWN LIST (W3-ACT2): its weeks are content, so "how many"
+  // is "how many are named" and no cadence arithmetic applies. A career's FIRST block can still
+  // hold fewer - MIN_FIRST_EVENT_WEEK floors placement at week 3, so an anchor on offset 0/1/2 has
+  // nowhere to go in year 0 - which is a fact about that career and not a miscount here.
+  const anchors = TIERS[tier].anchorWeeks
+  if (anchors) return anchors.length
   const cadence = TIERS[tier].everyNWeeks
   if (cadence === 0) return 0
   return Math.max(1, Math.round((WEEKS_PER_YEAR - OFF_SEASON_WEEKS) / cadence))
@@ -1019,7 +1238,15 @@ function makeEvent(
   rng: Rng,
   background: FamilyBackground,
 ): SeasonEvent {
-  const surface = pickSurface(rng, week)
+  // ⚠ THE ROLL IS ALWAYS SPENT, EVEN WHERE IT IS IGNORED (W3-ACT2). An anchored event takes its
+  // block's DOMINANT surface rather than a weighted draw from it - a grass major that came out on
+  // clay 8% of the time would be the same defect as one placed on a random week - but the draw
+  // still happens, in exactly the position it always occupied, because the very next call is the
+  // event's base travel cost. Skipping it would have shifted the whole season stream and re-dealt
+  // every travel cost in the game. Same discipline as `weeksSinceGear` walking a price draw it
+  // does not use.
+  const rolled = pickSurface(rng, week)
+  const surface = TIERS[tier].anchorWeeks ? dominantSurface(surfaceBlockFor(week)) : rolled
   const [lo, hi] = TIERS[tier].travelCostCents
   // Draw the base travel first (byte-identical MAIN-stream RNG – the pickInt call/sequence is
   // background-independent, so the calendar structure and the world's RNG identity hold). Then map a
@@ -1102,8 +1329,24 @@ export function buildSeason(
 
   // Strongest tier first, so the scarce high-tier weeks are picked before the dense ones fill in.
   const order: TierId[] = [...TIER_LADDER].reverse()
+  // Season-week offset of an absolute week, the same arithmetic isOffSeasonWeek/isExamWeek use.
+  const offsetOf = (w: number) => ((w % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+
   for (const tier of order) {
     const def = TIERS[tier]
+    // ⚠ THE ANCHORED RUNGS ARE PLACED FIRST AND BY NAME (W3-ACT2). They come first in `order`
+    // anyway (it is TIER_LADDER reversed and they are the top four), which matters: an anchor is
+    // not negotiable, so it must claim its week before any cadence rung bends around it. There is
+    // no `claimSlot` search, no phase and no jitter here - a named week that could be nudged is not
+    // a named week. Two anchored rungs cannot collide because `claimed` is per tier and the four
+    // lists are disjoint by construction (pinned in tests/season/calendar.test.ts).
+    if (def.anchorWeeks) {
+      for (const w of slots) {
+        if (!def.anchorWeeks.includes(offsetOf(w))) continue
+        events.push(makeEvent(seedStr, w, tier, rng, background))
+      }
+      continue
+    }
     if (def.everyNWeeks === 0) continue
     // R12-6: the tier's OWN slots. The off-season no longer needs a set of its own – it is not on
     // this axis at all – so the min gap is measured against events and can only ever have been.

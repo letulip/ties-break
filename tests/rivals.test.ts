@@ -94,7 +94,14 @@ describe('A1 — reconstruction: (tier, points) round-trips to the right match c
       // The W2-LADDER family split: the chart's nominal 1 at W50/W75/WTA125, wave B's 0 everywhere
       // else (tests/wave-b-points.test.ts NOMINAL_ONE_TIERS). The round-trip below is unaffected -
       // the table stays strictly decreasing, so 1 inverts as unambiguously as 0 did.
-      expect(def.points[def.points.length - 1]).toBe(['w50', 'w75', 'wta125'].includes(tier) ? 1 : 0)
+      // ⚠ W3-ACT2 ADDS A THIRD CASE: WTA 250/500 join the nominal-1 family and the two biggest
+      // rungs pay a REAL opener (a 1000's row bottoms at 65, a Slam's at 130) because the research
+      // chart is normalised to 32 main-draw rows. The round-trip below is unaffected either way -
+      // the table stays strictly decreasing, so 65 inverts as unambiguously as 0 did.
+      expect(def.points[def.points.length - 1]).toBe(
+        tier === 'slam' ? 130 : tier === 'wta1000' ? 65
+          : ['w50', 'w75', 'wta125', 'wta250', 'wta500'].includes(tier) ? 1 : 0,
+      )
 
       expect(reconstructRun(row(tier, 0, 1))).toMatchObject({ tier, matches: rounds }) // champion
       expect(reconstructRun(row(tier, rounds, 1))).toMatchObject({ tier, matches: 1 }) // R1 exit
@@ -1120,11 +1127,23 @@ describe('C5 — one body, one week: a rival is never in two of a week\'s draws'
     // The arm is simulated by CADENCE rather than by a checkout: `buildSeason` skips a tier whose
     // `everyNWeeks` is 0, so zeroing the three W rungs rebuilds the 92-event calendar. Restored in a
     // `finally` – TIERS is module state shared by every test in the file.
-    // All SIX W rungs since W2-LADDER - the arm is "the junior-only calendar", whatever the adult
+    // All TEN W rungs since W3-ACT2 - the arm is "the junior-only calendar", whatever the adult
     // family's size is this release.
-    const adult: TierId[] = ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125']
+    //
+    // ⚠ AND ZEROING THE CADENCE IS NO LONGER ENOUGH ON ITS OWN. The four act-3 rungs are placed by
+    // NAMED SEASON WEEKS (`TierDef.anchorWeeks`) and carry cadence 0 by construction, so the trick
+    // above would have left every Slam, 1000 and 500 on the calendar while believing it had removed
+    // them - and the "it really is the six-rung season" assertion at the foot of this test is
+    // exactly the guard that caught it. Both placement rules are suspended and both restored.
+    const adult: TierId[] = [
+      'w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam',
+    ]
     const cadences = adult.map((t) => TIERS[t].everyNWeeks)
-    for (const t of adult) TIERS[t].everyNWeeks = 0
+    const anchors = adult.map((t) => TIERS[t].anchorWeeks)
+    for (const t of adult) {
+      TIERS[t].everyNWeeks = 0
+      TIERS[t].anchorWeeks = undefined
+    }
     try {
       const world = createWorld('one-body-one-week-juniors')
       const rng = rngFromSeed(world.seed)
@@ -1156,7 +1175,10 @@ describe('C5 — one body, one week: a rival is never in two of a week\'s draws'
       expect(events).toBeGreaterThan(0)
       expect(world.season.every((e) => TIERS[e.tier].track !== 'wta')).toBe(true)
     } finally {
-      adult.forEach((t, i) => (TIERS[t].everyNWeeks = cadences[i]))
+      adult.forEach((t, i) => {
+        TIERS[t].everyNWeeks = cadences[i]
+        TIERS[t].anchorWeeks = anchors[i]
+      })
     }
   })
 

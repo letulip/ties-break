@@ -83,9 +83,27 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // discriminates - 14→18 measures 0/30 to 26/30 across the presets - and the saturation of 14→16
     // is pinned below as a fact, so that re-basing the target makes THAT line fail and brings
     // somebody back here.
+    // ⚠ AND THE 14->18 HORIZON SATURATED IN ITS TURN (W3-ACT2) - the FIFTH flip of this tripwire and
+    // the first on this line rather than the 14->16 one below. Mechanism: the same one flips 2 and 4
+    // record, one ladder longer. `tierPhase` divides a rung's index by `TIER_LADDER.length`, so
+    // taking the catalogue from twelve rungs to sixteen re-spaces the deterministic half of EVERY
+    // tier's placement; the whole calendar re-deals, the domestic rungs collide on different weeks,
+    // and the entry policy - one event a week at most - gets to enter more of the same events.
+    // Measured at this revision: 30 of 30 clear 14->18, against 26 of 30 before the wave.
+    //
+    // NOTHING ABOUT THE DOMESTIC LADDER GOT EASIER, which is the same sentence the note above makes
+    // about the last time this happened: the domestic event counts are byte-identical (25/12/6,
+    // pinned in tests/season/calendar.test.ts) and so are the point tables. What moved is WHICH
+    // WEEKS they sit on.
+    //
+    // So the assertion takes the shape this file has used at every saturation: the fact is PINNED,
+    // both branches of it, so the next pass that un-saturates the proxy - a re-based target, a
+    // calendar that starves the early game, or a seventeenth rung - fails HERE and re-reads the
+    // whole history above. Re-basing REACH_TARGET_MONEY is a tuning decision with its own sweep and
+    // is reported rather than done here, exactly as the 31.07 note reports it.
     const workingH18 = Array.from({ length: 30 }, (_, i) => runCareer(workingCoached, i, H18.weeks))
-    expect(workingH18.some((r) => r.reachedWeek !== null)).toBe(true) // some clear it
-    expect(workingH18.some((r) => r.reachedWeek === null)).toBe(true) // some never do
+    const reachedH18 = workingH18.filter((r) => r.reachedWeek !== null).length
+    expect(reachedH18, '14→18 collapsed - re-read the notes above').toBe(workingH18.length)
     for (const r of workingH18) {
       if (r.reachedWeek !== null) {
         expect(r.reachedWeek).toBeGreaterThan(0)
@@ -132,9 +150,22 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // re-read. Note the pattern across four flips - this proxy sits on a knife edge for the
     // working-self preset and nothing else; the horizon that discriminates for everybody is 14->18
     // above, unchanged through all of them.
+    // ⚠⚠ AND THE FIFTH FLIP TOOK BOTH HORIZONS AT ONCE (W3-ACT2), WHICH IS THE FINDING RATHER THAN
+    // THE ASSERTION. Every previous flip moved exactly one marginal career across one line; this one
+    // saturated 14->16 AND 14->18 in the same pass, because `tierPhase` divides by
+    // `TIER_LADDER.length` and the catalogue went from twelve rungs to sixteen - the largest
+    // re-spacing the calendar has ever taken in one wave. Measured at this revision: 30 of 30 at
+    // BOTH horizons, against 29/30 and 26/30 before it.
+    //
+    // ⚠ SO THE PROXY NO LONGER DISCRIMINATES ANYWHERE, and that is a finding for the owner rather
+    // than something this file can fix: `REACH_TARGET_MONEY` (150 domestic points) is a formality
+    // every family clears at every horizon, exactly as the 31.07 note predicted it would become and
+    // for the same reason it gave. Re-basing it is a tuning decision with its own sweep. What is
+    // pinned meanwhile is the strongest thing this case can still say - saturation at both horizons,
+    // as a FACT - so the pass that re-bases the target (or starves the early calendar, or adds a
+    // seventeenth rung) fails HERE and reads this whole history before deciding what it meant.
     const reachedH16 = workingH16.filter((r) => r.reachedWeek !== null).length
-    expect(reachedH16, '14→16 collapsed - re-read the notes above').toBeGreaterThanOrEqual(25)
-    expect(reachedH16, '14→16 saturated again - re-read the notes above').toBeLessThan(workingH16.length)
+    expect(reachedH16, '14→16 collapsed - re-read the notes above').toBe(workingH16.length)
   })
 
   // RE-PINNED by ladder-up Part A (cohort pre-history). The degeneracy this guard was written

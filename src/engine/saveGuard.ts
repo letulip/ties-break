@@ -216,6 +216,12 @@ const SPINE: SpineRule[] = [
   // The pro AER ledger (v36, W2-LADDER §5): dereferenced by `proEntryCapUsage` on the first
   // availability read after load, so a v36 file without it is a crash wearing a valid header.
   { field: 'proEntryWeeks', since: 36, check: anArray },
+  // The penalty ledger (v38, W3-ACT2 §6), for the same reason its neighbour is here: `penaltyPointsAt`
+  // filters it on the first availability read after load, so a v38 file without it is a crash
+  // wearing a valid header. `suspendedUntilWeek` is deliberately NOT listed - `null` is a legitimate
+  // value and the field is read through `isSuspendedAt`, which treats absent and null alike, so it
+  // is genuinely self-healing in the sense the note at the top of this file describes.
+  { field: 'penalties', since: 38, check: anArray },
   {
     // Shape only – s is mulberry32's register and the engine stores it SIGNED (rng.ts: `a |= 0`),
     // so the honest range is int32, both halves. Whether the pair satisfies the s/n algebra is the

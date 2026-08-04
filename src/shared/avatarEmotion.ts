@@ -165,6 +165,16 @@ export const WIN_IMMUNITY_WEEKS: Record<TierId, number> = {
   w75: 3,
   w100: 4,
   wta125: 4,
+  // W3-ACT2. The ceiling finally moves, and only here. The note above says 4 stays the ceiling
+  // because the table is "how long a good week lasts" rather than a ladder – true, and a WTA 250
+  // title is still that kind of week (a real title, on the tour proper, four weeks of nothing
+  // touching her). What a MAJOR is, is a different kind of week: it is the thing the whole career
+  // was for, most careers will never take one, and a bad Tuesday in the autumn does not reach a
+  // girl who won it in July. So the 1000 steps to 5 and the Slam to 6, and nothing below them moves.
+  wta250: 4,
+  wta500: 4,
+  wta1000: 5,
+  slam: 6,
 }
 
 /** The kid's most recent played match, as the caller read it off the snapshot's events. */

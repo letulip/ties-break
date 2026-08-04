@@ -41,7 +41,8 @@
 // letter reports what actually happened and against which number. An obligation that fails silently
 // is the same invisibility one step later.
 import { computed } from 'vue'
-import type { EntryLetterTerms, KitOfferTerms, Offer } from '../shared/protocol'
+import type { EntryLetterTerms, KitOfferTerms, Offer, TourLetterTerms } from '../shared/protocol'
+import { sponsorArtKey } from '../engine/offers'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
 import PaperNote from './ui/PaperNote.vue'
@@ -60,6 +61,16 @@ const base = import.meta.env.BASE_URL
 const isEntry = computed(() => props.offer.kind === 'entry')
 const entryTerms = computed(() => props.offer.terms as EntryLetterTerms)
 
+// THE TOUR'S OWN LETTERS (W3-ACT2, act2-pro-tour.md section 6). Three notices, one sheet, no
+// buttons: a rule is not a decision.
+//
+// THE VOICE IS THE RULING. «Мы ни за что не наказываем» - the tour has obligations and states them,
+// the GAME never leans on the player and never scolds. So the due notice reads as a fixture list
+// with a price on it, the penalty notice reads as an invoice with a running balance, and the
+// suspension notice states a date. Nothing here says "you should have gone".
+const isTour = computed(() => props.offer.kind === 'tour')
+const tourTerms = computed(() => props.offer.terms as TourLetterTerms)
+
 const terms = computed(() => props.offer.terms as KitOfferTerms)
 
 /** THE GOODBYE, in the brand's own voice, differing on WHY (see KitEndReason). Each reads as a
@@ -76,9 +87,14 @@ const endBody = computed(() => {
   }
   return `That is our term served, and she held up every part of it – ${played} tournaments in our kit this season. We are stopping here for now, with thanks.`
 })
-/** THE LETTERHEAD, BY TIER. `public/images/sponsors/<tier>.webp` - never a filename written out at a
- *  call site, which is why the national and global rungs needed no change here at all. */
-const markUrl = computed(() => `${base}images/sponsors/${terms.value.tier}.webp`)
+/** THE LETTERHEAD, BY TIER. `public/images/sponsors/<key>.webp` - never a filename written out at a
+ *  call site, which is why the national and global rungs needed no change here at all.
+ *
+ *  The key comes from `sponsorArtKey` rather than from the tier directly since W3-ACT2: three marks
+ *  ship and the ladder has six rungs, so the professional trio borrows the global mark until real
+ *  art exists. Placeholder art, flagged for the owner - the mapping is one engine function, and
+ *  three real marks would replace it with the identity. */
+const markUrl = computed(() => `${base}images/sponsors/${sponsorArtKey(terms.value.tier)}.webp`)
 
 /** ⚠ WHAT THEY COVER, IN THE BRAND'S OWN WORDS - the sentence the whole ladder exists to make
  *  readable. The rung is COVERAGE, not prestige (see `SponsorTier`), so the line that names the
@@ -185,6 +201,52 @@ const settled = computed(() => {
         </p>
       </template>
       <p class="offer-sign-off">– Tournament desk</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <!-- THE TOUR (W3-ACT2). Warning, charge, sentence - in that order in a career, and the first of
+       them always arrives before any of the others can. -->
+  <article v-else-if="isTour" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <template v-if="tourTerms.notice === 'due'">
+        <p class="offer-body">
+          The {{ tourTerms.label }} ({{ weekRange(tourTerms.eventWeek ?? 0) }}) is a required event
+          at her current ranking, and entries close at the end of
+          {{ weekLabel(tourTerms.freeUntilWeek ?? 0) }}.
+        </p>
+        <ul class="offer-terms">
+          <li>She is on the required list for this one – the top 50 play the majors, the 1000s and six 500s.</li>
+          <li>Not entering costs {{ tourTerms.points }} penalty points and a zero in one counted slot.</li>
+          <li>Entering and then withdrawing after the list closes costs more; not appearing costs most.</li>
+        </ul>
+      </template>
+      <template v-else-if="tourTerms.notice === 'penalty'">
+        <p class="offer-body">
+          {{ tourTerms.points }} penalty
+          {{ tourTerms.points === 1 ? 'point has' : 'points have' }} been recorded
+          <template v-if="tourTerms.label">for the {{ tourTerms.label }}</template>
+          <template v-else>against this season's required 500-level events</template>.
+        </p>
+        <ul class="offer-terms">
+          <li>Her total is {{ tourTerms.runningPoints }} of {{ tourTerms.suspensionAt }} over the last 52 weeks.</li>
+          <li>Points fall out of that window on their own as the year moves.</li>
+          <li>At {{ tourTerms.suspensionAt }} the tour suspends entries for four weeks.</li>
+        </ul>
+      </template>
+      <template v-else>
+        <p class="offer-body">
+          Entries are suspended through {{ weekLabel(tourTerms.untilWeek ?? 0) }} –
+          {{ tourTerms.runningPoints }} penalty points inside 52 weeks.
+        </p>
+        <ul class="offer-terms">
+          <li>She may train and travel; she may not enter a tournament until that week has passed.</li>
+          <li>Nothing is owed and nothing is taken back.</li>
+        </ul>
+      </template>
+      <p class="offer-sign-off">– Tour office</p>
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>

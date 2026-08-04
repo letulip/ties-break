@@ -60,7 +60,11 @@ describe('A2/1 — the junior tour pays nothing, ever', () => {
 describe('A2/2 — the adult tour pays, and a first-round loss is a token rather than nothing', () => {
   it('every W rung pays once per finish, strictly decreasing, and never 0', () => {
     // W2-LADDER: six paid rungs (W50/W75/WTA125 joined with real-purse tables - see calendar.ts).
-    expect(WTA_TIERS).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
+    // ⚠ TEN RUNGS SINCE W3-ACT2, pinned in full: a rung that pays money must not be able to join
+    // the tour without somebody writing its cheque table down here as well as in the catalogue.
+    expect(WTA_TIERS).toEqual([
+      'w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam',
+    ])
     for (const tier of WTA_TIERS) {
       const table = TIERS[tier].prizeCents!
       expect(table.length, `${tier} pays once per finish`).toBe(TIERS[tier].points.length)
@@ -86,8 +90,12 @@ describe('A2/2 — the adult tour pays, and a first-round loss is a token rather
   // are still zero - the two tables genuinely disagree, which is the shape the note above is about.
   it('the LAST element is the split value for points and non-zero for money, at every adult rung', () => {
     for (const tier of WTA_TIERS) {
+      // ⚠ W3-ACT2's third case - see tests/wave-b-points.test.ts for the whole ruling. The claim
+      // this block keeps is unchanged and is about MONEY: every adult rung pays a first-round loser
+      // real cents, whatever its points row does.
       expect(TIERS[tier].points.at(-1), `${tier} points`).toBe(
-        ['w50', 'w75', 'wta125'].includes(tier) ? 1 : 0,
+        tier === 'slam' ? 130 : tier === 'wta1000' ? 65
+          : ['w50', 'w75', 'wta125', 'wta250', 'wta500'].includes(tier) ? 1 : 0,
       )
       expect(TIERS[tier].prizeCents!.at(-1), `${tier} money`).toBeGreaterThan(0)
     }
@@ -96,13 +104,34 @@ describe('A2/2 — the adult tour pays, and a first-round loss is a token rather
   // The cliff, stated as arithmetic rather than as prose. Trip = entry fee + travel, quoted at the
   // calendar's own band; the middle family's corridor is ~1.0, so these are read straight.
   it('a first-round exit is an insult against the trip, and W15 barely pays even for winning it', () => {
-    const shares = WTA_TIERS.map((tier) => {
+    // ⚠⚠ RE-AIMED BY W3-ACT2, AND THE RE-AIM IS THE WHOLE POINT OF ACT 3. "An opening loss never
+    // covers the trip at ANY rung" was true of a ladder that stopped at WTA 125, and it is FALSE by
+    // design of one that reaches a Grand Slam: a first-round exit at a major pays $190,000 against a
+    // trip of at most $6,000. That gap is not a balance failure, it is
+    // docs/research/02-tennis-economics.md's own subject - the same week's work is worth $130 at one
+    // rung and six figures at another, and the whole game is the climb between them. So the claim is
+    // kept EXACTLY where it was ever true (the six rungs the money cliff is about, W15 through the
+    // 125) and the flip is asserted as its own fact rather than the guard being dropped: the WTA
+    // rungs proper are where showing up starts paying, and WTA 250 is the exact week it happens.
+    // ⚠ AND THE CLIFF REACHES ONE RUNG FURTHER THAN THE FAMILY BREAK DOES, which is worth reading
+    // twice: a WTA 250 first-round cheque ($2,500) still does not cover the cheapest trip to one
+    // ($3,100). Seven rungs of professional tennis in which showing up is a loss, and the eighth is
+    // where it stops.
+    const CLIFF_TIERS = ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250'] as const
+    const shares = CLIFF_TIERS.map((tier) => {
       const def = TIERS[tier]
       const cheapestTrip = def.entryFeeCents + def.travelCostCents[0]
-      // an opening loss never covers the trip at ANY rung, even the cheapest possible version of it
+      // an opening loss never covers the trip at ANY of these rungs, even the cheapest version of it
       expect(def.prizeCents!.at(-1)!, `${tier} R1`).toBeLessThan(cheapestTrip)
       return def.prizeCents!.at(-1)! / cheapestTrip
     })
+    // ...and above them it flips, at WTA 500 and never before it - the week the arithmetic changes,
+    // and it clears the DEAREST version of the trip rather than merely the cheapest.
+    for (const tier of ['wta500', 'wta1000', 'slam'] as const) {
+      const def = TIERS[tier]
+      const dearestTrip = def.entryFeeCents + def.travelCostCents[1]
+      expect(def.prizeCents!.at(-1)!, `${tier} R1`).toBeGreaterThan(dearestTrip)
+    }
     // At the ENTRY rung it is a token and nothing else: ~10% of the cheapest trip she can make.
     expect(shares[0], 'w15 R1 share of the trip').toBeLessThan(0.15)
     // ...and it climbs with the ladder – w15 ~10%, w35 ~17%, w100 ~36%. That gradient IS the feature:

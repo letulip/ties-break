@@ -548,7 +548,13 @@ describe('P1 — the pro table (spec §5 design values over the real rulebook sh
     for (const t of TIER_LADDER) {
       expect(isCappedTier(t) && isCappedProTier(t), `${t} in both families`).toBe(false)
     }
-    expect(ECONOMY.entryCap.cappedProTiers).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
+    // ⚠ WIDENED BY W3-ACT2, NOT WEAKENED: the real AER counts "professional events", so the four
+    // act-3 rungs join the family the moment they exist - a Grand Slam counts against a
+    // seventeen-year-old's sixteen exactly as a W15 does. The list stays pinned EXACTLY so a rung
+    // still cannot reach the engine without somebody deciding which allowance it spends.
+    expect(ECONOMY.entryCap.cappedProTiers).toEqual([
+      'w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam',
+    ])
   })
 })
 

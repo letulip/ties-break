@@ -58,6 +58,7 @@ import {
   raiseKitEndLetter,
   rungFor,
   shopWritesAt,
+  sponsorArtKey,
   standingClears,
   SPONSOR_TIERS,
   TIER_COVERS,
@@ -765,8 +766,18 @@ describe('the letter states its terms in words the player can act on', () => {
   })
 
   it('the letterhead is looked up BY TIER, never by a filename spelled out at a call site', () => {
-    expect(codeOf(letter)).toContain('images/sponsors/${terms.value.tier}.webp')
+    // ⚠ RE-AIMED BY W3-ACT2, NOT WEAKENED, AND THE CLAIM IS THE SAME ONE. Three marks ship and the
+    // ladder has six rungs, so the lookup goes through the ENGINE's `sponsorArtKey` - a single
+    // function that maps the three professional rungs onto the global mark until real art exists.
+    // The property this test protects ("never a filename spelled out at a call site") is unchanged
+    // and is in fact stronger: the mapping is now one named engine fact rather than a template
+    // literal in a component.
+    expect(codeOf(letter)).toContain('images/sponsors/${sponsorArtKey(terms.value.tier)}.webp')
     for (const t of SPONSOR_TIERS) expect(codeOf(letter)).not.toContain(`sponsors/${t}.webp`)
+    // ...and every rung really does resolve to a mark that exists on disk.
+    for (const t of SPONSOR_TIERS) {
+      expect(['local', 'national', 'global']).toContain(sponsorArtKey(t))
+    }
   })
 
   it('⚠ all three rungs are reachable, and every brand is the one on its own artwork', () => {
@@ -778,15 +789,29 @@ describe('the letter states its terms in words the player can act on', () => {
     // reads "STRING HOUSE", national.webp "NETRALLY DISTRIBUTION – STRINGS. FRAMES. NATIONWIDE.",
     // global.webp "PLAY BEYOND – EQUIP. SUPPORT. ELEVATE." - and the middle one's tagline is the
     // coverage this slice ships, which is the strongest evidence the ladder was read off the art.
-    expect(SPONSOR_TIERS).toEqual(['local', 'national', 'global'])
+    // ⚠ SIX RUNGS SINCE W3-ACT2, and the half of this guard that never expires is untouched: the
+    // three junior-era names are still read off the artwork. The three PROFESSIONAL names are
+    // invented here rather than read off a mark, because no mark exists for them yet - stated
+    // openly, flagged for the owner in the wave report, and the art ask is three files that would
+    // replace `sponsorArtKey` with the identity.
+    // ⚠ AND THE ORDER IS THE LADDER, not a listing. `rungFor` reverses this and takes the first
+    // rung she clears, so `tour` (WTA 200) must sit BELOW `global` (WTA 87) or a #60 professional
+    // would be handed the weaker brand and the stronger one would be unreachable. Pinned exactly.
+    expect(SPONSOR_TIERS).toEqual(['local', 'national', 'tour', 'global', 'premium', 'icon'])
     expect(ECONOMY.sponsorship.localBrand).toBe('String House')
     expect(ECONOMY.sponsorship.national.brand).toBe('Netrally Distribution')
     expect(ECONOMY.sponsorship.global.brand).toBe('Play Beyond')
     // The domestic table still reaches the local shop and only it – the rung whose gate did not move.
     for (const rank of [1, 5, 10, 11, 30]) expect(kitTermsFor(domestic(rank))!.tier).toBe('local')
-    // ...and each of the three marks on disk is now something a real career can be sent.
+    // ...and every rung resolves to a mark that really is on disk. ⚠ THROUGH `sponsorArtKey`
+    // SINCE W3-ACT2, which is the assertion this had to become: three marks ship and the ladder has
+    // six rungs, so the professional trio borrows the global mark until real art exists. The claim
+    // is unchanged and still exhaustive - no rung may be sendable without a picture on the letter -
+    // and it is now the mapping that is checked rather than a filename convention that happened to
+    // hold. Placeholder art, flagged for the owner; three real marks would make this the identity.
     for (const t of SPONSOR_TIERS) {
-      expect(existsSync(fileURLToPath(new URL(`../public/images/sponsors/${t}.webp`, import.meta.url)))).toBe(true)
+      const key = sponsorArtKey(t)
+      expect(existsSync(fileURLToPath(new URL(`../public/images/sponsors/${key}.webp`, import.meta.url))), t).toBe(true)
     }
   })
 
@@ -948,8 +973,17 @@ describe('the three rungs, and the tables they read', () => {
     // therefore a GLOBAL-grade professional now rather than a national one: the same sentence
     // against an honest table. What this case is actually about is that a professional standing
     // alone signs her, so the probes are re-pointed at the three rungs rather than re-argued.
-    expect(rungFor(pro(20))).toBe('global') // deep inside the last quarter of the W100 list
-    expect(rungFor(pro(200))).toBe('national') // on the list, not near the top of it
+    // ⚠ RE-POINTED AGAIN BY W3-ACT2, AND THE CLAIM IS AGAIN UNCHANGED. Three PROFESSIONAL rungs now
+    // sit in the same chain (act2-pro-tour.md §7: national 350 > tour 200 > global 87 > premium 50 >
+    // icon 10), so the probe ranks resolve one rung higher than they did - which is the ladder
+    // getting longer above her rather than the rule moving. What this case is about is that a
+    // professional standing ALONE signs her, and every line below still says exactly that.
+    expect(rungFor(pro(5))).toBe('icon') // the very top of the world
+    expect(rungFor(pro(20))).toBe('premium') // inside the top 50
+    expect(rungFor(pro(60))).toBe('global') // deep inside the last quarter of the W100 list
+    expect(rungFor(pro(150))).toBe('tour') // a working professional with a ranking that reads
+    expect(rungFor(pro(200))).toBe('tour') // the tour rung's own gate, exactly
+    expect(rungFor(pro(300))).toBe('national') // on the W100 list, not near the top of it
     // ...and the shop always would: the local rung is "somebody has heard of her".
     expect(rungFor(pro(400))).toBe('local')
     // The guard the junior table keeps, kept here too: an EMPTY professional table is not a world

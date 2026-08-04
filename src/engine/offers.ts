@@ -43,12 +43,37 @@ import { rngFromSeed } from './rng'
 import { isOffSeasonWeek, WEEKS_PER_YEAR } from './season/calendar'
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
-import type { KitEndReason, KitLine, KitOfferTerms, Offer, SponsorTier } from '../shared/protocol'
+import type {
+  KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier,
+} from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
  *  lookup - a tier, never a filename spelled out at a call site. All three rungs are reachable since
  *  01.08 (feat/brand-ladder); the art shipped first and the coverage ladder is written on it. */
-export const SPONSOR_TIERS: readonly SponsorTier[] = ['local', 'national', 'global'] as const
+export const SPONSOR_TIERS: readonly SponsorTier[] = [
+  // ⚠ WEAKEST-FIRST, AND SINCE W3-ACT2 THAT ORDERING IS LOAD-BEARING RATHER THAN TIDY. `rungFor`
+  // reverses this list and takes the FIRST rung she clears, so the order IS the ladder: a rung
+  // listed above a stricter one would be handed to a player who had cleared both, and the stricter
+  // brand would become unreachable. `tour` therefore sits between `national` and `global` - its
+  // gate (WTA 200) is looser than global's (87) and tighter than national's (350) - which is the
+  // monotone chain `SponsorTier` explains, and it is what answers section 7's own open question
+  // about where the professional rungs slot in. Caught by tests/offers.test.ts, which asks the
+  // ladder for a rung at six ranks rather than trusting the array to be in a sensible order.
+  'local', 'national', 'tour', 'global', 'premium', 'icon',
+  // Letterheads: the three professional rungs reuse `global.webp` until real marks exist, exactly
+  // as the W2-LADDER trophies reuse their masters - see `sponsorArtKey`.
+] as const
+
+/** WHICH LETTERHEAD IMAGE A RUNG PRINTS. `public/images/sponsors/<key>.webp` holds three marks and
+ *  the ladder now has six, so the three professional rungs borrow the global mark.
+ *
+ *  PLACEHOLDER ART, FLAGGED FOR THE OWNER, and it is the same stand-in rule `art/venues.ts` and the
+ *  W2-LADDER trophies already live by: no art is invented in code, the mapping is one function, and
+ *  three real marks (tour / premium / icon) are an art ask whenever he wants them - they would
+ *  replace this function with the identity rather than touching anything else. */
+export function sponsorArtKey(tier: SponsorTier): string {
+  return tier === 'tour' || tier === 'premium' || tier === 'icon' ? 'global' : tier
+}
 
 // =================================================================================================
 // THE BRAND LADDER - three rungs, and the rung says WHICH OF HER LINES IT COVERS
@@ -72,6 +97,15 @@ export const TIER_COVERS: Record<SponsorTier, readonly KitLine[]> = {
   local: ['strings'],
   national: ['strings', 'frame'],
   global: ['strings', 'frame', 'shoes'],
+  // ...AND THE LADDER STOPS BEING ABOUT COVERAGE AT THE TOP, WHICH IS THE HONEST READING (W3-ACT2
+  // section 7). There is no fourth line of kit to promise, so the three professional rungs all
+  // cover everything and what steps up instead is MONEY - a quarterly retainer, appearance fees and
+  // result bonuses. `SponsorTier`'s original argument (the rung is coverage, not prestige, because
+  // coverage is legible off a screen the player already has) held for exactly as long as there were
+  // lines left to add; above that a bigger deal has to pay her.
+  tour: ['strings', 'frame', 'shoes'],
+  premium: ['strings', 'frame', 'shoes'],
+  icon: ['strings', 'frame', 'shoes'],
 }
 
 /**
@@ -220,6 +254,17 @@ export interface SponsorStanding {
  *  her", and a girl on the world tour has cleared that bar by definition. */
 export function standingClears(standing: SponsorStanding, tier: SponsorTier): boolean {
   const s = ECONOMY.sponsorship
+  // W3-ACT2 section 7: the three professional rungs read the W table AND NOTHING ELSE, which is the
+  // difference between them and the pair below. `national` and `global` were built for a junior and
+  // LEARNED to read a professional (the 02.08 ruling), so they clear on either table; these three
+  // were never about a junior at all, and a brand that signs on a WTA ranking is not interested in a
+  // girl who has not got one. The `wtaRanked` guard is the same one the pair below keeps, for the
+  // same reason: everybody without a counting W result ties at the floor of that table, so a
+  // position there is not a standing until she has earned one.
+  if (tier === 'icon' || tier === 'premium' || tier === 'tour') {
+    const rung = tier === 'icon' ? s.icon : tier === 'premium' ? s.premium : s.tour
+    return standing.wtaRanked && standing.wtaRank <= rung.maxWtaRank
+  }
   if (tier === 'global') {
     return (
       (standing.itfRanked && standing.itfRank <= s.global.maxItfRank) ||
@@ -275,6 +320,28 @@ export function kitTermsFor(standing: SponsorStanding): KitOfferTerms | null {
       covers: TIER_COVERS.local,
       travelShare: 0,
       seasons: 1,
+    }
+  }
+  // W3-ACT2: the professional rungs carry three fields the junior pair does not, and they are
+  // written onto the offer at arrival like every other term - a deal signed under one set of numbers
+  // is honoured under those numbers for its whole life (`kitTermsFor`'s own standing rule).
+  if (tier === 'tour' || tier === 'premium' || tier === 'icon') {
+    const pro = tier === 'icon' ? s.icon : tier === 'premium' ? s.premium : s.tour
+    return {
+      tier,
+      brand: pro.brand,
+      kitAllowanceCents: pro.seasonCents,
+      freshCap: pro.freshCap,
+      minEventsPerSeason: pro.minEvents,
+      covers: TIER_COVERS[tier],
+      travelShare: pro.travelShare,
+      seasons: pro.seasons,
+      retainerCents: pro.retainerCents,
+      bonusShare: pro.bonusShare,
+      bonusFromTier: pro.bonusFromTier,
+      ...('appearanceFeeCents' in pro
+        ? { appearanceFeeCents: pro.appearanceFeeCents, appearanceFromTier: pro.appearanceFromTier }
+        : {}),
     }
   }
   const rung = tier === 'global' ? s.global : s.national
@@ -522,6 +589,114 @@ export function raiseEntryCancelLetter(
   return offer
 }
 
+// =================================================================================================
+// THE TOUR'S OWN VOICE (W3-ACT2 §6, the mandatory regime's half of the mail surface)
+// =================================================================================================
+//
+// A third writer, and the reason it is a third one rather than a second `entry` shape is what it is
+// FOR. An `entry` letter is a receipt for something she did; a `tour` letter is the REGIME talking -
+// the warning that an obligation is about to fall due, the notice of what a missed one cost, and the
+// suspension. Same surface, same `state: 'info'` (nothing to sign, nothing to expire), zero
+// randomness, ids derived from state so a replayed week writes the same inbox.
+//
+// ⚠⚠ THE ORDER OF THESE THREE IS THE OWNER'S RULING AS MECHANISM. «Мы ни за что не наказываем»: the
+// DUE letter is raised at the entry DEADLINE, one week before the event, so the first thing that
+// ever happens is a warning she can still act on; the PENALTY letter names the rule and the price
+// and quotes her running total against the threshold, so a charge reads like a bill; the SUSPENSION
+// letter states its last week. No copy anywhere in this family shames her - see the note on
+// `raiseMandatoryDueLetter` for the one sentence that decides it.
+
+/** THE WARNING. Raised at a mandatory event's entry deadline while she is still able to enter it.
+ *
+ *  ⚠ THE WORDING IS THE RULING. It says what the tour requires and what declining costs, and it
+ *  stops there: a letter that added "she really should go" would be the GAME leaning on the player,
+ *  and the whole point of §6 is that the tour has rules and the game has none. A penalty is a price
+ *  she chose to pay, like money - so the letter is priced like an invoice and worded like one. */
+export function raiseMandatoryDueLetter(
+  offers: Offer[],
+  week: number,
+  event: { id: string; tier: TierId; week: number; deadlineWeek: number },
+  label: string,
+  points: number,
+): Offer {
+  const offer: Offer = {
+    id: `tour-due-${event.id}`,
+    kind: 'tour',
+    week,
+    deadlineWeek: event.deadlineWeek,
+    terms: {
+      notice: 'due',
+      tier: event.tier,
+      label,
+      eventWeek: event.week,
+      freeUntilWeek: event.deadlineWeek,
+      points,
+    },
+    state: 'info',
+  }
+  if (offers.some((o) => o.id === offer.id)) return offers.find((o) => o.id === offer.id)!
+  offers.push(offer)
+  return offer
+}
+
+/** THE CHARGE, with the rule named and the running total quoted against the threshold - so the
+ *  player can always see how close the ledger is to the line without going to look for it. */
+export function raiseMandatoryPenaltyLetter(
+  offers: Offer[],
+  week: number,
+  args: {
+    reason: PenaltyReason
+    points: number
+    runningPoints: number
+    suspensionAt: number
+    tier?: TierId
+    label?: string
+    eventId?: string
+  },
+): Offer {
+  const offer: Offer = {
+    id: `tour-penalty-${week}-${args.reason}-${args.eventId ?? 'season'}`,
+    kind: 'tour',
+    week,
+    deadlineWeek: week,
+    terms: {
+      notice: 'penalty',
+      reason: args.reason,
+      points: args.points,
+      runningPoints: args.runningPoints,
+      suspensionAt: args.suspensionAt,
+      ...(args.tier ? { tier: args.tier } : {}),
+      ...(args.label ? { label: args.label } : {}),
+    },
+    state: 'info',
+  }
+  if (offers.some((o) => o.id === offer.id)) return offers.find((o) => o.id === offer.id)!
+  offers.push(offer)
+  return offer
+}
+
+/** THE SENTENCE. One letter, its last week on the paper, and nothing else - a suspension is a fact
+ *  with a date on it and needs no commentary. */
+export function raiseSuspensionLetter(
+  offers: Offer[],
+  week: number,
+  untilWeek: number,
+  runningPoints: number,
+  suspensionAt: number,
+): Offer {
+  const offer: Offer = {
+    id: `tour-suspension-${week}`,
+    kind: 'tour',
+    week,
+    deadlineWeek: untilWeek,
+    terms: { notice: 'suspension', untilWeek, runningPoints, suspensionAt },
+    state: 'info',
+  }
+  if (offers.some((o) => o.id === offer.id)) return offers.find((o) => o.id === offer.id)!
+  offers.push(offer)
+  return offer
+}
+
 /** THE INBOX STAYS BOUNDED (the `Snapshot.offers` note promises "never pruned" about CONTRACTS,
  *  and it can only keep that promise if the receipts do not pile up for ever): a professional
  *  career writes ~15-30 desk letters a season, so unlike the sponsor's handful they must age out.
@@ -529,7 +704,12 @@ export function raiseEntryCancelLetter(
  *  the same 52 weeks every other rolling record in the game keeps. Sponsor letters are NEVER
  *  touched here: a signed deal outlives every prune, which is the whole reason the inbox exists. */
 export function pruneEntryLetters(offers: Offer[], week: number): Offer[] {
-  return offers.filter((o) => o.kind !== 'entry' || week - o.week <= WEEKS_PER_YEAR)
+  // ⚠ THE TOUR'S OWN LETTERS AGE OUT ON THE SAME 52 WEEKS (W3-ACT2), and for the same reason the
+  // desk's do: a professional season writes a handful of due-notices and (rarely) a charge, and a
+  // record nobody can find is not a record. The PENALTY LEDGER itself is never pruned - the letter
+  // is the announcement, `world.penalties` is the account - so a charge stays readable on the Stats
+  // screen long after its paper has left the inbox, and the rolling window is what forgives it.
+  return offers.filter((o) => (o.kind !== 'entry' && o.kind !== 'tour') || week - o.week <= WEEKS_PER_YEAR)
 }
 
 /** The deal that covered the season now finishing, if any - what the off-season review has to judge

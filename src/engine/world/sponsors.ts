@@ -11,10 +11,10 @@
 //
 // ⚠ RNG: the sponsor review draws on a PURPOSE-SCOPED sub-stream, never MAIN.
 import { ECONOMY } from '../economy'
-import { TIERS, WEEKS_PER_YEAR } from '../season/calendar'
+import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
 import { activeKitDeal, dealUnderReview, endDealWithSeason, kitTravelShare, raiseKitEndLetter, raiseKitOffer, refuseOffer as refuseOfferIn, seasonLastWeek, signOffer as signOfferIn, standingClears } from '../offers'
-import type { SeasonEvent } from '../season/types'
+import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { kidPoints } from './ladder'
@@ -323,4 +323,76 @@ export function chargeTravel(world: WorldState, event: SeasonEvent): void {
     text: covered > 0 ? `Travel to ${TIERS[event.tier].label} – ${payer}` : `Travel to ${TIERS[event.tier].label}`,
     amountCents: -net,
   })
+}
+
+// =================================================================================================
+// THE PROFESSIONAL RUNGS' MONEY (W3-ACT2, act2-pro-tour.md §7)
+// =================================================================================================
+//
+// Three income lines that did not exist below `tour`, and every one of them is a cheque somebody
+// writes to the PLAYER rather than a price the family pays - so, exactly like prize money, NONE of
+// them scales with the wealth corridor. See `prizeCentsFor`'s note; it is the same rule and it is
+// stated there for the same reason.
+//
+// ⚠ RNG: zero draws, all three. They are lookups on a signed deal plus post-draw arithmetic, so the
+// frozen MAIN capture cannot see any of this.
+
+/** THE RETAINER'S PAY WEEKS. Quarterly, and quarterly means "every thirteenth week of the season
+ *  block", which is `WEEKS_PER_YEAR / 4` exactly - so the four arrivals land on season offsets 0,
+ *  13, 26 and 39 in every year, and a player can plan against them. Deliberately NOT the season
+ *  boundary alone: one number a year at the boundary would read as the old cheque this whole system
+ *  replaced, and the spec asks for a quarterly retainer because a wage is what it is. */
+export function isRetainerWeek(week: number): boolean {
+  return week % (WEEKS_PER_YEAR / 4) === 0
+}
+
+/** Pay the quarter's retainer, if a deal that carries one is running. Idempotent per week by
+ *  construction (the tick calls it once) and silent when nobody is paying. */
+export function payRetainer(world: WorldState): void {
+  if (!isRetainerWeek(world.week)) return
+  const deal = activeKitDeal(world.offers, world.week)
+  if (!deal) return
+  const terms = deal.terms as KitOfferTerms
+  const cents = terms.retainerCents ?? 0
+  if (cents <= 0) return
+  world.fundsCents += cents
+  addEvent(world, {
+    week: world.week,
+    type: 'income',
+    category: 'income',
+    text: `${terms.brand} retainer – quarterly`,
+    amountCents: cents,
+  })
+}
+
+/** WHAT AN EVENT PAYS HER TO TURN UP, in cents, 0 when nothing does. Read at the moment a run
+ *  COMMITS, so a skipped event or a walkover pays nothing - the same commit point the prize money
+ *  uses, and for the same reason: a fee for appearing has to be conditional on appearing. */
+export function appearanceFeeFor(world: WorldState, tier: TierId): number {
+  const deal = activeKitDeal(world.offers, world.week)
+  if (!deal) return 0
+  const terms = deal.terms as KitOfferTerms
+  const fee = terms.appearanceFeeCents ?? 0
+  const from = terms.appearanceFromTier
+  if (fee <= 0 || !from) return 0
+  return TIER_LADDER.indexOf(tier) >= TIER_LADDER.indexOf(from) ? fee : 0
+}
+
+/** THE RESULT BONUS, as a share of the tournament's own cheque for that finish.
+ *
+ *  ⚠ A SHARE AND NOT A SECOND TABLE, which is the whole design. The prize curve is already anchored
+ *  per rung and per finish by the research doc, so a bonus expressed against it inherits that shape
+ *  for free: it can never invert (a semi-final bonus larger than a title one is unrepresentable),
+ *  it scales with the rung she is winning at, and there is exactly one table to retune if the money
+ *  ever moves. It also means a rung that pays no prize money - the whole junior ladder - pays no
+ *  bonus by construction rather than by a second rule saying so. */
+export function resultBonusFor(world: WorldState, tier: TierId, finish: number): number {
+  const deal = activeKitDeal(world.offers, world.week)
+  if (!deal) return 0
+  const terms = deal.terms as KitOfferTerms
+  const share = terms.bonusShare ?? 0
+  const from = terms.bonusFromTier
+  if (share <= 0 || !from) return 0
+  if (TIER_LADDER.indexOf(tier) < TIER_LADDER.indexOf(from)) return 0
+  return Math.round(share * (TIERS[tier].prizeCents?.[finish] ?? 0))
 }

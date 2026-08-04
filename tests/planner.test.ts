@@ -217,7 +217,11 @@ function hashOf(draws: number[]): string {
 // carries the same condition math the kid does, so a dearer domestic week resolves the year's
 // brackets on a slightly more tired field and a different set of juniors ends it in the points.
 // Post-draw again; the A/B halves above are untouched.
-const REF = { kidRank: 121 }
+// ⚠ RE-PINNED 121 -> 123 BY W3-ACT2 (content, not a rule): the four act-3 rungs add 30 events a
+// season, so the cohort meets 30 more draws and a different set of juniors ends the year holding
+// counting ITF points. The declaration this one mirrors is tests/condition.test.ts B1's REF; the
+// frozen MAIN capture is untouched by construction (every bracket runs on `seed:aitour:<id>`).
+const REF = { kidRank: 123 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

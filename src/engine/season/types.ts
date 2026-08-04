@@ -7,12 +7,20 @@ import type { MatchPlayer, Surface } from '../match/types'
  *
  *  ⚠ THE W FAMILY IS SIX RUNGS SINCE W2-LADDER (act2-pro-tour.md §2, owner ruling 6): W50/W75 fill
  *  the ×5 hole between W35 and W100, and `wta125` sits above W100 – the WTA's own rung, not an ITF
- *  one, which is why its id carries the tour's name instead of the W prefix. 250/500/1000/Slams are
- *  act-3 content and deliberately absent. */
+ *  one, which is why its id carries the tour's name instead of the W prefix.
+ *
+ *  ⚠⚠ AND THE TOP FOUR ARRIVED WITH W3-ACT2 (act2-pro-tour.md §§2, 11.3). They are not "more
+ *  tournaments later": §11.3 measured the ceiling of the ladder as W2-LADDER shipped it – a
+ *  PERFECT, unreachable season of every WTA 125, W100 and W75 on the calendar is 1,500 points ≈
+ *  real #45 – so the real points-to-rank curve the owner chose put the top of the world out of
+ *  reach until these four existed. They are the only source of the points that curve is made of,
+ *  the only thing that fills the window above W75, and the home of the mandatory regime (§6).
+ *  Planned as optional content; promoted to the critical path by its own measurement. */
 export type TierId =
   | 'local' | 'regional' | 'national'
   | 'j30' | 'j60' | 'j300'
   | 'w15' | 'w35' | 'w50' | 'w75' | 'w100' | 'wta125'
+  | 'wta250' | 'wta500' | 'wta1000' | 'slam'
 /** WHICH TABLE A RESULT PAYS INTO. Two currencies with no exchange rate between them, which is how
  *  the real sport works: Reg 10's list of ranking tournaments is closed and contains only ITF grades,
  *  so a national title produces exactly ZERO ITF points, while federations import ITF results at
@@ -29,7 +37,14 @@ export interface TierDef {
   label: string
   /** the table this rung's points pay into. Nothing crosses between the two. */
   track: LadderTrack
-  drawSize: 8 | 16 | 32
+  /** ⚠ POWERS OF TWO ONLY, because `runTournament` is a pure single-elimination fold: it reads
+   *  `Math.log2(drawSize)` as its round count and `standardSeedOrder` builds the bracket by doubling.
+   *  There is no bye machinery in this engine and W3-ACT2 deliberately did not add one – the real
+   *  draws that are not powers of two (a WTA 1000's 56, a 500's 30/28) ARE power-of-two brackets in
+   *  which the top seeds are handed the first round, so the honest representation of a 56-draw is a
+   *  64-bracket and of a 30-draw a 32-bracket. See the W3-ACT2 note on `TIERS.slam` for what a draw
+   *  bigger than 32 costs the LIVE cohort, which is the reason the shipped numbers are what they are. */
+  drawSize: 8 | 16 | 32 | 64 | 128
   entryFeeCents: number
   travelCostCents: [number, number] // [min,max], drawn per event instance
   points: number[] // by finish: [W, F, SF, QF, R16?, R32?] length matches rounds+1
@@ -56,6 +71,31 @@ export interface TierDef {
    *  `prizeCentsFor` in world.ts, which is deliberately the only reader and takes no background. */
   prizeCents?: number[]
   everyNWeeks: number
+  /** THE NAMED CALENDAR ANCHORS (W3-ACT2, act2-pro-tour.md §9's «named calendar anchors, Slams at
+   *  fixed season weeks, 1000s/500s»). Season-week OFFSETS (0-48), not absolute weeks: a tier that
+   *  carries this list is placed on exactly those offsets of every season block and its
+   *  `everyNWeeks` is ignored for placement.
+   *
+   *  ⚠ IT IS THE FIRST TIER FAMILY WHOSE PLACEMENT IS NOT A CADENCE, AND THAT IS THE WHOLE POINT.
+   *  Every rung below is "one every N weeks, phase-interleaved, jittered by seed" – which is right
+   *  for a supply pyramid nobody names. The top of the real calendar is the opposite: Melbourne is
+   *  in January and Wimbledon is at the end of June in every year of everybody's life, and that
+   *  fixedness is what makes a tennis year RECOGNISABLE rather than a stream of interchangeable
+   *  weeks. A seeded jitter would have made it a stream of interchangeable weeks with famous names on.
+   *
+   *  ⚠ SO AN ANCHORED RUNG OPTS OUT OF W2-WINDOW'S SEEDED JITTER, DELIBERATELY, and that is the one
+   *  place this table contradicts a shipped rule rather than extending it. W2-WINDOW made placement
+   *  seed-dependent because `buildSeason` was producing a byte-identical calendar in every world
+   *  (see PLACEMENT_JITTER). That argument is about the rungs whose weeks are arbitrary; these
+   *  four's weeks are the content. Every world still deals a different calendar – the twelve rungs
+   *  below still jitter, and they are 157 of the season's ~187 events.
+   *
+   *  ⚠ AND AN ANCHORED EVENT TAKES ITS SURFACE BLOCK'S DOMINANT SURFACE rather than a weighted draw
+   *  from it (see `makeEvent`). One rule, no per-anchor surface table: the offsets below already sit
+   *  in the right blocks, so the four Slams come out hard / clay / grass / hard by construction. A
+   *  Wimbledon drawn onto clay by a 30% tail is the same defect as a Wimbledon drawn onto a random
+   *  week. The roll is still SPENT, so the season sub-stream keeps its position. */
+  anchorWeeks?: readonly number[]
   /** EXTRA events of this tier placed inside the season's SECOND half, on top of the
    *  `floor(weeks / everyNWeeks)` evenly-spaced ones (R9-20 national densification). */
   secondHalfBonus?: number

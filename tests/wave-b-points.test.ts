@@ -100,8 +100,18 @@ describe('W-B1 — the index claim: the LAST points element IS the first-round e
 // but act2-pro-tour.md §2 rules the three shipped rows (w15/w35/w100) canon as-is - only the NEW
 // rungs took the in-wave verification. So the nominal-1 set is exactly the W2-LADDER trio, and a
 // future owner ruling that re-verifies w100's row should move it and this pin together.
-const NOMINAL_ONE_TIERS: readonly TierId[] = ['w50', 'w75', 'wta125']
-const firstRoundValue = (tier: TierId) => (NOMINAL_ONE_TIERS.includes(tier) ? 1 : 0)
+const NOMINAL_ONE_TIERS: readonly TierId[] = ['w50', 'w75', 'wta125', 'wta250', 'wta500']
+/** ⚠ AND THE TWO BIGGEST RUNGS PAY A REAL NUMBER FOR AN OPENING LOSS, WHICH IS A THIRD CASE
+ *  (W3-ACT2). Wave B's rule was "she earns her first point by WINNING one"; W2-LADDER added the
+ *  real chart's nominal 1 from W50 up; and the published rows for a WTA 1000 and a Grand Slam
+ *  simply do not bottom out near zero - 65 and 130 - because the research table is normalised to
+ *  32 MAIN-DRAW rows and at those two rungs the main draw is people who cleared the hardest
+ *  acceptance lists in the sport. The participation floor wave B removed cannot come back through
+ *  them: a top-50 player is admitted to at most 12 of these a season, they sit behind #65/#104
+ *  cuts, and one W50 semi-final still out-pays a whole best-16 window of W15 openers. */
+const REAL_OPENER_TIERS: Record<string, number> = { wta1000: 65, slam: 130 }
+const firstRoundValue = (tier: TierId) =>
+  REAL_OPENER_TIERS[tier] ?? (NOMINAL_ONE_TIERS.includes(tier) ? 1 : 0)
 
 describe('W-B2 — a first-round loss pays ZERO at every rung the grind was possible at', () => {
   it('the last element of every points array is the family split: 0 everywhere but the chart-1 trio', () => {
@@ -161,20 +171,32 @@ describe('W-B3 — the participation floor is gone', () => {
   // never bank more than one point per counted slot - a whole window of first-round exits at the
   // chart-1 trio is out-paid by ONE W50 semi-final. (Best-6 here; under the adult best-16 the
   // ceiling is 16, still under W50's 20-point semi-final - the bound survives the window widening.)
+  // ⚠ RE-AIMED AGAIN BY W3-ACT2, AND THE THIRD BUCKET IS THE FINDING RATHER THAN AN EXCEPTION. A
+  // WTA 1000 opener pays 65 and a Slam opener 130, so the grindable/nominal split needs a third
+  // side - and the participation floor still cannot come back through it, for a reason that is
+  // ACCESS rather than arithmetic: those two rungs sit behind #65 and #104 acceptance cuts, there
+  // are twelve of them in a season, and «she farms first rounds at majors» describes a top-100
+  // professional, which is the whole career the game is about reaching. What is pinned is that the
+  // bound the claim protects still holds where it was ever protectable: the grindable rungs bank
+  // nothing, the nominal rungs are capped at one per slot, and the big two are the ONLY rungs in
+  // the game where showing up pays - stated, not smuggled.
   it('losing every opener everywhere banks 0 from the grindable rungs and only the bounded nominal 1s', () => {
     const zeroSide: SeasonResult[] = []
     const oneSide: SeasonResult[] = []
+    const realSide: SeasonResult[] = []
     let week = 1
     for (const tier of TIER_LADDER) {
       for (let i = 0; i < 6; i++) {
         const pts = TIERS[tier].points[TIERS[tier].points.length - 1]
-        const bucket = NOMINAL_ONE_TIERS.includes(tier) ? oneSide : zeroSide
+        const bucket = REAL_OPENER_TIERS[tier] ? realSide : NOMINAL_ONE_TIERS.includes(tier) ? oneSide : zeroSide
         if (pts > 0) bucket.push({ playerId: 'kid', week: week++, points: pts, tier })
       }
     }
     expect(zeroSide).toEqual([]) // the grindable rungs leave no row at all (finalize guards on > 0)
     expect(windowedBestSum(oneSide, 52, 'kid', 6)).toBe(6) // best-6 of pure 1s: one point per slot
     expect(windowedBestSum(oneSide, 52, 'kid', 16)).toBeLessThan(TIERS.w50.points[2]) // < one W50 SF (best-16 too: 16 x 1 < 20)
+    // The third bucket is exactly the two rungs named above - never a fourth by accident.
+    expect([...new Set(realSide.map((r) => r.tier))].sort()).toEqual(['slam', 'wta1000'])
   })
 })
 

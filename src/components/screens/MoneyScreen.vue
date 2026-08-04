@@ -46,7 +46,7 @@
 //  3. INCOME IS `--money-in`, NOT THE EXPORT'S `#a5db4b`. The app has one green for "money came in"
 //     and it is a token; adding a second one for this screen alone would break the very principle
 //     the export is written on (docs/design/README.md §3, "цвет = смысл").
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { ECONOMY } from '../../engine/economy'
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
@@ -466,13 +466,54 @@ function confirmKit(): void {
 // grows a second root.
 const ledgerEl = useTemplateRef<HTMLElement>('ledger')
 function showAllTransactions(): void {
+  // ⚠ THE LEDGER IS BEHIND A TAB NOW, so the button has to OPEN it before it can scroll to it -
+  // otherwise the CTA points at an element that is not in the document and silently does nothing.
+  // The scroll waits a tick for the arm to render (`nextTick`), because the ref is null until then.
+  screenTab.value = 'history'
   // The glide is a nicety and the ARRIVAL is the promise, so the behaviour is chosen rather than
   // assumed: a player who has asked their system for less motion gets taken there at once. Found
   // by driving it - the verification browser does not animate `behavior: 'smooth'` at all, and a
   // button whose only mode is an animation nobody runs is a button that does nothing.
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
-  ledgerEl.value?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
+  void nextTick(() => {
+    ledgerEl.value?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
+  })
 }
+
+// --- THE SCREEN'S OWN TABS (owner, 04.08: «В family budget теперь вообще очень много информации на
+// одном экране, предлагаю какие-то вкладки сделать внизу или наверху для переключения между
+// разделами») ------------------------------------------------------------------------------------
+//
+// THE GROUPING IS BY WHAT THE PLAYER IS DOING, NOT BY WHAT THE DATA IS, and the screen already had
+// the seam - every block on it answers exactly one of three questions:
+//
+//   SPENDING  "where is the money going right now?" - the three-cell summary, the 12w/season period
+//             switcher, the category column, the receipt/photo/donut. ⚠ These four are ONE tab and
+//             cannot be split: the summary figures, the rows and the ring are all reads of
+//             `activeFinance`, i.e. of the period switcher. A tab that showed the summary without
+//             the control that governs it would be a readout of an invisible setting.
+//   BILLS     "what am I signed up to pay?" - the physio retainer and her kit. The only two blocks
+//             on this screen that CHANGE anything (a toggle and four buy buttons); everything else
+//             is read-only. Putting the two decisions together is also the safety argument: the
+//             money you can accidentally spend now lives on one named page.
+//   HISTORY   "what has it cost so far?" - every season, and the full transaction ledger. The same
+//             record at two zooms, a year per row and a line per row, which is why they belong on
+//             one tab rather than one each.
+//
+// The header (her balance and the week) sits ABOVE the switcher on purpose: it is true on all three
+// tabs, and a wallet figure that disappeared when you looked at the ledger would be absurd.
+//
+// ⚠ NOT A NEW CONTROL. This is `SegmentedRow`, the app's one segmented idiom, wearing the plainer
+// look the owner ruled for Stats on 02.08 - see `.money-tabs` in the style block for the ruling and
+// the mechanism. Nothing is unmounted for the sake of it: `v-if` is what buys the screen back, and
+// each arm is exactly the block that used to be there.
+type MoneyTab = 'spend' | 'bills' | 'history'
+const screenTab = ref<MoneyTab>('spend')
+const TAB_OPTIONS = [
+  { value: 'spend', label: 'Spending', title: 'Where the money went in the chosen period' },
+  { value: 'bills', label: 'Bills', title: 'The recurring costs the family has signed up to' },
+  { value: 'history', label: 'History', title: 'Every season, and every transaction' },
+]
 </script>
 
 <template>
@@ -498,8 +539,19 @@ function showAllTransactions(): void {
         </div>
       </div>
 
+      <!-- ========================= 1b. THE SECTION SWITCHER =========================
+           Three tabs over what used to be one very long page. Which block sits behind which tab,
+           and why the summary cannot be parted from the period switcher, is argued at
+           `TAB_OPTIONS` in the script. The plate is off, per the Stats ruling - see .money-tabs. -->
+      <SegmentedRow
+        v-model="screenTab"
+        class="money-tabs"
+        :options="TAB_OPTIONS"
+        group-label="Which part of the budget"
+      />
+
       <!-- ============================= 2. THE SUMMARY ============================= -->
-      <Card class="money-summary" pad="14px 4px">
+      <Card v-if="screenTab === 'spend'" class="money-summary" pad="14px 4px">
         <div class="money-cell">
           <p class="money-cell-label">Total income</p>
           <p class="money-cell-figure positive">{{ formatCents(incomeCents) }}</p>
@@ -518,6 +570,7 @@ function showAllTransactions(): void {
 
       <!-- ============================= 3. THE PERIOD ============================= -->
       <SegmentedRow
+        v-if="screenTab === 'spend'"
         v-model="breakdownWindow"
         class="money-window"
         :options="WINDOW_OPTIONS"
@@ -528,9 +581,11 @@ function showAllTransactions(): void {
            The list keeps to its own column and the paper is laid over the space beside it, exactly
            as the export composes it. Below 340px of content the artefacts step out of the way
            rather than crowd the figures - see the media query in the style block. -->
-      <p v-if="!expenseRows.length" class="money-empty">No spending in this window yet.</p>
+      <p v-if="screenTab === 'spend' && !expenseRows.length" class="money-empty">
+        No spending in this window yet.
+      </p>
 
-      <div v-else class="money-body">
+      <div v-else-if="screenTab === 'spend'" class="money-body">
         <div class="money-list">
           <StatRow
             v-for="row in expenseRows"
@@ -646,7 +701,7 @@ function showAllTransactions(): void {
 
       <!-- ============================== 5. THE LEVERS ==============================
            R9-5: recurring budget levers live with the money, not on Home. -->
-      <Card class="money-panel">
+      <Card v-if="screenTab === 'bills'" class="money-panel">
         <Eyebrow as="h2">Budget</Eyebrow>
         <label class="physio-toggle">
           <input type="checkbox" :checked="physioActive" :disabled="game.busy" @change="togglePhysio" />
@@ -664,7 +719,7 @@ function showAllTransactions(): void {
            W3-KIT. Three lines, four rungs each. The rung she owns is marked; a dearer one asks
            before it charges, a cheaper one just takes effect at the next purchase. Every price,
            name and condition word comes off the snapshot - see the script. -->
-      <Card class="money-panel money-kit">
+      <Card v-if="screenTab === 'bills'" class="money-panel money-kit">
         <Eyebrow as="h2">Her kit</Eyebrow>
         <p class="money-panel-note">
           Better kit lasts longer, plays truer and is kinder to her body – and it is billed every time
@@ -699,7 +754,7 @@ function showAllTransactions(): void {
       <!-- ============================== 6. THE CAREER, BY YEAR ======================
            One row per season she has finished. Read-only, and honest about the years it cannot
            answer for - see the script for why some rows say nothing. -->
-      <Card class="money-panel money-years">
+      <Card v-if="screenTab === 'history'" class="money-panel money-years">
         <Eyebrow as="h2">Every season</Eyebrow>
         <p v-if="!seasonRows.length" class="money-panel-note">
           Her first season is still running – it lands here when the year wraps up.
@@ -720,7 +775,7 @@ function showAllTransactions(): void {
       </Card>
 
       <!-- ============================== 7. THE LEDGER ============================== -->
-      <div ref="ledger">
+      <div v-if="screenTab === 'history'" ref="ledger">
         <Card class="money-panel">
           <Eyebrow as="h2">All transactions</Eyebrow>
           <p v-if="!ledgerGroups.length" class="money-panel-note">No transactions yet.</p>
@@ -850,6 +905,26 @@ function showAllTransactions(): void {
 
 .money-cell-figure.negative {
   color: var(--money-out);
+}
+
+/* --- 1b. THE SECTION SWITCHER ------------------------------------------------------------------ */
+
+/* ⚠ NO PLATE AROUND THIS SWITCH, and it is the SAME ruling Stats carries (owner, 02.08: «Мне не
+   нравится круглая обводка у переключателя уровня турниров в stats, без нее было лучше... Давай
+   просто кнопки оставим и всё»). He ruled on a control, not on a screen: the app has ONE segmented
+   row, and a second instance of it that kept the panel fill and the hairline would be the app
+   disagreeing with itself two taps apart. Copied deliberately rather than shared, exactly as
+   `.stats-ladder-row` did it - scoped-over-shared wins on specificity ((0,2,0) with the data-v
+   attribute vs the sheet's (0,1,0)), so no `!important` and no edit to src/style.css.
+   ⚠ THE PERIOD SWITCH BELOW KEEPS ITS PLATE. That one is not the same object doing the same job:
+   these tabs are the page's own chapters, the 12w/season pills are a filter INSIDE one of them, and
+   the plate is what says so. Two identical-looking rows stacked six pixels apart would read as one
+   broken control. */
+.money-tabs {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
 }
 
 /* --- 3. THE PERIOD ---------------------------------------------------------------------------- */

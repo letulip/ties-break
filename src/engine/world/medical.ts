@@ -22,6 +22,7 @@ import { ageAtWeek } from './age'
 import { entryCapUsage, proEntryCapUsage, isCappedTier, isCappedProTier } from './entryCaps'
 import { acceptanceRank, kidPoints, onRampOpen, outgrewTier, rankIn, tierOutgrown } from './ladder'
 import { vacationForWeek, practiceForWeek, vacationBlackoutDetail } from './bookings'
+import { isSuspendedAt, suspensionWeeksLeft } from './mandatory'
 import type { WorldState } from '../world'
 
 // --- Season-Life: condition + availability gate (slice B) --------------------
@@ -231,6 +232,26 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   const layoff = layoffCovering(world, event.week)
   if (layoff !== null) {
     return { level: 'blocked', reason: 'injured', detail: injuredDetail(layoff.weeksRemaining) }
+  }
+  // ⚠ A SUSPENSION IS THE TOUR SHUTTING THE DOOR, AND IT OUTRANKS EVERY OTHER REFUSAL BUT INJURY
+  // (W3-ACT2 §6). Placed here rather than lower for the reason the precedence comment below gives
+  // about the caps: a parent has to be able to see the fact that reshapes the whole block of weeks,
+  // and no other gate matters while this one is closed. Below `injured` for the same reason the
+  // caps are - a layoff is the fresher news and names a return week, and this will still be here.
+  //
+  // THE REFUSAL NAMES THE RULE AND THE DATE, which is §6's transparency clause: she is not being
+  // told "no", she is being told which rule, how many points bought it, and the week it ends. No
+  // copy here shames her - «мы ни за что не наказываем» - and the letter that announced every one
+  // of those points arrived before any of them could bite.
+  if (isSuspendedAt(world, event.week)) {
+    const left = suspensionWeeksLeft(world, event.week)
+    return {
+      level: 'blocked',
+      reason: 'unavailable',
+      detail:
+        `Tour suspension – ${ECONOMY.mandatory.suspensionAt} penalty points inside 52 weeks. ` +
+        `${left} ${left === 1 ? 'week' : 'weeks'} left; entries reopen after that.`,
+    }
   }
   // THE TIER'S AGE GATE, BOTH ENDS OF IT (§4.1). The junior tour runs 13-18, the adult rungs open at
   // 16/16/17, the domestic ladder is open at every age for ever (owner's call 2 – it is ours, not

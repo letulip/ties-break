@@ -193,6 +193,18 @@ const CROWD_BANDS: Record<TierId, readonly [number, number]> = {
   // arena's outer configuration, 1,200-3,500 - the tour she was climbing towards starts being
   // audible from the court. Still decorative; nothing reads it.
   wta125: [1200, 3500],
+  // W3-ACT2 – and this is where the joke the table has been telling since `local` finally stops.
+  // Every rung so far has been a room: a club, a stand, a city arena's outer configuration. A WTA
+  // 250 is a full tournament week in a real venue (3,000-9,000); a 500 fills a show court
+  // (7,000-18,000); a 1000 is a stadium (15,000-35,000); a major is a fortnight a country watches
+  // (25,000-70,000, which is the ground, not the television). The crowd got SMALLER as the tennis
+  // got better right up to the tour she was climbing towards - and these four are that tour.
+  // Still decorative; nothing reads these numbers, which is pinned by a grep guard in
+  // tests/preview.test.ts exactly as the weather is.
+  wta250: [3000, 9000],
+  wta500: [7000, 18000],
+  wta1000: [15000, 35000],
+  slam: [25000, 70000],
 }
 
 /** Decorative crowd. Its own sub-stream so it can never perturb the draw, and keyed on the event so

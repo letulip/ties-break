@@ -12,6 +12,7 @@ import {
   type KitOfferTerms,
   type KitState,
   type Offer,
+  type PenaltyRow,
   type PlayerProfile,
   type PracticeBooking,
   type RecoveryBuff,
@@ -142,7 +143,10 @@ import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
 import { fireMilestone, captureMilestone, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
 export { emptySeasonRecord, emptyTrophyLedger }
-import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek } from './world/sponsors'
+// W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
+// implementation exactly as every other sponsor helper is.
+export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
 export { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor }
 import { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, accrueCondition, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
@@ -159,6 +163,35 @@ export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDome
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
+// W3-ACT2 §6 - the mandatory regime. Re-exported below under its own names so the worker, the
+// snapshot and the tools read one implementation, exactly as entryCaps is.
+import {
+  chargeMandatoryPenalty,
+  dueMandatoriesAt,
+  isMandatoryTier,
+  isSuspendedAt,
+  mandatoryBinds,
+  mandatoryBindsRank,
+  penaltyPointsAt,
+  quotaPlayedIn,
+  quotaShortfallAt,
+  settleMandatoryDeadlines,
+  settleMandatoryMisses,
+  settleMandatoryQuota,
+  suspensionWeeksLeft,
+} from './world/mandatory'
+export {
+  chargeMandatoryPenalty,
+  dueMandatoriesAt,
+  isMandatoryTier,
+  isSuspendedAt,
+  mandatoryBinds,
+  mandatoryBindsRank,
+  penaltyPointsAt,
+  quotaPlayedIn,
+  quotaShortfallAt,
+  suspensionWeeksLeft,
+}
 export { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage }
 import { finishLabel, prizeCentsFor } from './world/labels'
 export { finishLabel, prizeCentsFor }
@@ -183,9 +216,15 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 //     because no loaded career depends on the historical count being reproducible — each carries
 //     its own position.
 
-// v36 = W2-LADDER's `proEntryWeeks` (the pro AER ledger); v37/v38 stay reserved for endings/psyche
-// per act2-pro-tour.md §9's renumbering.
-export const SAVE_SCHEMA_VERSION = 37
+// v36 = W2-LADDER's `proEntryWeeks` (the pro AER ledger); v37 = W3-KIT's quality ladder (`world.kit`).
+//
+// ⚠ v38 = W3-ACT2's PENALTY LEDGER (`penalties` + `suspendedUntilWeek`), and it takes the number
+// act2-pro-tour.md §9 had reserved for psyche. The §9 renumbering («v36 = W2-LADDER, v37 = endings,
+// v38 = psyche») was written before W3-KIT and the endings wave landed in a different order, so the
+// reservations had already drifted by one; versions are allocated on arrival, not booked, and the
+// append-only migration ladder is what makes that safe. Endings and psyche take the next free
+// numbers when they ship.
+export const SAVE_SCHEMA_VERSION = 38
 
 
 
@@ -453,6 +492,29 @@ export interface WorldState {
    *  enter-time, spliced on refunding withdrawal, KEPT on every forfeiting exit - the tour counts
    *  participation, and a name still on a closed list participated. */
   proEntryWeeks: number[]
+  /** THE PENALTY LEDGER (v38, W3-ACT2 §6): one row per penalty the TOUR has charged her, each with
+   *  the absolute week it was charged in, what it cost and which rule it was.
+   *
+   *  ⚠ ROWS, NOT A RUNNING TOTAL, and it is `internationalEntryWeeks`' argument one table up: the
+   *  rule is "ten points inside a ROLLING 52 weeks", so the total is a filter over the window and a
+   *  missed reset is impossible by construction. It is also what makes the regime forgiving in the
+   *  way the owner's ruling requires - points age out on their own, with nobody having to remember
+   *  to clear them.
+   *
+   *  ⚠ AND IT IS A RECORD RATHER THAN A SCORE. Every row keeps its reason and (where there is one)
+   *  the event it was about, so the inbox and the Stats screen can always say WHICH rule and HOW
+   *  MANY points. «Мы ни за что не наказываем»: a penalty is a price she chose to pay, like money,
+   *  and a price you cannot itemise is a punishment. Pruned nowhere - a career's penalty history is
+   *  a handful of rows even in the worst case, and the window does the forgetting. */
+  penalties: PenaltyRow[]
+  /** THE LAST WEEK OF A SUSPENSION, inclusive, or null when she is not serving one (v38).
+   *
+   *  ⚠ PERSISTED RATHER THAN DERIVED, and the reason is that a sentence is a DECISION taken at a
+   *  moment. Recomputed from today's rolling window it would end early the week its tenth point aged
+   *  out - so the same career would be suspended or not depending on when the question was asked,
+   *  which is exactly the class of two-surfaces-disagree bug `refreshDerivedRankCaches` exists to
+   *  close. The ledger above says what she was charged; this says what the tour did about it. */
+  suspendedUntilWeek: number | null
   /** WHO SHE TRAINS WITH (v23): a roster coach's id, or `null` for the parent on the court.
    *
    *  Only the id is stored. The roster itself is a pure derivation of `seed` (engine/coach.ts
@@ -1171,6 +1233,39 @@ function finalizeTournament(world: WorldState): void {
     )
   }
 
+  // A3 (W3-ACT2 §7): AND THE BRAND PAYS TOO, at the same commit point and for the same reason. An
+  // APPEARANCE FEE is money for being on the poster and a RESULT BONUS is a share of the cheque she
+  // just won - both are the professional rungs' own terms (tour / premium / icon), both are zero
+  // while no such deal is running, and both are frozen onto the signed offer rather than re-read
+  // from ECONOMY, so a contract is honoured under the numbers it was signed under.
+  //
+  // ⚠ COMMITTED HERE AND NOWHERE ELSE, which is what makes an appearance fee conditional on
+  // APPEARING: a skipped event, a walkover or a medical withdrawal never reaches finalize, so
+  // neither line pays. And neither scales with the wealth corridor - see the prize note above, which
+  // is the same rule for the same reason.
+  const appearance = appearanceFeeFor(world, event.tier)
+  if (appearance > 0) {
+    world.fundsCents += appearance
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'income',
+      text: `Appearance fee – ${tier.label}`,
+      amountCents: appearance,
+    })
+  }
+  const bonus = resultBonusFor(world, event.tier, kidFinish)
+  if (bonus > 0) {
+    world.fundsCents += bonus
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'income',
+      text: `Sponsor bonus – ${finishLabel(kidFinish)} at the ${tier.label}`,
+      amountCents: bonus,
+    })
+  }
+
   // R9-7: the run's physical toll lands HERE, when it commits – per-match, not flat per tier.
   // A skipped event week (R9-9) or a walkover never reaches finalize, so neither costs strain.
   world.condition = clamp(
@@ -1554,6 +1649,11 @@ export function createWorld(
     milestones: [],
     internationalEntryWeeks: [],
     proEntryWeeks: [],
+    // The penalty ledger and the tour's own sentence (v38, W3-ACT2 §6). A fresh career owes the
+    // tour nothing and is not serving anything - both are the identity, so the migration's back-fill
+    // is the same pair.
+    penalties: [],
+    suspendedUntilWeek: null,
     // v37: the shipped rung on every line. She turns up with the frame most juniors own - the ladder
     // runs one rung below it and two above, and which way she goes is the parent's money.
     kit: defaultKitState(),
@@ -1614,6 +1714,8 @@ export function seedWorldForV6(save: Partial<WorldState> & { seed: string; week:
   save.entries = []
   save.internationalEntryWeeks = []
   save.proEntryWeeks = []
+  save.penalties = []
+  save.suspendedUntilWeek = null
   save.season = []
   save.nextEventId = 0
   const oldLog = Array.isArray(save.log) ? save.log : []
@@ -1731,6 +1833,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         sub-stream. The frozen MAIN capture (41550 / e6b0c709) cannot see it.
   if (isSponsorReviewWeek(world.week)) reviewSponsors(world)
 
+  // 0a0c-ter (W3-ACT2 §7): AND THE PROFESSIONAL RUNGS PAY A QUARTERLY RETAINER. Four arrivals a
+  //         season on fixed offsets (0 / 13 / 26 / 39) rather than one number at the boundary,
+  //         because a retainer is a WAGE and one annual figure would read as the cheque the whole
+  //         inbox replaced. Beside the sponsor review because it is the same contract talking, and
+  //         ZERO draws, so it is safe this far up the tick.
+  payRetainer(world)
+
   // 0a0-w4. W4: retire a knock whose weeks are up. FIRST of the pure-state steps, because everything
   //         below that reads it – `injuryTau` at step 1c most of all – must see the same answer for
   //         the whole week. ZERO draws.
@@ -1751,6 +1860,23 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // surfaces that already carry it truthfully: the dot goes out, and the letter itself says "Expired"
   // in the inbox for as long as the career lasts.
   expireOffers(world.offers, world.week)
+
+  // 0a0-tour (v38, W3-ACT2 §6). THE TOUR'S OWN DESK, and its two steps are in this order for the
+  //         reason the whole regime exists: the WARNING first, the CHARGE second, so that no career
+  //         can ever be charged for an obligation it was not written to about.
+  //
+  //         `settleMandatoryDeadlines` fires at the entry deadline of every mandatory event she is
+  //         bound to and has not entered - two weeks before the tournament, while entering is still
+  //         possible. `settleMandatoryMisses` fires on the event's OWN week, for the obligations
+  //         whose deadline has since passed, and writes both the penalty and the zero that occupies
+  //         one of her sixteen counted slots.
+  //
+  //         Placed with the inbox's own steps because that is what they are - deadlines the world
+  //         keeps for the player - and ZERO DRAWS on any stream, so the frozen MAIN capture
+  //         (41550 / e6b0c709) cannot see either of them. It is also above every gate that reads
+  //         `isSuspendedAt`, so a suspension handed down this week is in force for the rest of it.
+  settleMandatoryDeadlines(world)
+  settleMandatoryMisses(world)
 
   // 0a0. R9-1: savings interest on the carried-in balance. ZERO draws.
   resolveInterest(world)
@@ -2044,6 +2170,13 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   if (!world.pendingTournament) {
     recomputeRankAndMilestones(world)
     housekeep(world)
+    // ⚠ THE SEASON'S COMMITMENT IS SETTLED ON THE WRAP WEEK AND BEFORE THE WRAP-UP READS ANYTHING
+    // (W3-ACT2 §6). `maybeFireSeasonWrapUp` fires on the first off-season week; the 500-level quota
+    // is a fact about the season that has just finished, so it has to be charged on the same week
+    // and ahead of the summary that reports it. Both are no-ops on every other week and neither
+    // draws. `isSponsorReviewWeek` is the same predicate one line's worth of arithmetic away, which
+    // is deliberate: the tour and the brands both settle up in the first quiet week.
+    if (isSponsorReviewWeek(world.week)) settleMandatoryQuota(world, world.week)
     maybeFireSeasonWrapUp(world)
   }
 }
@@ -2093,6 +2226,19 @@ export function skipEvent(world: WorldState, eventId: string): void {
     type: 'info',
     text: `Skipped ${TIERS[event.tier].label} – entry fee forfeited.`,
   })
+  // ⚠ THE NO-SHOW, AND IT IS THE DEAREST OF THE THREE SOURCES (W3-ACT2 §6, `noShowPoints` 4 against
+  // a late withdrawal's 3 and a plain skip's 2). The ordering is about what the TOURNAMENT lost, not
+  // about her: never entering costs it an entry, pulling out after the list closed costs it a hole
+  // in a published draw, and not appearing on the day costs it the hole AND an empty court on a
+  // court schedule that cannot be refilled.
+  //
+  // ⚠ THE MEDICAL WITHDRAWAL IS NOT THIS PATH, which is the real tour's own distinction and the one
+  // that keeps «мы ни за что не наказываем» true here. `mandatoryBinds` answers false while she is
+  // injured, so a body that gives out on the Sunday is never a no-show; the doctor's veto in
+  // tickWeek pulls her out through its own route and this line simply does not fire.
+  if (mandatoryBinds(world, event)) {
+    chargeMandatoryPenalty(world, world.week, ECONOMY.mandatory.noShowPoints, 'no-show', event)
+  }
   // The week ends match-free after all, so she earns the slider recovery bonus that tickWeek
   // withheld when it still believed she would play (accrueCondition ran with played = true).
   // Integer, clamped – "the week then resolves as a normal non-playing week".

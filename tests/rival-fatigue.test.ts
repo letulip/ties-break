@@ -190,8 +190,17 @@ describe('R2 — nobody is charged zero strain for a week she played', () => {
     }
     expect(appearances).toBeGreaterThan(400) // 436 in year 1, before the age-13 J tiers open
     expect(blindNow).toBe(0)
-    // ...and the bias this replaces was not a rounding error: about half of every draw.
-    expect(blindBefore / appearances).toBeGreaterThan(0.4)
+    // ...and the bias this replaces was not a rounding error: a third to a half of every draw.
+    //
+    // ⚠ RE-AIMED 0.4 -> 0.3 BY W3-ACT2, AND THE MOVE IS THE HISTORICAL BIAS SHRINKING RATHER THAN
+    // THE FIX WEAKENING. `blindNow` is still exactly 0, which is this test's actual subject. What
+    // moved is the COUNTERFACTUAL: the four act-3 rungs pay every entrant something (a nominal 1 at
+    // 250/500, a real 65/130 at the 1000s and the Slams), so a first-round exit there would have
+    // left a row even under the old points-only write site. Fewer of year 1's appearances are
+    // therefore invisible to the old rule - measured 0.336 against 0.456 before the wave - and the
+    // bound is re-aimed to the number the claim is really making ("this was never a rounding
+    // error"), not deleted.
+    expect(blindBefore / appearances).toBeGreaterThan(0.3)
   })
 
   it('the cohort really is tireder than the points-only ledger would have said', () => {
@@ -219,7 +228,11 @@ describe('R2 — nobody is charged zero strain for a week she played', () => {
     for (const tier of TIER_LADDER) {
       const rounds = Math.log2(TIERS[tier].drawSize)
       const exit = row(tier, rounds, 10)
-      expect(exit.points).toBe(['w50', 'w75', 'wta125'].includes(tier) ? 1 : 0)
+      // ⚠ W3-ACT2's third case, same reason as above - see tests/wave-b-points.test.ts.
+      expect(exit.points).toBe(
+        tier === 'slam' ? 130 : tier === 'wta1000' ? 65
+          : ['w50', 'w75', 'wta125', 'wta250', 'wta500'].includes(tier) ? 1 : 0,
+      )
       expect(rivalCondition([exit], 'ai-x', 10)).toBe(R.max - matchDrain(tier, undefined))
       // ...and it is strictly worse than the same week spent at home.
       expect(rivalCondition([exit], 'ai-x', 10)).toBeLessThan(rivalCondition([], 'ai-x', 10))

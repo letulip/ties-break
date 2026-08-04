@@ -971,6 +971,32 @@ export function migrateSave(raw: unknown): WorldState {
     v = 37
   }
 
+  // v37 -> v38: THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6). Two fields, both created empty:
+  // `penalties` (one row per charge the TOUR has made, with the week, the points and the rule) and
+  // `suspendedUntilWeek` (the sentence it handed down, or null).
+  //
+  // ⚠ THE BACK-FILL IS THE IDENTITY, AND HERE THAT IS NOT MERELY THE SAFE CHOICE BUT THE ONLY
+  // TRUTHFUL ONE. The regime did not exist before this version, so no career has ever been charged
+  // anything - inventing history would mean fining a player retroactively for a rule she was never
+  // told about, which is precisely what «мы ни за что не наказываем» and §6's "announced before it
+  // can bite" forbid. A migrated career therefore wakes up owing nothing and free to play, and the
+  // first obligation it ever meets arrives as a letter like everybody else's.
+  //
+  // ⚠ AND IT IS NOT A NO-OP FOR A TOP-50 CAREER, which is worth saying plainly: a save loaded here
+  // may already be inside the standing the regime binds, so the very next mandatory entry deadline
+  // it ticks past will write its first letter. That is the correct behaviour - the letter is the
+  // announcement - and it is the reason the warning fires at the DEADLINE rather than at the event.
+  //
+  // Defensive and idempotent in v30's sense (a well-formed array is left alone, a malformed value is
+  // replaced). No sub-stream is added or reordered and not one draw is taken: the whole regime is
+  // post-draw bookkeeping, so the frozen MAIN capture is untouched by construction.
+  if (v === 37) {
+    if (!Array.isArray(save.penalties)) save.penalties = []
+    const held = save.suspendedUntilWeek
+    save.suspendedUntilWeek = typeof held === 'number' && Number.isFinite(held) ? held : null
+    v = 38
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
