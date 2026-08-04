@@ -18,6 +18,7 @@
     "bench:fatigue": "vite-node tools/fatigue-bench.ts",
     "bench:knock": "vite-node tools/knock-rate.ts",
     "bench:load": "vite-node tools/load-bench.ts",
+    "bench:money": "vite-node tools/money-decomposition.ts",
     "bench:radar": "vite-node tools/radar-bench.ts",
     "test": "vitest run --project unit",
     "test:watch": "vitest",
