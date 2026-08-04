@@ -28,6 +28,12 @@ developer docs (re-verify both at submission time – see the portals note).
 
 Notes:
 
+- **Not every shipped file is the real thing yet.** The stand-ins – trophy files that are byte copies
+  of another rung's master, and sponsor rungs with no letterhead of their own – are listed one row
+  each in [`docs/art-placeholders.md`](../../docs/art-placeholders.md), which
+  `tests/art-placeholders.test.ts` keeps honest in both directions. That list is the work queue for
+  real art; this table is the rights record. Replacing a placeholder makes the suite go red on
+  purpose, naming the row to delete.
 - **Masters are not in git – and they are not laptop-only either.** The working masters live
   in `art-src/` (gitignored – see the pipeline header in `scripts/optimize-art.mjs`), and the
   AUTHORING originals live in the owner's Figma, which is the versioned, recoverable master

@@ -1,16 +1,19 @@
 // HOW A PIECE OF SILVERWARE IS ADDRESSED — one function, and it is the only one.
 //
-// Twenty-four masters ship as `public/images/trophies/<tier>-<metal>.webp`: twelve tiers, gold and
-// silver each. The Trophy Cabinet (`screens/TrophiesScreen.vue`) drew them first and owned the
-// spelling as a private helper; the tournament finale now hangs the same objects on its podium, so
-// the spelling moved OUT of the screen rather than being written a second time next to it.
+// One file per rung per metal ships as `public/images/trophies/<tier>-<metal>.webp` – the count is
+// `TIER_LADDER.length * 2` and is asserted as such rather than written down, so a new rung cannot
+// make this sentence stale. The Trophy Cabinet (`screens/TrophiesScreen.vue`) drew them first and
+// owned the spelling as a private helper; the tournament finale now hangs the same objects on its
+// podium, so the spelling moved OUT of the screen rather than being written a second time next to it.
 //
-// ⚠ THREE PAIRS ARE PLACEHOLDER COPIES, NOT ORIGINALS (W2-LADDER, flagged for the artist): the
-// W50 pair is a byte copy of W35's masters and the W75 and WTA 125 pairs are byte copies of
-// W100's. Copies on disk rather than an alias in this function, deliberately - the naming scheme
-// stays uniform, both direction-checks in tests/trophy-podium.test.ts stay exact, and the day the
-// real masters are cut they replace files instead of deleting a code path. Same rule the venue art
-// already lives by (art/venues.ts: "a stand-in, not a compromise").
+// ⚠ SEVEN OF THE PAIRS ARE PLACEHOLDER COPIES, NOT ORIGINALS, and the list is NOT here - it is
+// `docs/art-placeholders.md`, kept honest in both directions by `tests/art-placeholders.test.ts`.
+// This comment said "three pairs" for two days after act 3 made it seven, which is the whole reason
+// the list moved out of a comment and into a checked file: prose about which art is real goes stale
+// silently, a hash does not. Copies on disk rather than an alias in this function, deliberately -
+// the naming scheme stays uniform, both direction-checks in tests/trophy-podium.test.ts stay exact,
+// and the day the real masters are cut they replace files instead of deleting a code path. Same rule
+// the venue art already lives by (art/venues.ts: "a stand-in, not a compromise").
 //
 // -------------------------------------------------------------------------------------------------
 // ⚠ WHY THIS IS A MODULE AND NOT A COPIED LINE
@@ -42,8 +45,8 @@
 // WHY `images/`, AND WHY THE URL IS BASE-RELATIVE
 // -------------------------------------------------------------------------------------------------
 // `BASE_URL` rather than a leading slash: the PWA ships under a sub-path. And the set lives under
-// `images/` because that is what workbox's `globIgnores: ['**/images/**']` keys on — all eighteen
-// stay out of the precache, so an install pays nothing for a cabinet most careers never fill, while
+// `images/` because that is what workbox's `globIgnores: ['**/images/**']` keys on — every one of
+// them stays out of the precache, so an install pays nothing for a cabinet most careers never fill, while
 // the CacheFirst runtime route makes each one offline-durable from the first time it is drawn.
 import type { TierId } from '../engine/season/types'
 
