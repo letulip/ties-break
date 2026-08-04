@@ -18,6 +18,29 @@ reading.
 
 ---
 
+## Current truth
+
+- A W-tier canonical draw **holds `ON_RAMP.slots` places** for LIVE cohort players. They are the
+  cohort's only way onto the professional ladder: before this, the merged W standings sorted on
+  points, every derived pro held a three-figure book and every live player held nought, so no cohort
+  player could be drawn into a W event, earn a W point, or leave the bottom of the table.
+- A held slot is **not a fabricated standing**. The candidate must clear the rung's own acceptance
+  door, asked of a cohort id through `proDoors` – the same question the kid answers.
+- Slots are filled **after** `resolveDoubleBookings`, not at draw time. Filling earlier silently
+  upgraded roughly 100 junior draws a season through the best-standing-first backfill.
+- **`ON_RAMP.slots` is 2**, and it is a measured value rather than a sporting one: it is where both
+  `econ-reach` bands hold exactly as shipped. The sweep found one slot moves the shipped tripwires as
+  far as eight do – they answer "is the world different", not "how different". Raising it is an
+  owner's call, priced in §5.
+- Reach is deliberately bounded: cohort rows land on **w15–w75 only** and appear in the **#320–400**
+  band, never higher. No cohort player has ever walked into a WTA 125 or a major. This is the
+  acceptance ladder tapering, not a cap written anywhere.
+- **No schema, no MAIN draw.** The kid's v34 latch is replaced by `latchOnRamps`' own second proof –
+  a W row inside the 52-week window.
+- Tick cost rose 1.97 → 2.23 ms (+13%), still 12% under the pre-`field-in-brackets` 2.53 ms.
+
+---
+
 ## 1. The mechanism, established by measurement rather than by reading
 
 `feat/field-in-brackets` (W3-FIELD3, `d8b39cb`) made the W-track canonical brackets select from
