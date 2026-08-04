@@ -58,7 +58,15 @@ import {
 import { BEST_N_BY_TRACK, computeRanking, windowedBestSum } from '../src/engine/season/ranking'
 import { resumeMain } from '../src/engine/rng'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { FIELD, fieldProsFor, isFieldProId, mergedWtaRanking, type FieldPro } from '../src/engine/season/fieldPros'
+import {
+  FIELD,
+  careerArc as fieldCareerArc,
+  careerAt,
+  fieldProsFor,
+  isFieldProId,
+  mergedWtaRanking,
+  type FieldPro,
+} from '../src/engine/season/fieldPros'
 import { fastMatchProbability } from '../src/engine/match/engine'
 import type { MatchPlayer } from '../src/engine/match/types'
 import type { RankingRow, TierId } from '../src/engine/season/types'
@@ -73,6 +81,7 @@ const SEEDS = argOf('seeds', 3)
 const SEASONS = argOf('seasons', 24)
 const NO_LIVE = args.includes('--no-live')
 const VERBOSE = args.includes('--verbose')
+const ARC_PROBE = args.includes('--arc-probe')
 
 const DEPTHS = [1, 5, 10, 25, 50, 100, 150, 200, 250, 300, 364, 400, 500] as const
 /** The acceptance cuts a career is trying to reach, straight off the catalogue. */
@@ -215,47 +224,116 @@ function sectionB(runs: SeasonField[][], seeds: string[]): void {
   }
 }
 
-function sectionD(runs: SeasonField[][]): void {
-  console.log('\n=== D. AGEING AND RETIREMENT ABOVE HER ===')
-  let aged = 0
-  let same = 0
-  let younger = 0
-  let pairs = 0
-  const dAges: number[] = []
-  const left: number[] = []
-  const meanAge: number[] = []
-  for (const run of runs) {
-    for (const s of run) meanAge.push(mean(s.pros.map((p) => p.ageYears)))
-    for (let i = 1; i < run.length; i++) {
-      const prev = new Map(run[i - 1].pros.map((p) => [p.id, p.ageYears]))
-      for (const p of run[i].pros) {
-        const was = prev.get(p.id)
-        // An id with no previous season is a genuine ARRIVAL; `left` below counts the departures,
-        // and both are 0 by construction because the id set is `fp-0`..`fp-363` for ever.
-        if (was === undefined) continue
-        pairs += 1
-        const d = p.ageYears - was
-        dAges.push(d)
-        if (d === 1) aged += 1
-        else if (d === 0) same += 1
-        else if (d < 0) younger += 1
+/** TENURE AT THE TOP – how many CONSECUTIVE seasons one person holds a top-`depth` chair.
+ *
+ *  ⚠ BY PERSON, NOT BY CHAIR (W4-LIVES). A chair (`fp-<n>`) is occupied for ever by construction;
+ *  the question the owner asked is about people – *"somebody may be in the top for a while, several
+ *  years running"* – so a run ends when the chair changes hands OR when the same person's book
+ *  drops her out of the depth. Identity is (chair, career index), which is exactly what `careerAt`
+ *  returns, so a re-used name can never fake a run.
+ *
+ *  Runs still open at the horizon are RIGHT-CENSORED and reported separately: counting them as
+ *  finished would understate the tail, and dropping them silently would understate it more. */
+function tenureRuns(runs: SeasonField[][], seeds: string[], depth: number): { closed: number[]; open: number[] } {
+  const closed: number[] = []
+  const open: number[] = []
+  for (let r = 0; r < runs.length; r++) {
+    const run = runs[r]
+    const current = new Map<string, number>()
+    for (const s of run) {
+      const inTop = new Set<string>()
+      for (const p of s.sorted.slice(0, depth)) {
+        const c = careerAt(seeds[r], Number(p.id.slice(FIELD.idPrefix.length)), s.season)
+        inTop.add(`${p.id}#${c.index}`)
       }
-      left.push(run[i - 1].pros.filter((p) => !run[i].pros.some((q) => q.id === p.id)).length)
+      for (const [key, len] of current) {
+        if (!inTop.has(key)) {
+          closed.push(len)
+          current.delete(key)
+        }
+      }
+      for (const key of inTop) current.set(key, (current.get(key) ?? 0) + 1)
+    }
+    for (const len of current.values()) open.push(len)
+  }
+  return { closed, open }
+}
+
+function sectionD(runs: SeasonField[][], seeds: string[]): void {
+  console.log('\n=== D. AGEING AND RETIREMENT ABOVE HER ===')
+  // ⚠ THE UNIT OF THE QUESTION IS A PERSON, NOT AN ID. A chair keeps its id for ever, so an
+  // id-to-id diff answers nothing about ageing or retirement now that a chair can change hands. The
+  // identity is (chair, career index) and it comes from `careerAt` – the same function the engine
+  // itself derives the pro from, so this cannot drift from what the world does.
+  let agedOne = 0
+  let stayed = 0
+  let younger = 0
+  const retirements: number[] = []
+  const meanAge: number[] = []
+  const careerLen: number[] = []
+  const debutAges: number[] = []
+  const retireAges: number[] = []
+  const hist = new Map<number, number>()
+  for (let r = 0; r < runs.length; r++) {
+    const run = runs[r]
+    const seed = seeds[r]
+    for (const s of run) {
+      meanAge.push(mean(s.pros.map((p) => p.ageYears)))
+      for (const p of s.pros) hist.set(p.ageYears, (hist.get(p.ageYears) ?? 0) + 1)
+    }
+    for (let i = 1; i < run.length; i++) {
+      const season = run[i].season
+      let retired = 0
+      for (let n = 0; n < FIELD.size; n++) {
+        const was = careerAt(seed, n, season - 1)
+        const now = careerAt(seed, n, season)
+        if (was.index !== now.index) {
+          retired += 1
+          careerLen.push(was.retireAge - was.debutAge + 1)
+          debutAges.push(was.debutAge)
+          retireAges.push(was.retireAge)
+          continue
+        }
+        // Same person, one season later: this is the owner's "+1 when the season ends".
+        stayed += 1
+        const before = run[i - 1].pros.find((p) => p.id === `${FIELD.idPrefix}${n}`)!.ageYears
+        const after = run[i].pros.find((p) => p.id === `${FIELD.idPrefix}${n}`)!.ageYears
+        if (after - before === 1) agedOne += 1
+        if (after < before) younger += 1
+      }
+      retirements.push(retired)
     }
   }
-  const band = FIELD.ageBand[1] - FIELD.ageBand[0] + 1
-  console.log(`\n  ${pairs} (id, season -> season+1) pairs`)
-  console.log(`    aged by exactly +1 : ${f((100 * aged) / pairs, 1)}%   (a real career: 100%; pure chance: ${f(100 / band, 1)}%)`)
-  console.log(`    same age           : ${f((100 * same) / pairs, 1)}%`)
-  console.log(`    got YOUNGER        : ${f((100 * younger) / pairs, 1)}%   (a real career: 0%)`)
-  console.log(`    mean |delta age|   : ${f(mean(dAges.map(Math.abs)), 2)} years`)
-  console.log(`\n    pros who LEAVE the population between seasons: ${f(mean(left), 2)} of ${FIELD.size}`)
-  console.log(`    population mean age: ${f(mean(meanAge), 2)} (sd across seasons ${f(sd(meanAge), 3)})`)
-  console.log(`    age band ${FIELD.ageBand[0]}-${FIELD.ageBand[1]}, drawn uniform -> expected mean ${f((FIELD.ageBand[0] + FIELD.ageBand[1]) / 2, 1)}`)
-  // Does the top of the world grow old? A tour that never retires anyone would show a rising mean.
+  console.log(`\n  ${stayed} (person, season -> season+1) pairs where she is still on the table`)
+  console.log(`    aged by exactly +1 : ${f((100 * agedOne) / stayed, 1)}%   (a real career: 100%; the OLD model: 6.0%)`)
+  console.log(`    got YOUNGER        : ${f((100 * younger) / stayed, 1)}%   (a real career: 0%; the OLD model: 47.0%)`)
+  console.log(
+    `\n    RETIREMENTS: ${f(mean(retirements), 1)} of ${FIELD.size} a season (min ${Math.min(...retirements)}, max ${Math.max(...retirements)}) – the OLD model: 0.00`,
+  )
+  console.log(`    career length: mean ${f(mean(careerLen), 1)} seasons, ${Math.min(...careerLen)}-${Math.max(...careerLen)}`)
+  console.log(`    debut age mean ${f(mean(debutAges), 1)} · retirement age mean ${f(mean(retireAges), 1)}`)
+  console.log(`\n    population mean age: ${f(mean(meanAge), 2)} (sd across seasons ${f(sd(meanAge), 3)}) – the OLD model: 23.01 / 0.229`)
   const topAge: number[] = []
   for (const run of runs) for (const s of run) topAge.push(mean(s.sorted.slice(0, 100).map((p) => p.ageYears)))
   console.log(`    mean age of the top 100: ${f(mean(topAge), 2)} (sd ${f(sd(topAge), 3)})`)
+  const total = [...hist.values()].reduce((a, b) => a + b, 0)
+  console.log('\n  age histogram of the whole population (share)')
+  for (const k of [...hist.keys()].sort((a, b) => a - b)) {
+    const share = (100 * hist.get(k)!) / total
+    console.log(`    ${pad(k, 3)}  ${pad(f(share, 2) + '%', 7)}  ${'#'.repeat(Math.round(share * 3))}`)
+  }
+
+  // TENURE – the owner's own acceptance test: "somebody may be in the top for several years".
+  console.log('\n  TENURE AT THE TOP – consecutive seasons ONE PERSON holds a chair at each depth')
+  console.log(`\n  depth | closed runs | median | mean |  p90 |  max | still open at the horizon (max)`)
+  for (const depth of [10, 50, 100]) {
+    const { closed, open } = tenureRuns(runs, seeds, depth)
+    const sorted = [...closed].sort((a, b) => a - b)
+    const q = (p: number) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length))] ?? 0
+    console.log(
+      `  ${pad('#' + depth, 5)} | ${pad(closed.length, 11)} | ${pad(q(0.5), 6)} | ${pad(f(mean(closed), 1), 4)} | ${pad(q(0.9), 4)} | ${pad(Math.max(...closed), 4)} | ${pad(open.length, 3)} runs, longest ${Math.max(...open)}`,
+    )
+  }
 }
 
 // =================================================================================================
@@ -456,9 +534,10 @@ function sectionC(runs: LiveSeason[][]): void {
     `                in WEEK 51 of the SAME season, after a full year of canonical W draws. Mean |chair shift| ${f(mean(all.map((s) => s.top100MeanShift)), 3)}.`,
   )
   console.log(
-    `  THE RE-DEAL – across the season boundary the same 100 ids hold ${f(mean(all.map((s) => s.top100HeldAfterRedeal)), 2)} of the first 100 chairs. That is`,
+    `  THE SHAPE   – across the season boundary the same 100 CHAIRS hold ${f(mean(all.map((s) => s.top100HeldAfterRedeal)), 2)} of the first 100 places.`,
   )
-  console.log('                not competition: it is the same fixed storeys re-rolled, and the seats are the same seats.')
+  console.log('                This is the storeys holding still, which is deliberate and is NOT the churn question – who')
+  console.log('                is SITTING in those chairs, and for how long, is section D\'s tenure table.')
   if (VERBOSE) {
     console.log('\n  per-season detail, world 0')
     for (const s of runs[0]) {
@@ -548,16 +627,69 @@ function doorWalk(seed: string): void {
 }
 
 // =================================================================================================
+// THE ARC CALIBRATION PROBE (`--arc-probe`) – W4-LIVES, and the whole of "ageing is not a
+// re-balance".
+//
+// The population's MEAN points multiplier is what decides whether the merged table's points-to-rank
+// curve moves. Before the wave it was `ageRamp` over a uniform 16-30 age draw; after it is
+// `careerArc` over the steady-state age distribution the career model actually produces. If the two
+// means agree, the table's shape is preserved and the only thing that changed is WHO is standing in
+// it – which is exactly the licence the owner's ruling gave.
+// =================================================================================================
+
+function arcProbe(): void {
+  console.log('\n=== ARC CALIBRATION – does the life cycle move the TABLE, or only the people in it? ===')
+  const OLD_MEAN = 0.9067 // ageRamp (floor 0.65 at 16, 1.0 from 23) over a uniform 16-30 draw
+  const c = FIELD.career
+  console.log(
+    `\n  career model: debut ${c.debutAge[0]}-${c.debutAge[1]} · retire ${c.retireAge[0]}-${c.retireAge[1]} · plateau ${c.peakFrom}-${c.peakTo} · declineFloor ${c.declineFloor}`,
+  )
+  // The steady state, read off the real derivation rather than modelled: every pro of every season
+  // of every seed, once the opening population has washed through.
+  const ages: number[] = []
+  const arcs: number[] = []
+  const hist = new Map<number, number>()
+  for (const seed of Array.from({ length: SEEDS }, (_, i) => `arc-probe-${i}`)) {
+    for (let s = SEASONS; s < SEASONS * 3; s++) {
+      for (const p of fieldProsFor(seed, s, [])) {
+        ages.push(p.ageYears)
+        hist.set(p.ageYears, (hist.get(p.ageYears) ?? 0) + 1)
+        // The multiplier, recovered from the pro herself: book / (skill-implied book x jitter) is
+        // not separable, so read the arc through the exported curve at her age instead.
+        arcs.push(fieldCareerArc(p.ageYears))
+      }
+    }
+  }
+  const n = ages.length
+  console.log(`\n  ${n} (pro, season) samples past the burn-in`)
+  console.log(`    mean age            ${f(mean(ages), 2)}   (old model: 23.00, uniform 16-30)`)
+  console.log(`    sd of age           ${f(sd(ages), 2)}   (old model: 4.32)`)
+  console.log(`    MEAN ARC            ${f(mean(arcs), 4)}   (old model: ${OLD_MEAN} – the number to preserve)`)
+  console.log(`    drift               ${f((100 * (mean(arcs) - OLD_MEAN)) / OLD_MEAN, 2)}%   (target: inside the table's own per-season noise, ~3%)`)
+  console.log('\n  age histogram (share of the population)')
+  const keys = [...hist.keys()].sort((a, b) => a - b)
+  for (const k of keys) {
+    const share = (100 * hist.get(k)!) / n
+    console.log(`    ${pad(k, 3)}  ${pad(f(share, 2) + '%', 7)}  ${'#'.repeat(Math.round(share * 3))}`)
+  }
+}
+
+// =================================================================================================
 
 const seeds = Array.from({ length: SEEDS }, (_, i) => `world-turnover-${i}`)
 console.log(
   `WORLD TURNOVER – ${SEEDS} worlds x ${SEASONS} seasons, FIELD.size ${FIELD.size}, storeys ${FIELD.tiers.map((t) => `${t.id}:${t.count}`).join(' ')}`,
 )
 
+if (ARC_PROBE) {
+  arcProbe()
+  process.exit(0)
+}
+
 const derived = seeds.map((s) => derivedSeasons(s, SEASONS))
 sectionA(derived)
 sectionB(derived, seeds)
-sectionD(derived)
+sectionD(derived, seeds)
 sectionE(derived)
 
 if (!NO_LIVE) {

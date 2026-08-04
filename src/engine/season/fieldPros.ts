@@ -41,10 +41,21 @@
 // this box states – and the six non-W rungs are byte-identical because `universeForTier` hands them
 // back the same cohort array instance it was given.
 //
-// PER-SEASON REGENERATION (`seasonIndex` in the key) is the phase-W turnover model: a new season
-// deals a new field, which is cheap, stable WITHIN the season (previews and draws agree week to
-// week), and honest enough until phase 2 gives the pros real aging and careers. Stored state for a
-// field pro is ZERO, which is §2.3's "one card index, generated lazily" holding for the pro contour.
+// ⚠⚠ THE TURNOVER MODEL CHANGED IN W4-LIVES (04.08) AND THIS PARAGRAPH IS ITS EPITAPH. It used to
+// read: "PER-SEASON REGENERATION (`seasonIndex` in the key) is the phase-W turnover model: a new
+// season deals a new field... honest enough until phase 2 gives the pros real aging and careers."
+// It was not honest enough, and the audit that measured it says why in numbers
+// (docs/specs/world-strength-audit-2026-08.md §§3-4): 47% of professionals got YOUNGER year on year,
+// 0.00 of 364 ever retired, and over 96 measured seasons not one simulated athlete ever held a
+// top-100 chair. The owner's ruling: they must age, they must leave, somebody may hold the top for
+// several years, and the world must be one a player has a real chance of climbing into.
+//
+// SO THE KEY IS THE CAREER, NOT THE SEASON. A chair (`fp-<n>`) keeps its storey; the person in it
+// has a debut age, a retirement age and a span, and `careerAt` walks that succession. Age is
+// `debutAge + (season - debutSeason)` – the owner's own "+1 when the season ends", computed rather
+// than stored. Stored state for a field pro is STILL ZERO, which is §2.3's "one card index,
+// generated lazily" holding for the pro contour, and which is why this was buildable without a
+// schema bump, a migration or a golden save.
 
 import { rngFromSeed, pickInt } from '../rng'
 import { FIRST_NAMES, NATION_POOL, SURNAMES } from './cohort'
@@ -68,9 +79,11 @@ export type FieldStrengthTier = 'tourElite' | 'elite' | 'contender' | 'journeyma
  *    carries the fifth attribute the brief asks for while the engine's derived read agrees with it
  *    byte-for-byte (one meaning, two access paths, no divergence possible).
  *  - `wtaPoints` is her virtual standing row – see `mergedWtaRanking`.
- *  - `growth`/`potential` exist to satisfy the AiPlayer contract and are inert in phase W: field
- *    pros are regenerated each season, never drifted (they are not in `world.cohort`), so growth is
- *    1 and the ceiling is where she stands. Phase 2 gives the pro contour a real curve. */
+ *  - `growth`/`potential` exist to satisfy the AiPlayer contract and are inert: a pro's four
+ *    attributes are drawn once for her whole career and never drifted (she is not in
+ *    `world.cohort`), so growth is 1 and the ceiling is where she stands. Since W4-LIVES her BOOK
+ *    moves with her career (`careerArc`) while her GAME does not – see that function for why the
+ *    two were split, and phase 2's pro contour for where a real body curve belongs. */
 export interface FieldPro extends AiPlayer {
   strengthTier: FieldStrengthTier
   groundstrokes: number
@@ -103,11 +116,12 @@ export interface FieldPro extends AiPlayer {
 // title 100, best-6 window): journeymen hold W15-round money, contenders hold W15-title-to-W35
 // money, elites hold W35-title-to-W100 money. Two shaping terms on top, both measured:
 //
-//  * `ageRamp`: points also scale with how long she has BEEN a pro. A 19-year-old with a
-//    contender's game has not accumulated a contender's ranking yet – she is exactly the hungry
-//    riser a real W15 field is full of – so young pros sit deeper in the table than their skill
-//    says, and a W15 window carries the occasional under-ranked shark. Ramps linearly from
-//    `ageRampFloor` at 16 to 1.0 at `ageRampFullAt`. (This term deliberately blurs strict
+//  * `careerArc` (was `ageRamp`, widened by W4-LIVES): points also scale with where in her CAREER
+//    she is. A 19-year-old with a contender's game has not accumulated a contender's ranking yet –
+//    she is exactly the hungry riser a real W15 field is full of – so young pros sit deeper in the
+//    table than their skill says, and a W15 window carries the occasional under-ranked shark. Since
+//    W4-LIVES the same term also brings her back DOWN past `career.peakTo`, so a chair is climbed
+//    into, held for a plateau of years, and vacated. (This term deliberately blurs strict
 //    tier-monotonicity of points: age is allowed to outrank youth at equal skill, which is how the
 //    real table reads.)
 //  * `jitter`: a small multiplicative wobble so equal cores do not produce a points staircase.
@@ -226,8 +240,11 @@ export const FIELD = {
    *  pyramid grew at the TOP only: the three shipped storeys keep their counts, because their
    *  calibration is the one thing in this file that had a bench behind it already. */
   size: 364,
-  /** a professional field: 16 (the ITF age-eligibility floor the W rungs use) to 30 */
-  ageBand: [16, 30] as [number, number],
+  /** THE AGES A PROFESSIONAL CAN BE SEEN AT – 16 (the ITF age-eligibility floor the W rungs use) to
+   *  the hard end of a career. NO LONGER THE DRAW: since W4-LIVES an age is `debutAge + seasons
+   *  since her debut`, and this pair is the envelope that span can occupy plus the anchor the points
+   *  arc is denominated in. See `FIELD.career`. */
+  ageBand: [16, 34] as [number, number],
   /** the pyramid, top first. `core` is the band the tier's mean-of-four is drawn from; `pts` is
    *  the tier's points band, lerped by where her core sits in the band (`gamma` bends the lerp –
    *  2 makes the elite top-heavy, so one or two 300+ names exist and the median elite does not).
@@ -248,9 +265,54 @@ export const FIELD = {
   ],
   /** per-attribute spread around the drawn core (uniform ± this), so a pro has a shape, not a bar */
   attrSpread: 6,
-  /** how much of her skill-implied points a 16-year-old pro has banked (ramps to 1 by full age) */
+  // ===============================================================================================
+  // ⚠ W4-LIVES (04.08) – THE PROFESSIONALS HAVE CAREERS. The owner's ruling, verbatim in substance:
+  // they must age (*"when the season ends can we not just add +1 to everyone's age?"*), they must
+  // leave, somebody may sit at the top for several years running, and the purpose is a living world
+  // in which the player has a real CHANCE at the top.
+  //
+  // THE ANSWER TO HIS QUESTION IS YES, AND IT IS EXACTLY THAT SIMPLE – computed rather than stored.
+  // A slot (`fp-<n>`) is a chair with a fixed storey; the PERSON in it has a debut age, a retirement
+  // age and therefore a span of seasons. Age at season s is `debutAge + (s - debutSeason)`, which is
+  // "+1 every season" as a pure function. Nothing is persisted, no schema moved, and the whole
+  // timeline re-derives from (seed, n) – see `careerAt`.
+  //
+  // WHAT WAS THERE BEFORE, and why it had to go (docs/specs/world-strength-audit-2026-08.md §4):
+  // age was an i.i.d. uniform draw EVERY season, so 47% of professionals got YOUNGER year on year,
+  // 0.00 of 364 ever left, and the population mean age was 23.01 with sd 0.229 for ever.
+  // ===============================================================================================
+  career: {
+    /** the age a professional arrives on the table. A real tour's intake, not a single birthday. */
+    debutAge: [16, 19] as [number, number],
+    /** ...and the age she leaves it. Drawn once per career, so a career is 7-18 seasons and the
+     *  MEDIAN is ~12 – long enough that a top-100 chair is held for years, which is the owner's own
+     *  framing, and short enough that the top is not one unbroken reign. */
+    retireAge: [26, 34] as [number, number],
+    /** THE POINTS ARC's plateau: she is at her full skill-implied book between these two ages.
+     *  22-28 is the real sport's own peak window, and it is also what the arc-probe arithmetic
+     *  wanted – see `declineFloor`. */
+    peakFrom: 22,
+    peakTo: 28,
+    /** ...and what the arc is worth at the hard end of `ageBand`. Together with `ageRampFloor` this
+     *  is the whole life cycle: rise, plateau, decline.
+     *
+     *  ⚠ TUNED TO PRESERVE THE TABLE, NOT TO CHANGE IT (CLAUDE.md invariant 4, and the ruling's own
+     *  limit: it licenses ageing and retirement, NOT a re-balance of how strong the tour is). The
+     *  population's mean multiplier under the OLD uniform-16-30 draw was 0.9067, and the job of
+     *  these four numbers is to land the new steady state on that same figure – so the merged
+     *  table's points-to-rank curve, the one thing in this file with a real calibration behind it,
+     *  does not move while the people standing in it start living.
+     *
+     *  PREDICTED vs MEASURED (`npm run bench:world -- --arc-probe`, 52,416 (pro, season) samples
+     *  past the burn-in). First cut (plateau 23-27, floor 0.55) measured 0.8873, a -2.14% drift –
+     *  a systematic weakening of the tour, small but not noise. Re-derived from the probe's own age
+     *  histogram: widening the plateau to the sport's real peak window 22-28 predicted **0.9095
+     *  (+0.31%)**; measured **0.9095 (+0.30%)**. The decline was NOT flattened to buy the number,
+     *  which was the other way to reach it and would have cost the tenure this wave is for. */
+    declineFloor: 0.55,
+  },
+  /** how much of her skill-implied points a debutante has banked (ramps to 1 by `career.peakFrom`) */
   ageRampFloor: 0.65,
-  ageRampFullAt: 23,
   /** multiplicative points wobble: ×(1 ± this) */
   jitter: 0.1,
   /** salted re-draw attempts on a name collision before the collision is accepted (the LIVE cohort
@@ -285,20 +347,146 @@ function pointsForCore(tier: (typeof FIELD.tiers)[number], core: number): number
   return pLo + (pHi - pLo) * Math.pow(t, tier.gamma)
 }
 
-/** How much of her skill-implied ranking a pro of `age` has accumulated. */
-function ageRamp(age: number): number {
-  const [lo] = FIELD.ageBand
-  if (age >= FIELD.ageRampFullAt) return 1
-  const t = (age - lo) / (FIELD.ageRampFullAt - lo)
-  return FIELD.ageRampFloor + (1 - FIELD.ageRampFloor) * Math.max(0, t)
+/** HER PLACE IN HER OWN CAREER, as a multiplier on her skill-implied book: rise, plateau, decline.
+ *
+ *  ⚠ THIS MOVES HER RANKING AND NOT HER GAME, AND THE SPLIT IS DELIBERATE (W4-LIVES). Her four
+ *  attributes are drawn once and never move for the whole career; only this multiplier does. Three
+ *  reasons, in order of weight:
+ *
+ *   1. THE RULING'S OWN LIMIT. Ageing and retirement were licensed; a skill decline curve would
+ *      change every match the field plays against her, which is a re-balance of how strong the tour
+ *      is and is not this branch's to take.
+ *   2. IT IS THE HONEST MODEL OF THE THING BEING SIMULATED. A ranking is a rolling window of
+ *      RESULTS. A player past her peak genuinely holds fewer points long before she hits the ball
+ *      appreciably worse – she plays a thinner schedule, loses earlier, defends less. The book is
+ *      what the arc is about; the body is `growth`/`potential`, which stay inert.
+ *   3. IT IS WHAT PRODUCES THE TURNOVER HE ASKED FOR. Without it a slot's book is constant for
+ *      12 seasons and the top 100 is one unbroken reign per chair; with it a career climbs into the
+ *      top band, holds it for the plateau, and falls out of it before she retires.
+ *
+ *  The rise half is the shipped `ageRamp` unchanged in shape and floor – see FIELD's own note on
+ *  what it was for ("a 19-year-old with a contender's game has not accumulated a contender's ranking
+ *  yet"). The plateau and the decline are the new half. */
+export function careerArc(age: number): number {
+  const c = FIELD.career
+  const [lo, hi] = FIELD.ageBand
+  if (age < c.peakFrom) {
+    const t = (age - lo) / (c.peakFrom - lo)
+    return FIELD.ageRampFloor + (1 - FIELD.ageRampFloor) * Math.max(0, Math.min(1, t))
+  }
+  if (age <= c.peakTo) return 1
+  const t = (age - c.peakTo) / (hi - c.peakTo)
+  return 1 - (1 - c.declineFloor) * Math.max(0, Math.min(1, t))
+}
+
+// =================================================================================================
+// THE CAREER TIMELINE OF ONE CHAIR – W4-LIVES, and the whole of "they age and they leave".
+// =================================================================================================
+//
+// A slot `fp-<n>` is a CHAIR with a fixed storey. The person sitting in it has a debut age, a
+// retirement age, and therefore a span of seasons; when she goes, the next one sits down. Walking
+// that succession forward from a fixed origin makes (age, identity, retirement, replacement) a pure
+// function of (seed, n, season) – so the module keeps every property its own header box claims:
+// zero persisted bytes, zero schema, delete-the-file-and-saves-still-load.
+//
+// ⚠ WHY THE CHAIR KEEPS ITS STOREY WHEN THE PERSON CHANGES. The pyramid (64/30/120/150) is the one
+// thing in this file with a real calibration behind it, and it describes the WORLD's shape rather
+// than any individual: a tour always has about so many top-100 players. Letting slots change storey
+// would re-deal that shape every season, which is the defect this wave is fixing, not a feature.
+// So: the chair is the world's, the career is the player's.
+//
+// ⚠ RNG DISCIPLINE. Every draw here comes off `${seed}:fieldcareer:${n}:${k}` – one fresh
+// purpose-scoped generator per CAREER, never per season, and never MAIN. The frozen capture
+// (41550 / e6b0c709) cannot see this file, exactly as before.
+//
+// ⚠ THE ORIGIN IS A TOUR ALREADY IN PROGRESS, not a founding class. Career 0 of every chair is
+// given a CURRENT AGE at season 0 drawn across her own span, so week 0 of a new career meets a
+// professional population with the same age spread it always had – and from season 1 everybody in
+// it ages by one, which is the ruling.
+
+interface ProCareer {
+  /** which career of this chair – 0 is the one already sitting there at season 0 */
+  index: number
+  /** the season she arrived. NEGATIVE for career 0: she was already playing before week 0. */
+  debutSeason: number
+  debutAge: number
+  retireAge: number
+}
+
+/** The last season this career is still on the table. */
+function retireSeason(c: ProCareer): number {
+  return c.debutSeason + (c.retireAge - c.debutAge)
+}
+
+function drawSpan(seed: string, n: number, k: number): { debutAge: number; retireAge: number; rng: () => number } {
+  const rng = rngFromSeed(`${seed}:fieldcareer:${n}:${k}`)
+  const [dLo, dHi] = FIELD.career.debutAge
+  const [rLo, rHi] = FIELD.career.retireAge
+  // The bands do not overlap (debut tops out at 19, retirement starts at 26), so no career is ever
+  // shorter than seven seasons and no clamp is needed.
+  return { debutAge: pickInt(rng, dLo, dHi), retireAge: pickInt(rng, rLo, rHi), rng }
+}
+
+// The timeline cache. Chairs are read by every W-table fold, so the succession is walked once per
+// (seed, chair) and extended as the world advances.
+//
+// ⚠ A FEW SEEDS, NOT ONE, AND THAT IS DELIBERATE. `memo` below and rival.ts's runsIndexCache are
+// single-entry on the reasoning that "a world is played one at a time", which is true in play – but
+// a paired-world A/B (tests/preview.test.ts, tests/ending.test.ts and the input-independence guards
+// all tick two worlds in one process) would alternate seeds on every call, and a single entry turns
+// that into a full 364-chair re-walk each time. A miss here costs strictly more than a `memo` miss,
+// so the cache holds a handful and evicts oldest-first. Purely a cost decision: the walk is a pure
+// function of (seed, n, season), so an evicted entry re-derives identically.
+const TIMELINE_SEEDS = 4
+const timelines = new Map<string, ProCareer[][]>()
+
+/** WHO IS SITTING IN CHAIR `n` AT `season` – the succession, walked. Pure in (seed, n, season). */
+export function careerAt(seed: string, n: number, season: number): ProCareer {
+  let chairs = timelines.get(seed)
+  if (!chairs) {
+    if (timelines.size >= TIMELINE_SEEDS) timelines.delete(timelines.keys().next().value as string)
+    chairs = []
+    timelines.set(seed, chairs)
+  }
+  let line = chairs[n]
+  if (!line) {
+    const { debutAge, retireAge, rng } = drawSpan(seed, n, 0)
+    // Career 0 is mid-career at season 0: her age there is drawn across her own span, so the
+    // opening population is a tour rather than a class that all arrived together.
+    const ageAtOrigin = pickInt(rng, debutAge, retireAge)
+    line = [{ index: 0, debutSeason: debutAge - ageAtOrigin, debutAge, retireAge }]
+    chairs[n] = line
+  }
+  while (retireSeason(line[line.length - 1]) < season) {
+    const prev = line[line.length - 1]
+    const k = prev.index + 1
+    const { debutAge, retireAge } = drawSpan(seed, n, k)
+    line.push({ index: k, debutSeason: retireSeason(prev) + 1, debutAge, retireAge })
+  }
+  // Seasons before the origin career's debut cannot be asked for in play (weeks start at 0), and a
+  // caller that does ask gets career 0 rather than a crash.
+  for (const c of line) if (season <= retireSeason(c)) return c
+  return line[line.length - 1]
 }
 
 // ONE pro. Draw order per player is FIXED (first name, surname, nation, core, four attribute
-// offsets, age, points jitter) off her own `${seed}:field:${seasonIndex}:${n}` stream – reordering
-// re-maps every seed's field, exactly as the cohort's own draw-order note warns. Name collisions
-// are resolved off SALTED side-streams (`...:name:<attempt>`) so a re-draw can never shift the base
-// stream: two worlds whose cohorts differ get fields that differ in NAMES ONLY, never in skills,
-// points, ages or nations.
+// offsets, points jitter) off her own stream – reordering re-maps every seed's field, exactly as the
+// cohort's own draw-order note warns. Name collisions are resolved off SALTED side-streams
+// (`...:name:<attempt>`) so a re-draw can never shift the base stream: two worlds whose cohorts
+// differ get fields that differ in NAMES ONLY, never in skills, points, ages or nations.
+//
+// ⚠ THE STREAM IS KEYED ON THE CAREER, NOT ON THE SEASON (W4-LIVES). It was
+// `${seed}:field:${seasonIndex}:${n}`, which is precisely why a chair held a different person every
+// year; it is now `${seed}:field:${n}:c${careerIndex}`, so every fact about her is CONSTANT for the
+// whole span she is on the table and only her age – and through the arc, her book – moves.
+//
+// ⚠ AND HER AGE IS NO LONGER DRAWN AT ALL. It is `debutAge + (season - debutSeason)`: the owner's
+// "+1 when the season ends", as arithmetic.
+//
+// ⚠ ONE KNOWN COSMETIC EDGE, stated rather than discovered later: the name dedupe runs against the
+// LIVE cohort, whose roster turns over every season, so a mid-career professional whose name a newly
+// arrived thirteen-year-old happens to collide with will re-draw hers. Rare (the pools are large),
+// and the pro has to yield because the junior's name is persisted state and hers is not.
 function makeFieldPro(
   seed: string,
   seasonIndex: number,
@@ -306,7 +494,8 @@ function makeFieldPro(
   tier: (typeof FIELD.tiers)[number],
   taken: Set<string>,
 ): FieldPro {
-  const rng = rngFromSeed(`${seed}:field:${seasonIndex}:${n}`)
+  const career = careerAt(seed, n, seasonIndex)
+  const rng = rngFromSeed(`${seed}:field:${n}:c${career.index}`)
   const id = `${FIELD.idPrefix}${n}`
 
   let first = FIRST_NAMES[pickInt(rng, 0, FIRST_NAMES.length - 1)]
@@ -321,16 +510,29 @@ function makeFieldPro(
   const composure = clamp01to100(core + spread * (2 * rng() - 1))
   const stamina = clamp01to100(core + spread * (2 * rng() - 1))
 
-  const [aLo, aHi] = FIELD.ageBand
-  const ageYears = pickInt(rng, aLo, aHi)
+  // Her age is her career's, not a draw: one year older every season she is still here.
+  const ageYears = career.debutAge + (seasonIndex - career.debutSeason)
 
-  const jitterRoll = rng()
+  // ⚠ THE JITTER IS DRAWN PER SEASON, NOT PER CAREER (W4-LIVES), AND IT IS THE ONE THING IN THIS
+  // FUNCTION THAT IS ALLOWED TO MOVE WHILE SHE STAYS THE SAME PERSON. It used to come off the
+  // per-season player stream, which made it look like form and was in fact a re-deal; keyed on the
+  // CAREER it would have been the opposite mistake – a book that glides along its arc with no year
+  // that goes well or badly, so a chair at the top is held by whoever holds it until she retires.
+  // Measured: with a career-constant jitter the tenure tail at the top ten ran to p90 13 seasons.
+  //
+  // ⚠ AND IT IS NOT A BALANCE CHANGE. `FIELD.jitter` is untouched and so is its distribution – the
+  // multiplier is still mean-1 uniform on ±10%, so the population's points total and the merged
+  // table's shape are exactly what they were. What changes is only its SERIAL CORRELATION, from
+  // perfectly correlated to independent, which is the honest reading of a ranking that is refolded
+  // every year. Stable WITHIN a season (the key is the season index), which is the promise
+  // `fieldProsFor` makes to previews and draws.
+  const jitterRoll = rngFromSeed(`${seed}:fieldform:${n}:${seasonIndex}`)()
 
   // DEDUPE, against the LIVE cohort's names and within the field itself, by salted re-draw. The
   // base stream is already fully consumed above, so however many attempts this takes, every other
   // fact about her – and about every other pro – is untouched.
   for (let attempt = 1; taken.has(`${first} ${last}`) && attempt <= FIELD.nameRedraws; attempt++) {
-    const salt = rngFromSeed(`${seed}:field:${seasonIndex}:${n}:name:${attempt}`)
+    const salt = rngFromSeed(`${seed}:field:${n}:c${career.index}:name:${attempt}`)
     first = FIRST_NAMES[pickInt(salt, 0, FIRST_NAMES.length - 1)]
     last = SURNAMES[pickInt(salt, 0, SURNAMES.length - 1)]
   }
@@ -338,7 +540,7 @@ function makeFieldPro(
 
   const wtaPoints = Math.max(
     1,
-    Math.round(pointsForCore(tier, core) * ageRamp(ageYears) * (1 + FIELD.jitter * (2 * jitterRoll - 1))),
+    Math.round(pointsForCore(tier, core) * careerArc(ageYears) * (1 + FIELD.jitter * (2 * jitterRoll - 1))),
   )
 
   const pro: FieldPro = {
@@ -349,8 +551,11 @@ function makeFieldPro(
     ret,
     composure,
     stamina,
-    // Inert in phase W – see the FieldPro doc comment. She is finished growing because nothing
-    // ever drifts her; next season deals a new field instead.
+    // ⚠ STILL INERT, AND THAT IS THE W4-LIVES DECISION RATHER THAN AN OVERSIGHT (see `careerArc`).
+    // Her BOOK follows her career; her GAME does not. A skill decline curve would change every
+    // match the field plays, which is a re-balance of how strong the tour is – the owner's ruling
+    // licensed ageing and retirement and did not license that. Phase 2's pro contour is where a
+    // body curve belongs.
     growth: 1,
     ageYears,
     potential: { serve, ret, composure, stamina },
