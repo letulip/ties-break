@@ -76,6 +76,27 @@ KNOBS.injuryBaseChance = argOf('injBase', KNOBS.injuryBaseChance)
 KNOBS.injuryFatigueSlope = argOf('injSlope', KNOBS.injuryFatigueSlope)
 KNOBS.injuryPlayingMultiplier = argOf('injPlay', KNOBS.injuryPlayingMultiplier)
 
+// ⚠ AND THE THREE RECOVERY KNOBS OF ISSUE #83, ON THE SAME CLI TERMS (fatigue-injury-audit-2026-08.md
+// §3). The owner's own round-2 list is three questions about recovery – the weekly rate, the vacation
+// table, and whether the two of them STACK – and «measure each in isolation» is not answerable without
+// being able to move exactly one of them at a time.
+//
+//   --recovery N    ECONOMY.condition.recoveryBase (shipped 8; his list asks about 7)
+//   --vacScale X    every package's conditionGain x X (0 = the table switched off entirely)
+//   --noStack       the STACKING arm: a booked vacation week forfeits the weekly recovery ladder, so
+//                   the package gain is all she gets that week. Nothing in the engine does this – it
+//                   is the counterfactual the question needs, and it is bench-local by construction
+//                   (see the note where it is applied).
+const CONDITION = ECONOMY.condition as unknown as { recoveryBase: number }
+CONDITION.recoveryBase = argOf('recovery', CONDITION.recoveryBase)
+const VAC_SCALE = argOf('vacScale', 1)
+if (VAC_SCALE !== 1) {
+  for (const pkg of ECONOMY.vacation.packages as unknown as { conditionGain: number }[]) {
+    pkg.conditionGain = Math.round(pkg.conditionGain * VAC_SCALE)
+  }
+}
+const NO_STACK = args.includes('--noStack')
+
 const SEEDS = argOf('seeds', 12)
 /** Professional seasons measured, from her sixteenth year on (age 16, 17, 18 ...). */
 const SEASONS = argOf('seasons', 3)
@@ -180,7 +201,7 @@ function nextEntry(world: WorldState, lastPlayWeek: number): string | null {
 /** The off-season family week (spec §4). ONE big package, or a pair of small ones back-to-back -
  *  the two shapes the owner named - booked into the blackout weeks, which is exactly where the UI
  *  offers them. Booked one week ahead, like every planner command. */
-function bookOffSeason(world: WorldState, target: number): void {
+function bookOffSeason(world: WorldState, target: number, booked: Set<number>): void {
   const offset = target % WEEKS_PER_YEAR
   const firstOff = WEEKS_PER_YEAR - OFF_SEASON_WEEKS // 49
   if (VACATION === 'none') return
@@ -195,8 +216,42 @@ function bookOffSeason(world: WorldState, target: number): void {
   if (!want) return
   try {
     bookVacation(world, target, want)
+    booked.add(target)
   } catch {
     /* not plannable - the week was not on the table */
+  }
+}
+
+// ⚠ THE `--noStack` ARM, AND WHY IT SUPPRESSES THE KNOBS RATHER THAN SUBTRACTING AFTERWARDS.
+// `accrueCondition` clamps at 100, so "add the weekly ladder, then take it back off" is NOT the same
+// world as "never add it": on a week that clamps, the subtraction lands below where the un-stacked
+// week would have. Zeroing the three recovery knobs for the duration of the tick is exact - the
+// vacation's own gain is applied by `resolveVacation`, which reads none of them - and it is restored
+// immediately, so no other week in the run can see it.
+const RECOVERY_KNOBS = ECONOMY.condition as unknown as {
+  recoveryBase: number
+  blackoutBonus: number
+  restRecoveryBonus: { minRest: number; bonus: number }[]
+}
+function tickMaybeUnstacked(world: WorldState, rng: ReturnType<typeof resumeMain>, isVacationWeek: boolean): void {
+  if (!NO_STACK || !isVacationWeek) {
+    tickWeek(world, rng)
+    return
+  }
+  const saved = {
+    base: RECOVERY_KNOBS.recoveryBase,
+    blackout: RECOVERY_KNOBS.blackoutBonus,
+    slider: RECOVERY_KNOBS.restRecoveryBonus,
+  }
+  RECOVERY_KNOBS.recoveryBase = 0
+  RECOVERY_KNOBS.blackoutBonus = 0
+  RECOVERY_KNOBS.restRecoveryBonus = []
+  try {
+    tickWeek(world, rng)
+  } finally {
+    RECOVERY_KNOBS.recoveryBase = saved.base
+    RECOVERY_KNOBS.blackoutBonus = saved.blackout
+    RECOVERY_KNOBS.restRecoveryBonus = saved.slider
   }
 }
 
@@ -226,6 +281,8 @@ function probe(seed: string): SeasonRow[] {
   // one before it and is dropped from the output rather than half-reported.
   const rows: SeasonRow[] = []
   let lastPlayWeek = -PAIR_GAP
+  /** every week this probe successfully booked a family week into – the `--noStack` arm's input */
+  const bookedVacationWeeks = new Set<number>()
   for (let s = 0; s <= SEASONS; s++) {
     const row: SeasonRow = {
       season: seasonIndexOf(world.week + 1),
@@ -250,7 +307,7 @@ function probe(seed: string): SeasonRow[] {
       world.fundsCents = 5_000_000_00
       if (world.week % 26 === 0) stampProBook(world)
       const target = world.week + 1
-      bookOffSeason(world, target)
+      bookOffSeason(world, target, bookedVacationWeeks)
       const id = nextEntry(world, lastPlayWeek)
       if (id) {
         try {
@@ -267,7 +324,7 @@ function probe(seed: string): SeasonRow[] {
         (e) => e.deadlineWeek === world.week + 1 && mandatoryBinds(world, e) && !world.entries.includes(e.id),
       ).length
       const penaltiesBefore = (world.penalties ?? []).length
-      tickWeek(world, rng)
+      tickMaybeUnstacked(world, rng, bookedVacationWeeks.has(target))
       for (const pen of (world.penalties ?? []).slice(penaltiesBefore)) row.penaltyPoints += pen.points
       if (isSuspendedAt(world, world.week)) row.suspendedWeeks += 1
       if (world.injury !== null) {
@@ -311,7 +368,9 @@ const flat = all.flat()
 console.log(
   `THE PROFESSIONAL PAIR - ${SEEDS} careers x ${SEASONS} seasons from age 16, policy "${POLICY}" ` +
     `(gap ${PAIR_GAP}w), plan ${PLAN} ${WEEK_PLAN_PRESETS[PLAN].train}/${WEEK_PLAN_PRESETS[PLAN].rest}, ` +
-    `off-season vacation "${VACATION}", physio ${PHYSIO}`,
+    `off-season vacation "${VACATION}", physio ${PHYSIO}` +
+    (VAC_SCALE !== 1 ? `, vacation gains x${VAC_SCALE}` : '') +
+    (NO_STACK ? ', NO-STACK (a family week forfeits the weekly recovery ladder)' : ''),
 )
 console.log(
   `  knobs under test: recoveryBase ${ECONOMY.condition.recoveryBase} · W surcharges ` +

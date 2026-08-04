@@ -1763,6 +1763,19 @@ export interface CareerTotals {
   earnedCents: number
   spentCents: number
   prizeCents: number
+  /** ⚠ EVERY WEEK HER BODY HAS EVER SPENT OFF COURT, AND IT LIVES HERE BECAUSE `injuryHistory` IS
+   *  PRUNED (v40, docs/specs/fatigue-injury-audit-2026-08.md §6). `rollInjury` keeps the last twenty
+   *  layoffs and drops the rest, and the career-ending injury (#4) is keyed on the SUM of them – so
+   *  a body past its twentieth layoff started forgetting the earliest ones, and the rule got harder
+   *  the more broken she was. Measured over 90 full careers: 13 reached the cap and 1.4% of onsets
+   *  were judged against an accumulator a mean of 6.1 weeks short of the truth.
+   *
+   *  A monotone counter cannot be pruned, and it is also the number the epilogue prints. It counts
+   *  RECOVERED layoffs only – the same moment `injuryHistory` gets its row – so an ongoing injury is
+   *  not yet in it, which is what «a body that has ALREADY lost N weeks» means. Migrated saves
+   *  back-fill from whatever the pruned list still holds: exact for every career under twenty
+   *  layoffs, an honest undercount for the rest, and never larger than the truth. */
+  weeksLostToInjury: number
 }
 
 /** THE DEBT SPELL, surfaced while she is under water – the WARNING PHASE bankruptcy wants before

@@ -38,7 +38,7 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
       { seasonIndex: 0, year: 2031, ageYears: 14, rows: [{ week: 12, label: 'Title', detail: 'Local Open' }] },
     ],
     handoff: { childBorn: false, freshCapitalFork: true, resumesWeek: null, resumesAgeYears: null },
-    totals: { earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0 },
+    totals: { earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 },
     seasonsPlayed: 5,
     bestRank: 88,
     titles: 2,
@@ -146,7 +146,7 @@ describe('the album', () => {
         album: [1, 2, 3, 4, 5, 6, 7].map((s) =>
           s === 3 || s === 6 ? albumPage(s, { empty: true, fact: null, week: null }) : albumPage(s),
         ),
-        totals: { earnedCents: 0, spentCents: 41_000_00, prizeCents: 0 },
+        totals: { earnedCents: 0, spentCents: 41_000_00, prizeCents: 0, weeksLostToInjury: 0 },
       }),
     })
     const w = mount(EndingScreen)

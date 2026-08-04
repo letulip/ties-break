@@ -1,6 +1,7 @@
 import {
   DEFAULT_PROFILE,
   WEEK_PLAN_PRESETS,
+  type CareerTotals,
   type FinanceWeek,
   type KitGrades,
   type KitLine,
@@ -1061,7 +1062,12 @@ export function migrateSave(raw: unknown): WorldState {
           if (cat === 'prize') prizeCents += amt
         }
       }
-      save.careerTotals = { earnedCents, spentCents, prizeCents }
+      // ⚠ THE CAST IS TYPE-ONLY AND THE MIGRATION IS UNCHANGED (v40 added
+      // `careerTotals.weeksLostToInjury`). A shipped migration writes the shape ITS OWN version
+      // froze - v39 knew three counters - and the v40 block below is what upgrades it. Widening
+      // this line to the new shape would make a v38 save skip straight to a v40 object, which is
+      // exactly the edit the append-only rule forbids.
+      save.careerTotals = { earnedCents, spentCents, prizeCents } as CareerTotals
     }
     if (save.fork === undefined || typeof save.fork !== 'object') {
       const profile = save.profile as PlayerProfile | undefined
@@ -1075,6 +1081,33 @@ export function migrateSave(raw: unknown): WorldState {
     if (typeof save.oneMoreYearCount !== 'number') save.oneMoreYearCount = 0
     if (save.college === undefined || typeof save.college !== 'object') save.college = null
     v = 39
+  }
+
+  // v40 – THE WEEKS-LOST COUNTER (docs/specs/fatigue-injury-audit-2026-08.md §6).
+  //
+  // `careerTotals.weeksLostToInjury` is the monotone total of the weeks her body has spent off
+  // court. It exists because `injuryHistory` is PRUNED to its last twenty rows by `rollInjury`,
+  // while the career-ending injury (#4) is keyed on the SUM of that list – so the accumulator went
+  // short exactly on the bodies the rule is about. Measured over 90 full careers: 13 reached the
+  // cap, and 1.4% of onsets were judged against a total a mean of 6.1 weeks light.
+  //
+  // ⚠ THE BACK-FILL IS EXACT FOR EVERY CAREER UNDER TWENTY LAYOFFS AND AN HONEST UNDERCOUNT ABOVE
+  // IT, and there is no third option: the pruned rows are gone from the save and no other field
+  // records them (`events` prunes at 400, `milestones` keeps only the FIRST injury, `seasonHistory`
+  // keeps no medical column at all). Undercounting is also the safe direction – `weeksLostSoFar`
+  // takes the LARGER of the counter and the surviving history, so a migrated career can never have
+  // its ending fire on weeks it did not lose, and starts counting exactly from the load.
+  //
+  // Defensive and idempotent in v30's sense; zero draws on any stream, so the frozen MAIN capture
+  // (41550 / e6b0c709) is untouched by construction.
+  if (v === 39) {
+    const totals = (save.careerTotals ?? {}) as { weeksLostToInjury?: unknown }
+    if (typeof totals.weeksLostToInjury !== 'number' || !Number.isFinite(totals.weeksLostToInjury)) {
+      const history = (Array.isArray(save.injuryHistory) ? save.injuryHistory : []) as { weeksOut?: unknown }[]
+      const lost = history.reduce((sum, h) => sum + (typeof h.weeksOut === 'number' ? h.weeksOut : 0), 0)
+      save.careerTotals = { ...(save.careerTotals as object), weeksLostToInjury: lost } as CareerTotals
+    }
+    v = 40
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

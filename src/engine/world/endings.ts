@@ -75,6 +75,7 @@ export function autoEndingViewOf(world: WorldState): AutoEndingView {
     freshInjurySeverity:
       world.injury !== null && world.injury.sinceWeek === world.week ? world.injury.severity : null,
     injuryHistory: world.injuryHistory,
+    weeksLostToInjury: world.careerTotals?.weeksLostToInjury ?? 0,
   }
 }
 

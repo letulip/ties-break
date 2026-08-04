@@ -142,6 +142,14 @@ better rule anyway: physical rather than bookkeeping (a body that has already sp
 court), indifferent to which labels the severity bands happen to carry, and a number the epilogue can
 print. Nothing the player chooses moves it, so it is a story and never a difficulty setting.
 
+⚠ **HALF-CORRECTED 04.08 by the fatigue-and-injury audit** (docs/specs/fatigue-injury-audit-2026-08.md
+§7). «Nothing the player chooses moves it» is measurably false: the same 90 careers end on injury
+**13.3% under the grinder entry policy and 3.3% under the careful one**. No knob the player picks
+changes the threshold – that part stands, and it is what «never a difficulty setting» meant – but the
+RATE is earned rather than dealt, which is the better property. The same audit swept N again on a
+wider ladder and left it at 20; it also fixed the accumulator this rule reads, which was summing a
+list the engine prunes to twenty entries (schema v40).
+
 ---
 
 ## 6. Slot 6 — the measurement the copy was written against
