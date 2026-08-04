@@ -98,15 +98,21 @@ export const FIELD_ART: readonly string[] = [
   'w35-grass-1',
   'w35-hard-1',
   'w35-venue-1',
-  // ⚠ W50 LANDED MID-WAVE, 19:01 on 04.08, as five raw .jpg masters dropped straight into
-  // public/images/fields/. `npm run art` encoded them in place and filed the masters into art-src/
-  // (scripts/optimize-art.mjs "anything else encodes in place"), so they ship as webp like the rest
-  // and the rung stopped borrowing W35 the same hour its `absent` rows came out of the registry.
+  // ⚠ W50 AND W75 LANDED MID-WAVE, 19:01 and 19:09 on 04.08, as five raw .jpg masters each, dropped
+  // straight into public/images/fields/ rather than into a `-jpeg` inbox. `npm run art` encoded them
+  // in place and filed the masters into art-src/ (scripts/optimize-art.mjs, "anything else encodes
+  // in place"), so they ship as webp like the rest. Both rungs stopped borrowing within the hour
+  // their `absent` rows went into docs/art-placeholders.md - which is the loop that registry is for.
   'w50-clay-1',
   'w50-grass-1',
   'w50-hard-1',
   'w50-venue-1',
   'w50-venue-2',
+  'w75-clay-1',
+  'w75-grass-1',
+  'w75-hard-1',
+  'w75-venue-1',
+  'w75-venue-2',
   'w100-clay-1',
   'w100-grass-1',
   'w100-hard-1',
@@ -162,20 +168,20 @@ export const ART_TIER_ORDER: readonly TierId[] = [
  * `j60` / `j300` -> `j30`: the same junior-tour venues a rung up (the handed-down rule 4). A
  * stand-in, not a compromise, and the only junior set that exists.
  *
- * `w75` -> `w100`: NEAREST POPULATED RUNG. W75's neighbours are W35 (40 rungs below) and W100 (25
- * above), so it goes up. Nearest-rung keeps the scale of the venue honest to within one step, which
- * matters here because a card that over-promises a stadium is the same kind of lie as one that
- * under-promises a court. Temporary: «в процессе, так же как и трофеи» (04.08).
- *
- * ⚠ `w50` WAS IN THIS MAP FOR ABOUT AN HOUR. It borrowed W35 by the same nearest-rung rule; the
- * owner delivered its five masters while this branch was being written, so the entry and its three
- * registry rows came straight back out. Left as a note rather than deleted silently, because the
- * shape of the answer is what the next rung will need.
+ * ⚠ `w50` AND `w75` WERE IN THIS MAP FOR ABOUT AN HOUR EACH, and the rule they were added under is
+ * worth keeping written down because the next unpainted rung will need it: BORROW THE NEAREST
+ * POPULATED RUNG, and do not let two borrowers share a lender. W50's neighbours were W35 (15 rungs
+ * below) and W100 (50 above), so it went down; W75's were W35 (40 below) and W100 (25 above), so it
+ * went up. Nearest-rung keeps the scale of the venue honest to within one step - a card that
+ * over-promises a stadium is the same kind of lie as one that under-promises a court - and splitting
+ * the two kept a W50 card and a W75 card in one season from being the same photograph, which is the
+ * whole point of rule 3. The owner delivered both sets while this branch was being written
+ * («в процессе, так же как и трофеи», then five masters each within the hour), so both entries and
+ * their six registry rows came straight back out. NO ADULT RUNG BORROWS ANY MORE.
  */
 export const ART_TIER_BORROWS: Partial<Record<TierId, TierId>> = {
   j60: 'j30',
   j300: 'j30',
-  w75: 'w100',
 }
 
 function artTier(tier: TierId): TierId {

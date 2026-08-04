@@ -65,8 +65,8 @@ Three properties are worth stating because each of them was a bug at some point 
 - **The ordinal is counted in the CALENDAR, never in the list on screen.** `snapshot.upcoming` is
   filtered to `week > world.week`, so a list position shrinks as the career advances and the same
   tournament would repaint itself every week. Guarded directly.
-- **The borrower is counted in its OWN sequence.** A W75 event takes its ordinal from the W75
-  calendar even though its frames are W100's, so two consecutive W75 clay events differ. Counting in
+- **The borrower is counted in its OWN sequence.** A J60 event takes its ordinal from the J60
+  calendar even though its frames are J30's, so two consecutive J60 clay events differ. Counting in
   the lender's sequence would have made the rotation follow a calendar the event is not in.
 
 ## The measurement that chose the design
@@ -78,16 +78,16 @@ same surface (rings of two or more only).
 
 | ordinal | adjacent same-(tier, surface) pairs that REPEAT |
 |---|---|
-| `week % ring.length` | **4,765 – 33.8 %** |
+| `week % ring.length` | **4,659 – 33.0 %** |
 | tier-sequence index (shipped) | **0 – 0.00 %** |
 
-33.8 % is no better than the coin flip it was meant to replace, and the reason is structural rather
+33.0 % is no better than the coin flip it was meant to replace, and the reason is structural rather
 than unlucky: event gaps are not arbitrary. A dense rung runs every ~2 weeks, half the rings are two
 frames long, and an anchored rung (`wta250` … `slam`) repeats a FIXED week offset every year – so
 the gap is a multiple of the ring length far more often than chance. `local/hard` alone contributed
 822 repeats, `wta1000/hard` 620.
 
-The 33.8 % figure is kept as a live test (`a week-derived ordinal would NOT do`), so the number can be
+The 33.0 % figure is kept as a live test (`a week-derived ordinal would NOT do`), so the number can be
 re-run and a future simplification back to the week has to walk past it.
 
 ## What the ring is, and why the establishing shots are always in it
@@ -113,15 +113,15 @@ One draw, on a purpose-scoped sub-stream keyed by the rung and the surface –
 `rngFromSeed(`${seed}:venue:${tier}:${surface}`)`. **Zero MAIN-stream draws**, re-derived at the call
 site, persisting nothing, nothing inside the tick; the frozen capture cannot move. It replaces the
 per-event draw that was there before, which had the same properties. Its job is to start two careers
-at different rungs of the same ring, and to stop two rungs that share a borrowed set (W75 and W100)
-from walking it in step.
+at different rungs of the same ring, and to stop two rungs that share a borrowed set (J60, J300 and
+J30) from walking it in step.
 
 ## Acceptance – and the honest exceptions
 
 Green:
 
 - 0 repeats over 20 careers × 8 seasons, every pair checked (`checked > 10000`).
-- every one of the 68 stems reachable structurally, and 66 of them actually shown by 30 real careers.
+- every one of the 73 stems reachable structurally, and 71 of them actually shown by 30 real careers.
 - the same career rendered twice picks the identical photograph for every event; an event keeps its
   photograph as 40 weeks pass under it; ten calls give one answer.
 
@@ -141,21 +141,23 @@ Three exceptions, each pinned **by name** so it cannot widen quietly, and each r
    W35 card can show the same frame. Four real W35 masters clear it. (It was three rungs while W50
    borrowed W35; W50's own art landed the same evening.)
 
-## W50 arrived mid-wave
+## W50 and W75 arrived mid-wave
 
-The rung was wired as a BORROWER (`w50` → `w35`, nearest populated rung) with three `absent` rows in
-`docs/art-placeholders.md`, exactly as `w75` still is. At 19:01 the same evening the owner dropped
-five raw `.jpg` masters – `w50-{clay,grass,hard}-1`, `w50-venue-{1,2}` – straight into
-`public/images/fields/`, next to the webp they belong with rather than into a `-jpeg` inbox.
+Both rungs were wired as BORROWERS – `w50` → `w35`, `w75` → `w100`, each its nearest populated rung,
+deliberately not the same one – with three `absent` rows each in `docs/art-placeholders.md`. At 19:01
+and 19:09 the same evening the owner dropped five raw `.jpg` masters for each,
+`w{50,75}-{clay,grass,hard}-1` and `w{50,75}-venue-{1,2}`, straight into `public/images/fields/` –
+next to the webp they belong with rather than into a `-jpeg` inbox.
 
 `npm run art` handled that without a change: `scripts/optimize-art.mjs` encodes raw art found
 anywhere under `public/` **in place** and moves the master out to gitignored `art-src/` (that door
 was opened on 01.08 for exactly this reason – "a human replaces a file where he can see the file").
-Five webp at q82, 59.7–78.7 KB each. The borrow entry and its registry rows came straight back out,
-which is the loop this registry exists to close: written down when it was a debt, deleted the hour it
-stopped being one.
+Ten webp at q82, 59.7–85.1 KB each. Both borrow entries and their six registry rows came straight
+back out, which is the loop the registry exists to close: written down the moment it is a debt,
+deleted the hour it stops being one.
 
-**W75 is the only adult rung still borrowing.**
+**No adult rung borrows any more.** The nearest-populated-rung rule is kept in `ART_TIER_BORROWS`'
+own comment rather than deleted with the entries, because the next unpainted rung will need it.
 
 ## Weight
 
@@ -164,13 +166,13 @@ Measured with `npm run build` on the branch base and again on the finished branc
 | | entries | precache |
 |---|---|---|
 | before (21 masters) | 107 | 2354.06 KiB |
-| after (63 masters) | 107 | 2357.32 KiB |
+| after (73 masters) | 107 | 2357.43 KiB |
 
-**+3.26 KiB, and none of it is a picture.** The delta is `dist/assets/index-*.js` going 419.12 kB →
-422.46 kB – this module's own code. `vite.config` carries `globIgnores: ['**/images/**']` and
+**+3.37 KiB, and none of it is a picture.** The delta is `dist/assets/index-*.js` going 419.12 kB →
+422.58 kB – this module's own code. `vite.config` carries `globIgnores: ['**/images/**']` and
 `/images/*.webp` is a CacheFirst RUNTIME route, so a field master is fetched if and only if a
-component asks for its URL; `grep -c images/fields dist/sw.js` is **0**. The 42 new files add
-3,023,618 bytes (~2.88 MiB) to `dist/` and **0 bytes to every user's install**.
+component asks for its URL; `grep -c images/fields dist/sw.js` is **0**. The 52 new files add
+3736374 bytes (~3.6 MiB) to `dist/` and **0 bytes to every user's install**.
 
 Nothing in `src/art/preload.ts` warms venue art, and nothing should. A card's own `<img src>` is the
 request, and the rotation means a career sees a fraction of the set – the preloader's standing rule

@@ -57,9 +57,6 @@ first cell is a backticked path starting with `public/`. Keep the column order.
 | `public/images/fields/w35-grass-1.webp` | `byte-copy` | `public/images/fields/w15-grass-2.webp` | adult venues (04.08) | W35 ships no grass court of its own – the file is the W15 spare under another name |
 | `public/images/fields/w35-hard-1.webp` | `byte-copy` | `public/images/fields/w15-hard-2.webp` | adult venues (04.08) | W35 ships no hard court of its own – the file is the W15 spare under another name |
 | `public/images/fields/w35-venue-1.webp` | `byte-copy` | `public/images/fields/w15-venue-3.webp` | adult venues (04.08) | W35 ships no establishing shot of its own – the file is the W15 spare under another name |
-| `public/images/fields/w75-hard-1.webp` | `absent` | `public/images/fields/w100-hard-1.webp` | adult venues (04.08) | in progress – `ART_TIER_BORROWS.w75` points the rung at W100; drop the entry when the art lands |
-| `public/images/fields/w75-clay-1.webp` | `absent` | `public/images/fields/w100-clay-1.webp` | adult venues (04.08) | in progress – `ART_TIER_BORROWS.w75` points the rung at W100; drop the entry when the art lands |
-| `public/images/fields/w75-grass-1.webp` | `absent` | `public/images/fields/w100-grass-1.webp` | adult venues (04.08) | in progress – `ART_TIER_BORROWS.w75` points the rung at W100; drop the entry when the art lands |
 | `public/images/fields/j60-hard-1.webp` | `absent` | `public/images/fields/j30-hard-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
 | `public/images/fields/j60-clay-1.webp` | `absent` | `public/images/fields/j30-clay-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
 | `public/images/fields/j60-grass-1.webp` | `absent` | `public/images/fields/j30-grass-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
@@ -85,12 +82,11 @@ They are not in the table above and the test does not enforce them.
 - ~~**Venue art stops at `j30`.**~~ CLOSED 04.08 – the owner generated 42 adult masters and they are
   registered in `FIELD_ART`. `ART_TIER_ORDER` is the full 16-rung ladder now, and every adult rung
   from `w15` to `slam` paints its own three surfaces, so no adult card falls through to a junior
-  photograph. What is LEFT of the row is ONE rung and it has moved into the table above as `absent`
-  rows: `w75` is still being drawn («в процессе, так же как и трофеи»), and until it lands
-  `ART_TIER_BORROWS` points it at its nearest painted neighbour, `w100`. `w50` was the second such
-  rung for about an hour – the owner delivered its five masters at 19:01 the same evening, so its
-  rows came straight back out. `j60` / `j300` were never painted either and are in the table for the
-  same reason; that borrow predates this wave and is unchanged.
+  photograph. NOTHING is left of the row: `w50` and `w75` were registered here as `absent` for about
+  an hour each – they were the two «в процессе, так же как и трофеи» – and the owner delivered five
+  masters for each at 19:01 and 19:09 the same evening, so their six rows came straight back out.
+  **No adult rung borrows any more.** `j60` / `j300` were never painted and stay in the table above
+  for the same reason; that borrow predates this wave and is unchanged.
 - **`wta1000` grass is art the simulation cannot ask for.** `wta1000-grass-1` and `wta1000-grass-2`
   ship and nothing will ever show them. The rung is ANCHORED – its weeks are named
   (`anchorWeeks: [5, 8, 12, 18, 31, 37, 41, 45]` in `season/calendar.ts`) and an anchored event takes

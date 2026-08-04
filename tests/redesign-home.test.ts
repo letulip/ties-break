@@ -457,6 +457,8 @@ describe('the venue paintings', () => {
       'w35-venue-1',
       'w50-venue-1',
       'w50-venue-2',
+      'w75-venue-1',
+      'w75-venue-2',
       'w100-venue-1',
       'wta125-venue-1',
       'wta250-venue-1',
@@ -477,10 +479,12 @@ describe('the venue paintings', () => {
 
   it('the adult ladder paints its own courts – backlog #86 is closed except for w50/w75', () => {
     // The defect this branch fixes, stated as the thing that was false: every adult rung's exact
-    // (tier, surface) art exists, so no adult card falls through to a junior photograph. Only
-    // w75 is the one the owner is still drawing, and it borrows BY NAME (ART_TIER_BORROWS) rather
-    // than by falling off the end of the ladder.
-    const ADULT: TierId[] = ['w15', 'w35', 'w50', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam']
+    // (tier, surface) art exists, so no adult card falls through to a junior photograph.
+    // Every one of the ten, with no exceptions left: w50 and w75 were borrowing when this case was
+    // written and the owner delivered both sets the same evening. Only the two JUNIOR rungs
+    // (j60/j300) still borrow, and they borrow BY NAME (ART_TIER_BORROWS) rather than by falling
+    // off the end of the ladder – which is the failure mode #86 actually was.
+    const ADULT: TierId[] = ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam']
     for (const tier of ADULT) {
       for (const surface of SURFACES) {
         const pool = venueCandidates(tier, surface)
@@ -490,7 +494,7 @@ describe('the venue paintings', () => {
       }
     }
     // ...and the two that are still borrowing say so out loud.
-    expect(ART_TIER_BORROWS).toEqual({ j60: 'j30', j300: 'j30', w75: 'w100' })
+    expect(ART_TIER_BORROWS).toEqual({ j60: 'j30', j300: 'j30' })
   })
 
   it('the second j30 wave widened the pools it was meant to widen, and nothing else', () => {

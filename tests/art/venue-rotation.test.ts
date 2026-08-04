@@ -300,32 +300,35 @@ describe("a tournament's photograph never changes", () => {
 // The borrowing rungs, and that borrowing never costs the surface
 // ===============================================================================================
 describe('the rungs that borrow somebody else\'s art', () => {
-  it('w75 borrows its NEAREST populated rung, and it is the only adult rung still borrowing', () => {
-    // ⚠ THIS CASE NAMED TWO RUNGS FOR ABOUT AN HOUR. `w50` borrowed `w35` by the same nearest-rung
-    // rule until the owner delivered its five masters mid-wave (19:01, 04.08); the entry and its
-    // three registry rows came out together. What is pinned is the RULE and the current set, so the
-    // day w75's art lands this case fails and names itself.
-    expect(ART_TIER_BORROWS).toEqual({ j60: 'j30', j300: 'j30', w75: 'w100' })
+  it('only the two junior rungs borrow – every adult rung paints its own courts', () => {
+    // ⚠ THIS CASE NAMED TWO ADULT RUNGS FOR ABOUT AN HOUR EACH. `w50` borrowed `w35` and `w75`
+    // borrowed `w100`, by the nearest-populated-rung rule written up in ART_TIER_BORROWS' comment;
+    // the owner delivered five masters for each mid-wave (19:01 and 19:09, 04.08) and both entries
+    // left with their six registry rows. The RULE is kept in the module comment because the next
+    // unpainted rung will need it; what is pinned here is the current set.
+    expect(ART_TIER_BORROWS).toEqual({ j60: 'j30', j300: 'j30' })
     for (const surface of SURFACES) {
-      expect(venueCandidates('w75', surface)).toEqual(venueCandidates('w100', surface))
-      // ...and the rung that stopped borrowing really did stop.
-      expect(venueCandidates('w50', surface)).not.toEqual(venueCandidates('w35', surface))
-      for (const stem of venueVariants('w50', surface)) expect(stem).toContain('w50-')
+      expect(venueCandidates('j60', surface)).toEqual(venueCandidates('j30', surface))
+      expect(venueCandidates('j300', surface)).toEqual(venueCandidates('j30', surface))
+      // ...and the two rungs that stopped borrowing really did stop.
+      for (const tier of ['w50', 'w75'] as TierId[]) {
+        for (const stem of venueVariants(tier, surface)) expect(stem).toContain(`${tier}-`)
+      }
     }
   })
 
   it('a borrowed set is still counted in the BORROWER\'s own sequence', () => {
     // The subtle one. `venueOrdinal` takes the event's real tier, never the tier it borrows art
-    // from, so two consecutive w75 clay events differ even though the frames are w100's. Counting in
-    // w100's sequence would have made the rotation follow a calendar the event is not in.
+    // from, so two consecutive j60 clay events differ even though the frames are j30's. Counting in
+    // j30's sequence would have made the rotation follow a calendar the event is not in.
     const seed = 'borrow-seed'
-    const w75 = calendar(seed, 6).filter((e) => e.tier === 'w75')
+    const j60 = calendar(seed, 6).filter((e) => e.tier === 'j60')
     let pairs = 0
-    for (let i = 1; i < w75.length; i++) {
-      if (w75[i - 1].surface !== w75[i].surface) continue
-      if (venueVariants(w75[i].tier, w75[i].surface).length < 2) continue
-      expect(venueArtStem(w75[i].tier, w75[i].surface, w75[i].id, seed)).not.toBe(
-        venueArtStem(w75[i - 1].tier, w75[i - 1].surface, w75[i - 1].id, seed),
+    for (let i = 1; i < j60.length; i++) {
+      if (j60[i - 1].surface !== j60[i].surface) continue
+      if (venueVariants(j60[i].tier, j60[i].surface).length < 2) continue
+      expect(venueArtStem(j60[i].tier, j60[i].surface, j60[i].id, seed)).not.toBe(
+        venueArtStem(j60[i - 1].tier, j60[i - 1].surface, j60[i - 1].id, seed),
       )
       pairs++
     }
