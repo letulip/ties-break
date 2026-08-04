@@ -35,8 +35,8 @@ import {
   kidAgeYears,
   type WorldState,
 } from '../src/engine/world'
-import { ENDINGS, bankruptcyDue, debtWeeks, plateauReading } from '../src/engine/ending'
-import { plateauViewOf } from '../src/engine/world'
+import { ENDINGS, bankruptcyDue, debtWeeks, plateauReading, weeksLostSoFar } from '../src/engine/ending'
+import { plateauViewOf, autoEndingViewOf } from '../src/engine/world'
 import type { CareerEndingType } from '../src/shared/protocol'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { Rng } from '../src/engine/rng'
@@ -180,7 +180,12 @@ export function runToEnding(
           (h) => h.severity === 'moderate' || h.severity === 'major' || h.severity === 'severe',
         ).length
         if (mod > out.maxModeratePlusAtSevere) out.maxModeratePlusAtSevere = mod
-        const lost = world.injuryHistory.reduce((sum, h) => sum + h.weeksOut, 0)
+        // ⚠ THROUGH THE ENGINE'S OWN ACCUMULATOR, NOT A HAND-ROLLED SUM (v40). `injuryHistory` is
+        // pruned to twenty rows, so the sum this line used to take went short on exactly the bodies
+        // the predicate is about - see docs/specs/fatigue-injury-audit-2026-08.md §6.
+        // `weeksLostSoFar` is what the ending itself reads, so the bench and the rule can no longer
+        // disagree about what a body has been through.
+        const lost = weeksLostSoFar(autoEndingViewOf(world))
         if (lost > out.maxWeeksOutAtSevere) out.maxWeeksOutAtSevere = lost
       }
       if (world.injury.severity === 'major' || world.injury.severity === 'severe') out.majorPlusCount += 1
@@ -426,7 +431,11 @@ export function main(argv = process.argv.slice(2)): void {
       `  a severe with >= ${need} prior major+     : ${hit} (${((100 * hit) / Math.max(1, longLived.length)).toFixed(1)}%)`,
     )
   }
-  for (const need of [10, 20, 30, 40]) {
+  // ⚠ THE CANDIDATE LIST IS THE SWEEP THE 04.08 AUDIT DEFENDS N ON, and it is deliberately finer
+  // than the four rungs the endings wave shipped with: 20 and 30 were three points apart in the
+  // original and the whole argument for one over the other turns on how much of the accumulation
+  // clause is actually doing the deciding. See docs/specs/fatigue-injury-audit-2026-08.md §7.
+  for (const need of [10, 16, 20, 24, 30, 40, 52]) {
     const hit = longLived.filter((o) => o.freshSevereCount > 0 && o.maxWeeksOutAtSevere >= need).length
     console.log(
       `  a severe on >= ${String(need).padStart(2)}w already lost : ${hit} (${((100 * hit) / Math.max(1, longLived.length)).toFixed(1)}%)${need === ENDINGS.injuryPriorWeeksOut ? '   <- the shipped rule' : ''}`,

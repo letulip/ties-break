@@ -21,6 +21,7 @@ import {
   forkDue,
   plateauReading,
   retirementDue,
+  weeksLostSoFar,
   type AutoEndingView,
   type PlateauView,
 } from '../src/engine/ending'
@@ -123,6 +124,27 @@ describe('#4 the career-ending injury – a story, never a difficulty setting', 
 
   it('an unbroken body survives even the worst single roll', () => {
     expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: [] }))).toBe(false)
+  })
+
+  // ⚠ THE PRUNE, AND WHY THE RULE STOPPED READING THE LIST ALONE (v40,
+  // docs/specs/fatigue-injury-audit-2026-08.md §6). `rollInjury` keeps the last twenty layoffs and
+  // drops the rest, so summing `injuryHistory` under-counted exactly the bodies this predicate is
+  // about - the accumulator got SHORTER the more broken she was. `careerTotals.weeksLostToInjury`
+  // is the monotone counter; `weeksLostSoFar` takes the larger of the two so that neither a
+  // hand-built view (history, no counter) nor a migrated save (counter back-filled from the same
+  // pruned list) can ever fire the ending on weeks she did not lose.
+  it('reads the monotone counter when the pruned history has forgotten half the body', () => {
+    const n = ENDINGS.injuryPriorWeeksOut
+    const shortHistory = [{ severity: 'minor', weeksOut: 2 }]
+    // the visible history is two weeks; the career total says she has lost five months
+    expect(weeksLostSoFar(autoView({ injuryHistory: shortHistory, weeksLostToInjury: n + 30 }))).toBe(n + 30)
+    expect(
+      careerEndingInjuryDue(
+        autoView({ freshInjurySeverity: 'severe', injuryHistory: shortHistory, weeksLostToInjury: n + 30 }),
+      ),
+    ).toBe(true)
+    // ...and it never goes the other way: a counter BELOW the surviving history cannot shrink it
+    expect(weeksLostSoFar(autoView({ injuryHistory: lost(n + 5), weeksLostToInjury: 0 }))).toBe(n + 5)
   })
 
   it('an ongoing layoff is not a fresh injury', () => {
@@ -348,7 +370,7 @@ describe('#2 college – the only ending that resumes', () => {
 describe('the break-even milestone – captured, never reconstructed', () => {
   it('fires the week prize passes spend, once, and only on prize money', () => {
     const { world } = freshWorld()
-    world.careerTotals = { earnedCents: 900_00, spentCents: 500_00, prizeCents: 0 }
+    world.careerTotals = { earnedCents: 900_00, spentCents: 500_00, prizeCents: 0, weeksLostToInjury: 0 }
     captureBreakEven(world)
     expect(world.milestones.filter((m) => m.type === 'break-even')).toHaveLength(0)
     world.careerTotals.prizeCents = 600_00

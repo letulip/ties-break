@@ -14,6 +14,7 @@ import {
   kidAgeYears,
   playedWeeksInTrailing4,
   toSnapshot,
+  autoEndingViewOf,
   financeWindow,
   skipTournament,
   closeTournament,
@@ -21,6 +22,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
+import { weeksLostSoFar } from '../src/engine/ending'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { kitInjuryFactor, kitWearAt } from '../src/engine/equipment'
@@ -600,6 +602,38 @@ describe('C4 — injured gate + recovery', () => {
     expect(w.injuryHistory).toHaveLength(20)
     expect(w.injuryHistory[0].kind).toBe('entry-5') // oldest 5 pruned away
     expect(w.injuryHistory[19].kind).toBe('entry-24')
+  })
+
+  // ⚠ THE COUNTER THE PRUNE ABOVE MADE NECESSARY (v40, docs/specs/fatigue-injury-audit-2026-08.md
+  // §6). The career-ending injury is keyed on the SUM of the layoffs a body has been through, and
+  // for twenty releases that sum was being taken over the list the test above proves is lossy - so
+  // the rule quietly got HARDER the more broken she was. Measured over 90 full careers: 13 reached
+  // the cap and 1.4% of onsets were judged a mean of 6.1 weeks light.
+  it('careerTotals.weeksLostToInjury counts EVERY layoff, including the ones the prune drops', () => {
+    const w = createWorld('c4-prune-total')
+    for (let i = 0; i < 25; i++) {
+      setInjury(w, 1, 3, `entry-${i}`)
+      w.week += 1
+      rollInjury(w)
+    }
+    // the visible history remembers twenty of the twenty-five; the counter remembers all of them
+    expect(w.injuryHistory).toHaveLength(20)
+    expect(w.injuryHistory.reduce((s, h) => s + h.weeksOut, 0)).toBe(60)
+    expect(w.careerTotals.weeksLostToInjury).toBe(75)
+    // ...and the ending reads the larger of the two, so it sees the whole body
+    expect(weeksLostSoFar(autoEndingViewOf(w))).toBe(75)
+  })
+
+  it('the counter records a layoff only when she RECOVERS from it, never at onset', () => {
+    const w = createWorld('c4-total-onset')
+    const rng = rngFromSeed(w.seed)
+    setInjury(w, 2, 5, 'knee strain')
+    expect(w.careerTotals.weeksLostToInjury).toBe(0) // out, but not yet "already lost"
+    tickWeek(w, rng)
+    expect(w.careerTotals.weeksLostToInjury).toBe(0)
+    tickWeek(w, rng) // clears
+    expect(w.injury).toBeNull()
+    expect(w.careerTotals.weeksLostToInjury).toBe(5)
   })
 })
 

@@ -841,7 +841,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       : null,
     retirementOffer: world.retirementOffer,
     college: world.college,
-    careerTotals: world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+    careerTotals: world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 },
     ...(stopReasons && stopReasons.length > 0 ? { stopReasons } : {}),
     ...(pending ? { pending } : {}),
   }

@@ -112,8 +112,12 @@ export interface AutoEndingView {
   cheapestEntryFeeCents: number
   /** the severity of an injury that landed THIS week, or null (an ongoing layoff is not fresh) */
   freshInjurySeverity: string | null
-  /** every layoff she has recovered from: what it was, and how long it took */
+  /** every layoff she has recovered from: what it was, and how long it took. ⚠ PRUNED to the last
+   *  twenty by `rollInjury`, which is why the accumulator below exists beside it. */
   injuryHistory: readonly { severity: string; weeksOut: number }[]
+  /** the monotone career total of weeks lost (v40, `careerTotals.weeksLostToInjury`). 0 on a
+   *  hand-built view, which is why `weeksLostSoFar` takes the larger of the two. */
+  weeksLostToInjury?: number
 }
 
 /** How many consecutive weeks she has been under water, counting this one. 0 when solvent. */
@@ -152,9 +156,22 @@ export function careerEndingInjuryDue(
   return weeksLostSoFar(view) >= priorWeeksOut
 }
 
-/** How much of her playing life the body has already spent off court. */
-export function weeksLostSoFar(view: Pick<AutoEndingView, 'injuryHistory'>): number {
-  return view.injuryHistory.reduce((sum, h) => sum + h.weeksOut, 0)
+/** How much of her playing life the body has already spent off court.
+ *
+ *  ⚠ THE LARGER OF TWO ANSWERS, AND THE REASON IS THE PRUNE. `injuryHistory` keeps the last twenty
+ *  layoffs and drops the rest (`rollInjury`), so summing it under-counts exactly the bodies this
+ *  rule is about – measured over 90 full careers, 13 reached the cap and 1.4% of onsets were judged
+ *  against a total a mean of 6.1 weeks short. `careerTotals.weeksLostToInjury` (v40) is the monotone
+ *  counter that cannot be pruned.
+ *
+ *  It is `max` rather than "prefer the counter" for two reasons, both load-bearing: a hand-built
+ *  view (every test in this file, and the endings bench's own probes) carries a history and no
+ *  counter, and a MIGRATED save carries a counter back-filled from the same pruned list – so
+ *  whichever of the two is bigger is always the more honest number, and neither can ever make the
+ *  ending fire on a body that has lost less than the visible history says. */
+export function weeksLostSoFar(view: Pick<AutoEndingView, 'injuryHistory' | 'weeksLostToInjury'>): number {
+  const fromHistory = view.injuryHistory.reduce((sum, h) => sum + h.weeksOut, 0)
+  return Math.max(fromHistory, view.weeksLostToInjury ?? 0)
 }
 
 /** The two automatic endings, in the order they are checked. Bankruptcy leads because it is the one

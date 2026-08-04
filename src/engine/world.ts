@@ -268,7 +268,12 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // reservations had already drifted by one; versions are allocated on arrival, not booked, and the
 // append-only migration ladder is what makes that safe. Endings and psyche take the next free
 // numbers when they ship.
-export const SAVE_SCHEMA_VERSION = 39
+// ⚠ v40 = ONE FIELD, `careerTotals.weeksLostToInjury` – the monotone total of weeks her body has
+// spent off court (docs/specs/fatigue-injury-audit-2026-08.md §6). It exists because
+// `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
+// the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
+// end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
+export const SAVE_SCHEMA_VERSION = 40
 
 
 
@@ -1882,7 +1887,7 @@ export function createWorld(
     // to college. The migration's back-fill is the same set, for the same reason.
     ending: null,
     debtSinceWeek: null,
-    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 },
     fork: null,
     retirementOffer: null,
     oneMoreYearCount: 0,

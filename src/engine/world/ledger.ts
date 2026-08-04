@@ -36,7 +36,7 @@ export function accrueFinance(world: WorldState, week: number, category: WorldEv
   // wages, sponsor money, the academy grant and savings interest are all income; none of them is the
   // tennis paying for itself. Zero draws, at the choke point every money movement already passes.
   // Defensive `??=` because hand-built probe worlds in tests predate the field.
-  world.careerTotals ??= { earnedCents: 0, spentCents: 0, prizeCents: 0 }
+  world.careerTotals ??= { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
   if (amountCents > 0) world.careerTotals.earnedCents += amountCents
   else world.careerTotals.spentCents += -amountCents
   if (category === 'prize') world.careerTotals.prizeCents += amountCents

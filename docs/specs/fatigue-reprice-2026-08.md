@@ -165,8 +165,19 @@ note in act2-pro-tour.md warns about for best-16.
    criterion; the baseline is 11 on the owner's W230 career).
 2. **The season's shape**: she arrives at the off-season at **45–50**, and after the blackout weeks
    plus one big (or two small) vacations she opens the next season at **≥90**.
+   ⚠ **THE 45–50 HALF NO LONGER DESCRIBES THIS GAME'S LADDER** (audit §2, 04.08): it is derived from
+   §3's average event of 2.35 matches, and since W3-ACT2 opened ten professional rungs the measured
+   figure is **1.6** – she loses in the first round of most of what she now enters, and a first-round
+   exit costs less than the rest week beside it returns. Measured today: the door is at **73** and she
+   opens the next season at **89**. The obvious repair (raise the top rungs' per-match surcharge) is
+   refused there under «мы ни за что не наказываем» – it would charge her body more for LOSING – and
+   §7 below reserves the professional week's price to the owner anyway.
 3. **A W35 title leaves her at 70–78%**, not 59% — the number the owner reads off the screen.
 4. **Season injury prevalence 46–54%** at that schedule, per the research anchor.
+   ⚠ **RE-AIMED TO 30–54% ON 04.08** (docs/specs/fatigue-injury-audit-2026-08.md §8): this is the
+   JUNIOR band from docs/research/injury-stats-by-age.md §1, applied to a schedule §1 of this very
+   spec describes as twenty PROFESSIONAL events a year. The same research carries a professional
+   band – 30–54% – and the measured 38% sits inside it. No injury knob moved; the criterion did.
 5. **The junior era does not move.** Domestic and J rungs keep ladder C and their surcharges; the
    junior-era benches (`tools/fatigue-bench.ts` reference tables in tests/fatigueReference.test.ts)
    must not move a cell that is not deliberately re-aimed with a note.

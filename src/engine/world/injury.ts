@@ -181,6 +181,16 @@ export function rollInjury(world: WorldState): void {
       const { kind, severity, totalWeeks } = world.injury
       world.injuryHistory.push({ kind, severity, week: world.week, weeksOut: totalWeeks })
       if (world.injuryHistory.length > 20) world.injuryHistory.splice(0, world.injuryHistory.length - 20)
+      // ⚠ AND THE MONOTONE TOTAL, BECAUSE THE LINE ABOVE THROWS HISTORY AWAY (v40, the audit's §6).
+      // The career-ending injury reads the SUM of the layoffs a body has already been through, and
+      // that sum was being taken over a list pruned to its last twenty rows - so the most broken
+      // careers in the game were the ones whose accumulator quietly ran short. Measured over 90 full
+      // careers: 13 reached the cap, 1.4% of onsets were judged against a total a mean of 6.1 weeks
+      // light. Counted HERE, in the same branch that writes the history row, so the two can never
+      // disagree about what "recovered" means. Pure state, zero draws.
+      // `??=` for the hand-built probe worlds in tests that predate `careerTotals`.
+      world.careerTotals ??= { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
+      world.careerTotals.weeksLostToInjury = (world.careerTotals.weeksLostToInjury ?? 0) + totalWeeks
       world.injury = null
       addEvent(world, { week: world.week, type: 'recovery', text: 'Back on court – cleared to play.' })
     }
