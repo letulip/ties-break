@@ -117,5 +117,14 @@ docs/review/     2026-08 full review + P1–P9 proposals
   git grep -l "engine/<module>.ts'" -- tests/
   ```
   Every hit is a pin that will break, and each one needs repointing at the source helper. Measured against the `world.ts` and `diary.ts` splits, this predicted **17 of 17 real breakages (100% recall, 81% precision)** – the four false positives cost seconds to dismiss. Those 20 break events were originally found reactively, one failing test run at a time, purely because nobody ran this query first. See `docs/research/graph-tooling-benchmark.md`.
+- **Never gate while agents are working, and never read an exit code through a pipe.** Two measured
+  hazards, both of which have already produced a false verdict here. (a) CONTENTION: with three
+  agents active this machine reached load 69 / 33 node processes, and a full `npm run check` came
+  back with three RED files — all of them timeouts (20 s, 240 s, 20 s), zero assertion failures, in
+  files the branch had not touched. The same contention turned a 3-minute sim run into 90 and a
+  3-second performance assertion into 16. Verify branches AFTER the agents finish, one at a time.
+  (b) THE PIPE: `npm run check 2>&1 | tail` reports **tail's** exit status, so a run with real
+  `vue-tsc` errors "passes". Redirect to a file and echo `$?` from the command itself, never from a
+  pipeline.
 - The sim project MUST run serialised: every script that touches it carries `--no-file-parallelism` (birpc has a hard-coded 60s RPC timeout that a minutes-long synchronous Monte-Carlo file will blow past, exiting 1 with every test green). If you add a script that runs the sim project, carry the flag.
 - The `▶▶ 52 (dev)` button in More ships in EVERY build – an owner ruling (the deployed build is the playtest device), not a regression. Its unsafe half is fixed: the worker's `tick` handler now enforces the same open-knock / unrevealed-tournament guards as `advanceWeeks`, refusing at entry and stopping mid-loop. `tests/dev-fast-forward.test.ts` pins both halves.
