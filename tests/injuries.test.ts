@@ -200,7 +200,15 @@ const REF = { //
   // season, the cohort meets 30 more draws, and a different set of juniors ends the year with
   // counting ITF points. See the same note on tests/condition.test.ts B1's REF, which is the
   // declaration this one mirrors. The capture itself is untouched by construction.
-  kidRank: 123 }
+  //
+  // ⚠⚠ RE-PINNED 123 -> 89 BY W3-FIELD3 (04.08) – a RULE, not content. The W-track canonical
+  // brackets draw from LIVE cohort ∪ 364 derived professionals and a professional leaves no ledger
+  // row, so the season's ~98 W events stop landing on the cohort (W result rows per rival over a
+  // 20-week window: 6.79 -> 0.00), the juniors play the year fresher, and a different set of them
+  // ends it holding counting ITF points. C1's own claim – that INJURY and PHYSIO add no main-stream
+  // draws – is untouched and still proves itself two lines up: count 41550 and hash e6b0c709
+  // reproduce byte-for-byte, because every W bracket runs on its own `seed:aitour:<id>` sub-stream.
+  kidRank: 89 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
