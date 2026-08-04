@@ -20,6 +20,7 @@ import { addEvent } from './ledger'
 import { kidPoints } from './ladder'
 import { KID_ID } from './constants'
 import type { WorldState } from '../world'
+import { guardNotEnded } from './endings'
 
 // --- the sponsors decide, in the off-season -----------------------------------
 // Who is willing to put this girl in their kit next year, and on what terms. Three rungs since
@@ -249,6 +250,10 @@ export function reviewSponsors(world: WorldState): void {
  *  behind a confirm that restated the deal, and the letter carries "Signed" in the inbox for the rest
  *  of the career - which is longer than any feed row survives. */
 export function acceptOffer(world: WorldState, offerId: string): Offer {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const signed = signOfferIn(world.offers, offerId, world.week)
   if (!signed) throw new Error(offerAnswerErrorFor(world, offerId))
   return signed
@@ -257,6 +262,10 @@ export function acceptOffer(world: WorldState, offerId: string): Offer {
 /** THE PARENT REFUSES. Terminal in the same way signing is: a "no" he could take back would make the
  *  deadline a formality on the other side of the decision. Same feed budget, same reason. */
 export function declineOffer(world: WorldState, offerId: string): Offer {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const refused = refuseOfferIn(world.offers, offerId, world.week)
   if (!refused) throw new Error(offerAnswerErrorFor(world, offerId))
   return refused

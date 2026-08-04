@@ -36,6 +36,27 @@ export function captureMilestone(world: WorldState, m: Milestone): void {
   world.milestones.push(m)
 }
 
+/** ⚠ THE TURN, CAPTURED THE WEEK IT HAPPENS AND NEVER RECONSTRUCTED (contract §9.4, and the wave
+ *  brief put it in double capitals). The album's central page – slot 6 – is the week her cumulative
+ *  prize money first passed her cumulative costs. The finance ledger keeps SIXTY WEEKS and the
+ *  crossing may land in season seven, so at epilogue time the arithmetic behind the answer is
+ *  already pruned out of the save. Either this row exists or the page is empty for everybody who
+ *  earned it.
+ *
+ *  ⚠ AND IT IS PRIZE MONEY AGAINST COSTS, not income against costs. Parent wages, sponsor money,
+ *  the academy grant and savings interest all cross the ledger as income; none of them is the tennis
+ *  paying for itself, and §9.2 is about «the break-even the whole game is about». A family that
+ *  merely stayed solvent has not turned – it has been subsidising her, which is the thesis, not the
+ *  exception to it.
+ *
+ *  Idempotent through `captureMilestone` (identity is the type), pure state, zero draws – so it
+ *  runs on the one step that fires on BOTH a normal week and a tournament week and cannot double. */
+export function captureBreakEven(world: WorldState): void {
+  const t = world.careerTotals
+  if (!t || t.prizeCents <= t.spentCents) return
+  captureMilestone(world, { type: 'break-even', week: world.week })
+}
+
 /** R10-9: how many finished seasons the career history keeps (newest wins). 30 years of junior/
  *  pro career is far past the game's horizon – the cap exists so the save has a hard ceiling. */
 export const SEASON_HISTORY_CAP = 30

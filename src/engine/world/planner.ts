@@ -33,6 +33,7 @@ import { kidMatchPlayerFor } from './player'
 import { fullRanking } from './ladder'
 import { practiceCoachRateFor } from './coachMarket'
 import type { WorldState } from '../world'
+import { guardNotEnded } from './endings'
 
 // --- Season planner: vacations + practice matches ------------------------------
 // docs/specs/season-planner.md. TWO player-planned week types on otherwise empty weeks.
@@ -81,6 +82,10 @@ export function assertPlannable(world: WorldState, week: number, kind: 'vacation
  *  records the booking. The week becomes a hard blackout; the package's condition gain (and, for
  *  the two top packages, its recovery buff) lands when the week ticks. */
 export function bookVacation(world: WorldState, week: number, packageId: string): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error('Unknown vacation package')
   assertPlannable(world, week, 'vacation')
@@ -106,6 +111,10 @@ export function bookVacation(world: WorldState, week: number, packageId: string)
 
 /** Cancel a booked vacation before its week starts: FULL refund (mirror of entry withdrawal). */
 export function cancelVacation(world: WorldState, week: number): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const booking = vacationForWeek(world, week)
   if (!booking) throw new Error('No vacation booked that week')
   if (week <= world.week) throw new Error('That vacation week has already started')
@@ -135,6 +144,10 @@ export function cancelVacation(world: WorldState, week: number): void {
  *  same hard body-gate `availabilityStatus` applies to a tournament, reading the same
  *  `medicalBlock`. */
 export function bookPractice(world: WorldState, week: number, withCoach: boolean): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   assertPlannable(world, week, 'practice')
   const paidCents = practiceFeeCents(world.seed, week, world.profile.background, withCoach, practiceCoachRateFor(world, week))
   if (world.fundsCents < paidCents) throw new Error('Not enough funds for the court rental')
@@ -153,6 +166,10 @@ export function bookPractice(world: WorldState, week: number, withCoach: boolean
 
 /** Cancel a booked practice before its week starts: full refund of the rental. */
 export function cancelPractice(world: WorldState, week: number): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const booking = practiceForWeek(world, week)
   if (!booking) throw new Error('No practice match booked that week')
   if (week <= world.week) throw new Error('That practice week has already started')

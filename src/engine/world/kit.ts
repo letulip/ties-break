@@ -35,6 +35,7 @@ import { kitFreshCap } from '../offers'
 import type { KitGrade, KitLine, KitLineView } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
+import { guardNotEnded } from './endings'
 
 /** The three lines, in the order the equipment model reads them and the screen draws them. */
 export const KIT_LINES: readonly KitLine[] = ['strings', 'frame', 'shoes']
@@ -72,6 +73,10 @@ function rungIndex(grade: KitGrade): number {
  * all, so a double-tap cannot buy two frames.
  */
 export function setKitGrade(world: WorldState, line: KitLine, grade: KitGrade): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   if (!KIT_LINES.includes(line)) throw new Error('Unknown kit line')
   if (rungIndex(grade) < 0) throw new Error('Unknown kit grade')
   const kit = kitStateOf(world)

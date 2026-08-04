@@ -81,6 +81,10 @@ export function milestoneKey(m: Milestone): string {
       return m.type
     case 'season-rank':
       return `season-rank:${m.seasonIndex ?? -1}`
+    // W2-ENDINGS: the break-even crossing is per CAREER - it can only happen once, because it is a
+    // crossing and not a level. Same identity shape as `prize` and for the same reason.
+    case 'break-even':
+      return m.type
   }
 }
 
@@ -101,6 +105,9 @@ export const MEMORY_EMOTION: Record<MilestoneType, AvatarEmotion> = {
   international: 'norm',
   injury: 'injury',
   'season-rank': 'norm',
+  // W2-ENDINGS: the week the tennis stopped being only a bill FOR GOOD, which is a bigger version of
+  // the same moment `prize` earns the smile for.
+  'break-even': 'happy',
 }
 
 // --- the facts ------------------------------------------------------------------------------

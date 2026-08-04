@@ -233,6 +233,16 @@ export type StopReason =
    *  the owner's complaint was that training weeks «просто скипались», and a stop the player can
    *  skip past is not a decision. See engine/knock.ts. */
   | 'knock'
+  /** W2-ENDINGS: the story has no next week. It outranks everything because its surface REPLACES
+   *  the app shell rather than laying a dialog over it – there is nothing behind an epilogue left
+   *  to stop for. `advanceWeeks` refuses to tick at all while it is latched. */
+  | 'ending'
+  /** W2-ENDINGS: SHE IS NINETEEN AND THE FORK IS OPEN (contract §4 #1/#2). Blocks like a knock and
+   *  for a stronger reason – two of its three answers end the career. */
+  | 'fork'
+  /** W2-ENDINGS: the natural end has asked her and she has not answered (contract §5.3). Blocks
+   *  like the fork; an off-season question a player can tick past is not a decision. */
+  | 'retirement'
 
 /** R11-1: the order the UI must SURFACE a week's stop reasons in, and the order `advanceWeeks`
  *  returns them in. One advance can stop for SEVERAL true reasons at once (the owner's lost injury
@@ -241,6 +251,10 @@ export type StopReason =
  *  silence). Medical events rank FIRST precisely because they may never be swallowed by a stop that
  *  can wait a click: they cost her entries and money the moment they land. */
 export const STOP_PRECEDENCE: readonly StopReason[] = [
+  // W2-ENDINGS: FIRST, above even the medical trio, because it is not a stop at all in the sense
+  // the rest of this list is. The others halt a week and hand it back to the tab shell; this one
+  // says the shell is over. Nothing below it has a surface left to render into.
+  'ending',
   'injury',
   'medical',
   // Third, with its two medical siblings and above everything that can wait a click: a walkover
@@ -258,6 +272,14 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // an ordinary training week – no tournament, no off-season), but it CAN co-occur with 'deadline'
   // and 'funds', which is exactly the ordering this line decides.
   'knock',
+  // W2-ENDINGS. The fork and the natural end's offer sit here, below the knock and above everything
+  // that owns a dismissable toast, because they BLOCK: `advanceWeeks` refuses to restart until they
+  // are answered. They are below the medical trio for the trio's own reason – those have already
+  // cost her money by the time they fire, and a question has not cost anything yet. They can
+  // co-occur with 'season-end' (the retirement offer is raised on the wrap week by construction) and
+  // with 'funds', which is exactly the ordering these two lines decide.
+  'fork',
+  'retirement',
   'tournament',
   'season-end',
   'deadline',
@@ -932,7 +954,21 @@ export interface ArrivalPreview {
  *  the tennis first PAID her, which on this ladder means her first W-family finish deep enough to
  *  cash. No schema bump: the milestones array is opaque to the migration ladder (rows pass through
  *  untouched), so widening the union is a new capture, not a new shape. */
-export type MilestoneType = 'title' | 'final' | 'prize' | 'international' | 'injury' | 'season-rank'
+export type MilestoneType =
+  | 'title'
+  | 'final'
+  | 'prize'
+  | 'international'
+  | 'injury'
+  | 'season-rank'
+  /** ⚠ THE TURN, AND IT CANNOT BE RECONSTRUCTED AT THE END (contract §9.4). Slot 6 of the album is
+   *  the week her cumulative prize money first passed her cumulative costs – the break-even the
+   *  whole game is about. The finance ledger keeps SIXTY WEEKS, and the crossing may happen in
+   *  season seven, so by the time the epilogue asks, the arithmetic behind the answer has been
+   *  pruned out of the save. It has to be captured the week it happens or the album's central page
+   *  is empty for everybody who earned it. Career-total counters (`careerTotals`, v39) are what
+   *  make the test cheap enough to run every week. */
+  | 'break-even'
 
 /** One captured milestone. Deliberately tiny: type + week + the minimal payload its memory line
  *  needs. Identity (for idempotent capture) is `milestoneKey` in engine/diary.ts. */
@@ -1642,6 +1678,176 @@ export interface TrainingRead {
   text: string
 }
 
+// --- HOW A CAREER ENDS (schema v39, career-contract-v1.md §4) ----------------------------------
+
+/** THE SIX ENDINGS THE CONTRACT SIGNS OFF, and they are six FATES rather than five failures and a
+ *  win (adult-tour-and-endings.md §6 call 4: «"stop" CAN be the right answer at 19»).
+ *
+ *  ⚠ `'natural'` AND `'plateau'` ARE ONE MECHANISM AND TWO REASONS, on purpose. §5.2 asked for the
+ *  plateau «в дешёвой форме»: the natural end already offers her the question each off-season from
+ *  29, and the plateau reading simply lets it ask EARLIER. So there is one offer, one answer and one
+ *  latch – and the type records WHICH of the two put the question in front of her, because §5.2's
+ *  closing line is "the epilogue says which of the two it was".
+ *
+ *  ⚠ `'college'` IS THE ONLY ONE THAT RESUMES (§5.1). It latches like the rest – the album is shown,
+ *  every mutating command refuses – and then the hand-off page's single button spends four years in
+ *  one tap and clears the latch. Four years amateur on a scholarship, no ranking points, and she is
+ *  back at twenty-two with no ranking at all, which is what a career that entered nothing for 208
+ *  weeks has by construction: every result she owned has aged out of the 52-week window. */
+export type CareerEndingType =
+  | 'stopped'
+  | 'college'
+  | 'bankruptcy'
+  | 'injury'
+  | 'natural'
+  | 'plateau'
+
+export interface CareerEnding {
+  type: CareerEndingType
+  /** the absolute career week the story stopped having a next week */
+  week: number
+  /** her age that week, in whole years – `kidAgeYears`, the GIRL's clock and not the career band */
+  ageYears: number
+  /** one short line of specifics: the layoff, the debt spell, the seasons flat. Never a verdict. */
+  detail: string
+  /** COLLEGE ONLY: the week she comes back. Null on the five that do not resume. */
+  resumesWeek: number | null
+}
+
+export type ForkAnswer = 'continue' | 'college' | 'stop'
+
+/** THE FORK AT NINETEEN (§4 #1/#2, adult spec B2 – "the most expensive click in the game").
+ *
+ *  ⚠ IT BLOCKS, exactly as an undecided knock does. A question the player can dismiss with one tap
+ *  and re-press past is a notification, not a decision, and this is the one decision the whole
+ *  second act hangs off. `answer === null` is the open state. */
+export interface ForkState {
+  askedWeek: number
+  answer: ForkAnswer | null
+}
+
+/** THE NATURAL END'S OFFER (§5.3). Raised in the off-season, answered before time can move again.
+ *
+ *  ⚠ `final: true` IS THE FLOOR AT 38, AND THE FLOOR IS NOT A RETIREMENT RULE. 38 is the age at
+ *  which the game STOPS ASKING: from 29 she may always refuse, and at 38 the last offer is made and
+ *  taken. So the final offer carries no refusal – not because a mechanic retires her, but because
+ *  the question has run out. The copy has to carry that and this flag is what lets it. */
+export interface RetirementOffer {
+  askedWeek: number
+  seasonIndex: number
+  /** which reading put the question in front of her – `'age'` from 29, `'plateau'` earlier */
+  reason: 'age' | 'plateau'
+  /** the last offer: made and taken (§5.3) */
+  final: boolean
+}
+
+/** THE FOUR-YEAR FREEZE (§5.1). Written the week she chooses college; `doneWeek` is null while the
+ *  jump has not been spent yet, so a save taken mid-decision resumes into the same button. */
+export interface CollegeState {
+  fromWeek: number
+  untilWeek: number
+  doneWeek: number | null
+}
+
+/** CAREER-TOTAL MONEY, and it is a NEW FACT rather than a view of an old one – the same argument
+ *  `trophiesByTier` makes. `financeWeeks` prunes to a 60-week trailing window (FINANCE_WEEKS), so
+ *  by season three the early bills are simply not in the save any more; `seasonHistory` keeps a NET
+ *  delta per season, which cannot separate gross in from gross out. A fifteen-season reckoning is
+ *  therefore not recoverable from anything already persisted.
+ *
+ *  ⚠ `prizeCents` IS TRACKED APART FROM `earnedCents` BECAUSE SLOT 6 IS ABOUT THE TENNIS, not about
+ *  the household. Parent income, sponsor money, the academy grant and savings interest are all
+ *  income; none of them is the tennis paying for itself. The break-even the game is about is prize
+ *  money against costs (§9.2 slot 6). */
+export interface CareerTotals {
+  earnedCents: number
+  spentCents: number
+  prizeCents: number
+}
+
+/** THE DEBT SPELL, surfaced while she is under water – the WARNING PHASE bankruptcy wants before
+ *  the fact (adult spec B4). One bad week is never death: the spell resets the week funds recover. */
+export interface DebtView {
+  sinceWeek: number
+  weeks: number
+  graceWeeks: number
+}
+
+/** ONE PAGE OF THE ALBUM (career-contract-v1.md §9.1). Four things and no fifth. */
+export interface AlbumPage {
+  /** 1..7 – the slots are FIXED so the album has a shape every career shares (§9.2) */
+  slot: number
+  /** ⚠ POINT 4, AND IT IS ALWAYS VISIBLE: why this week is in the album. The owner's «видимое
+   *  правило отбора». An engine that silently chooses "what mattered" is the game judging; an
+   *  engine that shows its reason is the game explaining. */
+  why: string
+  /** POINT 2: the week in her own hand, ON THE CARD – the polaroid's own bottom lip, in the app's
+   *  handwriting face. The engine writes the words; `Polaroid`'s caption slot renders them. */
+  caption: string
+  /** POINT 3: ONE hard fact off the milestone itself – the cheque, the rank, the opponent, the
+   *  layoff. Never a computed summary. Null on an empty face, which has no fact to give. */
+  fact: string | null
+  /** the absolute career week this page is, or null on an empty face */
+  week: number | null
+  /** the season the page belongs to, for the date under the caption; null on an empty face */
+  seasonIndex: number | null
+  /** POINT 1: the photograph, as the art system's two keys. The ENGINE never builds a URL – it
+   *  hands over the age band and the week's emotion and the UI calls `portraitUrl`. */
+  stage: PortraitStage
+  emotion: AvatarEmotion
+  /** ⚠ AN EMPTY FACE, and only slots 3 and 6 can ever have one (§9.2, corrected 05.08). Slot 5's
+   *  empty face was dropped: injury prevalence is ~51% a season and the slot's own fallback fills
+   *  even for a career that never was, so it is never empty in practice. */
+  empty: boolean
+}
+
+/** §9.3 – UNDERNEATH THE ALBUM: the full scroll, every milestone in order, paged by season. §5.5's
+ *  option (a), kept as the floor rather than as the surface. */
+export interface ScrollSeason {
+  seasonIndex: number
+  year: number
+  ageYears: number
+  rows: { week: number; label: string; detail: string | null }[]
+}
+
+/** THE HAND-OFF (§5.6): an OFFER, not a credits roll. One tap to a new career, the next daughter
+ *  generated automatically, and exactly ONE question asked – the starting-capital fork the player
+ *  already answers at onboarding. Nothing mechanical carries over. */
+export interface HandoffView {
+  /** ⚠ THE SEAM THAT ALWAYS ANSWERS NO IN v1. «Если ребенка родила за игру – то вполне может
+   *  попробовать продолжить»: if a child was born during the career, THAT child is the next
+   *  daughter. Pregnancy is post-v1 (§5.4), so this is false for every career this build can
+   *  produce – but the question is ASKED, and asking it now is what stops the lineage needing a
+   *  retrofit the day the system lands. */
+  childBorn: boolean
+  /** ⚠ FRESH FORK, NOT THE MOTHER'S BALANCE (§5.6, the architect's call). Carrying her final money
+   *  over is exactly the meta-currency §5.6 rules out, and a family that ended rich would open the
+   *  next daughter's story with its central tension already resolved. */
+  freshCapitalFork: true
+  /** COLLEGE ONLY: the week she comes back, and how old she is then. */
+  resumesWeek: number | null
+  resumesAgeYears: number | null
+}
+
+/** THE EPILOGUE, whole. Present on the snapshot exactly while `world.ending` is latched, which is
+ *  why the takeover gates on this FIELD and never on a stop reason: permanent state must survive
+ *  any fresh snapshot (the same argument App.vue makes for the knock). */
+export interface EndingView {
+  ending: CareerEnding
+  /** exactly seven pages, in slot order */
+  album: AlbumPage[]
+  scroll: ScrollSeason[]
+  handoff: HandoffView
+  /** the career's money, whole – not a score, just the two numbers the ledger kept */
+  totals: CareerTotals
+  seasonsPlayed: number
+  /** best (smallest) season-end rank she ever held, or null if she never closed a season */
+  bestRank: number | null
+  titles: number
+  /** how many times she answered "one more year" (§5.3's decade of decisions) */
+  oneMoreYearCount: number
+}
+
 export interface Snapshot {
   schemaVersion: number
   careerId: string
@@ -1871,6 +2077,24 @@ export interface Snapshot {
   stopReasons?: StopReason[]
   /** present while a tournament reveal is in progress (drives TournamentFlow) */
   pending?: PendingView
+  /** THE EPILOGUE, or null while the story still has a next week (schema v39).
+   *
+   *  ⚠ THE TAKEOVER GATES ON THIS FIELD AND NEVER ON THE STOP REASON, for exactly the reason
+   *  App.vue gives for the knock: a stop reason is a property of the LAST ADVANCE, and permanent
+   *  state has to survive any fresh snapshot. Reload an ended career and the album is there again;
+   *  the stop reason is long gone. */
+  ending: EndingView | null
+  /** the debt spell while she is under water, else null – the warning phase before bankruptcy */
+  debt: DebtView | null
+  /** the fork at nineteen while it is OPEN and unanswered, else null */
+  fork: { askedWeek: number; ageYears: number } | null
+  /** the natural end's offer while it is OPEN and unanswered, else null */
+  retirementOffer: RetirementOffer | null
+  /** her four years at college, once she has chosen them – null for every career that did not */
+  college: CollegeState | null
+  /** career-total money (v39). On the snapshot always, not only at the end: the Money screen's
+   *  "since week one" row reads it, and it is what makes the reckoning cheap. */
+  careerTotals: CareerTotals
 }
 
 export interface SlotMeta {
@@ -1945,6 +2169,14 @@ export type ToWorker =
   // (charged at once, and she is holding a new one from this week); moving DOWN is free and takes
   // effect at the next scheduled purchase - nobody is refunded for a racket they own.
   | { id: number; type: 'setKitGrade'; line: KitLine; grade: KitGrade; baseRevision: number }
+  // W2-ENDINGS. Three commands, and every one of them is an ANSWER to a question the engine asked:
+  // the fork at nineteen, the natural end's offer, and the single button on a college epilogue.
+  // None of them can be issued unprompted – the engine refuses when its question is not open, which
+  // is what stops a stale screen ending a career that never asked.
+  | { id: number; type: 'answerFork'; answer: ForkAnswer; baseRevision: number }
+  | { id: number; type: 'answerRetirement'; retire: boolean; baseRevision: number }
+  // «Four years later» – spends the college freeze in one tap and clears the latch (§5.1).
+  | { id: number; type: 'resumeFromCollege'; baseRevision: number }
   | { id: number; type: 'save'; slot?: string }
   | { id: number; type: 'saveNamed'; name: string }
   // W1-INTEGRITY-A (TB-01): restore a slot AS THE ACTIVE CAREER – the restored state is committed

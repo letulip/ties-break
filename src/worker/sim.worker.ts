@@ -22,8 +22,12 @@ import {
   revealTournamentRound,
   skipTournament,
   closeTournament,
+  answerFork,
+  answerRetirement,
+  resumeFromCollege,
   toSnapshot,
   refreshDerivedRankCaches,
+  guardNotEnded,
   type WorldState,
 } from '../engine/world'
 import { mainStateConsistent, resumeMain, type MainRngState, type Rng } from '../engine/rng'
@@ -294,8 +298,23 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'cancelPractice': {
       return mutate(msg.id, msg.baseRevision, (world) => cancelPractice(world, msg.week))
     }
+    // W2-ENDINGS. Three answers, and none of them can be issued unprompted: the engine refuses when
+    // its own question is not open, which is what stops a stale screen ending a career that was
+    // never asked. `resumeFromCollege` is the one command in the game that CLEARS an ending – it
+    // spends four years of weeks inside a single mutate, so the autosave that commits it commits a
+    // twenty-two-year-old.
+    case 'answerFork': {
+      return mutate(msg.id, msg.baseRevision, (world) => answerFork(world, msg.answer))
+    }
+    case 'answerRetirement': {
+      return mutate(msg.id, msg.baseRevision, (world) => answerRetirement(world, msg.retire))
+    }
+    case 'resumeFromCollege': {
+      return mutate(msg.id, msg.baseRevision, (world, rng) => resumeFromCollege(world, rng))
+    }
     case 'setPlan': {
       return mutate(msg.id, msg.baseRevision, (world) => {
+        guardNotEnded(world)
         const total = msg.plan.train + msg.plan.rest
         if (total !== 100 || msg.plan.train < 0 || msg.plan.rest < 0) {
           throw new Error('Week plan must split 100% between training and rest')
@@ -333,6 +352,7 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // Season-Life slice B: the toggle just reflects/sets the flag (default = hired coach). Its
       // recovery/cost lever is billed in Slice C; no engine draw, no schema impact here.
       return mutate(msg.id, msg.baseRevision, (world) => {
+        guardNotEnded(world)
         world.physioActive = msg.active
       })
     }

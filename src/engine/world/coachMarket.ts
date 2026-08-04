@@ -21,6 +21,7 @@ import { addEvent, seasonStartWeek } from './ledger'
 import { ageAtWeek, START_AGE_YEARS } from './age'
 import { kidPoints } from './ladder'
 import type { WorldState } from '../world'
+import { guardNotEnded } from './endings'
 
 // --- THE COACH MARKET (v23) --------------------------------------------------------------------
 
@@ -55,6 +56,10 @@ export function practiceCoachRateFor(world: WorldState, week: number): number {
  *  `null` fires the parent back onto the court, which must always be allowed: a family that cannot
  *  pay has to be able to stop paying. */
 export function hireCoach(world: WorldState, coachId: string | null): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   if (coachId === null) {
     if (world.coachId === null) return
     world.coachId = null
@@ -149,6 +154,10 @@ export function matchesEverPlayed(world: WorldState): number {
  *  arithmetic downstream of an unchanged pickInt does with the number it drew, so the frozen MAIN
  *  capture cannot move. Takes effect from the NEXT tick; this week's bill is already written. */
 export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   if (world.coachOnEventWeeks === on) return
   world.coachOnEventWeeks = on
   addEvent(world, {

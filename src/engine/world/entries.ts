@@ -22,12 +22,17 @@ import { isCappedTier, isCappedProTier } from './entryCaps'
 import { chargeMandatoryPenalty, mandatoryBinds } from './mandatory'
 import { ECONOMY } from '../economy'
 import type { WorldState } from '../world'
+import { guardNotEnded } from './endings'
 
 
 /** Enter the kid in a scheduled event: validates deadline / funds / duplicates / ranking
  *  eligibility, then charges the fee immediately (expense event) and records the entry (entry
  *  event). Eligibility is direction-aware: too low to qualify vs graduated out of the tier. */
 export function enterEvent(world: WorldState, eventId: string): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')
   if (world.entries.includes(eventId)) throw new Error('Already entered this event')
@@ -89,6 +94,10 @@ export function enterEvent(world: WorldState, eventId: string): void {
 
 /** Withdraw before the deadline: refunds the fee (income event) + records it (entry event). */
 export function withdrawEvent(world: WorldState, eventId: string): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   if (!world.entries.includes(eventId)) throw new Error('Not entered in this event')
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')
@@ -153,6 +162,10 @@ export function withdrawEvent(world: WorldState, eventId: string): void {
  *
  *  Pure state, ZERO RNG draws. */
 export function cancelEntry(world: WorldState, eventId: string): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   if (!world.entries.includes(eventId)) throw new Error('Not entered in this event')
   const event = eventById(world, eventId)
   if (!event) throw new Error('Unknown event')

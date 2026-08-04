@@ -26,6 +26,7 @@ import { practiceForWeek, vacationForWeek } from './bookings'
 import { coachSinceWeek, matchesEverPlayed } from './coachMarket'
 import { startingSkills } from './player'
 import type { WorldState } from '../world'
+import { guardNotEnded } from './endings'
 
 // --- W4: THE KNOCK ------------------------------------------------------------
 //
@@ -251,6 +252,10 @@ export function coachLoadViewOf(world: WorldState): CoachLoadView {
  *  `knockRestWeek`, a loaded roll by `knockTauFactor`). ZERO draws, on any stream – which is what
  *  makes a decision the player can take at any moment safe to put inside a deterministic sim. */
 export function decideKnock(world: WorldState, choice: KnockChoice): void {
+  // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
+  // because the worker is not the gate - a tab left open behind the epilogue must not be able to
+  // spend money for a girl who has retired.
+  guardNotEnded(world)
   const k = world.knock
   if (!k) throw new Error('Nothing to decide')
   if (k.choice !== null) throw new Error('That knock has already been answered')

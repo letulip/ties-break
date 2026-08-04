@@ -3,8 +3,13 @@ import {
   DEFAULT_PROFILE,
   STOP_PRECEDENCE,
   WEEK_PLAN_PRESETS,
+  type CareerEnding,
+  type CareerTotals,
+  type CollegeState,
   type FamilyBackground,
   type FinanceWeek,
+  type ForkState,
+  type RetirementOffer,
   type Knock,
   type KnockRecord,
   type Milestone,
@@ -141,8 +146,42 @@ export { enterEvent, withdrawEvent, cancelEntry }
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { fireMilestone, captureMilestone, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
-export { emptySeasonRecord, emptyTrophyLedger }
+import { fireMilestone, captureMilestone, captureBreakEven, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
+export { emptySeasonRecord, emptyTrophyLedger, captureBreakEven }
+// W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
+// snapshot, the tests and the bench all read the one implementation - the same contract every other
+// extracted module here keeps.
+import {
+  answerFork,
+  answerRetirement,
+  buildDebtView,
+  buildEndingView,
+  cheapestEntryFeeCents,
+  guardNotEnded,
+  inCollege,
+  latchEnding,
+  lastRungSeasonIndexOf,
+  plateauViewOf,
+  autoEndingViewOf,
+  resolveEndings,
+  wasThereAChild,
+} from './world/endings'
+export {
+  answerFork,
+  answerRetirement,
+  buildDebtView,
+  buildEndingView,
+  cheapestEntryFeeCents,
+  guardNotEnded,
+  inCollege,
+  latchEnding,
+  lastRungSeasonIndexOf,
+  plateauViewOf,
+  autoEndingViewOf,
+  resolveEndings,
+  wasThereAChild,
+}
+export { buildAlbum, buildScroll } from './world/album'
 import { localSponsorCents, reviewSponsors, acceptOffer, declineOffer, travelCostFor, academyCoverOf, chargeTravel, payRetainer, appearanceFeeFor, resultBonusFor, isRetainerWeek } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
@@ -224,7 +263,7 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // reservations had already drifted by one; versions are allocated on arrival, not booked, and the
 // append-only migration ladder is what makes that safe. Endings and psyche take the next free
 // numbers when they ship.
-export const SAVE_SCHEMA_VERSION = 38
+export const SAVE_SCHEMA_VERSION = 39
 
 
 
@@ -545,6 +584,36 @@ export interface WorldState {
    *  `null` IS the shipped behaviour, so absence is not a hole - it is the identity element. A real
    *  career always has one: `createWorld` writes it and the v36 -> v37 migration back-fills it. */
   kit?: KitState
+
+  // --- W2-ENDINGS (v39): where the career ends -------------------------------------------------
+
+  /** THE TERMINAL LATCH, or null while the story still has a next week (v39).
+   *
+   *  ⚠ THE LATCH LIVES HERE AND BLOCKS AT `advanceWeeks` / COMMAND LEVEL. `tickWeek` STAYS TOTAL –
+   *  it never early-returns on an ended world. That is not tidiness, it is the one place a naive
+   *  build corrupts saves: `replayMainState` re-runs `tickWeek` on a default no-input probe world to
+   *  reconstruct the MAIN position, and a probe that goes bankrupt mid-replay has to keep drawing
+   *  identically to one that does not. A guard inside `tickWeek` breaks RNG recovery by
+   *  construction. See tests/ending.test.ts for the twin that pins it. */
+  ending: CareerEnding | null
+  /** The first week of the CURRENT unbroken spell below zero, or null when solvent (v39). The
+   *  WARNING PHASE bankruptcy wants before the fact – Money shows the countdown off this, and one
+   *  solvent week clears it. */
+  debtSinceWeek: number | null
+  /** CAREER-TOTAL MONEY (v39), folded at the `accrueFinance` choke point. `financeWeeks` prunes to
+   *  60 weeks, so a fifteen-season reckoning is not recoverable from it – see `CareerTotals`. */
+  careerTotals: CareerTotals
+  /** THE FORK AT NINETEEN (v39) – raised on her birthday week, open until answered. Null before it
+   *  has ever been raised. */
+  fork: ForkState | null
+  /** THE NATURAL END'S OFFER (v39) while it is open and unanswered, else null. */
+  retirementOffer: RetirementOffer | null
+  /** How many times she answered "one more year" (v39). §5.3's decade of decisions, and the only
+   *  fact the epilogue can print about it. */
+  oneMoreYearCount: number
+  /** HER FOUR YEARS AT COLLEGE (v39), once she has chosen them – null for every career that did
+   *  not. `doneWeek` is null while the freeze has not been spent yet. */
+  college: CollegeState | null
 }
 
 export const STARTING_FUNDS_CENTS: Record<FamilyBackground, number> = {
@@ -696,6 +765,12 @@ function resolveParentIncome(world: WorldState): void {
  *  tournaments, not from training. What was wrong on those weeks was the COPY, not the money: the notes
  *  claimed the racquet never left the hall while $933 of coaching was billed. Fixed in engine/diary.ts. */
 export function coachWorksThisWeek(world: WorldState): boolean {
+  // ⚠ AND FOUR YEARS AT COLLEGE ARE NOT COACHING WEEKS EITHER (W2-ENDINGS, §5.1: «the family stops
+  // paying»). The scholarship is the whole economic point of that fork - it is the only place in
+  // the game where the money goes the other way - so the family cannot still be billed for a coach
+  // she is not training with. One clause moves the bill AND the development rate together, which is
+  // the reason both of them read this predicate and not a copy of it.
+  if (inCollege(world)) return false
   if (vacationForWeek(world, world.week) !== undefined) return false
   return world.coachOnEventWeeks || !isCompetitionWeek(world)
 }
@@ -757,7 +832,11 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   if (rng() < ECONOMY.sponsor.rollChance) {
     const [glo, ghi] = ECONOMY.sponsor.amountCents
     const gift = pickInt(rng, glo, ghi)
-    if (ECONOMY.sponsor.eligible.includes(world.profile.background)) {
+    // ⚠ AND AN AMATEUR ON A SCHOLARSHIP TAKES NO SPONSOR MONEY (W2-ENDINGS). Same post-draw
+    // discipline as the background clause it rides on: the roll and the gift draw BOTH still happen,
+    // and only the payout is discarded, so the MAIN sequence cannot depend on a player's answer at
+    // the fork. That is invariant 2 - player choices may never re-roll the world's dice.
+    if (!inCollege(world) && ECONOMY.sponsor.eligible.includes(world.profile.background)) {
       world.fundsCents += gift
       addEvent(world, {
         week: world.week,
@@ -1096,6 +1175,11 @@ function recomputeRankAndMilestones(world: WorldState): void {
   // survived because it reached for `computeRanking` directly instead. It now defers to the one
   // function that owns the caches, so the field cannot mean two things again.
   recomputeKidRank(world)
+  // W2-ENDINGS: ...and the ONE milestone this step still fires. It lives here because this is the
+  // step that runs on BOTH paths – inline on a normal week, deferred to finalizeTournament on a
+  // reveal week – which is exactly the pair the crossing can land on (the cheque arrives at
+  // finalize; the costs arrive on any week at all). Idempotent, so being reached twice is free.
+  captureBreakEven(world)
   // Rank milestones ("top 10/50/1") intentionally removed: in the early season almost no one
   // has points, so the first result rockets her to a single-digit rank and all of them fire at
   // once (reads absurdly). A real "world" ranking belief system belongs to the world-news
@@ -1333,12 +1417,18 @@ function finalizeTournament(world: WorldState): void {
   }
   recomputeRankAndMilestones(world)
   housekeep(world)
+  // W2-ENDINGS: the deferred step 7. A reveal week's money is not settled until here – the entry
+  // fee and the travel went out on the tick, the cheque comes in on this line – so a bankruptcy
+  // check on the tick would have been reading a balance that was about to change.
+  resolveEndings(world)
   p.finished = true
 }
 
 /** Reveal ONE more kid match: emit its News `match` event, bump `revealedRounds`, and finalize the
  *  run once the kid's last match (elimination or the final) has been shown. Idempotent when done. */
 export function revealTournamentRound(world: WorldState): void {
+  // ⚠ W2-ENDINGS: the engine re-validates every command; the worker is not the gate.
+  guardNotEnded(world)
   const p = world.pendingTournament
   if (!p || p.finished) return
   const event = eventById(world, p.eventId)
@@ -1357,6 +1447,8 @@ export function revealTournamentRound(world: WorldState): void {
 
 /** Reveal every remaining round at once, then finalize – the "Skip tournament" path to the finale. */
 export function skipTournament(world: WorldState): void {
+  // ⚠ W2-ENDINGS: the engine re-validates every command; the worker is not the gate.
+  guardNotEnded(world)
   const p = world.pendingTournament
   if (!p || p.finished) return
   const event = eventById(world, p.eventId)
@@ -1372,6 +1464,8 @@ export function skipTournament(world: WorldState): void {
 
 /** Dismiss a finished reveal (the finale's "Continue"): clear the pending state so the week closes. */
 export function closeTournament(world: WorldState): void {
+  // ⚠ W2-ENDINGS: the engine re-validates every command; the worker is not the gate.
+  guardNotEnded(world)
   world.pendingTournament = null
 }
 
@@ -1657,6 +1751,16 @@ export function createWorld(
     // v37: the shipped rung on every line. She turns up with the frame most juniors own - the ladder
     // runs one rung below it and two above, and which way she goes is the parent's money.
     kit: defaultKitState(),
+    // W2-ENDINGS (v39). Every one of these is the identity: the story has a next week, the family is
+    // solvent, nothing has been earned or spent, nobody has been asked anything and she has not been
+    // to college. The migration's back-fill is the same set, for the same reason.
+    ending: null,
+    debtSinceWeek: null,
+    careerTotals: { earnedCents: 0, spentCents: 0, prizeCents: 0 },
+    fork: null,
+    retirementOffer: null,
+    oneMoreYearCount: 0,
+    college: null,
   }
   addEvent(world, {
     week: 0,
@@ -1805,7 +1909,9 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // 0a0c (v21): AND THE ACADEMY DECIDES. It reads `world.kidRank` before this season can touch
     // it – the rank the year just gone earned her – which is precisely what an academy reviewing
     // her in the off-season would be looking at. ZERO draws, so it is safe this far up the tick.
-    reviewAcademy(world)
+    // ⚠ ...AND NOT WHILE SHE IS AT COLLEGE (W2-ENDINGS): she already has a scholarship, and it is
+    //   not this one. Zero draws either way, so the boundary block's draw count is untouched.
+    if (!inCollege(world)) reviewAcademy(world)
     // 0a0d: AND THE FIELD TURNS OVER. Last, because everything above is about the season that just
     // ENDED and wants the field that played it – the academy's verdict in particular is a reading
     // of her standing among those players, not among their replacements. ZERO main-stream draws:
@@ -1831,7 +1937,10 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //         Placed here, in the same zero-main-draw region the boundary block occupies, and for the
   //         same reason: it takes at most one draw and that draw is on `seed:offer:<week>`, its own
   //         sub-stream. The frozen MAIN capture (41550 / e6b0c709) cannot see it.
-  if (isSponsorReviewWeek(world.week)) reviewSponsors(world)
+  // ⚠ AND NOBODY WRITES TO AN AMATEUR (W2-ENDINGS). A college player on a scholarship cannot take
+  //   an endorsement, which is a real rule and also the only thing that keeps the four-year freeze
+  //   from being free money. `reviewSponsors` draws on `seed:offer:<week>`, never MAIN.
+  if (isSponsorReviewWeek(world.week) && !inCollege(world)) reviewSponsors(world)
 
   // 0a0c-ter (W3-ACT2 §7): AND THE PROFESSIONAL RUNGS PAY A QUARTERLY RETAINER. Four arrivals a
   //         season on fixed offsets (0 / 13 / 26 / 39) rather than one number at the boundary,
@@ -1893,7 +2002,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
 
   // 1b. recurring gear line-items (round-7 a). Zero main-stream draws – purpose-scoped
   //     sub-streams only – so this never perturbs the weekly draw count.
-  resolveGear(world)
+  // ⚠ AND NOT WHILE SHE IS AT COLLEGE (W2-ENDINGS). Her kit is the university's for four years, so
+  //   the family stops buying frames and stringing too. Free of the invariant this file guards
+  //   everywhere else: every gear line runs on a `seed:gear:<category>` sub-stream, so skipping the
+  //   purchase costs the MAIN sequence nothing at all.
+  if (!inCollege(world)) resolveGear(world)
 
   // 1c. Season-Life availability. ZERO main-stream draws: rollInjury/resolvePhysio pull only
   //     from the private per-week `:injury:`/`:physio:` sub-streams and accrueCondition is pure
@@ -2129,7 +2242,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     exactly as `rollInjury` reads `seed:injury:<week>` – so the frozen capture (41550 /
   //     e6b0c709) cannot move. `ordinaryTrainingWeek` also rules out every week with a pending
   //     tournament, so a knock can never arrive on a week the reveal flow still owns.
-  rollKnock(world)
+  // ⚠ AND NOT AT COLLEGE, for a mechanical reason as well as a fictional one: a knock BLOCKS the
+  //   advance until the parent answers it, and there is no parent in the loop for those four years -
+  //   an unanswered knock raised inside the freeze would strand the jump. `seed:knock:<week>` is a
+  //   sub-stream, so the skipped draw is invisible to the MAIN capture.
+  if (!inCollege(world)) rollKnock(world)
 
   // 3d. AND SHE HAS A BIRTHDAY. The owner, 30.07: the birth month should show up in the notes.
   //
@@ -2178,6 +2295,11 @@ export function tickWeek(world: WorldState, rng: Rng): void {
     // is deliberate: the tour and the brands both settle up in the first quiet week.
     if (isSponsorReviewWeek(world.week)) settleMandatoryQuota(world, world.week)
     maybeFireSeasonWrapUp(world)
+    // 7. W2-ENDINGS – WHERE THE CAREER ENDS. Last, and AFTER the wrap-up, because the natural end's
+    //    offer is a reading of the season that has just closed: `seasonHistory` has to have that
+    //    row in it before the plateau can be measured against it. Pure state, ZERO draws on any
+    //    stream, and `tickWeek` still has no ended-world early return (see world/endings.ts).
+    resolveEndings(world)
   }
 }
 
@@ -2193,6 +2315,8 @@ export function tickWeek(world: WorldState, rng: Rng): void {
  *  once a match has been shown the run is under way. Zero draws – the discarded shadow already
  *  ran on its event-scoped stream, so the MAIN weekly sequence is untouched either way. */
 export function skipEvent(world: WorldState, eventId: string): void {
+  // ⚠ W2-ENDINGS: the engine re-validates every command; the worker is not the gate.
+  guardNotEnded(world)
   const p = world.pendingTournament
   if (!p || p.eventId !== eventId) throw new Error('No tournament to skip this week')
   if (p.finished || p.revealedRounds > 0) throw new Error('The tournament is already under way')
@@ -2266,6 +2390,12 @@ export function skipEvent(world: WorldState, eventId: string): void {
  *  the order to show them in. ZERO extra RNG draws and the identical number of ticks – the loop
  *  still breaks on the first week that stops it, it just no longer forgets the rest of the news. */
 export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopReason[] {
+  // ⚠ W2-ENDINGS – AND THE STORY HAS NO NEXT WEEK. First, above every other block, because it is
+  // not a pause: there is nothing left to resolve and nothing to come back to. The epilogue's
+  // surface REPLACES the app shell rather than laying a dialog over it, so an advance behind it
+  // would be ticking a world nobody can see. The one ending that resumes clears this latch through
+  // `resumeFromCollege`, which is a command and not a tick.
+  if (world.ending) return ['ending']
   // A pending reveal must resolve (and close) before time moves on.
   if (world.pendingTournament) return ['tournament']
   // ⚠ W4 – AND SO MUST AN UNANSWERED KNOCK. This line is the mechanical heart of the whole slice.
@@ -2277,6 +2407,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
   // `decideKnock` runs. Both branches of the dialog are valid answers, so this can never dead-end a
   // career (see KnockDialog: there is no third button and no way out that is not a choice).
   if (pendingKnock(world)) return ['knock']
+  // ⚠ ...AND SO DOES AN UNANSWERED FORK OR AN UNANSWERED OFFER, on the identical contract. Two of
+  // the fork's three answers END the career, so a player who could press +4 past it would have the
+  // engine choosing "continue" for him – which is exactly the «просто скипались» complaint the knock
+  // block above exists to answer, one order of magnitude more expensive.
+  if (world.fork !== null && world.fork.answer === null) return ['fork']
+  if (world.retirementOffer !== null) return ['retirement']
   const stops = new Set<StopReason>()
   for (let i = 0; i < weeks; i++) {
     const nextWeek = world.week + 1
@@ -2339,11 +2475,55 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // a week or more AFTER the onset, when the injury is no longer fresh and nothing else stops.
     if (world.walkoverWeek === world.week) stops.add('walkover')
     if (world.fundsCents < 0) stops.add('funds')
+    // W2-ENDINGS. The three that the week may have just produced. `'ending'` is collected rather
+    // than returned early so a week that is BOTH an ending and something else (the classic: the
+    // season wraps up and she takes the offer on the same week) still reports both – R11-1's rule,
+    // and the epilogue is the surface that renders last anyway.
+    if (world.ending) stops.add('ending')
+    if (world.fork !== null && world.fork.answer === null) stops.add('fork')
+    if (world.retirementOffer !== null) stops.add('retirement')
     if (stops.size > 0) break
   }
   // Precedence order, not insertion order: the caller renders them in this sequence, and the
   // medical pair leads it so nothing can bury them (see STOP_PRECEDENCE).
   return STOP_PRECEDENCE.filter((r) => stops.has(r))
+}
+
+/** «FOUR YEARS LATER» – the one command that CLEARS an ending (contract §5.1).
+ *
+ *  College is the only ending that resumes, and this is where it does. The latch comes off, four
+ *  years of weeks are spent in one call, and she comes out the other side at twenty-two.
+ *
+ *  ⚠ THE WEEKS ARE REALLY TICKED, not skipped over. The world has to LIVE those four years: the
+ *  cohort ages, the conveyor turns it over twice, the field she will come back to is not the field
+ *  she left, and she keeps developing on the age curve because she is playing student tennis the
+ *  whole time. A `world.week += 208` would have handed back a world whose ranking table, calendar
+ *  and rivals were all four years stale.
+ *
+ *  ⚠ AND HER RANKING GOES ON ITS OWN, WITH NO RULE WRITTEN FOR IT. She enters nothing for 208
+ *  weeks, so every result she owned ages out of the rolling 52-week window and she arrives at
+ *  twenty-two on zero points, below the whole field – «no ranking at all», exactly as §5.1 says,
+ *  bought with no mechanism whatsoever. Back in through qualifying is what the ladder's own floor
+ *  already gives her.
+ *
+ *  ⚠ THE LOOP BREAKS ON A FRESH ENDING. A career-ending injury can land at college – she is playing
+ *  a lot of tennis – and when it does she never comes back, which is a true story rather than an
+ *  edge case to be defended against. */
+export function resumeFromCollege(world: WorldState, rng: Rng): void {
+  const college = world.college
+  if (!college || college.doneWeek !== null) throw new Error('She is not at college')
+  if (!world.ending || world.ending.type !== 'college') throw new Error('This career is not on the college branch')
+  world.ending = null
+  while (world.week < college.untilWeek && world.ending === null) tickWeek(world, rng)
+  college.doneWeek = world.week
+  if (world.ending === null) {
+    addEvent(world, {
+      week: world.week,
+      type: 'milestone',
+      keep: true,
+      text: `Four years, a degree and no ranking at all. She is ${kidAgeYears(world.week, world.profile.birthMonth)}, and the only way back in is qualifying.`,
+    })
+  }
 }
 
 
