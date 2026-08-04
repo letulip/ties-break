@@ -39,6 +39,8 @@ import {
   closeTournament,
   bookVacation,
   isBlackoutWeek,
+  mandatoryBinds,
+  isSuspendedAt,
   recomputeKidRank,
   seasonIndexOf,
   tournamentRunStrain,
@@ -128,6 +130,13 @@ interface SeasonRow {
   weeksInjured: number
   /** the deepest trough of the season - the "did the re-price merely move the floor" read */
   trough: number
+  /** ⚠ THE MANDATORY REGIME'S OWN RECEIPT (W3-ACT2 §6). This probe is the only tool in the repo that
+   *  puts a career at the TOP of the merged table for whole seasons, which is exactly the standing
+   *  the regime binds - so it is the only place the question "is the regime survivable at the volume
+   *  a body can actually carry" can be measured rather than argued. */
+  penaltyPoints: number
+  suspendedWeeks: number
+  mandatoriesDue: number
 }
 
 /** Keep her book elite so every gate but her BODY stands open - see the header. Re-stamped twice a
@@ -232,6 +241,9 @@ function probe(seed: string): SeasonRow[] {
       injuryOnsets: 0,
       weeksInjured: 0,
       trough: ECONOMY.condition.max,
+      penaltyPoints: 0,
+      suspendedWeeks: 0,
+      mandatoriesDue: 0,
     }
     let condSum = 0
     for (let w = 0; w < WEEKS_PER_YEAR; w++) {
@@ -251,7 +263,13 @@ function probe(seed: string): SeasonRow[] {
         }
       }
       const wasInjured = world.injury !== null
+      row.mandatoriesDue += world.season.filter(
+        (e) => e.deadlineWeek === world.week + 1 && mandatoryBinds(world, e) && !world.entries.includes(e.id),
+      ).length
+      const penaltiesBefore = (world.penalties ?? []).length
       tickWeek(world, rng)
+      for (const pen of (world.penalties ?? []).slice(penaltiesBefore)) row.penaltyPoints += pen.points
+      if (isSuspendedAt(world, world.week)) row.suspendedWeeks += 1
       if (world.injury !== null) {
         row.weeksInjured += 1
         if (!wasInjured) row.injuryOnsets += 1
@@ -352,4 +370,24 @@ console.log(
 console.log(
   `    blackout weeks a season: ${Array.from({ length: WEEKS_PER_YEAR }, (_, w) => w).filter(isBlackoutWeek).length}` +
     ` · W rung ages: ${W_RUNGS.map((t) => `${t} ${TIERS[t].minAgeYears}+`).join(' ')}`,
+)
+
+// ⚠ THE MANDATORY REGIME, MEASURED AT THE ONLY STANDING IT BINDS (W3-ACT2, act2-pro-tour.md §6).
+// This probe stamps her to the head of the merged table for every week it walks, so the regime is
+// live throughout - which is the harshest possible reading of it and therefore the honest one. What
+// it answers is the question the owner's own ruling forces: a regime that suspends her whatever she
+// does is not «a price she chose to pay», it is a punishment with extra steps.
+console.log('\n  THE MANDATORY REGIME (act2-pro-tour.md §6) at this schedule')
+console.log(
+  `    obligations that fell due per season   ${mean(flat.map((r) => r.mandatoriesDue)).toFixed(1).padStart(6)}` +
+    `   (${ECONOMY.mandatory.perEventTiers.join(' + ')} bind the top ${ECONOMY.mandatory.maxRank}, ` +
+    `plus ${ECONOMY.mandatory.quota} of the ${ECONOMY.mandatory.quotaTier}s)`,
+)
+console.log(
+  `    penalty points charged per season      ${mean(flat.map((r) => r.penaltyPoints)).toFixed(1).padStart(6)}` +
+    `   suspension at ${ECONOMY.mandatory.suspensionAt} inside ${ECONOMY.mandatory.windowWeeks} weeks`,
+)
+console.log(
+  `    weeks suspended per season             ${mean(flat.map((r) => r.suspendedWeeks)).toFixed(1).padStart(6)}` +
+    `   seasons carrying a suspension: ${((100 * flat.filter((r) => r.suspendedWeeks > 0).length) / flat.length).toFixed(0)}%`,
 )
