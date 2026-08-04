@@ -15,12 +15,81 @@ import { useGameStore } from '../stores/game'
 import { portraitUrl } from '../art/preload'
 import { weekLabel, seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
+import { STARTING_FUNDS_CENTS } from '../engine/world'
+import { SURNAMES, FIRST_NAMES } from '../engine/season/cohort'
+import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
+import { daysInBirthMonth } from '../shared/dates'
 import Polaroid from './ui/Polaroid.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
 import Eyebrow from './ui/Eyebrow.vue'
 
 const game = useGameStore()
 const emit = defineEmits<{ (e: 'newCareer'): void }>()
+
+// --- THE HAND-OFF (career-contract-v1.md §5.6) --------------------------------------------------
+//
+// «Можно сделать в конце какой-то выбор с авто-созданием нового рандомного персонажа, спросим только
+// вилку начального капитала и все.»
+//
+// ⚠ ONE QUESTION, AND IT IS THE ONE ONBOARDING ALREADY ASKS. Not the six-step wizard: the whole
+// point of the seam is that a player who has just watched a career end is ONE TAP from the next one.
+// So the three capital cards live here, the daughter is generated, and `newCareer` is called
+// directly - the wizard is for a player who wants to name her.
+//
+// ⚠ AND NOTHING CARRIES OVER. A FRESH fork, never the mother's final balance (§5.6's own open
+// question, the architect's recommendation taken): carrying her money is exactly the meta-currency
+// §5.6 rules out, and a family that ended rich would open the next story with its central tension
+// already resolved. The generated daughter is otherwise random, so the mother's career buys
+// narrative and not advantage - the same line the equipment and coach ladders already hold.
+const BACKGROUNDS: { id: FamilyBackground; label: string; blurb: string }[] = [
+  { id: 'wealthy', label: 'Wealthy', blurb: 'Top academies are within reach.' },
+  { id: 'middle', label: 'Middle class', blurb: 'Smart choices, steady progress.' },
+  { id: 'working', label: 'Working class', blurb: 'Big dreams, hard mode.' },
+]
+
+/** ⚠ THE COACH RUNG IS DERIVED, NOT ASKED, because §5.6 says exactly ONE question. These are the
+ *  three combinations `tools/econ-bench.ts` treats as each background's mainstream preset - the
+ *  rung a family of that size would actually walk into an academy and buy. The Coach Market is open
+ *  from week one, so it is a starting point rather than a decision taken away. */
+const COACH_BY_BACKGROUND: Record<FamilyBackground, CoachTier> = {
+  working: 'budget',
+  middle: 'middle',
+  wealthy: 'high',
+}
+
+/** Every style the match engine models, so the next daughter is a real roll of the dice rather than
+ *  a copy of her mother. */
+const PLAY_STYLES: readonly PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
+
+function pick<T>(list: readonly T[]): T {
+  return list[Math.floor(Math.random() * list.length)]
+}
+
+function nextDaughter(background: FamilyBackground): PlayerProfile {
+  const birthMonth = 1 + Math.floor(Math.random() * 12)
+  return {
+    ...DEFAULT_PROFILE,
+    kidName: pick(FIRST_NAMES),
+    kidLastName: pick(SURNAMES),
+    // The only thing that crosses the seam, and it is not a mechanic: the family lives where it
+    // lived. Country is display and flavour - it prices nothing, unlocks nothing and is not on any
+    // curve - so this is the fiction being consistent rather than progress carrying over.
+    country: game.snapshot?.profile?.country ?? DEFAULT_PROFILE.country,
+    background,
+    coachTier: COACH_BY_BACKGROUND[background],
+    playStyle: pick(PLAY_STYLES),
+    birthMonth,
+    birthDay: 1 + Math.floor(Math.random() * daysInBirthMonth(birthMonth)),
+  }
+}
+
+/** false until the player taps the offer – the one question is asked on the last page, not before. */
+const asking = ref(false)
+
+async function raiseAnother(background: FamilyBackground): Promise<void> {
+  await game.newCareer('', nextDaughter(background))
+  emit('newCareer')
+}
 
 const view = computed(() => game.snapshot?.ending ?? null)
 const pages = computed(() => view.value?.album ?? [])
@@ -132,7 +201,21 @@ async function resumeCollege(): Promise<void> {
           <p class="ending-offer">
             Nothing carries over. A new daughter, and one question: what the family starts with.
           </p>
-          <PrimaryPill variant="cta" @click="emit('newCareer')">Raise another</PrimaryPill>
+          <PrimaryPill v-if="!asking" variant="cta" @click="asking = true">Raise another</PrimaryPill>
+          <div v-else class="ending-fork">
+            <button
+              v-for="b in BACKGROUNDS"
+              :key="b.id"
+              class="ending-fork-option"
+              type="button"
+              :disabled="game.busy"
+              @click="raiseAnother(b.id)"
+            >
+              <strong>{{ b.label }}</strong>
+              <em>{{ formatCents(STARTING_FUNDS_CENTS[b.id]) }}</em>
+              <span>{{ b.blurb }}</span>
+            </button>
+          </div>
         </template>
       </footer>
     </section>
@@ -311,6 +394,54 @@ async function resumeCollege(): Promise<void> {
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
+}
+
+/* THE ONE QUESTION. Three cards, one weight, no recommendation – the same discipline the fork at
+   nineteen keeps, and for the same reason: the game does not have an opinion about how much money a
+   family should have. */
+.ending-fork {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.ending-fork-option {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  text-align: left;
+  padding: 11px 14px;
+  border: var(--stroke-hair) solid var(--ink-dim);
+  border-radius: var(--radius-control);
+  background: transparent;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.ending-fork-option:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ending-fork-option strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.ending-fork-option em {
+  font-style: normal;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.ending-fork-option span {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--ink-soft);
 }
 
 /* --- the record underneath --- */

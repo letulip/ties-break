@@ -8,6 +8,8 @@
 //      every one of those suppressions is POST-DRAW - so a player's answer at the fork cannot move
 //      the MAIN sequence. That is invariant 2 and it is a fairness property, not a tidiness one.
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { migrateSave } from '../src/engine/migrations'
 import {
   ENDINGS,
   bankruptcyDue,
@@ -37,6 +39,8 @@ import {
   latchEnding,
   buildEndingView,
   buildAlbum,
+  skipTournament,
+  closeTournament,
   captureBreakEven,
   toSnapshot,
 } from '../src/engine/world'
@@ -448,5 +452,63 @@ describe('⚠ input-independence survives college', () => {
     expect(a.week).toBe(b.week)
     expect(a.rngMain.n).toBe(b.rngMain.n)
     expect(a.rngMain.s).toBe(b.rngMain.s)
+  }, 60_000)
+})
+
+// --- acceptance: a PRE-WAVE save opens, plays, and can reach an ending ----------------------------
+
+describe('⚠ a career saved before this wave existed', () => {
+  // The golden corpus already proves every historical fixture MIGRATES (tests/goldenSaves.test.ts).
+  // That is a shape check. This is the behavioural one the wave was asked for: take the last save
+  // shape that shipped WITHOUT any of this - v38, a real career at week 60 - migrate it, and then
+  // actually play it until the story stops. If the v39 back-fills were wrong in any way that
+  // mattered, this is where it would show: a fork that re-asks a decision she made years ago, a debt
+  // spell reconstructed into an instant death, or a `careerTotals` that cannot be added to.
+  it('migrates, ticks, and reaches a real ending', () => {
+    const raw = JSON.parse(
+      readFileSync(new URL('./fixtures/saves/v38.json', import.meta.url), 'utf8'),
+    ) as unknown
+    const world = migrateSave(raw)
+    const rng = rngFromSeed(world.seed)
+
+    // the back-fills, checked before a single week is played
+    expect(world.ending).toBeNull()
+    expect(world.college).toBeNull()
+    expect(world.retirementOffer).toBeNull()
+    expect(world.oneMoreYearCount).toBe(0)
+    expect(world.careerTotals.spentCents).toBeGreaterThan(0)
+    // week 60 is age 15, so she is UNDER nineteen and the fork is hers still to answer
+    expect(world.fork).toBeNull()
+
+    const openedAt = world.week
+    // Play it. No entries, no commands - just the weeks, exactly as a fast-forward would.
+    for (let i = 0; i < 1400 && world.ending === null; i++) {
+      if (world.fork !== null && world.fork.answer === null) {
+        answerFork(world, 'continue')
+        continue
+      }
+      if (world.retirementOffer !== null) {
+        answerRetirement(world, world.retirementOffer.final || world.retirementOffer.reason === 'plateau')
+        continue
+      }
+      // ⚠ THE REVEAL TRIO IS UNGUARDED ON PURPOSE, and this is where that matters: a migrated save
+      // arrives holding entries, so the very first weeks produce tournaments to close. If those were
+      // guarded, a career that latched on a tournament week could never clear `pendingTournament` -
+      // the one piece of state `advanceWeeks` refuses to tick past.
+      if (world.pendingTournament) {
+        skipTournament(world)
+        closeTournament(world)
+        continue
+      }
+      tickWeek(world, rng)
+    }
+
+    expect(world.week).toBeGreaterThan(openedAt)
+    expect(world.ending).not.toBeNull()
+    // ...and the epilogue it lands on is a real one, built from a career that predates it.
+    const view = buildEndingView(world)!
+    expect(view.album).toHaveLength(7)
+    expect(view.album.every((p) => p.why.length > 0)).toBe(true)
+    expect(view.totals.spentCents).toBeGreaterThan(0)
   }, 60_000)
 })

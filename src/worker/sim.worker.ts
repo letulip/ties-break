@@ -239,12 +239,24 @@ async function handle(msg: ToWorker): Promise<ToUI> {
         // (the mutate() closure parameter shadows the committed module state on purpose), a clone of
         // the committed world — so both predicates read exactly the state they always read, and a
         // refusal now provably leaves the committed world without a single tick applied.
-        if (world.pendingTournament || pendingKnock(world)) {
-          throw new Error('A decision is open – resolve the tournament or knock before skipping weeks')
+        // ⚠ RE-AIMED AGAIN AT W2-ENDINGS, and this one is a real hole rather than a widening. The
+        // dev fast-forward ships in EVERY build (an owner ruling – the deployed build is the
+        // playtest device), so a loop that outran the fork at nineteen would tick a year of her life
+        // past the most expensive click in the game with nobody answering it, and a loop that outran
+        // the LATCH would keep ticking a career that has ended. Same two positions as the pair above,
+        // same reasoning: a refusal at entry, a stop mid-loop.
+        const decisionOpen = (w: WorldState): boolean =>
+          w.pendingTournament !== null ||
+          pendingKnock(w) ||
+          w.ending !== null ||
+          (w.fork !== null && w.fork.answer === null) ||
+          w.retirementOffer !== null
+        if (decisionOpen(world)) {
+          throw new Error('A decision is open – resolve the tournament or knock (or the fork, the offer, the ending) before skipping weeks')
         }
         for (let i = 0; i < msg.weeks; i++) {
-          if (world.pendingTournament || pendingKnock(world)) break
           tickWeek(world, rng)
+          if (decisionOpen(world)) break
         }
       })
     }

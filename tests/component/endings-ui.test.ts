@@ -109,6 +109,23 @@ describe('the album', () => {
     w.unmount()
   })
 
+  it('⚠ the hand-off asks EXACTLY ONE question, and it is the capital fork', async () => {
+    patchSnapshot({ ending: endingView() })
+    const game = useGameStore()
+    const spy = vi.spyOn(game, 'newCareer').mockResolvedValue(undefined)
+    const w = mount(EndingScreen)
+    for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
+    await w.findAll('.tb-pill')[0].trigger('click')
+    const options = w.findAll('.ending-fork-option')
+    expect(options).toHaveLength(3)
+    // ...and NOTHING else is asked: three cards, then a career.
+    await options[2].trigger('click')
+    expect(spy).toHaveBeenCalledTimes(1)
+    const profile = spy.mock.calls[0][1] as { background: string }
+    expect(profile.background).toBe('working')
+    w.unmount()
+  })
+
   it('⚠ COLLEGE offers four years instead of a new career – the only ending that resumes', async () => {
     patchSnapshot({
       ending: endingView('college', {

@@ -29,7 +29,7 @@ import type {
   ScrollSeason,
 } from '../../shared/protocol'
 import { ENDING_TITLE } from '../ending'
-import { kidAgeYears, START_AGE_YEARS } from './age'
+import { ageAtWeek, START_AGE_YEARS } from './age'
 import { seasonIndexOf } from './ledger'
 import { finishLabel } from './labels'
 import type { WorldState } from '../world'
@@ -62,8 +62,15 @@ const EMOTION_BY_ENDING: Record<CareerEndingType, AvatarEmotion> = {
   plateau: 'serious',
 }
 
-function ageAt(world: WorldState, week: number): number {
-  return kidAgeYears(week, world.profile.birthMonth)
+/** ⚠ THE BAND, NOT THE GIRL, AND THAT IS THE OPPOSITE OF WHAT THE ENDING ITSELF USES. Two ages live
+ *  in this engine (world/age.ts says so at length): `ageAtWeek` is the career band and
+ *  `kidAgeYears` folds her birth month into the real calendar, so a June girl is 13.5 in week zero.
+ *  The DECISIONS read the girl - the fork fires on her nineteenth birthday, not on a band boundary -
+ *  but everything the app PRINTS reads the band, because `Snapshot.ageYears` does and Home says «14
+ *  years old» on week zero. Caught in the browser: the scroll's season header read «2031 – she was
+ *  13» while Home, about the same week, read 14. Two surfaces, one week, two numbers. */
+function ageAt(_world: WorldState, week: number): number {
+  return ageAtWeek(week)
 }
 
 function page(
