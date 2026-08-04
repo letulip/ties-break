@@ -732,6 +732,16 @@ export function main(argv = process.argv.slice(2)): void {
       `  peak-rank distribution        : best #${ranked[0].peakWtaRank} · p10 #${median(ranked.slice(0, Math.max(1, Math.round(ranked.length / 5))).map((r) => r.peakWtaRank!)).toFixed(0)} · ` +
         `median #${median(ranked.map((r) => r.peakWtaRank!)).toFixed(0)} · worst #${ranked[ranked.length - 1].peakWtaRank}`,
     )
+    // ⚠ THE DISTRIBUTION, NOT JUST THE BEST (points-economy-2026-08.md measurement 6). The owner's
+    // framing of the whole question is "a CHANCE at the top", so a single best-of-180 cannot answer
+    // it: one career at #90 and a conveyor delivering ninety of them are the same headline and
+    // opposite games. Counted over the careers that ever held a professional rank at all.
+    const reach = (n: number) => ranked.filter((r) => r.peakWtaRank! <= n).length
+    console.log(
+      `  careers reaching the top      : #10 ${reach(10)}/${rows.length} · #50 ${reach(50)}/${rows.length} · ` +
+        `#100 ${reach(100)}/${rows.length} · #200 ${reach(200)}/${rows.length} · ` +
+        `ever ranked ${ranked.length}/${rows.length}`,
+    )
   }
   console.log(`  richest single SEASON anywhere: ${usd(bestSeasonPrize)}`)
   console.log(`  richest whole CAREER anywhere : ${usd(Math.max(...rows.map((r) => r.prizeCents)))}`)

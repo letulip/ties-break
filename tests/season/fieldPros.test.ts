@@ -277,6 +277,83 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     expect(world.kidRankWta).toBeLessThanOrEqual(420)
   })
 
+  // ⚠⚠ A CHARACTERISATION, NOT A TARGET (points-economy-2026-08.md §3b / §8b). It pins a measured
+  // property of the shipped engine that the owner has NOT ruled on, so that when he does, a fix has
+  // to walk past the explanation rather than trip over an unexplained red. Same device, same reason,
+  // as `tests/unranked-sentinel.test.ts`'s W15/W75 pair.
+  //
+  // THE PROPERTY: `selectEntrants` fills a rung's `entrantPctBand` from its TOP – the key is
+  // `position + rng x drawSize`, so with far more candidates in the window than chairs in the draw,
+  // the tail of the window is never reached. Measured over a full W season: the 150-strong
+  // `journeyman` storey is dealt ZERO entrant slots, while every one of them carries a three-figure
+  // W book that the merged standings sort her by. She is a name in the table who never plays.
+  //
+  // WHY IT MATTERS ENOUGH TO PIN: it is one half of the two-currencies problem this branch measured.
+  // A book is meant to be a record of results; a player who is never in a draw cannot have one, so
+  // her row is issued rather than earned – and it sits at exactly the ranks (#215-364) a climbing
+  // career has to pass through. The candidate repairs (a deeper FIELD.size, re-aimed
+  // `entrantPctBand`s, an on-ramp for the bottom of the pyramid) are all balance changes and are the
+  // owner's.
+  //
+  // ⚠ IT IS NOT THE WHOLE PICTURE AND MUST NOT BE READ AS ONE: `fillOnRamp` (W3-ONRAMP) holds
+  // ON_RAMP.slots per W event and is measured at 119.8 LIVE W rows a season, so the LIVE cohort does
+  // reach the professional tour. What this pins is that the FRONT DOOR – the percentile band – is
+  // shut to the bottom of the table.
+  it('⚠ CHARACTERISATION: the entrant band never reaches the bottom storey, which still holds a book', () => {
+    const world = createWorld('field-band-reach')
+    const pros = prosOf(world.seed, 0, world.cohort.map((p) => p.name))
+    const live = world.cohort.map((p) => ({ playerId: p.id, points: 0, rank: 1 }))
+    const ranking = mergedWtaRanking(live, pros)
+    const proById = new Map(pros.map((p) => [p.id, p]))
+    const slots = new Map<string, number>()
+    // One W season, week by week, strongest rung first – the order `weekFieldExclusion` resolves a
+    // shared week in, so "one body, one week" is respected exactly as the engine respects it.
+    const byWeek = new Map<number, SeasonEvent[]>()
+    for (const e of world.season) {
+      if (TIERS[e.tier].track !== 'wta') continue
+      const list = byWeek.get(e.week)
+      if (list) list.push(e)
+      else byWeek.set(e.week, [e])
+    }
+    expect(byWeek.size).toBeGreaterThan(10)
+    for (const [, evs] of byWeek) {
+      const booked = new Set<string>()
+      const ordered = [...evs].sort(
+        (a, b) =>
+          TIER_LADDER.indexOf(b.tier) - TIER_LADDER.indexOf(a.tier) || (a.id < b.id ? -1 : 1),
+      )
+      for (const e of ordered) {
+        const universe = universeForTier(e.tier, world.cohort, pros)
+        const rng = rngFromSeed(`${world.seed}:kidtour:${e.id}`)
+        for (const p of selectEntrants(e, universe, ranking, rng, undefined, booked)) {
+          booked.add(p.id)
+          slots.set(p.id, (slots.get(p.id) ?? 0) + 1)
+        }
+      }
+    }
+    const journeymen = pros.filter((p) => p.strengthTier === 'journeyman')
+    expect(journeymen.length).toBe(150)
+    const drawn = journeymen.filter((p) => (slots.get(p.id) ?? 0) > 0).length
+    // THE CHARACTERISATION. Zero today; the band is a threshold, so a re-aim could make it 150 as
+    // easily as 1. What the assertion protects is that the number is READ rather than assumed – if
+    // it moves, this comment is the reason to come back to §8b.
+    //
+    // MUTATION-VERIFIED TWICE, each watched red first: widening w15's `entrantPctBand` from
+    // [0.22, 0.72] to [0.5, 0.95] gives 47, and the `FIELD.earnCurve` experiment of
+    // points-economy-2026-08.md §5 gives 33 – the latter because re-pricing the field re-ORDERS the
+    // middle of the table (§5a), which moves who a percentile band can reach. So this guard is
+    // sensitive to both halves of the mechanism it describes, which is what makes it a guard.
+    expect(drawn, 'journeymen drawn into any W event in a season').toBe(0)
+    // ...and they are nevertheless in the table, which is what makes it a defect rather than a
+    // detail: the weakest pro the generator makes still outranks a girl with a real W15 title.
+    for (const p of journeymen) expect(p.wtaPoints).toBeGreaterThan(10)
+    // The storeys that DO play, for contrast, so a future zero everywhere reads as a broken harness
+    // rather than as this finding getting worse.
+    const played = pros.filter((p) => p.strengthTier !== 'journeyman' && (slots.get(p.id) ?? 0) > 0)
+    expect(played.length).toBeGreaterThan(100)
+    expect(proById.size).toBe(FIELD.size)
+  })
+
   it('acceptance cuts: an absolute rank on the W rungs, a share of the live table elsewhere', () => {
     // ⚠⚠ RE-AIMED BY W2-FIELD2, AND THE RE-AIM IS THE FIX IT PINS. This asserted that a W rung's cut
     // is `enterPct` x the merged table's size - a SHARE - which was the right unit for as long as

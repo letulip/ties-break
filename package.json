@@ -19,6 +19,7 @@
     "bench:knock": "vite-node tools/knock-rate.ts",
     "bench:load": "vite-node tools/load-bench.ts",
     "bench:money": "vite-node tools/money-decomposition.ts",
+    "bench:points": "vite-node tools/points-economy.ts",
     "bench:radar": "vite-node tools/radar-bench.ts",
     "bench:skill": "vite-node tools/skill-ceiling.ts",
     "bench:world": "vite-node tools/world-turnover.ts",
