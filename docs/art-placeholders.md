@@ -74,8 +74,9 @@ They are not in the table above and the test does not enforce them.
   stand-in, not a compromise"), and every ADULT rung – `w15` … `slam`, ten of the sixteen – falls off
   the end of `ART_TIER_ORDER` entirely and lands on the generic establishing-shot fallback. A WTA
   1000 card is currently a junior-tour photograph. Biggest open art ask in the repo.
-- **No `regional-grass`.** A regional grass week borrows `local-grass-1` – the fallback ladder's one
-  known gap, documented at its source.
+- ~~**No `regional-grass`.**~~ CLOSED 04.08 – the owner shipped `regional-grass-1.webp` and it is
+  registered in `FIELD_ART`. Every tier `local`..`j30` now paints all the surfaces it plays on; the
+  fallback ladder's surface-first narrowing stands, it just no longer has a live gap to prove it.
 - **`fem-euro-brunnet-sleepy-car.webp`** is the fourth rename leftover but is NOT byte-identical to
   `-travel-sleepy-car.webp` (it was re-encoded), so it cannot go in the table. It is equally dead –
   all four `-sleepy-*` files can be deleted whenever you like; nothing has read those names since

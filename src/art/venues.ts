@@ -16,8 +16,9 @@
 //     cardinal sin – a surface the simulation will not play on, asserted in a picture. This is the
 //     one place the fallback ladder handed down with the art was NARROWED: "same tier, any surface"
 //     became "same tier, SURFACE-NEUTRAL shot", and a lower-tier court on the RIGHT surface is
-//     preferred to a same-tier court on the wrong one. The one gap the art still has – there is no
-//     `regional-grass` – is covered silently by it: a regional grass week borrows `local-grass-1`.
+//     preferred to a same-tier court on the wrong one. The narrowing stands on its own merits, but
+//     the gap that used to prove it is CLOSED: `regional-grass-1` shipped 04.08 and a regional grass
+//     week no longer borrows `local-grass-1`. Every tier local..j30 now paints its own surfaces.
 //     (j30 has all three surfaces AND its own establishing shot since the owner's second wave.)
 
 import type { TierId } from '../engine/season/types'
@@ -38,6 +39,7 @@ export const FIELD_ART: readonly string[] = [
   'regional-hard-1',
   'regional-hard-2',
   'regional-hard-3',
+  'regional-grass-1',
   'national-hard-1',
   'national-clay-1',
   'national-grass-1',
