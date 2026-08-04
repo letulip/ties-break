@@ -174,3 +174,42 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
   norm/happy/sad/serious/injury/tired/**angry** + вехи bride/funeral/graduated/retired/farewell/
   pregnant-early/pregnant-last. `angry` есть как тип и как арт, но НИЧТО его пока не выбирает —
   триггер сознательно не придуман, см. открытый вопрос.
+
+## 2026-08-04 — W2-ENDINGS: what got MEASURED, and the two places the measurement changed the design
+
+Implementation record for career-contract-v1.md §4/§9. The contract is the decision; these are the
+numbers it turned into, and the two shapes that had to move because the measurement said so. Full
+tables: `docs/specs/endings-and-the-album.md`.
+
+- **Bankruptcy's grace window is 12 weeks, not the candidate 8.** Swept over {4,6,8,12,16,24}
+  against career-outcome-targets.md's own row (60-80% survival, 14→18) on both bench entry policies.
+  8 leaves the reckless parent surviving 62.2%, one seed set away from failing the target; 12 puts
+  both policies mid-band (74.4% / 80.0%). It is also three times the reckless policy's median debt
+  spell (4w) and a fifth of the careful policy's (60w), and it is exactly the 12-week window the
+  Money screen already draws – so the warning phase needed no new surface.
+- **⚠ THE CAREER-ENDING INJURY'S PROPOSED RULE WAS UNREACHABLE, not merely rare.** P1's «a fresh
+  severe on ≥2 prior major-or-severe layoffs» predicted 1-2%; instrumented over 90 full careers it
+  fires **0.0%** – `severe` is 2.5% of injuries and `major` 7.5%, so three of them in one career is a
+  coincidence the model cannot produce. Re-aimed to WEEKS LOST (a fresh severe on a body that has
+  already lost ≥20 weeks): **7.8%**, median age 31. Physical rather than bookkeeping, and a number
+  the epilogue can print.
+- **⚠ SLOT 6's CROSSING HAPPENS TO NOBODY, and the copy is written to that.** «Break-even» names two
+  events years apart. A WEEK whose prize money beat that week's costs: **46.7% of careers, median
+  age 17** – which is where the owner watched his own career cross it. The CUMULATIVE crossing §9.2
+  asks the album for – prize money past everything the family ever spent: **0 careers in 180**.
+  Prize/spend at the end of a career is a median 8.0%. So the empty page is the COMMON case; both
+  crossings are captured as milestones and the empty face carries the week when there was one («one
+  week, it paid for itself – and in the end $4,120 won against $61,000 spent»). Honest rather than
+  consoling, which is the bar §9.2 sets.
+- **All six endings are reachable and benched**: bankruptcy 51.1% (median age 17), plateau 48.9%
+  (24), natural 41.1% (38), injury 7.8% (31), and the fork's other two answers on 6/9 seeds each.
+  The natural/plateau split is a PLAYER CHOICE and not a game rate, so the bench reports both arms.
+- **Album slot 1 is week zero, not «her first entered event»** – a stated departure from §9.2. No
+  save can answer the latter (milestones keep only the first INTERNATIONAL entry; events, results and
+  bestFinishByTier all lose it), and buying it would have cost a second MilestoneType that no migrated
+  save could back-fill honestly.
+- **The second career starts from a FRESH capital fork**, not the mother's final balance (§5.6's open
+  question, the architect's recommendation taken): carrying the balance is exactly the meta-currency
+  §5.6 rules out.
+- Supersedes adult-tour-and-endings.md §6 call 3 («no play after the ending, in v1») – contract §5.6,
+  05.08, replaced the credits roll with an offer.

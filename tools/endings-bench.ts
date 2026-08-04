@@ -400,7 +400,13 @@ export function main(argv = process.argv.slice(2)): void {
   }
 
   // --- #4's REACHABILITY, instrumented rather than assumed ---
-  const longLived = sweepRows.flatMap((r) => r.full)
+  //
+  // ⚠ MEASURED ON THE ARM WITH MAXIMUM EXPOSURE, and it has to be. The first draft read the SWEEP
+  // arm, whose careers answer the plateau offer the moment it comes and therefore stop around
+  // twenty-four - so it reported 0.0% for a predicate the latched arm fires 7.8% of the time. A
+  // career-ending injury is a LATE-CAREER event by construction (it needs a body that has already
+  // lost months), so the only honest denominator is the careers that play long enough to have one.
+  const longLived = arms[1].rows
   const sawSevere = longLived.filter((o) => o.freshSevereCount > 0)
   console.log('  ── #4 THE CAREER-ENDING INJURY: is the predicate reachable at all? ──')
   console.log('')
