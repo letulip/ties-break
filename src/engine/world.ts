@@ -43,6 +43,7 @@ import type { MatchPlayer } from './match/types'
 import type { AiPlayer, LadderTrack, RankingRow, SeasonEvent, TierId, TournamentResult } from './season/types'
 import {
   TIERS,
+  TIER_LADDER,
   buildSeason,
   WEEKS_PER_YEAR,
   OFF_SEASON_WEEKS } from './season/calendar'
@@ -80,10 +81,14 @@ import {
 // THE FIELD TIER (living-field phase W, 01.08). Field pros are DERIVED, NEVER PERSISTED – see
 // season/fieldPros.ts for the whole argument. world.ts only ever asks three questions of them:
 // the merged W ranking, the W-event candidate universe, and a name for an fp- id on a surface.
+// Since W3-FIELD3 the second of those is asked by the CANONICAL brackets as well as by her shadow
+// run, and `isFieldProId` earns a fourth job: it is the one predicate that keeps a derived player
+// out of the persisted ledger (`runAiTournament`).
 import {
   isFieldProId,
   mergedWtaRanking,
   universeForTier,
+  type FieldPro,
 } from './season/fieldPros'
 // Diary-1: the copy system (facts → licensed phrase, sub-stream selection) and the milestone
 // identity rule. diary.ts is deliberately world-free (it takes a narrow structural view), so the
@@ -113,7 +118,7 @@ import {
 } from './offers'
 // The load slice (docs/specs/coach-as-load-manager.md): pure, world-free, world -> coachLoad only.
 import { addEvent, seasonIndexOf, seasonStartWeek, financeWindow, financeSeries } from './world/ledger'
-import { activeLadderOf, toSnapshot } from './world/snapshot'
+import { activeLadderOf, playerShortName, toSnapshot } from './world/snapshot'
 export { activeLadderOf, toSnapshot }
 import { flipScore, fallbackPlayer, kidMatchesOf, kidMatchEvent, computeLossStreak } from './world/matchNews'
 export { flipScore, computeLossStreak }
@@ -1424,14 +1429,74 @@ export function closeTournament(world: WorldState): void {
 // draw 0 and move every AI result ever recorded. So `drawAiEntrants` makes the draw and hands the
 // LIVE RNG OBJECT on; `runAiTournament` resumes on exactly the number it would have read anyway.
 // Same stream, same position, same values: the split is invisible to every sub-stream in the game.
+// ⚠⚠ AND SINCE W3-FIELD3 (04.08) A W-TRACK CANONICAL BRACKET IS PLAYED BY PROFESSIONALS.
+//
+// THE SHAPE, in one sentence: the W rungs' candidate universe becomes LIVE cohort ∪ derived field
+// pros positioned by the MERGED W standings – the same `universeForTier` seam, the same
+// `selectEntrants`, the same age gate, the same entrant bands the kid's shadow run has used since
+// living-field phase W – and `runAiTournament` then writes a ledger row for the LIVE entrants ONLY.
+//
+// THE FENCE THIS REPLACES said a pro must never be in a canonical draw BECAUSE a pro must never
+// write a persisted row. The second clause is still law and is enforced one function down; the
+// first turned out not to follow from it, and holding the two together is what shipped a Grand Slam
+// at draw 32 (calendar.ts `slam`) and a professional tour whose events no professional played.
+//
+// WHAT IT COSTS IN PERSISTED STATE: NOTHING, and slightly less than nothing. A 32-draw W event used
+// to push 32 junior rows into `world.results`; it now pushes only as many as it drew LIVE girls,
+// which at the shipped bands is a handful. No schema, no migration, no new field – and the 52-week
+// prune is doing strictly less work than it did yesterday. The two alternatives considered and not
+// taken: a parallel non-persisted results view (a second ledger for `rivalConditions` to read, i.e.
+// a second thing to keep in step with the first) and a bounded per-season pro-results structure (a
+// schema bump to buy a pro a ranking that moves – which is phase 2's pro contour, and it should
+// arrive with aging and retirement rather than ahead of them).
+//
+// WHAT IT COSTS IN FIDELITY, stated so it is not discovered later: a pro's canonical results change
+// nothing about her – her standing stays her derived `wtaPoints`, she banks no fatigue, so she is
+// fresh every week. See the superseded fence in season/fieldPros.ts for the full accounting.
+//
+// ⚠ RNG. Zero MAIN draws, exactly as before: `drawAiEntrants` opens `seed:aitour:<event.id>` and
+// `runAiTournament` resumes on it, and the frozen capture (41550 / e6b0c709) re-derives
+// byte-for-byte on this branch. What DID move is the COMPOSITION of each W event's own sub-stream –
+// `selectEntrants` spends one draw per band candidate and a W band now selects from 563 people
+// rather than 199 – which is the documented mutable class (every band and age re-pick has moved it)
+// and is NOT a fairness break: the count is a function of (seed, week, the kid-free ledger, the
+// derived field), every one of which is independent of what the player has entered or won. The six
+// non-W rungs are byte-identical, because `universeForTier` hands them back the same array instance.
+/** THE PROFESSIONAL SIDE OF ONE WEEK, derived once before any of the week's brackets run – exactly
+ *  as `aiRanking` and `rivalFatigue` are, and for the same reason: every event of the week must see
+ *  the same world, or the two universes could disagree about who is in which draw. */
+interface TourWeek {
+  /** this season's derived professionals */
+  pros: FieldPro[]
+  /** LIVE cohort ∪ pros – the pool a W event's short field backfills from */
+  universe: AiPlayer[]
+  /** the merged W standings, folded WITHOUT the kid (see the note at the call site) */
+  ranking: RankingRow[]
+}
+
+/** `universeForTier`'s fence is per TRACK, not per rung, so any W rung answers the same question and
+ *  the week's professional pool is built once off the entry rung. Named rather than inlined so the
+ *  claim ("all ten W rungs share one universe") is a statement rather than a coincidence. */
+const W_TRACK_PROBE: TierId = 'w15'
+
 function drawAiEntrants(
   world: WorldState,
   event: SeasonEvent,
   aiRanking: RankingRow[],
+  tour: TourWeek,
   fatigue: Map<string, number>,
 ): { event: SeasonEvent; entrants: AiPlayer[]; rng: Rng } {
   const rng = rngFromSeed(`${world.seed}:aitour:${event.id}`)
-  return { event, entrants: selectEntrants(event, world.cohort, aiRanking, rng, fatigue), rng }
+  // `universeForTier` is the seam and it is asked BY TIER, so a non-W event provably gets
+  // `world.cohort` itself back (reference equality, pinned in tests/season/fieldPros.test.ts) and
+  // reads the mixed junior table it always read.
+  const isW = TIERS[event.tier].track === 'wta'
+  const universe = universeForTier(event.tier, world.cohort, tour.pros)
+  return {
+    event,
+    entrants: selectEntrants(event, universe, isW ? tour.ranking : aiRanking, rng, fatigue),
+    rng,
+  }
 }
 
 function runAiTournament(
@@ -1445,8 +1510,51 @@ function runAiTournament(
   const result = runTournament(event, field, null, world.seed, aiRng)
   const pts = TIERS[event.tier].points
   for (const [playerId, finish] of Object.entries(result.finishes)) {
+    // ⚠ THE LEDGER IS FOR LIVE PLAYERS, AND THIS LINE IS THE WHOLE OF THAT RULE (W3-FIELD3). A
+    // field pro is derived state: she has no persisted identity, her standing is `wtaPoints` and
+    // her condition is 100 by construction, so a row for her would be a row nothing ever reads –
+    // bought with permanent bytes in a save that prunes on a 52-week window sized for 199 people.
+    // She played the tournament; the tournament simply does not write her down.
+    if (isFieldProId(playerId)) continue
     world.results.push({ playerId, week: world.week, points: pts[finish] ?? 0, tier: event.tier })
   }
+  announceTourChampion(world, event, result)
+}
+
+/** WHICH RUNGS' CANONICAL CHAMPIONS MAKE THE NEWS – W100 and up, and the cut is a feed budget
+ *  rather than a taste (`EVENTS_CAP` is 400 non-`keep` rows and `pruneEvents` sacrifices ordinary
+ *  rows first). All ten W rungs would be ~98 lines a season against a feed that already takes ~364;
+ *  W100-and-up is ~37, i.e. under one row a week. Expressed as a position in `TIER_LADDER` – the
+ *  project's single source of truth for "is tier A above tier B" – so a re-ordered or re-named rung
+ *  cannot silently fall out of the rule. */
+const NEWSWORTHY_FROM: TierId = 'w100'
+
+/** THE W TOUR CAN NAME ITS CHAMPION NOW, AND SHE CAN BE A PROFESSIONAL (W3-FIELD3, acceptance
+ *  criterion 2). Before this wave the canonical brackets resolved in silence and the only champion
+ *  line in the game was `finalizeTournament`'s, about the draw SHE played in; the field's ⚠ said in
+ *  as many words that AI W-tour news could name LIVE players only, because no pro was ever in a
+ *  canonical draw to win one.
+ *
+ *  ⚠ ONE TOURNAMENT, ONE CHAMPION. The event she ENTERED is skipped here, because her shadow run
+ *  and the canonical bracket are two different universes for the same event id (they always have
+ *  been – separate streams, separate fields) and printing both would put two champions of one
+ *  tournament in one week's news. Hers is the draw she actually played, so hers is the one that
+ *  speaks. This reads `world.entries`, i.e. player input – deliberately, and it is confined to a
+ *  news row: ZERO RNG, no ledger row, nothing any draw or ranking can see.
+ *
+ *  Names resolve through `playerShortName`, the same id→name function every bracket surface uses,
+ *  so an `fp-` id comes back as a person rather than as an id. */
+function announceTourChampion(world: WorldState, event: SeasonEvent, result: TournamentResult): void {
+  if (TIER_LADDER.indexOf(event.tier) < TIER_LADDER.indexOf(NEWSWORTHY_FROM)) return
+  if (TIERS[event.tier].track !== 'wta') return
+  if (world.entries.includes(event.id)) return
+  const championId = Object.entries(result.finishes).find(([, f]) => f === 0)?.[0]
+  if (!championId) return
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: `🏆 ${playerShortName(world, championId)} won the ${TIERS[event.tier].label}.`,
+  })
 }
 
 function pruneResults(world: WorldState): void {
@@ -1975,6 +2083,35 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // about how tired an opponent is. Pure derivation, ZERO main-stream draws.
   const rivalFatigue = rivalConditions(world.results, world.week)
 
+  // ⚠ THE PROFESSIONAL SIDE OF THE WEEK (W3-FIELD3, 04.08) – the canonical W brackets' universe and
+  // table, derived here beside the other two snapshots so every event of the week sees one world.
+  //
+  // The standings are folded WITHOUT the kid, on the very independence rule `aiRanking` above states
+  // in its own comment: who turns up to a canonical W100 may never depend on what she has entered or
+  // won. The LIVE half is the W-track fold at the W table's own best-16 width (this is a real table,
+  // not the mixed ordinal ambience `aiRanking` is), interleaved with the field's virtual rows by
+  // `mergedWtaRanking` – which is the SAME construction `computeShadowTournament` builds for her own
+  // W draws, so the canonical bracket and her shadow of it finally position their candidates against
+  // one table instead of two.
+  //
+  // ZERO DRAWS, on any stream: `fieldProsOf` is a memoised pure derivation off `seed:field:` and
+  // both folds are arithmetic over the ledger.
+  const seasonPros = fieldProsOf(world)
+  const tourWeek: TourWeek = {
+    pros: seasonPros,
+    universe: universeForTier(W_TRACK_PROBE, world.cohort, seasonPros),
+    ranking: mergedWtaRanking(
+      computeRanking(
+        world.results.filter((r) => r.playerId !== KID_ID),
+        world.week,
+        BEST_N_BY_TRACK.wta,
+        ids,
+        inTrack('wta'),
+      ),
+      seasonPros,
+    ),
+  }
+
   // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
   //    fully-computed shadow tournament. Nothing kid-specific is emitted/awarded here – the flow does.
   const enteredThisWeek = scheduled.find((e) => world.entries.includes(e.id))
@@ -2158,8 +2295,16 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //          by standings position. ZERO draws on any stream (season/tournament.ts).
   //      4c. the brackets play, in the ORIGINAL calendar order and each on the very number of its
   //          own sub-stream it was going to read, so the ledger's row order is unchanged too.
-  const weekDraws = scheduled.map((e) => drawAiEntrants(world, e, aiRanking, rivalFatigue))
-  const weekFields = resolveDoubleBookings(weekDraws, world.cohort, aiRanking, rivalFatigue)
+  //
+  //    ⚠ AND A WEEK NOW HOLDS TWO UNIVERSES (W3-FIELD3). The W events draw from LIVE ∪ pros against
+  //    the merged W table; the six junior/domestic rungs draw from the cohort against the mixed one.
+  //    4b spans both with ONE `booked` set, because it has to: the cohort's 16-18s are eligible for
+  //    both tours, so "she cannot be in two draws" is a claim about the WEEK and not about a track.
+  const weekDraws = scheduled.map((e) => drawAiEntrants(world, e, aiRanking, tourWeek, rivalFatigue))
+  const weekFields = resolveDoubleBookings(weekDraws, world.cohort, aiRanking, rivalFatigue, {
+    universe: tourWeek.universe,
+    ranking: tourWeek.ranking,
+  })
   for (const d of weekDraws) {
     runAiTournament(world, d.event, weekFields.get(d.event.id) ?? d.entrants, d.rng, rivalFatigue)
   }

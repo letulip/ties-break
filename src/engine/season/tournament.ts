@@ -427,7 +427,10 @@ export function weekFieldExclusion(
 //      collects ALL NINE rungs in every season of every seed, because `claimWeek` pushes each
 //      tier's overshooting final event down against the off-season wall. 248 slots, 199 rivals.
 //      Nothing a selection rule can do about that: 49 of those slots have no fifth-of-a-person to
-//      put in them. So the surplus events keep the players they drew – the collision is then a fact
+//      put in them. ⚠ W3-FIELD3 RELIEVES THIS WITHOUT AIMING AT IT: on such a week the W events'
+//      pool is now 563 people rather than 199, so the arithmetic that made (c) reachable is the
+//      junior half of the week's alone. The branch stays, because the junior half is still 199.
+//      So the surplus events keep the players they drew – the collision is then a fact
 //      about the CALENDAR, and it is left visible instead of being smeared over the whole week.
 //      Flagged for the owner; the fix is in the scheduler, not here, and it is deliberately not
 //      taken on this branch because moving a claimed week changes `pickSurface`'s block lookup and
@@ -451,6 +454,18 @@ export function weekFieldExclusion(
 // bracket for the same event, it writes no rival rows, and pulling it in would move every kid
 // result in every pinned career to fix nothing that is measured.
 //
+// ⚠ TWO UNIVERSES ON ONE WEEK SINCE W3-FIELD3 (04.08). The canonical W brackets now draw from LIVE
+// cohort ∪ derived field pros while the six junior/domestic rungs still draw from the cohort alone,
+// so a single week can hold events whose candidate POOLS and whose STANDINGS TABLES are different
+// objects. The rule spans them anyway, and it has to: the cohort's 16-18-year-olds are eligible for
+// both tours, so a J300 and a W15 on one Tuesday can still draw the same girl. `booked` is therefore
+// ONE set for the whole week; what varies per event is (a) the pool a short field backfills from –
+// a pro may never appear in a J30 – and (b) the table positions are read off, because a pro has no
+// row in the mixed junior fold and would otherwise sort to the very back of a W draw, silently
+// destroying the seed order this function is contracted to return. Both come from the optional
+// `pro` argument; omit it and every line below is byte-identical to the pre-W3 function, which is
+// what every non-world caller (benches, the older tests) gets.
+//
 // A ONE-EVENT WEEK RETURNS UNTOUCHED, by an early exit rather than by arithmetic that happens to be
 // the identity – 66 of the 852 event weeks measured above, and on those the engine is byte-identical.
 
@@ -472,6 +487,10 @@ export function resolveDoubleBookings(
   ranking: readonly RankingRow[],
   /** the week's rival conditions, exactly as `selectEntrants` takes them; absent ⇒ nobody is gated */
   conditions?: ReadonlyMap<string, number>,
+  /** THE PROFESSIONAL SIDE OF THE WEEK (W3-FIELD3): the universe and the standings table the W-track
+   *  events were drawn against – LIVE cohort ∪ field pros, positioned by the merged W table. Absent
+   *  ⇒ every event is resolved against `cohort`/`ranking`, i.e. the pre-W3 function exactly. */
+  pro?: { universe: readonly AiPlayer[]; ranking: readonly RankingRow[] },
 ): Map<string, AiPlayer[]> {
   const out = new Map<string, AiPlayer[]>()
   // One event cannot collide with itself. Explicit, so "the engine does not move on a single-event
@@ -481,10 +500,16 @@ export function resolveDoubleBookings(
     return out
   }
 
-  const total = ranking.length || cohort.length
-  const posOf = new Map<string, number>()
-  ranking.forEach((r, i) => posOf.set(r.playerId, i)) // 0 = best standing
-  const posFor = (id: string) => posOf.get(id) ?? total - 1
+  // One position map per table, built once for the whole week rather than once per event.
+  const indexOf = (rows: readonly RankingRow[]) => {
+    const m = new Map<string, number>()
+    rows.forEach((r, i) => m.set(r.playerId, i)) // 0 = best standing
+    return m
+  }
+  const livePos = indexOf(ranking)
+  const liveTotal = ranking.length || cohort.length
+  const proPos = pro ? indexOf(pro.ranking) : null
+  const proTotal = pro ? pro.ranking.length || pro.universe.length : 0
 
   // Rule 1. Strongest rung first. The id tie-break is unreachable at the shipped calendar
   // (`buildSeason` tracks occupancy PER TIER, so a tier runs at most one event in a week) and is
@@ -502,6 +527,12 @@ export function resolveDoubleBookings(
     const drawSize = TIERS[event.tier].drawSize
     const floor = ECONOMY.availability.minConditionToEnter[event.tier]
     const fit = (id: string) => (conditions?.get(id) ?? ECONOMY.condition.max) >= floor
+    // Which world this event lives in – see the two-universes note above.
+    const onTour = pro !== undefined && TIERS[event.tier].track === 'wta'
+    const pool = onTour ? pro.universe : cohort
+    const posOf = onTour ? proPos! : livePos
+    const total = onTour ? proTotal : liveTotal
+    const posFor = (id: string) => posOf.get(id) ?? total - 1
 
     // Whoever the event drew and nobody has claimed: the overwhelming majority of every field.
     const field = entrants.filter((p) => !booked.has(p.id))
@@ -517,7 +548,7 @@ export function resolveDoubleBookings(
 
     if (field.length < drawSize) {
       // Rule 2: best standing first, age gate honoured, fit players before tired ones.
-      const free = cohort
+      const free = pool
         .filter((p) => !booked.has(p.id) && isTierAgeOpen(event.tier, p.ageYears))
         .sort((a, b) => posFor(a.id) - posFor(b.id))
       fill(free.filter((p) => fit(p.id))) // (a)
@@ -525,7 +556,7 @@ export function resolveDoubleBookings(
     }
     if (field.length < drawSize) {
       fill(entrants) // (c) – the week is over-subscribed; see (c) in the note above
-      fill([...cohort].sort((a, b) => posFor(a.id) - posFor(b.id))) // (d) – never a short draw
+      fill([...pool].sort((a, b) => posFor(a.id) - posFor(b.id))) // (d) – never a short draw
     }
 
     // Back into standings order, which is the contract `buildDraw` seeds off. Stable, and keyed on

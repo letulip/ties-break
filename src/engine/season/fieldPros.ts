@@ -27,11 +27,19 @@
 // still loads – that is what "derived" means here.
 //
 // WHAT MAY LEGITIMATELY CHANGE DOWNSTREAM: the composition of the W rungs' event sub-streams
-// (`seed:kidtour:<id>` for her shadow runs and previews). Entrant sets are a documented mutable
-// class – they have changed with every band/age re-pick – and the candidate-count-per-window
-// discipline in selectEntrants is preserved (one draw per candidate, count a function of the window
-// and the universe size, never of results content). The canonical `seed:aitour:` brackets stay
-// LIVE-only and are byte-identical (see `universeForTier`).
+// (`seed:kidtour:<id>` for her shadow runs and previews, and since W3-FIELD3 `seed:aitour:<id>` for
+// the canonical W brackets too). Entrant sets are a documented mutable class – they have changed
+// with every band/age re-pick – and the candidate-count-per-window discipline in selectEntrants is
+// preserved (one draw per candidate, count a function of the window and the universe size, never of
+// results content and never of player input).
+//
+// ⚠ THE CANONICAL W BRACKETS ARE NO LONGER BYTE-IDENTICAL, AND THAT IS THE POINT OF W3-FIELD3 (see
+// the superseded fence on `universeForTier` below). A W event's `seed:aitour:<id>` sub-stream now
+// spends one draw per candidate of a 563-row merged universe instead of a 199-row one, so every W
+// result the engine writes from this branch on differs from the one it wrote yesterday. The MAIN
+// weekly stream is untouched – 41550 / e6b0c709 re-derives byte-for-byte, which is the invariant
+// this box states – and the six non-W rungs are byte-identical because `universeForTier` hands them
+// back the same cohort array instance it was given.
 //
 // PER-SEASON REGENERATION (`seasonIndex` in the key) is the phase-W turnover model: a new season
 // deals a new field, which is cheap, stable WITHIN the season (previews and draws agree week to
@@ -429,11 +437,42 @@ export function mergedWtaRanking(live: readonly RankingRow[], pros: readonly Fie
  *  reference-equality fact a test can pin, not a diff to re-review. The J-tier mixed-table
  *  percentile problem is real and is explicitly phase 2 (docs/specs/living-field.md).
  *
- *  ⚠ THE CANONICAL AI BRACKETS DO NOT COME THROUGH HERE. `drawAiEntrants` (world.ts) passes
- *  `world.cohort` directly, ON PURPOSE: canonical brackets WRITE result rows, and a field pro must
- *  never write into `world.results` – the ledger is persisted state with a 52-week prune sized for
- *  199 players, and a pro's fatigue/standing is derived, not recorded. Consequence, accepted and
- *  documented: AI W-tour news names LIVE players only in phase W. */
+ *  =============================================================================================
+ *  ⚠ THE CANONICAL AI BRACKETS COME THROUGH HERE NOW (W3-FIELD3, 04.08). THE FENCE BELOW IS
+ *  SUPERSEDED, AND ITS REASONING IS KEPT BECAUSE THE HALF OF IT THAT WAS RIGHT IS STILL LAW.
+ *  =============================================================================================
+ *
+ *  WHAT IT USED TO SAY, verbatim in substance: `drawAiEntrants` (world.ts) passes `world.cohort`
+ *  directly, ON PURPOSE – canonical brackets WRITE result rows, and a field pro must never write
+ *  into `world.results`, which is persisted state with a 52-week prune sized for 199 players.
+ *  Consequence, accepted: AI W-tour news names LIVE players only in phase W.
+ *
+ *  WHY IT MOVED. The fence conflated TWO facts that turn out to be separable: "she is in the draw"
+ *  and "she leaves a row". Only the second one costs persisted bytes. Holding them together cost
+ *  the two things W3-ACT2 measured and stopped for:
+ *
+ *    * A GRAND SLAM PLAYED BY CHILDREN. `tools/big-draw-cost.ts`: a 128-draw filled from the live
+ *      cohort alone takes 128 of the 199 juniors in the world, 18.3% of them under the rung's own
+ *      age gate, the youngest THIRTEEN – because `selectEntrants` treats an unfillable draw as a
+ *      crash rather than a compromise and its escape ladder falls through to `cohort`. So the
+ *      majors shipped at draw 32 with the deviation stated (calendar.ts, `slam`).
+ *    * A PROFESSIONAL TOUR WHOSE EVENTS NO PROFESSIONAL PLAYS. 364 derived pros absorbed exactly
+ *      zero canonical W draws – measured at 4.50 W result rows per LIVE rival over a 20-week
+ *      window both before and after W2-FIELD2 (living-field.md §8.2d) – so every W event in the
+ *      game was contested, and every W title won, by juniors.
+ *
+ *  WHAT IS UNCHANGED, AND IT IS THE PART THAT WAS ALWAYS THE REAL RULE: **a field pro still never
+ *  writes into `world.results`.** `runAiTournament` skips the ledger row for an `fp-` id (world.ts)
+ *  and her standing stays exactly what it has always been – derived, `wtaPoints`, a pure function of
+ *  (seed, seasonIndex). Zero persisted bytes, zero schema, zero prune pressure; the ledger in fact
+ *  gets SMALLER, because the slots a pro takes are slots that no longer write a junior's row.
+ *
+ *  WHAT IT COSTS, stated rather than discovered later: a pro's canonical results change nothing
+ *  about her. She cannot climb the table by winning a W100 and cannot fall out of it by losing in
+ *  the first round, and she carries no fatigue ledger, so she is fresh every week of the season.
+ *  Phase 2's pro contour (§2.2 – careers, peaks, retirements) is where that becomes untrue; until
+ *  then the field is a backdrop that plays rather than a backdrop that lives, and the simplification
+ *  is conservative in the hard direction (the field she meets is always at its best). */
 export function universeForTier(
   tier: TierId,
   cohort: AiPlayer[],
