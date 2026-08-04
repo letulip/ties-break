@@ -136,8 +136,8 @@ owner before W2-ENDINGS builds it:
      with what it cost and what it changed. Risk: the engine picking "what mattered" is the game
      doing the judging §6 promises it will not do.
 
-⚠ The architect leans to (c) with the choosing rule made VISIBLE — the player can see why a week
-was chosen — and (a) reachable underneath it. But this is the owner's page.
+✅ **ANSWERED 05.08: (c), and it is an ALBUM.** The full design is §9 — seven polaroids, the
+choosing rule printed on every page, the scroll kept underneath.
 
 **5.6 — A NEW CAREER, ONE QUESTION ASKED — AND THE OWNER'S ANSWER MOVED THE GAME.** ✅ «можно
 сделать в конце какой-то выбор с авто-созданием нового рандомного персонажа, спросим только вилку
@@ -207,3 +207,75 @@ Owner: _______________  ·  date: _______________
 Once signed, this page is the entry criterion for W2-ENDINGS and the source of truth for the
 README's claims. A change to it after signing is a decision with a date, recorded in
 docs/decisions.md like every other.
+
+---
+
+## 9. The epilogue — THE ALBUM (owner, 05.08)
+
+His answer to §5.5's open shape: «давай семь недель с видимым правилом отбора, но мне кажется это
+должно быть что-то кинематографичное, что-то вроде фотоальбома с этими неделями, что-то
+эмоциональное… у нас есть рамка для фоточки на главной, может быть мы сможем что-то придумать
+интересное».
+
+⚠ AND THE COMPONENT HE IS POINTING AT ALREADY SAYS THIS OUT LOUD. `ui/Polaroid.vue`'s own header:
+*"cream paper, a fat bottom lip, a tilt, and a photograph inside it. The only LIGHT surface in the
+app, and the reason Home's memory card reads as a page from an album rather than as a thumbnail in
+a list."* The album is not a new idea to be invented — it is the memory card, grown to the size of
+a career.
+
+### 9.1 What a page is
+
+Seven polaroids, one per chosen week, paged one at a time rather than scrolled — a photograph you
+turn, not a feed you flick. Each page carries four things and no fifth:
+
+1. **The photograph.** `portraitArtUrl(stage, emotion)` — the art system is already keyed on her
+   AGE BAND × the WEEK'S EMOTION, so a page shows her as she was that week and feeling what she
+   felt. Nothing new is drawn: a fourteen-year-old's first title and a thirty-year-old's last match
+   are different pictures because the career made them different.
+2. **The week, in her own hand.** `PaperNote` with one line in the diary's voice — the shipped
+   phrase pools already write in it.
+3. **One fact.** The cheque, the rank, the opponent, the layoff. Whatever that week's milestone
+   carries in `Milestone` (`tier`, `rank`, `kind`, `seasonIndex`) — never a computed summary.
+4. **Why this week is in the album.** One short line, visible, always: *"Her first title."* *"The
+   week the money turned."* *"The one that took eleven weeks."*
+
+Point 4 is the owner's «видимое правило отбора», and it is what keeps §6's promise. An engine that
+silently chooses "what mattered" is the game judging; an engine that shows its reason is the game
+explaining.
+
+### 9.2 The seven slots, and the rule for each
+
+The material is `world.milestones` — durable, never pruned, six types (`title` · `final` · `prize`
+· `international` · `injury` · `season-rank`) plus the finance ledger and the rank history. The
+slots are FIXED, so the album has a shape every career shares, and each slot is filled by a rule
+that a player could check by hand:
+
+| # | the page | the rule | if the career has none |
+| --- | --- | --- | --- |
+| 1 | **The beginning** | her first entered event, always | never empty |
+| 2 | **The first time she won something** | earliest `title`, any rung | falls back to earliest `final` |
+| 3 | **The first cheque** | earliest `prize` | the page says the money never came, and that IS the story |
+| 4 | **The best week** | the highest-rung `title`, ties broken by the best rank held that week | falls back to the best `season-rank` |
+| 5 | **The worst week** | the `injury` with the longest layoff, or the season her rank fell furthest | the page says she was never seriously hurt |
+| 6 | **The turn** | the week her cumulative prize money first exceeded her cumulative costs — the break-even the whole game is about | the page says it never happened, which is true of most careers |
+| 7 | **The last week** | the ending itself, whichever of the six it was | never empty |
+
+⚠ SLOTS 3, 5 AND 6 MUST HAVE AN EMPTY FACE. A career that never earned a cheque, was never hurt,
+or never broke even is the COMMON career, not a broken one — and an album that quietly drops those
+pages would tell the successful story to everybody. The empty page is the honest one, and it says
+so plainly without consolation.
+
+### 9.3 Underneath
+
+The full scroll — every milestone in order, paged by season — reachable from the album's last page
+for the player who wants the record rather than the story. That is §5.5's option (a), kept as the
+floor rather than as the surface.
+
+### 9.4 What this costs to build
+
+Almost nothing new: `Polaroid`, `PaperNote`, `portraitArtUrl`, `world.milestones` and the finance
+ledger all ship today. The work is the selection (seven pure functions over the ledgers), the
+paging surface, and the copy. ⚠ The one genuinely new number is slot 6's cumulative crossing —
+the finance ledger keeps 60 weeks, so the break-even week has to be captured as a MILESTONE when
+it happens rather than reconstructed at the end. That is one new `MilestoneType` and it must land
+in the endings wave, not after it.
