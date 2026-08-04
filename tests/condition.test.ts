@@ -351,7 +351,22 @@ const REF = {
   // set of juniors ends it holding counting ITF points. Post-draw arithmetic end to end - every
   // one of those brackets runs on its own `seed:aitour:<id>` sub-stream - so count 41550 and hash
   // e6b0c709 are asserted above this line and reproduce byte-for-byte.
-  kidRank: 123,
+  //
+  // ⚠⚠ RE-PINNED 123 -> 89 BY W3-FIELD3 (04.08), and this one is a RULE rather than content - the
+  // biggest move this companion has taken since the adult rungs, and worth reading as a measurement
+  // of the wave rather than as an update. The W-track canonical brackets now draw from LIVE cohort ∪
+  // 364 derived professionals, and a professional leaves no ledger row, so the ~98 W events a season
+  // stop landing on the cohort entirely: W result rows per rival over a 20-week window measure 6.79
+  // before the seam and 0.00 after. The juniors therefore end the year fresher (median condition 28-36
+  // -> 95-100, tests/rivals.test.ts C2) and play out a year of J draws that resolve differently, so a
+  // different set of them ends it holding counting ITF points and she sits 34 places higher among
+  // them. SHE DID NOTHING DIFFERENT - this fixture's kid is the stub build and enters nothing.
+  //
+  // THE CAPTURE ITSELF IS UNTOUCHED, WHICH IS WHAT THIS TEST IS FOR: count 41550, hash e6b0c709,
+  // head and tail are all asserted ABOVE this line in the same test and reproduce byte-for-byte on
+  // this branch. Every draw the wave moved is on a `seed:aitour:<id>` sub-stream; MAIN still carries
+  // base costs + `driftCohort`'s 4 x 199 and nothing else.
+  kidRank: 89,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

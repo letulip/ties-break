@@ -493,8 +493,9 @@ recoverable without the §8.3 item below.
   tiers (§1's band trap, junior edition) is real and untouched.
 - **Field-pro fatigue.** Phase W's pros are always fresh; a derived seasonal schedule (or §3.3's
   allotment shape) would let a tired pro sit a week out.
-- **Field pros in the canonical AI brackets and the news** — requires either fp-safe result rows
-  or the §3.3 title lottery, so AI W-tour news can name a professional.
+- ~~**Field pros in the canonical AI brackets and the news**~~ — **LANDED 04.08, §8.4 below.** It
+  needed neither fp-safe result rows nor the §3.3 title lottery: a pro plays the bracket and simply
+  leaves no row.
 - **Aging and turnover ACROSS seasons** — today the field re-deals per season; §2.2's pro contour
   (careers, peaks at 23-24, retirements, the graduating junior joining the field) is the real
   design.
@@ -502,6 +503,107 @@ recoverable without the §8.3 item below.
   the population does (append-only, see the SURNAMES note in cohort.ts).
 - **The Stats World-Tour chip** — the wta tab rides in a parallel wave (feat/round15); the data
   under it (`ladders.wta`) is finished here and works whichever lands first.
+
+### 8.4 The canonical brackets — the fence moves, the ledger does not (04.08, W3-FIELD3)
+
+§8.3's third bullet, taken. The scope fence at the top of `fieldPros.ts` held two facts together
+that turn out to be separable — **"a field pro is in the draw"** and **"a field pro leaves a row"** —
+and only the second one costs persisted bytes. So the W-track canonical brackets now draw from LIVE
+cohort ∪ field pros, through the same `universeForTier` seam, the same `selectEntrants`, the same
+age gate and the same entrant bands her shadow run has used since phase W; and `runAiTournament`
+writes a ledger row for the LIVE entrants only (`isFieldProId` → `continue`).
+
+**The shape, and what it costs.** Zero schema, zero migration, zero new fields. The ledger gets
+*smaller*: a 32-draw W event used to push 32 junior rows into `world.results` and now pushes only as
+many as it drew LIVE girls. Two alternatives were considered and not taken — a parallel
+non-persisted results view (a second ledger for `rivalConditions` to keep in step with the first)
+and a bounded per-season pro-results structure (a schema bump to buy a pro a ranking that moves,
+which is §2.2's pro contour and should arrive *with* aging and retirement, not ahead of them). What
+the chosen shape costs is fidelity: **a pro's canonical results change nothing about her.** She
+cannot climb by winning a W100, cannot fall out by losing her opener, and banks no fatigue.
+
+**And it made the tick FASTER, which was not the aim** — 3 worlds × 208 timed weeks after a season
+of warm-up, both arms on this branch: **2.34 → 1.65 ms/week (−29%)**. A bigger candidate pool costs
+one draw per extra candidate on an event sub-stream; not writing ~30 rows per W event costs the
+ledger nothing every week thereafter, and `rivalConditions` / `computeRanking` / `pruneResults` all
+fold that smaller ledger on every single tick. The saving is larger than the spend.
+
+**RNG.** Zero MAIN draws, exactly as before — the frozen capture (41550 / `e6b0c709`) re-derives
+byte-for-byte, asserted by five suites and by both arms of every input-independence A/B in
+`planner.test.ts` P1. What moved is the COMPOSITION of each W event's own `seed:aitour:<id>`
+sub-stream (one draw per candidate of a 563-row universe instead of a 199-row one) — the documented
+mutable class, and independent of player input by construction: the count is a function of (seed,
+week, the kid-free ledger, the derived field). The six non-W rungs are byte-identical, because
+`universeForTier` hands them back the cohort array instance itself.
+
+**Acceptance 1 — big draws are possible now** (`tools/big-draw-cost.ts`, 4 worlds × 260 weeks,
+sampled every 13th; both arms measured on this branch, the seam off and on):
+
+| draw | of-age in world | in-band | out-of-band | under-age | youngest | ms/bracket | verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 32 BEFORE | 110.4 | 37.0 | 0.0% | 0.0% | 17 | 0.13 | OK |
+| 32 AFTER | 450.1 | 99.2 | 0.0% | 0.0% | 17 | 0.56 | OK |
+| 64 BEFORE | 110.4 | 37.0 | 42.2% | 0.0% | 17 | 0.24 | OK |
+| 64 AFTER | 450.1 | 99.2 | **0.0%** | 0.0% | 17 | 0.74 | OK |
+| 128 BEFORE | 110.4 | 37.0 | 71.1% | **14.6%** | **13** | 0.48 | **BROKEN** |
+| 128 AFTER | 450.1 | 99.2 | **22.5%** | **0.0%** | **17** | 1.76 | **OK** |
+
+The measurement that shipped the majors at 32 was population, and the population answered: 110
+eligible players became 450, the 128-draw's children are gone, and the youngest entrant of a Grand
+Slam is seventeen at every size. ⚠ **The draw sizes are NOT changed in this wave** – this is the
+number that lets the owner decide. What he should read before deciding: at 128 the draw is still
+22.5% backfill, because the Slam's own window `[0, 0.185]` is 104 rows of a 563-row table against
+128 chairs. A real 128 therefore also wants either a wider top-rung window or the fifth storey §8.2c
+flags (`FIELD.size` ≈ 520). At **64 the field is entirely in-band** and the clock is 0.74 ms.
+
+**Acceptance 2 — the W tour can name a professional.** `runAiTournament` gained a champion news
+line, and the name resolves through `playerShortName`, so an `fp-` id comes back as a person. Two
+deliberate limits: it fires from **W100 up** (a feed budget, not a taste — `EVENTS_CAP` is 400 and
+all ten W rungs would be ~98 lines a season against a feed that already takes ~364; W100-and-up is
+~37, under one a week), and it skips the event **she entered**, because her shadow run and the
+canonical bracket are two different universes for one event id and printing both would put two
+champions of one tournament in one week's news.
+
+**⚠ THE COHORT COST §8.2d HANDED OVER IS REPAID, AND IT OVERSHOT.** That entry measured 4.50 W
+result rows per rival before and after W2-FIELD2 and concluded the population "does NOT relieve it
+and cannot" while the fence stood. With the fence moved, the same sweep as every C2 re-pin (8 seeds
+× 40 ticked weeks × 199 rivals, window 20w), the seam off and on:
+
+| | BEFORE (canonical W = LIVE only) | AFTER (LIVE ∪ pros) |
+| --- | --- | --- |
+| W result rows per rival | 6.79 | **0.00** |
+| worst floored weeks / 20 | 10–19 | **0** |
+| heavy (≥10w floored) of 199 | 1–22 | **0** |
+| ever floored | 23.1–31.2% | **0.0%** |
+| min median condition | 28–36 | **95–100** |
+
+The C2 tripwire that has been inverted since task #17 — "the knee claim is currently LOST … if a
+later slice gives the field its condition back, this line fails and somebody has to restore the
+stronger assertion" — is restored at the knee it originally defended.
+
+**⚠⚠ AND THE FLIP SIDE, WHICH IS THIS WAVE'S OPEN ITEM: the load did not get SHARED, it MOVED. LIVE
+W rows are now exactly zero.** A junior holds no W points, so she sits below all 364 pros in the
+merged table, so she is outside every W rung's entrant window (the widest, W15's, ends at percentile
+0.72 and the pros alone fill it), so she is never drawn, so she can never earn a W point. That is a
+**closed loop** — the same one the kid's own gate solves with an on-ramp rule (`tierFloorOpen` reads
+her ITF junior points for W15, "because a player cannot hold a ranking in a table she has never
+played in"). The AI juniors have no such rule and this wave deliberately does not invent one. It is
+pinned as a fact in `tests/rivals.test.ts` C2 and `tests/season/fieldPros.test.ts`, so whoever gives
+the juniors a route into the professional table has to come back and restate the trade. The two
+obvious knobs: an AI on-ramp (a junior's ITF standing positioning her in the merged W tail) or a
+capped professional share of each W draw.
+
+**Also freed, unasked:** the pre-off-season wall. `resolveDoubleBookings`' over-subscribed weeks —
+three structural offsets in every season of every seed, 312 draw slots for 199 rivals — measure
+**zero in 104 weeks**, because the shortage was always a W shortage and a W chair may now hold any
+of 364 professionals. The Hall arithmetic inside that guard is untouched and the count is pinned at
+the measured zero.
+
+**⚠ The rival-side fatigue gate now has room that is not this wave's to spend.** §8.2d recorded that
+the fatigue bench's rival-side gate stays at 40 and «W2-LADDER's hope of restoring it to 50 is not
+recoverable without the §8.3 item». It is recoverable now — `rivalCondMean` has a great deal more
+headroom than 50 — but re-tuning a bench gate on the back of a population change is a separate,
+measured decision. Reported, not taken.
 
 ---
 *Grounded in: `cohort.ts` (199 / 8 draws / 0.05-growth), `world.ts` `runAiTournament`

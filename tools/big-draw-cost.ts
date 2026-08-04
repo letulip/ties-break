@@ -10,15 +10,25 @@
 //
 //   1. TIME – a 128-draw is 127 AI-AI matches against a 32-draw's 31. Wall-clock per bracket, at
 //      each size, on the real `runTournament` with real cohort players.
-//   2. POPULATION – and this is the one that decides it. The canonical AI bracket is LIVE-ONLY by
-//      design: `drawAiEntrants` draws from `world.cohort` and nothing else, because a DERIVED field
-//      pro must never write a persisted result row (living-field.md §8.3; act2-pro-tour.md §8b names
-//      putting field pros into the canonical brackets as act-3 work in its own right). The cohort is
-//      199 players aged 13-19, and a W rung's age gate keeps only the 17-and-overs. So the honest
-//      question is not "can the machine do 127 matches" – it obviously can – but "who is in the
-//      draw", and `selectEntrants` answers that with an escape ladder it takes when a draw cannot be
-//      filled: in-band ⇒ of-age ⇒ EVERYBODY. A draw bigger than the eligible population does not
-//      fail loudly. It quietly fills a Grand Slam with children.
+//   2. POPULATION – and this is the one that decides it. `selectEntrants` treats a draw it cannot
+//      fill as a crash rather than a compromise, so it carries an escape ladder: in-band ⇒ of-age ⇒
+//      EVERYBODY. A draw bigger than the eligible population therefore does not fail loudly. It
+//      quietly fills a Grand Slam with children.
+//
+// ⚠⚠ THE ANSWER CHANGED UNDER THIS TOOL (W3-FIELD3, 04.08), WHICH IS WHY IT EXISTS.
+//
+// When it was written the canonical AI bracket was LIVE-ONLY by design – `drawAiEntrants` drew from
+// `world.cohort` and nothing else, because a DERIVED field pro must never write a persisted result
+// row (living-field.md §8.3) – so a 128-draw was contested by 128 of the 199 CHILDREN in the world,
+// 18.3% of them under the rung's own age gate and the youngest thirteen. That measurement is what
+// shipped the majors at draw 32 with the deviation stated in `calendar.ts`.
+//
+// W3-FIELD3 separated the two facts the old fence held together: a pro is now IN the canonical W
+// draw and still writes NO row. So the canonical universe below is the one the engine actually uses
+// – LIVE cohort ∪ 364 derived professionals, positioned by the merged W standings – and the numbers
+// this prints are the population argument re-taken against it. ⚠ IT STILL CHANGES NO SHIPPED DRAW
+// SIZE: the tool patches `drawSize` in memory to ask the counterfactual, and the decision about the
+// real majors is the owner's to make with the table in hand.
 //
 // WHAT IT PRINTS, per candidate draw size: the eligible population, the in-band candidate count, the
 // share of the drawn field that came from OUTSIDE the entrant band (backfill – the exact failure the
@@ -36,7 +46,7 @@ import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, isTierAgeOpen, TIER_SHORT } from '../src/engine/season/calendar'
 import { selectEntrants, isEntrantBand, runTournament } from '../src/engine/season/tournament'
 import { rivalMatchPlayer } from '../src/engine/season/rival'
-import { fieldProsFor, mergedWtaRanking } from '../src/engine/season/fieldPros'
+import { fieldProsFor, isFieldProId, mergedWtaRanking, universeForTier } from '../src/engine/season/fieldPros'
 import type { TierId, SeasonEvent, AiPlayer, RankingRow } from '../src/engine/season/types'
 import type { WorldState } from '../src/engine/world'
 
@@ -77,16 +87,19 @@ function emptyCell(): Cell {
 const cells = new Map<number, Cell>(SIZES.map((s) => [s, emptyCell()]))
 
 /** The canonical bracket's own universe and standings, rebuilt exactly as `tickWeek` builds them:
- *  LIVE cohort only, folded on the W table. This is the population the counterfactual is about. */
+ *  since W3-FIELD3 that is LIVE cohort ∪ this season's derived professionals, positioned by the
+ *  MERGED W standings folded WITHOUT the kid. This is the population the counterfactual is about,
+ *  and it is the whole of what moved – the draw sizes below are the same counterfactual as before. */
 function canonical(world: WorldState): { cohort: AiPlayer[]; ranking: RankingRow[] } {
-  const ranking = computeRanking(
-    world.results,
+  const pros = fieldProsFor(world.seed, seasonIndexOf(world.week), world.cohort.map((p) => p.name))
+  const live = computeRanking(
+    world.results.filter((r) => r.playerId !== KID_ID),
     world.week,
     BEST_N_BY_TRACK.wta,
-    [...world.cohort.map((p) => p.id), KID_ID],
+    world.cohort.map((p) => p.id),
     inTrack('wta'),
   )
-  return { cohort: world.cohort, ranking }
+  return { cohort: universeForTier(TIER, world.cohort, pros), ranking: mergedWtaRanking(live, pros) }
 }
 
 function sampleWeek(world: WorldState): void {
@@ -175,16 +188,21 @@ console.log(
   `BIG DRAW COST – rung "${TIER_SHORT[TIER]}" (shipped draw ${shippedDraw}), ` +
     `${SEEDS} worlds x ${WEEKS} weeks sampled every ${SAMPLE_EVERY}th`,
 )
-console.log(
-  `  the canonical bracket's universe is the LIVE COHORT ALONE (${createWorld('big-draw-0').cohort.length} players, ages 13-19); ` +
-    `the ${TIER_SHORT[TIER]} age gate is ${TIERS[TIER].minAgeYears}+`,
-)
+{
+  const probe = createWorld('big-draw-0')
+  const probePros = fieldProsFor(probe.seed, seasonIndexOf(probe.week), probe.cohort.map((p) => p.name))
+  console.log(
+    `  the canonical bracket's universe is LIVE COHORT ∪ FIELD PROS since W3-FIELD3 ` +
+      `(${probe.cohort.length} juniors aged 13-19 + ${probePros.length} professionals aged 16-30 = ` +
+      `${probe.cohort.length + probePros.length}); the ${TIER_SHORT[TIER]} age gate is ${TIERS[TIER].minAgeYears}+`,
+  )
+}
 console.log(
   `  entrant window ${JSON.stringify(TIERS[TIER].entrantPctBand)} · ` +
     `matches per bracket: ${SIZES.map((s) => `${s}-draw ${s - 1}`).join(' · ')}`,
 )
 
-console.log('\n  draw   of-age in cohort   in-band   drawn   out-of-band   under-age   youngest   ms/bracket')
+console.log('\n  draw   of-age in world    in-band   drawn   out-of-band   under-age   youngest   ms/bracket')
 for (const size of SIZES) {
   const c = cells.get(size)!
   const per = (n: number) => (n / Math.max(1, c.draws)).toFixed(1)
@@ -213,24 +231,35 @@ for (const size of SIZES) {
   console.log(`    ${String(size).padStart(4)}: ${verdict}`)
 }
 
-// The merged table exists too, and it is the number the FIX would be measured against – the kid's
-// shadow run already draws from LIVE ∪ field pros. Printed so the wave report can say how far away
-// the honest 128 is rather than merely that it is away.
+// WHO IS ACTUALLY IN THE DRAW – the other half of the population question, and the one the old
+// LIVE-only run could not ask at all. A 128-draw is only honest if the people filling it are
+// professionals rather than the world's juniors reached for by the escape ladder, so the share of
+// each draw that is derived is printed beside the window it came from.
 {
   const world = createWorld('big-draw-merged')
   const pros = fieldProsFor(world.seed, seasonIndexOf(world.week), world.cohort.map((p) => p.name))
-  const live = computeRanking(
-    world.results.filter((r) => r.playerId !== KID_ID),
-    world.week,
-    BEST_N_BY_TRACK.wta,
-    world.cohort.map((p) => p.id),
-    inTrack('wta'),
-  )
-  const merged = mergedWtaRanking(live, pros)
+  const { cohort, ranking } = canonical(world)
   const [lo, hi] = TIERS[TIER].entrantPctBand
   console.log(
-    `\n  for scale: the MERGED table (live ∪ ${pros.length} field pros) is ${merged.length} rows, and the ` +
-      `${TIER_SHORT[TIER]} window [${lo}, ${hi}] is ${Math.round((hi - lo) * merged.length)} of them – ` +
-      `so the fix living-field.md §8.3 names (field pros in the canonical brackets) is what a real 128 needs.`,
+    `\n  for scale: the MERGED table (live ∪ ${pros.length} field pros) is ${ranking.length} rows, and the ` +
+      `${TIER_SHORT[TIER]} window [${lo}, ${hi}] is ${Math.round((hi - lo) * ranking.length)} of them.`,
   )
+  console.log('\n  draw   from the professional field   from the live cohort')
+  for (const size of SIZES) {
+    ;(TIERS[TIER] as { drawSize: number }).drawSize = size
+    const event: SeasonEvent = {
+      id: `probe-mix-${TIER}`,
+      week: world.week,
+      tier: TIER,
+      surface: 'hard',
+      travelCostCents: 0,
+      deadlineWeek: world.week - 2,
+    }
+    const drawn = selectEntrants(event, cohort, ranking, rngFromSeed(`${world.seed}:probe:mix:${size}`))
+    const fp = drawn.filter((p) => isFieldProId(p.id)).length
+    console.log(
+      `  ${String(size).padStart(4)}   ${String(fp).padStart(26)}   ${String(drawn.length - fp).padStart(20)}`,
+    )
+  }
+  ;(TIERS[TIER] as { drawSize: number }).drawSize = shippedDraw
 }

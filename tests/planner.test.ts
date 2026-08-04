@@ -221,7 +221,16 @@ function hashOf(draws: number[]): string {
 // season, so the cohort meets 30 more draws and a different set of juniors ends the year holding
 // counting ITF points. The declaration this one mirrors is tests/condition.test.ts B1's REF; the
 // frozen MAIN capture is untouched by construction (every bracket runs on `seed:aitour:<id>`).
-const REF = { kidRank: 123 }
+// ⚠⚠ RE-PINNED 123 -> 89 BY W3-FIELD3 (04.08) – a RULE this time, and the largest move this
+// companion has taken since the adult rungs. The W-track canonical brackets draw from LIVE cohort ∪
+// 364 derived professionals and a professional leaves NO ledger row, so the season's ~98 W events
+// stop landing on the 199 juniors altogether (W result rows per rival over a 20-week window: 6.79 ->
+// 0.00). The cohort plays out the year fresher, its J draws resolve differently, and a different set
+// of juniors ends the year holding counting ITF points. THE A/B HALVES ABOVE THIS LINE ARE THE POINT
+// OF THIS BLOCK AND THEY ARE UNTOUCHED: the booking-heavy career and the baseline still take
+// byte-identical MAIN sequences (same count, same hash), asserted two lines before this constant is
+// ever read. Full argument at the B1 REF in tests/condition.test.ts.
+const REF = { kidRank: 89 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

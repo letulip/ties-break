@@ -787,6 +787,32 @@ export const TIERS: Record<TierId, TierDef> = {
     // half-derived: the research table is normalised to 32 main-draw rows, so 2000/1300/780/430/
     // 240/130 is exactly what the rulebook publishes and no R64/R128 value had to be invented.
     // A 128-draw Slam would have needed two rows the research does not print.
+    //
+    // =============================================================================================
+    // ✅⚠ THE POPULATION OBJECTION IS ANSWERED (W3-FIELD3, 04.08) AND THE DRAW IS STILL 32.
+    // =============================================================================================
+    //
+    // The wave above is done: the canonical W brackets draw from LIVE cohort ∪ 364 derived
+    // professionals, and a pro leaves no persisted row (world.ts `runAiTournament`). Re-measured
+    // with the same tool, 4 worlds x 260 weeks, both arms on one branch:
+    //
+    //     draw   of-age in world   in-band   out-of-band   under-age   youngest   ms   verdict
+    //      32     110 -> 450        37 -> 99   0.0% ->  0.0%  0.0% -> 0.0%  17 -> 17  0.13->0.56  OK
+    //      64     110 -> 450        37 -> 99  42.2% ->  0.0%  0.0% -> 0.0%  17 -> 17  0.24->0.74  OK
+    //     128     110 -> 450        37 -> 99  71.1% -> 22.5% 14.6% -> 0.0%  13 -> 17  0.48->1.76  BROKEN->OK
+    //
+    // So the sentence this note was built on - "a Grand Slam would be played by children" - is no
+    // longer true at any size, and the clock was never the constraint (1.76 ms for 127 matches).
+    //
+    // ⚠ THE SIZE IS DELIBERATELY NOT CHANGED HERE. It is an owner decision and the numbers are now
+    // his to decide on, but two of them belong beside it. (a) At 128 the draw is still 22.5%
+    // BACKFILL - this rung's own window [0, 0.185] is 104 rows of a 563-row table against 128
+    // chairs - so a real 128 wants a wider top-rung window or the fifth storey living-field.md §8.2c
+    // flags (FIELD.size near 520), and shipping 128 without one would trade "played by children" for
+    // "a quarter of the Slam is people the rung does not admit". (b) At 64 the field is ENTIRELY
+    // IN-BAND, which is the first honestly fillable big draw this game has ever had. (c) The points
+    // row above is still normalised to 32 rows, so any size change needs the research's R64/R128
+    // values, which it does not print.
     drawSize: 32,
     entryFeeCents: 0,
     // ⚠ SHE IS NOT CHARGED TO ENTER A SLAM. Real rule, and it is the one entry fee in the game that
