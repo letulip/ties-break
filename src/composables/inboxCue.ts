@@ -84,18 +84,24 @@ function useWatermark<T extends number | string | null>(
 ): Watermark {
   const game = useGameStore()
   const key = () => `${keyPrefix}:${game.snapshot?.careerId ?? ''}`
+  // ⚠ AN EMPTY INBOX IS STORED AS '', NEVER AS THE STRING "null". `String(null)` is `"null"`, which
+  // reads back as a five-character id that no letter will ever have - harmless today (nothing equals
+  // it, so the first real letter still counts as new) and a trap the day anything compares these
+  // values for anything else. '' round-trips to `null` and says what it means in devtools.
+  const EMPTY = ''
   const read = (): T => {
     try {
       const stored = localStorage.getItem(key())
       if (stored === null) return newest.value
-      return (typeof newest.value === 'number' ? (Number(stored) as T) : (stored as T))
+      if (typeof newest.value === 'number') return Number(stored) as T
+      return (stored === EMPTY ? null : stored) as T
     } catch {
       return newest.value // storage unavailable: claim nothing
     }
   }
   const write = (value: T): void => {
     try {
-      localStorage.setItem(key(), String(value))
+      localStorage.setItem(key(), value === null ? EMPTY : String(value))
     } catch {
       // storage unavailable - the dot still clears for this session, it just will not persist
     }
