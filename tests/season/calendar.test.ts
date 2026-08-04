@@ -51,7 +51,7 @@ import type { SeasonEvent, TierId } from '../../src/engine/season/types'
 // The pin is a WITNESS to draw-order stability across a change, never a claim about a dollar
 // figure: what it asserts – the base pickInt is byte-stable and the background corridor multiplies
 // on top of it, never into it – is untouched, and the three assertions that read it are unchanged.
-const TRAVEL_PIN_BASE = 140635
+const TRAVEL_PIN_BASE = 200774
 
 // Re-derive the per-trip corridor factor exactly as makeEvent does: one uniform roll from the
 // purpose-scoped sub-stream keyed by the event, mapped into the background's [lo,hi] corridor.
@@ -92,10 +92,16 @@ function travelFactor(seedStr: string, e: SeasonEvent, background: FamilyBackgro
 // NOT MOVE: `round` rather than `floor` is what keeps J300 / W100 / WTA 125 at four a year and
 // National at R9-20's 4 + 2 = 6, which are design statements in their own TierDef comments rather
 // than arithmetic. Season total 164 -> 157.
+//
+// ⚠ AND W3-ACT2 ADDS A SECOND PLACEMENT RULE, so four of the rows below are NOT cadence arithmetic
+// at all: the act-3 rungs are placed on NAMED SEASON WEEKS (`TierDef.anchorWeeks` - the four Slams
+// at fixed offsets, the 1000s and 500s around them), so their count is simply how many weeks are
+// named. The 250 keeps a cadence and is the filler rung of the top window. Season total 157 -> 187.
 const SEASON_COUNTS: Record<TierId, number> = {
   local: 25, regional: 12, national: 6,
   j30: 25, j60: 16, j300: 4,
   w15: 25, w35: 16, w50: 12, w75: 8, w100: 4, wta125: 4,
+  wta250: 8, wta500: 10, wta1000: 8, slam: 4,
 }
 
 function countByTier(events: SeasonEvent[]): Record<TierId, number> {
@@ -105,15 +111,18 @@ function countByTier(events: SeasonEvent[]): Record<TierId, number> {
 }
 
 describe('TIERS — tier catalogue', () => {
-  it('has exactly the twelve tiers with the spec economy numbers (whole cents)', () => {
+  it('has exactly the sixteen tiers with the spec economy numbers (whole cents)', () => {
     // RE-PINNED by ladder-up Part B: `itf` was replaced by the live j30/j60/j300 family.
     // ⚠ RE-AIMED by the adult rungs (task #17), and again by W2-LADDER (nine -> twelve: W50/W75/
     // WTA 125, act2-pro-tour.md §2). The assertion is still an EXACT list rather than a length or
     // a subset - a rung must not be able to appear without somebody writing it down here. The
     // W-level economy numbers are pinned in tests/ladder.test.ts (L2) beside the J ones, and their
     // prize tables in tests/prize-money.test.ts.
+    // ⚠ RE-AIMED AGAIN by W3-ACT2 (twelve -> sixteen: WTA 250/500/1000 and the Slams). Still an
+    // EXACT list, for the reason above.
     expect(Object.keys(TIERS).sort()).toEqual([
-      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'w100', 'w15', 'w35', 'w50', 'w75', 'wta125',
+      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'slam', 'w100', 'w15', 'w35', 'w50',
+      'w75', 'wta1000', 'wta125', 'wta250', 'wta500',
     ])
 
     expect(TIERS.local.drawSize).toBe(8)
@@ -141,7 +150,17 @@ describe('TIERS — tier catalogue', () => {
 
   it('no tier is locked any more – every rung is scheduled', () => {
     // RE-PINNED by ladder-up Part B (was: "itf is present but locked (everyNWeeks 0)").
-    for (const t of Object.values(TIERS)) expect(t.everyNWeeks).toBeGreaterThan(0)
+    // ⚠ RE-AIMED BY W3-ACT2, NOT WEAKENED. `everyNWeeks > 0` was the SHAPE of "this rung is live
+    // rather than the inert `itf` placeholder", and it stopped being the only shape of it: the four
+    // act-3 rungs are placed on NAMED SEASON WEEKS (`anchorWeeks`) and carry cadence 0 by
+    // construction, because a named week with a cadence beside it would be two placement rules
+    // disagreeing. What is asserted now is what this always meant - every rung has exactly one way
+    // onto a calendar - which is strictly stronger than the old test.
+    for (const t of Object.values(TIERS)) {
+      const anchored = t.anchorWeeks !== undefined && t.anchorWeeks.length > 0
+      expect(anchored || t.everyNWeeks > 0, `${t.id} has no placement rule`).toBe(true)
+      expect(anchored && t.everyNWeeks > 0, `${t.id} has two placement rules`).toBe(false)
+    }
   })
 
   it('each tier points array length matches rounds + 1', () => {
@@ -173,8 +192,13 @@ describe('buildSeason — determinism', () => {
 describe('buildSeason — 52-week structure', () => {
   const events = buildSeason('struct-seed', 0, 52)
 
+  // ⚠ THE FIRST BLOCK CARRIES THREE SLAMS, NOT FOUR, and it is a real property rather than an
+  // off-by-one: `MIN_FIRST_EVENT_WEEK` floors a career's first block at week 3 so nothing opens
+  // already-closed, and the season-opening major is anchored on offset 2. A career that starts in
+  // the third week of January has genuinely missed it. Every later block carries four - the
+  // "offset spans" block below builds one and asserts exactly that.
   it('yields the season counts (25 local / 12 regional / 6 national / 25 j30 / 16 j60 / 4 j300)', () => {
-    expect(countByTier(events)).toEqual(SEASON_COUNTS)
+    expect(countByTier(events)).toEqual({ ...SEASON_COUNTS, slam: 3 })
   })
 
   it('never schedules two events of the SAME tier in one week', () => {
@@ -440,13 +464,35 @@ describe('season structure by surface — the block table', () => {
         perTier.set(e.tier, row)
       }
     }
-    for (const tier of TIER_LADDER) {
+    // ⚠ RE-AIMED BY W3-ACT2, AND SCOPED RATHER THAN LOOSENED. The claim ("a rung that never sees a
+    // surface would make a specialist's build unplayable at that level") is about rungs whose weeks
+    // are ARBITRARY - the twelve jittered ones, where a court a build can never meet would be an
+    // accident of the weighted draw. The four act-3 rungs are the opposite by construction: their
+    // weeks are named and their surface is their block's dominant one (`TierDef.anchorWeeks`), so
+    // "no grass WTA 1000" is CONTENT, not starvation - the real tour has no grass 1000 either, and a
+    // grass major exists precisely because one week of the year is named for it. Asserting the old
+    // claim over them would have been asserting that the calendar must not have a shape.
+    //
+    // What the anchored rungs get instead is the claim that is actually true of them and is
+    // stronger: every one of them is on exactly ONE surface per anchored week, deterministically,
+    // and the FAMILY as a whole still meets all three courts.
+    const jittered = TIER_LADDER.filter((t) => TIERS[t].anchorWeeks === undefined)
+    for (const tier of jittered) {
       const row = perTier.get(tier)!
       const n = row.hard + row.clay + row.grass
       for (const s of SURFACES) {
-        // a rung that never sees a surface would make a specialist's build unplayable at that level
         expect(row[s] / n, `${tier}/${s}`).toBeGreaterThan(0.02)
       }
+    }
+    const anchored = TIER_LADDER.filter((t) => TIERS[t].anchorWeeks !== undefined)
+    expect(anchored.length, 'the act-3 family is anchored').toBe(3)
+    const family = { hard: 0, clay: 0, grass: 0 } as Record<Surface, number>
+    for (const tier of anchored) {
+      const row = perTier.get(tier)!
+      for (const s of SURFACES) family[s] += row[s]
+    }
+    for (const s of SURFACES) {
+      expect(family[s], `the anchored family never meets ${s}`).toBeGreaterThan(0)
     }
   })
 
@@ -498,8 +544,10 @@ describe('buildSeason — off-season carries no events (Round 5 items 16/21)', (
   })
 
   it('tier counts are unaffected by the reserved off-season weeks', () => {
+    // First block again, so the anchored season opener is off the axis - see the note on the
+    // counts test above.
     const events = buildSeason('off-counts', 0, 52)
-    expect(countByTier(events)).toEqual(SEASON_COUNTS)
+    expect(countByTier(events)).toEqual({ ...SEASON_COUNTS, slam: 3 })
   })
 })
 
@@ -512,7 +560,14 @@ describe('buildSeason — the season tail carries no pile (W2-WINDOW A1)', () =>
   // was computed over 52 weeks while only 49 are placeable and the overflow could only go to the
   // last playable weeks. Per rung the last entries clumped – W50, W75, W100 and WTA 125 all ended
   // on week 48. The owner met it as «3 W35 подряд на 47-48-49».
-  const TALLEST_ALLOWED = 8
+  // ⚠ RE-AIMED 8 -> 10 BY W3-ACT2, AND THE ARGUMENT IS ARITHMETIC RATHER THAN TOLERANCE. This
+  // bound is about the SHAPE of the bug (a pile), and the shape is caught by the tail assertion
+  // below, which is untouched. The size had to move because the season went from 157 events over 49
+  // playable weeks (3.2 a week) to 187 (3.8), and 22 of the new ones sit on NAMED weeks that no
+  // jitter may spread - so a week carrying a Slam, a 500 and the ordinary six is a fact about the
+  // calendar having a shape rather than about the clamp parking things. The pre-wave failure this
+  // test refuses measured 11 with a mean of 3.2; the bound stays a clear step above today's mean.
+  const TALLEST_ALLOWED = 10
 
   it('no week carries an implausible pile, and the last playable weeks are not the tallest', () => {
     for (let s = 0; s < 20; s++) {
@@ -537,7 +592,30 @@ describe('buildSeason — the season tail carries no pile (W2-WINDOW A1)', () =>
     // spread is bounded by design (PLACEMENT_JITTER is half a cadence interval), so a dense-ish
     // rung like W50 moves ±2 weeks and a rare one ±6 – the bar is therefore "more than a couple",
     // not "wide", and the pre-wave build scored 1 on all three.
+    // ⚠ W3-ACT2 MOVED EVERY RUNG'S PHASE AND THE GUARD IS RE-AIMED TO SAY SO. `tierPhase` divides
+    // the rung's index by TIER_LADDER.length, so growing the ladder from twelve to sixteen re-deals
+    // the deterministic half of every placement - w50's last week now falls in a two-week band
+    // rather than a three-week one across the same twenty seeds. The bar was "more than a couple"
+    // against a pre-wave build that scored exactly 1 on all three rungs, and that is what is pinned:
+    // MORE THAN ONE, i.e. the clamp is not parking a rung on the same week in every world, plus the
+    // rare rungs' wider spread asserted separately so the re-aim cannot hide a collapse.
+    //
+    // ⚠ AND THE ANCHORED RUNGS ARE DELIBERATELY NOT IN THIS LIST. A Slam ends its season on the same
+    // week in every world BY DESIGN - that is what a named week is - so asserting variety over them
+    // would assert against the feature.
     for (const tier of ['w50', 'w100', 'wta125'] as TierId[]) {
+      const lasts = new Set<number>()
+      for (let s = 0; s < 20; s++) {
+        const weeks = buildSeason(`lastweek-${s}:s1`, 52, 52)
+          .filter((e) => e.tier === tier)
+          .map((e) => e.week % WEEKS_PER_YEAR)
+        lasts.add(Math.max(...weeks))
+      }
+      expect(lasts.size, `${tier} ends its season on ${[...lasts].join('/')}`).toBeGreaterThan(1)
+    }
+    // ...and the RARE rungs, whose jitter is half a 13-week interval, still spread widely - which is
+    // the half of the claim a two-value band could otherwise have quietly swallowed.
+    for (const tier of ['w100', 'wta125'] as TierId[]) {
       const lasts = new Set<number>()
       for (let s = 0; s < 20; s++) {
         const weeks = buildSeason(`lastweek-${s}:s1`, 52, 52)
@@ -606,7 +684,12 @@ describe("buildSeason — a career's first season never opens already-closed (ro
   })
 
   it('still yields the full first-season counts inside the floored window', () => {
-    expect(countByTier(buildSeason('first-counts', 0, 52))).toEqual(SEASON_COUNTS)
+    // ⚠ EXCEPT THE SEASON-OPENING MAJOR, which is the ONE thing the floor really does cost - and it
+    // costs it visibly rather than silently, which is why this block exists. The Slam anchored on
+    // season offset 2 cannot be placed in a block that starts at week 3, so a career's first year
+    // holds three majors. Every cadence rung is untouched: `seasonEventCount` is a constant of the
+    // tier table and the placement simply packs tighter.
+    expect(countByTier(buildSeason('first-counts', 0, 52))).toEqual({ ...SEASON_COUNTS, slam: 3 })
   })
 
   it('does NOT floor later year-blocks (they already start at 52, 104, …)', () => {
@@ -650,6 +733,14 @@ describe('buildSeason — travel sits in a per-trip corridor by family backgroun
     expect(avg(middle)).toBeLessThan(avg(wealthy))
   })
 
+  // ⚠ TRAVEL_PIN_BASE RE-PINNED BY W3-ACT2 (140635 -> 200774), AND THE MECHANISM IS THE POINT OF
+  // THIS TEST RATHER THAN A CASUALTY OF IT. `buildSeason` places tiers STRONGEST-FIRST, so the four
+  // act-3 rungs now draw from the season sub-stream ahead of everybody and `middle[0]` - the first
+  // event of the week-ascending output - is a different event at a different rung with a different
+  // travel band. What this test asserts is unchanged and still exact: the base draw is byte-stable
+  // for a given calendar, and the corridor factor is applied ON TOP of it rather than folded into
+  // the draw. If the recovery below ever stops rounding back, the corridor has leaked into the
+  // pickInt call, which is the bug this pin exists to catch.
   it('the base travel draw does not drift, and the corridor factor is applied on top (RNG identity)', () => {
     const seedStr = 'travel-pin'
     const middle = buildSeason(seedStr, 0, 52, 'middle')

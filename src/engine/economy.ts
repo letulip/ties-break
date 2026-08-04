@@ -624,6 +624,112 @@ export const ECONOMY = {
        *  put through econ-bench when the ladder has run for a while. */
       travelShare: 0.25,
     },
+
+    // --- THE PROFESSIONAL RUNGS: tour / premium / icon (W3-ACT2, act2-pro-tour.md section 7) -----
+    //
+    // The owner asked for a proposal («да, надо продумать, предложи что-то») and this is it, built.
+    // Three things are new in KIND rather than in size, and each of them is the first of its sort in
+    // the game: a quarterly cash RETAINER (every rung below pays in gear, because juniors pay to
+    // play), an APPEARANCE FEE (money for turning up, which the sport really does pay at the top),
+    // and a RESULT BONUS expressed as a share of the tournament's own cheque.
+    //
+    // THE GATES ARE THE PROFESSIONAL TABLE'S, and they slot into a ladder that already had two
+    // professional arms rather than starting a second one. After W2-FIELD2 re-derived the W cuts the
+    // full chain reads national 350 > tour 200 > global 87 > premium 50 > icon 10 - monotone, one
+    // deal at a time, `rungFor` strongest-first. See `SponsorTier` for why that answers section 7's
+    // own open question without a new rule.
+    //
+    // NOTHING HERE SCALES WITH THE WEALTH CORRIDOR. A retainer is a cheque to the player, exactly
+    // like prize money, and `prizeCentsFor`'s note is the same rule for the same reason.
+    //
+    // THE BANDS ARE THE SPEC'S, ANCHORED ON REAL TENNIS ECONOMICS RATHER THAN INVENTED: section 7
+    // gives tour a "~$3-8k/yr" retainer band and premium "x5-10" of it. $1,500 a quarter is $6,000 a
+    // year, the middle of that band; premium takes x5 ($30,000) and icon x5 again ($150,000). Read
+    // against docs/research/02-tennis-economics.md that is the right shape - a #200 player's kit
+    // deal does not pay her rent, a #50 player's does, and a top-10 player's endorsement income is
+    // the largest line on her page.
+    tour: {
+      /** The first brand that signs a PROFESSIONAL rather than a prospect. Fictional, like every
+       *  organisation name in this game (ITF/WTA/ATP and the majors are trademarks). */
+      brand: 'Baseline Athletic',
+      /** WTA <= 200, the spec's own gate: inside the top 200 she is a working professional whose
+       *  name appears on a draw sheet somebody reads. Below `national`'s 350 and above `global`'s
+       *  87, which is what makes the chain monotone. */
+      maxWtaRank: 200,
+      /** ...and NO junior arm at all, which is the point of the rung. `national` and `global` read
+       *  BOTH tables because they were built for a junior and learned to read a professional; these
+       *  three read one table, because a brand that signs on a WTA ranking is not interested in a
+       *  girl who has not got one. `standingClears` treats a missing `maxItfRank` as "no junior
+       *  door", never as "open to anyone". */
+      seasons: 2,
+      /** Everything she wears - the same three lines `global` covers. The LADDER STOPS BEING ABOUT
+       *  COVERAGE HERE and starts being about money, which is the honest reading: there is no fourth
+       *  line of kit to promise, so a bigger deal has to pay her instead. */
+      seasonCents: 5_000_00,
+      freshCap: 0.3,
+      /** The step of two continues: 6 -> 8 -> 10 -> 12 -> 14. */
+      minEvents: 14,
+      travelShare: 0.25,
+      /** $1,500 a quarter = $6,000 a season, the middle of section 7's own "~$3-8k/yr" band. */
+      retainerCents: 1_500_00,
+      /** RESULT BONUSES AT W75 AND ABOVE (section 7 verbatim), at a fifth of the cheque. A W75 title
+       *  is $9,000, so the bonus is $1,800 - a real number that is not a second prize table. */
+      bonusShare: 0.2,
+      bonusFromTier: 'w75' as TierId,
+    },
+    premium: {
+      brand: 'Meridian Sport',
+      /** WTA <= 50 - the spec's gate, and the same number the mandatory regime binds at. That is not
+       *  a coincidence worth hiding: the top 50 is where the tour starts requiring her presence, and
+       *  it is exactly where a brand starts paying for it. */
+      maxWtaRank: 50,
+      seasons: 3,
+      seasonCents: 8_000_00,
+      freshCap: 0.3,
+      minEvents: 16,
+      travelShare: 0.5,
+      /** x5 the tour rung, the bottom of section 7's «retainer x5-10»: $7,500 a quarter, $30,000 a
+       *  season. */
+      retainerCents: 7_500_00,
+      /** APPEARANCE FEES - the new income line section 7 names, "real at 250s". $15,000 to be on the
+       *  poster of a WTA 250 or better, paid when she actually plays it. */
+      appearanceFeeCents: 15_000_00,
+      appearanceFromTier: 'wta250' as TierId,
+      /** ...and the bonus schedule reaches further down the ladder AND up to the Slam rounds, which
+       *  is section 7's own phrase - it is the same share against a prize table that now runs to
+       *  $3M, so a Slam semi-final bonus is six figures without a second table existing. */
+      bonusShare: 0.25,
+      bonusFromTier: 'w50' as TierId,
+    },
+    icon: {
+      brand: 'Aurelia',
+      /** WTA <= 10, section 7's gate. Its «or a Slam semi-final» half is deliberately NOT modelled as
+       *  a second predicate: a Slam semi-final under the shipped points table is 780 points from one
+       *  event, which on the real curve the merged table now carries puts her inside the top ten by
+       *  arithmetic anyway. One gate that both routes satisfy beats two that can disagree - and if a
+       *  future table breaks that equivalence, the honest fix is a second clause here with its own
+       *  measurement, not a guess now. */
+      maxWtaRank: 10,
+      /** FOUR SEASONS - the top of `02-tennis-economics.md`'s "3-4 year terms", and long enough that
+       *  signing it really is the last contract decision a career makes. */
+      seasons: 4,
+      seasonCents: 12_000_00,
+      freshCap: 0.3,
+      /** The step of two would give 18; it stops at 16 instead, and that is the one place this ladder
+       *  declines to get worse as it gets better. A top-10 player's calendar is largely the mandatory
+       *  regime's (act2-pro-tour.md section 6: four Slams, the 1000s and six 500s bind the top 50),
+       *  so an obligation ABOVE what the tour already compels would be two systems demanding the same
+       *  weeks and one of them fining her for it. The trap this block is proud of stays a trap right
+       *  up to the rung where it would stop being one. */
+      minEvents: 16,
+      travelShare: 0.75,
+      /** x5 again: $37,500 a quarter, $150,000 a season. */
+      retainerCents: 37_500_00,
+      appearanceFeeCents: 40_000_00,
+      appearanceFromTier: 'wta250' as TierId,
+      bonusShare: 0.3,
+      bonusFromTier: 'w50' as TierId,
+    },
   },
 
   // Recurring gear purchases, scheduled DETERMINISTICALLY off a purpose-scoped sub-stream per
@@ -1170,6 +1276,13 @@ export const ECONOMY = {
       local: 1, regional: 2, national: 3,
       j30: 3, j60: 4, j300: 5,
       w15: 2, w35: 2, w50: 2, w75: 3, w100: 3, wta125: 3,
+      // W3-ACT2. The family's own step continues rather than a new scale being invented: the top
+      // half of the W family sits at 3, so the 250/500 pair takes 4 and the 1000/Slam pair takes 5 -
+      // which lands the biggest week in the game on exactly J300's number, the most expensive match
+      // anywhere else on the ladder. What it prices is the WEEK, not the prestige: a major is a
+      // fortnight's trip across a time zone against the strongest field that exists, and every match
+      // in it is played after one of those.
+      wta250: 4, wta500: 4, wta1000: 5, slam: 5,
     } as Record<TierId, number>,
     // CUMULATIVE RUN FATIGUE (owner idea 26.07): matches at a tournament run every day or every
     // other day, so each SUBSEQUENT match of the SAME run costs EXTRA condition on top of its own
@@ -1263,6 +1376,16 @@ export const ECONOMY = {
       local: 20, regional: 30, national: 40,
       j30: 45, j60: 50, j300: 55,
       w15: 50, w35: 55, w50: 55, w75: 60, w100: 60, wta125: 60,
+      // ⚠ W3-ACT2 KEEPS THE W FAMILY'S CEILING AT 60 AND DELIBERATELY DOES NOT RAISE IT, which is
+      // the one place the top four rungs decline a step the tables below them would suggest. This
+      // is ARRIVAL SAFETY - how fresh she must BE to start a week, the question W2-FATIGUE separated
+      // from what the week COSTS (that half did step: see tierMatchFatigue above). From here up she
+      // is not free to decline: §6's mandatory regime obliges a top-50 player to turn up at the four
+      // Slams, the 1000s and six 500s or take penalty points for it. A floor that refused her entry
+      // to an event she is REQUIRED to attend would manufacture penalties out of a knob nobody asked
+      // to move, and «мы ни за что не наказываем» governs. The tour may punish; a tuning number
+      // may not.
+      wta250: 60, wta500: 60, wta1000: 60, slam: 60,
     } as Record<TierId, number>,
     examWeeks: [[23, 24]] as [number, number][], // season-week offsets blacked out for school
     // Moved off 24-25 when the surface blocks landed: week 25 is the FIRST week of the grass
@@ -1441,7 +1564,13 @@ export const ECONOMY = {
     //
     // THE FAMILY is every W rung (the WTA counts professional events, whatever their size); the
     // domestic ladder stays uncapped here for the same reason it is uncapped above - it is ours.
-    cappedProTiers: ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as readonly TierId[],
+    // ⚠ AND THE ACT-3 RUNGS JOIN IT (W3-ACT2). "Professional events, whatever their size" is the
+    // rule's own wording, and a Grand Slam is the most professional event there is - the real AER
+    // counts a major against a sixteen-year-old's twelve exactly as it counts a W15. It bites for
+    // one season only in practice (`proPerYearByAge` is unlimited from 18 and every act-3 rung
+    // opens at 17), which is the honest amount: the allowance is a rule about children, and by the
+    // time her ranking clears a 1000's acceptance list she is not one.
+    cappedProTiers: ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as readonly TierId[],
     // The spec's design table (§5): 16 -> 12, 17 -> 16, 18+ unlimited. 14 and 15 carry 8 and 10
     // in the real rulebook (research §4) and are DELIBERATELY absent here: every W rung's
     // `minAgeYears` is 16+, so availabilityStatus refuses a fourteen-year-old on AGE before the
@@ -1458,6 +1587,66 @@ export const ECONOMY = {
       [age: number]: number
       default: number
     },
+  },
+
+  // --- THE MANDATORY REGIME (W3-ACT2, act2-pro-tour.md §6 — the owner's spec as canon) ----------
+  //
+  // «10 штрафных очков за 52 недели -> отстранение на 4 недели. Источники: пропуск обязательного
+  // турнира, поздний отказ, неявка. Обязательные турниры только для топ-50: 4 Шлема, 1000-ки, шесть
+  // 500-к.» Verbatim, and every number below is either that sentence or the one adaptation the
+  // sentence itself authorises ("counts adapted to our calendar grid in act 3").
+  //
+  // ⚠⚠ THE TOUR PUNISHES; THE GAME NEVER DOES. The owner's standing ruling — «мы ни за что не
+  // наказываем» — is not softened by this block, it is what SHAPES it, and it lands as four
+  // structural rules rather than as a tone of voice:
+  //   1. EVERY OBLIGATION IS ANNOUNCED BEFORE IT CAN BITE. The desk writes when the entry deadline
+  //      of a mandatory event passes with her not on the list, one week before the week itself, so
+  //      the letter is a warning and not a receipt. The entry-lifecycle letters W2-LADDER shipped
+  //      are the pattern and this is the same surface.
+  //   2. AN OBLIGATION SHE COULD NOT MEET IS NOT AN OBLIGATION. It binds only if she was actually
+  //      able to enter — inside the acceptance list, old enough, not injured, not already committed
+  //      to that week and not suspended. See `mandatoryBinds`: the tour's real rule excuses a
+  //      medical withdrawal, and a rule the game manufactured out of a condition floor would be a
+  //      punishment nobody chose.
+  //   3. THE PRICE IS ALWAYS NAMEABLE. Each source has its own number and the refusal quotes it, so
+  //      a penalty reads like a bill and never like a verdict.
+  //   4. NOTHING IS RETROACTIVE. The ledger is a rolling 52 weeks, so points age out on their own.
+  mandatory: {
+    /** WHO IS BOUND. The spec's own number: top-50 only, and it is the real regime's own gate.
+     *  Read against the MERGED W table, which is the table these rungs' acceptance lists are in. */
+    maxRank: 50,
+    /** THE PER-EVENT OBLIGATIONS: every Slam and every 1000, exactly as the spec names them. Both
+     *  families are ANCHORED (`TierDef.anchorWeeks`), which is what makes an obligation announceable
+     *  a year ahead — a player can see in January which weeks she owes the tour. */
+    perEventTiers: ['slam', 'wta1000'] as readonly TierId[],
+    /** ...AND THE 500s ARE A QUOTA, WHICH IS THE REAL RULE'S OWN SHAPE. The tour does not name six
+     *  particular 500s; it asks a top-50 player to COMMIT to six of them and lets her pick. So this
+     *  is checked once, at the season boundary, against how many she actually played — which is
+     *  also the only reading that leaves her a decision (six of our ten) rather than a timetable. */
+    quotaTier: 'wta500' as TierId,
+    /** SIX, THE SPEC'S OWN NUMBER, against a pool of ten. The real regime is six of ~sixteen; our
+     *  grid holds ten 500s (`TIERS.wta500.anchorWeeks`), so keeping six preserves the NUMBER the
+     *  owner wrote while the ratio tightens — the adaptation his own parenthesis authorises, stated
+     *  rather than smuggled. If the measured season cannot carry it, that is a finding for him and
+     *  not a knob to turn quietly: the derivation-faithful alternative is 4 (six of sixteen scaled
+     *  to ten), and it is written down here so the choice is visible. */
+    quota: 6,
+    /** WHAT EACH SOURCE COSTS, and they are ordered by how much the tournament lost by it — which is
+     *  the only ordering that is about the TOUR rather than about her. Skipping an event nobody was
+     *  promised she would play costs least; withdrawing after the list closed leaves a hole in a
+     *  published draw; not turning up at all leaves the hole AND an empty court. */
+    skipPoints: 2,
+    lateWithdrawalPoints: 3,
+    noShowPoints: 4,
+    /** ...and one point per event of the 500 quota she fell short by, settled once a season. It is
+     *  the gentlest source on purpose: it is the one obligation she was allowed to plan around. */
+    quotaShortfallPoints: 1,
+    /** THE SPEC'S OWN PAIR: ten points inside a rolling 52 weeks, and a four-week suspension. */
+    suspensionAt: 10,
+    suspensionWeeks: 4,
+    /** The rolling window the ten are counted in — the same 52 every other rolling record in this
+     *  game keeps (the ranking window, the entry-letter prune, the results ledger). */
+    windowWeeks: 52,
   },
 
   // Season-Life slice C: physio + medical costs. ALL prices are MIDDLE-anchored bands. Every

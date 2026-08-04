@@ -259,12 +259,15 @@ describe('the scope fence – phase W is the W track and nothing else', () => {
       // Reference equality, not just equal membership: nothing was even copied for these rungs.
       expect(universeForTier(tier, world.cohort, pros)).toBe(world.cohort)
     }
-    // All six W rungs since W2-LADDER - the fence is per TRACK, so the new rungs inherited it.
-    for (const tier of ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]) {
+    // ⚠ TEN W RUNGS SINCE W3-ACT2 - the fence is per TRACK, so the act-3 rungs inherited it exactly
+    // as the W2-LADDER ones did, and the arithmetic below still proves the fence covers the whole
+    // catalogue rather than merely the rungs somebody remembered to list.
+    const W: TierId[] = ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam']
+    for (const tier of W) {
       const u = universeForTier(tier, world.cohort, pros)
       expect(u.length).toBe(world.cohort.length + pros.length)
     }
-    expect(TIER_LADDER.length).toBe(NON_W.length + 6) // the fence covers the whole catalogue
+    expect(TIER_LADDER.length).toBe(NON_W.length + W.length) // the fence covers the whole catalogue
   })
 
   it('selectEntrants over the phase-W universe: every non-W draw is fp-free, a W15 draw is not', () => {

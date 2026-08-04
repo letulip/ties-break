@@ -1002,7 +1002,68 @@ export interface TierTrophies {
  *  owner ruling 1: «у нас уже система писем есть для этого, надо использовать») - the letter that
  *  arrives when she registers for a professional event, and the short confirmation when she
  *  cancels in time. The agent (§4.2) and the investor (§4.3) still have no representation. */
-export type OfferKind = 'kit' | 'entry'
+export type OfferKind = 'kit' | 'entry' | 'tour'
+
+/** WHICH RULE A PENALTY WAS (W3-ACT2, act2-pro-tour.md §6). A closed union, and it is closed on
+ *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
+ *  not say which rule it came from would be exactly the thing the ruling forbids.
+ *
+ *  `conduct` is DECLARED AND NOT YET WRITTEN. §6 lists on-court conduct as a penalty source «once
+ *  psyche (v38) exists» - the anger system finally getting a price tag - and psyche is its own wave.
+ *  Naming it here costs nothing and means that wave widens a union rather than redesigning one, the
+ *  same courtesy `OfferKind` was built with. */
+export type PenaltyReason =
+  /** she never entered a mandatory event her standing obliged her to play */
+  | 'skip'
+  /** she pulled out after the entry list closed - the draw was published with her in it */
+  | 'late-withdrawal'
+  /** she was in the draw on the day and did not appear */
+  | 'no-show'
+  /** she finished the season short of the 500-level commitment */
+  | 'quota'
+  /** reserved: on-court conduct, when psyche ships (§6) */
+  | 'conduct'
+
+/** ONE PENALTY, as the tour charged it. Persisted (schema v38, `WorldState.penalties`). */
+export interface PenaltyRow {
+  /** the absolute week it was charged in - the unit the rolling 52-week window counts */
+  week: number
+  points: number
+  reason: PenaltyReason
+  /** the event it was about, where there was one. Absent on the season-end quota row. */
+  eventId?: string
+  /** true once this row has been spent on a suspension, so the same ten points cannot buy a second
+   *  one the following week. The row STAYS in the ledger - it is a record of what she was charged
+   *  for, and a career should be able to read its own history back. */
+  spent?: boolean
+}
+
+/** WHAT A TOUR LETTER SAYS. The desk's third voice: `entry` letters are receipts for something she
+ *  did, `kit` letters are a brand's, and these are the REGIME's - the warning that an obligation is
+ *  about to fall due, the notice that one was missed and what it cost, and the suspension notice.
+ *
+ *  ⚠ THE WARNING ARRIVES AT THE ENTRY DEADLINE, A WEEK BEFORE THE EVENT, which is the whole of
+ *  «every obligation is announced in a letter BEFORE it can bite». A letter that only ever arrived
+ *  after the fact would be a receipt for a punishment, which is the thing the ruling is against. */
+export interface TourLetterTerms {
+  /** which of the three this is */
+  notice: 'due' | 'penalty' | 'suspension'
+  /** the rung and its label as the letter was written */
+  tier?: TierId
+  label?: string
+  /** the week she is expected on court (a `due` letter), and the last week to enter free */
+  eventWeek?: number
+  freeUntilWeek?: number
+  /** what it cost, and which rule (a `penalty` letter) */
+  points?: number
+  reason?: PenaltyReason
+  /** her running total inside the rolling window, and the number that triggers a suspension - both
+   *  quoted on the paper so the player never has to find them on a screen */
+  runningPoints?: number
+  suspensionAt?: number
+  /** the last week of a suspension, inclusive (a `suspension` letter) */
+  untilWeek?: number
+}
 
 /** Where an offer is in its life. `open` is the only state a decision is possible in; the others
  *  are terminal and the letter stays in the inbox as a record.
@@ -1034,7 +1095,35 @@ export type OfferState = 'open' | 'signed' | 'refused' | 'expired' | 'info'
  *  local.webp says "STRING HOUSE – LOCAL. HONEST. TIGHT.", national.webp says "NETRALLY
  *  DISTRIBUTION – STRINGS. FRAMES. NATIONWIDE." and global.webp says "PLAY BEYOND – EQUIP. SUPPORT.
  *  ELEVATE.". The coverage ladder is written on the pictures; this type only names it. */
-export type SponsorTier = 'local' | 'national' | 'global'
+export type SponsorTier = 'local' | 'national' | 'global' | 'tour' | 'premium' | 'icon'
+
+/** THE THREE PROFESSIONAL RUNGS (W3-ACT2, act2-pro-tour.md section 7 - the owner's «да, надо
+ *  продумать, предложи что-то», built). They are gated on the WTA rank, which is exactly as real as
+ *  the two tables the rungs below read, and what they add is a KIND of money the junior ladder never
+ *  had:
+ *
+ *    tour     WTA <= 200   full kit + a quarterly cash RETAINER + result bonuses from W75 up
+ *    premium  WTA <= 50    retainer x5, APPEARANCE FEES (events that pay her to come, real at 250+),
+ *                          and a bonus schedule that reaches the Slam rounds
+ *    icon     WTA <= 10    the multi-year guarantee - the biggest retainer, the widest bonus, and a
+ *                          term long enough to be an epilogue rather than a season
+ *
+ *  THE SECTION-7 QUESTION IS ANSWERED HERE, AND THE ANSWER IS "ONE LADDER, ORDERED BY GATE". The
+ *  spec left it open («either `tour` replaces `global` for professionals, or the two ladders run side
+ *  by side with one deal at a time across both - an owner's call at build time»), and W2-FIELD2
+ *  settled it by moving the numbers: `global.maxWtaRank` went 31 -> 87 and `national`'s 125 -> 350
+ *  when the W cuts were re-derived, so the professional gates now read
+ *
+ *      national 350  >  tour 200  >  global 87  >  premium 50  >  icon 10
+ *
+ *  which is a single monotone ladder with `tour` slotting in between the two junior-era rungs rather
+ *  than colliding with either. `rungFor` reads it strongest-first and `raiseKitOffer` allows one deal
+ *  at a time, so "side by side, one deal across both" is what ships - and it needed no new rule.
+ *
+ *  AND NONE OF IT SCALES WITH THE WEALTH CORRIDOR (the principle section 7 carries over). A
+ *  retainer, an appearance fee and a result bonus are cheques somebody writes to the PLAYER, exactly
+ *  like prize money, so they are identical for a working family and a wealthy one. See
+ *  `prizeCentsFor`'s note, which is the same rule stated for the same reason. */
 
 /** THE THREE LINES OF KIT the equipment model reads, and the unit the brand ladder is denominated
  *  in. `KitWear` is `Record<KitLine, number>` (engine/equipment.ts) so a fourth line - or a renamed
@@ -1158,6 +1247,34 @@ export interface KitOfferTerms {
    *  again. A sponsor pays to be SEEN (spec §4.1), and this is the obligation that makes the deal a
    *  decision rather than a free win – the bench says playing more loses. */
   minEventsPerSeason: number
+  /** THE QUARTERLY CASH RETAINER, in cents per QUARTER, or absent at the rungs that pay only in kit
+   *  (W3-ACT2 section 7). The first money any sponsor has ever handed this family - every rung below
+   *  pays in gear, which is the junior tour's own truth, and a professional's contract is a salary.
+   *
+   *  QUARTERLY AND NOT ANNUAL, because that is what the spec asks for and because it is the shape
+   *  that makes it feel like a wage: four arrivals a season, on weeks she can plan against, rather
+   *  than one number at the boundary that reads like the old cheque this whole system replaced.
+   *
+   *  IT DOES NOT SCALE WITH THE WEALTH CORRIDOR - see SponsorTier. */
+  retainerCents?: number
+  /** WHAT AN EVENT PAYS HER TO TURN UP, in cents, or absent below `premium`. A NEW INCOME LINE and
+   *  the first one in the game that is not earned by winning: at the top of the real sport a
+   *  tournament pays a name to be on its poster, and it is real from the 250s up.
+   *
+   *  `appearanceFromTier` is the rung it starts at, stored on the deal rather than derived so a
+   *  contract signed under one catalogue keeps its own terms if the ladder is ever retuned. */
+  appearanceFeeCents?: number
+  appearanceFromTier?: TierId
+  /** THE RESULT BONUS, as a SHARE OF THE TOURNAMENT'S OWN CHEQUE, or absent at the rungs that pay
+   *  none. A share rather than a schedule of numbers, and that is deliberate: the prize table is
+   *  already a per-finish curve the research doc anchored, so a bonus expressed against it inherits
+   *  its shape for free and can never invert it (a semi-final bonus larger than a title one). It
+   *  also means the bonus grows with the rung she is winning at without a second table to maintain.
+   *
+   *  `bonusFromTier` is where the schedule starts - W75 for `tour`, and the bigger rungs reach
+   *  further down - stored on the deal for the same reason `appearanceFromTier` is. */
+  bonusShare?: number
+  bonusFromTier?: TierId
   /** ⚠ SET ONLY ON THE END-OF-DEAL LETTER (see `KitEndReason`), never on an offer. Its presence is
    *  what makes a kit letter a NOTICE rather than a proposal: no Sign/Refuse, no deadline, just the
    *  brand saying what happened and why. The rest of the terms are copied from the deal that ended
@@ -1202,7 +1319,7 @@ export type KitEndReason =
   /** it simply ran to the end of its term, terms honoured on both sides */
   | 'term'
 
-export type OfferTerms = KitOfferTerms | EntryLetterTerms
+export type OfferTerms = KitOfferTerms | EntryLetterTerms | TourLetterTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */

@@ -24,6 +24,21 @@ export interface SeasonResult {
   /** the tier this result was earned at (round-5: set on kid results for the "counting
    *  results" list; optional so AI results and pre-r5 saves can omit it). Never affects ranking. */
   tier?: TierId
+  /** ⚠ THE ZERO THAT COUNTS (W3-ACT2 §6, the owner's spec: «пропущенный обязательный турнир ЗАНИМАЕТ
+   *  один из 16 зачётных слотов нулём»). Set on the row a SKIPPED MANDATORY writes, and it is the
+   *  only thing in the game that makes a scoreless row count.
+   *
+   *  Why it is the real rule and crueller than the fine: the tour does not take points away, it
+   *  takes a SLOT. A zero sorts last in the best-N fold, so it costs her nothing while she has
+   *  sixteen better results and costs her a whole result the moment she does not - which is exactly
+   *  when a professional feels it. It also means the enforcement surface is the best-16 window she
+   *  already reads every week rather than a second ledger nobody looks at.
+   *
+   *  ⚠ AND IT IS THE ONE EXCEPTION `isCountingResult` CARRIES. Everything else about a scoreless row
+   *  is unchanged: this flag is absent on every row the brackets write, so the wave-B split ("a row
+   *  is an appearance; a counting result is one that scored") is untouched for the cohort, for the
+   *  fatigue reconstruction and for every historical save. */
+  mandatoryMiss?: true
 }
 
 /** THE ranking half of the row: a result COUNTS when it scored. A scoreless appearance is a record
@@ -33,7 +48,7 @@ export interface SeasonResult {
  *  a scoreless row would lend its week to `recency`, silently reordering tied players and with them
  *  the entrant percentiles `selectEntrants` reads. */
 export function isCountingResult(r: SeasonResult): boolean {
-  return r.points > 0
+  return r.points > 0 || r.mandatoryMiss === true
 }
 
 const WINDOW_WEEKS = 52

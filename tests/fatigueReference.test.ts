@@ -95,6 +95,15 @@ describe('per-match cost = scoreline + tier surcharge', () => {
     w75: [5, 6, 7],
     w100: [5, 6, 7],
     wta125: [5, 6, 7],
+    // ⚠ W3-ACT2 EXTENDS THE FAMILY UPWARD AND MOVES NOT ONE CELL BELOW IT. The six rungs above are
+    // exactly the numbers W2-FATIGUE left; the four new rows continue the family's own step
+    // (surcharge 3 -> 4 -> 5), so a WTA 250 match costs a J300 match's price and a Grand Slam match
+    // is the joint most expensive match in the game with a J300 epic. The ceiling assertion below
+    // is re-aimed to say so rather than deleted - see its own note.
+    wta250: [6, 7, 8],
+    wta500: [6, 7, 8],
+    wta1000: [7, 8, 9],
+    slam: [7, 8, 9],
   }
 
   it('the base is the owner-set 2 for a simple match, 3 for a hard one (one step above it)', () => {
@@ -128,13 +137,22 @@ describe('per-match cost = scoreline + tier surcharge', () => {
   // rather than shifts - which is the point of the re-price. The cheapest thing in the GAME is still
   // 1: that is the practice friendly, and it is pinned separately below precisely because it stopped
   // riding on Local's surcharge.
-  it('a match costs 3 to 9 across the whole ladder – 3 at Local, 9 for a J300 epic', () => {
+  // ⚠ RE-AIMED A FIFTH TIME (W3-ACT2), AND THE CEILING IS NOW SHARED RATHER THAN MOVED. The four
+  // act-3 rungs continue the W family's own step (3 -> 4 -> 5), so the top of the professional
+  // ladder finally CATCHES the junior one instead of passing it: a three-tiebreak Slam epic and a
+  // three-tiebreak J300 epic both cost 9. That is the sentence the previous note wanted and could
+  // not have - the travel tax belongs to the schoolgirl flying out twice a year, and the only thing
+  // that costs as much as her worst week is the biggest fortnight in the sport. The floor is
+  // untouched at 3, and the W100 < J300 claim below is kept VERBATIM (it is a statement about the
+  // ITF-labelled professional rungs, which did not move) with the new ceiling asserted beside it.
+  it('a match costs 3 to 9 across the whole ladder – 3 at Local, 9 for a J300 or a Slam epic', () => {
     const all = TIER_LADDER.flatMap((t) => [matchDrain(t, SIMPLE), matchDrain(t, HARD), matchDrain(t, EPIC)])
     expect(Math.min(...all)).toBe(3)
     expect(Math.max(...all)).toBe(9)
     expect(matchDrain('local', SIMPLE)).toBe(3)
     expect(matchDrain('j300', EPIC)).toBe(9)
-    // ...and the professional family now sits UNDER the junior one, end to end.
+    expect(matchDrain('slam', EPIC)).toBe(9)
+    // ...and the ITF-labelled professional rungs still sit UNDER the junior prestige one, end to end.
     expect(matchDrain('w100', EPIC)).toBeLessThan(matchDrain('j300', EPIC))
   })
 
@@ -170,9 +188,11 @@ describe('per-match cost = scoreline + tier surcharge', () => {
       }
     }
     // The W family, rung by rung - the exact compressed shape, not merely "non-decreasing".
+    // ⚠ WIDENED, NOT WEAKENED (W3-ACT2): ten rungs now, and the exact shape is still pinned cell by
+    // cell so a decrease, a re-extrapolation or a quiet retune of the four new rows meets this test.
     const w = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
-    expect(w).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
-    expect(w.map((t) => matchDrain(t, SIMPLE))).toEqual([4, 4, 4, 5, 5, 5])
+    expect(w).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'])
+    expect(w.map((t) => matchDrain(t, SIMPLE))).toEqual([4, 4, 4, 5, 5, 5, 6, 6, 7, 7])
     for (let i = 1; i < w.length; i++) {
       expect(matchDrain(w[i], SIMPLE), `${w[i]} vs ${w[i - 1]}`).toBeGreaterThanOrEqual(matchDrain(w[i - 1], SIMPLE))
     }
@@ -193,8 +213,19 @@ describe('per-match cost = scoreline + tier surcharge', () => {
     // simply one rung stronger now, and it is the same argument - she is the one girl who does this
     // for a living.
     expect(matchDrain('w15', SIMPLE)).toBe(matchDrain('national', SIMPLE) - 1)
-    // ...and the whole professional family stays at or below the junior tour's ENTRY rung.
-    for (const t of w) expect(matchDrain(t, SIMPLE), `${t} vs j30`).toBeLessThanOrEqual(matchDrain('j30', SIMPLE))
+    // ⚠ RE-AIMED (W3-ACT2), AND THE RE-AIM IS THE FINDING. This read "the whole professional family
+    // stays at or below the junior tour's ENTRY rung", which was true of a family that stopped at
+    // WTA 125 and is FALSE by design of one that reaches a Grand Slam: the act-3 rungs are the first
+    // professional weeks that cost more than a J30. The claim it was making is kept exactly, scoped
+    // to the rungs it was about (the ITF-labelled W15-W100 family plus the 125), and the new claim
+    // is asserted beside it rather than the old one being deleted: the WTA-proper rungs pass J30 and
+    // stop at J300, so the junior prestige rung is still the ceiling of the whole ladder.
+    const wLower = ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as const
+    for (const t of wLower) expect(matchDrain(t, SIMPLE), `${t} vs j30`).toBeLessThanOrEqual(matchDrain('j30', SIMPLE))
+    for (const t of ['wta250', 'wta500', 'wta1000', 'slam'] as const) {
+      expect(matchDrain(t, SIMPLE), `${t} vs j30`).toBeGreaterThan(matchDrain('j30', SIMPLE))
+      expect(matchDrain(t, SIMPLE), `${t} vs j300`).toBeLessThanOrEqual(matchDrain('j300', SIMPLE))
+    }
   })
 
   it('a score-less record (a defensive path) is charged as straight sets, never as free', () => {
@@ -266,6 +297,17 @@ describe('whole-run cost — the shipped ladder, all matches simple', () => {
     w75: [5, 11, 17, 23, 29],
     w100: [5, 11, 17, 23, 29],
     wta125: [5, 11, 17, 23, 29],
+    // W3-ACT2 rows: the SAME ladder D, the family's own continued surcharges (4/4/5/5). Every cell
+    // above is byte-identical, which is this file's standing rule for a wave that adds rungs rather
+    // than repricing them. The line worth reading: a straight-sets Slam TITLE run costs 39 against a
+    // J300 title's 41 - the biggest fortnight in the sport is still a shade cheaper than the junior
+    // tour's hardest week, because a title run is five matches at either rung and the travel tax is
+    // the schoolgirl's. Where the Slam catches J300 is the EPIC (both 9 a match) - see the ceiling
+    // assertion in the per-match block.
+    wta250: [6, 13, 20, 27, 34],
+    wta500: [6, 13, 20, 27, 34],
+    wta1000: [7, 15, 23, 31, 39],
+    slam: [7, 15, 23, 31, 39],
   }
 
   it('the shipped ladders are C = [0,1,1,2,2] for domestic+J and D = [0,1,1,1,1] for the W family (change deliberately, never to make a test pass)', () => {
@@ -345,6 +387,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       w75: [5, 10, 15, 20, 25],
       w100: [5, 10, 15, 20, 25],
       wta125: [5, 10, 15, 20, 25],
+      wta250: [6, 12, 18, 24, 30],
+      wta500: [6, 12, 18, 24, 30],
+      wta1000: [7, 14, 21, 28, 35],
+      slam: [7, 14, 21, 28, 35],
     },
     D: {
       local: [3, 7, 11, 15, 19],
@@ -359,6 +405,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       w75: [5, 11, 17, 23, 29],
       w100: [5, 11, 17, 23, 29],
       wta125: [5, 11, 17, 23, 29],
+      wta250: [6, 13, 20, 27, 34],
+      wta500: [6, 13, 20, 27, 34],
+      wta1000: [7, 15, 23, 31, 39],
+      slam: [7, 15, 23, 31, 39],
     },
     C: {
       local: [3, 7, 11, 16, 21],
@@ -373,6 +423,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       w75: [5, 11, 17, 24, 31],
       w100: [5, 11, 17, 24, 31],
       wta125: [5, 11, 17, 24, 31],
+      wta250: [6, 13, 20, 28, 36],
+      wta500: [6, 13, 20, 28, 36],
+      wta1000: [7, 15, 23, 32, 41],
+      slam: [7, 15, 23, 32, 41],
     },
     B: {
       local: [3, 7, 11, 16, 23],
@@ -387,6 +441,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       w75: [5, 11, 17, 24, 33],
       w100: [5, 11, 17, 24, 33],
       wta125: [5, 11, 17, 24, 33],
+      wta250: [6, 13, 20, 28, 38],
+      wta500: [6, 13, 20, 28, 38],
+      wta1000: [7, 15, 23, 32, 43],
+      slam: [7, 15, 23, 32, 43],
     },
     A: {
       local: [3, 7, 12, 18, 25],
@@ -401,6 +459,10 @@ describe('whole-run cost — the four proposed ladders (the doc grid), all match
       w75: [5, 11, 18, 26, 35],
       w100: [5, 11, 18, 26, 35],
       wta125: [5, 11, 18, 26, 35],
+      wta250: [6, 13, 21, 30, 40],
+      wta500: [6, 13, 21, 30, 40],
+      wta1000: [7, 15, 24, 34, 45],
+      slam: [7, 15, 24, 34, 45],
     },
   }
 

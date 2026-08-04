@@ -54,7 +54,14 @@ const SEEDS = argOf('seeds', 6)
 const SEASONS = argOf('seasons', 8)
 const VERBOSE = args.includes('--verbose')
 
-const W_RUNGS: readonly TierId[] = ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125']
+// ⚠ TEN RUNGS SINCE W3-ACT2, and the walk is graded at the TOP of the ladder now rather than in its
+// middle: act2-pro-tour.md §11.4's PLAYED row (20-30 events a season, the owner's own target and a
+// real top-100's number) was measured at the terminal window when that window was
+// {w50, w75, w100, wta125} and 28 events a season was all it offered. The terminal window is
+// {wta250, wta500, wta1000, slam} now, so the same question is asked one storey up.
+const W_RUNGS: readonly TierId[] = [
+  'w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam',
+]
 /** How far ABOVE a rung's condition floor she insists on being before she books the trip. */
 const REST_MARGIN = argOf('rest', 15)
 

@@ -51,9 +51,11 @@ describe('L1 — the tier catalogue is the J family + the W family (itf is gone)
   // placeholder.
   // ⚠ RE-AIMED by W2-LADDER (nine -> twelve): W50/W75 fill the family's ×5 title hole and WTA 125
   // tops it (act2-pro-tour.md §2, owner ruling 6). Still EXACT lists, still no `itf`.
-  it('has exactly twelve tiers and no `itf` anywhere', () => {
+  // ⚠ RE-AIMED by W3-ACT2 (twelve -> sixteen): the act-3 family. Still EXACT lists, still no `itf`.
+  it('has exactly sixteen tiers and no `itf` anywhere', () => {
     expect([...ALL_TIERS].sort()).toEqual([
-      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'w100', 'w15', 'w35', 'w50', 'w75', 'wta125',
+      'j30', 'j300', 'j60', 'local', 'national', 'regional', 'slam', 'w100', 'w15', 'w35', 'w50',
+      'w75', 'wta1000', 'wta125', 'wta250', 'wta500',
     ])
     expect(ALL_TIERS).not.toContain('itf')
   })
@@ -62,13 +64,24 @@ describe('L1 — the tier catalogue is the J family + the W family (itf is gone)
     expect([...TIER_LADDER].sort()).toEqual([...ALL_TIERS].sort())
     expect(TIER_LADDER).toEqual([
       'local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100', 'wta125',
+      // W3-ACT2: sixteen rungs. Pinned in full so a rung still cannot join the ladder without
+      // somebody writing down where it sits - which is what every guard in this file depends on.
+      'wta250', 'wta500', 'wta1000', 'slam',
     ])
   })
 
-  it('every id field equals its record key, and no tier is locked any more', () => {
+  it('every id field equals its record key, and every tier has a placement rule', () => {
+    // ⚠ RE-AIMED BY W3-ACT2, NOT WEAKENED. `everyNWeeks > 0` was the shape of "this tier is LIVE
+    // rather than the inert `itf` placeholder", and it stopped being the only shape of it: the four
+    // act-3 rungs are placed by NAMED WEEKS (`anchorWeeks`, the Slams at fixed season offsets) and
+    // carry cadence 0 by construction, because a named week that also had a cadence would have two
+    // placement rules disagreeing. What the guard asks now is the thing it always meant - every tier
+    // must have EXACTLY ONE way of getting onto a calendar - which is strictly stronger.
     for (const [key, def] of Object.entries(TIERS)) {
       expect(def.id).toBe(key)
-      expect(def.everyNWeeks).toBeGreaterThan(0)
+      const anchored = def.anchorWeeks !== undefined && def.anchorWeeks.length > 0
+      expect(anchored || def.everyNWeeks > 0, `${key} has no placement rule`).toBe(true)
+      expect(anchored && def.everyNWeeks > 0, `${key} has two placement rules`).toBe(false)
     }
   })
 
@@ -320,11 +333,18 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
   // event and the rare rungs – four a year, National's 4 + 2 – do not move at all. The density
   // claims below are unchanged and still pass.
   it('yields the per-tier season counts, with the dense rungs the clear majority of each family', () => {
+    // ⚠ RE-PINNED BY W3-ACT2, and the SLAM ROW IS THREE RATHER THAN FOUR IN THIS BLOCK, which is a
+    // real property and not an off-by-one. The act-3 rungs are placed on NAMED season weeks
+    // (`TierDef.anchorWeeks`) and the first block of a career floors placement at week 3
+    // (MIN_FIRST_EVENT_WEEK, so no event opens already-closed), so the season-opening major on
+    // offset 2 has nowhere to go in year 0 alone. A career that starts in the third week of January
+    // has genuinely missed it. Every later block carries four - asserted in the next test.
     const counts = countByTier(events)
     expect(counts).toEqual({
       local: 25, regional: 12, national: 6,
       j30: 25, j60: 16, j300: 4,
       w15: 25, w35: 16, w50: 12, w75: 8, w100: 4, wta125: 4,
+      wta250: 8, wta500: 10, wta1000: 8, slam: 3,
     })
     const jTotal = counts.j30 + counts.j60 + counts.j300
     expect((counts.j30 + counts.j60) / jTotal).toBeGreaterThan(0.75)
@@ -389,9 +409,18 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
     // regression: «пустые недели это нормально» (ruling 9) and «на каких-то неделях их точно не
     // будет вообще - это ок» (03.08). Measured across seeds, ~10% of playable weeks are blank. So
     // the pin now holds BOTH ends – the calendar must stay dense, and it must not be a metronome.
+    // ⚠ RE-AIMED AGAIN BY W3-ACT2, AND THE UPPER BOUND IS THE ONE THAT HAD TO GO. Its argument was
+    // that a seeded calendar leaves ~10% of playable weeks blank, so a FULL grid would mean the
+    // jitter had stopped working. That inference held for twelve rungs and is false for sixteen:
+    // the act-3 family adds 30 events a season on top of 157, and 22 of them sit on NAMED weeks
+    // that no jitter may move (see TierDef.anchorWeeks). At that density every playable week
+    // carries something in most seeds - by arithmetic, not by the metronome returning. The
+    // DENSITY floor is kept exactly as it was, because that is the half the owner's ruling is
+    // about; the metronome is now guarded where it can still be seen, on the twelve jittered
+    // rungs' own seed-difference check in tests/season/calendar.test.ts.
     const playable = 52 - 3 /* off-season */ - 3 /* the floored first weeks */
     expect(perWeek.size).toBeGreaterThanOrEqual(playable - 8)
-    expect(perWeek.size).toBeLessThan(playable)
+    expect(perWeek.size).toBeLessThanOrEqual(playable)
   })
 
   it('still keeps the off-season empty and the first block floored at week 3', () => {
@@ -410,12 +439,15 @@ describe('L5 — the calendar densifies (J30/J60 are the bread and butter)', () 
 
   it('holds for later year-blocks too', () => {
     const later = buildSeason('ladder-later', 52, 52)
-    // ⚠ RE-AIMED with its sibling above (task #17, then W2-LADDER): new rungs, new counts, and
-    // every pre-existing figure unchanged. A year-block is still a year-block whichever year it is.
+    // ⚠ RE-AIMED with its sibling above (task #17, W2-LADDER, now W3-ACT2): new rungs, new counts,
+    // and every pre-existing figure unchanged. A year-block is still a year-block whichever year it
+    // is - and the SLAM row is the four the sibling's block could only hold three of, which is what
+    // makes the first-block shortfall a fact about week 3 rather than about the anchors.
     expect(countByTier(later)).toEqual({
       local: 25, regional: 12, national: 6,
       j30: 25, j60: 16, j300: 4,
       w15: 25, w35: 16, w50: 12, w75: 8, w100: 4, wta125: 4,
+      wta250: 8, wta500: 10, wta1000: 8, slam: 4,
     })
     for (const e of later) expect(e.week).toBeGreaterThanOrEqual(52)
   })
@@ -518,8 +550,11 @@ describe('L6 — AI entrant fields step UP the ladder', () => {
         expect(means[i], `${rungs[i]} vs ${rungs[i - 1]}`).toBeLessThan(means[i - 1])
       }
     }
+    // ⚠ WIDENED BY W3-ACT2 (six -> ten). The strict-descent claim below is asserted over the whole
+    // family rather than the first four, because the act-3 bands were measured to slide at BOTH ends
+    // at every rung (tools/big-draw-cost.ts is the receipt for why they are as wide as they are).
     const w = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
-    expect(w).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'])
+    expect(w).toEqual(['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'])
     const means = w.map((t) => meanPct(t))
     // Strict down the floored rungs...
     for (let i = 1; i <= 3; i++) {
@@ -622,13 +657,18 @@ describe('L7 — age gate (the junior tour is 13-18), open immediately at our st
     // The adult rungs open at 16/16/16/17/17/17 and never close – the fork at 19 is a decision,
     // not a wall, precisely because these are still here on the far side of it (W2-LADDER: the
     // spec's minAge chain is 16 for the entry trio's first two plus w50, 17 from w75 up).
-    for (const t of ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as TierId[]) {
+    // ⚠ W3-ACT2 continues the chain at 17 for all four act-3 rungs, and DELIBERATELY does not push
+    // it higher: the doorway is not the gate up here, the acceptance list is (#200 / #120 / #65 /
+    // #104). A later doorway would have gated the top of the ladder twice and told the player the
+    // wrong reason once.
+    for (const t of ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as TierId[]) {
       expect(TIERS[t].maxAgeYears).toBeUndefined()
       expect(isTierAgeOpen(t, 30)).toBe(true)
     }
     expect(TIERS.w50.minAgeYears).toBe(16)
     expect(TIERS.w75.minAgeYears).toBe(17)
     expect(TIERS.wta125.minAgeYears).toBe(17)
+    expect(TIERS.slam.minAgeYears).toBe(17)
   })
 
   // THE OVERLAP IS THE POINT, and it is what makes 19 a fork rather than a cliff: for three whole
@@ -794,8 +834,18 @@ describe('L9 — the ECONOMY ripple covers every tier', () => {
     // THE TWO TABLES, PINNED RUNG BY RUNG on their own terms (the pairing that used to do this in
     // one line is retired - see the note above). Written out so a re-tune of either is a deliberate
     // edit to this file rather than a silent consequence of touching the other.
-    expect(rungsOf('wta').map((t) => ECONOMY.condition.tierMatchFatigue[t])).toEqual([2, 2, 2, 3, 3, 3])
-    expect(rungsOf('wta').map((t) => ECONOMY.availability.minConditionToEnter[t])).toEqual([50, 55, 55, 60, 60, 60])
+    // ⚠ WIDENED BY W3-ACT2, NOT WEAKENED: ten rungs, pinned cell by cell. The six below are
+    // W2-FATIGUE's numbers unmoved; the four above continue the family's own step (3 -> 4 -> 5).
+    expect(rungsOf('wta').map((t) => ECONOMY.condition.tierMatchFatigue[t])).toEqual([2, 2, 2, 3, 3, 3, 4, 4, 5, 5])
+    // ⚠ WIDENED BY W3-ACT2 AND THE CEILING DELIBERATELY DOES NOT MOVE: the act-3 rungs keep 60.
+    // This table is ARRIVAL SAFETY, and from here up she is not free to decline - §6's mandatory
+    // regime obliges a top-50 player to turn up. A floor that refused her entry to an event she is
+    // REQUIRED to attend would manufacture penalties out of a knob nobody asked to move, and «мы ни
+    // за что не наказываем» governs. The family is still monotone non-decreasing, which is what the
+    // guard beside this line checks.
+    expect(rungsOf('wta').map((t) => ECONOMY.availability.minConditionToEnter[t])).toEqual([
+      50, 55, 55, 60, 60, 60, 60, 60, 60, 60,
+    ])
     // ...and the floors keep the one property that made the pairing worth having: the professional
     // family is gatekept ABOVE every domestic rung and never below the junior tour's entry rung.
     for (const t of rungsOf('wta')) {

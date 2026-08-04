@@ -59,6 +59,14 @@ const EXPECTED_BANDS: Record<TierId, readonly [number, number]> = {
   w75: [150, 500],
   w100: [400, 1400],
   wta125: [1200, 3500],
+  // W3-ACT2, and this is where the joke stops: every rung so far has been a ROOM, and these four are
+  // the tour she was climbing towards. Four more rows, same two-file discipline - the numbers below
+  // restate preview.ts's table independently, so retuning a band is a deliberate edit that shows in
+  // a diff rather than a silent one.
+  wta250: [3000, 9000],
+  wta500: [7000, 18000],
+  wta1000: [15000, 35000],
+  slam: [25000, 70000],
 }
 
 /** The roster `computeRanking` wants: the whole cohort plus her. `cohortIds` is engine-internal, so

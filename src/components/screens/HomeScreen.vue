@@ -470,8 +470,18 @@ const coachQuote = computed(() =>
 // rungs. The feed's two-type rule (act2-pro-tour.md §4) governs the EVENT FEED, not this strip:
 // this row is her whole climb at a glance, achievement plus the top she has not reached, and
 // hiding outgrown rungs here would erase the finishes she earned on them.
+//
+// ⚠ W3-ACT2: SIXTEEN CHIPS, and the layout decision is taken the same way. The strip still wraps, so
+// the ladder now reads as three lines on a phone - which is the honest picture of what the climb is
+// and the whole argument for keeping the top of it visible from week one. The four act-3 chips read
+// `locked` for almost every career that will ever exist; that is the point of a ladder you can see
+// the top of, and it is the same reasoning the adult rungs joined under.
 const SEASON_STRIP_TIERS: { id: TierId; short: string }[] = (
-  ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100', 'wta125'] as const
+  [
+    'local', 'regional', 'national', 'j30', 'j60', 'j300',
+    'w15', 'w35', 'w50', 'w75', 'w100', 'wta125',
+    'wta250', 'wta500', 'wta1000', 'slam',
+  ] as const
 ).map((id) => ({ id, short: TIER_SHORT[id] }))
 // finish index -> short label (reuses the finish-index convention: 0 = champion).
 function shortFinish(finish: number): string {

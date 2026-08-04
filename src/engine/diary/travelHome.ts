@@ -131,6 +131,15 @@ export const TRAVEL_HOME_MODES: Record<TierId, readonly TravelHomeScene[]> = {
   w75: [...ROAD_SCENES, ...AIR_SCENES],
   w100: [...ROAD_SCENES, ...AIR_SCENES],
   wta125: [...ROAD_SCENES, ...AIR_SCENES],
+  // W3-ACT2 takes the same bucket, for the same reason and one storey higher: this is a rule about
+  // DISTANCE, and the act-3 rungs are simply further ($2,300-6,000 against the 125's $2,100-4,200).
+  // Whether the flight home from a major should read differently from the flight home from a J30 is
+  // a WRITING question, and this slice deliberately answers it the way the W2-LADDER one did –
+  // not here, where a fifth mode would only mean art nobody drew.
+  wta250: [...ROAD_SCENES, ...AIR_SCENES],
+  wta500: [...ROAD_SCENES, ...AIR_SCENES],
+  wta1000: [...ROAD_SCENES, ...AIR_SCENES],
+  slam: [...ROAD_SCENES, ...AIR_SCENES],
 }
 
 /** Her competitive tournament tier in `week`, off the event feed – null when she played none.

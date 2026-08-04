@@ -19,6 +19,8 @@ import { eventById, refundPractice, practiceForWeek } from './bookings'
 import { captureMilestone } from './milestones'
 import { entryStatus } from './medical'
 import { isCappedTier, isCappedProTier } from './entryCaps'
+import { chargeMandatoryPenalty, mandatoryBinds } from './mandatory'
+import { ECONOMY } from '../economy'
 import type { WorldState } from '../world'
 
 
@@ -168,4 +170,24 @@ export function cancelEntry(world: WorldState, eventId: string): void {
     type: 'info',
     text: `Cancelled ${TIERS[event.tier].label} – ${weekLabel(event.week)}, entry fee forfeited.`,
   })
+  // ⚠ THE LATE WITHDRAWAL, AND THIS IS THE ONE PLACE IT CAN BE CHARGED (W3-ACT2 §6). Past the
+  // deadline the entry list has CLOSED and the draw is published with her name in it, so the tour
+  // loses a seed and a slot rather than merely an entry - which is why it costs more than never
+  // having entered at all (`lateWithdrawalPoints` 3 against `skipPoints` 2), and why the free,
+  // in-time exit above delegates to `withdrawEvent` and reaches none of this.
+  //
+  // ⚠ `mandatoryBinds` IS CONSULTED AGAINST THE EVENT ITSELF, so the same "an obligation she could
+  // not meet is not an obligation" rule that governs the skip governs here: an injured player, a
+  // suspended one, or one the acceptance list has since refused pulls out for nothing. And she has
+  // already been WRITTEN to about this event - the desk's entry letter quoted this very deadline
+  // when she registered, and the tour's due-notice quoted it again. Nothing here can surprise her.
+  if (mandatoryBinds(world, event)) {
+    chargeMandatoryPenalty(
+      world,
+      world.week,
+      ECONOMY.mandatory.lateWithdrawalPoints,
+      'late-withdrawal',
+      event,
+    )
+  }
 }

@@ -195,7 +195,12 @@ const REF = { //
   // year's brackets on a slightly more tired field and a different set of juniors ends it holding
   // counting points. Post-draw arithmetic again: count 41550 and hash e6b0c709 are asserted above
   // and reproduce byte-for-byte.
-  kidRank: 121 }
+  //
+  // ⚠ RE-PINNED 121 -> 123 BY W3-ACT2 (content, not a rule): the four act-3 rungs add 30 events a
+  // season, the cohort meets 30 more draws, and a different set of juniors ends the year with
+  // counting ITF points. See the same note on tests/condition.test.ts B1's REF, which is the
+  // declaration this one mirrors. The capture itself is untouched by construction.
+  kidRank: 123 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

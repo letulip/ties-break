@@ -57,8 +57,14 @@ describe('the window: exactly what the engine holds open', () => {
     expect(rungsAt(['local', 'regional', 'national'], 14)).toEqual(['local', 'regional', 'national'])
     expect(rungsAt(['regional', 'national', 'j30'], 15)).toEqual(['regional', 'national', 'j30'])
     expect(rungsAt(['j60', 'j300', 'w15'], 17)).toEqual(['j60', 'j300', 'w15'])
-    // ...and the terminal four at the top, which is the owner's own «50 + 75 + 100 + 125».
+    // ...and the terminal four at the top. The owner's own «50 + 75 + 100 + 125» was the terminal
+    // set until W3-ACT2 added four rungs above it; the FEED's rule is unchanged either way (it
+    // carries whatever the engine opens), so both sets are asserted - the old one as an ordinary
+    // three-plus-one window in the middle of the ladder, the new one as the terminal top.
     expect(rungsAt(['w50', 'w75', 'w100', 'wta125'], 22)).toEqual(['w50', 'w75', 'w100', 'wta125'])
+    expect(rungsAt(['wta250', 'wta500', 'wta1000', 'slam'], 24)).toEqual([
+      'wta250', 'wta500', 'wta1000', 'slam',
+    ])
   })
 
   it('THE SHAPE, walked end to end against the real engine rule', () => {
@@ -66,20 +72,13 @@ describe('the window: exactly what the engine holds open', () => {
     // when the rung three above opens) plus the terminal top four. Walking it here, through the
     // engine's own predicate, is what makes "three wide, widening to four" a property rather than a
     // claim in a comment. `tierFloorOpen` is stubbed per stage: the point is the CEILING's arithmetic.
-    const stages: TierId[][] = [
-      ['local'],
-      ['local', 'regional'],
-      ['local', 'regional', 'national'],
-      ['local', 'regional', 'national', 'j30'],
-      ['local', 'regional', 'national', 'j30', 'j60'],
-      ['local', 'regional', 'national', 'j30', 'j60', 'j300'],
-      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15'],
-      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35'],
-      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50'],
-      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75'],
-      ['local', 'regional', 'national', 'j30', 'j60', 'j300', 'w15', 'w35', 'w50', 'w75', 'w100'],
-      [...TIER_LADDER],
-    ]
+    // ⚠ GENERATED FROM `TIER_LADDER` SINCE W3-ACT2 RATHER THAN HAND-LISTED. The stages ARE the
+    // ladder's prefixes - "she has reached rung i" for each i - and hand-listing them meant the last
+    // entry was a literal `[...TIER_LADDER]`, which jumped FOUR rungs at once the moment the ladder
+    // grew and made the slide guard below assert nothing about the top of it. Written as prefixes
+    // the walk covers every rung the catalogue will ever hold, and the widths line below is what
+    // pins the shape.
+    const stages: TierId[][] = TIER_LADDER.map((_, i) => TIER_LADDER.slice(0, i + 1))
     // A rung is CLOSED when the rung three above has been REACHED; the top four never close.
     const windowOf = (reached: TierId[]) =>
       reached.filter((t) => {
@@ -87,8 +86,10 @@ describe('the window: exactly what the engine holds open', () => {
         if (i >= TIER_LADDER.length - 4) return true
         return !reached.includes(TIER_LADDER[i + 3])
       })
+    // ⚠ WIDENED BY W3-ACT2 AND THE SHAPE IS UNCHANGED: 1, 2, then three all the way up, then the
+    // terminal four. Sixteen rungs, so twelve threes instead of nine - one entry per rung reached.
     const widths = stages.map((reached) => windowOf(reached).length)
-    expect(widths).toEqual([1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4])
+    expect(widths).toEqual([1, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4])
     // ...and it SLIDES: consecutive windows differ by at most one rung at each end.
     for (let i = 1; i < stages.length; i++) {
       const before = windowOf(stages[i - 1])
@@ -98,8 +99,13 @@ describe('the window: exactly what the engine holds open', () => {
       expect(gained.length, `stage ${i} gained ${gained.join(',')}`).toBeLessThanOrEqual(1)
       expect(lost.length, `stage ${i} lost ${lost.join(',')}`).toBeLessThanOrEqual(1)
     }
-    // The last window is the owner's own answer, named.
-    expect(windowOf(stages[stages.length - 1])).toEqual(['w50', 'w75', 'w100', 'wta125'])
+    // ⚠ THE TERMINAL WINDOW MOVED, WHICH IS THE WHOLE REASON W3-ACT2 EXISTS. The owner's own
+    // answer («50 + 75 + 100 + 125») described the top of the ladder as W2-LADDER shipped it, and
+    // act2-pro-tour.md §11.3 measured what that top could offer: 28 events a season, so a player
+    // who plays every second week got ~11 and the ladder ran out of tennis. The rule did not change
+    // a word - the top four never close - so adding four rungs slid the terminal window up by
+    // exactly four, and it is the act-3 family that never closes now.
+    expect(windowOf(stages[stages.length - 1])).toEqual(['wta250', 'wta500', 'wta1000', 'slam'])
   })
 
   it('no oracle (old fixture, no snapshot yet) hides nothing - the safe direction', () => {

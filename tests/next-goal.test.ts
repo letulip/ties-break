@@ -103,7 +103,15 @@ describe('a result reads back as the round she reached', () => {
       // loss pays nothing, the real chart's nominal 1 at W50/W75/WTA125 (see
       // tests/wave-b-points.test.ts NOMINAL_ONE_TIERS for the whole ruling). The inversion stays
       // unambiguous either way - strict descent is asserted above.
-      expect(table.at(-1), `${tier}`).toBe(['w50', 'w75', 'wta125'].includes(tier) ? 1 : 0)
+      // ⚠ W3-ACT2 EXTENDS THE NOMINAL-ONE FAMILY RATHER THAN CHANGING THE RULE: research §4's
+      // chart pays "a nominal 1 point higher up" from W50, and WTA 250/500 carry it too. The two
+      // biggest rungs do NOT - a WTA 1000's own row bottoms at 65 and a Slam's at 130, because
+      // their published tables are 32-main-draw rows in which even the first round is somebody who
+      // cleared the hardest acceptance list in the sport.
+      expect(table.at(-1), `${tier}`).toBe(
+        tier === 'slam' ? 130 : tier === 'wta1000' ? 65
+          : ['w50', 'w75', 'wta125', 'wta250', 'wta500'].includes(tier) ? 1 : 0,
+      )
     }
   })
 
@@ -171,8 +179,13 @@ describe('the rungs escalate, and a small draw does not pretend to have rounds i
     expect(nextRungFor(wasTop)).toEqual({ tier: 'w15', finish: 4, firstMatch: true })
     const wasW100 = facts({ ladders: { wta: ladder([result('w100', 0)]) } })
     expect(nextRungFor(wasW100)).toEqual({ tier: 'wta125', finish: 4, firstMatch: true })
-    const top = facts({ ladders: { wta: ladder([result('wta125', 0)]) } })
-    expect(nextRungFor(top)).toEqual({ tier: 'wta125', finish: 0, firstMatch: false })
+    // ⚠ RE-AIMED A THIRD TIME (W3-ACT2): the ceiling moved four rungs, so a WTA 125 title now hands
+    // her the 250 and the "nothing above it" case is the Grand Slam. Both halves of the claim are
+    // still asserted, which is the whole point of the pair.
+    const wasWta125 = facts({ ladders: { wta: ladder([result('wta125', 0)]) } })
+    expect(nextRungFor(wasWta125)).toEqual({ tier: 'wta250', finish: 4, firstMatch: true })
+    const top = facts({ ladders: { wta: ladder([result('slam', 0)]) } })
+    expect(nextRungFor(top)).toEqual({ tier: 'slam', finish: 0, firstMatch: false })
   })
 
   it('the goal is about the STRONGEST tier she has played, not the busiest', () => {
@@ -285,13 +298,25 @@ describe('the goal the card prints', () => {
       ladders: { wta: ladder([result('w100', 0)]) },
     })
     expect(nextGoalFor(w100).text).toBe('Win one match at the WTA 125')
-    // ...and at the very top of the ladder there is nothing above, so "win it" IS the honest goal -
-    // the one case the old fallback was right about, kept right (the top is the 125 now).
-    const top = facts({
+    // ⚠ RE-AIMED BY W3-ACT2, AND THE RE-AIM IS THE WHOLE POINT OF THE WAVE. A WTA 125 title used to
+    // be the top of the world, so "win it" was the honest goal there; there are four rungs above it
+    // now, so the escalation keeps going and the 125 case moves to the ordinary arm.
+    const wta125 = facts({
       upcoming: [event({ entered: true, tier: 'wta125', label: 'WTA 125 Limoges' })],
       ladders: { wta: ladder([result('wta125', 0)]) },
     })
-    expect(nextGoalFor(top).text).toBe('Win the WTA 125')
+    expect(nextGoalFor(wta125).text).toBe('Win one match at the WTA 250')
+    // ...and at the very top there is still nothing above, so "win it" IS the honest goal - the one
+    // case the old fallback was right about, kept right, one storey higher. The calendar's own
+    // standing rule ("there must ALWAYS be somewhere to go") now runs out at a Grand Slam, which is
+    // where a tennis career runs out of somewhere to go too.
+    const top = facts({
+      upcoming: [event({ entered: true, tier: 'slam', label: 'Grand Slam Melbourne' })],
+      ladders: { wta: ladder([result('slam', 0)]) },
+    })
+    // `rungLine`'s `where` is the TIER's own label when she is entered for one, so the top rung
+    // prints its catalogue name. Fictional by the Style rules - a category, never a city.
+    expect(nextGoalFor(top).text).toBe('Win the Grand Slam')
   })
 
   it('⚠ `bestAt` READS ALL THREE TABLES – a W15 result is not invisible to the entered arm', () => {

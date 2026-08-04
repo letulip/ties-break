@@ -98,7 +98,13 @@ const PAIR_GAP = POLICY === 'pair' ? 2 : 1
 /** Her first professional season starts here: age 16 is the earliest `minAgeYears` on any W rung. */
 const PRO_START_WEEK = 2 * WEEKS_PER_YEAR
 
-const W_RUNGS: readonly TierId[] = ['w15', 'w35', 'w50', 'w75', 'w100', 'wta125']
+// ⚠ TEN RUNGS SINCE W3-ACT2. The probe's own question is unchanged - what a professional SCHEDULE
+// costs the body - but the schedule it can now reach is the act-3 one, which is the whole point of
+// re-running it: §11.3 predicted, and the pre-wave probe measured, 11.3 events a season at the
+// terminal window because the top of the ladder had run out of tennis.
+const W_RUNGS: readonly TierId[] = [
+  'w15', 'w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam',
+]
 
 interface SeasonRow {
   season: number
@@ -133,7 +139,13 @@ function stampProBook(world: WorldState): void {
   for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: world.week, points: 300, tier: 'j300' })
   // A W book big enough to sit at the top of the merged table whatever the acceptance cuts resolve
   // to - the share-based cuts of this base and the absolute-rank cuts landing after it alike.
-  for (let i = 0; i < 4; i++) world.results.push({ playerId: KID_ID, week: world.week, points: 900, tier: 'wta125' })
+  // ⚠ THE BOOK HAD TO GROW WITH THE LADDER (W3-ACT2). Against the real points-to-rank curve the
+  // merged table carries, 4 x 900 = 3,600 points is roughly world #12 - which clears every W rung
+  // and the WTA 250, and MISSES a 1000's #65 and a Slam's #104 by nothing at all while being
+  // nowhere near the top-10 the biggest fields are drawn from. The probe's contract is that
+  // `entryStatus` can never refuse her on RANK (see the header), so the book is sized to sit at the
+  // head of the table: 8 x 1,800 is ~14,400, past the derived #1 on ~10,700.
+  for (let i = 0; i < 8; i++) world.results.push({ playerId: KID_ID, week: world.week, points: 1800, tier: 'wta1000' })
   recomputeKidRank(world)
 }
 
