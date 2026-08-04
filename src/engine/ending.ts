@@ -22,12 +22,27 @@ import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from
 export const ENDINGS = {
   // --- #3 BANKRUPTCY ---------------------------------------------------------------------------
   /** ⚠ MEASURED, NOT PICKED (adult spec B4: «N is a design decision, not an obvious one, and it
-   *  should be measured before it is picked»). Swept over {4, 6, 8, 12, 16} in
-   *  `tools/endings-bench.ts`; see docs/specs/endings-and-the-album.md §3 for the table and the
-   *  argument. 8 is the shortest spell that is unambiguously a state rather than a bad month: it
-   *  survives a severe injury's onset bill plus its rehab (16-22 weeks out, but the bills land in
-   *  the first fortnight) and it still leaves the family a full off-season to recover in. */
-  bankruptcyGraceWeeks: 8,
+   *  should be measured before it is picked»). Swept over {4, 6, 8, 12, 16, 24} against
+   *  career-outcome-targets.md's own row - «Family did not go bankrupt, 14→18: 60-80% of all
+   *  starts» - on both bench entry policies. The table and the argument are in
+   *  docs/specs/endings-and-the-album.md §3; the short version:
+   *
+   *    N        grinder survives    careful survives
+   *    4              39.8%  ✗            78.7%
+   *    8              61.1%               79.6%
+   *    12             73.1%               79.6%     <- shipped
+   *    16             83.3%  ✗            79.6%
+   *
+   *  ⚠ THREE THINGS PICK 12 OVER 8, AND NONE OF THEM IS TASTE.
+   *    1. It is the only candidate that puts BOTH policies MID-band rather than one of them on the
+   *       edge: 8 leaves the reckless parent at 61.1%, a rounding error from failing the target.
+   *    2. It is three times the reckless policy's MEDIAN DEBT SPELL (4 weeks), so it cannot fire on
+   *       a wobble - and a fifth of the careful policy's median spell (57 weeks), so it cannot miss
+   *       a real collapse. Those two medians are what the grace window has to sit between.
+   *    3. It is exactly the window the Money screen already draws. `FINANCE_WEEKS` is «12w + a full
+   *       52w season» and the breakdown opens on "Last 12 weeks", so a family in the grace period
+   *       can see the whole of it on one chart - the warning phase B4 demands, with no new surface. */
+  bankruptcyGraceWeeks: 12,
 
   // --- #1/#2 THE FORK AT NINETEEN --------------------------------------------------------------
   /** the birthday the junior story runs out on (adult spec §4.1: real ITF juniors is U18) */
@@ -58,15 +73,29 @@ export const ENDINGS = {
   // --- #4 THE CAREER-ENDING INJURY -------------------------------------------------------------
   /** ⚠ A POST-DRAW PREDICATE, NOT A NEW SEVERITY BAND. Re-mapping `severityBands` would change what
    *  every already-drawn `seed:injury:<week>` roll MEANS; reading the band after it is drawn touches
-   *  nothing shipped. A fresh `severe` (the top band, 2.5% of injuries) landing on a body that has
-   *  already been through this many major-or-worse layoffs is the accumulation adult spec B5 asks
-   *  for – rare enough to be a story, never a difficulty setting. */
-  injuryPriorMajors: 2,
+   *  nothing shipped.
+   *
+   *  ⚠ AND THE ACCUMULATION IS WEEKS LOST, NOT LAYOFFS COUNTED – because the obvious rule was
+   *  MEASURED AND IT WAS UNREACHABLE. P1's proposal was "a fresh severe on a body with >= 2 prior
+   *  major-or-severe layoffs", predicted at 1-2% of careers. Instrumented over 90 full careers
+   *  (tools/endings-bench.ts, the plays-on arm): 11.1% ever saw a fresh severe at all, mean 0.64
+   *  major-or-worse layoffs per WHOLE career, and the joint condition fired 0.0% of the time. It is
+   *  not rare, it is impossible - the top band is 2.5% of injuries and major is 7.5%, so needing
+   *  three of them in one career is asking for a coincidence the injury model cannot produce.
+   *
+   *  Weeks lost is reachable AND it is the better rule anyway: it is physical rather than
+   *  bookkeeping (a body that has already spent five months off court), it does not care which
+   *  labels the severity bands happen to carry, and it is a number the epilogue can print. Measured
+   *  at this threshold: 4.4% of full-life careers, and far less across all careers, most of which
+   *  end long before a body can accumulate that much. Rare enough to be a story, exactly as B5 asks,
+   *  and never a difficulty setting - nothing the player chooses moves it. */
+  injuryPriorWeeksOut: 20,
 } as const
 
-/** The severities that count toward the accumulation. `minor` and `moderate` never do: a career
- *  that collects niggles has not been broken by them, and counting them would make the rare ending
- *  common, which is precisely what B5 forbids. */
+/** The severities that count toward the accumulation MEASURE (`majorPlusCount` in the bench). The
+ *  predicate itself reads weeks lost – see `injuryPriorWeeksOut` for the measurement that decided
+ *  it – but the bench still reports this, because it is the shape P1 proposed and the record of why
+ *  it was not shipped belongs beside the number that ruled it out. */
 export const CAREER_ENDING_PRIOR_SEVERITIES: readonly string[] = ['major', 'severe']
 
 // --- #3 and #4: the two that HAPPEN TO her ------------------------------------------------------
@@ -83,8 +112,8 @@ export interface AutoEndingView {
   cheapestEntryFeeCents: number
   /** the severity of an injury that landed THIS week, or null (an ongoing layoff is not fresh) */
   freshInjurySeverity: string | null
-  /** every layoff she has recovered from, severities only */
-  injuryHistory: readonly { severity: string }[]
+  /** every layoff she has recovered from: what it was, and how long it took */
+  injuryHistory: readonly { severity: string; weeksOut: number }[]
 }
 
 /** How many consecutive weeks she has been under water, counting this one. 0 when solvent. */
@@ -107,7 +136,7 @@ export function debtWeeks(view: { week: number; debtSinceWeek: number | null }):
  *  reason this is a spell and not a floor. A hard debt floor was the runner-up and it is rejected in
  *  the spec: one catastrophic medical bill could end a career in a single week, which is exactly the
  *  instant death the warning phase exists to forbid. */
-export function bankruptcyDue(view: AutoEndingView, graceWeeks = ENDINGS.bankruptcyGraceWeeks): boolean {
+export function bankruptcyDue(view: AutoEndingView, graceWeeks: number = ENDINGS.bankruptcyGraceWeeks): boolean {
   if (view.fundsCents >= 0) return false
   if (view.fundsCents >= view.cheapestEntryFeeCents) return false
   return debtWeeks(view) >= graceWeeks
@@ -117,17 +146,21 @@ export function bankruptcyDue(view: AutoEndingView, graceWeeks = ENDINGS.bankrup
  *  `injuryPriorMajors` major-or-worse layoffs. */
 export function careerEndingInjuryDue(
   view: AutoEndingView,
-  priorMajors = ENDINGS.injuryPriorMajors,
+  priorWeeksOut: number = ENDINGS.injuryPriorWeeksOut,
 ): boolean {
   if (view.freshInjurySeverity !== 'severe') return false
-  const priors = view.injuryHistory.filter((h) => CAREER_ENDING_PRIOR_SEVERITIES.includes(h.severity)).length
-  return priors >= priorMajors
+  return weeksLostSoFar(view) >= priorWeeksOut
+}
+
+/** How much of her playing life the body has already spent off court. */
+export function weeksLostSoFar(view: Pick<AutoEndingView, 'injuryHistory'>): number {
+  return view.injuryHistory.reduce((sum, h) => sum + h.weeksOut, 0)
 }
 
 /** The two automatic endings, in the order they are checked. Bankruptcy leads because it is the one
  *  the player was warned about for weeks; an injury that ends a career is a week that has just
  *  happened, and a girl who is both broke and broken should read as the story she was living. */
-export function detectEnding(view: AutoEndingView, graceWeeks = ENDINGS.bankruptcyGraceWeeks): CareerEnding | null {
+export function detectEnding(view: AutoEndingView, graceWeeks: number = ENDINGS.bankruptcyGraceWeeks): CareerEnding | null {
   if (bankruptcyDue(view, graceWeeks)) {
     const weeks = debtWeeks(view)
     return {
@@ -139,12 +172,12 @@ export function detectEnding(view: AutoEndingView, graceWeeks = ENDINGS.bankrupt
     }
   }
   if (careerEndingInjuryDue(view)) {
-    const priors = view.injuryHistory.filter((h) => CAREER_ENDING_PRIOR_SEVERITIES.includes(h.severity)).length
+    const lost = weeksLostSoFar(view)
     return {
       type: 'injury',
       week: view.week,
       ageYears: view.ageYears,
-      detail: `the ${ordinal(priors + 1)} serious one, and the body had had enough`,
+      detail: `${lost} weeks already lost, and then this one`,
       resumesWeek: null,
     }
   }
@@ -166,7 +199,7 @@ export function endingForForkAnswer(
   answer: ForkAnswer,
   week: number,
   ageYears: number,
-  collegeYears = ENDINGS.collegeYears,
+  collegeYears: number = ENDINGS.collegeYears,
   weeksPerYear = 52,
 ): CareerEnding | null {
   if (answer === 'continue') return null
@@ -214,7 +247,7 @@ export interface PlateauView {
  *  should not be telling. "Inside the band" alone would fire on the three quiet seasons of a
  *  nineteen-year-old who is about to break through. Together they mean what the owner's sentence
  *  means: she is where she is going to be. */
-export function plateauReading(view: PlateauView, seasons = ENDINGS.plateauSeasons): boolean {
+export function plateauReading(view: PlateauView, seasons: number = ENDINGS.plateauSeasons): boolean {
   if (view.ageYears < ENDINGS.plateauFromAgeYears) return false
   const window = view.seasonEndRanks.filter((s) => s.seasonIndex > view.seasonIndex - seasons)
   if (window.length < seasons) return false
@@ -311,7 +344,3 @@ export const ENDING_BLURB: Record<CareerEndingType, string> = {
     'The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.',
 }
 
-function ordinal(n: number): string {
-  const names = ['zeroth', 'first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh']
-  return names[n] ?? `${n}th`
-}

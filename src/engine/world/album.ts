@@ -34,17 +34,24 @@ import { seasonIndexOf } from './ledger'
 import { finishLabel } from './labels'
 import type { WorldState } from '../world'
 
-/** ⚠ MEASURED BEFORE THE COPY WAS WRITTEN (§9.2's own instruction for slot 6, and the wave brief
- *  repeated it in capitals). `tools/endings-bench.ts` reports two different crossings:
+/** ⚠ MEASURED BEFORE THE COPY WAS WRITTEN – §9.2's own instruction for slot 6, and the wave brief
+ *  repeated it in capitals. `tools/endings-bench.ts` reports two crossings that both get called
+ *  "break-even" and are YEARS apart:
  *
- *    – the WEEK crossing: one week's prize money beat that week's costs. Common – it lands in the
- *      first professional season for most careers that get there at all.
- *    – the CUMULATIVE crossing: her prize money to date beat her costs to date, counting from the
- *      week she was fourteen. That is the one §9.2 asks for, and it is rare.
+ *    – the WEEK crossing: one week's prize money beat that week's costs. COMMON. It lands in the
+ *      first professional season for most careers that reach one, around seventeen – which is where
+ *      the owner watched his own career cross it.
+ *    – the CUMULATIVE crossing: her prize money to date passed everything the family had ever spent,
+ *      counting from the week she was fourteen. That is the one §9.2 asks slot 6 for, and it is
+ *      RARE: measured at 0 careers in 216 across every preset and both retirement policies.
  *
- *  So the empty page is the COMMON case and the copy says so plainly rather than apologising for
- *  it. The measured numbers and the argument are in docs/specs/endings-and-the-album.md §5. */
-export const SLOT6_EMPTY_WHY = 'The week the money turned – it never came'
+ *  So the empty page is THE COMMON CASE, not the exception, and the copy says so plainly instead of
+ *  apologising for it. And when a career had the week but never the career, the empty face carries
+ *  THAT – it is the honest thing to have on the page, and «the tennis paid for a week of itself and
+ *  never for the whole of it» is the game's own thesis arriving as a fact about her rather than as a
+ *  claim in a store description. The numbers and the argument are in
+ *  docs/specs/endings-and-the-album.md §5. */
+export const SLOT6_EMPTY_WHY = 'The week the money turned – it never came, and for almost nobody does it'
 
 const EMOTION_BY_ENDING: Record<CareerEndingType, AvatarEmotion> = {
   stopped: 'serious',
@@ -299,28 +306,41 @@ export function slotWorstWeek(world: WorldState): AlbumPage {
  *  behind the answer has been pruned out of the save – so it is captured the week it happens, in
  *  `tickWeek`, and this page just reads the row. */
 export function slotTheTurn(world: WorldState): AlbumPage {
-  const turn = earliest(world.milestones, 'break-even')
-  if (turn) {
+  const career = world.milestones.find((m) => m.type === 'break-even' && m.kind === 'career')
+  if (career) {
     return page(
       world,
       6,
-      'The week the money turned – prize money past everything the family had spent',
+      'The week the money turned – prize money past everything the family had ever spent',
       'It paid for itself',
-      `${seasonLabel(turn.week)} – ${formatCents(world.careerTotals.prizeCents)} won against ${formatCents(world.careerTotals.spentCents)} spent`,
-      turn.week,
+      `${seasonLabel(career.week)} – ${formatCents(world.careerTotals.prizeCents)} won against ${formatCents(world.careerTotals.spentCents)} spent`,
+      career.week,
       'happy',
     )
   }
-  // The empty face. Measured, not assumed – see SLOT6_EMPTY_WHY.
+  // THE EMPTY FACE. Measured, not assumed – see SLOT6_EMPTY_WHY for the two rates.
+  const week = world.milestones.find((m) => m.type === 'break-even' && m.kind === 'week')
   const won = world.careerTotals.prizeCents
   const spent = world.careerTotals.spentCents
-  const caption =
-    won > 0
-      ? 'It paid for some of it'
-      : 'It never paid for any of it'
+  if (week) {
+    // ⚠ THE HONEST MIDDLE, and it is the commonest true story the game has: one week where the
+    // tennis paid for itself, and never the whole of it. Naming the week is not consolation – it is
+    // the exact size of what did happen, printed next to the exact size of what did not.
+    return page(
+      world,
+      6,
+      SLOT6_EMPTY_WHY,
+      'One week, it paid for itself',
+      `${seasonLabel(week.week)} – and in the end ${formatCents(won)} won against ${formatCents(spent)} spent`,
+      week.week,
+      'serious',
+      true,
+    )
+  }
+  const caption = won > 0 ? 'It paid for some of it' : 'It never paid for any of it'
   const fact =
     won > 0
-      ? `${formatCents(won)} won against ${formatCents(spent)} spent – most careers end on this page`
+      ? `${formatCents(won)} won against ${formatCents(spent)} spent – not one week of it covered itself`
       : `${formatCents(spent)} spent, and the tennis never sent a cheque`
   return page(world, 6, SLOT6_EMPTY_WHY, caption, fact, null, won > 0 ? 'serious' : 'norm', true)
 }
@@ -379,7 +399,8 @@ function scrollDetail(m: Milestone): string | null {
     case 'season-rank':
       return m.rank === undefined ? null : `#${m.rank}`
     case 'break-even':
-      return null
+      // Two crossings, one type – say which. See `milestoneKey` in diary/facts.ts.
+      return m.kind === 'week' ? 'one week of it' : 'the whole of it'
   }
 }
 

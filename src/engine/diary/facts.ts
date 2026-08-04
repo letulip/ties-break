@@ -81,10 +81,14 @@ export function milestoneKey(m: Milestone): string {
       return m.type
     case 'season-rank':
       return `season-rank:${m.seasonIndex ?? -1}`
-    // W2-ENDINGS: the break-even crossing is per CAREER - it can only happen once, because it is a
-    // crossing and not a level. Same identity shape as `prize` and for the same reason.
+    // ⚠ W2-ENDINGS: TWO CROSSINGS, TWO IDENTITIES, ONE TYPE. "Break-even" names two different events
+    // that are YEARS apart, and the album needs both: `kind: 'week'` is the first week whose prize
+    // money beat that week's costs (common - it lands in the first professional season), `kind:
+    // 'career'` is the week her prize money to date passed everything the family had ever spent
+    // (measured at 0% across the bench, which is what slot 6's copy is written against). Each can
+    // happen only once, so the kind IS the identity.
     case 'break-even':
-      return m.type
+      return `${m.type}:${m.kind ?? 'career'}`
   }
 }
 

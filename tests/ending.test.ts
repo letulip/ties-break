@@ -78,31 +78,51 @@ describe('#3 bankruptcy – a spell, never a floor', () => {
     expect(bankruptcyDue(autoView({ fundsCents: 1_00, debtSinceWeek: 0, week: 500 }))).toBe(false)
   })
 
-  it('⚠ the redundant clause still holds: a free entry means she can still play', () => {
-    // Funds below zero, spell long enough - but the cheapest entry on the calendar costs nothing,
-    // so there IS a next entry and "no path back" is false. Redundant on every shipped calendar and
-    // written out anyway, exactly as the contract words it.
-    const free = autoView({ fundsCents: -1, debtSinceWeek: 0, week: 100, cheapestEntryFeeCents: 0 })
-    expect(bankruptcyDue(free)).toBe(false)
+  it('⚠ the second clause is REDUNDANT, and this is the test that says so out loud', () => {
+    // The contract words it as "funds below zero AND unable to fund the cheapest entry for N weeks".
+    // The engine's own affordability test is `fundsCents >= entryFeeCents`, so a family below zero
+    // cannot afford an entry of ANY price - not even a free one, because -1 >= 0 is false. The
+    // conjunction therefore adds nothing on every calendar this game can generate, which is exactly
+    // what P1 argued; it is written out because the contract words it that way and because a rung
+    // that one day ships with a NEGATIVE fee (a paid-appearance rung) would need it.
+    const freeEntry = autoView({ fundsCents: -1, debtSinceWeek: 0, week: 100, cheapestEntryFeeCents: 0 })
+    expect(bankruptcyDue(freeEntry)).toBe(true)
+    // ...and here is the one shape it does rescue: a rung that PAYS her to turn up.
+    const paidToPlay = autoView({ fundsCents: -1, debtSinceWeek: 0, week: 100, cheapestEntryFeeCents: -50_00 })
+    expect(bankruptcyDue(paidToPlay)).toBe(false)
   })
 })
 
 describe('#4 the career-ending injury – a story, never a difficulty setting', () => {
-  const priors = (n: number, severity = 'severe') => Array.from({ length: n }, () => ({ severity }))
+  const lost = (weeks: number, severity = 'moderate') => [{ severity, weeksOut: weeks }]
 
-  it('needs BOTH the fresh severe and the accumulation', () => {
-    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: priors(1) }))).toBe(false)
-    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'major', injuryHistory: priors(5) }))).toBe(false)
-    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: priors(2) }))).toBe(true)
+  it('needs BOTH the fresh severe and the weeks already lost', () => {
+    const n = ENDINGS.injuryPriorWeeksOut
+    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: lost(n - 1) }))).toBe(false)
+    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'major', injuryHistory: lost(n + 40) }))).toBe(false)
+    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: lost(n) }))).toBe(true)
   })
 
-  it('niggles never count toward it, however many there are', () => {
-    const noise = [...priors(20, 'minor'), ...priors(20, 'moderate')]
-    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: noise }))).toBe(false)
+  it('⚠ the accumulation is WEEKS, not layoffs – the counted rule was measured at 0.0% and dropped', () => {
+    // Three separate months off court end a career; three niggles do not, because they are not
+    // three months. The count-of-major rule P1 proposed could not fire at all on the shipped injury
+    // model - see ENDINGS.injuryPriorWeeksOut for the instrumented numbers.
+    const manyTiny = Array.from({ length: 30 }, () => ({ severity: 'minor', weeksOut: 1 }))
+    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: manyTiny }))).toBe(true)
+    const threeMonths = [
+      { severity: 'moderate', weeksOut: 6 },
+      { severity: 'moderate', weeksOut: 6 },
+      { severity: 'major', weeksOut: 9 },
+    ]
+    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: threeMonths }))).toBe(true)
+  })
+
+  it('an unbroken body survives even the worst single roll', () => {
+    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: 'severe', injuryHistory: [] }))).toBe(false)
   })
 
   it('an ongoing layoff is not a fresh injury', () => {
-    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: null, injuryHistory: priors(9) }))).toBe(false)
+    expect(careerEndingInjuryDue(autoView({ freshInjurySeverity: null, injuryHistory: lost(90) }))).toBe(false)
   })
 })
 
@@ -113,7 +133,7 @@ describe('detectEnding – bankruptcy leads, and neither is a verdict', () => {
       debtSinceWeek: 0,
       week: 100,
       freshInjurySeverity: 'severe',
-      injuryHistory: [{ severity: 'severe' }, { severity: 'major' }],
+      injuryHistory: [{ severity: 'severe', weeksOut: 18 }, { severity: 'major', weeksOut: 10 }],
     })
     expect(detectEnding(both)?.type).toBe('bankruptcy')
   })
@@ -148,7 +168,10 @@ describe('#5/#6 the natural end, and the plateau reading of it', () => {
     return {
       ageYears: 26,
       seasonIndex: 12,
-      seasonEndRanks: [...flat(6, 4, 180), ...flat(10, 3, 175)],
+      // ⚠ THE WINDOW MUST NOT BEAT WHAT CAME BEFORE IT. A plateau is "she is where she is going to
+      // be", so the later seasons sit slightly WORSE than her best - improving inside the window is
+      // the one thing that disqualifies it, and this fixture used to have it the other way round.
+      seasonEndRanks: [...flat(6, 4, 175), ...flat(10, 3, 180)],
       lastRungSeasonIndex: 6,
       ...over,
     }
@@ -167,12 +190,12 @@ describe('#5/#6 the natural end, and the plateau reading of it', () => {
   })
 
   it('an improvement inside the window is not a plateau', () => {
-    expect(plateauReading(plateauView({ seasonEndRanks: [...flat(6, 4, 180), ...flat(10, 3, 40)] }))).toBe(false)
+    expect(plateauReading(plateauView({ seasonEndRanks: [...flat(6, 4, 175), ...flat(10, 3, 40)] }))).toBe(false)
   })
 
   it('a collapse is not a plateau either – both halves of the flatness test are load-bearing', () => {
     const collapsing = [
-      ...flat(6, 4, 180),
+      ...flat(6, 4, 175),
       { seasonIndex: 10, endRank: 182 },
       { seasonIndex: 11, endRank: 260 },
       { seasonIndex: 12, endRank: 400 },
@@ -304,8 +327,12 @@ describe('#2 college – the only ending that resumes', () => {
     const spentBefore = world.careerTotals.spentCents
     const from = world.week
     resumeFromCollege(world, rng)
+    // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
+    // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last
+    // fourteen months of the freeze - which is exactly the stretch a bug would have to survive.
+    const until = world.college!.untilWeek
     const coachingInFreeze = world.financeWeeks
-      .filter((w) => w.week > from)
+      .filter((w) => w.week > from && w.week < until)
       .reduce((s, w) => s + (w.byCategory.coaching ?? 0), 0)
     expect(coachingInFreeze).toBe(0)
     // ...and the balance is HIGHER than it was, because the parent kept working.

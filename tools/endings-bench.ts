@@ -35,7 +35,8 @@ import {
   kidAgeYears,
   type WorldState,
 } from '../src/engine/world'
-import { ENDINGS, bankruptcyDue, debtWeeks } from '../src/engine/ending'
+import { ENDINGS, bankruptcyDue, debtWeeks, plateauReading } from '../src/engine/ending'
+import { plateauViewOf } from '../src/engine/world'
 import type { CareerEndingType } from '../src/shared/protocol'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { Rng } from '../src/engine/rng'
@@ -54,8 +55,10 @@ export type ForkArm = 'continue' | 'college' | 'stop'
  *  топ – уйду»: she takes the PLATEAU offer, because that offer only exists when the reading holds,
  *  and she says one more year to the AGE offer until the game stops asking at 38. That produces the
  *  distribution between #5 and #6 the contract asks the epilogue to be able to tell apart. */
-function answersRetirement(reason: 'age' | 'plateau', final: boolean): boolean {
-  return final || reason === 'plateau'
+export type RetireArm = 'her-words' | 'plays-on'
+function answersRetirement(arm: RetireArm, reason: 'age' | 'plateau', final: boolean): boolean {
+  if (final) return true
+  return arm === 'her-words' && reason === 'plateau'
 }
 
 export interface CareerOutcome {
@@ -82,8 +85,18 @@ export interface CareerOutcome {
   freshSevereCount: number
   maxPriorsAtSevere: number
   majorPlusCount: number
+  /** priors of moderate-or-worse at the moment of a fresh severe, and the weeks her body had
+   *  already lost to injury by then. Both are candidate accumulation rules; the shipped one is
+   *  whichever the measurement supports. */
+  maxModeratePlusAtSevere: number
+  maxWeeksOutAtSevere: number
   /** debt spells that STARTED inside the first `horizonWeeks` weeks - the 14→18 target row */
   debtSpellsInHorizon: number[]
+  /** ⚠ THE PLATEAU'S OWN N, SWEPT WITHOUT RE-RUNNING. At every season wrap the reading is evaluated
+   *  at 2, 3 and 4 seasons and the first season each would have asked in is banked. The career only
+   *  ACTS on the shipped value, so this is "when would it have asked" rather than "what would the
+   *  career have become" - exactly the claim the grace sweep makes, and no more. */
+  plateauAsksAt: Record<number, number | null>
 }
 
 /** career-outcome-targets.md's own window: four seasons, fourteen to eighteen. */
@@ -99,6 +112,7 @@ export function runToEnding(
   policy: Policy = POLICIES[0],
   latchBankruptcy = true,
   horizonWeeks = FULL_CAREER_WEEKS,
+  retireArm: RetireArm = 'her-words',
 ): CareerOutcome {
   const { world, rng, seed } = openCareer(preset, index, policy)
   const out: CareerOutcome = {
@@ -117,7 +131,10 @@ export function runToEnding(
     freshSevereCount: 0,
     maxPriorsAtSevere: 0,
     majorPlusCount: 0,
+    maxModeratePlusAtSevere: 0,
+    maxWeeksOutAtSevere: 0,
     debtSpellsInHorizon: [],
+    plateauAsksAt: { 2: null, 3: null, 4: null },
   }
   let spell = 0
   let spellStart = 0
@@ -159,11 +176,25 @@ export function runToEnding(
         out.freshSevereCount += 1
         const priors = world.injuryHistory.filter((h) => h.severity === 'major' || h.severity === 'severe').length
         if (priors > out.maxPriorsAtSevere) out.maxPriorsAtSevere = priors
+        const mod = world.injuryHistory.filter(
+          (h) => h.severity === 'moderate' || h.severity === 'major' || h.severity === 'severe',
+        ).length
+        if (mod > out.maxModeratePlusAtSevere) out.maxModeratePlusAtSevere = mod
+        const lost = world.injuryHistory.reduce((sum, h) => sum + h.weeksOut, 0)
+        if (lost > out.maxWeeksOutAtSevere) out.maxWeeksOutAtSevere = lost
       }
       if (world.injury.severity === 'major' || world.injury.severity === 'severe') out.majorPlusCount += 1
     }
 
-    answerWhateverIsOpen(world, rng, arm, out)
+    // the plateau sweep, evaluated on the wrap week and nowhere else (the only week it can fire)
+    if (world.week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - 3) {
+      const view = plateauViewOf(world)
+      for (const n of [2, 3, 4] as number[]) {
+        if (out.plateauAsksAt[n] === null && plateauReading(view, n)) out.plateauAsksAt[n] = view.seasonIndex
+      }
+    }
+
+    answerWhateverIsOpen(world, rng, arm, out, retireArm)
   }
   if (spell > 0) {
     out.debtSpells.push(spell)
@@ -182,7 +213,13 @@ export function runToEnding(
   return out
 }
 
-function answerWhateverIsOpen(world: WorldState, rng: Rng, arm: ForkArm, out: CareerOutcome): void {
+function answerWhateverIsOpen(
+  world: WorldState,
+  rng: Rng,
+  arm: ForkArm,
+  out: CareerOutcome,
+  retireArm: RetireArm,
+): void {
   if (world.fork !== null && world.fork.answer === null) {
     answerFork(world, arm)
     if (arm === 'college' && world.ending?.type === 'college') {
@@ -192,7 +229,7 @@ function answerWhateverIsOpen(world: WorldState, rng: Rng, arm: ForkArm, out: Ca
     }
   }
   if (world.retirementOffer !== null) {
-    answerRetirement(world, answersRetirement(world.retirementOffer.reason, world.retirementOffer.final))
+    answerRetirement(world, answersRetirement(retireArm, world.retirementOffer.reason, world.retirementOffer.final))
   }
 }
 
@@ -244,26 +281,44 @@ export function main(argv = process.argv.slice(2)): void {
   )
   console.log('')
 
-  // --- ARM 1: she turns professional at the fork. The only arm the other four endings live in. ---
-  const pro: CareerOutcome[] = []
-  for (const preset of presets) {
-    for (let i = 0; i < seeds; i++) pro.push(runToEnding(preset, i, 'continue'))
+  // --- ARM 1: she turns professional at the fork. The only arm the other four endings live in.
+  //
+  // ⚠ RUN UNDER BOTH RETIREMENT ANSWERS, because the split between #5 and #6 is a PLAYER CHOICE and
+  // not a game rate. «Her words» takes the plateau offer the moment it comes («не могу выйти в топ –
+  // уйду»); «plays on» refuses every offer until the game stops asking at 38. Reporting only one of
+  // them would have printed a 0% next to an ending that is reachable in one tap.
+  const arms: { label: string; retire: RetireArm; rows: CareerOutcome[] }[] = [
+    { label: 'her words (takes the plateau)', retire: 'her-words', rows: [] },
+    { label: 'plays on (refuses until 38)', retire: 'plays-on', rows: [] },
+  ]
+  for (const a of arms) {
+    for (const preset of presets) {
+      for (let i = 0; i < seeds; i++) {
+        a.rows.push(runToEnding(preset, i, 'continue', POLICIES[0], true, FULL_CAREER_WEEKS, a.retire))
+      }
+    }
   }
+  const pro = arms[0].rows
 
   console.log('  ── THE SIX, as rates of all careers that turned professional at nineteen ──')
-  console.log('')
-  console.log(`  ${padEnd('ending', 14)}${'careers'.padStart(9)}${'rate'.padStart(8)}   median age`)
-  for (const type of ENDING_ORDER) {
-    const rows = pro.filter((o) => o.ending === type)
-    const ages = rows.map((o) => o.endedAge ?? 0).sort((a, b) => a - b)
+  for (const a of arms) {
+    console.log('')
+    console.log(`  answering the natural end: "${a.label}"`)
+    console.log(`  ${padEnd('ending', 14)}${'careers'.padStart(9)}${'rate'.padStart(8)}   median age`)
+    for (const type of ENDING_ORDER) {
+      const rows = a.rows.filter((o) => o.ending === type)
+      const ages = rows.map((o) => o.endedAge ?? 0).sort((x, y) => x - y)
+      console.log(
+        `  ${padEnd(type, 14)}${String(rows.length).padStart(9)}${pct(rows.length, a.rows.length).padStart(8)}   ${
+          ages.length ? median(ages).toFixed(0) : '–'
+        }`,
+      )
+    }
+    const unresolved = a.rows.filter((o) => o.ending === null).length
     console.log(
-      `  ${padEnd(type, 14)}${String(rows.length).padStart(9)}${pct(rows.length, pro.length).padStart(8)}   ${
-        ages.length ? median(ages).toFixed(0) : '–'
-      }`,
+      `  ${padEnd('(still playing)', 14)}${String(unresolved).padStart(9)}${pct(unresolved, a.rows.length).padStart(8)}`,
     )
   }
-  const unresolved = pro.filter((o) => o.ending === null).length
-  console.log(`  ${padEnd('(still playing)', 14)}${String(unresolved).padStart(9)}${pct(unresolved, pro.length).padStart(8)}`)
   console.log('')
   console.log(
     `  ⚠ 'stopped' and 'college' are 0 here BY CONSTRUCTION – this arm answers the fork with`,
@@ -280,11 +335,27 @@ export function main(argv = process.argv.slice(2)): void {
     `  stop    : ${stopArm.filter((o) => o.ending === 'stopped').length}/${stopArm.length} latched 'stopped' at nineteen`,
   )
   const resumed = collegeArm.filter((o) => o.wentToCollege)
-  const collegeEnded = collegeArm.filter((o) => o.ending !== null)
+  const afterCollege = resumed.filter((o) => o.ending !== null)
   console.log(
     `  college : ${resumed.length}/${collegeArm.length} took the scholarship and came back at twenty-two; ` +
-      `${collegeEnded.length} of those went on to an ending (${collegeEnded.map((o) => o.ending).join(', ') || 'none'})`,
+      `${afterCollege.length} of THOSE went on to an ending (${afterCollege.map((o) => o.ending).join(', ') || 'none'})`,
   )
+  console.log(
+    `            the other ${collegeArm.length - resumed.length} never reached nineteen – the money went first.`,
+  )
+  console.log('')
+
+  // --- THE PLATEAU'S OWN N ---
+  console.log('  ── THE PLATEAU READING: when would each N have asked? ──')
+  console.log('')
+  console.log(`  ${padEnd('seasons', 10)}${'careers asked'.padStart(15)}${'rate'.padStart(8)}${'median season'.padStart(15)}`)
+  for (const n of [2, 3, 4]) {
+    const asked = arms[1].rows.filter((o) => o.plateauAsksAt[n] !== null)
+    const seasons = asked.map((o) => o.plateauAsksAt[n]!).sort((a, b) => a - b)
+    console.log(
+      `  ${padEnd(String(n), 10)}${String(asked.length).padStart(15)}${pct(asked.length, arms[1].rows.length).padStart(8)}${(seasons.length ? median(seasons).toFixed(0) : '–').padStart(15)}${n === ENDINGS.plateauSeasons ? '   <- shipped' : ''}`,
+    )
+  }
   console.log('')
 
   // --- THE N SWEEP, AGAINST THE TARGET ROW ---
@@ -340,12 +411,50 @@ export function main(argv = process.argv.slice(2)): void {
   console.log(
     `  major-or-worse layoffs per career : mean ${mean(longLived.map((o) => o.majorPlusCount)).toFixed(2)} · max ${Math.max(0, ...longLived.map((o) => o.majorPlusCount))}`,
   )
+  // ⚠ THE COUNTED RULE AND THE SHIPPED ONE, SIDE BY SIDE. P1 proposed "a fresh severe on >= 2 prior
+  // major-or-severe layoffs" and predicted 1-2%; it measures 0.0% on this injury model, which is why
+  // the shipped predicate reads WEEKS LOST instead. Both are printed so the reason is on the record.
   for (const need of [0, 1, 2, 3]) {
     const hit = longLived.filter((o) => o.freshSevereCount > 0 && o.maxPriorsAtSevere >= need).length
     console.log(
-      `  a severe with >= ${need} prior major+     : ${hit} (${((100 * hit) / Math.max(1, longLived.length)).toFixed(1)}%)${need === ENDINGS.injuryPriorMajors ? '   <- the shipped threshold' : ''}`,
+      `  a severe with >= ${need} prior major+     : ${hit} (${((100 * hit) / Math.max(1, longLived.length)).toFixed(1)}%)`,
     )
   }
+  for (const need of [10, 20, 30, 40]) {
+    const hit = longLived.filter((o) => o.freshSevereCount > 0 && o.maxWeeksOutAtSevere >= need).length
+    console.log(
+      `  a severe on >= ${String(need).padStart(2)}w already lost : ${hit} (${((100 * hit) / Math.max(1, longLived.length)).toFixed(1)}%)${need === ENDINGS.injuryPriorWeeksOut ? '   <- the shipped rule' : ''}`,
+    )
+  }
+  console.log('')
+
+  // --- THE TURN (album slot 6) ---
+  //
+  // ⚠ THIS IS THE MEASUREMENT §9.2 REQUIRES BEFORE SLOT 6's COPY IS WRITTEN, and the reason it is
+  // two rows is that "break-even" names two different events years apart. Reading one for the other
+  // is the trap: a WEEK that paid for itself is common and lands in the first professional season;
+  // repaying everything the family ever spent is a different bar entirely.
+  const turnRows = [...arms[0].rows, ...arms[1].rows]
+  const cum = turnRows.filter((o) => o.cumulativeTurnWeek !== null)
+  const wk = turnRows.filter((o) => o.weekTurnWeek !== null)
+  console.log('  ── SLOT 6: THE TURN. Two different crossings, and they are years apart ──')
+  console.log('')
+  console.log(
+    `  a WEEK that paid for itself    : ${wk.length}/${turnRows.length} = ${pct(wk.length, turnRows.length).trim()}` +
+      `   median week ${wk.length ? median(wk.map((o) => o.weekTurnWeek!)).toFixed(0) : '–'} (age ${ageOf(wk.length ? median(wk.map((o) => o.weekTurnWeek!)) : null)})`,
+  )
+  console.log(
+    `  the CUMULATIVE crossing (§9.2) : ${cum.length}/${turnRows.length} = ${pct(cum.length, turnRows.length).trim()}` +
+      `   median week ${cum.length ? median(cum.map((o) => o.cumulativeTurnWeek!)).toFixed(0) : '–'} (age ${ageOf(cum.length ? median(cum.map((o) => o.cumulativeTurnWeek!)) : null)})`,
+  )
+  console.log('')
+  const ratios = turnRows.map((o) => (o.spentCents > 0 ? o.prizeCents / o.spentCents : 0))
+  console.log(
+    `  prize / spend at the end: median ${(median(ratios) * 100).toFixed(1)}% · mean ${(mean(ratios) * 100).toFixed(1)}% · best ${(Math.max(...ratios) * 100).toFixed(1)}%`,
+  )
+  console.log(
+    `  careers that were EVER paid a cheque: ${turnRows.filter((o) => o.prizeCents > 0).length}/${turnRows.length}`,
+  )
   console.log('')
 
   // --- per preset, so a wealth corridor's effect is visible ---
@@ -382,7 +491,6 @@ export function main(argv = process.argv.slice(2)): void {
   void bankruptcyDue
   void debtWeeks
   void kidAgeYears
-  void ageOf
 }
 
 // ⚠ vite-node 3.2.4 strips the entry file from `process.argv`, so a plain argv[1] check silently
