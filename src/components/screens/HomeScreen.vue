@@ -40,11 +40,16 @@ import { coachPortraitUrl, coachUrlFor, portraitUrl as portraitArtUrl } from '..
 import { venueArtUrl } from '../../art/venues'
 import { TIER_SHORT } from '../../composables/weekAhead'
 // R11-5a: the ONE tier-state rule, shared with the Season screen's lock labels + open-tier note.
-import { isTierOpen, useTierStates } from '../../composables/tierState'
+// `feedContext` is the ONE reader of the engine's per-rung window (`Snapshot.tierOpen`); the season
+// strip is its third consumer, never a second derivation. See `stripExpanded` below.
+import { feedContext, isTierOpen, useTierStates } from '../../composables/tierState'
 import MatchReplay from '../MatchReplay.vue'
 import RankHelpDialog from '../RankHelpDialog.vue'
 // THE INBOX (docs/specs/offers-and-the-inbox.md) – the popup behind the second tool, beside the bell.
 import InboxSheet from '../InboxSheet.vue'
+// The bell's dot and the App bar's Home dot read ONE rule from here - see the module header for the
+// bug that made the extraction necessary.
+import { useNewsWatermark } from '../../composables/inboxCue'
 // U0 – the shared components (docs/specs/ui-components.md). Home is one of the two screens this
 // slice ports onto them; Season is the other, and the pair is the only honest test that these are
 // components rather than one screen with a wrapper round it. Where Home still carries a rule of its
@@ -161,16 +166,31 @@ const week = computed(() => game.snapshot?.week ?? 0)
 // shared/dates.ts and nowhere else, so no surface can invent a second shape for it.
 const dateLine = computed(() => weekDateLine(week.value))
 
-// The bell's dot asserts one FACT and not the "unread" it cannot know: this week put something in
-// the feed. (The App shell's unread-news dot is a different thing and lives on the Home TAB, where
-// it is only ever true while the player is somewhere else.)
-const newsThisWeek = computed(() =>
-  (game.snapshot?.events ?? []).some(
-    (e) => e.week === week.value && e.type !== 'expense' && e.type !== 'income',
-  ),
-)
+// ⚠ THE BELL'S DOT NOW CLEARS (owner, 04.08: «Красная точка на колокольчике на домашнем экране не
+// сбрасывается»), and the fix is a watermark rather than a new rule.
+//
+// WHAT IT USED TO SAY, and why that was never a signal:
+//
+//     events.some(e => e.week === currentWeek && e.type !== 'expense' && e.type !== 'income')
+//
+// i.e. "this week put something in the feed". The note that stood here defended it as "one FACT and
+// not the 'unread' it cannot know" - and the fact was true, useless and permanent: a played week
+// essentially always has a diary line in it, so the dot was lit on arrival, lit after the player had
+// read every word of the feed, and lit again next week. It counted events; it never asked whether
+// anybody had looked.
+//
+// WHAT IT SAYS NOW: "the feed has something newer than the last time you went to it." That is a fact
+// the app genuinely holds - it knows when the bell was tapped - and it is the SAME watermark idiom
+// the App shell has used for the Home tab, the Season tab and the trophy cabinet since R9-21b. The
+// rule and the storage live in composables/inboxCue.ts so this bell and that tab cannot drift apart;
+// the KEY is this surface's own, because the two dots mean different things and one key would make
+// each clear the other (the module header spells that out).
+const { unseen: newsUnseen, markSeen: markNewsSeen } = useNewsWatermark('tb:lastSeenBellNewsId')
 function jumpToNews(): void {
   playSfx('clickSoft')
+  // Tapping the bell IS the looking, so it is what puts the dot out - the feed is one scroll away on
+  // this same page and there is no later moment to catch.
+  markNewsSeen()
   document.getElementById('diary-news')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
@@ -539,6 +559,63 @@ const seasonChips = computed<TierChip[]>(() =>
   }),
 )
 
+// --- THE STRIP ONLY SHOWS THE RUNGS THAT ARE ABOUT HER (owner, 04.08) --------------------------
+//
+// «На домашнем экране давай из раздела season убирать j серию, когда переросла. Вообще для экономии
+// места в этом блоке предлагаю показать текущее доступное окно турниров как раз плюс один верхний
+// недоступный уровень, а нижние недоступные можно за иконкой многоточия скрывать, они не нужны же.
+// И места кучу сэкономим.»
+//
+// ⚠ THIS OVERRULES THE ⚠ TWO NOTES ABOVE `SEASON_STRIP_TIERS` ("twelve chips ... this row is her
+// whole climb at a glance ... hiding outgrown rungs here would erase the finishes she earned on
+// them"). The objection was right and it is ANSWERED rather than ignored: nothing is erased, the
+// outgrown rungs are one tap behind the ellipsis with their finishes intact. What the owner is
+// reporting is that on a phone twelve chips wrap to three lines, and eleven of them are answering a
+// question he stopped asking - which is exactly what the sliding window was introduced to fix one
+// storey down, in the event feed.
+//
+// ⚠⚠ AND THE WINDOW IS ASKED, NEVER RE-DERIVED. `feedContext` is the ONE reader of the engine's
+// per-rung verdict (`Snapshot.tierOpen`, computed by `tierOpenFor` / `tierOutgrown` in
+// engine/world/ladder.ts), already shared by the Season feed and the Calendar look-ahead; this strip
+// becomes its third consumer rather than its second definition. Re-deriving "which rungs are open"
+// in the UI has been the bug twice (tierState.ts's `engineOpen` header records both), and
+// `tierOpen` absent -> `feedContext` returns the whole ladder, which is the safe direction and makes
+// an old fixture render exactly as it did before.
+//
+// WHAT IS ON SCREEN, then: the window, plus ONE rung above it (the aspiration - «плюс один верхний
+// недоступный уровень»). Everything else - the rungs she has outgrown below, and the far top of the
+// ladder above - sits behind an ellipsis chip that expands the row in place.
+const stripExpanded = ref(false)
+const windowRungs = computed<readonly TierId[]>(
+  () =>
+    feedContext({
+      ageYears: game.snapshot?.ageYears ?? 0,
+      tierOpen: game.snapshot?.tierOpen,
+      upcoming: game.snapshot?.upcoming ?? [],
+    }).rungs,
+)
+/** The visible span of `SEASON_STRIP_TIERS`, as [first, last] inclusive. The window is contiguous in
+ *  ladder order by construction (`tierOutgrown` closes a rung when the rung three above opens), but
+ *  this takes the first and last OPEN index rather than assuming it, so a future non-contiguous
+ *  verdict widens the span instead of dropping a rung out of the middle of the row. */
+const stripSpan = computed<[number, number]>(() => {
+  const last = SEASON_STRIP_TIERS.length - 1
+  const open = SEASON_STRIP_TIERS.map((t, i) => (windowRungs.value.includes(t.id) ? i : -1)).filter((i) => i >= 0)
+  // Nothing open at all is not a state the engine produces, and if it ever did, a row with one
+  // ellipsis and no rungs would be worse than the old twelve. Show everything.
+  if (!open.length) return [0, last]
+  return [open[0], Math.min(open[open.length - 1] + 1, last)]
+})
+const shownChips = computed(() =>
+  stripExpanded.value ? seasonChips.value : seasonChips.value.slice(stripSpan.value[0], stripSpan.value[1] + 1),
+)
+/** How many rungs the ellipsis is standing in for, on each side. Zero on either side means no chip
+ *  there: an affordance for nothing is a control that lies about having something behind it. */
+const hiddenBelow = computed(() => (stripExpanded.value ? 0 : stripSpan.value[0]))
+const hiddenAbove = computed(() =>
+  stripExpanded.value ? 0 : SEASON_STRIP_TIERS.length - 1 - stripSpan.value[1],
+)
+
 // --- News: structured events (Package M), non-financial types only (expense/income live on the
 // Money ledger). Strictly newest-first: most recent week first, and within a week newest event
 // first (descending id). Milestones stay pinned to the top of their week group.
@@ -645,7 +722,9 @@ function openRankHelp(): void {
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                 <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
               </svg>
-              <span v-if="newsThisWeek" class="diary-tool-dot"></span>
+              <!-- It goes out when the bell is tapped - see `newsUnseen` in the script for the
+                   ruling and for what the dot used to assert instead. -->
+              <span v-if="newsUnseen" class="diary-tool-dot"></span>
             </button>
             <!-- THE INBOX. An envelope at the export's own 22px / 1.7 stroke, inline like the bell,
                  so nothing can 404 and nothing needs a mask. Its dot is the ENGINE's fact - see the
@@ -867,8 +946,19 @@ function openRankHelp(): void {
            were already one shared rule with the notecards above, and now they are one component. -->
       <Card as="section" class="diary-strip">
         <Eyebrow as="h2">Season</Eyebrow>
+        <!-- THE ROW IS THE ENGINE'S OPEN WINDOW PLUS ONE RUNG ABOVE IT; the rungs she has outgrown
+             and the far top of the ladder are behind the ellipsis chips, which expand the row in
+             place. Nothing is deleted - see the ruling quoted at `stripExpanded` in the script. -->
         <div class="season-strip">
-          <template v-for="(chip, i) in seasonChips" :key="chip.id">
+          <button
+            v-if="hiddenBelow"
+            class="pill tier-chip strip-more"
+            :aria-expanded="stripExpanded"
+            :aria-label="`Show ${hiddenBelow} earlier levels`"
+            :title="`${hiddenBelow} levels she has outgrown – tap to show them`"
+            @click="stripExpanded = true"
+          >&hellip;</button>
+          <template v-for="(chip, i) in shownChips" :key="chip.id">
             <span
               class="pill tier-chip"
               :class="{
@@ -881,8 +971,24 @@ function openRankHelp(): void {
               }"
               :title="chip.title"
             >{{ chip.short }} &middot; {{ chip.label }}</span>
-            <span v-if="i < seasonChips.length - 1" class="strip-arrow">&#8594;</span>
+            <span v-if="i < shownChips.length - 1" class="strip-arrow">&#8594;</span>
           </template>
+          <button
+            v-if="hiddenAbove"
+            class="pill tier-chip strip-more"
+            :aria-expanded="stripExpanded"
+            :aria-label="`Show ${hiddenAbove} higher levels`"
+            :title="`${hiddenAbove} levels above her window – tap to show them`"
+            @click="stripExpanded = true"
+          >&hellip;</button>
+          <button
+            v-if="stripExpanded"
+            class="pill tier-chip strip-more"
+            :aria-expanded="stripExpanded"
+            aria-label="Show only her current levels"
+            title="Back to her current window"
+            @click="stripExpanded = false"
+          >&minus;</button>
         </div>
       </Card>
 
@@ -1722,5 +1828,30 @@ button.note-card:active:not(:disabled) {
    the thing quietly supplying the uppercase and the eyebrow rule now says it out loud. */
 .diary-strip h2 {
   margin: 0 0 12px;
+}
+
+/* THE ELLIPSIS AFFORDANCE on the season strip (04.08 - «нижние недоступные можно за иконкой
+   многоточия скрывать»). It is a `.pill.tier-chip` like every other rung, because it stands IN the
+   row where those rungs are and a second shape there would read as a different kind of thing; what
+   this rule adds is only what a <button> needs to stop looking like a button - the app's global
+   button padding and background would otherwise make the row's quietest element its loudest.
+   Deliberately no accent: it is the one chip on the strip that is not about her progress. */
+.strip-more {
+  padding: 1px 10px;
+  min-height: 0;
+  line-height: 1.5;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.strip-more:hover:not(:disabled),
+.strip-more:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: transparent;
 }
 </style>

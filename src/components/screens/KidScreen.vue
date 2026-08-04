@@ -318,7 +318,6 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
                    fact. `role="img"` + a label is what turns the glyph into one. -->
               <span class="kid-flag" role="img" :aria-label="countryName" :title="countryName">{{ countryFlag }}</span>
             </p>
-            <p class="kid-age">{{ ageYears }} years old</p>
           </div>
           <button class="kid-tool" aria-label="Settings" title="Settings" @click="emit('navigate', 'more')">
             <svg
@@ -341,6 +340,12 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
         <!-- The export's paper scrap. It carries "Right-Handed"; ours carries the one inherent
              fact our engine actually models about how she plays. PaperNote's FIRST real caller. -->
         <PaperNote class="kid-style-note" tilt="-4deg">{{ playStyleLabel }}</PaperNote>
+
+        <!-- HER AGE, AT THE FOOT OF THE PAINTING (owner ruling 04.08 - quoted in full beside
+             `.kid-age` in the style block). It used to sit under her name in the top header, where
+             it landed across her face; the painting itself is untouched - same size, same framing,
+             the line simply moved to the one strip of the picture that is already scrim. -->
+        <p class="kid-age">{{ ageYears }} years old</p>
       </div>
 
       <!-- ======================== 2. THE ATTRIBUTE GRID ========================
@@ -597,8 +602,26 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.4));
 }
 
+/* ⚠ AT THE FOOT OF THE PICTURE, NOT UNDER HER NAME (owner, 04.08: «В профиле возраст давай вниз
+   картинки с небольшим отступом от нижнего края добавим, сейчас лицо перекрывает частично»).
+   It was the second line of `.kid-id`, i.e. ~50px down inside a 392px hero - which is exactly
+   where her face is in the portraits, so the one piece of chrome nobody needs to read first was
+   sitting on the one thing the screen is about.
+   ⚠ AND IT IS SOLVED BY MOVING THE TEXT, NEVER BY MOVING THE PAINTING. The standing ruling on this
+   art is that it is shown WHOLE - `.kid-hero-img`'s size, `object-fit` and `object-position` are
+   untouched here, and a crop or a scale would have been the wrong answer to "her face is covered".
+   The bottom strip is the one place on the hero where nothing of her is: `.kid-hero-scrim` has
+   already closed on `--panel` by 100%, so this line reads on page colour rather than on paint.
+   14px is the "небольшой отступ" - it clears the fade's last stop without floating free of it, and
+   it stays 42px clear of `.kid-style-note`'s bottom edge (56px), so the scrap and the age never
+   meet however long the play-style label wraps. */
 .kid-age {
-  margin: 5px 0 0;
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 14px;
+  margin: 0;
+  text-align: center;
   font-size: 13px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.82);

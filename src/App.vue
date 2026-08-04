@@ -28,6 +28,9 @@ import { dayCrossRuns } from './composables/dayCross'
 // R13-12: the This-week tab's accent dot reads the SAME recap-existence rule the tab's screen
 // renders the card by – one predicate, two consumers, zero drift.
 import { consumePostAdvanceNav, recapExists, storyOpensItself, thisWeekDotShows } from './composables/weekRecap'
+// R9-21b's news watermark, and the inbox cue that rides beside it (04.08). Both live in
+// composables/inboxCue.ts so Home's bell reads the same rule this bar does - see the module header.
+import { useLetterWatermark, useNewsWatermark } from './composables/inboxCue'
 // The Trophies tab's dot and the trophy that flies there to leave it. Same shape as the line above:
 // the PREDICATE is a pure function in the composable and this file only wires it to a watermark, so
 // "when does the dot show" is one testable sentence rather than a computed buried in a shell.
@@ -420,37 +423,58 @@ watch(
 // event (id above the last-seen watermark), whatever tab is up – the owner's complaint was
 // missing news entirely while week-skipping. Watermark persisted per career (event ids are
 // per-career counters, so a global key would collide across careers).
-const newsSeenKey = () => `tb:lastSeenNewsId:${game.snapshot?.careerId ?? ''}`
-const lastSeenNewsId = ref(Number(localStorage.getItem(newsSeenKey()) ?? '-1'))
-const latestNewsId = computed(() => {
-  const events = game.snapshot?.events ?? []
-  let latest = -1
-  for (const e of events) {
-    if (e.type !== 'expense' && e.type !== 'income' && e.id > latest) latest = e.id
-  }
-  return latest
-})
-const homeHasNews = computed(() => tab.value !== 'home' && latestNewsId.value > lastSeenNewsId.value)
-function markNewsSeen(): void {
-  if (latestNewsId.value > lastSeenNewsId.value) {
-    lastSeenNewsId.value = latestNewsId.value
-    localStorage.setItem(newsSeenKey(), String(latestNewsId.value))
-  }
+// ⚠ THE WATERMARK MOVED INTO composables/inboxCue.ts, WHERE HOME'S BELL CAN READ THE SAME RULE. The
+// derivation that used to sit inline here (walk the feed, take the highest non-financial id, compare
+// against a per-career localStorage number) is unchanged - it is `useNewsWatermark`, and the storage
+// key it is given is the one this block has always used, so an existing device keeps its place. What
+// changed is that the bell on Home now gets a watermark of its own from the same module instead of
+// re-deriving "is there news" a third way and getting it wrong (item 5, 04.08).
+const { latestId: latestNewsId, unseen: newsUnseenOffHome, markSeen: markNewsSeen } =
+  useNewsWatermark('tb:lastSeenNewsId')
+
+// --- THE INBOX CUE (owner, 04.08: «Добавить отключаемый, но очень аккуратный и консервативный дзынь
+// на входящее письмо и точечку возле иконки home») ------------------------------------------------
+//
+// ⚠ A LETTER IS NOT A NEWS EVENT, which is why it needs its own watch even though the feed already
+// has one. A sponsor's letter does write a feed line beside itself; the TOURNAMENT DESK's receipts
+// (engine/offers.ts `raiseEntryLetter`) write none at all, so under the news rule alone half the
+// post arrives in silence. `newestLetterId` is the arrival, and the module's header argues why it is
+// the last id rather than a count or `offerOpen`.
+//
+// ⚠ MUTEABLE BY CONSTRUCTION, NOT BY A NEW SWITCH: `playSfx` returns at once while `muted`, and
+// `muted` is the persisted `tb-muted` flag behind More's "Sound effects" row (src/audio/sfx.ts). So
+// the owner's «отключаемый» is the switch he already has, it survives a reload, and no second player
+// or second preference was invented for this.
+const { unseen: letterUnseen, markSeen: markLettersSeen, newestId: newestLetterId } =
+  useLetterWatermark('tb:lastSeenLetter')
+
+// ONE DOT ON THE HOME TAB, TWO FACTS BEHIND IT - «точечку возле иконки home». It is deliberately the
+// same dot the news already raised rather than a second marker beside it: both sentences are "there
+// is something on Home you have not seen", the tab has room for one answer, and a bar with two dots
+// on one icon says nothing that one dot does not.
+const homeHasNews = computed(() => tab.value !== 'home' && (newsUnseenOffHome.value || letterUnseen.value))
+function markHomeSeen(): void {
+  markNewsSeen()
+  markLettersSeen()
 }
-watch(
-  () => game.snapshot?.careerId,
-  () => {
-    // switching careers re-reads that career's own watermark (never dings on a plain load)
-    lastSeenNewsId.value = Number(localStorage.getItem(newsSeenKey()) ?? '-1')
-    if (lastSeenNewsId.value < 0) markNewsSeen()
-  },
-)
 watch(tab, (t) => {
-  if (t === 'home') markNewsSeen()
+  if (t === 'home') markHomeSeen()
 })
-watch(latestNewsId, (now, before) => {
-  if (before !== undefined && before >= 0 && now > before) playSfx('clickSoft') // тилинь
-  if (tab.value === 'home') markNewsSeen()
+// ⚠ ONE WATCHER FOR BOTH ARRIVALS, SO THE CHIME NEVER DOUBLES. A sponsor letter lands as a letter AND
+// as a feed line in the same tick; two independent watchers would have rung twice for it.
+watch([latestNewsId, newestLetterId], ([nowNews, nowLetter], [beforeNews, beforeLetter]) => {
+  const newsArrived = beforeNews !== undefined && beforeNews >= 0 && nowNews > beforeNews
+  // A letter is new when the newest id CHANGES to a real one - `beforeLetter === undefined` is the
+  // very first evaluation and `null` is an empty inbox becoming non-empty on a career load, and
+  // neither of those is post arriving while the player watched.
+  const letterArrived =
+    beforeLetter !== undefined && beforeLetter !== null && nowLetter !== null && nowLetter !== beforeLetter
+  // The quietest cue the app owns (effective 0.18, `clickSoft`) - «очень аккуратный и
+  // консервативный». There is no dedicated chime file in public/sounds/ and one is worth recording;
+  // until then this is the tick the news cue has always used rather than a new key pointing at a
+  // file that does not exist, which would be silence dressed up as a feature.
+  if (newsArrived || letterArrived) playSfx('clickSoft') // тилинь
+  if (tab.value === 'home') markHomeSeen()
 })
 
 // --- THE TROPHIES TAB'S DOT (31.07, the podium slice) --------------------------------------------
@@ -895,7 +919,8 @@ function dismissSeasonSummary(): void {
         <span class="tab-icon" :style="{ WebkitMaskImage: `url(${iconUrl(t.icon)})`, maskImage: `url(${iconUrl(t.icon)})` }"></span>
         <span class="tab-label">{{ t.label }}</span>
         <span v-if="t.id === 'play' && seasonHasNew" class="tab-dot"></span>
-        <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. -->
+        <!-- R9-21b: unread-news dot, same accent treatment as the Season tab's. Since 04.08 it also
+             carries an unopened LETTER - one dot, two facts, argued at `homeHasNews`. -->
         <span v-else-if="t.id === 'home' && homeHasNews" class="tab-dot"></span>
         <!-- The trophy dot, and it is the SAME object as the two above: same class, same accent, no
              private treatment. What differs is the sentence it asserts, and that is a fact rather

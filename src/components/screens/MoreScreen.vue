@@ -11,6 +11,7 @@ import type { CareerMeta, SlotMeta } from '../../shared/protocol'
 import { weekLabel } from '../../shared/dates'
 import ConfirmDialog from '../ConfirmDialog.vue'
 import IconButton from '../ui/IconButton.vue'
+import SegmentedRow from '../ui/SegmentedRow.vue'
 import { isMuted, setMuted } from '../../audio/sfx'
 import { isMusicMuted, setMusicMuted } from '../../audio/music'
 import { isHapticsOff, setHapticsOff, supportsHaptics } from '../../audio/haptics'
@@ -345,10 +346,51 @@ function pickMatchView(v: ViewMode): void {
   setMatchViewDefault(v)
   matchView.value = v
 }
+
+// --- THE SCREEN'S OWN TABS (owner, 04.08: «Давай настройки тоже сделаем группировку со вкладками
+// внутри, они постепенно разрастаются и сложно ориентироваться») ----------------------------------
+//
+// EIGHT SECTIONS HAD ACCUMULATED HERE, and they are three different kinds of object wearing the
+// same `<section><h2>` chrome. The grouping is by WHAT A TAP COSTS, which is the only distinction on
+// this screen a player can be hurt by:
+//
+//   PLAY    device preferences - sound, music, haptics, the week's story, the calendar sweep, the
+//           match-playback defaults. Every one of them is a localStorage flag behind pure functions
+//           (the shape five consecutive script comments above argue for), reversible by tapping it
+//           again, and touching NOTHING in any save. This is the tab a player can poke at freely.
+//   SAVES   her careers, the save slots, import/export, and the danger zone. Everything here writes
+//           to or destroys stored data, or advances the career (the ▶▶ 52). Same reasoning as the
+//           Money screen's Bills tab: the operations that cost something belong on one named page
+//           rather than scattered between the switches.
+//   ABOUT   the read-only plate - version, schema, seed, privacy links. It changes nothing at all.
+//
+// ⚠ THE DEFAULT IS `play`, NOT `saves`, and that is deliberate even though Careers used to be the
+// first thing on the screen. The owner's complaint is that he cannot FIND a setting; the settings
+// are in `play`, and opening on a list of careers he switches once a month would answer a question
+// he did not ask. Careers is one tap away and named.
+//
+// ⚠ SAME CONTROL, SAME LOOK AS EVERYWHERE ELSE: `SegmentedRow` with the plate off, per the owner's
+// 02.08 Stats ruling - see `.more-tabs` in the style block.
+type MoreTab = 'play' | 'saves' | 'about'
+const screenTab = ref<MoreTab>('play')
+const TAB_OPTIONS = [
+  { value: 'play', label: 'Play', title: 'Sound, animations and how a match opens' },
+  { value: 'saves', label: 'Saves', title: 'Careers, save slots, import and export' },
+  { value: 'about', label: 'About', title: 'Version, seed and privacy' },
+]
 </script>
 
 <template>
-  <section>
+  <!-- THE SECTION SWITCHER. Which section sits behind which tab, and why the split is by what a tap
+       costs rather than by subject, is argued at TAB_OPTIONS in the script. -->
+  <SegmentedRow
+    v-model="screenTab"
+    class="more-tabs"
+    :options="TAB_OPTIONS"
+    group-label="Which settings"
+  />
+
+  <section v-if="screenTab === 'saves'">
     <h2>Careers</h2>
     <p v-if="!game.careers.length" class="hint">No careers yet.</p>
     <div v-for="c in game.careers" :key="c.careerId" class="career-row">
@@ -368,7 +410,7 @@ function pickMatchView(v: ViewMode): void {
     </div>
   </section>
 
-  <section v-if="game.snapshot">
+  <section v-if="screenTab === 'saves' && game.snapshot">
     <h2>Saves</h2>
     <div class="save-row">
       <div>
@@ -458,7 +500,7 @@ function pickMatchView(v: ViewMode): void {
     </p>
   </section>
 
-  <section>
+  <section v-if="screenTab === 'saves'">
     <h2>Danger zone</h2>
     <button v-if="!confirmingNewCareer" class="danger" @click="askNewCareer">New career</button>
     <template v-else>
@@ -484,7 +526,7 @@ function pickMatchView(v: ViewMode): void {
     <p v-if="game.error && game.error !== game.saveOp?.message" class="error">{{ game.error }}</p>
   </section>
 
-  <section>
+  <section v-if="screenTab === 'play'">
     <h2>Sound</h2>
     <div class="career-row">
       <div>Sound effects</div>
@@ -532,7 +574,7 @@ function pickMatchView(v: ViewMode): void {
 
   <!-- W5: the week's story. Its own section rather than a fourth row under "Sound", because it is not
        a sound - and the hint is load-bearing copy: OFF stops the page appearing, not the page. -->
-  <section>
+  <section v-if="screenTab === 'play'">
     <h2>Week story</h2>
     <div class="career-row">
       <div>
@@ -561,7 +603,7 @@ function pickMatchView(v: ViewMode): void {
 
   <!-- The calendar's crossing-out sweep. Its own section, beside the week story rather than under
        "Sound", because the two are the same kind of thing: beats around the end of a week. -->
-  <section>
+  <section v-if="screenTab === 'play'">
     <h2>Calendar animation</h2>
     <div class="career-row">
       <div>
@@ -605,7 +647,7 @@ function pickMatchView(v: ViewMode): void {
   <!-- How a match OPENS - the viewer's two dials as defaults. Its own section beside the two
        animation sections: same kind of thing, a beat the player watches. The rows read only the
        stored default; the pills inside a running match keep working and never write back here. -->
-  <section>
+  <section v-if="screenTab === 'play'">
     <h2>Match playback</h2>
     <div class="career-row">
       <div>
@@ -648,7 +690,7 @@ function pickMatchView(v: ViewMode): void {
     </div>
   </section>
 
-  <section>
+  <section v-if="screenTab === 'about'">
     <h2>About</h2>
     <table>
       <tbody>
@@ -707,3 +749,22 @@ function pickMatchView(v: ViewMode): void {
     @cancel="pendingConfirm = null"
   />
 </template>
+
+<style scoped>
+/* ⚠ NO PLATE AROUND THIS SWITCH - the owner's 02.08 Stats ruling, applied to the app's ONE segmented
+   control wherever it is a page's chapter picker («Мне не нравится круглая обводка у переключателя
+   уровня турниров в stats, без нее было лучше... Давай просто кнопки оставим и всё»). Same four
+   declarations as `.stats-ladder-row` and `.money-tabs`, and copied rather than shared for the same
+   reason those two are: scoped-over-shared wins on specificity ((0,2,0) with the data-v attribute vs
+   the sheet's (0,1,0)), so nothing here reaches into src/style.css and no other caller of the plate
+   is touched.
+   The bottom margin is this screen's own: every `<section>` below opens with an `<h2>` that carries
+   no top margin of its own, so without it the first heading sits on the pills. */
+.more-tabs {
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  margin-bottom: 14px;
+}
+</style>
