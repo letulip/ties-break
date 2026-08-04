@@ -624,6 +624,9 @@ function planNextWeek(
   const p = policy.planner
   const target = world.week + 1
   const out = { practiceBooked: false, cautioned: false, rescued: false, vacationBooked: null as string | null }
+  // ⚠ W2-ENDINGS: nobody plans next week for a career that has no next week. Every booking command
+  // refuses on an ended world (guardNotEnded), so this is the same refusal read one step earlier.
+  if (world.ending) return out
   if (world.injury !== null) return out // rehab weeks are nobody's to plan
 
   const budgetCents = Math.floor(world.fundsCents * p.maxSpendShare)
@@ -727,7 +730,14 @@ export function stepFatigueWeek(
   // Entry rule = econ-bench policy v3 (ranking-eligible + affordable, committed near the
   // deadline, HARD blocks respected) + the careful policy's condition floor. The fatigue
   // 'caution' level is deliberately IGNORED by grinder/balanced – that is their defining trait.
-  for (const e of world.season) {
+  //
+  // ⚠ W2-ENDINGS: ...AND A CAREER THAT HAS ENDED ENTERS NOTHING, while the week still ticks. Since
+  // v39 a family twelve consecutive weeks below zero latches BANKRUPTCY and `enterEvent` refuses on
+  // an ended world, so a bench that walked straight past this threw on the first bankrupt seed.
+  // Skipping only the ENTRY phase (never the tick) keeps every fatigue figure comparable: a career
+  // under water was already entering nothing, because the affordability clause below refused it.
+  // Same fix, same reason, as tools/econ-bench.ts's own.
+  for (const e of world.ending ? [] : world.season) {
     if (world.entries.includes(e.id)) continue
     if (world.week > e.deadlineWeek) continue
     if (e.deadlineWeek - world.week > ENTRY_LOOKAHEAD) continue

@@ -101,9 +101,22 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // calendar that starves the early game, or a seventeenth rung - fails HERE and re-reads the
     // whole history above. Re-basing REACH_TARGET_MONEY is a tuning decision with its own sweep and
     // is reported rather than done here, exactly as the 31.07 note reports it.
+    // ⚠ RE-AIMED 04.08 (W2-ENDINGS), AND THE ONE CAREER THAT NO LONGER REACHES IS THE WAVE WORKING.
+    // Measured 29/30 here, against the 30/30 pinned above. Nothing about the domestic ladder moved
+    // again: since v39 a family twelve consecutive weeks below zero LATCHES BANKRUPTCY, and a
+    // latched career stops entering - so seed 30's family, which used to limp along under water and
+    // still clear the proxy in its fourth season, now has its story stopped in the third. That is
+    // the whole point of the wave («no run can end» was the review's action #1) and pinning 30/30
+    // would have made this file a tripwire against the endings rather than against a collapse.
+    //
+    // The FLOOR is what the tripwire is really about, so the floor is what is asserted: 14→18 must
+    // stay saturated-or-nearly, and a real collapse (a re-based target, a starved calendar, a
+    // seventeenth rung) still fails here and sends the reader back through the notes above.
     const workingH18 = Array.from({ length: 30 }, (_, i) => runCareer(workingCoached, i, H18.weeks))
     const reachedH18 = workingH18.filter((r) => r.reachedWeek !== null).length
-    expect(reachedH18, '14→18 collapsed - re-read the notes above').toBe(workingH18.length)
+    expect(reachedH18, '14→18 collapsed - re-read the notes above').toBeGreaterThanOrEqual(
+      workingH18.length - 1,
+    )
     for (const r of workingH18) {
       if (r.reachedWeek !== null) {
         expect(r.reachedWeek).toBeGreaterThan(0)
