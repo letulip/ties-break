@@ -271,9 +271,10 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
 }
 
 /* THE ARCHIVE PLATE (W2-LADDER §4): quiet, final, one card - the visual register of a record
-   rather than a readout. Local to this screen; no new design language. */
+   rather than a readout. Local to this screen; no new design language.
+   ⚠ ITS `margin-top: 10px` MOVED TO `.stats-ladder-row` (04.08) - it is not gone, it is now owned by
+   the switcher so all three tracks get it. See the note down there for the bug it was causing. */
 .stats-archive {
-  margin-top: 10px;
   padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -308,11 +309,30 @@ const emptyNote = computed(() => EMPTY_NOTE[shown.value])
    plainest active state), and every other caller of the plate keeps it. Scoped-over-shared wins on
    specificity ((0,2,0) with the data-v attribute vs the sheet's (0,1,0)), so no !important and no
    sheet edit. `padding: 0` lets the buttons sit flush with the heading above, which is what "just
-   buttons" looks like on this page. */
+   buttons" looks like on this page.
+
+   ⚠ AND THE GAP UNDER IT IS THIS RULE'S JOB NOW (owner, 04.08: «На вкладке stats при переключении
+   international имеет небольшой отступ снизу, а national и professional нет – надо тоже добавить»).
+
+   WHAT HE WAS SEEING, and it is a real inconsistency rather than a preference. Only ONE arm of this
+   screen carried any separation from the pills, and it carried it privately: the ITF archive plate
+   declared `margin-top: 10px` on itself, and the archive only ever renders on the International tab
+   (`archiveShown` = itf AND aged out of the junior tour). `.stats-header-row` - the three tiles that
+   stand in its place on National and Professional - declares no top margin at all, so on those two
+   tabs the tiles butt straight against the buttons. Switching tracks therefore MOVED the content by
+   10px, which is exactly the kind of jump the plate ruling above was meant to stop.
+
+   THE FIX IS TO MOVE THE DECLARATION, NOT TO COPY IT. `margin-bottom` on the switcher spaces it from
+   WHATEVER follows - the tiles, the archive, or whatever a fourth arm one day puts there - so the
+   three tabs cannot drift apart again by somebody adding a block and forgetting the number. Copying
+   `margin-top: 10px` onto `.stats-header-row` would have fixed today's three arms and left the trap
+   armed for the fourth. The archive's own copy is deleted at `.stats-archive` above, with a pointer
+   here, so the 10px is stated exactly once. */
 .stats-ladder-row {
   padding: 0;
   border: none;
   border-radius: 0;
   background: none;
+  margin-bottom: 10px;
 }
 </style>
