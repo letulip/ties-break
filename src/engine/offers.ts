@@ -51,14 +51,17 @@ import type {
  *  lookup - a tier, never a filename spelled out at a call site. All three rungs are reachable since
  *  01.08 (feat/brand-ladder); the art shipped first and the coverage ladder is written on it. */
 export const SPONSOR_TIERS: readonly SponsorTier[] = [
-  'local', 'national', 'global',
-  // W3-ACT2 section 7: the three PROFESSIONAL rungs, in gate order beside the junior three. The
-  // list is weakest-first (it is the art lookup's order and `rungFor` reverses it), and `tour` sits
-  // where its gate puts it - between `national` (WTA 350) and `global` (WTA 87), which is the
-  // monotone chain `SponsorTier` explains. Letterheads: the three new rungs reuse `global.webp`
-  // until real marks exist, exactly as the W2-LADDER trophies reuse their masters - see the note in
-  // `sponsorArtKey`.
-  'tour', 'premium', 'icon',
+  // ⚠ WEAKEST-FIRST, AND SINCE W3-ACT2 THAT ORDERING IS LOAD-BEARING RATHER THAN TIDY. `rungFor`
+  // reverses this list and takes the FIRST rung she clears, so the order IS the ladder: a rung
+  // listed above a stricter one would be handed to a player who had cleared both, and the stricter
+  // brand would become unreachable. `tour` therefore sits between `national` and `global` - its
+  // gate (WTA 200) is looser than global's (87) and tighter than national's (350) - which is the
+  // monotone chain `SponsorTier` explains, and it is what answers section 7's own open question
+  // about where the professional rungs slot in. Caught by tests/offers.test.ts, which asks the
+  // ladder for a rung at six ranks rather than trusting the array to be in a sensible order.
+  'local', 'national', 'tour', 'global', 'premium', 'icon',
+  // Letterheads: the three professional rungs reuse `global.webp` until real marks exist, exactly
+  // as the W2-LADDER trophies reuse their masters - see `sponsorArtKey`.
 ] as const
 
 /** WHICH LETTERHEAD IMAGE A RUNG PRINTS. `public/images/sponsors/<key>.webp` holds three marks and

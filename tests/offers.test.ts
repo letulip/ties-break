@@ -794,15 +794,24 @@ describe('the letter states its terms in words the player can act on', () => {
     // invented here rather than read off a mark, because no mark exists for them yet - stated
     // openly, flagged for the owner in the wave report, and the art ask is three files that would
     // replace `sponsorArtKey` with the identity.
-    expect(SPONSOR_TIERS).toEqual(['local', 'national', 'global', 'tour', 'premium', 'icon'])
+    // ⚠ AND THE ORDER IS THE LADDER, not a listing. `rungFor` reverses this and takes the first
+    // rung she clears, so `tour` (WTA 200) must sit BELOW `global` (WTA 87) or a #60 professional
+    // would be handed the weaker brand and the stronger one would be unreachable. Pinned exactly.
+    expect(SPONSOR_TIERS).toEqual(['local', 'national', 'tour', 'global', 'premium', 'icon'])
     expect(ECONOMY.sponsorship.localBrand).toBe('String House')
     expect(ECONOMY.sponsorship.national.brand).toBe('Netrally Distribution')
     expect(ECONOMY.sponsorship.global.brand).toBe('Play Beyond')
     // The domestic table still reaches the local shop and only it – the rung whose gate did not move.
     for (const rank of [1, 5, 10, 11, 30]) expect(kitTermsFor(domestic(rank))!.tier).toBe('local')
-    // ...and each of the three marks on disk is now something a real career can be sent.
+    // ...and every rung resolves to a mark that really is on disk. ⚠ THROUGH `sponsorArtKey`
+    // SINCE W3-ACT2, which is the assertion this had to become: three marks ship and the ladder has
+    // six rungs, so the professional trio borrows the global mark until real art exists. The claim
+    // is unchanged and still exhaustive - no rung may be sendable without a picture on the letter -
+    // and it is now the mapping that is checked rather than a filename convention that happened to
+    // hold. Placeholder art, flagged for the owner; three real marks would make this the identity.
     for (const t of SPONSOR_TIERS) {
-      expect(existsSync(fileURLToPath(new URL(`../public/images/sponsors/${t}.webp`, import.meta.url)))).toBe(true)
+      const key = sponsorArtKey(t)
+      expect(existsSync(fileURLToPath(new URL(`../public/images/sponsors/${key}.webp`, import.meta.url))), t).toBe(true)
     }
   })
 
