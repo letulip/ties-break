@@ -368,6 +368,14 @@ is the page to read before touching any of these constants again. What the owner
   higher ever-floored share (27.6–33.7% → 33.7–38.2%, against a 0.40 guard). The real remedy is
   living-field §8.3's «field pros in the canonical brackets», which needs fp-safe result rows and is
   act-3 work by construction.
+  - **✅⚠ SUPERSEDED 04.08 by W3-FIELD3** (living-field.md §8.4). "Cannot be" was true only while a
+    pro in a draw implied a pro in the ledger, and the two are separable: she plays, and
+    `runAiTournament` skips her row. Measured, same sweep, seam off and on — W rows per rival
+    **6.79 → 0.00**, ever-floored **23.1–31.2% → 0.0%**, min median condition **28–36 → 95–100**. It
+    also needed no fp-safe row format and no schema. ⚠ It overshot: the load did not get shared, it
+    moved — LIVE W rows are now exactly zero, because a junior with no W points sits below all 364
+    pros in the merged table and can therefore never be drawn to earn one. Closed loop, pinned as a
+    fact, reported for the owner.
 
 ---
 
@@ -784,6 +792,21 @@ invented. A 128-draw Slam would have needed two rows the research does not print
 
 **The fix is named and is its own wave**: field pros in the canonical brackets (living-field.md §8.3),
 which needs fp-safe result rows.
+
+**✅ THAT WAVE LANDED, 04.08 — W3-FIELD3, living-field.md §8.4.** It needed no fp-safe row format at
+all: a pro is in the draw and `runAiTournament` simply does not write her down. The same tool,
+4 worlds × 260 weeks, both arms measured on one branch:
+
+| draw | of-age in world | in-band | out-of-band | under-age | youngest | ms/bracket | verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **32** | 110 → **450** | 37 → **99** | 0.0% → 0.0% | 0.0% → 0.0% | 17 → 17 | 0.13 → 0.56 | OK — shipped |
+| 64 | 110 → **450** | 37 → **99** | 42.2% → **0.0%** | 0.0% → 0.0% | 17 → 17 | 0.24 → 0.74 | **entirely in-band** |
+| 128 | 110 → **450** | 37 → **99** | 71.1% → **22.5%** | 14.6% → **0.0%** | 13 → **17** | 0.48 → 1.76 | broken → **OK** |
+
+⚠ **The shipped sizes are unchanged** — that decision is the owner's and this is the number it needs.
+Two caveats belong with it: at 128 the draw is still 22.5% backfill (the Slam window `[0, 0.185]` is
+104 rows of a 563-row table against 128 chairs, so a real 128 also wants a wider top-rung window or
+living-field §8.2c's fifth storey), and the points rows above are still normalised to 32.
 
 ### 13.4 The window, and the three numbers this wave is graded on
 
