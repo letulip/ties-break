@@ -50,6 +50,21 @@ a prior reading and may have drifted — anchor on the **symbol names**.
    parent + local sponsor + gear subsidy), define the target against existing state:
    - `14→16`: `REACH_TARGET_MONEY` = national-tier eligibility → `kidPoints(world) >= 150`
      (equivalently `isTierEligible('national', kidPoints(world))`).
+
+     > **⚠ RE-BASED 150 → 320 (chore/reach-and-art).** Eligibility stopped being an achievement:
+     > after two `TIER_LADDER` re-spacings (9 → 12 → 16 rungs, each re-dividing `tierPhase` and
+     > re-dealing the season) **270 of 270 careers clear 150 inside 104 weeks**, most by about week
+     > 20 – a formality, not a measurement. 320 is the next milestone on the SAME axis, out of
+     > National's own table: `points[0] + points[1]` = a National title plus a National final inside
+     > the windowed best-6 (equivalently four Regional titles), and above J30's 250 floor. Measured
+     > by `tools/reach-sweep.ts` (9 presets × 30 careers): **11–14 of 30 clear it in every preset**,
+     > and the count is flat for any threshold in [319, 323] on the tightest preset – a plateau, not
+     > a knife edge. The sweep is committed; re-run it before the next re-base. Full history in the
+     > comment stack of `tests/econ-reach.test.ts`.
+     >
+     > **⚠ AND IT GOVERNS 14→16 ONLY.** `reachedTarget` keys on `targetAge`, so `targetAge >= 18`
+     > takes the pro arm: 14→18 and 14→20 never read `REACH_TARGET_MONEY`. A report that says
+     > re-basing it will un-saturate 14→18 is reading the wrong constant.
    - `14→18`: `REACH_TARGET_PRO` = `(hasResults && kidRank <= 50) || kidPoints >= 300`, where
      `hasResults` = the kid has ≥1 counting result. **The `hasResults` guard is REQUIRED:** without it
      the rank arm is degenerate — in the opening weeks the whole point-less field ties at dense-rank 1,
