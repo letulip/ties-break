@@ -64,7 +64,19 @@ Re-measured at this branch's head, the same 180 careers give:
 | mean | 7.6% | **12.1%** |
 | best | 22.9% | **37.4%** |
 | ever paid a cheque | 136/180 | **122/180** |
+| a WEEK that paid for itself | 84/180 = 46.7%, median week 187 | **104/180 = 57.8%, median week 190** |
 | the CUMULATIVE crossing | **0/180 = 0.0%** | **0/180 = 0.0%** |
+
+This is not an inference from the cross-check. `npm run bench:endings -- --seeds 10` was re-run on
+this branch and its own slot-6 block prints, verbatim:
+
+```
+  a WEEK that paid for itself    : 104/180 = 57.8%   median week 190 (age 17)
+  the CUMULATIVE crossing (§9.2) : 0/180 = 0.0%   median week – (age –)
+
+  prize / spend at the end: median 12.4% · mean 12.1% · best 37.4%
+  careers that were EVER paid a cheque: 122/180
+```
 
 `1c76403` is an ancestor of the `feat/field-in-brackets` merge (`03cbb92`), which changed
 `season/fieldPros.ts`, `season/tournament.ts`, `season/calendar.ts` and `world.ts` – "the canonical W
@@ -76,8 +88,9 @@ does not establish the mechanism: doing that would mean re-running the same 180 
 of `03cbb92`, which is a separate measurement and was not in scope. Flagged rather than explained.
 
 **Nothing in the conclusion moves.** The crossing is still 0 of 180, and 12.4% is the same answer to
-the owner's question as 8.0% was. The endings spec's section 6 table should be re-stamped at some
-point; that is a docs edit for whoever owns that page, not a change this probe makes.
+the owner's question as 8.0% was. The week crossing moving 46.7% to 57.8% strengthens the album's own
+copy rather than weakening it. The endings spec's section 6 table should be re-stamped with these
+figures; that is a docs edit for whoever owns that page, not a change this probe makes.
 
 Every other number on this page is measured at the head.
 
