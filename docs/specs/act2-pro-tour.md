@@ -696,3 +696,223 @@ the biggest domestic event there is — now costs per match exactly what the ent
 international tour does, which is a coherent sentence rather than an artefact. `tests/ladder.test.ts`
 L9's `j30 > national` is re-aimed to `>=` for the surcharge table only; the condition FLOOR table
 keeps its strict step (45 vs 40).
+
+---
+
+## 13. §§2, 6, 7 and 11.3 as built — W3-ACT2 (04.08)
+
+The wave the ladder's own arithmetic promoted from content to structure. §11.3 measured the ceiling
+of the ladder as W2-LADDER shipped it — a perfect, unreachable season of every WTA 125, W100 and W75
+is 1,500 points ≈ real #45 — and §11.4 measured the other end of the same fact: the terminal window
+(W50+W75+W100+125) offered 28 events a season, so a player at the top of it who plays every second
+week got **11.3**. The top of the ladder had run out of tennis. All three items below exist because
+of those two numbers.
+
+### 13.1 The rungs, and the one place the research corrected the spec
+
+WTA 250 / 500 / 1000 / Slam, points rows **verbatim** from `docs/research/ranking-points-by-tier.md`
+§4 (2026 WTA Official Rulebook VIII.A.5). §2's own ⚠ said the research wins every disagreement and
+it won one:
+
+| | §2's table | the rulebook chart | shipped |
+| --- | --- | --- | --- |
+| WTA 250 | 250/163/98/54/30/1 | same | ✅ as tabled |
+| WTA 500 | 500/325/195/108/60/**30** | 500/325/195/108/60/**1** | **1 — the research** |
+| WTA 1000 | 1000/650/390/215/120/65 | same | ✅ as tabled |
+| Slam | 2000/1300/780/430/240/130 | same | ✅ as tabled |
+
+The 30 is the chart's DRAW-SIZE annotation — the research prints the row as "WTA 500 (30/28)" — read
+as a points value. **Correction noted, not smoothed over.**
+
+The cheques are §2's design values unchanged (~$40k / ~$140k / ~$500k / ~$3M), stepped at the W
+family's own ~0.575× per finish. They are the only numbers in the four rungs that are not sourced:
+research §7 is primary for POINTS above W100 and gives purses only to W75.
+
+### 13.2 The named anchors — the first tier family that is not a cadence
+
+`TierDef.anchorWeeks`. Season-week OFFSETS, so a rung carrying the list is placed on exactly those
+weeks of every block and its `everyNWeeks` is ignored:
+
+| rung | anchors | count |
+| --- | --- | --- |
+| Slam | 2 · 21 · 26 · 34 | 4 |
+| WTA 1000 | 5 · 8 · 12 · 18 · 31 · 37 · 41 · 45 | 8 |
+| WTA 500 | 4 · 10 · 15 · 19 · 24 · 28 · 33 · 39 · 43 · 47 | 10 |
+| WTA 250 | *(cadence 6 — the filler rung of the top window)* | 8 |
+
+⚠ **ANCHORED RUNGS OPT OUT OF W2-WINDOW'S SEEDED JITTER, AND THAT IS THE ONE PLACE THIS WAVE
+CONTRADICTS A SHIPPED RULE.** §12.1 made placement seed-dependent because `buildSeason` was dealing a
+byte-identical calendar in every world. That argument is about rungs whose weeks are arbitrary; these
+four's weeks ARE the content — Melbourne is in January in every year of everybody's life, and a
+seeded major is a stream of interchangeable weeks with a famous name on. Every world still deals a
+different calendar: the twelve rungs below still jitter and they are 157 of the season's 187 events.
+
+⚠ **AND AN ANCHORED EVENT TAKES ITS BLOCK'S DOMINANT SURFACE** rather than a weighted draw from it —
+one rule, no per-anchor surface table, and the four majors come out hard / clay / grass / hard by
+construction. The roll is still SPENT so the season sub-stream keeps its position.
+
+⚠ **A CAREER'S FIRST BLOCK CARRIES THREE MAJORS, NOT FOUR.** `MIN_FIRST_EVENT_WEEK` floors placement
+at week 3 so nothing opens already-closed, and the season opener is anchored on offset 2. Left as it
+falls rather than nudged: a career that starts in the third week of January has missed it.
+
+### 13.3 ⚠⚠ THE BIG DRAWS DID NOT SHIP, AND THE DEVIATION IS MEASURED
+
+`tools/big-draw-cost.ts`, 3 worlds × 208 weeks, on the Slam rung:
+
+| draw | of-age in cohort | in-band | out-of-band | under-age | youngest | ms/bracket | verdict |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **32** | 105 | 37 | **0.0%** | 0.0% | 17 | 0.13 | **OK — shipped** |
+| 64 | 105 | 37 | 42.2% | 0.0% | 17 | 0.26 | fiction: a prestige draw 42% made of backfill |
+| 128 | 105 | 37 | 71.1% | **18.3%** | **13** | 0.51 | **broken** |
+
+**THE COST IS NOT THE CLOCK.** A 128-draw bracket is 127 AI-AI matches against 31 and costs 0.51 ms
+against 0.13 — four times the work for four times the matches, and nothing in the game notices. The
+cost is the POPULATION, and it is structural:
+
+* the canonical AI bracket is **live-only by design** — `drawAiEntrants` draws from `world.cohort`
+  alone, because a derived field pro must never write a persisted result row (living-field.md §8.3,
+  and §8b of this document already names putting them in as act-3 work in its own right);
+* the cohort is 199 players aged 13–19, of whom ~105 clear a W rung's 17+ gate;
+* `selectEntrants` treats an unfillable draw as a crash rather than a compromise, so its escape
+  ladder runs in-band ⇒ of-age ⇒ **everybody**. At 128 it falls all the way through and a Grand Slam
+  is played by 128 of the 199 CHILDREN in the world.
+
+So the honest ship is a 32-draw Slam with the deviation loud. ⚠ It also means the points rows are
+**fully sourced rather than half-derived**: the research table is normalised to 32 main-draw rows, so
+2000/1300/780/430/240/130 is exactly what the rulebook publishes and no R64/R128 value had to be
+invented. A 128-draw Slam would have needed two rows the research does not print.
+
+**The fix is named and is its own wave**: field pros in the canonical brackets (living-field.md §8.3),
+which needs fp-safe result rows.
+
+### 13.4 The window, and the three numbers this wave is graded on
+
+The rule did not change a word — a rung closes when the rung THREE above opens, the top FOUR never
+close — so adding four rungs slid the terminal window up by exactly four:
+
+> `{w75, w100, wta125}` → `{w100, wta125, wta250}` → `{wta125, wta250, wta500}` →
+> **`{wta250, wta500, wta1000, slam}`**
+
+| | before W3-ACT2 | after | source |
+| --- | --- | --- | --- |
+| OFFERED at the terminal window (weeks of 8) | 3.6 (§11.1) | **4.3** | tools/calendar-shape.ts |
+| weeks of 49 carrying a top-rung event | — | **26.1**, worst blank run **2** | same |
+| **PLAYED at the terminal window, `pair` policy** | **11.3** (§11.4) | **18.6** | tools/pro-season-probe.ts |
+| ENTERED a season, ladder-walk | 7.5–8 (§8b) | **21.3–27.8** | tools/ladder-walk.ts |
+
+**The headline is the third row.** §11.3's «the ladder ran out of tennis» was 11.3 events a season;
+it is 18.6 now, and 12.0 of them are on the four new rungs (500 5.0 · 1000 4.1 · Slam 2.3 · 250 0.6).
+It sits just under §11.4's 20–30 target rather than at half of it.
+
+⚠ **AND THE LADDER-WALK CAREERS STILL DO NOT REACH THE TOP — §8b's finding, unchanged and restated.**
+Best merged rank over 6 careers × 10 seasons: **#320–467**. W75 opens in 4 of 6, W100 in 1, nothing
+above in any. They now ENTER 21–28 events a season (against §8b's 7.5–8), so this is no longer a
+volume problem: she plays a full professional season and wins too little at the rungs she can reach
+to climb. **Act 3 built the top of the ladder; what stops her reaching it is the same open owner
+decision §8b left — what the professional era should COST — and not the absence of rungs.**
+
+### 13.5 The mandatory regime (§6), and it measures survivable
+
+Schema **v38**: `penalties` (a row per charge: week, points, rule) + `suspendedUntilWeek`. The owner's
+spec verbatim — 10 points inside a rolling 52 weeks → a 4-week suspension; sources skip / late
+withdrawal / no-show; binding the top 50; and a skipped mandatory **also takes one of her 16 counted
+slots with a zero** (`SeasonResult.mandatoryMiss`, the one exception `isCountingResult` carries, so
+the best-16 window she reads every week IS the enforcement surface).
+
+Counts adapted to our grid exactly as §6 authorises: **4 Slams + all 8 1000s bind per event; the 500s
+are a QUOTA of six from a pool of ten** — which is the real rule's own shape (the tour asks a top-50
+player to commit to six and lets her pick) and the only reading that leaves her a decision.
+
+⚠⚠ **«МЫ НИ ЗА ЧТО НЕ НАКАЗЫВАЕМ» IS WHAT SHAPES IT, AS THREE MECHANISMS RATHER THAN A TONE:**
+
+1. **Announced before it can bite.** The warning letter fires at the entry DEADLINE — two weeks
+   before the event, while entering is still possible. Nothing in the regime can charge for an
+   obligation the player was not written to about.
+2. **An obligation she could not meet is not an obligation.** `mandatoryBinds` answers false for an
+   injury (the real tour's own medical excuse), a suspension in force, an acceptance list that
+   refuses her, an age gate, and a week she had already committed to another tournament.
+3. **It deliberately does NOT read her condition**, and the condition floors on these rungs were left
+   at 60 rather than stepped, because a floor that refused her entry to an event she is REQUIRED to
+   attend would manufacture penalties out of a knob nobody asked to move.
+
+**MEASURED at the only standing it binds** (pro-season-probe holds her at the head of the merged
+table for every week it walks — the harshest possible reading):
+
+| | measured | threshold |
+| --- | --- | --- |
+| obligations falling due un-entered, per season | **1.7** | — |
+| penalty points charged per season | **3.4** | 10 |
+| weeks suspended per season | **0.0** | — |
+| seasons carrying a suspension | **0%** | — |
+
+**The regime is a real pressure and not a trap**, and the reason is mechanism 2: at the pair rhythm
+she is usually either playing the required event or playing something else that week, so only 1.7
+obligations a season are genuinely left empty. The derivation-faithful alternative quota (4 rather
+than 6, being six-of-sixteen scaled to ten) is written down in `ECONOMY.mandatory.quota`'s note and
+was **not** taken — the measurement says the spec's own number holds.
+
+### 13.6 Sponsors above global (§7) — and §7's open question, answered
+
+`tour` / `premium` / `icon`, gated on the WTA table, adding three kinds of money the junior ladder
+never had: a **quarterly retainer**, **appearance fees** (from WTA 250 up — the new income line §7
+names), and **result bonuses** as a share of the event's own cheque. None of them scales with the
+wealth corridor, per §7's carried-over principle.
+
+⚠ **§7 LEFT ONE THING FOR BUILD TIME** («either `tour` replaces `global` for professionals, or the two
+ladders run side by side with one deal at a time») **and W2-FIELD2 had already answered it by moving
+the numbers.** `global.maxWtaRank` went 31 → 87 and `national`'s 125 → 350 when the W cuts were
+re-derived, so the professional gates now read
+
+> national 350 > **tour 200** > global 87 > **premium 50** > **icon 10**
+
+— a single monotone ladder with `tour` slotting between the two junior-era rungs rather than
+colliding with either. Side by side, one deal at a time, and it needed no new rule. ⚠ The ORDER of
+`SPONSOR_TIERS` is therefore load-bearing rather than tidy: `rungFor` reverses it and takes the first
+rung she clears, so a looser gate listed above a stricter one makes the stricter brand unreachable.
+Caught in-wave by asking the ladder for a rung at six ranks.
+
+**The result bonus is a SHARE and not a second table**, deliberately: the prize curve is already
+anchored per rung and per finish by the research doc, so a bonus against it inherits that shape for
+free, can never invert, grows with the rung she is winning at, and gives the junior ladder no bonus
+by construction rather than by a second rule saying so.
+
+### 13.7 The ladder audit the owner asked for
+
+«вроде у нас вообще система спонсоров только на national ранг завязана, как-будто некорректно» —
+swept end to end. What is still domestic-only, and whether it should be:
+
+* ✅ **`standingClears` already gave both upper junior rungs a professional arm** (02.08) and it is
+  the single predicate both callers use, so a deal can never be killed by a rule that would have
+  offered it back the same winter. Unchanged and correct.
+* ⚠ **`kitTermsFor('local')` and `offerChanceFor` still read `nationalRank` alone** — so a
+  professional who lands on the local rung gets the base deal and the base chance, because her
+  domestic points have decayed. **In practice unreachable** (a professional clears `tour` at #200
+  long before that), so it is reported rather than changed: fixing it would mean inventing a
+  professional band for a shop in her home town, which is the rung whose whole argument is that it
+  reads the ladder she is on AT HOME.
+* ✅ **The academy reads `kidRank` (ITF junior)** and that is right — it is a junior programme with
+  its own `ageBand`, not a sponsor.
+* ✅ **THE W2-WINDOW FINDING IS NOW MOOT, BOTH HALVES.** National still closes when J300 opens (the
+  window rule is index-relative and the four new rungs are at the top), so a W-era career still meets
+  Nationals only as substituted weeks — but she is no longer OFFERED the national kit deal at all:
+  `tour` (WTA 200) writes to her instead, and it is above `national` in the chain. And the KEEP side
+  was already fixed by `standingClears`. **The deal that was hard to hold is one she no longer needs.**
+
+### 13.8 For the owner
+
+* **Placeholder art, flagged.** Eight trophy files (gold+silver × four rungs) are byte copies of the
+  WTA 125 masters, and the three professional sponsor rungs borrow `global.webp` through
+  `sponsorArtKey`. Same stand-in rule W2-LADDER used; the file names are already correct, so real art
+  replaces files rather than code, and `sponsorArtKey` would become the identity.
+* **The Home season strip is sixteen chips and wraps to three lines on a phone.** The layout decision
+  is taken the same way W2-LADDER took it: the strip is her whole climb at a glance, and the four
+  act-3 chips read `locked` for almost every career that will ever exist — which is the point of a
+  ladder you can see the top of.
+* **The `icon` rung's obligation stops climbing.** Every rung steps `minEvents` by two (6 → 8 → 10 →
+  12 → 14) and `icon` holds at 16 rather than 18: a top-10 player's calendar is largely the mandatory
+  regime's already, and an obligation ABOVE what the tour compels would be two systems demanding the
+  same weeks with one of them fining her for it.
+* **§7's «icon at WTA ≤ 10 OR a Slam semi-final» ships as one gate, not two.** A Slam semi-final is
+  780 points from one event, which against the real curve the merged table now carries puts her
+  inside the top ten by arithmetic. One gate both routes satisfy beats two that can disagree; if a
+  future table breaks that equivalence the honest fix is a second clause with its own measurement.
