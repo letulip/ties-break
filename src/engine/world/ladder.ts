@@ -18,7 +18,7 @@ import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPr
 import { seasonIndexOf } from './ledger'
 import { ageAtWeek } from './age'
 import { proEntryCapUsage } from './entryCaps'
-import { KID_ID } from './constants'
+import { KID_ID, RESULTS_WINDOW } from './constants'
 import type { WorldState } from '../world'
 
 export function cohortIds(world: WorldState): string[] {
@@ -371,6 +371,101 @@ export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
     return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? world.cohort.length + 1) <= accepts
   }
   return isTierEligible(tier, kidPoints(world, 'domestic'))
+}
+
+// =================================================================================================
+// THE SAME DOOR, ASKED OF A COHORT PLAYER (W3-ONRAMP, 04.08) – `tierFloorOpen`'s W arm, read for an
+// AI id instead of for the kid.
+// =================================================================================================
+//
+// WHY IT IS HERE AND NOT IN season/tournament.ts: the rule is the LADDER's, and this module is where
+// the ladder lives. `selectEntrants` is handed the finished predicate (`OnRamp.admits`) and never
+// learns what a track or a ranking table is – the same shape `universeForTier` uses to keep the
+// field's population out of the bracket code.
+//
+// WHY IT IS THE KID'S OWN RULE, LINE FOR LINE, and not a second one tuned for the AI: the closed
+// loop this closes exists precisely BECAUSE the cohort never had her rule. Two doors onto one tour
+// would be two things to keep in step, and the first time they drifted the standings would stop
+// meaning anything. So:
+//
+//     the on-ramp rung (no acceptance list) -> her ITF JUNIOR points against `enterPointBand`
+//     every rung above it                   -> a professional result, AND `acceptsRank` on the
+//                                              merged W table
+//
+// ⚠ THE ONE PLACE IT DIVERGES, AND WHY IT HAS TO. The kid's on-ramp is a LATCH (`onRampCleared`,
+// v34) because "the J rungs shut at eighteen on age, so from her birthday she can never earn another
+// junior point" – a rolling junior window would close her professional door a year later with
+// nothing she could do about it. A latch for 199 rivals would be persisted state and a schema bump,
+// so the cohort gets the SECOND of `latchOnRamps`' two proofs instead of the flag: **a W-track row
+// inside the ranking window**, i.e. she has actually been out there playing professional
+// tournaments this year. That is the stronger of the two proofs in `latchOnRamps`' own words, it is
+// derived from the ledger the pruner already maintains, and it costs zero bytes. What it does not
+// do is remember a player who has been off the professional tour for a full year – which is the
+// honest reading of that state rather than a gap in it.
+export interface ProDoors {
+  /** the rung's acceptance door, for a cohort id */
+  at(tier: TierId): (id: string) => boolean
+}
+
+/** Every W rung's door for this week, folded ONCE. `merged` is the kid-free merged W standings the
+ *  caller has already built (world.ts's `TourWeek.ranking`), so the professional half is two map
+ *  builds over an array the caller already has.
+ *
+ *  ⚠ THE ON-RAMP HALF IS LAZY, AND THAT IS A TICK-COST DECISION RATHER THAN A STYLE ONE. Only the
+ *  entry rung reads the junior table, and only some weeks carry an entry rung – so the extra
+ *  `computeRanking` and the ledger scan behind it are built on first use and never on a week that
+ *  does not ask. `feat/field-in-brackets` bought this tick a real speed-up and this wave is not
+ *  entitled to spend it on a fold nobody reads.
+ *
+ *  ZERO draws on any stream, and `at()` is a W-track question: every caller asks it of a W rung. */
+export function proDoors(world: WorldState, merged: readonly RankingRow[]): ProDoors {
+  const rankOf = new Map<string, number>()
+  const wtaPointsOf = new Map<string, number>()
+  for (const r of merged) {
+    rankOf.set(r.playerId, r.rank)
+    wtaPointsOf.set(r.playerId, r.points)
+  }
+  /** The on-ramp's own currency: the ITF junior table, folded WITHOUT the kid on the same
+   *  independence rule every other AI-side fold obeys – plus the second proof, that she has played a
+   *  professional tournament inside the window. An APPEARANCE, not a counting result: a first-round
+   *  exit is still a week she spent on the tour, which is exactly the split `SeasonResult` was
+   *  widened to carry (wave-b-first-round-zero). */
+  let onRampRead: { itfPointsOf: Map<string, number>; played: Set<string> } | null = null
+  const onRampFacts = () => {
+    if (onRampRead) return onRampRead
+    const itfPointsOf = new Map<string, number>()
+    for (const r of computeRanking(
+      world.results.filter((x) => x.playerId !== KID_ID),
+      world.week,
+      BEST_N_BY_TRACK.itf,
+      cohortIds(world),
+      inTrack('itf'),
+    )) {
+      itfPointsOf.set(r.playerId, r.points)
+    }
+    const played = new Set<string>()
+    for (const r of world.results) {
+      if (r.playerId === KID_ID) continue
+      if (r.week > world.week || world.week - r.week > RESULTS_WINDOW) continue
+      if (r.tier && TIERS[r.tier].track === 'wta') played.add(r.playerId)
+    }
+    onRampRead = { itfPointsOf, played }
+    return onRampRead
+  }
+  return {
+    at(tier: TierId) {
+      const accepts = TIERS[tier].track === 'wta' ? acceptanceRank(world, tier) : undefined
+      if (accepts === undefined) {
+        const { itfPointsOf, played } = onRampFacts()
+        // ⚠ THROUGH `isTierEligible`, NEVER BY RE-SPELLING THE BAND. It is the same helper
+        // `onRampOpen` reads for the kid – one place derives the point band, which is the fact
+        // tests/round10.test.ts R10-5 exists to keep true.
+        return (id: string) => isTierEligible(tier, itfPointsOf.get(id) ?? 0) || played.has(id)
+      }
+      return (id: string) =>
+        (wtaPointsOf.get(id) ?? 0) > 0 && (rankOf.get(id) ?? Number.MAX_SAFE_INTEGER) <= accepts
+    },
+  }
 }
 
 /** The GRADUATED-OUT half of the band, on its own: her points have passed the tier's ceiling.

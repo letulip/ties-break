@@ -210,7 +210,23 @@ const REF = { //
   // ends it holding counting ITF points. C1's own claim – that INJURY and PHYSIO add no main-stream
   // draws – is untouched and still proves itself two lines up: count 41550 and hash e6b0c709
   // reproduce byte-for-byte, because every W bracket runs on its own `seed:aitour:<id>` sub-stream.
-  kidRank: 89 }
+  // ⚠⚠ RE-PINNED 89 -> 90 BY W3-ONRAMP (04.08) – a RULE again, and the exact counter-move to the one
+  // above. W3-FIELD3 took the ~98 W events a season off the cohort entirely and this wave hands a
+  // SHARE of them back: a W draw holds `ON_RAMP.slots` (2 of 32) for LIVE players who clear the rung's
+  // own acceptance door – the kid's door, asked of a cohort id. Measured, tools/w-onramp-probe.ts:
+  // LIVE W ledger rows 0.0 -> ~125 a season (~0.6 per cohort player), against ~3,170 before
+  // W3-FIELD3. So a couple of dozen juniors of the 199 now hold counting W points, and a table sorted
+  // on points puts them ahead of a kid who holds none. Note the SIZE and the direction: two places,
+  // downward - the W rows the cohort now earns are on a DIFFERENT track from the one this number folds,
+  // so what reaches it is the second-order re-deal of who ends the junior year in the points, not the
+  // professional table itself. SHE DID NOTHING DIFFERENT – this fixture's kid
+  // enters nothing at all, which is the cleanest possible statement of "the world moved, not her".
+  //
+  // THE CAPTURE AND THE A/B ARE UNTOUCHED, WHICH IS WHAT THIS BLOCK IS FOR: count 41550, hash
+  // e6b0c709, head and tail all reproduce byte-for-byte and are asserted before this constant is ever
+  // read. Every draw the on-ramp spends is APPENDED to the event's own `seed:aitour:<id>` sub-stream,
+  // after the professional side of the draw has already been keyed.
+  kidRank: 90 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

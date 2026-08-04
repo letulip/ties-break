@@ -957,10 +957,38 @@ describe('C2 — a real season produces genuinely tired rivals, and nobody is pi
     // an AI on-ramp (a junior's ITF standing positioning her in the merged W tail) or a smaller
     // professional share of each W draw. If either lands, this line fails and its author has to come
     // back and restate the trade rather than let it drift.
+    //
+    // ✅⚠ IT LANDED, AND THIS IS THE TRADE RESTATED (W3-ONRAMP, 04.08 – the owner: «Замкнутый круг у
+    // ИИ-юниорок - да, надо чинить»). The first of the two knobs named above is what shipped, in the
+    // second of its two forms: a W draw HOLDS `ON_RAMP.slots` (2 of 32) for LIVE players who clear
+    // the rung's own acceptance door – the kid's door, `tierFloorOpen`'s W arm asked of a cohort id
+    // through `proDoors`. Nobody is given a W point she did not win; what opens is the door.
+    //
+    // MEASURED, this block's own methodology and unit (8 seeds x 40 ticked weeks x 199 rivals,
+    // 20-week window, tools/w-onramp-probe.ts – the `ON_RAMP.slots` 0/6 A/B on this very branch):
+    //     BEFORE (W3-FIELD3 as merged)  W rows/rival 0.00 · minMedian 95-100 · worst 0/20 · heavy 0 · ever 0.0%
+    //     AFTER  (the on-ramp)          W rows/rival 0.22 · minMedian 95-100 · worst 0/20 · heavy 0 · ever 0.0%
+    // and against the state this whole block was written about, W2-FIELD2: 6.79 rows/rival and a
+    // median of 28-36. So the load came back to the cohort at ONE THIRTIETH of the weight that broke
+    // it, and the median rival's condition is UNMOVED to the resolution of this measurement - not
+    // merely surviving the bound, identical to the arm with no on-ramp at all. Claims (1), (2) and
+    // (3) above are untouched; nothing was re-bounded to let this through. Part of why is that the
+    // held slots are filled AFTER the week is resolved (world.ts `fillWeekOnRamps`), so an on-ramp
+    // entrant is a player who was not already playing somewhere else that week.
+    //
+    // ⚠ THE ASSERTION IS NOW TWO-SIDED, WHICH IS WHAT IT SHOULD ALWAYS HAVE BEEN. `toBe(0)` could
+    // only ever catch the repair being spent; it could not catch the closed loop it was describing,
+    // because the loop WAS the zero. The bound below is the load the knee claim can carry, set from
+    // the measured 0.22 the way every other bound in this file was set from its measurement – so a
+    // future wave that widens the on-ramp trips this line before it trips the medians.
     const wRows = world.results.filter(
       (r) => r.playerId !== KID_ID && r.tier !== undefined && TIERS[r.tier].track === 'wta' && world.week - r.week < weeks,
     )
-    expect(wRows.length, 'LIVE W result rows in the window - the closed loop above').toBe(0)
+    expect(wRows.length, 'the cohort is ON the professional ladder - the loop above, opened').toBeGreaterThan(0)
+    expect(
+      wRows.length / world.cohort.length,
+      'W result rows per rival in the window - the load the knee claim can carry',
+    ).toBeLessThan(1.5)
   })
 })
 

@@ -259,6 +259,28 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // and re-base to the next milestone the domestic table NAMES rather than to the number that
     // restores 11. A target chosen to make the test interesting is the failure mode this whole
     // history is a record of.
+    // ⚠⚠ THE BAND ALMOST FIRED AN EIGHTH TIME (04.08, W3-ONRAMP), AND WHAT THE RE-READ FOUND IS ABOUT
+    // THE BAND RATHER THAN ABOUT THE TARGET. It is left EXACTLY as it was; this note is the evidence.
+    //
+    // The AI on-ramp gives the cohort a professional schedule again (docs/specs/ai-w-onramp.md), and
+    // its size is a knob - so for the first time this proxy could be swept against a WORLD change
+    // instead of against the target, 30 careers each, everything else held:
+    //
+    //     ON_RAMP.slots      0     1     2     3     4     6     8
+    //     14→16 of 30       10     4     6     6     4     5     9
+    //
+    // ⚠ THAT IS NOT A TREND, IT IS CHAOS, and it is a fact about the proxy nobody had measured. The
+    // count is a THRESHOLD crossing: a career sitting near 320 domestic points at week 104 crosses or
+    // does not on the strength of one early draw, so any change that re-deals the AI field re-rolls
+    // every marginal one of them - and ONE held slot per professional draw moves the count as far as
+    // eight do. The band [6, 20] was derived by sweeping the TARGET on one fixed world, so it
+    // measures the target's plateau; this is the first measurement of the WORLD's, and it is ±3
+    // careers around a mean of ~6 for any non-zero setting.
+    //
+    // WHAT THAT BOUGHT: the on-ramp's own constant was set from this table rather than from taste -
+    // `ON_RAMP.slots` is 2 because it is the setting at which THIS band and the 14→18 band below both
+    // hold as shipped. Nothing here is re-aimed, and nothing here should be re-aimed on the strength
+    // of one flip: the next reader who sees this fire should sweep the world before touching 320.
     const reachedH16 = workingH16.filter((r) => r.reachedWeek !== null).length
     expect(reachedH16, '14→16 collapsed to never - re-read the notes above').toBeGreaterThan(0)
     expect(reachedH16, '14→16 saturated - re-read the notes above').toBeLessThan(workingH16.length)

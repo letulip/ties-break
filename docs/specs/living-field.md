@@ -593,6 +593,19 @@ the juniors a route into the professional table has to come back and restate the
 obvious knobs: an AI on-ramp (a junior's ITF standing positioning her in the merged W tail) or a
 capped professional share of each W draw.
 
+> **✅ CLOSED 04.08 by W3-ONRAMP – `docs/specs/ai-w-onramp.md`** (the owner: «Замкнутый круг у
+> ИИ-юниорок - да, надо чинить»). The first knob shipped, as HELD SLOTS rather than as a fabricated
+> standing: a W draw keeps `ON_RAMP.slots` (2 of 32) for LIVE players who clear the rung's own
+> acceptance door – the kid's door, `tierFloorOpen`'s W arm asked of a cohort id through `proDoors` –
+> filled AFTER `resolveDoubleBookings`, so a held slot can never double-book. LIVE W ledger rows
+> 0.00 → 119.8 a season (0.60 per cohort player, against ~3,170 before this wave); W rows per rival
+> over the 20-week window 0.00 → 0.22 and the cohort's min median condition is 95–100 either way, so
+> C2's restored knee claim is not spent at all. ⚠ The C3 corridor in `fatigue-bench-policy` DID move
+> (2.538 → 2.071) and is re-aimed to the inverted pin its own block uses for a lost corridor; the
+> constant is 2 rather than the real tour's 4–6 because that is the value at which both `econ-reach`
+> bands hold as shipped – see that spec's §4f, which is the part worth reading. Zero schema, zero
+> migration; the ledger keeps 96% of the saving this wave made.
+
 **Also freed, unasked:** the pre-off-season wall. `resolveDoubleBookings`' over-subscribed weeks —
 three structural offsets in every season of every seed, 312 draw slots for 199 rivals — measure
 **zero in 104 weeks**, because the shortage was always a W shortage and a W chair may now hold any

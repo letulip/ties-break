@@ -82,6 +82,8 @@ import {
   runTournament,
   kidSeedIndexIn,
   weekFieldExclusion,
+  ON_RAMP,
+  fillOnRamp,
 } from './season/tournament'
 // THE FIELD TIER (living-field phase W, 01.08). Field pros are DERIVED, NEVER PERSISTED – see
 // season/fieldPros.ts for the whole argument. world.ts only ever asks three questions of them:
@@ -202,8 +204,8 @@ export { isExamWeek, isBlackoutWeek } from './season/calendar'
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier }
+import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors, type ProDoors } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
@@ -1589,6 +1591,9 @@ interface TourWeek {
   universe: AiPlayer[]
   /** the merged W standings, folded WITHOUT the kid (see the note at the call site) */
   ranking: RankingRow[]
+  /** every W rung's acceptance door for a cohort id (W3-ONRAMP) – the kid's own gate, folded once
+   *  a week beside the standings it reads */
+  doors: ProDoors
 }
 
 /** `universeForTier`'s fence is per TRACK, not per rung, so any W rung answers the same question and
@@ -1613,6 +1618,53 @@ function drawAiEntrants(
     event,
     entrants: selectEntrants(event, universe, isW ? tour.ranking : aiRanking, rng, fatigue),
     rng,
+  }
+}
+
+/** THE HELD SLOTS OF THE WHOLE WEEK (W3-ONRAMP, 04.08) – step 4b½, between the week's resolution and
+ *  its brackets.
+ *
+ *  WHY IT IS ITS OWN PASS AND NOT PART OF THE DRAW: `season/tournament.ts`'s ⚠⚠ box has the
+ *  measurement. In one sentence – a held slot filled at DRAW time can land on a junior the same
+ *  week's J300 has also drawn, `resolveDoubleBookings` then correctly hands her to the higher rung,
+ *  and the junior event backfills with a STRONGER player. Every held slot silently upgraded a junior
+ *  draw. Filling here, from the players the resolved week has left free, makes "one body, one week"
+ *  true of the held slots by construction and leaves the junior tour untouched.
+ *
+ *  STRONGEST RUNG FIRST, exactly as `resolveDoubleBookings` orders itself, so a graduate good enough
+ *  for a W100 is not spent on the W15 that happens to sort first in the calendar. The brackets still
+ *  PLAY in calendar order (the ledger's row order is unchanged); only the filling is re-ordered, and
+ *  each event's own `seed:aitour:<id>` stream sees its draws in the same place either way. */
+function fillWeekOnRamps(
+  world: WorldState,
+  drawn: readonly { event: SeasonEvent; entrants: AiPlayer[]; rng: Rng }[],
+  fields: Map<string, AiPlayer[]>,
+  aiRanking: RankingRow[],
+  tour: TourWeek,
+  fatigue: Map<string, number>,
+): void {
+  const booked = new Set<string>()
+  for (const field of fields.values()) for (const p of field) booked.add(p.id)
+  const wEvents = drawn
+    .filter((d) => TIERS[d.event.tier].track === 'wta')
+    .sort(
+      (a, b) =>
+        TIER_LADDER.indexOf(b.event.tier) - TIER_LADDER.indexOf(a.event.tier) ||
+        (a.event.id < b.event.id ? -1 : a.event.id > b.event.id ? 1 : 0),
+    )
+  for (const d of wEvents) {
+    const before = fields.get(d.event.id) ?? d.entrants
+    const after = fillOnRamp(
+      d.event,
+      before,
+      tour.ranking,
+      d.rng,
+      { pool: world.cohort, ranking: aiRanking, admits: tour.doors.at(d.event.tier), slots: ON_RAMP.slots },
+      fatigue,
+      booked,
+    )
+    fields.set(d.event.id, after)
+    for (const p of after) booked.add(p.id)
   }
 }
 
@@ -2233,19 +2285,24 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   // ZERO DRAWS, on any stream: `fieldProsOf` is a memoised pure derivation off `seed:field:` and
   // both folds are arithmetic over the ledger.
   const seasonPros = fieldProsOf(world)
+  const tourRanking = mergedWtaRanking(
+    computeRanking(
+      world.results.filter((r) => r.playerId !== KID_ID),
+      world.week,
+      BEST_N_BY_TRACK.wta,
+      ids,
+      inTrack('wta'),
+    ),
+    seasonPros,
+  )
   const tourWeek: TourWeek = {
     pros: seasonPros,
     universe: universeForTier(W_TRACK_PROBE, world.cohort, seasonPros),
-    ranking: mergedWtaRanking(
-      computeRanking(
-        world.results.filter((r) => r.playerId !== KID_ID),
-        world.week,
-        BEST_N_BY_TRACK.wta,
-        ids,
-        inTrack('wta'),
-      ),
-      seasonPros,
-    ),
+    ranking: tourRanking,
+    // ⚠ AND THE DOORS THE COHORT KNOCKS ON (W3-ONRAMP), folded here for the same reason the two
+    // tables above are: every event of the week must be judged against ONE world. Kid-free like
+    // everything else on this line, and zero draws – see `proDoors`.
+    doors: proDoors(world, tourRanking),
   }
 
   // 2. the kid's entered event this week (event-scoped RNG only): charge travel and stash the
@@ -2440,11 +2497,18 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //    the merged W table; the six junior/domestic rungs draw from the cohort against the mixed one.
   //    4b spans both with ONE `booked` set, because it has to: the cohort's 16-18s are eligible for
   //    both tours, so "she cannot be in two draws" is a claim about the WEEK and not about a track.
+  //
+  //    ⚠ AND 4b½: THE HELD SLOTS (W3-ONRAMP). The W rungs keep `ON_RAMP.slots` of their draws for
+  //    LIVE players coming up from the junior table – the closed loop W3-FIELD3 left behind was that
+  //    a cohort player could never be drawn into a W event, so could never earn a W point, so could
+  //    never leave the position that kept her out (measured: 0.0 LIVE W rows a season). It runs
+  //    AFTER 4b on purpose, from the players the resolved week has left free: see `fillWeekOnRamps`.
   const weekDraws = scheduled.map((e) => drawAiEntrants(world, e, aiRanking, tourWeek, rivalFatigue))
   const weekFields = resolveDoubleBookings(weekDraws, world.cohort, aiRanking, rivalFatigue, {
     universe: tourWeek.universe,
     ranking: tourWeek.ranking,
   })
+  fillWeekOnRamps(world, weekDraws, weekFields, aiRanking, tourWeek, rivalFatigue)
   for (const d of weekDraws) {
     runAiTournament(world, d.event, weekFields.get(d.event.id) ?? d.entrants, d.rng, rivalFatigue)
   }
