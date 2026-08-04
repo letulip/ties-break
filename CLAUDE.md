@@ -30,7 +30,11 @@ symlinks the binary onto PATH — far too large to vendor, so nothing is added t
 `npm run graph` prints these instructions if it cannot find the binary; `GRAPHIFY_BIN` overrides.
 `graphify-out/` is gitignored — a local artifact, rebuilt in seconds, never committed.
 
-**A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it.
+**A stale graph is worse than no graph.** Run `npm run graph:check` before reasoning from it —
+though the rebuild is now automatic: `.githooks/post-merge` and `post-checkout` fire it in the
+background after every pull, merge and branch switch, and `npm install` points git at them through
+the `prepare` script. Both hooks exit silently when the graphify binary is absent, so a machine
+that never installed it sees nothing.
 
 **⚠ CODE ONLY. Never point it at `docs/`.** `npm run graph` indexes `src`/`tests`/`tools`/`scripts`
 through tree-sitter — pure AST, genuinely zero model tokens. **Documents and images take a different
