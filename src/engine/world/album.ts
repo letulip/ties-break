@@ -18,7 +18,7 @@
 //
 // ⚠ RNG: nothing here draws. The album is a fold over ledgers that are already written.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
-import { seasonYear } from '../../shared/dates'
+import { seasonYear, weekLabel } from '../../shared/dates'
 import { formatCents } from '../../shared/money'
 import { portraitStage } from '../../shared/avatarEmotion'
 import type { AvatarEmotion } from '../../shared/avatarEmotion'
@@ -96,9 +96,10 @@ function earliest(milestones: readonly Milestone[], type: Milestone['type']): Mi
   return best
 }
 
-function seasonLabel(week: number): string {
-  return `W${(week % WEEKS_PER_YEAR) + 1} '${String(seasonYear(seasonIndexOf(week))).slice(2)}`
-}
+/** ⚠ THE SHARED FORMATTER, NOT A LOCAL ONE. The engine may THINK in absolute weeks; everything it
+ *  WRITES for a player goes through `weekLabel` – tests/world-trio.test.ts enforces that mechanically
+ *  and it caught this file's first draft growing its own. */
+const seasonLabel = weekLabel
 
 // --- the seven slots ----------------------------------------------------------------------------
 

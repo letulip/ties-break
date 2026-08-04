@@ -14,6 +14,7 @@
     "art": "node scripts/optimize-art.mjs",
     "bench:dual": "vite-node tools/dual-universe-bench.ts",
     "bench:econ": "vite-node tools/econ-bench.ts",
+    "bench:endings": "vite-node tools/endings-bench.ts",
     "bench:fatigue": "vite-node tools/fatigue-bench.ts",
     "bench:knock": "vite-node tools/knock-rate.ts",
     "bench:load": "vite-node tools/load-bench.ts",

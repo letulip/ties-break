@@ -322,7 +322,20 @@ describe('a real career', () => {
   // suite runs it alongside sixty-eight other files.
   it('the Snapshot carries all three tiles, and they change between 14 and 17', { timeout: 30_000 }, () => {
     const seed = 'kidlife-career'
-    const world = createWorld(seed, { ...DEFAULT_PROFILE, playStyle: 'serve-first', birthMonth: 4 })
+    // ⚠ W2-ENDINGS: A WEALTHY FAMILY, AND THE CHANGE IS THE ENGINE BEING RIGHT RATHER THAN THIS
+    // TEST BEING WRONG. The loop below enters every event the gate allows for 170 weeks, which under
+    // the shipped economy runs a MIDDLE-class family $3,210 under water by week 107 - travel and a
+    // standard coach, not the entry fees. Since v39 eight consecutive weeks below zero is
+    // BANKRUPTCY, a real ending, so this probe latched at fifteen and never reached the seventeen it
+    // is about. Measured, not guessed (tools/econ-bench.ts says the same thing about that policy).
+    // The three tiles under test are keyed on her age, her play style and her weeks away - none of
+    // them on the family's money - so the background is free to be the one that survives the policy.
+    const world = createWorld(seed, {
+      ...DEFAULT_PROFILE,
+      background: 'wealthy',
+      playStyle: 'serve-first',
+      birthMonth: 4,
+    })
     const rng = rngFromSeed(seed)
     const at14 = toSnapshot(world).life
     expect(at14.school.lead).toBe('8th grade')

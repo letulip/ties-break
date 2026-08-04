@@ -45,6 +45,9 @@ import PracticeFlow from './components/PracticeFlow.vue'
 import SeasonSummaryDialog from './components/SeasonSummaryDialog.vue'
 import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import KnockDialog from './components/KnockDialog.vue'
+import EndingScreen from './components/EndingScreen.vue'
+import ForkDialog from './components/ForkDialog.vue'
+import RetirementDialog from './components/RetirementDialog.vue'
 import HomeScreen from './components/screens/HomeScreen.vue'
 import SeasonScreen from './components/screens/SeasonScreen.vue'
 import CalendarScreen from './components/screens/CalendarScreen.vue'
@@ -694,6 +697,18 @@ const stopReasons = computed<StopReason[]>(() => game.snapshot?.stopReasons ?? [
 // The toast speaks for the highest-precedence reason that HAS copy (R10-16: no copy, no toast).
 const stopReasonText = computed(() => {
   for (const reason of stopReasons.value) {
+    // W2-ENDINGS: the 'funds' toast carries the COUNTDOWN while she is under water. That toast used
+    // to say "funds ran below zero" and then say it again, week after week, with nothing behind it -
+    // which is precisely the "unending nothing" the review flagged. Now it is the warning phase
+    // bankruptcy is required to have (adult spec B4): the number on it is the same one the Money
+    // screen's strip shows, off the same `snapshot.debt`, so the two can never disagree.
+    if (reason === 'funds' && game.snapshot?.debt) {
+      const d = game.snapshot.debt
+      const left = Math.max(0, d.graceWeeks - d.weeks)
+      return left === 0
+        ? 'Stopped: below zero, and out of time.'
+        : `Stopped: ${d.weeks} ${d.weeks === 1 ? 'week' : 'weeks'} below zero – ${left} before the money runs out for good.`
+    }
     const text = STOP_REASON_TEXT[reason]
     if (text) return text
   }
@@ -718,6 +733,18 @@ function dismissStopToast(): void {
 // cannot.
 const showKnock = computed(() => !!game.snapshot?.knockPrompt)
 
+// W2-ENDINGS. Three gates, and every one of them reads a SNAPSHOT FIELD rather than a stop reason -
+// the same argument the knock gate above makes, and here it matters more: an ending is permanent.
+// Reload an ended career from the Careers list and the album has to be there again; the stop reason
+// that reported it died with the advance that produced it.
+//
+// `showEnding` is not a dialog at all. It REPLACES the tab shell, which is why it is branched in the
+// top-level chain beside OnboardingWizard rather than laid over the shell like the four overlays -
+// there is nothing behind an epilogue worth painting.
+const showEnding = computed(() => !!game.snapshot?.ending)
+const showFork = computed(() => !!game.snapshot?.fork)
+const showRetirement = computed(() => !!game.snapshot?.retirementOffer && !showFork.value)
+
 // R9-21a: the injury stop popup – blocking, until Continue. The dialog itself plays the alert sfx
 // on mount.
 //
@@ -729,6 +756,12 @@ const showKnock = computed(() => !!game.snapshot?.knockPrompt)
 // snapshot, so it can never re-appear after Continue.
 const showInjuryStop = computed(
   () =>
+    // W2-ENDINGS: ...and behind the epilogue and the two blocking questions, for the reason the
+    // knock clause below states. An ending replaces the shell entirely; the fork and the offer are
+    // decisions time is stopped on, and an injury report can wait a click.
+    !showEnding.value &&
+    !showFork.value &&
+    !showRetirement.value &&
     stopReasons.value.includes('injury') &&
     !!game.snapshot?.injury &&
     !injuryStopDismissed.value &&
@@ -748,6 +781,11 @@ const showInjuryStop = computed(
 // dead-end: every reason in the set owns either a dialog with a Continue or a dismissable toast.
 const showSeasonSummary = computed(
   () =>
+    // W2-ENDINGS: the retirement offer is raised ON the wrap week by construction, so this is a real
+    // collision rather than a defensive one - the summary waits behind the question.
+    !showEnding.value &&
+    !showFork.value &&
+    !showRetirement.value &&
     stopReasons.value.includes('season-end') &&
     !!game.snapshot?.lastSeasonSummary &&
     !seasonSummaryDismissed.value &&
@@ -796,6 +834,13 @@ function dismissSeasonSummary(): void {
   <SplashScreen v-else-if="!splashDone" @done="splashDone = true" />
 
   <OnboardingWizard v-else-if="showOnboarding" />
+
+  <!-- W2-ENDINGS: THE EPILOGUE REPLACES THE APP SHELL. Branched here, beside the wizard, and not laid
+       over the tab shell like the four overlays below - the story has no next week, so there is
+       nothing behind it to go back to. «Raise another» drops the in-memory career, which flips
+       `showOnboarding` above and hands the player to the wizard: exactly the seam MoreScreen's own
+       new-career flow uses, and exactly what §5.6 asks for - one tap, one question, nothing carried. -->
+  <EndingScreen v-else-if="showEnding" @new-career="game.$patch({ snapshot: null })" />
 
   <template v-else>
     <!-- epic/redesign-home slice A2 (owner, 28.07): THE APP HEADER IS GONE. It carried three
@@ -975,6 +1020,12 @@ function dismissSeasonSummary(): void {
          no event and has no dismiss: answering it IS the exit, and until it is answered the engine
          will not tick a week. Last in the template so it paints over anything else that is up. -->
     <KnockDialog v-if="showKnock" />
+
+    <!-- W2-ENDINGS: the two blocking questions. Neither has a dismiss and neither has a third
+         button - answering IS the exit, and until one is answered the engine will not tick a week.
+         Painted last, over everything, for the same reason KnockDialog is. -->
+    <ForkDialog v-if="showFork" />
+    <RetirementDialog v-if="showRetirement" />
 
     <!-- Round 5 item 10: one-shot coach-mark tour after the very first career ever. -->
     <OnboardingTour v-if="showTour" @done="dismissTour" />

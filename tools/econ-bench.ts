@@ -344,6 +344,15 @@ export function stepCareerWeek(
   policy: Policy = POLICIES[0],
 ): Record<TierId, number> {
   const entered = zeroByTier()
+  // ⚠ W2-ENDINGS: A CAREER THAT HAS ENDED ENTERS NOTHING, and the week still ticks. Since v39 a
+  // family eight consecutive weeks below zero latches BANKRUPTCY, and `enterEvent` refuses on an
+  // ended world - so a bench that walked straight past this crashed on the first bankrupt seed.
+  // Skipping only the ENTRY phase (never the tick) keeps every horizon figure comparable: a career
+  // under water was already entering nothing, because the affordability clause below refused it.
+  if (world.ending) {
+    tickWeek(world, rng)
+    return entered
+  }
   // Entry policy v3: enter each RANKING-ELIGIBLE event affordable by entry+travel as its deadline
   // APPROACHES (within ENTRY_LOOKAHEAD weeks) – a parent commits a few weeks out, not a year ahead.
   //

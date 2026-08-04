@@ -27,7 +27,7 @@ import { KID_ID } from './constants'
 import { captureMilestone } from './milestones'
 import { layoffCovering } from './medical'
 import { eventById, refundPractice, vacationForWeek } from './bookings'
-import { withdrawEvent } from './entries'
+import { releaseEntry } from './entries'
 import { retireKnock } from './knockHistory'
 import type { WorldState } from '../world'
 
@@ -258,7 +258,7 @@ export function rollInjury(world: WorldState): void {
   for (const id of [...world.entries]) {
     const e = eventById(world, id)
     if (e && layoffCovering(world, e.week) !== null && world.week <= e.deadlineWeek) {
-      withdrawEvent(world, id)
+      releaseEntry(world, id)
     }
   }
 

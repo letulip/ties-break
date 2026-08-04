@@ -22,8 +22,17 @@ withDefaults(
     photoStyle?: Record<string, string> | undefined
     /** A strip of tape across the top edge, for a polaroid that is stuck rather than dropped. */
     tape?: boolean
+    /** WHAT SOMEBODY WROTE UNDER THE PICTURE, on the lip, in the app's handwriting face.
+     *
+     *  ⚠ THE OWNER ASKED FOR IT HERE AND NOT BESIDE THE PHOTO (05.08, the album): «лучше прямо на
+     *  карточке полароида нашим рукописным шрифтом писать, мне кажется это будет еще аутентичнее».
+     *  The fat bottom lip is the reason this component exists at all - it is the strip a person
+     *  actually writes on before putting a photograph in an album - so the caption is a SLOT on the
+     *  object rather than a redesign of it. Absent by default: every shipped caller passes nothing
+     *  and keeps the 12px lip it has today. */
+    caption?: string
   }>(),
-  { alt: '', tilt: 0, photoHeight: 52, photoStyle: undefined, tape: false },
+  { alt: '', tilt: 0, photoHeight: 52, photoStyle: undefined, tape: false, caption: '' },
 )
 </script>
 
@@ -35,6 +44,7 @@ withDefaults(
   >
     <span v-if="tape" class="tb-polaroid-tape" aria-hidden="true"></span>
     <img :src="src" :alt="alt" :style="{ height: `${photoHeight}px`, ...photoStyle }" />
+    <p v-if="caption" class="tb-polaroid-caption">{{ caption }}</p>
   </div>
 </template>
 
@@ -56,6 +66,24 @@ withDefaults(
    (`position: absolute` on the card corner) and must not have that quietly overwritten. */
 .tb-polaroid--taped {
   position: relative;
+}
+
+/* THE LIP, WRITTEN ON. Caveat, a size up on the body face (the house rule at style.css:345 - the
+   handwriting face needs 3-4px more than the sans to read at the same weight), inked in the paper's
+   own dark rather than the app's text colour, because this surface is the only LIGHT one in the app
+   and the app's ink is mixed for the dark ones. Centred, because that is where a person writes.
+
+   The lip grows to hold it: 12px of paper with nothing on it, and room for a line when there is
+   one. Two lines maximum - a caption is somebody's handwriting, not a paragraph - and it wraps
+   rather than truncating, because a clipped word in handwriting reads as a rendering fault. */
+.tb-polaroid-caption {
+  margin: 8px 4px 0;
+  font-family: var(--font-hand);
+  font-size: 17px;
+  line-height: 1.15;
+  text-align: center;
+  color: var(--paper-ink);
+  overflow-wrap: anywhere;
 }
 
 /* The design's own tape: a translucent warm strip laid over the top edge, never a drawn rectangle. */

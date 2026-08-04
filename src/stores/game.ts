@@ -3,6 +3,7 @@ import { request, WorkerRestartError } from '../worker/client'
 import {
   DEFAULT_PROFILE,
   type CareerMeta,
+  type ForkAnswer,
   type KitGrade,
   type KitLine,
   type KnockChoice,
@@ -240,6 +241,34 @@ export const useGameStore = defineStore('game', {
     async enterEvent(eventId: string) {
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'enterEvent', eventId, baseRevision: this.revision }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    // W2-ENDINGS. Three answers to three questions the engine asked. `startFreshCareer` is not one
+    // of them: the hand-off's «raise another» is a UI transition into onboarding, not a command, and
+    // that is the whole point of §5.6 - nothing mechanical carries over, so there is nothing for the
+    // worker to carry.
+    async answerFork(answer: ForkAnswer) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'answerFork', answer, baseRevision: this.revision }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    async answerRetirement(retire: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'answerRetirement', retire, baseRevision: this.revision }))
+        if (res.type === 'snapshot') this.snapshot = res.snapshot
+        await this.refreshSlots()
+      })
+    },
+    /** «Four years later» – the one command that CLEARS an ending. It ticks 208 weeks inside a
+     *  single worker call, so it is the slowest command in the game by an order of magnitude; the
+     *  store's own `busy` flag is what keeps the button from being pressed twice. */
+    async resumeFromCollege() {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'resumeFromCollege', baseRevision: this.revision }))
         if (res.type === 'snapshot') this.snapshot = res.snapshot
         await this.refreshSlots()
       })

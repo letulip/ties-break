@@ -141,8 +141,8 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio }
-import { enterEvent, withdrawEvent, cancelEntry } from './world/entries'
-export { enterEvent, withdrawEvent, cancelEntry }
+import { enterEvent, withdrawEvent, releaseEntry, cancelEntry } from './world/entries'
+export { enterEvent, withdrawEvent, releaseEntry, cancelEntry }
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
@@ -1427,8 +1427,14 @@ function finalizeTournament(world: WorldState): void {
 /** Reveal ONE more kid match: emit its News `match` event, bump `revealedRounds`, and finalize the
  *  run once the kid's last match (elimination or the final) has been shown. Idempotent when done. */
 export function revealTournamentRound(world: WorldState): void {
-  // ⚠ W2-ENDINGS: the engine re-validates every command; the worker is not the gate.
-  guardNotEnded(world)
+  // ⚠ W2-ENDINGS – DELIBERATELY NOT `guardNotEnded`, AND THE REASON IS A MEASURED BUG. The reveal
+  // trio completes an action that STARTED before the ending: `resolveEndings` runs at the end of
+  // `finalizeTournament`, while `pendingTournament` is still set and waiting to be closed, so a
+  // career that goes bankrupt on the very week it plays a tournament latches with the reveal still
+  // open. Guard these and that career can never clear `pendingTournament` – which is the one piece
+  // of state `advanceWeeks` refuses to tick past. The mutating commands that are DECISIONS (entries,
+  // bookings, hires, offers, kit) are the ones the guard belongs on; finishing a week already in
+  // flight is not a decision. Found by tests/travel-home.test.ts, which plays a real career.
   const p = world.pendingTournament
   if (!p || p.finished) return
   const event = eventById(world, p.eventId)
@@ -1447,8 +1453,14 @@ export function revealTournamentRound(world: WorldState): void {
 
 /** Reveal every remaining round at once, then finalize – the "Skip tournament" path to the finale. */
 export function skipTournament(world: WorldState): void {
-  // ⚠ W2-ENDINGS: the engine re-validates every command; the worker is not the gate.
-  guardNotEnded(world)
+  // ⚠ W2-ENDINGS – DELIBERATELY NOT `guardNotEnded`, AND THE REASON IS A MEASURED BUG. The reveal
+  // trio completes an action that STARTED before the ending: `resolveEndings` runs at the end of
+  // `finalizeTournament`, while `pendingTournament` is still set and waiting to be closed, so a
+  // career that goes bankrupt on the very week it plays a tournament latches with the reveal still
+  // open. Guard these and that career can never clear `pendingTournament` – which is the one piece
+  // of state `advanceWeeks` refuses to tick past. The mutating commands that are DECISIONS (entries,
+  // bookings, hires, offers, kit) are the ones the guard belongs on; finishing a week already in
+  // flight is not a decision. Found by tests/travel-home.test.ts, which plays a real career.
   const p = world.pendingTournament
   if (!p || p.finished) return
   const event = eventById(world, p.eventId)
@@ -1464,8 +1476,14 @@ export function skipTournament(world: WorldState): void {
 
 /** Dismiss a finished reveal (the finale's "Continue"): clear the pending state so the week closes. */
 export function closeTournament(world: WorldState): void {
-  // ⚠ W2-ENDINGS: the engine re-validates every command; the worker is not the gate.
-  guardNotEnded(world)
+  // ⚠ W2-ENDINGS – DELIBERATELY NOT `guardNotEnded`, AND THE REASON IS A MEASURED BUG. The reveal
+  // trio completes an action that STARTED before the ending: `resolveEndings` runs at the end of
+  // `finalizeTournament`, while `pendingTournament` is still set and waiting to be closed, so a
+  // career that goes bankrupt on the very week it plays a tournament latches with the reveal still
+  // open. Guard these and that career can never clear `pendingTournament` – which is the one piece
+  // of state `advanceWeeks` refuses to tick past. The mutating commands that are DECISIONS (entries,
+  // bookings, hires, offers, kit) are the ones the guard belongs on; finishing a week already in
+  // flight is not a decision. Found by tests/travel-home.test.ts, which plays a real career.
   world.pendingTournament = null
 }
 
@@ -1870,7 +1888,7 @@ function releaseOutgrownEntries(world: WorldState): void {
     // the same consequence, or a W15 entry taken the week before W75 opened would sit in her
     // schedule as the one card the gate refuses to explain.
     if (!outgrewTier(event.tier, points) && !tierOutgrown(world, event.tier)) continue
-    withdrawEvent(world, id)
+    releaseEntry(world, id)
     addEvent(world, {
       week: world.week,
       type: 'info',
