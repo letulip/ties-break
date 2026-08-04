@@ -53,6 +53,19 @@ first cell is a backticked path starting with `public/`. Keep the column order.
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-airport.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-airport.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-bus.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-bus.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-plane.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-plane.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
+| `public/images/fields/w35-clay-1.webp` | `byte-copy` | `public/images/fields/w15-clay-2.webp` | adult venues (04.08) | W35 ships no clay court of its own – the file is the W15 spare under another name |
+| `public/images/fields/w35-grass-1.webp` | `byte-copy` | `public/images/fields/w15-grass-2.webp` | adult venues (04.08) | W35 ships no grass court of its own – the file is the W15 spare under another name |
+| `public/images/fields/w35-hard-1.webp` | `byte-copy` | `public/images/fields/w15-hard-2.webp` | adult venues (04.08) | W35 ships no hard court of its own – the file is the W15 spare under another name |
+| `public/images/fields/w35-venue-1.webp` | `byte-copy` | `public/images/fields/w15-venue-3.webp` | adult venues (04.08) | W35 ships no establishing shot of its own – the file is the W15 spare under another name |
+| `public/images/fields/w75-hard-1.webp` | `absent` | `public/images/fields/w100-hard-1.webp` | adult venues (04.08) | in progress – `ART_TIER_BORROWS.w75` points the rung at W100; drop the entry when the art lands |
+| `public/images/fields/w75-clay-1.webp` | `absent` | `public/images/fields/w100-clay-1.webp` | adult venues (04.08) | in progress – `ART_TIER_BORROWS.w75` points the rung at W100; drop the entry when the art lands |
+| `public/images/fields/w75-grass-1.webp` | `absent` | `public/images/fields/w100-grass-1.webp` | adult venues (04.08) | in progress – `ART_TIER_BORROWS.w75` points the rung at W100; drop the entry when the art lands |
+| `public/images/fields/j60-hard-1.webp` | `absent` | `public/images/fields/j30-hard-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
+| `public/images/fields/j60-clay-1.webp` | `absent` | `public/images/fields/j30-clay-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
+| `public/images/fields/j60-grass-1.webp` | `absent` | `public/images/fields/j30-grass-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j60` points the rung at J30 |
+| `public/images/fields/j300-hard-1.webp` | `absent` | `public/images/fields/j30-hard-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
+| `public/images/fields/j300-clay-1.webp` | `absent` | `public/images/fields/j30-clay-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
+| `public/images/fields/j300-grass-1.webp` | `absent` | `public/images/fields/j30-grass-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
 
 ### What the two kinds mean
 
@@ -69,11 +82,35 @@ first cell is a backticked path starting with `public/`. Keep the column order.
 Real art asks, listed so they are visible, but with no single expected filename for a guard to watch.
 They are not in the table above and the test does not enforce them.
 
-- **Venue art stops at `j30`.** `public/images/fields/` holds 20 masters over `local` / `regional` /
-  `national` / `j30`. `src/art/venues.ts` maps `j60` and `j300` onto the `j30` set explicitly ("a
-  stand-in, not a compromise"), and every ADULT rung – `w15` … `slam`, ten of the sixteen – falls off
-  the end of `ART_TIER_ORDER` entirely and lands on the generic establishing-shot fallback. A WTA
-  1000 card is currently a junior-tour photograph. Biggest open art ask in the repo.
+- ~~**Venue art stops at `j30`.**~~ CLOSED 04.08 – the owner generated 42 adult masters and they are
+  registered in `FIELD_ART`. `ART_TIER_ORDER` is the full 16-rung ladder now, and every adult rung
+  from `w15` to `slam` paints its own three surfaces, so no adult card falls through to a junior
+  photograph. What is LEFT of the row is ONE rung and it has moved into the table above as `absent`
+  rows: `w75` is still being drawn («в процессе, так же как и трофеи»), and until it lands
+  `ART_TIER_BORROWS` points it at its nearest painted neighbour, `w100`. `w50` was the second such
+  rung for about an hour – the owner delivered its five masters at 19:01 the same evening, so its
+  rows came straight back out. `j60` / `j300` were never painted either and are in the table for the
+  same reason; that borrow predates this wave and is unchanged.
+- **`wta1000` grass is art the simulation cannot ask for.** `wta1000-grass-1` and `wta1000-grass-2`
+  ship and nothing will ever show them. The rung is ANCHORED – its weeks are named
+  (`anchorWeeks: [5, 8, 12, 18, 31, 37, 41, 45]` in `season/calendar.ts`) and an anchored event takes
+  its block's dominant surface – and none of those eight weeks is inside the grass window (25–30).
+  So the calendar never schedules a WTA 1000 on grass. Not fixable in the art layer and not a
+  placeholder: either the calendar gains a grass anchor for that rung, or the two masters are a
+  future-proofing spare. `tests/art/venue-rotation.test.ts` pins the pair by name, so the day a
+  grass anchor appears the list goes red and says the art is live.
+- **Six (tier, surface) pairs have a single picture, so two of them in a row must repeat.**
+  `local/clay`, `local/grass`, `regional/clay`, `regional/grass`, `slam/clay`, `slam/grass`. The
+  anti-repeat rotation (`docs/specs/venue-rotation.md`) needs two frames to rotate between, and
+  `local` / `regional` ship no establishing shot at all to fall back on. The cure is a second master
+  on those courts, not code. Pinned by name in `tests/art/venue-rotation.test.ts`, so the exemption
+  cannot quietly widen.
+- **W15 and W35 are the same four photographs.** Registered above as `byte-copy` rows, and worth
+  saying in prose because the consequence is visible: the owner's unnumbered `w15-clay.webp` /
+  `-grass` / `-hard` / `-venue` spares (renamed `w15-clay-2` etc. so the rotation can use them) are
+  byte-identical to the whole W35 set. Inside one rung nothing repeats – W15's ring holds five
+  distinct pictures – but a W15 card and a W35 card CAN show the same frame. Four real W35 masters
+  clear it. (This was three rungs until W50 got its own art on the evening of 04.08.)
 - ~~**No `regional-grass`.**~~ CLOSED 04.08 – the owner shipped `regional-grass-1.webp` and it is
   registered in `FIELD_ART`. Every tier `local`..`j30` now paints all the surfaces it plays on; the
   fallback ladder's surface-first narrowing stands, it just no longer has a live gap to prove it.

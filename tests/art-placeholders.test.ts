@@ -32,6 +32,7 @@ import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
 import { SPONSOR_TIERS, sponsorArtKey } from '../src/engine/offers'
+import { ART_TIER_BORROWS } from '../src/art/venues'
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
 const REGISTRY = 'docs/art-placeholders.md'
@@ -210,6 +211,32 @@ describe('placeholder-art registry – a new stand-in cannot ship silently', () 
       expect(
         `${IMAGES}/sponsors/${sponsorArtKey(tier as (typeof SPONSOR_TIERS)[number])}.webp`,
         `${REGISTRY}:${r.line} – names ${r.counterpart}, but sponsorArtKey('${tier}') borrows something else.`,
+      ).toBe(r.counterpart)
+    }
+  })
+
+  it('ART_TIER_BORROWS borrows exactly the venue rungs the registry lists as absent', () => {
+    // The same shape as the sponsor case above, for the second borrowing mechanism in the app. A
+    // rung with no venue art of its own shows a neighbour's courts (`src/art/venues.ts`
+    // ART_TIER_BORROWS), and there is no file to hash, so the "cannot ship silently" direction has
+    // to be a code check: the set of rungs that borrow must equal the set of `fields/` rows here.
+    // A NEW borrowing rung fails until somebody writes down what it borrows and why; a rung whose
+    // real art lands fails on the `absent` direction above, which names the rows to delete.
+    const dir = `${IMAGES}/fields/`
+    const rows = absent.filter((r) => r.asset.startsWith(dir))
+    const tierOf = (asset: string) => asset.slice(dir.length).split('-')[0]
+    expect(
+      [...new Set(rows.map((r) => tierOf(r.asset)))].sort(),
+      `ART_TIER_BORROWS and ${REGISTRY} disagree about which rungs borrow venue art. Add rows for a ` +
+        `new borrowing rung, or delete the rows for one whose own art has shipped.`,
+    ).toEqual(Object.keys(ART_TIER_BORROWS).sort())
+    // ...and each row names the rung the code ACTUALLY borrows from, on the row's own surface, so a
+    // row cannot claim the wrong neighbour and stay green.
+    for (const r of rows) {
+      const [tier, surface] = r.asset.slice(dir.length, -'.webp'.length).split('-')
+      expect(
+        `${dir}${ART_TIER_BORROWS[tier as keyof typeof ART_TIER_BORROWS]}-${surface}-1.webp`,
+        `${REGISTRY}:${r.line} – names ${r.counterpart}, but ART_TIER_BORROWS.${tier} borrows something else.`,
       ).toBe(r.counterpart)
     }
   })

@@ -19,7 +19,8 @@ import { GREETINGS, conditionBandOf, greetingFor, type Greeting } from '../src/e
 import { createWorld, financeSeries, tickWeek, toSnapshot } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { COACH_BY_BACKGROUND, coachUrlFor, preloadCoachArt, resetPreloadCache, warmedCount } from '../src/art/preload'
-import { FIELD_ART, fieldUrl, venueArtStem, venueCandidates } from '../src/art/venues'
+import { ART_TIER_BORROWS, ART_TIER_ORDER, FIELD_ART, fieldUrl, venueArtStem, venueCandidates, venueVariants } from '../src/art/venues'
+import { TIER_LADDER } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { Surface } from '../src/engine/match/types'
 import type { DiaryFacts, FamilyBackground, FinanceWeek } from '../src/shared/protocol'
@@ -372,7 +373,12 @@ describe('the coach portraits', () => {
 // 2b. The venue art
 // ===========================================================================
 describe('the venue paintings', () => {
-  const TIERS: TierId[] = ['local', 'regional', 'national', 'j30', 'j60', 'j300']
+  // ⚠ RE-AIMED 04.08 (feat/adult-venue-art): this list was the six rungs that had art. Ten adult
+  // rungs were missing from it for the same reason they were missing from `ART_TIER_ORDER` – which
+  // is exactly why backlog #86 could sit open with a WTA 1000 card showing a junior photograph and
+  // every test below green. It is `TIER_LADDER` now, so the exhaustive loops really are exhaustive
+  // and a seventeenth rung joins them automatically.
+  const TIERS: TierId[] = [...TIER_LADDER]
   const SURFACES: Surface[] = ['hard', 'clay', 'grass']
 
   it('the stem list and the files on disk agree in BOTH directions', () => {
@@ -412,9 +418,12 @@ describe('the venue paintings', () => {
     // demonstration to stand on. The rule itself is NOT weakened: the exhaustive loop above is the
     // invariant (no candidate at any tier/surface may name another surface) and it is untouched;
     // only the worked example moved, from the borrow to the court that replaced it.
+    // ⚠ WIDENED 04.08 to the ROTATION RING as well as the ladder. `venueVariants` is what the card
+    // actually renders now, so a rule that only inspected `venueCandidates` would have stopped
+    // covering the thing it is about the moment the ring appeared.
     for (const tier of TIERS) {
       for (const surface of SURFACES) {
-        for (const stem of venueCandidates(tier, surface)) {
+        for (const stem of [...venueCandidates(tier, surface), ...venueVariants(tier, surface)]) {
           const other = SURFACES.filter((s) => s !== surface)
           for (const wrong of other) {
             expect(stem, `${tier}/${surface} may not show a ${wrong} court`).not.toContain(`-${wrong}-`)
@@ -434,8 +443,54 @@ describe('the venue paintings', () => {
 
   it('the establishing shots are surface-neutral by construction', () => {
     // `-venue-` frames have no playable court in frame, which is what licenses them as a fallback.
+    // ⚠ RE-AIMED 04.08: the list grew with the adult drop. Still an exact list rather than a count –
+    // a new `-venue-` stem is a new SURFACE-NEUTRAL claim about a picture, and the claim is the
+    // thing that needs a human to have looked at the frame.
     const neutral = FIELD_ART.filter((s) => s.includes('-venue-'))
-    expect(neutral).toEqual(['national-venue-1', 'national-venue-2', 'j30-venue-1'])
+    expect(neutral).toEqual([
+      'national-venue-1',
+      'national-venue-2',
+      'j30-venue-1',
+      'w15-venue-1',
+      'w15-venue-2',
+      'w15-venue-3',
+      'w35-venue-1',
+      'w50-venue-1',
+      'w50-venue-2',
+      'w100-venue-1',
+      'wta125-venue-1',
+      'wta250-venue-1',
+      'wta250-venue-2',
+      'wta500-venue-1',
+      'wta500-venue-2',
+    ])
+  })
+
+  it('ART_TIER_ORDER is the whole engine ladder – a rung cannot fall off the end again', () => {
+    // Backlog #86's actual mechanism, pinned so it cannot come back. `venueCandidates` walks DOWN
+    // this array; a tier missing from it gets `indexOf === -1`, the walk never runs, and the card
+    // lands on the generic establishing shot. That is what made a WTA 1000 card a junior photograph
+    // for a month, silently, with every art test green. Equality with TIER_LADDER means the
+    // SEVENTEENTH rung joins the art ladder or fails here.
+    expect([...ART_TIER_ORDER]).toEqual([...TIER_LADDER])
+  })
+
+  it('the adult ladder paints its own courts – backlog #86 is closed except for w50/w75', () => {
+    // The defect this branch fixes, stated as the thing that was false: every adult rung's exact
+    // (tier, surface) art exists, so no adult card falls through to a junior photograph. Only
+    // w75 is the one the owner is still drawing, and it borrows BY NAME (ART_TIER_BORROWS) rather
+    // than by falling off the end of the ladder.
+    const ADULT: TierId[] = ['w15', 'w35', 'w50', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam']
+    for (const tier of ADULT) {
+      for (const surface of SURFACES) {
+        const pool = venueCandidates(tier, surface)
+        for (const stem of pool) {
+          expect(stem, `${tier}/${surface} shows ${stem} – not its own art`).toContain(`${tier}-${surface}-`)
+        }
+      }
+    }
+    // ...and the two that are still borrowing say so out loud.
+    expect(ART_TIER_BORROWS).toEqual({ j60: 'j30', j300: 'j30', w75: 'w100' })
   })
 
   it('the second j30 wave widened the pools it was meant to widen, and nothing else', () => {
@@ -459,7 +514,18 @@ describe('the venue paintings', () => {
   })
 
   it('draws on its own sub-stream – no MAIN-stream key, no capture can move', () => {
-    expect(read('../src/art/venues.ts')).toContain('`${seed}:venue:${eventId}`')
+    // ⚠ RE-AIMED 04.08 and made STRONGER, not weaker. It used to pin one literal key,
+    // `${seed}:venue:${eventId}`, which stopped existing when the per-event coin flip became a
+    // rotation offset keyed by the rung. Pinning the replacement literal would have re-created a
+    // string that breaks on the next legitimate edit and proves nothing about the STREAM, so the
+    // claim is now the actual invariant: every `rngFromSeed` in this module is keyed `seed:venue`,
+    // and no MAIN-stream handle is reachable from it at all.
+    const src = read('../src/art/venues.ts')
+    const keys = [...src.matchAll(/rngFromSeed\(([^)]*)\)/g)].map((m) => m[1])
+    expect(keys.length).toBeGreaterThan(0)
+    for (const key of keys) expect(key).toContain('${seed}:venue')
+    expect(src).not.toContain('rngMain')
+    expect(src).not.toContain('Math.random')
   })
 })
 
