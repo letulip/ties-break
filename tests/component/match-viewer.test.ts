@@ -212,7 +212,7 @@ describe('the point score under the court', () => {
 })
 
 // =================================================================================================
-// THE PLAYBACK CLOCK, HAND-DRIVEN — which is what makes everything below testable at all.
+// THE PLAYBACK CLOCK, HAND-DRIVEN – which is what makes everything below testable at all.
 //
 // ⚠ WHY THIS EXISTS. Every test above observes the component at REST: mounted, or one click later.
 // The two bugs of 04.08 both live in the walk – the score readout drifting from the match, and a
@@ -443,8 +443,8 @@ describe('the point counter walks with the match, not with the timeline', () => 
 // нажатие, это жутко раздражает».
 //
 // The mode pill's only wiring was `resetPlayback`, a fresh-run routine. It now rebuilds the timeline
-// and RESUMES at the first point she has not seen – see `retimeForMode`. 'skip' is excluded on
-// purpose and the two tests at the bottom of this block are what say so.
+// and RESUMES from the point on court – see `retimeForMode`. 'skip' is excluded on purpose and the
+// two tests at the bottom of this block are what say so.
 // =================================================================================================
 describe('changing the view mode mid-match does not start the match over', () => {
   async function clickMode(w: ReturnType<typeof mountViewer>, label: string) {

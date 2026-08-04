@@ -763,8 +763,8 @@ function firstEventAfterPoint(events: TimelineEvent[], afterPoint: number): numb
  *
  * The seek is by POINT, not by clock time, because the two timelines do not share a time axis at all
  * (the same match is 580s in 'full' and 184s in 'key'): playback resumes at the first event of the
- * new timeline belonging to a point she has not seen yet. So key -> full continues with the very next
- * point of the match, and full -> key continues at the next point the new mode considers worth
+ * new timeline for the point she is watching or anything after it. So key -> full picks the match up
+ * at the point currently on court, and full -> key at the next point the new mode thinks is worth
  * showing. `displayedPointIndex` is untouched by design - it is a fact about the MATCH, not about the
  * timeline, so the score, the set cells and the commentary log all carry across the switch unchanged.
  *
