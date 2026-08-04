@@ -218,10 +218,7 @@ describe('the news and letter watermarks', () => {
     expect(newestLetterId(null)).toBe(null)
     const snapshot = snapshotAfter(4)
     expect(newestLetterId({ ...snapshot, offers: [] })).toBe(null)
-    const offers = [
-      { ...({} as never), id: 'a' },
-      { ...({} as never), id: 'b' },
-    ] as unknown as Snapshot['offers']
+    const offers = [{ id: 'a' }, { id: 'b' }] as unknown as Snapshot['offers']
     expect(newestLetterId({ ...snapshot, offers })).toBe('b')
   })
 })
@@ -346,8 +343,12 @@ describe('HomeScreen - the season strip is the window plus one (item 7)', () => 
   })
 
   it('with no engine verdict at all the whole ladder is drawn - the safe direction', () => {
+    // ⚠ `tierOpen` is REQUIRED on the live Snapshot, so this state is not reachable from the current
+    // protocol - it is the OLD-FIXTURE case `feedContext` documents ("absent means hide nothing"),
+    // and the cast is how a test reaches a shape the type system has since closed off. The claim is
+    // the one that matters for a window read from the engine: with no verdict, hide nothing.
     const snapshot = snapshotAfter(30)
-    withSnapshot({ ...snapshot, tierOpen: undefined })
+    withSnapshot({ ...snapshot, tierOpen: undefined } as unknown as Snapshot)
     const wrapper = mount(HomeScreen, mountOpts)
     expect(wrapper.findAll('.season-strip .tier-chip:not(.strip-more)').length).toBe(TIER_LADDER.length)
     expect(wrapper.findAll('.season-strip .strip-more').length).toBe(0)
