@@ -232,8 +232,11 @@ turn, not a feed you flick. Each page carries four things and no fifth:
    AGE BAND × the WEEK'S EMOTION, so a page shows her as she was that week and feeling what she
    felt. Nothing new is drawn: a fourteen-year-old's first title and a thirty-year-old's last match
    are different pictures because the career made them different.
-2. **The week, in her own hand.** `PaperNote` with one line in the diary's voice — the shipped
-   phrase pools already write in it.
+2. **The week, in her own hand, ON THE CARD** (owner, 05.08: «лучше прямо на карточке полароида
+   нашим рукописным шрифтом писать, мне кажется это будет еще аутентичнее»). Not a separate note
+   beside the photo — the caption belongs on the polaroid's own bottom lip, in the app's
+   handwriting face, the way somebody writes under a picture before putting it in the album. The
+   `Polaroid` component already owns that lip; it needs a caption slot, not a redesign.
 3. **One fact.** The cheque, the rank, the opponent, the layoff. Whatever that week's milestone
    carries in `Milestone` (`tier`, `rank`, `kind`, `seasonIndex`) — never a computed summary.
 4. **Why this week is in the album.** One short line, visible, always: *"Her first title."* *"The
@@ -260,10 +263,26 @@ that a player could check by hand:
 | 6 | **The turn** | the week her cumulative prize money first exceeded her cumulative costs — the break-even the whole game is about | the page says it never happened, which is true of most careers |
 | 7 | **The last week** | the ending itself, whichever of the six it was | never empty |
 
-⚠ SLOTS 3, 5 AND 6 MUST HAVE AN EMPTY FACE. A career that never earned a cheque, was never hurt,
-or never broke even is the COMMON career, not a broken one — and an album that quietly drops those
-pages would tell the successful story to everybody. The empty page is the honest one, and it says
-so plainly without consolation.
+⚠ **WHICH SLOTS CAN ACTUALLY COME UP EMPTY — CORRECTED 05.08, because the owner questioned it and
+he was right to.** The first draft demanded an empty face on three slots. Checked, one of them was
+wrong and one is unmeasured:
+
+* **SLOT 3 (the first cheque) — CERTAIN, and it is the important one.** No junior rung pays prize
+  money at all; that is the design («juniors pay to play» — the whole valley-of-death thesis). So
+  every career that stops at nineteen without turning professional has NEVER been paid, and that is
+  ending #1 — the one the owner insisted must be a real ending rather than a failure. College
+  delays it four years further. This page must exist and must be able to say so.
+* **SLOT 5 (the worst week) — I WAS WRONG; drop the empty face.** Season injury prevalence is
+  ~51% after the 04.08 calibration, so over five or more seasons virtually every career is hurt at
+  least once — and the slot's fallback (the season her rank fell furthest) fills even for the
+  career that never was. It is never empty in practice. Defensive noise; removed.
+* **SLOT 6 (the turn) — UNMEASURED, so keep the empty face and MEASURE BEFORE WRITING THE COPY.**
+  The owner's own career crossed at seventeen or eighteen, which is real evidence that it happens.
+  Against that, the research anchor says break-even is around the world's 150th player and about
+  251 women a year clear it. Our ladder's shipped ceiling is roughly real #45, so the question is
+  genuinely open. ⚠ The endings wave must run the crossing over the bench presets and report the
+  rate before the empty page's wording is written — if it turns out most careers cross, the page is
+  a rarity rather than the common case, and the copy has to know which it is.
 
 ### 9.3 Underneath
 
