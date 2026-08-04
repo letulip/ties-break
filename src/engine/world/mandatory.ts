@@ -308,6 +308,15 @@ export function settleMandatoryMisses(world: WorldState): void {
     if (!mandatoryBinds(world, event)) continue
     // The deadline has to have passed, or she has not missed anything yet.
     if (week <= event.deadlineWeek) continue
+    // ⚠⚠ AND SHE MUST NOT BE CHARGED TWICE FOR ONE ABSENCE, which is the seam a LATE WITHDRAWAL
+    // opens. `cancelEntry` charges 3 points the moment she pulls out of a closed list; by the
+    // event's own week she is no longer in `world.entries`, so this loop would see an un-entered
+    // mandatory and add a 2-point skip on top - two rules for one week she was not there. The tour
+    // charges for the WORSE of the two, and it has already charged it, so any row already carrying
+    // this event's id ends the matter. `recordPenalty` is idempotent per (week, reason, eventId);
+    // this is the same guarantee across DIFFERENT reasons, and it is the one the player would
+    // notice. Caught in-wave rather than by a letter arriving twice.
+    if ((world.penalties ?? []).some((p) => p.eventId === event.id)) continue
     const charged = chargeMandatoryPenalty(world, week, ECONOMY.mandatory.skipPoints, 'skip', event)
     if (charged === 0) continue
     world.results.push({ playerId: KID_ID, week, points: 0, tier: event.tier, mandatoryMiss: true })
