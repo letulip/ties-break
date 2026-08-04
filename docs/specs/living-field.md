@@ -522,6 +522,12 @@ which is §2.2's pro contour and should arrive *with* aging and retirement, not 
 the chosen shape costs is fidelity: **a pro's canonical results change nothing about her.** She
 cannot climb by winning a W100, cannot fall out by losing her opener, and banks no fatigue.
 
+**And it made the tick FASTER, which was not the aim** — 3 worlds × 208 timed weeks after a season
+of warm-up, both arms on this branch: **2.34 → 1.65 ms/week (−29%)**. A bigger candidate pool costs
+one draw per extra candidate on an event sub-stream; not writing ~30 rows per W event costs the
+ledger nothing every week thereafter, and `rivalConditions` / `computeRanking` / `pruneResults` all
+fold that smaller ledger on every single tick. The saving is larger than the spend.
+
 **RNG.** Zero MAIN draws, exactly as before — the frozen capture (41550 / `e6b0c709`) re-derives
 byte-for-byte, asserted by five suites and by both arms of every input-independence A/B in
 `planner.test.ts` P1. What moved is the COMPOSITION of each W event's own `seed:aitour:<id>`

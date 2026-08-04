@@ -281,6 +281,36 @@ describe('policy ordering (the load-management axis)', () => {
     // the defect sat in both arms of every A/B this file ran; the ABSOLUTE ones about how tired the
     // opposition was do not. Flagged for the owner rather than acted on: re-deriving a year of
     // anchors is a decision about what the benches are for. ***
-    expect(ratio, 'the >= 2.5 C3 corridor is currently LOST – see the note above').toBeLessThan(2.5)
+    //
+    // *** ✅✅ AND THE REST OF THE WAY BACK: 2.032 -> 2.538 (04.08, W3-FIELD3). THE CORRIDOR IS
+    // RECOVERED AND THE INVERTED PIN IS RETIRED, which is precisely what the note four paragraphs up
+    // instructs ("this line FAILS the day the field gets its condition back, which is exactly when
+    // somebody should be here restoring `> 2.5` and deleting this assertion").
+    //
+    // NO KNOB MOVED, AGAIN. The W-track canonical brackets now draw from LIVE cohort ∪ 364 derived
+    // professionals, and a professional leaves no ledger row - so the ~98 W events a season stop
+    // landing on the 199 juniors altogether. This block's own diagnosis, written before the remedy
+    // existed, names the term exactly: "THE FIELD SHE MEETS IS EXHAUSTED … `conditionMatchFactor`
+    // makes a tired opponent weaker, so the careful parent - the one policy that arrives FRESH -
+    // wins rounds she used to lose, goes deeper, and plays more matches per entry." That term is now
+    // gone, and the swing is once more the CAREFUL parent's, exactly as every previous re-read
+    // predicted it would be. Measured in the sibling guard (tests/rivals.test.ts C2, same
+    // methodology as every re-pin there): field median condition 28-36 -> 95-100, W result rows per
+    // rival 6.79 -> 0.00.
+    //
+    // ⚠ RESTORED AT THE CORRIDOR'S FLOOR, NOT AT TODAY'S NUMBER - the discipline every note in this
+    // block insists on. 2.538 sits just inside 2.5, and the needle's own history is ±0.15 around its
+    // anchor on small pooled counts, so this WILL be the tightest bound in the file for a while. That
+    // is the correct place for it: the floor is the owner's C3 corridor, and if a later wave pushes
+    // the ratio back under it, the right response is to re-read this block rather than to lower the
+    // floor. The ">= 3" anchor above remains a separate, looser claim and is untouched.
+    //
+    // ⚠ AND THE SUSPECT-ANCHORS CAVEAT ABOVE NOW CUTS BOTH WAYS: every absolute in this block was
+    // measured against a field that was an over-worked third and an idle third, and the field is now
+    // neither - it is uniformly fresh, because the professional population absorbs the whole W
+    // calendar and the juniors carry only their own six rungs. living-field.md §8.4 reports that as
+    // an OVERSHOOT (LIVE W rows are exactly zero, a closed loop with no AI on-ramp), so if the owner
+    // gives the juniors a route back into the professional draws, this needle moves again. ***
+    expect(ratio, 'the C3 corridor floor, restored - see the note above').toBeGreaterThan(2.5)
   })
 })
