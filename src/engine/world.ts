@@ -204,8 +204,8 @@ export { isExamWeek, isBlackoutWeek } from './season/calendar'
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
-import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors, type ProDoors } from './world/ladder'
-export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors }
+import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors, type ProDoors } from './world/ladder'
+export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors }
 import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'

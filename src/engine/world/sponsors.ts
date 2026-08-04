@@ -17,7 +17,7 @@ import { activeKitDeal, dealUnderReview, endDealWithSeason, kitTravelShare, rais
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type KitEndReason, type KitOfferTerms, type Offer } from '../../shared/protocol'
 import { addEvent } from './ledger'
-import { kidPoints } from './ladder'
+import { kidPoints, tableSize } from './ladder'
 import { KID_ID } from './constants'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
@@ -140,7 +140,7 @@ export function reviewSponsors(world: WorldState): void {
   // Both cached ranks, with the same fallback rankIn uses: a career that has never held a point in a
   // table sits below the whole field rather than at the top of an empty one. `itfRanked` is the
   // guard that stops an empty table reading as a standing at all - see `SponsorStanding`.
-  const nationalRank = world.kidRankDomestic ?? world.cohort.length + 1
+  const nationalRank = world.kidRankDomestic ?? tableSize(world, 'domestic')
   const standing = {
     nationalRank,
     itfRank: world.kidRank,
@@ -148,7 +148,10 @@ export function reviewSponsors(world: WorldState): void {
     // The third table, on the same terms as the other two (02.08). `wtaRanked` uses the LIVE
     // window rather than the never-pruned mark on purpose: a sponsor asks what she is worth NOW,
     // and a professional who has not scored in a year is not holding a professional standing.
-    wtaRank: world.kidRankWta ?? world.cohort.length + 1,
+    // ⚠ AND THE W TABLE'S "below the whole field" IS 564, NOT 200 (`tableSize`): it carries 364
+    // derived professionals as well as the cohort, so the old sentinel valued an UNRANKED girl as
+    // world #200 – a top-200 professional's brand, on no ranking at all.
+    wtaRank: world.kidRankWta ?? tableSize(world, 'wta'),
     wtaRanked: kidPoints(world, 'wta') > 0,
   }
 
