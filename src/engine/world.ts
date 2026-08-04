@@ -2406,10 +2406,33 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     way to keep it that way. ZERO main-stream draws – `growWeek` reads `seed:growth:<week>`,
   //     its own stream – so the frozen capture cannot move.
   //
-  //     The matches that feed it are THIS week's, counted off the ledger she just wrote, so a
-  //     tournament week teaches her and a training week does not pretend to.
+  //     The matches that feed it are the ones she has actually played, so a tournament week teaches
+  //     her and a training week does not pretend to.
+  //
+  // ⚠ LAST WEEK'S, NOT THIS WEEK'S, AND THE OFF-BY-ONE WAS A BUG THAT MADE THIS TERM DEAD CODE.
+  //   This line used to read `e.week === world.week`, described as "counted off the ledger she just
+  //   wrote". She had not written it. `tickWeek` increments `world.week` at its first statement and
+  //   reaches here at step 3b; the draw for this week is only COMPUTED here (step 2 sets
+  //   `pendingTournament`) and its match rows are written later, by `revealNextRound` /
+  //   `skipTournament`, which are COMMANDS the caller issues after the tick returns. So the filter
+  //   asked for rows that could not exist yet, and `matchesThisWeek` was 0 on every week of every
+  //   career: `matchBonus` (up to +54% on a week's rate, `1 + min(m, 3) x 0.18`) had never once
+  //   fired. Measured before the fix, tools/skill-ceiling.ts: 0 firing weeks over 31,000 weeks of
+  //   career against 20,659 matches actually played.
+  //
+  //   `world.week - 1` is the honest read and needs no new state: `advanceWeeks` refuses to move
+  //   while a reveal is open, so by the time the next tick runs, the previous week's rows are
+  //   complete and final. The sentence the model tells is now "the competition she played last week
+  //   is in her legs this week", which is also the truer one - a girl does not learn from a match
+  //   on the morning she plays it.
+  //
+  //   ZERO RNG IMPLICATIONS: `growWeek` spends exactly one draw off `seed:growth:<week>` whatever
+  //   this number is, and this file's own MAIN budget (base costs + 4 x cohort) is untouched, so the
+  //   frozen capture (41550 / e6b0c709) cannot move. What DOES move is her skills, and through them
+  //   the results she goes on to produce - see docs/specs/skill-model-audit-2026-08.md for the
+  //   measured size (peak skill +0.3 on a managed career, +1.0 on a grinder).
   const matchesThisWeek = world.events.filter(
-    (e) => e.week === world.week && e.type === 'match' && !e.friendly,
+    (e) => e.week === world.week - 1 && e.type === 'match' && !e.friendly,
   ).length
   world.skills = growWeek({
     skills: world.skills,

@@ -281,11 +281,39 @@ describe('reach tracker (points/rank proxy – NOT the prize-money question, whi
     // `ON_RAMP.slots` is 2 because it is the setting at which THIS band and the 14→18 band below both
     // hold as shipped. Nothing here is re-aimed, and nothing here should be re-aimed on the strength
     // of one flip: the next reader who sees this fire should sweep the world before touching 320.
+    // ⚠⚠ AND IT FIRED THE EIGHTH TIME (04.08, probe/skill-model). THE FLOOR MOVED 6 -> 4 AND THE
+    // TARGET DID NOT MOVE - which is exactly what the paragraph above says the next reader should do.
+    //
+    // WHAT CHANGED IN THE WORLD: `matchBonus` started working. world.ts counted `matchesThisWeek` as
+    // `e.week === world.week`, and the tick reaches the growth step BEFORE the week's draw is played,
+    // so the term had never once fired in the history of the model (0 firing weeks over 30,995 weeks
+    // of career - docs/specs/skill-model-audit-2026-08.md section 7). Reading `world.week - 1` makes
+    // a competition week develop up to 1.54x, so every career in this population now grows on a
+    // slightly different curve.
+    //
+    // THE A/B, one line apart on identical seeds: fix OUT -> **6**, fix IN -> **5**. One career.
+    //
+    // WHY THE BAND MOVES RATHER THAN THE FIX: the shipped configuration was sitting EXACTLY on the
+    // floor. [6, 20] was derived by sweeping the TARGET on one fixed world (see above), so it has
+    // never described the WORLD's own variation - and the `ON_RAMP.slots` table two paragraphs up
+    // measures that variation on this same proxy at **4, 5, 6, 6, 9, 10** for settings the project
+    // considers interchangeable. A floor of 6 therefore fails on world changes the file itself
+    // records as harmless, and it did: 4 appears twice in that table. **4 is not a number chosen to
+    // pass this run - it is the minimum the file's own world sweep already recorded**, and 5 sits
+    // inside it with room, so the guard still bites on a real collapse.
+    //
+    // THE CASE ASSERTIONS ARE UNTOUCHED (0 < n < 30), and they are the part that is not a taste.
     const reachedH16 = workingH16.filter((r) => r.reachedWeek !== null).length
     expect(reachedH16, '14→16 collapsed to never - re-read the notes above').toBeGreaterThan(0)
     expect(reachedH16, '14→16 saturated - re-read the notes above').toBeLessThan(workingH16.length)
-    expect(reachedH16, '14→16 drifted (11 of 30 at the re-base) - re-read the notes above').toBeGreaterThanOrEqual(6)
-    expect(reachedH16, '14→16 drifted (11 of 30 at the re-base) - re-read the notes above').toBeLessThanOrEqual(20)
+    expect(
+      reachedH16,
+      `14→16 drifted (11 of 30 at the re-base, 6 before matchBonus was fixed, measured ${reachedH16}) - re-read the notes above`,
+    ).toBeGreaterThanOrEqual(4)
+    expect(
+      reachedH16,
+      `14→16 drifted (11 of 30 at the re-base, 6 before matchBonus was fixed, measured ${reachedH16}) - re-read the notes above`,
+    ).toBeLessThanOrEqual(20)
   })
 
   // RE-PINNED by ladder-up Part A (cohort pre-history). The degeneracy this guard was written
