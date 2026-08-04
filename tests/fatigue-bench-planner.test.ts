@@ -267,8 +267,38 @@ describe('season planner (REAL mechanics – bookings through the engine command
     expect(grinderRuns.some((r) => r.medicalWithdrawals > 0)).toBe(true)
     // A withdrawal is strictly rarer than a block – she has to survive the entry gate first, then
     // wreck herself inside the commit window. If this ever inverts, the entry gate stopped working.
-    expect(grinderRuns.reduce((s, r) => s + r.medicalWithdrawals, 0)).toBeLessThan(
-      grinderRuns.reduce((s, r) => s + r.medicalBlocks, 0),
+    //
+    // *** RE-AIMED BY WIDENING, NOT BY LOOSENING (probe/world-strength / W4-LIVES, 04.08). ***
+    //
+    // WHAT HAPPENED: this asserted over `grinderRuns` – FOUR profiles at ONE seed – and it read
+    // 11 withdrawals against 10 blocks, i.e. it inverted by a single event. The claim itself is a
+    // MECHANISM claim ("you must pass the entry gate before you can withdraw") and it is not in
+    // doubt; what had quietly gone is the sample that could support the word "strictly". The
+    // measured regime in the comment above is 199 blocked · 24 withdrawn – today the same sweep
+    // yields ~10 and ~11, two orders of magnitude down, because the fatigue reprice moved the whole
+    // phenomenon. At single-digit counts a one-event difference is a coin flip, and the guard was
+    // reporting seed luck rather than the gate.
+    //
+    // W4-LIVES tipped it, and only in the way any world change tips a coin: professionals now have
+    // careers, so their age histogram changed, so `selectEntrants`' age gate admits a different W
+    // field, so different JUNIORS are booked into W weeks, so her J draws differ – the same
+    // second-order chain that moved `REF.kidRank` by one place in three other files. Nothing in the
+    // medical machinery is touched by that wave, and the base branch passes this file.
+    //
+    // SO THE FIX IS MORE SAMPLE, NOT A WEAKER RULE: the aggregate is taken over FOUR SEEDS instead
+    // of one, which is where the counters get big enough for "strictly rarer" to mean something.
+    // The rest of this test still reads `grinderRuns` (seed 3) exactly as before, so no other pin
+    // in it moves.
+    //
+    // MEASURED at the widened sample (4 profiles x 4 seeds x 104w): **61 blocked · 42 withdrawn**.
+    // A 19-event margin instead of one, and it holds on BOTH arms – the base branch and this one –
+    // which is what makes this a widening rather than a number chosen to pass. Mutation-verified by
+    // inverting the comparison (`expected 61 to be less than 42`). Cost: the file goes 5.7 s -> 10.4 s.
+    const vetoSweep = [0, 1, 2, 3].flatMap((seed) =>
+      PROFILES.map((p) => runFatigueCareer(p, grinder, seed, H104.weeks)),
+    )
+    expect(vetoSweep.reduce((s, r) => s + r.medicalWithdrawals, 0)).toBeLessThan(
+      vetoSweep.reduce((s, r) => s + r.medicalBlocks, 0),
     )
     // ...and the WARNING band above the floor is used rather than being dead copy: somebody, in this
     // sweep, played inside [floor, warningCeiling) and got the doctor's line.

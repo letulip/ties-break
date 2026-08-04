@@ -246,7 +246,17 @@ function hashOf(draws: number[]): string {
 // e6b0c709, head and tail all reproduce byte-for-byte and are asserted before this constant is ever
 // read. Every draw the on-ramp spends is APPENDED to the event's own `seed:aitour:<id>` sub-stream,
 // after the professional side of the draw has already been keyed.
-const REF = { kidRank: 90 }
+//
+// ⚠ RE-AIMED AGAIN BY W4-LIVES (04.08): 90 -> 89, ONE place. The professionals have careers now
+// (FIELD.career) - they age +1 a season and retire - so the population's AGE HISTOGRAM changed
+// shape, `selectEntrants` gates candidates on age, a W event's entrant set changed, which JUNIORS a
+// W week books changed, and the J draws those juniors were no longer free for changed with it.
+// Second-order, on a different track from the one this number folds. SHE DID NOTHING DIFFERENT.
+//
+// ⚠⚠ AND IN THIS FILE THE A/B IS THE POINT: `draws.length` and `hashOf(draws)` are asserted two
+// lines ABOVE this constant and both still pass, so input-independence - the fairness property -
+// is untouched. Only the world's own outcome moved.
+const REF = { kidRank: 89 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

@@ -21,6 +21,7 @@
     "bench:money": "vite-node tools/money-decomposition.ts",
     "bench:radar": "vite-node tools/radar-bench.ts",
     "bench:skill": "vite-node tools/skill-ceiling.ts",
+    "bench:world": "vite-node tools/world-turnover.ts",
     "test": "vitest run --project unit",
     "test:watch": "vitest",
     "test:sim": "vitest run --project sim --no-file-parallelism --reporter=dot",

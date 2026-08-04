@@ -18,6 +18,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   FIELD,
+  careerAt,
   fieldProsFor,
   fieldSeasonOf,
   isFieldProId,
@@ -60,12 +61,67 @@ describe('the field is a pure derivation', () => {
     expect(cold).not.toEqual(a)
   })
 
-  it('the season index turns the field over – natural turnover, nothing stored', () => {
+  // ⚠⚠ RE-AIMED BY W4-LIVES (04.08), AND THE OLD ASSERTION WAS PINNING THE DEFECT.
+  //
+  // It read: `changed.length` (name or serve differing one season later) `> FIELD.size / 2`, with
+  // the comment "Regenerated per season: same ids (the namespace is positional), different people."
+  // That was true and it was the bug: docs/specs/world-strength-audit-2026-08.md measured what it
+  // cost - 47% of professionals got YOUNGER year on year, 0.00 of 364 ever retired, and over 96
+  // measured seasons not one simulated athlete ever held a top-100 chair. The owner's ruling: they
+  // must age, they must leave, and somebody may hold the top for several years running.
+  //
+  // So the property is INVERTED and strengthened rather than dropped: most of the field is the SAME
+  // PERSON a season later and is exactly one year older, and a realistic minority has been replaced.
+  it('a season passes: the same people, one year older, and a minority replaced', () => {
     const s0 = prosOf(SEED, 0)
     const s1 = prosOf(SEED, 1)
-    // Regenerated per season: same ids (the namespace is positional), different people.
-    const changed = s0.filter((p, i) => p.name !== s1[i].name || p.serve !== s1[i].serve)
-    expect(changed.length).toBeGreaterThan(FIELD.size / 2)
+    let stayed = 0
+    let replaced = 0
+    for (let i = 0; i < s0.length; i++) {
+      const before = s0[i]
+      const after = s1[i]
+      // A chair keeps its id and its storey for ever - that is the world's SHAPE, deliberately held.
+      expect(after.id).toBe(before.id)
+      expect(after.strengthTier).toBe(before.strengthTier)
+      // ⚠ IDENTITY IS THE CAREER INDEX, NOT THE NAME. The name dedupe is order-dependent over the
+      // whole field, so a pro can legitimately re-draw her surname when somebody ahead of her in the
+      // array is replaced - the cosmetic edge `makeFieldPro` documents. Comparing names here would
+      // read that as a different person and this test would be about the dedupe instead.
+      if (careerAt(SEED, i, 1).index === careerAt(SEED, i, 0).index) {
+        stayed += 1
+        // THE RULING, AS AN ASSERTION: "+1 to everyone's age when the season ends".
+        expect(after.ageYears, after.id).toBe(before.ageYears + 1)
+        // ...and her GAME does not move, only her book – see `careerArc` for why the two are split.
+        expect(after.ret).toBe(before.ret)
+        expect(after.composure).toBe(before.composure)
+        expect(after.stamina).toBe(before.stamina)
+        expect(after.potential).toEqual(before.potential)
+      } else {
+        replaced += 1
+        // A newcomer is a debutante, never a mid-career import.
+        expect(after.ageYears, after.id).toBeLessThanOrEqual(FIELD.career.debutAge[1])
+        expect(after.ageYears, after.id).toBeGreaterThanOrEqual(FIELD.career.debutAge[0])
+      }
+    }
+    // The rate is a tour's, not foam and not a photograph: measured 27.2 of 364 a season over
+    // 4 seeds x 24 seasons (bench:world section D). The band is wide because this is ONE season of
+    // ONE seed; what it forbids is the two failure modes on either side of it.
+    expect(stayed).toBeGreaterThan(FIELD.size * 0.8)
+    expect(replaced).toBeGreaterThan(0)
+    expect(replaced).toBeLessThan(FIELD.size * 0.2)
+  })
+
+  // The other half of the ruling: they LEAVE, and the chair is refilled by somebody new. Walked over
+  // a whole career's worth of seasons so a departure is certain rather than likely.
+  it('nobody plays for ever: every chair changes hands inside one career span', () => {
+    const span = FIELD.career.retireAge[1] - FIELD.career.debutAge[0] + 1
+    let handedOver = 0
+    for (let i = 0; i < FIELD.size; i++) {
+      if (careerAt(SEED, i, span).index > careerAt(SEED, i, 0).index) handedOver += 1
+    }
+    // A career tops out at retireAge.hi - debutAge.lo seasons, so after that many nobody who was
+    // sitting at season 0 can still be there.
+    expect(handedOver).toBe(FIELD.size)
   })
 
   it('the season arithmetic is the world\'s own seasonIndexOf – the two may never disagree', () => {

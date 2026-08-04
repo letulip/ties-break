@@ -52,6 +52,36 @@ export function fieldProsOf(world: WorldState): FieldPro[] {
   return fieldProsFor(world.seed, seasonIndexOf(world.week), world.cohort.map((p) => p.name))
 }
 
+/** HOW MANY ROWS THE TABLE OF `track` HOLDS THIS WEEK – and therefore what "below the whole field"
+ *  is worth as a number.
+ *
+ *  ⚠ THE BUG THIS CLOSES, and it is the "two currencies, no exchange rate" error one more time
+ *  (probe/world-strength, docs/specs/world-strength-audit-2026-08.md §6). Three tables are folded
+ *  from one ledger, and TWO of them are 199 juniors plus the kid – so `world.cohort.length + 1` was
+ *  the right "unranked" sentinel for the domestic and ITF tables and was spelled out by hand at
+ *  every site that needed one. The W table stopped being that shape when living-field phase W
+ *  merged 364 derived professionals into it: it is 564 rows, and 200 is not below its field, it is
+ *  its top 36%. Every W-side `?? world.cohort.length + 1` therefore read a girl with NO ranking at
+ *  all as world #200 – past the acceptance cuts of W35, W50, W75, W100, a WTA 125 and a WTA 250,
+ *  and worth a top-200 professional's brand valuation in `reviewSponsors`.
+ *
+ *  `sponsors.ts` states the intent in as many words – *"a career that has never held a point in a
+ *  table sits below the whole field rather than at the top of an empty one"* – so this is the code
+ *  being made to agree with its own comment rather than a rule being chosen. `world/mandatory.ts`
+ *  already had it right, by using `Number.MAX_SAFE_INTEGER` instead; a number the UI can print is
+ *  the only reason this is the bottom of the table rather than that.
+ *
+ *  It is CONSERVATIVE IN ONE DIRECTION BY CONSTRUCTION: the sentinel can only ever get bigger, so
+ *  the fix can refuse where the old value admitted and never the reverse. And it is behaviour-neutral
+ *  on every path that has a cache, which is all of them in practice – `recomputeKidRank` is the one
+ *  writer, it runs on every tick and on every load, and the kid is always in her own roster. What it
+ *  removes is the landmine underneath that, of exactly the kind `latchOnRamps`' own defensive branch
+ *  exists for: "a later step may never assume an earlier one's post-condition." */
+export function tableSize(world: WorldState, track: LadderTrack): number {
+  const live = world.cohort.length + 1
+  return track === 'wta' ? live + fieldProsOf(world).length : live
+}
+
 export function rankingFor(world: WorldState, track: LadderTrack): RankingRow[] {
   // THE WINDOW SPLIT LANDS HERE (W2-LADDER §3): best-6 for domestic/itf, best-16 for the
   // professional table, and because this is the ONE fold every table-reader flows through (rank
@@ -90,11 +120,12 @@ export function domesticRanking(world: WorldState): RankingRow[] {
  *  adult-tour-and-endings.md §4). This function only guarantees all three are true at once. */
 export function recomputeKidRank(world: WorldState): void {
   const row = fullRanking(world).find((r) => r.playerId === KID_ID)
-  world.kidRank = row?.rank ?? world.cohort.length + 1
+  world.kidRank = row?.rank ?? tableSize(world, 'itf')
   const dom = domesticRanking(world).find((r) => r.playerId === KID_ID)
-  world.kidRankDomestic = dom?.rank ?? world.cohort.length + 1
+  world.kidRankDomestic = dom?.rank ?? tableSize(world, 'domestic')
   const wta = rankingFor(world, 'wta').find((r) => r.playerId === KID_ID)
-  world.kidRankWta = wta?.rank ?? world.cohort.length + 1
+  // ⚠ THE W TABLE IS 564 ROWS, NOT 200 – see `tableSize`. The other two are unchanged in value.
+  world.kidRankWta = wta?.rank ?? tableSize(world, 'wta')
   latchOnRamps(world)
 }
 
@@ -235,11 +266,8 @@ export function acceptanceRank(world: WorldState, tier: TierId): number | undefi
   if (absolute !== undefined) return Math.max(1, absolute)
   const pct = TIERS[tier].enterPct
   if (pct === undefined) return undefined
-  const fieldSize =
-    TIERS[tier].track === 'wta'
-      ? world.cohort.length + 1 + fieldProsOf(world).length
-      : world.cohort.length + 1
-  return Math.max(1, Math.round(pct * fieldSize))
+  // ONE derivation of "how big is this table", shared with the unranked sentinel – see `tableSize`.
+  return Math.max(1, Math.round(pct * tableSize(world, TIERS[tier].track)))
 }
 
 /** THE ONE GATE, now that there are three tables (docs/specs/two-ladders.md, and the third one in
@@ -368,7 +396,9 @@ export function tierFloorOpen(world: WorldState, tier: TierId): boolean {
     // rolling junior window would close on its own a year later with nothing she could do about it.
     const accepts = acceptanceRank(world, tier)
     if (accepts === undefined) return onRampOpen(world, 'wta')
-    return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? world.cohort.length + 1) <= accepts
+    // ⚠ THE SENTINEL IS THE W TABLE'S OWN SIZE, NOT THE COHORT'S – see `tableSize`. With
+    // `cohort.length + 1` a missing cache read as world #200 and cleared this cut and five above it.
+    return kidPoints(world, 'wta') > 0 && (world.kidRankWta ?? tableSize(world, 'wta')) <= accepts
   }
   return isTierEligible(tier, kidPoints(world, 'domestic'))
 }
@@ -480,8 +510,9 @@ export function outgrewTier(tier: TierId, points: number): boolean {
  *  gate that used the same number to decide her entries cannot disagree. */
 export function rankIn(world: WorldState, track: LadderTrack): number {
   if (track === 'itf') return world.kidRank
-  if (track === 'wta') return world.kidRankWta ?? world.cohort.length + 1
-  return world.kidRankDomestic ?? world.cohort.length + 1
+  // ⚠ EACH TABLE'S OWN SIZE IS ITS OWN "unranked" – see `tableSize`. The W one is 564 rows.
+  if (track === 'wta') return world.kidRankWta ?? tableSize(world, 'wta')
+  return world.kidRankDomestic ?? tableSize(world, 'domestic')
 }
 
 /** ...and her place in the SAME table a week ago. Its own function beside `rankIn` for the reason

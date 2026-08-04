@@ -382,7 +382,19 @@ const REF = {
   // e6b0c709, head and tail all reproduce byte-for-byte and are asserted before this constant is ever
   // read. Every draw the on-ramp spends is APPENDED to the event's own `seed:aitour:<id>` sub-stream,
   // after the professional side of the draw has already been keyed.
-  kidRank: 90,
+  //
+  // ⚠ RE-AIMED AGAIN BY W4-LIVES (04.08): 90 -> 89, ONE place, same family as the paragraph above and
+  // the same verdict. The professionals have careers now (FIELD.career): they age +1 a season and
+  // retire, so the population's AGE HISTOGRAM changed shape - and `selectEntrants` gates candidates
+  // on age, so a W event's entrant set changed, so which JUNIORS a W week books changed, so the J
+  // draws those juniors were no longer free for changed. Second-order, on a different track from the
+  // one this number folds, and once again SHE DID NOTHING DIFFERENT.
+  //
+  // THE CAPTURE IS AGAIN UNTOUCHED, which is the assertion this block exists for: count 41550, hash
+  // e6b0c709, head and tail all reproduce byte-for-byte and are checked BEFORE this constant is ever
+  // read. Every draw W4-LIVES adds is on `seed:fieldcareer:<n>:<k>` or `seed:fieldform:<n>:<season>`
+  // - fresh purpose-scoped sub-streams that the weekly tick never walks.
+  kidRank: 89,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
