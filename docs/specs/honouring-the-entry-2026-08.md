@@ -44,8 +44,9 @@ wk426 [entry] Entered World Tour 50 – W17 '39 (hard)
 ### 1a. The diagnosis, in the order the defects matter
 
 1. **The agency is misattributed.** `releaseOutgrownEntries` called `releaseEntry`, which raises the
-   letter written for a *player-initiated* withdrawal. He never withdrew. So did the feed:
-   *"Withdrew from World Tour 50"* is his verb, on the engine's action.
+   letter written for a *player-initiated* withdrawal. He never withdrew. The feed said it too:
+   *"Withdrew from World Tour 50"* is his verb on the engine's action, sitting one line below the
+   reason. Two of the three things he could read agreed with the letter.
 2. **The reassurances answer a question he never asked.** *"In time, free of charge, and nothing is
    recorded against her"* is written to settle a parent who **chose** to pull out and is worried
    about the cost. Addressed to one who chose nothing, it reads as the desk being defensive about
@@ -113,7 +114,32 @@ which names the actor in its first three words, gives the cause in the next sent
 reassurances that only a voluntary exit asks for. The feed row obeys the same rule
 (*"Taken out of World Tour 50 – W17 '39, she is not fit for that week."*).
 
+### 2d. The other candidates for a genuine release, checked
+
+The brief asked whether some rule makes an entry truly unplayable, so the released arm has real work.
+Two were checked against the code:
+
+* **The tour's own age rule – UNREACHABLE, and by construction rather than by luck.** The J rungs
+  close at 18 inclusive (`TierDef.maxAgeYears`), so an entry taken at the end of one season for an
+  event in the next could in principle age out between them. It cannot: `availabilityStatus` asks
+  `tierAgeBlock(event.tier, ageAtWeek(event.week))` – **the event's own week**, not today's – so the
+  entry is refused at the door, with "at 19 she has aged out". Nothing to release.
+* **A tour suspension handed down AFTER she entered – a real gap, and it is not this wave's.**
+  `isSuspendedAt` gates `availabilityStatus` (entry) and `mandatoryBinds`, and nothing else.
+  `arrivalStatus` checks only the layoff and the medical floor, so a suspension that lands inside
+  `tickWeek` and covers a week she is already committed to does not stop her playing it. That is
+  genuinely "a rule that would make the event unplayable", but the answer is not automatically
+  "release" – past the deadline the fee is forfeited by the existing rule, so a release there is a
+  different decision from this one. Filed as its own task; when it is answered, `EntryReleaseReason`
+  and the released arm are where the copy goes, and the engine's copy switch will not compile until
+  somebody writes it.
+
 ## 3. Measured – `tools/outgrown-entry-probe.ts`, 180 careers per arm
+
+⚠ **`tools/outgrown-entry-probe.ts` is new and is the instrument for all of §3.** It reads the world
+and never writes to it, it runs unchanged on both sides of the fix, and its arm-A player column
+reproduces `population-1600-2026-08.md` §4 to within two places – which is the check that licenses
+believing anything else it says.
 
 `npm run bench:outgrown -- --seeds 10 --weeks 1248 --policy both [--lookahead 14]`. Nine econ-bench
 presets x 10 seeds x both policy arms, full 24-season horizon, fork answered "continue". Arm A is the
@@ -126,6 +152,7 @@ pinned pre-change tree; arm B is this branch, same command.
 | grinder, bench lookahead (3 wk) | 64/90 (71%) | 76 | 0.84 | local 62 · regional 13 · national 1 | median 14 |
 | player, bench lookahead (3 wk) | 63/90 (70%) | 74 | 0.82 | local 63 · regional 10 · national 1 | median 14 |
 | grinder, early committer (14 wk) | 90/90 (100%) | 602 | 6.69 | local 527 · regional 75 | median 14 |
+| player, early committer (14 wk) | 90/90 (100%) | 599 | 6.66 | local 527 · regional 72 | median 14 |
 
 **The bench understates it, and the reason is the axis the bench cannot express.** `stepCareerWeek`
 commits only as a deadline nears (`ENTRY_LOOKAHEAD` = 3 weeks), so a bench career is exposed to the
@@ -172,13 +199,61 @@ paying for, and the point of the wave is not a balance change.
 walked past, against a W50 title's 50 and a best-16 window that is already fuller than that. An
 outgrown rung pays little by construction, and the measurement agrees.
 
-### 3c. Can a career now sit on an outgrown rung instead of climbing?
+#### 3b-bis. The early committer is where it costs, and that is the honest reading
 
-**No, and the guard is structural rather than a number.** `entryStatus` refuses a NEW entry at a
-closed rung – that is untouched – so the only draws she can play there are ones committed before the
-crossing, each of which is one week. Measured over 180 careers on the pre-change tree, where the
-post-deadline half of this already happens: the **longest unbroken run of outgrown-rung tournaments
-is 2**, mean 0.83–0.94 per career. There is nothing to sit on.
+Run the same A/B at a 14-week commitment horizon and the grinder arm – no reserve, no rest floor,
+enters everything it can as soon as it can – moves further than anything above:
+
+| early committer (14 wk) | arm A | arm B |
+| --- | --- | --- |
+| grinder – draws at an outgrown rung | 112 of 4,890 (2.3%) | **730 of 5,255 (13.9%)** |
+| grinder – points they paid | mean 23.2/draw | mean **18.9**/draw |
+| grinder – longest unbroken run | 2 | **3** |
+| grinder – peak W rank, best / median | #133 / #286 | #159 / **#345** |
+| player – draws at an outgrown rung | 249 of 6,669 (3.7%) | **1,251 of 7,035 (17.8%)** |
+| player – longest unbroken run | 2 | **6** |
+| player – peak W rank, best / median | #74 / #168 | #120 / **#182** |
+
+**The release was partly a refund subsidy for over-committing, and removing it is the point rather
+than a side effect.** A career that books a season ahead and spends to zero used to be handed its fee
+back every time the ladder moved under it. It is not any more, so committing early now carries the
+risk that committing early should carry – which is the same sentence as "an entry already taken is
+honoured", read from the other side. The funded arm, which keeps a reserve and does not race worn
+out, barely notices (§3b).
+
+## 3c. Can a career now sit on an outgrown rung instead of climbing?
+
+**Not indefinitely – but the tail is longer than "one last event", and the number deserves saying
+out loud rather than being asserted away.**
+
+The structural half first. `entryStatus` refuses a NEW entry at a closed rung, untouched by this
+wave, so the only draws she can ever play there are ones **committed before the crossing**. The run
+is therefore bounded by how many entries she can be holding at once, which is bounded by how far
+ahead she commits (one tournament a week, so a 14-week horizon tops out around seven).
+
+Measured, 180 careers per cell:
+
+| longest unbroken run of outgrown-rung tournaments | arm A | arm B |
+| --- | --- | --- |
+| bench commitment horizon (3 wk) | 2 · mean 0.83–0.94 | **2** · mean 1.10–1.12 |
+| early committer (14 wk), grinder | 2 · mean 0.76 | **3** · mean 1.66 |
+| early committer (14 wk), player | 2 · mean 0.92 | **6** · mean 1.94 |
+
+So a parent who books a quarter ahead and then walks past a rung can spend up to **six weeks**
+finishing commitments there. That is the structural ceiling doing exactly what it should – it is the
+entries he already took, and no more – but it is not "her last event at that level" in the singular,
+and a career could feel it as a stall.
+
+Three things keep it from being a plateau strategy, and none of them is new code:
+
+1. **It cannot repeat.** Once the rung closes, no further entry can be taken at it. The tail runs
+   down and there is no way to top it up.
+2. **It pays nothing worth having.** 20.1 points a draw against a W50 title's 50, into a best-16
+   window that already holds better – which is what an outgrown rung means.
+3. **The exit is the parent's, which is the whole point of the ruling.** `cancelEntry` still hands
+   the fee back inside the deadline and frees the week. The game no longer decides for him; he can
+   still decide. The old behaviour was not a guard against sitting still – it was the game taking
+   the choice away and calling it a withdrawal he had made.
 
 ## 4. What shipped
 
@@ -217,3 +292,77 @@ is 2**, mean 0.83–0.94 per career. There is nothing to sit on.
 - `tests/component/home-strip-and-mail.test.ts` – five **mounted** assertions on the three arms,
   mutation-verified in both directions (kill the released arm: 1 red; let it swallow the voluntary
   one: 2 red).
+
+---
+
+## 6. THE SAME SHAPE, FROM THE OTHER SIDE – the dead weeks (05.08, second owner report)
+
+> «у меня сейчас там висит 5 w-серий подряд, т.е. я вообще 5 недель не могу нигде играть, хотя j30,
+> j60, j300 мне вполне доступны. Вместо этого я вижу 5 карточек с недоступными турнирами.»
+
+Five consecutive weeks of W cards a sixteen-year-old cannot enter – his professional allowance is
+spent (the AER, §5) – while J30/J60/J300 are open to him and not shown. Same defect family as §1:
+**what the feed OFFERS is not what she can PLAY.** §1 is a rung closing above her; this is a whole
+band shut for the season.
+
+### 6.1 The principle was already written down – R10-3, in this very file family
+
+`seasonSupply` (`src/engine/world/snapshot.ts`) counts what is left in a season and says it plainly:
+
+> *"An entry already made is hers whatever the gate says now (R10-3: a committed week survives a
+> band crossing), so it is counted before the gate is asked."*
+
+That is the rule `releaseOutgrownEntries` broke. One surface of this codebase already knew that a
+committed entry survives a band crossing and counted it that way; another cancelled it. §2's ruling
+is not a new principle – it is a second place made to obey one the project decided at R10-3. The same
+sentence is the spine of the fix below: `upcomingEvents` carries the entry verdict on every card
+(`eligible` / `ineligibleReason`) and is explicit that it "is NOT a verdict on `entered`" – the data
+was always right. What was wrong was the PICK.
+
+### 6.2 Display or supply – measured before proposing anything
+
+`tools/dead-week-probe.ts` (`npm run bench:deadweek`) reads the shipped predicates – `toSnapshot` for
+the cards, `feedContext` / `feedShows` / `preferredWeekEvent` for the feed – so it cannot disagree
+with the screen. 54 careers, 8 seasons, one record per calendar week judged 4 weeks out.
+
+**It is common, not a corner.** 13–16% of card-bearing weeks show a card she cannot act on, the
+longest run visible on one screen reaches **8** (median 6), and **51 of 54 careers hit a run of 3 or
+more**. His five in a row is the normal experience.
+
+**But most of it is SUPPLY, not display.** Split by why the shown card refuses her:
+
+| shown card refuses because… | dead weeks | of those, DISPLAY (an enterable event was on the same week) |
+| --- | --- | --- |
+| `unavailable` (exam, vacation, age, suspension) | 381 / 579 | 1.8% / 8.1% |
+| **`capped` (the pro allowance – his case)** | 341 / 110 | **16.1% / 38.2%** |
+| `medical` | 141 / 34 | 0% |
+| `injured` | 35 / 5 | 0% |
+
+(grinder / player.) And on the supply weeks the calendar is **not empty** – only 13–27 of several
+hundred carried no other event at all. The other events are there and refused for their own reasons:
+`locked` (a rung she has not reached) dominates, with `outgrown` (a rung she has passed on points)
+second.
+
+### 6.3 What shipped here, and what deliberately did not
+
+**Taken – the pick.** Both feed surfaces collapse a stacked week through `preferredWeekEvent`, which
+asked only which rung was TALLER. `preferredWeekEvent` now has three tiebreaks: entered, then
+**enterable**, then the highest rung. Measured after: the DISPLAY column is **0 in every row** – 62
+and 89 dead weeks removed, and the `capped` case drops 341 → 286 and 110 → 68. A week where nothing
+is enterable still shows its tallest card, so this is a re-order and never a filter.
+
+**Not taken – the supply half, and it is the larger one.** The remaining dead weeks carry only rungs
+she has not reached or has passed. Two things are worth separating there, and neither belongs in this
+branch:
+
+* **The `outgrown` slice is backlog #84's own case** – *"outgrown rungs stay playable as a fallback,
+  never in the feed"*. Ruling 2's boredom guard already lifts the LADDER ceiling when the pro
+  allowance is spent (`tierOutgrown` returns false for non-`wta` rungs), but the DOMESTIC POINT BAND
+  is a second ceiling in a different function (`isTierEligible`, via `tierFloorOpen` and
+  `entryStatus`'s domestic arm) and it is not lifted. So the guard's promise – «если не w-серии то
+  где-то еще» – is delivered for the J rungs and not for local/regional/national. That is the same
+  "two ceilings must agree" argument as §2a, and it is an ENGINE gate change with balance
+  consequences.
+* **The `locked` slice is genuine supply** – the calendar put rungs above her on those weeks. If
+  anything is to be done there it is in calendar generation, which is a much bigger change than any
+  brief here, and it should be decided against §11.1's own playable-weeks measurement.

@@ -228,8 +228,17 @@ describe('visibility is not access: the engine never reads the feed rule', () =>
 })
 
 describe('the stacked-week pick', () => {
-  type E = { tier: TierId; entered: boolean; id: string }
-  const ev = (tier: TierId, entered = false): E => ({ tier, entered, id: `${tier}${entered ? '+' : ''}` })
+  // ⚠ WIDENED 05.08 (fix/outgrown-entry), NOT WEAKENED: the pick now has THREE tiebreaks, so the
+  // fixture has to be able to express the middle one. `eligible` defaults to true, which makes every
+  // assertion written before this day mean exactly what it meant - all cards enterable, so the
+  // actionability tiebreak is a no-op and the tier order decides, as pinned below.
+  type E = { tier: TierId; entered: boolean; eligible: boolean; id: string }
+  const ev = (tier: TierId, entered = false, eligible = true): E => ({
+    tier,
+    entered,
+    eligible,
+    id: `${tier}${entered ? '+' : ''}${eligible ? '' : '!'}`,
+  })
 
   it('prefers the highest tier, whatever order the list arrives in', () => {
     // The regression this pins: strongest-first input used to come out WEAKEST (last write won).
@@ -246,6 +255,45 @@ describe('the stacked-week pick', () => {
 
   it('is total: an empty week picks nothing', () => {
     expect(preferredWeekEvent([])).toBeNull()
+  })
+
+  // ===============================================================================================
+  // THE MIDDLE TIEBREAK – a card she can enter beats a taller one she cannot (05.08).
+  //
+  // The owner's second report: «у меня сейчас там висит 5 w-серий подряд, т.е. я вообще 5 недель не
+  // могу нигде играть, хотя j30, j60, j300 мне вполне доступны.» His pro allowance was spent, so
+  // every W card refused him - and the J events on those same weeks, which the AER boredom guard
+  // deliberately re-opens when the allowance runs out, were never shown, because the pick asked
+  // only which rung was taller.
+  // ===============================================================================================
+
+  it('an ENTERABLE lower rung beats a BLOCKED higher one – the owner\'s five dead W weeks', () => {
+    const w35Blocked = ev('w35', false, false)
+    const j60Open = ev('j60', false, true)
+    expect(preferredWeekEvent([w35Blocked, j60Open])!.id).toBe('j60')
+    expect(preferredWeekEvent([j60Open, w35Blocked])!.id).toBe('j60')
+    // ...three deep, which is what a stacked week really looks like
+    expect(preferredWeekEvent([ev('w50', false, false), ev('w35', false, false), ev('j30', false, true)])!.id).toBe('j30')
+  })
+
+  it('...and among enterable cards the tier order is untouched', () => {
+    expect(preferredWeekEvent([ev('j30'), ev('j300'), ev('w15', false, false)])!.tier).toBe('j300')
+  })
+
+  it('a week where NOTHING is enterable still shows its tallest card – the feed is also how she learns', () => {
+    // Never empty a week: a locked rung is aspiration, and hiding it would tell her less than the
+    // blocked card does. This is the half that keeps the change a re-order rather than a filter.
+    const picked = preferredWeekEvent([ev('j30', false, false), ev('w35', false, false), ev('w15', false, false)])
+    expect(picked!.tier).toBe('w35')
+  })
+
+  it('an ENTERED card still beats everything, enterable or not – R10-3 is the first tiebreak', () => {
+    // An entered event can legitimately read `eligible: false` (the list closed with her on it and
+    // her points moved afterwards), and it must still be the card the week shows: it is the one she
+    // has to be able to act on. The new tiebreak sits BELOW `entered` precisely so this holds.
+    const committedButOutgrown = ev('local', true, false)
+    expect(preferredWeekEvent([ev('j300', false, true), committedButOutgrown])!.id).toBe('local+!')
+    expect(preferredWeekEvent([committedButOutgrown, ev('j300', false, true)])!.id).toBe('local+!')
   })
 })
 

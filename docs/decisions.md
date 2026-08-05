@@ -322,6 +322,35 @@ rulings, for the log:
   reader – the `wallet-and-wrapup` precedent of three days earlier, and the entry-letter family's own
   (commit `2763caa` added the whole `entry` kind at `SAVE_SCHEMA_VERSION` 36 and left it there).
   v44 was reserved for this wave, is not used, and remains free.
-- **Nothing can now sit on an outgrown rung.** `entryStatus` still refuses a NEW entry there, so the
-  only draws playable at a closed rung are ones committed before the crossing. Measured over 180
-  careers: the longest unbroken run is 2 tournaments, mean 0.83–0.94 per career.
+- **⚠ Nothing can SETTLE on an outgrown rung, but the tail is longer than one event and the number
+  is worth knowing.** `entryStatus` still refuses a NEW entry at a closed rung, so the only draws
+  playable there are ones committed before the crossing – the run is bounded by how far ahead the
+  parent commits and it cannot be topped up. On the bench's own 3-week horizon the longest unbroken
+  run is unchanged at 2. For a parent who books a quarter ahead it reaches **6**, i.e. he can spend
+  six weeks finishing commitments at a rung he has walked past. It pays 20.1 points a draw, it runs
+  down on its own, and `cancelEntry` still hands the fee back and frees the week – the decision is
+  his now, which is the ruling. Watch for it in playtest; if six weeks reads as a stall, the lever is
+  the commitment horizon, not the entry.
+
+**...and the same shape from the other side, same day: the dead weeks.** «у меня сейчас там висит 5
+w-серий подряд, т.е. я вообще 5 недель не могу нигде играть, хотя j30, j60, j300 мне вполне
+доступны.» Measured with `tools/dead-week-probe.ts` (`npm run bench:deadweek`, 54 careers) before
+proposing anything, because display and supply have completely different repairs:
+
+- **It is common, not a corner.** 13–16% of card-bearing weeks show a card she cannot act on; the
+  longest run on one screen reaches 8 (median 6); 51 of 54 careers hit 3 or more in a row.
+- **The PICK was a real defect and it is the smaller half – taken.** Both feed surfaces collapse a
+  stacked week through `preferredWeekEvent`, which asked only which rung was taller. It now asks
+  entered, then **enterable**, then tallest. Of the weeks whose card refused her for a spent pro
+  allowance, 16% (grinder) and 38% (player) had an enterable event on that same week being hidden –
+  "w35 hid j60", "w15 hid j30", "w50 hid j300". After the change the display column is 0 everywhere.
+  A week where nothing is enterable still shows its tallest card: a re-order, never a filter.
+- **The larger half is SUPPLY and is NOT taken.** On those weeks the calendar is not empty – only
+  13–27 of several hundred carried no other event – it is full of rungs she has not reached
+  (`locked`) or has passed on points (`outgrown`).
+- **⚠ And the `outgrown` slice is backlog #84's own case, with a named cause.** Ruling 2's boredom
+  guard lifts the LADDER ceiling when the pro allowance is spent (`tierOutgrown`), but the DOMESTIC
+  POINT BAND is a second ceiling in a different function and is not lifted – so «если не w-серии то
+  где-то еще» is delivered for the J rungs and not for local/regional/national. Same "two ceilings
+  must agree" argument as the entry ruling above, but an ENGINE gate change with balance
+  consequences, so it is filed rather than taken.
