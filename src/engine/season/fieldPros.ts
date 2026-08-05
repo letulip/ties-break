@@ -282,8 +282,10 @@ export interface FieldPro extends AiPlayer {
 // gamma 6.5 on the top storey is what makes the head read like a real one rather than 64 co-#1s.
 //
 // =================================================================================================
-// ⚠⚠ ...AND THE POPULATION IS THE SPORT'S NOW – 520 -> 1,600 (POPULATION-1600, 05.08). The owner:
-// «довести население до ~1 600, как в реальной WTA – да, со старением, сменами, всё как у нас было.»
+// ⚠⚠ ...AND THE POPULATION IS THE SPORT'S NOW – 520 -> 1,600 (POPULATION-1600, 05.08). The owner's
+// instruction, in substance: take the population to about 1,600 as in the real WTA – with the
+// ageing and the successions, everything exactly as we already had it. Verbatim in
+// docs/specs/population-1600-2026-08.md, which is where the owner log keeps his own words.
 // =================================================================================================
 //
 // The real WTA singles list holds ~1,550 women (docs/research/real-ladder-pace.md §3b, live August

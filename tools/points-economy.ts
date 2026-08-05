@@ -1212,10 +1212,10 @@ if (wants('13')) {
 // 14. THE TAPER – the owner's approved title-chance ladder, measured for HER AT HER OWN RUNG
 // =================================================================================================
 //
-// THE TARGET, approved verbatim (docs/specs/population-1600-2026-08.md): W15/W35 15-35% · W50/W75/
-// W100 10-20% · WTA 125/250 5-12% · 500/1000 2-6% · Slam rare. His reasoning governs the design –
-// «иначе это вообще боль, у нас всё-таки игра» – against the counter-pressure that a flat band
-// everywhere makes the rung she stands on meaningless.
+// THE TARGET, approved verbatim (docs/specs/population-1600-2026-08.md, which carries the owner's
+// own words): W15/W35 15-35% · W50/W75/W100 10-20% · WTA 125/250 5-12% · 500/1000 2-6% · Slam rare.
+// His reasoning governs the design – otherwise it is simply painful, and this is still a game –
+// against the counter-pressure that a flat band everywhere makes the rung she stands on meaningless.
 //
 // ⚠⚠ WHOSE TITLE CHANCE. This is the whole methodological question and it is settled here rather
 // than by whichever build was convenient. A FIXED reference build measured against ten fields of
