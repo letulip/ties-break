@@ -132,19 +132,32 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
   // asserted as an exact SET rather than a loop so a fourth going inert is red. The second no longer
   // characterises a defect, so it is turned into the POSITIVE property it was blocking – the slide
   // is one rung at a time, W15 survives her first point, and the stages are pinned by name.
-  it('the inert W cuts are now W35 and W50 alone – W75 bites again', () => {
+  // ⚠⚠ RE-AIMED A SECOND TIME BY POPULATION-1600 (05.08), AND THE INERT SET IS NOW **EMPTY** – which
+  // is this guard reaching the end of the road it was built to travel. `FIELD.size` 520 -> 1,600
+  // puts 1,080 more pointed rows underneath, so W50's #550 and W35's #700 are both well inside the
+  // pointed table and every one of the ten W cuts refuses somebody. Nothing about the cuts moved for
+  // the second wave running – `acceptsRank` is an absolute rank precisely so it survives a deeper
+  // population, and TierDef.acceptsRank says so in as many words.
+  //
+  // ⚠ AN EMPTY EXPECTED SET IS A WEAKER ASSERTION THAN A NAMED ONE, SO IT DOES NOT STAND ALONE.
+  // `expect(inert).toEqual([])` cannot tell "every cut bites" from "the loop found nothing to look
+  // at", so the positive form is asserted underneath it over the WHOLE ladder rather than the three
+  // rungs the old version named: every W cut in the game is strictly inside the pointed depth. That
+  // is the property, and it is now stated at full width.
+  it('every W acceptance cut bites: the inert set is empty on a 1,600-strong table', () => {
     const world = worldAt('cuts-truncated', 17, 0)
     const pointed = rankingFor(world, 'wta').filter((r) => r.points > 0).length
-    // 520 derived pros hold a book; the rest of the ~719 rows are LIVE players, most on nothing.
+    // 1,600 derived pros hold a book; the rest of the ~1,800 rows are LIVE players, most on nothing.
     expect(pointed).toBeGreaterThanOrEqual(FIELD.size)
     expect(pointed).toBeLessThan(FIELD.size + 60)
+    const W_CUTS = ['w35', 'w50', 'w75', 'w100', 'wta125', 'wta250', 'wta500', 'wta1000', 'slam'] as const
     // The SET of inert cuts, exactly. A cut looser than the pointed depth is not a cut.
-    const inert = (['w35', 'w50', 'w75', 'w100', 'wta125'] as const).filter(
-      (t) => TIERS[t].acceptsRank! > pointed,
-    )
-    expect(inert).toEqual(['w35', 'w50'])
-    // ...and every cut a career actually stalls under bites.
-    for (const tier of ['w75', 'w100', 'wta125'] as const) {
+    const inert = W_CUTS.filter((t) => TIERS[t].acceptsRank! > pointed)
+    expect(inert).toEqual([])
+    // ...and the positive form, which is what carries the meaning now that the negative one is
+    // empty: every cut on the ladder refuses somebody, not merely the three a career stalls under.
+    expect(W_CUTS.length).toBe(9)
+    for (const tier of W_CUTS) {
       expect(TIERS[tier].acceptsRank!, `${tier} gates`).toBeLessThan(pointed)
     }
   })
@@ -158,10 +171,21 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
   // ACTUALLY admits (ten points, exactly the threshold) and the one-point case is pinned separately
   // below as the new negative property. Nothing is weakened: the same three stages are still named,
   // still asserted as exact lists, and the "climbed" stage is untouched.
-  it('the entry rung SURVIVES her first W ranking, and the window slides one rung at a time', () => {
+  // ⚠⚠ RE-AIMED A THIRD TIME BY POPULATION-1600 (05.08), AND THE SLIDE HAS GROWN A STAGE, WHICH IS
+  // THE FIX RATHER THAN A REGRESSION. On a 719-row table the smallest ranking the rulebook admits
+  // (ten points) stood at ~#521 and cleared W35's #700 and W50's #550 at once, so her first ranking
+  // opened THREE rungs and the ladder's first two stages happened in the same week. On the 1,800-row
+  // table it stands at ~#1,142 and clears neither: the window at first ranking is **W15 alone**, and
+  // W35 and W50 are reached one book at a time. Every cut is where it was; the table is what moved.
+  //
+  // AND THAT IS THE SPORT'S OWN SHAPE, not a nicety – `real-ladder-pace.md` §1b measures #600 → #400
+  // at 4.8 months and #400 → #200 at 11.9, i.e. the bottom of the ladder is several distinct stages
+  // and not one. The books below are read off the shipped table (`bench:points --only 13`, the DOORS
+  // block): #700 carries 37 points, #550 carries 59, #450 carries 90.
+  it('the entry rung SURVIVES her first W ranking, and the window slides ONE rung at a time', () => {
     // `tierOutgrown` closes a rung when the rung three above it opens. Three above W15 is W75, whose
-    // cut is #450 – and a ten-point book now stands at ~#521, outside it. So the first ranking opens
-    // nothing above W50 and W15 stays hers, which is the ladder's own documented worked example.
+    // cut is #450 – and a ten-point book now stands at ~#1,142, outside it by a distance. So the
+    // first ranking opens nothing at all above the on-ramp and W15 stays hers.
     const at16 = worldAt('trapdoor-16', 16, 10)
     expect(tierOpenFor(at16, 'w15')).toBe(true)
 
@@ -169,14 +193,23 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     expect(tierFloorOpen(at17, 'w75')).toBe(false)
     expect(tierOpenFor(at17, 'w15')).toBe(true)
 
-    // `tierOutgrown`'s own worked example names the stages "{j60, j300, w15} -> {j300, w15, w35} ->
-    // {w15, w35, w50} -> {w35, w50, w75}". One point is the third of those, and it is now what the
-    // engine really produces instead of skipping three rungs at once.
-    const open = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at17, t))
-    expect(open).toEqual(['w15', 'w35', 'w50'])
+    // STAGE 1 – the first ranking. W15 alone.
+    const stage1 = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at17, t))
+    expect(stage1).toEqual(['w15'])
 
-    // ...and the NEXT stage is reached by playing, not by holding one point: a book that clears
-    // W75's cut is what closes W15, exactly one rung later.
+    // STAGE 2 – a book past #700 opens W35 and nothing else.
+    const at35 = worldAt('trapdoor-w35', 17, 50)
+    const stage2 = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at35, t))
+    expect(stage2).toEqual(['w15', 'w35'])
+
+    // STAGE 3 – a book past #550 opens W50, and W15 is STILL hers: three above W15 is W75, and W75
+    // is still shut. This is the stage the shipped table used to hand her on her first point.
+    const at50 = worldAt('trapdoor-w50', 17, 75)
+    const stage3 = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at50, t))
+    expect(stage3).toEqual(['w15', 'w35', 'w50'])
+
+    // STAGE 4 – and the entry rung closes only when the rung THREE above it opens, exactly one book
+    // later. This is the assertion the whole family exists for and it is untouched.
     const climbed = worldAt('trapdoor-climbed', 17, 140)
     expect(tierFloorOpen(climbed, 'w75')).toBe(true)
     expect(tierOpenFor(climbed, 'w15')).toBe(false)
@@ -200,10 +233,24 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     // boredom failure the owner has ruled against twice.
     expect(tierOpenFor(one, 'w15')).toBe(true)
 
-    // limb (ii): ten points in a single tournament.
+    // limb (ii): ten points in a single tournament. ⚠ THE ASSERTION THAT FOLLOWS IT MOVED WITH THE
+    // POPULATION AND THE SUBJECT DID NOT. What this test is about is §VIII.A.2.b – whether she is ON
+    // THE LIST – and `kidPoints` is that question; W35's door was only ever the observable used to
+    // read it. On a 1,800-row table ten points stands at ~#1,142, outside W35's #700 cut, so the
+    // door is the wrong observable and asserting it would be asserting the ladder's pace inside a
+    // test about the rulebook's eligibility rule. The direct form is used instead, in both
+    // directions, and it is STRICTLY STRONGER: `kidPoints` reads 0 under the threshold and the full
+    // book over it. The ladder's own stages are pinned by name in the slide test above.
     const ten = worldAt('minimum-ten-points', 17, 10)
     expect(kidPoints(ten, 'wta')).toBe(10)
-    expect(tierFloorOpen(ten, 'w35')).toBe(true)
+    // ...and being on the list is what opens a door AT ALL: the on-ramp rung is open either way, but
+    // an unranked girl cannot clear any acceptance cut in the game, and a ranked one clears the ones
+    // her book reaches. Asserted as the general property rather than against one rung's number.
+    expect(tierFloorOpen(ten, 'wta125')).toBe(false)
+    const bigger = worldAt('minimum-ranked-climbs', 17, 300)
+    expect(kidPoints(bigger, 'wta')).toBe(300)
+    expect(tierFloorOpen(bigger, 'w35')).toBe(true)
+    expect(tierFloorOpen(bigger, 'w75')).toBe(true)
 
     // limb (i): three tournaments that scored, on a total FAR below ten – the limb that cannot be
     // reached by making one result bigger.
@@ -213,7 +260,6 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     }
     recomputeKidRank(three)
     expect(kidPoints(three, 'wta')).toBe(3)
-    expect(tierFloorOpen(three, 'w35')).toBe(true)
     // two of the same three is still nothing – the limb is a real edge and not a formality.
     const two = worldAt('minimum-two-events', 17, 0)
     for (let i = 0; i < 2; i++) {

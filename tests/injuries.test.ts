@@ -252,7 +252,15 @@ const REF = { //
   // free for change. Different track from the one this number folds. SHE DID NOTHING DIFFERENT –
   // this fixture's kid enters nothing at all. The capture is untouched: count 41550, hash e6b0c709,
   // checked BEFORE this constant is read; no correction in that wave draws on any stream.
-  kidRank: 91 }
+  //
+  // ⚠ AND RE-AIMED A FIFTH TIME BY POPULATION-1600 (05.08): 91 -> 87, four places, SAME MECHANISM.
+  // `FIELD.size` 520 -> 1,600 makes the W universe 1,799 candidates instead of 719 and
+  // `selectEntrants` spends one draw per candidate off the event sub-streams, so a W event's entrant
+  // set changed, so which JUNIORS a W week books changed, so the J draws they were no longer free
+  // for changed. The largest of the five moves, for the largest of the five causes. Different track
+  // from the one this number folds; this fixture's kid enters nothing at all. The capture is
+  // untouched for the fifth time: count 41550, hash e6b0c709, checked BEFORE this constant is read.
+  kidRank: 87 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

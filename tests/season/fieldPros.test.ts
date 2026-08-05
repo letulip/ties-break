@@ -397,9 +397,24 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     // points-economy-2026-08.md §5 gives 33 – the latter because re-pricing the field re-ORDERS the
     // middle of the table (§5a) – and `FIELD.size` 364 -> 520 gives 7. So this guard is sensitive to
     // all three halves of the mechanism it describes, which is what makes it a guard.
-    expect(drawn, 'journeymen drawn into any W event in a season').toBeGreaterThan(0)
-    expect(drawn, 'journeymen drawn into any W event in a season').toBeLessThan(20)
-    // ...and they are nevertheless in the table, which is what makes it a defect rather than a
+    //
+    // ⚠⚠ AND IT MOVED AGAIN, FROM 7 TO **102 OF 150** (population-1600, 05.08) – WHICH IS THIS
+    // CHARACTERISATION'S OWN NAMED REPAIR ARRIVING. The comment above lists the candidate fixes as
+    // "a deeper FIELD.size, re-aimed `entrantPctBand`s, an on-ramp for the bottom of the pyramid",
+    // and the first of them has now landed: `FIELD.size` 520 -> 1,600 makes the merged table ~1,800
+    // rows, so W50's band opens at #261, W75's at #189 and W100's at #117 – and the journeyman
+    // storey (#215-364) is no longer in the TAIL of a window, it is at the HEAD of three of them.
+    // Entry is position-biased, so being at the head of a window is exactly what gets you drawn.
+    // **Two thirds of the storey now plays.** The band's floor is a share and the table is what it
+    // is a share of; nothing about the bands moved.
+    //
+    // THE LOWER BOUND IS RAISED WITH IT, ON PURPOSE. Leaving it at `> 0` would let the property
+    // silently regress all the way back to the defect it was written for. 60 is half the storey –
+    // well below the measured 102 and well above the 7 this replaced, so it states "the middle of
+    // the table plays" without pinning a sample.
+    expect(drawn, 'journeymen drawn into any W event in a season').toBeGreaterThan(60)
+    expect(drawn, 'journeymen drawn into any W event in a season').toBeLessThanOrEqual(150)
+    // ...and they are nevertheless in the table, which is what made it a defect rather than a
     // detail: the weakest pro the generator makes still outranks a girl with a real W15 title.
     for (const p of journeymen) expect(p.wtaPoints).toBeGreaterThan(10)
     // THE CHARACTERISATION, HALF TWO – RE-POINTED AT THE STOREY THAT IS NOW THE BOTTOM. This is the
@@ -411,7 +426,14 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     const bottom = pros.filter((p) => p.strengthTier === bottomId)
     expect(bottom.length).toBe(FIELD.tiers[FIELD.tiers.length - 1].count)
     expect(bottom.filter((p) => (slots.get(p.id) ?? 0) > 0).length, `${bottomId} drawn`).toBe(0)
-    for (const p of bottom) expect(p.wtaPoints).toBeGreaterThan(10)
+    // ⚠ AND THE COMPANION ASSERTION IS RE-AIMED RATHER THAN DELETED (population-1600). It used to
+    // read `wtaPoints > 10`, whose point was "the never-drawn tail nevertheless outranks a girl with
+    // a real W15 title" – true of `circuit`'s [70, 155] band and false of `newcomer`'s [3, 9], which
+    // is the real curve's own last rows (the live WTA list ends at #1,531 on three points). The
+    // property that survives the table reaching the sport's own floor is the one it was always
+    // about: **a pro who is never drawn still holds a book at all**, so her row is issued rather
+    // than earned. That is the defect, and it is asserted at the floor the rulebook itself names.
+    for (const p of bottom) expect(p.wtaPoints).toBeGreaterThan(0)
     // The storeys that DO play, for contrast, so a future zero everywhere reads as a broken harness
     // rather than as this finding getting worse.
     const played = pros.filter((p) => p.strengthTier !== 'journeyman' && (slots.get(p.id) ?? 0) > 0)
