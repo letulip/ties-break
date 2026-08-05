@@ -297,7 +297,11 @@ describe('R10-5 — entry, display and the advance stop read ONE rule', () => {
     expect(w.entries).toContain(ev.id)
 
     giveKidPoints(w, 122) // she outgrows local only AFTER the list closed
-    tickWeek(w, rng) // W3 – releaseOutgrownEntries must NOT touch a closed list
+    // ⚠ 05.08: `releaseOutgrownEntries` used to stand at the top of this tick and had to be kept
+    // off a CLOSED list. It is retired – an entry already taken is honoured on both sides of the
+    // deadline now – so this line asserts the same fact against a simpler rule than it was written
+    // for. The claim is unchanged and still worth guarding: nothing may take her off this list.
+    tickWeek(w, rng) // W3 – past the deadline, and she stays entered
     expect(w.entries).toContain(ev.id)
 
     const row = toSnapshot(w).upcoming.find((e) => e.id === ev.id)!

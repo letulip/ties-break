@@ -1360,9 +1360,34 @@ export interface EntryLetterTerms {
    *  the event's own entry deadline, restated on paper so the player plans against a date the
    *  engine actually enforces */
   freeUntilWeek: number
-  /** true on the short confirmation the desk sends back for a free, in-time cancellation */
+  /** true on the short confirmation the desk sends back when an entry ENDS before the deadline */
   cancelled?: boolean
+  /** ...and WHO ended it (fix/outgrown-entry, 05.08). Absent = the parent's own withdrawal, which
+   *  is what every letter written before this field meant and what `withdrawEvent`/`cancelEntry`
+   *  still mean. Present = the DESK took her name off, and the letter has to say so - see
+   *  `EntryReleaseReason` and the released arm of OfferLetter.vue.
+   *
+   *  ⚠ ADDITIVE AND OPTIONAL, SO NO SCHEMA BUMP - the same move the whole `entry` letter family
+   *  shipped as (commit 2763caa left SAVE_SCHEMA_VERSION at 36 while adding the kind, the terms
+   *  shape and `cancelled` itself). An old save's letters simply lack it and render exactly as they
+   *  did; there is nothing to back-fill, because the reason was never recorded to recover. */
+  releasedBy?: EntryReleaseReason
 }
+
+/** WHY AN ENTRY ENDED, on the letter the desk sends when it does (owner, 05.08: «моя уже 22 летняя
+ *  выиграла 2 w50 подряд и ее автоматом сняли с 3-го письмом без объяснения причины – я понимаю, что
+ *  она переросла, но это ощущается очень странно»).
+ *
+ *  ⚠ THE MISSING REASON WAS THE SMALLER HALF OF THAT BUG. The letter he was shown said «Your
+ *  withdrawal ... is confirmed – in time, free of charge, and nothing is recorded against her»: a
+ *  RECEIPT FOR A DECISION HE NEVER TOOK, reassuring him about consequences of a choice he had not
+ *  made. Agency first, cause second - that is the order this type exists to fix. `'parent'` is the
+ *  only value that keeps the old copy, because it is the only one where the old copy is true. */
+export type EntryReleaseReason =
+  /** she withdrew, in time and by choice – `withdrawEvent` / `cancelEntry` before the deadline */
+  | 'parent'
+  /** an injury layoff swallows the event week, so the desk takes her name off the list */
+  | 'injury'
 
 /** WHY A DEAL STOPPED, on the letter the brand sends when it does (owner, 04.08: «I've figured out
  *  there's no active sponsor. I believe we need to send an email with the termination message»).

@@ -78,7 +78,7 @@ import { isOffSeasonWeek, OFF_SEASON_WEEKS, WEEKS_PER_YEAR } from './season/cale
 import type { KitFreshCap } from './equipment'
 import type { TierId } from './season/types'
 import type {
-  KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier,
+  EntryLetterTerms, EntryReleaseReason, KitEndReason, KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier,
 } from '../shared/protocol'
 
 /** Every sponsor tier's letterhead lives at `public/images/sponsors/<key>.webp`, and this is the
@@ -840,20 +840,40 @@ export function raiseEntryLetter(
   return offer
 }
 
-/** The short confirmation for a free, in-time cancellation, raised by `withdrawEvent`. */
+/** The confirmation the desk sends when an entry ENDS before the deadline, raised by `releaseEntry`.
+ *
+ *  ⚠ IT CARRIES WHO ENDED IT, AND THAT IS THE WHOLE POINT OF THE PARAMETER (fix/outgrown-entry,
+ *  05.08). Two paths reach `releaseEntry` and only one of them is a decision the PARENT took: his
+ *  own in-time withdrawal, and the injury auto-withdraw inside `tickWeek`. For three releases both
+ *  produced the identical sheet - «Your withdrawal ... is confirmed – in time, free of charge, and
+ *  nothing is recorded against her» - so the engine's own action came back to the player as a
+ *  receipt for a choice he had not made, complete with reassurances about consequences he had not
+ *  risked. A letter that cannot say who acted is worse than no letter: it is a wrong one.
+ *
+ *  `'parent'` writes exactly the terms this function has always written (no `releasedBy` key at
+ *  all), so every existing letter, save and test of the voluntary exit is byte-identical. */
 export function raiseEntryCancelLetter(
   offers: Offer[],
   week: number,
   event: { id: string; tier: TierId; week: number; deadlineWeek: number },
   label: string,
+  releasedBy: EntryReleaseReason = 'parent',
 ): Offer {
   const n = offers.filter((o) => o.kind === 'entry' && o.id.startsWith(`entry-${event.id}-`)).length
+  const terms: EntryLetterTerms = {
+    tier: event.tier,
+    label,
+    eventWeek: event.week,
+    freeUntilWeek: event.deadlineWeek,
+    cancelled: true,
+  }
+  if (releasedBy !== 'parent') terms.releasedBy = releasedBy
   const offer: Offer = {
     id: `entry-${event.id}-${n}`,
     kind: 'entry',
     week,
     deadlineWeek: event.deadlineWeek,
-    terms: { tier: event.tier, label, eventWeek: event.week, freeUntilWeek: event.deadlineWeek, cancelled: true },
+    terms,
     state: 'info',
   }
   offers.push(offer)

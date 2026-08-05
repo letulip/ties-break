@@ -226,8 +226,23 @@ function seedThatFiresAt(prefix: string, week: number): string {
 }
 
 /** The withdrawal beats the injury popup scrapes – they name the tier AND the event week. */
+/** Which entries the layoff actually pulled her out of.
+ *
+ *  ⚠ RE-AIMED 05.08 (fix/outgrown-entry), NOT WIDENED FOR CONVENIENCE. This read `'Withdrew from '`
+ *  alone, which was the ONE verb the feed had – and that was the bug next door: the engine's own
+ *  pull-out reported itself in the parent's voice, so the owner was told he had withdrawn her from a
+ *  tournament he had not touched. The injury path now writes `'Taken out of '`. The question this
+ *  helper asks is unchanged ("which entries were released, and were they only the swallowed ones?");
+ *  what moved is that the answer is no longer a lie about who did it. `deskTookOut` below is the new
+ *  claim, asserted beside the old one rather than instead of it. */
 const withdrawnFrom = (w: WorldState) =>
-  w.events.filter((e) => e.type === 'entry' && e.text.startsWith('Withdrew from ')).map((e) => e.text)
+  w.events
+    .filter((e) => e.type === 'entry' && (e.text.startsWith('Withdrew from ') || e.text.startsWith('Taken out of ')))
+    .map((e) => e.text)
+
+/** ...and the half that says the DESK acted: the injury pull-out never uses the parent's verb. */
+const deskTookOut = (w: WorldState) =>
+  w.events.filter((e) => e.type === 'entry' && e.text.startsWith('Taken out of ')).map((e) => e.text)
 
 /** Fees actually handed back. Read off the refund beats, not off `fundsCents`: the onset also
  *  charges a scans-and-treatment bill, so the net balance is not a clean refund total. */
@@ -282,6 +297,11 @@ describe('F45-2 — an injury withdraws only the entries inside the layoff', () 
     expect(refund).toBeDefined()
     expect(refund!.amountCents).toBe(TIERS.local.entryFeeCents)
     expect(withdrawnFrom(w)).toHaveLength(1) // exactly one – not "all of them"
+    // ⚠ AND IT IS THE DESK'S OWN VERB, not his. The parent chose nothing here; a feed row reading
+    // "Withdrew from ..." is the same misattribution the owner hit on the letter surface (05.08).
+    expect(deskTookOut(w)).toHaveLength(1)
+    expect(deskTookOut(w)[0]).toMatch(/^Taken out of Local Open/)
+    expect(deskTookOut(w)[0]).toMatch(/not fit for that week/)
   })
 
   it('a post-deadline entry INSIDE the layoff keeps today’s behaviour: booked, fee forfeited', () => {

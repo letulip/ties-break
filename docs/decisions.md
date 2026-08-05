@@ -3,7 +3,7 @@ type: decision-log
 status: current
 area: governance
 canonical: true
-last-reviewed: 2026-08-03
+last-reviewed: 2026-08-05
 ---
 
 # Design decisions log
@@ -288,3 +288,40 @@ reproduce-then-fix numbers in `docs/specs/wallet-and-wrapup.md`; the rulings, fo
   plays is 260-300 weeks and the regime begins around week 430. Our tests only ever looked at young
   careers, and the ones that looked at old careers did not play tennis in them.
   `tests/long-career-ledgers.test.ts` closes it, mutation-verified against all four fixes.
+
+## 2026-08-05 – The entry she had already taken (`fix/outgrown-entry`)
+
+Owner, at twenty-two on the W tour: «моя уже 22 летняя выиграла 2 w50 подряд и ее автоматом сняли с
+3-го письмом без объяснения причины – я понимаю, что она переросла, но это ощущается очень странно.
+Надо поправить.» Full reproduce-then-measure in `docs/specs/honouring-the-entry-2026-08.md`; the
+rulings, for the log:
+
+- **An entry already taken is honoured.** In the sport, acceptance into a draw is not revoked because
+  your ranking improved between the entry deadline and the tournament: she plays, and it is her last
+  event at that level. A rung closing governs what she may enter NEXT – it removes the rung from the
+  feed and the offer list, never from her schedule. `releaseOutgrownEntries` is retired.
+- **The two ceilings still agree, and now the two sides of the deadline do too.** `outgrewTier` and
+  `tierOutgrown` had the same consequence as a release and have the same consequence as no release.
+  What went away is the asymmetry a player could actually feel: the PRE-deadline entry was cancelled
+  while the POST-deadline one played on (R12-3), so which of two identical commitments survived
+  depended on a date he was not thinking about.
+- **⚠ THE LETTER WAS THE WORSE HALF, AND HE UNDERSTATED IT.** He said «без объяснения причины». The
+  letter he was shown said *"Your withdrawal from the World Tour 50 is confirmed – in time, free of
+  charge, and nothing is recorded against her"* – a receipt for a decision he never took, reassuring
+  him about the consequences of a choice he had not made. The feed row beside it said *"Withdrew
+  from World Tour 50"*, the same misattribution. A letter that cannot say who acted is worse than no
+  letter. `releaseEntry` now carries an `EntryReleaseReason` and the desk's paper has a third arm –
+  entered / withdrew / **released** – which names the actor first and the cause second.
+- **The injury auto-withdraw had been sending that same wrong letter since it shipped**, on every
+  W-rung entry a layoff swallowed. It is the one automatic release left, and it is now the released
+  arm's whole reachable surface.
+- **He did not miss the feed row.** Measured over 76 releases on 90 full careers: the `info` row is
+  inside the 60-row snapshot the News list is built from on the week it lands, at +1 and at +4 weeks.
+  It reached him; the letter simply contradicted it, and the letter is the surface with the dot.
+- **No schema bump.** `EntryLetterTerms` gains `releasedBy?`, additive and optional with a defaulting
+  reader – the `wallet-and-wrapup` precedent of three days earlier, and the entry-letter family's own
+  (commit `2763caa` added the whole `entry` kind at `SAVE_SCHEMA_VERSION` 36 and left it there).
+  v44 was reserved for this wave, is not used, and remains free.
+- **Nothing can now sit on an outgrown rung.** `entryStatus` still refuses a NEW entry there, so the
+  only draws playable at a closed rung are ones committed before the crossing. Measured over 180
+  careers: the longest unbroken run is 2 tournaments, mean 0.83–0.94 per career.

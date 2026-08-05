@@ -705,7 +705,14 @@ describe('item 3 — end to end on a real career', () => {
     // Walk a career until she is genuinely on a run of losses, then check the whole chain:
     // engine streak -> snapshot -> pure decision.
     let observed: LossStreak | null = null
-    const world = playCareer('trio-e2e', 5 * WEEKS_PER_YEAR, (w) => {
+    // ⚠ THE SEED MOVED 05.08 (fix/outgrown-entry) AND THE RULE DID NOT – which is exactly what this
+    // fixture's own message asks for ("tune the fixture, not the rule"). Honouring a committed entry
+    // at an outgrown rung means she now PLAYS a handful of draws this career used to be withdrawn
+    // from, so `trio-e2e` walks a different set of matches and its crossing loss fell outside five
+    // seasons. Every assertion below is unchanged; only the career that reaches them is. Verified
+    // against the pre-change tree, where this file is green with the old seed and green with this
+    // one is what the new tree needs.
+    const world = playCareer('trio-e2e-honoured', 5 * WEEKS_PER_YEAR, (w) => {
       const s = computeLossStreak(w)
       // R12-16: stop on the CROSSING loss (`===`), not merely at-or-past it – past it her face is
       // `sad` again by design, so a `>=` walk could land on a week the assertion below would fail
