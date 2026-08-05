@@ -50,7 +50,16 @@ describe('off-season (Round 5 items 16/21)', () => {
     // exactly what `rankLabel` exists to refuse, and it read "#127" here while the Stats International
     // tab read "Unranked" one tab away: the owner's own complaint (Home #4 vs Stats #128) in new clothes.
     // A career that HAS an international point still prints "International rank #N", asserted below.
-    expect(wrap!.text).toMatch(/International rank #\d+|Unranked internationally/)
+    //
+    // ⚠ RE-AIMED AGAIN (05.08, fix/wallet-and-wrapup), AND THE PROTECTED FACT IS STILL UNCHANGED.
+    // The line now names THE TABLE SHE PLAYED ON rather than the junior one for ever – the owner's
+    // «на том же экране всегда показывается international, хотя мы уже давно там не играем». This
+    // fixture never enters an event and holds no point on any table, so `dominantTrackOfSeason`
+    // falls back to `activeLadderOf` (domestic) and the line reads "Unranked – national": the same
+    // refusal to print a tie as a ranking, about the table she is actually standing on. The
+    // alternation below is widened to the three table names rather than dropped, so a line that
+    // stopped stating where she stands at all would still be RED.
+    expect(wrap!.text).toMatch(/(National|International|Professional) rank #\d+|Unranked – (national|international|professional)/)
     expect(wrap!.text).toMatch(/\d+ pts this season/)
     expect(wrap!.text).toMatch(/\d+-\d+ \(W-L\)/)
     expect(wrap!.text).toMatch(/funds [+-]\$/)
@@ -58,7 +67,7 @@ describe('off-season (Round 5 items 16/21)', () => {
     expect(world.events.some((e) => e.week === 49 && e.type === 'info' && e.text.includes('Off-season'))).toBe(true)
   })
 
-  it('a girl who HOLDS an international point gets the number; one who does not gets "Unranked"', () => {
+  it('the wrap-up names the table the result was won on, and never trades one for another', () => {
     // The other half of the re-aim above, so neither branch can rot. Both worlds tick the same way; the
     // only difference is whether an international result sits in the ledger. `j300` because the track,
     // not the value, is what decides which table a result pays into.
@@ -75,8 +84,22 @@ describe('off-season (Round 5 items 16/21)', () => {
     const textOf = (w: typeof ranked) => w.events.find((e) => e.milestoneKey === 'season-wrap-0')!.text
     expect(textOf(ranked)).toMatch(/International rank #\d+/)
     expect(textOf(ranked)).not.toContain('Unranked')
-    expect(textOf(unranked)).toContain('Unranked internationally')
+    // ⚠ RE-AIMED (05.08, fix/wallet-and-wrapup). This asserted "Unranked internationally" for the
+    // DOMESTIC girl, and that assertion was the older half of the bug this wave closed: she holds
+    // 300 national points and the Stats National tab has been calling her #4 the whole time, so a
+    // wrap-up telling her she is unranked is the owner's original complaint (Home #4 against Stats
+    // #128) one table further down. THE CLAIM THE TEST WAS WRITTEN FOR IS UNTOUCHED AND IS THE
+    // second line: a national result must never buy an INTERNATIONAL ranking. What changed is that
+    // the line now names her own table instead of the one she has never played in.
+    expect(textOf(unranked)).toMatch(/National rank #\d+/)
     expect(textOf(unranked)).not.toMatch(/International rank #\d+/)
+    // ...and the "unranked is not a number" refusal still bites where it should: a career with no
+    // counting result on ANY table gets a word, not the dense place of the whole 0-point tie.
+    const nothing = createWorld('wrap-ranked')
+    const rng = rngFromSeed(nothing.seed)
+    for (let i = 0; i < 49; i++) tickWeek(nothing, rng)
+    expect(textOf(nothing)).toMatch(/Unranked – national/)
+    expect(textOf(nothing)).not.toMatch(/rank #\d+/)
   })
 
   it('never fires the same year wrap-up twice, even ticking through the whole off-season', () => {

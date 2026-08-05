@@ -257,3 +257,34 @@ Owner: «Замкнутый круг у ИИ-юниорок - да, надо ч�
 - **No schema bump.** The kid's on-ramp latch (`onRampCleared`, v34) is replaced for the cohort by
   `latchOnRamps`' own second proof – a W-track row inside the 52-week window – so the door costs zero
   persisted bytes. `SAVE_SCHEMA_VERSION` stays at 39.
+
+## 2026-08-05 – The wallet that read zero, and the wrap-up's rank line (`fix/wallet-and-wrapup`)
+
+Owner, playing into season 2038 at twenty-one on the W tour, three symptoms on one card. Full
+reproduce-then-fix numbers in `docs/specs/wallet-and-wrapup.md`; the rulings, for the log:
+
+- **The rank line follows where she plays, and this is the rule chosen.** His ask: «Это тоже надо
+  как-то динамично делать в зависимости от текущего уровня турнира, ну или доминирующего в этом
+  году.» The wrap-up now names **the track that carried the most competitive matches this season**
+  (`world.seasonRecord`, read at the wrap before it resets), ties broken by the points earned on each
+  track and by the ladder's order last, falling back to `activeLadderOf` for a season she did not
+  play at all. Matches and not entries, because a result row is award-only and would under-count the
+  rung a struggling professional plays most. So a 21-14 W season reads `Professional #288` where it
+  used to read *"Unranked – she has not played a Junior Tour event yet."*
+- **Nothing was lost and nothing was recovered, because nothing was missing.** `financeWeeks`,
+  `careerTotals`, `results` and `seasonHistory` were all correct in his save throughout. Every one of
+  the three symptoms is a SCREEN reading a store that cannot answer its question.
+- **The event feed's cap is spent by class, and that was the defect.** Ordinary rows are a flow and
+  her matches were a protected stock, so the protected class grew until it owned the whole 400 rows
+  (382 + 18 = 400 in his save) and every money row was deleted by the tick that wrote it.
+  `EVENTS_ORDINARY_FLOOR = 120` bounds it. The radar bench is byte-identical (its horizon is 208
+  weeks and cannot see this), and the structural argument is that the radar's confidence COUNT comes
+  from durable counters – the feed only ever supplied a per-match rate.
+- **No schema bump.** `SeasonSummary` gains `rankTrack?` / `rankInTrack?`, both optional with
+  defaulting readers – the `weeksInjured` precedent. `SAVE_SCHEMA_VERSION` stays at 40.
+- **⚠ AND THE ANSWER TO «что делают наши тесты и почему не ловят таких вещей»: the caps are the
+  untested region.** The two longest careers in the suite (520 and 500 weeks) enter no tournaments at
+  all, so the failure mode is unreachable in them by construction; the longest career that actually
+  plays is 260-300 weeks and the regime begins around week 430. Our tests only ever looked at young
+  careers, and the ones that looked at old careers did not play tennis in them.
+  `tests/long-career-ledgers.test.ts` closes it, mutation-verified against all four fixes.

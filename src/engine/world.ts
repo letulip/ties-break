@@ -206,7 +206,7 @@ import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
 import { cohortIds, inTrack, fieldProsOf, fullRanking, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors, type ProDoors } from './world/ladder'
 export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, proDoors }
-import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, FINANCE_WEEKS } from './world/constants'
+import { KID_ID, SEASON_MIN_FUTURE, SEASON_CHUNK, RESULTS_WINDOW, EVENTS_CAP, EVENTS_ORDINARY_FLOOR, FINANCE_WEEKS } from './world/constants'
 export { KID_ID }
 import { isCappedTier, annualEntryLimit, entryCapUsage, isCappedProTier, annualProEntryLimit, proEntryCapUsage } from './world/entryCaps'
 // W3-ACT2 §6 - the mandatory regime. Re-exported below under its own names so the worker, the
@@ -1755,17 +1755,40 @@ function isRadarEvidence(e: WorldEvent): boolean {
   return e.match !== undefined && !e.friendly && (e.match.aId === KID_ID || e.match.bId === KID_ID)
 }
 
+// ⚠⚠ ...AND THE ORDER OF SACRIFICE IS NOT ALLOWED TO REACH ZERO (fix/wallet-and-wrapup, 05.08).
+//
+// The paragraph above is still the rule and still right: an ordinary row is cheaper to lose than one
+// of her matches. What it did not say is what happens when the protected class STOPS LEAVING ROOM,
+// and the answer was measured on the owner's own save at week 412: 382 match rows + 18 kept
+// milestones = 400 = the whole cap, `rest` empty, and therefore EVERY income and expense row of
+// EVERY week deleted on the tick that wrote it. His week recap read «FINANCES · Income +$0 · Spent
+// +$0» beside three real matches, and the Money screen's ledger tab had no transactions at all.
+//
+// The asymmetry is structural rather than accidental: ordinary rows are a FLOW (2-6 a week, for
+// ever) and her matches are a STOCK, so absolute priority for the stock is not a preference between
+// two competing classes – it is a guarantee that the flow reaches zero on a long enough career. The
+// two ledger-side fixes in this wave (the recap's money, the wrap-up's best result) mean no SCREEN
+// depends on this any more, but the feed still owns things nothing else records – the flavour lines,
+// the ledger's individual transactions, the tournament summary the travel note quotes – and none of
+// those is reconstructible from a per-category total. So the newest `EVENTS_ORDINARY_FLOOR` of them
+// are off the table until her matches have been trimmed to their own share. See constants.ts.
 function pruneEvents(world: WorldState): void {
   if (world.events.length <= EVENTS_CAP) return
   const kept = world.events.filter((e) => e.keep)
   const evidence = world.events.filter((e) => !e.keep && isRadarEvidence(e))
   const rest = world.events.filter((e) => !e.keep && !isRadarEvidence(e))
   const overflow = world.events.length - EVENTS_CAP
-  // Ordinary rows go first. Only if dropping every one of them is still not enough does the trim
-  // reach her matches, oldest-first as before.
-  const restTrimmed = overflow >= rest.length ? [] : rest.slice(overflow)
-  const stillOver = Math.max(0, overflow - rest.length)
-  const evidenceTrimmed = stillOver >= evidence.length ? [] : evidence.slice(stillOver)
+  // Ordinary rows go first, oldest-first, but only down to the floor.
+  const sacrificeable = Math.max(0, rest.length - EVENTS_ORDINARY_FLOOR)
+  const fromRest = Math.min(overflow, sacrificeable)
+  let stillOver = overflow - fromRest
+  // Then her matches, oldest-first as before.
+  const fromEvidence = Math.min(stillOver, evidence.length)
+  stillOver -= fromEvidence
+  const evidenceTrimmed = evidence.slice(fromEvidence)
+  // And only when trimming every match she has ever played is STILL not enough does the floor
+  // itself give way – a career whose kept milestones alone approach the cap.
+  const restTrimmed = rest.slice(fromRest + stillOver)
   world.events = [...kept, ...evidenceTrimmed, ...restTrimmed].sort((a, b) => a.id - b.id)
 }
 

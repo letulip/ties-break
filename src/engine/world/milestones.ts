@@ -10,7 +10,7 @@
 //
 // ⚠ RNG: nothing here draws. The wrap-up folds persisted ledgers, so the frozen MAIN capture cannot
 // notice this file.
-import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS, TIER_LADDER } from '../season/calendar'
+import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS, TIER_LADDER, TIERS } from '../season/calendar'
 import { seasonYear } from '../../shared/dates'
 import { milestoneKey } from '../diary'
 import type { LadderTrack, TierId } from '../season/types'
@@ -18,7 +18,7 @@ import { LADDER_LABEL, type Milestone, type TierTrophies, type WorldEventCategor
 import { addEvent, financeWindow, seasonIndexOf, seasonStartWeek } from './ledger'
 import { KID_ID } from './constants'
 import { finishLabel } from './labels'
-import { kidPoints } from './ladder'
+import { activeLadderOf, kidPoints, rankIn } from './ladder'
 import type { WorldState } from '../world'
 
 // --- milestones (never pruned) -----------------------------------------------
@@ -76,6 +76,87 @@ export function captureBreakEven(world: WorldState): void {
  *  pro career is far past the game's horizon – the cap exists so the save has a hard ceiling. */
 export const SEASON_HISTORY_CAP = 30
 
+// =================================================================================================
+// THE TWO FOLDS THE WRAP-UP USED TO SCRAPE OUT OF THE EVENT FEED (fix/wallet-and-wrapup, 05.08)
+// =================================================================================================
+//
+// The owner, season 2038, on a 44-19 record: the wrap-up card said «no tournaments played». It is
+// the same defect R11-12a fixed for the season's MONEY eleven notes above, arriving through a
+// different field – the money moved onto `financeWeeks` and the best-result fold was missed.
+//
+// ⚠ AND IT BITES MUCH EARLIER THAN THE MONEY DID, which is why it went unnoticed for so long: the
+// feed does not go from right to empty, it DECAYS. Measured on tools/wallet-audit.ts, one greedy
+// career: the wrap-up's best result is already wrong in season 3 (it printed "Semifinalist" over a
+// real Champion, because the season's earliest tournament rows had been pruned while the later ones
+// survived), wrong again in seasons 5, 6 and 7, and only becomes the owner's flat "no tournaments
+// played" in season 8. A wrong-but-plausible finish is not something a playtest can catch.
+//
+// THE LEDGER THAT CAN ANSWER IT. `world.results` prunes on TIME (RESULTS_WINDOW = 52 weeks) and the
+// wrap fires at yearStart + 49, so every row of the season it is about is inside the window BY
+// CONSTRUCTION – no count, no cap, no career length that can take it away.
+
+/** HER BEST FINISH OF THE SEASON, inverted out of the counting results the ledger holds.
+ *
+ *  A result row carries what the finish PAID and the tier it was paid at, and `TierDef.points` is
+ *  indexed by finish and strictly decreasing on every rung – so a positive payout inverts to exactly
+ *  one round, in that tier's own table. (`nextGoal.ts` reads the same inversion for the goal ladder.)
+ *
+ *  ⚠ WHAT IT CANNOT SEE, stated rather than papered over: the kid's result row is AWARD-ONLY
+ *  (`finalizeTournament` pushes it only when `points > 0`), so a season of nothing but scoreless
+ *  exits leaves no row at all. That is not the same fact as "she played no tournaments", and the
+ *  caller tells the two apart with the season W-L, which is a running counter and cannot be pruned. */
+function seasonBestFinish(world: WorldState, fromWeek: number, toWeek: number): number | null {
+  let best: number | null = null
+  for (const r of world.results) {
+    if (r.playerId !== KID_ID || r.week < fromWeek || r.week >= toWeek) continue
+    if (!r.tier || r.points <= 0) continue
+    const finish = TIERS[r.tier].points.indexOf(r.points)
+    if (finish < 0) continue
+    if (best === null || finish < best) best = finish
+  }
+  return best
+}
+
+/** WHICH TABLE THE SEASON WAS PLAYED ON – the owner's own ask, 05.08: «на том же экране всегда
+ *  показывается international, хотя мы уже давно там не играем. Это тоже надо как-то динамично
+ *  делать в зависимости от текущего уровня турнира, ну или доминирующего в этом году.»
+ *
+ *  THE RULE: the track that carried the most COMPETITIVE MATCHES this season, ties broken by the
+ *  points she earned on each, and by the ladder's own order last (the higher table wins a dead heat).
+ *
+ *  ⚠ MATCHES AND NOT ENTRIES, because matches are the fact the save actually keeps. `seasonRecord`
+ *  is the per-track W-L (v28/v30), it is a running counter incremented at every finalize, it is
+ *  reset by this very function one screen below – so at the moment it is read it describes exactly
+ *  the season being wrapped, whatever the event feed has done with its rows. Counting ENTRIES would
+ *  mean counting result rows, which are award-only and would silently under-count the rung she is
+ *  losing openers at, i.e. precisely the rung a struggling professional plays most.
+ *
+ *  ⚠ AND A SEASON SHE DID NOT PLAY AT ALL falls back to `activeLadderOf` – the game's ONE answer to
+ *  "which table is hers", the same one Home's chip, Stats and the Kid screen read. A year lost to
+ *  injury does not demote a professional to the junior tour. */
+function dominantTrackOfSeason(world: WorldState, fromWeek: number, toWeek: number): LadderTrack {
+  const pointsBy: Record<LadderTrack, number> = { domestic: 0, itf: 0, wta: 0 }
+  for (const r of world.results) {
+    if (r.playerId !== KID_ID || r.week < fromWeek || r.week >= toWeek) continue
+    if (!r.tier) continue
+    pointsBy[TIERS[r.tier].track] += r.points
+  }
+  const record = world.seasonRecord ?? emptySeasonRecord()
+  // Lowest table first, so a strictly-greater test lets the HIGHER table win a dead heat.
+  const order: LadderTrack[] = ['domestic', 'itf', 'wta']
+  let best: LadderTrack | null = null
+  let bestMatches = 0
+  for (const track of order) {
+    const played = (record[track]?.wins ?? 0) + (record[track]?.losses ?? 0)
+    if (played === 0) continue
+    if (best === null || played > bestMatches || (played === bestMatches && pointsBy[track] >= pointsBy[best])) {
+      best = track
+      bestMatches = played
+    }
+  }
+  return best ?? activeLadderOf(world)
+}
+
 // --- season wrap-up (Round 5 items 16/21; round-7 item 4) ---------------------
 // Fires once, the moment the world ticks into a season year's first off-season week
 // (see calendar.ts's isOffSeasonWeek). Season figures are read back off the EXISTING
@@ -132,13 +213,11 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
     .filter((r) => r.playerId === KID_ID && inRange(r.week))
     .reduce((sum, r) => sum + r.points, 0)
 
-  let bestFinish: number | null = null
-  for (const e of world.events) {
-    if (!inRange(e.week)) continue
-    if (e.type === 'tournament' && e.finishIdx !== undefined) {
-      if (bestFinish === null || e.finishIdx < bestFinish) bestFinish = e.finishIdx
-    }
-  }
+  // ⚠ OFF THE RESULTS LEDGER, NOT THE EVENT FEED (fix/wallet-and-wrapup) – see `seasonBestFinish`.
+  // What stood here was `for (const e of world.events) ... e.type === 'tournament' && e.finishIdx`,
+  // and `world.events` is capped at 400 rows by COUNT: on the owner's save the tournament summaries
+  // of the whole season had been evicted, so a 44-19 year reported "no tournaments played".
+  const bestFinish = seasonBestFinish(world, yearStart, wrapWeek)
 
   const wins = world.seasonWins
   const losses = world.seasonLosses
@@ -182,12 +261,6 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // carried in. Persisted, because a save can be closed mid-season (schema v17). null on a career
   // migrated from an older save mid-season, which every reader already handles as "not recorded".
   const startRank = world.seasonStartRank
-  const rankMove =
-    startRank === null || startRank === world.kidRank
-      ? ''
-      : startRank > world.kidRank
-        ? ` (↑${startRank - world.kidRank} vs season start)`
-        : ` (↓${world.kidRank - startRank} vs season start)`
 
   // R12-S2 (owner's screenshot): the row LABEL is already "Best result", so the value said
   // "best Champion". The value is the finish, and nothing else – "Champion" / "Runner-up" /
@@ -197,7 +270,16 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // without the stray adjective), and the Stats season table – which never used this string at all,
   // it renders `bestFinish` through `finishLabel` itself. Summaries banked BEFORE this change keep
   // their stored wording, which is correct: a recap is a record of what was said.
-  const bestText = bestFinish === null ? 'no tournaments played' : finishLabel(bestFinish)
+  // ⚠ AND THERE ARE THREE ANSWERS NOW, NOT TWO. The result ledger is award-only, so "no counting
+  // result" and "no tournaments played" are different facts about different seasons and the W-L
+  // counters are what tell them apart. A girl who entered eight events and lost eight openers has
+  // played tournaments; saying she has not is the same lie in a smaller font.
+  const bestText =
+    bestFinish !== null
+      ? finishLabel(bestFinish)
+      : wins + losses > 0
+        ? 'no result that scored'
+        : 'no tournaments played'
   const fundsSign = fundsDeltaCents >= 0 ? '+' : '-'
   const fundsText = `${fundsSign}$${Math.abs(Math.round(fundsDeltaCents / 100)).toLocaleString('en-US')}`
 
@@ -215,8 +297,37 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
   // dense rank of the whole 0-point tie group, which is the thing `rankLabel` exists to refuse to
   // print. So the popup says what the table says, and the rank move (a diff between two of these
   // non-numbers) is suppressed with it.
-  const rankedItf = kidPoints(world, 'itf') > 0
-  const rankText = rankedItf ? `${LADDER_LABEL.itf} rank #${world.kidRank}${rankMove}` : `Unranked internationally`
+  //
+  // ⚠⚠ ...AND THE TABLE IT NAMES IS THE ONE SHE PLAYED ON (fix/wallet-and-wrapup, 05.08). Both
+  // paragraphs above were written when a career had two tables and the ITF one was the destination;
+  // the professional table arrived a day later (1560d25) and this line was never widened, so a W50/
+  // W75/W100 player with no junior point in the window read «Unranked internationally – she has not
+  // played a Junior Tour event yet», which is a sentence about a fourteen-year-old printed at a
+  // twenty-one-year-old professional. Her junior rank in the owner's save is #74 and she is #288 in
+  // the world; neither of those numbers is "unranked", and the junior one is not her season.
+  //
+  // `dominantTrackOfSeason` is the answer, `rankIn` is her place in that table (the same cache every
+  // rank surface reads) and `kidPoints > 0` is the unchanged "unranked is not a number" rule applied
+  // to the right table instead of always to the junior one.
+  const rankTrack = dominantTrackOfSeason(world, yearStart, wrapWeek)
+  const rankInTrack = kidPoints(world, rankTrack) > 0 ? rankIn(world, rankTrack) : null
+  // ⚠ THE MOVEMENT ARROW IS ITF-ONLY, AND THAT IS A LIMIT RATHER THAN AN OVERSIGHT.
+  // `seasonStartRank` (v17) is one persisted number and it is the ITF rank – widening it to three
+  // tracks is a schema change, and it cannot be back-filled because the rank AT the season's first
+  // week needs the 52 weeks before it, which `pruneResults` deleted 49 weeks ago (the whole reason
+  // v17 exists). Subtracting an ITF start rank from a professional end rank is the cross-currency
+  // subtraction `prevRankIn` exists to forbid, so on any other track the season simply reports where
+  // she finished and no arrow. Logged in docs/specs/wallet-and-wrapup.md as the one thing left open.
+  const rankMove =
+    rankTrack !== 'itf' || startRank === null || rankInTrack === null || startRank === rankInTrack
+      ? ''
+      : startRank > rankInTrack
+        ? ` (↑${startRank - rankInTrack} vs season start)`
+        : ` (↓${rankInTrack - startRank} vs season start)`
+  const rankText =
+    rankInTrack !== null
+      ? `${LADDER_LABEL[rankTrack]} rank #${rankInTrack}${rankMove}`
+      : `Unranked – ${LADDER_LABEL[rankTrack].toLowerCase()}`
   fireMilestone(
     world,
     `season-wrap-${seasonIndex}`,
@@ -241,6 +352,12 @@ export function maybeFireSeasonWrapUp(world: WorldState): void {
     // half is a discount on the travel line, not an income row, so no window fold can recover it.
     // Read HERE, at week 49, which is after the year's last trip and before the review resets it.
     academyCoveredCents: world.academy?.coveredCents ?? 0,
+    // fix/wallet-and-wrapup: WHICH table the season was played on, and her place in THAT one. Banked
+    // rather than re-derived by the dialog, because `seasonRecord` – the evidence – is reset three
+    // lines below, and because a summary is a record of what was true at the wrap. Both OPTIONAL and
+    // both defaulted by every reader, which is the `weeksInjured` precedent: no schema bump.
+    rankTrack,
+    rankInTrack,
   }
   // R10-9: the same figures also APPEND to the career history (the summary above is overwritten
   // every year). Guarded on the season INDEX, so a re-entry for a season already banked is a no-op –
