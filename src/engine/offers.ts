@@ -995,8 +995,15 @@ export function dealUnderReview(offers: Offer[], reviewWeek: number): Offer | nu
   return activeKitDeal(offers, reviewWeek)
 }
 
-/** The last week of the season that is finishing at `reviewWeek` - the week a deal's term has to
- *  reach to be "up", and the week a deal that fails its obligation is ended on. */
+/** The last week of the SEASON YEAR containing `week` - offset 51, the last of the three quiet
+ *  weeks.
+ *
+ *  ⚠ IT IS NO LONGER ANYTHING TO DO WITH A CONTRACT (05.08). It used to be both "the last week of
+ *  the year" and "the week a deal ends on", because those were the same week; a term now ends on
+ *  `contractEndWeek` (offset 49) so that the slot is empty while the brands' window is still open,
+ *  and the two questions have come apart. Its one remaining caller is the snapshot's `seasonSupply`,
+ *  which wants the calendar horizon and always did - a deal's dates must go through
+ *  `contractEndWeek`. */
 export function seasonLastWeek(week: number): number {
   return Math.floor(week / WEEKS_PER_YEAR) * WEEKS_PER_YEAR + WEEKS_PER_YEAR - 1
 }
