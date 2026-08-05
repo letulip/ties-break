@@ -142,7 +142,7 @@ export interface TierDef {
    *  Both halves of it moved on the same day and in the same direction: the professional window is
    *  the rulebook's eighteen rather than sixteen, and a W15 title is the 15 points the rung is named
    *  after rather than 10. 18 x 15 = 270, and a perfect W35 season likewise caps at 18 x 35 = 630.
-   *  The paragraph's ARGUMENT is untouched — it is about the unit, not the magnitude — but a reader
+   *  The paragraph's ARGUMENT is untouched – it is about the unit, not the magnitude – but a reader
    *  reaching for "160" as a current ceiling would be two corrections out of date.
    *
    *  ITF and domestic rungs keep `enterPct`: their tables ARE population artefacts (199 juniors, no
