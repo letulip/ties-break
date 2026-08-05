@@ -36,7 +36,7 @@ import { useLetterWatermark, useNewsWatermark } from './composables/inboxCue'
 // "when does the dot show" is one testable sentence rather than a computed buried in a shell.
 import { trophyDotShows, trophyPieces, useTrophyFlight } from './composables/trophyArrival'
 import { useScrollReset } from './composables/scrollReset'
-import { playSfx } from './audio/sfx'
+import { playSfx, primeSfx } from './audio/sfx'
 import SplashScreen from './components/SplashScreen.vue'
 import OnboardingWizard from './components/OnboardingWizard.vue'
 import OnboardingTour from './components/OnboardingTour.vue'
@@ -450,6 +450,12 @@ const { latestId: latestNewsId, unseen: newsUnseenOffHome, markSeen: markNewsSee
 // or second preference was invented for this.
 const { unseen: letterUnseen, markSeen: markLettersSeen, newestId: newestLetterId } =
   useLetterWatermark('tb:lastSeenLetter')
+// ⚠ WARMED UP FRONT, FOR THE REASON `primeSfx` EXISTS AT ALL (R10-6). The mail cue is the second
+// sound in the app that NEVER plays during the flow it belongs to - like `applauseFinal`, it is
+// always cold at the exact moment it has to land, and it pays a HEAD probe plus a fetch/decode
+// before `play()` makes a noise. That cold start is what "the applause comes a beat late" was.
+// Fire-and-forget, needs no gesture, free on repeat, and skipped entirely while muted.
+primeSfx('mail')
 
 // ONE DOT ON THE HOME TAB, TWO FACTS BEHIND IT - «точечку возле иконки home». It is deliberately the
 // same dot the news already raised rather than a second marker beside it: both sentences are "there
@@ -472,11 +478,17 @@ watch([latestNewsId, newestLetterId], ([nowNews, nowLetter], [beforeNews, before
   // neither of those is post arriving while the player watched.
   const letterArrived =
     beforeLetter !== undefined && beforeLetter !== null && nowLetter !== null && nowLetter !== beforeLetter
-  // The quietest cue the app owns (effective 0.18, `clickSoft`) - «очень аккуратный и
-  // консервативный». There is no dedicated chime file in public/sounds/ and one is worth recording;
-  // until then this is the tick the news cue has always used rather than a new key pointing at a
-  // file that does not exist, which would be silence dressed up as a feature.
-  if (newsArrived || letterArrived) playSfx('clickSoft') // тилинь
+  // ⚠ THE POST HAS ITS OWN CUE NOW (owner, 05.08: «Письма приходят, но ни маркера, ни извещений
+  // нет» - and he shipped public/music/email-notification.mp3 with the report). The note that stood
+  // here said the placeholder was `clickSoft` only because "there is no dedicated chime file in
+  // public/sounds/ and one is worth recording"; there is one, so the letter gets it and the news
+  // keeps the tick it has always had.
+  //
+  // ⚠ STILL ONE PLAY, NEVER TWO. A sponsor's letter lands as a letter AND as a feed line in the same
+  // tick, so the two arms share this single call and the LETTER wins the tie - it is the more
+  // specific event, and it is the one the owner said he was missing.
+  if (letterArrived) playSfx('mail')
+  else if (newsArrived) playSfx('clickSoft') // тилинь
   if (tab.value === 'home') markHomeSeen()
 })
 

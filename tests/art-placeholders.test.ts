@@ -31,7 +31,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
-import { SPONSOR_TIERS, sponsorArtKey } from '../src/engine/offers'
+import { SPONSOR_TIERS } from '../src/engine/offers'
 import { ART_TIER_BORROWS } from '../src/art/venues'
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url))
@@ -192,27 +192,35 @@ describe('placeholder-art registry – a new stand-in cannot ship silently', () 
     ).toEqual([])
   })
 
-  it('sponsorArtKey borrows exactly the rungs the registry lists as absent', () => {
-    // The `absent` half has no file to hash, so its "cannot ship silently" direction is a code
-    // check: the set of rungs that borrow somebody else's letterhead must equal the set of sponsor
-    // rows in the registry. A seventh rung added with a borrowed mark fails HERE.
-    const borrowing = SPONSOR_TIERS.filter((t) => sponsorArtKey(t) !== t).map((t) => `${IMAGES}/sponsors/${t}.webp`)
-    const listed = absent.filter((r) => r.asset.startsWith(`${IMAGES}/sponsors/`)).map((r) => r.asset)
+  it('every sponsor rung ships its own letterhead – a borrowed mark cannot return unregistered', () => {
+    // ⚠ THIS ARM CHANGED SHAPE ON 05.08, AND IT GAINED TEETH RATHER THAN LOSING THEM. It used to
+    // read `SPONSOR_TIERS.filter(t => sponsorArtKey(t) !== t)` and assert that set equalled the
+    // registry's sponsor rows – a code-to-doc equality, which was the only check available while
+    // three rungs of six had no art and there was therefore no file to hash. The owner has now drawn
+    // the three professional marks, `sponsorArtKey` is deleted (see the note in engine/offers.ts),
+    // and the honest question is no longer "which rungs redirect" but the one the redirect existed
+    // to answer: DOES EVERY RUNG ON THE LADDER HAVE A MARK OF ITS OWN?
+    //
+    // That is strictly stronger. The old arm could only see a borrow that went through that one
+    // function, and it was blind to a mark being deleted or to a rung whose file never existed. This
+    // fails on all three, and it is the check a seventh rung has to pass.
+    const missing = SPONSOR_TIERS.filter((t) => !existsSync(abs(`${IMAGES}/sponsors/${t}.webp`)))
     expect(
-      [...borrowing].sort(),
-      `sponsorArtKey and ${REGISTRY} disagree about which sponsor rungs borrow a mark. Add a row ` +
-        `for a new borrowing rung, or delete the row for one that stopped borrowing.`,
-    ).toEqual([...listed].sort())
-    // …and each borrowed-from key is the counterpart the registry names, so a row cannot claim the
-    // wrong master and stay green.
-    for (const r of absent) {
-      if (!r.asset.startsWith(`${IMAGES}/sponsors/`)) continue
-      const tier = r.asset.slice(`${IMAGES}/sponsors/`.length, -'.webp'.length)
-      expect(
-        `${IMAGES}/sponsors/${sponsorArtKey(tier as (typeof SPONSOR_TIERS)[number])}.webp`,
-        `${REGISTRY}:${r.line} – names ${r.counterpart}, but sponsorArtKey('${tier}') borrows something else.`,
-      ).toBe(r.counterpart)
-    }
+      missing,
+      `These sponsor rungs are on the ladder (SPONSOR_TIERS in src/engine/offers.ts) with no ` +
+        `letterhead in ${IMAGES}/sponsors/. Either the art is missing, or – if a rung is deliberately ` +
+        `borrowing another's mark for now – add an \`absent\` row to ${REGISTRY} saying what it ` +
+        `borrows and why, and the borrow itself needs a code branch that this test can see.`,
+    ).toEqual([])
+    // ...and no sponsor rung is registered as a placeholder any more. Left as a live assertion rather
+    // than deleted with the rows: it is what makes the paragraph above true, and the day somebody
+    // re-registers a borrowed letterhead this says so instead of the registry and the code drifting
+    // apart in silence.
+    expect(
+      absent.filter((r) => r.asset.startsWith(`${IMAGES}/sponsors/`)).map((r) => `${REGISTRY}:${r.line} ${r.asset}`),
+      `A sponsor rung is registered as \`absent\`, but every rung now ships its own mark and the ` +
+        `borrowing branch (sponsorArtKey) is gone. Restore a real borrow in code, or delete the row.`,
+    ).toEqual([])
   })
 
   it('ART_TIER_BORROWS borrows exactly the venue rungs the registry lists as absent', () => {

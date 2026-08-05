@@ -60,24 +60,24 @@ export const SPONSOR_TIERS: readonly SponsorTier[] = [
   // about where the professional rungs slot in. Caught by tests/offers.test.ts, which asks the
   // ladder for a rung at six ranks rather than trusting the array to be in a sensible order.
   'local', 'national', 'tour', 'global', 'premium', 'icon',
-  // Letterheads: the three professional rungs reuse `global.webp` until real marks exist, exactly
-  // as the W2-LADDER trophies reuse their masters - see `sponsorArtKey`.
+  // Letterheads: ALL SIX RUNGS SHIP THEIR OWN MARK since 05.08 - the tier id IS the filename, and
+  // `public/images/sponsors/<tier>.webp` is the whole of the lookup.
+  //
+  // ⚠ `sponsorArtKey` USED TO LIVE HERE AND IS GONE, WHICH IS THE POINT. From W3-ACT2 until now
+  // three marks existed for six rungs, so a one-line function redirected `tour` / `premium` / `icon`
+  // onto `global.webp` and three `absent` rows in docs/art-placeholders.md registered the debt. Its
+  // own note recorded the exit condition - «three real marks are an art ask whenever the owner wants
+  // them; they would replace this function with the identity rather than touching anything else» -
+  // and the owner has now drawn them (Baseline Athletic, Meridian Sport, Aurelia). An identity
+  // function is not a smaller redirect, it is a redirect nobody can tell is dead, so it was DELETED
+  // rather than emptied: the registry's own instruction for an `absent` row is that "the code branch
+  // that does the borrowing goes too".
+  //
+  // What replaced its guard is stronger than what it guarded. `tests/art-placeholders.test.ts` used
+  // to check that the redirect's rung-set equalled the registry's; it now checks that EVERY rung in
+  // this array has a letterhead on disk - which catches a seventh rung added with no art (the case
+  // the old arm existed for) and also catches a mark being deleted, which the old arm could not see.
 ] as const
-
-/** WHICH LETTERHEAD IMAGE A RUNG PRINTS. `public/images/sponsors/<key>.webp` holds three marks and
- *  the ladder now has six, so the three professional rungs borrow the global mark.
- *
- *  PLACEHOLDER ART, and it is REGISTERED rather than merely flagged: the three rungs have a row each
- *  in `docs/art-placeholders.md`, and `tests/art-placeholders.test.ts` asserts that the set of rungs
- *  this function redirects is exactly the set the registry lists. So a seventh rung added with a
- *  borrowed mark fails the suite instead of joining the debt silently, and the day `tour.webp` lands
- *  the same suite says which row to delete. Same stand-in rule `art/venues.ts` and the W2-LADDER
- *  trophies live by: no art is invented in code, the mapping is one function, and three real marks
- *  (tour / premium / icon) are an art ask whenever the owner wants them - they would replace this
- *  function with the identity rather than touching anything else. */
-export function sponsorArtKey(tier: SponsorTier): string {
-  return tier === 'tour' || tier === 'premium' || tier === 'icon' ? 'global' : tier
-}
 
 // =================================================================================================
 // THE BRAND LADDER - three rungs, and the rung says WHICH OF HER LINES IT COVERS

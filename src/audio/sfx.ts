@@ -31,9 +31,11 @@ export type SfxKey =
   | 'takeYourSeats'
   | 'click'
   | 'clickSoft'
+  | 'mail'
 
-/** Key -> filename(s) in public/sounds/ (without the .mp3 extension). A key with
- *  multiple variants plays one at random each time (see `pickFile`). */
+/** Key -> filename(s) for `urlFor` (without the .mp3 extension). A key with multiple variants plays
+ *  one at random each time (see `pickFile`). A bare name lives in public/sounds/; a name carrying a
+ *  '/' is a path from the app base, which is how `mail` reaches the owner's own music/ drop. */
 const MANIFEST: Record<SfxKey, string | string[]> = {
   hit: ['hit-1', 'hit-2', 'hit-3', 'hit-4', 'hit-5', 'hit-6', 'hit-7', 'hit-8', 'hit-9'],
   out: 'out',
@@ -44,6 +46,15 @@ const MANIFEST: Record<SfxKey, string | string[]> = {
   takeYourSeats: 'take-your-seats',
   click: 'click',
   clickSoft: 'click-soft',
+  // THE POST'S OWN CUE (owner, 05.08: «Письма приходят, но ни маркера, ни извещений нет»), and it is
+  // his own recording – he shipped public/music/email-notification.mp3 with the report.
+  //
+  // ⚠ IT LIVES UNDER music/, NOT sounds/, AND THAT IS DELIBERATE. The file is where the owner put
+  // it; moving his drop into sounds/ to satisfy this module's default folder would be the tail
+  // wagging the dog, and a renamed asset is the kind of thing that goes missing the next time he
+  // drops a replacement in the folder he used before. `urlFor` honours a path instead - one branch,
+  // and every other key keeps the bare-name convention it has always had.
+  mail: 'music/email-notification',
 }
 
 // Round-7 (audio balance): the whole SFX bus sits UNDER the 0.30 background music
@@ -69,6 +80,10 @@ const KEY_VOICE: Partial<Record<SfxKey, number>> = {
   takeYourSeats: 0.8, // 0.32
   click: 0.625, // 0.25
   clickSoft: 0.45, // 0.18
+  // 0.22 – «очень аккуратный и консервативный дзынь» (owner, 04.08). Above `clickSoft`, because a
+  // letter landing is an EVENT and a tap is not, and below every match cue, because it can arrive
+  // while he is reading something else.
+  mail: 0.55, // 0.22
   // out / ooh / oohApplause / applauseShort fall through to DEFAULT_VOICE → 0.34
 }
 
@@ -116,8 +131,11 @@ function pickFile(key: SfxKey): string {
   return files[Math.floor(Math.random() * files.length)]
 }
 
+/** A bare manifest name is a file in public/sounds/; one carrying a '/' is already a path from the
+ *  app base and is used as written (see `mail`). Both end up absolute under BASE_URL, so a build
+ *  served from a sub-path resolves either kind. */
 function urlFor(file: string): string {
-  return `${import.meta.env.BASE_URL}sounds/${file}.mp3`
+  return `${import.meta.env.BASE_URL}${file.includes('/') ? file : `sounds/${file}`}.mp3`
 }
 
 /**

@@ -23,8 +23,12 @@ Deriving, recolouring or generating a replacement is not a builder's job; flaggi
    row to delete – that failure is the reminder, not a problem with your art.
 3. Delete the row. Green.
 
-For an `absent` row there is one extra step, named in the row's own note: the code branch that does
-the borrowing goes too (e.g. `sponsorArtKey` becomes the identity once all six letterheads exist).
+For an `absent` row there is one extra step, named in the row's own note: **the code branch that does
+the borrowing goes too**, and it goes in the same commit as the row – remove one without the other
+and the guard is red in one direction or the other. The sponsor letterheads are the worked example,
+start to finish: `sponsorArtKey` redirected three rungs onto `global.webp`, three `absent` rows
+registered it, and on 05.08 the marks arrived, the function was **deleted** (not left as an identity –
+a redirect nobody can tell is dead is worse than the redirect) and the three rows came out together.
 
 ## The registry
 
@@ -35,21 +39,6 @@ first cell is a backticked path starting with `public/`. Keep the column order.
 |---|---|---|---|---|
 | `public/images/trophies/w50-gold.webp` | `byte-copy` | `public/images/trophies/w35-gold.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W50 has no master of its own |
 | `public/images/trophies/w50-silver.webp` | `byte-copy` | `public/images/trophies/w35-silver.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W50 has no master of its own |
-| `public/images/trophies/w75-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W75 has no master of its own |
-| `public/images/trophies/w75-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – W75 has no master of its own |
-| `public/images/trophies/wta125-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – WTA 125 has no master of its own |
-| `public/images/trophies/wta125-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | W2-LADDER (f4bc579, 02.08) | placeholder – WTA 125 has no master of its own |
-| `public/images/trophies/wta250-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta250-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta500-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta500-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta1000-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/wta1000-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – a top rung shipped with no silverware |
-| `public/images/trophies/slam-gold.webp` | `byte-copy` | `public/images/trophies/w100-gold.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – the Slam trophy is a W100 trophy today |
-| `public/images/trophies/slam-silver.webp` | `byte-copy` | `public/images/trophies/w100-silver.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – the Slam trophy is a W100 trophy today |
-| `public/images/sponsors/tour.webp` | `absent` | `public/images/sponsors/global.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – `sponsorArtKey` maps this rung to `global`; drop the branch when the mark exists |
-| `public/images/sponsors/premium.webp` | `absent` | `public/images/sponsors/global.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – `sponsorArtKey` maps this rung to `global`; drop the branch when the mark exists |
-| `public/images/sponsors/icon.webp` | `absent` | `public/images/sponsors/global.webp` | act 3 / W3-ACT2 (dd2997c, 04.08) | placeholder – `sponsorArtKey` maps this rung to `global`; drop the branch when the mark exists |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-airport.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-airport.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-bus.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-bus.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
 | `public/images/fem-euro-brunnet/fem-euro-brunnet-sleepy-plane.webp` | `byte-copy` | `public/images/fem-euro-brunnet/fem-euro-brunnet-travel-sleepy-plane.webp` | rename (00d6554, 29.07) | leftover – the old name, superseded by the `-travel-` group; nothing reads it |
@@ -63,6 +52,25 @@ first cell is a backticked path starting with `public/`. Keep the column order.
 | `public/images/fields/j300-hard-1.webp` | `absent` | `public/images/fields/j30-hard-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
 | `public/images/fields/j300-clay-1.webp` | `absent` | `public/images/fields/j30-clay-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
 | `public/images/fields/j300-grass-1.webp` | `absent` | `public/images/fields/j30-grass-1.webp` | redesign-home slice A | never painted – `ART_TIER_BORROWS.j300` points the rung at J30 |
+
+### Cleared rows
+
+Struck through with the date, the way the venue gaps below are, so the list also records what the
+owner has already paid off. Deleted from the table above rather than left in it struck through: the
+table is machine-read and a row that is still parsed is still a claim.
+
+- ~~**Twelve trophy rows: `slam`, `w75`, `wta125`, `wta250`, `wta500`, `wta1000`, gold and silver
+  each.**~~ CLEARED 05.08 – all twelve were byte copies of `w100-gold.webp` / `w100-silver.webp`
+  (every one of them literally the same two files under six pairs of names, which is why the cabinet
+  showed one trophy for the whole top of the ladder). The owner replaced all twelve. **Verified by
+  hash, not by eye**: the twelve are now distinct from `w100` and from each other, and the only
+  byte-duplicate pairs left anywhere under `trophies/` are `w50-gold == w35-gold` and
+  `w50-silver == w35-silver` – the two rows that therefore STAY in the table above.
+- ~~**Three sponsor rows: `tour.webp`, `premium.webp`, `icon.webp`.**~~ CLEARED 05.08 – the three
+  professional rungs had no letterhead and `sponsorArtKey` redirected them onto `global.webp`. The
+  owner drew all three (Baseline Athletic → `tour`, Meridian Sport → `premium`, Aurelia → `icon`).
+  The rows and the redirect went in the same commit; see "How to clear a row" above for why the
+  function was deleted rather than reduced to the identity. All six marks hash distinct.
 
 ### What the two kinds mean
 
