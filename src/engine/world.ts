@@ -75,7 +75,7 @@ import {
 } from './academy'
 import { rivalConditions, rivalMatchPlayer } from './season/rival'
 import { generatePreHistory } from './season/prehistory'
-import { BEST_N_BY_TRACK, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
+import { BEST_N_BY_TRACK, RANKABLE_MIN, computeRanking, windowedBestSum, type SeasonResult } from './season/ranking'
 import {
   selectEntrants,
   resolveDoubleBookings,
@@ -1217,9 +1217,17 @@ function housekeep(world: WorldState): void {
  *  window width (W2-LADDER §3) so the sentence names the rule it measured against - "best 6" on a
  *  junior summary, "best 18" on a professional one - instead of quoting the junior rule at both.
  *  It reads the constant rather than a literal, so the 05.08 correction from sixteen to the
- *  rulebook's eighteen changed this copy without touching this function. */
-export function rankingDeltaSuffix(points: number, delta: number, bestN: number): string {
+ *  rulebook's eighteen changed this copy without touching this function.
+ *
+ *  ⚠ AND THE THIRD CASE IS THE MINIMUM (points-by-the-book, 05.08, §VIII.A.2.b). A player who has
+ *  scored but is not yet on the list has `after === 0` with `points > 0`, and the old two-case
+ *  sentence would have told her the result "does not improve best 18" – true of the arithmetic and
+ *  nonsense to read, because the reason is not that her window was full, it is that she has no
+ *  window yet. `notRanked` says which rule is holding her instead. It is passed by the call site
+ *  rather than derived here, because this function is a formatter and knows nothing about tables. */
+export function rankingDeltaSuffix(points: number, delta: number, bestN: number, notRanked = false): string {
   if (points <= 0) return ''
+  if (notRanked) return ` (+${points} banked – a ranking needs ${RANKABLE_MIN.tournaments} events with points, or ${RANKABLE_MIN.points})`
   if (delta <= 0) return ` (does not improve best ${bestN})`
   if (delta < points) return ` (ranking total +${delta})`
   return ''
@@ -1397,7 +1405,7 @@ function finalizeTournament(world: WorldState): void {
     type: 'tournament',
     text:
       `${tier.label} (${event.surface}, ${weekLabel(event.week)}): ${world.profile.kidName} – ` +
-      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before, BEST_N_BY_TRACK[track])}`,
+      `${finishLabel(kidFinish)} (+${points} pts)${rankingDeltaSuffix(points, after - before, BEST_N_BY_TRACK[track], after === 0)}`,
     finishIdx: kidFinish,
   })
   // World news: who actually took the title of the draw she played in. When the kid IS the

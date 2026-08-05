@@ -331,8 +331,16 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
  *  ledger, so a freshly-folded rank and the cached one legitimately differ by a place or two until
  *  she finishes her run. Reading the cache through one function is what makes the two agree by
  *  construction instead of by coincidence. */
+/** ⚠ THE TEST IS HER POINTS, NOT THE LENGTH OF HER RESULTS LIST (points-by-the-book, 05.08), and
+ *  the two came apart when §VIII.A.2.b's minimum landed. It used to ask `countingResults.length > 0`,
+ *  which was the same question while every counting result paid something: a player with rows had
+ *  points and a player without had neither. Two rules broke that equivalence – a `mandatoryMiss`
+ *  zero is a counting row worth nothing, and a professional below the minimum has rows that do not
+ *  put her on the list – and under either she would have read as a RANK on a total of zero, which is
+ *  the "unranked is not a number" bug this function exists to prevent, arriving from the other side.
+ *  Behaviour-identical on the domestic and ITF tables, where neither rule applies. */
 export function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
-  return computeCountingResults(world, track).length > 0 ? rankIn(world, track) : null
+  return kidPoints(world, track) > 0 ? rankIn(world, track) : null
 }
 
 export function computeLadderView(world: WorldState, track: LadderTrack): LadderView {

@@ -949,7 +949,8 @@ function section5(peaks: { label: string; build: KidSkills }[]): void {
   // WHAT HER SKILL IS WORTH IN POINTS. Approximating a rung's whole field by its measured mean core
   // (calendar.ts's own W2-FIELD2 table), a 32-draw is five rounds of the same coin, so the finish
   // distribution is closed form and `TIERS[tier].points[finish]` prices it. `bestN` for the W table
-  // is 16, so sixteen events of that rung is the standing she would hold playing nothing else.
+  // is `BEST_N_BY_TRACK.wta`, so that many events of one rung is the standing she would hold playing
+  // nothing else.
   //
   // ⚠ THE POINTS COME OFF `TIERS`, NOT OFF A COPY (points-by-the-book, 05.08). This table used to
   // carry its own transcription of all six rows, which went stale the moment W15 and W35 were
