@@ -194,6 +194,14 @@ on week 49 by term, so nothing is over-paid, and the following window is normal.
 week instead would mean judging a season with two of its competitive weeks unplayed and failing a
 girl for events she had not yet had the chance to enter, which is the worse trade.
 
+> ⚠ **CLOSED, 06.08 – and it was not a small consequence, it was the bug.** Shipping this as a
+> stated cost was the wrong call: the owner merged the wave, loaded his own career, and it was a save
+> at exactly week 48. He got **no sponsor letter at all** – the outcome the whole wave existed to
+> prevent. The trade above is real and the answer was to take it on both sides: the verdict is now
+> **once a season, on whichever week of the window the career first reaches**, and the count it is
+> judged on is anchored on the window's OPENING week so a late verdict judges the same rolling year
+> an early one would have. See §10. Nothing in §§1–5 below it is superseded.
+
 ---
 
 ## 5. What was measured AFTER

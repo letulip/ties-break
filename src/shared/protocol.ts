@@ -1178,7 +1178,7 @@ export type SponsorTier = 'local' | 'national' | 'global' | 'tour' | 'premium' |
  *      national 350  >  tour 200  >  global 87  >  premium 50  >  icon 10
  *
  *  which is a single monotone ladder with `tour` slotting in between the two junior-era rungs rather
- *  than colliding with either. `rungFor` reads it strongest-first and `raiseKitOffer` allows one deal
+ *  than colliding with either. `rungFor` reads it strongest-first and `raiseKitOffers` allows one deal
  *  at a time, so "side by side, one deal across both" is what ships - and it needed no new rule.
  *
  *  AND NONE OF IT SCALES WITH THE WEALTH CORRIDOR (the principle section 7 carries over). A
