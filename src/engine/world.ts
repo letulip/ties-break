@@ -154,7 +154,7 @@ export { enterEvent, withdrawEvent, releaseEntry, cancelEntry }
 import { eventById } from './world/bookings'
 import { KNOCK_HISTORY_MAX } from './world/knockHistory'
 export { KNOCK_HISTORY_MAX }
-import { fireMilestone, captureMilestone, captureBreakEven, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
+import { fireMilestone, captureMilestone, captureBreakEven, markSchoolEnd, maybeFireSeasonWrapUp, emptySeasonRecord, emptyTrophyLedger } from './world/milestones'
 export { emptySeasonRecord, emptyTrophyLedger, captureBreakEven }
 // W2-ENDINGS: the six endings' world-side wiring. Re-exported under these names so the worker, the
 // snapshot, the tests and the bench all read the one implementation - the same contract every other
@@ -202,6 +202,9 @@ export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, E
 // re-exported here so the ~111 modules importing them from  keep working.
 export { matchDrain, runFatigueExtra, tournamentRunStrain, conditionMatchFactor } from './condition'
 export { isExamWeek, isBlackoutWeek } from './season/calendar'
+// W4-SCHOOL: the school calendar. Lives in kidLife.ts with `gradeOf`, whose arithmetic it is.
+import { schoolEndWeek, schoolIsOver, schoolIsOverForBand } from './kidLife'
+export { schoolEndWeek, schoolIsOver, schoolIsOverForBand }
 export { isTierAgeOpen, tierAgeBlock } from './season/calendar'
 import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
@@ -276,7 +279,7 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, bir
 // `injuryHistory` is pruned to twenty rows and the career-ending injury is keyed on their SUM, so
 // the rule was measurably getting HARDER the more layoffs a career collected. Post-draw state end to
 // end: nothing here touches any stream, and the frozen MAIN capture (41550 / e6b0c709) cannot see it.
-export const SAVE_SCHEMA_VERSION = 41
+export const SAVE_SCHEMA_VERSION = 43
 
 
 
@@ -654,6 +657,10 @@ const TRAIN_EVENTS = [
   'Video session: studying her last matches',
 ]
 
+// ⚠ SAME LENGTH, ONE LINE DIFFERENT (W4-SCHOOL), and the length is load-bearing: `pickInt` spends
+// exactly ONE draw whatever the list holds, so swapping a list of the same length is RNG-neutral by
+// construction and the frozen MAIN capture cannot notice. A twenty-two-year-old has no school to
+// catch up on; what a light week catches up on then is the rest of a life lived in hotels.
 const REST_EVENTS = [
   'Light week: school catches up',
   'Family weekend away from the courts',
@@ -670,12 +677,21 @@ const WORKING_TRAIN_EVENTS = TRAIN_EVENTS.map((e) =>
 // wealthy adds premium recovery lines to the rest pool.
 const WEALTHY_REST_EVENTS = [...REST_EVENTS, 'Physio session', 'Massage & recovery']
 
+// W4-SCHOOL: the same pools with the one school line swapped, built by `map` so the LENGTH is
+// structurally identical to its parent and the single `pickInt` draw stays one draw. Same idiom
+// `WORKING_TRAIN_EVENTS` already uses for the background swap, one axis over.
+const AFTER_SCHOOL = (e: string): string =>
+  e === 'Light week: school catches up' ? 'Light week: the rest of life catches up' : e
+const POST_SCHOOL_REST_EVENTS = REST_EVENTS.map(AFTER_SCHOOL)
+const POST_SCHOOL_WEALTHY_REST_EVENTS = WEALTHY_REST_EVENTS.map(AFTER_SCHOOL)
+
 function trainFlavors(background: FamilyBackground): string[] {
   return background === 'working' ? WORKING_TRAIN_EVENTS : TRAIN_EVENTS
 }
 
-function restFlavors(background: FamilyBackground): string[] {
-  return background === 'wealthy' ? WEALTHY_REST_EVENTS : REST_EVENTS
+function restFlavors(background: FamilyBackground, schoolOver: boolean): string[] {
+  if (background === 'wealthy') return schoolOver ? POST_SCHOOL_WEALTHY_REST_EVENTS : WEALTHY_REST_EVENTS
+  return schoolOver ? POST_SCHOOL_REST_EVENTS : REST_EVENTS
 }
 
 
@@ -827,7 +843,10 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
     ? Math.round(coachWeeklyCents(rate, world.plan, world.profile.background, corridor) * jitter)
     : 0
   world.fundsCents -= expense
-  const flavors = world.plan.train >= 70 ? trainFlavors(world.profile.background) : restFlavors(world.profile.background)
+  const flavors =
+    world.plan.train >= 70
+      ? trainFlavors(world.profile.background)
+      : restFlavors(world.profile.background, schoolIsOver(world.week, world.profile.birthMonth))
   const flavor = flavors[pickInt(rng, 0, flavors.length - 1)]
   // The $0 line is still EMITTED, the way a sponsor-covered gear item is: the Money breakdown should
   // show why a coaching week cost nothing, not silently drop the row.
@@ -2532,6 +2551,14 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //     ZERO DRAWS: a calendar comparison. Placed after `rollKnock` so a birthday week that also carries
   //     a knock reads in the order it happened - she came off court sore, and it was her birthday.
   markBirthday(world)
+
+  // 3e. ...AND ONE SEPTEMBER SHE DOES NOT GO BACK (W4-SCHOOL). The owner: «Школа должна когда-то
+  //     закончиться, ей уже 21» and «Конец школы – в конце учебного года». Beside the birthday for
+  //     the same reason the birthday is here: it is a date on the family's calendar rather than a
+  //     result, it fires at most once, and it costs one integer comparison and no draws. AFTER the
+  //     birthday, because the year she leaves she is already eighteen and the two lines read in that
+  //     order.
+  markSchoolEnd(world)
 
   // 4. canonical AI tournaments for ALL scheduled events. ZERO main-stream draws: each event's
   //    bracket runs on its own `seed:aitour:<event.id>` stream, so the calendar's SIZE no longer

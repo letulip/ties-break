@@ -15,7 +15,8 @@
 // the frozen MAIN capture cannot notice this file.
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { TIERS, isBlackoutWeek, tierAgeBlock } from '../season/calendar'
+import { TIERS, isBlackoutWeek, isOffSeasonWeek, tierAgeBlock } from '../season/calendar'
+import { schoolIsOver } from '../kidLife'
 import type { LadderTrack, SeasonEvent } from '../season/types'
 import { LADDER_LABEL, LADDER_POINTS_LABEL, type EntryCapUsage } from '../../shared/protocol'
 import { ageAtWeek } from './age'
@@ -65,7 +66,9 @@ export function accrueCondition(world: WorldState, playedThisWeek: boolean): voi
       ? c.recoveryBase
       : c.recoveryBase + restRecoveryBonus(world.plan.rest)
   if (world.physioActive) recovery += ECONOMY.physio.conditionBonusPerWeek
-  if (isBlackoutWeek(world.week)) recovery += c.blackoutBonus
+  if (isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))) {
+    recovery += c.blackoutBonus
+  }
   world.condition = clamp(world.condition + recovery, c.min, c.max)
 }
 
@@ -337,8 +340,18 @@ export function availabilityStatus(world: WorldState, event: SeasonEvent): Avail
   if (vacation) {
     return { level: 'blocked', reason: 'unavailable', detail: vacationBlackoutDetail(vacation) }
   }
-  if (isBlackoutWeek(event.week)) {
-    return { level: 'blocked', reason: 'unavailable', detail: 'School exams this week – no tournaments.' }
+  // ⚠ THE WEEK'S OWN ANSWER, NOT THIS WEEK'S (W4-SCHOOL). Entries commit weeks ahead, so a girl
+  // entering in August for a June that falls after her last school year must not be refused for an
+  // exam she will never sit.
+  if (isBlackoutWeek(event.week, schoolIsOver(event.week, world.profile.birthMonth))) {
+    return {
+      level: 'blocked',
+      reason: 'unavailable',
+      // Off-season weeks reach here too, and past school they are the ONLY ones that do.
+      detail: isOffSeasonWeek(event.week)
+        ? 'Off-season – the tour is closed.'
+        : 'School exams this week – no tournaments.',
+    }
   }
   // THE DOCTOR'S VETO: under the medical floor no tier is enterable, at any price. Ranked AFTER
   // the week-level blackouts (a vacation/exam week is unenterable for everyone, so it names the

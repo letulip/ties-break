@@ -106,7 +106,10 @@ export function useWeekAhead(): ComputedRef<WeekAhead> {
     }
     if (snap.vacations.some((v) => v.week === next)) return { kind: 'vacation', label: 'Leave on vacation' }
     if (snap.practices.some((p) => p.week === next)) return { kind: 'practice', label: 'Practice match' }
-    if (isExamWeek(next)) return { kind: 'exam', label: 'Exam week' }
+    // W4-SCHOOL: the NEXT week's own answer – she may leave school between this week and it.
+    if (isExamWeek(next, snap.schoolEndsWeek !== undefined && next >= snap.schoolEndsWeek)) {
+      return { kind: 'exam', label: 'Exam week' }
+    }
     if (isOffSeasonWeek(next)) return { kind: 'off-season', label: 'Off-season week' }
     return TRAINING
   })

@@ -133,6 +133,8 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
     const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
       seed: 's',
       week: 10,
+      // W4-SCHOOL: a schoolgirl, which is what every fixture in this file was written about.
+      schoolOver: false,
       kidId: KID_ID,
       startAgeYears: 14,
       condition: 80,

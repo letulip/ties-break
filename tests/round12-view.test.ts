@@ -65,11 +65,22 @@ function slice(src: string, from: string, to: string): string {
 describe('R12-1/14 — exam weeks say "Exams", in green, and the event card says why', () => {
   it('THE WEEKS THE LABEL LEANS ON: exams are weeks 23-24 of every season year', () => {
     expect(ECONOMY.availability.examWeeks).toEqual([[23, 24]])
+    // ⚠ RE-AIMED, NOT WEAKENED (W4-SCHOOL). Every original assertion is here unchanged, with the
+    // school answer that was implicit when they were written spelled out: years 0-2 are a girl of
+    // fourteen to sixteen and she is at school.
     for (const year of [0, 1, 2]) {
-      expect(isExamWeek(year * WEEKS_PER_YEAR + 23)).toBe(true)
-      expect(isExamWeek(year * WEEKS_PER_YEAR + 24)).toBe(true)
-      expect(isExamWeek(year * WEEKS_PER_YEAR + 22)).toBe(false)
-      expect(isExamWeek(year * WEEKS_PER_YEAR + 25)).toBe(false)
+      expect(isExamWeek(year * WEEKS_PER_YEAR + 23, false)).toBe(true)
+      expect(isExamWeek(year * WEEKS_PER_YEAR + 24, false)).toBe(true)
+      expect(isExamWeek(year * WEEKS_PER_YEAR + 22, false)).toBe(false)
+      expect(isExamWeek(year * WEEKS_PER_YEAR + 25, false)).toBe(false)
+    }
+    // ...AND THE HALF THE ORIGINAL GUARD COULD NOT ASK, because there was no answer to give it:
+    // ONCE SCHOOL IS OVER THE FORTNIGHT NEVER COMES AGAIN, at any offset, for ever. This is the
+    // owner's own report – «и школа с уроками в 22 года всё еще со мной» – as an assertion.
+    for (const year of [4, 5, 8, 20]) {
+      for (const offset of [22, 23, 24, 25]) {
+        expect(isExamWeek(year * WEEKS_PER_YEAR + offset, true), `y${year} o${offset}`).toBe(false)
+      }
     }
   })
 

@@ -27,7 +27,6 @@ import {
   schoolYearIndex,
   schoolTile,
   friendsTile,
-  LAST_GRADE,
   PERSONALITY,
   SCHOOL_CUTOFF_MONTH,
   SCHOOL_YEAR_TURNS_AT,
@@ -47,6 +46,7 @@ import {
 import { rngFromSeed } from '../src/engine/rng'
 import { seasonYear } from '../src/shared/dates'
 import { isExamWeek } from '../src/engine/season/calendar'
+import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type PlayStyle } from '../src/shared/protocol'
 
 const PLAY_STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
@@ -128,7 +128,10 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
   })
 
   it('school ends – and says so, instead of printing a 14th grade', () => {
-    expect(gradeOf(2017, 3, 2034)).toBe(LAST_GRADE)
+    // ⚠ RE-AIMED, NOT WEAKENED (W4-SCHOOL): `LAST_GRADE` moved to `ECONOMY.school.lastGrade` so the
+    // school bench can sweep it (`lastGrade: 99` re-plays the shipped game, in which school never
+    // ended). Same assertion, one source of truth.
+    expect(gradeOf(2017, 3, 2034)).toBe(ECONOMY.school.lastGrade)
     expect(gradeOf(2017, 3, 2035)).toBeNull()
     // Which lands in the autumn of the season she turns 18 – her last first-day-of-term.
     const lastTerm = schoolTile(view({ week: 52 * 3 + SCHOOL_YEAR_TURNS_AT, birthMonth: 3 }))
@@ -151,7 +154,9 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
 
   it('the exam blackout speaks on the tile – the one week school is a fact, not a background', () => {
     // ECONOMY.availability.examWeeks – real weeks in which she may not enter anything.
-    const examWeek = [...Array(52).keys()].find((w) => isExamWeek(w))!
+    // ⚠ `false` – SHE IS AT SCHOOL (W4-SCHOOL). `isExamWeek` takes the answer now, because it used
+    // to be a pure function of the week and a twenty-two-year-old still sat papers.
+    const examWeek = [...Array(52).keys()].find((w) => isExamWeek(w, false))!
     expect(schoolTile(view({ week: examWeek, birthMonth: 3 })).note).toBe('Exams this week')
     expect(schoolTile(view({ week: examWeek + 6, birthMonth: 3 })).note).not.toBe('Exams this week')
   })

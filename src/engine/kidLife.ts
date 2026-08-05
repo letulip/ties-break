@@ -31,7 +31,10 @@
 // pinned in tests/kidLife.test.ts, not left to a careful author.
 
 import { rngFromSeed } from './rng'
+import { ECONOMY } from './economy'
 import { isExamWeek, isOffSeasonWeek, isSummerWeek, WEEKS_PER_YEAR } from './season/calendar'
+import { kidBirthYear } from './world/age'
+import { seasonYear } from '../shared/dates'
 import type { KidLife, KidLifeTile, PlayStyle } from '../shared/protocol'
 
 /** The widest a tile line may be, in characters.
@@ -105,11 +108,65 @@ function schoolCohortYear(birthYear: number, birthMonth: number): number {
  *  Grade G runs from age G+5 to G+6 on 1 September, which gives G = start - cohort - 6. */
 export function gradeOf(birthYear: number, birthMonth: number, schoolYearStart: number): number | null {
   const grade = schoolYearStart - schoolCohortYear(birthYear, birthMonth) - 6
-  return grade >= 1 && grade <= LAST_GRADE ? grade : null
+  return grade >= 1 && grade <= ECONOMY.school.lastGrade ? grade : null
 }
 
-/** School stops at the twelfth grade; after that she is done, whatever the arithmetic says. */
-export const LAST_GRADE = 12
+// =================================================================================================
+// ...AND WHEN IT ENDS (W4-SCHOOL). The owner: «Конец школы – в конце учебного года.»
+// =================================================================================================
+//
+// ⚠ THIS IS THE SAME ARITHMETIC AS `gradeOf` AND IT HAD BETTER STAY THAT WAY, which is why it is
+// derived from it rather than written beside it. The School tile has said "School's done" past the
+// last grade since it shipped; every other surface in the game - the exam blackout, the day grid's
+// eight-o'clock lesson block, the diary, the planner's refusal - ignored it, which is how a
+// twenty-two-year-old professional ended up still sitting papers. One derivation, read everywhere.
+//
+// WHAT IT MEANS FOR HER AGE, measured over all twelve birth months (docs/specs/school-ends-2026-08.md
+// §2): she leaves at career week 242 (born January-August) or 294 (September-December), always at
+// season-week offset 34 - the 1 September the school year turns over on - and always at a REAL age
+// between 18.00 and 18.92. Never before eighteen and never at nineteen, so it satisfies «школа уже
+// после 18 вроде не должна быть» for every girl the game can generate, and it clears the act-3 fork
+// (`ENDINGS.forkAgeYears` = 19) before that fork is ever raised. The two cannot contradict each
+// other: she is out of school BEFORE she is asked whether to turn professional or take the
+// scholarship, which is the order those questions come in for a real player.
+//
+// ZERO STATE. It is a pure function of (week, birthMonth), so a career loaded from a save answers it
+// the same way the tick does, a save taken at twenty-two is out of school the moment it is read, and
+// nothing can drift out of step with `world.week`. The v43 migration exists for the MOMENT (the
+// milestone row), never for the fact.
+
+/** THE CAREER WEEK SCHOOL ENDS: the 1 September on which she would have started a thirteenth grade.
+ *
+ *  `gradeOf`'s own arithmetic solved for the year instead of the grade. Grade G runs from the
+ *  September of `cohort + G + 6`, so the year after the last one is `cohort + lastGrade + 7`, and
+ *  the career week of that September is `SCHOOL_YEAR_TURNS_AT` plus whole seasons since the epoch. */
+export function schoolEndWeek(birthMonth: number): number {
+  const cohort = schoolCohortYear(kidBirthYear(), birthMonth)
+  // `seasonYear(0)` is the epoch year, so this is its inverse and there is no second definition of
+  // what year a season is (shared/dates.ts owns that, here as everywhere else).
+  const seasonIndex = cohort + ECONOMY.school.lastGrade + 7 - seasonYear(0)
+  return seasonIndex * WEEKS_PER_YEAR + SCHOOL_YEAR_TURNS_AT
+}
+
+/** Is she out of school in `week`? The one predicate every surface reads.
+ *
+ *  ⚠ TAKES THE WEEK IT IS ASKED ABOUT, not "now". The calendar's look-ahead, the Season screen's
+ *  rows and the planner all ask about FUTURE weeks, and a boolean captured at the current week would
+ *  quietly paint a lesson block on a week she will not be at school in. */
+export function schoolIsOver(week: number, birthMonth: number): boolean {
+  return week >= schoolEndWeek(birthMonth)
+}
+
+/** The COHORT'S school end, on the band clock (`ageAtWeek`), for the rivals who have no birth month.
+ *
+ *  The band's median birth month is 6.5 (`relativeAgeYears`), and `schoolCohortYear` only asks
+ *  whether the month is September or later - so every month from January to August gives the same
+ *  September, and 6 is that whole half of the band rather than one girl in it. It matters for one
+ *  thing only: the extra recovery a blackout week pays, which the rivals must stop being paid at
+ *  roughly the same time she does or the tour would quietly favour them for two weeks a year. */
+export function schoolIsOverForBand(week: number): boolean {
+  return schoolIsOver(week, 6)
+}
 
 /** Where she sits in her CLASS by age, 1 = the oldest. September-born first, August-born last -
  *  the exact reverse of the order the same twelve months give on a tennis draw sheet. */
@@ -158,7 +215,10 @@ export function schoolTile(view: KidLifeWorldView): KidLifeTile {
   if (grade === null) return { lead: "School's done", note: 'Tennis full-time' }
   return {
     lead: `${ordinal(grade)} grade`,
-    note: isExamWeek(view.week)
+    // `false`, and it is not a shortcut: a grade exists, so she is at school, so an exam week is an
+    // exam week. `schoolIsOver` and `gradeOf` are the SAME arithmetic (see `schoolEndWeek`), which
+    // is what makes this branch unreachable-when-over rather than merely usually right.
+    note: isExamWeek(view.week, false)
       ? 'Exams this week'
       : isSummerWeek(view.week)
         ? 'Summer break'
@@ -241,6 +301,10 @@ export const FRIENDS_TITLE_WEEKS = 3
 /** The week's facts, as the friends pool is allowed to see them. */
 interface FriendFacts {
   injured: boolean
+  /** W4-SCHOOL: two lines in the pool below name a classroom she has left. Facts first – rule 1 of
+   *  this module – so the pool is told, rather than the lines being quietly reworded into vagueness.
+   *  The bands stay TOTAL either way: both lines sit in bands that keep other members. */
+  schoolOver: boolean
   exams: boolean
   offSeason: boolean
   /** weeks of the last `FRIENDS_WINDOW` in which the family paid to travel */
@@ -265,7 +329,7 @@ const FRIEND_LINES: readonly FriendLine[] = [
   // --- she is hurt, so she is home, and being visited -----------------------------------------
   { text: 'She visits a lot', license: (f) => f.injured },
   { text: 'Comes by daily', license: (f) => f.injured },
-  { text: 'Homework here', license: (f) => f.injured },
+  { text: 'Homework here', license: (f) => f.injured && !f.schoolOver },
   // --- the December weeks: nobody is anywhere ---------------------------------------------------
   { text: 'Home all month', license: (f) => !f.injured && f.offSeason },
   { text: 'Sleepovers now', license: (f) => !f.injured && f.offSeason },
@@ -292,7 +356,7 @@ const FRIEND_LINES: readonly FriendLine[] = [
   },
   // --- a stretch at home -------------------------------------------------------------------------
   { text: 'Over most days', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
-  { text: 'Over after class', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
+  { text: 'Over after class', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY && !f.schoolOver },
   { text: 'Same as ever', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
   { text: 'Two of a pair', license: (f) => onTheOrdinaryClock(f) && f.weeksAway <= AWAY_RARELY },
   // --- and two colours that cut across the bands, because a friend is who you tell ---------------
@@ -339,9 +403,11 @@ export function friendsTile(view: KidLifeWorldView): KidLifeTile {
   const shapeRng = rngFromSeed(`${seedSafe(view.seed)}:friends:shape:${index}`)
   const lead = FRIEND_SHAPES[Math.floor(shapeRng() * FRIEND_SHAPES.length)](name)
 
+  const schoolOver = schoolIsOver(view.week, view.birthMonth)
   const facts: FriendFacts = {
     injured: view.injured,
-    exams: isExamWeek(view.week),
+    schoolOver,
+    exams: isExamWeek(view.week, schoolOver),
     offSeason: isOffSeasonWeek(view.week),
     weeksAway: view.weeksAway,
     lossStreak: view.lossStreak,

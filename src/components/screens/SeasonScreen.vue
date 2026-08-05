@@ -422,7 +422,8 @@ const calendarRows = computed<CalendarRow[]>(() => {
     const e = byWeek.get(w)
     const vacation = vacations.value.find((v) => v.week === w)
     const practice = practices.value.find((p) => p.week === w)
-    const exam = isExamWeek(w)
+    // W4-SCHOOL: the ROW's own week, so the September she leaves in draws correctly either side.
+    const exam = isExamWeek(w, w >= (game.snapshot?.schoolEndsWeek ?? Infinity))
     const offSeason = isOffSeasonWeek(w)
     const kind: CalendarRow['kind'] = vacation
       ? 'vacation'
