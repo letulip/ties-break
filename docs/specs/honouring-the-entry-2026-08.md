@@ -8,6 +8,28 @@ last-reviewed: 2026-08-05
 
 # Honouring the entry – the outgrown release, retired (`fix/outgrown-entry`, 05.08.2026)
 
+## Current truth
+
+- **An entry already taken is honoured.** She plays it, whatever the ladder says by the time the
+  week arrives. `releaseOutgrownEntries` is retired; a rung closing governs what she may enter
+  NEXT, never what she has already committed to.
+- This is not a new principle – it is a second surface obeying one the project already decided.
+  `seasonSupply` has said it since R10-3: *"an entry already made is hers whatever the gate says
+  now"*. The two ceilings (`outgrewTier`, `tierOutgrown`) still agree: identically nothing for a
+  committed entry, identically closed for the next one.
+- **The tournament desk's letter has three arms – entered / withdrew / released – and names the
+  actor before the cause.** The released arm borrows none of the reassurances that belong to a
+  voluntary exit ("in time, free of charge, nothing recorded against her"), because those answer a
+  question a player who did not choose never asked.
+- **The injury auto-withdraw was sending the voluntary-withdrawal letter too**, and had been since
+  it shipped. It now passes its own reason. `releaseEntry` carries an `EntryReleaseReason` and the
+  feed row switches on it exhaustively, so a future reason cannot silently inherit the injury's
+  sentence.
+- **No schema change.** `EntryLetterTerms.releasedBy` is additive and optional; v44 stays free.
+- **The Season card prefers an ENTERABLE event over a taller blocked one.** Entered → enterable →
+  tallest. The display half of the dead-week problem measures 0 everywhere after the change; the
+  supply half (a calendar full of rungs she has not reached or has passed) is filed, not taken.
+
 ## 0. What the owner hit
 
 > «моя уже 22 летняя выиграла 2 w50 подряд и ее автоматом сняли с 3-го письмом без объяснения
