@@ -22,6 +22,7 @@
     "bench:points": "vite-node tools/points-economy.ts",
     "bench:radar": "vite-node tools/radar-bench.ts",
     "bench:skill": "vite-node tools/skill-ceiling.ts",
+    "bench:sponsor": "vite-node tools/sponsor-window-bench.ts",
     "bench:world": "vite-node tools/world-turnover.ts",
     "test": "vitest run --project unit",
     "test:watch": "vitest",
