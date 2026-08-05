@@ -301,19 +301,60 @@ and it is now priced in both directions rather than being a pure penalty.
    moved, no `offerChance` moved. Coverage rose a third and the post-signature hole halved purely
    because letters are written on four weeks instead of one, from every rung she clears instead of
    the best one, and because a contract stopped shutting the door on its own successor.
-2. **The residual is a FLOOR problem, not a schedule problem, and it is the next question.** The p90
-   gap is still 205–210 weeks. Those are careers that were signed young on the domestic rung and then
-   went international: domestic points are a rolling 52-week best-6, so a season spent abroad decays
-   them, `nationalRank` slides past 30, and she clears **no rung at all** – too good for the shop,
-   not yet good enough for the world. That is a real hole in the ladder between `local` (domestic top
-   30) and `national` (ITF top 32), and no schedule change can reach it. It is measurable and it is
-   the honest follow-up.
+2. **The residual p90 gap is a career that STOPPED, and that is the design working.** The p90 is
+   still 205 weeks, so I went and looked rather than theorising. Of the 216 eager careers, **63 carry
+   a gap of 150+ weeks after their first deal**, and they are a different population:
+
+   | | gap >= 150 wk (63 careers) | gap < 100 wk (117 careers) |
+   |---|---|---|
+   | mean tournaments entered, 6 seasons | **6.2** | **14.8** |
+   | letters raised | 1.73 | 3.41 |
+   | careers that ENDED (bankruptcy / retirement) | **32 of 63** | 13 of 117 |
+
+   They played about one tournament a season and half of them ended. By preset they concentrate
+   exactly where the econ bench says the family cannot afford its coach – 19 in `25k middle / high
+   coach`, 13 in `25k middle / middle coach`. **The long gaps are careers that stopped competing, and
+   a career that stops competing is supposed to lose its sponsors.** That is the owner's own framing
+   and the measurement says it holds.
+
+   ⚠ I had written a different explanation here first – that the p90 was a girl whose domestic points
+   decayed while she went international, leaving her between the `local` and `national` gates. The
+   data does not support it and it is recorded here as a discarded hypothesis rather than deleted,
+   because it is a plausible-sounding story that a reader might otherwise re-invent. Whether that
+   band-gap exists at all is a separate question and would need its own measurement.
 3. **The money is small and should be stated anyway.** +0.35 pp of career income. The whole economy
    is being re-measured this week; this is the size of the footprint the sponsor change leaves in it.
 4. **Nothing about the letters changed.** They still read as letters from a person at a company; the
    only line that moved is the one the code already generated («N weeks to decide»), which now says
    five for the first letter of a winter and two for the last, because it is computed from the
    deadline rather than written down.
+
+---
+
+## 9. Gates
+
+| gate | result |
+|---|---|
+| `vue-tsc -b --force` | clean |
+| `npm run test:quiet` | **112 files / 2,386 tests green** |
+| `npm run test:component` | 8 files / 88 tests green |
+| `npm run test:sim` | **8 files / 80 tests green.** Exit 1 is the documented birpc artefact – «a hard-coded 60s RPC timeout that a minutes-long synchronous Monte-Carlo file will blow past, exiting 1 with every test green» (CLAUDE.md). The run took 317 s against its usual ~70 s because a second agent's bench held the machine, which is the contention the same note warns about. Zero assertion failures. |
+
+The sim project is the load-bearing one here: `econ-bench.test.ts`, `econ-reach.test.ts`,
+`econ-reach-pro.test.ts` and `endings-bench.test.ts` all drive full careers and assert survival and
+reach rates. They are green with the sponsor change in, which is the independent confirmation that
++0.35 pp of income does not move the family's economics.
+
+**Mutation-verified, all three new nets** – the green run was not taken on trust:
+
+| mutation | tests reddened |
+|---|---|
+| `seasonSpokenFor` returns null (nothing ever blocks) | 4 |
+| `signOffer` writes `fromWeek = week` (the seam re-opens) | 2 |
+| `windowLadder` reversed (weakest-first) | 9 |
+
+`npm run check` was NOT run: a second agent is active, and the same CLAUDE.md note records a full
+gate coming back with three RED files under contention, all of them timeouts and none of them real.
 
 ---
 
