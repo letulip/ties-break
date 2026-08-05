@@ -256,7 +256,14 @@ function hashOf(draws: number[]): string {
 // ⚠⚠ AND IN THIS FILE THE A/B IS THE POINT: `draws.length` and `hashOf(draws)` are asserted two
 // lines ABOVE this constant and both still pass, so input-independence - the fairness property -
 // is untouched. Only the world's own outcome moved.
-const REF = { kidRank: 89 }
+//
+// ⚠ AND RE-AIMED A THIRD TIME BY LADDER-PACE STEP 1 (05.08): 89 -> 90, ONE place, SAME MECHANISM.
+// `FIELD.size` 364 -> 520 makes the W universe 719 candidates instead of 563 and `selectEntrants`
+// spends one draw per candidate, so a W event's entrant set changed, so which JUNIORS a W week books
+// changed, so the J draws they were no longer free for changed. ⚠⚠ AND IN THIS FILE THE A/B IS
+// STILL THE POINT: `draws.length` and `hashOf(draws)` are asserted two lines above and both pass on
+// the deeper field, so input-independence survives a change to the size of the world.
+const REF = { kidRank: 90 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

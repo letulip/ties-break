@@ -115,6 +115,20 @@ export interface CareerMoney {
 
   entriesByTier: Record<TierId, number>
   prizeByTier: Record<TierId, number>
+  /** HOW HER TOURNAMENTS ENDED, per rung, as a histogram over the finish index (0 = champion,
+   *  `log2(drawSize)` = lost the opener). Added for `docs/specs/ladder-pace-2026-08.md`, whose
+   *  calibration target is the owner's own complaint - "losing in the first or second match VERY
+   *  often is very galling". A 32-draw exits 16 of its 32 players in round one and 8 more in round two, so
+   *  75% of any field is out by the second match BY ARITHMETIC – the question is only whether OUR
+   *  rate is worse than that floor, and that cannot be answered without measuring it.
+   *
+   *  ⚠ READ OFF THE DIARY, NOT OFF `world.results`, and that is required rather than stylistic. The
+   *  kid's ranking row is AWARD-ONLY (`world.ts`: `if (points > 0) world.results.push(...)`), so at
+   *  every rung whose table pays a first-round loser nothing – w15, w35, w100 – her R1 exits write
+   *  no result row at all and a results-based count would silently measure only the rounds she
+   *  survived. `closeTournament` is the sole writer of a `tournament` diary event and it stamps
+   *  `finishIdx` on every one, win or lose. */
+  finishByTier: Record<TierId, number[]>
   /** ⚠ THE PER-RUNG BILL, AND BOTH HALVES ARE EXACT RATHER THAN APPORTIONED. `entryFeeCents` is a
    *  flat per-tier constant charged by `enterEvent` at commit, so entries x fee is the fee to the
    *  cent. Travel is charged by `chargeTravel` in the EVENT'S OWN week, and the engine allows one
@@ -125,6 +139,12 @@ export interface CareerMoney {
 
 function zeroByTier(): Record<TierId, number> {
   return Object.fromEntries(TIER_LADDER.map((t) => [t, 0])) as Record<TierId, number>
+}
+/** One bucket per finish index a rung's draw can produce, `log2(drawSize) + 1` of them. */
+function zeroFinishByTier(): Record<TierId, number[]> {
+  return Object.fromEntries(
+    TIER_LADDER.map((t) => [t, new Array<number>(Math.round(Math.log2(TIERS[t].drawSize)) + 1).fill(0)]),
+  ) as Record<TierId, number[]>
 }
 function zeroCats(): Record<WorldEventCategory, number> {
   const out = {} as Record<WorldEventCategory, number>
@@ -199,6 +219,7 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
     catsPro: zeroCats(),
     entriesByTier: zeroByTier(),
     prizeByTier: zeroByTier(),
+    finishByTier: zeroFinishByTier(),
     costByTier: zeroByTier(),
   }
 
@@ -262,6 +283,18 @@ export function decomposeCareer(preset: Preset, index: number, retireArm: Retire
         out.firstPrizeWeek = world.week
         out.spentAtFirstPrize = world.careerTotals.spentCents
       }
+    }
+
+    // HOW THIS WEEK'S TOURNAMENT ENDED – the finish histogram behind §8's exit-rate table.
+    // `closeTournament` is the only writer of a `tournament` diary event and stamps `finishIdx` on
+    // every one, so this is her win-loss record read at its source. The rung comes from
+    // `tierPlayedOn`, the same one-event-a-week mapping the cheque above is attributed through.
+    for (const e of world.events) {
+      if (e.week !== world.week || e.type !== 'tournament' || typeof e.finishIdx !== 'number') continue
+      const tier = tierPlayedOn.get(world.week)
+      if (!tier) continue
+      const hist = out.finishByTier[tier]
+      if (e.finishIdx >= 0 && e.finishIdx < hist.length) hist[e.finishIdx] += 1
     }
 
     // the category decomposition, off the ledger's own rows so a line lands in the week it moved
@@ -743,6 +776,61 @@ export function main(argv = process.argv.slice(2)): void {
         `ever ranked ${ranked.length}/${rows.length}`,
     )
   }
+  // --- §8 HOW HER TOURNAMENTS END -----------------------------------------------------------------
+  //
+  // THE OWNER'S OWN COMPLAINT, MEASURED - "losing in the first or second match VERY often is very
+  // galling".
+  // The honest way to read this table is against its own arithmetic floor. A 32-draw eliminates 16
+  // of 32 entrants in round one and 8 more in round two, so 75.0% of ANY field is gone by the second
+  // match whoever is in it – that is not a difficulty setting, it is what a knockout is. The number
+  // that carries meaning is the EXCESS over 75%, which is the part our calibration owns.
+  console.log('  ══ 8. HOW HER TOURNAMENTS END – the R1/R2 exit rate, against a knockout\'s own floor ══')
+  console.log('')
+  console.log(
+    '  ' + padEnd('rung', 9) + pad('draws', 8) + pad('R1 out', 10) + pad('R2 out', 10) + pad('out by R2', 11) +
+      pad('floor', 8) + pad('excess', 9) + pad('QF+', 8) + pad('titles', 8),
+  )
+  // ⚠ `hist.slice(0, 4)` is "quarter-final or better" only while the draw is 32 (indices 0-3 are
+  // champion / finalist / semi / quarter). Every W rung ships at drawSize 32 – see slam.drawSize for
+  // the measured reason the majors did too – so this holds today and would need re-aiming the day a
+  // 64- or 128-draw ships, at which point the QF+ column would silently start counting R16s.
+  const exitRow = (label: string, tiers: TierId[]) => {
+    let draws = 0
+    let r1 = 0
+    let r2 = 0
+    let qf = 0
+    let titles = 0
+    let floorNum = 0
+    for (const t of tiers) {
+      const hist = rows.reduce((acc: number[], r) => acc.map((v, i) => v + r.finishByTier[t][i]), new Array<number>(Math.round(Math.log2(TIERS[t].drawSize)) + 1).fill(0))
+      const n = hist.reduce((s, v) => s + v, 0)
+      if (n === 0) continue
+      const last = hist.length - 1
+      draws += n
+      r1 += hist[last]
+      r2 += hist[last - 1] ?? 0
+      qf += hist.slice(0, 4).reduce((s, v) => s + v, 0)
+      titles += hist[0]
+      // the floor is the draw's own arithmetic: half out in R1, a quarter more in R2
+      floorNum += n * 0.75
+    }
+    if (draws === 0) return
+    const outByR2 = r1 + r2
+    console.log(
+      '  ' + padEnd(label, 9) + pad(String(draws), 8) + pad(ratio(r1, draws), 10) + pad(ratio(r2, draws), 10) +
+        pad(ratio(outByR2, draws), 11) + pad(ratio(floorNum, draws), 8) +
+        pad(`${(100 * (outByR2 - floorNum) / draws >= 0 ? '+' : '')}${((100 * (outByR2 - floorNum)) / draws).toFixed(1)}pp`, 9) +
+        pad(ratio(qf, draws), 8) + pad(ratio(titles, draws), 8),
+    )
+  }
+  const W_RUNGS_ALL = TIER_LADDER.filter((t) => TIERS[t].track === 'wta')
+  for (const t of W_RUNGS_ALL) exitRow(t, [t])
+  exitRow('ALL W', W_RUNGS_ALL)
+  exitRow('ITF jr', TIER_LADDER.filter((t) => TIERS[t].track === 'itf'))
+  console.log('  "floor" = what a knockout of that draw size exits by round two with NO skill difference at all.')
+  console.log('  "excess" = ours minus the floor. Positive = she loses early more often than a coin-flip field would.')
+  console.log('')
+
   console.log(`  richest single SEASON anywhere: ${usd(bestSeasonPrize)}`)
   console.log(`  richest whole CAREER anywhere : ${usd(Math.max(...rows.map((r) => r.prizeCents)))}`)
   console.log(
