@@ -154,6 +154,27 @@ describe('the field is a pure derivation', () => {
     expect(eliteMean).toBeLessThanOrEqual(70)
   })
 
+  // ⚠ THE PYRAMID IS FIVE STOREYS SINCE LADDER-PACE STEP 1, AND THE COUNTS ARE THE WORLD'S SHAPE.
+  // `fieldProsFor` walks `FIELD.tiers` in order handing out `fp-<n>`, so the ORDER of that literal
+  // is load-bearing: a storey appended keeps every id above it, and a storey inserted re-deals the
+  // whole field. This asserts both halves – the counts sum to `FIELD.size`, and the storeys arrive
+  // strongest-first – so an insertion in the wrong place is red rather than silently a new world.
+  it('the storeys sum to FIELD.size and are dealt strongest-first', () => {
+    const pros = prosOf(SEED, 0, [])
+    let base = 0
+    for (const tier of FIELD.tiers) {
+      for (let i = 0; i < tier.count; i++) expect(pros[base + i].strengthTier).toBe(tier.id)
+      base += tier.count
+    }
+    expect(base).toBe(FIELD.size)
+    // Each storey's declared core band is strictly below the one above it, which is what makes the
+    // pyramid a pyramid rather than five labels over one population.
+    for (let i = 1; i < FIELD.tiers.length; i++) {
+      expect(FIELD.tiers[i].core[1], FIELD.tiers[i].id).toBeLessThanOrEqual(FIELD.tiers[i - 1].core[1])
+      expect(FIELD.tiers[i].core[0], FIELD.tiers[i].id).toBeLessThan(FIELD.tiers[i - 1].core[0])
+    }
+  })
+
   // ⚠ THE FOURTH STOREY (W2-FIELD2, act2-pro-tour.md §8.1). Three claims, and each is the answer to
   // a way the storey could be built and be useless.
   it('the fourth storey is a head, not a taller middle: strictly above elite, top-heavy, world-scale', () => {
@@ -268,13 +289,28 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     // world ranking. The floor at 300 kills it with three hundred places to spare; the ceiling at
     // 420 catches the opposite failure, a field so heavy that a real result moves nothing at all.
     // Measured: 364 of 364 pros hold more than 50 W points, and she lands #365 of 564.
+    //
+    // ⚠⚠ RE-AIMED AGAIN BY LADDER-PACE STEP 1, AND THIS TIME THE BAND IS DENOMINATED IN THE
+    // POPULATION SO IT CANNOT GO STALE THE NEXT TIME THE TABLE DEEPENS. `FIELD.size` 364 -> 520
+    // moved her from #365 of 564 to #519 of 721 without one thing about her result changing, because
+    // a rank is a count of the people above you and there are now 156 more of them. The old literal
+    // ceiling of 420 was measuring the population, not the promise.
+    //
+    // WHAT THE PIN DEFENDS IS STILL EXACTLY WHAT IT ALWAYS DEFENDED and both ends still bite:
+    //   * the FLOOR (#300, unchanged and still absolute) kills "#9" – five titles at the entry rung
+    //     of the professional game printing a top-ten world ranking – with hundreds of places spare;
+    //   * the CEILING now says she is inside the professional table rather than dumped below all of
+    //     it, which is the opposite failure: a field so heavy that a real result moves nothing.
+    //     `FIELD.size + 20` is "she is at worst just below the last pro", which is the honest place
+    //     for 50 WTA points – in the real table 50 points is past #700
+    //     (docs/research/real-ladder-pace.md §5: #500 = 117 and #700 = 59).
     const world = createWorld('field-cal-pin')
     for (let i = 0; i < 5; i++) {
       world.results.push({ playerId: KID_ID, week: world.week, points: 10, tier: 'w15' })
     }
     recomputeKidRank(world)
     expect(world.kidRankWta).toBeGreaterThanOrEqual(300)
-    expect(world.kidRankWta).toBeLessThanOrEqual(420)
+    expect(world.kidRankWta).toBeLessThanOrEqual(FIELD.size + 20)
   })
 
   // ⚠⚠ A CHARACTERISATION, NOT A TARGET (points-economy-2026-08.md §3b / §8b). It pins a measured
@@ -299,7 +335,23 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
   // ON_RAMP.slots per W event and is measured at 119.8 LIVE W rows a season, so the LIVE cohort does
   // reach the professional tour. What this pins is that the FRONT DOOR – the percentile band – is
   // shut to the bottom of the table.
-  it('⚠ CHARACTERISATION: the entrant band never reaches the bottom storey, which still holds a book', () => {
+  // ⚠⚠ RE-AIMED BY LADDER-PACE STEP 1 (05.08), AND THE MOVE IS THE POINT – this guard's own comment
+  // asked for exactly that: "the band is a threshold, so a re-aim could make it 150 as easily as 1.
+  // What the assertion protects is that the number is READ rather than assumed – if it moves, this
+  // comment is the reason to come back to §8b."
+  //
+  // IT MOVED, FROM 0 TO 7 OF 150. `FIELD.size` 364 -> 520 makes the merged table ~719 rows, so W15's
+  // `entrantPctBand` of [0.22, 0.72] now spans positions ~158-518 instead of ~124-405 – and the
+  // journeyman storey (positions ~215-364) is inside it with room to spare. **The front door has
+  // opened onto the middle of the table**, which is one of the three things §10 of
+  // points-economy-2026-08.md put population depth first for.
+  //
+  // ⚠ AND 7 OF 150 IS A CRACK, NOT A DOOR, WHICH IS WHY THIS STAYS A CHARACTERISATION. Entry is
+  // position-biased (`key = position + rng x drawSize`), so a window holding four times the draw's
+  // chairs is still filled from its top and its tail is still never reached. What the deeper table
+  // bought is that the tail is now a DIFFERENT population: the assertion below is re-pointed at the
+  // storey that is now the bottom, and it is still zero there. The finding survives one storey down.
+  it('⚠ CHARACTERISATION: the entrant band barely reaches the bottom of the table, which still holds a book', () => {
     const world = createWorld('field-band-reach')
     const pros = prosOf(world.seed, 0, world.cohort.map((p) => p.name))
     const live = world.cohort.map((p) => ({ playerId: p.id, points: 0, rank: 1 }))
@@ -334,19 +386,32 @@ describe('the calibration pins (bench: tools/field-quality.ts, 01.08)', () => {
     const journeymen = pros.filter((p) => p.strengthTier === 'journeyman')
     expect(journeymen.length).toBe(150)
     const drawn = journeymen.filter((p) => (slots.get(p.id) ?? 0) > 0).length
-    // THE CHARACTERISATION. Zero today; the band is a threshold, so a re-aim could make it 150 as
-    // easily as 1. What the assertion protects is that the number is READ rather than assumed – if
-    // it moves, this comment is the reason to come back to §8b.
+    // THE CHARACTERISATION, HALF ONE – the storey that used to be the bottom. 0 -> 7 of 150 on the
+    // deeper table: the front door has opened a crack onto the middle of the standings, and it is
+    // still only a crack, because entry is position-biased and the window holds four times the
+    // draw's chairs. Read as a range, not a point, because it is a threshold: what the assertion
+    // protects is that the number is READ rather than assumed.
     //
-    // MUTATION-VERIFIED TWICE, each watched red first: widening w15's `entrantPctBand` from
-    // [0.22, 0.72] to [0.5, 0.95] gives 47, and the `FIELD.earnCurve` experiment of
+    // MUTATION-VERIFIED THREE TIMES, each watched red first: widening w15's `entrantPctBand` from
+    // [0.22, 0.72] to [0.5, 0.95] gives 47, the `FIELD.earnCurve` experiment of
     // points-economy-2026-08.md §5 gives 33 – the latter because re-pricing the field re-ORDERS the
-    // middle of the table (§5a), which moves who a percentile band can reach. So this guard is
-    // sensitive to both halves of the mechanism it describes, which is what makes it a guard.
-    expect(drawn, 'journeymen drawn into any W event in a season').toBe(0)
+    // middle of the table (§5a) – and `FIELD.size` 364 -> 520 gives 7. So this guard is sensitive to
+    // all three halves of the mechanism it describes, which is what makes it a guard.
+    expect(drawn, 'journeymen drawn into any W event in a season').toBeGreaterThan(0)
+    expect(drawn, 'journeymen drawn into any W event in a season').toBeLessThan(20)
     // ...and they are nevertheless in the table, which is what makes it a defect rather than a
     // detail: the weakest pro the generator makes still outranks a girl with a real W15 title.
     for (const p of journeymen) expect(p.wtaPoints).toBeGreaterThan(10)
+    // THE CHARACTERISATION, HALF TWO – RE-POINTED AT THE STOREY THAT IS NOW THE BOTTOM. This is the
+    // property the guard was really about, stated so it cannot be retired by adding people below the
+    // people it names: **the band, filled from its top, never reaches the last storey at all.** 156
+    // professionals hold a book, sit inside the standings a climbing career walks through, and are
+    // dealt not one draw in a season.
+    const bottomId = FIELD.tiers[FIELD.tiers.length - 1].id
+    const bottom = pros.filter((p) => p.strengthTier === bottomId)
+    expect(bottom.length).toBe(FIELD.tiers[FIELD.tiers.length - 1].count)
+    expect(bottom.filter((p) => (slots.get(p.id) ?? 0) > 0).length, `${bottomId} drawn`).toBe(0)
+    for (const p of bottom) expect(p.wtaPoints).toBeGreaterThan(10)
     // The storeys that DO play, for contrast, so a future zero everywhere reads as a broken harness
     // rather than as this finding getting worse.
     const played = pros.filter((p) => p.strengthTier !== 'journeyman' && (slots.get(p.id) ?? 0) > 0)

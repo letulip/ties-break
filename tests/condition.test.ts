@@ -394,7 +394,21 @@ const REF = {
   // e6b0c709, head and tail all reproduce byte-for-byte and are checked BEFORE this constant is ever
   // read. Every draw W4-LIVES adds is on `seed:fieldcareer:<n>:<k>` or `seed:fieldform:<n>:<season>`
   // - fresh purpose-scoped sub-streams that the weekly tick never walks.
-  kidRank: 89,
+  //
+  // ⚠ AND RE-AIMED A THIRD TIME BY LADDER-PACE STEP 1 (05.08): 89 -> 90, ONE place, SAME MECHANISM
+  // AGAIN. `FIELD.size` 364 -> 520 makes the W universe 719 candidates instead of 563, and
+  // `selectEntrants` spends one draw per candidate off `seed:aitour:<id>` / `seed:kidtour:<id>` - so
+  // a W event's entrant set changed, so which JUNIORS a W week books changed, so the J draws those
+  // juniors were no longer free for changed. `fieldPros.ts`' own header names this as the licensed
+  // downstream class: "the composition of the W rungs' event sub-streams... Entrant sets are a
+  // documented mutable class". Different track from the one this number folds, and once again SHE
+  // DID NOTHING DIFFERENT.
+  //
+  // THE CAPTURE IS UNTOUCHED FOR THE THIRD TIME: count 41550, hash e6b0c709, head and tail all
+  // reproduce byte-for-byte and are checked BEFORE this constant is read. The fifth storey adds no
+  // draw to any stream the weekly tick walks - it is 156 more reads of `seed:field:<n>:c<k>`, which
+  // is a fresh generator per player.
+  kidRank: 90,
   //// ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
   //// number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
   //// construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

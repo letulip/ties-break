@@ -116,36 +116,64 @@ describe('⚠ the acceptance cuts against a truncated table (characterisation, n
     return world
   }
 
-  it('three W cuts sit past the end of the POINTED table, so they refuse nobody', () => {
+  // ⚠⚠ RE-AIMED BY LADDER-PACE STEP 1 (05.08), AND THE RE-AIM IS THE FIX THIS PAIR EXISTS TO CATCH.
+  // Both assertions below used to record a DEFECT: three of the ten W cuts sat past the end of the
+  // pointed table and therefore refused nobody, so one ranking point opened W75, `tierOutgrown` shut
+  // W15 behind it, and the documented three-stage slide never happened. The audit's own words were
+  // "three documented stages of the ladder do not exist".
+  //
+  // `FIELD.size` 364 -> 520 puts 156 more pointed rows underneath, so the pointed depth passes W75's
+  // #450 cut and W75 STOPS BEING INERT. Nothing about the cuts moved – `acceptsRank` is an absolute
+  // rank precisely so it survives a deeper population (TierDef.acceptsRank says so in as many words:
+  // "it is a fact about the sport, it does not move when FIELD.size does"). What moved is the table.
+  //
+  // NEITHER ASSERTION IS WEAKENED. The first still names every inert cut and still requires the two
+  // that a career stalls under to bite; the count it asserts went from three to two, and it is
+  // asserted as an exact SET rather than a loop so a fourth going inert is red. The second no longer
+  // characterises a defect, so it is turned into the POSITIVE property it was blocking – the slide
+  // is one rung at a time, W15 survives her first point, and the stages are pinned by name.
+  it('the inert W cuts are now W35 and W50 alone – W75 bites again', () => {
     const world = worldAt('cuts-truncated', 17, 0)
     const pointed = rankingFor(world, 'wta').filter((r) => r.points > 0).length
-    // 364 derived pros hold a book; the rest of the 564 rows are LIVE players, most on nothing. So
-    // the table's pointed depth is ~385 and a cut looser than that is not a cut.
-    expect(pointed).toBeGreaterThan(FIELD.size)
-    expect(pointed).toBeLessThan(420)
-    for (const tier of ['w35', 'w50', 'w75'] as const) {
-      expect(TIERS[tier].acceptsRank!, `${tier} is inert`).toBeGreaterThan(pointed)
+    // 520 derived pros hold a book; the rest of the ~719 rows are LIVE players, most on nothing.
+    expect(pointed).toBeGreaterThanOrEqual(FIELD.size)
+    expect(pointed).toBeLessThan(FIELD.size + 60)
+    // The SET of inert cuts, exactly. A cut looser than the pointed depth is not a cut.
+    const inert = (['w35', 'w50', 'w75', 'w100', 'wta125'] as const).filter(
+      (t) => TIERS[t].acceptsRank! > pointed,
+    )
+    expect(inert).toEqual(['w35', 'w50'])
+    // ...and every cut a career actually stalls under bites.
+    for (const tier of ['w75', 'w100', 'wta125'] as const) {
+      expect(TIERS[tier].acceptsRank!, `${tier} gates`).toBeLessThan(pointed)
     }
-    // ...and the two rungs that DO bite are the ones a career actually stalls under.
-    expect(TIERS.w100.acceptsRank!).toBeLessThan(pointed)
-    expect(TIERS.wta125.acceptsRank!).toBeLessThan(pointed)
   })
 
-  it('⚠ so the entry rung of the professional tour closes on her FIRST W point, from 17', () => {
+  it('the entry rung SURVIVES her first W point, and the window slides one rung at a time', () => {
     // `tierOutgrown` closes a rung when the rung three above it opens. Three above W15 is W75, whose
-    // cut (#450) is past the pointed depth – so one point opens W75 and the same point shuts W15.
-    // At 16 the W75 age gate (17) short-circuits the closure, which is why this only bites from 17.
+    // cut is #450 – and a one-point book now stands at ~#521, outside it. So the first point opens
+    // nothing above W50 and W15 stays hers, which is the ladder's own documented worked example.
     const at16 = worldAt('trapdoor-16', 16, 10)
     expect(tierOpenFor(at16, 'w15')).toBe(true)
 
     const at17 = worldAt('trapdoor-17', 17, 1)
-    expect(tierFloorOpen(at17, 'w75')).toBe(true)
-    expect(tierOpenFor(at17, 'w15')).toBe(false)
+    expect(tierFloorOpen(at17, 'w75')).toBe(false)
+    expect(tierOpenFor(at17, 'w15')).toBe(true)
 
-    // The documented slide is one rung at a time – `tierOutgrown`'s own worked example names the
-    // stages "{j60, j300, w15} -> {j300, w15, w35} -> {w15, w35, w50} -> {w35, w50, w75}". The
-    // engine's real floors skip straight from {w15} to {w35, w50, w75}: three at once.
+    // `tierOutgrown`'s own worked example names the stages "{j60, j300, w15} -> {j300, w15, w35} ->
+    // {w15, w35, w50} -> {w35, w50, w75}". One point is the third of those, and it is now what the
+    // engine really produces instead of skipping three rungs at once.
     const open = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) => tierOpenFor(at17, t))
-    expect(open).toEqual(['w35', 'w50', 'w75'])
+    expect(open).toEqual(['w15', 'w35', 'w50'])
+
+    // ...and the NEXT stage is reached by playing, not by holding one point: a book that clears
+    // W75's cut is what closes W15, exactly one rung later.
+    const climbed = worldAt('trapdoor-climbed', 17, 140)
+    expect(tierFloorOpen(climbed, 'w75')).toBe(true)
+    expect(tierOpenFor(climbed, 'w15')).toBe(false)
+    const openLater = (['w15', 'w35', 'w50', 'w75', 'w100'] as const).filter((t) =>
+      tierOpenFor(climbed, t),
+    )
+    expect(openLater).toEqual(['w35', 'w50', 'w75'])
   })
 })

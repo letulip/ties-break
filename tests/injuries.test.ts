@@ -237,7 +237,14 @@ const REF = { //
   // byte-for-byte and are checked BEFORE this constant is read. Every draw W4-LIVES adds is on
   // `seed:fieldcareer:<n>:<k>` or `seed:fieldform:<n>:<season>` - fresh purpose-scoped sub-streams
   // the weekly tick never walks.
-  kidRank: 89 }
+  //
+  // ⚠ AND RE-AIMED A THIRD TIME BY LADDER-PACE STEP 1 (05.08): 89 -> 90, ONE place, SAME MECHANISM.
+  // `FIELD.size` 364 -> 520 makes the W universe 719 candidates instead of 563 and `selectEntrants`
+  // spends one draw per candidate, so a W event's entrant set changed, so which JUNIORS a W week
+  // books changed, so the J draws they were no longer free for changed. Second-order, on a different
+  // track from the one this number folds. SHE DID NOTHING DIFFERENT. The capture is untouched:
+  // count 41550, hash e6b0c709, checked BEFORE this constant is read.
+  kidRank: 90 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
