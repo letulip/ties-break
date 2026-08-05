@@ -49,6 +49,9 @@ import {
   hasLiveOffer,
   isOfferLive,
   isSponsorReviewWeek,
+  isSponsorWindowWeek,
+  isSponsorLetterWeek,
+  contractEndWeek,
   kitFreshCap,
   kitTermsFor,
   kitTravelShare,
@@ -59,7 +62,11 @@ import {
   rungFor,
   shopWritesAt,
   standingClears,
+  seasonSpokenFor,
+  windowLadder,
   SPONSOR_TIERS,
+  SPONSOR_WINDOW_WEEKS,
+  SPONSOR_LETTER_WEEKS,
   TIER_COVERS,
   type SponsorStanding,
 } from '../src/engine/offers'
@@ -267,11 +274,21 @@ const pro = (wtaRank: number, over: Partial<SponsorStanding> = {}): SponsorStand
   ...over,
 })
 
-/** ⚠ RE-AIMED (01.08): the review moved from the season BOUNDARY into the first OFF-SEASON week, so
- *  a letter arrives at 49 rather than 52. Same once-a-season event, three weeks earlier - see
- *  `isSponsorReviewWeek`. Everything below reads this rather than a literal, so the day it moves
- *  again it moves once. */
-const LETTER_WEEK = WEEKS_PER_YEAR - OFF_SEASON_WEEKS // 49
+/** ⚠ RE-AIMED TWICE, AND THE SECOND TIME IS WHY IT IS A CONSTANT AT ALL.
+ *
+ *  (01.08) the review moved from the season BOUNDARY into the first OFF-SEASON week, so a letter
+ *  arrived at 49 rather than 52.
+ *
+ *  (05.08, feat/sponsor-window) the single review week became a FIVE-WEEK WINDOW - the off-season
+ *  plus the two weeks before it - with a letter landing on each of its first four weeks, one rung at
+ *  a time. So the week a career's FIRST letter arrives is the window's OPENING week, 47: the ladder
+ *  is walked weakest-first, and a girl who clears only the local rung is written to in slot 0.
+ *  Everything below reads this rather than a literal, which is what made the second move a one-line
+ *  change to a helper rather than a rewrite of forty assertions. */
+const LETTER_WEEK = WEEKS_PER_YEAR - SPONSOR_WINDOW_WEEKS // 47
+/** The window's last week - every letter in a window expires with the window, so this is the last
+ *  week any of them can be signed. */
+const WINDOW_CLOSE_WEEK = WEEKS_PER_YEAR - 1 // 51
 
 function seedTheShopWritesTo(stem: string, week = LETTER_WEEK, standing = domestic(1)): string {
   for (let attempt = 0; attempt < 20; attempt++) {

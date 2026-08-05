@@ -1404,8 +1404,24 @@ export interface Offer {
    *  which is what the owner asked for («мне кажется было бы логичным их как раз к старту сезона
    *  привязывать») and what really happens: equipment deals are negotiated in November and December
    *  and align to the calendar year. Signing early buys the last off-season weeks of fresh kit as a
-   *  bonus; signing late buys the same season, minus the weeks spent thinking. */
+   *  bonus; signing late buys the same season, minus the weeks spent thinking.
+   *
+   *  ⚠ AND IT ENDS ON WEEK 49 OF ITS LAST SEASON, NOT ON WEEK 51 (schema v41, feat/sponsor-window).
+   *  The owner's own words: «заканчивать контракты вместе с сезоном на 49 неделе… т.е. чтобы с 50
+   *  точно уже было пусто». The two weeks it gives up carry no tournament and no ranking; what they
+   *  buy is a slot that is demonstrably empty while the brands' five-week window is still open, so a
+   *  running contract can never turn away the letter meant to replace it. See `contractEndWeek`. */
   untilWeek?: number
+  /** SIGNED ONLY: the FIRST week the deal covers (schema v41). Today, unless a contract she is still
+   *  under runs past today - in which case the new one starts the week the old one stops, so the two
+   *  meet exactly and leave neither an overlap nor a gap.
+   *
+   *  ⚠ IT EXISTS BECAUSE THE WINDOW OPENS BEFORE THE OLD CONTRACT CLOSES. Letters land from week 47
+   *  and a term runs to week 49, so for three weeks a year a parent can sign the next deal while the
+   *  present one is still supplying her. `decidedWeek` used to serve as the start of cover and cannot
+   *  any more: it would put two deals in force in the same week, and there is at most one
+   *  (`activeKitDeal`). Migrated careers take `decidedWeek`, which is exactly what they meant. */
+  fromWeek?: number
   /** SIGNED ONLY: what the shop has actually spent on her kit under this deal, in cents. The one
    *  number that says what signing was worth – the same job `AcademySupport.coveredCents` does for
    *  the scholarship, and reported the same way at the season boundary. */

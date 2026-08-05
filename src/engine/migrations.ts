@@ -31,7 +31,7 @@ import type { PlayerProfile } from '../shared/protocol'
 import { daysInBirthMonth } from '../shared/dates'
 import { pickSurname } from './season/cohort'
 import { rngFromSeed, pickInt, type MainRngState } from './rng'
-import { OFF_SEASON_WEEKS, TIERS, tierFromLabel } from './season/calendar'
+import { OFF_SEASON_WEEKS, TIERS, tierFromLabel, WEEKS_PER_YEAR } from './season/calendar'
 import { milestoneKey } from './diary'
 import { WEEKS_IN_SEASON, weekYear } from '../shared/dates'
 import type { TierId } from './season/types'
@@ -1108,6 +1108,45 @@ export function migrateSave(raw: unknown): WorldState {
       save.careerTotals = { ...(save.careerTotals as object), weeksLostToInjury: lost } as CareerTotals
     }
     v = 40
+  }
+
+  // v41 – THE SPONSOR WINDOW LANDS EVERY RUNNING CONTRACT ON A SEASON BOUNDARY
+  // (docs/specs/sponsor-window-2026-08.md).
+  //
+  // Two fields on the kit deals in the inbox, and both are forced by the same change of schedule.
+  // Letters now arrive across weeks 47-51 and a contract ends on week 49 (`contractEndWeek`), so for
+  // three weeks a year the next deal can be signed while the present one is still supplying her.
+  //   * `fromWeek` – the first week the deal covers. It used to be `decidedWeek`, which is exactly
+  //     what a migrated deal meant by it, so the back-fill is EXACT rather than a reconstruction.
+  //   * `untilWeek` – snapped to the contract end of the season it was already going to finish in.
+  //
+  // ⚠ THE DIRECTION OF THE SNAP, STATED, because it is the one thing a player could feel. Every deal
+  // written before this version ends on the season year's LAST week (offset 51: `dealUntilWeek` ran
+  // `seasons * 52 - 1` from the covered season's start, and `endDealWithSeason` used `seasonLastWeek`
+  // for the same offset). Those land two weeks LATER than the new rule, so they are trimmed DOWN by
+  // one or two weeks - and the weeks they give up are off-season weeks that carry no tournament, no
+  // ranking and no entry, so the cost is at most a fortnight of the freshness ceiling. Anything
+  // ending EARLIER in the year - which no shipped rule produces, but a hand-edited or future save
+  // could - is rounded UP to the same week, because extending a promise is the safe direction and
+  // shortening one is not. Both cases are the same single expression: the contract end of the season
+  // the deal already died in.
+  //
+  // Defensive and idempotent in v30's sense: a value already on the boundary is left where it is, a
+  // malformed one is skipped rather than trusted. Zero draws on any stream - a signed contract is
+  // post-draw state - so the frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+  if (v === 40) {
+    const offers = Array.isArray(save.offers) ? (save.offers as unknown as Record<string, unknown>[]) : []
+    for (const o of offers) {
+      if (!o || typeof o !== 'object' || o.kind !== 'kit' || o.state !== 'signed') continue
+      if (typeof o.fromWeek !== 'number' || !Number.isFinite(o.fromWeek)) {
+        const decided = typeof o.decidedWeek === 'number' ? o.decidedWeek : o.week
+        if (typeof decided === 'number' && Number.isFinite(decided)) o.fromWeek = decided
+      }
+      if (typeof o.untilWeek === 'number' && Number.isFinite(o.untilWeek) && o.untilWeek >= 0) {
+        o.untilWeek = Math.floor(o.untilWeek / WEEKS_PER_YEAR) * WEEKS_PER_YEAR + (WEEKS_PER_YEAR - OFF_SEASON_WEEKS)
+      }
+    }
+    v = 41
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {
