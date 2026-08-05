@@ -656,7 +656,29 @@ export const TIERS: Record<TierId, TierDef> = {
     // points — plays a tour this game does not simulate yet (act 3's 250/500/1000/Slams); a WTA 125
     // whose top seed is the world #1 would be as wrong as a W100 whose top seed is. 0.025 of 564 is
     // the top ~14 rows, which is what a 125's entry list actually excludes.
-    entrantPctBand: [0.025, 0.26],
+    //
+    // ⚠⚠ RE-DERIVED FROM THE ACCEPTANCE RANGE ON THE LINE ABOVE (population-1600, 05.08), AND IT IS
+    // THE ONE BAND IN THE W FAMILY WHOSE TWO ENCODINGS ACTUALLY DISAGREED.
+    // `ladder-pace-2026-08.md` §6C(1) pre-registered this exact repair: every rung carries the real
+    // acceptance range beside its `acceptsRank`, `acceptsRank` is that range's floor, and the two are
+    // encodings of ONE real-world fact – so a band that does not match its own range is a defect on
+    // its own terms rather than a tuning preference.
+    //
+    // WHAT WENT WRONG, and it is the paragraph above being read at the wrong population. 0.025 was
+    // chosen as "the top ~14 rows of 564". Against 1,799 rows the identical share excludes the top
+    // **45** – and #45 is still inside `tourElite`, so a 125's field was drawn from the top of the
+    // WORLD (measured field core 65.9 against W100's 49.7: a sixteen-point cliff between two
+    // adjacent rungs). The range says a 125 draws ~#80–250. 80/1799 = **0.044**, 250/1799 = 0.139;
+    // the upper bound is left at 0.26 because `selectEntrants` fills from the top and a wider tail
+    // only buys candidate depth (`tools/band-probe.ts` is the receipt).
+    //
+    // ⚠ IT SOFTENS THE CLIFF AND DOES NOT REMOVE IT, AND THE REASON IS NOT IN THIS FILE. Our table's
+    // top 94 rows hold 21 of its core points and the remaining 1,700 hold the rest, so a rung whose
+    // field is drawn from the head will always be a step change. That is the exchange-rate defect
+    // (`ladder-pace-2026-08.md` §3a: our #50 beats our #100 89.3% of the time against a real 58%),
+    // it is measured on its own arm in docs/specs/population-1600-2026-08.md §3, and the arm was
+    // reverted. The band is fixed here because the band was wrong; the cliff is reported there.
+    entrantPctBand: [0.044, 0.26],
   },
   // --- act 3: the top of the ladder, and the year that has names in it (W3-ACT2) -----------------
   //
