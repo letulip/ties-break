@@ -56,11 +56,13 @@
 //   5. THE WINDOW IS FIVE WEEKS, NOT ONE. `isSponsorWindowWeek` - the off-season plus the two weeks
 //      before it. Letters land ONE PER WEEK across the first four (`isSponsorLetterWeek`), so a
 //      choice can accumulate; the fifth is the parent's alone and no brand writes on it.
-//   6. THE RUNGS SHE CLEARS WRITE, WEAKEST OF THEM FIRST. `windowLadder` - the shop that would have
-//      her writes in the first week, and the bigger name (if there is one) takes longer to make up
-//      its mind. That is the gamble the owner asked for: take the modest deal on the table, or hold
-//      out for a letter that may never come. NOTHING is manufactured - every letter is from a rung
-//      her standing genuinely clears, and a career that clears one rung gets one letter.
+//   6. THE RUNGS SHE CLEARS WRITE, STRONGEST OF THEM FIRST. `windowLadder` - the biggest name that
+//      would have her writes on the opening week, exactly as `rungFor` always said, and the rungs
+//      below it write on the following weeks as ALTERNATIVES rather than as replacements. So by the
+//      middle of the window a girl who clears three rungs holds three letters and may take any of
+//      them, and signing the first one she is sent is never a mistake. NOTHING is manufactured -
+//      every letter is from a rung her standing genuinely clears, and a career that clears one rung
+//      gets one letter.
 //   7. A CONTRACT ENDS WITH THE SEASON, ON WEEK 49. `contractEndWeek`, and `dealUntilWeek` is built
 //      on it, so by week 50 the slot is empty and the letters already in the inbox are for a season
 //      nobody has a claim on.
@@ -430,26 +432,40 @@ export function offerChanceFor(standing: SponsorStanding, tier = rungFor(standin
 
 /** WHICH RUNGS WRITE THIS WINTER, in the order they land - the window's whole content, as a list.
  *
- *  ⚠ WEAKEST OF THE TOP FEW FIRST, AND BOTH HALVES OF THAT ARE THE DESIGN. The list is cut from the
- *  TOP (`slice`), so the best brand that would have her can never be crowded off the calendar by
- *  four smaller ones - a top-10 professional hears from the biggest names and not from a shop in her
- *  town. Then it is REVERSED, so the smallest of those writes first and the largest last.
+ *  ⚠ STRONGEST FIRST, WHICH IS `rungFor`'s OWN RULE EXTENDED RATHER THAN REPLACED. `rungFor` says
+ *  "the best rung she clears, and only that one, because an ambitious parent is being written to by
+ *  the biggest name that would have him". The window keeps the first half exactly - the best brand
+ *  writes on the opening week - and relaxes the second, because the owner asked for «выбор (если он
+ *  будет конечно)» and one letter is not a choice. So the rungs below it write on the following
+ *  weeks, as ALTERNATIVES to a letter he already has rather than as a replacement for it.
  *
- *  That order is what makes the window a decision rather than a queue. Strongest-first would mean the
- *  best letter always arrives on day one and waiting could only ever lose - the "choice" would be
- *  decoration. Weakest-first is the owner's own gamble: a modest deal is on the table in week 47 and
- *  the bigger name may or may not write by week 50, so signing early is safe and waiting is not. It
- *  is also what really happens - a local shop decides over a coffee, a distributor's contract
- *  department takes a month - and it puts the FLOOR rung, which is the one that delivers his stated
- *  goal, on the earliest week with the most time to act on it.
+ *  ⚠ AND THE ORDER IS THE WHOLE SAFETY PROPERTY, WHICH IS WHY IT IS NOT THE OTHER WAY ROUND. Sorted
+ *  weakest-first the local shop would write in week 47 and the global brand in week 49, so a parent
+ *  who signed the first letter he was ever sent would have thrown away the better one without ever
+ *  seeing it - a trap dressed as a gamble, and the exact opposite of «есть время на принятие решения
+ *  и выбор». Strongest-first makes signing on sight always safe and waiting always optional, and the
+ *  choice is real anyway: by the third week of the window a girl who clears three rungs is holding
+ *  three letters at once and may take any of them.
+ *
+ *  ⚠ CUT FROM THE TOP, so the best brand can never be crowded off the calendar - a top-10
+ *  professional hears from the four biggest names that would have her and not from a shop in her
+ *  town, which has four rungs' worth of nothing to offer her.
+ *
+ *  ⚠ AND THE FLOOR IS STILL THE FLOOR. When the top rung's dice come up empty the next one down
+ *  writes the following week off its own roll - so the ladder's lower rungs are what catch a career
+ *  the big brands passed on, which is the mechanism behind the owner's stated goal («у нее есть
+ *  спонсоры в том или ином виде на протяжении всей карьеры») rather than a guarantee bolted on top
+ *  of it.
  *
  *  ⚠ AND NOTHING IS MANUFACTURED. Every entry is a rung `standingClears` says would have her, so a
- *  career that clears one rung gets exactly one letter and a career that clears none gets none. The
- *  dice are still rolled per letter (`shopWritesAt` on its own week), so a full list is an
- *  opportunity and never a guarantee. */
+ *  career that clears one rung gets one letter and a career that clears none gets none. The dice are
+ *  still rolled per letter (`shopWritesAt`, on that letter's own week), so a full list is an
+ *  opportunity and never a delivery. */
 export function windowLadder(standing: SponsorStanding): SponsorTier[] {
-  const clears = SPONSOR_TIERS_STRONGEST_FIRST.filter((t) => standingClears(standing, t))
-  return clears.slice(0, SPONSOR_LETTER_WEEKS).reverse()
+  return SPONSOR_TIERS_STRONGEST_FIRST.filter((t) => standingClears(standing, t)).slice(
+    0,
+    SPONSOR_LETTER_WEEKS,
+  )
 }
 
 /** IS THE SEASON AHEAD ALREADY PROMISED TO SOMEBODY - "one brand at a time", as the window forced it
